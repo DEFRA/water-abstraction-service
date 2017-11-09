@@ -1,0 +1,56 @@
+{
+  "name": "water-abstraction",
+  "version": "1.0.0",
+  "description": "Web app for Water Abstraction Permit service",
+  "main": "index.js",
+  "scripts": {
+    "heroku-prebuild": "npm install --only=dev",
+    "heroku-postbuild": "gulp clean && gulp copy-govuk-files && gulp install-govuk-files && gulp copy-static-assets && gulp sass",
+    "test": "lab -t 90 -m 0",
+    "test-cov-html": "lab -r html -o coverage.html"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "del": "^3.0.0",
+    "gulp": "^3.9.1",
+    "gulp-run-sequence": "^0.3.2",
+    "gulp-sass": "^3.1.0",
+    "gulp-sourcemaps": "^2.6.0",
+    "gulp-standard": "^10.0.0",
+    "lab": "^14.1.1",
+    "run-sequence": "^2.1.0",
+    "standard": "^10.0.2"
+  },
+  "dependencies": {
+    "async-waterfall": "^0.1.5",
+    "bcrypt": "^1.0.3",
+    "boom": "^5.2.0",
+    "dotenv": "^4.0.0",
+    "gulp": "^3.9.1",
+    "gulp-run-sequence": "^0.3.2",
+    "gulp-sass": "^3.1.0",
+    "gulp-sourcemaps": "^2.6.0",
+    "gulp-standard": "^10.0.0",
+    "handlebars": "^4.0.10",
+    "handlebars-helper-equal": "^1.0.0",
+    "hapi": "^16.5.0",
+    "hapi-auth-basic": "^4.2.0",
+    "hapi-auth-cookie": "^7.0.0",
+    "hapi-auth-jwt2": "^7.3.0",
+    "inert": "^4.2.1",
+    "jsonwebtoken": "^7.4.3",
+    "moment": "^2.18.1",
+    "notifications-node-client": "^3.2.0",
+    "path": "^0.12.7",
+    "pg": "^7.1.0",
+    "vision": "^4.1.1",
+    "yar": "^8.1.2"
+  },
+  "standard": {
+    "ignore": [
+      "node_modules/",
+      "public/"
+    ]
+  }
+}
