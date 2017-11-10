@@ -129,6 +129,7 @@ server.register([require('hapi-auth-basic'), require('hapi-auth-jwt2'), require(
 
   // load routes
 //  server.route(require('./src/routes/API'))
+server.route(require('./src/routes/water'))
 
 
 })
