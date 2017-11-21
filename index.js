@@ -123,7 +123,8 @@ server.register([{
   server.auth.strategy('jwt', 'jwt',
     { key: process.env.JWT_SECRET,          // Never Share your secret key
       validateFunc: validateJWT,            // validate function defined above
-      verifyOptions: {} // pick a strong algorithm
+      verifyOptions: {}, // pick a strong algorithm
+      verifyFunc: validateJWT
     })
 
   server.auth.default('jwt')
