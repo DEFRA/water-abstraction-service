@@ -38,7 +38,20 @@ var yar_options = {
   }
 }
 
-server.register({
+server.register(  {
+      register: require('node-hapi-airbrake'),
+      options: {
+        key: process.env.errbit_key,
+        host: process.env.errbit_server
+      }
+  },{
+    // Plugin to display the routes table to console at startup
+    // See https://www.npmjs.com/package/blipp
+    register: require('blipp'),
+    options: {
+      showAuth: true
+    }
+  },{
   register: require('yar'),
   options: yar_options
 }, function (err) { })
