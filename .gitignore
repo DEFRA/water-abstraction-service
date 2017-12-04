@@ -1,7 +1,7 @@
 /node_modules/
-/etl/node_modules/
+/migration/node_modules/
+/migration/database.json
 /govuk_modules/
 /public/
-.env
-/etl/.env
 /views/
+.env

@@ -1,0 +1,17 @@
+{
+  "name": "migration",
+  "version": "1.0.0",
+  "description": "db migration interface",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "db-migrate": "^0.10.1",
+    "db-migrate-pg": "^0.2.5",
+    "dotenv": "^4.0.0",
+    "pg": "^7.4.0"
+  }
+}
