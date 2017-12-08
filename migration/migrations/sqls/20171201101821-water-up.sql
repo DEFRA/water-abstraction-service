@@ -26,7 +26,7 @@ CREATE TABLE "config" (
   "config_value" varchar COLLATE "pg_catalog"."default"
 )
 ;
-ALTER TABLE "config" OWNER TO "postgres";
+
 
 -- ----------------------------
 -- Primary Key structure for table config
