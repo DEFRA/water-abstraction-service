@@ -4,7 +4,8 @@
   "description": "db migration interface",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate":"npm run migrate"
   },
   "author": "",
   "license": "ISC",
