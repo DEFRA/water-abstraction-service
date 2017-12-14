@@ -38,23 +38,27 @@ var yar_options = {
   }
 }
 
-server.register({
+
+server.register([{
   register: require('yar'),
   options: yar_options
-}, function (err) { })
+},
 
-/**
-server.register(
-  { register: require('hapi-server-session'), options: sessionPluginOptions },
-  (err) => {
-    if (err) {
-      throw err
+
+  {
+      register: require('node-hapi-airbrake'),
+      options: {
+        key: process.env.errbit_key,
+        host: process.env.errbit_server
+      }
+  },{
+    // Plugin to display the routes table to console at startup
+    // See https://www.npmjs.com/package/blipp
+    register: require('blipp'),
+    options: {
+      showAuth: true
     }
-  }
-)
-**/
-
-server.register([require('hapi-auth-basic'), require('hapi-auth-jwt2'), require('inert'), require('vision')], (err) => {
+  },require('hapi-auth-basic'), require('hapi-auth-jwt2'), require('inert'), require('vision')], (err) => {
   if (err) {
     throw err
   }
@@ -119,7 +123,8 @@ server.register([require('hapi-auth-basic'), require('hapi-auth-jwt2'), require(
   server.auth.strategy('jwt', 'jwt',
     { key: process.env.JWT_SECRET,          // Never Share your secret key
       validateFunc: validateJWT,            // validate function defined above
-      verifyOptions: {} // pick a strong algorithm
+      verifyOptions: {}, // pick a strong algorithm
+      verifyFunc: validateJWT
     })
 
   server.auth.default('jwt')
