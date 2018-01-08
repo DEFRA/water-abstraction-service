@@ -27,7 +27,7 @@ module.exports = [
 const cron = require('node-cron');
 const IDM= require('../lib/connectors/idm')
 const Slack= require('../lib/slack')
-cron.schedule('* 8,10,17 * * *', function(){
+cron.schedule('0 8,10,17 * * *', function(){
   console.log('running a task now and again...');
   users()
 });
