@@ -42,10 +42,12 @@
     "inert": "^4.2.1",
     "jsonwebtoken": "^7.4.3",
     "moment": "^2.18.1",
+    "node-cron": "^1.2.1",
     "node-hapi-airbrake": "0.0.6",
     "notifications-node-client": "^3.2.0",
     "path": "^0.12.7",
     "pg": "^7.1.0",
+    "request-promise-native": "^1.0.5",
     "vision": "^4.1.1",
     "yar": "^8.1.2"
   },
