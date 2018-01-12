@@ -28,6 +28,7 @@ function query (queryString, params, cb) {
 
 module.exports = {
 
-  query: promiseQuery
+  query: promiseQuery,
+  pool
 
 }
