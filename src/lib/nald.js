@@ -78,10 +78,12 @@ function execCommand(command){
 
 const loadNaldData = async (request,reply) => {
   reply('data loading')
-  console.log('check dir')
   try{
+    console.log(`purge dir ${localPath}`)
+  var tmpDir=await execCommand(`rm -rf ${localPath}`)
+  console.log(`check dir ${localPath}`)
   var tmpDir=await execCommand(`mkdir -p ${localPath}`)
-  console.log(tmpDir)
+  console.log(`download from s3`)
   var s3=await getS3()
   console.log('written '+s3+' to '+filePath)
 
