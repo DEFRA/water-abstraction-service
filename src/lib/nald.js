@@ -123,10 +123,10 @@ function getS3(){
   return new Promise((resolve, reject) => {
     const knox=require('knox')
     var client = knox.createClient({
-      key: 'AKIAJL7IYQIGSPBBWV6Q',
-      secret: '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',
+      key: process.env.s3_key,
+      secret: process.env.s3_secret,
       region: 'eu-west-1',
-      bucket: 'devwabs3-maintenance-001',
+      bucket: process.env.s3_bucket,
     });
     var file = require('fs').createWriteStream(filePath);
     const s3file='nald_dump/nald_enc.zip'
