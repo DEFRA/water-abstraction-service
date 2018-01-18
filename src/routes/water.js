@@ -6,12 +6,17 @@ API page, pending real back end - uses fs to read and write to lkocal json files
 
 const version = '1.0'
 
+const Nald = require('../lib/nald')
+
 
 const sessionRoutes = require('../controllers/sessions');
 
 module.exports = [
   ...sessionRoutes,
   { method: 'GET', path: '/status', handler: function(request,reply){return reply('ok').code(200)}, config:{auth: false,description:'Get all entities'}},
+  { method: 'GET', path: '/water/' + version + '/nald/import', handler: Nald.import, config:{auth: false,description:'Import nald from s3 data'}},
+  { method: 'POST', path: '/water/' + version + '/nald/licence', handler: Nald.licence, config:{auth: false,description:'Fetch legacy nald licence'}},
+
 ]
 /**
 { method: 'GET', path: '/API/' + version + '/test', handler: test },
