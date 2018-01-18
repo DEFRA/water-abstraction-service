@@ -17,5 +17,4 @@ WITH (
 )
 TABLESPACE pg_default;
 
-ALTER TABLE water.sessions
-    OWNER to postgres;
+
