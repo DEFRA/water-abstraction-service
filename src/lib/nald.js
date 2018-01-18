@@ -135,17 +135,20 @@ function getS3(){
   return new Promise((resolve, reject) => {
     const knox=require('knox')
     var knoxConfig={
-      key: process.env.s3_key,
-      secret: process.env.s3_secret,
-      region: 'eu-west-1',
-      bucket: process.env.s3_bucket    };
+          key: process.env.s3_key,
+          secret: process.env.s3_secret,
+          region: 'eu-west-1',
+          bucket: process.env.s3_bucket    };
 
-    if(process.env.proxy){
-      console.log('proxy: '+process.env.proxy)
-      knoxConfig.proxy=process.env.proxy
-    } else {
-      console.log('no proxy')
-    }
+        if(process.env.proxy){
+          console.log('proxy: '+process.env.proxy)
+          var ProxyAgent = require('proxy-agent');
+          knoxConfig.agent=new ProxyAgent(knoxConfig.proxy)
+        } else {
+          console.log('no proxy')
+        }
+    //knoxConfig.agent=require("https").globalAgent
+
     var client = knox.createClient(knoxConfig);
     var file = require('fs').createWriteStream(filePath);
     const s3file='nald_dump/nald_enc.zip'
