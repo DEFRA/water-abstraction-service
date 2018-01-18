@@ -2,12 +2,15 @@ const fs = require('fs');
 const localPath = `${__dirname}/temp/`
 const filePath=`${localPath}nald_dl.zip`
 const finalPath=`${__dirname}/temp/NALD`
+const Slack= require('./slack')
 var tables=[];
 var tableCreate="";
 
 
+
+
 async function buildSQL(request, reply){
-  tableCreate+='\nCREATE schema if not exists "import"; \n '
+  tableCreate+='drop schema if exists "import" cascade;\nCREATE schema if not exists "import"; \n '
   console.log(finalPath)
   const files = await fs.readdirSync(finalPath)
   const excludeList=["NALD_RET_LINES","NALD_RET_LINES_AUDIT","NALD_RET_FORM_LOGS","NALD_RET_FORM_LOGS_AUDIT"]
@@ -77,39 +80,48 @@ function execCommand(command){
 
 
 const loadNaldData = async (request,reply) => {
-  reply('data loading')
+
+  var os = require("os");
+  var hostname = os.hostname();
+  await Slack.post(`Starting NALD data import on ${hostname} - ${process.env.environment} `)
+  reply('Data load process started. NOTE: Progress will be reported in Slack')
+
+  await Slack.post('Purging previous downloads')
   try{
     console.log(`purge dir ${localPath}`)
   var tmpDir=await execCommand(`rm -rf ${localPath}`)
   console.log(`check dir ${localPath}`)
   var tmpDir=await execCommand(`mkdir -p ${localPath}`)
+  await Slack.post('Downloading from S3')
   console.log(`download from s3`)
   var s3=await getS3()
   console.log('written '+s3+' to '+filePath)
-
+  await Slack.post('S3 Download completed. Unzipping main archive')
   console.log('unzip top level')
   var command=`7z x ${localPath}nald_dl.zip -pn4ld -o${localPath}`;
   console.log(command)
-  var process=await execCommand(command)
-  console.log(process)
+  var res=await execCommand(command)
+  console.log(res)
 
+  await Slack.post('Unzipping secondary archive')
   console.log('unzip secondary')
   var command=`7z x ${localPath}/NALD.zip -o${localPath}`
   console.log(command)
-  var process=await execCommand(command)
-  console.log(process)
+  var res=await execCommand(command)
+  console.log(res)
 
+  await Slack.post('Processing data files')
   console.log('process files')
   var sqlFile=await buildSQL()
   console.log(sqlFile)
 
   console.log('Execute DB file')
-
-  var command=`PGPASSWORD=postgres psql -h 127.0.0.1 -U postgres permits < ${localPath}/sql.sql`;
-  console.log(command)
+  await Slack.post(`Loading to DB at ${process.env.PGHOST}`)
+  var command=`PGPASSWORD=${process.env.PGPASSWORD} psql -h ${process.env.PGHOST} -U ${process.env.PGUSER} ${process.env.PGDATABASE} < ${localPath}/sql.sql`;
   var loaddata=await execCommand(command)
   console.log(loaddata)
   console.log('data loaded')
+  await Slack.post('Data loaded')
 //  return reply('data loaded')
   }catch(e){
     console.log('error ',e)
@@ -127,6 +139,7 @@ function getS3(){
       secret: process.env.s3_secret,
       region: 'eu-west-1',
       bucket: process.env.s3_bucket,
+      proxy: 'your-proxy'
     });
     var file = require('fs').createWriteStream(filePath);
     const s3file='nald_dump/nald_enc.zip'
@@ -139,22 +152,10 @@ function getS3(){
   })
 }
 
-//loadNaldData()
-console.log(process.env)
 
 
 
-if (process.env.DATABASE_URL) {
-  // get heroku db params from env vars
 
-  var workingVariable = process.env.DATABASE_URL.replace('postgres://', '')
-  console.log(workingVariable)
-  process.env.PGUSER = workingVariable.split('@')[0].split(':')[0]
-  process.env.PGPASSWORD = workingVariable.split('@')[0].split(':')[1]
-  process.env.PGHOST = workingVariable.split('@')[1].split(':')[0]
-  process.env.PSPORT = workingVariable.split('@')[1].split(':')[1].split('/')[0]
-  process.env.PGDATABASE = workingVariable.split('@')[1].split(':')[1].split('/')[1]
-}
 
 
 const { Pool } = require('pg')
