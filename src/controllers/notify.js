@@ -48,7 +48,6 @@ async function send(request, reply) {
   } else {
     //Send ${data.message_ref} to ${data.recipient} with ${data.personalisation}`
     try {
-
       //get template details
       template = await DB.query('select * from water.notify_templates where message_ref=$1', [data.message_ref])
       if (!template.data.length == 1) {
@@ -94,7 +93,14 @@ async function send(request, reply) {
             break;
           case 'letter':
             try {
-              var res = await notifyClient.sendLetter(template_id, data.personalisation)
+              if((process.env.NODE_ENV || '').match(/^production|preprod$/i)) {
+                console.log('sending live letter')
+                await notifyClient.sendLetter(templateID, data.personalisation)
+              } else {
+                console.log('sending test letter')
+                const notifyClient = new NotifyClient(process.env.TEST_NOTIFY_KEY);
+                await notifyClient.sendLetter(templateID, data.personalisation)
+              }
             } catch (e) {
               return reply({
                 error: 'Error returned from notify',
@@ -113,6 +119,7 @@ async function send(request, reply) {
             }).code(500)
         }
       }
+      console.log('SUCCESS!')
       return reply({message:'ok'}).code(200)
 
     } catch (e) {
