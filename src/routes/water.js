@@ -10,14 +10,17 @@ const Nald = require('../lib/nald')
 
 
 const sessionRoutes = require('../controllers/sessions');
-
+const schedulerRoutes = require('../controllers/scheduler');
 const notifyController = require('../controllers/notify');
+const taskRunner = require('../controllers/taskRunner');
+
 
 module.exports = [
   ...sessionRoutes,
+  ...schedulerRoutes,
   { method: 'GET', path: '/status', handler: function(request,reply){return reply('ok').code(200)}, config:{auth: false,description:'Get all entities'}},
   { method: 'GET', path: '/water/' + version + '/nald/import', handler: Nald.import, config:{auth: false,description:'Import nald from s3 data'}},
-  { method: 'POST', path: '/water/' + version + '/nald/licence', handler: Nald.licence, config:{auth: false,description:'Fetch legacy nald licence'}},
+  { method: 'POST', path: '/water/' + version + '/nald/licence', handler: Nald.getLicence, config:{auth: false,description:'Fetch legacy nald licence'}},
   { method: 'POST', path: '/water/' + version + '/notify/{message_ref}', handler: notifyController.send, config:{description:'Send a notify message'}},
 ]
 /**
@@ -41,6 +44,11 @@ const Slack= require('../lib/slack')
 cron.schedule('0 8,10,17 * * *', function(){
   console.log('running a task now and again...');
   users()
+});
+
+
+cron.schedule('*/60 * * * * *', function(){
+  taskRunner.run()
 });
 
 function users(){

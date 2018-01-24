@@ -181,45 +181,50 @@ pool.on('connect', (client) => {
 })
 
 
-const licence = async (request,reply) => {
 
-var data=await getMain(request.payload.licence_number);
+const getLicence = (request,reply) => {
+  return reply(licence(request.payload.licence_number))
+}
+
+const licence = async (licence_number) => {
+
+var data=await getMain(licence_number);
 
 for (var licenceRow in data){
-  console.log('Licence ',licenceRow)
-  console.log(data[licenceRow])
+//  console.log('Licence ',licenceRow)
+//  console.log(data[licenceRow])
 
   var thisLicenceRow=data[licenceRow]
   thisLicenceRow.data={}
-  console.log('get purpose')
+//  console.log('get purpose')
 
 
   thisLicenceRow.data.cams=await getCams(thisLicenceRow.CAMS_CODE);
   thisLicenceRow.data.purpose=await getPurpose({raw:thisLicenceRow.PURP_CODE,primary:thisLicenceRow.PURP_CODE.substr(0,1),secondary:thisLicenceRow.PURP_CODE.substr(1,3),tertiary:thisLicenceRow.PURP_CODE.substr(4)});
-  console.log('get roles')
+//  console.log('get roles')
   thisLicenceRow.data.roles=await getRoles(thisLicenceRow.AABL_ID);
-  console.log('get points')
+//  console.log('get points')
   thisLicenceRow.data.points=await getPoints(thisLicenceRow.AAIP_ID,thisLicenceRow.ABS_POINT_NGR1.substr(0,2))
-console.log('-----------')
-console.log(thisLicenceRow.data.points)
+//console.log('-----------')
+//console.log(thisLicenceRow.data.points)
 
 
   for (var p in thisLicenceRow.data.points){
-    console.log('thisLicenceRow.data.points['+p+'] ',p)
+//    console.log('thisLicenceRow.data.points['+p+'] ',p)
 //    console.log(thisLicenceRow.data.points[p])
 
     thisLicenceRow.data.points[p].purpose=await getPurposePoints(thisLicenceRow.AAIP_ID)
 
   for (var pu in thisLicenceRow.data.points[p].purpose){
-    console.log('thisLicenceRow.data.points['+p+'].purpose['+pu+'] licenceAgreements ')
+//    console.log('thisLicenceRow.data.points['+p+'].purpose['+pu+'] licenceAgreements ')
     thisLicenceRow.data.points[p].purpose[pu].licenceAgreements=await getPurposePointLicenceAgreements(thisLicenceRow.data.points[p].purpose[pu].AABP_ID)
-    console.log('thisLicenceRow.data.points['+p+'].purpose['+pu+'] licenceConditions ')
+//    console.log('thisLicenceRow.data.points['+p+'].purpose['+pu+'] licenceConditions ')
     thisLicenceRow.data.points[p].purpose[pu].licenceConditions=await getPurposePointLicenceConditions(thisLicenceRow.data.points[p].purpose[pu].AABP_ID)
   }
   }
 
-  console.log(JSON.stringify(thisLicenceRow))
-  return reply(thisLicenceRow)
+//  console.log(JSON.stringify(thisLicenceRow))
+  return thisLicenceRow
 }
 //process.exit()
 }
@@ -237,23 +242,23 @@ const getMain = async (licence_no) => {
 }
 
 const getCams = async (code) => {
-  console.log('getCams ',code)
+//  console.log('getCams ',code)
   client = await pool.connect()
-  console.log('getCams - got client')
+//  console.log('getCams - got client')
   const res = await client.query(`
     select * from import."NALD_REP_UNITS"
     where "CODE"=$1
     `, [code])
-  console.log('getCams - pre release')
+//  console.log('getCams - pre release')
   client.release()
-  console.log('getCams - release')
+//  console.log('getCams - release')
   return res.rows
 
 }
 
 
 const getRoles = async (AABL_ID) => {
-  console.log('AABL_ID ',AABL_ID)
+//  console.log('AABL_ID ',AABL_ID)
   client = await pool.connect()
   const res = await client.query(`
       select row_to_json(r.*) AS role_detail,
@@ -279,7 +284,7 @@ client.release()
 }
 
 const getPurpose = async (purpose) => {
-  console.log('purpose ',purpose)
+//  console.log('purpose ',purpose)
 
   client = await pool.connect()
   const res = await client.query(`
@@ -300,7 +305,7 @@ client.release()
 }
 
 const getPoints = async (AAIP_ID,NGR1_SHEET) => {
-  console.log('AAIP_ID ',AAIP_ID,' NGR1_SHEET ',NGR1_SHEET)
+//  console.log('AAIP_ID ',AAIP_ID,' NGR1_SHEET ',NGR1_SHEET)
   client = await pool.connect()
   const res = await client.query(`
       select
@@ -317,7 +322,7 @@ const getPoints = async (AAIP_ID,NGR1_SHEET) => {
 
       where "ID"=$1 and "NGR1_SHEET"=$2
   `, [AAIP_ID,NGR1_SHEET])
-  console.log('done')
+//  console.log('done')
 client.release()
 
 
@@ -325,7 +330,7 @@ client.release()
 }
 
 const getPurposePoints = async (AAIP_ID) => {
-  console.log('AAIP_ID ',AAIP_ID)
+//  console.log('AAIP_ID ',AAIP_ID)
   client = await pool.connect()
   const res = await client.query(`
       select pp.*,
@@ -334,7 +339,7 @@ const getPurposePoints = async (AAIP_ID) => {
       left join import."NALD_MEANS_OF_ABS" m on m."CODE"=pp."AMOA_CODE"
       where pp."AAIP_ID"=$1
   `, [AAIP_ID])
-  console.log('done')
+//  console.log('done')
 client.release()
 
 
@@ -342,7 +347,7 @@ client.release()
 }
 
 getPurposePointLicenceAgreements = async (AABP_ID) => {
-  console.log('AABP_ID (1) ', AABP_ID)
+  //console.log('AABP_ID (1) ', AABP_ID)
   client = await pool.connect()
   const res = await client.query(`
       select * from import."NALD_LIC_AGRMNTS"
@@ -354,7 +359,7 @@ client.release()
   return res.rows
 }
 getPurposePointLicenceConditions = async (AABP_ID) => {
-  console.log('AABP_ID (2) ', AABP_ID)
+  //console.log('AABP_ID (2) ', AABP_ID)
   try{
   client = await pool.connect()
   const res = await client.query(`
@@ -379,5 +384,6 @@ getPurposePointLicenceConditions = async (AABP_ID) => {
 
 module.exports = {
   import:loadNaldData,
-  licence:licence
+  licence,
+  getLicence,
 }
