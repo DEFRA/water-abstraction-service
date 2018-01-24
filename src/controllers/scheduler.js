@@ -13,9 +13,16 @@ const SchedulerApi = new HAPIRestAPI({
   onCreateTimestamp : 'date_created',
   onUpdateTimestamp : 'date_updated',
   connection : pool,
+  primaryKeyAuto : true,
+  primaryKeyGuid : false,
+  upsert : {
+    fields : ['task_type', 'licence_ref'],
+    set : ['task_config']
+  },
   validation : {
+    task_id : Joi.number(),
     task_type : Joi.string(),
-    task_licence_ref : Joi.string(),
+    licence_ref : Joi.string(),
     task_config: Joi.string(),
     next_run: Joi.string(),
     last_run: Joi.string(),
