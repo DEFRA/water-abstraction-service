@@ -20,7 +20,7 @@ const SchedulerApi = new HAPIRestAPI({
     set : ['task_config']
   },
   validation : {
-    task_id : Joi.string(),
+    task_id : Joi.number(),
     task_type : Joi.string(),
     licence_ref : Joi.string(),
     task_config: Joi.string(),
