@@ -198,7 +198,7 @@ for (var licenceRow in data){
   thisLicenceRow.data={}
 //  console.log('get purpose')
 
-
+  thisLicenceRow.data.versions=await getVersions(thisLicenceRow.AABL_ID);
   thisLicenceRow.data.cams=await getCams(thisLicenceRow.CAMS_CODE);
   thisLicenceRow.data.purpose=await getPurpose({raw:thisLicenceRow.PURP_CODE,primary:thisLicenceRow.PURP_CODE.substr(0,1),secondary:thisLicenceRow.PURP_CODE.substr(1,3),tertiary:thisLicenceRow.PURP_CODE.substr(4)});
 //  console.log('get roles')
@@ -256,6 +256,20 @@ const getCams = async (code) => {
 
 }
 
+const getVersions = async (aabl_id) => {
+//  console.log('getCams ',code)
+  client = await pool.connect()
+//  console.log('getCams - got client')
+  const res = await client.query(`
+    select * from import."NALD_ABS_LIC_VERSIONS"
+    where "AABL_ID"=$1
+    `, [aabl_id])
+//  console.log('getCams - pre release')
+  client.release()
+//  console.log('getCams - release')
+  return res.rows
+
+}
 
 const getRoles = async (AABL_ID) => {
 //  console.log('AABL_ID ',AABL_ID)
