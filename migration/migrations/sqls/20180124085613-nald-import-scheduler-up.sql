@@ -1,3 +1,10 @@
+CREATE SEQUENCE if not exists "scheduler_task_id_seq"
+INCREMENT 1
+MINVALUE  1
+MAXVALUE 9223372036854775807
+START 1
+CACHE 1;
+
 CREATE TABLE water.scheduler
 (
     task_id integer NOT NULL DEFAULT nextval('water.scheduler_task_id_seq'::regclass),
