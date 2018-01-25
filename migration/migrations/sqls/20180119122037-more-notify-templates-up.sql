@@ -26,7 +26,6 @@ CREATE TABLE "notify_templates" (
   "notes" varchar COLLATE "pg_catalog"."default"
 )
 ;
-ALTER TABLE "notify_templates" OWNER TO "postgres";
 
 -- ----------------------------
 -- Records of notify_templates
