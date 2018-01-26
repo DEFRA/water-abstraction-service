@@ -213,13 +213,13 @@ for (var licenceRow in data){
 //    console.log('thisLicenceRow.data.points['+p+'] ',p)
 //    console.log(thisLicenceRow.data.points[p])
 
-    thisLicenceRow.data.points[p].purpose=await getPurposePoints(thisLicenceRow.AAIP_ID)
+    thisLicenceRow.data.points[p].abstraction_methods=await getPointAbstractionMethods(thisLicenceRow.AAIP_ID)
 
-  for (var pu in thisLicenceRow.data.points[p].purpose){
+  for (var am in thisLicenceRow.data.points[p].abstraction_methods){
 //    console.log('thisLicenceRow.data.points['+p+'].purpose['+pu+'] licenceAgreements ')
-    thisLicenceRow.data.points[p].purpose[pu].licenceAgreements=await getPurposePointLicenceAgreements(thisLicenceRow.data.points[p].purpose[pu].AABP_ID)
+    thisLicenceRow.data.points[p].abstraction_methods[am].licenceAgreements=await getPurposePointLicenceAgreements(thisLicenceRow.data.points[p].abstraction_methods[am].AABP_ID)
 //    console.log('thisLicenceRow.data.points['+p+'].purpose['+pu+'] licenceConditions ')
-    thisLicenceRow.data.points[p].purpose[pu].licenceConditions=await getPurposePointLicenceConditions(thisLicenceRow.data.points[p].purpose[pu].AABP_ID)
+    thisLicenceRow.data.points[p].abstraction_methods[am].licenceConditions=await getPurposePointLicenceConditions(thisLicenceRow.data.points[p].abstraction_methods[am].AABP_ID)
   }
   }
 
@@ -343,7 +343,7 @@ client.release()
   return res.rows
 }
 
-const getPurposePoints = async (AAIP_ID) => {
+const getPointAbstractionMethods = async (AAIP_ID) => {
 //  console.log('AAIP_ID ',AAIP_ID)
   client = await pool.connect()
   const res = await client.query(`
