@@ -199,6 +199,11 @@ for (var licenceRow in data){
 //  console.log('get purpose')
 
   thisLicenceRow.data.versions=await getVersions(thisLicenceRow.AABL_ID);
+  for (var v in thisLicenceRow.data.versions){
+    console.log(thisLicenceRow.data.versions[v].ACON_APAR_ID)
+    thisLicenceRow.data.versions[v].parties=await getParties(thisLicenceRow.data.versions[v].ACON_APAR_ID);
+  }
+
   thisLicenceRow.data.cams=await getCams(thisLicenceRow.CAMS_CODE);
   thisLicenceRow.data.purpose=await getPurpose({raw:thisLicenceRow.PURP_CODE,primary:thisLicenceRow.PURP_CODE.substr(0,1),secondary:thisLicenceRow.PURP_CODE.substr(1,3),tertiary:thisLicenceRow.PURP_CODE.substr(4)});
 //  console.log('get roles')
@@ -269,6 +274,24 @@ const getVersions = async (aabl_id) => {
 //  console.log('getCams - release')
   return res.rows
 
+}
+
+const getParties = async (APAR_ID) => {
+  client = await pool.connect()
+  const res = await client.query(`
+    select
+    row_to_json(p.*) AS party_details,
+    row_to_json(c.*) AS party_contacts,
+    row_to_json(a.*) AS party_addresses
+    from
+    import."NALD_PARTIES" p
+    left join import."NALD_CONTACTS" c on c."APAR_ID" = p."ID"
+    left join import."NALD_ADDRESSES" a on c."AADD_ID"=a."ID"
+    where p."ID"=$1
+  `, [APAR_ID])
+client.release()
+
+  return res.rows
 }
 
 const getRoles = async (AABL_ID) => {
