@@ -277,7 +277,6 @@ const getVersions = async (aabl_id) => {
 }
 
 const getParties = async (APAR_ID) => {
-  console.log('***APAR_ID ',APAR_ID)
   client = await pool.connect()
   const res = await client.query(`
     select
