@@ -5,3 +5,4 @@
 /public/
 /views/
 .env
+/src/lib/temp/
