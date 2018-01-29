@@ -383,13 +383,14 @@ const getPurposePoints = async(purpose_id) => {
   client = await pool.connect()
   const res = await client.query(`
         select
-              p.*,
-              row_to_json(m.*) AS means_of_abstraction
+              pp.*,
+              row_to_json(m.*) AS means_of_abstraction,
+              row_to_json(p.*) AS point_detail
               from
-  import."NALD_ABS_PURP_POINTS" p
-
-              left join import."NALD_MEANS_OF_ABS" m on m."CODE"=p."AMOA_CODE"
-        where p."AABP_ID"=$1
+              import."NALD_ABS_PURP_POINTS" pp
+              left join import."NALD_MEANS_OF_ABS" m on m."CODE"=pp."AMOA_CODE"
+              left join import."NALD_POINTS" p on p."ID"=pp."AABP_ID"
+        where pp."AABP_ID"=$1
     `, [purpose_id])
   client.release()
 
