@@ -387,11 +387,13 @@ const getPurposePoints = async(purpose_id,FGAC_REGION_CODE) => {
         select
               pp.*,
               row_to_json(m.*) AS means_of_abstraction,
-              row_to_json(p.*) AS point_detail
+              row_to_json(p.*) AS point_detail,
+              row_to_json(s.*) AS point_source
               from
               import."NALD_ABS_PURP_POINTS" pp
               left join import."NALD_MEANS_OF_ABS" m on m."CODE"=pp."AMOA_CODE"
               left join import."NALD_POINTS" p on p."ID"=pp."AAIP_ID"
+              left join import."NALD_SOURCES" s on s."CODE"=p."ASRC_CODE"
         where pp."AABP_ID"=$1 and pp."FGAC_REGION_CODE" = $2 and p."FGAC_REGION_CODE" = $2
     `, [purpose_id,FGAC_REGION_CODE])
   client.release()
