@@ -12,20 +12,17 @@ async function run(data){
     var query = `
     select * from water.pending_import where status=0 limit 250;`
     var licenceQuery = await DB.query(query);
-    console.log(licenceQuery)
     if(licenceQuery.data){
 
       for(licenceNo in licenceQuery.data){
 
       licence_ref=licenceQuery.data[licenceNo].licence_ref;
-      console.log('licence ref ',licence_ref)
       var licence = await Nald.licence(licence_ref)
       licence.vmlVersion=2
       var exp = await exportLicence(licence_ref,1,8,licence)
 
       var query = `
       update water.pending_import set status=1 where licence_ref=$1;`
-      console.log(licence_ref)
       var licenceStatusUpdate = await DB.query(query,[licence_ref]);
       }
       return {error:null}
@@ -78,7 +75,6 @@ async function exportLicence(licence_ref, regime_id, licence_type_id,data) {
 
 function buildCRMPacket(licence_data,licence_ref,licence_id){
   var crmData = {}
-  console.log(licence_data)
 
   crmData.regime_entity_id = '0434dc31-a34e-7158-5775-4694af7a60cf'
 
@@ -103,7 +99,7 @@ function buildCRMPacket(licence_data,licence_ref,licence_id){
 
 async function addLicenceToCRM(data){
   var url=  process.env.CRM_URI + '/documentHeader'
-  console.log(url)
+
   res = await Helpers.makeURIRequestWithBody(
     url,
     'post',
