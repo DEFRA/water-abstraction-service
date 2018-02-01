@@ -31,7 +31,7 @@ function makeURIRequest(uri) {
         responseData.statusCode = response.statusCode
         responseData.body = response.body
         console.log('reject request to '+uri)
-        console.log(JSON.stringify(responseData))
+//        console.log(JSON.stringify(responseData))
         reject(responseData);
       });
   })

@@ -82,22 +82,58 @@ function buildCRMPacket(licence_data,licence_ref,licence_id){
   crmData.system_internal_id = licence_id
   crmData.system_external_id = licence_ref
 
-  crmData.metadata = JSON.stringify({
-     Name : licence_data.LIC_HOLDERS_NAME,
-     Salutation : "",
-     AddressLine1 : "licence.addressLine1",
-     AddressLine2 : "licence.addressLine2",
-     AddressLine3 : "licence.addressLine3",
-     AddressLine4 : "licence.addressLine4",
-     Town : "licence.town",
-     County : "licence.county",
-     Postcode : "licence.postCode",
-     Country : "licence.country",
-  });
+try{
+
+
+
+  var baseLicence=JSON.parse(licence_data.licence_data_value).data.versions[0];
+  var baseParty=baseLicence.ACON_APAR_ID;
+  var baseAddress=baseLicence.ACON_AADD_ID;
+
+  var party = baseLicence.parties.filter(function(value){ return value.ID==baseParty;})[0]
+  var contacts = party.contacts.filter(function(value){ return value.AADD_ID==baseAddress;})[0]
+  var address=contacts.party_address
+
+  var metadata={
+     Name : party.NAME,
+     Salutation : party.SALUTATION,
+     Initials : party.INITIALS,
+     Forename : party.FORENAME,
+     AddressLine1 : address.ADDR_LINE1,
+     AddressLine2 : address.ADDR_LINE2,
+     AddressLine3 : address.ADDR_LINE3,
+     AddressLine4 : address.ADDR_LINE4,
+     Town : address.TOWN,
+     County : address.COUNTY,
+     Postcode : address.POSTCODE,
+     Country : address.COUNTRY,
+  }
+
+  for (attr in metadata){
+    if (metadata[attr]=='null'){
+      metadata[attr]=''
+    }
+  }
+
+  console.log(metadata)
+
+  crmData.metadata = JSON.stringify(metadata);
+
+}catch(e){
+  console.log('METADATA ERROR!!! OH NOES!!!')
+  console.log(e)
+}
+
+console.log("crmData")
+  console.log(crmData)
+
   return crmData
 }
 
 async function addLicenceToCRM(data){
+
+console.log(data)
+
   var url=  process.env.CRM_URI + '/documentHeader'
 
   res = await Helpers.makeURIRequestWithBody(

@@ -3,6 +3,14 @@ const NotifyClient = require('notifications-node-client').NotifyClient;
 const notifyClient = new NotifyClient(process.env.NOTIFY_KEY);
 const Joi = require('joi');
 
+async function reset() {
+  console.log('resetting scheduler')
+    var query = `
+      UPDATE "water"."scheduler" SET running=0`
+      var reset = await DB.query(query)
+    return true
+
+}
 async function run() {
 
   try {
@@ -56,5 +64,5 @@ async function run() {
 }
 
 module.exports = {
-  run
+  run,reset
 };
