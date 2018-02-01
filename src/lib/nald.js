@@ -164,7 +164,7 @@ function getS3() {
     if (process.env.proxy) {
       console.log('proxy: ' + process.env.proxy)
       var ProxyAgent = require('proxy-agent');
-      knoxConfig.agent = new ProxyAgent(knoxConfig.proxy)
+      knoxConfig.agent = new ProxyAgent(process.env.proxy)
     } else {
       console.log('no proxy')
     }
