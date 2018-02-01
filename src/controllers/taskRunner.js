@@ -21,10 +21,24 @@ async function run() {
     var job = await DB.query(query)
     if (job.data.length == 0) {} else {
 
+      try{
+        var interval=JSON.parse(job.data[0].task_config)
+      }catch(e){
+        var interval={count:1,period:'minute'}
+      }
+
+
+
       const taskHandler = require(`./tasks/${job.data[0].task_type}`);
       var log = await taskHandler.run(job.data[0])
+      console.log('task completed')
+
+
+
+
       try {
-        var query = 'UPDATE "water"."scheduler" SET running=0, log=$2,last_run=now(),next_run= now() + interval \'1\' day where task_id=$1'
+        var query = `UPDATE "water"."scheduler" SET running=0, log=$2,last_run=now(),next_run= now() + interval \'${interval.count}\' ${interval.period} where task_id=$1`
+        console.log(query)
         var params = [job.data[0].task_id, JSON.stringify(log)];
         try {
           var close = await DB.query(query, params)

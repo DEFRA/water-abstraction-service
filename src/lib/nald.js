@@ -21,9 +21,15 @@ async function buildSQL(request, reply) {
       //console.log(`SKIP ${table}`)
     } else {
       //console.log(`Process ${table}`)
+      var indexableFields=[]
       var line = await readFirstLine(`${finalPath}/${table}.txt`)
       var cols = line.split(',')
       tableCreate += `\n CREATE TABLE if not exists "import"."${table}" (`
+
+      indexableFields=[cols[0]];
+      if(cols.indexOf('FGAC_REGION_CODE') >= 0){
+        indexableFields[1]='FGAC_REGION_CODE'
+      }
       for (var col = 0; col < cols.length; col++) {
         tableCreate += `"${cols[col]}" varchar`
         if (cols.length == (col + 1)) {
@@ -32,9 +38,21 @@ async function buildSQL(request, reply) {
           tableCreate += `, `
         }
       }
+      console.log('-------')
+      console.log(cols)
+      console.log(indexableFields)
+      tableCreate += `\ndrop INDEX  if exists "${table}_index";`
+      tableCreate += `\nCREATE INDEX "${table}_index" ON "import"."${table}" USING btree(${'"' + indexableFields.join('","') + '"'});`
+
+
       tableCreate += `\n \\copy "import"."${table}" FROM '${finalPath}/${file}' HEADER DELIMITER ',' CSV;`
     }
   };
+  tableCreate+=`\n
+    delete from water.pending_import;
+    insert into water.pending_import (licence_ref,status)
+    select "LIC_NO",0 from import."NALD_ABS_LICENCES";`
+
   fs.writeFileSync(`${__dirname}/temp/sql.sql`, tableCreate)
   return `${__dirname}/temp/sql.sql`
 }

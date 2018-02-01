@@ -5,11 +5,44 @@ const Permit = require('../../lib/connectors/permit');
 const DB = require('../../lib/connectors/db')
 
 async function run(data){
-  console.log('request for ',data.licence_ref)
-  var licence = await Nald.licence(data.licence_ref)
-  licence.vmlVersion=2
-  var exp = await exportLicence(data.licence_ref,1,8,licence)
-  return {error:null}
+  console.log('run!')
+  if(data.licence_ref=='-'){
+    console.log('request for next pending licence')
+
+    var query = `
+    select * from water.pending_import where status=0 limit 250;`
+    var licenceQuery = await DB.query(query);
+    console.log(licenceQuery)
+    if(licenceQuery.data){
+
+      for(licenceNo in licenceQuery.data){
+
+      licence_ref=licenceQuery.data[licenceNo].licence_ref;
+      console.log('licence ref ',licence_ref)
+      var licence = await Nald.licence(licence_ref)
+      licence.vmlVersion=2
+      var exp = await exportLicence(licence_ref,1,8,licence)
+
+      var query = `
+      update water.pending_import set status=1 where licence_ref=$1;`
+      console.log(licence_ref)
+      var licenceStatusUpdate = await DB.query(query,[licence_ref]);
+      }
+      return {error:null}
+    } else {
+        console.log('no licences waiting')
+        return {error:null}
+    }
+    return {error:null}
+  } else {
+    console.log('request for ',data.licence_ref)
+    var licence = await Nald.licence(data.licence_ref)
+    licence.vmlVersion=2
+    var exp = await exportLicence(data.licence_ref,1,8,licence)
+    return {error:null}
+  }
+
+
 }
 
 
