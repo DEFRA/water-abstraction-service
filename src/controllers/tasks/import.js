@@ -34,9 +34,17 @@ async function run(data){
   } else {
     console.log('request for ',data.licence_ref)
     var licence = await Nald.licence(data.licence_ref)
-    licence.vmlVersion=2
-    var exp = await exportLicence(data.licence_ref,1,8,licence)
-    return {error:null}
+
+    if(licence) {
+      licence.vmlVersion=2
+      var exp = await exportLicence(data.licence_ref,1,8,licence)
+      return {error:null}
+    }
+    else {
+      return {error: `Licence data for ${data.licence_ref} is undefined`};   
+    }
+    console.log('Licence data:', licence);
+
   }
 
 

@@ -39,7 +39,7 @@ async function run() {
 
       const taskHandler = require(`./tasks/${job.data[0].task_type}`);
       var log = await taskHandler.run(job.data[0])
-      console.log('task completed')
+      console.log('task completed', log)
 
 
 
