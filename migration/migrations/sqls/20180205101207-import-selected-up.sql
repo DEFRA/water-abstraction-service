@@ -1,5 +1,5 @@
 /* Delete task which imports all licences */
-DELETE FROM "water"."scheduler" WHERE task_type='import' AND licence_ref='-' AND task_config='{"count":1,"period":"minute"}';
+DELETE FROM "water"."scheduler";
 
 /* Insert task for each licence */
 INSERT INTO "water"."scheduler" ("task_type", "licence_ref", "task_config", "next_run", "last_run", "log", "status", "running") VALUES ('import', '00/T3/5T/0000/1', '{"count":1,"period":"minute"}', '2018-01-01', '2018-01-01', '{"error":null}', NULL, 0);
