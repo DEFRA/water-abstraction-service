@@ -50,7 +50,7 @@ async function buildSQL(request, reply) {
   };
   tableCreate+=`\n
     delete from water.pending_import;
-    insert into water.pending_import (licence_ref,status)
+    /* insert into water.pending_import (licence_ref,status) */
     select "LIC_NO",0 from import."NALD_ABS_LICENCES";`
 
   fs.writeFileSync(`${__dirname}/temp/sql.sql`, tableCreate)
