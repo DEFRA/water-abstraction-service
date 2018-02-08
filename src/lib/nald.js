@@ -51,7 +51,7 @@ async function buildSQL(request, reply) {
 /**
   tableCreate+=`\n
     delete from water.pending_import;
-     insert into water.pending_import (licence_ref,status) 
+     insert into water.pending_import (licence_ref,status)
     select "LIC_NO",0 from import."NALD_ABS_LICENCES";`
 **/
   fs.writeFileSync(`${__dirname}/temp/sql.sql`, tableCreate)
@@ -484,7 +484,7 @@ const getPointAbstractionMethods = async(AAIP_ID,FGAC_REGION_CODE) => {
   return res.rows
 }
 
-getPurposePointLicenceAgreements = async(AABP_ID,FGAC_REGION_CODE) => {
+const getPurposePointLicenceAgreements = async(AABP_ID,FGAC_REGION_CODE) => {
   //console.log('AABP_ID (1) ', AABP_ID)
   client = await pool.connect()
   const res = await client.query(`
@@ -496,7 +496,7 @@ getPurposePointLicenceAgreements = async(AABP_ID,FGAC_REGION_CODE) => {
 
   return res.rows
 }
-getPurposePointLicenceConditions = async(AABP_ID,FGAC_REGION_CODE) => {
+const getPurposePointLicenceConditions = async(AABP_ID,FGAC_REGION_CODE) => {
   //console.log('AABP_ID (2) ', AABP_ID)
   try {
     client = await pool.connect()
