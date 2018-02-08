@@ -23,7 +23,9 @@
     "gulp-standard": "^10.1.2",
     "lab": "^14.3.2",
     "run-sequence": "^2.2.1",
-    "standard": "^10.0.2"
+    "standard": "^10.0.2",
+    "codecov": "^3.0.0",
+    "istanbul": "^0.4.5"
   },
   "dependencies": {
     "async-waterfall": "^0.1.5",
