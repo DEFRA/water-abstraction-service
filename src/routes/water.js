@@ -3,7 +3,6 @@ API page, pending real back end - uses fs to read and write to lkocal json files
 
 */
 
-
 const version = '1.0'
 
 const Nald = require('../lib/nald')
@@ -23,18 +22,6 @@ module.exports = [
   { method: 'POST', path: '/water/' + version + '/nald/licence', handler: Nald.getLicence, config:{auth: false,description:'Fetch legacy nald licence'}},
   { method: 'POST', path: '/water/' + version + '/notify/{message_ref}', handler: notifyController.send, config:{description:'Send a notify message'}},
 ]
-/**
-{ method: 'GET', path: '/API/' + version + '/test', handler: test },
-{ method: 'POST', path: '/API/' + version + '/licences', handler: licencesPostHandler },
-{ method: 'GET', path: '/API/' + version + '/licences/{id}', handler: licenceGetHandler },
-{ method: 'PUT', path: '/API/' + version + '/licences/{id}', handler: licencePutHandler  }
-
-{ method: 'GET', path: '/API/' + version + '/orgs/{regime_id}/types/{type_id}/licences', handler: getLicencesByOrgandType },
-{ method: 'GET', path: '/API/' + version + '/orgs/{regime_id}/types/{type_id}/licences/{licence_id}', handler: getLicenceByOrgTypeID },
-{ method: 'POST', path: '/API/' + version + '/orgs/{regime_id}/types/{type_id}/licences', handler: addLicenceByOrgTypeID },
-
-**/
-
 
 
 //start node cron
