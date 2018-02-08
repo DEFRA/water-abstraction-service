@@ -1,0 +1,22 @@
+language: node_js
+node_js:
+  - "8"
+install:
+  - npm install
+addons:
+  postgresql: "9.6"
+services:
+  - postgresql
+before_script:
+  - psql -c 'create database travis_ci_test;' -U postgres
+  - npm run migrate
+script:
+  - ./node_modules/.bin/istanbul cover ./node_modules/.bin/lab --report lcovonly  -- -l  && ./node_modules/.bin/codecov
+env:
+  global:
+    - DATABASE_URL=postgres://postgres:@localhost:5432/travis_ci_test
+    - JWT_SECRET=secret
+    - JWT_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MTIzNH0.MOREC6-Kszb9bDFw0O1UKywpnkcP-c5cPjASMpjk8Po
+    - errbit_key=xyz
+    - errbit_server=http://localhost
+    - PORT=8001
