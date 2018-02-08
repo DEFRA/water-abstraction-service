@@ -20,3 +20,4 @@ env:
     - errbit_key=xyz
     - errbit_server=http://localhost
     - PORT=8001
+    - NOTIFY_KEY=somerealnotifykey-00000000-0000-0000-0000-000000000000-00000000-0000-0000-0000-000000000000
