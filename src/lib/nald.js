@@ -5,10 +5,6 @@ const finalPath = `${__dirname}/temp/NALD`
 const Slack = require('./slack')
 var tables = [];
 var tableCreate = "";
-
-
-
-
 async function buildSQL(request, reply) {
   tableCreate += 'drop schema if exists "import" cascade;\nCREATE schema if not exists "import"; \n '
   console.log(finalPath)
@@ -25,7 +21,6 @@ async function buildSQL(request, reply) {
       var line = await readFirstLine(`${finalPath}/${table}.txt`)
       var cols = line.split(',')
       tableCreate += `\n CREATE TABLE if not exists "import"."${table}" (`
-
       indexableFields=[cols[0]];
       if(cols.indexOf('FGAC_REGION_CODE') >= 0){
         indexableFields[1]='FGAC_REGION_CODE'
@@ -43,8 +38,6 @@ async function buildSQL(request, reply) {
       console.log(indexableFields)
       tableCreate += `\ndrop INDEX  if exists "${table}_index";`
       tableCreate += `\nCREATE INDEX "${table}_index" ON "import"."${table}" USING btree(${'"' + indexableFields.join('","') + '"'});`
-
-
       tableCreate += `\n \\copy "import"."${table}" FROM '${finalPath}/${file}' HEADER DELIMITER ',' CSV;`
     }
   };
@@ -57,7 +50,6 @@ async function buildSQL(request, reply) {
   fs.writeFileSync(`${__dirname}/temp/sql.sql`, tableCreate)
   return `${__dirname}/temp/sql.sql`
 }
-
 function readFirstLine(path) {
   return new Promise((resolve, reject) => {
     var rs = fs.createReadStream(path, {
@@ -80,9 +72,6 @@ function readFirstLine(path) {
       })
   });
 }
-
-
-
 function execCommand(command) {
   return new Promise((resolve, reject) => {
     const child_process = require('child_process');
@@ -93,20 +82,14 @@ function execCommand(command) {
       } else {
         resolve(stdout);
       }
-
     });
   })
 }
-
-
-
 const loadNaldData = async(request, reply) => {
-
   var os = require("os");
   var hostname = os.hostname();
   await Slack.post(`Starting NALD data import on ${hostname} - ${process.env.environment} `)
   reply('Data load process started. NOTE: Progress will be reported in Slack')
-
   await Slack.post('Purging previous downloads')
   try {
     console.log(`purge dir ${localPath}`)
@@ -123,19 +106,16 @@ const loadNaldData = async(request, reply) => {
     console.log(command)
     var res = await execCommand(command)
     console.log(res)
-
     await Slack.post('Unzipping secondary archive')
     console.log('unzip secondary')
     var command = `7z x ${localPath}/NALD.zip -o${localPath}`
     console.log(command)
     var res = await execCommand(command)
     console.log(res)
-
     await Slack.post('Processing data files')
     console.log('process files')
     var sqlFile = await buildSQL()
     console.log(sqlFile)
-
     console.log('Execute DB file')
     await Slack.post(`Loading to DB at ${process.env.PGHOST}`)
     var command = `PGPASSWORD=${process.env.PGPASSWORD} psql -h ${process.env.PGHOST} -U ${process.env.PGUSER} ${process.env.PGDATABASE} < ${localPath}/sql.sql`;
@@ -148,10 +128,7 @@ const loadNaldData = async(request, reply) => {
     console.log('error ', e)
     //    return reply(e)
   }
-
 }
-
-
 function getS3() {
   return new Promise((resolve, reject) => {
     const knox = require('knox')
@@ -161,7 +138,6 @@ function getS3() {
       region: 'eu-west-1',
       bucket: process.env.s3_bucket
     };
-
     if (process.env.proxy) {
       console.log('proxy: ' + process.env.proxy)
       var ProxyAgent = require('proxy-agent');
@@ -170,7 +146,6 @@ function getS3() {
       console.log('no proxy')
     }
     //knoxConfig.agent=require("https").globalAgent
-
     var client = knox.createClient(knoxConfig);
     var file = require('fs').createWriteStream(filePath);
     const s3file = 'nald_dump/nald_enc.zip'
@@ -183,52 +158,32 @@ function getS3() {
         resolve(filePath)
       });
     })
-
-
   })
 }
-
-
-
-
-
-
-
 const {
   Pool
 } = require('pg')
-
 const pool = new Pool({
   max: 200,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 200000
 })
-
 pool.on('connect', (client) => {
   console.log('pool.totalCount ', pool.totalCount)
   console.log('pool.idleCount ', pool.idleCount)
 })
-
-
-
 const getLicence = (request, reply) => {
   return reply(licence(request.payload.licence_number))
 }
-
 const licence = async(licence_number) => {
-
   try {
-
     var data = await getMain(licence_number);
-
     for (var licenceRow in data) {
       //  console.log('Licence ',licenceRow)
       //  console.log(data[licenceRow])
-
       var thisLicenceRow = data[licenceRow]
       thisLicenceRow.data = {}
       //  console.log('get purpose')
-
       thisLicenceRow.data.versions = await getVersions(thisLicenceRow.ID,thisLicenceRow.FGAC_REGION_CODE);
       for (var v in thisLicenceRow.data.versions) {
         console.log(thisLicenceRow.data.versions[v].ACON_APAR_ID)
@@ -237,12 +192,22 @@ const licence = async(licence_number) => {
           thisLicenceRow.data.versions[v].parties[p].contacts = await getPartyContacts(thisLicenceRow.data.versions[v].parties[p].ID,thisLicenceRow.FGAC_REGION_CODE);
         }
       }
-
+      thisLicenceRow.data.current_version={}
+      thisLicenceRow.data.current_version.licence = (await getCurrentVersion(thisLicenceRow.ID,thisLicenceRow.FGAC_REGION_CODE))[0];
+console.log(thisLicenceRow.data.current_version.licence)
+      thisLicenceRow.data.current_version.licence.party = await getParties(thisLicenceRow.data.current_version.licence.ACON_APAR_ID,thisLicenceRow.FGAC_REGION_CODE);
+        for (var p in thisLicenceRow.data.current_version.licence.parties) {
+          thisLicenceRow.data.current_version.licence.parties[p].contacts = await getPartyContacts(thisLicenceRow.data.current_version.licence.parties[p].ID,thisLicenceRow.FGAC_REGION_CODE);
+        }
+      thisLicenceRow.data.current_version.party =  (await getParty(thisLicenceRow.data.current_version.licence.ACON_APAR_ID,thisLicenceRow.FGAC_REGION_CODE))[0];
+      thisLicenceRow.data.current_version.address =  (await getAddress(thisLicenceRow.data.current_version.licence.ACON_AADD_ID,thisLicenceRow.FGAC_REGION_CODE))[0];
+      thisLicenceRow.data.current_version.original_effective_date=dateToSortableString(thisLicenceRow.ORIG_EFF_DATE);
+      thisLicenceRow.data.current_version.version_effective_date=dateToSortableString(thisLicenceRow.data.current_version.licence.EFF_ST_DATE);
+      thisLicenceRow.data.current_version.expiry_date=dateToSortableString(thisLicenceRow.EXPIRY_DATE);
       thisLicenceRow.data.cams = await getCams(thisLicenceRow.CAMS_CODE,thisLicenceRow.FGAC_REGION_CODE);
       //  console.log('get roles')
       thisLicenceRow.data.roles = await getRoles(thisLicenceRow.ID,thisLicenceRow.FGAC_REGION_CODE);
       //  console.log('get points')
-
       thisLicenceRow.data.purposes = await getPurposes(thisLicenceRow.ID,thisLicenceRow.FGAC_REGION_CODE);
       for (var pu in thisLicenceRow.data.purposes) {
         thisLicenceRow.data.purposes[pu].purpose = await getPurpose({
@@ -254,9 +219,7 @@ const licence = async(licence_number) => {
         thisLicenceRow.data.purposes[pu].purposePoints = await getPurposePoints(thisLicenceRow.data.purposes[pu].ID,thisLicenceRow.FGAC_REGION_CODE)
         thisLicenceRow.data.purposes[pu].licenceAgreements = await getPurposePointLicenceAgreements(thisLicenceRow.data.purposes[pu].ID,thisLicenceRow.FGAC_REGION_CODE)
         thisLicenceRow.data.purposes[pu].licenceConditions = await getPurposePointLicenceConditions(thisLicenceRow.data.purposes[pu].ID,thisLicenceRow.FGAC_REGION_CODE)
-
       }
-
       //  console.log(JSON.stringify(thisLicenceRow))
       return thisLicenceRow
     }
@@ -265,8 +228,15 @@ const licence = async(licence_number) => {
     console.log(e)
   }
 }
-
-
+function dateToSortableString(str){
+  const moment = require('moment')
+    var d = moment(str,'DD/MM/YYYY');
+    if (d.isValid()){
+      return d.format('YYYYMMDD')
+    } else {
+      return null
+    }
+}
 const getMain = async(licence_no) => {
   client = await pool.connect()
   const res = await client.query(`
@@ -277,9 +247,7 @@ const getMain = async(licence_no) => {
     `, [licence_no])
   client.release()
   return res.rows
-
 }
-
 const getCams = async(code,FGAC_REGION_CODE) => {
   //  console.log('getCams ',code)
   client = await pool.connect()
@@ -292,26 +260,36 @@ const getCams = async(code,FGAC_REGION_CODE) => {
   client.release()
   //  console.log('getCams - release')
   return res.rows
-
 }
-
+const getCurrentVersion = async(licence_id, FGAC_REGION_CODE) => {
+  client = await pool.connect()
+  const res = await client.query(`
+    select * from import."NALD_ABS_LIC_VERSIONS"
+    JOIN import."NALD_WA_LIC_TYPES" ON "NALD_ABS_LIC_VERSIONS"."WA_ALTY_CODE"="NALD_WA_LIC_TYPES"."CODE"
+    where "AABL_ID"=$1 and "FGAC_REGION_CODE" = $2
+    AND ("EFF_END_DATE" = 'null'	OR to_date( "EFF_END_DATE", 'DD/MM/YYYY' ) > now())
+    AND ("EFF_ST_DATE" = 'null'	OR to_date( "EFF_ST_DATE", 'DD/MM/YYYY' ) <= now())
+    AND "NALD_ABS_LIC_VERSIONS"."STATUS" = 'CURR'
+    `, [licence_id,FGAC_REGION_CODE])
+  //  console.log('getCams - pre release')
+  client.release()
+  //  console.log('getCams - release')
+  return res.rows
+}
 const getVersions = async(licence_id,FGAC_REGION_CODE) => {
   //  console.log('getCams ',code)
   client = await pool.connect()
   //  console.log('getCams - got client')
   const res = await client.query(`
     select * from import."NALD_ABS_LIC_VERSIONS"
+--	   JOIN NALD_WA_LIC_TYPES ON "NALD_ABS_LIC_VERSIONS"."WA_ALTY_CODE"="NALD_WA_LIC_TYPES"."CODE"
     where "AABL_ID"=$1 and "FGAC_REGION_CODE" = $2
     `, [licence_id,FGAC_REGION_CODE])
   //  console.log('getCams - pre release')
   client.release()
   //  console.log('getCams - release')
   return res.rows
-
 }
-
-
-
 const getParties = async(ID,FGAC_REGION_CODE) => {
   client = await pool.connect()
   const res = await client.query(`
@@ -324,7 +302,6 @@ const getParties = async(ID,FGAC_REGION_CODE) => {
   client.release()
   return res.rows
 }
-
 const getPartyContacts = async(APAR_ID,FGAC_REGION_CODE) => {
   client = await pool.connect()
   var query = `
@@ -344,19 +321,27 @@ const getPartyContacts = async(APAR_ID,FGAC_REGION_CODE) => {
   client.release()
   return res.rows
 }
-
+const getParty = async(APAR_ID,FGAC_REGION_CODE) => {
+  client = await pool.connect()
+  const res = await client.query(`
+    select p.* from
+    import."NALD_PARTIES" p
+    where "ID"=$1 and "FGAC_REGION_CODE" = $2
+  `, [APAR_ID,FGAC_REGION_CODE])
+  client.release()
+  return res.rows
+}
 const getAddress = async(AADD_ID,FGAC_REGION_CODE) => {
   client = await pool.connect()
   const res = await client.query(`
     select
     a.*
-    from import."NALD_ADDRESSES"
+    from import."NALD_ADDRESSES" a
     where "ID"=$1 and "FGAC_REGION_CODE" = $2
   `, [AADD_ID,FGAC_REGION_CODE])
   client.release()
   return res.rows
 }
-
 const getRoles = async(AABL_ID,FGAC_REGION_CODE) => {
   //  console.log('AABL_ID ',AABL_ID)
   client = await pool.connect()
@@ -374,18 +359,13 @@ const getRoles = async(AABL_ID,FGAC_REGION_CODE) => {
       left join import."NALD_ADDRESSES" a on r."ACON_AADD_ID"=a."ID"
       left join import."NALD_CONT_NOS" c on r."ACON_APAR_ID"=c."ACON_APAR_ID" and r."ACON_AADD_ID" = c."ACON_AADD_ID"
       left join import."NALD_CONT_NO_TYPES" ct on c."ACNT_CODE"=ct."CODE"
-
-
       where r."AABL_ID"=$1 and r."FGAC_REGION_CODE" = $2  and p."FGAC_REGION_CODE" = $2 and a."FGAC_REGION_CODE" = $2  and c."FGAC_REGION_CODE" = $2
   `, [AABL_ID,FGAC_REGION_CODE])
   client.release()
-
   return res.rows
 }
-
 const getPurposes = async(licence_id,FGAC_REGION_CODE) => {
   //  console.log('purpose ',purpose)
-
   client = await pool.connect()
   const res = await client.query(`
       select
@@ -395,11 +375,8 @@ const getPurposes = async(licence_id,FGAC_REGION_CODE) => {
       where p."AABV_AABL_ID"=$1 and "FGAC_REGION_CODE" = $2
   `, [licence_id,FGAC_REGION_CODE])
   client.release()
-
-
   return res.rows
 }
-
 const getPurposePoints = async(purpose_id,FGAC_REGION_CODE) => {
   client = await pool.connect()
   const res = await client.query(`
@@ -416,14 +393,10 @@ const getPurposePoints = async(purpose_id,FGAC_REGION_CODE) => {
         where pp."AABP_ID"=$1 and pp."FGAC_REGION_CODE" = $2 and p."FGAC_REGION_CODE" = $2
     `, [purpose_id,FGAC_REGION_CODE])
   client.release()
-
-
   return res.rows
 }
-
 const getPurpose = async(purpose) => {
   //  console.log('purpose ',purpose)
-
   client = await pool.connect()
   const res = await client.query(`
       select
@@ -437,11 +410,8 @@ const getPurpose = async(purpose) => {
       where p1."CODE"=$1
   `, [purpose.primary, purpose.secondary, purpose.tertiary])
   client.release()
-
-
   return res.rows
 }
-
 const getPoints = async(AAIP_ID, NGR1_SHEET) => {
   //  console.log('AAIP_ID ',AAIP_ID,' NGR1_SHEET ',NGR1_SHEET)
   client = await pool.connect()
@@ -457,16 +427,12 @@ const getPoints = async(AAIP_ID, NGR1_SHEET) => {
       left join import."NALD_POINT_CATEGORIES" pc on pc."CODE"=p."AAPC_CODE"
       left join import."NALD_POINT_TYPE_PRIMS" ptp on ptp."CODE"=p."AAPT_APTP_CODE"
       left join import."NALD_POINT_TYPE_SECS" pts on pts."CODE"=p."AAPT_APTS_CODE"
-
       where "ID"=$1 and "NGR1_SHEET"=$2
   `, [AAIP_ID, NGR1_SHEET])
   //  console.log('done')
   client.release()
-
-
   return res.rows
 }
-
 const getPointAbstractionMethods = async(AAIP_ID,FGAC_REGION_CODE) => {
   //  console.log('AAIP_ID ',AAIP_ID)
   client = await pool.connect()
@@ -479,12 +445,9 @@ const getPointAbstractionMethods = async(AAIP_ID,FGAC_REGION_CODE) => {
   `, [AAIP_ID,FGAC_REGION_CODE])
   //  console.log('done')
   client.release()
-
-
   return res.rows
 }
-
-const getPurposePointLicenceAgreements = async(AABP_ID,FGAC_REGION_CODE) => {
+getPurposePointLicenceAgreements = async(AABP_ID,FGAC_REGION_CODE) => {
   //console.log('AABP_ID (1) ', AABP_ID)
   client = await pool.connect()
   const res = await client.query(`
@@ -492,11 +455,9 @@ const getPurposePointLicenceAgreements = async(AABP_ID,FGAC_REGION_CODE) => {
       where "AABP_ID"=$1 and "FGAC_REGION_CODE" = $2
   `, [AABP_ID,FGAC_REGION_CODE])
   client.release()
-
-
   return res.rows
 }
-const getPurposePointLicenceConditions = async(AABP_ID,FGAC_REGION_CODE) => {
+getPurposePointLicenceConditions = async(AABP_ID,FGAC_REGION_CODE) => {
   //console.log('AABP_ID (2) ', AABP_ID)
   try {
     client = await pool.connect()
@@ -514,12 +475,7 @@ const getPurposePointLicenceConditions = async(AABP_ID,FGAC_REGION_CODE) => {
     console.log(e)
     return null
   }
-
-
 }
-
-
-
 module.exports = {
   import: loadNaldData,
   licence,
