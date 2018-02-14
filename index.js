@@ -102,10 +102,10 @@ server.register([{
 
   function validateJWT(decoded, request, callback){
     // bring your own validation function
-    console.log(request.url.path)
-    console.log(request.payload)
-      console.log('CALL WITH TOKEN')
-      console.log(decoded)
+    //console.log(request.url.path)
+    //console.log(request.payload)
+    //  console.log('CALL WITH TOKEN')
+    //  console.log(decoded)
         // TODO: JWT tokens to DB...
         // do your checks to see if the person is valid
       if (!decoded.id) {
