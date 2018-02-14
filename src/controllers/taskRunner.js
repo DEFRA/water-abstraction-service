@@ -39,14 +39,13 @@ async function run() {
 
       const taskHandler = require(`./tasks/${job.data[0].task_type}`);
       var log = await taskHandler.run(job.data[0])
-      console.log('task completed', log)
+      console.log('task completed: '+job.data[0].task_type)
 
 
 
 
       try {
         var query = `UPDATE "water"."scheduler" SET running=0, log=$2,last_run=now(),next_run= now() + interval \'${interval.count}\' ${interval.period} where task_id=$1`
-        console.log(query)
         var params = [job.data[0].task_id, JSON.stringify(log)];
         try {
           var close = await DB.query(query, params)

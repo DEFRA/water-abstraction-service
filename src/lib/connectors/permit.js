@@ -11,4 +11,13 @@ const licences = new APIClient(rp, {
   }
 });
 
-module.exports = {licences};
+
+const expiringLicences = new APIClient(rp, {
+  endpoint: `${ process.env.PERMIT_URI }expiring_licences?filter={licence_type_id:${process.env.licenceTypeId},licence_regime_id:${process.env.licenceRegimeId}}`,
+  headers : {
+    Authorization : process.env.JWT_TOKEN
+  }
+});
+
+
+module.exports = {licences,expiringLicences};

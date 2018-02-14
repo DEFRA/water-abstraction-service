@@ -186,7 +186,6 @@ const licence = async(licence_number) => {
       //  console.log('get purpose')
       thisLicenceRow.data.versions = await getVersions(thisLicenceRow.ID,thisLicenceRow.FGAC_REGION_CODE);
       for (var v in thisLicenceRow.data.versions) {
-        console.log(thisLicenceRow.data.versions[v].ACON_APAR_ID)
         thisLicenceRow.data.versions[v].parties = await getParties(thisLicenceRow.data.versions[v].ACON_APAR_ID,thisLicenceRow.FGAC_REGION_CODE);
         for (var p in thisLicenceRow.data.versions[v].parties) {
           thisLicenceRow.data.versions[v].parties[p].contacts = await getPartyContacts(thisLicenceRow.data.versions[v].parties[p].ID,thisLicenceRow.FGAC_REGION_CODE);
@@ -194,7 +193,8 @@ const licence = async(licence_number) => {
       }
       thisLicenceRow.data.current_version={}
       thisLicenceRow.data.current_version.licence = (await getCurrentVersion(thisLicenceRow.ID,thisLicenceRow.FGAC_REGION_CODE))[0];
-console.log(thisLicenceRow.data.current_version.licence)
+
+
       thisLicenceRow.data.current_version.licence.party = await getParties(thisLicenceRow.data.current_version.licence.ACON_APAR_ID,thisLicenceRow.FGAC_REGION_CODE);
         for (var p in thisLicenceRow.data.current_version.licence.parties) {
           thisLicenceRow.data.current_version.licence.parties[p].contacts = await getPartyContacts(thisLicenceRow.data.current_version.licence.parties[p].ID,thisLicenceRow.FGAC_REGION_CODE);
@@ -262,18 +262,34 @@ const getCams = async(code,FGAC_REGION_CODE) => {
   return res.rows
 }
 const getCurrentVersion = async(licence_id, FGAC_REGION_CODE) => {
+
   client = await pool.connect()
   const res = await client.query(`
-    select * from import."NALD_ABS_LIC_VERSIONS"
-    JOIN import."NALD_WA_LIC_TYPES" ON "NALD_ABS_LIC_VERSIONS"."WA_ALTY_CODE"="NALD_WA_LIC_TYPES"."CODE"
-    where "AABL_ID"=$1 and "FGAC_REGION_CODE" = $2
-    AND ("EFF_END_DATE" = 'null'	OR to_date( "EFF_END_DATE", 'DD/MM/YYYY' ) > now())
-    AND ("EFF_ST_DATE" = 'null'	OR to_date( "EFF_ST_DATE", 'DD/MM/YYYY' ) <= now())
-    AND "NALD_ABS_LIC_VERSIONS"."STATUS" = 'CURR'
+    SELECT
+    	*
+    FROM
+    	import."NALD_ABS_LIC_VERSIONS"
+    	JOIN import."NALD_WA_LIC_TYPES" ON "NALD_ABS_LIC_VERSIONS"."WA_ALTY_CODE" = "NALD_WA_LIC_TYPES"."CODE"
+    WHERE
+    	"AABL_ID" = $1
+    	AND "FGAC_REGION_CODE" = $2
+    	AND (
+    	0 = 0
+    	AND "EFF_END_DATE" = 'null'
+    	OR to_date( "EFF_END_DATE", 'DD/MM/YYYY' ) > now()
+    	)
+    	AND ( 0 = 0 -- and "EFF_ST_DATE" = 'null'--	OR to_date( "EFF_ST_DATE", 'DD/MM/YYYY' ) <= now()
+    	)
+    	AND "NALD_ABS_LIC_VERSIONS"."STATUS" = 'CURR'
+    ORDER BY
+    	"ISSUE_NO" DESC,
+    	"INCR_NO" DESC
+    	LIMIT 1
     `, [licence_id,FGAC_REGION_CODE])
   //  console.log('getCams - pre release')
   client.release()
   //  console.log('getCams - release')
+
   return res.rows
 }
 const getVersions = async(licence_id,FGAC_REGION_CODE) => {
@@ -314,10 +330,10 @@ const getPartyContacts = async(APAR_ID,FGAC_REGION_CODE) => {
     on a."ID"=c."AADD_ID"
     where c."APAR_ID"=$1 and c."FGAC_REGION_CODE" = $2 and a."FGAC_REGION_CODE" = $2
   `
-  console.log(query)
-  console.log(APAR_ID,FGAC_REGION_CODE)
+//  console.log(query)
+//  console.log(APAR_ID,FGAC_REGION_CODE)
   const res = await client.query(query, [APAR_ID,FGAC_REGION_CODE])
-  console.log('ok')
+//  console.log('ok')
   client.release()
   return res.rows
 }

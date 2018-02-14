@@ -36,7 +36,7 @@ cron.schedule('0 8,10,17 * * *', function(){
 
 taskRunner.reset();
 
-cron.schedule('*/60 * * * * *', function(){
+cron.schedule('*/5 * * * * * *', function(){
   taskRunner.run()
 });
 
