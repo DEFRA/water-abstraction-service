@@ -7,24 +7,21 @@ const Joi = require('joi');
 const {pool} = require('../lib/connectors/db.js');
 
 const NotificationsApi = new HAPIRestAPI({
-  table : 'water.scheduled_notification',
-  primaryKey : 'id',
-  endpoint : '/water/1.0/notification',
-  onCreateTimestamp : 'date_created',
-  onUpdateTimestamp : 'date_updated',
+  table : 'water.notify_templates',
+  primaryKey : 'message_ref',
+  endpoint : '/water/1.0/notify_templates',
   connection : pool,
   primaryKeyAuto : false,
   primaryKeyGuid : false,
   upsert : {
-    fields : ['id'],
-    set : []
+    fields : ['message_ref'],
+    set : ['template_id','notify_key']
   },
   validation : {
-    id : Joi.string(),
-    recipient : Joi.string(),
     message_ref : Joi.string(),
-    personalisation: Joi.object(),
-    send_after: Joi.string()
+    template_id : Joi.string(),
+    notify_key : Joi.string(),
+    notes: Joi.string()
   }
 });
 
