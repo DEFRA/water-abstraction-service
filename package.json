@@ -16,6 +16,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "codecov": "^3.0.0",
+    "csv-stringify": "^2.0.4",
     "db-migrate": "^0.10.1",
     "db-migrate-pg": "^0.2.5",
     "del": "^3.0.0",
@@ -24,11 +26,11 @@
     "gulp-sass": "^3.1.0",
     "gulp-sourcemaps": "^2.6.4",
     "gulp-standard": "^10.1.2",
+    "istanbul": "^0.4.5",
     "lab": "^14.3.2",
     "run-sequence": "^2.2.1",
     "standard": "^10.0.2",
-    "codecov": "^3.0.0",
-    "istanbul": "^0.4.5"
+    "walk-object": "^4.0.0"
   },
   "dependencies": {
     "async-waterfall": "^0.1.5",
