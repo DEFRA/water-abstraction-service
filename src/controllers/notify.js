@@ -31,19 +31,58 @@ async function send(request, reply) {
   config.personalisation = request.payload.personalisation
 
   res = await sendNow(config)
-
+  console.log(res)
   if (res.error) {
+    console.log(res.error)
     return reply({
-      error
+      error: res.error
     }).code(500)
   } else {
+    console.log("no error")
     return reply({
-      message
+      message: res.message
     }).code(200)
   }
 
 }
 
+/**
+ * Gets the notify template ID for a notify message ref,
+ * and sends it using the notify API
+ *
+ *  Sample CURL
+ *  curl -X POST '../notify/password_reset_email' -d '{"recipient":"email@email.com","personalisation":{"firstname":"name","reset_url":"url"}}'
+ *
+ * @param {Object} request - the HAPI HTTP request
+ * @param {Object} [request.query] - GET query params
+ * @param {String} [request.query.recipient] - recipient of the notify message
+ * @param {String} [request.query.message_ref] - the internal ref of the message to be sent
+ * @param {String} [request.payload.personalisation] - the personalisation packet
+ * @param {Object} reply - the HAPI HTTP response
+ */
+async function futureSend(request, reply) {
+  var config = {};
+  config.message_ref = request.params.message_ref
+  config.id = request.payload.id
+  config.recipient = request.payload.recipient
+  config.personalisation = request.payload.personalisation
+  config.sendafter = request.payload.sendafter
+
+  res = await sendLater(config)
+  console.log(res)
+  if (res.error) {
+    console.log(res.error)
+    return reply({
+      error: res.error
+    }).code(500)
+  } else {
+    console.log("no error")
+    return reply({
+      message: res.message
+    }).code(200)
+  }
+
+}
 
 
 
@@ -61,8 +100,6 @@ async function send(request, reply) {
  * @param {String} [config.personalisation] - the personalisation packet
  */
 async function sendNow(config) {
-  console.log('sending now')
-  console.log(config)
   const schema = {
     message_ref: Joi.string().required(),
     recipient: Joi.string().required(),
@@ -73,6 +110,7 @@ async function sendNow(config) {
     value
   } = Joi.validate(config, schema);
   if (error) {
+    console.log(error)
     throw ({
       error: error.details
     });
@@ -80,13 +118,12 @@ async function sendNow(config) {
     //Send ${data.message_ref} to ${data.recipient} with ${data.personalisation}`
 
     try {
-      console.log('get the templates')
       //get template details
       template = await DB.query('select * from water.notify_templates where message_ref=$1', [config.message_ref])
-      console.log(template)
-      if (!template.data || !template.data.length == 1) {
-        console.log('template not found')
-        return {          error: `Template ${config.message_ref} was not found`        }
+      if (!template.data.length) {
+        return {
+          error: `Template ${config.message_ref} was not found`
+        }
       } else {
         const notifyClient = new NotifyClient(template.data[0].notify_key);
         var template_id = template.data[0].template_id
@@ -95,7 +132,12 @@ async function sendNow(config) {
           var template = await notifyClient.getTemplateById(template_id)
         } catch (e) {
           return {
-            error: {              error: 'Error returned from notify',              message_ref: config.message_ref,              template_id: template_id || 'Not found',              message: e.message            }
+            error: {
+              error: 'Error returned from notify getTemplateByID',
+              message_ref: config.message_ref,
+              template_id: template_id,
+              message: e.message
+            }
           }
         }
         //call different notify functions according to template type as returned by notify
@@ -106,69 +148,64 @@ async function sendNow(config) {
             } catch (e) {
               return {
                 error: {
-                  error: 'Error returned from notify',
-                  message_ref: data.message_ref,
-                  template_id: template_id || 'Not found',
+                  error: 'Error returned from notify sendSMS endpoint',
+                  message_ref: config.message_ref,
+                  template_id: template_id,
                   message: e.message
                 }
               }
             }
             break;
           case 'email':
+            const validateEmail = await Joi.validate(config.recipient, Joi.string().email())
             try {
               var res = await notifyClient.sendEmail(template_id, config.recipient, config.personalisation)
-              console.log(res.body)
             } catch (e) {
               return {
                 error: {
-                  error: 'Error returned from notify',
+                  error: 'Error returned from notify send email',
                   message_ref: config.message_ref,
-                  template_id: template_id || 'Not found',
+                  template_id: template_id,
                   message: e.message
                 }
               }
             }
+
             break;
           case 'letter':
             try {
               if ((process.env.NODE_ENV || '').match(/^production|preprod$/i)) {
+                //note: notify key (and therefore live or test) now controlled in DB
                 console.log('sending live letter')
-                await notifyClient.sendLetter(templateID, config.personalisation)
+                await notifyClient.sendLetter(template_id, config.personalisation)
               } else {
                 console.log('sending test letter')
                 const notifyClient = new NotifyClient(process.env.TEST_NOTIFY_KEY);
-                await notifyClient.sendLetter(templateID, config.personalisation)
+                await notifyClient.sendLetter(template_id, config.personalisation)
               }
             } catch (e) {
               return {
                 error: {
-                  error: 'Error returned from notify',
+                  error: 'Error returned from notify sendLetter',
                   message_ref: config.message_ref,
-                  template_id: template_id || 'Not found',
+                  template_id: template_id,
                   message: e.message
                 }
               }
             }
             break;
-          default:
-            throw `Unknown template type ${template.body.type}`
-            return {
-              error: {
-                error: 'Unsupported template type',
-                message_ref: config.message_ref,
-                template_id: template_id || 'Not found',
-                message: e.message
-              }
-            }
+
         }
       }
-      console.log('SUCCESS!')
-      return {        message: 'ok'      }
+      return {
+        message: 'ok'
+      }
 
     } catch (e) {
-      console.log('ERROR!')
       console.log(e)
-      return {        error: e      }
+      return {
+        error: e
+      }
     }
   }
 
@@ -202,8 +239,6 @@ async function sendLater(config) {
     value
   } = Joi.validate(config, schema);
   if (error) {
-    console.log('validation fail')
-    console.log(error.details)
     throw ({
       error: error.details
     });
@@ -213,13 +248,18 @@ async function sendLater(config) {
     const queryparams = [config.id, config.recipient, config.message_ref, config.personalisation, config.sendafter]
     try {
       const addNotification = await DB.query(query, queryparams)
-      return ({
-        message: 'ok'
-      })
+      if (addNotification.error) {
+        throw addNotification.error
+      } else {
+        return ({
+          message: 'ok'
+        })
+      }
     } catch (e) {
       console.log(e)
       return ({
-        message: e
+        error: e,
+
       })
     }
   }
@@ -229,5 +269,6 @@ async function sendLater(config) {
 module.exports = {
   send,
   sendNow,
-  sendLater
+  sendLater,
+  futureSend
 }
