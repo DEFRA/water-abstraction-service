@@ -47,17 +47,43 @@ async function run(data) {
     }
   }
 }
+
+function sortableStringToDate(str) {
+  const moment = require('moment')
+  var d = moment(str, 'YYYYMMDD');
+  if (d.isValid()) {
+    return d.format('YYYY/MM/DD')
+  } else {
+    return null
+  }
+}
+
 async function exportLicence(licence_ref, regime_id, licence_type_id, data) {
-  //console.log('xxx: build packet for export')
+  var baseLicence = data.data.current_version;
+  var start_dt = sortableStringToDate(baseLicence.original_effective_date)
+  var expires = sortableStringToDate(baseLicence.expiry_date)
+
+
+
   var requestBody = {
     licence_ref: licence_ref,
-    licence_start_dt: "2017-01-01T00:00:00.000Z",
-    licence_end_dt: "2019-01-01T00:00:00.000Z",
+    licence_start_dt: start_dt,
+    licence_end_dt: expires,
     licence_status_id: "1",
     licence_type_id: licence_type_id,
     licence_regime_id: regime_id,
     licence_data_value: JSON.stringify(data)
   }
+
+  //remove null attributes so as not to anger JOI
+  if (requestBody.licence_end_dt == null) {
+    delete requestBody.licence_end_dt
+  }
+
+  if (requestBody.licence_start_dt == null) {
+    delete requestBody.licence_start_dt
+  }
+
   delete requestBody.regime_id;
   var {
     data,
