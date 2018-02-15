@@ -174,15 +174,9 @@ async function sendNow(config) {
             break;
           case 'letter':
             try {
-              if ((process.env.NODE_ENV || '').match(/^production|preprod$/i)) {
                 //note: notify key (and therefore live or test) now controlled in DB
-                console.log('sending live letter')
+                console.log('sending letter')
                 await notifyClient.sendLetter(template_id, config.personalisation)
-              } else {
-                console.log('sending test letter')
-                const notifyClient = new NotifyClient(process.env.TEST_NOTIFY_KEY);
-                await notifyClient.sendLetter(template_id, config.personalisation)
-              }
             } catch (e) {
               return {
                 error: {
