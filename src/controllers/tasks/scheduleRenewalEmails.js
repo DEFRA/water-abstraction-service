@@ -16,8 +16,8 @@ async function run(data) {
 
   expiring = await Permit.expiringLicences.findMany()
 
-
-
+//18/54/08/0538
+  console.log(expiring)
   expiring.data.forEach(async(licence) => {
     //console.log(licence.licence_ref+' expires '+licence.licence_end_dt);
 
@@ -25,9 +25,10 @@ async function run(data) {
       role: "primary_user",
       system_external_id: licence.licence_ref
     })
+
     if (responsedata.data[0] && responsedata.data[0].individual_nm) {
       const recipient = responsedata.data[0].individual_nm
-      //    console.log(licence.licence_ref+' got recipient for renewal email...' + recipient)
+//          console.log(licence.licence_ref+' got recipient for renewal email...' + recipient)
       try {
         const config = {
           id: `${licence.licence_ref}_${licence.licence_end_dt}_${recipient}`,
@@ -38,12 +39,18 @@ async function run(data) {
           },
           sendafter: moment().format('DD-MMM-YYYY HH:MM'),
         };
+        getDocumentName = await crm.documents.getDocumentName(responsedata.data[0].document_id)
+        try{
+          config.personalisation.licence_name=getDocumentName.data[0].value
+        } catch(e){
+          config.personalisation.licence_name='';
+        }
         Notify.sendLater(config)
       } catch (e) {
         console.log(e)
       }
     } else {
-      //    console.log(licence.licence_ref+' no primary user for this licence, cannot notify anybody ::sadface::')
+//          console.log(licence.licence_ref+' no primary user for this licence, cannot notify anybody ::sadface::')
     }
 
 
