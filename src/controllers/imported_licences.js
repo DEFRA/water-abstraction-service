@@ -7,25 +7,20 @@ const Joi = require('joi');
 const {pool} = require('../lib/connectors/db.js');
 
 const NotificationsApi = new HAPIRestAPI({
-  table : 'water.scheduled_notification',
+  table : 'water.pending_import',
   primaryKey : 'id',
-  endpoint : '/water/1.0/notification',
+  endpoint : '/water/1.0/pending_import',
   connection : pool,
-  primaryKeyAuto : false,
+  primaryKeyAuto : true,
   primaryKeyGuid : false,
   upsert : {
-    fields : ['id'],
-    set : []
+    fields : ['licence_ref'],
+    set : ['status']
   },
   validation : {
-    id : Joi.string(),
-    recipient : Joi.string(),
-    message_ref : Joi.string(),
-    personalisation: Joi.object(),
-    send_after: Joi.string(),
-    message_type: Joi.string(),
-    status: Joi.string(),
-    log: Joi.string(),
+    id : Joi.number(),
+    licence_ref : Joi.string(),
+    status : Joi.number()
   }
 });
 
