@@ -19,7 +19,7 @@ const client = new APIClient(rp, {
 
 /**
  * Get a list of licences based on the supplied options
- * @param {Object} filter - criteria to filter licence lisrt
+ * @param {Object} filter - criteria to filter licence list
  * @param {String} [filter.entity_id] - the current user's entity ID
  * @param {String} [filter.email] - the email address to search on
  * @param {String} [filter.string] - the search query, can be licence number, user-defined name etc.
@@ -33,7 +33,6 @@ const client = new APIClient(rp, {
  * @example getLicences({entity_id : 'guid'})
  */
 client.getDocumentRoles = function (filter, sort = {}, pagination = {page: 1, perPage: 100}) {
-  console.log(filter)
   const uri = process.env.CRM_URI + '/document_role_access?filter='+JSON.stringify(filter);
   return rp({
     uri,
@@ -43,6 +42,25 @@ client.getDocumentRoles = function (filter, sort = {}, pagination = {page: 1, pe
     },
     json: true,
     body: { filter, sort, pagination }
+  });
+};
+
+/**
+ * Get a list of licences based on the supplied options
+ * @param {Object} filter - criteria to filter licence list
+ * @param {String} [document_id] - the ID of the document to return the name for
+ * @return {Promise} resolves with array of licence records
+ */
+client.getDocumentName = function (document_id) {
+  const uri = process.env.CRM_URI + `/documentHeader/${document_id}/entity/0/name`;
+  return rp({
+    uri,
+    method: 'GET',
+    headers: {
+      Authorization: process.env.JWT_TOKEN
+    },
+    json: true,
+    body: { }
   });
 };
 
