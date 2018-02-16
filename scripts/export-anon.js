@@ -27,6 +27,18 @@ const pool = new Pool({
 });
 
 const structure = {
+  roleTypes : {
+    table : 'NALD_LIC_ROLE_TYPES'
+  },
+  contTypes : {
+    table : 'NALD_CONT_NO_TYPES'
+  },
+  condTypes : {
+    table : 'NALD_LIC_COND_TYPES'
+  },
+  sources : {
+    table : 'NALD_SOURCES'
+  },
   root : {
     table : 'NALD_ABS_LICENCES',
     cond : [{ LIC_NO : '03/28/01/0200'}],
@@ -51,10 +63,8 @@ const structure = {
     }, {
         table : 'NALD_LIC_ROLES',
         join : {AABL_ID : 'ID', FGAC_REGION_CODE : 'FGAC_REGION_CODE'},
-        hasMany : [{
-          table : 'NALD_LIC_ROLE_TYPES',
-          join : { CODE : 'ALRT_CODE' }
-        }, {
+        hasMany : [
+        {
           table : 'NALD_PARTIES',
           join : { ID : 'ACON_APAR_ID' }
         }, {
@@ -62,11 +72,7 @@ const structure = {
           join : { ID : 'ACON_AADD_ID'}
         }, {
           table : 'NALD_CONT_NOS',
-          join : { ACON_APAR_ID : 'ACON_APAR_ID', ACON_AADD_ID : 'ACON_AADD_ID' },
-          hasMany : [{
-            table : 'NALD_CONT_NO_TYPES',
-            join : { CODE : 'ACNT_CODE' }
-          }]
+          join : { ACON_APAR_ID : 'ACON_APAR_ID', ACON_AADD_ID : 'ACON_AADD_ID' }
         }]
     }, {
       table : 'NALD_ABS_LIC_PURPOSES',
@@ -74,11 +80,7 @@ const structure = {
       hasMany : [
         {
           table : 'NALD_LIC_CONDITIONS',
-          join : { AABP_ID : 'ID',  FGAC_REGION_CODE : 'FGAC_REGION_CODE'},
-          hasMany : [{
-            table : 'NALD_LIC_COND_TYPES',
-            join : { CODE : 'ACIN_CODE' }
-          }]
+          join : { AABP_ID : 'ID',  FGAC_REGION_CODE : 'FGAC_REGION_CODE'}
         },
         {
           table : 'NALD_LIC_AGRMNTS',
@@ -92,18 +94,14 @@ const structure = {
           join : { CODE : 'AMOA_CODE' }
         }, {
           table : 'NALD_POINTS',
-          join : { ID : 'AAIP_ID' },
-          hasMany : [{
-            table : 'NALD_SOURCES',
-            join : { CODE : 'ASRC_CODE' }
-          }]
+          join : { ID : 'AAIP_ID' }
         }]
       }]
     }]
   }
 }
 
-async function getData(table, filter) {
+async function getData(table, filter = {}) {
   let query = `SELECT * FROM import."${ table }" WHERE 1=1 `;
   const params = [];
   for(key in filter) {
@@ -120,6 +118,9 @@ async function getData(table, filter) {
 
 
 async function getCondData(table, cond) {
+  if(cond.length === 0) {
+    return getData(table);
+  }
   const rowSets = await Promise.map(cond, (cond) => {
     return getData(table, cond);
   });
@@ -134,22 +135,23 @@ async function getCondData(table, cond) {
 async function nodeHandler ({ value, location, isLeaf }) {
 
   if(value.table) {
-    if(value.cond) {
 
-      // Get data for this node
-      value.data = await getCondData(value.table, value.cond);
+    const cond = value.cond || [];
 
-      // Add conditions to child relationships
-      if(value.hasMany) {
-        value.hasMany.forEach(rel => {
-          rel.cond = value.data.map(row => {
-            return mapValues(rel.join, (foreignField) => {
-              return row[foreignField];
-            });
+    // Get data for this node
+    value.data = await getCondData(value.table, cond);
+
+    // Add conditions to child relationships
+    if(value.hasMany) {
+      value.hasMany.forEach(rel => {
+        rel.cond = value.data.map(row => {
+          return mapValues(rel.join, (foreignField) => {
+            return row[foreignField];
           });
         });
-      }
+      });
     }
+
   }
   return;
 }
@@ -177,7 +179,6 @@ function getExportData(structure) {
   walkObject(structure, ({ value, location, isLeaf }) => {
     if(value.data) {
       data[value.table] = value.data;
-      //deDuplicate(value.data);
     }
   });
   return data;
@@ -189,6 +190,9 @@ async function main() {
     await walkObjectAsync(structure, nodeHandler);
 
     const exportData = getExportData(structure);
+
+    // Randomise data
+    
 
     // Write CSV data
     mapValues(exportData, (data, tableName) => {
