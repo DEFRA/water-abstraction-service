@@ -47,7 +47,7 @@
     "lodash": "^4.17.4",
     "moment": "^2.20.1",
     "node-cron": "^1.2.1",
-    "node-hapi-airbrake": "0.0.6",
+    "node-hapi-airbrake": "0.1.0",
     "notifications-node-client": "^3.2.0",
     "path": "^0.12.7",
     "pg": "^7.1.0",
