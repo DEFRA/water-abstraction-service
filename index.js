@@ -102,10 +102,10 @@ server.register([{
 
   function validateJWT(decoded, request, callback){
     // bring your own validation function
-    console.log(request.url.path)
-    console.log(request.payload)
-      console.log('CALL WITH TOKEN')
-      console.log(decoded)
+    //console.log(request.url.path)
+    //console.log(request.payload)
+    //  console.log('CALL WITH TOKEN')
+    //  console.log(decoded)
         // TODO: JWT tokens to DB...
         // do your checks to see if the person is valid
       if (!decoded.id) {
@@ -139,19 +139,14 @@ server.route(require('./src/routes/water'))
 
 })
 
-// Start the server
-server.start((err) => {
-  if (err) {
-    throw err
-  }
+// Start the server if not testing with Lab
+if (!module.parent) {
+  server.start((err) => {
+    if (err) {
+      throw err;
+    }
+    console.log(`Server running at: ${server.info.uri}`);
+  });
+}
 
-
-
-  console.log(`Service ${process.env.servicename} running at: ${server.info.uri}`)
-
-
-
-
-
-})
 module.exports = server

@@ -3,35 +3,33 @@ API page, pending real back end - uses fs to read and write to lkocal json files
 
 */
 
-
 const version = '1.0'
 
 const Nald = require('../lib/nald')
 
 
 const sessionRoutes = require('../controllers/sessions');
-
+const schedulerRoutes = require('../controllers/scheduler');
+const notificationsRoutes = require('../controllers/notifications');
+const notifyTemplatesRoutes = require('../controllers/notifytemplates');
 const notifyController = require('../controllers/notify');
+const importedLicencesRoutes = require('../controllers/imported_licences');
+const taskRunner = require('../controllers/taskRunner');
+
+
 
 module.exports = [
   ...sessionRoutes,
+  ...schedulerRoutes,
+  ...notificationsRoutes,
+  ...notifyTemplatesRoutes,
+  ...importedLicencesRoutes,
   { method: 'GET', path: '/status', handler: function(request,reply){return reply('ok').code(200)}, config:{auth: false,description:'Get all entities'}},
   { method: 'GET', path: '/water/' + version + '/nald/import', handler: Nald.import, config:{auth: false,description:'Import nald from s3 data'}},
-  { method: 'POST', path: '/water/' + version + '/nald/licence', handler: Nald.licence, config:{auth: false,description:'Fetch legacy nald licence'}},
+  { method: 'POST', path: '/water/' + version + '/nald/licence', handler: Nald.getLicence, config:{auth: false,description:'Fetch legacy nald licence'}},
   { method: 'POST', path: '/water/' + version + '/notify/{message_ref}', handler: notifyController.send, config:{description:'Send a notify message'}},
+  { method: 'POST', path: '/water/' + version + '/notifyLater/{message_ref}', handler: notifyController.futureSend, config:{description:'Send a notify message later'}},
 ]
-/**
-{ method: 'GET', path: '/API/' + version + '/test', handler: test },
-{ method: 'POST', path: '/API/' + version + '/licences', handler: licencesPostHandler },
-{ method: 'GET', path: '/API/' + version + '/licences/{id}', handler: licenceGetHandler },
-{ method: 'PUT', path: '/API/' + version + '/licences/{id}', handler: licencePutHandler  }
-
-{ method: 'GET', path: '/API/' + version + '/orgs/{regime_id}/types/{type_id}/licences', handler: getLicencesByOrgandType },
-{ method: 'GET', path: '/API/' + version + '/orgs/{regime_id}/types/{type_id}/licences/{licence_id}', handler: getLicenceByOrgTypeID },
-{ method: 'POST', path: '/API/' + version + '/orgs/{regime_id}/types/{type_id}/licences', handler: addLicenceByOrgTypeID },
-
-**/
-
 
 
 //start node cron
@@ -41,6 +39,13 @@ const Slack= require('../lib/slack')
 cron.schedule('0 8,10,17 * * *', function(){
   console.log('running a task now and again...');
   users()
+});
+
+
+taskRunner.reset();
+
+cron.schedule('*/5 * * * * * *', function(){
+  taskRunner.run()
 });
 
 function users(){
