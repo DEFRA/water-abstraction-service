@@ -7,7 +7,6 @@ const server = require('../../index.js');
 let taskId;
 
 lab.experiment('Test sending a email notification', () => {
-
   lab.test('The API should throw an error when personalisation is not supplied', async() => {
     const request = {
       method: 'POST',
@@ -20,8 +19,10 @@ lab.experiment('Test sending a email notification', () => {
       }
     };
     const res = await server.inject(request);
-    Code.expect(res.statusCode).to.equal(500);
+    Code.expect(res.statusCode).to.equal(400);
   });
+
+
 
   // Send email notification
   lab.test('The API should throw an error when an invalid template id is supplied', async() => {
@@ -40,7 +41,7 @@ lab.experiment('Test sending a email notification', () => {
     };
 
     const res = await server.inject(request);
-    Code.expect(res.statusCode).to.equal(500);
+    Code.expect(res.statusCode).to.equal(400);
   });
 
 
@@ -61,7 +62,7 @@ lab.experiment('Test sending a email notification', () => {
     };
 
     const res = await server.inject(request);
-    Code.expect(res.statusCode).to.equal(500);
+    Code.expect(res.statusCode).to.equal(400);
   });
 
 
@@ -83,7 +84,7 @@ lab.experiment('Test sending a email notification', () => {
 
     const res = await server.inject(request);
 
-    Code.expect(res.statusCode).to.equal(500);
+    Code.expect(res.statusCode).to.equal(400);
   });
 
   // Send email notification
@@ -102,7 +103,7 @@ lab.experiment('Test sending a email notification', () => {
 
     const res = await server.inject(request);
 
-    Code.expect(res.statusCode).to.equal(500);
+    Code.expect(res.statusCode).to.equal(400);
   });
 
 
@@ -123,7 +124,7 @@ lab.experiment('Test sending a email notification', () => {
 
     const res = await server.inject(request);
 
-    Code.expect(res.statusCode).to.equal(500);
+    Code.expect(res.statusCode).to.equal(400);
   });
 
   // Send email notification
@@ -170,7 +171,7 @@ lab.experiment('Test sending a SMS notification', () => {
 
     const res = await server.inject(request);
 
-    Code.expect(res.statusCode).to.equal(500);
+    Code.expect(res.statusCode).to.equal(400);
   });
 
   // Send email notification
@@ -217,7 +218,7 @@ lab.experiment('Test sending a Postal notification', () => {
 
     const res = await server.inject(request);
 
-    Code.expect(res.statusCode).to.equal(500);
+    Code.expect(res.statusCode).to.equal(400);
   });
 
   // Send letter notification
@@ -279,11 +280,11 @@ lab.experiment('Scheduled notifications', () => {
       method: 'POST',
       url: '/water/1.0/notifyLater/unit_test_email',
       payload: {
-        id: 'unit-test-notification-a',
+        id: 'unit-test-notification',
         personalisation: {
           "test_value": "00/00/00/00"
         },
-        sendafter: '2018-01-01'
+        sendafter: 'x2018-01-01'
       },
       headers: {
         Authorization: process.env.JWT_TOKEN
@@ -292,7 +293,7 @@ lab.experiment('Scheduled notifications', () => {
 
     const res = await server.inject(request);
 
-    Code.expect(res.statusCode).to.equal(500);
+    Code.expect(res.statusCode).to.equal(400);
 
   });
 
@@ -307,18 +308,15 @@ lab.experiment('Scheduled notifications', () => {
         personalisation: {
           "test_value": "00/00/00/00"
         },
-        sendafter: '201A-01-01'
+        sendafter: '2018x-01-01'
       },
       headers: {
         Authorization: process.env.JWT_TOKEN
       }
     };
-
     const res = await server.inject(request);
-
-    Code.expect(res.statusCode).to.equal(500);
+    Code.expect(res.statusCode).to.equal(400);
 
   });
-
 });
 exports.lab = lab;
