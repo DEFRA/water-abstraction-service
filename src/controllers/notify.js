@@ -29,20 +29,26 @@ async function send(request, reply) {
   config.message_ref = request.params.message_ref
   config.recipient = request.payload.recipient
   config.personalisation = request.payload.personalisation
-
+  try{
   res = await sendNow(config)
   console.log(res)
   if (res.error) {
     console.log(res.error)
     return reply({
       error: res.error
-    }).code(500)
+    }).code(400)
   } else {
     console.log("no error")
     return reply({
       message: res.message
     }).code(200)
   }
+} catch(e){
+  return reply({
+    message: e
+  }).code(500)
+}
+
 
 }
 
@@ -67,20 +73,26 @@ async function futureSend(request, reply) {
   config.recipient = request.payload.recipient
   config.personalisation = request.payload.personalisation
   config.sendafter = request.payload.sendafter
-
-  res = await sendLater(config)
-  console.log(res)
-  if (res.error) {
-    console.log(res.error)
+  try{
+    res = await sendLater(config)
+    console.log(res)
+    if (res.error) {
+      console.log(res.error)
+      return reply({
+        error: res.error
+      }).code(400)
+    } else {
+      console.log("no error")
+      return reply({
+        message: res.message
+      }).code(200)
+    }
+  }catch(e){
     return reply({
-      error: res.error
+      message: e
     }).code(500)
-  } else {
-    console.log("no error")
-    return reply({
-      message: res.message
-    }).code(200)
   }
+
 
 }
 
@@ -110,10 +122,15 @@ async function sendNow(config) {
     value
   } = Joi.validate(config, schema);
   if (error) {
+    return {
+      error: {
+        error: error.details,
+        message_ref: config.message_ref,
+        template_id: template_id,
+        message: error.details
+      }
+    }
     console.log(error)
-    throw ({
-      error: error.details
-    });
   } else {
     //Send ${data.message_ref} to ${data.recipient} with ${data.personalisation}`
 
@@ -233,9 +250,11 @@ async function sendLater(config) {
     value
   } = Joi.validate(config, schema);
   if (error) {
-    throw ({
-      error: error.details
-    });
+    return {
+      error: {
+        error: error.details
+      }
+    }
   } else {
     const query = `insert into water.scheduled_notification (id,recipient,message_ref,personalisation,send_after)
     values ($1,$2,$3,$4,$5) on conflict(id) do nothing`
