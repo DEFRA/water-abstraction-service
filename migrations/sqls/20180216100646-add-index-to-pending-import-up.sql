@@ -1,5 +1,5 @@
 
-ALTER TABLE "water"."pending_import" DROP CONSTRAINT "pending_import_pkey";
+ALTER TABLE "water"."pending_import" DROP CONSTRAINT IF EXISTS "pending_import_pkey";
 
 ALTER TABLE "water"."pending_import" ADD COLUMN id BIGSERIAL PRIMARY KEY;
 
