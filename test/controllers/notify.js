@@ -66,26 +66,6 @@ lab.experiment('Test sending a email notification', () => {
   });
 
 
-  // Send email notification
-  lab.test('The API should throw an error when invalid email address specified for message of type email', async() => {
-    const request = {
-      method: 'POST',
-      url: '/water/1.0/notify/unit_test_email',
-      payload: {
-        recipient: 'notAnEmail',
-        personalisation: {
-          "test_value": "00/00/00/00"
-        }
-      },
-      headers: {
-        Authorization: process.env.JWT_TOKEN
-      }
-    };
-
-    const res = await server.inject(request);
-
-    Code.expect(res.statusCode).to.equal(400);
-  });
 
   // Send email notification
   lab.test('The API should throw an error when personalisation params are missing', async() => {
@@ -93,8 +73,7 @@ lab.experiment('Test sending a email notification', () => {
       method: 'POST',
       url: '/water/1.0/notify/unit_test_email',
       payload: {
-        recipient: 'test@test.com',
-        personalisation: "bla"
+        recipient: 'test@test.com'
       },
       headers: {
         Authorization: process.env.JWT_TOKEN
@@ -107,25 +86,6 @@ lab.experiment('Test sending a email notification', () => {
   });
 
 
-  lab.test('The API should throw an error when personalisation params are invalid', async() => {
-    const request = {
-      method: 'POST',
-      url: '/water/1.0/notify/unit_test_email',
-      payload: {
-        recipient: 'test@test.com',
-        personalisation: {
-          "unexpected_value": "00/00/00/00"
-        }
-      },
-      headers: {
-        Authorization: process.env.JWT_TOKEN
-      }
-    };
-
-    const res = await server.inject(request);
-
-    Code.expect(res.statusCode).to.equal(400);
-  });
 
   // Send email notification
   lab.test('The API should not throw an error when valid email address specified for message of type email', async() => {
@@ -153,26 +113,6 @@ lab.experiment('Test sending a SMS notification', () => {
 
 
 
-  // Send email notification
-  lab.test('The API should throw an error when invalid number specified for message of type sms', async() => {
-    const request = {
-      method: 'POST',
-      url: '/water/1.0/notify/unit_test_sms',
-      payload: {
-        recipient: 'notAnEmail.com',
-        personalisation: {
-          "test_value": "00/00/00/00"
-        }
-      },
-      headers: {
-        Authorization: process.env.JWT_TOKEN
-      }
-    };
-
-    const res = await server.inject(request);
-
-    Code.expect(res.statusCode).to.equal(400);
-  });
 
   // Send email notification
   lab.test('The API should not throw an error when valid number specified for message of type sms', async() => {
@@ -200,26 +140,7 @@ lab.experiment('Test sending a SMS notification', () => {
 
 lab.experiment('Test sending a Postal notification', () => {
 
-  // Send letter notification
-  lab.test('The API should throw an error when invalid address specified for message of type letter', async() => {
-    const request = {
-      method: 'POST',
-      url: '/water/1.0/notify/unit_test_letter',
-      payload: {
-        recipient: 'insert name',
-        personalisation: {
-          test_value: "00/00/00/00"
-        }
-      },
-      headers: {
-        Authorization: process.env.JWT_TOKEN
-      }
-    };
 
-    const res = await server.inject(request);
-
-    Code.expect(res.statusCode).to.equal(400);
-  });
 
   // Send letter notification
   lab.test('The API should not throw an error when valid address specified for message of type letter', async() => {
