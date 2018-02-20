@@ -30,28 +30,28 @@ async function send(request, reply) {
   config.recipient = request.payload.recipient
   config.personalisation = request.payload.personalisation
   config.id = Helpers.createGUID()
-  config.sendafter=moment().format('DD-MMM-YYYY HH:MM')
+  config.sendafter = moment().format('DD-MMM-YYYY HH:MM')
 
   //note: now schedules notification for NOW for,logging reasons
-  try{
-  res = await sendLater(config)
-  console.log(res)
-  if (res.error) {
-    console.log(res.error)
+  try {
+    res = await sendLater(config)
+    console.log(res)
+    if (res.error) {
+      console.log(res.error)
+      return reply({
+        error: res.error
+      }).code(400)
+    } else {
+      console.log("no error")
+      return reply({
+        message: res.message
+      }).code(200)
+    }
+  } catch (e) {
     return reply({
-      error: res.error
-    }).code(400)
-  } else {
-    console.log("no error")
-    return reply({
-      message: res.message
-    }).code(200)
+      message: e
+    }).code(500)
   }
-} catch(e){
-  return reply({
-    message: e
-  }).code(500)
-}
 
 
 }
@@ -77,7 +77,7 @@ async function futureSend(request, reply) {
   config.recipient = request.payload.recipient
   config.personalisation = request.payload.personalisation
   config.sendafter = request.payload.sendafter
-  try{
+  try {
     res = await sendLater(config)
     console.log(res)
     if (res.error) {
@@ -91,7 +91,7 @@ async function futureSend(request, reply) {
         message: res.message
       }).code(200)
     }
-  }catch(e){
+  } catch (e) {
     return reply({
       message: e
     }).code(500)
@@ -195,9 +195,9 @@ async function sendNow(config) {
             break;
           case 'letter':
             try {
-                //note: notify key (and therefore live or test) now controlled in DB
-                console.log('sending letter')
-                await notifyClient.sendLetter(template_id, config.personalisation)
+              //note: notify key (and therefore live or test) now controlled in DB
+              console.log('sending letter')
+              await notifyClient.sendLetter(template_id, config.personalisation)
             } catch (e) {
               return {
                 error: {
@@ -249,6 +249,9 @@ async function sendLater(config) {
     personalisation: Joi.object().required(),
     sendafter: Joi.string().required(),
   };
+
+
+
   const {
     error,
     value
@@ -260,18 +263,43 @@ async function sendLater(config) {
       }
     }
   } else {
+
+
+  try {
+    //get template details
+    template = await DB.query('select * from water.notify_templates where message_ref=$1', [config.message_ref])
+    if (!template.data.length) {
+      return {
+        error: `Template ${config.message_ref} was not found`
+      }
+    }
+    const notifyClient = new NotifyClient(template.data[0].notify_key);
+    var template_id = template.data[0].template_id
+    try {
+      //check template exists in notify
+      var template = await notifyClient.getTemplateById(template_id)
+    } catch (e) {
+      return {
+        error: {
+          error: 'Error returned from notify getTemplateByID',
+          message_ref: config.message_ref,
+          template_id: template_id,
+          message: e.message
+        }
+      }
+    }
+
     const query = `insert into water.scheduled_notification (id,recipient,message_ref,personalisation,send_after)
-    values ($1,$2,$3,$4,$5) on conflict(id) do nothing`
+                  values ($1,$2,$3,$4,$5) on conflict(id) do nothing`
     const queryparams = [config.id, config.recipient, config.message_ref, config.personalisation, config.sendafter]
     try {
       const addNotification = await DB.query(query, queryparams)
       if (addNotification.error) {
         throw addNotification.error
-      } else {
+      }
         return ({
           message: 'ok'
         })
-      }
     } catch (e) {
       console.log(e)
       return ({
@@ -279,13 +307,23 @@ async function sendLater(config) {
 
       })
     }
+    return {
+      message: 'ok'
+    }
+  }catch (e) {
+    console.log(e)
+    return ({
+      error: e,
+
+    })
+
+}
+}
+}
+
+  module.exports = {
+    send,
+    sendNow,
+    sendLater,
+    futureSend
   }
-}
-
-
-module.exports = {
-  send,
-  sendNow,
-  sendLater,
-  futureSend
-}
