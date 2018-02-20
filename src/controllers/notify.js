@@ -8,7 +8,7 @@ const DB = require('../lib/connectors/db');
 const NotifyClient = require('notifications-node-client').NotifyClient;
 
 const Joi = require('joi');
-
+const moment = require('moment')
 
 /**
  * Gets the notify template ID for a notify message ref,
@@ -29,8 +29,12 @@ async function send(request, reply) {
   config.message_ref = request.params.message_ref
   config.recipient = request.payload.recipient
   config.personalisation = request.payload.personalisation
+  config.id = Helpers.createGUID()
+  config.sendafter=moment().format('DD-MMM-YYYY HH:MM')
+
+  //note: now schedules notification for NOW for,logging reasons
   try{
-  res = await sendNow(config)
+  res = await sendLater(config)
   console.log(res)
   if (res.error) {
     console.log(res.error)
