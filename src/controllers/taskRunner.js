@@ -58,6 +58,8 @@ async function run() {
       }
     }
   } catch (e) {
+    var query = `UPDATE "water"."scheduler" SET running=0, log=$2,last_run=now(),next_run= now() + interval \'${interval.count}\' ${interval.period} where task_id=$1`
+    var params = [job.data[0].task_id, JSON.stringify(e)];
     console.log(e)
   }
 }
