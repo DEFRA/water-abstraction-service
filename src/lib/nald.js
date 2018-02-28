@@ -204,6 +204,23 @@ const licence = async(licence_number) => {
       thisLicenceRow.data.current_version.original_effective_date=dateToSortableString(thisLicenceRow.ORIG_EFF_DATE);
       thisLicenceRow.data.current_version.version_effective_date=dateToSortableString(thisLicenceRow.data.current_version.licence.EFF_ST_DATE);
       thisLicenceRow.data.current_version.expiry_date=dateToSortableString(thisLicenceRow.EXPIRY_DATE);
+
+
+      thisLicenceRow.data.current_version.purposes = await getPurposes(thisLicenceRow.ID,thisLicenceRow.FGAC_REGION_CODE,thisLicenceRow.data.current_version.licence.ISSUE_NO,thisLicenceRow.data.current_version.licence.INCR_NO);
+      for (var pu in thisLicenceRow.data.current_version.purposes) {
+        thisLicenceRow.data.current_version.purposes[pu].purpose = await getPurpose({
+          primary: thisLicenceRow.data.current_version.purposes[pu].APUR_APPR_CODE,
+          secondary: thisLicenceRow.data.current_version.purposes[pu].APUR_APSE_CODE,
+          tertiary: thisLicenceRow.data.current_version.purposes[pu].APUR_APUS_CODE
+        })
+        thisLicenceRow.data.current_version.purposes[pu].purposePoints = await getPurposePoints(thisLicenceRow.data.current_version.purposes[pu].ID,thisLicenceRow.FGAC_REGION_CODE)
+        thisLicenceRow.data.current_version.purposes[pu].licenceAgreements = await getPurposePointLicenceAgreements(thisLicenceRow.data.current_version.purposes[pu].ID,thisLicenceRow.FGAC_REGION_CODE)
+        thisLicenceRow.data.current_version.purposes[pu].licenceConditions = await getPurposePointLicenceConditions(thisLicenceRow.data.current_version.purposes[pu].ID,thisLicenceRow.FGAC_REGION_CODE)
+      }
+
+
+
+
       thisLicenceRow.data.cams = await getCams(thisLicenceRow.CAMS_CODE,thisLicenceRow.FGAC_REGION_CODE);
       //  console.log('get roles')
       thisLicenceRow.data.roles = await getRoles(thisLicenceRow.ID,thisLicenceRow.FGAC_REGION_CODE);
@@ -401,17 +418,48 @@ const getRoles = async(AABL_ID,FGAC_REGION_CODE) => {
   client.release()
   return res.rows
 }
-const getPurposes = async(licence_id,FGAC_REGION_CODE) => {
+const getPurposes = async(licence_id,FGAC_REGION_CODE, ISSUE_NO, INCR_NO) => {
   //  console.log('purpose ',purpose)
   client = await pool.connect()
-  const res = await client.query(`
-      select
-            *
-      from
-      import."NALD_ABS_LIC_PURPOSES" p
-      where p."AABV_AABL_ID"=$1 and "FGAC_REGION_CODE" = $2
-  `, [licence_id,FGAC_REGION_CODE])
+  let res
+  if(ISSUE_NO && INCR_NO){
+    const params=[licence_id,FGAC_REGION_CODE,ISSUE_NO,INCR_NO];
+    console.log('p1',params)
+    try{
+      res = await client.query(`
+          select
+                *
+          from
+          import."NALD_ABS_LIC_PURPOSES" p
+          where p."AABV_AABL_ID"=$1 and "FGAC_REGION_CODE" = $2 and "AABV_ISSUE_NO"=$3  and "AABV_INCR_NO" = $4
+      `, params)
+          console.log('p1 done')
+    }catch(e){
+      console.log(e)
+    }
+
+  } else {
+    const params=[licence_id,FGAC_REGION_CODE];
+    console.log('p2',params)
+    try{
+      res = await client.query(`
+          select
+                *
+          from
+          import."NALD_ABS_LIC_PURPOSES" p
+          where p."AABV_AABL_ID"=$1 and "FGAC_REGION_CODE" = $2
+      `, params)
+    console.log('p2 done')
+    }catch(e){
+      console.log(e)
+    }
+
+
+
+  }
+
   client.release()
+  console.log(res.error)
   return res.rows
 }
 const getPurposePoints = async(purpose_id,FGAC_REGION_CODE) => {
