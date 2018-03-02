@@ -11,13 +11,18 @@ async function run(data) {
     var licenceQuery = await DB.query(query);
     if (licenceQuery.data) {
       for (licenceNo in licenceQuery.data) {
-        licence_ref = licenceQuery.data[licenceNo].licence_ref;
-        var licence = await Nald.licence(licence_ref)
-        licence.vmlVersion = 2
-        var exp = await exportLicence(licence_ref, 1, 8, licence)
-        var query = `
-      update water.pending_import set status=1 where licence_ref=$1;`
-        var licenceStatusUpdate = await DB.query(query, [licence_ref]);
+        try{
+          licence_ref = licenceQuery.data[licenceNo].licence_ref;
+          var licence = await Nald.licence(licence_ref)
+          var exp = await processLicence(licence_ref,licence)
+        }catch(e){
+          var query = `update water.pending_import set status=-1, log='${e.message}', date_updated=current_date where licence_ref=$1;`
+          var licenceStatusUpdate = await DB.query(query, [licence_ref]);
+
+          return {
+            error: e.message
+          }
+        }
       }
       return {
         error: null
@@ -35,18 +40,37 @@ async function run(data) {
     console.log('request for ', data.licence_ref)
     var licence = await Nald.licence(data.licence_ref)
     if (licence) {
-      licence.vmlVersion = 2
-      var exp = await exportLicence(data.licence_ref, 1, 8, licence)
-      return {
-        error: null
+      try{
+        var exp = await processLicence(data.licence_ref,licence)
+      }catch(e){
+        var query = `update water.pending_import set status=-1, log='${e.message}', date_updated=current_date where licence_ref=$1;`
+        var licenceStatusUpdate = await DB.query(query, [licence_ref]);
+        return {
+          error: e.message
+        }
       }
     } else {
+      var query = `update water.pending_import set status=-1, log='Licence not found', date_updated=current_date where licence_ref=$1;`
+      var licenceStatusUpdate = await DB.query(query, [licence_ref]);
       return {
         error: `Licence data for ${data.licence_ref} is undefined`
       };
     }
   }
 }
+
+async function processLicence(licence_ref,licence_data){
+  try{
+    licence_data.vmlVersion = 2
+    var exp = await exportLicence(licence_ref, 1, 8, licence_data)
+    var query = `update water.pending_import set status=1, date_updated=current_date where licence_ref=$1;`
+    var licenceStatusUpdate = await DB.query(query, [licence_ref]);
+  }catch(e){
+    throw e.message
+  }
+}
+
+
 
 function sortableStringToDate(str) {
   const moment = require('moment')

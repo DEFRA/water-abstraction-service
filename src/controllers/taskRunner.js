@@ -2,11 +2,12 @@ const DB = require('../lib/connectors/db');
 const NotifyClient = require('notifications-node-client').NotifyClient;
 const notifyClient = new NotifyClient(process.env.NOTIFY_KEY);
 const Joi = require('joi');
+const os=require('os')
 
 async function reset() {
   console.log('resetting scheduler')
     var query = `
-      UPDATE "water"."scheduler" SET running=0`
+      UPDATE "water"."scheduler" SET running=0 where running_on = '${os.hostname()}'`
       var reset = await DB.query(query)
     return true
 
@@ -23,7 +24,7 @@ async function run() {
          LIMIT  1
          FOR    UPDATE
          )
-      UPDATE "water"."scheduler" s SET running=1
+      UPDATE "water"."scheduler" s SET running=1, running_on = '${os.hostname()}'
       from job where job.task_id=s.task_id
       RETURNING * ;`
     var job = await DB.query(query)
@@ -38,18 +39,27 @@ async function run() {
 
 
       const taskHandler = require(`./tasks/${job.data[0].task_type}`);
+      try{
       var log = await taskHandler.run(job.data[0])
       console.log('task completed: '+job.data[0].task_type)
+      } catch(e){
+      log=e.message;
+      console.log('task completed IN ERROR: '+job.data[0].task_type)
+
+      }
+
+
 
 
 
 
       try {
-        var query = `UPDATE "water"."scheduler" SET running=0, log=$2,last_run=now(),next_run= now() + interval \'${interval.count}\' ${interval.period} where task_id=$1`
+        var query = `UPDATE "water"."scheduler" SET running=0, running_on=null, log=$2,last_run=now(),next_run= now() + interval \'${interval.count}\' ${interval.period} where task_id=$1`
         var params = [job.data[0].task_id, JSON.stringify(log)];
         try {
           var close = await DB.query(query, params)
         } catch (e) {
+          console.log(e)
           throw e
         }
       } catch (e) {

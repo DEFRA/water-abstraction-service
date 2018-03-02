@@ -30,7 +30,8 @@ const SchedulerApi = new HAPIRestAPI({
     status : Joi.number(),
     running: Joi.number(),
     date_created : Joi.string(),
-    date_updated : Joi.string()
+    date_updated : Joi.string(),
+    running_on : Joi.string(),
   }
 });
 
