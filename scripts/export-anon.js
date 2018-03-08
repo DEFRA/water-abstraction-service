@@ -10,22 +10,6 @@ const csvStringify = require('csv-stringify/lib/sync');
 const fs = require('fs');
 const writeFile = Promise.promisify(fs.writeFile);
 
-const outputPath = './test/dummy-csv/';
-
-function execCommand(command) {
-  return new Promise((resolve, reject) => {
-    const child_process = require('child_process');
-    child_process.exec(command, function(err, stdout, stderr) {
-      if (err) {
-        reject("child processes failed with error code: " +
-          err.code);
-      } else {
-        resolve(stdout);
-      }
-    });
-  })
-}
-
 if (process.env.DATABASE_URL) {
  // get heroku db params from env vars
  var workingVariable = process.env.DATABASE_URL.replace('postgres://', '')
@@ -55,21 +39,9 @@ const structure = {
   sources : {
     table : 'NALD_SOURCES'
   },
-  licTypes : {
-    table : 'NALD_WA_LIC_TYPES'
-  },
-  purpPrims : {
-    table : 'NALD_PURP_PRIMS'
-  },
-  purpSecs : {
-    table : 'NALD_PURP_SECS'
-  },
-  purpUses : {
-    table : 'NALD_PURP_USES'
-  },
   root : {
     table : 'NALD_ABS_LICENCES',
-    cond : [{ LIC_NO : 'x'}, { LIC_NO : 'x'} ],
+    cond : [{ LIC_NO : '03/28/01/0200'}],
     hasMany : [{
         table : 'NALD_ABS_LIC_VERSIONS',
         join : {AABL_ID : 'ID', FGAC_REGION_CODE : 'FGAC_REGION_CODE'},
@@ -129,41 +101,35 @@ const structure = {
   }
 }
 
-
-/**
- * Read data from import schema of DB
- * @param {String} table - the table name
- * @param {Array} filter - an array of conditions describing a sum of products, e.g. [{field: 'val'}, {fieldb : 123}]
- * @return {Promise} resolves with data reads from DB
- */
-async function getData(table, filter) {
-
-  // Build SQL query
+async function getData(table, filter = {}) {
+  let query = `SELECT * FROM import."${ table }" WHERE 1=1 `;
   const params = [];
-  const products = filter.map(cond => {
-    const parts = [];
-    for(key in cond) {
-      params.push(cond[key]);
-      parts.push(`"${key}"=$${params.length}`);
-    }
-    return '(' + parts.join(' AND ') +  ')';
-  });
-
-  let query = `SELECT * FROM import."${ table }" `;
-
-  if(products.length) {
-    query += ` WHERE ` + products.join(' OR ')
+  for(key in filter) {
+    params.push(filter[key]);
+    query += ` AND "${key}"=$${params.length} `;
   }
-
-  // console.log(query);
-
+  console.log(query, params);
   const {rows, error} = await pool.query(query, params);
   if(error) {
     console.error(error);
-    throw error;
   }
   return rows;
+}
 
+
+async function getCondData(table, cond) {
+  if(cond.length === 0) {
+    return getData(table);
+  }
+  const rowSets = await Promise.map(cond, (cond) => {
+    return getData(table, cond);
+  });
+  // Merge arrays
+  const data = [];
+  rowSets.forEach((rows) => {
+    data.push(...rows);
+  });
+  return data;
 }
 
 async function nodeHandler ({ value, location, isLeaf }) {
@@ -173,7 +139,7 @@ async function nodeHandler ({ value, location, isLeaf }) {
     const cond = value.cond || [];
 
     // Get data for this node
-    value.data = await getData(value.table, cond);
+    value.data = await getCondData(value.table, cond);
 
     // Add conditions to child relationships
     if(value.hasMany) {
@@ -190,6 +156,23 @@ async function nodeHandler ({ value, location, isLeaf }) {
   return;
 }
 
+/**
+ * Assumes that first column is primary key field
+ * @param {Array} data - array of objects
+ * @return {Array} - deduplicated on first column
+ */
+function deDuplicate(data) {
+  if(data.length) {
+    const primaryKey = Object.keys(data[0])[0];
+
+    if(primaryKey === 'ID' || primaryKey.match(/_ID$/)) {
+        return uniqBy(data, item => item[primaryKey]);
+    }
+
+
+  }
+  return data;
+}
 
 function getExportData(structure) {
   const data = {};
@@ -203,35 +186,18 @@ function getExportData(structure) {
 
 
 
-
-function writeCsv(outputPath, exportData) {
-  const keys = Object.keys(exportData);
-  return Promise.map(keys, (tableName) => {
-    const data = exportData[tableName];
-    console.log(`Exporting ${tableName}`);
-    const columns = Object.keys(data[0]).map(s => s.replace(/[^A-Z_0-9]/ig, ''));
-    const csv = csvStringify(data, {columns, header : true, quoted : false, quotedEmpty : false, quotedString : false});
-    return writeFile(`${ outputPath }${ tableName }.txt`, csv);
-  });
-}
-
-
 async function main() {
     await walkObjectAsync(structure, nodeHandler);
 
     const exportData = getExportData(structure);
 
     // Randomise data
-
-
-    // Create directory
-    await execCommand(`mkdir -p ${ outputPath }`);
+    
 
     // Write CSV data
-    await writeCsv(outputPath, exportData);
-
-    process.exit(0);
-
+    mapValues(exportData, (data, tableName) => {
+      writeFile('./data/' + tableName + '.csv', csvStringify(data, {header : true}));
+    });
 }
 
 main();
