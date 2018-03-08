@@ -37,6 +37,7 @@
     "bcrypt": "^1.0.3",
     "blipp": "^2.3.0",
     "boom": "^5.2.0",
+    "deep-map": "^1.5.0",
     "dotenv": "^4.0.0",
     "handlebars": "^4.0.10",
     "handlebars-helper-equal": "^1.0.0",

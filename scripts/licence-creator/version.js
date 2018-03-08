@@ -4,8 +4,9 @@ const getNextId = require('./next-id.js');
 class Version {
   constructor() {
     this.id = getNextId();
-    this.startDate = moment().format('DD/MM/YYYY');
+    this.startDate = '01/01/2018';
 
+    this.address = null;
     this.licence = null;
     this.party = null;
     this.purposes = [];
@@ -29,7 +30,7 @@ class Version {
   }
 
   setAddress(address) {
-    this.addressId = address.id;
+    this.address = address;
     return this;
   }
 
@@ -51,7 +52,7 @@ class Version {
       CHARGEABLE : 'Y',
       ASRC_CODE : 'SWSOS',
       ACON_APAR_ID : this.party.id,
-      ACON_AADD_ID : this.addressId,
+      ACON_AADD_ID : this.address.id,
       ALTY_CODE : 'LOR',
       ACCL_CODE : 'CR',
       MULTIPLE_LH : 'N',

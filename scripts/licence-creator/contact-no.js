@@ -6,6 +6,12 @@ class ContactNo {
   constructor() {
     this.party = null;
     this.address = null;
+    this.contactNoType = null;
+  }
+
+  setContactNoType(contactNoType) {
+    this.contactNoType = contactNoType;
+    return this;
   }
 
   setParty(party) {
@@ -22,7 +28,7 @@ class ContactNo {
     return {
       ACON_APAR_ID : this.party.id,
       ACON_AADD_ID : this.address.id,
-      ACNT_CODE : 'HP',
+      ACNT_CODE : this.contactNoType.code,
       CONT_NO : '01234 567890',
       DISP_ORD : null,
       FGAC_REGION_CODE : 1,

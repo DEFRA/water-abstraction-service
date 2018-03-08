@@ -13,6 +13,13 @@ class Role {
     this.endDate = moment().add(1, 'year').format('DD/MM/YYYY');
 
     this.contactNos = [];
+
+    this.roleType = null;
+  }
+
+  setRoleType(roleType) {
+    this.roleType = roleType;
+    return this;
   }
 
   setLicence(licence) {
@@ -38,7 +45,7 @@ class Role {
   export() {
     return {
       ID : this.id,
-      ALRT_CODE : 'RT',
+      ALRT_CODE : this.roleType.code,
       ACON_APAR_ID : this.party.id,
       ACON_AADD_ID : this.address.id,
       EFF_ST_DATE : this.startDate,

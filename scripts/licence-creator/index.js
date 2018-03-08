@@ -4,6 +4,7 @@ const Promise = require('bluebird');
 const csvStringify = require('csv-stringify/lib/sync');
 const getNextId = require('./next-id');
 const writeFile = Promise.promisify(fs.writeFile);
+const deepMap = require('deep-map');
 
 // Licence classes
 const Licence = require('./licence');
@@ -14,12 +15,14 @@ const Agreement = require('./agreement');
 const Condition = require('./condition');
 const Contact = require('./contact');
 const ContactNo = require('./contact-no');
+const ContactNoType = require('./contact-no-type');
 const MeansOfAbstraction = require('./means-of-abstraction');
 const Party = require('./party');
 const Point = require('./point');
 const Purpose = require('./purpose');
 const PurposePoint = require('./purpose-point');
 const Role = require('./role');
+const RoleType = require('./role-type');
 const WALicenceType = require('./wa-licence-type');
 
 // Construct licence
@@ -45,18 +48,26 @@ party.addContact(contact);
 // Add address to contact
 const address = new Address();
 contact.setAddress(address);
+version.setAddress(address);
 
 // Add role
 const role = new Role();
+const roleType = new RoleType();
+role.setRoleType(roleType);
+
 l.addRole(role);
+
+
 // role.setLicence(this);
 role.setParty(party);
 role.setAddress(address);
 
 // Add contact no to role
 const contactNo = new ContactNo();
+const contactNoType = new ContactNoType();
 contactNo.setParty(party);
 contactNo.setAddress(address);
+contactNo.setContactNoType(contactNoType);
 role.addContactNo(contactNo);
 
 // Add purpose
@@ -89,9 +100,12 @@ const data = l.exportAll();
 function writeCsv(outputPath, exportData) {
   const keys = Object.keys(exportData);
   return Promise.map(keys, (tableName) => {
-    const data = exportData[tableName];
+    // Convert JS null to 'null' string as in CSV data
+    const data = deepMap(exportData[tableName], (value) => {
+      return value === null ? 'null' : value;
+    });
     console.log(`Exporting ${tableName}`);
-    const columns = Object.keys(data[0]).map(s => s.replace(/[^A-Z_0-9]/ig, ''));
+    const columns = Object.keys(data[0])
     const csv = csvStringify(data, {columns, header : true, quoted : false, quotedEmpty : false, quotedString : false});
     return writeFile(`${ outputPath }${ tableName }.txt`, csv);
   });

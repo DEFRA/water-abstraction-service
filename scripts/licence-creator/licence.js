@@ -59,9 +59,17 @@ class Licence {
     // Roles
     const NALD_LIC_ROLES = this.roles.map(role => role.export());
 
+    // Role types
+    const NALD_LIC_ROLE_TYPES = this.roles.map(role => role.roleType.export());
+
     // Contact Nos
     const NALD_CONT_NOS = this.roles.reduce((memo, role) => {
       return [...memo, ...role.contactNos.map(contactNo => contactNo.export())];
+    }, []);
+
+    // Contact no types
+    const NALD_CONT_NO_TYPES = this.roles.reduce((memo, role) => {
+      return [...memo, ...role.contactNos.map(contactNo => contactNo.contactNoType.export())];
     }, []);
 
     // Purposes
@@ -113,7 +121,9 @@ class Licence {
       NALD_ADDRESSES,
       NALD_REP_UNITS,
       NALD_LIC_ROLES,
+      NALD_LIC_ROLE_TYPES,
       NALD_CONT_NOS,
+      NALD_CONT_NO_TYPES,
       NALD_ABS_LIC_PURPOSES,
       NALD_LIC_CONDITIONS,
       NALD_LIC_AGRMNTS,
