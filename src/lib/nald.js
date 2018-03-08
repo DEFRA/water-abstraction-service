@@ -532,7 +532,7 @@ const getPointAbstractionMethods = async(AAIP_ID,FGAC_REGION_CODE) => {
   client.release()
   return res.rows
 }
-getPurposePointLicenceAgreements = async(AABP_ID,FGAC_REGION_CODE) => {
+const getPurposePointLicenceAgreements = async(AABP_ID,FGAC_REGION_CODE) => {
   //console.log('AABP_ID (1) ', AABP_ID)
   client = await pool.connect()
   const res = await client.query(`
@@ -542,7 +542,7 @@ getPurposePointLicenceAgreements = async(AABP_ID,FGAC_REGION_CODE) => {
   client.release()
   return res.rows
 }
-getPurposePointLicenceConditions = async(AABP_ID,FGAC_REGION_CODE) => {
+const getPurposePointLicenceConditions = async(AABP_ID,FGAC_REGION_CODE) => {
   //console.log('AABP_ID (2) ', AABP_ID)
   try {
     client = await pool.connect()
