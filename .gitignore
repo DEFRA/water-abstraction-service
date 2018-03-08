@@ -6,3 +6,5 @@
 /views/
 .env
 /src/lib/temp/
+/coverage
+lcov.info
