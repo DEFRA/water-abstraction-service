@@ -11,7 +11,7 @@ before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
   - npm run migrate
 script:
-  - ./node_modules/lab/bin/lab -t 55 -m 0 --coverage-path ./src/ --ignore version --reporter lcov && ./node_modules/.bin/codecov
+  - ./node_modules/lab/bin/lab -t 55 -m 0 --coverage-path ./src/ --ignore version -r lcov -o lcov.info -r console -o stdout && ./node_modules/.bin/codecov
 env:
   global:
     - DATABASE_URL=postgres://postgres:@localhost:5432/travis_ci_test
