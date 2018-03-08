@@ -77,6 +77,7 @@ function execCommand(command) {
     const child_process = require('child_process');
     child_process.exec(command, function(err, stdout, stderr) {
       if (err) {
+        console.log(err);
         reject("child processes failed with error code: " +
           err.code);
       } else {
@@ -129,6 +130,36 @@ const loadNaldData = async(request, reply) => {
     //    return reply(e)
   }
 }
+
+const testLoadNaldData = async(request, reply) => {
+   try {
+    console.log('Starting dummy data import');
+
+    // Delete files in temp folder
+    var command = `rm ${localPath}NALD/* `;
+    await execCommand(command);
+
+    // move dummy data files
+    var command = `cp ./test/dummy-csv/* ${localPath}NALD/`;
+    console.log(command);
+    await execCommand(command);
+
+
+    var sqlFile = await buildSQL()
+    console.log(sqlFile)
+    console.log('Execute DB file')
+    console.log(`Loading to DB at ${process.env.PGHOST}`)
+    var command = `PGPASSWORD=${process.env.PGPASSWORD} psql -h ${process.env.PGHOST} -U ${process.env.PGUSER} ${process.env.PGDATABASE} < ${localPath}/sql.sql`;
+    var loaddata = await execCommand(command)
+    console.log(loaddata)
+    console.log('data loaded')
+  } catch (e) {
+    console.log('error ', e)
+    //    return reply(e)
+  }
+}
+
+
 function getS3() {
   return new Promise((resolve, reject) => {
     const knox = require('knox')
@@ -185,6 +216,8 @@ const licence = async(licence_number) => {
       thisLicenceRow.data = {}
       //  console.log('get purpose')
       thisLicenceRow.data.versions = await getVersions(thisLicenceRow.ID,thisLicenceRow.FGAC_REGION_CODE);
+
+      console.log('versions', thisLicenceRow.data.versions);
       for (var v in thisLicenceRow.data.versions) {
         thisLicenceRow.data.versions[v].parties = await getParties(thisLicenceRow.data.versions[v].ACON_APAR_ID,thisLicenceRow.FGAC_REGION_CODE);
         for (var p in thisLicenceRow.data.versions[v].parties) {
@@ -563,6 +596,7 @@ getPurposePointLicenceConditions = async(AABP_ID,FGAC_REGION_CODE) => {
 }
 module.exports = {
   import: loadNaldData,
+  importTest: testLoadNaldData,
   licence,
   getLicence,
 }
