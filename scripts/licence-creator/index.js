@@ -1,10 +1,9 @@
 const fs = require('fs');
-const moment = require('moment');
 const Promise = require('bluebird');
 const csvStringify = require('csv-stringify/lib/sync');
-const getNextId = require('./next-id');
 const writeFile = Promise.promisify(fs.writeFile);
 const deepMap = require('deep-map');
+const {mkdirsSync} = require('mkdir');
 
 // Licence classes
 const Licence = require('./licence');
@@ -34,7 +33,6 @@ const WALicenceType = require('./wa-licence-type');
 // Construct licence
 const l = new Licence('12/34/56/78');
 
-
 const type = new WALicenceType('TEST', 'Test licence type');
 
 const version = new Version();
@@ -62,7 +60,6 @@ const roleType = new RoleType();
 role.setRoleType(roleType);
 
 l.addRole(role);
-
 
 // role.setLicence(this);
 role.setParty(party);
@@ -113,14 +110,13 @@ pp.setMeansOfAbstraction(means);
 pp.setPoint(point);
 purpose.addPurposePoint(pp);
 
-
 /**
  * Export data as CSV files
  * @param {String} outputPath - directory to dump CSV files
  * @param {Object} exportData - data to dump to CSV files, keys are table names
  * @return {Promise} resolves when CSV files written
  */
-function writeCsv(outputPath, exportData) {
+function writeCsv (outputPath, exportData) {
   const keys = Object.keys(exportData);
   return Promise.map(keys, (tableName) => {
     // Convert JS null to 'null' string as in CSV data
@@ -128,21 +124,21 @@ function writeCsv(outputPath, exportData) {
       return value === null ? 'null' : value;
     });
     console.log(`Exporting ${tableName}`);
-    const columns = Object.keys(data[0])
-    const csv = csvStringify(data, {columns, header : true, quoted : false, quotedEmpty : false, quotedString : false});
-    return writeFile(`${ outputPath }${ tableName }.txt`, csv);
+    const columns = Object.keys(data[0]);
+    const csv = csvStringify(data, {columns, header: true, quoted: false, quotedEmpty: false, quotedString: false});
+    return writeFile(`${outputPath}${tableName}.txt`, csv);
   });
 }
 
-
-function dumpCsv() {
-  const data = l.exportAll();
+function dumpCsv () {
   const outputPath = './test/dummy-csv/';
+  mkdirsSync(outputPath);
+  const data = l.exportAll();
   return writeCsv(outputPath, data);
 }
 
 module.exports = dumpCsv;
 
-if(!module.parent) {
+if (!module.parent) {
   dumpCsv();
 }
