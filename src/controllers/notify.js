@@ -34,7 +34,7 @@ async function send(request, reply) {
 
   //note: now schedules notification for NOW for,logging reasons
   try {
-    res = await sendLater(config)
+    var res = await sendLater(config)
     console.log(res)
     if (res.error) {
       console.log(res.error)
@@ -78,7 +78,7 @@ async function futureSend(request, reply) {
   config.personalisation = request.payload.personalisation
   config.sendafter = request.payload.sendafter
   try {
-    res = await sendLater(config)
+    var res = await sendLater(config)
     console.log(res)
     if (res.error) {
       console.log(res.error)

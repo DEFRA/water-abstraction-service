@@ -7,3 +7,5 @@
 .env
 /src/lib/temp/
 /test/dummy-csv
+/coverage
+lcov.info
