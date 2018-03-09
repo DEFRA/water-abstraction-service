@@ -3,7 +3,6 @@ const localPath = `${__dirname}/temp/`;
 const filePath = `${localPath}nald_dl.zip`;
 const finalPath = `${__dirname}/temp/NALD`;
 const Slack = require('./slack');
-var tables = [];
 var tableCreate = '';
 async function buildSQL (request, reply) {
   tableCreate += 'drop schema if exists "import" cascade;\nCREATE schema if not exists "import"; \n ';
@@ -13,7 +12,7 @@ async function buildSQL (request, reply) {
   for (var f in files) {
     var file = files[f];
     var table = file.split('.')[0];
-    if (table.length == 0 || excludeList.indexOf(table) > -1) {
+    if (table.length === 0 || excludeList.indexOf(table) > -1) {
       // console.log(`SKIP ${table}`)
     } else {
       // console.log(`Process ${table}`)
@@ -27,7 +26,7 @@ async function buildSQL (request, reply) {
       }
       for (var col = 0; col < cols.length; col++) {
         tableCreate += `"${cols[col]}" varchar`;
-        if (cols.length == (col + 1)) {
+        if (cols.length === (col + 1)) {
           tableCreate += `);`;
         } else {
           tableCreate += `, `;
@@ -74,12 +73,11 @@ function readFirstLine (path) {
 }
 function execCommand (command) {
   return new Promise((resolve, reject) => {
-    const child_process = require('child_process');
-    child_process.exec(command, function (err, stdout, stderr) {
+    const childProcess = require('child_process');
+    childProcess.exec(command, function (err, stdout, stderr) {
       if (err) {
         console.log(err);
-        reject('child processes failed with error code: ' +
-          err.code);
+        reject(new Error('child processes failed with error code: ' + err.code));
       } else {
         resolve(stdout);
       }
@@ -94,24 +92,24 @@ const loadNaldData = async (request, reply) => {
   await Slack.post('Purging previous downloads');
   try {
     console.log(`purge dir ${localPath}`);
-    var tmpDir = await execCommand(`rm -rf ${localPath}`);
+    await execCommand(`rm -rf ${localPath}`);
     console.log(`check dir ${localPath}`);
-    var tmpDir = await execCommand(`mkdir -p ${localPath}`);
+    await execCommand(`mkdir -p ${localPath}`);
     await Slack.post('Downloading from S3');
     console.log(`download from s3`);
     var s3 = await getS3();
     console.log('written ' + s3 + ' to ' + filePath);
     await Slack.post('S3 Download completed. Unzipping main archive');
     console.log('unzip top level');
-    var command = `7z x ${localPath}nald_dl.zip -pn4ld -o${localPath}`;
+    let command = `7z x ${localPath}nald_dl.zip -pn4ld -o${localPath}`;
     console.log(command);
-    var res = await execCommand(command);
+    let res = await execCommand(command);
     console.log(res);
     await Slack.post('Unzipping secondary archive');
     console.log('unzip secondary');
-    var command = `7z x ${localPath}/NALD.zip -o${localPath}`;
+    command = `7z x ${localPath}/NALD.zip -o${localPath}`;
     console.log(command);
-    var res = await execCommand(command);
+    res = await execCommand(command);
     console.log(res);
     await Slack.post('Processing data files');
     console.log('process files');
@@ -119,7 +117,7 @@ const loadNaldData = async (request, reply) => {
     console.log(sqlFile);
     console.log('Execute DB file');
     await Slack.post(`Loading to DB at ${process.env.PGHOST}`);
-    var command = `PGPASSWORD=${process.env.PGPASSWORD} psql -h ${process.env.PGHOST} -U ${process.env.PGUSER} ${process.env.PGDATABASE} < ${localPath}/sql.sql`;
+    command = `PGPASSWORD=${process.env.PGPASSWORD} psql -h ${process.env.PGHOST} -U ${process.env.PGUSER} ${process.env.PGDATABASE} < ${localPath}/sql.sql`;
     var loaddata = await execCommand(command);
     console.log(loaddata);
     console.log('data loaded');
@@ -136,11 +134,11 @@ const testLoadNaldData = async (request, reply) => {
     console.log('Starting dummy data import');
 
     // Delete files in temp folder
-    var command = `rm ${localPath}NALD/* `;
+    let command = `rm ${localPath}NALD/* `;
     await execCommand(command);
 
     // move dummy data files
-    var command = `cp ./test/dummy-csv/* ${localPath}NALD/`;
+    command = `cp ./test/dummy-csv/* ${localPath}NALD/`;
     console.log(command);
     await execCommand(command);
 
@@ -148,7 +146,7 @@ const testLoadNaldData = async (request, reply) => {
     console.log(sqlFile);
     console.log('Execute DB file');
     console.log(`Loading to DB at ${process.env.PGHOST}`);
-    var command = `PGPASSWORD=${process.env.PGPASSWORD} psql -h ${process.env.PGHOST} -U ${process.env.PGUSER} ${process.env.PGDATABASE} < ${localPath}/sql.sql`;
+    command = `PGPASSWORD=${process.env.PGPASSWORD} psql -h ${process.env.PGHOST} -U ${process.env.PGUSER} ${process.env.PGDATABASE} < ${localPath}/sql.sql`;
     var loaddata = await execCommand(command);
     console.log(loaddata);
     console.log('data loaded');
@@ -180,6 +178,9 @@ function getS3 () {
     var file = require('fs').createWriteStream(filePath);
     const s3file = 'nald_dump/nald_enc.zip';
     client.getFile(s3file, function (err, stream) {
+      if (err) {
+        throw err;
+      }
       stream.on('data', function (chunk) {
         file.write(chunk);
       });
@@ -205,9 +206,9 @@ pool.on('connect', (client) => {
 const getLicence = (request, reply) => {
   return reply(licence(request.payload.licence_number));
 };
-const licence = async (licence_number) => {
+const licence = async (licenceNumber) => {
   try {
-    var data = await getMain(licence_number);
+    var data = await getMain(licenceNumber);
     for (var licenceRow in data) {
       //  console.log('Licence ',licenceRow)
       //  console.log(data[licenceRow])
@@ -227,7 +228,7 @@ const licence = async (licence_number) => {
       thisLicenceRow.data.current_version.licence = (await getCurrentVersion(thisLicenceRow.ID, thisLicenceRow.FGAC_REGION_CODE))[0];
 
       thisLicenceRow.data.current_version.licence.party = await getParties(thisLicenceRow.data.current_version.licence.ACON_APAR_ID, thisLicenceRow.FGAC_REGION_CODE);
-      for (var p in thisLicenceRow.data.current_version.licence.parties) {
+      for (p in thisLicenceRow.data.current_version.licence.parties) {
         thisLicenceRow.data.current_version.licence.parties[p].contacts = await getPartyContacts(thisLicenceRow.data.current_version.licence.parties[p].ID, thisLicenceRow.FGAC_REGION_CODE);
       }
       thisLicenceRow.data.current_version.party = (await getParty(thisLicenceRow.data.current_version.licence.ACON_APAR_ID, thisLicenceRow.FGAC_REGION_CODE))[0];
@@ -253,7 +254,7 @@ const licence = async (licence_number) => {
       thisLicenceRow.data.roles = await getRoles(thisLicenceRow.ID, thisLicenceRow.FGAC_REGION_CODE);
       //  console.log('get points')
       thisLicenceRow.data.purposes = await getPurposes(thisLicenceRow.ID, thisLicenceRow.FGAC_REGION_CODE);
-      for (var pu in thisLicenceRow.data.purposes) {
+      for (pu in thisLicenceRow.data.purposes) {
         thisLicenceRow.data.purposes[pu].purpose = await getPurpose({
           primary: thisLicenceRow.data.purposes[pu].APUR_APPR_CODE,
           secondary: thisLicenceRow.data.purposes[pu].APUR_APSE_CODE,
@@ -281,14 +282,14 @@ function dateToSortableString (str) {
     return null;
   }
 }
-const getMain = async (licence_no) => {
+const getMain = async (licenceNo) => {
   const client = await pool.connect();
   const res = await client.query(`
     select * from import.
     -- "NALD_ABSTAT_WFD_DATA"
     "NALD_ABS_LICENCES"
     where "LIC_NO"=$1
-    `, [licence_no]);
+    `, [licenceNo]);
   client.release();
   return res.rows;
 };
@@ -305,52 +306,52 @@ const getCams = async (code, FGAC_REGION_CODE) => {
   //  console.log('getCams - release')
   return res.rows;
 };
-const getCurrentVersion = async (licence_id, FGAC_REGION_CODE) => {
+const getCurrentVersion = async (licenceId, FGAC_REGION_CODE) => {
   const client = await pool.connect();
   const res = await client.query(`
     SELECT
-    	*
+      *
     FROM
-    	import."NALD_ABS_LIC_VERSIONS"
-    	JOIN import."NALD_WA_LIC_TYPES" ON "NALD_ABS_LIC_VERSIONS"."WA_ALTY_CODE" = "NALD_WA_LIC_TYPES"."CODE"
+      import."NALD_ABS_LIC_VERSIONS"
+      JOIN import."NALD_WA_LIC_TYPES" ON "NALD_ABS_LIC_VERSIONS"."WA_ALTY_CODE" = "NALD_WA_LIC_TYPES"."CODE"
     WHERE
-    	"AABL_ID" = $1
-    	AND "FGAC_REGION_CODE" = $2
-    	AND (
-    	0 = 0
-    	AND "EFF_END_DATE" = 'null'
-    	OR to_date( "EFF_END_DATE", 'DD/MM/YYYY' ) > now()
-    	)
-    	AND ( 0 = 0 -- and "EFF_ST_DATE" = 'null'--	OR to_date( "EFF_ST_DATE", 'DD/MM/YYYY' ) <= now()
-    	)
-    	AND "NALD_ABS_LIC_VERSIONS"."STATUS" = 'CURR'
+      "AABL_ID" = $1
+      AND "FGAC_REGION_CODE" = $2
+      AND (
+      0 = 0
+      AND "EFF_END_DATE" = 'null'
+      OR to_date( "EFF_END_DATE", 'DD/MM/YYYY' ) > now()
+      )
+      AND ( 0 = 0 -- and "EFF_ST_DATE" = 'null'--  OR to_date( "EFF_ST_DATE", 'DD/MM/YYYY' ) <= now()
+      )
+      AND "NALD_ABS_LIC_VERSIONS"."STATUS" = 'CURR'
     ORDER BY
-    	"ISSUE_NO" DESC,
-    	"INCR_NO" DESC
-    	LIMIT 1
-    `, [licence_id, FGAC_REGION_CODE]);
+      "ISSUE_NO" DESC,
+      "INCR_NO" DESC
+      LIMIT 1
+    `, [licenceId, FGAC_REGION_CODE]);
   //  console.log('getCams - pre release')
   client.release();
   //  console.log('getCams - release')
 
   return res.rows;
 };
-const getVersions = async (licence_id, FGAC_REGION_CODE) => {
+const getVersions = async (licenceId, FGAC_REGION_CODE) => {
   //  console.log('getCams ',code)
   const client = await pool.connect();
   //  console.log('getCams - got client')
   const res = await client.query(`
     select * from import."NALD_ABS_LIC_VERSIONS"
---	   JOIN NALD_WA_LIC_TYPES ON "NALD_ABS_LIC_VERSIONS"."WA_ALTY_CODE"="NALD_WA_LIC_TYPES"."CODE"
+--     JOIN NALD_WA_LIC_TYPES ON "NALD_ABS_LIC_VERSIONS"."WA_ALTY_CODE"="NALD_WA_LIC_TYPES"."CODE"
     where "AABL_ID"=$1 and "FGAC_REGION_CODE" = $2
-    `, [licence_id, FGAC_REGION_CODE]);
+    `, [licenceId, FGAC_REGION_CODE]);
   //  console.log('getCams - pre release')
   client.release();
   //  console.log('getCams - release')
   return res.rows;
 };
 const getParties = async (ID, FGAC_REGION_CODE) => {
-  client = await pool.connect();
+  const client = await pool.connect();
   const res = await client.query(`
     select
     p.*
@@ -410,18 +411,18 @@ const getRoles = async (AABL_ID, FGAC_REGION_CODE) => {
           row_to_json(p.*) AS role_party,
           row_to_json(a.*) AS role_address,
 
-    			ARRAY(
-    			select
-    			row_to_json(x.*) AS contact_data from (
-    				SELECT
-    				*
-    				from import."NALD_CONT_NOS" c
-    				left join import."NALD_CONT_NO_TYPES" ct on c."ACNT_CODE"=ct."CODE"
-    				where r."ACON_APAR_ID"=c."ACON_APAR_ID" and r."ACON_AADD_ID" = c."ACON_AADD_ID"
-    				and c."FGAC_REGION_CODE" = $2
+          ARRAY(
+          select
+          row_to_json(x.*) AS contact_data from (
+            SELECT
+            *
+            from import."NALD_CONT_NOS" c
+            left join import."NALD_CONT_NO_TYPES" ct on c."ACNT_CODE"=ct."CODE"
+            where r."ACON_APAR_ID"=c."ACON_APAR_ID" and r."ACON_AADD_ID" = c."ACON_AADD_ID"
+            and c."FGAC_REGION_CODE" = $2
 
-    			) x
-    			)
+          ) x
+          )
 
           from
           import."NALD_LIC_ROLES" r
@@ -444,12 +445,12 @@ const getRoles = async (AABL_ID, FGAC_REGION_CODE) => {
   client.release();
   return res.rows;
 };
-const getPurposes = async (licence_id, FGAC_REGION_CODE, ISSUE_NO, INCR_NO) => {
+const getPurposes = async (licenceId, FGAC_REGION_CODE, ISSUE_NO, INCR_NO) => {
   //  console.log('purpose ',purpose)
   const client = await pool.connect();
   let res;
   if (ISSUE_NO && INCR_NO) {
-    const params = [licence_id, FGAC_REGION_CODE, ISSUE_NO, INCR_NO];
+    const params = [licenceId, FGAC_REGION_CODE, ISSUE_NO, INCR_NO];
     console.log('p1', params);
     try {
       res = await client.query(`
@@ -464,7 +465,7 @@ const getPurposes = async (licence_id, FGAC_REGION_CODE, ISSUE_NO, INCR_NO) => {
       console.log(e);
     }
   } else {
-    const params = [licence_id, FGAC_REGION_CODE];
+    const params = [licenceId, FGAC_REGION_CODE];
     console.log('p2', params);
     try {
       res = await client.query(`
@@ -484,7 +485,7 @@ const getPurposes = async (licence_id, FGAC_REGION_CODE, ISSUE_NO, INCR_NO) => {
   console.log(res.error);
   return res.rows;
 };
-const getPurposePoints = async (purpose_id, FGAC_REGION_CODE) => {
+const getPurposePoints = async (purposeId, FGAC_REGION_CODE) => {
   const client = await pool.connect();
   const res = await client.query(`
         select
@@ -498,7 +499,7 @@ const getPurposePoints = async (purpose_id, FGAC_REGION_CODE) => {
               left join import."NALD_POINTS" p on p."ID"=pp."AAIP_ID"
               left join import."NALD_SOURCES" s on s."CODE"=p."ASRC_CODE"
         where pp."AABP_ID"=$1 and pp."FGAC_REGION_CODE" = $2 and p."FGAC_REGION_CODE" = $2
-    `, [purpose_id, FGAC_REGION_CODE]);
+    `, [purposeId, FGAC_REGION_CODE]);
   client.release();
   return res.rows;
 };
@@ -519,41 +520,41 @@ const getPurpose = async (purpose) => {
   client.release();
   return res.rows;
 };
-const getPoints = async (AAIP_ID, NGR1_SHEET) => {
-  //  console.log('AAIP_ID ',AAIP_ID,' NGR1_SHEET ',NGR1_SHEET)
-  const client = await pool.connect();
-  const res = await client.query(`
-      select
-      row_to_json(p.*) AS point,
-      row_to_json(pc.*) AS point_category,
-      row_to_json(ptp.*) AS point_type_primary,
-      row_to_json(pts.*) AS point_type_secondary,
-      row_to_json(s.*) AS source
-      from import."NALD_POINTS" p
-      left join import."NALD_SOURCES" s on s."CODE"=p."ASRC_CODE"
-      left join import."NALD_POINT_CATEGORIES" pc on pc."CODE"=p."AAPC_CODE"
-      left join import."NALD_POINT_TYPE_PRIMS" ptp on ptp."CODE"=p."AAPT_APTP_CODE"
-      left join import."NALD_POINT_TYPE_SECS" pts on pts."CODE"=p."AAPT_APTS_CODE"
-      where "ID"=$1 and "NGR1_SHEET"=$2
-  `, [AAIP_ID, NGR1_SHEET]);
-  //  console.log('done')
-  client.release();
-  return res.rows;
-};
-const getPointAbstractionMethods = async (AAIP_ID, FGAC_REGION_CODE) => {
-  //  console.log('AAIP_ID ',AAIP_ID)
-  const client = await pool.connect();
-  const res = await client.query(`
-      select pp.*,
-      row_to_json(m.*) AS means_of_abstraction
-      from import."NALD_ABS_PURP_POINTS" pp
-      left join import."NALD_MEANS_OF_ABS" m on m."CODE"=pp."AMOA_CODE"
-      where pp."AAIP_ID"=$1 and pp."FGAC_REGION_CODE" = $2
-  `, [AAIP_ID, FGAC_REGION_CODE]);
-  //  console.log('done')
-  client.release();
-  return res.rows;
-};
+// const getPoints = async (AAIP_ID, NGR1_SHEET) => {
+//   //  console.log('AAIP_ID ',AAIP_ID,' NGR1_SHEET ',NGR1_SHEET)
+//   const client = await pool.connect();
+//   const res = await client.query(`
+//       select
+//       row_to_json(p.*) AS point,
+//       row_to_json(pc.*) AS point_category,
+//       row_to_json(ptp.*) AS point_type_primary,
+//       row_to_json(pts.*) AS point_type_secondary,
+//       row_to_json(s.*) AS source
+//       from import."NALD_POINTS" p
+//       left join import."NALD_SOURCES" s on s."CODE"=p."ASRC_CODE"
+//       left join import."NALD_POINT_CATEGORIES" pc on pc."CODE"=p."AAPC_CODE"
+//       left join import."NALD_POINT_TYPE_PRIMS" ptp on ptp."CODE"=p."AAPT_APTP_CODE"
+//       left join import."NALD_POINT_TYPE_SECS" pts on pts."CODE"=p."AAPT_APTS_CODE"
+//       where "ID"=$1 and "NGR1_SHEET"=$2
+//   `, [AAIP_ID, NGR1_SHEET]);
+//   //  console.log('done')
+//   client.release();
+//   return res.rows;
+// };
+// const getPointAbstractionMethods = async (AAIP_ID, FGAC_REGION_CODE) => {
+//   //  console.log('AAIP_ID ',AAIP_ID)
+//   const client = await pool.connect();
+//   const res = await client.query(`
+//       select pp.*,
+//       row_to_json(m.*) AS means_of_abstraction
+//       from import."NALD_ABS_PURP_POINTS" pp
+//       left join import."NALD_MEANS_OF_ABS" m on m."CODE"=pp."AMOA_CODE"
+//       where pp."AAIP_ID"=$1 and pp."FGAC_REGION_CODE" = $2
+//   `, [AAIP_ID, FGAC_REGION_CODE]);
+//   //  console.log('done')
+//   client.release();
+//   return res.rows;
+// };
 const getPurposePointLicenceAgreements = async (AABP_ID, FGAC_REGION_CODE) => {
   // console.log('AABP_ID (1) ', AABP_ID)
   const client = await pool.connect();

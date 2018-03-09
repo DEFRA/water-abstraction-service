@@ -14,7 +14,7 @@ function post (message) {
     var options = { method: 'POST',
       url: uri,
       headers:
-       { 'content-type': 'application/x-www-form-urlencoded'},
+       { 'content-type': 'application/x-www-form-urlencoded' },
       form: { payload: '{"channel": "#beta-activity", "username": "Gerald The Water Buffalo", "text": "' + message + '", "icon_emoji": ":water_buffalo:"}' } };
     rp(options)
       .then(function (response) {
