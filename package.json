@@ -8,7 +8,8 @@
     "heroku-postbuild": "gulp clean && gulp copy-govuk-files && gulp install-govuk-files && gulp copy-static-assets && gulp sass",
     "test": "./node_modules/lab/bin/lab -t 55 -m 0 --coverage-path ./src/ --ignore version -r lcov -o lcov.info -r console -o stdout",
     "test-cov-html": "lab -r html -o coverage.html",
-    "migrate": "node scripts/create-schema && node node_modules/db-migrate/bin/db-migrate up --verbose"
+    "migrate": "node scripts/create-schema && node node_modules/db-migrate/bin/db-migrate up --verbose",
+    "lint": "./node_modules/.bin/eslint ./src/**/*.js --fix"
   },
   "engines": {
     "node": ">=8.0"
@@ -29,8 +30,14 @@
     "istanbul": "^0.4.5",
     "lab": "^14.3.2",
     "run-sequence": "^2.2.1",
-    "standard": "^10.0.2",
-    "walk-object": "^4.0.0"
+    "walk-object": "^4.0.0",
+    "eslint": "^4.17.0",
+    "eslint-config-standard": "^11.0.0-beta.0",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-node": "^6.0.0",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "standard": "^10.0.3"
   },
   "dependencies": {
     "async-waterfall": "^0.1.5",

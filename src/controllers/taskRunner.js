@@ -2,20 +2,17 @@ const DB = require('../lib/connectors/db');
 const NotifyClient = require('notifications-node-client').NotifyClient;
 const notifyClient = new NotifyClient(process.env.NOTIFY_KEY);
 const Joi = require('joi');
-const os=require('os')
+const os = require('os');
 
-async function reset() {
-  console.log('resetting scheduler')
-    var query = `
-      UPDATE "water"."scheduler" SET running=0 where running_on = '${os.hostname()}'`
-      var reset = await DB.query(query)
-    return true
-
+async function reset () {
+  console.log('resetting scheduler');
+  var query = `
+      UPDATE "water"."scheduler" SET running=0 where running_on = '${os.hostname()}'`;
+  var reset = await DB.query(query);
+  return true;
 }
-async function run() {
-
+async function run () {
   try {
-
     var query = `
       WITH job AS (
          SELECT *
@@ -26,52 +23,43 @@ async function run() {
          )
       UPDATE "water"."scheduler" s SET running=1, running_on = '${os.hostname()}'
       from job where job.task_id=s.task_id
-      RETURNING * ;`
-    var job = await DB.query(query)
+      RETURNING * ;`;
+    var job = await DB.query(query);
     if (job.data.length == 0) {} else {
-
-      try{
-        var interval=JSON.parse(job.data[0].task_config)
-      }catch(e){
-        var interval={count:1,period:'minute'}
+      try {
+        var interval = JSON.parse(job.data[0].task_config);
+      } catch (e) {
+        var interval = {count: 1, period: 'minute'};
       }
-
-
 
       const taskHandler = require(`./tasks/${job.data[0].task_type}`);
-      try{
-      var log = await taskHandler.run(job.data[0])
-      console.log('task completed: '+job.data[0].task_type)
-      } catch(e){
-      log=e.message;
-      console.log('task completed IN ERROR: '+job.data[0].task_type)
-
+      try {
+        var log = await taskHandler.run(job.data[0]);
+        console.log('task completed: ' + job.data[0].task_type);
+      } catch (e) {
+        log = e.message;
+        console.log('task completed IN ERROR: ' + job.data[0].task_type);
       }
 
-
-
-
-
-
       try {
-        var query = `UPDATE "water"."scheduler" SET running=0, running_on=null, log=$2,last_run=now(),next_run= now() + interval \'${interval.count}\' ${interval.period} where task_id=$1`
+        var query = `UPDATE "water"."scheduler" SET running=0, running_on=null, log=$2,last_run=now(),next_run= now() + interval \'${interval.count}\' ${interval.period} where task_id=$1`;
         var params = [job.data[0].task_id, JSON.stringify(log)];
         try {
-          var close = await DB.query(query, params)
+          var close = await DB.query(query, params);
         } catch (e) {
-          console.log(e)
-          throw e
+          console.log(e);
+          throw e;
         }
       } catch (e) {
-        console.log(e)
-        return e
+        console.log(e);
+        return e;
       }
     }
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
 }
 
 module.exports = {
-  run,reset
+  run, reset
 };
