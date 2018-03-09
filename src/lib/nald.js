@@ -152,6 +152,10 @@ const testLoadNaldData = async (request, reply) => {
     let command = `rm -f ${localPath}NALD/* `;
     await execCommand(command);
 
+    // Make temp folder
+    command = `mkdir -p ${localPath}NALD`;
+    await execCommand(command);
+
     // move dummy data files
     command = `cp ./test/dummy-csv/* ${localPath}NALD/`;
     console.log(command);
