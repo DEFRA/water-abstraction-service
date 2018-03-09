@@ -3,11 +3,13 @@ const getNextId = require('./next-id.js');
 class Purpose {
   constructor() {
     this.id = getNextId();
-    this.version = null;
+    // this.version = null;
 
-    this.primary = 'A';
-    this.secondary = 'AGR';
-    this.tertiary =  140;
+    this.licence = null;
+
+    this.primary = null;
+    this.secondary = null;
+    this.tertiary = null;
 
     this.periodStartDay = 1;
     this.periodStartMonth = 3;
@@ -24,8 +26,23 @@ class Purpose {
     this.purposePoints = [];
   }
 
-  setVersion(version) {
-    this.version = version;
+  setLicence(licence) {
+    this.licence = licence;
+    return this;
+  }
+
+  setPrimaryPurpose(primaryPurpose) {
+    this.primary = primaryPurpose;
+    return this;
+  }
+
+  setSecondaryPurpose(secondaryPurpose) {
+    this.secondary = secondaryPurpose;
+    return this;
+  }
+
+  setTertiaryPurpose(tertiaryPurpose) {
+    this.tertiary = tertiaryPurpose;
     return this;
   }
 
@@ -51,12 +68,12 @@ class Purpose {
   export() {
     return {
       ID : this.id,
-      AABV_AABL_ID : this.version.id,
+      AABV_AABL_ID : this.licence.id,
       AABV_ISSUE_NO : 100,
       AABV_INCR_NO : 0,
-      APUR_APPR_CODE : this.primary,
-      APUR_APSE_CODE : this.secondary,
-      APUR_APUS_CODE : this.tertiary,
+      APUR_APPR_CODE : this.primary.code,
+      APUR_APSE_CODE : this.secondary.code,
+      APUR_APUS_CODE : this.tertiary.code,
       PERIOD_ST_DAY : this.periodStartDay,
       PERIOD_ST_MONTH : this.periodStartMonth,
       PERIOD_END_DAY : this.periodEndDay,

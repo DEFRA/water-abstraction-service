@@ -36,7 +36,7 @@ class Version {
 
   addPurpose(purpose) {
     this.purposes.push(purpose);
-    purpose.setVersion(this);
+    // purpose.setVersion(this);
     return this;
   }
 

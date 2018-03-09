@@ -3,6 +3,11 @@ const getNextId = require('./next-id.js');
 class Point {
   constructor() {
     this.id = getNextId();
+    this.source = null;
+  }
+
+  setSource(source) {
+    this.source = source;
   }
 
   export () {
@@ -14,7 +19,7 @@ class Point {
       CART1_EAST : 400000,
       CART1_NORTH : 240000,
       LOCAL_NAME : 'TEST BOREHOLE',
-      ASRC_CODE : 'GWSOS',
+      ASRC_CODE : this.source.code,
       DISABLED : 'N',
       LOCAL_NAME_WELSH : null,
       NGR2_SHEET : null,

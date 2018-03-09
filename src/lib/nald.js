@@ -153,6 +153,7 @@ const testLoadNaldData = async(request, reply) => {
     var loaddata = await execCommand(command)
     console.log(loaddata)
     console.log('data loaded')
+    reply('data loaded');
   } catch (e) {
     console.log('error ', e)
     //    return reply(e)

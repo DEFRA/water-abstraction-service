@@ -13,8 +13,8 @@ class Licence {
 
     this.id = getNextId();
     this.licenceNumber = licenceNumber;
-    this.startDate = moment().format('DD/MM/YYYY');
-    this.expiryDate = moment().add(1, 'year').format('DD/MM/YYYY');
+    this.startDate = '01/01/2018';
+    this.expiryDate = '01/01/2020';
 
     this.versions = [];
     this.repUnit = new RepUnit();
@@ -77,10 +77,32 @@ class Licence {
       return [...memo, ...version.purposes.map(purpose => purpose.export())]
     }, []);
 
+    // Primary purposes
+    const NALD_PURP_PRIMS = this.versions.reduce((memo, version) => {
+      return [...memo, ...version.purposes.map(purpose => purpose.primary.export())]
+    }, []);
+
+    // Secondary purposes
+    const NALD_PURP_SECS = this.versions.reduce((memo, version) => {
+      return [...memo, ...version.purposes.map(purpose => purpose.secondary.export())]
+    }, []);
+
+    // Tertiary purposes
+    const NALD_PURP_USES = this.versions.reduce((memo, version) => {
+      return [...memo, ...version.purposes.map(purpose => purpose.tertiary.export())]
+    }, []);
+
     // Conditions
     const NALD_LIC_CONDITIONS = this.versions.reduce((memo, version) => {
       return [...memo, ...version.purposes.reduce((memo2, purpose) => {
           return purpose.conditions.map(condition => condition.export());
+      }, [])];
+    }, []);
+
+    // Condition type
+    const NALD_LIC_COND_TYPES = this.versions.reduce((memo, version) => {
+      return [...memo, ...version.purposes.reduce((memo2, purpose) => {
+          return purpose.conditions.map(condition => condition.type.export());
       }, [])];
     }, []);
 
@@ -112,6 +134,13 @@ class Licence {
       }, [])];
     }, []);
 
+    // Sources
+    const NALD_SOURCES = this.versions.reduce((memo, version) => {
+      return [...memo, ...version.purposes.reduce((memo2, purpose) => {
+          return purpose.purposePoints.map(purposePoint => purposePoint.point.source.export());
+      }, [])];
+    }, []);
+
     return {
       NALD_ABS_LICENCES : [this.export()],
       NALD_ABS_LIC_VERSIONS,
@@ -125,7 +154,12 @@ class Licence {
       NALD_CONT_NOS,
       NALD_CONT_NO_TYPES,
       NALD_ABS_LIC_PURPOSES,
+      NALD_PURP_PRIMS,
+      NALD_PURP_SECS,
+      NALD_PURP_USES,
+      NALD_SOURCES,
       NALD_LIC_CONDITIONS,
+      NALD_LIC_COND_TYPES,
       NALD_LIC_AGRMNTS,
       NALD_ABS_PURP_POINTS,
       NALD_MEANS_OF_ABS,

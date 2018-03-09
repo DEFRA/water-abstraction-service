@@ -13,6 +13,7 @@ const Version = require('./version');
 const Address = require('./address');
 const Agreement = require('./agreement');
 const Condition = require('./condition');
+const ConditionType = require('./condition-type');
 const Contact = require('./contact');
 const ContactNo = require('./contact-no');
 const ContactNoType = require('./contact-no-type');
@@ -20,9 +21,14 @@ const MeansOfAbstraction = require('./means-of-abstraction');
 const Party = require('./party');
 const Point = require('./point');
 const Purpose = require('./purpose');
+const PurposePrimary = require('./purpose-primary');
+const PurposeSecondary = require('./purpose-secondary');
+const PurposeTertiary = require('./purpose-tertiary');
+
 const PurposePoint = require('./purpose-point');
 const Role = require('./role');
 const RoleType = require('./role-type');
+const Source = require('./source');
 const WALicenceType = require('./wa-licence-type');
 
 // Construct licence
@@ -72,10 +78,23 @@ role.addContactNo(contactNo);
 
 // Add purpose
 const purpose = new Purpose();
+
+const primary = new PurposePrimary();
+purpose.setPrimaryPurpose(primary);
+
+const secondary = new PurposeSecondary();
+purpose.setSecondaryPurpose(secondary);
+
+const tertiary = new PurposeTertiary();
+purpose.setTertiaryPurpose(tertiary);
+
+purpose.setLicence(l);
 version.addPurpose(purpose);
 
 // Add condition
 const cond1 = new Condition();
+const conditionType = new ConditionType();
+cond1.setType(conditionType);
 purpose.addCondition(cond1);
 
 // Add agreement
@@ -84,6 +103,8 @@ purpose.addAggreement(aggreement);
 
 // Add point
 const point = new Point();
+const source = new Source();
+point.setSource(source);
 
 // Add purpose points
 const pp = new PurposePoint();
@@ -93,10 +114,12 @@ pp.setPoint(point);
 purpose.addPurposePoint(pp);
 
 
-// Export CSV
-const data = l.exportAll();
-
-
+/**
+ * Export data as CSV files
+ * @param {String} outputPath - directory to dump CSV files
+ * @param {Object} exportData - data to dump to CSV files, keys are table names
+ * @return {Promise} resolves when CSV files written
+ */
 function writeCsv(outputPath, exportData) {
   const keys = Object.keys(exportData);
   return Promise.map(keys, (tableName) => {
@@ -110,5 +133,16 @@ function writeCsv(outputPath, exportData) {
     return writeFile(`${ outputPath }${ tableName }.txt`, csv);
   });
 }
-const outputPath = './test/dummy-csv/';
-writeCsv(outputPath, data);
+
+
+function dumpCsv() {
+  const data = l.exportAll();
+  const outputPath = './test/dummy-csv/';
+  return writeCsv(outputPath, data);
+}
+
+module.exports = dumpCsv;
+
+if(!module.parent) {
+  dumpCsv();
+}

@@ -1,4 +1,3 @@
-const moment = require('moment');
 const getNextId = require('./next-id');
 
 /**
@@ -14,7 +13,7 @@ class Address {
     return {
       ID : this.id,
       ADDR_LINE_1 : 'Daisy cow farm',
-      LAST_CHANGED : moment().format('DD/MM/YYYY HH:mm:ss'),
+      LAST_CHANGED : '01/01/2018 09:00:00',
       DISABLED : 'N',
       ADDR_LINE_2 : 'Long road',
       ADDR_LINE_3 : null,

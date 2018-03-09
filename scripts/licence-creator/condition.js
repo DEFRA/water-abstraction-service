@@ -4,12 +4,16 @@ class Condition {
   constructor() {
     this.id = getNextId();
 
-    this.code = 'CES';
-    this.subCode = 'FLOW';
     this.purpose = null;
     this.param1 = 'AUTHOR';
     this.param2 = 17.5;
 
+    this.type = null;
+  }
+
+  setType(conditionType) {
+    this.type = conditionType;
+    return this;
   }
 
   setPurpose(purpose) {
@@ -20,8 +24,8 @@ class Condition {
   export() {
     return {
       ID : this.id,
-      ACIN_CODE : this.code,
-      ACIN_SUBCODE : this.subCode,
+      ACIN_CODE : this.type.code,
+      ACIN_SUBCODE : this.type.subCode,
       AABP_ID : this.purpose.id,
       AIPU_ID : null,
       PARAM1 : this.param1,
