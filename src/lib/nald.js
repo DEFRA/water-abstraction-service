@@ -84,6 +84,29 @@ function execCommand (command) {
     });
   });
 }
+
+/**
+ * Process CSV data files, build SQL and import into PostGres
+ * @param {Function} asyncLogger - an async logger, could be console/slack
+ */
+const importCSVToDatabase = async (localPath, asyncLogger) => {
+  await asyncLogger('Processing data files');
+  await buildSQL();
+  await asyncLogger(`Loading to DB at ${process.env.PGHOST}`);
+  const command = `PGPASSWORD=${process.env.PGPASSWORD} psql -h ${process.env.PGHOST} -U ${process.env.PGUSER} ${process.env.PGDATABASE} < ${localPath}/sql.sql`;
+  const loaddata = await execCommand(command);
+  console.log(loaddata);
+  return asyncLogger('Data loaded');
+};
+
+/**
+ * Async version of console.log
+ * @param {Mixed} data to log
+ */
+const asyncConsole = async () => {
+  console.log.call(arguments);
+};
+
 const loadNaldData = async (request, reply) => {
   var os = require('os');
   var hostname = os.hostname();
@@ -111,18 +134,10 @@ const loadNaldData = async (request, reply) => {
     console.log(command);
     res = await execCommand(command);
     console.log(res);
-    await Slack.post('Processing data files');
-    console.log('process files');
-    var sqlFile = await buildSQL();
-    console.log(sqlFile);
-    console.log('Execute DB file');
-    await Slack.post(`Loading to DB at ${process.env.PGHOST}`);
-    command = `PGPASSWORD=${process.env.PGPASSWORD} psql -h ${process.env.PGHOST} -U ${process.env.PGUSER} ${process.env.PGDATABASE} < ${localPath}/sql.sql`;
-    var loaddata = await execCommand(command);
-    console.log(loaddata);
-    console.log('data loaded');
-    await Slack.post('Data loaded');
-    //  return reply('data loaded')
+
+    await importCSVToDatabase(localPath, Slack.post);
+
+    return;
   } catch (e) {
     console.log('error ', e);
     //    return reply(e)
@@ -134,7 +149,7 @@ const testLoadNaldData = async (request, reply) => {
     console.log('Starting dummy data import');
 
     // Delete files in temp folder
-    let command = `rm ${localPath}NALD/* `;
+    let command = `rm -f ${localPath}NALD/* `;
     await execCommand(command);
 
     // move dummy data files
@@ -142,15 +157,8 @@ const testLoadNaldData = async (request, reply) => {
     console.log(command);
     await execCommand(command);
 
-    var sqlFile = await buildSQL();
-    console.log(sqlFile);
-    console.log('Execute DB file');
-    console.log(`Loading to DB at ${process.env.PGHOST}`);
-    command = `PGPASSWORD=${process.env.PGPASSWORD} psql -h ${process.env.PGHOST} -U ${process.env.PGUSER} ${process.env.PGDATABASE} < ${localPath}/sql.sql`;
-    var loaddata = await execCommand(command);
-    console.log(loaddata);
-    console.log('data loaded');
-    reply('data loaded');
+    await importCSVToDatabase(localPath, asyncConsole);
+    return reply('Test import complete');
   } catch (e) {
     console.log('error ', e);
     //    return reply(e)
