@@ -97,6 +97,30 @@ async function futureSend (request, reply) {
 }
 
 /**
+ * A function to get the notify key
+ * The key stored in the DB can be an actual key, or it can refer
+ * to an environment variable as follows:
+ * test:  TEST_NOTIFY_KEY
+ * whitelist: WHITELIST_NOTIFY_KEY
+ * live: LIVE_NOTIFY_KEY
+ * @param {String} a reference to a notify key: test|whitelist|live to be
+ *                 loaded from environment variable, or a full key
+ * @return {String} notify key
+ */
+function getNotifyKey (key) {
+  const lKey = key.toLowerCase();
+  const keys = {
+    test: process.env.TEST_NOTIFY_KEY,
+    whitelist: process.env.WHITELIST_NOTIFY_KEY,
+    live: process.env.LIVE_NOTIFY_KEY
+  };
+  if (lKey in keys) {
+    return keys[lKey];
+  }
+  return key;
+}
+
+/**
  * Gets the notify template ID for a notify message ref,
  * and sends it using the notify API
  *
@@ -139,7 +163,7 @@ async function sendNow (config) {
           error: `Template ${config.message_ref} was not found`
         };
       } else {
-        const notifyClient = new NotifyClient(template.data[0].notify_key);
+        const notifyClient = new NotifyClient(getNotifyKey(template.data[0].notify_key));
         var templateId = template.data[0].template_id;
         try {
           // check template exists in notify
@@ -257,7 +281,7 @@ async function sendLater (config) {
           error: `Template ${config.message_ref} was not found`
         };
       }
-      const notifyClient = new NotifyClient(template.data[0].notify_key);
+      const notifyClient = new NotifyClient(getNotifyKey(template.data[0].notify_key));
       var templateId = template.data[0].template_id;
       try {
       // check template exists in notify
@@ -305,5 +329,6 @@ module.exports = {
   send,
   sendNow,
   sendLater,
-  futureSend
+  futureSend,
+  getNotifyKey
 };
