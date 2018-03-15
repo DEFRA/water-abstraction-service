@@ -111,7 +111,7 @@ const loadNaldData = async (request, reply) => {
   var os = require('os');
   var hostname = os.hostname();
   await Slack.post(`Starting NALD data import on ${hostname} - ${process.env.environment} `);
-  reply('Data load process started. NOTE: Progress will be reported in Slack');
+//  reply('Data load process started. NOTE: Progress will be reported in Slack');
   await Slack.post('Purging previous downloads');
   try {
     console.log(`purge dir ${localPath}`);
@@ -136,10 +136,14 @@ const loadNaldData = async (request, reply) => {
     console.log(res);
 
     await importCSVToDatabase(localPath, Slack.post);
-
-    return;
+    return {
+      error: null
+    };
+    //return;
   } catch (e) {
     console.log('error ', e);
+    throw e
+
     //    return reply(e)
   }
 };
@@ -463,7 +467,7 @@ const getPurposes = async (licenceId, FGAC_REGION_CODE, ISSUE_NO, INCR_NO) => {
   let res;
   if (ISSUE_NO && INCR_NO) {
     const params = [licenceId, FGAC_REGION_CODE, ISSUE_NO, INCR_NO];
-    console.log('p1', params);
+    //console.log('p1', params);
     try {
       res = await client.query(`
           select
@@ -472,13 +476,13 @@ const getPurposes = async (licenceId, FGAC_REGION_CODE, ISSUE_NO, INCR_NO) => {
           import."NALD_ABS_LIC_PURPOSES" p
           where p."AABV_AABL_ID"=$1 and "FGAC_REGION_CODE" = $2 and "AABV_ISSUE_NO"=$3  and "AABV_INCR_NO" = $4
       `, params);
-      console.log('p1 done');
+      //console.log('p1 done');
     } catch (e) {
       console.log(e);
     }
   } else {
     const params = [licenceId, FGAC_REGION_CODE];
-    console.log('p2', params);
+    //console.log('p2', params);
     try {
       res = await client.query(`
           select
@@ -487,7 +491,7 @@ const getPurposes = async (licenceId, FGAC_REGION_CODE, ISSUE_NO, INCR_NO) => {
           import."NALD_ABS_LIC_PURPOSES" p
           where p."AABV_AABL_ID"=$1 and "FGAC_REGION_CODE" = $2
       `, params);
-      console.log('p2 done');
+      //console.log('p2 done');
     } catch (e) {
       console.log(e);
     }
