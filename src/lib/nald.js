@@ -40,12 +40,12 @@ async function buildSQL (request, reply) {
       tableCreate += `\n \\copy "import"."${table}" FROM '${finalPath}/${file}' HEADER DELIMITER ',' CSV;`;
     }
   };
-  /**
+
   tableCreate+=`\n
     delete from water.pending_import;
      insert into water.pending_import (licence_ref,status)
     select "LIC_NO",0 from import."NALD_ABS_LICENCES";`
-**/
+
   fs.writeFileSync(`${__dirname}/temp/sql.sql`, tableCreate);
   return `${__dirname}/temp/sql.sql`;
 }
