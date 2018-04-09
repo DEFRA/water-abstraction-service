@@ -4,75 +4,74 @@ const Permit = require('../../lib/connectors/permit');
 const DB = require('../../lib/connectors/db');
 const { orderBy } = require('lodash');
 const moment = require('moment');
+const Promise = require('bluebird');
+const { filter } = require('lodash');
 
-async function run (data) {
-  console.log('run!');
-  if (data.licence_ref == '-') {
-    console.log('request for next pending licence');
-    var query = `
-    select * from water.pending_import where status=0 limit 250;`;
-    var licenceQuery = await DB.query(query);
-    if (licenceQuery.data) {
-      for (licenceNo in licenceQuery.data) {
-        try {
-          licence_ref = licenceQuery.data[licenceNo].licence_ref;
-          var licence = await Nald.licence(licence_ref);
-          var exp = await processLicence(licence_ref, licence);
-        } catch (e) {
-          var query = `update water.pending_import set status=-1, log='${e.message}', date_updated=current_date where licence_ref=$1;`;
-          var licenceStatusUpdate = await DB.query(query, [licence_ref]);
-
-          return {
-            error: e.message
-          };
-        }
-      }
-      return {
-        error: null
-      };
-    } else {
-      console.log('no licences waiting');
-      return {
-        error: null
-      };
-    }
-    return {
-      error: null
-    };
-  } else {
-    console.log('request for ', data.licence_ref);
-    var licence = await Nald.licence(data.licence_ref);
-
-    // console.log(JSON.stringify(licence, null, 2));
-    if (licence) {
-      try {
-        var exp = await processLicence(data.licence_ref, licence);
-      } catch (e) {
-        var query = `update water.pending_import set status=-1, log='${e.message}', date_updated=current_date where licence_ref=$1;`;
-        var licenceStatusUpdate = await DB.query(query, [data.licence_ref]);
-        return {
-          error: e.message
-        };
-      }
-    } else {
-      var query = `update water.pending_import set status=-1, log='Licence not found', date_updated=current_date where licence_ref=$1;`;
-      var licenceStatusUpdate = await DB.query(query, [data.licence_ref]);
-      return {
-        error: `Licence data for ${data.licence_ref} is undefined`
-      };
-    }
+/**
+ * Process single licence, reporting result in DB
+ * @param {String} licence_ref - licence number
+ * @param {Object} licence_data - from NALD process
+ */
+async function processSingleLicence (licenceNumber) {
+  try {
+    const licenceData = await Nald.licence(licenceNumber);
+    licenceData.vmlVersion = 2;
+    await exportLicence(licenceNumber, 1, 8, licenceData);
+    // Log success
+    const query = `update water.pending_import set status=1, date_updated=current_date where licence_ref=$1;`;
+    return DB.query(query);
+  } catch (e) {
+    // Log error message
+    const query = `update water.pending_import set status=-1, log='${e.message}', date_updated=current_date where licence_ref=$1;`;
+    DB.query(query);
+    // Rethrow error
+    throw e;
   }
 }
 
-async function processLicence (licence_ref, licence_data) {
-  try {
-    licence_data.vmlVersion = 2;
-    var exp = await exportLicence(licence_ref, 1, 8, licence_data);
-    var query = `update water.pending_import set status=1, date_updated=current_date where licence_ref=$1;`;
-    var licenceStatusUpdate = await DB.query(query, [licence_ref]);
-  } catch (e) {
-    throw e.message;
+/**
+ * Process an array of licence numbers
+ * @param {Array} licenceNumbers
+ * @return {Promise} resolves with array of true/string error message for each licence
+ */
+function processMultipleLicences (licenceNumbers) {
+  const errorMessages = [];
+  console.log(`Importing ${licenceNumbers.join(', ')}`);
+  return Promise.map(licenceNumbers, async (licenceNumber) => {
+    try {
+      await processSingleLicence(licenceNumber);
+      console.log(`Imported ${licenceNumber}`);
+      return true;
+    } catch (e) {
+      return `Error ${licenceNumber}: ` + e.message;
+    }
+  }, {
+    concurrency: 3
+  });
+}
+
+async function run (data) {
+  let licenceNumbers;
+
+  // Query list of licence numbers
+  if (data.licence_ref == '-') {
+    const query = `select * from water.pending_import where status=0 limit 250;`;
+    const { data } = await DB.query(query);
+    licenceNumbers = data.map(row => row.licence_ref);
+  } else {
+    licenceNumbers = data.licence_ref.split(',');
   }
+
+  const result = await processMultipleLicences(licenceNumbers);
+
+  const errors = filter(result, item => item !== true);
+
+  if (errors.length) {
+    return;
+  }
+
+  // Return message from task
+  return errors.length ? { error: errors.join(',') } : { error: null };
 }
 
 function sortableStringToDate (str) {
