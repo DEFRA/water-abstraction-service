@@ -13,17 +13,18 @@ const { filter } = require('lodash');
  * @param {Object} licence_data - from NALD process
  */
 async function processSingleLicence (licenceNumber) {
+  const params = [licenceNumber];
   try {
     const licenceData = await Nald.licence(licenceNumber);
     licenceData.vmlVersion = 2;
     await exportLicence(licenceNumber, 1, 8, licenceData);
     // Log success
     const query = `update water.pending_import set status=1, date_updated=current_date where licence_ref=$1;`;
-    return DB.query(query);
+    return DB.query(query, params);
   } catch (e) {
     // Log error message
     const query = `update water.pending_import set status=-1, log='${e.message}', date_updated=current_date where licence_ref=$1;`;
-    DB.query(query);
+    DB.query(query, params);
     // Rethrow error
     throw e;
   }
@@ -136,7 +137,7 @@ async function exportLicence (licence_ref, regime_id, licence_type_id, data) {
     delete requestBody.licence_start_dt;
   }
 
-  console.log('>> exportLicence', JSON.stringify(requestBody, null, 2));
+  // console.log('>> exportLicence', JSON.stringify(requestBody, null, 2));
 
   // delete requestBody.regime_id;
   var {
