@@ -41,10 +41,10 @@ async function buildSQL (request, reply) {
     }
   };
 
-  tableCreate+=`\n
+  tableCreate += `\n
     delete from water.pending_import;
      insert into water.pending_import (licence_ref,status)
-    select "LIC_NO",0 from import."NALD_ABS_LICENCES";`
+    select "LIC_NO",0 from import."NALD_ABS_LICENCES";`;
 
   fs.writeFileSync(`${__dirname}/temp/sql.sql`, tableCreate);
   return `${__dirname}/temp/sql.sql`;
@@ -233,36 +233,42 @@ const licence = async (licenceNumber) => {
       //  console.log('get purpose')
       thisLicenceRow.data.versions = await getVersions(thisLicenceRow.ID, thisLicenceRow.FGAC_REGION_CODE);
 
-      console.log('versions', thisLicenceRow.data.versions);
       for (var v in thisLicenceRow.data.versions) {
         thisLicenceRow.data.versions[v].parties = await getParties(thisLicenceRow.data.versions[v].ACON_APAR_ID, thisLicenceRow.FGAC_REGION_CODE);
         for (var p in thisLicenceRow.data.versions[v].parties) {
           thisLicenceRow.data.versions[v].parties[p].contacts = await getPartyContacts(thisLicenceRow.data.versions[v].parties[p].ID, thisLicenceRow.FGAC_REGION_CODE);
         }
       }
-      thisLicenceRow.data.current_version = {};
-      thisLicenceRow.data.current_version.licence = (await getCurrentVersion(thisLicenceRow.ID, thisLicenceRow.FGAC_REGION_CODE))[0];
 
-      thisLicenceRow.data.current_version.licence.party = await getParties(thisLicenceRow.data.current_version.licence.ACON_APAR_ID, thisLicenceRow.FGAC_REGION_CODE);
-      for (p in thisLicenceRow.data.current_version.licence.parties) {
-        thisLicenceRow.data.current_version.licence.parties[p].contacts = await getPartyContacts(thisLicenceRow.data.current_version.licence.parties[p].ID, thisLicenceRow.FGAC_REGION_CODE);
-      }
-      thisLicenceRow.data.current_version.party = (await getParty(thisLicenceRow.data.current_version.licence.ACON_APAR_ID, thisLicenceRow.FGAC_REGION_CODE))[0];
-      thisLicenceRow.data.current_version.address = (await getAddress(thisLicenceRow.data.current_version.licence.ACON_AADD_ID, thisLicenceRow.FGAC_REGION_CODE))[0];
-      thisLicenceRow.data.current_version.original_effective_date = dateToSortableString(thisLicenceRow.ORIG_EFF_DATE);
-      thisLicenceRow.data.current_version.version_effective_date = dateToSortableString(thisLicenceRow.data.current_version.licence.EFF_ST_DATE);
-      thisLicenceRow.data.current_version.expiry_date = dateToSortableString(thisLicenceRow.EXPIRY_DATE);
+      const currentVersion = await getCurrentVersion(thisLicenceRow.ID, thisLicenceRow.FGAC_REGION_CODE);
 
-      thisLicenceRow.data.current_version.purposes = await getPurposes(thisLicenceRow.ID, thisLicenceRow.FGAC_REGION_CODE, thisLicenceRow.data.current_version.licence.ISSUE_NO, thisLicenceRow.data.current_version.licence.INCR_NO);
-      for (var pu in thisLicenceRow.data.current_version.purposes) {
-        thisLicenceRow.data.current_version.purposes[pu].purpose = await getPurpose({
-          primary: thisLicenceRow.data.current_version.purposes[pu].APUR_APPR_CODE,
-          secondary: thisLicenceRow.data.current_version.purposes[pu].APUR_APSE_CODE,
-          tertiary: thisLicenceRow.data.current_version.purposes[pu].APUR_APUS_CODE
-        });
-        thisLicenceRow.data.current_version.purposes[pu].purposePoints = await getPurposePoints(thisLicenceRow.data.current_version.purposes[pu].ID, thisLicenceRow.FGAC_REGION_CODE);
-        thisLicenceRow.data.current_version.purposes[pu].licenceAgreements = await getPurposePointLicenceAgreements(thisLicenceRow.data.current_version.purposes[pu].ID, thisLicenceRow.FGAC_REGION_CODE);
-        thisLicenceRow.data.current_version.purposes[pu].licenceConditions = await getPurposePointLicenceConditions(thisLicenceRow.data.current_version.purposes[pu].ID, thisLicenceRow.FGAC_REGION_CODE);
+      if (currentVersion) {
+        thisLicenceRow.data.current_version = {};
+        thisLicenceRow.data.current_version.licence = currentVersion;
+
+        thisLicenceRow.data.current_version.licence.party = await getParties(currentVersion.ACON_APAR_ID, thisLicenceRow.FGAC_REGION_CODE);
+        for (p in thisLicenceRow.data.current_version.licence.parties) {
+          thisLicenceRow.data.current_version.licence.parties[p].contacts = await getPartyContacts(currentVersion.parties[p].ID, thisLicenceRow.FGAC_REGION_CODE);
+        }
+        thisLicenceRow.data.current_version.party = (await getParty(currentVersion.ACON_APAR_ID, thisLicenceRow.FGAC_REGION_CODE))[0];
+        thisLicenceRow.data.current_version.address = (await getAddress(currentVersion.ACON_AADD_ID, thisLicenceRow.FGAC_REGION_CODE))[0];
+        thisLicenceRow.data.current_version.original_effective_date = dateToSortableString(thisLicenceRow.ORIG_EFF_DATE);
+        thisLicenceRow.data.current_version.version_effective_date = dateToSortableString(currentVersion.EFF_ST_DATE);
+        thisLicenceRow.data.current_version.expiry_date = dateToSortableString(thisLicenceRow.EXPIRY_DATE);
+
+        thisLicenceRow.data.current_version.purposes = await getPurposes(thisLicenceRow.ID, thisLicenceRow.FGAC_REGION_CODE, currentVersion.ISSUE_NO, currentVersion.INCR_NO);
+        for (var pu in thisLicenceRow.data.current_version.purposes) {
+          thisLicenceRow.data.current_version.purposes[pu].purpose = await getPurpose({
+            primary: thisLicenceRow.data.current_version.purposes[pu].APUR_APPR_CODE,
+            secondary: thisLicenceRow.data.current_version.purposes[pu].APUR_APSE_CODE,
+            tertiary: thisLicenceRow.data.current_version.purposes[pu].APUR_APUS_CODE
+          });
+          thisLicenceRow.data.current_version.purposes[pu].purposePoints = await getPurposePoints(thisLicenceRow.data.current_version.purposes[pu].ID, thisLicenceRow.FGAC_REGION_CODE);
+          thisLicenceRow.data.current_version.purposes[pu].licenceAgreements = await getPurposePointLicenceAgreements(thisLicenceRow.data.current_version.purposes[pu].ID, thisLicenceRow.FGAC_REGION_CODE);
+          thisLicenceRow.data.current_version.purposes[pu].licenceConditions = await getPurposePointLicenceConditions(thisLicenceRow.data.current_version.purposes[pu].ID, thisLicenceRow.FGAC_REGION_CODE);
+        }
+      } else {
+        thisLicenceRow.data.current_version = null;
       }
 
       thisLicenceRow.data.cams = await getCams(thisLicenceRow.CAMS_CODE, thisLicenceRow.FGAC_REGION_CODE);
@@ -326,13 +332,14 @@ const getCurrentVersion = async (licenceId, FGAC_REGION_CODE) => {
   const client = await pool.connect();
   const res = await client.query(`
     SELECT
-      *
+      v.*, t.*
     FROM
-      import."NALD_ABS_LIC_VERSIONS"
-      JOIN import."NALD_WA_LIC_TYPES" ON "NALD_ABS_LIC_VERSIONS"."WA_ALTY_CODE" = "NALD_WA_LIC_TYPES"."CODE"
+      import."NALD_ABS_LIC_VERSIONS" v
+      JOIN import."NALD_WA_LIC_TYPES" t ON v."WA_ALTY_CODE" = t."CODE"
+      JOIN import."NALD_ABS_LICENCES" l ON v."AABL_ID" = l."ID" AND l."FGAC_REGION_CODE"=v."FGAC_REGION_CODE"
     WHERE
       "AABL_ID" = $1
-      AND "FGAC_REGION_CODE" = $2
+      AND v."FGAC_REGION_CODE" = $2
       AND (
       0 = 0
       AND "EFF_END_DATE" = 'null'
@@ -340,17 +347,18 @@ const getCurrentVersion = async (licenceId, FGAC_REGION_CODE) => {
       )
       AND ( 0 = 0 -- and "EFF_ST_DATE" = 'null'--  OR to_date( "EFF_ST_DATE", 'DD/MM/YYYY' ) <= now()
       )
-      AND "NALD_ABS_LIC_VERSIONS"."STATUS" = 'CURR'
+      AND v."STATUS" = 'CURR'
+      AND (l."LAPSED_DATE" = 'null' OR to_date(l."LAPSED_DATE", 'DD/MM/YYYY') > NOW())
+      AND (l."REV_DATE" = 'null' OR to_date(l."REV_DATE", 'DD/MM/YYYY') > NOW())
     ORDER BY
       "ISSUE_NO" DESC,
       "INCR_NO" DESC
       LIMIT 1
     `, [licenceId, FGAC_REGION_CODE]);
-  //  console.log('getCams - pre release')
-  client.release();
-  //  console.log('getCams - release')
 
-  return res.rows;
+  client.release();
+
+  return res.rows.length ? res.rows[0] : null;
 };
 const getVersions = async (licenceId, FGAC_REGION_CODE) => {
   //  console.log('getCams ',code)
