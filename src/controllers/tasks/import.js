@@ -108,7 +108,9 @@ function naldDateToSql (str) {
  */
 function getLatestVersion (versions) {
   const sortedVersions = orderBy(versions, (version) => {
-    return moment(version.EFF_ST_DATE, 'DD/MM/YYYY').unix();
+    const issueNo = 1000 * parseInt(version.ISSUE_NO, 10);
+    const incrNo = parseInt(version.INCR_NO, 10);
+    return issueNo + incrNo;
   });
   return sortedVersions[sortedVersions.length - 1];
 }
