@@ -36,7 +36,6 @@ async function processSingleLicence (licenceNumber) {
  * @return {Promise} resolves with array of true/string error message for each licence
  */
 function processMultipleLicences (licenceNumbers) {
-  const errorMessages = [];
   console.log(`Importing ${licenceNumbers.join(', ')}`);
   return Promise.map(licenceNumbers, async (licenceNumber) => {
     try {
@@ -55,7 +54,7 @@ async function run (data) {
   let licenceNumbers;
 
   // Query list of licence numbers
-  if (data.licence_ref == '-') {
+  if (data.licence_ref === '-') {
     const query = `select * from water.pending_import where status=0 limit 250;`;
     const { data } = await DB.query(query);
     licenceNumbers = data.map(row => row.licence_ref);
