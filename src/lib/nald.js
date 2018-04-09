@@ -348,6 +348,7 @@ const getCurrentVersion = async (licenceId, FGAC_REGION_CODE) => {
       AND ( 0 = 0 -- and "EFF_ST_DATE" = 'null'--  OR to_date( "EFF_ST_DATE", 'DD/MM/YYYY' ) <= now()
       )
       AND v."STATUS" = 'CURR'
+      AND (l."EXPIRY_DATE" = 'null' OR to_date(l."EXPIRY_DATE", 'DD/MM/YYYY') > NOW())
       AND (l."LAPSED_DATE" = 'null' OR to_date(l."LAPSED_DATE", 'DD/MM/YYYY') > NOW())
       AND (l."REV_DATE" = 'null' OR to_date(l."REV_DATE", 'DD/MM/YYYY') > NOW())
     ORDER BY
