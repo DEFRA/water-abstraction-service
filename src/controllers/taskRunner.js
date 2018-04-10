@@ -9,8 +9,9 @@ async function reset () {
   return true;
 }
 async function run () {
+  let query, params;
   try {
-    var query = `
+    query = `
       WITH job AS (
          SELECT *
          FROM "water"."scheduler" job
@@ -30,6 +31,11 @@ async function run () {
         interval = {count: 1, period: 'minute'};
       }
 
+      // Record the time the task started
+      query = `UPDATE "water"."scheduler" SET last_run_started=NOW() where task_id=$1`;
+      params = [job.data[0].task_id];
+      await DB.query(query, params);
+
       const taskHandler = require(`./tasks/${job.data[0].task_type}`);
       try {
         var log = await taskHandler.run(job.data[0]);
@@ -41,7 +47,7 @@ async function run () {
 
       try {
         query = `UPDATE "water"."scheduler" SET running=0, running_on=null, log=$2,last_run=now(),next_run= now() + interval '${interval.count}' ${interval.period} where task_id=$1`;
-        var params = [job.data[0].task_id, JSON.stringify(log)];
+        params = [job.data[0].task_id, JSON.stringify(log)];
         try {
           await DB.query(query, params);
         } catch (e) {
