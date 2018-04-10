@@ -19,11 +19,11 @@ async function processSingleLicence (licenceNumber) {
     licenceData.vmlVersion = 2;
     await exportLicence(licenceNumber, 1, 8, licenceData);
     // Log success
-    const query = `update water.pending_import set status=1, date_updated=current_date where licence_ref=$1;`;
+    const query = `update water.pending_import set status=1, date_updated=NOW() where licence_ref=$1;`;
     return DB.query(query, params);
   } catch (e) {
     // Log error message
-    const query = `update water.pending_import set status=-1, log='${e.message}', date_updated=current_date where licence_ref=$1;`;
+    const query = `update water.pending_import set status=-1, log='${e.message}', date_updated=NOW() where licence_ref=$1;`;
     DB.query(query, params);
     // Rethrow error
     throw e;
