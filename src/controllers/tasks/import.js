@@ -6,6 +6,7 @@ const { orderBy } = require('lodash');
 const moment = require('moment');
 const Promise = require('bluebird');
 const { filter } = require('lodash');
+const { getRegisteredLicences } = require('../../lib/connectors/crm/documents');
 
 /**
  * Process single licence, reporting result in DB
@@ -53,11 +54,15 @@ function processMultipleLicences (licenceNumbers) {
 async function run (data) {
   let licenceNumbers;
 
-  // Query list of licence numbers
+  // Import all licences in pending_import table
   if (data.licence_ref === '-') {
     const query = `select * from water.pending_import where status=0 limit 250;`;
     const { data } = await DB.query(query);
     licenceNumbers = data.map(row => row.licence_ref);
+  } else if (data.licence_ref === '$') {
+    // Import all licences that are registered
+    const licences = await getRegisteredLicences();
+    licenceNumbers = licences.map(row => row.system_external_id);
   } else {
     licenceNumbers = data.licence_ref.split(',');
   }
