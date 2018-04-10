@@ -18,6 +18,38 @@ const client = new APIClient(rp, {
 });
 
 /**
+ * Get all registered licences - i.e. ones with a company entity ID set
+ * @return {Promise} resolves with array of CRM document headers
+ */
+client.getRegisteredLicences = async function () {
+  const getRegisteredLicencePage = (page = 1) => {
+    const filter = {
+      company_entity_id: {
+        $ne: null
+      }
+    };
+    return client.findMany(filter, null, {page, perPage: 250});
+  };
+
+  // Get first page of results
+  let {error, data, pagination} = await getRegisteredLicencePage(1);
+
+  if (error) {
+    throw error;
+  }
+
+  for (let i = 2; i <= pagination.pageCount; i++) {
+    let {data: nextPage, error: nextError} = await getRegisteredLicencePage(i);
+    if (nextError) {
+      throw nextError;
+    }
+    data.push(...nextPage);
+  }
+
+  return data;
+};
+
+/**
  * Get a list of licences based on the supplied options
  * @param {Object} filter - criteria to filter licence list
  * @param {String} [filter.entity_id] - the current user's entity ID
@@ -33,7 +65,7 @@ const client = new APIClient(rp, {
  * @example getLicences({entity_id : 'guid'})
  */
 client.getDocumentRoles = function (filter, sort = {}, pagination = {page: 1, perPage: 100}) {
-  const uri = process.env.CRM_URI + '/document_role_access?filter='+JSON.stringify(filter);
+  const uri = process.env.CRM_URI + '/document_role_access?filter=' + JSON.stringify(filter);
   return rp({
     uri,
     method: 'GET',
@@ -63,7 +95,5 @@ client.getDocumentName = function (document_id) {
     body: { }
   });
 };
-
-
 
 module.exports = client;
