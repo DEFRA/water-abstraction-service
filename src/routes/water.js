@@ -10,6 +10,7 @@ const Nald = require('../lib/nald');
 const sessionRoutes = require('../controllers/sessions');
 const schedulerRoutes = require('../controllers/scheduler');
 const notificationsRoutes = require('../controllers/notifications');
+const eventsRoutes = require('../controllers/events');
 const notifyTemplatesRoutes = require('../controllers/notifytemplates');
 const notifyController = require('../controllers/notify');
 const importedLicencesRoutes = require('../controllers/imported_licences');
@@ -18,6 +19,7 @@ const taskRunner = require('../controllers/taskRunner');
 module.exports = [
   ...sessionRoutes,
   ...schedulerRoutes,
+  ...eventsRoutes,
   ...notificationsRoutes,
   ...notifyTemplatesRoutes,
   ...importedLicencesRoutes,
