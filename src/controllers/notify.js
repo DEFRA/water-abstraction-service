@@ -281,6 +281,7 @@ async function sendLater (config) {
           error: `Template ${config.message_ref} was not found`
         };
       }
+      console.log(template)
       const notifyClient = new NotifyClient(getNotifyKey(template.data[0].notify_key));
       var templateId = template.data[0].template_id;
       try {
