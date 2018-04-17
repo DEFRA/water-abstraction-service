@@ -8,10 +8,10 @@ const {pool} = require('../lib/connectors/db.js');
 
 const EventsApi = new HAPIRestAPI({
   table: 'water.events',
-  primaryKey: 'id',
+  primaryKey: 'event_id',
   endpoint: '/water/1.0/event',
   connection: pool,
-  primaryKeyAuto: true,
+  primaryKeyAuto: false,
   primaryKeyGuid: true,
   upsert: {
     fields: ['event_id'],
