@@ -1,26 +1,6 @@
 const { find } = require('lodash');
 const sha1 = require('sha1');
-const rp = require('request-promise-native').defaults({
-  proxy: null,
-  strictSSL: false
-});
-
-/**
- * Get contacts list from CRM
- * @param {String} filter
- * @return {Promise} resolves with contact data from CRM
- */
-function getCrmContacts (filter = '{}') {
-  return rp({
-    uri: `${process.env.CRM_URI}/contacts`,
-    method: 'GET',
-    headers: {
-      Authorization: process.env.JWT_TOKEN
-    },
-    json: true,
-    qs: { filter }
-  });
-}
+const { getDocumentContacts } = require('../lib/connectors/crm/documents');
 
 /**
  * De-duplicate licence/contact list
@@ -93,7 +73,7 @@ async function send (request, reply) {
   try {
     // Get licence/contact list
     const { filter } = request.payload;
-    const { error, data } = await getCrmContacts(filter);
+    const { error, data } = await getDocumentContacts(JSON.parse(filter));
 
     if (error) {
       throw error;

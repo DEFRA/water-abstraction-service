@@ -28,18 +28,18 @@ client.getRegisteredLicences = async function () {
         $ne: null
       }
     };
-    return client.findMany(filter, null, {page, perPage: 250});
+    return client.findMany(filter, null, { page, perPage: 250 });
   };
 
   // Get first page of results
-  let {error, data, pagination} = await getRegisteredLicencePage(1);
+  let { error, data, pagination } = await getRegisteredLicencePage(1);
 
   if (error) {
     throw error;
   }
 
   for (let i = 2; i <= pagination.pageCount; i++) {
-    let {data: nextPage, error: nextError} = await getRegisteredLicencePage(i);
+    let { data: nextPage, error: nextError } = await getRegisteredLicencePage(i);
     if (nextError) {
       throw nextError;
     }
@@ -64,7 +64,7 @@ client.getRegisteredLicences = async function () {
  * @return {Promise} resolves with array of licence records
  * @example getLicences({entity_id : 'guid'})
  */
-client.getDocumentRoles = function (filter, sort = {}, pagination = {page: 1, perPage: 100}) {
+client.getDocumentRoles = function (filter, sort = {}, pagination = { page: 1, perPage: 100 }) {
   const uri = process.env.CRM_URI + '/document_role_access?filter=' + JSON.stringify(filter);
   return rp({
     uri,
@@ -92,7 +92,24 @@ client.getDocumentName = function (document_id) {
       Authorization: process.env.JWT_TOKEN
     },
     json: true,
-    body: { }
+    body: {}
+  });
+};
+
+/**
+ * Get a list of documents with contacts attached
+ * @param {Object} filter
+ * @return {Promise} reoslves with array of licence records with contact data
+ */
+client.getDocumentContacts = function (filter = {}) {
+  return rp({
+    uri: `${process.env.CRM_URI}/contacts`,
+    method: 'GET',
+    headers: {
+      Authorization: process.env.JWT_TOKEN
+    },
+    json: true,
+    qs: { filter: JSON.stringify(filter) }
   });
 };
 
