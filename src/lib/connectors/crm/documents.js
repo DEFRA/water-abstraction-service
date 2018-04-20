@@ -78,21 +78,20 @@ client.getDocumentRoles = function (filter, sort = {}, pagination = { page: 1, p
 };
 
 /**
- * Get a list of licences based on the supplied options
- * @param {Object} filter - criteria to filter licence list
- * @param {String} [document_id] - the ID of the document to return the name for
- * @return {Promise} resolves with array of licence records
+ * Get single licence
+ * @param {String} [document_id] - the ID of the document to find
+ * @return {Promise} resolves with single licence record
  */
-client.getDocumentName = function (document_id) {
-  const uri = process.env.CRM_URI + `/documentHeader/${document_id}/entity/0/name`;
+client.getDocument = function (documentId) {
+  const uri = process.env.CRM_URI + `/documentHeader/${documentId}`;
+  console.log(uri);
   return rp({
     uri,
     method: 'GET',
     headers: {
       Authorization: process.env.JWT_TOKEN
     },
-    json: true,
-    body: {}
+    json: true
   });
 };
 

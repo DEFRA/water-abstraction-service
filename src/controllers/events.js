@@ -16,12 +16,12 @@ const EventsApi = new HAPIRestAPI({
   upsert: {
     fields: ['event_id'],
     set: [
-                  'reference_code','type','subtype','issuer','licences','entities',
-                  'comment','metadata','status'
+      'reference_code', 'type', 'subtype', 'issuer', 'licences', 'entities',
+      'comment', 'metadata', 'status'
     ]
   },
-  onCreateTimestamp : 'created',
-  onUpdateTimestamp : 'modified',
+  onCreateTimestamp: 'created',
+  onUpdateTimestamp: 'modified',
   validation: {
     event_id: Joi.string(),
     reference_code: Joi.string(),
