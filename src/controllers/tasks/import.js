@@ -8,6 +8,9 @@ const Promise = require('bluebird');
 const { filter } = require('lodash');
 const { getRegisteredLicences } = require('../../lib/connectors/crm/documents');
 
+const concurrency = parseInt(process.env.import_concurrency, 10) || 1;
+console.log(`Import concurrency is ${concurrency}`);
+
 /**
  * Process single licence, reporting result in DB
  * @param {String} licence_ref - licence number
@@ -47,7 +50,7 @@ function processMultipleLicences (licenceNumbers) {
       return `Error ${licenceNumber}: ` + e.message;
     }
   }, {
-    concurrency: 3
+    concurrency
   });
 }
 
