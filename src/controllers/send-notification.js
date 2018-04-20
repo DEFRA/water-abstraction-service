@@ -39,8 +39,13 @@ function createSendList (licences) {
     }
 
     // Add licence
-    const { document_id, system_external_id, document_name } = licence;
-    list[contactKey].licences.push({ document_id, system_external_id, document_name, licence_holder: licenceHolder });
+    const { document_id: documentId, system_external_id: systemExternalId, document_name: documentName } = licence;
+    list[contactKey].licences.push({
+      document_id: documentId,
+      system_external_id: systemExternalId,
+      document_name: documentName,
+      licence_holder: licenceHolder
+    });
   });
 
   return Object.values(list);
