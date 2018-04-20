@@ -14,6 +14,7 @@ function createSendList (licences) {
     // Get relevant contacts
     const licenceHolder = find(licence.contacts, { role: 'licence_holder' });
     const primaryUser = find(licence.contacts, { role: 'primary_user' });
+    const otherContact = find(licence.contacts, { role: 'area_import' });
 
     // Create contact ID for licence holder
     const licenceHolderId = getContactId(licenceHolder);
@@ -21,7 +22,7 @@ function createSendList (licences) {
     // Who do we want to contact?  primary user if available, but default
     // to contacting licence holder by post.  In future this logic may
     // incorporate e.g. sending to specific contacts for different purposes
-    const contact = primaryUser || licenceHolder;
+    const contact = primaryUser || (otherContact || licenceHolder);
 
     const contactId = getContactId(contact);
 
