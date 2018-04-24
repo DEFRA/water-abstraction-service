@@ -18,6 +18,38 @@ const client = new APIClient(rp, {
 });
 
 /**
+ * Get all registered licences - i.e. ones with a company entity ID set
+ * @return {Promise} resolves with array of CRM document headers
+ */
+client.getRegisteredLicences = async function () {
+  const getRegisteredLicencePage = (page = 1) => {
+    const filter = {
+      company_entity_id: {
+        $ne: null
+      }
+    };
+    return client.findMany(filter, null, { page, perPage: 250 });
+  };
+
+  // Get first page of results
+  let { error, data, pagination } = await getRegisteredLicencePage(1);
+
+  if (error) {
+    throw error;
+  }
+
+  for (let i = 2; i <= pagination.pageCount; i++) {
+    let { data: nextPage, error: nextError } = await getRegisteredLicencePage(i);
+    if (nextError) {
+      throw nextError;
+    }
+    data.push(...nextPage);
+  }
+
+  return data;
+};
+
+/**
  * Get a list of licences based on the supplied options
  * @param {Object} filter - criteria to filter licence list
  * @param {String} [filter.entity_id] - the current user's entity ID
@@ -32,8 +64,8 @@ const client = new APIClient(rp, {
  * @return {Promise} resolves with array of licence records
  * @example getLicences({entity_id : 'guid'})
  */
-client.getDocumentRoles = function (filter, sort = {}, pagination = {page: 1, perPage: 100}) {
-  const uri = process.env.CRM_URI + '/document_role_access?filter='+JSON.stringify(filter);
+client.getDocumentRoles = function (filter, sort = {}, pagination = { page: 1, perPage: 100 }) {
+  const uri = process.env.CRM_URI + '/document_role_access?filter=' + JSON.stringify(filter);
   return rp({
     uri,
     method: 'GET',
@@ -46,24 +78,38 @@ client.getDocumentRoles = function (filter, sort = {}, pagination = {page: 1, pe
 };
 
 /**
- * Get a list of licences based on the supplied options
- * @param {Object} filter - criteria to filter licence list
- * @param {String} [document_id] - the ID of the document to return the name for
- * @return {Promise} resolves with array of licence records
+ * Get single licence
+ * @param {String} [document_id] - the ID of the document to find
+ * @return {Promise} resolves with single licence record
  */
-client.getDocumentName = function (document_id) {
-  const uri = process.env.CRM_URI + `/documentHeader/${document_id}/entity/0/name`;
+client.getDocument = function (documentId) {
+  const uri = process.env.CRM_URI + `/documentHeader/${documentId}`;
+  console.log(uri);
   return rp({
     uri,
     method: 'GET',
     headers: {
       Authorization: process.env.JWT_TOKEN
     },
-    json: true,
-    body: { }
+    json: true
   });
 };
 
-
+/**
+ * Get a list of documents with contacts attached
+ * @param {Object} filter
+ * @return {Promise} reoslves with array of licence records with contact data
+ */
+client.getDocumentContacts = function (filter = {}) {
+  return rp({
+    uri: `${process.env.CRM_URI}/contacts`,
+    method: 'GET',
+    headers: {
+      Authorization: process.env.JWT_TOKEN
+    },
+    json: true,
+    qs: { filter: JSON.stringify(filter) }
+  });
+};
 
 module.exports = client;
