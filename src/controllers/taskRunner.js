@@ -1,19 +1,17 @@
 const DB = require('../lib/connectors/db');
-// const NotifyClient = require('notifications-node-client').NotifyClient;
-// const notifyClient = new NotifyClient(process.env.NOTIFY_KEY);
-const Joi = require('joi');
 const os = require('os');
 
 async function reset () {
   console.log('resetting scheduler');
   var query = `
       UPDATE "water"."scheduler" SET running=0 where running_on = '${os.hostname()}'`;
-  var reset = await DB.query(query);
+  await DB.query(query);
   return true;
 }
 async function run () {
+  let query, params;
   try {
-    var query = `
+    query = `
       WITH job AS (
          SELECT *
          FROM "water"."scheduler" job
@@ -25,12 +23,18 @@ async function run () {
       from job where job.task_id=s.task_id
       RETURNING * ;`;
     var job = await DB.query(query);
-    if (job.data.length == 0) {} else {
+    if (job.data.length === 0) {} else {
+      let interval;
       try {
-        var interval = JSON.parse(job.data[0].task_config);
+        interval = JSON.parse(job.data[0].task_config);
       } catch (e) {
-        var interval = { count: 1, period: 'minute' };
+        interval = { count: 1, period: 'minute' };
       }
+
+      // Record the time the task started
+      query = `UPDATE "water"."scheduler" SET last_run_started=NOW() where task_id=$1`;
+      params = [job.data[0].task_id];
+      await DB.query(query, params);
 
       const taskHandler = require(`./tasks/${job.data[0].task_type}`);
       try {
@@ -42,10 +46,10 @@ async function run () {
       }
 
       try {
-        var query = `UPDATE "water"."scheduler" SET running=0, running_on=null, log=$2,last_run=now(),next_run= now() + interval \'${interval.count}\' ${interval.period} where task_id=$1`;
-        var params = [job.data[0].task_id, JSON.stringify(log)];
+        query = `UPDATE "water"."scheduler" SET running=0, running_on=null, log=$2,last_run=now(),next_run= now() + interval '${interval.count}' ${interval.period} where task_id=$1`;
+        params = [job.data[0].task_id, JSON.stringify(log)];
         try {
-          var close = await DB.query(query, params);
+          await DB.query(query, params);
         } catch (e) {
           console.log(e);
           throw e;
@@ -56,8 +60,6 @@ async function run () {
       }
     }
   } catch (e) {
-    var query = `UPDATE "water"."scheduler" SET running=0, log=$2,last_run=now(),next_run= now() + interval \'${interval.count}\' ${interval.period} where task_id=$1`;
-    var params = [job.data[0].task_id, JSON.stringify(e)];
     console.log(e);
   }
 }
