@@ -62,7 +62,7 @@ async function run (data) {
     const query = `select * from water.pending_import where status=0 limit 250;`;
     const { data } = await DB.query(query);
     licenceNumbers = data.map(row => row.licence_ref);
-  } else if (data.licence_ref === '$') {
+  } else if (data.licence_ref === '@') {
     // Import all licences that are registered
     const licences = await getRegisteredLicences();
     licenceNumbers = licences.map(row => row.system_external_id);

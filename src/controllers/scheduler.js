@@ -4,7 +4,7 @@
  */
 const HAPIRestAPI = require('hapi-pg-rest-api');
 const Joi = require('joi');
-const {pool} = require('../lib/connectors/db.js');
+const { pool } = require('../lib/connectors/db.js');
 
 const SchedulerApi = new HAPIRestAPI({
   table: 'water.scheduler',
@@ -31,7 +31,8 @@ const SchedulerApi = new HAPIRestAPI({
     running: Joi.number(),
     date_created: Joi.string(),
     date_updated: Joi.string(),
-    running_on: Joi.string()
+    running_on: Joi.string(),
+    last_run_started: Joi.string()
   }
 });
 
