@@ -9,6 +9,7 @@ const Nald = require('../lib/nald');
 
 const sessionRoutes = require('../controllers/sessions');
 const schedulerRoutes = require('../controllers/scheduler');
+const lookupRoutes = require('../controllers/lookup');
 const notificationsRoutes = require('../controllers/notifications');
 const eventsRoutes = require('../controllers/events');
 const notifyTemplatesRoutes = require('../controllers/notifytemplates');
@@ -24,6 +25,7 @@ module.exports = [
   ...notificationsRoutes,
   ...notifyTemplatesRoutes,
   ...importedLicencesRoutes,
+  ...lookupRoutes,
   { method: 'POST', path: '/water/' + version + '/notification/send', handler: sendNotificationController.send, config: { description: 'Send notification' } },
   { method: 'GET', path: '/status', handler: function (request, reply) { return reply('ok').code(200); }, config: { auth: false, description: 'Get all entities' } },
   { method: 'GET', path: '/water/' + version + '/nald/import', handler: Nald.import, config: { auth: false, description: 'Import nald from s3 data' } },
