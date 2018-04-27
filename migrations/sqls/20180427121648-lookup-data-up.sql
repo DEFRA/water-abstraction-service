@@ -6,5 +6,5 @@ CREATE TABLE "water"."lookup" (
   "metadata" jsonb,
   "created" timestamp(0),
   "modified" timestamp(0),
-  PRIMARY KEY("type", "key")
+  PRIMARY KEY(lookup_id)
 );
