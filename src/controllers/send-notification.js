@@ -3,6 +3,22 @@ const sha1 = require('sha1');
 const { getDocumentContacts } = require('../lib/connectors/crm/documents');
 
 /**
+ * Given list of licence contacts, this returns the preferred contact based
+ * on their role
+ * @param {Array} contacts - list of licence contacts
+ * @return {Object} - return preferred contact for notification
+ */
+function getPreferredContact (contacts) {
+  const notificationPriority = ['document_notifications', 'notifications', 'area_import', 'licence_holder'];
+  return notificationPriority.reduce((acc, role) => {
+    if (acc) {
+      return acc;
+    }
+    return find(contacts, { role });
+  }, null);
+}
+
+/**
  * De-duplicate licence/contact list
  * @param {Array} contacts
  * @return {Array} list of contacts to send to, and the licences it relates to
@@ -13,16 +29,15 @@ function createSendList (licences) {
   licences.forEach(licence => {
     // Get relevant contacts
     const licenceHolder = find(licence.contacts, { role: 'licence_holder' });
-    const primaryUser = find(licence.contacts, { role: 'primary_user' });
-    const otherContact = find(licence.contacts, { role: 'area_import' });
+
+    // Get preferred notification contact
+    // In future this may need to support sending specific messages to differnet
+    // users.  For now it follows the priority order listed above - these are
+    // either entity_roles or document_entity roles
+    const contact = getPreferredContact(licence.contacts);
 
     // Create contact ID for licence holder
     const licenceHolderId = getContactId(licenceHolder);
-
-    // Who do we want to contact?  primary user if available, but default
-    // to contacting licence holder by post.  In future this logic may
-    // incorporate e.g. sending to specific contacts for different purposes
-    const contact = primaryUser || (otherContact || licenceHolder);
 
     const contactId = getContactId(contact);
 
