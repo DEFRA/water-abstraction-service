@@ -2,8 +2,21 @@ const { find } = require('lodash');
 const sha1 = require('sha1');
 const { getDocumentContacts } = require('../lib/connectors/crm/documents');
 
-// This is the order of
-const notificationPriority = ['document_notifications', 'notifications', 'area_import', 'licence_holder'];
+/**
+ * Given list of licence contacts, this returns the preferred contact based
+ * on their role
+ * @param {Array} contacts - list of licence contacts
+ * @return {Object} - return preferred contact for notification
+ */
+function getPreferredContact (contacts) {
+  const notificationPriority = ['document_notifications', 'notifications', 'area_import', 'licence_holder'];
+  return notificationPriority.reduce((acc, role) => {
+    if (acc) {
+      return acc;
+    }
+    return find(contacts, { role });
+  }, null);
+}
 
 /**
  * De-duplicate licence/contact list
@@ -21,12 +34,7 @@ function createSendList (licences) {
     // In future this may need to support sending specific messages to differnet
     // users.  For now it follows the priority order listed above - these are
     // either entity_roles or document_entity roles
-    const contact = notificationPriority.reduce((acc, role) => {
-      if (acc) {
-        return acc;
-      }
-      return find(licence.contacts, { role });
-    }, null);
+    const contact = getPreferredContact(licence.contacts);
 
     // Create contact ID for licence holder
     const licenceHolderId = getContactId(licenceHolder);
