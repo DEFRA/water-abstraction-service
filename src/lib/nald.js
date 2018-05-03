@@ -49,6 +49,7 @@ async function buildSQL (request, reply) {
   fs.writeFileSync(`${__dirname}/temp/sql.sql`, tableCreate);
   return `${__dirname}/temp/sql.sql`;
 }
+
 function readFirstLine (path) {
   return new Promise((resolve, reject) => {
     var rs = fs.createReadStream(path, {
@@ -71,6 +72,7 @@ function readFirstLine (path) {
       });
   });
 }
+
 function execCommand (command) {
   return new Promise((resolve, reject) => {
     const childProcess = require('child_process');
@@ -295,6 +297,7 @@ const licence = async (licenceNumber) => {
     console.log(e);
   }
 };
+
 function dateToSortableString (str) {
   const moment = require('moment');
   var d = moment(str, 'DD/MM/YYYY');
@@ -304,33 +307,47 @@ function dateToSortableString (str) {
     return null;
   }
 }
-const getMain = async (licenceNo) => {
+
+/**
+ * Perform a database query by getting a client from the connection pool and releasing
+ * If an error is thrown, the client is still released and the error rethrown
+ * @param {String} query - SQL query
+ * @param {Array} params - bound SQL query params
+ * @return {Promise} resolves with query data
+ */
+const dbQuery = async (query, params = []) => {
   const client = await pool.connect();
-  const res = await client.query(`
+  try {
+    const res = await client.query(query, params);
+    client.release();
+    return res.rows;
+  } catch (error) {
+    console.error(error);
+    client.release();
+    throw error;
+  }
+};
+
+const getMain = async (licenceNo) => {
+  const query = `
     select * from import.
     -- "NALD_ABSTAT_WFD_DATA"
     "NALD_ABS_LICENCES"
     where "LIC_NO"=$1
-    `, [licenceNo]);
-  client.release();
-  return res.rows;
+    `;
+  const params = [licenceNo];
+  return dbQuery(query, params);
 };
 const getCams = async (code, FGAC_REGION_CODE) => {
-  //  console.log('getCams ',code)
-  const client = await pool.connect();
-  //  console.log('getCams - got client')
-  const res = await client.query(`
+  const query = `
     select * from import."NALD_REP_UNITS"
     where "CODE"=$1 and "FGAC_REGION_CODE" = $2
-    `, [code, FGAC_REGION_CODE]);
-  //  console.log('getCams - pre release')
-  client.release();
-  //  console.log('getCams - release')
-  return res.rows;
+    `;
+  const params = [code, FGAC_REGION_CODE];
+  return dbQuery(query, params);
 };
 const getCurrentVersion = async (licenceId, FGAC_REGION_CODE) => {
-  const client = await pool.connect();
-  const res = await client.query(`
+  const query = `
     SELECT
       v.*, t.*
     FROM
@@ -355,41 +372,36 @@ const getCurrentVersion = async (licenceId, FGAC_REGION_CODE) => {
       "ISSUE_NO" DESC,
       "INCR_NO" DESC
       LIMIT 1
-    `, [licenceId, FGAC_REGION_CODE]);
+    `;
+  const params = [licenceId, FGAC_REGION_CODE];
 
-  client.release();
+  const rows = await dbQuery(query, params);
 
-  return res.rows.length ? res.rows[0] : null;
+  return rows.length ? rows[0] : null;
 };
 const getVersions = async (licenceId, FGAC_REGION_CODE) => {
-  //  console.log('getCams ',code)
-  const client = await pool.connect();
-  //  console.log('getCams - got client')
-  const res = await client.query(`
+  const query = `
     select * from import."NALD_ABS_LIC_VERSIONS"
 --     JOIN NALD_WA_LIC_TYPES ON "NALD_ABS_LIC_VERSIONS"."WA_ALTY_CODE"="NALD_WA_LIC_TYPES"."CODE"
     where "AABL_ID"=$1 and "FGAC_REGION_CODE" = $2
-    `, [licenceId, FGAC_REGION_CODE]);
-  //  console.log('getCams - pre release')
-  client.release();
-  //  console.log('getCams - release')
-  return res.rows;
+    `;
+  const params = [licenceId, FGAC_REGION_CODE];
+
+  return dbQuery(query, params);
 };
 const getParties = async (ID, FGAC_REGION_CODE) => {
-  const client = await pool.connect();
-  const res = await client.query(`
+  const query = `
     select
     p.*
     from
     import."NALD_PARTIES" p
     where p."ID"=$1 and "FGAC_REGION_CODE" = $2
-  `, [ID, FGAC_REGION_CODE]);
-  client.release();
-  return res.rows;
+  `;
+  const params = [ID, FGAC_REGION_CODE];
+  return dbQuery(query, params);
 };
 const getPartyContacts = async (APAR_ID, FGAC_REGION_CODE) => {
-  const client = await pool.connect();
-  var query = `
+  const query = `
     select
     c.*,
     row_to_json(a.*) AS party_address
@@ -399,38 +411,30 @@ const getPartyContacts = async (APAR_ID, FGAC_REGION_CODE) => {
     on a."ID"=c."AADD_ID"
     where c."APAR_ID"=$1 and c."FGAC_REGION_CODE" = $2 and a."FGAC_REGION_CODE" = $2
   `;
-  //  console.log(query)
-  //  console.log(APAR_ID,FGAC_REGION_CODE)
-  const res = await client.query(query, [APAR_ID, FGAC_REGION_CODE]);
-  //  console.log('ok')
-  client.release();
-  return res.rows;
+  const params = [APAR_ID, FGAC_REGION_CODE];
+  return dbQuery(query, params);
 };
 const getParty = async (APAR_ID, FGAC_REGION_CODE) => {
-  const client = await pool.connect();
-  const res = await client.query(`
+  const query = `
     select p.* from
     import."NALD_PARTIES" p
     where "ID"=$1 and "FGAC_REGION_CODE" = $2
-  `, [APAR_ID, FGAC_REGION_CODE]);
-  client.release();
-  return res.rows;
+  `;
+  const params = [APAR_ID, FGAC_REGION_CODE];
+  return dbQuery(query, params);
 };
 const getAddress = async (AADD_ID, FGAC_REGION_CODE) => {
-  const client = await pool.connect();
-  const res = await client.query(`
+  const query = `
     select
     a.*
     from import."NALD_ADDRESSES" a
     where "ID"=$1 and "FGAC_REGION_CODE" = $2
-  `, [AADD_ID, FGAC_REGION_CODE]);
-  client.release();
-  return res.rows;
+  `;
+  const params = [AADD_ID, FGAC_REGION_CODE];
+  return dbQuery(query, params);
 };
 const getRoles = async (AABL_ID, FGAC_REGION_CODE) => {
-  //  console.log('AABL_ID ',AABL_ID)
-  const client = await pool.connect();
-  const res = await client.query(`
+  const query = `
     select row_to_json(r.*) AS role_detail,
           row_to_json(t.*) AS role_type,
           row_to_json(p.*) AS role_party,
@@ -466,53 +470,36 @@ const getRoles = async (AABL_ID, FGAC_REGION_CODE) => {
       AND (r."EFF_END_DATE" = 'null'
       OR to_date( r."EFF_END_DATE", 'DD/MM/YYYY' ) > now()
       )
-  `, [AABL_ID, FGAC_REGION_CODE]);
-  client.release();
-  return res.rows;
+  `;
+
+  const params = [AABL_ID, FGAC_REGION_CODE];
+  return dbQuery(query, params);
 };
 const getPurposes = async (licenceId, FGAC_REGION_CODE, ISSUE_NO, INCR_NO) => {
-  //  console.log('purpose ',purpose)
-  const client = await pool.connect();
-  let res;
+  let query, params;
   if (ISSUE_NO && INCR_NO) {
-    const params = [licenceId, FGAC_REGION_CODE, ISSUE_NO, INCR_NO];
-    // console.log('p1', params);
-    try {
-      res = await client.query(`
-          select
-                *
-          from
-          import."NALD_ABS_LIC_PURPOSES" p
-          where p."AABV_AABL_ID"=$1 and "FGAC_REGION_CODE" = $2 and "AABV_ISSUE_NO"=$3  and "AABV_INCR_NO" = $4
-      `, params);
-      // console.log('p1 done');
-    } catch (e) {
-      console.log(e);
-    }
+    query = `
+        select
+              *
+        from
+        import."NALD_ABS_LIC_PURPOSES" p
+        where p."AABV_AABL_ID"=$1 and "FGAC_REGION_CODE" = $2 and "AABV_ISSUE_NO"=$3  and "AABV_INCR_NO" = $4
+    `;
+    params = [licenceId, FGAC_REGION_CODE, ISSUE_NO, INCR_NO];
   } else {
-    const params = [licenceId, FGAC_REGION_CODE];
-    // console.log('p2', params);
-    try {
-      res = await client.query(`
-          select
-                *
-          from
-          import."NALD_ABS_LIC_PURPOSES" p
-          where p."AABV_AABL_ID"=$1 and "FGAC_REGION_CODE" = $2
-      `, params);
-      // console.log('p2 done');
-    } catch (e) {
-      console.log(e);
-    }
+    query = `
+        select
+              *
+        from
+        import."NALD_ABS_LIC_PURPOSES" p
+        where p."AABV_AABL_ID"=$1 and "FGAC_REGION_CODE" = $2
+        `;
+    params = [licenceId, FGAC_REGION_CODE];
   }
-
-  client.release();
-  console.log(res.error);
-  return res.rows;
+  return dbQuery(query, params);
 };
 const getPurposePoints = async (purposeId, FGAC_REGION_CODE) => {
-  const client = await pool.connect();
-  const res = await client.query(`
+  const query = `
         select
               pp.*,
               row_to_json(m.*) AS means_of_abstraction,
@@ -524,14 +511,12 @@ const getPurposePoints = async (purposeId, FGAC_REGION_CODE) => {
               left join import."NALD_POINTS" p on p."ID"=pp."AAIP_ID"
               left join import."NALD_SOURCES" s on s."CODE"=p."ASRC_CODE"
         where pp."AABP_ID"=$1 and pp."FGAC_REGION_CODE" = $2 and p."FGAC_REGION_CODE" = $2
-    `, [purposeId, FGAC_REGION_CODE]);
-  client.release();
-  return res.rows;
+    `;
+  const params = [purposeId, FGAC_REGION_CODE];
+  return dbQuery(query, params);
 };
 const getPurpose = async (purpose) => {
-  //  console.log('purpose ',purpose)
-  const client = await pool.connect();
-  const res = await client.query(`
+  const query = `
       select
             row_to_json(p1.*) AS purpose_primary,
             row_to_json(p2.*) AS purpose_secondary,
@@ -541,73 +526,29 @@ const getPurpose = async (purpose) => {
       left join import."NALD_PURP_SECS" p2 on p2."CODE"=$2
       left join import."NALD_PURP_USES" p3 on p3."CODE"=$3
       where p1."CODE"=$1
-  `, [purpose.primary, purpose.secondary, purpose.tertiary]);
-  client.release();
-  return res.rows;
+  `;
+  const params = [purpose.primary, purpose.secondary, purpose.tertiary];
+  return dbQuery(query, params);
 };
-// const getPoints = async (AAIP_ID, NGR1_SHEET) => {
-//   //  console.log('AAIP_ID ',AAIP_ID,' NGR1_SHEET ',NGR1_SHEET)
-//   const client = await pool.connect();
-//   const res = await client.query(`
-//       select
-//       row_to_json(p.*) AS point,
-//       row_to_json(pc.*) AS point_category,
-//       row_to_json(ptp.*) AS point_type_primary,
-//       row_to_json(pts.*) AS point_type_secondary,
-//       row_to_json(s.*) AS source
-//       from import."NALD_POINTS" p
-//       left join import."NALD_SOURCES" s on s."CODE"=p."ASRC_CODE"
-//       left join import."NALD_POINT_CATEGORIES" pc on pc."CODE"=p."AAPC_CODE"
-//       left join import."NALD_POINT_TYPE_PRIMS" ptp on ptp."CODE"=p."AAPT_APTP_CODE"
-//       left join import."NALD_POINT_TYPE_SECS" pts on pts."CODE"=p."AAPT_APTS_CODE"
-//       where "ID"=$1 and "NGR1_SHEET"=$2
-//   `, [AAIP_ID, NGR1_SHEET]);
-//   //  console.log('done')
-//   client.release();
-//   return res.rows;
-// };
-// const getPointAbstractionMethods = async (AAIP_ID, FGAC_REGION_CODE) => {
-//   //  console.log('AAIP_ID ',AAIP_ID)
-//   const client = await pool.connect();
-//   const res = await client.query(`
-//       select pp.*,
-//       row_to_json(m.*) AS means_of_abstraction
-//       from import."NALD_ABS_PURP_POINTS" pp
-//       left join import."NALD_MEANS_OF_ABS" m on m."CODE"=pp."AMOA_CODE"
-//       where pp."AAIP_ID"=$1 and pp."FGAC_REGION_CODE" = $2
-//   `, [AAIP_ID, FGAC_REGION_CODE]);
-//   //  console.log('done')
-//   client.release();
-//   return res.rows;
-// };
 const getPurposePointLicenceAgreements = async (AABP_ID, FGAC_REGION_CODE) => {
-  // console.log('AABP_ID (1) ', AABP_ID)
-  const client = await pool.connect();
-  const res = await client.query(`
+  const query = `
       select * from import."NALD_LIC_AGRMNTS"
       where "AABP_ID"=$1 and "FGAC_REGION_CODE" = $2
-  `, [AABP_ID, FGAC_REGION_CODE]);
-  client.release();
-  return res.rows;
+  `;
+  const params = [AABP_ID, FGAC_REGION_CODE];
+  return dbQuery(query, params);
 };
 const getPurposePointLicenceConditions = async (AABP_ID, FGAC_REGION_CODE) => {
-  // console.log('AABP_ID (2) ', AABP_ID)
-  try {
-    const client = await pool.connect();
-    const res = await client.query(`
-      select c.*,
-      row_to_json(ct.*) AS condition_type
-      from import."NALD_LIC_CONDITIONS" c
-      left join import."NALD_LIC_COND_TYPES" ct on ct."CODE"=c."ACIN_CODE" and ct."SUBCODE"=c."ACIN_SUBCODE"
-      where "AABP_ID"=$1 and c."FGAC_REGION_CODE" = $2
-      order by "DISP_ORD" asc
-  `, [AABP_ID, FGAC_REGION_CODE]);
-    client.release();
-    return res.rows;
-  } catch (e) {
-    console.log(e);
-    return null;
-  }
+  const query = `
+    select c.*,
+    row_to_json(ct.*) AS condition_type
+    from import."NALD_LIC_CONDITIONS" c
+    left join import."NALD_LIC_COND_TYPES" ct on ct."CODE"=c."ACIN_CODE" and ct."SUBCODE"=c."ACIN_SUBCODE"
+    where "AABP_ID"=$1 and c."FGAC_REGION_CODE" = $2
+    order by "DISP_ORD" asc
+`;
+  const params = [AABP_ID, FGAC_REGION_CODE];
+  return dbQuery(query, params);
 };
 module.exports = {
   import: loadNaldData,
