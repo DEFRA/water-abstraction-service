@@ -97,7 +97,7 @@ function getContactId (contact) {
  * @return {Array} - list of contacts with licence details
  */
 async function getContacts (filter) {
-  const { error, data } = await getDocumentContacts(JSON.parse(filter));
+  const { error, data } = await getDocumentContacts(filter);
 
   if (error) {
     throw error;

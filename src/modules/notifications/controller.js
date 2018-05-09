@@ -10,12 +10,14 @@ const { prepareNotification } = require('./lib');
  * @param { Number } request.payload.taskConfigId - the ID of the notification task in the task_config table *
  */
 async function postPreview (request, reply) {
-  const { filter, taskConfigId, params } = request.payload;
-
   try {
+    // console.log('payload type:', typeof (request.payload));
+    const { filter, taskConfigId, params } = request.payload;
+    console.log(typeof (filter), filter);
+    console.log(typeof (taskConfigId), taskConfigId);
+    console.log(typeof (params), params);
     const data = await prepareNotification(filter, taskConfigId, params);
-
-    return reply(data);
+    return reply({ error: null, data });
   } catch (error) {
     console.error(error);
     reply(error);
