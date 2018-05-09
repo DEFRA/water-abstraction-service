@@ -19,7 +19,7 @@ function getSystemInternalIds (contactList) {
  */
 async function loadLicenceData (licenceIds) {
   const filter = {
-    licence_id: licenceIds
+    licence_id: { $in: licenceIds }
   };
 
   const { data, error } = await licences.findMany(filter);
@@ -28,16 +28,16 @@ async function loadLicenceData (licenceIds) {
     throw error;
   }
 
-  return data.reduce(async (acc, licence) => {
-    const { licence_data_value: licenceData } = licence;
-    const transformer = new LicenceTransformer();
-    await transformer.load(licenceData);
+  let obj = {};
 
-    return {
-      ...acc,
-      [licence.licence_ref]: transformer.export()
-    };
-  }, {});
+  for (let row of data) {
+    let { licence_data_value: licenceData } = row;
+    let transformer = new LicenceTransformer();
+    await transformer.load(licenceData);
+    obj[row.licence_ref] = transformer.export();
+  };
+
+  return obj;
 }
 
 module.exports = (contacts) => {

@@ -27,6 +27,8 @@ function renderTemplates (taskConfig, params, contacts, licences) {
       licences: licenceList
     };
 
+    console.log(licences);
+
     const output = nunjucks.renderString(taskConfig.config.content.default, viewContext);
 
     return {
