@@ -1,5 +1,5 @@
-const LicenceTransformer = require('../../lib/licence-transformer');
-const { licences } = require('../../lib/connectors/permit');
+const LicenceTransformer = require('../../../lib/licence-transformer');
+const { licences } = require('../../../lib/connectors/permit');
 
 /**
  * Get a list of permit repo IDs for each licence from the contact list

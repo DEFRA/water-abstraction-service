@@ -11,7 +11,7 @@
 
 const { find } = require('lodash');
 const sha1 = require('sha1');
-const { getDocumentContacts } = require('../../lib/connectors/crm/documents');
+const { getDocumentContacts } = require('../../../lib/connectors/crm/documents');
 
 /**
  * Given list of licence contacts, this returns the preferred contact based

@@ -2,7 +2,7 @@
  * Loads task config data from database
  * @module modules/notifications/task-config-loader
  */
-const { repository: taskConfigRepo } = require('../../controllers/task-config');
+const { repository: taskConfigRepo } = require('../../../controllers/task-config');
 
 class TaskNotFoundError extends Error {
   constructor (message) {

@@ -2,7 +2,7 @@
  * Controller methods to send/preview notifications
  * @module src/modules/notifications/controller
  */
-const prepareNotification = require('./prepare-notification');
+const { prepareNotification } = require('./lib');
 
 /**
  * @param { Object } request.payload.filter - standard filter

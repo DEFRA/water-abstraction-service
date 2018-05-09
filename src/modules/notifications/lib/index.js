@@ -24,4 +24,6 @@ async function prepareNotification (filter, taskConfigId, params) {
   return templateRenderer(taskConfig, params, contacts, licenceData);
 }
 
-module.exports = prepareNotification;
+module.exports = {
+  prepareNotification
+};
