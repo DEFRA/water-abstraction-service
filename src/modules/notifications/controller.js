@@ -2,48 +2,24 @@
  * Controller methods to send/preview notifications
  * @module src/modules/notifications/controller
  */
-const getContactList = require('./contact-list');
-const licenceLoader = require('./licence-loader');
-const taskConfigLoader = require('./task-config-loader');
-
-const nunjucks = require('nunjucks');
-
-// nunjucks.configure({ autoescape: true });
-// nunjucks.renderString('Hello {{ username }}', { username: 'James' });
-
-async function postPreview () {
-
-}
+const prepareNotification = require('./prepare-notification');
 
 /**
- * @param {Object} taskConfig - an object of task config fata from the water service DB
- * @param {Object} params - user-supplied template variables
- * @param {Array} contacts - array of contacts with licence header data
- * @param {Object} licences - list of licences keyed by licence number
+ * @param { Object } request.payload.filter - standard filter
+ * @param { Object } request.payload.params - variables that will be merged into the template *
+ * @param { Number } request.payload.taskConfigId - the ID of the notification task in the task_config table *
  */
-function renderTemplates (taskConfig, params, contacts, licences) {
-  return contacts.map((contact) => {
-    const licenceList = contact.licences.map((licence) => {
-      return licences[licence.system_external_id];
-    });
+async function postPreview (request, reply) {
+  const { filter, taskConfigId, params } = request.payload;
 
-    // Assemble view data for passing to Nunjucks template
-    const viewContext = {
-      taskConfig,
-      params,
-      contact,
-      licences: licenceList
-    };
+  try {
+    const data = await prepareNotification(filter, taskConfigId, params);
 
-    const output = nunjucks.renderString(taskConfig.config.content.default, viewContext);
-
-    console.log('template:', output);
-
-    return {
-      ...viewContext,
-      output
-    };
-  });
+    return reply(data);
+  } catch (error) {
+    console.error(error);
+    reply(error);
+  }
 }
 
 /**
@@ -77,28 +53,18 @@ function renderTemplates (taskConfig, params, contacts, licences) {
  * @param {Number} request.payload.taskConfigId - the ID of the notification task in the task_config table
  */
 async function postSend (request, reply) {
-  const { filter, taskConfigId, params } = request.payload;
+  return reply('Not implemented').code(501);
 
-  try {
-    // Get a list of de-duped contacts with licences
-    const contacts = await getContactList(filter);
-
-    // Load licence data from permit repo, and use NALD licence transformer
-    // to transform to same format used in front-end GUI
-    const licenceData = await licenceLoader(contacts);
-
-    // Load task config data
-    const taskConfig = await taskConfigLoader(taskConfigId);
-
-    await renderTemplates(taskConfig, params, contacts, licenceData);
-
-    // console.log(JSON.stringify(taskConfig, null, 2));
-
-    reply(contacts);
-  } catch (error) {
-    console.error(error);
-    reply(error);
-  }
+  // const { filter, taskConfigId, params } = request.payload;
+  //
+  // try {
+  //   const data = await prepareNotification(filter, taskConfigId, params);
+  //
+  //   return reply(data);
+  // } catch (error) {
+  //   console.error(error);
+  //   reply(error);
+  // }
 }
 
 module.exports = {
