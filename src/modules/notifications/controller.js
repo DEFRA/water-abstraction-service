@@ -1,7 +1,49 @@
+/**
+ * Controller methods to send/preview notifications
+ * @module src/modules/notifications/controller
+ */
 const getContactList = require('./contact-list');
+const licenceLoader = require('./licence-loader');
+const taskConfigLoader = require('./task-config-loader');
+
+const nunjucks = require('nunjucks');
+
+// nunjucks.configure({ autoescape: true });
+// nunjucks.renderString('Hello {{ username }}', { username: 'James' });
 
 async function postPreview () {
 
+}
+
+/**
+ * @param {Object} taskConfig - an object of task config fata from the water service DB
+ * @param {Object} params - user-supplied template variables
+ * @param {Array} contacts - array of contacts with licence header data
+ * @param {Object} licences - list of licences keyed by licence number
+ */
+function renderTemplates (taskConfig, params, contacts, licences) {
+  return contacts.map((contact) => {
+    const licenceList = contact.licences.map((licence) => {
+      return licences[licence.system_external_id];
+    });
+
+    // Assemble view data for passing to Nunjucks template
+    const viewContext = {
+      taskConfig,
+      params,
+      contact,
+      licences: licenceList
+    };
+
+    const output = nunjucks.renderString(taskConfig.config.content.default, viewContext);
+
+    console.log('template:', output);
+
+    return {
+      ...viewContext,
+      output
+    };
+  });
 }
 
 /**
@@ -12,11 +54,7 @@ async function postPreview () {
  * - generate contact list
  * - send
  *
- * @param {Object} request.payload.filter - standard filter for selecting licences from CRM
- * @param {Object} request.payload.params - variables that will be merged into the template
- * @param {Number} request.payload.taskConfigId - the ID of the notification task in the task_config table
- *
- * The process:
+ * Process in detail:
  *
  * 1. Build contact list
  * - get list of contacts from CRM data
@@ -33,14 +71,30 @@ async function postPreview () {
  * 4. Send
  * - create batch send message in event log
  * - send each message
+ *
+ * @param {Object} request.payload.filter - standard filter for selecting licences from CRM
+ * @param {Object} request.payload.params - variables that will be merged into the template
+ * @param {Number} request.payload.taskConfigId - the ID of the notification task in the task_config table
  */
 async function postSend (request, reply) {
-  const { filter } = request.payload;
+  const { filter, taskConfigId, params } = request.payload;
 
   try {
-    const data = await getContactList(filter);
+    // Get a list of de-duped contacts with licences
+    const contacts = await getContactList(filter);
 
-    reply(data);
+    // Load licence data from permit repo, and use NALD licence transformer
+    // to transform to same format used in front-end GUI
+    const licenceData = await licenceLoader(contacts);
+
+    // Load task config data
+    const taskConfig = await taskConfigLoader(taskConfigId);
+
+    await renderTemplates(taskConfig, params, contacts, licenceData);
+
+    // console.log(JSON.stringify(taskConfig, null, 2));
+
+    reply(contacts);
   } catch (error) {
     console.error(error);
     reply(error);
