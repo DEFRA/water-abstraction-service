@@ -65,7 +65,6 @@ function createSendList (licences) {
     }
 
     // Add licence
-    console.log('lICENCE!!', licence);
     const { document_id: documentId, system_external_id: systemExternalId, document_name: documentName, system_internal_id: systemInternalId } = licence;
     list[contactKey].licences.push({
       document_id: documentId,
