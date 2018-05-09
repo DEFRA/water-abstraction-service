@@ -11,11 +11,7 @@ const { prepareNotification } = require('./lib');
  */
 async function postPreview (request, reply) {
   try {
-    // console.log('payload type:', typeof (request.payload));
     const { filter, taskConfigId, params } = request.payload;
-    console.log(typeof (filter), filter);
-    console.log(typeof (taskConfigId), taskConfigId);
-    console.log(typeof (params), params);
     const data = await prepareNotification(filter, taskConfigId, params);
     return reply({ error: null, data });
   } catch (error) {

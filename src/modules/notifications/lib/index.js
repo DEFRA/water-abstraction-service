@@ -5,6 +5,28 @@ const templateRenderer = require('./template-renderer');
 
 /**
  * Method which can be shared between preview/send
+ *
+ * Send a notification
+ * The process is:
+ * - select template (and personalisation variables)
+ * - select audience (licence numbers)
+ * - generate contact list
+ * - send
+ *
+ * Process in detail:
+ *
+ * 1. Build contact list
+ * - get list of contacts from CRM data
+ * - de-duplicate, select most relevant contacts
+ *
+ * 2. Build template view context for each licence
+ * - supplied template parameters (per batch)
+ * - task configuration data (per task)
+ * - pull all licences from permit repo, run them through NALD licence transformer (per de-duped licence list)
+ *
+ * 3. Render template content
+ * - use Nunjucks to render view context data with selected template
+ *
  * @param {Object} filter - the filter for searching for licences in CRM
  * @param {Number} taskConfigId - the numeric ID of the notification task
  * @param {Object} params - template parameters
