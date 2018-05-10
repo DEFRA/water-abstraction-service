@@ -26,3 +26,5 @@ const TaskConfigApi = new HAPIRestAPI({
 });
 
 module.exports = TaskConfigApi.getRoutes();
+
+module.exports.repository = TaskConfigApi.repo;
