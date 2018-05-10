@@ -1,8 +1,13 @@
+const moment = require('moment');
 const getContactList = require('./contact-list');
 const licenceLoader = require('./licence-loader');
 const taskConfigLoader = require('./task-config-loader');
 const templateRenderer = require('./template-renderer');
 const eventLogger = require('./event-logger');
+const { sendLater } = require('../../../controllers/notify');
+const { createGUID } = require('../../../lib/helpers');
+
+/* eslint camelcase: "warn" */
 
 /**
  * Method which can be shared between preview/send
@@ -55,6 +60,42 @@ async function prepareNotification (filter, taskConfigId, params) {
  */
 async function sendNotification (taskConfigId, issuer, contactData) {
   const taskConfig = await taskConfigLoader(taskConfigId);
+
+  // Schedule messages for sending
+  for (let row of contactData) {
+    // Format name
+    let { salutation, forename, name } = row.contact.contact;
+    let fullName = [salutation, forename, name].filter(x => x).join(' ');
+
+    // Get address
+    let { address_1, address_2, address_3, address_4, town, county, postcode } = row.contact.contact;
+    let lines = [fullName, address_1, address_2, address_3, address_4, town, county];
+
+    // Format personalisation with address lines and postcode
+    let address = lines.filter(x => x).reduce((acc, line, i) => {
+      return {
+        ...acc,
+        [`address_line_${i + 1}`]: line
+      };
+    }, {});
+
+    let messageConfig = {
+      id: createGUID(),
+      recipient: row.contact.method === 'email' ? row.contact.email : 'n/a',
+      message_ref: row.contact.method === 'email' ? 'notification_email' : 'notification_letter',
+      personalisation: {
+        body: row.output,
+        heading: taskConfig.config.name,
+        ...address,
+        postcode
+      },
+      sendafter: moment().format('YYYY-MM-DD HH:mm:ss')
+    };
+
+    const { error } = await sendLater(messageConfig);
+
+    console.log(error, messageConfig);
+  }
 
   // Create array of affected licence numbers
   const licences = contactData.reduce((acc, row) => {
