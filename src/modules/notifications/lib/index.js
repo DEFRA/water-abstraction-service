@@ -2,6 +2,7 @@ const getContactList = require('./contact-list');
 const licenceLoader = require('./licence-loader');
 const taskConfigLoader = require('./task-config-loader');
 const templateRenderer = require('./template-renderer');
+const eventLogger = require('./event-logger');
 
 /**
  * Method which can be shared between preview/send
@@ -46,6 +47,29 @@ async function prepareNotification (filter, taskConfigId, params) {
   return templateRenderer(taskConfig, params, contacts, licenceData);
 }
 
+/**
+ * Send notification
+ * @param {Number} taskConfigId
+ * @param {String} issuer - email address
+ * @param {Array} contactData - data from prepare step above
+ */
+async function sendNotification (taskConfigId, issuer, contactData) {
+  const taskConfig = await taskConfigLoader(taskConfigId);
+
+  // Create array of affected licence numbers
+  const licences = contactData.reduce((acc, row) => {
+    const licenceNumbers = row.contact.licences.map(item => item.system_external_id);
+    return [...acc, ...licenceNumbers];
+  }, []);
+
+  // Create array of affected CRM entity IDs
+  const entities = contactData.map(row => row.contact.entity_id).filter(x => x);
+
+  // Log event
+  await eventLogger(taskConfig, issuer, licences, entities, contactData, 'sent');
+}
+
 module.exports = {
-  prepareNotification
+  prepareNotification,
+  sendNotification
 };

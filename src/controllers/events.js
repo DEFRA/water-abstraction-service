@@ -4,7 +4,7 @@
  */
 const HAPIRestAPI = require('hapi-pg-rest-api');
 const Joi = require('joi');
-const {pool} = require('../lib/connectors/db.js');
+const { pool } = require('../lib/connectors/db.js');
 
 const EventsApi = new HAPIRestAPI({
   table: 'water.events',
@@ -37,3 +37,5 @@ const EventsApi = new HAPIRestAPI({
 });
 
 module.exports = EventsApi.getRoutes();
+
+module.exports.repository = EventsApi.repo;
