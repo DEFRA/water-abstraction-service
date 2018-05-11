@@ -3,7 +3,7 @@ const licenceLoader = require('./licence-loader');
 const taskConfigLoader = require('./task-config-loader');
 const templateRenderer = require('./template-renderer');
 const eventFactory = require('./event-factory');
-const ScheduledNotification = require('../../../lib/scheduled-notification');
+const notificationFactory = require('./notification-factory');
 
 /* eslint camelcase: "warn" */
 
@@ -51,66 +51,11 @@ async function prepareNotification (filter, taskConfigId, params) {
 }
 
 /**
- * Compose and send a single message with notify
- * @param {Object} contactData
- * @param {Object} taskConfig
- * @return {Promise} resolves with { error }
- */
-async function sendNotifyMessage (contactData, taskConfig, event) {
-  // Format name
-  const { salutation, forename, name, entity_id } = contactData.contact.contact;
-  const fullName = [salutation, forename, name].filter(x => x).join(' ');
-
-  // Get address
-  const { address_1, address_2, address_3, address_4, town, county, postcode } = contactData.contact.contact;
-  const lines = [fullName, address_1, address_2, address_3, address_4, town, county];
-
-  // Format personalisation with address lines and postcode
-  const address = lines.filter(x => x).reduce((acc, line, i) => {
-    return {
-      ...acc,
-      [`address_line_${i + 1}`]: line
-    };
-  }, {});
-
-  // Compose notify personalisation
-  const personalisation = {
-    body: contactData.output,
-    heading: taskConfig.config.name,
-    ...address,
-    postcode
-  };
-
-  // Get data for logging
-  const licenceNumbers = contactData.contact.licences.map(row => row.system_external_id);
-  const companyEntityId = contactData.contact.licences.reduce((acc, licence) => {
-    return acc || licence.company_entity_id;
-  }, null);
-
-  try {
-    const n = new ScheduledNotification();
-    await n.setMessage(contactData.contact.method === 'email' ? 'notification_email' : 'notification_letter');
-    n.setPersonalisation(personalisation)
-      .setRecipient(contactData.contact.email)
-      .setLicenceNumbers(licenceNumbers)
-      .setCompanyEntityId(companyEntityId)
-      .setIndividualEntityId(entity_id)
-      .setEventId(event.getId())
-      .setText(contactData.output);
-
-    return n.save();
-  } catch (error) {
-    console.error(error);
-    return { error };
-  }
-}
-
-/**
  * Send notification
  * We need to:
  * - Create batch event GUID and reference number
  * - Compose each message's Notify packet and send
- * - Log batch
+ * - Update the batch event status
  * @param {Number} taskConfigId
  * @param {String} issuer - email address
  * @param {Array} contactData - data from prepare step above
@@ -126,9 +71,11 @@ async function sendNotification (taskConfigId, issuer, contactData) {
 
   // Schedule messages for sending
   for (let row of contactData) {
-    const { error } = await sendNotifyMessage(row, taskConfig, e);
+    let n = await notificationFactory(row, taskConfig, e);
+    let { error } = await n.save();
+
     if (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 
