@@ -28,6 +28,7 @@ async function notificationFactory (contactData, taskConfig, event) {
   const personalisation = {
     body: contactData.output,
     heading: taskConfig.config.name,
+    subject: taskConfig.config.name,
     ...address,
     postcode
   };
