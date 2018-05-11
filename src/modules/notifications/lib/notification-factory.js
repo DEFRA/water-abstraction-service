@@ -42,7 +42,7 @@ async function notificationFactory (contactData, taskConfig, event) {
     const n = new ScheduledNotification();
     await n.setMessage(contactData.contact.method === 'email' ? 'notification_email' : 'notification_letter');
     n.setPersonalisation(personalisation)
-      .setRecipient(contactData.contact.email)
+      .setRecipient(contactData.contact.contact.email)
       .setLicenceNumbers(licenceNumbers)
       .setCompanyEntityId(companyEntityId)
       .setIndividualEntityId(entity_id)
