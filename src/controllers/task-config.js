@@ -19,6 +19,7 @@ const TaskConfigApi = new HAPIRestAPI({
   validation: {
     task_config_id: Joi.number(),
     type: Joi.string(),
+    subtype: Joi.string(),
     config: Joi.string(),
     created: Joi.string(),
     modified: Joi.string()

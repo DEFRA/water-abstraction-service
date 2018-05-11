@@ -2,7 +2,7 @@
  * Controller methods to send/preview notifications
  * @module src/modules/notifications/controller
  */
-const { prepareNotification } = require('./lib');
+const { prepareNotification, sendNotification } = require('./lib');
 
 /**
  * @param { Object } request.payload.filter - standard filter
@@ -51,18 +51,15 @@ async function postPreview (request, reply) {
  * @param {Number} request.payload.taskConfigId - the ID of the notification task in the task_config table
  */
 async function postSend (request, reply) {
-  return reply('Not implemented').code(501);
-
-  // const { filter, taskConfigId, params } = request.payload;
-  //
-  // try {
-  //   const data = await prepareNotification(filter, taskConfigId, params);
-  //
-  //   return reply(data);
-  // } catch (error) {
-  //   console.error(error);
-  //   reply(error);
-  // }
+  try {
+    const { filter, taskConfigId, params, sender } = request.payload;
+    const data = await prepareNotification(filter, taskConfigId, params);
+    await sendNotification(taskConfigId, sender, data);
+    return reply({ error: null, data });
+  } catch (error) {
+    console.error(error);
+    reply(error);
+  }
 }
 
 module.exports = {

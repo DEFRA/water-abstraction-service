@@ -274,7 +274,7 @@ async function sendLater (config) {
     };
   } else {
     try {
-    // get template details
+      // get template details
       let template = await DB.query('select * from water.notify_templates where message_ref=$1', [config.message_ref]);
       if (!template.data.length) {
         return {
@@ -285,7 +285,7 @@ async function sendLater (config) {
       const notifyClient = new NotifyClient(getNotifyKey(template.data[0].notify_key));
       var templateId = template.data[0].template_id;
       try {
-      // check template exists in notify
+        // check template exists in notify
         template = await notifyClient.getTemplateById(templateId);
       } catch (e) {
         return {

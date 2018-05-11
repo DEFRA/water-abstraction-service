@@ -2,6 +2,10 @@ const getContactList = require('./contact-list');
 const licenceLoader = require('./licence-loader');
 const taskConfigLoader = require('./task-config-loader');
 const templateRenderer = require('./template-renderer');
+const eventFactory = require('./event-factory');
+const notificationFactory = require('./notification-factory');
+
+/* eslint camelcase: "warn" */
 
 /**
  * Method which can be shared between preview/send
@@ -46,6 +50,41 @@ async function prepareNotification (filter, taskConfigId, params) {
   return templateRenderer(taskConfig, params, contacts, licenceData);
 }
 
+/**
+ * Send notification
+ * We need to:
+ * - Create batch event GUID and reference number
+ * - Compose each message's Notify packet and send
+ * - Update the batch event status
+ * @param {Number} taskConfigId
+ * @param {String} issuer - email address
+ * @param {Array} contactData - data from prepare step above
+ */
+async function sendNotification (taskConfigId, issuer, contactData) {
+  const taskConfig = await taskConfigLoader(taskConfigId);
+
+  // Create event
+  const e = eventFactory(issuer, taskConfig, contactData);
+  await e.save();
+
+  console.log(`Sending notification reference ${e.getReference()} ID ${e.getId()}`);
+
+  // Schedule messages for sending
+  for (let row of contactData) {
+    let n = await notificationFactory(row, taskConfig, e);
+    let { error } = await n.save();
+
+    if (error) {
+      console.error(error);
+    }
+  }
+
+  // Update event status
+  e.setStatus('sent');
+  return e.save();
+}
+
 module.exports = {
-  prepareNotification
+  prepareNotification,
+  sendNotification
 };
