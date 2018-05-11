@@ -1,11 +1,9 @@
-const moment = require('moment');
 const getContactList = require('./contact-list');
 const licenceLoader = require('./licence-loader');
 const taskConfigLoader = require('./task-config-loader');
 const templateRenderer = require('./template-renderer');
-const eventLogger = require('./event-logger');
-const { sendLater } = require('../../../controllers/notify');
-const { createGUID } = require('../../../lib/helpers');
+const eventFactory = require('./event-factory');
+const ScheduledNotification = require('../../../lib/scheduled-notification');
 
 /* eslint camelcase: "warn" */
 
@@ -53,7 +51,66 @@ async function prepareNotification (filter, taskConfigId, params) {
 }
 
 /**
+ * Compose and send a single message with notify
+ * @param {Object} contactData
+ * @param {Object} taskConfig
+ * @return {Promise} resolves with { error }
+ */
+async function sendNotifyMessage (contactData, taskConfig, event) {
+  // Format name
+  const { salutation, forename, name, entity_id } = contactData.contact.contact;
+  const fullName = [salutation, forename, name].filter(x => x).join(' ');
+
+  // Get address
+  const { address_1, address_2, address_3, address_4, town, county, postcode } = contactData.contact.contact;
+  const lines = [fullName, address_1, address_2, address_3, address_4, town, county];
+
+  // Format personalisation with address lines and postcode
+  const address = lines.filter(x => x).reduce((acc, line, i) => {
+    return {
+      ...acc,
+      [`address_line_${i + 1}`]: line
+    };
+  }, {});
+
+  // Compose notify personalisation
+  const personalisation = {
+    body: contactData.output,
+    heading: taskConfig.config.name,
+    ...address,
+    postcode
+  };
+
+  // Get data for logging
+  const licenceNumbers = contactData.contact.licences.map(row => row.system_external_id);
+  const companyEntityId = contactData.contact.licences.reduce((acc, licence) => {
+    return acc || licence.company_entity_id;
+  }, null);
+
+  try {
+    const n = new ScheduledNotification();
+    await n.setMessage(contactData.contact.method === 'email' ? 'notification_email' : 'notification_letter');
+    n.setPersonalisation(personalisation)
+      .setRecipient(contactData.contact.email)
+      .setLicenceNumbers(licenceNumbers)
+      .setCompanyEntityId(companyEntityId)
+      .setIndividualEntityId(entity_id)
+      .setEventId(event.getId())
+      .setText(contactData.output);
+
+    return n.save();
+  } catch (error) {
+    console.error(error);
+    return { error };
+  }
+}
+
+/**
  * Send notification
+ * We need to:
+ * - Create batch event GUID and reference number
+ * - Compose each message's Notify packet and send
+ * - Log batch
  * @param {Number} taskConfigId
  * @param {String} issuer - email address
  * @param {Array} contactData - data from prepare step above
@@ -61,53 +118,23 @@ async function prepareNotification (filter, taskConfigId, params) {
 async function sendNotification (taskConfigId, issuer, contactData) {
   const taskConfig = await taskConfigLoader(taskConfigId);
 
+  // Create event
+  const e = eventFactory(issuer, taskConfig, contactData);
+  await e.save();
+
+  console.log(`Sending notification reference ${e.getReference()} ID ${e.getId()}`);
+
   // Schedule messages for sending
   for (let row of contactData) {
-    // Format name
-    let { salutation, forename, name } = row.contact.contact;
-    let fullName = [salutation, forename, name].filter(x => x).join(' ');
-
-    // Get address
-    let { address_1, address_2, address_3, address_4, town, county, postcode } = row.contact.contact;
-    let lines = [fullName, address_1, address_2, address_3, address_4, town, county];
-
-    // Format personalisation with address lines and postcode
-    let address = lines.filter(x => x).reduce((acc, line, i) => {
-      return {
-        ...acc,
-        [`address_line_${i + 1}`]: line
-      };
-    }, {});
-
-    let messageConfig = {
-      id: createGUID(),
-      recipient: row.contact.method === 'email' ? row.contact.email : 'n/a',
-      message_ref: row.contact.method === 'email' ? 'notification_email' : 'notification_letter',
-      personalisation: {
-        body: row.output,
-        heading: taskConfig.config.name,
-        ...address,
-        postcode
-      },
-      sendafter: moment().format('YYYY-MM-DD HH:mm:ss')
-    };
-
-    const { error } = await sendLater(messageConfig);
-
-    console.log(error, messageConfig);
+    const { error } = await sendNotifyMessage(row, taskConfig, e);
+    if (error) {
+      console.log(error);
+    }
   }
 
-  // Create array of affected licence numbers
-  const licences = contactData.reduce((acc, row) => {
-    const licenceNumbers = row.contact.licences.map(item => item.system_external_id);
-    return [...acc, ...licenceNumbers];
-  }, []);
-
-  // Create array of affected CRM entity IDs
-  const entities = contactData.map(row => row.contact.entity_id).filter(x => x);
-
-  // Log event
-  await eventLogger(taskConfig, issuer, licences, entities, contactData, 'sent');
+  // Update event status
+  e.setStatus('sent');
+  return e.save();
 }
 
 module.exports = {

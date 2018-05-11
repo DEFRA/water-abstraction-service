@@ -9,6 +9,8 @@
  * @module src/modules/notifications/contact-list
  */
 
+/* eslint camelcase: "warn" */
+
 const { find } = require('lodash');
 const sha1 = require('sha1');
 const { getDocumentContacts } = require('../../../lib/connectors/crm/documents');
@@ -65,12 +67,14 @@ function createSendList (licences) {
     }
 
     // Add licence
-    const { document_id: documentId, system_external_id: systemExternalId, document_name: documentName, system_internal_id: systemInternalId } = licence;
+    const { document_id, system_external_id, document_name, system_internal_id, company_entity_id } = licence;
+
     list[contactKey].licences.push({
-      document_id: documentId,
-      system_external_id: systemExternalId,
-      system_internal_id: systemInternalId,
-      document_name: documentName,
+      document_id,
+      system_external_id,
+      system_internal_id,
+      company_entity_id,
+      document_name,
       licence_holder: licenceHolder
     });
   });
