@@ -7,6 +7,10 @@
 
 const nunjucks = require('nunjucks');
 
+nunjucks.configure({
+  autoescape: false
+});
+
 /**
  * @param {Object} taskConfig - an object of task config fata from the water service DB
  * @param {Object} params - user-supplied template variables
