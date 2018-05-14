@@ -35,7 +35,14 @@ function eventFactory (issuer, taskConfig, contactData) {
     .setIssuer(issuer)
     .setLicenceNumbers(licences)
     .setEntities(uniqueEntities)
-    .setMetadata(contactData)
+    .setMetadata({
+      name: taskConfig.config.name,
+      recipients: contactData.length,
+      pending: contactData.length,
+      sent: 0,
+      error: 0,
+      taskConfigId: taskConfig.task_config_id
+    })
     .setStatus('sending');
 
   return e;
