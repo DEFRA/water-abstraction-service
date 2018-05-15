@@ -91,7 +91,12 @@ function getContactId (contact) {
   if (contact.entity_id) {
     return contact.entity_id;
   }
-  return sha1(Object.values(contact).join(','));
+
+  function fixCase (str) {
+    return typeof (str) === 'string' ? str.toUpperCase() : str;
+  }
+
+  return sha1(Object.values(contact).map(fixCase).join(','));
 }
 
 /**
