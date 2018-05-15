@@ -28,6 +28,34 @@ async function getPendingNotifications () {
 }
 
 /**
+ * Update metadata
+ * @param {Object} existing metadata
+ * @param {Array} notifications - a list of notifications from water.scheduled_notification table
+ * @return {Object} updated metadata
+ */
+function getUpdatedMetadata (metadata, notifications) {
+  // Count pending/send status
+  const stats = notifications.reduce((acc, { status }) => {
+    if (status === 'sent') {
+      acc.sent++;
+    }
+    if (status === 'error') {
+      acc.error++;
+    }
+    return acc;
+  }, {
+    sent: 0,
+    error: 0
+  });
+
+  return {
+    ...metadata,
+    ...stats,
+    pending: metadata.recipients - (stats.sent + stats.error)
+  };
+}
+
+/**
  * Process a single event from the water.event table
  * Select all the scheduled notifications for this message, and update the
  * sent stats in the event metadata
@@ -47,25 +75,7 @@ async function processEvent (event) {
     return { error };
   }
 
-  // Count pending/send status
-  const stats = rows.reduce((acc, { status }) => {
-    if (status === 'sent') {
-      acc.sent++;
-    }
-    if (status === 'error') {
-      acc.error++;
-    }
-    return acc;
-  }, {
-    sent: 0,
-    error: 0
-  });
-
-  const update = {
-    ...metadata,
-    ...stats,
-    pending: metadata.recipients - (stats.sent + stats.error)
-  };
+  const update = getUpdatedMetadata(metadata, rows);
 
   console.log('updated', update);
 
