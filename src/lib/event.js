@@ -9,20 +9,6 @@ const event = new Repository({
   primaryKey: 'event_id'
 });
 
-/**
- * Make a random string of given length, from pre-defined list of chars
- * to avoid confusion - e.g don't include O and 0
- * @see {@link https://stackoverflow.com/questions/1349404/generate-random-string-characters-in-javascript}
- * @param {Number} length - the length of the random string
- * @return {String}
- */
-function randomString (length) {
-  let text = '';
-  let possible = 'ABCDEFGHJKLMNPQRTUVWXYZ0123456789';
-  for (let i = 0; i < length; i++) { text += possible.charAt(Math.floor(Math.random() * possible.length)); }
-  return text;
-}
-
 class Event {
   constructor () {
     this.data = {
@@ -49,24 +35,21 @@ class Event {
   }
 
   /**
-   * Get next reference number with a pre-defined prefix
-   * @param {String} prefix - the prefix for the reference, e.g. EXPIRY-
-   * @return {String} the next prefix
-   */
-  generateReference (prefix) {
-    if (!prefix) {
-      return null;
-    }
-    this.data.reference_code = prefix + randomString(6);
-    return this;
-  }
-
-  /**
    * Gets the reference for this batch
    * @return {String}
    */
   getReference () {
     return this.data.reference_code;
+  }
+
+  /**
+   * Sets reference for this batch
+   * @param {String} reference
+   * @return {this}
+   */
+  setReference (reference) {
+    this.data.reference_code = reference;
+    return this;
   }
 
   /**

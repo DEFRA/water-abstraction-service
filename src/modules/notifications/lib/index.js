@@ -32,11 +32,12 @@ const notificationFactory = require('./notification-factory');
  * - use Nunjucks to render view context data with selected template
  *
  * @param {Object} filter - the filter for searching for licences in CRM
- * @param {Number} taskConfigId - the numeric ID of the notification task
+ * @param {Object} taskConfig - task configuration data from water.task_config table
  * @param {Object} params - template parameters
+ * @param {Object} context - additional view context, used to pass reference code through to template
  * @return {Promise} resolves with array of contacts, licences, and rendered messages to send via Notify
  */
-async function prepareNotification (filter, taskConfigId, params) {
+async function prepareNotification (filter, taskConfig, params, context = {}) {
   // Get a list of de-duped contacts with licences
   const contacts = await getContactList(filter);
 
@@ -44,10 +45,7 @@ async function prepareNotification (filter, taskConfigId, params) {
   // to transform to same format used in front-end GUI
   const licenceData = await licenceLoader(contacts);
 
-  // Load task config data
-  const taskConfig = await taskConfigLoader(taskConfigId);
-
-  return templateRenderer(taskConfig, params, contacts, licenceData);
+  return templateRenderer(taskConfig, params, contacts, licenceData, context);
 }
 
 /**
@@ -56,15 +54,14 @@ async function prepareNotification (filter, taskConfigId, params) {
  * - Create batch event GUID and reference number
  * - Compose each message's Notify packet and send
  * - Update the batch event status
- * @param {Number} taskConfigId
+ * @param {Object} taskConfig - task configuration data from water.task_config table
  * @param {String} issuer - email address
  * @param {Array} contactData - data from prepare step above
+ * @param {String} ref - unique reference for this message batch
  */
-async function sendNotification (taskConfigId, issuer, contactData) {
-  const taskConfig = await taskConfigLoader(taskConfigId);
-
+async function sendNotification (taskConfig, issuer, contactData, ref) {
   // Create event
-  const e = eventFactory(issuer, taskConfig, contactData);
+  const e = eventFactory(issuer, taskConfig, contactData, ref);
   await e.save();
 
   console.log(`Sending notification reference ${e.getReference()} ID ${e.getId()}`);

@@ -3,6 +3,8 @@
  * @module src/modules/notifications/controller
  */
 const { prepareNotification, sendNotification } = require('./lib');
+const taskConfigLoader = require('./lib/task-config-loader');
+const generateReference = require('./lib/reference-generator');
 
 /**
  * @param { Object } request.payload.filter - standard filter
@@ -12,7 +14,8 @@ const { prepareNotification, sendNotification } = require('./lib');
 async function postPreview (request, reply) {
   try {
     const { filter, taskConfigId, params } = request.payload;
-    const data = await prepareNotification(filter, taskConfigId, params);
+    const taskConfig = await taskConfigLoader(taskConfigId);
+    const data = await prepareNotification(filter, taskConfig, params, { ref: 'SAMPLE' });
     return reply({ error: null, data });
   } catch (error) {
     console.error(error);
@@ -53,8 +56,10 @@ async function postPreview (request, reply) {
 async function postSend (request, reply) {
   try {
     const { filter, taskConfigId, params, sender } = request.payload;
-    const data = await prepareNotification(filter, taskConfigId, params);
-    await sendNotification(taskConfigId, sender, data);
+    const taskConfig = await taskConfigLoader(taskConfigId);
+    const ref = generateReference(taskConfig.config.prefix);
+    const data = await prepareNotification(filter, taskConfig, params, { ref });
+    await sendNotification(taskConfig, sender, data, ref);
     return reply({ error: null, data });
   } catch (error) {
     console.error(error);
