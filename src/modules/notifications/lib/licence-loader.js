@@ -14,6 +14,29 @@ function getSystemInternalIds (contactList) {
 }
 
 /**
+ * Fetch all pages
+ * @param {Object} filter - query filter for data
+ * @param {Object} sort - sort fields, direction
+ */
+async function fetchAllPages (filter, sort = null, cb) {
+  let data = [];
+  let page = 1;
+  const perPage = 100;
+  let pageCount;
+  do {
+    const { data: dataPage, error, pagination } = await licences.findMany(filter, sort, { perPage, page });
+    if (error) {
+      throw error;
+    }
+    data.push(...dataPage);
+    page++;
+    pageCount = pagination.pageCount;
+  } while (page <= pageCount);
+
+  return data;
+}
+
+/**
  * @param {Array} licenceIds - permit repo licence IDS
  * @return {Object} transformed licence data, keyed by licence number
  */
@@ -22,11 +45,8 @@ async function loadLicenceData (licenceIds) {
     licence_id: { $in: licenceIds }
   };
 
-  const { data, error } = await licences.findMany(filter);
-
-  if (error) {
-    throw error;
-  }
+  // Fetch all pages of results
+  const data = await fetchAllPages(filter, null, licences.findMany);
 
   let obj = {};
 
