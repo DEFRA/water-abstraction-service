@@ -21,14 +21,13 @@ function getUniqueEntities (contactData) {
 }
 
 /**
- * Log event
- * @param {Object} taskConfig - the config data from water.task_config table
+ * Create event for logging sent notification
  * @param {String} issuer - the email address of person issuing notification
- * @param {Array} licences - array of licence numbers impacted by event
- * @param {Array} entities - array of CRM entity IDs impaced by event
- * @param {Object} metadata - supplementary event data
+ * @param {Object} taskConfig - the config data from water.task_config table
+ * @param {Array} contactData - list of contacts with licences attached
+ * @param {String} ref - unique reference for this batch
  */
-function eventFactory (issuer, taskConfig, contactData) {
+function eventFactory (issuer, taskConfig, contactData, ref) {
   // Create array of affected licence numbers
   const licences = contactData.reduce((acc, row) => {
     const licenceNumbers = row.contact.licences.map(item => item.system_external_id);
@@ -38,7 +37,7 @@ function eventFactory (issuer, taskConfig, contactData) {
   const uniqueEntities = getUniqueEntities(contactData);
 
   const e = new Event();
-  e.generateReference(taskConfig.config.prefix)
+  e.setReference(ref)
     .setType(taskConfig.type, taskConfig.subtype)
     .setIssuer(issuer)
     .setLicenceNumbers(licences)

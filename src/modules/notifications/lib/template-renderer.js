@@ -6,6 +6,7 @@
  */
 
 const nunjucks = require('nunjucks');
+const moment = require('moment');
 
 nunjucks.configure({
   autoescape: false
@@ -44,8 +45,11 @@ function getTemplate (taskConfig, contact) {
  * @param {Object} params - user-supplied template variables
  * @param {Array} contacts - array of contacts with licence header data
  * @param {Object} licences - list of licences keyed by licence number
+ * @param {Object} context - additional context to send to the view
  */
-function renderTemplates (taskConfig, params, contacts, licences) {
+function renderTemplates (taskConfig, params, contacts, licences, context = {}) {
+  const date = moment().format('DD MMM YYYY');
+
   return contacts.map((contact) => {
     const licenceList = contact.licences.map((licence) => {
       return licences[licence.system_external_id];
@@ -56,7 +60,9 @@ function renderTemplates (taskConfig, params, contacts, licences) {
       taskConfig,
       params,
       contact,
-      licences: licenceList
+      licences: licenceList,
+      date,
+      ...context
     };
 
     // Get the correct Nunjucks template for the message type
