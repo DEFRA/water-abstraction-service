@@ -16,7 +16,7 @@ const notifyTemplatesRoutes = require('../controllers/notifytemplates');
 const notifyController = require('../controllers/notify');
 // const sendNotificationController = require('../controllers/send-notification');
 const importedLicencesRoutes = require('../controllers/imported_licences');
-const taskRunner = require('../controllers/taskRunner');
+// const taskRunner = require('../controllers/taskRunner');
 const taskConfigRoutes = require('../controllers/task-config');
 
 const moduleRoutes = require('../modules/routes');
@@ -42,9 +42,9 @@ module.exports = [
 ];
 
 // start node cron
-const cron = require('node-cron');
+// const cron = require('node-cron');
 
-taskRunner.reset();
-cron.schedule('*/5 * * * * * *', function () {
-  taskRunner.run();
-});
+// taskRunner.reset();
+// cron.schedule('*/5 * * * * * *', function () {
+//   taskRunner.run();
+// });
