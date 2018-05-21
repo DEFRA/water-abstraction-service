@@ -4,7 +4,7 @@
  *
  * @module controllers/tasks/updateNotificationEvents
  */
-
+const moment = require('moment');
 const { repository: eventsRepository } = require('../events');
 const { repository: notificationsRepository } = require('../notifications');
 
@@ -14,8 +14,15 @@ const { repository: notificationsRepository } = require('../notifications');
  * @return {Promise} resolves with {error, rows}
  */
 async function getPendingNotifications () {
+  const ts = moment().subtract(3, 'days').format('YYYY-MM-DD HH:mm:ss');
+
   const filter = {
     type: 'notification',
+    created: {
+      $gt: ts
+    }
+  };
+  /*
     'metadata->>pending': {
       $gt: 0
     },
@@ -23,6 +30,7 @@ async function getPendingNotifications () {
       $gt: 0
     }
   };
+  */
 
   return eventsRepository.find(filter);
 }
@@ -35,11 +43,11 @@ async function getPendingNotifications () {
  */
 function getUpdatedMetadata (metadata, notifications) {
   // Count pending/send status
-  const stats = notifications.reduce((acc, { status }) => {
-    if (status === 'sent') {
+  const stats = notifications.reduce((acc, { notify_status: notifyStatus }) => {
+    if (notifyStatus === 'delivered') {
       acc.sent++;
     }
-    if (status === 'error') {
+    if (notifyStatus === 'permanent-failure') {
       acc.error++;
     }
     return acc;
