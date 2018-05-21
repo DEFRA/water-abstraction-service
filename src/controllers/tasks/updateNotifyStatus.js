@@ -15,6 +15,8 @@ const moment = require('moment');
  * @return {Promise} resolves when status updated
  */
 async function updateMessage (row) {
+  console.log(`Update ${row.notify_id} ${row.status}`);
+
   const { body: { status } } = await notifyClient
     .getNotificationById(row.notify_id);
 
@@ -38,9 +40,6 @@ function getPendingNotifications () {
     },
     send_after: {
       $gt: ts
-    },
-    notify_status: {
-      $ne: 'permanent-failure'
     }
   });
 }
