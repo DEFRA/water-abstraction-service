@@ -2,6 +2,7 @@
 require('dotenv').config();
 
 const Hapi = require('hapi');
+const cron = require('node-cron');
 
 const serverOptions = { connections: { router: { stripTrailingSlash: true } } };
 const server = new Hapi.Server(serverOptions);
@@ -138,6 +139,33 @@ if (!module.parent) {
     console.log(`Server running at: ${server.info.uri}`);
   });
 }
+
+// Reset scheduler
+// const taskRunner = require('./src/controllers/taskRunner');
+// const path = require('path');
+// const taskRunnerPath = path.resolve(__dirname, 'task-runner.js');
+//
+// async function startTaskRunner () {
+//   console.log('Resetting task runner');
+//   await taskRunner.reset();
+//   cron.schedule('*/5 * * * * * *', function () {
+//     const exec = require('child_process').exec;
+//     const child = exec('node ' + taskRunnerPath);
+//     child.stdout.on('data', function (data) {
+//       console.log('taskRunner: ' + data);
+//     });
+//     child.stderr.on('data', function (data) {
+//       console.log('taskRunner: ' + data);
+//     });
+//     child.on('close', function (code) {
+//       const msg = `taskRunner: exited with code ${code}`;
+//       const log = code === 0 ? console.log : console.error;
+//       log(msg);
+//     });
+//   });
+// }
+//
+// startTaskRunner();
 
 module.exports = server;
 

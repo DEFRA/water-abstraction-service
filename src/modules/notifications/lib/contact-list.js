@@ -1,6 +1,19 @@
+/**
+ * Gets a filtered list of licences together with all
+ * attached contacts, from the CRM.
+ * Contains logic to select the correct contact based on a pre-defined
+ * priority order, and then de-duplicates to send the minimum number of
+ * messages.
+ * Returns an array of contacts, each with a list of licences
+ *
+ * @module src/modules/notifications/contact-list
+ */
+
+/* eslint camelcase: "warn" */
+
 const { find } = require('lodash');
 const sha1 = require('sha1');
-const { getDocumentContacts } = require('../lib/connectors/crm/documents');
+const { getDocumentContacts } = require('../../../lib/connectors/crm/documents');
 
 /**
  * Given list of licence contacts, this returns the preferred contact based
@@ -54,11 +67,14 @@ function createSendList (licences) {
     }
 
     // Add licence
-    const { document_id: documentId, system_external_id: systemExternalId, document_name: documentName } = licence;
+    const { document_id, system_external_id, document_name, system_internal_id, company_entity_id } = licence;
+
     list[contactKey].licences.push({
-      document_id: documentId,
-      system_external_id: systemExternalId,
-      document_name: documentName,
+      document_id,
+      system_external_id,
+      system_internal_id,
+      company_entity_id,
+      document_name,
       licence_holder: licenceHolder
     });
   });
@@ -75,40 +91,27 @@ function getContactId (contact) {
   if (contact.entity_id) {
     return contact.entity_id;
   }
-  return sha1(Object.values(contact).join(','));
+
+  function fixCase (str) {
+    return typeof (str) === 'string' ? str.toUpperCase() : str;
+  }
+
+  return sha1(Object.values(contact).map(fixCase).join(','));
 }
 
 /**
- * Send a notification
- * The process is:
- * - select template (and personalisation variables)
- * - select audience (licence numbers)
- * - generate contact list
- * - send
- *
- * This function assumes that the audience is already selected.  It takes
- * a list of licence numbers, and generates a de-duplicated contact list.
- * Later, it can also do the sending, logging etc.
+ * Get de a list of de-duplicated contacts/licences
+ * @param {Object} filter - the filter params to select licences from CRM
+ * @return {Array} - list of contacts with licence details
  */
-async function send (request, reply) {
-  try {
-    // Get licence/contact list
-    const { filter } = request.payload;
-    const { error, data } = await getDocumentContacts(JSON.parse(filter));
+async function getContacts (filter) {
+  const { error, data } = await getDocumentContacts(filter);
 
-    if (error) {
-      throw error;
-    }
-
-    const contacts = createSendList(data);
-
-    reply(contacts);
-  } catch (error) {
-    console.log(error);
-    reply(error);
+  if (error) {
+    throw error;
   }
+
+  return createSendList(data);
 }
 
-module.exports = {
-  send
-};
+module.exports = getContacts;

@@ -5,6 +5,7 @@
 
 const Helpers = require('../lib/helpers');
 const DB = require('../lib/connectors/db');
+const { pool } = require('../lib/connectors/db');
 const NotifyClient = require('notifications-node-client').NotifyClient;
 
 const Joi = require('joi');
@@ -121,6 +122,19 @@ function getNotifyKey (key) {
 }
 
 /**
+ * Update scheduled event with notify ID
+ * @param {String} id - the ID in the water.scheduled_notification table
+ * @param {String} notifyId - the ID of the message in the notify service
+ * @return {Promise} resolves when DB table updated
+ */
+function updateNotifyId (id, notifyId) {
+  // Update scheduled_notification table with message ID so we can check status later
+  const query = `UPDATE water.scheduled_notification SET notify_id=$1 WHERE id=$2`;
+  const queryParams = [notifyId, id];
+  return pool.query(query, queryParams);
+}
+
+/**
  * Gets the notify template ID for a notify message ref,
  * and sends it using the notify API
  *
@@ -135,6 +149,7 @@ function getNotifyKey (key) {
  */
 async function sendNow (config) {
   const schema = {
+    id: Joi.string().guid(),
     message_ref: Joi.string().required(),
     recipient: Joi.string().required(),
     personalisation: Joi.object().required()
@@ -182,7 +197,8 @@ async function sendNow (config) {
         switch (template.body.type) {
           case 'sms':
             try {
-              await notifyClient.sendSms(templateId, config.recipient, config.personalisation);
+              const { body: { id } } = await notifyClient.sendSms(templateId, config.recipient, config.personalisation);
+              await updateNotifyId(config.id, id);
             } catch (e) {
               return {
                 error: {
@@ -197,7 +213,8 @@ async function sendNow (config) {
           case 'email':
             await Joi.validate(config.recipient, Joi.string().email());
             try {
-              await notifyClient.sendEmail(templateId, config.recipient, config.personalisation);
+              const { body: { id } } = await notifyClient.sendEmail(templateId, config.recipient, config.personalisation);
+              await updateNotifyId(config.id, id);
             } catch (e) {
               return {
                 error: {
@@ -214,7 +231,8 @@ async function sendNow (config) {
             try {
               // note: notify key (and therefore live or test) now controlled in DB
               console.log('sending letter');
-              await notifyClient.sendLetter(templateId, config.personalisation);
+              const { body: { id } } = await notifyClient.sendLetter(templateId, config.personalisation);
+              await updateNotifyId(config.id, id);
             } catch (e) {
               return {
                 error: {
@@ -274,7 +292,7 @@ async function sendLater (config) {
     };
   } else {
     try {
-    // get template details
+      // get template details
       let template = await DB.query('select * from water.notify_templates where message_ref=$1', [config.message_ref]);
       if (!template.data.length) {
         return {
@@ -285,7 +303,7 @@ async function sendLater (config) {
       const notifyClient = new NotifyClient(getNotifyKey(template.data[0].notify_key));
       var templateId = template.data[0].template_id;
       try {
-      // check template exists in notify
+        // check template exists in notify
         template = await notifyClient.getTemplateById(templateId);
       } catch (e) {
         return {
