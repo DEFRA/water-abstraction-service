@@ -1,6 +1,10 @@
 const riverLevels = require('../../lib/connectors/river-levels');
 const ngrConverter = require('./ngr-converter');
 
+/**
+ * Get latest measurement data for gauging station with the given ID
+ * @param {String} request.params.id - gauging station ID
+ */
 async function getStation (request, reply) {
   const { id } = request.params;
 
