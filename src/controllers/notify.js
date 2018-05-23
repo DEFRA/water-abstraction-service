@@ -11,6 +11,8 @@ const NotifyClient = require('notifications-node-client').NotifyClient;
 const Joi = require('joi');
 const moment = require('moment');
 
+const messageQueue = require('../lib/message-queue');
+
 /**
  * Gets the notify template ID for a notify message ref,
  * and sends it using the notify API
@@ -26,33 +28,20 @@ const moment = require('moment');
  * @param {Object} reply - the HAPI HTTP response
  */
 async function send (request, reply) {
-  var config = {};
-  config.message_ref = request.params.message_ref;
-  config.recipient = request.payload.recipient;
-  config.personalisation = request.payload.personalisation;
-  config.id = Helpers.createGUID();
-  config.sendafter = moment().format('DD-MMM-YYYY HH:MM');
+  const { message_ref: messageRef } = request.params;
+  const { recipient, personalisation } = request.payload;
 
-  // note: now schedules notification for NOW for,logging reasons
-  try {
-    var res = await sendLater(config);
-    console.log(res);
-    if (res.error) {
-      console.log(res.error);
-      return reply({
-        error: res.error
-      }).code(400);
-    } else {
-      console.log('no error');
-      return reply({
-        message: res.message
-      }).code(200);
-    }
-  } catch (e) {
-    return reply({
-      message: e
-    }).code(500);
-  }
+  const config = {
+    messageRef,
+    recipient,
+    personalisation
+  };
+
+  // Schedule job
+  await messageQueue.publish('notify.enqueue', config, {
+    expireIn: '01:00:00'
+  });
+  reply(config);
 }
 
 /**

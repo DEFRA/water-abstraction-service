@@ -66,6 +66,7 @@
     "nunjucks": "^3.1.2",
     "path": "^0.12.7",
     "pg": "^7.4.1",
+    "pg-boss": "^2.5.1",
     "proxy-agent": "^2.3.1",
     "request-promise-native": "^1.0.5",
     "sentence-case": "^2.1.1",
