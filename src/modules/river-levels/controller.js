@@ -1,5 +1,13 @@
 const riverLevels = require('../../lib/connectors/river-levels');
 const ngrConverter = require('./ngr-converter');
+const { isArray } = require('lodash');
+
+function getMeasure (measures) {
+  if (isArray(measures)) {
+    return measures.find(row => row.parameter === 'level');
+  }
+  return measures;
+}
 
 /**
  * Get latest measurement data for gauging station with the given ID
@@ -11,8 +19,8 @@ async function getStation (request, reply) {
   try {
     // Get data from river levels API
     const data = await riverLevels.getStation(id);
-    const { lat, long, easting, northing, eaAreaName, eaRegionName, label, catchmentName, riverName } = data.items;
-    const measure = data.items.measures.find(row => row.parameter === 'level');
+    const { lat, long, easting, northing, eaAreaName, eaRegionName, label, catchmentName, riverName, measures } = data.items;
+    const measure = getMeasure(measures);
     const { latestReading, unitName } = measure;
 
     // Convert easting/northing to NGR
