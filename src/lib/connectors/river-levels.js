@@ -1,5 +1,5 @@
+// Note: don't set proxy : null for external HTTP
 const rp = require('request-promise-native').defaults({
-  proxy: null,
   strictSSL: false
 });
 
