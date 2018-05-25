@@ -18,6 +18,7 @@ const notifyController = require('../controllers/notify');
 const importedLicencesRoutes = require('../controllers/imported_licences');
 const taskRunner = require('../controllers/taskRunner');
 const taskConfigRoutes = require('../controllers/task-config');
+const gaugingStationRoutes = require('../controllers/gauging-stations');
 
 const moduleRoutes = require('../modules/routes');
 
@@ -31,6 +32,7 @@ module.exports = [
   ...lookupRoutes,
   ...taskConfigRoutes,
   ...moduleRoutes,
+  ...gaugingStationRoutes,
   // { method: 'POST', path: '/water/' + version + '/notification/send', handler: sendNotificationController.send, config: { description: 'Send notification' } },
   { method: 'GET', path: '/status', handler: function (request, reply) { return reply('ok').code(200); }, config: { auth: false, description: 'Get all entities' } },
   { method: 'GET', path: '/water/' + version + '/nald/import', handler: Nald.import, config: { auth: false, description: 'Import nald from s3 data' } },

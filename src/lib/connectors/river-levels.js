@@ -18,6 +18,19 @@ function getStation (id) {
   });
 }
 
+/**
+ * Get a list of all statioms
+ */
+function getAllStations () {
+  const uri = `https://environment.data.gov.uk/flood-monitoring/id/stations`;
+  return rp({
+    uri,
+    method: 'GET',
+    json: true
+  });
+}
+
 module.exports = {
-  getStation
+  getStation,
+  getAllStations
 };
