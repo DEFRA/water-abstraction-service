@@ -19,7 +19,8 @@ async function getStation (request, reply) {
   try {
     // Get data from river levels API
     const data = await riverLevels.getStation(id);
-    const { lat, long, easting, northing, eaAreaName, eaRegionName, label, catchmentName, riverName, measures } = data.items;
+
+    const { lat, long, easting, northing, eaAreaName, eaRegionName, label, catchmentName, riverName, measures, status } = data.items;
     const measure = getMeasure(measures);
     const { latestReading, unitName } = measure;
 
@@ -36,7 +37,8 @@ async function getStation (request, reply) {
       eaRegionName,
       label,
       latestReading,
-      unitName
+      unitName,
+      active: /^https?:\/\/environment.data.gov.uk\/flood-monitoring\/def\/core\/statusActive$/.test(status)
     });
   } catch (error) {
     console.error(error);
