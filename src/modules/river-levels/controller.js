@@ -38,7 +38,7 @@ async function getStation (request, reply) {
       label,
       latestReading,
       unitName,
-      active: status === 'http://environment.data.gov.uk/flood-monitoring/def/core/statusActive'
+      active: /^https?:\/\/environment.data.gov.uk\/flood-monitoring\/def\/core\/statusActive$/.test(status)
     });
   } catch (error) {
     console.error(error);
