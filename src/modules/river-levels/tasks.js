@@ -15,13 +15,15 @@ async function refreshStations () {
   for (let station of data.items) {
     const ts = moment().format('YYYY-MM-DD HH:mm:ss');
 
+    console.log('Importing ' + station['@id']);
+
     const row = {
       id: station['@id'],
       label: station.label,
-      lat: parseFloat(station.lat),
-      long: parseFloat(station.long),
-      easting: parseInt(station.easting),
-      northing: parseInt(station.northing),
+      lat: 'lat' in station ? parseFloat(station.lat) : null,
+      long: 'long' in station ? parseFloat(station.long) : null,
+      easting: 'easting' in station ? parseInt(station.easting) : null,
+      northing: 'northing' in station ? parseInt(station.northing) : null,
       grid_reference: station.gridReference || ngrConverter(station.easting, station.northing),
       catchment_name: station.catchmentName || '',
       river_name: station.riverName || '',
@@ -35,10 +37,11 @@ async function refreshStations () {
 
     console.log(row);
 
-    const { error } = repository.create(row);
+    const { error } = await repository.create(row);
 
     if (error) {
-      errors.push(error);
+      // console.error(station['@id'], error);
+      errors.push(station['@id'] + ' ' + error.toString());
     }
   }
 
