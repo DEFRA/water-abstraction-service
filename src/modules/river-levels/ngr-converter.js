@@ -4,6 +4,10 @@
  */
 
 function OSRefToSixFigureString (easting, northing) {
+  if (!easting || !northing) {
+    return null;
+  }
+
   var hundredkmE = Math.floor(easting / 100000);
   var hundredkmN = Math.floor(northing / 100000);
   var firstLetter = '';
