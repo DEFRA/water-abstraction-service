@@ -2,11 +2,31 @@ const riverLevels = require('../../lib/connectors/river-levels');
 const ngrConverter = require('./ngr-converter');
 const { isArray } = require('lodash');
 
-function getMeasure (measures) {
-  if (isArray(measures)) {
-    return measures.find(row => row.parameter === 'level');
-  }
-  return measures;
+/**
+ * Gets measures from river level data
+ * Ignores 'downstream stage'
+ * @param {Object} data - data from flood API
+ * @return {Array} measures
+ */
+function getMeasures (data) {
+  const { measures } = data.items;
+  const measuresArray = isArray(measures) ? measures : [measures];
+
+  return measuresArray.reduce((acc, measure) => {
+    if (measure.qualifier === 'Downstream Stage') {
+      return acc;
+    }
+
+    const { latestReading: { dateTime, value }, parameter, period, unitName, valueType } = measure;
+
+    return [...acc, {
+      latestReading: { dateTime, value },
+      parameter,
+      period,
+      unitName,
+      valueType
+    }];
+  }, []);
 }
 
 /**
@@ -20,9 +40,7 @@ async function getStation (request, reply) {
     // Get data from river levels API
     const data = await riverLevels.getStation(id);
 
-    const { lat, long, easting, northing, eaAreaName, eaRegionName, label, catchmentName, riverName, measures, status } = data.items;
-    const measure = getMeasure(measures);
-    const { latestReading, unitName } = measure;
+    const { lat, long, easting, northing, label, catchmentName, riverName, status, stageScale } = data.items;
 
     // Convert easting/northing to NGR
     const ngr = ngrConverter(easting, northing);
@@ -33,11 +51,9 @@ async function getStation (request, reply) {
       ngr,
       catchmentName,
       riverName,
-      eaAreaName,
-      eaRegionName,
       label,
-      latestReading,
-      unitName,
+      stageScale,
+      measures: getMeasures(data),
       active: /^https?:\/\/environment.data.gov.uk\/flood-monitoring\/def\/core\/statusActive$/.test(status)
     });
   } catch (error) {
