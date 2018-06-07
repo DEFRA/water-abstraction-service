@@ -9,3 +9,4 @@
 /test/dummy-csv
 /coverage
 lcov.info
+*.swp
