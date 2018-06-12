@@ -1,6 +1,5 @@
 const getContactList = require('./contact-list');
 const licenceLoader = require('./licence-loader');
-const taskConfigLoader = require('./task-config-loader');
 const templateRenderer = require('./template-renderer');
 const eventFactory = require('./event-factory');
 const notificationFactory = require('./notification-factory');
