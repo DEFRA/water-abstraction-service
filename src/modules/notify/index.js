@@ -114,8 +114,8 @@ module.exports = (messageQueue) => {
       personalisation: Joi.object(),
       sendAfter: Joi.string().default(now),
       licences: Joi.array().items(Joi.string()).default([]),
-      individualEntityId: Joi.string().guid(),
-      companyEntityId: Joi.string().guid(),
+      individualEntityId: Joi.string().guid().allow(null),
+      companyEntityId: Joi.string().guid().allow(null),
       eventId: Joi.string().guid(),
       metadata: Joi.object().default({})
     };
@@ -138,6 +138,7 @@ module.exports = (messageQueue) => {
       const notifyClient = new NotifyClient(apiKey);
       const result = await notifyClient.previewTemplateById(template.template_id, data.personalisation);
       row.plaintext = result.body.body;
+      row.message_type = result.body.type;
     } catch (err) {
       if (err.statusCode === 400) {
         throw err;

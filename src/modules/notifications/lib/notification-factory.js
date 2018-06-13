@@ -1,4 +1,4 @@
-const ScheduledNotification = require('../../../lib/scheduled-notification');
+// const ScheduledNotification = require('../../../lib/scheduled-notification');
 
 /**
  * Compose and send a single message with notify
@@ -40,17 +40,17 @@ async function notificationFactory (contactData, taskConfig, event) {
   }, null);
 
   try {
-    const n = new ScheduledNotification();
-    await n.setMessage(contactData.contact.method === 'email' ? 'notification_email' : 'notification_letter');
-    n.setPersonalisation(personalisation)
-      .setRecipient(contactData.contact.contact.email)
-      .setLicenceNumbers(licenceNumbers)
-      .setCompanyEntityId(companyEntityId)
-      .setIndividualEntityId(entity_id)
-      .setEventId(event.getId())
-      .setText(contactData.output);
+    const options = {
+      messageRef: contactData.contact.method === 'email' ? 'notification_email' : 'notification_letter',
+      recipient: contactData.contact.contact.email || 'n/a',
+      personalisation,
+      licences: licenceNumbers,
+      individualEntityId: entity_id,
+      companyEntityId,
+      eventId: event.getId()
+    };
 
-    return n;
+    return options;
   } catch (error) {
     console.error(error);
     return { error };
