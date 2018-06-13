@@ -1,3 +1,5 @@
+'use strict';
+
 const fs = require('fs');
 const Promise = require('bluebird');
 const csvStringify = require('csv-stringify/lib/sync');

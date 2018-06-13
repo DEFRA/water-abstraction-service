@@ -2,9 +2,11 @@
  * Controller methods to send/preview notifications
  * @module src/modules/notifications/controller
  */
+const Boom = require('boom');
 const { prepareNotification, sendNotification } = require('./lib');
 const taskConfigLoader = require('./lib/task-config-loader');
 const generateReference = require('./lib/reference-generator');
+const notificationClient = require('../../lib/connectors/notifications');
 
 /**
  * @param { Object } request.payload.filter - standard filter
@@ -67,7 +69,34 @@ async function postSend (request, reply) {
   }
 }
 
+/**
+ * Returns the last email message for a given email address.
+ *
+ * If no email for the requested address then then returns a 404.
+ *
+ * This function is here to facilitate acceptance tests and it
+ * not currently used by the main applications. It's route is accessible
+ * annonymously.
+ *
+ * @param {String} request.query.email - The email address to filter by,
+ */
+async function findLastEmail (request, reply) {
+  try {
+    const { email } = request.query;
+    const data = await notificationClient.getLatestEmailByAddress(email);
+
+    if (data.data.length === 0) {
+      return reply(Boom.notFound(`No email found for ${email}`));
+    }
+
+    return reply({ error: null, data: data.data });
+  } catch (error) {
+    reply(Boom.badImplementation('Error getting last email for user', error));
+  }
+};
+
 module.exports = {
   postPreview,
-  postSend
+  postSend,
+  findLastEmail
 };
