@@ -36,7 +36,7 @@ module.exports = [
   { method: 'GET', path: '/water/' + version + '/nald/import', handler: Nald.import, config: { auth: false, description: 'Import nald from s3 data' } },
   { method: 'GET', path: '/water/' + version + '/nald/import/test', handler: Nald.importTest, config: { auth: false, description: 'Test import dummy nald data' } },
 
-  { method: 'POST', path: '/water/' + version + '/nald/licence', handler: Nald.getLicence, config: { auth: false, description: 'Fetch legacy nald licence' } },
+  { method: 'POST', path: '/water/' + version + '/nald/licence', handler: Nald.getLicence, config: { auth: false, description: 'Fetch legacy nald licence' } }
 
   /*
     config.message_ref = request.params.message_ref;
@@ -46,26 +46,45 @@ module.exports = [
     config.sendafter = moment().format('DD-MMM-YYYY HH:MM');
   */
 
-  {
-    method: 'POST',
-    path: '/water/' + version + '/notify/{message_ref}',
-    handler: notifyController.send,
-    config: {
-      description: 'Send a notify message',
-      validate: {
-        params: {
-          message_ref: Joi.string().required()
-        },
-        payload: {
-          recipient: Joi.string().email().allow('n/a'),
-          personalisation: Joi.object()
-        }
-      }
-    }
-  },
+  // {
+  //   method: 'POST',
+  //   path: '/water/' + version + '/notify/{message_ref}',
+  //   handler: notifyController.send,
+  //   config: {
+  //     description: 'Send a notify message',
+  //     validate: {
+  //       params: {
+  //         message_ref: Joi.string().required()
+  //       },
+  //       payload: {
+  //         recipient: Joi.string().email().allow('n/a'),
+  //         personalisation: Joi.object()
+  //       }
+  //     }
+  //   }
+  // },
+  //
+  // {
+  //   method: 'POST',
+  //   path: '/water/' + version + '/notifyLater/{message_ref}',
+  //   handler: notifyController.send,
+  //   config: {
+  //     description: 'Send a notify message in the future',
+  //     validate: {
+  //       params: {
+  //         message_ref: Joi.string().required()
+  //       },
+  //       payload: {
+  //         recipient: Joi.string().email().allow('n/a'),
+  //         personalisation: Joi.object(),
+  //         sendafter: Joi.string()
+  //       }
+  //     }
+  //   }
+  // }
 
   //  { method: 'POST', path: '/water/' + version + '/notify/{message_ref}', handler: notifyController.send, config: { description: 'Send a notify message' } },
-  { method: 'POST', path: '/water/' + version + '/notifyLater/{message_ref}', handler: notifyController.futureSend, config: { description: 'Send a notify message later' } }
+  // { method: 'POST', path: '/water/' + version + '/notifyLater/{message_ref}', handler: notifyController.futureSend, config: { description: 'Send a notify message later' } }
 ];
 
 // start node cron

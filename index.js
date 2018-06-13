@@ -134,8 +134,13 @@ require('hapi-auth-basic'), require('hapi-auth-jwt2'), require('inert'), require
 async function start () {
   await messageQueue.start();
 
+  const { registerSubscribers } = require('./src/modules/notify')(messageQueue);
+  registerSubscribers();
+
+  server.log('info', 'Message queue started');
+
   // Register subscribers
-  require('./src/subscribers')(messageQueue);
+  // require('./src/subscribers')(messageQueue);
 
   server.start((err) => {
     if (err) {
