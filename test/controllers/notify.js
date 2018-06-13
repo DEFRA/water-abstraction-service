@@ -4,27 +4,9 @@ const lab = Lab.script();
 const Code = require('code');
 const server = require('../../index.js');
 
-const { getNotifyKey } = require('../../src/controllers/notify');
-
 let taskId;
 
 lab.experiment('Test sending a email notification', () => {
-  lab.test('The API should get test notify key', async () => {
-    Code.expect(getNotifyKey('test')).to.equal(process.env.TEST_NOTIFY_KEY);
-  });
-
-  lab.test('The API should get whitelist notify key', async () => {
-    Code.expect(getNotifyKey('whitelist')).to.equal(process.env.WHITELIST_NOTIFY_KEY);
-  });
-
-  lab.test('The API should get live notify key', async () => {
-    Code.expect(getNotifyKey('live')).to.equal(process.env.LIVE_NOTIFY_KEY);
-  });
-
-  lab.test('The API should use a custom notify key', async () => {
-    Code.expect(getNotifyKey('some-other-key')).to.equal('some-other-key');
-  });
-
   lab.test('The API should throw an error when personalisation is not supplied', async () => {
     const request = {
       method: 'POST',
