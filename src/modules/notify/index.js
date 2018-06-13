@@ -14,6 +14,7 @@ const { createGUID } = require('../../lib/helpers');
 const { getTemplate, getNotifyKey, sendMessage } = require('./helpers');
 const scheduledNotification = require('../../controllers/notifications').repository;
 const { NotificationNotFoundError, NotifyIdError } = require('./errors');
+const { isObject } = require('lodash');
 
 /**
  * Updates the notify_status field for the message with the given ID
@@ -114,8 +115,8 @@ module.exports = (messageQueue) => {
       personalisation: Joi.object(),
       sendAfter: Joi.string().default(now),
       licences: Joi.array().items(Joi.string()).default([]),
-      individualEntityId: Joi.string().guid().allow(null),
-      companyEntityId: Joi.string().guid().allow(null),
+      individualEntityId: [Joi.allow(null), Joi.string().guid()],
+      companyEntityId: [Joi.allow(null), Joi.string().guid()],
       eventId: Joi.string().guid(),
       metadata: Joi.object().default({})
     };
@@ -126,8 +127,12 @@ module.exports = (messageQueue) => {
       throw error;
     }
 
-    // Create DB data row - snake case keys and stringify non-scalars
-    const row = mapValues(snakeCaseKeys(data), value => typeof (value) === 'object' ? JSON.stringify(value) : value);
+    // Create DB data row - snake case keys and stringify objects/arrays
+    const row = mapValues(snakeCaseKeys(data), value => isObject(value) ? JSON.stringify(value) : value);
+
+    console.log('Options', options);
+    console.log('Validated', data);
+    console.log('Row data', row);
 
     // Determine notify key
     const template = await getTemplate(data.messageRef);
