@@ -13,7 +13,7 @@ const snakeCaseKeys = require('snakecase-keys');
 const { createGUID } = require('../../lib/helpers');
 const { getTemplate, getNotifyKey, sendMessage } = require('./helpers');
 const scheduledNotification = require('../../controllers/notifications').repository;
-const { NotificationNotFoundError, NotifyIdError } = require('./errors');
+const { NotificationNotFoundError, NotifyIdError, AlreadySentError } = require('./errors');
 const { isObject } = require('lodash');
 
 /**
@@ -63,6 +63,10 @@ async function send (id) {
     throw new NotificationNotFoundError();
   }
 
+  if (data.status) {
+    throw new AlreadySentError();
+  }
+
   const { personalisation, message_ref: messageRef, recipient } = data;
 
   // Load template from notify_templates table
@@ -73,27 +77,23 @@ async function send (id) {
     const { body: notifyResponse } = await sendMessage(notifyTemplate, personalisation, recipient);
 
     // Update plaintext value with what Notify actually sent
-    try {
-      await scheduledNotification.update({ id }, {
-        status: 'sent',
-        notify_id: notifyResponse.id,
-        plaintext: notifyResponse.content.body
-      });
-    } catch (err) {
-      console.error(err);
-    }
+    await scheduledNotification.update({ id }, {
+      status: 'sent',
+      notify_id: notifyResponse.id,
+      plaintext: notifyResponse.content.body
+    });
 
     return {
-      error: null,
       data
     };
   } catch (error) {
+    // Log notify error
     await scheduledNotification.update({ id }, {
       status: 'error',
       log: JSON.stringify({ error: 'Notify error', message: error.toString() })
     });
 
-    return { error };
+    throw error;
   }
 }
 
@@ -130,10 +130,6 @@ module.exports = (messageQueue) => {
     // Create DB data row - snake case keys and stringify objects/arrays
     const row = mapValues(snakeCaseKeys(data), value => isObject(value) ? JSON.stringify(value) : value);
 
-    console.log('Options', options);
-    console.log('Validated', data);
-    console.log('Row data', row);
-
     // Determine notify key
     const template = await getTemplate(data.messageRef);
     const apiKey = getNotifyKey(template.notify_key);
@@ -162,7 +158,8 @@ module.exports = (messageQueue) => {
     // Schedule send event
     const startIn = Math.round(moment(row.send_after).diff(moment(now)) / 1000);
     messageQueue.publish('notify.send', row, {
-      startIn
+      startIn,
+      singletonKey: row.id
     });
 
     // Return row data
@@ -177,14 +174,16 @@ module.exports = (messageQueue) => {
     messageQueue.subscribe('notify.send', async (job, done) => {
       const { id } = job.data;
 
-      const { data, error } = await send(id);
+      try {
+        const { data } = await send(id);
 
-      // Schedule status checks
-      if (!error) {
+        // Schedule status checks
         messageQueue.publish('notify.status', data);
         messageQueue.publish('notify.status', data, { startIn: 60 });
         messageQueue.publish('notify.status', data, { startIn: 3600 });
         messageQueue.publish('notify.status', data, { startIn: 86400 });
+      } catch (err) {
+        console.error(err);
       }
 
       done();

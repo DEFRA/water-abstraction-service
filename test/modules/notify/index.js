@@ -2,7 +2,6 @@ const Lab = require('lab');
 const lab = Lab.script();
 const Code = require('code');
 const moment = require('moment');
-const server = require('../../../index.js');
 
 const messageQueue = require('../../../src/lib/message-queue');
 
