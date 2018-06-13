@@ -68,22 +68,32 @@ async function send (id) {
   const notifyTemplate = await getTemplate(messageRef);
 
   // Send message with Notify API
-  const { body: notifyResponse } = await sendMessage(notifyTemplate, personalisation, recipient);
-
-  // Update plaintext value with what Notify actually sent
   try {
-    await scheduledNotification.update({ id }, {
-      notify_id: notifyResponse.id,
-      plaintext: notifyResponse.content.body
-    });
-  } catch (err) {
-    console.error(err);
-  }
+    const { body: notifyResponse } = await sendMessage(notifyTemplate, personalisation, recipient);
 
-  return {
-    data,
-    notifyResponse
-  };
+    // Update plaintext value with what Notify actually sent
+    try {
+      await scheduledNotification.update({ id }, {
+        status: 'sent',
+        notify_id: notifyResponse.id,
+        plaintext: notifyResponse.content.body
+      });
+    } catch (err) {
+      console.error(err);
+    }
+
+    return {
+      error: null,
+      data
+    };
+  } catch (error) {
+    await scheduledNotification.update({ id }, {
+      status: 'error',
+      log: JSON.stringify({ error: 'Notify error', message: error.toString() })
+    });
+
+    return { error };
+  }
 }
 
 module.exports = (messageQueue) => {
@@ -161,13 +171,15 @@ module.exports = (messageQueue) => {
     messageQueue.subscribe('notify.send', async (job, done) => {
       const { id } = job.data;
 
-      const { data } = await send(id);
+      const { data, error } = await send(id);
 
       // Schedule status checks
-      messageQueue.publish('notify.status', data);
-      messageQueue.publish('notify.status', data, { startIn: 60 });
-      messageQueue.publish('notify.status', data, { startIn: 3600 });
-      messageQueue.publish('notify.status', data, { startIn: 86400 });
+      if (!error) {
+        messageQueue.publish('notify.status', data);
+        messageQueue.publish('notify.status', data, { startIn: 60 });
+        messageQueue.publish('notify.status', data, { startIn: 3600 });
+        messageQueue.publish('notify.status', data, { startIn: 86400 });
+      }
 
       done();
     });
