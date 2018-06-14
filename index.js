@@ -7,6 +7,7 @@ const cron = require('node-cron');
 const serverOptions = { connections: { router: { stripTrailingSlash: true } } };
 const server = new Hapi.Server(serverOptions);
 const Helpers = require('./src/lib/helpers.js');
+const messageQueue = require('./src/lib/message-queue');
 
 server.connection({ port: process.env.PORT || 8001 });
 
@@ -130,14 +131,28 @@ require('hapi-auth-basic'), require('hapi-auth-jwt2'), require('inert'), require
   server.route(require('./src/routes/water'));
 });
 
-// Start the server if not testing with Lab
-if (!module.parent) {
+async function start () {
+  await messageQueue.start();
+
+  const { registerSubscribers } = require('./src/modules/notify')(messageQueue);
+  registerSubscribers();
+
+  server.log('info', 'Message queue started');
+
+  // Register subscribers
+  // require('./src/subscribers')(messageQueue);
+
   server.start((err) => {
     if (err) {
       throw err;
     }
     console.log(`Server running at: ${server.info.uri}`);
   });
+}
+
+// Start the server if not testing with Lab
+if (!module.parent) {
+  start();
 }
 
 // Reset scheduler

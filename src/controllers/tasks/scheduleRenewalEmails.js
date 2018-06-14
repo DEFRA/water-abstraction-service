@@ -1,9 +1,12 @@
-const Notify = require('../notify');
+// const Notify = require('../notify');
+const messageQueue = require('../../lib/message-queue');
+const { enqueue } = require('../../modules/notify')(messageQueue);
+
 const crm = {
   documents: require('../../lib/connectors/crm/documents')
 };
 const Permit = require('../../lib/connectors/permit');
-const moment = require('moment');
+// const moment = require('moment');
 
 async function run (data) {
   // send request to CRM to select licences with expiry in the next N days
@@ -14,10 +17,7 @@ async function run (data) {
   const expiring = await Permit.expiringLicences.findMany();
 
   // 18/54/08/0538
-  console.log(expiring);
   expiring.data.forEach(async (licence) => {
-    // console.log(licence.licence_ref+' expires '+licence.licence_end_dt);
-
     const responsedata = await crm.documents.getDocumentRoles({
       role: 'primary_user',
       system_external_id: licence.licence_ref
@@ -37,14 +37,17 @@ async function run (data) {
         const config = {
           id: `${licence.licence_ref}_${licence.licence_end_dt}_${recipient}`,
           recipient,
-          message_ref: 'expiry_notification_email',
+          messageRef: 'expiry_notification_email',
           personalisation: {
-            'licence_no': licence.licence_ref,
-            licence_name: data.document_name
+            licence_no: licence.licence_ref,
+            licence_name: data.document_name || ''
           },
-          sendafter: moment().format('DD-MMM-YYYY HH:MM')
+          individualEntityId: responsedata.data[0].individual_entity_id,
+          companyEntityId: responsedata.data[0].company_entity_id,
+          licences: [licence.licence_ref]
         };
-        Notify.sendLater(config);
+
+        await enqueue(config);
       } catch (error) {
         return { error };
       }

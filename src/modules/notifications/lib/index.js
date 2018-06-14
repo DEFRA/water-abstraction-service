@@ -4,6 +4,9 @@ const templateRenderer = require('./template-renderer');
 const eventFactory = require('./event-factory');
 const notificationFactory = require('./notification-factory');
 
+const messageQueue = require('../../../lib/message-queue');
+const { enqueue } = require('../../notify')(messageQueue);
+
 /* eslint camelcase: "warn" */
 
 /**
@@ -68,11 +71,17 @@ async function sendNotification (taskConfig, issuer, contactData, ref) {
   // Schedule messages for sending
   for (let row of contactData) {
     let n = await notificationFactory(row, taskConfig, e);
-    let { error } = await n.save();
 
-    if (error) {
+    try {
+      enqueue(n);
+    } catch (error) {
       console.error(error);
     }
+    // let { error } = await n.save();
+    //
+    // if (error) {
+    //   console.error(error);
+    // }
   }
 
   // Update event status

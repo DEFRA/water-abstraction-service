@@ -4,7 +4,7 @@
  */
 const HAPIRestAPI = require('hapi-pg-rest-api');
 const Joi = require('joi');
-const {pool} = require('../lib/connectors/db.js');
+const { pool } = require('../lib/connectors/db.js');
 
 const NotificationsApi = new HAPIRestAPI({
   table: 'water.notify_templates',
@@ -26,3 +26,5 @@ const NotificationsApi = new HAPIRestAPI({
 });
 
 module.exports = NotificationsApi.getRoutes();
+
+module.exports.repository = NotificationsApi.repo;
