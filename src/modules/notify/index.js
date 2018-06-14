@@ -46,6 +46,22 @@ async function updateMessageStatus (id) {
 }
 
 /**
+ * Marks record in scheduled_notification table as sent
+ * Also records notify ID and rendered body
+ * @param {String} id - GUID or other ID
+ * @param {Object} notifyResponse
+ * @return {Promise} resolves on DB success/error
+ */
+function markAsSent (id, notifyResponse) {
+  // Update plaintext value with what Notify actually sent
+  return scheduledNotification.update({ id }, {
+    status: 'sent',
+    notify_id: notifyResponse.id,
+    plaintext: notifyResponse.content.body
+  });
+}
+
+/**
  * Send message
  * @param {String} id - water.scheduled_notification id
  * @return {Promise} resolves with { data, notifyResponse }
@@ -76,11 +92,7 @@ async function send (id) {
     const { body: notifyResponse } = await sendMessage(notifyTemplate, personalisation, recipient);
 
     // Update plaintext value with what Notify actually sent
-    await scheduledNotification.update({ id }, {
-      status: 'sent',
-      notify_id: notifyResponse.id,
-      plaintext: notifyResponse.content.body
-    });
+    await markAsSent(id, notifyResponse);
 
     return {
       data
