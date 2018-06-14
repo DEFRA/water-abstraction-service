@@ -1,6 +1,8 @@
+const Joi = require('joi');
 const NotifyClient = require('notifications-node-client').NotifyClient;
 const notifyTemplateRepo = require('../../controllers/notifytemplates').repository;
 const { TemplateNotFoundError, MessageTypeError } = require('./errors');
+const { createGUID } = require('../../lib/helpers');
 
 /**
  * A function to get the notify key
@@ -77,8 +79,33 @@ async function sendMessage (notifyTemplate, personalisation, recipient) {
   }
 }
 
+/**
+ * Validates the options passed to enqueue
+ * @param {Object} options
+ * @param {String} now - ISO 8601 current timestamp
+ * @return {Object} - with {error, value }
+ */
+function validateEnqueueOptions (options, now) {
+  // Validate input options
+  const schema = {
+    id: Joi.string().default(createGUID()),
+    messageRef: Joi.string(),
+    recipient: Joi.string().default('n/a'),
+    personalisation: Joi.object(),
+    sendAfter: Joi.string().default(now),
+    licences: Joi.array().items(Joi.string()).default([]),
+    individualEntityId: [Joi.allow(null), Joi.string().guid()],
+    companyEntityId: [Joi.allow(null), Joi.string().guid()],
+    eventId: Joi.string().guid(),
+    metadata: Joi.object().default({})
+  };
+
+  return Joi.validate(options, schema);
+}
+
 module.exports = {
   getNotifyKey,
   getTemplate,
-  sendMessage
+  sendMessage,
+  validateEnqueueOptions
 };

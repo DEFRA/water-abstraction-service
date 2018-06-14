@@ -8,10 +8,9 @@
 const NotifyClient = require('notifications-node-client').NotifyClient;
 const moment = require('moment');
 const { mapValues } = require('lodash');
-const Joi = require('joi');
 const snakeCaseKeys = require('snakecase-keys');
-const { createGUID } = require('../../lib/helpers');
-const { getTemplate, getNotifyKey, sendMessage } = require('./helpers');
+
+const { getTemplate, getNotifyKey, sendMessage, validateEnqueueOptions } = require('./helpers');
 const scheduledNotification = require('../../controllers/notifications').repository;
 const { NotificationNotFoundError, NotifyIdError, AlreadySentError } = require('./errors');
 const { isObject } = require('lodash');
@@ -97,107 +96,93 @@ async function send (id) {
   }
 }
 
-module.exports = (messageQueue) => {
-  /**
-   * Queues a message to be sent
-   * @param {Object} options
-   * @return {Promise}
-   */
-  async function enqueue (options = {}) {
-    // Create timestamp
-    const now = moment().format('YYYY-MM-DD HH:mm:ss');
-
-    // Validate input options
-    const schema = {
-      id: Joi.string().default(createGUID()),
-      messageRef: Joi.string(),
-      recipient: Joi.string().default('n/a'),
-      personalisation: Joi.object(),
-      sendAfter: Joi.string().default(now),
-      licences: Joi.array().items(Joi.string()).default([]),
-      individualEntityId: [Joi.allow(null), Joi.string().guid()],
-      companyEntityId: [Joi.allow(null), Joi.string().guid()],
-      eventId: Joi.string().guid(),
-      metadata: Joi.object().default({})
-    };
-
-    const { value: data, error } = Joi.validate(options, schema);
-
-    if (error) {
-      throw error;
-    }
-
-    // Create DB data row - snake case keys and stringify objects/arrays
-    const row = mapValues(snakeCaseKeys(data), value => isObject(value) ? JSON.stringify(value) : value);
-
-    // Determine notify key
-    const template = await getTemplate(data.messageRef);
-    const apiKey = getNotifyKey(template.notify_key);
-
-    // Generate message preview with Notify
-    try {
-      const notifyClient = new NotifyClient(apiKey);
-      const result = await notifyClient.previewTemplateById(template.template_id, data.personalisation);
-      row.plaintext = result.body.body;
-      row.message_type = result.body.type;
-    } catch (err) {
-      if (err.statusCode === 400) {
-        throw err;
-      } else {
-        console.log(err);
-      }
-    }
-
-    // Write data row to DB
-    const { error: dbError } = await scheduledNotification.create(row);
-    if (dbError) {
-      console.error(dbError);
-      throw dbError;
-    }
-
-    // Schedule send event
-    const startIn = Math.round(moment(row.send_after).diff(moment(now)) / 1000);
-    messageQueue.publish('notify.send', row, {
-      startIn,
-      singletonKey: row.id
-    });
-
-    // Return row data
-    return { data: row, startIn };
-  }
-
-  /**
-   * Register subscribers with the message queue.
-   * This must be done after messageQueue.start() has resolved
-   */
-  function registerSubscribers () {
-    messageQueue.subscribe('notify.send', async (job, done) => {
-      const { id } = job.data;
-
-      try {
-        const { data } = await send(id);
-
-        // Schedule status checks
-        messageQueue.publish('notify.status', data);
-        messageQueue.publish('notify.status', data, { startIn: 60 });
-        messageQueue.publish('notify.status', data, { startIn: 3600 });
-        messageQueue.publish('notify.status', data, { startIn: 86400 });
-      } catch (err) {
-        console.error(err);
-      }
-
-      done();
-    });
-
-    messageQueue.subscribe('notify.status', async (job, done) => {
-      const { id } = job.data;
-      await updateMessageStatus(id);
-      done();
-    });
-  }
-
+const createNotify = (messageQueue) => {
   return {
-    enqueue,
-    registerSubscribers
+
+    /**
+     * Queues a message to be sent
+     * @param {Object} options
+     * @return {Promise}
+     */
+    enqueue: async function (options = {}) {
+      // Create timestamp
+      const now = moment().format('YYYY-MM-DD HH:mm:ss');
+
+      const { value: data, error } = validateEnqueueOptions(options, now);
+
+      if (error) {
+        throw error;
+      }
+
+      // Create DB data row - snake case keys and stringify objects/arrays
+      const row = mapValues(snakeCaseKeys(data), value => isObject(value) ? JSON.stringify(value) : value);
+
+      // Determine notify key
+      const template = await getTemplate(data.messageRef);
+      const apiKey = getNotifyKey(template.notify_key);
+
+      // Generate message preview with Notify
+      try {
+        const notifyClient = new NotifyClient(apiKey);
+        const result = await notifyClient.previewTemplateById(template.template_id, data.personalisation);
+        row.plaintext = result.body.body;
+        row.message_type = result.body.type;
+      } catch (err) {
+        if (err.statusCode === 400) {
+          throw err;
+        } else {
+          console.log(err);
+        }
+      }
+
+      // Write data row to DB
+      const { error: dbError } = await scheduledNotification.create(row);
+      if (dbError) {
+        console.error(dbError);
+        throw dbError;
+      }
+
+      // Schedule send event
+      const startIn = Math.round(moment(row.send_after).diff(moment(now)) / 1000);
+      messageQueue.publish('notify.send', row, {
+        startIn,
+        singletonKey: row.id
+      });
+
+      // Return row data
+      return { data: row, startIn };
+    },
+
+    /**
+     * Register subscribers with the message queue.
+     * This must be done after messageQueue.start() has resolved
+     */
+    registerSubscribers: () => {
+      messageQueue.subscribe('notify.send', async (job, done) => {
+        const { id } = job.data;
+
+        try {
+          const { data } = await send(id);
+
+          // Schedule status checks
+          messageQueue.publish('notify.status', data);
+          messageQueue.publish('notify.status', data, { startIn: 60 });
+          messageQueue.publish('notify.status', data, { startIn: 3600 });
+          messageQueue.publish('notify.status', data, { startIn: 86400 });
+        } catch (err) {
+          console.error(err);
+        }
+
+        done();
+      });
+
+      messageQueue.subscribe('notify.status', async (job, done) => {
+        const { id } = job.data;
+        await updateMessageStatus(id);
+        done();
+      });
+    }
   };
 };
+
+module.exports = createNotify;
