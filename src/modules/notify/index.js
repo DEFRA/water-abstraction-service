@@ -108,6 +108,35 @@ async function send (id) {
   }
 }
 
+/**
+ * Writes scheduled notification data to DB
+ * @param {Object} row
+ * @return {Promise}
+ */
+async function writeScheduledNotificationRow (row) {
+  const { error: dbError } = await scheduledNotification.create(row);
+  if (dbError) {
+    console.error(dbError);
+    throw dbError;
+  }
+}
+
+/**
+ * @param {Object} messageQueue - PG boss instance
+ * @param {Object} row - row data
+ * @param {String} ISO 8601 timestamp
+ * @return {Number} number of seconds until event starts
+ */
+function scheduleSendEvent (messageQueue, row, now) {
+  // Schedule send event
+  const startIn = Math.round(moment(row.send_after).diff(moment(now)) / 1000);
+  messageQueue.publish('notify.send', row, {
+    startIn,
+    singletonKey: row.id
+  });
+  return startIn;
+}
+
 const createEnqueue = messageQueue => {
   return async function (options = {}) {
     // Create timestamp
@@ -141,18 +170,8 @@ const createEnqueue = messageQueue => {
     }
 
     // Write data row to DB
-    const { error: dbError } = await scheduledNotification.create(row);
-    if (dbError) {
-      console.error(dbError);
-      throw dbError;
-    }
-
-    // Schedule send event
-    const startIn = Math.round(moment(row.send_after).diff(moment(now)) / 1000);
-    messageQueue.publish('notify.send', row, {
-      startIn,
-      singletonKey: row.id
-    });
+    await writeScheduledNotificationRow(row);
+    const startIn = scheduleSendEvent(messageQueue, row, now);
 
     // Return row data
     return { data: row, startIn };
