@@ -137,6 +137,15 @@ function scheduleSendEvent (messageQueue, row, now) {
   return startIn;
 }
 
+/**
+ * Converts object keys to snake case, and non-scalars to stringified JSON
+ * @param {Object} data
+ * @return {Object}
+ */
+function formatRowData (data) {
+  return mapValues(snakeCaseKeys(data), value => isObject(value) ? JSON.stringify(value) : value);
+}
+
 const createEnqueue = messageQueue => {
   return async function (options = {}) {
     // Create timestamp
@@ -149,7 +158,7 @@ const createEnqueue = messageQueue => {
     }
 
     // Create DB data row - snake case keys and stringify objects/arrays
-    const row = mapValues(snakeCaseKeys(data), value => isObject(value) ? JSON.stringify(value) : value);
+    const row = formatRowData(data);
 
     // Determine notify key
     const template = await getTemplate(data.messageRef);
