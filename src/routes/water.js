@@ -1,3 +1,4 @@
+'use strict';
 /*
 API page, pending real back end - uses fs to read and write to lkocal json files...
 
