@@ -43,11 +43,12 @@ async function getPendingNotifications () {
  */
 function getUpdatedMetadata (metadata, notifications) {
   // Count pending/send status
-  const stats = notifications.reduce((acc, { notify_status: notifyStatus }) => {
-    if (notifyStatus === 'delivered') {
+  const stats = notifications.reduce((acc, { status, notify_status: notifyStatus }) => {
+    if (status === 'error') {
+      acc.error++;
+    } else if (notifyStatus === 'delivered') {
       acc.sent++;
-    }
-    if (notifyStatus === 'permanent-failure') {
+    } else if (notifyStatus === 'permanent-failure') {
       acc.error++;
     }
     return acc;
