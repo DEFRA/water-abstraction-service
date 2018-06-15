@@ -6,7 +6,7 @@
   "scripts": {
     "heroku-prebuild": "npm install --only=dev",
     "heroku-postbuild": "gulp clean && gulp copy-govuk-files && gulp install-govuk-files && gulp copy-static-assets && gulp sass",
-    "test": "./node_modules/lab/bin/lab -t 55 -m 0 --coverage-path ./src/ --ignore version,payload -r lcov -o lcov.info -r console -o stdout",
+    "test": "./node_modules/lab/bin/lab -t 55 -m 0 --coverage-path ./src/ -r lcov -o lcov.info -r console -o stdout",
     "test-cov-html": "lab -r html -o coverage.html",
     "migrate": "node scripts/create-schema && node node_modules/db-migrate/bin/db-migrate up --verbose",
     "lint": "./node_modules/.bin/eslint ./src/**/*.js --fix"
@@ -37,6 +37,7 @@
     "lab": "^14.3.4",
     "mkdir": "0.0.2",
     "run-sequence": "^2.2.1",
+    "sinon": "^6.0.0",
     "standard": "^10.0.3",
     "walk-object": "^4.0.0"
   },
@@ -72,6 +73,7 @@
     "request-promise-native": "^1.0.5",
     "sentence-case": "^2.1.1",
     "sha1": "^1.1.1",
+    "url-join": "^4.0.0",
     "snakecase-keys": "^1.1.1",
     "vision": "^4.1.1",
     "yar": "^8.1.2"
