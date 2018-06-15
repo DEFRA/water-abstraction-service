@@ -5,6 +5,7 @@ const Hapi = require('hapi');
 
 const serverOptions = { connections: { router: { stripTrailingSlash: true } } };
 const server = new Hapi.Server(serverOptions);
+const messageQueue = require('./src/lib/message-queue');
 
 server.connection({ port: process.env.PORT || 8001 });
 
@@ -126,14 +127,28 @@ server.register([
   server.route(require('./src/routes/water'));
 });
 
-// Start the server if not testing with Lab
-if (!module.parent) {
+async function start () {
+  await messageQueue.start();
+
+  const { registerSubscribers } = require('./src/modules/notify')(messageQueue);
+  registerSubscribers();
+
+  server.log('info', 'Message queue started');
+
+  // Register subscribers
+  // require('./src/subscribers')(messageQueue);
+
   server.start((err) => {
     if (err) {
       throw err;
     }
     console.log(`Server running at: ${server.info.uri}`);
   });
+}
+
+// Start the server if not testing with Lab
+if (!module.parent) {
+  start();
 }
 
 module.exports = server;

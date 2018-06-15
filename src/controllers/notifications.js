@@ -15,8 +15,9 @@ const NotificationsApi = new HAPIRestAPI({
   primaryKeyGuid: false,
   upsert: {
     fields: ['id'],
-    set: []
+    set: ['id']
   },
+  showSql: true,
   validation: {
     id: Joi.string(),
     recipient: Joi.string(),

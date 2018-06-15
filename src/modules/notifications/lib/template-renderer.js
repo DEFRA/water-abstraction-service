@@ -61,8 +61,10 @@ function renderTemplates (taskConfig, params, contacts, licences, context = {}) 
       params,
       contact,
       licences: licenceList,
+      pluralLicence: licenceList.length !== 1,
       date,
-      ...context
+      ...context,
+      isPost: contact.method === 'post'
     };
 
     // Get the correct Nunjucks template for the message type
