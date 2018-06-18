@@ -200,6 +200,7 @@ const createRegisterSubscribers = messageQueue => {
         messageQueue.publish('notify.status', data, { startIn: 60 });
         messageQueue.publish('notify.status', data, { startIn: 3600 });
         messageQueue.publish('notify.status', data, { startIn: 86400 });
+        messageQueue.publish('notify.status', data, { startIn: 259200 });
       } catch (err) {
         console.error(err);
       }
