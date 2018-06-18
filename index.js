@@ -33,30 +33,29 @@ var yarOptions = {
   }
 };
 
-server.register([
-  {
-    register: require('yar'),
-    options: yarOptions
-  },
-  {
-    register: require('node-hapi-airbrake-js'),
-    options: {
-      key: process.env.errbit_key,
-      host: process.env.errbit_server
-    }
-  },
-  {
-    // Plugin to display the routes table to console at startup
-    // See https://www.npmjs.com/package/blipp
-    register: require('blipp'),
-    options: {
-      showAuth: true
-    }
-  },
-  require('hapi-auth-basic'),
-  require('hapi-auth-jwt2'),
-  require('inert'),
-  require('vision')
+server.register([{
+  register: require('yar'),
+  options: yarOptions
+},
+{
+  register: require('node-hapi-airbrake-js'),
+  options: {
+    key: process.env.errbit_key,
+    host: process.env.errbit_server
+  }
+},
+{
+  // Plugin to display the routes table to console at startup
+  // See https://www.npmjs.com/package/blipp
+  register: require('blipp'),
+  options: {
+    showAuth: true
+  }
+},
+require('hapi-auth-basic'),
+require('hapi-auth-jwt2'),
+require('inert'),
+require('vision')
 ], (err) => {
   if (err) {
     throw err;
@@ -130,11 +129,19 @@ server.register([
 async function start () {
   await messageQueue.start();
 
-  const { registerSubscribers } = require('./src/modules/notify')(messageQueue);
-  registerSubscribers();
+  const { registerSubscribers: notifySubscribers } = require('./src/modules/notify')(messageQueue);
+  notifySubscribers();
+
+  const { registerSubscribers: importSubscribers } = require('./src/modules/import')(messageQueue);
+  importSubscribers();
 
   server.log('info', 'Message queue started');
 
+  // Test import
+  const { importNald } = require('./src/modules/import')(messageQueue);
+  await importNald();
+
+  //
   // Register subscribers
   // require('./src/subscribers')(messageQueue);
 

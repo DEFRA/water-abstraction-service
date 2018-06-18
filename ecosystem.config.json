@@ -5,7 +5,8 @@
       "name": "water-api",
       "ignore_watch": [
         "node_modules",
-        "src/lib/temp"
+        "src/lib/temp",
+        "temp"
       ],
       "script": "index.js"
     }
