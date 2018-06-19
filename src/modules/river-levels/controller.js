@@ -17,7 +17,13 @@ function getMeasures (data) {
       return acc;
     }
 
-    const { latestReading: { dateTime, value }, parameter, period, unitName, valueType } = measure;
+    let { latestReading: { dateTime, value }, parameter, period, unitName, valueType } = measure;
+
+    // Convert ml/d flows to m3/s
+    if (unitName.toLowerCase() === 'ml/d') {
+      unitName = 'm3/s';
+      value = value * 1000 / 86400;
+    }
 
     return [...acc, {
       latestReading: { dateTime, value },
