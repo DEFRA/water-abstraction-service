@@ -23,6 +23,10 @@ function getMeasures (data) {
 
     let { latestReading: { dateTime, value }, parameter, period, unitName, valueType } = measure;
 
+    if (unitName.toLowerCase() === '---') {
+      return acc;
+    }
+
     // Convert ml/d flows to m3/s
     if (unitName.toLowerCase() === 'ml/d') {
       unitName = 'm3/s';
