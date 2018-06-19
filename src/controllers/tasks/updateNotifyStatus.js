@@ -45,13 +45,18 @@ async function run (config) {
     return { error };
   }
 
-  // Schedule a check
-  notifications.forEach((data) => {
-    console.log(`Scheduling notify status check for ${data.id}`);
-    messageQueue.publish('notify.status', data);
-  });
+  try {
+    // Schedule a check
+    notifications.forEach(async (data) => {
+      console.log(`Scheduling notify status check for ${data.id}`);
+      await messageQueue.publish('notify.status', data);
+    });
 
-  return { error: null };
+    return { error: null };
+  } catch (err) {
+    console.error(err);
+    return err;
+  }
 }
 
 module.exports = {
