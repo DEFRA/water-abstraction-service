@@ -4,20 +4,38 @@
  * message log
  */
 /* eslint camelcase: "warn" */
-const { pool } = require('../../lib/connectors/db');
 const messageQueue = require('../../lib/message-queue');
+const { repository: notificationsRepository } = require('../notifications');
 
 /**
  * Find records in "water"."scheduled_notification" which have a notify_id
- * but which don't yet have a Notify status
+ * but which haven't either resolved to a permanent success/failed status
  * @return {Promise} resolves with result from DB call
  */
 function getPendingNotifications () {
-  const sql = `SELECT id FROM water.scheduled_notification
-    WHERE notify_id IS NOT NULL
-    AND (notify_status IS NULL OR notify_status='sending')`;
+  const filter = {
+    notify_id: {
+      $ne: null
+    },
+    $or: [{
+      notify_status: null
+    }, {
+      notify_status: {
+        $nin: ['delivered', 'permanent-failure', 'temporary-failure', 'technical-failure', 'received']
+      }
+    }]
+  };
 
-  return pool.query(sql);
+  const pagination = {
+    perPage: 250,
+    page: 1
+  };
+
+  const sort = {
+    send_after: -1
+  };
+
+  return notificationsRepository.find(filter, sort, pagination);
 }
 
 async function run (config) {
