@@ -2,8 +2,10 @@
 const knox = require('knox');
 const childProcess = require('child_process');
 const fs = require('fs');
-// const Promise = require('bluebird');
-// const readDir = Promise.promisify(fs.)
+const { promisify } = require('util');
+const readDir = promisify(fs.readdir);
+const writeFile = promisify(fs.writeFile);
+const readFirstLine = require('firstline');
 
 // const Slack = require('../../lib/slack');
 
@@ -79,52 +81,29 @@ const extract = async () => {
   await execCommand(`7z x ${localPath}/NALD.zip -o${localPath}`);
 };
 
-function readFirstLine (path) {
-  return new Promise((resolve, reject) => {
-    var rs = fs.createReadStream(path, {
-      encoding: 'utf8'
-    });
-    var acc = '';
-    var pos = 0;
-    var index;
-    rs
-      .on('data', function (chunk) {
-        index = chunk.indexOf('\n');
-        acc += chunk;
-        index !== -1 ? rs.close() : pos += chunk.length;
-      })
-      .on('close', function () {
-        resolve(acc.slice(0, pos + index));
-      })
-      .on('error', function (err) {
-        reject(err);
-      });
-  });
-}
-
 /**
  @todo remove synchronous code
  */
 async function buildSQL (request, reply) {
-  var tableCreate = 'drop schema if exists "import" cascade;\nCREATE schema if not exists "import"; \n ';
-  const files = await fs.readdirSync(finalPath);
+  let tableCreate = 'drop schema if exists "import" cascade;\nCREATE schema if not exists "import"; \n ';
+  const files = await readDir(finalPath);
   const excludeList = ['NALD_RET_LINES', 'NALD_RET_LINES_AUDIT', 'NALD_RET_FORM_LOGS', 'NALD_RET_FORM_LOGS_AUDIT'];
-  for (var f in files) {
-    var file = files[f];
-    var table = file.split('.')[0];
+  for (let f in files) {
+    let file = files[f];
+    let table = file.split('.')[0];
     if (table.length === 0 || excludeList.indexOf(table) > -1) {
       // console.log(`SKIP ${table}`)
     } else {
       // console.log(`Process ${table}`)
-      var indexableFields = [];
-      var line = await readFirstLine(`${finalPath}/${table}.txt`);
-      var cols = line.split(',');
+      let indexableFields = [];
+      let line = await readFirstLine(`${finalPath}/${table}.txt`);
+      let cols = line.split(',');
       tableCreate += `\n CREATE TABLE if not exists "import"."${table}" (`;
       indexableFields = [cols[0]];
       if (cols.indexOf('FGAC_REGION_CODE') >= 0) {
         indexableFields[1] = 'FGAC_REGION_CODE';
       }
-      for (var col = 0; col < cols.length; col++) {
+      for (let col = 0; col < cols.length; col++) {
         tableCreate += `"${cols[col]}" varchar`;
         if (cols.length === (col + 1)) {
           tableCreate += `);`;
@@ -146,13 +125,22 @@ async function buildSQL (request, reply) {
      insert into water.pending_import (licence_ref,status)
     select "LIC_NO",0 from import."NALD_ABS_LICENCES";`;
 
-  fs.writeFileSync(`${__dirname}/temp/sql.sql`, tableCreate);
-  return `${__dirname}/temp/sql.sql`;
+  await writeFile(`${finalPath}/sql.sql`, tableCreate);
+  return `${finalPath}/sql.sql`;
 }
+
+/**
+ * Process CSV data files, build SQL and import into PostGres
+ * @param {Function} asyncLogger - an async logger, could be console/slack
+ */
+const importCSVToDatabase = async () => {
+  await execCommand(`PGPASSWORD=${process.env.PGPASSWORD} psql -h ${process.env.PGHOST} -U ${process.env.PGUSER} ${process.env.PGDATABASE} < ${finalPath}/sql.sql`);
+};
 
 module.exports = {
   prepare,
   download,
   extract,
-  buildSQL
+  buildSQL,
+  importCSVToDatabase
 };

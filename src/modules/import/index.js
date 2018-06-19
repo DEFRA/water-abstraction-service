@@ -1,7 +1,7 @@
 const Slack = require('../../lib/slack');
 const os = require('os');
 
-const { prepare, download, extract, buildSQL } = require('./helpers');
+const { prepare, download, extract, buildSQL, importCSVToDatabase } = require('./helpers');
 
 const createImportNald = messageQueue => {
   return async () => {
@@ -45,6 +45,18 @@ const registerBuildSqlSubscriber = messageQueue => {
     try {
       await Slack.post('Building SQL');
       await buildSQL();
+      messageQueue.publish('import.csv');
+    } catch (err) {
+      console.error(err);
+    }
+  });
+};
+
+const registerImportCSVSubscriber = messageQueue => {
+  messageQueue.subscribe('import.csv', async (job, done) => {
+    try {
+      await Slack.post('Import CSV files to DB');
+      await importCSVToDatabase();
     } catch (err) {
       console.error(err);
     }
@@ -56,6 +68,7 @@ const createRegisterSubscribers = messageQueue => {
     registerDownloadSubscriber(messageQueue);
     registerExtractSubscriber(messageQueue);
     registerBuildSqlSubscriber(messageQueue);
+    registerImportCSVSubscriber(messageQueue);
   };
 };
 
