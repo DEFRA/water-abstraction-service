@@ -2,11 +2,10 @@
 require('dotenv').config();
 
 const Hapi = require('hapi');
-const cron = require('node-cron');
 
 const serverOptions = { connections: { router: { stripTrailingSlash: true } } };
 const server = new Hapi.Server(serverOptions);
-const Helpers = require('./src/lib/helpers.js');
+const messageQueue = require('./src/lib/message-queue');
 
 server.connection({ port: process.env.PORT || 8001 });
 
@@ -24,14 +23,9 @@ if (process.env.DATABASE_URL) {
 
 const cacheKey = process.env.cacheKey || 'super-secret-cookie-encryption-key';
 console.log('Cache key' + cacheKey);
-const sessionPluginOptions = {
-  cache: { segment: 'unique-cache-sement' },
-  cookie: { isSecure: false },
-  key: 'bla-bla-bla'
-};
 
 // isSecure = true for live...
-var yar_options = {
+var yarOptions = {
   storeBlank: false,
   cookieOptions: {
     password: 'the-password-must-be-at-least-32-characters-long',
@@ -39,44 +33,44 @@ var yar_options = {
   }
 };
 
-server.register([{
-  register: require('yar'),
-  options: yar_options
-},
-
-{
-  register: require('node-hapi-airbrake-js'),
-  options: {
-    key: process.env.errbit_key,
-    host: process.env.errbit_server
-  }
-}, {
-  // Plugin to display the routes table to console at startup
-  // See https://www.npmjs.com/package/blipp
-  register: require('blipp'),
-  options: {
-    showAuth: true
-  }
-},
-require('hapi-auth-basic'), require('hapi-auth-jwt2'), require('inert'), require('vision')
+server.register([
+  {
+    register: require('yar'),
+    options: yarOptions
+  },
+  {
+    register: require('node-hapi-airbrake-js'),
+    options: {
+      key: process.env.errbit_key,
+      host: process.env.errbit_server
+    }
+  },
+  {
+    // Plugin to display the routes table to console at startup
+    // See https://www.npmjs.com/package/blipp
+    register: require('blipp'),
+    options: {
+      showAuth: true
+    }
+  },
+  require('hapi-auth-basic'),
+  require('hapi-auth-jwt2'),
+  require('inert'),
+  require('vision')
 ], (err) => {
   if (err) {
     throw err;
   }
 
-  function validateBasic (request, user_name, password, callback) {
+  function validateBasic (request, userName, password, callback) {
     // basic login for admin function UI
-
-    console.log(user_name);
-    console.log(password);
-
     var data = {};
-    data.user_name = user_name;
+    data.user_name = userName;
     data.password = password;
     const httpRequest = require('request');
 
     var method = 'post';
-    URI = process.env.IDM_URI + '/user/login';
+    var URI = process.env.IDM_URI + '/user/login';
     console.log(URI);
     httpRequest({
       method: method,
@@ -84,9 +78,12 @@ require('hapi-auth-basic'), require('hapi-auth-jwt2'), require('inert'), require
       form: data
     },
     function (err, httpResponse, body) {
+      if (err) {
+        console.error(err);
+      }
       console.log('got http ' + method + ' response');
       console.log(body);
-      responseData = JSON.parse(body);
+      var responseData = JSON.parse(body);
       if (responseData.err) {
         return callback(null, false);
       } else {
@@ -130,8 +127,17 @@ require('hapi-auth-basic'), require('hapi-auth-jwt2'), require('inert'), require
   server.route(require('./src/routes/water'));
 });
 
-// Start the server if not testing with Lab
-if (!module.parent) {
+async function start () {
+  await messageQueue.start();
+
+  const { registerSubscribers } = require('./src/modules/notify')(messageQueue);
+  registerSubscribers();
+
+  server.log('info', 'Message queue started');
+
+  // Register subscribers
+  // require('./src/subscribers')(messageQueue);
+
   server.start((err) => {
     if (err) {
       throw err;
@@ -140,33 +146,9 @@ if (!module.parent) {
   });
 }
 
-// Reset scheduler
-// const taskRunner = require('./src/controllers/taskRunner');
-// const path = require('path');
-// const taskRunnerPath = path.resolve(__dirname, 'task-runner.js');
-//
-// async function startTaskRunner () {
-//   console.log('Resetting task runner');
-//   await taskRunner.reset();
-//   cron.schedule('*/5 * * * * * *', function () {
-//     const exec = require('child_process').exec;
-//     const child = exec('node ' + taskRunnerPath);
-//     child.stdout.on('data', function (data) {
-//       console.log('taskRunner: ' + data);
-//     });
-//     child.stderr.on('data', function (data) {
-//       console.log('taskRunner: ' + data);
-//     });
-//     child.on('close', function (code) {
-//       const msg = `taskRunner: exited with code ${code}`;
-//       const log = code === 0 ? console.log : console.error;
-//       log(msg);
-//     });
-//   });
-// }
-//
-// startTaskRunner();
+// Start the server if not testing with Lab
+if (!module.parent) {
+  start();
+}
 
 module.exports = server;
-
-// Small change

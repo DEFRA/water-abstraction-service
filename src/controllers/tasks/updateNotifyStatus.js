@@ -4,44 +4,38 @@
  * message log
  */
 /* eslint camelcase: "warn" */
+const messageQueue = require('../../lib/message-queue');
 const { repository: notificationsRepository } = require('../notifications');
-const NotifyClient = require('notifications-node-client').NotifyClient;
-const notifyClient = new NotifyClient(process.env.LIVE_NOTIFY_KEY);
-const moment = require('moment');
-
-/**
- * Update message
- * @param {Object} row - single row from  "water"."scheduled_notification"
- * @return {Promise} resolves when status updated
- */
-async function updateMessage (row) {
-  console.log(`Update ${row.notify_id} ${row.status}`);
-
-  const { body: { status } } = await notifyClient
-    .getNotificationById(row.notify_id);
-
-  return notificationsRepository.update({ id: row.id }, { notify_status: status });
-}
 
 /**
  * Find records in "water"."scheduled_notification" which have a notify_id
- * but which don't yet have a Notify status
+ * but which haven't either resolved to a permanent success/failed status
  * @return {Promise} resolves with result from DB call
  */
 function getPendingNotifications () {
-  // Create timestamp for 3 days ago
-  // We need to keep updating as could start as 'delivered' but move to
-  // failure later
-  const ts = moment().subtract(3, 'days').format('YYYY-MM-DD HH:mm:ss');
-
-  return notificationsRepository.find({
+  const filter = {
     notify_id: {
       $ne: null
     },
-    send_after: {
-      $gt: ts
-    }
-  });
+    $or: [{
+      notify_status: null
+    }, {
+      notify_status: {
+        $nin: ['delivered', 'permanent-failure', 'temporary-failure', 'technical-failure', 'received']
+      }
+    }]
+  };
+
+  const pagination = {
+    perPage: 250,
+    page: 1
+  };
+
+  const sort = {
+    send_after: -1
+  };
+
+  return notificationsRepository.find(filter, sort, pagination);
 }
 
 async function run (config) {
@@ -51,11 +45,18 @@ async function run (config) {
     return { error };
   }
 
-  for (let message of notifications) {
-    await updateMessage(message);
-  }
+  try {
+    // Schedule a check
+    notifications.forEach(async (data) => {
+      console.log(`Scheduling notify status check for ${data.id}`);
+      await messageQueue.publish('notify.status', data);
+    });
 
-  return { error: null };
+    return { error: null };
+  } catch (error) {
+    console.error(error);
+    return { error };
+  }
 }
 
 module.exports = {

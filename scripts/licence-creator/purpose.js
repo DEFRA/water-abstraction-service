@@ -1,9 +1,10 @@
+'use strict';
+
 const getNextId = require('./next-id.js');
 
 class Purpose {
   constructor() {
     this.id = getNextId();
-    // this.version = null;
 
     this.licence = null;
 
