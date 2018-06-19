@@ -53,9 +53,9 @@ async function run (config) {
     });
 
     return { error: null };
-  } catch (err) {
-    console.error(err);
-    return err;
+  } catch (error) {
+    console.error(error);
+    return { error };
   }
 }
 
