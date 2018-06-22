@@ -12,6 +12,7 @@ const HapiAuthJwt2 = require('hapi-auth-jwt2');
 const config = require('./config');
 const messageQueue = require('./src/lib/message-queue');
 const routes = require('./src/routes/water.js');
+const notify = require('./src/modules/notify');
 
 // Initialise logger
 const logger = require('./src/lib/logger');
@@ -21,38 +22,46 @@ logger.init(config.logger);
 // Define server
 const server = Hapi.server(config.server);
 
+const registerServerPlugins = async (server) => {
+  // Third-party plugins
+  await server.register({
+    plugin: Good,
+    options: { ...config.good,
+      reporters: {
+        winston: [goodWinstonStream]
+      }
+    }
+  });
+  await server.register({
+    plugin: Blipp,
+    options: config.blipp
+  });
+
+  // JWT token auth
+  await server.register(HapiAuthJwt2);
+};
+
+const configureServerAuthStrategy = (server) => {
+  server.auth.strategy('jwt', 'jwt', {
+    ...config.jwt,
+    validate: async (decoded) => ({ isValid: !!decoded.id })
+  });
+  server.auth.default('jwt');
+};
+
+const configureMessageQueue = async (server) => {
+  await messageQueue.start();
+  const { registerSubscribers } = notify(messageQueue);
+  registerSubscribers();
+  server.log('info', 'Message queue started');
+};
+
 const start = async function () {
   try {
-    // Third-party plugins
-    await server.register({
-      plugin: Good,
-      options: { ...config.good,
-        reporters: {
-          winston: [goodWinstonStream]
-        }
-      }
-    });
-    await server.register({
-      plugin: Blipp,
-      options: config.blipp
-    });
-
-    // JWT token auth
-    await server.register(HapiAuthJwt2);
-    server.auth.strategy('jwt', 'jwt', {
-      ...config.jwt,
-      validate: async (decoded) => ({ isValid: !!decoded.id })
-    });
-    server.auth.default('jwt');
-
-    // Import routes
+    await registerServerPlugins(server);
+    configureServerAuthStrategy(server);
     server.route(routes);
-
-    // Set up PG Boss message queue
-    await messageQueue.start();
-    const { registerSubscribers } = require('./src/modules/notify')(messageQueue);
-    registerSubscribers();
-    server.log('info', 'Message queue started');
+    await configureMessageQueue(server);
 
     if (!module.parent) {
       await server.start();
