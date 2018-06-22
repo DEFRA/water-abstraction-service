@@ -12,15 +12,10 @@ const generateReference = require('./lib/reference-generator');
  * @param { Number } request.payload.taskConfigId - the ID of the notification task in the task_config table *
  */
 async function postPreview (request, reply) {
-  try {
-    const { filter, taskConfigId, params } = request.payload;
-    const taskConfig = await taskConfigLoader(taskConfigId);
-    const data = await prepareNotification(filter, taskConfig, params, { ref: 'SAMPLE' });
-    return reply({ error: null, data });
-  } catch (error) {
-    console.error(error);
-    reply(error);
-  }
+  const { filter, taskConfigId, params } = request.payload;
+  const taskConfig = await taskConfigLoader(taskConfigId);
+  const data = await prepareNotification(filter, taskConfig, params, { ref: 'SAMPLE' });
+  return { error: null, data };
 }
 
 /**
@@ -54,17 +49,12 @@ async function postPreview (request, reply) {
  * @param {Number} request.payload.taskConfigId - the ID of the notification task in the task_config table
  */
 async function postSend (request, reply) {
-  try {
-    const { filter, taskConfigId, params, sender } = request.payload;
-    const taskConfig = await taskConfigLoader(taskConfigId);
-    const ref = generateReference(taskConfig.config.prefix);
-    const data = await prepareNotification(filter, taskConfig, params, { ref });
-    await sendNotification(taskConfig, sender, data, ref);
-    return reply({ error: null, data });
-  } catch (error) {
-    console.error(error);
-    reply(error);
-  }
+  const { filter, taskConfigId, params, sender } = request.payload;
+  const taskConfig = await taskConfigLoader(taskConfigId);
+  const ref = generateReference(taskConfig.config.prefix);
+  const data = await prepareNotification(filter, taskConfig, params, { ref });
+  await sendNotification(taskConfig, sender, data, ref);
+  return { error: null, data };
 }
 
 module.exports = {

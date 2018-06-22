@@ -32,16 +32,15 @@ async function send (request, reply) {
 
   try {
     await enqueue(config);
-    reply(config);
+    return config;
   } catch (err) {
     if (err.statusCode === 400) {
-      return reply(Boom.badRequest(err));
+      throw Boom.badRequest(err);
     }
     if (err.name === 'TemplateNotFoundError') {
-      return reply(Boom.badRequest(err));
+      throw Boom.badRequest(err);
     }
-    console.error(err);
-    reply(err);
+    throw err;
   }
 }
 

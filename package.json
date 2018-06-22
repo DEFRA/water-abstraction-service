@@ -43,19 +43,19 @@
   },
   "dependencies": {
     "async-waterfall": "^0.1.5",
-    "blipp": "^2.3.0",
+    "blipp": "^3.0.0",
     "boom": "^5.2.0",
     "code": "^5.2.0",
     "csv-parse": "^2.4.0",
     "deep-map": "^1.5.0",
     "dotenv": "^4.0.0",
+    "good": "^8.1.1",
+    "good-winston": "^4.0.0",
     "handlebars": "^4.0.10",
     "handlebars-helper-equal": "^1.0.0",
-    "hapi": "^16.5.0",
-    "hapi-auth-basic": "^4.2.0",
-    "hapi-auth-cookie": "^7.0.0",
-    "hapi-auth-jwt2": "^7.4.1",
-    "hapi-pg-rest-api": "https://github.com/DEFRA/hapi-pg-rest-api.git",
+    "hapi": "^17.5.1",
+    "hapi-auth-jwt2": "^8.1.0",
+    "hapi-pg-rest-api": "https://github.com/DEFRA/hapi-pg-rest-api.git#v3.1",
     "inert": "^4.2.1",
     "joi": "^13.1.2",
     "jsonwebtoken": "^7.4.3",
@@ -73,10 +73,9 @@
     "request-promise-native": "^1.0.5",
     "sentence-case": "^2.1.1",
     "sha1": "^1.1.1",
-    "url-join": "^4.0.0",
     "snakecase-keys": "^1.1.1",
-    "vision": "^4.1.1",
-    "yar": "^8.1.2"
+    "url-join": "^4.0.0",
+    "vision": "^4.1.1"
   },
   "standard": {
     "ignore": [

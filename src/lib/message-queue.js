@@ -3,13 +3,8 @@
  * @see {@link https://github.com/timgit/pg-boss/blob/master/docs/usage.md#start}
  */
 const PgBoss = require('pg-boss');
+const config = require('../../config.js');
 
-const options = {
-  connectionString: process.env.DATABASE_URL,
-  schema: 'water',
-  application_name: process.env.servicename
-};
-
-const boss = new PgBoss(options);
+const boss = new PgBoss(config.pgBoss);
 
 module.exports = boss;
