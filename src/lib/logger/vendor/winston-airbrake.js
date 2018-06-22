@@ -33,12 +33,14 @@ Airbrake.prototype.log = function (level, msg, meta, callback) {
 
   err.type = level;
   if (meta) {
-    err.stack = meta.stack || '';
-    err.url = meta.url || '';
-    err.component = meta.component || '';
-    err.action = meta.action || '';
-    err.params = meta.params || {};
-    err.session = meta.session || {};
+    const {stack = '', url = '', component = '', action = '', params = {}, session = {}} = meta;
+
+    err.stack = stack;
+    err.url = url;
+    err.component = component;
+    err.action = action;
+    err.params = params;
+    err.session = session;
   }
 
   self.airbrakeClient.notify(err, function (err, url) {
