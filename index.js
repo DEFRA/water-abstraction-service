@@ -40,12 +40,6 @@ async function validate (decoded, request) {
 
 const start = async function () {
   try {
-    // Set up PG Boss message queue
-    await messageQueue.start();
-    const { registerSubscribers } = require('./src/modules/notify')(messageQueue);
-    registerSubscribers();
-    logger.info('Message queue started');
-
     // Third-party plugins
     await server.register({
       plugin: Good,
@@ -77,6 +71,12 @@ const start = async function () {
       const uri = server.info.uri;
       console.log(`Service ${name} running at: ${uri}`);
     }
+
+    // Set up PG Boss message queue
+    await messageQueue.start();
+    const { registerSubscribers } = require('./src/modules/notify')(messageQueue);
+    registerSubscribers();
+    logger.info('Message queue started');
   } catch (err) {
     logger.error(err);
   }

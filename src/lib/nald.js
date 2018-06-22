@@ -1,5 +1,6 @@
 const fs = require('fs');
 const config = require('../../config.js');
+const { pool } = require('./connectors/db');
 const localPath = `${__dirname}/temp/`;
 const filePath = `${localPath}nald_dl.zip`;
 const finalPath = `${__dirname}/temp/NALD`;
@@ -96,10 +97,11 @@ const importCSVToDatabase = async (localPath, asyncLogger) => {
   await asyncLogger('Processing data files');
   await buildSQL();
   await asyncLogger(`Loading to DB at ${process.env.PGHOST}`);
-  // const command = `PGPASSWORD=${process.env.PGPASSWORD} psql -h ${process.env.PGHOST} -U ${process.env.PGUSER} ${process.env.PGDATABASE} < ${localPath}/sql.sql`;
+
   const command = `psql ${config.pg.connectionString} < ${localPath}/sql.sql`;
+  console.log('command:', command);
   const loaddata = await execCommand(command);
-  console.log(loaddata);
+  console.log('loaded data:', loaddata);
   return asyncLogger('Data loaded');
 };
 
@@ -206,20 +208,10 @@ function getS3 () {
     });
   });
 }
-const {
-  Pool
-} = require('pg');
-const pool = new Pool({
-  max: 200,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 200000
-});
-pool.on('connect', (client) => {
-  console.log('pool.totalCount ', pool.totalCount);
-  console.log('pool.idleCount ', pool.idleCount);
-});
-const getLicence = (request, reply) => {
-  return reply.response(licence(request.payload.licence_number));
+
+const getLicence = async (request, reply) => {
+  const data = await licence(request.payload.licence_number);
+  return data;
   // return reply(licence(request.payload.licence_number));
 };
 const licence = async (licenceNumber) => {
