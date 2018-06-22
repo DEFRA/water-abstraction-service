@@ -38,7 +38,7 @@ async function validate (decoded, request) {
   }
 }
 
-async function start () {
+const start = async function () {
   try {
     // Set up PG Boss message queue
     await messageQueue.start();
@@ -71,17 +71,22 @@ async function start () {
     // Import routes
     server.route(routes);
 
-    // Start server
-    await server.start();
-    server.log(`Server started on ${server.info.uri} port ${server.info.port}`);
+    if (!module.parent) {
+      await server.start();
+      const name = process.env.servicename;
+      const uri = server.info.uri;
+      console.log(`Service ${name} running at: ${uri}`);
+    }
   } catch (err) {
     logger.error(err);
   }
-}
+};
 
-// Start the server if not testing with Lab
-if (!module.parent) {
-  start();
-}
+process.on('unhandledRejection', (err) => {
+  console.log(err);
+  process.exit(1);
+});
+
+start();
 
 module.exports = server;
