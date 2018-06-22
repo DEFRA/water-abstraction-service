@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "async-waterfall": "^0.1.5",
+    "base64url": "^3.0.0",
     "blipp": "^3.0.0",
     "boom": "^5.2.0",
     "code": "^5.2.0",
