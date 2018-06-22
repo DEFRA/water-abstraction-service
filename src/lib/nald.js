@@ -1,4 +1,6 @@
 const fs = require('fs');
+const config = require('../../config.js');
+const { pool } = require('./connectors/db');
 const localPath = `${__dirname}/temp/`;
 const filePath = `${localPath}nald_dl.zip`;
 const finalPath = `${__dirname}/temp/NALD`;
@@ -95,9 +97,11 @@ const importCSVToDatabase = async (localPath, asyncLogger) => {
   await asyncLogger('Processing data files');
   await buildSQL();
   await asyncLogger(`Loading to DB at ${process.env.PGHOST}`);
-  const command = `PGPASSWORD=${process.env.PGPASSWORD} psql -h ${process.env.PGHOST} -U ${process.env.PGUSER} ${process.env.PGDATABASE} < ${localPath}/sql.sql`;
+
+  const command = `psql ${config.pg.connectionString} < ${localPath}/sql.sql`;
+  console.log('command:', command);
   const loaddata = await execCommand(command);
-  console.log(loaddata);
+  console.log('loaded data:', loaddata);
   return asyncLogger('Data loaded');
 };
 
@@ -151,28 +155,23 @@ const loadNaldData = async (request, reply) => {
 };
 
 const testLoadNaldData = async (request, reply) => {
-  try {
-    console.log('Starting dummy data import');
+  console.log('Starting dummy data import');
 
-    // Delete files in temp folder
-    let command = `rm -f ${localPath}NALD/* `;
-    await execCommand(command);
+  // Delete files in temp folder
+  let command = `rm -f ${localPath}NALD/* `;
+  await execCommand(command);
 
-    // Make temp folder
-    command = `mkdir -p ${localPath}NALD`;
-    await execCommand(command);
+  // Make temp folder
+  command = `mkdir -p ${localPath}NALD`;
+  await execCommand(command);
 
-    // move dummy data files
-    command = `cp ./test/dummy-csv/* ${localPath}NALD/`;
-    console.log(command);
-    await execCommand(command);
+  // move dummy data files
+  command = `cp ./test/dummy-csv/* ${localPath}NALD/`;
+  console.log(command);
+  await execCommand(command);
 
-    await importCSVToDatabase(localPath, asyncConsole);
-    return reply('Test import complete');
-  } catch (e) {
-    console.log('error ', e);
-    //    return reply(e)
-  }
+  await importCSVToDatabase(localPath, asyncConsole);
+  return 'Test import complete';
 };
 
 function getS3 () {
@@ -209,20 +208,11 @@ function getS3 () {
     });
   });
 }
-const {
-  Pool
-} = require('pg');
-const pool = new Pool({
-  max: 200,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 200000
-});
-pool.on('connect', (client) => {
-  console.log('pool.totalCount ', pool.totalCount);
-  console.log('pool.idleCount ', pool.idleCount);
-});
-const getLicence = (request, reply) => {
-  return reply(licence(request.payload.licence_number));
+
+const getLicence = async (request, reply) => {
+  const data = await licence(request.payload.licence_number);
+  return data;
+  // return reply(licence(request.payload.licence_number));
 };
 const licence = async (licenceNumber) => {
   try {

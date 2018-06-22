@@ -37,8 +37,10 @@ async function updateMessageStatus (id) {
     throw new NotifyIdError();
   }
 
-  // We are only checking status here so OK to use live notify key
-  const client = new NotifyClient(process.env.LIVE_NOTIFY_KEY);
+  const { message_ref: messageRef } = data;
+  const { notify_key: notifyKey } = await getTemplate(messageRef);
+  const apiKey = getNotifyKey(notifyKey);
+  const client = new NotifyClient(apiKey);
 
   const { body: { status } } = await client.getNotificationById(notifyId);
 
