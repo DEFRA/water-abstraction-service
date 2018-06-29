@@ -9,6 +9,7 @@ const Permit = require('../../lib/connectors/permit');
 const { orderBy } = require('lodash');
 const moment = require('moment');
 const {LicenceNotFoundError} = require('./errors.js');
+const {mapValues} = require('lodash');
 
 /**
  * Process single licence, reporting result in DB
@@ -82,12 +83,8 @@ async function exportLicence (licence_ref, regime_id, licence_type_id, data) {
     error
   } = await Permit.licences.create(requestBody);
   if (error) {
-    if (error.code === '23505') {
-      console.error('licence already imported');
-      throw error;
-    } else {
-      throw error;
-    }
+    console.error(error);
+    throw error;
   }
   var crmPacket = buildCRMPacket(requestBody, licence_ref, licenceData.licence_id);
   await addLicenceToCRM(crmPacket);
@@ -96,12 +93,21 @@ async function exportLicence (licence_ref, regime_id, licence_type_id, data) {
   };
 }
 
+/**
+ * Data from NALD import has null as "null" string
+ * prune this to empty value
+ */
+function pruneNullString (data) {
+  return mapValues(data, value => value === 'null' ? '' : value);
+}
+
 function buildCRMPacket (licence_data, licence_ref, licence_id) {
-  var crmData = {};
-  crmData.regime_entity_id = '0434dc31-a34e-7158-5775-4694af7a60cf';
-  crmData.system_id = 'permit-repo';
-  crmData.system_internal_id = licence_id;
-  crmData.system_external_id = licence_ref;
+  let crmData = {
+    regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf',
+    system_id: 'permit-repo',
+    system_internal_id: licence_id,
+    system_external_id: licence_ref
+  };
   try {
     var baseLicence = JSON.parse(licence_data.licence_data_value).data.current_version;
     let metadata;
@@ -134,15 +140,11 @@ function buildCRMPacket (licence_data, licence_ref, licence_id) {
       };
     }
 
-    for (let attr in metadata) {
-      if (metadata[attr] === 'null') {
-        metadata[attr] = '';
-      }
-    }
+    metadata = pruneNullString(metadata);
+
     crmData.metadata = JSON.stringify(metadata);
   } catch (e) {
-    console.log('METADATA ERROR!!! OH NOES!!!');
-    console.log(e);
+    console.error(e);
   }
   return crmData;
 }
