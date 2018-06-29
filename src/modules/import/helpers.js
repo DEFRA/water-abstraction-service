@@ -20,30 +20,6 @@ const execCommand = (cmd) => {
 const config = require('../../../config.js');
 
 /**
- * Runs the specified shell command
- * @param {String} shell command
- * @return {Promise} resolves if shell command exits successfully
- */
-// function execCommand (command) {
-//   console.log(command);
-//
-//
-//
-//   return promisify(childProcess.exec)(command);
-//
-//   return new Promise((resolve, reject) => {
-//     childProcess.exec(command, function (err, stdout, stderr) {
-//       if (err) {
-//         console.error(err);
-//         reject(new Error('child processes failed with error code: ' + err.code));
-//       } else {
-//         resolve(stdout);
-//       }
-//     });
-//   });
-// }
-
-/**
  * Downloads latest ZIP file from S3 bucket
  * @return {Promise} resolves when download complete
  */
@@ -135,11 +111,6 @@ async function buildSQL (request, reply) {
       tableCreate += `\n \\copy "import"."${table}" FROM '${finalPath}/${file}' HEADER DELIMITER ',' CSV;`;
     }
   };
-
-  // tableCreate += `\n
-  //   delete from water.pending_import;
-  //    insert into water.pending_import (licence_ref,status)
-  //   select "LIC_NO",0 from import."NALD_ABS_LICENCES";`;
 
   await writeFile(`${finalPath}/sql.sql`, tableCreate);
   return `${finalPath}/sql.sql`;

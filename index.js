@@ -56,8 +56,6 @@ const configureMessageQueue = async (server) => {
   notify(messageQueue).registerSubscribers();
   importer(messageQueue).registerSubscribers();
   server.log('info', 'Message queue started');
-
-  messageQueue.publish('import.schedule');
 };
 
 const start = async function () {
