@@ -74,42 +74,57 @@ const extract = async () => {
 };
 
 /**
+ * Get a list of files to import
+ * @return {Promise} resolves with array of files
+ */
+async function getImportFiles () {
+  const files = await readDir(finalPath);
+  const excludeList = ['NALD_RET_LINES', 'NALD_RET_LINES_AUDIT', 'NALD_RET_FORM_LOGS', 'NALD_RET_FORM_LOGS_AUDIT'];
+  return files.filter((file) => {
+    const table = file.split('.')[0];
+    return !(table.length === 0 || excludeList.includes(table));
+  });
+}
+
+/**
+ * Gets import SQL for single file in import
+ * @param {String} file - the CSV file to import
+ * @return {String} the SQL statements to import the CSV file
+ */
+async function getSqlForFile (file) {
+  let table = file.split('.')[0];
+
+  // console.log(`Process ${table}`)
+  let indexableFields = [];
+  let line = await readFirstLine(`${finalPath}/${table}.txt`);
+  let cols = line.split(',');
+  let tableCreate = `\n CREATE TABLE if not exists "import"."${table}" (`;
+  indexableFields = [cols[0]];
+  if (cols.indexOf('FGAC_REGION_CODE') >= 0) {
+    indexableFields[1] = 'FGAC_REGION_CODE';
+  }
+  for (let col = 0; col < cols.length; col++) {
+    tableCreate += `"${cols[col]}" varchar`;
+    if (cols.length === (col + 1)) {
+      tableCreate += `);`;
+    } else {
+      tableCreate += `, `;
+    }
+  }
+  tableCreate += `\ndrop INDEX  if exists "${table}_index";`;
+  tableCreate += `\nCREATE INDEX "${table}_index" ON "import"."${table}" USING btree(${'"' + indexableFields.join('","') + '"'});`;
+  tableCreate += `\n \\copy "import"."${table}" FROM '${finalPath}/${file}' HEADER DELIMITER ',' CSV;`;
+  return tableCreate;
+}
+
+/**
  * Builds SQL file to create tables for NALD import
  */
 async function buildSQL (request, reply) {
   let tableCreate = 'drop schema if exists "import" cascade;\nCREATE schema if not exists "import"; \n ';
-  const files = await readDir(finalPath);
-  const excludeList = ['NALD_RET_LINES', 'NALD_RET_LINES_AUDIT', 'NALD_RET_FORM_LOGS', 'NALD_RET_FORM_LOGS_AUDIT'];
-  for (let f in files) {
-    let file = files[f];
-    let table = file.split('.')[0];
-    if (table.length === 0 || excludeList.indexOf(table) > -1) {
-      // console.log(`SKIP ${table}`)
-    } else {
-      // console.log(`Process ${table}`)
-      let indexableFields = [];
-      let line = await readFirstLine(`${finalPath}/${table}.txt`);
-      let cols = line.split(',');
-      tableCreate += `\n CREATE TABLE if not exists "import"."${table}" (`;
-      indexableFields = [cols[0]];
-      if (cols.indexOf('FGAC_REGION_CODE') >= 0) {
-        indexableFields[1] = 'FGAC_REGION_CODE';
-      }
-      for (let col = 0; col < cols.length; col++) {
-        tableCreate += `"${cols[col]}" varchar`;
-        if (cols.length === (col + 1)) {
-          tableCreate += `);`;
-        } else {
-          tableCreate += `, `;
-        }
-      }
-      console.log('-------');
-      console.log(cols);
-      console.log(indexableFields);
-      tableCreate += `\ndrop INDEX  if exists "${table}_index";`;
-      tableCreate += `\nCREATE INDEX "${table}_index" ON "import"."${table}" USING btree(${'"' + indexableFields.join('","') + '"'});`;
-      tableCreate += `\n \\copy "import"."${table}" FROM '${finalPath}/${file}' HEADER DELIMITER ',' CSV;`;
-    }
+  const files = await getImportFiles();
+  for (let file of files) {
+    tableCreate += await getSqlForFile(file);
   };
 
   await writeFile(`${finalPath}/sql.sql`, tableCreate);
