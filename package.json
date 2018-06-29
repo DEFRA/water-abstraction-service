@@ -51,6 +51,7 @@
     "csv-parse": "^2.4.0",
     "deep-map": "^1.5.0",
     "dotenv": "^4.0.0",
+    "firstline": "^2.0.2",
     "good": "^8.1.1",
     "good-winston": "^4.0.0",
     "handlebars": "^4.0.10",

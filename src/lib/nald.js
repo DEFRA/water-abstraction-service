@@ -8,7 +8,6 @@ const Slack = require('./slack');
 var tableCreate = '';
 async function buildSQL (request, reply) {
   tableCreate += 'drop schema if exists "import" cascade;\nCREATE schema if not exists "import"; \n ';
-  console.log(finalPath);
   const files = await fs.readdirSync(finalPath);
   const excludeList = ['NALD_RET_LINES', 'NALD_RET_LINES_AUDIT', 'NALD_RET_FORM_LOGS', 'NALD_RET_FORM_LOGS_AUDIT'];
   for (var f in files) {

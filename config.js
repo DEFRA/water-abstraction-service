@@ -27,7 +27,9 @@ module.exports = {
   pgBoss: {
     connectionString: process.env.DATABASE_URL,
     schema: 'water',
-    application_name: process.env.servicename
+    application_name: process.env.servicename,
+    newJobCheckInterval: 100,
+    teamSize: 5
   },
 
   server: {

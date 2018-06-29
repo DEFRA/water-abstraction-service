@@ -1,94 +1,27 @@
+/**
+ * Import a single licence
+ */
+/* eslint camelcase: "warn" */
+
 const Nald = require('../../lib/nald');
 const Helpers = require('../../lib/helpers');
 const Permit = require('../../lib/connectors/permit');
-const DB = require('../../lib/connectors/db');
 const { orderBy } = require('lodash');
 const moment = require('moment');
-const Promise = require('bluebird');
-const { filter } = require('lodash');
-const { getRegisteredLicences } = require('../../lib/connectors/crm/documents');
-
-const concurrency = parseInt(process.env.import_concurrency, 10) || 1;
-console.log(`Import concurrency is ${concurrency}`);
+const {LicenceNotFoundError} = require('./errors.js');
 
 /**
  * Process single licence, reporting result in DB
  * @param {String} licence_ref - licence number
  * @param {Object} licence_data - from NALD process
  */
-async function processSingleLicence (licenceNumber) {
-  const params = [licenceNumber];
-  try {
-    const licenceData = await Nald.licence(licenceNumber);
-    licenceData.vmlVersion = 2;
-    await exportLicence(licenceNumber, 1, 8, licenceData);
-    // Log success
-    const query = `update water.pending_import set status=1, date_updated=NOW() where licence_ref=$1;`;
-    return DB.query(query, params);
-  } catch (e) {
-    // Log error message
-    const query = `update water.pending_import set status=-1, log='${e.message}', date_updated=NOW() where licence_ref=$1;`;
-    DB.query(query, params);
-    // Rethrow error
-    throw e;
+async function importLicence (licenceNumber) {
+  const licenceData = await Nald.licence(licenceNumber);
+  if (!licenceData) {
+    throw new LicenceNotFoundError(`Licence ${licenceNumber} not found in import table`);
   }
-}
-
-/**
- * Process an array of licence numbers
- * @param {Array} licenceNumbers
- * @return {Promise} resolves with array of true/string error message for each licence
- */
-function processMultipleLicences (licenceNumbers) {
-  console.log(`Importing ${licenceNumbers.join(', ')}`);
-  return Promise.map(licenceNumbers, async (licenceNumber) => {
-    try {
-      await processSingleLicence(licenceNumber);
-      console.log(`Imported ${licenceNumber}`);
-      return true;
-    } catch (e) {
-      return `Error ${licenceNumber}: ` + e.message;
-    }
-  }, {
-    concurrency
-  });
-}
-
-async function run (data) {
-  let licenceNumbers;
-
-  // Import all licences in pending_import table
-  if (data.licence_ref === '-') {
-    const query = `select * from water.pending_import where status=0 limit 250;`;
-    const { data } = await DB.query(query);
-    licenceNumbers = data.map(row => row.licence_ref);
-  } else if (data.licence_ref === '@') {
-    // Import all licences that are registered
-    const licences = await getRegisteredLicences();
-    licenceNumbers = licences.map(row => row.system_external_id);
-  } else {
-    licenceNumbers = data.licence_ref.split(',');
-  }
-
-  const result = await processMultipleLicences(licenceNumbers);
-
-  const errors = filter(result, item => item !== true);
-
-  if (errors.length) {
-    return;
-  }
-
-  // Return message from task
-  return errors.length ? { error: errors.join(',') } : { error: null };
-}
-
-function sortableStringToDate (str) {
-  var d = moment(str, 'YYYYMMDD');
-  if (d.isValid()) {
-    return d.format('YYYY/MM/DD');
-  } else {
-    return null;
-  }
+  licenceData.vmlVersion = 2;
+  await exportLicence(licenceNumber, 1, 8, licenceData);
 }
 
 /**
@@ -144,32 +77,26 @@ async function exportLicence (licence_ref, regime_id, licence_type_id, data) {
     delete requestBody.licence_start_dt;
   }
 
-  // console.log('>> exportLicence', JSON.stringify(requestBody, null, 2));
-
-  // delete requestBody.regime_id;
   var {
-    data,
+    data: licenceData,
     error
   } = await Permit.licences.create(requestBody);
   if (error) {
-    if (error.code == '23505') {
-      console.log('licence already imported');
+    if (error.code === '23505') {
+      console.error('licence already imported');
       throw error;
     } else {
       throw error;
     }
   }
-  //    console.log(`Added ID ${data.licence_id} to Permit repo`);
-  var crmPacket = buildCRMPacket(requestBody, licence_ref, data.licence_id);
-  var crm = await addLicenceToCRM(crmPacket);
-  //    console.log('Added '+crmPacket.system_external_id+'to CRM');
+  var crmPacket = buildCRMPacket(requestBody, licence_ref, licenceData.licence_id);
+  await addLicenceToCRM(crmPacket);
   return {
     error: null
   };
 }
 
 function buildCRMPacket (licence_data, licence_ref, licence_id) {
-  console.log('buildCRMPacket');
   var crmData = {};
   crmData.regime_entity_id = '0434dc31-a34e-7158-5775-4694af7a60cf';
   crmData.system_id = 'permit-repo';
@@ -207,8 +134,8 @@ function buildCRMPacket (licence_data, licence_ref, licence_id) {
       };
     }
 
-    for (attr in metadata) {
-      if (metadata[attr] == 'null') {
+    for (let attr in metadata) {
+      if (metadata[attr] === 'null') {
         metadata[attr] = '';
       }
     }
@@ -217,12 +144,11 @@ function buildCRMPacket (licence_data, licence_ref, licence_id) {
     console.log('METADATA ERROR!!! OH NOES!!!');
     console.log(e);
   }
-  console.log('buildCRMPacket', crmData);
   return crmData;
 }
 async function addLicenceToCRM (data) {
   var url = process.env.CRM_URI + '/documentHeader';
-  res = await Helpers.makeURIRequestWithBody(
+  let res = await Helpers.makeURIRequestWithBody(
     url,
     'post',
     data, {
@@ -231,6 +157,7 @@ async function addLicenceToCRM (data) {
   );
   return res;
 }
+
 module.exports = {
-  run
+  importLicence
 };

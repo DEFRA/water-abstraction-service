@@ -13,6 +13,7 @@ const config = require('./config');
 const messageQueue = require('./src/lib/message-queue');
 const routes = require('./src/routes/water.js');
 const notify = require('./src/modules/notify');
+const importer = require('./src/modules/import');
 
 // Initialise logger
 const logger = require('./src/lib/logger');
@@ -52,8 +53,11 @@ const configureServerAuthStrategy = (server) => {
 const configureMessageQueue = async (server) => {
   await messageQueue.start();
   const { registerSubscribers } = notify(messageQueue);
-  registerSubscribers();
+  notify(messageQueue).registerSubscribers();
+  importer(messageQueue).registerSubscribers();
   server.log('info', 'Message queue started');
+
+  messageQueue.publish('import.schedule');
 };
 
 const start = async function () {

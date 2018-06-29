@@ -1,13 +1,40 @@
 const Slack = require('../../lib/slack');
-const os = require('os');
 
 const { prepare, download, extract, buildSQL, importCSVToDatabase } = require('./helpers');
+const { scheduleImports } = require('./import-scheduler.js');
+const { importLicence } = require('./import.js');
+const { updateImportLog } = require('./import-log.js');
+
+const registerImportLicence = (messageQueue) => {
+  messageQueue.subscribe('import.licence', async (job, done) => {
+    const {licenceNumber, index, licenceCount} = job.data;
+    try {
+      console.log(`Importing ${licenceNumber} (${index} of ${licenceCount})`);
+      await importLicence(licenceNumber);
+      await updateImportLog(licenceNumber, 'OK');
+    } catch (err) {
+      console.error(err);
+      await updateImportLog(licenceNumber, err.toString());
+    }
+    done();
+  });
+};
+
+const registerImportScheduler = (messageQueue) => {
+  messageQueue.subscribe('import.schedule', async (job, done) => {
+    try {
+      await scheduleImports(messageQueue);
+      done();
+    } catch (err) {
+      console.error(err);
+    }
+  });
+};
 
 const createImportNald = messageQueue => {
   return async () => {
     try {
-      const hostname = os.hostname();
-      await Slack.post(`Starting NALD data import on ${hostname} - ${process.env.environment} `);
+      await Slack.post(`Starting NALD data import`);
       await prepare();
       messageQueue.publish('import.download');
     } catch (err) {
@@ -21,9 +48,12 @@ const registerDownloadSubscriber = messageQueue => {
     try {
       await Slack.post('Downloading from S3');
       await download();
+      await Slack.post('Downloaded');
       messageQueue.publish('import.extract');
+      done();
     } catch (err) {
       console.error(err);
+      await Slack.post('Error downloading from S3');
     }
   });
 };
@@ -33,9 +63,11 @@ const registerExtractSubscriber = messageQueue => {
     try {
       await Slack.post('Extracting ZIP');
       await extract();
+      await Slack.post('ZIP extracted');
       messageQueue.publish('import.buildsql');
     } catch (err) {
       console.error(err);
+      await Slack.post('Error extracting ZIP');
     }
   });
 };
@@ -45,9 +77,11 @@ const registerBuildSqlSubscriber = messageQueue => {
     try {
       await Slack.post('Building SQL');
       await buildSQL();
+      await Slack.post('SQL built');
       messageQueue.publish('import.csv');
     } catch (err) {
       console.error(err);
+      await Slack.post('Error building SQL');
     }
   });
 };
@@ -57,8 +91,11 @@ const registerImportCSVSubscriber = messageQueue => {
     try {
       await Slack.post('Import CSV files to DB');
       await importCSVToDatabase();
+      await Slack.post('Imported CSV files to DB');
+      messageQueue.publish('import.schedule');
     } catch (err) {
       console.error(err);
+      await Slack.post('Error importing CSV files to DB');
     }
   });
 };
@@ -69,6 +106,8 @@ const createRegisterSubscribers = messageQueue => {
     registerExtractSubscriber(messageQueue);
     registerBuildSqlSubscriber(messageQueue);
     registerImportCSVSubscriber(messageQueue);
+    registerImportScheduler(messageQueue);
+    registerImportLicence(messageQueue);
   };
 };
 
