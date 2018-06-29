@@ -32,6 +32,14 @@ module.exports = {
     teamSize: 5
   },
 
+  s3: {
+    accessKeyId: process.env.s3_key,
+    secretAccessKey: process.env.s3_secret,
+    region: 'eu-west-1',
+    bucket: process.env.s3_bucket,
+    proxy: process.env.proxy
+  },
+
   server: {
     port: process.env.PORT,
     router: {

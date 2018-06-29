@@ -1,11 +1,13 @@
-// const os = require('os');
-const knox = require('knox');
+const readFirstLine = require('firstline');
 const childProcess = require('child_process');
 const fs = require('fs');
 const { promisify } = require('util');
+const config = require('../../../config.js');
+
 const readDir = promisify(fs.readdir);
 const writeFile = promisify(fs.writeFile);
-const readFirstLine = require('firstline');
+
+const { download: s3Download } = require('./s3-download.js');
 
 // Download / unzip paths
 const localPath = './temp/';
@@ -17,45 +19,13 @@ const execCommand = (cmd) => {
   return promisify(childProcess.exec)(cmd);
 };
 
-const config = require('../../../config.js');
-
 /**
  * Downloads latest ZIP file from S3 bucket
  * @return {Promise} resolves when download complete
  */
-function download () {
-  return new Promise((resolve, reject) => {
-    var knoxConfig = {
-      key: process.env.s3_key,
-      secret: process.env.s3_secret,
-      region: 'eu-west-1',
-      bucket: process.env.s3_bucket
-    };
-    if (process.env.proxy) {
-      console.log('proxy: ' + process.env.proxy);
-      var ProxyAgent = require('proxy-agent');
-      knoxConfig.agent = new ProxyAgent(process.env.proxy);
-    } else {
-      console.log('no proxy');
-    }
-    // knoxConfig.agent=require("https").globalAgent
-    var client = knox.createClient(knoxConfig);
-    var file = require('fs').createWriteStream(filePath);
-    const s3file = 'nald_dump/nald_enc.zip';
-    client.getFile(s3file, function (err, stream) {
-      if (err) {
-        throw err;
-      }
-      stream.on('data', function (chunk) {
-        file.write(chunk);
-      });
-      stream.on('end', function (chunk) {
-        file.end();
-        resolve(filePath);
-      });
-    });
-  });
-}
+const download = async () => {
+  return s3Download('nald_dump/nald_enc.zip', filePath);
+};
 
 /**
  * Prepares for import by removing files from tempory folder and creating directory
