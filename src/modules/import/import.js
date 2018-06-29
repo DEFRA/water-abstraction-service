@@ -4,8 +4,8 @@
 /* eslint camelcase: "warn" */
 
 const Nald = require('../../lib/nald');
-const Helpers = require('../../lib/helpers');
 const Permit = require('../../lib/connectors/permit');
+const Documents = require('../../lib/connectors/crm/documents');
 const { orderBy } = require('lodash');
 const moment = require('moment');
 const {LicenceNotFoundError} = require('./errors.js');
@@ -56,16 +56,35 @@ function getLatestVersion (versions) {
   return sortedVersions[sortedVersions.length - 1];
 }
 
-async function exportLicence (licence_ref, regime_id, licence_type_id, data) {
+/**
+ * Persists licence to permit repo and CRM
+ * @param {Object} requestBody - the request body to send to permit repo
+ * @return {Promise}
+ */
+const persistLicence = async (requestBody) => {
+  const { data, error } = await Permit.licences.create(requestBody);
+  if (error) {
+    console.error(error);
+    throw error;
+  }
+  const crmPacket = buildCRMPacket(requestBody, requestBody.licence_ref, data.licence_id);
+  const { error: crmError } = await Documents.create(crmPacket);
+  if (crmError) {
+    console.error(crmError);
+    throw crmError;
+  };
+};
+
+async function exportLicence (licenceRef, regimeId, licenceTypeId, data) {
   const latestVersion = getLatestVersion(data.data.versions);
 
   var requestBody = {
-    licence_ref: licence_ref,
+    licence_ref: licenceRef,
     licence_start_dt: naldDateToSql(latestVersion.EFF_ST_DATE),
     licence_end_dt: naldDateToSql(latestVersion.EFF_END_DATE),
     licence_status_id: '1',
-    licence_type_id: licence_type_id,
-    licence_regime_id: regime_id,
+    licence_type_id: licenceTypeId,
+    licence_regime_id: regimeId,
     licence_data_value: JSON.stringify(data)
   };
 
@@ -78,19 +97,7 @@ async function exportLicence (licence_ref, regime_id, licence_type_id, data) {
     delete requestBody.licence_start_dt;
   }
 
-  var {
-    data: licenceData,
-    error
-  } = await Permit.licences.create(requestBody);
-  if (error) {
-    console.error(error);
-    throw error;
-  }
-  var crmPacket = buildCRMPacket(requestBody, licence_ref, licenceData.licence_id);
-  await addLicenceToCRM(crmPacket);
-  return {
-    error: null
-  };
+  return persistLicence(requestBody);
 }
 
 /**
@@ -147,17 +154,6 @@ function buildCRMPacket (licence_data, licence_ref, licence_id) {
     console.error(e);
   }
   return crmData;
-}
-async function addLicenceToCRM (data) {
-  var url = process.env.CRM_URI + '/documentHeader';
-  let res = await Helpers.makeURIRequestWithBody(
-    url,
-    'post',
-    data, {
-      Authorization: process.env.JWT_TOKEN
-    }
-  );
-  return res;
 }
 
 module.exports = {
