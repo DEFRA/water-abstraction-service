@@ -23,10 +23,13 @@ const registerImportLicence = (messageQueue) => {
 const registerImportScheduler = (messageQueue) => {
   messageQueue.subscribe('import.schedule', async (job, done) => {
     try {
+      console.log(`Scheduling imports`);
       await scheduleImports(messageQueue);
+      console.log(`Imports scheduled`);
       done();
     } catch (err) {
       console.error(err);
+      console.log(`Error scheduling imports`);
     }
   });
 };
