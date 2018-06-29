@@ -17,7 +17,27 @@ function getMeasures (data) {
       return acc;
     }
 
-    const { latestReading: { dateTime, value }, parameter, period, unitName, valueType } = measure;
+    if (!measure.latestReading) {
+      return acc;
+    }
+
+    let { latestReading: { dateTime, value }, parameter, period, unitName, valueType } = measure;
+
+    if (unitName.toLowerCase() === '---') {
+      return acc;
+    }
+
+    // Convert ml/d flows to m3/s
+    if (unitName.toLowerCase() === 'ml/d') {
+      unitName = 'm3/s';
+      value = value * 1000 / 86400;
+    }
+
+    // Convert l/s to m3/s
+    if (unitName.toLowerCase() === 'l/s') {
+      unitName = 'm3/s';
+      value = value / 1000;
+    }
 
     return [...acc, {
       latestReading: { dateTime, value },
@@ -45,7 +65,7 @@ async function getStation (request, reply) {
     // Convert easting/northing to NGR
     const ngr = ngrConverter(easting, northing);
 
-    reply({
+    return {
       lat,
       long,
       ngr,
@@ -55,10 +75,10 @@ async function getStation (request, reply) {
       stageScale,
       measures: getMeasures(data),
       active: /^https?:\/\/environment.data.gov.uk\/flood-monitoring\/def\/core\/statusActive$/.test(status)
-    });
+    };
   } catch (error) {
     console.error(error);
-    reply({ error: 'River levels API error' }).code(error.statusCode);
+    reply.response({ error: 'River levels API error' }).code(error.statusCode);
   }
 }
 
