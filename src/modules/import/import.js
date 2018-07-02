@@ -108,21 +108,14 @@ function pruneNullString (data) {
 }
 
 /**
- * Build CRM metadata from current licence version data
+ * Builds CRM contact data from party/address
  * @param {Object} currentVersion
- * @return {Object} CRM metadata object
+ * @return {Object} contact metadata
  */
-function buildCRMMetadata (currentVersion) {
-  if (!currentVersion) {
-    return {
-      IsCurrent: false
-    };
-  }
+function buildCRMContactMetadata (currentVersion) {
   const party = currentVersion.party;
   const address = currentVersion.address;
-  const expires = currentVersion.expiry_date;
-  const modified = currentVersion.version_effective_date;
-  const data = {
+  return {
     Name: party.NAME,
     Salutation: party.SALUTATION,
     Initials: party.INITIALS,
@@ -134,7 +127,26 @@ function buildCRMMetadata (currentVersion) {
     Town: address.TOWN,
     County: address.COUNTY,
     Postcode: address.POSTCODE,
-    Country: address.COUNTRY,
+    Country: address.COUNTRY
+  };
+}
+
+/**
+ * Build CRM metadata from current licence version data
+ * @param {Object} currentVersion
+ * @return {Object} CRM metadata object
+ */
+function buildCRMMetadata (currentVersion) {
+  if (!currentVersion) {
+    return {
+      IsCurrent: false
+    };
+  }
+  const expires = currentVersion.expiry_date;
+  const modified = currentVersion.version_effective_date;
+  const contact = buildCRMContactMetadata(currentVersion);
+  const data = {
+    ...contact,
     Expires: expires,
     Modified: modified,
     IsCurrent: true
