@@ -5,6 +5,14 @@ class LicenceNotFoundError extends Error {
   }
 }
 
+class MetaDataError extends Error {
+  constructor (message) {
+    super(message);
+    this.name = 'MetaDataError';
+  }
+}
+
 module.exports = {
-  LicenceNotFoundError
+  LicenceNotFoundError,
+  MetaDataError
 };

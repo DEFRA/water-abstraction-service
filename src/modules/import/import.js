@@ -8,8 +8,7 @@ const {mapValues, orderBy} = require('lodash');
 const { getLicenceJson } = require('./nald.js');
 const Permit = require('../../lib/connectors/permit');
 const Documents = require('../../lib/connectors/crm/documents');
-
-const {LicenceNotFoundError} = require('./errors.js');
+const { LicenceNotFoundError, MetaDataError } = require('./errors.js');
 
 /**
  * Process single licence, reporting result in DB
@@ -108,6 +107,41 @@ function pruneNullString (data) {
   return mapValues(data, value => value === 'null' ? '' : value);
 }
 
+/**
+ * Build CRM metadata from current licence version data
+ * @param {Object} currentVersion
+ * @return {Object} CRM metadata object
+ */
+function buildCRMMetadata (currentVersion) {
+  if (!currentVersion) {
+    return {
+      IsCurrent: false
+    };
+  }
+  const party = currentVersion.party;
+  const address = currentVersion.address;
+  const expires = currentVersion.expiry_date;
+  const modified = currentVersion.version_effective_date;
+  const data = {
+    Name: party.NAME,
+    Salutation: party.SALUTATION,
+    Initials: party.INITIALS,
+    Forename: party.FORENAME,
+    AddressLine1: address.ADDR_LINE1,
+    AddressLine2: address.ADDR_LINE2,
+    AddressLine3: address.ADDR_LINE3,
+    AddressLine4: address.ADDR_LINE4,
+    Town: address.TOWN,
+    County: address.COUNTY,
+    Postcode: address.POSTCODE,
+    Country: address.COUNTRY,
+    Expires: expires,
+    Modified: modified,
+    IsCurrent: true
+  };
+  return pruneNullString(data);
+}
+
 function buildCRMPacket (licence_data, licence_ref, licence_id) {
   let crmData = {
     regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf',
@@ -116,42 +150,10 @@ function buildCRMPacket (licence_data, licence_ref, licence_id) {
     system_external_id: licence_ref
   };
   try {
-    var baseLicence = JSON.parse(licence_data.licence_data_value).data.current_version;
-    let metadata;
-    // Licence has a current version
-    if (baseLicence) {
-      const party = baseLicence.party;
-      const address = baseLicence.address;
-      const expires = baseLicence.expiry_date;
-      const modified = baseLicence.version_effective_date;
-      metadata = {
-        Name: party.NAME,
-        Salutation: party.SALUTATION,
-        Initials: party.INITIALS,
-        Forename: party.FORENAME,
-        AddressLine1: address.ADDR_LINE1,
-        AddressLine2: address.ADDR_LINE2,
-        AddressLine3: address.ADDR_LINE3,
-        AddressLine4: address.ADDR_LINE4,
-        Town: address.TOWN,
-        County: address.COUNTY,
-        Postcode: address.POSTCODE,
-        Country: address.COUNTRY,
-        Expires: expires,
-        Modified: modified,
-        IsCurrent: true
-      };
-    } else {
-      metadata = {
-        IsCurrent: false
-      };
-    }
-
-    metadata = pruneNullString(metadata);
-
-    crmData.metadata = JSON.stringify(metadata);
+    const currentVersion = JSON.parse(licence_data.licence_data_value).data.current_version;
+    crmData.metadata = JSON.stringify(buildCRMMetadata(currentVersion));
   } catch (e) {
-    console.error(e);
+    console.error(new MetaDataError(e));
   }
   return crmData;
 }
