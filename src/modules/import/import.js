@@ -9,6 +9,7 @@ const { getLicenceJson } = require('./nald.js');
 const Permit = require('../../lib/connectors/permit');
 const Documents = require('../../lib/connectors/crm/documents');
 const { LicenceNotFoundError, MetaDataError } = require('./errors.js');
+const { updateImportLog } = require('./import-log.js');
 
 /**
  * Process single licence, reporting result in DB
@@ -21,7 +22,13 @@ async function importLicence (licenceNumber) {
     throw new LicenceNotFoundError(`Licence ${licenceNumber} not found in import table`);
   }
   licenceData.vmlVersion = 2;
-  await exportLicence(licenceNumber, 1, 8, licenceData);
+  try {
+    await exportLicence(licenceNumber, 1, 8, licenceData);
+    await updateImportLog(licenceNumber, 'OK');
+  } catch (err) {
+    console.error(err);
+    await updateImportLog(licenceNumber, err.toString());
+  }
 }
 
 /**

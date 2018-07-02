@@ -2,8 +2,6 @@
 /*
 API page, pending real back end - uses fs to read and write to lkocal json files...
 */
-const version = '1.0';
-// const Nald = require('../lib/nald');
 const sessionRoutes = require('../controllers/sessions');
 const schedulerRoutes = require('../controllers/scheduler');
 const lookupRoutes = require('../controllers/lookup');

@@ -3,7 +3,30 @@ const Slack = require('../../lib/slack');
 const { prepare, download, extract, buildSQL, importCSVToDatabase } = require('./helpers');
 const { scheduleImports } = require('./import-scheduler.js');
 const { importLicence } = require('./import.js');
-const { updateImportLog } = require('./import-log.js');
+
+/**
+ * Register event handler with message queue
+ * @param {Object} messageQueue - the PG boss instance
+ * @param {String} eventName - the PG boss event name
+ * @param {Function} handler - async function to call
+ * @param {String} [nextEvent] - the PG boss event name to publish when complete
+ */
+const registerSubscriberWithSlackReport = (messageQueue, eventName, handler, nextEvent) => {
+  messageQueue.subscribe(eventName, async (job, done) => {
+    try {
+      Slack.post('Starting: ' + eventName);
+      await handler();
+      Slack.post('Success: ' + eventName);
+      if (nextEvent) {
+        messageQueue.publish(nextEvent);
+      }
+    } catch (err) {
+      console.error(err);
+      Slack.post('Error: ' + eventName);
+    }
+    done();
+  });
+};
 
 const registerImportLicence = (messageQueue) => {
   messageQueue.subscribe('import.licence', async (job, done) => {
@@ -11,10 +34,8 @@ const registerImportLicence = (messageQueue) => {
     try {
       console.log(`Importing ${licenceNumber} (${index} of ${licenceCount})`);
       await importLicence(licenceNumber);
-      await updateImportLog(licenceNumber, 'OK');
     } catch (err) {
       console.error(err);
-      await updateImportLog(licenceNumber, err.toString());
     }
     done();
   });
@@ -46,69 +67,13 @@ const createImportNald = messageQueue => {
   };
 };
 
-const registerDownloadSubscriber = messageQueue => {
-  messageQueue.subscribe('import.download', async (job, done) => {
-    try {
-      await Slack.post('Downloading from S3');
-      await download();
-      await Slack.post('Downloaded');
-      messageQueue.publish('import.extract');
-      done();
-    } catch (err) {
-      console.error(err);
-      await Slack.post('Error downloading from S3');
-    }
-  });
-};
-
-const registerExtractSubscriber = messageQueue => {
-  messageQueue.subscribe('import.extract', async (job, done) => {
-    try {
-      await Slack.post('Extracting ZIP');
-      await extract();
-      await Slack.post('ZIP extracted');
-      messageQueue.publish('import.buildsql');
-    } catch (err) {
-      console.error(err);
-      await Slack.post('Error extracting ZIP');
-    }
-  });
-};
-
-const registerBuildSqlSubscriber = messageQueue => {
-  messageQueue.subscribe('import.buildsql', async (job, done) => {
-    try {
-      await Slack.post('Building SQL');
-      await buildSQL();
-      await Slack.post('SQL built');
-      messageQueue.publish('import.csv');
-    } catch (err) {
-      console.error(err);
-      await Slack.post('Error building SQL');
-    }
-  });
-};
-
-const registerImportCSVSubscriber = messageQueue => {
-  messageQueue.subscribe('import.csv', async (job, done) => {
-    try {
-      await Slack.post('Import CSV files to DB');
-      await importCSVToDatabase();
-      await Slack.post('Imported CSV files to DB');
-      messageQueue.publish('import.schedule');
-    } catch (err) {
-      console.error(err);
-      await Slack.post('Error importing CSV files to DB');
-    }
-  });
-};
-
 const createRegisterSubscribers = messageQueue => {
   return () => {
-    registerDownloadSubscriber(messageQueue);
-    registerExtractSubscriber(messageQueue);
-    registerBuildSqlSubscriber(messageQueue);
-    registerImportCSVSubscriber(messageQueue);
+    registerSubscriberWithSlackReport(messageQueue, 'import.download', download, 'import.extract');
+    registerSubscriberWithSlackReport(messageQueue, 'import.extract', extract, 'import.buildsql');
+    registerSubscriberWithSlackReport(messageQueue, 'import.buildsql', buildSQL, 'import.csv');
+    registerSubscriberWithSlackReport(messageQueue, 'import.csv', importCSVToDatabase, 'import.schedule');
+
     registerImportScheduler(messageQueue);
     registerImportLicence(messageQueue);
   };

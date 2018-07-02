@@ -15,19 +15,19 @@ const filePath = `${localPath}nald_dl.zip`;
 const finalPath = `${localPath}/NALD`;
 
 /**
- * Downloads latest ZIP file from S3 bucket
- * @return {Promise} resolves when download complete
- */
-const download = async () => {
-  return s3Download('nald_dump/nald_enc.zip', filePath);
-};
-
-/**
  * Prepares for import by removing files from tempory folder and creating directory
  */
 const prepare = async () => {
   await execCommand(`rm -rf ${localPath}`);
   await execCommand(`mkdir -p ${localPath}`);
+};
+
+/**
+ * Downloads latest ZIP file from S3 bucket
+ * @return {Promise} resolves when download complete
+ */
+const download = async () => {
+  return s3Download('nald_dump/nald_enc.zip', filePath);
 };
 
 /**
