@@ -59,21 +59,31 @@ const getCurrentVersionJson = async (licenceRow) => {
   return null;
 };
 
+/**
+ * Gets all licence versions (including current)
+ * @param {Object} licenceRow
+ * @return {Promise} resolves with versions array
+ */
+const getVersionsJson = async (licenceRow) => {
+  let versions = await getVersions(licenceRow.ID, licenceRow.FGAC_REGION_CODE);
+
+  for (let version of versions) {
+    version.parties = await getParties(version.ACON_APAR_ID, licenceRow.FGAC_REGION_CODE);
+    for (let party of version.parties) {
+      party.contacts = await getPartyContacts(party.ID, licenceRow.FGAC_REGION_CODE);
+    }
+  }
+  return versions;
+};
+
 const getLicenceJson = async (licenceNumber) => {
   try {
     var data = await getMain(licenceNumber);
     for (var licenceRow in data) {
       var thisLicenceRow = data[licenceRow];
       thisLicenceRow.data = {};
-      thisLicenceRow.data.versions = await getVersions(thisLicenceRow.ID, thisLicenceRow.FGAC_REGION_CODE);
 
-      for (var v in thisLicenceRow.data.versions) {
-        thisLicenceRow.data.versions[v].parties = await getParties(thisLicenceRow.data.versions[v].ACON_APAR_ID, thisLicenceRow.FGAC_REGION_CODE);
-        for (var p in thisLicenceRow.data.versions[v].parties) {
-          thisLicenceRow.data.versions[v].parties[p].contacts = await getPartyContacts(thisLicenceRow.data.versions[v].parties[p].ID, thisLicenceRow.FGAC_REGION_CODE);
-        }
-      }
-
+      thisLicenceRow.data.versions = await getVersionsJson(thisLicenceRow);
       thisLicenceRow.data.current_version = await getCurrentVersionJson(thisLicenceRow);
 
       thisLicenceRow.data.cams = await getCams(thisLicenceRow.CAMS_CODE, thisLicenceRow.FGAC_REGION_CODE);
