@@ -17,6 +17,35 @@ const {
 } = require('./nald-queries.js');
 
 /**
+ * Gets the purposes together with their points, agreements and conditions
+ * for the specified current version
+ * @param {Object} licenceRow
+ * @param {Object} [currentVersion] - optional current version
+ * @return {Promise}
+ */
+const getPurposesJson = async (licenceRow, currentVersion = null) => {
+  const regionCode = licenceRow.FGAC_REGION_CODE;
+  let purposes;
+  if (currentVersion) {
+    purposes = await getPurposes(licenceRow.ID, regionCode, currentVersion.ISSUE_NO, currentVersion.INCR_NO);
+  } else {
+    purposes = await getPurposes(licenceRow.ID, regionCode);
+  }
+
+  for (let purpose of purposes) {
+    purpose.purpose = await getPurpose({
+      primary: purpose.APUR_APPR_CODE,
+      secondary: purpose.APUR_APSE_CODE,
+      tertiary: purpose.APUR_APUS_CODE
+    });
+    purpose.purposePoints = await getPurposePoints(purpose.ID, regionCode);
+    purpose.licenceAgreements = await getPurposePointLicenceAgreements(purpose.ID, regionCode);
+    purpose.licenceConditions = await getPurposePointLicenceConditions(purpose.ID, regionCode);
+  }
+  return purposes;
+};
+
+/**
  * Gets the JSON for the current version of the licence (if available)
  * @param {Object} licenceRow
  * return {Promise} resolves with object of current version, or null
@@ -41,17 +70,7 @@ const getCurrentVersionJson = async (licenceRow) => {
     data.version_effective_date = dateToSortableString(currentVersion.EFF_ST_DATE);
     data.expiry_date = dateToSortableString(licenceRow.EXPIRY_DATE);
 
-    data.purposes = await getPurposes(licenceRow.ID, regionCode, currentVersion.ISSUE_NO, currentVersion.INCR_NO);
-    for (let pu in data.purposes) {
-      data.purposes[pu].purpose = await getPurpose({
-        primary: data.purposes[pu].APUR_APPR_CODE,
-        secondary: data.purposes[pu].APUR_APSE_CODE,
-        tertiary: data.purposes[pu].APUR_APUS_CODE
-      });
-      data.purposes[pu].purposePoints = await getPurposePoints(data.purposes[pu].ID, regionCode);
-      data.purposes[pu].licenceAgreements = await getPurposePointLicenceAgreements(data.purposes[pu].ID, regionCode);
-      data.purposes[pu].licenceConditions = await getPurposePointLicenceConditions(data.purposes[pu].ID, regionCode);
-    }
+    data.purposes = await getPurposesJson(licenceRow, currentVersion);
 
     return data;
   }
@@ -76,33 +95,24 @@ const getVersionsJson = async (licenceRow) => {
   return versions;
 };
 
+/**
+ * Build full licence JSON for storing in permit repo from NALD import tables
+ * @param {String} licenceNumber
+ * @return {Promise} resolves with permit repo JSON packet
+ */
 const getLicenceJson = async (licenceNumber) => {
   try {
     var data = await getMain(licenceNumber);
     for (var licenceRow in data) {
       var thisLicenceRow = data[licenceRow];
       thisLicenceRow.data = {};
-
       thisLicenceRow.data.versions = await getVersionsJson(thisLicenceRow);
       thisLicenceRow.data.current_version = await getCurrentVersionJson(thisLicenceRow);
-
       thisLicenceRow.data.cams = await getCams(thisLicenceRow.CAMS_CODE, thisLicenceRow.FGAC_REGION_CODE);
       thisLicenceRow.data.roles = await getRoles(thisLicenceRow.ID, thisLicenceRow.FGAC_REGION_CODE);
-      thisLicenceRow.data.purposes = await getPurposes(thisLicenceRow.ID, thisLicenceRow.FGAC_REGION_CODE);
-      for (let pu in thisLicenceRow.data.purposes) {
-        thisLicenceRow.data.purposes[pu].purpose = await getPurpose({
-          primary: thisLicenceRow.data.purposes[pu].APUR_APPR_CODE,
-          secondary: thisLicenceRow.data.purposes[pu].APUR_APSE_CODE,
-          tertiary: thisLicenceRow.data.purposes[pu].APUR_APUS_CODE
-        });
-        thisLicenceRow.data.purposes[pu].purpose = thisLicenceRow.data.purposes[pu].purpose[0];
-        thisLicenceRow.data.purposes[pu].purposePoints = await getPurposePoints(thisLicenceRow.data.purposes[pu].ID, thisLicenceRow.FGAC_REGION_CODE);
-        thisLicenceRow.data.purposes[pu].licenceAgreements = await getPurposePointLicenceAgreements(thisLicenceRow.data.purposes[pu].ID, thisLicenceRow.FGAC_REGION_CODE);
-        thisLicenceRow.data.purposes[pu].licenceConditions = await getPurposePointLicenceConditions(thisLicenceRow.data.purposes[pu].ID, thisLicenceRow.FGAC_REGION_CODE);
-      }
+      thisLicenceRow.data.purposes = await getPurposesJson(thisLicenceRow);
       return thisLicenceRow;
     }
-    // process.exit()
   } catch (e) {
     console.error(e);
   }
