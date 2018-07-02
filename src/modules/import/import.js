@@ -2,7 +2,6 @@
  * Import a single licence
  */
 /* eslint camelcase: "warn" */
-const moment = require('moment');
 const {mapValues, orderBy} = require('lodash');
 
 const { getLicenceJson } = require('./nald.js');
@@ -10,6 +9,7 @@ const Permit = require('../../lib/connectors/permit');
 const Documents = require('../../lib/connectors/crm/documents');
 const { LicenceNotFoundError, MetaDataError } = require('./errors.js');
 const { updateImportLog } = require('./import-log.js');
+const { dateToIsoString } = require('./date-helpers.js');
 
 /**
  * Process single licence, reporting result in DB
@@ -28,21 +28,6 @@ async function importLicence (licenceNumber) {
   } catch (err) {
     console.error(err);
     await updateImportLog(licenceNumber, err.toString());
-  }
-}
-
-/**
- * Formats a UK date from NALD data to a SQL style date
- * e.g. 31/01/2018 becomes 2018-01-31
- * @param {String} str - NALD date string, can be 'null'
- * @return {String} date in SQL format
- */
-function naldDateToSql (str) {
-  const d = moment(str, 'DD/MM/YYYY');
-  if (d.isValid()) {
-    return d.format('YYYY-MM-DD');
-  } else {
-    return null;
   }
 }
 
@@ -86,8 +71,8 @@ async function exportLicence (licenceRef, regimeId, licenceTypeId, data) {
 
   var requestBody = {
     licence_ref: licenceRef,
-    licence_start_dt: naldDateToSql(latestVersion.EFF_ST_DATE),
-    licence_end_dt: naldDateToSql(latestVersion.EFF_END_DATE),
+    licence_start_dt: dateToIsoString(latestVersion.EFF_ST_DATE),
+    licence_end_dt: dateToIsoString(latestVersion.EFF_END_DATE),
     licence_status_id: '1',
     licence_type_id: licenceTypeId,
     licence_regime_id: regimeId,
