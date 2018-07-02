@@ -2,14 +2,14 @@
  * Import a single licence
  */
 /* eslint camelcase: "warn" */
+const moment = require('moment');
+const {mapValues, orderBy} = require('lodash');
 
-const Nald = require('../../lib/nald');
+const Nald = require('./nald.js');
 const Permit = require('../../lib/connectors/permit');
 const Documents = require('../../lib/connectors/crm/documents');
-const { orderBy } = require('lodash');
-const moment = require('moment');
+
 const {LicenceNotFoundError} = require('./errors.js');
-const {mapValues} = require('lodash');
 
 /**
  * Process single licence, reporting result in DB

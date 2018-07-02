@@ -1,3 +1,6 @@
+const childProcess = require('child_process');
+const { promisify } = require('util');
+
 // contains generic functions unrelated to a specific component
 var rp = require('request-promise-native').defaults({
   proxy: null,
@@ -89,10 +92,21 @@ function decryptToken (token) {
   return (data);
 }
 
+/**
+ * Executes (and logs) a shell command, returning a promise
+ * @param {String} shell command
+ * @return {Promise}
+ */
+const execCommand = (cmd) => {
+  console.log(cmd);
+  return promisify(childProcess.exec)(cmd);
+};
+
 module.exports = {
   createGUID: createGUID,
   encryptToken: encryptToken,
   decryptToken: decryptToken,
   makeURIRequest,
-  makeURIRequestWithBody
+  makeURIRequestWithBody,
+  execCommand
 };

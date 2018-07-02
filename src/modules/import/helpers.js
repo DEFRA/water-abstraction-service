@@ -1,8 +1,8 @@
 const readFirstLine = require('firstline');
-const childProcess = require('child_process');
 const fs = require('fs');
 const { promisify } = require('util');
 const config = require('../../../config.js');
+const { execCommand } = require('../../lib/helpers.js');
 
 const readDir = promisify(fs.readdir);
 const writeFile = promisify(fs.writeFile);
@@ -13,11 +13,6 @@ const { download: s3Download } = require('./s3-download.js');
 const localPath = './temp/';
 const filePath = `${localPath}nald_dl.zip`;
 const finalPath = `${localPath}/NALD`;
-
-const execCommand = (cmd) => {
-  console.log(cmd);
-  return promisify(childProcess.exec)(cmd);
-};
 
 /**
  * Downloads latest ZIP file from S3 bucket
@@ -90,7 +85,7 @@ async function getSqlForFile (file) {
 /**
  * Builds SQL file to create tables for NALD import
  */
-async function buildSQL (request, reply) {
+async function buildSQL () {
   let tableCreate = 'drop schema if exists "import" cascade;\nCREATE schema if not exists "import"; \n ';
   const files = await getImportFiles();
   for (let file of files) {
@@ -109,10 +104,28 @@ const importCSVToDatabase = () => {
   return execCommand(`psql ${config.pg.connectionString} < ${finalPath}/sql.sql`);
 };
 
+/**
+ * Move test files
+ * For the purposes of unit testing, this copies dummy CSV files from a test
+ * folder to the import folder ready for the import script
+ * @return {Promise} resolves when command completes
+ */
+const copyTestFiles = async () => {
+  await prepare();
+  // Create NALD folder (would have been created by unzip)
+  await execCommand(`mkdir -p ${localPath}NALD/`);
+  // move dummy data files
+  await execCommand(`cp ./test/dummy-csv/* ${localPath}NALD/`);
+  await buildSQL();
+  // Import CSV
+  return importCSVToDatabase();
+};
+
 module.exports = {
   prepare,
   download,
   extract,
   buildSQL,
-  importCSVToDatabase
+  importCSVToDatabase,
+  copyTestFiles
 };
