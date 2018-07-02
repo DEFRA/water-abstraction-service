@@ -5,7 +5,7 @@
 const moment = require('moment');
 const {mapValues, orderBy} = require('lodash');
 
-const Nald = require('./nald.js');
+const { getLicenceJson } = require('./nald.js');
 const Permit = require('../../lib/connectors/permit');
 const Documents = require('../../lib/connectors/crm/documents');
 
@@ -17,7 +17,7 @@ const {LicenceNotFoundError} = require('./errors.js');
  * @param {Object} licence_data - from NALD process
  */
 async function importLicence (licenceNumber) {
-  const licenceData = await Nald.licence(licenceNumber);
+  const licenceData = await getLicenceJson(licenceNumber);
   if (!licenceData) {
     throw new LicenceNotFoundError(`Licence ${licenceNumber} not found in import table`);
   }

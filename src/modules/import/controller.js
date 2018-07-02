@@ -1,5 +1,5 @@
 const { badRequest, notFound } = require('boom');
-const Nald = require('./nald.js');
+const { getLicenceJson } = require('./nald.js');
 
 /**
  * For test purposes, builds licence from the data in the NALD import
@@ -9,7 +9,7 @@ const Nald = require('./nald.js');
 const getLicence = async (request, h) => {
   try {
     const filter = JSON.parse(request.query.filter);
-    const data = await Nald.licence(filter.licenceNumber);
+    const data = await getLicenceJson(filter.licenceNumber);
 
     if (data) {
       return data;
