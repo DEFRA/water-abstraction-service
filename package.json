@@ -76,6 +76,7 @@
     "sha1": "^1.1.1",
     "snakecase-keys": "^1.1.1",
     "url-join": "^4.0.0",
+    "uuid": "^3.3.2",
     "vision": "^4.1.1"
   },
   "standard": {
