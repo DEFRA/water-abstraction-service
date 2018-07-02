@@ -44,6 +44,7 @@ const getPriority = (registeredLicences, licenceRow) => {
 /**
  * Schedules imports of all licences
  * @param {Object} messageQueue - PG Boss instance
+ * @return {Array} array of job IDs in message queue
  */
 const scheduleImports = async (messageQueue) => {
   // Get registered licence numbers
@@ -57,19 +58,26 @@ const scheduleImports = async (messageQueue) => {
 
   await resetImportLog();
 
-  importLicences.forEach((row, i) => {
+  let index = 0;
+  let jobIds = [];
+  for (let row of importLicences) {
     const data = {
       licenceNumber: row.LIC_NO,
       licenceCount,
-      index: i
+      index
     };
     const options = {
       priority: getPriority(licenceNumbers, row),
-      singletonKey: row.LIC_NO
+      singletonKey: row.LIC_NO,
+      retryLimit: 3,
+      expireIn: '24:00:00'
     };
 
-    messageQueue.publish('import.licence', data, options);
-  });
+    jobIds.push(await messageQueue.publish('import.licence', data, options));
+    index++;
+  }
+
+  return jobIds;
 };
 
 module.exports = {
