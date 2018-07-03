@@ -1,8 +1,8 @@
 const Slack = require('../../lib/slack');
 
-const { prepare, download, extract, buildSQL, importCSVToDatabase } = require('./helpers');
-const { scheduleImports } = require('./import-scheduler.js');
-const { importLicence } = require('./import.js');
+const { prepare, download, extract, buildSQL, importCSVToDatabase } = require('./extract');
+const { loadScheduler } = require('./load-scheduler.js');
+const { load } = require('./load.js');
 
 /**
  * Register event handler with message queue
@@ -18,7 +18,7 @@ const registerSubscriberWithSlackReport = (messageQueue, eventName, handler, nex
       await handler();
       Slack.post('Success: ' + eventName);
       if (nextEvent) {
-        messageQueue.publish(nextEvent);
+        await messageQueue.publish(nextEvent);
       }
     } catch (err) {
       console.error(err);
@@ -33,7 +33,7 @@ const registerImportLicence = (messageQueue) => {
     const {licenceNumber, index, licenceCount} = job.data;
     try {
       console.log(`Importing ${licenceNumber} (${index} of ${licenceCount})`);
-      await importLicence(licenceNumber);
+      await load(licenceNumber);
     } catch (err) {
       console.error(err);
     }
@@ -41,16 +41,16 @@ const registerImportLicence = (messageQueue) => {
   });
 };
 
-const registerImportScheduler = (messageQueue) => {
+const registerLoadScheduler = (messageQueue) => {
   messageQueue.subscribe('import.schedule', async (job, done) => {
     try {
-      console.log(`Scheduling imports`);
-      await scheduleImports(messageQueue);
-      console.log(`Imports scheduled`);
+      console.log(`Scheduling load`);
+      await loadScheduler(messageQueue);
+      console.log(`Loading scheduled`);
       done();
     } catch (err) {
       console.error(err);
-      console.log(`Error scheduling imports`);
+      console.log(`Error scheduling load`);
     }
   });
 };
@@ -60,7 +60,7 @@ const createImportNald = messageQueue => {
     try {
       await Slack.post(`Starting NALD data import`);
       await prepare();
-      messageQueue.publish('import.download');
+      await messageQueue.publish('import.download');
     } catch (err) {
       console.error(err);
     }
@@ -74,7 +74,7 @@ const createRegisterSubscribers = messageQueue => {
     registerSubscriberWithSlackReport(messageQueue, 'import.buildsql', buildSQL, 'import.csv');
     registerSubscriberWithSlackReport(messageQueue, 'import.csv', importCSVToDatabase, 'import.schedule');
 
-    registerImportScheduler(messageQueue);
+    registerLoadScheduler(messageQueue);
     registerImportLicence(messageQueue);
   };
 };

@@ -7,7 +7,7 @@ const { execCommand } = require('../../lib/helpers.js');
 const readDir = promisify(fs.readdir);
 const writeFile = promisify(fs.writeFile);
 
-const { download: s3Download } = require('./s3-download.js');
+const { download: s3Download } = require('./lib/s3-download.js');
 
 // Download / unzip paths
 const localPath = './temp/';

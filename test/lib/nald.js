@@ -4,7 +4,7 @@ const lab = Lab.script();
 const Code = require('code');
 const server = require('../../index.js');
 const licenceCreator = require('../../scripts/licence-creator/index.js');
-const { copyTestFiles } = require('../../src/modules/import/helpers.js');
+const { copyTestFiles } = require('../../src/modules/import/extract.js');
 
 let licenceData;
 

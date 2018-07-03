@@ -1,13 +1,12 @@
 /**
  * Download a file from S3 bucket and store locally on disk
  */
-
 const proxyAgent = require('proxy-agent');
 const AWS = require('aws-sdk');
 const fs = require('fs');
 
 // Configure S3
-const config = require('../../../config.js');
+const config = require('../../../../config.js');
 const { bucket, proxy, ...credentials } = config.s3;
 AWS.config.update(credentials);
 

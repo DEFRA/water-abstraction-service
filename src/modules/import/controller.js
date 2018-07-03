@@ -1,5 +1,5 @@
 const { badRequest, notFound } = require('boom');
-const { getLicenceJson } = require('./nald.js');
+const { getLicenceJson } = require('./transform-permit.js');
 
 /**
  * For test purposes, builds licence from the data in the NALD import

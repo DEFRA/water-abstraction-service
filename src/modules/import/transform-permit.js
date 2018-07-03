@@ -1,4 +1,5 @@
-const { dateToSortableString } = require('./date-helpers.js');
+const { orderBy } = require('lodash');
+const { dateToSortableString, dateToIsoString } = require('./lib/date-helpers.js');
 const {
   getMain,
   getCams,
@@ -14,7 +15,7 @@ const {
   getPurpose,
   getPurposePointLicenceAgreements,
   getPurposePointLicenceConditions
-} = require('./nald-queries.js');
+} = require('./lib/nald-queries.js');
 
 /**
  * Gets the purposes together with their points, agreements and conditions
@@ -118,6 +119,55 @@ const getLicenceJson = async (licenceNumber) => {
   }
 };
 
+/**
+ * Gets the latest version of the specified licence data
+ * by sorting on the effective start date of the versions array
+ * - Note: this may not be the current version
+ * @param {Array} versions - licence data versions array from NALD import process
+ * @return {Object} latest version
+ */
+const getLatestVersion = (versions) => {
+  const sortedVersions = orderBy(versions, (version) => {
+    const issueNo = 1000 * parseInt(version.ISSUE_NO, 10);
+    const incrNo = parseInt(version.INCR_NO, 10);
+    return issueNo + incrNo;
+  });
+  return sortedVersions[sortedVersions.length - 1];
+};
+
+/**
+ * Build packet of data to post to permit repository
+ * @param {String} licenceRef - the licence number
+ * @param {Number} regimeId - the numeric ID of the permitting regime
+ * @param {Number} licenceTypeId - the ID of the licence type, e.g abstraction, impoundment etc
+ * @param {Object} data - the licence JS object data
+ * @return {Object} - packet of data for posting to permit repo
+ */
+const buildPermitRepoPacket = (licenceRef, regimeId, licenceTypeId, data) => {
+  const latestVersion = getLatestVersion(data.data.versions);
+
+  let permitRepoData = {
+    licence_ref: licenceRef,
+    licence_start_dt: dateToIsoString(latestVersion.EFF_ST_DATE),
+    licence_end_dt: dateToIsoString(latestVersion.EFF_END_DATE),
+    licence_status_id: '1',
+    licence_type_id: licenceTypeId,
+    licence_regime_id: regimeId,
+    licence_data_value: JSON.stringify(data)
+  };
+
+  // remove null attributes so as not to anger JOI
+  if (permitRepoData.licence_end_dt == null) {
+    delete permitRepoData.licence_end_dt;
+  }
+
+  if (permitRepoData.licence_start_dt == null) {
+    delete permitRepoData.licence_start_dt;
+  }
+  return permitRepoData;
+};
+
 module.exports = {
-  getLicenceJson
+  getLicenceJson,
+  buildPermitRepoPacket
 };

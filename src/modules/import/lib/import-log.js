@@ -1,4 +1,8 @@
-const { pool } = require('../../lib/connectors/db');
+/**
+ * Sets/resets the current status of importing licences
+ * in the water.pending_import table
+ */
+const { pool } = require('../../../lib/connectors/db');
 
 /**
  * Clears the import log ready for a new batch
