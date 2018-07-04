@@ -1,5 +1,6 @@
 const readFirstLine = require('firstline');
 const fs = require('fs');
+const path = require('path');
 const { promisify } = require('util');
 const config = require('../../../config.js');
 const { execCommand } = require('../../lib/helpers.js');
@@ -11,8 +12,8 @@ const { download: s3Download } = require('./lib/s3-download.js');
 
 // Download / unzip paths
 const localPath = './temp/';
-const filePath = `${localPath}nald_dl.zip`;
-const finalPath = `${localPath}NALD`;
+const filePath = path.join(localPath, 'nald_dl.zip');
+const finalPath = path.join(localPath, 'NALD');
 
 /**
  * Prepares for import by removing files from tempory folder and creating directory
@@ -20,6 +21,7 @@ const finalPath = `${localPath}NALD`;
 const prepare = async () => {
   await execCommand(`rm -rf ${localPath}`);
   await execCommand(`mkdir -p ${localPath}`);
+  await execCommand(`mkdir -p ${finalPath}`);
 };
 
 /**
@@ -34,8 +36,10 @@ const download = async () => {
  * Extracts files from zip downloaded from S3 bucket
  */
 const extract = async () => {
-  await execCommand(`7z x ${localPath}nald_dl.zip -pn4ld -o${localPath}`);
-  await execCommand(`7z x ${localPath}/NALD.zip -o${localPath}`);
+  const primaryPath = path.join(localPath, 'nald_dl.zip');
+  const secondaryPath = path.join(localPath, 'NALD.zip');
+  await execCommand(`7z x ${primaryPath} -pn4ld -o${localPath}`);
+  await execCommand(`7z x ${secondaryPath} -o${localPath}`);
 };
 
 /**
@@ -59,9 +63,11 @@ async function getImportFiles () {
 async function getSqlForFile (file) {
   let table = file.split('.')[0];
 
+  const tablePath = path.join(finalPath, `${table}.txt`);
+
   // console.log(`Process ${table}`)
   let indexableFields = [];
-  let line = await readFirstLine(`${finalPath}/${table}.txt`);
+  let line = await readFirstLine(tablePath);
   let cols = line.split(',');
   let tableCreate = `\n CREATE TABLE if not exists "import"."${table}" (`;
   indexableFields = [cols[0]];
@@ -92,8 +98,10 @@ async function buildSQL () {
     tableCreate += await getSqlForFile(file);
   };
 
-  await writeFile(`${finalPath}/sql.sql`, tableCreate);
-  return `${finalPath}/sql.sql`;
+  const sqlPath = path.join(finalPath, 'sql.sql');
+
+  await writeFile(sqlPath, tableCreate);
+  return sqlPath;
 }
 
 /**
@@ -101,7 +109,8 @@ async function buildSQL () {
  * @param {Function} asyncLogger - an async logger, could be console/slack
  */
 const importCSVToDatabase = () => {
-  return execCommand(`psql ${config.pg.connectionString} < ${finalPath}/sql.sql`);
+  const sqlPath = path.join(finalPath, 'sql.sql');
+  return execCommand(`psql ${config.pg.connectionString} < ${sqlPath}`);
 };
 
 /**
@@ -112,10 +121,9 @@ const importCSVToDatabase = () => {
  */
 const copyTestFiles = async () => {
   await prepare();
-  // Create NALD folder (would have been created by unzip)
-  await execCommand(`mkdir -p ${localPath}NALD/`);
+
   // move dummy data files
-  await execCommand(`cp ./test/dummy-csv/* ${localPath}NALD/`);
+  await execCommand(`cp ./test/dummy-csv/* ${finalPath}`);
   await buildSQL();
   // Import CSV
   return importCSVToDatabase();
