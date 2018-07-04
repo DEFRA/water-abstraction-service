@@ -2,7 +2,7 @@ const Joi = require('joi');
 const NotifyClient = require('notifications-node-client').NotifyClient;
 const notifyTemplateRepo = require('../../controllers/notifytemplates').repository;
 const { TemplateNotFoundError, MessageTypeError } = require('./errors');
-const { createGUID } = require('../../lib/helpers');
+const uuidv4 = require('uuid/v4');
 
 /**
  * A function to get the notify key
@@ -88,7 +88,7 @@ async function sendMessage (notifyTemplate, personalisation, recipient) {
 function validateEnqueueOptions (options, now) {
   // Validate input options
   const schema = {
-    id: Joi.string().default(createGUID()),
+    id: Joi.string().default(uuidv4()),
     messageRef: Joi.string(),
     recipient: Joi.string().default('n/a'),
     personalisation: Joi.object(),

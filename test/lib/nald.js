@@ -4,6 +4,7 @@ const lab = Lab.script();
 const Code = require('code');
 const server = require('../../index.js');
 const licenceCreator = require('../../scripts/licence-creator/index.js');
+const { copyTestFiles } = require('../../src/modules/import/extract.js');
 
 let licenceData;
 
@@ -12,23 +13,12 @@ lab.experiment('Test NALD import', () => {
     // Generate dummy NALD data
     await licenceCreator();
 
-    // Import dummy data into import DB
-    const request = {
-      method: 'GET',
-      url: '/water/1.0/nald/import/test',
-      headers: {
-        Authorization: process.env.JWT_TOKEN
-      }
-    };
-    await server.inject(request);
+    await copyTestFiles();
 
     // Load dummy licence JSON
     const request2 = {
-      method: 'POST',
-      url: '/water/1.0/nald/licence',
-      payload: {
-        licence_number: '12/34/56/78'
-      },
+      method: 'GET',
+      url: '/water/1.0/nald/licence?filter=' + JSON.stringify({licenceNumber: '12/34/56/78'}),
       headers: {
         Authorization: process.env.JWT_TOKEN
       }
