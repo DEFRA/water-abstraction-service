@@ -12,7 +12,7 @@ const { download: s3Download } = require('./lib/s3-download.js');
 // Download / unzip paths
 const localPath = './temp/';
 const filePath = `${localPath}nald_dl.zip`;
-const finalPath = `${localPath}/NALD`;
+const finalPath = `${localPath}NALD`;
 
 /**
  * Prepares for import by removing files from tempory folder and creating directory
