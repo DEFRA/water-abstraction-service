@@ -48,6 +48,8 @@ const init = (config = {}) => {
       env: process.env.NODE_ENV
     };
     logger.add(Airbrake, airbrakeOptions);
+  } else {
+    logger.info('Airbrake/errbit integration disabled');
   }
 };
 

@@ -11,10 +11,10 @@ module.exports = {
   },
 
   logger: {
-    level: 'info',
-    airbrakeKey: process.env.errbit_key,
-    airbrakeHost: process.env.errbit_server,
-    airbrakeLevel: 'error'
+    level: 'info'
+    // airbrakeKey: process.env.errbit_key,
+    // airbrakeHost: process.env.errbit_server,
+    // airbrakeLevel: 'error'
   },
 
   pg: {
