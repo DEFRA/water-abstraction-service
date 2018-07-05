@@ -116,10 +116,6 @@ async function buildCRMPacket (licenceData, licenceRef, licenceId) {
 
     let metadata = buildCRMMetadata(currentVersion);
     metadata.contacts = contactsFormatter(findCurrent(licenceData.data.versions), licenceData.data.roles);
-    // metadata.contacts = (await transformer.load(licenceData)).contacts;
-
-    console.log(metadata.contacts);
-
     crmData.metadata = JSON.stringify(metadata);
   } catch (e) {
     console.error(e);

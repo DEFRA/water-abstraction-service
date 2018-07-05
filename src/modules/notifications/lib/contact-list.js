@@ -22,7 +22,7 @@ const { getDocumentContacts } = require('../../../lib/connectors/crm/documents')
  * @return {Object} - return preferred contact for notification
  */
 function getPreferredContact (contacts) {
-  const notificationPriority = ['document_notifications', 'notifications', 'area_import', 'licence_holder'];
+  const notificationPriority = ['document_notifications', 'notifications', 'area_import', 'licence_contact', 'licence_holder'];
   return notificationPriority.reduce((acc, role) => {
     if (acc) {
       return acc;

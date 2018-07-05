@@ -1,4 +1,4 @@
-const { uuidv4 } = require('./helpers');
+const uuidv4 = require('uuid/v4');
 const moment = require('moment');
 const { pool } = require('./connectors/db');
 const Repository = require('hapi-pg-rest-api/src/repository');
