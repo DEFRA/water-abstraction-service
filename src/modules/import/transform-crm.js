@@ -3,11 +3,44 @@
  */
 /* eslint camelcase: "warn" */
 
-const { mapValues } = require('lodash');
-const { MetaDataError } = require('./lib/errors.js');
+const { mapValues, find } = require('lodash');
+const { addressFormatter, findCurrent, crmNameFormatter, transformNull } = require('../../lib/licence-transformer/nald-functional');
+const sentenceCase = require('sentence-case');
 
-const NALDTransformer = require('../../lib/licence-transformer/nald-transformer');
-const transformer = new NALDTransformer();
+/**
+ * Contacts formatter
+ * Creates a list of contacts from the roles/parties in the NALD data
+ * @param {Object} currentVersion - note must be from versions array not current_version
+ * @param {Array} roles
+ * @return {Array} formatted contacts
+ */
+const contactsFormatter = (currentVersion, roles) => {
+  const contacts = [];
+
+  const licenceHolderParty = find(currentVersion.parties, (party) => {
+    return party.ID === currentVersion.ACON_APAR_ID;
+  });
+
+  const licenceHolderAddress = find(licenceHolderParty.contacts, (contact) => {
+    return contact.AADD_ID === currentVersion.ACON_AADD_ID;
+  });
+
+  contacts.push({
+    role: 'Licence holder',
+    ...crmNameFormatter(licenceHolderParty),
+    ...addressFormatter(licenceHolderAddress.party_address)
+  });
+
+  roles.forEach((role) => {
+    contacts.push({
+      role: sentenceCase(role.role_type.DESCR),
+      ...crmNameFormatter(licenceHolderParty),
+      ...addressFormatter(role.role_address)
+    });
+  });
+
+  return transformNull(contacts);
+};
 
 /**
  * Data from NALD import has null as "null" string
@@ -82,7 +115,11 @@ async function buildCRMPacket (licenceData, licenceRef, licenceId) {
     const currentVersion = licenceData.data.current_version;
 
     let metadata = buildCRMMetadata(currentVersion);
-    metadata.contacts = (await transformer.load(licenceData)).contacts;
+    metadata.contacts = contactsFormatter(findCurrent(licenceData.data.versions), licenceData.data.roles);
+    // metadata.contacts = (await transformer.load(licenceData)).contacts;
+
+    console.log(metadata.contacts);
+
     crmData.metadata = JSON.stringify(metadata);
   } catch (e) {
     console.error(e);
