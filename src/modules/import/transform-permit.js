@@ -106,6 +106,7 @@ const getLicenceJson = async (licenceNumber) => {
     var data = await getMain(licenceNumber);
     for (var licenceRow in data) {
       var thisLicenceRow = data[licenceRow];
+      thisLicenceRow.vmlVersion = 2;
       thisLicenceRow.data = {};
       thisLicenceRow.data.versions = await getVersionsJson(thisLicenceRow);
       thisLicenceRow.data.current_version = await getCurrentVersionJson(thisLicenceRow);
