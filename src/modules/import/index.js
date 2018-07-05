@@ -76,8 +76,6 @@ const createRegisterSubscribers = messageQueue => {
 
     registerLoadScheduler(messageQueue);
     registerImportLicence(messageQueue);
-
-    messageQueue.publish('import.licence', {licenceNumber: '4/30/09/*S/0110'});
   };
 };
 
