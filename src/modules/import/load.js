@@ -25,7 +25,7 @@ const load = async (licenceNumber) => {
       throw error;
     }
 
-    const crmPacket = buildCRMPacket(licenceData, licenceNumber, data.licence_id);
+    const crmPacket = await buildCRMPacket(licenceData, licenceNumber, data.licence_id);
     const { error: crmError } = await Documents.create(crmPacket);
     if (crmError) {
       console.error(crmError);

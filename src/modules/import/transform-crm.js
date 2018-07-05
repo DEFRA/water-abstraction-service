@@ -6,6 +6,9 @@
 const { mapValues } = require('lodash');
 const { MetaDataError } = require('./lib/errors.js');
 
+const NALDTransformer = require('../../lib/licence-transformer/nald-transformer');
+const transformer = new NALDTransformer();
+
 /**
  * Data from NALD import has null as "null" string
  * prune this to empty value
@@ -68,7 +71,7 @@ function buildCRMMetadata (currentVersion) {
  * @param {Number} licenceId - the permit repo licence ID
  * @return {Object} - object containing of row of data for CRM
  */
-function buildCRMPacket (licenceData, licenceRef, licenceId) {
+async function buildCRMPacket (licenceData, licenceRef, licenceId) {
   let crmData = {
     regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf',
     system_id: 'permit-repo',
@@ -77,9 +80,12 @@ function buildCRMPacket (licenceData, licenceRef, licenceId) {
   };
   try {
     const currentVersion = licenceData.data.current_version;
-    crmData.metadata = JSON.stringify(buildCRMMetadata(currentVersion));
+
+    let metadata = buildCRMMetadata(currentVersion);
+    metadata.contacts = (await transformer.load(licenceData)).contacts;
+    crmData.metadata = JSON.stringify(metadata);
   } catch (e) {
-    console.error(new MetaDataError(e));
+    console.error(e);
   }
   return crmData;
 }
