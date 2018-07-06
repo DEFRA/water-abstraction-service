@@ -4,6 +4,7 @@
 const Permit = require('../../lib/connectors/permit');
 const Documents = require('../../lib/connectors/crm/documents');
 const { buildCRMPacket } = require('./transform-crm');
+const { buildReturnsPacket } = require('./transform-returns');
 const { getLicenceJson, buildPermitRepoPacket } = require('./transform-permit');
 const { updateImportLog } = require('./lib/import-log.js');
 
@@ -25,12 +26,17 @@ const load = async (licenceNumber) => {
       throw error;
     }
 
+    // Build CRM data
     const crmPacket = await buildCRMPacket(licenceData, licenceNumber, data.licence_id);
     const { error: crmError } = await Documents.create(crmPacket);
     if (crmError) {
       console.error(crmError);
       throw crmError;
     };
+
+    // Build returns data
+    await buildReturnsPacket(licenceNumber);
+
     await updateImportLog(licenceNumber, 'OK');
   } catch (error) {
     await updateImportLog(licenceNumber, error.toString());

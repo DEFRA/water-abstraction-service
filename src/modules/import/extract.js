@@ -49,7 +49,7 @@ const extract = async () => {
  */
 async function getImportFiles () {
   const files = await readDir(finalPath);
-  const excludeList = ['NALD_RET_LINES', 'NALD_RET_LINES_AUDIT', 'NALD_RET_FORM_LOGS', 'NALD_RET_FORM_LOGS_AUDIT'];
+  const excludeList = ['NALD_RET_LINES_AUDIT', 'NALD_RET_FORM_LOGS_AUDIT'];
   return files.filter((file) => {
     const table = file.split('.')[0];
     return !(table.length === 0 || excludeList.includes(table));
