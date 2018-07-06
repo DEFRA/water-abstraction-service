@@ -1,14 +1,19 @@
 {
   "apps": [
     {
-      "watch": true,
       "name": "water-api",
       "ignore_watch": [
         "node_modules",
         "src/lib/temp",
         "temp"
       ],
-      "script": "index.js"
+      "script": "index.js",
+      "env": {
+        "watch": true
+      },
+      "env_production": {
+        "watch": false
+      }
     }
   ]
 }
