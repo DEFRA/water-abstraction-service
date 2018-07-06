@@ -12,7 +12,9 @@
         "watch": true
       },
       "env_production": {
-        "watch": false
+        "watch": false,
+        "instances" : "max",
+        "exec_mode" : "cluster"
       }
     }
   ]
