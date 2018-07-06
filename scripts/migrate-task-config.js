@@ -7,12 +7,7 @@ const { pg } = require('../config');
 
 const pool = new Pool(pg);
 
-const rows = [
-  require('../config/task-config/renewal'),
-  require('../config/task-config/hof-warning'),
-  require('../config/task-config/hof-stop'),
-  require('../config/task-config/hof-resume')
-];
+const rows = require('../config/task-config');
 
 const migrate = async () => {
   console.log(`Updating task configs`);
