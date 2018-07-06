@@ -52,8 +52,6 @@ const getPurposesJson = async (licenceRow, currentVersion = null) => {
  * return {Promise} resolves with object of current version, or null
  */
 const getCurrentVersionJson = async (licenceRow) => {
-  console.log(`Getting current version`, licenceRow);
-
   const regionCode = licenceRow.FGAC_REGION_CODE;
   const currentVersion = await getCurrentVersion(licenceRow.ID, regionCode);
 
