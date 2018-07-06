@@ -14,7 +14,6 @@
 const { find } = require('lodash');
 const sha1 = require('sha1');
 const { getDocumentContacts } = require('../../../lib/connectors/crm/documents');
-const defaultRolePriority = ['document_notifications', 'notifications', 'area_import', 'licence_contact', 'licence_holder'];
 
 /**
  * Given list of licence contacts, this returns the preferred contact based
@@ -112,7 +111,7 @@ async function getContacts (filter, rolePriority) {
     throw error;
   }
 
-  return createSendList(data, rolePriority || defaultRolePriority);
+  return createSendList(data, rolePriority);
 }
 
 module.exports = getContacts;
