@@ -4,6 +4,7 @@ const path = require('path');
 const { promisify } = require('util');
 const config = require('../../../config.js');
 const { execCommand } = require('../../lib/helpers.js');
+const Slack = require('../../lib/slack');
 
 const readDir = promisify(fs.readdir);
 const writeFile = promisify(fs.writeFile);
@@ -114,6 +115,31 @@ const importCSVToDatabase = () => {
 };
 
 /**
+ * The download/extract tasks have been combined into a single task
+ * since they are currently running on the local file system, so must all
+ * run on the same instance
+ * @return {Promise}
+ */
+const downloadAndExtract = async () => {
+  await Slack.post('Import: preparing folders');
+  await prepare();
+
+  // Download from S3
+  await Slack.post('Import: downloading from S3');
+  await download();
+  // Extract files from zip
+  await Slack.post('Import: extracting files from zip');
+  await extract();
+  // Build SQL import script
+  await Slack.post('Import: building SQL file');
+  await buildSQL();
+
+  await Slack.post('Import: importing CSV files');
+  await importCSVToDatabase();
+  await Slack.post('Import: CSV loaded');
+};
+
+/**
  * Move test files
  * For the purposes of unit testing, this copies dummy CSV files from a test
  * folder to the import folder ready for the import script
@@ -130,10 +156,6 @@ const copyTestFiles = async () => {
 };
 
 module.exports = {
-  prepare,
-  download,
-  extract,
-  buildSQL,
-  importCSVToDatabase,
-  copyTestFiles
+  copyTestFiles,
+  downloadAndExtract
 };
