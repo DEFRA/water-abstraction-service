@@ -4,6 +4,7 @@
   "subtype" : "renewal",
   "config" : {
     "name": "Expiring licence(s): invitation to renew",
+    "role_priority" : ["document_notifications", "notifications", "area_import", "licence_holder"],
     "steps": [
       {
         "widgets": [
