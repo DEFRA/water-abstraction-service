@@ -243,15 +243,6 @@ const getPurposePointLicenceConditions = async (AABP_ID, FGAC_REGION_CODE) => {
   return dbQuery(query, params);
 };
 
-/**
- * Gets a list of all the licences for import
- * @return {Promise} resolves with array of data from import table
- */
-const getImportLicences = async () => {
-  const sql = `SELECT "LIC_NO", "REV_DATE", "LAPSED_DATE" FROM "import"."NALD_ABS_LICENCES"`;
-  return dbQuery(sql);
-};
-
 module.exports = {
   getMain,
   getCams,
@@ -266,6 +257,5 @@ module.exports = {
   getPurposePoints,
   getPurpose,
   getPurposePointLicenceAgreements,
-  getPurposePointLicenceConditions,
-  getImportLicences
+  getPurposePointLicenceConditions
 };
