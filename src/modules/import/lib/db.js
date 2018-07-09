@@ -14,7 +14,6 @@ const dbQuery = async (query, params = []) => {
     client.release();
     return res.rows;
   } catch (error) {
-    console.error(error);
     client.release();
     throw error;
   }

@@ -10,10 +10,15 @@ const registerImportLicence = (messageQueue) => {
     try {
       console.log(`Importing ${licenceNumber} (${index} of ${licenceCount})`);
       await load(licenceNumber);
+      done();
     } catch (err) {
-      console.error(err);
+      if (err.code === '42P01') {
+        console.error(`Error importing ${licenceNumber}, import DB table/schema not ready`);
+      } else {
+        console.error(err);
+      }
+      done(err);
     }
-    done();
   });
 };
 
@@ -26,6 +31,7 @@ const registerLoadScheduler = (messageQueue) => {
       done();
     } catch (err) {
       console.error(err);
+      done(err);
     }
   });
 };

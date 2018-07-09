@@ -34,9 +34,6 @@ const load = async (licenceNumber) => {
       throw crmError;
     };
 
-    // Build returns data
-    await buildReturnsPacket(licenceNumber);
-
     await updateImportLog(licenceNumber, 'OK');
   } catch (error) {
     await updateImportLog(licenceNumber, error.toString());
