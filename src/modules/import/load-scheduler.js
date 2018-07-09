@@ -3,7 +3,7 @@
  * these are prioritised so that registered licence are done first
  */
 const { getRegisteredLicences } = require('../../lib/connectors/crm/documents');
-const { resetImportLog, createImportLog } = require('./lib/import-log');
+const { clearImportLog, createImportLog } = require('./lib/import-log');
 
 /**
  * Schedules imports of all licences by placing them on the "water"."pending_import" table
@@ -16,7 +16,7 @@ const loadScheduler = async (messageQueue, command) => {
   const registered = await getRegisteredLicences();
   const registeredLicenceNumbers = registered.map(row => row.system_external_id);
 
-  await resetImportLog();
+  await clearImportLog();
 
   if (command === '-') {
     return createImportLog(registeredLicenceNumbers);

@@ -58,9 +58,9 @@ const updateImportLog = (licenceNumber, log = null) => {
  * Gets the next licence to import
  * @return {Object} - pending_import row, or null if all complete
  */
-const getNext = () => {
+const getNextImport = async () => {
   const sql = `SELECT * FROM water.pending_import WHERE status=0 ORDER BY priority DESC LIMIT 1`;
-  const { error, rows } = pool.query(sql);
+  const { error, rows } = await pool.query(sql);
   if (error) {
     throw error;
   }
@@ -71,5 +71,5 @@ module.exports = {
   clearImportLog,
   createImportLog,
   updateImportLog,
-  getNext
+  getNextImport
 };
