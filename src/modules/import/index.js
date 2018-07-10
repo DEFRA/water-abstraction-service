@@ -24,7 +24,10 @@ const importNextLicence = (messageQueue) => {
       const row = await getNextImport();
       if (row) {
         const { licence_ref: licenceNumber } = row;
-        await messageQueue.publish('import.licence', { licenceNumber });
+        await messageQueue.publish('import.licence', { licenceNumber }, {
+          singletonKey: licenceNumber,
+          retryLimit: 3
+        });
       } else {
         messageQueue.publish('import.complete');
       }
@@ -69,8 +72,6 @@ const createRegisterSubscribers = messageQueue => {
   return () => {
     registerLoadScheduler(messageQueue);
     registerImportLicence(messageQueue);
-
-    messageQueue.publish('import.schedule', {command: '01/115,01/120'});
   };
 };
 
