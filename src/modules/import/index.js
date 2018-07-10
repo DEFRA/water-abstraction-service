@@ -4,6 +4,7 @@ const { downloadAndExtract } = require('./extract');
 const { loadScheduler } = require('./load-scheduler.js');
 const { load } = require('./load.js');
 const { getNextImport } = require('./lib/import-log.js');
+const { clearImportLog } = require('./lib/import-log');
 
 const registerImportLicence = (messageQueue) => {
   messageQueue.subscribe('import.licence', async (job, done) => {
@@ -18,6 +19,11 @@ const registerImportLicence = (messageQueue) => {
   });
 };
 
+/**
+ * Creates a function which can handle a licence import
+ * @param {Object} messageQueue - PG Boss instance
+ * @return {Function} async function to import licence
+ */
 const importNextLicence = (messageQueue) => {
   return async (job, done) => {
     try {
@@ -60,6 +66,7 @@ const createImportNald = messageQueue => {
   return async () => {
     try {
       await Slack.post(`Starting NALD data import`);
+      await clearImportLog();
       await downloadAndExtract();
       await messageQueue.publish('import.schedule');
     } catch (err) {
