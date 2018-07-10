@@ -12,10 +12,11 @@ const registerImportLicence = (messageQueue) => {
     try {
       console.log(`Importing ${licenceNumber}`);
       await load(licenceNumber);
+      done();
     } catch (err) {
       console.error(err);
+      done(err);
     }
-    done();
   });
 };
 
@@ -47,10 +48,9 @@ const importNextLicence = (messageQueue) => {
 
 const registerLoadScheduler = (messageQueue) => {
   messageQueue.subscribe('import.schedule', async (job, done) => {
-    const { command = '-' } = job.data;
+    await Slack.post(`Import: scheduling licence imports`);
     try {
-      await Slack.post(`Import: scheduling licence imports`);
-      await loadScheduler(messageQueue, command);
+      await loadScheduler(messageQueue);
       await Slack.post(`Import: scheduling complete`);
       done();
     } catch (err) {
