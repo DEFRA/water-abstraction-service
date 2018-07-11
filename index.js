@@ -53,7 +53,7 @@ const configureServerAuthStrategy = (server) => {
 const configureMessageQueue = async (server) => {
   await messageQueue.start();
   notify(messageQueue).registerSubscribers();
-  importer(messageQueue).registerSubscribers();
+  await importer(messageQueue).registerSubscribers();
 
   server.log('info', 'Message queue started');
 };

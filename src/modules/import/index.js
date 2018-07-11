@@ -41,11 +41,8 @@ const importNextLicence = (messageQueue) => {
       if (row) {
         const { licence_ref: licenceNumber } = row;
         await messageQueue.publish('import.licence', { licenceNumber }, {
-          singletonKey: licenceNumber,
           retryLimit: 3
         });
-
-        console.log('Requested import of ' + licenceNumber);
       } else {
         messageQueue.publish('import.complete');
       }
@@ -72,11 +69,11 @@ module.exports = (messageQueue) => {
     importNald: () => {
       messageQueue.publish('import.start');
     },
-    registerSubscribers: () => {
+    registerSubscribers: async () => {
       // Register event subscribers
-      messageQueue.subscribe('import.start', startImportSubscriber);
-      messageQueue.subscribe('import.schedule', scheduleImportSubscriber);
-      messageQueue.subscribe('import.licence', importLicenceSubscriber);
+      await messageQueue.subscribe('import.start', startImportSubscriber);
+      await messageQueue.subscribe('import.schedule', scheduleImportSubscriber);
+      await messageQueue.subscribe('import.licence', importLicenceSubscriber);
 
       // Register state-based subscribers
       messageQueue.onComplete('import.start', () => {
@@ -84,6 +81,7 @@ module.exports = (messageQueue) => {
       });
       messageQueue.onComplete('import.schedule', importNextLicence(messageQueue));
       messageQueue.onComplete('import.licence', importNextLicence(messageQueue));
+      messageQueue.onFail('import.licence', importNextLicence(messageQueue));
 
       // Import next licence in queue on startup
       importNextLicence(messageQueue)();
