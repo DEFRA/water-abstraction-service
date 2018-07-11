@@ -8,10 +8,9 @@ const { clearImportLog, createImportLog } = require('./lib/import-log');
 /**
  * Schedules imports of all licences by placing them on the "water"."pending_import" table
  * @param {String} command - can be '-' for all licences, '@' for registered, or CSV
- * @param {Object} messageQueue - PG Boss instance
  * @return {Array} array of job IDs in message queue
  */
-const loadScheduler = async (messageQueue, command = '-') => {
+const loadScheduler = async (command = '-') => {
   // Get registered licence numbers
   const registered = await getRegisteredLicences();
   const registeredLicenceNumbers = registered.map(row => row.system_external_id);

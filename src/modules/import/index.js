@@ -6,18 +6,27 @@ const { load } = require('./load.js');
 const { getNextImport } = require('./lib/import-log.js');
 const { clearImportLog } = require('./lib/import-log');
 
-const registerImportLicence = (messageQueue) => {
-  messageQueue.subscribe('import.licence', async (job, done) => {
+const importLicenceSubscriber = async (job, done) => {
+  try {
     const { licenceNumber } = job.data;
-    try {
-      console.log(`Importing ${licenceNumber}`);
-      await load(licenceNumber);
-      done();
-    } catch (err) {
-      console.error(err);
-      done(err);
-    }
-  });
+    console.log(`Importing ${licenceNumber}`);
+    await load(licenceNumber);
+    done();
+  } catch (err) {
+    console.error(err);
+    done(err);
+  }
+};
+
+const scheduleImportSubscriber = async (job, done) => {
+  await Slack.post(`Import: scheduling licence imports`);
+  try {
+    await loadScheduler();
+    await Slack.post(`Import: scheduling complete`);
+    done();
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 /**
@@ -26,7 +35,7 @@ const registerImportLicence = (messageQueue) => {
  * @return {Function} async function to import licence
  */
 const importNextLicence = (messageQueue) => {
-  return async (job, done) => {
+  return async () => {
     try {
       const row = await getNextImport();
       if (row) {
@@ -35,56 +44,49 @@ const importNextLicence = (messageQueue) => {
           singletonKey: licenceNumber,
           retryLimit: 3
         });
+
+        console.log('Requested import of ' + licenceNumber);
       } else {
         messageQueue.publish('import.complete');
       }
-      done();
-    } catch (err) {
-      console.error(err);
-      done(err);
-    }
-  };
-};
-
-const registerLoadScheduler = (messageQueue) => {
-  messageQueue.subscribe('import.schedule', async (job, done) => {
-    await Slack.post(`Import: scheduling licence imports`);
-    try {
-      await loadScheduler(messageQueue);
-      await Slack.post(`Import: scheduling complete`);
-      done();
-    } catch (err) {
-      console.error(err);
-    }
-  });
-
-  messageQueue.onComplete('import.schedule', importNextLicence(messageQueue));
-  messageQueue.onComplete('import.licence', importNextLicence(messageQueue));
-};
-
-const createImportNald = messageQueue => {
-  return async () => {
-    try {
-      await Slack.post(`Starting NALD data import`);
-      await clearImportLog();
-      await downloadAndExtract();
-      await messageQueue.publish('import.schedule');
     } catch (err) {
       console.error(err);
     }
   };
 };
 
-const createRegisterSubscribers = messageQueue => {
-  return () => {
-    registerLoadScheduler(messageQueue);
-    registerImportLicence(messageQueue);
-  };
+const startImportSubscriber = async (job, done) => {
+  try {
+    await Slack.post(`Starting NALD data import`);
+    await clearImportLog();
+    await downloadAndExtract();
+    done();
+  } catch (err) {
+    console.error(err);
+    done(err);
+  }
 };
 
 module.exports = (messageQueue) => {
   return {
-    importNald: createImportNald(messageQueue),
-    registerSubscribers: createRegisterSubscribers(messageQueue)
+    importNald: () => {
+      messageQueue.publish('import.start');
+    },
+    registerSubscribers: () => {
+      // Register event subscribers
+      messageQueue.subscribe('import.start', startImportSubscriber);
+      messageQueue.subscribe('import.schedule', scheduleImportSubscriber);
+      messageQueue.subscribe('import.licence', importLicenceSubscriber);
+
+      // Register state-based subscribers
+      messageQueue.onComplete('import.start', () => {
+        messageQueue.publish('import.schedule');
+      });
+      messageQueue.onComplete('import.schedule', importNextLicence(messageQueue));
+      messageQueue.onComplete('import.licence', importNextLicence(messageQueue));
+
+      // Import next licence in queue on startup
+      importNextLicence(messageQueue)();
+    }
   };
 };

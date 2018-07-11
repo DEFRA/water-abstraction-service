@@ -19,6 +19,7 @@ const load = async (licenceNumber) => {
 
     // Build and post data to permit repo
     const permitRepoPacket = buildPermitRepoPacket(licenceNumber, 1, 8, licenceData);
+
     const { data, error } = await Permit.licences.create(permitRepoPacket);
     if (error) {
       console.error(error);

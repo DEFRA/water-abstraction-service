@@ -2,7 +2,7 @@
  * Sets/resets the current status of importing licences
  * in the water.pending_import table
  */
-const { pool } = require('../../../lib/connectors/db');
+const { dbQuery } = require('./db');
 
 /**
  * Clears the import log ready for a new batch
@@ -10,7 +10,7 @@ const { pool } = require('../../../lib/connectors/db');
  */
 const clearImportLog = () => {
   const sql = `delete from water.pending_import`;
-  return pool.query(sql);
+  return dbQuery(sql);
 };
 
 /**
@@ -38,7 +38,7 @@ const createImportLog = async (licenceNumbers = [], filter = false) => {
 
   sql += `)`;
 
-  return pool.query(sql, licenceNumbers);
+  return dbQuery(sql, licenceNumbers);
 };
 
 /**
@@ -51,7 +51,7 @@ const updateImportLog = (licenceNumber, log = null) => {
   const sql = `UPDATE water.pending_import
     SET status=1, date_updated=NOW(), log=$1
     WHERE licence_ref=$2`;
-  return pool.query(sql, [log, licenceNumber]);
+  return dbQuery(sql, [log, licenceNumber]);
 };
 
 /**
@@ -60,10 +60,7 @@ const updateImportLog = (licenceNumber, log = null) => {
  */
 const getNextImport = async () => {
   const sql = `SELECT * FROM water.pending_import WHERE status=0 ORDER BY priority DESC LIMIT 1`;
-  const { error, rows } = await pool.query(sql);
-  if (error) {
-    throw error;
-  }
+  const rows = await dbQuery(sql);
   return rows.length ? rows[0] : null;
 };
 
