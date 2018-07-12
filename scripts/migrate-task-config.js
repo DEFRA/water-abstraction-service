@@ -16,10 +16,13 @@ const migrate = async () => {
       console.log(`Updating ${row.type} ${row.subtype}`);
 
       const sql = `INSERT INTO "water"."task_config"
-      (task_config_id, type, subtype, config, created)
-      VALUES ($1, $2, $3, $4, NOW())
-      ON CONFLICT (task_config_id)
-      DO UPDATE SET modified=NOW(), config=EXCLUDED.config
+      (task_config_id, type, subtype, config, created, modified)
+      VALUES ($1, $2, $3, $4, NOW(), NOW())
+      ON CONFLICT (task_config_id) DO UPDATE
+      SET config = excluded.config,
+        subtype = excluded.subtype,
+        type = excluded.type,
+        modified = excluded.modified;
     `;
 
       const params = [row.task_config_id, row.type, row.subtype, JSON.stringify(row.config)];
