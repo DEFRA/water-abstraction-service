@@ -51,7 +51,9 @@ function getTemplate (taskConfig, contact) {
 function renderTemplates (taskConfig, params, contacts, licences, context = {}) {
   const date = moment().format('DD MMM YYYY');
 
-  return contacts.map((contact) => {
+  const viewContexts = [];
+
+  const data = contacts.map((contact) => {
     const licenceList = contact.licences.map((licence) => {
       return licences[licence.system_external_id];
     });
@@ -68,7 +70,7 @@ function renderTemplates (taskConfig, params, contacts, licences, context = {}) 
       isPost: contact.method === 'post'
     };
 
-    fs.writeFileSync('./notification-log.json', JSON.stringify(viewContext, null, 2));
+    viewContexts.push(viewContext);
 
     // Get the correct Nunjucks template for the message type
     const template = getTemplate(taskConfig, contact);
@@ -81,6 +83,10 @@ function renderTemplates (taskConfig, params, contacts, licences, context = {}) 
       output
     };
   });
+
+  fs.writeFileSync('./notification-log.json', JSON.stringify(viewContexts, null, 2));
+
+  return data;
 }
 
 module.exports = renderTemplates;
