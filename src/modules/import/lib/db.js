@@ -8,14 +8,14 @@ const { pool } = require('../../../lib/connectors/db');
  * @return {Promise} resolves with query data
  */
 const dbQuery = async (query, params = []) => {
-  const client = await pool.connect();
   try {
-    const res = await client.query(query, params);
-    client.release();
-    return res.rows;
+    const {error, rows} = await pool.query(query, params);
+    if (error) {
+      throw error;
+    }
+    return rows;
   } catch (error) {
     console.error(error);
-    client.release();
     throw error;
   }
 };

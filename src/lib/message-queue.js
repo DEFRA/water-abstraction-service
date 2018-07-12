@@ -5,6 +5,17 @@
 const PgBoss = require('pg-boss');
 const config = require('../../config.js');
 
-const boss = new PgBoss(config.pgBoss);
+const { pool } = require('./connectors/db');
+
+const db = {
+  executeSql: (sql, params) => {
+    return pool.query(sql, params);
+  }
+};
+
+const boss = new PgBoss({
+  ...config.pgBoss,
+  db
+});
 
 module.exports = boss;
