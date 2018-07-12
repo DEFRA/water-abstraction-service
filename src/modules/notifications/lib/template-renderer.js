@@ -67,6 +67,9 @@ function renderTemplates (taskConfig, params, contacts, licences, context = {}) 
       isPost: contact.method === 'post'
     };
 
+    console.log('------------- Notification data ---------------');
+    console.log(JSON.stringify(viewContext, null, 2));
+
     // Get the correct Nunjucks template for the message type
     const template = getTemplate(taskConfig, contact);
 
