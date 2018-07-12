@@ -3,66 +3,27 @@
  * these are prioritised so that registered licence are done first
  */
 const { getRegisteredLicences } = require('../../lib/connectors/crm/documents');
-const { LOW_PRIORITY, MEDIUM_PRIORITY, HIGH_PRIORITY } = require('../../lib/priorities');
-const { resetImportLog } = require('./lib/import-log');
-const { getImportLicences } = require('./lib/nald-queries');
-/**
- * Gets the import priority
- * @param {Array} - array of registered licence numbers
- * @param {Object} - licenceRow - from import.NALD_ABS_LICENCES table
- * @return {Number} - import priority
- */
-const getPriority = (registeredLicences, licenceRow) => {
-  const { LIC_NO: licenceNumber, REV_DATE: revokedDate, LAPSED_DATE: lapsedDate } = licenceRow;
-  if (registeredLicences.includes(licenceNumber)) {
-    return HIGH_PRIORITY;
-  }
-  if (revokedDate !== 'null') {
-    return LOW_PRIORITY;
-  }
-  if (lapsedDate !== 'null') {
-    return LOW_PRIORITY;
-  }
-  return MEDIUM_PRIORITY;
-};
+const { clearImportLog, createImportLog } = require('./lib/import-log');
 
 /**
- * Schedules imports of all licences
- * @param {Object} messageQueue - PG Boss instance
+ * Schedules imports of all licences by placing them on the "water"."pending_import" table
+ * @param {String} command - can be '-' for all licences, '@' for registered, or CSV
  * @return {Array} array of job IDs in message queue
  */
-const loadScheduler = async (messageQueue) => {
+const loadScheduler = async (command = '-') => {
   // Get registered licence numbers
-  const licences = await getRegisteredLicences();
-  const licenceNumbers = licences.map(row => row.system_external_id);
+  const registered = await getRegisteredLicences();
+  const registeredLicenceNumbers = registered.map(row => row.system_external_id);
 
-  // Get all licences
-  const importLicences = await getImportLicences();
+  await clearImportLog();
 
-  const licenceCount = importLicences.length;
-
-  await resetImportLog();
-
-  let index = 0;
-  let jobIds = [];
-  for (let row of importLicences) {
-    const data = {
-      licenceNumber: row.LIC_NO,
-      licenceCount,
-      index
-    };
-    const options = {
-      priority: getPriority(licenceNumbers, row),
-      singletonKey: row.LIC_NO,
-      retryLimit: 3,
-      expireIn: '24:00:00'
-    };
-
-    jobIds.push(await messageQueue.publish('import.licence', data, options));
-    index++;
+  if (command === '-') {
+    return createImportLog(registeredLicenceNumbers);
+  } else if (command === '@') {
+    return createImportLog(registeredLicenceNumbers, true);
+  } else {
+    return createImportLog(command.split(','), true);
   }
-
-  return jobIds;
 };
 
 module.exports = {
