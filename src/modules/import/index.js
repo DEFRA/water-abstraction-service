@@ -3,14 +3,16 @@ const Slack = require('../../lib/slack');
 const { downloadAndExtract } = require('./extract');
 const { loadScheduler } = require('./load-scheduler.js');
 const { load } = require('./load.js');
-const { getNextImport } = require('./lib/import-log.js');
+const { getNextImportBatch } = require('./lib/import-log.js');
 const { clearImportLog } = require('./lib/import-log');
 
-const importLicenceSubscriber = async (job, done) => {
+const importLicenceBatchSubscriber = async (job, done) => {
   try {
-    const { licenceNumber } = job.data;
-    console.log(`Importing ${licenceNumber}`);
-    await load(licenceNumber);
+    const { licenceNumbers } = job.data;
+    for (let licenceNumber of licenceNumbers) {
+      console.log(`Importing ${licenceNumber}`);
+      await load(licenceNumber);
+    }
     done();
   } catch (err) {
     console.error(err);
@@ -34,13 +36,15 @@ const scheduleImportSubscriber = async (job, done) => {
  * @param {Object} messageQueue - PG Boss instance
  * @return {Function} async function to import licence
  */
-const importNextLicence = (messageQueue) => {
+const importNextLicenceBatch = (messageQueue) => {
   return async () => {
     try {
-      const row = await getNextImport();
-      if (row) {
-        const { licence_ref: licenceNumber } = row;
-        await messageQueue.publish('import.licence', { licenceNumber }, {
+      const rows = await getNextImportBatch();
+
+      if (rows.length) {
+        const licenceNumbers = rows.map(row => row.licence_ref);
+
+        await messageQueue.publish('import.licences', { licenceNumbers }, {
           retryLimit: 3
         });
       } else {
@@ -73,18 +77,21 @@ module.exports = (messageQueue) => {
       // Register event subscribers
       await messageQueue.subscribe('import.start', startImportSubscriber);
       await messageQueue.subscribe('import.schedule', scheduleImportSubscriber);
-      await messageQueue.subscribe('import.licence', importLicenceSubscriber);
+      await messageQueue.subscribe('import.licences', importLicenceBatchSubscriber);
 
       // Register state-based subscribers
       messageQueue.onComplete('import.start', () => {
         messageQueue.publish('import.schedule');
       });
-      messageQueue.onComplete('import.schedule', importNextLicence(messageQueue));
-      messageQueue.onComplete('import.licence', importNextLicence(messageQueue));
-      messageQueue.onFail('import.licence', importNextLicence(messageQueue));
+
+      const importBatch = importNextLicenceBatch(messageQueue);
+
+      messageQueue.onComplete('import.schedule', importBatch);
+      messageQueue.onComplete('import.licences', importBatch);
+      messageQueue.onFail('import.licences', importBatch);
 
       // Import next licence in queue on startup
-      importNextLicence(messageQueue)();
+      importBatch();
     }
   };
 };
