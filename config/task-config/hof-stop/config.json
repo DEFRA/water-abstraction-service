@@ -78,7 +78,7 @@
         "name": "contact_details",
         "label": "Contact number or email for questions",
         "widget": "text",
-        "default": "{{ contactDetails.tel }} or {{ contactDetails.email }}",
+        "default": "{{ contactDetails.tel }}{% if contactDetails.tel and contactDetails.email %} or {% endif %}{{ contactDetails.email }}",
         "validation": [
           "string",
           "required"
