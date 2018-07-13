@@ -7,7 +7,6 @@
 
 const nunjucks = require('nunjucks');
 const moment = require('moment');
-const fs = require('fs');
 
 nunjucks.configure({
   autoescape: false
@@ -53,7 +52,7 @@ function renderTemplates (taskConfig, params, contacts, licences, context = {}) 
 
   const viewContexts = [];
 
-  const data = contacts.map((contact) => {
+  return contacts.map((contact) => {
     const licenceList = contact.licences.map((licence) => {
       return licences[licence.system_external_id];
     });
@@ -83,10 +82,6 @@ function renderTemplates (taskConfig, params, contacts, licences, context = {}) 
       output
     };
   });
-
-  fs.writeFileSync('./notification-log.json', JSON.stringify(viewContexts, null, 2));
-
-  return data;
 }
 
 module.exports = renderTemplates;
