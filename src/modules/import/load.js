@@ -7,6 +7,36 @@ const { buildCRMPacket } = require('./transform-crm');
 const { buildReturnsPacket } = require('./transform-returns');
 const { getLicenceJson, buildPermitRepoPacket } = require('./transform-permit');
 const { updateImportLog } = require('./lib/import-log.js');
+const { returns, versions, lines } = require('../../lib/connectors/returns');
+
+/**
+ * Persist data from returns packet to 3x returns endpoints
+ * @param {Object} returnsPacket - created with buildReturnsPacket
+ * @return {Promise} resolves when complete
+ */
+const persistReturnsPacket = async (returnsPacket) => {
+  for (let row of returnsPacket.returns) {
+    const { error } = await returns.create(row);
+    if (error) {
+      throw new Error(error);
+    }
+  }
+
+  for (let row of returnsPacket.versions) {
+    const { error: versionError } = await versions.create(row);
+    if (versionError) {
+      console.error(versionError);
+      throw new Error(versionError);
+    }
+  }
+
+  for (let row of returnsPacket.lines) {
+    const { error: lineError } = await lines.create(row);
+    if (lineError) {
+      throw new Error(lineError);
+    }
+  }
+};
 
 /**
   * Persists licence to permit repo and CRM
@@ -34,6 +64,10 @@ const load = async (licenceNumber) => {
       console.error(crmError);
       throw crmError;
     };
+
+    // Build returns data
+    const returnsPacket = await buildReturnsPacket(licenceNumber);
+    persistReturnsPacket(returnsPacket);
 
     await updateImportLog(licenceNumber, 'OK');
   } catch (error) {

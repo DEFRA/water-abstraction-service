@@ -1,3 +1,10 @@
+const moment = require('moment');
+const camelCase = require('camelcase');
+const { mapValues } = require('lodash');
+const { dateToIsoString, returnsDateToIso } = require('./lib/date-helpers');
+
+const { formatAbstractionPoint } = require('../../lib/licence-transformer/nald-helpers');
+
 const {
   getFormats,
   getFormatPurposes,
@@ -5,6 +12,75 @@ const {
   getLogs,
   getLines
 } = require('./lib/nald-returns-queries.js');
+
+/**
+ * Converts 'null' strings to real null in supplied object
+ * @param {Object} - plain object
+ * @return {Object} with 'null' values converted to 'null'
+ */
+const convertNullStrings = (obj) => {
+  return mapValues(obj, val => val === 'null' ? null : val);
+};
+
+const mapFrequency = (str) => {
+  const frequencies = {
+    'D': 'daily',
+    'W': 'weekly',
+    'M': 'monthly',
+    'A': 'annual'
+  };
+  return frequencies[str];
+};
+
+const mapPeriod = (str) => {
+  const periods = {
+    'D': 'day',
+    'W': 'week',
+    'M': 'month',
+    'A': 'year'
+  };
+  return periods[str];
+};
+
+/**
+ * Calculates start of period based on start/end date and period
+ * @param {String} startDate - the returns start date YYYYMMDD
+ * @param {String} endDate - the line end date YYYYMMDD
+ * @param {String} period - the returns period - A/M/W/D
+ * @return {String} a date in format YYYY-MM-DD
+ */
+const getStartDate = (startDate, endDate, period) => {
+  const d = moment(endDate, 'YYYYMMDD');
+  let o;
+
+  if (period === 'A') {
+    o = moment(startDate, 'YYYYMMDD');
+  }
+  if (period === 'M') {
+    o = d.startOf('month');
+  }
+  if (period === 'W') {
+    o = d.startOf('week');
+  }
+  if (period === 'D') {
+    o = d;
+  }
+
+  return o.format('YYYY-MM-DD');
+};
+
+/**
+ * Converts units in NALD to recognised SI unit
+ * @param {String} unit
+ * @return {String} SI unit
+ */
+const mapUnit = (u) => {
+  const units = {
+    M: 'm³',
+    l: 'l'
+  };
+  return units[u];
+};
 
 const buildReturnsPacket = async (licenceNumber) => {
   const formats = await getFormats(licenceNumber);
@@ -20,7 +96,80 @@ const buildReturnsPacket = async (licenceNumber) => {
     format.logs = logs;
   }
 
-  return formats;
+  const returnsData = {
+    returns: [],
+    versions: [],
+    lines: []
+  };
+
+  for (let format of formats) {
+    for (let log of format.logs) {
+      const startDate = dateToIsoString(log.DATE_FROM);
+      const endDate = dateToIsoString(log.DATE_TO);
+      const logId = `${startDate}:${endDate}`;
+      const returnId = `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${logId}`;
+
+      const returnRow = {
+        return_id: returnId,
+        regime: 'water',
+        licence_type: 'abstraction',
+        licence_ref: licenceNumber,
+        start_date: startDate,
+        end_date: endDate,
+        returns_frequency: mapFrequency(format.ARTC_REC_FREQ_CODE),
+        status: 'complete',
+        source: 'NALD',
+        metadata: JSON.stringify({
+          version: 1,
+          description: format.SITE_DESCR,
+          purposes: format.purposes.map(purpose => ({
+            primaryCode: purpose.APUR_APPR_CODE,
+            secondaryCode: purpose.APUR_APSE_CODE,
+            tertiaryCode: purpose.APUR_APUS_CODE
+          })),
+          points: format.points.map(point => formatAbstractionPoint(convertNullStrings(point))),
+          nald: {
+            regionCode: format.FGAC_REGION_CODE,
+            formatId: format.ID,
+            logDateFrom: log.DATE_FROM,
+            logDateTo: log.DATE_TO
+          }
+        })
+      };
+
+      const versionRow = {
+        version_id: returnId,
+        return_id: returnId,
+        version_number: 1,
+        user_id: 'water-abstraction-service',
+        user_type: 'agency',
+        metadata: '{}',
+        nil_return: log.lines.length === 0
+      };
+
+      returnsData.returns.push(returnRow);
+      returnsData.versions.push(versionRow);
+
+      for (let line of log.lines) {
+        const endDate = returnsDateToIso(line.RET_DATE);
+        const lineRow = {
+          line_id: `${returnId}:${line.RET_DATE}`,
+          version_id: returnId,
+          substance: 'water',
+          quantity: parseFloat(line.RET_QTY) || 0,
+          unit: mapUnit(line.UNIT_RET_FLAG) || '?',
+          start_date: getStartDate(line.ARFL_DATE_FROM, line.RET_DATE, format.ARTC_REC_FREQ_CODE),
+          end_date: endDate,
+          time_period: mapPeriod(format.ARTC_REC_FREQ_CODE),
+          metadata: '{}'
+        };
+
+        returnsData.lines.push(lineRow);
+      }
+    }
+  }
+
+  return returnsData;
 };
 
 module.exports = {
