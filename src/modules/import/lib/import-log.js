@@ -64,9 +64,21 @@ const getNextImport = async () => {
   return rows.length ? rows[0] : null;
 };
 
+/**
+ * Gets the next licence to import
+ * @param {Number} batchSize - the number to import per batch
+ * @return {Object} - pending_import row, or null if all complete
+ */
+const getNextImportBatch = async (batchSize = 10) => {
+  const sql = `SELECT * FROM water.pending_import WHERE status=0 ORDER BY priority DESC LIMIT $1`;
+  const rows = await dbQuery(sql, [batchSize]);
+  return rows;
+};
+
 module.exports = {
   clearImportLog,
   createImportLog,
   updateImportLog,
-  getNextImport
+  getNextImport,
+  getNextImportBatch
 };

@@ -50,6 +50,8 @@ function getTemplate (taskConfig, contact) {
 function renderTemplates (taskConfig, params, contacts, licences, context = {}) {
   const date = moment().format('DD MMM YYYY');
 
+  const viewContexts = [];
+
   return contacts.map((contact) => {
     const licenceList = contact.licences.map((licence) => {
       return licences[licence.system_external_id];
@@ -66,6 +68,8 @@ function renderTemplates (taskConfig, params, contacts, licences, context = {}) 
       ...context,
       isPost: contact.method === 'post'
     };
+
+    viewContexts.push(viewContext);
 
     // Get the correct Nunjucks template for the message type
     const template = getTemplate(taskConfig, contact);

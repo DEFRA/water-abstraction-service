@@ -49,7 +49,7 @@
         "name": "sender_name",
         "label": "Name of sender",
         "widget": "text",
-        "default": "",
+        "default": "{{ contactDetails.name }}",
         "validation": [
           "string",
           "required"
@@ -59,7 +59,7 @@
         "name": "sender_role",
         "label": "Job title of sender",
         "widget": "text",
-        "default": "",
+        "default": "{{ contactDetails.jobTitle }}",
         "validation": [
           "string",
           "required"
@@ -70,7 +70,7 @@
         "label": "Address of sender",
         "mapper": "address",
         "widget": "textarea",
-        "default": "",
+        "default": "{{ contactDetails.address }}",
         "validation": [
           "string",
           "required"

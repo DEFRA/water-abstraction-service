@@ -18,16 +18,14 @@ module.exports = {
 
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: 20,
+    max: 5,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000
   },
 
   pgBoss: {
-    connectionString: process.env.DATABASE_URL,
     schema: 'water',
-    application_name: process.env.servicename,
-    newJobCheckInterval: 200
+    application_name: process.env.servicename
   },
 
   s3: {

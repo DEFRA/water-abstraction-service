@@ -11,3 +11,4 @@
 lcov.info
 *.swp
 temp/
+notification-log.json
