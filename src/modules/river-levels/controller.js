@@ -65,7 +65,7 @@ async function getStation (request, reply) {
     // Convert easting/northing to NGR
     const ngr = ngrConverter(easting, northing);
 
-    reply({
+    return {
       lat,
       long,
       ngr,
@@ -75,10 +75,10 @@ async function getStation (request, reply) {
       stageScale,
       measures: getMeasures(data),
       active: /^https?:\/\/environment.data.gov.uk\/flood-monitoring\/def\/core\/statusActive$/.test(status)
-    });
+    };
   } catch (error) {
     console.error(error);
-    reply({ error: 'River levels API error' }).code(error.statusCode);
+    reply.response({ error: 'River levels API error' }).code(error.statusCode);
   }
 }
 

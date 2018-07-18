@@ -2,7 +2,6 @@
  * Transforms NALD data into VML native format
  * @module lib/licence-transformer/nald-transformer
  */
-const deepMap = require('deep-map');
 const {
   find,
   uniqBy
@@ -12,6 +11,7 @@ const LicenceTitleLoader = require('./licence-title-loader');
 const licenceTitleLoader = new LicenceTitleLoader();
 const NALDHelpers = require('./nald-helpers');
 const sentenceCase = require('sentence-case');
+const { addressFormatter, findCurrent, nameFormatter, transformNull } = require('./nald-functional');
 
 class NALDTransformer extends BaseTransformer {
   /**
@@ -20,13 +20,7 @@ class NALDTransformer extends BaseTransformer {
    * @return {Object}
    */
   transformNull (data) {
-    return deepMap(data, (val) => {
-      // Convert string null to real null
-      if (typeof (val) === 'string' && val === 'null') {
-        return null;
-      }
-      return val;
-    });
+    return transformNull(data);
   }
 
   /**
@@ -36,7 +30,7 @@ class NALDTransformer extends BaseTransformer {
   async load (data) {
     data = this.transformNull(data);
 
-    const currentVersion = find(data.data.versions, version => version.STATUS === 'CURR');
+    const currentVersion = findCurrent(data.data.versions);
 
     const licenceHolderParty = find(currentVersion.parties, (party) => {
       return party.ID === currentVersion.ACON_APAR_ID;
@@ -100,29 +94,7 @@ class NALDTransformer extends BaseTransformer {
    * @return {Object} reformatted address
    */
   addressFormatter (contactAddress) {
-    const {
-      ADDR_LINE1,
-      ADDR_LINE2,
-      ADDR_LINE3
-    } = contactAddress;
-    const {
-      ADDR_LINE4,
-      TOWN,
-      COUNTY,
-      POSTCODE,
-      COUNTRY
-    } = contactAddress;
-
-    return {
-      addressLine1: ADDR_LINE1,
-      addressLine2: ADDR_LINE2,
-      addressLine3: ADDR_LINE3,
-      addressLine4: ADDR_LINE4,
-      town: TOWN,
-      county: COUNTY,
-      postcode: POSTCODE,
-      country: COUNTRY
-    };
+    return addressFormatter(contactAddress);
   }
 
   /**
@@ -131,19 +103,7 @@ class NALDTransformer extends BaseTransformer {
    * @return {Object} contact name
    */
   nameFormatter (party) {
-    if (party.APAR_TYPE === 'PER') {
-      const parts = [party.SALUTATION, party.INITIALS, party.NAME];
-      return {
-        contactType: 'Person',
-        name: parts.filter(s => s).join(' ')
-      };
-    }
-    if (party.APAR_TYPE === 'ORG') {
-      return {
-        contactType: 'Organisation',
-        name: party.NAME
-      };
-    }
+    return nameFormatter(party);
   }
 
   /**

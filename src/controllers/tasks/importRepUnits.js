@@ -1,5 +1,5 @@
 const { pool } = require('../../lib/connectors/db');
-const { createGUID } = require('../../lib/helpers');
+const uuidv4 = require('uuid/v4');
 /**
  * IMport rep units from NALD to lookup data
  */
@@ -14,7 +14,7 @@ async function processRepUnits () {
   const params = [];
   const insert = [];
   rows.forEach((row) => {
-    params.push(createGUID(), row.CODE, row.NAME, JSON.stringify(row));
+    params.push(uuidv4(), row.CODE, row.NAME, JSON.stringify(row));
     insert.push(`($${params.length - 3}, 'NALD_REP_UNITS', $${params.length - 2}, $${params.length - 1}, $${params.length} )`);
   });
 

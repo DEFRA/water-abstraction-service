@@ -1,4 +1,4 @@
-const { createGUID } = require('./helpers');
+const uuidv4 = require('uuid/v4');
 const moment = require('moment');
 const { pool } = require('./connectors/db');
 const Repository = require('hapi-pg-rest-api/src/repository');
@@ -120,7 +120,7 @@ class Event {
    */
   save () {
     if (!this.data.event_id) {
-      this.data.event_id = createGUID();
+      this.data.event_id = uuidv4();
       return event.create(this.data);
     }
     this.data.modified = moment().format('YYYY-MM-DD HH:mm:ss');

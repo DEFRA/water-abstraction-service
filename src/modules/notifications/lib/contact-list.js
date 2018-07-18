@@ -21,9 +21,8 @@ const { getDocumentContacts } = require('../../../lib/connectors/crm/documents')
  * @param {Array} contacts - list of licence contacts
  * @return {Object} - return preferred contact for notification
  */
-function getPreferredContact (contacts) {
-  const notificationPriority = ['document_notifications', 'notifications', 'area_import', 'licence_holder'];
-  return notificationPriority.reduce((acc, role) => {
+function getPreferredContact (contacts, rolePriority) {
+  return rolePriority.reduce((acc, role) => {
     if (acc) {
       return acc;
     }
@@ -36,7 +35,7 @@ function getPreferredContact (contacts) {
  * @param {Array} contacts
  * @return {Array} list of contacts to send to, and the licences it relates to
  */
-function createSendList (licences) {
+function createSendList (licences, rolePriority) {
   const list = {};
 
   licences.forEach(licence => {
@@ -47,7 +46,7 @@ function createSendList (licences) {
     // In future this may need to support sending specific messages to differnet
     // users.  For now it follows the priority order listed above - these are
     // either entity_roles or document_entity roles
-    const contact = getPreferredContact(licence.contacts);
+    const contact = getPreferredContact(licence.contacts, rolePriority);
 
     // Create contact ID for licence holder
     const licenceHolderId = getContactId(licenceHolder);
@@ -102,16 +101,17 @@ function getContactId (contact) {
 /**
  * Get de a list of de-duplicated contacts/licences
  * @param {Object} filter - the filter params to select licences from CRM
+ * @param {Array} [rolePriority] - an array of contact roles in priority order to send the message to
  * @return {Array} - list of contacts with licence details
  */
-async function getContacts (filter) {
+async function getContacts (filter, rolePriority) {
   const { error, data } = await getDocumentContacts(filter);
 
   if (error) {
     throw error;
   }
 
-  return createSendList(data);
+  return createSendList(data, rolePriority);
 }
 
 module.exports = getContacts;

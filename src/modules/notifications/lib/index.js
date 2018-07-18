@@ -6,6 +6,7 @@ const notificationFactory = require('./notification-factory');
 
 const messageQueue = require('../../../lib/message-queue');
 const { enqueue } = require('../../notify')(messageQueue);
+const defaultRolePriority = ['document_notifications', 'notifications', 'area_import', 'licence_contact', 'licence_holder'];
 
 /* eslint camelcase: "warn" */
 
@@ -41,7 +42,8 @@ const { enqueue } = require('../../notify')(messageQueue);
  */
 async function prepareNotification (filter, taskConfig, params, context = {}) {
   // Get a list of de-duped contacts with licences
-  const contacts = await getContactList(filter);
+  const rolePriority = taskConfig.config.role_priority || defaultRolePriority;
+  const contacts = await getContactList(filter, rolePriority);
 
   // Load licence data from permit repo, and use NALD licence transformer
   // to transform to same format used in front-end GUI

@@ -1,18 +1,15 @@
+const messageQueue = require('../../lib/message-queue');
+const { importNald } = require('../../modules/import')(messageQueue);
 
-const Nald = require('../../lib/nald')
-async function run(data) {
-  console.log('run!')
-        try{
-          await Nald.import()
-          return {
-            error: null
-          }
-        }catch(e){
-          return {
-            error: e.message
-          }
-        }
-      }
+const run = async (data) => {
+  try {
+    await importNald();
+    return { error: null };
+  } catch (error) {
+    return {error};
+  }
+};
+
 module.exports = {
   run
-}
+};

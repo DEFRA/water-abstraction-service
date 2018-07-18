@@ -1,0 +1,84 @@
+{
+  "task_config_id" : 2,
+  "type" : "notification",
+  "subtype" : "renewal",
+  "config" : {
+    "name": "Expiring licence(s): invitation to renew",
+    "role_priority" : ["document_notifications", "notifications", "area_import", "licence_holder"],
+    "steps": [
+      {
+        "widgets": [
+          {
+            "hint": "You can separate licence numbers using spaces, commas, or by entering them on different lines.",
+            "name": "system_external_id",
+            "label": "Enter the licence number(s) you want to send a notification about",
+            "mapper": "licenceNumbers",
+            "widget": "textarea",
+            "operator": "$in",
+            "validation": [
+              "array",
+              "min:1"
+            ],
+            "error_label": "licence number(s)"
+          }
+        ]
+      }
+    ],
+    "title": "Send an invitation to renew",
+    "prefix": "RENEW-",
+    "content": {
+    },
+    "formats": [
+      "email",
+      "letter"
+    ],
+    "subject": "Invitation to apply for a water abstraction licence renewal",
+    "variables": [
+      {
+        "name": "application_date",
+        "label": "Renewal application deadline",
+        "mapper": "date",
+        "widget": "date",
+        "default": "",
+        "validation": [
+          "string",
+          "required"
+        ]
+      },
+      {
+        "name": "sender_name",
+        "label": "Name of sender",
+        "widget": "text",
+        "default": "{{ contactDetails.name }}",
+        "validation": [
+          "string",
+          "required"
+        ]
+      },
+      {
+        "name": "sender_role",
+        "label": "Job title of sender",
+        "widget": "text",
+        "default": "{{ contactDetails.jobTitle }}",
+        "validation": [
+          "string",
+          "required"
+        ]
+      },
+      {
+        "name": "sender_address",
+        "label": "Address of sender",
+        "mapper": "address",
+        "widget": "textarea",
+        "default": "{{ contactDetails.address }}",
+        "validation": [
+          "string",
+          "required"
+        ]
+      }
+    ],
+    "permissions": [
+      "admin:defra"
+    ]
+  }
+}
