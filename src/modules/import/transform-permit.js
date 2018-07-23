@@ -100,21 +100,17 @@ const getVersionsJson = async (licenceRow) => {
  * @return {Promise} resolves with permit repo JSON packet
  */
 const getLicenceJson = async (licenceNumber) => {
-  try {
-    var data = await getMain(licenceNumber);
-    for (var licenceRow in data) {
-      var thisLicenceRow = data[licenceRow];
-      thisLicenceRow.vmlVersion = 2;
-      thisLicenceRow.data = {};
-      thisLicenceRow.data.versions = await getVersionsJson(thisLicenceRow);
-      thisLicenceRow.data.current_version = await getCurrentVersionJson(thisLicenceRow);
-      thisLicenceRow.data.cams = await getCams(thisLicenceRow.CAMS_CODE, thisLicenceRow.FGAC_REGION_CODE);
-      thisLicenceRow.data.roles = await getRoles(thisLicenceRow.ID, thisLicenceRow.FGAC_REGION_CODE);
-      thisLicenceRow.data.purposes = await getPurposesJson(thisLicenceRow);
-      return thisLicenceRow;
-    }
-  } catch (e) {
-    console.error(e);
+  var data = await getMain(licenceNumber);
+  for (var licenceRow in data) {
+    var thisLicenceRow = data[licenceRow];
+    thisLicenceRow.vmlVersion = 2;
+    thisLicenceRow.data = {};
+    thisLicenceRow.data.versions = await getVersionsJson(thisLicenceRow);
+    thisLicenceRow.data.current_version = await getCurrentVersionJson(thisLicenceRow);
+    thisLicenceRow.data.cams = await getCams(thisLicenceRow.CAMS_CODE, thisLicenceRow.FGAC_REGION_CODE);
+    thisLicenceRow.data.roles = await getRoles(thisLicenceRow.ID, thisLicenceRow.FGAC_REGION_CODE);
+    thisLicenceRow.data.purposes = await getPurposesJson(thisLicenceRow);
+    return thisLicenceRow;
   }
 };
 
