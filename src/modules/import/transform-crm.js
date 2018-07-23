@@ -104,7 +104,7 @@ function buildCRMMetadata (currentVersion) {
  * @param {Number} licenceId - the permit repo licence ID
  * @return {Object} - object containing of row of data for CRM
  */
-async function buildCRMPacket (licenceData, licenceRef, licenceId) {
+function buildCRMPacket (licenceData, licenceRef, licenceId) {
   let crmData = {
     regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf',
     system_id: 'permit-repo',

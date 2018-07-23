@@ -42,16 +42,46 @@ const createImportLog = async (licenceNumbers = [], filter = false) => {
 };
 
 /**
+ * Gets an appropriate status message given a row of import data
+ * @param {Object} row
+ * @return {String} log message
+ */
+const getMessage = (row) => {
+  let msg = 'OK';
+  if (row.error) {
+    msg = row.error;
+  } else if (!row.licenceData) {
+    msg = 'Missing licence data';
+  } else if (!row.licenceId) {
+    msg = 'Missing permit repo ID';
+  } else if (!row.documentId) {
+    msg = 'Missing CRM document ID';
+  }
+  return msg;
+};
+
+/**
  * Updates the import log with done status and optional log message
- * @param {String} licenceNumber
- * @param {String} log - optional log/error message
+ * @param {Array} batch of objects representing importing licences
  * @return {Promise} resolves when updated
  */
-const updateImportLog = (licenceNumber, log = null) => {
-  const sql = `UPDATE water.pending_import
-    SET status=1, date_updated=NOW(), log=$1
-    WHERE licence_ref=$2`;
-  return dbQuery(sql, [log, licenceNumber]);
+const updateImportLog = (data) => {
+  const parts = [];
+  const params = data.reduce((acc, row) => {
+    parts.push(`($${acc.length + 1}, $${acc.length + 2})`);
+    return [...acc, row.licenceNumber, getMessage(row)];
+  }, []);
+
+  const sql = `
+    UPDATE water.pending_import AS t SET
+        status=1, date_updated=NOW(), log = c.log
+    FROM (VALUES
+        ${parts.join(',')}
+    ) AS c(licence_ref, log)
+    WHERE c.licence_ref = t.licence_ref;
+    `;
+
+  return dbQuery(sql, params);
 };
 
 /**
