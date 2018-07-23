@@ -47,19 +47,17 @@ const createImportLog = async (licenceNumbers = [], filter = false) => {
  * @return {String} log message
  */
 const getMessage = (row) => {
+  let msg = 'OK';
   if (row.error) {
-    return row.error;
+    msg = row.error;
+  } else if (!row.licenceData) {
+    msg = 'Missing licence data';
+  } else if (!row.licenceId) {
+    msg = 'Missing permit repo ID';
+  } else if (!row.documentId) {
+    msg = 'Missing CRM document ID';
   }
-  if (!row.licenceData) {
-    return 'Missing licence data';
-  }
-  if (!row.licenceId) {
-    return 'Missing permit repo ID';
-  }
-  if (!row.documentId) {
-    return 'Missing CRM document ID';
-  }
-  return 'OK';
+  return msg;
 };
 
 /**
