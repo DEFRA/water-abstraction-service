@@ -36,6 +36,10 @@ module.exports = {
     proxy: process.env.proxy
   },
 
+  naldDump: {
+    file: process.env.test_mode ? 'nald_enc.zip.may18_1' : 'nald_enc.zip'
+  },
+
   server: {
     port: process.env.PORT,
     router: {
