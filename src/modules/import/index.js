@@ -9,10 +9,7 @@ const { clearImportLog } = require('./lib/import-log');
 const importLicenceBatchSubscriber = async (job, done) => {
   try {
     const { licenceNumbers } = job.data;
-    for (let licenceNumber of licenceNumbers) {
-      console.log(`Importing ${licenceNumber}`);
-      await load(licenceNumber);
-    }
+    await load(licenceNumbers);
     done();
   } catch (err) {
     console.error(err);
@@ -89,6 +86,8 @@ module.exports = (messageQueue) => {
       messageQueue.onComplete('import.schedule', importBatch);
       messageQueue.onComplete('import.licences', importBatch);
       messageQueue.onFail('import.licences', importBatch);
+
+      // messageQueue.publish('import.schedule');
 
       // Import next licence in queue on startup
       importBatch();

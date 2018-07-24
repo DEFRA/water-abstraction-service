@@ -28,7 +28,7 @@ The application forms can be found on our website: https://www.gov.uk/guidance/w
 
 # How to apply to renew your licence{{ 's' if pluralLicence }} with exactly the same terms
 
-Please complete this online form for each licence: [URL TBC].
+Please complete this online form for each licence: https://www.gov.uk/guidance/apply-to-renew-a-water-abstraction-licence.
 
 # How to complete your renewal form{{ 's' if pluralLicence }}
 
@@ -84,7 +84,7 @@ You may also receive a letter from your local area team about future changes we 
 
 # How to contact us
 
-To discuss any changes you would like to make please call us on 0114 2898 340.
+To discuss any changes you would like to make please call us on 03708 506 506.
 
 
 

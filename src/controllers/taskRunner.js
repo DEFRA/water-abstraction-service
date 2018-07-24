@@ -28,7 +28,7 @@ async function run () {
       try {
         interval = JSON.parse(job.data[0].task_config);
       } catch (e) {
-        interval = {count: 1, period: 'minute'};
+        interval = { count: 1, period: 'minute' };
       }
 
       // Record the time the task started
@@ -65,5 +65,6 @@ async function run () {
 }
 
 module.exports = {
-  run, reset
+  run,
+  reset
 };
