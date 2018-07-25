@@ -1,6 +1,7 @@
 const readFirstLine = require('firstline');
 const fs = require('fs');
 const path = require('path');
+const { intersection } = require('lodash');
 const { promisify } = require('util');
 const config = require('../../../config.js');
 const { execCommand } = require('../../lib/helpers.js');
@@ -49,7 +50,7 @@ const extract = async () => {
  */
 async function getImportFiles () {
   const files = await readDir(finalPath);
-  const excludeList = ['NALD_RET_LINES', 'NALD_RET_LINES_AUDIT', 'NALD_RET_FORM_LOGS', 'NALD_RET_FORM_LOGS_AUDIT'];
+  const excludeList = ['NALD_RET_LINES_AUDIT', 'NALD_RET_FORM_LOGS_AUDIT'];
   return files.filter((file) => {
     const table = file.split('.')[0];
     return !(table.length === 0 || excludeList.includes(table));
@@ -62,19 +63,16 @@ async function getImportFiles () {
  * @return {String} the SQL statements to import the CSV file
  */
 async function getSqlForFile (file) {
+  const indexableFieldsList = ['ID', 'LIC_NO ', 'FGAC_REGION_CODE', 'CODE ', 'AABL_ID', 'WA_ALTY_CODE', 'EFF_END_DATE', 'EFF_ST_DATE', 'STATUS', 'EXPIRY_DATE', 'LAPSED_DATE', 'REV_DATE', 'ISSUE_NO', 'INCR_NO', 'AADD_ID', 'APAR_ID', 'ACNT_CODE', 'ACON_APAR_ID', 'ACON_AADD_ID', 'ALRT_CODE', 'AABV_AABL_ID', 'AABV_ISSUE_NO', 'AABV_INCR_NO', 'AMOA_CODE', 'AAIP_ID', 'ASRC_CODE', 'AABP_ID', 'ACIN_CODE', 'ACIN_SUBCODE', 'DISP_ORD'];
+
   let table = file.split('.')[0];
 
   const tablePath = path.join(finalPath, `${table}.txt`);
 
-  // console.log(`Process ${table}`)
-  let indexableFields = [];
   let line = await readFirstLine(tablePath);
   let cols = line.split(',');
   let tableCreate = `\n CREATE TABLE if not exists "import"."${table}" (`;
-  indexableFields = [cols[0]];
-  if (cols.indexOf('FGAC_REGION_CODE') >= 0) {
-    indexableFields[1] = 'FGAC_REGION_CODE';
-  }
+
   for (let col = 0; col < cols.length; col++) {
     tableCreate += `"${cols[col]}" varchar`;
     if (cols.length === (col + 1)) {
@@ -83,8 +81,13 @@ async function getSqlForFile (file) {
       tableCreate += `, `;
     }
   }
-  tableCreate += `\ndrop INDEX  if exists "${table}_index";`;
-  tableCreate += `\nCREATE INDEX "${table}_index" ON "import"."${table}" USING btree(${'"' + indexableFields.join('","') + '"'});`;
+
+  const indexableFields = intersection(indexableFieldsList, cols);
+  for (let field of indexableFields) {
+    const indexName = `${table}_${field}_index`;
+    tableCreate += `\ndrop INDEX  if exists "${indexName}";`;
+    tableCreate += `\nCREATE INDEX "${indexName}" ON "import"."${table}" (${field});`;
+  }
   tableCreate += `\n \\copy "import"."${table}" FROM '${finalPath}/${file}' HEADER DELIMITER ',' CSV;`;
   return tableCreate;
 }
