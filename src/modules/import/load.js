@@ -3,9 +3,12 @@
  */
 const Permit = require('../../lib/connectors/permit');
 const Documents = require('../../lib/connectors/crm/documents');
+const Returns = require('../../lib/connectors/returns');
+
 const { buildCRMPacket } = require('./transform-crm');
+const { buildReturnsPacket } = require('./transform-returns');
 const { getLicenceJson, buildPermitRepoPacket } = require('./transform-permit');
-const { filter, find } = require('lodash');
+const { find } = require('lodash');
 const { updateImportLog } = require('./lib/import-log.js');
 
 /**
@@ -36,6 +39,32 @@ const preparePermitRepoData = async (licenceNumbers) => {
     }
   }
   return result;
+};
+
+/**
+ * Prepares returns data
+ * @param {Array} data - a list of objects for licences being imported
+ * @return {Promise} resolves with returns data included in list
+ */
+const persistReturns = async (data) => {
+  const returns = [];
+  const versions = [];
+  const lines = [];
+
+  for (let row of data) {
+    console.log(`Posting to returns for ${row.licenceNumber}`);
+    try {
+      const licenceReturns = await buildReturnsPacket(row.licenceNumber);
+      // Persist
+      await Returns.returns.create(licenceReturns.returns, ['return_id']);
+      await Returns.versions.create(licenceReturns.versions, ['version_id']);
+      await Returns.lines.create(licenceReturns.lines, ['line_id']);
+    } catch (error) {
+      row.error = error;
+    }
+  }
+
+  return data;
 };
 
 /**
@@ -106,11 +135,11 @@ const persistCrmDocuments = async (data) => {
 };
 
 const load = async (licenceNumbers) => {
-  const permits = await preparePermitRepoData(licenceNumbers);
-  const result = await persistPermits(permits);
-  const finalResult = await persistCrmDocuments(result);
-
-  await updateImportLog(finalResult);
+  let list = await preparePermitRepoData(licenceNumbers);
+  list = await persistPermits(list);
+  list = await persistCrmDocuments(list);
+  list = await persistReturns(list);
+  await updateImportLog(list);
 };
 
 module.exports = {
