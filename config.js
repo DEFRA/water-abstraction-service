@@ -22,7 +22,7 @@ module.exports = {
   // Therefore 125 / (2 x 2 x 5) = 6.25 connections per application pool.
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: 6,
+    max: 10,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000
   },

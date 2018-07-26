@@ -55,11 +55,13 @@ const persistReturns = async (data) => {
     console.log(`Posting to returns for ${row.licenceNumber}`);
     try {
       const licenceReturns = await buildReturnsPacket(row.licenceNumber);
+
       // Persist
       await Returns.returns.create(licenceReturns.returns, ['return_id']);
       await Returns.versions.create(licenceReturns.versions, ['version_id']);
       await Returns.lines.create(licenceReturns.lines, ['line_id']);
     } catch (error) {
+      console.error(error);
       row.error = error;
     }
   }

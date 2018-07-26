@@ -123,16 +123,31 @@ const buildReturnsPacket = async (licenceNumber) => {
           version: 1,
           description: format.SITE_DESCR,
           purposes: format.purposes.map(purpose => ({
-            primaryCode: purpose.APUR_APPR_CODE,
-            secondaryCode: purpose.APUR_APSE_CODE,
-            tertiaryCode: purpose.APUR_APUS_CODE
+            primary: {
+              code: purpose.APUR_APPR_CODE,
+              description: purpose.primary_purpose
+            },
+            secondary: {
+              code: purpose.APUR_APSE_CODE,
+              description: purpose.secondary_purpose
+            },
+            tertiary: {
+              code: purpose.APUR_APUS_CODE,
+              description: purpose.tertiary_purpose
+            }
           })),
           points: format.points.map(point => formatAbstractionPoint(convertNullStrings(point))),
           nald: {
-            regionCode: format.FGAC_REGION_CODE,
-            formatId: format.ID,
-            logDateFrom: log.DATE_FROM,
-            logDateTo: log.DATE_TO
+            regionCode: parseInt(format.FGAC_REGION_CODE),
+            formatId: parseInt(format.ID),
+            dateFrom: dateToIsoString(log.DATE_FROM),
+            dateTo: dateToIsoString(log.DATE_TO),
+            dateReceived: dateToIsoString(log.RECD_DATE),
+            periodStartDay: format.ABS_PERIOD_ST_DAY,
+            periodStartMonth: format.ABS_PERIOD_ST_MONTH,
+            periodEndDay: format.ABS_PERIOD_END_DAY,
+            periodEndMonth: format.ABS_PERIOD_END_MONTH,
+            underQuery: log.UNDER_QUERY_FLAG === 'Y'
           }
         })
       };
@@ -156,7 +171,7 @@ const buildReturnsPacket = async (licenceNumber) => {
           line_id: `${returnId}:${line.RET_DATE}`,
           version_id: returnId,
           substance: 'water',
-          quantity: parseFloat(line.RET_QTY) || 0,
+          quantity: line.RET_QTY === '' ? null : parseFloat(line.RET_QTY),
           unit: mapUnit(line.UNIT_RET_FLAG) || '?',
           start_date: getStartDate(line.ARFL_DATE_FROM, line.RET_DATE, format.ARTC_REC_FREQ_CODE),
           end_date: endDate,
