@@ -1,116 +1,53 @@
 /**
  * Code for loading imported data to the target database(s)
  */
-const Permit = require('../../lib/connectors/permit');
-const Documents = require('../../lib/connectors/crm/documents');
+const moment = require('moment');
+const uuidV4 = require('uuid/v4');
 const { buildCRMPacket } = require('./transform-crm');
+const { buildReturnsPacket } = require('./transform-returns');
 const { getLicenceJson, buildPermitRepoPacket } = require('./transform-permit');
-const { filter, find } = require('lodash');
-const { updateImportLog } = require('./lib/import-log.js');
+const { setImportStatus } = require('./lib/import-log.js');
 
-/**
- * Prepares a batch of permit repo data given a list of licence numbers
- * @param {Array} licenceNumbers - the licence numbers to import to the permit repo
- * @return {Promise} resolves with list of permits to import
- */
-const preparePermitRepoData = async (licenceNumbers) => {
-  const result = [];
-  for (let licenceNumber of licenceNumbers) {
-    console.log(`Import: ${licenceNumber}`);
-    try {
-      // Create licence JSON from import tables
-      const licenceData = await getLicenceJson(licenceNumber);
+const repository = require('./repositories');
 
-      result.push({
-        licenceNumber,
-        licenceData,
-        error: null
-
-      });
-    } catch (error) {
-      result.push({
-        licenceNumber,
-        licenceData: null,
-        error
-      });
-    }
-  }
-  return result;
-};
-
-/**
- * Persist a batch of licences where there are no errors from previous step
- * @param {Array} result set from preparePermitRepoData
- * @return {Array} result
- */
-const persistPermits = async (data) => {
-  const postData = data.filter(row => !row.error && row.licenceData).map(row => {
-    return buildPermitRepoPacket(row.licenceNumber, 1, 8, row.licenceData);
-  });
-
-  if (postData.length < 1) {
-    return data;
-  }
-
-  console.log(`Import: Posting to permit repo`);
-
-  // Persist batch of permits to permit repo
-  const { error, data: permitData } = await Permit.licences.create(postData, ['licence_id', 'licence_ref']);
-
-  if (error) {
-    throw error;
-  }
-
-  // Add permit repo licence IDs to result set
+const addTimestamp = (data) => {
+  const ts = moment().format('YYYY-MM-DD HH:mm:ss');
   return data.map(row => {
-    const permitRow = find(permitData, { licence_ref: row.licenceNumber });
-
     return {
       ...row,
-      licenceId: permitRow ? permitRow.licence_id : null
+      created_at: ts
     };
   });
 };
 
-/**
- * Persists batch of CRM documents where there are no errors from previous step
- * @param {Array} data - result of previous step
- */
-const persistCrmDocuments = async (data) => {
-  const postData = data.filter(row => !row.error && row.licenceId).map(row => {
-    return buildCRMPacket(row.licenceData, row.licenceNumber, row.licenceId);
-  });
+const load = async (licenceNumber) => {
+  try {
+    console.log(`Import: permit ${licenceNumber}`);
 
-  if (postData.length < 1) {
-    return data;
+    await setImportStatus(licenceNumber, 'Importing');
+
+    // Create permit repo data and persist
+    const licenceData = await getLicenceJson(licenceNumber);
+    const permit = buildPermitRepoPacket(licenceNumber, 1, 8, licenceData);
+    const { rows: [ { licence_id: permitRepoId } ] } = await repository.licence.persist(permit, ['licence_id']);
+
+    // Create CRM data and persist
+    console.log(`Import: document header for ${licenceNumber}`);
+    const crmData = buildCRMPacket(licenceData, licenceNumber, permitRepoId);
+    await repository.document.persist({document_id: uuidV4(), ...crmData});
+
+    console.log(`Import: returns for ${licenceNumber}`);
+    const { returns, versions, lines } = await buildReturnsPacket(licenceNumber);
+    await repository.return.persist(addTimestamp(returns));
+    await repository.version.persist(addTimestamp(versions));
+    await repository.line.persist(addTimestamp(lines));
+
+    await setImportStatus(licenceNumber, 'OK');
+    console.log(`Import: complete for ${licenceNumber}`);
+  } catch (error) {
+    console.error(error);
+    await setImportStatus(licenceNumber, error.toString());
   }
-
-  console.log(`Import: Posting to CRM`);
-
-  // Persist batch of permits to CRM  permit repo
-  const { error, data: crmData } = await Documents.create(postData, ['document_id', 'system_external_id']);
-
-  if (error) {
-    throw error;
-  }
-
-  // Add permit repo licence IDs to result set
-  return data.map(row => {
-    const crmRow = find(crmData, { system_external_id: row.licenceNumber });
-
-    return {
-      ...row,
-      documentId: crmRow ? crmRow.document_id : null
-    };
-  });
-};
-
-const load = async (licenceNumbers) => {
-  const permits = await preparePermitRepoData(licenceNumbers);
-  const result = await persistPermits(permits);
-  const finalResult = await persistCrmDocuments(result);
-
-  await updateImportLog(finalResult);
 };
 
 module.exports = {

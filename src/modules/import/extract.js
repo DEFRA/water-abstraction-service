@@ -31,7 +31,8 @@ const prepare = async () => {
  * @return {Promise} resolves when download complete
  */
 const download = async () => {
-  return s3Download('nald_dump/nald_enc.zip', filePath);
+  const remotePath = path.join('nald_dump', 'nald_enc.zip');
+  return s3Download(remotePath, filePath);
 };
 
 /**

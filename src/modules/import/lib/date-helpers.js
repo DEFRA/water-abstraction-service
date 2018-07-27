@@ -35,7 +35,18 @@ const dateToIsoString = (str) => {
   return dateFormatter(str, 'YYYY-MM-DD');
 };
 
+/**
+ * Formats returns date in form YYYYMMDDHHmmSS to ISO YYYY-MM-DD
+ * @param {String} date from NALD returns line
+ * @return {String} ISO date YYYY-MM-DD
+ */
+const returnsDateToIso = (str) => {
+  const d = moment(str, 'YYYYMMDD');
+  return d.isValid() ? d.format('YYYY-MM-DD') : null;
+};
+
 module.exports = {
   dateToIsoString,
-  dateToSortableString
+  dateToSortableString,
+  returnsDateToIso
 };
