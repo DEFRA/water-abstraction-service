@@ -1,5 +1,4 @@
 const moment = require('moment');
-const camelCase = require('camelcase');
 const { mapValues } = require('lodash');
 const { dateToIsoString, returnsDateToIso } = require('./lib/date-helpers');
 

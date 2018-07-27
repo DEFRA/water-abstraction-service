@@ -1,5 +1,6 @@
 {
   "apps": [
+
     {
       "name": "water-api",
       "ignore_watch": [
@@ -16,6 +17,25 @@
         "instances" : "max",
         "exec_mode" : "cluster"
       }
+    },
+
+    {
+      "name": "water-api-import",
+      "ignore_watch": [
+        "node_modules",
+        "src/lib/temp",
+        "temp"
+      ],
+      "script" : "import.js",
+      "env": {
+        "watch": true
+      },
+      "env_production": {
+        "watch": false,
+        "instances" : "1"
+      }
     }
+
+
   ]
 }

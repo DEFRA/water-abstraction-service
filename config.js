@@ -22,7 +22,14 @@ module.exports = {
   // Therefore 125 / (2 x 2 x 5) = 6.25 connections per application pool.
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: 10,
+    max: 8,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000
+  },
+
+  pgImport: {
+    connectionString: process.env.DATABASE_URL,
+    max: 2,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000
   },
@@ -39,10 +46,6 @@ module.exports = {
     region: 'eu-west-1',
     bucket: process.env.s3_bucket,
     proxy: process.env.proxy
-  },
-
-  naldDump: {
-    file: process.env.test_mode ? 'nald_enc.zip.may18_1' : 'nald_enc.zip'
   },
 
   server: {
