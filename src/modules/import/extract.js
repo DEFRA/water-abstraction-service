@@ -54,7 +54,8 @@ async function getImportFiles () {
   const excludeList = ['NALD_RET_LINES_AUDIT', 'NALD_RET_FORM_LOGS_AUDIT'];
   return files.filter((file) => {
     const table = file.split('.')[0];
-    return !(table.length === 0 || excludeList.includes(table));
+    const extn = file.split('.')[1];
+    return !(table.length === 0 || excludeList.includes(table)) && extn === 'txt';
   });
 }
 
@@ -64,7 +65,7 @@ async function getImportFiles () {
  * @return {String} the SQL statements to import the CSV file
  */
 async function getSqlForFile (file) {
-  const indexableFieldsList = ['ID', 'LIC_NO ', 'FGAC_REGION_CODE', 'CODE ', 'AABL_ID', 'WA_ALTY_CODE', 'EFF_END_DATE', 'EFF_ST_DATE', 'STATUS', 'EXPIRY_DATE', 'LAPSED_DATE', 'REV_DATE', 'ISSUE_NO', 'INCR_NO', 'AADD_ID', 'APAR_ID', 'ACNT_CODE', 'ACON_APAR_ID', 'ACON_AADD_ID', 'ALRT_CODE', 'AABV_AABL_ID', 'AABV_ISSUE_NO', 'AABV_INCR_NO', 'AMOA_CODE', 'AAIP_ID', 'ASRC_CODE', 'AABP_ID', 'ACIN_CODE', 'ACIN_SUBCODE', 'DISP_ORD'];
+  const indexableFieldsList = ['ID', 'LIC_NO ', 'FGAC_REGION_CODE', 'CODE ', 'AABL_ID', 'WA_ALTY_CODE', 'EFF_END_DATE', 'EFF_ST_DATE', 'STATUS', 'EXPIRY_DATE', 'LAPSED_DATE', 'REV_DATE', 'ISSUE_NO', 'INCR_NO', 'AADD_ID', 'APAR_ID', 'ACNT_CODE', 'ACON_APAR_ID', 'ACON_AADD_ID', 'ALRT_CODE', 'AABV_AABL_ID', 'AABV_ISSUE_NO', 'AABV_INCR_NO', 'AMOA_CODE', 'AAIP_ID', 'ASRC_CODE', 'AABP_ID', 'ACIN_CODE', 'ACIN_SUBCODE', 'DISP_ORD', 'ARTY_ID', 'ARFL_ARTY_ID', 'ARFL_DATE_FROM'];
 
   let table = file.split('.')[0];
 
@@ -84,12 +85,17 @@ async function getSqlForFile (file) {
   }
 
   const indexableFields = intersection(indexableFieldsList, cols);
+
   for (let field of indexableFields) {
     const indexName = `${table}_${field}_index`;
     tableCreate += `\ndrop INDEX  if exists "${indexName}";`;
-    tableCreate += `\nCREATE INDEX "${indexName}" ON "import"."${table}" (${field});`;
   }
   tableCreate += `\n \\copy "import"."${table}" FROM '${finalPath}/${file}' HEADER DELIMITER ',' CSV;`;
+  for (let field of indexableFields) {
+    const indexName = `${table}_${field}_index`;
+    tableCreate += `\nCREATE INDEX "${indexName}" ON "import"."${table}" ("${field}");`;
+  }
+
   return tableCreate;
 }
 

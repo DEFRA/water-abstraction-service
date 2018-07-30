@@ -1,5 +1,22 @@
 const { dbQuery } = require('./db');
 
+/**
+ * Checks whether import table exists
+ * @return {Promise} resolves with boolean
+ */
+const importTableExists = async () => {
+  const query = `
+  select count(*)
+  from information_schema.tables
+  where table_schema = 'import';
+`;
+  const rows = await dbQuery(query);
+  if (rows.length) {
+    return rows[0].count >= 128;
+  }
+  return false;
+};
+
 const getMain = async (licenceNo) => {
   const query = `
     select * from import.
@@ -224,6 +241,7 @@ const getPurposePointLicenceConditions = async (AABP_ID, FGAC_REGION_CODE) => {
 };
 
 module.exports = {
+  importTableExists,
   getMain,
   getCams,
   getCurrentVersion,
