@@ -7,6 +7,7 @@ const { buildCRMPacket } = require('./transform-crm');
 const { buildReturnsPacket } = require('./transform-returns');
 const { getLicenceJson, buildPermitRepoPacket } = require('./transform-permit');
 const { setImportStatus } = require('./lib/import-log.js');
+const { importTableExists } = require('./lib/nald-queries');
 
 const repository = require('./repositories');
 
@@ -23,6 +24,11 @@ const addTimestamp = (data) => {
 const load = async (licenceNumber) => {
   try {
     console.log(`Import: permit ${licenceNumber}`);
+
+    if (!await importTableExists()) {
+      console.log(`Import: skip ${licenceNumber} - import table does not exist`);
+      return;
+    }
 
     await setImportStatus(licenceNumber, 'Importing');
 

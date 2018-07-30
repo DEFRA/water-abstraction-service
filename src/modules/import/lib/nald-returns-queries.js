@@ -60,8 +60,8 @@ const getFormatPoints = (formatId, regionCode) => {
 const getLogs = (formatId, regionCode) => {
   const query = `
   SELECT l.* FROM "import"."NALD_RET_FORM_LOGS" l
-  WHERE l."ARTY_ID"=$1 AND l."FGAC_REGION_CODE"=$2
-  ORDER BY to_date(l."DATE_FROM", 'DD/MM/YYYY')`;
+  WHERE l."ARTY_ID"=$1 AND l."FGAC_REGION_CODE"=$2`;
+  // ORDER BY to_date(l."DATE_FROM", 'DD/MM/YYYY')`;
   const params = [formatId, regionCode];
   return dbQuery(query, params);
 };
@@ -78,9 +78,10 @@ const getLines = (formatId, regionCode, dateFrom) => {
   const from = m.format('YYYYMMDD') + '000000';
   const query = `
   SELECT l.* FROM "import"."NALD_RET_LINES" l
-  WHERE l."ARFL_ARTY_ID"=$1 AND l."FGAC_REGION_CODE"=$2 AND "ARFL_DATE_FROM"=$3
-  ORDER BY "RET_DATE"`;
+  WHERE l."ARFL_ARTY_ID"=$1 AND l."FGAC_REGION_CODE"=$2 AND "ARFL_DATE_FROM"=$3`;
+  // ORDER BY "RET_DATE"`;
   const params = [formatId, regionCode, from];
+
   return dbQuery(query, params);
 };
 
