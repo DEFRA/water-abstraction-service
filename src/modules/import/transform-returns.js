@@ -76,7 +76,7 @@ const getStartDate = (startDate, endDate, period) => {
 const mapUnit = (u) => {
   const units = {
     M: 'm³',
-    l: 'l'
+    l: 'L'
   };
   return units[u];
 };
