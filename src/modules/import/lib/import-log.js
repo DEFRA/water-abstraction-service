@@ -42,16 +42,14 @@ const createImportLog = async (licenceNumbers = [], filter = false) => {
 };
 
 /**
- * Updates the import log with done status and optional log message
- * @param {String} licenceNumber
- * @param {String} log - optional log/error message
- * @return {Promise} resolves when updated
+ * Updates import status of licence number specified
+ * @param {String} licenceNumber - the abstraction licence number
+ * @param {Number} status - 0 means pending import, 1 means importing/imported
+ * @return Promise
  */
-const updateImportLog = (licenceNumber, log = null) => {
-  const sql = `UPDATE water.pending_import
-    SET status=1, date_updated=NOW(), log=$1
-    WHERE licence_ref=$2`;
-  return dbQuery(sql, [log, licenceNumber]);
+const setImportStatus = async (licenceNumber, message = '', status = 1) => {
+  const sql = `UPDATE water.pending_import SET status=$1, log=$2 WHERE licence_ref=$3`;
+  await dbQuery(sql, [status, message, licenceNumber]);
 };
 
 /**
@@ -78,7 +76,7 @@ const getNextImportBatch = async (batchSize = 10) => {
 module.exports = {
   clearImportLog,
   createImportLog,
-  updateImportLog,
   getNextImport,
-  getNextImportBatch
+  getNextImportBatch,
+  setImportStatus
 };

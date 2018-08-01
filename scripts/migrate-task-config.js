@@ -1,12 +1,7 @@
 /**
  * Updates task config data in DB using config files
  */
-require('dotenv').config();
-const { Pool } = require('pg');
-const { pg } = require('../config');
-
-const pool = new Pool(pg);
-
+const { pool } = require('../src/lib/connectors/db');
 const rows = require('../config/task-config');
 
 const migrate = async () => {

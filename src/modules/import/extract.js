@@ -1,6 +1,8 @@
 const readFirstLine = require('firstline');
+const { dbQuery } = require('./lib/db');
 const fs = require('fs');
 const path = require('path');
+const { intersection } = require('lodash');
 const { promisify } = require('util');
 const config = require('../../../config.js');
 const { execCommand } = require('../../lib/helpers.js');
@@ -30,7 +32,8 @@ const prepare = async () => {
  * @return {Promise} resolves when download complete
  */
 const download = async () => {
-  return s3Download('nald_dump/nald_enc.zip', filePath);
+  const remotePath = path.join('nald_dump', 'nald_enc.zip');
+  return s3Download(remotePath, filePath);
 };
 
 /**
@@ -49,11 +52,21 @@ const extract = async () => {
  */
 async function getImportFiles () {
   const files = await readDir(finalPath);
-  const excludeList = ['NALD_RET_LINES', 'NALD_RET_LINES_AUDIT', 'NALD_RET_FORM_LOGS', 'NALD_RET_FORM_LOGS_AUDIT'];
+  const excludeList = ['NALD_RET_LINES_AUDIT', 'NALD_RET_FORM_LOGS_AUDIT'];
   return files.filter((file) => {
     const table = file.split('.')[0];
-    return !(table.length === 0 || excludeList.includes(table));
+    const extn = file.split('.')[1];
+    return !(table.length === 0 || excludeList.includes(table)) && extn === 'txt';
   });
+}
+
+/**
+ * Drops and creates the import schema ready to import the CSVs as tables
+ * @return {Promise}
+ */
+async function dropAndCreateSchema () {
+  await dbQuery('DROP SCHEMA IF EXISTS "import" CASCADE');
+  await dbQuery('CREATE schema if not exists "import"');
 }
 
 /**
@@ -62,19 +75,17 @@ async function getImportFiles () {
  * @return {String} the SQL statements to import the CSV file
  */
 async function getSqlForFile (file) {
+  const indexableFieldsList = ['ID', 'LIC_NO ', 'FGAC_REGION_CODE', 'CODE ', 'AABL_ID', 'WA_ALTY_CODE', 'EFF_END_DATE', 'EFF_ST_DATE', 'STATUS', 'EXPIRY_DATE', 'LAPSED_DATE', 'REV_DATE', 'ISSUE_NO', 'INCR_NO', 'AADD_ID', 'APAR_ID', 'ACNT_CODE', 'ACON_APAR_ID', 'ACON_AADD_ID', 'ALRT_CODE', 'AABV_AABL_ID', 'AABV_ISSUE_NO', 'AABV_INCR_NO', 'AMOA_CODE', 'AAIP_ID', 'ASRC_CODE', 'AABP_ID', 'ACIN_CODE', 'ACIN_SUBCODE', 'DISP_ORD', 'ARTY_ID', 'ARFL_ARTY_ID', 'ARFL_DATE_FROM'];
+
   let table = file.split('.')[0];
 
   const tablePath = path.join(finalPath, `${table}.txt`);
 
-  // console.log(`Process ${table}`)
-  let indexableFields = [];
   let line = await readFirstLine(tablePath);
   let cols = line.split(',');
+
   let tableCreate = `\n CREATE TABLE if not exists "import"."${table}" (`;
-  indexableFields = [cols[0]];
-  if (cols.indexOf('FGAC_REGION_CODE') >= 0) {
-    indexableFields[1] = 'FGAC_REGION_CODE';
-  }
+
   for (let col = 0; col < cols.length; col++) {
     tableCreate += `"${cols[col]}" varchar`;
     if (cols.length === (col + 1)) {
@@ -83,36 +94,38 @@ async function getSqlForFile (file) {
       tableCreate += `, `;
     }
   }
-  tableCreate += `\ndrop INDEX  if exists "${table}_index";`;
-  tableCreate += `\nCREATE INDEX "${table}_index" ON "import"."${table}" USING btree(${'"' + indexableFields.join('","') + '"'});`;
+
+  const indexableFields = intersection(indexableFieldsList, cols);
+
+  for (let field of indexableFields) {
+    const indexName = `${table}_${field}_index`;
+    tableCreate += `\ndrop INDEX  if exists "${indexName}";`;
+  }
   tableCreate += `\n \\copy "import"."${table}" FROM '${finalPath}/${file}' HEADER DELIMITER ',' CSV;`;
+  for (let field of indexableFields) {
+    const indexName = `${table}_${field}_index`;
+    tableCreate += `\nCREATE INDEX "${indexName}" ON "import"."${table}" ("${field}");`;
+  }
+
   return tableCreate;
 }
 
 /**
- * Builds SQL file to create tables for NALD import
+ * Imports a single CSV file
+ * @param {String} the CSV filename
+ * @return {Promise}
  */
-async function buildSQL () {
-  let tableCreate = 'drop schema if exists "import" cascade;\nCREATE schema if not exists "import"; \n ';
+async function importFiles () {
   const files = await getImportFiles();
+  const sqlPath = path.join(finalPath, 'sql.sql');
+
   for (let file of files) {
-    tableCreate += await getSqlForFile(file);
-  };
-
-  const sqlPath = path.join(finalPath, 'sql.sql');
-
-  await writeFile(sqlPath, tableCreate);
-  return sqlPath;
+    console.log(`Importing ${file} to PostGres`);
+    const sql = await getSqlForFile(file);
+    await writeFile(sqlPath, sql);
+    await execCommand(`psql ${config.pg.connectionString} < ${sqlPath}`);
+  }
 }
-
-/**
- * Process CSV data files, build SQL and import into PostGres
- * @param {Function} asyncLogger - an async logger, could be console/slack
- */
-const importCSVToDatabase = () => {
-  const sqlPath = path.join(finalPath, 'sql.sql');
-  return execCommand(`psql ${config.pg.connectionString} < ${sqlPath}`);
-};
 
 /**
  * The download/extract tasks have been combined into a single task
@@ -121,22 +134,26 @@ const importCSVToDatabase = () => {
  * @return {Promise}
  */
 const downloadAndExtract = async () => {
-  await Slack.post('Import: preparing folders');
+  Slack.post('Import: preparing folders');
   await prepare();
 
   // Download from S3
-  await Slack.post('Import: downloading from S3');
+  Slack.post('Import: downloading from S3');
   await download();
   // Extract files from zip
-  await Slack.post('Import: extracting files from zip');
+  Slack.post('Import: extracting files from zip');
   await extract();
-  // Build SQL import script
-  await Slack.post('Import: building SQL file');
-  await buildSQL();
 
-  await Slack.post('Import: importing CSV files');
-  await importCSVToDatabase();
-  await Slack.post('Import: CSV loaded');
+  Slack.post('Import: drop/create import schema');
+  await dropAndCreateSchema();
+
+  Slack.post('Import: importing CSV files');
+  await importFiles();
+
+  Slack.post('Import: CSV loaded');
+
+  await prepare();
+  Slack.post('Import: cleaned up local files');
 };
 
 /**
@@ -147,12 +164,13 @@ const downloadAndExtract = async () => {
  */
 const copyTestFiles = async () => {
   await prepare();
+  await dropAndCreateSchema();
 
   // move dummy data files
   await execCommand(`cp ./test/dummy-csv/* ${finalPath}`);
-  await buildSQL();
+
   // Import CSV
-  return importCSVToDatabase();
+  return importFiles();
 };
 
 module.exports = {

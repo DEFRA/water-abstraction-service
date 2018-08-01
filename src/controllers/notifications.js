@@ -26,7 +26,8 @@ const NotificationsApi = new HAPIRestAPI({
     send_after: Joi.string(),
     message_type: Joi.string(),
     status: Joi.string(),
-    log: Joi.string()
+    log: Joi.string(),
+    event_id: Joi.string().guid()
   }
 });
 
