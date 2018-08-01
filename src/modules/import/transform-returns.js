@@ -15,7 +15,8 @@ const {
   mapFrequency,
   mapPeriod,
   getStartDate,
-  mapUnit
+  mapUnit,
+  mapUsability
 } = require('./lib/transform-returns-helpers.js');
 
 const buildReturnsPacket = async (licenceNumber) => {
@@ -113,7 +114,8 @@ const buildReturnsPacket = async (licenceNumber) => {
           start_date: getStartDate(line.ARFL_DATE_FROM, line.RET_DATE, format.ARTC_REC_FREQ_CODE),
           end_date: endDate,
           time_period: mapPeriod(format.ARTC_REC_FREQ_CODE),
-          metadata: '{}'
+          metadata: '{}',
+          reading_type: mapUsability(line.RET_QTY_USABILITY)
         };
 
         returnsData.lines.push(lineRow);
