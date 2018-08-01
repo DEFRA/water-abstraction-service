@@ -148,7 +148,8 @@ const buildReturnsPacket = async (licenceNumber) => {
             periodEndMonth: format.ABS_PERIOD_END_MONTH,
             underQuery: log.UNDER_QUERY_FLAG === 'Y'
           }
-        })
+        }),
+        received_date: log.RECD_DATE === '' ? null : dateToIsoString(log.RECD_DATE)
       };
 
       const versionRow = {
