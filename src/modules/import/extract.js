@@ -134,26 +134,26 @@ async function importFiles () {
  * @return {Promise}
  */
 const downloadAndExtract = async () => {
-  await Slack.post('Import: preparing folders');
+  Slack.post('Import: preparing folders');
   await prepare();
 
   // Download from S3
-  await Slack.post('Import: downloading from S3');
+  Slack.post('Import: downloading from S3');
   await download();
   // Extract files from zip
-  await Slack.post('Import: extracting files from zip');
+  Slack.post('Import: extracting files from zip');
   await extract();
 
-  await Slack.post('Import: drop/create import schema');
+  Slack.post('Import: drop/create import schema');
   await dropAndCreateSchema();
 
-  await Slack.post('Import: importing CSV files');
+  Slack.post('Import: importing CSV files');
   await importFiles();
 
-  await Slack.post('Import: CSV loaded');
+  Slack.post('Import: CSV loaded');
 
   await prepare();
-  await Slack.post('Import: cleaned up local files');
+  Slack.post('Import: cleaned up local files');
 };
 
 /**
