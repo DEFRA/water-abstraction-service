@@ -29,7 +29,9 @@ const startImportSubscriber = async (job, done) => {
 module.exports = (messageQueue) => {
   return {
     importNald: () => {
-      messageQueue.publish('import.start');
+      messageQueue.publish('import.start', {}, {
+        expireIn: '1 hours'
+      });
     },
     registerSubscribers: async () => {
       // Register event subscribers

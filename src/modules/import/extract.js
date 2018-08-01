@@ -1,4 +1,5 @@
 const readFirstLine = require('firstline');
+const { dbQuery } = require('./lib/db');
 const fs = require('fs');
 const path = require('path');
 const { intersection } = require('lodash');
@@ -60,6 +61,15 @@ async function getImportFiles () {
 }
 
 /**
+ * Drops and creates the import schema ready to import the CSVs as tables
+ * @return {Promise}
+ */
+async function dropAndCreateSchema () {
+  await dbQuery('DROP SCHEMA IF EXISTS "import" CASCADE');
+  await dbQuery('CREATE schema if not exists "import"');
+}
+
+/**
  * Gets import SQL for single file in import
  * @param {String} file - the CSV file to import
  * @return {String} the SQL statements to import the CSV file
@@ -73,6 +83,7 @@ async function getSqlForFile (file) {
 
   let line = await readFirstLine(tablePath);
   let cols = line.split(',');
+
   let tableCreate = `\n CREATE TABLE if not exists "import"."${table}" (`;
 
   for (let col = 0; col < cols.length; col++) {
@@ -100,29 +111,21 @@ async function getSqlForFile (file) {
 }
 
 /**
- * Builds SQL file to create tables for NALD import
+ * Imports a single CSV file
+ * @param {String} the CSV filename
+ * @return {Promise}
  */
-async function buildSQL () {
-  let tableCreate = 'drop schema if exists "import" cascade;\nCREATE schema if not exists "import"; \n ';
+async function importFiles () {
   const files = await getImportFiles();
+  const sqlPath = path.join(finalPath, 'sql.sql');
+
   for (let file of files) {
-    tableCreate += await getSqlForFile(file);
-  };
-
-  const sqlPath = path.join(finalPath, 'sql.sql');
-
-  await writeFile(sqlPath, tableCreate);
-  return sqlPath;
+    console.log(`Importing ${file} to PostGres`);
+    const sql = await getSqlForFile(file);
+    await writeFile(sqlPath, sql);
+    await execCommand(`psql ${config.pg.connectionString} < ${sqlPath}`);
+  }
 }
-
-/**
- * Process CSV data files, build SQL and import into PostGres
- * @param {Function} asyncLogger - an async logger, could be console/slack
- */
-const importCSVToDatabase = () => {
-  const sqlPath = path.join(finalPath, 'sql.sql');
-  return execCommand(`psql ${config.pg.connectionString} < ${sqlPath}`);
-};
 
 /**
  * The download/extract tasks have been combined into a single task
@@ -140,13 +143,17 @@ const downloadAndExtract = async () => {
   // Extract files from zip
   await Slack.post('Import: extracting files from zip');
   await extract();
-  // Build SQL import script
-  await Slack.post('Import: building SQL file');
-  await buildSQL();
+
+  await Slack.post('Import: drop/create import schema');
+  await dropAndCreateSchema();
 
   await Slack.post('Import: importing CSV files');
-  await importCSVToDatabase();
+  await importFiles();
+
   await Slack.post('Import: CSV loaded');
+
+  await prepare();
+  await Slack.post('Import: cleaned up local files');
 };
 
 /**
@@ -157,12 +164,13 @@ const downloadAndExtract = async () => {
  */
 const copyTestFiles = async () => {
   await prepare();
+  await dropAndCreateSchema();
 
   // move dummy data files
   await execCommand(`cp ./test/dummy-csv/* ${finalPath}`);
-  await buildSQL();
+
   // Import CSV
-  return importCSVToDatabase();
+  return importFiles();
 };
 
 module.exports = {
