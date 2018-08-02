@@ -44,7 +44,7 @@ const repoConfig = {
     table: 'returns.lines',
     upsert: {
       fields: ['line_id'],
-      set: ['version_id', 'substance', 'quantity', 'unit', 'start_date', 'end_date', 'time_period', 'metadata']
+      set: ['version_id', 'substance', 'quantity', 'unit', 'start_date', 'end_date', 'time_period', 'metadata', 'reading_type']
     }
   }
 
