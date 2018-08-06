@@ -87,6 +87,26 @@ const mapUsability = (u) => {
 };
 
 /**
+ * Gets additional NALD data to store in return metadata
+ * @param {Object} format - the return format record from NALD data
+ * @return {Object} metadata to store
+ */
+const formatReturnNaldMetadata = (format) => {
+  return {
+    regionCode: parseInt(format.FGAC_REGION_CODE),
+    formatId: parseInt(format.ID),
+    // dateFrom: dateToIsoString(log.DATE_FROM),
+    // dateTo: dateToIsoString(log.DATE_TO),
+    // dateReceived: dateToIsoString(log.RECD_DATE),
+    periodStartDay: format.ABS_PERIOD_ST_DAY,
+    periodStartMonth: format.ABS_PERIOD_ST_MONTH,
+    periodEndDay: format.ABS_PERIOD_END_DAY,
+    periodEndMonth: format.ABS_PERIOD_END_MONTH
+    // underQuery: log.UNDER_QUERY_FLAG === 'Y'
+  };
+};
+
+/**
  * Gets metadata object to store in returns table
  * @param {Object} format
  * @return {Object} return metadata
@@ -110,18 +130,7 @@ const formatReturnMetadata = (format) => {
       }
     })),
     points: format.points.map(point => formatAbstractionPoint(convertNullStrings(point))),
-    nald: {
-      regionCode: parseInt(format.FGAC_REGION_CODE),
-      formatId: parseInt(format.ID),
-      // dateFrom: dateToIsoString(log.DATE_FROM),
-      // dateTo: dateToIsoString(log.DATE_TO),
-      // dateReceived: dateToIsoString(log.RECD_DATE),
-      periodStartDay: format.ABS_PERIOD_ST_DAY,
-      periodStartMonth: format.ABS_PERIOD_ST_MONTH,
-      periodEndDay: format.ABS_PERIOD_END_DAY,
-      periodEndMonth: format.ABS_PERIOD_END_MONTH
-      // underQuery: log.UNDER_QUERY_FLAG === 'Y'
-    }
+    nald: formatReturnNaldMetadata(format)
   };
 };
 
@@ -175,15 +184,13 @@ const getCyclePeriods = (startDate, endDate, isSummer) => {
 
     if (isSummer && datePtr.month() < 10) {
       datePtr.month(9).date(31);
-      dates.push(getDateWithinBounds(datePtr, startDate, endDate).format('YYYY-MM-DD'));
-      datePtr.month(10).date(1);
     } else {
       const year = (datePtr.month() <= 2) ? datePtr.year() : datePtr.year() + 1;
-
       datePtr.month(2).date(31).year(year);
-      dates.push(getDateWithinBounds(datePtr, startDate, endDate).format('YYYY-MM-DD'));
-      datePtr.month(3).date(1);
     }
+
+    dates.push(getDateWithinBounds(datePtr, startDate, endDate).format('YYYY-MM-DD'));
+    datePtr.add(1, 'day');
   }
 
   return chunk(dates, 2).map(arr => ({
