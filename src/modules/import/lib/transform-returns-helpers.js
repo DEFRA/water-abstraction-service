@@ -168,6 +168,22 @@ const getDateWithinBounds = (date, startDate, endDate) => {
 };
 
 /**
+ * Given a moment, and isSummer flag, returns a moment for the
+ * end date of the next period
+ * @param {Object} datePtr - moment
+ * @param {Boolean} isSummer
+ * @return {Object} moment for end of next period
+ */
+const getNextPeriodEnd = (datePtr, isSummer) => {
+  if (isSummer && datePtr.month() < 10) {
+    return moment().year(datePtr.year()).month(9).date(31);
+  } else {
+    const year = (datePtr.month() <= 2) ? datePtr.year() : datePtr.year() + 1;
+    return moment().year(year).month(2).date(31);
+  }
+};
+
+/**
  * Gets array of cycle dates for the given start date, end date,
  * and summer flag
  * @param {Object} startDate - moment
@@ -182,12 +198,7 @@ const getCyclePeriods = (startDate, endDate, isSummer) => {
   while (datePtr.isSameOrBefore(endDate)) {
     dates.push(getDateWithinBounds(datePtr, startDate, endDate).format('YYYY-MM-DD'));
 
-    if (isSummer && datePtr.month() < 10) {
-      datePtr.month(9).date(31);
-    } else {
-      const year = (datePtr.month() <= 2) ? datePtr.year() : datePtr.year() + 1;
-      datePtr.month(2).date(31).year(year);
-    }
+    datePtr = getNextPeriodEnd(datePtr, isSummer);
 
     dates.push(getDateWithinBounds(datePtr, startDate, endDate).format('YYYY-MM-DD'));
     datePtr.add(1, 'day');
