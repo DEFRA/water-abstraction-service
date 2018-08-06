@@ -141,6 +141,24 @@ const mapProductionMonth = (month) => {
 };
 
 /**
+ * Given a date, and bounding start/end dates, returns either
+ * the input date if within bounds, or the start/end date if out of bounds
+ * @param {Object} date - reference date, moment object
+ * @param {Object} startDate - moment
+ * @param {Object} endDate - moment
+ * @retun {Object} moment
+ */
+const getDateWithinBounds = (date, startDate, endDate) => {
+  if (date.isBefore(startDate)) {
+    return startDate;
+  } else if (date.isAfter(endDate)) {
+    return endDate;
+  } else {
+    return date;
+  }
+};
+
+/**
  * Gets array of cycle dates for the given start date, end date,
  * and summer flag
  * @param {Object} startDate - moment
@@ -148,8 +166,30 @@ const mapProductionMonth = (month) => {
  * @param {Boolean} isSummer
  * @return {Array} array of start/end date objects
  */
-const getCycleDates = (startDate, endDate, isSummer) => {
+const getCyclePeriods = (startDate, endDate, isSummer) => {
+  const dates = [];
+  let datePtr = moment(startDate);
 
+  while (datePtr.isSameOrBefore(endDate)) {
+    dates.push(getDateWithinBounds(datePtr, startDate, endDate).format('YYYY-MM-DD'));
+
+    if (isSummer && datePtr.month() < 10) {
+      datePtr.month(9).date(31);
+      dates.push(getDateWithinBounds(datePtr, startDate, endDate).format('YYYY-MM-DD'));
+      datePtr.month(10).date(1);
+    } else {
+      const year = (datePtr.month() <= 2) ? datePtr.year() : datePtr.year() + 1;
+
+      datePtr.month(2).date(31).year(year);
+      dates.push(getDateWithinBounds(datePtr, startDate, endDate).format('YYYY-MM-DD'));
+      datePtr.month(3).date(1);
+    }
+  }
+
+  return chunk(dates, 2).map(arr => ({
+    startDate: arr[0],
+    endDate: arr[1]
+  }));
 };
 
 /**
@@ -158,7 +198,7 @@ const getCycleDates = (startDate, endDate, isSummer) => {
  * @return {array}
  */
 const getCycles = (formats) => {
-  const dates = [];
+  const cycles = [];
 
   for (let format of formats) {
     const info = mapProductionMonth(format.FORM_PRODN_MONTH);
@@ -167,29 +207,16 @@ const getCycles = (formats) => {
 
     const endDate = effEnd || moment();
 
-    let datePtr = effStart;
+    const cyclePeriods = getCyclePeriods(effStart, endDate, info.isSummer);
 
-    while (datePtr.isBefore(endDate)) {
-      dates.push({format, info, date: datePtr.format('YYYY-MM-DD')});
-
-      if (info.isSummer && datePtr.month() === 3) {
-        datePtr.month(9).date(31);
-        dates.push({format, info, date: datePtr.format('YYYY-MM-DD')});
-        datePtr.month(10).date(1);
-      } else {
-        datePtr.month(2).date(31).year(datePtr.year() + 1);
-        dates.push({format, info, date: datePtr.format('YYYY-MM-DD')});
-        datePtr.month(3).date(1);
-      }
+    for (let period in cyclePeriods) {
+      cycles.push({
+        format,
+        info,
+        ...period
+      });
     }
   }
-
-  const cycles = chunk(dates, 2).map(pair => ({
-    format: pair[0].format,
-    info: pair[0].info,
-    startDate: pair[0].date,
-    endDate: pair[1].date
-  }));
 
   return cycles;
 };
@@ -230,5 +257,6 @@ module.exports = {
   mapUsability,
   getPeriod,
   formatReturnMetadata,
-  getCycles
+  getCycles,
+  getCyclePeriods
 };
