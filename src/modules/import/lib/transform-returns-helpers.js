@@ -160,7 +160,7 @@ const getCycles = (formats) => {
     let datePtr = effStart;
 
     while (datePtr.isBefore(endDate)) {
-      dates.push({format, info, date: effStart.format('YYYY-MM-DD')});
+      dates.push({format, info, date: datePtr.format('YYYY-MM-DD')});
 
       if (info.isSummer && datePtr.month() === 3) {
         datePtr.month(8).date(30);

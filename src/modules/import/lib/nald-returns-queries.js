@@ -77,14 +77,11 @@ const getLogs = (formatId, regionCode) => {
  * @return {Promise} resolves with array of DB records
  */
 const getLines = (formatId, regionCode, dateFrom, dateTo) => {
-  // const from = moment(dateFrom, 'YYYY-MM-DD').format('YYYYMMDD') + '000000';
-  // const to = moment(dateTo, 'YYYY-MM-DD').format('YYYYMMDD') + '000000';
   const query = `SELECT l.* FROM "import"."NALD_RET_LINES" l
   WHERE l."ARFL_ARTY_ID"=$1 AND l."FGAC_REGION_CODE"=$2 AND
-  to_date("RET_DATE", 'YYYYMMDD')>=to_date($3, 'YYYY-MM-DD') AND to_date("RET_DATE", 'YYYYMMDD')<=to_date($4, 'YYYY-MM-DD')
+  to_date("RET_DATE", 'YYYYMMDDHH24MISS')>=to_date($3, 'YYYY-MM-DD') AND to_date("RET_DATE", 'YYYYMMDDHH24MISS')<=to_date($4, 'YYYY-MM-DD')
   ORDER BY "RET_DATE"`;
   const params = [formatId, regionCode, dateFrom, dateTo];
-  console.log(params);
   return dbQuery(query, params);
 };
 
