@@ -227,7 +227,7 @@ const getCycles = (formats) => {
 
     const cyclePeriods = getCyclePeriods(effStart, endDate, info.isSummer);
 
-    for (let period in cyclePeriods) {
+    for (let period of cyclePeriods) {
       cycles.push({
         format,
         info,
@@ -245,26 +245,26 @@ const getCycles = (formats) => {
  * @param {Object} log
  * @return {Object} start/end dates
  */
-const getPeriod = (format, log) => {
-  const {
-    ABS_PERIOD_ST_DAY: startDay,
-    ABS_PERIOD_ST_MONTH: startMonth,
-    ABS_PERIOD_END_DAY: endDay,
-    ABS_PERIOD_END_MONTH: endMonth
-  } = format;
-
-  const startYear = moment(log.DATE_FROM, 'DD/MM/YYYY').year();
-  const endYear = endMonth < startMonth ? startYear + 1 : startYear;
-
-  // Need to create/retrieve a return for the specified period
-  const startDate = moment().year(startYear).month(startMonth - 1).date(startDay).format('YYYY-MM-DD');
-  const endDate = moment().year(endYear).month(endMonth - 1).date(endDay).format('YYYY-MM-DD');
-
-  return {
-    startDate,
-    endDate
-  };
-};
+// const getPeriod = (format, log) => {
+//   const {
+//     ABS_PERIOD_ST_DAY: startDay,
+//     ABS_PERIOD_ST_MONTH: startMonth,
+//     ABS_PERIOD_END_DAY: endDay,
+//     ABS_PERIOD_END_MONTH: endMonth
+//   } = format;
+//
+//   const startYear = moment(log.DATE_FROM, 'DD/MM/YYYY').year();
+//   const endYear = endMonth < startMonth ? startYear + 1 : startYear;
+//
+//   // Need to create/retrieve a return for the specified period
+//   const startDate = moment().year(startYear).month(startMonth - 1).date(startDay).format('YYYY-MM-DD');
+//   const endDate = moment().year(endYear).month(endMonth - 1).date(endDay).format('YYYY-MM-DD');
+//
+//   return {
+//     startDate,
+//     endDate
+//   };
+// };
 
 module.exports = {
   convertNullStrings,
@@ -273,7 +273,7 @@ module.exports = {
   getStartDate,
   mapUnit,
   mapUsability,
-  getPeriod,
+  // getPeriod,
   formatReturnMetadata,
   getCycles,
   getCyclePeriods
