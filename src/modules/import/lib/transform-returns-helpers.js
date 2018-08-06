@@ -141,6 +141,18 @@ const mapProductionMonth = (month) => {
 };
 
 /**
+ * Gets array of cycle dates for the given start date, end date,
+ * and summer flag
+ * @param {Object} startDate - moment
+ * @param {Object} endDate - moment
+ * @param {Boolean} isSummer
+ * @return {Array} array of start/end date objects
+ */
+const getCycleDates = (startDate, endDate, isSummer) => {
+
+};
+
+/**
  * Gets returns cycles given a list of return formats
  * @param {Array} formats
  * @return {array}
@@ -153,8 +165,6 @@ const getCycles = (formats) => {
     const effStart = moment(format.EFF_ST_DATE, 'DD/MM/YYYY');
     const effEnd = format.EFF_END_DATE === 'null' ? null : moment(format.EFF_END_DATE, 'DD/MM/YYYY');
 
-    const yearEnd = moment().month(2).date(31);
-
     const endDate = effEnd || moment();
 
     let datePtr = effStart;
@@ -163,9 +173,9 @@ const getCycles = (formats) => {
       dates.push({format, info, date: datePtr.format('YYYY-MM-DD')});
 
       if (info.isSummer && datePtr.month() === 3) {
-        datePtr.month(8).date(30);
+        datePtr.month(9).date(31);
         dates.push({format, info, date: datePtr.format('YYYY-MM-DD')});
-        datePtr.month(9).date(1);
+        datePtr.month(10).date(1);
       } else {
         datePtr.month(2).date(31).year(datePtr.year() + 1);
         dates.push({format, info, date: datePtr.format('YYYY-MM-DD')});
@@ -211,37 +221,6 @@ const getPeriod = (format, log) => {
   };
 };
 
-/**
- * Creates / retrieves return in list
- * @param {Array} rows of returns
- * @return {Object} created/retrieved return row
- */
-// const createReturn = (licenceNumber, returns, format, log) => {
-//
-//
-//   const returnId = `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}`;
-//
-//   // Create new return row
-//   returnRow = {
-//     return_id: returnId,
-//     regime: 'water',
-//     licence_type: 'abstraction',
-//     licence_ref: licenceNumber,
-//     start_date: startDate,
-//     end_date: endDate,
-//     returns_frequency: mapFrequency(format.ARTC_REC_FREQ_CODE),
-//     status: 'complete',
-//     source: 'NALD',
-//     metadata: JSON.stringify(formatReturnMetadata(format)),
-//     received_date: log.RECD_DATE === '' ? null : dateToIsoString(log.RECD_DATE)
-//   };
-//
-//   console.log('Create return!', startDate, endDate);
-//
-//   returns.push(returnRow);
-//   return returnRow;
-// };
-
 module.exports = {
   convertNullStrings,
   mapFrequency,
@@ -249,7 +228,6 @@ module.exports = {
   getStartDate,
   mapUnit,
   mapUsability,
-  // findReturn,
   getPeriod,
   formatReturnMetadata,
   getCycles

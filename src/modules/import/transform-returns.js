@@ -17,7 +17,6 @@ const {
   mapUnit,
   mapUsability,
   formatReturnMetadata,
-  // getPeriod,
   getCycles
 } = require('./lib/transform-returns-helpers.js');
 
