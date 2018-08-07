@@ -10,7 +10,8 @@ const {
   getStartDate,
   mapUnit,
   mapUsability,
-  getCyclePeriods
+  getFinancialYear,
+  getSummerYear
 } = require('../../../../src/modules/import/lib/transform-returns-helpers');
 
 lab.experiment('Test returns data transformation helpers', () => {
@@ -81,57 +82,42 @@ lab.experiment('Test returns data transformation helpers', () => {
     expect(mapUsability('x')).to.equal(undefined);
   });
 
-  lab.test('Test billing cycle periods - all year', async () => {
-    const periods = getCyclePeriods(moment('2014-01-01', 'YYYY-MM-DD'), moment('2016-06-15', 'YYYY-MM-DD'), false);
-
-    expect(periods).to.equal([
-      {
-        startDate: '2014-01-01',
-        endDate: '2014-03-31'
-      },
-      {
-        startDate: '2014-04-01',
-        endDate: '2015-03-31'
-      },
-      {
-        startDate: '2015-04-01',
-        endDate: '2016-03-31'
-      },
-      {
-        startDate: '2016-04-01',
-        endDate: '2016-06-15'
-      }
-    ]);
+  lab.test('Test getFinancialYear', async () => {
+    expect(getFinancialYear('01/01/2015')).to.equal({
+      startDate: '2014-04-01',
+      endDate: '2015-03-31'
+    });
+    expect(getFinancialYear('31/03/2016')).to.equal({
+      startDate: '2015-04-01',
+      endDate: '2016-03-31'
+    });
+    expect(getFinancialYear('01/04/2016')).to.equal({
+      startDate: '2016-04-01',
+      endDate: '2017-03-31'
+    });
+    expect(getFinancialYear('31/12/2016')).to.equal({
+      startDate: '2016-04-01',
+      endDate: '2017-03-31'
+    });
   });
 
-  lab.test('Test billing cycle periods - all year with start/end dates matching cycle dates', async () => {
-    const periods = getCyclePeriods(moment('2014-04-01', 'YYYY-MM-DD'), moment('2016-03-31', 'YYYY-MM-DD'), false);
-
-    expect(periods).to.equal([
-      {
-        startDate: '2014-04-01',
-        endDate: '2015-03-31'
-      },
-      {
-        startDate: '2015-04-01',
-        endDate: '2016-03-31'
-      }
-    ]);
-  });
-
-  lab.test('Test billing cycle periods - summer', async () => {
-    const periods = getCyclePeriods(moment('2014-11-05', 'YYYY-MM-DD'), moment('2016-05-15', 'YYYY-MM-DD'), true);
-
-    expect(periods).to.equal([
-      {
-        startDate: '2014-11-05',
-        endDate: '2015-10-31'
-      },
-      {
-        startDate: '2015-11-01',
-        endDate: '2016-05-15'
-      }
-    ]);
+  lab.test('Test getSummerYear', async () => {
+    expect(getSummerYear('01/01/2015')).to.equal({
+      startDate: '2014-11-01',
+      endDate: '2015-10-31'
+    });
+    expect(getSummerYear('31/10/2016')).to.equal({
+      startDate: '2015-11-01',
+      endDate: '2016-10-31'
+    });
+    expect(getSummerYear('01/11/2016')).to.equal({
+      startDate: '2016-11-01',
+      endDate: '2017-10-31'
+    });
+    expect(getSummerYear('31/12/2016')).to.equal({
+      startDate: '2016-11-01',
+      endDate: '2017-10-31'
+    });
   });
 });
 
