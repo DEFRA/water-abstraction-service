@@ -1,36 +1,49 @@
-const { dateToIsoString, returnsDateToIso } = require('./lib/date-helpers');
-
-const { formatAbstractionPoint } = require('../../lib/licence-transformer/nald-helpers');
+const moment = require('moment');
+const { returnsDateToIso } = require('./lib/date-helpers');
 
 const {
   getFormats,
   getFormatPurposes,
   getFormatPoints,
   getLogs,
-  getLines
+  getLines,
+  getLogsForPeriod
 } = require('./lib/nald-returns-queries.js');
 
 const {
-  convertNullStrings,
   mapFrequency,
   mapPeriod,
   getStartDate,
   mapUnit,
-  mapUsability
+  mapUsability,
+  formatReturnMetadata,
+  formatLineMetadata,
+  getFormatCycles,
+  isNilReturn,
+  mapQuantity,
+  mapReceivedDate
 } = require('./lib/transform-returns-helpers.js');
 
-const buildReturnsPacket = async (licenceNumber) => {
+/**
+ * @param {String} licenceNumber - the abstraction licence number
+ * @param {String} currentVersionStart - the start date of the current version of the licence in format DD/MM/YYYY
+ */
+const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
+  // Create moment for the start date of the current licence version
+  const versionStartDate = currentVersionStart ? moment(currentVersionStart, 'DD/MM/YYYY') : null;
+
   const formats = await getFormats(licenceNumber);
 
+  // Load format data
   for (let format of formats) {
-    let logs = await getLogs(format.ID, format.FGAC_REGION_CODE);
-    for (let log of logs) {
-      log.lines = await getLines(format.ID, format.FGAC_REGION_CODE, log.DATE_FROM);
-    }
-
     format.purposes = await getFormatPurposes(format.ID, format.FGAC_REGION_CODE);
     format.points = await getFormatPoints(format.ID, format.FGAC_REGION_CODE);
-    format.logs = logs;
+    format.logs = await getLogs(format.ID, format.FGAC_REGION_CODE);
+    format.cycles = getFormatCycles(format);
+
+    for (let cycle of format.cycles) {
+      cycle.lines = await getLines(format.ID, format.FGAC_REGION_CODE, cycle.startDate, cycle.endDate);
+    }
   }
 
   const returnsData = {
@@ -40,12 +53,18 @@ const buildReturnsPacket = async (licenceNumber) => {
   };
 
   for (let format of formats) {
-    for (let log of format.logs) {
-      const startDate = dateToIsoString(log.DATE_FROM);
-      const endDate = dateToIsoString(log.DATE_TO);
-      const logId = `${startDate}:${endDate}`;
-      const returnId = `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${logId}`;
+    for (let cycle of format.cycles) {
+      const { startDate, endDate } = cycle;
 
+      // Get all form logs relating to this cycle
+      const cycleLogs = await getLogsForPeriod(format.ID, format.FGAC_REGION_CODE, startDate, endDate);
+
+      const returnId = `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}:${endDate}`;
+
+      const isCurrent = versionStartDate && moment(endDate).isAfter(versionStartDate);
+      const isNil = isNilReturn(cycle.lines.map(row => mapQuantity(row.RET_QTY)));
+
+      // Create new return row
       const returnRow = {
         return_id: returnId,
         regime: 'water',
@@ -57,64 +76,43 @@ const buildReturnsPacket = async (licenceNumber) => {
         status: 'complete',
         source: 'NALD',
         metadata: JSON.stringify({
-          version: 1,
-          description: format.SITE_DESCR,
-          purposes: format.purposes.map(purpose => ({
-            primary: {
-              code: purpose.APUR_APPR_CODE,
-              description: purpose.primary_purpose
-            },
-            secondary: {
-              code: purpose.APUR_APSE_CODE,
-              description: purpose.secondary_purpose
-            },
-            tertiary: {
-              code: purpose.APUR_APUS_CODE,
-              description: purpose.tertiary_purpose
-            }
-          })),
-          points: format.points.map(point => formatAbstractionPoint(convertNullStrings(point))),
-          nald: {
-            regionCode: parseInt(format.FGAC_REGION_CODE),
-            formatId: parseInt(format.ID),
-            dateFrom: dateToIsoString(log.DATE_FROM),
-            dateTo: dateToIsoString(log.DATE_TO),
-            dateReceived: dateToIsoString(log.RECD_DATE),
-            periodStartDay: format.ABS_PERIOD_ST_DAY,
-            periodStartMonth: format.ABS_PERIOD_ST_MONTH,
-            periodEndDay: format.ABS_PERIOD_END_DAY,
-            periodEndMonth: format.ABS_PERIOD_END_MONTH,
-            underQuery: log.UNDER_QUERY_FLAG === 'Y'
-          }
+          ...formatReturnMetadata(format),
+          isCurrent
         }),
-        received_date: log.RECD_DATE === '' ? null : dateToIsoString(log.RECD_DATE)
+        received_date: mapReceivedDate(cycleLogs)
       };
 
+      // Create new version row
       const versionRow = {
         version_id: returnId,
         return_id: returnId,
         version_number: 1,
         user_id: 'water-abstraction-service',
         user_type: 'agency',
-        metadata: '{}',
-        nil_return: log.lines.length === 0
+        metadata: JSON.stringify({
+          isCurrent
+        }),
+        nil_return: isNil
       };
 
       returnsData.returns.push(returnRow);
       returnsData.versions.push(versionRow);
+      //
 
-      for (let line of log.lines) {
+      for (let line of cycle.lines) {
+        const startDate = getStartDate(line.ARFL_DATE_FROM, line.RET_DATE, format.ARTC_REC_FREQ_CODE);
         const endDate = returnsDateToIso(line.RET_DATE);
+        const isCurrent = versionStartDate && moment(startDate).isSameOrAfter(versionStartDate);
         const lineRow = {
-          line_id: `${returnId}:${line.RET_DATE}`,
+          line_id: `${returnId}:${line.ARFL_DATE_FROM}:${startDate}:${endDate}`,
           version_id: returnId,
           substance: 'water',
-          quantity: line.RET_QTY === '' ? null : parseFloat(line.RET_QTY),
+          quantity: mapQuantity(line.RET_QTY),
           unit: mapUnit(line.UNIT_RET_FLAG) || '?',
-          start_date: getStartDate(line.ARFL_DATE_FROM, line.RET_DATE, format.ARTC_REC_FREQ_CODE),
+          start_date: startDate,
           end_date: endDate,
           time_period: mapPeriod(format.ARTC_REC_FREQ_CODE),
-          metadata: '{}',
+          metadata: JSON.stringify(formatLineMetadata(line, isCurrent)),
           reading_type: mapUsability(line.RET_QTY_USABILITY)
         };
 

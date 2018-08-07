@@ -3,6 +3,7 @@
  */
 const moment = require('moment');
 const uuidV4 = require('uuid/v4');
+const { get } = require('lodash');
 const { buildCRMPacket } = require('./transform-crm');
 const { buildReturnsPacket } = require('./transform-returns');
 const { getLicenceJson, buildPermitRepoPacket } = require('./transform-permit');
@@ -43,7 +44,9 @@ const load = async (licenceNumber) => {
     await repository.document.persist({document_id: uuidV4(), ...crmData});
 
     console.log(`Import: returns for ${licenceNumber}`);
-    const { returns, versions, lines } = await buildReturnsPacket(licenceNumber);
+    const currentVersionStart = get(licenceData, 'data.current_version.licence.EFF_ST_DATE');
+
+    const { returns, versions, lines } = await buildReturnsPacket(licenceNumber, currentVersionStart);
     await repository.return.persist(addTimestamp(returns));
     await repository.version.persist(addTimestamp(versions));
     await repository.line.persist(addTimestamp(lines));

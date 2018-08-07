@@ -8,9 +8,11 @@ const { dbQuery } = require('./db');
  */
 const getFormats = (licenceNumber) => {
   const query = `
-  SELECT f.* FROM "import"."NALD_ABS_LICENCES" l
+  SELECT f.*, v.* FROM "import"."NALD_ABS_LICENCES" l
   LEFT JOIN "import"."NALD_RET_FORMATS" f ON l."ID"=f."ARVN_AABL_ID" AND l."FGAC_REGION_CODE"=f."FGAC_REGION_CODE"
-  WHERE l."LIC_NO"=$1`;
+  JOIN "import"."NALD_RET_VERSIONS" v ON f."ARVN_VERS_NO"=v."VERS_NO" AND f."ARVN_AABL_ID"=v."AABL_ID" AND f."FGAC_REGION_CODE"=v."FGAC_REGION_CODE"
+  WHERE l."LIC_NO"=$1
+  ORDER BY to_date(v."EFF_ST_DATE", 'DD/MM/YYYY')`;
   const params = [licenceNumber];
   return dbQuery(query, params);
 };
@@ -60,8 +62,8 @@ const getFormatPoints = (formatId, regionCode) => {
 const getLogs = (formatId, regionCode) => {
   const query = `
   SELECT l.* FROM "import"."NALD_RET_FORM_LOGS" l
-  WHERE l."ARTY_ID"=$1 AND l."FGAC_REGION_CODE"=$2`;
-  // ORDER BY to_date(l."DATE_FROM", 'DD/MM/YYYY')`;
+  WHERE l."ARTY_ID"=$1 AND l."FGAC_REGION_CODE"=$2
+  ORDER BY to_date(l."DATE_FROM", 'DD/MM/YYYY')`;
   const params = [formatId, regionCode];
   return dbQuery(query, params);
 };
@@ -70,18 +72,55 @@ const getLogs = (formatId, regionCode) => {
  * Get returns lines
  * @param {Number} formatId - the ARTY_ID=
  * @param {Number} region code - FGAC_REGION_CODE
- * @param {String} dateFrom - e.g. DD/MM/YYYY
+ * @param {String} dateFrom - e.g. YYYY-MM-DD
+ * @param {String} dateTo - e.g. YYYY-MM-DD
  * @return {Promise} resolves with array of DB records
  */
-const getLines = (formatId, regionCode, dateFrom) => {
-  const m = moment(dateFrom, 'DD/MM/YYYY');
-  const from = m.format('YYYYMMDD') + '000000';
-  const query = `
-  SELECT l.* FROM "import"."NALD_RET_LINES" l
-  WHERE l."ARFL_ARTY_ID"=$1 AND l."FGAC_REGION_CODE"=$2 AND "ARFL_DATE_FROM"=$3`;
-  // ORDER BY "RET_DATE"`;
-  const params = [formatId, regionCode, from];
+const getLines = (formatId, regionCode, dateFrom, dateTo) => {
+  const query = `SELECT l.*
+  FROM "import"."NALD_RET_LINES" l
+  WHERE l."ARFL_ARTY_ID"=$1 AND l."FGAC_REGION_CODE"=$2 AND
+  to_date("RET_DATE", 'YYYYMMDDHH24MISS')>=to_date($3, 'YYYY-MM-DD') AND to_date("RET_DATE", 'YYYYMMDDHH24MISS')<=to_date($4, 'YYYY-MM-DD')
+  ORDER BY "RET_DATE"`;
+  const params = [formatId, regionCode, dateFrom, dateTo];
+  return dbQuery(query, params);
+};
 
+/**
+ * Gets all form logs relating to the specified period - can be partial
+ * @param {Number} formatId - the ARTY_ID=
+ * @param {Number} region code - FGAC_REGION_CODE
+ * @param {String} dateFrom - e.g. YYYY-MM-DD
+ * @param {String} dateTo - e.g. YYYY-MM-DD
+ * @return {Promise} resolves with array of DB records
+ */
+const getLogsForPeriod = (formatId, regionCode, dateFrom, dateTo) => {
+  const query = `SELECT l.*
+  FROM "import"."NALD_RET_FORM_LOGS" l
+  WHERE
+    l."ARTY_ID"=$1
+    AND l."FGAC_REGION_CODE"=$2
+    AND to_date(l."DATE_TO", 'DD/MM/YYYY')>=to_date($3, 'YYYY-MM-DD')
+    AND to_date(l."DATE_FROM", 'DD/MM/YYYY')<=to_date($4, 'YYYY-MM-DD')
+  ORDER BY to_date(l."DATE_FROM", 'DD/MM/YYYY')`;
+  const params = [formatId, regionCode, dateFrom, dateTo];
+  return dbQuery(query, params);
+};
+
+/**
+ * Get returns lines for log
+ * @param {Number} formatId - the ARTY_ID=
+ * @param {Number} region code - FGAC_REGION_CODE
+ * @param {String} logDateFrom - e.g. DD/MM/YYYY
+ * @return {Promise} resolves with array of DB records
+ */
+const getLogLines = (formatId, regionCode, logDateFrom) => {
+  const from = moment(logDateFrom, 'DD/MM/YYYY').format('YYYYMMDD') + '000000';
+  const query = `SELECT l.* FROM "import"."NALD_RET_LINES" l
+  WHERE l."ARFL_ARTY_ID"=$1 AND l."FGAC_REGION_CODE"=$2 AND
+  "ARFL_DATE_FROM"=$3
+  ORDER BY "RET_DATE"`;
+  const params = [formatId, regionCode, from];
   return dbQuery(query, params);
 };
 
@@ -90,5 +129,7 @@ module.exports = {
   getFormatPurposes,
   getFormatPoints,
   getLogs,
-  getLines
+  getLines,
+  getLogLines,
+  getLogsForPeriod
 };
