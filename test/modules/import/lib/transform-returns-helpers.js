@@ -125,18 +125,10 @@ lab.experiment('Test returns data transformation helpers', () => {
     expect(periods).to.equal([
       {
         startDate: '2014-11-05',
-        endDate: '2015-03-31'
-      },
-      {
-        startDate: '2015-04-01',
         endDate: '2015-10-31'
       },
       {
         startDate: '2015-11-01',
-        endDate: '2016-03-31'
-      },
-      {
-        startDate: '2016-04-01',
         endDate: '2016-05-15'
       }
     ]);

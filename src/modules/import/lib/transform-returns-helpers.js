@@ -175,10 +175,12 @@ const getDateWithinBounds = (date, startDate, endDate) => {
  * @return {Object} moment for end of next period
  */
 const getNextPeriodEnd = (datePtr, isSummer) => {
-  if (isSummer && datePtr.month() < 10) {
-    return moment().year(datePtr.year()).month(9).date(31);
+  let year;
+  if (isSummer) {
+    year = (datePtr.month() <= 9) ? datePtr.year() : datePtr.year() + 1;
+    return moment().year(year).month(9).date(31);
   } else {
-    const year = (datePtr.month() <= 2) ? datePtr.year() : datePtr.year() + 1;
+    year = (datePtr.month() <= 2) ? datePtr.year() : datePtr.year() + 1;
     return moment().year(year).month(2).date(31);
   }
 };
