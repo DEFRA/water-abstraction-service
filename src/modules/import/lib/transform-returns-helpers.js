@@ -1,5 +1,5 @@
 const moment = require('moment');
-const { mapValues, chunk } = require('lodash');
+const { mapValues, chunk, uniqBy } = require('lodash');
 const { formatAbstractionPoint } = require('../../../lib/licence-transformer/nald-helpers');
 
 /**
@@ -150,123 +150,58 @@ const mapProductionMonth = (month) => {
 };
 
 /**
- * Given a date, and bounding start/end dates, returns either
- * the input date if within bounds, or the start/end date if out of bounds
- * @param {Object} date - reference date, moment object
- * @param {Object} startDate - moment
- * @param {Object} endDate - moment
- * @retun {Object} moment
+ * Gets financial year period for given date
+ * @param {String} date - DD/MM/YYYY
+ * @return {Object}
  */
-const getDateWithinBounds = (date, startDate, endDate) => {
-  if (date.isBefore(startDate)) {
-    return startDate;
-  } else if (date.isAfter(endDate)) {
-    return endDate;
-  } else {
-    return date;
-  }
+const getFinancialYear = (date) => {
+  const m = moment(date, 'DD/MM/YYYY');
+  const comparison = moment().year(m.year()).month(3).date(1);
+  const startYear = m.isBefore(comparison, 'day') ? m.year() - 1 : m.year();
+  return {
+    startDate: `${startYear}-04-01`,
+    endDate: `${startYear + 1}-03-31`
+  };
 };
 
 /**
- * Given a moment, and isSummer flag, returns a moment for the
- * end date of the next period
- * @param {Object} datePtr - moment
- * @param {Boolean} isSummer
- * @return {Object} moment for end of next period
+ * Gets financial year period for given date
+ * @param {String} date - DD/MM/YYYY
+ * @return {Object}
  */
-const getNextPeriodEnd = (datePtr, isSummer) => {
-  let year;
-  if (isSummer) {
-    year = (datePtr.month() <= 9) ? datePtr.year() : datePtr.year() + 1;
-    return moment().year(year).month(9).date(31);
-  } else {
-    year = (datePtr.month() <= 2) ? datePtr.year() : datePtr.year() + 1;
-    return moment().year(year).month(2).date(31);
-  }
+const getSummerYear = (date) => {
+  const m = moment(date, 'DD/MM/YYYY');
+  const comparison = moment().year(m.year()).month(10).date(1);
+  const startYear = m.isBefore(comparison, 'day') ? m.year() - 1 : m.year();
+  return {
+    startDate: `${startYear}-11-01`,
+    endDate: `${startYear + 1}-10-31`
+  };
 };
 
 /**
- * Gets array of cycle dates for the given start date, end date,
- * and summer flag
- * @param {Object} startDate - moment
- * @param {Object} endDate - moment
- * @param {Boolean} isSummer
- * @return {Array} array of start/end date objects
+ * Gets the returns cycles for the given format.
+ * Depending on the FORM_PRODN_MONTH flag, this will either be financial years
+ * or years running 1 Nov - 31 Oct
+ * @param {Object} format
+ * @return {Array} array of cycles
  */
-const getCyclePeriods = (startDate, endDate, isSummer) => {
-  const dates = [];
-  let datePtr = moment(startDate);
-
-  while (datePtr.isSameOrBefore(endDate)) {
-    dates.push(getDateWithinBounds(datePtr, startDate, endDate).format('YYYY-MM-DD'));
-
-    datePtr = getNextPeriodEnd(datePtr, isSummer);
-
-    dates.push(getDateWithinBounds(datePtr, startDate, endDate).format('YYYY-MM-DD'));
-    datePtr.add(1, 'day');
-  }
-
-  return chunk(dates, 2).map(arr => ({
-    startDate: arr[0],
-    endDate: arr[1]
-  }));
-};
-
-/**
- * Gets returns cycles given a list of return formats
- * @param {Array} formats
- * @return {array}
- */
-const getCycles = (formats) => {
+const getFormatCycles = (format) => {
   const cycles = [];
 
-  for (let format of formats) {
-    const info = mapProductionMonth(format.FORM_PRODN_MONTH);
-    const effStart = moment(format.EFF_ST_DATE, 'DD/MM/YYYY');
-    const effEnd = format.EFF_END_DATE === 'null' ? null : moment(format.EFF_END_DATE, 'DD/MM/YYYY');
+  const info = mapProductionMonth(format.FORM_PRODN_MONTH);
 
-    const endDate = effEnd || moment();
+  const dateFunc = info.isSummer ? getSummerYear : getFinancialYear;
 
-    const cyclePeriods = getCyclePeriods(effStart, endDate, info.isSummer);
+  for (let log of format.logs) {
+    const { DATE_FROM: dateFrom, DATE_TO: dateTo } = log;
 
-    for (let period of cyclePeriods) {
-      cycles.push({
-        format,
-        info,
-        ...period
-      });
-    }
+    cycles.push(dateFunc(dateFrom));
+    cycles.push(dateFunc(dateTo));
   }
 
-  return cycles;
+  return uniqBy(cycles, row => row.startDate);
 };
-
-/**
- * Gets period from the format and log
- * @param {Object} format
- * @param {Object} log
- * @return {Object} start/end dates
- */
-// const getPeriod = (format, log) => {
-//   const {
-//     ABS_PERIOD_ST_DAY: startDay,
-//     ABS_PERIOD_ST_MONTH: startMonth,
-//     ABS_PERIOD_END_DAY: endDay,
-//     ABS_PERIOD_END_MONTH: endMonth
-//   } = format;
-//
-//   const startYear = moment(log.DATE_FROM, 'DD/MM/YYYY').year();
-//   const endYear = endMonth < startMonth ? startYear + 1 : startYear;
-//
-//   // Need to create/retrieve a return for the specified period
-//   const startDate = moment().year(startYear).month(startMonth - 1).date(startDay).format('YYYY-MM-DD');
-//   const endDate = moment().year(endYear).month(endMonth - 1).date(endDay).format('YYYY-MM-DD');
-//
-//   return {
-//     startDate,
-//     endDate
-//   };
-// };
 
 module.exports = {
   convertNullStrings,
@@ -275,8 +210,12 @@ module.exports = {
   getStartDate,
   mapUnit,
   mapUsability,
+  mapProductionMonth,
   // getPeriod,
   formatReturnMetadata,
-  getCycles,
-  getCyclePeriods
+  // getCycles,
+  // getCyclePeriods,
+  getFinancialYear,
+  getSummerYear,
+  getFormatCycles
 };
