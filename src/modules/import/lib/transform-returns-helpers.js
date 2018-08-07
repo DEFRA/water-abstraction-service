@@ -1,5 +1,5 @@
 const moment = require('moment');
-const { mapValues, chunk, uniqBy } = require('lodash');
+const { mapValues, uniqBy, findIndex, max } = require('lodash');
 const { formatAbstractionPoint } = require('../../../lib/licence-transformer/nald-helpers');
 
 /**
@@ -135,6 +135,22 @@ const formatReturnMetadata = (format) => {
 };
 
 /**
+ * Get metadata to store with return line
+ * @param {Object} line - line data from NALD
+ * @return {Object}
+ */
+const formatLineMetadata = (line, isCurrent) => {
+  return {
+    version: 1,
+    isCurrent,
+    nald: {
+      formatId: line.ARFL_ARTY_ID,
+      formLogDateFrom: line.ARFL_DATE_FROM
+    }
+  };
+};
+
+/**
  * Maps NALD production month
  * @param {Number} month
  * @return {Object}
@@ -188,19 +204,62 @@ const getSummerYear = (date) => {
  */
 const getFormatCycles = (format) => {
   const cycles = [];
-
   const info = mapProductionMonth(format.FORM_PRODN_MONTH);
 
   const dateFunc = info.isSummer ? getSummerYear : getFinancialYear;
 
   for (let log of format.logs) {
     const { DATE_FROM: dateFrom, DATE_TO: dateTo } = log;
-
     cycles.push(dateFunc(dateFrom));
     cycles.push(dateFunc(dateTo));
   }
 
   return uniqBy(cycles, row => row.startDate);
+};
+
+/**
+ * Checks whether any return data is larger than 0
+ * @param {Array} values
+ * @return {Boolean}
+ */
+const isNilReturn = (arr) => {
+  const index = findIndex(arr, (value) => {
+    return value > 0;
+  });
+
+  return index === -1;
+};
+
+/**
+ * Gets quantity from NALD value
+ * @param {String} value or 'null' as string
+ * @return {Number|Boolean}
+ */
+const mapQuantity = (value) => {
+  return value === '' ? null : parseFloat(value);
+};
+
+/**
+ * A return may comprise more than one form log
+ * If any form log has not been received, we return null
+ * If there are no form log, return null
+ * otherwise return max received last date
+ * @param {Array} logs - form log records
+ */
+const mapReceivedDate = (logs) => {
+  const dates = logs.map(row => row.RECD_DATE);
+
+  if (logs.length < 1) {
+    return null;
+  }
+
+  if (findIndex(dates, val => val === 'null') !== -1) {
+    return null;
+  }
+
+  const timestamps = dates.map(date => moment(date, 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DD'));
+
+  return max(timestamps);
 };
 
 module.exports = {
@@ -211,11 +270,12 @@ module.exports = {
   mapUnit,
   mapUsability,
   mapProductionMonth,
-  // getPeriod,
   formatReturnMetadata,
-  // getCycles,
-  // getCyclePeriods,
   getFinancialYear,
   getSummerYear,
-  getFormatCycles
+  getFormatCycles,
+  isNilReturn,
+  mapQuantity,
+  mapReceivedDate,
+  formatLineMetadata
 };

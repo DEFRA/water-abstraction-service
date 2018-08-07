@@ -1,7 +1,6 @@
 const Lab = require('lab');
 const lab = exports.lab = Lab.script();
 const { expect } = require('code');
-const moment = require('moment');
 
 const {
   convertNullStrings,
@@ -11,7 +10,9 @@ const {
   mapUnit,
   mapUsability,
   getFinancialYear,
-  getSummerYear
+  getSummerYear,
+  isNilReturn,
+  mapReceivedDate
 } = require('../../../../src/modules/import/lib/transform-returns-helpers');
 
 lab.experiment('Test returns data transformation helpers', () => {
@@ -118,6 +119,30 @@ lab.experiment('Test returns data transformation helpers', () => {
       startDate: '2016-11-01',
       endDate: '2017-10-31'
     });
+  });
+
+  lab.test('Test isNilReturn', async () => {
+    expect(isNilReturn([0, 0, null])).to.equal(true);
+    expect(isNilReturn([])).to.equal(true);
+    expect(isNilReturn([0, null, 0.1])).to.equal(false);
+  });
+
+  lab.test('Test mapReceivedDate with no logs', async () => {
+    const logs = [];
+
+    expect(mapReceivedDate(logs)).to.equal(null);
+  });
+
+  lab.test('Test mapReceivedDate with a null string value', async () => {
+    const logs = [{ RECD_DATE: '01/01/2017'}, { RECD_DATE: 'null'}];
+
+    expect(mapReceivedDate(logs)).to.equal(null);
+  });
+
+  lab.test('Test mapReceivedDate with valiid dates', async () => {
+    const logs = [{ RECD_DATE: '25/12/2017'}, { RECD_DATE: '04/01/2017'}];
+
+    expect(mapReceivedDate(logs)).to.equal('2017-12-25');
   });
 });
 

@@ -1,25 +1,27 @@
 const moment = require('moment');
-const { uniqBy } = require('lodash');
 const { returnsDateToIso } = require('./lib/date-helpers');
-// const { formatAbstractionPoint } = require('../../lib/licence-transformer/nald-helpers');
 
 const {
   getFormats,
   getFormatPurposes,
   getFormatPoints,
   getLogs,
-  getLines
+  getLines,
+  getLogsForPeriod
 } = require('./lib/nald-returns-queries.js');
 
 const {
-  // convertNullStrings,
   mapFrequency,
   mapPeriod,
   getStartDate,
   mapUnit,
   mapUsability,
   formatReturnMetadata,
-  getFormatCycles
+  formatLineMetadata,
+  getFormatCycles,
+  isNilReturn,
+  mapQuantity,
+  mapReceivedDate
 } = require('./lib/transform-returns-helpers.js');
 
 /**
@@ -53,9 +55,14 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
   for (let format of formats) {
     for (let cycle of format.cycles) {
       const { startDate, endDate } = cycle;
+
+      // Get all form logs relating to this cycle
+      const cycleLogs = await getLogsForPeriod(format.ID, format.FGAC_REGION_CODE, startDate, endDate);
+
       const returnId = `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}:${endDate}`;
 
       const isCurrent = versionStartDate && moment(endDate).isAfter(versionStartDate);
+      const isNil = isNilReturn(cycle.lines.map(row => mapQuantity(row.RET_QTY)));
 
       // Create new return row
       const returnRow = {
@@ -72,7 +79,7 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
           ...formatReturnMetadata(format),
           isCurrent
         }),
-        received_date: '2018-01-01'
+        received_date: mapReceivedDate(cycleLogs)
       };
 
       // Create new version row
@@ -85,7 +92,7 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
         metadata: JSON.stringify({
           isCurrent
         }),
-        nil_return: false
+        nil_return: isNil
       };
 
       returnsData.returns.push(returnRow);
@@ -100,14 +107,12 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
           line_id: `${returnId}:${line.ARFL_DATE_FROM}:${startDate}:${endDate}`,
           version_id: returnId,
           substance: 'water',
-          quantity: line.RET_QTY === '' ? null : parseFloat(line.RET_QTY),
+          quantity: mapQuantity(line.RET_QTY),
           unit: mapUnit(line.UNIT_RET_FLAG) || '?',
           start_date: startDate,
           end_date: endDate,
           time_period: mapPeriod(format.ARTC_REC_FREQ_CODE),
-          metadata: JSON.stringify({
-            isCurrent
-          }),
+          metadata: JSON.stringify(formatLineMetadata(line, isCurrent)),
           reading_type: mapUsability(line.RET_QTY_USABILITY)
         };
 
