@@ -139,10 +139,9 @@ const formatReturnMetadata = (format) => {
  * @param {Object} line - line data from NALD
  * @return {Object}
  */
-const formatLineMetadata = (line, isCurrent) => {
+const formatLineMetadata = (line) => {
   return {
     version: 1,
-    isCurrent,
     nald: {
       formatId: line.ARFL_ARTY_ID,
       formLogDateFrom: line.ARFL_DATE_FROM
@@ -262,6 +261,17 @@ const mapReceivedDate = (logs) => {
   return max(timestamps);
 };
 
+/**
+ * Gets a return ID for the specified licence/format and dates
+ * @param {String} licenceNumber
+ * @param {Object} format - row from NALD_RET_FORMATS table
+ * @param {String} startDate - YYYY-MM-DD
+ * @param {String} endDate - YYYY-MM-DD
+ */
+const getReturnId = (licenceNumber, format, startDate, endDate) => {
+  return `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}:${endDate}`;
+};
+
 module.exports = {
   convertNullStrings,
   mapFrequency,
@@ -277,5 +287,6 @@ module.exports = {
   isNilReturn,
   mapQuantity,
   mapReceivedDate,
-  formatLineMetadata
+  formatLineMetadata,
+  getReturnId
 };

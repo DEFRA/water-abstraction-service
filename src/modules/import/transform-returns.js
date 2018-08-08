@@ -21,8 +21,13 @@ const {
   getFormatCycles,
   isNilReturn,
   mapQuantity,
-  mapReceivedDate
+  mapReceivedDate,
+  getReturnId
 } = require('./lib/transform-returns-helpers.js');
+
+const {
+  convertWeekData
+} = require('./lib/transform-weekly-returns-helpers.js');
 
 /**
  * @param {String} licenceNumber - the abstraction licence number
@@ -59,7 +64,8 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
       // Get all form logs relating to this cycle
       const cycleLogs = await getLogsForPeriod(format.ID, format.FGAC_REGION_CODE, startDate, endDate);
 
-      const returnId = `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}:${endDate}`;
+      const returnId = getReturnId(licenceNumber, format, startDate, endDate);
+      // `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}:${endDate}`;
 
       const isCurrent = versionStartDate && moment(endDate).isAfter(versionStartDate);
       const isNil = isNilReturn(cycle.lines.map(row => mapQuantity(row.RET_QTY)));
@@ -97,26 +103,32 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
 
       returnsData.returns.push(returnRow);
       returnsData.versions.push(versionRow);
-      //
+      // d
 
-      for (let line of cycle.lines) {
-        const startDate = getStartDate(line.ARFL_DATE_FROM, line.RET_DATE, format.ARTC_REC_FREQ_CODE);
-        const endDate = returnsDateToIso(line.RET_DATE);
-        const isCurrent = versionStartDate && moment(startDate).isSameOrAfter(versionStartDate);
-        const lineRow = {
-          line_id: `${returnId}:${line.ARFL_DATE_FROM}:${startDate}:${endDate}`,
-          version_id: returnId,
-          substance: 'water',
-          quantity: mapQuantity(line.RET_QTY),
-          unit: mapUnit(line.UNIT_RET_FLAG) || '?',
-          start_date: startDate,
-          end_date: endDate,
-          time_period: mapPeriod(format.ARTC_REC_FREQ_CODE),
-          metadata: JSON.stringify(formatLineMetadata(line, isCurrent)),
-          reading_type: mapUsability(line.RET_QTY_USABILITY)
-        };
+      if (format.ARTC_REC_FREQ_CODE === 'W') {
+        const weeks = convertWeekData(returnId, cycle.lines, versionStartDate);
 
-        returnsData.lines.push(lineRow);
+        returnsData.lines.push(...weeks);
+      } else {
+        for (let line of cycle.lines) {
+          const startDate = getStartDate(line.ARFL_DATE_FROM, line.RET_DATE, format.ARTC_REC_FREQ_CODE);
+          const endDate = returnsDateToIso(line.RET_DATE);
+          const isCurrent = versionStartDate && moment(startDate).isSameOrAfter(versionStartDate);
+          const lineRow = {
+            line_id: `${returnId}:${line.ARFL_DATE_FROM}:${startDate}:${endDate}`,
+            version_id: returnId,
+            substance: 'water',
+            quantity: mapQuantity(line.RET_QTY),
+            unit: mapUnit(line.UNIT_RET_FLAG) || '?',
+            start_date: startDate,
+            end_date: endDate,
+            time_period: mapPeriod(format.ARTC_REC_FREQ_CODE),
+            metadata: JSON.stringify({...formatLineMetadata, isCurrent}),
+            reading_type: mapUsability(line.RET_QTY_USABILITY)
+          };
+
+          returnsData.lines.push(lineRow);
+        }
       }
     }
   }
