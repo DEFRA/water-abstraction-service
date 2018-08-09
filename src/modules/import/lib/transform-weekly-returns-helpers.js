@@ -1,5 +1,6 @@
 const moment = require('moment');
-const { mapUnit, mapQuantity, mapUsability, mapPeriod, returnsDateToIso, formatLineMetadata } = require('./transform-returns-helpers');
+const { returnsDateToIso } = require('../lib/date-helpers');
+const { mapUnit, mapQuantity, mapUsability, mapPeriod, formatLineMetadata } = require('./transform-returns-helpers');
 
 /**
  * Reduces the units used for values used within a week
@@ -89,25 +90,31 @@ const convertWeekData = (returnId, lines, versionStartDate) => {
   // Combine week data
   const weekLines = [];
   for (let id in weekData) {
-    const data = weekData[id];
+    const lines = weekData[id];
 
     const [year, week] = id.split('-');
 
     const startDate = moment().weekYear(year).week(week).day(0).format('YYYY-MM-DD');
     const endDate = moment().weekYear(year).week(week).day(6).format('YYYY-MM-DD');
 
-    const quantities = data.map(row => row.RET_QTY);
-    const units = data.map(row => row.UNIT_RET_FLAG);
-    const usabilities = data.map(row => row.RET_QTY_USABILITY);
+    const quantities = lines.map(row => row.RET_QTY);
+    const units = lines.map(row => row.UNIT_RET_FLAG);
+    const usabilities = lines.map(row => row.RET_QTY_USABILITY);
 
-    const lastLine = weekData[id][weekData[id].length - 1];
+    const lastLine = lines[lines.length - 1];
     const isCurrent = versionStartDate && moment(startDate).isSameOrAfter(versionStartDate);
-    const dailyReturnDate = reduceWeekReturnDate(data);
+
+    const dailyLines = lines.map(row => ({
+      start_date: returnsDateToIso(row.RET_DATE),
+      quantity: mapQuantity(row.RET_QTY),
+      unit: mapUnit(row.UNIT_RET_FLAG),
+      reading_type: mapUsability(row.RET_QTY_USABILITY)
+    }));
 
     const metadata = {
       ...formatLineMetadata(lastLine),
       isCurrent,
-      dailyReturnDate
+      dailyLines
     };
 
     weekLines.push({
