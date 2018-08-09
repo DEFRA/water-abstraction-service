@@ -29,6 +29,7 @@ const {
   convertWeekData
 } = require('./lib/transform-weekly-returns-helpers.js');
 
+
 /**
  * @param {String} licenceNumber - the abstraction licence number
  * @param {String} currentVersionStart - the start date of the current version of the licence in format DD/MM/YYYY
@@ -65,7 +66,6 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
       const cycleLogs = await getLogsForPeriod(format.ID, format.FGAC_REGION_CODE, startDate, endDate);
 
       const returnId = getReturnId(licenceNumber, format, startDate, endDate);
-      // `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}:${endDate}`;
 
       const isCurrent = versionStartDate && moment(endDate).isAfter(versionStartDate);
       const isNil = isNilReturn(cycle.lines.map(row => mapQuantity(row.RET_QTY)));
@@ -103,7 +103,6 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
 
       returnsData.returns.push(returnRow);
       returnsData.versions.push(versionRow);
-      // d
 
       if (format.ARTC_REC_FREQ_CODE === 'W') {
         const weeks = convertWeekData(returnId, cycle.lines, versionStartDate);

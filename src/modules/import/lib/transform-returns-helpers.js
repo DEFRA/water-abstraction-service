@@ -272,6 +272,7 @@ const getReturnId = (licenceNumber, format, startDate, endDate) => {
   return `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}:${endDate}`;
 };
 
+
 module.exports = {
   convertNullStrings,
   mapFrequency,
