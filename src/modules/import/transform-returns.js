@@ -1,33 +1,20 @@
 const moment = require('moment');
-const { returnsDateToIso } = require('./lib/date-helpers');
 
 const {
   getFormats,
   getFormatPurposes,
   getFormatPoints,
   getLogs,
-  getLines,
   getLogsForPeriod
 } = require('./lib/nald-returns-queries.js');
 
 const {
-  mapFrequency,
   mapPeriod,
-  getStartDate,
-  mapUnit,
-  mapUsability,
   formatReturnMetadata,
-  formatLineMetadata,
   getFormatCycles,
-  isNilReturn,
-  mapQuantity,
   mapReceivedDate,
   getReturnId
 } = require('./lib/transform-returns-helpers.js');
-
-const {
-  convertWeekData
-} = require('./lib/transform-weekly-returns-helpers.js');
 
 /**
  * @param {String} licenceNumber - the abstraction licence number
@@ -45,16 +32,10 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
     format.points = await getFormatPoints(format.ID, format.FGAC_REGION_CODE);
     format.logs = await getLogs(format.ID, format.FGAC_REGION_CODE);
     format.cycles = getFormatCycles(format);
-
-    for (let cycle of format.cycles) {
-      cycle.lines = await getLines(format.ID, format.FGAC_REGION_CODE, cycle.startDate, cycle.endDate);
-    }
   }
 
   const returnsData = {
-    returns: [],
-    versions: [],
-    lines: []
+    returns: []
   };
 
   for (let format of formats) {
@@ -65,10 +46,8 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
       const cycleLogs = await getLogsForPeriod(format.ID, format.FGAC_REGION_CODE, startDate, endDate);
 
       const returnId = getReturnId(licenceNumber, format, startDate, endDate);
-      // `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}:${endDate}`;
 
       const isCurrent = versionStartDate && moment(endDate).isAfter(versionStartDate);
-      const isNil = isNilReturn(cycle.lines.map(row => mapQuantity(row.RET_QTY)));
 
       // Create new return row
       const returnRow = {
@@ -78,7 +57,7 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
         licence_ref: licenceNumber,
         start_date: startDate,
         end_date: endDate,
-        returns_frequency: mapFrequency(format.ARTC_REC_FREQ_CODE),
+        returns_frequency: mapPeriod(format.ARTC_REC_FREQ_CODE),
         status: 'complete',
         source: 'NALD',
         metadata: JSON.stringify({
@@ -88,48 +67,7 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
         received_date: mapReceivedDate(cycleLogs)
       };
 
-      // Create new version row
-      const versionRow = {
-        version_id: returnId,
-        return_id: returnId,
-        version_number: 1,
-        user_id: 'water-abstraction-service',
-        user_type: 'agency',
-        metadata: JSON.stringify({
-          isCurrent
-        }),
-        nil_return: isNil
-      };
-
       returnsData.returns.push(returnRow);
-      returnsData.versions.push(versionRow);
-      // d
-
-      if (format.ARTC_REC_FREQ_CODE === 'W') {
-        const weeks = convertWeekData(returnId, cycle.lines, versionStartDate);
-
-        returnsData.lines.push(...weeks);
-      } else {
-        for (let line of cycle.lines) {
-          const startDate = getStartDate(line.ARFL_DATE_FROM, line.RET_DATE, format.ARTC_REC_FREQ_CODE);
-          const endDate = returnsDateToIso(line.RET_DATE);
-          const isCurrent = versionStartDate && moment(startDate).isSameOrAfter(versionStartDate);
-          const lineRow = {
-            line_id: `${returnId}:${line.ARFL_DATE_FROM}:${startDate}:${endDate}`,
-            version_id: returnId,
-            substance: 'water',
-            quantity: mapQuantity(line.RET_QTY),
-            unit: mapUnit(line.UNIT_RET_FLAG) || '?',
-            start_date: startDate,
-            end_date: endDate,
-            time_period: mapPeriod(format.ARTC_REC_FREQ_CODE),
-            metadata: JSON.stringify({...formatLineMetadata, isCurrent}),
-            reading_type: mapUsability(line.RET_QTY_USABILITY)
-          };
-
-          returnsData.lines.push(lineRow);
-        }
-      }
     }
   }
 

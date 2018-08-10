@@ -48,8 +48,6 @@ const load = async (licenceNumber) => {
 
     const { returns, versions, lines } = await buildReturnsPacket(licenceNumber, currentVersionStart);
     await repository.return.persist(addTimestamp(returns));
-    await repository.version.persist(addTimestamp(versions));
-    await repository.line.persist(addTimestamp(lines));
 
     await setImportStatus(licenceNumber, 'OK');
     console.log(`Import: complete for ${licenceNumber}`);
