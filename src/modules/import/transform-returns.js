@@ -12,6 +12,7 @@ const {
   mapPeriod,
   formatReturnMetadata,
   getFormatCycles,
+  getCurrentCycles,
   mapReceivedDate,
   getReturnId
 } = require('./lib/transform-returns-helpers.js');
@@ -31,7 +32,7 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
     format.purposes = await getFormatPurposes(format.ID, format.FGAC_REGION_CODE);
     format.points = await getFormatPoints(format.ID, format.FGAC_REGION_CODE);
     format.logs = await getLogs(format.ID, format.FGAC_REGION_CODE);
-    format.cycles = getFormatCycles(format);
+    format.cycles = getCurrentCycles(getFormatCycles(format), versionStartDate);
   }
 
   const returnsData = {
@@ -40,14 +41,12 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
 
   for (let format of formats) {
     for (let cycle of format.cycles) {
-      const { startDate, endDate } = cycle;
+      const { startDate, endDate, isCurrent } = cycle;
 
       // Get all form logs relating to this cycle
       const cycleLogs = await getLogsForPeriod(format.ID, format.FGAC_REGION_CODE, startDate, endDate);
 
       const returnId = getReturnId(licenceNumber, format, startDate, endDate);
-
-      const isCurrent = versionStartDate && moment(endDate).isAfter(versionStartDate);
 
       // Create new return row
       const returnRow = {

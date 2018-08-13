@@ -134,26 +134,49 @@ const getFormatCycles = (format) => {
 };
 
 /**
- * Checks whether any return data is larger than 0
- * @param {Array} values
- * @return {Boolean}
+ * Splits a cycle in to two cycles if the supplied comparison date is within the
+ * cycle
+ * @param {Object}
+ * @param {String} splitDate - YYYY-MM-DD
+ * @return {Array} with one or two cycles
  */
-// const isNilReturn = (arr) => {
-//   const index = findIndex(arr, (value) => {
-//     return value > 0;
-//   });
-//
-//   return index === -1;
-// };
+const splitCycle = (cycle, splitDate) => {
+  const { startDate, endDate } = cycle;
+  // console.log('Split date', splitDate, cycle);
+  if (moment(splitDate).isBetween(startDate, endDate)) {
+    // console.log('>>>>>>> SPLIT!');
+    const cycleOneEnd = moment(splitDate).subtract(1, 'day').format('YYYY-MM-DD');
+    const cycleTwoStart = moment(splitDate).format('YYYY-MM-DD');
+    return [
+      { startDate, endDate: cycleOneEnd },
+      { startDate: cycleTwoStart, endDate }
+    ];
+  }
+  return [cycle];
+};
 
 /**
- * Gets quantity from NALD value
- * @param {String} value or 'null' as string
- * @return {Number|Boolean}
+ * Gets the returns cycle for the given format, using getFormatCycles
+ * A flag is added to the cycle to indicate whether it relates to the current
+ * licence version
+ * Where a cycle includes the version start date of a licence, that cycle is
+ * split into two, with one current and one non-current cycle
+ * @param {Object} format
+ * @param {String} versionStartDate - YYYY-MM-DD the effective start date of the current licence version
+ * @return {Array} returns cycles
  */
-// const mapQuantity = (value) => {
-//   return value === '' ? null : parseFloat(value);
-// };
+const getCurrentCycles = (cycles, versionStartDate) => {
+  return cycles.reduce((acc, cycle) => {
+    const split = splitCycle(cycle, versionStartDate);
+    for (let cycle of split) {
+      acc.push({
+        ...cycle,
+        isCurrent: moment(versionStartDate).isSameOrBefore(cycle.startDate)
+      });
+    }
+    return acc;
+  }, []);
+};
 
 /**
  * A return may comprise more than one form log
@@ -189,7 +212,6 @@ const getReturnId = (licenceNumber, format, startDate, endDate) => {
   return `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}:${endDate}`;
 };
 
-
 module.exports = {
   convertNullStrings,
   mapPeriod,
@@ -198,6 +220,7 @@ module.exports = {
   getFinancialYear,
   getSummerYear,
   getFormatCycles,
+  getCurrentCycles,
   mapReceivedDate,
   getReturnId
 };
