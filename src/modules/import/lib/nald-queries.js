@@ -35,6 +35,7 @@ const getCams = async (code, FGAC_REGION_CODE) => {
   const params = [code, FGAC_REGION_CODE];
   return dbQuery(query, params);
 };
+
 const getCurrentVersion = async (licenceId, FGAC_REGION_CODE) => {
   const query = `
     SELECT
@@ -240,6 +241,22 @@ const getPurposePointLicenceConditions = async (AABP_ID, FGAC_REGION_CODE) => {
   return dbQuery(query, params);
 };
 
+/**
+ * Get current formats for the specified licence
+ * @param {Number} licenceId - the ID from the NALD_ABS_LICENCES table
+ * @param {Number} regionCode - the FGAC_REGION_CODE
+ * @return {Promise} resolves with list of formats
+ */
+const getCurrentFormats = async (licenceId, regionCode) => {
+  const query = `SELECT f.*
+  FROM "import"."NALD_RET_VERSIONS" rv
+  JOIN "import"."NALD_RET_FORMATS" f ON f."ARVN_AABL_ID"=$1 AND f."FGAC_REGION_CODE"=$2 AND rv."VERS_NO"=f."ARVN_VERS_NO"
+  WHERE rv."AABL_ID"=$1 AND rv."FGAC_REGION_CODE"=$2 AND rv."STATUS"='CURR'
+  `;
+  const params = [licenceId, regionCode];
+  return dbQuery(query, params);
+};
+
 module.exports = {
   importTableExists,
   getMain,
@@ -255,5 +272,6 @@ module.exports = {
   getPurposePoints,
   getPurpose,
   getPurposePointLicenceAgreements,
-  getPurposePointLicenceConditions
+  getPurposePointLicenceConditions,
+  getCurrentFormats
 };
