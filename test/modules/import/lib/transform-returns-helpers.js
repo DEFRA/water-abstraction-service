@@ -10,8 +10,20 @@ const {
   mapUsability,
   getFinancialYear,
   getSummerYear,
-  mapReceivedDate
+  mapReceivedDate,
+  getCurrentCycles
 } = require('../../../../src/modules/import/lib/transform-returns-helpers');
+
+const testCycles = [{
+  startDate: '2014-11-01',
+  endDate: '2015-10-31'
+}, {
+  startDate: '2015-11-01',
+  endDate: '2016-10-31'
+}, {
+  startDate: '2016-11-01',
+  endDate: '2017-10-31'
+}];
 
 lab.experiment('Test returns data transformation helpers', () => {
   lab.test('Test convert null strings on shallow object', async () => {
@@ -95,6 +107,43 @@ lab.experiment('Test returns data transformation helpers', () => {
     const logs = [{ RECD_DATE: '25/12/2017'}, { RECD_DATE: '04/01/2017'}];
 
     expect(mapReceivedDate(logs)).to.equal('2017-12-25');
+  });
+
+  lab.test('Test splitting returns cycles when licence start date is null', async () => {
+    const split = getCurrentCycles(testCycles, null);
+    expect(split).to.equal(testCycles.map(row => ({...row, isCurrent: false })));
+  });
+
+  lab.test('Test splitting returns cycles when licence start date is before first cycle', async () => {
+    const split = getCurrentCycles(testCycles, '2011-01-01');
+    expect(split).to.equal(testCycles.map(row => ({...row, isCurrent: true })));
+  });
+
+  lab.test('Test splitting returns cycles when licence start date is within a cycle', async () => {
+    const split = getCurrentCycles(testCycles, '2016-02-05');
+    expect(split).to.equal([{
+      startDate: '2014-11-01',
+      endDate: '2015-10-31',
+      isCurrent: false
+    }, {
+      startDate: '2015-11-01',
+      endDate: '2016-02-04',
+      isCurrent: false
+    },
+    {
+      startDate: '2016-02-05',
+      endDate: '2016-10-31',
+      isCurrent: true
+    }, {
+      startDate: '2016-11-01',
+      endDate: '2017-10-31',
+      isCurrent: true
+    }]);
+  });
+
+  lab.test('Test splitting returns cycles when licence start date is after last cycle', async () => {
+    const split = getCurrentCycles(testCycles, '2018-02-05');
+    expect(split).to.equal(testCycles.map(row => ({...row, isCurrent: false })));
   });
 });
 
