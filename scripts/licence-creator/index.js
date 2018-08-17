@@ -32,6 +32,11 @@ const RoleType = require('./role-type');
 const Source = require('./source');
 const WALicenceType = require('./wa-licence-type');
 
+const ReturnVersion = require('./return-version');
+const ReturnFormat = require('./return-format');
+const ReturnFormatPoint = require('./return-format-point');
+const ReturnFormatPurpose = require('./return-format-purpose');
+
 // Construct licence
 const l = new Licence('12/34/56/78');
 
@@ -111,6 +116,22 @@ const means = new MeansOfAbstraction('UNP', 'Unspecified Pump');
 pp.setMeansOfAbstraction(means);
 pp.setPoint(point);
 purpose.addPurposePoint(pp);
+
+// Return version
+const rv = new ReturnVersion();
+l.addReturnVersion(rv);
+
+// Create format
+const format = new ReturnFormat();
+format.setLicence(l);
+rv.addFormat(format);
+
+const fp = new ReturnFormatPoint();
+fp.setPoint(point);
+format.addPoint(fp);
+
+const fpu = new ReturnFormatPurpose();
+format.addPurpose(fpu);
 
 /**
  * Export data as CSV files
