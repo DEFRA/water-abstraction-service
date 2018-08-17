@@ -8,9 +8,7 @@ const RepUnit = require('./rep-unit');
  * @class Party
  */
 class Licence {
-
-  constructor(licenceNumber) {
-
+  constructor (licenceNumber) {
     this.id = getNextId();
     this.licenceNumber = licenceNumber;
     this.startDate = '01/01/2018';
@@ -19,22 +17,29 @@ class Licence {
     this.versions = [];
     this.repUnit = new RepUnit();
     this.roles = [];
+
+    this.returnVersions = [];
   }
 
-  addVersion(version) {
+  addVersion (version) {
     this.versions.push(version);
     version.setLicence(this);
     return this;
   }
 
-  addRole(role) {
+  addRole (role) {
     this.roles.push(role);
     role.setLicence(this);
     return this;
   }
 
-  exportAll() {
+  addReturnVersion (returnVersion) {
+    returnVersion.setLicence(this);
+    this.returnVersions.push(returnVersion);
+    return this;
+  }
 
+  exportAll () {
     const NALD_ABS_LIC_VERSIONS = this.versions.map(version => version.export());
 
     const NALD_WA_LIC_TYPES = this.versions.map(version => version.waLicenceType.export());
@@ -74,75 +79,100 @@ class Licence {
 
     // Purposes
     const NALD_ABS_LIC_PURPOSES = this.versions.reduce((memo, version) => {
-      return [...memo, ...version.purposes.map(purpose => purpose.export())]
+      return [...memo, ...version.purposes.map(purpose => purpose.export())];
     }, []);
 
     // Primary purposes
     const NALD_PURP_PRIMS = this.versions.reduce((memo, version) => {
-      return [...memo, ...version.purposes.map(purpose => purpose.primary.export())]
+      return [...memo, ...version.purposes.map(purpose => purpose.primary.export())];
     }, []);
 
     // Secondary purposes
     const NALD_PURP_SECS = this.versions.reduce((memo, version) => {
-      return [...memo, ...version.purposes.map(purpose => purpose.secondary.export())]
+      return [...memo, ...version.purposes.map(purpose => purpose.secondary.export())];
     }, []);
 
     // Tertiary purposes
     const NALD_PURP_USES = this.versions.reduce((memo, version) => {
-      return [...memo, ...version.purposes.map(purpose => purpose.tertiary.export())]
+      return [...memo, ...version.purposes.map(purpose => purpose.tertiary.export())];
     }, []);
 
     // Conditions
     const NALD_LIC_CONDITIONS = this.versions.reduce((memo, version) => {
       return [...memo, ...version.purposes.reduce((memo2, purpose) => {
-          return purpose.conditions.map(condition => condition.export());
+        return purpose.conditions.map(condition => condition.export());
       }, [])];
     }, []);
 
     // Condition type
     const NALD_LIC_COND_TYPES = this.versions.reduce((memo, version) => {
       return [...memo, ...version.purposes.reduce((memo2, purpose) => {
-          return purpose.conditions.map(condition => condition.type.export());
+        return purpose.conditions.map(condition => condition.type.export());
       }, [])];
     }, []);
 
     // Agreements
     const NALD_LIC_AGRMNTS = this.versions.reduce((memo, version) => {
       return [...memo, ...version.purposes.reduce((memo2, purpose) => {
-          return purpose.agreements.map(agreement => agreement.export());
+        return purpose.agreements.map(agreement => agreement.export());
       }, [])];
     }, []);
 
     // Purpose points
     const NALD_ABS_PURP_POINTS = this.versions.reduce((memo, version) => {
       return [...memo, ...version.purposes.reduce((memo2, purpose) => {
-          return purpose.purposePoints.map(purposePoint => purposePoint.export());
+        return purpose.purposePoints.map(purposePoint => purposePoint.export());
       }, [])];
     }, []);
 
     // Means of abs
     const NALD_MEANS_OF_ABS = this.versions.reduce((memo, version) => {
       return [...memo, ...version.purposes.reduce((memo2, purpose) => {
-          return purpose.purposePoints.map(purposePoint => purposePoint.means.export());
+        return purpose.purposePoints.map(purposePoint => purposePoint.means.export());
       }, [])];
     }, []);
 
     // Points
     const NALD_POINTS = this.versions.reduce((memo, version) => {
       return [...memo, ...version.purposes.reduce((memo2, purpose) => {
-          return purpose.purposePoints.map(purposePoint => purposePoint.point.export());
+        return purpose.purposePoints.map(purposePoint => purposePoint.point.export());
       }, [])];
     }, []);
 
     // Sources
     const NALD_SOURCES = this.versions.reduce((memo, version) => {
       return [...memo, ...version.purposes.reduce((memo2, purpose) => {
-          return purpose.purposePoints.map(purposePoint => purposePoint.point.source.export());
+        return purpose.purposePoints.map(purposePoint => purposePoint.point.source.export());
       }, [])];
     }, []);
 
+    // Return version
+    const NALD_RET_VERSIONS = this.returnVersions.map(returnVersion => returnVersion.export());
+
+    // Return formats
+    const NALD_RET_FORMATS = this.returnVersions.reduce((memo, rv) => {
+      const formats = rv.formats.map(row => row.export());
+      return [...memo, ...formats];
+    }, []);
+
+    // Format points
+    const NALD_RET_FMT_POINTS = this.returnVersions.reduce((memo, rv) => {
+      for (let format of rv.formats) {
+        memo.push(...format.points.map(point => point.export()));
+      }
+      return memo;
+    }, []);
+
+    // Format purposes
+    const NALD_RET_FMT_PURPOSES = this.returnVersions.reduce((memo, rv) => {
+      for (let format of rv.formats) {
+        memo.push(...format.purposes.map(purpose => purpose.export()));
+      }
+      return memo;
+    }, []);
+
     return {
-      NALD_ABS_LICENCES : [this.export()],
+      NALD_ABS_LICENCES: [this.export()],
       NALD_ABS_LIC_VERSIONS,
       NALD_WA_LIC_TYPES,
       NALD_PARTIES,
@@ -163,40 +193,42 @@ class Licence {
       NALD_LIC_AGRMNTS,
       NALD_ABS_PURP_POINTS,
       NALD_MEANS_OF_ABS,
-      NALD_POINTS
+      NALD_POINTS,
+      NALD_RET_VERSIONS,
+      NALD_RET_FORMATS,
+      NALD_RET_FMT_POINTS,
+      NALD_RET_FMT_PURPOSES
     };
   }
-
-
 
   /**
    * Get data in NALD format
    */
-  export() {
+  export () {
     return {
-      ID : this.id,
-      LIC_NO : this.licenceNumber,
-      AREP_SUC_CODE : 'ARSUC',
-      AREP_AREA_CODE : 'ARCA',
-      SUSP_FROM_BILLING : 'N',
-      AREP_LEAP_CODE : 'C4',
-      EXPIRY_DATE : this.expiryDate,
-      ORIG_EFF_DATE : this.startDate,
-      ORIG_SIG_DATE : null,
-      ORIG_APP_NO : null,
-      ORIG_LIC_NO : null,
-      NOTES : '',
-      REV_DATE : null,
-      LAPSED_DATE : null,
-      SUSP_FROM_RETURNS : null,
-      AREP_CAMS_CODE : this.repUnit.code,
-      X_REG_IND : 'N',
-      PREV_LIC_NO : null,
-      FOLL_LIC_NO : null,
-      AREP_EIUC_CODE : 'ANOTH',
-      FGAC_REGION_CODE : 1,
-      SOURCE_CODE : 'NALD',
-      BATCH_RUN_DATE : '12/02/2018 20:02:11'
+      ID: this.id,
+      LIC_NO: this.licenceNumber,
+      AREP_SUC_CODE: 'ARSUC',
+      AREP_AREA_CODE: 'ARCA',
+      SUSP_FROM_BILLING: 'N',
+      AREP_LEAP_CODE: 'C4',
+      EXPIRY_DATE: this.expiryDate,
+      ORIG_EFF_DATE: this.startDate,
+      ORIG_SIG_DATE: null,
+      ORIG_APP_NO: null,
+      ORIG_LIC_NO: null,
+      NOTES: '',
+      REV_DATE: null,
+      LAPSED_DATE: null,
+      SUSP_FROM_RETURNS: null,
+      AREP_CAMS_CODE: this.repUnit.code,
+      X_REG_IND: 'N',
+      PREV_LIC_NO: null,
+      FOLL_LIC_NO: null,
+      AREP_EIUC_CODE: 'ANOTH',
+      FGAC_REGION_CODE: 1,
+      SOURCE_CODE: 'NALD',
+      BATCH_RUN_DATE: '12/02/2018 20:02:11'
     };
   };
 }
