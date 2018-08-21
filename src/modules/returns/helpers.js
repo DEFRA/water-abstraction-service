@@ -2,6 +2,84 @@ const { get } = require('lodash');
 const moment = require('moment');
 
 /**
+ * Get required daily return lines
+ * @param {String} startDate - YYYY-MM-DD start date of return cycle
+ * @param {String} endDate - YYYY-MM-DD end date of return cycle
+ * @return {Array} list of required return lines
+ */
+const getDays = (startDate, endDate) => {
+  const datePtr = moment(startDate);
+  const lines = [];
+  do {
+    lines.push({
+      startDate: datePtr.format('YYYY-MM-DD'),
+      endDate: datePtr.format('YYYY-MM-DD'),
+      timePeriod: 'day'
+    });
+    datePtr.add(1, 'day');
+  }
+  while (datePtr.isSameOrBefore(endDate, 'day'));
+
+  return lines;
+};
+
+/**
+ * Get required monthly return lines
+ * @param {String} startDate - YYYY-MM-DD start date of return cycle
+ * @param {String} endDate - YYYY-MM-DD end date of return cycle
+ * @return {Array} list of required return lines
+ */
+const getMonths = (startDate, endDate) => {
+  const datePtr = moment(startDate);
+  const lines = [];
+  do {
+    lines.push({
+      startDate: datePtr.startOf('month').format('YYYY-MM-DD'),
+      endDate: datePtr.endOf('month').format('YYYY-MM-DD'),
+      timePeriod: 'month'
+    });
+    datePtr.add(1, 'month');
+  }
+  while (datePtr.isSameOrBefore(endDate, 'month'));
+  return lines;
+};
+
+/**
+ * Get required annual return lines
+ * @param {String} startDate - YYYY-MM-DD start date of return cycle
+ * @param {String} endDate - YYYY-MM-DD end date of return cycle
+ * @return {Array} list of required return lines
+ */
+const getYears = (startDate, endDate) => {
+  return [{
+    startDate,
+    endDate,
+    timePeriod: 'year'
+  }];
+};
+
+/**
+ * Get required weekly return lines
+ * @param {String} startDate - YYYY-MM-DD start date of return cycle
+ * @param {String} endDate - YYYY-MM-DD end date of return cycle
+ * @return {Array} list of required return lines
+ */
+const getWeeks = (startDate, endDate) => {
+  const datePtr = moment(startDate);
+  const lines = [];
+  datePtr.startOf('week');
+  do {
+    lines.push({
+      startDate: datePtr.startOf('week').format('YYYY-MM-DD'),
+      endDate: datePtr.endOf('week').format('YYYY-MM-DD'),
+      timePeriod: 'week'
+    });
+    datePtr.add(1, 'week');
+  }
+  while (datePtr.isSameOrBefore(endDate, 'month'));
+};
+
+/**
  * Calculates lines required in return
  * @param {String} startDate - YYYY-MM-DD
  * @param {String} endDate - YYYY-MM-DD
@@ -9,38 +87,22 @@ const moment = require('moment');
  * @return {Array} array of required lines
  */
 const getRequiredLines = (startDate, endDate, frequency) => {
-  const lines = [];
-  const datePtr = moment(startDate);
-  if (frequency === 'day') {
-    do {
-      lines.push({
-        startDate: datePtr.format('YYYY-MM-DD'),
-        endDate: datePtr.format('YYYY-MM-DD'),
-        timePeriod: 'day'
-      });
-      datePtr.add(1, 'day');
-    }
-    while (datePtr.isSameOrBefore(endDate, 'day'));
-  } else if (frequency === 'month') {
-    do {
-      lines.push({
-        startDate: datePtr.startOf('month').format('YYYY-MM-DD'),
-        endDate: datePtr.endOf('month').format('YYYY-MM-DD'),
-        timePeriod: 'month'
-      });
-      datePtr.add(1, 'month');
-    }
-    while (datePtr.isSameOrBefore(endDate, 'month'));
-  } else if (frequency === 'year') {
-    lines.push({
-      startDate,
-      endDate,
-      timePeriod: 'year'
-    });
-  } else {
-    throw new Error(`Unknown return frequency ${frequency}`);
+  switch (frequency) {
+    case 'day':
+      return getDays(startDate, endDate);
+
+    case 'week':
+      return getWeeks(startDate, endDate);
+
+    case 'month':
+      return getMonths(startDate, endDate);
+
+    case 'year':
+      return getYears(startDate, endDate);
+
+    default:
+      throw new Error(`Unknown frequency ${frequency}`);
   }
-  return lines;
 };
 
 /**
@@ -51,6 +113,8 @@ const getRequiredLines = (startDate, endDate, frequency) => {
  * @return {Object} unified view of return
  */
 const createModel = (ret, version, lines) => {
+  const requiredLines = lines.length ? null : getRequiredLines(ret.start_date, ret.end_date, ret.returns_frequency);
+
   return {
     returnId: ret.return_id,
     frequency: ret.returns_frequency,
@@ -63,7 +127,7 @@ const createModel = (ret, version, lines) => {
       numberLivestock: null,
       units: null
     },
-    requiredLines: getRequiredLines(ret.start_date, ret.end_date, ret.returns_frequency),
+    requiredLines,
     lines
   };
 };
