@@ -119,6 +119,7 @@ const createModel = (ret, version, lines) => {
     returnId: ret.return_id,
     frequency: ret.returns_frequency,
     isNil: get(version, 'nil_return'),
+    status: ret.status,
     reading: {
       type: null,
       method: null,
