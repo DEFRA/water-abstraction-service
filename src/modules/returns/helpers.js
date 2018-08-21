@@ -117,8 +117,8 @@ const createModel = (ret, version, lines) => {
 
   return {
     returnId: ret.return_id,
-    startDate: ret.start_date,
-    endDate: ret.end_date,
+    startDate: moment(ret.start_date).format('YYYY-MM-DD'),
+    endDate: moment(ret.end_date).format('YYYY-MM-DD'),
     frequency: ret.returns_frequency,
     isNil: get(version, 'nil_return'),
     status: ret.status,
