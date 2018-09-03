@@ -7,6 +7,7 @@ const types = ['estimated', 'measured'];
 const statuses = ['due', 'complete'];
 const methods = ['amounts', 'pump', 'herd'];
 const units = ['m³', 'l', 'Ml', 'gal'];
+const userTypes = ['internal', 'external'];
 
 module.exports = {
 
@@ -61,7 +62,11 @@ module.exports = {
               quantity: Joi.number().allow(null).required()
             })
           }),
-          metadata: Joi.object()
+          metadata: Joi.object(),
+          user: {
+            email: Joi.string().required(),
+            type: Joi.string().valid(userTypes).required()
+          }
         }
       }
     }

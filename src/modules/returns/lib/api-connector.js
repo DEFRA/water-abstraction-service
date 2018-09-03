@@ -3,7 +3,7 @@ const {
   returns,
   versions,
   lines
-} = require('../../lib/connectors/returns');
+} = require('../../../lib/connectors/returns');
 
 /**
  * Gets return row from returns API

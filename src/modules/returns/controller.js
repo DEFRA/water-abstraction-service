@@ -1,5 +1,5 @@
-const { createModel } = require('./helpers');
-const { fetchReturn, fetchVersion, fetchLines } = require('./api-connector');
+const { createModel, mapReturnToVersion, mapReturnToLines } = require('./lib/helpers');
+const { getReturnData } = require('./lib/facade');
 
 /**
  * A controller method to get a unified view of a return, to avoid handling
@@ -8,9 +8,7 @@ const { fetchReturn, fetchVersion, fetchLines } = require('./api-connector');
 const getReturn = async (request, h) => {
   const { returnId } = request.query;
 
-  const ret = await fetchReturn(returnId);
-  const version = await fetchVersion(returnId);
-  const lines = await fetchLines(returnId, version.version_id);
+  const { return: ret, version, lines } = await getReturnData(returnId);
 
   return createModel(ret, version, lines);
 };
@@ -19,11 +17,24 @@ const getReturn = async (request, h) => {
  * Accepts posted return data from UI layer and submits back to returns service
  */
 const postReturn = async (request, h) => {
-  const data = request.payload;
-  console.log(data);
-  return data;
-  // console.log(JSON.stringify(request.payload, null, 2));
-  // return 'ok';
+  const ret = request.payload;
+
+  // Prepare objects for saving
+  const version = mapReturnToVersion(ret);
+  const lines = mapReturnToLines(ret);
+
+  // @TODO POST to returns service
+  // await returns.versions.create(version);
+  // await returns.lines.create(lines);
+  console.log(version, lines);
+
+  return {
+    error: null,
+    data: {
+      version,
+      lines
+    }
+  };
 };
 
 module.exports = {

@@ -144,6 +144,52 @@ const createModel = (ret, version, lines) => {
   };
 };
 
+/**
+ * Maps return model back to a return version row
+ * @param {Object} ret - return model
+ * @return {Object} version row for returns service
+ */
+const mapReturnToVersion = (ret) => {
+  const versionId = `${ret.returnId}_${ret.versionNumber}`;
+
+  return {
+    version_id: versionId,
+    return_id: ret.returnId,
+    user_id: ret.user.email,
+    user_type: ret.user.type,
+    version_number: ret.versionNumber,
+    metadata: ret.reading,
+    nil_return: ret.nilReturn
+  };
+};
+
+/**
+ * Maps return model back to return lines
+ * @param {Object} ret - return model
+ * @return {Array} lines rows for returns service
+ */
+const mapReturnToLines = (ret) => {
+  const versionId = `${ret.returnId}_${ret.versionNumber}`;
+
+  if (ret.lines) {
+    return ret.lines.map(line => ({
+      line_id: `${versionId}_${line.startDate}_${line.endDate}`,
+      version_id: versionId,
+      substance: 'water',
+      quantity: line.quantity,
+      unit: ret.reading.units,
+      start_date: line.startDate,
+      end_date: line.endDate,
+      time_period: line.timePeriod,
+      metadata: '{}',
+      reading_type: ret.reading.type
+    }));
+  }
+  return null;
+};
+
 module.exports = {
-  createModel
+  createModel,
+  mapReturnToVersion,
+  mapReturnToLines
 };
