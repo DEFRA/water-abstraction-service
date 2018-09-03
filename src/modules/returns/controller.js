@@ -15,6 +15,18 @@ const getReturn = async (request, h) => {
   return createModel(ret, version, lines);
 };
 
+/**
+ * Accepts posted return data from UI layer and submits back to returns service
+ */
+const postReturn = async (request, h) => {
+  const data = request.payload;
+  console.log(data);
+  return data;
+  // console.log(JSON.stringify(request.payload, null, 2));
+  // return 'ok';
+};
+
 module.exports = {
-  getReturn
+  getReturn,
+  postReturn
 };

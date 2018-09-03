@@ -117,18 +117,26 @@ const createModel = (ret, version, lines) => {
 
   return {
     returnId: ret.return_id,
+    licenceNumber: ret.licence_ref,
     startDate: moment(ret.start_date).format('YYYY-MM-DD'),
     endDate: moment(ret.end_date).format('YYYY-MM-DD'),
     frequency: ret.returns_frequency,
     isNil: get(version, 'nil_return'),
     status: ret.status,
+    versionNumber: version ? version.version_number : null,
     reading: {
+      // Can be measured | estimated
       type: null,
+      // For estimate, shows method used for estimation
       method: null,
       pumpCapacity: null,
       hoursRun: null,
       numberLivestock: null,
-      units: null
+      // Can be m3, l, Ml, gal
+      units: null,
+      // Only used when single total value has been given rather than individual amounts
+      totalFlag: null,
+      total: null
     },
     requiredLines,
     lines,
