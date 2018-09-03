@@ -1,5 +1,22 @@
 const { dbQuery } = require('./db');
 
+/**
+ * Checks whether import table exists
+ * @return {Promise} resolves with boolean
+ */
+const importTableExists = async () => {
+  const query = `
+  select count(*)
+  from information_schema.tables
+  where table_schema = 'import';
+`;
+  const rows = await dbQuery(query);
+  if (rows.length) {
+    return rows[0].count >= 128;
+  }
+  return false;
+};
+
 const getMain = async (licenceNo) => {
   const query = `
     select * from import.
@@ -18,6 +35,7 @@ const getCams = async (code, FGAC_REGION_CODE) => {
   const params = [code, FGAC_REGION_CODE];
   return dbQuery(query, params);
 };
+
 const getCurrentVersion = async (licenceId, FGAC_REGION_CODE) => {
   const query = `
     SELECT
@@ -223,7 +241,24 @@ const getPurposePointLicenceConditions = async (AABP_ID, FGAC_REGION_CODE) => {
   return dbQuery(query, params);
 };
 
+/**
+ * Get current formats for the specified licence
+ * @param {Number} licenceId - the ID from the NALD_ABS_LICENCES table
+ * @param {Number} regionCode - the FGAC_REGION_CODE
+ * @return {Promise} resolves with list of formats
+ */
+const getCurrentFormats = async (licenceId, regionCode) => {
+  const query = `SELECT f.*
+  FROM "import"."NALD_RET_VERSIONS" rv
+  JOIN "import"."NALD_RET_FORMATS" f ON f."ARVN_AABL_ID"=$1 AND f."FGAC_REGION_CODE"=$2 AND rv."VERS_NO"=f."ARVN_VERS_NO"
+  WHERE rv."AABL_ID"=$1 AND rv."FGAC_REGION_CODE"=$2 AND rv."STATUS"='CURR'
+  `;
+  const params = [licenceId, regionCode];
+  return dbQuery(query, params);
+};
+
 module.exports = {
+  importTableExists,
   getMain,
   getCams,
   getCurrentVersion,
@@ -237,5 +272,6 @@ module.exports = {
   getPurposePoints,
   getPurpose,
   getPurposePointLicenceAgreements,
-  getPurposePointLicenceConditions
+  getPurposePointLicenceConditions,
+  getCurrentFormats
 };

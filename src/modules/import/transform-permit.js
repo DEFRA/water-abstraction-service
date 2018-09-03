@@ -14,8 +14,14 @@ const {
   getPurposePoints,
   getPurpose,
   getPurposePointLicenceAgreements,
-  getPurposePointLicenceConditions
+  getPurposePointLicenceConditions,
+  getCurrentFormats
 } = require('./lib/nald-queries.js');
+
+const {
+  getFormatPoints,
+  getFormatPurposes
+} = require('./lib/nald-returns-queries.js');
 
 /**
  * Gets the purposes together with their points, agreements and conditions
@@ -47,6 +53,23 @@ const getPurposesJson = async (licenceRow, currentVersion = null) => {
 };
 
 /**
+ * Gets current return formats for specified licence ID and region code
+ * @param {Number} licenceId - from NALD_ABS_LICENCES table
+ * @param {Number} regionCode - FGAC_REGION_CODE
+ * @return {Promise} resolves with formats and purposes/points
+ */
+const getReturnFormats = async (licenceId, regionCode) => {
+  const formats = await getCurrentFormats(licenceId, regionCode);
+
+  for (let format of formats) {
+    format.points = await getFormatPoints(format.ID, regionCode);
+    format.purposes = await getFormatPurposes(format.ID, regionCode);
+  }
+
+  return formats;
+};
+
+/**
  * Gets the JSON for the current version of the licence (if available)
  * @param {Object} licenceRow
  * return {Promise} resolves with object of current version, or null
@@ -70,6 +93,7 @@ const getCurrentVersionJson = async (licenceRow) => {
     data.expiry_date = dateToSortableString(licenceRow.EXPIRY_DATE);
 
     data.purposes = await getPurposesJson(licenceRow, currentVersion);
+    data.formats = await getReturnFormats(licenceRow.ID, regionCode);
 
     return data;
   }

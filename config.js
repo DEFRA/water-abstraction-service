@@ -16,16 +16,28 @@ module.exports = {
     // airbrakeLevel: 'error'
   },
 
+  // 125 available db connections
+  // 2 instances each with 2 cores running 5 applicatons that use
+  // the database.
+  // Therefore 125 / (2 x 2 x 5) = 6.25 connections per application pool.
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: 5,
+    max: 8,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000
+    connectionTimeoutMillis: 5000
+  },
+
+  pgImport: {
+    connectionString: process.env.DATABASE_URL,
+    max: 2,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 5000
   },
 
   pgBoss: {
     schema: 'water',
-    application_name: process.env.servicename
+    application_name: process.env.servicename,
+    newJobCheckIntervalSeconds: 5
   },
 
   s3: {
