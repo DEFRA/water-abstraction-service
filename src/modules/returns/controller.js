@@ -1,4 +1,5 @@
-const { createModel, mapReturnToVersion, mapReturnToLines } = require('./lib/helpers');
+const returns = require('../../lib/connectors/returns');
+const { mapReturnToModel, mapReturnToVersion, mapReturnToLines } = require('./lib/model-returns-mapper');
 const { getReturnData } = require('./lib/facade');
 
 /**
@@ -10,7 +11,7 @@ const getReturn = async (request, h) => {
 
   const { return: ret, version, lines } = await getReturnData(returnId);
 
-  return createModel(ret, version, lines);
+  return mapReturnToModel(ret, version, lines);
 };
 
 /**
@@ -21,12 +22,18 @@ const postReturn = async (request, h) => {
 
   // Prepare objects for saving
   const version = mapReturnToVersion(ret);
-  const lines = mapReturnToLines(ret);
+  const lines = mapReturnToLines(ret, version);
 
   // @TODO POST to returns service
-  // await returns.versions.create(version);
-  // await returns.lines.create(lines);
-  console.log(version, lines);
+  try {
+    await returns.versions.create(version);
+    await returns.lines.create(lines);
+  } catch (error) {
+    return h.response({
+      error,
+      data: null
+    }).code(500);
+  }
 
   return {
     error: null,

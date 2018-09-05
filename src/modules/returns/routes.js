@@ -1,9 +1,10 @@
+const Boom = require('boom');
 const Joi = require('joi');
 const controller = require('./controller');
 
 const isoDateRegex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 const allowedPeriods = ['year', 'month', 'week', 'day'];
-const types = ['estimated', 'measured'];
+const readingTypes = ['estimated', 'measured'];
 const statuses = ['due', 'complete'];
 const methods = ['amounts', 'pump', 'herd'];
 const units = ['m³', 'l', 'Ml', 'gal'];
@@ -33,6 +34,10 @@ module.exports = {
     config: {
       description: 'Accepts posted return data from UI layer',
       validate: {
+        failAction: async (request, h, err) => {
+          console.error('ValidationError:', err.message); // Better to use an actual logger here.
+          throw Boom.badRequest(`Invalid request payload input`);
+        },
         payload: {
           returnId: Joi.string().required(),
           licenceNumber: Joi.string().required(),
@@ -42,24 +47,30 @@ module.exports = {
           isNil: Joi.boolean().required(),
           status: Joi.string().valid(statuses).required(),
           versionNumber: Joi.number().required().min(1),
-          reading: {
-            type: Joi.string().valid(types).required(),
-            method: Joi.when('type', {is: 'estimated', then: Joi.string().valid(methods).required()}),
-            pumpCapacity: Joi.when('method', { is: 'pump', then: Joi.number().required() }),
-            hoursRun: Joi.when('method', { is: 'pump', then: Joi.number().required() }),
-            numberLivestock: Joi.when('method', { is: 'herd', then: Joi.number().required().min(1) }),
-            units: Joi.string().valid(units),
-            totalFlag: Joi.boolean().required(),
-            total: Joi.when('totalFlag', { is: true, then: Joi.number().required() })
-          },
-          requiredLines: Joi.array(),
+          reading: Joi.when('isNil', { is: false,
+            then:
+            {
+              type: Joi.string().valid(readingTypes).required(),
+              method: Joi.when('type', {is: 'estimated', then: Joi.string().valid(methods).required()}),
+              pumpCapacity: Joi.when('method', { is: 'pump', then: Joi.number().required() }),
+              hoursRun: Joi.when('method', { is: 'pump', then: Joi.number().required() }),
+              numberLivestock: Joi.when('method', { is: 'herd', then: Joi.number().required().min(1) }),
+              units: Joi.string().valid(units),
+              totalFlag: Joi.boolean().required(),
+              total: Joi.when('totalFlag', { is: true, then: Joi.number().required() })
+            }
+          }),
+          requiredLines: Joi.array().allow(null).optional(),
           lines: Joi.when('isNil', { is: false,
             then:
             Joi.array().required().items({
+              unit: Joi.string().valid(units).optional(),
+              userUnit: Joi.string().valid(units).optional(),
               startDate: Joi.string().regex(isoDateRegex).required(),
               endDate: Joi.string().regex(isoDateRegex).required(),
               timePeriod: Joi.string().valid(allowedPeriods).required(),
-              quantity: Joi.number().allow(null).required()
+              quantity: Joi.number().allow(null).required(),
+              readingType: Joi.string().valid(readingTypes)
             })
           }),
           metadata: Joi.object(),

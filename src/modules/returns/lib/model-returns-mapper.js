@@ -1,5 +1,19 @@
-const { get } = require('lodash');
+const { get, pick, mapKeys } = require('lodash');
 const moment = require('moment');
+const camelCase = require('camelcase');
+const { convertToCubicMetres } = require('./unit-conversion');
+const uuidv4 = require('uuid/v4');
+
+/**
+ * Converts a line from the returns service to
+ * the format for the water service return model
+ * @param {Object} line - from return service
+ * @return {Object}
+ */
+const returnLineToModel = (line) => {
+  const obj = pick(line, 'start_date', 'end_date', 'quantity', 'unit', 'user_unit', 'time_period', 'reading_type');
+  return mapKeys(obj, (value, key) => camelCase(key));
+};
 
 /**
  * Get required daily return lines
@@ -112,8 +126,23 @@ const getRequiredLines = (startDate, endDate, frequency) => {
  * @param {Array} lines - array of line data
  * @return {Object} unified view of return
  */
-const createModel = (ret, version, lines) => {
+const mapReturnToModel = (ret, version, lines) => {
   const requiredLines = lines.length ? null : getRequiredLines(ret.start_date, ret.end_date, ret.returns_frequency);
+
+  const nullVersionMetadata = {
+    // Can be measured | estimated
+    type: null,
+    // For estimate, shows method used for estimation
+    method: null,
+    pumpCapacity: null,
+    hoursRun: null,
+    numberLivestock: null,
+    // Can be m3, l, Ml, gal
+    units: null,
+    // Only used when single total value has been given rather than individual amounts
+    totalFlag: null,
+    total: null
+  };
 
   return {
     returnId: ret.return_id,
@@ -124,22 +153,9 @@ const createModel = (ret, version, lines) => {
     isNil: get(version, 'nil_return'),
     status: ret.status,
     versionNumber: version ? version.version_number : null,
-    reading: {
-      // Can be measured | estimated
-      type: null,
-      // For estimate, shows method used for estimation
-      method: null,
-      pumpCapacity: null,
-      hoursRun: null,
-      numberLivestock: null,
-      // Can be m3, l, Ml, gal
-      units: null,
-      // Only used when single total value has been given rather than individual amounts
-      totalFlag: null,
-      total: null
-    },
+    reading: version ? version.metadata : nullVersionMetadata,
     requiredLines,
-    lines,
+    lines: lines ? lines.map(returnLineToModel) : null,
     metadata: ret.metadata
   };
 };
@@ -150,16 +166,15 @@ const createModel = (ret, version, lines) => {
  * @return {Object} version row for returns service
  */
 const mapReturnToVersion = (ret) => {
-  const versionId = `${ret.returnId}_${ret.versionNumber}`;
-
   return {
-    version_id: versionId,
+    version_id: uuidv4(),
     return_id: ret.returnId,
     user_id: ret.user.email,
     user_type: ret.user.type,
     version_number: ret.versionNumber,
-    metadata: ret.reading,
-    nil_return: ret.nilReturn
+    metadata: JSON.stringify(ret.reading),
+    nil_return: ret.isNil,
+    current: true
   };
 };
 
@@ -168,16 +183,15 @@ const mapReturnToVersion = (ret) => {
  * @param {Object} ret - return model
  * @return {Array} lines rows for returns service
  */
-const mapReturnToLines = (ret) => {
-  const versionId = `${ret.returnId}_${ret.versionNumber}`;
-
+const mapReturnToLines = (ret, version) => {
   if (ret.lines) {
     return ret.lines.map(line => ({
-      line_id: `${versionId}_${line.startDate}_${line.endDate}`,
-      version_id: versionId,
+      line_id: uuidv4(),
+      version_id: version.version_id,
       substance: 'water',
-      quantity: line.quantity,
-      unit: ret.reading.units,
+      quantity: convertToCubicMetres(line.quantity, ret.reading.units),
+      unit: 'm³',
+      user_unit: ret.reading.units,
       start_date: line.startDate,
       end_date: line.endDate,
       time_period: line.timePeriod,
@@ -189,7 +203,7 @@ const mapReturnToLines = (ret) => {
 };
 
 module.exports = {
-  createModel,
+  mapReturnToModel,
   mapReturnToVersion,
   mapReturnToLines
 };

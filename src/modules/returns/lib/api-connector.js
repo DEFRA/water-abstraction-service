@@ -29,7 +29,7 @@ const fetchReturn = async (returnId) => {
 /**
  * Gets most recent version, or the version with the specified number if present
  * @param {String} returnId
- * @param {Number} [versionNumber]
+ * @param {Number} [versionNumber] if omitted, the current version is returned
  * @return {Promise} resolves with version row if found
  */
 const fetchVersion = async (returnId, versionNumber) => {
@@ -43,16 +43,28 @@ const fetchVersion = async (returnId, versionNumber) => {
     return_id: returnId
   };
   if (versionNumber === undefined) {
+    filter.current = true;
+  } else {
     filter.version_number = versionNumber;
   }
-  const { data: [versionRow], error } = await versions.findMany(filter, sort, pagination);
-  if (error) {
-    throw Boom.badImplementation(error);
+
+  try {
+    const { data: [versionRow], error } = await versions.findMany(filter, sort, pagination);
+    if (error) {
+      throw Boom.badImplementation(error);
+    }
+    if (!versionRow) {
+      throw Boom.notFound(`Version for ${returnId} not found`);
+    }
+    return versionRow;
+  } catch (err) {
+    // Handle case where no version exists for this return ID
+    if (err.isBoom && err.output.statusCode === 404) {
+      return null;
+    }
+    // Rethrow
+    throw err;
   }
-  if (!versionRow) {
-    throw Boom.notFound(`Version for ${returnId} not found`);
-  }
-  return versionRow;
 };
 
 /**
@@ -66,7 +78,6 @@ const fetchLines = async (returnId, versionId) => {
     start_date: +1
   };
   const filter = {
-    return_id: returnId,
     version_id: versionId
   };
   const pagination = {
@@ -74,6 +85,7 @@ const fetchLines = async (returnId, versionId) => {
   };
   const { data, error } = await lines.findMany(filter, sort, pagination);
   if (error) {
+    console.error(error);
     throw Boom.badImplementation(error);
   }
   return data;

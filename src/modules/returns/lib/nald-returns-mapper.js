@@ -8,7 +8,7 @@ const { mapQuantity, mapUnit, getStartDate, mapUsability } = require('../../impo
  * @param {Object} line - a row from the NALD_RET_LINES import table
  * @return {Object}
  */
-const mapLine = (returnRow, line) => {
+const naldToReturnLine = (returnRow, line) => {
   const startDate = getStartDate(returnRow.start_date, line.RET_DATE, returnRow.returns_frequency);
   const endDate = moment(line.RET_DATE, 'YYYYMMDDHHmmss').format('YYYY-MM-DD');
   const lineId = `${returnRow.return_id}:${endDate}`;
@@ -80,8 +80,8 @@ const filterWeeklyRows = (returnRow, lines) => {
  * @param {Array} lines - NALD_RET_LINES data
  * @return {Array} data with irrelevant lines removed
  */
-const mapLines = (returnRow, lines) => {
-  const data = lines.map(row => (mapLine(returnRow, row)));
+const naldToReturnLines = (returnRow, lines) => {
+  const data = lines.map(row => (naldToReturnLine(returnRow, row)));
 
   if (returnRow.returns_frequency === 'week') {
     return filterWeeklyRows(returnRow, data);
@@ -91,5 +91,5 @@ const mapLines = (returnRow, lines) => {
 };
 
 module.exports = {
-  mapLines
+  naldToReturnLines
 };
