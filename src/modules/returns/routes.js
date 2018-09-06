@@ -41,6 +41,7 @@ module.exports = {
         payload: {
           returnId: Joi.string().required(),
           licenceNumber: Joi.string().required(),
+          receivedDate: Joi.string().regex(isoDateRegex).allow(null).required(),
           startDate: Joi.string().regex(isoDateRegex).required(),
           endDate: Joi.string().regex(isoDateRegex).required(),
           frequency: Joi.string().valid(allowedPeriods).required(),

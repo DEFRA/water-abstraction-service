@@ -163,6 +163,7 @@ const mapReturnToModel = (ret, version, lines) => {
   return {
     returnId: ret.return_id,
     licenceNumber: ret.licence_ref,
+    receivedDate: ret.received_date,
     startDate: moment(ret.start_date).format('YYYY-MM-DD'),
     endDate: moment(ret.end_date).format('YYYY-MM-DD'),
     frequency: ret.returns_frequency,
@@ -218,8 +219,23 @@ const mapReturnToLines = (ret, version) => {
   return null;
 };
 
+/**
+ * Maps water service model to those fields that need updating in returns service
+ * @param {Object} ret - water service return model
+ * @return {Object} data to store in returns table of returns service
+ */
+const mapReturn = (ret) => {
+  const { status, receivedDate } = ret;
+
+  return {
+    status,
+    received_date: receivedDate
+  };
+};
+
 module.exports = {
   mapReturnToModel,
   mapReturnToVersion,
-  mapReturnToLines
+  mapReturnToLines,
+  mapReturn
 };

@@ -5,6 +5,8 @@ const {
   lines
 } = require('../../../lib/connectors/returns');
 
+const { mapReturnToVersion, mapReturnToLines, mapReturn } = require('./model-returns-mapper');
+
 /**
  * Gets return row from returns API
  * @param {String} returnId
@@ -91,8 +93,39 @@ const fetchLines = async (returnId, versionId) => {
   return data;
 };
 
+/**
+ * Persists water service return model to return service
+ * @param {Object} ret - return model
+ * @return {Promise} resolves when saved successfully
+ */
+const persistReturnData = async (ret) => {
+  // Update the return
+  const r = mapReturn(ret);
+  const { error: returnError } = await returns.updateMany({return_id: ret.returnId}, r);
+  if (returnError) {
+    throw Boom.badImplementation(returnError);
+  }
+
+  // Update the version
+  const version = mapReturnToVersion(ret);
+  const { data, error: versionError } = await versions.create(version);
+  if (versionError) {
+    throw Boom.badImplementation(versionError);
+  }
+
+  console.log('DATA >>>>>>>>>>>>>', version, data);
+
+  // Update the lines
+  const lineRows = mapReturnToLines(ret, data);
+  const { error: linesError } = await lines.create(lineRows);
+  if (linesError) {
+    throw Boom.badImplementation(linesError);
+  }
+};
+
 module.exports = {
   fetchReturn,
   fetchVersion,
-  fetchLines
+  fetchLines,
+  persistReturnData
 };
