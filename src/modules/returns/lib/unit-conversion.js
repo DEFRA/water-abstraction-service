@@ -27,6 +27,30 @@ const convertToCubicMetres = (value, unit) => {
   throw new InvalidUnitError(`Unknown unit ${unit}`);
 };
 
+/**
+ * Convert value from cubic metres back to supplied user unit
+ * @param {Number} value - the quantity abstracted
+ * @return {String} unit
+ * @return {Number} quantity in user-selected units
+ */
+const convertToUserUnit = (value, unit) => {
+  if (unit === 'm³') {
+    return value;
+  }
+  if (unit === 'l') {
+    return value * 1000;
+  }
+  if (unit === 'Ml') {
+    return value / 1000;
+  }
+  if (unit === 'gal') {
+    return value * 219.969248299;
+  }
+  throw new InvalidUnitError(`Unknown unit ${unit}`);
+};
+
 module.exports = {
-  convertToCubicMetres
+  convertToCubicMetres,
+  convertToUserUnit,
+  InvalidUnitError
 };

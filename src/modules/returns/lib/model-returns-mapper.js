@@ -1,7 +1,7 @@
 const { get, pick, mapKeys } = require('lodash');
 const moment = require('moment');
 const camelCase = require('camelcase');
-const { convertToCubicMetres } = require('./unit-conversion');
+const { convertToCubicMetres, convertToUserUnit } = require('./unit-conversion');
 const uuidv4 = require('uuid/v4');
 
 /**
@@ -11,8 +11,22 @@ const uuidv4 = require('uuid/v4');
  * @return {Object}
  */
 const returnLineToModel = (line) => {
-  const obj = pick(line, 'start_date', 'end_date', 'quantity', 'unit', 'user_unit', 'time_period', 'reading_type');
-  return mapKeys(obj, (value, key) => camelCase(key));
+  const {
+    start_date: startDate,
+    end_date: endDate,
+    quantity,
+    user_unit: userUnit,
+    time_period: timePeriod,
+    reading_type: readingType
+  } = line;
+
+  return {
+    startDate,
+    endDate,
+    quantity: convertToUserUnit(quantity, userUnit),
+    timePeriod,
+    readingType
+  };
 };
 
 /**
