@@ -105,6 +105,8 @@ const getWeeks = (startDate, endDate) => {
     datePtr.add(1, 'week');
   }
   while (datePtr.isSameOrBefore(endDate, 'month'));
+
+  return lines;
 };
 
 /**
