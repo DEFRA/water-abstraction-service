@@ -148,11 +148,8 @@ const mapReturnToModel = (ret, version, lines, versions) => {
   const nullVersionMetadata = {
     // Can be measured | estimated
     type: null,
-    // For estimate, shows method used for estimation
+    // For estimated, shows method used for estimation
     method: null,
-    pumpCapacity: null,
-    hoursRun: null,
-    numberLivestock: null,
     // Can be m3, l, Ml, gal
     units: null,
     // Only used when single total value has been given rather than individual amounts
@@ -170,6 +167,7 @@ const mapReturnToModel = (ret, version, lines, versions) => {
     isNil: get(version, 'nil_return'),
     status: ret.status,
     versionNumber: version ? version.version_number : null,
+    isCurrent: version.current,
     reading: version ? version.metadata : nullVersionMetadata,
     requiredLines,
     lines: lines ? lines.map(returnLineToModel) : null,

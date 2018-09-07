@@ -33,7 +33,8 @@ const getReturnData = async (returnId, versionNumber) => {
       nil_return: nilReturn,
       metadata: {
         units: 'm3'
-      }
+      },
+      current: true
     };
 
     versions = [version];

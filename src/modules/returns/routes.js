@@ -6,7 +6,6 @@ const isoDateRegex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 const allowedPeriods = ['year', 'month', 'week', 'day'];
 const readingTypes = ['estimated', 'measured'];
 const statuses = ['due', 'complete'];
-const methods = ['amounts', 'pump', 'herd'];
 const units = ['m³', 'l', 'Ml', 'gal'];
 const userTypes = ['internal', 'external'];
 
@@ -49,14 +48,12 @@ module.exports = {
           isNil: Joi.boolean().required(),
           status: Joi.string().valid(statuses).required(),
           versionNumber: Joi.number().required().min(1),
+          isCurrent: Joi.boolean().required(),
           reading: Joi.when('isNil', { is: false,
             then:
             {
               type: Joi.string().valid(readingTypes).required(),
-              method: Joi.when('type', {is: 'estimated', then: Joi.string().valid(methods).required()}),
-              pumpCapacity: Joi.when('method', { is: 'pump', then: Joi.number().required() }),
-              hoursRun: Joi.when('method', { is: 'pump', then: Joi.number().required() }),
-              numberLivestock: Joi.when('method', { is: 'herd', then: Joi.number().required().min(1) }),
+              method: Joi.string().allow(null),
               units: Joi.string().valid(units),
               totalFlag: Joi.boolean().required(),
               total: Joi.when('totalFlag', { is: true, then: Joi.number().required() })
