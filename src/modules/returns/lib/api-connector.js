@@ -99,28 +99,37 @@ const fetchLines = async (returnId, versionId) => {
  * @return {Promise} resolves when saved successfully
  */
 const persistReturnData = async (ret) => {
+  let linesData;
+
   // Update the return
   const r = mapReturn(ret);
-  const { error: returnError } = await returns.updateMany({return_id: ret.returnId}, r);
+  const { data: returnData, error: returnError } = await returns.updateMany({return_id: ret.returnId}, r);
   if (returnError) {
     throw Boom.badImplementation(returnError);
   }
 
   // Update the version
   const version = mapReturnToVersion(ret);
-  const { data, error: versionError } = await versions.create(version);
+  const { data: versionData, error: versionError } = await versions.create(version);
   if (versionError) {
     throw Boom.badImplementation(versionError);
   }
 
-  console.log('DATA >>>>>>>>>>>>>', version, data);
-
   // Update the lines
-  const lineRows = mapReturnToLines(ret, data);
-  const { error: linesError } = await lines.create(lineRows);
-  if (linesError) {
-    throw Boom.badImplementation(linesError);
+  const lineRows = mapReturnToLines(ret, versionData);
+  if (lineRows) {
+    const { data, error: linesError } = await lines.create(lineRows);
+    linesData = data;
+    if (linesError) {
+      throw Boom.badImplementation(linesError);
+    }
   }
+
+  return {
+    return: returnData,
+    version: versionData,
+    lines: linesData
+  };
 };
 
 module.exports = {

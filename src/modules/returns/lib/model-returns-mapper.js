@@ -140,6 +140,7 @@ const getRequiredLines = (startDate, endDate, frequency) => {
  * @param {Object} ret - return
  * @param {Object} version - the current / selected version of the return
  * @param {Array} lines - array of line data
+ * @param {Object} document - CRM document
  * @return {Object} unified view of return
  */
 const mapReturnToModel = (ret, version, lines) => {

@@ -77,7 +77,8 @@ module.exports = {
           metadata: Joi.object(),
           user: {
             email: Joi.string().required(),
-            type: Joi.string().valid(userTypes).required()
+            type: Joi.string().valid(userTypes).required(),
+            entityId: Joi.string().guid().required()
           }
         }
       }

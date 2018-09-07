@@ -29,7 +29,10 @@ const getReturnData = async (returnId) => {
       version_id: returnId,
       return_id: returnId,
       version_number: 1,
-      nil_return: nilReturn
+      nil_return: nilReturn,
+      metadata: {
+        units: 'm3'
+      }
     };
 
     // Get lines from NALD import DB
