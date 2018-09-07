@@ -20,7 +20,8 @@ module.exports = {
       description: 'Gets a single view of a return for presentation to UI layer',
       validate: {
         query: {
-          returnId: Joi.string().required()
+          returnId: Joi.string().required(),
+          versionNumber: Joi.number().optional().min(1)
         }
       }
     }

@@ -8,7 +8,7 @@ const { isNilReturn, getLines } = require('../../import/lib/nald-returns-queries
 const { parseReturnId } = require('../../import/lib/transform-returns-helpers');
 const { naldToReturnLines } = require('./nald-returns-mapper');
 
-const getReturnData = async (returnId) => {
+const getReturnData = async (returnId, versionNumber) => {
   let version, lines, versions;
   const ret = await fetchReturn(returnId);
 
@@ -17,7 +17,7 @@ const getReturnData = async (returnId) => {
 
   // For Summer 2018 returns onwards, use new return service
   if (isNew) {
-    version = await fetchVersion(returnId);
+    version = await fetchVersion(returnId, versionNumber);
     versions = await fetchAllVersions(returnId);
     lines = version ? await fetchLines(returnId, version.version_id) : [];
   } else {
