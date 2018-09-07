@@ -70,6 +70,29 @@ const fetchVersion = async (returnId, versionNumber) => {
 };
 
 /**
+ * Get a list of all versions of a return, sorted by version number
+ * @TODO support pagination
+ * @param {String} returnId
+ * @return {Promise} resolves with list of versions
+ */
+const fetchAllVersions = async (returnId) => {
+  const filter = {
+    return_id: returnId
+  };
+  const sort = {
+    version_number: +1
+  };
+
+  const { data, error } = await versions.findMany(filter, sort);
+
+  if (error) {
+    throw Boom.badImplementation(error);
+  }
+
+  return data;
+};
+
+/**
  * Fetch line data from return
  * @param {String} returnId
  * @param {String} versionId
@@ -135,6 +158,7 @@ const persistReturnData = async (ret) => {
 module.exports = {
   fetchReturn,
   fetchVersion,
+  fetchAllVersions,
   fetchLines,
   persistReturnData
 };

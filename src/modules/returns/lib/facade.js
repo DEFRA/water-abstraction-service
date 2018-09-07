@@ -3,13 +3,13 @@
  * loads data from the NALD import DB, or direct from the returns service
  */
 const moment = require('moment');
-const { fetchReturn, fetchVersion, fetchLines } = require('./api-connector');
+const { fetchReturn, fetchVersion, fetchLines, fetchAllVersions } = require('./api-connector');
 const { isNilReturn, getLines } = require('../../import/lib/nald-returns-queries');
 const { parseReturnId } = require('../../import/lib/transform-returns-helpers');
 const { naldToReturnLines } = require('./nald-returns-mapper');
 
 const getReturnData = async (returnId) => {
-  let version, lines;
+  let version, lines, versions;
   const ret = await fetchReturn(returnId);
 
   // Whether to use new returns service - i.e. for Summer 2018 returns onwards
@@ -18,6 +18,7 @@ const getReturnData = async (returnId) => {
   // For Summer 2018 returns onwards, use new return service
   if (isNew) {
     version = await fetchVersion(returnId);
+    versions = await fetchAllVersions(returnId);
     lines = version ? await fetchLines(returnId, version.version_id) : [];
   } else {
     // For older returns, synthesise data direct from the NALD import tables
@@ -35,6 +36,8 @@ const getReturnData = async (returnId) => {
       }
     };
 
+    versions = [version];
+
     // Get lines from NALD import DB
     const naldLines = await getLines(formatId, regionCode, startDate, endDate);
     lines = naldToReturnLines(ret, naldLines);
@@ -43,7 +46,8 @@ const getReturnData = async (returnId) => {
   return {
     return: ret,
     version,
-    lines
+    lines,
+    versions
   };
 };
 

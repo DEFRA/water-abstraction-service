@@ -1,6 +1,5 @@
-const { get, pick, mapKeys } = require('lodash');
+const { get } = require('lodash');
 const moment = require('moment');
-const camelCase = require('camelcase');
 const { convertToCubicMetres, convertToUserUnit } = require('./unit-conversion');
 const uuidv4 = require('uuid/v4');
 
@@ -143,7 +142,7 @@ const getRequiredLines = (startDate, endDate, frequency) => {
  * @param {Object} document - CRM document
  * @return {Object} unified view of return
  */
-const mapReturnToModel = (ret, version, lines) => {
+const mapReturnToModel = (ret, version, lines, versions) => {
   const requiredLines = lines.length ? null : getRequiredLines(ret.start_date, ret.end_date, ret.returns_frequency);
 
   const nullVersionMetadata = {
@@ -174,7 +173,16 @@ const mapReturnToModel = (ret, version, lines) => {
     reading: version ? version.metadata : nullVersionMetadata,
     requiredLines,
     lines: lines ? lines.map(returnLineToModel) : null,
-    metadata: ret.metadata
+    metadata: ret.metadata,
+    versions: versions.map(version => {
+      const {user_id, created_at, version_number, current} = version;
+      return {
+        versionNumber: version_number,
+        email: user_id,
+        createdAt: created_at,
+        isCurrent: current
+      };
+    })
   };
 };
 

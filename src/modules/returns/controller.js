@@ -11,9 +11,9 @@ const { repository: eventRepository } = require('../../controllers/events');
 const getReturn = async (request, h) => {
   const { returnId } = request.query;
 
-  const { return: ret, version, lines } = await getReturnData(returnId);
+  const { return: ret, version, lines, versions } = await getReturnData(returnId);
 
-  return mapReturnToModel(ret, version, lines);
+  return mapReturnToModel(ret, version, lines, versions);
 };
 
 /**
