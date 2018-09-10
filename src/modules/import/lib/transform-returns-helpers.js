@@ -1,5 +1,5 @@
 const moment = require('moment');
-const { uniqBy, findIndex, max, mapValues } = require('lodash');
+const { findIndex, max, mapValues } = require('lodash');
 const { formatAbstractionPoint } = require('../../../lib/licence-transformer/nald-helpers');
 
 /**
@@ -190,6 +190,7 @@ const getReturnId = (licenceNumber, format, startDate, endDate) => {
 };
 
 /**
+<<<<<<< HEAD
  * Gets either financial or summer return cycles within the specified date range
  * @param {String} startDate - the start date of the first cycle YYYY-MM-DD
  * @param {String} endDate - the end date of the last cycle
@@ -276,6 +277,87 @@ const getFormatCycles = (format) => {
   return getReturnCycles(startDate, endDate, isSummer);
 };
 
+/*
+ * Parses a return ID into constituent variables
+ * @param {String} returnId
+ * @return {Object}
+ */
+const parseReturnId = (returnId) => {
+  const [ version, regionCode, licenceNumber, formatId, startDate, endDate ] = returnId.split(':');
+  return {
+    version,
+    regionCode,
+    licenceNumber,
+    formatId,
+    startDate,
+    endDate
+  };
+};
+
+/**
+ * Calculates start of period based on start/end date and period
+ * @param {String} startDate - the returns start date YYYY-MM-DD
+ * @param {String} endDate - the line end date YYYY-MM-DD
+ * @param {String} period - the returns period - A/M/W/D
+ * @return {String} a date in format YYYY-MM-DD
+ */
+const getStartDate = (startDate, endDate, period) => {
+  const d = moment(endDate, 'YYYY-MM-DD');
+  let o;
+
+  if (period === 'year') {
+    o = moment(startDate, 'YYYY-MM-DD');
+  }
+  if (period === 'month') {
+    o = d.startOf('month');
+  }
+  if (period === 'week') {
+    o = d.startOf('isoWeek');
+  }
+  if (period === 'day') {
+    o = d;
+  }
+
+  return o.format('YYYY-MM-DD');
+};
+
+/**
+ * Gets quantity from NALD value
+ * @param {String} value or 'null' as string
+ * @return {Number|Boolean}
+ */
+const mapQuantity = (value) => {
+  return value === '' ? null : parseFloat(value);
+};
+
+/**
+ * Converts units in NALD to recognised SI unit
+ * @param {String} unit
+ * @return {String} SI unit
+ */
+const mapUnit = (u) => {
+  const units = {
+    M: 'm³',
+    I: 'gal'
+  };
+  return units[u] || u;
+};
+
+/**
+ * Map NALD quantity usability field
+ * @param {String} NALD usability flag
+ * @return {String} plaintext version
+ */
+const mapUsability = (u) => {
+  const options = {
+    E: 'estimate',
+    M: 'measured',
+    D: 'derived',
+    A: 'assessed'
+  };
+  return options[u];
+};
+
 module.exports = {
   convertNullStrings,
   mapPeriod,
@@ -289,5 +371,10 @@ module.exports = {
   getReturnId,
   getReturnCycles,
   startOfPeriod,
-  endOfPreviousPeriod
+  endOfPreviousPeriod,
+  parseReturnId,
+  getStartDate,
+  mapQuantity,
+  mapUnit,
+  mapUsability
 };

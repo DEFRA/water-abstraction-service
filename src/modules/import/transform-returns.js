@@ -68,7 +68,6 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
           return_requirement: format.ID
         };
 
-        //
         returnsData.returns.push(returnRow);
       }
     }
