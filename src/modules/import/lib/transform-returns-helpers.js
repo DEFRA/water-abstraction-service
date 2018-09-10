@@ -217,11 +217,8 @@ const getReturnCycles = (startDate, endDate, isSummer = false) => {
  * @return {String} date - YYYY-MM-DD
  */
 const startOfPeriod = (date, period) => {
-  if (period === 'month') {
-    return moment(date).startOf('month').format('YYYY-MM-DD');
-  }
-  if (period === 'week') {
-    return moment(date).startOf('week').format('YYYY-MM-DD');
+  if (['month', 'week'].includes(period)) {
+    return moment(date).startOf(period).format('YYYY-MM-DD');
   }
   return moment(date).format('YYYY-MM-DD');
 };
@@ -236,15 +233,10 @@ const startOfPeriod = (date, period) => {
  * @return {String} date - YYYY-MM-DD rounded down to end of previous period
  */
 const endOfPreviousPeriod = (date, period) => {
-  if (period === 'month') {
+  if (['month', 'week'].includes(period)) {
     const m = moment(date);
-    const m2 = moment(m).endOf('month');
-    return m.isSame(m2, 'day') ? date : m.subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
-  }
-  if (period === 'week') {
-    const m = moment(date);
-    const m2 = moment(m).endOf('week');
-    return m.isSame(m2, 'day') ? date : m.subtract(1, 'weeks').endOf('week').format('YYYY-MM-DD');
+    const m2 = moment(m).endOf(period);
+    return m.isSame(m2, 'day') ? date : m.subtract(1, period).endOf(period).format('YYYY-MM-DD');
   }
   return moment(date).format('YYYY-MM-DD');
 };
