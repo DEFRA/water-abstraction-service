@@ -23,5 +23,7 @@ experiment('buildCRMMetadata', () => {
 
     const meta = buildCRMMetadata(currentVersion);
     expect(meta.IsCurrent).to.be.true();
+    expect(meta.Expires).to.equal(currentVersion.expiry_date);
+    expect(meta.Modified).to.equal(currentVersion.version_effective_date);
   });
 });
