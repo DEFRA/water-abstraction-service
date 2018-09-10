@@ -58,30 +58,32 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
 
       // Only create return cycles for formats with logs to allow NALD prepop to
       // drive online returns
-      if (cycleLogs.length > 0) {
-        const returnId = getReturnId(licenceNumber, format, startDate, endDate);
-
-        // Create new return row
-        const returnRow = {
-          return_id: returnId,
-          regime: 'water',
-          licence_type: 'abstraction',
-          licence_ref: licenceNumber,
-          start_date: startDate,
-          end_date: endDate,
-          returns_frequency: mapPeriod(format.ARTC_REC_FREQ_CODE),
-          status: 'complete',
-          source: 'NALD',
-          metadata: JSON.stringify({
-            ...formatReturnMetadata(format),
-            isCurrent
-          }),
-          received_date: mapReceivedDate(cycleLogs),
-          return_requirement: format.ID
-        };
-
-        returnsData.returns.push(returnRow);
+      if (cycleLogs.length === 0) {
+        continue;
       }
+
+      const returnId = getReturnId(licenceNumber, format, startDate, endDate);
+
+      // Create new return row
+      const returnRow = {
+        return_id: returnId,
+        regime: 'water',
+        licence_type: 'abstraction',
+        licence_ref: licenceNumber,
+        start_date: startDate,
+        end_date: endDate,
+        returns_frequency: mapPeriod(format.ARTC_REC_FREQ_CODE),
+        status: 'complete',
+        source: 'NALD',
+        metadata: JSON.stringify({
+          ...formatReturnMetadata(format),
+          isCurrent
+        }),
+        received_date: mapReceivedDate(cycleLogs),
+        return_requirement: format.ID
+      };
+
+      returnsData.returns.push(returnRow);
     }
   }
 
