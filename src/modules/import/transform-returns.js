@@ -19,10 +19,13 @@ const {
 /**
  * Loads licence formats from DB
  * @param {String} licenceNumber
- * @param {Object} versionStartDate - moment
+ * @param {Object} currentVersionStart - DD/MM/YYYY
  * @return {Promise} resolves with array of formats
  */
-const getLicenceFormats = async (licenceNumber, versionStartDate) => {
+const getLicenceFormats = async (licenceNumber, currentVersionStart) => {
+  // Create moment for the start date of the current licence version
+  const versionStartDate = currentVersionStart ? moment(currentVersionStart, 'DD/MM/YYYY') : null;
+
   const formats = await getFormats(licenceNumber);
 
   // Load format data
@@ -40,10 +43,7 @@ const getLicenceFormats = async (licenceNumber, versionStartDate) => {
  * @param {String} currentVersionStart - the start date of the current version of the licence in format DD/MM/YYYY
  */
 const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
-  // Create moment for the start date of the current licence version
-  const versionStartDate = currentVersionStart ? moment(currentVersionStart, 'DD/MM/YYYY') : null;
-
-  const formats = await getLicenceFormats(licenceNumber, versionStartDate);
+  const formats = await getLicenceFormats(licenceNumber, currentVersionStart);
 
   const returnsData = {
     returns: []
