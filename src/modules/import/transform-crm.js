@@ -94,7 +94,7 @@ function buildCRMMetadata (currentVersion) {
     ...contact,
     Expires: expires,
     Modified: modified,
-    IsCurrent: moment().isBetween(modified, expires, 'day')
+    IsCurrent: true
   };
   return pruneNullString(data);
 }
