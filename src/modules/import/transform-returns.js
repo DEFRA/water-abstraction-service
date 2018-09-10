@@ -4,7 +4,6 @@ const {
   getFormats,
   getFormatPurposes,
   getFormatPoints,
-  getLogs,
   getLogsForPeriod
 } = require('./lib/nald-returns-queries.js');
 
@@ -31,7 +30,6 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
   for (let format of formats) {
     format.purposes = await getFormatPurposes(format.ID, format.FGAC_REGION_CODE);
     format.points = await getFormatPoints(format.ID, format.FGAC_REGION_CODE);
-    format.logs = await getLogs(format.ID, format.FGAC_REGION_CODE);
     format.cycles = getCurrentCycles(getFormatCycles(format), versionStartDate);
   }
 
@@ -46,27 +44,33 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
       // Get all form logs relating to this cycle
       const cycleLogs = await getLogsForPeriod(format.ID, format.FGAC_REGION_CODE, startDate, endDate);
 
-      const returnId = getReturnId(licenceNumber, format, startDate, endDate);
+      // Only create return cycles for formats with logs to allow NALD prepop to
+      // drive online returns
+      if (cycleLogs.length > 0) {
+        const returnId = getReturnId(licenceNumber, format, startDate, endDate);
 
-      // Create new return row
-      const returnRow = {
-        return_id: returnId,
-        regime: 'water',
-        licence_type: 'abstraction',
-        licence_ref: licenceNumber,
-        start_date: startDate,
-        end_date: endDate,
-        returns_frequency: mapPeriod(format.ARTC_REC_FREQ_CODE),
-        status: 'complete',
-        source: 'NALD',
-        metadata: JSON.stringify({
-          ...formatReturnMetadata(format),
-          isCurrent
-        }),
-        received_date: mapReceivedDate(cycleLogs)
-      };
+        // Create new return row
+        const returnRow = {
+          return_id: returnId,
+          regime: 'water',
+          licence_type: 'abstraction',
+          licence_ref: licenceNumber,
+          start_date: startDate,
+          end_date: endDate,
+          returns_frequency: mapPeriod(format.ARTC_REC_FREQ_CODE),
+          status: 'complete',
+          source: 'NALD',
+          metadata: JSON.stringify({
+            ...formatReturnMetadata(format),
+            isCurrent
+          }),
+          received_date: mapReceivedDate(cycleLogs),
+          return_requirement: format.ID
+        };
 
-      returnsData.returns.push(returnRow);
+        //
+        returnsData.returns.push(returnRow);
+      }
     }
   }
 

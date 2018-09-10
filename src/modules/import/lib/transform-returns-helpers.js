@@ -112,28 +112,6 @@ const getSummerYear = (date) => {
 };
 
 /**
- * Gets the returns cycles for the given format.
- * Depending on the FORM_PRODN_MONTH flag, this will either be financial years
- * or years running 1 Nov - 31 Oct
- * @param {Object} format
- * @return {Array} array of cycles
- */
-const getFormatCycles = (format) => {
-  const cycles = [];
-  const info = mapProductionMonth(format.FORM_PRODN_MONTH);
-
-  const dateFunc = info.isSummer ? getSummerYear : getFinancialYear;
-
-  for (let log of format.logs) {
-    const { DATE_FROM: dateFrom, DATE_TO: dateTo } = log;
-    cycles.push(dateFunc(dateFrom));
-    cycles.push(dateFunc(dateTo));
-  }
-
-  return uniqBy(cycles, row => row.startDate);
-};
-
-/**
  * Splits a cycle in to two cycles if the supplied comparison date is within the
  * cycle
  * @param {Object}
@@ -144,7 +122,6 @@ const splitCycle = (cycle, splitDate) => {
   const { startDate, endDate } = cycle;
   // console.log('Split date', splitDate, cycle);
   if (moment(splitDate).isBetween(startDate, endDate)) {
-    // console.log('>>>>>>> SPLIT!');
     const cycleOneEnd = moment(splitDate).subtract(1, 'day').format('YYYY-MM-DD');
     const cycleTwoStart = moment(splitDate).format('YYYY-MM-DD');
     return [
@@ -212,6 +189,93 @@ const getReturnId = (licenceNumber, format, startDate, endDate) => {
   return `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}:${endDate}`;
 };
 
+/**
+ * Gets either financial or summer return cycles within the specified date range
+ * @param {String} startDate - the start date of the first cycle YYYY-MM-DD
+ * @param {String} endDate - the end date of the last cycle
+ * @param {Boolean} isSummer - true if summer cycle
+ * @return {Array} list of return cycles
+ */
+const getReturnCycles = (startDate, endDate, isSummer = false) => {
+  let datePtr = moment(startDate);
+  const dateFunc = isSummer ? getSummerYear : getFinancialYear;
+  const cycles = [];
+  while (datePtr.isSameOrBefore(endDate)) {
+    cycles.push(dateFunc(datePtr));
+    datePtr.add(1, 'year');
+  };
+  cycles[0].startDate = startDate;
+  cycles[cycles.length - 1].endDate = endDate;
+  return cycles;
+};
+
+/**
+ * Gets the start of the period (month/week) for a given date
+ * @param {String} date - YYYY-MM-DD
+ * @param {String} period - month|week
+ * @return {String} date - YYYY-MM-DD
+ */
+const startOfPeriod = (date, period) => {
+  if (period === 'month') {
+    return moment(date).startOf('month').format('YYYY-MM-DD');
+  }
+  if (period === 'week') {
+    return moment(date).startOf('week').format('YYYY-MM-DD');
+  }
+  return moment(date).format('YYYY-MM-DD');
+};
+
+/**
+ * Rounds date down as follows:
+ * - for period of 'month', date is rounded down to the end of the previous month
+ * - for period of 'week', date is rounded down to end of previous week
+ * - for other periods, date is unchanged
+ * @param {String} date - YYYY-MM-DD
+ * @param {String} period - month|week|year etc
+ * @return {String} date - YYYY-MM-DD rounded down to end of previous period
+ */
+const endOfPreviousPeriod = (date, period) => {
+  if (period === 'month') {
+    const m = moment(date);
+    const m2 = moment(m).endOf('month');
+    return m.isSame(m2, 'day') ? date : m.subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
+  }
+  if (period === 'week') {
+    const m = moment(date);
+    const m2 = moment(m).endOf('week');
+    return m.isSame(m2, 'day') ? date : m.subtract(1, 'weeks').endOf('week').format('YYYY-MM-DD');
+  }
+  return moment(date).format('YYYY-MM-DD');
+};
+
+/**
+ * Gets cycles for a given format.  If the format has no effective end date,
+ * then one is created at the end of the following year.  These will be filtered
+ * out later by checking if form logs exist for the cycles calculated
+ * @param {Object} row of data from NALD_RET_FORMATS
+ * @return {Array} array of return cycles with startDate and endDate in each item
+ */
+const getFormatCycles = (format) => {
+  const {
+    ARTC_REC_FREQ_CODE: frequencyCode,
+    FORM_PRODN_MONTH: productionMonth,
+    EFF_END_DATE: effectiveEndDate,
+    EFF_ST_DATE: effectiveStartDate
+  } = format;
+
+  const { isSummer } = mapProductionMonth(productionMonth);
+  const dateFunc = isSummer ? getSummerYear : getFinancialYear;
+
+  // Calculate start/end date.  If these are mid-way through month/week
+  // for monthly/weekly returns, we truncate these
+  const period = mapPeriod(frequencyCode);
+
+  const effStart = moment(effectiveStartDate, 'DD/MM/YYYY');
+  const startDate = startOfPeriod(effStart, period);
+  const endDate = effectiveEndDate === 'null' ? dateFunc(moment().add(1, 'years')).endDate : endOfPreviousPeriod(moment(effectiveEndDate, 'DD/MM/YYYY'));
+  return getReturnCycles(startDate, endDate, isSummer);
+};
+
 module.exports = {
   convertNullStrings,
   mapPeriod,
@@ -222,5 +286,8 @@ module.exports = {
   getFormatCycles,
   getCurrentCycles,
   mapReceivedDate,
-  getReturnId
+  getReturnId,
+  getReturnCycles,
+  startOfPeriod,
+  endOfPreviousPeriod
 };

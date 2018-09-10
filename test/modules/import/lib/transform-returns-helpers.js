@@ -5,13 +5,13 @@ const { expect } = require('code');
 const {
   convertNullStrings,
   mapPeriod,
-  getStartDate,
-  mapUnit,
-  mapUsability,
   getFinancialYear,
   getSummerYear,
   mapReceivedDate,
-  getCurrentCycles
+  getCurrentCycles,
+  getReturnCycles,
+  startOfPeriod,
+  endOfPreviousPeriod
 } = require('../../../../src/modules/import/lib/transform-returns-helpers');
 
 const testCycles = [{
@@ -144,6 +144,108 @@ lab.experiment('Test returns data transformation helpers', () => {
   lab.test('Test splitting returns cycles when licence start date is after last cycle', async () => {
     const split = getCurrentCycles(testCycles, '2018-02-05');
     expect(split).to.equal(testCycles.map(row => ({...row, isCurrent: false })));
+  });
+
+  lab.test('Get financial year returns cycles with start part-way through cycle', async () => {
+    const cycles = getReturnCycles('2014-06-25', '2018-03-31', false);
+
+    expect(cycles).to.equal([
+      {
+        startDate: '2014-06-25',
+        endDate: '2015-03-31'
+      },
+      {
+        startDate: '2015-04-01',
+        endDate: '2016-03-31'
+      },
+      {
+        startDate: '2016-04-01',
+        endDate: '2017-03-31'
+      }, {
+        startDate: '2017-04-01',
+        endDate: '2018-03-31'
+      }
+    ]);
+  });
+
+  lab.test('Get financial year returns cycles with end part-way through cycle', async () => {
+    const cycles = getReturnCycles('2015-04-01', '2017-06-25', false);
+
+    expect(cycles).to.equal([
+      {
+        startDate: '2015-04-01',
+        endDate: '2016-03-31'
+      },
+      {
+        startDate: '2016-04-01',
+        endDate: '2017-03-31'
+      }, {
+        startDate: '2017-04-01',
+        endDate: '2017-06-25'
+      }
+    ]);
+  });
+
+  lab.test('Get summer year returns cycles with start part-way through cycle', async () => {
+    const cycles = getReturnCycles('2014-06-25', '2018-10-31', true);
+
+    expect(cycles).to.equal([
+      {
+        startDate: '2014-06-25',
+        endDate: '2014-10-31'
+      },
+      {
+        startDate: '2014-11-01',
+        endDate: '2015-10-31'
+      },
+      {
+        startDate: '2015-11-01',
+        endDate: '2016-10-31'
+      }, {
+        startDate: '2016-11-01',
+        endDate: '2017-10-31'
+      }, {
+        startDate: '2017-11-01',
+        endDate: '2018-10-31'
+      }
+    ]);
+  });
+
+  lab.test('Get summer year returns cycles with end part-way through cycle', async () => {
+    const cycles = getReturnCycles('2015-11-01', '2017-06-25', true);
+
+    expect(cycles).to.equal([
+      {
+        startDate: '2015-11-01',
+        endDate: '2016-10-31'
+      },
+      {
+        startDate: '2016-11-01',
+        endDate: '2017-06-25'
+      }
+    ]);
+  });
+
+  lab.test('Round date to start of month', async () => {
+    expect(startOfPeriod('2016-04-25', 'month')).to.equal('2016-04-01');
+    expect(startOfPeriod('2019-01-01', 'month')).to.equal('2019-01-01');
+    expect(startOfPeriod('2015-09-30', 'month')).to.equal('2015-09-01');
+  });
+
+  lab.test('Round date down to start of week', async () => {
+    expect(startOfPeriod('2018-09-09', 'week')).to.equal('2018-09-09');
+    expect(startOfPeriod('2018-09-22', 'week')).to.equal('2018-09-16');
+  });
+
+  lab.test('Round date down to end of previous month', async () => {
+    expect(endOfPreviousPeriod('2016-04-25', 'month')).to.equal('2016-03-31');
+    expect(endOfPreviousPeriod('2019-01-01', 'month')).to.equal('2018-12-31');
+    expect(endOfPreviousPeriod('2015-09-30', 'month')).to.equal('2015-09-30');
+  });
+
+  lab.test('Round date down to end of previous week', async () => {
+    expect(endOfPreviousPeriod('2018-09-09', 'week')).to.equal('2018-09-08');
+    expect(endOfPreviousPeriod('2018-09-22', 'week')).to.equal('2018-09-22');
   });
 });
 
