@@ -63,7 +63,8 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
           ...formatReturnMetadata(format),
           isCurrent
         }),
-        received_date: mapReceivedDate(cycleLogs)
+        received_date: mapReceivedDate(cycleLogs),
+        return_requirement: format.ID
       };
 
       returnsData.returns.push(returnRow);
