@@ -13,33 +13,9 @@ experiment('buildCRMMetadata', () => {
     });
   });
 
-  test('IsCurrent is false if the currentVersion has not started', async () => {
+  test('IsCurrent is true if the currentVersion is supplied', async () => {
     const currentVersion = {
       expiry_date: moment().add(2, 'months').format('YYYYMMDD'),
-      version_effective_date: moment().add(1, 'month').format('YYYYMMDD'),
-      party: {},
-      address: {}
-    };
-
-    const meta = buildCRMMetadata(currentVersion);
-    expect(meta.IsCurrent).to.be.false();
-  });
-
-  test('IsCurrent is false if the currentVersion has ended', async () => {
-    const currentVersion = {
-      expiry_date: moment().subtract(1, 'months').format('YYYYMMDD'),
-      version_effective_date: moment().subtract(2, 'month').format('YYYYMMDD'),
-      party: {},
-      address: {}
-    };
-
-    const meta = buildCRMMetadata(currentVersion);
-    expect(meta.IsCurrent).to.be.false();
-  });
-
-  test('IsCurrent is true if the currentVersion has started but not ended', async () => {
-    const currentVersion = {
-      expiry_date: moment().add(1, 'months').format('YYYYMMDD'),
       version_effective_date: moment().subtract(1, 'month').format('YYYYMMDD'),
       party: {},
       address: {}
@@ -47,5 +23,7 @@ experiment('buildCRMMetadata', () => {
 
     const meta = buildCRMMetadata(currentVersion);
     expect(meta.IsCurrent).to.be.true();
+    expect(meta.Expires).to.equal(currentVersion.expiry_date);
+    expect(meta.Modified).to.equal(currentVersion.version_effective_date);
   });
 });
