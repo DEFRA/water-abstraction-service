@@ -306,6 +306,16 @@ const mapUsability = (u) => {
   return options[u];
 };
 
+/**
+ * Gets return status
+ * @param {String|null} receivedDate - the date received from NALD form logs YYYY-MM-DD, or null
+ * @param {String} startDate - the start date of the return period
+ * @return {String} status - completed|due
+ */
+const getStatus = (receivedDate) => {
+  return receivedDate === null ? 'due' : 'completed';
+};
+
 module.exports = {
   convertNullStrings,
   mapPeriod,
@@ -321,5 +331,6 @@ module.exports = {
   mapUnit,
   mapUsability,
   getPeriodStart,
-  addDate
+  addDate,
+  getStatus
 };

@@ -12,7 +12,8 @@ const {
   formatReturnMetadata,
   getFormatCycles,
   mapReceivedDate,
-  getReturnId
+  getReturnId,
+  getStatus
 } = require('./lib/transform-returns-helpers.js');
 
 /**
@@ -63,7 +64,7 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
 
       const returnId = getReturnId(licenceNumber, format, startDate, endDate);
       const receivedDate = mapReceivedDate(cycleLogs);
-      const isDue = (receivedDate === null) && moment(startDate).isSameOrAfter('2018-11-01');
+      const status = getStatus(receivedDate);
 
       // Create new return row
       const returnRow = {
@@ -74,7 +75,7 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
         start_date: startDate,
         end_date: endDate,
         returns_frequency: mapPeriod(format.ARTC_REC_FREQ_CODE),
-        status: isDue ? 'due' : 'complete',
+        status,
         source: 'NALD',
         metadata: JSON.stringify({
           ...formatReturnMetadata(format),
