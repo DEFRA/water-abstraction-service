@@ -48,7 +48,7 @@ module.exports = {
           isNil: Joi.boolean().required(),
           status: Joi.string().valid(statuses).required(),
           versionNumber: Joi.number().required().min(1),
-          isCurrent: Joi.boolean().required(),
+          isCurrent: Joi.boolean().required().allow(null),
           reading: Joi.when('isNil', { is: false,
             then:
             {
