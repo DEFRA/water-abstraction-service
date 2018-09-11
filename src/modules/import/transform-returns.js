@@ -11,7 +11,6 @@ const {
   mapPeriod,
   formatReturnMetadata,
   getFormatCycles,
-  getCurrentCycles,
   mapReceivedDate,
   getReturnId
 } = require('./lib/transform-returns-helpers.js');
@@ -24,7 +23,7 @@ const {
  */
 const getLicenceFormats = async (licenceNumber, currentVersionStart) => {
   // Create moment for the start date of the current licence version
-  const versionStartDate = currentVersionStart ? moment(currentVersionStart, 'DD/MM/YYYY') : null;
+  const versionStartDate = currentVersionStart ? moment(currentVersionStart, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
 
   const formats = await getFormats(licenceNumber);
 
@@ -32,7 +31,7 @@ const getLicenceFormats = async (licenceNumber, currentVersionStart) => {
   for (let format of formats) {
     format.purposes = await getFormatPurposes(format.ID, format.FGAC_REGION_CODE);
     format.points = await getFormatPoints(format.ID, format.FGAC_REGION_CODE);
-    format.cycles = getCurrentCycles(getFormatCycles(format), versionStartDate);
+    format.cycles = getFormatCycles(format, versionStartDate);
   }
 
   return formats;
