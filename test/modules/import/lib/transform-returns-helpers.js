@@ -8,7 +8,8 @@ const {
   mapReceivedDate,
   getReturnCycles,
   getPeriodStart,
-  addDate
+  addDate,
+  getStatus
 } = require('../../../../src/modules/import/lib/transform-returns-helpers');
 
 lab.experiment('Test returns data transformation helpers', () => {
@@ -246,6 +247,14 @@ lab.experiment('Test returns data transformation helpers', () => {
       { startDate: '2015-11-01',
         endDate: '2016-07-01',
         isCurrent: true } ]);
+  });
+
+  // ------------- getStatus
+  lab.test('getStatus should return completed if received date set in NALD', async () => {
+    expect(getStatus('2018-03-31')).to.equal('completed');
+  });
+  lab.test('getStatus should return due if no received date set in NALD', async () => {
+    expect(getStatus(null)).to.equal('due');
   });
 });
 
