@@ -167,7 +167,7 @@ const mapReturnToModel = (ret, version, lines, versions) => {
     isNil: get(version, 'nil_return'),
     status: ret.status,
     versionNumber: version ? version.version_number : null,
-    isCurrent: version.current,
+    isCurrent: version ? version.current : null,
     reading: version ? version.metadata : nullVersionMetadata,
     requiredLines,
     lines: lines ? lines.map(returnLineToModel) : null,
