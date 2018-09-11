@@ -198,15 +198,21 @@ const getReturnId = (licenceNumber, format, startDate, endDate) => {
  * @return {Array} list of return cycles
  */
 const getReturnCycles = (startDate, endDate, isSummer = false) => {
-  let datePtr = moment(startDate);
   const dateFunc = isSummer ? getSummerYear : getFinancialYear;
+
+  const { startDate: cycleStart } = dateFunc(moment(startDate).format('DD/MM/YYYY'));
+  const { endDate: cycleEnd } = dateFunc(moment(endDate).format('DD/MM/YYYY'));
+
+  let datePtr = moment(cycleStart);
   const cycles = [];
-  while (datePtr.isSameOrBefore(endDate)) {
+  do {
     cycles.push(dateFunc(datePtr));
     datePtr.add(1, 'year');
-  };
+  } while (datePtr.isBefore(cycleEnd));
+
   cycles[0].startDate = startDate;
   cycles[cycles.length - 1].endDate = endDate;
+
   return cycles;
 };
 

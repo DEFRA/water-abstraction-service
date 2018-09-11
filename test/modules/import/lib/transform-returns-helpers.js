@@ -168,6 +168,17 @@ lab.experiment('Test returns data transformation helpers', () => {
     ]);
   });
 
+  lab.test('Get financial year returns cycles with start/end within cycle', async () => {
+    const cycles = getReturnCycles('2015-05-15', '2016-02-01', false);
+
+    expect(cycles).to.equal([
+      {
+        startDate: '2015-05-15',
+        endDate: '2016-02-01'
+      }
+    ]);
+  });
+
   lab.test('Get financial year returns cycles with end part-way through cycle', async () => {
     const cycles = getReturnCycles('2015-04-01', '2017-06-25', false);
 
@@ -182,6 +193,17 @@ lab.experiment('Test returns data transformation helpers', () => {
       }, {
         startDate: '2017-04-01',
         endDate: '2017-06-25'
+      }
+    ]);
+  });
+
+  lab.test('Get summer year returns cycles with start/end within cycle', async () => {
+    const cycles = getReturnCycles('2015-12-01', '2016-09-01', true);
+
+    expect(cycles).to.equal([
+      {
+        startDate: '2015-12-01',
+        endDate: '2016-09-01'
       }
     ]);
   });
@@ -212,16 +234,24 @@ lab.experiment('Test returns data transformation helpers', () => {
   });
 
   lab.test('Get summer year returns cycles with end part-way through cycle', async () => {
-    const cycles = getReturnCycles('2015-11-01', '2017-06-25', true);
+    const cycles = getReturnCycles('2014-04-01', '2017-02-26', true);
 
     expect(cycles).to.equal([
+      {
+        startDate: '2014-04-01',
+        endDate: '2014-10-31'
+      },
+      {
+        startDate: '2014-11-01',
+        endDate: '2015-10-31'
+      },
       {
         startDate: '2015-11-01',
         endDate: '2016-10-31'
       },
       {
         startDate: '2016-11-01',
-        endDate: '2017-06-25'
+        endDate: '2017-02-26'
       }
     ]);
   });
