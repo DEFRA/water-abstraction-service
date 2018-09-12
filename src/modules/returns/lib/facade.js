@@ -32,7 +32,7 @@ const getReturnData = async (returnId, versionNumber) => {
       version_number: 1,
       nil_return: nilReturn,
       metadata: {
-        units: 'm3'
+        units: 'm³'
       },
       current: true
     };
