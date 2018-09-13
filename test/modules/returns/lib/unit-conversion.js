@@ -19,6 +19,13 @@ lab.experiment('Test returns helpers', () => {
     Code.expect(func).to.throw(InvalidUnitError, 'Unknown unit x');
   });
 
+  lab.test('convertToCubicMetres should return null when null given', async () => {
+    Code.expect(convertToCubicMetres(null, 'm³')).to.equal(null);
+    Code.expect(convertToCubicMetres(null, 'l')).to.equal(null);
+    Code.expect(convertToCubicMetres(null, 'Ml')).to.equal(null);
+    Code.expect(convertToCubicMetres(null, 'gal')).to.equal(null);
+  });
+
   lab.test('convertToUserUnit should convert known units', async () => {
     Code.expect(convertToUserUnit(100, 'm³')).to.equal(100);
     Code.expect(convertToUserUnit(100, 'l')).to.equal(100000);
@@ -31,6 +38,13 @@ lab.experiment('Test returns helpers', () => {
       convertToUserUnit(100, 'x');
     };
     Code.expect(func).to.throw(InvalidUnitError, 'Unknown unit x');
+  });
+
+  lab.test('convertToUserUnit should return null when null given', async () => {
+    Code.expect(convertToUserUnit(null, 'm³')).to.equal(null);
+    Code.expect(convertToUserUnit(null, 'l')).to.equal(null);
+    Code.expect(convertToUserUnit(null, 'Ml')).to.equal(null);
+    Code.expect(convertToUserUnit(null, 'gal')).to.equal(null);
   });
 });
 

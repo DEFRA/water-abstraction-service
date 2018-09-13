@@ -12,6 +12,9 @@ class InvalidUnitError extends Error {
  * @return {Number} value in cubic metres
  */
 const convertToCubicMetres = (value, unit) => {
+  if (value === null) {
+    return null;
+  }
   if (unit === 'm³') {
     return value;
   }
@@ -34,6 +37,9 @@ const convertToCubicMetres = (value, unit) => {
  * @return {Number} quantity in user-selected units
  */
 const convertToUserUnit = (value, unit) => {
+  if (value === null) {
+    return null;
+  }
   if (unit === 'm³') {
     return value;
   }
