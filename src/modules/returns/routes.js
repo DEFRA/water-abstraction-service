@@ -5,7 +5,7 @@ const controller = require('./controller');
 const isoDateRegex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 const allowedPeriods = ['year', 'month', 'week', 'day'];
 const readingTypes = ['estimated', 'measured'];
-const statuses = ['due', 'complete'];
+const statuses = ['due', 'completed', 'received'];
 const units = ['m³', 'l', 'Ml', 'gal'];
 const userTypes = ['internal', 'external'];
 
