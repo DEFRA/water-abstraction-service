@@ -5,25 +5,12 @@ const { expect } = require('code');
 const {
   convertNullStrings,
   mapPeriod,
-  getStartDate,
-  mapUnit,
-  mapUsability,
-  getFinancialYear,
-  getSummerYear,
   mapReceivedDate,
-  getCurrentCycles
+  getReturnCycles,
+  getPeriodStart,
+  addDate,
+  getStatus
 } = require('../../../../src/modules/import/lib/transform-returns-helpers');
-
-const testCycles = [{
-  startDate: '2014-11-01',
-  endDate: '2015-10-31'
-}, {
-  startDate: '2015-11-01',
-  endDate: '2016-10-31'
-}, {
-  startDate: '2016-11-01',
-  endDate: '2017-10-31'
-}];
 
 lab.experiment('Test returns data transformation helpers', () => {
   lab.test('Test convert null strings on shallow object', async () => {
@@ -53,44 +40,6 @@ lab.experiment('Test returns data transformation helpers', () => {
     expect(mapPeriod('x')).to.equal(undefined);
   });
 
-  lab.test('Test getFinancialYear', async () => {
-    expect(getFinancialYear('01/01/2015')).to.equal({
-      startDate: '2014-04-01',
-      endDate: '2015-03-31'
-    });
-    expect(getFinancialYear('31/03/2016')).to.equal({
-      startDate: '2015-04-01',
-      endDate: '2016-03-31'
-    });
-    expect(getFinancialYear('01/04/2016')).to.equal({
-      startDate: '2016-04-01',
-      endDate: '2017-03-31'
-    });
-    expect(getFinancialYear('31/12/2016')).to.equal({
-      startDate: '2016-04-01',
-      endDate: '2017-03-31'
-    });
-  });
-
-  lab.test('Test getSummerYear', async () => {
-    expect(getSummerYear('01/01/2015')).to.equal({
-      startDate: '2014-11-01',
-      endDate: '2015-10-31'
-    });
-    expect(getSummerYear('31/10/2016')).to.equal({
-      startDate: '2015-11-01',
-      endDate: '2016-10-31'
-    });
-    expect(getSummerYear('01/11/2016')).to.equal({
-      startDate: '2016-11-01',
-      endDate: '2017-10-31'
-    });
-    expect(getSummerYear('31/12/2016')).to.equal({
-      startDate: '2016-11-01',
-      endDate: '2017-10-31'
-    });
-  });
-
   lab.test('Test mapReceivedDate with no logs', async () => {
     const logs = [];
 
@@ -98,52 +47,214 @@ lab.experiment('Test returns data transformation helpers', () => {
   });
 
   lab.test('Test mapReceivedDate with a null string value', async () => {
-    const logs = [{ RECD_DATE: '01/01/2017'}, { RECD_DATE: 'null'}];
+    const logs = [{ RECD_DATE: '01/01/2017' }, { RECD_DATE: 'null' }];
 
     expect(mapReceivedDate(logs)).to.equal(null);
   });
 
   lab.test('Test mapReceivedDate with valiid dates', async () => {
-    const logs = [{ RECD_DATE: '25/12/2017'}, { RECD_DATE: '04/01/2017'}];
+    const logs = [{ RECD_DATE: '25/12/2017' }, { RECD_DATE: '04/01/2017' }];
 
     expect(mapReceivedDate(logs)).to.equal('2017-12-25');
   });
 
-  lab.test('Test splitting returns cycles when licence start date is null', async () => {
-    const split = getCurrentCycles(testCycles, null);
-    expect(split).to.equal(testCycles.map(row => ({...row, isCurrent: false })));
+  // ---------- getNextPeriodStart - financial
+  lab.test('getNextPeriodStart for financial year return in same year', async () => {
+    expect(getPeriodStart('2018-05-01')).to.equal('2018-04-01');
+  });
+  lab.test('getNextPeriodStart for financial year return in different year', async () => {
+    expect(getPeriodStart('2018-02-01')).to.equal('2017-04-01');
+  });
+  lab.test('getNextPeriodStart for financial year return on period start date', async () => {
+    expect(getPeriodStart('2018-04-01')).to.equal('2018-04-01');
+  });
+  lab.test('getNextPeriodStart for financial year return on period end date', async () => {
+    expect(getPeriodStart('2018-03-31')).to.equal('2017-04-01');
   });
 
-  lab.test('Test splitting returns cycles when licence start date is before first cycle', async () => {
-    const split = getCurrentCycles(testCycles, '2011-01-01');
-    expect(split).to.equal(testCycles.map(row => ({...row, isCurrent: true })));
+  // ---------- getNextPeriodStart - summer
+  lab.test('getNextPeriodStart for summer year return in same year', async () => {
+    expect(getPeriodStart('2018-12-01', true)).to.equal('2018-11-01');
+  });
+  lab.test('getNextPeriodStart for summer year return in different year', async () => {
+    expect(getPeriodStart('2018-02-01', true)).to.equal('2017-11-01');
+  });
+  lab.test('getNextPeriodStart for summer year return on period start date', async () => {
+    expect(getPeriodStart('2018-11-01', true)).to.equal('2018-11-01');
+  });
+  lab.test('getNextPeriodStart for summer year return on period end date', async () => {
+    expect(getPeriodStart('2018-10-31', true)).to.equal('2017-11-01');
   });
 
-  lab.test('Test splitting returns cycles when licence start date is within a cycle', async () => {
-    const split = getCurrentCycles(testCycles, '2016-02-05');
-    expect(split).to.equal([{
-      startDate: '2014-11-01',
-      endDate: '2015-10-31',
-      isCurrent: false
-    }, {
-      startDate: '2015-11-01',
-      endDate: '2016-02-04',
-      isCurrent: false
-    },
-    {
-      startDate: '2016-02-05',
-      endDate: '2016-10-31',
-      isCurrent: true
-    }, {
-      startDate: '2016-11-01',
-      endDate: '2017-10-31',
+  // ---------- addDate
+  lab.test('addDate - add a date if within range', async () => {
+    expect(addDate([], '2018-12-01', '2018-01-01', '2018-12-31')).to.equal(['2018-12-01']);
+  });
+  lab.test('addDate - dont add a date if before start date', async () => {
+    expect(addDate([], '2017-12-01', '2018-01-01', '2018-12-31')).to.equal([]);
+  });
+  lab.test('addDate - dont add a date if after end date', async () => {
+    expect(addDate([], '2018-12-05', '2018-01-01', '2018-11-31')).to.equal([]);
+  });
+  lab.test('addDate - dont add a date if on start date', async () => {
+    expect(addDate([], '2017-12-01', '2017-12-01', '2018-12-31')).to.equal([]);
+  });
+  lab.test('addDate - dont add a date if on end date', async () => {
+    expect(addDate([], '2018-11-31', '2018-01-01', '2018-11-31')).to.equal([]);
+  });
+  lab.test('addDate - dont add duplicate dates', async () => {
+    let dates = [];
+    dates = addDate(dates, '2018-12-01', '2018-01-01', '2018-12-31');
+    dates = addDate(dates, '2018-12-01', '2018-01-01', '2018-12-31');
+    expect(dates).to.equal(['2018-12-01']);
+  });
+
+  // ---------- getReturnCycles - financial year
+  lab.test('getReturnCycles - single financial year, current version', async () => {
+    const cycles = getReturnCycles('2014-04-01', '2015-03-31', '2014-04-01', false);
+    expect(cycles).to.equal([{
+      startDate: '2014-04-01',
+      endDate: '2015-03-31',
       isCurrent: true
     }]);
   });
+  lab.test('getReturnCycles - single financial year, expired version', async () => {
+    const cycles = getReturnCycles('2014-04-01', '2015-03-31', '2016-04-01', false);
+    expect(cycles).to.equal([{
+      startDate: '2014-04-01',
+      endDate: '2015-03-31',
+      isCurrent: false
+    }]);
+  });
+  lab.test('getReturnCycles - part financial years, current version', async () => {
+    const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2010-04-01', false);
+    expect(cycles).to.equal([
+      { startDate: '2014-06-01',
+        endDate: '2015-03-31',
+        isCurrent: true },
+      { startDate: '2015-04-01',
+        endDate: '2015-07-01',
+        isCurrent: true } ]);
+  });
 
-  lab.test('Test splitting returns cycles when licence start date is after last cycle', async () => {
-    const split = getCurrentCycles(testCycles, '2018-02-05');
-    expect(split).to.equal(testCycles.map(row => ({...row, isCurrent: false })));
+  lab.test('getReturnCycles - part financial years, expired version', async () => {
+    const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2018-04-01', false);
+    expect(cycles).to.equal([
+      { startDate: '2014-06-01',
+        endDate: '2015-03-31',
+        isCurrent: false },
+      { startDate: '2015-04-01',
+        endDate: '2015-07-01',
+        isCurrent: false } ]);
+  });
+
+  lab.test('getReturnCycles - part financial years, expiry on period start', async () => {
+    const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2015-04-01', false);
+    expect(cycles).to.equal([
+      { startDate: '2014-06-01',
+        endDate: '2015-03-31',
+        isCurrent: false },
+      { startDate: '2015-04-01',
+        endDate: '2015-07-01',
+        isCurrent: true } ]);
+  });
+
+  lab.test('getReturnCycles - part financial years, expiry part-way through period', async () => {
+    const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2015-06-01', false);
+    expect(cycles).to.equal([
+      { startDate: '2014-06-01',
+        endDate: '2015-03-31',
+        isCurrent: false },
+      { startDate: '2015-04-01',
+        endDate: '2015-05-31',
+        isCurrent: false },
+      { startDate: '2015-06-01',
+        endDate: '2015-07-01',
+        isCurrent: true } ]);
+  });
+
+  // ---------- getReturnCycles - summer year
+  lab.test('getReturnCycles - single summer year, current version', async () => {
+    const cycles = getReturnCycles('2014-11-01', '2015-10-31', '2014-11-01', true);
+    expect(cycles).to.equal([{
+      startDate: '2014-11-01',
+      endDate: '2015-10-31',
+      isCurrent: true
+    }]);
+  });
+  lab.test('getReturnCycles - single summer year, expired version', async () => {
+    const cycles = getReturnCycles('2014-11-01', '2015-10-31', '2016-04-01', true);
+    expect(cycles).to.equal([{
+      startDate: '2014-11-01',
+      endDate: '2015-10-31',
+      isCurrent: false
+    }]);
+  });
+  lab.test('getReturnCycles - part summer years, current version', async () => {
+    const cycles = getReturnCycles('2014-06-01', '2015-12-01', '2010-04-01', true);
+    expect(cycles).to.equal([
+      { startDate: '2014-06-01',
+        endDate: '2014-10-31',
+        isCurrent: true },
+      { startDate: '2014-11-01',
+        endDate: '2015-10-31',
+        isCurrent: true },
+      { startDate: '2015-11-01',
+        endDate: '2015-12-01',
+        isCurrent: true } ]);
+  });
+
+  lab.test('getReturnCycles - part summer years, expired version', async () => {
+    const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2018-04-01', true);
+
+    expect(cycles).to.equal([
+      { startDate: '2014-06-01',
+        endDate: '2014-10-31',
+        isCurrent: false },
+      { startDate: '2014-11-01',
+        endDate: '2015-07-01',
+        isCurrent: false } ]);
+  });
+
+  lab.test('getReturnCycles - part summer years, expiry on period start', async () => {
+    const cycles = getReturnCycles('2014-06-01', '2016-07-01', '2015-11-01', true);
+
+    expect(cycles).to.equal([
+      { startDate: '2014-06-01',
+        endDate: '2014-10-31',
+        isCurrent: false },
+      { startDate: '2014-11-01',
+        endDate: '2015-10-31',
+        isCurrent: false },
+      { startDate: '2015-11-01',
+        endDate: '2016-07-01',
+        isCurrent: true } ]);
+  });
+
+  lab.test('getReturnCycles - part summer years, expiry part-way through period', async () => {
+    const cycles = getReturnCycles('2014-06-01', '2016-07-01', '2015-06-01', true);
+
+    expect(cycles).to.equal([
+      { startDate: '2014-06-01',
+        endDate: '2014-10-31',
+        isCurrent: false },
+      { startDate: '2014-11-01',
+        endDate: '2015-05-31',
+        isCurrent: false },
+      { startDate: '2015-06-01',
+        endDate: '2015-10-31',
+        isCurrent: true },
+      { startDate: '2015-11-01',
+        endDate: '2016-07-01',
+        isCurrent: true } ]);
+  });
+
+  // ------------- getStatus
+  lab.test('getStatus should return completed if received date set in NALD', async () => {
+    expect(getStatus('2018-03-31')).to.equal('completed');
+  });
+  lab.test('getStatus should return due if no received date set in NALD', async () => {
+    expect(getStatus(null)).to.equal('due');
   });
 });
 

@@ -1,5 +1,5 @@
 const moment = require('moment');
-const { uniqBy, findIndex, max, mapValues } = require('lodash');
+const { findIndex, max, mapValues, chunk } = require('lodash');
 const { formatAbstractionPoint } = require('../../../lib/licence-transformer/nald-helpers');
 
 /**
@@ -82,103 +82,6 @@ const mapProductionMonth = (month) => {
 };
 
 /**
- * Gets financial year period for given date
- * @param {String} date - DD/MM/YYYY
- * @return {Object}
- */
-const getFinancialYear = (date) => {
-  const m = moment(date, 'DD/MM/YYYY');
-  const comparison = moment().year(m.year()).month(3).date(1);
-  const startYear = m.isBefore(comparison, 'day') ? m.year() - 1 : m.year();
-  return {
-    startDate: `${startYear}-04-01`,
-    endDate: `${startYear + 1}-03-31`
-  };
-};
-
-/**
- * Gets financial year period for given date
- * @param {String} date - DD/MM/YYYY
- * @return {Object}
- */
-const getSummerYear = (date) => {
-  const m = moment(date, 'DD/MM/YYYY');
-  const comparison = moment().year(m.year()).month(10).date(1);
-  const startYear = m.isBefore(comparison, 'day') ? m.year() - 1 : m.year();
-  return {
-    startDate: `${startYear}-11-01`,
-    endDate: `${startYear + 1}-10-31`
-  };
-};
-
-/**
- * Gets the returns cycles for the given format.
- * Depending on the FORM_PRODN_MONTH flag, this will either be financial years
- * or years running 1 Nov - 31 Oct
- * @param {Object} format
- * @return {Array} array of cycles
- */
-const getFormatCycles = (format) => {
-  const cycles = [];
-  const info = mapProductionMonth(format.FORM_PRODN_MONTH);
-
-  const dateFunc = info.isSummer ? getSummerYear : getFinancialYear;
-
-  for (let log of format.logs) {
-    const { DATE_FROM: dateFrom, DATE_TO: dateTo } = log;
-    cycles.push(dateFunc(dateFrom));
-    cycles.push(dateFunc(dateTo));
-  }
-
-  return uniqBy(cycles, row => row.startDate);
-};
-
-/**
- * Splits a cycle in to two cycles if the supplied comparison date is within the
- * cycle
- * @param {Object}
- * @param {String} splitDate - YYYY-MM-DD
- * @return {Array} with one or two cycles
- */
-const splitCycle = (cycle, splitDate) => {
-  const { startDate, endDate } = cycle;
-  // console.log('Split date', splitDate, cycle);
-  if (moment(splitDate).isBetween(startDate, endDate)) {
-    // console.log('>>>>>>> SPLIT!');
-    const cycleOneEnd = moment(splitDate).subtract(1, 'day').format('YYYY-MM-DD');
-    const cycleTwoStart = moment(splitDate).format('YYYY-MM-DD');
-    return [
-      { startDate, endDate: cycleOneEnd },
-      { startDate: cycleTwoStart, endDate }
-    ];
-  }
-  return [cycle];
-};
-
-/**
- * Gets the returns cycle for the given format, using getFormatCycles
- * A flag is added to the cycle to indicate whether it relates to the current
- * licence version
- * Where a cycle includes the version start date of a licence, that cycle is
- * split into two, with one current and one non-current cycle
- * @param {Object} format
- * @param {String} versionStartDate - YYYY-MM-DD the effective start date of the current licence version
- * @return {Array} returns cycles
- */
-const getCurrentCycles = (cycles, versionStartDate) => {
-  return cycles.reduce((acc, cycle) => {
-    const split = splitCycle(cycle, versionStartDate);
-    for (let cycle of split) {
-      acc.push({
-        ...cycle,
-        isCurrent: moment(versionStartDate).isSameOrBefore(cycle.startDate)
-      });
-    }
-    return acc;
-  }, []);
-};
-
-/**
  * A return may comprise more than one form log
  * If any form log has not been received, we return null
  * If there are no form log, return null
@@ -212,15 +115,222 @@ const getReturnId = (licenceNumber, format, startDate, endDate) => {
   return `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}:${endDate}`;
 };
 
+/**
+ * Split dates are the start date of the period.  This function
+ * adds the period end dates to the array
+ * @param {Array} arr - the array of split dates
+ * @return {Array} an array containing the split dates and previous day
+ */
+const sortAndPairSplitDates = (arr) => {
+  const sorted = arr.map(val => moment(val).format('YYYY-MM-DD')).sort();
+
+  return sorted.reduce((acc, value) => {
+    acc.push(moment(value).subtract(1, 'day').format('YYYY-MM-DD'));
+    acc.push(value);
+    return acc;
+  }, []);
+};
+
+/**
+ * Adds a date to the supplied array, if it is between but not equal to the
+ * supplied start and end dates
+ * @param {Array} dates
+ * @param {String} date - YYYY-MM-DD, the date to add to array
+ * @param {String} startDate - the start of the date range YYYY-MM-DD
+ * @param {String} endDate - the end of the date range YYYY-MM-DD
+ * @return {Array} new date array
+ */
+const addDate = (dates, date, startDate, endDate) => {
+  const m = moment(date);
+  const dateStr = m.format('YYYY-MM-DD');
+  const arr = dates.slice();
+  const isValid = m.isBetween(startDate, endDate, 'day', '()');
+  const isUnique = !arr.includes(dateStr);
+  if (isValid && isUnique) {
+    arr.push(dateStr);
+  }
+  return arr;
+};
+
+/**
+ * Gets the start date of the current period for the date supplied
+ * @param {String} date - comparison date
+ * @param {Boolean} isSummer - whether summer return
+ * @return {String} YYYY-MM-DD next period start date
+ */
+const getPeriodStart = (date, isSummer) => {
+  const m = moment(date);
+  const month = isSummer ? 10 : 3;
+  const comparison = moment().year(m.year()).month(month).date(1);
+  const startYear = m.isBefore(comparison, 'day') ? m.year() - 1 : m.year();
+  return moment().year(startYear).month(month).date(1).format('YYYY-MM-DD');
+};
+
+/**
+ * Gets summer/financial year return cycles, including splitting the cycles
+ * by licence effective start date (split date)
+ * @param {String} startDate - YYYY-MM-DD
+ * @param {String} endDate - YYYY-MM-DD
+ * @param {String} splitDate - licence effective start date
+ * @param {Boolean} isSummer - whether summer return cycle (default financial year)
+ * @return {Array} of return cycle objects
+ */
+const getReturnCycles = (startDate, endDate, splitDate, isSummer = false) => {
+  let splits = [];
+
+  // Add split date
+  splits = addDate(splits, splitDate, startDate, endDate);
+
+  // Date pointer should be within summer/financial year
+  let datePtr = moment().year();
+  do {
+    datePtr = getPeriodStart(datePtr, isSummer);
+    splits = addDate(splits, datePtr, startDate, endDate);
+    datePtr = moment(datePtr).add(1, 'year');
+  }
+  while (moment(datePtr).isBefore(endDate));
+
+  const dates = chunk([startDate, ...sortAndPairSplitDates(splits), endDate], 2);
+
+  return dates.map(arr => ({
+    startDate: arr[0],
+    endDate: arr[1],
+    isCurrent: moment(arr[0]).isSameOrAfter(splitDate)
+  }));
+};
+
+/**
+ * Gets cycles for a given format.  If the format has no effective end date,
+ * then one is created at the end of the following year.  These will be filtered
+ * out later by checking if form logs exist for the cycles calculated
+ * @param {Object} row of data from NALD_RET_FORMATS
+ * @return {Array} array of return cycles with startDate and endDate in each item
+ */
+const getFormatCycles = (format, licenceEffectiveStartDate) => {
+  const {
+    FORM_PRODN_MONTH: productionMonth,
+    EFF_END_DATE: effectiveEndDate,
+    EFF_ST_DATE: effectiveStartDate
+  } = format;
+
+  const { isSummer } = mapProductionMonth(productionMonth);
+
+  // Start date of first return cycle
+  const effStart = moment(effectiveStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD');
+
+  // // If no end date, choose a date in the future
+  const futureDate = moment(getPeriodStart(moment().add(1, 'years'))).subtract(1, 'day').format('YYYY-MM-DD');
+  const endDate = effectiveEndDate === 'null' ? futureDate : moment(effectiveEndDate, 'DD/MM/YYYY').format('YYYY-MM-DD');
+
+  return getReturnCycles(effStart, endDate, licenceEffectiveStartDate, isSummer);
+};
+
+/*
+ * Parses a return ID into constituent variables
+ * @param {String} returnId
+ * @return {Object}
+ */
+const parseReturnId = (returnId) => {
+  const [ version, regionCode, licenceNumber, formatId, startDate, endDate ] = returnId.split(':');
+  return {
+    version,
+    regionCode,
+    licenceNumber,
+    formatId,
+    startDate,
+    endDate
+  };
+};
+
+/**
+ * Calculates start of period based on start/end date and period
+ * @param {String} startDate - the returns start date YYYY-MM-DD
+ * @param {String} endDate - the line end date YYYY-MM-DD
+ * @param {String} period - the returns period - A/M/W/D
+ * @return {String} a date in format YYYY-MM-DD
+ */
+const getStartDate = (startDate, endDate, period) => {
+  const d = moment(endDate, 'YYYY-MM-DD');
+  let o;
+
+  if (period === 'year') {
+    o = moment(startDate, 'YYYY-MM-DD');
+  }
+  if (period === 'month') {
+    o = d.startOf('month');
+  }
+  if (period === 'week') {
+    o = d.startOf('isoWeek');
+  }
+  if (period === 'day') {
+    o = d;
+  }
+
+  return o.format('YYYY-MM-DD');
+};
+
+/**
+ * Gets quantity from NALD value
+ * @param {String} value or 'null' as string
+ * @return {Number|Boolean}
+ */
+const mapQuantity = (value) => {
+  return value === '' ? null : parseFloat(value);
+};
+
+/**
+ * Converts units in NALD to recognised SI unit
+ * @param {String} unit
+ * @return {String} SI unit
+ */
+const mapUnit = (u) => {
+  const units = {
+    M: 'm³',
+    I: 'gal'
+  };
+  return units[u] || u;
+};
+
+/**
+ * Map NALD quantity usability field
+ * @param {String} NALD usability flag
+ * @return {String} plaintext version
+ */
+const mapUsability = (u) => {
+  const options = {
+    E: 'estimate',
+    M: 'measured',
+    D: 'derived',
+    A: 'assessed'
+  };
+  return options[u];
+};
+
+/**
+ * Gets return status
+ * @param {String|null} receivedDate - the date received from NALD form logs YYYY-MM-DD, or null
+ * @param {String} startDate - the start date of the return period
+ * @return {String} status - completed|due
+ */
+const getStatus = (receivedDate) => {
+  return receivedDate === null ? 'due' : 'completed';
+};
+
 module.exports = {
   convertNullStrings,
   mapPeriod,
   mapProductionMonth,
   formatReturnMetadata,
-  getFinancialYear,
-  getSummerYear,
   getFormatCycles,
-  getCurrentCycles,
   mapReceivedDate,
-  getReturnId
+  getReturnId,
+  getReturnCycles,
+  parseReturnId,
+  getStartDate,
+  mapQuantity,
+  mapUnit,
+  mapUsability,
+  getPeriodStart,
+  addDate,
+  getStatus
 };
