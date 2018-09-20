@@ -1,20 +1,8 @@
-class TemplateNotFoundError extends Error {
-  constructor (message) {
-    super(message);
-    this.name = 'TemplateNotFoundError';
-  }
-}
+
 class MessageTypeError extends Error {
   constructor (message) {
     super(message);
     this.name = 'MessageTypeError';
-  }
-}
-
-class NotificationNotFoundError extends Error {
-  constructor (message) {
-    super(message);
-    this.name = 'NotificationNotFoundError';
   }
 }
 
@@ -33,9 +21,7 @@ class AlreadySentError extends Error {
 }
 
 module.exports = {
-  TemplateNotFoundError,
   MessageTypeError,
-  NotificationNotFoundError,
   NotifyIdError,
   AlreadySentError
 };

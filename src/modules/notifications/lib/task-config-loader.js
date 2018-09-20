@@ -2,6 +2,7 @@
  * Loads task config data from database
  * @module modules/notifications/task-config-loader
  */
+const Boom = require('boom');
 const { repository: taskConfigRepo } = require('../../../controllers/task-config');
 
 class TaskNotFoundError extends Error {
@@ -20,7 +21,7 @@ async function loadTaskConfig (taskConfigId) {
   const { error, rows: [taskConfig] } = await taskConfigRepo.find({ task_config_id: taskConfigId });
 
   if (error) {
-    throw error;
+    throw Boom.badImplementation(error);
   }
   if (!taskConfig) {
     throw new TaskNotFoundError(`Task ${taskConfigId} not found`);
