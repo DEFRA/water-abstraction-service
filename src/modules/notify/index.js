@@ -135,44 +135,53 @@ const createEnqueue = messageQueue => {
   };
 };
 
+const registerSendSubscriber = messageQueue => {
+  messageQueue.subscribe('notify.send', async (job, done) => {
+    const { id } = job.data;
+
+    try {
+      await send(id);
+      return done();
+    } catch (err) {
+      console.error(err);
+      return done(err);
+    }
+  });
+};
+
+const registerSendListener = messageQueue => {
+  messageQueue.onComplete('notify.send', async (job) => {
+    // Get scheduled_notification ID
+    const id = get(job, 'data.request.data.id', null);
+
+    // Schedule status checks
+    for (let delay of [5, 60, 3600, 86400, 259200]) {
+      await messageQueue.publish('notify.status', { id }, { startIn: delay });
+    }
+  });
+};
+
+const registerStatusCheckSubscriber = messageQueue => {
+  messageQueue.subscribe('notify.status', async (job, done) => {
+    const id = get(job, 'data.id');
+    try {
+      if (id) {
+        await updateMessageStatus(id);
+      }
+    } catch (err) {
+      console.error(err);
+      return done(err);
+    }
+
+    return done();
+  });
+};
+
 const createRegisterSubscribers = messageQueue => {
   return () => {
-    // @TODO schedule status checks events on send complete
-    messageQueue.subscribe('notify.send', async (job, done) => {
-      const { id } = job.data;
-
-      try {
-        await send(id);
-        return done();
-      } catch (err) {
-        console.error(err);
-        return done(err);
-      }
-    });
-
-    messageQueue.onComplete('notify.send', async (job) => {
-      // Get scheduled_notification ID
-      const id = get(job, 'data.request.data.id', null);
-
-      // Schedule status checks
-      for (let delay of [5, 60, 3600, 86400, 259200]) {
-        await messageQueue.publish('notify.status', { id }, { startIn: delay });
-      }
-    });
-
-    messageQueue.subscribe('notify.status', async (job, done) => {
-      const id = get(job, 'data.id');
-      try {
-        if (id) {
-          await updateMessageStatus(id);
-        }
-      } catch (err) {
-        console.error(err);
-        return done(err);
-      }
-
-      return done();
-    });
+    registerSendSubscriber(messageQueue);
+    registerSendListener(messageQueue);
+    registerStatusCheckSubscriber(messageQueue);
   };
 };
 
