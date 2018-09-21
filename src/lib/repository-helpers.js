@@ -19,7 +19,7 @@ const findOne = async (repository, id) => {
   try {
     response = await repository.find(filter);
   } catch (error) {
-    throw Boom.badImplementation(`findOne error`, error);
+    throw Boom.wrap(error, 500);
   }
 
   const { error, rows } = response;
@@ -29,7 +29,7 @@ const findOne = async (repository, id) => {
   }
 
   if (rows.length !== 1) {
-    throw Boom.notFound(`Could not find exactly 1 record in findOne query`, filter);
+    throw Boom.notFound(`Could not find exactly 1 record in for ${JSON.stringify(filter)}`);
   }
 
   return rows[0];
