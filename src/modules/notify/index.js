@@ -93,7 +93,7 @@ function scheduleSendEvent (messageQueue, row, now) {
  * For messages which use a Notify template, this function
  * gets the appropriate Notify key and creates message preview
  */
-const createScheduledNotificationRowWithTemplate = async (data) => {
+const getNotifyPreview = async (data) => {
   // Determine notify key/template ID and generate preview
   const template = await findByMessageRef(data.messageRef);
   const { body: { body: plaintext, type } } = await notify.preview(template, data.personalisation);
@@ -121,17 +121,13 @@ const createEnqueue = messageQueue => {
       throw Boom.badRequest(`Invalid message enqueue options`, error);
     }
 
-    let row = data;
+    // For non-PDF  messages, generate preview and add to data
+    let row = isPdf(options.messageRef) ? data : await getNotifyPreview(data);
 
-    // For PDFs, we are not using an existing Notify template
-    if (!isPdf(options.messageRef)) {
-      row = await createScheduledNotificationRowWithTemplate(data);
-    }
-
+    // Persist row to scheduled_notification table
     const dbRow = await createFromObject(row);
 
     // Schedules send event
-    // @todo re-write with event listener
     const startIn = scheduleSendEvent(messageQueue, dbRow, now);
 
     // Return row data
@@ -146,27 +142,36 @@ const createRegisterSubscribers = messageQueue => {
       const { id } = job.data;
 
       try {
-        const { data } = await send(id);
-
-        // Schedule status checks
-        messageQueue.publish('notify.status', data);
-        messageQueue.publish('notify.status', data, { startIn: 60 });
-        messageQueue.publish('notify.status', data, { startIn: 3600 });
-        messageQueue.publish('notify.status', data, { startIn: 86400 });
-        messageQueue.publish('notify.status', data, { startIn: 259200 });
+        await send(id);
+        return done();
       } catch (err) {
         console.error(err);
+        return done(err);
       }
+    });
 
-      done();
+    messageQueue.onComplete('notify.send', async (job) => {
+      // Get scheduled_notification ID
+      const id = get(job, 'data.request.data.id', null);
+
+      // Schedule status checks
+      for (let delay of [5, 60, 3600, 86400, 259200]) {
+        await messageQueue.publish('notify.status', { id }, { startIn: delay });
+      }
     });
 
     messageQueue.subscribe('notify.status', async (job, done) => {
-      const id = get(job, 'data.id', null);
-      if (id) {
-        await updateMessageStatus(id);
+      const id = get(job, 'data.id');
+      try {
+        if (id) {
+          await updateMessageStatus(id);
+        }
+      } catch (err) {
+        console.error(err);
+        return done(err);
       }
-      done();
+
+      return done();
     });
   };
 };

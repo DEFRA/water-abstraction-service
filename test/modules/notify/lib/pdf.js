@@ -8,7 +8,7 @@ const { createPdf } = require('../../../../src/modules/notify/lib/pdf.js');
 
 lab.experiment('Test createPdf', () => {
   lab.test('It should render and create a PDF as a buffer from a URL', async () => {
-    const url = `http://example.com/`;
+    const url = `https://www.gov.uk`;
     const buff = await createPdf(url);
     Code.expect(buff).to.be.a.buffer();
   });

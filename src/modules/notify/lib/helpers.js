@@ -22,13 +22,13 @@ function validateEnqueueOptions (options, now) {
   // Validate input options
   const schema = {
     id: Joi.string().default(uuidv4()),
-    messageRef: Joi.string(),
+    messageRef: Joi.string().required(),
     recipient: Joi.string().default('n/a'),
     personalisation: Joi.object(),
     sendAfter: Joi.string().default(now),
     licences: Joi.array().items(Joi.string()).default([]),
-    individualEntityId: [Joi.allow(null), Joi.string().guid()],
-    companyEntityId: [Joi.allow(null), Joi.string().guid()],
+    individualEntityId: Joi.string().guid().allow(null),
+    companyEntityId: Joi.string().guid().allow(null),
     eventId: Joi.string().guid(),
     metadata: Joi.object().default({}),
     messageType: Joi.string().valid(['letter', 'email', 'sms'])
