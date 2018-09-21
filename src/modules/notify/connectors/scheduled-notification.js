@@ -2,33 +2,7 @@ const Boom = require('boom');
 const scheduledNotification = require('../../../controllers/notifications').repository;
 const { isArray, mapValues } = require('lodash');
 const snakeCaseKeys = require('snakecase-keys');
-
-class NotificationNotFoundError extends Error {
-  constructor (message) {
-    super(message);
-    this.name = 'NotificationNotFoundError';
-  }
-}
-
-/**
- * Finds a scheduled notification by ID
- * @param {String} id - the scheduled_notification GUID
- * @return {Promise} resolves with notification row data
- */
-const findById = async (id) => {
-  // Load water.scheduled_notification record from DB
-  const { rows: [data], error } = await scheduledNotification.find({ id });
-
-  if (error) {
-    throw Boom.badImplementation(error);
-  }
-
-  if (!data) {
-    throw new NotificationNotFoundError(`Error finding scheduled notification ${id}`);
-  }
-
-  return data;
-};
+const { findOne } = require('../../../lib/repository-helpers');
 
 const stringifyArray = (value) => isArray(value) ? JSON.stringify(value) : value;
 
@@ -55,6 +29,6 @@ const createFromObject = async (data) => {
 
 module.exports = {
   scheduledNotification,
-  findById,
+  findById: (id) => (findOne(scheduledNotification, id)),
   createFromObject
 };
