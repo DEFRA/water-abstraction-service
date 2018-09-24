@@ -21,7 +21,6 @@ const findAllPages = async (apiClient, filter = {}, sort = {}, columns = []) => 
   const rows = [];
 
   for (let page = 1; page <= pageCount; page++) {
-    console.log('Fetch page ', page);
     const pagination = {
       page,
       perPage

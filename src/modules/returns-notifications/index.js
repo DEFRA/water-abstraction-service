@@ -1,9 +1,12 @@
-const { send } = require('./lib/send');
+const messageQueue = require('../../lib/message-queue');
+const { enqueue } = require('../notify')(messageQueue);
+const { prepareMessageData } = require('./lib/send');
 
 const registerSendSubscriber = (messageQueue) => {
   return messageQueue.subscribe('returnsNotification.send', async (job, done) => {
     try {
-      await send(job.data);
+      const options = await prepareMessageData(job.data);
+      await enqueue(options);
       return done();
     } catch (err) {
       console.error(err);

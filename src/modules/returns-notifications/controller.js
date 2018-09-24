@@ -6,8 +6,17 @@ const generateReference = require('../../lib/reference-generator');
 const messageQueue = require('../../lib/message-queue');
 const { getJobData } = require('./lib/message-helpers');
 
-// const { enqueue } = require('./index.js')(messageQueue);
-
+/**
+ * This route handler accepts a POST request containing a filter to find
+ * the relevant returns.
+ * It then schedules a message on the message queue for each message
+ * containing minimal information (return ID, licence number)
+ * This is picked up and more details are collected about the return
+ * before it is enqueue()'d with the Notify code module
+ * @param {Object} request.payload.filter - filter for retrieving returns from returns module
+ * @param {String} request.payload.issuer - email address of user issuing notification
+ * @param {String} name - name of reminder, eg  'invitation', 'reminder', 'paper form'
+ */
 const postReturnNotification = async (request, h) => {
   const { notificationId } = request.params;
 

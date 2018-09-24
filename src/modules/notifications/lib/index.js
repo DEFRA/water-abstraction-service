@@ -1,4 +1,4 @@
-const getContactList = require('../../../lib/contact-list');
+const { getContactList } = require('../../../lib/contact-list');
 const licenceLoader = require('./licence-loader');
 const templateRenderer = require('./template-renderer');
 const eventFactory = require('./event-factory');

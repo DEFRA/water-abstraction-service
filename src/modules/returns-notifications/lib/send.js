@@ -1,10 +1,9 @@
 const Boom = require('boom');
-const { get } = require('lodash');
 
-const { returns } = require('../../../lib/connectors/returns');
+const returns = require('../../../lib/connectors/returns');
 const contactList = require('../../../lib/contact-list');
 
-const { getRequiredLines } = require('../../returns/lib/model-returns-mapper');
+const { formatEnqueueOptions } = require('./message-helpers');
 
 /**
  * Gets contacts
@@ -12,20 +11,26 @@ const { getRequiredLines } = require('../../returns/lib/model-returns-mapper');
  * @return {Promise} resolves with array of contacts
  */
 const getContact = (licenceNumber) => {
-  return contactList({ system_external_id: licenceNumber }, ['returns_contact', 'licence_holder']);
+  return contactList.contactList({ system_external_id: licenceNumber }, ['returns_contact', 'licence_holder']);
 };
 
 /**
  * Contains code to pick up details of a return notification to be sent,
  * and retrieves relevant contacts and returns information in order to enqueue
  * it with notify module
+ * @param {Object} data - job data from PG boss message queue
+ * @param {String} data.returnId
+ * @param {String} data.licenceNumber
+ * @param {String} data.eventId - batch event ID from the events table
+ * @param {String} data.messageRef - corresponds to message type / template used
+ * @return {Promise} resolves when message queued with PG boss
  */
-const send = async (data) => {
-  const { returnId, licenceNumber, eventId } = data;
+const prepareMessageData = async (data) => {
+  const { returnId, licenceNumber, eventId, messageRef } = data;
 
   const [contactData] = await getContact(licenceNumber);
 
-  const { error, data: [ret] } = await returns.findMany({return_id: returnId});
+  const { error, data: [ret] } = await returns.returns.findMany({return_id: returnId});
 
   if (error) {
     throw Boom.badImplementation(`Error fetching return ${returnId}`, error);
@@ -35,22 +40,9 @@ const send = async (data) => {
     throw Boom.notFound(`Return ${returnId} not found`);
   }
 
-  const requiredLines = getRequiredLines(ret.start_date, ret.end_date, ret.returns_frequency);
-
-  const personalisation = {
-    ...contactData.contact,
-    formatId: get(ret, 'metadata.nald.formatId'),
-    qrUrl: `${process.env.base_url}?returnId=${returnId}`,
-    requiredLines
-  };
-
-  console.log(personalisation);
-
-  // console.log('Return send!');
-  // console.log(contactData);
-  // console.log(ret);
+  return formatEnqueueOptions(process.env, { eventId, messageRef }, ret, contactData);
 };
 
 module.exports = {
-  send
+  prepareMessageData
 };
