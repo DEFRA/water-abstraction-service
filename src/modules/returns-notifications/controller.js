@@ -18,7 +18,7 @@ const { getJobData } = require('./lib/message-helpers');
  * @param {String} name - name of reminder, eg  'invitation', 'reminder', 'paper form'
  */
 const postReturnNotification = async (request, h) => {
-  const { notificationId } = request.params;
+  const { notificationId: messageRef } = request.params;
 
   // Get params to query returns service
   const { filter, issuer, name } = request.payload;
@@ -32,12 +32,18 @@ const postReturnNotification = async (request, h) => {
   const ref = generateReference('RETURNS-');
 
   // Create container event in event log for tracking/reporting of batch
-  const e = eventFactory(issuer, notificationId, data, ref, name);
+  const e = eventFactory({
+    messageRef,
+    issuer,
+    ref,
+    name
+  }, data);
+
   await e.save();
 
   // Schedule building of individual messages
   for (let row of data) {
-    const job = getJobData(row, e.data, notificationId);
+    const job = getJobData(row, e.data, messageRef);
     await messageQueue.publish('returnsNotification.send', job);
   }
 

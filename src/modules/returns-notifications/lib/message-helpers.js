@@ -28,6 +28,31 @@ const formatAddressKeys = (contact) => {
 };
 
 /**
+ * Formats personalisation object
+ * @param {Object} env - the environment from process.env
+ * @param {Object} ret - the return row
+ * @param {Object} contact - a contact from getting contact list call
+ * @return {Object}
+ */
+const formatEnqueuePersonalisation = (env, ret, contact) => {
+  const {
+    start_date: startDate,
+    end_date: endDate,
+    returns_frequency: returnsFrequency,
+    return_id: returnId
+  } = ret;
+
+  return {
+    ...formatAddressKeys(contact),
+    formatId: get(ret, 'metadata.nald.formatId'),
+    qrUrl: `${env.base_url}?returnId=${returnId}`,
+    startDate,
+    endDate,
+    returnsFrequency
+  };
+};
+
+/**
  * Formats data for passing to the enqueue() method for sending by the Notify
  * module
  * @param {Object} data - the message data from the job
@@ -39,9 +64,6 @@ const formatAddressKeys = (contact) => {
  */
 const formatEnqueueOptions = (env, data, ret, contactData) => {
   const {
-    start_date: startDate,
-    end_date: endDate,
-    returns_frequency: returnsFrequency,
     return_id: returnId,
     licence_ref: licenceNumber
   } = ret;
@@ -49,14 +71,7 @@ const formatEnqueueOptions = (env, data, ret, contactData) => {
 
   const { entity_id: entityId, ...contact } = contactData.contact;
 
-  const personalisation = {
-    ...formatAddressKeys(contact),
-    formatId: get(ret, 'metadata.nald.formatId'),
-    qrUrl: `${env.base_url}?returnId=${returnId}`,
-    startDate,
-    endDate,
-    returnsFrequency
-  };
+  const personalisation = formatEnqueuePersonalisation(env, ret, contact);
 
   return {
     messageRef,
