@@ -5,6 +5,27 @@ const generateReference = require('../../lib/reference-generator');
 
 const messageQueue = require('../../lib/message-queue');
 const { getJobData } = require('./lib/message-helpers');
+const { parseRequest } = require('./lib/request-parser');
+
+/**
+ * Previews what will be send by the returns notification, by using the
+ * same filter query used by the post call below
+ */
+const postPreviewReturnNotification = async (request, h) => {
+  const {
+    filter,
+    columns,
+    sort
+  } = parseRequest(request);
+
+  // Find all returns matching criteria
+  const data = await findAllPages(returns, filter, sort, columns);
+
+  return {
+    error: null,
+    data
+  };
+};
 
 /**
  * This route handler accepts a POST request containing a filter to find
@@ -18,12 +39,14 @@ const { getJobData } = require('./lib/message-helpers');
  * @param {String} name - name of reminder, eg  'invitation', 'reminder', 'paper form'
  */
 const postReturnNotification = async (request, h) => {
-  const { notificationId: messageRef } = request.params;
-
-  // Get params to query returns service
-  const { filter, issuer, name } = request.payload;
-  const columns = ['return_id', 'licence_ref'];
-  const sort = {};
+  const {
+    messageRef,
+    filter,
+    issuer,
+    name,
+    columns,
+    sort
+  } = parseRequest(request);
 
   // Find all returns matching criteria
   const data = await findAllPages(returns, filter, sort, columns);
@@ -51,5 +74,6 @@ const postReturnNotification = async (request, h) => {
 };
 
 module.exports = {
+  postPreviewReturnNotification,
   postReturnNotification
 };
