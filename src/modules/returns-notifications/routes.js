@@ -23,7 +23,7 @@ module.exports = {
   },
 
   postReturnNotification: {
-    path: '/water/1.0/returns-notifications/sent/{notificationId}',
+    path: '/water/1.0/returns-notifications/send/{notificationId}',
     method: 'POST',
     handler: controller.postReturnNotification,
     config: {
