@@ -66,14 +66,11 @@ function createSendList (licences, rolePriority) {
     }
 
     // Add licence
-    const { document_id, system_external_id, document_name, system_internal_id, company_entity_id } = licence;
+    const { contacts, ...rest } = licence;
+    // const { document_id, system_external_id, document_name, system_internal_id, company_entity_id } = licence;
 
     list[contactKey].licences.push({
-      document_id,
-      system_external_id,
-      system_internal_id,
-      company_entity_id,
-      document_name,
+      ...rest,
       licence_holder: licenceHolder
     });
   });
@@ -115,5 +112,6 @@ async function getContacts (filter, rolePriority) {
 }
 
 module.exports = {
-  contactList: getContacts
+  contactList: getContacts,
+  createSendList
 };

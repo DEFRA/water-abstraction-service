@@ -5,6 +5,7 @@ const importRoutes = require('./import/routes');
 const returnsRoutes = require('./returns/routes');
 const pdfNotificationRoutes = require('./pdf-notifications/routes');
 const returnsNotificationRoutes = require('./returns-notifications/routes');
+const returnsInvitationRoutes = require('./returns-invitation/routes');
 
 module.exports = [
   ...Object.values(notificationsRoutes),
@@ -13,5 +14,6 @@ module.exports = [
   ...Object.values(importRoutes),
   ...Object.values(returnsRoutes),
   ...Object.values(pdfNotificationRoutes),
-  ...Object.values(returnsNotificationRoutes)
+  ...Object.values(returnsNotificationRoutes),
+  ...Object.values(returnsInvitationRoutes)
 ];
