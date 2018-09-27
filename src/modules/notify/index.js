@@ -51,7 +51,7 @@ async function send (id) {
 
     if (isPdf(messageRef)) {
       // Render and send PDF message
-      const pdfContentUrl = `${process.env.WATER_URI}/pdf-notifications/render/${id}`;
+      const pdfContentUrl = `http://localhost:${process.env.PORT}/water/1.0/pdf-notifications/render/${id}`;
       notifyResponse = await notify.sendPdf(pdfContentUrl, id);
     } else {
       // Load template from notify_templates table
