@@ -244,5 +244,6 @@ module.exports = {
   mapReturnToModel,
   mapReturnToVersion,
   mapReturnToLines,
-  mapReturn
+  mapReturn,
+  getRequiredLines
 };

@@ -17,6 +17,7 @@ lab.experiment('Test notify module', () => {
     const { data, startIn } = await enqueue({
       messageRef: 'unit_test_email',
       recipient: 'mail@example.com',
+      licences: ['01/234'],
       personalisation: {
         'test_value': '00/00/00/00'
       }
@@ -33,6 +34,7 @@ lab.experiment('Test notify module', () => {
     const { data, startIn } = await enqueue({
       messageRef: 'unit_test_email',
       recipient: 'mail@example.com',
+      licences: ['01/234'],
       personalisation: {
         'test_value': '00/00/00/00'
       },

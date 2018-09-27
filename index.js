@@ -7,12 +7,15 @@ const Good = require('good');
 const GoodWinston = require('good-winston');
 const Hapi = require('hapi');
 const HapiAuthJwt2 = require('hapi-auth-jwt2');
+const Vision = require('vision');
+const Nunjucks = require('nunjucks');
 
 // -------------- Require project code -----------------
 const config = require('./config');
 const messageQueue = require('./src/lib/message-queue');
 const routes = require('./src/routes/water.js');
 const notify = require('./src/modules/notify');
+const returnsNotifications = require('./src/modules/returns-notifications');
 const importer = require('./src/modules/import');
 
 // Initialise logger
@@ -40,6 +43,8 @@ const registerServerPlugins = async (server) => {
 
   // JWT token auth
   await server.register(HapiAuthJwt2);
+
+  await server.register(Vision);
 };
 
 const configureServerAuthStrategy = (server) => {
@@ -54,8 +59,33 @@ const configureMessageQueue = async (server) => {
   await messageQueue.start();
   notify(messageQueue).registerSubscribers();
   await importer(messageQueue).registerSubscribers();
+  await returnsNotifications(messageQueue).registerSubscribers();
 
   server.log('info', 'Message queue started');
+};
+
+const configureNunjucks = async (server) => {
+  server.views({
+    engines: {
+      html: {
+        compile: (src, options) => {
+          const template = Nunjucks.compile(src, options.environment);
+
+          return (context) => {
+            return template.render(context);
+          };
+        },
+
+        prepare: (options, next) => {
+          options.compileOptions.environment = Nunjucks.configure(options.path, { watch: false });
+
+          return next();
+        }
+      }
+    },
+    relativeTo: __dirname,
+    path: 'src/views'
+  });
 };
 
 const start = async function () {
@@ -64,6 +94,7 @@ const start = async function () {
     configureServerAuthStrategy(server);
     server.route(routes);
     await configureMessageQueue(server);
+    await configureNunjucks(server);
 
     if (!module.parent) {
       await server.start();

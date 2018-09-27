@@ -4,32 +4,21 @@
  * - send - sends notify message, fire 'status' at several regular intervals in future
  * - status - checks status in notify, updates scheduled_notification table
  */
-// const notifyTemplateRepo = require('../controllers/notifytemplates').repository;
-const NotifyClient = require('notifications-node-client').NotifyClient;
+const Boom = require('boom');
 const moment = require('moment');
-const { mapValues } = require('lodash');
-const snakeCaseKeys = require('snakecase-keys');
-
-const { getTemplate, getNotifyKey, sendMessage, validateEnqueueOptions } = require('./helpers');
-const scheduledNotification = require('../../controllers/notifications').repository;
-const { NotificationNotFoundError, NotifyIdError, AlreadySentError } = require('./errors');
-const { isObject } = require('lodash');
+const { get } = require('lodash');
+const notify = require('./connectors/notify');
+const { validateEnqueueOptions, isPdf, parseSentResponse } = require('./lib/helpers');
+const { scheduledNotification, findById, createFromObject } = require('./connectors/scheduled-notification');
+const { findByMessageRef } = require('./connectors/notify-template');
+const { NotifyIdError, AlreadySentError } = require('./lib/errors');
 
 /**
  * Updates the notify_status field for the message with the given ID
  * @param {String} id - water.scheduled_notification id
  */
 async function updateMessageStatus (id) {
-  // Load water.scheduled_notification record from DB
-  const { rows: [data], error } = await scheduledNotification.find({ id });
-
-  if (error) {
-    throw error;
-  }
-
-  if (!data) {
-    throw new NotificationNotFoundError();
-  }
+  const data = await findById(id);
 
   const { notify_id: notifyId } = data;
 
@@ -37,48 +26,19 @@ async function updateMessageStatus (id) {
     throw new NotifyIdError();
   }
 
-  const { message_ref: messageRef } = data;
-  const { notify_key: notifyKey } = await getTemplate(messageRef);
-  const apiKey = getNotifyKey(notifyKey);
-  const client = new NotifyClient(apiKey);
+  const status = await notify.getStatus(notifyId);
 
-  const { body: { status } } = await client.getNotificationById(notifyId);
-
-  await scheduledNotification.update({ id }, { notify_status: status });
+  return scheduledNotification.update({ id }, { notify_status: status });
 }
 
 /**
- * Marks record in scheduled_notification table as sent
- * Also records notify ID and rendered body
- * @param {String} id - GUID or other ID
- * @param {Object} notifyResponse
- * @return {Promise} resolves on DB success/error
- */
-function markAsSent (id, notifyResponse) {
-  // Update plaintext value with what Notify actually sent
-  return scheduledNotification.update({ id }, {
-    status: 'sent',
-    notify_id: notifyResponse.id,
-    plaintext: notifyResponse.content.body
-  });
-}
-
-/**
- * Send message
+ * Send notificatation message by scheduled_notification ID
  * @param {String} id - water.scheduled_notification id
  * @return {Promise} resolves with { data, notifyResponse }
  */
 async function send (id) {
-  // Load water.scheduled_notification record from DB
-  const { rows: [data], error } = await scheduledNotification.find({ id });
-
-  if (error) {
-    throw error;
-  }
-
-  if (!data) {
-    throw new NotificationNotFoundError();
-  }
+  // Get scheduled notification record
+  const data = await findById(id);
 
   if (data.status) {
     throw new AlreadySentError();
@@ -86,19 +46,20 @@ async function send (id) {
 
   const { personalisation, message_ref: messageRef, recipient } = data;
 
-  // Load template from notify_templates table
-  const notifyTemplate = await getTemplate(messageRef);
-
-  // Send message with Notify API
   try {
-    const { body: notifyResponse } = await sendMessage(notifyTemplate, personalisation, recipient);
+    let notifyResponse;
 
-    // Update plaintext value with what Notify actually sent
-    await markAsSent(id, notifyResponse);
+    if (isPdf(messageRef)) {
+      // Render and send PDF message
+      const pdfContentUrl = `${process.env.WATER_URI}/pdf-notifications/render/${id}`;
+      notifyResponse = await notify.sendPdf(pdfContentUrl, id);
+    } else {
+      // Load template from notify_templates table
+      const notifyTemplate = await findByMessageRef(messageRef);
+      notifyResponse = await notify.send(notifyTemplate, personalisation, recipient);
+    }
 
-    return {
-      data
-    };
+    await scheduledNotification.update({id}, parseSentResponse(notifyResponse));
   } catch (error) {
     // Log notify error
     await scheduledNotification.update({ id }, {
@@ -108,19 +69,8 @@ async function send (id) {
 
     throw error;
   }
-}
 
-/**
- * Writes scheduled notification data to DB
- * @param {Object} row
- * @return {Promise}
- */
-async function writeScheduledNotificationRow (row) {
-  const { error: dbError } = await scheduledNotification.create(row);
-  if (dbError) {
-    console.error(dbError);
-    throw dbError;
-  }
+  return data;
 }
 
 /**
@@ -140,14 +90,26 @@ function scheduleSendEvent (messageQueue, row, now) {
 }
 
 /**
- * Converts object keys to snake case, and non-scalars to stringified JSON
- * @param {Object} data
- * @return {Object}
+ * For messages which use a Notify template, this function
+ * gets the appropriate Notify key and creates message preview
  */
-function formatRowData (data) {
-  return mapValues(snakeCaseKeys(data), value => isObject(value) ? JSON.stringify(value) : value);
-}
+const getNotifyPreview = async (data) => {
+  // Determine notify key/template ID and generate preview
+  const template = await findByMessageRef(data.messageRef);
+  const { body: { body: plaintext, type } } = await notify.preview(template, data.personalisation);
 
+  return {
+    ...data,
+    plaintext,
+    messageType: type
+  };
+};
+
+/**
+ * Queues a message ready for sending.  For standard Notify message
+ * a preview is generated and stored in scheduled_notification table
+ * For PDF messages, this does not happen
+ */
 const createEnqueue = messageQueue => {
   return async function (options = {}) {
     // Create timestamp
@@ -156,71 +118,79 @@ const createEnqueue = messageQueue => {
     const { value: data, error } = validateEnqueueOptions(options, now);
 
     if (error) {
-      throw error;
+      throw Boom.badRequest(`Invalid message enqueue options`, error);
     }
 
-    // Create DB data row - snake case keys and stringify objects/arrays
-    const row = formatRowData(data);
+    // For non-PDF  messages, generate preview and add to data
+    let row = isPdf(options.messageRef) ? data : await getNotifyPreview(data);
 
-    // Determine notify key
-    const template = await getTemplate(data.messageRef);
-    const apiKey = getNotifyKey(template.notify_key);
+    // Persist row to scheduled_notification table
+    const dbRow = await createFromObject(row);
 
-    // Generate message preview with Notify
-    try {
-      const notifyClient = new NotifyClient(apiKey);
-      const result = await notifyClient.previewTemplateById(template.template_id, data.personalisation);
-      row.plaintext = result.body.body;
-      row.message_type = result.body.type;
-    } catch (err) {
-      if (err.statusCode === 400) {
-        throw err;
-      } else {
-        console.log(err);
-      }
-    }
-
-    // Write data row to DB
-    await writeScheduledNotificationRow(row);
-    const startIn = scheduleSendEvent(messageQueue, row, now);
+    // Schedules send event
+    const startIn = scheduleSendEvent(messageQueue, dbRow, now);
 
     // Return row data
-    return { data: row, startIn };
+    return { data: dbRow, startIn };
   };
+};
+
+const registerSendSubscriber = messageQueue => {
+  messageQueue.subscribe('notify.send', async (job, done) => {
+    const { id } = job.data;
+
+    try {
+      await send(id);
+      return done();
+    } catch (err) {
+      console.error(err);
+      return done(err);
+    }
+  });
+};
+
+const registerSendListener = messageQueue => {
+  messageQueue.onComplete('notify.send', async (job) => {
+    // Get scheduled_notification ID
+    const id = get(job, 'data.request.data.id', null);
+
+    // Schedule status checks
+    for (let delay of [5, 60, 3600, 86400, 259200]) {
+      await messageQueue.publish('notify.status', { id }, { startIn: delay });
+    }
+  });
+};
+
+const registerStatusCheckSubscriber = messageQueue => {
+  messageQueue.subscribe('notify.status', async (job, done) => {
+    const id = get(job, 'data.id');
+    try {
+      if (id) {
+        await updateMessageStatus(id);
+      }
+    } catch (err) {
+      console.error(err);
+      return done(err);
+    }
+
+    return done();
+  });
 };
 
 const createRegisterSubscribers = messageQueue => {
   return () => {
-    messageQueue.subscribe('notify.send', async (job, done) => {
-      const { id } = job.data;
-
-      try {
-        const { data } = await send(id);
-
-        // Schedule status checks
-        messageQueue.publish('notify.status', data);
-        messageQueue.publish('notify.status', data, { startIn: 60 });
-        messageQueue.publish('notify.status', data, { startIn: 3600 });
-        messageQueue.publish('notify.status', data, { startIn: 86400 });
-        messageQueue.publish('notify.status', data, { startIn: 259200 });
-      } catch (err) {
-        console.error(err);
-      }
-
-      done();
-    });
-
-    messageQueue.subscribe('notify.status', async (job, done) => {
-      const { id } = job.data;
-      await updateMessageStatus(id);
-      done();
-    });
+    registerSendSubscriber(messageQueue);
+    registerSendListener(messageQueue);
+    registerStatusCheckSubscriber(messageQueue);
   };
 };
 
 module.exports = (messageQueue) => {
+  const enqueue = createEnqueue(messageQueue);
+  const registerSubscribers = createRegisterSubscribers(messageQueue);
+
   return {
-    enqueue: createEnqueue(messageQueue),
-    registerSubscribers: createRegisterSubscribers(messageQueue)
+    enqueue,
+    registerSubscribers
   };
 };

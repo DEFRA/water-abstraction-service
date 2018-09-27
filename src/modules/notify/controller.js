@@ -34,11 +34,14 @@ async function send (request, reply) {
     await enqueue(config);
     return config;
   } catch (err) {
-    if (err.statusCode === 400) {
-      throw Boom.badRequest(err);
+    if (err.isBoom && (err.output.statusCode !== 500)) {
+      throw Boom.badRequest(err.message);
     }
     if (err.name === 'TemplateNotFoundError') {
       throw Boom.badRequest(err);
+    }
+    if (err.name === 'StatusCodeError') {
+      throw Boom.wrap(err, err.statusCode);
     }
     throw err;
   }

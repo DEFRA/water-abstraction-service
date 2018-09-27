@@ -4,7 +4,7 @@
  */
 const { prepareNotification, sendNotification } = require('./lib');
 const taskConfigLoader = require('./lib/task-config-loader');
-const generateReference = require('./lib/reference-generator');
+const generateReference = require('../../lib/reference-generator');
 
 /**
  * @param { Object } request.payload.filter - standard filter
