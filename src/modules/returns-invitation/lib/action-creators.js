@@ -1,18 +1,31 @@
 const Joi = require('joi');
 const uuidv4 = require('uuid/v4');
-const { INIT, SET_RETURN_FILTER, SET_RETURNS, ADD_CONTACT, SET_CONTACTS, CREATE_EVENT } = require('./action-types');
+const moment = require('moment');
+
+const { INIT, SET_RETURN_FILTER, SET_RETURNS, ADD_CONTACT, SET_CONTACTS, CREATE_EVENT, SET_MESSAGES, SET_NOTIFY_TEMPLATE } = require('./action-types');
 
 const configSchema = {
 
+  // Friendly name for this notification
+  name: Joi.string(),
+
   // For non-PDF messages, corresponds to the Notify template to use.
   // PDF messages have pdf. suffix and are rendered locally
-  messageRef: Joi.string(),
+  messageRef: {
+    default: Joi.string(),
+    email: Joi.string(),
+    letter: Joi.string()
+  },
 
   // Array of contact roles, message will be sent to first match
   rolePriority: Joi.array().min(1).items(Joi.string()),
 
   // Email address of the user sending the notification
-  issuer: Joi.string().email()
+  issuer: Joi.string().email(),
+
+  sendAfter: Joi.string().default(() => {
+    return moment().format();
+  }, 'timestamp')
 
 };
 
@@ -21,7 +34,7 @@ const configSchema = {
  * @return {Object}
  */
 const init = (config = {}) => {
-  const { error } = Joi.validate(config, configSchema);
+  const { error, value } = Joi.validate(config, configSchema);
   if (error) {
     throw error;
   }
@@ -30,7 +43,7 @@ const init = (config = {}) => {
     type: INIT,
     payload: {
 
-      config,
+      config: value,
 
       // Document header filter
       documentFilter: null,
@@ -42,6 +55,9 @@ const init = (config = {}) => {
       taskConfig: {
 
       },
+
+      // Notify template info
+      notifyTemplate: {},
 
       // Event, for storage in event log
       event: {
@@ -106,11 +122,31 @@ const createEvent = (reference, eventId) => {
   };
 };
 
+const setMessages = (messages) => {
+  return {
+    type: SET_MESSAGES,
+    payload: messages
+  };
+};
+
+const setNotifyTemplate = (templateId, notifyKey = 'test', messageType = 'default') => {
+  return {
+    type: SET_NOTIFY_TEMPLATE,
+    payload: {
+      templateId,
+      notifyKey,
+      messageType
+    }
+  };
+};
+
 module.exports = {
   init,
   setReturnFilter,
   setReturns,
   addContact,
   setContacts,
-  createEvent
+  createEvent,
+  setMessages,
+  setNotifyTemplate
 };

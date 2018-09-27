@@ -1,48 +1,52 @@
-const { get, isArray, uniq } = require('lodash');
+// const uuidv4 = require('uuid/v4');
+const { get, isArray } = require('lodash');
+// const moment = require('moment');
+// const Boom = require('boom');
 const { getDocumentContacts } = require('../../lib/connectors/crm/documents');
 const { reducer } = require('./lib/reducer');
-const { init, setReturnFilter, setReturns, addContact, setContacts, createEvent } = require('./lib/action-creators');
+const { init, setReturnFilter, setReturns, addContact, setContacts, createEvent, setMessages } = require('./lib/action-creators');
 const { returns } = require('../../lib/connectors/returns');
 const { findAllPages } = require('../../lib/api-client-helpers');
 
+const { eventFactory } = require('./lib/event-factory');
+
 const { transformContact, dedupe, getContactId } = require('./lib/de-duplicate');
 
-/**
- * Given the notification state object, creates an object row which can
- * be written to the water.events table
- * @param {Object} state
- * @return {Object} event
- */
-const createEventRow = (state) => {
-  const licences = state.contacts.reduce((acc, contact) => {
-    const arr = isArray(contact.data)
-      ? contact.data.map(row => row.system_external_id)
-      : [contact.data.system_external_id];
-    return [...acc, ...arr];
-  }, []);
+const { formatAddressKeys } = require('../returns-notifications/lib/message-helpers');
 
-  const entities = state.contacts.reduce((acc, contact) => {
-    const {entity_id: entityId} = contact;
-    return entityId ? uniq([...acc, entityId]) : acc;
-  }, []);
+const { persist: persistEvent } = require('./lib/connectors/event');
 
-  state.contacts.map(contact => contact.entity_id).filter(id => id !== null);
+const messageQueue = require('../../lib/message-queue');
+const { enqueue } = require('../notify')(messageQueue);
 
-  const metadata = {
-    recipients: state.contacts.length,
-    sent: 0,
-    error: 0
-  };
+const enqueueAll = (state) => {
+  const tasks = state.messages.map(message => enqueue(message));
+  return Promise.all(tasks);
+};
 
-  return {
-    ...state.event,
-    subtype: state.config.messageRef,
-    issuer: state.config.issuer,
-    licences,
-    entities: uniq(entities),
-    metadata,
-    status: ''
-  };
+const createMessages = (state) => {
+  const messages = state.contacts.map(row => {
+    const { contact, data } = row;
+
+    const messageType = contact.email ? 'email' : 'letter';
+
+    const licences = isArray(data) ? data.map(row => row.system_external_id) : [data.system_external_id];
+
+    const messageRef = get(state, `config.messageRef.${messageType}`, state.config.messageRef.default);
+
+    return {
+      messageRef,
+      recipient: contact.email || 'n/a',
+      personalisation: formatAddressKeys(contact),
+      sendAfter: state.config.sendAfter,
+      licences,
+      individualEntityId: contact.entity_id,
+      eventId: state.event.event_id,
+      messageType
+    };
+  });
+
+  return reducer(state, setMessages(messages));
 };
 
 /**
@@ -99,7 +103,7 @@ const postReturnsInvite = async (request, h) => {
   const { filter } = request.payload;
 
   // Create state
-  let state = reducer({}, init({ messageRef: 'returns.invitation', issuer: 'mail@example.com'}));
+  let state = reducer({}, init({ name: 'Returns: invitation', messageRef: { default: 'returns_invitation_letter' }, issuer: 'mail@example.com' }));
 
   // // Set returns filter
   state = reducer(state, setReturnFilter(filter));
@@ -114,7 +118,15 @@ const postReturnsInvite = async (request, h) => {
 
   state = reducer(state, createEvent('R-INV-XYZ'));
 
-  console.log(createEventRow(state));
+  const ev = eventFactory(state);
+  await persistEvent(ev);
+
+  await enqueueAll(state);
+  // state = await fetchNotifyTemplates(state);
+
+  // console.log(ev);
+
+  state = createMessages(state);
 
   return state;
 };
