@@ -6,9 +6,12 @@ const puppeteer = require('puppeteer');
  * @return {Promise} resolves with PDF buffer
  */
 const createPdf = async (url) => {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: ['--no-proxy-server']
+  });
   const page = await browser.newPage();
   await page.setExtraHTTPHeaders({Authorization: process.env.JWT_TOKEN});
+
   await page.goto(url, {waitUntil: 'networkidle2'});
   const buffer = await page.pdf({format: 'A4'});
   await browser.close();
