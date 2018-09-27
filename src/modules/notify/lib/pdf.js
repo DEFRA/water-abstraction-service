@@ -12,7 +12,6 @@ const createPdf = async (url) => {
   const page = await browser.newPage();
   await page.setExtraHTTPHeaders({Authorization: process.env.JWT_TOKEN});
 
-  console.log(url);
   await page.goto(url, {waitUntil: 'networkidle2'});
   const buffer = await page.pdf({format: 'A4'});
   await browser.close();
