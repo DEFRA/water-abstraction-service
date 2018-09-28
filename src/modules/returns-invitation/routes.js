@@ -1,5 +1,6 @@
 const Joi = require('joi');
 const controller = require('./controller');
+const schema = require('./lib/schema');
 
 module.exports = {
 
@@ -10,7 +11,11 @@ module.exports = {
     config: {
       description: 'Sends invitation to do a return',
       validate: {
-
+        payload: {
+          config: schema.config,
+          filter: Joi.object(),
+          personalisation: Joi.object()
+        }
       }
     }
   }

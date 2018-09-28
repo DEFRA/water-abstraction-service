@@ -6,5 +6,6 @@ module.exports = {
   SET_CONTACTS: 'set.contacts',
   CREATE_EVENT: 'create.event',
   SET_MESSAGES: 'set.messages',
-  SET_NOTIFY_TEMPLATE: 'set.notifyTemplate'
+  SET_NOTIFY_TEMPLATE: 'set.notifyTemplate',
+  SET_PERSONALISATION: 'set.personalisation'
 };

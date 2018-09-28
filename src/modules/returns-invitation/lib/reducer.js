@@ -1,4 +1,4 @@
-const { INIT, SET_RETURN_FILTER, SET_RETURNS, ADD_CONTACT, SET_CONTACTS, CREATE_EVENT, SET_MESSAGES, SET_NOTIFY_TEMPLATE } = require('./action-types');
+const { INIT, SET_RETURN_FILTER, SET_RETURNS, ADD_CONTACT, SET_CONTACTS, CREATE_EVENT, SET_MESSAGES, SET_NOTIFY_TEMPLATE, SET_PERSONALISATION } = require('./action-types');
 
 const reducer = (state, action) => {
   switch (action.type) {
@@ -56,6 +56,12 @@ const reducer = (state, action) => {
           ...state.notifyTemplate,
           [messageType]: rest
         }
+      };
+
+    case SET_PERSONALISATION:
+      return {
+        ...state,
+        personalisation: action.payload
       };
 
     default:

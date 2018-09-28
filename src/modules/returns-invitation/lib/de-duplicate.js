@@ -1,5 +1,5 @@
 const sha1 = require('sha1');
-const { find, isArray } = require('lodash');
+const { find } = require('lodash');
 
 /**
  * De-duplicates the supplied data

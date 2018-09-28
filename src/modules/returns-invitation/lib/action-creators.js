@@ -2,39 +2,15 @@ const Joi = require('joi');
 const uuidv4 = require('uuid/v4');
 const moment = require('moment');
 
-const { INIT, SET_RETURN_FILTER, SET_RETURNS, ADD_CONTACT, SET_CONTACTS, CREATE_EVENT, SET_MESSAGES, SET_NOTIFY_TEMPLATE } = require('./action-types');
-
-const configSchema = {
-
-  // Friendly name for this notification
-  name: Joi.string(),
-
-  // For non-PDF messages, corresponds to the Notify template to use.
-  // PDF messages have pdf. suffix and are rendered locally
-  messageRef: {
-    default: Joi.string(),
-    email: Joi.string(),
-    letter: Joi.string()
-  },
-
-  // Array of contact roles, message will be sent to first match
-  rolePriority: Joi.array().min(1).items(Joi.string()),
-
-  // Email address of the user sending the notification
-  issuer: Joi.string().email(),
-
-  sendAfter: Joi.string().default(() => {
-    return moment().format();
-  }, 'timestamp')
-
-};
+const { INIT, SET_RETURN_FILTER, SET_RETURNS, ADD_CONTACT, SET_CONTACTS, CREATE_EVENT, SET_MESSAGES, SET_NOTIFY_TEMPLATE, SET_PERSONALISATION } = require('./action-types');
+const schema = require('./schema');
 
 /**
  * Creates initial state
  * @return {Object}
  */
 const init = (config = {}) => {
-  const { error, value } = Joi.validate(config, configSchema);
+  const { error, value } = Joi.validate(config, schema.config);
   if (error) {
     throw error;
   }
@@ -64,8 +40,8 @@ const init = (config = {}) => {
 
       },
 
-      // Template variables, when sending HoF/expiry notifications
-      params: {
+      // Global personalisation (used as template variables, e.g. when sending HoF/expiry notifications)
+      personalisation: {
 
       },
 
@@ -140,6 +116,13 @@ const setNotifyTemplate = (templateId, notifyKey = 'test', messageType = 'defaul
   };
 };
 
+const setPersonalisation = (personalisation) => {
+  return {
+    type: SET_PERSONALISATION,
+    payload: personalisation
+  };
+};
+
 module.exports = {
   init,
   setReturnFilter,
@@ -148,5 +131,6 @@ module.exports = {
   setContacts,
   createEvent,
   setMessages,
-  setNotifyTemplate
+  setNotifyTemplate,
+  setPersonalisation
 };
