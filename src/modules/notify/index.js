@@ -12,7 +12,6 @@ const { validateEnqueueOptions, isPdf, parseSentResponse } = require('./lib/help
 const { scheduledNotification, findById, createFromObject } = require('./connectors/scheduled-notification');
 const { findByMessageRef } = require('./connectors/notify-template');
 const { NotifyIdError, AlreadySentError } = require('./lib/errors');
-const urlJoin = require('url-join');
 
 /**
  * Updates the notify_status field for the message with the given ID
@@ -52,9 +51,8 @@ async function send (id) {
 
     if (isPdf(messageRef)) {
       // Render and send PDF message
-      const pdfContentUrl = urlJoin(process.env.WATER_URI_INTERNAL, `/pdf-notifications/render/${id}`);
       const notifyId = `${personalisation.address_line_1} ${personalisation.postcode} ${id}`;
-      notifyResponse = await notify.sendPdf(pdfContentUrl, notifyId);
+      notifyResponse = await notify.sendPdf(id, notifyId);
     } else {
       // Load template from notify_templates table
       const notifyTemplate = await findByMessageRef(messageRef);
