@@ -1,5 +1,3 @@
-// Third-party dependencies
-const { pick } = require('lodash');
 
 // Module dependencies
 const { reducer } = require('./lib/reducer');
@@ -12,7 +10,7 @@ const { persist: persistEvent } = require('./lib/connectors/event');
 
 const generateReference = require('../../lib/reference-generator');
 
-const postReturnsInvite = async (request, h) => {
+const returnsInvite = async (request, isPreview = true) => {
   const { filter, personalisation, config } = request.payload;
 
   // Create initial state
@@ -34,16 +32,34 @@ const postReturnsInvite = async (request, h) => {
 
   // Create and persist event
   const ev = eventFactory(state);
-  await persistEvent(ev);
+
+  if (!isPreview) {
+    await persistEvent(ev);
+  }
 
   // Create messages and queue
   state = createMessages(state);
-  await enqueueMessages(state);
+
+  if (!isPreview) {
+    await enqueueMessages(state);
+  }
 
   // Output
-  return pick(state, ['config', 'event']);
+  return {
+    config: state.config,
+    event: ev
+  };
+};
+
+const postReturnsInvitePreview = async (request, h) => {
+  return returnsInvite(request, true);
+};
+
+const postReturnsInvite = async (request, h) => {
+  return returnsInvite(request, false);
 };
 
 module.exports = {
+  postReturnsInvitePreview,
   postReturnsInvite
 };
