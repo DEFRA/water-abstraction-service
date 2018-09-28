@@ -59,6 +59,16 @@ module.exports = {
               total: Joi.when('totalFlag', { is: true, then: Joi.number().required() })
             }
           }),
+          meters: Joi.when('isNil', { is: false,
+            then: Joi.array().items({
+              manufacturer: Joi.string().required(),
+              serialNumber: Joi.string().required(),
+              startReading: Joi.number().positive().required(),
+              multiplier: Joi.number().valid(1, 10).required(),
+              units: Joi.string().required(),
+              readings: Joi.object()
+            })
+          }),
           requiredLines: Joi.array().allow(null).optional(),
           lines: Joi.when('isNil', { is: false,
             then:
