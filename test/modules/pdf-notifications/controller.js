@@ -33,9 +33,9 @@ lab.experiment('Test getRenderNotification', () => {
       rows: [notification]
     });
 
-    await controller.getRenderNotification(request, h);
+    const html = await controller.getRenderNotification(request, h);
 
-    Code.expect(h.view.calledWith('pdf-notifications/test', { notification })).to.equal(true);
+    Code.expect(html).to.equal('OK');
 
     scheduledNotification.find.restore();
   });

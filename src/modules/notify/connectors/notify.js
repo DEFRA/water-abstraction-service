@@ -103,17 +103,14 @@ const getPdfNotifyKey = (env) => {
 
 /**
  * Sends a PDF as a letter via Notify
- * @param {String} url
- * @param {String} id
+ * @param {String} notificationId - ID in scheduled_notification table
+ * @param {String} notifyId - an ID sent to notify to identify the message
  * @return {Promise} resolves with Notify response
  */
-async function sendPdf (url, id) {
+async function sendPdf (notificationId, notifyId) {
   const notifyClient = new NotifyClient(getPdfNotifyKey(process.env));
-  const pdf = await createPdf(url);
-  return notifyClient.sendPrecompiledLetter(
-    id,
-    pdf
-  );
+  const pdf = await createPdf(notificationId);
+  return notifyClient.sendPrecompiledLetter(notifyId, pdf);
 }
 
 module.exports = {
