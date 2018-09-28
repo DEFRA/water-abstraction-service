@@ -51,8 +51,8 @@ async function send (id) {
 
     if (isPdf(messageRef)) {
       // Render and send PDF message
-      const pdfContentUrl = `${process.env.WATER_URI}/pdf-notifications/render/${id}`;
-      notifyResponse = await notify.sendPdf(pdfContentUrl, id);
+      const notifyId = `${personalisation.address_line_1} ${personalisation.postcode} ${id}`;
+      notifyResponse = await notify.sendPdf(id, notifyId);
     } else {
       // Load template from notify_templates table
       const notifyTemplate = await findByMessageRef(messageRef);
