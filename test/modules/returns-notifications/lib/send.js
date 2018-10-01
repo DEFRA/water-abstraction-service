@@ -11,17 +11,19 @@ const { prepareMessageData } = require('../../../../src/modules/returns-notifica
 
 const { data, ret, contact } = require('./test-data');
 
+const config = require('../../../../config');
+
 lab.experiment('Test send', () => {
-  let baseUrl = process.env.base_url;
+  let adminBaseUrl = config.admin.baseUrl;
 
   lab.afterEach(async () => {
-    process.env.base_url = baseUrl;
+    config.admin.baseUrl = adminBaseUrl;
     returns.returns.findMany.restore();
     contactList.contactList.restore();
   });
 
   lab.test('It should call enqueue with correct data', async () => {
-    process.env.base_url = 'http://localhost/return';
+    config.admin.baseUrl = 'http://localhost:8005';
     sinon.stub(returns.returns, 'findMany').resolves({ data: [ret], error: null });
     sinon.stub(contactList, 'contactList').resolves([contact]);
 
@@ -34,10 +36,15 @@ lab.experiment('Test send', () => {
      town: 'Testing',
      postcode: 'TT1 1TT',
      formatId: '01234567',
-     qrUrl: 'http://localhost/return?returnId=v1:123:456',
+     qrUrl: 'http://localhost:8005/return?returnId=v1:123:456',
      startDate: '2017-11-01',
      endDate: '2018-10-31',
-     returnsFrequency: 'week' },
+     returnsFrequency: 'week',
+     licenceRef: '01/123',
+     purpose: 'Spray irrigation',
+     regionCode: 5,
+     siteDescription: 'Borehole A'
+   },
       licences: [ '01/123' ],
       individualEntityId: '31656ee1-1130-4d38-ab49-030c5336f3e7',
       companyEntityId: null,
