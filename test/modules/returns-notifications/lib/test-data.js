@@ -13,8 +13,15 @@ const ret = {
   returns_frequency: 'week',
   metadata: {
     nald: {
-      formatId: '01234567'
-    }
+      formatId: '01234567',
+      regionCode: 5
+    },
+    description: 'Borehole A',
+    purposes: [{
+      tertiary: {
+        description: 'Spray irrigation'
+      }
+    }]
   }
 };
 

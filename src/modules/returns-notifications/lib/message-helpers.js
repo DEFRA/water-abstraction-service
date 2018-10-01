@@ -1,5 +1,5 @@
 const { mapKeys, get } = require('lodash');
-const { admin: { baseUrl } } = require('../../../../config');
+const config = require('../../../../config');
 const urlJoin = require('url-join');
 
 /**
@@ -37,6 +37,8 @@ const formatAddressKeys = (contact) => {
  * @return {Object}
  */
 const formatEnqueuePersonalisation = (env, ret, contact) => {
+  const baseUrl = get(config, 'admin.baseUrl');
+
   const {
     start_date: startDate,
     end_date: endDate,
