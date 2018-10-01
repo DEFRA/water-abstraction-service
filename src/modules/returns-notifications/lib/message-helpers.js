@@ -1,6 +1,5 @@
 const { mapKeys, get } = require('lodash');
 const config = require('../../../../config');
-const urlJoin = require('url-join');
 
 /**
  * Create job data for a returns notification message regarding a return to
@@ -37,8 +36,6 @@ const formatAddressKeys = (contact) => {
  * @return {Object}
  */
 const formatEnqueuePersonalisation = (env, ret, contact) => {
-  const baseUrl = get(config, 'admin.baseUrl');
-
   const {
     start_date: startDate,
     end_date: endDate,
@@ -56,7 +53,7 @@ const formatEnqueuePersonalisation = (env, ret, contact) => {
     formatId: get(ret, 'metadata.nald.formatId'),
     regionCode: get(ret, 'metadata.nald.regionCode'),
     siteDescription: get(ret, 'metadata.description'),
-    qrUrl: urlJoin(baseUrl, `/return?returnId=${returnId}`),
+    qrUrl: returnId,
     purpose,
     startDate,
     endDate,
