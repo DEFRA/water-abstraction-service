@@ -36,7 +36,7 @@ lab.experiment('Test send', () => {
      town: 'Testing',
      postcode: 'TT1 1TT',
      formatId: '01234567',
-     qrUrl: 'http://localhost:8005/return?returnId=v1:123:456',
+     qrUrl: 'v1:123:456',
      startDate: '2017-11-01',
      endDate: '2018-10-31',
      returnsFrequency: 'week',
