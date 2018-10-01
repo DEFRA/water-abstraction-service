@@ -2,6 +2,10 @@ require('dotenv').config();
 
 module.exports = {
 
+  admin: {
+    baseUrl: process.env.admin_base_url
+  },
+
   blipp: {
     showAuth: true
   },
@@ -55,6 +59,8 @@ module.exports = {
     router: {
       stripTrailingSlash: true
     }
-  }
+  },
+
+  testMode: parseInt(process.env.test_mode) === 1
 
 };

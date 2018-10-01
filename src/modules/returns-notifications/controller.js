@@ -52,7 +52,7 @@ const postReturnNotification = async (request, h) => {
   const data = await findAllPages(returns, filter, sort, columns);
 
   // Generate a reference number
-  const ref = generateReference('RETURNS-');
+  const ref = generateReference('RFORM-');
 
   // Create container event in event log for tracking/reporting of batch
   const e = eventFactory({
