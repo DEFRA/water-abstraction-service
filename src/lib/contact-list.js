@@ -10,10 +10,10 @@
  */
 
 /* eslint camelcase: "warn" */
-
+const Boom = require('boom');
 const { find } = require('lodash');
 const sha1 = require('sha1');
-const { getDocumentContacts } = require('../../../lib/connectors/crm/documents');
+const { getDocumentContacts } = require('./connectors/crm/documents');
 
 /**
  * Given list of licence contacts, this returns the preferred contact based
@@ -108,10 +108,12 @@ async function getContacts (filter, rolePriority) {
   const { error, data } = await getDocumentContacts(filter);
 
   if (error) {
-    throw error;
+    throw Boom.badImplementation(`Error building contact list`, error);
   }
 
   return createSendList(data, rolePriority);
 }
 
-module.exports = getContacts;
+module.exports = {
+  contactList: getContacts
+};

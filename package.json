@@ -66,19 +66,20 @@
     "lodash": "^4.17.5",
     "moment": "^2.20.1",
     "node-cron": "^1.2.1",
-    "notifications-node-client": "^4.1.0",
+    "notifications-node-client": "^4.5.1",
     "nunjucks": "^3.1.2",
     "path": "^0.12.7",
     "pg": "^7.4.1",
     "pg-boss": "^2.5.1",
     "proxy-agent": "^2.3.1",
+    "puppeteer": "^1.8.0",
     "request-promise-native": "^1.0.5",
     "sentence-case": "^2.1.1",
     "sha1": "^1.1.1",
     "snakecase-keys": "^1.1.1",
     "url-join": "^4.0.0",
     "uuid": "^3.3.2",
-    "vision": "^4.1.1"
+    "vision": "^5.4.0"
   },
   "standard": {
     "ignore": [

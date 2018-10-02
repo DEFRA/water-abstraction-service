@@ -1,0 +1,15 @@
+
+
+
+
+<pre>
+{{ notification | stringify }}
+<pre>
+
+
+<div id="qr" style="width:25mm; height: 25mm;"></div>
+
+<script type="text/javascript">
+{% include "./qrcode.min.js" %}
+new QRCode(document.getElementById("qr"), '{{ notification.personalisation.qr_url }}' );
+</script>

@@ -1,4 +1,4 @@
-const { get } = require('lodash');
+const { get, pick } = require('lodash');
 const moment = require('moment');
 const { convertToCubicMetres, convertToUserUnit } = require('./unit-conversion');
 const uuidv4 = require('uuid/v4');
@@ -134,17 +134,12 @@ const getRequiredLines = (startDate, endDate, frequency) => {
   }
 };
 
-/**
- * Creates a unified data model for a single return
- * @param {Object} ret - return
- * @param {Object} version - the current / selected version of the return
- * @param {Array} lines - array of line data
- * @param {Object} document - CRM document
- * @return {Object} unified view of return
- */
-const mapReturnToModel = (ret, version, lines, versions) => {
-  const requiredLines = lines.length ? null : getRequiredLines(ret.start_date, ret.end_date, ret.returns_frequency);
+const getMetersFromVersionMetadata = version => {
+  const meters = get(version, 'metadata.meters', []);
+  return meters;
+};
 
+const getReadingFromVersionMetadata = version => {
   const nullVersionMetadata = {
     // Can be measured | estimated
     type: null,
@@ -157,6 +152,22 @@ const mapReturnToModel = (ret, version, lines, versions) => {
     total: null
   };
 
+  return version
+    ? pick(version.metadata, Object.keys(nullVersionMetadata))
+    : nullVersionMetadata;
+};
+
+/**
+ * Creates a unified data model for a single return
+ * @param {Object} ret - return
+ * @param {Object} version - the current / selected version of the return
+ * @param {Array} lines - array of line data
+ * @param {Object} document - CRM document
+ * @return {Object} unified view of return
+ */
+const mapReturnToModel = (ret, version, lines, versions) => {
+  const requiredLines = lines.length ? null : getRequiredLines(ret.start_date, ret.end_date, ret.returns_frequency);
+
   return {
     returnId: ret.return_id,
     licenceNumber: ret.licence_ref,
@@ -168,17 +179,17 @@ const mapReturnToModel = (ret, version, lines, versions) => {
     status: ret.status,
     versionNumber: version ? version.version_number : null,
     isCurrent: version ? version.current : null,
-    reading: version ? version.metadata : nullVersionMetadata,
+    reading: getReadingFromVersionMetadata(version),
+    meters: getMetersFromVersionMetadata(version),
     requiredLines,
     lines: lines ? lines.map(returnLineToModel) : null,
     metadata: ret.metadata,
     versions: versions.map(version => {
-      const {user_id, created_at, version_number, current} = version;
       return {
-        versionNumber: version_number,
-        email: user_id,
-        createdAt: created_at,
-        isCurrent: current
+        versionNumber: version.version_number,
+        email: version.user_id,
+        createdAt: version.created_at,
+        isCurrent: version.current
       };
     })
   };
@@ -196,7 +207,10 @@ const mapReturnToVersion = (ret) => {
     user_id: ret.user.email,
     user_type: ret.user.type,
     version_number: ret.versionNumber,
-    metadata: JSON.stringify(ret.reading),
+    metadata: JSON.stringify({
+      ...ret.reading,
+      meters: ret.meters
+    }),
     nil_return: ret.isNil,
     current: true
   };
@@ -244,5 +258,6 @@ module.exports = {
   mapReturnToModel,
   mapReturnToVersion,
   mapReturnToLines,
-  mapReturn
+  mapReturn,
+  getRequiredLines
 };

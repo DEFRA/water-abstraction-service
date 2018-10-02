@@ -1,4 +1,4 @@
-const getContactList = require('./contact-list');
+const { contactList } = require('../../../lib/contact-list');
 const licenceLoader = require('./licence-loader');
 const templateRenderer = require('./template-renderer');
 const eventFactory = require('./event-factory');
@@ -43,7 +43,7 @@ const defaultRolePriority = ['document_notifications', 'notifications', 'area_im
 async function prepareNotification (filter, taskConfig, params, context = {}) {
   // Get a list of de-duped contacts with licences
   const rolePriority = taskConfig.config.role_priority || defaultRolePriority;
-  const contacts = await getContactList(filter, rolePriority);
+  const contacts = await contactList(filter, rolePriority);
 
   // Load licence data from permit repo, and use NALD licence transformer
   // to transform to same format used in front-end GUI

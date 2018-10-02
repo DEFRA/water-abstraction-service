@@ -5,6 +5,7 @@
 const HAPIRestAPI = require('hapi-pg-rest-api');
 const Joi = require('joi');
 const { pool } = require('../lib/connectors/db.js');
+const uuidv4 = require('uuid/v4');
 
 const NotificationsApi = new HAPIRestAPI({
   table: 'water.scheduled_notification',
@@ -19,7 +20,7 @@ const NotificationsApi = new HAPIRestAPI({
   },
   showSql: true,
   validation: {
-    id: Joi.string(),
+    id: Joi.string().guid().default(() => uuidv4(), 'GUID'),
     recipient: Joi.string(),
     message_ref: Joi.string(),
     personalisation: Joi.object(),
@@ -27,7 +28,11 @@ const NotificationsApi = new HAPIRestAPI({
     message_type: Joi.string(),
     status: Joi.string(),
     log: Joi.string(),
-    event_id: Joi.string().guid()
+    event_id: Joi.string().guid(),
+    licences: Joi.array(),
+    individual_entity_id: Joi.array(),
+    company_entity_id: Joi.array()
+
   }
 });
 
