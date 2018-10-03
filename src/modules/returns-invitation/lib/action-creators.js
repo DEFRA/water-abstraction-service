@@ -1,6 +1,5 @@
 const Joi = require('joi');
 const uuidv4 = require('uuid/v4');
-const moment = require('moment');
 
 const { INIT, SET_RETURN_FILTER, SET_RETURNS, ADD_CONTACT, SET_CONTACTS, CREATE_EVENT, SET_MESSAGES, SET_NOTIFY_TEMPLATE, SET_PERSONALISATION } = require('./action-types');
 const schema = require('./schema');
