@@ -1,68 +1,100 @@
 const { INIT, SET_RETURN_FILTER, SET_RETURNS, ADD_CONTACT, SET_CONTACTS, CREATE_EVENT, SET_MESSAGES, SET_NOTIFY_TEMPLATE, SET_PERSONALISATION } = require('./action-types');
 
+const setReturnFilter = (state, action) => {
+  return {
+    ...state,
+    returnsFilter: action.payload
+  };
+};
+
+const setReturns = (state, action) => {
+  return {
+    ...state,
+    returns: action.payload
+  };
+};
+
+const addContact = (state, action) => {
+  return {
+    ...state,
+    contacts: [...state.contacts, action.payload]
+  };
+};
+
+const setContacts = (state, action) => {
+  return {
+    ...state,
+    contacts: action.payload
+  };
+};
+
+const createEvent = (state, action) => {
+  const { eventId, reference } = action.payload;
+
+  const event = {
+    event_id: eventId,
+    reference_code: reference,
+    type: 'notification'
+  };
+  return {
+    ...state,
+    event
+  };
+};
+
+const setMessages = (state, action) => {
+  return {
+    ...state,
+    messages: action.payload
+  };
+};
+
+const setNotifyTemplate = (state, action) => {
+  const { messageType, ...rest } = action.payload;
+  return {
+    ...state,
+    notifyTemplate: {
+      ...state.notifyTemplate,
+      [messageType]: rest
+    }
+  };
+};
+
+const setPersonalisation = (state, action) => {
+  return {
+    ...state,
+    personalisation: action.payload
+  };
+};
+
 const reducer = (state, action) => {
   switch (action.type) {
     case INIT:
       return action.payload;
 
     case SET_RETURN_FILTER:
-      return {
-        ...state,
-        returnsFilter: action.payload
-      };
+      return setReturnFilter(state, action);
 
     case SET_RETURNS:
-      return {
-        ...state,
-        returns: action.payload
-      };
+      return setReturns(state, action);
 
     case ADD_CONTACT:
-      return {
-        ...state,
-        contacts: [...state.contacts, action.payload]
-      };
+      return addContact(state, action);
 
     case SET_CONTACTS:
-      return {
-        ...state,
-        contacts: action.payload
-      };
+      return setContacts(state, action);
 
     case CREATE_EVENT:
-      const { eventId, reference } = action.payload;
-
-      const event = {
-        event_id: eventId,
-        reference_code: reference,
-        type: 'notification'
-      };
-      return {
-        ...state,
-        event
-      };
+      return createEvent(state, action);
 
     case SET_MESSAGES:
-      return {
-        ...state,
-        messages: action.payload
-      };
+      return setMessages(state, action);
 
     case SET_NOTIFY_TEMPLATE:
-      const { messageType, ...rest } = action.payload;
-      return {
-        ...state,
-        notifyTemplate: {
-          ...state.notifyTemplate,
-          [messageType]: rest
-        }
-      };
+      return setNotifyTemplate(state, action);
 
     case SET_PERSONALISATION:
-      return {
-        ...state,
-        personalisation: action.payload
-      };
+      return setPersonalisation(state, action);
 
     default:
       return state;
