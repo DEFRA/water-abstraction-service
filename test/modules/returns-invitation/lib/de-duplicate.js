@@ -171,6 +171,23 @@ experiment('getPreferredContact', () => {
 });
 
 experiment('transformContact', () => {
-  const contactA = createContact('A', 'A', 'A', 'licence_holder');
-  const contactB = createContact('B', 'A', 'A', 'returns_contact');
+  const contactA = createContact('A', 'A', 'A', 'licence_holder').contact;
+  const contactB = createContact('B', 'A', 'A', 'returns_contact').contact;
+
+  const data = {
+    contacts: [contactA, contactB],
+    licence_ref: '01/234',
+    return_id: '01:234:5678'
+  };
+
+  test('It should select the correct contact and transform the data to contain { data, contact, group }', async () => {
+    const transformed = transformContact(data, ['returns_contact', 'licence_holder']);
+    expect(transformed).to.equal({ data: { licence_ref: '01/234', return_id: '01:234:5678' },
+      contact:
+     { name: 'Dave',
+       address_line_1: 'Buttercup Farm',
+       postcode: 'BB1 1BB',
+       role: 'returns_contact' },
+      group: '8c2446dc404209c8b0fd6310dd08f2f765778bc0' });
+  });
 });
