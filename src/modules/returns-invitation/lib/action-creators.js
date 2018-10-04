@@ -1,7 +1,11 @@
 const Joi = require('joi');
 const uuidv4 = require('uuid/v4');
 
-const { INIT, SET_RETURN_FILTER, SET_RETURNS, ADD_CONTACT, SET_CONTACTS, CREATE_EVENT, SET_MESSAGES, SET_NOTIFY_TEMPLATE, SET_PERSONALISATION } = require('./action-types');
+const {
+  INIT, SET_RETURN_FILTER, SET_RETURNS, ADD_CONTACT, SET_CONTACTS, CREATE_EVENT,
+  SET_MESSAGES, SET_NOTIFY_TEMPLATE, SET_PERSONALISATION, DEDUPE_CONTACTS,
+  CREATE_MESSAGES
+} = require('./action-types');
 const schema = require('./schema');
 
 /**
@@ -122,6 +126,18 @@ const setPersonalisation = (personalisation) => {
   };
 };
 
+const dedupeContacts = () => {
+  return {
+    type: DEDUPE_CONTACTS
+  };
+};
+
+const createMessages = () => {
+  return {
+    type: CREATE_MESSAGES
+  };
+};
+
 module.exports = {
   init,
   setReturnFilter,
@@ -131,5 +147,7 @@ module.exports = {
   createEvent,
   setMessages,
   setNotifyTemplate,
-  setPersonalisation
+  setPersonalisation,
+  dedupeContacts,
+  createMessages
 };

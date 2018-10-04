@@ -4,8 +4,10 @@ module.exports = {
   SET_RETURNS: 'set.returns',
   ADD_CONTACT: 'add.contact',
   SET_CONTACTS: 'set.contacts',
+  DEDUPE_CONTACTS: 'dedupe.contacts',
   CREATE_EVENT: 'create.event',
   SET_MESSAGES: 'set.messages',
+  CREATE_MESSAGES: 'create.messages',
   SET_NOTIFY_TEMPLATE: 'set.notifyTemplate',
   SET_PERSONALISATION: 'set.personalisation'
 };

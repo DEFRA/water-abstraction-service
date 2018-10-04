@@ -1,8 +1,11 @@
 
 // Module dependencies
 const { reducer } = require('./lib/reducer');
-const { init, setReturnFilter, createEvent, setPersonalisation } = require('./lib/action-creators');
-const { fetchReturns, fetchReturnsContacts, dedupeContacts, createMessages, enqueueMessages } = require('./lib/tasks');
+const {
+  init, setReturnFilter, createEvent, setPersonalisation, setReturns,
+  setContacts, dedupeContacts, createMessages
+} = require('./lib/action-creators');
+const { fetchReturns, fetchReturnsContacts, enqueueMessages } = require('./lib/tasks');
 
 const { eventFactory } = require('./lib/event-factory');
 
@@ -21,11 +24,13 @@ const returnsInvite = async (request, isPreview = true) => {
   state = reducer(state, setReturnFilter(filter));
 
   // Fetch returns
-  state = await fetchReturns(state);
+  const returns = await fetchReturns(state);
+  state = reducer(state, setReturns(returns));
 
   // Fetch returns contacts & de-duplicate
-  state = await fetchReturnsContacts(state);
-  state = dedupeContacts(state);
+  const contacts = await fetchReturnsContacts(state);
+  state = reducer(state, setContacts(contacts));
+  state = reducer(state, dedupeContacts());
 
   const ref = generateReference(state.config.prefix);
   state = reducer(state, createEvent(ref));
@@ -37,8 +42,7 @@ const returnsInvite = async (request, isPreview = true) => {
     await persistEvent(ev);
   }
 
-  // Create messages and queue
-  state = createMessages(state);
+  state = reducer(state, createMessages());
 
   if (!isPreview) {
     await enqueueMessages(state);

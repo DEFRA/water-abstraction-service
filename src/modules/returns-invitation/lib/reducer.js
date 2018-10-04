@@ -1,7 +1,11 @@
 const {
   INIT, SET_RETURN_FILTER, SET_RETURNS, ADD_CONTACT, SET_CONTACTS, CREATE_EVENT,
-  SET_MESSAGES, SET_NOTIFY_TEMPLATE, SET_PERSONALISATION
+  SET_MESSAGES, SET_NOTIFY_TEMPLATE, SET_PERSONALISATION, DEDUPE_CONTACTS,
+  CREATE_MESSAGES
 } = require('./action-types');
+
+const { dedupe, getContactId } = require('./de-duplicate');
+const { messageFactory } = require('./message-factory');
 
 const setReturnFilter = (state, action) => {
   return {
@@ -70,6 +74,25 @@ const setPersonalisation = (state, action) => {
   };
 };
 
+const dedupeContacts = (state) => {
+  return {
+    ...state,
+    contacts: dedupe(state.contacts, getContactId)
+  };
+};
+
+const createMessages = (state) => {
+  const messages = state.contacts.map(row => {
+    const { contact, data } = row;
+
+    return messageFactory(state, contact, data);
+  });
+  return {
+    ...state,
+    messages
+  };
+};
+
 const reducer = (state, action) => {
   switch (action.type) {
     case INIT:
@@ -87,6 +110,9 @@ const reducer = (state, action) => {
     case SET_CONTACTS:
       return setContacts(state, action);
 
+    case DEDUPE_CONTACTS:
+      return dedupeContacts(state);
+
     case CREATE_EVENT:
       return createEvent(state, action);
 
@@ -98,6 +124,9 @@ const reducer = (state, action) => {
 
     case SET_PERSONALISATION:
       return setPersonalisation(state, action);
+
+    case CREATE_MESSAGES:
+      return createMessages(state, action);
 
     default:
       return state;
