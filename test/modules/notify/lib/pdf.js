@@ -2,6 +2,7 @@ require('dotenv').config();
 const Lab = require('lab');
 const lab = Lab.script();
 const Code = require('code');
+
 const sinon = require('sinon');
 const { createPdf } = require('../../../../src/modules/notify/lib/pdf.js');
 
