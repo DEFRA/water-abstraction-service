@@ -222,21 +222,21 @@ const getFormatStartDate = (format) => {
  * @return {String} date YYYY-MM-DD or null
  */
 const getFormatEndDate = (format) => {
-  const effEndDate = moment(format.EFF_END_DATE, 'DD/MM/YYYY');
-  const tlEndDate = moment(format.TIMELTD_END_DATE, 'DD/MM/YYYY');
+  const versionEndDate = moment(format.EFF_END_DATE, 'DD/MM/YYYY');
+  const timeLimitedEndDate = moment(format.TIMELTD_END_DATE, 'DD/MM/YYYY');
 
-  const effEndValid = effEndDate.isValid();
-  const tlEndValid = tlEndDate.isValid();
-  const tlBefore = tlEndDate.isBefore(effEndDate);
+  const versionEndValid = versionEndDate.isValid();
+  const timeLimitedValid = timeLimitedEndDate.isValid();
+  const timeLimitedBefore = timeLimitedEndDate.isBefore(versionEndDate);
 
   // Valid end date and invalid time-limited date
-  if (tlEndValid) {
-    if (tlBefore || !effEndValid) {
-      return tlEndDate.format('YYYY-MM-DD');
+  if (timeLimitedValid) {
+    if (timeLimitedBefore || !versionEndValid) {
+      return timeLimitedEndDate.format('YYYY-MM-DD');
     }
   }
-  if (effEndValid) {
-    return effEndDate.format('YYYY-MM-DD');
+  if (versionEndValid) {
+    return versionEndDate.format('YYYY-MM-DD');
   }
   return null;
 };
