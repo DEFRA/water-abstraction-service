@@ -4,13 +4,12 @@
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "scripts": {
-    "heroku-prebuild": "npm install --only=dev",
-    "heroku-postbuild": "gulp clean && gulp copy-govuk-files && gulp install-govuk-files && gulp copy-static-assets && gulp sass",
-    "test": "./node_modules/lab/bin/lab -t 55 -m 0 --coverage-path ./src/ -r lcov -o lcov.info -r console -o stdout",
-    "test:only": "./node_modules/lab/bin/lab",
-    "test-cov-html": "lab -r html -o coverage.html",
-    "migrate": "node scripts/create-schema && node node_modules/db-migrate/bin/db-migrate up --verbose && node scripts/migrate-task-config",
-    "lint": "./node_modules/.bin/eslint ./src/**/*.js --fix"
+    "test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test lab",
+    "test:travis": "lab -t 55 -m 0 --coverage-path ./src/ -r lcov -o lcov.info -r console -o stdout",
+    "codecov": "codecov",
+    "migrate": "node scripts/create-schema && db-migrate up --verbose && node scripts/migrate-task-config",
+    "migrate:local-test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test node scripts/create-schema && DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test db-migrate up --verbose && DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test node scripts/migrate-task-config",
+    "lint": "eslint ./src/**/*.js"
   },
   "engines": {
     "node": ">=8.0"

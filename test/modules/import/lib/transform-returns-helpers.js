@@ -13,7 +13,8 @@ const {
   getFormatStartDate,
   getFormatEndDate,
   getFormatCycles,
-  formatReturnMetadata
+  formatReturnMetadata,
+  getDueDate
 } = require('../../../../src/modules/import/lib/transform-returns-helpers');
 
 lab.experiment('Test returns data transformation helpers', () => {
@@ -444,6 +445,15 @@ lab.experiment('formatReturnMetadata', () => {
   lab.test('the purposes contain the alias', async () => {
     expect(metadata.purposes[0].alias).to.equal('Water alias');
     expect(metadata.purposes[1].alias).to.equal('Agri alias');
+  });
+});
+
+lab.experiment('getDueDate', () => {
+  lab.test('it returns a date equal to the last day of the next month', async () => {
+    expect(getDueDate('2018-01-01')).to.equal('2018-02-28');
+    expect(getDueDate('2018-02-11')).to.equal('2018-03-31');
+    expect(getDueDate('2018-03-31')).to.equal('2018-04-30');
+    expect(getDueDate('2018-12-25')).to.equal('2019-01-31');
   });
 });
 
