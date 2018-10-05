@@ -34,7 +34,7 @@ const getFilter = (licenceNumber, returnIds) => {
  * @param {Array} returnIds - a list of valid return IDs for the supplied licence number
  * @return {Promise} resolves when returns updated
  */
-const markInvalidCycles = async (licenceNumber, returnIds) => {
+const deleteInvalidCycles = async (licenceNumber, returnIds) => {
   const filter = getFilter(licenceNumber, returnIds);
   const rows = await findAllPages(returns, filter, {}, ['return_id', 'metadata']);
   const tasks = rows.map(row => {
@@ -46,5 +46,6 @@ const markInvalidCycles = async (licenceNumber, returnIds) => {
 };
 
 module.exports = {
-  markInvalidCycles
+  deleteInvalidCycles,
+  getFilter
 };

@@ -9,7 +9,7 @@ const { buildReturnsPacket } = require('./transform-returns');
 const { getLicenceJson, buildPermitRepoPacket } = require('./transform-permit');
 const { setImportStatus } = require('./lib/import-log.js');
 const { importTableExists } = require('./lib/nald-queries');
-const { markInvalidCycles } = require('./lib/mark-invalid-cycles');
+const { deleteInvalidCycles } = require('./lib/delete-invalid-cycles');
 
 const repository = require('./repositories');
 
@@ -52,7 +52,7 @@ const load = async (licenceNumber) => {
 
     // Clean up invalid cycles
     const returnIds = returns.map(row => row.return_id);
-    await markInvalidCycles(licenceNumber, returnIds);
+    await deleteInvalidCycles(licenceNumber, returnIds);
 
     await setImportStatus(licenceNumber, 'OK');
     console.log(`Import: complete for ${licenceNumber}`);
