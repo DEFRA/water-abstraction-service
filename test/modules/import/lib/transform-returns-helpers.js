@@ -9,7 +9,10 @@ const {
   getReturnCycles,
   getPeriodStart,
   addDate,
-  getStatus
+  getStatus,
+  getFormatStartDate,
+  getFormatEndDate,
+  getFormatCycles
 } = require('../../../../src/modules/import/lib/transform-returns-helpers');
 
 lab.experiment('Test returns data transformation helpers', () => {
@@ -255,6 +258,156 @@ lab.experiment('Test returns data transformation helpers', () => {
   });
   lab.test('getStatus should return due if no received date set in NALD', async () => {
     expect(getStatus(null)).to.equal('due');
+  });
+});
+
+lab.experiment('Test getFormatStartDate', () => {
+  lab.test('It should return version start date when time limited date is null', async () => {
+    const format = {
+      EFF_ST_DATE: '03/05/2017',
+      TIMELTD_ST_DATE: 'null'
+    };
+    expect(getFormatStartDate(format)).to.equal('2017-05-03');
+  });
+
+  lab.test('It should return version start date if after time limited start date', async () => {
+    const format = {
+      EFF_ST_DATE: '03/05/2017',
+      TIMELTD_ST_DATE: '01/05/2016'
+    };
+    expect(getFormatStartDate(format)).to.equal('2017-05-03');
+  });
+
+  lab.test('It should return time limited start date if after version start date', async () => {
+    const format = {
+      EFF_ST_DATE: '03/05/2017',
+      TIMELTD_ST_DATE: '04/12/2017'
+    };
+    expect(getFormatStartDate(format)).to.equal('2017-12-04');
+  });
+});
+
+lab.experiment('Test getFormatEndDate', () => {
+  lab.test('It should return null when both dates are null', async () => {
+    const format = {
+      EFF_END_DATE: 'null',
+      TIMELTD_END_DATE: 'null'
+    };
+    expect(getFormatEndDate(format)).to.equal(null);
+  });
+
+  lab.test('It should return effective end date if time limited date is null', async () => {
+    const format = {
+      EFF_END_DATE: '22/02/2014',
+      TIMELTD_END_DATE: 'null'
+    };
+    expect(getFormatEndDate(format)).to.equal('2014-02-22');
+  });
+
+  lab.test('It should return effective end date if time limited date is after effective end date', async () => {
+    const format = {
+      EFF_END_DATE: '22/02/2014',
+      TIMELTD_END_DATE: '23/02/2014'
+    };
+    expect(getFormatEndDate(format)).to.equal('2014-02-22');
+  });
+
+  lab.test('It should return time limited end date if effective end date is null', async () => {
+    const format = {
+      EFF_END_DATE: 'null',
+      TIMELTD_END_DATE: '23/02/2014'
+    };
+    expect(getFormatEndDate(format)).to.equal('2014-02-23');
+  });
+  lab.test('It should return time limited end date if before effective end date', async () => {
+    const format = {
+      EFF_END_DATE: '25/04/2015',
+      TIMELTD_END_DATE: '23/02/2014'
+    };
+    expect(getFormatEndDate(format)).to.equal('2014-02-23');
+  });
+});
+
+lab.experiment('Test getFormatCycles', () => {
+  lab.test('It should calculate summer cycle', async () => {
+    const format = {
+      FORM_PRODN_MONTH: '80',
+      EFF_ST_DATE: '23/05/2016',
+      TIMELTD_ST_DATE: 'null',
+      EFF_END_DATE: '30/03/2018',
+      TIMELTD_END_DATE: 'null'
+    };
+    const cycles = getFormatCycles(format, '2014-04-01');
+
+    expect(cycles).to.equal([ { startDate: '2016-05-23',
+      endDate: '2016-10-31',
+      isCurrent: true },
+    { startDate: '2016-11-01',
+      endDate: '2017-10-31',
+      isCurrent: true },
+    { startDate: '2017-11-01',
+      endDate: '2018-03-30',
+      isCurrent: true } ]);
+  });
+
+  lab.test('It should calculate winter cycle', async () => {
+    const format = {
+      FORM_PRODN_MONTH: '66',
+      EFF_ST_DATE: '23/05/2016',
+      TIMELTD_ST_DATE: 'null',
+      EFF_END_DATE: '30/03/2018',
+      TIMELTD_END_DATE: 'null'
+    };
+    const cycles = getFormatCycles(format, '2014-04-01');
+
+    expect(cycles).to.equal([ { startDate: '2016-05-23',
+      endDate: '2017-03-31',
+      isCurrent: true },
+    { startDate: '2017-04-01',
+      endDate: '2018-03-30',
+      isCurrent: true } ]);
+  });
+
+  lab.test('It should split cycles on current licence version start date', async () => {
+    const format = {
+      FORM_PRODN_MONTH: '66',
+      EFF_ST_DATE: '23/05/2016',
+      TIMELTD_ST_DATE: 'null',
+      EFF_END_DATE: '30/03/2018',
+      TIMELTD_END_DATE: 'null'
+    };
+    const cycles = getFormatCycles(format, '2017-06-01');
+
+    expect(cycles).to.equal([ { startDate: '2016-05-23',
+      endDate: '2017-03-31',
+      isCurrent: false },
+    { startDate: '2017-04-01',
+      endDate: '2017-05-31',
+      isCurrent: false },
+    { startDate: '2017-06-01',
+      endDate: '2018-03-30',
+      isCurrent: true } ]);
+  });
+
+  lab.test('It should observe time limited start/end dates for summer cycle', async () => {
+    const format = {
+      FORM_PRODN_MONTH: '80',
+      EFF_ST_DATE: '23/05/2016',
+      TIMELTD_ST_DATE: '25/05/2016',
+      EFF_END_DATE: '30/03/2018',
+      TIMELTD_END_DATE: '28/03/2018'
+    };
+    const cycles = getFormatCycles(format, '2014-04-01');
+
+    expect(cycles).to.equal([ { startDate: '2016-05-25',
+      endDate: '2016-10-31',
+      isCurrent: true },
+    { startDate: '2016-11-01',
+      endDate: '2017-10-31',
+      isCurrent: true },
+    { startDate: '2017-11-01',
+      endDate: '2018-03-28',
+      isCurrent: true } ]);
   });
 });
 

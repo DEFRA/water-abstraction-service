@@ -200,6 +200,48 @@ const getReturnCycles = (startDate, endDate, splitDate, isSummer = false) => {
 };
 
 /**
+ * Given format/return version data, gets the start and end dates of
+ * this format
+ * @param {Object} format
+ * @return {String} date YYYY-MM-DD
+ */
+const getFormatStartDate = (format) => {
+  const versionStartDate = moment(format.EFF_ST_DATE, 'DD/MM/YYYY');
+  const timeLimitedStartDate = moment(format.TIMELTD_ST_DATE, 'DD/MM/YYYY');
+
+  if (timeLimitedStartDate.isValid() && timeLimitedStartDate.isAfter(versionStartDate)) {
+    return timeLimitedStartDate.format('YYYY-MM-DD');
+  }
+  return versionStartDate.format('YYYY-MM-DD');
+};
+
+/**
+ * Given format/return version data, gets the start and end dates of
+ * this format
+ * @param {Object} format
+ * @return {String} date YYYY-MM-DD or null
+ */
+const getFormatEndDate = (format) => {
+  const versionEndDate = moment(format.EFF_END_DATE, 'DD/MM/YYYY');
+  const timeLimitedEndDate = moment(format.TIMELTD_END_DATE, 'DD/MM/YYYY');
+
+  const versionEndValid = versionEndDate.isValid();
+  const timeLimitedValid = timeLimitedEndDate.isValid();
+  const timeLimitedBefore = timeLimitedEndDate.isBefore(versionEndDate);
+
+  // Valid end date and invalid time-limited date
+  if (timeLimitedValid) {
+    if (timeLimitedBefore || !versionEndValid) {
+      return timeLimitedEndDate.format('YYYY-MM-DD');
+    }
+  }
+  if (versionEndValid) {
+    return versionEndDate.format('YYYY-MM-DD');
+  }
+  return null;
+};
+
+/**
  * Gets cycles for a given format.  If the format has no effective end date,
  * then one is created at the end of the following year.  These will be filtered
  * out later by checking if form logs exist for the cycles calculated
@@ -208,21 +250,23 @@ const getReturnCycles = (startDate, endDate, splitDate, isSummer = false) => {
  */
 const getFormatCycles = (format, licenceEffectiveStartDate) => {
   const {
-    FORM_PRODN_MONTH: productionMonth,
-    EFF_END_DATE: effectiveEndDate,
-    EFF_ST_DATE: effectiveStartDate
+    FORM_PRODN_MONTH: productionMonth
   } = format;
 
+  // Get summer cycle flag
   const { isSummer } = mapProductionMonth(productionMonth);
 
-  // Start date of first return cycle
-  const effStart = moment(effectiveStartDate, 'DD/MM/YYYY').format('YYYY-MM-DD');
+  // Get start/end date for format, taking into account version dates and
+  // time-limited dates
+  const startDate = getFormatStartDate(format);
+  let endDate = getFormatEndDate(format);
 
-  // // If no end date, choose a date in the future
-  const futureDate = moment(getPeriodStart(moment().add(1, 'years'))).subtract(1, 'day').format('YYYY-MM-DD');
-  const endDate = effectiveEndDate === 'null' ? futureDate : moment(effectiveEndDate, 'DD/MM/YYYY').format('YYYY-MM-DD');
+  // If no end date, set date in future
+  if (!endDate) {
+    endDate = moment(getPeriodStart(moment().add(1, 'years'), isSummer)).subtract(1, 'day').format('YYYY-MM-DD');
+  }
 
-  return getReturnCycles(effStart, endDate, licenceEffectiveStartDate, isSummer);
+  return getReturnCycles(startDate, endDate, licenceEffectiveStartDate, isSummer);
 };
 
 /*
@@ -332,5 +376,7 @@ module.exports = {
   mapUsability,
   getPeriodStart,
   addDate,
-  getStatus
+  getStatus,
+  getFormatStartDate,
+  getFormatEndDate
 };
