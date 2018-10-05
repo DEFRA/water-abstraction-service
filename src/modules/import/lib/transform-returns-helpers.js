@@ -59,7 +59,8 @@ const formatReturnMetadata = (format) => {
       tertiary: {
         code: purpose.APUR_APUS_CODE,
         description: purpose.tertiary_purpose
-      }
+      },
+      alias: purpose.PURP_ALIAS
     })),
     points: format.points.map(point => formatAbstractionPoint(convertNullStrings(point))),
     nald: formatReturnNaldMetadata(format)

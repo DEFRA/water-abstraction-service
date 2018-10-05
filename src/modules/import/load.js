@@ -46,7 +46,7 @@ const load = async (licenceNumber) => {
     console.log(`Import: returns for ${licenceNumber}`);
     const currentVersionStart = get(licenceData, 'data.current_version.licence.EFF_ST_DATE');
 
-    const { returns, versions, lines } = await buildReturnsPacket(licenceNumber, currentVersionStart);
+    const { returns } = await buildReturnsPacket(licenceNumber, currentVersionStart);
     await repository.return.persist(addTimestamp(returns));
 
     await setImportStatus(licenceNumber, 'OK');
