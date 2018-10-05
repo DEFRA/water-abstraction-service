@@ -3,7 +3,8 @@ const { experiment, test } = exports.lab = Lab.script();
 const { expect } = require('code');
 
 const {
-  getFilter
+  getFilter,
+  processReturnsAsync
 } = require('../../../../src/modules/import/lib/delete-invalid-cycles');
 
 experiment('getFilter', () => {
@@ -25,5 +26,22 @@ experiment('getFilter', () => {
       licence_type: 'abstraction',
       licence_ref: '01/234/567',
       source: 'NALD' });
+  });
+});
+
+experiment('processReturnsAsync', () => {
+  const returns = [{
+    return_id: 123
+  }, {
+    return_id: 456
+  }];
+
+  const func = async (returnId) => {
+    return returnId + 1;
+  };
+
+  test('returns a filter object when there are valid return IDs', async () => {
+    const result = await processReturnsAsync(returns, func);
+    expect(result).to.equal([ 124, 457 ]);
   });
 });

@@ -28,6 +28,22 @@ const getFilter = (licenceNumber, returnIds) => {
   return filter;
 };
 
+const getReturnIds = (returns) => returns.map(row => row.return_id);
+
+/**
+ * Given a row of return data, and an async predicate,
+ * extracts the return_ids and passes each through the predicate,
+ * resolving when done
+ * @param {Array} returns
+ * @param {function} func
+ * @return {Promise} resolves when complete
+ */
+const processReturnsAsync = (returns, func) => {
+  const returnIds = getReturnIds(returns);
+  const tasks = returnIds.map(func);
+  return Promise.all(tasks);
+};
+
 /**
  * Marks returns that weren't located as part of the import as deleted
  * @param {String} licenceNumber
@@ -37,15 +53,11 @@ const getFilter = (licenceNumber, returnIds) => {
 const deleteInvalidCycles = async (licenceNumber, returnIds) => {
   const filter = getFilter(licenceNumber, returnIds);
   const rows = await findAllPages(returns, filter, {}, ['return_id', 'metadata']);
-  const tasks = rows.map(row => {
-    console.log(`Deleting invalid return ${row.return_id}`);
-    return returns.delete(row.return_id);
-  });
-
-  return Promise.all(tasks);
+  return processReturnsAsync(rows, returns.delete);
 };
 
 module.exports = {
   deleteInvalidCycles,
+  processReturnsAsync,
   getFilter
 };
