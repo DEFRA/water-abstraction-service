@@ -44,6 +44,8 @@ const processReturnsAsync = (returns, func) => {
   return Promise.all(tasks);
 };
 
+const deleteReturn = (returnId) => returns.delete(returnId);
+
 /**
  * Marks returns that weren't located as part of the import as deleted
  * @param {String} licenceNumber
@@ -53,7 +55,7 @@ const processReturnsAsync = (returns, func) => {
 const deleteInvalidCycles = async (licenceNumber, returnIds) => {
   const filter = getFilter(licenceNumber, returnIds);
   const rows = await findAllPages(returns, filter, {}, ['return_id', 'metadata']);
-  return processReturnsAsync(rows, returns.delete);
+  return processReturnsAsync(rows, deleteReturn);
 };
 
 module.exports = {
