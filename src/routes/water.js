@@ -12,7 +12,8 @@ const importedLicencesRoutes = require('../controllers/imported_licences');
 const taskRunner = require('../controllers/taskRunner');
 const taskConfigRoutes = require('../controllers/task-config');
 const gaugingStationRoutes = require('../controllers/gauging-stations');
-
+const picklistRoutes = require('../controllers/picklists');
+const picklistItemRoutes = require('../controllers/picklist-items');
 const moduleRoutes = require('../modules/routes');
 
 module.exports = [
@@ -26,6 +27,8 @@ module.exports = [
   ...taskConfigRoutes,
   ...moduleRoutes,
   ...gaugingStationRoutes,
+  ...picklistRoutes,
+  ...picklistItemRoutes,
   {
     method: 'GET',
     path: '/status',
