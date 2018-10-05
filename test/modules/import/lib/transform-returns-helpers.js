@@ -12,7 +12,8 @@ const {
   getStatus,
   getFormatStartDate,
   getFormatEndDate,
-  getFormatCycles
+  getFormatCycles,
+  formatReturnMetadata
 } = require('../../../../src/modules/import/lib/transform-returns-helpers');
 
 lab.experiment('Test returns data transformation helpers', () => {
@@ -55,7 +56,7 @@ lab.experiment('Test returns data transformation helpers', () => {
     expect(mapReceivedDate(logs)).to.equal(null);
   });
 
-  lab.test('Test mapReceivedDate with valiid dates', async () => {
+  lab.test('Test mapReceivedDate with valid dates', async () => {
     const logs = [{ RECD_DATE: '25/12/2017' }, { RECD_DATE: '04/01/2017' }];
 
     expect(mapReceivedDate(logs)).to.equal('2017-12-25');
@@ -408,6 +409,41 @@ lab.experiment('Test getFormatCycles', () => {
     { startDate: '2017-11-01',
       endDate: '2018-03-28',
       isCurrent: true } ]);
+  });
+});
+
+lab.experiment('formatReturnMetadata', () => {
+  let metadata;
+
+  lab.beforeEach(async () => {
+    metadata = formatReturnMetadata({
+      purposes: [
+        {
+          APUR_APPR_CODE: 'W',
+          APUR_APSE_CODE: 'WAT',
+          APUR_APUS_CODE: '180',
+          PURP_ALIAS: 'Water alias',
+          primary_purpose: 'primary',
+          secondary_purpose: 'secondary',
+          tertiary_purpose: 'tertiary'
+        },
+        {
+          APUR_APPR_CODE: 'A',
+          APUR_APSE_CODE: 'AGR',
+          APUR_APUS_CODE: '400',
+          PURP_ALIAS: 'Agri alias',
+          primary_purpose: 'primary',
+          secondary_purpose: 'secondary',
+          tertiary_purpose: 'tertiary'
+        }
+      ],
+      points: []
+    });
+  });
+
+  lab.test('the purposes contain the alias', async () => {
+    expect(metadata.purposes[0].alias).to.equal('Water alias');
+    expect(metadata.purposes[1].alias).to.equal('Agri alias');
   });
 });
 
