@@ -1,5 +1,5 @@
 const Lab = require('lab');
-const lab = exports.lab = Lab.script();
+const { beforeEach, experiment, test } = exports.lab = Lab.script();
 const { expect } = require('code');
 
 const {
@@ -17,8 +17,8 @@ const {
   getDueDate
 } = require('../../../../src/modules/import/lib/transform-returns-helpers');
 
-lab.experiment('Test returns data transformation helpers', () => {
-  lab.test('Test convert null strings on shallow object', async () => {
+experiment('Test returns data transformation helpers', () => {
+  test('Test convert null strings on shallow object', async () => {
     const obj = {
       name: 'Test',
       date: 'null',
@@ -36,7 +36,7 @@ lab.experiment('Test returns data transformation helpers', () => {
     });
   });
 
-  lab.test('Test mapping of NALD returns periods codes', async () => {
+  test('Test mapping of NALD returns periods codes', async () => {
     expect(mapPeriod('D')).to.equal('day');
     expect(mapPeriod('W')).to.equal('week');
     expect(mapPeriod('M')).to.equal('month');
@@ -45,69 +45,69 @@ lab.experiment('Test returns data transformation helpers', () => {
     expect(mapPeriod('x')).to.equal(undefined);
   });
 
-  lab.test('Test mapReceivedDate with no logs', async () => {
+  test('Test mapReceivedDate with no logs', async () => {
     const logs = [];
 
     expect(mapReceivedDate(logs)).to.equal(null);
   });
 
-  lab.test('Test mapReceivedDate with a null string value', async () => {
+  test('Test mapReceivedDate with a null string value', async () => {
     const logs = [{ RECD_DATE: '01/01/2017' }, { RECD_DATE: 'null' }];
 
     expect(mapReceivedDate(logs)).to.equal(null);
   });
 
-  lab.test('Test mapReceivedDate with valid dates', async () => {
+  test('Test mapReceivedDate with valid dates', async () => {
     const logs = [{ RECD_DATE: '25/12/2017' }, { RECD_DATE: '04/01/2017' }];
 
     expect(mapReceivedDate(logs)).to.equal('2017-12-25');
   });
 
   // ---------- getNextPeriodStart - financial
-  lab.test('getNextPeriodStart for financial year return in same year', async () => {
+  test('getNextPeriodStart for financial year return in same year', async () => {
     expect(getPeriodStart('2018-05-01')).to.equal('2018-04-01');
   });
-  lab.test('getNextPeriodStart for financial year return in different year', async () => {
+  test('getNextPeriodStart for financial year return in different year', async () => {
     expect(getPeriodStart('2018-02-01')).to.equal('2017-04-01');
   });
-  lab.test('getNextPeriodStart for financial year return on period start date', async () => {
+  test('getNextPeriodStart for financial year return on period start date', async () => {
     expect(getPeriodStart('2018-04-01')).to.equal('2018-04-01');
   });
-  lab.test('getNextPeriodStart for financial year return on period end date', async () => {
+  test('getNextPeriodStart for financial year return on period end date', async () => {
     expect(getPeriodStart('2018-03-31')).to.equal('2017-04-01');
   });
 
   // ---------- getNextPeriodStart - summer
-  lab.test('getNextPeriodStart for summer year return in same year', async () => {
+  test('getNextPeriodStart for summer year return in same year', async () => {
     expect(getPeriodStart('2018-12-01', true)).to.equal('2018-11-01');
   });
-  lab.test('getNextPeriodStart for summer year return in different year', async () => {
+  test('getNextPeriodStart for summer year return in different year', async () => {
     expect(getPeriodStart('2018-02-01', true)).to.equal('2017-11-01');
   });
-  lab.test('getNextPeriodStart for summer year return on period start date', async () => {
+  test('getNextPeriodStart for summer year return on period start date', async () => {
     expect(getPeriodStart('2018-11-01', true)).to.equal('2018-11-01');
   });
-  lab.test('getNextPeriodStart for summer year return on period end date', async () => {
+  test('getNextPeriodStart for summer year return on period end date', async () => {
     expect(getPeriodStart('2018-10-31', true)).to.equal('2017-11-01');
   });
 
   // ---------- addDate
-  lab.test('addDate - add a date if within range', async () => {
+  test('addDate - add a date if within range', async () => {
     expect(addDate([], '2018-12-01', '2018-01-01', '2018-12-31')).to.equal(['2018-12-01']);
   });
-  lab.test('addDate - dont add a date if before start date', async () => {
+  test('addDate - dont add a date if before start date', async () => {
     expect(addDate([], '2017-12-01', '2018-01-01', '2018-12-31')).to.equal([]);
   });
-  lab.test('addDate - dont add a date if after end date', async () => {
+  test('addDate - dont add a date if after end date', async () => {
     expect(addDate([], '2018-12-05', '2018-01-01', '2018-11-31')).to.equal([]);
   });
-  lab.test('addDate - dont add a date if on start date', async () => {
+  test('addDate - dont add a date if on start date', async () => {
     expect(addDate([], '2017-12-01', '2017-12-01', '2018-12-31')).to.equal([]);
   });
-  lab.test('addDate - dont add a date if on end date', async () => {
+  test('addDate - dont add a date if on end date', async () => {
     expect(addDate([], '2018-11-31', '2018-01-01', '2018-11-31')).to.equal([]);
   });
-  lab.test('addDate - dont add duplicate dates', async () => {
+  test('addDate - dont add duplicate dates', async () => {
     let dates = [];
     dates = addDate(dates, '2018-12-01', '2018-01-01', '2018-12-31');
     dates = addDate(dates, '2018-12-01', '2018-01-01', '2018-12-31');
@@ -115,7 +115,7 @@ lab.experiment('Test returns data transformation helpers', () => {
   });
 
   // ---------- getReturnCycles - financial year
-  lab.test('getReturnCycles - single financial year, current version', async () => {
+  test('getReturnCycles - single financial year, current version', async () => {
     const cycles = getReturnCycles('2014-04-01', '2015-03-31', '2014-04-01', false);
     expect(cycles).to.equal([{
       startDate: '2014-04-01',
@@ -123,7 +123,7 @@ lab.experiment('Test returns data transformation helpers', () => {
       isCurrent: true
     }]);
   });
-  lab.test('getReturnCycles - single financial year, expired version', async () => {
+  test('getReturnCycles - single financial year, expired version', async () => {
     const cycles = getReturnCycles('2014-04-01', '2015-03-31', '2016-04-01', false);
     expect(cycles).to.equal([{
       startDate: '2014-04-01',
@@ -131,7 +131,7 @@ lab.experiment('Test returns data transformation helpers', () => {
       isCurrent: false
     }]);
   });
-  lab.test('getReturnCycles - part financial years, current version', async () => {
+  test('getReturnCycles - part financial years, current version', async () => {
     const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2010-04-01', false);
     expect(cycles).to.equal([
       { startDate: '2014-06-01',
@@ -142,7 +142,7 @@ lab.experiment('Test returns data transformation helpers', () => {
         isCurrent: true } ]);
   });
 
-  lab.test('getReturnCycles - part financial years, expired version', async () => {
+  test('getReturnCycles - part financial years, expired version', async () => {
     const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2018-04-01', false);
     expect(cycles).to.equal([
       { startDate: '2014-06-01',
@@ -153,7 +153,7 @@ lab.experiment('Test returns data transformation helpers', () => {
         isCurrent: false } ]);
   });
 
-  lab.test('getReturnCycles - part financial years, expiry on period start', async () => {
+  test('getReturnCycles - part financial years, expiry on period start', async () => {
     const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2015-04-01', false);
     expect(cycles).to.equal([
       { startDate: '2014-06-01',
@@ -164,7 +164,7 @@ lab.experiment('Test returns data transformation helpers', () => {
         isCurrent: true } ]);
   });
 
-  lab.test('getReturnCycles - part financial years, expiry part-way through period', async () => {
+  test('getReturnCycles - part financial years, expiry part-way through period', async () => {
     const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2015-06-01', false);
     expect(cycles).to.equal([
       { startDate: '2014-06-01',
@@ -179,7 +179,7 @@ lab.experiment('Test returns data transformation helpers', () => {
   });
 
   // ---------- getReturnCycles - summer year
-  lab.test('getReturnCycles - single summer year, current version', async () => {
+  test('getReturnCycles - single summer year, current version', async () => {
     const cycles = getReturnCycles('2014-11-01', '2015-10-31', '2014-11-01', true);
     expect(cycles).to.equal([{
       startDate: '2014-11-01',
@@ -187,7 +187,7 @@ lab.experiment('Test returns data transformation helpers', () => {
       isCurrent: true
     }]);
   });
-  lab.test('getReturnCycles - single summer year, expired version', async () => {
+  test('getReturnCycles - single summer year, expired version', async () => {
     const cycles = getReturnCycles('2014-11-01', '2015-10-31', '2016-04-01', true);
     expect(cycles).to.equal([{
       startDate: '2014-11-01',
@@ -195,7 +195,7 @@ lab.experiment('Test returns data transformation helpers', () => {
       isCurrent: false
     }]);
   });
-  lab.test('getReturnCycles - part summer years, current version', async () => {
+  test('getReturnCycles - part summer years, current version', async () => {
     const cycles = getReturnCycles('2014-06-01', '2015-12-01', '2010-04-01', true);
     expect(cycles).to.equal([
       { startDate: '2014-06-01',
@@ -209,7 +209,7 @@ lab.experiment('Test returns data transformation helpers', () => {
         isCurrent: true } ]);
   });
 
-  lab.test('getReturnCycles - part summer years, expired version', async () => {
+  test('getReturnCycles - part summer years, expired version', async () => {
     const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2018-04-01', true);
 
     expect(cycles).to.equal([
@@ -221,7 +221,7 @@ lab.experiment('Test returns data transformation helpers', () => {
         isCurrent: false } ]);
   });
 
-  lab.test('getReturnCycles - part summer years, expiry on period start', async () => {
+  test('getReturnCycles - part summer years, expiry on period start', async () => {
     const cycles = getReturnCycles('2014-06-01', '2016-07-01', '2015-11-01', true);
 
     expect(cycles).to.equal([
@@ -236,7 +236,7 @@ lab.experiment('Test returns data transformation helpers', () => {
         isCurrent: true } ]);
   });
 
-  lab.test('getReturnCycles - part summer years, expiry part-way through period', async () => {
+  test('getReturnCycles - part summer years, expiry part-way through period', async () => {
     const cycles = getReturnCycles('2014-06-01', '2016-07-01', '2015-06-01', true);
 
     expect(cycles).to.equal([
@@ -255,16 +255,16 @@ lab.experiment('Test returns data transformation helpers', () => {
   });
 
   // ------------- getStatus
-  lab.test('getStatus should return completed if received date set in NALD', async () => {
+  test('getStatus should return completed if received date set in NALD', async () => {
     expect(getStatus('2018-03-31')).to.equal('completed');
   });
-  lab.test('getStatus should return due if no received date set in NALD', async () => {
+  test('getStatus should return due if no received date set in NALD', async () => {
     expect(getStatus(null)).to.equal('due');
   });
 });
 
-lab.experiment('Test getFormatStartDate', () => {
-  lab.test('It should return version start date when time limited date is null', async () => {
+experiment('Test getFormatStartDate', () => {
+  test('It should return version start date when time limited date is null', async () => {
     const format = {
       EFF_ST_DATE: '03/05/2017',
       TIMELTD_ST_DATE: 'null'
@@ -272,7 +272,7 @@ lab.experiment('Test getFormatStartDate', () => {
     expect(getFormatStartDate(format)).to.equal('2017-05-03');
   });
 
-  lab.test('It should return version start date if after time limited start date', async () => {
+  test('It should return version start date if after time limited start date', async () => {
     const format = {
       EFF_ST_DATE: '03/05/2017',
       TIMELTD_ST_DATE: '01/05/2016'
@@ -280,7 +280,7 @@ lab.experiment('Test getFormatStartDate', () => {
     expect(getFormatStartDate(format)).to.equal('2017-05-03');
   });
 
-  lab.test('It should return time limited start date if after version start date', async () => {
+  test('It should return time limited start date if after version start date', async () => {
     const format = {
       EFF_ST_DATE: '03/05/2017',
       TIMELTD_ST_DATE: '04/12/2017'
@@ -289,8 +289,8 @@ lab.experiment('Test getFormatStartDate', () => {
   });
 });
 
-lab.experiment('Test getFormatEndDate', () => {
-  lab.test('It should return null when both dates are null', async () => {
+experiment('Test getFormatEndDate', () => {
+  test('It should return null when both dates are null', async () => {
     const format = {
       EFF_END_DATE: 'null',
       TIMELTD_END_DATE: 'null'
@@ -298,7 +298,7 @@ lab.experiment('Test getFormatEndDate', () => {
     expect(getFormatEndDate(format)).to.equal(null);
   });
 
-  lab.test('It should return effective end date if time limited date is null', async () => {
+  test('It should return effective end date if time limited date is null', async () => {
     const format = {
       EFF_END_DATE: '22/02/2014',
       TIMELTD_END_DATE: 'null'
@@ -306,7 +306,7 @@ lab.experiment('Test getFormatEndDate', () => {
     expect(getFormatEndDate(format)).to.equal('2014-02-22');
   });
 
-  lab.test('It should return effective end date if time limited date is after effective end date', async () => {
+  test('It should return effective end date if time limited date is after effective end date', async () => {
     const format = {
       EFF_END_DATE: '22/02/2014',
       TIMELTD_END_DATE: '23/02/2014'
@@ -314,14 +314,14 @@ lab.experiment('Test getFormatEndDate', () => {
     expect(getFormatEndDate(format)).to.equal('2014-02-22');
   });
 
-  lab.test('It should return time limited end date if effective end date is null', async () => {
+  test('It should return time limited end date if effective end date is null', async () => {
     const format = {
       EFF_END_DATE: 'null',
       TIMELTD_END_DATE: '23/02/2014'
     };
     expect(getFormatEndDate(format)).to.equal('2014-02-23');
   });
-  lab.test('It should return time limited end date if before effective end date', async () => {
+  test('It should return time limited end date if before effective end date', async () => {
     const format = {
       EFF_END_DATE: '25/04/2015',
       TIMELTD_END_DATE: '23/02/2014'
@@ -330,8 +330,8 @@ lab.experiment('Test getFormatEndDate', () => {
   });
 });
 
-lab.experiment('Test getFormatCycles', () => {
-  lab.test('It should calculate summer cycle', async () => {
+experiment('Test getFormatCycles', () => {
+  test('It should calculate summer cycle', async () => {
     const format = {
       FORM_PRODN_MONTH: '80',
       EFF_ST_DATE: '23/05/2016',
@@ -352,7 +352,7 @@ lab.experiment('Test getFormatCycles', () => {
       isCurrent: true } ]);
   });
 
-  lab.test('It should calculate winter cycle', async () => {
+  test('It should calculate winter cycle', async () => {
     const format = {
       FORM_PRODN_MONTH: '66',
       EFF_ST_DATE: '23/05/2016',
@@ -370,7 +370,7 @@ lab.experiment('Test getFormatCycles', () => {
       isCurrent: true } ]);
   });
 
-  lab.test('It should split cycles on current licence version start date', async () => {
+  test('It should split cycles on current licence version start date', async () => {
     const format = {
       FORM_PRODN_MONTH: '66',
       EFF_ST_DATE: '23/05/2016',
@@ -391,7 +391,7 @@ lab.experiment('Test getFormatCycles', () => {
       isCurrent: true } ]);
   });
 
-  lab.test('It should observe time limited start/end dates for summer cycle', async () => {
+  test('It should observe time limited start/end dates for summer cycle', async () => {
     const format = {
       FORM_PRODN_MONTH: '80',
       EFF_ST_DATE: '23/05/2016',
@@ -413,10 +413,10 @@ lab.experiment('Test getFormatCycles', () => {
   });
 });
 
-lab.experiment('formatReturnMetadata', () => {
+experiment('formatReturnMetadata', () => {
   let metadata;
 
-  lab.beforeEach(async () => {
+  beforeEach(async () => {
     metadata = formatReturnMetadata({
       purposes: [
         {
@@ -442,19 +442,15 @@ lab.experiment('formatReturnMetadata', () => {
     });
   });
 
-  lab.test('the purposes contain the alias', async () => {
+  test('the purposes contain the alias', async () => {
     expect(metadata.purposes[0].alias).to.equal('Water alias');
     expect(metadata.purposes[1].alias).to.equal('Agri alias');
   });
 });
 
-lab.experiment('getDueDate', () => {
-  lab.test('it returns a date equal to the last day of the next month', async () => {
-    expect(getDueDate('2018-01-01')).to.equal('2018-02-28');
-    expect(getDueDate('2018-02-11')).to.equal('2018-03-31');
-    expect(getDueDate('2018-03-31')).to.equal('2018-04-30');
-    expect(getDueDate('2018-12-25')).to.equal('2019-01-31');
+experiment('getDueDate', () => {
+  test('returns a date 28 days later', async () => {
+    expect(getDueDate('2018-01-01')).to.equal('2018-01-29');
+    expect(getDueDate('2018-12-10')).to.equal('2019-01-07');
   });
 });
-
-exports.lab = lab;
