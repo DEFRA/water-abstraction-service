@@ -363,7 +363,7 @@ const getStatus = (receivedDate) => {
 
 const getDueDate = endDate => {
   const format = 'YYYY-MM-DD';
-  return moment(endDate, format).add(1, 'month').endOf('month').format(format);
+  return moment(endDate, format).add(28, 'days').format(format);
 };
 
 module.exports = {
