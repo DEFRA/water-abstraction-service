@@ -48,7 +48,8 @@ lab.experiment('Test picklist items endpoint', () => {
       url: endpoint,
       payload: {
         picklist_id: listId,
-        value: 'Test item'
+        value: 'Test item',
+        hidden: true
       },
       headers: {
         Authorization: process.env.JWT_TOKEN
@@ -60,6 +61,29 @@ lab.experiment('Test picklist items endpoint', () => {
 
     const payload = JSON.parse(res.payload);
     itemId = payload.data.picklist_item_id;
+
+    expect(payload.data.hidden).to.equal(true);
+  });
+
+  // Create
+  lab.test('The API should not create a duplicate item within a list, case insensitive', async () => {
+    const request = {
+      method: 'POST',
+      url: endpoint,
+      payload: {
+        picklist_id: listId,
+        value: 'test item',
+        hidden: true
+      },
+      headers: {
+        Authorization: process.env.JWT_TOKEN
+      }
+    };
+
+    const res = await server.inject(request);
+    const payload = JSON.parse(res.payload);
+
+    expect(parseInt(payload.error.code)).to.equal(23505);
   });
 
   // Retrieve

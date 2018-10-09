@@ -17,7 +17,8 @@ const PicklistItemsAPI = new HAPIRestAPI({
     picklist_item_id: Joi.string().guid(),
     picklist_id: Joi.string(),
     value: Joi.string(),
-    id: Joi.string().valid(null)
+    id: Joi.string().allow(null),
+    hidden: Joi.boolean().default(false)
   }
 });
 
