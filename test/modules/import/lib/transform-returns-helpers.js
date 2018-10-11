@@ -416,27 +416,25 @@ experiment('Test getFormatCycles', () => {
 experiment('formatReturnMetadata', () => {
   let metadata;
 
+  const getPurpose = alias => ({
+    APUR_APPR_CODE: 'W',
+    APUR_APSE_CODE: 'WAT',
+    APUR_APUS_CODE: '180',
+    PURP_ALIAS: alias,
+    primary_purpose: 'primary',
+    secondary_purpose: 'secondary',
+    tertiary_purpose: 'tertiary'
+  });
+
   beforeEach(async () => {
     metadata = formatReturnMetadata({
       purposes: [
-        {
-          APUR_APPR_CODE: 'W',
-          APUR_APSE_CODE: 'WAT',
-          APUR_APUS_CODE: '180',
-          PURP_ALIAS: 'Water alias',
-          primary_purpose: 'primary',
-          secondary_purpose: 'secondary',
-          tertiary_purpose: 'tertiary'
-        },
-        {
-          APUR_APPR_CODE: 'A',
-          APUR_APSE_CODE: 'AGR',
-          APUR_APUS_CODE: '400',
-          PURP_ALIAS: 'Agri alias',
-          primary_purpose: 'primary',
-          secondary_purpose: 'secondary',
-          tertiary_purpose: 'tertiary'
-        }
+        getPurpose('Water alias'),
+        getPurpose('Agri alias'),
+        getPurpose('null'),
+        getPurpose('Null'),
+        getPurpose('NULL'),
+        getPurpose(' null ')
       ],
       points: []
     });
@@ -445,6 +443,13 @@ experiment('formatReturnMetadata', () => {
   test('the purposes contain the alias', async () => {
     expect(metadata.purposes[0].alias).to.equal('Water alias');
     expect(metadata.purposes[1].alias).to.equal('Agri alias');
+  });
+
+  test('null aliases are ignored', async () => {
+    expect(metadata.purposes[2].alias).to.be.undefined();
+    expect(metadata.purposes[3].alias).to.be.undefined();
+    expect(metadata.purposes[4].alias).to.be.undefined();
+    expect(metadata.purposes[5].alias).to.be.undefined();
   });
 });
 
