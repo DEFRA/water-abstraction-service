@@ -16,6 +16,7 @@ const messageQueue = require('./src/lib/message-queue');
 const routes = require('./src/routes/water.js');
 const notify = require('./src/modules/notify');
 const returnsNotifications = require('./src/modules/returns-notifications');
+const returnsInvitations = require('./src/modules/returns-invitation');
 const importer = require('./src/modules/import');
 
 // Initialise logger
@@ -60,7 +61,7 @@ const configureMessageQueue = async (server) => {
   notify(messageQueue).registerSubscribers();
   await importer(messageQueue).registerSubscribers();
   await returnsNotifications(messageQueue).registerSubscribers();
-
+  await returnsInvitations(messageQueue).registerSubscribers();
   server.log('info', 'Message queue started');
 };
 
