@@ -39,6 +39,18 @@ const formatReturnNaldMetadata = (format) => {
 };
 
 /**
+ * Returns the trimmed purpose alias if it is not
+ * already empty or equal to 'null'
+ */
+const getPurposeAlias = purpose => {
+  const alias = (purpose.PURP_ALIAS || '').trim();
+
+  if (!['', 'null'].includes(alias.toLowerCase())) {
+    return alias;
+  }
+};
+
+/**
  * Gets metadata object to store in returns table
  * @param {Object} format
  * @return {Object} return metadata
@@ -60,7 +72,7 @@ const formatReturnMetadata = (format) => {
         code: purpose.APUR_APUS_CODE,
         description: purpose.tertiary_purpose
       },
-      alias: purpose.PURP_ALIAS
+      alias: getPurposeAlias(purpose)
     })),
     points: format.points.map(point => formatAbstractionPoint(convertNullStrings(point))),
     nald: formatReturnNaldMetadata(format)
