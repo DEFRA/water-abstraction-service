@@ -13,6 +13,8 @@ const { persist: persistEvent } = require('./lib/connectors/event');
 
 const generateReference = require('../../lib/reference-generator');
 
+const messageQueue = require('../../lib/message-queue');
+
 const returnsInvite = async (request, isPreview = true) => {
   const { filter, personalisation, config } = request.payload;
 
@@ -45,7 +47,7 @@ const returnsInvite = async (request, isPreview = true) => {
   state = reducer(state, createMessages());
 
   if (!isPreview) {
-    await enqueueMessages(state);
+    await messageQueue.publish('notification.enqueue', { state });
   }
 
   // Output
