@@ -2,6 +2,8 @@
  * Create message queue
  * @see {@link https://github.com/timgit/pg-boss/blob/master/docs/usage.md#start}
  */
+const server = require('../../');
+
 const PgBoss = require('pg-boss');
 const config = require('../../config.js');
 
@@ -16,6 +18,10 @@ const db = {
 const boss = new PgBoss({
   ...config.pgBoss,
   db
+});
+
+boss.on('error', error => {
+  server.log('error', error);
 });
 
 module.exports = boss;

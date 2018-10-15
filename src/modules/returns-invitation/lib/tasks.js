@@ -22,9 +22,14 @@ const { enqueue } = require('../../notify')(messageQueue);
  * @param {Object} state - notification state
  * @return {Promise} resolves when all messages enqueued
  */
-const enqueueMessages = (state) => {
-  const tasks = state.messages.map(message => enqueue(message));
-  return Promise.all(tasks);
+const enqueueMessages = async (state) => {
+  for (let message of state.messages) {
+    try {
+      await enqueue(message);
+    } catch (err) {
+      console.error(err);
+    }
+  }
 };
 
 /**
