@@ -12,6 +12,7 @@ const { validateEnqueueOptions, isPdf, parseSentResponse } = require('./lib/help
 const { scheduledNotification, findById, createFromObject } = require('./connectors/scheduled-notification');
 const { findByMessageRef } = require('./connectors/notify-template');
 const { NotifyIdError, AlreadySentError } = require('./lib/errors');
+const { HIGH_PRIORITY, LOW_PRIORITY } = require('../../lib/priorities');
 
 /**
  * Updates the notify_status field for the message with the given ID
@@ -79,13 +80,21 @@ async function send (id) {
  * @param {String} ISO 8601 timestamp
  * @return {Number} number of seconds until event starts
  */
-function scheduleSendEvent (messageQueue, row, now) {
+async function scheduleSendEvent (messageQueue, row, now) {
+  // Give email/SMS higher priority than letter
+  const priority = row.message_type === 'letter' ? LOW_PRIORITY : HIGH_PRIORITY;
+
   // Schedule send event
   const startIn = Math.round(moment(row.send_after).diff(moment(now)) / 1000);
-  messageQueue.publish('notify.send', row, {
+
+  const options = {
     startIn,
-    singletonKey: row.id
-  });
+    singletonKey: row.id,
+    priority,
+    expireIn: '1 day'
+  };
+
+  await messageQueue.publish('notify.send', row, options);
   return startIn;
 }
 
@@ -128,7 +137,7 @@ const createEnqueue = messageQueue => {
     const dbRow = await createFromObject(row);
 
     // Schedules send event
-    const startIn = scheduleSendEvent(messageQueue, dbRow, now);
+    const startIn = await scheduleSendEvent(messageQueue, dbRow, now);
 
     // Return row data
     return { data: dbRow, startIn };
