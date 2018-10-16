@@ -44,6 +44,7 @@ module.exports = {
           receivedDate: Joi.string().regex(isoDateRegex).allow(null).required(),
           startDate: Joi.string().regex(isoDateRegex).required(),
           endDate: Joi.string().regex(isoDateRegex).required(),
+          dueDate: Joi.string().regex(isoDateRegex).required(),
           frequency: Joi.string().valid(allowedPeriods).required(),
           isNil: Joi.boolean().required(),
           status: Joi.string().valid(statuses).required(),
@@ -91,7 +92,5 @@ module.exports = {
         }
       }
     }
-
   }
-
 };

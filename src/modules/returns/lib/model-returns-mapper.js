@@ -174,6 +174,7 @@ const mapReturnToModel = (ret, version, lines, versions) => {
     receivedDate: ret.received_date,
     startDate: moment(ret.start_date).format('YYYY-MM-DD'),
     endDate: moment(ret.end_date).format('YYYY-MM-DD'),
+    dueDate: ret.due_date,
     frequency: ret.returns_frequency,
     isNil: get(version, 'nil_return'),
     status: ret.status,

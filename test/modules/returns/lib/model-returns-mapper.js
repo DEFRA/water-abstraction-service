@@ -7,6 +7,7 @@ const getTestReturn = () => ({
   return_id: 'test-return-id',
   start_date: '2018-01-01',
   end_date: '2018-05-01',
+  due_date: '2018-06-30',
   returns_frequency: 'month'
 });
 
@@ -69,6 +70,14 @@ experiment('mapReturnToModel', () => {
     const model = mapReturnToModel(getTestReturn(), getTestVersion(true), lines, versions);
     expect(model.meters).to.have.length(1);
     expect(model.meters[0]).to.equal(getTestMeter());
+  });
+
+  test('adds the dueDate from the return', async () => {
+    const lines = [];
+    const versions = [];
+    const testReturn = getTestReturn();
+    let model = mapReturnToModel(testReturn, getTestVersion(), lines, versions);
+    expect(model.dueDate).to.equal(testReturn.due_date);
   });
 });
 

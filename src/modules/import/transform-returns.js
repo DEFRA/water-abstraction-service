@@ -13,7 +13,8 @@ const {
   getFormatCycles,
   mapReceivedDate,
   getReturnId,
-  getStatus
+  getStatus,
+  getDueDate
 } = require('./lib/transform-returns-helpers.js');
 
 /**
@@ -74,6 +75,7 @@ const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
         licence_ref: licenceNumber,
         start_date: startDate,
         end_date: endDate,
+        due_date: getDueDate(endDate),
         returns_frequency: mapPeriod(format.ARTC_REC_FREQ_CODE),
         status,
         source: 'NALD',
