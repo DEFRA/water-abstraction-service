@@ -38,35 +38,35 @@ const digitalServiceReturn = {
   due_date: '2018-11-28'
 };
 
-// experiment('returnExists', () => {
-//   test('It should return true if return exists', async () => {
-//     const stub = sinon.stub(returnsApi.returns, 'findOne').resolves({ error: null, data: digitalServiceReturn });
-//     const exists = await persistReturns.returnExists('01/123');
-//     expect(exists).to.equal(true);
-//     stub.restore();
-//   });
-//
-//   test('It should return false if return does not exist', async () => {
-//     const stub = sinon.stub(returnsApi.returns, 'findOne').resolves({ error: { name: 'NotFoundError' }, data: null });
-//     const exists = await persistReturns.returnExists('01/123');
-//     expect(exists).to.equal(false);
-//     stub.restore();
-//   });
-// });
-//
-// experiment('getUpdateRow', () => {
-//   test('It should update metadata, status and date received for a past return', async () => {
-//     const data = persistReturns.getUpdateRow(naldReturn);
-//     expect(data).to.equal({ status: 'completed',
-//       metadata: { param: 'value' },
-//       received_date: '2017-11-24' });
-//   });
-//
-//   test('It should update metadata only for a return managed by the digital service', async () => {
-//     const data = persistReturns.getUpdateRow(digitalServiceReturn);
-//     expect(data).to.equal({ metadata: { param: 'value' } });
-//   });
-// });
+experiment('returnExists', () => {
+  test('It should return true if return exists', async () => {
+    const stub = sinon.stub(returnsApi.returns, 'findOne').resolves({ error: null, data: digitalServiceReturn });
+    const exists = await persistReturns.returnExists('01/123');
+    expect(exists).to.equal(true);
+    stub.restore();
+  });
+
+  test('It should return false if return does not exist', async () => {
+    const stub = sinon.stub(returnsApi.returns, 'findOne').resolves({ error: { name: 'NotFoundError' }, data: null });
+    const exists = await persistReturns.returnExists('01/123');
+    expect(exists).to.equal(false);
+    stub.restore();
+  });
+});
+
+experiment('getUpdateRow', () => {
+  test('It should update metadata, status and date received for a past return', async () => {
+    const data = persistReturns.getUpdateRow(naldReturn);
+    expect(data).to.equal({ status: 'completed',
+      metadata: { param: 'value' },
+      received_date: '2017-11-24' });
+  });
+
+  test('It should update metadata only for a return managed by the digital service', async () => {
+    const data = persistReturns.getUpdateRow(digitalServiceReturn);
+    expect(data).to.equal({ metadata: { param: 'value' } });
+  });
+});
 
 experiment('createOrUpdateReturn', () => {
   let stubs;
