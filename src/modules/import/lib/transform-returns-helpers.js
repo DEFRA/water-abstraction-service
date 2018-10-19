@@ -30,6 +30,7 @@ const mapPeriod = (str) => {
 const formatReturnNaldMetadata = (format) => {
   return {
     regionCode: parseInt(format.FGAC_REGION_CODE),
+    areaCode: format.AREP_AREA_CODE,
     formatId: parseInt(format.ID),
     periodStartDay: format.ABS_PERIOD_ST_DAY,
     periodStartMonth: format.ABS_PERIOD_ST_MONTH,
@@ -75,7 +76,8 @@ const formatReturnMetadata = (format) => {
       alias: getPurposeAlias(purpose)
     })),
     points: format.points.map(point => formatAbstractionPoint(convertNullStrings(point))),
-    nald: formatReturnNaldMetadata(format)
+    nald: formatReturnNaldMetadata(format),
+    isTwoPartTariff: format.TPT_FLAG === 'Y'
   };
 };
 

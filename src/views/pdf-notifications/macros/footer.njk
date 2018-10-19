@@ -1,0 +1,12 @@
+{% macro footer(currentPage, totalPages) %}
+<div class="footer">
+  <div class="columns">
+    <div class="column">
+      <p class="smaller">WR71 - October 2018</p>
+    </div>
+    <div  class="column">
+      <p class="pagination smaller">Page {{ currentPage }} of {{ totalPages }}</p>
+    </div>
+  </div>
+</div>
+{% endmacro %}

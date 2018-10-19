@@ -1,0 +1,31 @@
+{% extends "../layouts/page-layout.html" %}
+{% from "../macros/header.njk" import header %}
+{% from "../macros/address.njk" import address %}
+{% from "../macros/returns-title.njk" import returnsTitle %}
+{% from "../macros/cover-text.njk" import coverText %}
+{% from "../macros/cover-details.njk" import coverDetails %}
+{% from "../macros/footer.njk" import footer %}
+
+{% block header %}
+  {{ header(notification.personalisation, true) }}
+{% endblock %}
+
+{% block content %}
+  {{ address(notification.personalisation) }}
+  {{ returnsTitle(notification.personalisation.returns_frequency) }}
+
+  <div id="cover-content">
+    <div class="columns">
+      <div class="column">
+        {{ coverText(notification.personalisation.end_date) }}
+      </div>
+      <div class="column" id="cover-layout">
+        {{ coverDetails(notification.personalisation) }}
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block footer %}
+  {{ footer(1, totalPages) }}
+{% endblock %}

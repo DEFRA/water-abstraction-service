@@ -1,0 +1,29 @@
+{% from "./boxes.njk" import boxes %}
+
+{% macro dataCollectionItem(returnsFrequency, item) %}
+
+  {% if returnsFrequency === 'month' %} 
+    <p class="month-label">
+      {{ item.label }}
+      {{ boxes(12) }}
+    </p>
+  {% endif %}
+
+  {% if returnsFrequency === 'week' %}
+    <p class="week-label">
+      {{ item.label }}
+      {{ boxes(12) }}
+    </p>
+  {% endif %}
+
+  {% if returnsFrequency === 'day' %}
+    <div class="block-head">{{ item.label }}</div>
+      {% for dayNumber in range(0, item.days) %}
+        <div class="daily-input">
+          <div class="day-label">{{ dayNumber + 1 }}</div>
+          {{ boxes(12, isSmall = true) }}
+        </div>
+      {% endfor %}
+  {% endif %}
+
+{% endmacro %}

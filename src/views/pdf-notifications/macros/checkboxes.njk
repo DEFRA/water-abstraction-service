@@ -1,0 +1,7 @@
+{% from './checkbox.njk' import checkbox %}
+
+{% macro checkboxes(labels) %}
+  {% for label in labels %}
+    {{ checkbox(label) }}
+  {% endfor %}
+{% endmacro %}

@@ -43,6 +43,7 @@ lab.experiment('Test send', () => {
      licenceRef: '01/123',
      purpose: 'Spray irrigation',
      regionCode: 5,
+     isTwoPartTariff: true,
      siteDescription: 'Borehole A'
    },
       licences: [ '01/123' ],

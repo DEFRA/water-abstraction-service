@@ -1,0 +1,7 @@
+{% from './text-input.njk' import textInput %}
+
+{% macro textInputs(labels) %}
+  {% for label in labels %}
+    {{ textInput(label) }}
+  {% endfor %}
+{% endmacro %}

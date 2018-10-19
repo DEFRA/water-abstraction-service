@@ -1,0 +1,11 @@
+{% macro returnsTitle(frequency) %}
+<div id="title-block">
+  <h1 class="bold">
+    {{ 'Water abstraction daily return ' if frequency === 'day' }}
+    {{ 'Water abstraction weekly return ' if frequency === 'week' }}
+    {{ 'Water abstraction monthly return ' if frequency === 'month' }}
+    {{ 'Water abstraction quarterly return ' if frequency === 'quarter' }}
+    {{ 'Water abstraction yearly return ' if frequency === 'year' }}
+  </h1>
+</div>
+{% endmacro %}

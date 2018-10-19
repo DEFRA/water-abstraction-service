@@ -1,0 +1,14 @@
+{#
+  boxes 
+
+  Creates a line of boxes for data entry.
+
+  count: The number of horizontal boxes
+  isSmall: Should the 'small-number-input' class be used (e.g. daily entries)
+#}
+
+{% macro boxes(count = 12, isSmall = false) %}
+  {% for i in range(0, count) -%}
+    <div class="{{ 'small-number-input' if isSmall else 'number-input'}}{{ ' last-digit' if loop.last }}"></div>
+  {%- endfor %}
+{% endmacro %}

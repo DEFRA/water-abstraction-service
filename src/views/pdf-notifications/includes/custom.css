@@ -1,0 +1,339 @@
+html {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+h1 {
+  font-size: 22pt;
+  font-weight: 800;
+}
+
+h2 {
+  font-size: 14pt;
+  line-height: 7mm;
+  font-weight: 800;
+  margin-bottom: 3mm;
+}
+
+h3 {
+  font-size: 12pt;
+  font-weight: 800;
+  margin-bottom: 2mm;
+  line-height: 5mm;
+}
+
+p {
+  font-size: 12pt;
+  line-height: 6mm;
+}
+
+ul {
+  list-style: disc outside none;
+  margin-left: 0;
+}
+
+li {
+  line-height: 5.5mm;
+  margin-left: 4mm;
+}
+
+.page {
+  width: 210mm;
+  height: 297mm;
+  page-break-after: always;
+
+  display: flex;
+  flex-direction: column;
+
+  margin: 0;
+  padding: 6mm 16mm 6mm 16mm;
+  box-sizing: border-box;
+  background-image: url('/public/images/print-guide-page.png');
+  background-size: 210mm;
+  overflow: hidden;
+}
+
+#cover {
+  background-image: url('/public/images/print-guide-cover.png');
+}
+
+.licence {
+  margin-bottom: 5mm;
+}
+
+.header {
+  text-align: right;
+}
+
+.content {
+  flex-grow: 1;
+}
+
+.columns {
+  display: flex;
+}
+
+.column {
+  flex-basis: 50%;
+  flex-grow: 1;
+  padding-right: 10mm;
+}
+
+.columns .column:last-child {
+  padding-right: 0;
+}
+
+.footer .column {
+  padding-right: 0;
+}
+
+.pagination {
+  text-align: right;
+}
+
+.lede {
+  padding-bottom: 2mm;
+}
+
+.meta {
+  padding-right: 0;
+}
+
+.buffed {
+  margin-top: 10mm;
+}
+
+#logo-container {
+  position: absolute;
+  top: 4.3mm;
+  top: 12mm;
+  left: 16mm;
+  width: 180mm;
+  height: 30mm;
+}
+
+.description {
+  display: inline-block;
+  margin-left: 8mm;
+  margin-right: 0.5mm;
+}
+
+.description p {
+  display: inline-block;
+}
+
+#title-block {
+  position: absolute;
+  top: 100mm;
+  margin-bottom: 2mm;
+}
+
+#address-container {
+  position: absolute;
+  left: 25.5mm;
+  top: 38.5mm;
+  display: block;
+  width: 95.4mm;
+  height: 26.8mm;
+}
+
+.address-block {
+  position: absolute;
+  bottom: 0;
+  font-size: 10pt;
+}
+
+#cover-content {
+  position: relative;
+  top: 102mm;
+  width: 180mm;
+  height: 185mm;
+}
+
+#cover-layout {
+  left: 90mm;
+}
+
+.block {
+  margin-bottom: 7.5mm;
+}
+
+.input {
+  border-bottom: 1pt solid gray;
+  margin-top: 1mm;
+  padding-bottom: 2mm;
+  height: 5mm;
+  position: relative;
+}
+
+.input:before {
+  position: absolute;
+  content: '';
+  left: 0;
+  bottom: -1pt;
+  height: 2mm;
+  border-left: 1pt solid gray;
+}
+
+.input:after {
+  position: absolute;
+  content: '';
+  right: 0;
+  bottom: -1pt;
+  height: 5pt;
+  border-right: 1pt solid gray;
+}
+
+.daily-input {
+  display: flex;
+  font-size: 10pt;
+  margin-top: 0.5mm;
+  margin-bottom: 0;
+  padding: 0.5mm;
+}
+
+.day-label {
+  display: inline-block;
+  align-self: flex-start;
+  padding-top: 1.4mm;
+  width: 5.5mm;
+}
+
+.number-input {
+  display: inline-block;
+  margin-top: 0;
+  border: 1pt solid gray;
+  border-right: 0;
+  width: 6.62mm;
+  height: 7.5mm;
+  margin-top: 1mm;
+}
+
+.small-number-input {
+  display: inline-block;
+  margin-top: 0;
+  border: 1pt solid gray;
+  border-right: 0;
+  width: 3.48mm;
+  height: 5.5mm;
+}
+
+.last-digit {
+  border-right: 1pt solid gray;
+}
+
+.input p {
+  font-size: 14pt;
+  padding-top: 1.4mm;
+}
+
+.stacked {
+  margin-bottom: 0;
+  border-bottom: 1pt solid grey;
+}
+
+.label {
+  margin-bottom: 0;
+}
+
+.key-data {
+  line-height: 2mm;
+  padding-top: 3mm;
+  font-size: 12pt;
+}
+
+.key-data:first-child {
+  padding-top: 0;
+}
+
+.checkbox {
+  display: inline-block;
+  border: 1pt solid black;
+  width: 5mm;
+  height: 5mm;
+  position: relative;
+  top: 1mm;
+  margin-right: 2mm;
+}
+
+.guide {
+  font-size: 12pt;
+  margin-top: 5mm;
+}
+
+.bold {
+  font-weight: 800;
+}
+
+.regular {
+  font-weight: 400;
+}
+
+.block-head {
+  font-size: 12pt;
+  line-height: 6mm;
+  margin-bottom: 2mm;
+}
+
+.item {
+  margin-bottom: 3mm;
+}
+
+.hint {
+  color: grey;
+  color: #6f777b;
+}
+
+.faux-link {
+  text-decoration: underline;
+}
+
+.smaller {
+  font-size: 10pt;
+}
+
+.special-number-input {
+  display: inline-block;
+  margin-top: 0;
+  border: 1pt solid gray;
+  width: 6.62mm;
+  height: 7.5mm;
+  margin-top: 1mm;
+}
+
+.special-row {
+  display: flex;
+}
+
+.special-input {
+  display: inline-block;
+  width: 10mm;
+  height: 7.5mm;
+  border: 1pt solid gray;
+}
+
+.elastic {
+  height: 28px;
+  padding-left: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.special-label {
+  display: inline;
+}
+
+.flex {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.number-group {
+  display: inline-block;
+  padding-right: 3mm;
+}

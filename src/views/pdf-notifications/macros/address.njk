@@ -1,0 +1,45 @@
+{% macro address(personalisation) %}
+<div id="address-container">
+  <div class="address-block">
+
+    {{ personalisation.salutation + ' ' if personalisation.salutation }}
+    {{ personalisation.forename + ' ' if personalisation.forename }}
+    {{ personalisation.name }}
+    <br>
+
+    {% if personalisation.address_line_1 %}
+      {{ personalisation.address_line_1 }}<br>
+    {% endif %}
+
+    {% if personalisation.address_line_2 %}
+      {{ personalisation.address_line_2 }}<br>
+    {% endif %}
+
+    {% if personalisation.address_line_3 %}
+      {{ personalisation.address_line_3 }}<br>
+    {% endif %}
+
+    {% if personalisation.address_line_4 %}
+      {{ personalisation.address_line_4 }}<br>
+    {% endif %}
+
+    {% if personalisation.town %}
+      {{ personalisation.town }}<br>
+    {% endif %}
+
+    {% if personalisation.county %}
+      {{ personalisation.county }}<br>
+    {% endif %}
+
+    {% if personalisation.postcode %}
+      {{ personalisation.postcode }}<br>
+    {% endif %}
+
+    {% if personalisation.country %}
+      {{ personalisation.country }}<br>
+    {% endif %}
+
+  </div>
+</div>
+
+{% endmacro %}

@@ -2,7 +2,6 @@ const Joi = require('joi');
 const controller = require('./controller');
 
 module.exports = {
-
   getRenderNotification: {
     path: '/water/1.0/pdf-notifications/render/{notificationId}',
     method: 'GET',
@@ -16,5 +15,4 @@ module.exports = {
       }
     }
   }
-
 };

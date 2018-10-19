@@ -35,7 +35,6 @@ const getLicenceFormats = async (licenceNumber, currentVersionStart) => {
     format.points = await getFormatPoints(format.ID, format.FGAC_REGION_CODE);
     format.cycles = getFormatCycles(format, versionStartDate);
   }
-
   return formats;
 };
 
