@@ -7,117 +7,164 @@
 {% endblock %}
 
 {% block content %}
-<div class="columns">
-  <div class="column">
-    <div class="text-block">
+  <div class="columns">
+    <div class="column">
+      <div class="text-block">
+        <div class="item">
+          <h2>Guidance</h2>
+          <p>
+          Refer to this guidance when filling out<br>
+          the form.
+          </p>
+        </div>
 
-      <div class="item">
-        <h2>Guidance</h2>
-        <p>You should refer to this guidance when<br>filling out the form.</p>
-      </div>
+        <div class="item">
 
-      <div class="item">
-        <h3>Return details</h3>
-        <p>
-          The return shows your licence number, return reference and site description. If you need to modify the site description call us on <span class="bold">03708 506 506</span>. The combination of the licence number and return reference make a return unique.
-        </p>
-      </div>
+          <h3>Return details</h3>
 
-      <div class="item">
-        <h3>1. Who is the contact for this return?</h3>
-        <p>Enter the details for the person who should be contacted if we have any queries about this return.</p>
-      </div>
+          <p>
+          The return shows your licence number, return reference and site description.<br>
+          If you need to modify the site description<br>
+          call us on <span class="bold">03708 506 506</span>. The combination of the licence number and return reference make a return unique.
+          </p>
 
-      <div class="item">
-        <h3>2. Did you abstract water?</h3>
-        <p>
+        </div>
+
+        <div class="item">
+          <h3>1. Who is the contact for this return?</h3>
+          <p>
+          Enter the details for the person who should be contacted if we have any queries about this return.
+          </p>
+        </div>
+
+        <div class="item">
+          <h3>
+            2. Did you abstract water?
+          </h3>
+          <p>
           Even if you did not abstract any water you must still report that to us. This is known as ‘submitting a nil return’.
-        </p>
-      </div>
+          </p>
+        </div>
 
-      <div class="item">
-        <h3>3. Unit of measurement</h3>
-        <p>Tell us what units have been used to measure your abstraction.</p>
-      </div>
+        <div class="item">
+          <h3>
+            3. Unit of measurement
+          </h3>
+          <p>
+          Tell us what units have been used to measure your abstraction.
+          </p>
+        </div>
 
-      <div class="item">
-        <h3>4. and 5. Meter details</h3>
-        <p>
-        If you have used multiple meters tell us<br>how many. You only need to give us the manufacturer and serial number for one<br>of them.
-        </p>
-      </div>
+        <div class="item">
+          <h3>
+            4. and 5. Meter details
+          </h3>
+          <p>
+          If you have used multiple meters tell us how many. You only need need to give us the manufacturer and serial number for one<br>
+          of them.
+          </p>
+        </div>
 
-      <div class="item">
-        <p>
+        <div class="item">
+          <p>
           If your meter is marked with a x10 use the number on the display. You do not need to add an extra ‘0’ to the reading.
-        </p>
-      </div>
+          </p>
+        </div>
 
-      <div class="item">
-        <h3>6. and 7. Start and end meter readings</h3>
-        <p>
+        <div class="item">
+          <h3>
+            6. and 7. Start and end meter readings
+          </h3>
+          <p>
           If you are reporting continuous run meter readings you need to enter ‘start’ and ‘end’ meter readings. You also need to add the individual entries.
-        </p>
-      </div>
+          </p>
+        </div>
 
-      <div class="item">
-        <p>
+        <div class="item">
+          <p>
           The <span class="bold">start reading</span> is taken immediately before the start of the period of abstraction but within the reporting period.
-        </p>
-      </div>
-    </div>
-  </div>
+          </p>
+        </div>
 
-  <div class="column">
-    <div class="text-block buffed">
-      <div class="item">
-        <p>
+      </div> <!-- end text block -->
+
+    </div>
+
+    <div class="column">
+
+      <div class="text-block buffed">
+
+        <div class="item">
+          <p>
           The <span class="bold">end reading</span> is taken at the end of the abstraction period. We treat all readings in between the start and end dates as if they were taken at the end of each {{notification.personalisation.returns_frequency}}.
-        </p>
-      </div>
+          </p>
+        </div>
 
-      <div class="item">
-        <h3>8. and 9. How are you reporting your return?</h3>
-        <p>
+        <div class="item">
+          <h3>
+            8. and 9. How are you reporting<br>
+            your return?
+          </h3>
+        </div>
+
+        <div class="item">
+          <p>
+          Enter either:
+          </p>
+          <ul>
+            <li>
+              continuous meter readings, or
+            </li>
+            <li>
+              the actual quantity on the {{notification.personalisation.returns_frequency}}s you abstracted water and ‘0’ when you did not
+            </li>
+          </ul>
+        </div>
+
+        <div class="item">
+          <p>
           If you used more than one meter you need to enter your abstracted quantities as volumes not meter readings.
-        </p>
-      </div>
+          </p>
+        </div>
 
-      <div class="item">
-        <p>Enter either:</p>
-        <ul>
-          <li>continuous meter readings</li>
-          <li>the actual quantity on the {{notification.personalisation.returns_frequency}}s you abstracted water and ‘0’ when you did not
-          </li>
-        </ul>
-      </div>
+        <div class="item">
+          <p>
+          A decimal point should only be used<br>
+          to indicate a fraction of a whole unit.<br>
+          For example, 0.5 will be taken to mean<br>
+          half a gallon.
+          </p>
+        </div>
 
-      <div class="item">
-        <p>
-          A decimal point should only be used to indicate a fraction of a whole unit. For example, 0.5 will be taken to mean half a gallon.
-        </p>
-      </div>
+        <div class="item">
+          <h3>
+            10. Total volume of water abstracted
+          </h3>
+          <p>
+          This is the total volume of water abstracted in the return period.
+          </p>
+        </div>
 
-      <div class="item">
-        <h3>10. Total water abtracted</h3>
-        <p>This is the total volume of water abstracted in the return period.</p>
-      </div>
-
-      <div class="item">
-        <h3>11. Reporting without a meter</h3>
-        <p>
+        <div class="item">
+          <h3>
+            11. Reporting without a meter
+          </h3>
+          <p>
           Complete this section if you are not required to use a water meter to measure your abstracted quantities. For example, you may have used pump rate capacity multiplied by hours pumped.
-        </p>
-      </div>
-      <div class="item">
-        <h3>13. Declaration</h3>
-        <p>
-          You must sign the declaration before sending your return to us, even if it is a ‘nil’ return.
-        </p>
+          </p>
+        </div>
+        <div class="item">
+          <h3>
+            13. Declaration
+          </h3>
+          <p>
+          You must sign the declaration before sending your return to us, even if it is a<br>
+          ‘nil’ return.
+          </p>
+        </div>
       </div>
     </div>
   </div>
-</div>
 {% endblock %}
 
 {% block footer %}
