@@ -8,7 +8,8 @@ const { dbQuery } = require('./db');
  */
 const getFormats = (licenceNumber) => {
   const query = `
-  SELECT f.*, v.* FROM "import"."NALD_ABS_LICENCES" l
+  SELECT f.*, v.*, l."AREP_AREA_CODE"
+  FROM "import"."NALD_ABS_LICENCES" l
   LEFT JOIN "import"."NALD_RET_FORMATS" f ON l."ID"=f."ARVN_AABL_ID" AND l."FGAC_REGION_CODE"=f."FGAC_REGION_CODE"
   JOIN "import"."NALD_RET_VERSIONS" v ON f."ARVN_VERS_NO"=v."VERS_NO" AND f."ARVN_AABL_ID"=v."AABL_ID" AND f."FGAC_REGION_CODE"=v."FGAC_REGION_CODE"
   WHERE l."LIC_NO"=$1

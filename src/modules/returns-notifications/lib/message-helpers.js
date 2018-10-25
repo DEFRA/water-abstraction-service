@@ -1,5 +1,4 @@
-const { mapKeys, get } = require('lodash');
-const config = require('../../../../config');
+const { mapKeys, get, pick } = require('lodash');
 
 /**
  * Create job data for a returns notification message regarding a return to
@@ -47,12 +46,15 @@ const formatEnqueuePersonalisation = (env, ret, contact) => {
   const purposes = get(ret, 'metadata.purposes', []);
   const purpose = purposes.map(purpose => purpose.tertiary.description).join(', ');
 
+  const metadata = ret.metadata || {};
+  const nald = metadata.nald;
+
   return {
     ...formatAddressKeys(contact),
     licenceRef,
-    formatId: get(ret, 'metadata.nald.formatId'),
-    regionCode: get(ret, 'metadata.nald.regionCode'),
-    siteDescription: get(ret, 'metadata.description'),
+    ...pick(nald, ['formatId', 'regionCode', 'areaCode']),
+    siteDescription: metadata.description,
+    isTwoPartTariff: metadata.isTwoPartTariff,
     qrUrl: returnId,
     purpose,
     startDate,

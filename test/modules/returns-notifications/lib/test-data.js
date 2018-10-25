@@ -17,6 +17,7 @@ const ret = {
       regionCode: 5
     },
     description: 'Borehole A',
+    isTwoPartTariff: true,
     purposes: [{
       tertiary: {
         description: 'Spray irrigation'

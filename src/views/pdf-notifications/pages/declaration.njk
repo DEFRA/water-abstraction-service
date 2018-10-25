@@ -1,0 +1,66 @@
+{% extends "../layouts/page-layout.html" %}
+{% from "../macros/header.njk" import header %}
+{% from "../macros/address.njk" import address %}
+{% from "../macros/returns-title.njk" import returnsTitle %}
+{% from "../macros/cover-text.njk" import coverText %}
+{% from "../macros/cover-details.njk" import coverDetails %}
+{% from "../macros/footer.njk" import footer %}
+{% from "../macros/boxes.njk" import boxes %}
+{% from "../macros/checkbox.njk" import checkbox %}
+{% from "../macros/input.njk" import input %}
+
+{% block header %}
+  {{ header(notification.personalisation) }}
+{% endblock %}
+
+{% block content %}
+<div class="columns">
+  <div class="column">
+
+    <div class="block">
+      <div class="block-head bold">10. Total volume of water abstracted</div>
+      <p class="label">
+        Amount abstracted
+        {{ boxes() }}
+      </p>
+    </div>
+
+    <div class="block">
+      <div class="block-head bold">11. Reporting without a meter</div>
+      <p class="label">
+        What are the abstraction volumes based on, for example, pump capacity by hours run?
+        {{ input(3) }}
+      </p>
+    </div>
+
+    <div class="block">
+      <div class="block-head bold">12. Further information</div>
+      <div class="item">
+        <p class="label">
+        If you need to explain an entry or give more information send this on a separate sheet. Write the return reference <span class="bold">{{ notification.personalisation.format_id }}</span> and your licence number <span class="bold">{{ notification.personalisation.licence_ref }}</span> on each sheet.
+        </p>
+      </div>
+      <div class="item">
+        {{ checkbox('I am sending further information') }}
+      </div>
+    </div>
+  </div>
+
+  <div class="column">
+    <div class="block">
+      <div class="block-head bold">13. Declaration</div>
+      <p>
+        I confirm that the information I have provided is correct, to the best of my knowledge.
+      </p>
+      <br>
+      <p class="label">Signed</p>
+      {{ input() }}
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block footer %}
+  {{ footer(totalPages - 1, totalPages) }}
+{% endblock %}

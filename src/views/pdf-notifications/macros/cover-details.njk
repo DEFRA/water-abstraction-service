@@ -1,0 +1,38 @@
+{% macro coverDetails(personalisation) %}
+<div class="item">
+  <p class="label">Licence number</p>
+  <p class="bold">{{ personalisation.licence_ref }}</p>
+</div>
+
+<div class="item">
+  <p class="label">Return reference</p>
+  <p class="bold">{{ personalisation.format_id }}</p>
+</div>
+
+<div class="item">
+  <p class="label">Site</p>
+  <p class="bold">{{ personalisation.site_description | title }}</p>
+</div>
+
+<div class="item">
+  <p class="label">Purpose</p>
+  <p class="bold">{{ personalisation.purpose | title }}</p>
+</div>
+
+<div class="item">
+  <p class="label">Return period</p>
+  <p>
+  <span class="bold">{{ personalisation.start_date | date }}</span> to <span class="bold">{{ personalisation.end_date | date }}</span>
+  </p>
+</div>
+
+<div class="item">
+  <p class="label">Two-part tariff</p>
+  <p class="bold">{{ 'Yes' if personalisation.is_two_part_tariff else 'No' }}</p>
+</div>
+
+<div class="item">
+  <p class="bold">If you do not send your return in time, we may take enforcement action.</p>
+</div>
+
+{% endmacro %}

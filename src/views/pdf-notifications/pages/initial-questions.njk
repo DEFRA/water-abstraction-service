@@ -1,0 +1,113 @@
+{% extends "../layouts/page-layout.html" %}
+{% from "../macros/header.njk" import header %}
+{% from "../macros/footer.njk" import footer %}
+{% from "../macros/text-input.njk" import textInput %}
+{% from "../macros/text-inputs.njk" import textInputs %}
+{% from "../macros/checkbox.njk" import checkbox %}
+{% from "../macros/checkboxes.njk" import checkboxes %}
+{% from "../macros/boxes.njk" import boxes %}
+{% from "../macros/date-boxes.njk" import dateBoxes %}
+
+{% block header %}
+  {{ header(notification.personalisation) }}
+{% endblock %}
+
+{% block content %}
+  <div class="columns">
+    <div class="column">
+
+      <div class="block">
+        <div class="block-head bold">1. Who is the contact for this return?</div>
+        <p>Write in CAPITAL LETTERS</p>
+        <br>
+        {{ textInputs(['First name', 'Last name', 'Telephone', 'Email']) }}
+      </div>
+
+      <div class="block">
+        <div class="block-head bold">2. Did you abstract water?</div>
+        <div class="item">
+          {{ checkboxes(['Yes', 'No (nil return)']) }}
+          <p class="guide">If no, go to section 13</p>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-head bold">3. Unit of measurement</div>
+        <div class="item">
+          {{ checkboxes(['Cubic metres', 'Litres', 'Megalitres', 'Gallons']) }}
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-head bold">4. Did you use a meter?</div>
+        <div class="item">
+          {{ checkboxes(['Yes', 'No']) }}
+        </div>
+        <p class="guide">If no, go to section 9</p>
+      </div>
+    </div>
+
+    <div class="column">
+      <div class="block">
+        <div class="block-head bold">5. Meter details</div>
+        <div class="item special-row">
+          <div class="special-input"></div>
+          <div class="elastic">
+            <p>How many meters?</p>
+          </div>
+        </div>
+        {{ textInput('Manufacturer') }}
+
+        <div class="item">
+          <p class="label">Serial number<br>
+          {{ boxes(12) }}
+          </p>
+        </div>
+
+        <div class="item">
+          <p>Some meters are marked with ×10. If yours is, send us the actual number on the display. You do not need to multiply it by 10.</p>
+          {{ checkbox('My meter has a ×10 display') }}
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-head bold">6. Start meter reading</div>
+        <div class="item">
+          <p class="label">
+            {{ dateBoxes() }}
+          </p>
+        </div>
+        <div class="item">
+          <p class="label">Reading<br>
+          {{ boxes(12) }}
+          </p>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-head bold">7. End meter reading</div>
+        <div class="item">
+          {{ dateBoxes() }}
+        </div>
+        <div class="item">
+          <p class="label">
+            Reading<br>
+            {{ boxes(12) }}
+          </p>
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-head bold">8. How are you reporting your return?</div>
+        <div class="item">
+          {{ checkboxes(['Meter readings', 'Abstraction volumes']) }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block footer %}
+  {{ footer(3, totalPages) }}
+{% endblock %}

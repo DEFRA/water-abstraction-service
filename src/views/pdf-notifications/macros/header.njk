@@ -1,0 +1,27 @@
+{% from "./region-and-area.njk" import regionAndArea %}
+
+{% macro header(personalisation, isFirstPage) %}
+<div class="columns">
+  <div class="column">
+    {% if isFirstPage %}
+      {% include "../includes/logo.html" %}
+    {% else %}
+      <div class="licence">
+        <p class="smaller">
+          Return reference&nbsp;
+          <span class="bold">{{ personalisation.format_id }}</span>
+        </p>
+        <p class="smaller">
+          Licence number&nbsp;
+          <span class="bold">{{ personalisation.licence_ref }}</span>
+        </p>
+      </div>
+    {% endif %}
+  </div>
+  <div class="column meta">
+    <div class="header">
+      <p class="smaller">{{ regionAndArea(personalisation) }}</p>
+    </div>
+  </div>
+</div>
+{% endmacro %}
