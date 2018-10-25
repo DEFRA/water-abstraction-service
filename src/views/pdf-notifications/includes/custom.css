@@ -94,10 +94,6 @@ li {
   text-align: right;
 }
 
-.lede {
-  padding-bottom: 2mm;
-}
-
 .meta {
   padding-right: 0;
 }
@@ -266,10 +262,6 @@ li {
 
 .bold {
   font-weight: 800;
-}
-
-.regular {
-  font-weight: 400;
 }
 
 .block-head {

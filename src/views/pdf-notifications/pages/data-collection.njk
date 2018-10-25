@@ -2,7 +2,6 @@
 {% extends "../layouts/page-layout.html" %}
 {% from "../macros/header.njk" import header %}
 {% from "../macros/footer.njk" import footer %}
-{% from "../macros/data-collection-intro.njk" import dataCollectionIntro %}
 {% from "../macros/data-collection-item.njk" import dataCollectionItem %}
 
 {% block header %}
@@ -13,7 +12,6 @@
 
   {% if loop.first %}
     <div class="block-head bold">9. Meter readings or volumes</div>
-    {{ dataCollectionIntro(notification.personalisation) }}
   {% endif %}
 
   <div class="columns">
