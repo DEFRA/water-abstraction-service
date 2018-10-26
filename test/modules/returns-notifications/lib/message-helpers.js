@@ -55,6 +55,7 @@ lab.experiment('formatEnqueueOptions', () => {
     const env = {};
     const data = { eventId: 1, messageRef: 'ref' };
     const ret = {
+      due_date: '2018-01-01',
       return_id: 'r_id',
       licence_ref: 'l_ref',
       metadata: {
@@ -89,6 +90,10 @@ lab.experiment('formatEnqueueOptions', () => {
 
   lab.test('adds formatId to the personalisation', async () => {
     expect(result.personalisation.formatId).to.equal(123321);
+  });
+
+  lab.test('adds dueDate to the personalisation', async () => {
+    expect(result.personalisation.dueDate).to.equal('2018-01-01');
   });
 });
 

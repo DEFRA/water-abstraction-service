@@ -1,9 +1,8 @@
-{% macro coverText(dueDate) %}
+{% macro coverText(personalisation) %}
 <div class="block">
-
   <div class="item">
     <div class="item">
-      <p>Send us your return by <span class="bold">{{ dueDate | date }}</span>.</p>
+      <p>Send us your return by <span class="bold">{{ personalisation.due_date | date }}</span>.</p>
     </div>
   </div>
 

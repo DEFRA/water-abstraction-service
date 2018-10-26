@@ -39,6 +39,7 @@ lab.experiment('Test send', () => {
      qrUrl: 'v1:123:456',
      startDate: '2017-11-01',
      endDate: '2018-10-31',
+     dueDate: '2018-11-30',
      returnsFrequency: 'week',
      licenceRef: '01/123',
      purpose: 'Spray irrigation',

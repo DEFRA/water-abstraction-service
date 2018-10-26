@@ -10,6 +10,7 @@ const ret = {
   licence_ref: '01/123',
   start_date: '2017-11-01',
   end_date: '2018-10-31',
+  due_date: '2018-11-30',
   returns_frequency: 'week',
   metadata: {
     nald: {

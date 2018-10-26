@@ -40,7 +40,8 @@ const formatEnqueuePersonalisation = (env, ret, contact) => {
     end_date: endDate,
     returns_frequency: returnsFrequency,
     return_id: returnId,
-    licence_ref: licenceRef
+    licence_ref: licenceRef,
+    due_date: dueDate
   } = ret;
 
   const purposes = get(ret, 'metadata.purposes', []);
@@ -59,6 +60,7 @@ const formatEnqueuePersonalisation = (env, ret, contact) => {
     purpose,
     startDate,
     endDate,
+    dueDate,
     returnsFrequency
   };
 };
