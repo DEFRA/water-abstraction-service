@@ -194,7 +194,9 @@ const getReturnCycles = (startDate, endDate, splitDate, isSummer = false) => {
   let splits = [];
 
   // Add split date
-  splits = addDate(splits, splitDate, startDate, endDate);
+  if (splitDate) {
+    splits = addDate(splits, splitDate, startDate, endDate);
+  }
 
   // Date pointer should be within summer/financial year
   let datePtr = moment().year();
@@ -210,7 +212,7 @@ const getReturnCycles = (startDate, endDate, splitDate, isSummer = false) => {
   return dates.map(arr => ({
     startDate: arr[0],
     endDate: arr[1],
-    isCurrent: moment(arr[0]).isSameOrAfter(splitDate)
+    isCurrent: (splitDate === null) || moment(arr[0]).isSameOrAfter(splitDate)
   }));
 };
 

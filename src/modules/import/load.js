@@ -2,7 +2,6 @@
  * Code for loading imported data to the target database(s)
  */
 const uuidV4 = require('uuid/v4');
-const { get } = require('lodash');
 const { buildCRMPacket } = require('./transform-crm');
 const { buildReturnsPacket } = require('./transform-returns');
 const { getLicenceJson, buildPermitRepoPacket } = require('./transform-permit');
@@ -37,11 +36,10 @@ const loadPermitAndDocumentHeader = async (licenceNumber, licenceData) => {
  * @param {Object} licenceData - extracted from NALD import tables
  * @return {Promise} resolves when returns imported
  */
-const loadReturns = async (licenceNumber, licenceData) => {
+const loadReturns = async (licenceNumber) => {
   console.log(`Import: returns for ${licenceNumber}`);
-  const currentVersionStart = get(licenceData, 'data.current_version.licence.EFF_ST_DATE');
 
-  const { returns } = await buildReturnsPacket(licenceNumber, currentVersionStart);
+  const { returns } = await buildReturnsPacket(licenceNumber);
   await persistReturns(returns);
 
   // Clean up invalid cycles
@@ -70,7 +68,7 @@ const load = async (licenceNumber) => {
 
     await Promise.all([
       loadPermitAndDocumentHeader(licenceNumber, licenceData),
-      loadReturns(licenceNumber, licenceData)
+      loadReturns(licenceNumber)
     ]);
 
     await setImportStatus(licenceNumber, 'OK');
