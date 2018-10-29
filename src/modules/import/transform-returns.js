@@ -1,10 +1,9 @@
-const moment = require('moment');
-
 const {
   getFormats,
   getFormatPurposes,
   getFormatPoints,
-  getLogsForPeriod
+  getLogsForPeriod,
+  getSplitDate
 } = require('./lib/nald-returns-queries.js');
 
 const {
@@ -20,12 +19,12 @@ const {
 /**
  * Loads licence formats from DB
  * @param {String} licenceNumber
- * @param {Object} currentVersionStart - DD/MM/YYYY
  * @return {Promise} resolves with array of formats
  */
-const getLicenceFormats = async (licenceNumber, currentVersionStart) => {
-  // Create moment for the start date of the current licence version
-  const versionStartDate = currentVersionStart ? moment(currentVersionStart, 'DD/MM/YYYY').format('YYYY-MM-DD') : null;
+const getLicenceFormats = async (licenceNumber) => {
+  const splitDate = await getSplitDate(licenceNumber);
+
+  console.log(splitDate);
 
   const formats = await getFormats(licenceNumber);
 
@@ -33,17 +32,16 @@ const getLicenceFormats = async (licenceNumber, currentVersionStart) => {
   for (let format of formats) {
     format.purposes = await getFormatPurposes(format.ID, format.FGAC_REGION_CODE);
     format.points = await getFormatPoints(format.ID, format.FGAC_REGION_CODE);
-    format.cycles = getFormatCycles(format, versionStartDate);
+    format.cycles = getFormatCycles(format, splitDate);
   }
   return formats;
 };
 
 /**
  * @param {String} licenceNumber - the abstraction licence number
- * @param {String} currentVersionStart - the start date of the current version of the licence in format DD/MM/YYYY
  */
-const buildReturnsPacket = async (licenceNumber, currentVersionStart) => {
-  const formats = await getLicenceFormats(licenceNumber, currentVersionStart);
+const buildReturnsPacket = async (licenceNumber) => {
+  const formats = await getLicenceFormats(licenceNumber);
 
   const returnsData = {
     returns: []

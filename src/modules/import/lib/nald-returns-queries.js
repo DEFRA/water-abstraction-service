@@ -151,6 +151,33 @@ const isNilReturn = async (formatId, regionCode, dateFrom, dateTo) => {
   return rows[0].total_qty === 0;
 };
 
+/**
+ * Gets the split date for considering returns as either current / non current
+ * Originally this date was the EFF_ST_DATE of the current licence version
+ * however this has been modified to only split if a licence version has
+ * a mod log reason code of SUCC - 'Succession To A Whole Licence/Licence Transfer'
+ * @param {String} licenceNumber - the licence number
+ * @return {String|null} split date in format YYYY-MM-DD, or null if none found
+ */
+const getSplitDate = async (licenceNumber) => {
+  const query = `SELECT l."ID", v."ISSUE_NO", v."INCR_NO", v."EFF_ST_DATE", m.*  FROM "import"."NALD_ABS_LICENCES" l
+JOIN "import"."NALD_ABS_LIC_VERSIONS" v ON l."ID"=v."AABL_ID" AND l."FGAC_REGION_CODE"=v."FGAC_REGION_CODE"
+JOIN "import"."NALD_MOD_LOGS" m ON l."ID"=m."AABL_ID" AND l."FGAC_REGION_CODE"=m."FGAC_REGION_CODE"
+AND v."ISSUE_NO"=m."AABV_ISSUE_NO" AND v."INCR_NO"=m."AABV_INCR_NO"
+WHERE l."LIC_NO"=$1
+AND m."AMRE_CODE"='SUCC'
+ORDER BY to_date(v."EFF_ST_DATE", 'DD/MM/YYYY') DESC
+LIMIT 1`;
+
+  const params = [licenceNumber];
+  const rows = await dbQuery(query, params);
+
+  if (rows.length === 1) {
+    return moment(rows[0].EFF_ST_DATE, 'DD/MM/YYYY').format('YYYY-MM-DD');
+  }
+  return null;
+};
+
 module.exports = {
   getFormats,
   getFormatPurposes,
@@ -159,5 +186,6 @@ module.exports = {
   getLines,
   getLogLines,
   getLogsForPeriod,
-  isNilReturn
+  isNilReturn,
+  getSplitDate
 };
