@@ -24,8 +24,6 @@ const {
 const getLicenceFormats = async (licenceNumber) => {
   const splitDate = await getSplitDate(licenceNumber);
 
-  console.log(splitDate);
-
   const formats = await getFormats(licenceNumber);
 
   // Load format data

@@ -212,7 +212,7 @@ const getReturnCycles = (startDate, endDate, splitDate, isSummer = false) => {
   return dates.map(arr => ({
     startDate: arr[0],
     endDate: arr[1],
-    isCurrent: splitDate === null || moment(arr[0]).isSameOrAfter(splitDate)
+    isCurrent: (splitDate === null) || moment(arr[0]).isSameOrAfter(splitDate)
   }));
 };
 
