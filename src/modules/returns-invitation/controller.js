@@ -1,3 +1,4 @@
+const { get } = require('lodash');
 
 // Module dependencies
 const { reducer } = require('./lib/reducer');
@@ -5,7 +6,7 @@ const {
   init, setReturnFilter, createEvent, setPersonalisation, setReturns,
   setContacts, dedupeContacts, createMessages
 } = require('./lib/action-creators');
-const { fetchReturns, fetchReturnsContacts, enqueueMessages } = require('./lib/tasks');
+const { fetchReturns, fetchReturnsContacts } = require('./lib/tasks');
 
 const { eventFactory } = require('./lib/event-factory');
 
@@ -51,10 +52,16 @@ const returnsInvite = async (request, isPreview = true) => {
   }
 
   // Output
-  return {
+  const output = {
     config: state.config,
     event: ev
   };
+
+  if (get(request.query, 'verbose', false)) {
+    output.messages = state.messages;
+  }
+
+  return output;
 };
 
 const postReturnsInvitePreview = async (request, h) => {
