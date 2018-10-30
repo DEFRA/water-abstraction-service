@@ -1,0 +1,7 @@
+{% macro regionAndArea(personalisation) %}
+  {{ personalisation.region_code | naldRegion }}
+  {% if personalisation.area_code %}
+    &nbsp;/&nbsp;
+    {{ personalisation.area_code | naldArea }}
+  {% endif %}
+{% endmacro %}

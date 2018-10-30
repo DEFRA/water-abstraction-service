@@ -1,0 +1,13 @@
+{% from './boxes.njk' import boxes %}
+
+{% macro dateBoxes() %}
+<div class="number-group">
+  {{ boxes(2) }}
+</div>
+<div class="number-group">
+  {{ boxes(2) }}
+</div>
+<div class="number-group">
+  {{ boxes(4) }}
+</div>
+{% endmacro %}

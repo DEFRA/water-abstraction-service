@@ -1,8 +1,8 @@
 const Lab = require('lab');
 const lab = Lab.script();
-const Code = require('code');
+const { expect } = require('code');
 
-const { getJobData, formatAddressKeys } = require('../../../../src/modules/returns-notifications/lib/message-helpers.js');
+const { getJobData, formatAddressKeys, formatEnqueueOptions } = require('../../../../src/modules/returns-notifications/lib/message-helpers.js');
 
 lab.experiment('Test getJobData', () => {
   const ret = {
@@ -19,7 +19,7 @@ lab.experiment('Test getJobData', () => {
   lab.test('getJobData should format object', async () => {
     const obj = getJobData(ret, event, messageRef);
 
-    Code.expect(obj).to.equal({
+    expect(obj).to.equal({
       eventId: event.event_id,
       returnId: ret.return_id,
       messageRef,
@@ -39,12 +39,61 @@ lab.experiment('Test formatAddressKeys', () => {
   lab.test('formatAddressKeys should replace address_<i> keys with address_line_<i> and leave other keys unchanged', async () => {
     const obj = formatAddressKeys(contact);
 
-    Code.expect(obj).to.equal({
+    expect(obj).to.equal({
       town: 'Bristol',
       address_line_1: 'Daisy House',
       address_line_12: 'Windy Lane',
       address_email: 'mail@example.com'
     });
+  });
+});
+
+lab.experiment('formatEnqueueOptions', () => {
+  let result;
+
+  lab.beforeEach(async () => {
+    const env = {};
+    const data = { eventId: 1, messageRef: 'ref' };
+    const ret = {
+      due_date: '2018-01-01',
+      return_id: 'r_id',
+      licence_ref: 'l_ref',
+      metadata: {
+        description: 'desc',
+        isTwoPartTariff: true,
+        nald: {
+          regionCode: 1,
+          areaCode: 'ARCA',
+          formatId: 123321
+        }
+      }
+    };
+    const contactData = { contact: { entity_id: 'e_id' } };
+    result = formatEnqueueOptions(env, data, ret, contactData);
+  });
+
+  lab.test('adds regionCode to the personalisation', async () => {
+    expect(result.personalisation.regionCode).to.equal(1);
+  });
+
+  lab.test('adds areaCode to the personalisation', async () => {
+    expect(result.personalisation.areaCode).to.equal('ARCA');
+  });
+
+  lab.test('adds siteDescription to the personalisation', async () => {
+    expect(result.personalisation.siteDescription).to.equal('desc');
+  });
+
+  lab.test('adds isTwoPartTariff to the personalisation', async () => {
+    expect(result.personalisation.isTwoPartTariff).to.equal(true);
+  });
+
+  lab.test('adds formatId to the personalisation', async () => {
+    expect(result.personalisation.formatId).to.equal(123321);
+  });
+
+  lab.test('adds dueDate to the personalisation', async () => {
+    expect(result.personalisation.dueDate).to.equal('2018-01-01');
   });
 });
 

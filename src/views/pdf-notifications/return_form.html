@@ -1,15 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      {% include "includes/reset.css" %}
+      {% include "includes/custom.css" %}
+    </style>
+  </head>
+  <body class="paper">
 
+    {% set dataPages = paginateReturnLines(notification.personalisation) %}
+    {% set totalPages = dataPages.length + 4 %}
 
+    {% include 'pages/cover.njk' %}
+    {% include 'pages/guidance.njk' %}
+    {% include 'pages/initial-questions.njk' %}
 
+    {% for page in dataPages %}
+      {% include 'pages/data-collection.njk' %}
+    {% endfor %}
 
-<pre>
-{{ notification | stringify }}
-<pre>
+    {% include 'pages/declaration.njk' %}
 
-
-<div id="qr" style="width:25mm; height: 25mm;"></div>
-
-<script type="text/javascript">
-{% include "./qrcode.min.js" %}
-new QRCode(document.getElementById("qr"), '{{ notification.personalisation.qr_url }}' );
-</script>
+  </body>
+</html>

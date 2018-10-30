@@ -1,0 +1,33 @@
+
+{% extends "../layouts/page-layout.html" %}
+{% from "../macros/header.njk" import header %}
+{% from "../macros/footer.njk" import footer %}
+{% from "../macros/data-collection-item.njk" import dataCollectionItem %}
+
+{% block header %}
+  {{ header(notification.personalisation) }}
+{% endblock %}
+
+{% block content %}
+
+  {% if loop.first %}
+    <div class="block-head bold">9. Meter readings or abstraction volumes</div>
+  {% endif %}
+
+  <div class="columns">
+    {% for column in page.columns %}
+      <div class="column">
+        <div class="block">
+          {% for item in column.items %}
+            {{ dataCollectionItem(notification.personalisation.returns_frequency, item) }}
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+{% endblock %}
+
+{% block footer %}
+  {{ footer(3 + loop.index, totalPages) }}
+{% endblock %}

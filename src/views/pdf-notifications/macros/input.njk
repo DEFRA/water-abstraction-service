@@ -1,0 +1,15 @@
+{#
+  input.njk
+
+  Creates a 'tray' for the user to enter data into.
+
+  count: Defaults to one, but if changed will create a stack of trays.
+
+#}
+{% macro input(count = 1) %}
+  {% for i in range (0, count) %}
+    <div class="input">
+      <div class="input-mask"></div>
+    </div>
+  {% endfor %}
+{% endmacro %}

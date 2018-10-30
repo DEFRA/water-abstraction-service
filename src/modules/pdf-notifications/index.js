@@ -10,8 +10,9 @@ const env = nunjucks.configure('./src/views/pdf-notifications/', {
 });
 
 env.addFilter('naldRegion', viewHelpers.naldRegion);
+env.addFilter('naldArea', viewHelpers.naldArea);
 env.addFilter('date', viewHelpers.dateFormat);
-env.addFilter('paginateReturnLines', viewHelpers.paginateReturnLines);
+env.addGlobal('paginateReturnLines', viewHelpers.paginateReturnLines);
 env.addFilter('stringify', viewHelpers.stringify);
 
 /**

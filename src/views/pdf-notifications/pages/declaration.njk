@@ -1,0 +1,70 @@
+{% extends "../layouts/page-layout.html" %}
+{% from "../macros/header.njk" import header %}
+{% from "../macros/address.njk" import address %}
+{% from "../macros/returns-title.njk" import returnsTitle %}
+{% from "../macros/cover-text.njk" import coverText %}
+{% from "../macros/cover-details.njk" import coverDetails %}
+{% from "../macros/footer.njk" import footer %}
+{% from "../macros/boxes.njk" import boxes %}
+{% from "../macros/checkbox.njk" import checkbox %}
+{% from "../macros/input.njk" import input %}
+
+{% block header %}
+  {{ header(notification.personalisation) }}
+{% endblock %}
+
+{% block content %}
+<div class="columns">
+  <div class="column">
+
+    <div class="block">
+      <div class="block-head bold">10. Total volume of water abstracted</div>
+      <p class="label">
+        Amount abstracted
+        {{ boxes() }}
+      </p>
+    </div>
+
+    <div class="block">
+      <div class="block-head bold">11. Reporting without a meter</div>
+      <p class="label">
+        What are the abstraction volumes based on, for example, pump capacity by hours run?
+        {{ input(2) }}
+      </p>
+    </div>
+
+    <div class="block">
+      <div class="block-head bold">12. Further information</div>
+      <div class="item">
+        <p class="label">
+        If you need to explain an entry or give more information send this on a separate sheet. Write your return reference and licence number on each sheet.
+        </p>
+      </div>
+      <div class="item">
+        {{ checkbox('I am sending further information') }}
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-head bold">13. Declaration</div>
+      <p>
+      I certify that the information in this return<br>is correct to the best of my knowledge<br>and belief.
+      </p>
+      <br>
+      <p class="label">Signed</p>
+      {{ input() }}
+    </div>
+
+    {% include '../includes/declaration-contact-us.html' %}
+  </div>
+
+  <div class="column">
+    {% include '../includes/declaration-privacy.html' %}
+  </div>
+</div>
+
+{% endblock %}
+
+{% block footer %}
+  {{ footer(totalPages, totalPages) }}
+{% endblock %}

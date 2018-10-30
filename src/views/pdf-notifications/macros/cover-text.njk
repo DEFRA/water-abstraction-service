@@ -1,0 +1,67 @@
+{% macro coverText(personalisation) %}
+<div class="block">
+  <div class="item">
+    <div class="item">
+      <p>Send us your return by <span class="bold">{{ personalisation.due_date | date }}</span>.</p>
+    </div>
+  </div>
+
+  <div class="item">
+    <p>
+    You must complete an abstraction return form even if you have not abstracted any water (nil return).
+    </p>
+  </div>
+  <div class="item">
+    <p>
+    If your licence has expired or been revoked (cancelled) complete the return up to the end date of the licence.
+    </p>
+  </div>
+  <div class="item">
+    <p>
+    Two-part tariff agreement holders may<br>want to send the form back to us by<br>recorded delivery.
+    </p>
+  </div>
+
+  <div class="item">
+    <p>
+    Before sending it make sure you have:
+    <ul>
+      <li>
+        filled in all the relevant sections
+      </li>
+      <li>
+        ticked the ‘nil return’ box if no water<br>
+        has been abstracted
+      </li>
+      <li>
+        signed the declaration
+      </li>
+    </ul>
+    </p>
+  </div>
+
+  <div class="item">
+    <p>
+    If you are required to carry out monitoring<br>
+    as a condition of you abstracting water you need to continue sending this information<br>
+    to your local area office.
+    </p>
+  </div>
+
+  <div class="item">
+    <p class="bold">
+    Return the completed form to:
+    </p>
+    <p>
+    Waste and Industry Regulatory Services<br>
+    Environment Agency<br>
+    Quadrant 2, 99 Parkway Avenue<br>
+    Sheffield, S9 4WF
+    </p>
+  </div>
+
+</div>
+
+
+
+{% endmacro %}

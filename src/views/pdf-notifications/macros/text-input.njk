@@ -1,0 +1,16 @@
+{#
+  Abstracts a common pattern where a label is followed by an input
+  tray
+#}
+
+{% macro textInput(labelText) %}
+<div class="item">
+  <p class="label">
+    {{ labelText }}
+    <br>
+    <div class="input">
+      <div class="input-mask"></div>
+    </div>
+  </p>
+</div>
+{% endmacro %}

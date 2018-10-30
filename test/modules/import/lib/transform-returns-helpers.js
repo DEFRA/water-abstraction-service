@@ -428,6 +428,8 @@ experiment('formatReturnMetadata', () => {
 
   beforeEach(async () => {
     metadata = formatReturnMetadata({
+      TPT_FLAG: 'N',
+      AREP_AREA_CODE: 'KAEA',
       purposes: [
         getPurpose('Water alias'),
         getPurpose('Agri alias'),
@@ -450,6 +452,14 @@ experiment('formatReturnMetadata', () => {
     expect(metadata.purposes[3].alias).to.be.undefined();
     expect(metadata.purposes[4].alias).to.be.undefined();
     expect(metadata.purposes[5].alias).to.be.undefined();
+  });
+
+  test('the area code is added to the metadata', async () => {
+    expect(metadata.nald.areaCode).to.equal('KAEA');
+  });
+
+  test('adds an isTwoPartTariff flag', async () => {
+    expect(metadata.isTwoPartTariff).to.be.false();
   });
 });
 
