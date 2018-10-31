@@ -1,11 +1,10 @@
-
 // Module dependencies
 const { reducer } = require('./lib/reducer');
 const {
   init, setReturnFilter, createEvent, setPersonalisation, setReturns,
   setContacts, dedupeContacts, createMessages
 } = require('./lib/action-creators');
-const { fetchReturns, fetchReturnsContacts, enqueueMessages } = require('./lib/tasks');
+const { fetchReturns, fetchReturnsContacts } = require('./lib/tasks');
 
 const { eventFactory } = require('./lib/event-factory');
 
@@ -50,10 +49,10 @@ const returnsInvite = async (request, isPreview = true) => {
     await messageQueue.publish('notification.enqueue', { state });
   }
 
-  // Output
   return {
     config: state.config,
-    event: ev
+    event: ev,
+    ...request.query.verbose && { messages: state.messages }
   };
 };
 
