@@ -1,5 +1,3 @@
-const { get } = require('lodash');
-
 // Module dependencies
 const { reducer } = require('./lib/reducer');
 const {
@@ -51,17 +49,11 @@ const returnsInvite = async (request, isPreview = true) => {
     await messageQueue.publish('notification.enqueue', { state });
   }
 
-  // Output
-  const output = {
+  return {
     config: state.config,
-    event: ev
+    event: ev,
+    ...request.query.verbose && { messages: state.messages }
   };
-
-  if (get(request.query, 'verbose', false)) {
-    output.messages = state.messages;
-  }
-
-  return output;
 };
 
 const postReturnsInvitePreview = async (request, h) => {
