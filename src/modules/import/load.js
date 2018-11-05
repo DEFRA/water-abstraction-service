@@ -11,6 +11,7 @@ const { deleteInvalidCycles } = require('./lib/delete-invalid-cycles');
 const { persistReturns } = require('./lib/persist-returns');
 
 const repository = require('./repositories');
+const logger = require('../../lib/logger');
 
 /**
  * Loads data into the permit repository and CRM doc header
@@ -19,12 +20,12 @@ const repository = require('./repositories');
  * @return {Promise} resolves when completed
  */
 const loadPermitAndDocumentHeader = async (licenceNumber, licenceData) => {
-  console.log(`Import: permit for ${licenceNumber}`);
+  logger.info(`Import: permit for ${licenceNumber}`);
   const permit = buildPermitRepoPacket(licenceNumber, 1, 8, licenceData);
   const { rows: [ { licence_id: permitRepoId } ] } = await repository.licence.persist(permit, ['licence_id']);
 
   // Create CRM data and persist
-  console.log(`Import: document header for ${licenceNumber}`);
+  logger.info(`Import: document header for ${licenceNumber}`);
   const crmData = buildCRMPacket(licenceData, licenceNumber, permitRepoId);
   await repository.document.persist({document_id: uuidV4(), ...crmData});
 };
@@ -37,7 +38,7 @@ const loadPermitAndDocumentHeader = async (licenceNumber, licenceData) => {
  * @return {Promise} resolves when returns imported
  */
 const loadReturns = async (licenceNumber) => {
-  console.log(`Import: returns for ${licenceNumber}`);
+  logger.info(`Import: returns for ${licenceNumber}`);
 
   const { returns } = await buildReturnsPacket(licenceNumber);
   await persistReturns(returns);
@@ -54,10 +55,10 @@ const loadReturns = async (licenceNumber) => {
  */
 const load = async (licenceNumber) => {
   try {
-    console.log(`Import: permit ${licenceNumber}`);
+    logger.info(`Import: permit ${licenceNumber}`);
 
     if (!await importTableExists()) {
-      console.log(`Import: skip ${licenceNumber} - import table does not exist`);
+      logger.info(`Import: skip ${licenceNumber} - import table does not exist`);
       return;
     }
 
@@ -72,9 +73,9 @@ const load = async (licenceNumber) => {
     ]);
 
     await setImportStatus(licenceNumber, 'OK');
-    console.log(`Import: complete for ${licenceNumber}`);
+    logger.info(`Import: complete for ${licenceNumber}`);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     await setImportStatus(licenceNumber, error.toString());
   }
 };

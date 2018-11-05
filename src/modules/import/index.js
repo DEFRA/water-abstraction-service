@@ -2,6 +2,7 @@ const Slack = require('../../lib/slack');
 const { clearImportLog } = require('./lib/import-log');
 const { downloadAndExtract } = require('./extract');
 const { loadScheduler } = require('./load-scheduler');
+const logger = require('../../lib/logger');
 
 const scheduleImportSubscriber = async (job, done) => {
   Slack.post(`Import: scheduling licence imports`);
@@ -10,7 +11,7 @@ const scheduleImportSubscriber = async (job, done) => {
     Slack.post(`Import: scheduling complete`);
     done();
   } catch (err) {
-    console.error(err);
+    logger.error(err);
   }
 };
 
@@ -21,7 +22,7 @@ const startImportSubscriber = async (job, done) => {
     await downloadAndExtract();
     done();
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     done(err);
   }
 };

@@ -8,6 +8,8 @@ const messageQueue = require('../../../lib/message-queue');
 const { enqueue } = require('../../notify')(messageQueue);
 const defaultRolePriority = ['document_notifications', 'notifications', 'area_import', 'licence_contact', 'licence_holder'];
 
+const logger = require('../../../lib/logger');
+
 /* eslint camelcase: "warn" */
 
 /**
@@ -68,7 +70,7 @@ async function sendNotification (taskConfig, issuer, contactData, ref) {
   const e = eventFactory(issuer, taskConfig, contactData, ref);
   await e.save();
 
-  console.log(`Sending notification reference ${e.getReference()} ID ${e.getId()}`);
+  logger.info(`Sending notification reference ${e.getReference()} ID ${e.getId()}`);
 
   // Schedule messages for sending
   for (let row of contactData) {
@@ -77,13 +79,8 @@ async function sendNotification (taskConfig, issuer, contactData, ref) {
     try {
       enqueue(n);
     } catch (error) {
-      console.error(error);
+      logger.error(error);
     }
-    // let { error } = await n.save();
-    //
-    // if (error) {
-    //   console.error(error);
-    // }
   }
 
   // Update event status

@@ -12,6 +12,7 @@ const { getDocumentContacts } = require('../../../lib/connectors/crm/documents')
 const { findAllPages } = require('../../../lib/api-client-helpers');
 const messageQueue = require('../../../lib/message-queue');
 const { returns } = require('../../../lib/connectors/returns');
+const logger = require('../../../lib/logger');
 
 // Module dependencies
 const { transformContact } = require('./de-duplicate');
@@ -27,7 +28,7 @@ const enqueueMessages = async (state) => {
     try {
       await enqueue(message);
     } catch (err) {
-      console.error(err);
+      logger.error(err);
     }
   }
 };

@@ -3,11 +3,11 @@
  * @module lib/connectors/crm-licences
  */
 const { APIClient } = require('hapi-pg-rest-api');
-const moment = require('moment');
 const rp = require('request-promise-native').defaults({
   proxy: null,
   strictSSL: false
 });
+const logger = require('../../logger');
 
 // Create API client
 const client = new APIClient(rp, {
@@ -84,7 +84,7 @@ client.getDocumentRoles = function (filter, sort = {}, pagination = { page: 1, p
  */
 client.getDocument = function (documentId) {
   const uri = process.env.CRM_URI + `/documentHeader/${documentId}`;
-  console.log(uri);
+  logger.info(uri);
   return rp({
     uri,
     method: 'GET',

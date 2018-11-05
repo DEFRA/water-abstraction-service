@@ -2,6 +2,7 @@
  * PG boss subscribers for notifications
  */
 const { enqueueMessages } = require('./lib/tasks');
+const logger = require('../../lib/logger');
 
 module.exports = (messageQueue) => {
   return {
@@ -16,7 +17,7 @@ module.exports = (messageQueue) => {
         try {
           await enqueueMessages(state);
         } catch (err) {
-          console.error(err);
+          logger.error(err);
           return done(err);
         }
 

@@ -6,6 +6,7 @@ const {
 } = require('../../../lib/connectors/returns');
 
 const { mapReturnToVersion, mapReturnToLines, mapReturn } = require('./model-returns-mapper');
+const logger = require('../../../lib/logger');
 
 /**
  * Gets return row from returns API
@@ -110,7 +111,7 @@ const fetchLines = async (returnId, versionId) => {
   };
   const { data, error } = await lines.findMany(filter, sort, pagination);
   if (error) {
-    console.error(error);
+    logger.error(error);
     throw Boom.badImplementation(error);
   }
   return data;

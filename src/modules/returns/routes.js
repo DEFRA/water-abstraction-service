@@ -2,6 +2,7 @@ const Boom = require('boom');
 const Joi = require('joi');
 const controller = require('./controller');
 const { returnSchema } = require('./schema');
+const logger = require('../../lib/logger');
 
 module.exports = {
 
@@ -29,7 +30,7 @@ module.exports = {
       description: 'Accepts posted return data from UI layer',
       validate: {
         failAction: async (request, h, err) => {
-          console.error('ValidationError:', err.message); // Better to use an actual logger here.
+          logger.error(err.message);
           throw Boom.badRequest(`Invalid request payload input`);
         },
         payload: returnSchema

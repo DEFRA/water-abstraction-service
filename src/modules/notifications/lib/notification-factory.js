@@ -1,4 +1,4 @@
-// const ScheduledNotification = require('../../../lib/scheduled-notification');
+const logger = require('../../../lib/logger');
 
 /**
  * Compose and send a single message with notify
@@ -52,7 +52,7 @@ async function notificationFactory (contactData, taskConfig, event) {
 
     return options;
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return { error };
   }
 }
