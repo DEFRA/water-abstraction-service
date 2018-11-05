@@ -28,6 +28,9 @@ module.exports = {
     config: {
       description: 'Accepts posted return data from UI layer',
       validate: {
+        query: {
+          returnId: Joi.string().required()
+        },
         failAction: async (request, h, err) => {
           console.error('ValidationError:', err.message); // Better to use an actual logger here.
           throw Boom.badRequest(`Invalid request payload input`);
