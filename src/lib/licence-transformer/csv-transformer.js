@@ -7,6 +7,7 @@ const { find, uniqBy } = require('lodash');
 const BaseTransformer = require('./base-transformer');
 const LicenceTitleLoader = require('./licence-title-loader');
 const licenceTitleLoader = new LicenceTitleLoader();
+const logger = require('../logger');
 
 /**
  * Formats an abstraction point into a string
@@ -58,7 +59,7 @@ class CSVTransformer extends BaseTransformer {
       contacts: this.contactsFormatter(data)
     };
 
-    console.log(JSON.stringify(this.data, null, 2));
+    logger.info(JSON.stringify(this.data, null, 2));
   }
 
   /**

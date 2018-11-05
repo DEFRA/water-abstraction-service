@@ -77,7 +77,7 @@ async function getStation (request, reply) {
       active: /^https?:\/\/environment.data.gov.uk\/flood-monitoring\/def\/core\/statusActive$/.test(status)
     };
   } catch (error) {
-    console.error(error);
+    request.log('error', error);
     reply.response({ error: 'River levels API error' }).code(error.statusCode);
   }
 }

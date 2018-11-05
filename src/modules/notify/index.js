@@ -13,6 +13,7 @@ const { scheduledNotification, findById, createFromObject } = require('./connect
 const { findByMessageRef } = require('./connectors/notify-template');
 const { NotifyIdError, AlreadySentError } = require('./lib/errors');
 const { HIGH_PRIORITY, LOW_PRIORITY } = require('../../lib/priorities');
+const logger = require('../../lib/logger');
 
 /**
  * Updates the notify_status field for the message with the given ID
@@ -152,7 +153,7 @@ const registerSendSubscriber = messageQueue => {
       await send(id);
       return done();
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       return done(err);
     }
   });
@@ -178,7 +179,7 @@ const registerStatusCheckSubscriber = messageQueue => {
         await updateMessageStatus(id);
       }
     } catch (err) {
-      console.error(err);
+      logger.error(err);
       return done(err);
     }
 

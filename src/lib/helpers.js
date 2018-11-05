@@ -1,5 +1,6 @@
 const childProcess = require('child_process');
 const { promisify } = require('util');
+const logger = require('./logger');
 
 /**
  * Executes (and logs) a shell command, returning a promise
@@ -7,7 +8,7 @@ const { promisify } = require('util');
  * @return {Promise}
  */
 const execCommand = (cmd) => {
-  console.log(cmd);
+  logger.info(cmd);
   return promisify(childProcess.exec)(cmd);
 };
 

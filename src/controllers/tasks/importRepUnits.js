@@ -1,5 +1,7 @@
 const { pool } = require('../../lib/connectors/db');
 const uuidv4 = require('uuid/v4');
+const logger = require('../../lib/logger');
+
 /**
  * IMport rep units from NALD to lookup data
  */
@@ -32,7 +34,7 @@ async function run (data) {
       error: null
     };
   } catch (e) {
-    console.log(e);
+    logger.error(e);
     return {
       error: e.message
     };

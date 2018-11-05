@@ -4,6 +4,7 @@ const nunjucks = require('nunjucks');
 const { testMode } = require('../../../config');
 
 const viewHelpers = require('./view-helpers');
+const logger = require('../../lib/logger');
 
 const env = nunjucks.configure('./src/views/pdf-notifications/', {
   noCache: testMode
@@ -36,7 +37,7 @@ const getRenderNotification = async (notificationId) => {
   const notification = await findOne(scheduledNotification, notificationId);
   const view = getViewPath(notification.message_ref);
 
-  console.log(JSON.stringify({ notification }, null, 2));
+  logger.info(JSON.stringify({ notification }, null, 2));
   return env.render(view, { notification });
 };
 

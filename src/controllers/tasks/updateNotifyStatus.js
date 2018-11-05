@@ -6,6 +6,7 @@
 /* eslint camelcase: "warn" */
 const messageQueue = require('../../lib/message-queue');
 const { repository: notificationsRepository } = require('../notifications');
+const logger = require('../../lib/logger');
 
 /**
  * Find records in "water"."scheduled_notification" which have a notify_id
@@ -48,13 +49,13 @@ async function run (config) {
   try {
     // Schedule a check
     notifications.forEach(async (data) => {
-      console.log(`Scheduling notify status check for ${data.id}`);
+      logger.info(`Scheduling notify status check for ${data.id}`);
       await messageQueue.publish('notify.status', data);
     });
 
     return { error: null };
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return { error };
   }
 }

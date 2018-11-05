@@ -11,7 +11,6 @@ const Permit = require('../../lib/connectors/permit');
 async function run (data) {
   // send request to CRM to select licences with expiry in the next N days
 
-  // console.log(data)
   // http://127.0.0.1:8004/crm/1.0/expiring_licences?filter={"licence_type_id":8,"licence_regime_id":1}
 
   const expiring = await Permit.expiringLicences.findMany();
@@ -25,7 +24,7 @@ async function run (data) {
 
     if (responsedata.data[0] && responsedata.data[0].individual_nm) {
       const recipient = responsedata.data[0].individual_nm;
-      //          console.log(licence.licence_ref+' got recipient for renewal email...' + recipient)
+
       try {
         // Read CRM doc header to get document custom name
         const { data, error } = await crm.documents.getDocument(responsedata.data[0].document_id);
@@ -51,8 +50,6 @@ async function run (data) {
       } catch (error) {
         return { error };
       }
-    } else {
-      //          console.log(licence.licence_ref+' no primary user for this licence, cannot notify anybody ::sadface::')
     }
   });
 
