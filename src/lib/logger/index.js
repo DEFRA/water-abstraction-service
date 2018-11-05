@@ -24,8 +24,8 @@ const init = (config = {}) => {
   // Validate the provided config object
   const schema = {
     level: Joi.string().allow('debug', 'verbose', 'info', 'warn', 'error').default('info'),
-    airbrakeKey: Joi.string(),
-    airbrakeHost: Joi.string(),
+    airbrakeKey: Joi.string().allow(''),
+    airbrakeHost: Joi.string().allow(''),
     airbrakeLevel: Joi.string().allow('debug', 'verbose', 'info', 'warn', 'error').default('error')
   };
 

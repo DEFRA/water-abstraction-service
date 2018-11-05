@@ -1,8 +1,9 @@
 const DB = require('../lib/connectors/db');
 const os = require('os');
+const logger = require('../lib/logger');
 
 async function reset () {
-  console.log('resetting scheduler');
+  logger.debug('resetting scheduler');
   var query = `
       UPDATE "water"."scheduler" SET running=0 where running_on = '${os.hostname()}'`;
   await DB.query(query);
@@ -39,10 +40,10 @@ async function run () {
       const taskHandler = require(`./tasks/${job.data[0].task_type}`);
       try {
         var log = await taskHandler.run(job.data[0]);
-        console.log('task completed: ' + job.data[0].task_type);
+        logger.debug('task completed: ' + job.data[0].task_type);
       } catch (e) {
         log = e.message;
-        console.log('task completed IN ERROR: ' + job.data[0].task_type);
+        logger.debug('task completed IN ERROR: ' + job.data[0].task_type);
       }
 
       try {
@@ -51,16 +52,16 @@ async function run () {
         try {
           await DB.query(query, params);
         } catch (e) {
-          console.log(e);
+          logger.error(e);
           throw e;
         }
       } catch (e) {
-        console.log(e);
+        logger.error(e);
         return e;
       }
     }
   } catch (e) {
-    console.log(e);
+    logger.error(e);
   }
 }
 

@@ -2,6 +2,7 @@ const { getAllStations } = require('../../lib/connectors/river-levels');
 const { repository } = require('../../controllers/gauging-stations.js');
 const moment = require('moment');
 const ngrConverter = require('./ngr-converter');
+const logger = require('../../lib/logger');
 
 /**
  * Calls the river levels API and updates list of stations locally
@@ -15,7 +16,7 @@ async function refreshStations () {
   for (let station of data.items) {
     const ts = moment().format('YYYY-MM-DD HH:mm:ss');
 
-    console.log('Importing ' + station['@id']);
+    logger.debug('Importing ' + station['@id']);
 
     const row = {
       id: station['@id'],
@@ -35,12 +36,11 @@ async function refreshStations () {
       modified: ts
     };
 
-    console.log(row);
+    logger.debug(row);
 
     const { error } = await repository.create(row);
 
     if (error) {
-      // console.error(station['@id'], error);
       errors.push(station['@id'] + ' ' + error.toString());
     }
   }

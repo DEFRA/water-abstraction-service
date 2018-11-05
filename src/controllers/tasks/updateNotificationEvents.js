@@ -7,6 +7,7 @@
 const moment = require('moment');
 const { repository: eventsRepository } = require('../events');
 const { repository: notificationsRepository } = require('../notifications');
+const logger = require('../../lib/logger');
 
 /**
  * Gets a list of events which are of type 'notification' and which are in
@@ -86,18 +87,16 @@ async function processEvent (event) {
 
   const update = getUpdatedMetadata(metadata, rows);
 
-  console.log('updated', update);
+  logger.info(update);
 
   return eventsRepository.update({ event_id: event.event_id }, { metadata: update });
 }
 
 async function run (config) {
-  console.log('updateNotificationEvents');
-
   const { error, rows } = await getPendingNotifications();
 
   if (error) {
-    console.error(error);
+    logger.error(error);
     return { error };
   }
 
@@ -105,7 +104,7 @@ async function run (config) {
   for (let row of rows) {
     const { error } = await processEvent(row);
     if (error) {
-      console.error(error);
+      logger.error(error);
       errors.push(error);
     }
   }

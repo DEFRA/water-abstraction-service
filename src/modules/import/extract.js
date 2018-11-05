@@ -7,6 +7,7 @@ const { promisify } = require('util');
 const config = require('../../../config.js');
 const { execCommand } = require('../../lib/helpers.js');
 const Slack = require('../../lib/slack');
+const logger = require('../../lib/logger');
 
 const readDir = promisify(fs.readdir);
 const writeFile = promisify(fs.writeFile);
@@ -120,7 +121,7 @@ async function importFiles () {
   const sqlPath = path.join(finalPath, 'sql.sql');
 
   for (let file of files) {
-    console.log(`Importing ${file} to PostGres`);
+    logger.info(`Importing ${file} to PostGres`);
     const sql = await getSqlForFile(file);
     await writeFile(sqlPath, sql);
     await execCommand(`psql ${config.pg.connectionString} < ${sqlPath}`);
