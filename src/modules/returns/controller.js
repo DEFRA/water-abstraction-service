@@ -1,7 +1,5 @@
-const Boom = require('boom');
-const { returns } = require('../../lib/connectors/returns');
-const { persistReturnData } = require('./lib/api-connector');
-const { mapReturnToModel, mapReturn } = require('./lib/model-returns-mapper');
+const { persistReturnData, patchReturnData } = require('./lib/api-connector');
+const { mapReturnToModel } = require('./lib/model-returns-mapper');
 const { getReturnData } = require('./lib/facade');
 const { eventFactory } = require('./lib/event-factory');
 const { repository: eventRepository } = require('../../controllers/events');
@@ -44,14 +42,7 @@ const postReturn = async (request, h) => {
  * @return {Promise} resolves with JSON payload
  */
 const patchReturnHeader = async (request, h) => {
-  const { returnId } = request.payload;
-
-  // Update return in returns service
-  const { data, error } = await returns.updateOne(returnId, mapReturn(request.payload));
-
-  if (error) {
-    throw Boom.badImplementation(`Error updating return ${returnId}`, error);
-  }
+  const data = await patchReturnData(request.payload);
 
   // Log event in water service event log
   const eventData = {
