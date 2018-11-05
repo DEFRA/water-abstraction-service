@@ -44,6 +44,8 @@ const postReturn = async (request, h) => {
 const patchReturnHeader = async (request, h) => {
   const data = await patchReturnData(request.payload);
 
+  console.log('payload', request.payload);
+
   // Log event in water service event log
   const eventData = {
     ...request.payload,
