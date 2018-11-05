@@ -1,7 +1,9 @@
+const Boom = require('boom');
+const { returns } = require('../../lib/connectors/returns');
 const { persistReturnData } = require('./lib/api-connector');
-const { mapReturnToModel } = require('./lib/model-returns-mapper');
+const { mapReturnToModel, mapReturn } = require('./lib/model-returns-mapper');
 const { getReturnData } = require('./lib/facade');
-const { eventFactory } = require('./lib/event-factory');
+const { submitEvent, updateStatusEvent } = require('./lib/event-factory');
 const { repository: eventRepository } = require('../../controllers/events');
 
 /**
@@ -26,7 +28,7 @@ const postReturn = async (request, h) => {
   const returnServiceData = await persistReturnData(ret);
 
   // Log event in water service event log
-  const event = eventFactory(ret, returnServiceData.version);
+  const event = submitEvent(ret, returnServiceData.version);
   await eventRepository.create(event);
 
   return {
@@ -34,7 +36,40 @@ const postReturn = async (request, h) => {
   };
 };
 
+/**
+ * Allows the patching of return header data
+ * @param {String} request.payload.returnId - the return_id in the returns.returns table
+ * @param {String} [request.payload.status] - return status
+ * @param {String} [request.payload.receivedDate] - date received, ISO 8601 YYYY-MM-DD
+ * @return {Promise} resolves with JSON payload
+ */
+const patchReturnHeader = async (request, h) => {
+  const { returnId } = request.payload;
+
+  // Update return in returns service
+  const { data, error } = await returns.updateOne(returnId, mapReturn(request.payload));
+
+  if (error) {
+    throw Boom.badImplementation(`Error updating return ${returnId}`, error);
+  }
+
+  // Log event in water service event log
+  const eventData = {
+    ...request.payload,
+    licenceNumber: data.licence_ref
+  };
+  const event = updateStatusEvent(eventData);
+  await eventRepository.create(event);
+
+  return {
+    returnId: data.return_id,
+    status: data.status,
+    receivedDate: data.received_date
+  };
+};
+
 module.exports = {
   getReturn,
-  postReturn
+  postReturn,
+  patchReturnHeader
 };
