@@ -156,10 +156,28 @@ const persistReturnData = async (ret) => {
   };
 };
 
+/**
+ * Updates return row data - status, received date
+ * @param {Object} ret - return model
+ * @return {Promise} resolves when saved successfully
+ */
+const patchReturnData = async (ret) => {
+  const { returnId } = ret;
+
+  const { data, error } = await returns.updateOne(returnId, mapReturn(ret));
+
+  if (error) {
+    throw Boom.badImplementation(`Error updating return ${returnId}`, error);
+  }
+
+  return data;
+};
+
 module.exports = {
   fetchReturn,
   fetchVersion,
   fetchAllVersions,
   fetchLines,
-  persistReturnData
+  persistReturnData,
+  patchReturnData
 };

@@ -6,6 +6,12 @@ const statuses = ['due', 'completed', 'received'];
 const units = ['m³', 'l', 'Ml', 'gal'];
 const userTypes = ['internal', 'external'];
 
+const userSchema = Joi.object().required().keys({
+  email: Joi.string().required(),
+  type: Joi.string().valid(userTypes).required(),
+  entityId: Joi.string().guid().required()
+});
+
 const returnSchema = {
   returnId: Joi.string().required(),
   licenceNumber: Joi.string().required(),
@@ -59,13 +65,17 @@ const returnSchema = {
     })
   }),
   metadata: Joi.object(),
-  user: {
-    email: Joi.string().required(),
-    type: Joi.string().valid(userTypes).required(),
-    entityId: Joi.string().guid().required()
-  }
+  user: userSchema
+};
+
+const headerSchema = {
+  returnId: Joi.string().required(),
+  status: Joi.string().valid(statuses).required(),
+  receivedDate: Joi.string().regex(isoDateRegex).allow(null).required(),
+  user: userSchema
 };
 
 module.exports = {
-  returnSchema
+  returnSchema,
+  headerSchema
 };
