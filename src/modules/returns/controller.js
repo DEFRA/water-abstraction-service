@@ -3,7 +3,7 @@ const { returns } = require('../../lib/connectors/returns');
 const { persistReturnData } = require('./lib/api-connector');
 const { mapReturnToModel, mapReturn } = require('./lib/model-returns-mapper');
 const { getReturnData } = require('./lib/facade');
-const { submitEvent, updateStatusEvent } = require('./lib/event-factory');
+const { eventFactory } = require('./lib/event-factory');
 const { repository: eventRepository } = require('../../controllers/events');
 
 /**
@@ -28,7 +28,7 @@ const postReturn = async (request, h) => {
   const returnServiceData = await persistReturnData(ret);
 
   // Log event in water service event log
-  const event = submitEvent(ret, returnServiceData.version);
+  const event = eventFactory(ret, returnServiceData.version);
   await eventRepository.create(event);
 
   return {
@@ -58,7 +58,7 @@ const patchReturnHeader = async (request, h) => {
     ...request.payload,
     licenceNumber: data.licence_ref
   };
-  const event = updateStatusEvent(eventData);
+  const event = eventFactory(eventData, null, 'return.status');
   await eventRepository.create(event);
 
   return {
