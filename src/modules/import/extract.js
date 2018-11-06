@@ -37,14 +37,43 @@ const download = async () => {
   return s3Download(remotePath, filePath);
 };
 
+const extractArchive = async (source, destination, password) => {
+  let command = `7z x ${source} -o${destination}`;
+  if (password) {
+    command += ` -p${password}`;
+  }
+  await execCommand(command);
+};
+
 /**
  * Extracts files from zip downloaded from S3 bucket
  */
 const extract = async () => {
   const primaryPath = path.join(localPath, 'nald_dl.zip');
   const secondaryPath = path.join(localPath, 'NALD.zip');
-  await execCommand(`7z x ${primaryPath} -pn4ld -o${localPath}`);
-  await execCommand(`7z x ${secondaryPath} -o${localPath}`);
+  let fileExtracted = false;
+
+  logger.info('Extracting data from NALD zip file');
+
+  try {
+    logger.info('Attempting with new password');
+    await extractArchive(primaryPath, localPath, process.env.NALD_ZIP_PASSWORD);
+    fileExtracted = true;
+  } catch (err) {
+    logger.error('Could not extract archive with new password');
+  }
+
+  if (!fileExtracted) {
+    try {
+      logger.info('Attempting with old password');
+      await execCommand(`rm ${secondaryPath}`);
+      await extractArchive(primaryPath, localPath, process.env.NALD_ZIP_PASSWORD_OLD);
+    } catch (err) {
+      logger.error('Failed to extract NALD zip data');
+    }
+  }
+
+  await extractArchive(secondaryPath, localPath);
 };
 
 /**
@@ -138,10 +167,9 @@ const downloadAndExtract = async () => {
   Slack.post('Import: preparing folders');
   await prepare();
 
-  // Download from S3
   Slack.post('Import: downloading from S3');
   await download();
-  // Extract files from zip
+
   Slack.post('Import: extracting files from zip');
   await extract();
 
@@ -150,7 +178,6 @@ const downloadAndExtract = async () => {
 
   Slack.post('Import: importing CSV files');
   await importFiles();
-
   Slack.post('Import: CSV loaded');
 
   await prepare();
