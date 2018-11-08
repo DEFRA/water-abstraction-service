@@ -1,6 +1,8 @@
 const { load } = require('./src/modules/import/load');
 const { getNextImportBatch } = require('./src/modules/import/lib/import-log');
+const config = require('./config');
 const logger = require('./src/lib/logger');
+logger.init(config.logger);
 
 process.on('uncaughtException', (err) => {
   logger.error(err);
