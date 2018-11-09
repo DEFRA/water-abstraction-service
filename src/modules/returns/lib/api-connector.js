@@ -125,18 +125,20 @@ const fetchLines = async (returnId, versionId) => {
 const persistReturnData = async (ret) => {
   let linesData;
 
+  logger.info(`start: persistReturnData with return id ${ret.returnId}`);
+
   // Update the return
   const r = mapReturn(ret);
-  const { data: returnData, error: returnError } = await returns.updateMany({return_id: ret.returnId}, r);
+  const { data: returnData, error: returnError } = await returns.updateMany({ return_id: ret.returnId }, r);
   if (returnError) {
-    throw Boom.badImplementation(returnError);
+    throw returnError;
   }
 
   // Update the version
   const version = mapReturnToVersion(ret);
   const { data: versionData, error: versionError } = await versions.create(version);
   if (versionError) {
-    throw Boom.badImplementation(versionError);
+    throw versionError;
   }
 
   // Update the lines
@@ -145,9 +147,11 @@ const persistReturnData = async (ret) => {
     const { data, error: linesError } = await lines.create(lineRows);
     linesData = data;
     if (linesError) {
-      throw Boom.badImplementation(linesError);
+      throw linesError;
     }
   }
+
+  logger.info(`finish: persistReturnData with return id ${ret.returnId}`);
 
   return {
     return: returnData,
