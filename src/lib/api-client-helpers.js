@@ -15,7 +15,7 @@ const findAllPages = async (apiClient, filter = {}, sort = {}, columns = []) => 
   const { error, pagination: { pageCount, perPage } } = await apiClient.findMany(filter, sort, null, []);
 
   if (error) {
-    throw Boom.badImplementation(error);
+    throw Boom.boomify(error);
   }
 
   const rows = [];
@@ -28,7 +28,7 @@ const findAllPages = async (apiClient, filter = {}, sort = {}, columns = []) => 
     const { error, data } = await apiClient.findMany(filter, sort, pagination, columns);
 
     if (error) {
-      throw Boom.badImplementation(error);
+      throw Boom.boomify(error);
     }
 
     rows.push(...data);

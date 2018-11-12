@@ -1,4 +1,4 @@
-const { badRequest, notFound } = require('boom');
+const Boom = require('boom');
 const { getLicenceJson } = require('./transform-permit');
 const { buildReturnsPacket } = require('./transform-returns');
 
@@ -17,9 +17,9 @@ const getLicence = async (request, h) => {
     if (data) {
       return data;
     }
-    return notFound(`The requested licence number could not be found`);
+    return Boom.notFound(`The requested licence number could not be found`);
   } catch (err) {
-    throw badRequest(err);
+    throw Boom.boomify(err, { statusCode: 400 });
   }
 };
 
@@ -35,9 +35,9 @@ const getReturns = async (request, h) => {
     if (data) {
       return data;
     }
-    return notFound(`The requested licence number could not be found`);
+    return Boom.notFound(`The requested licence number could not be found`);
   } catch (err) {
-    throw badRequest(err);
+    throw Boom.boomify(err, { statusCode: 400 });
   }
 };
 
@@ -52,7 +52,7 @@ const getReturnsFormats = async (request, h) => {
 
     return data;
   } catch (err) {
-    throw badRequest(err);
+    throw Boom.boomify(err, { statusCode: 400 });
   }
 };
 
@@ -67,7 +67,7 @@ const getReturnsLogs = async (request, h) => {
     const data = await getLogs(formatId, regionCode);
     return data;
   } catch (err) {
-    throw badRequest(err);
+    throw Boom.boomify(err, { statusCode: 400 });
   }
 };
 
@@ -82,7 +82,7 @@ const getReturnsLogLines = async (request, h) => {
     const data = await getLogLines(formatId, regionCode, dateFrom);
     return data;
   } catch (err) {
-    throw badRequest(err);
+    throw Boom.boomify(err, { statusCode: 400 });
   }
 };
 

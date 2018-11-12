@@ -19,7 +19,7 @@ const findOne = async (repository, id) => {
   try {
     response = await repository.find(filter);
   } catch (error) {
-    throw Boom.wrap(error, 500);
+    throw Boom.boomify(error);
   }
 
   const { error, rows } = response;
