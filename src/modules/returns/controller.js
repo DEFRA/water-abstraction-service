@@ -39,6 +39,7 @@ const postReturn = async (request, h) => {
  * @param {String} request.payload.returnId - the return_id in the returns.returns table
  * @param {String} [request.payload.status] - return status
  * @param {String} [request.payload.receivedDate] - date received, ISO 8601 YYYY-MM-DD
+ * @param {String} [request.payload.isUnderQuery] - is the return under query
  * @return {Promise} resolves with JSON payload
  */
 const patchReturnHeader = async (request, h) => {
@@ -55,7 +56,8 @@ const patchReturnHeader = async (request, h) => {
   return {
     returnId: data.return_id,
     status: data.status,
-    receivedDate: data.received_date
+    receivedDate: data.received_date,
+    isUnderQuery: data.under_query
   };
 };
 

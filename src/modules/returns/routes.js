@@ -46,7 +46,7 @@ module.exports = {
       description: 'Updates return row data, e.g. received date, under query',
       validate: {
         failAction: async (request, h, err) => {
-          console.error('ValidationError:', err.message); // Better to use an actual logger here.
+          logger.error('ValidationError:', err.message);
           throw Boom.badRequest(`Invalid request payload input`);
         },
         payload: headerSchema

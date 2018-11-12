@@ -8,6 +8,12 @@ const {
 const { mapReturnToVersion, mapReturnToLines, mapReturn } = require('./model-returns-mapper');
 const logger = require('../../../lib/logger');
 
+const throwIfError = error => {
+  if (error) {
+    throw Boom.boomify(error);
+  }
+};
+
 /**
  * Gets return row from returns API
  * @param {String} returnId
@@ -20,9 +26,8 @@ const fetchReturn = async (returnId) => {
     licence_type: 'abstraction'
   };
   const { data: [returnRow], error } = await returns.findMany(filter);
-  if (error) {
-    throw Boom.badImplementation(error);
-  }
+  throwIfError(error);
+
   if (!returnRow) {
     throw Boom.notFound(`Return ${returnId} not found`);
   }
@@ -53,9 +58,8 @@ const fetchVersion = async (returnId, versionNumber) => {
 
   try {
     const { data: [versionRow], error } = await versions.findMany(filter, sort, pagination);
-    if (error) {
-      throw Boom.badImplementation(error);
-    }
+    throwIfError(error);
+
     if (!versionRow) {
       throw Boom.notFound(`Version for ${returnId} not found`);
     }
@@ -85,10 +89,7 @@ const fetchAllVersions = async (returnId) => {
   };
 
   const { data, error } = await versions.findMany(filter, sort);
-
-  if (error) {
-    throw Boom.badImplementation(error);
-  }
+  throwIfError(error);
 
   return data;
 };
@@ -112,7 +113,7 @@ const fetchLines = async (returnId, versionId) => {
   const { data, error } = await lines.findMany(filter, sort, pagination);
   if (error) {
     logger.error(error);
-    throw Boom.badImplementation(error);
+    throw Boom.boomify(error);
   }
   return data;
 };
@@ -130,25 +131,19 @@ const persistReturnData = async (ret) => {
   // Update the return
   const r = mapReturn(ret);
   const { data: returnData, error: returnError } = await returns.updateMany({ return_id: ret.returnId }, r);
-  if (returnError) {
-    throw returnError;
-  }
+  throwIfError(returnError);
 
   // Update the version
   const version = mapReturnToVersion(ret);
   const { data: versionData, error: versionError } = await versions.create(version);
-  if (versionError) {
-    throw versionError;
-  }
+  throwIfError(versionError);
 
   // Update the lines
   const lineRows = mapReturnToLines(ret, versionData);
   if (lineRows) {
     const { data, error: linesError } = await lines.create(lineRows);
     linesData = data;
-    if (linesError) {
-      throw linesError;
-    }
+    throwIfError(linesError);
   }
 
   logger.info(`finish: persistReturnData with return id ${ret.returnId}`);

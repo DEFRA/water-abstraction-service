@@ -192,7 +192,8 @@ const mapReturnToModel = (ret, version, lines, versions) => {
         createdAt: version.created_at,
         isCurrent: version.current
       };
-    })
+    }),
+    isUnderQuery: ret.under_query
   };
 };
 
@@ -251,7 +252,8 @@ const mapReturn = (ret) => {
 
   return {
     status,
-    received_date: receivedDate
+    received_date: receivedDate,
+    under_query: ret.isUnderQuery
   };
 };
 

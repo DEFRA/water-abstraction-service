@@ -22,7 +22,7 @@ const createFromObject = async (data) => {
   // Write data row to scheduled_notification DB table
   const {rows: [row], error} = await scheduledNotification.create(dbRow);
   if (error) {
-    throw Boom.badImplementation(error);
+    throw Boom.boomify(error);
   }
   return row;
 };

@@ -65,14 +65,16 @@ const returnSchema = {
     })
   }),
   metadata: Joi.object(),
-  user: userSchema
+  user: userSchema,
+  isUnderQuery: Joi.boolean()
 };
 
 const headerSchema = {
   returnId: Joi.string().required(),
   status: Joi.string().valid(statuses).required(),
   receivedDate: Joi.string().regex(isoDateRegex).allow(null).required(),
-  user: userSchema
+  user: userSchema,
+  isUnderQuery: Joi.boolean().required()
 };
 
 module.exports = {
