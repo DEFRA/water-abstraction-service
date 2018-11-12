@@ -40,7 +40,7 @@ const prepareMessageData = async (data) => {
     throw Boom.notFound(`Return ${returnId} not found`);
   }
 
-  return formatEnqueueOptions(process.env, { eventId, messageRef }, ret, contactData);
+  return formatEnqueueOptions({ eventId, messageRef }, ret, contactData);
 };
 
 module.exports = {
