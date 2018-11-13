@@ -62,7 +62,7 @@
     "hapi-auth-jwt2": "^8.1.0",
     "hapi-pg-rest-api": "https://github.com/DEFRA/hapi-pg-rest-api.git#v4.0",
     "hoek": "^4.2.1",
-    "joi": "^13.1.2",
+    "joi": "^14.0.6",
     "lodash": "^4.17.5",
     "moment": "^2.20.1",
     "node-cron": "^1.2.1",
