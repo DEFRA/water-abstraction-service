@@ -1,7 +1,8 @@
 const Boom = require('boom');
 const Joi = require('joi');
 const controller = require('./controller');
-const { returnSchema } = require('./schema');
+const { returnSchema, headerSchema } = require('./schema');
+const logger = require('../../lib/logger');
 
 module.exports = {
 
@@ -29,10 +30,26 @@ module.exports = {
       description: 'Accepts posted return data from UI layer',
       validate: {
         failAction: async (request, h, err) => {
-          console.error('ValidationError:', err.message); // Better to use an actual logger here.
+          logger.error(err.message);
           throw Boom.badRequest(`Invalid request payload input`);
         },
         payload: returnSchema
+      }
+    }
+  },
+
+  patchReturnHeader: {
+    path: '/water/1.0/returns/header',
+    method: 'PATCH',
+    handler: controller.patchReturnHeader,
+    config: {
+      description: 'Updates return row data, e.g. received date, under query',
+      validate: {
+        failAction: async (request, h, err) => {
+          logger.error('ValidationError:', err.message);
+          throw Boom.badRequest(`Invalid request payload input`);
+        },
+        payload: headerSchema
       }
     }
   }

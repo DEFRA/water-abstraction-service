@@ -323,8 +323,6 @@ class NALDTransformer extends BaseTransformer {
     purposes.forEach((purpose) => {
       const points = purpose.purposePoints.map((purposePoint) => {
         return NALDHelpers.formatAbstractionPoint(purposePoint.point_detail);
-        // console.log(purposePoint);
-        // return NALDHelpers.abstractionPointToString(NALDHelpers.formatAbstractionPoint(purposePoint.point_detail));
       });
 
       purpose.licenceConditions.forEach((condition) => {

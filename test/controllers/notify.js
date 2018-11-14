@@ -4,8 +4,6 @@ const lab = Lab.script();
 const Code = require('code');
 const server = require('../../index.js');
 
-let taskId;
-
 lab.experiment('Test sending a email notification', () => {
   lab.test('The API should throw an error when personalisation is not supplied', async () => {
     const request = {

@@ -6,7 +6,7 @@
 const { mapValues, find } = require('lodash');
 const { addressFormatter, findCurrent, crmNameFormatter, transformNull } = require('../../lib/licence-transformer/nald-functional');
 const sentenceCase = require('sentence-case');
-const moment = require('moment');
+const logger = require('../../lib/logger');
 
 /**
  * Contacts formatter
@@ -119,7 +119,7 @@ function buildCRMPacket (licenceData, licenceRef, licenceId) {
     metadata.contacts = contactsFormatter(findCurrent(licenceData.data.versions), licenceData.data.roles);
     crmData.metadata = JSON.stringify(metadata);
   } catch (e) {
-    console.error(e);
+    logger.error(e);
   }
   return crmData;
 }

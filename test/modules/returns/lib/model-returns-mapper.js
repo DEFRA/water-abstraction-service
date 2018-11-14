@@ -1,14 +1,16 @@
 const { expect } = require('code');
+const moment = require('moment');
 const { experiment, test } = exports.lab = require('lab').script();
 
-const { mapReturnToModel, mapReturnToVersion } = require('../../../../src/modules/returns/lib/model-returns-mapper');
+const { mapReturnToModel, mapReturnToVersion, mapReturn } = require('../../../../src/modules/returns/lib/model-returns-mapper');
 
 const getTestReturn = () => ({
   return_id: 'test-return-id',
   start_date: '2018-01-01',
   end_date: '2018-05-01',
   due_date: '2018-06-30',
-  returns_frequency: 'month'
+  returns_frequency: 'month',
+  under_query: true
 });
 
 const getTestReadingData = () => ({
@@ -79,6 +81,14 @@ experiment('mapReturnToModel', () => {
     let model = mapReturnToModel(testReturn, getTestVersion(), lines, versions);
     expect(model.dueDate).to.equal(testReturn.due_date);
   });
+
+  test('adds the under query flag from the return', async () => {
+    const lines = [];
+    const versions = [];
+    const testReturn = getTestReturn();
+    const model = mapReturnToModel(testReturn, getTestVersion(), lines, versions);
+    expect(model.isUnderQuery).to.be.true();
+  });
 });
 
 experiment('mapReturnToVersion', () => {
@@ -106,5 +116,26 @@ experiment('mapReturnToVersion', () => {
     };
 
     expect(JSON.parse(mappedVersion.metadata)).to.equal(expectedMetadata);
+  });
+});
+
+experiment('mapReturn', () => {
+  test('extracts only the expected data', async () => {
+    const receivedDate = moment().toISOString();
+    const returnModel = {
+      returnId: '123',
+      status: 'due',
+      receivedDate,
+      isNil: false,
+      isCurrent: true,
+      isUnderQuery: true
+    };
+
+    const mapped = mapReturn(returnModel);
+    expect(mapped).to.equal({
+      status: 'due',
+      received_date: receivedDate,
+      under_query: true
+    });
   });
 });

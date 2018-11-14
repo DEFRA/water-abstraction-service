@@ -24,8 +24,8 @@ const init = (config = {}) => {
   // Validate the provided config object
   const schema = {
     level: Joi.string().allow('debug', 'verbose', 'info', 'warn', 'error').default('info'),
-    airbrakeKey: Joi.string(),
-    airbrakeHost: Joi.string(),
+    airbrakeKey: Joi.string().allow(''),
+    airbrakeHost: Joi.string().allow(''),
     airbrakeLevel: Joi.string().allow('debug', 'verbose', 'info', 'warn', 'error').default('error')
   };
 
@@ -45,11 +45,10 @@ const init = (config = {}) => {
       host: options.airbrakeHost,
       projectId: true,
       level: options.airbrakeLevel,
-      env: process.env.NODE_ENV
+      env: process.env.NODE_ENV,
+      proxy: process.env.proxy
     };
     logger.add(Airbrake, airbrakeOptions);
-  } else {
-    logger.info('Airbrake/errbit integration disabled');
   }
 };
 

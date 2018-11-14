@@ -6,6 +6,13 @@ const {
 } = require('../../../lib/connectors/returns');
 
 const { mapReturnToVersion, mapReturnToLines, mapReturn } = require('./model-returns-mapper');
+const logger = require('../../../lib/logger');
+
+const throwIfError = error => {
+  if (error) {
+    throw Boom.boomify(error);
+  }
+};
 
 /**
  * Gets return row from returns API
@@ -19,9 +26,8 @@ const fetchReturn = async (returnId) => {
     licence_type: 'abstraction'
   };
   const { data: [returnRow], error } = await returns.findMany(filter);
-  if (error) {
-    throw Boom.badImplementation(error);
-  }
+  throwIfError(error);
+
   if (!returnRow) {
     throw Boom.notFound(`Return ${returnId} not found`);
   }
@@ -52,9 +58,8 @@ const fetchVersion = async (returnId, versionNumber) => {
 
   try {
     const { data: [versionRow], error } = await versions.findMany(filter, sort, pagination);
-    if (error) {
-      throw Boom.badImplementation(error);
-    }
+    throwIfError(error);
+
     if (!versionRow) {
       throw Boom.notFound(`Version for ${returnId} not found`);
     }
@@ -84,10 +89,7 @@ const fetchAllVersions = async (returnId) => {
   };
 
   const { data, error } = await versions.findMany(filter, sort);
-
-  if (error) {
-    throw Boom.badImplementation(error);
-  }
+  throwIfError(error);
 
   return data;
 };
@@ -110,8 +112,8 @@ const fetchLines = async (returnId, versionId) => {
   };
   const { data, error } = await lines.findMany(filter, sort, pagination);
   if (error) {
-    console.error(error);
-    throw Boom.badImplementation(error);
+    logger.error(error);
+    throw Boom.boomify(error);
   }
   return data;
 };
@@ -124,29 +126,27 @@ const fetchLines = async (returnId, versionId) => {
 const persistReturnData = async (ret) => {
   let linesData;
 
+  logger.info(`start: persistReturnData with return id ${ret.returnId}`);
+
   // Update the return
   const r = mapReturn(ret);
-  const { data: returnData, error: returnError } = await returns.updateMany({return_id: ret.returnId}, r);
-  if (returnError) {
-    throw Boom.badImplementation(returnError);
-  }
+  const { data: returnData, error: returnError } = await returns.updateMany({ return_id: ret.returnId }, r);
+  throwIfError(returnError);
 
   // Update the version
   const version = mapReturnToVersion(ret);
   const { data: versionData, error: versionError } = await versions.create(version);
-  if (versionError) {
-    throw Boom.badImplementation(versionError);
-  }
+  throwIfError(versionError);
 
   // Update the lines
   const lineRows = mapReturnToLines(ret, versionData);
   if (lineRows) {
     const { data, error: linesError } = await lines.create(lineRows);
     linesData = data;
-    if (linesError) {
-      throw Boom.badImplementation(linesError);
-    }
+    throwIfError(linesError);
   }
+
+  logger.info(`finish: persistReturnData with return id ${ret.returnId}`);
 
   return {
     return: returnData,
@@ -155,10 +155,28 @@ const persistReturnData = async (ret) => {
   };
 };
 
+/**
+ * Updates return row data - status, received date
+ * @param {Object} ret - return model
+ * @return {Promise} resolves when saved successfully
+ */
+const patchReturnData = async (ret) => {
+  const { returnId } = ret;
+
+  const { data, error } = await returns.updateOne(returnId, mapReturn(ret));
+
+  if (error) {
+    throw Boom.badImplementation(`Error updating return ${returnId}`, error);
+  }
+
+  return data;
+};
+
 module.exports = {
   fetchReturn,
   fetchVersion,
   fetchAllVersions,
   fetchLines,
-  persistReturnData
+  persistReturnData,
+  patchReturnData
 };

@@ -38,10 +38,10 @@ async function send (request, reply) {
       throw Boom.badRequest(err.message);
     }
     if (err.name === 'TemplateNotFoundError') {
-      throw Boom.badRequest(err);
+      throw Boom.boomify(err, { statusCode: 400 });
     }
     if (err.name === 'StatusCodeError') {
-      throw Boom.wrap(err, err.statusCode);
+      throw Boom.boomify(err, { statusCode: err.statusCode });
     }
     throw err;
   }

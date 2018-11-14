@@ -23,6 +23,8 @@ const {
   getFormatPurposes
 } = require('./lib/nald-returns-queries.js');
 
+const logger = require('../../lib/logger');
+
 /**
  * Gets the purposes together with their points, agreements and conditions
  * for the specified current version
@@ -138,7 +140,7 @@ const getLicenceJson = async (licenceNumber) => {
       return thisLicenceRow;
     }
   } catch (e) {
-    console.error(e);
+    logger.error(e);
   }
 };
 

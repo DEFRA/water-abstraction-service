@@ -7,7 +7,6 @@ const { promisify } = require('util');
  * @return {Promise}
  */
 const execCommand = (cmd) => {
-  console.log(cmd);
   return promisify(childProcess.exec)(cmd);
 };
 

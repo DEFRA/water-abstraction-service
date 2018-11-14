@@ -1,26 +1,29 @@
 const { load } = require('./src/modules/import/load');
 const { getNextImportBatch } = require('./src/modules/import/lib/import-log');
+const config = require('./config');
+const logger = require('./src/lib/logger');
+logger.init(config.logger);
 
 process.on('uncaughtException', (err) => {
-  console.error(err);
+  logger.error(err);
 });
 
 const checkImportQueue = async () => {
-  console.log('Import: check queue');
+  logger.info('Import: check queue');
 
   try {
     const data = await getNextImportBatch(100);
 
-    console.log(`Import: ${data.length} items to import. ${(new Date()).toISOString()}`);
+    logger.info(`Import: ${data.length} items to import. ${(new Date()).toISOString()}`);
 
     for (let row of data) {
       await load(row.licence_ref);
     }
   } catch (error) {
-    console.error(error);
+    logger.error(error);
   }
 
-  console.log(`Import: waiting 10 seconds`);
+  logger.info(`Import: waiting 10 seconds`);
   setTimeout(checkImportQueue, 10000);
 };
 
