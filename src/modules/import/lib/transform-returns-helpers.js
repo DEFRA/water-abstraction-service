@@ -1,6 +1,7 @@
 const moment = require('moment');
 const { findIndex, max, mapValues, chunk } = require('lodash');
 const { formatAbstractionPoint } = require('../../../lib/licence-transformer/nald-helpers');
+const naldDates = require('../../../lib/nald-dates');
 
 /**
  * Converts 'null' strings to real null in supplied object
@@ -321,7 +322,8 @@ const getStartDate = (startDate, endDate, period) => {
     o = d.startOf('month');
   }
   if (period === 'week') {
-    o = d.startOf('isoWeek');
+    const naldWeek = naldDates.getWeek(d);
+    o = naldWeek.start;
   }
   if (period === 'day') {
     o = d;

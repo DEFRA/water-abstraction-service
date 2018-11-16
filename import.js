@@ -1,3 +1,6 @@
+const moment = require('moment');
+moment.locale('en-gb');
+
 const { load } = require('./src/modules/import/load');
 const { getNextImportBatch } = require('./src/modules/import/lib/import-log');
 const config = require('./config');
