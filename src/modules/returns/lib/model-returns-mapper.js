@@ -2,6 +2,7 @@ const { get, pick } = require('lodash');
 const moment = require('moment');
 const { convertToCubicMetres, convertToUserUnit } = require('./unit-conversion');
 const uuidv4 = require('uuid/v4');
+const naldDates = require('../../../lib/nald-dates');
 
 /**
  * Converts a line from the returns service to
@@ -92,18 +93,18 @@ const getYears = (startDate, endDate) => {
  * @return {Array} list of required return lines
  */
 const getWeeks = (startDate, endDate) => {
-  const datePtr = moment(startDate);
+  let datePtr = naldDates.getWeek(startDate);
   const lines = [];
-  datePtr.startOf('week');
+
   do {
     lines.push({
-      startDate: datePtr.startOf('week').format('YYYY-MM-DD'),
-      endDate: datePtr.endOf('week').format('YYYY-MM-DD'),
+      startDate: datePtr.start.format('YYYY-MM-DD'),
+      endDate: datePtr.end.format('YYYY-MM-DD'),
       timePeriod: 'week'
     });
-    datePtr.add(1, 'week');
+    datePtr = naldDates.getWeek(datePtr.start.add(1, 'week'));
   }
-  while (datePtr.isSameOrBefore(endDate, 'month'));
+  while (datePtr.end.isSameOrBefore(endDate, 'day'));
 
   return lines;
 };
@@ -262,5 +263,6 @@ module.exports = {
   mapReturnToVersion,
   mapReturnToLines,
   mapReturn,
-  getRequiredLines
+  getRequiredLines,
+  getWeeks
 };

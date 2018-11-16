@@ -1,6 +1,8 @@
 const Lab = require('lab');
 const { beforeEach, experiment, test } = exports.lab = Lab.script();
 const { expect } = require('code');
+const moment = require('moment');
+moment.locale('en-gb');
 
 const {
   convertNullStrings,
@@ -14,7 +16,8 @@ const {
   getFormatEndDate,
   getFormatCycles,
   formatReturnMetadata,
-  getDueDate
+  getDueDate,
+  getStartDate
 } = require('../../../../src/modules/import/lib/transform-returns-helpers');
 
 experiment('Test returns data transformation helpers', () => {
@@ -467,5 +470,13 @@ experiment('getDueDate', () => {
   test('returns a date 28 days later', async () => {
     expect(getDueDate('2018-01-01')).to.equal('2018-01-29');
     expect(getDueDate('2018-12-10')).to.equal('2019-01-07');
+  });
+});
+
+experiment('getStartDate', () => {
+  test('a weekly date starts on a sunday', async () => {
+    const wednesday = '2018-11-14';
+    const sunday = '2018-11-11';
+    expect(getStartDate('2018-11-11', wednesday, 'week')).to.equal(sunday);
   });
 });
