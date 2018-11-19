@@ -3,24 +3,24 @@ const { experiment, test } = exports.lab = require('lab').script();
 const viewHelpers = require('../../../src/modules/pdf-notifications/view-helpers');
 
 experiment('paginateReturnLines (weekly)', async () => {
-  test('the first week uses the week ending date', async () => {
+  test('the first week uses the week ending date (saturday)', async () => {
     const personalisation = {
       start_date: '2018-01-03',
       end_date: '2018-02-18',
       returns_frequency: 'week'
     };
     const pages = viewHelpers.paginateReturnLines(personalisation);
-    expect(pages[0].columns[0].items[0].label).to.equal('7 January 2018');
+    expect(pages[0].columns[0].items[0].label).to.equal('6 January 2018');
   });
 
-  test('the last week uses the week ending date', async () => {
+  test('the last week uses the week ending date (saturday)', async () => {
     const personalisation = {
       start_date: '2018-01-03',
       end_date: '2018-02-18',
       returns_frequency: 'week'
     };
     const pages = viewHelpers.paginateReturnLines(personalisation);
-    expect(pages[0].columns[0].items[6].label).to.equal('18 February 2018');
+    expect(pages[0].columns[0].items[6].label).to.equal('17 February 2018');
   });
 
   // 14 rows per column
@@ -31,17 +31,17 @@ experiment('paginateReturnLines (weekly)', async () => {
       returns_frequency: 'week'
     };
     const pages = viewHelpers.paginateReturnLines(personalisation);
-    expect(pages[0].columns[1].items[0].label).to.equal('15 April 2018');
+    expect(pages[0].columns[1].items[0].label).to.equal('14 April 2018');
   });
 
   test('when more than two columns, there are two pages', async () => {
     const personalisation = {
       start_date: '2018-01-03',
-      end_date: '2018-07-22',
+      end_date: '2018-07-21',
       returns_frequency: 'week'
     };
     const pages = viewHelpers.paginateReturnLines(personalisation);
-    expect(pages[1].columns[0].items[0].label).to.equal('22 July 2018');
+    expect(pages[1].columns[0].items[0].label).to.equal('21 July 2018');
   });
 });
 

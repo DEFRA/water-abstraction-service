@@ -10,6 +10,9 @@ const HapiAuthJwt2 = require('hapi-auth-jwt2');
 const Vision = require('vision');
 const Nunjucks = require('nunjucks');
 
+const moment = require('moment');
+moment.locale('en-gb');
+
 // -------------- Require project code -----------------
 const config = require('./config');
 const messageQueue = require('./src/lib/message-queue');

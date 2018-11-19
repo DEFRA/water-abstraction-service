@@ -2,6 +2,8 @@ const moment = require('moment');
 const { chunk } = require('lodash');
 const naldRegions = require('./data/nald-regions');
 const naldAreas = require('./data/nald-areas');
+const naldDates = require('../../lib/nald-dates');
+
 /**
  * Outputs the region name given the NALD region code
  * @param {Number} code
@@ -48,8 +50,8 @@ const paginateDailyReturnLines = (startDate, endDate) => {
 };
 
 const paginateWeeklyReturnLines = (startDate, endDate) => {
-  let datePtr = moment(startDate).endOf('week');
-  const end = moment(endDate).endOf('week');
+  let datePtr = naldDates.getWeek(startDate).end;
+  const end = naldDates.getWeek(endDate).end;
   const dates = [];
   do {
     dates.push({ label: datePtr.format('D MMMM YYYY') });
