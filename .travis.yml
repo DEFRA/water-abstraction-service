@@ -11,7 +11,7 @@ addons:
   chrome: stable
   postgresql: "9.6"
   code_climate:
-    repo_token: 981ea381d551865b056ba4acaf82d61521b0ec79b3e067eaf0ab0f30019ca5d7
+    repo_token: $CODE_CLIMATE_REPORTER_ID
 
 before_install:
   - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
