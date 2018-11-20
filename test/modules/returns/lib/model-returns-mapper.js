@@ -1,8 +1,10 @@
 const { expect } = require('code');
 const moment = require('moment');
+moment.locale('en-gb');
+
 const { experiment, test } = exports.lab = require('lab').script();
 
-const { mapReturnToModel, mapReturnToVersion, mapReturn } = require('../../../../src/modules/returns/lib/model-returns-mapper');
+const { getWeeks, mapReturnToModel, mapReturnToVersion, mapReturn } = require('../../../../src/modules/returns/lib/model-returns-mapper');
 
 const getTestReturn = () => ({
   return_id: 'test-return-id',
@@ -137,5 +139,24 @@ experiment('mapReturn', () => {
       received_date: receivedDate,
       under_query: true
     });
+  });
+});
+
+experiment('getWeeks', () => {
+  test('returns a week starting on sunday', async () => {
+    const lines = getWeeks('2018-11-04', '2018-11-10');
+    expect(lines[0].startDate).to.equal('2018-11-04');
+    expect(lines[0].endDate).to.equal('2018-11-10');
+  });
+
+  /**
+   * Ensures that the last week does not bleed out of the
+   * bounds of the return cycle.
+   */
+  test('the last full week does not cross the end date', async () => {
+    const lines = getWeeks('2018-10-01', '2018-10-31');
+    const lastLine = lines.reverse()[0];
+    expect(lastLine.startDate).to.equal('2018-10-21');
+    expect(lastLine.endDate).to.equal('2018-10-27');
   });
 });
