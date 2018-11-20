@@ -1,25 +1,40 @@
 language: node_js
+
 node_js:
   - "8"
+
 dist: trusty
+
 sudo: required
+
 addons:
   chrome: stable
+  postgresql: "9.6"
+  code_climate:
+    repo_token: 981ea381d551865b056ba4acaf82d61521b0ec79b3e067eaf0ab0f30019ca5d7
+
 before_install:
   - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
+
 install:
   - npm install
-addons:
-  postgresql: "9.6"
+
 services:
   - postgresql
+
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
   - npm run migrate
+
 script:
   - npm run lint
   - npm run test:travis
   - npm run codecov
+
+after_success:
+  - npm install -g codeclimate-test-reporter
+  - codeclimate-test-reporter < lcov.info
+
 env:
   global:
     - DATABASE_URL=postgres://postgres:@localhost:5432/travis_ci_test
