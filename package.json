@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction",
-  "version": "1.0.0",
+  "version": "1.13.0",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,8 @@
     "codecov": "codecov",
     "migrate": "node scripts/create-schema && db-migrate up --verbose && node scripts/migrate-task-config",
     "migrate:local-test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test node scripts/create-schema && DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test db-migrate up --verbose && DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test node scripts/migrate-task-config",
-    "lint": "eslint ./src/**/*.js"
+    "lint": "eslint ./src/**/*.js",
+    "version": "auto-changelog -p --commit-limit false && git add CHANGELOG.md"
   },
   "engines": {
     "node": ">=8.0"
@@ -17,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "auto-changelog": "^1.10.2",
     "codecov": "^3.0.0",
     "csv-stringify": "^2.0.4",
     "db-migrate": "^0.10.1",
