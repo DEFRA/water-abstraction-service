@@ -29,5 +29,5 @@
 {% endblock %}
 
 {% block footer %}
-  {{ footer(3 + loop.index, totalPages) }}
+  {{ footer(3 + offset + loop.index, totalPages) }}
 {% endblock %}
