@@ -29,12 +29,11 @@ const formatAddressKeys = (contact) => {
 
 /**
  * Formats personalisation object
- * @param {Object} env - the environment from process.env
  * @param {Object} ret - the return row
  * @param {Object} contact - a contact from getting contact list call
  * @return {Object}
  */
-const formatEnqueuePersonalisation = (env, ret, contact) => {
+const formatEnqueuePersonalisation = (ret, contact) => {
   const {
     start_date: startDate,
     end_date: endDate,
@@ -75,7 +74,7 @@ const formatEnqueuePersonalisation = (env, ret, contact) => {
  * @param {Object} contactData - contact data, including address for sending
  * @return {Object} message data for enqueue()
  */
-const formatEnqueueOptions = (env, data, ret, contactData) => {
+const formatEnqueueOptions = (data, ret, contactData) => {
   const {
     return_id: returnId,
     licence_ref: licenceNumber
@@ -84,7 +83,7 @@ const formatEnqueueOptions = (env, data, ret, contactData) => {
 
   const { entity_id: entityId, ...contact } = contactData.contact;
 
-  const personalisation = formatEnqueuePersonalisation(env, ret, contact);
+  const personalisation = formatEnqueuePersonalisation(ret, contact);
 
   return {
     messageRef,
