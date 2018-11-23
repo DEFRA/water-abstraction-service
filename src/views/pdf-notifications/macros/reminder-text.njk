@@ -1,0 +1,64 @@
+{% macro reminderText(personalisation) %}
+
+        <div class="block bigger-text">
+
+          <div class="item">
+            <p>
+              Dear licence holder
+            </p>
+          </div>
+          <div class="item">
+            <p>
+              Your abstraction return for {{ personalisation.start_date | date }} to {{ personalisation.end_date | date }} is now overdue. You still have time to submit it online. Even if you did not abstract water you must complete a return.
+            </p>
+          </div>
+          <div class="item">
+            <h2>
+              You can be fined if you do not submit a return
+            </h2>
+          </div>
+          <div class="item">
+            <p>
+              Visit GOV.UK and search for ‘Manage your water abstraction or impoundment licence online’ to register with the service.
+            </p>
+          </div>
+          <div class="item">
+            <p>
+              We will send you a security code in the post within 5 days. You will then be able to submit your return.
+            </p>
+          </div>
+          <div class="item">
+            <h2>
+              If you are not the licence holder
+            </h2>
+          </div>
+
+          <div class="item">
+            <p>
+              If you usually submit returns on behalf of a licence holder you need to ask them to register with the service.
+            </p>
+          </div>
+
+          <div class="item">
+            <p>
+              They can then give you access to their account and permission to manage their returns.
+            </p>
+          </div>
+
+          <div class="item">
+            <p>
+              Alternatively, fill out the attached form and send it back straightaway.
+            </p>
+          </div>
+
+          <div class="item">
+            <p>
+              Yours faithfully
+            </p>
+            <p>
+              Water Resource Licensing Service
+            </p>
+          </div>
+
+        </div>
+{% endmacro %}

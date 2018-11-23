@@ -6,12 +6,13 @@ const { mapKeys, get, pick } = require('lodash');
  * @param {Object} ret - return row
  * @param {Object} event - event
  */
-const getJobData = (ret, event, messageRef) => {
+const getJobData = (ret, event, messageRef, config) => {
   return {
     returnId: ret.return_id,
     licenceNumber: ret.licence_ref,
     eventId: event.event_id,
-    messageRef
+    messageRef,
+    config
   };
 };
 
