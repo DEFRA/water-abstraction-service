@@ -7,6 +7,10 @@ const messageQueue = require('../../lib/message-queue');
 const { getJobData } = require('./lib/message-helpers');
 const { parseRequest } = require('./lib/request-parser');
 
+const pgOptions = {
+  expireIn: '1 day'
+};
+
 /**
  * Previews what will be send by the returns notification, by using the
  * same filter query used by the post call below
@@ -53,8 +57,7 @@ const postReturnNotification = async (request, h) => {
   const data = await findAllPages(returns, filter, sort, columns);
 
   // Generate a reference number
-  const { prefix = 'RFORM-' } = config;
-  const ref = generateReference(prefix);
+  const ref = generateReference(config.prefix);
 
   // Create container event in event log for tracking/reporting of batch
   const e = eventFactory({
@@ -69,9 +72,7 @@ const postReturnNotification = async (request, h) => {
   // Schedule building of individual messages
   for (let row of data) {
     const job = getJobData(row, e.data, messageRef, config);
-    await messageQueue.publish('returnsNotification.send', job, {
-      expireIn: '1 day'
-    });
+    await messageQueue.publish('returnsNotification.send', job, pgOptions);
   }
 
   return { event: e.data };

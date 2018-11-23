@@ -5,6 +5,7 @@
  */
 const getConfig = (config) => {
   const defaults = {
+    prefix: 'RFORM-',
     rolePriority: ['licence_holder']
   };
 

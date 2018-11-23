@@ -8,16 +8,19 @@ lab.experiment('Test getConfig', () => {
   lab.test('It should get a default config object', async () => {
     const result = getConfig();
     Code.expect(result).to.equal({
-      rolePriority: ['licence_holder']
+      rolePriority: ['licence_holder'],
+      prefix: 'RFORM-'
     });
   });
 
   lab.test('It should be possible to override default options', async () => {
     const result = getConfig({
-      rolePriority: ['returns_to', 'licence_holder']
+      rolePriority: ['returns_to', 'licence_holder'],
+      prefix: 'CUSTOM-'
     });
     Code.expect(result).to.equal({
-      rolePriority: ['returns_to', 'licence_holder']
+      rolePriority: ['returns_to', 'licence_holder'],
+      prefix: 'CUSTOM-'
     });
   });
 });
@@ -34,7 +37,8 @@ lab.experiment('Test parseRequest', () => {
       issuer: 'mail@example.com',
       name: 'Friendly name',
       config: {
-        rolePriority: ['returns_to', 'licence_holder']
+        rolePriority: ['returns_to', 'licence_holder'],
+        prefix: 'RFORM-'
       }
     }
   };
