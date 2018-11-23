@@ -57,7 +57,6 @@ lab.experiment('formatEnqueueOptions', () => {
   let result;
 
   lab.beforeEach(async () => {
-    const env = {};
     const data = { eventId: 1, messageRef: 'ref' };
     const ret = {
       due_date: '2018-01-01',
@@ -74,7 +73,7 @@ lab.experiment('formatEnqueueOptions', () => {
       }
     };
     const contactData = { contact: { entity_id: 'e_id' } };
-    result = formatEnqueueOptions(env, data, ret, contactData);
+    result = formatEnqueueOptions(data, ret, contactData);
   });
 
   lab.test('adds regionCode to the personalisation', async () => {

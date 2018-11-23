@@ -3,7 +3,7 @@ require('dotenv').config();
 module.exports = {
 
   admin: {
-    baseUrl: process.env.admin_base_url
+    baseUrl: process.env.ADMIN_BASE_URL
   },
 
   blipp: {
@@ -17,8 +17,8 @@ module.exports = {
 
   logger: {
     level: 'info',
-    airbrakeKey: process.env.errbit_key,
-    airbrakeHost: process.env.errbit_server,
+    airbrakeKey: process.env.ERRBIT_KEY,
+    airbrakeHost: process.env.ERRBIT_SERVER,
     airbrakeLevel: 'error'
   },
 
@@ -42,16 +42,16 @@ module.exports = {
 
   pgBoss: {
     schema: 'water',
-    application_name: process.env.servicename,
+    application_name: process.env.SERVICE_NAME,
     newJobCheckIntervalSeconds: 5
   },
 
   s3: {
-    accessKeyId: process.env.s3_key,
-    secretAccessKey: process.env.s3_secret,
+    accessKeyId: process.env.S3_KEY,
+    secretAccessKey: process.env.S3_SECRET,
     region: 'eu-west-1',
-    bucket: process.env.s3_bucket,
-    proxy: process.env.proxy
+    bucket: process.env.S3_BUCKET,
+    proxy: process.env.PROXY
   },
 
   server: {
@@ -61,6 +61,10 @@ module.exports = {
     }
   },
 
-  testMode: parseInt(process.env.test_mode) === 1
+  testMode: parseInt(process.env.TEST_MODE) === 1,
 
+  licence: {
+    regimeId: 1,
+    typeId: 8
+  }
 };

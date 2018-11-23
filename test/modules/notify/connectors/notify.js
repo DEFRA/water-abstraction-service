@@ -43,19 +43,19 @@ lab.experiment('Test getPdfNotifyKey', () => {
     NODE_ENV: 'preprod'
   };
 
-  const prod = {
+  const production = {
     ...env,
-    NODE_ENV: 'prod'
+    NODE_ENV: 'production'
   };
 
-  lab.test('Should return test key for all environments other than prod', async () => {
+  lab.test('Should return test key for all environments other than production', async () => {
     Code.expect(getPdfNotifyKey(test)).to.equal('test-key');
     Code.expect(getPdfNotifyKey(local)).to.equal('test-key');
     Code.expect(getPdfNotifyKey(preprod)).to.equal('test-key');
   });
 
-  lab.test('Should return live key for prod only', async () => {
-    Code.expect(getPdfNotifyKey(prod)).to.equal('live-key');
+  lab.test('Should return live key for production only', async () => {
+    Code.expect(getPdfNotifyKey(production)).to.equal('live-key');
   });
 });
 
