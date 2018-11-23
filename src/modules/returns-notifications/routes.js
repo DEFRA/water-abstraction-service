@@ -1,6 +1,16 @@
 const Joi = require('joi');
 const controller = require('./controller');
 
+const notificationId = Joi.string().required().valid(['pdf.return_form', 'pdf.return_reminder']);
+const payload = {
+  filter: Joi.object().required(),
+  issuer: Joi.string().email().required(),
+  name: Joi.string().required(),
+  config: Joi.object({
+    rolePriority: Joi.array().items(Joi.string().valid('licence_holder', 'returns_to'))
+  })
+};
+
 module.exports = {
 
   getReturnNotificationPreview: {
@@ -11,13 +21,9 @@ module.exports = {
       description: 'Sends a notification regarding a group of returns',
       validate: {
         params: {
-          notificationId: Joi.string().required()
+          notificationId
         },
-        payload: {
-          filter: Joi.object().required(),
-          issuer: Joi.string().email().required(),
-          name: Joi.string().required()
-        }
+        payload
       }
     }
   },
@@ -30,13 +36,9 @@ module.exports = {
       description: 'Sends a notification regarding a group of returns',
       validate: {
         params: {
-          notificationId: Joi.string().required()
+          notificationId
         },
-        payload: {
-          filter: Joi.object().required(),
-          issuer: Joi.string().email().required(),
-          name: Joi.string().required()
-        }
+        payload
       }
     }
   }

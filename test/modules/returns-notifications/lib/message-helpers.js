@@ -16,14 +16,19 @@ lab.experiment('Test getJobData', () => {
 
   const messageRef = 'REF';
 
+  const config = {
+    rolePriority: ['returns_to', 'licence_holder']
+  };
+
   lab.test('getJobData should format object', async () => {
-    const obj = getJobData(ret, event, messageRef);
+    const obj = getJobData(ret, event, messageRef, config);
 
     expect(obj).to.equal({
       eventId: event.event_id,
       returnId: ret.return_id,
       messageRef,
-      licenceNumber: ret.licence_ref
+      licenceNumber: ret.licence_ref,
+      config
     });
   });
 });
