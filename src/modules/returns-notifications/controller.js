@@ -45,14 +45,16 @@ const postReturnNotification = async (request, h) => {
     issuer,
     name,
     columns,
-    sort
+    sort,
+    config
   } = parseRequest(request);
 
   // Find all returns matching criteria
   const data = await findAllPages(returns, filter, sort, columns);
 
   // Generate a reference number
-  const ref = generateReference('RFORM-');
+  const { prefix = 'RFORM-' } = config;
+  const ref = generateReference(prefix);
 
   // Create container event in event log for tracking/reporting of batch
   const e = eventFactory({
@@ -66,11 +68,13 @@ const postReturnNotification = async (request, h) => {
 
   // Schedule building of individual messages
   for (let row of data) {
-    const job = getJobData(row, e.data, messageRef);
-    await messageQueue.publish('returnsNotification.send', job);
+    const job = getJobData(row, e.data, messageRef, config);
+    await messageQueue.publish('returnsNotification.send', job, {
+      expireIn: '1 day'
+    });
   }
 
-  return { };
+  return { event: e.data };
 };
 
 module.exports = {
