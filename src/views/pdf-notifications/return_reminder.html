@@ -9,8 +9,8 @@
   <body class="paper">
 
     {% set dataPages = paginateReturnLines(notification.personalisation) %}
-    {% set totalPages = dataPages.length + 5 %}
-    {% set offset=1 %}
+    {% set totalPages = dataPages.length + 4 %}
+    {% set offset=0 %}
 
     {% include 'pages/reminder-letter.njk' %}
     {% include 'pages/reminder-cover.njk' %}
