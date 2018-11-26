@@ -4,6 +4,14 @@ const controller = require('./controller');
 const { returnSchema, headerSchema } = require('./schema');
 const logger = require('../../lib/logger');
 
+/**
+ * Log error if validation fails
+ */
+const failAction = async (request, h, err) => {
+  logger.error(err.message, { path: request.path, payload: JSON.stringify(request.payload) });
+  throw Boom.badRequest(`Invalid request payload input`);
+};
+
 module.exports = {
 
   getReturn: {
@@ -29,10 +37,7 @@ module.exports = {
     config: {
       description: 'Accepts posted return data from UI layer',
       validate: {
-        failAction: async (request, h, err) => {
-          logger.error(err.message);
-          throw Boom.badRequest(`Invalid request payload input`);
-        },
+        failAction,
         payload: returnSchema
       }
     }
@@ -45,10 +50,7 @@ module.exports = {
     config: {
       description: 'Updates return row data, e.g. received date, under query',
       validate: {
-        failAction: async (request, h, err) => {
-          logger.error('ValidationError:', err.message);
-          throw Boom.badRequest(`Invalid request payload input`);
-        },
+        failAction,
         payload: headerSchema
       }
     }
