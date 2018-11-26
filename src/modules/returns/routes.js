@@ -1,16 +1,7 @@
-const Boom = require('boom');
 const Joi = require('joi');
 const controller = require('./controller');
+const { failAction } = require('./lib/route-helpers');
 const { returnSchema, headerSchema } = require('./schema');
-const logger = require('../../lib/logger');
-
-/**
- * Log error if validation fails
- */
-const failAction = async (request, h, err) => {
-  logger.error(err.message, { path: request.path, payload: JSON.stringify(request.payload) });
-  throw Boom.badRequest(`Invalid request payload input`);
-};
 
 module.exports = {
 

@@ -16,6 +16,10 @@ class ReturnAPIError extends ExtendableError {
   }
 };
 
+/**
+* If the argument passed in is truthy, throws a ReturnAPIError
+* @param {Object} error
+*/
 const throwIfError = error => {
   if (error) {
     throw new ReturnAPIError(error);
@@ -184,5 +188,7 @@ module.exports = {
   fetchAllVersions,
   fetchLines,
   persistReturnData,
-  patchReturnData
+  patchReturnData,
+  ReturnAPIError,
+  throwIfError
 };
