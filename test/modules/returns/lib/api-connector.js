@@ -35,3 +35,15 @@ experiment('patchReturnData', () => {
     });
   });
 });
+
+experiment('throwIfError', async () => {
+  test('Should throw an error if argument is truthy', async () => {
+    const func = () => {
+      apiConnector.throwIfError('Some message');
+    };
+    expect(func).to.throw(apiConnector.ReturnAPIError, 'Return API error "Some message"');
+  });
+  test('Should not throw an error if argument is null', async () => {
+    expect(apiConnector.throwIfError(null)).to.equal(undefined);
+  });
+});

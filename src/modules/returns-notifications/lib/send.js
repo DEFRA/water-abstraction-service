@@ -10,8 +10,8 @@ const { formatEnqueueOptions } = require('./message-helpers');
  * @param {String} licenceNumber
  * @return {Promise} resolves with array of contacts
  */
-const getContact = (licenceNumber) => {
-  return contactList.contactList({ system_external_id: licenceNumber }, ['returns_contact', 'licence_holder']);
+const getContact = (licenceNumber, rolePriority = ['licence_holder']) => {
+  return contactList.contactList({ system_external_id: licenceNumber }, rolePriority);
 };
 
 /**
@@ -23,12 +23,13 @@ const getContact = (licenceNumber) => {
  * @param {String} data.licenceNumber
  * @param {String} data.eventId - batch event ID from the events table
  * @param {String} data.messageRef - corresponds to message type / template used
+ * @param {String} data.config - task config data
  * @return {Promise} resolves when message queued with PG boss
  */
 const prepareMessageData = async (data) => {
-  const { returnId, licenceNumber, eventId, messageRef } = data;
+  const { returnId, licenceNumber, eventId, messageRef, config } = data;
 
-  const [contactData] = await getContact(licenceNumber);
+  const [contactData] = await getContact(licenceNumber, config.rolePriority);
 
   const { error, data: [ret] } = await returns.returns.findMany({return_id: returnId});
 
@@ -40,7 +41,7 @@ const prepareMessageData = async (data) => {
     throw Boom.notFound(`Return ${returnId} not found`);
   }
 
-  return formatEnqueueOptions(process.env, { eventId, messageRef }, ret, contactData);
+  return formatEnqueueOptions({ eventId, messageRef }, ret, contactData);
 };
 
 module.exports = {

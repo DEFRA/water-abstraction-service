@@ -16,14 +16,19 @@ lab.experiment('Test getJobData', () => {
 
   const messageRef = 'REF';
 
+  const config = {
+    rolePriority: ['returns_to', 'licence_holder']
+  };
+
   lab.test('getJobData should format object', async () => {
-    const obj = getJobData(ret, event, messageRef);
+    const obj = getJobData(ret, event, messageRef, config);
 
     expect(obj).to.equal({
       eventId: event.event_id,
       returnId: ret.return_id,
       messageRef,
-      licenceNumber: ret.licence_ref
+      licenceNumber: ret.licence_ref,
+      config
     });
   });
 });
@@ -52,7 +57,6 @@ lab.experiment('formatEnqueueOptions', () => {
   let result;
 
   lab.beforeEach(async () => {
-    const env = {};
     const data = { eventId: 1, messageRef: 'ref' };
     const ret = {
       due_date: '2018-01-01',
@@ -69,7 +73,7 @@ lab.experiment('formatEnqueueOptions', () => {
       }
     };
     const contactData = { contact: { entity_id: 'e_id' } };
-    result = formatEnqueueOptions(env, data, ret, contactData);
+    result = formatEnqueueOptions(data, ret, contactData);
   });
 
   lab.test('adds regionCode to the personalisation', async () => {

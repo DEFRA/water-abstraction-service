@@ -2,7 +2,10 @@
 const data = {
   eventId: '27175f42-cae3-4e19-85fa-65e8fbff6125',
   messageRef: 'pdf.testRef',
-  licenceNumber: '01/123'
+  licenceNumber: '01/123',
+  config: {
+    rolePriority: ['licence_holder', 'returns_to']
+  }
 };
 
 const ret = {

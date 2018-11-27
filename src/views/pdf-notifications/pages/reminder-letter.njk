@@ -1,0 +1,33 @@
+{% extends "../layouts/page-layout.html" %}
+{% from "../macros/header.njk" import header %}
+{% from "../macros/address.njk" import address %}
+{% from "../macros/returns-title.njk" import returnsTitleCustom %}
+{% from "../macros/reminder-text.njk" import reminderText %}
+{% from "../macros/footer.njk" import footer %}
+
+{% block header %}
+  {{ header(notification.personalisation, true) }}
+{% endblock %}
+
+{% block content %}
+  {{ address(notification.personalisation) }}
+
+  <div class="date-block">
+
+    <p>{{ notification.send_after | date }}</p>
+  </div>
+
+  {{ returnsTitleCustom('Your abstraction return is overdue') }}
+
+  <div id="cover-content">
+    <div class="columns">
+      <div class="column column--letter">
+        {{ reminderText(notification.personalisation) }}
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block footer %}
+  
+{% endblock %}

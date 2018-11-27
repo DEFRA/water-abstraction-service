@@ -1,4 +1,5 @@
 const Boom = require('boom');
+const ExtendableError = require('es6-error');
 const {
   returns,
   versions,
@@ -8,9 +9,20 @@ const {
 const { mapReturnToVersion, mapReturnToLines, mapReturn } = require('./model-returns-mapper');
 const logger = require('../../../lib/logger');
 
+class ReturnAPIError extends ExtendableError {
+  constructor (obj) {
+    const msg = JSON.stringify(obj);
+    super(`Return API error ${msg}`);
+  }
+};
+
+/**
+* If the argument passed in is truthy, throws a ReturnAPIError
+* @param {Object} error
+*/
 const throwIfError = error => {
   if (error) {
-    throw Boom.boomify(error);
+    throw new ReturnAPIError(error);
   }
 };
 
@@ -165,9 +177,7 @@ const patchReturnData = async (ret) => {
 
   const { data, error } = await returns.updateOne(returnId, mapReturn(ret));
 
-  if (error) {
-    throw Boom.badImplementation(`Error updating return ${returnId}`, error);
-  }
+  throwIfError(error);
 
   return data;
 };
@@ -178,5 +188,7 @@ module.exports = {
   fetchAllVersions,
   fetchLines,
   persistReturnData,
-  patchReturnData
+  patchReturnData,
+  ReturnAPIError,
+  throwIfError
 };

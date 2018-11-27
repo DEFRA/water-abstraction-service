@@ -1,5 +1,6 @@
 {% from "./region-and-area.njk" import regionAndArea %}
 
+
 {% macro header(personalisation, isFirstPage) %}
 <div class="columns">
   <div class="column">
@@ -16,6 +17,13 @@
           <span class="bold">{{ personalisation.licence_ref }}</span>
         </p>
       </div>
+    {% endif %}
+  </div>
+  <div>
+    {% if not isFirstPage %}
+    <div class="qr" style="text-align: center;">
+    {{ qrCode(personalisation.qr_url, 42) | safe }}
+    </div>
     {% endif %}
   </div>
   <div class="column meta">

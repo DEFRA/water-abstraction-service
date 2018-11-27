@@ -1,8 +1,7 @@
-const Boom = require('boom');
 const Joi = require('joi');
 const controller = require('./controller');
+const { failAction } = require('./lib/route-helpers');
 const { returnSchema, headerSchema } = require('./schema');
-const logger = require('../../lib/logger');
 
 module.exports = {
 
@@ -29,10 +28,7 @@ module.exports = {
     config: {
       description: 'Accepts posted return data from UI layer',
       validate: {
-        failAction: async (request, h, err) => {
-          logger.error(err.message);
-          throw Boom.badRequest(`Invalid request payload input`);
-        },
+        failAction,
         payload: returnSchema
       }
     }
@@ -45,10 +41,7 @@ module.exports = {
     config: {
       description: 'Updates return row data, e.g. received date, under query',
       validate: {
-        failAction: async (request, h, err) => {
-          logger.error('ValidationError:', err.message);
-          throw Boom.badRequest(`Invalid request payload input`);
-        },
+        failAction,
         payload: headerSchema
       }
     }

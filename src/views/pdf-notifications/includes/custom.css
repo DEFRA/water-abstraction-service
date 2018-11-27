@@ -82,6 +82,12 @@ li {
   padding-right: 10mm;
 }
 
+.column--letter {
+  flex-basis: 77.5%;
+  flex-grow: 0;
+}
+
+
 .columns .column:last-child {
   padding-right: 0;
 }
@@ -122,9 +128,7 @@ li {
 }
 
 #title-block {
-  position: absolute;
-  top: 100mm;
-  margin-bottom: 2mm;
+  margin-bottom: 6mm;
 }
 
 #address-container {
@@ -136,17 +140,16 @@ li {
   height: 26.8mm;
 }
 
+.address-spacer {
+  height: 88mm;
+}
+
 .address-block {
   position: absolute;
   bottom: 0;
   font-size: 8.5pt;
 }
 
-#cover-content {
-  position: relative;
-  top: 102mm;
-  height: 185mm;
-}
 
 #cover-layout {
   left: 90mm;
@@ -327,4 +330,8 @@ li {
 .number-group {
   display: inline-block;
   padding-right: 3mm;
+}
+
+.date-block {
+  margin-bottom: 6mm;
 }

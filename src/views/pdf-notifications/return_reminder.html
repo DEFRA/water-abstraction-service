@@ -12,9 +12,14 @@
     {% set totalPages = dataPages.length + 4 %}
     {% set offset=0 %}
 
-    {% include 'pages/cover.njk' %}
+    {% include 'pages/reminder-letter.njk' %}
+    {% include 'pages/reminder-cover.njk' %}
+
+
     {% include 'pages/guidance.njk' %}
     {% include 'pages/initial-questions.njk' %}
+
+
 
     {% for page in dataPages %}
       {% include 'pages/data-collection.njk' %}
