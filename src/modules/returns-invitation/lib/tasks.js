@@ -28,7 +28,7 @@ const enqueueMessages = async (state) => {
     try {
       await enqueue(message);
     } catch (err) {
-      logger.error(err);
+      logger.error('Failed to enqueue', err);
     }
   }
 };

@@ -52,7 +52,7 @@ async function notificationFactory (contactData, taskConfig, event) {
 
     return options;
   } catch (error) {
-    logger.error(error);
+    logger.error('Notification Factory error', error);
     return { error };
   }
 }

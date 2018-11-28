@@ -96,7 +96,6 @@ async function run (config) {
   const { error, rows } = await getPendingNotifications();
 
   if (error) {
-    logger.error(error);
     return { error };
   }
 
@@ -104,7 +103,6 @@ async function run (config) {
   for (let row of rows) {
     const { error } = await processEvent(row);
     if (error) {
-      logger.error(error);
       errors.push(error);
     }
   }
