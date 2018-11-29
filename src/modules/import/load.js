@@ -75,7 +75,7 @@ const load = async (licenceNumber) => {
     await setImportStatus(licenceNumber, 'OK');
     logger.info(`Import: complete for ${licenceNumber}`);
   } catch (error) {
-    logger.error(error);
+    logger.error(`Import failure for ${licenceNumber}`, error);
     await setImportStatus(licenceNumber, error.toString());
   }
 };

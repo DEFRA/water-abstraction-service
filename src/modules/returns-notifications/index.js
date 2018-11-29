@@ -10,7 +10,7 @@ const registerSendSubscriber = (messageQueue) => {
       await enqueue(options);
       return done();
     } catch (err) {
-      logger.error(err);
+      logger.error('Failed to enqueue return notification', err);
       return done(err);
     }
   });

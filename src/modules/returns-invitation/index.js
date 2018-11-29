@@ -17,7 +17,7 @@ module.exports = (messageQueue) => {
         try {
           await enqueueMessages(state);
         } catch (err) {
-          logger.error(err);
+          logger.error('Failed to enqueue', err);
           return done(err);
         }
 
