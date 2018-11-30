@@ -5,7 +5,7 @@ const version = '1.0';
 module.exports = {
 
   getUpdateLicence: {
-    method: 'GET',
+    method: 'POST',
     path: `/water/${version}/ar/{licenceRef*}`,
     handler: controller.getUpdateLicence,
     config: {
