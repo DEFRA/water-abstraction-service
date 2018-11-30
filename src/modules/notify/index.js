@@ -153,7 +153,7 @@ const registerSendSubscriber = messageQueue => {
       await send(id);
       return done();
     } catch (err) {
-      logger.error(err);
+      logger.error('Failed to send', err);
       return done(err);
     }
   });
@@ -179,7 +179,7 @@ const registerStatusCheckSubscriber = messageQueue => {
         await updateMessageStatus(id);
       }
     } catch (err) {
-      logger.error(err);
+      logger.error('Failed to update msg status', err);
       return done(err);
     }
 

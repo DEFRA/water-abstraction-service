@@ -8,7 +8,7 @@ const logger = require('./src/lib/logger');
 logger.init(config.logger);
 
 process.on('uncaughtException', (err) => {
-  logger.error(err);
+  logger.error('Import uncaughtException', err);
 });
 
 const checkImportQueue = async () => {
@@ -23,7 +23,7 @@ const checkImportQueue = async () => {
       await load(row.licence_ref);
     }
   } catch (error) {
-    logger.error(error);
+    logger.error('Import queue error', error);
   }
 
   logger.info(`Import: waiting 10 seconds`);

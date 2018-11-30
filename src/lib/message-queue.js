@@ -20,7 +20,7 @@ const boss = new PgBoss({
 });
 
 boss.on('error', error => {
-  logger.error(error);
+  logger.error('PG Boss Error', error);
 });
 
 module.exports = boss;
