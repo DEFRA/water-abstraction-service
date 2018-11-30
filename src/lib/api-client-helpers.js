@@ -1,5 +1,4 @@
 const ExtendableError = require('es6-error');
-const Boom = require('boom');
 
 class APIError extends ExtendableError {
   constructor (error) {
