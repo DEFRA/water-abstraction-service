@@ -4,7 +4,7 @@ const { expect } = require('code');
 const sinon = require('sinon');
 
 const { returns } = require('../../src/lib/connectors/returns');
-const { findAllPages } = require('../../src/lib/api-client-helpers');
+const { findAllPages, throwIfError } = require('../../src/lib/api-client-helpers');
 
 lab.experiment('Test findAllPages', () => {
   lab.before(async () => {
@@ -48,6 +48,23 @@ lab.experiment('Test findAllPages', () => {
     });
 
     expect(findAllPages(returns, {})).to.reject();
+  });
+});
+
+lab.experiment('Test throwIfError', () => {
+  lab.test('It should return if error is null', async () => {
+    expect(throwIfError(null)).to.equal(undefined);
+  });
+
+  lab.test('It should throw error if error is object', async () => {
+    const error = {
+      'name': 'ValidationError',
+      'message': 'ValidationError: Some message'
+    };
+    const func = () => {
+      throwIfError(error);
+    };
+    expect(func).to.throw('API error: {"name":"ValidationError","message":"ValidationError: Some message"}');
   });
 });
 

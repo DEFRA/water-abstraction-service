@@ -1,4 +1,11 @@
+const ExtendableError = require('es6-error');
 const Boom = require('boom');
+
+class APIError extends ExtendableError {
+  constructor (error) {
+    super(`API error: ${JSON.stringify(error)}`);
+  }
+};
 
 /**
  * Finds all pages of data for a particular filter request and returns as a
@@ -37,6 +44,17 @@ const findAllPages = async (apiClient, filter = {}, sort = {}, columns = []) => 
   return rows;
 };
 
+/**
+ * Accepts error response from hapi-pg-rest-api and throws if truthy
+ * @param  {Object|null} error [description]
+ */
+const throwIfError = (error) => {
+  if (error) {
+    throw new APIError(error);
+  }
+};
+
 module.exports = {
-  findAllPages
+  findAllPages,
+  throwIfError
 };

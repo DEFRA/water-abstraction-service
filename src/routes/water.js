@@ -15,6 +15,7 @@ const gaugingStationRoutes = require('../controllers/gauging-stations');
 const picklistRoutes = require('../controllers/picklists');
 const picklistItemRoutes = require('../controllers/picklist-items');
 const moduleRoutes = require('../modules/routes');
+const arAnalysisLicencesRoutes = require('../controllers/ar-analysis-licences');
 
 module.exports = [
   ...sessionRoutes,
@@ -29,6 +30,7 @@ module.exports = [
   ...gaugingStationRoutes,
   ...picklistRoutes,
   ...picklistItemRoutes,
+  ...arAnalysisLicencesRoutes,
   {
     method: 'GET',
     path: '/status',
