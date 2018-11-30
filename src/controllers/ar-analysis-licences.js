@@ -8,7 +8,7 @@ const { pool } = require('../lib/connectors/db.js');
 
 const ARAnalysisLicences = new HAPIRestAPI({
   table: 'water.ar_analysis_licences',
-  primaryKey: 'id',
+  primaryKey: 'licence_ref',
   endpoint: '/water/1.0/ar/licences',
   connection: pool,
   primaryKeyAuto: false,
