@@ -3,7 +3,8 @@ const controller = require('./controller');
 const version = '1.0';
 
 module.exports = {
-  getLicence: {
+
+  getUpdateLicence: {
     method: 'GET',
     path: `/water/${version}/ar/{licenceRef*}`,
     handler: controller.getUpdateLicence,

@@ -8,6 +8,16 @@ class APIError extends ExtendableError {
 };
 
 /**
+ * Accepts error response from hapi-pg-rest-api and throws if truthy
+ * @param  {Object|null} error [description]
+ */
+const throwIfError = (error) => {
+  if (error) {
+    throw new APIError(error);
+  }
+};
+
+/**
  * Finds all pages of data for a particular filter request and returns as a
  * flat array
  *
@@ -21,9 +31,7 @@ const findAllPages = async (apiClient, filter = {}, sort = {}, columns = []) => 
   // Find first page
   const { error, pagination: { pageCount, perPage } } = await apiClient.findMany(filter, sort, null, []);
 
-  if (error) {
-    throw Boom.boomify(error);
-  }
+  throwIfError(error);
 
   const rows = [];
 
@@ -34,24 +42,12 @@ const findAllPages = async (apiClient, filter = {}, sort = {}, columns = []) => 
     };
     const { error, data } = await apiClient.findMany(filter, sort, pagination, columns);
 
-    if (error) {
-      throw Boom.boomify(error);
-    }
+    throwIfError(error);
 
     rows.push(...data);
   }
 
   return rows;
-};
-
-/**
- * Accepts error response from hapi-pg-rest-api and throws if truthy
- * @param  {Object|null} error [description]
- */
-const throwIfError = (error) => {
-  if (error) {
-    throw new APIError(error);
-  }
 };
 
 module.exports = {

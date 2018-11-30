@@ -1,5 +1,15 @@
 const Boom = require('boom');
-const { updateLicenceRow } = require('./lib/update-licence-row');
+const { updateLicenceRow, updateAllLicences } = require('./lib/update-licence-row');
+const cron = require('node-cron');
+const logger = require('../../lib/logger');
+
+/**
+ * Run task nightly at 2am to refresh all data
+ */
+cron.schedule('0 2 * * *', () => {
+  logger.info(`Starting AR licence refresh`);
+  updateAllLicences();
+});
 
 /**
  * A webhook that updates the AR licence analysis table stored in the water service

@@ -2,12 +2,21 @@ const { get } = require('lodash');
 const ExtendableError = require('es6-error');
 
 const permit = require('../../../lib/connectors/permit');
+const logger = require('../../../lib/logger');
 const { licence, abstractionReform } = require('../../../../config');
 const { mapLicenceToTableRow } = require('./licence-row-mapper');
-const { throwIfError } = require('../../../lib/api-client-helpers');
+const { findAllPages, throwIfError } = require('../../../lib/api-client-helpers');
 const arAnalysis = require('../../../controllers/ar-analysis-licences.js');
 
 class NotFoundError extends ExtendableError {};
+
+const getLicenceTypeFilter = (config) => {
+  const { regimeId, typeId } = config;
+  return {
+    licence_regime_id: regimeId,
+    licence_type_id: typeId
+  };
+};
 
 /**
  * Gets permit repo filter
@@ -18,11 +27,8 @@ class NotFoundError extends ExtendableError {};
  * @return {Object} filter object for permit repo API
  */
 const getPermitFilter = (licenceRef, config) => {
-  const { regimeId, typeId } = config;
-
   return {
-    licence_regime_id: regimeId,
-    licence_type_id: typeId,
+    ...getLicenceTypeFilter(config),
     licence_ref: licenceRef
   };
 };
@@ -64,8 +70,26 @@ const updateLicenceRow = async (licenceRef) => {
   return result.rowCount ? arAnalysisRow : undefined;
 };
 
+/**
+ * Updates the analysis table for all AR licences
+ * @return {Promise} resolves when done
+ */
+const updateAllLicences = async () => {
+  const filter = getLicenceTypeFilter(abstractionReform);
+  const results = await findAllPages(permit.licences, filter, {}, ['licence_ref']);
+  for (let row of results) {
+    const { licence_ref: licenceNumber } = row;
+    try {
+      await updateLicenceRow(licenceNumber);
+    } catch (error) {
+      logger.error(error);
+    }
+  }
+};
+
 module.exports = {
   getPermitFilter,
   getLicence,
-  updateLicenceRow
+  updateLicenceRow,
+  updateAllLicences
 };
