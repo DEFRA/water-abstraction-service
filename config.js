@@ -66,5 +66,10 @@ module.exports = {
   licence: {
     regimeId: 1,
     typeId: 8
+  },
+
+  abstractionReform: {
+    regimeId: 1,
+    typeId: 10
   }
 };

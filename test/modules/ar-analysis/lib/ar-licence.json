@@ -1,0 +1,116 @@
+{
+  "status": "Approved",
+  "actions": [
+    {
+      "type": "edit.licence",
+      "payload": {
+        "data": {
+          "NOTES": "Changed some notes in here"
+        },
+        "user": {
+          "id": 98,
+          "email": "mail@example.com"
+        },
+        "timestamp": 1543486627483
+      }
+    },
+    {
+      "type": "edit.version",
+      "payload": {
+        "data": {
+          "STATUS": "SUPER"
+        },
+        "user": {
+          "id": 98,
+          "email": "mail@example.com"
+        },
+        "timestamp": 1543486642429,
+        "issueNumber": 107,
+        "incrementNumber": 0
+      }
+    },
+    {
+      "type": "edit.party",
+      "payload": {
+        "data": {
+          "NAME": "MR JOHN DOE"
+        },
+        "user": {
+          "id": 98,
+          "email": "mail@example.com"
+        },
+        "partyId": 4537,
+        "timestamp": 1543486670670
+      }
+    },
+    {
+      "type": "edit.address",
+      "payload": {
+        "data": {
+          "POSTCODE": "AB1 B22"
+        },
+        "user": {
+          "id": 98,
+          "email": "mail@example.com"
+        },
+        "addressId": 10027030,
+        "timestamp": 1543486680203
+      }
+    },
+    {
+      "type": "set.status",
+      "payload": {
+        "user": {
+          "id": 98,
+          "email": "mail@example.com"
+        },
+        "notes": "Changed some things",
+        "status": "In review",
+        "timestamp": 1543486694660
+      }
+    },
+    {
+      "type": "set.status",
+      "payload": {
+        "user": {
+          "id": 98,
+          "email": "mail@example.com"
+        },
+        "notes": null,
+        "status": "Approved",
+        "timestamp": 1543486909677
+      }
+    },
+    {
+      "type": "set.status",
+      "payload": {
+        "user": {
+          "id": 98,
+          "email": "mail@example.com"
+        },
+        "notes": "Setting back to in progress",
+        "status": "In progress",
+        "timestamp": 1543486927890
+      }
+    },
+    {
+      "type": "set.status",
+      "payload": {
+        "user": {
+          "id": 98,
+          "email": "mail@example.com"
+        },
+        "notes": "Setting back to in progress",
+        "status": "Approved",
+        "timestamp": 1543486940013
+      }
+    }
+  ],
+  "lastEdit": {
+    "user": {
+      "id": 98,
+      "email": "mail@example.com"
+    },
+    "timestamp": 1543486940013
+  }
+}
