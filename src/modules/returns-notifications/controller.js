@@ -1,5 +1,4 @@
 const { returns } = require('../../lib/connectors/returns');
-const { findAllPages } = require('../../lib/api-client-helpers');
 const eventFactory = require('./lib/event-factory');
 const generateReference = require('../../lib/reference-generator');
 
@@ -23,7 +22,7 @@ const postPreviewReturnNotification = async (request, h) => {
   } = parseRequest(request);
 
   // Find all returns matching criteria
-  const data = await findAllPages(returns, filter, sort, columns);
+  const data = await returns.findAll(filter, sort, columns);
 
   return {
     error: null,
@@ -54,7 +53,7 @@ const postReturnNotification = async (request, h) => {
   } = parseRequest(request);
 
   // Find all returns matching criteria
-  const data = await findAllPages(returns, filter, sort, columns);
+  const data = await returns.findAll(filter, sort, columns);
 
   // Generate a reference number
   const ref = generateReference(config.prefix);

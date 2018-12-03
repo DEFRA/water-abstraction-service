@@ -3,7 +3,7 @@
  * For setting up notifications, each notification type is stores in the DB
  * as a blob of JSON config data
  */
-const HAPIRestAPI = require('hapi-pg-rest-api');
+const HAPIRestAPI = require('@envage/hapi-pg-rest-api');
 const Joi = require('joi');
 const { pool } = require('../lib/connectors/db.js');
 

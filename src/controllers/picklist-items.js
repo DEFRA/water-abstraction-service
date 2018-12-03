@@ -1,7 +1,7 @@
 /**
  * Picklist items for AR data
  */
-const HAPIRestAPI = require('hapi-pg-rest-api');
+const HAPIRestAPI = require('@envage/hapi-pg-rest-api');
 const Joi = require('joi');
 const { pool } = require('../lib/connectors/db.js');
 
