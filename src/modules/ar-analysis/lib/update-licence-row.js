@@ -1,11 +1,11 @@
 const { get } = require('lodash');
 const ExtendableError = require('es6-error');
+const { throwIfError } = require('@envage/hapi-pg-rest-api');
 
 const permit = require('../../../lib/connectors/permit');
 const logger = require('../../../lib/logger');
 const { licence, abstractionReform } = require('../../../../config');
 const { mapLicenceToTableRow } = require('./licence-row-mapper');
-const { findAllPages, throwIfError } = require('../../../lib/api-client-helpers');
 const arAnalysis = require('../../../controllers/ar-analysis-licences.js');
 
 class NotFoundError extends ExtendableError {};
@@ -76,7 +76,7 @@ const updateLicenceRow = async (licenceRef) => {
  */
 const updateAllLicences = async () => {
   const filter = getLicenceTypeFilter(abstractionReform);
-  const results = await findAllPages(permit.licences, filter, {}, ['licence_ref']);
+  const results = await permit.licences.findAll(filter, {}, ['licence_ref']);
   for (let row of results) {
     const { licence_ref: licenceNumber } = row;
     try {

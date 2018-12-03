@@ -4,7 +4,6 @@
  *
  */
 const { returns } = require('../../../lib/connectors/returns');
-const { findAllPages } = require('../../../lib/api-client-helpers');
 
 /**
  * Gets the filter which will be used to find returns whose IDs
@@ -54,7 +53,7 @@ const deleteReturn = (returnId) => returns.delete(returnId);
  */
 const deleteInvalidCycles = async (licenceNumber, returnIds) => {
   const filter = getFilter(licenceNumber, returnIds);
-  const rows = await findAllPages(returns, filter, {}, ['return_id', 'metadata']);
+  const rows = await returns.findAll(filter, {}, ['return_id', 'metadata']);
   return processReturnsAsync(rows, deleteReturn);
 };
 

@@ -9,7 +9,6 @@ const Boom = require('boom');
 
 // Library dependencies
 const { getDocumentContacts } = require('../../../lib/connectors/crm/documents');
-const { findAllPages } = require('../../../lib/api-client-helpers');
 const messageQueue = require('../../../lib/message-queue');
 const { returns } = require('../../../lib/connectors/returns');
 const logger = require('../../../lib/logger');
@@ -127,7 +126,7 @@ const fetchReturns = async (state) => {
   const columns = ['return_id', 'licence_ref'];
 
   // Find all returns matching criteria
-  return findAllPages(returns, filter, sort, columns);
+  return returns.findAll(filter, sort, columns);
 };
 
 module.exports = {
