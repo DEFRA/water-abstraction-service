@@ -7,7 +7,7 @@ class APIError extends ExtendableError {
 };
 
 /**
- * Accepts error response from hapi-pg-rest-api and throws if truthy
+ * Accepts error response from @envage/hapi-pg-rest-api and throws if truthy
  * @param  {Object|null} error [description]
  */
 const throwIfError = (error) => {

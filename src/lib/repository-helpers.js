@@ -5,7 +5,7 @@ const Boom = require('boom');
  * Loads exactly one record by ID or filter from specified repository
  * If !=1 record found, or DB error, a Boom
  * error is thrown
- * @param {Object} repo - the repository from hapi-pg-rest-api
+ * @param {Object} repo - the repository from @envage/hapi-pg-rest-api
  * @param {Mixed} id - ID or filter criteria
  * @return {Promise} resolves with single row of data
  */
