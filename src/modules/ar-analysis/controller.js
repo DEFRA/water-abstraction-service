@@ -5,8 +5,9 @@ const logger = require('../../lib/logger');
 
 /**
  * Run task nightly at 2am to refresh all data
+ * 0 2 * * *
  */
-cron.schedule('0 2 * * *', () => {
+cron.schedule('0 * * * *', () => {
   logger.info(`Starting AR licence refresh`);
   updateAllLicences();
 });
