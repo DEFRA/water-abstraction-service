@@ -28,9 +28,18 @@ async function updateMessageStatus (id) {
     throw new NotifyIdError();
   }
 
-  const status = await notify.getStatus(notifyId);
+  try {
+    const status = await notify.getStatus(notifyId);
+    return scheduledNotification.update({ id }, { notify_status: status });
+  } catch (e) {
+    if (get(e, 'error.errors', []).length === 0) {
+      // Not a notify error, throw to be caught by consumer.
+      throw e;
+    }
 
-  return scheduledNotification.update({ id }, { notify_status: status });
+    const error = e.error.errors[0];
+    logger.error(`Notify: ${error.message}`);
+  }
 }
 
 /**
