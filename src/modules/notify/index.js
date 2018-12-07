@@ -6,6 +6,7 @@
  */
 const Boom = require('boom');
 const moment = require('moment');
+const promiseRetry = require('promise-retry');
 const { get } = require('lodash');
 const notify = require('./connectors/notify');
 const { validateEnqueueOptions, isPdf, parseSentResponse } = require('./lib/helpers');
@@ -51,8 +52,8 @@ async function send (id) {
   // Get scheduled notification record
   const data = await findById(id);
 
-  if (data.status) {
-    throw new AlreadySentError();
+  if (data.status === 'sent') {
+    throw new AlreadySentError(`Message ${id} already sent, aborting`);
   }
 
   const { personalisation, message_ref: messageRef, recipient } = data;
@@ -82,6 +83,28 @@ async function send (id) {
   }
 
   return data;
+}
+
+/**
+ * Wraps the send function and automatically tries resending the message
+ * @param  {String} id - scheduled_notification ID
+ * @return {Promise}    resolves when message sent
+ */
+async function sendAndRetry (id) {
+  const options = {
+    retries: 5,
+    factor: 3,
+    minTimeout: 10 * 1000,
+    randomize: true
+  };
+
+  const func = (retry, number) => {
+    logger.log('info', `Sending message ${id} attempt ${number}`);
+    return send(id)
+      .catch(retry);
+  };
+
+  return promiseRetry(func, options);
 }
 
 /**
@@ -159,7 +182,7 @@ const registerSendSubscriber = messageQueue => {
     const { id } = job.data;
 
     try {
-      await send(id);
+      await sendAndRetry(id);
       return done();
     } catch (err) {
       logger.error('Failed to send', err);
