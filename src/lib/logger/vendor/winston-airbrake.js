@@ -8,6 +8,7 @@ var request = require('request');
 var util = require('util');
 var winston = require('winston');
 var AirbrakeClient = require('airbrake-js');
+const { isError } = require('lodash');
 
 var Airbrake = exports.Airbrake = winston.transports.Airbrake = function (options) {
   this.name = 'airbrake';
@@ -34,9 +35,12 @@ var Airbrake = exports.Airbrake = winston.transports.Airbrake = function (option
 
 util.inherits(Airbrake, winston.Transport);
 
-Airbrake.prototype.log = function (level, msg, meta, callback) {
-  var self = this;
-  var err = new Error(msg);
+Airbrake.prototype.log = function (level, msg, meta = {}, callback) {
+  const self = this;
+  const err = isError(meta) ? meta : new Error(msg);
+  const notice = {
+    error: err
+  };
 
   if (self.silent) {
     return callback(null, true);
@@ -44,17 +48,11 @@ Airbrake.prototype.log = function (level, msg, meta, callback) {
 
   err.type = level;
   if (meta) {
-    const {stack = '', url = '', component = '', action = '', params = {}, session = {}} = meta;
-
-    err.stack = stack;
-    err.url = url;
-    err.component = component;
-    err.action = action;
-    err.params = params;
-    err.session = session;
+    notice.params = meta.params;
+    notice.context = meta.context;
   }
 
-  self.airbrakeClient.notify(err, function (err, url) {
+  self.airbrakeClient.notify(notice, function (err, url) {
     if (err) {
       return callback(err, false);
     }

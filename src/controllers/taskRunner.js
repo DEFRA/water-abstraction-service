@@ -71,19 +71,22 @@ async function run () {
         log = await taskHandler.run(job.data[0]);
         logger.debug('task completed: ' + taskType);
       } catch (e) {
+        e.params = { job };
         log = e.message;
-        logger.error('task completed IN ERROR: ' + e);
+        logger.error('task completed IN ERROR: ' + e.message, e);
       }
 
       try {
         const interval = getJobInterval(job);
         await endTask(taskId, log, interval);
       } catch (e) {
-        logger.error(`Failed to end task: ${taskType}`, e);
+        e.params = { job, taskType };
+        logger.error('Failed to end task', e);
         return e;
       }
     }
   } catch (e) {
+    e.context = { component: 'src/controllers/taskRunner.js' };
     logger.error('Error running task', e);
   }
 }

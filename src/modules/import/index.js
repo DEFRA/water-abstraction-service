@@ -11,7 +11,8 @@ const scheduleImportSubscriber = async (job, done) => {
     Slack.post(`Import: scheduling complete`);
     done();
   } catch (err) {
-    logger.error(err);
+    err.params = { job };
+    logger.error('Schedule licence import error', err);
   }
 };
 
@@ -22,7 +23,8 @@ const startImportSubscriber = async (job, done) => {
     await downloadAndExtract();
     done();
   } catch (err) {
-    logger.error(err);
+    err.params = { job };
+    logger.error('Nald data import start error', err);
     done(err);
   }
 };

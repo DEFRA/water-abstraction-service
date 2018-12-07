@@ -39,7 +39,13 @@ async function updateMessageStatus (id) {
     }
 
     const error = e.error.errors[0];
-    logger.error(`Notify: ${error.message}`);
+    logger.error(`Notify: ${error.message}`, {
+      params: {
+        messageId: id,
+        notifyId
+      },
+      context: { component: 'src/modules/notify/index', action: 'updateMessageStatus' }
+    });
   }
 }
 
