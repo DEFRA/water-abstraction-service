@@ -127,9 +127,9 @@ const getVersionsJson = async (licenceRow) => {
  */
 const getLicenceJson = async (licenceNumber) => {
   try {
-    var data = await getMain(licenceNumber);
-    for (var licenceRow in data) {
-      var thisLicenceRow = data[licenceRow];
+    const data = await getMain(licenceNumber);
+    for (const licenceRow in data) {
+      const thisLicenceRow = data[licenceRow];
       thisLicenceRow.vmlVersion = 2;
       thisLicenceRow.data = {};
       thisLicenceRow.data.versions = await getVersionsJson(thisLicenceRow);
@@ -139,8 +139,10 @@ const getLicenceJson = async (licenceNumber) => {
       thisLicenceRow.data.purposes = await getPurposesJson(thisLicenceRow);
       return thisLicenceRow;
     }
-  } catch (e) {
-    logger.error(`Error getting licence JSON for ${licenceNumber}`, e);
+  } catch (error) {
+    error.params = { licenceNumber };
+    error.context = { component: 'src/modules/import/transform-permit.js', action: 'getLicenceJson' };
+    logger.error('Error getting licence JSON', error);
   }
 };
 
