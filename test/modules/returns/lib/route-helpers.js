@@ -1,4 +1,3 @@
-const Boom = require('boom');
 const { expect } = require('code');
 const sinon = require('sinon');
 const { experiment, test, before, after } = exports.lab = require('lab').script();
@@ -36,7 +35,8 @@ experiment('failAction', () => {
 
     expect(func()).to.reject(Error);
     expect(stub.firstCall.args[0]).to.equal(error.message);
-    expect(stub.firstCall.args[1].path).to.equal(request.path);
-    expect(stub.firstCall.args[1].payload).to.equal(JSON.stringify(request.payload));
+    expect(stub.firstCall.args[1].params.path).to.equal(request.path);
+    expect(stub.firstCall.args[1].context.component).to.equal(request.path);
+    expect(stub.firstCall.args[1].params.payload).to.equal(request.payload);
   });
 });

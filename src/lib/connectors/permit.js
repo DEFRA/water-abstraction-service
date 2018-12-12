@@ -3,7 +3,7 @@ const rp = require('request-promise-native').defaults({
   strictSSL: false
 });
 
-const { APIClient } = require('hapi-pg-rest-api');
+const { APIClient } = require('@envage/hapi-pg-rest-api');
 const config = require('../../../config');
 
 const licences = new APIClient(rp, {

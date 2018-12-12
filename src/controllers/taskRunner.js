@@ -9,59 +9,85 @@ async function reset () {
   await DB.query(query);
   return true;
 }
-async function run () {
-  let query, params;
+
+const getNextJob = async () => {
+  const query = `
+    WITH job AS (
+       SELECT *
+       FROM "water"."scheduler" job
+       WHERE running=0 and next_run <= now()
+       LIMIT  1
+       FOR    UPDATE
+    )
+    UPDATE "water"."scheduler" s
+    SET running=1, running_on = '${os.hostname()}'
+    from job
+    where job.task_id = s.task_id
+    RETURNING * ;`;
+
+  const job = await DB.query(query);
+  return job;
+};
+
+const getJobInterval = job => {
   try {
-    query = `
-      WITH job AS (
-         SELECT *
-         FROM "water"."scheduler" job
-         WHERE running=0 and next_run <= now()
-         LIMIT  1
-         FOR    UPDATE
-         )
-      UPDATE "water"."scheduler" s SET running=1, running_on = '${os.hostname()}'
-      from job where job.task_id=s.task_id
-      RETURNING * ;`;
-    var job = await DB.query(query);
-    if (job.data.length === 0) {} else {
-      let interval;
-      try {
-        interval = JSON.parse(job.data[0].task_config);
-      } catch (e) {
-        interval = { count: 1, period: 'minute' };
-      }
+    const interval = JSON.parse(job.data[0].task_config);
+    return interval;
+  } catch (e) {
+    return { count: 1, period: 'minute' };
+  }
+};
+
+const updateTaskTimeStarted = async taskId => {
+  const query = `UPDATE "water"."scheduler" SET last_run_started=NOW() where task_id=$1`;
+  await DB.query(query, [taskId]);
+};
+
+const endTask = async (taskId, log, interval) => {
+  const query = `
+    UPDATE "water"."scheduler"
+    SET running=0, running_on=null, log=$2, last_run=now(), next_run= now() + interval '${interval.count}' ${interval.period}
+    where task_id=$1`;
+
+  const params = [taskId, JSON.stringify(log)];
+  await DB.query(query, params);
+};
+
+async function run () {
+  try {
+    const job = await getNextJob();
+
+    if (job.data.length > 0) {
+      const { task_type: taskType, task_id: taskId } = job.data[0];
 
       // Record the time the task started
-      query = `UPDATE "water"."scheduler" SET last_run_started=NOW() where task_id=$1`;
-      params = [job.data[0].task_id];
-      await DB.query(query, params);
+      await updateTaskTimeStarted(taskId);
 
-      const taskHandler = require(`./tasks/${job.data[0].task_type}`);
+      const taskHandler = require(`./tasks/${taskType}`);
+      let log;
+
       try {
-        var log = await taskHandler.run(job.data[0]);
-        logger.debug('task completed: ' + job.data[0].task_type);
+        logger.debug('starting task: ' + taskType);
+        log = await taskHandler.run(job.data[0]);
+        logger.debug('task completed: ' + taskType);
       } catch (e) {
+        e.params = { job };
         log = e.message;
-        logger.debug('task completed IN ERROR: ' + job.data[0].task_type);
+        logger.error('task completed IN ERROR: ' + e.message, e);
       }
 
       try {
-        query = `UPDATE "water"."scheduler" SET running=0, running_on=null, log=$2,last_run=now(),next_run= now() + interval '${interval.count}' ${interval.period} where task_id=$1`;
-        params = [job.data[0].task_id, JSON.stringify(log)];
-        try {
-          await DB.query(query, params);
-        } catch (e) {
-          logger.error(e);
-          throw e;
-        }
+        const interval = getJobInterval(job);
+        await endTask(taskId, log, interval);
       } catch (e) {
-        logger.error(e);
+        e.params = { job, taskType };
+        logger.error('Failed to end task', e);
         return e;
       }
     }
   } catch (e) {
-    logger.error(e);
+    e.context = { component: 'src/controllers/taskRunner.js' };
+    logger.error('Error running task', e);
   }
 }
 

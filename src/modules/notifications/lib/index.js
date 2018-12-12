@@ -79,7 +79,7 @@ async function sendNotification (taskConfig, issuer, contactData, ref) {
     try {
       enqueue(n);
     } catch (error) {
-      logger.error(error);
+      logger.error('Error sending notification', error);
     }
   }
 

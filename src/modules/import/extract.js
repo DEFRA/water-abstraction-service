@@ -51,29 +51,15 @@ const extractArchive = async (source, destination, password) => {
 const extract = async () => {
   const primaryPath = path.join(localPath, 'nald_dl.zip');
   const secondaryPath = path.join(localPath, 'NALD.zip');
-  let fileExtracted = false;
 
   logger.info('Extracting data from NALD zip file');
 
   try {
-    logger.info('Attempting with new password');
     await extractArchive(primaryPath, localPath, process.env.NALD_ZIP_PASSWORD);
-    fileExtracted = true;
+    await extractArchive(secondaryPath, localPath);
   } catch (err) {
-    logger.error('Could not extract archive with new password');
+    logger.error('Could not extract NALD zip', err);
   }
-
-  if (!fileExtracted) {
-    try {
-      logger.info('Attempting with old password');
-      await execCommand(`rm ${secondaryPath}`);
-      await extractArchive(primaryPath, localPath, process.env.NALD_ZIP_PASSWORD_OLD);
-    } catch (err) {
-      logger.error('Failed to extract NALD zip data');
-    }
-  }
-
-  await extractArchive(secondaryPath, localPath);
 };
 
 /**

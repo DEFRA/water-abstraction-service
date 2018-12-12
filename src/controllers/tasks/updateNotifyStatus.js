@@ -55,7 +55,7 @@ async function run (config) {
 
     return { error: null };
   } catch (error) {
-    logger.error(error);
+    logger.error('Update notify status error', error);
     return { error };
   }
 }

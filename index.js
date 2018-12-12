@@ -107,12 +107,12 @@ const start = async function () {
       server.log('info', `Service ${name} running at: ${uri}`);
     }
   } catch (err) {
-    logger.error(err);
+    logger.error('Failed to start server', err);
   }
 };
 
 process.on('unhandledRejection', (err) => {
-  logger.error(err);
+  logger.error('Server unhandledRejection', err);
   process.exit(1);
 });
 
