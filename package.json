@@ -1,8 +1,12 @@
 {
-  "name": "water-abstraction",
+  "name": "water-abstraction-service",
   "version": "1.15.0",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DEFRA/water-abstraction-service"
+  },
   "scripts": {
     "test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test lab",
     "test:travis": "lab -t 55 -m 0 --coverage-path ./src/ -r lcov -o coverage/lcov.info -r console -o stdout",
