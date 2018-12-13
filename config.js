@@ -71,5 +71,7 @@ module.exports = {
   abstractionReform: {
     regimeId: 1,
     typeId: 10
-  }
+  },
+
+  version: '1.0'
 };
