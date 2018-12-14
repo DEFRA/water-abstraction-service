@@ -2,14 +2,30 @@ const Joi = require('joi');
 const controller = require('./controller');
 const { version } = require('../../../config');
 
+const pathPrefix = `/water/${version}/documents/`;
+
 module.exports = {
 
-  getUpdateLicence: {
+  getLicenceByDocumentId: {
     method: 'GET',
-    path: `/water/${version}/documents/{documentId}/licence`,
+    path: `${pathPrefix}{documentId}/licence`,
     handler: controller.getLicenceByDocumentId,
     config: {
-      description: 'Returns the full licence for a given document',
+      description: 'Returns the current version of the licence for a given document',
+      validate: {
+        params: {
+          documentId: Joi.string().guid().required()
+        }
+      }
+    }
+  },
+
+  getLicenceConditionsByDocumentId: {
+    method: 'GET',
+    path: `${pathPrefix}{documentId}/licence/conditions`,
+    handler: controller.getLicenceConditionsByDocumentId,
+    config: {
+      description: 'Returns the condition of the current version of the licence for a given document',
       validate: {
         params: {
           documentId: Joi.string().guid().required()
