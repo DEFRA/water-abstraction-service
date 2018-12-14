@@ -25,7 +25,21 @@ module.exports = {
     path: `${pathPrefix}{documentId}/licence/conditions`,
     handler: controller.getLicenceConditionsByDocumentId,
     config: {
-      description: 'Returns the condition of the current version of the licence for a given document',
+      description: 'Returns the conditions of the current version of the licence for a given document',
+      validate: {
+        params: {
+          documentId: Joi.string().guid().required()
+        }
+      }
+    }
+  },
+
+  getLicencePointsByDocumentId: {
+    method: 'GET',
+    path: `${pathPrefix}{documentId}/licence/points`,
+    handler: controller.getLicencePointsByDocumentId,
+    config: {
+      description: 'Returns the points of the current version of the licence for a given document',
       validate: {
         params: {
           documentId: Joi.string().guid().required()

@@ -125,3 +125,43 @@ experiment('getLicenceConditionsByDocumentId', () => {
     expect(loggedError.context).to.exist();
   });
 });
+
+experiment('getLicencePointsByDocumentId', () => {
+  beforeEach(async () => {
+    sandbox.stub(permitClient.licences, 'findMany');
+    sandbox.stub(documentsClient, 'findMany');
+    sandbox.stub(logger, 'error');
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  test('returns 404 for unknown document id', async () => {
+    documentsClient.findMany.resolves(emptyResponse);
+    const response = await controller.getLicencePointsByDocumentId(testRequest);
+    expect(response.output.statusCode).to.equal(404);
+  });
+
+  test('returns 404 for unknown licence id', async () => {
+    documentsClient.findMany.resolves(documentResponse);
+    permitClient.licences.findMany.resolves(emptyResponse);
+    const response = await controller.getLicencePointsByDocumentId(testRequest);
+    expect(response.output.statusCode).to.equal(404);
+  });
+
+  test('returns expected points', async () => {
+    documentsClient.findMany.resolves(documentResponse);
+    permitClient.licences.findMany.resolves(licenceResponse);
+    const response = await controller.getLicencePointsByDocumentId(testRequest);
+    expect(response.data).to.be.an.array();
+  });
+
+  test('provides error details in the event of a major error', async () => {
+    documentsClient.findMany.rejects(new Error('fail'));
+    await controller.getLicencePointsByDocumentId(testRequest);
+    const loggedError = logger.error.lastCall.args[1];
+    expect(loggedError.params).to.equal({ documentId: testRequest.params.documentId });
+    expect(loggedError.context).to.exist();
+  });
+});
