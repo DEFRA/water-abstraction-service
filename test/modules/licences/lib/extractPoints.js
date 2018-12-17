@@ -14,16 +14,16 @@ experiment('extractPoints', () => {
     const licence = {
       purposes: [{
         purposePoints: [
-          { point_detail: { ID: 1, LOCAL_NAME: 'one' } },
-          { point_detail: { ID: 2, LOCAL_NAME: 'two' } }
+          { point_detail: { ID: 1, LOCAL_NAME: 'one', FGAC_REGION_CODE: 2 } },
+          { point_detail: { ID: 2, LOCAL_NAME: 'two', FGAC_REGION_CODE: 2 } }
         ]
       }]
     };
 
     const points = extractPoints(licence);
     expect(points).to.equal([
-      { id: 1, name: 'one' },
-      { id: 2, name: 'two' }
+      { id: 'nald://points/2/1', name: 'one' },
+      { id: 'nald://points/2/2', name: 'two' }
     ]);
   });
 
@@ -32,13 +32,13 @@ experiment('extractPoints', () => {
       purposes: [
         {
           purposePoints: [
-            { point_detail: { ID: 1, LOCAL_NAME: 'one' } },
-            { point_detail: { ID: 2, LOCAL_NAME: 'two' } }
+            { point_detail: { ID: 1, LOCAL_NAME: 'one', FGAC_REGION_CODE: 3 } },
+            { point_detail: { ID: 2, LOCAL_NAME: 'two', FGAC_REGION_CODE: 3 } }
           ]
         },
         {
           purposePoints: [
-            { point_detail: { ID: 3, LOCAL_NAME: 'three' } }
+            { point_detail: { ID: 3, LOCAL_NAME: 'three', FGAC_REGION_CODE: 3 } }
           ]
         }
       ]
@@ -46,9 +46,9 @@ experiment('extractPoints', () => {
 
     const points = extractPoints(licence);
     expect(points).to.equal([
-      { id: 1, name: 'one' },
-      { id: 2, name: 'two' },
-      { id: 3, name: 'three' }
+      { id: 'nald://points/3/1', name: 'one' },
+      { id: 'nald://points/3/2', name: 'two' },
+      { id: 'nald://points/3/3', name: 'three' }
     ]);
   });
 
@@ -57,18 +57,18 @@ experiment('extractPoints', () => {
       purposes: [
         {
           purposePoints: [
-            { point_detail: { ID: 1, LOCAL_NAME: 'one' } },
-            { point_detail: { ID: 2, LOCAL_NAME: 'two' } }
+            { point_detail: { ID: 1, LOCAL_NAME: 'one', FGAC_REGION_CODE: 4 } },
+            { point_detail: { ID: 2, LOCAL_NAME: 'two', FGAC_REGION_CODE: 4 } }
           ]
         },
         {
           purposePoints: [
-            { point_detail: { ID: 3, LOCAL_NAME: 'three' } }
+            { point_detail: { ID: 3, LOCAL_NAME: 'three', FGAC_REGION_CODE: 4 } }
           ]
         },
         {
           purposePoints: [
-            { point_detail: { ID: 3, LOCAL_NAME: 'three' } }
+            { point_detail: { ID: 3, LOCAL_NAME: 'three', FGAC_REGION_CODE: 4 } }
           ]
         }
       ]
@@ -76,9 +76,9 @@ experiment('extractPoints', () => {
 
     const points = extractPoints(licence);
     expect(points).to.equal([
-      { id: 1, name: 'one' },
-      { id: 2, name: 'two' },
-      { id: 3, name: 'three' }
+      { id: 'nald://points/4/1', name: 'one' },
+      { id: 'nald://points/4/2', name: 'two' },
+      { id: 'nald://points/4/3', name: 'three' }
     ]);
   });
 });
