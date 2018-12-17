@@ -7,6 +7,7 @@ const pdfNotificationRoutes = require('./pdf-notifications/routes');
 const returnsNotificationRoutes = require('./returns-notifications/routes');
 const returnsInvitationRoutes = require('./returns-invitation/routes');
 const arAnalysisRoutes = require('./ar-analysis/routes');
+const licenceRoutes = require('./licences/routes');
 
 module.exports = [
   ...Object.values(notificationsRoutes),
@@ -17,5 +18,6 @@ module.exports = [
   ...Object.values(pdfNotificationRoutes),
   ...Object.values(returnsNotificationRoutes),
   ...Object.values(returnsInvitationRoutes),
-  ...Object.values(arAnalysisRoutes)
+  ...Object.values(arAnalysisRoutes),
+  ...Object.values(licenceRoutes)
 ];
