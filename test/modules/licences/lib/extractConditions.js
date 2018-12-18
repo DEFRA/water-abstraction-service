@@ -20,14 +20,16 @@ experiment('extractConditions', () => {
             PARAM1: '1 limited',
             PARAM2: '1,000 m3 per day',
             TEXT: 'Some condition text',
-            condition_type: { CODE: 'AA', SUBCODE: 'BB' }
+            condition_type: { CODE: 'AA', SUBCODE: 'BB' },
+            FGAC_REGION_CODE: 2
           },
           {
             ID: 2,
             PARAM1: '2 limited',
             PARAM2: '2,000 m3 per day',
             TEXT: 'Some condition text',
-            condition_type: { CODE: 'CC', SUBCODE: 'DD' }
+            condition_type: { CODE: 'CC', SUBCODE: 'DD' },
+            FGAC_REGION_CODE: 2
           }
         ]
       }]
@@ -49,14 +51,16 @@ experiment('extractConditions', () => {
               PARAM1: 'one/1 - p1',
               PARAM2: 'one/1 - p2',
               TEXT: 'one',
-              condition_type: { CODE: 'AA', SUBCODE: 'BB' }
+              condition_type: { CODE: 'AA', SUBCODE: 'BB' },
+              FGAC_REGION_CODE: 3
             },
             {
               ID: 2,
               PARAM1: 'one/2 - p1',
               PARAM2: 'one/2 - p2',
               TEXT: 'two',
-              condition_type: { CODE: 'CC', SUBCODE: 'DD' }
+              condition_type: { CODE: 'CC', SUBCODE: 'DD' },
+              FGAC_REGION_CODE: 3
             }
           ]
         },
@@ -68,7 +72,8 @@ experiment('extractConditions', () => {
               PARAM1: 'two/3 - p1',
               PARAM2: 'two/3 - p2',
               TEXT: 'three',
-              condition_type: { CODE: 'EE', SUBCODE: 'FF' }
+              condition_type: { CODE: 'EE', SUBCODE: 'FF' },
+              FGAC_REGION_CODE: 3
             }
           ]
         }
@@ -78,7 +83,8 @@ experiment('extractConditions', () => {
     const conditions = extractConditions(licence);
     expect(conditions).to.equal([
       {
-        id: 1,
+        id: 'nald://conditions/3/1',
+        regionCode: 3,
         code: 'AA',
         subCode: 'BB',
         text: 'one',
@@ -87,7 +93,8 @@ experiment('extractConditions', () => {
         purposeText: 'purpose one'
       },
       {
-        id: 2,
+        id: 'nald://conditions/3/2',
+        regionCode: 3,
         code: 'CC',
         subCode: 'DD',
         text: 'two',
@@ -96,7 +103,8 @@ experiment('extractConditions', () => {
         purposeText: 'purpose one'
       },
       {
-        id: 3,
+        id: 'nald://conditions/3/3',
+        regionCode: 3,
         code: 'EE',
         subCode: 'FF',
         text: 'three',

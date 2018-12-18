@@ -1,9 +1,12 @@
 const { get, uniqBy } = require('lodash');
+const { createUniqueId } = require('../../../lib/licence-transformer/nald-helpers');
+const type = 'points';
 
 const mapPoints = (points = []) => {
   return points.map(point => {
+    const { ID: id, FGAC_REGION_CODE: regionCode } = point.point_detail;
     return {
-      id: point.point_detail.ID,
+      id: createUniqueId(type, regionCode, id),
       name: point.point_detail.LOCAL_NAME
     };
   });

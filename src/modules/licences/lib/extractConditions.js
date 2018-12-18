@@ -1,10 +1,15 @@
 const { get } = require('lodash');
+const { createUniqueId } = require('../../../lib/licence-transformer/nald-helpers');
+const type = 'conditions';
 
 const mapConditions = (purposeText, conditions = []) => {
   return conditions.map(condition => {
+    const { FGAC_REGION_CODE: regionCode, ID: id } = condition;
+
     return {
       purposeText,
-      id: condition.ID,
+      regionCode,
+      id: createUniqueId(type, regionCode, id),
       code: condition.condition_type.CODE,
       subCode: condition.condition_type.SUBCODE,
       text: condition.TEXT,

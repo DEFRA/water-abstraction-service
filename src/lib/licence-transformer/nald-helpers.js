@@ -39,8 +39,26 @@ function abstractionPointToString (point) {
   return parts.join(', ');
 }
 
+/**
+ * Creates a unique id by including the NALD type, region code and
+ * id into a single string. This is because historically each region had
+ * a different database and therefore the ids are not unique.
+ */
+const createUniqueId = (type, regionCode, id) => `nald://${type}/${regionCode}/${id}`;
+
+/**
+ * Takes the unique id in the format created by the `createUniqueId`
+ * function and extracts the type, id and region code
+ */
+const parseUniqueId = uniqueId => {
+  const [type, regionCode, ...rest] = uniqueId.replace(/^nald:\/\//, '').split('/');
+  return { type, regionCode, id: rest.join('/') };
+};
+
 module.exports = {
   formatAbstractionPoint,
   abstractionPointToString,
-  formatNGRPointStr
+  formatNGRPointStr,
+  createUniqueId,
+  parseUniqueId
 };
