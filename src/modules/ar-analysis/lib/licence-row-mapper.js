@@ -44,6 +44,8 @@ const isContactEdited = (actions) => {
   return intersection(['edit.party', 'edit.address'], actionTypes).length > 0;
 };
 
+const getStatus = status => status || 'In progress';
+
 /**
  * A function to map an AR licence JSON object to a row of data for the
  * AR analysis table
@@ -56,7 +58,7 @@ const mapLicenceToTableRow = (regionCode, licenceRef, licence) => {
   const { status, actions } = licence;
   return {
     licence_ref: licenceRef,
-    status,
+    status: getStatus(status),
     region_code: parseInt(regionCode),
     start_date: getFirstEditTimestamp(actions),
     review_date: getTimestamp(actions, inReviewFilter),
