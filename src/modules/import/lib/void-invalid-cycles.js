@@ -43,7 +43,7 @@ const processReturnsAsync = (returns, func) => {
   return Promise.all(tasks);
 };
 
-const deleteReturn = (returnId) => returns.delete(returnId);
+const voidReturn = (returnId) => returns.updateOne(returnId, { status: 'void' });
 
 /**
  * Marks returns that weren't located as part of the import as deleted
@@ -51,14 +51,14 @@ const deleteReturn = (returnId) => returns.delete(returnId);
  * @param {Array} returnIds - a list of valid return IDs for the supplied licence number
  * @return {Promise} resolves when returns updated
  */
-const deleteInvalidCycles = async (licenceNumber, returnIds) => {
+const voidInvalidCycles = async (licenceNumber, returnIds) => {
   const filter = getFilter(licenceNumber, returnIds);
   const rows = await returns.findAll(filter, {}, ['return_id', 'metadata']);
-  return processReturnsAsync(rows, deleteReturn);
+  return processReturnsAsync(rows, voidReturn);
 };
 
 module.exports = {
-  deleteInvalidCycles,
+  voidInvalidCycles,
   processReturnsAsync,
   getFilter
 };

@@ -5,7 +5,7 @@ const { expect } = require('code');
 const {
   getFilter,
   processReturnsAsync
-} = require('../../../../src/modules/import/lib/delete-invalid-cycles');
+} = require('../../../../src/modules/import/lib/void-invalid-cycles');
 
 experiment('getFilter', () => {
   const licenceRef = '01/234/567';
