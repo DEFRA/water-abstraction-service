@@ -90,5 +90,6 @@ const buildReturnsPacket = async (licenceNumber) => {
 };
 
 module.exports = {
-  buildReturnsPacket
+  buildReturnsPacket,
+  getLicenceFormats
 };

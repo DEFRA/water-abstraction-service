@@ -1,5 +1,5 @@
 const moment = require('moment');
-const { findIndex, max, mapValues, chunk } = require('lodash');
+const { pick, findIndex, max, mapValues, chunk } = require('lodash');
 const { formatAbstractionPoint } = require('../../../lib/licence-transformer/nald-helpers');
 const naldDates = require('../../../lib/nald-dates');
 
@@ -234,30 +234,35 @@ const getFormatStartDate = (format) => {
 };
 
 /**
- * Given format/return version data, gets the start and end dates of
- * this format
+ * Finds the earlist valid date that represents the end date of
+ * the given format.
+ *
+ * Returns null, if no format end date.
  * @param {Object} format
  * @return {String} date YYYY-MM-DD or null
  */
 const getFormatEndDate = (format) => {
-  const versionEndDate = moment(format.EFF_END_DATE, 'DD/MM/YYYY');
-  const timeLimitedEndDate = moment(format.TIMELTD_END_DATE, 'DD/MM/YYYY');
+  const dates = Object.values(pick(format, [
+    'EFF_END_DATE',
+    'TIMELTD_END_DATE',
+    'LICENCE_LAPSED_DATE',
+    'LICENCE_REVOKED_DATE',
+    'LICENCE_EXPIRY_DATE'
+  ]));
 
-  const versionEndValid = versionEndDate.isValid();
-  const timeLimitedValid = timeLimitedEndDate.isValid();
-  const timeLimitedBefore = timeLimitedEndDate.isBefore(versionEndDate);
+  const validDates = dates
+    .map(date => moment(date, 'DD/MM/YYYY'))
+    .filter(date => date.isValid())
+    .sort(chronologicalMomentSort)
+    .map(date => date.format('YYYY-MM-DD'));
 
-  // Valid end date and invalid time-limited date
-  if (timeLimitedValid) {
-    if (timeLimitedBefore || !versionEndValid) {
-      return timeLimitedEndDate.format('YYYY-MM-DD');
-    }
-  }
-  if (versionEndValid) {
-    return versionEndDate.format('YYYY-MM-DD');
-  }
-  return null;
+  return validDates.length ? validDates[0] : null;
 };
+
+/**
+ * A sort camparator that will sort moment dates in ascending order
+ */
+const chronologicalMomentSort = (left, right) => left.diff(right);
 
 /**
  * Gets cycles for a given format.  If the format has no effective end date,
@@ -266,7 +271,7 @@ const getFormatEndDate = (format) => {
  * @param {Object} row of data from NALD_RET_FORMATS
  * @return {Array} array of return cycles with startDate and endDate in each item
  */
-const getFormatCycles = (format, licenceEffectiveStartDate) => {
+const getFormatCycles = (format, splitDate) => {
   const {
     FORM_PRODN_MONTH: productionMonth
   } = format;
@@ -284,7 +289,7 @@ const getFormatCycles = (format, licenceEffectiveStartDate) => {
     endDate = moment(getPeriodStart(moment().add(1, 'years'), isSummer)).subtract(1, 'day').format('YYYY-MM-DD');
   }
 
-  return getReturnCycles(startDate, endDate, licenceEffectiveStartDate, isSummer);
+  return getReturnCycles(startDate, endDate, splitDate, isSummer);
 };
 
 /*
@@ -294,14 +299,7 @@ const getFormatCycles = (format, licenceEffectiveStartDate) => {
  */
 const parseReturnId = (returnId) => {
   const [ version, regionCode, licenceNumber, formatId, startDate, endDate ] = returnId.split(':');
-  return {
-    version,
-    regionCode,
-    licenceNumber,
-    formatId,
-    startDate,
-    endDate
-  };
+  return { version, regionCode, licenceNumber, formatId, startDate, endDate };
 };
 
 /**
