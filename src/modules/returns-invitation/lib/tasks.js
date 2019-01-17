@@ -49,7 +49,7 @@ const createReturnsIndex = (returns) => {
   }, {});
 };
 
-const formatDate = date => moment(date).format('D MMM YYYY');
+const formatDate = date => moment(date).format('D MMMM YYYY');
 
 const addReturnPrefix = ret => mapKeys(ret, (value, key) => `return_${key}`);
 
@@ -60,9 +60,6 @@ const addReturnPrefix = ret => mapKeys(ret, (value, key) => `return_${key}`);
  * @return {[type]}     [description]
  */
 const formatReturn = ret => {
-  if (!ret) {
-    return {};
-  }
   const data = mapValues(ret, (value, key) => {
     const isDate = ['start_date', 'end_date', 'due_date'].includes(key);
     return isDate ? formatDate(value) : value;
@@ -136,8 +133,6 @@ const fetchReturnsContacts = async (state) => {
     contacts.push(...getTransformedReturnsContacts(data, index, rolePriority, state));
   }
 
-  console.log(contacts);
-
   return contacts;
 };
 
@@ -161,5 +156,6 @@ module.exports = {
   fetchReturnsContacts,
   fetchReturns,
   createReturnsIndex,
-  getTransformedReturnsContacts
+  getTransformedReturnsContacts,
+  formatReturn
 };
