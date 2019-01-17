@@ -31,7 +31,9 @@ const returnsInvite = async (request, isPreview = true) => {
   // Fetch returns contacts & de-duplicate
   const contacts = await fetchReturnsContacts(state);
   state = reducer(state, setContacts(contacts));
-  state = reducer(state, dedupeContacts());
+  if (config.deDupe) {
+    state = reducer(state, dedupeContacts());
+  }
 
   const ref = generateReference(state.config.prefix);
   state = reducer(state, createEvent(ref));

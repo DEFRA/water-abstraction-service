@@ -33,7 +33,7 @@ const messageFactory = (state, contact, data) => {
 
   const messageRef = get(state, `config.messageRef.${messageType}`, state.config.messageRef.default);
 
-  const personalisation = Object.assign({}, state.personalisation, formatAddress(contact));
+  const personalisation = Object.assign({}, state.personalisation, data, formatAddress(contact));
 
   return {
     messageRef,

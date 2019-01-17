@@ -1,3 +1,4 @@
+const { omit } = require('lodash');
 const { expect } = require('code');
 const { experiment, test } = exports.lab = require('lab').script();
 
@@ -12,7 +13,8 @@ experiment('actionCreators', () => {
     },
     rolePriority: ['role_a', 'role_b'],
     issuer: 'mail@example.com',
-    sendAfter: '2018-10-01'
+    sendAfter: '2018-10-01',
+    deDupe: false
   };
 
   const returns = [{
@@ -40,6 +42,7 @@ experiment('actionCreators', () => {
       'type': 'init',
       'payload': {
         'config': {
+          'deDupe': false,
           'name': 'Notification: test',
           'prefix': 'NOTE:',
           'messageRef': {
@@ -64,6 +67,12 @@ experiment('actionCreators', () => {
         'messages': []
       }
     });
+  });
+
+  test('init deDupe should default to true if not set', async () => {
+    const config = omit(testConfig, 'deDupe');
+    const action = actionCreators.init(config);
+    expect(action.payload.config.deDupe).to.equal(true);
   });
 
   test('init with invalid config should throw an error', async () => {

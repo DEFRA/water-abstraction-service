@@ -26,6 +26,10 @@ experiment('createReturnsIndex', () => {
 });
 
 experiment('getTransformedReturnsContacts', () => {
+  const state = {
+    returns
+  };
+
   const data = [{
     system_external_id: '01/123',
     contacts: [{
@@ -45,16 +49,17 @@ experiment('getTransformedReturnsContacts', () => {
 
   test('It should transform contacts returned from CRM API', async () => {
     const index = createReturnsIndex(returns);
-    const contacts = getTransformedReturnsContacts(data, index, ['returns_contact', 'licence_holder']);
+    const contacts = getTransformedReturnsContacts(data, index, ['returns_contact', 'licence_holder'], state);
 
-    expect(contacts).to.equal([ { data: { system_external_id: '01/123', return_id: 'v1:123:456' },
-      contact: { role: 'returns_contact', name: 'Contact B' },
-      group: 'dbd14dea22213a945d901c068458242f1b02ff44' },
-    { data: { system_external_id: '01/123', return_id: 'v1:789:123' },
-      contact: { role: 'returns_contact', name: 'Contact B' },
-      group: 'dbd14dea22213a945d901c068458242f1b02ff44' },
-    { data: { system_external_id: '01/456', return_id: 'v1:142:635' },
-      contact: { role: 'licence_holder', name: 'Contact C' },
-      group: 'ef6e40de93886bada7430abc6382d9b5b4d91282' } ]);
+    expect(contacts).to.equal([
+      { data: { system_external_id: '01/123', return_return_id: 'v1:123:456', return_licence_ref: '01/123' },
+        contact: { role: 'returns_contact', name: 'Contact B' },
+        group: 'dbd14dea22213a945d901c068458242f1b02ff44' },
+      { data: { system_external_id: '01/123', return_return_id: 'v1:789:123', return_licence_ref: '01/123' },
+        contact: { role: 'returns_contact', name: 'Contact B' },
+        group: 'dbd14dea22213a945d901c068458242f1b02ff44' },
+      { data: { system_external_id: '01/456', return_return_id: 'v1:142:635', return_licence_ref: '01/456' },
+        contact: { role: 'licence_holder', name: 'Contact C' },
+        group: 'ef6e40de93886bada7430abc6382d9b5b4d91282' } ]);
   });
 });
