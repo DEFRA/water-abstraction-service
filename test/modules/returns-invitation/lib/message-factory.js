@@ -18,7 +18,8 @@ experiment('messageFactory', () => {
       personalisation:
    { address_line_2: 'Testington',
      address_line_1: 'Daisy Farm',
-     postcode: 'DD1 1DD' },
+     postcode: 'DD1 1DD',
+     system_external_id: '01/123'},
       sendAfter: undefined,
       licences: [ '01/123' ],
       individualEntityId: 'entity_a',
@@ -33,7 +34,10 @@ experiment('messageFactory', () => {
 
     expect(msg).to.equal({ messageRef: 'template_name',
       recipient: 'entity_c@example.com',
-      personalisation: { postcode: undefined },
+      personalisation: {
+        postcode: undefined,
+        system_external_id: '01/123'
+      },
       sendAfter: undefined,
       licences: [ '01/123' ],
       individualEntityId: 'entity_c',

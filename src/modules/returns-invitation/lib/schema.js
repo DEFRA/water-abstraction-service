@@ -26,7 +26,9 @@ const config = {
 
   sendAfter: Joi.string().default(() => {
     return moment().format();
-  }, 'timestamp')
+  }, 'timestamp'),
+
+  deDupe: Joi.boolean().default(true)
 
 };
 

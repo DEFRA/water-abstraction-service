@@ -4,8 +4,9 @@
  */
 
 // Third-party dependencies
-const { get, chunk } = require('lodash');
+const { get, chunk, find, mapValues, mapKeys } = require('lodash');
 const Boom = require('boom');
+const moment = require('moment');
 
 // Library dependencies
 const { getDocumentContacts } = require('../../../lib/connectors/crm/documents');
@@ -48,6 +49,24 @@ const createReturnsIndex = (returns) => {
   }, {});
 };
 
+const formatDate = date => moment(date).format('D MMMM YYYY');
+
+const addReturnPrefix = ret => mapKeys(ret, (value, key) => `return_${key}`);
+
+/**
+ * Formats return data for inclusion in personalisation fields
+ * by formatting the dates to the form D MMM YYYY
+ * @param  {[type]} ret [description]
+ * @return {[type]}     [description]
+ */
+const formatReturn = ret => {
+  const data = mapValues(ret, (value, key) => {
+    const isDate = ['start_date', 'end_date', 'due_date'].includes(key);
+    return isDate ? formatDate(value) : value;
+  });
+  return addReturnPrefix(data);
+};
+
 /**
  * Given a page of licence contacts, a returns index, and a rolePriority array,
  * returns an array of transformed contacts ready for placing in the
@@ -55,17 +74,20 @@ const createReturnsIndex = (returns) => {
  * @param {Object} data - returned from CRM licence contacts call
  * @param {Object} index - returns index, with return IDs for each licence number
  * @param {Array} rolePriority - preferred contact roles for notification type
+ * @parm {Object} state - message state
  * @return {Array} contacts
  */
-const getTransformedReturnsContacts = (data, index, rolePriority) => {
+const getTransformedReturnsContacts = (data, index, rolePriority, state) => {
   return data.reduce((acc, contact) => {
     const { system_external_id: licenceNumber } = contact;
 
     // Create a row for each return ID for this licence
     const contacts = index[licenceNumber].reduce((acc, returnId) => {
+      const ret = find(state.returns, row => (row.return_id === returnId));
+
       const returnContact = {
         ...contact,
-        return_id: returnId
+        ...formatReturn(ret)
       };
       return [
         ...acc,
@@ -108,7 +130,7 @@ const fetchReturnsContacts = async (state) => {
       throw Boom.badImplementation(`Error getting contacts for licences ${page.join(',')}`, error);
     }
 
-    contacts.push(...getTransformedReturnsContacts(data, index, rolePriority));
+    contacts.push(...getTransformedReturnsContacts(data, index, rolePriority, state));
   }
 
   return contacts;
@@ -123,7 +145,7 @@ const fetchReturns = async (state) => {
   const { returnsFilter: filter } = state;
 
   const sort = {};
-  const columns = ['return_id', 'licence_ref'];
+  const columns = ['return_id', 'licence_ref', 'return_requirement', 'due_date', 'start_date', 'end_date'];
 
   // Find all returns matching criteria
   return returns.findAll(filter, sort, columns);
@@ -134,5 +156,6 @@ module.exports = {
   fetchReturnsContacts,
   fetchReturns,
   createReturnsIndex,
-  getTransformedReturnsContacts
+  getTransformedReturnsContacts,
+  formatReturn
 };
