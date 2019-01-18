@@ -2,7 +2,8 @@ const { expect } = require('code');
 const { experiment, test } = exports.lab = require('lab').script();
 
 const {
-  messageFactory
+  messageFactory,
+  formatName
 } = require('../../../../src/modules/returns-invitation/lib/message-factory');
 
 const { state } = require('./test-data');
@@ -43,5 +44,52 @@ experiment('messageFactory', () => {
       individualEntityId: 'entity_c',
       eventId: 'event_id',
       messageType: 'email' });
+  });
+});
+
+experiment('formatName', () => {
+  const salutation = 'Mr';
+  const forename = 'John';
+  const initials = 'J';
+  const name = 'Doe';
+
+  test('For companies, it should return the name only', async () => {
+    const contact = {
+      salutation: null,
+      forename: null,
+      initials: null,
+      name
+    };
+    expect(formatName(contact)).to.equal(contact.name);
+  });
+
+  test('If initials and forename are specified, it should use initials only', async () => {
+    const contact = {
+      salutation,
+      forename,
+      initials,
+      name
+    };
+    expect(formatName(contact)).to.equal('Mr J Doe');
+  });
+
+  test('If should use forename if initials omitted', async () => {
+    const contact = {
+      salutation,
+      forename,
+      initials: null,
+      name
+    };
+    expect(formatName(contact)).to.equal('Mr John Doe');
+  });
+
+  test('If should only use salutation and last name if forename and initials are omitted', async () => {
+    const contact = {
+      salutation,
+      forename: null,
+      initials: null,
+      name
+    };
+    expect(formatName(contact)).to.equal('Mr Doe');
   });
 });
