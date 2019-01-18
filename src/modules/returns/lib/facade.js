@@ -13,7 +13,7 @@ const getReturnData = async (returnId, versionNumber) => {
   const ret = await fetchReturn(returnId);
 
   // Whether to use new returns service - i.e. for Summer 2018 returns onwards
-  const isNew = moment(ret.end_date).isSameOrAfter('2018-09-01');
+  const isNew = moment(ret.end_date).isSameOrAfter('2018-10-31');
 
   // For Summer 2018 returns onwards, use new return service
   if (isNew) {
