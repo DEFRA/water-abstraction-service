@@ -14,9 +14,14 @@ const generateReference = require('../../lib/reference-generator');
 
 const messageQueue = require('../../lib/message-queue');
 
-const returnsInvite = async (request, isPreview = true) => {
-  const { filter, personalisation, config } = request.payload;
-
+/**
+ * Sets up state for sending a returns message
+ * @param  {Object}  config          - message configuration options
+ * @param  {Object}  personalisation - message personalisation that applies to all messages
+ * @param  {Object}  filter          - filter for locating returns in returns service
+ * @return {Promise}                 - state object
+ */
+const getReturnsMessageState = async (config, personalisation, filter) => {
   // Create initial state
   let state = reducer({}, init(config));
 
@@ -31,10 +36,18 @@ const returnsInvite = async (request, isPreview = true) => {
   // Fetch returns contacts & de-duplicate
   const contacts = await fetchReturnsContacts(state);
   state = reducer(state, setContacts(contacts));
-  state = reducer(state, dedupeContacts());
+  if (config.deDupe) {
+    state = reducer(state, dedupeContacts());
+  }
 
   const ref = generateReference(state.config.prefix);
-  state = reducer(state, createEvent(ref));
+  return reducer(state, createEvent(ref));
+};
+
+const returnsInvite = async (request, isPreview = true) => {
+  const { filter, personalisation, config } = request.payload;
+
+  let state = await getReturnsMessageState(config, personalisation, filter);
 
   // Create and persist event
   const ev = eventFactory(state);

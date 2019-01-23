@@ -1,6 +1,7 @@
 const riverLevels = require('../../lib/connectors/river-levels');
 const ngrConverter = require('./ngr-converter');
 const { isArray } = require('lodash');
+const { stationIsActive } = require('./api-mappers');
 
 /**
  * Gets measures from river level data
@@ -60,10 +61,12 @@ async function getStation (request, reply) {
     // Get data from river levels API
     const data = await riverLevels.getStation(id);
 
-    const { lat, long, easting, northing, label, catchmentName, riverName, status, stageScale } = data.items;
+    const { lat, long, easting, northing, label, catchmentName, riverName, stageScale } = data.items;
 
     // Convert easting/northing to NGR
     const ngr = ngrConverter(easting, northing);
+
+    const active = stationIsActive(data);
 
     return {
       lat,
@@ -74,7 +77,7 @@ async function getStation (request, reply) {
       label,
       stageScale,
       measures: getMeasures(data),
-      active: /^https?:\/\/environment.data.gov.uk\/flood-monitoring\/def\/core\/statusActive$/.test(status)
+      active
     };
   } catch (error) {
     request.log('error', error);

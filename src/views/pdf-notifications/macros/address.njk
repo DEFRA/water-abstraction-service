@@ -3,7 +3,11 @@
   <div class="address-block">
 
     {{ personalisation.salutation + ' ' if personalisation.salutation }}
-    {{ personalisation.forename + ' ' if personalisation.forename }}
+    {% if personalisation.initials %}
+      {{ personalisation.initials + ' ' }}
+    {% else %}
+      {{ personalisation.forename + ' ' if personalisation.forename }}
+    {% endif %}
     {{ personalisation.name }}
     <br>
 

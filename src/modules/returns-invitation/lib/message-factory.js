@@ -1,4 +1,17 @@
-const { isArray, get, pick } = require('lodash');
+const { isArray, get, pick, set } = require('lodash');
+
+/**
+ * Formats name
+ * @param  {Object} contact - from CRM contacts call
+ * @return {String}         - formatted name
+ */
+const formatName = (contact) => {
+  const keys = contact.initials
+    ? ['salutation', 'initials', 'name']
+    : ['salutation', 'forename', 'name'];
+  const parts = Object.values(pick(contact, keys));
+  return parts.filter(x => x).join(' ');
+};
 
 /**
  * Formats contact address to format expected by Notify
@@ -7,14 +20,10 @@ const { isArray, get, pick } = require('lodash');
  */
 const formatAddress = (contact) => {
   const { postcode } = contact;
-  const values = pick(contact, ['name', 'address_1', 'address_2', 'address_3', 'address_4', 'town', 'county']);
-
-  const addressLines = Object.values(values).filter(value => value);
+  const values = pick(contact, ['address_1', 'address_2', 'address_3', 'address_4', 'town', 'county']);
+  const addressLines = [formatName(contact), ...Object.values(values)].filter(value => value);
   return addressLines.reduce((acc, value, index) => {
-    return {
-      [`address_line_${index + 1}`]: value,
-      ...acc
-    };
+    return set(acc, `address_line_${index + 1}`, value);
   }, { postcode });
 };
 
@@ -33,7 +42,7 @@ const messageFactory = (state, contact, data) => {
 
   const messageRef = get(state, `config.messageRef.${messageType}`, state.config.messageRef.default);
 
-  const personalisation = Object.assign({}, state.personalisation, formatAddress(contact));
+  const personalisation = Object.assign({}, state.personalisation, data, formatAddress(contact));
 
   return {
     messageRef,
@@ -48,5 +57,6 @@ const messageFactory = (state, contact, data) => {
 };
 
 module.exports = {
+  formatName,
   messageFactory
 };

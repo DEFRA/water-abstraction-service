@@ -30,6 +30,15 @@ experiment('mapLicenceToTableRow', () => {
     expect(row.status).to.equal(arLicence.status);
   });
 
+  test('If the status is null, the licence is marked as In progress', async () => {
+    const licence = {
+      ...arLicence,
+      status: null
+    };
+    const mapped = mapLicenceToTableRow(regionCode, licenceRef, licence);
+    expect(mapped.status).to.equal('In progress');
+  });
+
   test('The region code should match the function argument', async () => {
     expect(row.region_code).to.equal(regionCode);
   });
