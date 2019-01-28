@@ -1,6 +1,6 @@
 const { get } = require('lodash');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
-const { users } = require('../../../lib/connectors/idm');
+const idm = require('../../../lib/connectors/idm');
 const { getPagination } = require('./pagination');
 
 const columns = ['user_id', 'user_name', 'role'];
@@ -41,7 +41,7 @@ const mapRow = (row) => {
  * @return {Promise}      - responds with API response
  */
 const searchUsers = async (query, page) => {
-  const response = await users.findMany(getFilter(query), sort, getPagination(page), columns);
+  const response = await idm.users.findMany(getFilter(query), sort, getPagination(page), columns);
   throwIfError(response.error);
   return {
     pagination: response.pagination,
@@ -51,5 +51,6 @@ const searchUsers = async (query, page) => {
 
 module.exports = {
   getFilter,
+  mapRow,
   searchUsers
 };
