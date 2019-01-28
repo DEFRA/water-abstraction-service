@@ -84,12 +84,12 @@ experiment('searchUsers', () => {
   });
 
   test('It should throw an error if error returned from IDM API call', async () => {
-    stub = sinon.stub(idm.users, 'findMany').resolves({ error: 'Some error' });
+    stub = sinon.stub(idm.usersClient, 'findMany').resolves({ error: 'Some error' });
     expect(searchUsers.searchUsers('mail@example.com', 2)).to.reject();
   });
 
   test('It should return mapped data from IDM API call', async () => {
-    stub = sinon.stub(idm.users, 'findMany').resolves({ data: [user], pagination });
+    stub = sinon.stub(idm.usersClient, 'findMany').resolves({ data: [user], pagination });
     const result = await searchUsers.searchUsers('mail@example.com', 2);
     expect(result.pagination).to.equal(getPagination());
     expect(result.data).to.be.an.array();

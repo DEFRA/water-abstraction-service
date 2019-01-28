@@ -41,7 +41,7 @@ const mapRow = (row) => {
  * @return {Promise}      - responds with API response
  */
 const searchUsers = async (query, page) => {
-  const response = await idm.users.findMany(getFilter(query), sort, getPagination(page), columns);
+  const response = await idm.usersClient.findMany(getFilter(query), sort, getPagination(page), columns);
   throwIfError(response.error);
   return {
     pagination: response.pagination,

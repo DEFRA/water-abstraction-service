@@ -22,6 +22,6 @@ module.exports = [
   ...Object.values(returnsInvitationRoutes),
   ...Object.values(arAnalysisRoutes),
   ...Object.values(licenceRoutes),
-  ...Object.values(internalSearch)
+  ...Object.values(internalSearch),
   ...Object.values(usersRoutes)
 ];
