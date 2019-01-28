@@ -24,12 +24,13 @@ const getCompanyLicences = (company, documentHeaders) => {
     }));
 };
 
-const getCompanyOutstadingVerifications = (company, verifications) => {
+const getCompanyOutstandingVerifications = (company, verifications) => {
   const companyEntityId = company.entityId;
   return verifications
     .filter(v => v.companyEntityId === companyEntityId)
     .map(v => ({
       code: v.code,
+      dateCreated: v.dateCreated,
       licences: v.documents
     }));
 };
@@ -39,7 +40,7 @@ const mapCompanies = (companies, verifications, documentHeaders) => {
     return {
       name: company.name,
       userRoles: company.userRoles,
-      outstandingVerifications: getCompanyOutstadingVerifications(company, verifications),
+      outstandingVerifications: getCompanyOutstandingVerifications(company, verifications),
       registeredLicences: getCompanyLicences(company, documentHeaders)
     };
   });

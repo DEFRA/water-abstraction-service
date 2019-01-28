@@ -52,7 +52,7 @@ const getVerificationsResponse = () => ({
       id: 'verification_one_id',
       companyEntityId: 'wet_and_wild_id',
       code: 'test_code_1',
-      dateCreated: '2019-01-11T11:24:27.000Z',
+      dateCreated: '2017-01-01T00:00:00.000Z',
       documents: [
         { licenceRef: 'lic_1', documentId: 'lic_1_document_id' },
         { licenceRef: 'lic_2', documentId: 'lic_2_document_id' }
@@ -62,7 +62,7 @@ const getVerificationsResponse = () => ({
       id: 'verification_two_id',
       companyEntityId: 'max_irrigation_id',
       code: 'test_code_2',
-      dateCreated: '2018-01-11T11:24:27.000Z',
+      dateCreated: '2018-01-01T00:00:00.000Z',
       documents: [
         { licenceRef: 'lic_3', documentId: 'lic_3_document_id' }
       ]
@@ -230,6 +230,7 @@ experiment('getStatus', () => {
       .to.equal([
         {
           code: 'test_code_1',
+          dateCreated: '2017-01-01T00:00:00.000Z',
           licences: [
             { licenceRef: 'lic_1', documentId: 'lic_1_document_id' },
             { licenceRef: 'lic_2', documentId: 'lic_2_document_id' }
@@ -241,6 +242,7 @@ experiment('getStatus', () => {
       .to.equal([
         {
           code: 'test_code_2',
+          dateCreated: '2018-01-01T00:00:00.000Z',
           licences: [{ licenceRef: 'lic_3', documentId: 'lic_3_document_id' }]
         }
       ]);
