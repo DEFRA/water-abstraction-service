@@ -1,12 +1,7 @@
-const moment = require('moment');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 const documents = require('../../../lib/connectors/crm/documents');
 const { getPagination } = require('./pagination');
-
-const mapSortableDate = (date) => {
-  const m = moment(date, 'YYYYMMDD');
-  return m.isValid() ? m.format('YYYY-MM-DD') : null;
-};
+const { returnsDateToIso } = require('../../import/lib/date-helpers');
 
 const mapRow = (row) => {
   return {
@@ -14,7 +9,7 @@ const mapRow = (row) => {
     licenceNumber: row.system_external_id,
     licenceHolder: row.metadata.Name,
     documentName: row.document_name,
-    expires: mapSortableDate(row.metadata.Expires)
+    expires: returnsDateToIso(row.metadata.Expires)
   };
 };
 
@@ -50,5 +45,6 @@ const searchDocuments = async (query, page = 1) => {
 };
 
 module.exports = {
+  mapRow,
   searchDocuments
 };

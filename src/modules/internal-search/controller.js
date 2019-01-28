@@ -1,7 +1,26 @@
+const { set } = require('lodash');
 const { parseQuery } = require('./lib/query-parser');
 const { searchUsers } = require('./lib/search-users');
 const { searchDocuments } = require('./lib/search-documents');
 const { searchReturns } = require('./lib/search-returns');
+
+/**
+ * Build response object
+ * Only adds key to response if there is >0 data items for that key
+ * @param  {Object} response - the API response being built
+ * @param  {String} key      - the key for data in the response object
+ * @param  {Object|Array} data - the data to add
+ */
+const buildResponse = (response, key, data) => {
+  if ('pagination' in data) {
+    if (data.data.length) {
+      set(response, key, data.data);
+      set(response, 'pagination', data.pagination);
+    }
+  } else if (data.length) {
+    set(response, key, data);
+  }
+};
 
 /**
  * Provides an API for internal search.
@@ -15,35 +34,28 @@ const getInternalSearch = async (request, h) => {
 
   const { isUser, isNumeric, isReturnId } = parseQuery(query);
 
+  const response = {};
+
   // Single return
   if (isReturnId) {
-    const returns = await searchReturns(query);
-    if (returns) {
-      return { returns };
-    }
-  }
-  // User search
-  if (isUser) {
-    const { data: users, pagination } = await searchUsers(query, page);
-    return users.length
-      ? { users, pagination }
-      : {};
+    const data = await searchReturns(query);
+    buildResponse(response, 'returns', data);
+  } else if (isUser) {
+    // User search
+    const data = await searchUsers(query, page);
+    buildResponse(response, 'users', data);
   } else {
     // Search returns
-    const response = {};
     if (isNumeric) {
-      const returns = await searchReturns(query);
-      if (returns.length) {
-        response.returns = returns;
-      }
+      const data = await searchReturns(query);
+      buildResponse(response, 'returns', data);
     }
     // Search CRM documents
-    const { data: documents, pagination } = await searchDocuments(query, page);
-    if (documents.length) {
-      Object.assign(response, { documents, pagination });
-    }
-    return response;
+    const data = await searchDocuments(query, page);
+    buildResponse(response, 'documents', data);
   }
+
+  return response;
 };
 
 module.exports = {
