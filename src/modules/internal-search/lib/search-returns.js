@@ -130,5 +130,10 @@ const searchReturns = async (query) => {
 };
 
 module.exports = {
-  searchReturns
+  mapReturn,
+  searchReturns,
+  filterReturnsByCRMDocument,
+  findReturnByReturnId,
+  findLatestReturnByFormatId,
+  findRecentReturnsByFormatId
 };

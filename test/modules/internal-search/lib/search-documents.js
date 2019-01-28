@@ -1,4 +1,3 @@
-const { diff } = require('lodash');
 const sinon = require('sinon');
 const Lab = require('lab');
 const { experiment, test, afterEach } = exports.lab = Lab.script();
