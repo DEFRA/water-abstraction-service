@@ -1,7 +1,5 @@
 const { parseQuery } = require('./lib/query-parser');
-const { searchUsers } = require('./lib/search-users');
-const { searchDocuments } = require('./lib/search-documents');
-const { searchReturns } = require('./lib/search-returns');
+const search = require('./lib/index');
 const { buildResponse } = require('./lib/build-response');
 
 /**
@@ -11,7 +9,7 @@ const { buildResponse } = require('./lib/build-response');
  * - Returns
  * - Users
  */
-const getInternalSearch = async (request, h) => {
+const getInternalSearch = async (request) => {
   const { query, page } = request.query;
 
   const { isUser, isNumeric, isReturnId } = parseQuery(query);
@@ -20,20 +18,20 @@ const getInternalSearch = async (request, h) => {
 
   // Single return
   if (isReturnId) {
-    const data = await searchReturns(query);
+    const data = await search.searchReturns(query);
     buildResponse(response, 'returns', data);
   } else if (isUser) {
     // User search
-    const data = await searchUsers(query, page);
+    const data = await search.searchUsers(query, page);
     buildResponse(response, 'users', data);
   } else {
     // Search returns
     if (isNumeric) {
-      const data = await searchReturns(query);
+      const data = await search.searchReturns(query);
       buildResponse(response, 'returns', data);
     }
     // Search CRM documents
-    const data = await searchDocuments(query, page);
+    const data = await search.searchDocuments(query, page);
     buildResponse(response, 'documents', data);
   }
 
