@@ -42,6 +42,7 @@ experiment('Internal search controller', () => {
     const request = getRequest('mail@example.com');
     const result = await controller.getInternalSearch(request);
     expect(Object.keys(result)).to.only.include(['users', 'pagination']);
+    expect(result.pagination.page).to.equal(3);
   });
 
   test('The response should only contain return data if a return ID search', async () => {
@@ -54,11 +55,13 @@ experiment('Internal search controller', () => {
     const request = getRequest('12345678');
     const result = await controller.getInternalSearch(request);
     expect(Object.keys(result)).to.only.include(['returns', 'documents', 'pagination']);
+    expect(result.pagination.page).to.equal(5);
   });
 
   test('The response should only contain documents data for a licence number search', async () => {
     const request = getRequest('01/123');
     const result = await controller.getInternalSearch(request);
     expect(Object.keys(result)).to.only.include(['documents', 'pagination']);
+    expect(result.pagination.page).to.equal(5);
   });
 });
