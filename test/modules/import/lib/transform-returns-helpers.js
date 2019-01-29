@@ -9,7 +9,6 @@ const {
   mapPeriod,
   mapReceivedDate,
   getReturnCycles,
-  getPeriodStart,
   addDate,
   getStatus,
   getFormatStartDate,
@@ -64,34 +63,6 @@ experiment('Test returns data transformation helpers', () => {
     const logs = [{ RECD_DATE: '25/12/2017' }, { RECD_DATE: '04/01/2017' }];
 
     expect(mapReceivedDate(logs)).to.equal('2017-12-25');
-  });
-
-  // ---------- getNextPeriodStart - financial
-  test('getNextPeriodStart for financial year return in same year', async () => {
-    expect(getPeriodStart('2018-05-01')).to.equal('2018-04-01');
-  });
-  test('getNextPeriodStart for financial year return in different year', async () => {
-    expect(getPeriodStart('2018-02-01')).to.equal('2017-04-01');
-  });
-  test('getNextPeriodStart for financial year return on period start date', async () => {
-    expect(getPeriodStart('2018-04-01')).to.equal('2018-04-01');
-  });
-  test('getNextPeriodStart for financial year return on period end date', async () => {
-    expect(getPeriodStart('2018-03-31')).to.equal('2017-04-01');
-  });
-
-  // ---------- getNextPeriodStart - summer
-  test('getNextPeriodStart for summer year return in same year', async () => {
-    expect(getPeriodStart('2018-12-01', true)).to.equal('2018-11-01');
-  });
-  test('getNextPeriodStart for summer year return in different year', async () => {
-    expect(getPeriodStart('2018-02-01', true)).to.equal('2017-11-01');
-  });
-  test('getNextPeriodStart for summer year return on period start date', async () => {
-    expect(getPeriodStart('2018-11-01', true)).to.equal('2018-11-01');
-  });
-  test('getNextPeriodStart for summer year return on period end date', async () => {
-    expect(getPeriodStart('2018-10-31', true)).to.equal('2017-11-01');
   });
 
   // ---------- addDate
