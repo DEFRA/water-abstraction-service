@@ -544,6 +544,7 @@ experiment('formatReturnMetadata', () => {
     metadata = formatReturnMetadata({
       TPT_FLAG: 'N',
       AREP_AREA_CODE: 'KAEA',
+      FORM_PRODN_MONTH: '65',
       purposes: [
         getPurpose('Water alias'),
         getPurpose('Agri alias'),
@@ -574,6 +575,10 @@ experiment('formatReturnMetadata', () => {
 
   test('adds an isTwoPartTariff flag', async () => {
     expect(metadata.isTwoPartTariff).to.be.false();
+  });
+
+  test('adds an isSummer flag', async () => {
+    expect(metadata.isSummer).to.be.true();
   });
 });
 
