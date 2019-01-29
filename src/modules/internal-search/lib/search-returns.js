@@ -1,4 +1,4 @@
-const { get } = require('lodash');
+const { get, groupBy, mapValues, first } = require('lodash');
 const helpers = require('@envage/water-abstraction-helpers');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 const returnsService = require('../../../lib/connectors/returns');
@@ -69,52 +69,51 @@ const findReturnByReturnId = async (returnId) => {
 };
 
 /**
- * Creates the required params to send to the return service to get the
- * latest return for a specified format ID
- * @param {String} formatId
- * @param {String} regionCode - the NALD region code
- * @return {Object} contains filter, sort, pagination, columns
+ * Given an array of returns which may be in various regions, but which
+ * are already sorted by reverse end date, returns an array with only
+ * the most recent return in each NALD region
+ * @param  {Array} returns - list of returns sorted by reverse end date
+ * @return {Array}         - a list of the most recent return in each region
  */
-const findLatestReturnByFormatId = async (formatId, regionCode) => {
-  const filter = {
-    regime: 'water',
-    licence_type: 'abstraction',
-    return_requirement: formatId,
-    'metadata->nald->regionCode': parseInt(regionCode)
-  };
+const mapRecentReturns = (returns) => {
+  // Group results by NALD region code
+  const grouped = groupBy(returns, ret => ret.metadata.nald.regionCode);
 
-  const sort = {
-    end_date: -1
-  };
+  // Discard all but last item in each group
+  const filtered = mapValues(grouped, group => first(group));
 
-  const pagination = {
-    perPage: 1,
-    page: 1
-  };
-
-  const columns = [
-    'return_id', 'status', 'licence_ref', 'return_requirement', 'metadata',
-    'due_date', 'end_date'
-  ];
-
-  const { data, error } = await returnsService.returns.findMany(filter, sort, pagination, columns);
-
-  throwIfError(error);
-  return data.length ? data[0] : null;
+  // Return the values from each group as array
+  return Object.values(filtered);
 };
 
 /**
  * Finds recent returns by format ID
+ * Return formats are split across regions, so may not be unique.  We therefore
+ * get all returns for the specified format ID, and then group them by
+ * region code before getting the most recent
  * @param  {String}  formatId - formatId - return_requirement field in returns service
  * @return {Promise}          Resolves with array of returns
  */
 const findRecentReturnsByFormatId = async (formatId) => {
-  const regions = [1, 2, 3, 4, 5, 6, 7, 8];
-  const tasks = regions.map(regionCode => {
-    return findLatestReturnByFormatId(formatId, regionCode);
-  });
-  const returns = await Promise.all(tasks);
-  return returns.filter(x => x);
+  const filter = {
+    regime: 'water',
+    licence_type: 'abstraction',
+    return_requirement: formatId,
+    start_date: {
+      $gte: '2008-04-01'
+    }
+  };
+  const sort = {
+    end_date: -1
+  };
+  const columns = [
+    'return_id', 'licence_ref', 'return_requirement',
+    'end_date', 'metadata', 'status'
+  ];
+
+  const returns = await returnsService.returns.findAll(filter, sort, columns);
+
+  return mapRecentReturns(returns);
 };
 
 /**
@@ -134,6 +133,6 @@ module.exports = {
   searchReturns,
   filterReturnsByCRMDocument,
   findReturnByReturnId,
-  findLatestReturnByFormatId,
-  findRecentReturnsByFormatId
+  findRecentReturnsByFormatId,
+  mapRecentReturns
 };

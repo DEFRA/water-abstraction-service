@@ -24,6 +24,14 @@ const returns = [{
       regionCode: 1
     }
   }
+}, {
+  return_id: 'c',
+  licence_ref: 'z',
+  metadata: {
+    nald: {
+      regionCode: 1
+    }
+  }
 }];
 
 const errorResponse = {
@@ -94,51 +102,11 @@ experiment('findReturnByReturnId', () => {
   });
 });
 
-experiment('findLatestReturnByFormatId', () => {
-  let stub;
-  const formatId = '12345';
-  const regionCode = '2';
-
-  afterEach(async () => {
-    stub.restore();
-  });
-
-  test('It should throw an error if API response contains error', async () => {
-    stub = sinon.stub(returnsService.returns, 'findMany').resolves(errorResponse);
-    expect(searchReturns.findLatestReturnByFormatId(12345, 2)).to.reject();
-  });
-
-  test('It should call API with correct arguments', async () => {
-    stub = sinon.stub(returnsService.returns, 'findMany').resolves(singleResponse);
-    await searchReturns.findLatestReturnByFormatId(formatId, regionCode);
-    const [ filter, sort, pagination, columns ] = stub.firstCall.args;
-
-    expect(filter).to.equal({
-      regime: 'water',
-      licence_type: 'abstraction',
-      return_requirement: formatId,
-      'metadata->nald->regionCode': parseInt(regionCode)
-    });
-
-    expect(sort).to.equal({
-      end_date: -1
-    });
-
-    expect(pagination).to.equal({
-      page: 1,
-      perPage: 1
-    });
-
-    expect(columns).to.equal([
-      'return_id', 'status', 'licence_ref', 'return_requirement', 'metadata',
-      'due_date', 'end_date'
-    ]);
-  });
-
-  test('It should resolve with data from API if call successful', async () => {
-    stub = sinon.stub(returnsService.returns, 'findMany').resolves(singleResponse);
-    const result = await searchReturns.findLatestReturnByFormatId(formatId, regionCode);
-    expect(result).to.equal(singleResponse.data[0]);
+experiment('mapRecentReturns', async () => {
+  test('It should select the first return in each NALD region', async () => {
+    const result = searchReturns.mapRecentReturns(returns);
+    const ids = result.map(row => row.return_id);
+    expect(ids).to.only.include(['a', 'b']);
   });
 });
 
@@ -147,19 +115,26 @@ experiment('findRecentReturnsByFormatId', async () => {
   const formatId = '12345';
 
   beforeEach(async () => {
-    stub = sinon.stub(returnsService.returns, 'findMany').resolves(singleResponse);
+    stub = sinon.stub(returnsService.returns, 'findAll').resolves(returns);
   });
 
   afterEach(async () => {
     stub.restore();
   });
 
-  test('It should search for the most recent return in each NALD region 1-8', async () => {
-    const result = await searchReturns.findRecentReturnsByFormatId(formatId);
-    expect(result.length).to.equal(8);
+  test('It should query the returns API with correct filter, columns and sorting options', async () => {
+    await searchReturns.findRecentReturnsByFormatId(formatId);
 
-    const callArgs = stub.getCalls().map(call => call.args);
-    const regionCodes = callArgs.map(call => call[0]['metadata->nald->regionCode']);
-    expect(regionCodes).to.equal([1, 2, 3, 4, 5, 6, 7, 8]);
+    const [filter, sort, columns] = returnsService.returns.findAll.firstCall.args;
+
+    expect(filter.regime).to.equal('water');
+    expect(filter.licence_type).to.equal('abstraction');
+    expect(filter.return_requirement).to.equal(formatId);
+    expect(filter.start_date).to.equal({$gte: '2008-04-01'});
+    expect(sort).to.equal({ end_date: -1 });
+    expect(columns).to.include([
+      'return_id', 'licence_ref', 'return_requirement',
+      'end_date', 'metadata', 'status'
+    ]);
   });
 });
