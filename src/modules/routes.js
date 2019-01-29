@@ -8,6 +8,7 @@ const returnsNotificationRoutes = require('./returns-notifications/routes');
 const returnsInvitationRoutes = require('./returns-invitation/routes');
 const arAnalysisRoutes = require('./ar-analysis/routes');
 const licenceRoutes = require('./licences/routes');
+const internalSearch = require('./internal-search/routes');
 const usersRoutes = require('./users/routes');
 
 module.exports = [
@@ -21,5 +22,6 @@ module.exports = [
   ...Object.values(returnsInvitationRoutes),
   ...Object.values(arAnalysisRoutes),
   ...Object.values(licenceRoutes),
+  ...Object.values(internalSearch),
   ...Object.values(usersRoutes)
 ];
