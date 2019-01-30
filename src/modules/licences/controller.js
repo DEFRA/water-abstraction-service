@@ -1,6 +1,7 @@
 const Boom = require('boom');
 const { get } = require('lodash');
 const documentsClient = require('../../lib/connectors/crm/documents');
+const { usersClient } = require('../../lib/connectors/idm');
 const permitClient = require('../../lib/connectors/permit');
 const logger = require('../../lib/logger');
 const extractConditions = require('./lib/extractConditions');
@@ -28,6 +29,10 @@ const getLicence = async documentId => {
 };
 
 const handleUnexpectedError = (error, documentId, functionName) => {
+  if (parseInt(error.statusCode) === 404) {
+    return Boom.notFound('Not found', error);
+  }
+
   error.params = { documentId };
   error.context = {
     component: 'modules/licences/controller',
@@ -93,8 +98,31 @@ const getLicencePointsByDocumentId = async (request, h) => {
   }
 };
 
+const getLicenceUsersByDocumentId = async (request, h) => {
+  const { documentId } = request.params;
+
+  try {
+    const documentUsers = await documentsClient.getDocumentUsers(documentId);
+    const userEntityIds = get(documentUsers, 'data', []).map(u => u.entityId);
+    const { data: users } = await usersClient.getUsersByExternalId(userEntityIds);
+
+    return {
+      error: null,
+      data: users.map(user => ({
+        userId: user.user_id,
+        entityId: user.external_id,
+        userName: user.user_name,
+        roles: documentUsers.data.find(d => d.entityId === user.external_id).roles
+      }))
+    };
+  } catch (error) {
+    return handleUnexpectedError(error, documentId, 'getLicenceUsersByDocumentId');
+  }
+};
+
 module.exports = {
   getLicenceByDocumentId,
   getLicenceConditionsByDocumentId,
-  getLicencePointsByDocumentId
+  getLicencePointsByDocumentId,
+  getLicenceUsersByDocumentId
 };

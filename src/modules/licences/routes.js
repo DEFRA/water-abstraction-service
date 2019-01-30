@@ -46,5 +46,19 @@ module.exports = {
         }
       }
     }
+  },
+
+  getLicenceUsersByDocumentId: {
+    method: 'GET',
+    path: `${pathPrefix}{documentId}/licence/users`,
+    handler: controller.getLicenceUsersByDocumentId,
+    config: {
+      description: 'Returns the users that are able to access the licence for a given document',
+      validate: {
+        params: {
+          documentId: Joi.string().guid().required()
+        }
+      }
+    }
   }
 };
