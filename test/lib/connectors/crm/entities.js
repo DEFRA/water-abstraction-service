@@ -1,4 +1,3 @@
-
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 const { expect } = require('code');

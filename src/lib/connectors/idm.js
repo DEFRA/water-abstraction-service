@@ -12,6 +12,12 @@ const usersClient = new APIClient(rp, {
   }
 });
 
+usersClient.getUsersByExternalId = async externalIds => {
+  return usersClient.findMany({
+    external_id: { $in: externalIds }
+  });
+};
+
 module.exports = {
   usersClient
 };
