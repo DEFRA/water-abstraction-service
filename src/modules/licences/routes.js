@@ -60,5 +60,20 @@ module.exports = {
         }
       }
     }
+  },
+
+  getLicenceSummaryByDocumentId: {
+    method: 'GET',
+    path: `${pathPrefix}{documentId}/licence/summary`,
+    handler: controller.getLicenceSummaryByDocumentId,
+    config: {
+      description: 'Returns the licence summary details for a given document',
+      validate: {
+        params: {
+          documentId: Joi.string().guid().required()
+        }
+      }
+    }
   }
+
 };

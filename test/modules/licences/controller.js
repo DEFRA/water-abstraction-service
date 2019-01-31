@@ -10,6 +10,8 @@ const logger = require('../../../src/lib/logger');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
+const { licences } = require('../../responses/permits/licence');
+
 const testRequest = {
   params: {
     documentId: '00000000-0000-0000-0000-000000000000'
@@ -74,7 +76,9 @@ experiment('getLicenceByDocumentId', () => {
     const response = await controller.getLicenceByDocumentId(testRequest);
     expect(response.data.licence_ref).to.equal('test-id');
     expect(permitClient.licences.findMany.calledWith({
-      licence_id: 'test-id'
+      licence_id: 'test-id',
+      licence_regime_id: 1,
+      licence_type_id: 8
     })).to.be.true();
   });
 
@@ -235,6 +239,58 @@ experiment('getLicenceUsersByDocumentId', () => {
   test('provides error details in the event of a major error', async () => {
     documentsClient.findMany.rejects(new Error('fail'));
     await controller.getLicencePointsByDocumentId(testRequest);
+    const loggedError = logger.error.lastCall.args[1];
+    expect(loggedError.params).to.equal({ documentId: testRequest.params.documentId });
+    expect(loggedError.context).to.exist();
+  });
+});
+
+experiment('getLicenceSummaryByDocumentId', () => {
+  beforeEach(async () => {
+    sandbox.stub(permitClient.licences, 'findMany');
+    sandbox.stub(documentsClient, 'findMany');
+    sandbox.stub(logger, 'error');
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  test('returns 404 for unknown document id', async () => {
+    documentsClient.findMany.rejects({ statusCode: 404 });
+    const response = await controller.getLicenceSummaryByDocumentId(testRequest);
+    expect(response.output.statusCode).to.equal(404);
+  });
+
+  test('transforms permit repo data into a form expected by UI', async () => {
+    documentsClient.findMany.resolves(documentResponse);
+    permitClient.licences.findMany.resolves(licences());
+    const response = await controller.getLicenceSummaryByDocumentId(testRequest);
+
+    expect(response).to.be.an.object();
+
+    expect(Object.keys(response)).to.include([
+      'licenceNumber',
+      'licenceHolderTitle',
+      'licenceHolderInitials',
+      'licenceHolderName',
+      'effectiveDate',
+      'expiryDate',
+      'versionCount',
+      'conditions',
+      'points',
+      'abstractionPeriods',
+      'aggregateQuantity',
+      'contacts',
+      'purposes',
+      'uniquePurposeNames',
+      'documentName'
+    ]);
+  });
+
+  test('provides error details in the event of a major error', async () => {
+    documentsClient.findMany.rejects(new Error('fail'));
+    await controller.getLicenceSummaryByDocumentId(testRequest);
     const loggedError = logger.error.lastCall.args[1];
     expect(loggedError.params).to.equal({ documentId: testRequest.params.documentId });
     expect(loggedError.context).to.exist();
