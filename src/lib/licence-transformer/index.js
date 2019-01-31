@@ -54,7 +54,6 @@ class LicenceTransformer {
    * @return {String} data format
    */
   guessFormat (data) {
-    console.log(data);
     if ('vmlVersion' in data && data.vmlVersion === 2) {
       return FORMAT_NALD;
     }

@@ -25,6 +25,8 @@ lab.experiment('Test NALD import', () => {
     };
     const res = await server.inject(request2);
     licenceData = JSON.parse(res.payload);
+
+    require('fs').writeFileSync('dummy-licence.json', JSON.stringify(licenceData, null, 2));
   });
 
   lab.test('Test licence number', async () => {
