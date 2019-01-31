@@ -1,11 +1,13 @@
 const Boom = require('boom');
-const { get } = require('lodash');
+const { get, isObject } = require('lodash');
 const documentsClient = require('../../lib/connectors/crm/documents');
 const { usersClient } = require('../../lib/connectors/idm');
 const permitClient = require('../../lib/connectors/permit');
 const logger = require('../../lib/logger');
 const extractConditions = require('./lib/extractConditions');
 const extractPoints = require('./lib/extractPoints');
+const { licence: { regimeId, typeId } } = require('../../../config');
+const LicenceTransformer = require('../../lib/licence-transformer');
 
 const getDocumentHeader = async documentId => {
   const documentResponse = await documentsClient.findMany({
@@ -14,15 +16,25 @@ const getDocumentHeader = async documentId => {
   return get(documentResponse, 'data[0]');
 };
 
-const getLicence = async documentId => {
-  const documentHeader = await getDocumentHeader(documentId);
+/**
+ * Gets licence data from permit repo
+ * @param  {String|Object}  document     - CRM document ID GUID, or already loaded document header
+ * @param  {Object}  [documentHeader] - If document header has already been loaded, it is not loaded again
+ * @return {Promise}                resolves with permit repo data
+ */
+const getLicence = async (document) => {
+  const documentHeader = isObject(document)
+    ? document
+    : await getDocumentHeader(document);
 
   if (!documentHeader) {
     return;
   }
 
   const licenceResponse = await permitClient.licences.findMany({
-    licence_id: documentHeader.system_internal_id
+    licence_id: documentHeader.system_internal_id,
+    licence_type_id: typeId,
+    licence_regime_id: regimeId
   });
 
   return get(licenceResponse, 'data[0]');
@@ -120,9 +132,35 @@ const getLicenceUsersByDocumentId = async (request, h) => {
   }
 };
 
+const mapSummary = async (documentHeader, licence) => {
+  const transformer = new LicenceTransformer();
+  await transformer.load(licence.licence_data_value);
+  return {
+    ...transformer.export(),
+    documentName: documentHeader.document_name
+  };
+};
+
+const getLicenceSummaryByDocumentId = async (request, h) => {
+  const { documentId } = request.params;
+
+  try {
+    const documentHeader = await getDocumentHeader(documentId);
+    const licence = await getLicence(documentHeader);
+
+    if (licence) {
+      return mapSummary(documentHeader, licence);
+    }
+    return Boom.notFound();
+  } catch (error) {
+    return handleUnexpectedError(error, documentId, 'getLicenceSummaryByDocumentId');
+  }
+};
+
 module.exports = {
   getLicenceByDocumentId,
   getLicenceConditionsByDocumentId,
   getLicencePointsByDocumentId,
-  getLicenceUsersByDocumentId
+  getLicenceUsersByDocumentId,
+  getLicenceSummaryByDocumentId
 };
