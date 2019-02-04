@@ -2,6 +2,7 @@ const { expect } = require('code');
 const { afterEach, beforeEach, experiment, test } = exports.lab = require('lab').script();
 
 const controller = require('../../../src/modules/licences/controller');
+const queries = require('../../../src/modules/licences/lib/queries');
 const permitClient = require('../../../src/lib/connectors/permit');
 const documentsClient = require('../../../src/lib/connectors/crm/documents');
 const idmConnector = require('../../../src/lib/connectors/idm');
@@ -45,6 +46,16 @@ const licenceResponse = {
   }],
   error: null
 };
+
+const notificationsResponse = [{
+  id: 'message_123',
+  send_after: '2018-12-13T16:04:22.000Z',
+  issuer: 'mail@example.com',
+  event_metadata: {
+    name: 'Notification type'
+  },
+  type: 'letter'
+}];
 
 experiment('getLicenceByDocumentId', () => {
   beforeEach(async () => {
@@ -269,7 +280,7 @@ experiment('getLicenceSummaryByDocumentId', () => {
 
     expect(response).to.be.an.object();
 
-    expect(Object.keys(response)).to.include([
+    expect(Object.keys(response.data)).to.include([
       'licenceNumber',
       'licenceHolderTitle',
       'licenceHolderInitials',
@@ -291,6 +302,48 @@ experiment('getLicenceSummaryByDocumentId', () => {
   test('provides error details in the event of a major error', async () => {
     documentsClient.findMany.rejects(new Error('fail'));
     await controller.getLicenceSummaryByDocumentId(testRequest);
+    const loggedError = logger.error.lastCall.args[1];
+    expect(loggedError.params).to.equal({ documentId: testRequest.params.documentId });
+    expect(loggedError.context).to.exist();
+  });
+});
+
+experiment('getLicenceCommunicationsByDocumentId', () => {
+  beforeEach(async () => {
+    sandbox.stub(documentsClient, 'findMany');
+    sandbox.stub(queries, 'getNotificationsForLicence');
+    sandbox.stub(logger, 'error');
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  test('returns 404 for unknown document id', async () => {
+    documentsClient.findMany.rejects({ statusCode: 404 });
+    const response = await controller.getLicenceCommunicationsByDocumentId(testRequest);
+    expect(response.output.statusCode).to.equal(404);
+  });
+
+  test('transforms messages data into a form expected by UI', async () => {
+    documentsClient.findMany.resolves(documentResponse);
+    queries.getNotificationsForLicence.resolves(notificationsResponse);
+
+    const response = await controller.getLicenceCommunicationsByDocumentId(testRequest);
+
+    expect(response).to.be.an.object();
+    expect(response.error).to.equal(null);
+    expect(response.data).to.equal([
+      { notificationId: 'message_123',
+        messageType: undefined,
+        date: '2018-12-13T16:04:22.000Z',
+        notificationType: 'Notification type',
+        sender: 'mail@example.com' } ]);
+  });
+
+  test('provides error details in the event of a major error', async () => {
+    documentsClient.findMany.rejects(new Error('fail'));
+    await controller.getLicenceCommunicationsByDocumentId(testRequest);
     const loggedError = logger.error.lastCall.args[1];
     expect(loggedError.params).to.equal({ documentId: testRequest.params.documentId });
     expect(loggedError.context).to.exist();

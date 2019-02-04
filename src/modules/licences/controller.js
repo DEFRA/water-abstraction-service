@@ -9,7 +9,7 @@ const extractPoints = require('./lib/extractPoints');
 const { licence: { regimeId, typeId } } = require('../../../config');
 const LicenceTransformer = require('../../lib/licence-transformer');
 const { mapGaugingStation, getGaugingStations } = require('./lib/gauging-stations');
-const { getNotificationsForLicence } = require('./lib/queries');
+const queries = require('./lib/queries');
 
 const getDocumentHeader = async documentId => {
   const documentResponse = await documentsClient.findMany({
@@ -183,7 +183,7 @@ const getLicenceCommunicationsByDocumentId = async (request, h) => {
 
   try {
     const documentHeader = await getDocumentHeader(documentId);
-    const notifications = await getNotificationsForLicence(documentHeader.system_external_id);
+    const notifications = await queries.getNotificationsForLicence(documentHeader.system_external_id);
 
     return {
       error: null,

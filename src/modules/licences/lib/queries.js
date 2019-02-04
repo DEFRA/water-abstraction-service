@@ -15,17 +15,7 @@ const getNotificationsForLicence = async (licenceNumber) => {
     ORDER BY send_after DESC
     LIMIT 10`;
 
-  const { rows, error } = await pool.query(query, params);
-
-  if (error) {
-    const err = new Error(`Error getting scheduled_notifications for ${licenceNumber}`);
-    err.params = {
-      params,
-      query,
-      error
-    };
-    throw err;
-  }
+  const { rows } = await pool.query(query, params);
 
   return rows;
 };
