@@ -160,7 +160,7 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
     if (licence) {
       const data = await mapSummary(documentHeader, licence);
       data.gaugingStations = (await getGaugingStations(licence)).map(mapGaugingStation);
-      return data;
+      return { error: null, data };
     }
     return Boom.notFound();
   } catch (error) {
