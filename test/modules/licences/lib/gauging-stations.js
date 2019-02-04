@@ -51,7 +51,7 @@ experiment('getGaugingStations', () => {
   });
 
   test('It should fetch data from the gauging_stations table with correct query', async () => {
-    await gaugingStations.getGaugingStations(licence);
+    const result = await gaugingStations.getGaugingStations(licence);
 
     const [filter] = repository.find.firstCall.args;
 
@@ -60,5 +60,7 @@ experiment('getGaugingStations', () => {
         $in: ['ABCD1', 'DEFG2']
       }
     });
+
+    expect(result).to.be.an.array();
   });
 });
