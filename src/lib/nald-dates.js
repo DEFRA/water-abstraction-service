@@ -16,6 +16,20 @@ const getWeek = day => {
   };
 };
 
+/**
+ * Accepts a date formatted DD/MM/YYYY and formats to YYYY-MM-DD
+ * @param  {String} date - formatted DD/MM/YYYY
+ * @return {String}      - formatted YYYY-MM-DD
+ */
+const ukDateToISO = (date) => {
+  const m = moment(date, 'DD/MM/YYYY');
+  if (m.isValid()) {
+    return m.format('YYYY-MM-DD');
+  }
+  return null;
+};
+
 module.exports = {
-  getWeek
+  getWeek,
+  ukDateToISO
 };
