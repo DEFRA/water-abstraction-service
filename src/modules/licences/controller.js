@@ -8,6 +8,7 @@ const extractConditions = require('./lib/extractConditions');
 const extractPoints = require('./lib/extractPoints');
 const { licence: { regimeId, typeId } } = require('../../../config');
 const LicenceTransformer = require('../../lib/licence-transformer');
+const { mapGaugingStation, getGaugingStations } = require('./lib/gauging-stations');
 
 const getDocumentHeader = async documentId => {
   const documentResponse = await documentsClient.findMany({
@@ -141,6 +142,13 @@ const mapSummary = async (documentHeader, licence) => {
   };
 };
 
+/**
+ * Gets licence summary for consumption by licence summary page in UI
+ * @param  {Object}  request - HAPI request
+ * @param {String} request.params.documentId - CRM document ID
+ * @param  {Object}  h       - HAPI reply interface
+ * @return {Promise}         resolves with JSON data for licence summary view
+ */
 const getLicenceSummaryByDocumentId = async (request, h) => {
   const { documentId } = request.params;
 
@@ -149,7 +157,9 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
     const licence = await getLicence(documentHeader);
 
     if (licence) {
-      return mapSummary(documentHeader, licence);
+      const data = await mapSummary(documentHeader, licence);
+      data.gaugingStations = (await getGaugingStations(licence)).map(mapGaugingStation);
+      return data;
     }
     return Boom.notFound();
   } catch (error) {
