@@ -6,7 +6,7 @@ const crmDocumentsConnector = require('../../lib/connectors/crm/documents');
 
 const mapUserStatus = user => {
   return {
-    isLocked: user.reset_required === 1,
+    isLocked: parseInt(user.reset_required) === 1,
     isInternal: !get(user, 'role.scopes', []).includes('external'),
     lastLogin: user.last_login,
     userName: user.user_name
@@ -46,6 +46,22 @@ const mapCompanies = (companies, verifications, documentHeaders) => {
   });
 };
 
+const isInternalUser = user => get(user, 'role.scopes', []).includes('internal');
+
+const getUserCompanyStatus = user => {
+  const entityId = user.external_id;
+
+  if (isInternalUser(user) || !entityId) {
+    return Promise.resolve([[], [], []]);
+  }
+
+  return Promise.all([
+    crmEntitiesConnector.getEntityCompanies(entityId),
+    crmEntitiesConnector.getEntityVerifications(entityId),
+    crmDocumentsConnector.findMany({ entity_id: entityId })
+  ]);
+};
+
 const getStatus = async (request, h) => {
   const userResponse = await idmConnector.usersClient.findOne(request.params.id);
 
@@ -53,22 +69,16 @@ const getStatus = async (request, h) => {
     return Boom.notFound('User not found');
   }
 
-  const entityId = userResponse.data.external_id;
-
-  return Promise.all([
-    crmEntitiesConnector.getEntityCompanies(entityId),
-    crmEntitiesConnector.getEntityVerifications(entityId),
-    crmDocumentsConnector.findMany({ entity_id: entityId })
-  ]).then(results => {
+  return getUserCompanyStatus(userResponse.data).then(results => {
     const [companies, verifications, documentsHeaders] = results;
 
     return {
       data: {
         user: mapUserStatus(userResponse.data),
         companies: mapCompanies(
-          companies.data.companies,
-          verifications.data,
-          documentsHeaders.data
+          get(companies, 'data.companies', []),
+          get(verifications, 'data', []),
+          get(documentsHeaders, 'data', [])
         )
       },
       error: null
