@@ -176,6 +176,8 @@ experiment('getStatus', () => {
       lastLogin: '2019-01-24T17:07:54.000Z',
       userName: 'test@example.com'
     });
+
+    expect(response.data.companies).to.equal([]);
   });
 
   test('passes the user entity id to the getEntitiesCompanies function', async () => {
@@ -298,5 +300,24 @@ experiment('getStatus', () => {
 
     expect(response.output.statusCode).to.equal(404);
     expect(response.output.payload.message).to.equal('User not found');
+  });
+
+  test('only returns the user part when no external/enitity id is present', async () => {
+    const request = { params: { id: 123 } };
+    const testResponse = getUserResponse();
+    testResponse.data.external_id = null;
+    idmConnector.usersClient.findOne.resolves(testResponse);
+
+    const response = await controller.getStatus(request);
+    const user = response.data.user;
+
+    expect(user).to.equal({
+      isLocked: false,
+      isInternal: false,
+      lastLogin: '2019-01-24T17:07:54.000Z',
+      userName: 'test@example.com'
+    });
+
+    expect(response.data.companies).to.equal([]);
   });
 });
