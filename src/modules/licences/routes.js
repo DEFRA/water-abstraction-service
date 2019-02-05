@@ -74,6 +74,20 @@ module.exports = {
         }
       }
     }
+  },
+
+  getLicenceCommunicationsByDocumentId: {
+    method: 'GET',
+    path: `${pathPrefix}{documentId}/licence/communications`,
+    handler: controller.getLicenceCommunicationsByDocumentId,
+    config: {
+      description: 'Returns the sent licence notifications for a given document',
+      validate: {
+        params: {
+          documentId: Joi.string().guid().required()
+        }
+      }
+    }
   }
 
 };

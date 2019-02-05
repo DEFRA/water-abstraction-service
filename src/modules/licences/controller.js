@@ -9,6 +9,7 @@ const extractPoints = require('./lib/extractPoints');
 const { licence: { regimeId, typeId } } = require('../../../config');
 const LicenceTransformer = require('../../lib/licence-transformer');
 const { mapGaugingStation, getGaugingStations } = require('./lib/gauging-stations');
+const queries = require('./lib/queries');
 
 const getDocumentHeader = async documentId => {
   const documentResponse = await documentsClient.findMany({
@@ -159,11 +160,37 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
     if (licence) {
       const data = await mapSummary(documentHeader, licence);
       data.gaugingStations = (await getGaugingStations(licence)).map(mapGaugingStation);
-      return data;
+      return { error: null, data };
     }
     return Boom.notFound();
   } catch (error) {
     return handleUnexpectedError(error, documentId, 'getLicenceSummaryByDocumentId');
+  }
+};
+
+const mapNotification = (row) => {
+  return {
+    notificationId: row.id,
+    messageType: row.message_type,
+    date: row.send_after,
+    notificationType: get(row, 'event_metadata.name', null),
+    sender: row.issuer
+  };
+};
+
+const getLicenceCommunicationsByDocumentId = async (request, h) => {
+  const { documentId } = request.params;
+
+  try {
+    const documentHeader = await getDocumentHeader(documentId);
+    const notifications = await queries.getNotificationsForLicence(documentHeader.system_external_id);
+
+    return {
+      error: null,
+      data: notifications.map(mapNotification)
+    };
+  } catch (error) {
+    return handleUnexpectedError(error, documentId, 'getLicenceCommunications');
   }
 };
 
@@ -172,5 +199,6 @@ module.exports = {
   getLicenceConditionsByDocumentId,
   getLicencePointsByDocumentId,
   getLicenceUsersByDocumentId,
-  getLicenceSummaryByDocumentId
+  getLicenceSummaryByDocumentId,
+  getLicenceCommunicationsByDocumentId
 };
