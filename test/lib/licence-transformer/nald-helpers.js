@@ -39,3 +39,30 @@ experiment('parseUniqueId', () => {
     expect(id).to.equal('conditions');
   });
 });
+
+experiment('getFullName', () => {
+  test('It should return a full name using initials if first name empty', async () => {
+    const str = naldHelpers.getFullName('Mr', 'J', null, 'Doe');
+    expect(str).to.equal('Mr J Doe');
+  });
+
+  test('It should return a full name using initials if first name is defined', async () => {
+    const str = naldHelpers.getFullName('Mr', 'J', 'John', 'Doe');
+    expect(str).to.equal('Mr J Doe');
+  });
+
+  test('It should return a full name if salutation is emtpy', async () => {
+    const str = naldHelpers.getFullName(null, 'J', 'John', 'Doe');
+    expect(str).to.equal('J Doe');
+  });
+
+  test('It should return a full name if initials are emtpy', async () => {
+    const str = naldHelpers.getFullName('Mr', null, 'John', 'Doe');
+    expect(str).to.equal('Mr John Doe');
+  });
+
+  test('It should return a company name', async () => {
+    const str = naldHelpers.getFullName(null, null, null, 'Company Ltd');
+    expect(str).to.equal('Company Ltd');
+  });
+});

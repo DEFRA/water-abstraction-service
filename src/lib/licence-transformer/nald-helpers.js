@@ -55,10 +55,24 @@ const parseUniqueId = uniqueId => {
   return { type, regionCode, id: rest.join('/') };
 };
 
+/**
+ * Gets full name for a NALD contact
+ * @param  {String|null} salutation
+ * @param  {String|null} initials
+ * @param  {String|null} firstName
+ * @param  {String|null} lastName
+ * @return {String}      full licence holder name
+ */
+const getFullName = (salutation, initials, firstName, lastName) => {
+  const parts = [salutation, initials || firstName, lastName];
+  return parts.filter(x => x).join(' ');
+};
+
 module.exports = {
   formatAbstractionPoint,
   abstractionPointToString,
   formatNGRPointStr,
   createUniqueId,
-  parseUniqueId
+  parseUniqueId,
+  getFullName
 };

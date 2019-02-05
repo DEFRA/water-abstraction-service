@@ -11,7 +11,10 @@ const row = {
   document_id: 'abc',
   system_external_id: '01/123/456',
   metadata: {
-    Name: 'J Doe',
+    Name: 'Doe',
+    Initials: 'J',
+    Forename: 'John',
+    Salutation: 'Mr',
     Expires: '20190205'
   },
   document_name: 'Fusty meadow'
@@ -23,7 +26,7 @@ experiment('mapRow', () => {
     expect(mapped).to.equal({
       documentId: row.document_id,
       licenceNumber: row.system_external_id,
-      licenceHolder: row.metadata.Name,
+      licenceHolder: 'Mr J Doe',
       documentName: row.document_name,
       expires: '2019-02-05'
     });

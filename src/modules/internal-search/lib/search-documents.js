@@ -2,12 +2,28 @@ const { throwIfError } = require('@envage/hapi-pg-rest-api');
 const documents = require('../../../lib/connectors/crm/documents');
 const { getPagination } = require('./pagination');
 const { returnsDateToIso } = require('../../import/lib/date-helpers');
+const { getFullName } = require('../../../lib/licence-transformer/nald-helpers');
+
+/**
+ * Gets full name for a licence
+ * @param  {[type]} documentHeader [description]
+ * @return {[type]}                [description]
+ */
+const getLicenceHolderNameFromDocumentHeader = (documentHeader) => {
+  const {
+    Name: lastName,
+    Forename: firstName,
+    Initials: initials,
+    Salutation: salutation
+  } = documentHeader.metadata;
+  return getFullName(salutation, initials, firstName, lastName);
+};
 
 const mapRow = (row) => {
   return {
     documentId: row.document_id,
     licenceNumber: row.system_external_id,
-    licenceHolder: row.metadata.Name,
+    licenceHolder: getLicenceHolderNameFromDocumentHeader(row),
     documentName: row.document_name,
     expires: returnsDateToIso(row.metadata.Expires)
   };
