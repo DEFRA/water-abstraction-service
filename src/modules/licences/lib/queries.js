@@ -7,10 +7,12 @@ const { pool } = require('../../../lib/connectors/db');
  */
 const getNotificationsForLicence = async (licenceNumber) => {
   const params = [`"${licenceNumber}"`];
-  const query = `SELECT n.*, e.metadata as event_metadata, e.issuer
+  const query = `
+    SELECT n.*, e.metadata as event_metadata, e.issuer
     FROM "water".scheduled_notification  n
-    LEFT JOIN "water".events e ON n.event_id = e.event_id
+    INNER JOIN "water".events e ON n.event_id = e.event_id
     WHERE n.licences @> $1
+    AND n.notify_status IN ('delivered', 'received')
     AND n.status='sent'
     ORDER BY send_after DESC
     LIMIT 10`;
