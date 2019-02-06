@@ -6,8 +6,7 @@ const deepMap = require('deep-map');
 const {
   find,
   uniqBy,
-  isArray,
-  flatMap
+  isArray
 } = require('lodash');
 const BaseTransformer = require('./base-transformer');
 const LicenceTitleLoader = require('./licence-title-loader');
@@ -233,13 +232,19 @@ class NALDTransformer extends BaseTransformer {
 
   /**
    * Max quantities formatter
-   * If a licence has a single AGG PP condition, i.e. purposes to purpose within
-   * a licence, this extracts the data
+   * If a licence has a single set of quantities across all periods, return
+   * that, otherwise return empty array
    * @param {Array} purposes
    * @return {Array} array of quantities
    */
   aggregateQuantitiesFormatter (purposes) {
-    return flatMap(purposes, getAggregateQuantities);
+    const quantities = purposes.map(getAggregateQuantities);
+
+    const unique = uniqBy(quantities, row => {
+      return row.map(row => row.value).join(',');
+    });
+
+    return unique.length === 1 ? unique[0] : [];
   }
 
   /**
