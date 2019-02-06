@@ -20,6 +20,14 @@ const getNotification = async id => {
 const formatNotification = notification => {
   const data = pick(notification, ['id', 'recipient', 'message_ref', 'message_type', 'licences']);
   data.plainText = notification.plaintext;
+  data.address = camelCaseKeys(pick(notification.personalisation, [
+    'address_line_1',
+    'address_line_2',
+    'address_line_3',
+    'address_line_4',
+    'address_line_5',
+    'postcode'
+  ]));
   return camelCaseKeys(data);
 };
 
@@ -28,6 +36,7 @@ const formatEvent = evt => {
   data.id = evt.event_id;
   data.subType = evt.subtype;
   data.createdDate = evt.created;
+  data.name = get(evt, 'metadata.name');
   return camelCaseKeys(data);
 };
 

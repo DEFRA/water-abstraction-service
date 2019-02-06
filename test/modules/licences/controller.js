@@ -47,7 +47,7 @@ const licenceResponse = {
   error: null
 };
 
-const notificationsResponse = [{
+const getNotificationsResponse = () => ([{
   id: 'message_123',
   send_after: '2018-12-13T16:04:22.000Z',
   issuer: 'mail@example.com',
@@ -55,7 +55,7 @@ const notificationsResponse = [{
     name: 'Notification type'
   },
   type: 'letter'
-}];
+}]);
 
 experiment('getLicenceByDocumentId', () => {
   beforeEach(async () => {
@@ -327,7 +327,7 @@ experiment('getLicenceCommunicationsByDocumentId', () => {
 
   test('transforms messages data into a form expected by UI', async () => {
     documentsClient.findMany.resolves(documentResponse);
-    queries.getNotificationsForLicence.resolves(notificationsResponse);
+    queries.getNotificationsForLicence.resolves(getNotificationsResponse());
 
     const response = await controller.getLicenceCommunicationsByDocumentId(testRequest);
 
@@ -338,7 +338,9 @@ experiment('getLicenceCommunicationsByDocumentId', () => {
         messageType: undefined,
         date: '2018-12-13T16:04:22.000Z',
         notificationType: 'Notification type',
-        sender: 'mail@example.com' } ]);
+        sender: 'mail@example.com',
+        isPdf: false
+      } ]);
   });
 
   test('provides error details in the event of a major error', async () => {
@@ -347,5 +349,17 @@ experiment('getLicenceCommunicationsByDocumentId', () => {
     const loggedError = logger.error.lastCall.args[1];
     expect(loggedError.params).to.equal({ documentId: testRequest.params.documentId });
     expect(loggedError.context).to.exist();
+  });
+
+  test('sets isPdf to true if the notification message_ref starts with pdf.', async () => {
+    const notificationResponse = getNotificationsResponse();
+    notificationResponse[0].message_ref = 'pdf.testing';
+
+    documentsClient.findMany.resolves(documentResponse);
+    queries.getNotificationsForLicence.resolves(notificationResponse);
+
+    const response = await controller.getLicenceCommunicationsByDocumentId(testRequest);
+
+    expect(response.data[0].isPdf).to.be.true();
   });
 });

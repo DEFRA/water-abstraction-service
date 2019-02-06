@@ -20,7 +20,14 @@ const notificationResult = {
     recipient: 'n/a',
     message_type: 'letter',
     message_ref: 'notification-letter',
-    personalisation: {},
+    personalisation: {
+      postcode: 'PO5 0TC',
+      address_line_1: 'Add 1',
+      address_line_2: 'Add 2',
+      address_line_3: 'Add 3',
+      address_line_4: 'Add 4',
+      address_line_5: 'Add 5'
+    },
     send_after: '2018-01-01T00:00:00.000Z',
     status: 'sent',
     log: null,
@@ -47,7 +54,9 @@ const eventResult = {
     licences: ['lic-1', 'lic-2'],
     entities: ['entity-id'],
     comment: null,
-    metadata: {},
+    metadata: {
+      name: 'Test name'
+    },
     status: 'sent',
     created: '2018-01-01T00:00:00.000Z'
   }]
@@ -127,6 +136,14 @@ experiment('getCommunication', () => {
     expect(notification.licences).to.have.length(2);
     expect(notification.licences).to.only.include(['lic-1', 'lic-2']);
     expect(notification.plainText).to.equal('test message content');
+    expect(notification.address).to.equal({
+      addressLine1: 'Add 1',
+      addressLine2: 'Add 2',
+      addressLine3: 'Add 3',
+      addressLine4: 'Add 4',
+      addressLine5: 'Add 5',
+      postcode: 'PO5 0TC'
+    });
   });
 
   test('returns the expected event data', async () => {
@@ -139,6 +156,7 @@ experiment('getCommunication', () => {
     expect(evt.issuer).to.equal('issuer@example.com');
     expect(evt.subType).to.equal('abc-resume');
     expect(evt.createdDate).to.equal('2018-01-01T00:00:00.000Z');
+    expect(evt.name).to.equal('Test name');
   });
 
   test('returns the expected document data', async () => {

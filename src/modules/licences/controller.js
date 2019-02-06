@@ -169,12 +169,14 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
 };
 
 const mapNotification = (row) => {
+  const isPdf = get(row, 'message_ref', '').startsWith('pdf.');
   return {
     notificationId: row.id,
     messageType: row.message_type,
     date: row.send_after,
     notificationType: get(row, 'event_metadata.name', null),
-    sender: row.issuer
+    sender: row.issuer,
+    isPdf
   };
 };
 
