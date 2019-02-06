@@ -6,7 +6,8 @@ const deepMap = require('deep-map');
 const {
   find,
   uniqBy,
-  isArray
+  isArray,
+  flatMap
 } = require('lodash');
 const BaseTransformer = require('./base-transformer');
 const LicenceTitleLoader = require('./licence-title-loader');
@@ -14,6 +15,7 @@ const licenceTitleLoader = new LicenceTitleLoader();
 const NALDHelpers = require('./nald-helpers');
 const sentenceCase = require('sentence-case');
 const { ukDateToISO } = require('../nald-dates');
+const { getAggregateQuantities } = require('./nald-helpers');
 
 class NALDTransformer extends BaseTransformer {
   /**
@@ -237,36 +239,7 @@ class NALDTransformer extends BaseTransformer {
    * @return {Array} array of quantities
    */
   aggregateQuantitiesFormatter (purposes) {
-    const quantities = purposes.map(purpose => ({
-      annualQty: purpose.ANNUAL_QTY,
-      dailyQty: purpose.DAILY_QTY,
-      hourlyQty: purpose.HOURLY_QTY,
-      instantQty: purpose.INST_QTY
-    }));
-
-    const uniqQuantities = uniqBy(quantities, item => Object.values(item).join(','));
-
-    if (uniqQuantities.length === 1) {
-      return [{
-        value: uniqQuantities[0].annualQty,
-        name: 'cubic metres per year'
-      },
-      {
-        value: uniqQuantities[0].dailyQty,
-        name: 'cubic metres per day'
-      },
-      {
-        value: uniqQuantities[0].hourlyQty,
-        name: 'cubic metres per hour'
-      },
-      {
-        value: uniqQuantities[0].instantQty,
-        name: 'litres per second'
-      }
-      ];
-    }
-
-    return [];
+    return flatMap(purposes, getAggregateQuantities);
   }
 
   /**
