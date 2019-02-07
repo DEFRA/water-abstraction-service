@@ -14,7 +14,7 @@ const licenceTitleLoader = new LicenceTitleLoader();
 const NALDHelpers = require('./nald-helpers');
 const sentenceCase = require('sentence-case');
 const { ukDateToISO } = require('../nald-dates');
-const { getAggregateQuantities } = require('./nald-helpers');
+const { getAggregateQuantities, getFullName } = require('./nald-helpers');
 
 class NALDTransformer extends BaseTransformer {
   /**
@@ -52,6 +52,7 @@ class NALDTransformer extends BaseTransformer {
       licenceHolderTitle: licenceHolderParty.SALUTATION,
       licenceHolderInitials: licenceHolderParty.INITIALS,
       licenceHolderName: licenceHolderParty.NAME,
+      licenceHolderFullName: this.fullNameFormatter(licenceHolderParty),
       effectiveDate: ukDateToISO(data.ORIG_EFF_DATE),
       currentVersionEffectiveStartDate: ukDateToISO(currentVersion.EFF_ST_DATE),
       expiryDate: ukDateToISO(data.EXPIRY_DATE),
@@ -70,6 +71,16 @@ class NALDTransformer extends BaseTransformer {
     };
 
     return this.data;
+  }
+
+  fullNameFormatter (party) {
+    const {
+      SALUTATION: salutation,
+      INITIALS: initials,
+      FORENAME: firstName,
+      NAME: lastName
+    } = party;
+    return getFullName(salutation, initials, firstName, lastName);
   }
 
   formatsFormatter (formats = []) {
