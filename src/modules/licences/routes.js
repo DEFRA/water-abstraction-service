@@ -46,5 +46,48 @@ module.exports = {
         }
       }
     }
+  },
+
+  getLicenceUsersByDocumentId: {
+    method: 'GET',
+    path: `${pathPrefix}{documentId}/licence/users`,
+    handler: controller.getLicenceUsersByDocumentId,
+    config: {
+      description: 'Returns the users that are able to access the licence for a given document',
+      validate: {
+        params: {
+          documentId: Joi.string().guid().required()
+        }
+      }
+    }
+  },
+
+  getLicenceSummaryByDocumentId: {
+    method: 'GET',
+    path: `${pathPrefix}{documentId}/licence/summary`,
+    handler: controller.getLicenceSummaryByDocumentId,
+    config: {
+      description: 'Returns the licence summary details for a given document',
+      validate: {
+        params: {
+          documentId: Joi.string().guid().required()
+        }
+      }
+    }
+  },
+
+  getLicenceCommunicationsByDocumentId: {
+    method: 'GET',
+    path: `${pathPrefix}{documentId}/licence/communications`,
+    handler: controller.getLicenceCommunicationsByDocumentId,
+    config: {
+      description: 'Returns the sent licence notifications for a given document',
+      validate: {
+        params: {
+          documentId: Joi.string().guid().required()
+        }
+      }
+    }
   }
+
 };

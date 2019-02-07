@@ -1,5 +1,6 @@
 const moment = require('moment');
 const { pick, findIndex, max, mapValues, chunk } = require('lodash');
+const { returns: { date: { getPeriodStart } } } = require('@envage/water-abstraction-helpers');
 const { formatAbstractionPoint } = require('../../../lib/licence-transformer/nald-helpers');
 const naldDates = require('../../../lib/nald-dates');
 
@@ -58,6 +59,8 @@ const getPurposeAlias = purpose => {
  * @return {Object} return metadata
  */
 const formatReturnMetadata = (format) => {
+  const { isSummer } = mapProductionMonth(format.FORM_PRODN_MONTH);
+
   return {
     version: 1,
     description: format.SITE_DESCR,
@@ -78,7 +81,8 @@ const formatReturnMetadata = (format) => {
     })),
     points: format.points.map(point => formatAbstractionPoint(convertNullStrings(point))),
     nald: formatReturnNaldMetadata(format),
-    isTwoPartTariff: format.TPT_FLAG === 'Y'
+    isTwoPartTariff: format.TPT_FLAG === 'Y',
+    isSummer
   };
 };
 
@@ -166,20 +170,6 @@ const addDate = (dates, date, startDate, endDate) => {
     arr.push(dateStr);
   }
   return arr;
-};
-
-/**
- * Gets the start date of the current period for the date supplied
- * @param {String} date - comparison date
- * @param {Boolean} isSummer - whether summer return
- * @return {String} YYYY-MM-DD next period start date
- */
-const getPeriodStart = (date, isSummer) => {
-  const m = moment(date);
-  const month = isSummer ? 10 : 3;
-  const comparison = moment().year(m.year()).month(month).date(1);
-  const startYear = m.isBefore(comparison, 'day') ? m.year() - 1 : m.year();
-  return moment().year(startYear).month(month).date(1).format('YYYY-MM-DD');
 };
 
 /**

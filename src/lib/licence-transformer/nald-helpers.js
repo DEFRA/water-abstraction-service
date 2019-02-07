@@ -55,10 +55,49 @@ const parseUniqueId = uniqueId => {
   return { type, regionCode, id: rest.join('/') };
 };
 
+/**
+ * Gets full name for a NALD contact
+ * @param  {String|null} salutation
+ * @param  {String|null} initials
+ * @param  {String|null} firstName
+ * @param  {String|null} lastName
+ * @return {String}      full licence holder name
+ */
+const getFullName = (salutation, initials, firstName, lastName) => {
+  const parts = [salutation, initials || firstName, lastName];
+  return parts.filter(x => x).join(' ');
+};
+
+/**
+ * Gets an array of aggregate quantities for a given purpose
+ * @param  {Object} purpose - purpose object from NALD data
+ * @return {Array}         - array of items with { name, value }
+ */
+const getAggregateQuantities = (purpose) => {
+  const names = {
+    ANNUAL_QTY: 'cubic metres per year',
+    DAILY_QTY: 'cubic metres per day',
+    HOURLY_QTY: 'cubic metres per hour',
+    INST_QTY: 'litres per second'
+  };
+
+  return Object.keys(names).reduce((acc, key) => {
+    if (purpose[key] !== null) {
+      acc.push({
+        name: names[key],
+        value: purpose[key]
+      });
+    }
+    return acc;
+  }, []);
+};
+
 module.exports = {
   formatAbstractionPoint,
   abstractionPointToString,
   formatNGRPointStr,
   createUniqueId,
-  parseUniqueId
+  parseUniqueId,
+  getFullName,
+  getAggregateQuantities
 };

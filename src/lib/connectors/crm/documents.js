@@ -7,7 +7,7 @@ const rp = require('request-promise-native').defaults({
   proxy: null,
   strictSSL: false
 });
-const logger = require('../../logger');
+const serviceRequest = require('../service-request');
 
 // Create API client
 const client = new APIClient(rp, {
@@ -83,16 +83,8 @@ client.getDocumentRoles = function (filter, sort = {}, pagination = { page: 1, p
  * @return {Promise} resolves with single licence record
  */
 client.getDocument = function (documentId) {
-  const uri = process.env.CRM_URI + `/documentHeader/${documentId}`;
-  logger.info(uri);
-  return rp({
-    uri,
-    method: 'GET',
-    headers: {
-      Authorization: process.env.JWT_TOKEN
-    },
-    json: true
-  });
+  const url = process.env.CRM_URI + `/documentHeader/${documentId}`;
+  return serviceRequest.get(url);
 };
 
 /**
@@ -110,6 +102,11 @@ client.getDocumentContacts = function (filter = {}) {
     json: true,
     qs: { filter: JSON.stringify(filter) }
   });
+};
+
+client.getDocumentUsers = async documentId => {
+  const url = `${process.env.CRM_URI}/documents/${documentId}/users`;
+  return serviceRequest.get(url);
 };
 
 module.exports = client;

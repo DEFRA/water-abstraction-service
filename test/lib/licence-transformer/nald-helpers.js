@@ -39,3 +39,61 @@ experiment('parseUniqueId', () => {
     expect(id).to.equal('conditions');
   });
 });
+
+experiment('getFullName', () => {
+  test('It should return a full name using initials if first name empty', async () => {
+    const str = naldHelpers.getFullName('Mr', 'J', null, 'Doe');
+    expect(str).to.equal('Mr J Doe');
+  });
+
+  test('It should return a full name using initials if first name is defined', async () => {
+    const str = naldHelpers.getFullName('Mr', 'J', 'John', 'Doe');
+    expect(str).to.equal('Mr J Doe');
+  });
+
+  test('It should return a full name if salutation is emtpy', async () => {
+    const str = naldHelpers.getFullName(null, 'J', 'John', 'Doe');
+    expect(str).to.equal('J Doe');
+  });
+
+  test('It should return a full name if initials are emtpy', async () => {
+    const str = naldHelpers.getFullName('Mr', null, 'John', 'Doe');
+    expect(str).to.equal('Mr John Doe');
+  });
+
+  test('It should return a company name', async () => {
+    const str = naldHelpers.getFullName(null, null, null, 'Company Ltd');
+    expect(str).to.equal('Company Ltd');
+  });
+});
+
+experiment('getAggregateQuantities', () => {
+  const getPurpose = (hasNull = false) => {
+    return {
+      ANNUAL_QTY: 1000,
+      DAILY_QTY: 50,
+      HOURLY_QTY: hasNull ? null : 25,
+      INST_QTY: 3
+    };
+  };
+
+  test('It should get formatted quantities from a purposes', async () => {
+    const result = naldHelpers.getAggregateQuantities(getPurpose(false));
+    expect(result).to.equal([
+      { name: 'cubic metres per year', value: 1000 },
+      { name: 'cubic metres per day', value: 50 },
+      { name: 'cubic metres per hour', value: 25 },
+      { name: 'litres per second', value: 3 }
+    ]);
+  });
+
+  test('It should omit a value if it is null', async () => {
+    const result = naldHelpers.getAggregateQuantities(getPurpose(true));
+    const names = result.map(row => row.name);
+    expect(names).to.only.include([
+      'cubic metres per year',
+      'cubic metres per day',
+      'litres per second'
+    ]);
+  });
+});

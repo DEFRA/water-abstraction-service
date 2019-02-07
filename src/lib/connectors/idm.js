@@ -1,31 +1,23 @@
-const Helpers = require('../helpers');
 const rp = require('request-promise-native').defaults({
-    proxy:null,
-    strictSSL :false
+  proxy: null,
+  strictSSL: false
+});
+
+const { APIClient } = require('@envage/hapi-pg-rest-api');
+
+const usersClient = new APIClient(rp, {
+  endpoint: process.env.IDM_URI + '/user',
+  headers: {
+    Authorization: process.env.JWT_TOKEN
+  }
+});
+
+usersClient.getUsersByExternalId = async externalIds => {
+  return usersClient.findMany({
+    external_id: { $in: externalIds }
   });
-
-
-
-
-
-/**
- * Get user by numeric ID/email address
- * @param {String|Number} numeric ID or string email address
- * @return {Promise} resolves with user if found
- */
- function getUsers() {
-   return rp({
-     uri : process.env.IDM_URI + '/user/',
-     method : 'GET',
-     json : true,
-     headers : {
-       Authorization : process.env.JWT_TOKEN
-     }
-   });
- }
-
-
+};
 
 module.exports = {
-getUsers:getUsers,
-}
+  usersClient
+};
