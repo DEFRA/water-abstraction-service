@@ -45,5 +45,32 @@ module.exports = {
         payload: headerSchema
       }
     }
+  },
+
+  postUploadReturnsXml: {
+    path: '/water/1.0/returns/upload-xml',
+    method: 'POST',
+    handler: controller.postUploadXml,
+    config: {
+      validate: {
+        payload: {
+          fileData: Joi.binary().required(),
+          userName: Joi.string().email().required()
+        }
+      }
+    }
+  },
+
+  getUploadReturnsXml: {
+    path: '/water/1.0/returns/upload-xml/{eventId}',
+    method: 'GET',
+    handler: controller.getUploadXml,
+    config: {
+      validate: {
+        params: {
+          eventId: Joi.string().uuid().required()
+        }
+      }
+    }
   }
 };

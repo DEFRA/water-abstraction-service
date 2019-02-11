@@ -3,6 +3,12 @@ const { mapReturnToModel } = require('./lib/model-returns-mapper');
 const { getReturnData } = require('./lib/facade');
 const { eventFactory } = require('./lib/event-factory');
 const { repository: eventRepository } = require('../../controllers/events');
+const s3 = require('../../lib/connectors/s3');
+const Event = require('../../lib/event');
+const Boom = require('boom');
+const logger = require('../../lib/logger');
+const { uploadStatus, getUploadFilename } = require('./lib/returns-upload');
+const messageQueue = require('../../lib/message-queue');
 
 /**
  * A controller method to get a unified view of a return, to avoid handling
@@ -61,8 +67,92 @@ const patchReturnHeader = async (request, h) => {
   };
 };
 
+/**
+ * Creates the event object that represent the upload
+ * of a returns xml document.
+ * @param uploadUserName The username of end user.
+ * @returns {Event}
+ */
+const createXmlUploadEvent = (uploadUserName) => {
+  const evt = new Event();
+  evt.setType('returns-upload', 'xml');
+  evt.setIssuer(uploadUserName);
+  evt.setStatus(uploadStatus.PROCESSING);
+  return evt;
+};
+
+/**
+ * Creates the relative URL for a consumer to find out
+ * the status of the event described by the eventId parameter.
+ */
+const getEventStatusLink = eventId => {
+  return `/water/1.0/returns/upload-xml/${eventId}`;
+};
+
+/**
+ * Begins the XML returns process by adding a new task to PG Boss.
+ *
+ * @param {string} eventId The UUID of the event
+ * @param {string} location The URL to the saved XML document in S3
+ * @returns {Promise}
+ */
+const addUploadToMessageQueue = (eventId, location) => {
+  const queueData = { eventId, location, subType: 'xml' };
+  return messageQueue.publish('returns-upload', queueData);
+};
+
+const postUploadXml = async (request, h) => {
+  const evt = createXmlUploadEvent(request.payload.userName);
+  let eventId;
+
+  try {
+    await evt.save();
+    eventId = evt.getId();
+
+    const filename = getUploadFilename(eventId);
+    const data = await s3.upload(filename, request.payload.fileData);
+    const jobId = await addUploadToMessageQueue(eventId, data.Location);
+
+    return h.response({
+      data: {
+        eventId,
+        filename,
+        location: data.Location,
+        statusLink: getEventStatusLink(eventId),
+        jobId
+      },
+      error: null
+    }).code(202);
+  } catch (error) {
+    logger.error('Failed to upload returns xml', error);
+    if (eventId) {
+      await evt.setStatus(uploadStatus.ERROR).save();
+    }
+
+    return h.response({ data: null, error }).code(500);
+  }
+};
+
+const getUploadXml = async (request, h) => {
+  const { eventId } = request.params;
+
+  try {
+    const evt = await Event.load(eventId);
+
+    if (evt.rowCount === 0) {
+      return Boom.notFound('No event found');
+    }
+    return { data: evt.rows[0], error: null };
+  } catch (error) {
+    logger.error('Failed to get upload xml', error);
+    throw Boom.boomify(error);
+  }
+};
+
 module.exports = {
   getReturn,
   postReturn,
-  patchReturnHeader
+  patchReturnHeader,
+  postUploadXml,
+  getUploadXml
 };
