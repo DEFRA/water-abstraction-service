@@ -21,6 +21,7 @@ const notify = require('./src/modules/notify');
 const returnsNotifications = require('./src/modules/returns-notifications');
 const returnsInvitations = require('./src/modules/returns-invitation');
 const importer = require('./src/modules/import');
+const returnsUpload = require('./src/modules/returns/lib/jobs/init-upload');
 
 // Initialise logger
 const logger = require('./src/lib/logger');
@@ -65,6 +66,7 @@ const configureMessageQueue = async (server) => {
   await importer(messageQueue).registerSubscribers();
   await returnsNotifications(messageQueue).registerSubscribers();
   await returnsInvitations(messageQueue).registerSubscribers();
+  await returnsUpload.registerSubscribers(messageQueue);
   server.log('info', 'Message queue started');
 };
 
