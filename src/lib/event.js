@@ -126,6 +126,10 @@ class Event {
     this.data.modified = moment().format('YYYY-MM-DD HH:mm:ss');
     return event.update({ event_id: this.data.event_id }, this.data);
   }
+
+  static async load (eventId) {
+    return event.find({ event_id: eventId });
+  }
 }
 
 module.exports = Event;
