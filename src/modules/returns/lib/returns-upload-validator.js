@@ -11,8 +11,8 @@
   {
     "licenceNumber": "01/123/456",
     "returnRequirement": "12345678",
-    "receivedDate": "2019-02-11",
     "startDate": "2017-04-01",
+    "endDate": "2019-02-11",
     ...
   }
 ]
