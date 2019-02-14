@@ -114,6 +114,11 @@ class Event {
     return this;
   }
 
+  setComment (comment) {
+    this.data.comment = comment;
+    return this;
+  }
+
   /**
    * Saves record to DB
    * @return {Promise} resolves on save/error
@@ -128,7 +133,15 @@ class Event {
   }
 
   static async load (eventId) {
-    return event.find({ event_id: eventId });
+    const result = await event.find({ event_id: eventId });
+
+    if (result.rowCount === 0) {
+      return null;
+    }
+
+    const evt = new Event();
+    evt.data = result.rows[0];
+    return evt;
   }
 }
 
