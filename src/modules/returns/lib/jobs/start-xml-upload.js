@@ -4,6 +4,8 @@ const Event = require('../../../../lib/event');
 const { uploadStatus } = require('../returns-upload');
 const { logger } = require('@envage/water-abstraction-helpers');
 const returnsUpload = require('../../lib/returns-upload');
+const { validateXml } = require('../../lib/schema-validation');
+const { parseXmlFile } = require('../../lib/xml-helpers');
 
 /**
  * Begins the XML returns process by adding a new task to PG Boss.
@@ -23,6 +25,15 @@ const publishReturnsUploadStart = eventId =>
  * @param {Object} job The job data from PG Boss
  */
 const handleReturnsUploadStart = async job => {
+  // job = {
+  //   data: {
+  //     eventId: '3798a2b5-5e63-4717-94cb-93a71c83d27e',
+  //   },
+  //   done: (data) => {
+  //     console.log('job.done called with', data);
+  //     return 'done';
+  //   }
+  // };
   const { eventId } = job.data;
   const evt = await Event.load(eventId);
 
@@ -33,7 +44,11 @@ const handleReturnsUploadStart = async job => {
     const s3Object = await returnsUpload.getReturnsS3Object(eventId);
     console.log('Found S3 Object from Job', s3Object);
 
-    // TODO: validate the xml schema
+    // Pass parsed xml doc to the validation function
+    // returns true if the validation passes
+    // returns an array of objects containing error messages and lines
+    const result = await validateXml(parseXmlFile(s3Object.Body));
+    if (result !== true) throw new Error('Failed Schema Validation');
 
     return job.done();
   } catch (error) {
