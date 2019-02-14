@@ -51,6 +51,9 @@ const getLicence = async (licenceRef, config) => {
   return row;
 };
 
+const hasAbstractionReformActions = licence =>
+  get(licence, 'licence_data_value.actions', []).length > 0;
+
 /**
  * Updates the licence analysis table
  * @param {String} licenceRef
@@ -58,8 +61,13 @@ const getLicence = async (licenceRef, config) => {
  */
 const updateLicenceRow = async (licenceRef) => {
   // Get base and AR licences
-  const base = await getLicence(licenceRef, licence);
   const ar = await getLicence(licenceRef, abstractionReform);
+
+  if (!hasAbstractionReformActions(ar)) {
+    return { error: null, data: 'No AR for licence yet', licenceRef };
+  }
+
+  const base = await getLicence(licenceRef, licence);
 
   // Map data to analysis row
   const regionCode = get(base, 'licence_data_value.FGAC_REGION_CODE');

@@ -1,14 +1,23 @@
 const Lab = require('lab');
-const { experiment, test, afterEach } = exports.lab = Lab.script();
+const {
+  experiment,
+  test,
+  beforeEach,
+  afterEach
+} = exports.lab = Lab.script();
 const { expect } = require('code');
 const sinon = require('sinon');
 
 const {
   getPermitFilter,
-  getLicence
+  getLicence,
+  updateLicenceRow
 } = require('../../../../src/modules/ar-analysis/lib/update-licence-row');
 
 const permit = require('../../../../src/lib/connectors/permit');
+const arAnalysisController = require('../../../../src/controllers/ar-analysis-licences.js');
+
+const permitResponse = require('../../../responses/permits/licence');
 
 const config = {
   regimeId: 1,
@@ -65,5 +74,66 @@ experiment('getLicence', () => {
 
     const result = await getLicence(licenceRef, config);
     expect(result).to.equal(row);
+  });
+});
+
+experiment('updateLicenceRow', () => {
+  beforeEach(async () => {
+    sinon.stub(permit.licences, 'findMany');
+
+    sinon.stub(arAnalysisController.repository, 'create')
+      .resolves({
+        rowCount: 1,
+        rows: [{
+          licence_ref: '123',
+          status: 'In progress'
+        }]
+      });
+  });
+
+  afterEach(async () => {
+    permit.licences.findMany.restore();
+    arAnalysisController.repository.create.restore();
+  });
+
+  experiment('when the abstraction reform has no actions', () => {
+    beforeEach(async () => {
+      permit.licences.findMany
+        .onCall(0).resolves(permitResponse.emptyAbstractionReform())
+        .onCall(1).resolves(permitResponse.licences());
+    });
+
+    test('no analysis row is created', async () => {
+      await updateLicenceRow('123');
+      expect(arAnalysisController.repository.create.called).to.be.false();
+    });
+
+    test('a no action object is returned', async () => {
+      const result = await updateLicenceRow('123');
+      expect(result).to.be.equal({
+        error: null,
+        data: 'No AR for licence yet',
+        licenceRef: '123'
+      });
+    });
+  });
+
+  experiment('when the abstraction reform has actions', () => {
+    beforeEach(async () => {
+      permit.licences.findMany
+        .onCall(0).resolves(permitResponse.abstractionReformLicence())
+        .onCall(1).resolves(permitResponse.licences());
+    });
+
+    test('an analysis row is created', async () => {
+      await updateLicenceRow('123');
+      expect(arAnalysisController.repository.create.called).to.be.true();
+    });
+
+    test('the analysis row is returned', async () => {
+      const result = await updateLicenceRow('123');
+      expect(result.licence_ref).to.equal('123');
+      expect(result.status).to.equal('In progress');
+    });
   });
 });
