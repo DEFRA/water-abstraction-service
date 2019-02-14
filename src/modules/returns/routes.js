@@ -59,18 +59,5 @@ module.exports = {
         }
       }
     }
-  },
-
-  getUploadReturnsXml: {
-    path: '/water/1.0/returns/upload-xml/{eventId}',
-    method: 'GET',
-    handler: controller.getUploadXml,
-    config: {
-      validate: {
-        params: {
-          eventId: Joi.string().uuid().required()
-        }
-      }
-    }
   }
 };
