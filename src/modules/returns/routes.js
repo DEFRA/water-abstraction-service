@@ -59,5 +59,22 @@ module.exports = {
         }
       }
     }
+  },
+
+  postUploadPreview: {
+    path: '/water/1.0/returns/upload-preview/{eventId}',
+    method: 'POST',
+    handler: controller.postUploadPreview,
+    config: {
+      validate: {
+        params: {
+          eventId: Joi.string().uuid().required()
+        },
+        payload: {
+          companyId: Joi.string().uuid().required(),
+          userName: Joi.string().email().required()
+        }
+      }
+    }
   }
 };

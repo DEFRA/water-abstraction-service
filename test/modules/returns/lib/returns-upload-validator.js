@@ -91,6 +91,11 @@ experiment('getLicenceRegionCodes', () => {
       '06/890': 2
     });
   });
+
+  test('it should resolve with an empty object if no licence numbers supplied', async () => {
+    const result = await returnsUploadValidator.getLicenceRegionCodes([]);
+    expect(result).to.equal({});
+  });
 });
 
 experiment('getReturnId', () => {
