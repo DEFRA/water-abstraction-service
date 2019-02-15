@@ -132,8 +132,8 @@ const notFound = (h, message, eventId) => {
 
 /**
  * Allows the user to review their submitted return prior to submitting it
+ * @param {String} request.params.eventId - the upload event ID
  * @param {String} request.payload.companyId - the company CRM entity ID
- * @param {String} request.payload.eventId - the upload event ID
  * @param {String} request.payload.userName - email address of current user
  */
 const postUploadPreview = async (request, h) => {
