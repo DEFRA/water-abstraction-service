@@ -9,7 +9,6 @@
  * @module src/modules/notifications/contact-list
  */
 
-/* eslint camelcase: "warn" */
 const Boom = require('boom');
 const { find } = require('lodash');
 const sha1 = require('sha1');
@@ -65,15 +64,12 @@ function createSendList (licences, rolePriority) {
       };
     }
 
-    // Add licence
-    const { document_id, system_external_id, document_name, system_internal_id, company_entity_id } = licence;
-
     list[contactKey].licences.push({
-      document_id,
-      system_external_id,
-      system_internal_id,
-      company_entity_id,
-      document_name,
+      document_id: licence.document_id,
+      system_external_id: licence.system_external_id,
+      system_internal_id: licence.system_internal_id,
+      company_entity_id: licence.company_entity_id,
+      document_name: licence.document_name,
       licence_holder: licenceHolder
     });
   });
@@ -81,21 +77,15 @@ function createSendList (licences, rolePriority) {
   return Object.values(list);
 }
 
+const fixCase = str => typeof (str) === 'string' ? str.toUpperCase() : str;
+
 /**
  * Gets/generates a unique contact ID for the supplied contact
  * @param {Object} contact
  * @return {String} contact ID (can be entity ID)
  */
 function getContactId (contact) {
-  if (contact.entity_id) {
-    return contact.entity_id;
-  }
-
-  function fixCase (str) {
-    return typeof (str) === 'string' ? str.toUpperCase() : str;
-  }
-
-  return sha1(Object.values(contact).map(fixCase).join(','));
+  return contact.entity_id || sha1(Object.values(contact).map(fixCase).join(','));
 }
 
 /**
@@ -114,6 +104,6 @@ async function getContacts (filter, rolePriority) {
   return createSendList(data, rolePriority);
 }
 
-module.exports = {
-  contactList: getContacts
-};
+exports.contactList = getContacts;
+exports.getContactId = getContactId;
+exports.getPreferredContact = getPreferredContact;
