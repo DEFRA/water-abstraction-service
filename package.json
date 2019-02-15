@@ -57,7 +57,7 @@
     "firstline": "^2.0.2",
     "good": "^8.1.1",
     "good-winston": "^4.0.0",
-    "handlebars": "^4.0.12",
+    "handlebars": "^4.0.13",
     "handlebars-helper-equal": "^1.0.0",
     "hapi": "^17.5.1",
     "hapi-auth-jwt2": "^8.2.0",
