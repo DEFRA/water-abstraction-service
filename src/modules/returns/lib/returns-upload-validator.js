@@ -54,6 +54,9 @@ const getDocumentsForCompany = async (companyId) => {
  * @return {Promise}                resolves with map of licence numbers/regions
  */
 const getLicenceRegionCodes = async (licenceNumbers) => {
+  if (licenceNumbers.length === 0) {
+    return {};
+  }
   const filter = {
     licence_regime_id: regimeId,
     licence_type_id: typeId,
