@@ -5,7 +5,7 @@ const nunjucks = require('nunjucks');
 const { testMode } = require('../../../config');
 
 const viewHelpers = require('./view-helpers');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 const env = nunjucks.configure('./src/views/pdf-notifications/', {
   noCache: testMode

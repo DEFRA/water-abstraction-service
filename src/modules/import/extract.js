@@ -7,7 +7,7 @@ const { promisify } = require('util');
 const config = require('../../../config.js');
 const { execCommand } = require('../../lib/helpers.js');
 const Slack = require('../../lib/slack');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 const readDir = promisify(fs.readdir);
 const writeFile = promisify(fs.writeFile);

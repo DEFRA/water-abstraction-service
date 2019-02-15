@@ -3,7 +3,7 @@ const ExtendableError = require('es6-error');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 
 const permit = require('../../../lib/connectors/permit');
-const logger = require('../../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 const { licence, abstractionReform } = require('../../../../config');
 const { mapLicenceToTableRow } = require('./licence-row-mapper');
 const arAnalysis = require('../../../controllers/ar-analysis-licences.js');
