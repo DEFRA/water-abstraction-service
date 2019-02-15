@@ -1,3 +1,4 @@
+const Boom = require('boom');
 const { expect } = require('code');
 const {
   experiment,
@@ -110,12 +111,14 @@ experiment('postUploadPreview', () => {
 
   test('returns 404 if event not found', async () => {
     sandbox.stub(Event, 'load').resolves(null);
-    await controller.postUploadPreview(request, h);
-
-    const [response] = h.response.firstCall.args;
-    expect(response.data).to.equal(null);
-    expect(response.error.message).to.be.a.string();
-    expect(response.error.eventId).to.equal(request.params.eventId);
+    sandbox.stub(Boom, 'notFound');
+    try {
+      await controller.postUploadPreview(request, h);
+    } catch (err) {
+      const [message, data] = Boom.notFound.firstCall.args;
+      expect(message).to.be.a.string();
+      expect(data).to.equal({ eventId: request.params.eventId });
+    }
   });
 
   experiment('when data found in S3', async () => {

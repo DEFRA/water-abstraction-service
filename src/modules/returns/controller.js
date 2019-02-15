@@ -1,3 +1,4 @@
+const Boom = require('boom');
 const { persistReturnData, patchReturnData } = require('./lib/api-connector');
 const { mapReturnToModel } = require('./lib/model-returns-mapper');
 const { getReturnData } = require('./lib/facade');
@@ -121,15 +122,6 @@ const postUploadXml = async (request, h) => {
   }
 };
 
-const notFound = (h, message, eventId) => {
-  return h.response({
-    data: null,
-    error: {
-      message, eventId
-    }
-  }).code(404);
-};
-
 /**
  * Allows the user to review their submitted return prior to submitting it
  * @param {String} request.params.eventId - the upload event ID
@@ -144,7 +136,7 @@ const postUploadPreview = async (request, h) => {
     // Load event - 404 if not found
     const evt = await Event.load(eventId);
     if (!evt) {
-      return notFound(h, `Return upload event not found`, eventId);
+      throw Boom.notFound(`Return upload event not found`, { eventId });
     }
 
     // Load JSON from S3 and validate
