@@ -177,6 +177,9 @@ const validateReturn = (ret, context) => {
   // Find matching return in returns service
   const match = find(returns, { return_id: ret.returnId });
 
+  // Joi validation
+  const { error: joiError } = Joi.validate(ret, schema.multipleSchema);
+
   // Licence number not in CRM docs
   if (!licenceNumbers.includes(ret.licenceNumber)) {
     errors = [uploadErrors.ERR_PERMISSION];
@@ -186,17 +189,10 @@ const validateReturn = (ret, context) => {
   } else if (isNotDue(match)) {
     // Match found, but the return is not `due` status
     errors = [uploadErrors.ERR_NOT_DUE];
-  } else {
-    // Joi validation
-    const { error } = Joi.validate(ret, schema.multipleSchema);
-    if (error) {
-      errors = mapJoiError(error);
-    }
-
-    // Return line date check
-    if (!hasExpectedReturnLines(ret)) {
-      errors = mapJoiError(error);
-    }
+  } else if (joiError) {
+    errors = mapJoiError(joiError);
+  } else if (!hasExpectedReturnLines(ret)) {
+    errors = [uploadErrors.ERR_LINES];
   }
 
   return {
