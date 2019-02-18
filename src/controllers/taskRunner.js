@@ -1,6 +1,6 @@
 const DB = require('../lib/connectors/db');
 const os = require('os');
-const logger = require('../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 async function reset () {
   logger.debug('resetting scheduler');

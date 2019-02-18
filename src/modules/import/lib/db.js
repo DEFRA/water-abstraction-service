@@ -1,5 +1,5 @@
 const { pool } = require('../../../lib/connectors/db');
-const logger = require('../../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * Perform a database query by getting a client from the connection pool and releasing

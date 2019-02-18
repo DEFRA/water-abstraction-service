@@ -3,10 +3,9 @@
  * This allows emails which have bounced to have this status reflected in the
  * message log
  */
-/* eslint camelcase: "warn" */
 const messageQueue = require('../../lib/message-queue');
 const { repository: notificationsRepository } = require('../notifications');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * Find records in "water"."scheduled_notification" which have a notify_id

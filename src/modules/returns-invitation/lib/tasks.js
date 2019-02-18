@@ -12,7 +12,7 @@ const moment = require('moment');
 const { getDocumentContacts } = require('../../../lib/connectors/crm/documents');
 const messageQueue = require('../../../lib/message-queue');
 const { returns } = require('../../../lib/connectors/returns');
-const logger = require('../../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 // Module dependencies
 const { transformContact } = require('./de-duplicate');

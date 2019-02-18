@@ -1,6 +1,6 @@
 const { pool } = require('../../lib/connectors/db');
 const uuidv4 = require('uuid/v4');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * IMport rep units from NALD to lookup data

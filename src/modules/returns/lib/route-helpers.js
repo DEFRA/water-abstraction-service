@@ -1,5 +1,5 @@
 const Boom = require('boom');
-const logger = require('../../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * Log error if validation fails

@@ -14,7 +14,7 @@ const { scheduledNotification, findById, createFromObject } = require('./connect
 const { findByMessageRef } = require('./connectors/notify-template');
 const { NotifyIdError, AlreadySentError } = require('./lib/errors');
 const { HIGH_PRIORITY, LOW_PRIORITY } = require('../../lib/priorities');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * Updates the notify_status field for the message with the given ID

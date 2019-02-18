@@ -3,7 +3,7 @@ const { get, isObject } = require('lodash');
 const documentsClient = require('../../lib/connectors/crm/documents');
 const { usersClient } = require('../../lib/connectors/idm');
 const permitClient = require('../../lib/connectors/permit');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 const extractConditions = require('./lib/extractConditions');
 const extractPoints = require('./lib/extractPoints');
 const { licence: { regimeId, typeId } } = require('../../../config');
@@ -47,12 +47,8 @@ const handleUnexpectedError = (error, documentId, functionName) => {
     return Boom.notFound('Not found', error);
   }
 
-  error.params = { documentId };
-  error.context = {
-    component: 'modules/licences/controller',
-    action: functionName
-  };
-  logger.error('Failed to get licence data for document', error);
+  const logError = logger.decorateError(error, 'modules/licences/controller', { documentId }, functionName);
+  logger.error('Failed to get licence data for document', logError);
   return Boom.boomify(error);
 };
 

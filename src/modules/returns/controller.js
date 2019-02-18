@@ -6,8 +6,8 @@ const { eventFactory } = require('./lib/event-factory');
 const { repository: eventRepository } = require('../../controllers/events');
 const s3 = require('../../lib/connectors/s3');
 const Event = require('../../lib/event');
-const logger = require('../../lib/logger');
 const { uploadStatus, getUploadFilename, getReturnsS3Object } = require('./lib/returns-upload');
+const { logger } = require('@envage/water-abstraction-helpers');
 const startUploadJob = require('./lib/jobs/start-xml-upload');
 const uploadValidator = require('./lib/returns-upload-validator');
 

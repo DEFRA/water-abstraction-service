@@ -10,7 +10,6 @@ module.exports = {
     'migrations',
     'node_modules',
     'scripts',
-    'src/lib/logger/vendor',
     'test'
   ]
 };

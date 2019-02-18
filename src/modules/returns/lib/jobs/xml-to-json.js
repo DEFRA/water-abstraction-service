@@ -3,7 +3,7 @@ const JOB_NAME = 'returns-upload-xml-to-json';
 const s3 = require('../../../../lib/connectors/s3');
 const Event = require('../../../../lib/event');
 const returnsUpload = require('../returns-upload');
-const logger = require('../../../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * Begins the returns XML to JSON process by adding a new task to PG Boss.
@@ -39,9 +39,8 @@ const handleReturnsXmlToJsonStart = async job => {
     await evt.setStatus(returnsUpload.uploadStatus.VALIDATED).save();
     return job.done();
   } catch (error) {
-    error.params = { job };
-    error.context = { component: 'modules/returns/lib/jobs/xml-to-json' };
-    logger.error('Failed to convert XML to JSON', error);
+    const logError = logger.decorateError(error, 'modules/returns/lib/jobs/xml-to-json', { job }, 'handleReturnsXmlToJsonStart');
+    logger.error('Failed to convert XML to JSON', logError);
 
     await evt
       .setStatus(returnsUpload.uploadStatus.ERROR)

@@ -2,7 +2,7 @@
  * PG boss subscribers for notifications
  */
 const { enqueueMessages } = require('./lib/tasks');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 module.exports = (messageQueue) => {
   return {

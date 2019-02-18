@@ -10,7 +10,7 @@ const sandbox = sinon.createSandbox();
 
 const xmlToJsonJob = require('../../../../../src/modules/returns/lib/jobs/xml-to-json');
 const messageQueue = require('../../../../../src/lib/message-queue');
-const logger = require('../../../../../src/lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 const Event = require('../../../../../src/lib/event');
 const s3 = require('../../../../../src/lib/connectors/s3');
 
@@ -104,7 +104,7 @@ experiment('handler', () => {
 
     test('the error is logged', async () => {
       const [, error] = logger.error.lastCall.args;
-      expect(error.params).to.equal({ job });
+      expect(error.params.job).to.equal(job);
       expect(error.context.component).not.to.be.undefined();
     });
 

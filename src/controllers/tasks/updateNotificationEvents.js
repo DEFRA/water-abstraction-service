@@ -7,7 +7,7 @@
 const moment = require('moment');
 const { repository: eventsRepository } = require('../events');
 const { repository: notificationsRepository } = require('../notifications');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * Gets a list of events which are of type 'notification' and which are in
