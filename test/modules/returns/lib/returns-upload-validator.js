@@ -1,5 +1,6 @@
 const sinon = require('sinon');
 const { expect } = require('code');
+const { cloneDeep } = require('lodash');
 const { experiment, test, afterEach, beforeEach } = exports.lab = require('lab').script();
 const returnsUploadValidator = require('../../../../src/modules/returns/lib/returns-upload-validator');
 
@@ -98,16 +99,16 @@ experiment('getLicenceRegionCodes', () => {
   });
 });
 
-experiment('getReturnId', () => {
-  test('it should generate a return ID', async () => {
-    const regionCodes = {
-      '01/234': 4
-    };
-    const returnId = returnsUploadValidator.getReturnId(data.upload[0], regionCodes);
-
-    expect(returnId).to.equal(`v1:4:01/234:01234:2017-11-01:2018-10-31`);
-  });
-});
+// experiment('getReturnId', () => {
+//   test('it should generate a return ID', async () => {
+//     const regionCodes = {
+//       '01/234': 4
+//     };
+//     const returnId = returnsUploadValidator.getReturnId(data.upload[0], regionCodes);
+//
+//     expect(returnId).to.equal(`v1:4:01/234:01234:2017-11-01:2018-10-31`);
+//   });
+// });
 
 experiment('getReturns', () => {
   beforeEach(async () => {
@@ -163,5 +164,12 @@ experiment('validate', () => {
     expect(result[1].errors).to.equal([ERR_NOT_FOUND]);
     expect(result[2].errors).to.equal([ERR_NOT_DUE]);
     expect(result[3].errors).to.equal([]);
+  });
+
+  test('it should fail validation if it doesnt match the Joi schema', async () => {
+    const upload = cloneDeep(data.upload);
+    delete upload[3].isNil;
+    const result = await returnsUploadValidator.validate(upload, data.companyId);
+    expect(result[3].errors).to.equal(['"isNil" is required']);
   });
 });

@@ -17,7 +17,7 @@
   }
 ]
  */
-
+const Joi = require('joi');
 const { chunk, flatMap, find } = require('lodash');
 
 const permit = require('../../../lib/connectors/permit');
@@ -25,6 +25,8 @@ const returns = require('../../../lib/connectors/returns');
 const documents = require('../../../lib/connectors/crm/documents');
 
 const { licence: { regimeId, typeId } } = require('../../../../config.js');
+
+const schema = require('../schema.js');
 
 const uploadErrors = {
   ERR_PERMISSION: 'You do not have permission to submit returns for this licence',
@@ -82,16 +84,16 @@ const getLicenceRegionCodes = async (licenceNumbers) => {
  * @param  {Object} regionCodes- map of NALD region codes for each licence #
  * @return {String}            - return ID
  */
-const getReturnId = (ret, regionCodes) => {
-  const {
-    licenceNumber,
-    returnRequirement,
-    startDate,
-    endDate
-  } = ret;
-  const regionCode = regionCodes[licenceNumber];
-  return `v1:${regionCode}:${licenceNumber}:${returnRequirement}:${startDate}:${endDate}`;
-};
+// const getReturnId = (ret, regionCodes) => {
+//   const {
+//     licenceNumber,
+//     returnRequirement,
+//     startDate,
+//     endDate
+//   } = ret;
+//   const regionCode = regionCodes[licenceNumber];
+//   return `v1:${regionCode}:${licenceNumber}:${returnRequirement}:${startDate}:${endDate}`;
+// };
 
 /**
  * Gets an array of returns in the return service matching the
@@ -133,6 +135,15 @@ const formatReturn = (ret, msg) => {
 
 const isNotDue = ret => ret.status !== 'due';
 
+const joiValidation = (ret) => {
+  const { error } = Joi.validate(ret, schema.multipleSchema);
+  const errors = error ? error.details.map(err => err.message) : [];
+  return {
+    ...ret,
+    errors
+  };
+};
+
 /**
  * Validates a single return
  * Checks that:
@@ -143,12 +154,11 @@ const isNotDue = ret => ret.status !== 'due';
  * @param  {Object} ret     - return object from uploaded data
  * @param  {Object} context - context data for validation checks
  * @param  {Object} context.licenceNumbers - array of valid licence numbers
- * @param  {Object} context.regionCodes - map of licence numbers / NALD region codes
  * @param  {Object} context.returns - returns found in return service
  * @return {Object} return object decorated with errors array
  */
 const validateReturn = (ret, context) => {
-  const { licenceNumbers, regionCodes, returns } = context;
+  const { licenceNumbers, returns } = context;
 
   // Licence number not in list of CRM docs
   if (!licenceNumbers.includes(ret.licenceNumber)) {
@@ -156,8 +166,7 @@ const validateReturn = (ret, context) => {
   }
 
   // Find matching return in returns service
-  const returnId = getReturnId(ret, regionCodes);
-  const match = find(returns, row => row.return_id === returnId);
+  const match = find(returns, { return_id: ret.returnId });
 
   // No matching return found
   if (!match) {
@@ -169,8 +178,7 @@ const validateReturn = (ret, context) => {
     return formatReturn(ret, uploadErrors.ERR_NOT_DUE);
   }
 
-  // All OK
-  return formatReturn(ret);
+  return joiValidation(ret);
 };
 
 /**
@@ -181,19 +189,12 @@ const validateReturn = (ret, context) => {
  * @return {Promise}                array of returns with errors[] added
  */
 const validateBatch = async (uploadedReturns, licenceNumbers) => {
-  // Get a map of region codes for each licence number
-  const regionCodes = await getLicenceRegionCodes(licenceNumbers);
-
-  // Get returns from returns service based on uploaded return
-  const returnIds = uploadedReturns.map(row => {
-    return getReturnId(row, regionCodes);
-  });
+  const returnIds = uploadedReturns.map(ret => ret.returnId);
   const returns = await getReturns(returnIds);
 
   return uploadedReturns.map(ret => {
     const context = {
       licenceNumbers,
-      regionCodes,
       returns
     };
 
@@ -231,7 +232,6 @@ const validate = async (returns, companyId) => {
 module.exports = {
   getDocumentsForCompany,
   getLicenceRegionCodes,
-  getReturnId,
   getReturns,
   validate,
   batchProcess,

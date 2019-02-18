@@ -5,6 +5,8 @@ const readingTypes = ['estimated', 'measured'];
 const statuses = ['due', 'completed', 'received'];
 const units = ['m³', 'l', 'Ml', 'gal'];
 const userTypes = ['internal', 'external'];
+const returnIDRegex = /^v1:[1-8]:[^:]+:[0-9]+:[0-9]{4}-[0-9]{2}-[0-9]{2}:[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
+const formatIDRegex = /^[0-9]+$/;
 
 const userSchema = Joi.object().required().keys({
   email: Joi.string().required(),
@@ -12,8 +14,30 @@ const userSchema = Joi.object().required().keys({
   entityId: Joi.string().guid().required()
 });
 
+/**
+ * Schema for return lines, either via single/multiple flow
+ * @type {Object}
+ */
+const lines = Joi.when('isNil', {
+  is: false,
+  then:
+      Joi.array().required().items({
+        unit: Joi.string().valid(units).optional(),
+        userUnit: Joi.string().valid(units).optional(),
+        startDate: Joi.string().regex(isoDateRegex).required(),
+        endDate: Joi.string().regex(isoDateRegex).required(),
+        timePeriod: Joi.string().valid(allowedPeriods).required(),
+        quantity: Joi.number().allow(null).required(),
+        readingType: Joi.string().valid(readingTypes)
+      })
+});
+
+/**
+ * Schema for return
+ * @type {Object}
+ */
 const returnSchema = {
-  returnId: Joi.string().required(),
+  returnId: Joi.string().regex(returnIDRegex).required(),
   licenceNumber: Joi.string().required(),
   receivedDate: Joi.string().regex(isoDateRegex).allow(null).required(),
   startDate: Joi.string().regex(isoDateRegex).required(),
@@ -52,23 +76,16 @@ const returnSchema = {
     })
   }),
   requiredLines: Joi.array().allow(null).optional(),
-  lines: Joi.when('isNil', { is: false,
-    then:
-    Joi.array().required().items({
-      unit: Joi.string().valid(units).optional(),
-      userUnit: Joi.string().valid(units).optional(),
-      startDate: Joi.string().regex(isoDateRegex).required(),
-      endDate: Joi.string().regex(isoDateRegex).required(),
-      timePeriod: Joi.string().valid(allowedPeriods).required(),
-      quantity: Joi.number().allow(null).required(),
-      readingType: Joi.string().valid(readingTypes)
-    })
-  }),
+  lines,
   metadata: Joi.object(),
   user: userSchema,
   isUnderQuery: Joi.boolean()
 };
 
+/**
+ * Schema for updating under query / received date only
+ * @type {Object}
+ */
 const headerSchema = {
   returnId: Joi.string().required(),
   status: Joi.string().valid(statuses).required(),
@@ -77,7 +94,30 @@ const headerSchema = {
   isUnderQuery: Joi.boolean().required()
 };
 
+/**
+ * Compact schema for submitting a return from a multiple returns XML file
+ * @type {Object}
+ */
+const multipleSchema = {
+  returnId: Joi.string().regex(returnIDRegex).required(),
+  licenceNumber: Joi.string().required(),
+  receivedDate: Joi.string().regex(isoDateRegex).allow(null).required(),
+  startDate: Joi.string().regex(isoDateRegex).required(),
+  endDate: Joi.string().regex(isoDateRegex).required(),
+  frequency: Joi.string().valid(allowedPeriods).required(),
+  isNil: Joi.boolean().required(),
+  reading: Joi.object({
+    type: Joi.string().valid(readingTypes).required()
+  }),
+  lines,
+  meters: Joi.array().items({
+    manufacturer: Joi.string().required(),
+    serialNumber: Joi.string().required()
+  })
+};
+
 module.exports = {
   returnSchema,
-  headerSchema
+  headerSchema,
+  multipleSchema
 };
