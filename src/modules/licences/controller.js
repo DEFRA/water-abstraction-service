@@ -75,7 +75,14 @@ const getLicenceByDocumentId = async (request, h) => {
   }
 };
 
-const getLicenceConditionsByDocumentId = async (request, h) => {
+/**
+ * Gets the current version of the licence, then applies the given extract function
+ *
+ * @param {Object} request The HAPI request
+ * @param {Function} extractFn The function to apply to the current version to yield the required subset of data
+ * @returns {Object} The extracted data, wrapped in the comment return shape
+ */
+const extractLicenceData = async (request, extractFn) => {
   const { documentId } = request.params;
 
   try {
@@ -83,7 +90,7 @@ const getLicenceConditionsByDocumentId = async (request, h) => {
 
     if (licence) {
       const currentVersion = get(licence, 'licence_data_value.data.current_version');
-      return wrapData(extractConditions(currentVersion));
+      return wrapData(extractFn(currentVersion));
     }
     return Boom.notFound();
   } catch (error) {
@@ -91,21 +98,11 @@ const getLicenceConditionsByDocumentId = async (request, h) => {
   }
 };
 
-const getLicencePointsByDocumentId = async (request, h) => {
-  const { documentId } = request.params;
+const getLicenceConditionsByDocumentId = async request =>
+  extractLicenceData(request, extractConditions);
 
-  try {
-    const licence = await getLicence(documentId);
-
-    if (licence) {
-      const currentVersion = get(licence, 'licence_data_value.data.current_version');
-      return wrapData(extractPoints(currentVersion));
-    }
-    return Boom.notFound();
-  } catch (error) {
-    return handleUnexpectedError(error, documentId);
-  }
-};
+const getLicencePointsByDocumentId = async request =>
+  extractLicenceData(request, extractPoints);
 
 const getLicenceUsersByDocumentId = async (request, h) => {
   const { documentId } = request.params;
