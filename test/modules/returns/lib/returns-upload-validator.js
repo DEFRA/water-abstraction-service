@@ -173,3 +173,41 @@ experiment('validate', () => {
     expect(result[3].errors).to.equal(['"isNil" is required']);
   });
 });
+
+experiment('hasExpectedReturnLines', () => {
+  test('it should return true for a nil return', async () => {
+    const result = returnsUploadValidator.hasExpectedReturnLines(data.upload[0]);
+    expect(result).to.equal(true);
+  });
+
+  test('it should return true if the expected lines are present', async () => {
+    const ret = {
+      startDate: '2018-12-01',
+      endDate: '2019-01-31',
+      frequency: 'month',
+      lines: [{
+        startDate: '2019-01-01',
+        endDate: '2019-01-31'
+      }, {
+        startDate: '2018-12-01',
+        endDate: '2018-12-31'
+      }]
+    };
+    const result = returnsUploadValidator.hasExpectedReturnLines(ret);
+    expect(result).to.equal(true);
+  });
+
+  test('it should return false if the expected lines are not present', async () => {
+    const ret = {
+      startDate: '2018-12-01',
+      endDate: '2019-01-31',
+      frequency: 'month',
+      lines: [{
+        startDate: '2019-01-01',
+        endDate: '2019-01-31'
+      }]
+    };
+    const result = returnsUploadValidator.hasExpectedReturnLines(ret);
+    expect(result).to.equal(false);
+  });
+});

@@ -24,6 +24,8 @@ const permit = require('../../../lib/connectors/permit');
 const returns = require('../../../lib/connectors/returns');
 const documents = require('../../../lib/connectors/crm/documents');
 
+const { getRequiredLines } = require('./model-returns-mapper');
+
 const { licence: { regimeId, typeId } } = require('../../../../config.js');
 
 const schema = require('../schema.js');
@@ -31,7 +33,8 @@ const schema = require('../schema.js');
 const uploadErrors = {
   ERR_PERMISSION: 'You do not have permission to submit returns for this licence',
   ERR_NOT_DUE: 'Return for this licence and date has already been sent and cannot be changed',
-  ERR_NOT_FOUND: 'Dates do not match the return period'
+  ERR_NOT_FOUND: 'Dates do not match the return period',
+  ERR_LINES: 'Submitted return lines do not match those expected'
 };
 
 /**
@@ -133,16 +136,39 @@ const formatReturn = (ret, msg) => {
   };
 };
 
+/**
+ * Tests whether the supplied return has 'due' status
+ * @param  {Object}  ret - return object from returns service
+ * @return {Boolean}      true if return is due
+ */
 const isNotDue = ret => ret.status !== 'due';
 
-const joiValidation = (ret) => {
-  const { error } = Joi.validate(ret, schema.multipleSchema);
-  const errors = error ? error.details.map(err => err.message) : [];
-  return {
-    ...ret,
-    errors
-  };
+/**
+ * Converts an array of return line objects to a single string so it can be
+ * compared with another
+ * @param  {Array} lines
+ * @return {String}       - a string that can be used for comparison
+ */
+const linesToString = (lines) => {
+  const mapped = (lines || []).map(line => `${line.startDate}:${line.endDate}`);
+  return mapped.sort().join(',');
 };
+
+/**
+ * Checks that the return lines in the uploaded data match those calculated
+ * @param  {Object} ret - return upload object
+ * @return {boolean}     - true if return lines OK or nil return
+ */
+const hasExpectedReturnLines = (ret) => {
+  if (ret.isNil) {
+    return true;
+  }
+  const { startDate, endDate, frequency } = ret;
+  const requiredLines = getRequiredLines(startDate, endDate, frequency);
+  return linesToString(requiredLines) === linesToString(ret.lines);
+};
+
+const mapJoiError = error => error.details.map(err => err.message);
 
 /**
  * Validates a single return
@@ -178,7 +204,20 @@ const validateReturn = (ret, context) => {
     return formatReturn(ret, uploadErrors.ERR_NOT_DUE);
   }
 
-  return joiValidation(ret);
+  // Joi validation
+  const { error } = Joi.validate(ret, schema.multipleSchema);
+  if (error) {
+    return {
+      ...ret,
+      errors: mapJoiError(error)
+    };
+  }
+
+  if (!hasExpectedReturnLines(ret)) {
+    return formatReturn(ret, uploadErrors.ERR_LINES);
+  }
+
+  return formatReturn(ret);
 };
 
 /**
@@ -232,6 +271,7 @@ const validate = async (returns, companyId) => {
 module.exports = {
   getDocumentsForCompany,
   getLicenceRegionCodes,
+  hasExpectedReturnLines,
   getReturns,
   validate,
   batchProcess,
