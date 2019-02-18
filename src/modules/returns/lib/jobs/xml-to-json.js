@@ -39,8 +39,7 @@ const handleReturnsXmlToJsonStart = async job => {
     await evt.setStatus(returnsUpload.uploadStatus.VALIDATED).save();
     return job.done();
   } catch (error) {
-    const logError = logger.decorateError(error, 'modules/returns/lib/jobs/xml-to-json', { job }, 'handleReturnsXmlToJsonStart');
-    logger.error('Failed to convert XML to JSON', logError);
+    logger.error('Failed to convert XML to JSON', error, { job });
 
     await evt
       .setStatus(returnsUpload.uploadStatus.ERROR)

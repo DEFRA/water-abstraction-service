@@ -17,9 +17,7 @@ module.exports = (messageQueue) => {
         try {
           await enqueueMessages(state);
         } catch (err) {
-          err.context = { component: 'src/modules/returns-invitation/index.js' };
-          err.params = { job };
-          logger.error('Failed to enqueue', err);
+          logger.error('Failed to enqueue', err, { job });
           return done(err);
         }
 

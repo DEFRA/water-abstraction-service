@@ -42,13 +42,12 @@ const getLicence = async (document) => {
   return get(licenceResponse, 'data[0]');
 };
 
-const handleUnexpectedError = (error, documentId, functionName) => {
+const handleUnexpectedError = (error, documentId) => {
   if (parseInt(error.statusCode) === 404) {
     return Boom.notFound('Not found', error);
   }
 
-  const logError = logger.decorateError(error, 'modules/licences/controller', { documentId }, functionName);
-  logger.error('Failed to get licence data for document', logError);
+  logger.error('Failed to get licence data for document', error, { documentId });
   return Boom.boomify(error);
 };
 
@@ -72,7 +71,7 @@ const getLicenceByDocumentId = async (request, h) => {
     }
     return Boom.notFound();
   } catch (error) {
-    return handleUnexpectedError(error, documentId, 'getLicenceByDocumentId');
+    return handleUnexpectedError(error, documentId);
   }
 };
 
@@ -88,7 +87,7 @@ const getLicenceConditionsByDocumentId = async (request, h) => {
     }
     return Boom.notFound();
   } catch (error) {
-    return handleUnexpectedError(error, documentId, 'getLicenceConditionsByDocumentId');
+    return handleUnexpectedError(error, documentId);
   }
 };
 
@@ -104,7 +103,7 @@ const getLicencePointsByDocumentId = async (request, h) => {
     }
     return Boom.notFound();
   } catch (error) {
-    return handleUnexpectedError(error, documentId, 'getLicencePointsByDocumentId');
+    return handleUnexpectedError(error, documentId);
   }
 };
 
@@ -126,7 +125,7 @@ const getLicenceUsersByDocumentId = async (request, h) => {
       }))
     };
   } catch (error) {
-    return handleUnexpectedError(error, documentId, 'getLicenceUsersByDocumentId');
+    return handleUnexpectedError(error, documentId);
   }
 };
 
@@ -160,7 +159,7 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
     }
     return Boom.notFound();
   } catch (error) {
-    return handleUnexpectedError(error, documentId, 'getLicenceSummaryByDocumentId');
+    return handleUnexpectedError(error, documentId);
   }
 };
 
@@ -188,7 +187,7 @@ const getLicenceCommunicationsByDocumentId = async (request, h) => {
       data: notifications.map(mapNotification)
     };
   } catch (error) {
-    return handleUnexpectedError(error, documentId, 'getLicenceCommunications');
+    return handleUnexpectedError(error, documentId);
   }
 };
 

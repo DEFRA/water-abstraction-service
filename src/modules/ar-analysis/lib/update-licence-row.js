@@ -90,7 +90,7 @@ const updateAllLicences = async () => {
     try {
       await updateLicenceRow(licenceNumber);
     } catch (error) {
-      logger.error(error);
+      logger.error('Error updating all licences', error, { row });
     }
   }
 };

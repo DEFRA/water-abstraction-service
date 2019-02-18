@@ -140,8 +140,7 @@ const getLicenceJson = async (licenceNumber) => {
       return thisLicenceRow;
     }
   } catch (error) {
-    const logError = logger.decorateError(error, 'modules/import/transform-permit', { licenceNumber }, 'getLicenceJson');
-    logger.error('Error getting licence JSON', logError);
+    logger.error('Error getting licence JSON', error, { licenceNumber });
   }
 };
 
