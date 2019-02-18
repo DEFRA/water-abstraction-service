@@ -156,7 +156,8 @@ experiment('validate', () => {
     const {
       ERR_PERMISSION,
       ERR_NOT_DUE,
-      ERR_NOT_FOUND
+      ERR_NOT_FOUND,
+      ERR_LINES
     } = returnsUploadValidator.uploadErrors;
 
     const result = await returnsUploadValidator.validate(data.upload, data.companyId);
@@ -164,6 +165,7 @@ experiment('validate', () => {
     expect(result[1].errors).to.equal([ERR_NOT_FOUND]);
     expect(result[2].errors).to.equal([ERR_NOT_DUE]);
     expect(result[3].errors).to.equal([]);
+    expect(result[4].errors).to.equal([ERR_LINES]);
   });
 
   test('it should fail validation if it doesnt match the Joi schema', async () => {
