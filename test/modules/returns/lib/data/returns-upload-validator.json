@@ -28,32 +28,74 @@
     {
       "return_id": "v1:2:06/890:789:2017-11-01:2018-10-31",
       "status": "due"
+    },
+    {
+      "return_id": "v1:2:06/890:789:2019-02-01:2019-02-28",
+      "status": "due"
     }
   ],
   "upload": [
     {
+      "returnId": "v1:1:01/234:01234:2017-11-01:2018-10-31",
       "licenceNumber": "01/234",
-      "returnRequirement": "01234",
       "startDate": "2017-11-01",
-      "endDate": "2018-10-31"
+      "endDate": "2018-10-31",
+      "receivedDate" : "2018-11-15",
+      "frequency" : "week",
+      "isNil" : true
     },
     {
+      "returnId": "v1:1:05/678:0123:2017-11-01:2018-10-31",
       "licenceNumber": "05/678",
-      "returnRequirement": "0123",
       "startDate": "2017-11-01",
-      "endDate": "2018-10-31"
+      "endDate": "2018-10-31",
+      "receivedDate" : "2018-11-15",
+      "frequency" : "week",
+      "isNil" : true
     },
     {
+      "returnId": "v1:1:05/678:456:2017-11-01:2018-10-31",
       "licenceNumber": "05/678",
-      "returnRequirement": "456",
       "startDate": "2017-11-01",
-      "endDate": "2018-10-31"
+      "endDate": "2018-10-31",
+      "receivedDate" : "2018-11-15",
+      "frequency" : "week",
+      "isNil" : true
     },
     {
+      "returnId": "v1:2:06/890:789:2017-11-01:2018-10-31",
       "licenceNumber": "06/890",
-      "returnRequirement": "789",
       "startDate": "2017-11-01",
-      "endDate": "2018-10-31"
+      "endDate": "2018-10-31",
+      "receivedDate" : "2018-11-15",
+      "frequency" : "week",
+      "isNil" : true
+    },
+    {
+      "returnId": "v1:2:06/890:789:2019-02-01:2019-02-28",
+      "licenceNumber": "06/890",
+      "startDate": "2019-02-01",
+      "endDate": "2019-02-28",
+      "receivedDate" : "2019-02-18",
+      "frequency" : "month",
+      "isNil" : false,
+      "lines" : [
+        {
+          "timePeriod" : "month",
+          "startDate" : "2019-02-01",
+          "endDate" : "2019-02-28",
+          "quantity" : "0"
+        },
+        {
+          "timePeriod" : "month",
+          "startDate" : "2019-03-01",
+          "endDate" : "2019-03-31",
+          "quantity" : "0"
+        }
+      ]
     }
+
+
+
   ]
 }

@@ -17,19 +17,24 @@
   }
 ]
  */
-
+const Joi = require('joi');
 const { chunk, flatMap, find } = require('lodash');
 
 const permit = require('../../../lib/connectors/permit');
 const returns = require('../../../lib/connectors/returns');
 const documents = require('../../../lib/connectors/crm/documents');
 
+const { getRequiredLines } = require('./model-returns-mapper');
+
 const { licence: { regimeId, typeId } } = require('../../../../config.js');
+
+const schema = require('../schema.js');
 
 const uploadErrors = {
   ERR_PERMISSION: 'You do not have permission to submit returns for this licence',
   ERR_NOT_DUE: 'Return for this licence and date has already been sent and cannot be changed',
-  ERR_NOT_FOUND: 'Dates do not match the return period'
+  ERR_NOT_FOUND: 'Dates do not match the return period',
+  ERR_LINES: 'Submitted return lines do not match those expected'
 };
 
 /**
@@ -82,16 +87,16 @@ const getLicenceRegionCodes = async (licenceNumbers) => {
  * @param  {Object} regionCodes- map of NALD region codes for each licence #
  * @return {String}            - return ID
  */
-const getReturnId = (ret, regionCodes) => {
-  const {
-    licenceNumber,
-    returnRequirement,
-    startDate,
-    endDate
-  } = ret;
-  const regionCode = regionCodes[licenceNumber];
-  return `v1:${regionCode}:${licenceNumber}:${returnRequirement}:${startDate}:${endDate}`;
-};
+// const getReturnId = (ret, regionCodes) => {
+//   const {
+//     licenceNumber,
+//     returnRequirement,
+//     startDate,
+//     endDate
+//   } = ret;
+//   const regionCode = regionCodes[licenceNumber];
+//   return `v1:${regionCode}:${licenceNumber}:${returnRequirement}:${startDate}:${endDate}`;
+// };
 
 /**
  * Gets an array of returns in the return service matching the
@@ -119,19 +124,38 @@ const getReturns = (returnIds) => {
 };
 
 /**
- * Formats return with errors array
- * @param  {Object} ret - the return object from uploaded data
- * @param  {String} [msg] - error message
- * @return {Object} return decorated with errors array
+ * Tests whether the supplied return has 'due' status
+ * @param  {Object}  ret - return object from returns service
+ * @return {Boolean}      true if return is due
  */
-const formatReturn = (ret, msg) => {
-  return {
-    ...ret,
-    errors: msg ? [msg] : []
-  };
+const isNotDue = ret => ret.status !== 'due';
+
+/**
+ * Converts an array of return line objects to a single string so it can be
+ * compared with another
+ * @param  {Array} lines
+ * @return {String}       - a string that can be used for comparison
+ */
+const linesToString = (lines = []) => {
+  const mapped = lines.map(line => `${line.startDate}:${line.endDate}`);
+  return mapped.sort().join(',');
 };
 
-const isNotDue = ret => ret.status !== 'due';
+/**
+ * Checks that the return lines in the uploaded data match those calculated
+ * @param  {Object} ret - return upload object
+ * @return {boolean}     - true if return lines OK or nil return
+ */
+const hasExpectedReturnLines = (ret) => {
+  if (ret.isNil) {
+    return true;
+  }
+  const { startDate, endDate, frequency } = ret;
+  const requiredLines = getRequiredLines(startDate, endDate, frequency);
+  return linesToString(requiredLines) === linesToString(ret.lines);
+};
+
+const mapJoiError = error => error.details.map(err => err.message);
 
 /**
  * Validates a single return
@@ -143,34 +167,38 @@ const isNotDue = ret => ret.status !== 'due';
  * @param  {Object} ret     - return object from uploaded data
  * @param  {Object} context - context data for validation checks
  * @param  {Object} context.licenceNumbers - array of valid licence numbers
- * @param  {Object} context.regionCodes - map of licence numbers / NALD region codes
  * @param  {Object} context.returns - returns found in return service
  * @return {Object} return object decorated with errors array
  */
 const validateReturn = (ret, context) => {
-  const { licenceNumbers, regionCodes, returns } = context;
-
-  // Licence number not in list of CRM docs
-  if (!licenceNumbers.includes(ret.licenceNumber)) {
-    return formatReturn(ret, uploadErrors.ERR_PERMISSION);
-  }
+  const { licenceNumbers, returns } = context;
+  let errors = [];
 
   // Find matching return in returns service
-  const returnId = getReturnId(ret, regionCodes);
-  const match = find(returns, row => row.return_id === returnId);
+  const match = find(returns, { return_id: ret.returnId });
 
-  // No matching return found
-  if (!match) {
-    return formatReturn(ret, uploadErrors.ERR_NOT_FOUND);
+  // Joi validation
+  const { error: joiError } = Joi.validate(ret, schema.multipleSchema);
+
+  // Licence number not in CRM docs
+  if (!licenceNumbers.includes(ret.licenceNumber)) {
+    errors = [uploadErrors.ERR_PERMISSION];
+  } else if (!match) {
+    // No matching return
+    errors = [uploadErrors.ERR_NOT_FOUND];
+  } else if (isNotDue(match)) {
+    // Match found, but the return is not `due` status
+    errors = [uploadErrors.ERR_NOT_DUE];
+  } else if (joiError) {
+    errors = mapJoiError(joiError);
+  } else if (!hasExpectedReturnLines(ret)) {
+    errors = [uploadErrors.ERR_LINES];
   }
 
-  // Match found, but the return is not `due` status
-  if (isNotDue(match)) {
-    return formatReturn(ret, uploadErrors.ERR_NOT_DUE);
-  }
-
-  // All OK
-  return formatReturn(ret);
+  return {
+    ...ret,
+    errors
+  };
 };
 
 /**
@@ -181,19 +209,12 @@ const validateReturn = (ret, context) => {
  * @return {Promise}                array of returns with errors[] added
  */
 const validateBatch = async (uploadedReturns, licenceNumbers) => {
-  // Get a map of region codes for each licence number
-  const regionCodes = await getLicenceRegionCodes(licenceNumbers);
-
-  // Get returns from returns service based on uploaded return
-  const returnIds = uploadedReturns.map(row => {
-    return getReturnId(row, regionCodes);
-  });
+  const returnIds = uploadedReturns.map(ret => ret.returnId);
   const returns = await getReturns(returnIds);
 
   return uploadedReturns.map(ret => {
     const context = {
       licenceNumbers,
-      regionCodes,
       returns
     };
 
@@ -231,7 +252,7 @@ const validate = async (returns, companyId) => {
 module.exports = {
   getDocumentsForCompany,
   getLicenceRegionCodes,
-  getReturnId,
+  hasExpectedReturnLines,
   getReturns,
   validate,
   batchProcess,
