@@ -7,7 +7,7 @@ const { find, uniqBy } = require('lodash');
 const BaseTransformer = require('./base-transformer');
 const LicenceTitleLoader = require('./licence-title-loader');
 const licenceTitleLoader = new LicenceTitleLoader();
-const logger = require('../logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 const naldHelpers = require('./nald-helpers');
 
 class CSVTransformer extends BaseTransformer {

@@ -4,7 +4,7 @@ moment.locale('en-gb');
 const { load } = require('./src/modules/import/load');
 const { getNextImportBatch } = require('./src/modules/import/lib/import-log');
 const config = require('./config');
-const logger = require('./src/lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 logger.init(config.logger);
 
 process.on('uncaughtException', (err) => {

@@ -4,7 +4,6 @@
     "migrations",
     "test",
     "node_modules",
-    "data",
-    "src/lib/logger/vendor/winston-airbrake.js"
+    "data"
   ]
 }

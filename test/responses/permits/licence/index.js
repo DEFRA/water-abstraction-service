@@ -1,6 +1,9 @@
 const { cloneDeep } = require('lodash');
 
 const licenceDataValue = require('./licence-data.json');
+const emptyActions = {
+  actions: []
+};
 
 const licences = {
   data: [{
@@ -20,6 +23,40 @@ const licences = {
   error: null
 };
 
+const abstractionReformActions = () => ({
+  status: 'In progress',
+  actions: [
+    {
+      type: 'edit.version',
+      payload: {
+        data: { CHARGEABLE: 'Y' },
+        user: { id: 1234, email: 'test@example.com' },
+        timestamp: 1550148300724,
+        issueNumber: 100,
+        incrementNumber: 0
+      }
+    }
+  ],
+  lastEdit: {
+    user: { id: 2392, email: 'markswaffer.defra@gmail.com' },
+    timestamp: 1550148602230
+  }
+});
+
+const emptyAbstractionReform = () => {
+  const shell = cloneDeep(licences);
+  shell.data[0].licence_data_value = emptyActions;
+  return shell;
+};
+
+const abstractionReformLicence = () => {
+  const shell = cloneDeep(licences);
+  shell.data[0].licence_data_value = abstractionReformActions();
+  return shell;
+};
+
 module.exports = {
-  licences: () => cloneDeep(licences)
+  licences: () => cloneDeep(licences),
+  emptyAbstractionReform,
+  abstractionReformLicence
 };

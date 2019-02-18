@@ -24,7 +24,7 @@ const importer = require('./src/modules/import');
 const returnsUpload = require('./src/modules/returns/lib/jobs/init-upload');
 
 // Initialise logger
-const logger = require('./src/lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 const goodWinstonStream = new GoodWinston({ winston: logger });
 logger.init(config.logger);
 

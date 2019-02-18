@@ -2,7 +2,7 @@ const Slack = require('../../lib/slack');
 const { clearImportLog } = require('./lib/import-log');
 const { downloadAndExtract } = require('./extract');
 const { loadScheduler } = require('./load-scheduler');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 const scheduleImportSubscriber = async (job, done) => {
   Slack.post(`Import: scheduling licence imports`);

@@ -7,7 +7,7 @@ const {
 } = require('../../../lib/connectors/returns');
 
 const { mapReturnToVersion, mapReturnToLines, mapReturn } = require('./model-returns-mapper');
-const logger = require('../../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 class ReturnAPIError extends ExtendableError {
   constructor (obj) {

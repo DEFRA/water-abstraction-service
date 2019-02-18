@@ -6,7 +6,7 @@ const queries = require('../../../src/modules/licences/lib/queries');
 const permitClient = require('../../../src/lib/connectors/permit');
 const documentsClient = require('../../../src/lib/connectors/crm/documents');
 const idmConnector = require('../../../src/lib/connectors/idm');
-const logger = require('../../../src/lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();

@@ -2,7 +2,7 @@ const { getAllStations } = require('../../lib/connectors/river-levels');
 const { repository } = require('../../controllers/gauging-stations.js');
 const moment = require('moment');
 const ngrConverter = require('./ngr-converter');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * Calls the river levels API and updates list of stations locally

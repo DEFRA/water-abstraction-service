@@ -11,7 +11,7 @@ const sandbox = sinon.createSandbox();
 const startUploadJob = require('../../../../../src/modules/returns/lib/jobs/start-xml-upload');
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload');
 const messageQueue = require('../../../../../src/lib/message-queue');
-const logger = require('../../../../../src/lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 const Event = require('../../../../../src/lib/event');
 
 experiment('publish', () => {
@@ -90,7 +90,7 @@ experiment('handler', () => {
 
     test('the error is logged', async () => {
       const [, error] = logger.error.lastCall.args;
-      expect(error.params).to.equal({ job });
+      expect(error.params.job).to.equal(job);
       expect(error.context.component).not.to.be.undefined();
     });
 

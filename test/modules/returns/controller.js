@@ -15,7 +15,8 @@ const Event = require('../../../src/lib/event');
 const s3 = require('../../../src/lib/connectors/s3');
 const startUploadJob = require('../../../src/modules/returns/lib/jobs/start-xml-upload');
 const uploadValidator = require('../../../src/modules/returns/lib/returns-upload-validator');
-const logger = require('../../../src/lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
+
 
 experiment('postUploadXml', () => {
   let request;
