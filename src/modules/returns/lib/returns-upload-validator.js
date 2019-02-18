@@ -136,8 +136,8 @@ const isNotDue = ret => ret.status !== 'due';
  * @param  {Array} lines
  * @return {String}       - a string that can be used for comparison
  */
-const linesToString = (lines) => {
-  const mapped = (lines || []).map(line => `${line.startDate}:${line.endDate}`);
+const linesToString = (lines = []) => {
+  const mapped = lines.map(line => `${line.startDate}:${line.endDate}`);
   return mapped.sort().join(',');
 };
 
