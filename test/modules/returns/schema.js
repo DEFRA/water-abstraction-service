@@ -56,6 +56,7 @@ const createMultipleReturn = (ret) => {
     'meters'
   ]);
 
+  // Remove multiplier from meter
   modified.meters = (modified.meters || []).map(meter => {
     const { multiplier, ...rest } = meter;
     return rest;

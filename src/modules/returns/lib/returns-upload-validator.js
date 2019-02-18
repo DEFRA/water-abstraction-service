@@ -124,19 +124,6 @@ const getReturns = (returnIds) => {
 };
 
 /**
- * Formats return with errors array
- * @param  {Object} ret - the return object from uploaded data
- * @param  {String} [msg] - error message
- * @return {Object} return decorated with errors array
- */
-const formatReturn = (ret, msg) => {
-  return {
-    ...ret,
-    errors: msg ? [msg] : []
-  };
-};
-
-/**
  * Tests whether the supplied return has 'due' status
  * @param  {Object}  ret - return object from returns service
  * @return {Boolean}      true if return is due
@@ -185,39 +172,37 @@ const mapJoiError = error => error.details.map(err => err.message);
  */
 const validateReturn = (ret, context) => {
   const { licenceNumbers, returns } = context;
-
-  // Licence number not in list of CRM docs
-  if (!licenceNumbers.includes(ret.licenceNumber)) {
-    return formatReturn(ret, uploadErrors.ERR_PERMISSION);
-  }
+  let errors = [];
 
   // Find matching return in returns service
   const match = find(returns, { return_id: ret.returnId });
 
-  // No matching return found
-  if (!match) {
-    return formatReturn(ret, uploadErrors.ERR_NOT_FOUND);
+  // Licence number not in CRM docs
+  if (!licenceNumbers.includes(ret.licenceNumber)) {
+    errors = [uploadErrors.ERR_PERMISSION];
+  } else if (!match) {
+    // No matching return
+    errors = [uploadErrors.ERR_NOT_FOUND];
+  } else if (isNotDue(match)) {
+    // Match found, but the return is not `due` status
+    errors = [uploadErrors.ERR_NOT_DUE];
+  } else {
+    // Joi validation
+    const { error } = Joi.validate(ret, schema.multipleSchema);
+    if (error) {
+      errors = mapJoiError(error);
+    }
+
+    // Return line date check
+    if (!hasExpectedReturnLines(ret)) {
+      errors = mapJoiError(error);
+    }
   }
 
-  // Match found, but the return is not `due` status
-  if (isNotDue(match)) {
-    return formatReturn(ret, uploadErrors.ERR_NOT_DUE);
-  }
-
-  // Joi validation
-  const { error } = Joi.validate(ret, schema.multipleSchema);
-  if (error) {
-    return {
-      ...ret,
-      errors: mapJoiError(error)
-    };
-  }
-
-  if (!hasExpectedReturnLines(ret)) {
-    return formatReturn(ret, uploadErrors.ERR_LINES);
-  }
-
-  return formatReturn(ret);
+  return {
+    ...ret,
+    errors
+  };
 };
 
 /**
