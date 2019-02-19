@@ -35,11 +35,11 @@ experiment('XML to JSON Mapping', () => {
     test('getNilReturn function returns false', () => {
       let xmlReturn = getNilReturn(returnXmlNode);
 
-      expect(xmlReturn).to.be.a.boolean().and.to.be.false();
+      expect(xmlReturn).to.be.false();
     });
 
     test('mapXml returns an object with the relevant licence headers', () => {
-      let returnsArray = mapXml(returnXml);
+      const returnsArray = mapXml(returnXml);
 
       expect(returnsArray).to.be.an.array().and.to.not.be.empty();
       expect(returnsArray[0]).to.contain(['licenceNumber', 'returnRequirement',
