@@ -25,15 +25,6 @@ const publishReturnsUploadStart = eventId =>
  * @param {Object} job The job data from PG Boss
  */
 const handleReturnsUploadStart = async job => {
-  // job = {
-  //   data: {
-  //     eventId: '3798a2b5-5e63-4717-94cb-93a71c83d27e',
-  //   },
-  //   done: (data) => {
-  //     console.log('job.done called with', data);
-  //     return 'done';
-  //   }
-  // };
   const { eventId } = job.data;
   const evt = await Event.load(eventId);
 
