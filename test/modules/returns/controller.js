@@ -168,10 +168,10 @@ experiment('postUploadPreview', () => {
 
       }
 
-      const [message, error] = logger.error.firstCall.args;
+      const [message, , params] = logger.error.firstCall.args;
       expect(message).to.be.a.string();
-      expect(error.params.eventId).to.equal(request.params.eventId);
-      expect(error.params.companyId).to.equal(request.payload.companyId);
+      expect(params.eventId).to.equal(request.params.eventId);
+      expect(params.companyId).to.equal(request.payload.companyId);
     });
   });
 });

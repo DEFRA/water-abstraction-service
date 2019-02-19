@@ -5,9 +5,8 @@ const { logger } = require('@envage/water-abstraction-helpers');
  * Log error if validation fails
  */
 const failAction = async (request, h, err) => {
-  err.params = { path: request.path, payload: request.payload };
-  err.context = { component: request.path };
-  logger.error(err.message, err);
+  const params = { path: request.path, payload: request.payload };
+  logger.error(err.message, err, params);
   throw Boom.badRequest(`Invalid request payload input`);
 };
 

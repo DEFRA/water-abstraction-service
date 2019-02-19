@@ -148,11 +148,10 @@ const postUploadPreview = async (request, h) => {
       error: null
     };
   } catch (error) {
-    // Log error
-    error.params = {
-      eventId, companyId
-    };
-    logger.error('Return upload preview failed', error);
+    logger.error('Return upload preview failed', error, {
+      eventId,
+      companyId
+    });
 
     throw error;
   }

@@ -1,9 +1,11 @@
 {
   "version": 2,
   "exclude_patterns": [
+    "data",
     "migrations",
-    "test",
     "node_modules",
-    "data"
+    "scripts",
+    "temp",
+    "test"
   ]
 }

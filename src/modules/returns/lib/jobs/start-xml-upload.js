@@ -37,10 +37,7 @@ const handleReturnsUploadStart = async job => {
 
     return job.done();
   } catch (error) {
-    logger.error(
-      'Returns upload failure',
-      logger.decorateError(error, 'modules/returns/lib/jobs/start-xml-upload', { job }, 'handleReturnsUploadStart')
-    );
+    logger.error('Returns upload failure', error, { job });
 
     await evt
       .setStatus(uploadStatus.ERROR)

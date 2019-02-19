@@ -24,14 +24,7 @@ const getUpdateLicence = async (request, h) => {
     const result = await updateLicence.updateLicenceRow(licenceRef);
     return result;
   } catch (error) {
-    const logError = logger.decorateError(
-      error,
-      'modules/ar-analysis/controller',
-      { licenceRef },
-      'getUpdateLicence'
-    );
-    logger.error('Failed to update AR licence', logError);
-
+    logger.error('Failed to update AR licence', error, { licenceRef });
     throw Boom.badImplementation(`Unable to update AR licence analysis row for ${licenceRef}`);
   }
 };

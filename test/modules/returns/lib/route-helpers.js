@@ -35,8 +35,7 @@ experiment('failAction', () => {
 
     expect(func()).to.reject(Error);
     expect(stub.firstCall.args[0]).to.equal(error.message);
-    expect(stub.firstCall.args[1].params.path).to.equal(request.path);
-    expect(stub.firstCall.args[1].context.component).to.equal(request.path);
-    expect(stub.firstCall.args[1].params.payload).to.equal(request.payload);
+    expect(stub.firstCall.args[2].path).to.equal(request.path);
+    expect(stub.firstCall.args[2].payload).to.equal(request.payload);
   });
 });

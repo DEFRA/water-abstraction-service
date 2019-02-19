@@ -45,11 +45,10 @@ experiment('controller', () => {
       try {
         await controller.getUpdateLicence(request);
       } catch (e) {
-        const [message, error] = logger.error.lastCall.args;
+        const [message, error, params] = logger.error.lastCall.args;
         expect(message).to.equal('Failed to update AR licence');
         expect(error.name).to.equal('nasty error');
-        expect(error.params.licenceRef).to.equal('123');
-        expect(error.context).to.be.an.object();
+        expect(params.licenceRef).to.equal('123');
       }
     });
 
