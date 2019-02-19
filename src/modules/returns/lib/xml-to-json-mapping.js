@@ -120,16 +120,14 @@ const mapXml = (xmlDoc, today) => {
   return flatMap(returnsArray);
 };
 
-module.exports = {
-  getReturnFrequency,
-  getNilReturn,
-  getMeterDetails,
-  wasMeterUsed,
-  getOverallReadingType,
-  getUnits,
-  getReadingDetails,
-  getReturnLines,
-  getEndDate,
-  getReadingType,
-  mapXml
-};
+exports.getReturnFrequency = getReturnFrequency;
+exports.getNilReturn = getNilReturn;
+exports.getMeterDetails = getMeterDetails;
+exports.wasMeterUsed = wasMeterUsed;
+exports.getOverallReadingType = getOverallReadingType;
+exports.getUnits = getUnits;
+exports.getReadingDetails = getReadingDetails;
+exports.getReturnLines = getReturnLines;
+exports.getEndDate = getEndDate;
+exports.getReadingType = getReadingType;
+exports.mapXml = mapXml;
