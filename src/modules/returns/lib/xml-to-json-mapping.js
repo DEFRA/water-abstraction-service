@@ -101,7 +101,7 @@ const mapXml = (xmlDoc, today) => {
   const permits = xmlDoc.find('tns:Permit', options);
 
   const returnsArray = permits.map(permit => {
-    var returns = permit.find('tns:Return', options);
+    const returns = permit.find('tns:Return', options);
     return returns.map(ret => {
       return {
         licenceNumber: permit.get('tns:IrPermitNo', options).text(),
