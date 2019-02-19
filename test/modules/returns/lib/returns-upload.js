@@ -58,3 +58,21 @@ experiment('buildJobData', () => {
     });
   });
 });
+
+experiment('s3ObjectToJson', () => {
+  test('returns the expected object', async () => {
+    const ret = {
+      id: 'return-id',
+      lines: [
+        { id: 'line-id' }
+      ]
+    };
+
+    const s3Object = {
+      Body: Buffer.from(JSON.stringify(ret), 'utf-8')
+    };
+
+    const json = returnsUpload.s3ObjectToJson(s3Object);
+    expect(json).to.equal(ret);
+  });
+});

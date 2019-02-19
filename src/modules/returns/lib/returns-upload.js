@@ -26,6 +26,14 @@ const getReturnsS3Object = (eventId, fileExtension = 'xml') => {
 };
 
 /**
+ * Extracts the JSON from an S3 object
+ *
+ * @param {Object} s3Object The S3 object containing the JSON
+ * @returns {Object} S3 body parsed as JSON
+ */
+const s3ObjectToJson = s3Object => JSON.parse(s3Object.Body.toString());
+
+/**
  * buildJobData
  *
  * @param {string} eventId The event id
@@ -38,3 +46,4 @@ exports.uploadStatus = uploadStatus;
 exports.getUploadFilename = getUploadFilename;
 exports.getReturnsS3Object = getReturnsS3Object;
 exports.buildJobData = buildJobData;
+exports.s3ObjectToJson = s3ObjectToJson;
