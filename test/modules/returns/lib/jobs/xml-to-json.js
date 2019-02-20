@@ -5,6 +5,8 @@ const {
   experiment,
   test } = exports.lab = require('lab').script();
 
+const fs = require('fs');
+const path = require('path');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
@@ -51,7 +53,9 @@ experiment('handler', () => {
     };
     sandbox.stub(Event, 'load').resolves(eventStub);
 
-    sandbox.stub(s3, 'getObject').resolves({});
+    const str = fs.readFileSync(path.join(__dirname, '../xml-files-for-tests/weekly-return-pass.xml'));
+
+    sandbox.stub(s3, 'getObject').resolves({ Body: Buffer.from(str, 'utf-8') });
     sandbox.stub(s3, 'upload').resolves({});
     sandbox.spy(logger, 'error');
 
@@ -103,9 +107,8 @@ experiment('handler', () => {
     });
 
     test('the error is logged', async () => {
-      const [, error] = logger.error.lastCall.args;
-      expect(error.params.job).to.equal(job);
-      expect(error.context.component).not.to.be.undefined();
+      const params = logger.error.lastCall.args[2];
+      expect(params.job).to.equal(job);
     });
 
     test('the status is set to error', async () => {

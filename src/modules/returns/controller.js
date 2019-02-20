@@ -185,7 +185,7 @@ const postUploadSubmit = async (request, h) => {
     if (isValidated(request.evt)) {
       throw Boom.badRequest(`Event status not 'validated'`);
     }
-
+    
     // Validate data in JSON
     const data = await uploadValidator.validate(request.jsonData, companyId);
     const valid = data.filter(isValidReturn);
@@ -194,6 +194,7 @@ const postUploadSubmit = async (request, h) => {
     if (valid.length < 1) {
       throw Boom.badRequest(`No valid returns found in submission`);
     }
+
 
     // Update event
     const updatedEvent = applySubmitting(request.evt, valid);

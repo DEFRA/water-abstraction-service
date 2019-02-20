@@ -177,8 +177,10 @@ experiment('postUploadPreview', () => {
 
       }
 
+
       const [msg, , params] = logger.error.lastCall.args;
       expect(msg).to.be.a.string();
+
       expect(params.eventId).to.equal(request.params.eventId);
       expect(params.companyId).to.equal(request.payload.companyId);
     });

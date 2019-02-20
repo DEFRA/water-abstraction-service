@@ -20,7 +20,7 @@ function post (message) {
 
   return rp(options)
     .catch((err) => {
-      logger.error(`Slack error`, err.statusCode, err.message);
+      logger.error(`Slack error`, err);
     });
 }
 

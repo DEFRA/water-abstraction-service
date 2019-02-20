@@ -4,6 +4,8 @@ const s3 = require('../../../../lib/connectors/s3');
 const Event = require('../../../../lib/event');
 const returnsUpload = require('../returns-upload');
 const { logger } = require('@envage/water-abstraction-helpers');
+const { mapXml } = require('../../lib/xml-to-json-mapping');
+const { parseXmlFile } = require('../../lib/xml-helpers');
 
 /**
  * Begins the returns XML to JSON process by adding a new task to PG Boss.
@@ -31,7 +33,7 @@ const handleReturnsXmlToJsonStart = async job => {
     console.log('Found S3 Object from Job', s3Object);
 
     // TODO: convert XML to JSON
-    const json = '{ "status": "under-construction" }';
+    const json = mapXml(parseXmlFile(s3Object.Body));
 
     await uploadJsonToS3(evt.getId(), json);
 
@@ -39,8 +41,7 @@ const handleReturnsXmlToJsonStart = async job => {
     await evt.setStatus(returnsUpload.uploadStatus.VALIDATED).save();
     return job.done();
   } catch (error) {
-    const logError = logger.decorateError(error, 'modules/returns/lib/jobs/xml-to-json', { job }, 'handleReturnsXmlToJsonStart');
-    logger.error('Failed to convert XML to JSON', logError);
+    logger.error('Failed to convert XML to JSON', error, { job });
 
     await evt
       .setStatus(returnsUpload.uploadStatus.ERROR)

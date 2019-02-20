@@ -89,9 +89,8 @@ experiment('handler', () => {
     });
 
     test('the error is logged', async () => {
-      const [, error] = logger.error.lastCall.args;
-      expect(error.params.job).to.equal(job);
-      expect(error.context.component).not.to.be.undefined();
+      const params = logger.error.lastCall.args[2];
+      expect(params.job).to.equal(job);
     });
 
     test('the status is set to error', async () => {
