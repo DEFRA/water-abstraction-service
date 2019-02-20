@@ -1,4 +1,4 @@
-const Event = require('../../../lib/event');
+const evt = require('../../../lib/event');
 const { uniq } = require('lodash');
 
 /**
@@ -36,23 +36,23 @@ function eventFactory (issuer, taskConfig, contactData, ref) {
 
   const uniqueEntities = getUniqueEntities(contactData);
 
-  const e = new Event();
-  e.setReference(ref)
-    .setType(taskConfig.type, taskConfig.subtype)
-    .setIssuer(issuer)
-    .setLicenceNumbers(licences)
-    .setEntities(uniqueEntities)
-    .setMetadata({
+  return evt.factory({
+    referenceCode: ref,
+    type: taskConfig.type,
+    subtype: taskConfig.subtype,
+    issuer,
+    licences,
+    entities: uniqueEntities,
+    metadata: {
       name: taskConfig.config.name,
       recipients: contactData.length,
       pending: contactData.length,
       sent: 0,
       error: 0,
       taskConfigId: taskConfig.task_config_id
-    })
-    .setStatus('sending');
-
-  return e;
+    },
+    status: 'sending'
+  });
 }
 
 module.exports = eventFactory;

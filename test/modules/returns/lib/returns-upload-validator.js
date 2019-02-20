@@ -1,3 +1,4 @@
+const moment = require('moment');
 const sinon = require('sinon');
 const { expect } = require('code');
 const { cloneDeep } = require('lodash');
@@ -126,9 +127,11 @@ experiment('getReturns', () => {
 
     const [filter, sort, columns] = returns.returns.findAll.firstCall.args;
 
+    const today = moment().format('YYYY-MM-DD');
+
     expect(filter).to.equal({
       return_id: { $in: returnIds },
-      end_date: { $gte: '2018-10-31' },
+      end_date: { $gte: '2018-10-31', $lte: today },
       status: { $ne: 'void' },
       'metadata->>isCurrent': 'true'
     });

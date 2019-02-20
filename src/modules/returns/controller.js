@@ -6,7 +6,7 @@ const { eventFactory } = require('./lib/event-factory');
 const { repository: eventRepository } = require('../../controllers/events');
 const s3 = require('../../lib/connectors/s3');
 const Event = require('../../lib/event');
-const { uploadStatus, getUploadFilename, getReturnsS3Object } = require('./lib/returns-upload');
+const { uploadStatus, getUploadFilename } = require('./lib/returns-upload');
 const { logger } = require('@envage/water-abstraction-helpers');
 const startUploadJob = require('./lib/jobs/start-xml-upload');
 const uploadValidator = require('./lib/returns-upload-validator');
@@ -75,11 +75,12 @@ const patchReturnHeader = async (request, h) => {
  * @returns {Event}
  */
 const createXmlUploadEvent = (uploadUserName) => {
-  const evt = new Event();
-  evt.setType('returns-upload', 'xml');
-  evt.setIssuer(uploadUserName);
-  evt.setStatus(uploadStatus.PROCESSING);
-  return evt;
+  return Event.factory({
+    type: 'returns-upload',
+    subtype: 'xml',
+    issuer: uploadUserName,
+    status: uploadStatus.PROCESSING
+  });
 };
 
 /**
@@ -95,8 +96,8 @@ const postUploadXml = async (request, h) => {
   let eventId;
 
   try {
-    await evt.save();
-    eventId = evt.getId();
+    await Event.persist(evt);
+    const { eventId } = evt;
 
     const filename = getUploadFilename(eventId);
     const data = await s3.upload(filename, request.payload.fileData);
@@ -115,7 +116,8 @@ const postUploadXml = async (request, h) => {
   } catch (error) {
     logger.error('Failed to upload returns xml', error);
     if (eventId) {
-      await evt.setStatus(uploadStatus.ERROR).save();
+      evt.status = uploadStatus.ERROR;
+      await Event.persist(evt);
     }
 
     return h.response({ data: null, error }).code(500);
@@ -133,27 +135,75 @@ const postUploadPreview = async (request, h) => {
   const { companyId } = request.payload;
 
   try {
-    // Load event - 404 if not found
-    const evt = await Event.load(eventId);
-    if (!evt) {
-      throw Boom.notFound(`Return upload event not found`, { eventId });
+    const data = await uploadValidator.validate(request.jsonData, companyId);
+    return { data, error: null };
+  } catch (error) {
+    logger.error('Return upload preview failed', error, { eventId, companyId });
+    throw error;
+  }
+};
+
+const isValidReturn = ret => ret.errors.length === 0;
+
+/**
+ * Update event to submitting status
+ * @param  {Object} evt  - the event object
+ * @param  {Array} data - array of return objects
+ * @return {Object}
+ */
+const applySubmitting = (evt, data) => {
+  return {
+    ...evt,
+    metadata: {
+      returns: data.map(ret => ({
+        returnId: ret.returnId,
+        submitted: false,
+        error: null
+      }))
+    },
+    status: uploadStatus.SUBMITTING
+  };
+};
+
+const isValidated = (evt) => evt.status === 'validated';
+
+/**
+ * Route handler to trigger the submission of valid returns corresponding
+ * to the supplied upload event ID
+ * @param  {String}  request.params.eventId - GUID from the water events table
+ * @param  {String}  request.params.companyId - CRM company entity GUID
+ * @param  {String}  request.params.entityId - CRM individual entity GUID
+ * @param  {String}  request.params.userName - email of current user
+ * @return {Promise}         resolves with JSON if submitted
+ */
+const postUploadSubmit = async (request, h) => {
+  const { eventId } = request.params;
+  const { companyId } = request.payload;
+
+  try {
+    // Check event status is 'validated'
+    if (isValidated(request.evt)) {
+      throw Boom.badRequest(`Event status not 'validated'`);
     }
 
-    // Load JSON from S3 and validate
-    const response = await getReturnsS3Object(eventId, 'json');
-    const returns = JSON.parse(response.Body.toString());
-    const result = await uploadValidator.validate(returns, companyId);
-    return {
-      data: result,
-      error: null
-    };
-  } catch (error) {
-    // Log error
-    error.params = {
-      eventId, companyId
-    };
-    logger.error('Return upload preview failed', error);
+    // Validate data in JSON
+    const data = await uploadValidator.validate(request.jsonData, companyId);
+    const valid = data.filter(isValidReturn);
 
+    // Check 1+ valid returns
+    if (valid.length < 1) {
+      throw Boom.badRequest(`No valid returns found in submission`);
+    }
+
+    // Update event
+    const updatedEvent = applySubmitting(request.evt, valid);
+    await Event.persist(updatedEvent);
+
+    // @TODO publish PG boss event
+
+    return { data, error: null };
+  } catch (error) {
+    logger.error('Return upload preview failed', error, { eventId, companyId });
     throw error;
   }
 };
@@ -163,5 +213,6 @@ module.exports = {
   postReturn,
   patchReturnHeader,
   postUploadXml,
-  postUploadPreview
+  postUploadPreview,
+  postUploadSubmit
 };

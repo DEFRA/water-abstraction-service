@@ -17,14 +17,17 @@ const startUploadJob = require('../../../src/modules/returns/lib/jobs/start-xml-
 const uploadValidator = require('../../../src/modules/returns/lib/returns-upload-validator');
 const { logger } = require('@envage/water-abstraction-helpers');
 
+const UUIDV4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i);
 
 experiment('postUploadXml', () => {
   let request;
   let h;
 
   beforeEach(async () => {
-    sandbox.stub(Event.prototype, 'save').resolves({});
-    sandbox.stub(Event.prototype, 'getId').returns('test-event-id');
+    sandbox.stub(Event.repo, 'update').resolves({});
+    sandbox.stub(Event.repo, 'create').resolves({});
+    // sandbox.stub(Event.repo, 'update').resolves({});
+    // sandbox.stub(Event.prototype, 'getId').returns('test-event-id');
     sandbox.stub(s3, 'upload').resolves({
       Location: 'test-s3-location',
       Key: 'test-s3-key'
@@ -51,18 +54,21 @@ experiment('postUploadXml', () => {
 
   test('an event is saved with the expected values', async () => {
     await controller.postUploadXml(request, h);
-    const [eventValues] = Event.prototype.save.thisValues;
-    expect(eventValues.data.type).to.equal('returns-upload');
-    expect(eventValues.data.subtype).to.equal('xml');
-    expect(eventValues.data.issuer).to.equal('test-user');
-    expect(eventValues.data.status).to.equal('processing');
+    const [eventValues] = Event.repo.create.firstCall.args;
+    expect(eventValues.type).to.equal('returns-upload');
+    expect(eventValues.subtype).to.equal('xml');
+    expect(eventValues.issuer).to.equal('test-user');
+    expect(eventValues.status).to.equal('processing');
   });
 
   test('file data is uploaded to S3', async () => {
     await controller.postUploadXml(request, h);
     const [filename, fileData] = s3.upload.lastCall.args;
 
-    expect(filename).to.equal('returns-upload/test-event-id.xml');
+    expect(filename.substr(0, 15)).to.equal('returns-upload/');
+    expect(filename.substr(15, 36)).to.match(UUIDV4_REGEX);
+    expect(filename.substr(51, 4)).to.equal('.xml');
+
     expect(fileData).to.equal('10101');
   });
 
@@ -70,40 +76,50 @@ experiment('postUploadXml', () => {
     await controller.postUploadXml(request, h);
     const [eventId] = startUploadJob.publish.lastCall.args;
 
-    expect(eventId).to.equal('test-event-id');
+    expect(eventId).to.match(UUIDV4_REGEX);
   });
 
   test('response contains the expected data', async () => {
     await controller.postUploadXml(request, h);
     const [responseData] = h.response.lastCall.args;
 
-    expect(responseData.data.eventId).to.equal('test-event-id');
-    expect(responseData.data.filename).to.equal('returns-upload/test-event-id.xml');
+    expect(responseData.data.eventId).to.match(UUIDV4_REGEX);
+
+    const expectedFilename = `returns-upload/${responseData.data.eventId}.xml`;
+    expect(responseData.data.filename).to.equal(expectedFilename);
+
     expect(responseData.data.location).to.equal('test-s3-location');
     expect(responseData.data.jobId).to.equal('test-job-id');
-    expect(responseData.data.statusLink).to.equal('/water/1.0/event/test-event-id');
+
+    const expectedStatusLink = `/water/1.0/event/${responseData.data.eventId}`;
+    expect(responseData.data.statusLink).to.equal(expectedStatusLink);
   });
 });
 
 experiment('postUploadPreview', () => {
+  const sandbox = sinon.createSandbox();
+
   const request = {
     params: {
       eventId: 'bb69e563-1a0c-4661-8e33-51ddf737740d'
     },
     payload: {
       companyId: '2dc953ff-c80e-4a1c-8f59-65c641bdbe45'
+    },
+    jsonData: {
+      foo: 'bar'
     }
   };
 
-  let h, sandbox;
+  let h;
 
   beforeEach(async () => {
-    sandbox = sinon.createSandbox();
     h = {
       response: sinon.stub().returns({
         code: sinon.spy()
       })
     };
+    sandbox.stub(logger, 'error');
   });
 
   afterEach(async () => {
@@ -152,26 +168,19 @@ experiment('postUploadPreview', () => {
       const func = () => controller.postUploadPreview(request, h);
       expect(func()).to.reject();
     });
-  });
 
-  experiment('when data not found in S3', async () => {
-    beforeEach(async () => {
-      sandbox.stub(Event, 'load').resolves({});
-      sandbox.stub(s3, 'getObject').rejects(new Error('Test'));
-      sandbox.stub(logger, 'error');
-    });
-
-    test('it should log error', async () => {
+    test('if validator fails it should log error', async () => {
+      uploadValidator.validate.rejects(new Error('Some error'));
       try {
         await controller.postUploadPreview(request, h);
       } catch (err) {
 
       }
 
-      const [message, error] = logger.error.firstCall.args;
-      expect(message).to.be.a.string();
-      expect(error.params.eventId).to.equal(request.params.eventId);
-      expect(error.params.companyId).to.equal(request.payload.companyId);
+      const [msg, , params] = logger.error.lastCall.args;
+      expect(msg).to.be.a.string();
+      expect(params.eventId).to.equal(request.params.eventId);
+      expect(params.companyId).to.equal(request.payload.companyId);
     });
   });
 });

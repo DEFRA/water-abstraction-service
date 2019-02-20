@@ -79,6 +79,7 @@
     "request-promise-native": "^1.0.6",
     "sentence-case": "^2.1.1",
     "sha1": "^1.1.1",
+    "snake-case": "^2.1.0",
     "snakecase-keys": "^1.1.1",
     "url-join": "^4.0.0",
     "uuid": "^3.3.2",

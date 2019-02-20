@@ -1,4 +1,5 @@
 const { isArray, uniq } = require('lodash');
+const evt = require('../../../lib/event');
 
 /**
  * Given the notification state object, creates an object row which can
@@ -26,7 +27,7 @@ const eventFactory = (state) => {
     error: 0
   };
 
-  return {
+  return evt.factory({
     ...state.event,
     subtype: state.config.messageRef.default,
     issuer: state.config.issuer,
@@ -34,7 +35,7 @@ const eventFactory = (state) => {
     entities: uniq(entities),
     metadata,
     status: ''
-  };
+  });
 };
 
 module.exports = {

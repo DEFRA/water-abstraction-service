@@ -1,3 +1,4 @@
+const evt = require('../../../lib/event');
 const { contactList } = require('../../../lib/contact-list');
 const licenceLoader = require('./licence-loader');
 const templateRenderer = require('./template-renderer');
@@ -68,9 +69,9 @@ async function prepareNotification (filter, taskConfig, params, context = {}) {
 async function sendNotification (taskConfig, issuer, contactData, ref) {
   // Create event
   const e = eventFactory(issuer, taskConfig, contactData, ref);
-  await e.save();
+  await evt.persist(e);
 
-  logger.info(`Sending notification reference ${e.getReference()} ID ${e.getId()}`);
+  logger.info(`Sending notification reference ${e.referenceCode} ID ${e.eventId}`);
 
   // Schedule messages for sending
   for (let row of contactData) {
@@ -84,8 +85,8 @@ async function sendNotification (taskConfig, issuer, contactData, ref) {
   }
 
   // Update event status
-  e.setStatus('sent');
-  return e.save();
+  e.status = 'sent';
+  return evt.persist(e);
 }
 
 module.exports = {

@@ -18,6 +18,7 @@
 ]
  */
 const Joi = require('joi');
+const moment = require('moment');
 const { chunk, flatMap, find } = require('lodash');
 
 const permit = require('../../../lib/connectors/permit');
@@ -32,9 +33,9 @@ const schema = require('../schema.js');
 
 const uploadErrors = {
   ERR_PERMISSION: 'You do not have permission to submit returns for this licence',
-  ERR_NOT_DUE: 'Return for this licence and date has already been sent and cannot be changed',
+  ERR_NOT_DUE: 'A return for this licence and date has already been submitted and cannot be changed',
   ERR_NOT_FOUND: 'Dates do not match the return period',
-  ERR_LINES: 'Submitted return lines do not match those expected'
+  ERR_LINES: 'Submitted return line dates do not match those expected'
 };
 
 /**
@@ -113,7 +114,8 @@ const getReturns = (returnIds) => {
       $ne: 'void'
     },
     end_date: {
-      $gte: '2018-10-31'
+      $gte: '2018-10-31',
+      $lte: moment().format('YYYY-MM-DD')
     },
     'metadata->>isCurrent': 'true'
   };

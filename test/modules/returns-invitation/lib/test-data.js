@@ -8,7 +8,7 @@ module.exports = {
       issuer: 'mail@example.com'
     },
     event: {
-      event_id: 'event_id'
+      eventId: 'event_id'
     },
     contacts: [{
       entity_id: 'entity_a',

@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const Event = require('../../../lib/event');
+const evt = require('../../../lib/event');
 const { uniq } = require('lodash');
 
 /**
@@ -48,22 +48,22 @@ function eventFactory (options, returns) {
   // Create array of affected licence numbers
   const licences = getLicenceNumbers(returns);
 
-  const e = new Event();
-  e.setReference(ref)
-    .setType('notification', messageRef)
-    .setIssuer(issuer)
-    .setLicenceNumbers(licences)
-    .setMetadata({
+  return evt.factory({
+    referenceCode: ref,
+    type: 'notification',
+    subtype: messageRef,
+    issuer,
+    licences,
+    metadata: {
       name: `Returns: ${name}`,
       returnIds: getReturnIds(returns),
       recipients: returns.length,
       pending: returns.length,
       sent: 0,
       error: 0
-    })
-    .setStatus('sending');
-
-  return e;
+    },
+    status: 'sending'
+  });
 }
 
 module.exports = eventFactory;
