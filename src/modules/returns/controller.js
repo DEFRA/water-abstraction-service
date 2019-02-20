@@ -143,8 +143,6 @@ const postUploadPreview = async (request, h) => {
   }
 };
 
-const isValidReturn = ret => ret.errors.length === 0;
-
 /**
  * Update event to submitting status
  * @param  {Object} evt  - the event object
@@ -165,7 +163,8 @@ const applySubmitting = (evt, data) => {
   };
 };
 
-const isValidated = (evt) => evt.status === 'validated';
+const isValidReturn = ret => ret.errors.length === 0;
+const isValidatedEvent = evt => evt.status === 'validated';
 
 const parseRequest = (request) => {
   const { eventId } = request.params;
@@ -187,7 +186,7 @@ const postUploadSubmit = async (request, h) => {
 
   try {
     // Check event status is 'validated'
-    if (isValidated(request.evt)) {
+    if (!isValidatedEvent(request.evt)) {
       throw Boom.badRequest(`Event status not 'validated'`);
     }
 

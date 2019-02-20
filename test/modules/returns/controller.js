@@ -15,6 +15,7 @@ const Event = require('../../../src/lib/event');
 const s3 = require('../../../src/lib/connectors/s3');
 const startUploadJob = require('../../../src/modules/returns/lib/jobs/start-xml-upload');
 const uploadValidator = require('../../../src/modules/returns/lib/returns-upload-validator');
+const { uploadStatus } = require('../../../src/modules/returns/lib/returns-upload');
 const { logger } = require('@envage/water-abstraction-helpers');
 
 const UUIDV4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i);
@@ -96,20 +97,26 @@ experiment('postUploadXml', () => {
   });
 });
 
-experiment('postUploadPreview', () => {
-  const sandbox = sinon.createSandbox();
-
-  const request = {
+const requestFactory = () => {
+  return {
     params: {
       eventId: 'bb69e563-1a0c-4661-8e33-51ddf737740d'
     },
     payload: {
       companyId: '2dc953ff-c80e-4a1c-8f59-65c641bdbe45'
     },
+    evt: {
+      eventId: 'bb69e563-1a0c-4661-8e33-51ddf737740d',
+      status: 'validated'
+    },
     jsonData: {
       foo: 'bar'
     }
   };
+};
+
+experiment('postUploadPreview', () => {
+  const sandbox = sinon.createSandbox();
 
   const data = { foo: 'bar' };
   const validatorResponse = { bar: 'foo' };
@@ -131,6 +138,7 @@ experiment('postUploadPreview', () => {
   });
 
   test('it should call validator with correct arguments', async () => {
+    const request = requestFactory();
     await controller.postUploadPreview(request, h);
     const [returnData, companyId] = uploadValidator.validate.firstCall.args;
     expect(returnData).to.equal(data);
@@ -138,18 +146,21 @@ experiment('postUploadPreview', () => {
   });
 
   test('it should respond with validator result in response', async () => {
+    const request = requestFactory();
     const response = await controller.postUploadPreview(request, h);
     expect(response.error).to.equal(null);
     expect(response.data).to.equal(validatorResponse);
   });
 
   test('if validator fails it should reject', async () => {
+    const request = requestFactory();
     uploadValidator.validate.rejects(new Error('Some error'));
     const func = () => controller.postUploadPreview(request, h);
     expect(func()).to.reject();
   });
 
   test('if validator fails it should log error', async () => {
+    const request = requestFactory();
     uploadValidator.validate.rejects(new Error('Some error'));
     try {
       await controller.postUploadPreview(request, h);
@@ -162,5 +173,74 @@ experiment('postUploadPreview', () => {
 
     expect(params.eventId).to.equal(request.params.eventId);
     expect(params.companyId).to.equal(request.payload.companyId);
+  });
+});
+
+experiment('postUploadSubmit', () => {
+  const sandbox = sinon.createSandbox();
+  let h;
+
+  beforeEach(async () => {
+    sandbox.stub(Boom, 'badRequest');
+    sandbox.stub(logger, 'error');
+    sandbox.stub(Event, 'persist');
+    h = {
+      response: sinon.stub().returns({
+        code: sinon.spy()
+      })
+    };
+    sandbox.stub(uploadValidator, 'validate').resolves([{
+      returnId: 'a',
+      errors: []
+    }, {
+      returnId: 'b',
+      errors: ['Some error']
+    }
+    ]);
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  test('it should throw a bad request error if the event is the wrong status', async () => {
+    const request = requestFactory();
+    request.evt.status = 'submitted';
+
+    try {
+      await controller.postUploadSubmit(request, h);
+    } catch (err) {
+
+    }
+    expect(Boom.badRequest.callCount).to.equal(1);
+    const [msg, , params] = logger.error.lastCall.args;
+    expect(msg).to.be.a.string();
+    expect(params.eventId).to.equal(request.params.eventId);
+    expect(params.companyId).to.equal(request.payload.companyId);
+  });
+
+  test('it should throw a bad request error if no returns to submit', async () => {
+    const request = requestFactory();
+    uploadValidator.validate.resolves([]);
+    try {
+      await controller.postUploadSubmit(request, h);
+    } catch (err) {
+
+    }
+    expect(Boom.badRequest.callCount).to.equal(1);
+    const [msg, , params] = logger.error.lastCall.args;
+    expect(msg).to.be.a.string();
+    expect(params.eventId).to.equal(request.params.eventId);
+    expect(params.companyId).to.equal(request.payload.companyId);
+  });
+
+  experiment('when there are returns to submit', async () => {
+    test('it should update the event status to "submitted"', async () => {
+      const request = requestFactory();
+      await controller.postUploadSubmit(request, h);
+      const [{ eventId, status }] = Event.persist.lastCall.args;
+      expect(eventId).to.equal(request.params.eventId);
+      expect(status).to.equal(uploadStatus.SUBMITTING);
+    });
   });
 });
