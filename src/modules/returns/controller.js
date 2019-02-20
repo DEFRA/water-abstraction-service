@@ -167,6 +167,12 @@ const applySubmitting = (evt, data) => {
 
 const isValidated = (evt) => evt.status === 'validated';
 
+const parseRequest = (request) => {
+  const { eventId } = request.params;
+  const { companyId } = request.payload;
+  return { eventId, companyId };
+};
+
 /**
  * Route handler to trigger the submission of valid returns corresponding
  * to the supplied upload event ID
@@ -177,15 +183,14 @@ const isValidated = (evt) => evt.status === 'validated';
  * @return {Promise}         resolves with JSON if submitted
  */
 const postUploadSubmit = async (request, h) => {
-  const { eventId } = request.params;
-  const { companyId } = request.payload;
+  const { eventId, companyId } = parseRequest(request);
 
   try {
     // Check event status is 'validated'
     if (isValidated(request.evt)) {
       throw Boom.badRequest(`Event status not 'validated'`);
     }
-    
+
     // Validate data in JSON
     const data = await uploadValidator.validate(request.jsonData, companyId);
     const valid = data.filter(isValidReturn);
@@ -194,7 +199,6 @@ const postUploadSubmit = async (request, h) => {
     if (valid.length < 1) {
       throw Boom.badRequest(`No valid returns found in submission`);
     }
-
 
     // Update event
     const updatedEvent = applySubmitting(request.evt, valid);
