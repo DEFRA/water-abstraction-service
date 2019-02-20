@@ -111,6 +111,9 @@ experiment('postUploadPreview', () => {
     }
   };
 
+  const data = { foo: 'bar' };
+  const validatorResponse = { bar: 'foo' };
+
   let h;
 
   beforeEach(async () => {
@@ -120,69 +123,44 @@ experiment('postUploadPreview', () => {
       })
     };
     sandbox.stub(logger, 'error');
+    sandbox.stub(uploadValidator, 'validate').resolves(validatorResponse);
   });
 
   afterEach(async () => {
     sandbox.restore();
   });
 
-  test('returns 404 if event not found', async () => {
-    sandbox.stub(Event, 'load').resolves(null);
-    sandbox.stub(Boom, 'notFound');
+  test('it should call validator with correct arguments', async () => {
+    await controller.postUploadPreview(request, h);
+    const [returnData, companyId] = uploadValidator.validate.firstCall.args;
+    expect(returnData).to.equal(data);
+    expect(companyId).to.equal(request.payload.companyId);
+  });
+
+  test('it should respond with validator result in response', async () => {
+    const response = await controller.postUploadPreview(request, h);
+    expect(response.error).to.equal(null);
+    expect(response.data).to.equal(validatorResponse);
+  });
+
+  test('if validator fails it should reject', async () => {
+    uploadValidator.validate.rejects(new Error('Some error'));
+    const func = () => controller.postUploadPreview(request, h);
+    expect(func()).to.reject();
+  });
+
+  test('if validator fails it should log error', async () => {
+    uploadValidator.validate.rejects(new Error('Some error'));
     try {
       await controller.postUploadPreview(request, h);
     } catch (err) {
-      const [message, data] = Boom.notFound.firstCall.args;
-      expect(message).to.be.a.string();
-      expect(data).to.equal({ eventId: request.params.eventId });
+
     }
-  });
 
-  experiment('when data found in S3', async () => {
-    const data = { foo: 'bar' };
-    const validatorResponse = { bar: 'foo' };
+    const [msg, , params] = logger.error.lastCall.args;
+    expect(msg).to.be.a.string();
 
-    beforeEach(async () => {
-      sandbox.stub(Event, 'load').resolves({});
-      sandbox.stub(s3, 'getObject').resolves({
-        Body: Buffer.from(JSON.stringify(data), 'utf-8')
-      });
-      sandbox.stub(uploadValidator, 'validate').resolves(validatorResponse);
-    });
-
-    test('it should call validator with correct arguments', async () => {
-      await controller.postUploadPreview(request, h);
-      const [returnData, companyId] = uploadValidator.validate.firstCall.args;
-      expect(returnData).to.equal(data);
-      expect(companyId).to.equal(request.payload.companyId);
-    });
-
-    test('it should respond with validator result in response', async () => {
-      const response = await controller.postUploadPreview(request, h);
-      expect(response.error).to.equal(null);
-      expect(response.data).to.equal(validatorResponse);
-    });
-
-    test('if validator fails it should reject', async () => {
-      uploadValidator.validate.rejects(new Error('Some error'));
-      const func = () => controller.postUploadPreview(request, h);
-      expect(func()).to.reject();
-    });
-
-    test('if validator fails it should log error', async () => {
-      uploadValidator.validate.rejects(new Error('Some error'));
-      try {
-        await controller.postUploadPreview(request, h);
-      } catch (err) {
-
-      }
-
-
-      const [msg, , params] = logger.error.lastCall.args;
-      expect(msg).to.be.a.string();
-
-      expect(params.eventId).to.equal(request.params.eventId);
-      expect(params.companyId).to.equal(request.payload.companyId);
-    });
+    expect(params.eventId).to.equal(request.params.eventId);
+    expect(params.companyId).to.equal(request.payload.companyId);
   });
 });
