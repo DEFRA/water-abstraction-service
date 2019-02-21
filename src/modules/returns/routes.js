@@ -2,6 +2,25 @@ const Joi = require('joi');
 const controller = require('./controller');
 const { failAction } = require('./lib/route-helpers');
 const { returnSchema, headerSchema } = require('./schema');
+const pre = require('./pre-handlers');
+
+const submitConfig = {
+  pre: [
+    { method: pre.preLoadEvent },
+    { method: pre.preLoadJson },
+    { method: pre.preCheckIssuer }
+  ],
+  validate: {
+    params: {
+      eventId: Joi.string().uuid().required()
+    },
+    payload: {
+      entityId: Joi.string().uuid().required(),
+      companyId: Joi.string().uuid().required(),
+      userName: Joi.string().email().required()
+    }
+  }
+};
 
 module.exports = {
 
@@ -65,16 +84,13 @@ module.exports = {
     path: '/water/1.0/returns/upload-preview/{eventId}',
     method: 'POST',
     handler: controller.postUploadPreview,
-    config: {
-      validate: {
-        params: {
-          eventId: Joi.string().uuid().required()
-        },
-        payload: {
-          companyId: Joi.string().uuid().required(),
-          userName: Joi.string().email().required()
-        }
-      }
-    }
+    config: submitConfig
+  },
+
+  postUploadSubmit: {
+    path: '/water/1.0/returns/upload-submit/{eventId}',
+    method: 'POST',
+    handler: controller.postUploadSubmit,
+    config: submitConfig
   }
 };

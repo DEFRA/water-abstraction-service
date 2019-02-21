@@ -3,7 +3,9 @@ const s3 = require('../../../lib/connectors/s3');
 const uploadStatus = {
   PROCESSING: 'processing',
   VALIDATED: 'validated',
-  ERROR: 'error'
+  ERROR: 'error',
+  SUBMITTING: 'submitting',
+  SUBMITTED: 'submitted'
 };
 
 /**

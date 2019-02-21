@@ -11,7 +11,7 @@ lab.experiment('Test getJobData', () => {
   };
 
   const event = {
-    event_id: '12345'
+    eventId: '12345'
   };
 
   const messageRef = 'REF';
@@ -24,7 +24,7 @@ lab.experiment('Test getJobData', () => {
     const obj = getJobData(ret, event, messageRef, config);
 
     expect(obj).to.equal({
-      eventId: event.event_id,
+      eventId: event.eventId,
       returnId: ret.return_id,
       messageRef,
       licenceNumber: ret.licence_ref,

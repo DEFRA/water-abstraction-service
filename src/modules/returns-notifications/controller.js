@@ -1,3 +1,4 @@
+const evt = require('../../lib/event');
 const { returns } = require('../../lib/connectors/returns');
 const eventFactory = require('./lib/event-factory');
 const generateReference = require('../../lib/reference-generator');
@@ -60,17 +61,17 @@ const postReturnNotification = async (request, h) => {
 
   // Create container event in event log for tracking/reporting of batch
   const e = eventFactory({
-    messageRef,
     issuer,
+    messageRef,
     ref,
     name
   }, data);
 
-  await e.save();
+  await evt.persist(e);
 
   // Schedule building of individual messages
   for (let row of data) {
-    const job = getJobData(row, e.data, messageRef, config);
+    const job = getJobData(row, e, messageRef, config);
     await messageQueue.publish('returnsNotification.send', job, pgOptions);
   }
 
