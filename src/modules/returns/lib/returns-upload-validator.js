@@ -21,13 +21,10 @@ const Joi = require('joi');
 const moment = require('moment');
 const { chunk, flatMap, find } = require('lodash');
 
-const permit = require('../../../lib/connectors/permit');
 const returns = require('../../../lib/connectors/returns');
 const documents = require('../../../lib/connectors/crm/documents');
 
 const { getRequiredLines } = require('./model-returns-mapper');
-
-const { licence: { regimeId, typeId } } = require('../../../../config.js');
 
 const schema = require('../schema.js');
 
@@ -52,33 +49,6 @@ const getDocumentsForCompany = async (companyId) => {
   const columns = ['system_external_id'];
   const data = await documents.findAll(filter, null, columns);
   return data.map(row => row.system_external_id);
-};
-
-/**
- * Gets the NALD region codes for each licence number supplied, and returns a map
- * @param  {Array} licenceNumbers - licence numbers to check
- * @return {Promise}                resolves with map of licence numbers/regions
- */
-const getLicenceRegionCodes = async (licenceNumbers) => {
-  if (licenceNumbers.length === 0) {
-    return {};
-  }
-  const filter = {
-    licence_regime_id: regimeId,
-    licence_type_id: typeId,
-    licence_ref: {
-      $in: licenceNumbers
-    }
-  };
-  const columns = ['licence_ref', 'licence_data_value->>FGAC_REGION_CODE'];
-  const data = await permit.licences.findAll(filter, null, columns);
-
-  return data.reduce((acc, row) => {
-    return {
-      ...acc,
-      [row.licence_ref]: parseInt(row['?column?'])
-    };
-  }, {});
 };
 
 /**
@@ -253,7 +223,6 @@ const validate = async (returns, companyId) => {
 
 module.exports = {
   getDocumentsForCompany,
-  getLicenceRegionCodes,
   hasExpectedReturnLines,
   getReturns,
   validate,

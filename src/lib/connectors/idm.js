@@ -12,9 +12,21 @@ const usersClient = new APIClient(rp, {
   }
 });
 
-usersClient.getUsersByExternalId = async externalIds => {
+/**
+ * Find all users that have an external_id value in the array of ids
+ */
+usersClient.getUsersByExternalId = async ids => {
   return usersClient.findMany({
-    external_id: { $in: externalIds }
+    external_id: { $in: ids }
+  });
+};
+
+/**
+ * Find a single user that has the given user name
+ */
+usersClient.getUserByUserName = async userName => {
+  return usersClient.findMany({
+    user_name: userName
   });
 };
 

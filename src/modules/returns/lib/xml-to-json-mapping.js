@@ -1,9 +1,40 @@
 const moment = require('moment');
-const { flatMap } = require('lodash');
+const { get, flatMap, uniq } = require('lodash');
+const { getReturnId } = require('../../../lib/returns');
+const returns = require('../../../lib/connectors/returns');
+const permitConnector = require('../../../lib/connectors/permit');
 
 const options = {
   tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06'
 };
+
+/**
+ * Gets an array of returns in the return service matching the
+ * uploaded returns
+ * @param  {Array} returnIds - an array of return IDs inferred from the upload
+ * @return {Array} returns found in returns service
+ */
+const getReturns = (returnIds) => {
+  const filter = {
+    return_id: {
+      $in: returnIds
+    },
+    status: {
+      $ne: 'void'
+    },
+    end_date: {
+      $gte: '2018-10-31',
+      $lte: moment().format('YYYY-MM-DD')
+    },
+    'metadata->>isCurrent': 'true'
+  };
+
+  const columns = ['return_id', 'status'];
+
+  return returns.returns.findAll(filter, null, columns);
+};
+
+const getText = (from, path) => from.get(path, options).text();
 
 const getReturnFrequency = (ret) => {
   const fullReturnStructure = ret.get('tns:GorPart', options).get('tns:FullReturnStructure', options);
@@ -16,22 +47,31 @@ const getReturnFrequency = (ret) => {
 };
 
 const getNilReturn = (ret) => {
-  const nilReturnStructure = ret.get('tns:GorPart', options).get('tns:NilReturnStructure', options);
+  const nilReturnStructure = ret
+    .get('tns:GorPart', options)
+    .get('tns:NilReturnStructure', options);
+
   if (nilReturnStructure) {
-    return nilReturnStructure.get('tns:IsNilReturn', options).text() === 'yes';
+    return getText(nilReturnStructure, 'tns:IsNilReturn') === 'yes';
   }
   return false;
 };
 
 const getMeterDetails = (ret) => {
   if (getNilReturn(ret)) return [];
-  const meterUsage = ret.get('tns:GorPart', options).get('tns:FullReturnStructure', options).find('tns:MeterUsage', options);
+
+  const meterUsage = ret
+    .get('tns:GorPart', options)
+    .get('tns:FullReturnStructure', options)
+    .find('tns:MeterUsage', options);
+
   return flatMap(meterUsage.map(meter => {
     if (!wasMeterUsed(meter)) return [];
+
     return {
       units: getUnits(ret),
-      manufacturer: meter.get('tns:EaListedManufacturer', options).text(),
-      serialNumber: meter.get('tns:SerialNumber', options).text()
+      manufacturer: getText(meter, 'tns:EaListedManufacturer'),
+      serialNumber: getText(meter, 'tns:SerialNumber')
     };
   }));
 };
@@ -41,19 +81,27 @@ const wasMeterUsed = (meterUsage) => {
 };
 
 const getOverallReadingType = (ret) => {
-  const meterUsage = ret.get('tns:GorPart', options).get('tns:FullReturnStructure', options).get('tns:MeterUsage', options);
-  if (wasMeterUsed(meterUsage)) return 'measured';
-  return 'estimated';
+  const meterUsage = ret
+    .get('tns:GorPart', options)
+    .get('tns:FullReturnStructure', options)
+    .get('tns:MeterUsage', options);
+
+  return wasMeterUsed(meterUsage) ? 'measured' : 'estimated';
 };
 
 const getUnits = (ret) => {
-  const unitOfMeasurement = ret.get('tns:GorPart', options).get('tns:FullReturnStructure', options).get('tns:UnitOfMeasurement', options).text();
-  if (unitOfMeasurement === 'CubicMetres') return 'm³';
-  return null;
+  const unitOfMeasurement = ret
+    .get('tns:GorPart', options)
+    .get('tns:FullReturnStructure', options)
+    .get('tns:UnitOfMeasurement', options)
+    .text();
+
+  return (unitOfMeasurement === 'CubicMetres') ? 'm³' : null;
 };
 
 const getReadingDetails = (ret) => {
   if (getNilReturn(ret)) return {};
+
   return {
     type: getOverallReadingType(ret),
     method: 'AbstractedVolume',
@@ -63,15 +111,16 @@ const getReadingDetails = (ret) => {
 
 const getReturnLines = (ret) => {
   if (getNilReturn(ret)) return [];
+
   const returnTotals = ret.get('tns:GorPart', options).get('tns:FullReturnStructure', options).child(5).name();
   const returnLines = ret.find(`//tns:${returnTotals.slice(0, -5)}ReturnLine`, options);
   return returnLines.map(line => {
-    const startDate = line.get('tns:Date', options).text();
+    const startDate = getText(line, 'tns:Date');
     const freq = getReturnFrequency(ret);
     return {
       startDate: startDate,
       endDate: getEndDate(startDate, freq),
-      quantity: line.get('tns:AbstractedVolume', options).text(),
+      quantity: getText(line, 'tns:AbstractedVolume'),
       timePeriod: freq,
       readingType: getReadingType(line)
     };
@@ -92,32 +141,88 @@ const getEndDate = (startDate, freq) => {
 };
 
 const getReadingType = (returnLine) => {
-  const readingType = returnLine.get('tns:EstimatedIndicator', options).text();
-  if (readingType === 'N') return 'measured';
-  return 'estimated';
+  const readingType = getText(returnLine, 'tns:EstimatedIndicator');
+  return readingType === 'N' ? 'measured' : 'estimated';
 };
 
-const mapXml = (xmlDoc, today) => {
-  const permits = xmlDoc.find('tns:Permit', options);
+const getPermitsFromXml = xmlDoc => xmlDoc.find('tns:Permit', options);
 
-  const returnsArray = permits.map(permit => {
+const getReturnsFromPermits = (permits, licenceRegionCodes) => {
+  return flatMap(permits, permit => {
+    const licenceNumber = getText(permit, 'tns:IrPermitNo');
     const returns = permit.find('tns:Return', options);
     return returns.map(ret => {
-      return {
-        licenceNumber: permit.get('tns:IrPermitNo', options).text(),
-        returnRequirement: ret.get('tns:ReturnRequirementId', options).text(),
-        receivedDate: moment(today).format('YYYY-MM-DD'),
-        startDate: ret.get('tns:ReturnReportingPeriodStartDate', options).text(),
-        endDate: ret.get('tns:ReturnReportingPeriodEndDate', options).text(),
-        frequency: getReturnFrequency(ret),
-        isNil: getNilReturn(ret),
-        reading: getReadingDetails(ret),
-        meters: getMeterDetails(ret),
-        lines: getReturnLines(ret)
-      };
+      ret.licenceNumber = licenceNumber;
+      return ret;
     });
   });
-  return flatMap(returnsArray);
+};
+
+const getLicencesNumbers = returns => uniq(returns.map(ret => ret.licenceNumber));
+
+const getReturnsIdsFromReturns = returns => returns.map(ret => ret.returnId);
+
+const getXmlReturnSkeleton = () => ({
+  isUnderQuery: false,
+  version: 1,
+  isCurrent: true
+});
+
+const getUserType = user => {
+  const scopes = get(user, 'role.scopes', []);
+  return scopes.includes('external') ? 'external' : 'internal';
+};
+
+const mapUser = user => ({
+  email: user.user_name,
+  type: getUserType(user),
+  entityId: user.entity_id
+});
+
+const mapXmlReturn = (returnXml, licenceRegionCodes, returnsData, receivedDate, user) => {
+  const returnRequirement = getText(returnXml, 'tns:ReturnRequirementId');
+  const startDate = getText(returnXml, 'tns:ReturnReportingPeriodStartDate');
+  const endDate = getText(returnXml, 'tns:ReturnReportingPeriodEndDate');
+  const regionCode = licenceRegionCodes[returnXml.licenceNumber];
+  const returnId = getReturnId(regionCode, returnXml.licenceNumber, returnRequirement, startDate, endDate);
+  const returnData = returnsData.find(r => r.return_id === returnId);
+
+  return {
+    ...getXmlReturnSkeleton(),
+    returnId,
+    licenceNumber: returnXml.licenceNumber,
+    returnRequirement,
+    receivedDate,
+    startDate,
+    endDate,
+    dueDate: returnData.due_date,
+    frequency: getReturnFrequency(returnXml),
+    isNil: getNilReturn(returnXml),
+    status: returnData.status,
+    reading: getReadingDetails(returnXml),
+    meters: getMeterDetails(returnXml),
+    lines: getReturnLines(returnXml),
+    user: mapUser(user)
+  };
+};
+
+const mapXml = async (xmlDoc, user, today) => {
+  const permits = getPermitsFromXml(xmlDoc);
+  const returns = getReturnsFromPermits(permits);
+  const returnIds = getReturnsIdsFromReturns(returns);
+  const licenceNumbers = getLicencesNumbers(returns);
+  const receivedDate = moment(today).format('YYYY-MM-DD');
+
+  // Get the licence region codes and the server data about the returns which
+  // will be used to fulfil the required data schema.
+  const [licenceRegionCodes, returnsData] = await Promise.all([
+    permitConnector.getLicenceRegionCodes(licenceNumbers),
+    getReturns(returnIds)
+  ]);
+
+  return returns.map(ret => {
+    return mapXmlReturn(ret, licenceRegionCodes, returnsData, receivedDate, user);
+  });
 };
 
 exports.getReturnFrequency = getReturnFrequency;

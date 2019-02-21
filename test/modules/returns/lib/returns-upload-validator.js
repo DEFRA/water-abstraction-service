@@ -57,49 +57,6 @@ experiment('getDocumentsForCompany', () => {
   });
 });
 
-experiment('getLicenceRegionCodes', () => {
-  beforeEach(async () => {
-    sinon.stub(permit.licences, 'findAll').resolves(data.licences);
-  });
-
-  afterEach(async () => {
-    permit.licences.findAll.restore();
-  });
-
-  test('it should call the permit API with correct arguments', async () => {
-    const licenceNumbers = data.licences.map(row => row.licence_ref);
-    await returnsUploadValidator.getLicenceRegionCodes(licenceNumbers);
-
-    const [filter, sort, columns] = permit.licences.findAll.firstCall.args;
-
-    expect(filter).to.equal({
-      licence_regime_id: 1,
-      licence_type_id: 8,
-      licence_ref: {
-        $in: licenceNumbers
-      }
-    });
-
-    expect(sort).to.equal(null);
-
-    expect(columns).to.equal(['licence_ref', 'licence_data_value->>FGAC_REGION_CODE']);
-  });
-
-  test('it should resolve with a map of licence numbers / region codes', async () => {
-    const licenceNumbers = data.licences.map(row => row.licence_ref);
-    const result = await returnsUploadValidator.getLicenceRegionCodes(licenceNumbers);
-    expect(result).to.equal({
-      '05/678': 1,
-      '06/890': 2
-    });
-  });
-
-  test('it should resolve with an empty object if no licence numbers supplied', async () => {
-    const result = await returnsUploadValidator.getLicenceRegionCodes([]);
-    expect(result).to.equal({});
-  });
-});
-
 // experiment('getReturnId', () => {
 //   test('it should generate a return ID', async () => {
 //     const regionCodes = {
