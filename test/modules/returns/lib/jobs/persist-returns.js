@@ -12,7 +12,7 @@ const persistReturnsJob = require('../../../../../src/modules/returns/lib/jobs/p
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload');
 const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('@envage/water-abstraction-helpers');
-const Event = require('../../../../../src/lib/event');
+const event = require('../../../../../src/lib/event');
 const returnsConnector = require('../../../../../src/modules/returns/lib/api-connector');
 
 experiment('publish', () => {
@@ -42,21 +42,18 @@ experiment('publish', () => {
 
 experiment('handler', () => {
   let job;
-  let eventStub;
   let testError;
+
   beforeEach(async () => {
-    eventStub = {
-      setStatus: sinon.stub().returnsThis(),
-      setMetadata: sinon.stub().returnsThis(),
-      save: sinon.spy(),
+    sandbox.stub(event, 'load').resolves({
       metadata: {
         returns: [
           { returnId: 'test-return-1', submitted: false, error: null },
           { returnId: 'test-return-2', submitted: false, error: null }
         ]
       }
-    };
-    sandbox.stub(Event, 'load').resolves(eventStub);
+    });
+    sandbox.stub(event, 'save').resolves();
 
     sandbox.stub(returnsUpload, 'getReturnsS3Object').resolves({
       Body: Buffer.from(JSON.stringify({
@@ -91,7 +88,7 @@ experiment('handler', () => {
 
   test('loads the event', async () => {
     await persistReturnsJob.handler(job);
-    expect(Event.load.calledWith(job.data.eventId)).to.be.true();
+    expect(event.load.calledWith(job.data.eventId)).to.be.true();
   });
 
   test('loads the S3 object', async () => {
@@ -113,8 +110,8 @@ experiment('handler', () => {
 
   test('updates the event metadata with the upload result', async () => {
     await persistReturnsJob.handler(job);
-    const [ metadata ] = eventStub.setMetadata.lastCall.args;
-    expect(metadata).to.equal({
+    const [evt] = event.save.lastCall.args;
+    expect(evt.metadata).to.equal({
       returns: [
         { returnId: 'test-return-1', submitted: true, error: null },
         { returnId: 'test-return-2', submitted: false, error: testError }
@@ -124,7 +121,8 @@ experiment('handler', () => {
 
   test('sets the event status to submitted on completion', async () => {
     await persistReturnsJob.handler(job);
-    expect(eventStub.setStatus.calledWith(returnsUpload.uploadStatus.SUBMITTED)).to.be.true();
+    const [evt] = event.save.lastCall.args;
+    expect(evt.status).to.equal(returnsUpload.uploadStatus.SUBMITTED);
   });
 
   test('finishes the job', async () => {
@@ -146,9 +144,8 @@ experiment('handler', () => {
     });
 
     test('the status is set to error', async () => {
-      const [status] = eventStub.setStatus.lastCall.args;
-      expect(status).to.equal('error');
-      expect(eventStub.save.called).to.be.true();
+      const [evt] = event.save.lastCall.args;
+      expect(evt.status).to.equal('error');
     });
 
     test('the job is completed', async () => {

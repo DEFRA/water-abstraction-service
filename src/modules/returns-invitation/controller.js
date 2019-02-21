@@ -48,11 +48,11 @@ const returnsInvite = async (request, isPreview = true) => {
 
   let state = await getReturnsMessageState(config, personalisation, filter);
 
-  // Create and persist event
+  // Create and save event
   const ev = eventFactory(state);
 
   if (!isPreview) {
-    await evt.persist(ev);
+    await evt.save(ev);
   }
 
   state = reducer(state, createMessages());

@@ -23,9 +23,9 @@ const isGuid = str => {
 const obj = { foo: 'bar' };
 const arr = ['foo', 'bar'];
 
-experiment('event factory', () => {
+experiment('event create', () => {
   test('it should create an event with default params', async () => {
-    const ev = event.factory();
+    const ev = event.create();
 
     const { created, ...rest } = ev;
 
@@ -46,7 +46,7 @@ experiment('event factory', () => {
   });
 
   test('it should enable properties to be set on creation', async () => {
-    const ev = event.factory({
+    const ev = event.create({
       type: 'foo',
       subtype: 'bar'
     });
@@ -55,7 +55,7 @@ experiment('event factory', () => {
   });
 });
 
-experiment('persist', () => {
+experiment('save', () => {
   const expectedKeys = [
     'event_id',
     'reference_code',
@@ -86,17 +86,17 @@ experiment('persist', () => {
     let ev;
 
     beforeEach(async () => {
-      ev = event.factory();
+      ev = event.create();
     });
 
     test('it should call repo.create() once', async () => {
-      await event.persist(ev);
+      await event.save(ev);
 
       expect(event.repo.create.callCount).to.equal(1);
     });
 
     test('it should create a GUID event ID', async () => {
-      await event.persist(ev);
+      await event.save(ev);
 
       const [ data ] = event.repo.create.firstCall.args;
 
@@ -105,7 +105,7 @@ experiment('persist', () => {
     });
 
     test('it should contain the correct keys', async () => {
-      await event.persist(ev);
+      await event.save(ev);
 
       const [ data ] = event.repo.create.firstCall.args;
 
@@ -113,7 +113,7 @@ experiment('persist', () => {
     });
 
     test('modified date should be null', async () => {
-      await event.persist(ev);
+      await event.save(ev);
 
       const [ data ] = event.repo.create.firstCall.args;
 
@@ -121,21 +121,21 @@ experiment('persist', () => {
     });
   });
 
-  experiment('it should persist an existing event', async () => {
+  experiment('it should save an existing event', async () => {
     let ev;
 
     beforeEach(async () => {
-      ev = event.factory();
+      ev = event.create();
       ev.eventId = 'f6378a83-015b-4afd-8de1-d7eb2ce8e032';
     });
 
     test('it should call repo.update() once', async () => {
-      await event.persist(ev);
+      await event.save(ev);
       expect(event.repo.update.callCount).to.equal(1);
     });
 
     test('it should pass the correct filter to repo.update', async () => {
-      await event.persist(ev);
+      await event.save(ev);
       const [filter] = event.repo.update.firstCall.args;
       expect(filter).to.equal({
         event_id: ev.eventId
@@ -143,13 +143,13 @@ experiment('persist', () => {
     });
 
     test('it should pass data with the correct keys to repo.update', async () => {
-      await event.persist(ev);
+      await event.save(ev);
       const [, data] = event.repo.update.firstCall.args;
       expect(Object.keys(data)).to.equal(expectedKeys);
     });
 
     test('it should set a modified date when updating', async () => {
-      await event.persist(ev);
+      await event.save(ev);
       const [, { modified }] = event.repo.update.firstCall.args;
       expect(isDateString(modified)).to.equal(true);
     });
@@ -157,30 +157,30 @@ experiment('persist', () => {
 
   experiment('it should map JSON fields to strings', async () => {
     test('it should stringify objects in jsonb fields', async () => {
-      const ev = event.factory({
+      const ev = event.create({
         licences: obj
       });
-      await event.persist(ev);
+      await event.save(ev);
       const [data] = event.repo.create.firstCall.args;
 
       expect(data.licences).to.equal(JSON.stringify(obj));
     });
 
     test('it should stringify arrays in jsonb fields', async () => {
-      const ev = event.factory({
+      const ev = event.create({
         entities: arr
       });
-      await event.persist(ev);
+      await event.save(ev);
       const [data] = event.repo.create.firstCall.args;
 
       expect(data.entities).to.equal(JSON.stringify(arr));
     });
 
     test('it should leave null unchanged in jsonb fields', async () => {
-      const ev = event.factory({
+      const ev = event.create({
         metadata: null
       });
-      await event.persist(ev);
+      await event.save(ev);
       const [data] = event.repo.create.firstCall.args;
 
       expect(data.metadata).to.equal(null);

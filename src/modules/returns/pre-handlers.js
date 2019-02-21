@@ -1,5 +1,5 @@
 const Boom = require('boom');
-const Event = require('../../lib/event');
+const event = require('../../lib/event');
 const returnsUpload = require('./lib/returns-upload');
 
 /**
@@ -10,7 +10,7 @@ const preLoadEvent = async (request, h) => {
   const { eventId } = request.params;
 
   // Load event - 404 if not found
-  const evt = await Event.load(eventId);
+  const evt = await event.load(eventId);
   if (!evt) {
     throw Boom.notFound(`Return upload event not found`, { eventId });
   }

@@ -1,5 +1,5 @@
 const messageQueue = require('../../../../lib/message-queue');
-const Event = require('../../../../lib/event');
+const event = require('../../../../lib/event');
 const { logger } = require('@envage/water-abstraction-helpers');
 const returnsUpload = require('../../lib/returns-upload');
 const { uploadStatus } = returnsUpload;
@@ -20,15 +20,16 @@ const publishPersistBulkReturns = eventId => {
 
 const updateEventMetadata = (evt, updatedReturns) => {
   if (updatedReturns) {
-    evt.setMetadata(Object.assign(evt.metadata, {
+    evt.metadata = Object.assign(evt.metadata, {
       returns: updatedReturns
-    }));
+    });
   }
 };
 
 const updateEvent = (evt, status, updatedReturns) => {
   updateEventMetadata(evt, updatedReturns);
-  evt.setStatus(status).save();
+  evt.status = status;
+  event.save(evt);
 };
 
 const updateValidatedReturnWithResult = (validatedReturn, error = false) => {
@@ -83,7 +84,7 @@ const handlePersistReturns = async job => {
   let evt;
 
   try {
-    evt = await Event.load(eventId);
+    evt = await event.load(eventId);
     const returns = await getReturnsFromS3(eventId);
 
     const validatedReturns = evt.metadata.returns;

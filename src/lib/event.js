@@ -57,7 +57,7 @@ const mapFromRepo = data => keyMapper(data, camelCase);
  * @param  {Object} [data={}] data for the event
  * @return {Object}           event object
  */
-const factory = (data = {}) => {
+const create = (data = {}) => {
   const defaults = {
     eventId: null,
     referenceCode: null,
@@ -81,7 +81,7 @@ const factory = (data = {}) => {
  * @param  {Object} event - plain JS event object
  * @return {Promise}        resolves when event saved
  */
-const persist = (event) => {
+const save = (event) => {
   // Update existing record
   if (event.eventId) {
     event.modified = moment().format('YYYY-MM-DD HH:mm:ss');
@@ -109,7 +109,7 @@ const load = async (eventId) => {
 
 module.exports = {
   repo,
-  factory,
-  persist,
+  create,
+  save,
   load
 };

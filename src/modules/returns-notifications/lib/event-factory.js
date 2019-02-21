@@ -48,7 +48,7 @@ function eventFactory (options, returns) {
   // Create array of affected licence numbers
   const licences = getLicenceNumbers(returns);
 
-  return evt.factory({
+  return evt.create({
     referenceCode: ref,
     type: 'notification',
     subtype: messageRef,

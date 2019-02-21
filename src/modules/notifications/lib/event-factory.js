@@ -36,7 +36,7 @@ function eventFactory (issuer, taskConfig, contactData, ref) {
 
   const uniqueEntities = getUniqueEntities(contactData);
 
-  return evt.factory({
+  return evt.create({
     referenceCode: ref,
     type: taskConfig.type,
     subtype: taskConfig.subtype,
