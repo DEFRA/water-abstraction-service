@@ -10,7 +10,7 @@ const {
 const sinon = require('sinon');
 
 const preHandlers = require('../../../src/modules/returns/pre-handlers');
-const Event = require('../../../src/lib/event');
+const event = require('../../../src/lib/event');
 const returnsUpload = require('../../../src/modules/returns/lib/returns-upload');
 
 const eventId = 'df1c0fcc-9ef1-4287-8d6a-e80e451fb987';
@@ -42,7 +42,7 @@ experiment('preLoadEvent', () => {
   const sandbox = sinon.createSandbox();
 
   beforeEach(async () => {
-    sandbox.stub(Event, 'load').resolves(evt);
+    sandbox.stub(event, 'load').resolves(evt);
     sandbox.stub(Boom, 'notFound').throws();
   });
 
@@ -53,7 +53,7 @@ experiment('preLoadEvent', () => {
   test('it should load the event with the ID specified in the params', async () => {
     const request = requestFactory();
     await preHandlers.preLoadEvent(request, h);
-    const [ id ] = Event.load.firstCall.args;
+    const [ id ] = event.load.firstCall.args;
     expect(id).to.equal(eventId);
   });
 
@@ -70,7 +70,7 @@ experiment('preLoadEvent', () => {
   });
 
   test('it should throw Boom.notFound if event not loaded', async () => {
-    Event.load.resolves(null);
+    event.load.resolves(null);
     const request = requestFactory();
     try {
       await preHandlers.preLoadEvent(request, h);

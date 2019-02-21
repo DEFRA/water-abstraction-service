@@ -69,7 +69,7 @@ async function prepareNotification (filter, taskConfig, params, context = {}) {
 async function sendNotification (taskConfig, issuer, contactData, ref) {
   // Create event
   const e = eventFactory(issuer, taskConfig, contactData, ref);
-  await evt.persist(e);
+  await evt.save(e);
 
   logger.info(`Sending notification reference ${e.referenceCode} ID ${e.eventId}`);
 
@@ -86,7 +86,7 @@ async function sendNotification (taskConfig, issuer, contactData, ref) {
 
   // Update event status
   e.status = 'sent';
-  return evt.persist(e);
+  return evt.save(e);
 }
 
 module.exports = {

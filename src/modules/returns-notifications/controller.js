@@ -67,7 +67,7 @@ const postReturnNotification = async (request, h) => {
     name
   }, data);
 
-  await evt.persist(e);
+  await evt.save(e);
 
   // Schedule building of individual messages
   for (let row of data) {

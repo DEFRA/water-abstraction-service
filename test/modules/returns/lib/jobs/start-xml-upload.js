@@ -12,7 +12,7 @@ const startUploadJob = require('../../../../../src/modules/returns/lib/jobs/star
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload');
 const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('@envage/water-abstraction-helpers');
-const Event = require('../../../../../src/lib/event');
+const event = require('../../../../../src/lib/event');
 
 experiment('publish', () => {
   beforeEach(async () => {
@@ -41,15 +41,12 @@ experiment('publish', () => {
 
 experiment('handler', () => {
   let job;
-  let eventStub;
-  beforeEach(async () => {
-    eventStub = {
-      setStatus: sinon.stub().returnsThis(),
-      setComment: sinon.stub().returnsThis(),
-      save: sinon.spy()
-    };
-    sandbox.stub(Event, 'load').resolves(eventStub);
 
+  beforeEach(async () => {
+    sandbox.stub(event, 'load').resolves({
+      eventId: 'test-event-id'
+    });
+    sandbox.stub(event, 'save').resolves();
     sandbox.stub(returnsUpload, 'getReturnsS3Object').resolves({});
     sandbox.spy(logger, 'error');
 
@@ -68,7 +65,7 @@ experiment('handler', () => {
 
   test('loads the event', async () => {
     await startUploadJob.handler(job);
-    expect(Event.load.calledWith(job.data.eventId)).to.be.true();
+    expect(event.load.calledWith(job.data.eventId)).to.be.true();
   });
 
   test('loads the S3 object', async () => {
@@ -94,14 +91,13 @@ experiment('handler', () => {
     });
 
     test('the status is set to error', async () => {
-      const [status] = eventStub.setStatus.lastCall.args;
-      expect(status).to.equal('error');
-      expect(eventStub.save.called).to.be.true();
+      const [evt] = event.save.lastCall.args;
+      expect(evt.status).to.equal('error');
     });
 
     test('the event comment is updated', async () => {
-      const [comment] = eventStub.setComment.lastCall.args;
-      expect(comment).to.equal('Validation Failed');
+      const [evt] = event.save.lastCall.args;
+      expect(evt.comment).to.equal('Validation Failed');
     });
 
     test('the job is completed', async () => {

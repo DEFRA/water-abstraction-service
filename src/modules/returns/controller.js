@@ -5,7 +5,7 @@ const { getReturnData } = require('./lib/facade');
 const { eventFactory } = require('./lib/event-factory');
 const { repository: eventRepository } = require('../../controllers/events');
 const s3 = require('../../lib/connectors/s3');
-const Event = require('../../lib/event');
+const event = require('../../lib/event');
 const { uploadStatus, getUploadFilename } = require('./lib/returns-upload');
 const { logger } = require('@envage/water-abstraction-helpers');
 const startUploadJob = require('./lib/jobs/start-xml-upload');
@@ -72,10 +72,10 @@ const patchReturnHeader = async (request, h) => {
  * Creates the event object that represent the upload
  * of a returns xml document.
  * @param uploadUserName The username of end user.
- * @returns {Event}
+ * @returns {Object}
  */
 const createXmlUploadEvent = (uploadUserName) => {
-  return Event.factory({
+  return event.create({
     type: 'returns-upload',
     subtype: 'xml',
     issuer: uploadUserName,
@@ -93,31 +93,29 @@ const getEventStatusLink = eventId => {
 
 const postUploadXml = async (request, h) => {
   const evt = createXmlUploadEvent(request.payload.userName);
-  let eventId;
 
   try {
-    await Event.persist(evt);
-    const { eventId } = evt;
+    await event.save(evt);
 
-    const filename = getUploadFilename(eventId);
+    const filename = getUploadFilename(evt.eventId);
     const data = await s3.upload(filename, request.payload.fileData);
-    const jobId = await startUploadJob.publish(eventId);
+    const jobId = await startUploadJob.publish(evt.eventId);
 
     return h.response({
       data: {
-        eventId,
+        eventId: evt.eventId,
         filename,
         location: data.Location,
-        statusLink: getEventStatusLink(eventId),
+        statusLink: getEventStatusLink(evt.eventId),
         jobId
       },
       error: null
     }).code(202);
   } catch (error) {
     logger.error('Failed to upload returns xml', error);
-    if (eventId) {
+    if (evt.eventId) {
       evt.status = uploadStatus.ERROR;
-      await Event.persist(evt);
+      await event.save(evt);
     }
 
     return h.response({ data: null, error }).code(500);
@@ -201,7 +199,7 @@ const postUploadSubmit = async (request, h) => {
 
     // Update event
     const updatedEvent = applySubmitting(request.evt, valid);
-    await Event.persist(updatedEvent);
+    await event.save(updatedEvent);
 
     // @TODO publish PG boss event
 

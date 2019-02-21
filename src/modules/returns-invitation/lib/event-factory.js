@@ -27,7 +27,7 @@ const eventFactory = (state) => {
     error: 0
   };
 
-  return evt.factory({
+  return evt.create({
     ...state.event,
     subtype: state.config.messageRef.default,
     issuer: state.config.issuer,

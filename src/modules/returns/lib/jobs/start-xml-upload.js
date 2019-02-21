@@ -1,6 +1,6 @@
 const messageQueue = require('../../../../lib/message-queue');
 const JOB_NAME = 'returns-upload';
-const Event = require('../../../../lib/event');
+const event = require('../../../../lib/event');
 const { uploadStatus } = require('../returns-upload');
 const { logger } = require('@envage/water-abstraction-helpers');
 const returnsUpload = require('../../lib/returns-upload');
@@ -26,14 +26,13 @@ const publishReturnsUploadStart = eventId =>
  */
 const handleReturnsUploadStart = async job => {
   const { eventId } = job.data;
-  const evt = await Event.load(eventId);
+  const evt = await event.load(eventId);
 
   try {
     // Job key is the S3 key for the persisted document
     // which is currently xml only, but could be other formats
     // in the future. In which case check the sub type.
     const s3Object = await returnsUpload.getReturnsS3Object(eventId);
-    console.log('Found S3 Object from Job', s3Object);
 
     // Pass parsed xml doc to the validation function
     // returns true if the validation passes
@@ -45,10 +44,9 @@ const handleReturnsUploadStart = async job => {
   } catch (error) {
     logger.error('Returns upload failure', error, { job });
 
-    await evt
-      .setStatus(uploadStatus.ERROR)
-      .setComment('Validation Failed')
-      .save();
+    evt.status = uploadStatus.ERROR;
+    evt.comment = 'Validation Failed';
+    await event.save(evt);
     return job.done(error);
   }
 };

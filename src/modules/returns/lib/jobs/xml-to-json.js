@@ -1,11 +1,22 @@
 const messageQueue = require('../../../../lib/message-queue');
 const JOB_NAME = 'returns-upload-xml-to-json';
 const s3 = require('../../../../lib/connectors/s3');
-const Event = require('../../../../lib/event');
+const event = require('../../../../lib/event');
 const returnsUpload = require('../returns-upload');
+const uploadStatus = returnsUpload.uploadStatus;
 const { logger } = require('@envage/water-abstraction-helpers');
 const { mapXml } = require('../../lib/xml-to-json-mapping');
 const { parseXmlFile } = require('../../lib/xml-helpers');
+
+const updateEventStatus = (evt, isSuccess) => {
+  evt.status = uploadStatus.VALIDATED;
+
+  if (!isSuccess) {
+    evt.status = uploadStatus.ERROR;
+    evt.comment = 'XML to JSON conversion failed';
+  }
+  return event.save(evt);
+};
 
 /**
  * Begins the returns XML to JSON process by adding a new task to PG Boss.
@@ -26,27 +37,19 @@ const publishReturnsXmlToJsonStart = eventId =>
  * @param {Object} job The job data from PG Boss
  */
 const handleReturnsXmlToJsonStart = async job => {
-  const evt = await Event.load(job.data.eventId);
+  const evt = await event.load(job.data.eventId);
 
   try {
     const s3Object = await returnsUpload.getReturnsS3Object(job.data.eventId);
-    console.log('Found S3 Object from Job', s3Object);
 
-    // TODO: convert XML to JSON
     const json = mapXml(parseXmlFile(s3Object.Body));
 
-    await uploadJsonToS3(evt.getId(), json);
-
-    // update the event status
-    await evt.setStatus(returnsUpload.uploadStatus.VALIDATED).save();
+    await uploadJsonToS3(evt.eventId, json);
+    await updateEventStatus(evt, true);
     return job.done();
   } catch (error) {
     logger.error('Failed to convert XML to JSON', error, { job });
-
-    await evt
-      .setStatus(returnsUpload.uploadStatus.ERROR)
-      .setComment('XML to JSON conversion failed')
-      .save();
+    await updateEventStatus(evt, false);
     return job.done(error);
   }
 };

@@ -13,7 +13,7 @@ const sandbox = sinon.createSandbox();
 const xmlToJsonJob = require('../../../../../src/modules/returns/lib/jobs/xml-to-json');
 const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('@envage/water-abstraction-helpers');
-const Event = require('../../../../../src/lib/event');
+const event = require('../../../../../src/lib/event');
 const s3 = require('../../../../../src/lib/connectors/s3');
 
 experiment('publish', () => {
@@ -43,15 +43,12 @@ experiment('publish', () => {
 
 experiment('handler', () => {
   let job;
-  let eventStub;
+
   beforeEach(async () => {
-    eventStub = {
-      getId: () => 'test-event-id',
-      setStatus: sinon.stub().returnsThis(),
-      setComment: sinon.stub().returnsThis(),
-      save: sinon.spy()
-    };
-    sandbox.stub(Event, 'load').resolves(eventStub);
+    sandbox.stub(event, 'load').resolves({
+      eventId: 'test-event-id'
+    });
+    sandbox.stub(event, 'save').resolves();
 
     const str = fs.readFileSync(path.join(__dirname, '../xml-files-for-tests/weekly-return-pass.xml'));
 
@@ -73,7 +70,7 @@ experiment('handler', () => {
 
   test('loads the event', async () => {
     await xmlToJsonJob.handler(job);
-    expect(Event.load.calledWith(job.data.eventId)).to.be.true();
+    expect(event.load.calledWith(job.data.eventId)).to.be.true();
   });
 
   test('loads the S3 object', async () => {
@@ -91,8 +88,8 @@ experiment('handler', () => {
 
   test('updates the event status to validated', async () => {
     await xmlToJsonJob.handler(job);
-    expect(eventStub.setStatus.calledWith('validated')).to.be.true();
-    expect(eventStub.save.called).to.be.true();
+    const [evt] = event.save.lastCall.args;
+    expect(evt.status).to.equal('validated');
   });
 
   test('finishes the job', async () => {
@@ -112,14 +109,13 @@ experiment('handler', () => {
     });
 
     test('the status is set to error', async () => {
-      const [status] = eventStub.setStatus.lastCall.args;
-      expect(status).to.equal('error');
-      expect(eventStub.save.called).to.be.true();
+      const [evt] = event.save.lastCall.args;
+      expect(evt.status).to.equal('error');
     });
 
     test('the event comment is updated', async () => {
-      const [comment] = eventStub.setComment.lastCall.args;
-      expect(comment).to.equal('XML to JSON conversion failed');
+      const [evt] = event.save.lastCall.args;
+      expect(evt.comment).to.equal('XML to JSON conversion failed');
     });
 
     test('the job is completed', async () => {

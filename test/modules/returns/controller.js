@@ -11,7 +11,7 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const controller = require('../../../src/modules/returns/controller');
-const Event = require('../../../src/lib/event');
+const event = require('../../../src/lib/event');
 const s3 = require('../../../src/lib/connectors/s3');
 const startUploadJob = require('../../../src/modules/returns/lib/jobs/start-xml-upload');
 const uploadValidator = require('../../../src/modules/returns/lib/returns-upload-validator');
@@ -25,10 +25,9 @@ experiment('postUploadXml', () => {
   let h;
 
   beforeEach(async () => {
-    sandbox.stub(Event.repo, 'update').resolves({});
-    sandbox.stub(Event.repo, 'create').resolves({});
-    // sandbox.stub(Event.repo, 'update').resolves({});
-    // sandbox.stub(Event.prototype, 'getId').returns('test-event-id');
+    sandbox.stub(event.repo, 'update').resolves({});
+    sandbox.stub(event.repo, 'create').resolves({});
+
     sandbox.stub(s3, 'upload').resolves({
       Location: 'test-s3-location',
       Key: 'test-s3-key'
@@ -55,7 +54,7 @@ experiment('postUploadXml', () => {
 
   test('an event is saved with the expected values', async () => {
     await controller.postUploadXml(request, h);
-    const [eventValues] = Event.repo.create.firstCall.args;
+    const [eventValues] = event.repo.create.firstCall.args;
     expect(eventValues.type).to.equal('returns-upload');
     expect(eventValues.subtype).to.equal('xml');
     expect(eventValues.issuer).to.equal('test-user');
@@ -183,7 +182,7 @@ experiment('postUploadSubmit', () => {
   beforeEach(async () => {
     sandbox.stub(Boom, 'badRequest');
     sandbox.stub(logger, 'error');
-    sandbox.stub(Event, 'persist');
+    sandbox.stub(event, 'save');
     h = {
       response: sinon.stub().returns({
         code: sinon.spy()
@@ -238,7 +237,7 @@ experiment('postUploadSubmit', () => {
     test('it should update the event status to "submitted"', async () => {
       const request = requestFactory();
       await controller.postUploadSubmit(request, h);
-      const [{ eventId, status }] = Event.persist.lastCall.args;
+      const [{ eventId, status }] = event.save.lastCall.args;
       expect(eventId).to.equal(request.params.eventId);
       expect(status).to.equal(uploadStatus.SUBMITTING);
     });
