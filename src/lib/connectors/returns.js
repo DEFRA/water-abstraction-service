@@ -1,25 +1,11 @@
-const {APIClient} = require('@envage/hapi-pg-rest-api');
+const apiClientFactory = require('./api-client-factory');
 const moment = require('moment');
 
-const rp = require('request-promise-native').defaults({
-  proxy: null,
-  strictSSL: false
-});
+const returnsClient = apiClientFactory.create(`${process.env.RETURNS_URI}/returns`);
 
-const createClient = path => {
-  return new APIClient(rp, {
-    endpoint: `${process.env.RETURNS_URI}/${path}`,
-    headers: {
-      Authorization: process.env.JWT_TOKEN
-    }
-  });
-};
+const versionsClient = apiClientFactory.create(`${process.env.RETURNS_URI}/versions`);
 
-const returnsClient = createClient('returns');
-
-const versionsClient = createClient('versions');
-
-const linesClient = createClient('lines');
+const linesClient = apiClientFactory.create(`${process.env.RETURNS_URI}/lines`);
 
 /**
  * Gets an array of returns in the return service matching the

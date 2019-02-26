@@ -1,16 +1,6 @@
-const rp = require('request-promise-native').defaults({
-  proxy: null,
-  strictSSL: false
-});
+const apiClientFactory = require('./api-client-factory');
 
-const { APIClient } = require('@envage/hapi-pg-rest-api');
-
-const usersClient = new APIClient(rp, {
-  endpoint: process.env.IDM_URI + '/user',
-  headers: {
-    Authorization: process.env.JWT_TOKEN
-  }
-});
+const usersClient = apiClientFactory.create(`${process.env.IDM_URI}/user`);
 
 /**
  * Find all users that have an external_id value in the array of ids
@@ -30,6 +20,4 @@ usersClient.getUserByUserName = async userName => {
   });
 };
 
-module.exports = {
-  usersClient
-};
+exports.usersClient = usersClient;
