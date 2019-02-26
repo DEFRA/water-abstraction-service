@@ -18,10 +18,9 @@
 ]
  */
 const Joi = require('joi');
-const moment = require('moment');
 const { chunk, flatMap, find } = require('lodash');
 
-const returns = require('../../../lib/connectors/returns');
+const returnsConnector = require('../../../lib/connectors/returns');
 const documents = require('../../../lib/connectors/crm/documents');
 
 const { getRequiredLines } = require('./model-returns-mapper');
@@ -49,50 +48,6 @@ const getDocumentsForCompany = async (companyId) => {
   const columns = ['system_external_id'];
   const data = await documents.findAll(filter, null, columns);
   return data.map(row => row.system_external_id);
-};
-
-/**
- * Gets expected return ID in return service based on uploaded return, and
- * the NALD region code
- * @param  {Object} ret        - single return from uploaded returns array
- * @param  {Object} regionCodes- map of NALD region codes for each licence #
- * @return {String}            - return ID
- */
-// const getReturnId = (ret, regionCodes) => {
-//   const {
-//     licenceNumber,
-//     returnRequirement,
-//     startDate,
-//     endDate
-//   } = ret;
-//   const regionCode = regionCodes[licenceNumber];
-//   return `v1:${regionCode}:${licenceNumber}:${returnRequirement}:${startDate}:${endDate}`;
-// };
-
-/**
- * Gets an array of returns in the return service matching the
- * uploaded returns
- * @param  {Array} returnIds - an array of return IDs inferred from the upload
- * @return {Array} returns found in returns service
- */
-const getReturns = (returnIds) => {
-  const filter = {
-    return_id: {
-      $in: returnIds
-    },
-    status: {
-      $ne: 'void'
-    },
-    end_date: {
-      $gte: '2018-10-31',
-      $lte: moment().format('YYYY-MM-DD')
-    },
-    'metadata->>isCurrent': 'true'
-  };
-
-  const columns = ['return_id', 'status'];
-
-  return returns.returns.findAll(filter, null, columns);
 };
 
 /**
@@ -182,7 +137,7 @@ const validateReturn = (ret, context) => {
  */
 const validateBatch = async (uploadedReturns, licenceNumbers) => {
   const returnIds = uploadedReturns.map(ret => ret.returnId);
-  const returns = await getReturns(returnIds);
+  const returns = await returnsConnector.getActiveReturns(returnIds);
 
   return uploadedReturns.map(ret => {
     const context = {
@@ -221,11 +176,8 @@ const validate = async (returns, companyId) => {
   return batchProcess(returns, 100, validateBatch, licenceNumbers);
 };
 
-module.exports = {
-  getDocumentsForCompany,
-  hasExpectedReturnLines,
-  getReturns,
-  validate,
-  batchProcess,
-  uploadErrors
-};
+exports.getDocumentsForCompany = getDocumentsForCompany;
+exports.hasExpectedReturnLines = hasExpectedReturnLines;
+exports.validate = validate;
+exports.batchProcess = batchProcess;
+exports.uploadErrors = uploadErrors;

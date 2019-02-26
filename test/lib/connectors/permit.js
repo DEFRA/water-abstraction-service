@@ -24,7 +24,7 @@ experiment('permit connector', () => {
     sandbox.restore();
   });
 
-  test('it should call the permit API with correct arguments', async () => {
+  test('calls the permit API with correct arguments', async () => {
     await permit.getLicenceRegionCodes(licenceNumbers);
 
     const [filter, sort, columns] = permit.licences.findAll.firstCall.args;
@@ -42,7 +42,7 @@ experiment('permit connector', () => {
     expect(columns).to.equal(['licence_ref', 'licence_data_value->>FGAC_REGION_CODE']);
   });
 
-  test('it should resolve with a map of licence numbers / region codes', async () => {
+  test('resolves with a map of licence numbers / region codes', async () => {
     const result = await permit.getLicenceRegionCodes(licenceNumbers);
     expect(result).to.equal({
       '05/678': 1,
@@ -50,7 +50,7 @@ experiment('permit connector', () => {
     });
   });
 
-  test('it should resolve with an empty object if no licence numbers supplied', async () => {
+  test('resolves with an empty object if no licence numbers supplied', async () => {
     const result = await permit.getLicenceRegionCodes([]);
     expect(result).to.equal({});
   });

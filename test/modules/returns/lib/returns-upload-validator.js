@@ -1,5 +1,5 @@
-const moment = require('moment');
 const sinon = require('sinon');
+const sandbox = sinon.createSandbox();
 const { expect } = require('code');
 const { cloneDeep } = require('lodash');
 const { experiment, test, afterEach, beforeEach } = exports.lab = require('lab').script();
@@ -33,11 +33,11 @@ experiment('batchProcess', () => {
 
 experiment('getDocumentsForCompany', () => {
   beforeEach(async () => {
-    sinon.stub(documents, 'findAll').resolves(data.documents);
+    sandbox.stub(documents, 'findAll').resolves(data.documents);
   });
 
   afterEach(async () => {
-    documents.findAll.restore();
+    sandbox.restore();
   });
 
   test('it should call the CRM API with correct arguments', async () => {
@@ -57,51 +57,7 @@ experiment('getDocumentsForCompany', () => {
   });
 });
 
-// experiment('getReturnId', () => {
-//   test('it should generate a return ID', async () => {
-//     const regionCodes = {
-//       '01/234': 4
-//     };
-//     const returnId = returnsUploadValidator.getReturnId(data.upload[0], regionCodes);
-//
-//     expect(returnId).to.equal(`v1:4:01/234:01234:2017-11-01:2018-10-31`);
-//   });
-// });
-
-experiment('getReturns', () => {
-  beforeEach(async () => {
-    sinon.stub(returns.returns, 'findAll').resolves(data.licences);
-  });
-
-  afterEach(async () => {
-    returns.returns.findAll.restore();
-  });
-
-  test('it should call the returns API with correct arguments', async () => {
-    const returnIds = ['a', 'b'];
-
-    returnsUploadValidator.getReturns(returnIds);
-
-    const [filter, sort, columns] = returns.returns.findAll.firstCall.args;
-
-    const today = moment().format('YYYY-MM-DD');
-
-    expect(filter).to.equal({
-      return_id: { $in: returnIds },
-      end_date: { $gte: '2018-10-31', $lte: today },
-      status: { $ne: 'void' },
-      'metadata->>isCurrent': 'true'
-    });
-
-    expect(sort).to.equal(null);
-
-    expect(columns).to.equal(['return_id', 'status']);
-  });
-});
-
 experiment('validate', () => {
-  const sandbox = sinon.createSandbox();
-
   beforeEach(async () => {
     sandbox.stub(documents, 'findAll').resolves(data.documents);
     sandbox.stub(permit.licences, 'findAll').resolves(data.licences);

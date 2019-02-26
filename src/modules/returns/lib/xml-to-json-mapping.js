@@ -1,37 +1,11 @@
 const moment = require('moment');
 const { get, flatMap, uniq } = require('lodash');
 const { getReturnId } = require('../../../lib/returns');
-const returns = require('../../../lib/connectors/returns');
+const returnsConnector = require('../../../lib/connectors/returns');
 const permitConnector = require('../../../lib/connectors/permit');
 
 const options = {
   tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06'
-};
-
-/**
- * Gets an array of returns in the return service matching the
- * uploaded returns
- * @param  {Array} returnIds - an array of return IDs inferred from the upload
- * @return {Array} returns found in returns service
- */
-const getReturns = (returnIds) => {
-  const filter = {
-    return_id: {
-      $in: returnIds
-    },
-    status: {
-      $ne: 'void'
-    },
-    end_date: {
-      $gte: '2018-10-31',
-      $lte: moment().format('YYYY-MM-DD')
-    },
-    'metadata->>isCurrent': 'true'
-  };
-
-  const columns = ['return_id', 'status'];
-
-  return returns.returns.findAll(filter, null, columns);
 };
 
 const getText = (from, path) => from.get(path, options).text();
@@ -217,7 +191,7 @@ const mapXml = async (xmlDoc, user, today) => {
   // will be used to fulfil the required data schema.
   const [licenceRegionCodes, returnsData] = await Promise.all([
     permitConnector.getLicenceRegionCodes(licenceNumbers),
-    getReturns(returnIds)
+    returnsConnector.getActiveReturns(returnIds)
   ]);
 
   return returns.map(ret => {
