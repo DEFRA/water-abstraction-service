@@ -2,7 +2,7 @@ const { get, pick } = require('lodash');
 const moment = require('moment');
 const { convertToCubicMetres, convertToUserUnit } = require('./unit-conversion');
 const uuidv4 = require('uuid/v4');
-const returnLines = require('@envage/water-abstraction-helpers/src/returns/lines');
+const returnLines = require('@envage/water-abstraction-helpers').returns.lines;
 
 /**
  * Converts a line from the returns service to

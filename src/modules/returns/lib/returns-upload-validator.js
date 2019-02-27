@@ -23,7 +23,7 @@ const { chunk, flatMap, find } = require('lodash');
 const returnsConnector = require('../../../lib/connectors/returns');
 const documents = require('../../../lib/connectors/crm/documents');
 
-const returnLines = require('@envage/water-abstraction-helpers/src/returns/lines');
+const returnLines = require('@envage/water-abstraction-helpers').returns.lines;
 
 const schema = require('../schema.js');
 
