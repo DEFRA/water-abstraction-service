@@ -2,7 +2,7 @@ const { get, pick } = require('lodash');
 const moment = require('moment');
 const { convertToCubicMetres, convertToUserUnit } = require('./unit-conversion');
 const uuidv4 = require('uuid/v4');
-const naldDates = require('../../../lib/nald-dates');
+const returnLines = require('@envage/water-abstraction-helpers/src/returns/lines');
 
 /**
  * Converts a line from the returns service to
@@ -27,112 +27,6 @@ const returnLineToModel = (line) => {
     timePeriod,
     readingType
   };
-};
-
-/**
- * Get required daily return lines
- * @param {String} startDate - YYYY-MM-DD start date of return cycle
- * @param {String} endDate - YYYY-MM-DD end date of return cycle
- * @return {Array} list of required return lines
- */
-const getDays = (startDate, endDate) => {
-  const datePtr = moment(startDate);
-  const lines = [];
-  do {
-    lines.push({
-      startDate: datePtr.format('YYYY-MM-DD'),
-      endDate: datePtr.format('YYYY-MM-DD'),
-      timePeriod: 'day'
-    });
-    datePtr.add(1, 'day');
-  }
-  while (datePtr.isSameOrBefore(endDate, 'day'));
-
-  return lines;
-};
-
-/**
- * Get required monthly return lines
- * @param {String} startDate - YYYY-MM-DD start date of return cycle
- * @param {String} endDate - YYYY-MM-DD end date of return cycle
- * @return {Array} list of required return lines
- */
-const getMonths = (startDate, endDate) => {
-  const datePtr = moment(startDate);
-  const lines = [];
-  do {
-    lines.push({
-      startDate: datePtr.startOf('month').format('YYYY-MM-DD'),
-      endDate: datePtr.endOf('month').format('YYYY-MM-DD'),
-      timePeriod: 'month'
-    });
-    datePtr.add(1, 'month');
-  }
-  while (datePtr.isSameOrBefore(endDate, 'month'));
-  return lines;
-};
-
-/**
- * Get required annual return lines
- * @param {String} startDate - YYYY-MM-DD start date of return cycle
- * @param {String} endDate - YYYY-MM-DD end date of return cycle
- * @return {Array} list of required return lines
- */
-const getYears = (startDate, endDate) => {
-  return [{
-    startDate,
-    endDate,
-    timePeriod: 'year'
-  }];
-};
-
-/**
- * Get required weekly return lines
- * @param {String} startDate - YYYY-MM-DD start date of return cycle
- * @param {String} endDate - YYYY-MM-DD end date of return cycle
- * @return {Array} list of required return lines
- */
-const getWeeks = (startDate, endDate) => {
-  let datePtr = naldDates.getWeek(startDate);
-  const lines = [];
-
-  do {
-    lines.push({
-      startDate: datePtr.start.format('YYYY-MM-DD'),
-      endDate: datePtr.end.format('YYYY-MM-DD'),
-      timePeriod: 'week'
-    });
-    datePtr = naldDates.getWeek(datePtr.start.add(1, 'week'));
-  }
-  while (datePtr.end.isSameOrBefore(endDate, 'day'));
-
-  return lines;
-};
-
-/**
- * Calculates lines required in return
- * @param {String} startDate - YYYY-MM-DD
- * @param {String} endDate - YYYY-MM-DD
- * @param {String} frequency
- * @return {Array} array of required lines
- */
-const getRequiredLines = (startDate, endDate, frequency) => {
-  switch (frequency) {
-    case 'day':
-      return getDays(startDate, endDate);
-
-    case 'week':
-      return getWeeks(startDate, endDate);
-
-    case 'month':
-      return getMonths(startDate, endDate);
-
-    case 'year':
-      return getYears(startDate, endDate);
-
-    default:
-      throw new Error(`Unknown frequency ${frequency}`);
-  }
 };
 
 const getMetersFromVersionMetadata = version => {
@@ -167,7 +61,9 @@ const getReadingFromVersionMetadata = version => {
  * @return {Object} unified view of return
  */
 const mapReturnToModel = (ret, version, lines, versions) => {
-  const requiredLines = lines.length ? null : getRequiredLines(ret.start_date, ret.end_date, ret.returns_frequency);
+  const requiredLines = lines.length
+    ? null
+    : returnLines.getRequiredLines(ret.start_date, ret.end_date, ret.returns_frequency);
 
   return {
     returnId: ret.return_id,
@@ -262,7 +158,5 @@ module.exports = {
   mapReturnToModel,
   mapReturnToVersion,
   mapReturnToLines,
-  mapReturn,
-  getRequiredLines,
-  getWeeks
+  mapReturn
 };

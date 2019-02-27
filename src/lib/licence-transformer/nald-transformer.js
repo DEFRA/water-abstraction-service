@@ -13,7 +13,7 @@ const LicenceTitleLoader = require('./licence-title-loader');
 const licenceTitleLoader = new LicenceTitleLoader();
 const NALDHelpers = require('./nald-helpers');
 const sentenceCase = require('sentence-case');
-const { ukDateToISO } = require('../nald-dates');
+const { ukDateToISO } = require('../../lib/dates');
 const { getAggregateQuantities, getFullName } = require('./nald-helpers');
 
 class NALDTransformer extends BaseTransformer {

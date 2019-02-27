@@ -41,7 +41,7 @@
   },
   "dependencies": {
     "@envage/hapi-pg-rest-api": "^4.1.1",
-    "@envage/water-abstraction-helpers": "2.0.0",
+    "@envage/water-abstraction-helpers": "2.1.0",
     "async-waterfall": "^0.1.5",
     "aws-sdk": "^2.410.0",
     "base64url": "^3.0.1",
