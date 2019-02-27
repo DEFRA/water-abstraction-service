@@ -125,17 +125,6 @@ const mapReceivedDate = (logs) => {
 };
 
 /**
- * Gets a return ID for the specified licence/format and dates
- * @param {String} licenceNumber
- * @param {Object} format - row from NALD_RET_FORMATS table
- * @param {String} startDate - YYYY-MM-DD
- * @param {String} endDate - YYYY-MM-DD
- */
-const getReturnId = (licenceNumber, format, startDate, endDate) => {
-  return `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}:${endDate}`;
-};
-
-/**
  * Split dates are the start date of the period.  This function
  * adds the period end dates to the array
  * @param {Array} arr - the array of split dates
@@ -379,7 +368,6 @@ module.exports = {
   formatReturnMetadata,
   getFormatCycles,
   mapReceivedDate,
-  getReturnId,
   getReturnCycles,
   parseReturnId,
   getStartDate,

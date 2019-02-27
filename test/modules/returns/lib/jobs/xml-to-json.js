@@ -11,10 +11,12 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const xmlToJsonJob = require('../../../../../src/modules/returns/lib/jobs/xml-to-json');
+const xmlToJsonMapping = require('../../../../../src/modules/returns/lib/xml-to-json-mapping');
 const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('@envage/water-abstraction-helpers');
 const event = require('../../../../../src/lib/event');
 const s3 = require('../../../../../src/lib/connectors/s3');
+const { usersClient } = require('../../../../../src/lib/connectors/idm');
 
 experiment('publish', () => {
   beforeEach(async () => {
@@ -46,11 +48,19 @@ experiment('handler', () => {
 
   beforeEach(async () => {
     sandbox.stub(event, 'load').resolves({
-      eventId: 'test-event-id'
+      eventId: 'test-event-id',
+      issuer: 'test-job@example.com'
     });
     sandbox.stub(event, 'save').resolves();
 
     const str = fs.readFileSync(path.join(__dirname, '../xml-files-for-tests/weekly-return-pass.xml'));
+
+    sandbox.stub(usersClient, 'getUserByUserName').resolves({
+      user_id: 123,
+      user_name: 'test-job@example.com',
+      external_id: '1234-abcd'
+    });
+    sandbox.stub(xmlToJsonMapping, 'mapXml').resolves('{}');
 
     sandbox.stub(s3, 'getObject').resolves({ Body: Buffer.from(str, 'utf-8') });
     sandbox.stub(s3, 'upload').resolves({});
@@ -79,6 +89,18 @@ experiment('handler', () => {
     expect(s3Key).to.equal('returns-upload/test-event-id.xml');
   });
 
+  test('gets the user object for the issuer', async () => {
+    await xmlToJsonJob.handler(job);
+    const [userName] = usersClient.getUserByUserName.lastCall.args;
+    expect(userName).to.equal('test-job@example.com');
+  });
+
+  test('maps the JSON to the required shape', async () => {
+    await xmlToJsonJob.handler(job);
+    const [, user] = xmlToJsonMapping.mapXml.lastCall.args;
+    expect(user.user_id).to.equal(123);
+  });
+
   test('uploads JSON back to S3', async () => {
     await xmlToJsonJob.handler(job);
     const [fileName, buffer] = s3.upload.lastCall.args;
@@ -95,6 +117,33 @@ experiment('handler', () => {
   test('finishes the job', async () => {
     await xmlToJsonJob.handler(job);
     expect(job.done.called).to.be.true();
+  });
+
+  experiment('when the user is not found', async () => {
+    beforeEach(async () => {
+      usersClient.getUserByUserName.resolves();
+      await xmlToJsonJob.handler(job);
+    });
+
+    test('the error is logged', async () => {
+      const params = logger.error.lastCall.args[2];
+      expect(params.job).to.equal(job);
+    });
+
+    test('the status is set to error', async () => {
+      const [evt] = event.save.lastCall.args;
+      expect(evt.status).to.equal('error');
+    });
+
+    test('the event comment is updated', async () => {
+      const [evt] = event.save.lastCall.args;
+      expect(evt.comment).to.equal('XML to JSON conversion failed');
+    });
+
+    test('the job is completed', async () => {
+      const [error] = job.done.lastCall.args;
+      expect(error).to.exist();
+    });
   });
 
   experiment('when there is an error', async () => {

@@ -5,8 +5,9 @@ const event = require('../../../../lib/event');
 const returnsUpload = require('../returns-upload');
 const uploadStatus = returnsUpload.uploadStatus;
 const { logger } = require('@envage/water-abstraction-helpers');
-const { mapXml } = require('../../lib/xml-to-json-mapping');
+const xmlToJsonMapping = require('../../lib/xml-to-json-mapping');
 const { parseXmlFile } = require('../../lib/xml-helpers');
+const idmConnector = require('../../../../lib/connectors/idm');
 
 const updateEventStatus = (evt, isSuccess) => {
   evt.status = uploadStatus.VALIDATED;
@@ -27,6 +28,12 @@ const updateEventStatus = (evt, isSuccess) => {
 const publishReturnsXmlToJsonStart = eventId =>
   messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(eventId));
 
+const validateUser = user => {
+  if (!user) {
+    throw new Error('User not found');
+  }
+};
+
 /**
  * Handler for the 'return-upload-xml-to-json' job in PG Boss.
  *
@@ -40,9 +47,14 @@ const handleReturnsXmlToJsonStart = async job => {
   const evt = await event.load(job.data.eventId);
 
   try {
-    const s3Object = await returnsUpload.getReturnsS3Object(job.data.eventId);
+    const [s3Object, user] = await Promise.all([
+      returnsUpload.getReturnsS3Object(job.data.eventId),
+      idmConnector.usersClient.getUserByUserName(evt.issuer)
+    ]);
 
-    const json = mapXml(parseXmlFile(s3Object.Body));
+    validateUser(user);
+
+    const json = await xmlToJsonMapping.mapXml(parseXmlFile(s3Object.Body), user);
 
     await uploadJsonToS3(evt.eventId, json);
     await updateEventStatus(evt, true);
