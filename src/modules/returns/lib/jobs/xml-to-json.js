@@ -28,6 +28,12 @@ const updateEventStatus = (evt, isSuccess) => {
 const publishReturnsXmlToJsonStart = eventId =>
   messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(eventId));
 
+const validateUser = user => {
+  if (!user) {
+    throw new Error('User not found');
+  }
+};
+
 /**
  * Handler for the 'return-upload-xml-to-json' job in PG Boss.
  *
@@ -41,12 +47,14 @@ const handleReturnsXmlToJsonStart = async job => {
   const evt = await event.load(job.data.eventId);
 
   try {
-    const [s3Object, userResponse] = await Promise.all([
+    const [s3Object, user] = await Promise.all([
       returnsUpload.getReturnsS3Object(job.data.eventId),
       idmConnector.usersClient.getUserByUserName(evt.issuer)
     ]);
 
-    const json = await xmlToJsonMapping.mapXml(parseXmlFile(s3Object.Body), userResponse.data[0]);
+    validateUser(user);
+
+    const json = await xmlToJsonMapping.mapXml(parseXmlFile(s3Object.Body), user);
 
     await uploadJsonToS3(evt.eventId, json);
     await updateEventStatus(evt, true);

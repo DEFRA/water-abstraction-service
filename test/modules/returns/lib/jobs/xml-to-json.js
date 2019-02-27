@@ -56,10 +56,9 @@ experiment('handler', () => {
     const str = fs.readFileSync(path.join(__dirname, '../xml-files-for-tests/weekly-return-pass.xml'));
 
     sandbox.stub(usersClient, 'getUserByUserName').resolves({
-      data: [
-        { user_id: 123, user_name: 'test-job@example.com', external_id: '1234-abcd' }
-      ],
-      error: null
+      user_id: 123,
+      user_name: 'test-job@example.com',
+      external_id: '1234-abcd'
     });
     sandbox.stub(xmlToJsonMapping, 'mapXml').resolves('{}');
 
@@ -118,6 +117,33 @@ experiment('handler', () => {
   test('finishes the job', async () => {
     await xmlToJsonJob.handler(job);
     expect(job.done.called).to.be.true();
+  });
+
+  experiment('when the user is not found', async () => {
+    beforeEach(async () => {
+      usersClient.getUserByUserName.resolves();
+      await xmlToJsonJob.handler(job);
+    });
+
+    test('the error is logged', async () => {
+      const params = logger.error.lastCall.args[2];
+      expect(params.job).to.equal(job);
+    });
+
+    test('the status is set to error', async () => {
+      const [evt] = event.save.lastCall.args;
+      expect(evt.status).to.equal('error');
+    });
+
+    test('the event comment is updated', async () => {
+      const [evt] = event.save.lastCall.args;
+      expect(evt.comment).to.equal('XML to JSON conversion failed');
+    });
+
+    test('the job is completed', async () => {
+      const [error] = job.done.lastCall.args;
+      expect(error).to.exist();
+    });
   });
 
   experiment('when there is an error', async () => {

@@ -1,6 +1,6 @@
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
-const { expect } = require('code');
+const { expect, fail } = require('code');
 const {
   beforeEach,
   afterEach,
@@ -54,8 +54,38 @@ experiment('getUserByUserName', () => {
   });
 
   test('returns the expected data', async () => {
-    const response = await idmConnector.usersClient.getUserByUserName(userName);
-    expect(response.error).to.equal(null);
-    expect(response.data[0].user_id).to.equal(123);
+    idmConnector.usersClient.findMany.resolves({
+      data: [{ user_id: 123 }],
+      error: null
+    });
+
+    const user = await idmConnector.usersClient.getUserByUserName(userName);
+
+    expect(user.user_id).to.equal(123);
+  });
+
+  test('returns undefined when the user is not found', async () => {
+    idmConnector.usersClient.findMany.resolves({
+      data: [],
+      error: null
+    });
+
+    const user = await idmConnector.usersClient.getUserByUserName(userName);
+
+    expect(user).to.be.undefined();
+  });
+
+  test('throws if an error is returned', async () => {
+    idmConnector.usersClient.findMany.resolves({
+      error: { name: 'User not found' },
+      data: []
+    });
+
+    try {
+      await idmConnector.usersClient.getUserByUserName(userName);
+      fail('Should never get here');
+    } catch (err) {
+      expect(err).to.exist();
+    }
   });
 });
