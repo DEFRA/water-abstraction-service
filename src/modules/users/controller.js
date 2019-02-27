@@ -39,6 +39,7 @@ const mapCompanies = (companies, verifications, documentHeaders) => {
   return companies.map(company => {
     return {
       name: company.name,
+      entityId: company.entityId,
       userRoles: company.userRoles,
       outstandingVerifications: getCompanyOutstandingVerifications(company, verifications),
       registeredLicences: getCompanyLicences(company, documentHeaders)
