@@ -14,5 +14,5 @@ const getSchemaDoc = async () => {
   return libxmljs.parseXml(schema);
 };
 
-module.exports.parseXmlFile = parseXmlFile;
-module.exports.getSchemaDoc = getSchemaDoc;
+exports.parseXmlFile = parseXmlFile;
+exports.getSchemaDoc = getSchemaDoc;

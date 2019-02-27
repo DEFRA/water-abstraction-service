@@ -73,5 +73,9 @@ module.exports = {
     typeId: 10
   },
 
-  version: '1.0'
+  version: '1.0',
+
+  idm: {
+    application: 'water_vml'
+  }
 };

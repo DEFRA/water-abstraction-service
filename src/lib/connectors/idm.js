@@ -1,23 +1,30 @@
-const rp = require('request-promise-native').defaults({
-  proxy: null,
-  strictSSL: false
-});
+const { head } = require('lodash');
+const { throwIfError } = require('@envage/hapi-pg-rest-api');
+const apiClientFactory = require('./api-client-factory');
 
-const { APIClient } = require('@envage/hapi-pg-rest-api');
+const usersClient = apiClientFactory.create(`${process.env.IDM_URI}/user`);
+const { idm: { application } } = require('../../../config');
 
-const usersClient = new APIClient(rp, {
-  endpoint: process.env.IDM_URI + '/user',
-  headers: {
-    Authorization: process.env.JWT_TOKEN
-  }
-});
-
-usersClient.getUsersByExternalId = async externalIds => {
+/**
+ * Find all users that have an external_id value in the array of ids
+ */
+usersClient.getUsersByExternalId = async ids => {
   return usersClient.findMany({
-    external_id: { $in: externalIds }
+    external_id: { $in: ids },
+    application
   });
 };
 
-module.exports = {
-  usersClient
+/**
+ * Find a single user that has the given user name
+ */
+usersClient.getUserByUserName = async userName => {
+  const { error, data } = await usersClient.findMany({
+    user_name: userName,
+    application
+  });
+  throwIfError(error);
+  return head(data);
 };
+
+exports.usersClient = usersClient;

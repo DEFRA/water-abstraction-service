@@ -11,10 +11,11 @@ const {
   formatReturnMetadata,
   getFormatCycles,
   mapReceivedDate,
-  getReturnId,
   getStatus,
   getDueDate
 } = require('./lib/transform-returns-helpers.js');
+
+const { getReturnId } = require('../../lib/returns');
 
 /**
  * Loads licence formats from DB
@@ -58,7 +59,7 @@ const buildReturnsPacket = async (licenceNumber) => {
         continue;
       }
 
-      const returnId = getReturnId(licenceNumber, format, startDate, endDate);
+      const returnId = getReturnId(format.FGAC_REGION_CODE, licenceNumber, format.ID, startDate, endDate);
       const receivedDate = mapReceivedDate(cycleLogs);
       const status = getStatus(receivedDate);
 
