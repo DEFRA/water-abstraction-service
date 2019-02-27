@@ -28,7 +28,8 @@ experiment('getUsersByExternalId', () => {
     expect(filter).to.equal({
       external_id: {
         $in: externalIds
-      }
+      },
+      application: 'water_vml'
     });
   });
 });
@@ -50,7 +51,10 @@ experiment('getUserByUserName', () => {
   test('uses the expected filter', async () => {
     await idmConnector.usersClient.getUserByUserName(userName);
     const [filter] = idmConnector.usersClient.findMany.lastCall.args;
-    expect(filter).to.equal({ user_name: userName });
+    expect(filter).to.equal({
+      user_name: userName,
+      application: 'water_vml'
+    });
   });
 
   test('returns the expected data', async () => {
