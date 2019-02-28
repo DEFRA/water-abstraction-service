@@ -1,4 +1,7 @@
 const Boom = require('boom');
+const { find, first } = require('lodash');
+const { throwIfError } = require('@envage/hapi-pg-rest-api');
+
 const { persistReturnData, patchReturnData } = require('./lib/api-connector');
 const { mapReturnToModel } = require('./lib/model-returns-mapper');
 const { getReturnData } = require('./lib/facade');
@@ -10,7 +13,8 @@ const { uploadStatus, getUploadFilename } = require('./lib/returns-upload');
 const { logger } = require('@envage/water-abstraction-helpers');
 const startUploadJob = require('./lib/jobs/start-xml-upload');
 const uploadValidator = require('./lib/returns-upload-validator');
-
+const { mapSingleReturn, mapMultipleReturn } = require('./lib/upload-preview-mapper');
+const returnsConnector = require('../../lib/connectors/returns');
 /**
  * A controller method to get a unified view of a return, to avoid handling
  * in UI layer
@@ -122,21 +126,84 @@ const postUploadXml = async (request, h) => {
   }
 };
 
+// const isSingleReturnRequest = request => {
+//   const { returnId } = request.params;
+//   return !!returnId;
+// };
+
 /**
- * Allows the user to review their submitted return prior to submitting it
- * @param {String} request.params.eventId - the upload event ID
- * @param {String} request.payload.companyId - the company CRM entity ID
- * @param {String} request.payload.userName - email address of current user
+ * Gets a function for filtering the returns in an array
+ * @param  {[type]} request [description]
+ * @return {[type]}         [description]
  */
-const postUploadPreview = async (request, h) => {
+// const getPreviewPredicate = (request) => {
+//   if (!isSingleReturnRequest(request)) {
+//     return () => true;
+//   }
+//   const { returnId } = request.params;
+//   return ret => ret.returnId === returnId;
+// };
+
+/**
+ * An API endpoint to preview the uploaded returns including any validation
+ * errors.
+ * Can be for either:
+ * - the whole upload, with totalVolume only (return lines omitted)
+ * - a single return, with return lines
+
+ * @param  {[type]}  request [description]
+ * @param  {[type]}  h       [description]
+ * @return {Promise}         [description]
+ */
+const getUploadPreview = async (request, h) => {
   const { eventId } = request.params;
-  const { companyId } = request.payload;
+  const { companyId } = request.query;
 
   try {
-    const data = await uploadValidator.validate(request.jsonData, companyId);
-    return { data, error: null };
+    const validated = await uploadValidator.validate(request.jsonData, companyId);
+
+    const data = validated.map(mapMultipleReturn);
+
+    return {
+      error: null,
+      data
+    };
   } catch (error) {
     logger.error('Return upload preview failed', error, { eventId, companyId });
+    throw error;
+  }
+};
+
+/**
+ * View a single return
+ * The response from this call includes line data and metadata loaded from
+ * the return service
+ */
+const getUploadPreviewReturn = async (request, h) => {
+  const { eventId, returnId } = request.params;
+  const { companyId } = request.query;
+
+  try {
+    const match = find(request.jsonData, {returnId});
+
+    if (!match) {
+      throw Boom.notFound(`Return ${returnId} not found in upload`);
+    }
+
+    const validated = await uploadValidator.validate([match], companyId);
+
+    // Load return from return service in order to get metadata
+    const response = await returnsConnector.returns.findOne(returnId);
+    throwIfError(response.error);
+
+    const data = validated.map(row => mapSingleReturn(row, response.data));
+
+    return {
+      error: null,
+      data: first(data)
+    };
+  } catch (error) {
+    logger.error('Return upload preview failed', error, { eventId, companyId, returnId });
     throw error;
   }
 };
@@ -210,11 +277,10 @@ const postUploadSubmit = async (request, h) => {
   }
 };
 
-module.exports = {
-  getReturn,
-  postReturn,
-  patchReturnHeader,
-  postUploadXml,
-  postUploadPreview,
-  postUploadSubmit
-};
+exports.getReturn = getReturn;
+exports.postReturn = postReturn;
+exports.patchReturnHeader = patchReturnHeader;
+exports.postUploadXml = postUploadXml;
+exports.getUploadPreview = getUploadPreview;
+exports.getUploadPreviewReturn = getUploadPreviewReturn;
+exports.postUploadSubmit = postUploadSubmit;
