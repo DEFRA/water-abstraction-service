@@ -101,7 +101,7 @@ const requestFactory = () => {
     params: {
       eventId: 'bb69e563-1a0c-4661-8e33-51ddf737740d'
     },
-    payload: {
+    query: {
       companyId: '2dc953ff-c80e-4a1c-8f59-65c641bdbe45'
     },
     evt: {
@@ -114,11 +114,11 @@ const requestFactory = () => {
   };
 };
 
-experiment('postUploadPreview', () => {
+experiment('getUploadPreview', () => {
   const sandbox = sinon.createSandbox();
 
   const data = { foo: 'bar' };
-  const validatorResponse = { bar: 'foo' };
+  const validatorResponse = [{ bar: 'foo', lines: [] }];
 
   let h;
 
@@ -138,23 +138,24 @@ experiment('postUploadPreview', () => {
 
   test('it should call validator with correct arguments', async () => {
     const request = requestFactory();
-    await controller.postUploadPreview(request, h);
+    await controller.getUploadPreview(request, h);
     const [returnData, companyId] = uploadValidator.validate.firstCall.args;
     expect(returnData).to.equal(data);
-    expect(companyId).to.equal(request.payload.companyId);
+    expect(companyId).to.equal(request.query.companyId);
   });
 
   test('it should respond with validator result in response', async () => {
     const request = requestFactory();
-    const response = await controller.postUploadPreview(request, h);
+    const response = await controller.getUploadPreview(request, h);
     expect(response.error).to.equal(null);
-    expect(response.data).to.equal(validatorResponse);
+    expect(response.data[0].bar).to.equal('foo');
+    expect(response.data[0].totalVolume).to.equal(0);
   });
 
   test('if validator fails it should reject', async () => {
     const request = requestFactory();
     uploadValidator.validate.rejects(new Error('Some error'));
-    const func = () => controller.postUploadPreview(request, h);
+    const func = () => controller.getUploadPreview(request, h);
     expect(func()).to.reject();
   });
 
@@ -162,7 +163,7 @@ experiment('postUploadPreview', () => {
     const request = requestFactory();
     uploadValidator.validate.rejects(new Error('Some error'));
     try {
-      await controller.postUploadPreview(request, h);
+      await controller.getUploadPreview(request, h);
     } catch (err) {
 
     }
@@ -171,7 +172,7 @@ experiment('postUploadPreview', () => {
     expect(msg).to.be.a.string();
 
     expect(params.eventId).to.equal(request.params.eventId);
-    expect(params.companyId).to.equal(request.payload.companyId);
+    expect(params.companyId).to.equal(request.query.companyId);
   });
 });
 
@@ -215,7 +216,7 @@ experiment('postUploadSubmit', () => {
     const [msg, , params] = logger.error.lastCall.args;
     expect(msg).to.be.a.string();
     expect(params.eventId).to.equal(request.params.eventId);
-    expect(params.companyId).to.equal(request.payload.companyId);
+    expect(params.companyId).to.equal(request.query.companyId);
   });
 
   test('it should throw a bad request error if no returns to submit', async () => {
@@ -230,7 +231,7 @@ experiment('postUploadSubmit', () => {
     const [msg, , params] = logger.error.lastCall.args;
     expect(msg).to.be.a.string();
     expect(params.eventId).to.equal(request.params.eventId);
-    expect(params.companyId).to.equal(request.payload.companyId);
+    expect(params.companyId).to.equal(request.query.companyId);
   });
 
   experiment('when there are returns to submit', async () => {

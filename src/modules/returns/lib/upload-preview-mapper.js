@@ -34,10 +34,14 @@ const mapSingleReturn = (validatedReturn, ret) => {
  * @return {Object} return including totalVolume and excluding lines
  */
 const mapMultipleReturn = ret => {
-  return omit(mapSingleReturn(ret), 'lines');
+  return {
+    ...omit(ret, 'lines'),
+    totalVolume: getTotalVolume(ret)
+  };
 };
 
 module.exports = {
+  getTotalVolume,
   mapSingleReturn,
   mapMultipleReturn
 };

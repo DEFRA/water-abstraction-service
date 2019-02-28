@@ -127,38 +127,18 @@ const postUploadXml = async (request, h) => {
   }
 };
 
-// const isSingleReturnRequest = request => {
-//   const { returnId } = request.params;
-//   return !!returnId;
-// };
-
-/**
- * Gets a function for filtering the returns in an array
- * @param  {[type]} request [description]
- * @return {[type]}         [description]
- */
-// const getPreviewPredicate = (request) => {
-//   if (!isSingleReturnRequest(request)) {
-//     return () => true;
-//   }
-//   const { returnId } = request.params;
-//   return ret => ret.returnId === returnId;
-// };
-
 /**
  * An API endpoint to preview the uploaded returns including any validation
  * errors.
  * Can be for either:
  * - the whole upload, with totalVolume only (return lines omitted)
  * - a single return, with return lines
-
  * @param  {[type]}  request [description]
  * @param  {[type]}  h       [description]
  * @return {Promise}         [description]
  */
 const getUploadPreview = async (request, h) => {
-  const { eventId } = request.params;
-  const { companyId } = request.query;
+  const { eventId, companyId } = parseRequest(request);
 
   try {
     const validated = await uploadValidator.validate(request.jsonData, companyId);
@@ -176,13 +156,12 @@ const getUploadPreview = async (request, h) => {
 };
 
 /**
- * View return data for a single return submitted via the XML route
+ * View a single return
  * The response from this call includes line data and metadata loaded from
  * the return service
  */
 const getUploadPreviewReturn = async (request, h) => {
-  const { eventId, returnId } = request.params;
-  const { companyId } = request.query;
+  const { eventId, companyId, returnId } = parseRequest(request);
 
   try {
     const match = find(request.jsonData, {returnId});
@@ -234,8 +213,8 @@ const isValidatedEvent = evt => evt.status === 'validated';
 
 const parseRequest = (request) => {
   const { eventId } = request.params;
-  const { companyId } = request.payload;
-  return { eventId, companyId };
+  const { companyId, returnId } = request.query;
+  return { eventId, companyId, returnId };
 };
 
 /**
