@@ -15,6 +15,7 @@ const startUploadJob = require('./lib/jobs/start-xml-upload');
 const uploadValidator = require('./lib/returns-upload-validator');
 const { mapSingleReturn, mapMultipleReturn } = require('./lib/upload-preview-mapper');
 const returnsConnector = require('../../lib/connectors/returns');
+
 /**
  * A controller method to get a unified view of a return, to avoid handling
  * in UI layer
@@ -175,7 +176,7 @@ const getUploadPreview = async (request, h) => {
 };
 
 /**
- * View a single return
+ * View return data for a single return submitted via the XML route
  * The response from this call includes line data and metadata loaded from
  * the return service
  */
