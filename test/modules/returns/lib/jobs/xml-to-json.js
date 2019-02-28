@@ -135,9 +135,36 @@ experiment('handler', () => {
       expect(evt.status).to.equal('error');
     });
 
-    test('the event comment is updated', async () => {
+    test('the event metadata is updated', async () => {
       const [evt] = event.save.lastCall.args;
-      expect(evt.comment).to.equal('XML to JSON conversion failed');
+      expect(evt.metadata.error.key).to.equal('user-not-found');
+    });
+
+    test('the job is completed', async () => {
+      const [error] = job.done.lastCall.args;
+      expect(error).to.exist();
+    });
+  });
+
+  experiment('when the XML cannot be mapped to JSON', async () => {
+    beforeEach(async () => {
+      xmlToJsonMapping.mapXml.throws();
+      await xmlToJsonJob.handler(job);
+    });
+
+    test('the error is logged', async () => {
+      const params = logger.error.lastCall.args[2];
+      expect(params.job).to.equal(job);
+    });
+
+    test('the status is set to error', async () => {
+      const [evt] = event.save.lastCall.args;
+      expect(evt.status).to.equal('error');
+    });
+
+    test('the event metadata is updated', async () => {
+      const [evt] = event.save.lastCall.args;
+      expect(evt.metadata.error.key).to.equal('xml-to-json-mapping-failure');
     });
 
     test('the job is completed', async () => {
@@ -164,7 +191,7 @@ experiment('handler', () => {
 
     test('the event comment is updated', async () => {
       const [evt] = event.save.lastCall.args;
-      expect(evt.comment).to.equal('XML to JSON conversion failed');
+      expect(evt.metadata.error.key).to.equal('server');
     });
 
     test('the job is completed', async () => {

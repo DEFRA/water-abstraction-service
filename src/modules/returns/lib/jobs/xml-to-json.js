@@ -8,16 +8,7 @@ const { logger } = require('@envage/water-abstraction-helpers');
 const xmlToJsonMapping = require('../../lib/xml-to-json-mapping');
 const { parseXmlFile } = require('../../lib/xml-helpers');
 const idmConnector = require('../../../../lib/connectors/idm');
-
-const updateEventStatus = (evt, isSuccess) => {
-  evt.status = uploadStatus.VALIDATED;
-
-  if (!isSuccess) {
-    evt.status = uploadStatus.ERROR;
-    evt.comment = 'XML to JSON conversion failed';
-  }
-  return event.save(evt);
-};
+const errorEvent = require('./error-event');
 
 /**
  * Begins the returns XML to JSON process by adding a new task to PG Boss.
@@ -30,7 +21,20 @@ const publishReturnsXmlToJsonStart = eventId =>
 
 const validateUser = user => {
   if (!user) {
-    throw new Error('User not found');
+    const err = new Error('User not found');
+    err.key = errorEvent.keys.USER_NOT_FOUND;
+    throw err;
+  }
+};
+
+const xmlToJson = async (s3Object, user) => {
+  try {
+    const xml = parseXmlFile(s3Object.Body);
+    const json = await xmlToJsonMapping.mapXml(xml, user);
+    return json;
+  } catch (error) {
+    error.key = errorEvent.keys.XML_TO_JSON_MAPPING;
+    throw error;
   }
 };
 
@@ -54,14 +58,16 @@ const handleReturnsXmlToJsonStart = async job => {
 
     validateUser(user);
 
-    const json = await xmlToJsonMapping.mapXml(parseXmlFile(s3Object.Body), user);
-
+    const json = await xmlToJson(s3Object, user);
     await uploadJsonToS3(evt.eventId, json);
-    await updateEventStatus(evt, true);
+
+    evt.status = uploadStatus.VALIDATED;
+    await event.save(evt);
+
     return job.done();
   } catch (error) {
     logger.error('Failed to convert XML to JSON', error, { job });
-    await updateEventStatus(evt, false);
+    await errorEvent.setEventError(evt, error);
     return job.done(error);
   }
 };
