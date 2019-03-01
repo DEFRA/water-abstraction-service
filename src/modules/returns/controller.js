@@ -171,10 +171,12 @@ const getUploadPreviewReturn = async (request, h) => {
       throw Boom.notFound(`Return ${returnId} not found in upload`);
     }
 
-    const validated = await uploadValidator.validate([match], companyId);
+    // Validate JSON data, and fetch return from return service
+    const [ validated, response ] = await Promise.all([
+      uploadValidator.validate([match], companyId),
+      returnsConnector.returns.findOne(returnId)
+    ]);
 
-    // Load return from return service in order to get metadata
-    const response = await returnsConnector.returns.findOne(returnId);
     throwIfError(response.error);
 
     const data = validated.map(row => mapSingleReturn(row, response.data));

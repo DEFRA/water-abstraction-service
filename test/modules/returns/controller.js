@@ -4,7 +4,8 @@ const {
   experiment,
   test,
   beforeEach,
-  afterEach
+  afterEach,
+  fail
 } = exports.lab = require('lab').script();
 
 const sinon = require('sinon');
@@ -176,6 +177,7 @@ experiment('getUploadPreview', () => {
     uploadValidator.validate.rejects(new Error('Some error'));
     try {
       await controller.getUploadPreview(request, h);
+      fail('Controller method should not resolve');
     } catch (err) {
 
     }
@@ -232,6 +234,7 @@ experiment('getUploadPreviewReturn', () => {
     const request = requestFactory('z');
     try {
       await controller.getUploadPreviewReturn(request, h);
+      fail('Controller method should not resolve');
     } catch (err) {
       expect(err.isBoom).to.equal(true);
       expect(err.output.statusCode).to.equal(404);
@@ -296,6 +299,7 @@ experiment('postUploadSubmit', () => {
 
     try {
       await controller.postUploadSubmit(request, h);
+      fail('Controller method should not resolve');
     } catch (err) {
 
     }
@@ -311,6 +315,7 @@ experiment('postUploadSubmit', () => {
     uploadValidator.validate.resolves([]);
     try {
       await controller.postUploadSubmit(request, h);
+      fail('Controller method should not resolve');
     } catch (err) {
 
     }

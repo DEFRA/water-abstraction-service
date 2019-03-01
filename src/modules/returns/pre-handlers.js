@@ -43,7 +43,6 @@ const preCheckIssuer = async (request, h) => {
   const { evt } = request;
   const { eventId } = evt;
   const { userName } = request.query;
-  console.log(userName);
   if (evt.issuer !== userName) {
     throw Boom.unauthorized(`Return upload permission denied`, { eventId, userName });
   }
