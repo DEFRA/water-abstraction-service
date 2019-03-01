@@ -4,6 +4,7 @@ const { logger } = require('@envage/water-abstraction-helpers');
 const returnsUpload = require('../../lib/returns-upload');
 const { uploadStatus } = returnsUpload;
 const returnsConnector = require('../api-connector');
+const errorEvent = require('./error-event');
 
 const JOB_NAME = 'persist-bulk-returns';
 
@@ -18,18 +19,12 @@ const publishPersistBulkReturns = eventId => {
   messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(eventId));
 };
 
-const updateEventMetadata = (evt, updatedReturns) => {
-  if (updatedReturns) {
-    evt.metadata = Object.assign(evt.metadata, {
-      returns: updatedReturns
-    });
-  }
-};
-
-const updateEvent = (evt, status, updatedReturns) => {
-  updateEventMetadata(evt, updatedReturns);
-  evt.status = status;
-  event.save(evt);
+const updateEvent = (evt, updatedReturns) => {
+  evt.metadata = Object.assign({}, evt.metadata, {
+    returns: updatedReturns
+  });
+  evt.status = uploadStatus.SUBMITTED;
+  return event.save(evt);
 };
 
 const updateValidatedReturnWithResult = (validatedReturn, error = false) => {
@@ -89,11 +84,11 @@ const handlePersistReturns = async job => {
 
     const validatedReturns = evt.metadata.returns;
     const updatedReturns = await persistReturns(validatedReturns, returns);
-    await updateEvent(evt, uploadStatus.SUBMITTED, updatedReturns);
+    await updateEvent(evt, updatedReturns);
     job.done();
   } catch (err) {
     logger.error('Failed to persist bulk returns upload', err, { job });
-    await updateEvent(evt, uploadStatus.ERROR);
+    await errorEvent.setEventError(evt, err);
     job.done(err);
   }
 };

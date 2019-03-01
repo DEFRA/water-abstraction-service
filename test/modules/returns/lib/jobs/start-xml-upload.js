@@ -10,6 +10,7 @@ const sandbox = sinon.createSandbox();
 
 const startUploadJob = require('../../../../../src/modules/returns/lib/jobs/start-xml-upload');
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload');
+const schemaValidation = require('../../../../../src/modules/returns/lib/schema-validation');
 const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('@envage/water-abstraction-helpers');
 const event = require('../../../../../src/lib/event');
@@ -47,7 +48,10 @@ experiment('handler', () => {
       eventId: 'test-event-id'
     });
     sandbox.stub(event, 'save').resolves();
-    sandbox.stub(returnsUpload, 'getReturnsS3Object').resolves({});
+    sandbox.stub(returnsUpload, 'getReturnsS3Object').resolves({
+      Body: Buffer.from('<xml></xml>', 'utf-8')
+    });
+    sandbox.stub(schemaValidation, 'validateXml').resolves(true);
     sandbox.spy(logger, 'error');
 
     job = {
@@ -95,14 +99,45 @@ experiment('handler', () => {
       expect(evt.status).to.equal('error');
     });
 
-    test('the event comment is updated', async () => {
+    test('the event metadata is updated', async () => {
       const [evt] = event.save.lastCall.args;
-      expect(evt.comment).to.equal('Validation Failed');
+      expect(evt.metadata.error.key).to.equal('server');
     });
 
     test('the job is completed', async () => {
       const [error] = job.done.lastCall.args;
       expect(error.name).to.equal('test-error');
+    });
+  });
+
+  experiment('when the xml does not validate', async () => {
+    beforeEach(async () => {
+      schemaValidation.validateXml.resolves({
+        errors: [
+          { one: 1 }
+        ]
+      });
+      await startUploadJob.handler(job);
+    });
+
+    test('the error is logged', async () => {
+      const params = logger.error.lastCall.args[2];
+      expect(params.job).to.equal(job);
+    });
+
+    test('the status is set to error', async () => {
+      const [evt] = event.save.lastCall.args;
+      expect(evt.status).to.equal('error');
+    });
+
+    test('the event metadata is updated', async () => {
+      const [evt] = event.save.lastCall.args;
+      expect(evt.metadata.error.key).to.equal('invalid-xml');
+    });
+
+    test('the job is completed', async () => {
+      const [error] = job.done.lastCall.args;
+      expect(error).to.exist();
     });
   });
 });
