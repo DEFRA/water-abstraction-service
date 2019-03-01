@@ -128,14 +128,11 @@ const postUploadXml = async (request, h) => {
 };
 
 /**
- * An API endpoint to preview the uploaded returns including any validation
- * errors.
- * Can be for either:
- * - the whole upload, with totalVolume only (return lines omitted)
- * - a single return, with return lines
- * @param  {[type]}  request [description]
- * @param  {[type]}  h       [description]
- * @return {Promise}         [description]
+ * An API endpoint to preview uploaded returns including any validation errors.
+ * @param {String} request.params.eventId - the upload event ID
+ * @param {String} request.query.companyId - the company CRM entity ID
+ * @param {String} request.query.userName - email address of current user
+ * @return {Promise} resolves with returns data { error : null, data : [] }
  */
 const getUploadPreview = async (request, h) => {
   const { eventId, companyId } = parseRequest(request);
@@ -156,9 +153,13 @@ const getUploadPreview = async (request, h) => {
 };
 
 /**
- * View a single return
- * The response from this call includes line data and metadata loaded from
- * the return service
+ * An API endpoint to preview a single uploaded return, included full line data
+ * and metadata loaded from the return service return record to support the view
+ * @param {String} request.params.eventId - the upload event ID
+ * @param {String} request.query.returnId - the return service ID to view
+ * @param {String} request.query.companyId - the company CRM entity ID
+ * @param {String} request.query.userName - email address of current user
+ * @return {Promise} resolves with return data { error : null, data : {} }
  */
 const getUploadPreviewReturn = async (request, h) => {
   const { eventId, companyId, returnId } = parseRequest(request);
