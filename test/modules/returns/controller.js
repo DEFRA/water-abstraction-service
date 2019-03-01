@@ -4,7 +4,8 @@ const {
   experiment,
   test,
   beforeEach,
-  afterEach
+  afterEach,
+  fail
 } = exports.lab = require('lab').script();
 
 const sinon = require('sinon');
@@ -17,6 +18,7 @@ const startUploadJob = require('../../../src/modules/returns/lib/jobs/start-xml-
 const uploadValidator = require('../../../src/modules/returns/lib/returns-upload-validator');
 const { uploadStatus } = require('../../../src/modules/returns/lib/returns-upload');
 const { logger } = require('@envage/water-abstraction-helpers');
+const returnsConnector = require('../../../src/lib/connectors/returns');
 
 const UUIDV4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i);
 
@@ -96,33 +98,44 @@ experiment('postUploadXml', () => {
   });
 });
 
-const requestFactory = () => {
+const requestFactory = (returnId) => {
   return {
     params: {
       eventId: 'bb69e563-1a0c-4661-8e33-51ddf737740d'
     },
-    payload: {
-      companyId: '2dc953ff-c80e-4a1c-8f59-65c641bdbe45'
+    query: {
+      companyId: '2dc953ff-c80e-4a1c-8f59-65c641bdbe45',
+      returnId
     },
     evt: {
       eventId: 'bb69e563-1a0c-4661-8e33-51ddf737740d',
       status: 'validated'
     },
-    jsonData: {
-      foo: 'bar'
-    }
+    jsonData: [{
+      returnId: 'x',
+      lines: []
+    }, {
+      returnId: 'y',
+      lines: []
+    }]
   };
 };
 
-experiment('postUploadPreview', () => {
-  const sandbox = sinon.createSandbox();
+const validatorResponseFactory = (returnId) => {
+  const request = requestFactory(returnId);
+  return request.jsonData.map(ret => ({
+    ...ret,
+    errors: []
+  }));
+};
 
-  const data = { foo: 'bar' };
-  const validatorResponse = { bar: 'foo' };
+experiment('getUploadPreview', () => {
+  let validatorResponse;
 
   let h;
 
   beforeEach(async () => {
+    validatorResponse = validatorResponseFactory();
     h = {
       response: sinon.stub().returns({
         code: sinon.spy()
@@ -138,23 +151,24 @@ experiment('postUploadPreview', () => {
 
   test('it should call validator with correct arguments', async () => {
     const request = requestFactory();
-    await controller.postUploadPreview(request, h);
-    const [returnData, companyId] = uploadValidator.validate.firstCall.args;
-    expect(returnData).to.equal(data);
-    expect(companyId).to.equal(request.payload.companyId);
+    await controller.getUploadPreview(request, h);
+    const [returnData, companyId] = await uploadValidator.validate.firstCall.args;
+    expect(returnData).to.equal(request.jsonData);
+    expect(companyId).to.equal(request.query.companyId);
   });
 
   test('it should respond with validator result in response', async () => {
     const request = requestFactory();
-    const response = await controller.postUploadPreview(request, h);
+    const response = await controller.getUploadPreview(request, h);
     expect(response.error).to.equal(null);
-    expect(response.data).to.equal(validatorResponse);
+    expect(response.data[0].returnId).to.equal(validatorResponse[0].returnId);
+    expect(response.data[1].returnId).to.equal(validatorResponse[1].returnId);
   });
 
   test('if validator fails it should reject', async () => {
     const request = requestFactory();
     uploadValidator.validate.rejects(new Error('Some error'));
-    const func = () => controller.postUploadPreview(request, h);
+    const func = () => controller.getUploadPreview(request, h);
     expect(func()).to.reject();
   });
 
@@ -162,7 +176,8 @@ experiment('postUploadPreview', () => {
     const request = requestFactory();
     uploadValidator.validate.rejects(new Error('Some error'));
     try {
-      await controller.postUploadPreview(request, h);
+      await controller.getUploadPreview(request, h);
+      fail('Controller method should not resolve');
     } catch (err) {
 
     }
@@ -171,12 +186,88 @@ experiment('postUploadPreview', () => {
     expect(msg).to.be.a.string();
 
     expect(params.eventId).to.equal(request.params.eventId);
-    expect(params.companyId).to.equal(request.payload.companyId);
+    expect(params.companyId).to.equal(request.query.companyId);
+  });
+});
+
+experiment('getUploadPreviewReturn', () => {
+  let h;
+
+  const returnServiceResponse = {
+    error: null,
+    data: {
+      metadata: {
+        foo: 'bar'
+      }
+    }
+  };
+
+  const uploadedReturns = [{
+    returnId: 'x',
+    isNil: false,
+    lines: [{
+      quantity: 2
+    }, {
+      quantity: 3
+    }]
+  }, {
+    returnId: 'y',
+    isNil: true
+  }];
+
+  beforeEach(async () => {
+    h = {
+      response: sinon.stub().returns({
+        code: sinon.spy()
+      })
+    };
+    sandbox.stub(logger, 'error');
+    sandbox.stub(uploadValidator, 'validate').resolves(uploadedReturns);
+    sandbox.stub(returnsConnector.returns, 'findOne').resolves(returnServiceResponse);
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  test('throws a 404 error if the requested return ID is not in the array', async () => {
+    const request = requestFactory('z');
+    try {
+      await controller.getUploadPreviewReturn(request, h);
+      fail('Controller method should not resolve');
+    } catch (err) {
+      expect(err.isBoom).to.equal(true);
+      expect(err.output.statusCode).to.equal(404);
+    }
+  });
+
+  test('calls validator with the return specified in the request', async () => {
+    const request = requestFactory('x');
+    await controller.getUploadPreviewReturn(request, h);
+    const [returns, companyId] = uploadValidator.validate.lastCall.args;
+    expect(returns.length).to.equal(1);
+    expect(returns[0].returnId).to.equal('x');
+    expect(companyId).to.equal(request.query.companyId);
+  });
+
+  test('throws an error if error in return service response', async () => {
+    const request = requestFactory('x');
+    returnsConnector.returns.findOne.resolves({error: 'oh no'});
+    const func = () => controller.getUploadPreviewReturn(request, h);
+    expect(func()).to.reject();
+  });
+
+  test('it should responsd with the return', async () => {
+    const request = requestFactory('x');
+    const response = await controller.getUploadPreviewReturn(request, h);
+    expect(response.error).to.equal(null);
+    expect(response.data.returnId).to.equal('x');
+    expect(response.data.metadata).to.equal(returnServiceResponse.data.metadata);
+    expect(response.data.totalVolume).to.equal(5);
   });
 });
 
 experiment('postUploadSubmit', () => {
-  const sandbox = sinon.createSandbox();
   let h;
 
   beforeEach(async () => {
@@ -208,6 +299,7 @@ experiment('postUploadSubmit', () => {
 
     try {
       await controller.postUploadSubmit(request, h);
+      fail('Controller method should not resolve');
     } catch (err) {
 
     }
@@ -215,7 +307,7 @@ experiment('postUploadSubmit', () => {
     const [msg, , params] = logger.error.lastCall.args;
     expect(msg).to.be.a.string();
     expect(params.eventId).to.equal(request.params.eventId);
-    expect(params.companyId).to.equal(request.payload.companyId);
+    expect(params.companyId).to.equal(request.query.companyId);
   });
 
   test('it should throw a bad request error if no returns to submit', async () => {
@@ -223,6 +315,7 @@ experiment('postUploadSubmit', () => {
     uploadValidator.validate.resolves([]);
     try {
       await controller.postUploadSubmit(request, h);
+      fail('Controller method should not resolve');
     } catch (err) {
 
     }
@@ -230,7 +323,7 @@ experiment('postUploadSubmit', () => {
     const [msg, , params] = logger.error.lastCall.args;
     expect(msg).to.be.a.string();
     expect(params.eventId).to.equal(request.params.eventId);
-    expect(params.companyId).to.equal(request.payload.companyId);
+    expect(params.companyId).to.equal(request.query.companyId);
   });
 
   experiment('when there are returns to submit', async () => {
