@@ -2,7 +2,7 @@ const moment = require('moment');
 const { pick, findIndex, max, mapValues, chunk } = require('lodash');
 const { returns: { date: { getPeriodStart } } } = require('@envage/water-abstraction-helpers');
 const { formatAbstractionPoint } = require('../../../lib/licence-transformer/nald-helpers');
-const naldDates = require('../../../lib/nald-dates');
+const naldDates = require('@envage/water-abstraction-helpers').nald.dates;
 
 /**
  * Converts 'null' strings to real null in supplied object

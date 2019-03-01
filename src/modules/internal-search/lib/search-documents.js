@@ -1,7 +1,7 @@
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 const documents = require('../../../lib/connectors/crm/documents');
 const { getPagination } = require('./pagination');
-const { returnsDateToIso } = require('../../import/lib/date-helpers');
+const { returnsDateToIso } = require('../../../lib/dates');
 const { getFullName } = require('../../../lib/licence-transformer/nald-helpers');
 
 /**

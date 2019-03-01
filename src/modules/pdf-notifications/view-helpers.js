@@ -2,7 +2,7 @@ const moment = require('moment');
 const { chunk } = require('lodash');
 const naldRegions = require('./data/nald-regions');
 const naldAreas = require('./data/nald-areas');
-const naldDates = require('../../lib/nald-dates');
+const naldDates = require('@envage/water-abstraction-helpers').nald.dates;
 
 /**
  * Outputs the region name given the NALD region code
