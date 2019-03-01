@@ -3,16 +3,13 @@ const moment = require('moment');
 /**
  * General UK date formatter
  * @param {String} str - NALD date string, can be 'null', format dd/mm/yyyy
- * @param {String} str - output date format
+ * @param {String} outputFormat - output date format
+ * @param {String} inputFormat - optional input format
  * @return {String} - date in new format
  */
-const dateFormatter = (str, outputFormat) => {
-  const d = moment(str, 'DD/MM/YYYY');
-  if (d.isValid()) {
-    return d.format(outputFormat);
-  } else {
-    return null;
-  }
+const dateFormatter = (str, inputFormat, outputFormat) => {
+  const d = moment(str, inputFormat);
+  return d.isValid() ? d.format(outputFormat) : null;
 };
 
 /**
@@ -22,7 +19,7 @@ const dateFormatter = (str, outputFormat) => {
  * @return {String} date in sortable date format
  */
 const dateToSortableString = (str) => {
-  return dateFormatter(str, 'YYYYMMDD');
+  return dateFormatter(str, 'DD/MM/YYYY', 'YYYYMMDD');
 };
 
 /**
@@ -32,7 +29,7 @@ const dateToSortableString = (str) => {
  * @return {String} date in SQL format
  */
 const dateToIsoString = (str) => {
-  return dateFormatter(str, 'YYYY-MM-DD');
+  return dateFormatter(str, 'DD/MM/YYYY', 'YYYY-MM-DD');
 };
 
 /**
@@ -41,12 +38,9 @@ const dateToIsoString = (str) => {
  * @return {String} ISO date YYYY-MM-DD
  */
 const returnsDateToIso = (str) => {
-  const d = moment(str, 'YYYYMMDD');
-  return d.isValid() ? d.format('YYYY-MM-DD') : null;
+  return dateFormatter(str, 'YYYYMMDD', 'YYYY-MM-DD');
 };
 
-module.exports = {
-  dateToIsoString,
-  dateToSortableString,
-  returnsDateToIso
-};
+exports.dateToIsoString = dateToIsoString;
+exports.dateToSortableString = dateToSortableString;
+exports.returnsDateToIso = returnsDateToIso;

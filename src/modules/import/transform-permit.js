@@ -1,5 +1,5 @@
 const { orderBy } = require('lodash');
-const { dateToSortableString, dateToIsoString } = require('./lib/date-helpers.js');
+const { dateToSortableString, dateToIsoString } = require('../../lib/dates');
 const {
   getMain,
   getCams,

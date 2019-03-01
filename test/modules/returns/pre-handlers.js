@@ -20,7 +20,7 @@ const requestFactory = () => {
     params: {
       eventId
     },
-    payload: {
+    query: {
       userName: 'bob@example.com'
     }
   };
@@ -136,7 +136,7 @@ experiment('preCheckIssuer', () => {
 
   test('throws Boom.unauthorized error if username in payload does not match event issuer', async () => {
     const request = requestFactory();
-    request.payload.userName = 'invisible@example.com';
+    request.query.userName = 'invisible@example.com';
     request.evt = evt;
     try {
       await preHandlers.preCheckIssuer(request, h);
@@ -146,6 +146,6 @@ experiment('preCheckIssuer', () => {
     expect(Boom.unauthorized.callCount).to.equal(1);
     const [, params] = Boom.unauthorized.firstCall.args;
     expect(params.eventId).to.equal(eventId);
-    expect(params.userName).to.equal(request.payload.userName);
+    expect(params.userName).to.equal(request.query.userName);
   });
 });

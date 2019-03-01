@@ -1,25 +1,33 @@
 const Joi = require('joi');
 const controller = require('./controller');
+const { set } = require('lodash');
 const { failAction } = require('./lib/route-helpers');
 const { returnSchema, headerSchema } = require('./schema');
 const pre = require('./pre-handlers');
 
-const submitConfig = {
-  pre: [
-    { method: pre.preLoadEvent },
-    { method: pre.preLoadJson },
-    { method: pre.preCheckIssuer }
-  ],
-  validate: {
-    params: {
-      eventId: Joi.string().uuid().required()
-    },
-    payload: {
-      entityId: Joi.string().uuid().required(),
-      companyId: Joi.string().uuid().required(),
-      userName: Joi.string().email().required()
+const getSubmitConfig = (isSingleReturn) => {
+  const submitConfig = {
+    pre: [
+      { method: pre.preLoadEvent },
+      { method: pre.preLoadJson },
+      { method: pre.preCheckIssuer }
+    ],
+    validate: {
+      params: {
+        eventId: Joi.string().uuid().required()
+      },
+      query: {
+        entityId: Joi.string().uuid().required(),
+        companyId: Joi.string().uuid().required(),
+        userName: Joi.string().email().required()
+      }
     }
+  };
+
+  if (isSingleReturn) {
+    set(submitConfig, 'validate.params.returnId', Joi.string().required());
   }
+  return submitConfig;
 };
 
 module.exports = {
@@ -80,17 +88,24 @@ module.exports = {
     }
   },
 
-  postUploadPreview: {
+  getUploadPreview: {
     path: '/water/1.0/returns/upload-preview/{eventId}',
-    method: 'POST',
-    handler: controller.postUploadPreview,
-    config: submitConfig
+    method: 'GET',
+    handler: controller.getUploadPreview,
+    config: getSubmitConfig()
+  },
+
+  getUploadPreviewSingleReturn: {
+    path: '/water/1.0/returns/upload-preview/{eventId}/{returnId*}',
+    method: 'GET',
+    handler: controller.getUploadPreviewReturn,
+    config: getSubmitConfig(true)
   },
 
   postUploadSubmit: {
     path: '/water/1.0/returns/upload-submit/{eventId}',
     method: 'POST',
     handler: controller.postUploadSubmit,
-    config: submitConfig
+    config: getSubmitConfig()
   }
 };

@@ -42,7 +42,7 @@ const preLoadJson = async (request, h) => {
 const preCheckIssuer = async (request, h) => {
   const { evt } = request;
   const { eventId } = evt;
-  const { userName } = request.payload;
+  const { userName } = request.query;
   if (evt.issuer !== userName) {
     throw Boom.unauthorized(`Return upload permission denied`, { eventId, userName });
   }
