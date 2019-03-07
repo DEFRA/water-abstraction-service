@@ -161,9 +161,9 @@ const validateReturnSchema = (ret, context) => {
 /**
  * Creates a pair for use in the lodash cond function, in the form:
  * [predicate, func]
- * @param  {[type]} predicate [description]
- * @param  {[type]} error     [description]
- * @return {[type]}           [description]
+ * @param  {Function} predicate
+ * @param  {String} error - error message
+ * @return {Array} [predicate, func]
  */
 const createPair = (predicate, error) => {
   return [negate(predicate), () => error];
