@@ -1,8 +1,9 @@
 /**
  * A module to validate a batch of returns data sent via XML
  *
- * It performs 3 checks:
- * - CRM documents are current and registered to the supplied company entity ID
+ * It performs 4 checks:
+ * - Current CRM documents exist for the licence number in the return
+ * - CRM documents are registered to the supplied company entity ID
  * - returns exist in return service
  * - returns have 'due' status
  *
@@ -18,7 +19,7 @@
 ]
  */
 const Joi = require('joi');
-const { chunk, flatMap, find } = require('lodash');
+const { chunk, flatMap, find, uniq } = require('lodash');
 
 const returnsConnector = require('../../../lib/connectors/returns');
 const documents = require('../../../lib/connectors/crm/documents');
@@ -28,6 +29,7 @@ const returnLines = require('@envage/water-abstraction-helpers').returns.lines;
 const schema = require('../schema.js');
 
 const uploadErrors = {
+  ERR_LICENCE_NOT_FOUND: 'The licence number could not be found',
   ERR_PERMISSION: 'You do not have permission to submit returns for this licence',
   ERR_NOT_DUE: 'A return for this licence and date has already been submitted and cannot be changed',
   ERR_NOT_FOUND: 'Dates do not match the return period',
@@ -35,20 +37,44 @@ const uploadErrors = {
 };
 
 /**
- * Gets an array of CRM document headers that can be submitted by the
- * supplied company entity ID
- * @param  {String} companyId - GUID for CRM company entity ID
- * @return {Promise}           resolves with array of licence numbers
+ * Get all current CRM documents for the supplied batch of returns
+ * from the CRM
+ * @param  {Array} returns   - a list of all returns
+ * @return {Promise}           resolves with array of CRM documents
  */
-const getDocumentsForCompany = async (companyId) => {
+const getDocuments = (returns) => {
+  const licenceNumbers = uniq(returns.map(row => row.licenceNumber));
   const filter = {
-    company_entity_id: companyId,
-    'metadata->>IsCurrent': { $ne: 'false' }
+    'metadata->>IsCurrent': { $ne: 'false' },
+    system_external_id: {
+      $in: licenceNumbers
+    }
   };
-  const columns = ['system_external_id'];
-  const data = await documents.findAll(filter, null, columns);
-  return data.map(row => row.system_external_id);
+  const columns = ['system_external_id', 'company_entity_id'];
+  return documents.findAll(filter, null, columns);
 };
+
+/**
+ * Gets a filter object which can be passed to lodash find to find a
+ * CRM document with the specified licence number
+ * @param  {String} licenceNumber - the licence number to find
+ * @return {Object} filter object
+ */
+const getDocumentFilter = licenceNumber => ({
+  system_external_id: licenceNumber
+});
+
+/**
+ * Gets a filter object which can be passed to lodash find to find a
+ * CRM document with the specified licence number and company ID
+ * @param  {String} licenceNumber - the licence number to find
+ * @param {String} companyId - CRM company entity GUID
+ * @return {Object} filter object
+ */
+const getCompanyDocumentFilter = (licenceNumber, companyId) => ({
+  system_external_id: licenceNumber,
+  company_entity_id: companyId
+});
 
 /**
  * Tests whether the supplied return has 'due' status
@@ -95,10 +121,11 @@ const mapJoiError = error => error.details.map(err => err.message);
  * @param  {Object} context - context data for validation checks
  * @param  {Object} context.licenceNumbers - array of valid licence numbers
  * @param  {Object} context.returns - returns found in return service
+ * @param {String} context.companyId - the CRM company entity ID for current user
  * @return {Object} return object decorated with errors array
  */
 const validateReturn = (ret, context) => {
-  const { licenceNumbers, returns } = context;
+  const { documents, returns, companyId } = context;
   let errors = [];
 
   // Find matching return in returns service
@@ -107,8 +134,10 @@ const validateReturn = (ret, context) => {
   // Joi validation
   const { error: joiError } = Joi.validate(ret, schema.multipleSchema);
 
-  // Licence number not in CRM docs
-  if (!licenceNumbers.includes(ret.licenceNumber)) {
+  // Licence number not found
+  if (!find(documents, getDocumentFilter(ret.licenceNumber))) {
+    errors = [uploadErrors.ERR_LICENCE_NOT_FOUND];
+  } else if (!find(documents, getCompanyDocumentFilter(ret.licenceNumber, companyId))) {
     errors = [uploadErrors.ERR_PERMISSION];
   } else if (!match) {
     // No matching return
@@ -135,17 +164,15 @@ const validateReturn = (ret, context) => {
  *                                  to current company
  * @return {Promise}                array of returns with errors[] added
  */
-const validateBatch = async (uploadedReturns, licenceNumbers) => {
+const validateBatch = async (uploadedReturns, context) => {
   const returnIds = uploadedReturns.map(ret => ret.returnId);
   const returns = await returnsConnector.getActiveReturns(returnIds);
 
   return uploadedReturns.map(ret => {
-    const context = {
-      licenceNumbers,
+    return validateReturn(ret, {
+      ...context,
       returns
-    };
-
-    return validateReturn(ret, context);
+    });
   });
 };
 
@@ -172,12 +199,17 @@ const batchProcess = async (arr, batchSize, iteratee, ...params) => {
  * @return {Promise}          - resolves with each return having errors array
  */
 const validate = async (returns, companyId) => {
-  const licenceNumbers = await getDocumentsForCompany(companyId);
-  return batchProcess(returns, 100, validateBatch, licenceNumbers);
+  const documents = await getDocuments(returns);
+  const context = {
+    companyId,
+    documents
+  };
+  // const licenceNumbers = await getDocumentsForCompany(companyId);
+  return batchProcess(returns, 100, validateBatch, context);
 };
 
-exports.getDocumentsForCompany = getDocumentsForCompany;
 exports.hasExpectedReturnLines = hasExpectedReturnLines;
 exports.validate = validate;
 exports.batchProcess = batchProcess;
 exports.uploadErrors = uploadErrors;
+exports.getDocuments = getDocuments;
