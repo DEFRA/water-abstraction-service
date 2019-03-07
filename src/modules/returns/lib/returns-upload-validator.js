@@ -19,7 +19,7 @@
 ]
  */
 const Joi = require('joi');
-const { chunk, flatMap, find, uniq } = require('lodash');
+const { chunk, flatMap, find, uniq, cond, negate, get } = require('lodash');
 
 const returnsConnector = require('../../../lib/connectors/returns');
 const documents = require('../../../lib/connectors/crm/documents');
@@ -33,7 +33,8 @@ const uploadErrors = {
   ERR_PERMISSION: 'You do not have permission to submit returns for this licence',
   ERR_NOT_DUE: 'A return for this licence and date has already been submitted and cannot be changed',
   ERR_NOT_FOUND: 'Dates do not match the return period',
-  ERR_LINES: 'Submitted return line dates do not match those expected'
+  ERR_LINES: 'Submitted return line dates do not match those expected',
+  ERR_SCHEMA: 'The selected file must use the template'
 };
 
 /**
@@ -81,7 +82,7 @@ const getCompanyDocumentFilter = (licenceNumber, companyId) => ({
  * @param  {Object}  ret - return object from returns service
  * @return {Boolean}      true if return is due
  */
-const isNotDue = ret => ret.status !== 'due';
+// const isNotDue = ret => ret.status !== 'due';
 
 /**
  * Converts an array of return line objects to a single string so it can be
@@ -99,7 +100,7 @@ const linesToString = (lines = []) => {
  * @param  {Object} ret - return upload object
  * @return {boolean}     - true if return lines OK or nil return
  */
-const hasExpectedReturnLines = (ret) => {
+const validateReturnlines = ret => {
   if (ret.isNil) {
     return true;
   }
@@ -108,7 +109,79 @@ const hasExpectedReturnLines = (ret) => {
   return linesToString(requiredLines) === linesToString(ret.lines);
 };
 
-const mapJoiError = error => error.details.map(err => err.message);
+/**
+ * Checks that a CRM document for the licence number in the return was found
+ * @param  {Object} ret     - uploaded return
+ * @param  {Object} context - additional context data
+ * @return {Boolean}         true if document was found
+ */
+const validateLicence = (ret, context) =>
+  find(context.documents, getDocumentFilter(ret.licenceNumber));
+
+/**
+ * Checks that the user's company matches that of the CRM document
+ * @param  {Object} ret     - uploaded return
+ * @param  {Object} context - additional context data
+ * @return {Boolean}         true if company matches
+ */
+const validatePermission = (ret, context) =>
+  find(context.documents, getCompanyDocumentFilter(ret.licenceNumber, context.companyId));
+
+/**
+ * Checks a return was found in the returns service for the uploaded return ID
+ * @param  {Object} ret     - uploaded return
+ * @param  {Object} context - additional context data
+ * @return {Boolean}         true if return found
+ */
+const validateReturnExists = (ret, context) =>
+  find(context.returns, { return_id: ret.returnId });
+
+/**
+ * Checks the return in the return service has 'due' status
+ * @param  {Object} ret     - uploaded return
+ * @param  {Object} context - additional context data
+ * @return {Boolean}         true if return is due
+ */
+const validateReturnDue = (ret, context) => {
+  const match = find(context.returns, { return_id: ret.returnId });
+  return get(match, 'status') === 'due';
+};
+
+/**
+ * Checks that the JSON in the uploaded return passes Joi schema validation
+ * @param  {Object} ret     - uploaded return
+ * @param  {Object} context - additional context data
+ * @return {Boolean}         true if schema passes
+ */
+const validateReturnSchema = (ret, context) => {
+  const { error } = Joi.validate(ret, schema.multipleSchema);
+  return !error;
+};
+
+/**
+ * Creates a pair for use in the lodash cond function, in the form:
+ * [predicate, func]
+ * @param  {[type]} predicate [description]
+ * @param  {[type]} error     [description]
+ * @return {[type]}           [description]
+ */
+const createPair = (predicate, error) => {
+  return [negate(predicate), () => error];
+};
+
+/**
+ * Creates a validator which returns an error message for the first validation
+ * test that fails
+ * @type {Function}
+ */
+const validator = cond([
+  createPair(validateLicence, uploadErrors.ERR_LICENCE_NOT_FOUND),
+  createPair(validatePermission, uploadErrors.ERR_PERMISSION),
+  createPair(validateReturnExists, uploadErrors.ERR_NOT_FOUND),
+  createPair(validateReturnDue, uploadErrors.ERR_NOT_DUE),
+  createPair(validateReturnSchema, uploadErrors.ERR_SCHEMA),
+  createPair(validateReturnlines, uploadErrors.ERR_LINES)
+]);
 
 /**
  * Validates a single return
@@ -119,41 +192,17 @@ const mapJoiError = error => error.details.map(err => err.message);
  *
  * @param  {Object} ret     - return object from uploaded data
  * @param  {Object} context - context data for validation checks
- * @param  {Object} context.licenceNumbers - array of valid licence numbers
+ * @param  {Object} context.documents - array of CRM documents found
  * @param  {Object} context.returns - returns found in return service
  * @param {String} context.companyId - the CRM company entity ID for current user
  * @return {Object} return object decorated with errors array
  */
 const validateReturn = (ret, context) => {
-  const { documents, returns, companyId } = context;
-  let errors = [];
-
-  // Find matching return in returns service
-  const match = find(returns, { return_id: ret.returnId });
-
-  // Joi validation
-  const { error: joiError } = Joi.validate(ret, schema.multipleSchema);
-
-  // Licence number not found
-  if (!find(documents, getDocumentFilter(ret.licenceNumber))) {
-    errors = [uploadErrors.ERR_LICENCE_NOT_FOUND];
-  } else if (!find(documents, getCompanyDocumentFilter(ret.licenceNumber, companyId))) {
-    errors = [uploadErrors.ERR_PERMISSION];
-  } else if (!match) {
-    // No matching return
-    errors = [uploadErrors.ERR_NOT_FOUND];
-  } else if (isNotDue(match)) {
-    // Match found, but the return is not `due` status
-    errors = [uploadErrors.ERR_NOT_DUE];
-  } else if (joiError) {
-    errors = mapJoiError(joiError);
-  } else if (!hasExpectedReturnLines(ret)) {
-    errors = [uploadErrors.ERR_LINES];
-  }
+  const error = validator(ret, context);
 
   return {
     ...ret,
-    errors
+    errors: error ? [error] : []
   };
 };
 
@@ -208,8 +257,9 @@ const validate = async (returns, companyId) => {
   return batchProcess(returns, 100, validateBatch, context);
 };
 
-exports.hasExpectedReturnLines = hasExpectedReturnLines;
+// exports.hasExpectedReturnLines = hasExpectedReturnLines;
 exports.validate = validate;
 exports.batchProcess = batchProcess;
 exports.uploadErrors = uploadErrors;
 exports.getDocuments = getDocuments;
+exports.validateReturnlines = validateReturnlines;

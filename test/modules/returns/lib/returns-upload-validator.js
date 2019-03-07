@@ -70,25 +70,6 @@ experiment('validate', () => {
     sandbox.restore();
   });
 
-  /*
-  test('it should validate an array of uploaded returns correctly', async () => {
-    const {
-      ERR_LICENCE_NOT_FOUND,
-      ERR_PERMISSION,
-      ERR_NOT_DUE,
-      ERR_NOT_FOUND,
-      ERR_LINES
-    } = returnsUploadValidator.uploadErrors;
-
-    const result = await returnsUploadValidator.validate(data.upload, data.companyId);
-    // expect(result[0].errors).to.equal([ERR_PERMISSION]);
-    expect(result[0].errors).to.equal([ERR_LICENCE_NOT_FOUND]);
-    expect(result[1].errors).to.equal([ERR_NOT_FOUND]);
-    expect(result[2].errors).to.equal([ERR_NOT_DUE]);
-    expect(result[3].errors).to.equal([]);
-    expect(result[4].errors).to.equal([ERR_LINES]);
-  });
-  */
   test('fails validation if a current CRM document cannot be found', async () => {
     const { ERR_LICENCE_NOT_FOUND } = returnsUploadValidator.uploadErrors;
     const [{ errors }] = await returnsUploadValidator.validate([data.upload[0]], data.companyId);
@@ -125,15 +106,16 @@ experiment('validate', () => {
   });
 
   test('it should fail validation if it doesnt match the Joi schema', async () => {
+    const { ERR_SCHEMA } = returnsUploadValidator.uploadErrors;
     const upload = [omit(data.upload[4], 'isNil')];
     const [{ errors }] = await returnsUploadValidator.validate(upload, data.companyId);
-    expect(errors).to.equal(['"isNil" is required']);
+    expect(errors).to.equal([ERR_SCHEMA]);
   });
 });
 
-experiment('hasExpectedReturnLines', () => {
+experiment('validateReturnlines', () => {
   test('it should return true for a nil return', async () => {
-    const result = returnsUploadValidator.hasExpectedReturnLines(data.upload[0]);
+    const result = returnsUploadValidator.validateReturnlines(data.upload[0]);
     expect(result).to.equal(true);
   });
 
@@ -150,7 +132,7 @@ experiment('hasExpectedReturnLines', () => {
         endDate: '2018-12-31'
       }]
     };
-    const result = returnsUploadValidator.hasExpectedReturnLines(ret);
+    const result = returnsUploadValidator.validateReturnlines(ret);
     expect(result).to.equal(true);
   });
 
@@ -164,7 +146,7 @@ experiment('hasExpectedReturnLines', () => {
         endDate: '2019-01-31'
       }]
     };
-    const result = returnsUploadValidator.hasExpectedReturnLines(ret);
+    const result = returnsUploadValidator.validateReturnlines(ret);
     expect(result).to.equal(false);
   });
 });
