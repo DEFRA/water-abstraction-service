@@ -28,7 +28,7 @@ const getActiveReturns = (returnIds) => {
     'metadata->>isCurrent': 'true'
   };
 
-  const columns = ['return_id', 'status'];
+  const columns = ['return_id', 'status', 'due_date'];
 
   return returnsClient.findAll(filter, null, columns);
 };
