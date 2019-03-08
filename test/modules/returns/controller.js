@@ -101,11 +101,11 @@ experiment('postUploadXml', () => {
 const requestFactory = (returnId) => {
   return {
     params: {
-      eventId: 'bb69e563-1a0c-4661-8e33-51ddf737740d'
+      eventId: 'bb69e563-1a0c-4661-8e33-51ddf737740d',
+      returnId
     },
     query: {
-      companyId: '2dc953ff-c80e-4a1c-8f59-65c641bdbe45',
-      returnId
+      companyId: '2dc953ff-c80e-4a1c-8f59-65c641bdbe45'
     },
     evt: {
       eventId: 'bb69e563-1a0c-4661-8e33-51ddf737740d',

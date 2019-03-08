@@ -162,13 +162,14 @@ const getUploadPreview = async (request, h) => {
  * @return {Promise} resolves with return data { error : null, data : {} }
  */
 const getUploadPreviewReturn = async (request, h) => {
-  const { eventId, companyId, returnId } = parseRequest(request);
+  const params = parseRequest(request);
+  const { companyId, returnId } = params;
 
   try {
-    const match = find(request.jsonData, {returnId});
+    const match = find(request.jsonData, { returnId });
 
     if (!match) {
-      throw Boom.notFound(`Return ${returnId} not found in upload`);
+      throw Boom.notFound(`Return ${returnId} not found in upload`, params);
     }
 
     // Validate JSON data, and fetch return from return service
@@ -186,7 +187,7 @@ const getUploadPreviewReturn = async (request, h) => {
       data: first(data)
     };
   } catch (error) {
-    logger.error('Return upload preview failed', error, { eventId, companyId, returnId });
+    logger.error('Return upload preview failed', error, params);
     throw error;
   }
 };
@@ -215,8 +216,8 @@ const isValidReturn = ret => ret.errors.length === 0;
 const isValidatedEvent = evt => evt.status === 'validated';
 
 const parseRequest = (request) => {
-  const { eventId } = request.params;
-  const { companyId, returnId } = request.query;
+  const { eventId, returnId } = request.params;
+  const { companyId } = request.query;
   return { eventId, companyId, returnId };
 };
 
