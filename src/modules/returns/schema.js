@@ -93,30 +93,7 @@ const headerSchema = {
   isUnderQuery: Joi.boolean().required()
 };
 
-/**
- * Compact schema for submitting a return from a multiple returns XML file
- * @type {Object}
- */
-const multipleSchema = {
-  returnId: Joi.string().regex(returnIDRegex).required(),
-  licenceNumber: Joi.string().required(),
-  receivedDate: Joi.string().regex(isoDateRegex).allow(null).required(),
-  startDate: Joi.string().regex(isoDateRegex).required(),
-  endDate: Joi.string().regex(isoDateRegex).required(),
-  frequency: Joi.string().valid(allowedPeriods).required(),
-  isNil: Joi.boolean().required(),
-  reading: Joi.object({
-    type: Joi.string().valid(readingTypes).required()
-  }),
-  lines,
-  meters: Joi.array().items({
-    manufacturer: Joi.string().required(),
-    serialNumber: Joi.string().required()
-  })
-};
-
 module.exports = {
   returnSchema,
-  headerSchema,
-  multipleSchema
+  headerSchema
 };
