@@ -39,6 +39,6 @@ experiment('getActiveReturns', () => {
 
     expect(sort).to.equal(null);
 
-    expect(columns).to.equal(['return_id', 'status']);
+    expect(columns).to.include(['return_id', 'status', 'due_date']);
   });
 });

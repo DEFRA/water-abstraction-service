@@ -39,7 +39,7 @@ const getTestUser = () => ({
   role: {
     scopes: ['external']
   },
-  entity_id: '1234-4321',
+  external_id: '1234-4321',
   reset_required: 0
 });
 
@@ -80,7 +80,7 @@ experiment('XML to JSON Mapping', () => {
       const returnsArray = await mapXml(returnXml, getTestUser());
 
       expect(returnsArray).to.be.an.array().and.to.not.be.empty();
-      expect(returnsArray[0]).to.contain(['licenceNumber', 'returnRequirement',
+      expect(returnsArray[0]).to.contain(['licenceNumber',
         'receivedDate', 'startDate', 'endDate', 'frequency', 'isNil', 'reading',
         'meters', 'lines']);
     });
@@ -422,7 +422,7 @@ experiment('mapXml', () => {
   });
 
   test('sets the version to 1', async () => {
-    expect(mappedReturn.version).to.equal(1);
+    expect(mappedReturn.versionNumber).to.equal(1);
   });
 
   test('sets isCurrent to true', async () => {

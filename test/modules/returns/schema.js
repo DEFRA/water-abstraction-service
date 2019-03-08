@@ -9,7 +9,7 @@ const { pick } = require('lodash');
 const { expect } = require('code');
 const { experiment, test } = exports.lab = require('lab').script();
 
-const { returnSchema, multipleSchema } = require('../../../src/modules/returns/schema.js');
+const { returnSchema } = require('../../../src/modules/returns/schema.js');
 
 experiment('returnSchema', () => {
   test('It should accept a nil return', async () => {
@@ -64,21 +64,3 @@ const createMultipleReturn = (ret) => {
 
   return modified;
 };
-
-experiment('multipleSchema', () => {
-  test('It should accept a nil return', async () => {
-    const { error } = Joi.validate(createMultipleReturn(nilReturn), multipleSchema);
-    expect(error).to.equal(null);
-  });
-
-  test('It should accept estimated volumes', async () => {
-    const ret = createMultipleReturn(estimatedVolumes);
-    const { error } = Joi.validate(ret, multipleSchema);
-    expect(error).to.equal(null);
-  });
-
-  test('It should accept metered volumes', async () => {
-    const { error } = Joi.validate(createMultipleReturn(meteredVolumes), multipleSchema);
-    expect(error).to.equal(null);
-  });
-});
