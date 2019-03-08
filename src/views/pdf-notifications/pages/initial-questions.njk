@@ -32,24 +32,32 @@
       </div>
 
       <div class="block">
-        <div class="block-head bold">3. Unit of measurement</div>
+        <div class="block-head bold">3. How are you reporting your return?</div>
+        <div class="item">
+          {{ checkboxes(['Meter readings', 'Abstraction volumes']) }}
+        </div>
+      </div>
+
+      <div class="block">
+        <div class="block-head bold">4. Unit of measurement</div>
         <div class="item">
           {{ checkboxes(['Cubic metres', 'Litres', 'Megalitres', 'Gallons']) }}
         </div>
       </div>
-
-      <div class="block">
-        <div class="block-head bold">4. Did you use a meter?</div>
-        <div class="item">
-          {{ checkboxes(['Yes', 'No']) }}
-        </div>
-        <p class="guide">If no, go to section 8</p>
-      </div>
     </div>
 
     <div class="column">
+
       <div class="block">
-        <div class="block-head bold">5. Meter details</div>
+        <div class="block-head bold">5. Did you use a meter?</div>
+        <div class="item">
+          {{ checkboxes(['Yes', 'No']) }}
+        </div>
+        <p class="guide">If no, go to section 9</p>
+      </div>
+
+      <div class="block">
+        <div class="block-head bold">6. Meter details</div>
         <div class="item special-row">
           <div class="special-input"></div>
           <div class="elastic">
@@ -63,15 +71,22 @@
           {{ boxes(12) }}
           </p>
         </div>
-
         <div class="item">
           <p>Some meters are marked with ×10. If yours is, send us the actual number on the display. You do not need to multiply it by 10.</p>
-          {{ checkbox('My meter has a ×10 display') }}
+        </div>
+        <div class="checkbox-and-text">
+          <div>
+            <div class="checkbox"></div>
+          </div>
+          <div>
+            <p>Tick this box if your meter has a</p>
+            <p>&times;10 display</p>
+          </div>
         </div>
       </div>
 
       <div class="block">
-        <div class="block-head bold">6. Start meter reading</div>
+        <div class="block-head bold">7. Start meter reading</div>
         <div class="item">
           <p class="label">
             {{ dateBoxes() }}
@@ -85,7 +100,7 @@
       </div>
 
       <div class="block">
-        <div class="block-head bold">7. End meter reading</div>
+        <div class="block-head bold">8. End meter reading</div>
         <div class="item">
           {{ dateBoxes() }}
         </div>
@@ -94,13 +109,6 @@
             Reading<br>
             {{ boxes(12) }}
           </p>
-        </div>
-      </div>
-
-      <div class="block">
-        <div class="block-head bold">8. How are you reporting your return?</div>
-        <div class="item">
-          {{ checkboxes(['Meter readings', 'Abstraction volumes']) }}
         </div>
       </div>
     </div>

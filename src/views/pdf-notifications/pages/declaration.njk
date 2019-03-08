@@ -29,7 +29,7 @@
       <div class="block-head bold">11. Reporting without a meter</div>
       <p class="label">
         What are the abstraction volumes based on, for example, pump capacity by hours run?
-        {{ input(2) }}
+        {{ input(1) }}
       </p>
     </div>
 
@@ -37,11 +37,21 @@
       <div class="block-head bold">12. Further information</div>
       <div class="item">
         <p class="label">
-        If you need to explain an entry or give more information send this on a separate sheet. Write your return reference and licence number on each sheet.
+          If you need to explain an entry or give more information send this on a
+          separate sheet. Write your return reference
+          <span class="bold">{{notification.personalisation.format_id}}</span>
+          and licence number
+          <span class="bold">{{notification.personalisation.licence_ref}}</span>
+          on each sheet.
         </p>
       </div>
-      <div class="item">
-        {{ checkbox('I am sending further information') }}
+      <div class="checkbox-and-text">
+        <div>
+          <div class="checkbox"></div>
+        </div>
+        <div>
+          <p>Tick this box if you are sending further information</p>
+        </div>
       </div>
     </div>
 
