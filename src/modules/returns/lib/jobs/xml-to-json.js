@@ -59,6 +59,7 @@ const handleReturnsXmlToJsonStart = async job => {
     validateUser(user);
 
     const json = await xmlToJson(s3Object, user);
+
     await uploadJsonToS3(evt.eventId, json);
 
     evt.status = uploadStatus.VALIDATED;
@@ -81,7 +82,8 @@ const handleReturnsXmlToJsonStart = async job => {
  */
 const uploadJsonToS3 = (eventId, json) => {
   const jsonFileName = returnsUpload.getUploadFilename(eventId, 'json');
-  return s3.upload(jsonFileName, Buffer.from(json, 'utf8'));
+  const str = JSON.stringify(json, null, 2);
+  return s3.upload(jsonFileName, Buffer.from(str, 'utf8'));
 };
 
 exports.publish = publishReturnsXmlToJsonStart;
