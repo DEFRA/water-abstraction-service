@@ -229,7 +229,6 @@ const getReturnIds = returns => returns.map(ret => ret.returnId);
 const mapReturnsData = (ret, returnsData) => {
   const { returnId } = ret;
   const match = find(returnsData, { return_id: returnId });
-  console.log('match:', match);
   return {
     ...ret,
     status: get(match, 'status'),

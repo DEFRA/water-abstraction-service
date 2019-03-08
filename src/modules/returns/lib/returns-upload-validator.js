@@ -148,8 +148,6 @@ const validateReturnDue = (ret, context) => {
  */
 const validateReturnSchema = (ret, context) => {
   const { error } = Joi.validate(ret, schema.returnSchema);
-  console.log(JSON.stringify(ret, null, 2));
-  console.log(error);
   return !error;
 };
 
