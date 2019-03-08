@@ -4,10 +4,16 @@
   "licenceTypeId" : 8,
   "documents": [
     {
-      "system_external_id": "05/678"
+      "system_external_id": "01/ABC",
+      "company_entity_id" : "some_other_company"
     },
     {
-      "system_external_id": "06/890"
+      "system_external_id": "05/678",
+      "company_entity_id" : "company_1"
+    },
+    {
+      "system_external_id": "06/890",
+      "company_entity_id": "company_1"
     }
   ],
   "licences": [
@@ -38,6 +44,15 @@
     {
       "returnId": "v1:1:01/234:01234:2017-11-01:2018-10-31",
       "licenceNumber": "01/234",
+      "startDate": "2017-11-01",
+      "endDate": "2018-10-31",
+      "receivedDate" : "2018-11-15",
+      "frequency" : "week",
+      "isNil" : true
+    },
+    {
+      "returnId": "v1:1:01/ABC:01234:2017-11-01:2018-10-31",
+      "licenceNumber": "01/ABC",
       "startDate": "2017-11-01",
       "endDate": "2018-10-31",
       "receivedDate" : "2018-11-15",
