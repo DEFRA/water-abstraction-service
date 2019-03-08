@@ -25,16 +25,13 @@ const loadReturnVersions = returnId =>
  * @param {Array} asyncversionIds The list of version ids to delete matching lines for
  * @returns {Promise} A promise that will resolve to all deleted line calls
  */
-const deleteLines = async versionIds => {
+const deleteLines = versionIds => {
   // get all the lines for the version ids
-  const lines = await returnsConnector.lines.findAll({
+  return returnsConnector.lines.delete({
     version_id: {
       '$in': versionIds
     }
   });
-
-  const promises = lines.map(line => returnsConnector.lines.delete(line.line_id));
-  return Promise.all(promises);
 };
 
 /**
@@ -44,8 +41,11 @@ const deleteLines = async versionIds => {
  * @returns {Promise} A promise that will resolve to all deleted version calls
  */
 const deleteVersions = versionIds => {
-  const promises = versionIds.map(id => returnsConnector.versions.delete(id));
-  return Promise.all(promises);
+  return returnsConnector.versions.delete({
+    version_id: {
+      '$in': versionIds
+    }
+  });
 };
 
 /**
