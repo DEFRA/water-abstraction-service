@@ -78,13 +78,6 @@ const getCompanyDocumentFilter = (licenceNumber, companyId) => ({
 });
 
 /**
- * Tests whether the supplied return has 'due' status
- * @param  {Object}  ret - return object from returns service
- * @return {Boolean}      true if return is due
- */
-// const isNotDue = ret => ret.status !== 'due';
-
-/**
  * Converts an array of return line objects to a single string so it can be
  * compared with another
  * @param  {Array} lines
@@ -154,7 +147,9 @@ const validateReturnDue = (ret, context) => {
  * @return {Boolean}         true if schema passes
  */
 const validateReturnSchema = (ret, context) => {
-  const { error } = Joi.validate(ret, schema.multipleSchema);
+  const { error } = Joi.validate(ret, schema.returnSchema);
+  console.log(JSON.stringify(ret, null, 2));
+  console.log(error);
   return !error;
 };
 

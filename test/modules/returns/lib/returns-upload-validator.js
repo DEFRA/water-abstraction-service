@@ -9,7 +9,7 @@ const permit = require('../../../../src/lib/connectors/permit');
 const returns = require('../../../../src/lib/connectors/returns');
 const documents = require('../../../../src/lib/connectors/crm/documents');
 
-const data = require('./data/returns-upload-validator.json');
+const data = require('./data/returns-upload-validator.js');
 
 experiment('batchProcess', () => {
   const data = [0, 1, 2, 3];
