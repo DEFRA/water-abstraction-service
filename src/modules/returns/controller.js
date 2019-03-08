@@ -1,5 +1,5 @@
 const Boom = require('boom');
-const { find, first } = require('lodash');
+const { find, first, get } = require('lodash');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 
 const { persistReturnData, patchReturnData } = require('./lib/api-connector');
@@ -12,6 +12,7 @@ const event = require('../../lib/event');
 const { uploadStatus, getUploadFilename } = require('./lib/returns-upload');
 const { logger } = require('@envage/water-abstraction-helpers');
 const startUploadJob = require('./lib/jobs/start-xml-upload');
+const persistReturnsJob = require('./lib/jobs/persist-returns');
 const uploadValidator = require('./lib/returns-upload-validator');
 const { mapSingleReturn, mapMultipleReturn } = require('./lib/upload-preview-mapper');
 const returnsConnector = require('../../lib/connectors/returns');
@@ -252,7 +253,7 @@ const postUploadSubmit = async (request, h) => {
     const updatedEvent = applySubmitting(request.evt, valid);
     await event.save(updatedEvent);
 
-    // @TODO publish PG boss event
+    await persistReturnsJob.publish(get(request, 'evt.eventId'));
 
     return { data, error: null };
   } catch (error) {

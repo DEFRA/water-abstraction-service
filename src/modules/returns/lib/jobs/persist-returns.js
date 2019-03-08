@@ -1,3 +1,4 @@
+const { find, get } = require('lodash');
 const messageQueue = require('../../../../lib/message-queue');
 const event = require('../../../../lib/event');
 const { logger } = require('@envage/water-abstraction-helpers');
@@ -5,6 +6,7 @@ const returnsUpload = require('../../lib/returns-upload');
 const { uploadStatus } = returnsUpload;
 const returnsConnector = require('../api-connector');
 const errorEvent = require('./error-event');
+const bluebird = require('bluebird');
 
 const JOB_NAME = 'persist-bulk-returns';
 
@@ -27,9 +29,46 @@ const updateEvent = (evt, updatedReturns) => {
   return event.save(evt);
 };
 
-const updateValidatedReturnWithResult = (validatedReturn, error = false) => {
-  validatedReturn.submitted = !error;
-  validatedReturn.error = error || null;
+/**
+ * Formats a success/error object to store in the event metadata for each
+ * validated return
+ * @param  {Object}  validatedReturn - validated return object from metadata
+ * @param  {Object} [error=false]    - error if applicable
+ * @return {Object} success/error object
+ */
+const formatResult = (validatedReturn, error = false) => {
+  return {
+    ...validatedReturn,
+    submitted: !error,
+    error: error || null
+  };
+};
+
+/**
+ * Persists a single validated return, and resolves with a success/error object
+ * to store in the event metadata
+ * @param  {Object}  validatedReturn - validated return object from metadata
+ * @param  {Object}  returnToSave    - return object from uploaded JSON
+ * @return {Promise}                 resolves with error/success object
+ */
+const persistReturn = async (validatedReturn, returnToSave) => {
+  try {
+    await returnsConnector.persistReturnData(returnToSave);
+    return formatResult(validatedReturn);
+  } catch (err) {
+    return formatResult(validatedReturn, err);
+  }
+};
+
+/**
+ * Creates a mapper function which persists a return
+ * @param  {Array} allReturns - all returns in the uploaded JSON
+ * @return {Function}           mapper
+ */
+const createMapper = allReturns => validatedReturn => {
+  const { returnId } = validatedReturn;
+  const returnToSave = find(allReturns, { returnId });
+  return persistReturn(validatedReturn, returnToSave);
 };
 
 /**
@@ -38,18 +77,9 @@ const updateValidatedReturnWithResult = (validatedReturn, error = false) => {
  * Mutates the validatedReturns array adding the result of
  * the attempted upload.
  */
-const persistReturns = async (validatedReturns, allReturns) => {
-  for (const validatedReturn of validatedReturns) {
-    try {
-      const returnToSave = allReturns.find(ret => ret.returnId === validatedReturn.returnId);
-      await returnsConnector.persistReturnData(returnToSave);
-      updateValidatedReturnWithResult(validatedReturn);
-    } catch (err) {
-      updateValidatedReturnWithResult(validatedReturn, err);
-    }
-  }
-
-  return validatedReturns;
+const persistReturns = (validatedReturns, allReturns) => {
+  const mapper = createMapper(allReturns);
+  return bluebird.map(validatedReturns, mapper, { concurrency: 1 });
 };
 
 /**
@@ -60,8 +90,7 @@ const persistReturns = async (validatedReturns, allReturns) => {
  */
 const getReturnsFromS3 = async eventId => {
   const s3Object = await returnsUpload.getReturnsS3Object(eventId, 'json');
-  const { returns } = returnsUpload.s3ObjectToJson(s3Object);
-  return returns;
+  return returnsUpload.s3ObjectToJson(s3Object);
 };
 
 /**
@@ -78,11 +107,13 @@ const handlePersistReturns = async job => {
   const { eventId } = job.data;
   let evt;
 
+  logger.info('persist job started returns', { eventId });
+
   try {
     evt = await event.load(eventId);
     const returns = await getReturnsFromS3(eventId);
 
-    const validatedReturns = evt.metadata.returns;
+    const validatedReturns = get(evt, 'metadata.returns', []);
     const updatedReturns = await persistReturns(validatedReturns, returns);
     await updateEvent(evt, updatedReturns);
     job.done();
