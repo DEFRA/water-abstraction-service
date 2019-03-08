@@ -60,7 +60,13 @@ li {
   background-image: url('/public/images/print-guide-cover.png');
 }
 
+.licence-details {
+  display: flex;
+  flex-direction: row;
+}
+
 .licence {
+  margin-left: 2mm;
   margin-bottom: 5mm;
 }
 
@@ -128,7 +134,7 @@ li {
 }
 
 #title-block {
-  margin-bottom: 6mm;
+  margin-bottom: 12mm;
 }
 
 #address-container {
@@ -276,6 +282,13 @@ li {
   margin-bottom: 3mm;
 }
 
+.boxed {
+  display: inline-block;
+  border: 4pt solid #000;
+  padding: 2mm 2.9mm;
+  margin: 3mm 0 5mm;
+}
+
 .hint {
   color: grey;
   color: #6f777b;
@@ -334,4 +347,10 @@ li {
 
 .date-block {
   margin-bottom: 6mm;
+}
+
+.checkbox-and-text {
+  display: flex;
+  line-height: 2mm;
+  font-size: 12pt;
 }
