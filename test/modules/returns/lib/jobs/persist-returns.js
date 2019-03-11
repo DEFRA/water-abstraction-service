@@ -56,12 +56,10 @@ experiment('handler', () => {
     sandbox.stub(event, 'save').resolves();
 
     sandbox.stub(returnsUpload, 'getReturnsS3Object').resolves({
-      Body: Buffer.from(JSON.stringify({
-        returns: [
-          { returnId: 'test-return-1', returnRequirement: '11111111' },
-          { returnId: 'test-return-2', returnRequirement: '22222222' }
-        ]
-      }), 'utf-8')
+      Body: Buffer.from(JSON.stringify([
+        { returnId: 'test-return-1', returnRequirement: '11111111' },
+        { returnId: 'test-return-2', returnRequirement: '22222222' }
+      ]), 'utf-8')
     });
 
     testError = new Error('test-error');
@@ -101,11 +99,14 @@ experiment('handler', () => {
   test('attempts to save both returns', async () => {
     await persistReturnsJob.handler(job);
 
+    console.log('first', returnsConnector.persistReturnData.firstCall.args);
+    console.log('second', returnsConnector.persistReturnData.secondCall.args);
+
     const firstReturn = returnsConnector.persistReturnData.firstCall.args[0];
     const secondReturn = returnsConnector.persistReturnData.secondCall.args[0];
 
-    expect(firstReturn.returnRequirement).to.equal('11111111');
-    expect(secondReturn.returnRequirement).to.equal('22222222');
+    expect(firstReturn.returnId).to.equal('test-return-1');
+    expect(secondReturn.returnId).to.equal('test-return-2');
   });
 
   test('updates the event metadata with the upload result', async () => {

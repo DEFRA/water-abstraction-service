@@ -417,8 +417,8 @@ experiment('mapXml', () => {
     expect(mappedReturn.isNil).to.be.false();
   });
 
-  test('adds the status', async () => {
-    expect(mappedReturn.status).to.equal('due');
+  test('always sets the status to completed', async () => {
+    expect(mappedReturn.status).to.equal('completed');
   });
 
   test('sets the version to 1', async () => {

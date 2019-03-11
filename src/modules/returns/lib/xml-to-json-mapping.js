@@ -228,7 +228,7 @@ const mapReturnsData = (ret, returnsData) => {
   const match = find(returnsData, { return_id: returnId });
   return {
     ...ret,
-    status: get(match, 'status'),
+    status: 'completed',
     dueDate: get(match, 'due_date')
   };
 };

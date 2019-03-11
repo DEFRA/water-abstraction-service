@@ -1,6 +1,7 @@
 const jobs = {
   start: require('./start-xml-upload'),
-  xmlToJson: require('./xml-to-json')
+  xmlToJson: require('./xml-to-json'),
+  persist: require('./persist-returns')
 };
 
 const registerSubscribers = async messageQueue => {
@@ -15,6 +16,8 @@ const registerSubscribers = async messageQueue => {
     const { eventId } = job.data.request.data;
     await jobs.xmlToJson.publish(eventId);
   });
+
+  await messageQueue.subscribe(jobs.persist.jobName, jobs.persist.handler);
 };
 
 module.exports = {
