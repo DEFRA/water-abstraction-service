@@ -71,7 +71,7 @@ const getStatus = async (request, h) => {
   }
 
   return getUserCompanyStatus(userResponse.data).then(results => {
-    const [companies, verifications, documentHeaders] = results;
+    const [companies, verifications, documentHeaders = []] = results;
 
     return {
       data: {
@@ -79,7 +79,7 @@ const getStatus = async (request, h) => {
         companies: mapCompanies(
           get(companies, 'data.companies', []),
           get(verifications, 'data', []),
-          documentHeaders || []
+          documentHeaders
         )
       },
       error: null
