@@ -59,7 +59,7 @@ const getUserCompanyStatus = user => {
   return Promise.all([
     crmEntitiesConnector.getEntityCompanies(entityId),
     crmEntitiesConnector.getEntityVerifications(entityId),
-    crmDocumentsConnector.findMany({ entity_id: entityId })
+    crmDocumentsConnector.findAll({ entity_id: entityId })
   ]);
 };
 
@@ -71,7 +71,7 @@ const getStatus = async (request, h) => {
   }
 
   return getUserCompanyStatus(userResponse.data).then(results => {
-    const [companies, verifications, documentsHeaders] = results;
+    const [companies, verifications, documentHeaders = []] = results;
 
     return {
       data: {
@@ -79,7 +79,7 @@ const getStatus = async (request, h) => {
         companies: mapCompanies(
           get(companies, 'data.companies', []),
           get(verifications, 'data', []),
-          get(documentsHeaders, 'data', [])
+          documentHeaders
         )
       },
       error: null
