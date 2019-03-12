@@ -31,9 +31,9 @@ const schema = require('../schema.js');
 const uploadErrors = {
   ERR_LICENCE_NOT_FOUND: 'The licence number could not be found',
   ERR_PERMISSION: 'You do not have permission to submit returns for this licence',
-  ERR_NOT_DUE: 'A return for this licence and date has already been submitted and cannot be changed',
-  ERR_NOT_FOUND: 'Dates do not match the return period',
-  ERR_LINES: 'Submitted return line dates do not match those expected',
+  ERR_NOT_DUE: 'This return has already been completed',
+  ERR_NOT_FOUND: 'The return dates or reference do not match our records',
+  ERR_LINES: 'The data you sent does not match our requirements',
   ERR_SCHEMA: 'The selected file must use the template'
 };
 
