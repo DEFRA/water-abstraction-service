@@ -6,10 +6,10 @@
 const getConfig = (config) => {
   const defaults = {
     prefix: 'RFORM-',
-    rolePriority: ['licence_holder']
+    rolePriority: ['returns_to', 'licence_holder']
   };
 
-  return Object.assign({}, defaults, config);
+  return Object.assign(defaults, config);
 };
 
 /**
@@ -36,7 +36,5 @@ const parseRequest = (request) => {
   };
 };
 
-module.exports = {
-  getConfig,
-  parseRequest
-};
+exports.getConfig = getConfig;
+exports.parseRequest = parseRequest;

@@ -119,6 +119,7 @@ experiment('getStatus', () => {
     sandbox.stub(crmEntitiesConnector, 'getEntityCompanies').resolves(getCompaniesResponse());
     sandbox.stub(crmEntitiesConnector, 'getEntityVerifications').resolves(getVerificationsResponse());
     sandbox.stub(crmDocumentsConnector, 'findMany').resolves(getDocumentHeaderResponse());
+    sandbox.stub(crmDocumentsConnector, 'findAll').resolves(getDocumentHeaderResponse().data);
   });
 
   afterEach(async () => {
@@ -253,7 +254,7 @@ experiment('getStatus', () => {
   test('uses the user entity id to fetch documents', async () => {
     const request = { params: { id: 123 } };
     await controller.getStatus(request);
-    const getDocumentsArgs = crmDocumentsConnector.findMany.args[0][0];
+    const getDocumentsArgs = crmDocumentsConnector.findAll.args[0][0];
     expect(getDocumentsArgs).to.equal({
       entity_id: getUserResponse().data.external_id
     });
