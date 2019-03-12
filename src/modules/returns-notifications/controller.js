@@ -1,5 +1,7 @@
+const { uniq } = require('lodash');
 const evt = require('../../lib/event');
 const { returns } = require('../../lib/connectors/returns');
+const permitConnector = require('../../lib/connectors/permit');
 const eventFactory = require('./lib/event-factory');
 const generateReference = require('../../lib/reference-generator');
 
@@ -16,18 +18,21 @@ const pgOptions = {
  * same filter query used by the post call below
  */
 const postPreviewReturnNotification = async (request, h) => {
-  const {
-    filter,
-    columns,
-    sort
-  } = parseRequest(request);
+  const { filter, columns, sort } = parseRequest(request);
 
   // Find all returns matching criteria
   const data = await returns.findAll(filter, sort, columns);
 
+  const licenceRefs = uniq(data.map(item => item.licence_ref));
+
+  const licencesEndDates = await permitConnector.getLicenceEndDates(licenceRefs);
+
   return {
     error: null,
-    data
+    data: data.map(item => {
+      const endDates = licencesEndDates[item.licence_ref];
+      return Object.assign(item, endDates);
+    })
   };
 };
 
