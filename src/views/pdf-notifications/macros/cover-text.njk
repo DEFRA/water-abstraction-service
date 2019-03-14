@@ -1,53 +1,42 @@
 {% macro coverText(personalisation) %}
 <div class="block">
   <div class="item">
-    <div class="item">
-      <p>Send us your return by <span class="bold">{{ personalisation.due_date | date }}</span>.</p>
-    </div>
+    <p>Send us your return by <span class="bold">{{ personalisation.due_date | date }}</span>.</p>
+  </div>
+
+  <div class="item">
+    <p>You must submit a return form even if you have not abstracted any water.</p>
   </div>
 
   <div class="item">
     <p>
-    You must complete an abstraction return form even if you have not abstracted any water (nil return).
-    </p>
-  </div>
-  <div class="item">
-    <p>
-    If your licence has expired or been revoked (cancelled) complete the return up to the end date of the licence.
-    </p>
-  </div>
-  <div class="item">
-    <p>
-    Two-part tariff agreement holders may<br>want to send the form back to us by<br>recorded delivery.
+      If your licence has expired or been cancelled complete the return
+      up to the end date of the licence.
     </p>
   </div>
 
   <div class="item">
+    <p>Two-part tariff holders may want to send the form by recorded delivery.</p>
+  </div>
+
+  <div class="item">
     <p>
-    Before sending it make sure you have:
+    Before sending it make sure you:
     <ul>
-      <li>
-        filled in all the relevant sections
-      </li>
-      <li>
-        ticked the ‘nil return’ box if no water<br>
-        has been abstracted
-      </li>
-      <li>
-        signed the declaration
-      </li>
+      <li>fill in all the relevant sections</li>
+      <li>tick the ‘nil return’ box if no water has been abstracted</li>
+      <li>sign the declaration</li>
+      <li>include this page with your form</li>
     </ul>
     </p>
   </div>
 
   <div class="item">
     <p>
-    If you are required to carry out monitoring<br>
-    as a condition of you abstracting water you need to continue sending this information<br>
-    to your local area office.
+      If you are required to carry out monitoring as a condition of your licence
+      you need to continue sending this information to your local area office.
     </p>
   </div>
-
 </div>
 
 {% endmacro %}
