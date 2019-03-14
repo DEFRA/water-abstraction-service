@@ -58,13 +58,9 @@
 
       <div class="block">
         <div class="block-head bold">6. Meter details</div>
-        <div class="item special-row">
-          <div class="special-input"></div>
-          <div class="elastic">
-            <p>How many meters were used?</p>
-          </div>
+        <div class="item">
+          {{ textInput('Make') }}
         </div>
-        {{ textInput('Manufacturer') }}
 
         <div class="item">
           <p class="label">Serial number<br>
@@ -72,15 +68,15 @@
           </p>
         </div>
         <div class="item">
-          <p>Some meters are marked with ×10. If yours is, send us the actual number on the display. You do not need to multiply it by 10.</p>
+          <p>You do not need to multiply meter<br>readings by 10.</p>
         </div>
         <div class="checkbox-and-text">
           <div>
             <div class="checkbox"></div>
           </div>
           <div>
-            <p>Tick this box if your meter has a</p>
-            <p>&times;10 display</p>
+            <p>Tick this box if your meter</p>
+            <p>has a &times;10 display</p>
           </div>
         </div>
       </div>
@@ -88,7 +84,7 @@
       <div class="block">
         <div class="block-head bold">7. Start meter reading</div>
         <div class="item">
-          <p class="label">
+          <p class="label">Date<br>
             {{ dateBoxes() }}
           </p>
         </div>
@@ -101,7 +97,7 @@
 
       <div class="block">
         <div class="block-head bold">8. End meter reading</div>
-        <div class="item">
+        <div class="item">Date<br>
           {{ dateBoxes() }}
         </div>
         <div class="item">
