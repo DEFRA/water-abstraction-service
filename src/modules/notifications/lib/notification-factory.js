@@ -1,4 +1,4 @@
-const logger = require('../../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * Compose and send a single message with notify
@@ -40,6 +40,8 @@ async function notificationFactory (contactData, taskConfig, event) {
   }, null);
 
   try {
+    const { eventId } = event;
+
     const options = {
       messageRef: contactData.contact.method === 'email' ? 'notification_email' : 'notification_letter',
       recipient: contactData.contact.contact.email || 'n/a',
@@ -47,7 +49,7 @@ async function notificationFactory (contactData, taskConfig, event) {
       licences: licenceNumbers,
       individualEntityId: entity_id,
       companyEntityId,
-      eventId: event.getId()
+      eventId
     };
 
     return options;

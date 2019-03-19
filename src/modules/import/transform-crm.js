@@ -1,12 +1,10 @@
 /**
  * Transform data for loading into CRM
  */
-/* eslint camelcase: "warn" */
-
 const { mapValues, find } = require('lodash');
 const { addressFormatter, findCurrent, crmNameFormatter, transformNull } = require('../../lib/licence-transformer/nald-functional');
 const sentenceCase = require('sentence-case');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * Contacts formatter
@@ -119,8 +117,7 @@ function buildCRMPacket (licenceData, licenceRef, licenceId) {
     metadata.contacts = contactsFormatter(findCurrent(licenceData.data.versions), licenceData.data.roles);
     crmData.metadata = JSON.stringify(metadata);
   } catch (error) {
-    error.params = { licenceId };
-    logger.error('Cannot build CRM packet', error);
+    logger.error('Cannot build CRM packet', error, { licenceId });
   }
   return crmData;
 }

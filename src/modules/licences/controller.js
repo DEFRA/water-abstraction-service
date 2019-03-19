@@ -3,7 +3,7 @@ const { get, isObject } = require('lodash');
 const documentsClient = require('../../lib/connectors/crm/documents');
 const { usersClient } = require('../../lib/connectors/idm');
 const permitClient = require('../../lib/connectors/permit');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 const extractConditions = require('./lib/extractConditions');
 const extractPoints = require('./lib/extractPoints');
 const { licence: { regimeId, typeId } } = require('../../../config');
@@ -42,17 +42,12 @@ const getLicence = async (document) => {
   return get(licenceResponse, 'data[0]');
 };
 
-const handleUnexpectedError = (error, documentId, functionName) => {
+const handleUnexpectedError = (error, documentId) => {
   if (parseInt(error.statusCode) === 404) {
     return Boom.notFound('Not found', error);
   }
 
-  error.params = { documentId };
-  error.context = {
-    component: 'modules/licences/controller',
-    action: functionName
-  };
-  logger.error('Failed to get licence data for document', error);
+  logger.error('Failed to get licence data for document', error, { documentId });
   return Boom.boomify(error);
 };
 
@@ -76,11 +71,18 @@ const getLicenceByDocumentId = async (request, h) => {
     }
     return Boom.notFound();
   } catch (error) {
-    return handleUnexpectedError(error, documentId, 'getLicenceByDocumentId');
+    return handleUnexpectedError(error, documentId);
   }
 };
 
-const getLicenceConditionsByDocumentId = async (request, h) => {
+/**
+ * Gets the current version of the licence, then applies the given extract function
+ *
+ * @param {Object} request The HAPI request
+ * @param {Function} extractFn The function to apply to the current version to yield the required subset of data
+ * @returns {Object} The extracted data, wrapped in the comment return shape
+ */
+const extractLicenceData = async (request, extractFn) => {
   const { documentId } = request.params;
 
   try {
@@ -88,29 +90,19 @@ const getLicenceConditionsByDocumentId = async (request, h) => {
 
     if (licence) {
       const currentVersion = get(licence, 'licence_data_value.data.current_version');
-      return wrapData(extractConditions(currentVersion));
+      return wrapData(extractFn(currentVersion));
     }
     return Boom.notFound();
   } catch (error) {
-    return handleUnexpectedError(error, documentId, 'getLicenceConditionsByDocumentId');
+    return handleUnexpectedError(error, documentId);
   }
 };
 
-const getLicencePointsByDocumentId = async (request, h) => {
-  const { documentId } = request.params;
+const getLicenceConditionsByDocumentId = async request =>
+  extractLicenceData(request, extractConditions);
 
-  try {
-    const licence = await getLicence(documentId);
-
-    if (licence) {
-      const currentVersion = get(licence, 'licence_data_value.data.current_version');
-      return wrapData(extractPoints(currentVersion));
-    }
-    return Boom.notFound();
-  } catch (error) {
-    return handleUnexpectedError(error, documentId, 'getLicencePointsByDocumentId');
-  }
-};
+const getLicencePointsByDocumentId = async request =>
+  extractLicenceData(request, extractPoints);
 
 const getLicenceUsersByDocumentId = async (request, h) => {
   const { documentId } = request.params;
@@ -130,7 +122,7 @@ const getLicenceUsersByDocumentId = async (request, h) => {
       }))
     };
   } catch (error) {
-    return handleUnexpectedError(error, documentId, 'getLicenceUsersByDocumentId');
+    return handleUnexpectedError(error, documentId);
   }
 };
 
@@ -164,7 +156,7 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
     }
     return Boom.notFound();
   } catch (error) {
-    return handleUnexpectedError(error, documentId, 'getLicenceSummaryByDocumentId');
+    return handleUnexpectedError(error, documentId);
   }
 };
 
@@ -192,7 +184,7 @@ const getLicenceCommunicationsByDocumentId = async (request, h) => {
       data: notifications.map(mapNotification)
     };
   } catch (error) {
-    return handleUnexpectedError(error, documentId, 'getLicenceCommunications');
+    return handleUnexpectedError(error, documentId);
   }
 };
 

@@ -1,31 +1,30 @@
-const Lab = require('lab');
-const lab = Lab.script();
-const Code = require('code');
+const { experiment, test } = exports.lab = require('lab').script();
+const { expect } = require('code');
 
 const { parseRequest, getConfig } = require('../../../../src/modules/returns-notifications/lib/request-parser.js');
 
-lab.experiment('Test getConfig', () => {
-  lab.test('It should get a default config object', async () => {
+experiment('getConfig', () => {
+  test('returns a default config object', async () => {
     const result = getConfig();
-    Code.expect(result).to.equal({
-      rolePriority: ['licence_holder'],
+    expect(result).to.equal({
+      rolePriority: ['returns_to', 'licence_holder'],
       prefix: 'RFORM-'
     });
   });
 
-  lab.test('It should be possible to override default options', async () => {
+  test('allows the defaults to be overridden', async () => {
     const result = getConfig({
-      rolePriority: ['returns_to', 'licence_holder'],
+      rolePriority: ['licence_holder'],
       prefix: 'CUSTOM-'
     });
-    Code.expect(result).to.equal({
-      rolePriority: ['returns_to', 'licence_holder'],
+    expect(result).to.equal({
+      rolePriority: ['licence_holder'],
       prefix: 'CUSTOM-'
     });
   });
 });
 
-lab.experiment('Test parseRequest', () => {
+experiment('Test parseRequest', () => {
   const request = {
     params: {
       notificationId: 'pdf.return'
@@ -43,9 +42,10 @@ lab.experiment('Test parseRequest', () => {
     }
   };
 
-  lab.test('parseRequest should parse the request into variables used by the controller', async () => {
+  test('parseRequest should parse the request into variables used by the controller', async () => {
     const result = parseRequest(request);
-    Code.expect(result).to.equal({ messageRef: 'pdf.return',
+    expect(result).to.equal({
+      messageRef: 'pdf.return',
       filter: { return_id: 'abc' },
       issuer: 'mail@example.com',
       name: 'Friendly name',
@@ -55,5 +55,3 @@ lab.experiment('Test parseRequest', () => {
     });
   });
 });
-
-exports.lab = lab;

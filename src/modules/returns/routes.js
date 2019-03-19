@@ -1,7 +1,34 @@
 const Joi = require('joi');
 const controller = require('./controller');
+const { set } = require('lodash');
 const { failAction } = require('./lib/route-helpers');
 const { returnSchema, headerSchema } = require('./schema');
+const pre = require('./pre-handlers');
+
+const getSubmitConfig = (isSingleReturn) => {
+  const submitConfig = {
+    pre: [
+      { method: pre.preLoadEvent },
+      { method: pre.preLoadJson },
+      { method: pre.preCheckIssuer }
+    ],
+    validate: {
+      params: {
+        eventId: Joi.string().uuid().required()
+      },
+      query: {
+        entityId: Joi.string().uuid().required(),
+        companyId: Joi.string().uuid().required(),
+        userName: Joi.string().email().required()
+      }
+    }
+  };
+
+  if (isSingleReturn) {
+    set(submitConfig, 'validate.params.returnId', Joi.string().required());
+  }
+  return submitConfig;
+};
 
 module.exports = {
 
@@ -45,5 +72,40 @@ module.exports = {
         payload: headerSchema
       }
     }
+  },
+
+  postUploadReturnsXml: {
+    path: '/water/1.0/returns/upload-xml',
+    method: 'POST',
+    handler: controller.postUploadXml,
+    config: {
+      validate: {
+        payload: {
+          fileData: Joi.binary().required(),
+          userName: Joi.string().email().required()
+        }
+      }
+    }
+  },
+
+  getUploadPreview: {
+    path: '/water/1.0/returns/upload-preview/{eventId}',
+    method: 'GET',
+    handler: controller.getUploadPreview,
+    config: getSubmitConfig()
+  },
+
+  getUploadPreviewSingleReturn: {
+    path: '/water/1.0/returns/upload-preview/{eventId}/{returnId*}',
+    method: 'GET',
+    handler: controller.getUploadPreviewReturn,
+    config: getSubmitConfig(true)
+  },
+
+  postUploadSubmit: {
+    path: '/water/1.0/returns/upload-submit/{eventId}',
+    method: 'POST',
+    handler: controller.postUploadSubmit,
+    config: getSubmitConfig()
   }
 };

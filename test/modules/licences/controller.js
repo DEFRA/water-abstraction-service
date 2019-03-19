@@ -6,7 +6,7 @@ const queries = require('../../../src/modules/licences/lib/queries');
 const permitClient = require('../../../src/lib/connectors/permit');
 const documentsClient = require('../../../src/lib/connectors/crm/documents');
 const idmConnector = require('../../../src/lib/connectors/idm');
-const logger = require('../../../src/lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
@@ -96,9 +96,8 @@ experiment('getLicenceByDocumentId', () => {
   test('provides error details in the event of a major error', async () => {
     documentsClient.findMany.rejects(new Error('fail'));
     await controller.getLicenceByDocumentId(testRequest);
-    const loggedError = logger.error.lastCall.args[1];
-    expect(loggedError.params).to.equal({ documentId: testRequest.params.documentId });
-    expect(loggedError.context).to.exist();
+    const errorParams = logger.error.lastCall.args[2];
+    expect(errorParams).to.equal({ documentId: testRequest.params.documentId });
   });
 });
 
@@ -136,9 +135,8 @@ experiment('getLicenceConditionsByDocumentId', () => {
   test('provides error details in the event of a major error', async () => {
     documentsClient.findMany.rejects(new Error('fail'));
     await controller.getLicenceConditionsByDocumentId(testRequest);
-    const loggedError = logger.error.lastCall.args[1];
-    expect(loggedError.params).to.equal({ documentId: testRequest.params.documentId });
-    expect(loggedError.context).to.exist();
+    const params = logger.error.lastCall.args[2];
+    expect(params.documentId).to.equal(testRequest.params.documentId);
   });
 });
 
@@ -176,9 +174,8 @@ experiment('getLicencePointsByDocumentId', () => {
   test('provides error details in the event of a major error', async () => {
     documentsClient.findMany.rejects(new Error('fail'));
     await controller.getLicencePointsByDocumentId(testRequest);
-    const loggedError = logger.error.lastCall.args[1];
-    expect(loggedError.params).to.equal({ documentId: testRequest.params.documentId });
-    expect(loggedError.context).to.exist();
+    const params = logger.error.lastCall.args[2];
+    expect(params.documentId).to.equal(testRequest.params.documentId);
   });
 });
 
@@ -250,9 +247,8 @@ experiment('getLicenceUsersByDocumentId', () => {
   test('provides error details in the event of a major error', async () => {
     documentsClient.findMany.rejects(new Error('fail'));
     await controller.getLicencePointsByDocumentId(testRequest);
-    const loggedError = logger.error.lastCall.args[1];
-    expect(loggedError.params).to.equal({ documentId: testRequest.params.documentId });
-    expect(loggedError.context).to.exist();
+    const params = logger.error.lastCall.args[2];
+    expect(params.documentId).to.equal(testRequest.params.documentId);
   });
 });
 
@@ -302,9 +298,8 @@ experiment('getLicenceSummaryByDocumentId', () => {
   test('provides error details in the event of a major error', async () => {
     documentsClient.findMany.rejects(new Error('fail'));
     await controller.getLicenceSummaryByDocumentId(testRequest);
-    const loggedError = logger.error.lastCall.args[1];
-    expect(loggedError.params).to.equal({ documentId: testRequest.params.documentId });
-    expect(loggedError.context).to.exist();
+    const params = logger.error.lastCall.args[2];
+    expect(params.documentId).to.equal(testRequest.params.documentId);
   });
 });
 
@@ -346,9 +341,8 @@ experiment('getLicenceCommunicationsByDocumentId', () => {
   test('provides error details in the event of a major error', async () => {
     documentsClient.findMany.rejects(new Error('fail'));
     await controller.getLicenceCommunicationsByDocumentId(testRequest);
-    const loggedError = logger.error.lastCall.args[1];
-    expect(loggedError.params).to.equal({ documentId: testRequest.params.documentId });
-    expect(loggedError.context).to.exist();
+    const params = logger.error.lastCall.args[2];
+    expect(params).to.equal({ documentId: testRequest.params.documentId });
   });
 
   test('sets isPdf to true if the notification message_ref starts with pdf.', async () => {

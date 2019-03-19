@@ -1,6 +1,6 @@
 const os = require('os');
 const hostname = os.hostname();
-const logger = require('./logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 // contains generic functions unrelated to a specific component
 const rp = require('request-promise-native').defaults({
@@ -20,7 +20,7 @@ function post (message) {
 
   return rp(options)
     .catch((err) => {
-      logger.error(`Slack error`, err.statusCode, err.message);
+      logger.error(`Slack error`, err);
     });
 }
 

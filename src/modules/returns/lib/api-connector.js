@@ -7,7 +7,7 @@ const {
 } = require('../../../lib/connectors/returns');
 
 const { mapReturnToVersion, mapReturnToLines, mapReturn } = require('./model-returns-mapper');
-const logger = require('../../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 class ReturnAPIError extends ExtendableError {
   constructor (obj) {
@@ -124,8 +124,8 @@ const fetchLines = async (returnId, versionId) => {
   };
   const { data, error } = await lines.findMany(filter, sort, pagination);
   if (error) {
-    error.params = { returnId, versionId };
-    logger.error(`Failed to fetch lines for return`, error);
+    const params = { returnId, versionId };
+    logger.error(`Failed to fetch lines for return`, error, params);
     throw Boom.boomify(error);
   }
   return data;

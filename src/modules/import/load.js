@@ -11,7 +11,7 @@ const { voidInvalidCycles } = require('./lib/void-invalid-cycles');
 const { persistReturns } = require('./lib/persist-returns');
 
 const repository = require('./repositories');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * Loads data into the permit repository and CRM doc header
@@ -75,9 +75,7 @@ const load = async (licenceNumber) => {
     await setImportStatus(licenceNumber, 'OK');
     logger.info(`Import: complete for ${licenceNumber}`);
   } catch (error) {
-    error.params = { licenceNumber };
-    error.context = { component: 'src/modules/import/load.js' };
-    logger.error(`Import failure`, error);
+    logger.error(`Import failure`, error, { licenceNumber });
     await setImportStatus(licenceNumber, error.toString());
   }
 };

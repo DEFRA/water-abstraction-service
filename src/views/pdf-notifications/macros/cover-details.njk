@@ -10,7 +10,7 @@
 </div>
 
 <div class="item">
-  <p class="label">Site</p>
+  <p class="label">Site description</p>
   <p class="bold">{{ personalisation.site_description | title }}</p>
 </div>
 
@@ -26,13 +26,22 @@
   </p>
 </div>
 
-<div class="item">
-  <p class="label">Two-part tariff</p>
-  <p class="bold">{{ 'Yes' if personalisation.is_two_part_tariff else 'No' }}</p>
+<div class="boxed">
+  <div class="item">
+    <p class="bold">Send this page with your completed form to:</p>
+  </div>
+  <div class="item">
+    <p>
+    Waste and Industry Regulatory Services<br>
+    Environment Agency<br>
+    Quadrant 2, 99 Parkway Avenue<br>
+    Sheffield, S9 4WF
+    </p>
+  </div>
 </div>
 
 <div class="item">
-  <p class="bold">If you do not send your return in time,<br>we may take enforcement action.</p>
+  <p class="bold">If you do not send your return in time<br>we may take enforcement action.</p>
 </div>
 
 {% endmacro %}

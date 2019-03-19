@@ -3,7 +3,6 @@ const controller = require('./controller');
 const version = '1.0';
 
 module.exports = {
-
   getUpdateLicence: {
     method: 'POST',
     path: `/water/${version}/ar/{licenceRef*}`,

@@ -14,7 +14,7 @@ const { scheduledNotification, findById, createFromObject } = require('./connect
 const { findByMessageRef } = require('./connectors/notify-template');
 const { NotifyIdError, AlreadySentError } = require('./lib/errors');
 const { HIGH_PRIORITY, LOW_PRIORITY } = require('../../lib/priorities');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * Updates the notify_status field for the message with the given ID
@@ -39,12 +39,8 @@ async function updateMessageStatus (id) {
     }
 
     const error = e.error.errors[0];
-    logger.error(`Notify: ${error.message}`, {
-      params: {
-        messageId: id,
-        notifyId
-      },
-      context: { component: 'src/modules/notify/index', action: 'updateMessageStatus' }
+    logger.error(`Notify: ${error.message}`, error, {
+      notify: { messageId: id, notifyId }
     });
   }
 }

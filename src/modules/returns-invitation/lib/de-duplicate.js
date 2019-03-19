@@ -1,5 +1,4 @@
-const sha1 = require('sha1');
-const { find } = require('lodash');
+const { getContactId, getPreferredContact } = require('../../../lib/contact-list');
 
 /**
  * De-duplicates the supplied data
@@ -28,38 +27,6 @@ const dedupe = (data, func) => {
   }
 
   return Object.values(list);
-};
-
-/**
- * Gets/generates a unique contact ID for the supplied contact
- * @param {Object} contact
- * @return {String} contact ID (can be entity ID)
- */
-const getContactId = (contact) => {
-  if (contact.entity_id) {
-    return contact.entity_id;
-  }
-
-  function fixCase (str) {
-    return typeof (str) === 'string' ? str.toUpperCase() : str;
-  }
-
-  return sha1(Object.values(contact).map(fixCase).join(','));
-};
-
-/**
- * Given list of licence contacts, this returns the preferred contact based
- * on their role
- * @param {Array} contacts - list of licence contacts
- * @return {Object} - return preferred contact for notification
- */
-const getPreferredContact = (contacts, rolePriority) => {
-  return rolePriority.reduce((acc, role) => {
-    if (acc) {
-      return acc;
-    }
-    return find(contacts, { role });
-  }, null);
 };
 
 /**

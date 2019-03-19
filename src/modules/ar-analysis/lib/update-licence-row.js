@@ -3,7 +3,7 @@ const ExtendableError = require('es6-error');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 
 const permit = require('../../../lib/connectors/permit');
-const logger = require('../../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 const { licence, abstractionReform } = require('../../../../config');
 const { mapLicenceToTableRow } = require('./licence-row-mapper');
 const arAnalysis = require('../../../controllers/ar-analysis-licences.js');
@@ -51,6 +51,9 @@ const getLicence = async (licenceRef, config) => {
   return row;
 };
 
+const hasAbstractionReformActions = licence =>
+  get(licence, 'licence_data_value.actions', []).length > 0;
+
 /**
  * Updates the licence analysis table
  * @param {String} licenceRef
@@ -58,8 +61,13 @@ const getLicence = async (licenceRef, config) => {
  */
 const updateLicenceRow = async (licenceRef) => {
   // Get base and AR licences
-  const base = await getLicence(licenceRef, licence);
   const ar = await getLicence(licenceRef, abstractionReform);
+
+  if (!hasAbstractionReformActions(ar)) {
+    return { error: null, data: 'No AR for licence yet', licenceRef };
+  }
+
+  const base = await getLicence(licenceRef, licence);
 
   // Map data to analysis row
   const regionCode = get(base, 'licence_data_value.FGAC_REGION_CODE');
@@ -82,7 +90,7 @@ const updateAllLicences = async () => {
     try {
       await updateLicenceRow(licenceNumber);
     } catch (error) {
-      logger.error(error);
+      logger.error('Error updating all licences', error, { row });
     }
   }
 };

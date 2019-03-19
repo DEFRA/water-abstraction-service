@@ -1,10 +1,11 @@
 {
   "version": 2,
   "exclude_patterns": [
-    "migrations",
-    "test",
-    "node_modules",
     "data",
-    "src/lib/logger/vendor/winston-airbrake.js"
+    "migrations",
+    "node_modules",
+    "scripts",
+    "temp",
+    "test"
   ]
 }

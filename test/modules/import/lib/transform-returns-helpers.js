@@ -551,6 +551,10 @@ experiment('formatReturnMetadata', () => {
   test('adds an isSummer flag', async () => {
     expect(metadata.isSummer).to.be.true();
   });
+
+  test('adds an isUpload flag', async () => {
+    expect(metadata.isUpload).to.be.true();
+  });
 });
 
 experiment('getDueDate', () => {

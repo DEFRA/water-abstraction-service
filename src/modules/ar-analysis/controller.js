@@ -1,15 +1,17 @@
 const Boom = require('boom');
-const { updateLicenceRow, updateAllLicences } = require('./lib/update-licence-row');
+const updateLicence = require('./lib/update-licence-row');
 const cron = require('node-cron');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * Run task nightly at 2am to refresh all data
  * 0 2 * * *
+ *
+ * https://crontab.guru/#0_2_*_*_*
  */
-cron.schedule('0 * * * *', () => {
+cron.schedule('0 2 * * *', () => {
   logger.info(`Starting AR licence refresh`);
-  updateAllLicences();
+  updateLicence.updateAllLicences();
 });
 
 /**
@@ -18,12 +20,13 @@ cron.schedule('0 * * * *', () => {
 const getUpdateLicence = async (request, h) => {
   const { licenceRef } = request.params;
 
-  const result = await updateLicenceRow(licenceRef);
-
-  if (result) {
+  try {
+    const result = await updateLicence.updateLicenceRow(licenceRef);
     return result;
+  } catch (error) {
+    logger.error('Failed to update AR licence', error, { licenceRef });
+    throw Boom.badImplementation(`Unable to update AR licence analysis row for ${licenceRef}`);
   }
-  throw Boom.badImplementation(`Unable to update AR licence analysis row for ${licenceRef}`);
 };
 
 module.exports = {

@@ -51,7 +51,7 @@ const messageFactory = (state, contact, data) => {
     sendAfter: state.config.sendAfter,
     licences,
     individualEntityId: contact.entity_id,
-    eventId: state.event.event_id,
+    eventId: state.event.eventId,
     messageType
   };
 };

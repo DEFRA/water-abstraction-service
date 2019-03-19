@@ -1,5 +1,5 @@
 const { orderBy } = require('lodash');
-const { dateToSortableString, dateToIsoString } = require('./lib/date-helpers.js');
+const { dateToSortableString, dateToIsoString } = require('../../lib/dates');
 const {
   getMain,
   getCams,
@@ -23,7 +23,7 @@ const {
   getFormatPurposes
 } = require('./lib/nald-returns-queries.js');
 
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 /**
  * Gets the purposes together with their points, agreements and conditions
@@ -140,9 +140,7 @@ const getLicenceJson = async (licenceNumber) => {
       return thisLicenceRow;
     }
   } catch (error) {
-    error.params = { licenceNumber };
-    error.context = { component: 'src/modules/import/transform-permit.js', action: 'getLicenceJson' };
-    logger.error('Error getting licence JSON', error);
+    logger.error('Error getting licence JSON', error, { licenceNumber });
   }
 };
 

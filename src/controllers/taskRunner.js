@@ -1,6 +1,6 @@
 const DB = require('../lib/connectors/db');
 const os = require('os');
-const logger = require('../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 async function reset () {
   logger.debug('resetting scheduler');
@@ -71,22 +71,18 @@ async function run () {
         log = await taskHandler.run(job.data[0]);
         logger.debug('task completed: ' + taskType);
       } catch (e) {
-        e.params = { job };
-        log = e.message;
-        logger.error('task completed IN ERROR: ' + e.message, e);
+        logger.error('task completed IN ERROR', e, { job });
       }
 
       try {
         const interval = getJobInterval(job);
         await endTask(taskId, log, interval);
       } catch (e) {
-        e.params = { job, taskType };
-        logger.error('Failed to end task', e);
+        logger.error('Failed to end task', e, { job, taskType });
         return e;
       }
     }
   } catch (e) {
-    e.context = { component: 'src/controllers/taskRunner.js' };
     logger.error('Error running task', e);
   }
 }

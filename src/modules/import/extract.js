@@ -7,12 +7,12 @@ const { promisify } = require('util');
 const config = require('../../../config.js');
 const { execCommand } = require('../../lib/helpers.js');
 const Slack = require('../../lib/slack');
-const logger = require('../../lib/logger');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 const readDir = promisify(fs.readdir);
 const writeFile = promisify(fs.writeFile);
 
-const { download: s3Download } = require('./lib/s3-download.js');
+const s3 = require('../../lib/connectors/s3');
 
 // Download / unzip paths
 const localPath = './temp/';
@@ -34,7 +34,7 @@ const prepare = async () => {
  */
 const download = async () => {
   const remotePath = path.join('nald_dump', 'nald_enc.zip');
-  return s3Download(remotePath, filePath);
+  return s3.download(remotePath, filePath);
 };
 
 const extractArchive = async (source, destination, password) => {

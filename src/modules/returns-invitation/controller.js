@@ -1,4 +1,5 @@
 // Module dependencies
+const evt = require('../../lib/event');
 const { reducer } = require('./lib/reducer');
 const {
   init, setReturnFilter, createEvent, setPersonalisation, setReturns,
@@ -7,8 +8,6 @@ const {
 const { fetchReturns, fetchReturnsContacts } = require('./lib/tasks');
 
 const { eventFactory } = require('./lib/event-factory');
-
-const { persist: persistEvent } = require('./lib/connectors/event');
 
 const generateReference = require('../../lib/reference-generator');
 
@@ -49,11 +48,11 @@ const returnsInvite = async (request, isPreview = true) => {
 
   let state = await getReturnsMessageState(config, personalisation, filter);
 
-  // Create and persist event
+  // Create and save event
   const ev = eventFactory(state);
 
   if (!isPreview) {
-    await persistEvent(ev);
+    await evt.save(ev);
   }
 
   state = reducer(state, createMessages());

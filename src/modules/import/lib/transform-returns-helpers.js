@@ -2,7 +2,7 @@ const moment = require('moment');
 const { pick, findIndex, max, mapValues, chunk } = require('lodash');
 const { returns: { date: { getPeriodStart } } } = require('@envage/water-abstraction-helpers');
 const { formatAbstractionPoint } = require('../../../lib/licence-transformer/nald-helpers');
-const naldDates = require('../../../lib/nald-dates');
+const naldDates = require('@envage/water-abstraction-helpers').nald.dates;
 
 /**
  * Converts 'null' strings to real null in supplied object
@@ -59,7 +59,7 @@ const getPurposeAlias = purpose => {
  * @return {Object} return metadata
  */
 const formatReturnMetadata = (format) => {
-  const { isSummer } = mapProductionMonth(format.FORM_PRODN_MONTH);
+  const { isSummer, isUpload } = mapProductionMonth(format.FORM_PRODN_MONTH);
 
   return {
     version: 1,
@@ -82,7 +82,8 @@ const formatReturnMetadata = (format) => {
     points: format.points.map(point => formatAbstractionPoint(convertNullStrings(point))),
     nald: formatReturnNaldMetadata(format),
     isTwoPartTariff: format.TPT_FLAG === 'Y',
-    isSummer
+    isSummer,
+    isUpload
   };
 };
 
@@ -122,17 +123,6 @@ const mapReceivedDate = (logs) => {
   const timestamps = dates.map(date => moment(date, 'DD/MM/YYYY HH:mm:ss').format('YYYY-MM-DD'));
 
   return max(timestamps);
-};
-
-/**
- * Gets a return ID for the specified licence/format and dates
- * @param {String} licenceNumber
- * @param {Object} format - row from NALD_RET_FORMATS table
- * @param {String} startDate - YYYY-MM-DD
- * @param {String} endDate - YYYY-MM-DD
- */
-const getReturnId = (licenceNumber, format, startDate, endDate) => {
-  return `v1:${format.FGAC_REGION_CODE}:${licenceNumber}:${format.ID}:${startDate}:${endDate}`;
 };
 
 /**
@@ -379,7 +369,6 @@ module.exports = {
   formatReturnMetadata,
   getFormatCycles,
   mapReceivedDate,
-  getReturnId,
   getReturnCycles,
   parseReturnId,
   getStartDate,
