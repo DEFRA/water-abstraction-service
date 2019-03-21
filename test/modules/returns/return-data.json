@@ -450,8 +450,6 @@
       "entityId": "8a934448-d796-4dae-91f0-992c98d70090"
     }
   },
-
-
   "estimatedSingleValue": {
     "returnId": "v1:2:01/234/567:1000000:2018-03-08:2018-10-31",
     "licenceNumber": "01/234/567",
@@ -575,137 +573,399 @@
       "entityId": "8a934448-d796-4dae-91f0-992c98d70090"
     }
   },
-
-
-  "meteredSingleValue" : {
-     "returnId": "v1:2:01/234/567:1000000:2018-03-08:2018-10-31",
-     "licenceNumber": "01/234/567",
-     "receivedDate": "2018-10-17",
-     "startDate": "2018-03-08",
-     "endDate": "2018-10-31",
-     "dueDate": "2018-11-28",
-     "frequency": "month",
-     "isNil": false,
-     "status": "completed",
-     "versionNumber": 11,
-     "isCurrent": true,
-     "reading": {
-       "type": "measured",
-       "method": "abstractionVolumes",
-       "units": "gal",
-       "totalFlag": true,
-       "total": 2000,
-       "totalCustomDates": false
-     },
-     "lines": [
-       {
-         "startDate": "2018-03-01",
-         "endDate": "2018-03-31",
-         "quantity": 0,
-         "timePeriod": "month",
-         "readingType": "estimated"
-       },
-       {
-         "startDate": "2018-04-01",
-         "endDate": "2018-04-30",
-         "quantity": 285.7142857142857,
-         "timePeriod": "month",
-         "readingType": "estimated"
-       },
-       {
-         "startDate": "2018-05-01",
-         "endDate": "2018-05-31",
-         "quantity": 285.7142857142857,
-         "timePeriod": "month",
-         "readingType": "estimated"
-       },
-       {
-         "startDate": "2018-06-01",
-         "endDate": "2018-06-30",
-         "quantity": 285.7142857142857,
-         "timePeriod": "month",
-         "readingType": "estimated"
-       },
-       {
-         "startDate": "2018-07-01",
-         "endDate": "2018-07-31",
-         "quantity": 285.7142857142857,
-         "timePeriod": "month",
-         "readingType": "estimated"
-       },
-       {
-         "startDate": "2018-08-01",
-         "endDate": "2018-08-31",
-         "quantity": 285.7142857142857,
-         "timePeriod": "month",
-         "readingType": "estimated"
-       },
-       {
-         "startDate": "2018-09-01",
-         "endDate": "2018-09-30",
-         "quantity": 285.7142857142857,
-         "timePeriod": "month",
-         "readingType": "estimated"
-       },
-       {
-         "startDate": "2018-10-01",
-         "endDate": "2018-10-31",
-         "quantity": 285.7142857142857,
-         "timePeriod": "month",
-         "readingType": "estimated"
-       }
-     ],
-     "metadata": {
-       "nald": {
-         "formatId": 10024293,
-         "regionCode": 2,
-         "periodEndDay": "31",
-         "periodEndMonth": "10",
-         "periodStartDay": "1",
-         "periodStartMonth": "4"
-       },
-       "points": [
-         {
-           "name": "TEST RIVER",
-           "ngr1": "AB 123 456",
-           "ngr2": null,
-           "ngr3": null,
-           "ngr4": null
-         }
-       ],
-       "version": 1,
-       "purposes": [
-         {
-           "alias": "SPRAY IRRIGATION",
-           "primary": {
-             "code": "I",
-             "description": "Industrial, Commercial And Public Services"
-           },
-           "tertiary": {
-             "code": "400",
-             "description": "Spray Irrigation - Direct"
-           },
-           "secondary": {
-             "code": "GOF",
-             "description": "Golf Courses"
-           }
-         }
-       ],
-       "isCurrent": true,
-       "description": "TEST RIVER"
-     },
-     "meters": [
-       {
-         "manufacturer": "AccuratePro",
-         "serialNumber": "123456",
-         "multiplier": 1,
-         "meterDetailsProvided": true
-       }
-     ],
-     "user": {
-       "email": "mail@example.com",
-       "type": "internal",
-       "entityId": "8a934448-d796-4dae-91f0-992c98d70090"
-     }
-   }
+  "meteredSingleValue": {
+    "returnId": "v1:2:01/234/567:1000000:2018-03-08:2018-10-31",
+    "licenceNumber": "01/234/567",
+    "receivedDate": "2018-10-17",
+    "startDate": "2018-03-08",
+    "endDate": "2018-10-31",
+    "dueDate": "2018-11-28",
+    "frequency": "month",
+    "isNil": false,
+    "status": "completed",
+    "versionNumber": 11,
+    "isCurrent": true,
+    "reading": {
+      "type": "measured",
+      "method": "abstractionVolumes",
+      "units": "gal",
+      "totalFlag": true,
+      "total": 2000,
+      "totalCustomDates": false
+    },
+    "lines": [
+      {
+        "startDate": "2018-03-01",
+        "endDate": "2018-03-31",
+        "quantity": 0,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-04-01",
+        "endDate": "2018-04-30",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-05-01",
+        "endDate": "2018-05-31",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-06-01",
+        "endDate": "2018-06-30",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-07-01",
+        "endDate": "2018-07-31",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-08-01",
+        "endDate": "2018-08-31",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-09-01",
+        "endDate": "2018-09-30",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-10-01",
+        "endDate": "2018-10-31",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      }
+    ],
+    "metadata": {
+      "nald": {
+        "formatId": 10024293,
+        "regionCode": 2,
+        "periodEndDay": "31",
+        "periodEndMonth": "10",
+        "periodStartDay": "1",
+        "periodStartMonth": "4"
+      },
+      "points": [
+        {
+          "name": "TEST RIVER",
+          "ngr1": "AB 123 456",
+          "ngr2": null,
+          "ngr3": null,
+          "ngr4": null
+        }
+      ],
+      "version": 1,
+      "purposes": [
+        {
+          "alias": "SPRAY IRRIGATION",
+          "primary": {
+            "code": "I",
+            "description": "Industrial, Commercial And Public Services"
+          },
+          "tertiary": {
+            "code": "400",
+            "description": "Spray Irrigation - Direct"
+          },
+          "secondary": {
+            "code": "GOF",
+            "description": "Golf Courses"
+          }
+        }
+      ],
+      "isCurrent": true,
+      "description": "TEST RIVER"
+    },
+    "meters": [
+      {
+        "manufacturer": "AccuratePro",
+        "serialNumber": "123456",
+        "multiplier": 1,
+        "meterDetailsProvided": true
+      }
+    ],
+    "user": {
+      "email": "mail@example.com",
+      "type": "internal",
+      "entityId": "8a934448-d796-4dae-91f0-992c98d70090"
+    }
+  },
+  "meteredSingleValueCustomDates": {
+    "returnId": "v1:2:01/234/567:1000000:2018-03-08:2018-10-31",
+    "licenceNumber": "01/234/567",
+    "receivedDate": "2018-10-17",
+    "startDate": "2018-03-08",
+    "endDate": "2018-10-31",
+    "dueDate": "2018-11-28",
+    "frequency": "month",
+    "isNil": false,
+    "status": "completed",
+    "versionNumber": 11,
+    "isCurrent": true,
+    "reading": {
+      "type": "measured",
+      "method": "abstractionVolumes",
+      "units": "gal",
+      "totalFlag": true,
+      "total": 2000,
+      "totalCustomDates": true,
+      "totalCustomDateStart": "2018-04-01",
+      "totalCustomDateEnd": "2018-08-01"
+    },
+    "lines": [
+      {
+        "startDate": "2018-03-01",
+        "endDate": "2018-03-31",
+        "quantity": 0,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-04-01",
+        "endDate": "2018-04-30",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-05-01",
+        "endDate": "2018-05-31",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-06-01",
+        "endDate": "2018-06-30",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-07-01",
+        "endDate": "2018-07-31",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-08-01",
+        "endDate": "2018-08-31",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-09-01",
+        "endDate": "2018-09-30",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-10-01",
+        "endDate": "2018-10-31",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      }
+    ],
+    "metadata": {
+      "nald": {
+        "formatId": 10024293,
+        "regionCode": 2,
+        "periodEndDay": "31",
+        "periodEndMonth": "10",
+        "periodStartDay": "1",
+        "periodStartMonth": "4"
+      },
+      "points": [
+        {
+          "name": "TEST RIVER",
+          "ngr1": "AB 123 456",
+          "ngr2": null,
+          "ngr3": null,
+          "ngr4": null
+        }
+      ],
+      "version": 1,
+      "purposes": [
+        {
+          "alias": "SPRAY IRRIGATION",
+          "primary": {
+            "code": "I",
+            "description": "Industrial, Commercial And Public Services"
+          },
+          "tertiary": {
+            "code": "400",
+            "description": "Spray Irrigation - Direct"
+          },
+          "secondary": {
+            "code": "GOF",
+            "description": "Golf Courses"
+          }
+        }
+      ],
+      "isCurrent": true,
+      "description": "TEST RIVER"
+    },
+    "meters": [
+      {
+        "manufacturer": "AccuratePro",
+        "serialNumber": "123456",
+        "multiplier": 1,
+        "meterDetailsProvided": true
+      }
+    ],
+    "user": {
+      "email": "mail@example.com",
+      "type": "internal",
+      "entityId": "8a934448-d796-4dae-91f0-992c98d70090"
+    }
+  },
+  "meteredNoMeterDetails": {
+    "returnId": "v1:2:01/234/567:1000000:2018-03-08:2018-10-31",
+    "licenceNumber": "01/234/567",
+    "receivedDate": "2018-10-17",
+    "startDate": "2018-03-08",
+    "endDate": "2018-10-31",
+    "dueDate": "2018-11-28",
+    "frequency": "month",
+    "isNil": false,
+    "status": "completed",
+    "versionNumber": 11,
+    "isCurrent": true,
+    "reading": {
+      "type": "measured",
+      "method": "abstractionVolumes",
+      "units": "gal",
+      "totalFlag": true,
+      "total": 2000,
+      "totalCustomDates": true,
+      "totalCustomDateStart": "2018-04-01",
+      "totalCustomDateEnd": "2018-08-01"
+    },
+    "lines": [
+      {
+        "startDate": "2018-03-01",
+        "endDate": "2018-03-31",
+        "quantity": 0,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-04-01",
+        "endDate": "2018-04-30",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-05-01",
+        "endDate": "2018-05-31",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-06-01",
+        "endDate": "2018-06-30",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-07-01",
+        "endDate": "2018-07-31",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-08-01",
+        "endDate": "2018-08-31",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-09-01",
+        "endDate": "2018-09-30",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      },
+      {
+        "startDate": "2018-10-01",
+        "endDate": "2018-10-31",
+        "quantity": 285.7142857142857,
+        "timePeriod": "month",
+        "readingType": "estimated"
+      }
+    ],
+    "metadata": {
+      "nald": {
+        "formatId": 10024293,
+        "regionCode": 2,
+        "periodEndDay": "31",
+        "periodEndMonth": "10",
+        "periodStartDay": "1",
+        "periodStartMonth": "4"
+      },
+      "points": [
+        {
+          "name": "TEST RIVER",
+          "ngr1": "AB 123 456",
+          "ngr2": null,
+          "ngr3": null,
+          "ngr4": null
+        }
+      ],
+      "version": 1,
+      "purposes": [
+        {
+          "alias": "SPRAY IRRIGATION",
+          "primary": {
+            "code": "I",
+            "description": "Industrial, Commercial And Public Services"
+          },
+          "tertiary": {
+            "code": "400",
+            "description": "Spray Irrigation - Direct"
+          },
+          "secondary": {
+            "code": "GOF",
+            "description": "Golf Courses"
+          }
+        }
+      ],
+      "isCurrent": true,
+      "description": "TEST RIVER"
+    },
+    "meters": [
+      {
+        "multiplier": 1,
+        "meterDetailsProvided": false
+      }
+    ],
+    "user": {
+      "email": "mail@example.com",
+      "type": "internal",
+      "entityId": "8a934448-d796-4dae-91f0-992c98d70090"
+    }
+  }
 }

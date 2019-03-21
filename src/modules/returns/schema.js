@@ -64,14 +64,14 @@ const returnSchema = {
     then: Joi.when('reading.method', { is: 'abstractionVolumes',
       then: Joi.array().items({
         meterDetailsProvided: Joi.boolean().required(),
-        manufacturer: Joi.string().required(),
-        serialNumber: Joi.string().required(),
+        manufacturer: Joi.when('meterDetailsProvided', { is: true, then: Joi.string().required() }),
+        serialNumber: Joi.when('meterDetailsProvided', { is: true, then: Joi.string().required() }),
         multiplier: Joi.number().valid(1, 10).required()
       }),
       else: Joi.array().items({
         meterDetailsProvided: Joi.boolean().required(),
-        manufacturer: Joi.string().required(),
-        serialNumber: Joi.string().required(),
+        manufacturer: Joi.when('meterDetailsProvided', { is: true, then: Joi.string().required() }),
+        serialNumber: Joi.when('meterDetailsProvided', { is: true, then: Joi.string().required() }),
         startReading: Joi.number().positive().required(),
         multiplier: Joi.number().valid(1, 10).required(),
         units: Joi.string().required(),
