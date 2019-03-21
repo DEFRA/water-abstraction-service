@@ -45,7 +45,8 @@ const getMeterDetails = (ret) => {
     return {
       units: getUnits(ret),
       manufacturer: getText(meter, 'tns:EaListedManufacturer'),
-      serialNumber: getText(meter, 'tns:SerialNumber')
+      serialNumber: getText(meter, 'tns:SerialNumber'),
+      meterDetailsProvided: true
     };
   }));
 };

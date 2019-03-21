@@ -20,11 +20,15 @@ const getTestReadingData = () => ({
   total: null,
   units: 'm³',
   method: null,
-  totalFlag: false
+  totalFlag: false,
+  totalCustomDates: false,
+  totalCustomDateStart: null,
+  totalCustomDateEnd: null
 });
 
 const getTestMeter = () => ({
   manufacturer: 'test-man',
+  meterDetailsProvided: true,
   serialNumber: '1234v3',
   multiplier: 10,
   startReading: 1000,

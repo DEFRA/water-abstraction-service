@@ -343,7 +343,8 @@
       {
         "multiplier": 10,
         "manufacturer": "AccuratePro",
-        "serialNumber": "123456"
+        "serialNumber": "123456",
+        "meterDetailsProvided": true
       }
     ],
     "lines": [
@@ -468,7 +469,8 @@
       "method": "abstractionVolumes",
       "units": "gal",
       "totalFlag": true,
-      "total": 2000
+      "total": 2000,
+      "totalCustomDates": false
     },
     "lines": [
       {
@@ -592,7 +594,8 @@
        "method": "abstractionVolumes",
        "units": "gal",
        "totalFlag": true,
-       "total": 2000
+       "total": 2000,
+       "totalCustomDates": false
      },
      "lines": [
        {
@@ -695,7 +698,8 @@
        {
          "manufacturer": "AccuratePro",
          "serialNumber": "123456",
-         "multiplier": 1
+         "multiplier": 1,
+         "meterDetailsProvided": true
        }
      ],
      "user": {

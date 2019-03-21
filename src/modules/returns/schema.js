@@ -54,17 +54,22 @@ const returnSchema = {
       method: Joi.string().allow(null),
       units: Joi.string().valid(units),
       totalFlag: Joi.boolean().required(),
-      total: Joi.when('totalFlag', { is: true, then: Joi.number().required() })
+      total: Joi.when('totalFlag', { is: true, then: Joi.number().required() }),
+      totalCustomDates: Joi.when('totalFlag', { is: true, then: Joi.boolean().required() }),
+      totalCustomDateStart: Joi.when('totalCustomDates', { is: true, then: Joi.string().regex(isoDateRegex).required() }),
+      totalCustomDateEnd: Joi.when('totalCustomDates', { is: true, then: Joi.string().regex(isoDateRegex).required() })
     }
   }),
   meters: Joi.when('isNil', { is: false,
     then: Joi.when('reading.method', { is: 'abstractionVolumes',
       then: Joi.array().items({
+        meterDetailsProvided: Joi.boolean().required(),
         manufacturer: Joi.string().required(),
         serialNumber: Joi.string().required(),
         multiplier: Joi.number().valid(1, 10).required()
       }),
       else: Joi.array().items({
+        meterDetailsProvided: Joi.boolean().required(),
         manufacturer: Joi.string().required(),
         serialNumber: Joi.string().required(),
         startReading: Joi.number().positive().required(),
