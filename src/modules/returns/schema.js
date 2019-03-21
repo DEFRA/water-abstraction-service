@@ -31,6 +31,9 @@ const lines = Joi.when('isNil', {
       })
 });
 
+const validCustomDate = Joi.when('totalCustomDates', { is: true, then: Joi.string().regex(isoDateRegex).required() });
+const validMeterDetail = Joi.when('meterDetailsProvided', { is: true, then: Joi.string().required() });
+
 /**
  * Schema for return
  * @type {Object}
@@ -54,19 +57,24 @@ const returnSchema = {
       method: Joi.string().allow(null),
       units: Joi.string().valid(units),
       totalFlag: Joi.boolean().required(),
-      total: Joi.when('totalFlag', { is: true, then: Joi.number().required() })
+      total: Joi.when('totalFlag', { is: true, then: Joi.number().required() }),
+      totalCustomDates: Joi.when('totalFlag', { is: true, then: Joi.boolean().required() }),
+      totalCustomDateStart: validCustomDate,
+      totalCustomDateEnd: validCustomDate
     }
   }),
   meters: Joi.when('isNil', { is: false,
     then: Joi.when('reading.method', { is: 'abstractionVolumes',
       then: Joi.array().items({
-        manufacturer: Joi.string().required(),
-        serialNumber: Joi.string().required(),
+        meterDetailsProvided: Joi.boolean().required(),
+        manufacturer: validMeterDetail,
+        serialNumber: validMeterDetail,
         multiplier: Joi.number().valid(1, 10).required()
       }),
       else: Joi.array().items({
-        manufacturer: Joi.string().required(),
-        serialNumber: Joi.string().required(),
+        meterDetailsProvided: Joi.boolean().required(),
+        manufacturer: validMeterDetail,
+        serialNumber: validMeterDetail,
         startReading: Joi.number().positive().required(),
         multiplier: Joi.number().valid(1, 10).required(),
         units: Joi.string().required(),

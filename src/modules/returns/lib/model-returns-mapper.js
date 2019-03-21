@@ -1,4 +1,4 @@
-const { get, pick } = require('lodash');
+const { get } = require('lodash');
 const moment = require('moment');
 const { convertToCubicMetres, convertToUserUnit } = require('./unit-conversion');
 const uuidv4 = require('uuid/v4');
@@ -29,27 +29,29 @@ const returnLineToModel = (line) => {
   };
 };
 
+const mapMeter = meter => {
+  return {
+    ...meter,
+    meterDetailsProvided: get(meter, 'meterDetailsProvided', !!meter.manufacturer)
+  };
+};
+
 const getMetersFromVersionMetadata = version => {
   const meters = get(version, 'metadata.meters', []);
-  return meters;
+  return meters.map(mapMeter);
 };
 
 const getReadingFromVersionMetadata = version => {
-  const nullVersionMetadata = {
-    // Can be measured | estimated
-    type: null,
-    // For estimated, shows method used for estimation
-    method: null,
-    // Can be m3, l, Ml, gal
-    units: null,
-    // Only used when single total value has been given rather than individual amounts
-    totalFlag: null,
-    total: null
+  return {
+    type: get(version, 'metadata.type', null),
+    method: get(version, 'metadata.method', null),
+    units: get(version, 'metadata.units', null),
+    totalFlag: get(version, 'metadata.totalFlag', null),
+    total: get(version, 'metadata.total', null),
+    totalCustomDates: get(version, 'metadata.totalCustomDates', false),
+    totalCustomDateStart: get(version, 'metadata.totalCustomDateStart', null),
+    totalCustomDateEnd: get(version, 'metadata.totalCustomDateEnd', null)
   };
-
-  return version
-    ? pick(version.metadata, Object.keys(nullVersionMetadata))
-    : nullVersionMetadata;
 };
 
 /**

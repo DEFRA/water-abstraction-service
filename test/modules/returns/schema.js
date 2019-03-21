@@ -1,7 +1,8 @@
 const Joi = require('joi');
 const {
   nilReturn, estimatedVolumes, meterReadings, meteredVolumes,
-  estimatedSingleValue, meteredSingleValue
+  estimatedSingleValue, meteredSingleValue, meteredSingleValueCustomDates,
+  meteredNoMeterDetails
 } = require('./return-data.json');
 
 const { pick } = require('lodash');
@@ -39,6 +40,16 @@ experiment('returnSchema', () => {
 
   test('It should accept metered single volume', async () => {
     const { error } = Joi.validate(meteredSingleValue, returnSchema);
+    expect(error).to.equal(null);
+  });
+
+  test('It should accept metered single volume with custom dates', async () => {
+    const { error } = Joi.validate(meteredSingleValueCustomDates, returnSchema);
+    expect(error).to.equal(null);
+  });
+
+  test('It should accept metered with no meter details', async () => {
+    const { error } = Joi.validate(meteredNoMeterDetails, returnSchema);
     expect(error).to.equal(null);
   });
 });
