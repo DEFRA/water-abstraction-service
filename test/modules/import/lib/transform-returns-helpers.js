@@ -511,21 +511,23 @@ experiment('formatReturnMetadata', () => {
     tertiary_purpose: 'tertiary'
   });
 
+  const formatData = {
+    TPT_FLAG: 'N',
+    AREP_AREA_CODE: 'KAEA',
+    FORM_PRODN_MONTH: '65',
+    purposes: [
+      getPurpose('Water alias'),
+      getPurpose('Agri alias'),
+      getPurpose('null'),
+      getPurpose('Null'),
+      getPurpose('NULL'),
+      getPurpose(' null ')
+    ],
+    points: []
+  };
+
   beforeEach(async () => {
-    metadata = formatReturnMetadata({
-      TPT_FLAG: 'N',
-      AREP_AREA_CODE: 'KAEA',
-      FORM_PRODN_MONTH: '65',
-      purposes: [
-        getPurpose('Water alias'),
-        getPurpose('Agri alias'),
-        getPurpose('null'),
-        getPurpose('Null'),
-        getPurpose('NULL'),
-        getPurpose(' null ')
-      ],
-      points: []
-    });
+    metadata = formatReturnMetadata(formatData);
   });
 
   test('the purposes contain the alias', async () => {
@@ -552,8 +554,36 @@ experiment('formatReturnMetadata', () => {
     expect(metadata.isSummer).to.be.true();
   });
 
-  test('adds an isUpload flag', async () => {
-    expect(metadata.isUpload).to.be.true();
+  experiment('isUpload flag', () => {
+    const createFormat = month => formatReturnMetadata({
+      ...metadata,
+      FORM_PRODN_MONTH: month
+    });
+
+    test('sets isUpload true for form production month 45', async () => {
+      const data = createFormat(45);
+      expect(data.isUpload).to.equal(true);
+    });
+
+    test('sets isUpload true for form production month 46', async () => {
+      const data = createFormat(46);
+      expect(data.isUpload).to.equal(true);
+    });
+
+    test('sets isUpload true for form production month 65', async () => {
+      const data = createFormat(65);
+      expect(data.isUpload).to.equal(true);
+    });
+
+    test('sets isUpload true for form production month 66', async () => {
+      const data = createFormat(66);
+      expect(data.isUpload).to.equal(true);
+    });
+
+    test('sets isUpload false for other months', async () => {
+      const data = createFormat(67);
+      expect(data.isUpload).to.equal(false);
+    });
   });
 });
 
