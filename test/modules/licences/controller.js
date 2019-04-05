@@ -8,6 +8,7 @@ const documentsClient = require('../../../src/lib/connectors/crm/documents');
 const idmConnector = require('../../../src/lib/connectors/idm');
 const { logger } = require('@envage/water-abstraction-helpers');
 
+const { cloneDeep } = require('lodash');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
@@ -16,7 +17,8 @@ const { licences } = require('../../responses/permits/licence');
 const testRequest = {
   params: {
     documentId: '00000000-0000-0000-0000-000000000000'
-  }
+  },
+  query: {}
 };
 
 const emptyResponse = {
@@ -26,7 +28,7 @@ const emptyResponse = {
 
 const documentResponse = {
   data: [
-    { system_internal_id: 'test-id' }
+    { document_name: 'test-doc-name', system_internal_id: 'test-id' }
   ],
   error: null
 };
@@ -34,6 +36,9 @@ const documentResponse = {
 const licenceResponse = {
   data: [{
     licence_data_value: {
+      'EXPIRY_DATE': '01/02/2003',
+      'LAPSED_DATE': 'NULL',
+      'REV_DATE': '04/05/2006',
       current_version: {
         purposes: [
           {
@@ -93,11 +98,38 @@ experiment('getLicenceByDocumentId', () => {
     })).to.be.true();
   });
 
+  test('adds the earliest end date to the licence data', async () => {
+    documentsClient.findMany.resolves(documentResponse);
+    permitClient.licences.findMany.resolves(licenceResponse);
+    const response = await controller.getLicenceByDocumentId(testRequest);
+
+    expect(response.data.earliestEndDate).to.equal('20030201');
+    expect(response.data.earliestEndDateReason).to.equal('expired');
+  });
+
   test('provides error details in the event of a major error', async () => {
     documentsClient.findMany.rejects(new Error('fail'));
     await controller.getLicenceByDocumentId(testRequest);
     const errorParams = logger.error.lastCall.args[2];
     expect(errorParams).to.equal({ documentId: testRequest.params.documentId });
+  });
+
+  test('requests expired licences if the includeExpired query param is truthy', async () => {
+    const request = cloneDeep(testRequest);
+    request.query.includeExpired = true;
+    await controller.getLicenceByDocumentId(request);
+
+    const [filter] = documentsClient.findMany.lastCall.args;
+
+    expect(filter.document_id).to.equal(testRequest.params.documentId);
+    expect(filter.includeExpired).to.be.true();
+  });
+
+  test('augments the licence with some of the document details', async () => {
+    documentsClient.findMany.resolves(documentResponse);
+    permitClient.licences.findMany.resolves(licenceResponse);
+    const response = await controller.getLicenceByDocumentId(testRequest);
+    expect(response.data.document.name).to.equal('test-doc-name');
   });
 });
 
@@ -355,5 +387,16 @@ experiment('getLicenceCommunicationsByDocumentId', () => {
     const response = await controller.getLicenceCommunicationsByDocumentId(testRequest);
 
     expect(response.data[0].isPdf).to.be.true();
+  });
+
+  test('can request expired licences by setting includeExpired to true', async () => {
+    const request = cloneDeep(testRequest);
+    request.query.includeExpired = true;
+    await controller.getLicenceCommunicationsByDocumentId(request);
+
+    const [filter] = documentsClient.findMany.lastCall.args;
+
+    expect(filter.document_id).to.equal(testRequest.params.documentId);
+    expect(filter.includeExpired).to.be.true();
   });
 });

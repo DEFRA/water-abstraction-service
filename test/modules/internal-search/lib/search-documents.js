@@ -15,7 +15,8 @@ const row = {
     Initials: 'J',
     Forename: 'John',
     Salutation: 'Mr',
-    Expires: '20190205'
+    Expires: '20190205',
+    IsCurrent: true
   },
   document_name: 'Fusty meadow'
 };
@@ -28,7 +29,8 @@ experiment('mapRow', () => {
       licenceNumber: row.system_external_id,
       licenceHolder: 'Mr J Doe',
       documentName: row.document_name,
-      expires: '2019-02-05'
+      expires: '2019-02-05',
+      isCurrent: true
     });
   });
 });
@@ -49,7 +51,10 @@ experiment('searchDocuments', () => {
     stub = sinon.stub(documents, 'findMany').resolves({ data: [] });
     searchDocuments('01/123', 5);
     const [filter, sort, pagination, columns] = stub.firstCall.args;
-    expect(filter).to.equal({ string: '01/123' });
+    expect(filter).to.equal({
+      string: '01/123',
+      includeExpired: true
+    });
     expect(sort).to.equal({system_external_id: 1});
     expect(pagination.page).to.equal(5);
     expect(columns).to.equal([

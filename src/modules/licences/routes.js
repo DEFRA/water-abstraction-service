@@ -85,6 +85,9 @@ module.exports = {
       validate: {
         params: {
           documentId: Joi.string().guid().required()
+        },
+        query: {
+          includeExpired: Joi.boolean().optional().default(false)
         }
       }
     }
