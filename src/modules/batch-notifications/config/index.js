@@ -1,5 +1,3 @@
-const returnReminder = require('./return-reminder');
-
-module.exports = {
-  returnReminder
-};
+module.exports = [
+  require('./return-reminder')
+];

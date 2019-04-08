@@ -1,31 +1,32 @@
 const Joi = require('joi');
 const Boom = require('boom');
 const { logger } = require('@envage/water-abstraction-helpers');
-const { get } = require('lodash');
+const { get, find } = require('lodash');
 
 const event = require('../../lib/event');
 const generateReference = require('../../lib/reference-generator');
 
 const configs = require('./config');
+const getRecipients = require('./lib/jobs/get-recipients');
 
 /**
  * Creates a notification event
  * @param  {String}  issuer - email address of user sending message
  * @param {Object} config   - message config
- * @param  {Object}  data   - message data - placed in event metadata
+ * @param  {Object}  options   - message data - placed in event metadata
  * @return {Promise}          resolves with event data
  */
-const createEvent = async (issuer, config, data) => {
+const createEvent = async (issuer, config, options) => {
   // Create a reference code
   const referenceCode = generateReference(config.prefix);
 
   const ev = event.create({
     referenceCode,
     type: 'notification',
-    subtype: 'returnReminder',
+    subtype: config.messageType,
     issuer,
     metadata: {
-      ...data,
+      options,
       name: config.name
     },
     status: 'processing'
@@ -43,7 +44,7 @@ const postPrepare = async (request, h) => {
 
   try {
     // Get message config based on message type
-    const config = configs[messageType];
+    const config = find(configs, { messageType });
 
     // Validate payload against schema defined in message config
     const { error } = Joi.validate(data, config.schema);
@@ -54,7 +55,8 @@ const postPrepare = async (request, h) => {
     // Generate an event
     const ev = await createEvent(issuer, config, data);
 
-    // @TODO kick of PG boss
+    // Kick off PG boss job to get recipients
+    await getRecipients.publish(ev.eventId);
 
     // Return event details
     return {
