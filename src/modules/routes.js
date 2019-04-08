@@ -11,6 +11,7 @@ const licenceRoutes = require('./licences/routes');
 const internalSearch = require('./internal-search/routes');
 const usersRoutes = require('./users/routes');
 const communicationsRoutes = require('./communications/routes');
+const batchNotificationsRoutes = require('./batch-notifications/routes');
 
 module.exports = [
   ...Object.values(notificationsRoutes),
@@ -25,5 +26,6 @@ module.exports = [
   ...Object.values(licenceRoutes),
   ...Object.values(internalSearch),
   ...Object.values(usersRoutes),
-  ...Object.values(communicationsRoutes)
+  ...Object.values(communicationsRoutes),
+  ...Object.values(batchNotificationsRoutes)
 ];
