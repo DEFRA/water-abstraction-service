@@ -59,7 +59,7 @@ const getPurposeAlias = purpose => {
  * @return {Object} return metadata
  */
 const formatReturnMetadata = (format) => {
-  const { isSummer, isUpload } = mapProductionMonth(format.FORM_PRODN_MONTH);
+  const { isSummer, isUpload, isLineEntry } = mapProductionMonth(format.FORM_PRODN_MONTH);
 
   return {
     version: 1,
@@ -83,7 +83,7 @@ const formatReturnMetadata = (format) => {
     nald: formatReturnNaldMetadata(format),
     isTwoPartTariff: format.TPT_FLAG === 'Y',
     isSummer,
-    isUpload
+    isUpload: isUpload || isLineEntry
   };
 };
 

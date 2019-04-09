@@ -79,6 +79,9 @@ module.exports = {
     method: 'POST',
     handler: controller.postUploadXml,
     config: {
+      payload: {
+        maxBytes: 1000 * 1000 * 50
+      },
       validate: {
         payload: {
           fileData: Joi.binary().required(),
