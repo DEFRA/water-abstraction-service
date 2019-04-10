@@ -24,6 +24,9 @@ const importer = require('./src/modules/import');
 const returnsUpload = require('./src/modules/returns/lib/jobs/init-upload');
 const batchNotifications = require('./src/modules/batch-notifications/lib/jobs/init-batch-notifications');
 
+// Notification cron jobs
+require('./src/modules/batch-notifications/cron').scheduleJobs();
+
 // Initialise logger
 const { logger } = require('@envage/water-abstraction-helpers');
 const goodWinstonStream = new GoodWinston({ winston: logger });

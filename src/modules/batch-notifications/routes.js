@@ -16,11 +16,25 @@ module.exports = {
       description: 'Prepares a batch message for sending by getting recipients',
       validate: {
         params: {
-          messageType: Joi.string().guid().allow(messageTypes)
+          messageType: Joi.string().allow(messageTypes)
         },
         payload: {
           issuer: Joi.string().email().required(),
           data: Joi.object().default({})
+        }
+      }
+    }
+  },
+
+  postSend: {
+    method: 'POST',
+    path: `/water/${version}/batch-notifications/send/{eventId}`,
+    handler: controller.postSend,
+    config: {
+      description: 'Sends a batch message',
+      validate: {
+        params: {
+          eventId: Joi.string().guid().required()
         }
       }
     }

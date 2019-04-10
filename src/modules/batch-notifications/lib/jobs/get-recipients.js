@@ -10,7 +10,7 @@ const { logger } = require('@envage/water-abstraction-helpers');
 const JOB_NAME = 'notifications.getRecipients';
 
 const publishGetRecipients = eventId => {
-  messageQueue.publish(JOB_NAME, batchNotifications.buildJobData(eventId));
+  return messageQueue.publish(JOB_NAME, batchNotifications.buildJobData(eventId));
 };
 
 const handleGetRecipients = async job => {
@@ -20,7 +20,7 @@ const handleGetRecipients = async job => {
     const data = await batchNotifications.loadJobData(eventId);
 
     // Use config.getRecipients to get recipient list for this notification
-    const contacts = await data.config.getRecipients(data);
+    await data.config.getRecipients(data);
   } catch (err) {
     logger.error(`Batch notifications handleGetRecipients error:`, err, { eventId });
   }

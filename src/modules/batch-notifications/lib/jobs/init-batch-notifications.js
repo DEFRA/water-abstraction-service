@@ -1,5 +1,7 @@
 const jobs = {
-  getRecipients: require('./get-recipients')
+  getRecipients: require('./get-recipients'),
+  sendMessage: require('./send-message'),
+  refreshEvent: require('./refresh-event')
 };
 
 /**
@@ -9,6 +11,8 @@ const jobs = {
  */
 const registerSubscribers = async messageQueue => {
   await messageQueue.subscribe(jobs.getRecipients.jobName, jobs.getRecipients.handler);
+  await messageQueue.subscribe(jobs.sendMessage.jobName, jobs.sendMessage.handler);
+  await messageQueue.subscribe(jobs.refreshEvent.jobName, jobs.refreshEvent.handler);
 };
 
 module.exports = {
