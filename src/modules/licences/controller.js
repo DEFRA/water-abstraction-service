@@ -70,7 +70,7 @@ const wrapData = data => ({
   data
 });
 
-const addEarlistEndDate = licence => {
+const addEarliestEndDate = licence => {
   const dates = [
     { key: 'expired', date: licence.licence_data_value.EXPIRY_DATE },
     { key: 'lapsed', date: licence.licence_data_value.LAPSED_DATE },
@@ -88,7 +88,7 @@ const addEarlistEndDate = licence => {
       return l.date.isBefore(r.date) ? -1 : 1;
     })
     .map(date => {
-      date.date = date.date.format('YYYYMMDD');
+      date.date = date.date.format('YYYY-MM-DD');
       return date;
     });
 
@@ -111,7 +111,7 @@ const getLicenceByDocumentId = async (request, h) => {
     const licence = await getLicence(documentId, includeExpired);
 
     if (licence) {
-      return wrapData(addEarlistEndDate(licence));
+      return wrapData(addEarliestEndDate(licence));
     }
     return Boom.notFound();
   } catch (error) {

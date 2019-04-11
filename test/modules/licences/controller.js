@@ -103,7 +103,7 @@ experiment('getLicenceByDocumentId', () => {
     permitClient.licences.findMany.resolves(licenceResponse);
     const response = await controller.getLicenceByDocumentId(testRequest);
 
-    expect(response.data.earliestEndDate).to.equal('20030201');
+    expect(response.data.earliestEndDate).to.equal('2003-02-01');
     expect(response.data.earliestEndDateReason).to.equal('expired');
   });
 
