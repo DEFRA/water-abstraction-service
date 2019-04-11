@@ -1,3 +1,4 @@
+const moment = require('moment');
 const Boom = require('boom');
 const { get, isObject } = require('lodash');
 const documentsClient = require('../../lib/connectors/crm/documents');
@@ -11,11 +12,20 @@ const LicenceTransformer = require('../../lib/licence-transformer');
 const { mapGaugingStation, getGaugingStations } = require('./lib/gauging-stations');
 const queries = require('./lib/queries');
 
-const getDocumentHeader = async documentId => {
+const getDocumentHeader = async (documentId, includeExpired = false) => {
   const documentResponse = await documentsClient.findMany({
-    document_id: documentId
+    document_id: documentId,
+    includeExpired
   });
   return get(documentResponse, 'data[0]');
+};
+
+const addDocumentDetails = (licence, document) => {
+  return Object.assign(licence, {
+    document: {
+      name: document.document_name
+    }
+  });
 };
 
 /**
@@ -24,10 +34,10 @@ const getDocumentHeader = async documentId => {
  * @param  {Object}  [documentHeader] - If document header has already been loaded, it is not loaded again
  * @return {Promise}                resolves with permit repo data
  */
-const getLicence = async (document) => {
+const getLicence = async (document, includeExpired) => {
   const documentHeader = isObject(document)
     ? document
-    : await getDocumentHeader(document);
+    : await getDocumentHeader(document, includeExpired);
 
   if (!documentHeader) {
     return;
@@ -39,7 +49,11 @@ const getLicence = async (document) => {
     licence_regime_id: regimeId
   });
 
-  return get(licenceResponse, 'data[0]');
+  const licence = get(licenceResponse, 'data[0]');
+
+  if (licence) {
+    return addDocumentDetails(licence, documentHeader);
+  }
 };
 
 const handleUnexpectedError = (error, documentId) => {
@@ -56,18 +70,48 @@ const wrapData = data => ({
   data
 });
 
+const addEarliestEndDate = licence => {
+  const dates = [
+    { key: 'expired', date: licence.licence_data_value.EXPIRY_DATE },
+    { key: 'lapsed', date: licence.licence_data_value.LAPSED_DATE },
+    { key: 'revoked', date: licence.licence_data_value.REV_DATE }
+  ];
+
+  const endedDates = dates
+    .map(date => {
+      date.date = moment(date.date, 'DD/MM/YYYY');
+      return date;
+    })
+    .filter(date => date.date.isValid())
+    .sort((l, r) => {
+      if (l.date.isSame(r.date)) return 0;
+      return l.date.isBefore(r.date) ? -1 : 1;
+    })
+    .map(date => {
+      date.date = date.date.format('YYYY-MM-DD');
+      return date;
+    });
+
+  const earliest = endedDates.length ? endedDates[0] : { date: null, key: null };
+  licence.earliestEndDate = earliest.date;
+  licence.earliestEndDateReason = earliest.key;
+
+  return licence;
+};
+
 /**
  * Coordinates finding a full licence from the permit repository
  * using the CRM document ID.
  */
 const getLicenceByDocumentId = async (request, h) => {
   const { documentId } = request.params;
+  const { includeExpired } = request.query;
 
   try {
-    const licence = await getLicence(documentId);
+    const licence = await getLicence(documentId, includeExpired);
 
     if (licence) {
-      return wrapData(licence);
+      return wrapData(addEarliestEndDate(licence));
     }
     return Boom.notFound();
   } catch (error) {
@@ -174,9 +218,10 @@ const mapNotification = (row) => {
 
 const getLicenceCommunicationsByDocumentId = async (request, h) => {
   const { documentId } = request.params;
+  const { includeExpired } = request.query;
 
   try {
-    const documentHeader = await getDocumentHeader(documentId);
+    const documentHeader = await getDocumentHeader(documentId, includeExpired);
     const notifications = await queries.getNotificationsForLicence(documentHeader.system_external_id);
 
     return {
