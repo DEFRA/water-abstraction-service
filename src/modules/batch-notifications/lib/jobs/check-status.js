@@ -1,6 +1,5 @@
 const { get } = require('lodash');
 const messageQueue = require('../../../../lib/message-queue');
-// const batchNotifications = require('../batch-notifications');
 const { logger } = require('@envage/water-abstraction-helpers');
 const { getNextCheckTime, getNextCheckCount } = require('../status-check-helpers');
 const messageHelpers = require('../message-helpers');

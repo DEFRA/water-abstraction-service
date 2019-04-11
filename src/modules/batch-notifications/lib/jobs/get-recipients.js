@@ -2,6 +2,8 @@ const { get } = require('lodash');
 const messageQueue = require('../../../../lib/message-queue');
 const batchNotifications = require('../batch-notifications');
 const { logger } = require('@envage/water-abstraction-helpers');
+const eventHelpers = require('../event-helpers');
+const { EVENT_STATUS_ERROR } = require('../event-statuses');
 
 /**
  * The name of this event in the PG Boss
@@ -23,6 +25,7 @@ const handleGetRecipients = async job => {
     await data.config.getRecipients(data);
   } catch (err) {
     logger.error(`Batch notifications handleGetRecipients error:`, err, { eventId });
+    return eventHelpers.updateEventStatus(eventId, EVENT_STATUS_ERROR);
   }
 };
 

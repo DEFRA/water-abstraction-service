@@ -86,6 +86,10 @@ const createContacts = (data) => {
   // Initialise contact list
   const contacts = new ContactList();
 
+  if (!currentVersion) {
+    return contacts;
+  }
+
   // Add licence holder contact
   const licenceHolderParty = getLicenceHolderParty(currentVersion);
   const licenceHolderAddress = getLicenceHolderAddress(currentVersion, licenceHolderParty);

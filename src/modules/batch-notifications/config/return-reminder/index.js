@@ -11,6 +11,7 @@ const { createNotificationData } = require('./create-notification-data');
 const scheduledNotifications = require('../../../../controllers/notifications');
 const evt = require('../../../../lib/event');
 const { EVENT_STATUS_PROCESSED } = require('../../lib/event-statuses');
+const { logger } = require('@envage/water-abstraction-helpers');
 
 const schema = {
   endDate: Joi.string().isoDate().required(),
@@ -53,18 +54,18 @@ const prepareDBRow = data => {
  * Marks event as processed, and also updates the number of messages,
  * licence numbers etc.
  * @param  {String}  eventId - the event ID GUID
- * @param  {Array}  returns - list of returns for this notification
+ * @param  {Array}  licenceNumbers - list of licence numbers for this notification
+ * @param {Number} recipientCount
  * @return {Promise}         resolves when event updated
  */
-const markEventAsProcessed = async (eventId, returns) => {
-  const licenceNumbers = uniq(returns.map(row => row.licence_ref));
+const markEventAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
   const ev = await evt.load(eventId);
 
   set(ev, 'status', EVENT_STATUS_PROCESSED);
-  set(ev, 'licences', licenceNumbers);
+  set(ev, 'licences', uniq(licenceNumbers));
   set(ev, 'metadata.sent', 0);
   set(ev, 'metadata.error', 0);
-  set(ev, 'metadata.recipients', returns.length);
+  set(ev, 'metadata.recipients', recipientCount);
 
   return evt.save(ev);
 };
@@ -81,6 +82,9 @@ const getRecipients = async (data) => {
   // Load due returns in current cycle from return service
   const returns = await returnsConnector.getCurrentDueReturns(excludeLicences);
 
+  let recipientCount = 0;
+  const licenceNumbers = [];
+
   for (let ret of returns) {
     // Get licence data so contacts can be extracted
     const licenceData = await permitConnector.licences.getWaterLicence(ret.licence_ref);
@@ -89,14 +93,21 @@ const getRecipients = async (data) => {
     const contacts = createContacts(licenceData.licence_data_value);
     const contact = getPreferredContact(contacts);
 
-    // Create and persist scheduled_notifications data
-    const scheduledNotification = createNotificationData(data.ev, ret, contact);
-    const rowData = prepareDBRow(scheduledNotification);
-    await scheduledNotifications.repository.create(rowData);
+    if (contact) {
+      // Create and persist scheduled_notifications data
+      const scheduledNotification = createNotificationData(data.ev, ret, contact);
+      const rowData = prepareDBRow(scheduledNotification);
+      await scheduledNotifications.repository.create(rowData);
+
+      recipientCount++;
+      licenceNumbers.push(ret.licence_ref);
+    } else {
+      logger.error(`Return reminder: no contacts for ${ret.licence_ref}`);
+    }
   }
 
   // Update event status
-  return markEventAsProcessed(data.ev.eventId, returns);
+  return markEventAsProcessed(data.ev.eventId, licenceNumbers, recipientCount);
 };
 
 module.exports = {
