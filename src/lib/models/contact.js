@@ -6,8 +6,6 @@ const CONTACT_ROLE_RETURNS_TO = 'Returns to';
 
 class Contact {
   constructor (data = {}) {
-    console.log('constructor', data);
-
     // Type and role
     this.type = data.type;
     this.role = data.role;

@@ -21,6 +21,14 @@ class ContactList {
   getByRole (role) {
     return find(this.contacts, { role });
   }
+
+  /**
+   * Get all contacts
+   * @return {Array}
+   */
+  toArray () {
+    return this.contacts;
+  }
 }
 
 module.exports = ContactList;
