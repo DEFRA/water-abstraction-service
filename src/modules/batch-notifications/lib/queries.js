@@ -1,5 +1,5 @@
 const { pool } = require('../../../lib/connectors/db');
-const { MESSAGE_STATUS_SENDING } = require('./message-statuses');
+const { MESSAGE_STATUS_SENDING, MESSAGE_STATUS_SENT } = require('./message-statuses');
 const { EVENT_STATUS_SENDING } = require('./event-statuses');
 
 /**
@@ -23,7 +23,7 @@ const getSendingMessageBatch = async () => {
  * @return {Promise} resolves with events in 'sending' status
  */
 const getSendingEvents = async () => {
-  const query = `SELECT event_id 
+  const query = `SELECT event_id
     FROM water.events
     WHERE type='notification' AND status=$1
     AND created>(CURRENT_TIMESTAMP - interval '1 week')
@@ -36,7 +36,7 @@ const getSendingEvents = async () => {
 /**
  * Gets a breakdown of message statuses for a particular event ID
  * @param {String} eventId - the event GUID
- * @return {Array} list of statuses and the number of messages in that status
+ * @return {Promise<Array>} list of statuses and the number of messages in that status
  */
 const getMessageStatuses = async eventId => {
   const query = `SELECT DISTINCT status, COUNT(id) AS "count"
@@ -46,7 +46,24 @@ const getMessageStatuses = async eventId => {
   `;
   const params = [eventId];
 
-  console.log(query, params);
+  const { rows } = await pool.query(query, params);
+  return rows;
+};
+
+/**
+ * Gets a list of all scheduled notifications that require a Notify status check
+ * @return {Promise<Array>}
+ */
+const getNotifyStatusChecks = async () => {
+  const query = `SELECT id
+    FROM water.scheduled_notification
+    WHERE send_after>(CURRENT_TIMESTAMP - interval '1 week')
+    AND (notify_status IS NULL OR notify_status NOT IN ('permanent-failure', 'technical-failure', 'delivered', 'received'))
+    AND (next_status_check IS NULL OR next_status_check<=CURRENT_TIMESTAMP)
+    AND notify_id IS NOT NULL
+    AND status=$1
+  `;
+  const params = [ MESSAGE_STATUS_SENT ];
   const { rows } = await pool.query(query, params);
   return rows;
 };
@@ -54,5 +71,6 @@ const getMessageStatuses = async eventId => {
 module.exports = {
   getSendingMessageBatch,
   getSendingEvents,
-  getMessageStatuses
+  getMessageStatuses,
+  getNotifyStatusChecks
 };
