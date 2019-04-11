@@ -60,7 +60,7 @@ const getCurrentDueReturns = (excludeLicences, refDate) => {
     };
   }
 
-  return returnsClient.findAll(filter, null);
+  return returnsClient.findAll(filter);
 };
 
 exports.returns = returnsClient;

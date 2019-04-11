@@ -10,32 +10,50 @@ const getPurposeString = ret => {
   return purposes.join(', ');
 };
 
+/**
+ * Creates the notification address in the format expected by existing
+ * notifications for the supplied Contact model
+ * @param  {Contact} contact
+ * @return {Object} contact details object for personalisation
+ */
+const createNotificationAddress = (contact) => ({
+  salutation: contact.salutation,
+  forename: contact.firstName,
+  initials: contact.initials,
+  name: contact.name,
+  address_line_1: contact.addressLine1,
+  address_line_2: contact.addressLine2,
+  address_line_3: contact.addressLine3,
+  address_line_4: contact.addressLine4,
+  town: contact.town,
+  county: contact.county,
+  postcode: contact.postcode,
+  country: contact.country
+});
+
+/**
+ * Creates personalisation object to create notification - this includes the
+ * address and other data needed by the template
+ * @param  {Object} ev      - event object from water.events table
+ * @param  {Object} ret     - return row loaded from returns service
+ * @param  {Contact} contact - contact model
+ * @return {Object}         personalisation data to send to Notify
+ */
 const createNotificationPersonalisation = (ev, ret, contact) => {
   return {
-    name: contact.name,
     role: snakeCase(contact.role.toLowerCase()),
-    town: contact.town,
     email: null,
-    county: contact.county,
+    ...createNotificationAddress(contact),
     qr_url: ret.return_id,
     source: ret.source,
-    country: contact.country,
     purpose: getPurposeString(ret),
     due_date: ret.due_date,
     end_date: ret.end_date,
-    forename: contact.firstName,
-    initials: contact.initials,
-    postcode: contact.postcode,
     area_code: get(ret, 'metadata.nald.areaCode'),
     format_id: ret.return_requirement,
-    salutation: contact.salutation,
     start_date: ret.start_date,
     licence_ref: ret.licence_ref,
     region_code: get(ret, 'metadata.nald.regionCode'),
-    address_line_1: contact.addressLine1,
-    address_line_2: contact.addressLine2,
-    address_line_3: contact.addressLine3,
-    address_line_4: contact.addressLine4,
     site_description: get(ret, 'metadata.description'),
     returns_frequency: ret.returns_frequency,
     is_two_part_tariff: get(ret, 'metadata.isTwoPartTariff')
