@@ -5,6 +5,8 @@ const { find, get } = require('lodash');
 const Contact = require('../contact');
 const ContactList = require('../contact-list');
 
+const { createContact } = require('./contact');
+
 /**
  * Given the current version object, gets the licence holder party
  * @param  {Object} currentVersion
@@ -28,51 +30,17 @@ const getLicenceHolderAddress = (currentVersion, licenceHolderParty) => {
   });
 };
 
+const mapRole = role => sentenceCase(role.role_type.DESCR);
+
 /**
- * Maps the type of the NALD party to our internal type
- * @param  {Object} party the party object
- * @return {String} contact type
+ * Checks whether the NALD role is one we wish to include in our model
+ * @param  {Object} role
+ * @return {Boolean} true if the contact with this role should be included
  */
-const mapType = (party) => {
-  const isOrg = party.APAR_TYPE === 'ORG';
-  return isOrg ? Contact.CONTACT_TYPE_ORGANISATION : Contact.CONTACT_TYPE_PERSON;
+const rolePredicate = role => {
+  const contactCodes = ['FM', 'LA', 'LC', 'MG', 'RT'];
+  return contactCodes.includes(role.role_type.CODE);
 };
-
-/**
- * Maps NALD party to the fields in our contact model
- * @param  {Object} party - NALD party data
- * @return {Object} mapped contact type and name
- */
-const mapParty = party => ({
-  type: mapType(party),
-  salutation: mapValue(party.SALUTATION),
-  initials: mapValue(party.INITIALS),
-  firstName: mapValue(party.FORENAME),
-  name: mapValue(party.NAME)
-});
-
-/**
- * Maps NALD address to the fields in out contact model
- * @param  {Object} address - NALD address
- * @return {Object} mapped contact address
- */
-const mapAddress = address => ({
-  addressLine1: mapValue(address.ADDR_LINE1),
-  addressLine2: mapValue(address.ADDR_LINE2),
-  addressLine3: mapValue(address.ADDR_LINE3),
-  addressLine4: mapValue(address.ADDR_LINE4),
-  town: mapValue(address.TOWN),
-  county: mapValue(address.COUNTY),
-  postcode: mapValue(address.POSTCODE),
-  country: mapValue(address.COUNTRY)
-});
-
-/**
- * Maps a NALD value, converting 'null' string to null
- * @param  {String} value - the NALD value
- * @return {String|Null}
- */
-const mapValue = value => value === 'null' ? null : value;
 
 /**
  * Creates a contacts object given NALD permit data
@@ -80,12 +48,11 @@ const mapValue = value => value === 'null' ? null : value;
  * @return {ContactList}
  */
 const createContacts = (data) => {
-  const currentVersion = find(data.data.versions, version => version.STATUS === 'CURR');
-  const roles = get(data, 'data.roles');
-
   // Initialise contact list
   const contacts = new ContactList();
 
+  // Get current version
+  const currentVersion = find(data.data.versions, version => version.STATUS === 'CURR');
   if (!currentVersion) {
     return contacts;
   }
@@ -94,23 +61,19 @@ const createContacts = (data) => {
   const licenceHolderParty = getLicenceHolderParty(currentVersion);
   const licenceHolderAddress = getLicenceHolderAddress(currentVersion, licenceHolderParty);
 
-  contacts.add(new Contact({
-    role: Contact.CONTACT_ROLE_LICENCE_HOLDER,
-    ...mapParty(licenceHolderParty),
-    ...mapAddress(licenceHolderAddress.party_address)
-  }));
+  const licenceHolder = createContact(
+    Contact.CONTACT_ROLE_LICENCE_HOLDER, licenceHolderParty, licenceHolderAddress
+  );
+  contacts.add(licenceHolder);
 
   // Add other contacts for allowed roles
-  const contactCodes = ['FM', 'LA', 'LC', 'MG', 'RT'];
-  roles.filter(role => contactCodes.includes(role.role_type.CODE)).forEach((role) => {
-    contacts.add({
-      role: sentenceCase(role.role_type.DESCR),
-      ...mapParty(role.role_party),
-      ...mapAddress(role.role_address)
-    });
+  const roles = get(data, 'data.roles');
+  roles.filter(rolePredicate).forEach((role) => {
+    const contact = createContact(mapRole(role), role.role_party, role.role_address);
+    contacts.add(contact);
   });
 
   return contacts;
 };
 
-module.exports.createContacts = createContacts;
+exports.createContacts = createContacts;
