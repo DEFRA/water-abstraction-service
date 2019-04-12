@@ -14,7 +14,7 @@ const { EVENT_STATUS_PROCESSED } = require('../../lib/event-statuses');
 const { logger } = require('@envage/water-abstraction-helpers');
 
 const schema = {
-  excludeLicences: Joi.string()
+  excludeLicences: Joi.string().allow('')
 };
 
 const getExcludeLicences = data => {
