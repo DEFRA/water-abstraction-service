@@ -1,7 +1,6 @@
 const { expect } = require('code');
 const {
   beforeEach,
-  afterEach,
   experiment,
   test
 } = exports.lab = require('lab').script();
