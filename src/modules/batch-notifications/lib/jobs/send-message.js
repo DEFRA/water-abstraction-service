@@ -1,8 +1,8 @@
 const { get } = require('lodash');
-const messageQueue = require('../../../../lib/message-queue');
 const { logger } = require('@envage/water-abstraction-helpers');
 const notify = require('../../../notify/connectors/notify');
 const messageHelpers = require('../message-helpers');
+const { createJobPublisher } = require('../batch-notifications');
 
 /**
  * The name of this event in the PG Boss
@@ -15,13 +15,7 @@ const JOB_NAME = 'notifications.sendMessage';
  * @param  {String} messageId - GUID in scheduled_notification table
  * @return {Promise}           resolves when message published
  */
-const publishSendMessage = messageId => {
-  const data = { messageId };
-  const options = {
-    singletonKey: messageId
-  };
-  return messageQueue.publish(JOB_NAME, data, options);
-};
+const publishSendMessage = createJobPublisher(JOB_NAME, 'messageId', true);
 
 /**
  * Creates a string reference for a message in Notify so it can be

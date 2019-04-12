@@ -1,9 +1,10 @@
 const { get } = require('lodash');
-const messageQueue = require('../../../../lib/message-queue');
+// const messageQueue = require('../../../../lib/message-queue');
 const batchNotifications = require('../batch-notifications');
 const { logger } = require('@envage/water-abstraction-helpers');
 const eventHelpers = require('../event-helpers');
 const { EVENT_STATUS_ERROR } = require('../event-statuses');
+const { createJobPublisher } = require('../batch-notifications');
 
 /**
  * The name of this event in the PG Boss
@@ -11,9 +12,7 @@ const { EVENT_STATUS_ERROR } = require('../event-statuses');
  */
 const JOB_NAME = 'notifications.getRecipients';
 
-const publishGetRecipients = eventId => {
-  return messageQueue.publish(JOB_NAME, batchNotifications.buildJobData(eventId));
-};
+const publishGetRecipients = createJobPublisher(JOB_NAME, 'eventId', true);
 
 const handleGetRecipients = async job => {
   const eventId = get(job, 'data.eventId');

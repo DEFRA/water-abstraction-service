@@ -1,7 +1,8 @@
 const { get } = require('lodash');
-const messageQueue = require('../../../../lib/message-queue');
+// const messageQueue = require('../../../../lib/message-queue');
 const { logger } = require('@envage/water-abstraction-helpers');
 const eventHelpers = require('../event-helpers');
+const { createJobPublisher } = require('../batch-notifications');
 
 /**
  * The name of this event in the PG Boss
@@ -15,13 +16,7 @@ const JOB_NAME = 'notifications.refreshEvent';
  * @param  {String} eventId - GUID in scheduled_notification table
  * @return {Promise}           resolves when message published
  */
-const publishRefreshEvent = eventId => {
-  const data = { eventId };
-  const options = {
-    singletonKey: eventId
-  };
-  return messageQueue.publish(JOB_NAME, data, options);
-};
+const publishRefreshEvent = createJobPublisher(JOB_NAME, 'eventId', true);
 
 /**
  * Sends a single message

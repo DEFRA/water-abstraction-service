@@ -1,15 +1,22 @@
 const { find } = require('lodash');
 const event = require('../../../lib/event');
 const configs = require('../config');
+const messageQueue = require('../../../lib/message-queue');
 
 /**
- * Creates job data for publishing on the PG boss message queue
- * We just publish the event ID and load the event/config in the hander
- * using this
- * @param  {String} eventId - event GUID
- * @return {Object}         - job data for PG boss job
+ * Creates a function which publishes a job on the PG boss queue
+ * @param {String} jobName - the name of the PG boss job
+ * @param {String} key - the key for the job data eventId|messageId
+ * @param {Boolean} isSingleton - only 1 job of this name/ID can be active
+ * @return {Function}
  */
-const buildJobData = eventId => ({ eventId });
+const createJobPublisher = (jobName, key, isSingleton = true) => {
+  return id => {
+    const data = { [key]: id };
+    const options = isSingleton ? { singletonKey: id } : {};
+    return messageQueue.publish(jobName, data, options);
+  };
+};
 
 /**
  * Loads job data given the event ID
@@ -34,6 +41,6 @@ const loadJobData = async (eventId) => {
 };
 
 module.exports = {
-  buildJobData,
+  createJobPublisher,
   loadJobData
 };

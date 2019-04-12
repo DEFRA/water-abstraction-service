@@ -1,10 +1,10 @@
 const { get } = require('lodash');
-const messageQueue = require('../../../../lib/message-queue');
 const { logger } = require('@envage/water-abstraction-helpers');
 const { getNextCheckTime, getNextCheckCount } = require('../status-check-helpers');
 const messageHelpers = require('../message-helpers');
 const notify = require('../../../notify/connectors/notify');
 const scheduledNotifications = require('../../../../controllers/notifications');
+const { createJobPublisher } = require('../batch-notifications');
 
 /**
  * The name of this event in the PG Boss
@@ -17,13 +17,7 @@ const JOB_NAME = 'notifications.checkStatus';
  * @param  {String} messageId - GUID of the scheduled_notification
  * @return {Promise}
  */
-const publishCheckStatus = messageId => {
-  const data = { messageId };
-  const options = {
-    singletonKey: messageId
-  };
-  return messageQueue.publish(JOB_NAME, data, options);
-};
+const publishCheckStatus = createJobPublisher(JOB_NAME, 'messageId');
 
 /**
  * PG boss job handler to check the status of a scheduled_notification in
