@@ -35,6 +35,9 @@ module.exports = {
       validate: {
         params: {
           eventId: Joi.string().guid().required()
+        },
+        payload: {
+          issuer: Joi.string().email().required()
         }
       }
     }

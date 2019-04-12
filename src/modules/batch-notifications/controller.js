@@ -56,6 +56,33 @@ const postPrepare = async (request, h) => {
 };
 
 /**
+ * Checks event is valid for sending - throws Boom errors if invalid
+ * - event is found
+ * - event.type is "notification"
+ * - event.status is "processed"
+ * - event.issuer is same as that in request payload
+ * @param  {Object} ev      - event object
+ * @param  {Object} request HAPI request
+ */
+const checkEventIsValid = (ev, request) => {
+  const { eventId } = request.params;
+  const { issuer } = request.payload;
+
+  if (!ev) {
+    throw Boom.notFound(`Event ${eventId} not found`);
+  }
+  if (ev.type !== 'notification') {
+    throw Boom.badRequest(`Event ${eventId} is not a notification`);
+  }
+  if (ev.status !== EVENT_STATUS_PROCESSED) {
+    throw Boom.badRequest(`Event ${eventId} has invalid status ${ev.status}`);
+  }
+  if (ev.issuer !== issuer) {
+    throw Boom.unauthorized(`Event ${eventId} issuer does not match that supplied`);
+  }
+};
+
+/**
  * Starts the sending process by:
  * - Updating event status to 'sending'
  * - Updating all related messages to 'sending'
@@ -68,12 +95,7 @@ const postSend = async (request, h) => {
     // Load and check event
     const ev = await evt.load(eventId);
 
-    if (!ev) {
-      throw Boom.notFound(`Event ${eventId} not found`);
-    }
-    if (ev.status !== EVENT_STATUS_PROCESSED) {
-      throw Boom.badRequest(`Event ${eventId} has invalid status ${ev.status}`);
-    }
+    checkEventIsValid(ev, request);
 
     // Update scheduled_notifications to new status
     const tasks = [

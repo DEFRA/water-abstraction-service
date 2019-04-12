@@ -14,12 +14,17 @@ const { EVENT_STATUS_PROCESSED } = require('../../lib/event-statuses');
 const { logger } = require('@envage/water-abstraction-helpers');
 
 const schema = {
-  excludeLicences: Joi.string().allow('')
+  excludeLicences: Joi.array().items(Joi.string().trim())
 };
 
-const getExcludeLicences = data => {
-  const csv = get(data, 'ev.metadata.options.excludeLicences', '');
-  return csv.split(',').map(x => x.trim()).filter(x => x);
+/**
+ * Gets array of licences to exclude from event metadata
+ * @param  {Object} job - PG boss job data
+ * @return {[type]}      [description]
+ */
+const getExcludeLicences = job => {
+  const licenceNumbers = get(job, 'ev.metadata.options.excludeLicences', []);
+  return uniq(licenceNumbers);
 };
 
 /**
