@@ -86,8 +86,6 @@ const refreshEventStatus = async (eventId) => {
   set(ev, 'metadata.sent', sent);
   set(ev, 'metadata.error', error);
 
-  console.log(ev, statuses);
-
   await evt.save(ev);
   return ev;
 };
