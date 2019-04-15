@@ -74,5 +74,8 @@ const scheduleJobs = () => {
 };
 
 module.exports = {
-  scheduleJobs
+  scheduleJobs,
+  refreshEvents,
+  sendMessageBatch,
+  checkNotifyStatuses
 };
