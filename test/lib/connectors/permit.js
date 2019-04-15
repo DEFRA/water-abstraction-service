@@ -10,6 +10,8 @@ const sandbox = sinon.createSandbox();
 
 const permit = require('../../../src/lib/connectors/permit');
 
+const { licence: { regimeId, typeId } } = require('../../../config');
+
 experiment('getLicenceRegionCodes', () => {
   const licenceNumbers = ['05/678', '06/890'];
 
@@ -121,5 +123,32 @@ experiment('getLicenceEndDates', () => {
   test('resolves with an empty object if no licence numbers supplied', async () => {
     const result = await permit.getLicenceEndDates([]);
     expect(result).to.equal({});
+  });
+});
+
+experiment('getWaterLicence', () => {
+  const licenceNumber = '05/678';
+
+  beforeEach(async () => {
+    sandbox.stub(permit.licences, 'findMany').resolves({
+      data: [{ licence_ref: licenceNumber }]
+    });
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  test('should find licence with correct regime, type and ID', async () => {
+    await permit.licences.getWaterLicence(licenceNumber);
+    const [ filter ] = permit.licences.findMany.lastCall.args;
+    expect(filter.licence_regime_id).to.equal(regimeId);
+    expect(filter.licence_type_id).to.equal(typeId);
+    expect(filter.licence_ref).to.equal(licenceNumber);
+  });
+
+  test('should return the first result found', async () => {
+    const result = await permit.licences.getWaterLicence(licenceNumber);
+    expect(result.licence_ref).to.equal(licenceNumber);
   });
 });
