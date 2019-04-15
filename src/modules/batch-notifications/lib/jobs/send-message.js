@@ -38,12 +38,12 @@ const createNotifyReference = (message) => {
 const handleSendMessage = async job => {
   const messageId = get(job, 'data.messageId');
 
-  // load scheduled notification data from table
-  const message = await messageHelpers.getMessageById(messageId);
-
-  const notifyReference = createNotifyReference(message);
-
   try {
+    // load scheduled notification data from table
+    const message = await messageHelpers.getMessageById(messageId);
+
+    const notifyReference = createNotifyReference(message);
+
     // @TODO this will need modification to handle non-PDF message types
     const notifyResponse = await notify.sendPdf(messageId, notifyReference);
     await messageHelpers.markMessageAsSent(messageId, notifyResponse);
