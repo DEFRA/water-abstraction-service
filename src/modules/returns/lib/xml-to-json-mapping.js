@@ -1,8 +1,11 @@
 const moment = require('moment');
+const helpers = require('@envage/water-abstraction-helpers');
 const { get, flatMap, uniq, find } = require('lodash');
 const { getReturnId } = require('../../../lib/returns');
 const returnsConnector = require('../../../lib/connectors/returns');
 const permitConnector = require('../../../lib/connectors/permit');
+
+const DATE_FORMAT = 'YYYY-MM-DD';
 
 const options = {
   tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06'
@@ -10,12 +13,26 @@ const options = {
 
 const getText = (from, path) => from.get(path, options).text();
 
+const getChildNames = node => node.childNodes().map(node => node.name());
+
 const getReturnFrequency = (ret) => {
+  const mapping = {
+    DailyTotal: 'day',
+    WeeklyTotal: 'week',
+    MonthlyTotal: 'month',
+    YearlyTotal: 'year'
+  };
+
   const fullReturnStructure = ret.get('tns:GorPart', options).get('tns:FullReturnStructure', options);
+
   if (fullReturnStructure) {
-    const freq = fullReturnStructure.child(5).name();
-    if (freq === 'DailyTotal') return 'day';
-    return freq.slice(0, -7).toLowerCase();
+    const childNames = getChildNames(fullReturnStructure);
+
+    for (let key in mapping) {
+      if (childNames.includes(key)) {
+        return mapping[key];
+      }
+    }
   }
   return null;
 };
@@ -79,22 +96,35 @@ const getReadingDetails = (ret) => {
 
   return {
     type: getOverallReadingType(ret),
-    method: 'AbstractedVolume',
+    method: 'abstractionVolumes',
     units: getUnits(ret),
     totalFlag: false
   };
 };
 
+const getFrequencyNodePrefix = freq => {
+  const mapping = {
+    day: 'Daily',
+    week: 'Weekly',
+    month: 'Monthly',
+    year: 'Yearly'
+  };
+  return mapping[freq];
+};
+
 const getReturnLines = (ret) => {
   if (getNilReturn(ret)) return [];
 
-  const returnTotals = ret.get('tns:GorPart', options).get('tns:FullReturnStructure', options).child(5).name();
-  const returnLines = ret.find(`//tns:${returnTotals.slice(0, -5)}ReturnLine`, options);
-  return returnLines.map(line => {
+  const freq = getReturnFrequency(ret);
+
+  const xpath = `tns:GorPart/tns:FullReturnStructure/tns:${getFrequencyNodePrefix(freq)}Total/tns:${getFrequencyNodePrefix(freq)}ReturnLine`;
+
+  const lines = ret.find(xpath, options);
+
+  return lines.map(line => {
     const startDate = getText(line, 'tns:Date');
-    const freq = getReturnFrequency(ret);
     return {
-      startDate: startDate,
+      startDate: getStartDate(startDate, freq),
       endDate: getEndDate(startDate, freq),
       quantity: parseFloat(getText(line, 'tns:AbstractedVolume')),
       timePeriod: freq,
@@ -103,16 +133,29 @@ const getReturnLines = (ret) => {
   });
 };
 
+/**
+ * The start date is the start of the NALD week - Sunday - Saturday
+ * @param  {String} startDate
+ * @param  {String} freq      - frequency - day|week|month|year
+ * @return {String}           - calculated date
+ */
+const getStartDate = (startDate, freq) => {
+  if (freq === 'week') {
+    return helpers.nald.dates.getWeek(startDate).start.format(DATE_FORMAT);
+  }
+  return startDate;
+};
+
 const getEndDate = (startDate, freq) => {
   switch (freq) {
     case 'day':
       return startDate;
     case 'week':
-      return moment(startDate).add(6, 'days').format('YYYY-MM-DD');
+      return helpers.nald.dates.getWeek(startDate).end.format(DATE_FORMAT);
     case 'month':
-      return moment(startDate).endOf('month').format('YYYY-MM-DD');
+      return moment(startDate).endOf('month').format(DATE_FORMAT);
     case 'year':
-      return moment(startDate).add(1, 'years').subtract(1, 'days').format('YYYY-MM-DD');
+      return moment(startDate).add(1, 'years').subtract(1, 'days').format(DATE_FORMAT);
   }
 };
 
@@ -244,7 +287,7 @@ const mapXml = async (xmlDoc, user, today) => {
   const context = {
     licenceRegionCodes,
     user,
-    receivedDate: moment(today).format('YYYY-MM-DD')
+    receivedDate: moment(today).format(DATE_FORMAT)
   };
   const returns = mapPermits(permits, context);
 
