@@ -1,6 +1,7 @@
 const Joi = require('joi');
 const isoDateRegex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 const allowedPeriods = ['year', 'month', 'week', 'day'];
+const methods = ['abstractionVolumes', 'oneMeter'];
 const readingTypes = ['estimated', 'measured'];
 const statuses = ['due', 'completed', 'received'];
 const units = ['m³', 'l', 'Ml', 'gal'];
@@ -56,7 +57,7 @@ const returnSchema = {
     then:
     {
       type: Joi.string().valid(readingTypes).required(),
-      method: Joi.string().allow(null),
+      method: Joi.string().valid(methods).required(),
       units: Joi.string().valid(units),
       totalFlag: Joi.boolean().required(),
       total: Joi.when('totalFlag', { is: true, then: Joi.number().required() }),
