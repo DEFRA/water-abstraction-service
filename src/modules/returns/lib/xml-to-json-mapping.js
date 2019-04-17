@@ -143,6 +143,9 @@ const getStartDate = (startDate, freq) => {
   if (freq === 'week') {
     return helpers.nald.dates.getWeek(startDate).start.format(DATE_FORMAT);
   }
+  if (freq === 'month') {
+    return moment(startDate).startOf('month').format(DATE_FORMAT);
+  }
   return startDate;
 };
 
