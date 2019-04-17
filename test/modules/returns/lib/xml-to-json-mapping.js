@@ -231,9 +231,8 @@ experiment('XML to JSON Mapping', () => {
 
     test('getMeterDetails returns a meter object', () => {
       const meterDetails = getMeterDetails(returnXmlNode);
-
       expect(meterDetails).to.be.an.array().and.to.have.length(1);
-      expect(meterDetails[0]).to.be.an.object().and.contain(['units', 'manufacturer', 'serialNumber']);
+      expect(meterDetails[0]).to.be.an.object().and.only.contain(['meterDetailsProvided', 'manufacturer', 'serialNumber', 'multiplier']);
     });
 
     test('getReadingDetails returns a reading object', () => {
