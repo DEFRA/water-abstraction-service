@@ -60,10 +60,10 @@ const getMeterDetails = (ret) => {
     if (!wasMeterUsed(meter)) return [];
 
     return {
-      units: getUnits(ret),
       manufacturer: getText(meter, 'tns:EaListedManufacturer'),
       serialNumber: getText(meter, 'tns:SerialNumber'),
-      meterDetailsProvided: true
+      meterDetailsProvided: true,
+      multiplier: 1
     };
   }));
 };
