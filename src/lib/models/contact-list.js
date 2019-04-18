@@ -19,7 +19,9 @@ class ContactList {
    * @return {Contact}      - the contact (if found)
    */
   getByRole (role) {
-    return find(this.contacts, { role });
+    return find(this.contacts, contact => {
+      return contact.role.toLowerCase() === role.toLowerCase();
+    });
   }
 
   /**

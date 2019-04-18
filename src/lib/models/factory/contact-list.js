@@ -62,7 +62,7 @@ const createContacts = (data) => {
   const licenceHolderAddress = getLicenceHolderAddress(currentVersion, licenceHolderParty);
 
   const licenceHolder = createContact(
-    Contact.CONTACT_ROLE_LICENCE_HOLDER, licenceHolderParty, licenceHolderAddress
+    Contact.CONTACT_ROLE_LICENCE_HOLDER, licenceHolderParty, licenceHolderAddress.party_address
   );
   contacts.add(licenceHolder);
 
