@@ -231,9 +231,8 @@ experiment('XML to JSON Mapping', () => {
 
     test('getMeterDetails returns a meter object', () => {
       const meterDetails = getMeterDetails(returnXmlNode);
-
       expect(meterDetails).to.be.an.array().and.to.have.length(1);
-      expect(meterDetails[0]).to.be.an.object().and.contain(['units', 'manufacturer', 'serialNumber']);
+      expect(meterDetails[0]).to.be.an.object().and.only.contain(['meterDetailsProvided', 'manufacturer', 'serialNumber', 'multiplier']);
     });
 
     test('getReadingDetails returns a reading object', () => {
@@ -340,10 +339,9 @@ experiment('XML to JSON Mapping', () => {
       expect(endDate).to.equal('2019-01-01');
     });
 
-    test('returns startDate + 6 days when freq="week"', () => {
+    test('returns the end of the week when freq="week" (weeks end on Saturday)', () => {
       const endDate = getEndDate('2019-01-01', 'week');
-
-      expect(endDate).to.equal('2019-01-07');
+      expect(endDate).to.equal('2019-01-05');
     });
 
     test('returns last day of the month when freq="month"', () => {
