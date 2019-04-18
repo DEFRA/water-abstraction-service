@@ -18,7 +18,6 @@ const NotificationsApi = new HAPIRestAPI({
     fields: ['id'],
     set: ['id']
   },
-  showSql: true,
   validation: {
     id: Joi.string().guid().default(() => uuidv4(), 'GUID'),
     recipient: Joi.string(),
