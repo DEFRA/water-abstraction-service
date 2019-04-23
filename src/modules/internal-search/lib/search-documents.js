@@ -25,18 +25,23 @@ const mapRow = (row) => {
     licenceNumber: row.system_external_id,
     licenceHolder: getLicenceHolderNameFromDocumentHeader(row),
     documentName: row.document_name,
-    expires: returnsDateToIso(row.metadata.Expires)
+    expires: returnsDateToIso(row.metadata.Expires),
+    isCurrent: row.metadata.IsCurrent
   };
 };
 
 /**
  * Searches documents with given query string
+ *
+ * Unlike most other searches in the application, this search will also request
+ * expired documents to allow the submission of older returns data.
  * @param  {String} query - the user's search query
  * @return {Promise}        resolves with licences
  */
 const searchDocuments = async (query, page = 1) => {
   const filter = {
-    string: query
+    string: query,
+    includeExpired: true // include expired documents
   };
 
   const columns = [
