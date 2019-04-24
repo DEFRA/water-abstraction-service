@@ -1,5 +1,7 @@
 const apiClientFactory = require('./api-client-factory');
 const moment = require('moment');
+const { last } = require('lodash');
+const helpers = require('@envage/water-abstraction-helpers');
 
 const returnsClient = apiClientFactory.create(`${process.env.RETURNS_URI}/returns`);
 
@@ -33,7 +35,36 @@ const getActiveReturns = (returnIds) => {
   return returnsClient.findAll(filter, null, columns);
 };
 
+/**
+ * Gets due returns in the current cycle that relate to the current version
+ * of a licence.
+ * @param  {Array} excludeLicences - if passed in, these licences will be excluded
+ * @param  {String} [refDate]      - optional ref date, used for testing
+ * @return {Promise<Array>}        - all returns matching criteria
+ */
+const getCurrentDueReturns = (excludeLicences, refDate) => {
+  const cycles = helpers.returns.date.createReturnCycles(undefined, refDate);
+  const { endDate } = last(cycles);
+
+  const filter = {
+    end_date: endDate,
+    status: 'due',
+    regime: 'water',
+    licence_type: 'abstraction',
+    'metadata->>isCurrent': 'true'
+  };
+
+  if (excludeLicences.length) {
+    filter.licence_ref = {
+      $nin: excludeLicences
+    };
+  }
+
+  return returnsClient.findAll(filter);
+};
+
 exports.returns = returnsClient;
 exports.versions = versionsClient;
 exports.lines = linesClient;
 exports.getActiveReturns = getActiveReturns;
+exports.getCurrentDueReturns = getCurrentDueReturns;
