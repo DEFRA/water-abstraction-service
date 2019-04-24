@@ -28,9 +28,9 @@ const returnExists = async (returnId) => {
 const getUpdateRow = (row) => {
   const { end_date: endDate } = row;
   if (moment(endDate).isBefore('2018-10-31')) {
-    return pick(row, ['status', 'metadata', 'received_date']);
+    return pick(row, ['status', 'metadata', 'received_date', 'due_date']);
   } else {
-    return pick(row, ['metadata']);
+    return pick(row, ['metadata', 'due_date']);
   }
 };
 
