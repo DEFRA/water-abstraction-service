@@ -189,6 +189,27 @@ LIMIT 1`;
   return null;
 };
 
+/**
+ * Gets the reason code from the mod log relating to a new return version
+ * @param  {Number}  licenceId     - the NALD licence ID
+ * @param  {Number}  regionCode    - the NALD FGAC_REGION_CODE
+ * @param  {Number}  versionNumber - the version number of the return
+ * @return {Promise<Array>}          resolves with reason codes
+ */
+const getReturnVersionReason = async (licenceId, regionCode, versionNumber) => {
+  const query = `SELECT l."AMRE_CODE"
+    FROM import."NALD_RET_VERSIONS" rv
+    JOIN import."NALD_MOD_LOGS" l
+      ON l."ARVN_AABL_ID"=rv."AABL_ID"
+      AND l."ARVN_VERS_NO"=rv."VERS_NO"
+      AND l."FGAC_REGION_CODE"=rv."FGAC_REGION_CODE"
+      AND l."AMRE_AMRE_TYPE"='RET'
+    WHERE rv."AABL_ID"=$1 AND rv."VERS_NO"=$2 AND rv."FGAC_REGION_CODE"=$3
+     `;
+  const params = [licenceId, versionNumber, regionCode];
+  return dbQuery(query, params);
+};
+
 module.exports = {
   getFormats,
   getFormatPurposes,
@@ -198,5 +219,6 @@ module.exports = {
   getLogLines,
   getLogsForPeriod,
   isNilReturn,
-  getSplitDate
+  getSplitDate,
+  getReturnVersionReason
 };

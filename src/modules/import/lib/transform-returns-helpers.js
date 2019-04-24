@@ -357,11 +357,6 @@ const getStatus = (receivedDate) => {
   return receivedDate === null ? 'due' : 'completed';
 };
 
-const getDueDate = endDate => {
-  const format = 'YYYY-MM-DD';
-  return moment(endDate, format).add(28, 'days').format(format);
-};
-
 module.exports = {
   convertNullStrings,
   mapPeriod,
@@ -379,6 +374,5 @@ module.exports = {
   addDate,
   getStatus,
   getFormatStartDate,
-  getFormatEndDate,
-  getDueDate
+  getFormatEndDate
 };
