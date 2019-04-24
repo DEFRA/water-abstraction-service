@@ -587,13 +587,6 @@ experiment('formatReturnMetadata', () => {
   });
 });
 
-experiment('getDueDate', () => {
-  test('returns a date 28 days later', async () => {
-    expect(getDueDate('2018-01-01')).to.equal('2018-01-29');
-    expect(getDueDate('2018-12-10')).to.equal('2019-01-07');
-  });
-});
-
 experiment('getStartDate', () => {
   test('a weekly date starts on a sunday', async () => {
     const wednesday = '2018-11-14';

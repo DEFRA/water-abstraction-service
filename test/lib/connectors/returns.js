@@ -42,3 +42,42 @@ experiment('getActiveReturns', () => {
     expect(columns).to.include(['return_id', 'status', 'due_date']);
   });
 });
+
+experiment('getCurrentDueReturns', () => {
+  beforeEach(async () => {
+    sandbox.stub(returns.returns, 'findAll').resolves({});
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  test('calls the returns API with the correct arguments when no licences are excluded', async () => {
+    await returns.getCurrentDueReturns([], '2019-03-31');
+
+    const [filter] = returns.returns.findAll.lastCall.args;
+    expect(filter).to.equal({
+      end_date: '2019-03-31',
+      status: 'due',
+      regime: 'water',
+      licence_type: 'abstraction',
+      'metadata->>isCurrent': 'true'
+    });
+  });
+
+  test('calls the returns API with the correct arguments when licences are excluded', async () => {
+    await returns.getCurrentDueReturns(['01/123', '04/567'], '2019-03-31');
+
+    const [filter] = returns.returns.findAll.lastCall.args;
+    expect(filter).to.equal({
+      end_date: '2019-03-31',
+      status: 'due',
+      regime: 'water',
+      licence_type: 'abstraction',
+      'metadata->>isCurrent': 'true',
+      licence_ref: {
+        $nin: ['01/123', '04/567']
+      }
+    });
+  });
+});
