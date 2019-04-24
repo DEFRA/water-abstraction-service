@@ -7,43 +7,13 @@
 const Boom = require('boom');
 const moment = require('moment');
 const promiseRetry = require('promise-retry');
-const { get } = require('lodash');
 const notify = require('./connectors/notify');
 const { validateEnqueueOptions, isPdf, parseSentResponse } = require('./lib/helpers');
 const { scheduledNotification, findById, createFromObject } = require('./connectors/scheduled-notification');
 const { findByMessageRef } = require('./connectors/notify-template');
-const { NotifyIdError, AlreadySentError } = require('./lib/errors');
+const { AlreadySentError } = require('./lib/errors');
 const { HIGH_PRIORITY, LOW_PRIORITY } = require('../../lib/priorities');
 const { logger } = require('@envage/water-abstraction-helpers');
-
-/**
- * Updates the notify_status field for the message with the given ID
- * @param {String} id - water.scheduled_notification id
- */
-async function updateMessageStatus (id) {
-  const data = await findById(id);
-
-  const { notify_id: notifyId } = data;
-
-  if (!notifyId) {
-    throw new NotifyIdError();
-  }
-
-  try {
-    const status = await notify.getStatus(notifyId);
-    return scheduledNotification.update({ id }, { notify_status: status });
-  } catch (e) {
-    if (get(e, 'error.errors', []).length === 0) {
-      // Not a notify error, throw to be caught by consumer.
-      throw e;
-    }
-
-    const error = e.error.errors[0];
-    logger.error(`Notify: ${error.message}`, error, {
-      notify: { messageId: id, notifyId }
-    });
-  }
-}
 
 /**
  * Send notificatation message by scheduled_notification ID
@@ -193,39 +163,9 @@ const registerSendSubscriber = messageQueue => {
   });
 };
 
-const registerSendListener = messageQueue => {
-  messageQueue.onComplete('notify.send', async (job) => {
-    // Get scheduled_notification ID
-    const id = get(job, 'data.request.data.id', null);
-
-    // Schedule status checks
-    for (let delay of [5, 60, 3600, 86400, 259200]) {
-      await messageQueue.publish('notify.status', { id }, { startIn: delay });
-    }
-  });
-};
-
-const registerStatusCheckSubscriber = messageQueue => {
-  messageQueue.subscribe('notify.status', async (job, done) => {
-    const id = get(job, 'data.id');
-    try {
-      if (id) {
-        await updateMessageStatus(id);
-      }
-    } catch (err) {
-      logger.error('Failed to update msg status', err);
-      return done(err);
-    }
-
-    return done();
-  });
-};
-
 const createRegisterSubscribers = messageQueue => {
   return () => {
     registerSendSubscriber(messageQueue);
-    registerSendListener(messageQueue);
-    registerStatusCheckSubscriber(messageQueue);
   };
 };
 
