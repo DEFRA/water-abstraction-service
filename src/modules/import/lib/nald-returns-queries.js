@@ -1,5 +1,5 @@
 const moment = require('moment');
-const { dbQuery } = require('./db');
+const db = require('./db');
 
 /**
  * Gets form logs for specified licence number
@@ -26,7 +26,7 @@ const getFormats = (licenceNumber) => {
   WHERE l."LIC_NO"=$1
   ORDER BY to_date(v."EFF_ST_DATE", 'DD/MM/YYYY')`;
   const params = [licenceNumber];
-  return dbQuery(query, params);
+  return db.dbQuery(query, params);
 };
 
 /**
@@ -47,7 +47,7 @@ const getFormatPurposes = (formatId, regionCode) => {
   LEFT JOIN "import"."NALD_PURP_USES" p3 ON p."APUR_APUS_CODE"=p3."CODE"
   WHERE p."ARTY_ID"=$1 AND p."FGAC_REGION_CODE"=$2`;
   const params = [formatId, regionCode];
-  return dbQuery(query, params);
+  return db.dbQuery(query, params);
 };
 
 /**
@@ -63,7 +63,7 @@ const getFormatPoints = (formatId, regionCode) => {
   LEFT JOIN "import"."NALD_POINTS" p ON fp."AAIP_ID"=p."ID" AND fp."FGAC_REGION_CODE"=p."FGAC_REGION_CODE"
   WHERE fp."ARTY_ID"=$1 AND fp."FGAC_REGION_CODE"=$2`;
   const params = [formatId, regionCode];
-  return dbQuery(query, params);
+  return db.dbQuery(query, params);
 };
 
 /**
@@ -77,7 +77,7 @@ const getLogs = (formatId, regionCode) => {
   WHERE l."ARTY_ID"=$1 AND l."FGAC_REGION_CODE"=$2
   ORDER BY to_date(l."DATE_FROM", 'DD/MM/YYYY')`;
   const params = [formatId, regionCode];
-  return dbQuery(query, params);
+  return db.dbQuery(query, params);
 };
 
 /**
@@ -95,7 +95,7 @@ const getLines = (formatId, regionCode, dateFrom, dateTo) => {
   to_date("RET_DATE", 'YYYYMMDDHH24MISS')>=to_date($3, 'YYYY-MM-DD') AND to_date("RET_DATE", 'YYYYMMDDHH24MISS')<=to_date($4, 'YYYY-MM-DD')
   ORDER BY "RET_DATE"`;
   const params = [formatId, regionCode, dateFrom, dateTo];
-  return dbQuery(query, params);
+  return db.dbQuery(query, params);
 };
 
 /**
@@ -116,7 +116,7 @@ const getLogsForPeriod = (formatId, regionCode, dateFrom, dateTo) => {
     AND to_date(l."DATE_FROM", 'DD/MM/YYYY')<=to_date($4, 'YYYY-MM-DD')
   ORDER BY to_date(l."DATE_FROM", 'DD/MM/YYYY')`;
   const params = [formatId, regionCode, dateFrom, dateTo];
-  return dbQuery(query, params);
+  return db.dbQuery(query, params);
 };
 
 /**
@@ -133,7 +133,7 @@ const getLogLines = (formatId, regionCode, logDateFrom) => {
   "ARFL_DATE_FROM"=$3
   ORDER BY "RET_DATE"`;
   const params = [formatId, regionCode, from];
-  return dbQuery(query, params);
+  return db.dbQuery(query, params);
 };
 
 /**
@@ -157,7 +157,7 @@ const isNilReturn = async (formatId, regionCode, dateFrom, dateTo) => {
   `;
   const params = [formatId, regionCode, dateFrom, dateTo];
 
-  const rows = await dbQuery(query, params);
+  const rows = await db.dbQuery(query, params);
 
   return rows[0].total_qty === 0;
 };
@@ -181,7 +181,7 @@ ORDER BY to_date(v."EFF_ST_DATE", 'DD/MM/YYYY') DESC
 LIMIT 1`;
 
   const params = [licenceNumber];
-  const rows = await dbQuery(query, params);
+  const rows = await db.dbQuery(query, params);
 
   if (rows.length === 1) {
     return moment(rows[0].EFF_ST_DATE, 'DD/MM/YYYY').format('YYYY-MM-DD');
@@ -207,7 +207,7 @@ const getReturnVersionReason = async (licenceId, regionCode, versionNumber) => {
     WHERE rv."AABL_ID"=$1 AND rv."VERS_NO"=$2 AND rv."FGAC_REGION_CODE"=$3
      `;
   const params = [licenceId, versionNumber, regionCode];
-  return dbQuery(query, params);
+  return db.dbQuery(query, params);
 };
 
 module.exports = {
