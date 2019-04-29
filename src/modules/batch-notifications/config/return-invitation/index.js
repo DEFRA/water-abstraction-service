@@ -106,8 +106,5 @@ module.exports = {
   name: 'Returns: invitation',
   messageType: 'returnInvitation',
   schema,
-  getRecipients,
-  notifyTemplate: {
-    letter: 'd31d05d3-66fe-4203-8626-22e63f9bccd6'
-  }
+  getRecipients
 };
