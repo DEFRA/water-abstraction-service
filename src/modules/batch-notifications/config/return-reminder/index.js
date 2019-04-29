@@ -1,6 +1,6 @@
 const Joi = require('joi');
 
-const { get, set, isArray, isObject, mapValues, uniq } = require('lodash');
+const { get, uniq } = require('lodash');
 
 const returnsConnector = require('../../../../lib/connectors/returns');
 const permitConnector = require('../../../../lib/connectors/permit');
@@ -9,9 +9,9 @@ const { CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO } =
   require('../../../../lib/models/contact');
 const { createNotificationData } = require('./create-notification-data');
 const scheduledNotifications = require('../../../../controllers/notifications');
-const evt = require('../../../../lib/event');
-const { EVENT_STATUS_PROCESSED } = require('../../lib/event-statuses');
 const { logger } = require('@envage/water-abstraction-helpers');
+const eventHelpers = require('../../lib/event-helpers');
+const { stringifyValues } = require('../../../../lib/stringify-values');
 
 const schema = {
   excludeLicences: Joi.array().items(Joi.string().trim())
@@ -41,40 +41,6 @@ const getPreferredContact = contactList => {
 };
 
 /**
- * Stringifies array/object data for writing to DB
- * @param  {Object} data - row data
- * @return {Object}      - row data with arrays/objects stringified
- */
-const prepareDBRow = data => {
-  return mapValues(data, (value, key) => {
-    if (isArray(value) || isObject(value)) {
-      return JSON.stringify(value);
-    }
-    return value;
-  });
-};
-
-/**
- * Marks event as processed, and also updates the number of messages,
- * licence numbers etc.
- * @param  {String}  eventId - the event ID GUID
- * @param  {Array}  licenceNumbers - list of licence numbers for this notification
- * @param {Number} recipientCount
- * @return {Promise}         resolves when event updated
- */
-const markEventAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
-  const ev = await evt.load(eventId);
-
-  set(ev, 'status', EVENT_STATUS_PROCESSED);
-  set(ev, 'licences', uniq(licenceNumbers));
-  set(ev, 'metadata.sent', 0);
-  set(ev, 'metadata.error', 0);
-  set(ev, 'metadata.recipients', recipientCount);
-
-  return evt.save(ev);
-};
-
-/**
  * A function to get a list of recipients for the requested message, and
  * persist them to the scheduled_notifications table
  * @param  {Object}  data - PG boss event data
@@ -100,7 +66,7 @@ const getRecipients = async (data) => {
     if (contact) {
       // Create and persist scheduled_notifications data
       const scheduledNotification = createNotificationData(data.ev, ret, contact);
-      const rowData = prepareDBRow(scheduledNotification);
+      const rowData = stringifyValues(scheduledNotification);
       await scheduledNotifications.repository.create(rowData);
 
       recipientCount++;
@@ -111,7 +77,7 @@ const getRecipients = async (data) => {
   }
 
   // Update event status
-  return markEventAsProcessed(data.ev.eventId, licenceNumbers, recipientCount);
+  return eventHelpers.markAsProcessed(data.ev.eventId, licenceNumbers, recipientCount);
 };
 
 module.exports = {
