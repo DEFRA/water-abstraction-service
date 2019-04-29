@@ -19,7 +19,6 @@ const messageQueue = require('./src/lib/message-queue');
 const routes = require('./src/routes/water.js');
 const notify = require('./src/modules/notify');
 const returnsNotifications = require('./src/modules/returns-notifications');
-const returnsInvitations = require('./src/modules/returns-invitation');
 const importer = require('./src/modules/import');
 const returnsUpload = require('./src/modules/returns/lib/jobs/init-upload');
 const batchNotifications = require('./src/modules/batch-notifications/lib/jobs/init-batch-notifications');
@@ -69,7 +68,6 @@ const configureMessageQueue = async (server) => {
   notify(messageQueue).registerSubscribers();
   await importer(messageQueue).registerSubscribers();
   await returnsNotifications(messageQueue).registerSubscribers();
-  await returnsInvitations(messageQueue).registerSubscribers();
   await returnsUpload.registerSubscribers(messageQueue);
   await batchNotifications.registerSubscribers(messageQueue);
   server.log('info', 'Message queue started');
