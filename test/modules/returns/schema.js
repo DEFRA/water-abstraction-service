@@ -5,8 +5,6 @@ const {
   meteredNoMeterDetails
 } = require('./return-data.json');
 
-const { pick } = require('lodash');
-
 const { expect } = require('code');
 const { experiment, test } = exports.lab = require('lab').script();
 
@@ -53,25 +51,3 @@ experiment('returnSchema', () => {
     expect(error).to.equal(null);
   });
 });
-
-const createMultipleReturn = (ret) => {
-  const modified = pick(ret, [
-    'returnId',
-    'licenceNumber',
-    'startDate',
-    'endDate',
-    'isNil',
-    'lines',
-    'receivedDate',
-    'frequency',
-    'meters'
-  ]);
-
-  // Remove multiplier from meter
-  modified.meters = (modified.meters || []).map(meter => {
-    const { multiplier, ...rest } = meter;
-    return rest;
-  });
-
-  return modified;
-};
