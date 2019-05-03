@@ -10,9 +10,9 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const queries = require('../../../../src/modules/batch-notifications/lib/queries');
-const { createEvent, updateEventStatus, refreshEventStatus } =
+const { createEvent, updateEventStatus, markAsProcessed, refreshEventStatus } =
 require('../../../../src/modules/batch-notifications/lib/event-helpers');
-const { EVENT_STATUS_PROCESSING, EVENT_STATUS_SENDING, EVENT_STATUS_COMPLETED } =
+const { EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING, EVENT_STATUS_COMPLETED } =
 require('../../../../src/modules/batch-notifications/lib/event-statuses');
 const { MESSAGE_STATUS_SENT, MESSAGE_STATUS_ERROR } =
 require('../../../../src/modules/batch-notifications/lib/message-statuses');
@@ -48,7 +48,10 @@ experiment('batch notifications event helpers', () => {
     sandbox.stub(evt, 'load').resolves({
       eventId: 'testEventId',
       status: 'testStatus',
-      type: 'notification'
+      type: 'notification',
+      metadata: {
+        foo: 'bar'
+      }
     });
     sandbox.stub(queries, 'getMessageStatuses').resolves([
       { status: MESSAGE_STATUS_SENT, count: 5 },
@@ -120,16 +123,50 @@ experiment('batch notifications event helpers', () => {
 
     test('should save the event with the new status', async () => {
       await updateEventStatus('testEventId', 'newStatus');
-      expect(evt.save.firstCall.args[0]).to.equal({
-        eventId: 'testEventId',
-        status: 'newStatus',
-        type: 'notification'
-      });
+      const [ ev ] = evt.save.firstCall.args;
+      expect(ev.eventId).to.equal('testEventId');
+      expect(ev.status).to.equal('newStatus');
     });
 
     test('should return the updated event', async () => {
       const result = await updateEventStatus('testEventId', 'newStatus');
       expect(result.eventId).to.equal('testEventId');
+    });
+  });
+
+  experiment('markAsProcessed', () => {
+    const licenceNumbers = ['01/123', '04/567'];
+    const recipients = 10;
+
+    test('should load the event with the supplied ID', async () => {
+      await markAsProcessed('testEventId', licenceNumbers, recipients);
+      expect(evt.load.firstCall.args[0]).to.equal('testEventId');
+    });
+
+    test('should mark the event as processed', async () => {
+      await markAsProcessed('testEventId', licenceNumbers, recipients);
+      const [ ev ] = evt.save.lastCall.args;
+      expect(ev.status).to.equal(EVENT_STATUS_PROCESSED);
+    });
+
+    test('should record the affected licence numbers', async () => {
+      await markAsProcessed('testEventId', licenceNumbers, recipients);
+      const [ ev ] = evt.save.lastCall.args;
+      expect(ev.licences).to.equal(licenceNumbers);
+    });
+
+    test('should update the event metadata', async () => {
+      await markAsProcessed('testEventId', licenceNumbers, recipients);
+      const [ ev ] = evt.save.lastCall.args;
+      expect(ev.metadata.sent).to.equal(0);
+      expect(ev.metadata.error).to.equal(0);
+      expect(ev.metadata.recipients).to.equal(recipients);
+    });
+
+    test('should not alter existing metadata', async () => {
+      await markAsProcessed('testEventId', licenceNumbers, recipients);
+      const [ ev ] = evt.save.lastCall.args;
+      expect(ev.metadata.foo).to.equal('bar');
     });
   });
 

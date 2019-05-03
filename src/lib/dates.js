@@ -41,6 +41,16 @@ const returnsDateToIso = (str) => {
   return dateFormatter(str, 'YYYYMMDD', 'YYYY-MM-DD');
 };
 
+/**
+ * Converts date to GDS pattern of 1 November 2018
+ * @param  {String} str  date in format YYYY-MM-DD
+ * @return {String}     date in format 1 November 2018
+ */
+const readableDate = (str) => {
+  return dateFormatter(str, 'YYYY-MM-DD', 'D MMMM YYYY');
+};
+
 exports.dateToIsoString = dateToIsoString;
 exports.dateToSortableString = dateToSortableString;
 exports.returnsDateToIso = returnsDateToIso;
+exports.readableDate = readableDate;

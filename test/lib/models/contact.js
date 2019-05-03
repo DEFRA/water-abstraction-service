@@ -1,5 +1,6 @@
 const { expect } = require('code');
 const { experiment, test } = exports.lab = require('lab').script();
+const { mapValues } = require('lodash');
 
 const Contact = require('../../../src/lib/models/contact');
 
@@ -63,5 +64,34 @@ experiment('Contact model', () => {
     const updated = { ...data, type: 'Organisation' };
     const contact = new Contact(updated);
     expect(contact.getFullName()).to.equal('Doe');
+  });
+
+  experiment('generateId', () => {
+    const data = {
+      initials: 'J',
+      name: 'Doe',
+      firstName: 'John',
+      addressLine1: 'Daisy Farm',
+      postcode: 'TT1 1TT'
+    };
+
+    test('should generate an ID', async () => {
+      const contactA = new Contact(data);
+      const id = contactA.generateId();
+      expect(id).to.be.a.string();
+      expect(id).to.have.length(40);
+    });
+
+    test('should generate the same ID for identical contacts - case insensitive', async () => {
+      const contactA = new Contact(data);
+      const contactB = new Contact(mapValues(data, str => str.toLowerCase()));
+      expect(contactA.generateId()).to.equal(contactB.generateId());
+    });
+
+    test('should generate different ID for differnet contacts', async () => {
+      const contactA = new Contact(data);
+      const contactB = new Contact({ data, country: 'The moon' });
+      expect(contactA.generateId()).to.not.equal(contactB.generateId());
+    });
   });
 });

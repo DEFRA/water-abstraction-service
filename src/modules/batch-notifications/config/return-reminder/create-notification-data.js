@@ -1,7 +1,7 @@
 const uuidv4 = require('uuid/v4');
 const snakeCase = require('snake-case');
 const { get } = require('lodash');
-const { STATUS_DRAFT } = require('../../lib/message-statuses');
+const { MESSAGE_STATUS_DRAFT } = require('../../lib/message-statuses');
 
 const getPurposeDescription = purpose => get(purpose, 'tertiary.description');
 
@@ -67,7 +67,7 @@ const createNotificationData = (ev, ret, contact) => {
     message_type: 'letter',
     message_ref: 'pdf.return_reminder',
     personalisation: createNotificationPersonalisation(ev, ret, contact),
-    status: STATUS_DRAFT,
+    status: MESSAGE_STATUS_DRAFT,
     licences: [ret.licence_ref],
     event_id: ev.eventId,
     metadata: {

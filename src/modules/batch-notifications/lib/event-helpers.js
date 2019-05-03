@@ -1,7 +1,7 @@
-const { find, get, set } = require('lodash');
+const { find, get, set, uniq } = require('lodash');
 const generateReference = require('../../../lib/reference-generator');
-const { EVENT_STATUS_PROCESSING, EVENT_STATUS_SENDING, EVENT_STATUS_COMPLETED } =
-  require('./event-statuses');
+const { EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING,
+  EVENT_STATUS_COMPLETED } = require('./event-statuses');
 const { MESSAGE_STATUS_SENT, MESSAGE_STATUS_ERROR } =
     require('./message-statuses');
 const evt = require('../../../lib/event');
@@ -51,6 +51,26 @@ const updateEventStatus = async (eventId, status, data = {}) => {
 };
 
 /**
+ * Marks event as processed, and also updates the number of messages,
+ * licence numbers etc.
+ * @param  {String}  eventId - the event ID GUID
+ * @param  {Array}  licenceNumbers - list of licence numbers for this notification
+ * @param {Number} recipientCount
+ * @return {Promise}         resolves when event updated
+ */
+const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
+  const ev = await evt.load(eventId);
+
+  set(ev, 'status', EVENT_STATUS_PROCESSED);
+  set(ev, 'licences', uniq(licenceNumbers));
+  set(ev, 'metadata.sent', 0);
+  set(ev, 'metadata.error', 0);
+  set(ev, 'metadata.recipients', recipientCount);
+
+  return evt.save(ev);
+};
+
+/**
  * Gets the number of messages in a certain status, defaulting to 0
  * @param {Array} - array of statuses and counts retrieved from DB
  * @param {String} status - the status to check
@@ -93,5 +113,6 @@ const refreshEventStatus = async (eventId) => {
 module.exports = {
   createEvent,
   updateEventStatus,
+  markAsProcessed,
   refreshEventStatus
 };

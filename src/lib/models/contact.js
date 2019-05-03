@@ -1,3 +1,6 @@
+const { pick } = require('lodash');
+const sha1 = require('sha1');
+
 const CONTACT_TYPE_PERSON = 'Person';
 const CONTACT_TYPE_ORGANISATION = 'Organisation';
 
@@ -38,6 +41,20 @@ class Contact {
     }
     const parts = [salutation, initials || firstName, name];
     return parts.filter(x => x).join(' ');
+  }
+
+  /**
+   * Generates a unique ID for this contact, useful when de-duplicating
+   * contact lists
+   * @return {String}
+   */
+  generateId () {
+    const properties = ['initials', 'salutation', 'firstName', 'name',
+      'addressLine1', 'addressLine2', 'addressLine3', 'addressLine4', 'town',
+      'county', 'postcode', 'country'];
+    const values = Object.values(pick(this, properties));
+    const normalised = values.map(val => (val || '').trim().toLowerCase());
+    return sha1(normalised.join(','));
   }
 }
 

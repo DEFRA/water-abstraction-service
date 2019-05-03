@@ -1,8 +1,8 @@
 const { get } = require('lodash');
 const { logger } = require('@envage/water-abstraction-helpers');
-const notify = require('../../../notify/connectors/notify');
 const messageHelpers = require('../message-helpers');
 const { createJobPublisher } = require('../batch-notifications');
+const notify = require('../notify-connector');
 
 /**
  * The name of this event in the PG Boss
@@ -18,19 +18,6 @@ const JOB_NAME = 'notifications.sendMessage';
 const publishSendMessage = createJobPublisher(JOB_NAME, 'messageId', true);
 
 /**
- * Creates a string reference for a message in Notify so it can be
- * easily identified in the Notify UI
- * @param  {Object} message - row from scheduled_notification table
- * @return {String}           notification reference
- */
-const createNotifyReference = (message) => {
-  const id = get(message, 'id');
-  const addressLine1 = get(message, 'personalisation.address_line_1');
-  const postcode = get(message, 'personalisation.postcode');
-  return `${addressLine1} ${postcode} ${id}`;
-};
-
-/**
  * Sends a single message
  * @param  {Object}  job - job data
  * @return {Promise}     - resolves when message sent
@@ -41,11 +28,7 @@ const handleSendMessage = async job => {
   try {
     // load scheduled notification data from table
     const message = await messageHelpers.getMessageById(messageId);
-
-    const notifyReference = createNotifyReference(message);
-
-    // @TODO this will need modification to handle non-PDF message types
-    const notifyResponse = await notify.sendPdf(messageId, notifyReference);
+    const notifyResponse = await notify.send(message);
     await messageHelpers.markMessageAsSent(messageId, notifyResponse);
   } catch (err) {
     logger.error(`Error sending batch message`, err, { messageId });
