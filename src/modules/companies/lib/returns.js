@@ -1,32 +1,29 @@
-
+/**
+ * Creates a filter object to request returns from the returns service
+ * @param  {Object} request   - the HAPI request
+ * @param  {Array} documents  - a list of CRM document headers
+ * @return {Object}           - filter object for returns API request
+ */
 const createReturnsFilter = (request, documents) => {
-  const filter = {
+  const { query } = request;
+
+  const filters = {
+    startDate: { start_date: { $gte: query.startDate } },
+    endDate: { end_date: { $lte: query.endDate } },
+    isSummer: { 'metadata->>isSummer': query.isSummer ? 'true' : 'false' },
+    status: { status: query.status }
+  };
+
+  const baseFilter = {
     'metadata->>isCurrent': 'true',
     licence_ref: {
       $in: documents.map(row => row.system_external_id)
     }
   };
 
-  if ('startDate' in request.query) {
-    filter.start_date = {
-      $gte: request.query.startDate
-    };
-  };
-
-  if ('endDate' in request.query) {
-    filter.end_date = {
-      $lte: request.query.endDate
-    };
-  };
-
-  if ('summer' in request.query) {
-    filter['metadata->>isSummer'] = request.query.isSummer ? 'true' : 'false';
-  }
-
-  if ('status' in request.query) {
-    filter.status = request.query.status;
-  }
-  return filter;
+  return Object.keys(request.query).reduce((acc, key) => {
+    return Object.assign(acc, filters[key]);
+  }, baseFilter);
 };
 
 exports.createReturnsFilter = createReturnsFilter;
