@@ -3,7 +3,7 @@ const isoDateRegex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 const allowedPeriods = ['year', 'month', 'week', 'day'];
 const methods = ['abstractionVolumes', 'oneMeter'];
 const readingTypes = ['estimated', 'measured'];
-const statuses = ['due', 'completed', 'received'];
+const statuses = ['due', 'completed', 'received', 'void'];
 const units = ['m³', 'l', 'Ml', 'gal'];
 const userTypes = ['internal', 'external'];
 const returnIDRegex = /^v1:[1-8]:[^:]+:[0-9]+:[0-9]{4}-[0-9]{2}-[0-9]{2}:[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
@@ -106,5 +106,6 @@ const headerSchema = {
 
 module.exports = {
   returnSchema,
-  headerSchema
+  headerSchema,
+  statuses
 };

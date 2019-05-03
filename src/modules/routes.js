@@ -11,6 +11,7 @@ const internalSearch = require('./internal-search/routes');
 const usersRoutes = require('./users/routes');
 const communicationsRoutes = require('./communications/routes');
 const batchNotificationsRoutes = require('./batch-notifications/routes');
+const companiesRoutes = require('./companies/routes');
 
 module.exports = [
   ...Object.values(notificationsRoutes),
@@ -25,5 +26,6 @@ module.exports = [
   ...Object.values(internalSearch),
   ...Object.values(usersRoutes),
   ...Object.values(communicationsRoutes),
-  ...Object.values(batchNotificationsRoutes)
+  ...Object.values(batchNotificationsRoutes),
+  ...Object.values(companiesRoutes)
 ];
