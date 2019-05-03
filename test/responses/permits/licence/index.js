@@ -55,8 +55,14 @@ const abstractionReformLicence = () => {
   return shell;
 };
 
+const getWaterLicence = () => {
+  const shell = cloneDeep(licences);
+  return shell.data[0];
+};
+
 module.exports = {
   licences: () => cloneDeep(licences),
   emptyAbstractionReform,
-  abstractionReformLicence
+  abstractionReformLicence,
+  getWaterLicence
 };

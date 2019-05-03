@@ -15,7 +15,7 @@ const messageQueue = require('../../../../../src/lib/message-queue');
 const sendMessage = require('../../../../../src/modules/batch-notifications/lib/jobs/send-message');
 const eventHelpers = require('../../../../../src/modules/batch-notifications/lib/event-helpers');
 const messageHelpers = require('../../../../../src/modules/batch-notifications/lib/message-helpers');
-const notify = require('../../../../../src/modules/notify/connectors/notify');
+const notifyConnector = require('../../../../../src/modules/batch-notifications/lib/notify-connector');
 
 const { logger } = require('@envage/water-abstraction-helpers');
 
@@ -35,7 +35,7 @@ experiment('refreshEvent job', () => {
     });
     sandbox.stub(messageHelpers, 'markMessageAsErrored').resolves();
     sandbox.stub(messageHelpers, 'markMessageAsSent').resolves();
-    sandbox.stub(notify, 'sendPdf').resolves({
+    sandbox.stub(notifyConnector, 'send').resolves({
       body: {
         id: 'notify_id',
         content: {
@@ -108,10 +108,10 @@ experiment('refreshEvent job', () => {
       expect(args).to.equal([messageId]);
     });
 
-    test('sends the PDF using the message ID provided in the job data and a reference string', async () => {
-      const [id, reference] = notify.sendPdf.lastCall.args;
-      expect(id).to.equal(messageId);
-      expect(reference).to.equal('1 Daisy Farm TT1 1TT message_1');
+    test('sends the message', async () => {
+      expect(notifyConnector.send.callCount).to.equal(1);
+      const [ message ] = notifyConnector.send.lastCall.args;
+      expect(message.id).to.equal(messageId);
     });
 
     test('marks message as sent', async () => {

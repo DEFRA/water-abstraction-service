@@ -1,11 +1,11 @@
 const Joi = require('joi');
 
-const { get, uniq } = require('lodash');
+const { get, uniq, groupBy } = require('lodash');
 
 const returnsConnector = require('../../../../lib/connectors/returns');
 const permitConnector = require('../../../../lib/connectors/permit');
 const { createContacts } = require('../../../../lib/models/factory/contact-list');
-const { CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO } =
+const { CONTACT_ROLE_LICENCE_HOLDER } =
   require('../../../../lib/models/contact');
 const { createNotificationData } = require('./create-notification-data');
 const scheduledNotifications = require('../../../../controllers/notifications');
@@ -35,10 +35,39 @@ const getExcludeLicences = job => {
  * @return {Contact}
  */
 const getPreferredContact = contactList => {
-  const returnsContact = contactList.getByRole(CONTACT_ROLE_RETURNS_TO);
-  const licenceHolder = contactList.getByRole(CONTACT_ROLE_LICENCE_HOLDER);
-  return returnsContact || licenceHolder;
+  return contactList.getByRole(CONTACT_ROLE_LICENCE_HOLDER);
 };
+
+const getRecipientsFromReturns = async returns => {
+  const recipients = [];
+  for (let ret of returns) {
+    // Get licence data so contacts can be extracted
+    const licenceData = await permitConnector.licences.getWaterLicence(ret.licence_ref);
+
+    // Get contact for message
+    const contacts = createContacts(licenceData.licence_data_value);
+    const contact = getPreferredContact(contacts);
+
+    if (contact) {
+      recipients.push({
+        contact,
+        return: ret
+      });
+    } else {
+      logger.error(`Return reminder: no contacts for ${ret.licence_ref}`);
+    }
+  }
+  return recipients;
+};
+
+const getLicenceNumbers = deduped => {
+  return Object.values(deduped).reduce((acc, group) => {
+    const licenceNumbers = group.map(row => row.return.licence_ref);
+    return [...acc, ...licenceNumbers];
+  }, []);
+};
+
+const getRecipientCount = deduped => Object.values(deduped).length;
 
 /**
  * A function to get a list of recipients for the requested message, and
@@ -52,38 +81,30 @@ const getRecipients = async (data) => {
   // Load due returns in current cycle from return service
   const returns = await returnsConnector.getCurrentDueReturns(excludeLicences);
 
-  let recipientCount = 0;
-  const licenceNumbers = [];
+  // Get recipients
+  const recipients = await getRecipientsFromReturns(returns);
 
-  for (let ret of returns) {
-    // Get licence data so contacts can be extracted
-    const licenceData = await permitConnector.licences.getWaterLicence(ret.licence_ref);
+  // De-duplicate on contact
+  const deduped = groupBy(recipients, recipient => recipient.contact.generateId());
 
-    // Get contact for message
-    const contacts = createContacts(licenceData.licence_data_value);
-    const contact = getPreferredContact(contacts);
-
-    if (contact) {
-      // Create and persist scheduled_notifications data
-      const scheduledNotification = createNotificationData(data.ev, ret, contact);
-      const rowData = stringifyValues(scheduledNotification);
-      await scheduledNotifications.repository.create(rowData);
-
-      recipientCount++;
-      licenceNumbers.push(ret.licence_ref);
-    } else {
-      logger.error(`Return reminder: no contacts for ${ret.licence_ref}`);
-    }
+  for (let group of Object.values(deduped)) {
+    // Create and persist scheduled_notifications data
+    const scheduledNotification = createNotificationData(data.ev, group);
+    const rowData = stringifyValues(scheduledNotification);
+    await scheduledNotifications.repository.create(rowData);
   }
 
+  const licenceNumbers = getLicenceNumbers(deduped);
+  const count = getRecipientCount(deduped);
+
   // Update event status
-  return eventHelpers.markAsProcessed(data.ev.eventId, licenceNumbers, recipientCount);
+  return eventHelpers.markAsProcessed(data.ev.eventId, licenceNumbers, count);
 };
 
 module.exports = {
-  prefix: 'RREM-',
-  name: 'Returns: reminder',
-  messageType: 'returnReminder',
+  prefix: 'RINV-',
+  name: 'Returns: invitation',
+  messageType: 'returnInvitation',
   schema,
   getRecipients
 };
