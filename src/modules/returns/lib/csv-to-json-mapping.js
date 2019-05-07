@@ -175,12 +175,12 @@ const mapMeters = (column, readingType) => {
 const mapReturn = (column, context) => {
   const isNil = normalize(column[2]) === 'y';
   const returnId = column.slice(-1)[0];
-  const { startDate, endDate } = parseReturnId(returnId);
+  const { startDate, endDate, licenceNumber } = parseReturnId(returnId);
 
   // Create return skeleton
   const ret = {
     returnId,
-    licenceNumber: column[0],
+    licenceNumber,
     receivedDate: context.today,
     startDate,
     endDate,
