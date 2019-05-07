@@ -13,8 +13,8 @@ const {
   experiment,
   test
 } = exports.lab = require('lab').script();
-const { parseXmlFile } = require('../../../../src/modules/returns/lib/xml-helpers');
-const { mapXml } = require('../../../../src/modules/returns/lib/xml-to-json-mapping');
+const libxmljs = require('libxmljs');
+const { mapXml } = require('../../../../src/modules/returns/lib/xml-adapter/mapper');
 const path = require('path');
 const fs = require('fs');
 const util = require('util');
@@ -26,7 +26,7 @@ const returnsConnector = require('../../../../src/lib/connectors/returns');
 
 const getParsedTestFile = async name => {
   const xml = await readFile(path.join(__dirname, './xml-files-for-tests', name + '.xml'), 'utf-8');
-  return parseXmlFile(xml);
+  return libxmljs.parseXml(xml);
 };
 
 const getTestUser = () => ({
