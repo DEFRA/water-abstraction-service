@@ -16,7 +16,8 @@ const getReturnId = (regionCode, licenceNumber, formatId, startDate, endDate) =>
  * @return {Object}
  */
 const parseReturnId = (returnId) => {
-  const [ version, regionCode, licenceNumber, formatId, startDate, endDate ] = returnId.split(':');
+  const [ versionStr, regionCode, licenceNumber, formatId, startDate, endDate ] = returnId.split(':');
+  const version = parseFloat(versionStr.replace('v', ''));
   return { version, regionCode, licenceNumber, formatId, startDate, endDate };
 };
 

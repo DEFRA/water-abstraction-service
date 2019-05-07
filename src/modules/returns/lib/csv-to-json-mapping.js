@@ -6,6 +6,7 @@ const moment = require('moment');
 const DATE_FORMAT = 'YYYY-MM-DD';
 const GDS_DATE_FORMAT = 'D MMMM YYYY';
 const GDS_MONTH_FORMAT = 'MMMM YYYY';
+const { parseReturnId } = require('../../../lib/returns');
 
 /**
  * Trims and lowercases value
@@ -86,21 +87,18 @@ const createReturnLine = dateLabel => {
 };
 
 /**
- * Parses return ID into constituent parts
- * @param  {String} returnId
- * @return {Object}
+ * Maps an abstracted volume to a float
+ * - If empty string, returns null
+ * - Otherwise parses as a number, which may include commas
+ * @param  {String} value - the abstracted volume
+ * @return {Number}
  */
-const parseReturnId = returnId => {
-  const parts = returnId.split(':');
-  const [ version, regionCode, licenceNumber, returnRequirement, startDate, endDate ] = parts;
-  return {
-    version: parseFloat(version.replace('v', '')),
-    regionCode,
-    licenceNumber,
-    returnRequirement,
-    startDate,
-    endDate
-  };
+const mapQuantity = value => {
+  const val = normalize(value);
+  if (val === '') {
+    return null;
+  }
+  return parseFloat(val.replace(',', ''));
 };
 
 /**
@@ -122,7 +120,7 @@ const mapLines = (headers, column, readingType) => {
       unit: 'm³',
       userUnit: 'm³',
       ...createReturnLine(dateLabel),
-      quantity: value === '' ? null : parseFloat(value),
+      quantity: mapQuantity(value),
       readingType
     }];
   }, []);
@@ -227,10 +225,10 @@ exports._createDay = createDay;
 exports._createWeek = createWeek;
 exports._createMonth = createMonth;
 exports._createReturnLine = createReturnLine;
-exports._parseReturnId = parseReturnId;
 exports._mapLines = mapLines;
 exports._mapReading = mapReading;
 exports._mapMeters = mapMeters;
 exports._mapReturn = mapReturn;
+exports._mapQuantity = mapQuantity;
 
 exports.mapCsv = mapCsv;

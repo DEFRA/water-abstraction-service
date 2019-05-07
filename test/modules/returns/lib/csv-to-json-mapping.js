@@ -162,17 +162,20 @@ experiment('returns CSV to JSON mapper', () => {
     });
   });
 
-  experiment('parseReturnId', async () => {
-    test('it should parse a return ID into its component parts', async () => {
-      const result = csvMapper._parseReturnId('v1:1:01/123:1234:2018-04-01:2019-03-31');
-      expect(result).to.equal({
-        version: 1,
-        regionCode: '1',
-        licenceNumber: '01/123',
-        returnRequirement: '1234',
-        startDate: '2018-04-01',
-        endDate: '2019-03-31'
-      });
+  experiment('mapQuantity', () => {
+    test('maps an empty string to null', async () => {
+      const result = csvMapper._mapQuantity('  ');
+      expect(result).to.equal(null);
+    });
+
+    test('maps a number', async () => {
+      const result = csvMapper._mapQuantity('10.4343');
+      expect(result).to.equal(10.4343);
+    });
+
+    test('accepts commas as a separator', async () => {
+      const result = csvMapper._mapQuantity('10,4343');
+      expect(result).to.equal(104343);
     });
   });
 

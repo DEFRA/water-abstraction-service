@@ -28,7 +28,7 @@ experiment('parseReturnId', () => {
   });
 
   test('extracts the version', async () => {
-    expect(parsed.version).to.equal('v1');
+    expect(parsed.version).to.equal(1);
   });
 
   test('extracts the region code', async () => {
