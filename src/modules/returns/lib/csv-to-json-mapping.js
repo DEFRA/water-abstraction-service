@@ -98,7 +98,7 @@ const mapQuantity = value => {
   if (val === '') {
     return null;
   }
-  return parseFloat(val.replace(',', ''));
+  return parseFloat(val.replace(/,/g, ''));
 };
 
 /**

@@ -174,8 +174,13 @@ experiment('returns CSV to JSON mapper', () => {
     });
 
     test('accepts commas as a separator', async () => {
-      const result = csvMapper._mapQuantity('10,4343');
-      expect(result).to.equal(104343);
+      const result = csvMapper._mapQuantity('10,434');
+      expect(result).to.equal(10434);
+    });
+
+    test('accepts multiple commas as a separator', async () => {
+      const result = csvMapper._mapQuantity('10,434,789.123');
+      expect(result).to.equal(10434789.123);
     });
   });
 
