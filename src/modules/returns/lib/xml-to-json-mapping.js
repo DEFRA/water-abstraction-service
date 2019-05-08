@@ -4,6 +4,7 @@ const { get, flatMap, uniq, find } = require('lodash');
 const { getReturnId } = require('../../../lib/returns');
 const returnsConnector = require('../../../lib/connectors/returns');
 const permitConnector = require('../../../lib/connectors/permit');
+const common = require('./common-mapping');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
@@ -189,7 +190,7 @@ const mapReturn = (returnXml, context) => {
   const returnId = getReturnId(regionCode, licenceNumber, returnRequirement, startDate, endDate);
 
   return {
-    ...getXmlReturnSkeleton(),
+    ...common.getReturnSkeleton(),
     returnId,
     licenceNumber,
     receivedDate,
@@ -200,7 +201,7 @@ const mapReturn = (returnXml, context) => {
     reading: getReadingDetails(returnXml),
     meters: getMeterDetails(returnXml),
     lines: getReturnLines(returnXml),
-    user: mapUser(user)
+    user: common.mapUser(user)
   };
 };
 
@@ -224,37 +225,6 @@ const mapPermits = (permits, context) => {
     return returns.map(ret => mapReturn(ret, { ...context, licenceNumber }));
   });
 };
-
-/**
- * Gets a basic shape for the return
- * @return {Object} [description]
- */
-const getXmlReturnSkeleton = () => ({
-  isUnderQuery: false,
-  versionNumber: 1,
-  isCurrent: true
-});
-
-/**
- * Gets the user type from an IDM user row
- * @param  {Object} user - IDM user row
- * @return {String} user type - internal|external
- */
-const getUserType = user => {
-  const scopes = get(user, 'role.scopes', []);
-  return scopes.includes('external') ? 'external' : 'internal';
-};
-
-/**
- * Maps IDM user to the shape in the water service return model
- * @param  {Object} user - IDM user row
- * @return {Object} water service return model user
- */
-const mapUser = user => ({
-  email: user.user_name,
-  type: getUserType(user),
-  entityId: user.external_id
-});
 
 /**
  * Given an array of returns, gets all the return IDs
