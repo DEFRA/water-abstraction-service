@@ -1,7 +1,7 @@
 const { expect } = require('code');
 const { find } = require('lodash');
 const { experiment, test, beforeEach } = exports.lab = require('lab').script();
-const csvMapper = require('../../../../src/modules/returns/lib/csv-to-json-mapping');
+const csvMapper = require('../../../../../src/modules/returns/lib/csv-adapter/mapper');
 
 const headers = [
   'Licence number',
@@ -316,6 +316,7 @@ experiment('returns CSV to JSON mapper', () => {
       expect(result.reading).to.be.an.object();
       expect(result.meters[0]).to.be.an.object();
       expect(result.lines).to.be.an.array();
+      expect(result.frequency).to.be.a.string();
     });
   });
 

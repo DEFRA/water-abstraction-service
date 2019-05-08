@@ -11,7 +11,7 @@ const s3 = require('../../lib/connectors/s3');
 const event = require('../../lib/event');
 const { uploadStatus, getUploadFilename } = require('./lib/returns-upload');
 const { logger } = require('@envage/water-abstraction-helpers');
-const startUploadJob = require('./lib/jobs/start-xml-upload');
+const startUploadJob = require('./lib/jobs/start-upload');
 const persistReturnsJob = require('./lib/jobs/persist-returns');
 const uploadValidator = require('./lib/returns-upload-validator');
 const { mapSingleReturn, mapMultipleReturn } = require('./lib/upload-preview-mapper');
@@ -80,10 +80,10 @@ const patchReturnHeader = async (request, h) => {
  * @param uploadUserName The username of end user.
  * @returns {Object}
  */
-const createXmlUploadEvent = (uploadUserName) => {
+const createXmlUploadEvent = (uploadUserName, subtype = 'xml') => {
   return event.create({
     type: 'returns-upload',
-    subtype: 'xml',
+    subtype,
     issuer: uploadUserName,
     status: uploadStatus.PROCESSING
   });
@@ -97,13 +97,14 @@ const getEventStatusLink = eventId => {
   return `/water/1.0/event/${eventId}`;
 };
 
-const postUploadXml = async (request, h) => {
-  const evt = createXmlUploadEvent(request.payload.userName);
+const postUpload = async (request, h) => {
+  const { type } = request.params;
+  const evt = createXmlUploadEvent(request.payload.userName, type);
 
   try {
     await event.save(evt);
 
-    const filename = getUploadFilename(evt.eventId);
+    const filename = getUploadFilename(evt.eventId, type);
     const data = await s3.upload(filename, request.payload.fileData);
     const jobId = await startUploadJob.publish(evt.eventId);
 
@@ -242,6 +243,7 @@ const postUploadSubmit = async (request, h) => {
 
     // Validate data in JSON
     const data = await uploadValidator.validate(request.jsonData, companyId);
+
     const valid = data.filter(isValidReturn);
 
     // Check 1+ valid returns
@@ -265,7 +267,7 @@ const postUploadSubmit = async (request, h) => {
 exports.getReturn = getReturn;
 exports.postReturn = postReturn;
 exports.patchReturnHeader = patchReturnHeader;
-exports.postUploadXml = postUploadXml;
+exports.postUpload = postUpload;
 exports.getUploadPreview = getUploadPreview;
 exports.getUploadPreviewReturn = getUploadPreviewReturn;
 exports.postUploadSubmit = postUploadSubmit;

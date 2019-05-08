@@ -10,8 +10,8 @@ const path = require('path');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const xmlToJsonJob = require('../../../../../src/modules/returns/lib/jobs/xml-to-json');
-const xmlToJsonMapping = require('../../../../../src/modules/returns/lib/xml-to-json-mapping');
+const mapToJsonJob = require('../../../../../src/modules/returns/lib/jobs/map-to-json');
+const uploadAdapters = require('../../../../../src/modules/returns/lib/upload-adapters');
 const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('@envage/water-abstraction-helpers');
 const event = require('../../../../../src/lib/event');
@@ -28,13 +28,13 @@ experiment('publish', () => {
   });
 
   test('publishes a job with the expected name', async () => {
-    await xmlToJsonJob.publish('test-event-id');
+    await mapToJsonJob.publish('test-event-id');
     const [jobName] = messageQueue.publish.lastCall.args;
-    expect(jobName).to.equal(xmlToJsonJob.jobName);
+    expect(jobName).to.equal(mapToJsonJob.jobName);
   });
 
   test('sends the expected job data', async () => {
-    await xmlToJsonJob.publish('test-event-id');
+    await mapToJsonJob.publish('test-event-id');
     const [, data] = messageQueue.publish.lastCall.args;
     expect(data).to.equal({
       eventId: 'test-event-id',
@@ -49,7 +49,8 @@ experiment('handler', () => {
   beforeEach(async () => {
     sandbox.stub(event, 'load').resolves({
       eventId: 'test-event-id',
-      issuer: 'test-job@example.com'
+      issuer: 'test-job@example.com',
+      subtype: 'xml'
     });
     sandbox.stub(event, 'save').resolves();
 
@@ -60,7 +61,8 @@ experiment('handler', () => {
       user_name: 'test-job@example.com',
       external_id: '1234-abcd'
     });
-    sandbox.stub(xmlToJsonMapping, 'mapXml').resolves('{}');
+
+    sandbox.stub(uploadAdapters.xml, 'mapper').resolves('{}');
 
     sandbox.stub(s3, 'getObject').resolves({ Body: Buffer.from(str, 'utf-8') });
     sandbox.stub(s3, 'upload').resolves({});
@@ -79,50 +81,50 @@ experiment('handler', () => {
   });
 
   test('loads the event', async () => {
-    await xmlToJsonJob.handler(job);
+    await mapToJsonJob.handler(job);
     expect(event.load.calledWith(job.data.eventId)).to.be.true();
   });
 
   test('loads the S3 object', async () => {
-    await xmlToJsonJob.handler(job);
+    await mapToJsonJob.handler(job);
     const [s3Key] = s3.getObject.lastCall.args;
     expect(s3Key).to.equal('returns-upload/test-event-id.xml');
   });
 
   test('gets the user object for the issuer', async () => {
-    await xmlToJsonJob.handler(job);
+    await mapToJsonJob.handler(job);
     const [userName] = usersClient.getUserByUserName.lastCall.args;
     expect(userName).to.equal('test-job@example.com');
   });
 
   test('maps the JSON to the required shape', async () => {
-    await xmlToJsonJob.handler(job);
-    const [, user] = xmlToJsonMapping.mapXml.lastCall.args;
+    await mapToJsonJob.handler(job);
+    const [, user] = uploadAdapters.xml.mapper.lastCall.args;
     expect(user.user_id).to.equal(123);
   });
 
   test('uploads JSON back to S3', async () => {
-    await xmlToJsonJob.handler(job);
+    await mapToJsonJob.handler(job);
     const [fileName, buffer] = s3.upload.lastCall.args;
     expect(fileName).to.equal('returns-upload/test-event-id.json');
     expect(buffer).to.be.a.buffer();
   });
 
   test('updates the event status to validated', async () => {
-    await xmlToJsonJob.handler(job);
+    await mapToJsonJob.handler(job);
     const [evt] = event.save.lastCall.args;
     expect(evt.status).to.equal('validated');
   });
 
   test('finishes the job', async () => {
-    await xmlToJsonJob.handler(job);
+    await mapToJsonJob.handler(job);
     expect(job.done.called).to.be.true();
   });
 
   experiment('when the user is not found', async () => {
     beforeEach(async () => {
       usersClient.getUserByUserName.resolves();
-      await xmlToJsonJob.handler(job);
+      await mapToJsonJob.handler(job);
     });
 
     test('the error is logged', async () => {
@@ -148,8 +150,8 @@ experiment('handler', () => {
 
   experiment('when the XML cannot be mapped to JSON', async () => {
     beforeEach(async () => {
-      xmlToJsonMapping.mapXml.throws();
-      await xmlToJsonJob.handler(job);
+      uploadAdapters.xml.mapper.throws();
+      await mapToJsonJob.handler(job);
     });
 
     test('the error is logged', async () => {
@@ -176,7 +178,7 @@ experiment('handler', () => {
   experiment('when there is an error', async () => {
     beforeEach(async () => {
       s3.getObject.rejects({ name: 'test-error' });
-      await xmlToJsonJob.handler(job);
+      await mapToJsonJob.handler(job);
     });
 
     test('the error is logged', async () => {

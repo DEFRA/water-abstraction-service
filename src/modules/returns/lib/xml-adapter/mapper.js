@@ -1,10 +1,11 @@
 const moment = require('moment');
 const helpers = require('@envage/water-abstraction-helpers');
-const { get, flatMap, uniq, find } = require('lodash');
-const { getReturnId } = require('../../../lib/returns');
-const returnsConnector = require('../../../lib/connectors/returns');
-const permitConnector = require('../../../lib/connectors/permit');
-const common = require('./common-mapping');
+const { get, flatMap, uniq, find, intersection } = require('lodash');
+const libxmljs = require('libxmljs');
+const { getReturnId } = require('../../../../lib/returns');
+const returnsConnector = require('../../../../lib/connectors/returns');
+const permitConnector = require('../../../../lib/connectors/permit');
+const common = require('../common-mapping');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
@@ -17,6 +18,12 @@ const getText = (from, path) => from.get(path, options).text();
 const getChildNames = node => node.childNodes().map(node => node.name());
 
 const getReturnFrequency = (ret) => {
+  const fullReturnStructure = ret.get('tns:GorPart', options).get('tns:FullReturnStructure', options);
+
+  if (!fullReturnStructure) {
+    return null;
+  }
+
   const mapping = {
     DailyTotal: 'day',
     WeeklyTotal: 'week',
@@ -24,18 +31,10 @@ const getReturnFrequency = (ret) => {
     YearlyTotal: 'year'
   };
 
-  const fullReturnStructure = ret.get('tns:GorPart', options).get('tns:FullReturnStructure', options);
-
-  if (fullReturnStructure) {
-    const childNames = getChildNames(fullReturnStructure);
-
-    for (let key in mapping) {
-      if (childNames.includes(key)) {
-        return mapping[key];
-      }
-    }
-  }
-  return null;
+  // Get node names of child nodes, then compare them with the mapping above
+  const childNames = getChildNames(fullReturnStructure);
+  const [ key ] = intersection(childNames, Object.keys(mapping));
+  return mapping[key];
 };
 
 const getNilReturn = (ret) => {
@@ -245,12 +244,13 @@ const mapReturnsData = (ret, returnsData) => {
   const match = find(returnsData, { return_id: returnId });
   return {
     ...ret,
-    status: 'completed',
     dueDate: get(match, 'due_date')
   };
 };
 
-const mapXml = async (xmlDoc, user, today) => {
+const mapXml = async (xmlStr, user, today) => {
+  const xmlDoc = libxmljs.parseXml(xmlStr);
+
   // Stage 1 - get licence numbers and region codes
   const permits = getPermitsFromXml(xmlDoc);
   const licenceNumbers = getLicenceNumbersFromPermits(permits);

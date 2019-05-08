@@ -1,4 +1,3 @@
-const Boom = require('boom');
 const { expect } = require('code');
 const {
   experiment,
@@ -14,15 +13,16 @@ const sandbox = sinon.createSandbox();
 const controller = require('../../../src/modules/returns/controller');
 const event = require('../../../src/lib/event');
 const s3 = require('../../../src/lib/connectors/s3');
-const startUploadJob = require('../../../src/modules/returns/lib/jobs/start-xml-upload');
+const startUploadJob = require('../../../src/modules/returns/lib/jobs/start-upload');
+const persistReturnsJob = require('../../../src/modules/returns/lib/jobs/persist-returns');
 const uploadValidator = require('../../../src/modules/returns/lib/returns-upload-validator');
-const { uploadStatus } = require('../../../src/modules/returns/lib/returns-upload');
 const { logger } = require('@envage/water-abstraction-helpers');
 const returnsConnector = require('../../../src/lib/connectors/returns');
+const { uploadStatus } = require('../../../src/modules/returns/lib/returns-upload');
 
 const UUIDV4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i);
 
-experiment('postUploadXml', () => {
+experiment('postUpload', () => {
   let request;
   let h;
 
@@ -40,6 +40,9 @@ experiment('postUploadXml', () => {
       payload: {
         userName: 'test-user',
         fileData: '10101'
+      },
+      params: {
+        type: 'xml'
       }
     };
 
@@ -55,7 +58,7 @@ experiment('postUploadXml', () => {
   });
 
   test('an event is saved with the expected values', async () => {
-    await controller.postUploadXml(request, h);
+    await controller.postUpload(request, h);
     const [eventValues] = event.repo.create.firstCall.args;
     expect(eventValues.type).to.equal('returns-upload');
     expect(eventValues.subtype).to.equal('xml');
@@ -64,7 +67,7 @@ experiment('postUploadXml', () => {
   });
 
   test('file data is uploaded to S3', async () => {
-    await controller.postUploadXml(request, h);
+    await controller.postUpload(request, h);
     const [filename, fileData] = s3.upload.lastCall.args;
 
     expect(filename.substr(0, 15)).to.equal('returns-upload/');
@@ -75,14 +78,14 @@ experiment('postUploadXml', () => {
   });
 
   test('creates a new job for the task queue', async () => {
-    await controller.postUploadXml(request, h);
+    await controller.postUpload(request, h);
     const [eventId] = startUploadJob.publish.lastCall.args;
 
     expect(eventId).to.match(UUIDV4_REGEX);
   });
 
   test('response contains the expected data', async () => {
-    await controller.postUploadXml(request, h);
+    await controller.postUpload(request, h);
     const [responseData] = h.response.lastCall.args;
 
     expect(responseData.data.eventId).to.match(UUIDV4_REGEX);
@@ -271,7 +274,6 @@ experiment('postUploadSubmit', () => {
   let h;
 
   beforeEach(async () => {
-    sandbox.stub(Boom, 'badRequest');
     sandbox.stub(logger, 'error');
     sandbox.stub(event, 'save');
     h = {
@@ -287,6 +289,7 @@ experiment('postUploadSubmit', () => {
       errors: ['Some error']
     }
     ]);
+    sandbox.stub(persistReturnsJob, 'publish').resolves();
   });
 
   afterEach(async () => {
@@ -301,9 +304,9 @@ experiment('postUploadSubmit', () => {
       await controller.postUploadSubmit(request, h);
       fail('Controller method should not resolve');
     } catch (err) {
-
+      expect(err.isBoom).to.equal(true);
+      expect(err.output.statusCode).to.equal(400);
     }
-    expect(Boom.badRequest.callCount).to.equal(1);
     const [msg, , params] = logger.error.lastCall.args;
     expect(msg).to.be.a.string();
     expect(params.eventId).to.equal(request.params.eventId);
@@ -317,9 +320,9 @@ experiment('postUploadSubmit', () => {
       await controller.postUploadSubmit(request, h);
       fail('Controller method should not resolve');
     } catch (err) {
-
+      expect(err.isBoom).to.equal(true);
+      expect(err.output.statusCode).to.equal(400);
     }
-    expect(Boom.badRequest.callCount).to.equal(1);
     const [msg, , params] = logger.error.lastCall.args;
     expect(msg).to.be.a.string();
     expect(params.eventId).to.equal(request.params.eventId);
