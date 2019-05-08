@@ -8,9 +8,9 @@ const {
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const startUploadJob = require('../../../../../src/modules/returns/lib/jobs/start-xml-upload');
+const startUploadJob = require('../../../../../src/modules/returns/lib/jobs/start-upload');
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload');
-const schemaValidation = require('../../../../../src/modules/returns/lib/schema-validation');
+const uploadAdapters = require('../../../../../src/modules/returns/lib/upload-adapters');
 const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('@envage/water-abstraction-helpers');
 const event = require('../../../../../src/lib/event');
@@ -45,13 +45,15 @@ experiment('handler', () => {
 
   beforeEach(async () => {
     sandbox.stub(event, 'load').resolves({
-      eventId: 'test-event-id'
+      eventId: 'test-event-id',
+      subtype: 'xml'
     });
     sandbox.stub(event, 'save').resolves();
     sandbox.stub(returnsUpload, 'getReturnsS3Object').resolves({
       Body: Buffer.from('<xml></xml>', 'utf-8')
     });
-    sandbox.stub(schemaValidation, 'validateXml').resolves(true);
+    sandbox.stub(uploadAdapters.xml, 'validator').resolves(true);
+
     sandbox.spy(logger, 'error');
 
     job = {
@@ -112,7 +114,7 @@ experiment('handler', () => {
 
   experiment('when the xml does not validate', async () => {
     beforeEach(async () => {
-      schemaValidation.validateXml.resolves({
+      uploadAdapters.xml.validator.resolves({
         errors: [
           { one: 1 }
         ]

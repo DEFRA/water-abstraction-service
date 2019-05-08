@@ -1,10 +1,11 @@
 const moment = require('moment');
 const helpers = require('@envage/water-abstraction-helpers');
 const { get, flatMap, uniq, find } = require('lodash');
-const { getReturnId } = require('../../../lib/returns');
-const returnsConnector = require('../../../lib/connectors/returns');
-const permitConnector = require('../../../lib/connectors/permit');
-const common = require('./common-mapping');
+const libxmljs = require('libxmljs');
+const { getReturnId } = require('../../../../lib/returns');
+const returnsConnector = require('../../../../lib/connectors/returns');
+const permitConnector = require('../../../../lib/connectors/permit');
+const common = require('../common-mapping');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
@@ -250,7 +251,9 @@ const mapReturnsData = (ret, returnsData) => {
   };
 };
 
-const mapXml = async (xmlDoc, user, today) => {
+const mapXml = async (xmlStr, user, today) => {
+  const xmlDoc = libxmljs.parseXml(xmlStr);
+
   // Stage 1 - get licence numbers and region codes
   const permits = getPermitsFromXml(xmlDoc);
   const licenceNumbers = getLicenceNumbersFromPermits(permits);

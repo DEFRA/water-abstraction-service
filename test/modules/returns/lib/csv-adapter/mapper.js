@@ -1,7 +1,7 @@
 const { expect } = require('code');
 const { find } = require('lodash');
 const { experiment, test, beforeEach } = exports.lab = require('lab').script();
-const csvMapper = require('../../../../src/modules/returns/lib/csv-to-json-mapping');
+const csvMapper = require('../../../../../src/modules/returns/lib/csv-adapter/mapper');
 
 const headers = [
   'Licence number',

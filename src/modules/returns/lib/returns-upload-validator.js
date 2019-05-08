@@ -246,7 +246,6 @@ const validate = async (returns, companyId) => {
     companyId,
     documents
   };
-  // const licenceNumbers = await getDocumentsForCompany(companyId);
   return batchProcess(returns, 100, validateBatch, context);
 };
 

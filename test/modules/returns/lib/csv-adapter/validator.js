@@ -1,7 +1,7 @@
 const { expect } = require('code');
 const { experiment, test } = exports.lab = require('lab').script();
 
-const csvSchemaValidation = require('../../../../src/modules/returns/lib/csv-schema-validation');
+const csvSchemaValidation = require('../../../../../src/modules/returns/lib/csv-adapter/validator');
 const csvStringify = require('csv-stringify/lib/sync');
 
 const validLicenceNumberRecord = ['Licence number', '123', '123abc'];

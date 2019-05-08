@@ -1,14 +1,13 @@
 const messageQueue = require('../../../../lib/message-queue');
-const JOB_NAME = 'returns-upload-xml-to-json';
+const JOB_NAME = 'returns-upload-to-json';
 const s3 = require('../../../../lib/connectors/s3');
 const event = require('../../../../lib/event');
 const returnsUpload = require('../returns-upload');
 const uploadStatus = returnsUpload.uploadStatus;
 const { logger } = require('@envage/water-abstraction-helpers');
-const xmlToJsonMapping = require('../../lib/xml-to-json-mapping');
-const { parseXmlFile } = require('../../lib/xml-helpers');
 const idmConnector = require('../../../../lib/connectors/idm');
 const errorEvent = require('./error-event');
+const uploadAdapters = require('../upload-adapters');
 
 /**
  * Begins the returns XML to JSON process by adding a new task to PG Boss.
@@ -27,13 +26,14 @@ const validateUser = user => {
   }
 };
 
-const xmlToJson = async (s3Object, user) => {
+const mapToJson = async (evt, s3Object, user) => {
+  const { subtype } = evt;
   try {
-    const xml = parseXmlFile(s3Object.Body);
-    const json = await xmlToJsonMapping.mapXml(xml, user);
+    const adapter = uploadAdapters[subtype];
+    const json = await adapter.mapper(s3Object.Body, user);
     return json;
   } catch (error) {
-    error.key = errorEvent.keys.XML_TO_JSON_MAPPING;
+    error.key = errorEvent.keys[subtype].MAPPING;
     throw error;
   }
 };
@@ -58,7 +58,7 @@ const handleReturnsXmlToJsonStart = async job => {
 
     validateUser(user);
 
-    const json = await xmlToJson(s3Object, user);
+    const json = await mapToJson(evt, s3Object, user);
 
     await uploadJsonToS3(evt.eventId, json);
 

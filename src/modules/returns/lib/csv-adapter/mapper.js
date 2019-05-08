@@ -1,12 +1,12 @@
 const { unzip } = require('lodash');
-const common = require('./common-mapping');
+const common = require('../common-mapping');
 const util = require('util');
 const parseCsv = util.promisify(require('csv-parse'));
 const moment = require('moment');
 const DATE_FORMAT = 'YYYY-MM-DD';
 const GDS_DATE_FORMAT = 'D MMMM YYYY';
 const GDS_MONTH_FORMAT = 'MMMM YYYY';
-const { parseReturnId } = require('../../../lib/returns');
+const { parseReturnId } = require('../../../../lib/returns');
 
 /**
  * Trims and lowercases value

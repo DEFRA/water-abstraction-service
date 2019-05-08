@@ -3,7 +3,7 @@ const util = require('util');
 const parseCsv = util.promisify(parse);
 const { isEmpty, flatten, compact, isString, times } = require('lodash');
 
-const { returnIDRegex, parseReturnId } = require('../../../lib/returns');
+const { returnIDRegex, parseReturnId } = require('../../../../lib/returns');
 const validDateRegex = /(^(Week ending )?\d{1,2} \w{3,9} \d{4}$)|(\w{3,8} \d{4})/;
 const lineErrorRegex = /line (\d*)$/;
 const validAbstractionVolumeRegex = /(^Do not edit$)|(^\d[\d|.|,]*$)|(^\s*$)/;

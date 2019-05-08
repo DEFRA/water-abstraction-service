@@ -74,15 +74,18 @@ module.exports = {
     }
   },
 
-  postUploadReturnsXml: {
-    path: '/water/1.0/returns/upload-xml',
+  postUploadReturns: {
+    path: '/water/1.0/returns/upload/{type}',
     method: 'POST',
-    handler: controller.postUploadXml,
+    handler: controller.postUpload,
     config: {
       payload: {
         maxBytes: 1000 * 1000 * 50
       },
       validate: {
+        params: {
+          type: Joi.string().required().valid(['xml', 'csv'])
+        },
         payload: {
           fileData: Joi.binary().required(),
           userName: Joi.string().email().required()
