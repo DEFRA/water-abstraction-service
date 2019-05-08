@@ -1,7 +1,5 @@
 const jobs = {
   start: require('./start-upload'),
-  // start: require('./start-xml-upload'),
-  // xmlToJson: require('./xml-to-json'),
   mapToJson: require('./map-to-json'),
   persist: require('./persist-returns')
 };
