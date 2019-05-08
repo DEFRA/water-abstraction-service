@@ -192,6 +192,7 @@ const mapReturn = (column, context) => {
     ret.reading = mapReading(column);
     ret.lines = mapLines(context.headers, column, ret.reading.type);
     ret.meters = mapMeters(column, ret.reading.type);
+    ret.frequency = ret.lines[0].timePeriod;
   }
 
   // Return

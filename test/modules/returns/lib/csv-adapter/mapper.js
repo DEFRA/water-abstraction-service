@@ -316,6 +316,7 @@ experiment('returns CSV to JSON mapper', () => {
       expect(result.reading).to.be.an.object();
       expect(result.meters[0]).to.be.an.object();
       expect(result.lines).to.be.an.array();
+      expect(result.frequency).to.be.a.string();
     });
   });
 

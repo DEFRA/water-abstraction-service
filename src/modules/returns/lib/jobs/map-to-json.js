@@ -15,7 +15,7 @@ const uploadAdapters = require('../upload-adapters');
  * @param {string} eventId The UUID of the event
  * @returns {Promise}
  */
-const publishReturnsXmlToJsonStart = eventId =>
+const publishReturnsMapToJsonStart = eventId =>
   messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(eventId));
 
 const validateUser = user => {
@@ -47,12 +47,12 @@ const mapToJson = async (evt, s3Object, user) => {
  *
  * @param {Object} job The job data from PG Boss
  */
-const handleReturnsXmlToJsonStart = async job => {
+const handleReturnsMapToJsonStart = async job => {
   const evt = await event.load(job.data.eventId);
 
   try {
     const [s3Object, user] = await Promise.all([
-      returnsUpload.getReturnsS3Object(job.data.eventId),
+      returnsUpload.getReturnsS3Object(job.data.eventId, evt.subtype),
       idmConnector.usersClient.getUserByUserName(evt.issuer)
     ]);
 
@@ -86,6 +86,6 @@ const uploadJsonToS3 = (eventId, json) => {
   return s3.upload(jsonFileName, Buffer.from(str, 'utf8'));
 };
 
-exports.publish = publishReturnsXmlToJsonStart;
-exports.handler = handleReturnsXmlToJsonStart;
+exports.publish = publishReturnsMapToJsonStart;
+exports.handler = handleReturnsMapToJsonStart;
 exports.jobName = JOB_NAME;

@@ -7,7 +7,8 @@ const { get } = require('lodash');
 const getReturnSkeleton = () => ({
   isUnderQuery: false,
   versionNumber: 1,
-  isCurrent: true
+  isCurrent: true,
+  status: 'completed'
 });
 
 /**

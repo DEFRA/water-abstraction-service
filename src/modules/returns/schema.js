@@ -45,7 +45,7 @@ const returnSchema = {
   receivedDate: Joi.string().regex(isoDateRegex).allow(null).required(),
   startDate: Joi.string().regex(isoDateRegex).required(),
   endDate: Joi.string().regex(isoDateRegex).required(),
-  dueDate: Joi.string().regex(isoDateRegex).required(),
+  dueDate: Joi.string().regex(isoDateRegex),
   frequency: Joi.when('isNil', { is: false,
     then: Joi.string().valid(allowedPeriods).required()
   }),
