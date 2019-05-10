@@ -333,8 +333,8 @@ experiment('Test getFormatEndDate', () => {
       EFF_END_DATE: 'null',
       TIMELTD_END_DATE: 'null',
       LICENCE_LAPSED_DATE: 'null',
-      LICENCE_REVOKED_DATE: 'null',
-      LICENCE_EXPIRY_DATE: '02/02/2018'
+      LICENCE_REVOKED_DATE: '02/02/2018',
+      LICENCE_EXPIRY_DATE: 'null'
     };
     expect(getFormatEndDate(format)).to.equal('2018-02-02');
   });
@@ -343,9 +343,9 @@ experiment('Test getFormatEndDate', () => {
     const format = {
       EFF_END_DATE: 'null',
       TIMELTD_END_DATE: 'null',
-      LICENCE_LAPSED_DATE: 'null',
+      LICENCE_LAPSED_DATE: '01/01/2018',
       LICENCE_REVOKED_DATE: 'null',
-      LICENCE_EXPIRY_DATE: '01/01/2018'
+      LICENCE_EXPIRY_DATE: 'null'
     };
     expect(getFormatEndDate(format)).to.equal('2018-01-01');
   });
@@ -582,6 +582,51 @@ experiment('formatReturnMetadata', () => {
     test('sets isUpload false for other months', async () => {
       const data = createFormat(67);
       expect(data.isUpload).to.equal(false);
+    });
+  });
+
+  experiment('isFinal flag', () => {
+    const createFormat = (endDate, expiredDate, lapsedDate, revokedDate) => formatReturnMetadata({
+      ...metadata,
+      EFF_END_DATE: endDate || 'null',
+      LICENCE_EXPIRY_DATE: expiredDate || 'null',
+      LICENCE_LAPSED_DATE: lapsedDate || 'null',
+      LICENCE_REVOKED_DATE: revokedDate || 'null'
+    });
+
+    test('sets isFinal to false if licence is not expired, revoked or lapsed', () => {
+      const data = createFormat('18/12/2018');
+      expect(data.isFinal).to.equal(false);
+    });
+
+    test('sets isFinal to false if licence expired date is not the same as end date', () => {
+      const data = createFormat('18/12/2018', '25/12/2018');
+      expect(data.isFinal).to.equal(false);
+    });
+
+    test('sets isFinal to false if licence lapsed date is not the same as end date', () => {
+      const data = createFormat('18/12/2018', null, '25/12/2018');
+      expect(data.isFinal).to.equal(false);
+    });
+
+    test('sets isFinal to false if licence revoked date is not the same as end date', () => {
+      const data = createFormat('18/12/2018', null, null, '25/12/2018');
+      expect(data.isFinal).to.equal(false);
+    });
+
+    test('sets isFinal to true if licence expired date is the same as end date', () => {
+      const data = createFormat('18/12/2018', '18/12/2018');
+      expect(data.isFinal).to.equal(true);
+    });
+
+    test('sets isFinal to true if licence lapsed date is the same as end date', () => {
+      const data = createFormat('18/12/2018', null, '18/12/2018');
+      expect(data.isFinal).to.equal(true);
+    });
+
+    test('sets isFinal to true if licence revoked date is the same as end date', () => {
+      const data = createFormat('18/12/2018', null, null, '18/12/2018');
+      expect(data.isFinal).to.equal(true);
     });
   });
 });
