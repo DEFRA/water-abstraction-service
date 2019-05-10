@@ -84,7 +84,8 @@ const formatReturnMetadata = (format) => {
     nald: formatReturnNaldMetadata(format),
     isTwoPartTariff: format.TPT_FLAG === 'Y',
     isSummer,
-    isUpload: isUpload || isLineEntry
+    isUpload: isUpload || isLineEntry,
+    isFinal: getIsFinal(format)
   };
 };
 
@@ -215,6 +216,19 @@ const getFormatStartDate = (format) => {
 };
 
 /**
+ * Returns valid dates sorted in chronological order
+ * @param  {Array} dates
+ * @return {Array}       valid, sorted dates
+ */
+const getValidDates = dates => {
+  return dates
+    .map(date => moment(date, 'DD/MM/YYYY'))
+    .filter(date => date.isValid())
+    .sort(chronologicalMomentSort)
+    .map(date => date.format('YYYY-MM-DD'));
+};
+
+/**
  * Finds the earlist valid date that represents the end date of
  * the given format.
  *
@@ -231,13 +245,26 @@ const getFormatEndDate = (format) => {
     'LICENCE_EXPIRY_DATE'
   ]));
 
-  const validDates = dates
-    .map(date => moment(date, 'DD/MM/YYYY'))
-    .filter(date => date.isValid())
-    .sort(chronologicalMomentSort)
-    .map(date => date.format('YYYY-MM-DD'));
-
+  const validDates = getValidDates(dates);
   return validDates.length ? validDates[0] : null;
+};
+
+/**
+ * Checks if end date is the same as expired/lapsed/revoked date,
+ * ie if the dates are the same, this is the final return for the licence
+ * @param  {Object} format
+ * @return {Boolean}       Whether or not it is the final return
+ */
+const getIsFinal = format => {
+  const dates = Object.values(pick(format, [
+    'LICENCE_EXPIRY_DATE',
+    'LICENCE_LAPSED_DATE',
+    'LICENCE_REVOKED_DATE'
+  ]));
+  const validDates = (dates.length > 0) ? getValidDates(dates) : null;
+  const returnEndDate = getFormatEndDate(format);
+
+  return validDates ? moment(returnEndDate).isSame(validDates[0], 'day') : false;
 };
 
 /**

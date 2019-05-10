@@ -65,7 +65,7 @@ const getReadingFromVersionMetadata = version => {
 const mapReturnToModel = (ret, version, lines, versions) => {
   const requiredLines = lines.length
     ? null
-    : returnLines.getRequiredLines(ret.start_date, ret.end_date, ret.returns_frequency);
+    : returnLines.getRequiredLines(ret.start_date, ret.end_date, ret.returns_frequency, ret.metadata.isFinal);
 
   return {
     returnId: ret.return_id,

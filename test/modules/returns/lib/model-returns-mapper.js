@@ -1,10 +1,12 @@
 const { expect } = require('code');
 const moment = require('moment');
 moment.locale('en-gb');
-
-const { experiment, test } = exports.lab = require('lab').script();
+const sinon = require('sinon');
+const sandbox = sinon.createSandbox();
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('lab').script();
 
 const { mapReturnToModel, mapReturnToVersion, mapReturn } = require('../../../../src/modules/returns/lib/model-returns-mapper');
+const returnLines = require('@envage/water-abstraction-helpers').returns.lines;
 
 const getTestReturn = () => ({
   return_id: 'test-return-id',
@@ -12,6 +14,9 @@ const getTestReturn = () => ({
   end_date: '2018-05-01',
   due_date: '2018-06-30',
   returns_frequency: 'month',
+  metadata: {
+    isFinal: false
+  },
   under_query: true
 });
 
@@ -51,6 +56,12 @@ const getTestVersion = (hasMeters = false) => {
 };
 
 experiment('mapReturnToModel', () => {
+  beforeEach(() => {
+    sandbox.stub(returnLines, 'getRequiredLines');
+  });
+  afterEach(() => {
+    sandbox.restore();
+  });
   test('assigns the reading meta data when no meters', async () => {
     const lines = [];
     const versions = [];
@@ -94,6 +105,18 @@ experiment('mapReturnToModel', () => {
     const testReturn = getTestReturn();
     const model = mapReturnToModel(testReturn, getTestVersion(), lines, versions);
     expect(model.isUnderQuery).to.be.true();
+  });
+
+  test('calls getRequiredLines with start date, end date, returns frequency, isFinal flag', async () => {
+    const lines = [];
+    const versions = [];
+    const testReturn = getTestReturn();
+    mapReturnToModel(testReturn, getTestVersion(), lines, versions);
+    const args = returnLines.getRequiredLines.lastCall.args;
+    expect(args[0]).to.be.equal(testReturn.start_date);
+    expect(args[1]).to.be.equal(testReturn.end_date);
+    expect(args[2]).to.be.equal(testReturn.returns_frequency);
+    expect(args[3]).to.be.equal(testReturn.metadata.isFinal);
   });
 });
 
