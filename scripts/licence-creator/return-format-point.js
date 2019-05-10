@@ -1,9 +1,4 @@
-
 class ReturnFormatPoint {
-  constructor () {
-
-  }
-
   setFormat (format) {
     this.format = format;
     return this;

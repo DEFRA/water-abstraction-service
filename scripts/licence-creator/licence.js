@@ -1,4 +1,3 @@
-const moment = require('moment');
 const getNextId = require('./next-id.js');
 
 const RepUnit = require('./rep-unit');

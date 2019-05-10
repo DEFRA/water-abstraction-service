@@ -81,7 +81,7 @@ const sendPDF = async (client, scheduledNotification) => {
 const sendLetter = async (client, scheduledNotification) => {
   const templateId = getNotifyTemplate(scheduledNotification);
   const { personalisation } = scheduledNotification;
-  return client.sendLetter(templateId, {personalisation});
+  return client.sendLetter(templateId, { personalisation });
 };
 
 /**
@@ -93,7 +93,7 @@ const sendLetter = async (client, scheduledNotification) => {
 const sendEmail = async (client, scheduledNotification) => {
   const templateId = getNotifyTemplate(scheduledNotification);
   const { recipient, personalisation } = scheduledNotification;
-  return client.sendEmail(templateId, recipient, {personalisation});
+  return client.sendEmail(templateId, recipient, { personalisation });
 };
 
 /**

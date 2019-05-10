@@ -5,7 +5,7 @@ const Promise = require('bluebird');
 const csvStringify = require('csv-stringify/lib/sync');
 const writeFile = Promise.promisify(fs.writeFile);
 const deepMap = require('deep-map');
-const {mkdirsSync} = require('mkdir');
+const { mkdirsSync } = require('mkdir');
 
 // Licence classes
 const Licence = require('./licence');
@@ -148,7 +148,7 @@ function writeCsv (outputPath, exportData) {
     });
     console.log(`Exporting ${tableName}`);
     const columns = Object.keys(data[0]);
-    const csv = csvStringify(data, {columns, header: true, quoted: false, quotedEmpty: false, quotedString: false});
+    const csv = csvStringify(data, { columns, header: true, quoted: false, quotedEmpty: false, quotedString: false });
     return writeFile(`${outputPath}${tableName}.txt`, csv);
   });
 }

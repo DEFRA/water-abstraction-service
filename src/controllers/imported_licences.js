@@ -4,7 +4,7 @@
  */
 const HAPIRestAPI = require('@envage/hapi-pg-rest-api');
 const Joi = require('joi');
-const {pool} = require('../lib/connectors/db.js');
+const { pool } = require('../lib/connectors/db.js');
 
 const NotificationsApi = new HAPIRestAPI({
   table: 'water.pending_import',

@@ -2,7 +2,7 @@ const moment = require('moment');
 const getNextId = require('./next-id.js');
 
 class Role {
-  constructor() {
+  constructor () {
     this.id = getNextId();
 
     this.licence = null;
@@ -17,47 +17,46 @@ class Role {
     this.roleType = null;
   }
 
-  setRoleType(roleType) {
+  setRoleType (roleType) {
     this.roleType = roleType;
     return this;
   }
 
-  setLicence(licence) {
+  setLicence (licence) {
     this.licence = licence;
     return this;
   }
 
-  setParty(party) {
+  setParty (party) {
     this.party = party;
     return this;
   }
 
-  setAddress(address) {
+  setAddress (address) {
     this.address = address;
     return this;
   }
 
-  addContactNo(contactNo) {
+  addContactNo (contactNo) {
     this.contactNos.push(contactNo);
     return this;
   }
 
-  export() {
+  export () {
     return {
-      ID : this.id,
-      ALRT_CODE : this.roleType.code,
-      ACON_APAR_ID : this.party.id,
-      ACON_AADD_ID : this.address.id,
-      EFF_ST_DATE : this.startDate,
-      AABL_ID : this.licence.id,
-      AIMP_ID : null,
-      EFF_END_DATE : this.endDate,
-      FGAC_REGION_CODE : 1,
-      SOURCE_CODE : 'NALD',
-      BATCH_RUN_DATE : '12/02/2018 20:02:11'
+      ID: this.id,
+      ALRT_CODE: this.roleType.code,
+      ACON_APAR_ID: this.party.id,
+      ACON_AADD_ID: this.address.id,
+      EFF_ST_DATE: this.startDate,
+      AABL_ID: this.licence.id,
+      AIMP_ID: null,
+      EFF_END_DATE: this.endDate,
+      FGAC_REGION_CODE: 1,
+      SOURCE_CODE: 'NALD',
+      BATCH_RUN_DATE: '12/02/2018 20:02:11'
     };
   }
-
 }
 
 module.exports = Role;

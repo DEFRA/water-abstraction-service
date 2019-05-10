@@ -25,7 +25,7 @@ experiment('checkStatus job', () => {
   beforeEach(async () => {
     sandbox.stub(messageQueue, 'publish').resolves();
     sandbox.stub(messageHelpers, 'getMessageById')
-      .resolves({id: messageId, notify_id: notifyId});
+      .resolves({ id: messageId, notify_id: notifyId });
     sandbox.stub(scheduledNotifications.repository, 'update').resolves();
     sandbox.stub(notify, 'getStatus').resolves(status);
     sandbox.stub(logger, 'error');
@@ -49,7 +49,7 @@ experiment('checkStatus job', () => {
     });
     test('includes the message ID in the job data', async () => {
       const [, data] = messageQueue.publish.lastCall.args;
-      expect(data).to.equal({messageId});
+      expect(data).to.equal({ messageId });
     });
     test('uses the message ID as a singleton key in the job options', async () => {
       const [, , options] = messageQueue.publish.lastCall.args;
