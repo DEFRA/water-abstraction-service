@@ -4,6 +4,7 @@
  *
  */
 const { returns } = require('../../../lib/connectors/returns');
+const { chunk } = require('lodash');
 
 /**
  * Gets the filter which will be used to find returns whose IDs
@@ -52,9 +53,17 @@ const voidReturn = (returnId) => returns.updateOne(returnId, { status: 'void' })
  * @return {Promise} resolves when returns updated
  */
 const voidInvalidCycles = async (licenceNumber, returnIds) => {
-  const filter = getFilter(licenceNumber, returnIds);
-  const rows = await returns.findAll(filter, {}, ['return_id', 'metadata']);
-  return processReturnsAsync(rows, voidReturn);
+  // Only do 20 at a time to prevent making the URI too large by adding an
+  // unlimited number of returns ids to the filter.
+  const chunks = chunk(returnIds, 20);
+  const promises = [];
+
+  for (const chunk of chunks) {
+    const filter = getFilter(licenceNumber, chunk);
+    const rows = await returns.findAll(filter, {}, ['return_id', 'metadata']);
+    promises.push(processReturnsAsync(rows, voidReturn));
+  }
+  return Promise.all(promises);
 };
 
 module.exports = {
