@@ -19,19 +19,19 @@ const importTableExists = async () => {
 
 const getMain = async (licenceNo) => {
   const query = `
-    select * from import.
-    -- "NALD_ABSTAT_WFD_DATA"
-    "NALD_ABS_LICENCES"
-    where "LIC_NO"=$1
-    `;
+    select *
+    from import."NALD_ABS_LICENCES"
+    where "LIC_NO"=$1;`;
+
   const params = [licenceNo];
   return dbQuery(query, params);
 };
 const getCams = async (code, FGAC_REGION_CODE) => {
   const query = `
-    select * from import."NALD_REP_UNITS"
-    where "CODE"=$1 and "FGAC_REGION_CODE" = $2
-    `;
+    select * 
+    from import."NALD_REP_UNITS"
+    where "CODE"=$1 and "FGAC_REGION_CODE" = $2;`;
+
   const params = [code, FGAC_REGION_CODE];
   return dbQuery(query, params);
 };
@@ -72,8 +72,8 @@ const getCurrentVersion = async (licenceId, FGAC_REGION_CODE) => {
 };
 const getVersions = async (licenceId, FGAC_REGION_CODE) => {
   const query = `
-    select * from import."NALD_ABS_LIC_VERSIONS"
---     JOIN NALD_WA_LIC_TYPES ON "NALD_ABS_LIC_VERSIONS"."WA_ALTY_CODE"="NALD_WA_LIC_TYPES"."CODE"
+    select * 
+    from import."NALD_ABS_LIC_VERSIONS"
     where "AABL_ID"=$1 and "FGAC_REGION_CODE" = $2
     `;
   const params = [licenceId, FGAC_REGION_CODE];
@@ -82,10 +82,8 @@ const getVersions = async (licenceId, FGAC_REGION_CODE) => {
 };
 const getParties = async (ID, FGAC_REGION_CODE) => {
   const query = `
-    select
-    p.*
-    from
-    import."NALD_PARTIES" p
+    select p.*
+    from import."NALD_PARTIES" p
     where p."ID"=$1 and "FGAC_REGION_CODE" = $2
   `;
   const params = [ID, FGAC_REGION_CODE];
@@ -107,8 +105,8 @@ const getPartyContacts = async (APAR_ID, FGAC_REGION_CODE) => {
 };
 const getParty = async (APAR_ID, FGAC_REGION_CODE) => {
   const query = `
-    select p.* from
-    import."NALD_PARTIES" p
+    select p.* 
+    from import."NALD_PARTIES" p
     where "ID"=$1 and "FGAC_REGION_CODE" = $2
   `;
   const params = [APAR_ID, FGAC_REGION_CODE];
@@ -116,8 +114,7 @@ const getParty = async (APAR_ID, FGAC_REGION_CODE) => {
 };
 const getAddress = async (AADD_ID, FGAC_REGION_CODE) => {
   const query = `
-    select
-    a.*
+    select a.*
     from import."NALD_ADDRESSES" a
     where "ID"=$1 and "FGAC_REGION_CODE" = $2
   `;
@@ -170,19 +167,15 @@ const getPurposes = async (licenceId, FGAC_REGION_CODE, ISSUE_NO, INCR_NO) => {
   let query, params;
   if (ISSUE_NO && INCR_NO) {
     query = `
-        select
-              *
-        from
-        import."NALD_ABS_LIC_PURPOSES" p
+        select *
+        from import."NALD_ABS_LIC_PURPOSES" p
         where p."AABV_AABL_ID"=$1 and "FGAC_REGION_CODE" = $2 and "AABV_ISSUE_NO"=$3  and "AABV_INCR_NO" = $4
     `;
     params = [licenceId, FGAC_REGION_CODE, ISSUE_NO, INCR_NO];
   } else {
     query = `
-        select
-              *
-        from
-        import."NALD_ABS_LIC_PURPOSES" p
+        select *
+        from import."NALD_ABS_LIC_PURPOSES" p
         where p."AABV_AABL_ID"=$1 and "FGAC_REGION_CODE" = $2
         `;
     params = [licenceId, FGAC_REGION_CODE];
@@ -223,7 +216,8 @@ const getPurpose = async (purpose) => {
 };
 const getPurposePointLicenceAgreements = async (AABP_ID, FGAC_REGION_CODE) => {
   const query = `
-      select * from import."NALD_LIC_AGRMNTS"
+      select * 
+      from import."NALD_LIC_AGRMNTS"
       where "AABP_ID"=$1 and "FGAC_REGION_CODE" = $2
   `;
   const params = [AABP_ID, FGAC_REGION_CODE];

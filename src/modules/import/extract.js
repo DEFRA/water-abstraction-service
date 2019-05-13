@@ -19,6 +19,9 @@ const localPath = './temp/';
 const filePath = path.join(localPath, 'nald_dl.zip');
 const finalPath = path.join(localPath, 'NALD');
 
+const SCHEMA_IMPORT = 'import';
+const SCHEMA_TEMP = 'import_temp';
+
 /**
  * Prepares for import by removing files from tempory folder and creating directory
  */
@@ -76,31 +79,39 @@ async function getImportFiles () {
   });
 }
 
+const dropSchema = name => dbQuery(`drop schema if exists ${name} cascade`);
+const createSchema = name => dbQuery(`create schema if not exists ${name}`);
+const renameSchema = (from, to) => dbQuery(`alter schema ${from} rename to ${to};`);
+
 /**
  * Drops and creates the import schema ready to import the CSVs as tables
+ * @schemaName {String} The name of the schema to recreate.
  * @return {Promise}
  */
-async function dropAndCreateSchema () {
-  await dbQuery('DROP SCHEMA IF EXISTS "import" CASCADE');
-  await dbQuery('CREATE schema if not exists "import"');
+async function dropAndCreateSchema (schemaName = SCHEMA_IMPORT) {
+  await dropSchema(schemaName);
+  await createSchema(schemaName);
 }
+
+const swapTemporarySchema = async () => {
+  await dropSchema(SCHEMA_IMPORT);
+  await renameSchema(SCHEMA_TEMP, SCHEMA_IMPORT);
+};
 
 /**
  * Gets import SQL for single file in import
  * @param {String} file - the CSV file to import
  * @return {String} the SQL statements to import the CSV file
  */
-async function getSqlForFile (file) {
+async function getSqlForFile (file, schemaName) {
   const indexableFieldsList = ['ID', 'LIC_NO ', 'FGAC_REGION_CODE', 'CODE ', 'AABL_ID', 'WA_ALTY_CODE', 'EFF_END_DATE', 'EFF_ST_DATE', 'STATUS', 'EXPIRY_DATE', 'LAPSED_DATE', 'REV_DATE', 'ISSUE_NO', 'INCR_NO', 'AADD_ID', 'APAR_ID', 'ACNT_CODE', 'ACON_APAR_ID', 'ACON_AADD_ID', 'ALRT_CODE', 'AABV_AABL_ID', 'AABV_ISSUE_NO', 'AABV_INCR_NO', 'AMOA_CODE', 'AAIP_ID', 'ASRC_CODE', 'AABP_ID', 'ACIN_CODE', 'ACIN_SUBCODE', 'DISP_ORD', 'ARTY_ID', 'ARFL_ARTY_ID', 'ARFL_DATE_FROM'];
 
-  let table = file.split('.')[0];
-
+  const table = file.split('.')[0];
   const tablePath = path.join(finalPath, `${table}.txt`);
+  const line = await readFirstLine(tablePath);
+  const cols = line.split(',');
 
-  let line = await readFirstLine(tablePath);
-  let cols = line.split(',');
-
-  let tableCreate = `\n CREATE TABLE if not exists "import"."${table}" (`;
+  let tableCreate = `\n CREATE TABLE if not exists ${schemaName}."${table}" (`;
 
   for (let col = 0; col < cols.length; col++) {
     tableCreate += `"${cols[col]}" varchar`;
@@ -113,14 +124,14 @@ async function getSqlForFile (file) {
 
   const indexableFields = intersection(indexableFieldsList, cols);
 
-  for (let field of indexableFields) {
+  for (const field of indexableFields) {
     const indexName = `${table}_${field}_index`;
     tableCreate += `\ndrop INDEX  if exists "${indexName}";`;
   }
-  tableCreate += `\n \\copy "import"."${table}" FROM '${finalPath}/${file}' HEADER DELIMITER ',' CSV;`;
-  for (let field of indexableFields) {
+  tableCreate += `\n \\copy ${schemaName}."${table}" FROM '${finalPath}/${file}' HEADER DELIMITER ',' CSV;`;
+  for (const field of indexableFields) {
     const indexName = `${table}_${field}_index`;
-    tableCreate += `\nCREATE INDEX "${indexName}" ON "import"."${table}" ("${field}");`;
+    tableCreate += `\nCREATE INDEX "${indexName}" ON ${schemaName}."${table}" ("${field}");`;
   }
 
   return tableCreate;
@@ -131,17 +142,23 @@ async function getSqlForFile (file) {
  * @param {String} the CSV filename
  * @return {Promise}
  */
-async function importFiles () {
+async function importFiles (schemaName) {
   const files = await getImportFiles();
   const sqlPath = path.join(finalPath, 'sql.sql');
 
-  for (let file of files) {
+  for (const file of files) {
     logger.info(`Importing ${file} to PostGres`);
-    const sql = await getSqlForFile(file);
+    const sql = await getSqlForFile(file, schemaName);
+
     await writeFile(sqlPath, sql);
     await execCommand(`psql ${config.pg.connectionString} < ${sqlPath}`);
   }
 }
+
+const logToConsoleAndSlack = message => {
+  Slack.post(message);
+  logger.info(message);
+};
 
 /**
  * The download/extract tasks have been combined into a single task
@@ -150,24 +167,27 @@ async function importFiles () {
  * @return {Promise}
  */
 const downloadAndExtract = async () => {
-  Slack.post('Import: preparing folders');
+  logToConsoleAndSlack('Import: preparing folders');
   await prepare();
 
-  Slack.post('Import: downloading from S3');
+  logToConsoleAndSlack('Import: downloading from S3');
   await download();
 
-  Slack.post('Import: extracting files from zip');
+  logToConsoleAndSlack('Import: extracting files from zip');
   await extract();
 
-  Slack.post('Import: drop/create import schema');
-  await dropAndCreateSchema();
+  logToConsoleAndSlack('Import: create import_temp schema');
+  await dropAndCreateSchema(SCHEMA_TEMP);
 
-  Slack.post('Import: importing CSV files');
-  await importFiles();
-  Slack.post('Import: CSV loaded');
+  logToConsoleAndSlack('Import: importing CSV files');
+  await importFiles(SCHEMA_TEMP);
+  logToConsoleAndSlack('Import: CSV loaded');
+
+  logToConsoleAndSlack('Import: swapping schema from import_temp to import');
+  await swapTemporarySchema();
 
   await prepare();
-  Slack.post('Import: cleaned up local files');
+  logToConsoleAndSlack('Import: cleaned up local files');
 };
 
 /**
@@ -178,16 +198,14 @@ const downloadAndExtract = async () => {
  */
 const copyTestFiles = async () => {
   await prepare();
-  await dropAndCreateSchema();
+  await dropAndCreateSchema(SCHEMA_IMPORT);
 
   // move dummy data files
   await execCommand(`cp ./test/dummy-csv/* ${finalPath}`);
 
   // Import CSV
-  return importFiles();
+  return importFiles(SCHEMA_IMPORT);
 };
 
-module.exports = {
-  copyTestFiles,
-  downloadAndExtract
-};
+exports.copyTestFiles = copyTestFiles;
+exports.downloadAndExtract = downloadAndExtract;
