@@ -12,11 +12,14 @@ pool.on('acquire', () => {
   }
 });
 
-function promiseQuery (queryString, params) {
-  return pool.query(queryString, params);
-}
-
-module.exports = {
-  query: promiseQuery,
-  pool
+const query = async (queryString, params) => {
+  try {
+    const result = await pool.query(queryString, params);
+    return { data: result.rows, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
 };
+
+exports.query = query;
+exports.pool = pool;
