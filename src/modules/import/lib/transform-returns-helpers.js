@@ -65,21 +65,7 @@ const formatReturnMetadata = (format) => {
   return {
     version: 1,
     description: format.SITE_DESCR,
-    purposes: format.purposes.map(purpose => ({
-      primary: {
-        code: purpose.APUR_APPR_CODE,
-        description: purpose.primary_purpose
-      },
-      secondary: {
-        code: purpose.APUR_APSE_CODE,
-        description: purpose.secondary_purpose
-      },
-      tertiary: {
-        code: purpose.APUR_APUS_CODE,
-        description: purpose.tertiary_purpose
-      },
-      alias: getPurposeAlias(purpose)
-    })),
+    purposes: mapPurposes(format),
     points: format.points.map(point => formatAbstractionPoint(convertNullStrings(point))),
     nald: formatReturnNaldMetadata(format),
     isTwoPartTariff: format.TPT_FLAG === 'Y',
@@ -87,6 +73,28 @@ const formatReturnMetadata = (format) => {
     isUpload: isUpload || isLineEntry,
     isFinal: getIsFinal(format)
   };
+};
+/**
+ * Maps purposes, by primary, secondary, and tertiary, includes alias
+ * @param  {Object} format
+ * @return {Object}       purposes metadata array
+ */
+const mapPurposes = format => {
+  return format.purposes.map(purpose => ({
+    primary: {
+      code: purpose.APUR_APPR_CODE,
+      description: purpose.primary_purpose
+    },
+    secondary: {
+      code: purpose.APUR_APSE_CODE,
+      description: purpose.secondary_purpose
+    },
+    tertiary: {
+      code: purpose.APUR_APUS_CODE,
+      description: purpose.tertiary_purpose
+    },
+    alias: getPurposeAlias(purpose)
+  }));
 };
 
 /**
