@@ -585,56 +585,11 @@ experiment('formatReturnMetadata', () => {
     });
   });
 
-  experiment('isFinal flag', () => {
-    const createFormat = (endDate, expiredDate, lapsedDate, revokedDate) => formatReturnMetadata({
-      ...metadata,
-      EFF_END_DATE: endDate || 'null',
-      LICENCE_EXPIRY_DATE: expiredDate || 'null',
-      LICENCE_LAPSED_DATE: lapsedDate || 'null',
-      LICENCE_REVOKED_DATE: revokedDate || 'null'
+  experiment('getStartDate', () => {
+    test('a weekly date starts on a sunday', async () => {
+      const wednesday = '2018-11-14';
+      const sunday = '2018-11-11';
+      expect(getStartDate('2018-11-11', wednesday, 'week')).to.equal(sunday);
     });
-
-    test('sets isFinal to false if licence is not expired, revoked or lapsed', () => {
-      const data = createFormat('18/12/2018');
-      expect(data.isFinal).to.equal(false);
-    });
-
-    test('sets isFinal to false if licence expired date is not the same as end date', () => {
-      const data = createFormat('18/12/2018', '25/12/2018');
-      expect(data.isFinal).to.equal(false);
-    });
-
-    test('sets isFinal to false if licence lapsed date is not the same as end date', () => {
-      const data = createFormat('18/12/2018', null, '25/12/2018');
-      expect(data.isFinal).to.equal(false);
-    });
-
-    test('sets isFinal to false if licence revoked date is not the same as end date', () => {
-      const data = createFormat('18/12/2018', null, null, '25/12/2018');
-      expect(data.isFinal).to.equal(false);
-    });
-
-    test('sets isFinal to true if licence expired date is the same as end date', () => {
-      const data = createFormat('18/12/2018', '18/12/2018');
-      expect(data.isFinal).to.equal(true);
-    });
-
-    test('sets isFinal to true if licence lapsed date is the same as end date', () => {
-      const data = createFormat('18/12/2018', null, '18/12/2018');
-      expect(data.isFinal).to.equal(true);
-    });
-
-    test('sets isFinal to true if licence revoked date is the same as end date', () => {
-      const data = createFormat('18/12/2018', null, null, '18/12/2018');
-      expect(data.isFinal).to.equal(true);
-    });
-  });
-});
-
-experiment('getStartDate', () => {
-  test('a weekly date starts on a sunday', async () => {
-    const wednesday = '2018-11-14';
-    const sunday = '2018-11-11';
-    expect(getStartDate('2018-11-11', wednesday, 'week')).to.equal(sunday);
   });
 });

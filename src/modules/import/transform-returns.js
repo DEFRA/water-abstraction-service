@@ -1,19 +1,6 @@
-const {
-  getFormats,
-  getFormatPurposes,
-  getFormatPoints,
-  getLogsForPeriod,
-  getSplitDate
-} = require('./lib/nald-returns-queries.js');
-
-const {
-  mapPeriod,
-  formatReturnMetadata,
-  getFormatCycles,
-  mapReceivedDate,
-  getStatus
-} = require('./lib/transform-returns-helpers.js');
-
+const moment = require('moment');
+const queries = require('./lib/nald-returns-queries.js');
+const helpers = require('./lib/transform-returns-helpers.js');
 const dueDate = require('./lib/due-date');
 
 const { getReturnId } = require('../../lib/returns');
@@ -24,15 +11,15 @@ const { getReturnId } = require('../../lib/returns');
  * @return {Promise} resolves with array of formats
  */
 const getLicenceFormats = async (licenceNumber) => {
-  const splitDate = await getSplitDate(licenceNumber);
+  const splitDate = await queries.getSplitDate(licenceNumber);
 
-  const formats = await getFormats(licenceNumber);
+  const formats = await queries.getFormats(licenceNumber);
 
   // Load format data
   for (let format of formats) {
-    format.purposes = await getFormatPurposes(format.ID, format.FGAC_REGION_CODE);
-    format.points = await getFormatPoints(format.ID, format.FGAC_REGION_CODE);
-    format.cycles = getFormatCycles(format, splitDate);
+    format.purposes = await queries.getFormatPurposes(format.ID, format.FGAC_REGION_CODE);
+    format.points = await queries.getFormatPoints(format.ID, format.FGAC_REGION_CODE);
+    format.cycles = helpers.getFormatCycles(format, splitDate);
   }
   return formats;
 };
@@ -52,7 +39,7 @@ const buildReturnsPacket = async (licenceNumber) => {
       const { startDate, endDate, isCurrent } = cycle;
 
       // Get all form logs relating to this cycle
-      const cycleLogs = await getLogsForPeriod(format.ID, format.FGAC_REGION_CODE, startDate, endDate);
+      const cycleLogs = await queries.getLogsForPeriod(format.ID, format.FGAC_REGION_CODE, startDate, endDate);
 
       // Only create return cycles for formats with logs to allow NALD prepop to
       // drive online returns
@@ -61,8 +48,8 @@ const buildReturnsPacket = async (licenceNumber) => {
       }
 
       const returnId = getReturnId(format.FGAC_REGION_CODE, licenceNumber, format.ID, startDate, endDate);
-      const receivedDate = mapReceivedDate(cycleLogs);
-      const status = getStatus(receivedDate);
+      const receivedDate = helpers.mapReceivedDate(cycleLogs);
+      const status = helpers.getStatus(receivedDate);
 
       // Create new return row
       const returnRow = {
@@ -73,12 +60,13 @@ const buildReturnsPacket = async (licenceNumber) => {
         start_date: startDate,
         end_date: endDate,
         due_date: await dueDate.getDueDate(endDate, format),
-        returns_frequency: mapPeriod(format.ARTC_REC_FREQ_CODE),
+        returns_frequency: helpers.mapPeriod(format.ARTC_REC_FREQ_CODE),
         status,
         source: 'NALD',
         metadata: JSON.stringify({
-          ...formatReturnMetadata(format),
-          isCurrent
+          ...helpers.formatReturnMetadata(format),
+          isCurrent,
+          isFinal: moment(endDate).isSame(helpers.getFormatEndDate(format), 'day')
         }),
         received_date: receivedDate,
         return_requirement: format.ID
