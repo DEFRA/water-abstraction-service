@@ -97,8 +97,8 @@ const validateReturnlines = ret => {
   if (ret.isNil) {
     return true;
   }
-  const { startDate, endDate, frequency } = ret;
-  const requiredLines = returnLines.getRequiredLines(startDate, endDate, frequency);
+  const { startDate, endDate, frequency, metadata } = ret;
+  const requiredLines = returnLines.getRequiredLines(startDate, endDate, frequency, metadata.isFinal);
   return linesToString(requiredLines) === linesToString(ret.lines);
 };
 
