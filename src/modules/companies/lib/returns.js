@@ -1,3 +1,5 @@
+const { set } = require('lodash');
+
 /**
  * Creates a filter object to request returns from the returns service
  * @param  {Object} request   - the HAPI request
@@ -8,10 +10,11 @@ const createReturnsFilter = (request, documents) => {
   const { query } = request;
 
   const filters = {
-    startDate: { start_date: { $gte: query.startDate } },
-    endDate: { end_date: { $lte: query.endDate } },
-    isSummer: { 'metadata->>isSummer': query.isSummer ? 'true' : 'false' },
-    status: { status: query.status }
+    startDate: { key: 'start_date.$gte', value: query.startDate },
+    endDate: { key: 'end_date.$lte', value: query.endDate },
+    isSummer: { key: 'metadata->>isSummer', value: query.isSummer ? 'true' : 'false' },
+    status: { key: 'status', value: query.status },
+    excludeNaldReturns: { key: 'end_date.$gte', value: '2018-10-31' }
   };
 
   const baseFilter = {
@@ -21,8 +24,9 @@ const createReturnsFilter = (request, documents) => {
     }
   };
 
-  return Object.keys(request.query).reduce((acc, key) => {
-    return Object.assign(acc, filters[key]);
+  return Object.keys(request.query).reduce((acc, queryParam) => {
+    set(acc, filters[queryParam].key, filters[queryParam].value);
+    return acc;
   }, baseFilter);
 };
 
