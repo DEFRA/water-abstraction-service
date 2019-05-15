@@ -1,19 +1,15 @@
-/* eslint-disable camelcase */
-const Lab = require('lab');
-
-const lab = Lab.script();
-const Code = require('code');
+const { before, experiment, test } = exports.lab = require('lab').script();
+const { expect } = require('code');
 const server = require('../../index.js');
 const licenceCreator = require('../../scripts/licence-creator/index.js');
 const { copyTestFiles } = require('../../src/modules/import/extract.js');
 
 let licenceData;
 
-lab.experiment('Test NALD import', () => {
-  lab.before(async () => {
+experiment('Test NALD import', () => {
+  before(async () => {
     // Generate dummy NALD data
     await licenceCreator();
-
     await copyTestFiles();
 
     // Load dummy licence JSON
@@ -28,111 +24,110 @@ lab.experiment('Test NALD import', () => {
     licenceData = JSON.parse(res.payload);
   });
 
-  lab.test('Test licence number', async () => {
-    Code.expect(licenceData.LIC_NO).to.equal('12/34/56/78');
+  test('Test licence number', async () => {
+    expect(licenceData.LIC_NO).to.equal('12/34/56/78');
   });
 
-  lab.test('Test start date', async () => {
-    Code.expect(licenceData.ORIG_EFF_DATE).to.equal('01/01/2018');
+  test('Test start date', async () => {
+    expect(licenceData.ORIG_EFF_DATE).to.equal('01/01/2018');
   });
 
-  lab.test('Test start date', async () => {
-    Code.expect(licenceData.ORIG_EFF_DATE).to.equal('01/01/2018');
+  test('Test start date', async () => {
+    expect(licenceData.ORIG_EFF_DATE).to.equal('01/01/2018');
   });
 
-  lab.test('Test expiry date', async () => {
-    Code.expect(licenceData.EXPIRY_DATE).to.equal('01/01/2020');
+  test('Test expiry date', async () => {
+    expect(licenceData.EXPIRY_DATE).to.equal('01/01/2020');
   });
 
-  lab.test('Test current vertsion', async () => {
-    Code.expect(licenceData.data.current_version.licence.STATUS).to.equal('CURR');
+  test('Test current vertsion', async () => {
+    expect(licenceData.data.current_version.licence.STATUS).to.equal('CURR');
   });
 
-  lab.test('Test party count', async () => {
-    Code.expect(licenceData.data.current_version.licence.party.length).to.equal(1);
+  test('Test party count', async () => {
+    expect(licenceData.data.current_version.licence.party.length).to.equal(1);
   });
 
-  lab.test('Test party details', async () => {
+  test('Test party details', async () => {
     const [party] = licenceData.data.current_version.licence.party;
-    Code.expect(party.APAR_TYPE).to.equal('PER');
-    Code.expect(party.FORENAME).to.equal('John');
-    Code.expect(party.NAME).to.equal('Doe');
+    expect(party.APAR_TYPE).to.equal('PER');
+    expect(party.FORENAME).to.equal('John');
+    expect(party.NAME).to.equal('Doe');
   });
 
-  lab.test('Test address', async () => {
+  test('Test address', async () => {
     const { address } = licenceData.data.current_version;
-    Code.expect(address.ADDR_LINE_1).to.equal('Daisy cow farm');
+    expect(address.ADDR_LINE_1).to.equal('Daisy cow farm');
   });
 
-  lab.test('Test purpose count', async () => {
+  test('Test purpose count', async () => {
     const { purposes } = licenceData.data.current_version;
-    Code.expect(purposes.length).to.equal(1);
+    expect(purposes.length).to.equal(1);
   });
 
-  lab.test('Test purpose', async () => {
-    const { purpose_primary, purpose_secondary, purpose_tertiary } = licenceData.data.current_version.purposes[0].purpose[0];
-    Code.expect(purpose_primary.CODE).to.equal('A');
-    Code.expect(purpose_secondary.CODE).to.equal('AGR');
-    Code.expect(purpose_tertiary.CODE).to.equal('140');
+  test('Test purpose', async () => {
+    const purpose = licenceData.data.current_version.purposes[0].purpose[0];
+    expect(purpose.purpose_primary.CODE).to.equal('A');
+    expect(purpose.purpose_secondary.CODE).to.equal('AGR');
+    expect(purpose.purpose_tertiary.CODE).to.equal('140');
   });
 
-  lab.test('Test point count', async () => {
+  test('Test point count', async () => {
     const { purposePoints } = licenceData.data.current_version.purposes[0];
-    Code.expect(purposePoints.length).to.equal(1);
+    expect(purposePoints.length).to.equal(1);
   });
 
-  lab.test('Test point', async () => {
+  test('Test point', async () => {
     const [point] = licenceData.data.current_version.purposes[0].purposePoints;
-    Code.expect(point.means_of_abstraction.CODE).to.equal('UNP');
-    Code.expect(point.point_detail.NGR1_SHEET).to.equal('SP');
-    Code.expect(point.point_detail.NGR1_EAST).to.equal('123');
-    Code.expect(point.point_detail.NGR1_NORTH).to.equal('456');
-    Code.expect(point.point_detail.LOCAL_NAME).to.equal('TEST BOREHOLE');
-    Code.expect(point.point_source.CODE).to.equal('GWSOS');
+    expect(point.means_of_abstraction.CODE).to.equal('UNP');
+    expect(point.point_detail.NGR1_SHEET).to.equal('SP');
+    expect(point.point_detail.NGR1_EAST).to.equal('123');
+    expect(point.point_detail.NGR1_NORTH).to.equal('456');
+    expect(point.point_detail.LOCAL_NAME).to.equal('TEST BOREHOLE');
+    expect(point.point_source.CODE).to.equal('GWSOS');
   });
 
-  lab.test('Test agreement', async () => {
+  test('Test agreement', async () => {
     const [agreement] = licenceData.data.current_version.purposes[0].licenceAgreements;
-    Code.expect(agreement.EFF_ST_DATE).to.equal('01/01/2018');
+    expect(agreement.EFF_ST_DATE).to.equal('01/01/2018');
   });
 
-  lab.test('Test condition count', async () => {
+  test('Test condition count', async () => {
     const conditions = licenceData.data.current_version.purposes[0].licenceConditions;
-    Code.expect(conditions.length).to.equal(1);
+    expect(conditions.length).to.equal(1);
   });
 
-  lab.test('Test condition', async () => {
+  test('Test condition', async () => {
     const [condition] = licenceData.data.current_version.purposes[0].licenceConditions;
-    Code.expect(condition.ACIN_CODE).to.equal('CES');
-    Code.expect(condition.ACIN_SUBCODE).to.equal('FLOW');
-    Code.expect(condition.PARAM1).to.equal('AUTHOR');
-    Code.expect(condition.PARAM2).to.equal('17.5');
+    expect(condition.ACIN_CODE).to.equal('CES');
+    expect(condition.ACIN_SUBCODE).to.equal('FLOW');
+    expect(condition.PARAM1).to.equal('AUTHOR');
+    expect(condition.PARAM2).to.equal('17.5');
   });
 
-  lab.test('Test role count', async () => {
+  test('Test role count', async () => {
     const { roles } = licenceData.data;
-    Code.expect(roles.length).to.equal(1);
+    expect(roles.length).to.equal(1);
   });
 
-  lab.test('Test role detail', async () => {
+  test('Test role detail', async () => {
     const [role] = licenceData.data.roles;
-    const { role_detail, role_type, role_party } = role;
-    Code.expect(role_detail.ALRT_CODE).to.equal('LC');
-    Code.expect(role_type.CODE).to.equal('LC');
-    Code.expect(role_type.DESCR).to.equal('Licence contact');
-    Code.expect(role_party.APAR_TYPE).to.equal('PER');
-    Code.expect(role_party.NAME).to.equal('Doe');
-    Code.expect(role_party.FORENAME).to.equal('John');
+    const { role_detail: roleDetail, role_type: roleType, role_party: roleParty } = role;
+    expect(roleDetail.ALRT_CODE).to.equal('LC');
+    expect(roleType.CODE).to.equal('LC');
+    expect(roleType.DESCR).to.equal('Licence contact');
+    expect(roleParty.APAR_TYPE).to.equal('PER');
+    expect(roleParty.NAME).to.equal('Doe');
+    expect(roleParty.FORENAME).to.equal('John');
   });
 
-  lab.test('Test role address', async () => {
+  test('Test role address', async () => {
     const [role] = licenceData.data.roles;
-    const { role_address } = role;
-    Code.expect(role_address.ADDR_LINE_1).to.equal('Daisy cow farm');
-    Code.expect(role_address.ADDR_LINE_2).to.equal('Long road');
-    Code.expect(role_address.TOWN).to.equal('Daisybury');
-    Code.expect(role_address.COUNTY).to.equal('Testingshire');
-    Code.expect(role_address.POSTCODE).to.equal('TT1 1TT');
+    const { role_address: roleAddress } = role;
+    expect(roleAddress.ADDR_LINE_1).to.equal('Daisy cow farm');
+    expect(roleAddress.ADDR_LINE_2).to.equal('Long road');
+    expect(roleAddress.TOWN).to.equal('Daisybury');
+    expect(roleAddress.COUNTY).to.equal('Testingshire');
+    expect(roleAddress.POSTCODE).to.equal('TT1 1TT');
   });
 });
-exports.lab = lab;
