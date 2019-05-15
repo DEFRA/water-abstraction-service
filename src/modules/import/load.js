@@ -27,7 +27,7 @@ const loadPermitAndDocumentHeader = async (licenceNumber, licenceData) => {
   // Create CRM data and persist
   logger.info(`Import: document header for ${licenceNumber}`);
   const crmData = buildCRMPacket(licenceData, licenceNumber, permitRepoId);
-  await repository.document.persist({document_id: uuidV4(), ...crmData});
+  await repository.document.persist({ document_id: uuidV4(), ...crmData });
 };
 
 /**

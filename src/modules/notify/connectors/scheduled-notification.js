@@ -20,7 +20,7 @@ const mapObjectToNotification = (data) => {
 const createFromObject = async (data) => {
   const dbRow = mapObjectToNotification(data);
   // Write data row to scheduled_notification DB table
-  const {rows: [row], error} = await scheduledNotification.create(dbRow);
+  const { rows: [row], error } = await scheduledNotification.create(dbRow);
   if (error) {
     throw Boom.boomify(error);
   }

@@ -15,7 +15,6 @@ const {
   getFormatEndDate,
   getFormatCycles,
   formatReturnMetadata,
-  getDueDate,
   getStartDate
 } = require('../../../../src/modules/import/lib/transform-returns-helpers');
 

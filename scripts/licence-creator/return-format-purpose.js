@@ -1,9 +1,4 @@
-
 class ReturnFormatPurpose {
-  constructor () {
-
-  }
-
   setFormat (format) {
     this.format = format;
     return this;

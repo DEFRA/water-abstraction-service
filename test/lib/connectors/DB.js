@@ -1,34 +1,30 @@
-'use strict'
-require('dotenv').config()
+'use strict';
 
-// See Code API ref at https://github.com/hapijs/code/blob/HEAD/API.md
+require('dotenv').config();
 
-// requires for testing
-const Code = require('code')
+const { expect } = require('code');
+const { experiment, test } = exports.lab = require('lab').script();
 
-const expect = Code.expect
-const Lab = require('lab')
-const lab = Lab.script()
+const db = require('../../../src/lib/connectors/db.js');
 
-// use some BDD verbage instead of lab default
-const describe = lab.describe
-const it = lab.it
-const after = lab.after
+experiment('result object', () => {
+  test('has data when no error', async () => {
+    const res = await db.query('select 1 as test_one');
+    expect(res).to.equal({
+      data: [
+        { test_one: 1 }
+      ],
+      error: null
+    });
+  });
 
-const db = require('../../../src/lib/connectors/db.js')
-// tests
-lab.experiment('Test Database Connection', () => {
-  lab.test('should return data', async() => {
-      // make API call to self to test functionality end-to-end
-      const {error, rows} = await db.query('select 1');
+  test('has error details when an error occurs', async () => {
+    const query = `
+      select 1
+      from non_existent_schema.non_existent_table;`;
 
-      Code.expect(error).to.equal(null);
-
-      return;
-  })
-})
-
-
-
-
-exports.lab = lab;
+    const res = await db.query(query);
+    expect(res.data).to.be.null();
+    expect(res.error).not.to.be.null();
+  });
+});

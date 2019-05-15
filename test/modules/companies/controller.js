@@ -12,8 +12,6 @@ const returnsConnector = require('../../../src/lib/connectors/returns');
 const documentsConnector = require('../../../src/lib/connectors/crm/documents');
 
 const controller = require('../../../src/modules/companies/controller');
-const documentsHelper = require('../../../src/modules/companies/lib/documents');
-const returnsHelper = require('../../../src/modules/companies/lib/returns');
 
 const documents = [{
   system_external_id: 'licence_1'

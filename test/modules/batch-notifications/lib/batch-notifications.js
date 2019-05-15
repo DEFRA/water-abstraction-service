@@ -44,7 +44,7 @@ experiment('batch notifications helpers', () => {
         await (func(id));
         const [jobName, data, options] = messageQueue.publish.lastCall.args;
         expect(jobName).to.equal(JOB_NAME);
-        expect(data).to.equal({[key]: id});
+        expect(data).to.equal({ [key]: id });
         expect(options).to.equal({});
       });
     });
@@ -55,7 +55,7 @@ experiment('batch notifications helpers', () => {
         await (func(id));
         const [jobName, data, options] = messageQueue.publish.lastCall.args;
         expect(jobName).to.equal(JOB_NAME);
-        expect(data).to.equal({[key]: id});
+        expect(data).to.equal({ [key]: id });
         expect(options).to.equal({ singletonKey: id });
       });
     });

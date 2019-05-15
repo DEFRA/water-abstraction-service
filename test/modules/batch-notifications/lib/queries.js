@@ -21,7 +21,7 @@ const queries =
 require('../../../../src/modules/batch-notifications/lib/queries');
 
 experiment('queries', () => {
-  const data = [{foo: 'bar'}];
+  const data = [{ foo: 'bar' }];
   const eventId = 'event_id';
 
   beforeEach(async () => {
