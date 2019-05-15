@@ -255,7 +255,7 @@ experiment('getUploadPreviewReturn', () => {
 
   test('throws an error if error in return service response', async () => {
     const request = requestFactory('x');
-    returnsConnector.returns.findOne.resolves({error: 'oh no'});
+    returnsConnector.returns.findOne.resolves({ error: 'oh no' });
     const func = () => controller.getUploadPreviewReturn(request, h);
     expect(func()).to.reject();
   });

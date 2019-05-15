@@ -92,12 +92,10 @@ const getAggregateQuantities = (purpose) => {
   }, []);
 };
 
-module.exports = {
-  formatAbstractionPoint,
-  abstractionPointToString,
-  formatNGRPointStr,
-  createUniqueId,
-  parseUniqueId,
-  getFullName,
-  getAggregateQuantities
-};
+exports.formatAbstractionPoint = formatAbstractionPoint;
+exports.abstractionPointToString = abstractionPointToString;
+exports.formatNGRPointStr = formatNGRPointStr;
+exports.createUniqueId = createUniqueId;
+exports.parseUniqueId = parseUniqueId;
+exports.getFullName = getFullName;
+exports.getAggregateQuantities = getAggregateQuantities;

@@ -17,7 +17,8 @@ module.exports = {
           startDate: Joi.string().isoDate(),
           endDate: Joi.string().isoDate(),
           isSummer: Joi.boolean(),
-          status: Joi.string().valid(statuses)
+          status: Joi.string().valid(statuses),
+          excludeNaldReturns: Joi.boolean().default(true)
         }
       }
     }

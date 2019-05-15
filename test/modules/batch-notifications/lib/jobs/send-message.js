@@ -64,7 +64,7 @@ experiment('refreshEvent job', () => {
     });
     test('includes the message ID in the job data', async () => {
       const [, data] = messageQueue.publish.lastCall.args;
-      expect(data).to.equal({messageId});
+      expect(data).to.equal({ messageId });
     });
     test('uses the message ID as a singleton key in the job options', async () => {
       const [, , options] = messageQueue.publish.lastCall.args;

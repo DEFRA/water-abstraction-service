@@ -65,7 +65,7 @@ experiment('filterReturnsByCRMDocument', () => {
   test('It should filter returns for which a CRM document cannot be found', async () => {
     stub = sinon.stub(documents, 'findMany').resolves({ data: [{
       system_external_id: 'y'
-    }]});
+    }] });
     const result = await searchReturns.filterReturnsByCRMDocument(returns);
     expect(result).to.equal([returns[1]]);
   });
@@ -130,7 +130,7 @@ experiment('findRecentReturnsByFormatId', async () => {
     expect(filter.regime).to.equal('water');
     expect(filter.licence_type).to.equal('abstraction');
     expect(filter.return_requirement).to.equal(formatId);
-    expect(filter.start_date).to.equal({$gte: '2008-04-01'});
+    expect(filter.start_date).to.equal({ $gte: '2008-04-01' });
     expect(sort).to.equal({ end_date: -1 });
     expect(columns).to.include([
       'return_id', 'licence_ref', 'return_requirement',

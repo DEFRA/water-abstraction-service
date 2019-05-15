@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const Lab = require('lab');
 
 const lab = Lab.script();
@@ -18,7 +19,7 @@ lab.experiment('Test NALD import', () => {
     // Load dummy licence JSON
     const request2 = {
       method: 'GET',
-      url: '/water/1.0/nald/licence?filter=' + JSON.stringify({licenceNumber: '12/34/56/78'}),
+      url: '/water/1.0/nald/licence?filter=' + JSON.stringify({ licenceNumber: '12/34/56/78' }),
       headers: {
         Authorization: process.env.JWT_TOKEN
       }
@@ -59,24 +60,24 @@ lab.experiment('Test NALD import', () => {
   });
 
   lab.test('Test address', async () => {
-    const {address} = licenceData.data.current_version;
+    const { address } = licenceData.data.current_version;
     Code.expect(address.ADDR_LINE_1).to.equal('Daisy cow farm');
   });
 
   lab.test('Test purpose count', async () => {
-    const {purposes} = licenceData.data.current_version;
+    const { purposes } = licenceData.data.current_version;
     Code.expect(purposes.length).to.equal(1);
   });
 
   lab.test('Test purpose', async () => {
-    const {purpose_primary, purpose_secondary, purpose_tertiary} = licenceData.data.current_version.purposes[0].purpose[0];
+    const { purpose_primary, purpose_secondary, purpose_tertiary } = licenceData.data.current_version.purposes[0].purpose[0];
     Code.expect(purpose_primary.CODE).to.equal('A');
     Code.expect(purpose_secondary.CODE).to.equal('AGR');
     Code.expect(purpose_tertiary.CODE).to.equal('140');
   });
 
   lab.test('Test point count', async () => {
-    const {purposePoints} = licenceData.data.current_version.purposes[0];
+    const { purposePoints } = licenceData.data.current_version.purposes[0];
     Code.expect(purposePoints.length).to.equal(1);
   });
 
@@ -115,7 +116,7 @@ lab.experiment('Test NALD import', () => {
 
   lab.test('Test role detail', async () => {
     const [role] = licenceData.data.roles;
-    const {role_detail, role_type, role_party} = role;
+    const { role_detail, role_type, role_party } = role;
     Code.expect(role_detail.ALRT_CODE).to.equal('LC');
     Code.expect(role_type.CODE).to.equal('LC');
     Code.expect(role_type.DESCR).to.equal('Licence contact');
@@ -126,7 +127,7 @@ lab.experiment('Test NALD import', () => {
 
   lab.test('Test role address', async () => {
     const [role] = licenceData.data.roles;
-    const { role_address} = role;
+    const { role_address } = role;
     Code.expect(role_address.ADDR_LINE_1).to.equal('Daisy cow farm');
     Code.expect(role_address.ADDR_LINE_2).to.equal('Long road');
     Code.expect(role_address.TOWN).to.equal('Daisybury');

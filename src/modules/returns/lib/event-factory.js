@@ -28,7 +28,7 @@ const eventFactory = (ret, version, eventType = 'return') => {
     licences: [licenceNumber],
     entities: [entityId],
     comment: ret.comment,
-    metadata: {returnId, versionId, return: ret, receivedDate, underQuery},
+    metadata: { returnId, versionId, return: ret, receivedDate, underQuery },
     status,
     created: moment().format()
   };

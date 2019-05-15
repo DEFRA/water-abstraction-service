@@ -10,7 +10,7 @@ const { logger } = require('@envage/water-abstraction-helpers');
  */
 const dbQuery = async (query, params = []) => {
   try {
-    const {error, rows} = await pool.query(query, params);
+    const { error, rows } = await pool.query(query, params);
     if (error) {
       throw error;
     }

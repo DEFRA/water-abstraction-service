@@ -71,4 +71,28 @@ experiment('createReturnsFilter', () => {
       status: 'due'
     });
   });
+
+  test('filters to only include digital service returns if specified in the request', async () => {
+    set(request, 'query.excludeNaldReturns', true);
+    const result = createReturnsFilter(request, documents);
+    expect(result).to.equal({
+      ...baseFilter,
+      end_date: {
+        $gte: '2018-10-31'
+      }
+    });
+  });
+
+  test('can merge multiple filter parameters on the same field', async () => {
+    set(request, 'query.endDate', '2019-03-31');
+    set(request, 'query.excludeNaldReturns', true);
+    const result = createReturnsFilter(request, documents);
+    expect(result).to.equal({
+      ...baseFilter,
+      end_date: {
+        $lte: '2019-03-31',
+        $gte: '2018-10-31'
+      }
+    });
+  });
 });

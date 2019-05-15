@@ -13,7 +13,7 @@
     "codecov": "codecov",
     "migrate": "node scripts/create-schema && db-migrate up --verbose && node scripts/migrate-task-config",
     "migrate:local-test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test node scripts/create-schema && DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test db-migrate up --verbose && DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test node scripts/migrate-task-config",
-    "lint": "eslint ./src/**/*.js",
+    "lint": "eslint .",
     "version": "auto-changelog -p --commit-limit false && git add CHANGELOG.md"
   },
   "engines": {
@@ -27,17 +27,16 @@
     "csv-stringify": "^2.0.4",
     "db-migrate": "^0.10.1",
     "db-migrate-pg": "^0.2.5",
-    "eslint": "^4.17.0",
-    "eslint-config-standard": "^11.0.0-beta.0",
-    "eslint-plugin-import": "^2.16.0",
-    "eslint-plugin-node": "^6.0.0",
-    "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-standard": "^3.0.1",
+    "eslint": "^5.16.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.17.2",
+    "eslint-plugin-node": "^9.0.1",
+    "eslint-plugin-promise": "^4.1.1",
+    "eslint-plugin-standard": "^4.0.0",
     "istanbul": "^0.4.5",
     "lab": "^15.5.0",
-    "mkdir": "0.0.2",
-    "sinon": "^6.0.0",
-    "standard": "^10.0.3"
+    "mkdir": "^0.0.2",
+    "sinon": "^7.3.2"
   },
   "dependencies": {
     "@envage/hapi-pg-rest-api": "^4.1.1",
@@ -57,7 +56,7 @@
     "firstline": "^2.0.2",
     "good": "^8.1.2",
     "good-winston": "^4.0.0",
-    "handlebars": "^4.1.0",
+    "handlebars": "^4.1.2",
     "handlebars-helper-equal": "^1.0.0",
     "hapi": "^17.8.4",
     "hapi-auth-jwt2": "^8.3.0",
@@ -85,11 +84,5 @@
     "url-join": "^4.0.0",
     "uuid": "^3.3.2",
     "vision": "^5.4.4"
-  },
-  "standard": {
-    "ignore": [
-      "node_modules/",
-      "public/"
-    ]
   }
 }
