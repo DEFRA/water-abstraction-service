@@ -17,7 +17,7 @@ const eventHelpers = require('../../../../../src/modules/batch-notifications/lib
 const messageHelpers = require('../../../../../src/modules/batch-notifications/lib/message-helpers');
 const notifyConnector = require('../../../../../src/modules/batch-notifications/lib/notify-connector');
 
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../../src/logger');
 
 experiment('refreshEvent job', () => {
   const messageId = 'message_1';

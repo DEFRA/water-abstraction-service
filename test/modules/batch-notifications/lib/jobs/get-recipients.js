@@ -15,7 +15,7 @@ const messageQueue = require('../../../../../src/lib/message-queue');
 const getRecipients = require('../../../../../src/modules/batch-notifications/lib/jobs/get-recipients');
 const eventHelpers = require('../../../../../src/modules/batch-notifications/lib/event-helpers');
 const { EVENT_STATUS_ERROR } = require('../../../../../src/modules/batch-notifications/lib/event-statuses');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../../src/logger');
 
 experiment('getRecipients job', () => {
   const eventId = 'event_1';

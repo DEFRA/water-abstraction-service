@@ -23,7 +23,7 @@ const {
   getFormatPurposes
 } = require('./lib/nald-returns-queries.js');
 
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../logger');
 
 /**
  * Gets the purposes together with their points, agreements and conditions

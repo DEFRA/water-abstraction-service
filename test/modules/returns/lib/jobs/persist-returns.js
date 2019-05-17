@@ -11,7 +11,7 @@ const sandbox = sinon.createSandbox();
 const persistReturnsJob = require('../../../../../src/modules/returns/lib/jobs/persist-returns');
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload');
 const messageQueue = require('../../../../../src/lib/message-queue');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../../src/logger');
 const event = require('../../../../../src/lib/event');
 const returnsConnector = require('../../../../../src/modules/returns/lib/api-connector');
 

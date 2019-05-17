@@ -11,7 +11,7 @@ const { voidInvalidCycles } = require('./lib/void-invalid-cycles');
 const { persistReturns } = require('./lib/persist-returns');
 
 const repository = require('./repositories');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../logger');
 
 /**
  * Loads data into the permit repository and CRM doc header

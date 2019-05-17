@@ -1,5 +1,5 @@
 const { get } = require('lodash');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../logger');
 const { getNextCheckTime, getNextCheckCount } = require('../status-check-helpers');
 const messageHelpers = require('../message-helpers');
 const notify = require('../../../notify/connectors/notify');
