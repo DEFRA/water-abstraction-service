@@ -27,9 +27,8 @@ const batchNotifications = require('./src/modules/batch-notifications/lib/jobs/i
 require('./src/modules/batch-notifications/cron').scheduleJobs();
 
 // Initialise logger
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('./src/logger');
 const goodWinstonStream = new GoodWinston({ winston: logger });
-logger.init(config.logger);
 
 // Define server
 const server = Hapi.server(config.server);

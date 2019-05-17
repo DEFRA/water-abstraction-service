@@ -12,7 +12,7 @@ const startUploadJob = require('../../../../../src/modules/returns/lib/jobs/star
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload');
 const uploadAdapters = require('../../../../../src/modules/returns/lib/upload-adapters');
 const messageQueue = require('../../../../../src/lib/message-queue');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../../src/logger');
 const event = require('../../../../../src/lib/event');
 
 experiment('publish', () => {

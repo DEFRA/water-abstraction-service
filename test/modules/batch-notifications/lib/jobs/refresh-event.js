@@ -13,7 +13,7 @@ const sandbox = sinon.createSandbox();
 const messageQueue = require('../../../../../src/lib/message-queue');
 const refreshEvent = require('../../../../../src/modules/batch-notifications/lib/jobs/refresh-event');
 const eventHelpers = require('../../../../../src/modules/batch-notifications/lib/event-helpers');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../../src/logger');
 
 experiment('refreshEvent job', () => {
   const eventId = 'event_1';

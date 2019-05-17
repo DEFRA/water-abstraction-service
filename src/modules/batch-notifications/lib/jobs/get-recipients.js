@@ -1,6 +1,6 @@
 const { get } = require('lodash');
 const batchNotifications = require('../batch-notifications');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../logger');
 const eventHelpers = require('../event-helpers');
 const { EVENT_STATUS_ERROR } = require('../event-statuses');
 const { createJobPublisher } = require('../batch-notifications');

@@ -9,7 +9,7 @@ const messageQueue = require('../../../lib/message-queue');
 const { enqueue } = require('../../notify')(messageQueue);
 const defaultRolePriority = ['document_notifications', 'notifications', 'area_import', 'licence_contact', 'licence_holder'];
 
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../logger');
 
 /* eslint camelcase: "warn" */
 

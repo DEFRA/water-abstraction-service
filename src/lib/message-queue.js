@@ -4,8 +4,7 @@
  */
 const PgBoss = require('pg-boss');
 const config = require('../../config.js');
-const { logger } = require('@envage/water-abstraction-helpers');
-
+const { logger } = require('../logger');
 const { pool } = require('./connectors/db');
 
 const db = {

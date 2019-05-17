@@ -1,4 +1,4 @@
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../src/logger');
 const { expect } = require('code');
 const {
   beforeEach,

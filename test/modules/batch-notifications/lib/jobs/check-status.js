@@ -15,7 +15,7 @@ const checkStatus = require('../../../../../src/modules/batch-notifications/lib/
 const messageHelpers = require('../../../../../src/modules/batch-notifications/lib/message-helpers');
 const scheduledNotifications = require('../../../../../src/controllers/notifications.js');
 const notify = require('../../../../../src/modules/notify/connectors/notify');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../../src/logger');
 
 experiment('checkStatus job', () => {
   const messageId = 'message_1';

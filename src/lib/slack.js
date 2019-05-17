@@ -1,6 +1,6 @@
 const os = require('os');
 const hostname = os.hostname();
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../logger');
 
 // contains generic functions unrelated to a specific component
 const rp = require('request-promise-native').defaults({

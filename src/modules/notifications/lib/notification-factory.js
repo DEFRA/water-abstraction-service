@@ -1,4 +1,4 @@
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../logger');
 
 /**
  * Compose and send a single message with notify
