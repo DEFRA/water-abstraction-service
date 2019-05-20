@@ -48,6 +48,29 @@ const loadReturns = async (licenceNumber) => {
   await voidInvalidCycles(licenceNumber, returnIds);
 };
 
+const validateTableExists = async licenceNumber => {
+  if (!await importTableExists()) {
+    logger.info(`Import: skip ${licenceNumber} - import table does not exist`);
+    return false;
+  }
+  return true;
+};
+
+const handleLoadError = async (error, licenceNumber) => {
+  logger.error(`Import failure`, error, { licenceNumber });
+  await setImportStatus(licenceNumber, error.toString());
+};
+
+const logLoadStart = async licenceNumber => {
+  logger.info(`Import: permit ${licenceNumber}`);
+  await setImportStatus(licenceNumber, 'Importing');
+};
+
+const logLoadEnd = async licenceNumber => {
+  logger.info(`Import: complete for ${licenceNumber}`);
+  await setImportStatus(licenceNumber, 'OK');
+};
+
 /**
  * Imports the whole licence
  * @param {String} licenceNumber
@@ -55,31 +78,27 @@ const loadReturns = async (licenceNumber) => {
  */
 const load = async (licenceNumber) => {
   try {
-    logger.info(`Import: permit ${licenceNumber}`);
-
-    if (!await importTableExists()) {
-      logger.info(`Import: skip ${licenceNumber} - import table does not exist`);
+    if (!await validateTableExists()) {
       return;
     }
 
-    await setImportStatus(licenceNumber, 'Importing');
+    await logLoadStart(licenceNumber);
 
-    // Create permit repo data and persist
     const licenceData = await getLicenceJson(licenceNumber);
 
-    await Promise.all([
-      loadPermitAndDocumentHeader(licenceNumber, licenceData),
-      loadReturns(licenceNumber)
-    ]);
+    if (licenceData.data.versions.length > 0) {
+      await Promise.all([
+        loadPermitAndDocumentHeader(licenceNumber, licenceData),
+        loadReturns(licenceNumber)
+      ]);
+    } else {
+      logger.info(`No versions found for ${licenceNumber}`);
+    }
 
-    await setImportStatus(licenceNumber, 'OK');
-    logger.info(`Import: complete for ${licenceNumber}`);
+    await logLoadEnd(licenceNumber);
   } catch (error) {
-    logger.error(`Import failure`, error, { licenceNumber });
-    await setImportStatus(licenceNumber, error.toString());
+    await handleLoadError(error, licenceNumber);
   }
 };
 
-module.exports = {
-  load
-};
+exports.load = load;
