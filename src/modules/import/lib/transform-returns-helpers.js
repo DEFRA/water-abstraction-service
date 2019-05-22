@@ -3,6 +3,7 @@ const { pick, findIndex, max, mapValues, chunk } = require('lodash');
 const { returns: { date: { getPeriodStart } } } = require('@envage/water-abstraction-helpers');
 const { formatAbstractionPoint } = require('../../../lib/licence-transformer/nald-helpers');
 const naldDates = require('@envage/water-abstraction-helpers').nald.dates;
+const { parseReturnId } = require('../../../lib/returns');
 
 /**
  * Converts 'null' strings to real null in supplied object
@@ -272,16 +273,6 @@ const getFormatCycles = (format, splitDate) => {
   return getReturnCycles(startDate, endDate, splitDate, isSummer);
 };
 
-/*
- * Parses a return ID into constituent variables
- * @param {String} returnId
- * @return {Object}
- */
-const parseReturnId = (returnId) => {
-  const [ version, regionCode, licenceNumber, formatId, startDate, endDate ] = returnId.split(':');
-  return { version, regionCode, licenceNumber, formatId, startDate, endDate };
-};
-
 /**
  * Calculates start of period based on start/end date and period
  * @param {String} startDate - the returns start date YYYY-MM-DD
@@ -357,11 +348,6 @@ const getStatus = (receivedDate) => {
   return receivedDate === null ? 'due' : 'completed';
 };
 
-const getDueDate = endDate => {
-  const format = 'YYYY-MM-DD';
-  return moment(endDate, format).add(28, 'days').format(format);
-};
-
 module.exports = {
   convertNullStrings,
   mapPeriod,
@@ -379,6 +365,5 @@ module.exports = {
   addDate,
   getStatus,
   getFormatStartDate,
-  getFormatEndDate,
-  getDueDate
+  getFormatEndDate
 };

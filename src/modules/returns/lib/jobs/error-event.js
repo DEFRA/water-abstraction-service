@@ -48,6 +48,12 @@ exports.setEventError = setEventError;
 exports.keys = {
   SERVER: 'server',
   USER_NOT_FOUND: 'user-not-found',
-  XML_TO_JSON_MAPPING: 'xml-to-json-mapping-failure',
-  INVALID_XML: 'invalid-xml'
+  xml: {
+    INVALID: 'invalid-xml',
+    MAPPING: 'xml-to-json-mapping-failure'
+  },
+  csv: {
+    INVALID: 'invalid-csv',
+    MAPPING: 'csv-to-json-mapping-failure'
+  }
 };

@@ -3,10 +3,10 @@ const isoDateRegex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 const allowedPeriods = ['year', 'month', 'week', 'day'];
 const methods = ['abstractionVolumes', 'oneMeter'];
 const readingTypes = ['estimated', 'measured'];
-const statuses = ['due', 'completed', 'received'];
+const statuses = ['due', 'completed', 'received', 'void'];
 const units = ['m³', 'l', 'Ml', 'gal'];
 const userTypes = ['internal', 'external'];
-const returnIDRegex = /^v1:[1-8]:[^:]+:[0-9]+:[0-9]{4}-[0-9]{2}-[0-9]{2}:[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
+const { returnIDRegex } = require('../../lib/returns');
 
 const userSchema = Joi.object().required().keys({
   email: Joi.string().required(),
@@ -45,7 +45,7 @@ const returnSchema = {
   receivedDate: Joi.string().regex(isoDateRegex).allow(null).required(),
   startDate: Joi.string().regex(isoDateRegex).required(),
   endDate: Joi.string().regex(isoDateRegex).required(),
-  dueDate: Joi.string().regex(isoDateRegex).required(),
+  dueDate: Joi.string().regex(isoDateRegex),
   frequency: Joi.when('isNil', { is: false,
     then: Joi.string().valid(allowedPeriods).required()
   }),
@@ -106,5 +106,6 @@ const headerSchema = {
 
 module.exports = {
   returnSchema,
-  headerSchema
+  headerSchema,
+  statuses
 };

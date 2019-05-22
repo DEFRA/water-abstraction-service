@@ -30,6 +30,16 @@ p {
   line-height: 6mm;
 }
 
+strong {
+  font-weight: bold;
+}
+
+ol {
+  list-style-type: decimal;
+  list-style-position: outside;
+  margin-top: 1rem;
+}
+
 ul {
   list-style: disc outside none;
   margin-left: 0;

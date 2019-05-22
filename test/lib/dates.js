@@ -35,3 +35,13 @@ experiment('returnsDateToIso', () => {
     expect(dates.returnsDateToIso('20180122')).to.equal('2018-01-22');
   });
 });
+
+experiment('readableDate', () => {
+  test('returns null for invalid date', async () => {
+    expect(dates.readableDate('nope')).to.be.null();
+  });
+
+  test('converts the date as expected', async () => {
+    expect(dates.readableDate('2018-01-22')).to.equal('22 January 2018');
+  });
+});

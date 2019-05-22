@@ -1,6 +1,7 @@
 const { dateToIsoString } = require('../dates');
 const apiClientFactory = require('./api-client-factory');
 const config = require('../../../config');
+const { get } = require('lodash');
 const { licence: { regimeId, typeId } } = config;
 
 const licences = apiClientFactory.create(`${process.env.PERMIT_URI}licence`);
@@ -55,6 +56,22 @@ const getLicenceEndDates = async licenceNumbers => {
       }
     };
   }, {});
+};
+
+/**
+ * Loads the water licence from the permit repo with the specified licence
+ * number
+ * @param  {String}  licenceNumber
+ * @return {Promise<Object>} - resolves with licence data
+ */
+licences.getWaterLicence = async (licenceNumber) => {
+  const filter = {
+    licence_ref: licenceNumber,
+    licence_type_id: typeId,
+    licence_regime_id: regimeId
+  };
+  const licenceResponse = await licences.findMany(filter);
+  return get(licenceResponse, 'data[0]');
 };
 
 exports.licences = licences;

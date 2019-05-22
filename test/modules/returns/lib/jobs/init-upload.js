@@ -9,15 +9,15 @@ const {
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const startUploadJob = require('../../../../../src/modules/returns/lib/jobs/start-xml-upload');
-const xmlToJsonJob = require('../../../../../src/modules/returns/lib/jobs/xml-to-json');
+const startUploadJob = require('../../../../../src/modules/returns/lib/jobs/start-upload');
+const mapToJsonJob = require('../../../../../src/modules/returns/lib/jobs/map-to-json');
 const { registerSubscribers } = require('../../../../../src/modules/returns/lib/jobs/init-upload');
 
 experiment('registerSubscribers', () => {
   let messageQueue;
 
   beforeEach(async () => {
-    sandbox.stub(xmlToJsonJob, 'publish').resolves({});
+    sandbox.stub(mapToJsonJob, 'publish').resolves({});
     messageQueue = {
       subscribe: sandbox.spy(),
       onComplete: sandbox.spy()
@@ -35,7 +35,7 @@ experiment('registerSubscribers', () => {
   });
 
   test('subscribes to the XML to JSON job', async () => {
-    const { jobName, handler } = xmlToJsonJob;
+    const { jobName, handler } = mapToJsonJob;
     expect(messageQueue.subscribe.calledWith(jobName, handler)).to.be.true();
   });
 
@@ -56,6 +56,6 @@ experiment('registerSubscribers', () => {
     };
 
     await handler(job);
-    expect(xmlToJsonJob.publish.calledWith('test-event-id')).to.be.true();
+    expect(mapToJsonJob.publish.calledWith('test-event-id')).to.be.true();
   });
 });

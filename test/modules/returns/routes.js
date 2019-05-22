@@ -10,18 +10,18 @@ const Hapi = require('hapi');
 
 const routes = require('../../../src/modules/returns/routes');
 
-experiment('postUploadReturnsXml', () => {
+experiment('postUploadReturns', () => {
   let server;
   beforeEach(async () => {
     server = Hapi.server();
 
-    const route = cloneDeep(routes.postUploadReturnsXml);
+    const route = cloneDeep(routes.postUploadReturns);
     route.handler = async () => 'ok';
     server.route(route);
   });
 
   test('calls the controller action for a valid payload', async () => {
-    const url = '/water/1.0/returns/upload-xml';
+    const url = '/water/1.0/returns/upload/xml';
     const output = await server.inject({
       method: 'POST',
       url,
@@ -34,7 +34,7 @@ experiment('postUploadReturnsXml', () => {
   });
 
   test('returns a 400 for an invalid user name', async () => {
-    const url = '/water/1.0/returns/upload-xml';
+    const url = '/water/1.0/returns/upload/xml';
     const output = await server.inject({
       method: 'POST',
       url,
@@ -47,7 +47,7 @@ experiment('postUploadReturnsXml', () => {
   });
 
   test('returns a 400 for invalid file data', async () => {
-    const url = '/water/1.0/returns/upload-xml';
+    const url = '/water/1.0/returns/upload/xml';
     const output = await server.inject({
       method: 'POST',
       url,

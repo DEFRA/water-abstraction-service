@@ -55,16 +55,21 @@ experiment('returnExists', () => {
 });
 
 experiment('getUpdateRow', () => {
-  test('It should update metadata, status and date received for a past return', async () => {
+  test('It should update metadata, status, date received and due date for a past return', async () => {
     const data = persistReturns.getUpdateRow(naldReturn);
     expect(data).to.equal({ status: 'completed',
       metadata: { param: 'value' },
-      received_date: '2017-11-24' });
+      received_date: '2017-11-24',
+      due_date: '2017-11-28'
+    });
   });
 
-  test('It should update metadata only for a return managed by the digital service', async () => {
+  test('It should update metadata and due date only for a return managed by the digital service', async () => {
     const data = persistReturns.getUpdateRow(digitalServiceReturn);
-    expect(data).to.equal({ metadata: { param: 'value' } });
+    expect(data).to.equal({
+      metadata: { param: 'value' },
+      due_date: '2018-11-28'
+    });
   });
 });
 
@@ -103,7 +108,8 @@ experiment('createOrUpdateReturn', () => {
     expect(stubs.updateOne.firstCall.args).to.equal([naldReturn.return_id, {
       metadata: naldReturn.metadata,
       status: naldReturn.status,
-      received_date: naldReturn.received_date
+      received_date: naldReturn.received_date,
+      due_date: naldReturn.due_date
     }]);
   });
 
@@ -114,7 +120,8 @@ experiment('createOrUpdateReturn', () => {
 
     expect(stubs.create.firstCall).to.equal(null);
     expect(stubs.updateOne.firstCall.args).to.equal([digitalServiceReturn.return_id, {
-      metadata: digitalServiceReturn.metadata
+      metadata: digitalServiceReturn.metadata,
+      due_date: digitalServiceReturn.due_date
     }]);
   });
 });

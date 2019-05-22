@@ -1,56 +1,54 @@
 {% macro reminderText(personalisation) %}
-
         <div class="block bigger-text">
-
           <div class="item">
             <p>
-              Dear licence holder
+              Dear licence holder (or representative),
             </p>
           </div>
           <div class="item">
             <p>
-              Your abstraction return for {{ personalisation.start_date | date }} to {{ personalisation.end_date | date }} is now overdue. You still have time to submit it online. Even if you did not abstract water you must complete a return.
-            </p>
-          </div>
-          <div class="item">
-            <h2>
-              You can be fined if you do not submit a return
-            </h2>
-          </div>
-          <div class="item">
-            <p>
-              Visit GOV.UK and search for ‘Manage your water abstraction or impoundment licence online’ to register with the service.
+              <strong>Your water abstraction return for {{ personalisation.start_date | date }} to {{ personalisation.end_date | date }} is now overdue.</strong>
             </p>
           </div>
           <div class="item">
             <p>
-              We will send you a security code in the post within 5 days. You will then be able to submit your return.
+              Please disregard this letter if you have already submitted your water abstraction return.
             </p>
           </div>
-          <div class="item">
-            <h2>
-              If you are not the licence holder
-            </h2>
-          </div>
-
           <div class="item">
             <p>
-              If you usually submit returns on behalf of a licence holder you need to ask them to register with the service.
+              You should complete your return as soon as possible even if you did not abstract water in this period. If you do not submit your return we may take enforcement action which could include criminal or civil sanctions.
             </p>
           </div>
-
           <div class="item">
             <p>
-              They can then give you access to their account and permission to manage their returns.
+              You can do your return easily online by signing in to your account. Search GOV.UK for ‘Manage your water abstraction’.
             </p>
           </div>
-
           <div class="item">
             <p>
-              Alternatively, fill out the attached form and send it back straightaway.
+              If you are not yet registered online, please create an account:
+            </p>
+            <ol>
+              <li>You will need an email address and your licence numbers.</li>
+              <li>Search GOV.UK for ‘Manage your water abstraction’.</li>
+              <li>Registering will generate a security code which we post to the licence holder at their address.</li>
+              <li>Use the security code to complete registration.</li>
+              <li>You can then submit your return.</li>
+            </ol>
+          </div>
+          <div class="item">
+            <p>
+              <strong>If you are not the licence holder</strong>
+              <br />
+              If you manage returns on behalf of the licence holder, they will need to log in to the service and give you access to submit returns.
             </p>
           </div>
-
+          <div class="item">
+            <p>
+              Alternatively, fill out the attached paper return form and send it back straight away. If you have any questions please call 03708 506 506.
+            </p>
+          </div>
           <div class="item">
             <p>
               Yours faithfully
