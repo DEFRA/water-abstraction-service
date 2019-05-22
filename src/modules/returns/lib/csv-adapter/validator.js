@@ -19,14 +19,6 @@ const errorMessages = {
   returnReference: 'All return references should be integers',
   nilReturn: 'Nil return should be Y, N or empty',
   meterUsed: 'Did you use a meter should be Y, N or empty',
-  meterMake: {
-    required: 'Meter make required if a meter was used',
-    notRequired: 'Meter make not allowed if a meter was not used'
-  },
-  meterSerialNumber: {
-    required: 'Meter serial number required if a meter was used',
-    notRequired: 'Meter serial number not allowed if a meter was not used'
-  },
   abstractionVolumes: 'Abstraction volumes must be numbers',
   returnId: 'Return id in unexpected format'
 };
@@ -186,34 +178,6 @@ const validateMeterUsed = licence => isValidBooleanOrEmpty(licence, 'meterUsed')
 const validateNilReturn = licence => isValidBooleanOrEmpty(licence, 'isNilReturn', 'nilReturn');
 
 /**
- * Checks that if the meter details are said to have been suplied
- * that the meter make is not empty.
- */
-const validateMeterMake = licence =>
-  validateMeterDetails(licence, 'meterMake');
-
-/**
- * Checks that if the meter details are said to have been suplied
- * that the meter serial number is not empty.
- */
-const validateMeterSerialNumber = licence =>
-  validateMeterDetails(licence, 'meterSerialNumber');
-
-const validateMeterDetails = (licence, meterDetailKey) => {
-  const meterUsed = licence.meterUsed.value.toLowerCase() === 'y';
-  const { value, line } = licence[meterDetailKey];
-  const { required, notRequired } = errorMessages[meterDetailKey];
-
-  if (meterUsed && isEmpty(value)) {
-    return createError(required, line);
-  }
-
-  if (!meterUsed && !isEmpty(value)) {
-    return createError(notRequired, line);
-  }
-};
-
-/**
  * Checks that the abstraction volumes are valid.
  *
  * They can be:
@@ -263,8 +227,6 @@ const validateLicences = licences => {
     acc.push(validateReturnReference(licence));
     acc.push(validateNilReturn(licence));
     acc.push(validateMeterUsed(licence));
-    acc.push(validateMeterMake(licence));
-    acc.push(validateMeterSerialNumber(licence));
     acc.push(validateAbstractionVolumes(licence));
     acc.push(validateReturnId(licence));
     return acc;

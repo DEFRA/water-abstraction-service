@@ -149,13 +149,11 @@ const mapMeters = (column, readingType) => {
   if (readingType === 'estimated') {
     return [];
   }
-  const manufacturer = column[4].trim();
-  const serialNumber = column[5].trim();
-  const meterDetailsProvided = manufacturer !== '' || serialNumber !== '';
+
   return [{
-    meterDetailsProvided,
-    manufacturer,
-    serialNumber,
+    meterDetailsProvided: true,
+    manufacturer: column[4].trim(),
+    serialNumber: column[5].trim(),
     multiplier: 1
   }];
 };
