@@ -265,11 +265,11 @@ experiment('returns CSV to JSON mapper', () => {
       }]);
     });
 
-    test('returns meter details with meterDetailsProvided flag false when manufacturer/serial are blank"', async () => {
+    test('returns meter details with meterDetailsProvided flag true even when manufacturer/serial are blank"', async () => {
       const column = ['', '', '', '', '', ''];
       const result = csvMapper._mapMeters(column, 'measured');
       expect(result).to.equal([{
-        meterDetailsProvided: false,
+        meterDetailsProvided: true,
         manufacturer: '',
         serialNumber: '',
         multiplier: 1
