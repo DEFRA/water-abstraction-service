@@ -9,6 +9,8 @@ const { pool } = require('../lib/connectors/db.js');
 const SessionsApi = new HAPIRestAPI({
   table: 'water.sessions',
   primaryKey: 'session_id',
+  primaryKeyAuto: false,
+  primaryKeyGuid: false,
   endpoint: '/water/1.0/sessions',
   onCreateTimestamp: 'date_created',
   onUpdateTimestamp: 'date_updated',
@@ -19,6 +21,10 @@ const SessionsApi = new HAPIRestAPI({
     session_data: Joi.string(),
     date_created: Joi.string(),
     date_updated: Joi.string()
+  },
+  upsert: {
+    fields: ['session_id'],
+    set: ['session_data']
   }
 });
 
