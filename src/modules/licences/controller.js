@@ -29,12 +29,30 @@ const addDocumentDetails = (licence, document) => {
 };
 
 /**
+ * Throws a Boom unauthorized error if the supplied company ID does not
+ * match that in the CRM document header
+ * @param  {Object} documentHeader - CRM doc header
+ * @param  {String} companyId      - the user's company ID
+ */
+const throwIfUnauthorised = (documentHeader, companyId) => {
+  const documentCompanyId = get(documentHeader, 'company_entity_id');
+  console.log(documentCompanyId, companyId);
+  if (companyId && (documentCompanyId !== companyId)) {
+    throw Boom.unauthorized(`Unauthorised to view licence data`, {
+      companyId,
+      documentId: documentHeader.document_id
+    });
+  }
+};
+
+/**
  * Gets licence data from permit repo
  * @param  {String|Object}  document     - CRM document ID GUID, or already loaded document header
  * @param  {Object}  [documentHeader] - If document header has already been loaded, it is not loaded again
+ * @param {String} [companyId] - If supplied, the company ID must match that of the document header
  * @return {Promise}                resolves with permit repo data
  */
-const getLicence = async (document, includeExpired) => {
+const getLicence = async (document, includeExpired, companyId) => {
   const documentHeader = isObject(document)
     ? document
     : await getDocumentHeader(document, includeExpired);
@@ -42,6 +60,8 @@ const getLicence = async (document, includeExpired) => {
   if (!documentHeader) {
     return;
   }
+
+  throwIfUnauthorised(documentHeader, companyId);
 
   const licenceResponse = await permitClient.licences.findMany({
     licence_id: documentHeader.system_internal_id,
@@ -105,10 +125,10 @@ const addEarliestEndDate = licence => {
  */
 const getLicenceByDocumentId = async (request, h) => {
   const { documentId } = request.params;
-  const { includeExpired } = request.query;
+  const { includeExpired, companyId } = request.query;
 
   try {
-    const licence = await getLicence(documentId, includeExpired);
+    const licence = await getLicence(documentId, includeExpired, companyId);
 
     if (licence) {
       return wrapData(addEarliestEndDate(licence));
@@ -128,9 +148,10 @@ const getLicenceByDocumentId = async (request, h) => {
  */
 const extractLicenceData = async (request, extractFn) => {
   const { documentId } = request.params;
+  const { companyId } = request.query;
 
   try {
-    const licence = await getLicence(documentId);
+    const licence = await getLicence(documentId, undefined, companyId);
 
     if (licence) {
       const currentVersion = get(licence, 'licence_data_value.data.current_version');
@@ -150,8 +171,14 @@ const getLicencePointsByDocumentId = async request =>
 
 const getLicenceUsersByDocumentId = async (request, h) => {
   const { documentId } = request.params;
+  const { companyId } = request.query;
 
   try {
+    if (companyId) {
+      const header = await getDocumentHeader(documentId);
+      throwIfUnauthorised(header, companyId);
+    }
+
     const documentUsers = await documentsClient.getDocumentUsers(documentId);
     const userEntityIds = get(documentUsers, 'data', []).map(u => u.entityId);
     const { data: users } = await usersClient.getUsersByExternalId(userEntityIds);
@@ -188,10 +215,11 @@ const mapSummary = async (documentHeader, licence) => {
  */
 const getLicenceSummaryByDocumentId = async (request, h) => {
   const { documentId } = request.params;
+  const { companyId } = request.query;
 
   try {
     const documentHeader = await getDocumentHeader(documentId);
-    const licence = await getLicence(documentHeader);
+    const licence = await getLicence(documentHeader, undefined, companyId);
 
     if (licence) {
       const data = await mapSummary(documentHeader, licence);
@@ -218,10 +246,11 @@ const mapNotification = (row) => {
 
 const getLicenceCommunicationsByDocumentId = async (request, h) => {
   const { documentId } = request.params;
-  const { includeExpired } = request.query;
+  const { includeExpired, companyId } = request.query;
 
   try {
     const documentHeader = await getDocumentHeader(documentId, includeExpired);
+    throwIfUnauthorised(documentHeader, companyId);
     const notifications = await queries.getNotificationsForLicence(documentHeader.system_external_id);
 
     return {
