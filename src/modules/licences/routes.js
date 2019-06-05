@@ -85,7 +85,8 @@ module.exports = {
           documentId: Joi.string().guid().required()
         },
         query: {
-          companyId: Joi.string().guid()
+          companyId: Joi.string().guid(),
+          includeExpired: Joi.boolean().optional().default(false)
         }
       }
     }
@@ -97,6 +98,24 @@ module.exports = {
     handler: controller.getLicenceCommunicationsByDocumentId,
     config: {
       description: 'Returns the sent licence notifications for a given document',
+      validate: {
+        params: {
+          documentId: Joi.string().guid().required()
+        },
+        query: {
+          includeExpired: Joi.boolean().optional().default(false),
+          companyId: Joi.string().guid()
+        }
+      }
+    }
+  },
+
+  getLicenceContactsByDocumentId: {
+    method: 'GET',
+    path: `${pathPrefix}{documentId}/licence/contacts`,
+    handler: controller.getLicenceContactsByDocumentId,
+    config: {
+      description: 'Returns the sent licence contacts for a given document',
       validate: {
         params: {
           documentId: Joi.string().guid().required()

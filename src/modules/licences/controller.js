@@ -11,6 +11,7 @@ const { licence: { regimeId, typeId } } = require('../../../config');
 const LicenceTransformer = require('../../lib/licence-transformer');
 const { mapGaugingStation, getGaugingStations } = require('./lib/gauging-stations');
 const queries = require('./lib/queries');
+const { createContacts } = require('../../lib/models/factory/contact-list');
 
 const getDocumentHeader = async (documentId, includeExpired = false) => {
   const documentResponse = await documentsClient.findMany({
@@ -262,11 +263,35 @@ const getLicenceCommunicationsByDocumentId = async (request, h) => {
   }
 };
 
+const mapContacts = data => {
+  const contactList = createContacts(data.licence_data_value);
+  return contactList.toArray().map(contact => ({
+    ...contact,
+    fullName: contact.getFullName()
+  }));
+};
+
+const getLicenceContactsByDocumentId = async (request, h) => {
+  const { documentId } = request.params;
+  const { includeExpired, companyId } = request.query;
+  try {
+    const data = await getLicence(documentId, includeExpired, companyId);
+
+    return {
+      error: null,
+      data: mapContacts(data)
+    };
+  } catch (error) {
+    return handleUnexpectedError(error, documentId);
+  }
+};
+
 module.exports = {
   getLicenceByDocumentId,
   getLicenceConditionsByDocumentId,
   getLicencePointsByDocumentId,
   getLicenceUsersByDocumentId,
   getLicenceSummaryByDocumentId,
-  getLicenceCommunicationsByDocumentId
+  getLicenceCommunicationsByDocumentId,
+  getLicenceContactsByDocumentId
 };
