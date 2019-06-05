@@ -13,7 +13,7 @@ const { scheduledNotification, findById, createFromObject } = require('./connect
 const { findByMessageRef } = require('./connectors/notify-template');
 const { AlreadySentError } = require('./lib/errors');
 const { HIGH_PRIORITY, LOW_PRIORITY } = require('../../lib/priorities');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../logger');
 
 /**
  * Send notificatation message by scheduled_notification ID
@@ -43,7 +43,7 @@ async function send (id) {
       notifyResponse = await notify.send(notifyTemplate, personalisation, recipient);
     }
 
-    await scheduledNotification.update({id}, parseSentResponse(notifyResponse));
+    await scheduledNotification.update({ id }, parseSentResponse(notifyResponse));
   } catch (error) {
     // Log notify error
     await scheduledNotification.update({ id }, {

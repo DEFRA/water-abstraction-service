@@ -1,4 +1,4 @@
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../logger');
 const queries = require('./queries');
 const sendMessage = require('./jobs/send-message');
 const refreshEvent = require('./jobs/refresh-event');

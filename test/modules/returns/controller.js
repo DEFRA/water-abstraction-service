@@ -16,7 +16,7 @@ const s3 = require('../../../src/lib/connectors/s3');
 const startUploadJob = require('../../../src/modules/returns/lib/jobs/start-upload');
 const persistReturnsJob = require('../../../src/modules/returns/lib/jobs/persist-returns');
 const uploadValidator = require('../../../src/modules/returns/lib/returns-upload-validator');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../src/logger');
 const returnsConnector = require('../../../src/lib/connectors/returns');
 const { uploadStatus } = require('../../../src/modules/returns/lib/returns-upload');
 
@@ -255,7 +255,7 @@ experiment('getUploadPreviewReturn', () => {
 
   test('throws an error if error in return service response', async () => {
     const request = requestFactory('x');
-    returnsConnector.returns.findOne.resolves({error: 'oh no'});
+    returnsConnector.returns.findOne.resolves({ error: 'oh no' });
     const func = () => controller.getUploadPreviewReturn(request, h);
     expect(func()).to.reject();
   });

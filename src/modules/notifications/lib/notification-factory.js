@@ -1,4 +1,4 @@
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../logger');
 
 /**
  * Compose and send a single message with notify
@@ -9,12 +9,21 @@ const { logger } = require('@envage/water-abstraction-helpers');
  */
 async function notificationFactory (contactData, taskConfig, event) {
   // Format name
-  const { salutation, forename, name, entity_id } = contactData.contact.contact;
+  const { salutation, forename, name, entity_id: entityId } = contactData.contact.contact;
   const fullName = [salutation, forename, name].filter(x => x).join(' ');
 
   // Get address
-  const { address_1, address_2, address_3, address_4, town, county, postcode } = contactData.contact.contact;
-  const lines = [fullName, address_1, address_2, address_3, address_4, town, county];
+  const {
+    address_1: address1,
+    address_2: address2,
+    address_3: address3,
+    address_4: address4,
+    town,
+    county,
+    postcode
+  } = contactData.contact.contact;
+
+  const lines = [fullName, address1, address2, address3, address4, town, county];
 
   // Format personalisation with address lines and postcode
   const address = lines.filter(x => x).reduce((acc, line, i) => {
@@ -47,7 +56,7 @@ async function notificationFactory (contactData, taskConfig, event) {
       recipient: contactData.contact.contact.email || 'n/a',
       personalisation,
       licences: licenceNumbers,
-      individualEntityId: entity_id,
+      individualEntityId: entityId,
       companyEntityId,
       eventId
     };

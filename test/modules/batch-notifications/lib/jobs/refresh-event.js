@@ -13,7 +13,7 @@ const sandbox = sinon.createSandbox();
 const messageQueue = require('../../../../../src/lib/message-queue');
 const refreshEvent = require('../../../../../src/modules/batch-notifications/lib/jobs/refresh-event');
 const eventHelpers = require('../../../../../src/modules/batch-notifications/lib/event-helpers');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../../src/logger');
 
 experiment('refreshEvent job', () => {
   const eventId = 'event_1';
@@ -42,7 +42,7 @@ experiment('refreshEvent job', () => {
     });
     test('includes the event ID in the job data', async () => {
       const [, data] = messageQueue.publish.lastCall.args;
-      expect(data).to.equal({eventId});
+      expect(data).to.equal({ eventId });
     });
     test('uses the event ID as a singleton key in the job options', async () => {
       const [, , options] = messageQueue.publish.lastCall.args;

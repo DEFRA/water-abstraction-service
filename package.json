@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "1.22.0",
+  "version": "1.23.0",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "repository": {
@@ -13,7 +13,7 @@
     "codecov": "codecov",
     "migrate": "node scripts/create-schema && db-migrate up --verbose && node scripts/migrate-task-config",
     "migrate:local-test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test node scripts/create-schema && DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test db-migrate up --verbose && DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test node scripts/migrate-task-config",
-    "lint": "eslint ./src/**/*.js",
+    "lint": "eslint .",
     "version": "auto-changelog -p --commit-limit false && git add CHANGELOG.md"
   },
   "engines": {
@@ -22,34 +22,33 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "auto-changelog": "^1.11.0",
-    "codecov": "^3.2.0",
+    "auto-changelog": "^1.13.0",
+    "code": "^5.2.4",
+    "codecov": "^3.5.0",
     "csv-stringify": "^2.0.4",
-    "db-migrate": "^0.10.1",
-    "db-migrate-pg": "^0.2.5",
-    "eslint": "^4.17.0",
-    "eslint-config-standard": "^11.0.0-beta.0",
-    "eslint-plugin-import": "^2.16.0",
-    "eslint-plugin-node": "^6.0.0",
-    "eslint-plugin-promise": "^3.6.0",
-    "eslint-plugin-standard": "^3.0.1",
+    "db-migrate": "^0.11.5",
+    "db-migrate-pg": "^0.5.1",
+    "eslint": "^5.16.0",
+    "eslint-config-standard": "^12.0.0",
+    "eslint-plugin-import": "^2.17.2",
+    "eslint-plugin-node": "^9.0.1",
+    "eslint-plugin-promise": "^4.1.1",
+    "eslint-plugin-standard": "^4.0.0",
     "istanbul": "^0.4.5",
     "lab": "^15.5.0",
-    "mkdir": "0.0.2",
-    "sinon": "^6.0.0",
-    "standard": "^10.0.3"
+    "mkdir": "^0.0.2",
+    "sinon": "^7.3.2"
   },
   "dependencies": {
-    "@envage/hapi-pg-rest-api": "^4.1.1",
-    "@envage/water-abstraction-helpers": "^2.4.0",
+    "@envage/hapi-pg-rest-api": "^4.1.2",
+    "@envage/water-abstraction-helpers": "^3.0.0",
     "async-waterfall": "^0.1.5",
-    "aws-sdk": "^2.410.0",
+    "aws-sdk": "^2.457.0",
     "base64url": "^3.0.1",
     "blipp": "^3.1.2",
     "boom": "^5.2.0",
-    "camelcase": "^5.0.0",
-    "code": "^5.2.0",
-    "commander": "^2.19.0",
+    "camelcase": "^5.3.1",
+    "commander": "^2.20.0",
     "csv-parse": "^2.4.0",
     "deep-map": "^1.5.0",
     "dotenv": "^4.0.0",
@@ -57,7 +56,7 @@
     "firstline": "^2.0.2",
     "good": "^8.1.2",
     "good-winston": "^4.0.0",
-    "handlebars": "^4.1.0",
+    "handlebars": "^4.1.2",
     "handlebars-helper-equal": "^1.0.0",
     "hapi": "^17.8.4",
     "hapi-auth-jwt2": "^8.3.0",
@@ -68,13 +67,13 @@
     "moment": "^2.24.0",
     "node-cron": "^1.2.1",
     "notifications-node-client": "^4.6.0",
-    "nunjucks": "^3.1.7",
+    "nunjucks": "^3.2.0",
     "path": "^0.12.7",
     "pg": "^7.8.1",
     "pg-boss": "^2.5.1",
     "promise-retry": "^1.0.2",
     "proxy-agent": "^2.3.1",
-    "puppeteer": "^1.12.2",
+    "puppeteer": "^1.16.0",
     "qrcode-svg": "^1.0.0",
     "request": "^2.88.0",
     "request-promise-native": "^1.0.6",
@@ -85,11 +84,5 @@
     "url-join": "^4.0.0",
     "uuid": "^3.3.2",
     "vision": "^5.4.4"
-  },
-  "standard": {
-    "ignore": [
-      "node_modules/",
-      "public/"
-    ]
   }
 }

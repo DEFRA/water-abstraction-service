@@ -1,7 +1,7 @@
 const Boom = require('boom');
 const updateLicence = require('./lib/update-licence-row');
 const cron = require('node-cron');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../logger');
 
 /**
  * Run task nightly at 2am to refresh all data

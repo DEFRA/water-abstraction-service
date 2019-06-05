@@ -103,7 +103,7 @@ lab.experiment('Test validateEnqueueOptions', () => {
   lab.test('Should accept personalisation object', async () => {
     const opts = {
       ...options,
-      personalisation: {'name': 'John'}
+      personalisation: { 'name': 'John' }
     };
 
     const { value } = validateEnqueueOptions(opts);

@@ -1,5 +1,5 @@
 const { pool } = require('../../../lib/connectors/db');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../logger');
 
 /**
  * Perform a database query by getting a client from the connection pool and releasing
@@ -10,7 +10,7 @@ const { logger } = require('@envage/water-abstraction-helpers');
  */
 const dbQuery = async (query, params = []) => {
   try {
-    const {error, rows} = await pool.query(query, params);
+    const { error, rows } = await pool.query(query, params);
     if (error) {
       throw error;
     }

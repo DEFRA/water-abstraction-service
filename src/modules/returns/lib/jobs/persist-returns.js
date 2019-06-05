@@ -1,7 +1,7 @@
 const { find, get } = require('lodash');
 const messageQueue = require('../../../../lib/message-queue');
 const event = require('../../../../lib/event');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../logger');
 const returnsUpload = require('../../lib/returns-upload');
 const { uploadStatus } = returnsUpload;
 const returnsConnector = require('../api-connector');

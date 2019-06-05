@@ -15,7 +15,7 @@ const messageQueue = require('../../../../../src/lib/message-queue');
 const getRecipients = require('../../../../../src/modules/batch-notifications/lib/jobs/get-recipients');
 const eventHelpers = require('../../../../../src/modules/batch-notifications/lib/event-helpers');
 const { EVENT_STATUS_ERROR } = require('../../../../../src/modules/batch-notifications/lib/event-statuses');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../../src/logger');
 
 experiment('getRecipients job', () => {
   const eventId = 'event_1';
@@ -45,7 +45,7 @@ experiment('getRecipients job', () => {
     });
     test('includes the event ID in the job data', async () => {
       const [, data] = messageQueue.publish.lastCall.args;
-      expect(data).to.equal({eventId});
+      expect(data).to.equal({ eventId });
     });
     test('uses the event ID as a singleton key in the job options', async () => {
       const [, , options] = messageQueue.publish.lastCall.args;

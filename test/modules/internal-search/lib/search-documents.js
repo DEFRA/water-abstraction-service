@@ -55,7 +55,7 @@ experiment('searchDocuments', () => {
       string: '01/123',
       includeExpired: true
     });
-    expect(sort).to.equal({system_external_id: 1});
+    expect(sort).to.equal({ system_external_id: 1 });
     expect(pagination.page).to.equal(5);
     expect(columns).to.equal([
       'document_id',

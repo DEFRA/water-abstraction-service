@@ -3,7 +3,7 @@ const sinon = require('sinon');
 const { experiment, test, before, after } = exports.lab = require('lab').script();
 
 const { failAction } = require('../../../../src/modules/returns/lib/route-helpers');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../src/logger');
 
 experiment('failAction', () => {
   const request = {

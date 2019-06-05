@@ -27,11 +27,11 @@ class LicenceTitleLoader {
 
     // Read condition titles from CSV
     const str = await readFile('./data/condition_titles.csv');
-    const data = await csvParse(str, {columns: true});
+    const data = await csvParse(str, { columns: true });
 
     // Sentence case all titles
     const dataTransformed = data.map((row) => {
-      const {code, subCode, displayTitle, parameter1Label, parameter2Label} = row;
+      const { code, subCode, displayTitle, parameter1Label, parameter2Label } = row;
       return {
         code,
         subCode,

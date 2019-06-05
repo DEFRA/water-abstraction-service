@@ -16,7 +16,7 @@ const createPdf = async (notificationId) => {
   const html = await getRenderNotification(notificationId);
   await page.setContent(html);
 
-  const buffer = await page.pdf({format: 'A4'});
+  const buffer = await page.pdf({ format: 'A4' });
   await browser.close();
   return buffer;
 };

@@ -4,11 +4,11 @@
  */
 
 class BaseTransformer {
-  constructor(data) {
+  constructor (data) {
     this.data = data;
   }
 
-  export() {
+  export () {
     return this.data;
   }
 }

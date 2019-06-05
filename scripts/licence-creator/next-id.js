@@ -1,6 +1,6 @@
 let idCounter = 1000000000;
 
-function getNextId() {
+function getNextId () {
   idCounter++;
   return idCounter;
 }

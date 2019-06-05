@@ -1,6 +1,6 @@
 const Joi = require('joi');
 const Boom = require('boom');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../logger');
 const { get, find } = require('lodash');
 
 const evt = require('../../lib/event');

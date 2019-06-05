@@ -7,7 +7,7 @@
 const moment = require('moment');
 const { repository: eventsRepository } = require('../events');
 const { repository: notificationsRepository } = require('../notifications');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../logger');
 
 /**
  * Gets a list of events which are of type 'notification' and which are in
@@ -73,10 +73,8 @@ function getUpdatedMetadata (metadata, notifications) {
  * @return {Promise} resolves with {error}
  */
 async function processEvent (event) {
-  const { event_id, metadata } = event;
-
   const filter = {
-    event_id
+    event_id: event.event_id
   };
 
   const { error, rows } = await notificationsRepository.find(filter);
@@ -85,7 +83,7 @@ async function processEvent (event) {
     return { error };
   }
 
-  const update = getUpdatedMetadata(metadata, rows);
+  const update = getUpdatedMetadata(event.metadata, rows);
 
   logger.info(update);
 

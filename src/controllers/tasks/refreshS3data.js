@@ -6,7 +6,7 @@ const run = async (data) => {
     await importNald();
     return { error: null };
   } catch (error) {
-    return {error};
+    return { error };
   }
 };
 

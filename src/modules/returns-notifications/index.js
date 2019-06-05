@@ -1,7 +1,7 @@
 const messageQueue = require('../../lib/message-queue');
 const { enqueue } = require('../notify')(messageQueue);
 const { prepareMessageData } = require('./lib/send');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../logger');
 
 const registerSendSubscriber = (messageQueue) => {
   return messageQueue.subscribe('returnsNotification.send', async (job, done) => {

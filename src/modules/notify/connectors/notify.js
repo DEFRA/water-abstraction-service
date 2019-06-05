@@ -56,13 +56,13 @@ async function send (notifyTemplate, personalisation, recipient) {
 
   switch (type) {
     case 'sms':
-      return notifyClient.sendSms(templateId, recipient, {personalisation});
+      return notifyClient.sendSms(templateId, recipient, { personalisation });
 
     case 'email':
-      return notifyClient.sendEmail(templateId, recipient, {personalisation});
+      return notifyClient.sendEmail(templateId, recipient, { personalisation });
 
     case 'letter':
-      return notifyClient.sendLetter(templateId, {personalisation});
+      return notifyClient.sendLetter(templateId, { personalisation });
 
     default:
       throw new MessageTypeError(`Message type ${type} not found`);

@@ -1,6 +1,5 @@
 const { get } = require('lodash');
-// const messageQueue = require('../../../../lib/message-queue');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../logger');
 const eventHelpers = require('../event-helpers');
 const { createJobPublisher } = require('../batch-notifications');
 

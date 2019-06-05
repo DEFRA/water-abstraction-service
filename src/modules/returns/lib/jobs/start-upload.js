@@ -1,7 +1,7 @@
 const messageQueue = require('../../../../lib/message-queue');
 const JOB_NAME = 'returns-upload';
 const event = require('../../../../lib/event');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../logger');
 const returnsUpload = require('../../lib/returns-upload');
 const errorEvent = require('./error-event');
 const uploadAdapters = require('../upload-adapters');

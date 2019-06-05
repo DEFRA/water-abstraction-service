@@ -4,7 +4,7 @@
 const { mapValues, find } = require('lodash');
 const { addressFormatter, findCurrent, crmNameFormatter, transformNull } = require('../../lib/licence-transformer/nald-functional');
 const sentenceCase = require('sentence-case');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../logger');
 
 /**
  * Contacts formatter

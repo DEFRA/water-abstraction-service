@@ -9,7 +9,7 @@ const {
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../src/logger');
 const controller = require('../../../src/modules/ar-analysis/controller');
 const updateLicence = require('../../../src/modules/ar-analysis/lib/update-licence-row');
 

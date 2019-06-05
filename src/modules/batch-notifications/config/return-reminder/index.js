@@ -9,7 +9,7 @@ const { CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO } =
   require('../../../../lib/models/contact');
 const { createNotificationData } = require('./create-notification-data');
 const scheduledNotifications = require('../../../../controllers/notifications');
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../logger');
 const eventHelpers = require('../../lib/event-helpers');
 const { stringifyValues } = require('../../../../lib/stringify-values');
 

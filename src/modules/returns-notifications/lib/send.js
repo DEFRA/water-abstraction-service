@@ -31,7 +31,7 @@ const prepareMessageData = async (data) => {
 
   const [contactData] = await getContact(licenceNumber, config.rolePriority);
 
-  const { error, data: [ret] } = await returns.returns.findMany({return_id: returnId});
+  const { error, data: [ret] } = await returns.returns.findMany({ return_id: returnId });
 
   if (error) {
     throw Boom.badImplementation(`Error fetching return ${returnId}`, error);

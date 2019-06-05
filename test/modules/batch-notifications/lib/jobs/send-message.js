@@ -17,7 +17,7 @@ const eventHelpers = require('../../../../../src/modules/batch-notifications/lib
 const messageHelpers = require('../../../../../src/modules/batch-notifications/lib/message-helpers');
 const notifyConnector = require('../../../../../src/modules/batch-notifications/lib/notify-connector');
 
-const { logger } = require('@envage/water-abstraction-helpers');
+const { logger } = require('../../../../../src/logger');
 
 experiment('refreshEvent job', () => {
   const messageId = 'message_1';
@@ -64,7 +64,7 @@ experiment('refreshEvent job', () => {
     });
     test('includes the message ID in the job data', async () => {
       const [, data] = messageQueue.publish.lastCall.args;
-      expect(data).to.equal({messageId});
+      expect(data).to.equal({ messageId });
     });
     test('uses the message ID as a singleton key in the job options', async () => {
       const [, , options] = messageQueue.publish.lastCall.args;

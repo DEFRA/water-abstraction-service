@@ -92,7 +92,7 @@ experiment('createOrUpdateReturn', () => {
 
   test('It should create a row if the record is not present', async () => {
     stubs.findOne.resolves({ error: { name: 'NotFoundError' }, data: null });
-    stubs.create.resolves({error: null});
+    stubs.create.resolves({ error: null });
     await persistReturns.createOrUpdateReturn(naldReturn);
 
     expect(stubs.create.firstCall.args[0]).to.equal(naldReturn);
@@ -101,7 +101,7 @@ experiment('createOrUpdateReturn', () => {
 
   test('It should update a NALD return if the record is present', async () => {
     stubs.findOne.resolves({ error: null, data: naldReturn });
-    stubs.updateOne.resolves({error: null});
+    stubs.updateOne.resolves({ error: null });
     await persistReturns.createOrUpdateReturn(naldReturn);
 
     expect(stubs.create.firstCall).to.equal(null);
@@ -115,7 +115,7 @@ experiment('createOrUpdateReturn', () => {
 
   test('It should update a digital service return metadata only if the record is present', async () => {
     stubs.findOne.resolves({ error: null, data: digitalServiceReturn });
-    stubs.updateOne.resolves({error: null});
+    stubs.updateOne.resolves({ error: null });
     await persistReturns.createOrUpdateReturn(digitalServiceReturn);
 
     expect(stubs.create.firstCall).to.equal(null);
