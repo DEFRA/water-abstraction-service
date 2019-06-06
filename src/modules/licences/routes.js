@@ -108,24 +108,6 @@ module.exports = {
         }
       }
     }
-  },
-
-  getLicenceContactsByDocumentId: {
-    method: 'GET',
-    path: `${pathPrefix}{documentId}/licence/contacts`,
-    handler: controller.getLicenceContactsByDocumentId,
-    config: {
-      description: 'Returns the sent licence contacts for a given document',
-      validate: {
-        params: {
-          documentId: Joi.string().guid().required()
-        },
-        query: {
-          includeExpired: Joi.boolean().optional().default(false),
-          companyId: Joi.string().guid()
-        }
-      }
-    }
   }
 
 };

@@ -207,6 +207,14 @@ const mapSummary = async (documentHeader, licence) => {
   };
 };
 
+const mapContacts = data => {
+  const contactList = createContacts(data.licence_data_value);
+  return contactList.toArray().map(contact => ({
+    ...contact,
+    fullName: contact.getFullName()
+  }));
+};
+
 /**
  * Gets licence summary for consumption by licence summary page in UI
  * @param  {Object}  request - HAPI request
@@ -225,6 +233,7 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
     if (licence) {
       const data = await mapSummary(documentHeader, licence);
       data.gaugingStations = (await getGaugingStations(licence)).map(mapGaugingStation);
+      data.contacts = mapContacts(licence);
       return { error: null, data };
     }
     return Boom.notFound();
@@ -263,35 +272,11 @@ const getLicenceCommunicationsByDocumentId = async (request, h) => {
   }
 };
 
-const mapContacts = data => {
-  const contactList = createContacts(data.licence_data_value);
-  return contactList.toArray().map(contact => ({
-    ...contact,
-    fullName: contact.getFullName()
-  }));
-};
-
-const getLicenceContactsByDocumentId = async (request, h) => {
-  const { documentId } = request.params;
-  const { includeExpired, companyId } = request.query;
-  try {
-    const data = await getLicence(documentId, includeExpired, companyId);
-
-    return {
-      error: null,
-      data: mapContacts(data)
-    };
-  } catch (error) {
-    return handleUnexpectedError(error, documentId);
-  }
-};
-
 module.exports = {
   getLicenceByDocumentId,
   getLicenceConditionsByDocumentId,
   getLicencePointsByDocumentId,
   getLicenceUsersByDocumentId,
   getLicenceSummaryByDocumentId,
-  getLicenceCommunicationsByDocumentId,
-  getLicenceContactsByDocumentId
+  getLicenceCommunicationsByDocumentId
 };
