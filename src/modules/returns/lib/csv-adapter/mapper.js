@@ -1,4 +1,4 @@
-const { unzip } = require('lodash');
+const { unzip, uniq } = require('lodash');
 const common = require('../common-mapping');
 const util = require('util');
 const parseCsv = util.promisify(require('csv-parse'));
@@ -198,6 +198,26 @@ const mapReturn = (column, context) => {
 };
 
 /**
+ * Checks whether a cell is not empty
+ * @param  {String}  value - the cell value
+ * @return {Boolean}         true if the cell is not empty
+ */
+const isNotEmptyCell = value => normalize(value) !== '';
+
+/**
+ * Checks whether return column from the imported CSV is blank
+ * The 0th, 1st and last cells should have a value in as that was provided
+ * by the template.  All other cells will be empty to consider the return
+ * as empty
+ * @param  {Array}  column  - column of data from imported CSV
+ * @return {Boolean}          true if the return is empty
+ */
+const isEmptyReturn = column => {
+  const cells = column.slice(2, -1);
+  return !cells.some(isNotEmptyCell);
+};
+
+/**
  * Maps a CSV file in string form to an array of return objects
  * @param  {String}  csvStr - CSV file in string form
  * @param  {Object}  user   - current user
@@ -215,7 +235,9 @@ const mapCsv = async (csvStr, user, today) => {
     headers
   };
 
-  return returns.map(ret => mapReturn(ret, context));
+  return returns.reduce((acc, column) => {
+    return isEmptyReturn(column) ? acc : [...acc, mapReturn(column, context)];
+  }, []);
 };
 
 exports._normalize = normalize;
