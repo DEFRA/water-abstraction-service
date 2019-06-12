@@ -42,25 +42,38 @@ const nilReturn = [
   'v1:1:01/123:01234:2019-04-01:2020-03-31'
 ];
 
-const csv = `Licence number,01/23
-Return reference,1234
-Nil return Y/N,N
-Did you use a meter Y/N,N
-Meter make,Superpump
-Meter serial number,789
-April 2018,Do not edit
-May 2018,Do not edit
-June 2018,Do not edit
-July 2018,Do not edit
-August 2018,Do not edit
-September 2018,Do not edit
-October 2018,10
-November 2018,25
-December 2018,4
-January 2019,6
-February 2019,
-March 2019,2
-Unique return reference,v1:8:01/123:1234:2018-10-30:2019-03-31`;
+const emptyReturn = [
+  '01/123',
+  '01234',
+  ' ',
+  '',
+  '',
+  '',
+  '',
+  'Do not edit',
+  'Do not edit',
+  'v1:1:01/123:01234:2019-04-01:2020-03-31'
+];
+
+const csv = `Licence number,01/23,02/34
+Return reference,1234,5678
+Nil return Y/N,N,
+Did you use a meter Y/N,N,
+Meter make,Superpump,
+Meter serial number,789,
+April 2018,Do not edit,
+May 2018,Do not edit,
+June 2018,Do not edit,
+July 2018,Do not edit,
+August 2018,Do not edit,
+September 2018,Do not edit,
+October 2018,10,
+November 2018,25,
+December 2018,4,
+January 2019,6,
+February 2019,,
+March 2019,2,
+Unique return reference,v1:8:01/123:1234:2018-10-30:2019-03-31,v1:8:02/34:5678:2018-04-01:2019-03-31`;
 
 const user = {
   user_name: 'mail@example.com',
@@ -320,8 +333,20 @@ experiment('returns CSV to JSON mapper', () => {
     });
   });
 
-  experiment('mapCsv', async () => {
-    test('maps a CSV string to an array of return objects', async () => {
+  experiment('isEmptyReturn', () => {
+    test('returns true if the return is empty', async () => {
+      const result = csvMapper._isEmptyReturn(emptyReturn);
+      expect(result).to.equal(true);
+    });
+
+    test('returns false for non-empty returns', async () => {
+      const result = csvMapper._isEmptyReturn(nilReturn);
+      expect(result).to.equal(false);
+    });
+  });
+
+  experiment('mapCsv', () => {
+    test('maps a CSV string to an array of return objects, ignoring empty returns', async () => {
       const result = await csvMapper.mapCsv(csv, user, '2019-05-07');
       expect(result).to.be.an.array();
       expect(result.length).to.equal(1);
