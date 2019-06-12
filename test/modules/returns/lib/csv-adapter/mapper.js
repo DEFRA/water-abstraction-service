@@ -42,6 +42,19 @@ const nilReturn = [
   'v1:1:01/123:01234:2019-04-01:2020-03-31'
 ];
 
+const emptyReturn = [
+  '01/123',
+  '01234',
+  ' ',
+  '',
+  '',
+  '',
+  '',
+  ' ',
+  '',
+  'v1:1:01/123:01234:2019-04-01:2020-03-31'
+];
+
 const csv = `Licence number,01/23
 Return reference,1234
 Nil return Y/N,N
@@ -320,7 +333,19 @@ experiment('returns CSV to JSON mapper', () => {
     });
   });
 
-  experiment('mapCsv', async () => {
+  experiment('isEmptyReturn', () => {
+    test('returns true if the return is empty', async () => {
+      const result = csvMapper._isEmptyReturn(emptyReturn);
+      expect(result).to.equal(true);
+    });
+
+    test('returns false for non-empty returns', async () => {
+      const result = csvMapper._isEmptyReturn(nilReturn);
+      expect(result).to.equal(false);
+    });
+  });
+
+  experiment('mapCsv', () => {
     test('maps a CSV string to an array of return objects', async () => {
       const result = await csvMapper.mapCsv(csv, user, '2019-05-07');
       expect(result).to.be.an.array();
