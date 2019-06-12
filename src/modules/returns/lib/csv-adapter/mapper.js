@@ -202,7 +202,7 @@ const mapReturn = (column, context) => {
  * @param  {String}  value - the cell value
  * @return {Boolean}         true if the cell is not empty
  */
-const isNotEmptyCell = value => normalize(value) !== '';
+const isNotEmptyCell = value => !['', 'do not edit'].includes(normalize(value));
 
 /**
  * Checks whether return column from the imported CSV is blank
