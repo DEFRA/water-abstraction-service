@@ -1,4 +1,4 @@
-const { unzip, uniq } = require('lodash');
+const { unzip } = require('lodash');
 const common = require('../common-mapping');
 const util = require('util');
 const parseCsv = util.promisify(require('csv-parse'));
