@@ -37,7 +37,6 @@ const addDocumentDetails = (licence, document) => {
  */
 const throwIfUnauthorised = (documentHeader, companyId) => {
   const documentCompanyId = get(documentHeader, 'company_entity_id');
-  console.log(documentCompanyId, companyId);
   if (companyId && (documentCompanyId !== companyId)) {
     throw Boom.unauthorized(`Unauthorised to view licence data`, {
       companyId,
