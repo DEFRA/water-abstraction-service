@@ -18,6 +18,8 @@ const {
   getCurrentFormats
 } = require('./lib/nald-queries.js');
 
+const { getEndDate } = require('./lib/end-date');
+
 const {
   getFormatPoints,
   getFormatPurposes
@@ -174,7 +176,7 @@ const buildPermitRepoPacket = (licenceRef, regimeId, licenceTypeId, data) => {
   let permitRepoData = {
     licence_ref: licenceRef,
     licence_start_dt: dateToIsoString(latestVersion.EFF_ST_DATE),
-    licence_end_dt: dateToIsoString(latestVersion.EFF_END_DATE),
+    licence_end_dt: getEndDate(data),
     licence_status_id: '1',
     licence_type_id: licenceTypeId,
     licence_regime_id: regimeId,
