@@ -44,7 +44,8 @@ const handleCheckStatus = async job => {
       notify_status: status
     };
 
-    return scheduledNotifications.repository.update({ id: messageId }, data);
+    const result = await scheduledNotifications.repository.update({ id: messageId }, data);
+    return result;
   } catch (err) {
     logger.error(`Error checking notify status`, err, { messageId });
   }
