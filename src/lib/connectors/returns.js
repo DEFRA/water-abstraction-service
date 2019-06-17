@@ -85,7 +85,7 @@ const voidReturns = (licenceNumber, validReturnIds = []) => {
     validReturnIds
   };
 
-  return helpers.serviceRequest.post(url, { body });
+  return helpers.serviceRequest.patch(url, { body });
 };
 
 exports.returns = returnsClient;
