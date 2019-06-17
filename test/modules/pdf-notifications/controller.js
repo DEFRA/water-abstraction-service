@@ -5,7 +5,7 @@ const Code = require('code');
 const controller = require('../../../src/modules/pdf-notifications/controller.js');
 const scheduledNotification = require('../../../src/controllers/notifications').repository;
 
-const sinon = require('sinon');
+const sandbox = require('sinon').createSandbox();
 
 lab.experiment('Test getRenderNotification', () => {
   const request = {
@@ -15,7 +15,7 @@ lab.experiment('Test getRenderNotification', () => {
   };
 
   const h = {
-    view: sinon.spy()
+    view: sandbox.spy()
   };
 
   const notification = {
@@ -23,12 +23,25 @@ lab.experiment('Test getRenderNotification', () => {
     message_ref: 'pdf.test'
   };
 
+  lab.beforeEach(async () => {
+    sandbox.stub(scheduledNotification, 'find');
+  });
+
+  lab.afterEach(async () => {
+    sandbox.restore();
+  });
+
   lab.test('The handler should throw an error if notification not found', async () => {
+    scheduledNotification.find.resolves({
+      error: null,
+      rows: []
+    });
+
     Code.expect(controller.getRenderNotification(request, h)).to.reject();
   });
 
   lab.test('The handler should render a message if PDF notification found', async () => {
-    sinon.stub(scheduledNotification, 'find').resolves({
+    scheduledNotification.find.resolves({
       error: null,
       rows: [notification]
     });
