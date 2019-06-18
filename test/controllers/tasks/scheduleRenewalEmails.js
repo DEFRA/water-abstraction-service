@@ -1,5 +1,6 @@
 const Lab = require('lab');
 
+const { set } = require('lodash');
 const { experiment, test, beforeEach, afterEach } = exports.lab = Lab.script();
 const { expect } = require('code');
 const sandbox = require('sinon').createSandbox();
@@ -31,6 +32,7 @@ experiment('scheduleRenewalEmails', () => {
     responses = {
       permit: permitResponse.getExpiringLicence().data,
       document: documentsResponse.singleResponse().data,
+      unnamedDocument: set(documentsResponse.singleResponse().data, '0.document_name', null),
       documentUsers: documentsResponse.multipleDocumentUsers()
     };
 
@@ -94,6 +96,20 @@ experiment('scheduleRenewalEmails', () => {
 
     test('the licence numbers relate to the expiring licence', async () => {
       expect(config.licences).to.equal(['12/34/56/78']);
+    });
+  });
+
+  experiment('when the document name is not set', async () => {
+    let config;
+
+    beforeEach(async () => {
+      documentsConnector.findAll.resolves(responses.unnamedDocument);
+      await scheduleRenewalEmails.run();
+      config = notify.sendMessage.lastCall.args[0];
+    });
+
+    test('the personalisation for document name is an empty string', async () => {
+      expect(config.personalisation.licence_name).to.equal('');
     });
   });
 
