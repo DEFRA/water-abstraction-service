@@ -66,7 +66,30 @@ const singleResponse = () => ({
   }
 });
 
+const multipleDocumentUsers = () => {
+  return {
+    'data': [
+      {
+        'entityId': 'individal_entity_id_1',
+        'roles': [
+          'user'
+        ],
+        'entityName': 'jane@example.com'
+      },
+      {
+        'entityId': 'individal_entity_id_2',
+        'roles': [
+          'primary_user'
+        ],
+        'entityName': 'john@example.com'
+      }
+    ],
+    'error': null
+  };
+};
+
 module.exports = {
   singleResponse,
-  notFound
+  notFound,
+  multipleDocumentUsers
 };
