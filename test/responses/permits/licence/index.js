@@ -60,9 +60,16 @@ const getWaterLicence = () => {
   return shell.data[0];
 };
 
+const getExpiringLicence = () => {
+  const shell = cloneDeep(licences);
+  shell.data[0].licence_end_dt = '01/01/2021';
+  return shell;
+};
+
 module.exports = {
   licences: () => cloneDeep(licences),
   emptyAbstractionReform,
   abstractionReformLicence,
-  getWaterLicence
+  getWaterLicence,
+  getExpiringLicence
 };

@@ -6,16 +6,17 @@ const moment = require('moment');
  * @param  {String} message.message_type email|letter
  * @param  {String} message.send_after the timestamp when the message was sent
  * @param  {Number} message.status_checks the number of times the message has been checked
+ * @param  {Object} The moment representation of now (used in testing)
  * @return {String}             the timestamp of the next check
  */
-const getNextCheckTime = (message) => {
+const getNextCheckTime = (message, now = moment()) => {
   const {
     message_type: messageType,
     send_after: sent,
     status_checks: checkCount
   } = message;
 
-  const momentSent = moment(sent);
+  const momentSent = moment(sent || now);
 
   // For letters, check their status every 12 hours
   if (messageType === 'letter') {

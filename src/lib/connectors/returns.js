@@ -63,8 +63,34 @@ const getCurrentDueReturns = (excludeLicences, refDate) => {
   return returnsClient.findAll(filter);
 };
 
+/**
+ * Makes a POST request to the returns service that causes any
+ * returns not in the list of validReturnIds for the given
+ * licence number to be marked as void.
+ *
+ * @param {String} licenceNumber The licence number
+ * @param {Array} validReturnIds An array of return ids that are valid and
+ * therefore will not be made void
+ */
+const voidReturns = (licenceNumber, validReturnIds = []) => {
+  if (!validReturnIds.length) {
+    return Promise.resolve();
+  }
+
+  const url = `${process.env.RETURNS_URI}/void-returns`;
+  const body = {
+    regime: 'water',
+    licenceType: 'abstraction',
+    licenceNumber,
+    validReturnIds
+  };
+
+  return helpers.serviceRequest.patch(url, { body });
+};
+
 exports.returns = returnsClient;
 exports.versions = versionsClient;
 exports.lines = linesClient;
 exports.getActiveReturns = getActiveReturns;
 exports.getCurrentDueReturns = getCurrentDueReturns;
+exports.voidReturns = voidReturns;

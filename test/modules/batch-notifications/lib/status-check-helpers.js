@@ -1,12 +1,15 @@
 const { expect } = require('code');
+const moment = require('moment');
 const {
   beforeEach,
   experiment,
   test
 } = exports.lab = require('lab').script();
 
-const { getNextCheckTime, getNextCheckCount } =
-require('../../../../src/modules/batch-notifications/lib/status-check-helpers');
+const {
+  getNextCheckTime,
+  getNextCheckCount
+} = require('../../../../src/modules/batch-notifications/lib/status-check-helpers');
 
 experiment('batch notifications status check helpers', () => {
   let message;
@@ -63,6 +66,19 @@ experiment('batch notifications status check helpers', () => {
         const msg = { ...message, status_checks: 2 };
         const result = getNextCheckTime(msg);
         expect(result).to.startWith('2019-04-12T11:04:00');
+      });
+    });
+
+    experiment('when send_after is null', () => {
+      test('send_after is considered to be now', async () => {
+        const now = moment();
+        const message = {
+          message_type: 'email',
+          send_after: null,
+          status_checks: null
+        };
+        const result = getNextCheckTime(message, now);
+        expect(result).to.equal(now.add(1, 'minute').format());
       });
     });
   });

@@ -7,7 +7,7 @@ const { buildReturnsPacket } = require('./transform-returns');
 const { getLicenceJson, buildPermitRepoPacket } = require('./transform-permit');
 const { setImportStatus } = require('./lib/import-log.js');
 const { importTableExists } = require('./lib/nald-queries');
-const { voidInvalidCycles } = require('./lib/void-invalid-cycles');
+const returnsConnector = require('../../lib/connectors/returns');
 const { persistReturns } = require('./lib/persist-returns');
 
 const repository = require('./repositories');
@@ -45,7 +45,7 @@ const loadReturns = async (licenceNumber) => {
 
   // Clean up invalid cycles
   const returnIds = returns.map(row => row.return_id);
-  await voidInvalidCycles(licenceNumber, returnIds);
+  await returnsConnector.voidReturns(licenceNumber, returnIds);
 };
 
 const validateTableExists = async licenceNumber => {
