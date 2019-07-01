@@ -1,11 +1,28 @@
-const { unzip } = require('lodash');
+const { unzip, flatMap } = require('lodash');
 const common = require('../common-mapping');
 const util = require('util');
 const parseCsv = util.promisify(require('csv-parse'));
 const moment = require('moment');
 const DATE_FORMAT = 'YYYY-MM-DD';
-const GDS_DATE_FORMAT = 'D MMMM YYYY';
-const GDS_MONTH_FORMAT = 'MMMM YYYY';
+// preferred format for dates is D MMMM YYYY, but some applications
+// may output the CSV in another format. This list attempts to deal
+// with the unexpected formats without risking potential
+// crossovers between formats such at DD/MM/YYYY and MM/DD/YYYY
+// by using a sample of potential separators.
+const GDS_DATE_FORMATS = flatMap([
+  ['D', 'MMMM', 'YYYY'],
+  ['D', 'MMM', 'YYYY'],
+  ['D', 'MM', 'YYYY'],
+  ['D', 'MMMM', 'YY'],
+  ['D', 'MMM', 'YY'],
+  ['D', 'MM', 'YY']
+], date => ([
+  date.join(' '),
+  date.join('/'),
+  date.join('-')
+]));
+
+const GDS_MONTH_FORMATS = ['MMMM YYYY', ...GDS_DATE_FORMATS];
 const { parseReturnId } = require('../../../../lib/returns');
 
 /**
@@ -18,20 +35,16 @@ const normalize = value => value.trim().toLowerCase();
 /**
  * Parses a date label found in the CSV into a frequency
  * @param  {String} date - the date label from the CSV
+ * @param {Number} numberOfDataLines - how many lines of data for this return?
  * @return {String}      - return frequency day|week|month
  */
-const parseDateFrequency = date => {
+const parseDateFrequency = (date, numberOfDataLines) => {
   const d = normalize(date);
   if (d.startsWith('week ending ')) {
     return 'week';
   };
-  if (d.match(/^[a-z]+ [0-9]{4}$/)) {
-    return 'month';
-  }
-  if (d.match(/^[0-9]{1,2} [a-z]+ [0-9]{4}$/)) {
-    return 'day';
-  }
-  throw new Error(`Could not parse return frequency from ${date}`);
+
+  return (numberOfDataLines === 12) ? 'month' : 'day';
 };
 
 /**
@@ -40,8 +53,8 @@ const parseDateFrequency = date => {
  * @return {Object}      - a return line skeleton
  */
 const createDay = date => ({
-  startDate: moment(date, GDS_DATE_FORMAT).format(DATE_FORMAT),
-  endDate: moment(date, GDS_DATE_FORMAT).format(DATE_FORMAT),
+  startDate: moment(date, GDS_DATE_FORMATS, true).format(DATE_FORMAT),
+  endDate: moment(date, GDS_DATE_FORMATS, true).format(DATE_FORMAT),
   timePeriod: 'day'
 });
 
@@ -51,8 +64,8 @@ const createDay = date => ({
  * @return {Object}      - a return line skeleton
  */
 const createWeek = date => ({
-  startDate: moment(date, GDS_DATE_FORMAT).subtract(6, 'day').format(DATE_FORMAT),
-  endDate: moment(date, GDS_DATE_FORMAT).format(DATE_FORMAT),
+  startDate: moment(date, GDS_DATE_FORMATS, true).subtract(6, 'day').format(DATE_FORMAT),
+  endDate: moment(date, GDS_DATE_FORMATS, true).format(DATE_FORMAT),
   timePeriod: 'week'
 });
 
@@ -62,18 +75,19 @@ const createWeek = date => ({
  * @return {Object}      - a return line skeleton
  */
 const createMonth = date => ({
-  startDate: moment(date, GDS_MONTH_FORMAT).startOf('month').format(DATE_FORMAT),
-  endDate: moment(date, GDS_MONTH_FORMAT).endOf('month').format(DATE_FORMAT),
+  startDate: moment(date, GDS_MONTH_FORMATS, true).startOf('month').format(DATE_FORMAT),
+  endDate: moment(date, GDS_MONTH_FORMATS, true).endOf('month').format(DATE_FORMAT),
   timePeriod: 'month'
 });
 
 /**
  * Creates a skeleton return line object
  * @param  {String} dateLabel - the date label in the CSV
+ * @param {Number} numberOfDataLines - how many lines of data for this return?
  * @return {Object}           - return line object
  */
-const createReturnLine = dateLabel => {
-  const frequency = parseDateFrequency(dateLabel);
+const createReturnLine = (dateLabel, numberOfDataLines) => {
+  const frequency = parseDateFrequency(dateLabel, numberOfDataLines);
 
   const actions = {
     day: createDay,
@@ -81,7 +95,7 @@ const createReturnLine = dateLabel => {
     month: createMonth
   };
 
-  const date = normalize(dateLabel).replace('week ending', '');
+  const date = normalize(dateLabel).replace(/week ending /i, '');
 
   return actions[frequency](date);
 };
@@ -111,6 +125,7 @@ const mapQuantity = value => {
 const mapLines = (headers, column, readingType) => {
   const lineHeaders = headers.slice(6, -1);
   const lineCells = column.slice(6, -1);
+
   return lineHeaders.reduce((acc, dateLabel, index) => {
     const value = normalize(lineCells[index]);
     if (value === 'do not edit') {
@@ -119,7 +134,7 @@ const mapLines = (headers, column, readingType) => {
     return [...acc, {
       unit: 'm³',
       userUnit: 'm³',
-      ...createReturnLine(dateLabel),
+      ...createReturnLine(dateLabel, lineCells.length),
       quantity: mapQuantity(value),
       readingType
     }];
