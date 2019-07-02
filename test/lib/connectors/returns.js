@@ -47,11 +47,19 @@ experiment('connectors/returns', () => {
   });
 
   experiment('getCurrentDueReturns', () => {
+    const response = [{
+      licence_ref: '01/123'
+    }, {
+      licence_ref: '02/345'
+    }, {
+      licence_ref: '03/456'
+    }];
+
     beforeEach(async () => {
-      sandbox.stub(returns.returns, 'findAll').resolves({});
+      sandbox.stub(returns.returns, 'findAll').resolves(response);
     });
 
-    test('calls the returns API with the correct arguments when no licences are excluded', async () => {
+    test('calls the returns API with the correct arguments', async () => {
       await returns.getCurrentDueReturns([], '2019-03-31');
 
       const [filter] = returns.returns.findAll.lastCall.args;
@@ -64,20 +72,14 @@ experiment('connectors/returns', () => {
       });
     });
 
-    test('calls the returns API with the correct arguments when licences are excluded', async () => {
-      await returns.getCurrentDueReturns(['01/123', '04/567'], '2019-03-31');
+    test('does not exclude any licences from result set when no licences are excluded', async () => {
+      const response = await returns.getCurrentDueReturns(['01/123', '03/456'], '2019-03-31');
+      expect(response).to.equal(response);
+    });
 
-      const [filter] = returns.returns.findAll.lastCall.args;
-      expect(filter).to.equal({
-        end_date: '2019-03-31',
-        status: 'due',
-        regime: 'water',
-        licence_type: 'abstraction',
-        'metadata->>isCurrent': 'true',
-        licence_ref: {
-          $nin: ['01/123', '04/567']
-        }
-      });
+    test('excludes licences from the result set when licences are excluded', async () => {
+      const response = await returns.getCurrentDueReturns(['01/123', '03/456'], '2019-03-31');
+      expect(response).to.equal([{ licence_ref: '02/345' }]);
     });
   });
 
