@@ -15,6 +15,9 @@ module.exports = {
       validate: {
         params: {
           documentId: Joi.string().guid().required()
+        },
+        query: {
+          companyId: Joi.string().guid()
         }
       }
     }
@@ -29,6 +32,9 @@ module.exports = {
       validate: {
         params: {
           documentId: Joi.string().guid().required()
+        },
+        query: {
+          companyId: Joi.string().guid()
         }
       }
     }
@@ -43,6 +49,9 @@ module.exports = {
       validate: {
         params: {
           documentId: Joi.string().guid().required()
+        },
+        query: {
+          companyId: Joi.string().guid()
         }
       }
     }
@@ -57,6 +66,9 @@ module.exports = {
       validate: {
         params: {
           documentId: Joi.string().guid().required()
+        },
+        query: {
+          companyId: Joi.string().guid()
         }
       }
     }
@@ -71,6 +83,10 @@ module.exports = {
       validate: {
         params: {
           documentId: Joi.string().guid().required()
+        },
+        query: {
+          companyId: Joi.string().guid(),
+          includeExpired: Joi.boolean().optional().default(false)
         }
       }
     }
@@ -87,7 +103,8 @@ module.exports = {
           documentId: Joi.string().guid().required()
         },
         query: {
-          includeExpired: Joi.boolean().optional().default(false)
+          includeExpired: Joi.boolean().optional().default(false),
+          companyId: Joi.string().guid()
         }
       }
     }

@@ -42,7 +42,7 @@ const getActiveReturns = (returnIds) => {
  * @param  {String} [refDate]      - optional ref date, used for testing
  * @return {Promise<Array>}        - all returns matching criteria
  */
-const getCurrentDueReturns = (excludeLicences, refDate) => {
+const getCurrentDueReturns = async (excludeLicences, refDate) => {
   const cycles = helpers.returns.date.createReturnCycles(undefined, refDate);
   const { endDate } = last(cycles);
 
@@ -54,13 +54,9 @@ const getCurrentDueReturns = (excludeLicences, refDate) => {
     'metadata->>isCurrent': 'true'
   };
 
-  if (excludeLicences.length) {
-    filter.licence_ref = {
-      $nin: excludeLicences
-    };
-  }
+  const results = await returnsClient.findAll(filter);
 
-  return returnsClient.findAll(filter);
+  return results.filter(ret => !excludeLicences.includes(ret.licence_ref));
 };
 
 /**
