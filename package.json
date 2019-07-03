@@ -40,7 +40,7 @@
     "sinon": "^7.3.2"
   },
   "dependencies": {
-    "@envage/hapi-pg-rest-api": "^4.1.2",
+    "@envage/hapi-pg-rest-api": "^5.0.0",
     "@envage/water-abstraction-helpers": "^3.0.0",
     "async-waterfall": "^0.1.5",
     "aws-sdk": "^2.457.0",
