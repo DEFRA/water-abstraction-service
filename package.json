@@ -14,7 +14,9 @@
     "migrate": "node scripts/create-schema && db-migrate up --verbose && node scripts/migrate-task-config",
     "migrate:local-test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test node scripts/create-schema && DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test db-migrate up --verbose && DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test node scripts/migrate-task-config",
     "lint": "eslint .",
-    "version": "auto-changelog -p --commit-limit false && git add CHANGELOG.md"
+    "version": "auto-changelog -p --commit-limit false && git add CHANGELOG.md",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "engines": {
     "node": ">=8.0"
@@ -83,6 +85,8 @@
     "snakecase-keys": "^1.1.1",
     "url-join": "^4.0.0",
     "uuid": "^3.3.2",
-    "vision": "^5.4.4"
-  }
+    "vision": "^5.4.4",
+    "snyk": "^1.189.0"
+  },
+  "snyk": true
 }
