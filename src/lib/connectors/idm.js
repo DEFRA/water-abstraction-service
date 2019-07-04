@@ -9,6 +9,9 @@ const { idm: { application } } = require('../../../config');
  * Find all users that have an external_id value in the array of ids
  */
 usersClient.getUsersByExternalId = async ids => {
+  if (ids.length === 0) {
+    return { data: [] };
+  }
   return usersClient.findMany({
     external_id: { $in: ids },
     application
