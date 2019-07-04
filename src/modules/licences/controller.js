@@ -173,11 +173,11 @@ const getLicencePointsByDocumentId = async request =>
 
 const getLicenceUsersByDocumentId = async (request, h) => {
   const { documentId } = request.params;
-  const { companyId } = request.query;
+  const { companyId, includeExpired } = request.query;
 
   try {
     if (companyId) {
-      const header = await getDocumentHeader(documentId);
+      const header = await getDocumentHeader(documentId, includeExpired);
       throwIfUnauthorised(header, companyId);
     }
 
@@ -225,10 +225,10 @@ const mapContacts = data => {
  */
 const getLicenceSummaryByDocumentId = async (request, h) => {
   const { documentId } = request.params;
-  const { companyId } = request.query;
+  const { companyId, includeExpired } = request.query;
 
   try {
-    const documentHeader = await getDocumentHeader(documentId);
+    const documentHeader = await getDocumentHeader(documentId, includeExpired);
     const licence = await getLicence(documentHeader, undefined, companyId);
 
     if (licence) {

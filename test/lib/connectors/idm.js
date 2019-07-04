@@ -10,26 +10,45 @@ const {
 const idmConnector = require('../../../src/lib/connectors/idm');
 
 experiment('getUsersByExternalId', () => {
-  const externalIds = [1, 2, 3, 4];
   beforeEach(async () => {
     sandbox.stub(idmConnector.usersClient, 'findMany').resolves({
       data: [],
       error: null
     });
-    await idmConnector.usersClient.getUsersByExternalId(externalIds);
   });
 
   afterEach(async () => {
     sandbox.restore();
   });
 
-  test('uses the expected filter', async () => {
-    const [filter] = idmConnector.usersClient.findMany.lastCall.args;
-    expect(filter).to.equal({
-      external_id: {
-        $in: externalIds
-      },
-      application: 'water_vml'
+  experiment('when externalIds array is empty', () => {
+    const externalIds = [];
+
+    test('the API is not called', async () => {
+      await idmConnector.usersClient.getUsersByExternalId(externalIds);
+      expect(idmConnector.usersClient.findMany.callCount).to.equal(0);
+    });
+
+    test('returns an object with empty data array', async () => {
+      const result = await idmConnector.usersClient.getUsersByExternalId(externalIds);
+      expect(result).to.equal({ data: [] });
+    });
+  });
+
+  experiment('when externalIds is not empty', () => {
+    const externalIds = [1, 2, 3, 4];
+    beforeEach(async () => {
+      await idmConnector.usersClient.getUsersByExternalId(externalIds);
+    });
+
+    test('uses the expected filter', async () => {
+      const [filter] = idmConnector.usersClient.findMany.lastCall.args;
+      expect(filter).to.equal({
+        external_id: {
+          $in: externalIds
+        },
+        application: 'water_vml'
+      });
     });
   });
 });
