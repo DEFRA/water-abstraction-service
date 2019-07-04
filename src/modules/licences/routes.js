@@ -17,7 +17,8 @@ module.exports = {
           documentId: Joi.string().guid().required()
         },
         query: {
-          companyId: Joi.string().guid()
+          companyId: Joi.string().guid(),
+          includeExpired: Joi.boolean().optional().default(false)
         }
       }
     }
