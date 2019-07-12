@@ -7,11 +7,12 @@ const rp = require('request-promise-native').defaults({
   proxy: null,
   strictSSL: false
 });
-const serviceRequest = require('../service-request');
+const { serviceRequest } = require('@envage/water-abstraction-helpers');
+const config = require('../../../../config');
 
 // Create API client
 const client = new APIClient(rp, {
-  endpoint: `${process.env.CRM_URI}/documentHeader`,
+  endpoint: `${config.services.crm}/documentHeader`,
   headers: {
     Authorization: process.env.JWT_TOKEN
   }
@@ -65,7 +66,7 @@ client.getRegisteredLicences = async function () {
  * @example getLicences({entity_id : 'guid'})
  */
 client.getDocumentRoles = function (filter, sort = {}, pagination = { page: 1, perPage: 100 }) {
-  const uri = process.env.CRM_URI + '/document_role_access?filter=' + JSON.stringify(filter);
+  const uri = config.services.crm + '/document_role_access?filter=' + JSON.stringify(filter);
   return rp({
     uri,
     method: 'GET',
@@ -83,7 +84,7 @@ client.getDocumentRoles = function (filter, sort = {}, pagination = { page: 1, p
  * @return {Promise} resolves with single licence record
  */
 client.getDocument = function (documentId) {
-  const url = process.env.CRM_URI + `/documentHeader/${documentId}`;
+  const url = config.services.crm + `/documentHeader/${documentId}`;
   return serviceRequest.get(url);
 };
 
@@ -94,7 +95,7 @@ client.getDocument = function (documentId) {
  */
 client.getDocumentContacts = function (filter = {}) {
   return rp({
-    uri: `${process.env.CRM_URI}/contacts`,
+    uri: `${config.services.crm}/contacts`,
     method: 'GET',
     headers: {
       Authorization: process.env.JWT_TOKEN
@@ -105,7 +106,7 @@ client.getDocumentContacts = function (filter = {}) {
 };
 
 client.getDocumentUsers = async documentId => {
-  const url = `${process.env.CRM_URI}/documents/${documentId}/users`;
+  const url = `${config.services.crm}/documents/${documentId}/users`;
   return serviceRequest.get(url);
 };
 

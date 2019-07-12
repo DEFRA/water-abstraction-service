@@ -8,7 +8,7 @@ const lookupRoutes = require('../controllers/lookup');
 const notificationsRoutes = require('../controllers/notifications');
 const eventsRoutes = require('../controllers/events');
 const notifyTemplatesRoutes = require('../controllers/notifytemplates');
-const importedLicencesRoutes = require('../controllers/imported_licences');
+const importedLicencesClient = require('../controllers/imported_licences');
 const taskRunner = require('../controllers/taskRunner');
 const taskConfigRoutes = require('../controllers/task-config');
 const gaugingStationRoutes = require('../controllers/gauging-stations');
@@ -23,7 +23,7 @@ module.exports = [
   ...eventsRoutes,
   ...notificationsRoutes,
   ...notifyTemplatesRoutes,
-  ...importedLicencesRoutes,
+  ...importedLicencesClient.getRoutes(),
   ...lookupRoutes,
   ...taskConfigRoutes,
   ...moduleRoutes,
