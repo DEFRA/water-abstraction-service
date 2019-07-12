@@ -5,12 +5,12 @@ const csvSchemaValidation = require('../../../../../src/modules/returns/lib/csv-
 const csvStringify = require('csv-stringify/lib/sync');
 
 const validLicenceNumberRecord = ['Licence number', '123', '123abc'];
-const validReturnReferenceRecord = ['Return reference', '123', '456'];
+const validReturnReferenceRecord = ['Return reference', '1234', '4321'];
 const validNilReturnRecord = ['Nil return Y/N', 'Y', 'N'];
 const validUseAMeterRecord = ['Did you use a meter Y/N', 'Y', 'N'];
 const validMeterMakeRecord = ['Meter make', 'Make 1', ''];
 const validMeterSerialNumberRecord = ['Meter serial number', '123-123', ''];
-const validUniqueReturnReferenceRecord = ['Unique return reference', '123', '123'];
+const validUniqueReturnReferenceRecord = ['Unique return reference', 'v1:1:123:1234:2018-01-01:2019-01-01', 'v1:1:123abc:4321:2018-01-01:2019-01-01'];
 const validDailyRecords = [
   ['9 April 2018', '10', 'Do not edit'],
   ['10 April 2018', '20', 'Do not edit'],
@@ -189,7 +189,7 @@ experiment('csv-schema-validation', () => {
         ...validDailyRecords,
         ...validWeeklyRecords,
         ...validMonthlyRecords,
-        ['13/04/2018', '111', 'Do not edit'],
+        ['not a date', '111', 'Do not edit'],
         validUniqueReturnReferenceRecord
       ];
       const csv = csvStringify(records);
@@ -202,6 +202,43 @@ experiment('csv-schema-validation', () => {
       expect(error).to.equal({
         message: errorMessage,
         line: 16
+      });
+    });
+
+    experiment('will allow the date field to be in the format:', () => {
+      const dates = [
+        { format: 'D MMM YYYY', value: '8 Apr 2019' },
+        { format: 'DD MMM YYYY', value: '08 Apr 2019' },
+        { format: 'D-MMM-YYYY', value: '8-Apr-2019' },
+        { format: 'DD-MMM-YYYY', value: '08-Apr-2019' },
+        { format: 'D/MMM/YYYY', value: '8/Apr/2019' },
+        { format: 'DD/MMM/YYYY', value: '08/Apr/2019' },
+        { format: 'DD MMM YY', value: '08 Apr 19' },
+        { format: 'DD-MMM-YY', value: '08-Apr-19' },
+        { format: 'DD/MMM/YY', value: '08/Apr/19' },
+        { format: 'D MMM YY', value: '8 Apr 19' },
+        { format: 'D-MMM-YY', value: '8-Apr-19' },
+        { format: 'D/MMM/YY', value: '8/Apr/19' },
+        { format: 'D MMMM YYYY', value: '8 April 2019' },
+        { format: 'D-MMMM-YYYY', value: '8-April-2019' },
+        { format: 'D/MMMM/YYYY', value: '8/April/2019' },
+        { format: 'DD MMMM YYYY', value: '08 April 2019' },
+        { format: 'DD-MMMM-YYYY', value: '08-April-2019' },
+        { format: 'DD/MMMM/YYYY', value: '08/April/2019' },
+        { format: 'DD-MM-YYYY', value: '08-04-2019' },
+        { format: 'DD/MM/YYYY', value: '08/04/2019' }
+      ];
+
+      dates.forEach(date => {
+        test(date.format, async () => {
+          const records = getValidSingleLicenceReturn();
+          records.splice(6, 0, [date.value, '5']);
+
+          const csv = csvStringify(records);
+          const { isValid } = await csvSchemaValidation.validate(csv);
+
+          expect(isValid).to.be.true();
+        });
       });
     });
 
