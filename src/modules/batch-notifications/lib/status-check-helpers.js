@@ -25,7 +25,7 @@ const getNextCheckTime = (message, now = moment()) => {
   }
   // For emails, use an exponential check time starting with 1 minute
   if (messageType === 'email') {
-    const minutes = Math.pow(2, checkCount);
+    const minutes = Math.pow(checkCount + 1, 2);
     momentSent.add(minutes, 'minute');
   }
   return momentSent.format();
