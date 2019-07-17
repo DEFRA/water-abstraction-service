@@ -56,16 +56,16 @@ experiment('batch notifications status check helpers', () => {
         expect(result).to.startWith('2019-04-12T11:01:00');
       });
 
-      test('second additional status check is 2 minutes after sending', () => {
+      test('second additional status check is 4 minutes after sending', () => {
         const msg = { ...message, status_checks: 1 };
         const result = getNextCheckTime(msg);
-        expect(result).to.startWith('2019-04-12T11:02:00');
+        expect(result).to.startWith('2019-04-12T11:04:00');
       });
 
-      test('third additional status check is 4 hours after sending', () => {
+      test('third additional status check is 9 minutes after sending', () => {
         const msg = { ...message, status_checks: 2 };
         const result = getNextCheckTime(msg);
-        expect(result).to.startWith('2019-04-12T11:04:00');
+        expect(result).to.startWith('2019-04-12T11:09:00');
       });
     });
 
