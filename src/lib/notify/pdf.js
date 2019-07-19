@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-const { getRenderNotification } = require('../../pdf-notifications');
+const { getRenderNotification } = require('../../modules/pdf-notifications');
 
 /**
  * Generates a PDF from the supplied URL and returns a buffer

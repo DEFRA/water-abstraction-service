@@ -1,6 +1,6 @@
 const NotifyClient = require('notifications-node-client').NotifyClient;
 const { get } = require('lodash');
-const pdfCreator = require('../../notify/lib/pdf');
+const pdfCreator = require('../../../lib/notify/pdf');
 const config = require('../../../../config');
 const s3Connector = require('../../../lib/connectors/s3');
 

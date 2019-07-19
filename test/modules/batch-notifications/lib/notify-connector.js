@@ -9,7 +9,7 @@ const notifyConnector =
 require('../../../../src/modules/batch-notifications/lib/notify-connector');
 
 const s3Connector = require('../../../../src/lib/connectors/s3');
-const pdfCreator = require('../../../../src/modules/notify/lib/pdf');
+const pdfCreator = require('../../../../src/lib/notify/pdf');
 
 experiment('batch notifications notify connector', () => {
   let client, sendLetter, sendPrecompiledLetter, sendEmail;

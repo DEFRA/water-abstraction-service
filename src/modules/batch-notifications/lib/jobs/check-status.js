@@ -2,7 +2,7 @@ const { get } = require('lodash');
 const { logger } = require('../../../../logger');
 const { getNextCheckTime, getNextCheckCount } = require('../status-check-helpers');
 const messageHelpers = require('../message-helpers');
-const notify = require('../../../notify/connectors/notify');
+const notify = require('../../../../lib/notify');
 const scheduledNotifications = require('../../../../controllers/notifications');
 const { createJobPublisher } = require('../batch-notifications');
 
