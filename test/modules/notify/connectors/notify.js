@@ -2,7 +2,7 @@ const Lab = require('lab');
 const lab = Lab.script();
 const Code = require('code');
 
-const { getNotifyKey, getPdfNotifyKey } = require('../../../../src/modules/notify/connectors/notify.js');
+const { getNotifyKey, getPdfNotifyKey } = require('../../../../src/lib/notify');
 
 lab.experiment('Test getNotifyKey', () => {
   lab.test('The API should get test notify key', async () => {

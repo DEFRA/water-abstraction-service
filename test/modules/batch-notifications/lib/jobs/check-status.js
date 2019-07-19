@@ -14,7 +14,7 @@ const messageQueue = require('../../../../../src/lib/message-queue');
 const checkStatus = require('../../../../../src/modules/batch-notifications/lib/jobs/check-status');
 const messageHelpers = require('../../../../../src/modules/batch-notifications/lib/message-helpers');
 const scheduledNotifications = require('../../../../../src/controllers/notifications.js');
-const notify = require('../../../../../src/modules/notify/connectors/notify');
+const notify = require('../../../../../src/lib/notify');
 const { logger } = require('../../../../../src/logger');
 
 experiment('checkStatus job', () => {
