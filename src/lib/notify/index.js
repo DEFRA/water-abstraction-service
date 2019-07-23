@@ -113,11 +113,9 @@ async function sendPdf (notificationId, notifyId) {
   return notifyClient.sendPrecompiledLetter(notifyId, pdf);
 }
 
-module.exports = {
-  getNotifyKey,
-  getStatus,
-  preview,
-  send,
-  getPdfNotifyKey,
-  sendPdf
-};
+exports.getNotifyKey = getNotifyKey;
+exports.getStatus = getStatus;
+exports.preview = preview;
+exports.send = send;
+exports.getPdfNotifyKey = getPdfNotifyKey;
+exports.sendPdf = sendPdf;

@@ -82,7 +82,9 @@ module.exports = {
 
   notify: {
     templates: {
-      returns_invitation_letter: 'd31d05d3-66fe-4203-8626-22e63f9bccd6'
+      returns_invitation_letter: 'd31d05d3-66fe-4203-8626-22e63f9bccd6',
+      email_change_verification_code_email: '1fd2e8f2-8cb9-4ed1-8fa6-691918c15430',
+      email_change_email_in_use_email: 'adb02416-e9d3-4e05-a9cc-b24e25675672'
     }
   },
 
