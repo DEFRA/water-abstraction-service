@@ -38,11 +38,7 @@ const createNotificationData = (messageRef, recipient, personalisation) => {
  */
 const sendEmailAddressInUseNotification = recipient => {
   const personalisation = {
-<<<<<<< HEAD
     link: `${process.env.BASE_URL}/signin`,
-=======
-    link: `${process.env.BASE_URL}/welcome`,
->>>>>>> Refactor. Add tests.
     resetLink: `${process.env.BASE_URL}/reset_password` };
 
   const scheduledNotification = createNotificationData('email_change_email_in_use_email', recipient, personalisation);
