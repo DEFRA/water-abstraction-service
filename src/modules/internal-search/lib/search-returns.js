@@ -128,11 +128,9 @@ const searchReturns = async (query) => {
   return filtered.map(mapReturn);
 };
 
-module.exports = {
-  mapReturn,
-  searchReturns,
-  filterReturnsByCRMDocument,
-  findReturnByReturnId,
-  findRecentReturnsByFormatId,
-  mapRecentReturns
-};
+exports.mapReturn = mapReturn;
+exports.searchReturns = searchReturns;
+exports.filterReturnsByCRMDocument = filterReturnsByCRMDocument;
+exports.findReturnByReturnId = findReturnByReturnId;
+exports.findRecentReturnsByFormatId = findRecentReturnsByFormatId;
+exports.mapRecentReturns = mapRecentReturns;
