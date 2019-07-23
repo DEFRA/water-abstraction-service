@@ -273,11 +273,9 @@ const getLicenceCommunicationsByDocumentId = async (request, h) => {
   }
 };
 
-module.exports = {
-  getLicenceByDocumentId,
-  getLicenceConditionsByDocumentId,
-  getLicencePointsByDocumentId,
-  getLicenceUsersByDocumentId,
-  getLicenceSummaryByDocumentId,
-  getLicenceCommunicationsByDocumentId
-};
+exports.getLicenceByDocumentId = getLicenceByDocumentId;
+exports.getLicenceConditionsByDocumentId = getLicenceConditionsByDocumentId;
+exports.getLicencePointsByDocumentId = getLicencePointsByDocumentId;
+exports.getLicenceUsersByDocumentId = getLicenceUsersByDocumentId;
+exports.getLicenceSummaryByDocumentId = getLicenceSummaryByDocumentId;
+exports.getLicenceCommunicationsByDocumentId = getLicenceCommunicationsByDocumentId;
