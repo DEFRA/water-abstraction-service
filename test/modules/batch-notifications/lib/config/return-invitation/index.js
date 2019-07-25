@@ -1,14 +1,14 @@
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 const {
   beforeEach,
   experiment,
   test,
   afterEach
-} = exports.lab = require('lab').script();
+} = exports.lab = require('@hapi/lab').script();
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
-const Joi = require('joi');
+const Joi = require('@hapi/joi');
 
 const config = require('../../../../../../src/modules/batch-notifications/config/return-invitation');
 const returnsConnector = require('../../../../../../src/lib/connectors/returns');

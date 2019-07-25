@@ -1,6 +1,6 @@
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const { experiment, test, beforeEach } = exports.lab = Lab.script();
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 const { set } = require('lodash');
 
 const { createReturnsFilter } = require('../../../../src/modules/companies/lib/returns');

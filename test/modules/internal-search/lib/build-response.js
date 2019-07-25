@@ -1,6 +1,6 @@
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const { experiment, test, beforeEach } = exports.lab = Lab.script();
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 
 const { buildResponse } = require('../../../../src/modules/internal-search/lib/build-response');
 

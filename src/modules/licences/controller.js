@@ -1,5 +1,5 @@
 const moment = require('moment');
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const { get, isObject } = require('lodash');
 const documentsClient = require('../../lib/connectors/crm/documents');
 const { usersClient } = require('../../lib/connectors/idm');

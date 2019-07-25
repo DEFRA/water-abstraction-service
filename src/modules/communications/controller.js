@@ -1,7 +1,7 @@
 const notificationsController = require('../../controllers/notifications');
 const eventsController = require('../../controllers/events');
 const { get, mapKeys, camelCase, pick } = require('lodash');
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const crmDocumentConnector = require('../../lib/connectors/crm/documents');
 
 const camelCaseKeys = obj => mapKeys(obj, (value, key) => camelCase(key));

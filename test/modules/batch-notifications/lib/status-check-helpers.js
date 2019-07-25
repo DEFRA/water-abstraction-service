@@ -1,10 +1,10 @@
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 const moment = require('moment');
 const {
   beforeEach,
   experiment,
   test
-} = exports.lab = require('lab').script();
+} = exports.lab = require('@hapi/lab').script();
 
 const {
   getNextCheckTime,

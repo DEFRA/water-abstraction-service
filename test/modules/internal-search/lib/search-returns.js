@@ -1,7 +1,7 @@
 const sinon = require('sinon');
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const { experiment, test, afterEach, beforeEach } = exports.lab = Lab.script();
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 
 const searchReturns = require('../../../../src/modules/internal-search/lib/search-returns');
 const documents = require('../../../../src/lib/connectors/crm/documents');

@@ -1,5 +1,5 @@
-const { expect } = require('code');
-const { afterEach, beforeEach, experiment, test } = exports.lab = require('lab').script();
+const { expect } = require('@hapi/code');
+const { afterEach, beforeEach, experiment, test } = exports.lab = require('@hapi/lab').script();
 
 const controller = require('../../../src/modules/licences/controller');
 const queries = require('../../../src/modules/licences/lib/queries');

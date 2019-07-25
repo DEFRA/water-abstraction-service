@@ -5,8 +5,8 @@ const {
   test,
   beforeEach,
   afterEach
-} = exports.lab = require('lab').script();
-const { expect } = require('code');
+} = exports.lab = require('@hapi/lab').script();
+const { expect } = require('@hapi/code');
 const server = require('../../index.js');
 
 const createRequest = (method, sessionId) => {

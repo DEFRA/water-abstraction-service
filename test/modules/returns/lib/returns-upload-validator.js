@@ -1,8 +1,8 @@
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 const { omit } = require('lodash');
-const { experiment, test, afterEach, beforeEach } = exports.lab = require('lab').script();
+const { experiment, test, afterEach, beforeEach } = exports.lab = require('@hapi/lab').script();
 const returnsUploadValidator = require('../../../../src/modules/returns/lib/returns-upload-validator');
 
 const permit = require('../../../../src/lib/connectors/permit');

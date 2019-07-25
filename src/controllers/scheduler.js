@@ -3,7 +3,7 @@
  * Scheduler defines and reports on tasks
  */
 const HAPIRestAPI = require('@envage/hapi-pg-rest-api');
-const Joi = require('joi');
+const Joi = require('@hapi/joi');
 const { pool } = require('../lib/connectors/db.js');
 
 const SchedulerApi = new HAPIRestAPI({

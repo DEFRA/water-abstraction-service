@@ -1,11 +1,11 @@
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
-const { expect, fail } = require('code');
+const { expect, fail } = require('@hapi/code');
 const {
   beforeEach,
   afterEach,
   experiment,
-  test } = exports.lab = require('lab').script();
+  test } = exports.lab = require('@hapi/lab').script();
 
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const idmConnector = require('../../../src/lib/connectors/idm');

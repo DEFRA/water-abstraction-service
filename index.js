@@ -5,9 +5,9 @@ require('dotenv').config();
 const Blipp = require('blipp');
 const Good = require('good');
 const GoodWinston = require('good-winston');
-const Hapi = require('hapi');
+const Hapi = require('@hapi/hapi');
 const HapiAuthJwt2 = require('hapi-auth-jwt2');
-const Vision = require('vision');
+const Vision = require('@hapi/vision');
 const Nunjucks = require('nunjucks');
 
 const moment = require('moment');

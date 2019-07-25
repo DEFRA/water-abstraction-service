@@ -1,4 +1,4 @@
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const event = require('../../lib/event');
 const returnsUpload = require('./lib/returns-upload');
 

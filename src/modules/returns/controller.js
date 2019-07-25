@@ -1,4 +1,4 @@
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const { find, first, get } = require('lodash');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 

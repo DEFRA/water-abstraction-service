@@ -1,6 +1,6 @@
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const { experiment, test } = exports.lab = Lab.script();
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 
 const { createDocumentsFilter } = require('../../../../src/modules/companies/lib/documents');
 

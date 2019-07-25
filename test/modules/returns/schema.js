@@ -1,12 +1,12 @@
-const Joi = require('joi');
+const Joi = require('@hapi/joi');
 const {
   nilReturn, estimatedVolumes, meterReadings, meteredVolumes,
   estimatedSingleValue, meteredSingleValue, meteredSingleValueCustomDates,
   meteredNoMeterDetails
 } = require('./return-data.json');
 
-const { expect } = require('code');
-const { experiment, test } = exports.lab = require('lab').script();
+const { expect } = require('@hapi/code');
+const { experiment, test } = exports.lab = require('@hapi/lab').script();
 
 const { returnSchema } = require('../../../src/modules/returns/schema.js');
 

@@ -1,4 +1,4 @@
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 
 const returns = require('../../../lib/connectors/returns');
 const contactList = require('../../../lib/contact-list');

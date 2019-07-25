@@ -1,5 +1,5 @@
-const { before, experiment, test } = exports.lab = require('lab').script();
-const { expect } = require('code');
+const { before, experiment, test } = exports.lab = require('@hapi/lab').script();
+const { expect } = require('@hapi/code');
 const server = require('../../index.js');
 const licenceCreator = require('../../scripts/licence-creator/index.js');
 const { copyTestFiles } = require('../../src/modules/import/extract.js');

@@ -1,4 +1,4 @@
-const Joi = require('joi');
+const Joi = require('@hapi/joi');
 const controller = require('./controller');
 
 const notificationId = Joi.string().required().valid(['pdf.return_form', 'pdf.return_reminder']);

@@ -1,6 +1,6 @@
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const lab = Lab.script();
-const Code = require('code');
+const Code = require('@hapi/code');
 const moment = require('moment');
 
 const messageQueue = require('../../../src/lib/message-queue');
