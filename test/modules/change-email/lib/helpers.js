@@ -54,7 +54,7 @@ experiment('sendEmailAddressInUseNotification', () => {
     helpers.sendEmailAddressInUseNotification('test-email@domain.com');
     const args = scheduledNotifications.repository.create.lastCall.args;
     expect(args).to.be.an.array();
-    expect(args[0].personalisation.link).to.equal(`${process.env.BASE_URL}/welcome`);
+    expect(args[0].personalisation.link).to.equal(`${process.env.BASE_URL}/signin`);
     expect(args[0].personalisation.resetLink).to.equal(`${process.env.BASE_URL}/reset_password`);
   });
 });
