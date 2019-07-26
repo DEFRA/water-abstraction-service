@@ -2,7 +2,6 @@ const event = require('../../lib/event');
 const idm = require('../../lib/connectors/idm');
 const crm = require('../../lib/connectors/crm/entities');
 const { logger } = require('../../logger');
-const scheduledNotifications = require('../../controllers/notifications');
 const changeEmailHelpers = require('./lib/helpers');
 
 /**
@@ -11,10 +10,10 @@ const changeEmailHelpers = require('./lib/helpers');
  * @param  {Object}  h
  */
 const postStartEmailAddressChange = async (request, h) => {
-  const { userId } = request.defra;
-  const { password } = request.payload;
+  const { password, userId } = request.payload;
 
-  return idm.createEmailChangeRecord(userId, password);
+  const result = await idm.createEmailChangeRecord(userId, password);
+  return { data: result, error: null };
 };
 
 /**
@@ -27,16 +26,13 @@ const postGenerateSecurityCode = async (request, h) => {
   try {
     const { data: { verificationCode } } = await idm.addNewEmailToEmailChangeRecord(verificationId, newEmail);
 
-    const scheduledNotification = changeEmailHelpers.createNotificationData(
-      'email_change_verification_code_email',
-      newEmail,
-      { verification_code: verificationCode });
-    await scheduledNotifications.repository.create(scheduledNotification);
+    const result = await changeEmailHelpers.sendVerificationCodeEmail(newEmail, verificationCode);
+    return { data: result, error: null };
   } catch (error) {
     if (error.message === 'Email address already in use') {
-      changeEmailHelpers.sendEmailAddressInUseNotification(newEmail);
+      await changeEmailHelpers.sendEmailAddressInUseNotification(newEmail);
     }
-    return error;
+    return { data: null, error };
   }
 };
 
@@ -46,8 +42,7 @@ const postGenerateSecurityCode = async (request, h) => {
  * @param  {Object}  h
  */
 const postChangeEmailAddress = async (request, h) => {
-  const { securityCode, entityId } = request.payload;
-  const { userId, userName } = request.defra;
+  const { securityCode, entityId, userId, userName } = request.payload;
 
   try {
     const { data: { newEmail } } = await idm.verifySecurityCode(userId, securityCode);
@@ -56,10 +51,11 @@ const postChangeEmailAddress = async (request, h) => {
 
     const evt = changeEmailHelpers.createEventObject(userName, entityId, newEmail, userId);
 
-    await event.repo.create(evt);
+    const result = await event.repo.create(evt);
+    return { data: result, error: null };
   } catch (error) {
     logger.error('Email change error', error);
-    if (error.name === 'EmailChangeError') return error;
+    if (error.name === 'EmailChangeError') return { data: null, error };
   }
 };
 

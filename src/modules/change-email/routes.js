@@ -9,7 +9,8 @@ module.exports = {
     options: {
       validate: {
         payload: {
-          password: Joi.string().required()
+          password: Joi.string().required(),
+          userId: Joi.number().integer().required()
         }
       }
     }
@@ -35,7 +36,9 @@ module.exports = {
       validate: {
         payload: {
           securityCode: Joi.number().integer().required(),
-          entityId: Joi.string().guid().required()
+          entityId: Joi.string().guid().required(),
+          userId: Joi.number().integer().required(),
+          userName: Joi.string().required()
         }
       }
     }

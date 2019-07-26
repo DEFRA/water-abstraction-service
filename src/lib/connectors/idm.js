@@ -40,7 +40,7 @@ usersClient.getUserByUserName = async userName => {
  * call IDM to check user credentials and create email change record
  */
 const createEmailChangeRecord = (userId, password) => {
-  const url = `${process.env.IDM_URI}/user/change-email-address/start`;
+  const url = `${config.services.idm}/user/change-email-address/start`;
   return helpers.serviceRequest.post(url, { userId, password });
 };
 
@@ -48,7 +48,7 @@ const createEmailChangeRecord = (userId, password) => {
  * call IDM to update record with new email address
  */
 const addNewEmailToEmailChangeRecord = (verificationId, newEmail) => {
-  const url = `${process.env.IDM_URI}/user/change-email-address/create-code`;
+  const url = `${config.services.idm}/user/change-email-address/create-code`;
   return helpers.serviceRequest.patch(url, { verificationId, newEmail });
 };
 
@@ -58,7 +58,7 @@ const addNewEmailToEmailChangeRecord = (verificationId, newEmail) => {
  * @param  {Int} securityCode
  */
 const verifySecurityCode = (userId, securityCode) => {
-  const url = `${process.env.IDM_URI}/user/change-email-address/complete`;
+  const url = `${config.services.idm}/user/change-email-address/complete`;
   return helpers.serviceRequest.post(url, { userId, securityCode });
 };
 

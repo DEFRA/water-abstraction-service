@@ -33,6 +33,13 @@ const createNotificationData = (messageRef, recipient, personalisation) => {
   };
 };
 
+const sendVerificationCodeEmail = (newEmail, verificationCode) => {
+  const scheduledNotification = createNotificationData(
+    'email_change_verification_code',
+    newEmail,
+    { verification_code: verificationCode });
+  return scheduledNotifications.repository.create(scheduledNotification);
+};
 /**
  * set personalisation and send email address already in use email
  */
@@ -41,10 +48,11 @@ const sendEmailAddressInUseNotification = recipient => {
     link: `${process.env.BASE_URL}/signin`,
     resetLink: `${process.env.BASE_URL}/reset_password` };
 
-  const scheduledNotification = createNotificationData('email_change_email_in_use_email', recipient, personalisation);
+  const scheduledNotification = createNotificationData('email_change_email_in_use', recipient, personalisation);
   return scheduledNotifications.repository.create(scheduledNotification);
 };
 
 exports.createEventObject = createEventObject;
 exports.createNotificationData = createNotificationData;
+exports.sendVerificationCodeEmail = sendVerificationCodeEmail;
 exports.sendEmailAddressInUseNotification = sendEmailAddressInUseNotification;
