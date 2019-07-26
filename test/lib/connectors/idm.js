@@ -10,6 +10,7 @@ const {
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const idmConnector = require('../../../src/lib/connectors/idm');
 const helpers = require('@envage/water-abstraction-helpers');
+const config = require('../../../config');
 
 experiment('connectors/idm', () => {
   beforeEach(async () => {
@@ -134,7 +135,7 @@ experiment('createEmailChangeRecord', () => {
 
   test('passes the expected URL to the request', async () => {
     await idmConnector.createEmailChangeRecord('test-user-id', 'password');
-    const expectedUrl = `${process.env.IDM_URI}/user/change-email-address/start`;
+    const expectedUrl = `${config.services.idm}/user/change-email-address/start`;
     const arg = helpers.serviceRequest.post.args[0][0];
     expect(arg).to.equal(expectedUrl);
   });
@@ -151,7 +152,7 @@ experiment('addNewEmailToEmailChangeRecord', () => {
 
   test('passes the expected URL to the request', async () => {
     await idmConnector.addNewEmailToEmailChangeRecord('test-id', 'test-email@domain.com');
-    const expectedUrl = `${process.env.IDM_URI}/user/change-email-address/create-code`;
+    const expectedUrl = `${config.services.idm}/user/change-email-address/create-code`;
     const arg = helpers.serviceRequest.patch.args[0][0];
     expect(arg).to.equal(expectedUrl);
   });
@@ -168,7 +169,7 @@ experiment('verifySecurityCode', () => {
 
   test('passes the expected URL to the request', async () => {
     await idmConnector.verifySecurityCode('test-user-id', '464632');
-    const expectedUrl = `${process.env.IDM_URI}/user/change-email-address/complete`;
+    const expectedUrl = `${config.services.idm}/user/change-email-address/complete`;
     const arg = helpers.serviceRequest.post.args[0][0];
     expect(arg).to.equal(expectedUrl);
   });
@@ -185,7 +186,7 @@ experiment('createEmailChangeRecord', () => {
 
   test('passes the expected URL to the request', async () => {
     await idmConnector.createEmailChangeRecord('test-user-id', 'password');
-    const expectedUrl = `${process.env.IDM_URI}/user/change-email-address/start`;
+    const expectedUrl = `${config.services.idm}/user/change-email-address/start`;
     const arg = helpers.serviceRequest.post.args[0][0];
     expect(arg).to.equal(expectedUrl);
   });
@@ -202,7 +203,7 @@ experiment('addNewEmailToEmailChangeRecord', () => {
 
   test('passes the expected URL to the request', async () => {
     await idmConnector.addNewEmailToEmailChangeRecord('test-id', 'test-email@domain.com');
-    const expectedUrl = `${process.env.IDM_URI}/user/change-email-address/create-code`;
+    const expectedUrl = `${config.services.idm}/user/change-email-address/create-code`;
     const arg = helpers.serviceRequest.patch.args[0][0];
     expect(arg).to.equal(expectedUrl);
   });
@@ -219,7 +220,7 @@ experiment('verifySecurityCode', () => {
 
   test('passes the expected URL to the request', async () => {
     await idmConnector.verifySecurityCode('test-user-id', '464632');
-    const expectedUrl = `${process.env.IDM_URI}/user/change-email-address/complete`;
+    const expectedUrl = `${config.services.idm}/user/change-email-address/complete`;
     const arg = helpers.serviceRequest.post.args[0][0];
     expect(arg).to.equal(expectedUrl);
   });
