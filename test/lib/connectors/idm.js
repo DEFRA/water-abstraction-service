@@ -173,3 +173,54 @@ experiment('verifySecurityCode', () => {
     expect(arg).to.equal(expectedUrl);
   });
 });
+
+experiment('createEmailChangeRecord', () => {
+  beforeEach(async () => {
+    sandbox.stub(helpers.serviceRequest, 'post').resolves({});
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  test('passes the expected URL to the request', async () => {
+    await idmConnector.createEmailChangeRecord('test-user-id', 'password');
+    const expectedUrl = `${process.env.IDM_URI}/user/change-email-address/start`;
+    const arg = helpers.serviceRequest.post.args[0][0];
+    expect(arg).to.equal(expectedUrl);
+  });
+});
+
+experiment('addNewEmailToEmailChangeRecord', () => {
+  beforeEach(async () => {
+    sandbox.stub(helpers.serviceRequest, 'patch').resolves({});
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  test('passes the expected URL to the request', async () => {
+    await idmConnector.addNewEmailToEmailChangeRecord('test-id', 'test-email@domain.com');
+    const expectedUrl = `${process.env.IDM_URI}/user/change-email-address/create-code`;
+    const arg = helpers.serviceRequest.patch.args[0][0];
+    expect(arg).to.equal(expectedUrl);
+  });
+});
+
+experiment('verifySecurityCode', () => {
+  beforeEach(async () => {
+    sandbox.stub(helpers.serviceRequest, 'post').resolves({});
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  test('passes the expected URL to the request', async () => {
+    await idmConnector.verifySecurityCode('test-user-id', '464632');
+    const expectedUrl = `${process.env.IDM_URI}/user/change-email-address/complete`;
+    const arg = helpers.serviceRequest.post.args[0][0];
+    expect(arg).to.equal(expectedUrl);
+  });
+});
