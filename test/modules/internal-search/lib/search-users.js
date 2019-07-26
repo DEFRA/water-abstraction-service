@@ -1,8 +1,8 @@
 const sinon = require('sinon');
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const { set } = require('lodash');
 const { experiment, test, afterEach, beforeEach } = exports.lab = Lab.script();
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 
 const searchUsers = require('../../../../src/modules/internal-search/lib/search-users');
 const idm = require('../../../../src/lib/connectors/idm');

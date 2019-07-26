@@ -1,11 +1,11 @@
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const {
   experiment,
   test,
   beforeEach,
   afterEach
 } = exports.lab = Lab.script();
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 
 const {

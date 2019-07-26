@@ -1,7 +1,7 @@
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
-const { expect } = require('code');
-const { experiment, test, beforeEach, afterEach } = exports.lab = require('lab').script();
+const { expect } = require('@hapi/code');
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const documentsConnector = require('../../../../src/lib/connectors/crm/documents');
 

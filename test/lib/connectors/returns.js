@@ -1,11 +1,11 @@
 const moment = require('moment');
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 const {
   beforeEach,
   afterEach,
   experiment,
   test
-} = exports.lab = require('lab').script();
+} = exports.lab = require('@hapi/lab').script();
 
 const helpers = require('@envage/water-abstraction-helpers');
 

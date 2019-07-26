@@ -1,7 +1,7 @@
 const licenceData = require('../../../responses/permits/licence/licence-data.json');
 
-const { expect } = require('code');
-const { experiment, test } = exports.lab = require('lab').script();
+const { expect } = require('@hapi/code');
+const { experiment, test } = exports.lab = require('@hapi/lab').script();
 
 const { createContacts } = require('../../../../src/lib/models/factory/contact-list');
 

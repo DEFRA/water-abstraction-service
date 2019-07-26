@@ -1,4 +1,4 @@
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const updateLicence = require('./lib/update-licence-row');
 const cron = require('node-cron');
 const { logger } = require('../../logger');

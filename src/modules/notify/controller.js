@@ -1,4 +1,4 @@
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const moment = require('moment');
 const messageQueue = require('../../lib/message-queue');
 

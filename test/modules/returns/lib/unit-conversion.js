@@ -1,6 +1,6 @@
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const lab = Lab.script();
-const Code = require('code');
+const Code = require('@hapi/code');
 
 const { convertToCubicMetres, convertToUserUnit, InvalidUnitError } = require('../../../../src/modules/returns/lib/unit-conversion.js');
 

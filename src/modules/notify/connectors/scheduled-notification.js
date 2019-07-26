@@ -1,4 +1,4 @@
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const scheduledNotification = require('../../../controllers/notifications').repository;
 const { isArray, mapValues } = require('lodash');
 const snakeCaseKeys = require('snakecase-keys');

@@ -1,6 +1,6 @@
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const lab = Lab.script();
-const Code = require('code');
+const Code = require('@hapi/code');
 
 const { getNotifyKey, getPdfNotifyKey } = require('../../../../src/modules/notify/connectors/notify.js');
 

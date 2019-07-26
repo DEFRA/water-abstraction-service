@@ -1,6 +1,6 @@
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const lab = Lab.script();
-const Code = require('code');
+const Code = require('@hapi/code');
 
 const { isPdf, parseSentResponse, validateEnqueueOptions } = require('../../../../src/modules/notify/lib/helpers.js');
 

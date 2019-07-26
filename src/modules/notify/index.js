@@ -4,7 +4,7 @@
  * - send - sends notify message, fire 'status' at several regular intervals in future
  * - status - checks status in notify, updates scheduled_notification table
  */
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const moment = require('moment');
 const promiseRetry = require('promise-retry');
 const notify = require('./connectors/notify');

@@ -1,5 +1,5 @@
 const idmConnector = require('../../lib/connectors/idm');
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const { get } = require('lodash');
 const crmEntitiesConnector = require('../../lib/connectors/crm/entities');
 const crmDocumentsConnector = require('../../lib/connectors/crm/documents');

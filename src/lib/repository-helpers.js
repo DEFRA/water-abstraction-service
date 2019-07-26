@@ -1,5 +1,5 @@
 const { isObject } = require('lodash');
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 
 /**
  * Loads exactly one record by ID or filter from specified repository

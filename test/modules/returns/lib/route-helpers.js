@@ -1,6 +1,6 @@
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 const sinon = require('sinon');
-const { experiment, test, before, after } = exports.lab = require('lab').script();
+const { experiment, test, before, after } = exports.lab = require('@hapi/lab').script();
 
 const { failAction } = require('../../../../src/modules/returns/lib/route-helpers');
 const { logger } = require('../../../../src/logger');

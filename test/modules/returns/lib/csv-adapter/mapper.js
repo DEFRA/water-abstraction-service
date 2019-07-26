@@ -1,6 +1,6 @@
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 const { find } = require('lodash');
-const { experiment, test, beforeEach } = exports.lab = require('lab').script();
+const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const csvMapper = require('../../../../../src/modules/returns/lib/csv-adapter/mapper');
 
 const headers = [

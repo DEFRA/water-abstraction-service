@@ -1,6 +1,6 @@
 const sinon = require('sinon');
-const { expect } = require('code');
-const { experiment, test, beforeEach, afterEach } = exports.lab = require('lab').script();
+const { expect } = require('@hapi/code');
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 
 const { getNotificationsForLicence } = require('../../../../src/modules/licences/lib/queries');
 const { pool } = require('../../../../src/lib/connectors/db');
