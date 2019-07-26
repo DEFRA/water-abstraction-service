@@ -81,7 +81,8 @@ experiment('change email controller', async () => {
       test('returns the error when error message !== "Email address already in use"', async () => {
         idm.addNewEmailToEmailChangeRecord.throws('EmailChangeError');
         const result = await controller.postGenerateSecurityCode(request, h);
-        expect(result).to.be.an.error();
+        expect(result.data).to.be.null();
+        expect(result.error).to.be.an.error();
       });
     });
   });
@@ -129,7 +130,8 @@ experiment('change email controller', async () => {
 
       test('return error if error name is "EmailChangeError"', async () => {
         const result = await controller.postChangeEmailAddress(request, h);
-        expect(result).to.be.an.error();
+        expect(result.data).to.be.null();
+        expect(result.error).to.be.an.error();
       });
     });
   });
