@@ -38,7 +38,7 @@ module.exports = {
           securityCode: Joi.number().integer().required(),
           entityId: Joi.string().guid().required(),
           userId: Joi.number().integer().required(),
-          userName: Joi.string().required()
+          userName: Joi.string().email().required()
         }
       }
     }
