@@ -13,7 +13,7 @@ const postStartEmailAddressChange = async (request, h) => {
   const { password, userId } = request.payload;
 
   const result = await idm.createEmailChangeRecord(userId, password);
-  return { data: result, error: null };
+  return h.response({ data: result, error: null }).code(200);
 };
 
 /**
@@ -24,7 +24,8 @@ const postStartEmailAddressChange = async (request, h) => {
 const postGenerateSecurityCode = async (request, h) => {
   const { verificationId, newEmail } = request.payload;
   try {
-    const { data: { verificationCode } } = await idm.addNewEmailToEmailChangeRecord(verificationId, newEmail);
+    const { error, data: { verificationCode } } = await idm.addNewEmailToEmailChangeRecord(verificationId, newEmail);
+    if (error) throw error;
 
     const result = await changeEmailHelpers.sendVerificationCodeEmail(newEmail, verificationCode);
     return { data: result, error: null };
@@ -32,7 +33,7 @@ const postGenerateSecurityCode = async (request, h) => {
     if (error.message === 'Email address already in use') {
       await changeEmailHelpers.sendEmailAddressInUseNotification(newEmail);
     }
-    return { data: null, error };
+    return h.response({ data: null, error }).code(error.statusCode);
   }
 };
 
@@ -42,10 +43,10 @@ const postGenerateSecurityCode = async (request, h) => {
  * @param  {Object}  h
  */
 const postChangeEmailAddress = async (request, h) => {
-  const { securityCode, entityId, userId, userName } = request.payload;
+  const { verificationCode, entityId, userId, userName } = request.payload;
 
   try {
-    const { data: { newEmail } } = await idm.verifySecurityCode(userId, securityCode);
+    const { data: { newEmail } } = await idm.verifySecurityCode(userId, verificationCode);
 
     await crm.updateEntityEmail(entityId, newEmail);
 
@@ -55,7 +56,7 @@ const postChangeEmailAddress = async (request, h) => {
     return { data: result, error: null };
   } catch (error) {
     logger.error('Email change error', error);
-    if (error.name === 'EmailChangeError') return { data: null, error };
+    if (error.name === 'EmailChangeError') return h.response({ data: null, error }).code(error.statusCode);
   }
 };
 

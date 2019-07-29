@@ -21,14 +21,14 @@ const request = {
     password: 'test-password',
     verificationId: '1234-asdf-qwert',
     newEmail: 'new-email@domain.com',
-    securityCode: '98765',
+    verificationCode: '98765',
     entityId: '957u-037m-jkd7',
     userId: 1234,
     userName: 'test-user'
   }
 };
-
-const h = {};
+const code = sandbox.stub();
+const h = { response: sandbox.stub().returns({ code }) };
 
 experiment('change email controller', async () => {
   beforeEach(() => {
@@ -80,9 +80,10 @@ experiment('change email controller', async () => {
 
       test('returns the error when error message !== "Email address already in use"', async () => {
         idm.addNewEmailToEmailChangeRecord.throws('EmailChangeError');
-        const result = await controller.postGenerateSecurityCode(request, h);
-        expect(result.data).to.be.null();
-        expect(result.error).to.be.an.error();
+        await controller.postGenerateSecurityCode(request, h);
+        const [args] = h.response.lastCall.args;
+        expect(args.data).to.be.null();
+        expect(args.error).to.be.an.error();
       });
     });
   });
@@ -92,7 +93,7 @@ experiment('change email controller', async () => {
       await controller.postChangeEmailAddress(request, h);
       const [userId, securityCode] = idm.verifySecurityCode.lastCall.args;
       expect(userId).to.equal(request.payload.userId);
-      expect(securityCode).to.equal(request.payload.securityCode);
+      expect(securityCode).to.equal(request.payload.verificationCode);
     });
 
     test('calls updateEntityEmail with correct parameters', async () => {
@@ -129,9 +130,10 @@ experiment('change email controller', async () => {
       });
 
       test('return error if error name is "EmailChangeError"', async () => {
-        const result = await controller.postChangeEmailAddress(request, h);
-        expect(result.data).to.be.null();
-        expect(result.error).to.be.an.error();
+        await controller.postChangeEmailAddress(request, h);
+        const [args] = h.response.lastCall.args;
+        expect(args.data).to.be.null();
+        expect(args.error).to.be.an.error();
       });
     });
   });
