@@ -2,12 +2,16 @@ const apiClientFactory = require('./api-client-factory');
 const moment = require('moment');
 const { last } = require('lodash');
 const helpers = require('@envage/water-abstraction-helpers');
+const urlJoin = require('url-join');
+const { URL } = require('url');
 
-const returnsClient = apiClientFactory.create(`${process.env.RETURNS_URI}/returns`);
+const config = require('../../../config');
 
-const versionsClient = apiClientFactory.create(`${process.env.RETURNS_URI}/versions`);
+const returnsClient = apiClientFactory.create(`${config.services.returns}/returns`);
 
-const linesClient = apiClientFactory.create(`${process.env.RETURNS_URI}/lines`);
+const versionsClient = apiClientFactory.create(`${config.services.returns}/versions`);
+
+const linesClient = apiClientFactory.create(`${config.services.returns}/lines`);
 
 /**
  * Gets an array of returns in the return service matching the
@@ -73,7 +77,7 @@ const voidReturns = (licenceNumber, validReturnIds = []) => {
     return Promise.resolve();
   }
 
-  const url = `${process.env.RETURNS_URI}/void-returns`;
+  const url = `${config.services.returns}/void-returns`;
   const body = {
     regime: 'water',
     licenceType: 'abstraction',
@@ -84,9 +88,17 @@ const voidReturns = (licenceNumber, validReturnIds = []) => {
   return helpers.serviceRequest.patch(url, { body });
 };
 
+const getServiceVersion = async () => {
+  const urlParts = new URL(config.services.returns);
+  const url = urlJoin(urlParts.protocol, urlParts.host, 'status');
+  const response = await helpers.serviceRequest.get(url);
+  return response.version;
+};
+
 exports.returns = returnsClient;
 exports.versions = versionsClient;
 exports.lines = linesClient;
 exports.getActiveReturns = getActiveReturns;
 exports.getCurrentDueReturns = getCurrentDueReturns;
 exports.voidReturns = voidReturns;
+exports.getServiceVersion = getServiceVersion;

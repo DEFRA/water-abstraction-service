@@ -4,9 +4,11 @@ const config = require('../../../config');
 const { get } = require('lodash');
 const { licence: { regimeId, typeId } } = config;
 
-const licences = apiClientFactory.create(`${process.env.PERMIT_URI}licence`);
+const factory = require('./service-version-factory');
 
-const expiringLicences = apiClientFactory.create(`${process.env.PERMIT_URI}expiring_licences?filter={licence_type_id:${config.licence.typeId},licence_regime_id:${config.licence.regimeId}}`);
+const licences = apiClientFactory.create(`${config.services.permits}licence`);
+
+const expiringLicences = apiClientFactory.create(`${config.services.permits}expiring_licences?filter={licence_type_id:${config.licence.typeId},licence_regime_id:${config.licence.regimeId}}`);
 
 const getLicenceNumbersFilter = licenceNumbers => ({
   licence_regime_id: regimeId,
@@ -78,3 +80,4 @@ exports.licences = licences;
 exports.expiringLicences = expiringLicences;
 exports.getLicenceRegionCodes = getLicenceRegionCodes;
 exports.getLicenceEndDates = getLicenceEndDates;
+exports.getServiceVersion = factory.create(config.services.permits);

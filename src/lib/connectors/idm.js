@@ -1,8 +1,13 @@
 const { head } = require('lodash');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 const apiClientFactory = require('./api-client-factory');
+const urlJoin = require('url-join');
+const config = require('../../../config');
+const factory = require('./service-version-factory');
 
-const usersClient = apiClientFactory.create(`${process.env.IDM_URI}/user`);
+const usersClient = apiClientFactory.create(urlJoin(config.services.idm, 'user'));
+const kpiClient = apiClientFactory.create(urlJoin(config.services.idm, 'kpi'));
+
 const { idm: { application } } = require('../../../config');
 
 /**
@@ -31,3 +36,5 @@ usersClient.getUserByUserName = async userName => {
 };
 
 exports.usersClient = usersClient;
+exports.getServiceVersion = factory.create(config.services.crm);
+exports.kpiClient = kpiClient;

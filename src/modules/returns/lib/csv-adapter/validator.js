@@ -4,7 +4,18 @@ const parseCsv = util.promisify(parse);
 const { isEmpty, flatten, compact, isString, times } = require('lodash');
 
 const { returnIDRegex, parseReturnId } = require('../../../../lib/returns');
-const validDateRegex = /(^(Week ending )?\d{1,2} \w{3,9} \d{4}$)|(\w{3,8} \d{4})/;
+
+/**
+ * Optionally starts with 'Week ending'
+ * Optionally contains a leading numeric date (1 or 08) or month string
+ * Then mandatory numeric date (1 or 08) or month string
+ * Then 2-4 digit year
+ * Each segment can be separted with ' ', '-', or '/'
+ *
+ * Designed to be as flexible as possible to cater for the formatting
+ * changes seen when saving a CSV in a spreadsheet application.
+ */
+const validDateRegex = /^(Week ending )?([a-z\d]{1,9}[ -/])?[a-z\d]{1,9}[ -/]\d{2,4}$/i;
 const lineErrorRegex = /line (\d*)$/;
 const validAbstractionVolumeRegex = /(^Do not edit$)|(^\d[\d|.|,]*$)|(^\s*$)/;
 
@@ -218,6 +229,7 @@ const validateReturnId = licence => {
       return;
     }
   }
+
   return createError(errorMessages.returnId, line);
 };
 

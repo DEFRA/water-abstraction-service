@@ -12,6 +12,7 @@ const usersRoutes = require('./users/routes');
 const communicationsRoutes = require('./communications/routes');
 const batchNotificationsRoutes = require('./batch-notifications/routes');
 const companiesRoutes = require('./companies/routes');
+const serviceStatusRoutes = require('./service-status/routes');
 
 module.exports = [
   ...Object.values(notificationsRoutes),
@@ -27,5 +28,6 @@ module.exports = [
   ...Object.values(usersRoutes),
   ...Object.values(communicationsRoutes),
   ...Object.values(batchNotificationsRoutes),
-  ...Object.values(companiesRoutes)
+  ...Object.values(companiesRoutes),
+  ...Object.values(serviceStatusRoutes)
 ];

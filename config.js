@@ -84,5 +84,13 @@ module.exports = {
     templates: {
       returns_invitation_letter: 'd31d05d3-66fe-4203-8626-22e63f9bccd6'
     }
+  },
+
+  services: {
+    crm: process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0',
+    idm: process.env.IDM_URI || 'http://127.0.0.1:8003/idm/1.0',
+    permits: process.env.PERMIT_URI || 'http://127.0.0.1:8004/API/1.0/',
+    returns: process.env.RETURNS_URI || 'http://127.0.0.1:8006/returns/1.0',
+    import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0'
   }
 };
