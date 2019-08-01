@@ -4,9 +4,9 @@ const lab = Lab.script();
 const Code = require('@hapi/code');
 
 const sinon = require('sinon');
-const { createPdf } = require('../../../../src/modules/notify/lib/pdf.js');
+const { createPdf } = require('../../../src/lib/notify/pdf');
 
-const scheduledNotification = require('../../../../src/controllers/notifications').repository;
+const scheduledNotification = require('../../../src/controllers/notifications').repository;
 
 lab.experiment('Test createPdf', () => {
   const notification = {
