@@ -1,8 +1,15 @@
 const idmConnector = require('../../lib/connectors/idm');
+const { throwIfError } = require('@envage/hapi-pg-rest-api');
 const Boom = require('@hapi/boom');
 const { get } = require('lodash');
 const crmEntitiesConnector = require('../../lib/connectors/crm/entities');
 const crmDocumentsConnector = require('../../lib/connectors/crm/documents');
+const idmUserRolesConnector = require('../../lib/connectors/idm/user-roles');
+const config = require('../../../config');
+const emailNotifications = require('../../lib/notifications/emails');
+const event = require('../../lib/event');
+const { getRolesForPermissionKey } = require('../../lib/roles');
+const { logger } = require('../../logger');
 
 const mapUserStatus = user => {
   return {
@@ -87,6 +94,94 @@ const getStatus = async (request, h) => {
   });
 };
 
-module.exports = {
-  getStatus
+const userCanManageAccounts = user => user.roles.includes('manage_accounts');
+
+const internalUserExists = async email => {
+  const existingUser = await idmConnector.usersClient.getUserByUsername(
+    email,
+    config.idm.application.internalUser
+  );
+
+  return !!existingUser;
 };
+
+const createNewUserEvent = (callingUser, newUser) => {
+  const auditEvent = event.create({
+    type: 'new-user',
+    subtype: 'internal',
+    issuer: callingUser,
+    metadata: {
+      user: newUser
+    }
+  });
+
+  return event.save(auditEvent);
+};
+
+const createIdmUser = (email, crmEntityId) => {
+  return idmConnector.usersClient.createUser(
+    email,
+    config.idm.application.internalUser,
+    crmEntityId
+  );
+};
+
+/**
+ * Replaces any roles/groups that a user may have with a resolved set based
+ * on the permissionsKey
+ *
+ * @param {Number} userId The users's id
+ * @param {String} permissionsKey A value that can be mapped to arrays of roles and groups
+ */
+const setIdmUserRoles = async (userId, permissionsKey) => {
+  const { roles, groups } = getRolesForPermissionKey(permissionsKey);
+  const { data: userWithRoles } = await idmUserRolesConnector
+    .setInternalUserRoles(userId, roles, groups);
+
+  return userWithRoles;
+};
+
+const postUserInternal = async (request, h) => {
+  const { callingUserId, newUserEmail, permissionsKey } = request.payload;
+  const { data: user, error } = await idmConnector.usersClient.findOne(callingUserId);
+  throwIfError(error);
+
+  if (!userCanManageAccounts(user)) {
+    return Boom.forbidden('Calling user not authorised to manage accounts');
+  }
+
+  // TODO: When user deletion is implemented this should handle the
+  // restoration of a previously deleted user
+  if (await internalUserExists(newUserEmail)) {
+    return Boom.conflict(`User with name ${newUserEmail} already exists`);
+  }
+
+  try {
+  // create the crm entity
+    const crmEntity = await crmEntitiesConnector.getOrCreateInternalUserEntity(newUserEmail, user.user_name);
+
+    // create the idm user
+    const newUser = await createIdmUser(newUserEmail, crmEntity.entity_id);
+
+    // set the users roles/groups
+    const userWithRoles = await setIdmUserRoles(newUser.user_id, permissionsKey);
+
+    // send an email to the new user
+    const changePasswordUrl = `${config.frontEnds.viewMyLicence.baseUrl}/reset_password_change_password?resetGuid=${newUser.reset_guid}`;
+    await emailNotifications.sendNewInternalUserMessage(newUserEmail, changePasswordUrl);
+
+    // write a message to the event log
+    await createNewUserEvent(user.user_name, newUserEmail);
+
+    // respond with the user object as part of the response
+    return h.response(userWithRoles).code(201);
+  } catch (err) {
+    logger.error('Failed to create new internal user', err, {
+      callingUserId, newUserEmail, permissionsKey
+    });
+    throw err;
+  }
+};
+
+exports.getStatus = getStatus;
+exports.postUserInternal = postUserInternal;

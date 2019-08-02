@@ -56,7 +56,7 @@ experiment('handler', () => {
 
     const str = fs.readFileSync(path.join(__dirname, '../xml-files-for-tests/weekly-return-pass.xml'));
 
-    sandbox.stub(usersClient, 'getUserByUserName').resolves({
+    sandbox.stub(usersClient, 'getUserByUsername').resolves({
       user_id: 123,
       user_name: 'test-job@example.com',
       external_id: '1234-abcd'
@@ -93,7 +93,7 @@ experiment('handler', () => {
 
   test('gets the user object for the issuer', async () => {
     await mapToJsonJob.handler(job);
-    const [userName] = usersClient.getUserByUserName.lastCall.args;
+    const [userName] = usersClient.getUserByUsername.lastCall.args;
     expect(userName).to.equal('test-job@example.com');
   });
 
@@ -123,7 +123,7 @@ experiment('handler', () => {
 
   experiment('when the user is not found', async () => {
     beforeEach(async () => {
-      usersClient.getUserByUserName.resolves();
+      usersClient.getUserByUsername.resolves();
       await mapToJsonJob.handler(job);
     });
 

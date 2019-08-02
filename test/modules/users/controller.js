@@ -11,8 +11,13 @@ const sandbox = sinon.createSandbox();
 
 const controller = require('../../../src/modules/users/controller');
 const idmConnector = require('../../../src/lib/connectors/idm');
+const userRolesConnector = require('../../../src/lib/connectors/idm/user-roles');
 const crmEntitiesConnector = require('../../../src/lib/connectors/crm/entities');
 const crmDocumentsConnector = require('../../../src/lib/connectors/crm/documents');
+const config = require('../../../config');
+const emailNotifications = require('../../../src/lib/notifications/emails');
+const { getRolesForPermissionKey } = require('../../../src/lib/roles');
+const event = require('../../../src/lib/event');
 
 const getUserResponse = () => ({
   error: null,
@@ -113,212 +118,428 @@ const getDocumentHeaderResponse = () => ({
   error: null
 });
 
-experiment('getStatus', () => {
+experiment('modules/users/controller', () => {
   beforeEach(async () => {
-    sandbox.stub(idmConnector.usersClient, 'findOne').resolves(getUserResponse());
-    sandbox.stub(crmEntitiesConnector, 'getEntityCompanies').resolves(getCompaniesResponse());
-    sandbox.stub(crmEntitiesConnector, 'getEntityVerifications').resolves(getVerificationsResponse());
-    sandbox.stub(crmDocumentsConnector, 'findMany').resolves(getDocumentHeaderResponse());
-    sandbox.stub(crmDocumentsConnector, 'findAll').resolves(getDocumentHeaderResponse().data);
+    sandbox.stub(idmConnector.usersClient, 'findOne');
+    sandbox.stub(idmConnector.usersClient, 'getUserByUsername');
+    sandbox.stub(idmConnector.usersClient, 'createUser');
+    sandbox.stub(crmEntitiesConnector, 'getOrCreateInternalUserEntity');
+    sandbox.stub(emailNotifications, 'sendNewInternalUserMessage');
+    sandbox.stub(userRolesConnector, 'setInternalUserRoles');
+    sandbox.stub(event, 'save');
   });
 
   afterEach(async () => {
     sandbox.restore();
   });
 
-  test('passes the expected user id to the idm connector', async () => {
-    const request = { params: { id: 123 } };
-    await controller.getStatus(request);
-    const idmArgs = idmConnector.usersClient.findOne.args[0][0];
-    expect(idmArgs).to.equal(123);
-  });
-
-  test('format user section as required', async () => {
-    const request = { params: { id: 123 } };
-    const response = await controller.getStatus(request);
-    const user = response.data.user;
-    expect(user).to.equal({
-      isLocked: false,
-      isInternal: false,
-      lastLogin: '2019-01-24T17:07:54.000Z',
-      userName: 'test@example.com'
-    });
-  });
-
-  test('identifies a locked account', async () => {
-    const request = { params: { id: 123 } };
-    const testResponse = getUserResponse();
-    testResponse.data.reset_required = 1;
-    idmConnector.usersClient.findOne.resolves(testResponse);
-
-    const response = await controller.getStatus(request);
-    const user = response.data.user;
-
-    expect(user).to.equal({
-      isLocked: true,
-      isInternal: false,
-      lastLogin: '2019-01-24T17:07:54.000Z',
-      userName: 'test@example.com'
-    });
-  });
-
-  test('identifies an internal user', async () => {
-    const request = { params: { id: 123 } };
-    const testResponse = getUserResponse();
-    testResponse.data.role.scopes = ['internal'];
-    idmConnector.usersClient.findOne.resolves(testResponse);
-
-    const response = await controller.getStatus(request);
-    const user = response.data.user;
-
-    expect(user).to.equal({
-      isLocked: false,
-      isInternal: true,
-      lastLogin: '2019-01-24T17:07:54.000Z',
-      userName: 'test@example.com'
+  experiment('getStatus', () => {
+    beforeEach(async () => {
+      idmConnector.usersClient.findOne.resolves(getUserResponse());
+      sandbox.stub(crmEntitiesConnector, 'getEntityCompanies').resolves(getCompaniesResponse());
+      sandbox.stub(crmEntitiesConnector, 'getEntityVerifications').resolves(getVerificationsResponse());
+      sandbox.stub(crmDocumentsConnector, 'findMany').resolves(getDocumentHeaderResponse());
+      sandbox.stub(crmDocumentsConnector, 'findAll').resolves(getDocumentHeaderResponse().data);
     });
 
-    expect(response.data.companies).to.equal([]);
-  });
+    test('passes the expected user id to the idm connector', async () => {
+      const request = { params: { id: 123 } };
+      await controller.getStatus(request);
+      const idmArgs = idmConnector.usersClient.findOne.args[0][0];
+      expect(idmArgs).to.equal(123);
+    });
 
-  test('passes the user entity id to the getEntitiesCompanies function', async () => {
-    const request = { params: { id: 123 } };
-    await controller.getStatus(request);
-    const getCompaniesArgs = crmEntitiesConnector.getEntityCompanies.args[0][0];
-    expect(getCompaniesArgs).to.equal(getUserResponse().data.external_id);
-  });
+    test('format user section as required', async () => {
+      const request = { params: { id: 123 } };
+      const response = await controller.getStatus(request);
+      const user = response.data.user;
+      expect(user).to.equal({
+        isLocked: false,
+        isInternal: false,
+        lastLogin: '2019-01-24T17:07:54.000Z',
+        userName: 'test@example.com'
+      });
+    });
 
-  test('includes all the associated companies', async () => {
-    const request = { params: { id: 123 } };
+    test('identifies a locked account', async () => {
+      const request = { params: { id: 123 } };
+      const testResponse = getUserResponse();
+      testResponse.data.reset_required = 1;
+      idmConnector.usersClient.findOne.resolves(testResponse);
 
-    const response = await controller.getStatus(request);
-    const companies = response.data.companies;
-    expect(companies.length).to.equal(2);
-  });
+      const response = await controller.getStatus(request);
+      const user = response.data.user;
 
-  test('the companies contain thier names', async () => {
-    const request = { params: { id: 123 } };
+      expect(user).to.equal({
+        isLocked: true,
+        isInternal: false,
+        lastLogin: '2019-01-24T17:07:54.000Z',
+        userName: 'test@example.com'
+      });
+    });
 
-    const response = await controller.getStatus(request);
+    test('identifies an internal user', async () => {
+      const request = { params: { id: 123 } };
+      const testResponse = getUserResponse();
+      testResponse.data.role.scopes = ['internal'];
+      idmConnector.usersClient.findOne.resolves(testResponse);
 
-    const companies = response.data.companies;
-    expect(companies.find(c => c.name === 'Wet and Wild')).to.exist();
-    expect(companies.find(c => c.name === 'Max Irrigation')).to.exist();
-  });
+      const response = await controller.getStatus(request);
+      const user = response.data.user;
 
-  test('the companies contain the user roles at the company', async () => {
-    const request = { params: { id: 123 } };
+      expect(user).to.equal({
+        isLocked: false,
+        isInternal: true,
+        lastLogin: '2019-01-24T17:07:54.000Z',
+        userName: 'test@example.com'
+      });
 
-    const response = await controller.getStatus(request);
+      expect(response.data.companies).to.equal([]);
+    });
 
-    const companies = response.data.companies;
-    expect(companies.find(c => c.name === 'Wet and Wild').userRoles)
-      .to
-      .only
-      .include(['primary_user']);
+    test('passes the user entity id to the getEntitiesCompanies function', async () => {
+      const request = { params: { id: 123 } };
+      await controller.getStatus(request);
+      const getCompaniesArgs = crmEntitiesConnector.getEntityCompanies.args[0][0];
+      expect(getCompaniesArgs).to.equal(getUserResponse().data.external_id);
+    });
 
-    expect(companies.find(c => c.name === 'Max Irrigation').userRoles)
-      .to
-      .only
-      .include(['user', 'user_returns']);
-  });
+    test('includes all the associated companies', async () => {
+      const request = { params: { id: 123 } };
 
-  test('the companies contain thier outstanding verifications', async () => {
-    const request = { params: { id: 123 } };
+      const response = await controller.getStatus(request);
+      const companies = response.data.companies;
+      expect(companies.length).to.equal(2);
+    });
 
-    const response = await controller.getStatus(request);
+    test('the companies contain thier names', async () => {
+      const request = { params: { id: 123 } };
 
-    const companies = response.data.companies;
-    expect(companies.find(c => c.name === 'Wet and Wild').outstandingVerifications)
-      .to.equal([
-        {
-          code: 'test_code_1',
-          dateCreated: '2017-01-01T00:00:00.000Z',
-          licences: [
-            { licenceRef: 'lic_1', documentId: 'lic_1_document_id' },
-            { licenceRef: 'lic_2', documentId: 'lic_2_document_id' }
-          ]
+      const response = await controller.getStatus(request);
+
+      const companies = response.data.companies;
+      expect(companies.find(c => c.name === 'Wet and Wild')).to.exist();
+      expect(companies.find(c => c.name === 'Max Irrigation')).to.exist();
+    });
+
+    test('the companies contain the user roles at the company', async () => {
+      const request = { params: { id: 123 } };
+
+      const response = await controller.getStatus(request);
+
+      const companies = response.data.companies;
+      expect(companies.find(c => c.name === 'Wet and Wild').userRoles)
+        .to
+        .only
+        .include(['primary_user']);
+
+      expect(companies.find(c => c.name === 'Max Irrigation').userRoles)
+        .to
+        .only
+        .include(['user', 'user_returns']);
+    });
+
+    test('the companies contain thier outstanding verifications', async () => {
+      const request = { params: { id: 123 } };
+
+      const response = await controller.getStatus(request);
+
+      const companies = response.data.companies;
+      expect(companies.find(c => c.name === 'Wet and Wild').outstandingVerifications)
+        .to.equal([
+          {
+            code: 'test_code_1',
+            dateCreated: '2017-01-01T00:00:00.000Z',
+            licences: [
+              { licenceRef: 'lic_1', documentId: 'lic_1_document_id' },
+              { licenceRef: 'lic_2', documentId: 'lic_2_document_id' }
+            ]
+          }
+        ]);
+
+      expect(companies.find(c => c.name === 'Max Irrigation').outstandingVerifications)
+        .to.equal([
+          {
+            code: 'test_code_2',
+            dateCreated: '2018-01-01T00:00:00.000Z',
+            licences: [{ licenceRef: 'lic_3', documentId: 'lic_3_document_id' }]
+          }
+        ]);
+    });
+
+    test('uses the user entity id to fetch documents', async () => {
+      const request = { params: { id: 123 } };
+      await controller.getStatus(request);
+      const getDocumentsArgs = crmDocumentsConnector.findAll.args[0][0];
+      expect(getDocumentsArgs).to.equal({
+        entity_id: getUserResponse().data.external_id
+      });
+    });
+
+    test('adds the licence summary to each company', async () => {
+      const request = { params: { id: 123 } };
+      const response = await controller.getStatus(request);
+
+      const companies = response.data.companies;
+      expect(companies.find(c => c.name === 'Wet and Wild').registeredLicences)
+        .to.equal([
+          {
+            documentId: 'lic_1_document_id',
+            licenceRef: 'lic_1',
+            licenceHolder: 'Wet and Wild LH'
+          },
+          {
+            documentId: 'lic_2_document_id',
+            licenceRef: 'lic_2',
+            licenceHolder: 'Wet and Wild LH'
+          }
+        ]);
+
+      expect(companies.find(c => c.name === 'Max Irrigation').registeredLicences)
+        .to.equal([
+          {
+            documentId: 'lic_3_document_id',
+            licenceRef: 'lic_3',
+            licenceHolder: 'Max Irrigation LH'
+          }
+        ]);
+    });
+
+    test('when no user is found a 404 is returned', async () => {
+      const request = { params: { id: 123 } };
+      idmConnector.usersClient.findOne.resolves({
+        error: {
+          name: 'NotFoundError'
         }
-      ]);
+      });
 
-    expect(companies.find(c => c.name === 'Max Irrigation').outstandingVerifications)
-      .to.equal([
-        {
-          code: 'test_code_2',
-          dateCreated: '2018-01-01T00:00:00.000Z',
-          licences: [{ licenceRef: 'lic_3', documentId: 'lic_3_document_id' }]
-        }
-      ]);
-  });
+      const response = await controller.getStatus(request);
 
-  test('uses the user entity id to fetch documents', async () => {
-    const request = { params: { id: 123 } };
-    await controller.getStatus(request);
-    const getDocumentsArgs = crmDocumentsConnector.findAll.args[0][0];
-    expect(getDocumentsArgs).to.equal({
-      entity_id: getUserResponse().data.external_id
+      expect(response.output.statusCode).to.equal(404);
+      expect(response.output.payload.message).to.equal('User not found');
+    });
+
+    test('only returns the user part when no external/enitity id is present', async () => {
+      const request = { params: { id: 123 } };
+      const testResponse = getUserResponse();
+      testResponse.data.external_id = null;
+      idmConnector.usersClient.findOne.resolves(testResponse);
+
+      const response = await controller.getStatus(request);
+      const user = response.data.user;
+
+      expect(user).to.equal({
+        isLocked: false,
+        isInternal: false,
+        lastLogin: '2019-01-24T17:07:54.000Z',
+        userName: 'test@example.com'
+      });
+
+      expect(response.data.companies).to.equal([]);
     });
   });
 
-  test('adds the licence summary to each company', async () => {
-    const request = { params: { id: 123 } };
-    const response = await controller.getStatus(request);
+  experiment('.postUserInternal', () => {
+    let h;
+    let statusCodeSpy;
 
-    const companies = response.data.companies;
-    expect(companies.find(c => c.name === 'Wet and Wild').registeredLicences)
-      .to.equal([
-        {
-          documentId: 'lic_1_document_id',
-          licenceRef: 'lic_1',
-          licenceHolder: 'Wet and Wild LH'
-        },
-        {
-          documentId: 'lic_2_document_id',
-          licenceRef: 'lic_2',
-          licenceHolder: 'Wet and Wild LH'
-        }
-      ]);
+    beforeEach(async () => {
+      statusCodeSpy = sandbox.spy();
 
-    expect(companies.find(c => c.name === 'Max Irrigation').registeredLicences)
-      .to.equal([
-        {
-          documentId: 'lic_3_document_id',
-          licenceRef: 'lic_3',
-          licenceHolder: 'Max Irrigation LH'
-        }
-      ]);
-  });
-
-  test('when no user is found a 404 is returned', async () => {
-    const request = { params: { id: 123 } };
-    idmConnector.usersClient.findOne.resolves({
-      error: {
-        name: 'NotFoundError'
-      }
+      h = {
+        view: sandbox.spy(),
+        response: sandbox.stub().returns({
+          code: statusCodeSpy
+        })
+      };
     });
 
-    const response = await controller.getStatus(request);
+    experiment('validates the calling user', () => {
+      const invalidRoles = [
+        'unknown',
+        'returns',
+        'bulk_return_notifications',
+        'unlink_licences',
+        'renewal_notifications',
+        'ar_user',
+        'ar_approver',
+        'hof_notifications'
+      ];
 
-    expect(response.output.statusCode).to.equal(404);
-    expect(response.output.payload.message).to.equal('User not found');
-  });
+      invalidRoles.forEach(role => {
+        test(`invalid role of ${role} responds with 403`, async () => {
+          idmConnector.usersClient.findOne.resolves({
+            data: {
+              user_id: 100,
+              roles: [role]
+            }
+          });
 
-  test('only returns the user part when no external/enitity id is present', async () => {
-    const request = { params: { id: 123 } };
-    const testResponse = getUserResponse();
-    testResponse.data.external_id = null;
-    idmConnector.usersClient.findOne.resolves(testResponse);
+          const request = {
+            payload: {
+              callingUserId: 100,
+              newUserEmail: 'test@example.gov.uk'
+            }
+          };
 
-    const response = await controller.getStatus(request);
-    const user = response.data.user;
-
-    expect(user).to.equal({
-      isLocked: false,
-      isInternal: false,
-      lastLogin: '2019-01-24T17:07:54.000Z',
-      userName: 'test@example.com'
+          const response = await controller.postUserInternal(request, h);
+          expect(response.output.statusCode).to.equal(403);
+        });
+      });
     });
 
-    expect(response.data.companies).to.equal([]);
+    experiment('validates the proposed new user', () => {
+      test('returns a conflict response if the new user already exists', async () => {
+        const newUserEmail = 'test@example.gov.uk';
+        const application = config.idm.application.internalUser;
+
+        idmConnector.usersClient.findOne.resolves({
+          data: {
+            user_id: 100,
+            roles: ['manage_accounts']
+          }
+        });
+
+        idmConnector.usersClient.getUserByUsername
+          .withArgs(newUserEmail, application)
+          .resolves({
+            user_id: 200,
+            user_name: newUserEmail
+          });
+
+        const request = {
+          payload: {
+            callingUserId: 100,
+            newUserEmail
+          }
+        };
+
+        const response = await controller.postUserInternal(request, h);
+        expect(response.output.statusCode).to.equal(409);
+      });
+    });
+
+    experiment('when the user can be created', () => {
+      let newUserEmail;
+      let callingUserId;
+      let callingUserEmail;
+      let createdCrmEntityId;
+
+      beforeEach(async () => {
+        newUserEmail = 'new-user@example.gov.uk';
+        callingUserId = 123;
+        callingUserEmail = 'admin@example.govuk';
+        createdCrmEntityId = '00000000-0000-0000-0000-000000000000';
+
+        // set up to confirm the calling user has the correct role
+        idmConnector.usersClient.findOne.resolves({
+          data: {
+            user_id: callingUserId,
+            user_name: callingUserEmail,
+            roles: ['manage_accounts']
+          }
+        });
+
+        // set up so that the proposed user does not already exist
+        idmConnector.usersClient.getUserByUsername
+          .withArgs(newUserEmail, 'water_admin')
+          .resolves();
+
+        crmEntitiesConnector.getOrCreateInternalUserEntity.resolves({
+          entity_id: createdCrmEntityId,
+          entity_name: newUserEmail
+        });
+
+        idmConnector.usersClient.createUser.resolves({
+          user_id: 100,
+          user_name: newUserEmail,
+          reset_guid: '22222222-2222-2222-2222-222222222222'
+        });
+
+        // when setting the roles, the user in the response
+        // contains the fully resolved roles and any groups.
+        userRolesConnector.setInternalUserRoles.resolves({
+          data: {
+            user_id: 100,
+            user_name: newUserEmail,
+            reset_guid: '22222222-2222-2222-2222-222222222222',
+            roles: [
+              'returns',
+              'bulk_return_notifications',
+              'manage_accounts',
+              'unlink_licences'
+            ],
+            groups: ['billing_and_data']
+          }
+        });
+
+        event.save.resolves();
+        emailNotifications.sendNewInternalUserMessage.resolves({});
+
+        const request = {
+          payload: {
+            callingUserId,
+            newUserEmail,
+            permissionsKey: 'billing_and_data'
+          }
+        };
+        await controller.postUserInternal(request, h);
+      });
+
+      test('the user is created in the CRM', async () => {
+        const [userEmail, adminEmail] = crmEntitiesConnector.getOrCreateInternalUserEntity.lastCall.args;
+        expect(userEmail).to.equal(newUserEmail);
+        expect(adminEmail).to.equal(callingUserEmail);
+      });
+
+      test('the user is created in the IDM', async () => {
+        const [username, application, externalId] = idmConnector.usersClient.createUser.lastCall.args;
+        expect(username).to.equal(newUserEmail);
+        expect(application).to.equal('water_admin');
+        expect(externalId).to.equal(createdCrmEntityId);
+      });
+
+      test('the user roles and groups are set', async () => {
+        const [userId, roles, groups] = userRolesConnector.setInternalUserRoles.lastCall.args;
+        expect(userId).to.equal(userId);
+        expect(roles).to.equal(getRolesForPermissionKey('billing_and_data').roles);
+        expect(groups).to.equal(getRolesForPermissionKey('billing_and_data').groups);
+      });
+
+      test('an email is sent to the new user', async () => {
+        const [recipient, changePasswordLink] = emailNotifications.sendNewInternalUserMessage.lastCall.args;
+        expect(recipient).to.equal(newUserEmail);
+
+        expect(changePasswordLink).to.equal(
+          `${config.frontEnds.viewMyLicence.baseUrl}/reset_password_change_password?resetGuid=22222222-2222-2222-2222-222222222222`
+        );
+      });
+
+      test('an event is created for audit purposes', async () => {
+        const [savedEvent] = event.save.lastCall.args;
+        expect(savedEvent.type).to.equal('new-user');
+        expect(savedEvent.subtype).to.equal('internal');
+        expect(savedEvent.issuer).to.equal(callingUserEmail);
+        expect(savedEvent.metadata.user).to.equal(newUserEmail);
+      });
+
+      test('the new IDM user is returned in the response', async () => {
+        const [body] = h.response.lastCall.args;
+        expect(body.user_id).to.equal(100);
+        expect(body.user_name).to.equal(newUserEmail);
+        expect(body.roles).to.equal([
+          'returns',
+          'bulk_return_notifications',
+          'manage_accounts',
+          'unlink_licences'
+        ]);
+
+        expect(body.groups).to.equal(['billing_and_data']);
+      });
+
+      test('the response has a status code of 201 (created)', async () => {
+        expect(statusCodeSpy.calledWith(201)).to.be.true();
+      });
+    });
   });
 });

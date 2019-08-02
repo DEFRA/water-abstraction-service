@@ -8,6 +8,7 @@ const { logger } = require('../../../../logger');
 const idmConnector = require('../../../../lib/connectors/idm');
 const errorEvent = require('./error-event');
 const uploadAdapters = require('../upload-adapters');
+const config = require('../../../../../config');
 
 /**
  * Begins the returns XML to JSON process by adding a new task to PG Boss.
@@ -51,9 +52,11 @@ const handleReturnsMapToJsonStart = async job => {
   const evt = await event.load(job.data.eventId);
 
   try {
+    const application = config.idm.application.externalUser;
+
     const [s3Object, user] = await Promise.all([
       returnsUpload.getReturnsS3Object(job.data.eventId, evt.subtype),
-      idmConnector.usersClient.getUserByUserName(evt.issuer)
+      idmConnector.usersClient.getUserByUsername(evt.issuer, application)
     ]);
 
     validateUser(user);
