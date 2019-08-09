@@ -17,7 +17,7 @@ const sendNewInternalUserMessage = (recipient, changePasswordLink) => {
 const sendVerificationCodeEmail = (recipient, verificationCode) => {
   return enqueue.sendEmail(recipient, 'email_change_verification_code_email', {
     verification_code: verificationCode,
-    link: `${config.service.baseUrl}/account/change-email/verify-new-email`
+    link: `${config.frontEnds.viewMyLicence.baseUrl}/account/change-email/verify-new-email`
   });
 };
 
@@ -29,8 +29,8 @@ const sendVerificationCodeEmail = (recipient, verificationCode) => {
  */
 const sendEmailAddressInUseNotification = recipient => {
   return enqueue.sendEmail(recipient, 'email_change_email_in_use_email', {
-    link: `${config.service.baseUrl}/signin`,
-    resetLink: `${config.service.baseUrl}/reset_password`
+    link: `${config.frontEnds.viewMyLicence.baseUrl}/signin`,
+    resetLink: `${config.frontEnds.viewMyLicence.baseUrl}/reset_password`
   });
 };
 

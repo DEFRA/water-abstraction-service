@@ -101,10 +101,6 @@ module.exports = {
     }
   },
 
-  service: {
-    baseUrl: process.env.BASE_URL
-  },
-
   services: {
     crm: process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0',
     idm: process.env.IDM_URI || 'http://127.0.0.1:8003/idm/1.0',
