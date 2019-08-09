@@ -36,35 +36,57 @@ usersClient.getUserByUserName = async userName => {
   return head(data);
 };
 
-/**
- * call IDM to check user credentials and create email change record
- */
-const createEmailChangeRecord = (userId, password) => {
-  const url = `${config.services.idm}/user/change-email-address/start`;
-  return helpers.serviceRequest.post(url, { userId, password });
+usersClient.findOneById = async id => {
+  const { error, data } = await usersClient.findOne(id);
+  throwIfError(error);
+  return data;
 };
 
 /**
- * call IDM to update record with new email address
+ * Starts the email change process
+ * @param  {Number} userId
+ * @param  {String} email  - the new email address
+ * @return {Promise}
  */
-const addNewEmailToEmailChangeRecord = (verificationId, newEmail) => {
-  const url = `${config.services.idm}/user/change-email-address/create-code`;
-  return helpers.serviceRequest.patch(url, { verificationId, newEmail });
+const startEmailChange = (userId, email) => {
+  const url = `${config.services.idm}/user/${userId}/change-email-address`;
+  const options = {
+    body: {
+      email
+    }
+  };
+  return helpers.serviceRequest.post(url, options);
 };
 
 /**
- * check if record matching userId and securityCode exists
+ * Completes the email change process with a security code
+ * @param  {Number} userId
+ * @param  {String} securityCode - 6 digit security code
+ * @return {Promise}              [description]
+ */
+const verifySecurityCode = (userId, securityCode) => {
+  const url = `${config.services.idm}/user/${userId}/change-email-address/code`;
+  const options = {
+    body: {
+      securityCode
+    }
+  };
+  return helpers.serviceRequest.post(url, options);
+};
+
+/**
+ * Check status of email change
  * @param  {Int} userId
  * @param  {Int} securityCode
  */
-const verifySecurityCode = (userId, securityCode) => {
-  const url = `${config.services.idm}/user/change-email-address/complete`;
-  return helpers.serviceRequest.post(url, { userId, securityCode });
+const getEmailChangeStatus = userId => {
+  const url = `${config.services.idm}/user/${userId}/change-email-address`;
+  return helpers.serviceRequest.get(url);
 };
 
 exports.usersClient = usersClient;
 exports.getServiceVersion = factory.create(config.services.crm);
 exports.kpiClient = kpiClient;
-exports.createEmailChangeRecord = createEmailChangeRecord;
-exports.addNewEmailToEmailChangeRecord = addNewEmailToEmailChangeRecord;
+exports.startEmailChange = startEmailChange;
 exports.verifySecurityCode = verifySecurityCode;
+exports.getEmailChangeStatus = getEmailChangeStatus;

@@ -16,8 +16,11 @@ const getEntityVerifications = partialRight(getEntityContent, 'verifications');
  * update CRM db row for entity with new email for entity_nm
  */
 const updateEntityEmail = async (entityId, newEmail) => {
-  return helpers.serviceRequest.patch(`${process.env.CRM_URI}/entity/${entityId}/entity`,
-    { entity_id: entityId, entity_nm: newEmail });
+  return helpers.serviceRequest.patch(`${process.env.CRM_URI}/entity/${entityId}`, {
+    body: {
+      entity_nm: newEmail
+    }
+  });
 };
 
 module.exports = {
