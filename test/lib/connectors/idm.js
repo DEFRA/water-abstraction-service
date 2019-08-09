@@ -7,14 +7,14 @@ const {
   experiment,
   test } = exports.lab = require('@hapi/lab').script();
 
-const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const idmConnector = require('../../../src/lib/connectors/idm');
 const helpers = require('@envage/water-abstraction-helpers');
 const config = require('../../../config');
+const { assertIsUuid } = require('../../custom-assertions');
 
 experiment('connectors/idm', () => {
   beforeEach(async () => {
-    sandbox.stub(serviceRequest, 'get').resolves({
+    sandbox.stub(helpers.serviceRequest, 'get').resolves({
       version: '0.0.1'
     });
 
@@ -22,6 +22,8 @@ experiment('connectors/idm', () => {
       data: [],
       error: null
     });
+
+    sandbox.stub(idmConnector.usersClient, 'create');
   });
 
   afterEach(async () => {
@@ -61,7 +63,7 @@ experiment('connectors/idm', () => {
     });
   });
 
-  experiment('.getUserByUserName', () => {
+  experiment('.getUserByUsername', () => {
     const userName = 'testing@example.com';
 
     beforeEach(async () => {
@@ -72,7 +74,7 @@ experiment('connectors/idm', () => {
     });
 
     test('uses the expected filter', async () => {
-      await idmConnector.usersClient.getUserByUserName(userName);
+      await idmConnector.usersClient.getUserByUsername(userName, 'water_vml');
       const [filter] = idmConnector.usersClient.findMany.lastCall.args;
       expect(filter).to.equal({
         user_name: userName,
@@ -86,7 +88,7 @@ experiment('connectors/idm', () => {
         error: null
       });
 
-      const user = await idmConnector.usersClient.getUserByUserName(userName);
+      const user = await idmConnector.usersClient.getUserByUsername(userName, 'water_vml');
       expect(user.user_id).to.equal(123);
     });
 
@@ -96,7 +98,7 @@ experiment('connectors/idm', () => {
         error: null
       });
 
-      const user = await idmConnector.usersClient.getUserByUserName(userName);
+      const user = await idmConnector.usersClient.getUserByUsername(userName, 'water_vml');
       expect(user).to.be.undefined();
     });
 
@@ -107,19 +109,97 @@ experiment('connectors/idm', () => {
       });
 
       try {
-        await idmConnector.usersClient.getUserByUserName(userName);
+        await idmConnector.usersClient.getUserByUsername(userName, 'water_vml');
         fail('Should never get here');
       } catch (err) {
         expect(err).to.exist();
       }
+    });
+
+    test('throws for an unexpected application', async () => {
+      const err = await expect(idmConnector.usersClient.getUserByUsername(userName, 'not-an-application')).to.reject();
+      expect(err.name).to.equal('ValidationError');
+      expect(err.isJoi).to.be.true();
     });
   });
 
   experiment('.getServiceVersion', () => {
     test('calls the expected URL', async () => {
       await idmConnector.getServiceVersion();
-      const [url] = serviceRequest.get.lastCall.args;
+      const [url] = helpers.serviceRequest.get.lastCall.args;
       expect(url).to.endWith('/status');
+    });
+  });
+
+  experiment('.createUser', () => {
+    test('throws for an unexpected application', async () => {
+      const err = await expect(idmConnector.usersClient.createUser(
+        'test@example.com',
+        'not-an-application',
+        '00000000-0000-0000-0000-000000000000'
+      )).to.reject();
+
+      expect(err.name).to.equal('ValidationError');
+      expect(err.isJoi).to.be.true();
+    });
+
+    experiment('with valid arguments', () => {
+      let createData;
+      let createdUser;
+
+      beforeEach(async () => {
+        idmConnector.usersClient.create.resolves({
+          data: {
+            user_id: 100,
+            user_name: 'test@example.com'
+          },
+          error: null
+        });
+
+        createdUser = await idmConnector.usersClient.createUser(
+          'test@example.com',
+          'water_admin',
+          '00000000-0000-0000-0000-000000000000'
+        );
+
+        createData = idmConnector.usersClient.create.lastCall.args[0];
+      });
+
+      test('passes the new username to the IDM', async () => {
+        expect(createData.user_name).to.equal('test@example.com');
+      });
+
+      test('passes a UUID for the password to the IDM', async () => {
+        assertIsUuid(createData.password);
+      });
+
+      test('passes a UUID for the reset_guid to the IDM', async () => {
+        assertIsUuid(createData.reset_guid);
+      });
+
+      test('passes a reset_required value of 1 to the IDM', async () => {
+        expect(createData.reset_required).to.equal(1);
+      });
+
+      test('passes the application to the IDM', async () => {
+        expect(createData.application).to.equal('water_admin');
+      });
+
+      test('passes the external_id to the IDM', async () => {
+        expect(createData.external_id).to.equal('00000000-0000-0000-0000-000000000000');
+      });
+
+      test('passes a bad_logins value of 0 to the IDM', async () => {
+        expect(createData.bad_logins).to.equal(0);
+      });
+
+      test('passes a reset_guid_date_created value to the IDM', async () => {
+        expect(createData.reset_guid_date_created).to.be.a.date();
+      });
+
+      test('returns the created user without the data envelope', async () => {
+        expect(createdUser.user_id).to.equal(100);
+      });
     });
   });
 });
