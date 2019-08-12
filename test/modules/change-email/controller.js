@@ -10,131 +10,197 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const controller = require('../../../src/modules/change-email/controller');
-const changeEmailHelpers = require('../../../src/modules/change-email/lib/helpers');
 const idm = require('../../../src/lib/connectors/idm');
-const crm = require('../../../src/lib/connectors/crm/entities');
+const crmEntities = require('../../../src/lib/connectors/crm/entities');
+const notifications = require('../../../src/lib/notifications/emails');
 const { logger } = require('../../../src/logger');
 const event = require('../../../src/lib/event');
 
-const request = {
-  payload: {
-    password: 'test-password',
-    verificationId: '1234-asdf-qwert',
-    newEmail: 'new-email@domain.com',
-    verificationCode: '98765',
-    entityId: '957u-037m-jkd7',
-    userId: 1234,
-    userName: 'test-user'
-  }
-};
-const code = sandbox.stub();
-const h = { response: sandbox.stub().returns({ code }) };
+const userId = 123;
+const email = 'mail@example.com';
+const securityCode = '012987';
+const entityId = 'entity_1';
 
-experiment('change email controller', async () => {
+experiment('change email controller', () => {
+  const code = sandbox.stub();
+  const h = { response: sandbox.stub().returns({ code }) };
+
   beforeEach(() => {
-    sandbox.stub(idm, 'createEmailChangeRecord').resolves({});
-    sandbox.stub(idm, 'addNewEmailToEmailChangeRecord');
+    sandbox.stub(idm, 'getEmailChangeStatus');
+    sandbox.stub(idm, 'startEmailChange');
     sandbox.stub(idm, 'verifySecurityCode');
-    sandbox.stub(crm, 'updateEntityEmail');
-    sandbox.stub(changeEmailHelpers, 'createNotificationData');
-    sandbox.stub(changeEmailHelpers, 'sendEmailAddressInUseNotification');
-    sandbox.stub(changeEmailHelpers, 'createEventObject');
-    sandbox.stub(changeEmailHelpers, 'sendVerificationCodeEmail');
+    sandbox.stub(idm.usersClient, 'findOneById');
+    sandbox.stub(notifications, 'sendVerificationCodeEmail');
+    sandbox.stub(notifications, 'sendEmailAddressInUseNotification');
+    sandbox.stub(crmEntities, 'updateEntityEmail');
     sandbox.stub(logger, 'error');
-    sandbox.stub(event.repo, 'create');
+    sandbox.stub(event, 'save');
   });
 
   afterEach(async () => sandbox.restore());
 
-  experiment('postStartEmailAddressChange', async () => {
-    test('calls createEmailChangeRecord with correct parameters', async () => {
-      await controller.postStartEmailAddressChange(request, h);
-      const [userId, password] = idm.createEmailChangeRecord.lastCall.args;
-      expect(userId).to.equal(request.payload.userId);
-      expect(password).to.equal(request.payload.password);
-    });
-  });
-
-  experiment('postGenerateSecurityCode', async () => {
-    const testScheduledNotificationData = {
-      message_ref: 'test-message-ref',
-      other_data: 'other-test-data'
+  experiment('getStatus', () => {
+    const request = {
+      params: {
+        userId
+      }
     };
 
-    test('calls sendVerificationCodeEmail with correct parameters', async () => {
-      idm.addNewEmailToEmailChangeRecord.returns({ data: { verificationCode: 123456 } });
-      changeEmailHelpers.createNotificationData.returns(testScheduledNotificationData);
-      await controller.postGenerateSecurityCode(request, h);
-      const [newEmail, verificationCode] = changeEmailHelpers.sendVerificationCodeEmail.lastCall.args;
-      expect(newEmail).to.equal(request.payload.newEmail);
-      expect(verificationCode).to.equal(123456);
+    test('gets status of email change from IDM', async () => {
+      await controller.getStatus(request, h);
+      expect(idm.getEmailChangeStatus.calledWith(userId))
+        .to.equal(true);
     });
 
-    experiment('error is thrown', async () => {
-      test('calls sendEmailAddressInUseNotification when error message is "Email address already in use"', async () => {
-        idm.addNewEmailToEmailChangeRecord.throws('EmailChangeError', 'Email address already in use');
-        await controller.postGenerateSecurityCode(request, h);
-        const [newEmail] = changeEmailHelpers.sendEmailAddressInUseNotification.lastCall.args;
-        expect(newEmail).to.equal(request.payload.newEmail);
-      });
+    test('responds with result of IDM call', async () => {
+      const response = {
+        error: null,
+        data: {
+          userId
+        }
+      };
+      idm.getEmailChangeStatus.resolves(response);
+      const result = await controller.getStatus(request, h);
+      expect(result).to.equal(response);
+    });
 
-      test('returns the error when error message !== "Email address already in use"', async () => {
-        idm.addNewEmailToEmailChangeRecord.throws('EmailChangeError');
-        await controller.postGenerateSecurityCode(request, h);
-        const [args] = h.response.lastCall.args;
-        expect(args.data).to.be.null();
-        expect(args.error).to.be.an.error();
+    test('handles IDM error and responds with same code', async () => {
+      idm.getEmailChangeStatus.rejects({
+        statusCode: 404
       });
+      await controller.getStatus(request, h);
+      expect(code.calledWith(404)).to.equal(true);
+    });
+
+    test('throws non-http errors', async () => {
+      idm.getEmailChangeStatus.rejects();
+      const func = () => controller.getStatus(request, h);
+      expect(func()).to.reject();
     });
   });
 
-  experiment('postChangeEmailAddress', async () => {
-    test('calls verifySecurityCode with correct parameters', async () => {
-      await controller.postChangeEmailAddress(request, h);
-      const [userId, securityCode] = idm.verifySecurityCode.lastCall.args;
-      expect(userId).to.equal(request.payload.userId);
-      expect(securityCode).to.equal(request.payload.verificationCode);
+  experiment('postStartEmailAddressChange', () => {
+    const request = {
+      params: {
+        userId
+      },
+      payload: {
+        email
+      }
+    };
+    const idmResponse = {
+      error: null,
+      data: {
+        securityCode
+      }
+    };
+
+    test('calls idm.startEmailChange with correct params', async () => {
+      await controller.postStartEmailAddressChange(request, h);
+      expect(idm.startEmailChange.calledWith(
+        userId, email
+      )).to.equal(true);
     });
 
-    test('calls updateEntityEmail with correct parameters', async () => {
-      idm.verifySecurityCode.returns({ data: { newEmail: 'new-email@domain.com' } });
-      await controller.postChangeEmailAddress(request, h);
-      const [entityId, newEmail] = crm.updateEntityEmail.lastCall.args;
-      expect(entityId).to.equal(request.payload.entityId);
-      expect(newEmail).to.equal('new-email@domain.com');
+    test('sends verification code email only', async () => {
+      idm.startEmailChange.resolves(idmResponse);
+      await controller.postStartEmailAddressChange(request, h);
+      expect(notifications.sendVerificationCodeEmail.calledWith(
+        email, securityCode
+      )).to.equal(true);
+      expect(notifications.sendEmailAddressInUseNotification.callCount)
+        .to.equal(0);
     });
 
-    test('calls createEventObject with correct parameters', async () => {
-      idm.verifySecurityCode.returns({ data: { newEmail: 'new-email@domain.com' } });
-      await controller.postChangeEmailAddress(request, h);
-      const [userName, entityId, newEmail, userId] = changeEmailHelpers.createEventObject.lastCall.args;
-      expect(userName).to.equal(request.payload.userName);
-      expect(entityId).to.equal(request.payload.entityId);
-      expect(newEmail).to.equal('new-email@domain.com');
-      expect(userId).to.equal(request.payload.userId);
+    test('resolves with IDM response', async () => {
+      idm.startEmailChange.resolves(idmResponse);
+      const result = await controller.postStartEmailAddressChange(request, h);
+      expect(result).to.equal(idmResponse);
     });
 
-    experiment('error is thrown', async () => {
-      beforeEach(() => {
-        idm.verifySecurityCode.returns({ data: { newEmail: 'new-email@domain.com' } });
-        crm.updateEntityEmail.throws('EmailChangeError');
+    test('sends email address in use email only if conflict', async () => {
+      idm.startEmailChange.rejects({
+        statusCode: 409
       });
+      await controller.postStartEmailAddressChange(request, h);
+      expect(notifications.sendEmailAddressInUseNotification.calledWith(
+        email
+      )).to.equal(true);
+      expect(notifications.sendVerificationCodeEmail.callCount).to.equal(0);
+      expect(code.calledWith(409)).to.equal(true);
+    });
 
-      afterEach(async () => sandbox.restore());
+    test('throws non-http errors', async () => {
+      idm.startEmailChange.rejects();
+      const func = () => controller.postStartEmailAddressChange(request, h);
+      expect(func()).to.reject();
+    });
+  });
 
-      test('log the error', async () => {
-        await controller.postChangeEmailAddress(request, h);
-        const error = logger.error.lastCall.args;
-        expect(error[0]).to.equal('Email change error');
-        expect(error[1]).to.be.an.error();
+  experiment('postSecurityCode', () => {
+    const request = {
+      params: {
+        userId
+      },
+      payload: {
+        securityCode
+      }
+    };
+    const idmUserResponse = {
+      user_name: 'old@example.com',
+      external_id: entityId
+    };
+    const idmVerifyResponse = {
+      error: null,
+      data: {
+        email
+      }
+    };
+
+    beforeEach(async () => {
+      idm.usersClient.findOneById.resolves(idmUserResponse);
+      idm.verifySecurityCode.resolves(idmVerifyResponse);
+    });
+
+    test('verifies security code with IDM', async () => {
+      await controller.postSecurityCode(request, h);
+      expect(idm.verifySecurityCode.calledWith(
+        userId, securityCode
+      )).to.equal(true);
+    });
+
+    test('updates CRM entity', async () => {
+      await controller.postSecurityCode(request, h);
+      expect(crmEntities.updateEntityEmail.calledWith(
+        entityId, email
+      )).to.equal(true);
+    });
+
+    test('logs event for audit', async () => {
+      await controller.postSecurityCode(request, h);
+      const e = event.save.lastCall.args[0];
+
+      expect(e.type).to.equal('user-account');
+      expect(e.subtype).to.equal('email-change');
+      expect(e.issuer).to.equal('old@example.com');
+      expect(e.entities).to.equal([entityId]);
+      expect(e.metadata).to.equal({
+        oldEmail: 'old@example.com',
+        newEmail: email,
+        userId
       });
+    });
 
-      test('return error if error name is "EmailChangeError"', async () => {
-        await controller.postChangeEmailAddress(request, h);
-        const [args] = h.response.lastCall.args;
-        expect(args.data).to.be.null();
-        expect(args.error).to.be.an.error();
-      });
+    test('responds with event', async () => {
+      const result = await controller.postSecurityCode(request, h);
+      expect(result.error).to.equal(null);
+      expect(result.data.eventId).to.be.a.string();
+    });
+
+    test('throws non-http errors', async () => {
+      idm.usersClient.findOneById.rejects();
+      const func = () => controller.postSecurityCode(request, h);
+      expect(func()).to.reject();
     });
   });
 });

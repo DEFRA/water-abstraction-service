@@ -270,6 +270,9 @@ experiment('lib/connectors/crm/entities', () => {
 });
 
 experiment('updateEntityEmail', () => {
+  const entityId = 'entity-1';
+  const email = 'mail@example.com';
+
   beforeEach(async () => {
     sandbox.stub(helpers.serviceRequest, 'patch').resolves({});
   });
@@ -279,9 +282,13 @@ experiment('updateEntityEmail', () => {
   });
 
   test('passes the expected URL to the request', async () => {
-    await entitiesConnector.updateEntityEmail('test-entity-id', 'test-email@domain.com');
-    const expectedUrl = `${process.env.CRM_URI}/entity/test-entity-id/entity`;
-    const arg = helpers.serviceRequest.patch.args[0][0];
-    expect(arg).to.equal(expectedUrl);
+    await entitiesConnector.updateEntityEmail(entityId, email);
+    const [url, options] = helpers.serviceRequest.patch.lastCall.args;
+    expect(url).to.equal(`${process.env.CRM_URI}/entity/${entityId}`);
+    expect(options).to.equal({
+      body: {
+        entity_nm: email
+      }
+    });
   });
 });

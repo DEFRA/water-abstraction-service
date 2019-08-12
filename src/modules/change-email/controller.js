@@ -1,19 +1,45 @@
 const event = require('../../lib/event');
 const idm = require('../../lib/connectors/idm');
-const crm = require('../../lib/connectors/crm/entities');
-const { logger } = require('../../logger');
+const crmEntities = require('../../lib/connectors/crm/entities');
 const changeEmailHelpers = require('./lib/helpers');
+const { get } = require('lodash');
+
+const notifications = require('../../lib/notifications/emails');
+
+const errorCodes = {
+  401: 'unauthorized',
+  404: 'not-found',
+  409: 'conflict',
+  423: 'locked',
+  429: 'rate-limit'
+};
 
 /**
- * call IDM to check authentication details, return result
- * @param  {Object}  request
- * @param  {Object}  h
+ * Unless error is 500 or above, respond with 200 code and put the IDM
+ * error code in the response
+ * @param  {Object} error - StatusCodeError from IDM request
+ * @param  {Object} h     - HAPI response toolkit
+ * @param {Object}        - HAPI response
  */
-const postStartEmailAddressChange = async (request, h) => {
-  const { password, userId } = request.payload;
+const errorHandler = (error, h) => {
+  const statusCode = get(error, 'statusCode');
+  if (statusCode in errorCodes) {
+    return h.response({
+      data: null,
+      error: errorCodes[statusCode]
+    }).code(statusCode);
+  }
+  throw error;
+};
 
-  const result = await idm.createEmailChangeRecord(userId, password);
-  return h.response({ data: result, error: null }).code(200);
+const getStatus = async (request, h) => {
+  const { userId } = request.params;
+  try {
+    const response = await idm.getEmailChangeStatus(userId);
+    return response;
+  } catch (err) {
+    return errorHandler(err, h);
+  }
 };
 
 /**
@@ -21,19 +47,26 @@ const postStartEmailAddressChange = async (request, h) => {
  * @param  {Object}  request
  * @param  {Object}  h
  */
-const postGenerateSecurityCode = async (request, h) => {
-  const { verificationId, newEmail } = request.payload;
+const postStartEmailAddressChange = async (request, h) => {
+  const { userId } = request.params;
+  const { email } = request.payload;
   try {
-    const { error, data: { verificationCode } } = await idm.addNewEmailToEmailChangeRecord(verificationId, newEmail);
-    if (error) throw error;
+    const response = await idm.startEmailChange(userId, email);
 
-    const result = await changeEmailHelpers.sendVerificationCodeEmail(newEmail, verificationCode);
-    return { data: result, error: null };
-  } catch (error) {
-    if (error.message === 'Email address already in use') {
-      await changeEmailHelpers.sendEmailAddressInUseNotification(newEmail);
+    const securityCode = get(response, 'data.securityCode');
+
+    // Send verification code to existing user
+    await notifications.sendVerificationCodeEmail(email, securityCode);
+
+    // Return IDM response
+    return response;
+  } catch (err) {
+    // If the error code is a conflict, send the email address in use email
+    // and respond without error
+    if (err.statusCode === 409) {
+      await notifications.sendEmailAddressInUseNotification(email);
     }
-    return h.response({ data: null, error }).code(error.statusCode);
+    return errorHandler(err, h);
   }
 };
 
@@ -42,24 +75,29 @@ const postGenerateSecurityCode = async (request, h) => {
  * @param  {Object}  request
  * @param  {Object}  h
  */
-const postChangeEmailAddress = async (request, h) => {
-  const { verificationCode, entityId, userId, userName } = request.payload;
+const postSecurityCode = async (request, h) => {
+  const { userId } = request.params;
+  const { securityCode } = request.payload;
 
   try {
-    const { data: { newEmail } } = await idm.verifySecurityCode(userId, verificationCode);
+    // Get CRM entity ID and current email address from IDM
+    const data = await idm.usersClient.findOneById(userId);
+    const { user_name: oldEmail, external_id: entityId } = data;
 
-    await crm.updateEntityEmail(entityId, newEmail);
+    const { data: { email: newEmail } } = await idm.verifySecurityCode(userId, securityCode);
 
-    const evt = changeEmailHelpers.createEventObject(userName, entityId, newEmail, userId);
+    await crmEntities.updateEntityEmail(entityId, newEmail);
 
-    const result = await event.repo.create(evt);
-    return { data: result, error: null };
-  } catch (error) {
-    logger.error('Email change error', error);
-    if (error.name === 'EmailChangeError') return h.response({ data: null, error }).code(error.statusCode);
+    const evt = changeEmailHelpers.createEventObject(oldEmail, entityId, newEmail, userId);
+    await event.save(evt);
+
+    // const result = await event.repo.create(evt);
+    return { data: evt, error: null };
+  } catch (err) {
+    return errorHandler(err, h);
   }
 };
 
 module.exports.postStartEmailAddressChange = postStartEmailAddressChange;
-module.exports.postGenerateSecurityCode = postGenerateSecurityCode;
-module.exports.postChangeEmailAddress = postChangeEmailAddress;
+module.exports.postSecurityCode = postSecurityCode;
+module.exports.getStatus = getStatus;
