@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TYPE water.charge_scheme AS ENUM ('alcs', 'sroc');
 CREATE TYPE water.charge_version_status AS ENUM ('current', 'draft', 'superseded');
 CREATE TYPE water.charge_version_source AS ENUM ('nald', 'wrls');
