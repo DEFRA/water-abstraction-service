@@ -24,6 +24,8 @@ experiment('connectors/idm', () => {
     });
 
     sandbox.stub(idmConnector.usersClient, 'create');
+
+    sandbox.stub(idmConnector.usersClient, 'updateMany');
   });
 
   afterEach(async () => {
@@ -199,6 +201,67 @@ experiment('connectors/idm', () => {
 
       test('returns the created user without the data envelope', async () => {
         expect(createdUser.user_id).to.equal(100);
+      });
+    });
+  });
+
+  experiment('.disableUser', () => {
+    beforeEach(async () => {
+      idmConnector.usersClient.updateMany.resolves({
+        error: null,
+        data: [{
+          user_id: 123
+        }]
+      });
+    });
+
+    test('calls usersClient.updateMany with correct params', async () => {
+      await idmConnector.usersClient.disableUser(123, 'water_vml');
+      const [filter, data] = idmConnector.usersClient.updateMany.lastCall.args;
+
+      expect(filter).to.equal({
+        user_id: 123,
+        application: 'water_vml',
+        enabled: true
+      });
+      expect(data).to.equal({
+        enabled: false
+      });
+    });
+
+    test('throws error if API error response', async () => {
+      idmConnector.usersClient.updateMany.resolves({ error: 'some error' });
+      const func = () => idmConnector.usersClient.disableUser(123, 'water_vml');
+      expect(func()).to.reject();
+    });
+
+    test('resolves with updated user', async () => {
+      const result = await idmConnector.usersClient.disableUser(123, 'water_vml');
+      expect(result.user_id).to.equal(123);
+    });
+  });
+
+  experiment('.enableUser', () => {
+    beforeEach(async () => {
+      idmConnector.usersClient.updateMany.resolves({
+        error: null,
+        data: [{
+          user_id: 123
+        }]
+      });
+    });
+
+    test('calls usersClient.updateMany with correct params', async () => {
+      await idmConnector.usersClient.enableUser(123, 'water_vml');
+      const [filter, data] = idmConnector.usersClient.updateMany.lastCall.args;
+
+      expect(filter).to.equal({
+        user_id: 123,
+        application: 'water_vml',
+        enabled: false
+      });
+      expect(data).to.equal({
+        enabled: true
       });
     });
   });
