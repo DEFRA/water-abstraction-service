@@ -123,6 +123,7 @@ experiment('modules/users/controller', () => {
     sandbox.stub(idmConnector.usersClient, 'findOne');
     sandbox.stub(idmConnector.usersClient, 'getUserByUsername');
     sandbox.stub(idmConnector.usersClient, 'createUser');
+    sandbox.stub(idmConnector.usersClient, 'enableUser');
     sandbox.stub(crmEntitiesConnector, 'getOrCreateInternalUserEntity');
     sandbox.stub(emailNotifications, 'sendNewInternalUserMessage');
     sandbox.stub(userRolesConnector, 'setInternalUserRoles');
@@ -524,6 +525,123 @@ experiment('modules/users/controller', () => {
       });
 
       test('the new IDM user is returned in the response', async () => {
+        const [body] = h.response.lastCall.args;
+        expect(body.user_id).to.equal(100);
+        expect(body.user_name).to.equal(newUserEmail);
+        expect(body.roles).to.equal([
+          'returns',
+          'bulk_return_notifications',
+          'manage_accounts',
+          'unlink_licences'
+        ]);
+
+        expect(body.groups).to.equal(['billing_and_data']);
+      });
+
+      test('the response has a status code of 201 (created)', async () => {
+        expect(statusCodeSpy.calledWith(201)).to.be.true();
+      });
+    });
+
+    experiment('when a disabled user account already exists', () => {
+      let newUserEmail;
+      let callingUserId;
+      let callingUserEmail;
+
+      beforeEach(async () => {
+        newUserEmail = 'new-user@example.gov.uk';
+        callingUserId = 123;
+        callingUserEmail = 'admin@example.govuk';
+
+        // set up to confirm the calling user has the correct role
+        idmConnector.usersClient.findOne.resolves({
+          data: {
+            user_id: callingUserId,
+            user_name: callingUserEmail,
+            roles: ['manage_accounts']
+          }
+        });
+
+        // set up so that the proposed user exists but is disabled
+        idmConnector.usersClient.getUserByUsername
+          .withArgs(newUserEmail, 'water_admin')
+          .resolves({
+            user_id: 456,
+            user_name: newUserEmail,
+            enabled: false
+          });
+
+        // a call to re-enable to user account resolves with the user
+        idmConnector.usersClient.enableUser.resolves({
+          user_id: 456,
+          user_name: newUserEmail,
+          enabled: false
+        });
+
+        // when setting the roles, the user in the response
+        // contains the fully resolved roles and any groups.
+        userRolesConnector.setInternalUserRoles.resolves({
+          data: {
+            user_id: 100,
+            user_name: newUserEmail,
+            reset_guid: '22222222-2222-2222-2222-222222222222',
+            roles: [
+              'returns',
+              'bulk_return_notifications',
+              'manage_accounts',
+              'unlink_licences'
+            ],
+            groups: ['billing_and_data']
+          }
+        });
+
+        event.save.resolves();
+        emailNotifications.sendNewInternalUserMessage.resolves({});
+
+        const request = {
+          payload: {
+            callingUserId,
+            newUserEmail,
+            permissionsKey: 'billing_and_data'
+          }
+        };
+        await controller.postUserInternal(request, h);
+      });
+
+      test('does not create a new CRM entity', async () => {
+        expect(
+          crmEntitiesConnector.getOrCreateInternalUserEntity.called
+        ).to.be.false();
+      });
+
+      test('the user is not created in the IDM', async () => {
+        expect(
+          idmConnector.usersClient.createUser.called
+        ).to.be.false();
+      });
+
+      test('the user roles and groups are set', async () => {
+        const [userId, roles, groups] = userRolesConnector.setInternalUserRoles.lastCall.args;
+        expect(userId).to.equal(userId);
+        expect(roles).to.equal(getRolesForPermissionKey('billing_and_data').roles);
+        expect(groups).to.equal(getRolesForPermissionKey('billing_and_data').groups);
+      });
+
+      test('an email is not sent to the existing user', async () => {
+        expect(
+          emailNotifications.sendNewInternalUserMessage.called
+        ).to.be.false();
+      });
+
+      test('an event is created for audit purposes', async () => {
+        const [savedEvent] = event.save.lastCall.args;
+        expect(savedEvent.type).to.equal('new-user');
+        expect(savedEvent.subtype).to.equal('internal');
+        expect(savedEvent.issuer).to.equal(callingUserEmail);
+        expect(savedEvent.metadata.user).to.equal(newUserEmail);
+      });
+
+      test('the existing IDM user is returned in the response', async () => {
         const [body] = h.response.lastCall.args;
         expect(body.user_id).to.equal(100);
         expect(body.user_name).to.equal(newUserEmail);
