@@ -660,4 +660,119 @@ experiment('modules/users/controller', () => {
       });
     });
   });
+
+  experiment('.patchUserInternal', () => {
+    let request;
+
+    let userId;
+    let userEmail;
+    let callingUserId;
+    let permissionsKey;
+    let callingUserEmail;
+
+    beforeEach(async () => {
+      userId = 1;
+      callingUserId = 123;
+      callingUserEmail = 'admin@example.govuk';
+      permissionsKey = 'nps_ar_user';
+      userEmail = 'bob@gov.uk';
+      request = {
+        params: {
+          userId
+        },
+        payload: {
+          callingUserId,
+          permissionsKey
+        }
+      };
+
+      // when setting the roles, the user in the response
+      // contains the fully resolved roles and any groups.
+      userRolesConnector.setInternalUserRoles.resolves({
+        data: {
+          user_id: userId,
+          user_name: userEmail,
+          reset_guid: '22222222-2222-2222-2222-222222222222',
+          roles: [
+            'returns',
+            'bulk_return_notifications',
+            'manage_accounts',
+            'unlink_licences'
+          ],
+          groups: ['billing_and_data']
+        }
+      });
+    });
+
+    experiment('when the calling user has permission to manage roles', () => {
+      beforeEach(async () => {
+        // set up to confirm the calling user has the correct role
+        idmConnector.usersClient.findOne.withArgs(callingUserId).resolves({
+          data: {
+            user_id: callingUserId,
+            user_name: callingUserEmail,
+            roles: ['manage_accounts']
+          }
+        });
+
+        // set up to confirm the calling user has the correct role
+        idmConnector.usersClient.findOne.withArgs(userId).resolves({
+          data: {
+            user_id: userId,
+            user_name: userEmail,
+            roles: []
+          }
+        });
+
+        await controller.patchUserInternal(request);
+      });
+
+      test('calls the IDM to get the calling user', async () => {
+        expect(idmConnector.usersClient.findOne.firstCall.calledWith(
+          callingUserId
+        )).to.be.true();
+      });
+
+      test('calls the IDM to get the user being updated', async () => {
+        expect(idmConnector.usersClient.findOne.secondCall.calledWith(
+          userId
+        )).to.be.true();
+      });
+
+      test('calls the IDM to update the user roles/permissions', async () => {
+        const [id, roles, groups] = userRolesConnector.setInternalUserRoles.lastCall.args;
+        expect(id).to.equal(userId);
+        expect(roles).to.equal(['ar_user']);
+        expect(groups).to.equal(['nps']);
+      });
+
+      test('writes an event for audit purposes', async () => {
+        const [savedEvent] = event.save.lastCall.args;
+        expect(savedEvent.type).to.equal('update-user-roles');
+        expect(savedEvent.subtype).to.equal('internal');
+        expect(savedEvent.issuer).to.equal(callingUserEmail);
+        expect(savedEvent.metadata.userId).to.equal(userId);
+        expect(savedEvent.metadata.user).to.equal(userEmail);
+      });
+    });
+
+    experiment('when the calling user does not have permission to manage roles', () => {
+      beforeEach(async () => {
+        // set up to confirm the calling user has the correct role
+        idmConnector.usersClient.findOne.withArgs(callingUserId).resolves({
+          data: {
+            user_id: callingUserId,
+            user_name: callingUserEmail,
+            roles: []
+          }
+        });
+      });
+
+      test.only('a 403 forbidden error is returned', async () => {
+        const err = await controller.patchUserInternal(request);
+        expect(err.isBoom).to.be.true();
+        expect(err.output.statusCode).to.equal(403);
+      });
+    });
+  });
 });
