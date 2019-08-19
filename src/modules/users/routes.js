@@ -52,13 +52,15 @@ module.exports = {
 
   patchUserInternal: {
     method: 'PATCH',
-    path: '/water/1.0/user/internal',
+    path: '/water/1.0/user/internal/{userId}',
     handler: controller.patchUserInternal,
     options: {
       validate: {
+        params: {
+          userId: VALID_USER_ID
+        },
         payload: {
           callingUserId: VALID_USER_ID,
-          userId: VALID_USER_ID,
           permissionsKey: VALID_PERMISSIONS_KEY
         }
       }

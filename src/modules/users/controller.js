@@ -90,7 +90,7 @@ const getExistingUserByEmail = email => idmConnector.usersClient.getUserByUserna
   config.idm.application.internalUser
 );
 
-const isDisabledUser = user => get(user, 'enabled', false);
+const isDisabledUser = user => user && (user.enabled === false);
 
 const createInternalUserEvent = (type, callingUser, newUser) => {
   const auditEvent = event.create({
@@ -152,7 +152,13 @@ const createOrEnableUser = async (emailAddress, callingUser) => {
       .getOrCreateInternalUserEntity(emailAddress, callingUserEmail);
 
     // create the idm user
-    return createIdmUser(emailAddress, crmEntity.entity_id);
+    const newUser = await createIdmUser(emailAddress, crmEntity.entity_id);
+
+    // send an email to the new user
+    const changePasswordUrl = `${config.frontEnds.internal.baseUrl}/reset_password_change_password?resetGuid=${newUser.reset_guid}`;
+    await emailNotifications.sendNewInternalUserMessage(emailAddress, changePasswordUrl);
+
+    return newUser;
   }
 
   if (isDisabledUser(existingUser)) {
@@ -208,10 +214,6 @@ const postUserInternal = async (request, h) => {
     // set the users roles/groups
     const userWithRoles = await setIdmUserRoles(newUser.user_id, permissionsKey);
 
-    // send an email to the new user
-    const changePasswordUrl = `${config.frontEnds.internal.baseUrl}/reset_password_change_password?resetGuid=${newUser.reset_guid}`;
-    await emailNotifications.sendNewInternalUserMessage(newUserEmail, changePasswordUrl);
-
     // write a message to the event log
     await createNewUserEvent(callingUser, newUser);
 
@@ -225,7 +227,8 @@ const postUserInternal = async (request, h) => {
 };
 
 const patchUserInternal = async (request, h) => {
-  const { callingUserId, userId, permissionsKey } = request.payload;
+  const { userId } = request.params;
+  const { callingUserId, permissionsKey } = request.payload;
 
   try {
     const callingUser = await getCallingUser(callingUserId);
