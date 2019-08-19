@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const { head } = require('lodash');
+const { head, partialRight } = require('lodash');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 const apiClientFactory = require('./api-client-factory');
 const urlJoin = require('url-join');
@@ -117,6 +117,33 @@ usersClient.createUser = async (username, application, externalId) => {
   throwIfError(error);
   return user;
 };
+
+const setEnabled = async (userId, application, enabled) => {
+  const filter = {
+    user_id: userId,
+    application,
+    enabled: !enabled
+  };
+  const { data: [user], error } = await usersClient.updateMany(filter, { enabled });
+  throwIfError(error);
+  return user;
+};
+
+/**
+ * Disables the user's IDM user account if enabled
+ * @param {Number} userId - the IDM user account
+ * @param {String} application - the IDM application name
+ * @return {Promise<Boolean>} resolves with boolean to indicate success status
+ */
+usersClient.disableUser = partialRight(setEnabled, false);
+
+/**
+ * Enables the user's IDM user account if disabled
+ * @param {Number} userId - the IDM user account
+ * @param {String} application - the IDM application name
+ * @return {Promise<Boolean>} resolves with boolean to indicate success status
+ */
+usersClient.enableUser = partialRight(setEnabled, true);
 
 exports.usersClient = usersClient;
 exports.getServiceVersion = factory.create(config.services.crm);

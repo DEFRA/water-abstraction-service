@@ -511,7 +511,7 @@ experiment('modules/users/controller', () => {
         expect(recipient).to.equal(newUserEmail);
 
         expect(changePasswordLink).to.equal(
-          `${config.frontEnds.viewMyLicence.baseUrl}/reset_password_change_password?resetGuid=22222222-2222-2222-2222-222222222222`
+          `${config.frontEnds.internal.baseUrl}/reset_password_change_password?resetGuid=22222222-2222-2222-2222-222222222222`
         );
       });
 
