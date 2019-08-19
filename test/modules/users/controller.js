@@ -768,7 +768,7 @@ experiment('modules/users/controller', () => {
         });
       });
 
-      test.only('a 403 forbidden error is returned', async () => {
+      test('a 403 forbidden error is returned', async () => {
         const err = await controller.patchUserInternal(request);
         expect(err.isBoom).to.be.true();
         expect(err.output.statusCode).to.equal(403);
