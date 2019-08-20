@@ -29,7 +29,7 @@ const getChargeVersion = async (request, h) => {
   const data = await Promise.all(tasks);
 
   if (!data[0]) {
-    throw Boom.notFound(`Charge agreement ${versionId} not found`);
+    return Boom.notFound(`Charge agreement ${versionId} not found`);
   }
 
   return mappers.mapChargeVersion(...data);

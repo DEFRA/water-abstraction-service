@@ -4,6 +4,13 @@ const { mapKeys } = require('lodash');
 const mapRow = row => mapKeys(row, (value, key) => camelCase(key));
 const mapRows = rows => rows.map(mapRow);
 
+/**
+ * Filters the agreements to a list which only contains those that belong
+ * to the supplied element
+ * @param  {Object} element    - charge element
+ * @param  {Array} agreements  - charge agreements
+ * @return {Array}             - filtered list of charge agreements
+ */
 const filterElementAgreements = (element, agreements) => {
   const { charge_element_id: elementId } = element;
   return agreements.filter(row => row.charge_element_id === elementId);
