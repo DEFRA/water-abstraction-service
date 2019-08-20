@@ -183,7 +183,7 @@ experiment('modules/users/controller', () => {
     test('identifies an internal user', async () => {
       const request = { params: { id: 123 } };
       const testResponse = getUserResponse();
-      testResponse.data.role.scopes = ['internal'];
+      testResponse.data.application = config.idm.application.internalUser;
       idmConnector.usersClient.findOne.resolves(testResponse);
 
       const response = await controller.getStatus(request);
