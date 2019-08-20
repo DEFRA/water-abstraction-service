@@ -27,7 +27,7 @@ const getCallingUser = async callingUserId => {
 const mapUserStatus = user => {
   return {
     isLocked: parseInt(user.reset_required) === 1,
-    isInternal: !get(user, 'role.scopes', []).includes('external'),
+    isInternal: isInternalUser(user),
     lastLogin: user.last_login,
     userName: user.user_name
   };
@@ -67,7 +67,7 @@ const mapCompanies = (companies, verifications, documentHeaders) => {
   });
 };
 
-const isInternalUser = user => get(user, 'role.scopes', []).includes('internal');
+const isInternalUser = user => user.application === config.idm.application.internalUser;
 
 const getUserCompanyStatus = user => {
   const entityId = user.external_id;
