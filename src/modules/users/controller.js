@@ -67,7 +67,7 @@ const mapCompanies = (companies, verifications, documentHeaders) => {
   });
 };
 
-const isInternalUser = user => get(user, 'role.scopes', []).includes('internal');
+const isInternalUser = user => user.application === config.idm.application.internalUser;
 
 const getUserCompanyStatus = user => {
   const entityId = user.external_id;
