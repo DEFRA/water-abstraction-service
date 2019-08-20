@@ -226,6 +226,12 @@ const postUserInternal = async (request, h) => {
   }
 };
 
+/**
+ * Updates a user's roles/groups
+ * @param {Number} request.params.userId - IDM user ID of user being patched
+ * @param {Number} request.payload.callingUserId - IDM user ID user making change
+ * @param {String} request.payload.permissionsKey - maps to roles/groups
+ */
 const patchUserInternal = async (request, h) => {
   const { userId } = request.params;
   const { callingUserId, permissionsKey } = request.payload;
@@ -252,7 +258,7 @@ const patchUserInternal = async (request, h) => {
 };
 
 /**
- * Soft-deletes an internal user by setting their enabled flag to false.
+ * Soft-deletes an internal user by setting their IDM enabled flag to false.
  * Also logs an event for audit purposes
  * @param  {Number}  request.params.id - IDM user ID
  * @param  {Number}  request.payload.callingUserId - the user performing the deletion
