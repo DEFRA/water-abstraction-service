@@ -27,7 +27,7 @@ const getCallingUser = async callingUserId => {
 const mapUserStatus = user => {
   return {
     isLocked: parseInt(user.reset_required) === 1,
-    isInternal: user.application === config.idm.application.internalUser,
+    isInternal: isInternalUser(user),
     lastLogin: user.last_login,
     userName: user.user_name
   };
