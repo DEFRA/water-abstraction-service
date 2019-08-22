@@ -14,6 +14,7 @@ const batchNotificationsRoutes = require('./batch-notifications/routes');
 const companiesRoutes = require('./companies/routes');
 const serviceStatusRoutes = require('./service-status/routes');
 const changeEmailRoutes = require('./change-email/routes');
+const chargeVersionRoutes = require('./charge-versions/routes');
 
 module.exports = [
   ...Object.values(notificationsRoutes),
@@ -31,5 +32,6 @@ module.exports = [
   ...Object.values(batchNotificationsRoutes),
   ...Object.values(companiesRoutes),
   ...Object.values(serviceStatusRoutes),
-  ...Object.values(changeEmailRoutes)
+  ...Object.values(changeEmailRoutes),
+  ...Object.values(chargeVersionRoutes)
 ];
