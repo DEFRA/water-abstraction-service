@@ -4,6 +4,7 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const repository = require('../../../src/lib/connectors/repository');
 const controller = require('../../../src/modules/charge-versions/controller');
+const documentConnector = require('../../../src/lib/connectors/crm/documents');
 
 const chargeVersion = {
   charge_version_id: 'b58fd6d2-40b9-4ab8-a860-82eeb218ecdd'
@@ -30,6 +31,8 @@ experiment('./src/modules/charge-versions/controller.js', () => {
       .resolves(chargeElements);
     sandbox.stub(repository.chargeAgreements, 'findByChargeVersionId')
       .resolves(chargeAgreements);
+
+    sandbox.stub(documentConnector, 'getDocument');
   });
 
   afterEach(async () => {
@@ -130,6 +133,44 @@ experiment('./src/modules/charge-versions/controller.js', () => {
       test('responds with 404 not found error', async () => {
         expect(response.isBoom).to.equal(true);
         expect(response.output.statusCode).to.equal(404);
+      });
+    });
+  });
+
+  experiment('getChargeVersionsByDocumentId', () => {
+    let request, response;
+
+    beforeEach(async () => {
+      documentConnector.getDocument.resolves({
+        data: {
+          system_external_id: 'test-licence-ref'
+        }
+      });
+
+      request = {
+        params: {
+          documentId: '00000000-0000-0000-0000-000000000000'
+        }
+      };
+      response = await controller.getChargeVersionsByDocumentId(request);
+    });
+
+    test('gets the document using the document id parameter', async () => {
+      const [docId] = documentConnector.getDocument.lastCall.args;
+      expect(docId).to.equal(request.params.documentId);
+    });
+
+    test('calls charge versions repo with licence number from the found document', async () => {
+      expect(repository.chargeVersions.findByLicenceRef.calledWith(
+        'test-licence-ref'
+      )).to.be.true();
+    });
+
+    test('responds with the mapped charge version data', async () => {
+      expect(response).to.equal({
+        data: [{
+          chargeVersionId: chargeVersion.charge_version_id
+        }]
       });
     });
   });
