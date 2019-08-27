@@ -28,6 +28,8 @@ const mapUserStatus = user => {
   return {
     isLocked: parseInt(user.reset_required) === 1,
     isInternal: isInternalUser(user),
+    isDisabled: !user.enabled,
+    dateDisabled: user.enabled ? null : user.date_updated,
     lastLogin: user.last_login,
     userName: user.user_name
   };
