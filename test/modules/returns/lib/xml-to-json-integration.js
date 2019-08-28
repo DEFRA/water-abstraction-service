@@ -4,7 +4,7 @@
  * returns model schema.
  */
 
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 const {
@@ -12,13 +12,13 @@ const {
   afterEach,
   experiment,
   test
-} = exports.lab = require('lab').script();
+} = exports.lab = require('@hapi/lab').script();
 const libxmljs = require('libxmljs');
 const { mapXml } = require('../../../../src/modules/returns/lib/xml-adapter/mapper');
 const path = require('path');
 const fs = require('fs');
 const util = require('util');
-const Joi = require('joi');
+const Joi = require('@hapi/joi');
 const readFile = util.promisify(fs.readFile);
 
 const permitConnector = require('../../../../src/lib/connectors/permit');

@@ -1,4 +1,4 @@
-const Joi = require('joi');
+const Joi = require('@hapi/joi');
 const controller = require('./controller');
 const { set } = require('lodash');
 const { failAction } = require('./lib/route-helpers');

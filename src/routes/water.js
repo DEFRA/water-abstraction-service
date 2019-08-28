@@ -17,6 +17,9 @@ const picklistItemRoutes = require('../controllers/picklist-items');
 const moduleRoutes = require('../modules/routes');
 const arAnalysisLicencesRoutes = require('../controllers/ar-analysis-licences');
 
+const pkg = require('../../package.json');
+const { version } = pkg;
+
 module.exports = [
   ...sessionRoutes,
   ...schedulerRoutes,
@@ -34,9 +37,7 @@ module.exports = [
   {
     method: 'GET',
     path: '/status',
-    handler: function (request, h) {
-      return 'ok';
-    },
+    handler: () => ({ version }),
     config: { auth: false, description: 'Check service status' }
   }
 ];

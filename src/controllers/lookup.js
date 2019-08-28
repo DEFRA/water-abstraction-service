@@ -2,7 +2,7 @@
  * Lookup data - e.g. for pick lists of NALD data
  */
 const HAPIRestAPI = require('@envage/hapi-pg-rest-api');
-const Joi = require('joi');
+const Joi = require('@hapi/joi');
 const { pool } = require('../lib/connectors/db.js');
 
 const LookupApi = new HAPIRestAPI({

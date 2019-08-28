@@ -9,7 +9,7 @@
  * @module src/modules/notifications/contact-list
  */
 
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const { find } = require('lodash');
 const sha1 = require('sha1');
 const { getDocumentContacts } = require('./connectors/crm/documents');

@@ -1,9 +1,9 @@
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 const {
   experiment,
   test,
   beforeEach
-} = exports.lab = require('lab').script();
+} = exports.lab = require('@hapi/lab').script();
 
 const returns = require('../../src/lib/returns');
 

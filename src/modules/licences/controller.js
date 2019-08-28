@@ -1,5 +1,5 @@
 const moment = require('moment');
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const { get, isObject } = require('lodash');
 const documentsClient = require('../../lib/connectors/crm/documents');
 const { usersClient } = require('../../lib/connectors/idm');
@@ -273,11 +273,9 @@ const getLicenceCommunicationsByDocumentId = async (request, h) => {
   }
 };
 
-module.exports = {
-  getLicenceByDocumentId,
-  getLicenceConditionsByDocumentId,
-  getLicencePointsByDocumentId,
-  getLicenceUsersByDocumentId,
-  getLicenceSummaryByDocumentId,
-  getLicenceCommunicationsByDocumentId
-};
+exports.getLicenceByDocumentId = getLicenceByDocumentId;
+exports.getLicenceConditionsByDocumentId = getLicenceConditionsByDocumentId;
+exports.getLicencePointsByDocumentId = getLicencePointsByDocumentId;
+exports.getLicenceUsersByDocumentId = getLicenceUsersByDocumentId;
+exports.getLicenceSummaryByDocumentId = getLicenceSummaryByDocumentId;
+exports.getLicenceCommunicationsByDocumentId = getLicenceCommunicationsByDocumentId;

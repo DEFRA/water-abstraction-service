@@ -1,8 +1,8 @@
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 const {
   experiment,
   test
-} = exports.lab = require('lab').script();
+} = exports.lab = require('@hapi/lab').script();
 
 const { stringifyValues } = require('../../src/lib/stringify-values');
 

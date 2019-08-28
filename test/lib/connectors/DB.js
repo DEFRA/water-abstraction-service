@@ -2,8 +2,8 @@
 
 require('dotenv').config();
 
-const { expect } = require('code');
-const { experiment, test } = exports.lab = require('lab').script();
+const { expect } = require('@hapi/code');
+const { experiment, test } = exports.lab = require('@hapi/lab').script();
 
 const db = require('../../../src/lib/connectors/db.js');
 

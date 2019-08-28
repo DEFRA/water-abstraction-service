@@ -1,4 +1,4 @@
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const { getLicenceJson } = require('./transform-permit');
 const { buildReturnsPacket } = require('./transform-returns');
 

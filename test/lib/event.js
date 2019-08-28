@@ -1,12 +1,12 @@
 const sinon = require('sinon');
-const Joi = require('joi');
-const { expect } = require('code');
+const Joi = require('@hapi/joi');
+const { expect } = require('@hapi/code');
 const {
   experiment,
   test,
   beforeEach,
   afterEach
-} = exports.lab = require('lab').script();
+} = exports.lab = require('@hapi/lab').script();
 
 const event = require('../../src/lib/event');
 

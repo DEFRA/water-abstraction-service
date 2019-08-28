@@ -1,5 +1,5 @@
-const { expect } = require('code');
-const { experiment, test } = exports.lab = require('lab').script();
+const { expect } = require('@hapi/code');
+const { experiment, test } = exports.lab = require('@hapi/lab').script();
 
 const csvSchemaValidation = require('../../../../../src/modules/returns/lib/csv-adapter/validator');
 const csvStringify = require('csv-stringify/lib/sync');

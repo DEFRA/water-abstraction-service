@@ -3,8 +3,13 @@ const testMode = parseInt(process.env.TEST_MODE) === 1;
 
 module.exports = {
 
-  admin: {
-    baseUrl: process.env.ADMIN_BASE_URL
+  frontEnds: {
+    viewMyLicence: {
+      baseUrl: process.env.BASE_URL || 'http://localhost:8000'
+    },
+    internal: {
+      baseUrl: process.env.ADMIN_BASE_URL || 'http://localhost:8008'
+    }
   },
 
   blipp: {
@@ -77,12 +82,22 @@ module.exports = {
   version: '1.0',
 
   idm: {
-    application: 'water_vml'
+    application: {
+      externalUser: 'water_vml',
+      internalUser: 'water_admin'
+    }
+  },
+
+  crm: {
+    waterRegime: '0434dc31-a34e-7158-5775-4694af7a60cf'
   },
 
   notify: {
     templates: {
-      returns_invitation_letter: 'd31d05d3-66fe-4203-8626-22e63f9bccd6'
+      returns_invitation_letter: 'd31d05d3-66fe-4203-8626-22e63f9bccd6',
+      email_change_verification_code_email: '1fd2e8f2-8cb9-4ed1-8fa6-691918c15430',
+      email_change_email_in_use_email: 'adb02416-e9d3-4e05-a9cc-b24e25675672',
+      new_internal_user_email: '45b79d3a-39f2-44cf-b8f9-012c952dbd92'
     }
   },
 

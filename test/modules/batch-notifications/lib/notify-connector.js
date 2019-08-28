@@ -1,7 +1,7 @@
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 const {
   experiment, test, beforeEach, afterEach
-} = exports.lab = require('lab').script();
+} = exports.lab = require('@hapi/lab').script();
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
@@ -9,7 +9,7 @@ const notifyConnector =
 require('../../../../src/modules/batch-notifications/lib/notify-connector');
 
 const s3Connector = require('../../../../src/lib/connectors/s3');
-const pdfCreator = require('../../../../src/modules/notify/lib/pdf');
+const pdfCreator = require('../../../../src/lib/notify/pdf');
 
 experiment('batch notifications notify connector', () => {
   let client, sendLetter, sendPrecompiledLetter, sendEmail;

@@ -4,8 +4,8 @@ const s3 = require('../../../../src/lib/connectors/s3');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const { expect } = require('code');
-const { experiment, test, beforeEach, afterEach } = exports.lab = require('lab').script();
+const { expect } = require('@hapi/code');
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 
 experiment('getUploadFilename', () => {
   test('uses xml extension by default', async () => {

@@ -4,7 +4,7 @@ const { URL } = require('url');
 
 /**
  * Takes a service endpoint which may contain path segments (e.g. http://localhost:8001/api)
- * and creats a handler function for http://localhost:8001/status.
+ * and creates a handler function for http://localhost:8001/status.
  *
  * This is a convieniece function becuase the water service needs to check the
  * status of the downstream services for the service-status resource.

@@ -2,9 +2,9 @@
  * See https://environment.data.gov.uk/flood-monitoring/doc/reference#individual-station
  */
 
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const lab = Lab.script();
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 
 const { stationIsActive } = require('../../../src/modules/river-levels/api-mappers.js');
 

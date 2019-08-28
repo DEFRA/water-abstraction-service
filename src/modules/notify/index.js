@@ -4,14 +4,14 @@
  * - send - sends notify message, fire 'status' at several regular intervals in future
  * - status - checks status in notify, updates scheduled_notification table
  */
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const moment = require('moment');
 const promiseRetry = require('promise-retry');
-const notify = require('./connectors/notify');
+const notify = require('../../lib/notify');
 const { validateEnqueueOptions, isPdf, parseSentResponse } = require('./lib/helpers');
 const { scheduledNotification, findById, createFromObject } = require('./connectors/scheduled-notification');
 const { findByMessageRef } = require('./connectors/notify-template');
-const { AlreadySentError } = require('./lib/errors');
+const { AlreadySentError } = require('../../lib/notify/errors');
 const { HIGH_PRIORITY, LOW_PRIORITY } = require('../../lib/priorities');
 const { logger } = require('../../logger');
 

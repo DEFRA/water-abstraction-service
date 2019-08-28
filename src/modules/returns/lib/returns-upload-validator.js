@@ -18,7 +18,7 @@
   }
 ]
  */
-const Joi = require('joi');
+const Joi = require('@hapi/joi');
 const { chunk, flatMap, find, uniq, cond, negate, get } = require('lodash');
 
 const returnsConnector = require('../../../lib/connectors/returns');

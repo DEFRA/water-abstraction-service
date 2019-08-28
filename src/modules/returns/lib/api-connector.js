@@ -1,4 +1,4 @@
-const Boom = require('boom');
+const Boom = require('@hapi/boom');
 const ExtendableError = require('es6-error');
 const {
   returns,

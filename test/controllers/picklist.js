@@ -1,8 +1,8 @@
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 
 const lab = Lab.script();
 const server = require('../../index.js');
-const { expect } = require('code');
+const { expect } = require('@hapi/code');
 
 const endpoint = '/water/1.0/picklists';
 

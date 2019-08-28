@@ -1,6 +1,6 @@
-const Lab = require('lab');
+const Lab = require('@hapi/lab');
 const lab = Lab.script();
-const Code = require('code');
+const Code = require('@hapi/code');
 
 const sinon = require('sinon');
 
@@ -14,16 +14,16 @@ const { data, ret, contact } = require('./test-data');
 const config = require('../../../../config');
 
 lab.experiment('Test send', () => {
-  let adminBaseUrl = config.admin.baseUrl;
+  let adminBaseUrl = config.frontEnds.internal.baseUrl;
 
   lab.afterEach(async () => {
-    config.admin.baseUrl = adminBaseUrl;
+    config.frontEnds.internal.baseUrl = adminBaseUrl;
     returns.returns.findMany.restore();
     contactList.contactList.restore();
   });
 
   lab.test('It should call enqueue with correct data', async () => {
-    config.admin.baseUrl = 'http://localhost:8005';
+    config.frontEnds.internal.baseUrl = 'http://localhost:8005';
     sinon.stub(returns.returns, 'findMany').resolves({ data: [ret], error: null });
     sinon.stub(contactList, 'contactList').resolves([contact]);
 
