@@ -15,6 +15,7 @@ const companiesRoutes = require('./companies/routes');
 const serviceStatusRoutes = require('./service-status/routes');
 const changeEmailRoutes = require('./change-email/routes');
 const chargeVersionRoutes = require('./charge-versions/routes');
+const unlinkLicenceRoutes = require('./unlink-licence/routes');
 
 module.exports = [
   ...Object.values(notificationsRoutes),
@@ -33,5 +34,6 @@ module.exports = [
   ...Object.values(companiesRoutes),
   ...Object.values(serviceStatusRoutes),
   ...Object.values(changeEmailRoutes),
-  ...Object.values(chargeVersionRoutes)
+  ...Object.values(chargeVersionRoutes),
+  ...Object.values(unlinkLicenceRoutes)
 ];
