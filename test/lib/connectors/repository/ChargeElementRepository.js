@@ -22,7 +22,7 @@ const chargeElements = [{
 
 experiment('lib/connectors/repository/ChargeElementRepository.js', () => {
   beforeEach(async () => {
-    sandbox.stub(ChargeElementRepository.prototype, 'find');
+    sandbox.stub(ChargeElementRepository.prototype, 'dbQuery');
   });
 
   afterEach(async () => {
@@ -33,25 +33,15 @@ experiment('lib/connectors/repository/ChargeElementRepository.js', () => {
     let result;
 
     beforeEach(async () => {
-      ChargeElementRepository.prototype.find.resolves({
+      ChargeElementRepository.prototype.dbQuery.resolves({
         rows: chargeElements
       });
       result = await repo.findByChargeVersionId(chargeVersionId);
     });
 
-    test('filters charge elements by the supplied charge version ID', async () => {
-      const [filter] = ChargeElementRepository.prototype.find.lastCall.args;
-      expect(filter).to.equal({
-        charge_version_id: chargeVersionId
-      });
-    });
-
-    test('sorts charge elements time limited dates', async () => {
-      const [, sort] = ChargeElementRepository.prototype.find.lastCall.args;
-      expect(sort).to.equal({
-        time_limited_start_date: +1,
-        time_limited_end_date: +1
-      });
+    test('passes the expected params to the query', async () => {
+      const [, params] = ChargeElementRepository.prototype.dbQuery.lastCall.args;
+      expect(params).to.equal([chargeVersionId]);
     });
 
     test('resolves with charge elements data', async () => {

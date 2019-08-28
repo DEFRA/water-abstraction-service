@@ -30,6 +30,18 @@ module.exports = {
         }
       }
     }
-  }
+  },
 
+  getDocumentChargeVersions: {
+    method: 'GET',
+    path: '/water/1.0/charge-versions/document/{documentId}',
+    handler: controller.getChargeVersionsByDocumentId,
+    options: {
+      validate: {
+        params: {
+          documentId: VALID_GUID
+        }
+      }
+    }
+  }
 };
