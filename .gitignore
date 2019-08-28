@@ -14,3 +14,4 @@ temp/
 notification-log.json
 .vscode
 .DS_Store
+/.vscode
