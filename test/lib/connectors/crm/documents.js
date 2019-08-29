@@ -24,15 +24,4 @@ experiment('lib/connectors/crm/documents', () => {
       expect(url).to.equal(expectedUrl);
     });
   });
-
-  experiment('.unlinkLicence', () => {
-    test('passes the expected URL to the request', async () => {
-      await documentsConnector.unlinkLicence('doc-id');
-      const expectedUrl = `${config.services.crm}/documentHeader/doc-id`;
-      const expectedBody = { body: { company_entity_id: null, verification_id: null, document_name: null } };
-      const [url, body] = serviceRequest.patch.lastCall.args;
-      expect(url).to.equal(expectedUrl);
-      expect(body).to.equal(expectedBody);
-    });
-  });
 });

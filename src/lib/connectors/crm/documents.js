@@ -110,15 +110,4 @@ client.getDocumentUsers = async documentId => {
   return serviceRequest.get(url);
 };
 
-/**
- * Unlink licence from user
- * @param {String} [document_id] - the ID of the document to find
- * @return {Promise} resolves with single licence record
- */
-client.unlinkLicence = function (documentId) {
-  const url = `${config.services.crm}/documentHeader/${documentId}`;
-  const body = { company_entity_id: null, verification_id: null, document_name: null };
-  return serviceRequest.patch(url, { body });
-};
-
 module.exports = client;
