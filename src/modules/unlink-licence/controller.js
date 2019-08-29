@@ -21,12 +21,18 @@ const getCallingUser = async callingUserId => {
   return user;
 };
 
-const createUnlinkLicenceEvent = (callingUser, document) => {
+const unlinkLicenceInCRM = documentId => {
+  const filter = { document_id: documentId, company_entity_id: { $ne: null } };
+  const body = { company_entity_id: null, verification_id: null, document_name: null };
+  return crmDocumentsConnector.updateMany(filter, body);
+};
+
+const createUnlinkLicenceEvent = (callingUser, documentId) => {
   const auditEvent = event.create({
     type: 'unlink-licence',
     issuer: callingUser.user_name,
     metadata: {
-      documentId: document.document_id
+      documentId
     }
   });
   return event.save(auditEvent);
@@ -44,16 +50,18 @@ const patchUnlinkLicence = async (request, h) => {
 
   try {
     const callingUser = await getCallingUser(callingUserId);
-    const document = await crmDocumentsConnector.unlinkLicence(documentId);
-    await createUnlinkLicenceEvent(callingUser, document);
+    const { data, rowCount } = await unlinkLicenceInCRM(documentId);
+    if (rowCount === 0) {
+      return h.response({ data, error: null }).code(202);
+    }
 
-    // respond with unlinked licence
-    return document;
+    await createUnlinkLicenceEvent(callingUser, documentId);
+    return h.response({ data, error: null }).code(200);
   } catch (err) {
     logger.error('Failed to unlink licence', err, {
       callingUserId, documentId });
     if (err.isBoom) {
-      return err;
+      return h.response({ data: null, error: err }).code(err.output.statusCode);
     }
     throw err;
   }
@@ -61,4 +69,5 @@ const patchUnlinkLicence = async (request, h) => {
 
 exports.patchUnlinkLicence = patchUnlinkLicence;
 exports.getCallingUser = getCallingUser;
+exports.unlinkLicenceInCRM = unlinkLicenceInCRM;
 exports.createUnlinkLicenceEvent = createUnlinkLicenceEvent;

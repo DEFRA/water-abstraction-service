@@ -9,17 +9,20 @@ const event = require('../../../src/lib/event');
 const { logger } = require('../../../src/logger');
 
 const callingUserId = 123;
+const documentId = 'doc-id';
 
 const request = {
   params: {
-    documentId: 'doc-id'
+    documentId
   },
   payload: {
     callingUserId
   }
 };
-
-const h = {};
+const codeSpy = sandbox.spy();
+const h = {
+  response: sandbox.stub().returns({ code: codeSpy })
+};
 
 const user = {
   user_id: 123,
@@ -28,12 +31,12 @@ const user = {
 };
 
 const document = {
-  document_id: 'doc-id'
+  document_id: documentId
 };
 
 experiment('modules/unlink-licence/controller', () => {
   beforeEach(async () => {
-    sandbox.stub(crmDocumentsConnector, 'unlinkLicence').resolves(document);
+    sandbox.stub(crmDocumentsConnector, 'updateMany').resolves({ data: document, rowCount: 1 });
     sandbox.stub(idmConnector.usersClient, 'findOneById').resolves(user);
     sandbox.stub(event, 'create');
     sandbox.stub(event, 'save');
@@ -43,40 +46,52 @@ experiment('modules/unlink-licence/controller', () => {
   afterEach(async () => { sandbox.restore(); });
 
   experiment('.patchUnlinkLicence', async () => {
-    test('calls crmDocumentsConnector.unlinkLicence with documentId', async () => {
-      await controller.patchUnlinkLicence(request, h);
-      expect(crmDocumentsConnector.unlinkLicence.calledWith(request.params.documentId)).to.be.true();
-    });
-
-    test('returns the document', async () => {
-      const result = await controller.patchUnlinkLicence(request, h);
-      expect(result).to.equal(document);
-    });
-
-    test('calls logger.error if error is thrown', async () => {
-      crmDocumentsConnector.unlinkLicence.throws(Boom.teapot('bad error'));
-      const result = await controller.patchUnlinkLicence(request, h);
-      const [message, err, body] = logger.error.lastCall.args;
-      expect(message).to.equal('Failed to unlink licence');
-      expect(err).to.equal(result);
-      expect(body).to.equal({ callingUserId, documentId: request.params.documentId });
-    });
-
-    test('returns error if isBoom', async () => {
-      crmDocumentsConnector.unlinkLicence.throws(Boom.teapot('bad error'));
-      const result = await controller.patchUnlinkLicence(request, h);
-      expect(result).to.be.an.error();
-      expect(result.isBoom).to.be.true();
-    });
-
-    test('throws error if is not Boom', async () => {
-      crmDocumentsConnector.unlinkLicence.throws('not a Boom error');
-      try {
+    experiment('when rowCount === 1', async () => {
+      test('calls h.response with the document data & 200 status code', async () => {
         await controller.patchUnlinkLicence(request, h);
-      } catch (err) {
-        expect(err).to.be.an.error();
-        expect(err.isBoom).to.be.undefined();
-      }
+        expect(h.response.calledWith({ data: document, error: null })).to.be.true();
+        expect(codeSpy.calledWith(200)).to.be.true();
+      });
+    });
+
+    experiment('when rowCount === 0', async () => {
+      test('calls h.response with the document data & 202 status code', async () => {
+        crmDocumentsConnector.updateMany.resolves({ data: [], rowCount: 0 });
+        await controller.patchUnlinkLicence(request, h);
+        expect(h.response.calledWith({ data: [], error: null })).to.be.true();
+        expect(codeSpy.calledWith(202)).to.be.true();
+      });
+    });
+
+    experiment('when an error is thrown', async () => {
+      test('calls logger.error if error is thrown', async () => {
+        crmDocumentsConnector.updateMany.throws(Boom.teapot('bad error'));
+        await controller.patchUnlinkLicence(request, h);
+        const [{ error: thrownError }] = h.response.lastCall.args;
+        const [message, err, body] = logger.error.lastCall.args;
+        expect(message).to.equal('Failed to unlink licence');
+        expect(err).to.equal(thrownError);
+        expect(body).to.equal({ callingUserId, documentId: request.params.documentId });
+      });
+
+      test('returns error if isBoom', async () => {
+        crmDocumentsConnector.updateMany.throws(Boom.teapot('bad error'));
+        await controller.patchUnlinkLicence(request, h);
+        const [{ error: thrownError }] = h.response.lastCall.args;
+        expect(h.response.calledWith({ data: null, error: thrownError })).to.true();
+        expect(codeSpy.calledWith(418)).to.true();
+        expect(thrownError.isBoom).to.be.true();
+      });
+
+      test('throws error if is not Boom', async () => {
+        crmDocumentsConnector.updateMany.throws('not a Boom error');
+        try {
+          await controller.patchUnlinkLicence(request, h);
+        } catch (err) {
+          expect(err).to.be.an.error();
+          expect(err.isBoom).to.be.undefined();
+        }
+      });
     });
   });
 
@@ -106,12 +121,12 @@ experiment('modules/unlink-licence/controller', () => {
 
   experiment('.createUnlinkLicenceEvent', async () => {
     test('calls event.create with expected arguments', async () => {
-      await controller.createUnlinkLicenceEvent(user, document);
+      await controller.createUnlinkLicenceEvent(user, documentId);
       expect(event.create.calledWith({
         type: 'unlink-licence',
         issuer: user.user_name,
         metadata: {
-          documentId: document.document_id
+          documentId
         }
       })).to.be.true();
     });
@@ -121,6 +136,15 @@ experiment('modules/unlink-licence/controller', () => {
       event.create.returns(eventData);
       await controller.createUnlinkLicenceEvent(user, document);
       expect(event.save.calledWith(eventData)).to.be.true();
+    });
+  });
+
+  experiment('.unlinkLicenceInCRM', async () => {
+    test('calls crmDocumentsConnector.updateMandy with correct arguments', async () => {
+      await controller.unlinkLicenceInCRM(documentId);
+      const filter = { document_id: documentId, company_entity_id: { $ne: null } };
+      const body = { company_entity_id: null, verification_id: null, document_name: null };
+      expect(crmDocumentsConnector.updateMany.calledWith(filter, body)).to.be.true();
     });
   });
 });
