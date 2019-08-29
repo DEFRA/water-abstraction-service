@@ -9,6 +9,7 @@ const rp = require('request-promise-native').defaults({
 });
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
+const urlJoin = require('url-join');
 
 // Create API client
 const client = new APIClient(rp, {
@@ -83,9 +84,15 @@ client.getDocumentRoles = function (filter, sort = {}, pagination = { page: 1, p
  * @param {String} [document_id] - the ID of the document to find
  * @return {Promise} resolves with single licence record
  */
-client.getDocument = function (documentId) {
-  const url = config.services.crm + `/documentHeader/${documentId}`;
-  return serviceRequest.get(url);
+client.getDocument = function (documentId, includeExpired = false) {
+  const filter = JSON.stringify({ includeExpired });
+  const url = urlJoin(config.services.crm, 'documentHeader', documentId);
+
+  return serviceRequest.get(url, {
+    qs: {
+      filter
+    }
+  });
 };
 
 /**
@@ -106,7 +113,7 @@ client.getDocumentContacts = function (filter = {}) {
 };
 
 client.getDocumentUsers = async documentId => {
-  const url = `${config.services.crm}/documents/${documentId}/users`;
+  const url = urlJoin(config.services.crm, 'documents', documentId, 'users');
   return serviceRequest.get(url);
 };
 

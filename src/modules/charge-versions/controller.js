@@ -43,7 +43,7 @@ const getChargeVersion = async request => {
 const getChargeVersionsByDocumentId = async request => {
   const { documentId } = request.params;
 
-  const { data: document } = await documentsConnector.getDocument(documentId);
+  const { data: document } = await documentsConnector.getDocument(documentId, true);
   return getChargeVersionsByLicenceRef(document.system_external_id);
 };
 
