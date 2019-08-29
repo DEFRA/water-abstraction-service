@@ -10,7 +10,7 @@ class ChargeAgreementRepository extends Repository {
     const query = `
       SELECT a.*, t.description AS agreement_description
         FROM water.charge_agreements a
-        LEFT JOIN water.financial_agreement_types t ON a.agreement_code=t.id
+        JOIN water.financial_agreement_types t ON a.agreement_code=t.id
         JOIN water.charge_elements e ON a.charge_element_id=e.charge_element_id
         WHERE e.charge_version_id=$1
         ORDER BY a.start_date`;
