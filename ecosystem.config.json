@@ -6,7 +6,9 @@
       "ignore_watch": [
         "node_modules",
         "src/lib/temp",
-        "temp"
+        "temp",
+        ".git",
+        ".git/index.lock"
       ],
       "script": "index.js",
       "env": {
@@ -24,7 +26,9 @@
       "ignore_watch": [
         "node_modules",
         "src/lib/temp",
-        "temp"
+        "temp",
+        ".git",
+        ".git/index.lock"
       ],
       "script" : "import.js",
       "env": {
@@ -35,7 +39,5 @@
         "instances" : "1"
       }
     }
-
-
   ]
 }

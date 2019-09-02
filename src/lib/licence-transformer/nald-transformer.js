@@ -2,44 +2,24 @@
  * Transforms NALD data into VML native format
  * @module lib/licence-transformer/nald-transformer
  */
-const deepMap = require('deep-map');
-const {
-  find,
-  uniqBy,
-  isArray
-} = require('lodash');
+const { find, uniqBy, isArray } = require('lodash');
 const BaseTransformer = require('./base-transformer');
 const LicenceTitleLoader = require('./licence-title-loader');
 const licenceTitleLoader = new LicenceTitleLoader();
 const NALDHelpers = require('./nald-helpers');
 const sentenceCase = require('sentence-case');
 const { dateToIsoString } = require('../../lib/dates');
-const { getAggregateQuantities, getFullName } = require('./nald-helpers');
+const naldFunctional = require('./nald-functional');
 
 class NALDTransformer extends BaseTransformer {
-  /**
-   * Transform string 'null' values to real null
-   * @param {Object} data
-   * @return {Object}
-   */
-  transformNull (data) {
-    return deepMap(data, (val) => {
-      // Convert string null to real null
-      if (typeof (val) === 'string' && val === 'null') {
-        return null;
-      }
-      return val;
-    });
-  }
-
   /**
    * Load data into the transformer
    * @param {Object} data - data loaded from NALD
    */
   async load (data) {
-    data = this.transformNull(data);
+    data = naldFunctional.transformNull(data);
 
-    const currentVersion = find(data.data.versions, version => version.STATUS === 'CURR');
+    const currentVersion = naldFunctional.findCurrent(data.data.versions);
 
     const licenceHolderParty = find(currentVersion.parties, (party) => {
       return party.ID === currentVersion.ACON_APAR_ID;
@@ -80,7 +60,7 @@ class NALDTransformer extends BaseTransformer {
       FORENAME: firstName,
       NAME: lastName
     } = party;
-    return getFullName(salutation, initials, firstName, lastName);
+    return NALDHelpers.getFullName(salutation, initials, firstName, lastName);
   }
 
   formatsFormatter (formats = []) {
@@ -128,58 +108,6 @@ class NALDTransformer extends BaseTransformer {
   }
 
   /**
-   * Formats contact address
-   * @param {Object} contactAddress - party/role address
-   * @return {Object} reformatted address
-   */
-  addressFormatter (contactAddress) {
-    const {
-      ADDR_LINE1,
-      ADDR_LINE2,
-      ADDR_LINE3
-    } = contactAddress;
-    const {
-      ADDR_LINE4,
-      TOWN,
-      COUNTY,
-      POSTCODE,
-      COUNTRY
-    } = contactAddress;
-
-    return {
-      addressLine1: ADDR_LINE1,
-      addressLine2: ADDR_LINE2,
-      addressLine3: ADDR_LINE3,
-      addressLine4: ADDR_LINE4,
-      town: TOWN,
-      county: COUNTY,
-      postcode: POSTCODE,
-      country: COUNTRY
-    };
-  }
-
-  /**
-   * Formats a party name - whether person or organisation
-   * @param {Object} party - NALD party / role party
-   * @return {Object} contact name
-   */
-  nameFormatter (party) {
-    if (party.APAR_TYPE === 'PER') {
-      const parts = [party.SALUTATION, party.INITIALS, party.NAME];
-      return {
-        contactType: 'Person',
-        name: parts.filter(s => s).join(' ')
-      };
-    }
-    if (party.APAR_TYPE === 'ORG') {
-      return {
-        contactType: 'Organisation',
-        name: party.NAME
-      };
-    }
-  }
-
-  /**
    * Contacts formatter
    * Creates a list of contacts from the roles/parties in the NALD data
    */
@@ -196,16 +124,16 @@ class NALDTransformer extends BaseTransformer {
 
     contacts.push({
       type: 'Licence holder',
-      ...this.nameFormatter(licenceHolderParty),
-      ...this.addressFormatter(licenceHolderAddress.party_address)
+      ...naldFunctional.nameFormatter(licenceHolderParty),
+      ...naldFunctional.addressFormatter(licenceHolderAddress.party_address)
     });
 
     const contactCodes = ['FM', 'LA', 'LC', 'MG', 'RT'];
     roles.filter(role => contactCodes.includes(role.role_type.CODE)).forEach((role) => {
       contacts.push({
         type: sentenceCase(role.role_type.DESCR),
-        ...this.nameFormatter(role.role_party),
-        ...this.addressFormatter(role.role_address)
+        ...naldFunctional.nameFormatter(role.role_party),
+        ...naldFunctional.addressFormatter(role.role_address)
       });
     });
 
@@ -249,7 +177,7 @@ class NALDTransformer extends BaseTransformer {
    * @return {Array} array of quantities
    */
   aggregateQuantitiesFormatter (purposes) {
-    const quantities = purposes.map(getAggregateQuantities);
+    const quantities = purposes.map(NALDHelpers.getAggregateQuantities);
 
     const unique = uniqBy(quantities, row => {
       return row.map(row => row.value).join(',');

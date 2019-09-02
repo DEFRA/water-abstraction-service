@@ -4,6 +4,17 @@ const { getPagination } = require('./pagination');
 const { returnsDateToIso } = require('../../../lib/dates');
 const { getFullName } = require('../../../lib/licence-transformer/nald-helpers');
 
+const validateRowMetadata = row => {
+  if (!row.metadata) {
+    const err = new Error('No metadata for document');
+    err.params = {
+      documentId: row.document_id,
+      licenceRef: row.system_external_id
+    };
+    throw err;
+  }
+};
+
 /**
  * Gets full name for a licence
  * @param  {[type]} documentHeader [description]
@@ -20,6 +31,8 @@ const getLicenceHolderNameFromDocumentHeader = (documentHeader) => {
 };
 
 const mapRow = (row) => {
+  validateRowMetadata(row);
+
   return {
     documentId: row.document_id,
     licenceNumber: row.system_external_id,
@@ -65,7 +78,5 @@ const searchDocuments = async (query, page = 1) => {
   };
 };
 
-module.exports = {
-  mapRow,
-  searchDocuments
-};
+exports.mapRow = mapRow;
+exports.searchDocuments = searchDocuments;
