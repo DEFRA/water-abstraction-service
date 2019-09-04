@@ -2,7 +2,12 @@
  * Transform data for loading into CRM
  */
 const { mapValues, find } = require('lodash');
-const { addressFormatter, findCurrent, crmNameFormatter, transformNull } = require('../../lib/licence-transformer/nald-functional');
+const {
+  addressFormatter,
+  findCurrent,
+  crmNameFormatter,
+  transformNull
+} = require('../../lib/licence-transformer/nald-functional');
 const sentenceCase = require('sentence-case');
 const { logger } = require('../../logger');
 
@@ -14,7 +19,9 @@ const { logger } = require('../../logger');
  * @return {Array} formatted contacts
  */
 const contactsFormatter = (currentVersion, roles) => {
-  const contacts = [];
+  if (!currentVersion) {
+    return [];
+  }
 
   const licenceHolderParty = find(currentVersion.parties, (party) => {
     return party.ID === currentVersion.ACON_APAR_ID;
@@ -24,11 +31,11 @@ const contactsFormatter = (currentVersion, roles) => {
     return contact.AADD_ID === currentVersion.ACON_AADD_ID;
   });
 
-  contacts.push({
+  const contacts = [{
     role: 'Licence holder',
     ...crmNameFormatter(licenceHolderParty),
     ...addressFormatter(licenceHolderAddress.party_address)
-  });
+  }];
 
   roles.forEach((role) => {
     contacts.push({
@@ -105,24 +112,24 @@ function buildCRMMetadata (currentVersion) {
  * @return {Object} - object containing of row of data for CRM
  */
 function buildCRMPacket (licenceData, licenceRef, licenceId) {
-  let crmData = {
+  const crmData = {
     regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf',
     system_id: 'permit-repo',
     system_internal_id: licenceId,
     system_external_id: licenceRef
   };
+
   try {
     const currentVersion = licenceData.data.current_version;
-    let metadata = buildCRMMetadata(currentVersion);
+    const metadata = buildCRMMetadata(currentVersion);
     metadata.contacts = contactsFormatter(findCurrent(licenceData.data.versions), licenceData.data.roles);
     crmData.metadata = JSON.stringify(metadata);
   } catch (error) {
-    logger.error('Cannot build CRM packet', error, { licenceId });
+    logger.error('Cannot build CRM packet', error, crmData);
   }
   return crmData;
 }
 
-module.exports = {
-  buildCRMPacket,
-  buildCRMMetadata
-};
+exports.buildCRMPacket = buildCRMPacket;
+exports.buildCRMMetadata = buildCRMMetadata;
+exports.contactsFormatter = contactsFormatter;

@@ -4,6 +4,7 @@ const { find, get } = require('lodash');
 // Import models
 const Contact = require('../contact');
 const ContactList = require('../contact-list');
+const naldFunctional = require('../../licence-transformer/nald-functional');
 
 const { createContact } = require('./contact');
 
@@ -52,7 +53,7 @@ const createContacts = (data) => {
   const contacts = new ContactList();
 
   // Get current version
-  const currentVersion = find(data.data.versions, version => version.STATUS === 'CURR');
+  const currentVersion = naldFunctional.findCurrent(data.data.versions);
   if (!currentVersion) {
     return contacts;
   }
