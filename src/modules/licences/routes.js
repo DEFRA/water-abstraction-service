@@ -112,5 +112,19 @@ module.exports = {
         }
       }
     }
+  },
+
+  getLicenceCompanyByDocumentId: {
+    method: 'GET',
+    path: `${pathPrefix}{documentId}/licence/company`,
+    handler: controller.getLicenceCompanyByDocumentId,
+    config: {
+      description: 'Returns the company details for a given document',
+      validate: {
+        params: {
+          documentId: Joi.string().guid().required()
+        }
+      }
+    }
   }
 };
