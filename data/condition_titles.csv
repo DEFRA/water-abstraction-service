@@ -2,19 +2,20 @@ code,subCode,displayTitle,parameter1Label,parameter2Label
 AGG,LLL,Aggregate condition link between licences,Linked licence number,Aggregate quantity
 AGG,LLX,Aggregate condition cross regional link between licences,Linked licence number,Aggregate quantity
 AGG,LPL,Aggregate condition licence to purpose between different licences,Linked licence number,Aggregate quantity
-AGG,PPL,Aggregate condition purpose to purpose between different licences,Linked licence number,Aggregate quantity
 AGG,PP,Aggregate condition purpose to purpose within a licence,,Aggregate quantity
+AGG,PPL,Aggregate condition purpose to purpose between different licences,Linked licence number,Aggregate quantity
 AGI,DIM,Additional groundwater information dimensions,,
 BYPAS,FLOW,By-pass flow,Specify flow (l/s),Where measured
-CES,FLOW,Flow cessation condition,EA gauging station ,Threshold flow
-CES,LEV,Level cessation condition,EA gauging station ,Threshold level
 CES,CHE,Chemical cessation condition,Control sampling site,Concentration
-CES,GWL,Groundwater level cessation condition,Control site number,Threshold level
 CES,DEP,Cessation dependant on releases from schemes / other licences,Licence number/scheme name,Threshold quantity
+CES,FLOW,Flow cessation condition,EA gauging station ,Threshold flow
+CES,GWL,Groundwater level cessation condition,Control site number,Threshold level
+CES,LEV,Level cessation condition,EA gauging station ,Threshold level
 CES,POL,Political cessation condition,Start date,End date
 COMB,LINK,Link between split licences,Licence number and suffix linked to,
 COMP,GEN,Complex condition,,
 COMPR,FLOW,Flow compensation release,Specify flow (l/s),Where measured
+DEROG,CLAUS,Derogation clause,,
 EEL,REGS,Fish pass/screen - eel regs SI3344,Type of pass or screen,Location of pass or screen
 FILL,FILL,Filling/emptying to be notified to Agency,Number of days notice Agency to be given,
 FILL,SEAS,Filling/emptying season limited,Filling season start date,Filling season end date
@@ -24,20 +25,20 @@ LINTY,TYPE,Type of lining,Type,
 LOK,OFF,Lockable structures required,Structure required ,Season to be locked
 MAINT,FLOW,Maintained flow,Flow (l/s),Where measured
 MCOMP,MEANS,Means of compensation flow release,Means,
-NSQ,M3WK,Non standard quantities cubic metres per week,Volume m3,
-NSQ,M3MO,Non standard quantities cubic metres per month,Volume m3,
 NSQ,M3FN,Non standard quantities cubic metres per fortnight,Volume m3,
+NSQ,M3MO,Non standard quantities cubic metres per month,Volume m3,
+NSQ,M3WK,Non standard quantities cubic metres per week,Volume m3,
 NSQ,PER,Non standard quantities,,
 OTH,GEN,General conditions,,
-PTAK,PCENT,Proportional percentage take,Reference of PF site above which take occurs,Percentage e.g. 50%
 PTAK,COMP,Complex proportional take,,
+PTAK,PCENT,Proportional percentage take,Reference of PF site above which take occurs,Percentage e.g. 50%
 PWS,WSL,Public water supply licensee,,
 RAT,LPS,Rates litres per second,Name of reference site,Rate l/s
-RAT,M3S,Rates m3 per second,Name of reference site,Rate m3/s
 RAT,M3D,Rates m3 per day,Name of reference site,Rate m3/d
 RAT,M3M,Rates m3 per month,Name of reference site,Rate m3/month
-S57,BANP,Spray irrigation ban proposed,Start date,End date
+RAT,M3S,Rates m3 per second,Name of reference site,Rate m3/s
 S57,BANI,Spray irrigation ban imposed,Start date,End date
+S57,BANP,Spray irrigation ban proposed,Start date,End date
 TLTD,MINQ,Time limited minimum quantity,Effective date of licence plus 12 years,Minimum abstraction quantity
 TLTD,SD,Time limited self destruct,Self destruct date,Indication whether whole or part licence expires
 TLTD,VAR,Time limited variation,Variation end date,
@@ -46,7 +47,7 @@ WLM,GW,Water level monitoring groundwater,Name of reference site,Level (mODN) or
 WLM,SW,Water level monitoring surface water,Name of reference site,Level (mODN) or (mBD)
 WQM,GW,Water quality monitoring groundwater,Name of reference site,Full chemical name e.g. 'Manganese' not 'Mn'
 WQM,SW,Water quality monitoring surface water,Name of reference site,Full chemical name e.g. 'Manganese' not 'Mn'
-WRT,QTY,Water rights trade quantity,Donor / recipient  licence number,Volume m3
-WRT,PUR,Water rights trade purpose,Donor / recipient  licence number,Purpose code and description
 WRT,PNT,Water rights trade point,Donor / recipient  licence number,Grid reference and local name
+WRT,PUR,Water rights trade purpose,Donor / recipient  licence number,Purpose code and description
+WRT,QTY,Water rights trade quantity,Donor / recipient  licence number,Volume m3
 XREG,PTS,Licensed point falls within another region,National grid reference of appropriate abstraction point,Other region
