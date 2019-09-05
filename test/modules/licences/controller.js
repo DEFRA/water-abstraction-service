@@ -5,6 +5,7 @@ const controller = require('../../../src/modules/licences/controller');
 const queries = require('../../../src/modules/licences/lib/queries');
 const permitClient = require('../../../src/lib/connectors/permit');
 const documentsClient = require('../../../src/lib/connectors/crm/documents');
+const crmEntities = require('../../../src/lib/connectors/crm/entities');
 const idmConnector = require('../../../src/lib/connectors/idm');
 const { logger } = require('../../../src/logger');
 
@@ -28,7 +29,7 @@ const emptyResponse = {
 
 const documentResponse = {
   data: [
-    { document_name: 'test-doc-name', system_internal_id: 'test-id' }
+    { document_name: 'test-doc-name', system_internal_id: 'test-id', company_entity_id: 'test-entity-id' }
   ],
   error: null
 };
@@ -398,5 +399,49 @@ experiment('getLicenceCommunicationsByDocumentId', () => {
 
     expect(filter.document_id).to.equal(testRequest.params.documentId);
     expect(filter.includeExpired).to.be.true();
+  });
+});
+
+experiment('getLicenceCompanyByDocumentId', () => {
+  const companyData = { data: { entityName: 'test-name' } };
+  beforeEach(async () => {
+    sandbox.stub(documentsClient, 'findMany');
+    sandbox.stub(crmEntities, 'getEntityCompanies');
+    sandbox.stub(logger, 'error');
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  test('returns 404 for unknown document id', async () => {
+    documentsClient.findMany.rejects({ statusCode: 404 });
+    const response = await controller.getLicenceCompanyByDocumentId(testRequest);
+    expect(response.output.statusCode).to.equal(404);
+  });
+
+  test('gets company data with company_entity_id from document', async () => {
+    documentsClient.findMany.resolves(documentResponse);
+    crmEntities.getEntityCompanies.resolves(companyData);
+    await controller.getLicenceCompanyByDocumentId(testRequest);
+    expect(crmEntities.getEntityCompanies.calledWith(
+      documentResponse.data[0].company_entity_id)).to.be.true();
+  });
+
+  test('provides error details in the event of a major error', async () => {
+    documentsClient.findMany.rejects(new Error('fail'));
+    await controller.getLicenceCompanyByDocumentId(testRequest);
+    const params = logger.error.lastCall.args[2];
+    expect(params).to.equal({ documentId: testRequest.params.documentId });
+  });
+
+  test('returns the expected licence company details', async () => {
+    documentsClient.findMany.resolves(documentResponse);
+    crmEntities.getEntityCompanies.resolves(companyData);
+    const { data, error } = await controller.getLicenceCompanyByDocumentId(testRequest);
+    expect(data.entityId).to.equal(documentResponse.data[0].company_entity_id);
+    expect(data.companyName).to.equal(companyData.data.entityName);
+    expect(data.licenceNumber).to.equal(documentResponse.data[0].system_external_id);
+    expect(error).to.be.null();
   });
 });
