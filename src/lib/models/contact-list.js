@@ -1,7 +1,9 @@
 const { find } = require('lodash');
 
+const normaliseString = str => (str || '').trim().toLowerCase();
+
 const compareRoles = (role1, role2) =>
-  (role1 || '').toLowerCase() === (role2 || '').toLowerCase();
+  normaliseString(role1) === normaliseString(role2);
 
 class ContactList {
   constructor (data = []) {

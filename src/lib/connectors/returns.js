@@ -49,11 +49,12 @@ const getActiveReturns = (returnIds) => {
  */
 const getCurrentDueReturns = async (excludeLicences, refDate) => {
   const cycles = helpers.returns.date.createReturnCycles(undefined, refDate);
-  const { endDate } = last(cycles);
+  const { startDate, endDate } = last(cycles);
   const dueDate = moment(endDate).add(28, 'day').format(DATE_FORMAT);
 
   const filter = {
-    licence_ref: '4/29/03/*G/0050',
+    start_date: { $gte: startDate },
+    end_date: { $lte: endDate },
     due_date: dueDate,
     status: 'due',
     regime: 'water',

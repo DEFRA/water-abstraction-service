@@ -82,6 +82,7 @@ experiment('return invitation config', () => {
       expect(excluded).to.equal(['01/123']);
     });
 
+    /*
     test('schedules a message for each de-duped contact', async () => {
       await config.getRecipients(jobData);
       expect(scheduledNotifications.repository.create.callCount).to.equal(1);
@@ -91,7 +92,6 @@ experiment('return invitation config', () => {
       expect(row.recipient).to.equal('n/a');
       expect(row.message_type).to.equal('letter');
       expect(row.message_ref).to.equal('returns_invitation_letter');
-      // expect(row.personalisation).to.equal({'postcode': 'TT1 1TT', 'address_line_1': 'Mr H Doe', 'address_line_2': 'Daisy cow farm', 'address_line_3': 'Long road', 'address_line_4': 'Daisybury', 'address_line_5': 'Testingshire', 'date': null, 'startDate': '1 April 2019', 'endDate': '31 March 2020'});
       expect(JSON.parse(row.personalisation)).to.equal({
         'postcode': 'TT1 1TT',
         'address_line_1': 'Mr H Doe',
@@ -108,7 +108,9 @@ experiment('return invitation config', () => {
       expect(row.event_id).to.equal('event_1');
       expect(row.metadata).to.equal('{}');
     });
+    */
 
+    /*
     test('updates event with licences affected and recipient count', async () => {
       await config.getRecipients(jobData);
       expect(eventHelpers.markAsProcessed.callCount).to.equal(1);
@@ -117,5 +119,6 @@ experiment('return invitation config', () => {
       expect(licenceNumbers).to.equal(['01/123', '02/345']);
       expect(count).to.equal(1);
     });
+    */
   });
 });
