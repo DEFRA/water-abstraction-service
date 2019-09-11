@@ -15,7 +15,6 @@ const returnsConnector = require('../../../../../../src/lib/connectors/returns')
 const permitConnector = require('../../../../../../src/lib/connectors/permit');
 const scheduledNotifications = require('../../../../../../src/controllers/notifications');
 const eventHelpers = require('../../../../../../src/modules/batch-notifications/lib/event-helpers');
-const { MESSAGE_STATUS_DRAFT } = require('../../../../../../src/modules/batch-notifications/lib/message-statuses');
 
 const { getWaterLicence } = require('../../../../../responses/permits/licence');
 
