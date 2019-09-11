@@ -37,7 +37,7 @@ const getRecipients = async (data) => {
 
   // Get a list of returns grouped by licence number
   const returnContacts = await notificationContacts
-    .getReturnNotificationContacts(excludeLicences);
+    .getReturnContacts(excludeLicences);
 
   // Get a list of recipients from the grouped returns
   const messages = notificationRecipients.getRecipientList(returnContacts);

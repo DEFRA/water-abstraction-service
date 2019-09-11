@@ -60,7 +60,7 @@ experiment('return invitation config', () => {
     };
 
     beforeEach(async () => {
-      sandbox.stub(notificationContacts, 'getReturnNotificationContacts');
+      sandbox.stub(notificationContacts, 'getReturnContacts');
       sandbox.stub(notificationRecipients, 'getRecipientList').returns([
         {
           contact: new Contact({
@@ -86,8 +86,8 @@ experiment('return invitation config', () => {
 
     test('finds due returns and contacts excluding any specified licence numbers', async () => {
       await config.getRecipients(jobData);
-      expect(notificationContacts.getReturnNotificationContacts.callCount).to.equal(1);
-      const [ excluded ] = notificationContacts.getReturnNotificationContacts.lastCall.args;
+      expect(notificationContacts.getReturnContacts.callCount).to.equal(1);
+      const [ excluded ] = notificationContacts.getReturnContacts.lastCall.args;
       expect(excluded).to.equal(['01/123']);
     });
 

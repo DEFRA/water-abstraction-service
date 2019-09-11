@@ -28,6 +28,18 @@ const getCRMContacts = async groupedReturns => {
   return arr;
 };
 
+/**
+ * Fetches all due returns from the returns service
+ * The returns are then grouped by licence number, and the contacts loaded
+ * from the CRM for each group.
+ * The contact information is mapped to a standard water service ContactList
+ * instance
+ * @param {Array} excludeLicences - a list of licences to exclude from the
+ *                                  list of returns
+ * @param {Promise<Array>} an array of objects, each object represents a licence
+ *                         number, with an array of return IDs due for that
+ *                         licence, and a ContactList instance
+ */
 const getReturnContacts = async excludeLicences => {
   // Load due returns in current cycle from return service
   const returns = await returnsConnector.getCurrentDueReturns(excludeLicences);
@@ -39,4 +51,4 @@ const getReturnContacts = async excludeLicences => {
   return getCRMContacts(groupedReturns);
 };
 
-exports.getReturnNotificationContacts = getReturnContacts;
+exports.getReturnContacts = getReturnContacts;
