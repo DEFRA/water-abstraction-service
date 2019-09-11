@@ -22,7 +22,7 @@ const getPreferredContacts = contactList => {
   // Send letters to non-null NALD contacts
   return [
     contactList.getByRole(CONTACT_ROLE_LICENCE_HOLDER),
-    contactList.getByRole(CONTACT_ROLE_RETURNS_TO)
+    ...contactList.getAllByRole(CONTACT_ROLE_RETURNS_TO)
   ].filter(identity);
 };
 
@@ -50,4 +50,5 @@ const getRecipientList = returnContacts => {
   return Object.values(grouped).map(mapGroupedRecipient);
 };
 
+exports._getPreferredContacts = getPreferredContacts;
 exports.getRecipientList = getRecipientList;
