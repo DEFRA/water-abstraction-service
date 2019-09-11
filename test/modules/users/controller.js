@@ -26,8 +26,10 @@ const getUserResponse = () => ({
     user_name: 'test@example.com',
     reset_required: '0',
     last_login: '2019-01-24T17:07:54.000Z',
+    date_updated: '2019-02-23T17:07:54.000Z',
     role: { scopes: [ 'external' ] },
-    external_id: 'user-external-id'
+    external_id: 'user-external-id',
+    enabled: true
   }
 });
 
@@ -158,6 +160,8 @@ experiment('modules/users/controller', () => {
       expect(user).to.equal({
         isLocked: false,
         isInternal: false,
+        isDisabled: false,
+        dateDisabled: null,
         lastLogin: '2019-01-24T17:07:54.000Z',
         userName: 'test@example.com'
       });
@@ -175,6 +179,8 @@ experiment('modules/users/controller', () => {
       expect(user).to.equal({
         isLocked: true,
         isInternal: false,
+        isDisabled: false,
+        dateDisabled: null,
         lastLogin: '2019-01-24T17:07:54.000Z',
         userName: 'test@example.com'
       });
@@ -192,6 +198,30 @@ experiment('modules/users/controller', () => {
       expect(user).to.equal({
         isLocked: false,
         isInternal: true,
+        isDisabled: false,
+        dateDisabled: null,
+        lastLogin: '2019-01-24T17:07:54.000Z',
+        userName: 'test@example.com'
+      });
+
+      expect(response.data.companies).to.equal([]);
+    });
+
+    test('identifies a disabled account', async () => {
+      const request = { params: { id: 123 } };
+      const testResponse = getUserResponse();
+      testResponse.data.application = config.idm.application.internalUser;
+      testResponse.data.enabled = false;
+      idmConnector.usersClient.findOne.resolves(testResponse);
+
+      const response = await controller.getStatus(request);
+      const user = response.data.user;
+
+      expect(user).to.equal({
+        isLocked: false,
+        isInternal: true,
+        isDisabled: true,
+        dateDisabled: '2019-02-23T17:07:54.000Z',
         lastLogin: '2019-01-24T17:07:54.000Z',
         userName: 'test@example.com'
       });
@@ -333,6 +363,8 @@ experiment('modules/users/controller', () => {
       expect(user).to.equal({
         isLocked: false,
         isInternal: false,
+        isDisabled: false,
+        dateDisabled: null,
         lastLogin: '2019-01-24T17:07:54.000Z',
         userName: 'test@example.com'
       });
