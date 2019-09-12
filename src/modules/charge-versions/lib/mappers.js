@@ -16,6 +16,18 @@ const filterElementAgreements = (element, agreements) => {
   return agreements.filter(row => row.charge_element_id === elementId);
 };
 
+const eiucSourceMap = {
+  unsupported: 'other',
+  supported: 'other',
+  kielder: 'other',
+  tidal: 'tidal'
+};
+
+const mapElement = element => ({
+  ...mapRow(element),
+  eiucSource: eiucSourceMap[element.source]
+});
+
 /**
  * Maps a complete charge version with its version, elements and agreements
  * @param  {Object} version   - charge version
@@ -26,11 +38,12 @@ const filterElementAgreements = (element, agreements) => {
 const mapChargeVersion = (version, elements, agreements) => ({
   ...mapRow(version),
   chargeElements: elements.map(element => ({
-    ...mapRow(element),
+    ...mapElement(element),
     chargeAgreements: mapRows(filterElementAgreements(element, agreements))
   }))
 });
 
 exports.mapRow = mapRow;
 exports.mapRows = mapRows;
+exports.mapElement = mapElement;
 exports.mapChargeVersion = mapChargeVersion;
