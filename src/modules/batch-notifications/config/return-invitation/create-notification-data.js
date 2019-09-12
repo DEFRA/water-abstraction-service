@@ -81,4 +81,5 @@ const createNotificationData = (ev, contact, context) => {
   return actions[contact.role](ev, contact, context);
 };
 
+exports._getReturnPersonalisation = getReturnPersonalisation;
 exports.createNotificationData = createNotificationData;
