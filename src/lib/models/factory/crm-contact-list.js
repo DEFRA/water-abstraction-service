@@ -75,4 +75,5 @@ const createContacts = (data) => {
   return contacts;
 };
 
+exports._mapType = mapType;
 exports.createContacts = createContacts;

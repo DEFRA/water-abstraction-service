@@ -1,7 +1,7 @@
 const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 
-const { createContacts } = require('../../../../src/lib/models/factory/crm-contact-list');
+const { createContacts, _mapType } = require('../../../../src/lib/models/factory/crm-contact-list');
 const {
   CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO,
   CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_AGENT, CONTACT_ROLE_RETURNS_AGENT,
@@ -54,66 +54,105 @@ const createReturnsAgent = () => ({
   email: 'returns-agent@example.com'
 });
 
-experiment('CRMContactList factory', () => {
+experiment('CRMContactList', () => {
   let contacts, list;
 
-  beforeEach(async () => {
-    contacts = [
-      createLicenceHolder(),
-      createReturnsTo(),
-      createPrimaryUser(),
-      createAgent(),
-      createReturnsAgent()
-    ];
-    list = createContacts(contacts);
+  experiment('_mapType', () => {
+    test('the type is "organisation" when the contact has an entity ID and a role of "company"', async () => {
+      const result = _mapType({
+        entity_id: 'entity_1',
+        role: 'company'
+      });
+      expect(result).to.equal(CONTACT_TYPE_ORGANISATION);
+    });
+
+    test('the type is "person" when the contact has an entity ID and a role that is not "company"', async () => {
+      const result = _mapType({
+        entity_id: 'entity_1',
+        role: 'primary_user'
+      });
+      expect(result).to.equal(CONTACT_TYPE_PERSON);
+    });
+
+    test('the type is "organisation" when the contact has no entity ID and no initials/forename/salutation', async () => {
+      const result = _mapType({
+        name: 'Big Water Co',
+        initials: null,
+        forename: null,
+        salutation: null
+      });
+      expect(result).to.equal(CONTACT_TYPE_ORGANISATION);
+    });
+
+    test('the type is "person" when the contact has no entity ID and has initials/forename/salutation', async () => {
+      const result = _mapType({
+        name: 'Smith',
+        forename: 'Jasmine',
+        initials: 'J'
+      });
+      expect(result).to.equal(CONTACT_TYPE_PERSON);
+    });
   });
 
-  test('contacts have the correct role', async () => {
-    const roles = list.toArray().map(item => item.role);
-    expect(roles).to.equal([
-      CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO,
-      CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_AGENT, CONTACT_ROLE_RETURNS_AGENT
-    ]);
-  });
+  experiment('createContacts', () => {
+    beforeEach(async () => {
+      contacts = [
+        createLicenceHolder(),
+        createReturnsTo(),
+        createPrimaryUser(),
+        createAgent(),
+        createReturnsAgent()
+      ];
+      list = createContacts(contacts);
+    });
 
-  test('contacts have the correct type', async () => {
-    const roles = list.toArray().map(item => item.type);
-    expect(roles).to.equal([
-      CONTACT_TYPE_ORGANISATION, CONTACT_TYPE_PERSON,
-      CONTACT_TYPE_PERSON, CONTACT_TYPE_PERSON, CONTACT_TYPE_PERSON
-    ]);
-  });
+    test('contacts have the correct role', async () => {
+      const roles = list.toArray().map(item => item.role);
+      expect(roles).to.equal([
+        CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO,
+        CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_AGENT, CONTACT_ROLE_RETURNS_AGENT
+      ]);
+    });
 
-  test('address fields are correctly mapped', async () => {
-    const [contact] = list.toArray();
-    expect(contact.addressLine1).to.equal(contacts[0].address_1);
-    expect(contact.addressLine2).to.equal(contacts[0].address_2);
-    expect(contact.addressLine3).to.equal(contacts[0].address_3);
-    expect(contact.addressLine4).to.equal(contacts[0].address_4);
-    expect(contact.town).to.equal(contacts[0].town);
-    expect(contact.county).to.equal(contacts[0].county);
-    expect(contact.postcode).to.equal(contacts[0].postcode);
-    expect(contact.country).to.equal(contacts[0].country);
-  });
+    test('contacts have the correct type', async () => {
+      const roles = list.toArray().map(item => item.type);
+      expect(roles).to.equal([
+        CONTACT_TYPE_ORGANISATION, CONTACT_TYPE_PERSON,
+        CONTACT_TYPE_PERSON, CONTACT_TYPE_PERSON, CONTACT_TYPE_PERSON
+      ]);
+    });
 
-  test('name fields are correctly mapped for a person', async () => {
-    const [, contact] = list.toArray();
-    expect(contact.salutation).to.equal(contacts[1].salutation);
-    expect(contact.firstName).to.equal(contacts[1].forename);
-    expect(contact.name).to.equal(contacts[1].name);
-    expect(contact.initials).to.equal(contacts[1].initials);
-  });
+    test('address fields are correctly mapped', async () => {
+      const [contact] = list.toArray();
+      expect(contact.addressLine1).to.equal(contacts[0].address_1);
+      expect(contact.addressLine2).to.equal(contacts[0].address_2);
+      expect(contact.addressLine3).to.equal(contacts[0].address_3);
+      expect(contact.addressLine4).to.equal(contacts[0].address_4);
+      expect(contact.town).to.equal(contacts[0].town);
+      expect(contact.county).to.equal(contacts[0].county);
+      expect(contact.postcode).to.equal(contacts[0].postcode);
+      expect(contact.country).to.equal(contacts[0].country);
+    });
 
-  test('name fields are correctly mapped for an organisation', async () => {
-    const [contact] = list.toArray();
-    expect(contact.salutation).to.be.null();
-    expect(contact.firstName).to.be.null();
-    expect(contact.name).to.equal(contacts[0].name);
-    expect(contact.initials).to.be.null();
-  });
+    test('name fields are correctly mapped for a person', async () => {
+      const [, contact] = list.toArray();
+      expect(contact.salutation).to.equal(contacts[1].salutation);
+      expect(contact.firstName).to.equal(contacts[1].forename);
+      expect(contact.name).to.equal(contacts[1].name);
+      expect(contact.initials).to.equal(contacts[1].initials);
+    });
 
-  test('email address is correctly mapped for a service user', async () => {
-    const [,, contact] = list.toArray();
-    expect(contact.email).to.be.equal(contacts[2].email);
+    test('name fields are correctly mapped for an organisation', async () => {
+      const [contact] = list.toArray();
+      expect(contact.salutation).to.be.null();
+      expect(contact.firstName).to.be.null();
+      expect(contact.name).to.equal(contacts[0].name);
+      expect(contact.initials).to.be.null();
+    });
+
+    test('email address is correctly mapped for a service user', async () => {
+      const [,, contact] = list.toArray();
+      expect(contact.email).to.be.equal(contacts[2].email);
+    });
   });
 });
