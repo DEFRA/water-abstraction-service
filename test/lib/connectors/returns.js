@@ -64,7 +64,9 @@ experiment('connectors/returns', () => {
 
       const [filter] = returns.returns.findAll.lastCall.args;
       expect(filter).to.equal({
-        end_date: '2019-03-31',
+        end_date: { $lte: '2019-03-31' },
+        start_date: { $gte: '2018-04-01' },
+        due_date: '2019-04-28',
         status: 'due',
         regime: 'water',
         licence_type: 'abstraction',

@@ -4,6 +4,7 @@ const { last } = require('lodash');
 const helpers = require('@envage/water-abstraction-helpers');
 const urlJoin = require('url-join');
 const { URL } = require('url');
+const DATE_FORMAT = 'YYYY-MM-DD';
 
 const config = require('../../../config');
 
@@ -29,7 +30,7 @@ const getActiveReturns = (returnIds) => {
     },
     end_date: {
       $gte: '2018-10-31',
-      $lte: moment().format('YYYY-MM-DD')
+      $lte: moment().format(DATE_FORMAT)
     },
     'metadata->>isCurrent': 'true'
   };
@@ -48,10 +49,13 @@ const getActiveReturns = (returnIds) => {
  */
 const getCurrentDueReturns = async (excludeLicences, refDate) => {
   const cycles = helpers.returns.date.createReturnCycles(undefined, refDate);
-  const { endDate } = last(cycles);
+  const { startDate, endDate } = last(cycles);
+  const dueDate = moment(endDate).add(28, 'day').format(DATE_FORMAT);
 
   const filter = {
-    end_date: endDate,
+    start_date: { $gte: startDate },
+    end_date: { $lte: endDate },
+    due_date: dueDate,
     status: 'due',
     regime: 'water',
     licence_type: 'abstraction',
