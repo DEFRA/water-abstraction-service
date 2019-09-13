@@ -24,10 +24,20 @@ experiment('ContactList model', () => {
     expect(contacts.toArray()).to.equal([contactA]);
   });
 
-  test('find contact by role', async () => {
+  test('find first contact by role', async () => {
     const contacts = new ContactList();
     contacts.add(contactA);
     contacts.add(contactB);
     expect(contacts.getByRole('Licence holder')).to.equal(contactB);
+  });
+
+  test('filter contacts by role', async () => {
+    const contacts = new ContactList();
+    contacts.add(contactA);
+    contacts.add(contactB);
+    contacts.add(contactB);
+    const result = contacts.getAllByRole('Licence holder');
+    expect(result).to.be.an.array().length(2);
+    expect(result).to.equal([contactB, contactB]);
   });
 });

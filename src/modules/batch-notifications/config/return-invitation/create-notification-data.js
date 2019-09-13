@@ -1,48 +1,85 @@
 const uuidv4 = require('uuid/v4');
-const { uniq, get } = require('lodash');
-const { returns: { date: { getPeriodStart, getPeriodEnd } } } = require('@envage/water-abstraction-helpers');
+const moment = require('moment');
+const { last } = require('lodash');
+
+const helpers = require('@envage/water-abstraction-helpers');
 
 const { MESSAGE_STATUS_DRAFT } = require('../../lib/message-statuses');
 const notifyHelpers = require('../../lib/notify-helpers');
 const { readableDate } = require('../../../../lib/dates');
+const {
+  CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_RETURNS_AGENT,
+  CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO
+} = require('../../../../lib/models/contact');
 
-/**
- * Creates personalisation object to create notification - this includes the
- * address and other data needed by the template
- * @param  {Object} ev      - event object from water.events table
- * @param  {Object} ret     - return row loaded from returns service
- * @param  {Contact} contact - contact model
- * @return {Object}         personalisation data to send to Notify
- */
-const createNotificationPersonalisation = (ev, ret, contact) => {
-  const isSummer = get(ret, 'metadata.isSummer');
-
+const getReturnPersonalisation = refDate => {
+  const cycles = helpers.returns.date.createReturnCycles(undefined, refDate);
+  const { startDate, endDate } = last(cycles);
+  const returnDueDate = moment(endDate).add(28, 'day').format('YYYY-MM-DD');
   return {
-    ...notifyHelpers.mapContactAddress(contact),
-    date: readableDate(ret.due_date),
-    startDate: readableDate(getPeriodStart(ret.end_date, isSummer)),
-    endDate: readableDate(getPeriodEnd(ret.end_date, isSummer))
+    periodStartDate: readableDate(startDate),
+    periodEndDate: readableDate(endDate),
+    returnDueDate: readableDate(returnDueDate)
   };
 };
 
-const createNotificationData = (ev, group) => {
-  const { return: ret, contact } = group[0];
-  const licences = uniq(group.map(row => row.return.licence_ref));
-  return {
-    id: uuidv4(),
-    recipient: 'n/a',
-    message_type: 'letter',
-    message_ref: 'returns_invitation_letter',
-    personalisation: createNotificationPersonalisation(ev, ret, contact),
-    status: MESSAGE_STATUS_DRAFT,
-    licences,
-    event_id: ev.eventId,
-    metadata: {
-      return_id: ret.return_id
-    }
+const createNotification = (ev, contact, context) => ({
+  id: uuidv4(),
+  event_id: ev.eventId,
+  licences: context.licenceNumbers,
+  metadata: {
+    returnIds: context.returnIds
+  },
+  status: MESSAGE_STATUS_DRAFT
+});
+
+const createEmail = (ev, contact, context) => ({
+  ...createNotification(ev, contact, context),
+  message_type: 'email',
+  recipient: contact.email,
+  personalisation: getReturnPersonalisation()
+});
+
+const createLetter = (ev, contact, context) => ({
+  ...createNotification(ev, contact, context),
+  message_type: 'letter',
+  recipient: 'n/a',
+  personalisation: {
+    ...getReturnPersonalisation(),
+    name: contact.getFullName(),
+    ...notifyHelpers.mapContactAddress(contact)
+  }
+});
+
+const createPrimaryUserEmail = (ev, contact, context) => ({
+  message_ref: 'returns_invitation_primary_user_email',
+  ...createEmail(ev, contact, context)
+});
+
+const createReturnsAgentEmail = (ev, contact, context) => ({
+  message_ref: 'returns_invitation_returns_agent_email',
+  ...createEmail(ev, contact, context)
+});
+
+const createLicenceHolderLetter = (ev, contact, context) => ({
+  message_ref: 'returns_invitation_licence_holder_letter',
+  ...createLetter(ev, contact, context)
+});
+
+const createReturnsToLetter = (ev, contact, context) => ({
+  message_ref: 'returns_invitation_returns_to_letter',
+  ...createLetter(ev, contact, context)
+});
+
+const createNotificationData = (ev, contact, context) => {
+  const actions = {
+    [CONTACT_ROLE_PRIMARY_USER]: createPrimaryUserEmail,
+    [CONTACT_ROLE_RETURNS_AGENT]: createReturnsAgentEmail,
+    [CONTACT_ROLE_LICENCE_HOLDER]: createLicenceHolderLetter,
+    [CONTACT_ROLE_RETURNS_TO]: createReturnsToLetter
   };
+  return actions[contact.role](ev, contact, context);
 };
 
-module.exports = {
-  createNotificationData
-};
+exports._getReturnPersonalisation = getReturnPersonalisation;
+exports.createNotificationData = createNotificationData;
