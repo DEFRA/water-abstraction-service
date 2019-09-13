@@ -97,7 +97,12 @@ module.exports = {
       returns_invitation_letter: 'd31d05d3-66fe-4203-8626-22e63f9bccd6',
       email_change_verification_code_email: '1fd2e8f2-8cb9-4ed1-8fa6-691918c15430',
       email_change_email_in_use_email: 'adb02416-e9d3-4e05-a9cc-b24e25675672',
-      new_internal_user_email: '45b79d3a-39f2-44cf-b8f9-012c952dbd92'
+      new_internal_user_email: '45b79d3a-39f2-44cf-b8f9-012c952dbd92',
+
+      returns_invitation_primary_user_email: 'b18195f7-7b83-4251-a6eb-22124f1dff87',
+      returns_invitation_returns_agent_email: '24dade05-e020-4a85-a73f-64ccd0c4b9d8',
+      returns_invitation_licence_holder_letter: '1d719f8c-fa6e-4ea8-ba5d-38bc7cca9285',
+      returns_invitation_returns_to_letter: 'bceedf11-8dcc-4ec6-8570-11bb7d292f19'
     }
   },
 
