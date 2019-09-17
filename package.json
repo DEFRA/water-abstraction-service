@@ -41,12 +41,17 @@
     "sinon": "^7.3.2"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@envage/hapi-pg-rest-api": "^5.0.0",
     "@envage/water-abstraction-helpers": "^3.1.0",
     "@hapi/boom": "^7.4.2",
     "@hapi/hapi": "^18.3.1",
     "@hapi/joi": "^15.1.0",
     "@hapi/vision": "^5.5.2",
+=======
+    "@envage/hapi-pg-rest-api": "^4.1.1",
+    "@envage/water-abstraction-helpers": "^2.5.0",
+>>>>>>> 28a472ce73d4f054a5f6d1141131b2f2e8697b39
     "async-waterfall": "^0.1.5",
     "aws-sdk": "^2.457.0",
     "base64url": "^3.0.1",
