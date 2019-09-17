@@ -1,12 +1,11 @@
-const Lab = require('lab');
-const { afterEach, beforeEach, experiment, test } = exports.lab = Lab.script();
-const { expect } = require('code');
+const { experiment, test, afterEach, beforeEach } = exports.lab = require('@hapi/lab').script();
+const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 const moment = require('moment');
 moment.locale('en-gb');
 
-const {buildReturnsPacket, getLicenceFormats} = require('../../../src/modules/import/transform-returns');
+const { buildReturnsPacket, getLicenceFormats } = require('../../../src/modules/import/transform-returns');
 const queries = require('../../../src/modules/import/lib/nald-returns-queries.js');
 const helpers = require('../../../src/modules/import/lib/transform-returns-helpers.js');
 const dueDate = require('../../../src/modules/import/lib/due-date');

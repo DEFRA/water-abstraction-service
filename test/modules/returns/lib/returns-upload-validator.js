@@ -130,7 +130,8 @@ experiment('validateReturnlines', () => {
       }, {
         startDate: '2018-12-01',
         endDate: '2018-12-31'
-      }]
+      }],
+      metadata: {}
     };
     const result = returnsUploadValidator.validateReturnlines(ret);
     expect(result).to.equal(true);
@@ -144,7 +145,8 @@ experiment('validateReturnlines', () => {
       lines: [{
         startDate: '2019-01-01',
         endDate: '2019-01-31'
-      }]
+      }],
+      metadata: {}
     };
     const result = returnsUploadValidator.validateReturnlines(ret);
     expect(result).to.equal(false);

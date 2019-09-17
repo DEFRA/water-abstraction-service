@@ -3,7 +3,7 @@ const moment = require('moment');
 moment.locale('en-gb');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
-const { experiment, test, beforeEach, afterEach } = exports.lab = require('lab').script();
+const { experiment, test, afterEach, beforeEach } = exports.lab = require('@hapi/lab').script();
 
 const { mapReturnToModel, mapReturnToVersion, mapReturn } = require('../../../../src/modules/returns/lib/model-returns-mapper');
 const returnLines = require('@envage/water-abstraction-helpers').returns.lines;

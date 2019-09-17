@@ -14,7 +14,8 @@ const createReturn = data => ({
     entityId: 'd9c5412c-8993-49b9-9d20-b8f2208ccd8e',
     type: 'external'
   },
-  ...data
+  ...data,
+  metadata: {}
 });
 
 module.exports = {
