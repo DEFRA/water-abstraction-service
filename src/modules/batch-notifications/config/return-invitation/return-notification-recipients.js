@@ -14,10 +14,8 @@ const getPreferredContacts = contactList => {
   // Send emails to digital service users
   const primaryUser = contactList.getByRole(CONTACT_ROLE_PRIMARY_USER);
   if (primaryUser) {
-    return [
-      primaryUser,
-      ...contactList.getAllByRole(CONTACT_ROLE_RETURNS_AGENT)
-    ];
+    const returnsAgents = contactList.getAllByRole(CONTACT_ROLE_RETURNS_AGENT);
+    return returnsAgents.length ? returnsAgents : [primaryUser];
   }
   // Send letters to non-null NALD contacts
   return [
