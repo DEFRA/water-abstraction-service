@@ -9,9 +9,9 @@ const {
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const createNotificationData = require('../../../../../../src/modules/batch-notifications/config/return-invitation/create-notification-data');
-const Contact = require('../../../../../../src/lib/models/contact');
-const { MESSAGE_STATUS_DRAFT } = require('../../../../../../src/modules/batch-notifications/lib/message-statuses');
+const createNotificationData = require('../../../../../../../src/modules/batch-notifications/config/returns/lib/create-notification-data');
+const Contact = require('../../../../../../../src/lib/models/contact');
+const { MESSAGE_STATUS_DRAFT } = require('../../../../../../../src/modules/batch-notifications/lib/message-statuses');
 
 experiment('modules/batch-notifications/config/return-invitation/create-notification-data', () => {
   afterEach(async () => {
@@ -52,7 +52,8 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
 
     beforeEach(async () => {
       ev = {
-        eventId: 'event_1'
+        eventId: 'event_1',
+        subtype: 'returnInvitation'
       };
 
       context = {

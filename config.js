@@ -102,7 +102,12 @@ module.exports = {
       returns_invitation_primary_user_email: 'b18195f7-7b83-4251-a6eb-22124f1dff87',
       returns_invitation_returns_agent_email: '24dade05-e020-4a85-a73f-64ccd0c4b9d8',
       returns_invitation_licence_holder_letter: '1d719f8c-fa6e-4ea8-ba5d-38bc7cca9285',
-      returns_invitation_returns_to_letter: 'bceedf11-8dcc-4ec6-8570-11bb7d292f19'
+      returns_invitation_returns_to_letter: 'bceedf11-8dcc-4ec6-8570-11bb7d292f19',
+
+      returns_reminder_primary_user_email: '',
+      returns_reminder_returns_agent_email: '',
+      returns_reminder_licence_holder_letter: '',
+      returns_reminder_returns_to_letter: ''
     }
   },
 

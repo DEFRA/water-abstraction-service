@@ -9,11 +9,11 @@ const {
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const notificationContacts = require('../../../../../../src/modules/batch-notifications/config/return-invitation/return-notification-contacts');
-const documentsConnector = require('../../../../../../src/lib/connectors/crm/documents');
-const returnsConnector = require('../../../../../../src/lib/connectors/returns');
+const notificationContacts = require('../../../../../../../src/modules/batch-notifications/config/returns/lib/return-notification-contacts');
+const documentsConnector = require('../../../../../../../src/lib/connectors/crm/documents');
+const returnsConnector = require('../../../../../../../src/lib/connectors/returns');
 
-const ContactList = require('../../../../../../src/lib/models/contact-list');
+const ContactList = require('../../../../../../../src/lib/models/contact-list');
 
 experiment('modules/batch-notifications/config/return-invitation/return-notification-contacts', () => {
   afterEach(async () => {
