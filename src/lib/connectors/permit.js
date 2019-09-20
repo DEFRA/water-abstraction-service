@@ -8,8 +8,6 @@ const factory = require('./service-version-factory');
 
 const licences = apiClientFactory.create(`${config.services.permits}licence`);
 
-const expiringLicences = apiClientFactory.create(`${config.services.permits}expiring_licences?filter={licence_type_id:${config.licence.typeId},licence_regime_id:${config.licence.regimeId}}`);
-
 const getLicenceNumbersFilter = licenceNumbers => ({
   licence_regime_id: regimeId,
   licence_type_id: typeId,
@@ -77,7 +75,6 @@ licences.getWaterLicence = async (licenceNumber) => {
 };
 
 exports.licences = licences;
-exports.expiringLicences = expiringLicences;
 exports.getLicenceRegionCodes = getLicenceRegionCodes;
 exports.getLicenceEndDates = getLicenceEndDates;
 exports.getServiceVersion = factory.create(config.services.permits);
