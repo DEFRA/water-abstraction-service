@@ -75,21 +75,19 @@ experiment('modules/batch-notifications/config/return-invitation/return-notifica
       expect(result[0].role).to.equal(Contact.CONTACT_ROLE_PRIMARY_USER);
     });
 
-    test('when there is a primary user and returns agent, send to both', async () => {
+    test('when there is a primary user and returns agent, send to returns agent only', async () => {
       const list = new ContactList([licenceHolder, returnsTo, primaryUser, agent, returnsAgent]);
       const result = notificationRecipients._getPreferredContacts(list);
-      expect(result.length).to.equal(2);
-      expect(result[0].role).to.equal(Contact.CONTACT_ROLE_PRIMARY_USER);
-      expect(result[1].role).to.equal(Contact.CONTACT_ROLE_RETURNS_AGENT);
+      expect(result.length).to.equal(1);
+      expect(result[0].role).to.equal(Contact.CONTACT_ROLE_RETURNS_AGENT);
     });
 
-    test('when there is a primary user and multiple returns agents, send to all', async () => {
+    test('when there is a primary user and multiple returns agents, send to all returns agents', async () => {
       const list = new ContactList([licenceHolder, returnsTo, primaryUser, agent, returnsAgent, returnsAgent]);
       const result = notificationRecipients._getPreferredContacts(list);
-      expect(result.length).to.equal(3);
-      expect(result[0].role).to.equal(Contact.CONTACT_ROLE_PRIMARY_USER);
+      expect(result.length).to.equal(2);
+      expect(result[0].role).to.equal(Contact.CONTACT_ROLE_RETURNS_AGENT);
       expect(result[1].role).to.equal(Contact.CONTACT_ROLE_RETURNS_AGENT);
-      expect(result[2].role).to.equal(Contact.CONTACT_ROLE_RETURNS_AGENT);
     });
   });
 
@@ -158,17 +156,17 @@ experiment('modules/batch-notifications/config/return-invitation/return-notifica
     });
 
     test('primary@example.com gets one message for their primary user role', async () => {
-      expect(result[2].licenceNumbers).to.equal(['licence_3', 'licence_4']);
-      expect(result[2].contact.role).to.equal(Contact.CONTACT_ROLE_PRIMARY_USER);
-      expect(result[2].contact.email).to.equal('primary@example.com');
-      expect(result[2].returnIds).to.equal(['return_4', 'return_5']);
+      expect(result[3].licenceNumbers).to.equal(['licence_4']);
+      expect(result[3].contact.role).to.equal(Contact.CONTACT_ROLE_PRIMARY_USER);
+      expect(result[3].contact.email).to.equal('primary@example.com');
+      expect(result[3].returnIds).to.equal(['return_5']);
     });
 
     test('returnsagent@example.com gets one message for their returns agent role', async () => {
-      expect(result[3].licenceNumbers).to.equal(['licence_3']);
-      expect(result[3].contact.role).to.equal(Contact.CONTACT_ROLE_RETURNS_AGENT);
-      expect(result[3].contact.email).to.equal('returnsagent@example.com');
-      expect(result[3].returnIds).to.equal(['return_4']);
+      expect(result[2].licenceNumbers).to.equal(['licence_3']);
+      expect(result[2].contact.role).to.equal(Contact.CONTACT_ROLE_RETURNS_AGENT);
+      expect(result[2].contact.email).to.equal('returnsagent@example.com');
+      expect(result[2].returnIds).to.equal(['return_4']);
     });
   });
 });
