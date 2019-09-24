@@ -11,8 +11,7 @@ module.exports = [{
   messageType: 'returnInvitation',
   schema,
   getRecipients
-},
-module.exports = {
+}, {
   prefix: 'RREM-',
   name: 'Returns: reminder',
   messageType: 'returnReminder',
