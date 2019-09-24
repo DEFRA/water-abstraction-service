@@ -1,4 +1,3 @@
 module.exports = [
-  require('./return-reminder'),
-  require('./return-invitation')
+  ...require('./returns')
 ];

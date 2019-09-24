@@ -1,25 +1,83 @@
 const { expect } = require('@hapi/code');
 const {
-  beforeEach,
   experiment,
-  test,
-  afterEach
+  test
 } = exports.lab = require('@hapi/lab').script();
 
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
 const Joi = require('@hapi/joi');
 
-const config = require('../../../../../../src/modules/batch-notifications/config/return-invitation');
-const scheduledNotifications = require('../../../../../../src/controllers/notifications');
-const eventHelpers = require('../../../../../../src/modules/batch-notifications/lib/event-helpers');
+const [invitationConfig, reminderConfig] =
+  require('../../../../../../src/modules/batch-notifications/config/returns/index');
+const { getRecipients } =
+  require('../../../../../../src/modules/batch-notifications/config/returns/lib/get-recipients');
 
-const Contact = require('../../../../../../src/lib/models/contact');
+experiment('returns notifications config', () => {
+  experiment('return invitation config', () => {
+    test('has the correct prefix', async () => {
+      expect(invitationConfig.prefix).to.equal('RINV-');
+    });
 
-const notificationContacts = require('../../../../../../src/modules/batch-notifications/config/return-invitation/return-notification-contacts');
-const notificationRecipients = require('../../../../../../src/modules/batch-notifications/config/return-invitation/return-notification-recipients');
-const { logger } = require('../../../../../../src/logger');
+    test('has the correct name', async () => {
+      expect(invitationConfig.name).to.equal('Returns: invitation');
+    });
 
+    test('has the correct message type', async () => {
+      expect(invitationConfig.messageType).to.equal('returnInvitation');
+    });
+
+    test('uses the correct function to get recipients', async () => {
+      expect(invitationConfig.getRecipients).to.equal(getRecipients);
+    });
+
+    experiment('schema', () => {
+      test('can be an empty object', async () => {
+        const { error } = Joi.validate({}, invitationConfig.schema);
+        expect(error).to.equal(null);
+      });
+
+      test('can contain an array of licence numbers to exclude from the notification', async () => {
+        const { error } = Joi.validate({
+          excludeLicences: ['01/123', '04/567']
+        }, invitationConfig.schema);
+        expect(error).to.equal(null);
+      });
+    });
+  });
+
+  experiment('return reminder config', () => {
+    test('has the correct prefix', async () => {
+      expect(reminderConfig.prefix).to.equal('RREM-');
+    });
+
+    test('has the correct name', async () => {
+      expect(reminderConfig.name).to.equal('Returns: reminder');
+    });
+
+    test('has the correct message type', async () => {
+      expect(reminderConfig.messageType).to.equal('returnReminder');
+    });
+
+    test('uses the correct function to get recipients', async () => {
+      expect(reminderConfig.getRecipients).to.equal(getRecipients);
+    });
+
+    experiment('schema', () => {
+      test('can be an empty object', async () => {
+        const { error } = Joi.validate({}, reminderConfig.schema);
+        expect(error).to.equal(null);
+      });
+
+      test('can contain an array of licence numbers to exclude from the notification', async () => {
+        const { error } = Joi.validate({
+          excludeLicences: ['01/123', '04/567']
+        }, reminderConfig.schema);
+        expect(error).to.equal(null);
+      });
+    });
+  });
+});
+
+/*
 experiment('return invitation config', () => {
   test('has the correct prefix', async () => {
     expect(config.prefix).to.equal('RINV-');
@@ -136,3 +194,4 @@ experiment('return invitation config', () => {
     });
   });
 });
+*/

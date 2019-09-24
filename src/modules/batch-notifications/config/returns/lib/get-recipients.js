@@ -1,20 +1,13 @@
-const Joi = require('@hapi/joi');
+const { get, uniq } = require('lodash');
 
-const { get, uniq } =
-  require('lodash');
-
-const { stringifyValues } = require('../../../../lib/stringify-values');
+const { stringifyValues } = require('../../../../../lib/stringify-values');
 
 const { createNotificationData } = require('./create-notification-data');
-const scheduledNotifications = require('../../../../controllers/notifications');
-const { logger } = require('../../../../logger');
-const eventHelpers = require('../../lib/event-helpers');
+const scheduledNotifications = require('../../../../../controllers/notifications');
+const { logger } = require('../../../../../logger');
+const eventHelpers = require('../../../lib/event-helpers');
 const notificationContacts = require('./return-notification-contacts');
 const notificationRecipients = require('./return-notification-recipients');
-
-const schema = {
-  excludeLicences: Joi.array().items(Joi.string().trim())
-};
 
 /**
  * Gets array of licences to exclude from event metadata
@@ -56,7 +49,8 @@ const getRecipients = async (data) => {
       recipientCount++;
       licenceNumbers.push(...context.licenceNumbers);
     } else {
-      logger.error(`Return invitation: no contact found for ${context.returnIds.join(', ')}`);
+      const name = get(data, 'ev.metadata.name', 'Returns notification');
+      logger.error(`${name} - no contact found for ${context.returnIds.join(', ')}`);
     }
   }
 
@@ -64,10 +58,4 @@ const getRecipients = async (data) => {
   return eventHelpers.markAsProcessed(data.ev.eventId, licenceNumbers, recipientCount);
 };
 
-module.exports = {
-  prefix: 'RINV-',
-  name: 'Returns: invitation',
-  messageType: 'returnInvitation',
-  schema,
-  getRecipients
-};
+exports.getRecipients = getRecipients;
