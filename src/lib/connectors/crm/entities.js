@@ -48,13 +48,18 @@ const getEntity = async (name, type = 'individual') => {
  *
  * @param {String} name The name or email address of the entity to create
  * @param {String} type The entity type (individual|company|regime)
+ * @param {String} source The source of the user (used in acceptance tests data creation)
  */
-const createEntity = async (name, type = 'individual') => {
+const createEntity = async (name, type = 'individual', source) => {
   const url = `${config.services.crm}/entity`;
   const body = {
     entity_nm: name,
     entity_type: type
   };
+
+  if (source) {
+    body.source = source;
+  }
 
   const response = await serviceRequest.post(url, { body });
   return get(response, 'data');

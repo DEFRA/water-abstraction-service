@@ -1,5 +1,6 @@
 require('dotenv').config();
 const testMode = parseInt(process.env.TEST_MODE) === 1;
+const isProduction = (process.env.NODE_ENV === 'production');
 
 module.exports = {
 
@@ -117,5 +118,7 @@ module.exports = {
     permits: process.env.PERMIT_URI || 'http://127.0.0.1:8004/API/1.0/',
     returns: process.env.RETURNS_URI || 'http://127.0.0.1:8006/returns/1.0',
     import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0'
-  }
+  },
+
+  isProduction
 };

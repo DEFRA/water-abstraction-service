@@ -115,6 +115,16 @@ experiment('lib/connectors/crm/entities', () => {
       });
     });
 
+    test('will include the source if provied', async () => {
+      await entitiesConnector.createEntity('test@example.com', 'company', 'test-source');
+      const [, options] = serviceRequest.post.lastCall.args;
+      expect(options.body).to.equal({
+        entity_nm: 'test@example.com',
+        entity_type: 'company',
+        source: 'test-source'
+      });
+    });
+
     test('returns the created entity', async () => {
       serviceRequest.post.resolves({
         data: {
