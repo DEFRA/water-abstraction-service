@@ -5,6 +5,8 @@ const { get } = require('lodash');
 const { licence: { regimeId, typeId } } = config;
 
 const factory = require('./service-version-factory');
+const urlJoin = require('url-join');
+const helpers = require('@envage/water-abstraction-helpers');
 
 const licences = apiClientFactory.create(`${config.services.permits}licence`);
 
@@ -74,7 +76,16 @@ licences.getWaterLicence = async (licenceNumber) => {
   return get(licenceResponse, 'data[0]');
 };
 
+const deleteAcceptanceTestData = () => {
+  const url = urlJoin(config.services.permits, 'acceptance-tests');
+  return helpers.serviceRequest.delete(url);
+};
+
 exports.licences = licences;
 exports.getLicenceRegionCodes = getLicenceRegionCodes;
 exports.getLicenceEndDates = getLicenceEndDates;
 exports.getServiceVersion = factory.create(config.services.permits);
+
+if (config.isAcceptanceTestTarget) {
+  exports.deleteAcceptanceTestData = deleteAcceptanceTestData;
+}
