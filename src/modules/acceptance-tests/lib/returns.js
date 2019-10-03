@@ -53,7 +53,7 @@ const createReturnMetadata = (isSummer) => {
     ],
     version: 1,
     isSummer,
-    isUpload: false,
+    isUpload: true,
     purposes: [
       {
         alias: 'Evaporative Cooling',
