@@ -1,5 +1,5 @@
 # Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
-version: v1.10.1
+version: v1.13.5
 # ignores vulnerabilities until expiry date; change duration by modifying expiry date
 ignore:
   'npm:hoek:20180212':
@@ -262,4 +262,12 @@ ignore:
     - notifications-node-client > request-promise > request-promise-core > lodash:
         reason: No update available
         expires: '2018-03-23T15:05:52.966Z'
-patch: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-HTTPSPROXYAGENT-469131:
+    - proxy-agent > https-proxy-agent:
+        patched: '2019-10-04T06:56:24.171Z'
+    - puppeteer > https-proxy-agent:
+        patched: '2019-10-04T06:56:24.171Z'
+    - proxy-agent > pac-proxy-agent > https-proxy-agent:
+        patched: '2019-10-04T06:56:24.171Z'
