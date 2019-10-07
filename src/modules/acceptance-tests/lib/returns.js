@@ -67,12 +67,12 @@ const createReturnMetadata = (isSummer) => {
   };
 };
 
-const createDueReturn = async (licenceRef) => {
+const createDueReturn = async (licenceRef, frequency = 'day') => {
   const cycles = waterHelpers.returns.date.createReturnCycles();
   const cycle = cycles.pop();
 
   const metadata = createReturnMetadata(cycle.isSummer);
-  const row = createReturnRow(licenceRef, cycle, metadata);
+  const row = createReturnRow(licenceRef, cycle, metadata, frequency);
 
   const result = await returnsConnector.returns.create(row);
   console.log(result);

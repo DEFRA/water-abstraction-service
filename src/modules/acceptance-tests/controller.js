@@ -5,7 +5,12 @@ const users = require('./lib/users');
 const documents = require('./lib/documents');
 const events = require('./lib/events');
 const sessions = require('./lib/sessions');
-const { TEST_EXTERNAL_USER_EMAIL, LICENCE_REF_CURRENT } = require('./lib/constants');
+const {
+  TEST_EXTERNAL_USER_EMAIL,
+  LICENCE_REF_CURRENT_DAILY,
+  LICENCE_REF_CURRENT_WEEKLY,
+  LICENCE_REF_CURRENT_MONTHLY
+} = require('./lib/constants');
 
 const createExternalPrimaryUser = async company => {
   const individual = await entities.createIndividual(TEST_EXTERNAL_USER_EMAIL);
@@ -18,17 +23,55 @@ const createExternalPrimaryUser = async company => {
   };
 };
 
-const createCurrentLicenceWithReturn = async (company, externalPrimaryUser) => {
-  const permit = await permits.createCurrentLicence(LICENCE_REF_CURRENT);
-  const document = await documents.create(company.entity_id, permit.licence_id, LICENCE_REF_CURRENT);
-  const licenceReturn = await returns.createDueReturn(LICENCE_REF_CURRENT);
+const createPermits = () => Promise.all([
+  permits.createCurrentLicence(LICENCE_REF_CURRENT_DAILY),
+  permits.createCurrentLicence(LICENCE_REF_CURRENT_WEEKLY),
+  permits.createCurrentLicence(LICENCE_REF_CURRENT_MONTHLY)
+]);
+
+const createDocuments = (company, dailyPermit, weeklyPermit, monthlyPermit) => {
+  return Promise.all([
+    documents.create(company.entity_id, dailyPermit.licence_id, LICENCE_REF_CURRENT_DAILY),
+    documents.create(company.entity_id, weeklyPermit.licence_id, LICENCE_REF_CURRENT_WEEKLY),
+    documents.create(company.entity_id, monthlyPermit.licence_id, LICENCE_REF_CURRENT_MONTHLY)
+  ]);
+};
+
+const createReturns = () => Promise.all([
+  returns.createDueReturn(LICENCE_REF_CURRENT_DAILY, 'day'),
+  returns.createDueReturn(LICENCE_REF_CURRENT_WEEKLY, 'week'),
+  returns.createDueReturn(LICENCE_REF_CURRENT_MONTHLY, 'month')
+]);
+
+const createCurrentLicencesWithReturns = async (company, externalPrimaryUser) => {
+  const [dailyPermit, weeklyPermit, monthlyPermit] = await createPermits();
+
+  const [
+    dailyDocument,
+    weeklyDocument,
+    monthlyDocument
+  ] = await createDocuments(company, dailyPermit, weeklyPermit, monthlyPermit);
+
+  const [dailyReturn, weeklyReturn, monthlyReturn] = await createReturns();
 
   return {
-    permit,
     company,
     externalPrimaryUser,
-    document,
-    return: licenceReturn
+    permits: {
+      daily: dailyPermit,
+      weekly: weeklyPermit,
+      monthly: monthlyPermit
+    },
+    document: {
+      daily: dailyDocument,
+      weekly: weeklyDocument,
+      monthly: monthlyDocument
+    },
+    returns: {
+      daily: dailyReturn,
+      weekly: weeklyReturn,
+      monthly: monthlyReturn
+    }
   };
 };
 
@@ -38,10 +81,10 @@ const postSetup = async () => {
   try {
     const company = await entities.createCompany();
     const externalPrimaryUser = await createExternalPrimaryUser(company);
-    const currentLicenceWithReturn = await createCurrentLicenceWithReturn(company, externalPrimaryUser);
+    const currentLicencesWithReturns = await createCurrentLicencesWithReturns(company, externalPrimaryUser);
 
     return {
-      currentLicenceWithReturn
+      currentLicencesWithReturns
     };
   } catch (err) {
     return err;
