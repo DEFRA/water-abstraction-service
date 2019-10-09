@@ -1,4 +1,3 @@
-const { find } = require('lodash');
 const deepMap = require('deep-map');
 
 /**
@@ -6,31 +5,16 @@ const deepMap = require('deep-map');
  * @param {Object} contactAddress - party/role address
  * @return {Object} reformatted address
  */
-const addressFormatter = (contactAddress) => {
-  const {
-    ADDR_LINE1,
-    ADDR_LINE2,
-    ADDR_LINE3
-  } = contactAddress;
-  const {
-    ADDR_LINE4,
-    TOWN,
-    COUNTY,
-    POSTCODE,
-    COUNTRY
-  } = contactAddress;
-
-  return {
-    addressLine1: ADDR_LINE1,
-    addressLine2: ADDR_LINE2,
-    addressLine3: ADDR_LINE3,
-    addressLine4: ADDR_LINE4,
-    town: TOWN,
-    county: COUNTY,
-    postcode: POSTCODE,
-    country: COUNTRY
-  };
-};
+const addressFormatter = (contactAddress) => ({
+  addressLine1: contactAddress.ADDR_LINE1,
+  addressLine2: contactAddress.ADDR_LINE2,
+  addressLine3: contactAddress.ADDR_LINE3,
+  addressLine4: contactAddress.ADDR_LINE4,
+  town: contactAddress.TOWN,
+  county: contactAddress.COUNTY,
+  postcode: contactAddress.POSTCODE,
+  country: contactAddress.COUNTRY
+});
 
 /**
  * Formats a party name - whether person or organisation
@@ -69,13 +53,14 @@ const crmNameFormatter = (party) => {
   };
 };
 
+const isCurrentVersion = version => version.STATUS === 'CURR';
+
 /**
+ * From an array of version, finds a versiont that has a status of CURR
  * @param {Array} versions
- * @return {Array}
+ * @return {Object | undefined} The current version or undeined if not current version
  */
-const findCurrent = (versions) => {
-  return find(versions, version => version.STATUS === 'CURR');
-};
+const findCurrent = (versions = []) => versions.find(isCurrentVersion);
 
 /**
  * Transform string 'null' values to real null
@@ -92,10 +77,8 @@ const transformNull = (data) => {
   });
 };
 
-module.exports = {
-  addressFormatter,
-  nameFormatter,
-  crmNameFormatter,
-  findCurrent,
-  transformNull
-};
+exports.addressFormatter = addressFormatter;
+exports.nameFormatter = nameFormatter;
+exports.crmNameFormatter = crmNameFormatter;
+exports.findCurrent = findCurrent;
+exports.transformNull = transformNull;

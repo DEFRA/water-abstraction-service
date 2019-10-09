@@ -10,6 +10,7 @@ const rp = require('request-promise-native').defaults({
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
 const urlJoin = require('url-join');
+const { isArray } = require('lodash');
 
 // Create API client
 const client = new APIClient(rp, {
@@ -110,6 +111,22 @@ client.getDocumentContacts = function (filter = {}) {
     json: true,
     qs: { filter: JSON.stringify(filter) }
   });
+};
+
+/**
+ * Get all CRM contacts for the given licence number(s)
+ * Strips the response envelope
+ * @param  {String|Array} licenceNumber(s)
+ * @return {Promise<Array>} array of document records decorated with contacts
+ */
+client.getLicenceContacts = async licenceNumber => {
+  const licenceNumbers = isArray(licenceNumber) ? licenceNumber : [licenceNumber];
+  const filter = {
+    regime_entity_id: config.crm.waterRegime,
+    system_external_id: { $in: licenceNumbers }
+  };
+  const result = await client.getDocumentContacts(filter);
+  return result.data;
 };
 
 client.getDocumentUsers = async documentId => {

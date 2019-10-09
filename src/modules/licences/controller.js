@@ -2,6 +2,7 @@ const moment = require('moment');
 const Boom = require('@hapi/boom');
 const { get, isObject } = require('lodash');
 const documentsClient = require('../../lib/connectors/crm/documents');
+const crmEntities = require('../../lib/connectors/crm/entities');
 const { usersClient } = require('../../lib/connectors/idm');
 const permitClient = require('../../lib/connectors/permit');
 const { logger } = require('../../logger');
@@ -273,9 +274,28 @@ const getLicenceCommunicationsByDocumentId = async (request, h) => {
   }
 };
 
+const getLicenceCompanyByDocumentId = async (request, h) => {
+  const { documentId } = request.params;
+  try {
+    const document = await getDocumentHeader(documentId);
+    const { data: company } = await crmEntities.getEntityCompanies(document.company_entity_id);
+    return {
+      data: {
+        entityId: document.company_entity_id,
+        companyName: company.entityName,
+        licenceNumber: document.system_external_id
+      },
+      error: null
+    };
+  } catch (err) {
+    return handleUnexpectedError(err, documentId);
+  }
+};
+
 exports.getLicenceByDocumentId = getLicenceByDocumentId;
 exports.getLicenceConditionsByDocumentId = getLicenceConditionsByDocumentId;
 exports.getLicencePointsByDocumentId = getLicencePointsByDocumentId;
 exports.getLicenceUsersByDocumentId = getLicenceUsersByDocumentId;
 exports.getLicenceSummaryByDocumentId = getLicenceSummaryByDocumentId;
 exports.getLicenceCommunicationsByDocumentId = getLicenceCommunicationsByDocumentId;
+exports.getLicenceCompanyByDocumentId = getLicenceCompanyByDocumentId;

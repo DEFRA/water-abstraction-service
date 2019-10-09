@@ -2,36 +2,21 @@
  * Transforms NALD data into VML native format
  * @module lib/licence-transformer/nald-transformer
  */
-const deepMap = require('deep-map');
 const { find, uniqBy } = require('lodash');
 const BaseTransformer = require('./base-transformer');
 const LicenceTitleLoader = require('./licence-title-loader');
 const licenceTitleLoader = new LicenceTitleLoader();
 const { logger } = require('../../logger');
 const naldHelpers = require('./nald-helpers');
+const naldFunctional = require('./nald-functional');
 
 class CSVTransformer extends BaseTransformer {
-  /**
-   * Transform string 'null' values to real null
-   * @param {Object} data
-   * @return {Object}
-   */
-  transformNull (data) {
-    return deepMap(data, (val) => {
-      // Convert string null to real null
-      if (typeof (val) === 'string' && (val === 'null' || val === '')) {
-        return null;
-      }
-      return val;
-    });
-  }
-
   /**
    * Load data into the transformer
    * @param {Object} data - data loaded from NALD
    */
   async load (data) {
-    data = this.transformNull(data);
+    data = naldFunctional.transformNull(data);
 
     this.data = {
       licenceNumber: data.id,
