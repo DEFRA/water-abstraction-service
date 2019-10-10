@@ -48,7 +48,7 @@
     "@hapi/joi": "^15.1.0",
     "@hapi/vision": "^5.5.2",
     "async-waterfall": "^0.1.5",
-    "aws-sdk": "^2.457.0",
+    "aws-sdk": "^2.546.0",
     "base64url": "^3.0.1",
     "blipp": "^4.0.0",
     "camelcase": "^5.3.1",
