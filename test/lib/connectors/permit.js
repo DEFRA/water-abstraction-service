@@ -11,13 +11,15 @@ const sandbox = sinon.createSandbox();
 const permit = require('../../../src/lib/connectors/permit');
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 
-const { licence: { regimeId, typeId } } = require('../../../config');
+const config = require('../../../config');
 
 experiment('connectors/permit', () => {
   beforeEach(async () => {
     sandbox.stub(serviceRequest, 'get').resolves({
       version: '0.0.1'
     });
+
+    sandbox.stub(serviceRequest, 'delete').resolves();
   });
 
   afterEach(async () => {
@@ -90,10 +92,6 @@ experiment('connectors/permit', () => {
       ]);
     });
 
-    afterEach(async () => {
-      sandbox.restore();
-    });
-
     test('calls the permit API with correct arguments', async () => {
       await permit.getLicenceEndDates(licenceNumbers);
 
@@ -143,15 +141,11 @@ experiment('connectors/permit', () => {
       });
     });
 
-    afterEach(async () => {
-      sandbox.restore();
-    });
-
     test('should find licence with correct regime, type and ID', async () => {
       await permit.licences.getWaterLicence(licenceNumber);
       const [ filter ] = permit.licences.findMany.lastCall.args;
-      expect(filter.licence_regime_id).to.equal(regimeId);
-      expect(filter.licence_type_id).to.equal(typeId);
+      expect(filter.licence_regime_id).to.equal(config.licence.regimeId);
+      expect(filter.licence_type_id).to.equal(config.licence.typeId);
       expect(filter.licence_ref).to.equal(licenceNumber);
     });
 
@@ -166,6 +160,15 @@ experiment('connectors/permit', () => {
       await permit.getServiceVersion();
       const [url] = serviceRequest.get.lastCall.args;
       expect(url).to.endWith('/status');
+    });
+  });
+
+  experiment('.deleteAcceptanceTestData', () => {
+    test('makes a delete request to the expected url', async () => {
+      await permit.deleteAcceptanceTestData();
+
+      const [url] = serviceRequest.delete.lastCall.args;
+      expect(url).to.equal(`${config.services.permits}acceptance-tests`);
     });
   });
 });

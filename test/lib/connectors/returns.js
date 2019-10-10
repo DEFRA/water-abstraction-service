@@ -11,10 +11,15 @@ const helpers = require('@envage/water-abstraction-helpers');
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const config = require('../../../config');
 
 const returns = require('../../../src/lib/connectors/returns');
 
 experiment('connectors/returns', () => {
+  beforeEach(async () => {
+    sandbox.stub(helpers.serviceRequest, 'delete').resolves();
+  });
+
   afterEach(async () => {
     sandbox.restore();
   });
@@ -109,6 +114,15 @@ experiment('connectors/returns', () => {
     test('does not make the request for no return ids', async () => {
       await returns.voidReturns('test-licence-id', []);
       expect(helpers.serviceRequest.patch.called).to.be.false();
+    });
+  });
+
+  experiment('.deleteAcceptanceTestData', () => {
+    test('makes a delete request to the expected url', async () => {
+      await returns.deleteAcceptanceTestData();
+
+      const [url] = helpers.serviceRequest.delete.lastCall.args;
+      expect(url).to.equal(`${config.services.returns}/acceptance-tests`);
     });
   });
 });

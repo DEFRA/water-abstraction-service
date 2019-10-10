@@ -11,6 +11,7 @@ experiment('lib/connectors/crm/entities', () => {
   beforeEach(async () => {
     sandbox.stub(serviceRequest, 'get').resolves({});
     sandbox.stub(serviceRequest, 'post').resolves({});
+    sandbox.stub(serviceRequest, 'delete').resolves({});
   });
 
   afterEach(async () => {
@@ -112,6 +113,16 @@ experiment('lib/connectors/crm/entities', () => {
       expect(options.body).to.equal({
         entity_nm: 'test@example.com',
         entity_type: 'company'
+      });
+    });
+
+    test('will include the source if provied', async () => {
+      await entitiesConnector.createEntity('test@example.com', 'company', 'test-source');
+      const [, options] = serviceRequest.post.lastCall.args;
+      expect(options.body).to.equal({
+        entity_nm: 'test@example.com',
+        entity_type: 'company',
+        source: 'test-source'
       });
     });
 
@@ -265,6 +276,15 @@ experiment('lib/connectors/crm/entities', () => {
         expect(entity.entity_nm).to.equal('test@example.com');
         expect(entity.entity_type).to.equal('individual');
       });
+    });
+  });
+
+  experiment('.deleteAcceptanceTestData', () => {
+    test('makes a delete request to the expected url', async () => {
+      await entitiesConnector.deleteAcceptanceTestData();
+
+      const [url] = serviceRequest.delete.lastCall.args;
+      expect(url).to.equal(`${config.services.crm}/acceptance-tests/entities`);
     });
   });
 });

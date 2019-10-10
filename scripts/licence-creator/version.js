@@ -39,6 +39,10 @@ class Version {
     return this;
   }
 
+  setStartDate (date) {
+    this.startDate = date;
+  }
+
   export () {
     return {
       AABL_ID: this.licence.id,

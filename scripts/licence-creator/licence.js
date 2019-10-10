@@ -26,6 +26,14 @@ class Licence {
     return this;
   }
 
+  setStartDate (date) {
+    this.startDate = date;
+  }
+
+  setExpiryDate (date) {
+    this.expiryDate = date;
+  }
+
   addRole (role) {
     this.roles.push(role);
     role.setLicence(this);
