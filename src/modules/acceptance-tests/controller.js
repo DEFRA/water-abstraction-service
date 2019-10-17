@@ -75,7 +75,20 @@ const createCurrentLicencesWithReturns = async (company, externalPrimaryUser) =>
   };
 };
 
-const postSetup = async () => {
+const createInternalUsers = async () => {
+  const groups = ['wirs', 'nps', 'environment_officer', 'billing_and_data', 'psc'];
+
+  const createdUsers = await Promise.all(
+    groups.map(group => {
+      const email = `acceptance-test.internal.${group}@defra.gov.uk`;
+      return users.createInternalUser(email, group);
+    })
+  );
+
+  return createdUsers.map(response => response.data);
+};
+
+const postSetup = async (request, h) => {
   await postTearDown();
 
   try {
@@ -83,9 +96,13 @@ const postSetup = async () => {
     const externalPrimaryUser = await createExternalPrimaryUser(company);
     const currentLicencesWithReturns = await createCurrentLicencesWithReturns(company, externalPrimaryUser);
 
-    return {
-      currentLicencesWithReturns
-    };
+    const responseData = { currentLicencesWithReturns };
+
+    if (request.payload.includeInternalUsers) {
+      responseData.internalUsers = await createInternalUsers();
+    }
+
+    return responseData;
   } catch (err) {
     return err;
   }

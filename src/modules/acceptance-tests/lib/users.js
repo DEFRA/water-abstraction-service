@@ -1,4 +1,5 @@
 const { usersClient } = require('../../../lib/connectors/idm');
+const { setInternalUserRoles } = require('../../../lib/connectors/idm/user-roles');
 const acceptanceTestsConnector = require('../../../lib/connectors/idm/acceptance-tests');
 
 const {
@@ -30,5 +31,13 @@ const createExternalUser = crmEntityId => createIdmUser(
   crmEntityId
 );
 
+const createInternalUser = async (email, group) => {
+  const user = await createIdmUser(email, 'water_admin', null);
+  const userWithRoles = await setInternalUserRoles(user.user_id, [], [group]);
+
+  return userWithRoles;
+};
+
 exports.createExternalUser = createExternalUser;
+exports.createInternalUser = createInternalUser;
 exports.delete = () => acceptanceTestsConnector.deleteAcceptanceTestData();

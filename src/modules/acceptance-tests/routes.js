@@ -1,3 +1,4 @@
+const Joi = require('joi');
 const controller = require('./controller');
 const { version, isAcceptanceTestTarget } = require('../../../config');
 
@@ -7,7 +8,12 @@ if (isAcceptanceTestTarget) {
     path: `/water/${version}/acceptance-tests/set-up`,
     handler: controller.postSetup,
     config: {
-      description: 'Creates the required data to allow acceptance tests to run'
+      description: 'Creates the required data to allow acceptance tests to run',
+      validate: {
+        payload: {
+          includeInternalUsers: Joi.boolean().default(false).optional()
+        }
+      }
     }
   };
 
