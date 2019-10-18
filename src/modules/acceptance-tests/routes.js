@@ -11,7 +11,8 @@ if (isAcceptanceTestTarget) {
       description: 'Creates the required data to allow acceptance tests to run',
       validate: {
         payload: {
-          includeInternalUsers: Joi.boolean().default(false).optional()
+          includeInternalUsers: Joi.boolean().default(false).optional(),
+          includeAgents: Joi.boolean().default(false).optional()
         }
       }
     }

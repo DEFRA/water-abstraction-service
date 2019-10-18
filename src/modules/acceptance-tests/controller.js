@@ -7,6 +7,8 @@ const events = require('./lib/events');
 const sessions = require('./lib/sessions');
 const {
   TEST_EXTERNAL_USER_EMAIL,
+  TEST_EXTERNAL_AGENT_EMAIL,
+  TEST_EXTERNAL_RETURNS_AGENT_EMAIL,
   LICENCE_REF_CURRENT_DAILY,
   LICENCE_REF_CURRENT_WEEKLY,
   LICENCE_REF_CURRENT_MONTHLY
@@ -15,7 +17,20 @@ const {
 const createExternalPrimaryUser = async company => {
   const individual = await entities.createIndividual(TEST_EXTERNAL_USER_EMAIL);
   await entities.createEntityRole(individual.entity_id, company.entity_id);
-  const user = await users.createExternalUser(individual.entity_id);
+  const user = await users.createExternalUser(TEST_EXTERNAL_USER_EMAIL, individual.entity_id);
+
+  return {
+    entity: individual,
+    user
+  };
+};
+
+const createAgent = async (company, hasReturnsAccess = false) => {
+  const email = hasReturnsAccess ? TEST_EXTERNAL_RETURNS_AGENT_EMAIL : TEST_EXTERNAL_AGENT_EMAIL;
+  const role = hasReturnsAccess ? 'user_returns' : 'user';
+  const individual = await entities.createIndividual(email);
+  await entities.createEntityRole(individual.entity_id, company.entity_id, role);
+  const user = await users.createExternalUser(email, individual.entity_id);
 
   return {
     entity: individual,
@@ -76,7 +91,7 @@ const createCurrentLicencesWithReturns = async (company, externalPrimaryUser) =>
 };
 
 const createInternalUsers = async () => {
-  const groups = ['wirs', 'nps', 'environment_officer', 'billing_and_data', 'psc'];
+  const groups = ['super', 'wirs', 'nps', 'environment_officer', 'billing_and_data', 'psc'];
 
   const createdUsers = await Promise.all(
     groups.map(group => {
@@ -86,6 +101,15 @@ const createInternalUsers = async () => {
   );
 
   return createdUsers.map(response => response.data);
+};
+
+const createAgents = async (company) => {
+  const [agent, agentWithReturns] = await Promise.all([
+    createAgent(company, false),
+    createAgent(company, true)
+  ]);
+
+  return { agent, agentWithReturns };
 };
 
 const postSetup = async (request, h) => {
@@ -100,6 +124,10 @@ const postSetup = async (request, h) => {
 
     if (request.payload.includeInternalUsers) {
       responseData.internalUsers = await createInternalUsers();
+    }
+
+    if (request.payload.includeAgents) {
+      responseData.agents = await createAgents(company);
     }
 
     return responseData;

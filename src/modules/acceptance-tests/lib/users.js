@@ -4,8 +4,7 @@ const acceptanceTestsConnector = require('../../../lib/connectors/idm/acceptance
 
 const {
   TEST_USER_PASSWORD,
-  ACCEPTANCE_TEST_SOURCE,
-  TEST_EXTERNAL_USER_EMAIL
+  ACCEPTANCE_TEST_SOURCE
 } = require('./constants');
 
 const createIdmUser = async (email, application, crmEntityId) => {
@@ -25,11 +24,8 @@ const createIdmUser = async (email, application, crmEntityId) => {
   return user;
 };
 
-const createExternalUser = crmEntityId => createIdmUser(
-  TEST_EXTERNAL_USER_EMAIL,
-  'water_vml',
-  crmEntityId
-);
+const createExternalUser = (email, crmEntityId) =>
+  createIdmUser(email, 'water_vml', crmEntityId);
 
 const createInternalUser = async (email, group) => {
   const user = await createIdmUser(email, 'water_admin', null);
