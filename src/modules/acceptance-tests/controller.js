@@ -1,3 +1,5 @@
+const { get } = require('lodash');
+
 const returns = require('./lib/returns');
 const permits = require('./lib/permits');
 const entities = require('./lib/entities');
@@ -90,17 +92,38 @@ const createCurrentLicencesWithReturns = async (company, externalPrimaryUser) =>
   };
 };
 
+/**
+ * National Permitting Service and Digitise! editor Send renewals and digitise licence information.
+National Permitting Service and Digitise! approver Send renewals, digitise licence information and approve changes.
+
+ */
 const createInternalUsers = async () => {
-  const groups = ['super', 'wirs', 'nps', 'environment_officer', 'billing_and_data', 'psc'];
+  const emailRegex = /acceptance-test\.internal\.(\w*)@defra\.gov\.uk/;
+
+  const toCreate = [
+    { group: 'super' },
+    { group: 'wirs' },
+    { group: 'nps' },
+    { id: 'nps_digitise', group: 'nps', roles: ['ar_user'] },
+    { id: 'nps_digitise_approver', group: 'nps', roles: ['ar_user', 'ar_approver'] },
+    { group: 'environment_officer' },
+    { group: 'billing_and_data' },
+    { group: 'psc' }
+  ];
 
   const createdUsers = await Promise.all(
-    groups.map(group => {
-      const email = `acceptance-test.internal.${group}@defra.gov.uk`;
-      return users.createInternalUser(email, group);
+    toCreate.map(user => {
+      const email = `acceptance-test.internal.${user.id || user.group}@defra.gov.uk`;
+      return users.createInternalUser(email, user.group, user.roles);
     })
   );
 
-  return createdUsers.map(response => response.data);
+  return createdUsers
+    .reduce((users, user) => {
+      const id = user.user_name.replace(emailRegex, '$1');
+      users[id] = user;
+      return users;
+    }, {});
 };
 
 const createAgents = async (company) => {
@@ -114,6 +137,8 @@ const createAgents = async (company) => {
 
 const postSetup = async (request, h) => {
   await postTearDown();
+  const includeAgents = get(request, 'payload.includeAgents', false);
+  const includeInternalUsers = get(request, 'payload.includeInternalUsers', false);
 
   try {
     const company = await entities.createCompany();
@@ -122,11 +147,11 @@ const postSetup = async (request, h) => {
 
     const responseData = { currentLicencesWithReturns };
 
-    if (request.payload.includeInternalUsers) {
+    if (includeInternalUsers) {
       responseData.internalUsers = await createInternalUsers();
     }
 
-    if (request.payload.includeAgents) {
+    if (includeAgents) {
       responseData.agents = await createAgents(company);
     }
 

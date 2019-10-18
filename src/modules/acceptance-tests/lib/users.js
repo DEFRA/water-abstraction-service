@@ -27,11 +27,11 @@ const createIdmUser = async (email, application, crmEntityId) => {
 const createExternalUser = (email, crmEntityId) =>
   createIdmUser(email, 'water_vml', crmEntityId);
 
-const createInternalUser = async (email, group) => {
+const createInternalUser = async (email, group, roles = []) => {
   const user = await createIdmUser(email, 'water_admin', null);
-  const userWithRoles = await setInternalUserRoles(user.user_id, [], [group]);
+  const userWithRoles = await setInternalUserRoles(user.user_id, roles, [group]);
 
-  return userWithRoles;
+  return userWithRoles.data;
 };
 
 exports.createExternalUser = createExternalUser;
