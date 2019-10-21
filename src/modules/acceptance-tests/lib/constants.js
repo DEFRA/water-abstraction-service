@@ -1,4 +1,6 @@
 exports.TEST_EXTERNAL_USER_EMAIL = 'acceptance-test.external@example.com';
+exports.TEST_EXTERNAL_AGENT_EMAIL = 'acceptance-test.agent@example.com';
+exports.TEST_EXTERNAL_RETURNS_AGENT_EMAIL = 'acceptance-test.returns-agent@example.com';
 exports.TEST_COMPANY_NAME = 'acceptance-test-company';
 exports.ACCEPTANCE_TEST_SOURCE = 'acceptance-test-setup';
 exports.LICENCE_REF_CURRENT_DAILY = 'AT/CURR/DAILY/01';
