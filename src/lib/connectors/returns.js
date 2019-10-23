@@ -99,6 +99,11 @@ const getServiceVersion = async () => {
   return response.version;
 };
 
+const deleteAcceptanceTestData = () => {
+  const url = urlJoin(config.services.returns, 'acceptance-tests');
+  return helpers.serviceRequest.delete(url);
+};
+
 exports.returns = returnsClient;
 exports.versions = versionsClient;
 exports.lines = linesClient;
@@ -106,3 +111,7 @@ exports.getActiveReturns = getActiveReturns;
 exports.getCurrentDueReturns = getCurrentDueReturns;
 exports.voidReturns = voidReturns;
 exports.getServiceVersion = getServiceVersion;
+
+if (config.isAcceptanceTestTarget) {
+  exports.deleteAcceptanceTestData = deleteAcceptanceTestData;
+}

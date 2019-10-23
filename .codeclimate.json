@@ -6,6 +6,7 @@
     "node_modules",
     "scripts",
     "temp",
-    "test"
+    "test",
+    "src/modules/acceptance-tests"
   ]
 }
