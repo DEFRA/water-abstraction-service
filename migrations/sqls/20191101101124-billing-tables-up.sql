@@ -10,35 +10,35 @@ create type water.charge_batch_type as enum ('annual', 'supplementary', 'two_par
 ---------------------------------------------------
 
 -- drop the foreign key constraints
-alter table water.charge_agreements
+alter table if exists water.charge_agreements
   drop constraint charge_agreements_charge_element_id_fkey;
 
-alter table water.charge_elements
+alter table if exists water.charge_elements
   drop constraint charge_elements_charge_version_id_fkey;
 
 
 -- update from varchar to uuid
-alter table water.charge_agreements
+alter table if exists water.charge_agreements
   alter column charge_agreement_id set data type uuid using charge_agreement_id::uuid,
   alter column charge_element_id set data type uuid using charge_element_id::uuid;
 
-alter table water.charge_versions
+alter table if exists water.charge_versions
   alter column charge_version_id set data type uuid using charge_version_id::uuid;
 
-alter table water.charge_elements
+alter table if exists water.charge_elements
   alter column charge_version_id set data type uuid using charge_version_id::uuid,
   alter column charge_element_id set data type uuid using charge_element_id::uuid;
 
 
 -- reinstate the foreign key relationships
-alter table water.charge_agreements
+alter table if exists water.charge_agreements
   add constraint charge_agreements_charge_element_id_fkey
     foreign key (charge_element_id)
     references water.charge_elements (charge_element_id)
     match simple
     on delete cascade;
 
-alter table water.charge_elements
+alter table if exists water.charge_elements
   add constraint charge_elements_charge_version_id_fkey
     foreign key (charge_version_id)
     references water.charge_versions (charge_version_id)
