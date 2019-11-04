@@ -10,11 +10,22 @@ create type water.charge_batch_type as enum ('annual', 'supplementary', 'two_par
 ---------------------------------------------------
 
 -- drop the foreign key constraints
-alter table if exists water.charge_agreements
-  drop constraint charge_agreements_charge_element_id_fkey;
-
-alter table if exists water.charge_elements
-  drop constraint charge_elements_charge_version_id_fkey;
+DO $$DECLARE r record;
+BEGIN
+  FOR r IN
+    select n.nspname as schema_name,
+      t.relname as table_name,
+      c.conname as constraint_name
+    from pg_constraint c
+      join pg_class t on c.conrelid = t.oid
+      join pg_namespace n on t.relnamespace = n.oid
+    where t.relname in('charge_agreements', 'charge_elements')
+    and n.nspname = 'water'
+    and c.contype = 'f'
+  LOOP
+    EXECUTE 'ALTER TABLE water.' || quote_ident(r.table_name)|| ' DROP CONSTRAINT '|| quote_ident(r.constraint_name) || ';';
+  END LOOP;
+END$$;
 
 
 -- update from varchar to uuid
