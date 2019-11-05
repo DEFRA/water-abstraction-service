@@ -55,7 +55,7 @@ experiment('modules/billing/routes', () => {
       expect(response.statusCode).to.equal(400);
     });
 
-    test('returns a 400 if the userEmail is ommited', async () => {
+    test('returns a 400 if the userEmail is omitted', async () => {
       delete request.payload.userEmail;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
@@ -67,7 +67,7 @@ experiment('modules/billing/routes', () => {
       expect(response.statusCode).to.equal(400);
     });
 
-    test('returns a 400 if the regionId is ommited', async () => {
+    test('returns a 400 if the regionId is omitted', async () => {
       delete request.payload.regionId;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
@@ -79,7 +79,7 @@ experiment('modules/billing/routes', () => {
       expect(response.statusCode).to.equal(400);
     });
 
-    test('returns a 400 if the batchType is ommited', async () => {
+    test('returns a 400 if the batchType is omitted', async () => {
       delete request.payload.batchType;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
@@ -91,7 +91,7 @@ experiment('modules/billing/routes', () => {
       expect(response.statusCode).to.equal(400);
     });
 
-    test('returns a 400 if the financialYear is ommited', async () => {
+    test('returns a 400 if the financialYear is omitted', async () => {
       delete request.payload.financialYear;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
@@ -103,7 +103,7 @@ experiment('modules/billing/routes', () => {
       expect(response.statusCode).to.equal(400);
     });
 
-    test('returns a 400 if the season is ommited', async () => {
+    test('returns a 400 if the season is omitted', async () => {
       delete request.payload.season;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);

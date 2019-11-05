@@ -37,9 +37,7 @@ experiment('modules/billing/controller', () => {
 
     sandbox.stub(event, 'save').resolves({
       rows: [
-        {
-          event_id: '11111111-1111-1111-1111-111111111111'
-        }
+        { event_id: '11111111-1111-1111-1111-111111111111' }
       ]
     });
 
