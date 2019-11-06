@@ -75,7 +75,6 @@ const createDueReturn = async (licenceRef, frequency = 'day') => {
   const row = createReturnRow(licenceRef, cycle, metadata, frequency);
 
   const result = await returnsConnector.returns.create(row);
-  console.log(result);
   return result.data;
 };
 
