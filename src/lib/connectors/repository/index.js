@@ -2,6 +2,7 @@ const { pool } = require('../db');
 const ChargeVersionRepository = require('./ChargeVersionRepository');
 const ChargeElementRepository = require('./ChargeElementRepository');
 const ChargeAgreementRepository = require('./ChargeAgreementRepository');
+const BillingBatchRepository = require('./BillingBatchRepository');
 
 const chargeVersions = new ChargeVersionRepository({
   connection: pool,
@@ -21,8 +22,7 @@ const chargeAgreements = new ChargeAgreementRepository({
   primaryKey: 'charge_agreement_id'
 });
 
-module.exports = {
-  chargeVersions,
-  chargeElements,
-  chargeAgreements
-};
+exports.chargeVersions = chargeVersions;
+exports.chargeElements = chargeElements;
+exports.chargeAgreements = chargeAgreements;
+exports.billingBatches = new BillingBatchRepository();

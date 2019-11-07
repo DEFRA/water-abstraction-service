@@ -1,43 +1,23 @@
-const notificationsRoutes = require('./notifications/routes');
-const riverLevelsRoutes = require('./river-levels/routes');
-const notifyRoutes = require('./notify/routes');
-const importRoutes = require('./import/routes');
-const returnsRoutes = require('./returns/routes');
-const pdfNotificationRoutes = require('./pdf-notifications/routes');
-const returnsNotificationRoutes = require('./returns-notifications/routes');
-const arAnalysisRoutes = require('./ar-analysis/routes');
-const licenceRoutes = require('./licences/routes');
-const internalSearch = require('./internal-search/routes');
-const usersRoutes = require('./users/routes');
-const communicationsRoutes = require('./communications/routes');
-const batchNotificationsRoutes = require('./batch-notifications/routes');
-const companiesRoutes = require('./companies/routes');
-const serviceStatusRoutes = require('./service-status/routes');
-const changeEmailRoutes = require('./change-email/routes');
-const chargeVersionRoutes = require('./charge-versions/routes');
-const unlinkLicenceRoutes = require('./unlink-licence/routes');
-const acceptanceTestRoutes = require('./acceptance-tests/routes');
-const regionsRoutes = require('./regions/routes');
-
 module.exports = [
-  ...Object.values(notificationsRoutes),
-  ...Object.values(notifyRoutes),
-  ...Object.values(riverLevelsRoutes),
-  ...Object.values(importRoutes),
-  ...Object.values(returnsRoutes),
-  ...Object.values(pdfNotificationRoutes),
-  ...Object.values(returnsNotificationRoutes),
-  ...Object.values(arAnalysisRoutes),
-  ...Object.values(licenceRoutes),
-  ...Object.values(internalSearch),
-  ...Object.values(usersRoutes),
-  ...Object.values(communicationsRoutes),
-  ...Object.values(batchNotificationsRoutes),
-  ...Object.values(companiesRoutes),
-  ...Object.values(serviceStatusRoutes),
-  ...Object.values(changeEmailRoutes),
-  ...Object.values(chargeVersionRoutes),
-  ...Object.values(unlinkLicenceRoutes),
-  ...Object.values(acceptanceTestRoutes),
-  ...Object.values(regionsRoutes)
+  ...Object.values(require('./notifications/routes')),
+  ...Object.values(require('./notify/routes')),
+  ...Object.values(require('./river-levels/routes')),
+  ...Object.values(require('./import/routes')),
+  ...Object.values(require('./returns/routes')),
+  ...Object.values(require('./pdf-notifications/routes')),
+  ...Object.values(require('./returns-notifications/routes')),
+  ...Object.values(require('./ar-analysis/routes')),
+  ...Object.values(require('./licences/routes')),
+  ...Object.values(require('./internal-search/routes')),
+  ...Object.values(require('./users/routes')),
+  ...Object.values(require('./communications/routes')),
+  ...Object.values(require('./batch-notifications/routes')),
+  ...Object.values(require('./companies/routes')),
+  ...Object.values(require('./service-status/routes')),
+  ...Object.values(require('./change-email/routes')),
+  ...Object.values(require('./charge-versions/routes')),
+  ...Object.values(require('./unlink-licence/routes')),
+  ...Object.values(require('./acceptance-tests/routes')),
+  ...Object.values(require('./regions/routes')),
+  ...Object.values(require('./billing/routes'))
 ];
