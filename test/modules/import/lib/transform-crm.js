@@ -40,7 +40,7 @@ experiment('modules/import/lib/transform-crm', () => {
       });
     });
 
-    experiment('when the current version is present', () => {
+    experiment('when the current version is present without a licence role', () => {
       let currentVersion;
       let roles;
 
@@ -66,16 +66,7 @@ experiment('modules/import/lib/transform-crm', () => {
           ]
         };
 
-        roles = [
-          {
-            role_type: {
-              DESCR: 'For Sentance Casing'
-            },
-            role_address: {
-              ADDR_LINE1: 'test-1'
-            }
-          }
-        ];
+        roles = [];
       });
 
       test('the licence holder is added to the contacts', async () => {
@@ -91,13 +82,70 @@ experiment('modules/import/lib/transform-crm', () => {
       test('the roles are added after the licence holder', async () => {
         const contacts = transformCrm.contactsFormatter(currentVersion, roles);
         const role = contacts[1];
-
-        expect(role.role).to.equal('For sentance casing');
-        expect(role.type).to.equal('Person');
-        expect(role.forename).to.equal('forename');
-        expect(role.name).to.equal('name');
-        expect(role.addressLine1).to.equal('test-1');
+        expect(role).to.equal(undefined);
       });
+    });
+  });
+  experiment('when the current version is present with a licence role', () => {
+    let currentVersion;
+    let roles;
+
+    beforeEach(async () => {
+      currentVersion = {
+        ACON_APAR_ID: 1,
+        ACON_AADD_ID: 2,
+        parties: [
+          {
+            ID: 1,
+            APAR_TYPE: 'PER',
+            FORENAME: 'forename',
+            NAME: 'name',
+            contacts: [
+              {
+                AADD_ID: 2,
+                party_address: {
+                  ADDR_LINE1: 'test-1'
+                }
+              }
+            ]
+          }
+        ]
+      };
+
+      roles = [
+        {
+          role_type: {
+            DESCR: 'For returns'
+          },
+          role_address: {
+            ADDR_LINE1: 'test-1'
+          },
+          role_party: {
+            ID: 2,
+            APAR_TYPE: 'PER',
+            NAME: 'forname4role'
+          }
+        }
+      ];
+    });
+
+    test('the licence holder is added to the contacts', async () => {
+      const contacts = transformCrm.contactsFormatter(currentVersion, roles);
+      const licenceHolder = contacts[0];
+      expect(licenceHolder.role).to.equal('Licence holder');
+      expect(licenceHolder.type).to.equal('Person');
+      expect(licenceHolder.forename).to.equal('forename');
+      expect(licenceHolder.name).to.equal('name');
+      expect(licenceHolder.addressLine1).to.equal('test-1');
+    });
+
+    test('the roles are added after the licence holder', async () => {
+      const contacts = transformCrm.contactsFormatter(currentVersion, roles);
+      const role = contacts[1];
+      expect(role.role).to.equal('For returns');
+      expect(role.type).to.equal('Person');
+      expect(role.name).to.equal('forname4role');
+      expect(role.addressLine1).to.equal('test-1');
     });
   });
 });
