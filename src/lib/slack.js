@@ -8,6 +8,10 @@ const rp = require('request-promise-native').defaults({
 });
 
 function post (message) {
+  if (!process.env.SLACK_HOOK) {
+    return;
+  }
+
   const msg = message + ' - ' + hostname + ' - ' + process.env.NODE_ENV;
   logger.info(`Slack: ${msg}`);
   const uri = 'https://hooks.slack.com/services/' + process.env.SLACK_HOOK;
