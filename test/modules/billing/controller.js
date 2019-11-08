@@ -10,7 +10,7 @@ const sandbox = sinon.createSandbox();
 
 const repos = require('../../../src/lib/connectors/repository');
 const event = require('../../../src/lib/event');
-const populateBillingBatchJob = require('../../../src/modules/billing/jobs/populate-billing-batch');
+const populateBatchChargeVersionsJob = require('../../../src/modules/billing/jobs/populate-batch-charge-versions');
 
 const controller = require('../../../src/modules/billing/controller');
 
@@ -45,7 +45,7 @@ experiment('modules/billing/controller', () => {
       ]
     });
 
-    sandbox.stub(populateBillingBatchJob, 'publish').resolves();
+    sandbox.stub(populateBatchChargeVersionsJob, 'publish').resolves();
   });
 
   afterEach(async () => {
@@ -84,11 +84,11 @@ experiment('modules/billing/controller', () => {
       expect(savedEvent.subtype).to.equal(request.payload.batchType);
       expect(savedEvent.issuer).to.equal(request.payload.userEmail);
       expect(savedEvent.metadata.batch.billing_batch_id).to.equal('00000000-0000-0000-0000-000000000000');
-      expect(savedEvent.status).to.equal('received');
+      expect(savedEvent.status).to.equal('batch:start');
     });
 
     test('publishes a new job to the message queue with the event id', async () => {
-      const [eventId] = populateBillingBatchJob.publish.lastCall.args;
+      const [eventId] = populateBatchChargeVersionsJob.publish.lastCall.args;
       expect(eventId).to.equal('11111111-1111-1111-1111-111111111111');
     });
 

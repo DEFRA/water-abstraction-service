@@ -1,8 +1,10 @@
 const Boom = require('@hapi/boom');
 const repos = require('../../lib/connectors/repository');
 const event = require('../../lib/event');
-const populateBillingBatchJob = require('./jobs/populate-billing-batch');
+
 const { envelope } = require('../../lib/response');
+const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-versions');
+const { jobStatus } = require('./lib/batch');
 
 const createBatchEvent = async (userEmail, batch) => {
   const batchEvent = event.create({
@@ -10,7 +12,7 @@ const createBatchEvent = async (userEmail, batch) => {
     subtype: batch.batch_type,
     issuer: userEmail,
     metadata: { batch },
-    status: 'received'
+    status: jobStatus.start
   });
 
   const response = await event.save(batchEvent);
@@ -41,7 +43,7 @@ const postCreateBatch = async (request, h) => {
 
   // add a new job to the queue so that the batch can be filled
   // with charge versions
-  populateBillingBatchJob.publish(batchEvent.event_id);
+  populateBatchChargeVersionsJob.publish(batchEvent.event_id);
 
   return h.response(envelope({
     event: batchEvent,
