@@ -11,7 +11,7 @@ const {
   getEffectiveDates,
   prepChargeElements,
   getTPTChargeElements,
-  prepareChargeElementsForMatching,
+  sortChargeElementsForMatching,
   prepareReturns,
   prepareReturnLines,
   getProRataQuantity,
@@ -204,14 +204,14 @@ experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
     });
   });
 
-  experiment('.prepareChargeElementsForMatching', async () => {
+  experiment('.sortChargeElementsForMatching', async () => {
     test('sorts the charge elements by billableDays', async () => {
       const chargeElements = [
         getChargeElement({ billableDays: 180 }),
         getChargeElement({ billableDays: 56 }),
         getChargeElement({ billableDays: 352 })
       ];
-      const sortedElements = prepareChargeElementsForMatching(chargeElements);
+      const sortedElements = sortChargeElementsForMatching(chargeElements);
       expect(sortedElements).to.be.equal([
         getChargeElement({ billableDays: 56 }),
         getChargeElement({ billableDays: 180 }),

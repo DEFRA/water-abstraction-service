@@ -1,6 +1,12 @@
 const { cloneDeep } = require('lodash');
 const helpers = require('./two-part-tariff-helpers');
 
+/**
+ * Checks whether the return purpose matches the charge element purpose
+ * @param {Object} ret return
+ * @param {Object} ele charge element
+ * @return {Boolean} whether or not the return contains a purpose that matches the charge element purpose
+ */
 const returnPurposeMatchesElementPurpose = (ret, ele) => {
   const purposeMatch = ret.metadata.purposes.map(purpose => {
     return parseInt(purpose.tertiary.code) === ele.purposeTertiary;
@@ -11,6 +17,7 @@ const returnPurposeMatchesElementPurpose = (ret, ele) => {
  * Matches prepared returns to sorted charge elements
  * @param {Array} chargeElements - sorted charge elements for matching
  * @param {Aray} returns - returns for TPT Purposes
+ * @return {Array} charge elements array with allocated quantities
  */
 const matchReturnQuantities = (chargeElements, returnsToMatch) => {
   const returns = cloneDeep(returnsToMatch);
@@ -38,7 +45,7 @@ const matchReturnQuantities = (chargeElements, returnsToMatch) => {
 const matchReturnsToChargeElements = (chargeVersion, returns) => {
   const tptChargeElements = helpers.getTPTChargeElements(chargeVersion);
 
-  const sortedChargeElements = helpers.prepareChargeElementsForMatching(tptChargeElements);
+  const sortedChargeElements = helpers.sortChargeElementsForMatching(tptChargeElements);
 
   const filteredReturns = helpers.prepareReturns(returns);
 
