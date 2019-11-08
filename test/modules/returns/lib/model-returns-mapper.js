@@ -3,7 +3,6 @@ const moment = require('moment');
 moment.locale('en-gb');
 
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
-
 const { mapReturnToModel, mapReturnToVersion, mapReturn } = require('../../../../src/modules/returns/lib/model-returns-mapper');
 
 const getTestReturn = () => ({
