@@ -16,7 +16,14 @@ const createBatchEvent = async (userEmail, batch) => {
 };
 
 const createBatch = async (regionId, batchType, financialYear, season) => {
-  const result = await repos.billingBatches.createBatch(regionId, batchType, financialYear, season);
+  const startFinancialYear = batchType === 'supplementary' ? financialYear - 6 : financialYear;
+  const result = await repos.billingBatches.createBatch(
+    regionId,
+    batchType,
+    startFinancialYear,
+    financialYear,
+    season
+  );
   return result.rows[0];
 };
 

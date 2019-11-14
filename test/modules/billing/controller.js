@@ -70,6 +70,21 @@ experiment('modules/billing/controller', () => {
         request.payload.regionId,
         request.payload.batchType,
         request.payload.financialYear,
+        request.payload.financialYear,
+        request.payload.season
+      )).to.be.true();
+    });
+
+    test('creates a new entry with the expected range for a supplementary bill run', async () => {
+      sandbox.resetHistory();
+      request.payload.batchType = 'supplementary';
+      await controller.postCreateBatch(request, h);
+
+      expect(repos.billingBatches.createBatch.calledWith(
+        request.payload.regionId,
+        request.payload.batchType,
+        2013,
+        2019,
         request.payload.season
       )).to.be.true();
     });
