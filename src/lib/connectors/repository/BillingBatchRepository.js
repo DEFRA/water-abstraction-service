@@ -1,14 +1,14 @@
+const { get } = require('lodash');
 const Repository = require('@envage/hapi-pg-rest-api/src/repository');
 const db = require('../db');
 
 class BillingBatchRepository extends Repository {
   constructor (config = {}) {
-    const mergedConfig = {
+    super(Object.assign({
       connection: db.pool,
       table: 'water.billing_batches',
       primaryKey: 'billing_batch_id'
-    };
-    super(mergedConfig);
+    }, config));
   }
 
   /**
@@ -26,6 +26,11 @@ class BillingBatchRepository extends Repository {
       financial_year: financialYear,
       season
     });
+  }
+
+  async getById (batchId) {
+    const result = await this.find({ billing_batch_id: batchId });
+    return get(result, 'rows[0]', null);
   }
 }
 

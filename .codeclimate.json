@@ -7,6 +7,7 @@
     "scripts",
     "temp",
     "test",
-    "src/modules/acceptance-tests"
+    "src/modules/acceptance-tests",
+    "src/modules/**/routes.js"
   ]
 }
