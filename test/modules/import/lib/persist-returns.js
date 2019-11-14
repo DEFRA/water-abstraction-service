@@ -57,7 +57,8 @@ experiment('returnExists', () => {
 experiment('getUpdateRow', () => {
   test('It should update metadata, status, date received and due date for a past return', async () => {
     const data = persistReturns.getUpdateRow(naldReturn);
-    expect(data).to.equal({ status: 'completed',
+    expect(data).to.equal({
+      status: 'completed',
       metadata: { param: 'value' },
       received_date: '2017-11-24',
       due_date: '2017-11-28'

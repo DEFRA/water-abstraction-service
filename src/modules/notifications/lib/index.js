@@ -74,8 +74,8 @@ async function sendNotification (taskConfig, issuer, contactData, ref) {
   logger.info(`Sending notification reference ${e.referenceCode} ID ${e.eventId}`);
 
   // Schedule messages for sending
-  for (let row of contactData) {
-    let n = await notificationFactory(row, taskConfig, e);
+  for (const row of contactData) {
+    const n = await notificationFactory(row, taskConfig, e);
 
     try {
       enqueue(n);

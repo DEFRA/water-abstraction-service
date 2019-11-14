@@ -31,7 +31,7 @@ const handleSendMessage = async job => {
     const notifyResponse = await notify.send(message);
     await messageHelpers.markMessageAsSent(messageId, notifyResponse);
   } catch (err) {
-    logger.error(`Error sending batch message`, err, { messageId });
+    logger.error('Error sending batch message', err, { messageId });
     await messageHelpers.markMessageAsErrored(messageId, err);
   }
 };

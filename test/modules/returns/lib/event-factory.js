@@ -36,7 +36,8 @@ experiment('eventFactory', () => {
       entities: '["ca3dc532-23de-4301-adbe-007409f340e0"]',
       comment: undefined,
       metadata: '{"returnId":"36f0296a-9812-408a-9346-60ea90945864","versionId":"d00b67dd-54bd-4f00-b3c0-f3e83aa16315","return":{"returnId":"36f0296a-9812-408a-9346-60ea90945864","licenceNumber":"01/234/567","status":"due","receivedDate":"2018-04-25","underQuery":false,"user":{"email":"mail@example.com","type":"internal","entityId":"ca3dc532-23de-4301-adbe-007409f340e0"}},"receivedDate":"2018-04-25","underQuery":false}',
-      status: 'due' });
+      status: 'due'
+    });
 
     // Event ID should be GUID
     expect(event.event_id).to.be.a.string();
@@ -59,7 +60,8 @@ experiment('eventFactory', () => {
       entities: '["ca3dc532-23de-4301-adbe-007409f340e0"]',
       comment: undefined,
       metadata: '{"returnId":"36f0296a-9812-408a-9346-60ea90945864","versionId":null,"return":{"returnId":"36f0296a-9812-408a-9346-60ea90945864","licenceNumber":"01/234/567","status":"due","receivedDate":"2018-04-25","underQuery":false,"user":{"email":"mail@example.com","type":"internal","entityId":"ca3dc532-23de-4301-adbe-007409f340e0"}},"receivedDate":"2018-04-25","underQuery":false}',
-      status: 'due' });
+      status: 'due'
+    });
 
     // Event ID should be GUID
     expect(event.event_id).to.be.a.string();

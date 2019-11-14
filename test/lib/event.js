@@ -40,7 +40,8 @@ experiment('event create', () => {
       comment: null,
       metadata: {},
       status: null,
-      modified: null });
+      modified: null
+    });
 
     expect(isDateString(created)).to.equal(true);
   });
@@ -98,7 +99,7 @@ experiment('save', () => {
     test('it should create a GUID event ID', async () => {
       await event.save(ev);
 
-      const [ data ] = event.repo.create.firstCall.args;
+      const [data] = event.repo.create.firstCall.args;
 
       // A GUID should have been generated for event ID
       expect(isGuid(data.event_id)).to.equal(true);
@@ -107,7 +108,7 @@ experiment('save', () => {
     test('it should contain the correct keys', async () => {
       await event.save(ev);
 
-      const [ data ] = event.repo.create.firstCall.args;
+      const [data] = event.repo.create.firstCall.args;
 
       expect(Object.keys(data)).to.equal(expectedKeys);
     });
@@ -115,7 +116,7 @@ experiment('save', () => {
     test('modified date should be null', async () => {
       await event.save(ev);
 
-      const [ data ] = event.repo.create.firstCall.args;
+      const [data] = event.repo.create.firstCall.args;
 
       expect(data.modified).to.equal(null);
     });

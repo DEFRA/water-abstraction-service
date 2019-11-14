@@ -93,6 +93,6 @@ experiment('searchUsers', () => {
     const result = await searchUsers.searchUsers('mail@example.com', 2);
     expect(result.pagination).to.equal(getPagination());
     expect(result.data).to.be.an.array();
-    expect(result.data[0]).to.only.include([ 'userId', 'email', 'isInternal', 'isExternal' ]);
+    expect(result.data[0]).to.only.include(['userId', 'email', 'isInternal', 'isExternal']);
   });
 });

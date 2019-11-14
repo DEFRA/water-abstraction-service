@@ -29,7 +29,7 @@ const deleteLines = versionIds => {
   // get all the lines for the version ids
   return returnsConnector.lines.delete({
     version_id: {
-      '$in': versionIds
+      $in: versionIds
     }
   });
 };
@@ -43,7 +43,7 @@ const deleteLines = versionIds => {
 const deleteVersions = versionIds => {
   return returnsConnector.versions.delete({
     version_id: {
-      '$in': versionIds
+      $in: versionIds
     }
   });
 };

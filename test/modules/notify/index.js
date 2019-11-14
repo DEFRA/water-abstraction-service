@@ -19,7 +19,7 @@ lab.experiment('Test notify module', () => {
       recipient: 'mail@example.com',
       licences: ['01/234'],
       personalisation: {
-        'test_value': '00/00/00/00'
+        test_value: '00/00/00/00'
       }
     });
 
@@ -36,7 +36,7 @@ lab.experiment('Test notify module', () => {
       recipient: 'mail@example.com',
       licences: ['01/234'],
       personalisation: {
-        'test_value': '00/00/00/00'
+        test_value: '00/00/00/00'
       },
       sendAfter
     });

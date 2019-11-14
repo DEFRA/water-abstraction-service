@@ -63,9 +63,11 @@ experiment('filterReturnsByCRMDocument', () => {
   });
 
   test('It should filter returns for which a CRM document cannot be found', async () => {
-    stub = sinon.stub(documents, 'findMany').resolves({ data: [{
-      system_external_id: 'y'
-    }] });
+    stub = sinon.stub(documents, 'findMany').resolves({
+      data: [{
+        system_external_id: 'y'
+      }]
+    });
     const result = await searchReturns.filterReturnsByCRMDocument(returns);
     expect(result).to.equal([returns[1]]);
   });

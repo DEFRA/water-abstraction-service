@@ -18,7 +18,7 @@ const getLicenceFormats = async (licenceNumber) => {
   const formats = await queries.getFormats(licenceNumber);
 
   // Load format data
-  for (let format of formats) {
+  for (const format of formats) {
     format.purposes = await queries.getFormatPurposes(format.ID, format.FGAC_REGION_CODE);
     format.points = await queries.getFormatPoints(format.ID, format.FGAC_REGION_CODE);
     format.cycles = helpers.getFormatCycles(format, splitDate);
@@ -36,8 +36,8 @@ const buildReturnsPacket = async (licenceNumber) => {
     returns: []
   };
 
-  for (let format of formats) {
-    for (let cycle of format.cycles) {
+  for (const format of formats) {
+    for (const cycle of format.cycles) {
       const { startDate, endDate, isCurrent } = cycle;
 
       // Get all form logs relating to this cycle

@@ -27,7 +27,7 @@ const handleRefreshEvent = async job => {
   try {
     await eventHelpers.refreshEventStatus(eventId);
   } catch (err) {
-    logger.error(`Error refreshing batch message event`, err, { eventId });
+    logger.error('Error refreshing batch message event', err, { eventId });
   }
 };
 

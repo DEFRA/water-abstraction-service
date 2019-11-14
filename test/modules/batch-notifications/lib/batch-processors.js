@@ -62,15 +62,15 @@ experiment('batch processors', () => {
 
     test('logs an info level message', async () => {
       expect(logger.info.callCount).to.equal(1);
-      const [ str ] = logger.info.lastCall.args;
+      const [str] = logger.info.lastCall.args;
       expect(str).to.be.a.string();
     });
 
     test('publishes a send message job for each message in batch', async () => {
       expect(sendMessage.publish.callCount).to.equal(2);
-      const [ firstId ] = sendMessage.publish.getCall(0).args;
+      const [firstId] = sendMessage.publish.getCall(0).args;
       expect(firstId).to.equal('message_1');
-      const [ secondId ] = sendMessage.publish.getCall(1).args;
+      const [secondId] = sendMessage.publish.getCall(1).args;
       expect(secondId).to.equal('message_2');
     });
   });
@@ -86,15 +86,15 @@ experiment('batch processors', () => {
 
     test('logs an info level message', async () => {
       expect(logger.info.callCount).to.equal(1);
-      const [ str ] = logger.info.lastCall.args;
+      const [str] = logger.info.lastCall.args;
       expect(str).to.be.a.string();
     });
 
     test('publishes a refresh event job for each event in batch', async () => {
       expect(refreshEvent.publish.callCount).to.equal(2);
-      const [ firstId ] = refreshEvent.publish.getCall(0).args;
+      const [firstId] = refreshEvent.publish.getCall(0).args;
       expect(firstId).to.equal('event_1');
-      const [ secondId ] = refreshEvent.publish.getCall(1).args;
+      const [secondId] = refreshEvent.publish.getCall(1).args;
       expect(secondId).to.equal('event_2');
     });
   });
@@ -110,15 +110,15 @@ experiment('batch processors', () => {
 
     test('logs an info level message', async () => {
       expect(logger.info.callCount).to.equal(1);
-      const [ str ] = logger.info.lastCall.args;
+      const [str] = logger.info.lastCall.args;
       expect(str).to.be.a.string();
     });
 
     test('publishes a check status job for each message in batch', async () => {
       expect(checkStatus.publish.callCount).to.equal(2);
-      const [ firstId ] = checkStatus.publish.getCall(0).args;
+      const [firstId] = checkStatus.publish.getCall(0).args;
       expect(firstId).to.equal('message_1');
-      const [ secondId ] = checkStatus.publish.getCall(1).args;
+      const [secondId] = checkStatus.publish.getCall(1).args;
       expect(secondId).to.equal('message_2');
     });
   });

@@ -471,7 +471,7 @@ experiment('returns CSV to JSON mapper', () => {
       expect(result).to.be.an.array();
       expect(result.length).to.equal(1);
 
-      const [ ret ] = result;
+      const [ret] = result;
 
       const keys = Object.keys(ret);
       expect(keys).to.include([

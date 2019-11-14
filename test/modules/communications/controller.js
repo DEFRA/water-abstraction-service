@@ -3,7 +3,8 @@ const {
   beforeEach,
   afterEach,
   experiment,
-  test } = exports.lab = require('@hapi/lab').script();
+  test
+} = exports.lab = require('@hapi/lab').script();
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
@@ -16,7 +17,8 @@ const crmResponses = require('../../responses/crm/documentHeader');
 
 const notificationResult = {
   rowCount: 1,
-  rows: [{ id: 'notification-id',
+  rows: [{
+    id: 'notification-id',
     recipient: 'n/a',
     message_type: 'letter',
     message_ref: 'notification-letter',

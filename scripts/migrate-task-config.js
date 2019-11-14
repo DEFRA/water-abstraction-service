@@ -5,9 +5,9 @@ const { pool } = require('../src/lib/connectors/db');
 const rows = require('../config/task-config');
 
 const migrate = async () => {
-  console.log(`Updating task configs`);
+  console.log('Updating task configs');
   try {
-    for (let row of rows) {
+    for (const row of rows) {
       console.log(`Updating ${row.type} ${row.subtype}`);
 
       const sql = `INSERT INTO "water"."task_config"

@@ -17,14 +17,14 @@ const checkImportQueue = async () => {
 
     logger.info(`Import: ${data.length} items to import. ${(new Date()).toISOString()}`);
 
-    for (let row of data) {
+    for (const row of data) {
       await load(row.licence_ref);
     }
   } catch (error) {
     logger.error('Import queue error', error);
   }
 
-  logger.info(`Import: waiting 10 seconds`);
+  logger.info('Import: waiting 10 seconds');
   setTimeout(checkImportQueue, 10000);
 };
 

@@ -132,11 +132,11 @@ const createEnqueue = messageQueue => {
     const { value: data, error } = validateEnqueueOptions(options, now);
 
     if (error) {
-      throw Boom.badRequest(`Invalid message enqueue options`, error);
+      throw Boom.badRequest('Invalid message enqueue options', error);
     }
 
     // For non-PDF  messages, generate preview and add to data
-    let row = isPdf(options.messageRef) ? data : await getNotifyPreview(data);
+    const row = isPdf(options.messageRef) ? data : await getNotifyPreview(data);
 
     // Persist row to scheduled_notification table
     const dbRow = await createFromObject(row);

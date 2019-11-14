@@ -84,7 +84,7 @@ experiment('mapReturnToModel', () => {
     const lines = [];
     const versions = [];
     const testReturn = getTestReturn();
-    let model = mapReturnToModel(testReturn, getTestVersion(), lines, versions);
+    const model = mapReturnToModel(testReturn, getTestVersion(), lines, versions);
     expect(model.dueDate).to.equal(testReturn.due_date);
   });
 
