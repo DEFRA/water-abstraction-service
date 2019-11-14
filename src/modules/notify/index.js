@@ -93,7 +93,7 @@ async function scheduleSendEvent (messageQueue, row, now) {
   const startIn = Math.round(moment(row.send_after).diff(moment(now)) / 1000);
 
   const options = {
-    startIn,
+    startAfter: row.send_after,
     singletonKey: row.id,
     priority,
     expireIn: '1 day'
@@ -155,10 +155,9 @@ const registerSendSubscriber = messageQueue => {
 
     try {
       await sendAndRetry(id);
-      return done();
     } catch (err) {
       logger.error('Failed to send', err);
-      return done(err);
+      throw err;
     }
   });
 };

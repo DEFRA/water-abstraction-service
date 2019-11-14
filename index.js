@@ -35,10 +35,16 @@ const goodWinstonStream = new GoodWinston({ winston: logger });
 const server = Hapi.server(config.server);
 
 const registerServerPlugins = async (server) => {
+  // Message queue plugin
+  await server.register({
+    plugin: require('./src/lib/message-queue').plugin
+  });
+
   // Third-party plugins
   await server.register({
     plugin: Good,
-    options: { ...config.good,
+    options: {
+      ...config.good,
       reporters: {
         winston: [goodWinstonStream]
       }
@@ -64,7 +70,6 @@ const configureServerAuthStrategy = (server) => {
 };
 
 const configureMessageQueue = async (server) => {
-  await messageQueue.start();
   notify(messageQueue).registerSubscribers();
   await importer(messageQueue).registerSubscribers();
   await returnsNotifications(messageQueue).registerSubscribers();
@@ -122,6 +127,9 @@ process.on('unhandledRejection', (err) => {
   process.exit(1);
 });
 
-start();
+if (!module.parent) {
+  start();
+}
 
 module.exports = server;
+module.exports._start = start;
