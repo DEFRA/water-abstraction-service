@@ -1,6 +1,8 @@
+const Boom = require('@hapi/boom');
 const repos = require('../../lib/connectors/repository');
 const event = require('../../lib/event');
 const populateBillingBatchJob = require('./jobs/populate-billing-batch');
+const { envelope } = require('../../lib/response');
 
 const createBatchEvent = async (userEmail, batch) => {
   const batchEvent = event.create({
@@ -48,12 +50,40 @@ const postCreateBatch = async (request, h) => {
   // with charge versions
   populateBillingBatchJob.publish(batchEvent.event_id);
 
-  return h.response({
-    data: {
-      event: batchEvent,
-      url: `/water/1.0/event/${batchEvent.event_id}`
-    }
-  }).code(202);
+  return h.response(envelope({
+    event: batchEvent,
+    url: `/water/1.0/event/${batchEvent.event_id}`
+  })).code(202);
+};
+
+const getBatch = async request => {
+  const { batchId } = request.params;
+  const batch = await repos.billingBatches.getById(batchId);
+
+  return batch
+    ? envelope(batch, true)
+    : Boom.notFound(`No batch found with id: ${batchId}`);
+};
+
+const getBatchInvoices = async request => {
+  const { batchId } = request.params;
+  const invoices = await repos.billingInvoices.findByBatchId(batchId);
+
+  return invoices.length
+    ? envelope(invoices, true)
+    : Boom.notFound(`No invoices found for batch with id: ${batchId}`);
+};
+
+const getInvoiceDetail = async request => {
+  const { invoiceId } = request.params;
+  const invoice = await repos.billingInvoices.getInvoiceDetail(invoiceId);
+
+  return invoice
+    ? envelope(invoice, true)
+    : Boom.notFound(`No invoice found with id: ${invoiceId}`);
 };
 
 exports.postCreateBatch = postCreateBatch;
+exports.getBatch = getBatch;
+exports.getBatchInvoices = getBatchInvoices;
+exports.getInvoiceDetail = getInvoiceDetail;
