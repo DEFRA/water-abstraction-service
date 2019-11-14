@@ -109,4 +109,82 @@ experiment('modules/billing/routes', () => {
       expect(response.statusCode).to.equal(400);
     });
   });
+
+  experiment('getBatch', () => {
+    let request;
+    let server;
+    let validId;
+
+    beforeEach(async () => {
+      server = getServer(routes.getBatch);
+      validId = '00000000-0000-0000-0000-000000000000';
+      request = {
+        method: 'GET',
+        url: `/water/1.0/billing/batches/${validId}`
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the batch id is not a uuid', async () => {
+      request.url = request.url.replace(validId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+  });
+
+  experiment('getBatchInvoices', () => {
+    let request;
+    let server;
+    let validId;
+
+    beforeEach(async () => {
+      server = getServer(routes.getBatchInvoices);
+      validId = '00000000-0000-0000-0000-000000000000';
+      request = {
+        method: 'GET',
+        url: `/water/1.0/billing/batches/${validId}/invoices`
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the batch id is not a uuid', async () => {
+      request.url = request.url.replace(validId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+  });
+
+  experiment('getInvoiceDetail', () => {
+    let request;
+    let server;
+    let validId;
+
+    beforeEach(async () => {
+      server = getServer(routes.getInvoiceDetail);
+      validId = '00000000-0000-0000-0000-000000000000';
+      request = {
+        method: 'GET',
+        url: `/water/1.0/billing/invoices/${validId}`
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the batch id is not a uuid', async () => {
+      request.url = request.url.replace(validId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+  });
 });
