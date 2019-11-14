@@ -5,6 +5,10 @@ const Code = require('@hapi/code');
 const server = require('../../index.js');
 
 lab.experiment('Test sending a email notification', () => {
+  lab.before(async () => {
+    await server._start();
+  });
+
   lab.test('The API should throw an error when personalisation is not supplied', async () => {
     const request = {
       method: 'POST',
