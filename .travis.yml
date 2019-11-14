@@ -25,6 +25,7 @@ services:
 before_script:
   - psql -c 'create database travis_ci_test;' -U postgres
   - npm run migrate
+  - node scripts/create-gen_random_uuid.js
 
 script:
   - npm run lint
