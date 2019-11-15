@@ -1,7 +1,9 @@
 const { find, get, set, uniq } = require('lodash');
 const generateReference = require('../../../lib/reference-generator');
-const { EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING,
-  EVENT_STATUS_COMPLETED } = require('./event-statuses');
+const {
+  EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING,
+  EVENT_STATUS_COMPLETED
+} = require('./event-statuses');
 const { MESSAGE_STATUS_SENT, MESSAGE_STATUS_ERROR } =
     require('./message-statuses');
 const evt = require('../../../lib/event');

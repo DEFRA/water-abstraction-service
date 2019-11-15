@@ -16,14 +16,16 @@ class BillingBatchRepository extends Repository {
    *
    * @param {String} regionId The uuid value for the region
    * @param {String} batchType Whether annual, supplementary or two_part_tariff
-   * @param {Number} financialYear The financial year
+   * @param {Number} startFinancialYear The start year for the financial year range
+   * @param {Number} endFinancialYear The end year for the financial year range
    * @param {String} season Whether summer, winter or all year
    */
-  createBatch (regionId, batchType, financialYear, season) {
+  createBatch (regionId, batchType, startFinancialYear, endFinancialYear, season) {
     return this.create({
       region_id: regionId,
       batch_type: batchType,
-      financial_year: financialYear,
+      start_financial_year: startFinancialYear,
+      end_financial_year: endFinancialYear,
       season
     });
   }

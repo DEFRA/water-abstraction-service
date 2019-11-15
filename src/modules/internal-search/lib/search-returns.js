@@ -39,7 +39,7 @@ const filterReturnsByCRMDocument = async (returns) => {
   const { data, error } = await documents.findMany(filter, null, null, ['system_external_id']);
 
   if (error) {
-    const err = new Error(`Error finding CRM document`);
+    const err = new Error('Error finding CRM document');
     err.params = {
       error,
       licenceNumbers

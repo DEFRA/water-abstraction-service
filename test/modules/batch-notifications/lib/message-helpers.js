@@ -34,7 +34,7 @@ experiment('message helpers', () => {
   experiment('updateMessageStatuses', () => {
     test('selects messages based on the supplied event ID', async () => {
       await messageHelpers.updateMessageStatuses(eventId, MESSAGE_STATUS_SENT);
-      const [ filter ] = scheduledNotifications.repository.update.lastCall.args;
+      const [filter] = scheduledNotifications.repository.update.lastCall.args;
       expect(filter).to.equal({
         event_id: eventId
       });
@@ -42,7 +42,7 @@ experiment('message helpers', () => {
 
     test('updates the status only if status not MESSAGE_STATUS_SENDING', async () => {
       await messageHelpers.updateMessageStatuses(eventId, MESSAGE_STATUS_SENT);
-      const [ , data ] = scheduledNotifications.repository.update.lastCall.args;
+      const [, data] = scheduledNotifications.repository.update.lastCall.args;
       expect(data).to.equal({
         status: MESSAGE_STATUS_SENT
       });
@@ -51,7 +51,7 @@ experiment('message helpers', () => {
     test('updates status and send_after timestamp if status MESSAGE_STATUS_SENDING', async () => {
       const m = moment().format();
       await messageHelpers.updateMessageStatuses(eventId, MESSAGE_STATUS_SENDING);
-      const [ , data ] = scheduledNotifications.repository.update.lastCall.args;
+      const [, data] = scheduledNotifications.repository.update.lastCall.args;
       expect(data.status).to.equal(MESSAGE_STATUS_SENDING);
       expect(data.send_after).to.equal(m);
     });
@@ -60,7 +60,7 @@ experiment('message helpers', () => {
   experiment('getMessageById', () => {
     test('gets the scheduled_notification row by ID', async () => {
       await messageHelpers.getMessageById(messageId);
-      const [ filter ] = scheduledNotifications.repository.find.lastCall.args;
+      const [filter] = scheduledNotifications.repository.find.lastCall.args;
       expect(filter).to.equal({
         id: messageId
       });
@@ -84,7 +84,7 @@ experiment('message helpers', () => {
 
     test('finds the message to update using the supplied message ID', async () => {
       await messageHelpers.markMessageAsSent(messageId, notifyResponse);
-      const [ filter ] = scheduledNotifications.repository.update.lastCall.args;
+      const [filter] = scheduledNotifications.repository.update.lastCall.args;
       expect(filter).to.equal({
         id: messageId
       });
@@ -92,7 +92,7 @@ experiment('message helpers', () => {
 
     test('updates the message with a status of MESSAGE_STATUS_SENT, the notify ID and message body', async () => {
       await messageHelpers.markMessageAsSent(messageId, notifyResponse);
-      const [ , data ] = scheduledNotifications.repository.update.lastCall.args;
+      const [, data] = scheduledNotifications.repository.update.lastCall.args;
       expect(data.status).to.equal(MESSAGE_STATUS_SENT);
       expect(data.notify_id).to.equal('notify_id');
       expect(data.plaintext).to.equal('A test');
@@ -104,7 +104,7 @@ experiment('message helpers', () => {
 
     test('finds the message to update using the supplied message ID', async () => {
       await messageHelpers.markMessageAsErrored(messageId, err);
-      const [ filter ] = scheduledNotifications.repository.update.lastCall.args;
+      const [filter] = scheduledNotifications.repository.update.lastCall.args;
       expect(filter).to.equal({
         id: messageId
       });
@@ -112,13 +112,13 @@ experiment('message helpers', () => {
 
     test('sets message status to MESSAGE_STATUS_ERROR', async () => {
       await messageHelpers.markMessageAsErrored(messageId, err);
-      const [ , data ] = scheduledNotifications.repository.update.lastCall.args;
+      const [, data] = scheduledNotifications.repository.update.lastCall.args;
       expect(data.status).to.equal(MESSAGE_STATUS_ERROR);
     });
 
     test('sets log text to stringified object with error type and message', async () => {
       await messageHelpers.markMessageAsErrored(messageId, err);
-      const [ , data ] = scheduledNotifications.repository.update.lastCall.args;
+      const [, data] = scheduledNotifications.repository.update.lastCall.args;
       expect(data.log).to.equal(JSON.stringify({
         error: 'Notify error',
         message: err.toString()

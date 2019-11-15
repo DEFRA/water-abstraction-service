@@ -22,7 +22,7 @@ const handleGetRecipients = async job => {
     // Use config.getRecipients to get recipient list for this notification
     await data.config.getRecipients(data);
   } catch (err) {
-    logger.error(`Batch notifications handleGetRecipients error:`, err, { eventId });
+    logger.error('Batch notifications handleGetRecipients error:', err, { eventId });
     return eventHelpers.updateEventStatus(eventId, EVENT_STATUS_ERROR);
   }
 };

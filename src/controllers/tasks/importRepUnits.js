@@ -6,11 +6,11 @@ const { logger } = require('../../logger');
  * IMport rep units from NALD to lookup data
  */
 async function processRepUnits () {
-  const query = `SELECT * FROM import."NALD_REP_UNITS"`;
+  const query = 'SELECT * FROM import."NALD_REP_UNITS"';
   const { rows } = await pool.query(query);
 
   // Delete current list
-  await (`DELETE FROM water.lookup WHERE type='NALD_REP_UNITS'`);
+  await ('DELETE FROM water.lookup WHERE type=\'NALD_REP_UNITS\'');
 
   // Build query
   const params = [];

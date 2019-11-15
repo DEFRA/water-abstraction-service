@@ -33,9 +33,9 @@ const converter = (value, unit, multipliers) => {
 const convertToCubicMetres = (value, unit) => {
   const multipliers = {
     'm³': 1,
-    'l': 0.001,
-    'Ml': 1000,
-    'gal': 0.00454609
+    l: 0.001,
+    Ml: 1000,
+    gal: 0.00454609
   };
 
   return converter(value, unit, multipliers);
@@ -50,9 +50,9 @@ const convertToCubicMetres = (value, unit) => {
 const convertToUserUnit = (value, unit) => {
   const multipliers = {
     'm³': 1,
-    'l': 1000,
-    'Ml': 0.001,
-    'gal': 219.969248299
+    l: 1000,
+    Ml: 0.001,
+    gal: 219.969248299
   };
 
   return converter(value, unit, multipliers);

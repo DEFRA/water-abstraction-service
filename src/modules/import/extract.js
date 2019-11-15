@@ -116,9 +116,9 @@ async function getSqlForFile (file, schemaName) {
   for (let col = 0; col < cols.length; col++) {
     tableCreate += `"${cols[col]}" varchar`;
     if (cols.length === (col + 1)) {
-      tableCreate += `);`;
+      tableCreate += ');';
     } else {
-      tableCreate += `, `;
+      tableCreate += ', ';
     }
   }
 

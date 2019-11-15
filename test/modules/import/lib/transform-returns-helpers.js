@@ -107,48 +107,66 @@ experiment('Test returns data transformation helpers', () => {
   test('getReturnCycles - part financial years, current version', async () => {
     const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2010-04-01', false);
     expect(cycles).to.equal([
-      { startDate: '2014-06-01',
+      {
+        startDate: '2014-06-01',
         endDate: '2015-03-31',
-        isCurrent: true },
-      { startDate: '2015-04-01',
+        isCurrent: true
+      },
+      {
+        startDate: '2015-04-01',
         endDate: '2015-07-01',
-        isCurrent: true } ]);
+        isCurrent: true
+      }]);
   });
 
   test('getReturnCycles - part financial years, expired version', async () => {
     const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2018-04-01', false);
     expect(cycles).to.equal([
-      { startDate: '2014-06-01',
+      {
+        startDate: '2014-06-01',
         endDate: '2015-03-31',
-        isCurrent: false },
-      { startDate: '2015-04-01',
+        isCurrent: false
+      },
+      {
+        startDate: '2015-04-01',
         endDate: '2015-07-01',
-        isCurrent: false } ]);
+        isCurrent: false
+      }]);
   });
 
   test('getReturnCycles - part financial years, expiry on period start', async () => {
     const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2015-04-01', false);
     expect(cycles).to.equal([
-      { startDate: '2014-06-01',
+      {
+        startDate: '2014-06-01',
         endDate: '2015-03-31',
-        isCurrent: false },
-      { startDate: '2015-04-01',
+        isCurrent: false
+      },
+      {
+        startDate: '2015-04-01',
         endDate: '2015-07-01',
-        isCurrent: true } ]);
+        isCurrent: true
+      }]);
   });
 
   test('getReturnCycles - part financial years, expiry part-way through period', async () => {
     const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2015-06-01', false);
     expect(cycles).to.equal([
-      { startDate: '2014-06-01',
+      {
+        startDate: '2014-06-01',
         endDate: '2015-03-31',
-        isCurrent: false },
-      { startDate: '2015-04-01',
+        isCurrent: false
+      },
+      {
+        startDate: '2015-04-01',
         endDate: '2015-05-31',
-        isCurrent: false },
-      { startDate: '2015-06-01',
+        isCurrent: false
+      },
+      {
+        startDate: '2015-06-01',
         endDate: '2015-07-01',
-        isCurrent: true } ]);
+        isCurrent: true
+      }]);
   });
 
   // ---------- getReturnCycles - summer year
@@ -171,60 +189,84 @@ experiment('Test returns data transformation helpers', () => {
   test('getReturnCycles - part summer years, current version', async () => {
     const cycles = getReturnCycles('2014-06-01', '2015-12-01', '2010-04-01', true);
     expect(cycles).to.equal([
-      { startDate: '2014-06-01',
+      {
+        startDate: '2014-06-01',
         endDate: '2014-10-31',
-        isCurrent: true },
-      { startDate: '2014-11-01',
+        isCurrent: true
+      },
+      {
+        startDate: '2014-11-01',
         endDate: '2015-10-31',
-        isCurrent: true },
-      { startDate: '2015-11-01',
+        isCurrent: true
+      },
+      {
+        startDate: '2015-11-01',
         endDate: '2015-12-01',
-        isCurrent: true } ]);
+        isCurrent: true
+      }]);
   });
 
   test('getReturnCycles - part summer years, expired version', async () => {
     const cycles = getReturnCycles('2014-06-01', '2015-07-01', '2018-04-01', true);
 
     expect(cycles).to.equal([
-      { startDate: '2014-06-01',
+      {
+        startDate: '2014-06-01',
         endDate: '2014-10-31',
-        isCurrent: false },
-      { startDate: '2014-11-01',
+        isCurrent: false
+      },
+      {
+        startDate: '2014-11-01',
         endDate: '2015-07-01',
-        isCurrent: false } ]);
+        isCurrent: false
+      }]);
   });
 
   test('getReturnCycles - part summer years, expiry on period start', async () => {
     const cycles = getReturnCycles('2014-06-01', '2016-07-01', '2015-11-01', true);
 
     expect(cycles).to.equal([
-      { startDate: '2014-06-01',
+      {
+        startDate: '2014-06-01',
         endDate: '2014-10-31',
-        isCurrent: false },
-      { startDate: '2014-11-01',
+        isCurrent: false
+      },
+      {
+        startDate: '2014-11-01',
         endDate: '2015-10-31',
-        isCurrent: false },
-      { startDate: '2015-11-01',
+        isCurrent: false
+      },
+      {
+        startDate: '2015-11-01',
         endDate: '2016-07-01',
-        isCurrent: true } ]);
+        isCurrent: true
+      }]);
   });
 
   test('getReturnCycles - part summer years, expiry part-way through period', async () => {
     const cycles = getReturnCycles('2014-06-01', '2016-07-01', '2015-06-01', true);
 
     expect(cycles).to.equal([
-      { startDate: '2014-06-01',
+      {
+        startDate: '2014-06-01',
         endDate: '2014-10-31',
-        isCurrent: false },
-      { startDate: '2014-11-01',
+        isCurrent: false
+      },
+      {
+        startDate: '2014-11-01',
         endDate: '2015-05-31',
-        isCurrent: false },
-      { startDate: '2015-06-01',
+        isCurrent: false
+      },
+      {
+        startDate: '2015-06-01',
         endDate: '2015-10-31',
-        isCurrent: true },
-      { startDate: '2015-11-01',
+        isCurrent: true
+      },
+      {
+        startDate: '2015-11-01',
         endDate: '2016-07-01',
-        isCurrent: true } ]);
+        isCurrent: true
+      }]);
   });
 
   // ------------- getStatus

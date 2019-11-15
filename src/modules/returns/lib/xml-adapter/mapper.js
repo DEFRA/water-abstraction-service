@@ -33,7 +33,7 @@ const getReturnFrequency = (ret) => {
 
   // Get node names of child nodes, then compare them with the mapping above
   const childNames = getChildNames(fullReturnStructure);
-  const [ key ] = intersection(childNames, Object.keys(mapping));
+  const [key] = intersection(childNames, Object.keys(mapping));
   return mapping[key];
 };
 

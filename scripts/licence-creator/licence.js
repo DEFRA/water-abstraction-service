@@ -164,7 +164,7 @@ class Licence {
 
     // Format points
     const NALD_RET_FMT_POINTS = this.returnVersions.reduce((memo, rv) => {
-      for (let format of rv.formats) {
+      for (const format of rv.formats) {
         memo.push(...format.points.map(point => point.export()));
       }
       return memo;
@@ -172,7 +172,7 @@ class Licence {
 
     // Format purposes
     const NALD_RET_FMT_PURPOSES = this.returnVersions.reduce((memo, rv) => {
-      for (let format of rv.formats) {
+      for (const format of rv.formats) {
         memo.push(...format.purposes.map(purpose => purpose.export()));
       }
       return memo;

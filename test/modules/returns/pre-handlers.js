@@ -53,7 +53,7 @@ experiment('preLoadEvent', () => {
   test('it should load the event with the ID specified in the params', async () => {
     const request = requestFactory();
     await preHandlers.preLoadEvent(request, h);
-    const [ id ] = event.load.firstCall.args;
+    const [id] = event.load.firstCall.args;
     expect(id).to.equal(eventId);
   });
 

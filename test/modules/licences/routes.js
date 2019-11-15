@@ -5,7 +5,8 @@ const { cloneDeep } = require('lodash');
 const {
   beforeEach,
   experiment,
-  test } = exports.lab = require('@hapi/lab').script();
+  test
+} = exports.lab = require('@hapi/lab').script();
 
 const routes = require('../../../src/modules/licences/routes');
 const id = '00000000-0000-0000-0000-000000000000';
@@ -21,13 +22,13 @@ experiment('/documents/{documentId}/licence', () => {
   });
 
   test('validates the documentId must be a GUID', async () => {
-    const url = `/water/1.0/documents/not-a-guid/licence`;
+    const url = '/water/1.0/documents/not-a-guid/licence';
     const output = await server.inject(url);
     expect(output.statusCode).to.equal(400);
   });
 
   test('allows a valid guid for documentId', async () => {
-    const url = `/water/1.0/documents/00000000-0000-0000-0000-000000000000/licence`;
+    const url = '/water/1.0/documents/00000000-0000-0000-0000-000000000000/licence';
     const output = await server.inject(url);
     expect(output.statusCode).to.equal(200);
   });
@@ -44,7 +45,7 @@ experiment('/documents/{documentId}/licence/conditions', () => {
   });
 
   test('validates the documentId must be a GUID', async () => {
-    const url = `/water/1.0/documents/not-a-guid/licence/conditions`;
+    const url = '/water/1.0/documents/not-a-guid/licence/conditions';
     const output = await server.inject(url);
     expect(output.statusCode).to.equal(400);
   });
@@ -67,7 +68,7 @@ experiment('/documents/{documentId}/licence/points', () => {
   });
 
   test('validates the documentId must be a GUID', async () => {
-    const url = `/water/1.0/documents/not-a-guid/licence/points`;
+    const url = '/water/1.0/documents/not-a-guid/licence/points';
     const output = await server.inject(url);
     expect(output.statusCode).to.equal(400);
   });
@@ -90,7 +91,7 @@ experiment('/documents/{documentId}/licence/users', () => {
   });
 
   test('validates the documentId must be a GUID', async () => {
-    const url = `/water/1.0/documents/not-a-guid/licence/users`;
+    const url = '/water/1.0/documents/not-a-guid/licence/users';
     const output = await server.inject(url);
     expect(output.statusCode).to.equal(400);
   });

@@ -14,6 +14,7 @@ experiment('message statuses', () => {
       'MESSAGE_STATUS_DRAFT',
       'MESSAGE_STATUS_SENDING',
       'MESSAGE_STATUS_SENT',
-      'MESSAGE_STATUS_ERROR' ]);
+      'MESSAGE_STATUS_ERROR'
+    ]);
   });
 });

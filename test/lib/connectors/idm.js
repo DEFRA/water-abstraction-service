@@ -5,7 +5,8 @@ const {
   beforeEach,
   afterEach,
   experiment,
-  test } = exports.lab = require('@hapi/lab').script();
+  test
+} = exports.lab = require('@hapi/lab').script();
 
 const idmConnector = require('../../../src/lib/connectors/idm');
 const helpers = require('@envage/water-abstraction-helpers');

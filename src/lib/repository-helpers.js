@@ -25,7 +25,7 @@ const findOne = async (repository, id) => {
   const { error, rows } = response;
 
   if (error) {
-    throw Boom.badImplementation(`findOne DB error`, error);
+    throw Boom.badImplementation('findOne DB error', error);
   }
 
   if (rows.length !== 1) {

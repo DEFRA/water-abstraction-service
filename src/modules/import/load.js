@@ -22,7 +22,7 @@ const { logger } = require('../../logger');
 const loadPermitAndDocumentHeader = async (licenceNumber, licenceData) => {
   logger.info(`Import: permit for ${licenceNumber}`);
   const permit = buildPermitRepoPacket(licenceNumber, 1, 8, licenceData);
-  const { rows: [ { licence_id: permitRepoId } ] } = await repository.licence.persist(permit, ['licence_id']);
+  const { rows: [{ licence_id: permitRepoId }] } = await repository.licence.persist(permit, ['licence_id']);
 
   // Create CRM data and persist
   logger.info(`Import: document header for ${licenceNumber}`);
@@ -57,7 +57,7 @@ const validateTableExists = async licenceNumber => {
 };
 
 const handleLoadError = async (error, licenceNumber) => {
-  logger.error(`Import failure`, error, { licenceNumber });
+  logger.error('Import failure', error, { licenceNumber });
   await setImportStatus(licenceNumber, error.toString());
 };
 

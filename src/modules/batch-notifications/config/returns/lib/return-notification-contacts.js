@@ -15,9 +15,9 @@ const groupReturnsByLicenceNumber = returns => groupBy(returns, ret => ret.licen
 const getCRMContacts = async groupedReturns => {
   const arr = [];
   const batches = chunk(Object.keys(groupedReturns), 100);
-  for (let batch of batches) {
+  for (const batch of batches) {
     const response = await documentsConnector.getLicenceContacts(batch);
-    for (let row of response) {
+    for (const row of response) {
       arr.push({
         licenceNumber: row.system_external_id,
         returns: groupedReturns[row.system_external_id],

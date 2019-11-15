@@ -98,7 +98,7 @@ async function getContacts (filter, rolePriority) {
   const { error, data } = await getDocumentContacts(filter);
 
   if (error) {
-    throw Boom.badImplementation(`Error building contact list`, error);
+    throw Boom.badImplementation('Error building contact list', error);
   }
 
   return createSendList(data, rolePriority);

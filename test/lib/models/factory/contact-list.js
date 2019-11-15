@@ -14,13 +14,13 @@ experiment('ContactList factory', () => {
 
   test('the first contact should be the licence holder', async () => {
     const contactList = createContacts(licenceData);
-    const [ licenceHolder ] = contactList.toArray();
+    const [licenceHolder] = contactList.toArray();
     expect(licenceHolder.role).to.equal('Licence holder');
   });
 
   test('the second contact should be a licence contact', async () => {
     const contactList = createContacts(licenceData);
-    const [ , licenceContact ] = contactList.toArray();
+    const [, licenceContact] = contactList.toArray();
     expect(licenceContact.role).to.equal('Licence contact');
   });
 });
