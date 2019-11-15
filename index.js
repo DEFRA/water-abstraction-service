@@ -39,7 +39,9 @@ const registerServerPlugins = async (server) => {
     plugin: require('./src/lib/message-queue').plugin
   });
 
-  await server.register(require('./src/modules/billing/plugin'));
+  await server.registerSubscribers(
+    require('./src/modules/register-subscribers')
+  );
 
   // Third-party plugins
   await server.register({
