@@ -6,11 +6,16 @@ const moment = require('moment');
 const messageQueue = require('../../../src/lib/message-queue');
 
 const { enqueue } = require('../../../src/modules/notify/index.js')(messageQueue);
+const sandbox = require('sinon').createSandbox();
 
 lab.experiment('Test notify module', () => {
   lab.before(async () => {
-    await messageQueue.start();
-    console.log('Message queue started');
+    sandbox.stub(messageQueue, 'publish').resolves();
+    sandbox.stub(messageQueue, 'subscribe').resolves();
+  });
+
+  lab.after(async () => {
+    sandbox.restore();
   });
 
   lab.test('Enqueue message for immediate send', async () => {
