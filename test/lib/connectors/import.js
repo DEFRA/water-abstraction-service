@@ -5,7 +5,8 @@ const {
   beforeEach,
   afterEach,
   experiment,
-  test } = exports.lab = require('@hapi/lab').script();
+  test
+} = exports.lab = require('@hapi/lab').script();
 
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const importConnector = require('../../../src/lib/connectors/import');

@@ -39,7 +39,7 @@ const getJobInterval = job => {
 };
 
 const updateTaskTimeStarted = async taskId => {
-  const query = `UPDATE "water"."scheduler" SET last_run_started=NOW() where task_id=$1`;
+  const query = 'UPDATE "water"."scheduler" SET last_run_started=NOW() where task_id=$1';
   await DB.query(query, [taskId]);
 };
 

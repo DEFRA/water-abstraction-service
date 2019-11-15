@@ -17,7 +17,7 @@ const getLicence = async (request, h) => {
     if (data) {
       return data;
     }
-    return Boom.notFound(`The requested licence number could not be found`);
+    return Boom.notFound('The requested licence number could not be found');
   } catch (err) {
     throw Boom.boomify(err, { statusCode: 400 });
   }
@@ -35,7 +35,7 @@ const getReturns = async (request, h) => {
     if (data) {
       return data;
     }
-    return Boom.notFound(`The requested licence number could not be found`);
+    return Boom.notFound('The requested licence number could not be found');
   } catch (err) {
     throw Boom.boomify(err, { statusCode: 400 });
   }

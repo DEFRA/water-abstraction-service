@@ -46,14 +46,16 @@ const returnSchema = {
   startDate: Joi.string().regex(isoDateRegex).required(),
   endDate: Joi.string().regex(isoDateRegex).required(),
   dueDate: Joi.string().regex(isoDateRegex),
-  frequency: Joi.when('isNil', { is: false,
+  frequency: Joi.when('isNil', {
+    is: false,
     then: Joi.string().valid(allowedPeriods).required()
   }),
   isNil: Joi.boolean().required(),
   status: Joi.string().valid(statuses).required(),
   versionNumber: Joi.number().required().min(1),
   isCurrent: Joi.boolean().required().allow(null),
-  reading: Joi.when('isNil', { is: false,
+  reading: Joi.when('isNil', {
+    is: false,
     then:
     {
       type: Joi.string().valid(readingTypes).required(),
@@ -66,8 +68,10 @@ const returnSchema = {
       totalCustomDateEnd: validCustomDate
     }
   }),
-  meters: Joi.when('isNil', { is: false,
-    then: Joi.when('reading.method', { is: 'abstractionVolumes',
+  meters: Joi.when('isNil', {
+    is: false,
+    then: Joi.when('reading.method', {
+      is: 'abstractionVolumes',
       then: Joi.array().items({
         meterDetailsProvided: Joi.boolean().required(),
         manufacturer: validMeterDetail,

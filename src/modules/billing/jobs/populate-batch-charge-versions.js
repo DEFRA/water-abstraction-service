@@ -1,5 +1,4 @@
 const { get } = require('lodash');
-const messageQueue = require('../../../lib/message-queue');
 const evt = require('../../../lib/event');
 const { chargeVersions } = require('../../../lib/connectors/repository');
 
@@ -7,7 +6,10 @@ const JOB_NAME = 'billing.populate-batch-charge-versions';
 
 const { isSupplementaryBatch, jobStatus } = require('../lib/batch');
 
-const publish = eventId => messageQueue.publish(JOB_NAME, { eventId });
+const createMessage = eventId => ({
+  name: JOB_NAME,
+  data: { eventId }
+});
 
 /**
  * Handles a batch that is supplementary
@@ -44,6 +46,6 @@ const handlePopulateBatch = async job => {
   }
 };
 
-exports.publish = publish;
+exports.createMessage = createMessage;
 exports.handler = handlePopulateBatch;
 exports.jobName = JOB_NAME;

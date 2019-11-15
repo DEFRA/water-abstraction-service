@@ -43,7 +43,7 @@ const getPurposesJson = async (licenceRow, currentVersion = null) => {
     purposes = await getPurposes(licenceRow.ID, regionCode);
   }
 
-  for (let purpose of purposes) {
+  for (const purpose of purposes) {
     purpose.purpose = await getPurpose({
       primary: purpose.APUR_APPR_CODE,
       secondary: purpose.APUR_APSE_CODE,
@@ -65,7 +65,7 @@ const getPurposesJson = async (licenceRow, currentVersion = null) => {
 const getReturnFormats = async (licenceId, regionCode) => {
   const formats = await getCurrentFormats(licenceId, regionCode);
 
-  for (let format of formats) {
+  for (const format of formats) {
     format.points = await getFormatPoints(format.ID, regionCode);
     format.purposes = await getFormatPurposes(format.ID, regionCode);
   }
@@ -83,11 +83,11 @@ const getCurrentVersionJson = async (licenceRow) => {
   const currentVersion = await getCurrentVersion(licenceRow.ID, regionCode);
 
   if (currentVersion) {
-    let data = {};
+    const data = {};
     data.licence = currentVersion;
 
     data.licence.party = await getParties(currentVersion.ACON_APAR_ID, regionCode);
-    for (let p in data.licence.parties) {
+    for (const p in data.licence.parties) {
       data.licence.parties[p].contacts = await getPartyContacts(currentVersion.parties[p].ID, regionCode);
     }
     data.party = (await getParty(currentVersion.ACON_APAR_ID, regionCode))[0];
@@ -111,11 +111,11 @@ const getCurrentVersionJson = async (licenceRow) => {
  * @return {Promise} resolves with versions array
  */
 const getVersionsJson = async (licenceRow) => {
-  let versions = await getVersions(licenceRow.ID, licenceRow.FGAC_REGION_CODE);
+  const versions = await getVersions(licenceRow.ID, licenceRow.FGAC_REGION_CODE);
 
-  for (let version of versions) {
+  for (const version of versions) {
     version.parties = await getParties(version.ACON_APAR_ID, licenceRow.FGAC_REGION_CODE);
-    for (let party of version.parties) {
+    for (const party of version.parties) {
       party.contacts = await getPartyContacts(party.ID, licenceRow.FGAC_REGION_CODE);
     }
   }
@@ -173,7 +173,7 @@ const getLatestVersion = (versions) => {
 const buildPermitRepoPacket = (licenceRef, regimeId, licenceTypeId, data) => {
   const latestVersion = getLatestVersion(data.data.versions);
 
-  let permitRepoData = {
+  const permitRepoData = {
     licence_ref: licenceRef,
     licence_start_dt: dateToIsoString(latestVersion.EFF_ST_DATE),
     licence_end_dt: getEndDate(data),

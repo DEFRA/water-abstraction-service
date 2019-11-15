@@ -58,8 +58,7 @@ const patchUnlinkLicence = async (request, h) => {
     await createUnlinkLicenceEvent(callingUser, documentId);
     return h.response({ data, error: null }).code(200);
   } catch (err) {
-    logger.error('Failed to unlink licence', err, {
-      callingUserId, documentId });
+    logger.error('Failed to unlink licence', err, { callingUserId, documentId });
     if (err.isBoom) {
       return h.response({ data: null, error: err }).code(err.output.statusCode);
     }

@@ -32,19 +32,11 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
     expect(populateBatchChargeVersionsJob.jobName).to.equal('billing.populate-batch-charge-versions');
   });
 
-  experiment('.publish', () => {
-    beforeEach(async () => {
-      await populateBatchChargeVersionsJob.publish('test-event-id');
-    });
-
-    test('publishes using the expected job name', async () => {
-      const [name] = messageQueue.publish.lastCall.args;
-      expect(name).to.equal('billing.populate-batch-charge-versions');
-    });
-
-    test('publishes a data object with the event id', async () => {
-      const [, data] = messageQueue.publish.lastCall.args;
-      expect(data).to.equal({
+  experiment('.createMessage', () => {
+    test('creates the expected request object', async () => {
+      const message = populateBatchChargeVersionsJob.createMessage('test-event-id');
+      expect(message.name).to.equal('billing.populate-batch-charge-versions');
+      expect(message.data).to.equal({
         eventId: 'test-event-id'
       });
     });

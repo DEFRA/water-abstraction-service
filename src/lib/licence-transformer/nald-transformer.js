@@ -158,7 +158,7 @@ class NALDTransformer extends BaseTransformer {
 
     const r = /([0-9,.]+) ?([a-z3/]+)/ig;
     let result;
-    let results = [];
+    const results = [];
     while ((result = r.exec(str)) !== null) {
       results.push({
         value: parseFloat(result[1].replace(/[^0-9.]/g, '')),
@@ -299,7 +299,8 @@ class NALDTransformer extends BaseTransformer {
         let cWrapper = find(conditionsArr, conditionMatcher(code, subCode, purposeText));
         if (!cWrapper) {
           const titles = find(titleData, titleMatcher(code, subCode));
-          cWrapper = { ...titles,
+          cWrapper = {
+            ...titles,
             code,
             subCode,
             points: [],
@@ -359,8 +360,8 @@ class NALDTransformer extends BaseTransformer {
     const filtered = this.filterConditions(conditions, 'CES', ['FLOW', 'LEV']);
 
     const names = filtered.reduce((acc, condition) => {
-      for (let point of condition.points) {
-        for (let pointCondition of point.conditions) {
+      for (const point of condition.points) {
+        for (const pointCondition of point.conditions) {
           acc.push(pointCondition.parameter1);
         }
       }

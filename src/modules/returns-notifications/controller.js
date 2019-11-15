@@ -75,7 +75,7 @@ const postReturnNotification = async (request, h) => {
   await evt.save(e);
 
   // Schedule building of individual messages
-  for (let row of data) {
+  for (const row of data) {
     const job = getJobData(row, e, messageRef, config);
     await messageQueue.publish('returnsNotification.send', job, pgOptions);
   }

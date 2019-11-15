@@ -1,12 +1,14 @@
 const { get } = require('lodash');
-const messageQueue = require('../../../lib/message-queue');
 const evt = require('../../../lib/event');
 
 const { jobStatus } = require('../lib/batch');
 
 const JOB_NAME = 'billing.populate-batch-transactions';
 
-const publish = eventId => messageQueue.publish(JOB_NAME, { eventId });
+const createMessage = eventId => ({
+  name: JOB_NAME,
+  data: { eventId }
+});
 
 const handlePopulateBatch = async job => {
   const eventId = get(job, 'data.eventId');
@@ -19,6 +21,6 @@ const handlePopulateBatch = async job => {
   await evt.save(batchEvent);
 };
 
-exports.publish = publish;
+exports.createMessage = createMessage;
 exports.handler = handlePopulateBatch;
 exports.jobName = JOB_NAME;

@@ -38,7 +38,7 @@ const getRecipients = async (data) => {
   const licenceNumbers = [];
   let recipientCount = 0;
 
-  for (let message of messages) {
+  for (const message of messages) {
     const { contact, ...context } = message;
 
     if (contact) {

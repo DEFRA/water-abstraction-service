@@ -64,7 +64,7 @@ experiment('getRecipients job', () => {
       });
 
       test('logs the error', async () => {
-        const [ msg, error, params ] = logger.error.lastCall.args;
+        const [msg, error, params] = logger.error.lastCall.args;
         expect(msg).to.be.a.string();
         expect(error).to.equal(err);
         expect(params).to.equal({ eventId });
@@ -103,7 +103,7 @@ experiment('getRecipients job', () => {
       });
 
       test('passes data retrieved from loadJobData to the getRecipients method', async () => {
-        const [ data ] = getRecipientsStub.lastCall.args;
+        const [data] = getRecipientsStub.lastCall.args;
         expect(data.ev.eventId).to.equal(eventId);
       });
     });

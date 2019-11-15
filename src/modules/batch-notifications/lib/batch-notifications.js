@@ -27,7 +27,7 @@ const loadJobData = async (eventId) => {
   // Load event
   const ev = await event.load(eventId);
   if (!ev) {
-    throw new Error(`Batch notification event not found`);
+    throw new Error('Batch notification event not found');
   }
   // Load config
   const config = find(configs, { messageType: ev.subtype });

@@ -20,7 +20,14 @@ const createBatchEvent = async (userEmail, batch) => {
 };
 
 const createBatch = (regionId, batchType, financialYear, season) => {
-  return repos.billingBatches.createBatch(regionId, batchType, financialYear, season);
+  const startFinancialYear = batchType === 'supplementary' ? financialYear - 6 : financialYear;
+  return repos.billingBatches.createBatch(
+    regionId,
+    batchType,
+    startFinancialYear,
+    financialYear,
+    season
+  );
 };
 
 /**
@@ -47,7 +54,8 @@ const postCreateBatch = async (request, h) => {
 
   // add a new job to the queue so that the batch can be filled
   // with charge versions
-  populateBatchChargeVersionsJob.publish(batchEvent.event_id);
+  const message = populateBatchChargeVersionsJob.createMessage(batchEvent.event_id);
+  await request.messageQueue.publish(message);
 
   return h.response(envelope({
     event: batchEvent,

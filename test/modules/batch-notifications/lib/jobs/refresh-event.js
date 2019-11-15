@@ -61,7 +61,7 @@ experiment('refreshEvent job', () => {
       });
 
       test('logs the error', async () => {
-        const [ msg, error, params ] = logger.error.lastCall.args;
+        const [msg, error, params] = logger.error.lastCall.args;
         expect(msg).to.be.a.string();
         expect(error).to.equal(err);
         expect(params).to.equal({ eventId });

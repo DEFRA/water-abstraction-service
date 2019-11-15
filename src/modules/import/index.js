@@ -4,26 +4,25 @@ const { downloadAndExtract } = require('./extract');
 const { loadScheduler } = require('./load-scheduler');
 const { logger } = require('../../logger');
 
-const scheduleImportSubscriber = async (job, done) => {
-  Slack.post(`Import: scheduling licence imports`);
+const scheduleImportSubscriber = async job => {
+  Slack.post('Import: scheduling licence imports');
   try {
     await loadScheduler();
-    Slack.post(`Import: scheduling complete`);
-    done();
+    Slack.post('Import: scheduling complete');
   } catch (err) {
     logger.error('Schedule licence import error', err, { job });
+    throw err;
   }
 };
 
-const startImportSubscriber = async (job, done) => {
+const startImportSubscriber = async job => {
   try {
-    Slack.post(`Starting NALD data import`);
+    Slack.post('Starting NALD data import');
     await clearImportLog();
     await downloadAndExtract();
-    done();
   } catch (err) {
     logger.error('Nald data import start error', err, { job });
-    done(err);
+    throw err;
   }
 };
 

@@ -10,7 +10,6 @@ const sandbox = sinon.createSandbox();
 
 const repos = require('../../../src/lib/connectors/repository');
 const event = require('../../../src/lib/event');
-const populateBatchChargeVersionsJob = require('../../../src/modules/billing/jobs/populate-batch-charge-versions');
 
 const controller = require('../../../src/modules/billing/controller');
 
@@ -40,8 +39,6 @@ experiment('modules/billing/controller', () => {
         { event_id: '11111111-1111-1111-1111-111111111111' }
       ]
     });
-
-    sandbox.stub(populateBatchChargeVersionsJob, 'publish').resolves();
   });
 
   afterEach(async () => {
@@ -59,6 +56,9 @@ experiment('modules/billing/controller', () => {
           batchType: 'annual',
           financialYear: 2019,
           season: 'summer'
+        },
+        messageQueue: {
+          publish: sandbox.stub().resolves()
         }
       };
     });
@@ -74,6 +74,7 @@ experiment('modules/billing/controller', () => {
           request.payload.regionId,
           request.payload.batchType,
           request.payload.financialYear,
+          request.payload.financialYear,
           request.payload.season
         )).to.be.true();
       });
@@ -83,7 +84,7 @@ experiment('modules/billing/controller', () => {
       });
 
       test('no job is published', async () => {
-        expect(populateBatchChargeVersionsJob.publish.called).to.be.false();
+        expect(request.messageQueue.publish.called).to.be.false();
       });
 
       test('the response contains an error message', async () => {
@@ -107,6 +108,7 @@ experiment('modules/billing/controller', () => {
           request.payload.regionId,
           request.payload.batchType,
           request.payload.financialYear,
+          request.payload.financialYear,
           request.payload.season
         )).to.be.true();
       });
@@ -121,8 +123,8 @@ experiment('modules/billing/controller', () => {
       });
 
       test('publishes a new job to the message queue with the event id', async () => {
-        const [eventId] = populateBatchChargeVersionsJob.publish.lastCall.args;
-        expect(eventId).to.equal('11111111-1111-1111-1111-111111111111');
+        const [message] = request.messageQueue.publish.lastCall.args;
+        expect(message.data.eventId).to.equal('11111111-1111-1111-1111-111111111111');
       });
 
       test('the response contains the event', async () => {

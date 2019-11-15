@@ -42,15 +42,16 @@ experiment('lib/connectors/repository/BillingBatchRepository', () => {
 
     test('forwards the expected params to the query', async () => {
       const repo = new BillingBatchRepository();
-      await repo.createBatch('region-id', 'annual', 2019, 'summer');
+      await repo.createBatch('region-id', 'supplementary', 2013, 2019, 'summer');
 
       const [, params] = BillingBatchRepository.prototype.dbQuery.lastCall.args;
-      const [regionId, batchType, financialYear, season] = params;
+      const [regionId, batchType, startFinancialYear, endFinancialYear, season] = params;
 
-      expect(params).to.have.length(4);
+      expect(params).to.have.length(5);
       expect(regionId).to.equal('region-id');
-      expect(batchType).to.equal('annual');
-      expect(financialYear).to.equal(2019);
+      expect(batchType).to.equal('supplementary');
+      expect(startFinancialYear).to.equal(2013);
+      expect(endFinancialYear).to.equal(2019);
       expect(season).to.equal('summer');
     });
   });

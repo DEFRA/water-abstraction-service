@@ -83,7 +83,7 @@ experiment('refreshEvent job', () => {
       });
 
       test('logs the error', async () => {
-        const [ msg, error, params ] = logger.error.lastCall.args;
+        const [msg, error, params] = logger.error.lastCall.args;
         expect(msg).to.be.a.string();
         expect(error).to.equal(err);
         expect(params).to.equal({ messageId });
@@ -110,7 +110,7 @@ experiment('refreshEvent job', () => {
 
     test('sends the message', async () => {
       expect(notifyConnector.send.callCount).to.equal(1);
-      const [ message ] = notifyConnector.send.lastCall.args;
+      const [message] = notifyConnector.send.lastCall.args;
       expect(message.id).to.equal(messageId);
     });
 

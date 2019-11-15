@@ -14,7 +14,7 @@ const { data, ret, contact } = require('./test-data');
 const config = require('../../../../config');
 
 lab.experiment('Test send', () => {
-  let adminBaseUrl = config.frontEnds.internal.baseUrl;
+  const adminBaseUrl = config.frontEnds.internal.baseUrl;
 
   lab.afterEach(async () => {
     config.frontEnds.internal.baseUrl = adminBaseUrl;
@@ -29,9 +29,11 @@ lab.experiment('Test send', () => {
 
     const result = await prepareMessageData(data);
 
-    Code.expect(result).to.equal({ messageRef: 'pdf.testRef',
+    Code.expect(result).to.equal({
+      messageRef: 'pdf.testRef',
       personalisation:
-   { address_line_1: 'Daisy Cottage',
+   {
+     address_line_1: 'Daisy Cottage',
      address_line_2: 'Buttercup Road',
      town: 'Testing',
      postcode: 'TT1 1TT',
@@ -47,12 +49,13 @@ lab.experiment('Test send', () => {
      isTwoPartTariff: true,
      siteDescription: 'Borehole A'
    },
-      licences: [ '01/123' ],
+      licences: ['01/123'],
       individualEntityId: '31656ee1-1130-4d38-ab49-030c5336f3e7',
       companyEntityId: null,
       eventId: '27175f42-cae3-4e19-85fa-65e8fbff6125',
       messageType: 'letter',
-      metadata: { returnId: 'v1:123:456' } });
+      metadata: { returnId: 'v1:123:456' }
+    });
   });
 
   lab.test('It should throw an error if contacts API call rejects', async () => {

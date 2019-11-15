@@ -49,7 +49,7 @@ experiment('Test parseRequest', () => {
       filter: { return_id: 'abc' },
       issuer: 'mail@example.com',
       name: 'Friendly name',
-      columns: [ 'return_id', 'licence_ref' ],
+      columns: ['return_id', 'licence_ref'],
       sort: {},
       config: request.payload.config
     });

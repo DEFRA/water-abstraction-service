@@ -18,14 +18,14 @@ function getSystemInternalIds (contactList) {
  * @return {Object} transformed licence data, keyed by licence number
  */
 async function loadLicenceData (licenceIds) {
-  let obj = {};
+  const obj = {};
 
-  for (let licenceId of licenceIds) {
-    let { data: { licence_ref: licenceNumber, licence_data_value: licenceData }, error } = await licences.findOne(licenceId);
+  for (const licenceId of licenceIds) {
+    const { data: { licence_ref: licenceNumber, licence_data_value: licenceData }, error } = await licences.findOne(licenceId);
     if (error) {
       throw error;
     }
-    let transformer = new LicenceTransformer();
+    const transformer = new LicenceTransformer();
     await transformer.load(licenceData);
     obj[licenceNumber] = transformer.export();
   }

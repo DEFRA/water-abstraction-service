@@ -3,7 +3,8 @@ const {
   beforeEach,
   afterEach,
   experiment,
-  test } = exports.lab = require('@hapi/lab').script();
+  test
+} = exports.lab = require('@hapi/lab').script();
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
@@ -143,7 +144,7 @@ experiment('connectors/permit', () => {
 
     test('should find licence with correct regime, type and ID', async () => {
       await permit.licences.getWaterLicence(licenceNumber);
-      const [ filter ] = permit.licences.findMany.lastCall.args;
+      const [filter] = permit.licences.findMany.lastCall.args;
       expect(filter.licence_regime_id).to.equal(config.licence.regimeId);
       expect(filter.licence_type_id).to.equal(config.licence.typeId);
       expect(filter.licence_ref).to.equal(licenceNumber);

@@ -9,7 +9,7 @@ const { dbQuery } = require('./db');
  * @return {Promise} resolves when done
  */
 const clearImportLog = () => {
-  const sql = `delete from water.pending_import`;
+  const sql = 'delete from water.pending_import';
   return dbQuery(sql);
 };
 
@@ -22,7 +22,7 @@ const clearImportLog = () => {
 const createImportLog = async (licenceNumbers = [], filter = false) => {
   const placeholders = licenceNumbers.map((value, i) => `$${i + 1}`);
 
-  let sql = `INSERT INTO "water"."pending_import" (licence_ref, status, priority) (SELECT "LIC_NO", 0, ( CASE `;
+  let sql = 'INSERT INTO "water"."pending_import" (licence_ref, status, priority) (SELECT "LIC_NO", 0, ( CASE ';
 
   if (licenceNumbers.length) {
     sql += ` WHEN ("LIC_NO" IN (${placeholders})) THEN 10 `;
@@ -36,7 +36,7 @@ const createImportLog = async (licenceNumbers = [], filter = false) => {
     sql += ` WHERE "LIC_NO" IN (${placeholders})`;
   }
 
-  sql += `)`;
+  sql += ')';
 
   return dbQuery(sql, licenceNumbers);
 };
@@ -48,7 +48,7 @@ const createImportLog = async (licenceNumbers = [], filter = false) => {
  * @return Promise
  */
 const setImportStatus = async (licenceNumber, message = '', status = 1) => {
-  const sql = `UPDATE water.pending_import SET status=$1, log=$2 WHERE licence_ref=$3`;
+  const sql = 'UPDATE water.pending_import SET status=$1, log=$2 WHERE licence_ref=$3';
   await dbQuery(sql, [status, message, licenceNumber]);
 };
 
@@ -57,7 +57,7 @@ const setImportStatus = async (licenceNumber, message = '', status = 1) => {
  * @return {Object} - pending_import row, or null if all complete
  */
 const getNextImport = async () => {
-  const sql = `SELECT * FROM water.pending_import WHERE status=0 ORDER BY priority DESC LIMIT 1`;
+  const sql = 'SELECT * FROM water.pending_import WHERE status=0 ORDER BY priority DESC LIMIT 1';
   const rows = await dbQuery(sql);
   return rows.length ? rows[0] : null;
 };
@@ -68,7 +68,7 @@ const getNextImport = async () => {
  * @return {Object} - pending_import row, or null if all complete
  */
 const getNextImportBatch = async (batchSize = 10) => {
-  const sql = `SELECT * FROM water.pending_import WHERE status=0 ORDER BY priority DESC LIMIT $1`;
+  const sql = 'SELECT * FROM water.pending_import WHERE status=0 ORDER BY priority DESC LIMIT $1';
   const rows = await dbQuery(sql, [batchSize]);
   return rows;
 };

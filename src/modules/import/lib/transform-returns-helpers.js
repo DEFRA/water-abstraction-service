@@ -16,11 +16,11 @@ const convertNullStrings = (obj) => {
 
 const mapPeriod = (str) => {
   const periods = {
-    'D': 'day',
-    'W': 'week',
-    'M': 'month',
-    'Q': 'quarter',
-    'A': 'year'
+    D: 'day',
+    W: 'week',
+    M: 'month',
+    Q: 'quarter',
+    A: 'year'
   };
   return periods[str];
 };

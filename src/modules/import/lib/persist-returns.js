@@ -60,7 +60,7 @@ const createOrUpdateReturn = async (row) => {
  * @return {Promise} resolves when all processed
  */
 const persistReturns = async (returns) => {
-  for (let ret of returns) {
+  for (const ret of returns) {
     await createOrUpdateReturn(ret);
   }
 };

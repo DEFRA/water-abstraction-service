@@ -30,7 +30,7 @@ const updateMessageStatuses = (eventId, status) => {
  */
 const getMessageById = async (messageId) => {
   const filter = { id: messageId };
-  const { rows: [ message ] } = await scheduledNotifications.repository.find(filter);
+  const { rows: [message] } = await scheduledNotifications.repository.find(filter);
   return message;
 };
 

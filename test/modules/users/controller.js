@@ -5,7 +5,8 @@ const {
   beforeEach,
   afterEach,
   experiment,
-  test } = exports.lab = require('@hapi/lab').script();
+  test
+} = exports.lab = require('@hapi/lab').script();
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
@@ -27,7 +28,7 @@ const getUserResponse = () => ({
     reset_required: '0',
     last_login: '2019-01-24T17:07:54.000Z',
     date_updated: '2019-02-23T17:07:54.000Z',
-    role: { scopes: [ 'external' ] },
+    role: { scopes: ['external'] },
     external_id: 'user-external-id',
     enabled: true
   }
@@ -39,12 +40,12 @@ const getCompaniesResponse = () => ({
     entityName: 'test@example.com',
     companies: [
       {
-        userRoles: [ 'primary_user' ],
+        userRoles: ['primary_user'],
         entityId: 'wet_and_wild_id',
         name: 'Wet and Wild'
       },
       {
-        userRoles: [ 'user', 'user_returns' ],
+        userRoles: ['user', 'user_returns'],
         entityId: 'max_irrigation_id',
         name: 'Max Irrigation'
       }
@@ -86,8 +87,8 @@ const getDocumentHeaderResponse = () => ({
       metadata: {
         Name: 'Wet and Wild',
         contacts: [
-          { name: 'Wet and Wild LH', 'role': 'Licence holder' },
-          { name: 'Wet and Wild Other', 'role': 'other role' }
+          { name: 'Wet and Wild LH', role: 'Licence holder' },
+          { name: 'Wet and Wild Other', role: 'other role' }
         ]
       },
       company_entity_id: 'wet_and_wild_id'
@@ -98,8 +99,8 @@ const getDocumentHeaderResponse = () => ({
       metadata: {
         Name: 'Wet and Wild',
         contacts: [
-          { name: 'Wet and Wild LH', 'role': 'Licence holder' },
-          { name: 'Wet and Wild Other', 'role': 'other role' }
+          { name: 'Wet and Wild LH', role: 'Licence holder' },
+          { name: 'Wet and Wild Other', role: 'other role' }
         ]
       },
       company_entity_id: 'wet_and_wild_id'
@@ -110,8 +111,8 @@ const getDocumentHeaderResponse = () => ({
       metadata: {
         Name: 'Max Irrigation',
         contacts: [
-          { name: 'Max Irrigation LH', 'role': 'Licence holder' },
-          { name: 'Max Irrigation Other', 'role': 'other role' }
+          { name: 'Max Irrigation LH', role: 'Licence holder' },
+          { name: 'Max Irrigation Other', role: 'other role' }
         ]
       },
       company_entity_id: 'max_irrigation_id'

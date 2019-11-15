@@ -37,9 +37,9 @@ const documentResponse = {
 const licenceResponse = {
   data: [{
     licence_data_value: {
-      'EXPIRY_DATE': '01/02/2003',
-      'LAPSED_DATE': 'NULL',
-      'REV_DATE': '04/05/2006',
+      EXPIRY_DATE: '01/02/2003',
+      LAPSED_DATE: 'NULL',
+      REV_DATE: '04/05/2006',
       current_version: {
         purposes: [
           {
@@ -362,13 +362,14 @@ experiment('getLicenceCommunicationsByDocumentId', () => {
     expect(response).to.be.an.object();
     expect(response.error).to.equal(null);
     expect(response.data).to.equal([
-      { notificationId: 'message_123',
+      {
+        notificationId: 'message_123',
         messageType: undefined,
         date: '2018-12-13T16:04:22.000Z',
         notificationType: 'Notification type',
         sender: 'mail@example.com',
         isPdf: false
-      } ]);
+      }]);
   });
 
   test('provides error details in the event of a major error', async () => {

@@ -63,7 +63,7 @@ const getNotifyStatusChecks = async () => {
     AND notify_id IS NOT NULL
     AND status=$1
   `;
-  const params = [ MESSAGE_STATUS_SENT ];
+  const params = [MESSAGE_STATUS_SENT];
   const { rows } = await pool.query(query, params);
   return rows;
 };

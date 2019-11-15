@@ -43,7 +43,7 @@ const getPermitFilter = (licenceRef, config) => {
  */
 const getLicence = async (licenceRef, config) => {
   const filter = getPermitFilter(licenceRef, config);
-  const { error, data: [ row ] } = await permit.licences.findMany(filter);
+  const { error, data: [row] } = await permit.licences.findMany(filter);
   throwIfError(error);
   if (!row) {
     throw new NotFoundError(`Licence ${licenceRef} with ${JSON.stringify(config)} not found`);
@@ -85,7 +85,7 @@ const updateLicenceRow = async (licenceRef) => {
 const updateAllLicences = async () => {
   const filter = getLicenceTypeFilter(abstractionReform);
   const results = await permit.licences.findAll(filter, {}, ['licence_ref']);
-  for (let row of results) {
+  for (const row of results) {
     const { licence_ref: licenceNumber } = row;
     try {
       await updateLicenceRow(licenceNumber);

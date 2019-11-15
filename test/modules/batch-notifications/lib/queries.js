@@ -35,13 +35,13 @@ experiment('queries', () => {
   experiment('getSendingMessageBatch', () => {
     test('passes a string query to pool.query', async () => {
       await queries.getSendingMessageBatch();
-      const [ query ] = pool.query.lastCall.args;
+      const [query] = pool.query.lastCall.args;
       expect(query).to.be.a.string();
     });
 
     test('passes expected parameters to pool.query', async () => {
       await queries.getSendingMessageBatch();
-      const [ , params ] = pool.query.lastCall.args;
+      const [, params] = pool.query.lastCall.args;
       expect(params).to.equal([MESSAGE_STATUS_SENDING]);
     });
 
@@ -54,13 +54,13 @@ experiment('queries', () => {
   experiment('getSendingEvents', () => {
     test('passes a string query to pool.query', async () => {
       await queries.getSendingEvents();
-      const [ query ] = pool.query.lastCall.args;
+      const [query] = pool.query.lastCall.args;
       expect(query).to.be.a.string();
     });
 
     test('passes expected parameters to pool.query', async () => {
       await queries.getSendingEvents();
-      const [ , params ] = pool.query.lastCall.args;
+      const [, params] = pool.query.lastCall.args;
       expect(params).to.equal([EVENT_STATUS_SENDING]);
     });
 
@@ -73,13 +73,13 @@ experiment('queries', () => {
   experiment('getMessageStatuses', () => {
     test('passes a string query to pool.query', async () => {
       await queries.getMessageStatuses(eventId);
-      const [ query ] = pool.query.lastCall.args;
+      const [query] = pool.query.lastCall.args;
       expect(query).to.be.a.string();
     });
 
     test('passes expected parameters to pool.query', async () => {
       await queries.getMessageStatuses(eventId);
-      const [ , params ] = pool.query.lastCall.args;
+      const [, params] = pool.query.lastCall.args;
       expect(params).to.equal([eventId]);
     });
 
@@ -92,13 +92,13 @@ experiment('queries', () => {
   experiment('getNotifyStatusChecks', () => {
     test('passes a string query to pool.query', async () => {
       await queries.getNotifyStatusChecks(eventId);
-      const [ query ] = pool.query.lastCall.args;
+      const [query] = pool.query.lastCall.args;
       expect(query).to.be.a.string();
     });
 
     test('passes expected parameters to pool.query', async () => {
       await queries.getNotifyStatusChecks(eventId);
-      const [ , params ] = pool.query.lastCall.args;
+      const [, params] = pool.query.lastCall.args;
       expect(params).to.equal([MESSAGE_STATUS_SENT]);
     });
 

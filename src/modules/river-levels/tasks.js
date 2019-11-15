@@ -13,7 +13,7 @@ async function refreshStations () {
 
   const errors = [];
 
-  for (let station of data.items) {
+  for (const station of data.items) {
     const ts = moment().format('YYYY-MM-DD HH:mm:ss');
 
     logger.debug('Importing ' + station['@id']);

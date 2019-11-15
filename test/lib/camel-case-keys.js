@@ -36,13 +36,13 @@ experiment('lib/camel-case-keys', () => {
   experiment('for an object', () => {
     test('all keys are transformed to camel case', async () => {
       const input = {
-        'snake_case': 'slither',
+        snake_case: 'slither',
         'kebab-case': 'meaty'
       };
 
       expect(camelCaseKeys(input)).to.equal({
-        'snakeCase': 'slither',
-        'kebabCase': 'meaty'
+        snakeCase: 'slither',
+        kebabCase: 'meaty'
       });
     });
   });
@@ -84,13 +84,13 @@ experiment('lib/camel-case-keys', () => {
   experiment('for an array of objects', () => {
     test('all object keys are transformed to camel case', async () => {
       const input = [
-        { 'snake_case': 'slither' },
+        { snake_case: 'slither' },
         { 'kebab-case': 'meaty' }
       ];
 
       expect(camelCaseKeys(input)).to.equal([
-        { 'snakeCase': 'slither' },
-        { 'kebabCase': 'meaty' }
+        { snakeCase: 'slither' },
+        { kebabCase: 'meaty' }
       ]);
     });
   });

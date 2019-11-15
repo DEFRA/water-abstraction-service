@@ -32,7 +32,7 @@ lab.experiment('Test sending a email notification', () => {
       payload: {
         recipient: 'test@test.com',
         personalisation: {
-          'test_value': '00/00/00/00'
+          test_value: '00/00/00/00'
         }
       },
       headers: {
@@ -52,7 +52,7 @@ lab.experiment('Test sending a email notification', () => {
       payload: {
         recipient: 'test@test.com',
         personalisation: {
-          'test_value': '00/00/00/00'
+          test_value: '00/00/00/00'
         }
       },
       headers: {
@@ -90,7 +90,7 @@ lab.experiment('Test sending a email notification', () => {
       payload: {
         recipient: 'test@test.com',
         personalisation: {
-          'test_value': '00/00/00/00'
+          test_value: '00/00/00/00'
         }
       },
       headers: {
@@ -112,7 +112,7 @@ lab.experiment('Test sending a SMS notification', () => {
       payload: {
         recipient: '+447446880860',
         personalisation: {
-          'test_value': '00/00/00/00'
+          test_value: '00/00/00/00'
         }
       },
       headers: {
@@ -163,7 +163,7 @@ lab.experiment('Scheduled notifications', () => {
         id: 'unit-test-notification',
         recipient: 'test@test.com',
         personalisation: {
-          'test_value': '00/00/00/00'
+          test_value: '00/00/00/00'
         },
         sendafter: '2018-01-01'
       },
@@ -184,7 +184,7 @@ lab.experiment('Scheduled notifications', () => {
       payload: {
         id: 'unit-test-notification',
         personalisation: {
-          'test_value': '00/00/00/00'
+          test_value: '00/00/00/00'
         },
         sendafter: 'x2018-01-01'
       },
@@ -206,7 +206,7 @@ lab.experiment('Scheduled notifications', () => {
         id: 'unit-test-notification-b',
         recipient: 'test@test.com',
         personalisation: {
-          'test_value': '00/00/00/00'
+          test_value: '00/00/00/00'
         },
         sendafter: '2018x-01-01'
       },
