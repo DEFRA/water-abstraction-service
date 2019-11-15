@@ -2,7 +2,7 @@ const Boom = require('@hapi/boom');
 const repos = require('../../lib/connectors/repository');
 const event = require('../../lib/event');
 
-const { envelope } = require('../../lib/response');
+const { envelope, errorEnvelope } = require('../../lib/response');
 const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-versions');
 const { jobStatus } = require('./lib/batch');
 
@@ -19,9 +19,8 @@ const createBatchEvent = async (userEmail, batch) => {
   return response.rows[0];
 };
 
-const createBatch = async (regionId, batchType, financialYear, season) => {
-  const result = await repos.billingBatches.createBatch(regionId, batchType, financialYear, season);
-  return result.rows[0];
+const createBatch = (regionId, batchType, financialYear, season) => {
+  return repos.billingBatches.createBatch(regionId, batchType, financialYear, season);
 };
 
 /**
@@ -37,6 +36,11 @@ const postCreateBatch = async (request, h) => {
 
   // create a new entry in the batch table
   const batch = await createBatch(regionId, batchType, financialYear, season);
+
+  if (!batch) {
+    const data = errorEnvelope(`Batch already processing for region ${regionId}`);
+    return h.response(data).code(409);
+  }
 
   // add these details to the event log
   const batchEvent = await createBatchEvent(userEmail, batch);

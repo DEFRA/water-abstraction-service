@@ -14,18 +14,29 @@ class BillingBatchRepository extends Repository {
   /**
    * Creates a new batch record in the water.billing_batches table
    *
+   * Will return null if no batch was created which indicates that there
+   * is already a batch being processed for the given region.
+   *
    * @param {String} regionId The uuid value for the region
    * @param {String} batchType Whether annual, supplementary or two_part_tariff
    * @param {Number} financialYear The financial year
    * @param {String} season Whether summer, winter or all year
    */
-  createBatch (regionId, batchType, financialYear, season) {
-    return this.create({
-      region_id: regionId,
-      batch_type: batchType,
-      financial_year: financialYear,
-      season
-    });
+  async createBatch (regionId, batchType, financialYear, season) {
+    const query = `
+      insert into water.billing_batches (region_id, batch_type, financial_year, season, status)
+      select $1, $2, $3, $4, 'processing'
+      where
+        not exists (
+          select b.billing_batch_id
+          from water.billing_batches b
+          where b.status = 'processing' and b.region_id = $1
+        )
+      returning *;
+    `;
+
+    const result = await this.dbQuery(query, [regionId, batchType, financialYear, season]);
+    return get(result, 'rows[0]', null);
   }
 
   async getById (batchId) {

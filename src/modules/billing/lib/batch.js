@@ -37,3 +37,9 @@ exports.jobStatus = {
   complete: 'batch:complete',
   findingTransactions: 'batch:finding-transactions'
 };
+
+exports.batchStatus = {
+  processing: 'processing',
+  complete: 'complete',
+  error: 'error'
+};

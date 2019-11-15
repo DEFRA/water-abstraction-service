@@ -4,7 +4,7 @@ const { expect } = require('@hapi/code');
 const response = require('../../src/lib/response');
 
 experiment('lib/response', () => {
-  experiment('envelope', () => {
+  experiment('.envelope', () => {
     test('returns the wrapped data', async () => {
       const data = {
         camelCase: 'humps',
@@ -52,6 +52,22 @@ experiment('lib/response', () => {
       expect(output).to.equal({
         data: { camelCase: 'humps' },
         error: { result: 'bad' }
+      });
+    });
+  });
+
+  experiment('.errorEnvelope', () => {
+    test('returns the wrapped data', async () => {
+      const err = {
+        code: 2,
+        reason: 'problem'
+      };
+
+      const output = response.errorEnvelope(err);
+
+      expect(output).to.equal({
+        data: null,
+        error: err
       });
     });
   });
