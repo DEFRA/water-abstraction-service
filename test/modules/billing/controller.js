@@ -10,7 +10,6 @@ const sandbox = sinon.createSandbox();
 
 const repos = require('../../../src/lib/connectors/repository');
 const event = require('../../../src/lib/event');
-const populateBillingBatchJob = require('../../../src/modules/billing/jobs/populate-billing-batch');
 
 const controller = require('../../../src/modules/billing/controller');
 
@@ -45,7 +44,7 @@ experiment('modules/billing/controller', () => {
       ]
     });
 
-    sandbox.stub(populateBillingBatchJob, 'publish').resolves();
+    // sandbox.stub(populateBillingBatchJob, 'publish').resolves();
   });
 
   afterEach(async () => {
@@ -63,6 +62,9 @@ experiment('modules/billing/controller', () => {
           batchType: 'annual',
           financialYear: 2019,
           season: 'summer'
+        },
+        messageQueue: {
+          publish: sandbox.stub().resolves()
         }
       };
 
@@ -88,7 +90,7 @@ experiment('modules/billing/controller', () => {
     });
 
     test('publishes a new job to the message queue with the event id', async () => {
-      const [eventId] = populateBillingBatchJob.publish.lastCall.args;
+      const [{ data: { eventId } }] = request.messageQueue.publish.lastCall.args;
       expect(eventId).to.equal('11111111-1111-1111-1111-111111111111');
     });
 
