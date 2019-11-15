@@ -1,13 +1,17 @@
 const { get } = require('lodash');
-const messageQueue = require('../../../lib/message-queue');
 const evt = require('../../../lib/event');
 
 const JOB_NAME = 'billing.populateBatch';
 
-const publish = eventId => {
-  const data = { eventId };
-  return messageQueue.publish(JOB_NAME, data);
-};
+/**
+ * Formats job details ready to be published on PG boss
+ * @param {String} eventId - GUID
+ * @return {Object} ready to pass to PG boss publish() method
+ */
+const createMessage = eventId => ({
+  name: JOB_NAME,
+  data: { eventId }
+});
 
 const handlePopulateBatch = async job => {
   // Minimal skeleton implementation at this stage before
@@ -26,6 +30,6 @@ const handlePopulateBatch = async job => {
   await evt.save(batchEvent);
 };
 
-exports.publish = publish;
+exports.createMessage = createMessage;
 exports.handler = handlePopulateBatch;
 exports.jobName = JOB_NAME;

@@ -41,7 +41,8 @@ const postCreateBatch = async (request, h) => {
 
   // add a new job to the queue so that the batch can be filled
   // with charge versions
-  populateBillingBatchJob.publish(batchEvent.event_id);
+  const message = populateBillingBatchJob.createMessage(batchEvent.event_id);
+  await request.messageQueue.publish(message);
 
   return h.response(envelope({
     event: batchEvent,
