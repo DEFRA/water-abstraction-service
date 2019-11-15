@@ -12,4 +12,7 @@ const envelope = (data, camelCaseData = false, error = null) => ({
   error
 });
 
+const errorEnvelope = (error = null) => envelope(null, false, error);
+
 exports.envelope = envelope;
+exports.errorEnvelope = errorEnvelope;

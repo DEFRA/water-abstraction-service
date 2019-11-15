@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test lab",
+    "test:bail": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test lab --bail",
     "test:travis": "lab -t 55 -m 0 --coverage-path ./src/ -r lcov -o coverage/lcov.info -r console -o stdout",
     "codecov": "codecov",
     "migrate": "node scripts/create-schema && db-migrate up --verbose && node scripts/migrate-task-config",
@@ -42,7 +43,7 @@
   },
   "dependencies": {
     "@envage/hapi-pg-rest-api": "^5.0.0",
-    "@envage/water-abstraction-helpers": "^3.2.0",
+    "@envage/water-abstraction-helpers": "^3.6.1",
     "@hapi/boom": "^7.4.11",
     "@hapi/hapi": "^18.4.0",
     "@hapi/joi": "^15.1.1",

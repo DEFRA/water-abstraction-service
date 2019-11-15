@@ -1,8 +1,10 @@
 const Boom = require('@hapi/boom');
 const repos = require('../../lib/connectors/repository');
 const event = require('../../lib/event');
-const populateBillingBatchJob = require('./jobs/populate-billing-batch');
-const { envelope } = require('../../lib/response');
+
+const { envelope, errorEnvelope } = require('../../lib/response');
+const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-versions');
+const { jobStatus } = require('./lib/batch');
 
 const createBatchEvent = async (userEmail, batch) => {
   const batchEvent = event.create({
@@ -10,23 +12,22 @@ const createBatchEvent = async (userEmail, batch) => {
     subtype: batch.batch_type,
     issuer: userEmail,
     metadata: { batch },
-    status: 'received'
+    status: jobStatus.start
   });
 
   const response = await event.save(batchEvent);
   return response.rows[0];
 };
 
-const createBatch = async (regionId, batchType, financialYear, season) => {
+const createBatch = (regionId, batchType, financialYear, season) => {
   const startFinancialYear = batchType === 'supplementary' ? financialYear - 6 : financialYear;
-  const result = await repos.billingBatches.createBatch(
+  return repos.billingBatches.createBatch(
     regionId,
     batchType,
     startFinancialYear,
     financialYear,
     season
   );
-  return result.rows[0];
 };
 
 /**
@@ -43,12 +44,17 @@ const postCreateBatch = async (request, h) => {
   // create a new entry in the batch table
   const batch = await createBatch(regionId, batchType, financialYear, season);
 
+  if (!batch) {
+    const data = errorEnvelope(`Batch already processing for region ${regionId}`);
+    return h.response(data).code(409);
+  }
+
   // add these details to the event log
   const batchEvent = await createBatchEvent(userEmail, batch);
 
   // add a new job to the queue so that the batch can be filled
   // with charge versions
-  const message = populateBillingBatchJob.createMessage(batchEvent.event_id);
+  const message = populateBatchChargeVersionsJob.createMessage(batchEvent.event_id);
   await request.messageQueue.publish(message);
 
   return h.response(envelope({

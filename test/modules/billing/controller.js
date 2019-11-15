@@ -26,12 +26,8 @@ experiment('modules/billing/controller', () => {
     };
 
     sandbox.stub(repos.billingBatches, 'createBatch').resolves({
-      rows: [
-        {
-          batch_type: 'annual',
-          billing_batch_id: '00000000-0000-0000-0000-000000000000'
-        }
-      ]
+      batch_type: 'annual',
+      billing_batch_id: '00000000-0000-0000-0000-000000000000'
     });
 
     sandbox.stub(repos.billingBatches, 'getById');
@@ -43,8 +39,6 @@ experiment('modules/billing/controller', () => {
         { event_id: '11111111-1111-1111-1111-111111111111' }
       ]
     });
-
-    // sandbox.stub(populateBillingBatchJob, 'publish').resolves();
   });
 
   afterEach(async () => {
@@ -67,61 +61,86 @@ experiment('modules/billing/controller', () => {
           publish: sandbox.stub().resolves()
         }
       };
-
-      await controller.postCreateBatch(request, h);
     });
 
-    test('creates a new entry in the billing_batches table', async () => {
-      expect(repos.billingBatches.createBatch.calledWith(
-        request.payload.regionId,
-        request.payload.batchType,
-        request.payload.financialYear,
-        request.payload.financialYear,
-        request.payload.season
-      )).to.be.true();
+    experiment('if there is a batch being processed for the region', () => {
+      beforeEach(async () => {
+        repos.billingBatches.createBatch.resolves(null);
+        await controller.postCreateBatch(request, h);
+      });
+
+      test('an attempt to create the batch is made', async () => {
+        expect(repos.billingBatches.createBatch.calledWith(
+          request.payload.regionId,
+          request.payload.batchType,
+          request.payload.financialYear,
+          request.payload.financialYear,
+          request.payload.season
+        )).to.be.true();
+      });
+
+      test('no event is created', async () => {
+        expect(event.save.called).to.be.false();
+      });
+
+      test('no job is published', async () => {
+        expect(request.messageQueue.publish.called).to.be.false();
+      });
+
+      test('the response contains an error message', async () => {
+        const [{ error }] = h.response.lastCall.args;
+        expect(error).to.equal('Batch already processing for region 22222222-2222-2222-2222-222222222222');
+      });
+
+      test('a 409 response code is used', async () => {
+        const [code] = hapiResponseStub.code.lastCall.args;
+        expect(code).to.equal(409);
+      });
     });
 
-    test('creates a new entry with the expected range for a supplementary bill run', async () => {
-      sandbox.resetHistory();
-      request.payload.batchType = 'supplementary';
-      await controller.postCreateBatch(request, h);
+    experiment('if there is not a batch already being processed for the region', () => {
+      beforeEach(async () => {
+        await controller.postCreateBatch(request, h);
+      });
 
-      expect(repos.billingBatches.createBatch.calledWith(
-        request.payload.regionId,
-        request.payload.batchType,
-        2013,
-        2019,
-        request.payload.season
-      )).to.be.true();
-    });
+      test('creates a new entry in the billing_batches table', async () => {
+        expect(repos.billingBatches.createBatch.calledWith(
+          request.payload.regionId,
+          request.payload.batchType,
+          request.payload.financialYear,
+          request.payload.financialYear,
+          request.payload.season
+        )).to.be.true();
+      });
 
-    test('creates a new event with the created batch', async () => {
-      const [savedEvent] = event.save.lastCall.args;
-      expect(savedEvent.type).to.equal('billing-batch');
-      expect(savedEvent.subtype).to.equal(request.payload.batchType);
-      expect(savedEvent.issuer).to.equal(request.payload.userEmail);
-      expect(savedEvent.metadata.batch.billing_batch_id).to.equal('00000000-0000-0000-0000-000000000000');
-      expect(savedEvent.status).to.equal('received');
-    });
+      test('creates a new event with the created batch', async () => {
+        const [savedEvent] = event.save.lastCall.args;
+        expect(savedEvent.type).to.equal('billing-batch');
+        expect(savedEvent.subtype).to.equal(request.payload.batchType);
+        expect(savedEvent.issuer).to.equal(request.payload.userEmail);
+        expect(savedEvent.metadata.batch.billing_batch_id).to.equal('00000000-0000-0000-0000-000000000000');
+        expect(savedEvent.status).to.equal('batch:start');
+      });
 
-    test('publishes a new job to the message queue with the event id', async () => {
-      const [{ data: { eventId } }] = request.messageQueue.publish.lastCall.args;
-      expect(eventId).to.equal('11111111-1111-1111-1111-111111111111');
-    });
+      test('publishes a new job to the message queue with the event id', async () => {
+        const [message] = request.messageQueue.publish.lastCall.args;
+        expect(message.data.eventId).to.equal('11111111-1111-1111-1111-111111111111');
+      });
 
-    test('the response contains the event', async () => {
-      const [{ data }] = h.response.lastCall.args;
-      expect(data.event.event_id).to.equal('11111111-1111-1111-1111-111111111111');
-    });
+      test('the response contains the event', async () => {
+        const [{ data }] = h.response.lastCall.args;
+        expect(data.event.event_id).to.equal('11111111-1111-1111-1111-111111111111');
+      });
 
-    test('the response contains a URL to the event', async () => {
-      const [{ data }] = h.response.lastCall.args;
-      expect(data.url).to.equal('/water/1.0/event/11111111-1111-1111-1111-111111111111');
-    });
+      test('the response contains a URL to the event', async () => {
+        const [{ data }] = h.response.lastCall.args;
+        expect(data.url).to.equal('/water/1.0/event/11111111-1111-1111-1111-111111111111');
+      });
 
-    test('a 202 response code is used', async () => {
-      const [code] = hapiResponseStub.code.lastCall.args;
-      expect(code).to.equal(202);
+      test('a 202 response code is used', async () => {
+        const [code] = hapiResponseStub.code.lastCall.args;
+        expect(code).to.equal(202);
+      });
     });
   });
 
