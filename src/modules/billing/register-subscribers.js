@@ -1,9 +1,8 @@
 const populateBillingBatch = require('./jobs/populate-billing-batch');
 
-module.exports = [
-  {
-    method: 'subscribe',
-    name: populateBillingBatch.jobName,
-    handler: populateBillingBatch.handler
+module.exports = {
+  name: 'billingRegisterSubscribers',
+  register: async server => {
+    await server.messageQueue.subscribe(populateBillingBatch.jobName, populateBillingBatch.handler);
   }
-];
+};
