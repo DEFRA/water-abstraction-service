@@ -60,7 +60,7 @@
     "firstline": "^2.0.2",
     "good": "^8.1.2",
     "good-winston": "^4.0.0",
-    "handlebars": "^4.4.3",
+    "handlebars": "^4.5.2",
     "handlebars-helper-equal": "^1.0.0",
     "hapi-auth-jwt2": "^8.3.0",
     "libxmljs": "^0.19.5",
