@@ -77,10 +77,13 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
           expect(batchEvent.status).to.equal('batch:finding-transactions');
         });
 
-        test('the job is completed and includes the row count', async () => {
-          const [err, { chargeVersionCount }] = job.done.lastCall.args;
+        test('the job is completed and includes the rows', async () => {
+          const [err, { chargeVersions }] = job.done.lastCall.args;
           expect(err).to.be.null();
-          expect(chargeVersionCount).to.equal(2);
+          expect(chargeVersions).to.equal([
+            { charge_version_id: 1 },
+            { charge_version_id: 2 }
+          ]);
         });
       });
 
@@ -97,9 +100,9 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
         });
 
         test('the job is completed and includes the row count', async () => {
-          const [err, { chargeVersionCount }] = job.done.lastCall.args;
+          const [err, { chargeVersions }] = job.done.lastCall.args;
           expect(err).to.be.null();
-          expect(chargeVersionCount).to.equal(0);
+          expect(chargeVersions).to.equal([]);
         });
       });
     });

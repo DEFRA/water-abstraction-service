@@ -1,0 +1,1 @@
+drop table water.billing_batch_charge_version_years;

@@ -26,10 +26,10 @@ const handleSupplementaryBatch = async (job, batchEvent) => {
   batchEvent.status = rows.length === 0 ? jobStatus.complete : jobStatus.findingTransactions;
   await evt.save(batchEvent);
 
-  // Include the charge version count in the response data. This information
+  // Include the charge versions in the response data. This information
   // can then be used in the onComplete callback to decide if a new job
   // should be published.
-  return job.done(null, { chargeVersionCount: rows.length });
+  return job.done(null, { chargeVersions: rows, batch });
 };
 
 const handlePopulateBatch = async job => {

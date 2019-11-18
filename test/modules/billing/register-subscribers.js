@@ -8,15 +8,23 @@ const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
+const repos = require('../../../src/lib/connectors/repository');
+
 const registerSubscribers = require('../../../src/modules/billing/register-subscribers');
 const populateBatchChargeVersions = require('../../../src/modules/billing/jobs/populate-batch-charge-versions');
-const populateBatchTransactions = require('../../../src/modules/billing/jobs/populate-batch-transactions');
+const processChargeVersions = require('../../../src/modules/billing/jobs/process-charge-versions');
 
 experiment('modules/billing/register-subscribers', () => {
   let server;
   let onCompleteHandlers;
 
   beforeEach(async () => {
+    sandbox.stub(repos.billingBatchChargeVersionYears, 'create').resolves();
+    sandbox.stub(repos.billingBatchChargeVersionYears, 'findProcessingByBatch').resolves({
+      rowCount: 10
+    });
+    sandbox.stub(repos.billingBatches, 'setStatus').resolves();
+
     onCompleteHandlers = {};
     server = {
       messageQueue: {
@@ -53,46 +61,127 @@ experiment('modules/billing/register-subscribers', () => {
         populateBatchChargeVersions.jobName, populateBatchChargeVersions.handler
       )).to.be.true();
     });
+  });
 
-    test('the populate billing batch charge transactions job is registered', async () => {
-      expect(server.messageQueue.subscribe.calledWith(
-        populateBatchTransactions.jobName, populateBatchTransactions.handler
-      )).to.be.true();
+  experiment('onComplete : processChargeVersions', () => {
+    experiment('if there are more charge version years to process', () => {
+      test('the batch status is not updated', async () => {
+        await registerSubscribers.register(server);
+        await onCompleteHandlers[processChargeVersions.jobName]({
+          data: {
+            response: {
+              chargeVersionYear: {
+                billing_batch_id: 'test-batch-id'
+              }
+            }
+          }
+        });
+
+        expect(repos.billingBatchChargeVersionYears.findProcessingByBatch.calledWith('test-batch-id')).to.be.true();
+        expect(repos.billingBatches.setStatus.called).to.be.false();
+      });
+    });
+
+    experiment('if all the charge version years have been processed', () => {
+      test('the batch status is updated', async () => {
+        repos.billingBatchChargeVersionYears.findProcessingByBatch.resolves({
+          rowCount: 0
+        });
+        await registerSubscribers.register(server);
+        await onCompleteHandlers[processChargeVersions.jobName]({
+          data: {
+            response: {
+              chargeVersionYear: {
+                billing_batch_id: 'test-batch-id'
+              }
+            }
+          }
+        });
+
+        expect(repos.billingBatchChargeVersionYears.findProcessingByBatch.calledWith('test-batch-id')).to.be.true();
+        expect(repos.billingBatches.setStatus.calledWith('test-batch-id', 'complete')).to.be.true();
+      });
     });
   });
 
-  experiment('when the populateBachChargeVersions job completes', () => {
-    experiment('and the job created charge versions', () => {
-      test('the populateBatchTransactions job is published', async () => {
+  experiment('onComplete : populateBatchChargeVersions', () => {
+    experiment('if the job created charge versions', () => {
+      beforeEach(async () => {
         const job = {
           data: {
             request: {
               data: { eventId: 'test-event-id' }
             },
-            response: { chargeVersionCount: 10 }
+            response: {
+              chargeVersions: [
+                {
+                  charge_version_id: 'test-charge-version-id-1',
+                  billing_batch_id: 'test-batch-id'
+                },
+                {
+                  charge_version_id: 'test-charge-version-id-2',
+                  billing_batch_id: 'test-batch-id'
+                }
+              ],
+              batch: {
+                billing_batch_id: 'test-batch-id',
+                start_financial_year: 2019,
+                end_financial_year: 2020
+              }
+            }
           }
         };
 
         await registerSubscribers.register(server);
         await onCompleteHandlers[populateBatchChargeVersions.jobName](job);
+      });
 
-        expect(server.messageQueue.publish.calledWith({
-          name: 'billing.populate-batch-transactions',
-          data: {
-            eventId: 'test-event-id'
-          }
+      test('a charge version year is created for each year in the batch range', async () => {
+        expect(repos.billingBatchChargeVersionYears.create.calledWith({
+          billing_batch_id: 'test-batch-id',
+          charge_version_id: 'test-charge-version-id-1',
+          financial_year: 2019,
+          status: 'processing'
         })).to.be.true();
+
+        expect(repos.billingBatchChargeVersionYears.create.calledWith({
+          billing_batch_id: 'test-batch-id',
+          charge_version_id: 'test-charge-version-id-1',
+          financial_year: 2020,
+          status: 'processing'
+        })).to.be.true();
+
+        expect(repos.billingBatchChargeVersionYears.create.calledWith({
+          billing_batch_id: 'test-batch-id',
+          charge_version_id: 'test-charge-version-id-2',
+          financial_year: 2019,
+          status: 'processing'
+        })).to.be.true();
+
+        expect(repos.billingBatchChargeVersionYears.create.calledWith({
+          billing_batch_id: 'test-batch-id',
+          charge_version_id: 'test-charge-version-id-2',
+          financial_year: 2020,
+          status: 'processing'
+        })).to.be.true();
+      });
+
+      test('a message is published to process each charge version year entry', async () => {
+        const [message] = server.messageQueue.publish.lastCall.args;
+
+        expect(message.name).to.equal(processChargeVersions.jobName);
+        expect(message.data.eventId).to.equal('test-event-id');
       });
     });
 
-    experiment('and no charge versions were found', () => {
+    experiment('if no charge versions were found', () => {
       test('the populateBatchTransactions job is not published', async () => {
         const job = {
           data: {
             request: {
               data: { eventId: 'test-event-id' }
             },
-            response: { chargeVersionCount: 0 }
+            response: { chargeVersions: [] }
           }
         };
 
