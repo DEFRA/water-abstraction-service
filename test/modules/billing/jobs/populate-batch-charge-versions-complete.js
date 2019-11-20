@@ -232,10 +232,16 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
         }, messageQueue);
       });
 
-      test('creates a version year record for the first valid charge version', async () => {
+      test('creates a version year record for the first valid charge version for both years', async () => {
         expect(
           repos.billingBatchChargeVersionYears.create.calledWith(
             sinon.match({ charge_version_id: 'valid-1', financial_year: 2019 })
+          )
+        ).to.be.true();
+
+        expect(
+          repos.billingBatchChargeVersionYears.create.calledWith(
+            sinon.match({ charge_version_id: 'valid-1', financial_year: 2020 })
           )
         ).to.be.true();
       });
