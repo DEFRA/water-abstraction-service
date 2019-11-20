@@ -1,29 +1,18 @@
-const { range } = require('lodash');
 const { batchStatus } = require('./batch');
 
 /**
- * For a given batch and it's associated charge versions, this function will return
- * a copy of the charge version ready to persist in water.billing_batch_charge_version_years
- * for each financial year that the batch spans. For example for annual billing this would
- * be a one to one mapping but for supplementary this could mean that each incoming charge version
- * is mapped to six new charge version years.
+ * Create an object ready for saving to the
+ * water.billng_batch_charge_version_years table that contains the
+ * batch, charge version and financial year values for future processing.
  *
- * @param {Object} batch The batch that is being processed
- * @param {Array} batchChargeVersions The charge versions that have been mapped to the batch
+ * @param {Object} billingBatchChargeVersion Object representing the inclusion of a charge version in a batch
+ * @param {Number} financialYear The financial year value
  */
-const createChargeVersionYears = (batch, batchChargeVersions) => {
-  const years = range(batch.start_financial_year, batch.end_financial_year + 1);
-  return batchChargeVersions.reduce((acc, batchChargeVersion) => {
-    return [
-      ...acc,
-      ...years.map(year => ({
-        billing_batch_id: batchChargeVersion.billing_batch_id,
-        charge_version_id: batchChargeVersion.charge_version_id,
-        financial_year: year,
-        status: batchStatus.processing
-      }))
-    ];
-  }, []);
-};
+const createChargeVersionYear = (billingBatchChargeVersion, financialYear) => ({
+  charge_version_id: billingBatchChargeVersion.charge_version_id,
+  billing_batch_id: billingBatchChargeVersion.billing_batch_id,
+  financial_year: financialYear,
+  status: batchStatus.processing
+});
 
-exports.createChargeVersionYears = createChargeVersionYears;
+exports.createChargeVersionYear = createChargeVersionYear;

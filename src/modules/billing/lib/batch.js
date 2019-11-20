@@ -24,6 +24,7 @@ const isSupplementaryBatch = batchIsOfType(batchTypes.supplementary);
 const isAnnualBatch = batchIsOfType(batchTypes.annual);
 
 const getFinancialYear = year => ({
+  year,
   start: moment(`${year}-04-01`, 'YYYY-MM-DD'),
   end: moment(`${year + 1}-03-31`, 'YYYY-MM-DD')
 });

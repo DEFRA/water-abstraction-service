@@ -5,6 +5,7 @@ const { chargeVersions } = require('../../../lib/connectors/repository');
 const JOB_NAME = 'billing.populate-batch-charge-versions';
 
 const { isSupplementaryBatch, jobStatus } = require('../lib/batch');
+const { logger } = require('../../../logger');
 
 const createMessage = eventId => ({
   name: JOB_NAME,
@@ -19,6 +20,8 @@ const createMessage = eventId => ({
  */
 const handleSupplementaryBatch = async (job, batchEvent) => {
   const { batch } = batchEvent.metadata;
+
+  logger.info('Handling supplementary batch', batch);
 
   // move any found charge versions into water.billing_batch_charge_versions
   const rows = await chargeVersions.createSupplementaryChargeVersions(batch);
@@ -40,7 +43,7 @@ const handlePopulateBatch = async job => {
   if (isSupplementaryBatch(batch)) {
     return handleSupplementaryBatch(job, batchEvent);
   } else {
-    console.log('handle annual batches in a future story');
+    logger.info('handle annual batches in a future story');
     batchEvent.status = jobStatus.complete;
     await evt.save(batchEvent);
   }
