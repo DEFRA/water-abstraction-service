@@ -7,7 +7,8 @@ const createReturn = options => {
     'startDate': options.startDate,
     'endDate': options.endDate,
     'frequency': options.frequency,
-    'isNil': false,
+    'status': options.status,
+    'isNil': options.isNil,
     'isCurrent': true,
     'lines': (options.lineData) ? getReturnLines(options.frequency, options.lineData) : [],
     'metadata': {
