@@ -54,7 +54,7 @@ experiment('modules/billing/controller', () => {
           userEmail: 'test@example.com',
           regionId: '22222222-2222-2222-2222-222222222222',
           batchType: 'annual',
-          financialYear: 2019,
+          financialYearEnding: 2019,
           season: 'summer'
         },
         messageQueue: {
@@ -73,8 +73,8 @@ experiment('modules/billing/controller', () => {
         expect(repos.billingBatches.createBatch.calledWith(
           request.payload.regionId,
           request.payload.batchType,
-          request.payload.financialYear,
-          request.payload.financialYear,
+          request.payload.financialYearEnding,
+          request.payload.financialYearEnding,
           request.payload.season
         )).to.be.true();
       });
@@ -107,8 +107,8 @@ experiment('modules/billing/controller', () => {
         expect(repos.billingBatches.createBatch.calledWith(
           request.payload.regionId,
           request.payload.batchType,
-          request.payload.financialYear,
-          request.payload.financialYear,
+          request.payload.financialYearEnding,
+          request.payload.financialYearEnding,
           request.payload.season
         )).to.be.true();
       });

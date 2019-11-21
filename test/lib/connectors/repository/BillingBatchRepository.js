@@ -46,13 +46,13 @@ experiment('lib/connectors/repository/BillingBatchRepository', () => {
       await repo.createBatch('region-id', 'supplementary', 2013, 2019, 'summer');
 
       const [, params] = BillingBatchRepository.prototype.dbQuery.lastCall.args;
-      const [regionId, batchType, startFinancialYear, endFinancialYear, season] = params;
+      const [regionId, batchType, fromFinancialYearEnding, toFinancialYearEnding, season] = params;
 
       expect(params).to.have.length(5);
       expect(regionId).to.equal('region-id');
       expect(batchType).to.equal('supplementary');
-      expect(startFinancialYear).to.equal(2013);
-      expect(endFinancialYear).to.equal(2019);
+      expect(fromFinancialYearEnding).to.equal(2013);
+      expect(toFinancialYearEnding).to.equal(2019);
       expect(season).to.equal('summer');
     });
   });

@@ -19,13 +19,20 @@ class BillingBatchRepository extends Repository {
    *
    * @param {String} regionId The uuid value for the region
    * @param {String} batchType Whether annual, supplementary or two_part_tariff
-   * @param {Number} startFinancialYear The start year for the financial year range
-   * @param {Number} endFinancialYear The end year for the financial year range
+   * @param {Number} fromFinancialYearEnding The start year for the financial year range (e.g. 2019 => 01/04/2018 - 31/03/2019)
+   * @param {Number} toFinancialYearEnding The end year for the financial year range (e.g. 2019 => 01/04/2018 - 31/03/2019)
    * @param {String} season Whether summer, winter or all year
    */
-  async createBatch (regionId, batchType, startFinancialYear, endFinancialYear, season) {
+  async createBatch (regionId, batchType, fromFinancialYearEnding, toFinancialYearEnding, season) {
     const query = `
-      insert into water.billing_batches (region_id, batch_type, start_financial_year, end_financial_year, season, status)
+      insert into water.billing_batches (
+        region_id,
+        batch_type,
+        from_financial_year_ending,
+        to_financial_year_ending,
+        season,
+        status
+      )
       select $1, $2, $3, $4, $5, 'processing'
       where
         not exists (
@@ -36,7 +43,7 @@ class BillingBatchRepository extends Repository {
       returning *;
     `;
 
-    const result = await this.dbQuery(query, [regionId, batchType, startFinancialYear, endFinancialYear, season]);
+    const result = await this.dbQuery(query, [regionId, batchType, fromFinancialYearEnding, toFinancialYearEnding, season]);
     return get(result, 'rows[0]', null);
   }
 

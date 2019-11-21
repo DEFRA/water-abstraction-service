@@ -6,7 +6,8 @@ const processChargeVersions = require('./process-charge-versions');
 
 const { logger } = require('../../../logger');
 
-const { getFinancialYears, batchStatus } = require('../lib/batch');
+const { batchStatus } = require('../lib/batch');
+const FinancialYear = require('../lib/financial-year');
 const { isValidForFinancialYear } = require('../lib/charge-version');
 
 /**
@@ -15,13 +16,13 @@ const { isValidForFinancialYear } = require('../lib/charge-version');
  * batch, charge version and financial year values for future processing.
  *
  * @param {Object} billingBatchChargeVersion Object representing the inclusion of a charge version in a batch
- * @param {Number} financialYear The financial year value
+ * @param {Number} financialYearEnding The financial year value
  */
-const createChargeVersionYear = async (billingBatchChargeVersion, financialYear) => {
+const createChargeVersionYear = async (billingBatchChargeVersion, financialYearEnding) => {
   const chargeVersionYear = {
     charge_version_id: billingBatchChargeVersion.charge_version_id,
     billing_batch_id: billingBatchChargeVersion.billing_batch_id,
-    financial_year: financialYear,
+    financial_year_ending: financialYearEnding,
     status: batchStatus.processing
   };
 
@@ -59,7 +60,7 @@ const processBillingBatchChargeVersions = async (billingBatchChargeVersions, fin
 const publishForValidChargeVersion = async (chargeVersion, financialYears, billingBatchChargeVersion, messageQueue, eventId) => {
   for (const financialYear of financialYears) {
     if (isValidForFinancialYear(chargeVersion, financialYear)) {
-      const chargeVersionYear = await createChargeVersionYear(billingBatchChargeVersion, financialYear.year);
+      const chargeVersionYear = await createChargeVersionYear(billingBatchChargeVersion, financialYear.endYear);
 
       const message = processChargeVersions.createMessage(eventId, chargeVersionYear);
       await messageQueue.publish(message);
@@ -87,7 +88,7 @@ const handlePopulateBatchChargeVersionsComplete = async (job, messageQueue) => {
   }
 
   try {
-    const financialYears = getFinancialYears(batch);
+    const financialYears = FinancialYear.getFinancialYears(batch.from_financial_year_ending, batch.to_financial_year_ending);
     await processBillingBatchChargeVersions(billingBatchChargeVersions, financialYears, messageQueue, eventId);
   } catch (err) {
     logger.error('Failed to create charge version years', err);

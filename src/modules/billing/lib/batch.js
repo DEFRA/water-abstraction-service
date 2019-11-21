@@ -1,6 +1,3 @@
-const moment = require('moment');
-const { range } = require('lodash');
-
 const batchTypes = {
   supplementary: 'supplementary',
   annual: 'annual',
@@ -23,26 +20,6 @@ const isSupplementaryBatch = batchIsOfType(batchTypes.supplementary);
  */
 const isAnnualBatch = batchIsOfType(batchTypes.annual);
 
-const getFinancialYear = year => ({
-  year,
-  start: moment(`${year}-04-01`, 'YYYY-MM-DD'),
-  end: moment(`${year + 1}-03-31`, 'YYYY-MM-DD')
-});
-
-/**
- * Given a batch containing a start and end financial year, this returns
- * an array of objects with the start and end dates of each financial year
- * in the range.
- * @param {Object} batch The database row for a batch
- */
-const getFinancialYears = batch => {
-  const { start_financial_year: start, end_financial_year: end } = batch;
-
-  return range(start, end + 1).reduce((years, year) => {
-    return [...years, getFinancialYear(year)];
-  }, []);
-};
-
 /**
  * Tests if the batch is two part tariff
  *
@@ -54,7 +31,6 @@ exports.batchTypes = batchTypes;
 exports.isSupplementaryBatch = isSupplementaryBatch;
 exports.isAnnualBatch = isAnnualBatch;
 exports.isTwoPartTariffBatch = isTwoPartTariffBatch;
-exports.getFinancialYears = getFinancialYears;
 
 /**
  * Statuses that the event (water.events) can have

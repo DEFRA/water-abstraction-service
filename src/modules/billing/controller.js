@@ -19,13 +19,14 @@ const createBatchEvent = async (userEmail, batch) => {
   return response.rows[0];
 };
 
-const createBatch = (regionId, batchType, financialYear, season) => {
-  const startFinancialYear = batchType === 'supplementary' ? financialYear - 6 : financialYear;
+const createBatch = (regionId, batchType, financialYearEnding, season) => {
+  const fromFinancialYearEnding = batchType === 'supplementary' ? financialYearEnding - 6 : financialYearEnding;
+
   return repos.billingBatches.createBatch(
     regionId,
     batchType,
-    startFinancialYear,
-    financialYear,
+    fromFinancialYearEnding,
+    financialYearEnding,
     season
   );
 };
@@ -39,10 +40,10 @@ const createBatch = (regionId, batchType, financialYear, season) => {
  * @param {Object} h HAPI response toolkit
  */
 const postCreateBatch = async (request, h) => {
-  const { userEmail, regionId, batchType, financialYear, season } = request.payload;
+  const { userEmail, regionId, batchType, financialYearEnding, season } = request.payload;
 
   // create a new entry in the batch table
-  const batch = await createBatch(regionId, batchType, financialYear, season);
+  const batch = await createBatch(regionId, batchType, financialYearEnding, season);
 
   if (!batch) {
     const data = errorEnvelope(`Batch already processing for region ${regionId}`);
