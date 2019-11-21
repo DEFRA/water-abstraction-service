@@ -5,6 +5,7 @@ const ChargeAgreementRepository = require('./ChargeAgreementRepository');
 const BillingBatchRepository = require('./BillingBatchRepository');
 const BillingInvoiceRepository = require('./BillingInvoiceRepository');
 const BillingTransactionRepository = require('./BillingTransactionRepository');
+const BillingBatchChargeVersionYearsRepository = require('./BillingBatchChargeVersionYearsRepository');
 
 const chargeVersions = new ChargeVersionRepository({
   connection: pool,
@@ -30,3 +31,4 @@ exports.chargeAgreements = chargeAgreements;
 exports.billingBatches = new BillingBatchRepository();
 exports.billingInvoices = new BillingInvoiceRepository();
 exports.billingTransactions = new BillingTransactionRepository();
+exports.billingBatchChargeVersionYears = new BillingBatchChargeVersionYearsRepository();

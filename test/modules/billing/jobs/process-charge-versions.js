@@ -9,13 +9,11 @@ const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const messageQueue = require('../../../../src/lib/message-queue');
 const event = require('../../../../src/lib/event');
-const populateBatchTransactionsJob = require('../../../../src/modules/billing/jobs/populate-batch-transactions');
+const processChargeVersions = require('../../../../src/modules/billing/jobs/process-charge-versions');
 
-experiment('modules/billing/jobs/populate-batch-transactions', () => {
+experiment('modules/billing/jobs/process-charge-versions', () => {
   beforeEach(async () => {
-    sandbox.stub(messageQueue, 'publish').resolves();
     sandbox.stub(event, 'save').resolves();
     sandbox.stub(event, 'load').resolves({
       event_id: '00000000-0000-0000-0000-000000000000'
@@ -27,24 +25,28 @@ experiment('modules/billing/jobs/populate-batch-transactions', () => {
   });
 
   test('exports the expected job name', async () => {
-    expect(populateBatchTransactionsJob.jobName).to.equal('billing.populate-batch-transactions');
+    expect(processChargeVersions.jobName).to.equal('billing.process-charge-version');
   });
 
   experiment('.createMessage', () => {
     let message;
 
     beforeEach(async () => {
-      message = populateBatchTransactionsJob.createMessage('test-event-id');
+      message = processChargeVersions.createMessage('test-event-id', {
+        billing_batch_charge_version_year_id: 1
+      });
     });
 
     test('using the expected job name', async () => {
-      expect(message.name).to.equal(populateBatchTransactionsJob.jobName);
+      expect(message.name).to.equal(processChargeVersions.jobName);
     });
 
     test('includes a data object with the event id', async () => {
-      expect(message.data).to.equal({
-        eventId: 'test-event-id'
-      });
+      expect(message.data.eventId).to.equal('test-event-id');
+    });
+
+    test('includes a data object with the charge version year data', async () => {
+      expect(message.data.chargeVersionYear.billing_batch_charge_version_year_id).to.equal(1);
     });
   });
 });

@@ -5,6 +5,7 @@ const { chargeVersions } = require('../../../lib/connectors/repository');
 const JOB_NAME = 'billing.populate-batch-charge-versions';
 
 const { isSupplementaryBatch, jobStatus } = require('../lib/batch');
+const { logger } = require('../../../logger');
 
 const createMessage = eventId => ({
   name: JOB_NAME,
@@ -20,16 +21,18 @@ const createMessage = eventId => ({
 const handleSupplementaryBatch = async (job, batchEvent) => {
   const { batch } = batchEvent.metadata;
 
+  logger.info('Handling supplementary batch', batch);
+
   // move any found charge versions into water.billing_batch_charge_versions
   const rows = await chargeVersions.createSupplementaryChargeVersions(batch);
 
-  batchEvent.status = rows.length === 0 ? jobStatus.complete : jobStatus.findingTransactions;
+  batchEvent.status = rows.length === 0 ? jobStatus.complete : jobStatus.processing;
   await evt.save(batchEvent);
 
-  // Include the charge version count in the response data. This information
+  // Include the charge versions in the response data. This information
   // can then be used in the onComplete callback to decide if a new job
   // should be published.
-  return job.done(null, { chargeVersionCount: rows.length });
+  return job.done(null, { chargeVersions: rows, batch });
 };
 
 const handlePopulateBatch = async job => {
@@ -40,7 +43,7 @@ const handlePopulateBatch = async job => {
   if (isSupplementaryBatch(batch)) {
     return handleSupplementaryBatch(job, batchEvent);
   } else {
-    console.log('handle annual batches in a future story');
+    logger.info('handle annual batches in a future story');
     batchEvent.status = jobStatus.complete;
     await evt.save(batchEvent);
   }

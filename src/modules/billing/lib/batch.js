@@ -32,12 +32,21 @@ exports.isSupplementaryBatch = isSupplementaryBatch;
 exports.isAnnualBatch = isAnnualBatch;
 exports.isTwoPartTariffBatch = isTwoPartTariffBatch;
 
+/**
+ * Statuses that the event (water.events) can have
+ */
 exports.jobStatus = {
-  start: 'batch:start',
-  complete: 'batch:complete',
-  findingTransactions: 'batch:finding-transactions'
+  start: 'start',
+  complete: 'complete',
+  processing: 'processing',
+  error: 'error'
 };
 
+/**
+ * Statuses that the batch (water.billing_batches) may have. These
+ * are here to help enforce that only one batch per region may
+ * be run at a time.
+ */
 exports.batchStatus = {
   processing: 'processing',
   complete: 'complete',

@@ -38,7 +38,7 @@ experiment('modules/billing/routes', () => {
           userEmail: 'charging@example.com',
           regionId: '054517f2-be00-4505-a3cc-df65a89cd8e1',
           batchType: 'annual',
-          financialYear: 2019,
+          financialYearEnding: 2019,
           season: 'summer'
         }
       };
@@ -86,13 +86,13 @@ experiment('modules/billing/routes', () => {
     });
 
     test('returns a 400 if the financialYear is not a number', async () => {
-      request.payload.financialYear = false;
+      request.payload.financialYearEnding = false;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     test('returns a 400 if the financialYear is omitted', async () => {
-      delete request.payload.financialYear;
+      delete request.payload.financialYearEnding;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
