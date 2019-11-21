@@ -40,7 +40,7 @@ const contactsFormatter = (currentVersion, roles) => {
   roles.forEach((role) => {
     contacts.push({
       role: sentenceCase(role.role_type.DESCR),
-      ...crmNameFormatter(licenceHolderParty),
+      ...crmNameFormatter(role.role_party),
       ...addressFormatter(role.role_address)
     });
   });

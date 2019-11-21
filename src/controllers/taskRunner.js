@@ -54,6 +54,12 @@ const endTask = async (taskId, log, interval) => {
 };
 
 async function run () {
+  // We don't wish to run the scheduler in Travis because it will cause
+  // jobs to run which may invoke Slack etc.
+  if (process.env.TRAVIS) {
+    return;
+  }
+
   try {
     const job = await getNextJob();
 
