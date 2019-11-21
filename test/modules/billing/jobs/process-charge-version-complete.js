@@ -10,9 +10,9 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const repos = require('../../../../src/lib/connectors/repository');
-const processChargeVersionsComplete = require('../../../../src/modules/billing/jobs/process-charge-versions-complete');
+const processChargeVersionComplete = require('../../../../src/modules/billing/jobs/process-charge-version-complete');
 
-experiment('modules/billing/jobs/process-charge-versions-complete', () => {
+experiment('modules/billing/jobs/process-charge-version-complete', () => {
   beforeEach(async () => {
     sandbox.stub(repos.billingBatchChargeVersionYears, 'findProcessingByBatch').resolves({
       rowCount: 10
@@ -26,7 +26,7 @@ experiment('modules/billing/jobs/process-charge-versions-complete', () => {
 
   experiment('if there are more charge version years to process', () => {
     test('the batch status is not updated', async () => {
-      await processChargeVersionsComplete({
+      await processChargeVersionComplete({
         data: {
           response: {
             chargeVersionYear: {
@@ -47,7 +47,7 @@ experiment('modules/billing/jobs/process-charge-versions-complete', () => {
         rowCount: 0
       });
 
-      await processChargeVersionsComplete({
+      await processChargeVersionComplete({
         data: {
           response: {
             chargeVersionYear: {
