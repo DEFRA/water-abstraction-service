@@ -10,7 +10,7 @@ const sandbox = sinon.createSandbox();
 
 const registerSubscribers = require('../../../src/modules/billing/register-subscribers');
 const populateBatchChargeVersions = require('../../../src/modules/billing/jobs/populate-batch-charge-versions');
-const processChargeVersions = require('../../../src/modules/billing/jobs/process-charge-versions');
+const processChargeVersion = require('../../../src/modules/billing/jobs/process-charge-version');
 
 experiment('modules/billing/register-subscribers', () => {
   let server;
@@ -51,12 +51,12 @@ experiment('modules/billing/register-subscribers', () => {
       expect(server.messageQueue.onComplete.calledWith(populateBatchChargeVersions.jobName)).to.be.true();
     });
 
-    test('a subscribe handler is registered for processChargeVersions', async () => {
-      expect(server.messageQueue.subscribe.calledWith(processChargeVersions.jobName)).to.be.true();
+    test('a subscribe handler is registered for processChargeVersion', async () => {
+      expect(server.messageQueue.subscribe.calledWith(processChargeVersion.jobName)).to.be.true();
     });
 
-    test('an onComplete handler is registered for processChargeVersions', async () => {
-      expect(server.messageQueue.onComplete.calledWith(processChargeVersions.jobName)).to.be.true();
+    test('an onComplete handler is registered for processChargeVersion', async () => {
+      expect(server.messageQueue.onComplete.calledWith(processChargeVersion.jobName)).to.be.true();
     });
   });
 });

@@ -2,7 +2,7 @@ const { get } = require('lodash');
 const repos = require('../../../lib/connectors/repository');
 
 const populateBatchChargeVersions = require('./populate-batch-charge-versions');
-const processChargeVersions = require('./process-charge-versions');
+const processChargeVersion = require('./process-charge-version');
 
 const { logger } = require('../../../logger');
 
@@ -62,7 +62,7 @@ const publishForValidChargeVersion = async (chargeVersion, financialYears, billi
     if (isValidForFinancialYear(chargeVersion, financialYear)) {
       const chargeVersionYear = await createChargeVersionYear(billingBatchChargeVersion, financialYear.endYear);
 
-      const message = processChargeVersions.createMessage(eventId, chargeVersionYear);
+      const message = processChargeVersion.createMessage(eventId, chargeVersionYear);
       await messageQueue.publish(message);
     }
   }

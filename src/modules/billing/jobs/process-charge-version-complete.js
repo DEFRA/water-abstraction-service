@@ -1,11 +1,11 @@
 const repo = require('../../../lib/connectors/repository');
 
-const processChargeVersions = require('./process-charge-versions');
+const processChargeVersion = require('./process-charge-version');
 const { logger } = require('../../../logger');
 const { batchStatus } = require('../lib/batch');
 
-const handleProcessChargeVersionsComplete = async job => {
-  logger.info(`onComplete - ${processChargeVersions.jobName}`);
+const handleProcessChargeVersionComplete = async job => {
+  logger.info(`onComplete - ${processChargeVersion.jobName}`);
 
   const { chargeVersionYear } = job.data.response;
   const batchId = chargeVersionYear.billing_batch_id;
@@ -20,4 +20,4 @@ const handleProcessChargeVersionsComplete = async job => {
   }
 };
 
-module.exports = handleProcessChargeVersionsComplete;
+module.exports = handleProcessChargeVersionComplete;

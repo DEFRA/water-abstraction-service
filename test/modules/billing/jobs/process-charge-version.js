@@ -10,9 +10,9 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const event = require('../../../../src/lib/event');
-const processChargeVersions = require('../../../../src/modules/billing/jobs/process-charge-versions');
+const processChargeVersion = require('../../../../src/modules/billing/jobs/process-charge-version');
 
-experiment('modules/billing/jobs/process-charge-versions', () => {
+experiment('modules/billing/jobs/process-charge-version', () => {
   beforeEach(async () => {
     sandbox.stub(event, 'save').resolves();
     sandbox.stub(event, 'load').resolves({
@@ -25,20 +25,20 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
   });
 
   test('exports the expected job name', async () => {
-    expect(processChargeVersions.jobName).to.equal('billing.process-charge-version');
+    expect(processChargeVersion.jobName).to.equal('billing.process-charge-version');
   });
 
   experiment('.createMessage', () => {
     let message;
 
     beforeEach(async () => {
-      message = processChargeVersions.createMessage('test-event-id', {
+      message = processChargeVersion.createMessage('test-event-id', {
         billing_batch_charge_version_year_id: 1
       });
     });
 
     test('using the expected job name', async () => {
-      expect(message.name).to.equal(processChargeVersions.jobName);
+      expect(message.name).to.equal(processChargeVersion.jobName);
     });
 
     test('includes a data object with the event id', async () => {
