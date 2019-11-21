@@ -74,7 +74,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
 
         test('the event is saved with the expected status', async () => {
           const [batchEvent] = event.save.lastCall.args;
-          expect(batchEvent.status).to.equal('batch:finding-transactions');
+          expect(batchEvent.status).to.equal('processing');
         });
 
         test('the job is completed and includes the rows', async () => {
@@ -96,7 +96,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
 
         test('the event is saved with the expected status', async () => {
           const [batchEvent] = event.save.lastCall.args;
-          expect(batchEvent.status).to.equal('batch:complete');
+          expect(batchEvent.status).to.equal('complete');
         });
 
         test('the job is completed and includes the row count', async () => {

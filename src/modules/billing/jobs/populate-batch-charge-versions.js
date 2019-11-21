@@ -26,7 +26,7 @@ const handleSupplementaryBatch = async (job, batchEvent) => {
   // move any found charge versions into water.billing_batch_charge_versions
   const rows = await chargeVersions.createSupplementaryChargeVersions(batch);
 
-  batchEvent.status = rows.length === 0 ? jobStatus.complete : jobStatus.findingTransactions;
+  batchEvent.status = rows.length === 0 ? jobStatus.complete : jobStatus.processing;
   await evt.save(batchEvent);
 
   // Include the charge versions in the response data. This information
