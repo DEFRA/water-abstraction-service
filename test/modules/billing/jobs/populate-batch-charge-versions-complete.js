@@ -11,6 +11,7 @@ const sandbox = sinon.createSandbox();
 
 const { logger } = require('../../../../src/logger');
 const repos = require('../../../../src/lib/connectors/repository');
+const jobService = require('../../../../src/modules/billing/services/jobService');
 
 const handlePopulateBatchChargeVersionsComplete = require('../../../../src/modules/billing/jobs/populate-batch-charge-versions-complete');
 
@@ -19,6 +20,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
 
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
+    sandbox.stub(jobService, 'setCompletedJob');
     sandbox.stub(repos.chargeVersions, 'findOneById');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'create');
 
@@ -37,7 +39,9 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
         data: {
           response: {
             chargeVersions: [],
-            batch: {}
+            batch: {
+              billing_batch_id: 'test-batch-id'
+            }
           },
           request: {
             data: {
@@ -58,6 +62,12 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
 
     test('no jobs are queued', async () => {
       expect(messageQueue.publish.called).to.be.false();
+    });
+
+    test('the batch is set to complete', async () => {
+      const [eventId, batchId] = jobService.setCompletedJob.lastCall.args;
+      expect(eventId).to.equal('test-event-id');
+      expect(batchId).to.equal('test-batch-id');
     });
   });
 

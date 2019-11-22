@@ -1,5 +1,5 @@
 const evt = require('../../../lib/event');
-const { jobStatus, batchStatus } = require('../lib/batch');
+const { batchStatus } = require('../lib/batch');
 const repos = require('../../../lib/connectors/repository');
 
 const JOB_NAME = 'billing.process-charge-version';
@@ -22,12 +22,10 @@ const handleProcessChargeVersion = async job => {
 
   await repos.billingBatchChargeVersionYears.setStatus(chargeVersionYear.billing_batch_charge_version_year_id, batchStatus.complete);
 
-  batchEvent.status = jobStatus.complete;
-  await evt.save(batchEvent);
-
-  return job.done(null, {
-    chargeVersionYear
-  });
+  return {
+    chargeVersionYear,
+    batch: batchEvent.metadata.batch
+  };
 };
 
 exports.createMessage = createMessage;
