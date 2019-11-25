@@ -7,7 +7,7 @@ const processChargeVersion = require('./process-charge-version');
 const { logger } = require('../../../logger');
 
 const { batchStatus } = require('../lib/batch');
-const FinancialYear = require('../lib/financial-year');
+const { FinancialYear } = require('../models');
 const { isValidForFinancialYear } = require('../lib/charge-version');
 const jobService = require('../services/jobService');
 
