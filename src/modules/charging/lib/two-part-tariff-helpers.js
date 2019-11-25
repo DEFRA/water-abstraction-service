@@ -9,9 +9,24 @@ Decimal.set({
 const TPT_PURPOSES = [380, 390, 400, 410, 420];
 const dateFormat = 'YYYY-MM-DD';
 
-const returnMatchingError = error => {
+const returnsError = (error, chargeElements) => {
+  if (error[0].type === 'returnsNotCompleted') return getNullActualReturnQuantities(chargeElements);
   return { error,
     data: null };
+};
+
+/**
+ * Set actualReturnQuantities set to null for all chargeElements
+ * @param {Array} chargeElements objects
+ * @return {Object}
+ *          {null} error
+ *          {Array} data chargeElementId & null actualReturnQuantity
+ */
+const getNullActualReturnQuantities = chargeElements => {
+  const data = chargeElements.map(element => {
+    return { chargeElementId: element.chargeElementId, actualReturnQuantity: null };
+  });
+  return { error: null, data };
 };
 
 /**
@@ -66,6 +81,7 @@ const returnPurposeMatchesElementPurpose = (ret, ele) => {
 
 exports.TPT_PURPOSES = TPT_PURPOSES;
 exports.dateFormat = dateFormat;
-exports.returnMatchingError = returnMatchingError;
+exports.getNullActualReturnQuantities = getNullActualReturnQuantities;
+exports.returnsError = returnsError;
 exports.getAbsPeriod = getAbsPeriod;
 exports.returnPurposeMatchesElementPurpose = returnPurposeMatchesElementPurpose;

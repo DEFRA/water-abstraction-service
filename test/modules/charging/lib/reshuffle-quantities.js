@@ -8,7 +8,9 @@ Decimal.set({
 
 const {
   isTimeLimited,
+  getElementsBySource,
   sortElementsInPriorityOrder,
+  reallocateQuantitiesInPriorityOrder,
   reshuffleQuantities
 } = require('../../../../src/modules/charging/lib/reshuffle-quantities');
 
@@ -31,6 +33,35 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         timeLimitedEndDate: '2017-03-31'
       }));
       expect(result).to.be.true();
+    });
+  });
+  experiment('.getElementsBySource', async () => {
+    const unsupportedSourceElement = getChargeElement({ source: 'unsupported' });
+    const supportedSourceElement = getChargeElement({ source: 'supported' });
+    const unsupportedSourceTLElement = getChargeElement({
+      source: 'unsupported',
+      timeLimitedStartDate: '2018-01-01',
+      timeLimitedEndDate: '2018-12-31' });
+    const supportedSourceTLElement = getChargeElement({
+      source: 'supported',
+      timeLimitedStartDate: '2018-01-01',
+      timeLimitedEndDate: '2018-12-31' });
+    const chargeElements = [unsupportedSourceElement, supportedSourceElement, unsupportedSourceTLElement, supportedSourceTLElement];
+    test('only returns unsupported source elements', async () => {
+      const filteredElements = getElementsBySource([...chargeElements, unsupportedSourceElement], 'unsupported', false);
+      expect(filteredElements).to.equal([unsupportedSourceElement, unsupportedSourceElement]);
+    });
+    test('only returns unsupported source time limited elements', async () => {
+      const filteredElements = getElementsBySource(chargeElements, 'unsupported', true);
+      expect(filteredElements).to.equal([unsupportedSourceTLElement]);
+    });
+    test('only returns supported source elements', async () => {
+      const filteredElements = getElementsBySource(chargeElements, 'supported', false);
+      expect(filteredElements).to.equal([supportedSourceElement]);
+    });
+    test('only returns supported source time limited elements', async () => {
+      const filteredElements = getElementsBySource([...chargeElements, supportedSourceTLElement], 'supported', true);
+      expect(filteredElements).to.equal([supportedSourceTLElement, supportedSourceTLElement]);
     });
   });
   experiment('.sortElementsInPriorityOrder', async () => {
@@ -115,7 +146,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       });
     });
   });
-  experiment('.reshuffleQuantities', async () => {
+  experiment('.reallocateQuantitiesInPriorityOrder', async () => {
     experiment('when all elements are not full', async () => {
       test('move quantity from lower priority element into base element', async () => {
         const chargeElements = [
@@ -124,119 +155,180 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             source: 'unsupported',
             timeLimitedStartDate: null,
             timeLimitedEndDate: null,
-            actualAnnualQuantity: 75,
-            maxAllowableQuantity: 100
+            actualReturnQuantity: 75,
+            proRataAuthorisedQuantity: 100
           }),
           getChargeElement({
             chargeElementId: 'charge-element-2',
             source: 'supported',
             timeLimitedStartDate: null,
             timeLimitedEndDate: null,
-            actualAnnualQuantity: 100,
-            maxAllowableQuantity: 100
+            actualReturnQuantity: 100,
+            proRataAuthorisedQuantity: 100
           })
         ];
-        const reshuffledElements = reshuffleQuantities(chargeElements);
-        expect(reshuffledElements[0].actualAnnualQuantity).to.equal(100);
-        expect(reshuffledElements[1].actualAnnualQuantity).to.equal(75);
+        const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
+        expect(allocatedElements[0].actualReturnQuantity).to.equal(100);
+        expect(allocatedElements[1].actualReturnQuantity).to.equal(75);
       });
       test('moves quantities from lower priority elements filling elements in priority order', async () => {
         const chargeElements = [
           getChargeElement({
-            chargeElementId: 'charge-element-1',
-            source: 'unsupported',
-            timeLimitedStartDate: '2016-04-01',
-            timeLimitedEndDate: '2017-03-31',
-            actualAnnualQuantity: 50,
-            maxAllowableQuantity: 50
-          }),
-          getChargeElement({
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
             timeLimitedStartDate: null,
             timeLimitedEndDate: null,
-            actualAnnualQuantity: 75,
-            maxAllowableQuantity: 100
+            actualReturnQuantity: 75,
+            proRataAuthorisedQuantity: 100
+          }),
+          getChargeElement({
+            chargeElementId: 'charge-element-1',
+            source: 'unsupported',
+            timeLimitedStartDate: '2016-04-01',
+            timeLimitedEndDate: '2017-03-31',
+            actualReturnQuantity: 50,
+            proRataAuthorisedQuantity: 50
           }),
           getChargeElement({
             chargeElementId: 'charge-element-3',
             source: 'supported',
-            timeLimitedStartDate: null,
-            timeLimitedEndDate: null,
-            actualAnnualQuantity: 35,
-            maxAllowableQuantity: 50
+            actualReturnQuantity: 35,
+            proRataAuthorisedQuantity: 50
           })
         ];
-        const reshuffledElements = reshuffleQuantities(chargeElements);
-        expect(reshuffledElements[0].actualAnnualQuantity).to.equal(100);
-        expect(reshuffledElements[1].actualAnnualQuantity).to.equal(50);
-        expect(reshuffledElements[2].actualAnnualQuantity).to.equal(10);
+        const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
+        expect(allocatedElements[0].actualReturnQuantity).to.equal(100);
+        expect(allocatedElements[1].actualReturnQuantity).to.equal(50);
+        expect(allocatedElements[2].actualReturnQuantity).to.equal(10);
       });
       test('actual quantities remain the same if no shuffling is needed', async () => {
         const chargeElements = [
-          getChargeElement({ // lowest priority
-            chargeElementId: 'charge-element-1',
-            source: 'supported',
-            timeLimitedStartDate: null,
-            timeLimitedEndDate: null,
-            actualAnnualQuantity: 10,
-            maxAllowableQuantity: 20
+          getChargeElement({ // first priority
+            chargeElementId: 'charge-element-3',
+            source: 'unsupported',
+            actualReturnQuantity: 100,
+            proRataAuthorisedQuantity: 100
           }),
           getChargeElement({ // second priority
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
             timeLimitedStartDate: '2016-04-01',
             timeLimitedEndDate: '2017-03-31',
-            actualAnnualQuantity: 20,
-            maxAllowableQuantity: 20
+            actualReturnQuantity: 20,
+            proRataAuthorisedQuantity: 20
           }),
-          getChargeElement({ // first priority
-            chargeElementId: 'charge-element-3',
-            source: 'unsupported',
-            timeLimitedStartDate: null,
-            timeLimitedEndDate: null,
-            actualAnnualQuantity: 100,
-            maxAllowableQuantity: 100
+          getChargeElement({ // lowest priority
+            chargeElementId: 'charge-element-1',
+            source: 'supported',
+            actualReturnQuantity: 10,
+            proRataAuthorisedQuantity: 20
           })
         ];
-        const reshuffledElements = reshuffleQuantities(chargeElements);
-        expect(reshuffledElements[0].actualAnnualQuantity).to.equal(chargeElements[2].actualAnnualQuantity);
-        expect(reshuffledElements[1].actualAnnualQuantity).to.equal(chargeElements[1].actualAnnualQuantity);
-        expect(reshuffledElements[2].actualAnnualQuantity).to.equal(chargeElements[0].actualAnnualQuantity);
+        const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
+        expect(allocatedElements[0].actualReturnQuantity).to.equal(chargeElements[0].actualReturnQuantity);
+        expect(allocatedElements[1].actualReturnQuantity).to.equal(chargeElements[1].actualReturnQuantity);
+        expect(allocatedElements[2].actualReturnQuantity).to.equal(chargeElements[2].actualReturnQuantity);
       });
     });
     experiment('when all elements are full', async () => {
-      test('the actual quantities are equal to the max allowable quantities', async () => {
+      test('the actual quantities are equal to the billable quantities, if provided', async () => {
         const chargeElements = [
           getChargeElement({ // second priority
             chargeElementId: 'charge-element-1',
             source: 'unsupported',
             timeLimitedStartDate: '2016-04-01',
             timeLimitedEndDate: '2017-03-31',
-            actualAnnualQuantity: 50,
-            maxAllowableQuantity: 50
+            actualReturnQuantity: 50,
+            proRataBillableQuantity: 50,
+            proRataAuthorisedQuantity: 200
           }),
           getChargeElement({ // first priority
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
-            timeLimitedStartDate: null,
-            timeLimitedEndDate: null,
-            actualAnnualQuantity: 50,
-            maxAllowableQuantity: 50
+            actualReturnQuantity: 50,
+            proRataBillableQuantity: 50,
+            proRataAuthorisedQuantity: 200
           }),
           getChargeElement({ // lowest priority
             chargeElementId: 'charge-element-3',
             source: 'supported',
-            timeLimitedStartDate: null,
-            timeLimitedEndDate: null,
-            actualAnnualQuantity: 100,
-            maxAllowableQuantity: 100
+            actualReturnQuantity: 100,
+            proRataBillableQuantity: 100,
+            proRataAuthorisedQuantity: 200
           })
         ];
-        const reshuffledElements = reshuffleQuantities(chargeElements);
-        expect(reshuffledElements[0].actualAnnualQuantity).to.equal(chargeElements[1].maxAllowableQuantity);
-        expect(reshuffledElements[1].actualAnnualQuantity).to.equal(chargeElements[0].maxAllowableQuantity);
-        expect(reshuffledElements[2].actualAnnualQuantity).to.equal(chargeElements[2].maxAllowableQuantity);
+        const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
+        expect(allocatedElements[0].actualReturnQuantity).to.equal(chargeElements[1].proRataBillableQuantity);
+        expect(allocatedElements[1].actualReturnQuantity).to.equal(chargeElements[0].proRataBillableQuantity);
+        expect(allocatedElements[2].actualReturnQuantity).to.equal(chargeElements[2].proRataBillableQuantity);
+      });
+      test('the actual quantities are equal to the authorised quantities, if no billable quantities provided', async () => {
+        const chargeElements = [
+          getChargeElement({ // second priority
+            chargeElementId: 'charge-element-1',
+            source: 'unsupported',
+            timeLimitedStartDate: '2016-04-01',
+            timeLimitedEndDate: '2017-03-31',
+            actualReturnQuantity: 50,
+            proRataAuthorisedQuantity: 50
+          }),
+          getChargeElement({ // first priority
+            chargeElementId: 'charge-element-2',
+            source: 'unsupported',
+            actualReturnQuantity: 50,
+            proRataAuthorisedQuantity: 50
+          }),
+          getChargeElement({ // lowest priority
+            chargeElementId: 'charge-element-3',
+            source: 'supported',
+            actualReturnQuantity: 100,
+            proRataAuthorisedQuantity: 100
+          })
+        ];
+        const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
+        expect(allocatedElements[0].actualReturnQuantity).to.equal(chargeElements[1].proRataAuthorisedQuantity);
+        expect(allocatedElements[1].actualReturnQuantity).to.equal(chargeElements[0].proRataAuthorisedQuantity);
+        expect(allocatedElements[2].actualReturnQuantity).to.equal(chargeElements[2].proRataAuthorisedQuantity);
+      });
+    });
+    experiment('when there is an over abstraction', async () => {
+      test('base element gets overabstraction, other elements are equal to billable quantity', async () => {
+        const chargeElements = [
+          getChargeElement({ // first priority
+            chargeElementId: 'charge-element-2',
+            source: 'unsupported',
+            actualReturnQuantity: 50,
+            proRataBillableQuantity: 100,
+            proRataAuthorisedQuantity: 200
+          }),
+          getChargeElement({ // second priority
+            chargeElementId: 'charge-element-1',
+            source: 'unsupported',
+            timeLimitedStartDate: '2016-04-01',
+            timeLimitedEndDate: '2017-03-31',
+            actualReturnQuantity: 75,
+            proRataBillableQuantity: 50,
+            proRataAuthorisedQuantity: 200
+          }),
+          getChargeElement({ // lowest priority
+            chargeElementId: 'charge-element-3',
+            source: 'supported',
+            actualReturnQuantity: 100,
+            proRataBillableQuantity: 50,
+            proRataAuthorisedQuantity: 200
+          })
+        ];
+        const overAbstraction = new Decimal(chargeElements[0].actualReturnQuantity)
+          .plus(chargeElements[1].actualReturnQuantity)
+          .plus(chargeElements[2].actualReturnQuantity)
+          .minus(chargeElements[0].proRataBillableQuantity)
+          .minus(chargeElements[1].proRataBillableQuantity)
+          .minus(chargeElements[2].proRataBillableQuantity);
+        const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
+
+        expect(allocatedElements[0].actualReturnQuantity).to.equal(overAbstraction.plus(chargeElements[0].proRataBillableQuantity).toDecimalPlaces(3).toNumber());
+        expect(allocatedElements[1].actualReturnQuantity).to.equal(chargeElements[1].proRataBillableQuantity);
+        expect(allocatedElements[2].actualReturnQuantity).to.equal(chargeElements[2].proRataBillableQuantity);
       });
     });
     experiment('when the total quantities sum to zero', async () => {
@@ -247,31 +339,78 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             source: 'unsupported',
             timeLimitedStartDate: '2016-04-01',
             timeLimitedEndDate: '2017-03-31',
-            actualAnnualQuantity: 0,
-            maxAllowableQuantity: 50
+            actualReturnQuantity: 0,
+            proRataAuthorisedQuantity: 50
           }),
           getChargeElement({
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
-            timeLimitedStartDate: null,
-            timeLimitedEndDate: null,
-            actualAnnualQuantity: 0,
-            maxAllowableQuantity: 50
+            actualReturnQuantity: 0,
+            proRataAuthorisedQuantity: 50
           }),
           getChargeElement({
             chargeElementId: 'charge-element-3',
             source: 'supported',
-            timeLimitedStartDate: null,
-            timeLimitedEndDate: null,
-            actualAnnualQuantity: 0,
-            maxAllowableQuantity: 100
+            actualReturnQuantity: 0,
+            proRataAuthorisedQuantity: 100
           })
         ];
-        const reshuffledElements = reshuffleQuantities(chargeElements);
-        expect(reshuffledElements[0].actualAnnualQuantity).to.equal(0);
-        expect(reshuffledElements[1].actualAnnualQuantity).to.equal(0);
-        expect(reshuffledElements[2].actualAnnualQuantity).to.equal(0);
+        const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
+        expect(allocatedElements[0].actualReturnQuantity).to.equal(0);
+        expect(allocatedElements[1].actualReturnQuantity).to.equal(0);
+        expect(allocatedElements[2].actualReturnQuantity).to.equal(0);
       });
+    });
+  });
+  experiment('.reshuffleQuantities', async () => {
+    test('quantities for charge elements with 2 different purposes are allocated appropriately', async () => {
+      const purpose400ChargeElements = [
+        getChargeElement({
+          chargeElementId: 'charge-element-1',
+          source: 'unsupported',
+          timeLimitedStartDate: '2018-01-01',
+          timeLimitedEndDate: '2018-12-31',
+          actualReturnQuantity: 75,
+          proRataAuthorisedQuantity: 100,
+          purposeTertiary: 400
+        }),
+        getChargeElement({
+          chargeElementId: 'charge-element-2',
+          source: 'supported',
+          actualReturnQuantity: 100,
+          proRataAuthorisedQuantity: 100,
+          purposeTertiary: 400
+        })
+      ];
+      const purpose420ChargeElements = [
+        getChargeElement({
+          chargeElementId: 'charge-element-3',
+          source: 'supported',
+          timeLimitedStartDate: '2018-01-01',
+          timeLimitedEndDate: '2018-12-31',
+          actualReturnQuantity: 50,
+          proRataAuthorisedQuantity: 50,
+          purposeTertiary: 420
+        }),
+        getChargeElement({
+          chargeElementId: 'charge-element-4',
+          source: 'supported',
+          actualReturnQuantity: 80,
+          proRataAuthorisedQuantity: 100,
+          purposeTertiary: 420
+        })
+      ];
+      const { error, data: reshuffledElements } = reshuffleQuantities([...purpose400ChargeElements, ...purpose420ChargeElements]);
+
+      expect(error).to.be.an.array().and.to.be.empty();
+      expect(reshuffledElements[0].chargeElementId).to.equal('charge-element-1');
+      expect(reshuffledElements[0].actualReturnQuantity).to.equal(100);
+      expect(reshuffledElements[1].chargeElementId).to.equal('charge-element-2');
+      expect(reshuffledElements[1].actualReturnQuantity).to.equal(75);
+      expect(reshuffledElements[2].chargeElementId).to.equal('charge-element-4');
+      expect(reshuffledElements[2].actualReturnQuantity).to.equal(100);
+      expect(reshuffledElements[3].chargeElementId).to.equal('charge-element-3');
+      expect(reshuffledElements[3].actualReturnQuantity).to.equal(30);
     });
   });
 });

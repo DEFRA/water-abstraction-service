@@ -22,7 +22,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       sandbox.restore();
     });
     const chargeElement = [getChargeElement({
-      actualAnnualQuantity: 0,
+      actualReturnQuantity: 0,
       purposeTertiary: 400
     })];
     const returnLines = [{
@@ -38,7 +38,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       quantity: 0.05,
       quantityAllocated: 0
     }];
-    test('returns charge element with updated actualAnnualQuantity', async () => {
+    test('returns charge element with updated actualReturnQuantity', async () => {
       const ret = [createReturn({
         tertiaryCode: '400',
         quantityAlloccated: 0,
@@ -49,10 +49,34 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         updatedElementQuantity: 0.05
       });
       const matchedChargeElement = matchReturnQuantities(chargeElement, ret);
-      expect(matchedChargeElement[0].actualAnnualQuantity).to.equal(0.05);
+      expect(matchedChargeElement[0].actualReturnQuantity).to.equal(0.05);
     });
   });
   experiment('.matchReturnsToChargeElements', async () => {
+    const getProRataAuthorisedQuantity = ele => new Decimal(ele.authorisedAnnualQuantity).times(ele.billableDays).dividedBy(ele.totalDays);
+
+    experiment('no returns exist', async () => {
+      test('return chargeElements with null actualReturnQuantity', async () => {
+        const chargeElements = [
+          getChargeElement({ chargeElementId: 'charge-element-1' }),
+          getChargeElement({ chargeElementId: 'charge-element-2' }),
+          getChargeElement({ chargeElementId: 'charge-element-3' })
+        ];
+        const returns = [
+          createReturn({ status: 'due' }),
+          createReturn({ status: 'due' }),
+          createReturn({ status: 'due' })
+        ];
+        const { data: matchedElements } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
+
+        expect(matchedElements[0].chargeElementId).to.equal('charge-element-1');
+        expect(matchedElements[0].actualReturnQuantity).to.equal(null);
+        expect(matchedElements[1].chargeElementId).to.equal('charge-element-2');
+        expect(matchedElements[1].actualReturnQuantity).to.equal(null);
+        expect(matchedElements[2].chargeElementId).to.equal('charge-element-3');
+        expect(matchedElements[2].actualReturnQuantity).to.equal(null);
+      });
+    });
     experiment('allocating quantities to correct charge elements', async () => {
       const chargeElementOptions = {
         purposeTertiary: 400,
@@ -68,6 +92,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         authorisedAnnualQuantity: 5.5
       };
       const returnOptions = {
+        status: 'completed',
         startDate: '2016-04-01',
         endDate: '2017-03-31',
         periodEndDay: '31',
@@ -108,18 +133,18 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         quantities: [0, 0, 0, 15, 4, 7, 9, 11, 14, 0, 0, 0] // total: 60
       })];
       test('only return quantities with matching purpose are applied to the charge element', async () => {
-        const matchedElements = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), [...tptReturns, ...otherPurposeReturns]);
-        expect(matchedElements[0].actualAnnualQuantity).to.equal(0.147);
+        const { data: matchedElements } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), [...tptReturns, ...otherPurposeReturns]);
+        expect(matchedElements[0].actualReturnQuantity).to.equal(0.147);
       });
       test('no quantity is allocated if there are no TPT returns', async () => {
-        const matchedElements = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), otherPurposeReturns);
-        expect(matchedElements[0].actualAnnualQuantity).to.equal(0);
+        const { data: matchedElements } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), otherPurposeReturns);
+        expect(matchedElements[0].actualReturnQuantity).to.equal(0);
       });
       test('when there are charge elements and returns with different TPT purposes', async () => {
-        const matchedElements = matchReturnsToChargeElements(wrapElementsInVersion(
+        const { data: matchedElements } = matchReturnsToChargeElements(wrapElementsInVersion(
           [...chargeElement, secondChargeElement]), [...tptReturns, ...otherPurposeReturns]);
-        expect(matchedElements[0].actualAnnualQuantity).to.equal(0.147);
-        expect(matchedElements[1].actualAnnualQuantity).to.equal(0.052);
+        expect(matchedElements[0].actualReturnQuantity).to.equal(0.147);
+        expect(matchedElements[1].actualReturnQuantity).to.equal(0.052);
       });
       test('quantities are allocated correctly for returns with multiple purposes', async () => {
         const [nonTptPurpose] = createPurposeData('260');
@@ -132,10 +157,10 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           return ret;
         });
 
-        const matchedElements = matchReturnsToChargeElements(wrapElementsInVersion(
+        const { data: matchedElements } = matchReturnsToChargeElements(wrapElementsInVersion(
           [...chargeElement, secondChargeElement]), [...updatedTpTReturns, ...updatedOtherReturns]);
-        expect(matchedElements[0].actualAnnualQuantity).to.equal(0.147);
-        expect(matchedElements[1].actualAnnualQuantity).to.equal(0.052);
+        expect(matchedElements[0].actualReturnQuantity).to.equal(0.147);
+        expect(matchedElements[1].actualReturnQuantity).to.equal(0.052);
       });
     });
 
@@ -151,9 +176,11 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         source: 'unsupported',
         totalDays: 182,
         billableDays: 31,
+        billableAnnualQuantity: 0.8,
         authorisedAnnualQuantity: 1
       };
       const returnOptions = {
+        status: 'completed',
         startDate: '2016-04-01',
         endDate: '2017-03-31',
         periodEndDay: '31',
@@ -163,7 +190,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         quantityAllocated: 0
       };
       const chargeElement = [getChargeElement(chargeElementOptions)];
-      test('actualAnnualQuantity does not exceed maxAllowableQuantity', async () => {
+      test('actualReturnQuantity does not exceed authorisedAnnualQuantity', async () => {
         const returns = [createMonthlyReturn({
           ...returnOptions,
           tertiaryCode: '400',
@@ -173,15 +200,16 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           tertiaryCode: '400',
           quantities: [0, 0, 0, 0, 0, 0, 12, 18, 11, 16, 8, 0]
         })];
-        const [matchedChargeElement] = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
-        const expectedActualAnnualQuantity = new Decimal(chargeElement[0].authorisedAnnualQuantity)
+        const { error, data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+        const expectedactualReturnQuantity = new Decimal(chargeElement[0].authorisedAnnualQuantity)
           .times(chargeElement[0].billableDays)
           .dividedBy(chargeElement[0].totalDays)
           .toDecimalPlaces(3)
           .toNumber();
-        expect(matchedChargeElement.actualAnnualQuantity).to.equal(expectedActualAnnualQuantity);
+        expect(matchedChargeElement.actualReturnQuantity).to.equal(expectedactualReturnQuantity);
+        expect(error[0].type).to.equal('overAbstraction');
       });
-      test('actualAnnualQuantity does not exceed total quantities', async () => {
+      test('actualReturnQuantity does not exceed total quantities', async () => {
         const firstQuantities = [0, 0, 0, 0, 0, 0, 12, 12, 15, 0, 0, 0];
         const secondQuantities = [0, 0, 0, 0, 0, 0, 12, 18, 11, 0, 8, 0];
         const returns = [createMonthlyReturn({
@@ -193,12 +221,13 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           tertiaryCode: '400',
           quantities: secondQuantities
         })];
-        const [matchedChargeElement] = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+        const { data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
         const totalReturnQuantities = firstQuantities.reduce((a, b) => a + b, 0) + secondQuantities.reduce((a, b) => a + b, 0);
-        const expectedActualAnnualQuantity = new Decimal(totalReturnQuantities).dividedBy(1000).toNumber();
-        expect(matchedChargeElement.actualAnnualQuantity).to.equal(expectedActualAnnualQuantity);
+        const expectedactualReturnQuantity = new Decimal(totalReturnQuantities).dividedBy(1000).toNumber();
+        expect(matchedChargeElement.actualReturnQuantity).to.equal(expectedactualReturnQuantity);
       });
     });
+
     experiment('allocating quantities in the correct date range', async () => {
       const chargeElementOptions = {
         purposeTertiary: 400,
@@ -216,6 +245,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       test('return quantities are not applied outside of the charge element date range', async () => {
         const chargeElement = [getChargeElement(chargeElementOptions)];
         const returnOptions = {
+          status: 'completed',
           startDate: '2016-04-01',
           endDate: '2017-03-31',
           periodStartDay: '1',
@@ -234,10 +264,10 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           quantities: returnQuantities
         })];
         const sumOfRelevantQuantities = returnQuantities.slice(0, 6).reduce((a, b) => a + b, 0);
-        const expectedActualAnnualQuantity = new Decimal(sumOfRelevantQuantities).dividedBy(1000).toNumber();
+        const expectedactualReturnQuantity = new Decimal(sumOfRelevantQuantities).dividedBy(1000).toNumber();
 
-        const [matchedChargeElement] = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
-        expect(matchedChargeElement.actualAnnualQuantity).to.equal(expectedActualAnnualQuantity);
+        const { data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+        expect(matchedChargeElement.actualReturnQuantity).to.equal(expectedactualReturnQuantity);
       });
       test('does not allocate quantities outside the return abstraction period', async () => {
         const chargeElement = [getChargeElement({
@@ -245,6 +275,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           endDate: '2017-03-31'
         })];
         const returnOptions = {
+          status: 'completed',
           startDate: '2016-04-01',
           endDate: '2017-03-31',
           periodStartDay: '1',
@@ -264,10 +295,10 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           quantities: returnQuantities2
         })];
         const sumOfRelevantQuantities = returnQuantities1.slice(0, 8).reduce((a, b) => a + b, 0) + returnQuantities2.slice(0, 8).reduce((a, b) => a + b, 0);
-        const expectedActualAnnualQuantity = new Decimal(sumOfRelevantQuantities).dividedBy(1000).toNumber();
+        const expectedactualReturnQuantity = new Decimal(sumOfRelevantQuantities).dividedBy(1000).toNumber();
 
-        const [matchedChargeElement] = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
-        expect(matchedChargeElement.actualAnnualQuantity).to.equal(expectedActualAnnualQuantity);
+        const { data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+        expect(matchedChargeElement.actualReturnQuantity).to.equal(expectedactualReturnQuantity);
       });
       test('does not allocate quantities outside the charge elements abstraction period', async () => {
         const chargeElement = [getChargeElement({
@@ -276,6 +307,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           abstractionPeriodEndMonth: '8'
         })];
         const returnOptions = {
+          status: 'completed',
           startDate: '2016-04-01',
           endDate: '2017-03-31',
           periodStartDay: '1',
@@ -294,10 +326,10 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           quantities: returnQuantities
         })];
         const sumOfRelevantQuantities = returnQuantities.slice(0, 5).reduce((a, b) => a + b, 0);
-        const expectedActualAnnualQuantity = new Decimal(sumOfRelevantQuantities).dividedBy(1000).toNumber();
+        const expectedactualReturnQuantity = new Decimal(sumOfRelevantQuantities).dividedBy(1000).toNumber();
 
-        const [matchedChargeElement] = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
-        expect(matchedChargeElement.actualAnnualQuantity).to.equal(expectedActualAnnualQuantity);
+        const { data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+        expect(matchedChargeElement.actualReturnQuantity).to.equal(expectedactualReturnQuantity);
       });
       experiment('where a charge version ends partway through a return line, pro rata quantity is allocated', async () => {
         test('monthly return', async () => {
@@ -306,6 +338,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
             endDate: '2017-01-18'
           }];
           const returnOptions = {
+            status: 'completed',
             startDate: '2016-04-01',
             endDate: '2017-03-31',
             periodStartDay: '1',
@@ -321,10 +354,10 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           })];
 
           const sumOfRelevantQuantities = returnQuantities.slice(0, 9).reduce((a, b) => a + b, 0) + new Decimal(returnQuantities[9]).times(18).dividedBy(31).toNumber();
-          const expectedActualAnnualQuantity = new Decimal(sumOfRelevantQuantities).dividedBy(1000).toDecimalPlaces(3).toNumber();
+          const expectedactualReturnQuantity = new Decimal(sumOfRelevantQuantities).dividedBy(1000).toDecimalPlaces(3).toNumber();
 
-          const [matchedChargeElement] = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
-          expect(matchedChargeElement.actualAnnualQuantity).to.equal(expectedActualAnnualQuantity);
+          const { data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+          expect(matchedChargeElement.actualReturnQuantity).to.equal(expectedactualReturnQuantity);
         });
         test('weekly return', async () => {
           const chargeElement = [{
@@ -332,6 +365,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
             endDate: '2016-07-12'
           }];
           const returnOptions = {
+            status: 'completed',
             startDate: '2016-04-03',
             endDate: '2017-03-31',
             periodStartDay: '1',
@@ -346,13 +380,14 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
             quantities: returnQuantities
           })];
           const sumOfRelevantQuantities = returnQuantities.slice(0, 14).reduce((a, b) => a + b, 0) + new Decimal(returnQuantities[14]).times(3).dividedBy(7).toNumber();
-          const expectedActualAnnualQuantity = new Decimal(sumOfRelevantQuantities).dividedBy(1000).toDecimalPlaces(3).toNumber();
+          const expectedactualReturnQuantity = new Decimal(sumOfRelevantQuantities).dividedBy(1000).toDecimalPlaces(3).toNumber();
 
-          const [matchedChargeElement] = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
-          expect(matchedChargeElement.actualAnnualQuantity).to.equal(expectedActualAnnualQuantity);
+          const { data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+          expect(matchedChargeElement.actualReturnQuantity).to.equal(expectedactualReturnQuantity);
         });
       });
     });
+
     experiment('allocating quantities to charge elements in correct order', async () => {
       const chargeElementOptions = {
         purposeTertiary: 400,
@@ -380,6 +415,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           }
         ];
         const returnOptions = {
+          status: 'completed',
           startDate: '2016-04-01',
           endDate: '2017-03-31',
           periodStartDay: '1',
@@ -399,13 +435,14 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           quantities: returnQuantities2
         })];
 
-        const matchedChargeElements = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
+        const { data: matchedChargeElements } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
+        const proRataAuthorisedQuantity = getProRataAuthorisedQuantity(chargeElements[0]);
 
         const sumOfRelevantQuantities = returnQuantities1.slice(0, 6).reduce((a, b) => a + b, 0) + returnQuantities2.slice(0, 6).reduce((a, b) => a + b, 0);
-        const timeLimitedQuantity = new Decimal(sumOfRelevantQuantities).dividedBy(1000).minus(matchedChargeElements[0].maxAllowableQuantity).toDecimalPlaces(3).toNumber();
+        const timeLimitedQuantity = new Decimal(sumOfRelevantQuantities).dividedBy(1000).minus(proRataAuthorisedQuantity).toDecimalPlaces(3).toNumber();
 
-        expect(matchedChargeElements[0].actualAnnualQuantity).to.equal(matchedChargeElements[0].maxAllowableQuantity);
-        expect(matchedChargeElements[1].actualAnnualQuantity).to.equal(timeLimitedQuantity);
+        expect(matchedChargeElements[0].actualReturnQuantity).to.equal(proRataAuthorisedQuantity.toDecimalPlaces(3).toNumber());
+        expect(matchedChargeElements[1].actualReturnQuantity).to.equal(timeLimitedQuantity);
       });
       test('first two elements are filled before third', async () => {
         const chargeElements = [getChargeElement(chargeElementOptions), // pro rata quantity 0.49863
@@ -426,6 +463,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           }
         ];
         const returnOptions = {
+          status: 'completed',
           startDate: '2016-04-01',
           endDate: '2017-03-31',
           periodStartDay: '1',
@@ -444,19 +482,22 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           tertiaryCode: '400',
           quantities: returnQuantities2
         })];
-        const matchedChargeElements = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
+        const { data: matchedChargeElements } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
+        const proRataAuthorisedQuantityFirstElement = getProRataAuthorisedQuantity(chargeElements[0]);
+        const proRataAuthorisedQuantitySecondElement = getProRataAuthorisedQuantity(chargeElements[1]);
 
         const sumOfRelevantQuantities = returnQuantities1.slice(0, 6).reduce((a, b) => a + b, 0) + returnQuantities2.slice(0, 6).reduce((a, b) => a + b, 0);
 
         const remainingQuantity = new Decimal(sumOfRelevantQuantities)
           .dividedBy(1000)
-          .minus(matchedChargeElements[0].maxAllowableQuantity)
-          .minus(matchedChargeElements[1].maxAllowableQuantity)
+          .minus(proRataAuthorisedQuantityFirstElement)
+          .minus(proRataAuthorisedQuantitySecondElement)
+          .toDecimalPlaces(3)
           .toNumber();
 
-        expect(matchedChargeElements[0].actualAnnualQuantity).to.equal(matchedChargeElements[0].maxAllowableQuantity);
-        expect(matchedChargeElements[1].actualAnnualQuantity).to.equal(matchedChargeElements[1].maxAllowableQuantity);
-        expect(matchedChargeElements[2].actualAnnualQuantity).to.equal(remainingQuantity);
+        expect(matchedChargeElements[0].actualReturnQuantity).to.equal(proRataAuthorisedQuantityFirstElement.toDecimalPlaces(3).toNumber());
+        expect(matchedChargeElements[1].actualReturnQuantity).to.equal(proRataAuthorisedQuantitySecondElement.toDecimalPlaces(3).toNumber());
+        expect(matchedChargeElements[2].actualReturnQuantity).to.equal(remainingQuantity);
       });
       test('first three elements are filled before fourth', async () => {
         const chargeElements = [getChargeElement(chargeElementOptions), // pro rata quantity 0.49863
@@ -487,6 +528,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           }
         ];
         const returnOptions = {
+          status: 'completed',
           startDate: '2016-04-01',
           endDate: '2017-03-31',
           periodStartDay: '1',
@@ -510,23 +552,28 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           tertiaryCode: '400',
           quantities: returnQuantities3
         })];
-        const matchedChargeElements = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
+        const { data: matchedChargeElements } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
 
-        const sumOfAllocatedQuantities = new Decimal(matchedChargeElements[0].actualAnnualQuantity)
-          .plus(matchedChargeElements[1].actualAnnualQuantity)
-          .plus(matchedChargeElements[2].actualAnnualQuantity)
-          .plus(matchedChargeElements[3].actualAnnualQuantity);
+        const proRataAuthorisedQuantityFirstElement = getProRataAuthorisedQuantity(chargeElements[0]);
+        const proRataAuthorisedQuantitySecondElement = getProRataAuthorisedQuantity(chargeElements[1]);
+        const proRataAuthorisedQuantityThirdElement = getProRataAuthorisedQuantity(chargeElements[2]);
+
+        const sumOfAllocatedQuantities = new Decimal(matchedChargeElements[0].actualReturnQuantity)
+          .plus(matchedChargeElements[1].actualReturnQuantity)
+          .plus(matchedChargeElements[2].actualReturnQuantity)
+          .plus(matchedChargeElements[3].actualReturnQuantity);
 
         const remainingQuantity = new Decimal(sumOfAllocatedQuantities)
-          .minus(matchedChargeElements[0].maxAllowableQuantity)
-          .minus(matchedChargeElements[1].maxAllowableQuantity)
-          .minus(matchedChargeElements[2].maxAllowableQuantity)
+          .minus(proRataAuthorisedQuantityFirstElement)
+          .minus(proRataAuthorisedQuantitySecondElement)
+          .minus(proRataAuthorisedQuantityThirdElement)
+          .toDecimalPlaces(3)
           .toNumber();
 
-        expect(matchedChargeElements[0].actualAnnualQuantity).to.equal(matchedChargeElements[0].maxAllowableQuantity);
-        expect(matchedChargeElements[1].actualAnnualQuantity).to.equal(matchedChargeElements[1].maxAllowableQuantity);
-        expect(matchedChargeElements[2].actualAnnualQuantity).to.equal(matchedChargeElements[2].maxAllowableQuantity);
-        expect(matchedChargeElements[3].actualAnnualQuantity).to.equal(remainingQuantity);
+        expect(matchedChargeElements[0].actualReturnQuantity).to.equal(proRataAuthorisedQuantityFirstElement.toDecimalPlaces(3).toNumber());
+        expect(matchedChargeElements[1].actualReturnQuantity).to.equal(proRataAuthorisedQuantitySecondElement.toDecimalPlaces(3).toNumber());
+        expect(matchedChargeElements[2].actualReturnQuantity).to.equal(proRataAuthorisedQuantityThirdElement.toDecimalPlaces(3).toNumber());
+        expect(matchedChargeElements[3].actualReturnQuantity).to.equal(remainingQuantity);
       });
     });
   });

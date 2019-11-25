@@ -6,9 +6,7 @@ Decimal.set({
 });
 
 /**
- * Checks whether or not the charge element is time limited
- * @param {Object} element charge element
- * @return {Boolean} whether or not the time limited start and end dates are valid dates
+ * Checks whether or not the charge element is time limited, but checking if it has time limited dates
  */
 const isTimeLimited = element => {
   const startDate = moment(element.timeLimitedStartDate || null); // if undefined is passed, moment defaults to now()
@@ -43,7 +41,7 @@ const prioritySorting = {
 };
 
 /**
- * Calls functions listed in prioritySorting object above
+ * Calls getElementsBySource with parameters from prioritySorting object
  * @param {String} key from prioritySorting object
  */
 const getPriorityFunction = key => {
@@ -91,12 +89,16 @@ const getAllChargeElementPurposes = chargeElements => {
 
 /**
  * Reduce function for calculating the total allocated quantity
- * @param {Decimal} total
- * @param {Object} element charge element
- * @return {Decimal} total plus the quantitiy of the charge element
  */
 const getTotalActualQuantity = (total, element) => {
-  return total.plus(element.actualAnnualQuantity);
+  return total.plus(element.actualReturnQuantity);
+};
+
+/**
+ * Reduce function for calculating the total billable quantity
+ */
+const getTotalBillableQuantity = (total, element) => {
+  return total.plus(element.proRataBillableQuantity || element.proRataAuthorisedQuantity);
 };
 
 /**
@@ -108,52 +110,97 @@ const getTotalActualQuantity = (total, element) => {
 const getAllChargeElementsForPurpose = (chargeElements, purpose) =>
   chargeElements.filter(ele => ele.purposeTertiary === purpose);
 
-/**
-   * Sum up allocated quantities and reallocate to charge elements in order
-   * @param {Array} chargeElements
-   * @return {Array} charge elements with reshuffled quantities
-   */
-const reallocateQuantityInPriorityOrder = chargeElements => {
-  let totalAllocatedQuantitity = chargeElements.reduce(getTotalActualQuantity, new Decimal(0));
+const getQuantityToAllocate = (actualQuantity, maxAllowable) => {
+  return actualQuantity.gte(maxAllowable)
+    ? new Decimal(maxAllowable)
+    : actualQuantity;
+};
 
-  return chargeElements.map(element => {
-    if (totalAllocatedQuantitity.isZero()) {
-      return element;
+/**
+ * Checks if total actual quantity is greater than total billable quantity
+ */
+const isOverAbstracted = (actual, billable) => actual.gt(billable);
+
+/**
+ * Return over abstraction error
+ */
+const getOverAbstractedErr = elements => {
+  const elementIds = elements.map(ele => ele.chargeElementId);
+  return {
+    type: 'overAbstraction',
+    msg: `Over abstraction reported on element/s ${elementIds.join(', ')}`
+  };
+};
+
+/**
+ * Reallocate quantities to fill elements in order, overabstractions are filled in same order
+ * @param {Array} elements in order for reallocation
+ * @return {Array} of {error, data}
+ *        data.chargeElementId
+ *        data.actualReturnQuantity
+ */
+const reallocateQuantitiesInPriorityOrder = (elements) => {
+  let totalActual = elements.reduce(getTotalActualQuantity, new Decimal(0));
+  let totalBillable = elements.reduce(getTotalBillableQuantity, new Decimal(0));
+  const overAbstractedElementIds = [];
+
+  const dataToReturn = elements.map(element => {
+    const { chargeElementId, proRataBillableQuantity: elementBillable, proRataAuthorisedQuantity: elementAuthorised } = element;
+    let quantityToAllocate;
+
+    if (totalActual.isZero()) return { chargeElementId, actualReturnQuantity: 0 };
+
+    if (isOverAbstracted(totalActual, totalBillable)) {
+      const overAbstraction = totalActual.minus(totalBillable);
+      const billableWithOverAbstraction = overAbstraction.plus(elementBillable);
+      quantityToAllocate = getQuantityToAllocate(billableWithOverAbstraction, elementAuthorised);
+      overAbstractedElementIds.push(chargeElementId);
+    } else {
+      quantityToAllocate = getQuantityToAllocate(totalActual, elementBillable || elementAuthorised);
     }
 
-    const quantityToAllocate = totalAllocatedQuantitity.gte(element.maxAllowableQuantity)
-      ? new Decimal(element.maxAllowableQuantity)
-      : totalAllocatedQuantitity;
-
-    totalAllocatedQuantitity = totalAllocatedQuantitity.minus(quantityToAllocate);
+    totalActual = totalActual.minus(quantityToAllocate);
+    totalBillable = totalBillable.minus(elementBillable || elementAuthorised);
 
     return {
-      ...element,
-      actualAnnualQuantity: quantityToAllocate.toDecimalPlaces(3).toNumber()
+      chargeElementId,
+      actualReturnQuantity: quantityToAllocate.toDecimalPlaces(3).toNumber()
     };
   });
+
+  return { error: (overAbstractedElementIds.length > 0) ? getOverAbstractedErr(overAbstractedElementIds) : null,
+    data: dataToReturn };
 };
 
 /**
  * Reshuffle quantities between charge elements so that they are filled in priority order
  * @param {Array} chargeElements
- * @return {Array} charge elements in priority order with final allocated quantities
+ * @return {Array} of {error, data}
+ *        data.chargeElementId
+ *        data.actualReturnQuantity
  */
 const reshuffleQuantities = chargeElements => {
   const chargeElementPurposes = getAllChargeElementPurposes(chargeElements);
-  const finalAllocatedElements = [];
+  const matchedQuantities = [];
+  const matchingErrors = [];
   chargeElementPurposes.forEach(purpose => {
     const chargeElementsToPrioritise = getAllChargeElementsForPurpose(chargeElements, purpose);
 
     const prioritisedElements = sortElementsInPriorityOrder(chargeElementsToPrioritise);
 
-    const allocatedElements = reallocateQuantityInPriorityOrder(prioritisedElements);
+    const { error, data } = reallocateQuantitiesInPriorityOrder(prioritisedElements);
+    if (error) matchingErrors.push(error);
 
-    finalAllocatedElements.push(allocatedElements);
+    matchedQuantities.push(data);
   });
-  return flatMap(finalAllocatedElements);
+  return {
+    error: flatMap(matchingErrors),
+    data: flatMap(matchedQuantities)
+  };
 };
 
 exports.isTimeLimited = isTimeLimited;
+exports.getElementsBySource = getElementsBySource;
 exports.sortElementsInPriorityOrder = sortElementsInPriorityOrder;
+exports.reallocateQuantitiesInPriorityOrder = reallocateQuantitiesInPriorityOrder;
 exports.reshuffleQuantities = reshuffleQuantities;

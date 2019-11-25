@@ -10,7 +10,10 @@ const {
   prepareReturnLinesData
 } = require('./prepare-returns');
 const matchRets = require('./match-return-quantities');
-const { returnMatchingError, returnPurposeMatchesElementPurpose } = require('./two-part-tariff-helpers');
+const {
+  returnsError,
+  returnPurposeMatchesElementPurpose
+} = require('./two-part-tariff-helpers');
 const { reshuffleQuantities } = require('./reshuffle-quantities');
 
 /**
@@ -33,7 +36,7 @@ const matchReturnQuantities = (chargeElements, returnsToMatch) => {
           } = matchRets.matchReturnLineToElement(retLine, ele);
 
           retLine.quantityAllocated = updatedLineQuantityAllocated;
-          ele.actualAnnualQuantity = updatedElementQuantity;
+          ele.actualReturnQuantity = updatedElementQuantity;
         });
       }
     });
@@ -49,9 +52,16 @@ const prepareChargeElementsForMatching = chargeElements => {
   return sortChargeElementsForMatching(preparedChargeElements);
 };
 
+/**
+ * Check that returns are completed and ready to be matched, return error/s otherwise
+ * @param {Array} returns for checking
+ * @return {Object}
+ *         {Array} errors about returns which are not in a ready state or
+ *         {Array} data prepared returns
+ */
 const prepareReturnsForMatching = returns => {
   const returnErrors = checkReturnsAreCompleted(returns);
-  if (returnErrors) returnMatchingError(returnErrors);
+  if (returnErrors) return { error: returnErrors, data: null };
 
   const tptReturns = getTPTReturns(returns);
 
@@ -68,7 +78,7 @@ const prepareReturnsForMatching = returns => {
  */
 const matchReturnsToChargeElements = (chargeVersion, returns) => {
   const { error, data: preparedReturns } = prepareReturnsForMatching(returns);
-  if (error) returnMatchingError(error);
+  if (error) return returnsError(error, chargeVersion.chargeElements);
 
   const preparedChargeElements = prepareChargeElementsForMatching(chargeVersion.chargeElements);
 

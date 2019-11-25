@@ -11,8 +11,6 @@ const { dateFormat } = require('./two-part-tariff-helpers');
 
 /**
  * Create moment range for return line or charge element
- * @param {Object} obj - return line or charge element
- * @return {moment range} date range for object passed in
  */
 const getDateRange = obj => moment.range([
   moment(obj.effectiveStartDate || obj.startDate, dateFormat),
@@ -21,9 +19,6 @@ const getDateRange = obj => moment.range([
 
 /**
  * Checks whether the return line overlaps the effective date range of the charge element
- * @param {Object} line return line
- * @param {Object} ele charge element
- * @return {Boolean} whether or not the return line overlaps the charge element
  */
 const doesLineOverlapChargeElementDateRange = (line, ele) => {
   const lineRange = getDateRange(line);
@@ -33,22 +28,16 @@ const doesLineOverlapChargeElementDateRange = (line, ele) => {
 
 /**
  * Checks whether there is space in the allowable quantity in the charge element
- * @param {Object} chargeElement
- * @return {Boolean} whether or not allocated quantitiy is equal to allowable quantity
  */
-const isChargeElementFull = chargeElement => chargeElement.actualAnnualQuantity === chargeElement.maxAllowableQuantity;
+const isChargeElementFull = chargeElement => chargeElement.actualReturnQuantity === chargeElement.authorisedAnnualQuantity;
 
 /**
  * Checks whether or not all of the return quantity has already been allocated
- * @param {Object} returnLine
- * @return {Boolean} whether or not the quantity is equal to the allocated quantity
  */
 const isQuantityAllocated = returnLine => returnLine.quantity === returnLine.quantityAllocated;
 
 /**
  * Return the number of days in a date range
- * @param {moment range} range
- * @return {Number} of days between start and end date of the range
  */
 const getNumberOfDaysInRange = range => range.end.diff(range.start, 'days') + 1;
 
@@ -84,15 +73,15 @@ const matchReturnLineToElement = (line, ele) => {
       const proRataQuantity = getProRataQuantity(line, ele);
 
       const unallocatedQuantity = proRataQuantity.minus(line.quantityAllocated);
-      const remainingAllowableQuantity = new Decimal(ele.maxAllowableQuantity).minus(ele.actualAnnualQuantity);
+      const remainingAllowableQuantity = new Decimal(ele.authorisedAnnualQuantity).minus(ele.actualReturnQuantity);
 
       const quantityToBeAllocated = Math.min(unallocatedQuantity, remainingAllowableQuantity);
-      updatedEle.actualAnnualQuantity = new Decimal(ele.actualAnnualQuantity).plus(quantityToBeAllocated).toNumber();
+      updatedEle.actualReturnQuantity = new Decimal(ele.actualReturnQuantity).plus(quantityToBeAllocated).toNumber();
       updatedLine.quantityAllocated = new Decimal(line.quantityAllocated).plus(quantityToBeAllocated).toNumber();
     }
   }
   return {
-    updatedElementQuantity: updatedEle.actualAnnualQuantity,
+    updatedElementQuantity: updatedEle.actualReturnQuantity,
     updatedLineQuantityAllocated: updatedLine.quantityAllocated
   };
 };

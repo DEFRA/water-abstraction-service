@@ -19,20 +19,21 @@ const getTPTChargeElements = chargeElements => chargeElements.filter(element => 
 
 /**
  * Find pro rata authorised quantity for charge element
- * Add effectiveStartDate, effectiveEndDate, actualAnnualQuantity & maxAllowableQuantity data points
+ * Add effectiveStartDate, effectiveEndDate, actualReturnQuantity,
+ * proRataBillableQuantity & proRataAuthorisedQuantity data points
  * @param {Array} chargeElements all charge elements in charge version
  * @return {Array} updated chargeElements array with new data points
  */
 const prepareChargeElementData = chargeElements => {
   const updated = cloneDeep(chargeElements);
   updated.forEach(ele => {
-    ele.actualAnnualQuantity = 0;
+    ele.actualReturnQuantity = 0;
     const { effectiveStartDate, effectiveEndDate } = getEffectiveDates(ele);
     ele.effectiveStartDate = effectiveStartDate;
     ele.effectiveEndDate = effectiveEndDate;
+    ele.proRataAuthorisedQuantity = new Decimal(ele.authorisedAnnualQuantity).times(ele.billableDays).dividedBy(ele.totalDays).toDecimalPlaces(3).toNumber();
 
-    const allowableQuantity = new Decimal(ele.billableAnnualQuantity || ele.authorisedAnnualQuantity);
-    ele.maxAllowableQuantity = allowableQuantity.times(ele.billableDays).dividedBy(ele.totalDays).toDecimalPlaces(3).toNumber();
+    if (ele.billableAnnualQuantity) ele.proRataBillableQuantity = new Decimal(ele.billableAnnualQuantity).times(ele.billableDays).dividedBy(ele.totalDays).toDecimalPlaces(3).toNumber();
   });
   return updated;
 };

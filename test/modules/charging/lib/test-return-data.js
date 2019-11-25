@@ -29,7 +29,7 @@ const createReturn = options => {
       'isCurrent': true,
       'isTwoPartTariff': true
     },
-    'isUnderQuery': false
+    'isUnderQuery': options.isUnderQuery
   };
 };
 

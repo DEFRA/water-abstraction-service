@@ -15,7 +15,7 @@ const {
 experiment('modules/charging/lib/prepare-charge-elements', async () => {
   experiment('.getTPTChargeElements', async () => {
     const chargeElementOptions = {
-      actualAnnualQuantity: 0,
+      actualReturnQuantity: 0,
       abstractionPeriodStartDay: '1',
       abstractionPeriodStartMonth: '4',
       abstractionPeriodEndDay: '31',
@@ -23,7 +23,7 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
       startDate: '2016-04-01',
       endDate: '2016-10-31',
       billableAnnualQuantity: 5.9996,
-      maxAllowableQuantity: 5.9996,
+      authorisedAnnualQuantity: 5.9996,
       totalDays: 214,
       billableDays: 214,
       effectiveEndDate: '2016-10-31',
@@ -70,55 +70,14 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
       totalDays: 214,
       billableDays: 214
     };
-    experiment('maxAllowableQuantity', async () => {
-      test('uses billableAnnualQuantity, if provided', () => {
-        const chargeElement = [getChargeElement({
-          ...chargeElementOptions,
-          billableAnnualQuantity: '5.996'
-        })];
-        const [updatedChargeElement] = prepareChargeElementData(chargeElement);
-        expect(updatedChargeElement.maxAllowableQuantity).to.equal(parseFloat(chargeElement[0].billableAnnualQuantity));
-      });
-      test('uses authorisedAnnualQuantity, if billableAnnualQuantity not provided', () => {
-        const chargeElement = [getChargeElement({
-          ...chargeElementOptions,
-          authorisedAnnualQuantity: '5.445'
-        })];
-        const [updatedChargeElement] = prepareChargeElementData(chargeElement);
-        expect(updatedChargeElement.maxAllowableQuantity).to.equal(parseFloat(chargeElement[0].authorisedAnnualQuantity));
-      });
-      test('uses billableAnnualQuantity, if authorisedAnnualQuantity also provided', () => {
-        const chargeElement = [getChargeElement({
-          ...chargeElementOptions,
-          authorisedAnnualQuantity: '5.445',
-          billableAnnualQuantity: '5.996'
-        })];
-        const [updatedChargeElement] = prepareChargeElementData(chargeElement);
-        expect(updatedChargeElement.maxAllowableQuantity).to.equal(parseFloat(chargeElement[0].billableAnnualQuantity));
-      });
-      test('pro ratas the authorised quantity if billableDays < totalDays', () => {
-        const chargeElement = [getChargeElement({
-          ...chargeElementOptions,
-          billableAnnualQuantity: '5.996',
-          totalDays: 214,
-          billableDays: 150
-        })];
-        const [updatedChargeElement] = prepareChargeElementData(chargeElement);
-        const expectedMaxAllowableQuantity = new Decimal(chargeElement[0].billableAnnualQuantity)
-          .times(chargeElement[0].billableDays)
-          .dividedBy(chargeElement[0].totalDays)
-          .toDecimalPlaces(3)
-          .toNumber();
-        expect(updatedChargeElement.maxAllowableQuantity).to.equal(expectedMaxAllowableQuantity);
-      });
-    });
-    experiment('actualAnnualQuantity', async () => {
+
+    experiment('actualReturnQuantity', async () => {
       test('is set to 0', () => {
         const [updatedChargeElement] = prepareChargeElementData([getChargeElement({
           ...chargeElementOptions,
-          billableAnnualQuantity: '5.996'
+          authorisedAnnualQuantity: '5.996'
         })]);
-        expect(updatedChargeElement.actualAnnualQuantity).to.equal(0);
+        expect(updatedChargeElement.actualReturnQuantity).to.equal(0);
       });
     });
   });

@@ -8,6 +8,10 @@ Decimal.set({
 const { cloneDeep } = require('lodash');
 const { TPT_PURPOSES, getAbsPeriod } = require('./two-part-tariff-helpers');
 
+const noReturnsSubmitted = returns => {
+  const dueReturns = returns.filter(ret => ret.status === 'due');
+  return returns.length === dueReturns.length;
+};
 /**
  * Checks whether the specific return line is within the return abstraction period
  * @param {Object} ret - return which contains the return line
@@ -29,22 +33,29 @@ const isLineWithinAbstractionPeriod = (ret, line) => {
 };
 
 /**
- * AWAITING FURTHER INFORMATION FROM RACHEL
+ * Check if all returns are completed
  * @param {Array} returns
+ * @return {Array} of error messages if they exist
  */
 const checkReturnsAreCompleted = returns => {
-  const returnErrors = returns.map(ret => {
-    const { returnId } = ret;
-    if (ret.isUnderQuery) {
-      return { type: 'return',
-        msg: `${returnId} is under query` };
-    }
-    if (!ret.status === 'completed') {
-      return { type: 'return',
-        msg: `${returnId} is not completed` };
-    }
-  });
-  return returnErrors;
+  if (returns.length === 0) {
+    return [{
+      type: 'return',
+      msg: 'No returns available for matching'
+    }];
+  };
+  if (noReturnsSubmitted(returns)) return [{ type: 'returnsNotCompleted' }];
+  const errors = returns.reduce((returnErrors, ret) => {
+    let msg;
+    if (ret.isUnderQuery) msg = `${ret.returnId} is under query`;
+
+    if (!(ret.status === 'completed')) msg = `${ret.returnId} is not completed`;
+
+    if (msg) returnErrors.push({ type: 'return', msg });
+
+    return returnErrors;
+  }, []);
+  return (errors.length > 0) ? errors : null;
 };
 
 /**
@@ -52,10 +63,11 @@ const checkReturnsAreCompleted = returns => {
  * @param {Array} purposes from return object
  * @return {Boolean} whether or not the return has a TPT purpose
  */
-const checkReturnPurposes = purposes => {
-  return purposes.map(purpose => {
+const isReturnPurposeTPT = purposes => {
+  const returnContainsTptPurpose = purposes.map(purpose => {
     return TPT_PURPOSES.includes(parseInt(purpose.tertiary.code));
   });
+  return returnContainsTptPurpose.includes(true);
 };
 
 /**
@@ -64,10 +76,7 @@ const checkReturnPurposes = purposes => {
  * @return {Array} returns objects ready for matching with required data points
  */
 const getTPTReturns = returns => {
-  return returns.filter(ret => {
-    const returnContainsTptPurpose = checkReturnPurposes(ret.metadata.purposes);
-    return returnContainsTptPurpose.includes(true);
-  });
+  return returns.filter(ret => isReturnPurposeTPT(ret.metadata.purposes));
 };
 
 /**
@@ -93,5 +102,6 @@ const prepareReturnLinesData = returns => {
 
 exports.isLineWithinAbstractionPeriod = isLineWithinAbstractionPeriod;
 exports.checkReturnsAreCompleted = checkReturnsAreCompleted;
+exports.isReturnPurposeTPT = isReturnPurposeTPT;
 exports.getTPTReturns = getTPTReturns;
 exports.prepareReturnLinesData = prepareReturnLinesData;

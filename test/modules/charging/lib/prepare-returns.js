@@ -1,12 +1,15 @@
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
-const { createReturn, createMonthlyReturn } = require('./test-return-data');
+const { createReturn, createMonthlyReturn, createPurposeData } = require('./test-return-data');
 const Decimal = require('decimal.js-light');
 Decimal.set({
   precision: 8
 });
+const { flatMap } = require('lodash');
 const {
   isLineWithinAbstractionPeriod,
+  checkReturnsAreCompleted,
+  isReturnPurposeTPT,
   getTPTReturns,
   prepareReturnLinesData
 } = require('../../../../src/modules/charging/lib/prepare-returns');
@@ -101,8 +104,96 @@ experiment('modules/charging/lib/prepare-returns', async () => {
       });
     });
   });
-  experiment('.getCompletedReturns', async () => {
-    // WAITING FOR INFORMATION ON THIS
+  experiment('.checkReturnsAreCompleted', async () => {
+    test('return error if there are no returns for matching', async () => {
+      const [returnError] = checkReturnsAreCompleted([]);
+      expect(returnError.type).to.equal('return');
+      expect(returnError.msg).to.equal('No returns available for matching');
+    });
+    test('return error for return that is under query', async () => {
+      const completedRetOptions = {
+        returnId: 'completed-return',
+        status: 'completed',
+        isUnderQuery: false
+      };
+      const underQueryRetOptions = {
+        returnId: 'under-query-return',
+        status: 'completed',
+        isUnderQuery: true
+      };
+      const returnsToCheck = [createReturn(completedRetOptions), createReturn(underQueryRetOptions)];
+      const [returnError] = checkReturnsAreCompleted(returnsToCheck);
+
+      expect(returnError.type).to.equal('return');
+      expect(returnError.msg).to.equal(`${underQueryRetOptions.returnId} is under query`);
+    });
+    test('return error for return that does not have a "completed" status', async () => {
+      const receivedRetOptions = {
+        returnId: 'received-return',
+        status: 'received',
+        isUnderQuery: false
+      };
+      const completedRetOptions = {
+        returnId: 'completed-return',
+        status: 'completed',
+        isUnderQuery: false
+      };
+      const returnsToCheck = [createReturn(receivedRetOptions), createReturn(completedRetOptions)];
+      const [returnError] = checkReturnsAreCompleted(returnsToCheck);
+      expect(returnError.type).to.equal('return');
+      expect(returnError.msg).to.equal(`${receivedRetOptions.returnId} is not completed`);
+    });
+    test('return an error for each return with an error', async () => {
+      const receivedRetOptions = {
+        returnId: 'received-return',
+        status: 'received',
+        isUnderQuery: false
+      };
+      const completedRetOptions = {
+        returnId: 'completed-return',
+        status: 'completed',
+        isUnderQuery: false
+      };
+      const underQueryRetOptions = {
+        returnId: 'under-query-return',
+        status: 'completed',
+        isUnderQuery: true
+      };
+      const returnsToCheck = [
+        createReturn(receivedRetOptions),
+        createReturn(completedRetOptions),
+        createReturn(underQueryRetOptions)];
+      const returnErrors = checkReturnsAreCompleted(returnsToCheck);
+      expect(returnErrors[0].type).to.equal('return');
+      expect(returnErrors[0].msg).to.equal(`${receivedRetOptions.returnId} is not completed`);
+      expect(returnErrors[1].type).to.equal('return');
+      expect(returnErrors[1].msg).to.equal(`${underQueryRetOptions.returnId} is under query`);
+    });
+    test('no errors returned if all returns are completed', async () => {
+      const completedRetOptions = {
+        status: 'completed',
+        isUnderQuery: false
+      };
+      const returnsToCheck = [
+        createReturn({ ...completedRetOptions, returnId: 'completed-return-1' }),
+        createReturn({ ...completedRetOptions, returnId: 'completed-return-2' }),
+        createReturn({ ...completedRetOptions, returnId: 'completed-return-3' })
+      ];
+      const returnErrors = checkReturnsAreCompleted(returnsToCheck);
+      expect(returnErrors).to.be.null();
+    });
+  });
+  experiment('.isReturnPurposeTPT', async () => {
+    test('returns true when return contains TPT purpose', async () => {
+      const purposes = [createPurposeData('300'), createPurposeData('180'), createPurposeData('420'), createPurposeData('560'), createPurposeData('200')];
+      const returnPurposes = flatMap(purposes);
+      expect(isReturnPurposeTPT(returnPurposes)).to.be.true();
+    });
+    test('returns false when return does not contain a TPT purpose', async () => {
+      const purposes = [createPurposeData('300'), createPurposeData('180'), createPurposeData('560'), createPurposeData('200')];
+      const returnPurposes = flatMap(purposes);
+      expect(isReturnPurposeTPT(returnPurposes)).to.be.false();
+    });
   });
   experiment('.getTPTReturns', async () => {
     test('only return returns which are for TPT_PURPOSES', async () => {
@@ -128,7 +219,6 @@ experiment('modules/charging/lib/prepare-returns', async () => {
       expect(filteredReturns).to.be.an.array().and.to.be.empty();
     });
   });
-
   experiment('.prepareReturnLinesData', async () => {
     const getPreparedLines = lines => {
       const returnLines = lines;
