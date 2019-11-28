@@ -1,8 +1,18 @@
 const Joi = require('@hapi/joi');
 
+const VALID_GUID = Joi.string().guid().required();
 const VALID_STRING = Joi.string().allow(null).required();
 
 class Address {
+  set id (id) {
+    Joi.assert(id, VALID_GUID);
+    this._id = id;
+  }
+
+  get id () {
+    return this._id;
+  }
+
   set addressLine1 (addressLine1) {
     Joi.assert(addressLine1, VALID_STRING);
     this._addressLine1 = addressLine1;
@@ -73,6 +83,24 @@ class Address {
 
   get country () {
     return this._country;
+  }
+
+  /**
+   * Returns all properties as a plain JS object
+   * @return {Object}
+   */
+  toObject () {
+    return {
+      id: this.id,
+      addressLine1: this.addressLine1,
+      addressLine2: this.addressLine2,
+      addressLine3: this.addressLine3,
+      addressLine4: this.addressLine4,
+      town: this.town,
+      county: this.county,
+      postcode: this.postcode,
+      country: this.country
+    };
   }
 }
 

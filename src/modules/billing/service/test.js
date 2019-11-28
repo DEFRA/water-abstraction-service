@@ -1,5 +1,27 @@
 const service = require('./');
+const { omit } = require('lodash');
 const logger = require('../../../logger');
+const repository = require('../../../lib/connectors/repository/');
+const { Batch } = require('../../../lib/models');
+const { assert } = require('@hapi/hoek');
+
+/**
+ * Given a Batch instance, writes all the invoices within the batch
+ * to the water.billing_invoices table
+ * @param {Batch} batch
+ * @return {Promise} resolves when all records written
+ */
+const createBatchInvoices = batch => {
+  assert(batch instanceof Batch, 'Batch expected');
+  const data = batch.invoices.map(invoice => ({
+    invoice_account_id: invoice.invoiceAccount.id,
+    invoice_account_number: invoice.invoiceAccount.accountNumber,
+    address: omit(invoice.address.toObject(), 'id'),
+    billing_batch_id: batch.id
+  }));
+  const tasks = data.map(row => repository.billingInvoices.create(row));
+  return Promise.all(tasks);
+};
 
 // To-do:
 // Load charge version
@@ -20,10 +42,9 @@ const initialiseFromChargeVersionYear = async chargeVersionYear => {
     throw new Error(msg);
   }
 
-  // Create batch
+  // Create batch and persist to DB
   const batch = service.chargeProcessor.modelMapper(chargeVersionYear.billing_batch_id, data);
-
-  console.log(JSON.stringify(batch, null, 2));
+  await createBatchInvoices(batch);
 };
 
 initialiseFromChargeVersionYear({
