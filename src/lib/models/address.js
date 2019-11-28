@@ -1,6 +1,6 @@
 const Joi = require('@hapi/joi');
 
-const VALID_STRING = Joi.string().allow('').required();
+const VALID_STRING = Joi.string().allow(null).required();
 
 class Address {
   set addressLine1 (addressLine1) {

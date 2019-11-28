@@ -1,6 +1,7 @@
 const Joi = require('@hapi/joi');
-const Address = require('../../../lib/models/address');
-const InvoiceAccount = require('./invoice-account');
+const Address = require('./address.js');
+const InvoiceAccount = require('./invoice-account.js');
+const { assert } = require('@hapi/hoek');
 
 const VALID_GUID = Joi.string().guid().required();
 
@@ -31,9 +32,7 @@ class Invoice {
    * @param {InvoiceAccount} invoiceAccount
    */
   set invoiceAccount (invoiceAccount) {
-    if (!(invoiceAccount instanceof InvoiceAccount)) {
-      throw new Error('Instance of InvoiceAccount expected');
-    }
+    assert(invoiceAccount instanceof InvoiceAccount, 'InvoiceAccount expected');
     this._invoiceAccount = invoiceAccount;
   }
 
@@ -50,9 +49,7 @@ class Invoice {
    * @param {Address} address
    */
   set address (address) {
-    if (!(address instanceof Address)) {
-      throw new Error('Instance of Address expected');
-    }
+    assert(address instanceof Address, 'Address expected');
     this._address = address;
   }
 

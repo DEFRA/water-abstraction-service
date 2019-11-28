@@ -1,7 +1,7 @@
 const Joi = require('@hapi/joi');
 const Invoice = require('./invoice');
 const FinancialYear = require('./financial-year');
-const Region = require('./region');
+const { assert } = require('@hapi/hoek');
 
 const VALID_GUID = Joi.string().guid().required();
 const VALID_BATCH_TYPE = Joi.string().valid('annual', 'supplementary', 'two_part_tariff').required();
@@ -28,25 +28,6 @@ class Batch {
    */
   get id () {
     return this._id;
-  }
-
-  /**
-   * Sets the region for this batch
-   * @param {Region} region
-   */
-  set region (region) {
-    if (!(region instanceof Region)) {
-      throw new Error('Instance of Region expected');
-    }
-    this._region = region;
-  }
-
-  /**
-   * Gets the region for this batch
-   * @return {Region}
-   */
-  get regionId () {
-    return this._regionId;
   }
 
   /**
@@ -88,9 +69,7 @@ class Batch {
    * @param {FinancialYear} startYear
    */
   set startYear (startYear) {
-    if (!(startYear instanceof FinancialYear)) {
-      throw new Error('Instance of FinancialYear expected');
-    }
+    assert(startYear instanceof FinancialYear, 'FinancialYear expected');
     this._startYear = startYear;
   }
 
@@ -107,9 +86,7 @@ class Batch {
  * @param {FinancialYear} startYear
  */
   set endYear (endYear) {
-    if (!(endYear instanceof FinancialYear)) {
-      throw new Error('Instance of FinancialYear expected');
-    }
+    assert(endYear instanceof FinancialYear, 'FinancialYear expected');
     this._endYear = endYear;
   }
 
@@ -139,14 +116,12 @@ class Batch {
   }
 
   /**
-   * Adds an invoice to the batch
-   * @return {String}
+   * Adds a single invoice to the batch
+   * @return {Invoice}
    */
   addInvoice (invoice) {
     // Validate type
-    if (!(invoice instanceof Invoice)) {
-      throw new Error('Instance of Invoice expected');
-    }
+    assert(invoice instanceof Invoice, 'Instance of Invoice expected');
     // Each customer ref can only appear once in batch
     if (this.getInvoiceByAccountNumber(invoice.accountNumber)) {
       throw new Error(`An invoice with account number ${invoice.invoiceAccountNumber} is already in the batch`);
@@ -155,14 +130,26 @@ class Batch {
     return this;
   }
 
+  /**
+   * Add an array of invoices to the batch
+   * @param {Array<Invoice>} invoices
+   */
+  addInvoices (invoices = []) {
+    return invoices.map(invoice => this.addInvoice(invoice));
+  }
+
+  /**
+   * Gets an invoice in the batch by invoice account number
+   * @param {String} accountNumber
+   */
   getInvoiceByAccountNumber (accountNumber) {
     return this._invoices.find(
-      row => row.invoiceAccountNumber === invoice.invoiceAccountNumber
+      row => row.invoice.invoiceAccount.accountNumber === accountNumber
     );
   }
 
   /**
-   * Gets invoices in the batch
+   * Gets all invoices in the batch
    * @return {Array}
    */
   get invoices () {

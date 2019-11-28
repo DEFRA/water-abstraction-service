@@ -7,7 +7,7 @@ class InvoiceAccount {
    * Sets the CRM invoice account ID
    * @param {String} id - GUID
    */
-  set id(id) {
+  set id (id) {
     Joi.assert(id, VALID_GUID);
     this._id = id;
   }
@@ -16,7 +16,7 @@ class InvoiceAccount {
    * Gets the CRM invoice account ID
    * @return {String} - GUID
    */
-  get id() {
+  get id () {
     return this._id;
   }
 
@@ -25,7 +25,7 @@ class InvoiceAccount {
    * Must be in the form [region letter]01234567A
    * @param {String} accountNumber
    */
-  set accountNumber(accountNumber) {
+  set accountNumber (accountNumber) {
     Joi.assert(accountNumber, VALID_ACCOUNT_NUMBER);
     this._accountNumber = accountNumber;
   }
@@ -34,7 +34,7 @@ class InvoiceAccount {
    * Gets the invoice account number
    * @return {String}
    */
-  get accountNumber() {
+  get accountNumber () {
     return this._accountNumber;
   }
 }
