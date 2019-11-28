@@ -1,7 +1,7 @@
-const service = require('./');
+const chargeProcessor = require('./charge-processor');
 const { omit } = require('lodash');
 const logger = require('../../../logger');
-const repository = require('../../../lib/connectors/repository/');
+const repository = require('../../../lib/connectors/repository');
 const { Batch } = require('../../../lib/models');
 const { assert } = require('@hapi/hoek');
 
@@ -23,18 +23,22 @@ const createBatchInvoices = batch => {
   return Promise.all(tasks);
 };
 
-// To-do:
-// Load charge version
-// Load licence docs versions from API
-// Loop through and create invoices
-const initialiseFromChargeVersionYear = async chargeVersionYear => {
+/**
+ * Given a charge version year record from the water.billing_batch_charge_version_years,
+ * processes the charge version for that year, and then populates a Batch model with
+ * related entities ready for persistence to DB
+ * @param {Object} chargeVersionYear
+ * @return {Batch}
+ */
+const createBatchFromChargeVersionYear = async chargeVersionYear => {
   const {
     charge_version_id: chargeVersionId,
-    financial_year_ending: financialYearEnding
+    financial_year_ending: financialYearEnding,
+    billing_batch_id: batchId
   } = chargeVersionYear;
 
   // Process charge data
-  const { error, data } = await service.chargeProcessor(financialYearEnding, chargeVersionId);
+  const { error, data } = await chargeProcessor.processCharges(financialYearEnding, chargeVersionId);
 
   if (error) {
     const msg = 'Error processing charge version year';
@@ -43,14 +47,18 @@ const initialiseFromChargeVersionYear = async chargeVersionYear => {
   }
 
   // Create batch and persist to DB
-  const batch = service.chargeProcessor.modelMapper(chargeVersionYear.billing_batch_id, data);
+  return chargeProcessor.modelMapper(batchId, data);
+};
+
+/**
+ * Saves a batch for a charge version year to the DB
+ * @param {Batch} batch
+ * @return {Promise}
+ */
+const persistChargeVersionYearBatch = async batch => {
+  assert(batch instanceof Batch, 'Batch expected');
   await createBatchInvoices(batch);
 };
 
-initialiseFromChargeVersionYear({
-  billing_batch_charge_version_year_id: '944dc076-a034-4845-991e-28f64fe1f8c4',
-  billing_batch_id: '7b844a49-b11e-431c-910a-c188995c989d',
-  charge_version_id: '980293d0-c0fe-4a77-b676-141d4c085eda',
-  financial_year_ending: 2018,
-  status: 'processing'
-});
+exports.createBatchFromChargeVersionYear = createBatchFromChargeVersionYear;
+exports.persistChargeVersionYearBatch = persistChargeVersionYearBatch;

@@ -83,7 +83,11 @@ class BillingInvoiceRepository extends Repository {
     super(Object.assign({
       connection: db.pool,
       table: 'water.billing_invoices',
-      primaryKey: 'billing_invoice_id'
+      primaryKey: 'billing_invoice_id',
+      upsert: {
+        fields: ['billing_batch_id', 'invoice_account_id'],
+        set: ['date_updated']
+      }
     }, config));
   }
 

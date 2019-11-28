@@ -1,3 +1,3 @@
 module.exports = {
-  chargeProcessor: require('./charge-processor')
+  chargeVersionYear: require('./charge-version-year')
 };

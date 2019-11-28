@@ -234,7 +234,7 @@ const processInvoiceAccounts = (data, docs) => {
  * @param {Boolean} isTwoPart
  * @param {Boolean} isSummer
  */
-const chargeProcessor = async (year, chargeVersionId, isTwoPart = false, isSummer) => {
+const processCharges = async (year, chargeVersionId, isTwoPart = false, isSummer) => {
   const financialYear = dateHelpers.getFinancialYearRange(year);
 
   // Load charge version data
@@ -262,5 +262,5 @@ const chargeProcessor = async (year, chargeVersionId, isTwoPart = false, isSumme
   return { error: null, data };
 };
 
-module.exports = chargeProcessor;
+module.exports.processCharges = processCharges;
 module.exports.modelMapper = modelMapper;
