@@ -35,9 +35,10 @@ const getMaxDate = arr => last(getSortedDates(arr));
 const getSmallestDateRange = arr => {
   const startDates = arr.map(obj => obj.startDate);
   const endDates = arr.map(obj => obj.endDate);
+  const minDate = getMinDate(endDates);
   return {
     startDate: getMaxDate(startDates).format(DATE_FORMAT),
-    endDate: getMinDate(endDates).format(DATE_FORMAT)
+    endDate: minDate ? minDate.format(DATE_FORMAT) : null
   };
 };
 
