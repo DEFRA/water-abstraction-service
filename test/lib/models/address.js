@@ -102,4 +102,33 @@ experiment('lib/models/address', () => {
   experiment('.country', () => {
     testNullableString('country');
   });
+
+  experiment('.toObject', () => {
+    beforeEach(async () => {
+      address.id = TEST_GUID;
+      address.addressLine1 = 'Daisy cottage';
+      address.addressLine2 = 'Buttercup lane';
+      address.addressLine3 = 'Babbling brook';
+      address.addressLine4 = 'Stony hill';
+      address.town = 'Testington';
+      address.county = 'Testinshire';
+      address.postcode = 'TT1 1TT';
+      address.country = 'UK';
+    });
+
+    test('returns all properties as plain object', async () => {
+      const obj = address.toObject();
+      expect(obj).to.equal({
+        id: 'add1cf3b-7296-4817-b013-fea75a928580',
+        addressLine1: 'Daisy cottage',
+        addressLine2: 'Buttercup lane',
+        addressLine3: 'Babbling brook',
+        addressLine4: 'Stony hill',
+        town: 'Testington',
+        county: 'Testinshire',
+        postcode: 'TT1 1TT',
+        country: 'UK'
+      });
+    });
+  });
 });
