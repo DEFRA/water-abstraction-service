@@ -7,6 +7,8 @@ const helpers = require('@envage/water-abstraction-helpers');
 const crm = require('../../../../lib/connectors/crm-v2/documents');
 const crmMappers = require('./crm-mappers');
 const dateHelpers = require('./date-helpers');
+
+const { mergeHistory } = require('@envage/water-abstraction-helpers').charging;
 const { camelCaseKeys } = require('./mappers');
 const repository = require('../../../../lib/connectors/repository');
 const { ERROR_CHARGE_VERSION_NOT_FOUND } = require('./errors');
@@ -173,7 +175,7 @@ const processAgreements = async (data, licenceNumber) => {
 
   each(grouped, (agreements, key) => {
     const propertyKey = `section${key}`;
-    const history = dateHelpers.mergeHistory(agreements);
+    const history = mergeHistory(agreements);
     const arr = updated
       .map(row => helpers.charging.dateRangeSplitter(row, history, propertyKey));
     updated = flatMap(arr).map(applyEffectiveDates);
@@ -203,7 +205,7 @@ const processChargingElements = async (data, chargeVersionId) => {
  * @return {Array}
  */
 const processLicenceHolders = (data, docs) => {
-  const licenceHolders = dateHelpers.mergeHistory(
+  const licenceHolders = mergeHistory(
     crmMappers.getLicenceHolderRoles(docs), isSameLicenceHolder
   );
   return helpers.charging
@@ -219,7 +221,7 @@ const processLicenceHolders = (data, docs) => {
  * @return {Array}
  */
 const processInvoiceAccounts = (data, docs) => {
-  const billing = dateHelpers.mergeHistory(crmMappers.getBillingRoles(docs));
+  const billing = mergeHistory(crmMappers.getBillingRoles(docs));
   return flatMap(data.map(row => helpers.charging
     .dateRangeSplitter(row, billing, 'invoiceAccount')
     .map(applyEffectiveDates)));
