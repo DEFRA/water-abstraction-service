@@ -2,6 +2,7 @@ const Joi = require('@hapi/joi');
 const Invoice = require('./invoice');
 const FinancialYear = require('./financial-year');
 const { assert } = require('@hapi/hoek');
+const { isArray } = require('lodash');
 
 const VALID_GUID = Joi.string().guid().required();
 const VALID_BATCH_TYPE = Joi.string().valid('annual', 'supplementary', 'two_part_tariff').required();
@@ -34,17 +35,17 @@ class Batch {
    * Sets the batch type for this batch
    * @param {String} batchType
    */
-  set batchType (batchType) {
+  set type (batchType) {
     Joi.assert(batchType, VALID_BATCH_TYPE);
-    this._batchType = batchType;
+    this._type = batchType;
   }
 
   /**
    * Gets the batch type for this batch
    * @return {String}
    */
-  get batchType () {
-    return this._batchType;
+  get type () {
+    return this._type;
   }
 
   /**
@@ -123,7 +124,7 @@ class Batch {
     // Validate type
     assert(invoice instanceof Invoice, 'Instance of Invoice expected');
     // Each customer ref can only appear once in batch
-    if (this.getInvoiceByAccountNumber(invoice.accountNumber)) {
+    if (this.getInvoiceByAccountNumber(invoice.invoiceAccount.accountNumber)) {
       throw new Error(`An invoice with account number ${invoice.invoiceAccountNumber} is already in the batch`);
     }
     this._invoices.push(invoice);
@@ -135,6 +136,7 @@ class Batch {
    * @param {Array<Invoice>} invoices
    */
   addInvoices (invoices = []) {
+    assert(isArray(invoices), 'Array expected');
     return invoices.map(invoice => this.addInvoice(invoice));
   }
 
@@ -144,7 +146,7 @@ class Batch {
    */
   getInvoiceByAccountNumber (accountNumber) {
     return this._invoices.find(
-      row => row.invoice.invoiceAccount.accountNumber === accountNumber
+      invoice => invoice.invoiceAccount.accountNumber === accountNumber
     );
   }
 
