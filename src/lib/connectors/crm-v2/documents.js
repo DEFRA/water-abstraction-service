@@ -4,8 +4,6 @@ const Joi = require('joi');
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
 
-const basePath = config.services.crm.replace('/1.0', '/2.0');
-
 const VALID_LICENCE_NUMBER = Joi.string().required().example('01/123/R01');
 const VALID_GUID = Joi.string().guid().required();
 
@@ -16,7 +14,7 @@ const VALID_GUID = Joi.string().guid().required();
  */
 const getDocuments = licenceNumber => {
   Joi.assert(licenceNumber, VALID_LICENCE_NUMBER);
-  const uri = urlJoin(basePath, '/documents');
+  const uri = urlJoin(config.services.crm_v2, '/documents');
   return serviceRequest.get(uri, {
     qs: {
       documentRef: licenceNumber,
@@ -33,7 +31,7 @@ const getDocuments = licenceNumber => {
  */
 const getDocument = documentId => {
   Joi.assert(documentId, VALID_GUID);
-  const uri = urlJoin(basePath, '/documents/', documentId);
+  const uri = urlJoin(config.services.crm_v2, '/documents/', documentId);
   return serviceRequest.get(uri);
 };
 
