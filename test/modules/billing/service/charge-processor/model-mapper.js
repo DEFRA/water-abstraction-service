@@ -5,7 +5,7 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const { Batch, Invoice, invoiceAccount, Address } = require('../../../../../src/lib/models');
+const { Batch, Invoice, InvoiceAccount, Address } = require('../../../../../src/lib/models');
 const modelMapper = require('../../../../../src/modules/billing/service/charge-processor/model-mapper');
 
 const BATCH_ID = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
@@ -62,6 +62,14 @@ experiment('modules/billing/service/charge-processor/model-mapper.js', () => {
       expect(result.invoices).to.be.an.array().length(2);
     });
 
+    test('the first invoice is an instance of Invoice', async () => {
+      expect(result.invoices[0] instanceof Invoice).to.be.true();
+    });
+
+    test('the first invoice has an InvoiceAccount instance', async () => {
+      expect(result.invoices[0].invoiceAccount instanceof InvoiceAccount).to.be.true();
+    });
+
     test('the first invoice has the correct account number', async () => {
       expect(result.invoices[0].invoiceAccount.accountNumber).to.equal('S12345671A');
     });
@@ -69,6 +77,14 @@ experiment('modules/billing/service/charge-processor/model-mapper.js', () => {
     test('the first invoice has the correct address', async () => {
       expect(result.invoices[0].address instanceof Address).to.be.true();
       expect(result.invoices[0].address.id).to.equal(data[0].invoiceAccount.address.addressId);
+    });
+
+    test('the second invoice is an instance of Invoice', async () => {
+      expect(result.invoices[1] instanceof Invoice).to.be.true();
+    });
+
+    test('the second invoice has an InvoiceAccount instance', async () => {
+      expect(result.invoices[1].invoiceAccount instanceof InvoiceAccount).to.be.true();
     });
 
     test('the second invoice has the correct account number', async () => {
