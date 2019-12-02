@@ -6,6 +6,8 @@ const createReturn = options => {
     'returnId': options.returnId || 'return-id',
     'startDate': options.startDate,
     'endDate': options.endDate,
+    'dueDate': options.dueDate,
+    'receivedDate': options.receivedDate,
     'frequency': options.frequency,
     'status': options.status,
     'isNil': options.isNil,
@@ -13,9 +15,6 @@ const createReturn = options => {
     'lines': (options.lineData) ? getReturnLines(options.frequency, options.lineData) : [],
     'metadata': {
       'nald': {
-        'areaCode': 'ARCA',
-        'formatId': 10042708,
-        'regionCode': 1,
         'periodEndDay': options.periodEndDay,
         'periodEndMonth': options.periodEndMonth,
         'periodStartDay': options.periodStartDay,
@@ -68,7 +67,8 @@ const createLineData = (startDate, frequency, quantities) => {
   const lineData = [];
   for (var i = 0; i < totalLines; i++) {
     lineData.push({
-      startDate: moment(startDate).add(i, `${frequency}s`).format(dateFormat),
+      startDate: moment(startDate).add(i, frequency).format(dateFormat),
+      endDate: moment(startDate).add(i, frequency).endOf(frequency),
       quantity: quantities[i] !== null ? quantities[i] : null
     });
   }

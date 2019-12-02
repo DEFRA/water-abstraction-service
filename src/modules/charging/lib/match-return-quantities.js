@@ -27,11 +27,6 @@ const doesLineOverlapChargeElementDateRange = (line, ele) => {
 };
 
 /**
- * Checks whether there is space in the allowable quantity in the charge element
- */
-const isChargeElementFull = chargeElement => chargeElement.actualReturnQuantity === chargeElement.authorisedAnnualQuantity;
-
-/**
  * Checks whether or not all of the return quantity has already been allocated
  */
 const isQuantityAllocated = returnLine => returnLine.quantity === returnLine.quantityAllocated;
@@ -48,7 +43,7 @@ const getNumberOfDaysInRange = range => range.end.diff(range.start, 'days') + 1;
  * @param {Object} ele charge element
  * @return {Decimal} pro rata quantity in Decimal format for use in further calculations
  */
-const getProRataQuantity = (line, ele) => {
+const getProRataQuantityToAllocate = (line, ele) => {
   const lineRange = getDateRange(line);
   const eleRange = getDateRange(ele);
   const intersectionOfRanges = eleRange.intersect(lineRange);
@@ -69,15 +64,13 @@ const matchReturnLineToElement = (line, ele) => {
   const updatedEle = cloneDeep(ele);
   const updatedLine = cloneDeep(line);
   if (doesLineOverlapChargeElementDateRange(line, ele)) {
-    if (!isChargeElementFull(ele) && !isQuantityAllocated(line)) {
-      const proRataQuantity = getProRataQuantity(line, ele);
+    if (!isQuantityAllocated(line)) {
+      const proRataQuantityToAllocate = getProRataQuantityToAllocate(line, ele);
 
-      const unallocatedQuantity = proRataQuantity.minus(line.quantityAllocated);
-      const remainingAllowableQuantity = new Decimal(ele.authorisedAnnualQuantity).minus(ele.actualReturnQuantity);
+      const unallocatedQuantity = proRataQuantityToAllocate.minus(line.quantityAllocated);
 
-      const quantityToBeAllocated = Math.min(unallocatedQuantity, remainingAllowableQuantity);
-      updatedEle.actualReturnQuantity = new Decimal(ele.actualReturnQuantity).plus(quantityToBeAllocated).toNumber();
-      updatedLine.quantityAllocated = new Decimal(line.quantityAllocated).plus(quantityToBeAllocated).toNumber();
+      updatedEle.actualReturnQuantity = new Decimal(ele.actualReturnQuantity).plus(unallocatedQuantity).toNumber();
+      updatedLine.quantityAllocated = new Decimal(line.quantityAllocated).plus(unallocatedQuantity).toNumber();
     }
   }
   return {
@@ -86,6 +79,6 @@ const matchReturnLineToElement = (line, ele) => {
   };
 };
 
-exports.getProRataQuantity = getProRataQuantity;
+exports.getProRataQuantityToAllocate = getProRataQuantityToAllocate;
 exports.doesLineOverlapChargeElementDateRange = doesLineOverlapChargeElementDateRange;
 exports.matchReturnLineToElement = matchReturnLineToElement;

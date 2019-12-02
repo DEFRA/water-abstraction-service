@@ -13,6 +13,7 @@ const {
   reallocateQuantitiesInPriorityOrder,
   reshuffleQuantities
 } = require('../../../../src/modules/charging/lib/reshuffle-quantities');
+const { ERROR_OVER_ABSTRACTION } = require('../../../../src/modules/charging/lib/two-part-tariff-helpers');
 
 experiment('modules/charging/lib/reshuffle-quantities', async () => {
   experiment('.isTimeLimited', async () => {
@@ -167,9 +168,13 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             proRataAuthorisedQuantity: 100
           })
         ];
-        const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
-        expect(allocatedElements[0].actualReturnQuantity).to.equal(100);
-        expect(allocatedElements[1].actualReturnQuantity).to.equal(75);
+        const { error, data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
+
+        expect(error).to.be.null();
+        expect(allocatedElements[0].data.actualReturnQuantity).to.equal(100);
+        expect(allocatedElements[0].error).to.be.null();
+        expect(allocatedElements[1].data.actualReturnQuantity).to.equal(75);
+        expect(allocatedElements[1].error).to.be.null();
       });
       test('moves quantities from lower priority elements filling elements in priority order', async () => {
         const chargeElements = [
@@ -196,10 +201,15 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             proRataAuthorisedQuantity: 50
           })
         ];
-        const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
-        expect(allocatedElements[0].actualReturnQuantity).to.equal(100);
-        expect(allocatedElements[1].actualReturnQuantity).to.equal(50);
-        expect(allocatedElements[2].actualReturnQuantity).to.equal(10);
+        const { error, data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
+
+        expect(error).to.be.null();
+        expect(allocatedElements[0].data.actualReturnQuantity).to.equal(100);
+        expect(allocatedElements[0].error).to.be.null();
+        expect(allocatedElements[1].data.actualReturnQuantity).to.equal(50);
+        expect(allocatedElements[1].error).to.be.null();
+        expect(allocatedElements[2].data.actualReturnQuantity).to.equal(10);
+        expect(allocatedElements[2].error).to.be.null();
       });
       test('actual quantities remain the same if no shuffling is needed', async () => {
         const chargeElements = [
@@ -224,10 +234,15 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             proRataAuthorisedQuantity: 20
           })
         ];
-        const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
-        expect(allocatedElements[0].actualReturnQuantity).to.equal(chargeElements[0].actualReturnQuantity);
-        expect(allocatedElements[1].actualReturnQuantity).to.equal(chargeElements[1].actualReturnQuantity);
-        expect(allocatedElements[2].actualReturnQuantity).to.equal(chargeElements[2].actualReturnQuantity);
+        const { error, data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
+
+        expect(error).to.be.null();
+        expect(allocatedElements[0].data.actualReturnQuantity).to.equal(chargeElements[0].actualReturnQuantity);
+        expect(allocatedElements[0].error).to.be.null();
+        expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElements[1].actualReturnQuantity);
+        expect(allocatedElements[1].error).to.be.null();
+        expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElements[2].actualReturnQuantity);
+        expect(allocatedElements[2].error).to.be.null();
       });
     });
     experiment('when all elements are full', async () => {
@@ -257,10 +272,15 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             proRataAuthorisedQuantity: 200
           })
         ];
-        const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
-        expect(allocatedElements[0].actualReturnQuantity).to.equal(chargeElements[1].proRataBillableQuantity);
-        expect(allocatedElements[1].actualReturnQuantity).to.equal(chargeElements[0].proRataBillableQuantity);
-        expect(allocatedElements[2].actualReturnQuantity).to.equal(chargeElements[2].proRataBillableQuantity);
+        const { error, data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
+
+        expect(error).to.be.null();
+        expect(allocatedElements[0].data.actualReturnQuantity).to.equal(chargeElements[1].proRataBillableQuantity);
+        expect(allocatedElements[0].error).to.be.null();
+        expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElements[0].proRataBillableQuantity);
+        expect(allocatedElements[1].error).to.be.null();
+        expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElements[2].proRataBillableQuantity);
+        expect(allocatedElements[2].error).to.be.null();
       });
       test('the actual quantities are equal to the authorised quantities, if no billable quantities provided', async () => {
         const chargeElements = [
@@ -285,10 +305,15 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             proRataAuthorisedQuantity: 100
           })
         ];
-        const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
-        expect(allocatedElements[0].actualReturnQuantity).to.equal(chargeElements[1].proRataAuthorisedQuantity);
-        expect(allocatedElements[1].actualReturnQuantity).to.equal(chargeElements[0].proRataAuthorisedQuantity);
-        expect(allocatedElements[2].actualReturnQuantity).to.equal(chargeElements[2].proRataAuthorisedQuantity);
+        const { error, data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
+
+        expect(error).to.be.null();
+        expect(allocatedElements[0].data.actualReturnQuantity).to.equal(chargeElements[1].proRataAuthorisedQuantity);
+        expect(allocatedElements[0].error).to.be.null();
+        expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElements[0].proRataAuthorisedQuantity);
+        expect(allocatedElements[1].error).to.be.null();
+        expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElements[2].proRataAuthorisedQuantity);
+        expect(allocatedElements[2].error).to.be.null();
       });
     });
     experiment('when there is an over abstraction', async () => {
@@ -326,9 +351,12 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
           .minus(chargeElements[2].proRataBillableQuantity);
         const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
 
-        expect(allocatedElements[0].actualReturnQuantity).to.equal(overAbstraction.plus(chargeElements[0].proRataBillableQuantity).toDecimalPlaces(3).toNumber());
-        expect(allocatedElements[1].actualReturnQuantity).to.equal(chargeElements[1].proRataBillableQuantity);
-        expect(allocatedElements[2].actualReturnQuantity).to.equal(chargeElements[2].proRataBillableQuantity);
+        expect(allocatedElements[0].data.actualReturnQuantity).to.equal(overAbstraction.plus(chargeElements[0].proRataBillableQuantity).toDecimalPlaces(3).toNumber());
+        expect(allocatedElements[0].error).to.equal(ERROR_OVER_ABSTRACTION);
+        expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElements[1].proRataBillableQuantity);
+        expect(allocatedElements[1].error).to.be.null();
+        expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElements[2].proRataBillableQuantity);
+        expect(allocatedElements[2].error).to.be.null();
       });
     });
     experiment('when the total quantities sum to zero', async () => {
@@ -355,10 +383,15 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             proRataAuthorisedQuantity: 100
           })
         ];
-        const { data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
-        expect(allocatedElements[0].actualReturnQuantity).to.equal(0);
-        expect(allocatedElements[1].actualReturnQuantity).to.equal(0);
-        expect(allocatedElements[2].actualReturnQuantity).to.equal(0);
+        const { error, data: allocatedElements } = reallocateQuantitiesInPriorityOrder(chargeElements);
+
+        expect(error).to.be.null();
+        expect(allocatedElements[0].data.actualReturnQuantity).to.equal(0);
+        expect(allocatedElements[0].error).to.be.null();
+        expect(allocatedElements[1].data.actualReturnQuantity).to.equal(0);
+        expect(allocatedElements[1].error).to.be.null();
+        expect(allocatedElements[2].data.actualReturnQuantity).to.equal(0);
+        expect(allocatedElements[2].error).to.be.null();
       });
     });
   });
@@ -402,15 +435,19 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       ];
       const { error, data: reshuffledElements } = reshuffleQuantities([...purpose400ChargeElements, ...purpose420ChargeElements]);
 
-      expect(error).to.be.an.array().and.to.be.empty();
-      expect(reshuffledElements[0].chargeElementId).to.equal('charge-element-1');
-      expect(reshuffledElements[0].actualReturnQuantity).to.equal(100);
-      expect(reshuffledElements[1].chargeElementId).to.equal('charge-element-2');
-      expect(reshuffledElements[1].actualReturnQuantity).to.equal(75);
-      expect(reshuffledElements[2].chargeElementId).to.equal('charge-element-4');
-      expect(reshuffledElements[2].actualReturnQuantity).to.equal(100);
-      expect(reshuffledElements[3].chargeElementId).to.equal('charge-element-3');
-      expect(reshuffledElements[3].actualReturnQuantity).to.equal(30);
+      expect(error).to.be.null();
+      expect(reshuffledElements[0].data.chargeElementId).to.equal('charge-element-1');
+      expect(reshuffledElements[0].data.actualReturnQuantity).to.equal(100);
+      expect(reshuffledElements[0].error).to.be.null();
+      expect(reshuffledElements[1].data.chargeElementId).to.equal('charge-element-2');
+      expect(reshuffledElements[1].data.actualReturnQuantity).to.equal(75);
+      expect(reshuffledElements[1].error).to.be.null();
+      expect(reshuffledElements[2].data.chargeElementId).to.equal('charge-element-4');
+      expect(reshuffledElements[2].data.actualReturnQuantity).to.equal(100);
+      expect(reshuffledElements[2].error).to.be.null();
+      expect(reshuffledElements[3].data.chargeElementId).to.equal('charge-element-3');
+      expect(reshuffledElements[3].data.actualReturnQuantity).to.equal(30);
+      expect(reshuffledElements[3].error).to.be.null();
     });
   });
 });

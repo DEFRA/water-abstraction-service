@@ -4,6 +4,77 @@ const Decimal = require('decimal.js-light');
 Decimal.set({
   precision: 8
 });
+const { ERROR_OVER_ABSTRACTION } = require('./two-part-tariff-helpers');
+
+/**
+ * Reduce function for calculating the total allocated quantity
+ */
+const getTotalActualQuantity = (total, element) => {
+  return total.plus(element.actualReturnQuantity);
+};
+
+/**
+ * Reduce function for calculating the total billable quantity
+ */
+const getTotalBillableQuantity = (total, element) => {
+  return total.plus(element.proRataBillableQuantity || element.proRataAuthorisedQuantity);
+};
+
+const getQuantityToAllocate = (actualQuantity, maxAllowable) => {
+  return new Decimal(Math.min(actualQuantity, maxAllowable));
+};
+
+/**
+ * Get the billable + full over abstraction amount
+ */
+const getOverAbstractionQuantity = (overAbstraction, billable) => overAbstraction.plus(billable);
+
+/**
+ * Reallocate quantities to fill elements in order, overabstractions are allocated to first element
+ * @param {Array} elements in order for reallocation
+ * @return {Array} of {error, data}
+ *        data.chargeElementId
+ *        data.actualReturnQuantity
+ */
+const reallocateQuantitiesInPriorityOrder = (elements) => {
+  let totalBillable = elements.reduce(getTotalBillableQuantity, new Decimal(0));
+  let totalActual = elements.reduce(getTotalActualQuantity, new Decimal(0));
+  const overallErr = totalActual.minus(totalBillable).gt(0) ? ERROR_OVER_ABSTRACTION : null;
+
+  const dataToReturn = elements.map(element => {
+    const { chargeElementId, proRataBillableQuantity, proRataAuthorisedQuantity } = element;
+    const maxAllowableQuantity = proRataBillableQuantity || proRataAuthorisedQuantity;
+    let quantityToAllocate;
+    let err = null;
+
+    if (totalActual.isZero()) return { error: err, data: { chargeElementId, actualReturnQuantity: 0 } };
+
+    const overAbstraction = totalActual.minus(totalBillable);
+
+    if (overAbstraction.gt(0)) {
+      err = ERROR_OVER_ABSTRACTION;
+      quantityToAllocate = getOverAbstractionQuantity(overAbstraction, maxAllowableQuantity);
+    } else {
+      quantityToAllocate = getQuantityToAllocate(totalActual, maxAllowableQuantity);
+    }
+    totalActual = totalActual.minus(quantityToAllocate);
+    totalBillable = totalBillable.minus(maxAllowableQuantity);
+
+    return {
+      error: err,
+      data: {
+        chargeElementId,
+        proRataAuthorisedQuantity,
+        proRataBillableQuantity,
+        actualReturnQuantity: quantityToAllocate.toDecimalPlaces(3).toNumber()
+      }
+    };
+  });
+
+  return {
+    error: overallErr,
+    data: dataToReturn };
+};
 
 /**
  * Checks whether or not the charge element is time limited, but checking if it has time limited dates
@@ -88,20 +159,6 @@ const getAllChargeElementPurposes = chargeElements => {
 };
 
 /**
- * Reduce function for calculating the total allocated quantity
- */
-const getTotalActualQuantity = (total, element) => {
-  return total.plus(element.actualReturnQuantity);
-};
-
-/**
- * Reduce function for calculating the total billable quantity
- */
-const getTotalBillableQuantity = (total, element) => {
-  return total.plus(element.proRataBillableQuantity || element.proRataAuthorisedQuantity);
-};
-
-/**
  * Filter charge elements for those containing the given purpose code
  * @param {Array} chargeElements
  * @param {Integer} purpose code
@@ -109,68 +166,6 @@ const getTotalBillableQuantity = (total, element) => {
  */
 const getAllChargeElementsForPurpose = (chargeElements, purpose) =>
   chargeElements.filter(ele => ele.purposeTertiary === purpose);
-
-const getQuantityToAllocate = (actualQuantity, maxAllowable) => {
-  return actualQuantity.gte(maxAllowable)
-    ? new Decimal(maxAllowable)
-    : actualQuantity;
-};
-
-/**
- * Checks if total actual quantity is greater than total billable quantity
- */
-const isOverAbstracted = (actual, billable) => actual.gt(billable);
-
-/**
- * Return over abstraction error
- */
-const getOverAbstractedErr = elements => {
-  const elementIds = elements.map(ele => ele.chargeElementId);
-  return {
-    type: 'overAbstraction',
-    msg: `Over abstraction reported on element/s ${elementIds.join(', ')}`
-  };
-};
-
-/**
- * Reallocate quantities to fill elements in order, overabstractions are filled in same order
- * @param {Array} elements in order for reallocation
- * @return {Array} of {error, data}
- *        data.chargeElementId
- *        data.actualReturnQuantity
- */
-const reallocateQuantitiesInPriorityOrder = (elements) => {
-  let totalActual = elements.reduce(getTotalActualQuantity, new Decimal(0));
-  let totalBillable = elements.reduce(getTotalBillableQuantity, new Decimal(0));
-  const overAbstractedElementIds = [];
-
-  const dataToReturn = elements.map(element => {
-    const { chargeElementId, proRataBillableQuantity: elementBillable, proRataAuthorisedQuantity: elementAuthorised } = element;
-    let quantityToAllocate;
-
-    if (totalActual.isZero()) return { chargeElementId, actualReturnQuantity: 0 };
-
-    if (isOverAbstracted(totalActual, totalBillable)) {
-      const overAbstraction = totalActual.minus(totalBillable);
-      const billableWithOverAbstraction = overAbstraction.plus(elementBillable);
-      quantityToAllocate = getQuantityToAllocate(billableWithOverAbstraction, elementAuthorised);
-      overAbstractedElementIds.push(chargeElementId);
-    } else {
-      quantityToAllocate = getQuantityToAllocate(totalActual, elementBillable || elementAuthorised);
-    }
-
-    totalActual = totalActual.minus(quantityToAllocate);
-    totalBillable = totalBillable.minus(elementBillable || elementAuthorised);
-
-    return {
-      chargeElementId,
-      actualReturnQuantity: quantityToAllocate.toDecimalPlaces(3).toNumber()
-    };
-  });
-
-  return { error: (overAbstractedElementIds.length > 0) ? getOverAbstractedErr(overAbstractedElementIds) : null,
-    data: dataToReturn };
-};
 
 /**
  * Reshuffle quantities between charge elements so that they are filled in priority order
@@ -182,7 +177,7 @@ const reallocateQuantitiesInPriorityOrder = (elements) => {
 const reshuffleQuantities = chargeElements => {
   const chargeElementPurposes = getAllChargeElementPurposes(chargeElements);
   const matchedQuantities = [];
-  const matchingErrors = [];
+  let matchingErrors = [];
   chargeElementPurposes.forEach(purpose => {
     const chargeElementsToPrioritise = getAllChargeElementsForPurpose(chargeElements, purpose);
 
@@ -193,8 +188,9 @@ const reshuffleQuantities = chargeElements => {
 
     matchedQuantities.push(data);
   });
+
   return {
-    error: flatMap(matchingErrors),
+    error: (matchingErrors.length > 0) ? flatMap(uniq(matchingErrors)) : null,
     data: flatMap(matchedQuantities)
   };
 };

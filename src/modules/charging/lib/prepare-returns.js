@@ -6,12 +6,21 @@ Decimal.set({
   precision: 8
 });
 const { cloneDeep } = require('lodash');
-const { TPT_PURPOSES, getAbsPeriod } = require('./two-part-tariff-helpers');
+const {
+  TPT_PURPOSES,
+  getAbsPeriod,
+  ERROR_NO_RETURNS_FOR_MATCHING,
+  ERROR_NO_RETURNS_SUBMITTED,
+  ERROR_SOME_RETURNS_DUE,
+  ERROR_LATE_RETURNS,
+  ERROR_UNDER_QUERY,
+  ERROR_RECEIVED_NO_DATA
+} = require('./two-part-tariff-helpers');
 
-const noReturnsSubmitted = returns => {
-  const dueReturns = returns.filter(ret => ret.status === 'due');
-  return returns.length === dueReturns.length;
-};
+const noReturnsSubmitted = (returns, dueReturns) => returns.length === dueReturns.length;
+
+const getReturnsByStatus = (returns, status) => returns.filter(ret => ret.status === status);
+
 /**
  * Checks whether the specific return line is within the return abstraction period
  * @param {Object} ret - return which contains the return line
@@ -32,30 +41,37 @@ const isLineWithinAbstractionPeriod = (ret, line) => {
   return absPeriod.contains(startDate) || absPeriod.contains(endDate);
 };
 
+const areAnyReturnsUnderQuery = returns => {
+  const isReturnUnderQuery = returns.map(ret => ret.isUnderQuery);
+  return isReturnUnderQuery.includes(true);
+};
+
+const areReturnsLate = returns => {
+  const lateReturns = returns.map(ret => {
+    const cutOffDate = moment(returns[0].dueDate).add(3, 'weeks');
+    return moment(ret.receivedDate).isAfter(cutOffDate);
+  });
+
+  return lateReturns.includes(true);
+};
+
 /**
  * Check if all returns are completed
  * @param {Array} returns
  * @return {Array} of error messages if they exist
  */
-const checkReturnsAreCompleted = returns => {
-  if (returns.length === 0) {
-    return [{
-      type: 'return',
-      msg: 'No returns available for matching'
-    }];
-  };
-  if (noReturnsSubmitted(returns)) return [{ type: 'returnsNotCompleted' }];
-  const errors = returns.reduce((returnErrors, ret) => {
-    let msg;
-    if (ret.isUnderQuery) msg = `${ret.returnId} is under query`;
+const checkForReturnsErrors = returns => {
+  if (returns.length === 0) return ERROR_NO_RETURNS_FOR_MATCHING;
 
-    if (!(ret.status === 'completed')) msg = `${ret.returnId} is not completed`;
+  const dueReturns = getReturnsByStatus(returns, 'due');
+  if (noReturnsSubmitted(returns, dueReturns)) return ERROR_NO_RETURNS_SUBMITTED;
+  if (dueReturns.length > 0) return ERROR_SOME_RETURNS_DUE;
 
-    if (msg) returnErrors.push({ type: 'return', msg });
+  if (areReturnsLate(returns)) return ERROR_LATE_RETURNS;
 
-    return returnErrors;
-  }, []);
-  return (errors.length > 0) ? errors : null;
+  if (areAnyReturnsUnderQuery(returns)) return ERROR_UNDER_QUERY;
+
+  if (getReturnsByStatus(returns, 'received').length > 0) return ERROR_RECEIVED_NO_DATA;
 };
 
 /**
@@ -101,7 +117,7 @@ const prepareReturnLinesData = returns => {
 };
 
 exports.isLineWithinAbstractionPeriod = isLineWithinAbstractionPeriod;
-exports.checkReturnsAreCompleted = checkReturnsAreCompleted;
+exports.checkForReturnsErrors = checkForReturnsErrors;
 exports.isReturnPurposeTPT = isReturnPurposeTPT;
 exports.getTPTReturns = getTPTReturns;
 exports.prepareReturnLinesData = prepareReturnLinesData;

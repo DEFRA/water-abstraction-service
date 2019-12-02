@@ -5,7 +5,7 @@ const {
   sortChargeElementsForMatching
 } = require('./prepare-charge-elements');
 const {
-  checkReturnsAreCompleted,
+  checkForReturnsErrors,
   getTPTReturns,
   prepareReturnLinesData
 } = require('./prepare-returns');
@@ -25,15 +25,12 @@ const { reshuffleQuantities } = require('./reshuffle-quantities');
 const matchReturnQuantities = (chargeElements, returnsToMatch) => {
   const returns = cloneDeep(returnsToMatch);
   const elements = cloneDeep(chargeElements);
-  // loop through charge elements - break if all relevant return quantities have been used up OR charge element quantity is full
+
   elements.forEach(ele => {
     returns.forEach(ret => {
       if (returnPurposeMatchesElementPurpose(ret, ele)) {
         ret.lines.forEach(retLine => {
-          const {
-            updatedLineQuantityAllocated,
-            updatedElementQuantity
-          } = matchRets.matchReturnLineToElement(retLine, ele);
+          const { updatedLineQuantityAllocated, updatedElementQuantity } = matchRets.matchReturnLineToElement(retLine, ele);
 
           retLine.quantityAllocated = updatedLineQuantityAllocated;
           ele.actualReturnQuantity = updatedElementQuantity;
@@ -44,6 +41,11 @@ const matchReturnQuantities = (chargeElements, returnsToMatch) => {
   return elements;
 };
 
+/**
+ * Filter, prepare and sort charge elements for returns matching
+ * @param {Array} chargeElements
+ * @return {Array} chargeElements ready for matching
+ */
 const prepareChargeElementsForMatching = chargeElements => {
   const tptChargeElements = getTPTChargeElements(chargeElements);
 
@@ -60,8 +62,8 @@ const prepareChargeElementsForMatching = chargeElements => {
  *         {Array} data prepared returns
  */
 const prepareReturnsForMatching = returns => {
-  const returnErrors = checkReturnsAreCompleted(returns);
-  if (returnErrors) return { error: returnErrors, data: null };
+  const returnError = checkForReturnsErrors(returns);
+  if (returnError) return { error: returnError, data: null };
 
   const tptReturns = getTPTReturns(returns);
 
@@ -87,5 +89,7 @@ const matchReturnsToChargeElements = (chargeVersion, returns) => {
   return reshuffleQuantities(matchedChargeElements);
 };
 
-exports.matchReturnsToChargeElements = matchReturnsToChargeElements;
 exports.matchReturnQuantities = matchReturnQuantities;
+exports.prepareChargeElementsForMatching = prepareChargeElementsForMatching;
+exports.prepareReturnsForMatching = prepareReturnsForMatching;
+exports.matchReturnsToChargeElements = matchReturnsToChargeElements;

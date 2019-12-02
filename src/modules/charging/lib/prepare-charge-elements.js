@@ -18,6 +18,17 @@ const getTPTChargeElements = chargeElements => chargeElements.filter(element => 
 });
 
 /**
+ * Pro rata the quantity - multiply by billable days & divide by total days
+ */
+const getProRataQuantity = (quantity, ele) => {
+  return new Decimal(quantity)
+    .times(ele.billableDays)
+    .dividedBy(ele.totalDays)
+    .toDecimalPlaces(3)
+    .toNumber();
+};
+
+/**
  * Find pro rata authorised quantity for charge element
  * Add effectiveStartDate, effectiveEndDate, actualReturnQuantity,
  * proRataBillableQuantity & proRataAuthorisedQuantity data points
@@ -31,9 +42,9 @@ const prepareChargeElementData = chargeElements => {
     const { effectiveStartDate, effectiveEndDate } = getEffectiveDates(ele);
     ele.effectiveStartDate = effectiveStartDate;
     ele.effectiveEndDate = effectiveEndDate;
-    ele.proRataAuthorisedQuantity = new Decimal(ele.authorisedAnnualQuantity).times(ele.billableDays).dividedBy(ele.totalDays).toDecimalPlaces(3).toNumber();
+    ele.proRataAuthorisedQuantity = getProRataQuantity(ele.authorisedAnnualQuantity, ele);
 
-    if (ele.billableAnnualQuantity) ele.proRataBillableQuantity = new Decimal(ele.billableAnnualQuantity).times(ele.billableDays).dividedBy(ele.totalDays).toDecimalPlaces(3).toNumber();
+    if (ele.billableAnnualQuantity) ele.proRataBillableQuantity = getProRataQuantity(ele.billableAnnualQuantity, ele);
   });
   return updated;
 };
@@ -72,9 +83,7 @@ const getEffectiveDates = (ele) => {
  * @param {Array} chargeElements
  * @return {Array} sorted array of chargeElements
  */
-const sortChargeElementsForMatching = chargeElements => {
-  return sortBy(chargeElements, 'billableDays');
-};
+const sortChargeElementsForMatching = chargeElements => sortBy(chargeElements, 'billableDays');
 
 exports.getTPTChargeElements = getTPTChargeElements;
 exports.prepareChargeElementData = prepareChargeElementData;

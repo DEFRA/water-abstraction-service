@@ -7,7 +7,7 @@ Decimal.set({
 });
 
 const {
-  getProRataQuantity,
+  getProRataQuantityToAllocate,
   doesLineOverlapChargeElementDateRange,
   matchReturnLineToElement
 } = require('../../../../src/modules/charging/lib/match-return-quantities');
@@ -94,7 +94,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
     });
   });
 
-  experiment('.getProRataQuantity', async () => {
+  experiment('.getProRataQuantityToAllocate', async () => {
     experiment('when return line is completely within charge element', async () => {
       const chargeElementOptions = {
         effectiveStartDate: '2016-04-01',
@@ -113,7 +113,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
           quantityAllocated: 0,
           quantity: 0.02269
         });
-        const proRataQuantity = getProRataQuantity(returnLine, chargeElement);
+        const proRataQuantity = getProRataQuantityToAllocate(returnLine, chargeElement);
         const quantityDecimal = new Decimal(returnLine.quantity);
         expect(proRataQuantity).to.equal(quantityDecimal);
       });
@@ -136,7 +136,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
           quantityAllocated: 0,
           quantity: 0.02269
         });
-        const proRataQuantity = getProRataQuantity(returnLine, chargeElement);
+        const proRataQuantity = getProRataQuantityToAllocate(returnLine, chargeElement);
         const expectedProRataQuantity = new Decimal(returnLine.quantity).times(2).dividedBy(7);
         expect(proRataQuantity).to.equal(expectedProRataQuantity);
       });
@@ -179,7 +179,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         effectiveStartDate: '2016-04-01',
         effectiveEndDate: '2017-03-31',
         actualReturnQuantity: 1.3,
-        authorisedAnnualQuantity: 5.9996,
+        proRataAuthorisedAnnualQuantity: 5.9996,
         totalDays: 214,
         billableDays: 214
       });
@@ -195,7 +195,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         expect(updatedLineQuantityAllocated).to.equal(quantityDecimal.toNumber());
       });
     });
-    experiment('if quantity allocated fills charge element to authorisedAnnualQuantity', async () => {
+    experiment('if quantity takes charge element actualReturnQuantity above authorised quantity', async () => {
       const returnLine = createReturnLine({
         startDate: '2016-04-01',
         endDate: '2016-04-30',
@@ -206,21 +206,18 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         effectiveStartDate: '2016-04-01',
         effectiveEndDate: '2017-03-31',
         actualReturnQuantity: 5.99,
-        authorisedAnnualQuantity: 5.9996,
+        proRataAuthorisedAnnualQuantity: 5.9996,
         totalDays: 214,
         billableDays: 214
       });
-      test('allocates only enough quantity to take actualReturnQuantity to authorisedAnnualQuantity', async () => {
-        const { updatedElementQuantity } = matchReturnLineToElement(returnLine, chargeElement);
-        expect(updatedElementQuantity).to.equal(chargeElement.authorisedAnnualQuantity);
+      const { updatedElementQuantity, updatedLineQuantityAllocated } = matchReturnLineToElement(returnLine, chargeElement);
+      test('all available quantity is allocated', async () => {
+        expect(updatedElementQuantity).to.equal(
+          new Decimal(chargeElement.actualReturnQuantity).plus(returnLine.quantity).toNumber()
+        );
       });
       test('quantityAllocated in return line reflects how much quantity was allocated', async () => {
-        const {
-          updatedLineQuantityAllocated
-        } = matchReturnLineToElement(returnLine, chargeElement);
-        expect(updatedLineQuantityAllocated).to.equal(
-          new Decimal(chargeElement.authorisedAnnualQuantity).minus(chargeElement.actualReturnQuantity).toNumber()
-        );
+        expect(updatedLineQuantityAllocated).to.equal(returnLine.quantity);
       });
     });
     experiment('if some of the quantity has already been allocated', async () => {
@@ -234,7 +231,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         effectiveStartDate: '2016-04-01',
         effectiveEndDate: '2017-03-31',
         actualReturnQuantity: 2,
-        authorisedAnnualQuantity: 5.9996,
+        proRataAuthorisedAnnualQuantity: 5.9996,
         totalDays: 214,
         billableDays: 214
       });
@@ -246,41 +243,11 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         );
       });
       test('quantityAllocated is never greater than proRataQuantity', async () => {
-        const {
-          updatedLineQuantityAllocated
-        } = matchReturnLineToElement(returnLine, chargeElement);
+        const { updatedLineQuantityAllocated } = matchReturnLineToElement(returnLine, chargeElement);
         expect(updatedLineQuantityAllocated).to.equal(returnLine.quantity);
       });
     });
-    experiment('if charge element is at authorisedAnnualQuantity', async () => {
-      const returnLine = createReturnLine({
-        startDate: '2016-04-01',
-        endDate: '2016-04-30',
-        quantity: 0.02269,
-        quantityAllocated: 0
-      });
-      const chargeElement = getChargeElement({
-        effectiveStartDate: '2016-04-01',
-        effectiveEndDate: '2017-03-31',
-        actualReturnQuantity: 5.9996,
-        authorisedAnnualQuantity: 5.9996,
-        totalDays: 214,
-        billableDays: 214
-      });
-      test('charge element actualReturnQuantity remains the same', async () => {
-        const {
-          updatedElementQuantity
-        } = matchReturnLineToElement(returnLine, chargeElement);
-        expect(updatedElementQuantity).to.equal(chargeElement.actualReturnQuantity);
-      });
-      test('quantityAllocated remains the same', async () => {
-        const {
-          updatedLineQuantityAllocated
-        } = matchReturnLineToElement(returnLine, chargeElement);
-        expect(updatedLineQuantityAllocated).to.equal(returnLine.quantityAllocated);
-      });
-    });
-    experiment('if quantityAllocated has already been allocated', async () => {
+    experiment('if line quantity has already been allocated', async () => {
       const returnLine = createReturnLine({
         startDate: '2016-04-01',
         endDate: '2016-04-30',
@@ -291,14 +258,12 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         effectiveStartDate: '2016-04-01',
         effectiveEndDate: '2017-03-31',
         actualReturnQuantity: 0,
-        authorisedAnnualQuantity: 5.9996,
+        proRataAuthorisedAnnualQuantity: 5.9996,
         totalDays: 214,
         billableDays: 214
       });
       test('charge element actualReturnQuantity remains the same', async () => {
-        const {
-          updatedElementQuantity
-        } = matchReturnLineToElement(returnLine, chargeElement);
+        const { updatedElementQuantity } = matchReturnLineToElement(returnLine, chargeElement);
         expect(updatedElementQuantity).to.equal(chargeElement.actualReturnQuantity);
       });
       test('quantityAllocated remains the same', async () => {

@@ -8,11 +8,20 @@ Decimal.set({
 const { flatMap } = require('lodash');
 const {
   isLineWithinAbstractionPeriod,
-  checkReturnsAreCompleted,
+  checkForReturnsErrors,
   isReturnPurposeTPT,
   getTPTReturns,
   prepareReturnLinesData
 } = require('../../../../src/modules/charging/lib/prepare-returns');
+
+const {
+  ERROR_NO_RETURNS_FOR_MATCHING,
+  ERROR_NO_RETURNS_SUBMITTED,
+  ERROR_SOME_RETURNS_DUE,
+  ERROR_LATE_RETURNS,
+  ERROR_UNDER_QUERY,
+  ERROR_RECEIVED_NO_DATA
+} = require('../../../../src/modules/charging/lib/two-part-tariff-helpers');
 
 experiment('modules/charging/lib/prepare-returns', async () => {
   experiment('.isLineWithinAbstractionPeriod', async () => {
@@ -104,83 +113,101 @@ experiment('modules/charging/lib/prepare-returns', async () => {
       });
     });
   });
-  experiment('.checkReturnsAreCompleted', async () => {
-    test('return error if there are no returns for matching', async () => {
-      const [returnError] = checkReturnsAreCompleted([]);
-      expect(returnError.type).to.equal('return');
-      expect(returnError.msg).to.equal('No returns available for matching');
+  experiment('.checkForReturnsErrors', async () => {
+    const completedRet = createReturn({
+      returnId: 'completed-return',
+      status: 'completed',
+      dueDate: '2018-11-01',
+      receivedDate: '2018-10-15',
+      isUnderQuery: false
     });
-    test('return error for return that is under query', async () => {
-      const completedRetOptions = {
-        returnId: 'completed-return',
-        status: 'completed',
-        isUnderQuery: false
-      };
-      const underQueryRetOptions = {
-        returnId: 'under-query-return',
-        status: 'completed',
-        isUnderQuery: true
-      };
-      const returnsToCheck = [createReturn(completedRetOptions), createReturn(underQueryRetOptions)];
-      const [returnError] = checkReturnsAreCompleted(returnsToCheck);
+    const dueRet = createReturn({
+      returnId: 'due-return',
+      status: 'due',
+      dueDate: '2018-11-01',
+      receivedDate: null,
+      isUnderQuery: false
+    });
+    const lateRet = createReturn({
+      returnId: 'late-return',
+      status: 'completed',
+      dueDate: '2018-11-01',
+      receivedDate: '2018-12-10',
+      isUnderQuery: false
+    });
+    const beforeCutOffRet = createReturn({
+      returnId: 'within-cut-off-return',
+      status: 'completed',
+      dueDate: '2018-11-01',
+      receivedDate: '2018-11-05',
+      isUnderQuery: false
+    });
+    const underQueryRet = createReturn({
+      returnId: 'under-query-return',
+      status: 'completed',
+      dueDate: '2018-11-01',
+      receivedDate: '2018-11-01',
+      isUnderQuery: true
+    });
 
-      expect(returnError.type).to.equal('return');
-      expect(returnError.msg).to.equal(`${underQueryRetOptions.returnId} is under query`);
+    test('return error if there are no returns for matching', async () => {
+      const returnError = checkForReturnsErrors([]);
+      expect(returnError).to.equal(ERROR_NO_RETURNS_FOR_MATCHING);
     });
-    test('return error for return that does not have a "completed" status', async () => {
-      const receivedRetOptions = {
-        returnId: 'received-return',
-        status: 'received',
-        isUnderQuery: false
-      };
-      const completedRetOptions = {
-        returnId: 'completed-return',
-        status: 'completed',
-        isUnderQuery: false
-      };
-      const returnsToCheck = [createReturn(receivedRetOptions), createReturn(completedRetOptions)];
-      const [returnError] = checkReturnsAreCompleted(returnsToCheck);
-      expect(returnError.type).to.equal('return');
-      expect(returnError.msg).to.equal(`${receivedRetOptions.returnId} is not completed`);
+
+    test('return error if all of the returns are due', async () => {
+      const returnError = checkForReturnsErrors([dueRet, dueRet, dueRet]);
+      expect(returnError).to.equal(ERROR_NO_RETURNS_SUBMITTED);
     });
-    test('return an error for each return with an error', async () => {
-      const receivedRetOptions = {
-        returnId: 'received-return',
-        status: 'received',
-        isUnderQuery: false
-      };
-      const completedRetOptions = {
-        returnId: 'completed-return',
-        status: 'completed',
-        isUnderQuery: false
-      };
-      const underQueryRetOptions = {
+
+    test('return error if any of the returns is due', async () => {
+      const returnError = checkForReturnsErrors([completedRet, completedRet, dueRet]);
+      expect(returnError).to.equal(ERROR_SOME_RETURNS_DUE);
+    });
+
+    test('return error if any of the returns are late', async () => {
+      const returnError = checkForReturnsErrors([completedRet, completedRet, lateRet]);
+      expect(returnError).to.equal(ERROR_LATE_RETURNS);
+    });
+
+    test('no error if returns were submitted after due date, but within grace period', async () => {
+      const returnError = checkForReturnsErrors([beforeCutOffRet, completedRet, beforeCutOffRet]);
+      expect(returnError).to.be.undefined();
+    });
+
+    test('return error for return that is under query', async () => {
+      const returnsToCheck = [completedRet, underQueryRet];
+      const returnError = checkForReturnsErrors(returnsToCheck);
+
+      expect(returnError).to.equal(ERROR_UNDER_QUERY);
+    });
+    test('return received and under query returns only under query error', async () => {
+      const underQueryReceivedRet = createReturn({
         returnId: 'under-query-return',
-        status: 'completed',
+        status: 'received',
         isUnderQuery: true
-      };
-      const returnsToCheck = [
-        createReturn(receivedRetOptions),
-        createReturn(completedRetOptions),
-        createReturn(underQueryRetOptions)];
-      const returnErrors = checkReturnsAreCompleted(returnsToCheck);
-      expect(returnErrors[0].type).to.equal('return');
-      expect(returnErrors[0].msg).to.equal(`${receivedRetOptions.returnId} is not completed`);
-      expect(returnErrors[1].type).to.equal('return');
-      expect(returnErrors[1].msg).to.equal(`${underQueryRetOptions.returnId} is under query`);
+      });
+      const returnsToCheck = [underQueryReceivedRet];
+      const returnError = checkForReturnsErrors(returnsToCheck);
+
+      expect(returnError).to.equal(ERROR_UNDER_QUERY);
+    });
+    test('return error for return that has a "received" status', async () => {
+      const receivedRet = createReturn({
+        returnId: 'received-return',
+        status: 'received',
+        dueDate: '2018-11-01',
+        receivedDate: '2018-11-01',
+        isUnderQuery: false
+      });
+
+      const returnsToCheck = [completedRet, receivedRet, completedRet];
+      const returnError = checkForReturnsErrors(returnsToCheck);
+      expect(returnError).to.equal(ERROR_RECEIVED_NO_DATA);
     });
     test('no errors returned if all returns are completed', async () => {
-      const completedRetOptions = {
-        status: 'completed',
-        isUnderQuery: false
-      };
-      const returnsToCheck = [
-        createReturn({ ...completedRetOptions, returnId: 'completed-return-1' }),
-        createReturn({ ...completedRetOptions, returnId: 'completed-return-2' }),
-        createReturn({ ...completedRetOptions, returnId: 'completed-return-3' })
-      ];
-      const returnErrors = checkReturnsAreCompleted(returnsToCheck);
-      expect(returnErrors).to.be.null();
+      const returnErrors = checkForReturnsErrors([completedRet, completedRet, completedRet]);
+      expect(returnErrors).to.be.undefined();
     });
   });
   experiment('.isReturnPurposeTPT', async () => {

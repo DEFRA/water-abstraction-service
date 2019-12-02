@@ -8,29 +8,50 @@ Decimal.set({
 
 const TPT_PURPOSES = [380, 390, 400, 410, 420];
 const dateFormat = 'YYYY-MM-DD';
+const ERROR_NO_RETURNS_FOR_MATCHING = 'no-returns-for-matching';
+const ERROR_NO_RETURNS_SUBMITTED = 'no-returns-submitted';
+const ERROR_SOME_RETURNS_DUE = 'some-returns-due';
+const ERROR_LATE_RETURNS = 'late-returns';
+const ERROR_UNDER_QUERY = 'under-query';
+const ERROR_RECEIVED = 'received';
+const ERROR_OVER_ABSTRACTION = 'over-abstraction';
 
+/**
+ * Checks whether error is one which requires a null return
+ * @param {String} error
+ */
+const isNullReturnRequired = error => {
+  const nullReturnErrors = [ERROR_NO_RETURNS_SUBMITTED, ERROR_SOME_RETURNS_DUE, ERROR_LATE_RETURNS];
+  return nullReturnErrors.includes(error);
+};
+
+/**
+ * Checks whether a null return is required, otherwise returns error
+ * @param {String} error
+ * @param {Array} chargeElements
+ */
 const returnsError = (error, chargeElements) => {
-  if (error[0].type === 'returnsNotCompleted') return getNullActualReturnQuantities(chargeElements);
+  if (isNullReturnRequired(error)) return getNullActualReturnQuantities(error, chargeElements);
   return { error,
     data: null };
 };
 
 /**
- * Set actualReturnQuantities set to null for all chargeElements
+ * Sets actualReturnQuantities set to null for all chargeElements
  * @param {Array} chargeElements objects
  * @return {Object}
- *          {null} error
- *          {Array} data chargeElementId & null actualReturnQuantity
+ *         {null} error
+ *         {Array} data chargeElementId & null actualReturnQuantity
  */
-const getNullActualReturnQuantities = chargeElements => {
+const getNullActualReturnQuantities = (error, chargeElements) => {
   const data = chargeElements.map(element => {
     return { chargeElementId: element.chargeElementId, actualReturnQuantity: null };
   });
-  return { error: null, data };
+  return { error, data };
 };
 
 /**
- *
+ * Finds the abstraction period with relevant year for the given start & end dates
  * @param {moment} startDate of return or charge element
  * @param {moment} endDate of return or charge element
  * @param {Object} absDates abstraction dates
@@ -81,6 +102,13 @@ const returnPurposeMatchesElementPurpose = (ret, ele) => {
 
 exports.TPT_PURPOSES = TPT_PURPOSES;
 exports.dateFormat = dateFormat;
+exports.ERROR_NO_RETURNS_FOR_MATCHING = ERROR_NO_RETURNS_FOR_MATCHING;
+exports.ERROR_NO_RETURNS_SUBMITTED = ERROR_NO_RETURNS_SUBMITTED;
+exports.ERROR_OVER_ABSTRACTION = ERROR_OVER_ABSTRACTION;
+exports.ERROR_SOME_RETURNS_DUE = ERROR_SOME_RETURNS_DUE;
+exports.ERROR_LATE_RETURNS = ERROR_LATE_RETURNS;
+exports.ERROR_UNDER_QUERY = ERROR_UNDER_QUERY;
+exports.ERROR_RECEIVED = ERROR_RECEIVED;
 exports.getNullActualReturnQuantities = getNullActualReturnQuantities;
 exports.returnsError = returnsError;
 exports.getAbsPeriod = getAbsPeriod;
