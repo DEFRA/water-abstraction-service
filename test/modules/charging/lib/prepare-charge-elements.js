@@ -1,6 +1,6 @@
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
-const { getChargeElement, wrapElementsInVersion } = require('./test-charge-data');
+const { createChargeElement, wrapElementsInVersion } = require('./test-charge-data');
 const Decimal = require('decimal.js-light');
 Decimal.set({
   precision: 8
@@ -31,14 +31,14 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
     };
     test('only returns charge elements with TPT purposes', async () => {
       const chargeElementsWithTPTPurposes = [
-        getChargeElement({ purposeTertiary: 380, ...chargeElementOptions }),
-        getChargeElement({ purposeTertiary: 410, ...chargeElementOptions }),
-        getChargeElement({ purposeTertiary: 420, ...chargeElementOptions })
+        createChargeElement({ purposeTertiary: 380, ...chargeElementOptions }),
+        createChargeElement({ purposeTertiary: 410, ...chargeElementOptions }),
+        createChargeElement({ purposeTertiary: 420, ...chargeElementOptions })
       ];
       const chargeElementsWithOtherPurposes = [
-        getChargeElement({ purposeTertiary: 200, ...chargeElementOptions }),
-        getChargeElement({ purposeTertiary: 180, ...chargeElementOptions }),
-        getChargeElement({ purposeTertiary: 620, ...chargeElementOptions })
+        createChargeElement({ purposeTertiary: 200, ...chargeElementOptions }),
+        createChargeElement({ purposeTertiary: 180, ...chargeElementOptions }),
+        createChargeElement({ purposeTertiary: 620, ...chargeElementOptions })
       ];
       const chargeVersion = wrapElementsInVersion([
         ...chargeElementsWithTPTPurposes,
@@ -49,9 +49,9 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
     });
     test('returns empty array if no TPT charge elements present', async () => {
       const nonTPTChargeElements = [
-        getChargeElement({ purposeTertiary: 200, ...chargeElementOptions }),
-        getChargeElement({ purposeTertiary: 180, ...chargeElementOptions }),
-        getChargeElement({ purposeTertiary: 620, ...chargeElementOptions })
+        createChargeElement({ purposeTertiary: 200, ...chargeElementOptions }),
+        createChargeElement({ purposeTertiary: 180, ...chargeElementOptions }),
+        createChargeElement({ purposeTertiary: 620, ...chargeElementOptions })
       ];
       const chargeVersion = wrapElementsInVersion(nonTPTChargeElements, '2019-04-01', '2019-08-31');
       const filteredElements = getTPTChargeElements(chargeVersion.chargeElements);
@@ -73,7 +73,7 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
 
     experiment('actualReturnQuantity', async () => {
       test('is set to 0', () => {
-        const [updatedChargeElement] = prepareChargeElementData([getChargeElement({
+        const [updatedChargeElement] = prepareChargeElementData([createChargeElement({
           ...chargeElementOptions,
           authorisedAnnualQuantity: '5.996'
         })]);
@@ -95,7 +95,7 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
         billableDays: 214
       };
       test('when startDate is within abs period, effectiveStartDate = startDate', async () => {
-        const chargeElement = getChargeElement({
+        const chargeElement = createChargeElement({
           ...chargeElementOptions,
           startDate: '2016-10-01',
           abstractionPeriodEndMonth: '3'
@@ -104,17 +104,17 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
         expect(effectiveStartDate).to.equal(chargeElement.startDate);
       });
       test('when endDate is within abs period, effectiveEndDate = endDate', async () => {
-        const chargeElement = getChargeElement({ ...chargeElementOptions, endDate: '2016-10-15' });
+        const chargeElement = createChargeElement({ ...chargeElementOptions, endDate: '2016-10-15' });
         const { effectiveEndDate } = getEffectiveDates(chargeElement);
         expect(effectiveEndDate).to.equal(chargeElement.endDate);
       });
       test('when startDate is outside abs period, effectiveStartDate = start of abs period', async () => {
-        const chargeElement = getChargeElement({ ...chargeElementOptions, startDate: '2016-03-31' });
+        const chargeElement = createChargeElement({ ...chargeElementOptions, startDate: '2016-03-31' });
         const { effectiveStartDate } = getEffectiveDates(chargeElement);
         expect(effectiveStartDate).to.equal('2016-04-01');
       });
       test('when endDate is outside abs period, effectiveEndDate = end of abs period', async () => {
-        const chargeElement = getChargeElement(chargeElementOptions);
+        const chargeElement = createChargeElement(chargeElementOptions);
         const { effectiveEndDate } = getEffectiveDates(chargeElement);
         expect(effectiveEndDate).to.equal('2016-10-31');
       });
@@ -131,22 +131,22 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
         billableDays: 214
       };
       test('when startDate is within abs period, effectiveStartDate = startDate', async () => {
-        const chargeElement = getChargeElement({ ...chargeElementOptions, startDate: '2016-11-15' });
+        const chargeElement = createChargeElement({ ...chargeElementOptions, startDate: '2016-11-15' });
         const { effectiveStartDate } = getEffectiveDates(chargeElement);
         expect(effectiveStartDate).to.equal(chargeElement.startDate);
       });
       test('when endDate is within abs period, effectiveEndDate = endDate', async () => {
-        const chargeElement = getChargeElement(chargeElementOptions);
+        const chargeElement = createChargeElement(chargeElementOptions);
         const { effectiveEndDate } = getEffectiveDates(chargeElement);
         expect(effectiveEndDate).to.equal(chargeElement.endDate);
       });
       test('when startDate is outside abs period, effectiveStartDate = start of abs period', async () => {
-        const chargeElement = getChargeElement({ ...chargeElementOptions, startDate: '2016-10-01' });
+        const chargeElement = createChargeElement({ ...chargeElementOptions, startDate: '2016-10-01' });
         const { effectiveStartDate } = getEffectiveDates(chargeElement);
         expect(effectiveStartDate).to.equal('2016-11-01');
       });
       test('when endDate is outside abs period, effectiveEndDate = end of abs period', async () => {
-        const chargeElement = getChargeElement({ ...chargeElementOptions, endDate: '2016-10-31' });
+        const chargeElement = createChargeElement({ ...chargeElementOptions, endDate: '2016-10-31' });
         const { effectiveEndDate } = getEffectiveDates(chargeElement);
         expect(effectiveEndDate).to.equal('2016-04-30');
       });
@@ -156,25 +156,25 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
   experiment('.sortChargeElementsForMatching', async () => {
     test('sorts the charge elements by billableDays', async () => {
       const chargeElements = [
-        getChargeElement({
+        createChargeElement({
           billableDays: 180
         }),
-        getChargeElement({
+        createChargeElement({
           billableDays: 56
         }),
-        getChargeElement({
+        createChargeElement({
           billableDays: 352
         })
       ];
       const sortedElements = sortChargeElementsForMatching(chargeElements);
       expect(sortedElements).to.be.equal([
-        getChargeElement({
+        createChargeElement({
           billableDays: 56
         }),
-        getChargeElement({
+        createChargeElement({
           billableDays: 180
         }),
-        getChargeElement({
+        createChargeElement({
           billableDays: 352
         })
 

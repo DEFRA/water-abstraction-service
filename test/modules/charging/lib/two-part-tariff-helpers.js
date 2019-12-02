@@ -1,7 +1,7 @@
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { createReturn, createPurposeData } = require('./test-return-data');
-const { getChargeElement } = require('./test-charge-data');
+const { createChargeElement } = require('./test-charge-data');
 const Decimal = require('decimal.js-light');
 Decimal.set({
   precision: 8
@@ -29,8 +29,8 @@ experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
     });
 
     test('returns the error and a null return if one is required', async () => {
-      const chargeElement1 = getChargeElement({ chargeElementId: 'charge-element-1' });
-      const chargeElement2 = getChargeElement({ chargeElementId: 'charge-element-2' });
+      const chargeElement1 = createChargeElement({ chargeElementId: 'charge-element-1' });
+      const chargeElement2 = createChargeElement({ chargeElementId: 'charge-element-2' });
       const { error, data } = returnsError(ERROR_NO_RETURNS_SUBMITTED,
         [chargeElement1, chargeElement2]);
 
@@ -191,7 +191,7 @@ experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
     });
   });
   experiment('.returnPurposeMatchesElementPurpose', async () => {
-    const chargeElement = getChargeElement({
+    const chargeElement = createChargeElement({
       purposeTertiary: 400
     });
     const purpose120 = createPurposeData('120');

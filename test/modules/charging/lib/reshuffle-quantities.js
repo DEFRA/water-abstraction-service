@@ -1,6 +1,6 @@
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
-const { getChargeElement } = require('./test-charge-data');
+const { createChargeElement } = require('./test-charge-data');
 const Decimal = require('decimal.js-light');
 Decimal.set({
   precision: 8
@@ -18,18 +18,18 @@ const { ERROR_OVER_ABSTRACTION } = require('../../../../src/modules/charging/lib
 experiment('modules/charging/lib/reshuffle-quantities', async () => {
   experiment('.isTimeLimited', async () => {
     test('returns false if timeLimited start & end dates are null', async () => {
-      const result = isTimeLimited(getChargeElement({
+      const result = isTimeLimited(createChargeElement({
         timeLimitedStartDate: null,
         timeLimitedEndDate: null
       }));
       expect(result).to.be.false();
     });
     test('returns false if timeLimited start & end dates are undefined', async () => {
-      const result = isTimeLimited(getChargeElement({}));
+      const result = isTimeLimited(createChargeElement({}));
       expect(result).to.be.false();
     });
     test('returns true if timeLimited start & end dates are dates', async () => {
-      const result = isTimeLimited(getChargeElement({
+      const result = isTimeLimited(createChargeElement({
         timeLimitedStartDate: '2016-04-01',
         timeLimitedEndDate: '2017-03-31'
       }));
@@ -37,13 +37,13 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
     });
   });
   experiment('.getElementsBySource', async () => {
-    const unsupportedSourceElement = getChargeElement({ source: 'unsupported' });
-    const supportedSourceElement = getChargeElement({ source: 'supported' });
-    const unsupportedSourceTLElement = getChargeElement({
+    const unsupportedSourceElement = createChargeElement({ source: 'unsupported' });
+    const supportedSourceElement = createChargeElement({ source: 'supported' });
+    const unsupportedSourceTLElement = createChargeElement({
       source: 'unsupported',
       timeLimitedStartDate: '2018-01-01',
       timeLimitedEndDate: '2018-12-31' });
-    const supportedSourceTLElement = getChargeElement({
+    const supportedSourceTLElement = createChargeElement({
       source: 'supported',
       timeLimitedStartDate: '2018-01-01',
       timeLimitedEndDate: '2018-12-31' });
@@ -68,13 +68,13 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
   experiment('.sortElementsInPriorityOrder', async () => {
     test('unsupported source is prioritised over supported source', async () => {
       const chargeElements = [
-        getChargeElement({
+        createChargeElement({
           chargeElementId: 'charge-element-1',
           source: 'supported',
           timeLimitedStartDate: null,
           timeLimitedEndDate: null
         }),
-        getChargeElement({
+        createChargeElement({
           chargeElementId: 'charge-element-2',
           source: 'unsupported',
           timeLimitedStartDate: null,
@@ -87,13 +87,13 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
     });
     test('unsupported source time-limited element prioritised over "regular" supported source element', async () => {
       const chargeElements = [
-        getChargeElement({
+        createChargeElement({
           chargeElementId: 'charge-element-1',
           source: 'supported',
           timeLimitedStartDate: null,
           timeLimitedEndDate: null
         }),
-        getChargeElement({
+        createChargeElement({
           chargeElementId: 'charge-element-2',
           source: 'unsupported',
           timeLimitedStartDate: '2016-04-01',
@@ -106,13 +106,13 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
     });
     test('supported source "regular" element is prioritised over supported source time-limited element', async () => {
       const chargeElements = [
-        getChargeElement({
+        createChargeElement({
           chargeElementId: 'charge-element-1',
           source: 'supported',
           timeLimitedStartDate: '2016-04-01',
           timeLimitedEndDate: '2017-03-31'
         }),
-        getChargeElement({
+        createChargeElement({
           chargeElementId: 'charge-element-2',
           source: 'supported',
           timeLimitedStartDate: null,
@@ -126,14 +126,14 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
     experiment('have 2 equal priority elements', async () => {
       test('sort by billable days in descending order', async () => {
         const chargeElements = [
-          getChargeElement({
+          createChargeElement({
             chargeElementId: 'charge-element-1',
             source: 'unsupported',
             timeLimitedStartDate: null,
             timeLimitedEndDate: null,
             billableDays: 56
           }),
-          getChargeElement({
+          createChargeElement({
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
             timeLimitedStartDate: null,
@@ -151,7 +151,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
     experiment('when all elements are not full', async () => {
       test('move quantity from lower priority element into base element', async () => {
         const chargeElements = [
-          getChargeElement({
+          createChargeElement({
             chargeElementId: 'charge-element-1',
             source: 'unsupported',
             timeLimitedStartDate: null,
@@ -159,7 +159,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             actualReturnQuantity: 75,
             proRataAuthorisedQuantity: 100
           }),
-          getChargeElement({
+          createChargeElement({
             chargeElementId: 'charge-element-2',
             source: 'supported',
             timeLimitedStartDate: null,
@@ -178,7 +178,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       });
       test('moves quantities from lower priority elements filling elements in priority order', async () => {
         const chargeElements = [
-          getChargeElement({
+          createChargeElement({
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
             timeLimitedStartDate: null,
@@ -186,7 +186,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             actualReturnQuantity: 75,
             proRataAuthorisedQuantity: 100
           }),
-          getChargeElement({
+          createChargeElement({
             chargeElementId: 'charge-element-1',
             source: 'unsupported',
             timeLimitedStartDate: '2016-04-01',
@@ -194,7 +194,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             actualReturnQuantity: 50,
             proRataAuthorisedQuantity: 50
           }),
-          getChargeElement({
+          createChargeElement({
             chargeElementId: 'charge-element-3',
             source: 'supported',
             actualReturnQuantity: 35,
@@ -213,13 +213,13 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       });
       test('actual quantities remain the same if no shuffling is needed', async () => {
         const chargeElements = [
-          getChargeElement({ // first priority
+          createChargeElement({ // first priority
             chargeElementId: 'charge-element-3',
             source: 'unsupported',
             actualReturnQuantity: 100,
             proRataAuthorisedQuantity: 100
           }),
-          getChargeElement({ // second priority
+          createChargeElement({ // second priority
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
             timeLimitedStartDate: '2016-04-01',
@@ -227,7 +227,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             actualReturnQuantity: 20,
             proRataAuthorisedQuantity: 20
           }),
-          getChargeElement({ // lowest priority
+          createChargeElement({ // lowest priority
             chargeElementId: 'charge-element-1',
             source: 'supported',
             actualReturnQuantity: 10,
@@ -248,7 +248,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
     experiment('when all elements are full', async () => {
       test('the actual quantities are equal to the billable quantities, if provided', async () => {
         const chargeElements = [
-          getChargeElement({ // second priority
+          createChargeElement({ // second priority
             chargeElementId: 'charge-element-1',
             source: 'unsupported',
             timeLimitedStartDate: '2016-04-01',
@@ -257,14 +257,14 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             proRataBillableQuantity: 50,
             proRataAuthorisedQuantity: 200
           }),
-          getChargeElement({ // first priority
+          createChargeElement({ // first priority
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
             actualReturnQuantity: 50,
             proRataBillableQuantity: 50,
             proRataAuthorisedQuantity: 200
           }),
-          getChargeElement({ // lowest priority
+          createChargeElement({ // lowest priority
             chargeElementId: 'charge-element-3',
             source: 'supported',
             actualReturnQuantity: 100,
@@ -284,7 +284,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       });
       test('the actual quantities are equal to the authorised quantities, if no billable quantities provided', async () => {
         const chargeElements = [
-          getChargeElement({ // second priority
+          createChargeElement({ // second priority
             chargeElementId: 'charge-element-1',
             source: 'unsupported',
             timeLimitedStartDate: '2016-04-01',
@@ -292,13 +292,13 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             actualReturnQuantity: 50,
             proRataAuthorisedQuantity: 50
           }),
-          getChargeElement({ // first priority
+          createChargeElement({ // first priority
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
             actualReturnQuantity: 50,
             proRataAuthorisedQuantity: 50
           }),
-          getChargeElement({ // lowest priority
+          createChargeElement({ // lowest priority
             chargeElementId: 'charge-element-3',
             source: 'supported',
             actualReturnQuantity: 100,
@@ -319,14 +319,14 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
     experiment('when there is an over abstraction', async () => {
       test('base element gets overabstraction, other elements are equal to billable quantity', async () => {
         const chargeElements = [
-          getChargeElement({ // first priority
+          createChargeElement({ // first priority
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
             actualReturnQuantity: 50,
             proRataBillableQuantity: 100,
             proRataAuthorisedQuantity: 200
           }),
-          getChargeElement({ // second priority
+          createChargeElement({ // second priority
             chargeElementId: 'charge-element-1',
             source: 'unsupported',
             timeLimitedStartDate: '2016-04-01',
@@ -335,7 +335,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             proRataBillableQuantity: 50,
             proRataAuthorisedQuantity: 200
           }),
-          getChargeElement({ // lowest priority
+          createChargeElement({ // lowest priority
             chargeElementId: 'charge-element-3',
             source: 'supported',
             actualReturnQuantity: 100,
@@ -362,7 +362,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
     experiment('when the total quantities sum to zero', async () => {
       test('all actual quantities should remain as zero', async () => {
         const chargeElements = [
-          getChargeElement({
+          createChargeElement({
             chargeElementId: 'charge-element-1',
             source: 'unsupported',
             timeLimitedStartDate: '2016-04-01',
@@ -370,13 +370,13 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             actualReturnQuantity: 0,
             proRataAuthorisedQuantity: 50
           }),
-          getChargeElement({
+          createChargeElement({
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
             actualReturnQuantity: 0,
             proRataAuthorisedQuantity: 50
           }),
-          getChargeElement({
+          createChargeElement({
             chargeElementId: 'charge-element-3',
             source: 'supported',
             actualReturnQuantity: 0,
@@ -398,7 +398,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
   experiment('.reshuffleQuantities', async () => {
     test('quantities for charge elements with 2 different purposes are allocated appropriately', async () => {
       const purpose400ChargeElements = [
-        getChargeElement({
+        createChargeElement({
           chargeElementId: 'charge-element-1',
           source: 'unsupported',
           timeLimitedStartDate: '2018-01-01',
@@ -407,7 +407,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
           proRataAuthorisedQuantity: 100,
           purposeTertiary: 400
         }),
-        getChargeElement({
+        createChargeElement({
           chargeElementId: 'charge-element-2',
           source: 'supported',
           actualReturnQuantity: 100,
@@ -416,7 +416,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         })
       ];
       const purpose420ChargeElements = [
-        getChargeElement({
+        createChargeElement({
           chargeElementId: 'charge-element-3',
           source: 'supported',
           timeLimitedStartDate: '2018-01-01',
@@ -425,7 +425,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
           proRataAuthorisedQuantity: 50,
           purposeTertiary: 420
         }),
-        getChargeElement({
+        createChargeElement({
           chargeElementId: 'charge-element-4',
           source: 'supported',
           actualReturnQuantity: 80,

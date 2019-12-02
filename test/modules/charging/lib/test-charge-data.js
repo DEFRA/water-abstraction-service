@@ -1,4 +1,4 @@
-const getChargeElement = options => {
+const createChargeElement = options => {
   return {
     'chargeElementId': options.chargeElementId || 'charge-element-id',
     'chargeVersionId': 'charge-version-id',
@@ -57,5 +57,5 @@ const wrapElementsInVersion = (chargeElements, startDate, endDate) => {
   };
 };
 
-exports.getChargeElement = getChargeElement;
+exports.createChargeElement = createChargeElement;
 exports.wrapElementsInVersion = wrapElementsInVersion;

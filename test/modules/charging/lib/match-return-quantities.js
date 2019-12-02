@@ -1,6 +1,6 @@
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
-const { getChargeElement } = require('./test-charge-data');
+const { createChargeElement } = require('./test-charge-data');
 const Decimal = require('decimal.js-light');
 Decimal.set({
   precision: 8
@@ -36,7 +36,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         startDate: '2016-05-01',
         endDate: '2016-05-31'
       });
-      const chargeElement = getChargeElement({
+      const chargeElement = createChargeElement({
         ...chargeElementOptions
       });
       expect(doesLineOverlapChargeElementDateRange(returnLine, chargeElement)).to.be.true();
@@ -53,7 +53,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         startDate: '2016-04-01',
         endDate: '2016-04-30'
       });
-      const chargeElement = getChargeElement({
+      const chargeElement = createChargeElement({
         ...chargeElementOptions
       });
       expect(doesLineOverlapChargeElementDateRange(returnLine, chargeElement)).to.be.true();
@@ -70,7 +70,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         startDate: '2016-03-27',
         endDate: '2016-04-02'
       });
-      const chargeElement = getChargeElement({
+      const chargeElement = createChargeElement({
         ...chargeElementOptions
       });
       expect(doesLineOverlapChargeElementDateRange(returnLine, chargeElement)).to.be.true();
@@ -87,7 +87,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         startDate: '2016-05-01',
         endDate: '2016-05-31'
       });
-      const chargeElement = getChargeElement({
+      const chargeElement = createChargeElement({
         ...chargeElementOptions
       });
       expect(doesLineOverlapChargeElementDateRange(returnLine, chargeElement)).to.be.false();
@@ -103,7 +103,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         totalDays: 214,
         billableDays: 214
       };
-      const chargeElement = getChargeElement({
+      const chargeElement = createChargeElement({
         ...chargeElementOptions
       });
       test('returns entire quantity as Decimal', async () => {
@@ -126,7 +126,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         totalDays: 214,
         billableDays: 214
       };
-      const chargeElement = getChargeElement({
+      const chargeElement = createChargeElement({
         ...chargeElementOptions
       });
       test('proRataQuantity will be proportionate to quantity based on overlap', async () => {
@@ -152,7 +152,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
           quantity: 0.02269,
           quantityAllocated: 0
         });
-        const chargeElement = getChargeElement({
+        const chargeElement = createChargeElement({
           effectiveStartDate: '2016-05-01',
           effectiveEndDate: '2017-04-30',
           billableAnnualQuantity: 5.9996,
@@ -175,7 +175,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         quantity: 0.02269,
         quantityAllocated: 0
       });
-      const chargeElement = getChargeElement({
+      const chargeElement = createChargeElement({
         effectiveStartDate: '2016-04-01',
         effectiveEndDate: '2017-03-31',
         actualReturnQuantity: 1.3,
@@ -202,7 +202,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         quantity: 0.02269,
         quantityAllocated: 0
       });
-      const chargeElement = getChargeElement({
+      const chargeElement = createChargeElement({
         effectiveStartDate: '2016-04-01',
         effectiveEndDate: '2017-03-31',
         actualReturnQuantity: 5.99,
@@ -227,7 +227,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         quantity: 0.02269,
         quantityAllocated: 0.02
       });
-      const chargeElement = getChargeElement({
+      const chargeElement = createChargeElement({
         effectiveStartDate: '2016-04-01',
         effectiveEndDate: '2017-03-31',
         actualReturnQuantity: 2,
@@ -254,7 +254,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         quantity: 0.02269,
         quantityAllocated: 0.02269
       });
-      const chargeElement = getChargeElement({
+      const chargeElement = createChargeElement({
         effectiveStartDate: '2016-04-01',
         effectiveEndDate: '2017-03-31',
         actualReturnQuantity: 0,

@@ -1,6 +1,6 @@
 const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
-const { getChargeElement, wrapElementsInVersion } = require('./test-charge-data');
+const { createChargeElement, wrapElementsInVersion } = require('./test-charge-data');
 const { createReturn, createLineData, createMonthlyReturn, createWeeklyReturn, createPurposeData } = require('./test-return-data');
 const sandbox = require('sinon').createSandbox();
 const Decimal = require('decimal.js-light');
@@ -36,7 +36,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
     afterEach(async () => {
       sandbox.restore();
     });
-    const chargeElement = [getChargeElement({
+    const chargeElement = [createChargeElement({
       actualReturnQuantity: 0,
       purposeTertiary: 400
     })];
@@ -78,7 +78,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       abstractionPeriodEndMonth: 9,
       totalDays: 365
     };
-    const unsupportedChargeElement = getChargeElement({
+    const unsupportedChargeElement = createChargeElement({
       ...options,
       chargeElementId: 'unsupported-code-400',
       purposeTertiary: 400,
@@ -86,7 +86,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       billableAnnualQuantity: 3.5,
       billableDays: 182
     });
-    const unsupportedTLChargeElement = getChargeElement({
+    const unsupportedTLChargeElement = createChargeElement({
       ...options,
       chargeElementId: 'unsupported-TL-code-400',
       purposeTertiary: 400,
@@ -95,7 +95,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       timeLimitedEndDate: '2018-09-15',
       billableDays: 160
     });
-    const getNonTptChargeElement = code => getChargeElement({
+    const getNonTptChargeElement = code => createChargeElement({
       ...options,
       chargeElementId: `non-tpt-code-${code}`,
       purposeTertiary: code
@@ -131,14 +131,14 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       expect(secondElement.proRataBillableQuantity).to.be.a.number();
     });
     test('charge elements are sorted by billable days in ascending order', async => {
-      const supportedChargeElement = getChargeElement({
+      const supportedChargeElement = createChargeElement({
         ...options,
         chargeElementId: 'supported-code-420',
         purposeTertiary: 420,
         source: 'supported',
         billableDays: 175
       });
-      const supportedTLChargeElement = getChargeElement({
+      const supportedTLChargeElement = createChargeElement({
         ...options,
         chargeElementId: 'supported-TL-code-420',
         purposeTertiary: 420,
@@ -250,9 +250,9 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
     experiment('no returns exist', async () => {
       test('return chargeElements with null actualReturnQuantity', async () => {
         const chargeElements = [
-          getChargeElement({ chargeElementId: 'charge-element-1' }),
-          getChargeElement({ chargeElementId: 'charge-element-2' }),
-          getChargeElement({ chargeElementId: 'charge-element-3' })
+          createChargeElement({ chargeElementId: 'charge-element-1' }),
+          createChargeElement({ chargeElementId: 'charge-element-2' }),
+          createChargeElement({ chargeElementId: 'charge-element-3' })
         ];
         const returns = [
           createReturn({ status: 'due' }),
@@ -293,8 +293,8 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         periodStartMonth: '4',
         quantityAllocated: 0
       };
-      const chargeElement = [getChargeElement(chargeElementOptions)];
-      const secondChargeElement = getChargeElement({
+      const chargeElement = [createChargeElement(chargeElementOptions)];
+      const secondChargeElement = createChargeElement({
         ...chargeElementOptions,
         purposeTertiary: 380
       });
@@ -387,7 +387,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         periodStartMonth: '4',
         quantityAllocated: 0
       };
-      const chargeElement = [getChargeElement(chargeElementOptions)];
+      const chargeElement = [createChargeElement(chargeElementOptions)];
       test('the full over abstraction amount is put onto the first element', async () => {
         const firstQuantities = [0, 0, 0, 0, 0, 0, 12, 20, 15, 23, 50, 0];
         const secondQuantities = [0, 0, 0, 0, 0, 0, 12, 18, 11, 16, 8, 0];
@@ -442,7 +442,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         authorisedAnnualQuantity: 5
       };
       test('return quantities are not applied outside of the charge element date range', async () => {
-        const chargeElement = [getChargeElement(chargeElementOptions)];
+        const chargeElement = [createChargeElement(chargeElementOptions)];
         const returnOptions = {
           status: 'completed',
           startDate: '2016-04-01',
@@ -470,7 +470,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         expect(matchedChargeElement.error).to.be.null();
       });
       test('does not allocate quantities outside the return abstraction period', async () => {
-        const chargeElement = [getChargeElement({
+        const chargeElement = [createChargeElement({
           ...chargeElementOptions,
           endDate: '2017-03-31'
         })];
@@ -502,7 +502,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         expect(matchedChargeElement.error).to.be.null();
       });
       test('does not allocate quantities outside the charge elements abstraction period', async () => {
-        const chargeElement = [getChargeElement({
+        const chargeElement = [createChargeElement({
           ...chargeElementOptions,
           abstractionPeriodEndDay: '31',
           abstractionPeriodEndMonth: '8'
@@ -536,7 +536,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       experiment('where a charge element ends partway through a return line, pro rata quantity is allocated', async () => {
         test('monthly return', async () => {
           const chargeElement = [{
-            ...getChargeElement(chargeElementOptions),
+            ...createChargeElement(chargeElementOptions),
             endDate: '2017-01-18'
           }];
           const returnOptions = {
@@ -564,7 +564,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         });
         test('weekly return', async () => {
           const chargeElement = [{
-            ...getChargeElement(chargeElementOptions),
+            ...createChargeElement(chargeElementOptions),
             endDate: '2016-07-12'
           }];
           const returnOptions = {
@@ -607,9 +607,9 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         authorisedAnnualQuantity: 1
       };
       test('base element is filled up before other elements', async () => {
-        const chargeElements = [getChargeElement(chargeElementOptions), // pro rata quantity 0.49863
+        const chargeElements = [createChargeElement(chargeElementOptions), // pro rata quantity 0.49863
           {
-            ...getChargeElement(chargeElementOptions),
+            ...createChargeElement(chargeElementOptions),
             timeLimitedStartDate: '2016-04-01',
             timeLimitedEndDate: '2016-05-31',
             endDate: '2016-05-31',
@@ -651,9 +651,9 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         expect(matchedChargeElements[1].error).to.be.null();
       });
       test('first two elements are filled before third', async () => {
-        const chargeElements = [getChargeElement(chargeElementOptions), // pro rata quantity 0.49863
+        const chargeElements = [createChargeElement(chargeElementOptions), // pro rata quantity 0.49863
           {
-            ...getChargeElement(chargeElementOptions),
+            ...createChargeElement(chargeElementOptions),
             timeLimitedStartDate: '2016-04-01',
             timeLimitedEndDate: '2016-05-31',
             endDate: '2016-05-31',
@@ -661,7 +661,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
             billableDays: 60,
             authorisedAnnualQuantity: 1 // pro rata quantity 0.16438
           }, {
-            ...getChargeElement(chargeElementOptions),
+            ...createChargeElement(chargeElementOptions),
             source: 'supported',
             totalDays: 365,
             billableDays: 182,
@@ -707,9 +707,9 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         expect(matchedChargeElements[2].error).to.be.null();
       });
       test('first three elements are filled before fourth', async () => {
-        const chargeElements = [getChargeElement(chargeElementOptions), // pro rata quantity 0.49863
+        const chargeElements = [createChargeElement(chargeElementOptions), // pro rata quantity 0.49863
           {
-            ...getChargeElement(chargeElementOptions),
+            ...createChargeElement(chargeElementOptions),
             timeLimitedStartDate: '2016-04-01',
             timeLimitedEndDate: '2016-05-31',
             endDate: '2016-05-31',
@@ -717,14 +717,14 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
             billableDays: 60,
             authorisedAnnualQuantity: 1 // pro rata quantity 0.16438
           }, {
-            ...getChargeElement(chargeElementOptions),
+            ...createChargeElement(chargeElementOptions),
             source: 'supported',
             totalDays: 365,
             billableDays: 182,
             authorisedAnnualQuantity: 1 // pro rata quantity 0.49863
           },
           {
-            ...getChargeElement(chargeElementOptions),
+            ...createChargeElement(chargeElementOptions),
             timeLimitedStartDate: '2016-04-01',
             timeLimitedEndDate: '2016-05-31',
             source: 'supported',
