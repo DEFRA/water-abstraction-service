@@ -110,6 +110,7 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
     sandbox.stub(documents, 'getDocument');
 
     sandbox.stub(repository.chargeElements, 'findByChargeVersionId').resolves(data.chargeElements);
+    sandbox.stub(repository.chargeVersions, 'findOneById');
   });
 
   afterEach(async () => {
@@ -120,7 +121,7 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
     experiment('when there is 1x document, non-expiring charge version, ', () => {
       beforeEach(async () => {
         documents.getDocuments.resolves(data.singleDocument);
-        sandbox.stub(repository.chargeVersions, 'findOneById').resolves(data.chargeVersions.nonExpiring);
+        repository.chargeVersions.findOneById.resolves(data.chargeVersions.nonExpiring);
       });
 
       experiment('non-expiring licence, 1x licence holder and 1x billing role', () => {
@@ -586,7 +587,7 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
   experiment('when there is 1x document, expiring charge version, ', () => {
     beforeEach(async () => {
       documents.getDocuments.resolves(data.singleDocument);
-      sandbox.stub(repository.chargeVersions, 'findOneById').resolves(data.chargeVersions.expiring);
+      repository.chargeVersions.findOneById.resolves(data.chargeVersions.expiring);
     });
 
     experiment('non-expiring licence, 1x licence holder and 1x billing role', () => {
@@ -666,6 +667,103 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
         const { totalDays, billableDays } = result.data[0].chargeElements[2];
         expect(totalDays).to.equal(365);
         expect(billableDays).to.equal(234);
+      });
+    });
+
+    experiment('when there are 2x documents, non-expiring charge version, ', () => {
+      beforeEach(async () => {
+        documents.getDocuments.resolves(data.multipleDocuments);
+        repository.chargeVersions.findOneById.resolves(data.chargeVersions.nonExpiring);
+      });
+
+      experiment('non-expiring licence, 1x licence holder and 1x billing role', () => {
+        beforeEach(async () => {
+          documents.getDocument.withArgs(data.multipleDocuments[0].documentId).resolves({
+            documentRef: '01/123',
+            startDate: '1993-02-12',
+            endDate: '2018-06-01',
+            documentRoles: [
+              createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: null }),
+              createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
+            ]
+          });
+
+          documents.getDocument.withArgs(data.multipleDocuments[1].documentId).resolves({
+            documentRef: '01/123',
+            startDate: '2018-06-02',
+            endDate: null,
+            documentRoles: [
+              createLicenceHolderRole(companyA, { startDate: '2018-06-02', endDate: null }),
+              createBillingRole(companyA, invoiceAccountA, { startDate: '2018-06-02', endDate: null })
+            ]
+          });
+
+          result = await processCharges(2019, chargeVersionId);
+        });
+
+        test('there is no error', async () => {
+          expect(result.error).to.equal(null);
+        });
+
+        test('there is a single charge date range', async () => {
+          expect(result.data).to.have.length(1);
+        });
+
+        test('the charge date range covers the financial year ending 2019', async () => {
+          expect(result.data[0].startDate).to.equal('2018-04-01');
+          expect(result.data[0].endDate).to.equal('2019-03-31');
+        });
+
+        test('the first charge element has the correct ID', async () => {
+          const { chargeElementId } = result.data[0].chargeElements[0];
+          expect(chargeElementId).to.equal(chargeElement1);
+        });
+
+        test('the first charge element covers the correct charge period', async () => {
+          const { startDate, endDate } = result.data[0].chargeElements[0];
+          expect(startDate).to.equal('2018-04-01');
+          expect(endDate).to.equal('2019-03-31');
+        });
+
+        test('the first charge element has the correct pro-rata billable days', async () => {
+          const { totalDays, billableDays } = result.data[0].chargeElements[0];
+          expect(totalDays).to.equal(276);
+          expect(billableDays).to.equal(276);
+        });
+
+        test('the second charge element has the correct ID', async () => {
+          const { chargeElementId } = result.data[0].chargeElements[1];
+          expect(chargeElementId).to.equal(chargeElement2);
+        });
+
+        test('the second charge element covers the correct charge period', async () => {
+          const { startDate, endDate } = result.data[0].chargeElements[1];
+          expect(startDate).to.equal('2018-04-01');
+          expect(endDate).to.equal('2019-03-31');
+        });
+
+        test('the second charge element is all year', async () => {
+          const { totalDays, billableDays } = result.data[0].chargeElements[1];
+          expect(totalDays).to.equal(365);
+          expect(billableDays).to.equal(365);
+        });
+
+        test('the third charge element has the correct ID', async () => {
+          const { chargeElementId } = result.data[0].chargeElements[2];
+          expect(chargeElementId).to.equal(chargeElement3);
+        });
+
+        test('the third charge element period respects the time-limited end date', async () => {
+          const { startDate, endDate } = result.data[0].chargeElements[2];
+          expect(startDate).to.equal('2018-04-01');
+          expect(endDate).to.equal('2018-11-20');
+        });
+
+        test('the third charge element is all year, and respects the time-limited end date 2018-11-20', async () => {
+          const { totalDays, billableDays } = result.data[0].chargeElements[2];
+          expect(totalDays).to.equal(365);
+          expect(billableDays).to.equal(234);
+        });
       });
     });
   });

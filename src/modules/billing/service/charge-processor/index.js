@@ -1,4 +1,4 @@
-const { get, flatMap, groupBy, cloneDeep, each } = require('lodash');
+const { get, flatMap, groupBy, cloneDeep, each, last } = require('lodash');
 
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(require('moment'));
@@ -228,6 +228,17 @@ const processInvoiceAccounts = (data, docs) => {
 };
 
 /**
+ * Gets the date range covered by the list of documents.  This is the start date
+ * of the first document, and the end date of the last document in the list.
+ * @param {Array} docs - an array of documents returned from CRM
+ * @return {Object}
+ */
+const getDocumentDateRange = docs => ({
+  startDate: docs[0].startDate,
+  endDate: last(docs).endDate
+});
+
+/**
  * @TODO handle two-part billing summer/winter
  * @TODO split by licence-level agreements - TPT/canal
  *
@@ -249,7 +260,7 @@ const processCharges = async (year, chargeVersionId, isTwoPart = false, isSummer
   const docs = await getCRMDocuments(chargeVersion.licenceRef);
 
   // Calculate the valid date range for this licence
-  const documentDateRange = dateHelpers.getSmallestDateRange(docs);
+  const documentDateRange = getDocumentDateRange(docs);
 
   // Constrain charge version dates by financial year
   const dateRange = dateHelpers.getSmallestDateRange([
