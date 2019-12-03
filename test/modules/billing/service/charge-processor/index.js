@@ -309,6 +309,10 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
             range = result.data[0];
           });
 
+          test('the invoice account relates to the first billing role', async () => {
+            expect(range.invoiceAccount.invoiceAccount.invoiceAccountNumber).to.equal(invoiceAccountA);
+          });
+
           test('the charge date range ends on the billing role end date', async () => {
             expect(range.startDate).to.equal('2018-04-01');
             expect(range.endDate).to.equal('2018-06-01');
@@ -365,6 +369,159 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
 
           beforeEach(async () => {
             range = result.data[1];
+          });
+
+          test('the invoice account relates to the second billing role', async () => {
+            expect(range.invoiceAccount.invoiceAccount.invoiceAccountNumber).to.equal(invoiceAccountB);
+          });
+
+          test('the charge date range starts on the second billing role start date and ends on the licence end date', async () => {
+            expect(range.startDate).to.equal('2018-06-02');
+            expect(range.endDate).to.equal('2018-10-31');
+          });
+
+          test('the first charge element has the correct ID', async () => {
+            const { chargeElementId } = range.chargeElements[0];
+            expect(chargeElementId).to.equal(chargeElement1);
+          });
+
+          test('the first charge element covers the correct charge period', async () => {
+            const { startDate, endDate } = range.chargeElements[0];
+            expect(startDate).to.equal('2018-06-02');
+            expect(endDate).to.equal('2018-10-31');
+          });
+
+          test('the first charge element has the correct pro-rata billable days', async () => {
+            const { totalDays, billableDays } = range.chargeElements[0];
+            expect(totalDays).to.equal(276);
+            expect(billableDays).to.equal(152);
+          });
+
+          test('the second charge element has the correct ID', async () => {
+            const { chargeElementId } = range.chargeElements[1];
+            expect(chargeElementId).to.equal(chargeElement2);
+          });
+
+          test('the second charge element is all year', async () => {
+            const { totalDays, billableDays } = range.chargeElements[1];
+            expect(totalDays).to.equal(365);
+            expect(billableDays).to.equal(152);
+          });
+
+          test('the third charge element has the correct ID', async () => {
+            const { chargeElementId } = range.chargeElements[2];
+            expect(chargeElementId).to.equal(chargeElement3);
+          });
+
+          test('the third charge element period covers the correct charge period', async () => {
+            const { startDate, endDate } = range.chargeElements[2];
+            expect(startDate).to.equal('2018-06-02');
+            expect(endDate).to.equal('2018-10-31');
+          });
+
+          test('the third charge element is all year, and the billing role ends before the time-limited end date', async () => {
+            const { totalDays, billableDays } = range.chargeElements[2];
+            expect(totalDays).to.equal(365);
+            expect(billableDays).to.equal(152);
+          });
+        });
+      });
+
+      experiment('expiring licence, 2x licence holder and 1x billing roles', () => {
+        beforeEach(async () => {
+          documents.getDocument.withArgs(data.singleDocument[0].documentId).resolves({
+            documentRef: '01/123',
+            startDate: '1993-02-12',
+            endDate: '2018-10-31',
+            documentRoles: [
+              createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: '2018-06-01' }),
+              createLicenceHolderRole(companyB, { startDate: '2018-06-02', endDate: null }),
+              createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
+            ]
+          });
+
+          result = await processCharges(2019, chargeVersionId);
+        });
+
+        test('there is no error', async () => {
+          expect(result.error).to.equal(null);
+        });
+
+        test('there is a charge date range for each invoice account', async () => {
+          expect(result.data).to.have.length(2);
+        });
+
+        experiment('for the first charge date range', () => {
+          let range;
+
+          beforeEach(async () => {
+            range = result.data[0];
+          });
+
+          test('the licence holder relates to the first billing role', async () => {
+            expect(range.licenceHolder.company.companyId).to.equal(companyA);
+          });
+
+          test('the charge date range ends on the billing role end date', async () => {
+            expect(range.startDate).to.equal('2018-04-01');
+            expect(range.endDate).to.equal('2018-06-01');
+          });
+
+          test('the first charge element has the correct ID', async () => {
+            const { chargeElementId } = range.chargeElements[0];
+            expect(chargeElementId).to.equal(chargeElement1);
+          });
+
+          test('the first charge element covers the correct charge period', async () => {
+            const { startDate, endDate } = range.chargeElements[0];
+            expect(startDate).to.equal('2018-04-01');
+            expect(endDate).to.equal('2018-06-01');
+          });
+
+          test('the first charge element has the correct pro-rata billable days', async () => {
+            const { totalDays, billableDays } = range.chargeElements[0];
+            expect(totalDays).to.equal(276);
+            expect(billableDays).to.equal(32);
+          });
+
+          test('the second charge element has the correct ID', async () => {
+            const { chargeElementId } = range.chargeElements[1];
+            expect(chargeElementId).to.equal(chargeElement2);
+          });
+
+          test('the second charge element is all year', async () => {
+            const { totalDays, billableDays } = range.chargeElements[1];
+            expect(totalDays).to.equal(365);
+            expect(billableDays).to.equal(62);
+          });
+
+          test('the third charge element has the correct ID', async () => {
+            const { chargeElementId } = range.chargeElements[2];
+            expect(chargeElementId).to.equal(chargeElement3);
+          });
+
+          test('the third charge element period covers the correct charge period', async () => {
+            const { startDate, endDate } = range.chargeElements[2];
+            expect(startDate).to.equal('2018-04-01');
+            expect(endDate).to.equal('2018-06-01');
+          });
+
+          test('the third charge element is all year, and the billing role ends before the time-limited end date', async () => {
+            const { totalDays, billableDays } = range.chargeElements[2];
+            expect(totalDays).to.equal(365);
+            expect(billableDays).to.equal(62);
+          });
+        });
+
+        experiment('for the second charge date range', () => {
+          let range;
+
+          beforeEach(async () => {
+            range = result.data[1];
+          });
+
+          test('the licence holder relates to the first billing role', async () => {
+            expect(range.licenceHolder.company.companyId).to.equal(companyB);
           });
 
           test('the charge date range starts on the second billing role start date and ends on the licence end date', async () => {
