@@ -143,23 +143,53 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
           expect(result.data[0].endDate).to.equal('2019-03-31');
         });
 
-        test('the first charge element covers 1 May - 31 Jan', async () => {
-          const { chargeElementId, totalDays, billableDays } = result.data[0].chargeElements[0];
+        test('the first charge element has the correct ID', async () => {
+          const { chargeElementId } = result.data[0].chargeElements[0];
           expect(chargeElementId).to.equal(chargeElement1);
+        });
+
+        test('the first charge element covers the correct charge period', async () => {
+          const { startDate, endDate } = result.data[0].chargeElements[0];
+          expect(startDate).to.equal('2018-04-01');
+          expect(endDate).to.equal('2019-03-31');
+        });
+
+        test('the first charge element has the correct pro-rata billable days', async () => {
+          const { totalDays, billableDays } = result.data[0].chargeElements[0];
           expect(totalDays).to.equal(276);
           expect(billableDays).to.equal(276);
         });
 
-        test('the second charge element is all year', async () => {
-          const { chargeElementId, totalDays, billableDays } = result.data[0].chargeElements[1];
+        test('the second charge element has the correct ID', async () => {
+          const { chargeElementId } = result.data[0].chargeElements[1];
           expect(chargeElementId).to.equal(chargeElement2);
+        });
+
+        test('the second charge element covers the correct charge period', async () => {
+          const { startDate, endDate } = result.data[0].chargeElements[1];
+          expect(startDate).to.equal('2018-04-01');
+          expect(endDate).to.equal('2019-03-31');
+        });
+
+        test('the second charge element is all year', async () => {
+          const { totalDays, billableDays } = result.data[0].chargeElements[1];
           expect(totalDays).to.equal(365);
           expect(billableDays).to.equal(365);
         });
 
-        test('the third charge element is all year, with time-limited end date 2018-11-20', async () => {
-          const { chargeElementId, totalDays, billableDays } = result.data[0].chargeElements[2];
+        test('the third charge element has the correct ID', async () => {
+          const { chargeElementId } = result.data[0].chargeElements[2];
           expect(chargeElementId).to.equal(chargeElement3);
+        });
+
+        test('the third charge element period respects the time-limited end date', async () => {
+          const { startDate, endDate } = result.data[0].chargeElements[2];
+          expect(startDate).to.equal('2018-04-01');
+          expect(endDate).to.equal('2018-11-20');
+        });
+
+        test('the third charge element is all year, and respects the time-limited end date 2018-11-20', async () => {
+          const { totalDays, billableDays } = result.data[0].chargeElements[2];
           expect(totalDays).to.equal(365);
           expect(billableDays).to.equal(234);
         });
