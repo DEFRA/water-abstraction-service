@@ -245,15 +245,19 @@ const processCharges = async (year, chargeVersionId, isTwoPart = false, isSummer
     return { error: ERROR_CHARGE_VERSION_NOT_FOUND, data: null };
   }
 
+  // Load CRM docs
+  const docs = await getCRMDocuments(chargeVersion.licenceRef);
+
+  // Calculate the valid date range for this licence
+  const documentDateRange = dateHelpers.getSmallestDateRange(docs);
+
   // Constrain charge version dates by financial year
   const dateRange = dateHelpers.getSmallestDateRange([
     financialYear,
-    chargeVersion
+    chargeVersion,
+    documentDateRange
   ]);
   let data = { chargeVersion, financialYear, ...dateRange, isTwoPart, isSummer };
-
-  // Load CRM docs
-  const docs = await getCRMDocuments(chargeVersion.licenceRef);
 
   // Process and split into date ranges
   data = processLicenceHolders(data, docs);
