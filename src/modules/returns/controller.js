@@ -175,7 +175,7 @@ const getUploadPreviewReturn = async (request, h) => {
     }
 
     // Validate JSON data, and fetch return from return service
-    const [ validated, response ] = await Promise.all([
+    const [validated, response] = await Promise.all([
       uploadValidator.validate([match], companyId),
       returnsConnector.returns.findOne(returnId)
     ]);
@@ -238,7 +238,7 @@ const postUploadSubmit = async (request, h) => {
   try {
     // Check event status is 'validated'
     if (!isValidatedEvent(request.evt)) {
-      throw Boom.badRequest(`Event status not 'validated'`);
+      throw Boom.badRequest('Event status not \'validated\'');
     }
 
     // Validate data in JSON
@@ -248,7 +248,7 @@ const postUploadSubmit = async (request, h) => {
 
     // Check 1+ valid returns
     if (valid.length < 1) {
-      throw Boom.badRequest(`No valid returns found in submission`);
+      throw Boom.badRequest('No valid returns found in submission');
     }
 
     // Update event

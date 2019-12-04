@@ -41,7 +41,7 @@ const throwIfUnauthorised = (documentHeader, companyId) => {
     return;
   }
   if (documentHeader.company_entity_id !== companyId) {
-    throw Boom.unauthorized(`Unauthorised to view licence data`, {
+    throw Boom.unauthorized('Unauthorised to view licence data', {
       companyId,
       documentId: documentHeader.document_id
     });

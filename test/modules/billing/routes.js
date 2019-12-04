@@ -38,7 +38,7 @@ experiment('modules/billing/routes', () => {
           userEmail: 'charging@example.com',
           regionId: '054517f2-be00-4505-a3cc-df65a89cd8e1',
           batchType: 'annual',
-          financialYear: 2019,
+          financialYearEnding: 2019,
           season: 'summer'
         }
       };
@@ -86,13 +86,13 @@ experiment('modules/billing/routes', () => {
     });
 
     test('returns a 400 if the financialYear is not a number', async () => {
-      request.payload.financialYear = false;
+      request.payload.financialYearEnding = false;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     test('returns a 400 if the financialYear is omitted', async () => {
-      delete request.payload.financialYear;
+      delete request.payload.financialYearEnding;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
@@ -105,6 +105,84 @@ experiment('modules/billing/routes', () => {
 
     test('returns a 400 if the season is omitted', async () => {
       delete request.payload.season;
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+  });
+
+  experiment('getBatch', () => {
+    let request;
+    let server;
+    let validId;
+
+    beforeEach(async () => {
+      server = getServer(routes.getBatch);
+      validId = '00000000-0000-0000-0000-000000000000';
+      request = {
+        method: 'GET',
+        url: `/water/1.0/billing/batches/${validId}`
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the batch id is not a uuid', async () => {
+      request.url = request.url.replace(validId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+  });
+
+  experiment('getBatchInvoices', () => {
+    let request;
+    let server;
+    let validId;
+
+    beforeEach(async () => {
+      server = getServer(routes.getBatchInvoices);
+      validId = '00000000-0000-0000-0000-000000000000';
+      request = {
+        method: 'GET',
+        url: `/water/1.0/billing/batches/${validId}/invoices`
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the batch id is not a uuid', async () => {
+      request.url = request.url.replace(validId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+  });
+
+  experiment('getInvoiceDetail', () => {
+    let request;
+    let server;
+    let validId;
+
+    beforeEach(async () => {
+      server = getServer(routes.getInvoiceDetail);
+      validId = '00000000-0000-0000-0000-000000000000';
+      request = {
+        method: 'GET',
+        url: `/water/1.0/billing/invoices/${validId}`
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the batch id is not a uuid', async () => {
+      request.url = request.url.replace(validId, '123');
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });

@@ -93,7 +93,7 @@ async function scheduleSendEvent (messageQueue, row, now) {
   const startIn = Math.round(moment(row.send_after).diff(moment(now)) / 1000);
 
   const options = {
-    startIn,
+    startAfter: row.send_after,
     singletonKey: row.id,
     priority,
     expireIn: '1 day'
@@ -132,11 +132,11 @@ const createEnqueue = messageQueue => {
     const { value: data, error } = validateEnqueueOptions(options, now);
 
     if (error) {
-      throw Boom.badRequest(`Invalid message enqueue options`, error);
+      throw Boom.badRequest('Invalid message enqueue options', error);
     }
 
     // For non-PDF  messages, generate preview and add to data
-    let row = isPdf(options.messageRef) ? data : await getNotifyPreview(data);
+    const row = isPdf(options.messageRef) ? data : await getNotifyPreview(data);
 
     // Persist row to scheduled_notification table
     const dbRow = await createFromObject(row);
@@ -155,10 +155,9 @@ const registerSendSubscriber = messageQueue => {
 
     try {
       await sendAndRetry(id);
-      return done();
     } catch (err) {
       logger.error('Failed to send', err);
-      return done(err);
+      throw err;
     }
   });
 };

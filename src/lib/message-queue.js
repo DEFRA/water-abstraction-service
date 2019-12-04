@@ -23,3 +23,11 @@ boss.on('error', error => {
 });
 
 module.exports = boss;
+module.exports.plugin = {
+  name: 'hapiPgBoss',
+  register: async server => {
+    await boss.start();
+    server.decorate('server', 'messageQueue', boss);
+    server.decorate('request', 'messageQueue', boss);
+  }
+};

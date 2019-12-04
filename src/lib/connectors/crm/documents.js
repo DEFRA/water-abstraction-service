@@ -35,14 +35,14 @@ client.getRegisteredLicences = async function () {
   };
 
   // Get first page of results
-  let { error, data, pagination } = await getRegisteredLicencePage(1);
+  const { error, data, pagination } = await getRegisteredLicencePage(1);
 
   if (error) {
     throw error;
   }
 
   for (let i = 2; i <= pagination.pageCount; i++) {
-    let { data: nextPage, error: nextError } = await getRegisteredLicencePage(i);
+    const { data: nextPage, error: nextError } = await getRegisteredLicencePage(i);
     if (nextError) {
       throw nextError;
     }

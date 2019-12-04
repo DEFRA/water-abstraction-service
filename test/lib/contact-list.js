@@ -62,18 +62,22 @@ experiment('getPreferredContact', () => {
 
   test('It should select preferred contact by role', async () => {
     const contact = getPreferredContact(contacts, ['licence_holder', 'returns_contact']);
-    expect(contact).to.equal({ name: 'Bob',
+    expect(contact).to.equal({
+      name: 'Bob',
       address_line_1: 'Daisy Farm',
       postcode: 'DD1 1DD',
-      role: 'licence_holder' });
+      role: 'licence_holder'
+    });
   });
 
   test('It should select preferred contact by role', async () => {
     const contact = getPreferredContact(contacts, ['returns_contact', 'licence_holder']);
-    expect(contact).to.equal({ name: 'Dave',
+    expect(contact).to.equal({
+      name: 'Dave',
       address_line_1: 'Buttercup Farm',
       postcode: 'BB1 1BB',
-      role: 'returns_contact' });
+      role: 'returns_contact'
+    });
   });
 
   test('It should return nothing if no contact found', async () => {

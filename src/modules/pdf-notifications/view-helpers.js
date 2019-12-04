@@ -35,7 +35,7 @@ const chunkPages = (data, itemsPerColumn, columnsPerPage) => {
 
 const paginateDailyReturnLines = (startDate, endDate) => {
   const months = [];
-  let datePtr = moment(startDate);
+  const datePtr = moment(startDate);
   const end = moment(endDate).endOf('month');
 
   do {
@@ -50,7 +50,7 @@ const paginateDailyReturnLines = (startDate, endDate) => {
 };
 
 const paginateWeeklyReturnLines = (startDate, endDate) => {
-  let datePtr = naldDates.getWeek(startDate).end;
+  const datePtr = naldDates.getWeek(startDate).end;
   const end = naldDates.getWeek(endDate).end;
   const dates = [];
   do {
@@ -63,7 +63,7 @@ const paginateWeeklyReturnLines = (startDate, endDate) => {
 
 const paginateMonthlyReturnLines = (startDate, endDate) => {
   const months = [];
-  let datePtr = moment(startDate).endOf('month');
+  const datePtr = moment(startDate).endOf('month');
   const end = moment(endDate).endOf('month');
 
   do {

@@ -10,7 +10,7 @@ const { logger } = require('../../logger');
  * https://crontab.guru/#0_2_*_*_*
  */
 cron.schedule('0 2 * * *', () => {
-  logger.info(`Starting AR licence refresh`);
+  logger.info('Starting AR licence refresh');
   updateLicence.updateAllLicences();
 });
 

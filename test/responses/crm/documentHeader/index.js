@@ -68,23 +68,23 @@ const singleResponse = () => ({
 
 const multipleDocumentUsers = () => {
   return {
-    'data': [
+    data: [
       {
-        'entityId': 'individal_entity_id_1',
-        'roles': [
+        entityId: 'individal_entity_id_1',
+        roles: [
           'user'
         ],
-        'entityName': 'jane@example.com'
+        entityName: 'jane@example.com'
       },
       {
-        'entityId': 'individal_entity_id_2',
-        'roles': [
+        entityId: 'individal_entity_id_2',
+        roles: [
           'primary_user'
         ],
-        'entityName': 'john@example.com'
+        entityName: 'john@example.com'
       }
     ],
-    'error': null
+    error: null
   };
 };
 

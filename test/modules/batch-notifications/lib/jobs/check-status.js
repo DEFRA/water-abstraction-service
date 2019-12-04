@@ -68,7 +68,7 @@ experiment('checkStatus job', () => {
       });
 
       test('logs the error', async () => {
-        const [ msg, error, params ] = logger.error.lastCall.args;
+        const [msg, error, params] = logger.error.lastCall.args;
         expect(msg).to.be.a.string();
         expect(error).to.equal(err);
         expect(params).to.equal({ messageId });
@@ -89,7 +89,7 @@ experiment('checkStatus job', () => {
         expect(args).to.equal([notifyId]);
       });
       test('updates scheduled_notification with new status and next check times', async () => {
-        const [ filter, data ] = scheduledNotifications.repository.update.lastCall.args;
+        const [filter, data] = scheduledNotifications.repository.update.lastCall.args;
         expect(filter).to.equal({ id: messageId });
         expect(data.next_status_check).to.be.a.string();
         expect(data.status_checks).to.be.a.number();

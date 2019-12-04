@@ -19,7 +19,7 @@ experiment('getNotificationsForLicence', () => {
 
     await getNotificationsForLicence(licenceRef);
 
-    const [ query, params ] = pool.query.firstCall.args;
+    const [query, params] = pool.query.firstCall.args;
 
     expect(query).to.be.a.string();
     expect(params).to.equal(['"' + licenceRef + '"']);

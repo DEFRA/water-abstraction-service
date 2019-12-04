@@ -108,13 +108,13 @@ experiment('batch notifications notify connector', () => {
 
     test('generates a filename for the S3 bucket', async () => {
       await notifyConnector._uploadPDFToS3(message);
-      const [ filename ] = s3Connector.upload.lastCall.args;
+      const [filename] = s3Connector.upload.lastCall.args;
       expect(filename).to.equal('pdf-letters/message-1.pdf');
     });
 
     test('provides the PDF data to the S3 uploader', async () => {
       await notifyConnector._uploadPDFToS3(message, testPdf);
-      const [ , pdf ] = s3Connector.upload.lastCall.args;
+      const [, pdf] = s3Connector.upload.lastCall.args;
       expect(pdf).to.equal(testPdf);
     });
   });
@@ -126,21 +126,21 @@ experiment('batch notifications notify connector', () => {
 
     test('calls createPdf with the message ID', async () => {
       await notifyConnector._sendPDF(client, message);
-      const [ id ] = pdfCreator.createPdf.lastCall.args;
+      const [id] = pdfCreator.createPdf.lastCall.args;
       expect(id).to.equal(message.id);
     });
 
     test('uploads PDF to S3', async () => {
       await notifyConnector._sendPDF(client, message);
-      const [ fileName, pdf ] = s3Connector.upload.lastCall.args;
-      expect(fileName).to.equal(`pdf-letters/message_1.pdf`);
+      const [fileName, pdf] = s3Connector.upload.lastCall.args;
+      expect(fileName).to.equal('pdf-letters/message_1.pdf');
       expect(pdf).to.equal(testPdf);
     });
 
     test('sends PDF as letter via Notify', async () => {
       await notifyConnector._sendPDF(client, message);
       expect(client.sendPrecompiledLetter.callCount).to.equal(1);
-      const [ notifyReference, pdf ] = client.sendPrecompiledLetter.lastCall.args;
+      const [notifyReference, pdf] = client.sendPrecompiledLetter.lastCall.args;
       expect(notifyReference).to.be.a.string();
       expect(pdf).to.equal(testPdf);
     });
@@ -155,7 +155,7 @@ experiment('batch notifications notify connector', () => {
     test('sends letter using Notify client', async () => {
       await notifyConnector._sendLetter(client, message);
       expect(client.sendLetter.callCount).to.equal(1);
-      const [ templateId, options ] = client.sendLetter.lastCall.args;
+      const [templateId, options] = client.sendLetter.lastCall.args;
       expect(templateId).to.equal('d31d05d3-66fe-4203-8626-22e63f9bccd6');
       expect(options).to.equal({
         personalisation: message.personalisation
@@ -172,7 +172,7 @@ experiment('batch notifications notify connector', () => {
     test('sends email using Notify client', async () => {
       await notifyConnector._sendEmail(client, message);
       expect(client.sendEmail.callCount).to.equal(1);
-      const [ templateId, recipient, options ] = client.sendEmail.lastCall.args;
+      const [templateId, recipient, options] = client.sendEmail.lastCall.args;
       expect(templateId).to.equal('d31d05d3-66fe-4203-8626-22e63f9bccd6');
       expect(recipient).to.equal('mail@example.com');
       expect(options).to.equal({

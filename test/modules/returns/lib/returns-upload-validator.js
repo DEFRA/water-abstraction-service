@@ -20,7 +20,7 @@ experiment('batchProcess', () => {
     await returnsUploadValidator.batchProcess(data, 2, iteratee, 'a', 'b');
 
     expect(iteratee.callCount).to.equal(2);
-    expect(iteratee.firstCall.args).to.equal([ [ 0, 1 ], 'a', 'b' ]);
+    expect(iteratee.firstCall.args).to.equal([[0, 1], 'a', 'b']);
     expect(iteratee.secondCall.args).to.equal([[2, 3], 'a', 'b']);
   });
 

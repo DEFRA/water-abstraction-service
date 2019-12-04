@@ -98,7 +98,7 @@ async function run (config) {
   }
 
   const errors = [];
-  for (let row of rows) {
+  for (const row of rows) {
     const { error } = await processEvent(row);
     if (error) {
       errors.push(error);

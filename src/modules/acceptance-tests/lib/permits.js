@@ -75,7 +75,7 @@ const getLicenceData = (licenceRef, startDate, endDate) => {
           ID: '9000007',
           LANDS: 'Boldly outlined on map',
           NOTES: 'null',
-          purpose: [ testPurpose ],
+          purpose: [testPurpose],
           ...testQuanties,
           PERIOD_ST_DAY: '1',
           purposePoints: [
@@ -240,7 +240,7 @@ const getLicenceData = (licenceRef, startDate, endDate) => {
             ID: '9000030',
             LANDS: 'Boldly outlined on map',
             NOTES: 'null',
-            purpose: [ testPurpose ],
+            purpose: [testPurpose],
             ...testQuanties,
             PERIOD_ST_DAY: '1',
             purposePoints: [

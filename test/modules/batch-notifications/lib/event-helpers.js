@@ -40,7 +40,7 @@ const eventKeys = [
   'metadata',
   'status',
   'created',
-  'modified' ];
+  'modified'];
 
 experiment('batch notifications event helpers', () => {
   beforeEach(async () => {
@@ -123,7 +123,7 @@ experiment('batch notifications event helpers', () => {
 
     test('should save the event with the new status', async () => {
       await updateEventStatus('testEventId', 'newStatus');
-      const [ ev ] = evt.save.firstCall.args;
+      const [ev] = evt.save.firstCall.args;
       expect(ev.eventId).to.equal('testEventId');
       expect(ev.status).to.equal('newStatus');
     });
@@ -145,19 +145,19 @@ experiment('batch notifications event helpers', () => {
 
     test('should mark the event as processed', async () => {
       await markAsProcessed('testEventId', licenceNumbers, recipients);
-      const [ ev ] = evt.save.lastCall.args;
+      const [ev] = evt.save.lastCall.args;
       expect(ev.status).to.equal(EVENT_STATUS_PROCESSED);
     });
 
     test('should record the affected licence numbers', async () => {
       await markAsProcessed('testEventId', licenceNumbers, recipients);
-      const [ ev ] = evt.save.lastCall.args;
+      const [ev] = evt.save.lastCall.args;
       expect(ev.licences).to.equal(licenceNumbers);
     });
 
     test('should update the event metadata', async () => {
       await markAsProcessed('testEventId', licenceNumbers, recipients);
-      const [ ev ] = evt.save.lastCall.args;
+      const [ev] = evt.save.lastCall.args;
       expect(ev.metadata.sent).to.equal(0);
       expect(ev.metadata.error).to.equal(0);
       expect(ev.metadata.recipients).to.equal(recipients);
@@ -165,7 +165,7 @@ experiment('batch notifications event helpers', () => {
 
     test('should not alter existing metadata', async () => {
       await markAsProcessed('testEventId', licenceNumbers, recipients);
-      const [ ev ] = evt.save.lastCall.args;
+      const [ev] = evt.save.lastCall.args;
       expect(ev.metadata.foo).to.equal('bar');
     });
   });
@@ -194,7 +194,7 @@ experiment('batch notifications event helpers', () => {
 
       await refreshEventStatus('testId');
 
-      const [ ev ] = evt.save.lastCall.args;
+      const [ev] = evt.save.lastCall.args;
 
       expect(ev.status).to.equal(EVENT_STATUS_SENDING);
       expect(ev.metadata.sent).to.equal(5);
@@ -211,7 +211,7 @@ experiment('batch notifications event helpers', () => {
 
       await refreshEventStatus('testId');
 
-      const [ ev ] = evt.save.lastCall.args;
+      const [ev] = evt.save.lastCall.args;
       expect(ev.status).to.equal(EVENT_STATUS_COMPLETED);
     });
 

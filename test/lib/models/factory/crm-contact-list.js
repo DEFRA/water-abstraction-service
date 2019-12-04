@@ -9,22 +9,22 @@ const {
 } = require('../../../../src/lib/models/contact');
 
 const createContact = role => ({
-  'entity_id': null,
-  'source': 'nald',
-  'email': null,
-  'role': role,
-  'address_1': 'Daisy meadow farm',
-  'address_2': 'Buttercup road',
-  'address_3': 'Big stony hill',
-  'address_4': 'Little test',
-  'initials': null,
-  'name': 'Daisy Farms Estate Company',
-  'town': 'Testing',
-  'county': 'TESTINGSHIRE',
-  'country': 'UK',
-  'forename': null,
-  'postcode': 'TT1 1TT',
-  'salutation': null
+  entity_id: null,
+  source: 'nald',
+  email: null,
+  role: role,
+  address_1: 'Daisy meadow farm',
+  address_2: 'Buttercup road',
+  address_3: 'Big stony hill',
+  address_4: 'Little test',
+  initials: null,
+  name: 'Daisy Farms Estate Company',
+  town: 'Testing',
+  county: 'TESTINGSHIRE',
+  country: 'UK',
+  forename: null,
+  postcode: 'TT1 1TT',
+  salutation: null
 });
 
 const createLicenceHolder = () => createContact('licence_holder');

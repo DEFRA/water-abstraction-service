@@ -93,7 +93,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
 
       test('contains the correct personalisation fields', async () => {
         expect(Object.keys(result.personalisation)).only.include(
-          [ 'periodStartDate',
+          ['periodStartDate',
             'periodEndDate',
             'returnDueDate',
             'name',
@@ -103,7 +103,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
             'address_line_3',
             'address_line_4',
             'address_line_5',
-            'address_line_6' ]
+            'address_line_6']
         );
       });
     });
@@ -122,7 +122,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
 
       test('contains the correct personalisation fields', async () => {
         expect(Object.keys(result.personalisation)).only.include(
-          [ 'periodStartDate',
+          ['periodStartDate',
             'periodEndDate',
             'returnDueDate',
             'name',
@@ -132,7 +132,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
             'address_line_3',
             'address_line_4',
             'address_line_5',
-            'address_line_6' ]
+            'address_line_6']
         );
       });
     });
@@ -151,9 +151,9 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
 
       test('contains the correct personalisation fields', async () => {
         expect(Object.keys(result.personalisation)).only.include(
-          [ 'periodStartDate',
+          ['periodStartDate',
             'periodEndDate',
-            'returnDueDate' ]
+            'returnDueDate']
         );
       });
     });
@@ -172,9 +172,9 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
 
       test('contains the correct personalisation fields', async () => {
         expect(Object.keys(result.personalisation)).only.include(
-          [ 'periodStartDate',
+          ['periodStartDate',
             'periodEndDate',
-            'returnDueDate' ]
+            'returnDueDate']
         );
       });
     });

@@ -359,7 +359,7 @@ experiment('mapXml', () => {
     '123abc': 1
   };
   let mappedReturn;
-  let today = '2019-01-01';
+  const today = '2019-01-01';
 
   beforeEach(async () => {
     const file = await getTestFile('single-yearly-return');

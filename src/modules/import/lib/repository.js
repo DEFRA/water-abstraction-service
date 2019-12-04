@@ -70,7 +70,7 @@ class Repository {
     const chunks = chunk(insertData, maxRows);
     const result = { rows: [], rowCount: 0 };
 
-    for (let batch of chunks) {
+    for (const batch of chunks) {
       const { rows, rowCount } = await this.persistBatch(batch, columns);
       result.rows.push(...rows);
       result.rowCount += rowCount;

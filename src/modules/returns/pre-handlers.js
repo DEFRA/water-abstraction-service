@@ -12,7 +12,7 @@ const preLoadEvent = async (request, h) => {
   // Load event - 404 if not found
   const evt = await event.load(eventId);
   if (!evt) {
-    throw Boom.notFound(`Return upload event not found`, { eventId });
+    throw Boom.notFound('Return upload event not found', { eventId });
   }
 
   request.evt = evt;
@@ -44,7 +44,7 @@ const preCheckIssuer = async (request, h) => {
   const { eventId } = evt;
   const { userName } = request.query;
   if (evt.issuer !== userName) {
-    throw Boom.unauthorized(`Return upload permission denied`, { eventId, userName });
+    throw Boom.unauthorized('Return upload permission denied', { eventId, userName });
   }
   return h.continue;
 };

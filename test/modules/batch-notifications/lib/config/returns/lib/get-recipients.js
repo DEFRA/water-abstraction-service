@@ -62,7 +62,7 @@ experiment('getRecipients', () => {
   test('finds due returns and contacts excluding any specified licence numbers', async () => {
     await getRecipients(jobData);
     expect(notificationContacts.getReturnContacts.callCount).to.equal(1);
-    const [ excluded ] = notificationContacts.getReturnContacts.lastCall.args;
+    const [excluded] = notificationContacts.getReturnContacts.lastCall.args;
     expect(excluded).to.equal(['01/123']);
   });
 
@@ -86,7 +86,7 @@ experiment('getRecipients', () => {
       'status',
       'message_type',
       'recipient',
-      'personalisation' ]
+      'personalisation']
     );
   });
 
