@@ -1,6 +1,6 @@
 const chargeProcessor = require('./charge-processor');
 const { omit } = require('lodash');
-const logger = require('../../../logger');
+const { logger } = require('../../../logger');
 const repository = require('../../../lib/connectors/repository');
 const { Batch } = require('../../../lib/models');
 const { assert } = require('@hapi/hoek');
