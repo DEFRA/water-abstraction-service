@@ -1,0 +1,2 @@
+drop index water.scheduled_notification_idx_send_after;
+drop index water.pending_import_idx_status_priority;
