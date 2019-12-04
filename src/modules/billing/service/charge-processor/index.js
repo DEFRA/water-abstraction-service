@@ -9,7 +9,7 @@ const crmMappers = require('./crm-mappers');
 const dateHelpers = require('./date-helpers');
 
 const { mergeHistory } = require('@envage/water-abstraction-helpers').charging;
-const { camelCaseKeys } = require('./mappers');
+const camelCaseKeys = require('../../../../lib/camel-case-keys');
 const repository = require('../../../../lib/connectors/repository');
 const { ERROR_CHARGE_VERSION_NOT_FOUND } = require('./errors');
 const { modelMapper } = require('./model-mapper');

@@ -84,10 +84,10 @@ experiment('modules/billing/service/charge-version-year.js', () => {
       });
 
       test('logs an error', async () => {
-        expect(logger.error.calledWith(
-          'Error processing charge version year',
-          data.chargeVersionYear
-        )).to.be.true();
+        const [msg, error, data] = logger.error.lastCall.args;
+        expect(msg).to.equal('Oh no!');
+        expect(error).to.be.an.error();
+        expect(data).to.equal({ chargeVersionYear: data.chargeVersionYear });
       });
     });
   });

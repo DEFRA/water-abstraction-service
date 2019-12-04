@@ -41,9 +41,9 @@ const createBatchFromChargeVersionYear = async chargeVersionYear => {
   const { error, data } = await chargeProcessor.processCharges(financialYearEnding, chargeVersionId);
 
   if (error) {
-    const msg = 'Error processing charge version year';
-    logger.error(msg, chargeVersionYear);
-    throw new Error(msg);
+    const err = new Error(error);
+    logger.error(error, err, { chargeVersionYear });
+    throw err;
   }
 
   // Create batch and persist to DB
