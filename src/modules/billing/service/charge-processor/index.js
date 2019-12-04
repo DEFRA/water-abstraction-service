@@ -145,20 +145,24 @@ const augmentElementWithBillingPeriod = (chargeVersion, chargeElement, startDate
  * @return {Array} processed chargeElements
  */
 const chargeElementProcessor = (chargeVersion, chargeElements) => chargeElements.reduce((acc, row) => {
-  if (isTimeLimited(row)) {
-    const rangeA = moment.range(chargeVersion.startDate, chargeVersion.endDate);
-    const rangeB = moment.range(row.timeLimitedStartDate, row.timeLimitedEndDate);
-
-    const intersection = rangeA.intersect(rangeB);
-    if (intersection) {
-      const startDate = intersection.start.format(DATE_FORMAT);
-      const endDate = intersection.end.format(DATE_FORMAT);
-      acc.push(augmentElementWithBillingPeriod(chargeVersion, row, startDate, endDate));
-    }
-  } else {
+  // Non time-limited element
+  if (!isTimeLimited(row)) {
     const { startDate, endDate } = chargeVersion;
     acc.push(augmentElementWithBillingPeriod(chargeVersion, row, startDate, endDate));
+    return acc;
   }
+
+  // Time-limited element
+  const rangeA = moment.range(chargeVersion.startDate, chargeVersion.endDate);
+  const rangeB = moment.range(row.timeLimitedStartDate, row.timeLimitedEndDate);
+  const intersection = rangeA.intersect(rangeB);
+
+  if (intersection) {
+    const startDate = intersection.start.format(DATE_FORMAT);
+    const endDate = intersection.end.format(DATE_FORMAT);
+    acc.push(augmentElementWithBillingPeriod(chargeVersion, row, startDate, endDate));
+  }
+
   return acc;
 }, []);
 
