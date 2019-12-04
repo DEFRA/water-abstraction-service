@@ -18,8 +18,6 @@ const {
 
 const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
 
-const noReturnsSubmitted = (returns, dueReturns) => returns.length === dueReturns.length;
-
 const getReturnsByStatus = (returns, status) => returns.filter(ret => ret.status === status);
 
 /**
@@ -69,18 +67,32 @@ const areReturnsLate = returns => {
   return lateReturns.includes(true);
 };
 
+const noReturnsSubmitted = (returns, dueReturns) => returns.length === dueReturns.length;
+
+/**
+ * Check if any returns are due, throw appropriate error
+ * @param {Array} returns
+ * @return {String} error message or undefined (by default) if no error
+ */
+const checkDueReturnsErrors = returns => {
+  const dueReturns = getReturnsByStatus(returns, 'due');
+  if (dueReturns.length > 0) {
+    return noReturnsSubmitted(returns, dueReturns)
+      ? ERROR_NO_RETURNS_SUBMITTED
+      : ERROR_SOME_RETURNS_DUE;
+  }
+};
+
 /**
  * Check if all returns are completed
  * @param {Array} returns
  * @return {String} if exists, or undefined
  */
 const checkForReturnsErrors = returns => {
-  const dueReturns = getReturnsByStatus(returns, 'due');
   const receivedReturns = getReturnsByStatus(returns, 'received');
   const errors = [
     returns.length === 0 ? ERROR_NO_RETURNS_FOR_MATCHING : null,
-    noReturnsSubmitted(returns, dueReturns) ? ERROR_NO_RETURNS_SUBMITTED : null,
-    dueReturns.length > 0 ? ERROR_SOME_RETURNS_DUE : null,
+    checkDueReturnsErrors(returns) || null,
     areReturnsLate(returns) ? ERROR_LATE_RETURNS : null,
     areAnyReturnsUnderQuery(returns) ? ERROR_UNDER_QUERY : null,
     receivedReturns.length > 0 ? ERROR_RECEIVED_NO_DATA : null
