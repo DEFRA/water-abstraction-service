@@ -12,7 +12,6 @@ const sandbox = sinon.createSandbox();
 
 const { logger } = require('../../../../src/logger');
 const event = require('../../../../src/lib/event');
-const repos = require('../../../../src/lib/connectors/repository');
 const processChargeVersion = require('../../../../src/modules/billing/jobs/process-charge-version');
 const { jobStatus } = require('../../../../src/modules/billing/lib/batch');
 const service = require('../../../../src/modules/billing/service');
