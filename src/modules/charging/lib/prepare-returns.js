@@ -5,7 +5,7 @@ const Decimal = require('decimal.js-light');
 Decimal.set({
   precision: 8
 });
-const { cloneDeep } = require('lodash');
+const { identity, cloneDeep } = require('lodash');
 const {
   TPT_PURPOSES,
   ERROR_NO_RETURNS_FOR_MATCHING,
@@ -45,11 +45,21 @@ const isLineWithinAbstractionPeriod = (ret, line) => {
   return isDateWithinAbstractionPeriod(line.startDate, options) || isDateWithinAbstractionPeriod(line.endDate, options);
 };
 
+/**
+ * Checks if any of the returns are under query
+ * @param {Array} returns
+ * @return {Boolean} whether or not any of the returns are under query
+ */
 const areAnyReturnsUnderQuery = returns => {
   const isReturnUnderQuery = returns.map(ret => ret.isUnderQuery);
   return isReturnUnderQuery.includes(true);
 };
 
+/**
+ * Check if any returns were submitted late (after the grace period)
+ * @param {Array} returns
+ * @return {Boolean} whether or not there were late returns
+ */
 const areReturnsLate = returns => {
   const lateReturns = returns.map(ret => {
     const cutOffDate = moment(returns[0].dueDate).add(3, 'weeks');
@@ -62,20 +72,21 @@ const areReturnsLate = returns => {
 /**
  * Check if all returns are completed
  * @param {Array} returns
- * @return {Array} of error messages if they exist
+ * @return {String} if exists, or undefined
  */
 const checkForReturnsErrors = returns => {
-  if (returns.length === 0) return ERROR_NO_RETURNS_FOR_MATCHING;
-
   const dueReturns = getReturnsByStatus(returns, 'due');
-  if (noReturnsSubmitted(returns, dueReturns)) return ERROR_NO_RETURNS_SUBMITTED;
-  if (dueReturns.length > 0) return ERROR_SOME_RETURNS_DUE;
+  const receivedReturns = getReturnsByStatus(returns, 'received');
+  const errors = [
+    returns.length === 0 ? ERROR_NO_RETURNS_FOR_MATCHING : null,
+    noReturnsSubmitted(returns, dueReturns) ? ERROR_NO_RETURNS_SUBMITTED : null,
+    dueReturns.length > 0 ? ERROR_SOME_RETURNS_DUE : null,
+    areReturnsLate(returns) ? ERROR_LATE_RETURNS : null,
+    areAnyReturnsUnderQuery(returns) ? ERROR_UNDER_QUERY : null,
+    receivedReturns.length > 0 ? ERROR_RECEIVED_NO_DATA : null
+  ];
 
-  if (areReturnsLate(returns)) return ERROR_LATE_RETURNS;
-
-  if (areAnyReturnsUnderQuery(returns)) return ERROR_UNDER_QUERY;
-
-  if (getReturnsByStatus(returns, 'received').length > 0) return ERROR_RECEIVED_NO_DATA;
+  return errors.filter(identity).shift();
 };
 
 /**

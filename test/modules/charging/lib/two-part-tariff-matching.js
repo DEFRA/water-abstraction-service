@@ -119,7 +119,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       ]);
       expect(firstElement.actualReturnQuantity).to.equal(0);
       expect(firstElement.proRataAuthorisedQuantity).to.be.a.number();
-      expect(firstElement.proRataBillableQuantity).not.to.exist();
+      expect(firstElement.proRataBillableQuantity).to.be.undefined();
 
       expect(secondElement.actualReturnQuantity).to.equal(0);
       expect(secondElement.proRataAuthorisedQuantity).to.be.a.number();
