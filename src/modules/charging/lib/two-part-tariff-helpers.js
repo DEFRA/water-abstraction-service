@@ -1,6 +1,3 @@
-const Moment = require('moment');
-const MomentRange = require('moment-range');
-const moment = MomentRange.extendMoment(Moment);
 const Decimal = require('decimal.js-light');
 Decimal.set({
   precision: 8
@@ -32,8 +29,10 @@ const isNullReturnRequired = error => {
  */
 const returnsError = (error, chargeElements) => {
   if (isNullReturnRequired(error)) return getNullActualReturnQuantities(error, chargeElements);
-  return { error,
-    data: null };
+  return {
+    error,
+    data: null
+  };
 };
 
 /**
@@ -48,44 +47,6 @@ const getNullActualReturnQuantities = (error, chargeElements) => {
     return { error: null, data: { chargeElementId: element.chargeElementId, actualReturnQuantity: null } };
   });
   return { error, data };
-};
-
-/**
- * Finds the abstraction period with relevant year for the given start & end dates
- * @param {moment} startDate of return or charge element
- * @param {moment} endDate of return or charge element
- * @param {Object} absDates abstraction dates
- * @param {String} absDates.periodStartDay - abstraction period start day of the month
- * @param {String} absDates.periodStartMonth - abstraction period start month
- * @param {String} absDates.periodEndDay - abstraction period end day of the month
- * @param {String} absDates.periodEndMonth - abstraction period end month
- * @return {moment range} absPeriod - abstraction period with years for given dates
- *
- */
-const getAbsPeriod = (startDate, endDate, absDates) => {
-  const { periodStartDay, periodStartMonth, periodEndDay, periodEndMonth } = absDates;
-
-  const absStartYear = (new Decimal(periodStartMonth).gte(startDate.month() + 1)) ? startDate.year() : startDate.year() + 1;
-
-  let absStartDate = moment({
-    year: absStartYear,
-    month: periodStartMonth - 1,
-    days: periodStartDay
-  });
-
-  let absEndDate = moment({
-    year: (new Decimal(periodStartMonth).gte(periodEndMonth)) ? absStartYear + 1 : absStartYear,
-    month: periodEndMonth - 1,
-    day: periodEndDay
-  });
-  // if abstraction period straddles the financial year, absPeriod will sometimes be a year ahead
-  // this is a sense check for that situation
-  if (absStartDate > endDate) {
-    absStartDate.subtract(1, 'year');
-    absEndDate.subtract(1, 'year');
-  }
-  return moment.range(absStartDate, absEndDate);
-  ;
 };
 
 /**
@@ -112,5 +73,4 @@ exports.ERROR_UNDER_QUERY = ERROR_UNDER_QUERY;
 exports.ERROR_RECEIVED = ERROR_RECEIVED;
 exports.getNullActualReturnQuantities = getNullActualReturnQuantities;
 exports.returnsError = returnsError;
-exports.getAbsPeriod = getAbsPeriod;
 exports.returnPurposeMatchesElementPurpose = returnPurposeMatchesElementPurpose;

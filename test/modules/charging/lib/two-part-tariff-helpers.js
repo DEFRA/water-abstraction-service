@@ -6,16 +6,11 @@ const Decimal = require('decimal.js-light');
 Decimal.set({
   precision: 8
 });
-const Moment = require('moment');
-const MomentRange = require('moment-range');
-const moment = MomentRange.extendMoment(Moment);
 
 const {
   ERROR_UNDER_QUERY,
   ERROR_NO_RETURNS_SUBMITTED,
-  dateFormat,
   returnsError,
-  getAbsPeriod,
   returnPurposeMatchesElementPurpose
 } = require('../../../../src/modules/charging/lib/two-part-tariff-helpers');
 
@@ -45,153 +40,6 @@ experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
     });
   });
 
-  experiment('.getAbsPeriod', async () => {
-    experiment('when abs dates cover the full financial year', async () => {
-      const absDates = {
-        periodStartDay: 1,
-        periodStartMonth: 4,
-        periodEndDay: 31,
-        periodEndMonth: 3
-      };
-      // Apr           Abs Period            Mar
-      //  |-----------------------------------|
-      //      |--------------------------|
-      //    May-18                     Feb-19
-      test('abs start is the same year as start date when start & end dates are within the abs period', async () => {
-        const startDate = moment('2018-05-01');
-        const endDate = moment('2019-02-28');
-        const absPeriod = getAbsPeriod(startDate, endDate, absDates);
-        expect(absPeriod.start.format(dateFormat)).to.equal('2018-04-01');
-        expect(absPeriod.end.format(dateFormat)).to.equal('2019-03-31');
-      });
-      //        Apr           Abs Period            Mar
-      //         |-----------------------------------|
-      //     |------------------------|
-      //   Mar-19                  Sep-19
-      test('abs start is the same year as start date when start date is at the end of abs period', async () => {
-        const startDate = moment('2019-03-01');
-        const endDate = moment('2019-09-30');
-        const absPeriod = getAbsPeriod(startDate, endDate, absDates);
-        expect(absPeriod.start.format(dateFormat)).to.equal('2019-04-01');
-        expect(absPeriod.end.format(dateFormat)).to.equal('2020-03-31');
-      });
-      // Apr           Abs Period            Mar
-      //  |-----------------------------------|
-      //                            |---------|
-      //                         Jan-19     Mar-19
-      test('abs start is year before start date when start & end dates are within last quarter of financial year', async () => {
-        const startDate = moment('2019-01-01');
-        const endDate = moment('2019-03-31');
-        const absPeriod = getAbsPeriod(startDate, endDate, absDates);
-        expect(absPeriod.start.format(dateFormat)).to.equal('2018-04-01');
-        expect(absPeriod.end.format(dateFormat)).to.equal('2019-03-31');
-      });
-    });
-    experiment('when abs dates are within the same calendar year', async () => {
-      const absDates = {
-        periodStartDay: 1,
-        periodStartMonth: 4,
-        periodEndDay: 31,
-        periodEndMonth: 10
-      };
-      // Apr      Abs Period     Oct
-      //  |-----------------------|
-      //  |-----------------------|
-      // Apr-18                 Oct-18
-      test('abs start is the same year as start date when start & end dates are within the abs period', async () => {
-        const startDate = moment('2018-04-01');
-        const endDate = moment('2018-10-31');
-        const absPeriod = getAbsPeriod(startDate, endDate, absDates);
-        expect(absPeriod.start.format(dateFormat)).to.equal('2018-04-01');
-        expect(absPeriod.end.format(dateFormat)).to.equal('2018-10-31');
-      });
-      // Apr      Abs Period     Oct
-      //  |-----------------------|
-      //                     |-----------------------|
-      //                  Oct-18                   Mar-19
-      test('abs start is the same year as start date when start date is at the end of abs period', async () => {
-        const startDate = moment('2018-10-01');
-        const endDate = moment('2019-03-31');
-        const absPeriod = getAbsPeriod(startDate, endDate, absDates);
-        expect(absPeriod.start.format(dateFormat)).to.equal('2018-04-01');
-        expect(absPeriod.end.format(dateFormat)).to.equal('2018-10-31');
-      });
-      //          Apr      Abs Period     Oct
-      //           |-----------------------|
-      //  |-----------------------|
-      // Feb-18                  Aug-18
-      test('abs start is the same year as start date when start date is before the abs period', async () => {
-        const startDate = moment('2018-02-01');
-        const endDate = moment('2019-08-31');
-        const absPeriod = getAbsPeriod(startDate, endDate, absDates);
-        expect(absPeriod.start.format(dateFormat)).to.equal('2018-04-01');
-        expect(absPeriod.end.format(dateFormat)).to.equal('2018-10-31');
-      });
-      // Apr      Abs Period     Oct
-      //  |-----------------------|
-      //                           |-----------------------|
-      //                         Nov-18                   Jul-19
-      test('abs start is the same year as end date when start date is after the end of abs period', async () => {
-        const startDate = moment('2018-11-01');
-        const endDate = moment('2019-07-31');
-        const absPeriod = getAbsPeriod(startDate, endDate, absDates);
-        expect(absPeriod.start.format(dateFormat)).to.equal('2019-04-01');
-        expect(absPeriod.end.format(dateFormat)).to.equal('2019-10-31');
-      });
-    });
-    experiment('when abs dates straddle the calendar year', async () => {
-      const absDates = {
-        periodStartDay: 1,
-        periodStartMonth: 11,
-        periodEndDay: 31,
-        periodEndMonth: 3
-      };
-      // Nov      Abs Period     Mar
-      //  |-----------------------|
-      //    |---------------------|
-      //  Dec-18                 Mar-19
-      test('abs start is the same year as start date when start & end dates are within the abs period', async () => {
-        const startDate = moment('2018-12-01');
-        const endDate = moment('2019-03-31');
-        const absPeriod = getAbsPeriod(startDate, endDate, absDates);
-        expect(absPeriod.start.format(dateFormat)).to.equal('2018-11-01');
-        expect(absPeriod.end.format(dateFormat)).to.equal('2019-03-31');
-      });
-      // Nov      Abs Period     Mar
-      //  |-----------------------|
-      //                |---------|
-      //              Jan-19    Mar-19
-      test('abs start is the same year as end date when start/end dates are within the following calendar year & withing the abs period', async () => {
-        const startDate = moment('2019-01-01');
-        const endDate = moment('2019-03-31');
-        const absPeriod = getAbsPeriod(startDate, endDate, absDates);
-        expect(absPeriod.start.format(dateFormat)).to.equal('2018-11-01');
-        expect(absPeriod.end.format(dateFormat)).to.equal('2019-03-31');
-      });
-      // Nov      Abs Period     Mar
-      //  |-----------------------|
-      //                |-----------------|
-      //              Jan-19            May-19
-      test('abs start is the year before start date when start date is at the end of the abs period', async () => {
-        const startDate = moment('2019-01-01');
-        const endDate = moment('2019-05-31');
-        const absPeriod = getAbsPeriod(startDate, endDate, absDates);
-        expect(absPeriod.start.format(dateFormat)).to.equal('2018-11-01');
-        expect(absPeriod.end.format(dateFormat)).to.equal('2019-03-31');
-      });
-      //      Nov      Abs Period     Mar
-      //       |-----------------------|
-      //   |-----------------|
-      // Oct-18            Jan-19
-      test('abs start is the same year as start date when start date is before the abs period', async () => {
-        const startDate = moment('2018-10-01');
-        const endDate = moment('2019-01-31');
-        const absPeriod = getAbsPeriod(startDate, endDate, absDates);
-        expect(absPeriod.start.format(dateFormat)).to.equal('2018-11-01');
-        expect(absPeriod.end.format(dateFormat)).to.equal('2019-03-31');
-      });
-    });
-  });
   experiment('.returnPurposeMatchesElementPurpose', async () => {
     const chargeElement = createChargeElement({
       purposeTertiary: 400

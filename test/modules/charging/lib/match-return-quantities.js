@@ -269,7 +269,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
           new Decimal(chargeElement.actualReturnQuantity).plus(quantityToBeAllocated).toNumber()
         );
       });
-      test('quantityAllocated is never greater than proRataQuantity', async () => {
+      test('quantityAllocated is never greater than the return line quantity', async () => {
         const { updatedLineQuantityAllocated } = matchReturnLineToElement(returnLine, chargeElement);
         expect(updatedLineQuantityAllocated).to.equal(returnLine.quantity);
       });

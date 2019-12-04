@@ -69,8 +69,10 @@ const prepareReturnsForMatching = returns => {
 
   const preparedReturns = prepareReturnLinesData(tptReturns);
 
-  return { error: null,
-    data: preparedReturns };
+  return {
+    error: null,
+    data: preparedReturns
+  };
 };
 
 /**

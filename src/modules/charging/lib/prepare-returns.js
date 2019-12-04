@@ -8,7 +8,6 @@ Decimal.set({
 const { cloneDeep } = require('lodash');
 const {
   TPT_PURPOSES,
-  getAbsPeriod,
   ERROR_NO_RETURNS_FOR_MATCHING,
   ERROR_NO_RETURNS_SUBMITTED,
   ERROR_SOME_RETURNS_DUE,
@@ -16,6 +15,8 @@ const {
   ERROR_UNDER_QUERY,
   ERROR_RECEIVED_NO_DATA
 } = require('./two-part-tariff-helpers');
+
+const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
 
 const noReturnsSubmitted = (returns, dueReturns) => returns.length === dueReturns.length;
 
@@ -28,17 +29,20 @@ const getReturnsByStatus = (returns, status) => returns.filter(ret => ret.status
  * @return {Boolean} whether or not some or all of the line is within the abstraction period
  */
 const isLineWithinAbstractionPeriod = (ret, line) => {
-  const { nald } = ret.metadata;
-  const startDate = moment(line.startDate);
-  const endDate = moment(line.endDate);
-  const absPeriod = getAbsPeriod(startDate, endDate, {
-    periodStartDay: nald.periodStartDay,
-    periodStartMonth: nald.periodStartMonth,
-    periodEndDay: nald.periodEndDay,
-    periodEndMonth: nald.periodEndMonth
-  });
+  const {
+    periodStartDay,
+    periodStartMonth,
+    periodEndDay,
+    periodEndMonth
+  } = ret.metadata.nald;
+  const options = {
+    periodStartDay: parseInt(periodStartDay),
+    periodStartMonth: parseInt(periodStartMonth),
+    periodEndDay: parseInt(periodEndDay),
+    periodEndMonth: parseInt(periodEndMonth)
+  };
 
-  return absPeriod.contains(startDate) || absPeriod.contains(endDate);
+  return isDateWithinAbstractionPeriod(line.startDate, options) || isDateWithinAbstractionPeriod(line.endDate, options);
 };
 
 const areAnyReturnsUnderQuery = returns => {

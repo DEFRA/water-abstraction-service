@@ -73,7 +73,8 @@ const reallocateQuantitiesInPriorityOrder = (elements) => {
 
   return {
     error: overallErr,
-    data: dataToReturn };
+    data: dataToReturn
+  };
 };
 
 /**
@@ -177,7 +178,7 @@ const getAllChargeElementsForPurpose = (chargeElements, purpose) =>
 const reshuffleQuantities = chargeElements => {
   const chargeElementPurposes = getAllChargeElementPurposes(chargeElements);
   const matchedQuantities = [];
-  let matchingErrors = [];
+  const matchingErrors = [];
   chargeElementPurposes.forEach(purpose => {
     const chargeElementsToPrioritise = getAllChargeElementsForPurpose(chargeElements, purpose);
 

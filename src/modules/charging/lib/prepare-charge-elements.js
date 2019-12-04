@@ -1,8 +1,5 @@
-const { TPT_PURPOSES, dateFormat, getAbsPeriod } = require('./two-part-tariff-helpers');
+const { TPT_PURPOSES } = require('./two-part-tariff-helpers');
 const { cloneDeep, sortBy } = require('lodash');
-const Moment = require('moment');
-const MomentRange = require('moment-range');
-const moment = MomentRange.extendMoment(Moment);
 const Decimal = require('decimal.js-light');
 Decimal.set({
   precision: 8
@@ -39,44 +36,11 @@ const prepareChargeElementData = chargeElements => {
   const updated = cloneDeep(chargeElements);
   updated.forEach(ele => {
     ele.actualReturnQuantity = 0;
-    const { effectiveStartDate, effectiveEndDate } = getEffectiveDates(ele);
-    ele.effectiveStartDate = effectiveStartDate;
-    ele.effectiveEndDate = effectiveEndDate;
     ele.proRataAuthorisedQuantity = getProRataQuantity(ele.authorisedAnnualQuantity, ele);
 
     if (ele.billableAnnualQuantity) ele.proRataBillableQuantity = getProRataQuantity(ele.billableAnnualQuantity, ele);
   });
   return updated;
-};
-
-/**
- * Finds effective start & end dates for charge element taking into account
- * the abstraction period and start & end dates
- * @param {Object} ele - charge element
- * @return {Object}
- *   {String} effectiveStartDate - calculated start date as a string, formatted YYYY-MM-DD
- *   {String} effectiveEndDate - calculated end date as a string, formatted YYYY-MM-DD
- */
-const getEffectiveDates = ele => {
-  const startDate = moment(ele.startDate, dateFormat);
-  const endDate = moment(ele.endDate, dateFormat);
-
-  const absPeriod = getAbsPeriod(startDate, endDate, {
-    periodStartDay: ele.abstractionPeriodStartDay,
-    periodStartMonth: ele.abstractionPeriodStartMonth,
-    periodEndDay: ele.abstractionPeriodEndDay,
-    periodEndMonth: ele.abstractionPeriodEndMonth
-  });
-
-  const absStartDate = absPeriod.start;
-  const absEndDate = absPeriod.end;
-
-  return {
-    effectiveStartDate: absPeriod.contains(startDate) ? startDate.format(dateFormat) : absStartDate.format(dateFormat),
-    effectiveEndDate: absPeriod.contains(endDate)
-      ? endDate.format(dateFormat)
-      : (endDate <= absStartDate) ? absEndDate.subtract(1, 'year').format(dateFormat) : absEndDate.format(dateFormat)
-  };
 };
 
 /**
@@ -88,5 +52,4 @@ const sortChargeElementsForMatching = chargeElements => sortBy(chargeElements, '
 
 exports.getTptChargeElements = getTptChargeElements;
 exports.prepareChargeElementData = prepareChargeElementData;
-exports.getEffectiveDates = getEffectiveDates;
 exports.sortChargeElementsForMatching = sortChargeElementsForMatching;

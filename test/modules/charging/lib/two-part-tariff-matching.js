@@ -18,7 +18,6 @@ const {
   ERROR_NO_RETURNS_FOR_MATCHING,
   ERROR_OVER_ABSTRACTION
 } = require('../../../../src/modules/charging/lib/two-part-tariff-helpers');
-const dateStringRegex = /^\d{4}-\d{2}-\d{2}$/;
 
 const roundTo3DP = decimal => {
   return decimal.toDecimalPlaces(3).toNumber();
@@ -119,14 +118,10 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         unsupportedChargeElement // has billableAnnualQuantity
       ]);
       expect(firstElement.actualReturnQuantity).to.equal(0);
-      expect(firstElement.effectiveStartDate).to.match(dateStringRegex);
-      expect(firstElement.effectiveEndDate).to.match(dateStringRegex);
       expect(firstElement.proRataAuthorisedQuantity).to.be.a.number();
       expect(firstElement.proRataBillableQuantity).not.to.exist();
 
       expect(secondElement.actualReturnQuantity).to.equal(0);
-      expect(secondElement.effectiveStartDate).to.match(dateStringRegex);
-      expect(secondElement.effectiveEndDate).to.match(dateStringRegex);
       expect(secondElement.proRataAuthorisedQuantity).to.be.a.number();
       expect(secondElement.proRataBillableQuantity).to.be.a.number();
     });
