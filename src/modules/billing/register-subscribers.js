@@ -1,18 +1,27 @@
-const populateBatchChargeVersions = require('./jobs/populate-batch-charge-versions');
-const handlePopulateBatchChargeVersionsComplete = require('./jobs/populate-batch-charge-versions-complete');
+const jobs = require('./jobs');
 
-const processChargeVersion = require('./jobs/process-charge-version');
-const handleProcessChargeVersionComplete = require('./jobs/process-charge-version-complete');
+const createSubscription = async (server, jobContainer) => {
+  const { job: billingJob, onCompleteHandler } = jobContainer;
+
+  await server.messageQueue.subscribe(
+    billingJob.jobName,
+    billingJob.handler
+  );
+
+  if (onCompleteHandler) {
+    await server.messageQueue.onComplete(
+      billingJob.jobName,
+      job => onCompleteHandler(job, server.messageQueue)
+    );
+  }
+};
 
 module.exports = {
   name: 'billingRegisterSubscribers',
   register: async server => {
-    await server.messageQueue.subscribe(populateBatchChargeVersions.jobName, populateBatchChargeVersions.handler);
-    await server.messageQueue.onComplete(populateBatchChargeVersions.jobName, job => {
-      return handlePopulateBatchChargeVersionsComplete(job, server.messageQueue);
-    });
-
-    await server.messageQueue.subscribe(processChargeVersion.jobName, processChargeVersion.handler);
-    await server.messageQueue.onComplete(processChargeVersion.jobName, job => handleProcessChargeVersionComplete(job));
+    await createSubscription(server, jobs.populateBatchChargeVersions);
+    await createSubscription(server, jobs.processChargeVersion);
+    await createSubscription(server, jobs.prepareTransactions);
+    await createSubscription(server, jobs.createCharge);
   }
 };
