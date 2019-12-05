@@ -1,6 +1,7 @@
 const evt = require('../../../lib/event');
-const { batchStatus } = require('../lib/batch');
+const { jobStatus } = require('../lib/batch');
 const repos = require('../../../lib/connectors/repository');
+const service = require('../service');
 
 const JOB_NAME = 'billing.process-charge-version';
 
@@ -14,18 +15,33 @@ const createMessage = (eventId, chargeVersionYear) => ({
 const handleProcessChargeVersion = async job => {
   logger.info(`Handling ${JOB_NAME}`);
 
-  // temporary implementation here just sets the required statuses
-  // to completed so future jobs can be queued
   const { eventId, chargeVersionYear } = job.data;
 
-  const batchEvent = await evt.load(eventId);
+  // Process charge version year
+  try {
+    const batchEvent = await evt.load(eventId);
 
-  await repos.billingBatchChargeVersionYears.setStatus(chargeVersionYear.billing_batch_charge_version_year_id, batchStatus.complete);
+    // Create batch model
+    const batch = await service.chargeVersionYear.createBatchFromChargeVersionYear(chargeVersionYear);
+    // Persist data
+    await service.chargeVersionYear.persistChargeVersionYearBatch(batch);
+    // Update status in water.billing_batch_charge_version_year
+    await repos.billingBatchChargeVersionYears.setStatus(chargeVersionYear.billing_batch_charge_version_year_id, jobStatus.complete);
 
-  return {
-    chargeVersionYear,
-    batch: batchEvent.metadata.batch
-  };
+    return {
+      chargeVersionYear,
+      batch: batchEvent.metadata.batch
+    };
+  } catch (err) {
+    logger.error('Error processing charge version year', err, {
+      eventId,
+      chargeVersionYear
+    });
+    // Mark as error
+    await repos.billingBatchChargeVersionYears.setStatus(chargeVersionYear.billing_batch_charge_version_year_id, jobStatus.error);
+    // Rethrow
+    throw err;
+  }
 };
 
 exports.createMessage = createMessage;
