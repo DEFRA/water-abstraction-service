@@ -1,6 +1,6 @@
 const Joi = require('@hapi/joi');
 const VALID_GUID = Joi.string().guid().required();
-const VALID_LICENCE_NUMBER = Joi.string().regex(/^[&\(\)\*-\.\/0123456789ABCDEFGHLMNORSTWXYZ]+/).required();
+const VALID_LICENCE_NUMBER = Joi.string().regex(/^[&()*-./0123456789ABCDEFGHLMNORSTWXYZ]+/).required();
 
 class Licence {
   /**
