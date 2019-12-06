@@ -8,7 +8,7 @@ class BillingInvoiceLicenceRepository extends Repository {
       table: 'water.billing_invoice_licences',
       primaryKey: 'billing_invoice_licence_id',
       upsert: {
-        fields: ['billing_invoice_id', 'company_id', 'address_id', 'contact_id', 'licence_id'],
+        fields: ['billing_invoice_id', 'company_id', 'address_id', 'licence_id'],
         set: ['date_updated']
       }
     }, config));

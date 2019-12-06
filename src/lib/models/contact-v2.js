@@ -53,7 +53,7 @@ class Contact {
    * @return {String}
    */
   get fullName () {
-    const parts = [this._salutation, this._initials || this._firstName, this._name];
+    const parts = [this._salutation, this._initials || this._firstName, this._lastName];
     return parts.filter(x => x).join(' ');
   }
 

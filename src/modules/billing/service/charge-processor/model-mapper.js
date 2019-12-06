@@ -63,6 +63,7 @@ const mapLicence = chargeVersion => {
 const mapContact = contactData => {
   const contact = new Contact();
   contact.id = contactData.contactId;
+  contact.salutation = contactData.salutation;
   contact.firstName = contactData.firstName;
   contact.lastName = contactData.lastName;
   contact.initials = contactData.initials;

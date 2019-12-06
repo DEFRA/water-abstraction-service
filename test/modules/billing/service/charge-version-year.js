@@ -35,7 +35,15 @@ experiment('modules/billing/service/charge-version-year.js', () => {
     sandbox.stub(logger, 'error');
     sandbox.stub(chargeProcessor, 'processCharges');
     sandbox.stub(chargeProcessor, 'modelMapper').returns(data.modelMapperResponse);
-    sandbox.stub(repository.billingInvoices, 'create');
+    sandbox.stub(repository.billingInvoices, 'create').resolves({
+      rows: {
+        billing_batch_invoice_id: 'billing_batch_invoice_id'
+      }
+    });
+    sandbox.stub(repository.licences, 'findOneByLicenceNumber').resolves({
+      licence_id: 'licence_id'
+    });
+    sandbox.stub(repository.billingInvoiceLicences, 'create').resolves();
   });
 
   afterEach(async () => {

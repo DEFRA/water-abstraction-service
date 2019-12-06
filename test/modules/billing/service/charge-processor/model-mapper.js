@@ -5,7 +5,8 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const { Batch, Invoice, InvoiceAccount, Address } = require('../../../../../src/lib/models');
+const { Batch, Invoice, InvoiceAccount, Address, Company } = require('../../../../../src/lib/models');
+const Contact = require('../../../../../src/lib/models/contact-v2');
 const modelMapper = require('../../../../../src/modules/billing/service/charge-processor/model-mapper');
 
 const BATCH_ID = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
@@ -27,17 +28,44 @@ const createCrmInvoiceAccount = index => ({
   invoiceAccountNumber: `S1234567${index}A`
 });
 
+const createChargeVersion = licenceRef => ({
+  licenceRef
+});
+
+const createCrmContact = () => ({
+  contactId: '8d72ac2f-a16e-4226-ab56-0065b5af058d',
+  salutation: 'Captain',
+  initials: 'J T',
+  firstName: 'James',
+  lastName: 'Kirk'
+});
+
+const createCrmLicenceHolder = withContact => ({
+  company: {
+    companyId: 'a4d2ad99-4cda-4634-b1a2-a665aa125554',
+    name: 'Big Farm Ltd'
+  },
+  contact: withContact ? createCrmContact() : null,
+  address: createCrmAddress(1)
+});
+
 const createData = () => [{
+  chargeVersion: createChargeVersion('01/123'),
+  licenceHolder: createCrmLicenceHolder(),
   invoiceAccount: {
     invoiceAccount: createCrmInvoiceAccount(1),
     address: createCrmAddress(1)
   }
 }, {
+  chargeVersion: createChargeVersion('02/345'),
+  licenceHolder: createCrmLicenceHolder(true),
   invoiceAccount: {
     invoiceAccount: createCrmInvoiceAccount(2),
     address: createCrmAddress(2)
   }
 }, {
+  chargeVersion: createChargeVersion('03/456'),
+  licenceHolder: createCrmLicenceHolder(),
   invoiceAccount: {
     invoiceAccount: createCrmInvoiceAccount(1),
     address: createCrmAddress(1)
@@ -46,7 +74,7 @@ const createData = () => [{
 
 experiment('modules/billing/service/charge-processor/model-mapper.js', () => {
   experiment('modelMapper', () => {
-    let data, result;
+    let data, result, invoice;
 
     beforeEach(async () => {
       data = createData();
@@ -62,38 +90,99 @@ experiment('modules/billing/service/charge-processor/model-mapper.js', () => {
       expect(result.invoices).to.be.an.array().length(2);
     });
 
-    test('the first invoice is an instance of Invoice', async () => {
-      expect(result.invoices[0] instanceof Invoice).to.be.true();
+    experiment('the first invoice', () => {
+      beforeEach(async () => {
+        invoice = result.invoices[0];
+      });
+
+      test('is an instance of Invoice', async () => {
+        expect(invoice instanceof Invoice).to.be.true();
+      });
+
+      test('has an InvoiceAccount instance', async () => {
+        expect(invoice.invoiceAccount instanceof InvoiceAccount).to.be.true();
+      });
+
+      test('has the correct account number', async () => {
+        expect(invoice.invoiceAccount.accountNumber).to.equal('S12345671A');
+      });
+
+      test('has the correct address', async () => {
+        expect(invoice.address instanceof Address).to.be.true();
+        expect(invoice.address.id).to.equal(data[0].invoiceAccount.address.addressId);
+      });
+
+      test('has an invoiceLicence for each licence', async () => {
+        expect(invoice.invoiceLicences).to.have.length(2);
+        expect(invoice.invoiceLicences[0].licence.licenceNumber).to.equal('01/123');
+        expect(invoice.invoiceLicences[1].licence.licenceNumber).to.equal('03/456');
+      });
+
+      test('the first invoiceLicence has an address', async () => {
+        expect(invoice.invoiceLicences[0].address instanceof Address).to.be.true();
+      });
+
+      test('the first invoiceLicence has a company', async () => {
+        expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
+      });
+
+      test('the first invoiceLicence has no contact', async () => {
+        expect(invoice.invoiceLicences[0].contact).to.be.undefined();
+      });
+
+      test('the second invoiceLicence has an address', async () => {
+        expect(invoice.invoiceLicences[1].address instanceof Address).to.be.true();
+      });
+
+      test('the second invoiceLicence has a company', async () => {
+        expect(invoice.invoiceLicences[1].company instanceof Company).to.be.true();
+      });
+
+      test('the second invoiceLicence has no contact', async () => {
+        expect(invoice.invoiceLicences[1].contact).to.be.undefined();
+      });
     });
 
-    test('the first invoice has an InvoiceAccount instance', async () => {
-      expect(result.invoices[0].invoiceAccount instanceof InvoiceAccount).to.be.true();
-    });
+    experiment('the second invoice', () => {
+      beforeEach(async () => {
+        invoice = result.invoices[1];
+      });
 
-    test('the first invoice has the correct account number', async () => {
-      expect(result.invoices[0].invoiceAccount.accountNumber).to.equal('S12345671A');
-    });
+      test('is an instance of Invoice', async () => {
+        expect(invoice instanceof Invoice).to.be.true();
+      });
 
-    test('the first invoice has the correct address', async () => {
-      expect(result.invoices[0].address instanceof Address).to.be.true();
-      expect(result.invoices[0].address.id).to.equal(data[0].invoiceAccount.address.addressId);
-    });
+      test('has an InvoiceAccount instance', async () => {
+        expect(invoice.invoiceAccount instanceof InvoiceAccount).to.be.true();
+      });
 
-    test('the second invoice is an instance of Invoice', async () => {
-      expect(result.invoices[1] instanceof Invoice).to.be.true();
-    });
+      test('has the correct account number', async () => {
+        expect(invoice.invoiceAccount.accountNumber).to.equal('S12345672A');
+      });
 
-    test('the second invoice has an InvoiceAccount instance', async () => {
-      expect(result.invoices[1].invoiceAccount instanceof InvoiceAccount).to.be.true();
-    });
+      test('has the correct address', async () => {
+        expect(invoice.address instanceof Address).to.be.true();
+        expect(invoice.address.id).to.equal(data[1].invoiceAccount.address.addressId);
+      });
 
-    test('the second invoice has the correct account number', async () => {
-      expect(result.invoices[1].invoiceAccount.accountNumber).to.equal('S12345672A');
-    });
+      test('has an invoiceLicence for each licence', async () => {
+        expect(invoice.invoiceLicences).to.have.length(1);
+        expect(invoice.invoiceLicences[0].licence.licenceNumber).to.equal('02/345');
+      });
 
-    test('the second invoice has the correct address', async () => {
-      expect(result.invoices[1].address instanceof Address).to.be.true();
-      expect(result.invoices[1].address.id).to.equal(data[1].invoiceAccount.address.addressId);
+      test('the first invoiceLicence has an address', async () => {
+        expect(invoice.invoiceLicences[0].address instanceof Address).to.be.true();
+      });
+
+      test('the first invoiceLicence has a company', async () => {
+        expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
+      });
+
+      test('the first invoiceLicence has a contact', async () => {
+        const { contact } = invoice.invoiceLicences[0];
+        expect(contact instanceof Contact).to.be.true();
+        expect(contact.fullName).to.equal('Captain J T Kirk');
+      });
     });
   });
 });
