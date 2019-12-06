@@ -2,9 +2,9 @@ const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const moment = require('moment');
 
-const FinancialYear = require('../../../../src/modules/billing/lib/financial-year');
+const FinancialYear = require('../../../src/lib/models/financial-year');
 
-experiment('modules/billing/lib/financial-year', () => {
+experiment('lib/models/financial-year', () => {
   test('.startYear is the year before the year ending value', async () => {
     const financialYear = new FinancialYear(2019);
     expect(financialYear.startYear).to.equal(2018);
