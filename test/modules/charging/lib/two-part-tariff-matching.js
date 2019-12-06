@@ -468,10 +468,11 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         expect(matchedChargeElement.error).to.be.null();
       });
       test('does not allocate quantities outside the return abstraction period', async () => {
-        const chargeElement = [createChargeElement({
-          ...chargeElementOptions,
-          endDate: '2017-03-31'
-        })];
+        const chargeElement = [
+          createChargeElement({
+            ...chargeElementOptions,
+            endDate: '2017-03-31'
+          })];
         const returnOptions = {
           status: 'completed',
           startDate: '2016-04-01',
@@ -500,11 +501,12 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         expect(matchedChargeElement.error).to.be.null();
       });
       test('does not allocate quantities outside the charge elements abstraction period', async () => {
-        const chargeElement = [createChargeElement({
-          ...chargeElementOptions,
-          abstractionPeriodEndDay: 31,
-          abstractionPeriodEndMonth: 8
-        })];
+        const chargeElement = [
+          createChargeElement({
+            ...chargeElementOptions,
+            abstractionPeriodEndDay: 31,
+            abstractionPeriodEndMonth: 8
+          })];
         const returnOptions = {
           status: 'completed',
           startDate: '2016-04-01',
@@ -605,7 +607,8 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         authorisedAnnualQuantity: 1
       };
       test('base element is filled up before other elements', async () => {
-        const chargeElements = [createChargeElement(chargeElementOptions), // pro rata quantity 0.49863
+        const chargeElements = [
+          createChargeElement(chargeElementOptions), // pro rata authorised 0.49863
           {
             ...createChargeElement(chargeElementOptions),
             timeLimitedStartDate: '2016-04-01',
@@ -613,7 +616,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
             endDate: '2016-05-31',
             totalDays: 365,
             billableDays: 60,
-            authorisedAnnualQuantity: 1 // pro rata quantity 0.16438
+            authorisedAnnualQuantity: 1 // pro rata authorised 0.16438
           }
         ];
         const returnOptions = {
@@ -649,7 +652,8 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         expect(matchedChargeElements[1].error).to.be.null();
       });
       test('first two elements are filled before third', async () => {
-        const chargeElements = [createChargeElement(chargeElementOptions), // pro rata quantity 0.49863
+        const chargeElements = [
+          createChargeElement(chargeElementOptions), // pro rata authorised 0.49863
           {
             ...createChargeElement(chargeElementOptions),
             timeLimitedStartDate: '2016-04-01',
@@ -657,13 +661,14 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
             endDate: '2016-05-31',
             totalDays: 365,
             billableDays: 60,
-            authorisedAnnualQuantity: 1 // pro rata quantity 0.16438
+            authorisedAnnualQuantity: 1 // pro rata authorised 0.16438
           }, {
             ...createChargeElement(chargeElementOptions),
-            source: 'supported',
+            timeLimitedStartDate: '2016-06-01',
+            timeLimitedEndDate: '2017-03-31',
             totalDays: 365,
-            billableDays: 182,
-            authorisedAnnualQuantity: 1 // pro rata quantity 0.49863
+            billableDays: 304,
+            authorisedAnnualQuantity: 1 // pro rata authorised 0.49863
           }
         ];
         const returnOptions = {
@@ -705,31 +710,42 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         expect(matchedChargeElements[2].error).to.be.null();
       });
       test('first three elements are filled before fourth', async () => {
-        const chargeElements = [createChargeElement(chargeElementOptions), // pro rata quantity 0.49863
+        const chargeElements = [
+          createChargeElement({
+            ...chargeElementOptions,
+            chargeElementId: 'base-element'
+          }), // pro rata quantity 0.49863
           {
             ...createChargeElement(chargeElementOptions),
+            chargeElementId: 'TL-element-61-days',
             timeLimitedStartDate: '2016-04-01',
             timeLimitedEndDate: '2016-05-31',
+            startDate: '2016-04-01',
             endDate: '2016-05-31',
             totalDays: 365,
-            billableDays: 60,
-            authorisedAnnualQuantity: 1 // pro rata quantity 0.16438
+            billableDays: 61,
+            authorisedAnnualQuantity: 1 // pro rata quantity 0.16712
           }, {
             ...createChargeElement(chargeElementOptions),
-            source: 'supported',
+            chargeElementId: 'TL-element-30-days',
+            timeLimitedStartDate: '2016-06-01',
+            timeLimitedEndDate: '2016-06-30',
+            startDate: '2016-06-01',
+            endDate: '2016-06-30',
             totalDays: 365,
-            billableDays: 182,
-            authorisedAnnualQuantity: 1 // pro rata quantity 0.49863
+            billableDays: 30,
+            authorisedAnnualQuantity: 1 // pro rata quantity 0.08219
           },
           {
             ...createChargeElement(chargeElementOptions),
-            timeLimitedStartDate: '2016-04-01',
-            timeLimitedEndDate: '2016-05-31',
-            source: 'supported',
-            endDate: '2016-05-31',
+            chargeElementId: 'TL-element-92-days',
+            timeLimitedStartDate: '2016-07-01',
+            timeLimitedEndDate: '2016-09-30',
+            startDate: '2016-07-01',
+            endDate: '2016-07-31',
             totalDays: 365,
-            billableDays: 60,
-            authorisedAnnualQuantity: 1 // pro rata quantity 0.16438
+            billableDays: 92,
+            authorisedAnnualQuantity: 1 // pro rata quantity 0.25205
           }
         ];
         const returnOptions = {
@@ -741,9 +757,9 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           periodEndDay: '31',
           periodEndMonth: '3'
         };
-        const returnQuantities1 = [55, 60, 67, 76, 58, 72, 30, 54, 37, 37, 50, 68]; // Apr-Sept total: 388
-        const returnQuantities2 = [77, 61, 74, 51, 65, 80, 32, 49, 48, 57, 45, 52]; // Apr-Sept total: 408
-        const returnQuantities3 = [52, 71, 68, 73, 66, 57, 32, 49, 48, 57, 45, 52]; // Apr-Sept total: 387
+        const returnQuantities1 = [55, 60, 67, 62, 58, 42, 30, 54, 37, 37, 50, 68]; // Apr-Sept total: 388
+        const returnQuantities2 = [53, 61, 57, 51, 46, 44, 32, 49, 48, 57, 45, 52]; // Apr-Sept total: 408
+        const returnQuantities3 = [52, 57, 57, 60, 50, 57, 32, 49, 48, 57, 45, 52]; // Apr-Sept total: 387
         const returns = [createMonthlyReturn({
           ...returnOptions,
           tertiaryCode: '400',
@@ -757,11 +773,13 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           tertiaryCode: '400',
           quantities: returnQuantities3
         })];
-        const { data: matchedChargeElements } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
+        const {
+          data: matchedChargeElements
+        } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
 
-        const proRataAuthorisedQuantityFirstElement = getProRataAuthorisedQuantity(chargeElements[0]);
-        const proRataAuthorisedQuantitySecondElement = getProRataAuthorisedQuantity(chargeElements[1]);
-        const proRataAuthorisedQuantityThirdElement = getProRataAuthorisedQuantity(chargeElements[2]);
+        const proRataAuthorisedQuantityFirstElement = getProRataAuthorisedQuantity(chargeElements.filter(ele => ele.chargeElementId === 'base-element').shift());
+        const proRataAuthorisedQuantitySecondElement = getProRataAuthorisedQuantity(chargeElements.filter(ele => ele.chargeElementId === 'TL-element-30-days').shift());
+        const proRataAuthorisedQuantityThirdElement = getProRataAuthorisedQuantity(chargeElements.filter(ele => ele.chargeElementId === 'TL-element-61-days').shift());
 
         const sumOfAllocatedQuantities = new Decimal(matchedChargeElements[0].data.actualReturnQuantity)
           .plus(matchedChargeElements[1].data.actualReturnQuantity)

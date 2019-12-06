@@ -74,9 +74,10 @@ const matchReturnLineToElement = (line, ele) => {
   const updatedLine = cloneDeep(line);
 
   if (doesLineOverlapChargeElementDateRange(line, ele)) {
-    if (!isQuantityAllocated(line)) {
-      const proRataQuantityToAllocate = getProRataQuantityToAllocate(line, ele);
+    const proRataQuantityToAllocate = getProRataQuantityToAllocate(line, ele);
+    updatedEle.maxPossibleReturnQuantity = new Decimal(ele.maxPossibleReturnQuantity).plus(proRataQuantityToAllocate).toNumber();
 
+    if (!isQuantityAllocated(line)) {
       const unallocatedQuantity = proRataQuantityToAllocate.minus(line.quantityAllocated);
 
       updatedEle.actualReturnQuantity = new Decimal(ele.actualReturnQuantity).plus(unallocatedQuantity).toNumber();
@@ -84,6 +85,7 @@ const matchReturnLineToElement = (line, ele) => {
     }
   }
   return {
+    updatedMaxPossibleReturnQuantity: updatedEle.maxPossibleReturnQuantity,
     updatedElementQuantity: updatedEle.actualReturnQuantity,
     updatedLineQuantityAllocated: updatedLine.quantityAllocated
   };

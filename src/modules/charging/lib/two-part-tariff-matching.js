@@ -30,10 +30,15 @@ const matchReturnQuantities = (chargeElements, returnsToMatch) => {
     returns.forEach(ret => {
       if (returnPurposeMatchesElementPurpose(ret, ele)) {
         ret.lines.forEach(retLine => {
-          const { updatedLineQuantityAllocated, updatedElementQuantity } = matchRets.matchReturnLineToElement(retLine, ele);
+          const {
+            updatedLineQuantityAllocated,
+            updatedElementQuantity,
+            updatedMaxPossibleReturnQuantity
+          } = matchRets.matchReturnLineToElement(retLine, ele);
 
           retLine.quantityAllocated = updatedLineQuantityAllocated;
           ele.actualReturnQuantity = updatedElementQuantity;
+          ele.maxPossibleReturnQuantity = updatedMaxPossibleReturnQuantity;
         });
       }
     });

@@ -1,17 +1,19 @@
-const { flatMap, partialRight, uniq } = require('lodash');
+const { flatMap, uniq, identity } = require('lodash');
 const moment = require('moment');
 const Decimal = require('decimal.js-light');
 Decimal.set({
   precision: 8
 });
-const { ERROR_OVER_ABSTRACTION } = require('./two-part-tariff-helpers');
+const {
+  getChargeElementReturnData,
+  ERROR_OVER_ABSTRACTION
+} = require('./two-part-tariff-helpers');
+const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
 
 /**
  * Reduce function for calculating the total allocated quantity
  */
-const getTotalActualQuantity = (total, element) => {
-  return total.plus(element.actualReturnQuantity);
-};
+const getTotalActualQuantity = (total, element) => total.plus(element.actualReturnQuantity);
 
 /**
  * Reduce function for calculating the total billable quantity
@@ -21,89 +23,9 @@ const getTotalBillableQuantity = (total, element) => {
 };
 
 /**
- * Calculates the quantity to allocate for a charge element
- * @param {Decimal} totalActual return quantity to reshuffle
- * @param {Decimal} totalBillable quantity across charge elements
- * @param {Number} maxAllowable quantity for single charge element
- * @return {Object}
- *         {String} err  over abstraction error or null
- *         {Decimal} quantityToAllocate  for charge element
+ * Return the pro rata billable quantity or the pro rata authorised quantity
  */
-const getQuantityToAllocate = (totalActual, totalBillable, maxAllowable) => {
-  let err, quantityToAllocate;
-  const overAbstraction = totalActual.minus(totalBillable);
-
-  if (overAbstraction.gt(0)) {
-    err = ERROR_OVER_ABSTRACTION;
-    quantityToAllocate = overAbstraction.plus(maxAllowable);
-  } else {
-    quantityToAllocate = new Decimal(Math.min(totalActual, maxAllowable));
-  }
-  return { err, quantityToAllocate };
-};
-
-/**
- * Return object for charge element with zero actual return quantity
- * @param {String} chargeElementId
- */
-const getZeroReturnQuantity = element => {
-  const { chargeElementId, proRataBillableQuantity, proRataAuthorisedQuantity } = element;
-
-  return {
-    error: null,
-    data: {
-      chargeElementId,
-      proRataAuthorisedQuantity,
-      proRataBillableQuantity,
-      actualReturnQuantity: 0
-    }
-  };
-};
-
-/**
- * Reallocate quantities to fill elements in order, over abstractions are allocated to first element
- * @param {Array} elements in order for reallocation
- * @return {Array} of {error, data}
- *         {String} error  over abstraction error or null
- *         {Array} data containing further {error, data} objects
- *         {String} error  over abstraction or null
- *         {String} data.chargeElementId
- *         {Number} data.proRataAuthorisedQuantity
- *         {Number} data.proRataBillableQuantity
- *         {Number} data.actualReturnQuantity rounded to 3 decimal places
- */
-const reallocateQuantitiesInPriorityOrder = (elements) => {
-  let totalBillable = elements.reduce(getTotalBillableQuantity, new Decimal(0));
-  let totalActual = elements.reduce(getTotalActualQuantity, new Decimal(0));
-  const overallErr = totalActual.minus(totalBillable).gt(0) ? ERROR_OVER_ABSTRACTION : null;
-
-  const dataToReturn = elements.map(element => {
-    const { chargeElementId, proRataBillableQuantity, proRataAuthorisedQuantity } = element;
-    const maxAllowableQuantity = proRataBillableQuantity || proRataAuthorisedQuantity;
-
-    if (totalActual.isZero()) return getZeroReturnQuantity(element);
-
-    const { err, quantityToAllocate } = getQuantityToAllocate(totalActual, totalBillable, maxAllowableQuantity);
-
-    totalActual = totalActual.minus(quantityToAllocate);
-    totalBillable = totalBillable.minus(maxAllowableQuantity);
-
-    return {
-      error: err || null,
-      data: {
-        chargeElementId,
-        proRataAuthorisedQuantity,
-        proRataBillableQuantity,
-        actualReturnQuantity: quantityToAllocate.toDecimalPlaces(3).toNumber()
-      }
-    };
-  });
-
-  return {
-    error: overallErr,
-    data: dataToReturn
-  };
-};
+const getMaxAllowable = ele => ele.proRataBillableQuantity || ele.proRataAuthorisedQuantity;
 
 /**
  * Checks whether or not the charge element is time limited, but checking if it has time limited dates
@@ -112,6 +34,76 @@ const isTimeLimited = element => {
   const startDate = moment(element.timeLimitedStartDate || null); // if undefined is passed, moment defaults to now()
   const endDate = moment(element.timeLimitedEndDate || null);
   return startDate.isValid() && endDate.isValid();
+};
+
+/**
+ * Filter charge elements for those containing the given purpose code
+ */
+const getAllChargeElementsForPurpose = (chargeElements, purpose) =>
+  chargeElements.filter(ele => ele.purposeTertiary === purpose);
+
+/**
+   * Get a unique list of purposes across all charge elements
+   */
+const getAllChargeElementPurposes = chargeElements => {
+  return uniq(chargeElements.map(ele => {
+    return ele.purposeTertiary;
+  }));
+};
+
+/**
+ * Calculates the quantity to allocate for a charge element
+ * @param {Decimal} totalActual return quantity to reshuffle
+ * @param {Decimal} totalBillable quantity across charge elements
+ * @param {Number} maxAllowable quantity for single charge element
+ * @param {Number} maxForPeriod quantity for single charge element
+ * @return {Object}
+ *         {String} err  over abstraction error or null
+ *         {Decimal} quantityToAllocate  for charge element
+ */
+const getQuantityToAllocate = (totalActual, totalBillable, maxAllowable, maxForPeriod) => {
+  let err, quantityToAllocate;
+  const overAbstraction = totalActual.minus(totalBillable);
+
+  if (overAbstraction.gt(0)) {
+    err = ERROR_OVER_ABSTRACTION;
+    quantityToAllocate = overAbstraction.plus(maxAllowable);
+  } else {
+    quantityToAllocate = new Decimal(Math.min(totalActual, maxAllowable, maxForPeriod));
+  }
+  return {
+    err,
+    quantityToAllocate
+  };
+};
+
+/**
+ * Reallocate quantities to fill elements in order, over abstractions are allocated to first element
+ * @param {Array} elements charge elements
+ * @return {Array} of {error, data}
+ *         {String} error  over abstraction error or null
+ *         {Array} data containing further {error, data} objects
+ */
+const reallocateQuantitiesInOrder = chargeElementGroup => {
+  const { baseElement, subElements } = chargeElementGroup;
+  const elements = [baseElement, ...subElements];
+  let totalBillable = elements.reduce(getTotalBillableQuantity, new Decimal(0));
+  let totalActual = elements.reduce(getTotalActualQuantity, new Decimal(0));
+  const overallErr = totalActual.minus(totalBillable).gt(0) ? ERROR_OVER_ABSTRACTION : null;
+
+  const dataToReturn = elements.map(element => {
+    const maxAllowableQuantity = getMaxAllowable(element);
+
+    if (totalActual.isZero()) return getChargeElementReturnData({ ...element, actualReturnQuantity: 0 });
+
+    const { err, quantityToAllocate } = getQuantityToAllocate(totalActual, totalBillable, maxAllowableQuantity, element.maxPossibleReturnQuantity);
+
+    totalActual = totalActual.minus(quantityToAllocate);
+    totalBillable = totalBillable.minus(maxAllowableQuantity);
+    return getChargeElementReturnData({ ...element, actualReturnQuantity: quantityToAllocate }, err);
+  });
+
+  return { error: overallErr, data: dataToReturn };
 };
 
 /**
@@ -131,70 +123,70 @@ const getElementsBySource = (chargeElements, source, timeLimited) => {
 };
 
 /**
- * Source and time limited factors in order of final sorting priority
+ * Check that sub element abs period is within the base element abs period
+ * @param {Object} subEle sub element
+ * @param {Object} baseEle base element
+ * @return {Boolean} whether or not the sub element is within the base element
  */
-const prioritySorting = {
-  unsupportedSource: ['unsupported', false],
-  unsupportedTimeLimited: ['unsupported', true],
-  supportedSource: ['supported', false],
-  supportedTimeLimited: ['supported', true]
+const isSubElementWithinBaseElement = (subEle, baseEle) => {
+  const year = subEle.startDate.slice(0, 4);
+  const options = {
+    periodStartDay: baseEle.abstractionPeriodStartDay,
+    periodStartMonth: baseEle.abstractionPeriodStartMonth,
+    periodEndDay: baseEle.abstractionPeriodEndDay,
+    periodEndMonth: baseEle.abstractionPeriodEndMonth
+  };
+  return isDateWithinAbstractionPeriod(`${year}-${subEle.abstractionPeriodStartMonth}-${subEle.abstractionPeriodStartDay}`, options) &&
+    isDateWithinAbstractionPeriod(`${year}-${subEle.abstractionPeriodEndMonth}-${subEle.abstractionPeriodEndDay}`, options);
 };
 
 /**
- * Calls getElementsBySource with parameters from prioritySorting object
- * @param {String} key from prioritySorting object
+ * Determine base elements and group with relevant sub elements
+ * @param {Array} chargeElements for a given purpose
+ * @return {Array} of base and subElements
  */
-const getPriorityFunction = key => {
-  return partialRight(getElementsBySource, ...prioritySorting[key]);
-};
+const sortElementsIntoGroupsForReallocation = chargeElements => {
+  const baseElements = chargeElements.filter(element => !isTimeLimited(element));
 
-/**
- * Sorting function to sort charge elements in descending order of billable days
- * @param {Object} element1 charge element to sort by billable days
- * @param {Object} element2 charge element to sort by billable days
- * @return {Number} difference in billable days for the sorting algorithm
- */
-const sortByDescBillableDays = (element1, element2) => {
-  return element2.billableDays - element1.billableDays;
-};
+  return baseElements.map(baseEle => {
+    const subElements = chargeElements.filter(subEle => {
+      const areFactorsMatching = subEle.source === baseEle.source && subEle.season === baseEle.season;
+      return isTimeLimited(subEle) && areFactorsMatching && isSubElementWithinBaseElement(subEle, baseEle);
+    });
 
-/**
- * Sort charge elements in priority order for output
- * @param {Array} chargeElements
- * @return {Array} sorted charge elements
- */
-const sortElementsInPriorityOrder = chargeElements => {
-  const prioritisedElements = [];
-  Object.keys(prioritySorting).forEach(key => {
-    const methodToCall = getPriorityFunction(key);
-    let elementsToBeAdded = methodToCall(chargeElements);
-    if (elementsToBeAdded.length > 1) {
-      elementsToBeAdded = elementsToBeAdded.sort(sortByDescBillableDays);
-    }
-    prioritisedElements.push(elementsToBeAdded);
+    return { baseElement: baseEle, subElements };
   });
-  return flatMap(prioritisedElements);
 };
 
-/**
- * Get all purposes for charge elements
- * @param {Array} chargeElements
- * @return {Array} of unique purposes
- */
-const getAllChargeElementPurposes = chargeElements => {
-  return uniq(chargeElements.map(ele => {
-    return ele.purposeTertiary;
-  }));
-};
+const isElementOverAbstracted = element => element.actualReturnQuantity > getMaxAllowable(element);
 
 /**
- * Filter charge elements for those containing the given purpose code
- * @param {Array} chargeElements
- * @param {Number} purpose code
- * @return {Array} of charge elements with the given purpose
+ * Finds final allocation for elements in each element group
+ * @param {Array} elementGroups charge elements grouped by purpose & source
+ * @return {String} error over abstraction error or null
+ *         {Array} data objects with final actualReturnQuantity determined
  */
-const getAllChargeElementsForPurpose = (chargeElements, purpose) =>
-  chargeElements.filter(ele => ele.purposeTertiary === purpose);
+const checkQuantitiesInElementGroups = elementGroups => {
+  const matchedQuantities = [];
+  const matchingErrors = [];
+
+  elementGroups.forEach(group => {
+    if (group.subElements.length === 0) {
+      const error = isElementOverAbstracted(group.baseElement) ? ERROR_OVER_ABSTRACTION : null;
+      matchingErrors.push(error);
+      matchedQuantities.push(getChargeElementReturnData(group.baseElement, error));
+    } else {
+      const { error, data } = reallocateQuantitiesInOrder(group);
+      matchingErrors.push(error);
+      matchedQuantities.push(data);
+    }
+  });
+
+  return {
+    error: matchingErrors.filter(identity).shift() || null,
+    data: flatMap(matchedQuantities)
+  };
+};
 
 /**
  * Reshuffle quantities between charge elements so that they are filled in priority order
@@ -208,14 +200,14 @@ const reshuffleQuantities = chargeElements => {
   const matchedQuantities = [];
   const matchingErrors = [];
   chargeElementPurposes.forEach(purpose => {
-    const chargeElementsToPrioritise = getAllChargeElementsForPurpose(chargeElements, purpose);
+    const chargeElementsForPurpose = getAllChargeElementsForPurpose(chargeElements, purpose);
 
-    const prioritisedElements = sortElementsInPriorityOrder(chargeElementsToPrioritise);
+    const elementGroups = sortElementsIntoGroupsForReallocation(chargeElementsForPurpose);
 
-    const { error, data } = reallocateQuantitiesInPriorityOrder(prioritisedElements);
+    const { error, data } = checkQuantitiesInElementGroups(elementGroups);
     if (error) matchingErrors.push(error);
 
-    matchedQuantities.push(data);
+    matchedQuantities.push(...data);
   });
 
   return {
@@ -224,8 +216,11 @@ const reshuffleQuantities = chargeElements => {
   };
 };
 
+exports.getQuantityToAllocate = getQuantityToAllocate;
+exports.reallocateQuantitiesInOrder = reallocateQuantitiesInOrder;
 exports.isTimeLimited = isTimeLimited;
 exports.getElementsBySource = getElementsBySource;
-exports.sortElementsInPriorityOrder = sortElementsInPriorityOrder;
-exports.reallocateQuantitiesInPriorityOrder = reallocateQuantitiesInPriorityOrder;
+exports.isSubElementWithinBaseElement = isSubElementWithinBaseElement;
+exports.sortElementsIntoGroupsForReallocation = sortElementsIntoGroupsForReallocation;
+exports.checkQuantitiesInElementGroups = checkQuantitiesInElementGroups;
 exports.reshuffleQuantities = reshuffleQuantities;

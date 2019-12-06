@@ -63,19 +63,31 @@ experiment('2PT Returns Matching - Sample Data', async () => {
     test('returns expected actualReturnQuantities for each element', async () => {
       const { error, data } = matchReturnsToChargeElements(sampleData5.chargeVersion, sampleData5.returns);
 
+      const [chargeElement1] = data.filter(ele => ele.data.chargeElementId === 'charge-element-1');
+      const [chargeElement2] = data.filter(ele => ele.data.chargeElementId === 'charge-element-2');
+      const [chargeElement3] = data.filter(ele => ele.data.chargeElementId === 'charge-element-3');
+
       expect(error).to.be.null();
       expect(data).to.be.an.array().and.to.have.length(3);
-      expect(data[0].data.actualReturnQuantity).to.equal(34.35);
+      expect(chargeElement1.data.actualReturnQuantity).to.equal(24.63);
+      expect(chargeElement2.data.actualReturnQuantity).to.equal(0);
+      expect(chargeElement3.data.actualReturnQuantity).to.equal(0);
       expect(data[0].error).to.be.null();
-      expect(data[1].data.actualReturnQuantity).to.equal(0);
       expect(data[1].error).to.be.null();
-      expect(data[2].data.actualReturnQuantity).to.equal(0);
       expect(data[2].error).to.be.null();
     });
   });
   experiment('One return, one charge element', async () => {
     test('returns null error and expedcted actualReturnQuantity', async () => {
-      const { error, data } = matchReturnsToChargeElements(sampleData6.chargeVersion, sampleData6.returns);
+      const { error, data } = matchReturnsToChargeElements(sampleData6.chargeVersion1, sampleData6.returns);
+
+      expect(error).to.be.null();
+      expect(data).to.be.an.array().and.to.have.length(1);
+      expect(data[0].data.actualReturnQuantity).to.equal(13.974);
+      expect(data[0].error).to.be.null();
+    });
+    test('returns null error and expedcted actualReturnQuantity', async () => {
+      const { error, data } = matchReturnsToChargeElements(sampleData6.chargeVersion2, sampleData6.returns);
 
       expect(error).to.be.null();
       expect(data).to.be.an.array().and.to.have.length(1);

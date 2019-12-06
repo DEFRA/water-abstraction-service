@@ -36,6 +36,7 @@ const prepareChargeElementData = chargeElements => {
   const updated = cloneDeep(chargeElements);
   updated.forEach(ele => {
     ele.actualReturnQuantity = 0;
+    ele.maxPossibleReturnQuantity = 0;
     ele.proRataAuthorisedQuantity = getProRataQuantity(ele.authorisedAnnualQuantity, ele);
 
     if (ele.billableAnnualQuantity) ele.proRataBillableQuantity = getProRataQuantity(ele.billableAnnualQuantity, ele);

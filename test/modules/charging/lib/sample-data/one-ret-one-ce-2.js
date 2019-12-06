@@ -1,4 +1,4 @@
-const chargeVersion = {
+const chargeVersion1 = {
   chargeVersionId: 'charge-version-1',
   licenceRef: 'licence-ref',
   scheme: 'alcs',
@@ -20,10 +20,10 @@ const chargeVersion = {
     abstractionPeriodStartMonth: 4,
     abstractionPeriodEndDay: 31,
     abstractionPeriodEndMonth: 3,
-    startDate: '2017-04-01',
+    startDate: '2017-12-06',
     endDate: '2018-03-31',
     totalDays: 365,
-    billableDays: 365,
+    billableDays: 116,
     authorisedAnnualQuantity: '112.2',
     season: 'summer',
     seasonDerived: 'summer',
@@ -49,6 +49,67 @@ const chargeVersion = {
       chargeElementId: 'charge-element-1',
       agreementCode: 'S127',
       startDate: '2017-12-06T00:00:00.000Z',
+      endDate: null,
+      signedDate: null,
+      fileReference: null,
+      description: null,
+      dateCreated: '2019-09-26T08:12:17.107Z',
+      dateUpdated: '2019-09-26T08:12:17.107Z',
+      agreementDescription: 'Section 127 (Two Part Tariff)'
+    }]
+  }]
+};
+
+const chargeVersion2 = {
+  chargeVersionId: 'charge-version-2',
+  licenceRef: 'licence-ref',
+  scheme: 'alcs',
+  versionNumber: 107,
+  startDate: '2014-04-13T23:00:00.000Z',
+  status: 'superseded',
+  apportionment: false,
+  error: false,
+  endDate: '2017-12-05T00:00:00.000Z',
+  billedUptoDate: '2017-12-05T00:00:00.000Z',
+  dateCreated: '2019-09-26T08:12:02.492Z',
+  dateUpdated: '2019-09-26T08:12:02.492Z',
+  source: 'nald',
+  chargeElements: [{
+    chargeElementId: 'charge-element-1',
+    chargeVersionId: 'charge-version-2',
+    abstractionPeriodStartDay: 1,
+    abstractionPeriodStartMonth: 1,
+    abstractionPeriodEndDay: 31,
+    abstractionPeriodEndMonth: 12,
+    startDate: '2017-04-01',
+    endDate: '2017-12-05',
+    totalDays: 365,
+    billableDays: 249,
+    authorisedAnnualQuantity: '112.2',
+    season: 'summer',
+    seasonDerived: 'summer',
+    source: 'unsupported',
+    loss: 'high',
+    purposePrimary: 'A',
+    purposeSecondary: 'AGR',
+    purposeTertiary: '400',
+    factorsOverridden: false,
+    billableAnnualQuantity: '112.2',
+    timeLimitedStartDate: null,
+    timeLimitedEndDate: null,
+    description: 'SEEPAGE RESV',
+    srocCategory: null,
+    dateCreated: '2019-09-26T08:12:08.346Z',
+    dateUpdated: '2019-09-26T08:12:08.346Z',
+    purposePrimaryDescription: 'Agriculture',
+    purposeSecondaryDescription: 'General Agriculture',
+    purposeTertiaryDescription: 'Spray Irrigation - Direct',
+    eiucSource: 'other',
+    chargeAgreements: [{
+      chargeAgreementId: 'charge-agreement-1',
+      chargeElementId: 'charge-element-1',
+      agreementCode: 'S127',
+      startDate: '2014-04-13T23:00:00.000Z',
       endDate: null,
       signedDate: null,
       fileReference: null,
@@ -197,9 +258,120 @@ const returns = [{
     isCurrent: true
   }],
   isUnderQuery: false
+}, {
+  returnId: 'return-2',
+  licenceNumber: 'licence-ref',
+  receivedDate: '2018-04-17',
+  startDate: '2017-12-06',
+  endDate: '2018-03-31',
+  dueDate: '2018-04-28',
+  frequency: 'month',
+  isNil: false,
+  status: 'completed',
+  versionNumber: 1,
+  isCurrent: true,
+  reading: {
+    type: null,
+    method: null,
+    units: 'm³',
+    totalFlag: null,
+    total: null,
+    totalCustomDates: false,
+    totalCustomDateStart: null,
+    totalCustomDateEnd: null
+  },
+  meters: [],
+  requiredLines: null,
+  lines: [{
+    startDate: '2017-12-01',
+    endDate: '2017-12-31',
+    quantity: 9547,
+    timePeriod: 'month',
+    readingType: 'measured'
+  },
+  {
+    startDate: '2018-01-01',
+    endDate: '2018-01-31',
+    quantity: 5967,
+    timePeriod: 'month',
+    readingType: 'measured'
+  },
+  {
+    startDate: '2018-02-01',
+    endDate: '2018-02-28',
+    quantity: 0,
+    timePeriod: 'month',
+    readingType: 'measured'
+  },
+  {
+    startDate: '2018-03-01',
+    endDate: '2018-03-31',
+    quantity: 0,
+    timePeriod: 'month',
+    readingType: 'measured'
+  }
+  ],
+  metadata: {
+    nald: {
+      periodEndDay: '31',
+      periodEndMonth: '3',
+      periodStartDay: '1',
+      periodStartMonth: '4'
+    },
+    points: [{
+      name: 'BOREHOLE',
+      ngr1: 'XX 123 456',
+      ngr2: null,
+      ngr3: null,
+      ngr4: null
+    }],
+    isFinal: false,
+    version: 1,
+    isSummer: false,
+    isUpload: false,
+    purposes: [{
+      alias: 'TRANSFER TO SEEPAGE RESV',
+      primary: {
+        code: 'A',
+        description: 'Agriculture'
+      },
+      tertiary: {
+        code: '450',
+        description: 'Transfer Between Sources (Pre Water Act 2003)'
+      },
+      secondary: {
+        code: 'AGR',
+        description: 'General Agriculture'
+      }
+    },
+    {
+      primary: {
+        code: 'A',
+        description: 'Agriculture'
+      },
+      tertiary: {
+        code: '420',
+        description: 'Spray Irrigation - Storage'
+      },
+      secondary: {
+        code: 'AGR',
+        description: 'General Agriculture'
+      }
+    }
+    ],
+    isCurrent: true,
+    description: 'BORE - FOR TRANSFER TO SEEPAGE RES',
+    isTwoPartTariff: true
+  },
+  versions: [{
+    versionNumber: 1,
+    isCurrent: true
+  }],
+  isUnderQuery: false
 }];
 
 module.exports = {
-  chargeVersion,
+  chargeVersion1,
+  chargeVersion2,
   returns
 };

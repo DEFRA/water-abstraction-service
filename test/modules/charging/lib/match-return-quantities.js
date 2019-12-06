@@ -23,6 +23,55 @@ const createReturnLine = options => {
 };
 
 experiment('modules/charging/lib/match-return-quantities', async () => {
+  experiment('.getProRataQuantityToAllocate', async () => {
+    experiment('when return line is completely within charge element', async () => {
+      const chargeElementOptions = {
+        startDate: '2015-04-01',
+        endDate: '2016-03-31',
+        billableAnnualQuantity: 5.9996,
+        totalDays: 214,
+        billableDays: 214
+      };
+      const chargeElement = createChargeElement({
+        ...chargeElementOptions
+      });
+      test('returns entire quantity as Decimal', async () => {
+        const returnLine = createReturnLine({
+          startDate: '2015-04-03',
+          endDate: '2015-04-09',
+          quantityAllocated: 0,
+          quantity: 0.02269
+        });
+        const proRataQuantity = getProRataQuantityToAllocate(returnLine, chargeElement);
+        const quantityDecimal = new Decimal(returnLine.quantity);
+        expect(proRataQuantity).to.equal(quantityDecimal);
+      });
+    });
+    experiment('when return line is partially within charge element', async () => {
+      const chargeElementOptions = {
+        startDate: '2015-04-01',
+        endDate: '2016-03-31',
+        billableAnnualQuantity: 5.9996,
+        totalDays: 214,
+        billableDays: 214
+      };
+      const chargeElement = createChargeElement({
+        ...chargeElementOptions
+      });
+      test('proRataQuantity will be proportionate to quantity based on overlap', async () => {
+        const returnLine = createReturnLine({
+          startDate: '2016-03-27',
+          endDate: '2016-04-02',
+          quantityAllocated: 0,
+          quantity: 0.02269
+        });
+        const proRataQuantity = getProRataQuantityToAllocate(returnLine, chargeElement);
+        const expectedProRataQuantity = new Decimal(returnLine.quantity).times(5).dividedBy(7);
+        expect(proRataQuantity).to.equal(expectedProRataQuantity);
+      });
+    });
+  });
+
   experiment('.doesLineOverlapChargeElementDateRange', async () => {
     test('returns true when line is completely within charge element date range', async () => {
       const chargeElementOptions = {
@@ -108,55 +157,6 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
     });
   });
 
-  experiment('.getProRataQuantityToAllocate', async () => {
-    experiment('when return line is completely within charge element', async () => {
-      const chargeElementOptions = {
-        startDate: '2015-04-01',
-        endDate: '2016-03-31',
-        billableAnnualQuantity: 5.9996,
-        totalDays: 214,
-        billableDays: 214
-      };
-      const chargeElement = createChargeElement({
-        ...chargeElementOptions
-      });
-      test('returns entire quantity as Decimal', async () => {
-        const returnLine = createReturnLine({
-          startDate: '2015-04-03',
-          endDate: '2015-04-09',
-          quantityAllocated: 0,
-          quantity: 0.02269
-        });
-        const proRataQuantity = getProRataQuantityToAllocate(returnLine, chargeElement);
-        const quantityDecimal = new Decimal(returnLine.quantity);
-        expect(proRataQuantity).to.equal(quantityDecimal);
-      });
-    });
-    experiment('when return line is partially within charge element', async () => {
-      const chargeElementOptions = {
-        startDate: '2015-04-01',
-        endDate: '2016-03-31',
-        billableAnnualQuantity: 5.9996,
-        totalDays: 214,
-        billableDays: 214
-      };
-      const chargeElement = createChargeElement({
-        ...chargeElementOptions
-      });
-      test('proRataQuantity will be proportionate to quantity based on overlap', async () => {
-        const returnLine = createReturnLine({
-          startDate: '2016-03-27',
-          endDate: '2016-04-02',
-          quantityAllocated: 0,
-          quantity: 0.02269
-        });
-        const proRataQuantity = getProRataQuantityToAllocate(returnLine, chargeElement);
-        const expectedProRataQuantity = new Decimal(returnLine.quantity).times(5).dividedBy(7);
-        expect(proRataQuantity).to.equal(expectedProRataQuantity);
-      });
-    });
-  });
-
   experiment('.matchReturnLineToElement', async () => {
     experiment('if return line and charge element have no overlap', async () => {
       test('return line quantityAllocated and charge element actualReturnQuantity remain the same', async () => {
@@ -175,10 +175,16 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
           endDate: '2017-04-30',
           billableAnnualQuantity: 5.9996,
           actualReturnQuantity: 0,
+          maxPossibleReturnQuantity: 0,
           totalDays: 214,
           billableDays: 214
         });
-        const { updatedElementQuantity, updatedLineQuantityAllocated } = matchReturnLineToElement(returnLine, chargeElement);
+        const {
+          updatedMaxPossibleReturnQuantity,
+          updatedElementQuantity,
+          updatedLineQuantityAllocated
+        } = matchReturnLineToElement(returnLine, chargeElement);
+        expect(updatedMaxPossibleReturnQuantity).to.equal(chargeElement.maxPossibleReturnQuantity);
         expect(updatedElementQuantity).to.equal(chargeElement.actualReturnQuantity);
         expect(updatedLineQuantityAllocated).to.equal(returnLine.quantityAllocated);
       });
@@ -199,6 +205,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         endDate: '2017-03-31',
         actualReturnQuantity: 1.3,
         proRataAuthorisedAnnualQuantity: 5.9996,
+        maxPossibleReturnQuantity: 0,
         totalDays: 214,
         billableDays: 214
       });
@@ -212,6 +219,12 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
           updatedLineQuantityAllocated
         } = matchReturnLineToElement(returnLine, chargeElement);
         expect(updatedLineQuantityAllocated).to.equal(quantityDecimal.toNumber());
+      });
+      test('adds proRataQuantity to maxPossibleReturnQuantity in return line', async () => {
+        const {
+          updatedMaxPossibleReturnQuantity
+        } = matchReturnLineToElement(returnLine, chargeElement);
+        expect(updatedMaxPossibleReturnQuantity).to.equal(quantityDecimal.toNumber());
       });
     });
     experiment('if quantity takes charge element actualReturnQuantity above authorised quantity', async () => {
@@ -230,6 +243,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         endDate: '2017-03-31',
         actualReturnQuantity: 5.99,
         proRataAuthorisedAnnualQuantity: 5.9996,
+        maxPossibleReturnQuantity: 0,
         totalDays: 214,
         billableDays: 214
       });
@@ -259,6 +273,7 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         endDate: '2017-03-31',
         actualReturnQuantity: 2,
         proRataAuthorisedAnnualQuantity: 5.9996,
+        maxPossibleReturnQuantity: 0,
         totalDays: 214,
         billableDays: 214
       });

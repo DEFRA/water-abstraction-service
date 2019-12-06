@@ -25,13 +25,12 @@ const createChargeElement = options => {
     dateUpdated: '2019-09-27T10:23:07.981Z',
     proRataAuthorisedQuantity: options.proRataAuthorisedQuantity,
     proRataBillableQuantity: options.proRataBillableQuantity,
+    maxPossibleReturnQuantity: options.maxPossibleReturnQuantity,
     purposePrimaryDescription: 'Agriculture',
     purposeSecondaryDescription: 'General Agriculture',
     purposeTertiaryDescription: 'Spray Irrigation - Direct',
     startDate: options.startDate,
     endDate: options.endDate,
-    effectiveEndDate: options.effectiveEndDate,
-    effectiveStartDate: options.effectiveStartDate,
     // Number of days this charge element would have been billable for
     // had it been in effect for the whole financial year.
     // Takes the abstraction period into account

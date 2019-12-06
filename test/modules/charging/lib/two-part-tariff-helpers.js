@@ -11,6 +11,7 @@ const {
   ERROR_UNDER_QUERY,
   ERROR_NO_RETURNS_SUBMITTED,
   returnsError,
+  getChargeElementReturnData,
   returnPurposeMatchesElementPurpose
 } = require('../../../../src/modules/charging/lib/two-part-tariff-helpers');
 
@@ -37,6 +38,63 @@ experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
       expect(data[1].data.chargeElementId).to.equal(chargeElement2.chargeElementId);
       expect(data[1].data.actualReturnQuantity).to.be.null();
       expect(data[1].error).to.be.null();
+    });
+  });
+
+  experiment('.getChargeElementReturnData', async () => {
+    test('if no error is passed, returns a null error', async () => {
+      const chargeElement = {
+        chargeElementId: 'test-charge-element',
+        proRataAuthorisedQuantity: 50,
+        actualReturnQuantity: 50
+      };
+      const { error } = getChargeElementReturnData(chargeElement);
+
+      expect(error).to.be.null();
+    });
+    test('if error is passed, returns the error', async () => {
+      const chargeElement = {
+        chargeElementId: 'test-charge-element',
+        proRataAuthorisedQuantity: 50,
+        actualReturnQuantity: 50
+      };
+      const { error } = getChargeElementReturnData(chargeElement, 'bad-error');
+
+      expect(error).to.equal('bad-error');
+    });
+    test('data contains the expected values', async () => {
+      const chargeElement = {
+        chargeElementId: 'test-charge-element',
+        proRataAuthorisedQuantity: 50,
+        proRataBillableQuantity: 50,
+        actualReturnQuantity: 45.79
+      };
+      const { data } = getChargeElementReturnData(chargeElement);
+
+      expect(data.chargeElementId).to.equal(chargeElement.chargeElementId);
+      expect(data.proRataAuthorisedQuantity).to.equal(chargeElement.proRataAuthorisedQuantity);
+      expect(data.proRataBillableQuantity).to.equal(chargeElement.proRataBillableQuantity);
+      expect(data.actualReturnQuantity).to.equal(chargeElement.actualReturnQuantity);
+    });
+    test('if no proRataBillableQuantity is passed, it is returned as null', async () => {
+      const chargeElement = {
+        chargeElementId: 'test-charge-element',
+        proRataAuthorisedQuantity: 50,
+        actualReturnQuantity: 50
+      };
+      const { data } = getChargeElementReturnData(chargeElement);
+
+      expect(data.proRataBillableQuantity).to.be.null();
+    });
+    test('if actualReturnsQuantity is null, is returned as null', async () => {
+      const chargeElement = {
+        chargeElementId: 'test-charge-element',
+        proRataAuthorisedQuantity: 50,
+        actualReturnQuantity: null
+      };
+      const { data } = getChargeElementReturnData(chargeElement);
+
+      expect(data.actualReturnQuantity).to.be.null();
     });
   });
 

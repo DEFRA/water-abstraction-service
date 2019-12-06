@@ -43,10 +43,32 @@ const returnsError = (error, chargeElements) => {
  *         {Array} data chargeElementId & null actualReturnQuantity
  */
 const getNullActualReturnQuantities = (error, chargeElements) => {
-  const data = chargeElements.map(element => {
-    return { error: null, data: { chargeElementId: element.chargeElementId, actualReturnQuantity: null } };
-  });
+  const data = chargeElements.map(element =>
+    getChargeElementReturnData({ ...element, actualReturnQuantity: null })
+  );
   return { error, data };
+};
+
+/**
+ * Return object for matched charge element data
+ * @param {Object} chargeElement
+ * @param {String} error
+ * @return {String} error that is passed in or null
+ *         {Object} data result of matching exercise for specific charge element
+ */
+const getChargeElementReturnData = (chargeElement, error) => {
+  const actualReturnQuantity = (chargeElement.actualReturnQuantity !== null)
+    ? new Decimal(chargeElement.actualReturnQuantity).toDecimalPlaces(3).toNumber()
+    : null;
+  return {
+    error: error || null,
+    data: {
+      chargeElementId: chargeElement.chargeElementId,
+      proRataAuthorisedQuantity: chargeElement.proRataAuthorisedQuantity,
+      proRataBillableQuantity: chargeElement.proRataBillableQuantity || null,
+      actualReturnQuantity
+    }
+  };
 };
 
 /**
@@ -73,4 +95,5 @@ exports.ERROR_UNDER_QUERY = ERROR_UNDER_QUERY;
 exports.ERROR_RECEIVED = ERROR_RECEIVED;
 exports.getNullActualReturnQuantities = getNullActualReturnQuantities;
 exports.returnsError = returnsError;
+exports.getChargeElementReturnData = getChargeElementReturnData;
 exports.returnPurposeMatchesElementPurpose = returnPurposeMatchesElementPurpose;
