@@ -1,7 +1,7 @@
 const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 const { createChargeElement, wrapElementsInVersion } = require('./test-charge-data');
-const { createReturn, createLineData, createMonthlyReturn, createWeeklyReturn, createPurposeData } = require('./test-return-data');
+const { createReturn, createLineData, createMonthlyReturn, createPurposeData } = require('./test-return-data');
 const sandbox = require('sinon').createSandbox();
 const Decimal = require('decimal.js-light');
 Decimal.set({
@@ -576,14 +576,41 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
             periodEndDay: '31',
             periodEndMonth: '3'
           };
-          const returnQuantities = [0, 0, 0, 2, 4, 3, 3, 7, 2, 1, 6, 8, 0, 1, 4, 6, 7, 0, 0, 8, 1, 4, 3, 2];
-          const returns = [createWeeklyReturn({
+          const lineData = [
+            { startDate: '2016-04-03', endDate: '2016-04-09', quantity: 0 },
+            { startDate: '2016-04-10', endDate: '2016-04-16', quantity: 0 },
+            { startDate: '2016-04-17', endDate: '2016-04-23', quantity: 0 },
+            { startDate: '2016-04-24', endDate: '2016-04-30', quantity: 2 },
+            { startDate: '2016-05-01', endDate: '2016-05-07', quantity: 4 },
+            { startDate: '2016-05-08', endDate: '2016-05-14', quantity: 3 },
+            { startDate: '2016-05-15', endDate: '2016-05-21', quantity: 3 },
+            { startDate: '2016-05-22', endDate: '2016-05-28', quantity: 7 },
+            { startDate: '2016-05-29', endDate: '2016-06-04', quantity: 2 },
+            { startDate: '2016-06-05', endDate: '2016-06-11', quantity: 1 },
+            { startDate: '2016-06-12', endDate: '2016-06-18', quantity: 6 },
+            { startDate: '2016-06-19', endDate: '2016-06-25', quantity: 8 },
+            { startDate: '2016-06-26', endDate: '2016-07-02', quantity: 0 },
+            { startDate: '2016-07-03', endDate: '2016-07-09', quantity: 1 },
+            { startDate: '2016-07-10', endDate: '2016-07-16', quantity: 4 },
+            { startDate: '2016-07-17', endDate: '2016-07-23', quantity: 6 },
+            { startDate: '2016-07-24', endDate: '2016-07-30', quantity: 7 },
+            { startDate: '2016-07-31', endDate: '2016-08-06', quantity: 0 },
+            { startDate: '2016-08-07', endDate: '2016-08-13', quantity: 0 },
+            { startDate: '2016-08-14', endDate: '2016-08-20', quantity: 8 },
+            { startDate: '2016-08-21', endDate: '2016-08-27', quantity: 1 },
+            { startDate: '2016-08-28', endDate: '2016-09-03', quantity: 4 },
+            { startDate: '2016-09-04', endDate: '2016-09-10', quantity: 3 },
+            { startDate: '2016-09-11', endDate: '2016-09-17', quantity: 2 }
+          ];
+          const returns = [createReturn({
             ...returnOptions,
             tertiaryCode: '400',
-            quantities: returnQuantities
+            lineData,
+            frequency: 'week'
           })];
 
-          const sumOfRelevantQuantities = returnQuantities.slice(0, 14).reduce((a, b) => a + b, 0) + new Decimal(returnQuantities[14]).times(3).dividedBy(7).toNumber();
+          const sumOfRelevantQuantities = lineData.slice(0, 14).reduce((a, b) => a + b.quantity, 0) +
+            new Decimal(lineData[14].quantity).times(3).dividedBy(7).toNumber();
           const expectedActualReturnQuantity = convertToML(sumOfRelevantQuantities, true);
           const { data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
           expect(matchedChargeElement.data.actualReturnQuantity).to.equal(expectedActualReturnQuantity);

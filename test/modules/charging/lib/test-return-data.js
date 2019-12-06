@@ -54,7 +54,7 @@ const getReturnLines = (frequency, lineData) => {
   return lineData.map(line => {
     return {
       startDate: moment(line.startDate).format(dateFormat),
-      endDate: moment(line.startDate).endOf(frequency).format(dateFormat),
+      endDate: line.endDate || moment(line.startDate).endOf(frequency).format(dateFormat),
       quantity: line.quantity,
       quantityAllocated: line.quantityAllocated,
       timePeriod: frequency
@@ -66,9 +66,10 @@ const createLineData = (startDate, frequency, quantities) => {
   const totalLines = quantities.length;
   const lineData = [];
   for (var i = 0; i < totalLines; i++) {
+    const startDateForLine = moment(startDate).add(i, frequency);
     lineData.push({
-      startDate: moment(startDate).add(i, frequency).format(dateFormat),
-      endDate: moment(startDate).add(i, frequency).endOf(frequency),
+      startDate: startDateForLine.format(dateFormat),
+      endDate: startDateForLine.endOf(frequency).format(dateFormat),
       quantity: quantities[i] !== null ? quantities[i] : null
     });
   }
@@ -89,22 +90,7 @@ const createMonthlyReturn = options => {
   });
 };
 
-/**
- * startDate must be a Sunday
- * @param {Object} options
- */
-const createWeeklyReturn = options => {
-  const { startDate, quantities } = options;
-  const lineData = createLineData(startDate, 'week', quantities);
-  return createReturn({
-    ...options,
-    lineData,
-    frequency: 'week'
-  });
-};
-
 exports.createReturn = createReturn;
 exports.createMonthlyReturn = createMonthlyReturn;
-exports.createWeeklyReturn = createWeeklyReturn;
 exports.createPurposeData = createPurposeData;
 exports.createLineData = createLineData;
