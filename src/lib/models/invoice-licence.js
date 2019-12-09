@@ -106,9 +106,9 @@ class InvoiceLicence {
   get uniqueId () {
     return [
       get(this, '_licence.licenceNumber'),
-      get(this, '_company.companyId'),
-      get(this, '_address.addressId'),
-      get(this, '_contact.contactId')
+      get(this, '_company.id'),
+      get(this, '_address.id'),
+      get(this, '_contact.id')
     ].join('.');
   }
 }
