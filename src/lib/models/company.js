@@ -1,7 +1,10 @@
 const Joi = require('@hapi/joi');
 
+const TYPE_PERSON = 'person';
+const TYPE_ORGANISATION = 'organisation';
+
 const VALID_GUID = Joi.string().guid().required();
-const VALID_TYPE = Joi.string().valid('person', 'organisation').required();
+const VALID_TYPE = Joi.string().valid(TYPE_PERSON, TYPE_ORGANISATION).required();
 const VALID_NAME = Joi.string().required();
 
 class Company {
@@ -48,3 +51,5 @@ class Company {
 }
 
 module.exports = Company;
+module.exports.TYPE_ORGANISATION = TYPE_ORGANISATION;
+module.exports.TYPE_PERSON = TYPE_PERSON;
