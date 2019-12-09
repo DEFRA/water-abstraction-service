@@ -121,6 +121,11 @@ experiment('lib/models/contact-v2 model', () => {
       expect(contact.fullName).to.equal('Captain A B C Doe');
     });
 
+    test('full name returns the full name when initials are null', async () => {
+      contact.initials = null;
+      expect(contact.fullName).to.equal('Captain John Doe');
+    });
+
     test('.toJSON returns all data', async () => {
       const json = contact.toJSON();
       expect(json).to.equal({
