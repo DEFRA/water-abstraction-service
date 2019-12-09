@@ -15,8 +15,10 @@ const createBatchInvoiceLicence = async (billingInvoiceId, invoiceLicence) => {
     throw new Error(`Licence ${licenceNumber} not found`);
   }
 
+  // Map data to new row in water.billing_invoice_licences
+  // @todo - it feels odd here writing either a contact or a company object
+  // suggest we expand the table to include company and contact fields and write both separately
   const licenceHolder = invoiceLicence.contact ? invoiceLicence.contact.toJSON() : invoiceLicence.company.toJSON();
-
   const row = {
     billing_invoice_id: billingInvoiceId,
     company_id: invoiceLicence.company.id,
@@ -28,6 +30,7 @@ const createBatchInvoiceLicence = async (billingInvoiceId, invoiceLicence) => {
     licence_id: licence.licence_id
   };
 
+  // Persist to DB
   return repository.billingInvoiceLicences.create(row);
 };
 
