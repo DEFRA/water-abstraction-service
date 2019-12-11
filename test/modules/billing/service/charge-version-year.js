@@ -8,7 +8,8 @@ const {
 const { expect } = require('@hapi/code');
 
 const sandbox = require('sinon').createSandbox();
-const { Batch, Invoice, InvoiceAccount, Address } = require('../../../../src/lib/models');
+const { Address, Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence } = require('../../../../src/lib/models');
+const Contact = require('../../../../src/lib/models/contact-v2');
 
 const chargeVersionYear = require('../../../../src/modules/billing/service/charge-version-year');
 const chargeProcessor = require('../../../../src/modules/billing/service/charge-processor');
@@ -19,6 +20,7 @@ const batchId = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
 const chargeVersionId = 'charge_version_1';
 
 const data = {
+  billingInvoiceId: '991675b7-4760-49eb-8adf-e240770d21eb',
   chargeVersionYear: {
     charge_version_id: chargeVersionId,
     financial_year_ending: 2020,
@@ -27,15 +29,68 @@ const data = {
   charges: [{
 
   }],
-  modelMapperResponse: new Batch()
+  modelMapperResponse: new Batch(),
+  company: {
+    id: '710014ac-381e-41b6-a14b-0696efa4fc31',
+    type: 'organisation',
+    name: 'Really Big Farm Ltd'
+  },
+  contact: {
+    id: '62d82f1d-73aa-4126-9700-105a427474f4',
+    salutation: 'Mrs',
+    firstName: 'Joan',
+    lastName: 'Doe'
+  },
+  licence: {
+    id: '490479e9-7cb7-44c2-8af8-bd178eb61b1c',
+    licenceNumber: '01/234/*ABC'
+  },
+  address: {
+    id: '1f8a29a9-7d07-4c21-8fba-f73f72f5a72b',
+    addressLine1: 'Daisy Farm',
+    addressLine2: 'Buttercup Lane',
+    addressLine3: 'Windy Hill',
+    addressLine4: 'Green Meadows',
+    town: 'Testington',
+    county: 'Testingshire',
+    postcode: 'TT1 1TT',
+    country: 'England'
+  },
+  invoiceAccount: {
+    id: 'b5b37451-27e5-457e-a2d8-2751ee99cd01',
+    accountNumber: 'S12345678A'
+  }
 };
+
+const createCompany = () =>
+  Object.assign(new Company(), data.company);
+
+const createLicence = () =>
+  Object.assign(new Licence(), data.licence);
+
+const createContact = () =>
+  Object.assign(new Contact(), data.contact);
+
+const createAddress = () =>
+  Object.assign(new Address(), data.address);
+
+const createInvoiceAccount = () =>
+  Object.assign(new InvoiceAccount(), data.invoiceAccount);
 
 experiment('modules/billing/service/charge-version-year.js', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
     sandbox.stub(chargeProcessor, 'processCharges');
     sandbox.stub(chargeProcessor, 'modelMapper').returns(data.modelMapperResponse);
-    sandbox.stub(repository.billingInvoices, 'create');
+    sandbox.stub(repository.billingInvoices, 'create').resolves({
+      rows: [{
+        billing_invoice_id: data.billingInvoiceId
+      }]
+    });
+    sandbox.stub(repository.licences, 'findOneByLicenceNumber').resolves({
+      licence_id: data.licence.id
+    });
+    sandbox.stub(repository.billingInvoiceLicences, 'create').resolves();
   });
 
   afterEach(async () => {
@@ -103,22 +158,24 @@ experiment('modules/billing/service/charge-version-year.js', () => {
 
         // Create invoice
         const invoice = new Invoice();
-        invoice.invoiceAccount = new InvoiceAccount();
-        invoice.invoiceAccount.id = 'b5b37451-27e5-457e-a2d8-2751ee99cd01';
-        invoice.invoiceAccount.accountNumber = 'S12345678A';
-        invoice.address = new Address();
-        invoice.address.id = '1f8a29a9-7d07-4c21-8fba-f73f72f5a72b';
-        invoice.address.addressLine1 = 'Daisy Farm';
-        invoice.address.addressLine2 = 'Buttercup Lane';
-        invoice.address.addressLine3 = 'Windy Hill';
-        invoice.address.addressLine4 = 'Green Meadows';
-        invoice.address.town = 'Testington';
-        invoice.address.county = 'Testingshire';
-        invoice.address.postcode = 'TT1 1TT';
-        invoice.address.country = 'England';
+        invoice.invoiceAccount = createInvoiceAccount();
+        invoice.address = createAddress();
+
+        // Set up invoice licence
+        const invoiceLicence = new InvoiceLicence();
+        invoiceLicence.licence = createLicence();
+        invoiceLicence.company = createCompany();
+        invoiceLicence.contact = createContact();
+        invoiceLicence.address = createAddress();
+        invoice.invoiceLicences = [invoiceLicence];
+
         batch.addInvoice(invoice);
 
         await chargeVersionYear.persistChargeVersionYearBatch(batch);
+      });
+
+      test('one invoice is created for each licence in batch', async () => {
+        expect(repository.billingInvoices.create.callCount).to.equal(1);
       });
 
       test('persists each invoice in the batch', async () => {
@@ -138,6 +195,40 @@ experiment('modules/billing/service/charge-version-year.js', () => {
             country: 'England'
           },
           billing_batch_id: '6556baab-4e69-4bba-89d8-7c6403f8ac8d'
+        });
+      });
+
+      test('one invoice licence is created for each licence in batch', async () => {
+        expect(repository.billingInvoiceLicences.create.callCount).to.equal(1);
+      });
+
+      test('persists each licence in the batch', async () => {
+        const [row] = repository.billingInvoiceLicences.create.lastCall.args;
+        expect(row).to.equal({
+          billing_invoice_id: data.billingInvoiceId,
+          company_id: data.company.id,
+          contact_id: data.contact.id,
+          address_id: data.address.id,
+          licence_ref: data.licence.licenceNumber,
+          licence_holder_name: {
+            id: data.contact.id,
+            initials: undefined,
+            salutation: data.contact.salutation,
+            firstName: data.contact.firstName,
+            lastName: data.contact.lastName
+          },
+          licence_holder_address: {
+            addressLine1: 'Daisy Farm',
+            addressLine2: 'Buttercup Lane',
+            addressLine3: 'Windy Hill',
+            addressLine4: 'Green Meadows',
+            country: 'England',
+            county: 'Testingshire',
+            id: '1f8a29a9-7d07-4c21-8fba-f73f72f5a72b',
+            postcode: 'TT1 1TT',
+            town: 'Testington'
+          },
+          licence_id: data.licence.id
         });
       });
     });

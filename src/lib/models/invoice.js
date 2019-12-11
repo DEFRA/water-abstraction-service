@@ -1,13 +1,15 @@
 const Joi = require('@hapi/joi');
 const Address = require('./address.js');
 const InvoiceAccount = require('./invoice-account.js');
+const InvoiceLicence = require('./invoice-licence.js');
 const { assert } = require('@hapi/hoek');
+const { isArray } = require('lodash');
 
 const VALID_GUID = Joi.string().guid().required();
 
 class Invoice {
   constructor () {
-    this._transactions = [];
+    this._invoiceLicences = [];
   }
 
   /**
@@ -59,6 +61,18 @@ class Invoice {
    */
   get address () {
     return this._address;
+  }
+
+  set invoiceLicences (arr) {
+    assert(isArray(arr), 'Array expected');
+    arr.map((invoiceLicence, i) =>
+      assert(invoiceLicence instanceof InvoiceLicence, `InvoiceLicence expected at position ${i}`)
+    );
+    this._invoiceLicences = arr;
+  }
+
+  get invoiceLicences () {
+    return this._invoiceLicences;
   }
 }
 
