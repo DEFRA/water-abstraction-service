@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -7,9 +9,13 @@ const {
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const uuid = require('uuid/v4');
+
+const Invoice = require('../../../src/lib/models/invoice');
 
 const repos = require('../../../src/lib/connectors/repository');
 const event = require('../../../src/lib/event');
+const invoiceService = require('../../../src/modules/billing/services/invoice-service');
 
 const controller = require('../../../src/modules/billing/controller');
 
@@ -31,8 +37,9 @@ experiment('modules/billing/controller', () => {
     });
 
     sandbox.stub(repos.billingBatches, 'getById');
-    sandbox.stub(repos.billingInvoices, 'findByBatchId');
-    sandbox.stub(repos.billingInvoices, 'getInvoiceDetail');
+
+    sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
+    sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
 
     sandbox.stub(event, 'save').resolves({
       rows: [
@@ -202,20 +209,9 @@ experiment('modules/billing/controller', () => {
       let response;
 
       beforeEach(async () => {
-        repos.billingInvoices.findByBatchId.resolves([
-          {
-            billing_invoice_id: 'test-invoice-id',
-            invoice_account_id: 'test-account-id',
-            address: {
-              test: 1,
-              testing: 'one'
-            },
-            invoice_account_number: '11222',
-            net_amount: '192',
-            is_credit: true,
-            date_created: '2019-11-11T16:05:07.330Z',
-            date_updated: '2019-11-11T16:05:07.330Z'
-          }
+        invoiceService.getInvoicesForBatch.resolves([
+          new Invoice(),
+          new Invoice()
         ]);
 
         response = await controller.getBatchInvoices({
@@ -225,22 +221,9 @@ experiment('modules/billing/controller', () => {
         });
       });
 
-      test('a camel case representation of the data is returned', async () => {
-        expect(response.data).to.equal([
-          {
-            billingInvoiceId: 'test-invoice-id',
-            invoiceAccountId: 'test-account-id',
-            address: {
-              test: 1,
-              testing: 'one'
-            },
-            invoiceAccountNumber: '11222',
-            netAmount: '192',
-            isCredit: true,
-            dateCreated: '2019-11-11T16:05:07.330Z',
-            dateUpdated: '2019-11-11T16:05:07.330Z'
-          }
-        ]);
+      test('the batch id is passed to the invoice service', async () => {
+        const [batchId] = invoiceService.getInvoicesForBatch.lastCall.args;
+        expect(batchId).to.equal('test-batch-id');
       });
 
       test('the error object is null', async () => {
@@ -252,7 +235,7 @@ experiment('modules/billing/controller', () => {
       let response;
 
       beforeEach(async () => {
-        repos.billingInvoices.findByBatchId.resolves([]);
+        invoiceService.getInvoicesForBatch.resolves([]);
         response = await controller.getBatchInvoices({
           params: {
             batchId: 'test-batch-id'
@@ -270,26 +253,25 @@ experiment('modules/billing/controller', () => {
     });
   });
 
-  experiment('.getInvoiceDetail', () => {
+  experiment('.getBatchInvoiceDetail', () => {
     experiment('when the invoice is found', () => {
       let response;
+      let invoice;
 
       beforeEach(async () => {
-        repos.billingInvoices.getInvoiceDetail.resolves({
-          billing_invoice_id: 'test-invoice-id'
-        });
+        invoice = new Invoice(uuid());
+        invoiceService.getInvoiceForBatch.resolves(invoice);
 
-        response = await controller.getInvoiceDetail({
+        response = await controller.getBatchInvoiceDetail({
           params: {
+            batchId: 'test-batch-id',
             invoiceId: 'test-invoice-id'
           }
         });
       });
 
-      test('a camel case representation of the invoice is returned', async () => {
-        expect(response.data).to.equal({
-          billingInvoiceId: 'test-invoice-id'
-        });
+      test('the invoice is returned', async () => {
+        expect(response.data.id).to.equal(invoice.id);
       });
 
       test('the error object is null', async () => {
@@ -301,9 +283,10 @@ experiment('modules/billing/controller', () => {
       let response;
 
       beforeEach(async () => {
-        repos.billingInvoices.getInvoiceDetail.resolves(null);
-        response = await controller.getInvoiceDetail({
+        invoiceService.getInvoiceForBatch.resolves();
+        response = await controller.getBatchInvoiceDetail({
           params: {
+            batchId: 'test-batch-id',
             invoiceId: 'test-invoice-id'
           }
         });
@@ -314,7 +297,7 @@ experiment('modules/billing/controller', () => {
       });
 
       test('the error contains a not found message', async () => {
-        expect(response.output.payload.message).to.equal('No invoice found with id: test-invoice-id');
+        expect(response.output.payload.message).to.equal('No invoice found with id: test-invoice-id in batch with id: test-batch-id');
       });
     });
   });

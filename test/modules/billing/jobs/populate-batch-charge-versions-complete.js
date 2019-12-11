@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -11,7 +13,7 @@ const sandbox = sinon.createSandbox();
 
 const { logger } = require('../../../../src/logger');
 const repos = require('../../../../src/lib/connectors/repository');
-const jobService = require('../../../../src/modules/billing/services/jobService');
+const jobService = require('../../../../src/modules/billing/services/job-service');
 
 const handlePopulateBatchChargeVersionsComplete = require('../../../../src/modules/billing/jobs/populate-batch-charge-versions-complete');
 

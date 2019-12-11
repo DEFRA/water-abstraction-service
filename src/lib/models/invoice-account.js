@@ -1,3 +1,5 @@
+'use strict';
+
 const Joi = require('@hapi/joi');
 const VALID_GUID = Joi.string().guid().required();
 const VALID_ACCOUNT_NUMBER = Joi.string().regex(/^[ABENSTWY][0-9]{8}A$/).required();
@@ -36,6 +38,13 @@ class InvoiceAccount {
    */
   get accountNumber () {
     return this._accountNumber;
+  }
+
+  toJSON () {
+    return {
+      id: this.id,
+      accountNumber: this.accountNumber
+    };
   }
 }
 

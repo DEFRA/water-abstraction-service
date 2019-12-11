@@ -1,3 +1,5 @@
+'use strict';
+
 const { get } = require('lodash');
 const evt = require('../../../lib/event');
 const { chargeVersions } = require('../../../lib/connectors/repository');

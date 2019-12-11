@@ -1,6 +1,7 @@
 'use strict';
 
 const Hapi = require('@hapi/hapi');
+const uuid = require('uuid/v4');
 
 const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
@@ -162,17 +163,20 @@ experiment('modules/billing/routes', () => {
     });
   });
 
-  experiment('getInvoiceDetail', () => {
+  experiment('getBatchInvoiceDetail', () => {
     let request;
     let server;
-    let validId;
+    let validInvoiceId;
+    let validBatchId;
 
     beforeEach(async () => {
-      server = getServer(routes.getInvoiceDetail);
-      validId = '00000000-0000-0000-0000-000000000000';
+      server = getServer(routes.getBatchInvoiceDetail);
+      validInvoiceId = uuid();
+      validBatchId = uuid();
+
       request = {
         method: 'GET',
-        url: `/water/1.0/billing/invoices/${validId}`
+        url: `/water/1.0/billing/batches/${validBatchId}/invoices/${validInvoiceId}`
       };
     });
 
@@ -182,7 +186,13 @@ experiment('modules/billing/routes', () => {
     });
 
     test('returns a 400 if the batch id is not a uuid', async () => {
-      request.url = request.url.replace(validId, '123');
+      request.url = request.url.replace(validBatchId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the invoice id is not a uuid', async () => {
+      request.url = request.url.replace(validInvoiceId, '123');
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });

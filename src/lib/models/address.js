@@ -1,9 +1,17 @@
+'use strict';
+
 const Joi = require('@hapi/joi');
 
 const VALID_GUID = Joi.string().guid().required();
 const VALID_STRING = Joi.string().allow(null).required();
 
 class Address {
+  constructor (id) {
+    if (id) {
+      this.id = id;
+    }
+  }
+
   set id (id) {
     Joi.assert(id, VALID_GUID);
     this._id = id;
@@ -101,6 +109,10 @@ class Address {
       postcode: this.postcode,
       country: this.country
     };
+  }
+
+  toJSON () {
+    return this.toObject();
   }
 }
 

@@ -1,6 +1,10 @@
+'use strict';
+
 const Joi = require('@hapi/joi');
+
 const VALID_GUID = Joi.string().guid().required();
 const VALID_LICENCE_NUMBER = Joi.string().regex(/^[&()*-./0-9A-Z]+$/).required();
+const VALID_ACCOUNT_NUMBER = Joi.string().regex(/^[ABENSTWY][0-9]{8}A$/).required();
 
 class Licence {
   /**
@@ -35,6 +39,22 @@ class Licence {
    */
   get licenceNumber () {
     return this._licenceNumber;
+  }
+
+  set accountNumber (accountNumber) {
+    Joi.assert(accountNumber, VALID_ACCOUNT_NUMBER);
+    this._accountNumber = accountNumber;
+  }
+
+  get accountNumber () {
+    return this._accountNumber;
+  }
+
+  toJSON () {
+    return {
+      id: this.id,
+      licenceNumber: this.licenceNumber
+    };
   }
 }
 

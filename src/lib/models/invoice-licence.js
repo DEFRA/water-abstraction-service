@@ -1,10 +1,16 @@
+'use strict';
+
 const Joi = require('@hapi/joi');
-const Address = require('./address.js');
+const { assert } = require('@hapi/hoek');
+const { get } = require('lodash');
+
+const Address = require('./address');
 const Company = require('./company');
 const Contact = require('./contact-v2');
 const Licence = require('./licence');
-const { assert } = require('@hapi/hoek');
-const { get } = require('lodash');
+const Transaction = require('./transaction');
+
+const { isArrayOfType } = require('./validators');
 
 const VALID_GUID = Joi.string().guid().required();
 
@@ -41,7 +47,7 @@ class InvoiceLicence {
 
   /**
    * Gets the licence instance
-   * @return {Address}
+   * @return {Licence}
    */
   get licence () {
     return this._licence;
@@ -98,6 +104,15 @@ class InvoiceLicence {
     return this._address;
   }
 
+  set transactions (transactions) {
+    isArrayOfType(transactions, Transaction);
+    this._transactions = transactions;
+  }
+
+  get transactions () {
+    return this._transactions;
+  }
+
   /**
    * Gets a unique ID for this invoice licence which can be used
    * for unique comparisons
@@ -110,6 +125,17 @@ class InvoiceLicence {
       get(this, '_address.id'),
       get(this, '_contact.id')
     ].join('.');
+  }
+
+  toJSON () {
+    return {
+      id: this.id,
+      licence: this.licence,
+      company: this.company,
+      contact: this.contact,
+      address: this.address,
+      transactions: this.transactions
+    };
   }
 }
 

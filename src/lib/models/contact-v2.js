@@ -1,8 +1,16 @@
+'use strict';
+
 const Joi = require('@hapi/joi');
 const VALID_NULLABLE_STRING = Joi.string().required().allow(null);
 const VALID_GUID = Joi.string().guid().required();
 
 class Contact {
+  constructor (id) {
+    if (id) {
+      this.id = id;
+    }
+  }
+
   set id (id) {
     Joi.assert(id, VALID_GUID);
     this._id = id;

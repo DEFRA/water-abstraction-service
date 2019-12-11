@@ -1,3 +1,5 @@
+'use strict';
+
 const urlJoin = require('url-join');
 const Joi = require('joi');
 
