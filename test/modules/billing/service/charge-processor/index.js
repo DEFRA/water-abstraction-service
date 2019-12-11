@@ -111,6 +111,7 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
 
     sandbox.stub(repository.chargeElements, 'findByChargeVersionId').resolves(data.chargeElements);
     sandbox.stub(repository.chargeVersions, 'findOneById');
+    sandbox.stub(repository.licenceAgreements, 'findByLicenceNumber').resolves([]);
   });
 
   afterEach(async () => {

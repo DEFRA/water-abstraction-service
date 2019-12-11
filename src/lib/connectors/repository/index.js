@@ -8,6 +8,7 @@ const BillingInvoiceLicenceRepository = require('./BillingInvoiceLicenceReposito
 const BillingTransactionRepository = require('./BillingTransactionRepository');
 const BillingBatchChargeVersionYearsRepository = require('./BillingBatchChargeVersionYearsRepository');
 const LicenceRepository = require('./LicenceRepository');
+const LicenceAgreementRepository = require('./LicenceAgreementRepository');
 
 const chargeVersions = new ChargeVersionRepository({
   connection: pool,
@@ -36,3 +37,4 @@ exports.billingInvoiceLicences = new BillingInvoiceLicenceRepository();
 exports.billingTransactions = new BillingTransactionRepository();
 exports.billingBatchChargeVersionYears = new BillingBatchChargeVersionYearsRepository();
 exports.licences = new LicenceRepository();
+exports.licenceAgreements = new LicenceAgreementRepository();

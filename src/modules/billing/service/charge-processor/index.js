@@ -16,13 +16,22 @@ const { modelMapper } = require('./model-mapper');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
+const agreementTypes = ['S127', 'S130S', 'S130T', 'S130U', 'S130W'];
+
 /**
- * @todo handle licence-level agreements
+ * Gets licence level agreements from water.licence_agreements
+ * These can be S127/S130
  * @param {String} licenceNumber
  * @return {Promise<Array>}
  */
-const getLicenceAgreements = async licenceNumber => [
-];
+const getLicenceAgreements = async licenceNumber => {
+  const data = await repository.licenceAgreements.findByLicenceNumber(licenceNumber, agreementTypes);
+  return data.map(row => ({
+    code: row.financial_agreement_type_id,
+    startDate: row.start_date,
+    endDate: row.end_date
+  }));
+};
 
 /**
  * Gets an array of document objects from the CRM
@@ -166,6 +175,8 @@ const chargeElementProcessor = (chargeVersion, chargeElements) => chargeElements
   return acc;
 }, []);
 
+const getPropertyKey = agreementCode => `section${agreementCode}Agreement`;
+
 /**
  * Processes licence-level agreements that affect charging
  * @param {Array} data
@@ -174,18 +185,25 @@ const chargeElementProcessor = (chargeVersion, chargeElements) => chargeElements
  */
 const processAgreements = async (data, licenceNumber) => {
   let updated = cloneDeep(data);
-  const agreements = await getLicenceAgreements(licenceNumber);
+  const agreements = await getLicenceAgreements(licenceNumber, agreementTypes);
   const grouped = groupBy(agreements, row => row.code);
 
-  each(grouped, (agreements, key) => {
-    const propertyKey = `section${key}`;
+  each(grouped, (agreements, agreementCode) => {
+    const propertyKey = getPropertyKey(agreementCode);
     const history = mergeHistory(agreements);
     const arr = updated
       .map(row => helpers.charging.dateRangeSplitter(row, history, propertyKey));
     updated = flatMap(arr).map(applyEffectiveDates);
   });
 
-  return updated;
+  // Convert all agreements to boolean
+  return updated.map(row => {
+    agreementTypes.forEach(agreementType => {
+      const propertyKey = getPropertyKey(agreementType);
+      row[propertyKey] = !!row[propertyKey];
+    });
+    return row;
+  });
 };
 
 /**
@@ -279,6 +297,8 @@ const processCharges = async (year, chargeVersionId, isTwoPart = false, isSummer
   data = processInvoiceAccounts(data, docs);
   data = await processAgreements(data, chargeVersion.licenceRef);
   data = await processChargingElements(data, chargeVersionId);
+
+  console.log(JSON.stringify(data, null, 2));
 
   return { error: null, data };
 };
