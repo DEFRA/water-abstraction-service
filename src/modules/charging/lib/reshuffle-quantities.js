@@ -2,7 +2,7 @@ const { flatMap, uniq, identity } = require('lodash');
 const moment = require('moment');
 const Decimal = require('decimal.js-light');
 Decimal.set({
-  precision: 8
+  precision: 20
 });
 const {
   getChargeElementReturnData,
@@ -87,23 +87,23 @@ const getQuantityToAllocate = (totalActual, totalBillable, maxAllowable, maxForP
 const reallocateQuantitiesInOrder = chargeElementGroup => {
   const { baseElement, subElements } = chargeElementGroup;
   const elements = [baseElement, ...subElements];
-  let totalBillable = elements.reduce(getTotalBillableQuantity, new Decimal(0));
+  const totalBillable = elements.reduce(getTotalBillableQuantity, new Decimal(0));
   let totalActual = elements.reduce(getTotalActualQuantity, new Decimal(0));
   const overallErr = totalActual.minus(totalBillable).gt(0) ? ERROR_OVER_ABSTRACTION : null;
 
-  const dataToReturn = elements.map(element => {
-    const maxAllowableQuantity = getMaxAllowable(element);
-
-    if (totalActual.isZero()) return getChargeElementReturnData({ ...element, actualReturnQuantity: 0 });
-
-    const { err, quantityToAllocate } = getQuantityToAllocate(totalActual, totalBillable, maxAllowableQuantity, element.maxPossibleReturnQuantity);
+  const data = elements.map(element => {
+    const billableQuantity = getMaxAllowable(element);
+    const quantityToAllocate = Math.min(totalActual, billableQuantity, element.maxPossibleReturnQuantity);
 
     totalActual = totalActual.minus(quantityToAllocate);
-    totalBillable = totalBillable.minus(maxAllowableQuantity);
-    return getChargeElementReturnData({ ...element, actualReturnQuantity: quantityToAllocate }, err);
+    return getChargeElementReturnData({ ...element, actualReturnQuantity: quantityToAllocate }, null);
   });
 
-  return { error: overallErr, data: dataToReturn };
+  if (totalActual.gt(0)) {
+    data[0].data.actualReturnQuantity = totalActual.plus(data[0].data.actualReturnQuantity).toDecimalPlaces(3).toNumber();
+    data[0].error = overallErr;
+  }
+  return { data, error: overallErr };
 };
 
 /**

@@ -3,7 +3,7 @@ const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { createReturn, createMonthlyReturn, createPurposeData } = require('./test-return-data');
 const Decimal = require('decimal.js-light');
 Decimal.set({
-  precision: 8
+  precision: 20
 });
 const { flatMap } = require('lodash');
 const {

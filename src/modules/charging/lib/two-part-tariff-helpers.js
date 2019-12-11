@@ -1,6 +1,6 @@
 const Decimal = require('decimal.js-light');
 Decimal.set({
-  precision: 8
+  precision: 20
 });
 
 const TPT_PURPOSES = [380, 390, 400, 410, 420];

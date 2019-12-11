@@ -3,7 +3,7 @@ const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { createChargeElement, wrapElementsInVersion } = require('./test-charge-data');
 const Decimal = require('decimal.js-light');
 Decimal.set({
-  precision: 8
+  precision: 20
 });
 const {
   getTptChargeElements,

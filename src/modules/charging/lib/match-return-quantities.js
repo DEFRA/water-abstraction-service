@@ -4,7 +4,7 @@ const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(Moment);
 const Decimal = require('decimal.js-light');
 Decimal.set({
-  precision: 8
+  precision: 20
 });
 const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
 
@@ -84,6 +84,7 @@ const matchReturnLineToElement = (line, ele) => {
       updatedLine.quantityAllocated = new Decimal(line.quantityAllocated).plus(unallocatedQuantity).toNumber();
     }
   }
+
   return {
     updatedMaxPossibleReturnQuantity: updatedEle.maxPossibleReturnQuantity,
     updatedElementQuantity: updatedEle.actualReturnQuantity,

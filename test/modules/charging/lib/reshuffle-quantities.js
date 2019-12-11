@@ -3,7 +3,7 @@ const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { createChargeElement } = require('./test-charge-data');
 const Decimal = require('decimal.js-light');
 Decimal.set({
-  precision: 8
+  precision: 20
 });
 
 const {
@@ -309,7 +309,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       });
     });
     experiment('when there is an over abstraction', async () => {
-      test('base element gets overabstraction, other elements are equal to billable quantity', async () => {
+      test('base element gets overabstraction, sub elements are equal to billable quantity', async () => {
         const chargeElementsGroup = {
           baseElement: createChargeElement({
             chargeElementId: 'charge-element-2',
@@ -362,6 +362,38 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(200);
         expect(allocatedElements[1].data.proRataBillableQuantity).to.equal(50);
         expect(allocatedElements[2].error).to.be.null();
+      });
+      test('and an under abstraction in sub element, sub element is equal to max for period, excess is put on base element', async () => {
+        const chargeElementsGroup = {
+          baseElement: createChargeElement({
+            chargeElementId: 'charge-element-2',
+            source: 'unsupported',
+            actualReturnQuantity: 110,
+            proRataBillableQuantity: 100,
+            proRataAuthorisedQuantity: 150,
+            maxPossibleReturnQuantity: 156
+          }),
+          subElements: [createChargeElement({
+            chargeElementId: 'charge-element-1',
+            source: 'unsupported',
+            timeLimitedStartDate: '2016-04-01',
+            timeLimitedEndDate: '2017-03-31',
+            actualReturnQuantity: 46,
+            proRataBillableQuantity: 50,
+            proRataAuthorisedQuantity: 150,
+            maxPossibleReturnQuantity: 46
+          })
+          ]
+        };
+
+        const { error, data: allocatedElements } = reallocateQuantitiesInOrder(chargeElementsGroup);
+
+        expect(error).to.equal(ERROR_OVER_ABSTRACTION);
+        expect(allocatedElements).to.be.an.array().and.to.have.length(2);
+        expect(allocatedElements[0].data.actualReturnQuantity).to.equal(chargeElementsGroup.baseElement.actualReturnQuantity);
+        expect(allocatedElements[0].error).to.equal(ERROR_OVER_ABSTRACTION);
+        expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[0].maxPossibleReturnQuantity);
+        expect(allocatedElements[1].error).to.be.null();
       });
     });
     experiment('when the total quantities sum to zero', async () => {

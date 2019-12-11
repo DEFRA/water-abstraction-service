@@ -5,7 +5,7 @@ const { createReturn, createLineData, createMonthlyReturn, createPurposeData } =
 const sandbox = require('sinon').createSandbox();
 const Decimal = require('decimal.js-light');
 Decimal.set({
-  precision: 8
+  precision: 20
 });
 const matchRetQuantities = require('../../../../src/modules/charging/lib/match-return-quantities');
 const {
@@ -769,7 +769,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
             timeLimitedStartDate: '2016-07-01',
             timeLimitedEndDate: '2016-09-30',
             startDate: '2016-07-01',
-            endDate: '2016-07-31',
+            endDate: '2016-09-30',
             totalDays: 365,
             billableDays: 92,
             authorisedAnnualQuantity: 1 // pro rata quantity 0.25205
@@ -784,8 +784,8 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           periodEndDay: '31',
           periodEndMonth: '3'
         };
-        const returnQuantities1 = [55, 60, 67, 62, 58, 42, 30, 54, 37, 37, 50, 68]; // Apr-Sept total: 388
-        const returnQuantities2 = [53, 61, 57, 51, 46, 44, 32, 49, 48, 57, 45, 52]; // Apr-Sept total: 408
+        const returnQuantities1 = [55, 58, 55, 62, 58, 50, 36, 54, 37, 37, 50, 68]; // Apr-Sept total: 388
+        const returnQuantities2 = [53, 55, 52, 51, 46, 49, 38, 49, 48, 57, 45, 52]; // Apr-Sept total: 408
         const returnQuantities3 = [52, 57, 57, 60, 50, 57, 32, 49, 48, 57, 45, 52]; // Apr-Sept total: 387
         const returns = [createMonthlyReturn({
           ...returnOptions,
@@ -800,9 +800,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           tertiaryCode: '400',
           quantities: returnQuantities3
         })];
-        const {
-          data: matchedChargeElements
-        } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
+        const { data: matchedChargeElements } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
 
         const proRataAuthorisedQuantityFirstElement = getProRataAuthorisedQuantity(chargeElements.filter(ele => ele.chargeElementId === 'base-element').shift());
         const proRataAuthorisedQuantitySecondElement = getProRataAuthorisedQuantity(chargeElements.filter(ele => ele.chargeElementId === 'TL-element-30-days').shift());

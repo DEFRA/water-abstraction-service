@@ -3,7 +3,7 @@ const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(Moment);
 const Decimal = require('decimal.js-light');
 Decimal.set({
-  precision: 8
+  precision: 20
 });
 const { identity, cloneDeep } = require('lodash');
 const {

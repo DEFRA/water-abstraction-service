@@ -2,7 +2,7 @@ const { TPT_PURPOSES } = require('./two-part-tariff-helpers');
 const { cloneDeep, sortBy } = require('lodash');
 const Decimal = require('decimal.js-light');
 Decimal.set({
-  precision: 8
+  precision: 20
 });
 
 /**

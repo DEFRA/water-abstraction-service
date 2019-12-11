@@ -4,7 +4,7 @@ const { createReturn, createPurposeData } = require('./test-return-data');
 const { createChargeElement } = require('./test-charge-data');
 const Decimal = require('decimal.js-light');
 Decimal.set({
-  precision: 8
+  precision: 20
 });
 
 const {
