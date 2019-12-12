@@ -22,8 +22,8 @@ const getProRataQuantity = (quantity, ele) => new Decimal(quantity)
 
 /**
  * Find pro rata authorised quantity for charge element
- * Add effectiveStartDate, effectiveEndDate, actualReturnQuantity,
- * proRataBillableQuantity & proRataAuthorisedQuantity data points
+ * Add effectiveStartDate, effectiveEndDate, actualReturnQuantity
+ * & proRataAuthorisedQuantity data points
  * @param {Array} chargeElements all charge elements in charge version
  * @return {Array} updated chargeElements array with new data points
  */

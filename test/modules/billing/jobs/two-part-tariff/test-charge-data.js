@@ -24,7 +24,6 @@ const createChargeElement = options => {
     dateCreated: '2019-08-15T04:43:45.234Z',
     dateUpdated: '2019-09-27T10:23:07.981Z',
     proRataAuthorisedQuantity: options.proRataAuthorisedQuantity,
-    proRataBillableQuantity: options.proRataBillableQuantity,
     maxPossibleReturnQuantity: options.maxPossibleReturnQuantity,
     purposePrimaryDescription: 'Agriculture',
     purposeSecondaryDescription: 'General Agriculture',

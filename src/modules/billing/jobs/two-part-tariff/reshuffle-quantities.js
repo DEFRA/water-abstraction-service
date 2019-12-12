@@ -16,9 +16,7 @@ const getTotalActualQuantity = (total, element) => total.plus(element.actualRetu
 /**
  * Reduce function for calculating the total billable quantity
  */
-const getTotalBillableQuantity = (total, element) => {
-  return total.plus(element.proRataBillableQuantity || element.proRataAuthorisedQuantity);
-};
+const getTotalBillableQuantity = (total, element) => total.plus(element.proRataAuthorisedQuantity);
 
 /**
  * Checks whether or not the charge element is time limited, but checking if it has time limited dates
