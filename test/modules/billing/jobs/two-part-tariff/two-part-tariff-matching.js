@@ -4,17 +4,17 @@ const { createChargeElement, wrapElementsInVersion } = require('./test-charge-da
 const { createReturn, createLineData, createMonthlyReturn, createPurposeData } = require('./test-return-data');
 const sandbox = require('sinon').createSandbox();
 const Decimal = require('decimal.js-light');
-const matchRetQuantities = require('../../../../src/modules/charging/lib/match-return-quantities');
+const matchRetQuantities = require('../../../../../src/modules/billing/jobs/two-part-tariff/match-return-quantities');
 const {
   matchReturnQuantities,
   prepareChargeElementsForMatching,
   prepareReturnsForMatching,
   matchReturnsToChargeElements
-} = require('../../../../src/modules/charging/lib/two-part-tariff-matching');
+} = require('../../../../../src/modules/billing/jobs/two-part-tariff/two-part-tariff-matching');
 const {
   ERROR_NO_RETURNS_FOR_MATCHING,
   ERROR_OVER_ABSTRACTION
-} = require('../../../../src/modules/charging/lib/two-part-tariff-helpers');
+} = require('../../../../../src/modules/billing/jobs/two-part-tariff/two-part-tariff-helpers');
 
 const roundTo3DP = decimal => {
   return decimal.toDecimalPlaces(3).toNumber();

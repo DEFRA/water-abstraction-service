@@ -1,10 +1,10 @@
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
-const { matchReturnsToChargeElements } = require('../../../../src/modules/charging/lib/two-part-tariff-matching');
+const { matchReturnsToChargeElements } = require('../../../../../src/modules/billing/jobs/two-part-tariff/two-part-tariff-matching');
 const {
   ERROR_NO_RETURNS_SUBMITTED,
   ERROR_SOME_RETURNS_DUE
-} = require('../../../../src/modules/charging/lib/two-part-tariff-helpers');
+} = require('../../../../../src/modules/billing/jobs/two-part-tariff/two-part-tariff-helpers');
 const sampleData1 = require('./sample-data/two-due-rets-two-tpt-ce');
 const sampleData2 = require('./sample-data/two-ret-one-nil-one-ce');
 const sampleData3 = require('./sample-data/two-ret-four-ce-three-purposes');

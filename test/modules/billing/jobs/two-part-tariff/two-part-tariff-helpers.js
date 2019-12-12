@@ -8,7 +8,7 @@ const {
   returnsError,
   getChargeElementReturnData,
   returnPurposeMatchesElementPurpose
-} = require('../../../../src/modules/charging/lib/two-part-tariff-helpers');
+} = require('../../../../../src/modules/billing/jobs/two-part-tariff/two-part-tariff-helpers');
 
 experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
   experiment('.returnsError', async () => {
