@@ -352,6 +352,8 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
 
         const { data: matchedElements, error } = matchReturnsToChargeElements(wrapElementsInVersion(
           [...chargeElement, secondChargeElement]), [...updatedTpTReturns, ...updatedOtherReturns]);
+
+        expect(error).to.be.null();
         expect(matchedElements[0].data.actualReturnQuantity).to.equal(0.147);
         expect(matchedElements[0].error).to.be.null();
         expect(matchedElements[1].data.actualReturnQuantity).to.equal(0.052);
