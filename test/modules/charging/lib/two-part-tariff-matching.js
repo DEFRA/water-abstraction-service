@@ -4,14 +4,11 @@ const { createChargeElement, wrapElementsInVersion } = require('./test-charge-da
 const { createReturn, createLineData, createMonthlyReturn, createPurposeData } = require('./test-return-data');
 const sandbox = require('sinon').createSandbox();
 const Decimal = require('decimal.js-light');
-Decimal.set({
-  precision: 20
-});
 const matchRetQuantities = require('../../../../src/modules/charging/lib/match-return-quantities');
 const {
+  matchReturnQuantities,
   prepareChargeElementsForMatching,
   prepareReturnsForMatching,
-  matchReturnQuantities,
   matchReturnsToChargeElements
 } = require('../../../../src/modules/charging/lib/two-part-tariff-matching');
 const {
@@ -119,11 +116,9 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       ]);
       expect(firstElement.actualReturnQuantity).to.equal(0);
       expect(firstElement.proRataAuthorisedQuantity).to.be.a.number();
-      expect(firstElement.proRataBillableQuantity).to.be.undefined();
 
       expect(secondElement.actualReturnQuantity).to.equal(0);
       expect(secondElement.proRataAuthorisedQuantity).to.be.a.number();
-      expect(secondElement.proRataBillableQuantity).to.be.a.number();
     });
     test('charge elements are sorted by billable days in ascending order', async => {
       const supportedChargeElement = createChargeElement({

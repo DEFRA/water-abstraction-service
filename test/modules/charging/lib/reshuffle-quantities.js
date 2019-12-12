@@ -2,10 +2,6 @@ const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { createChargeElement } = require('./test-charge-data');
 const Decimal = require('decimal.js-light');
-Decimal.set({
-  precision: 20
-});
-
 const {
   getQuantityToAllocate,
   reallocateQuantitiesInOrder,
@@ -105,11 +101,9 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(allocatedElements).to.be.an.array().and.to.have.length(2);
         expect(allocatedElements[0].data.actualReturnQuantity).to.equal(100);
         expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(100);
-        expect(allocatedElements[0].data.proRataBillableQuantity).to.be.null();
         expect(allocatedElements[0].error).to.be.null();
         expect(allocatedElements[1].data.actualReturnQuantity).to.equal(75);
         expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(100);
-        expect(allocatedElements[1].data.proRataBillableQuantity).to.be.null();
         expect(allocatedElements[1].error).to.be.null();
       });
       test('moves quantities from sub elements filling elements in order passed', async () => {
@@ -150,15 +144,12 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(allocatedElements).to.be.an.array().and.to.have.length(3);
         expect(allocatedElements[0].data.actualReturnQuantity).to.equal(100);
         expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(100);
-        expect(allocatedElements[0].data.proRataBillableQuantity).to.be.null();
         expect(allocatedElements[0].error).to.be.null();
         expect(allocatedElements[1].data.actualReturnQuantity).to.equal(50);
         expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(50);
-        expect(allocatedElements[1].data.proRataBillableQuantity).to.be.null();
         expect(allocatedElements[1].error).to.be.null();
         expect(allocatedElements[2].data.actualReturnQuantity).to.equal(10);
         expect(allocatedElements[2].data.proRataAuthorisedQuantity).to.equal(50);
-        expect(allocatedElements[2].data.proRataBillableQuantity).to.be.null();
         expect(allocatedElements[2].error).to.be.null();
       });
       test('actual quantities remain the same if no shuffling is needed', async () => {
@@ -197,15 +188,12 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(allocatedElements).to.be.an.array().and.to.have.length(3);
         expect(allocatedElements[0].data.actualReturnQuantity).to.equal(chargeElementsGroup.baseElement.actualReturnQuantity);
         expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(100);
-        expect(allocatedElements[0].data.proRataBillableQuantity).to.be.null();
         expect(allocatedElements[0].error).to.be.null();
         expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[0].actualReturnQuantity);
         expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(20);
-        expect(allocatedElements[1].data.proRataBillableQuantity).to.be.null();
         expect(allocatedElements[1].error).to.be.null();
         expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[1].actualReturnQuantity);
         expect(allocatedElements[2].data.proRataAuthorisedQuantity).to.equal(20);
-        expect(allocatedElements[2].data.proRataBillableQuantity).to.be.null();
         expect(allocatedElements[2].error).to.be.null();
       });
     });
@@ -216,8 +204,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
             actualReturnQuantity: 50,
-            proRataBillableQuantity: 50,
-            proRataAuthorisedQuantity: 200,
+            proRataAuthorisedQuantity: 50,
             maxPossibleReturnQuantity: 200
           }),
           subElements: [
@@ -227,8 +214,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
               timeLimitedStartDate: '2016-04-01',
               timeLimitedEndDate: '2017-03-31',
               actualReturnQuantity: 50,
-              proRataBillableQuantity: 50,
-              proRataAuthorisedQuantity: 200,
+              proRataAuthorisedQuantity: 50,
               maxPossibleReturnQuantity: 200
             }),
             createChargeElement({
@@ -237,8 +223,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
               timeLimitedStartDate: '2016-04-01',
               timeLimitedEndDate: '2017-03-31',
               actualReturnQuantity: 100,
-              proRataBillableQuantity: 100,
-              proRataAuthorisedQuantity: 200,
+              proRataAuthorisedQuantity: 100,
               maxPossibleReturnQuantity: 200
             })
           ]
@@ -247,17 +232,14 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
 
         expect(error).to.be.null();
         expect(allocatedElements).to.be.an.array().and.to.have.length(3);
-        expect(allocatedElements[0].data.actualReturnQuantity).to.equal(chargeElementsGroup.baseElement.proRataBillableQuantity);
-        expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(200);
-        expect(allocatedElements[0].data.proRataBillableQuantity).to.equal(50);
+        expect(allocatedElements[0].data.actualReturnQuantity).to.equal(chargeElementsGroup.baseElement.proRataAuthorisedQuantity);
+        expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(chargeElementsGroup.baseElement.proRataAuthorisedQuantity);
         expect(allocatedElements[0].error).to.be.null();
-        expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[0].proRataBillableQuantity);
-        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(200);
-        expect(allocatedElements[1].data.proRataBillableQuantity).to.equal(50);
+        expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[0].proRataAuthorisedQuantity);
+        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(chargeElementsGroup.subElements[0].proRataAuthorisedQuantity);
         expect(allocatedElements[1].error).to.be.null();
-        expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[1].proRataBillableQuantity);
-        expect(allocatedElements[2].data.proRataAuthorisedQuantity).to.equal(200);
-        expect(allocatedElements[2].data.proRataBillableQuantity).to.equal(100);
+        expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[1].proRataAuthorisedQuantity);
+        expect(allocatedElements[2].data.proRataAuthorisedQuantity).to.equal(chargeElementsGroup.subElements[1].proRataAuthorisedQuantity);
         expect(allocatedElements[2].error).to.be.null();
       });
       test('the actual quantities are equal to the authorised quantities, if no billable quantities provided', async () => {
@@ -296,15 +278,12 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(allocatedElements).to.be.an.array().and.to.have.length(3);
         expect(allocatedElements[0].data.actualReturnQuantity).to.equal(chargeElementsGroup.baseElement.proRataAuthorisedQuantity);
         expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(50);
-        expect(allocatedElements[0].data.proRataBillableQuantity).to.be.null();
         expect(allocatedElements[0].error).to.be.null();
         expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[0].proRataAuthorisedQuantity);
         expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(50);
-        expect(allocatedElements[1].data.proRataBillableQuantity).to.be.null();
         expect(allocatedElements[1].error).to.be.null();
         expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[1].proRataAuthorisedQuantity);
         expect(allocatedElements[2].data.proRataAuthorisedQuantity).to.equal(100);
-        expect(allocatedElements[2].data.proRataBillableQuantity).to.be.null();
         expect(allocatedElements[2].error).to.be.null();
       });
     });
@@ -315,8 +294,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
             actualReturnQuantity: 50,
-            proRataBillableQuantity: 100,
-            proRataAuthorisedQuantity: 200,
+            proRataAuthorisedQuantity: 100,
             maxPossibleReturnQuantity: 200
           }),
           subElements: [createChargeElement({
@@ -325,16 +303,14 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             timeLimitedStartDate: '2016-04-01',
             timeLimitedEndDate: '2017-03-31',
             actualReturnQuantity: 75,
-            proRataBillableQuantity: 50,
-            proRataAuthorisedQuantity: 200,
+            proRataAuthorisedQuantity: 50,
             maxPossibleReturnQuantity: 200
           }),
           createChargeElement({
             chargeElementId: 'charge-element-3',
             source: 'supported',
             actualReturnQuantity: 100,
-            proRataBillableQuantity: 50,
-            proRataAuthorisedQuantity: 200,
+            proRataAuthorisedQuantity: 50,
             maxPossibleReturnQuantity: 200
           })
           ]
@@ -342,25 +318,22 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         const overAbstraction = new Decimal(chargeElementsGroup.baseElement.actualReturnQuantity)
           .plus(chargeElementsGroup.subElements[0].actualReturnQuantity)
           .plus(chargeElementsGroup.subElements[1].actualReturnQuantity)
-          .minus(chargeElementsGroup.baseElement.proRataBillableQuantity)
-          .minus(chargeElementsGroup.subElements[0].proRataBillableQuantity)
-          .minus(chargeElementsGroup.subElements[1].proRataBillableQuantity);
+          .minus(chargeElementsGroup.baseElement.proRataAuthorisedQuantity)
+          .minus(chargeElementsGroup.subElements[0].proRataAuthorisedQuantity)
+          .minus(chargeElementsGroup.subElements[1].proRataAuthorisedQuantity);
 
         const { error, data: allocatedElements } = reallocateQuantitiesInOrder(chargeElementsGroup);
 
         expect(error).to.equal(ERROR_OVER_ABSTRACTION);
         expect(allocatedElements).to.be.an.array().and.to.have.length(3);
-        expect(allocatedElements[0].data.actualReturnQuantity).to.equal(overAbstraction.plus(chargeElementsGroup.baseElement.proRataBillableQuantity).toDecimalPlaces(3).toNumber());
-        expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(200);
-        expect(allocatedElements[0].data.proRataBillableQuantity).to.equal(100);
+        expect(allocatedElements[0].data.actualReturnQuantity).to.equal(overAbstraction.plus(chargeElementsGroup.baseElement.proRataAuthorisedQuantity).toDecimalPlaces(3).toNumber());
+        expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(chargeElementsGroup.baseElement.proRataAuthorisedQuantity);
         expect(allocatedElements[0].error).to.equal(ERROR_OVER_ABSTRACTION);
-        expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[0].proRataBillableQuantity);
-        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(200);
-        expect(allocatedElements[1].data.proRataBillableQuantity).to.equal(50);
+        expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[0].proRataAuthorisedQuantity);
+        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(chargeElementsGroup.subElements[0].proRataAuthorisedQuantity);
         expect(allocatedElements[1].error).to.be.null();
-        expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[1].proRataBillableQuantity);
-        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(200);
-        expect(allocatedElements[1].data.proRataBillableQuantity).to.equal(50);
+        expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[1].proRataAuthorisedQuantity);
+        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(chargeElementsGroup.subElements[1].proRataAuthorisedQuantity);
         expect(allocatedElements[2].error).to.be.null();
       });
       test('and an under abstraction in sub element, sub element is equal to max for period, excess is put on base element', async () => {
@@ -369,8 +342,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             chargeElementId: 'charge-element-2',
             source: 'unsupported',
             actualReturnQuantity: 110,
-            proRataBillableQuantity: 100,
-            proRataAuthorisedQuantity: 150,
+            proRataAuthorisedQuantity: 100,
             maxPossibleReturnQuantity: 156
           }),
           subElements: [createChargeElement({
@@ -379,8 +351,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             timeLimitedStartDate: '2016-04-01',
             timeLimitedEndDate: '2017-03-31',
             actualReturnQuantity: 46,
-            proRataBillableQuantity: 50,
-            proRataAuthorisedQuantity: 150,
+            proRataAuthorisedQuantity: 50,
             maxPossibleReturnQuantity: 46
           })
           ]
@@ -423,11 +394,9 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(allocatedElements).to.be.an.array().and.to.have.length(2);
         expect(allocatedElements[0].data.actualReturnQuantity).to.equal(0);
         expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(50);
-        expect(allocatedElements[0].data.proRataBillableQuantity).to.be.null();
         expect(allocatedElements[0].error).to.be.null();
         expect(allocatedElements[1].data.actualReturnQuantity).to.equal(0);
         expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(50);
-        expect(allocatedElements[1].data.proRataBillableQuantity).to.be.null();
         expect(allocatedElements[1].error).to.be.null();
       });
     });
@@ -645,8 +614,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         const baseElementGroup = [{
           baseElement: createChargeElement({
             chargeElementId: 'base-charge-element',
-            proRataAuthorisedQuantity: 100,
-            proRataBillableQuantity: 75,
+            proRataAuthorisedQuantity: 75,
             actualReturnQuantity: 65.3,
             maxPossibleReturnQuantity: 65.3
           }),
@@ -660,15 +628,13 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(error).to.be.null();
         expect(data).to.be.an.array().and.have.length(1);
         expect(outputBaseElement.proRataAuthorisedQuantity).to.equal(inputBaseElement.proRataAuthorisedQuantity);
-        expect(outputBaseElement.proRataBillableQuantity).to.equal(inputBaseElement.proRataBillableQuantity);
         expect(outputBaseElement.actualReturnQuantity).to.equal(inputBaseElement.actualReturnQuantity);
       });
       test('if the element is over abstracted, it returns an over abstraction error, but element remains the same', async () => {
         const baseElementGroup = [{
           baseElement: createChargeElement({
             chargeElementId: 'base-charge-element',
-            proRataAuthorisedQuantity: 100,
-            proRataBillableQuantity: 75,
+            proRataAuthorisedQuantity: 75,
             actualReturnQuantity: 80,
             maxPossibleReturnQuantity: 80
           }),
@@ -682,7 +648,6 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(error).to.equal(ERROR_OVER_ABSTRACTION);
         expect(data).to.be.an.array().and.have.length(1);
         expect(outputBaseElement.proRataAuthorisedQuantity).to.equal(inputBaseElement.proRataAuthorisedQuantity);
-        expect(outputBaseElement.proRataBillableQuantity).to.equal(inputBaseElement.proRataBillableQuantity);
         expect(outputBaseElement.actualReturnQuantity).to.equal(inputBaseElement.actualReturnQuantity);
       });
     });
@@ -753,22 +718,18 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       expect(reshuffledElements[0].data.chargeElementId).to.equal('charge-element-2');
       expect(reshuffledElements[0].data.actualReturnQuantity).to.equal(100);
       expect(reshuffledElements[0].data.proRataAuthorisedQuantity).to.equal(100);
-      expect(reshuffledElements[0].data.proRataBillableQuantity).to.be.null();
       expect(reshuffledElements[0].error).to.be.null();
       expect(reshuffledElements[1].data.chargeElementId).to.equal('charge-element-1');
       expect(reshuffledElements[1].data.actualReturnQuantity).to.equal(75);
       expect(reshuffledElements[1].data.proRataAuthorisedQuantity).to.equal(100);
-      expect(reshuffledElements[1].data.proRataBillableQuantity).to.be.null();
       expect(reshuffledElements[1].error).to.be.null();
       expect(reshuffledElements[2].data.chargeElementId).to.equal('charge-element-4');
       expect(reshuffledElements[2].data.actualReturnQuantity).to.equal(100);
       expect(reshuffledElements[2].data.proRataAuthorisedQuantity).to.equal(100);
-      expect(reshuffledElements[2].data.proRataBillableQuantity).to.be.null();
       expect(reshuffledElements[2].error).to.be.null();
       expect(reshuffledElements[3].data.chargeElementId).to.equal('charge-element-3');
       expect(reshuffledElements[3].data.actualReturnQuantity).to.equal(30);
       expect(reshuffledElements[3].data.proRataAuthorisedQuantity).to.equal(50);
-      expect(reshuffledElements[3].data.proRataBillableQuantity).to.be.null();
       expect(reshuffledElements[3].error).to.be.null();
     });
   });

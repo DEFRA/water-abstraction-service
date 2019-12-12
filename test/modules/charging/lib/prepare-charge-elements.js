@@ -1,10 +1,6 @@
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { createChargeElement, wrapElementsInVersion } = require('./test-charge-data');
-const Decimal = require('decimal.js-light');
-Decimal.set({
-  precision: 20
-});
 const {
   getTptChargeElements,
   prepareChargeElementData,

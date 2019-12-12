@@ -1,8 +1,4 @@
 const Decimal = require('decimal.js-light');
-Decimal.set({
-  precision: 20
-});
-
 const TPT_PURPOSES = [380, 390, 400, 410, 420];
 const dateFormat = 'YYYY-MM-DD';
 const ERROR_NO_RETURNS_FOR_MATCHING = 'no-returns-for-matching';
@@ -60,12 +56,12 @@ const getChargeElementReturnData = (chargeElement, error) => {
   const actualReturnQuantity = (chargeElement.actualReturnQuantity !== null)
     ? new Decimal(chargeElement.actualReturnQuantity).toDecimalPlaces(3).toNumber()
     : null;
+
   return {
     error: error || null,
     data: {
       chargeElementId: chargeElement.chargeElementId,
       proRataAuthorisedQuantity: chargeElement.proRataAuthorisedQuantity,
-      proRataBillableQuantity: chargeElement.proRataBillableQuantity || null,
       actualReturnQuantity
     }
   };

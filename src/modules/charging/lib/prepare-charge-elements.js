@@ -1,9 +1,6 @@
 const { TPT_PURPOSES } = require('./two-part-tariff-helpers');
-const { cloneDeep, sortBy } = require('lodash');
+const { sortBy } = require('lodash');
 const Decimal = require('decimal.js-light');
-Decimal.set({
-  precision: 20
-});
 
 /**
  * Filter charge elements for those which have a TPT purpose
@@ -17,13 +14,11 @@ const getTptChargeElements = chargeElements => chargeElements.filter(element => 
 /**
  * Pro rata the quantity - multiply by billable days & divide by total days
  */
-const getProRataQuantity = (quantity, ele) => {
-  return new Decimal(quantity)
-    .times(ele.billableDays)
-    .dividedBy(ele.totalDays)
-    .toDecimalPlaces(3)
-    .toNumber();
-};
+const getProRataQuantity = (quantity, ele) => new Decimal(quantity)
+  .times(ele.billableDays)
+  .dividedBy(ele.totalDays)
+  .toDecimalPlaces(3)
+  .toNumber();
 
 /**
  * Find pro rata authorised quantity for charge element
@@ -32,17 +27,14 @@ const getProRataQuantity = (quantity, ele) => {
  * @param {Array} chargeElements all charge elements in charge version
  * @return {Array} updated chargeElements array with new data points
  */
-const prepareChargeElementData = chargeElements => {
-  const updated = cloneDeep(chargeElements);
-  updated.forEach(ele => {
-    ele.actualReturnQuantity = 0;
-    ele.maxPossibleReturnQuantity = 0;
-    ele.proRataAuthorisedQuantity = getProRataQuantity(ele.authorisedAnnualQuantity, ele);
-
-    if (ele.billableAnnualQuantity) ele.proRataBillableQuantity = getProRataQuantity(ele.billableAnnualQuantity, ele);
-  });
-  return updated;
-};
+const prepareChargeElementData = chargeElements => chargeElements.map(ele => {
+  return {
+    ...ele,
+    actualReturnQuantity: 0,
+    maxPossibleReturnQuantity: 0,
+    proRataAuthorisedQuantity: getProRataQuantity(ele.billableAnnualQuantity || ele.authorisedAnnualQuantity, ele)
+  };
+});
 
 /**
  * Sorts charge elements by billableDays

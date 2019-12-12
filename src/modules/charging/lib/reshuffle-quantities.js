@@ -1,14 +1,12 @@
-const { flatMap, uniq, identity } = require('lodash');
-const moment = require('moment');
+const { flatMap, identity, groupBy } = require('lodash');
 const Decimal = require('decimal.js-light');
-Decimal.set({
-  precision: 20
-});
 const {
   getChargeElementReturnData,
   ERROR_OVER_ABSTRACTION
 } = require('./two-part-tariff-helpers');
 const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
+
+const dateRegex = new RegExp(/^\d{4}-\d{2}-\d{2}$/);
 
 /**
  * Reduce function for calculating the total allocated quantity
@@ -23,18 +21,9 @@ const getTotalBillableQuantity = (total, element) => {
 };
 
 /**
- * Return the pro rata billable quantity or the pro rata authorised quantity
- */
-const getMaxAllowable = ele => ele.proRataBillableQuantity || ele.proRataAuthorisedQuantity;
-
-/**
  * Checks whether or not the charge element is time limited, but checking if it has time limited dates
  */
-const isTimeLimited = element => {
-  const startDate = moment(element.timeLimitedStartDate || null); // if undefined is passed, moment defaults to now()
-  const endDate = moment(element.timeLimitedEndDate || null);
-  return startDate.isValid() && endDate.isValid();
-};
+const isTimeLimited = element => dateRegex.test(element.timeLimitedStartDate) && dateRegex.test(element.timeLimitedEndDate);
 
 /**
  * Calculates the quantity to allocate for a charge element
@@ -76,8 +65,7 @@ const reallocateQuantitiesInOrder = chargeElementGroup => {
   const overallErr = totalActual.minus(totalBillable).gt(0) ? ERROR_OVER_ABSTRACTION : null;
 
   const data = elements.map(element => {
-    const billableQuantity = getMaxAllowable(element);
-    const quantityToAllocate = Math.min(totalActual, billableQuantity, element.maxPossibleReturnQuantity);
+    const quantityToAllocate = Math.min(totalActual, element.proRataAuthorisedQuantity, element.maxPossibleReturnQuantity);
     totalActual = totalActual.minus(quantityToAllocate);
     return getChargeElementReturnData({ ...element, actualReturnQuantity: quantityToAllocate }, null);
   });
@@ -132,17 +120,17 @@ const sortElementsIntoGroupsForReallocation = chargeElements => {
   const baseElements = chargeElements.filter(element => !isTimeLimited(element));
 
   return baseElements.map(baseEle => {
-    const subElements = chargeElements.filter(subEle => {
-      const areFactorsMatching = subEle.source === baseEle.source && subEle.season === baseEle.season && subEle.purposeTertiary === baseEle.purposeTertiary;
-      return isTimeLimited(subEle) && areFactorsMatching && isSubElementWithinBaseElement(subEle, baseEle);
+    const groupedElements = groupBy(chargeElements, ele => {
+      const areFactorsMatching = ele.source === baseEle.source && ele.season === baseEle.season && ele.purposeTertiary === baseEle.purposeTertiary;
+      return (isTimeLimited(ele) && areFactorsMatching && isSubElementWithinBaseElement(ele, baseEle)) ? 'subElements' : 'notMatching';
     });
 
-    return { baseElement: baseEle, subElements };
+    return { baseElement: baseEle, subElements: groupedElements.subElements || [] };
   });
 };
 
 /**
- * Finds final allocation for elements in each element group
+ * Calls reallocateQuantitiesInOrder & organises return values in arrays
  * @param {Array} elementGroups charge elements grouped by purpose & source
  * @return {String} error over abstraction error or null
  *         {Array} data objects with final actualReturnQuantity determined
@@ -172,7 +160,6 @@ const checkQuantitiesInElementGroups = elementGroups => {
  */
 const reshuffleQuantities = chargeElements => {
   const elementGroups = sortElementsIntoGroupsForReallocation(chargeElements);
-
   return checkQuantitiesInElementGroups(elementGroups);
 };
 

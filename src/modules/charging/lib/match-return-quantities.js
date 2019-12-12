@@ -1,11 +1,7 @@
-const { cloneDeep } = require('lodash');
 const Moment = require('moment');
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(Moment);
 const Decimal = require('decimal.js-light');
-Decimal.set({
-  precision: 20
-});
 const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
 
 const { dateFormat } = require('./two-part-tariff-helpers');
@@ -37,7 +33,7 @@ const doesLineOverlapChargeElementDateRange = (line, ele) => {
 /**
  * Checks whether or not all of the return quantity has already been allocated
  */
-const isQuantityAllocated = returnLine => returnLine.quantity === returnLine.quantityAllocated;
+const isQuantityAllocated = returnLine => returnLine.quantity <= returnLine.quantityAllocated;
 
 /**
  * Return the number of days in a date range
@@ -58,8 +54,8 @@ const getProRataQuantityToAllocate = (line, ele) => {
   const intersectionOfRanges = eleRange.intersect(lineRange);
   const abstractionDaysInChargeElement = getNumberOfDaysInRange(intersectionOfRanges);
   const totalAbstractionDays = getNumberOfDaysInRange(lineRange);
+  const proRataFactor = new Decimal(abstractionDaysInChargeElement).dividedBy(totalAbstractionDays);
 
-  const proRataFactor = new Decimal(abstractionDaysInChargeElement / totalAbstractionDays);
   return proRataFactor.times(line.quantity);
 };
 
@@ -70,26 +66,25 @@ const getProRataQuantityToAllocate = (line, ele) => {
  * @return {Object} updated element quantity & updated allocated quantity for return line
  */
 const matchReturnLineToElement = (line, ele) => {
-  const updatedEle = cloneDeep(ele);
-  const updatedLine = cloneDeep(line);
+  const data = {
+    updatedMaxPossibleReturnQuantity: ele.maxPossibleReturnQuantity,
+    updatedElementQuantity: ele.actualReturnQuantity,
+    updatedLineQuantityAllocated: line.quantityAllocated
+  };
 
   if (doesLineOverlapChargeElementDateRange(line, ele)) {
     const proRataQuantityToAllocate = getProRataQuantityToAllocate(line, ele);
-    updatedEle.maxPossibleReturnQuantity = new Decimal(ele.maxPossibleReturnQuantity).plus(proRataQuantityToAllocate).toNumber();
+    data.updatedMaxPossibleReturnQuantity = new Decimal(ele.maxPossibleReturnQuantity).plus(proRataQuantityToAllocate).toNumber();
 
     if (!isQuantityAllocated(line)) {
       const unallocatedQuantity = proRataQuantityToAllocate.minus(line.quantityAllocated);
 
-      updatedEle.actualReturnQuantity = new Decimal(ele.actualReturnQuantity).plus(unallocatedQuantity).toNumber();
-      updatedLine.quantityAllocated = new Decimal(line.quantityAllocated).plus(unallocatedQuantity).toNumber();
+      data.updatedElementQuantity = new Decimal(ele.actualReturnQuantity).plus(unallocatedQuantity).toNumber();
+      data.updatedLineQuantityAllocated = new Decimal(line.quantityAllocated).plus(unallocatedQuantity).toNumber();
     }
   }
 
-  return {
-    updatedMaxPossibleReturnQuantity: updatedEle.maxPossibleReturnQuantity,
-    updatedElementQuantity: updatedEle.actualReturnQuantity,
-    updatedLineQuantityAllocated: updatedLine.quantityAllocated
-  };
+  return data;
 };
 
 exports.getProRataQuantityToAllocate = getProRataQuantityToAllocate;

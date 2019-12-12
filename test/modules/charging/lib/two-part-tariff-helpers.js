@@ -2,11 +2,6 @@ const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { createReturn, createPurposeData } = require('./test-return-data');
 const { createChargeElement } = require('./test-charge-data');
-const Decimal = require('decimal.js-light');
-Decimal.set({
-  precision: 20
-});
-
 const {
   ERROR_UNDER_QUERY,
   ERROR_NO_RETURNS_SUBMITTED,
@@ -66,25 +61,13 @@ experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
       const chargeElement = {
         chargeElementId: 'test-charge-element',
         proRataAuthorisedQuantity: 50,
-        proRataBillableQuantity: 50,
         actualReturnQuantity: 45.79
       };
       const { data } = getChargeElementReturnData(chargeElement);
 
       expect(data.chargeElementId).to.equal(chargeElement.chargeElementId);
       expect(data.proRataAuthorisedQuantity).to.equal(chargeElement.proRataAuthorisedQuantity);
-      expect(data.proRataBillableQuantity).to.equal(chargeElement.proRataBillableQuantity);
       expect(data.actualReturnQuantity).to.equal(chargeElement.actualReturnQuantity);
-    });
-    test('if no proRataBillableQuantity is passed, it is returned as null', async () => {
-      const chargeElement = {
-        chargeElementId: 'test-charge-element',
-        proRataAuthorisedQuantity: 50,
-        actualReturnQuantity: 50
-      };
-      const { data } = getChargeElementReturnData(chargeElement);
-
-      expect(data.proRataBillableQuantity).to.be.null();
     });
     test('if actualReturnsQuantity is null, is returned as null', async () => {
       const chargeElement = {

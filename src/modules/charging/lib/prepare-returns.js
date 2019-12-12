@@ -2,10 +2,7 @@ const Moment = require('moment');
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(Moment);
 const Decimal = require('decimal.js-light');
-Decimal.set({
-  precision: 20
-});
-const { identity, cloneDeep } = require('lodash');
+const { identity } = require('lodash');
 const {
   TPT_PURPOSES,
   ERROR_NO_RETURNS_FOR_MATCHING,
@@ -128,19 +125,20 @@ const getTPTReturns = returns => {
  * @return {Array} Updated returns array
  */
 const prepareReturnLinesData = returns => {
-  const updated = cloneDeep(returns);
-  updated.forEach(ret => {
-    ret.lines = ret.lines.filter(line => {
-      return isLineWithinAbstractionPeriod(ret, line) ? line.quantity > 0 : false;
-    });
-
-    ret.lines.forEach(retLine => {
-      retLine.quantityAllocated = 0;
-      const quantity = new Decimal(retLine.quantity);
-      retLine.quantity = quantity.dividedBy(1000).toNumber();
-    });
+  return returns.map(ret => {
+    return {
+      ...ret,
+      lines: ret.lines.filter(line => {
+        return isLineWithinAbstractionPeriod(ret, line) ? line.quantity > 0 : false;
+      }).map(line => {
+        return {
+          ...line,
+          quantityAllocated: 0,
+          quantity: new Decimal(line.quantity).dividedBy(1000).toNumber()
+        };
+      })
+    };
   });
-  return updated;
 };
 
 exports.isLineWithinAbstractionPeriod = isLineWithinAbstractionPeriod;
