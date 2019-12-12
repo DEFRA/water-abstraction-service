@@ -398,7 +398,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
     });
     experiment('when the total quantities sum to zero', async () => {
       test('all actual quantities should remain as zero', async () => {
-        const chargeElementGroup = {
+        const chargeElementsGroup = {
           baseElement: createChargeElement({
             chargeElementId: 'charge-element-1',
             source: 'unsupported',
@@ -417,10 +417,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
           })]
         };
 
-        const {
-          error,
-          data: allocatedElements
-        } = reallocateQuantitiesInOrder(chargeElementGroup);
+        const { error, data: allocatedElements } = reallocateQuantitiesInOrder(chargeElementsGroup);
 
         expect(error).to.be.null();
         expect(allocatedElements).to.be.an.array().and.to.have.length(2);
@@ -650,7 +647,8 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             chargeElementId: 'base-charge-element',
             proRataAuthorisedQuantity: 100,
             proRataBillableQuantity: 75,
-            actualReturnQuantity: 65.3
+            actualReturnQuantity: 65.3,
+            maxPossibleReturnQuantity: 65.3
           }),
           subElements: []
         }];
@@ -671,7 +669,8 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
             chargeElementId: 'base-charge-element',
             proRataAuthorisedQuantity: 100,
             proRataBillableQuantity: 75,
-            actualReturnQuantity: 80
+            actualReturnQuantity: 80,
+            maxPossibleReturnQuantity: 80
           }),
           subElements: []
         }];

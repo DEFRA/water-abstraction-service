@@ -269,6 +269,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
     });
     experiment('allocating quantities to correct charge elements', async () => {
       const chargeElementOptions = {
+        chargeElementId: 'charge-element-400-purpose',
         purposeTertiary: 400,
         startDate: '2016-04-01',
         endDate: '2017-03-31',
@@ -294,6 +295,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       const chargeElement = [createChargeElement(chargeElementOptions)];
       const secondChargeElement = createChargeElement({
         ...chargeElementOptions,
+        chargeElementId: 'charge-element-380-purpose',
         purposeTertiary: 380
       });
       const tptReturns = [createMonthlyReturn({
@@ -333,8 +335,10 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         expect(error).to.equal(ERROR_NO_RETURNS_FOR_MATCHING);
       });
       test('when there are charge elements and returns with different TPT purposes', async () => {
-        const { data: matchedElements } = matchReturnsToChargeElements(wrapElementsInVersion(
+        const { data: matchedElements, error } = matchReturnsToChargeElements(wrapElementsInVersion(
           [...chargeElement, secondChargeElement]), [...tptReturns, ...otherPurposeReturns]);
+
+        expect(error).to.be.null();
         expect(matchedElements[0].data.actualReturnQuantity).to.equal(0.147);
         expect(matchedElements[0].error).to.be.null();
         expect(matchedElements[1].data.actualReturnQuantity).to.equal(0.052);
@@ -351,7 +355,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           return ret;
         });
 
-        const { data: matchedElements } = matchReturnsToChargeElements(wrapElementsInVersion(
+        const { data: matchedElements, error } = matchReturnsToChargeElements(wrapElementsInVersion(
           [...chargeElement, secondChargeElement]), [...updatedTpTReturns, ...updatedOtherReturns]);
         expect(matchedElements[0].data.actualReturnQuantity).to.equal(0.147);
         expect(matchedElements[0].error).to.be.null();
@@ -401,7 +405,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         const { error, data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
         const totalReturnQuantities = firstQuantities.reduce((a, b) => a + b, 0) + secondQuantities.reduce((a, b) => a + b, 0);
         const expectedactualReturnQuantity = convertToML(totalReturnQuantities, true);
-        expect(error[0]).to.equal(ERROR_OVER_ABSTRACTION);
+        expect(error).to.equal(ERROR_OVER_ABSTRACTION);
         expect(matchedChargeElement.data.actualReturnQuantity).to.equal(expectedactualReturnQuantity);
         expect(matchedChargeElement.error).to.equal(ERROR_OVER_ABSTRACTION);
       });

@@ -37,21 +37,6 @@ const isTimeLimited = element => {
 };
 
 /**
- * Filter charge elements for those containing the given purpose code
- */
-const getAllChargeElementsForPurpose = (chargeElements, purpose) =>
-  chargeElements.filter(ele => ele.purposeTertiary === purpose);
-
-/**
-   * Get a unique list of purposes across all charge elements
-   */
-const getAllChargeElementPurposes = chargeElements => {
-  return uniq(chargeElements.map(ele => {
-    return ele.purposeTertiary;
-  }));
-};
-
-/**
  * Calculates the quantity to allocate for a charge element
  * @param {Decimal} totalActual return quantity to reshuffle
  * @param {Decimal} totalBillable quantity across charge elements
@@ -85,8 +70,7 @@ const getQuantityToAllocate = (totalActual, totalBillable, maxAllowable, maxForP
  *         {Array} data containing further {error, data} objects
  */
 const reallocateQuantitiesInOrder = chargeElementGroup => {
-  const { baseElement, subElements } = chargeElementGroup;
-  const elements = [baseElement, ...subElements];
+  const elements = [chargeElementGroup.baseElement, ...chargeElementGroup.subElements];
   const totalBillable = elements.reduce(getTotalBillableQuantity, new Decimal(0));
   let totalActual = elements.reduce(getTotalActualQuantity, new Decimal(0));
   const overallErr = totalActual.minus(totalBillable).gt(0) ? ERROR_OVER_ABSTRACTION : null;
@@ -94,7 +78,6 @@ const reallocateQuantitiesInOrder = chargeElementGroup => {
   const data = elements.map(element => {
     const billableQuantity = getMaxAllowable(element);
     const quantityToAllocate = Math.min(totalActual, billableQuantity, element.maxPossibleReturnQuantity);
-
     totalActual = totalActual.minus(quantityToAllocate);
     return getChargeElementReturnData({ ...element, actualReturnQuantity: quantityToAllocate }, null);
   });
@@ -150,15 +133,13 @@ const sortElementsIntoGroupsForReallocation = chargeElements => {
 
   return baseElements.map(baseEle => {
     const subElements = chargeElements.filter(subEle => {
-      const areFactorsMatching = subEle.source === baseEle.source && subEle.season === baseEle.season;
+      const areFactorsMatching = subEle.source === baseEle.source && subEle.season === baseEle.season && subEle.purposeTertiary === baseEle.purposeTertiary;
       return isTimeLimited(subEle) && areFactorsMatching && isSubElementWithinBaseElement(subEle, baseEle);
     });
 
     return { baseElement: baseEle, subElements };
   });
 };
-
-const isElementOverAbstracted = element => element.actualReturnQuantity > getMaxAllowable(element);
 
 /**
  * Finds final allocation for elements in each element group
@@ -171,15 +152,9 @@ const checkQuantitiesInElementGroups = elementGroups => {
   const matchingErrors = [];
 
   elementGroups.forEach(group => {
-    if (group.subElements.length === 0) {
-      const error = isElementOverAbstracted(group.baseElement) ? ERROR_OVER_ABSTRACTION : null;
-      matchingErrors.push(error);
-      matchedQuantities.push(getChargeElementReturnData(group.baseElement, error));
-    } else {
-      const { error, data } = reallocateQuantitiesInOrder(group);
-      matchingErrors.push(error);
-      matchedQuantities.push(data);
-    }
+    const { error, data } = reallocateQuantitiesInOrder(group);
+    matchingErrors.push(error);
+    matchedQuantities.push(data);
   });
 
   return {
@@ -196,24 +171,9 @@ const checkQuantitiesInElementGroups = elementGroups => {
  *         {Array} data containing further {error, data} objects
  */
 const reshuffleQuantities = chargeElements => {
-  const chargeElementPurposes = getAllChargeElementPurposes(chargeElements);
-  const matchedQuantities = [];
-  const matchingErrors = [];
-  chargeElementPurposes.forEach(purpose => {
-    const chargeElementsForPurpose = getAllChargeElementsForPurpose(chargeElements, purpose);
+  const elementGroups = sortElementsIntoGroupsForReallocation(chargeElements);
 
-    const elementGroups = sortElementsIntoGroupsForReallocation(chargeElementsForPurpose);
-
-    const { error, data } = checkQuantitiesInElementGroups(elementGroups);
-    if (error) matchingErrors.push(error);
-
-    matchedQuantities.push(...data);
-  });
-
-  return {
-    error: (matchingErrors.length > 0) ? flatMap(uniq(matchingErrors)) : null,
-    data: flatMap(matchedQuantities)
-  };
+  return checkQuantitiesInElementGroups(elementGroups);
 };
 
 exports.getQuantityToAllocate = getQuantityToAllocate;
