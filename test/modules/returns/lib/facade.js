@@ -120,6 +120,36 @@ experiment('modules/returns/lib/facade', () => {
       });
     });
 
+    experiment('when the return is a service return ending on 2018-10-31 or later but has no version', async () => {
+      beforeEach(async () => {
+        data = {
+          versionNumber: 1,
+          returnId: createReturnId('2018-10-31'),
+          return: createReturn('2018-10-31'),
+          versions: createVersions('2018-10-31'),
+          lines: createLines()
+        };
+
+        apiConnector.fetchReturn.resolves(data.return);
+        apiConnector.fetchVersion.resolves();
+        apiConnector.fetchAllVersions.resolves([]);
+        apiConnector.fetchLines.resolves(data.lines);
+
+        result = await facade.getReturnData(data.returnId, data.versionNumber);
+      });
+
+      test('apiConnector.fetchLines is never called', async () => {
+        expect(apiConnector.fetchLines.called).to.be.false();
+      });
+
+      test('the function resolves with the collected data', async () => {
+        expect(result.return).to.equal(data.return);
+        expect(result.version).to.equal(undefined);
+        expect(result.versions).to.equal([]);
+        expect(result.lines).to.equal([]);
+      });
+    });
+
     experiment('when the return is a non-nil, metric, NALD return', async () => {
       beforeEach(async () => {
         data = {
