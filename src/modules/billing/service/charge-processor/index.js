@@ -13,7 +13,6 @@ const camelCaseKeys = require('../../../../lib/camel-case-keys');
 const repository = require('../../../../lib/connectors/repository');
 const { ERROR_CHARGE_VERSION_NOT_FOUND } = require('./errors');
 const { modelMapper } = require('./model-mapper');
-const camelCase = require('camelcase');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
@@ -298,8 +297,6 @@ const processCharges = async (year, chargeVersionId, isTwoPart = false, isSummer
   data = processInvoiceAccounts(data, docs);
   data = await processAgreements(data, chargeVersion.licenceRef);
   data = await processChargingElements(data, chargeVersionId);
-
-  console.log(JSON.stringify(data, null, 2));
 
   return { error: null, data };
 };
