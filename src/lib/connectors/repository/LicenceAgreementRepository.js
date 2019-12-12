@@ -12,8 +12,9 @@ class LicenceAgreementRepository extends Repository {
 
   /**
    * Finds all agreements for a particular licence number
-   * @param {String} licenceNumber
-   * @return {Object}
+   * @param {String} licenceNumber - the licence number to retrieve agreements for
+   * @param {Array} [agreementCodes] - optional array of agreement codes to select
+   * @return {Promise<Array>} agreement records
    */
   async findByLicenceNumber (licenceNumber, agreementCodes) {
     const filter = { licence_ref: licenceNumber };

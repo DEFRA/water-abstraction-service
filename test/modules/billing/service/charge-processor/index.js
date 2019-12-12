@@ -99,7 +99,15 @@ const data = {
     abstractionPeriodStartMonth: 1,
     abstractionPeriodEndDay: 31,
     abstractionPeriodEndMonth: 12
-  }]
+  }],
+  licenceAgreements: {
+    section127: {
+      licence_agreement_id: 'f5d78402-8dc4-490a-8326-b1be90e12729',
+      financial_agreement_type_id: 'S127',
+      start_date: '2018-08-01',
+      end_date: null
+    }
+  }
 };
 
 experiment('modules/billing/service/charge-processor/index.js', () => {
@@ -764,6 +772,86 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
           const { totalDays, billableDays } = result.data[0].chargeElements[2];
           expect(totalDays).to.equal(365);
           expect(billableDays).to.equal(234);
+        });
+      });
+    });
+
+    experiment('when there is 1x document, non-expiring charge version, mid-year section 127 agreement', () => {
+      beforeEach(async () => {
+        documents.getDocuments.resolves(data.singleDocument);
+        repository.chargeVersions.findOneById.resolves(data.chargeVersions.nonExpiring);
+        repository.licenceAgreements.findByLicenceNumber.resolves([data.licenceAgreements.section127]);
+      });
+
+      experiment('non-expiring licence, 1x licence holder and 1x billing role', () => {
+        beforeEach(async () => {
+          documents.getDocument.withArgs(data.singleDocument[0].documentId).resolves({
+            documentRef: '01/123',
+            startDate: '1993-02-12',
+            endDate: null,
+            documentRoles: [
+              createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: null }),
+              createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
+            ]
+          });
+
+          result = await processCharges(2019, chargeVersionId);
+        });
+
+        test('there is no error', async () => {
+          expect(result.error).to.equal(null);
+        });
+
+        test('there is are 2 charge date ranges', async () => {
+          expect(result.data).to.have.length(2);
+        });
+
+        experiment('the first date range', () => {
+          test('covers the period up until the section 127 agreement starts', async () => {
+            const { startDate, endDate } = result.data[0].chargeElements[0];
+            expect(startDate).to.equal('2018-04-01');
+            expect(endDate).to.equal('2018-07-31');
+          });
+
+          test('the first charge element has the correct ID', async () => {
+            const { chargeElementId } = result.data[0].chargeElements[0];
+            expect(chargeElementId).to.equal(chargeElement1);
+          });
+
+          test('does not have a section 127 agreement', async () => {
+            const { section127Agreement } = result.data[0];
+            expect(section127Agreement).to.equal(false);
+          });
+
+          test('the first charge element has the correct pro-rata billable days', async () => {
+            const { totalDays, billableDays } = result.data[0].chargeElements[0];
+            expect(totalDays).to.equal(276);
+            expect(billableDays).to.equal(92);
+          });
+        });
+
+        experiment('the second date range', () => {
+          test('covers the period from when the section 127 agreement starts', async () => {
+            const { startDate, endDate } = result.data[1].chargeElements[0];
+            expect(startDate).to.equal('2018-08-01');
+            expect(endDate).to.equal('2019-03-31');
+          });
+
+          test('the first charge element has the correct ID', async () => {
+            const { chargeElementId } = result.data[1].chargeElements[0];
+            expect(chargeElementId).to.equal(chargeElement1);
+          });
+
+          test('has a section 127 agreement', async () => {
+            const { section127Agreement } = result.data[1];
+            expect(section127Agreement).to.equal(true);
+          });
+
+          test('the first charge element has the correct pro-rata billable days', async () => {
+            const { totalDays, billableDays } = result.data[1].chargeElements[0];
+            expect(totalDays).to.equal(276);
+            expect(billableDays).to.equal(184);
+          });
         });
       });
     });

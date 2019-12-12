@@ -13,6 +13,7 @@ const camelCaseKeys = require('../../../../lib/camel-case-keys');
 const repository = require('../../../../lib/connectors/repository');
 const { ERROR_CHARGE_VERSION_NOT_FOUND } = require('./errors');
 const { modelMapper } = require('./model-mapper');
+const camelCase = require('camelcase');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
@@ -175,7 +176,7 @@ const chargeElementProcessor = (chargeVersion, chargeElements) => chargeElements
   return acc;
 }, []);
 
-const getPropertyKey = agreementCode => `section${agreementCode}Agreement`;
+const getPropertyKey = agreementCode => `section${(agreementCode.substr(1))}Agreement`;
 
 /**
  * Processes licence-level agreements that affect charging
