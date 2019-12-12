@@ -4,8 +4,8 @@
  */
 const moment = require('moment');
 const { get } = require('lodash');
-const { fetchReturn, fetchVersion, fetchLines, fetchAllVersions } = require('./api-connector');
-const { isNilReturn, getLines } = require('../../import/lib/nald-returns-queries');
+const apiConnector = require('./api-connector');
+const naldConnector = require('../../import/lib/nald-returns-queries');
 const { parseReturnId, mapUnit } = require('../../import/lib/transform-returns-helpers');
 const { naldToReturnLines } = require('./nald-returns-mapper');
 
@@ -16,10 +16,10 @@ const { naldToReturnLines } = require('./nald-returns-mapper');
  * @return {Promise<Object>}
  */
 const getServiceData = async (returnId, versionNumber) => {
-  const version = await fetchVersion(returnId, versionNumber);
+  const version = await apiConnector.fetchVersion(returnId, versionNumber);
   const [versions, lines] = await Promise.all([
-    fetchAllVersions(returnId),
-    version ? fetchLines(returnId, version.version_id) : []
+    apiConnector.fetchAllVersions(returnId),
+    version ? apiConnector.fetchLines(returnId, version.version_id) : []
   ]);
   return { version, versions, lines };
 };
@@ -36,10 +36,9 @@ const getNaldData = async ret => {
   // For older returns, synthesise data direct from the NALD import tables
   const { regionCode, formatId, startDate, endDate } = parseReturnId(returnId);
 
-  const [nilReturn, naldLines] = await Promise.all([
-    isNilReturn(formatId, regionCode, startDate, endDate),
-    getLines(formatId, regionCode, startDate, endDate)
-  ]);
+  // Get data from NALD import schema
+  const nilReturn = await naldConnector.isNilReturn(formatId, regionCode, startDate, endDate);
+  const naldLines = nilReturn ? [] : await naldConnector.getLines(formatId, regionCode, startDate, endDate);
 
   const naldUnit = get(naldLines, '0.UNIT_RET_FLAG', 'M');
 
@@ -64,7 +63,7 @@ const getNaldData = async ret => {
 const getReturnData = async (returnId, versionNumber) => {
   // Irrespective of whether service/NALD data, the return header is always loaded
   // from the returns service
-  const ret = await fetchReturn(returnId);
+  const ret = await apiConnector.fetchReturn(returnId);
 
   // Whether to use new returns service - service is used for returns with
   // end date on or after 31/10/2018
