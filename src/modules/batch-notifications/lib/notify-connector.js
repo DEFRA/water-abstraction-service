@@ -1,22 +1,8 @@
-const NotifyClient = require('notifications-node-client').NotifyClient;
+const notifyConnector = require('../../../lib/connectors/notify');
 const { get } = require('lodash');
 const pdfCreator = require('../../../lib/notify/pdf');
 const config = require('../../../../config');
 const s3Connector = require('../../../lib/connectors/s3');
-
-/**
- * Gets the Notify API key.
- * @TODO we may need per-message type/environment config of key selection
- * @param  {Object} env  Node environment
- * @param  {String} type Message type email|letter
- * @return {String}      Notify API key
- */
-const getNotifyKey = (env, type) => {
-  if (env.NODE_ENV === 'production') {
-    return env.LIVE_NOTIFY_KEY;
-  }
-  return type === 'email' ? env.LIVE_NOTIFY_KEY : env.TEST_NOTIFY_KEY;
-};
 
 /**
  * Creates a string reference for a message in Notify so it can be
@@ -119,9 +105,8 @@ const actions = {
  * @return {Promise}                       resolves when message is sent
  */
 const send = async scheduledNotification => {
-  // Create Notify client
-  const key = getNotifyKey(process.env, scheduledNotification.message_type);
-  const client = new NotifyClient(key);
+  const client = notifyConnector
+    .getClient(scheduledNotification.message_type);
 
   // Get action
   const action = getAction(scheduledNotification);
@@ -130,7 +115,6 @@ const send = async scheduledNotification => {
   return actions[action](client, scheduledNotification);
 };
 
-exports._getNotifyKey = getNotifyKey;
 exports._createNotifyReference = createNotifyReference;
 exports._getNotifyTemplate = getNotifyTemplate;
 exports._uploadPDFToS3 = uploadPDFtoS3;
