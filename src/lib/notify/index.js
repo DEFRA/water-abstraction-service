@@ -1,6 +1,6 @@
-const NotifyClient = require('notifications-node-client').NotifyClient;
 const { MessageTypeError } = require('./errors');
 const { createPdf } = require('./pdf');
+const notifyConnector = require('../connectors/notify');
 
 /**
  * A function to get the notify key
@@ -32,7 +32,7 @@ function getNotifyKey (key) {
  * @return {Promise} resolves with message status
  */
 const getStatus = async (notifyId) => {
-  const client = new NotifyClient(process.env.LIVE_NOTIFY_KEY);
+  const client = notifyConnector.getClient();
   const { body: { status } } = await client.getNotificationById(notifyId);
   return status;
 };
@@ -43,26 +43,26 @@ const getStatus = async (notifyId) => {
  * @param {String} recipient - for SMS/email only
  */
 async function send (notifyTemplate, personalisation, recipient) {
-  const { notify_key: notifyKey, template_id: templateId } = notifyTemplate;
+  const { template_id: templateId } = notifyTemplate;
 
-  // Get API key and create client
-  const apiKey = getNotifyKey(notifyKey);
-  const notifyClient = new NotifyClient(apiKey);
-
-  // check template exists in notify
-  const template = await notifyClient.getTemplateById(templateId);
+  const template = await notifyConnector
+    .getClient()
+    .getTemplateById(templateId);
 
   const { type } = template.body;
 
   switch (type) {
     case 'sms':
-      return notifyClient.sendSms(templateId, recipient, { personalisation });
+      return notifyConnector.getClient(notifyConnector.messageTypes.sms)
+        .sendSms(templateId, recipient, { personalisation });
 
     case 'email':
-      return notifyClient.sendEmail(templateId, recipient, { personalisation });
+      return notifyConnector.getClient(notifyConnector.messageTypes.email)
+        .sendEmail(templateId, recipient, { personalisation });
 
     case 'letter':
-      return notifyClient.sendLetter(templateId, { personalisation });
+      return notifyConnector.getClient(notifyConnector.messageTypes.letter)
+        .sendLetter(templateId, { personalisation });
 
     default:
       throw new MessageTypeError(`Message type ${type} not found`);
@@ -76,17 +76,11 @@ async function send (notifyTemplate, personalisation, recipient) {
  * @return {Promise} resolves with notify response
  */
 async function preview (notifyTemplate, personalisation) {
-  const { notify_key: notifyKey, template_id: templateId } = notifyTemplate;
+  const { template_id: templateId } = notifyTemplate;
 
-  // Get API key and create client
-  const apiKey = getNotifyKey(notifyKey);
-  const notifyClient = new NotifyClient(apiKey);
-
-  // check template exists in notify
-  await notifyClient.getTemplateById(templateId);
-
-  // Create Notify client and preview template
-  return notifyClient.previewTemplateById(templateId, personalisation);
+  return notifyConnector
+    .getClient()
+    .previewTemplateById(templateId, personalisation);
 }
 
 /**
@@ -108,9 +102,10 @@ const getPdfNotifyKey = (env) => {
  * @return {Promise} resolves with Notify response
  */
 async function sendPdf (notificationId, notifyId) {
-  const notifyClient = new NotifyClient(getPdfNotifyKey(process.env));
   const pdf = await createPdf(notificationId);
-  return notifyClient.sendPrecompiledLetter(notifyId, pdf);
+  return notifyConnector
+    .getClient(notifyConnector.messageTypes.letter)
+    .sendPrecompiledLetter(notifyId, pdf);
 }
 
 exports.getNotifyKey = getNotifyKey;
