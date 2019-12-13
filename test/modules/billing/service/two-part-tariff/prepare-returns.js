@@ -9,8 +9,7 @@ const {
   isReturnPurposeTPT,
   getTPTReturns,
   prepareReturnLinesData
-} = require('../../../../../src/modules/billing/jobs/two-part-tariff/prepare-returns');
-
+} = require('../../../../../src/modules/billing/service/two-part-tariff/prepare-returns');
 const {
   ERROR_NO_RETURNS_FOR_MATCHING,
   ERROR_NO_RETURNS_SUBMITTED,
@@ -18,7 +17,7 @@ const {
   ERROR_LATE_RETURNS,
   ERROR_UNDER_QUERY,
   ERROR_RECEIVED_NO_DATA
-} = require('../../../../../src/modules/billing/jobs/two-part-tariff/two-part-tariff-helpers');
+} = require('../../../../../src/modules/billing/service/two-part-tariff/two-part-tariff-helpers');
 
 experiment('modules/charging/lib/prepare-returns', async () => {
   experiment('.isLineWithinAbstractionPeriod', async () => {

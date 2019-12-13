@@ -6,7 +6,7 @@ const {
   getProRataQuantityToAllocate,
   doesLineOverlapChargeElementDateRange,
   matchReturnLineToElement
-} = require('../../../../../src/modules/billing/jobs/two-part-tariff/match-return-quantities');
+} = require('../../../../../src/modules/billing/service/two-part-tariff/match-return-quantities');
 
 const createReturnLine = options => {
   return {

@@ -5,7 +5,7 @@ const {
   getTptChargeElements,
   prepareChargeElementData,
   sortChargeElementsForMatching
-} = require('../../../../../src/modules/billing/jobs/two-part-tariff/prepare-charge-elements');
+} = require('../../../../../src/modules/billing/service/two-part-tariff/prepare-charge-elements');
 
 experiment('modules/charging/lib/prepare-charge-elements', async () => {
   experiment('.getTptChargeElements', async () => {

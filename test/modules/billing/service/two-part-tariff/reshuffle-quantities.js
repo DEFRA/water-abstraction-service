@@ -11,8 +11,8 @@ const {
   sortElementsIntoGroupsForReallocation,
   checkQuantitiesInElementGroups,
   reshuffleQuantities
-} = require('../../../../../src/modules/billing/jobs/two-part-tariff/reshuffle-quantities');
-const { ERROR_OVER_ABSTRACTION } = require('../../../../../src/modules/billing/jobs/two-part-tariff/two-part-tariff-helpers');
+} = require('../../../../../src/modules/billing/service/two-part-tariff/reshuffle-quantities');
+const { ERROR_OVER_ABSTRACTION } = require('../../../../../src/modules/billing/service/two-part-tariff/two-part-tariff-helpers');
 
 experiment('modules/charging/lib/reshuffle-quantities', async () => {
   experiment('.getQuantityToAllocate', async () => {
