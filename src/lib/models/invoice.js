@@ -1,16 +1,14 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
-const { assert } = require('@hapi/hoek');
 const { get, flatMap } = require('lodash');
 
+const { assertIsInstanceOf, assertIsArrayOfType } = require('./validators');
+const Model = require('./model');
 const Address = require('./address');
 const InvoiceAccount = require('./invoice-account');
 const InvoiceLicence = require('./invoice-licence');
-const { isArrayOfType } = require('./validators');
 
 const MINIMUM_PAYMENT = 25 * 100; // £25
-const VALID_GUID = Joi.string().guid().required();
 
 const getTotalsCredit = (totals, value) => {
   return {
@@ -37,29 +35,10 @@ const getTotalsChange = (totals, value, isCredit) => {
   };
 };
 
-class Invoice {
+class Invoice extends Model {
   constructor (id) {
-    if (id) {
-      this.id = id;
-    }
+    super(id);
     this._invoiceLicences = [];
-  }
-
-  /**
-   * Sets the ID for this invoice
-   * @param {String} - GUID
-   */
-  set id (id) {
-    Joi.assert(id, VALID_GUID);
-    this._id = id;
-  }
-
-  /**
-   * Gets the ID for this invoice
-   * @return {String}
-   */
-  get id () {
-    return this._id;
   }
 
   /**
@@ -67,7 +46,7 @@ class Invoice {
    * @param {InvoiceAccount} invoiceAccount
    */
   set invoiceAccount (invoiceAccount) {
-    assert(invoiceAccount instanceof InvoiceAccount, 'InvoiceAccount expected');
+    assertIsInstanceOf(invoiceAccount, InvoiceAccount);
     this._invoiceAccount = invoiceAccount;
   }
 
@@ -84,7 +63,7 @@ class Invoice {
    * @param {Address} address
    */
   set address (address) {
-    assert(address instanceof Address, 'Address expected');
+    assertIsInstanceOf(address, Address);
     this._address = address;
   }
 
@@ -97,7 +76,7 @@ class Invoice {
   }
 
   set invoiceLicences (invoiceLicences) {
-    isArrayOfType(invoiceLicences, InvoiceLicence);
+    assertIsArrayOfType(invoiceLicences, InvoiceLicence);
     this._invoiceLicences = invoiceLicences;
   }
 
@@ -168,9 +147,7 @@ class Invoice {
 
   toJSON () {
     return {
-      id: this.id,
-      invoiceAccount: this.invoiceAccount,
-      invoiceLicences: this.invoiceLicences,
+      ...super.toJSON(),
       totals: this.getTotals()
     };
   }

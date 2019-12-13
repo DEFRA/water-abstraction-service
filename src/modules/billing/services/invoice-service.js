@@ -13,6 +13,7 @@ const Licence = require('../../../lib/models/licence');
 const Address = require('../../../lib/models/address');
 const Company = require('../../../lib/models/company');
 const Contact = require('../../../lib/models/contact-v2');
+const Transaction = require('../../../lib/models/transaction');
 
 const mapRowToModels = row => {
   const invoice = new Invoice(row['billing_invoices.billing_invoice_id']);
@@ -32,15 +33,22 @@ const mapRowToModels = row => {
   return { invoice, invoiceLicence };
 };
 
-const decorateInvoicesWithTransactions = (invoices, transactions) => {
+/**
+ * Applies any matching transactions to the invoices
+ *
+ * @param {Array<Invoice>} invoices THe invoices that are to have any mathcing transactions applied
+ * @param {Array<ChargeModuleTransaction>} chargeModuleTransactions The transactions from the charge module api
+ */
+const decorateInvoicesWithTransactions = (invoices, chargeModuleTransactions) => {
   return invoices.map(invoice => {
     invoice.invoiceLicences = invoice.invoiceLicences.map(invoiceLicence => {
-      const transaction = transactions.find(tx => {
+      const chargeModuleTransaction = chargeModuleTransactions.find(tx => {
         return tx.licenceNumber === invoiceLicence.licence.licenceNumber &&
         tx.accountNumber === invoice.invoiceAccount.accountNumber;
       });
 
-      if (transaction) {
+      if (chargeModuleTransaction) {
+        const transaction = Transaction.fromChargeModuleTransaction(chargeModuleTransaction);
         invoiceLicence.transactions = [...invoiceLicence.transactions, transaction];
       }
       return invoiceLicence;
@@ -107,11 +115,11 @@ const createInvoiceModelsFromBatchInvoiceRows = batchInvoiceRows => {
  */
 const getInvoicesForBatch = async batchId => {
   const batchInvoiceRows = await repos.billingInvoices.findByBatchId(batchId);
-  const transactions = await transactionsService.getTransactionsForBatch(batchId);
+  const chargeModuleTransactions = await transactionsService.getTransactionsForBatch(batchId);
 
   const models = createInvoiceModelsFromBatchInvoiceRows(batchInvoiceRows);
 
-  return decorateInvoices(models, transactions);
+  return decorateInvoices(models, chargeModuleTransactions);
 };
 
 /**
@@ -128,8 +136,8 @@ const getInvoiceForBatch = async (batchId, invoiceId) => {
 
   if (invoiceRows.length > 0) {
     const [invoice] = createInvoiceModelsFromBatchInvoiceRows(invoiceRows);
-    const transactions = await transactionsService.getTransactionsForBatchInvoice(batchId, invoice.invoiceAccount.accountNumber);
-    return first(await decorateInvoices([invoice], transactions));
+    const chargeModuleTransactions = await transactionsService.getTransactionsForBatchInvoice(batchId, invoice.invoiceAccount.accountNumber);
+    return first(await decorateInvoices([invoice], chargeModuleTransactions));
   }
 };
 

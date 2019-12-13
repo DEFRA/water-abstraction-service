@@ -1,6 +1,5 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
 const { assert } = require('@hapi/hoek');
 const { get } = require('lodash');
 
@@ -10,30 +9,17 @@ const Contact = require('./contact-v2');
 const Licence = require('./licence');
 const Transaction = require('./transaction');
 
-const { isArrayOfType } = require('./validators');
+const {
+  assertIsArrayOfType,
+  assertIsInstanceOf
+} = require('./validators');
 
-const VALID_GUID = Joi.string().guid().required();
+const Model = require('./model');
 
-class InvoiceLicence {
+class InvoiceLicence extends Model {
   constructor () {
+    super();
     this._transactions = [];
-  }
-
-  /**
-   * Sets the ID for this invoice
-   * @param {String} - GUID
-   */
-  set id (id) {
-    Joi.assert(id, VALID_GUID);
-    this._id = id;
-  }
-
-  /**
-   * Gets the ID for this invoice
-   * @return {String}
-   */
-  get id () {
-    return this._id;
   }
 
   /**
@@ -58,7 +44,7 @@ class InvoiceLicence {
   * @param {Company} company
   */
   set company (company) {
-    assert(company instanceof Company, 'Company expected');
+    assertIsInstanceOf(company, Company);
     this._company = company;
   }
 
@@ -75,7 +61,7 @@ class InvoiceLicence {
   * @param {Contact} contact
   */
   set contact (contact) {
-    assert(contact instanceof Contact, 'Contact expected');
+    assertIsInstanceOf(contact, Contact);
     this._contact = contact;
   }
 
@@ -92,7 +78,7 @@ class InvoiceLicence {
    * @param {Address} address
    */
   set address (address) {
-    assert(address instanceof Address, 'Address expected');
+    assertIsInstanceOf(address, Address);
     this._address = address;
   }
 
@@ -105,7 +91,7 @@ class InvoiceLicence {
   }
 
   set transactions (transactions) {
-    isArrayOfType(transactions, Transaction);
+    assertIsArrayOfType(transactions, Transaction);
     this._transactions = transactions;
   }
 
@@ -125,17 +111,6 @@ class InvoiceLicence {
       get(this, '_address.id'),
       get(this, '_contact.id')
     ].join('.');
-  }
-
-  toJSON () {
-    return {
-      id: this.id,
-      licence: this.licence,
-      company: this.company,
-      contact: this.contact,
-      address: this.address,
-      transactions: this.transactions
-    };
   }
 }
 

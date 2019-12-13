@@ -4,6 +4,7 @@ const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
 
+const ChargeModuleTransaction = require('../../../src/lib/models/charge-module-transaction');
 const Transaction = require('../../../src/lib/models/transaction');
 
 experiment('lib/models/transaction', () => {
@@ -60,6 +61,19 @@ experiment('lib/models/transaction', () => {
         value: transaction.value,
         isCredit: transaction.isCredit
       });
+    });
+  });
+
+  experiment('.fromChargeModuleTransaction', () => {
+    test('copies across the expected values', async () => {
+      const chargeModuleTransaction = new ChargeModuleTransaction();
+      chargeModuleTransaction.id = uuid();
+      chargeModuleTransaction.value = 100;
+      chargeModuleTransaction.isCredit = false;
+
+      const transaction = Transaction.fromChargeModuleTransaction(chargeModuleTransaction);
+      expect(transaction.value).to.equal(chargeModuleTransaction.value);
+      expect(transaction.isCredit).to.equal(chargeModuleTransaction.isCredit);
     });
   });
 });

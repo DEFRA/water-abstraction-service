@@ -5,26 +5,12 @@ const Joi = require('@hapi/joi');
 const TYPE_PERSON = 'person';
 const TYPE_ORGANISATION = 'organisation';
 
-const VALID_GUID = Joi.string().guid().required();
 const VALID_TYPE = Joi.string().valid(TYPE_PERSON, TYPE_ORGANISATION).required();
 const VALID_NAME = Joi.string().required();
 
-class Company {
-  constructor (id) {
-    if (id) {
-      this.id = id;
-    }
-  }
+const Model = require('./model');
 
-  set id (id) {
-    Joi.assert(id, VALID_GUID);
-    this._id = id;
-  }
-
-  get id () {
-    return this._id;
-  }
-
+class Company extends Model {
   /**
    * @param {String} type - Company type person|organisation
    */
@@ -47,14 +33,6 @@ class Company {
 
   get name () {
     return this._name;
-  }
-
-  toJSON () {
-    return {
-      id: this._id,
-      type: this._type,
-      name: this._name
-    };
   }
 }
 

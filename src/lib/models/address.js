@@ -1,28 +1,11 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
+const Model = require('./model');
+const { assertNullableString } = require('./validators');
 
-const VALID_GUID = Joi.string().guid().required();
-const VALID_STRING = Joi.string().allow(null).required();
-
-class Address {
-  constructor (id) {
-    if (id) {
-      this.id = id;
-    }
-  }
-
-  set id (id) {
-    Joi.assert(id, VALID_GUID);
-    this._id = id;
-  }
-
-  get id () {
-    return this._id;
-  }
-
+class Address extends Model {
   set addressLine1 (addressLine1) {
-    Joi.assert(addressLine1, VALID_STRING);
+    assertNullableString(addressLine1);
     this._addressLine1 = addressLine1;
   }
 
@@ -31,7 +14,7 @@ class Address {
   }
 
   set addressLine2 (addressLine2) {
-    Joi.assert(addressLine2, VALID_STRING);
+    assertNullableString(addressLine2);
     this._addressLine2 = addressLine2;
   }
 
@@ -40,7 +23,7 @@ class Address {
   }
 
   set addressLine3 (addressLine3) {
-    Joi.assert(addressLine3, VALID_STRING);
+    assertNullableString(addressLine3);
     this._addressLine3 = addressLine3;
   }
 
@@ -49,7 +32,7 @@ class Address {
   }
 
   set addressLine4 (addressLine4) {
-    Joi.assert(addressLine4, VALID_STRING);
+    assertNullableString(addressLine4);
     this._addressLine4 = addressLine4;
   }
 
@@ -58,7 +41,7 @@ class Address {
   }
 
   set town (town) {
-    Joi.assert(town, VALID_STRING);
+    assertNullableString(town);
     this._town = town;
   }
 
@@ -67,7 +50,7 @@ class Address {
   }
 
   set county (county) {
-    Joi.assert(county, VALID_STRING);
+    assertNullableString(county);
     this._county = county;
   }
 
@@ -76,7 +59,7 @@ class Address {
   }
 
   set postcode (postcode) {
-    Joi.assert(postcode, VALID_STRING);
+    assertNullableString(postcode);
     this._postcode = postcode;
   }
 
@@ -85,7 +68,7 @@ class Address {
   }
 
   set country (country) {
-    Joi.assert(country, VALID_STRING);
+    assertNullableString(country);
     this._country = country;
   }
 
@@ -109,10 +92,6 @@ class Address {
       postcode: this.postcode,
       country: this.country
     };
-  }
-
-  toJSON () {
-    return this.toObject();
   }
 }
 

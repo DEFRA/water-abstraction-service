@@ -212,7 +212,6 @@ experiment('modules/billing/service/charge-version-year.js', () => {
           licence_ref: data.licence.licenceNumber,
           licence_holder_name: {
             id: data.contact.id,
-            initials: undefined,
             salutation: data.contact.salutation,
             firstName: data.contact.firstName,
             lastName: data.contact.lastName

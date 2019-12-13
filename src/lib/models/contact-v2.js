@@ -1,27 +1,11 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
-const VALID_NULLABLE_STRING = Joi.string().required().allow(null);
-const VALID_GUID = Joi.string().guid().required();
+const { assertNullableString } = require('./validators');
+const Model = require('./model');
 
-class Contact {
-  constructor (id) {
-    if (id) {
-      this.id = id;
-    }
-  }
-
-  set id (id) {
-    Joi.assert(id, VALID_GUID);
-    this._id = id;
-  }
-
-  get id () {
-    return this._id;
-  }
-
+class Contact extends Model {
   set initials (initials) {
-    Joi.assert(initials, VALID_NULLABLE_STRING);
+    assertNullableString(initials);
     this._initials = initials;
   }
 
@@ -30,7 +14,7 @@ class Contact {
   }
 
   set salutation (salutation) {
-    Joi.assert(salutation, VALID_NULLABLE_STRING);
+    assertNullableString(salutation);
     this._salutation = salutation;
   }
 
@@ -39,7 +23,7 @@ class Contact {
   }
 
   set firstName (firstName) {
-    Joi.assert(firstName, VALID_NULLABLE_STRING);
+    assertNullableString(firstName);
     this._firstName = firstName;
   }
 
@@ -48,7 +32,7 @@ class Contact {
   }
 
   set lastName (lastName) {
-    Joi.assert(lastName, VALID_NULLABLE_STRING);
+    assertNullableString(lastName);
     this._lastName = lastName;
   }
 
@@ -63,16 +47,6 @@ class Contact {
   get fullName () {
     const parts = [this._salutation, this._initials || this._firstName, this._lastName];
     return parts.filter(x => x).join(' ');
-  }
-
-  toJSON () {
-    return {
-      id: this._id,
-      salutation: this._salutation,
-      initials: this._initials,
-      firstName: this._firstName,
-      lastName: this._lastName
-    };
   }
 }
 

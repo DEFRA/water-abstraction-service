@@ -7,13 +7,8 @@ const getContacts = async contactIds => {
   const contacts = await contactsConnector.getContacts(contactIds);
 
   return contacts.map(contact => {
-    const contactModel = new Contact();
-    contactModel.id = contact.contactId;
-    contactModel.initials = contact.initials;
-    contactModel.salutation = contact.salutation;
-    contactModel.firstName = contact.firstName;
-    contactModel.lastName = contact.lastName;
-
+    const contactModel = new Contact(contact.contactId);
+    contactModel.pickFrom(contact, ['initials', 'salutation', 'firstName', 'lastName']);
     return contactModel;
   });
 };

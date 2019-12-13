@@ -13,6 +13,7 @@ const uuid = require('uuid/v4');
 
 const Invoice = require('../../../../src/lib/models/invoice');
 const Transaction = require('../../../../src/lib/models/transaction');
+const ChargeModuleTransaction = require('../../../../src/lib/models/charge-module-transaction');
 const Contact = require('../../../../src/lib/models/contact-v2');
 
 const repos = require('../../../../src/lib/connectors/repository');
@@ -81,11 +82,15 @@ experiment('modules/billing/services/invoiceService', () => {
   beforeEach(async () => {
     sandbox.stub(repos.billingInvoices, 'findByBatchId').resolves(testResponse);
 
-    transaction1 = new Transaction(uuid(), 100);
+    transaction1 = new ChargeModuleTransaction(uuid());
+    transaction1.value = 100;
+    transaction1.isCredit = false;
     transaction1.accountNumber = INVOICE_1_ACCOUNT_NUMBER;
     transaction1.licenceNumber = '111/LIC';
 
-    transaction2 = new Transaction(uuid(), 200);
+    transaction2 = new ChargeModuleTransaction(uuid());
+    transaction2.value = 200;
+    transaction2.isCredit = true;
     transaction2.accountNumber = INVOICE_2_ACCOUNT_NUMBER;
     transaction2.licenceNumber = '333/LIC';
 
@@ -182,14 +187,17 @@ experiment('modules/billing/services/invoiceService', () => {
     test('the InvoiceLicences objects have the expected transactions', async () => {
       // the first licence on the first invoice has a transaction
       expect(invoices[0].invoiceLicences[0].transactions).to.have.length(1);
-      expect(invoices[0].invoiceLicences[0].transactions[0].licenceNumber).to.equal('111/LIC');
+      expect(invoices[0].invoiceLicences[0].transactions[0]).to.be.instanceOf(Transaction);
+      expect(invoices[0].invoiceLicences[0].transactions[0].value).to.equal(100);
+      expect(invoices[0].invoiceLicences[0].transactions[0].isCredit).to.be.false();
 
       // the second licence on the first invoice has no transactions
       expect(invoices[0].invoiceLicences[1].transactions).to.have.length(0);
 
       // the first licence on the second invoice has a transaction
       expect(invoices[1].invoiceLicences[0].transactions).to.have.length(1);
-      expect(invoices[1].invoiceLicences[0].transactions[0].licenceNumber).to.equal('333/LIC');
+      expect(invoices[1].invoiceLicences[0].transactions[0].value).to.equal(200);
+      expect(invoices[1].invoiceLicences[0].transactions[0].isCredit).to.be.true();
     });
   });
 });

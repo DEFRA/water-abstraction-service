@@ -1,20 +1,26 @@
 'use strict';
 
-const Joi = require('joi');
+const { pick } = require('lodash');
 
-class Transaction {
+const Model = require('./model');
+const { assertIsBoolean } = require('./validators');
+
+class Transaction extends Model {
   constructor (id, value, isCredit = false) {
-    this.id = id;
+    super(id);
     this.value = value;
     this.isCredit = isCredit;
   }
 
-  get id () {
-    return this._id;
-  }
-
-  set id (id) {
-    this._id = id;
+  /**
+   * Extracts a subset of the ChargeModuleTransaction object data and returns
+   * a Transaction model
+   * @param {ChargeModuleTransaction} chargeModuleTransaction The source data
+   */
+  static fromChargeModuleTransaction (chargeModuleTransaction) {
+    const transaction = new Transaction();
+    transaction.fromHash(pick(chargeModuleTransaction, ['value', 'isCredit']));
+    return transaction;
   }
 
   get value () {
@@ -30,16 +36,8 @@ class Transaction {
   }
 
   set isCredit (isCredit) {
-    Joi.assert(isCredit, Joi.boolean());
+    assertIsBoolean(isCredit);
     this._isCredit = isCredit;
-  }
-
-  toJSON () {
-    return {
-      id: this.id,
-      value: this.value,
-      isCredit: this.isCredit
-    };
   }
 }
 
