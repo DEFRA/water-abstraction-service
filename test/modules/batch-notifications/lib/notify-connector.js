@@ -6,7 +6,7 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const notifyConnector =
-require('../../../../src/modules/batch-notifications/lib/notify-connector');
+  require('../../../../src/modules/batch-notifications/lib/notify-connector');
 
 const s3Connector = require('../../../../src/lib/connectors/s3');
 const pdfCreator = require('../../../../src/lib/notify/pdf');
@@ -48,40 +48,6 @@ experiment('batch notifications notify connector', () => {
 
   afterEach(async () => {
     sandbox.restore();
-  });
-
-  experiment('getNotifyKey', () => {
-    experiment('in production', () => {
-      const env = {
-        NODE_ENV: 'production',
-        TEST_NOTIFY_KEY: 'test-key',
-        LIVE_NOTIFY_KEY: 'live-key'
-      };
-
-      test('returns a live key for email messages', async () => {
-        expect(notifyConnector._getNotifyKey(env, 'email')).to.equal('live-key');
-      });
-
-      test('returns a live key for letter messages', async () => {
-        expect(notifyConnector._getNotifyKey(env, 'letter')).to.equal('live-key');
-      });
-    });
-
-    experiment('in non-production environments', () => {
-      const env = {
-        NODE_ENV: 'not-production',
-        TEST_NOTIFY_KEY: 'test-key',
-        LIVE_NOTIFY_KEY: 'live-key'
-      };
-
-      test('returns a live key for email messages', async () => {
-        expect(notifyConnector._getNotifyKey(env, 'email')).to.equal('live-key');
-      });
-
-      test('returns a test key for letter messages', async () => {
-        expect(notifyConnector._getNotifyKey(env, 'letter')).to.equal('test-key');
-      });
-    });
   });
 
   experiment('createNotifyReference', () => {
@@ -203,14 +169,4 @@ experiment('batch notifications notify connector', () => {
       expect(result).to.equal('email');
     });
   });
-
-  // experiment('send', () => {
-  //   beforeEach(async () => {
-  //
-  //   });
-  //
-  //   test('it selects the correct method in the action object', async () => {
-  //     await notifyConnector.send(message);
-  //   });
-  // });
 });
