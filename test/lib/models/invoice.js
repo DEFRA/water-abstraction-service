@@ -2,7 +2,6 @@
 
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
-const uuid = require('uuid/v4');
 
 const Invoice = require('../../../src/lib/models/invoice');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
@@ -10,7 +9,6 @@ const Address = require('../../../src/lib/models/address');
 const InvoiceLicence = require('../../../src/lib/models/invoice-licence');
 const Licence = require('../../../src/lib/models/licence');
 const Transaction = require('../../../src/lib/models/transaction');
-const Contact = require('../../../src/lib/models/contact-v2');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
 
@@ -205,65 +203,6 @@ experiment('lib/models/invoice', () => {
         const topUp = invoice.getMinimumPaymentTopUp();
         expect(topUp).to.equal(100);
       });
-    });
-  });
-
-  experiment('.getInvoiceLicenceContacts', () => {
-    test('returns an empty array if no InvoiceLicences', () => {
-      const invoice = new Invoice();
-      expect(invoice.getInvoiceLicenceContacts()).to.equal([]);
-    });
-
-    test('returns an empty array if InvoiceLicences have no contacts', () => {
-      const invoice = new Invoice();
-      invoice.invoiceLicences = [
-        new InvoiceLicence(),
-        new InvoiceLicence(),
-        new InvoiceLicence()
-      ];
-      expect(invoice.getInvoiceLicenceContacts()).to.equal([]);
-    });
-
-    test('returns all contacts when no duplicates', async () => {
-      const invoiceLicence1 = new InvoiceLicence();
-      invoiceLicence1.contact = new Contact(uuid());
-
-      const invoiceLicence2 = new InvoiceLicence();
-      invoiceLicence2.contact = new Contact(uuid());
-
-      const invoiceLicence3 = new InvoiceLicence();
-      invoiceLicence3.contact = new Contact(uuid());
-
-      const invoice = new Invoice();
-      invoice.invoiceLicences = [invoiceLicence1, invoiceLicence2, invoiceLicence3];
-
-      const contacts = invoice.getInvoiceLicenceContacts();
-
-      expect(contacts).to.have.length(3);
-      expect(contacts.find(contact => contact.id === invoiceLicence1.contact.id)).to.exist();
-      expect(contacts.find(contact => contact.id === invoiceLicence2.contact.id)).to.exist();
-      expect(contacts.find(contact => contact.id === invoiceLicence3.contact.id)).to.exist();
-    });
-
-    test('returns unique contacts when duplicates', async () => {
-      const sharedContactId = uuid();
-      const invoiceLicence1 = new InvoiceLicence();
-      invoiceLicence1.contact = new Contact(sharedContactId);
-
-      const invoiceLicence2 = new InvoiceLicence();
-      invoiceLicence2.contact = new Contact(sharedContactId);
-
-      const invoiceLicence3 = new InvoiceLicence();
-      invoiceLicence3.contact = new Contact(uuid());
-
-      const invoice = new Invoice();
-      invoice.invoiceLicences = [invoiceLicence1, invoiceLicence2, invoiceLicence3];
-
-      const contacts = invoice.getInvoiceLicenceContacts();
-
-      expect(contacts).to.have.length(2);
-      expect(contacts.find(contact => contact.id === sharedContactId)).to.exist();
-      expect(contacts.find(contact => contact.id === invoiceLicence3.contact.id)).to.exist();
     });
   });
 });

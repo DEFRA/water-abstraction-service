@@ -12,14 +12,15 @@ const sandbox = sinon.createSandbox();
 const uuid = require('uuid/v4');
 
 const Invoice = require('../../../../src/lib/models/invoice');
+const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const Transaction = require('../../../../src/lib/models/transaction');
 const ChargeModuleTransaction = require('../../../../src/lib/models/charge-module-transaction');
-const Contact = require('../../../../src/lib/models/contact-v2');
+const Company = require('../../../../src/lib/models/company');
 
 const repos = require('../../../../src/lib/connectors/repository');
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 const transactionService = require('../../../../src/modules/billing/services/transactions-service');
-const contactsService = require('../../../../src/modules/billing/services/contacts-service');
+const invoiceAccountsService = require('../../../../src/modules/billing/services/invoice-accounts-service');
 
 const INVOICE_1_ID = uuid();
 const INVOICE_2_ID = uuid();
@@ -27,6 +28,8 @@ const INVOICE_1_ACCOUNT_ID = uuid();
 const INVOICE_1_ACCOUNT_NUMBER = 'A11111111A';
 const INVOICE_2_ACCOUNT_ID = uuid();
 const INVOICE_2_ACCOUNT_NUMBER = 'A22222222A';
+const COMPANY_1_ID = uuid();
+const COMPANY_2_ID = uuid();
 const CONTACT_1_ID = uuid();
 const CONTACT_2_ID = uuid();
 
@@ -75,8 +78,8 @@ const testResponse = [
 let transaction1;
 let transaction2;
 
-let contact1;
-let contact2;
+let invoiceAccount1;
+let invoiceAccount2;
 
 experiment('modules/billing/services/invoiceService', () => {
   beforeEach(async () => {
@@ -98,14 +101,16 @@ experiment('modules/billing/services/invoiceService', () => {
       transaction1, transaction2
     ]);
 
-    contact1 = new Contact(CONTACT_1_ID);
-    contact1.firstName = 'Test1';
+    invoiceAccount1 = new InvoiceAccount(INVOICE_1_ACCOUNT_ID);
+    invoiceAccount1.company = new Company(COMPANY_1_ID);
+    invoiceAccount1.company.name = 'Test Company 1';
 
-    contact2 = new Contact(CONTACT_2_ID);
-    contact2.firstName = 'Test2';
+    invoiceAccount2 = new InvoiceAccount(INVOICE_2_ACCOUNT_ID);
+    invoiceAccount2.company = new Company(COMPANY_2_ID);
+    invoiceAccount2.company.name = 'Test Company 2';
 
-    sandbox.stub(contactsService, 'getContacts').resolves([
-      contact1, contact2
+    sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountIds').resolves([
+      invoiceAccount1, invoiceAccount2
     ]);
   });
 
@@ -173,15 +178,12 @@ experiment('modules/billing/services/invoiceService', () => {
       );
     });
 
-    test('the InvoiceLicence objects have the expected contacts', async () => {
-      expect(invoices[0].invoiceLicences[0].contact.id).to.equal(contact1.id);
-      expect(invoices[0].invoiceLicences[0].contact.firstName).to.equal(contact1.firstName);
+    test('the InvoiceAccount objects have the expected companies', async () => {
+      expect(invoices[0].invoiceAccount.company.id).to.equal(invoiceAccount1.company.id);
+      expect(invoices[0].invoiceAccount.company.name).to.equal(invoiceAccount1.company.name);
 
-      expect(invoices[0].invoiceLicences[1].contact.id).to.equal(contact1.id);
-      expect(invoices[0].invoiceLicences[1].contact.firstName).to.equal(contact1.firstName);
-
-      expect(invoices[1].invoiceLicences[0].contact.id).to.equal(contact2.id);
-      expect(invoices[1].invoiceLicences[0].contact.firstName).to.equal(contact2.firstName);
+      expect(invoices[1].invoiceAccount.company.id).to.equal(invoiceAccount2.company.id);
+      expect(invoices[1].invoiceAccount.company.name).to.equal(invoiceAccount2.company.name);
     });
 
     test('the InvoiceLicences objects have the expected transactions', async () => {

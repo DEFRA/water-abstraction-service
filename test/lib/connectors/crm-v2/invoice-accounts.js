@@ -10,11 +10,11 @@ const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const contacts = require('../../../../src/lib/connectors/crm-v2/contacts');
+const invoiceAccountConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts');
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
 
-experiment('lib/connectors/crm-v2/contacts', () => {
+experiment('lib/connectors/crm-v2/invoice-accounts', () => {
   beforeEach(async () => {
     sandbox.stub(config.services, 'crm_v2').value('http://test.defra');
     sandbox.stub(serviceRequest, 'get').resolves();
@@ -24,54 +24,31 @@ experiment('lib/connectors/crm-v2/contacts', () => {
     sandbox.restore();
   });
 
-  experiment('.getContact', () => {
-    let response;
-
-    beforeEach(async () => {
-      serviceRequest.get.resolves({
-        contactId: 'test-contact-id'
-      });
-
-      response = await contacts.getContact('test-contact-id');
-    });
-
-    test('makes a request to the expected URL', async () => {
-      const [url] = serviceRequest.get.lastCall.args;
-      expect(url).to.equal('http://test.defra/contacts/test-contact-id');
-    });
-
-    test('returns the result from the crm', async () => {
-      expect(response).to.equal({
-        contactId: 'test-contact-id'
-      });
-    });
-  });
-
-  experiment('.getContacts', () => {
+  experiment('.getInvoiceAccountsByIds', () => {
     let response;
 
     beforeEach(async () => {
       serviceRequest.get.resolves([
-        { contactId: 'test-contact-id-1' },
-        { contactId: 'test-contact-id-2' }
+        { invoiceAccountId: 'test-id-1' },
+        { invoiceAccountId: 'test-id-2' }
       ]);
 
-      response = await contacts.getContacts([
-        'test-contact-id-1',
-        'test-contact-id-2'
+      response = await invoiceAccountConnector.getInvoiceAccountsByIds([
+        'test-id-1',
+        'test-id-2'
       ]);
     });
 
     test('makes a request to the expected URL', async () => {
       const [url] = serviceRequest.get.lastCall.args;
-      expect(url).to.equal('http://test.defra/contacts');
+      expect(url).to.equal('http://test.defra/invoice-accounts');
     });
 
-    test('adds the contacts ids to the query string as a comma separated string', async () => {
+    test('adds the invoice account ids to the query string', async () => {
       const [, options] = serviceRequest.get.lastCall.args;
       expect(options.qs.id).to.equal([
-        'test-contact-id-1',
-        'test-contact-id-2'
+        'test-id-1',
+        'test-id-2'
       ]);
     });
 
@@ -82,8 +59,8 @@ experiment('lib/connectors/crm-v2/contacts', () => {
 
     test('returns the result from the crm', async () => {
       expect(response).to.equal([
-        { contactId: 'test-contact-id-1' },
-        { contactId: 'test-contact-id-2' }
+        { invoiceAccountId: 'test-id-1' },
+        { invoiceAccountId: 'test-id-2' }
       ]);
     });
   });

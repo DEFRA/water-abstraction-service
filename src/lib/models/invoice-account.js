@@ -1,7 +1,8 @@
 'use strict';
 
-const { assertAccountNumber } = require('./validators');
+const { assertAccountNumber, assertIsInstanceOf } = require('./validators');
 const Model = require('./model');
+const Company = require('./company');
 
 class InvoiceAccount extends Model {
   /**
@@ -20,6 +21,23 @@ class InvoiceAccount extends Model {
    */
   get accountNumber () {
     return this._accountNumber;
+  }
+
+  /**
+  * Sets the account company
+  * @param {Company} company
+  */
+  set company (company) {
+    assertIsInstanceOf(company, Company);
+    this._company = company;
+  }
+
+  /**
+ * Gets the company
+ * @return {Company}
+ */
+  get company () {
+    return this._company;
   }
 }
 

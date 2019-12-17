@@ -11,8 +11,8 @@ const VALID_STATUS = Joi.string().valid('processing', 'complete', 'error').requi
 const Model = require('./model');
 
 class Batch extends Model {
-  constructor () {
-    super();
+  constructor (id) {
+    super(id);
     this._invoices = [];
   }
 

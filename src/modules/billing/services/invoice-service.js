@@ -1,10 +1,10 @@
 'use strict';
 
-const { first, flatMap, uniq } = require('lodash');
+const { first } = require('lodash');
 
 const repos = require('../../../lib/connectors/repository');
 const transactionsService = require('./transactions-service');
-const contactsService = require('./contacts-service');
+const invoiceAccountsService = require('./invoice-accounts-service');
 
 const Invoice = require('../../../lib/models/invoice');
 const InvoiceAccount = require('../../../lib/models/invoice-account');
@@ -57,19 +57,21 @@ const decorateInvoicesWithTransactions = (invoices, chargeModuleTransactions) =>
   });
 };
 
-const decorateInvoicesWithContacts = async (invoices) => {
-  const contacts = flatMap(invoices, invoice => invoice.getInvoiceLicenceContacts());
-  const uniqueContactIds = uniq(contacts.map(contact => contact.id));
-  const crmContacts = await contactsService.getContacts(uniqueContactIds);
+/**
+ * Adds the Company object to the InvoiceAccount objects in the Invoice.
+ *
+ * @param {Array<Invoice>} invoices The invoices to add invoice account companies to
+ */
+const decorateInvoicesWithCompanies = async (invoices) => {
+  const invoiceAccountIds = invoices.map(invoice => invoice.invoiceAccount.id);
+  const invoiceAccounts = await invoiceAccountsService.getByInvoiceAccountIds(invoiceAccountIds);
 
   return invoices.map(invoice => {
-    invoice.invoiceLicences = invoice.invoiceLicences.map(invoiceLicence => {
-      const crmContact = crmContacts.find(contact => contact.id === invoiceLicence.contact.id);
-      if (crmContact) {
-        invoiceLicence.contact = crmContact;
-      }
-      return invoiceLicence;
-    });
+    const invoiceAccount = invoiceAccounts.find(ia => ia.id === invoice.invoiceAccount.id);
+
+    if (invoiceAccount && invoiceAccount.company) {
+      invoice.invoiceAccount.company = invoiceAccount.company;
+    }
     return invoice;
   });
 };
@@ -82,7 +84,7 @@ const decorateInvoicesWithContacts = async (invoices) => {
  */
 const decorateInvoices = async (invoices, transactions) => {
   return decorateInvoicesWithTransactions(
-    await decorateInvoicesWithContacts(invoices),
+    await decorateInvoicesWithCompanies(invoices),
     transactions
   );
 };

@@ -133,18 +133,6 @@ class Invoice extends Model {
     return totalValue < MINIMUM_PAYMENT ? MINIMUM_PAYMENT - totalValue : 0;
   }
 
-  getInvoiceLicenceContacts () {
-    return Object.values(this.invoiceLicences.reduce((acc, invoiceLicence) => {
-      const contact = get(invoiceLicence, 'contact');
-      const contactId = get(contact, 'id');
-
-      if (contactId && !acc[contactId]) {
-        acc[contactId] = contact;
-      }
-      return acc;
-    }, {}));
-  }
-
   toJSON () {
     return {
       ...super.toJSON(),
