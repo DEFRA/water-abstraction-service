@@ -1,3 +1,5 @@
+'use strict';
+
 const { get } = require('lodash');
 const repos = require('../../../lib/connectors/repository');
 
@@ -9,7 +11,7 @@ const { logger } = require('../../../logger');
 const { batchStatus } = require('../lib/batch');
 const { FinancialYear } = require('../../../lib/models');
 const { isValidForFinancialYear } = require('../lib/charge-version');
-const jobService = require('../services/jobService');
+const jobService = require('../services/job-service');
 
 /**
  * Create an object ready for saving to the

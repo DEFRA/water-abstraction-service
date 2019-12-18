@@ -100,9 +100,6 @@ experiment('handler', () => {
   test('attempts to save both returns', async () => {
     await persistReturnsJob.handler(job);
 
-    console.log('first', returnsConnector.persistReturnData.firstCall.args);
-    console.log('second', returnsConnector.persistReturnData.secondCall.args);
-
     const firstReturn = returnsConnector.persistReturnData.firstCall.args[0];
     const secondReturn = returnsConnector.persistReturnData.secondCall.args[0];
 

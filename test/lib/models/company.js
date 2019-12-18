@@ -13,6 +13,18 @@ experiment('lib/models/company model', () => {
     company = new Company();
   });
 
+  experiment('construction', () => {
+    test('can include an id', async () => {
+      const company = new Company(TEST_GUID);
+      expect(company.id).to.equal(TEST_GUID);
+    });
+
+    test('can omit the id', async () => {
+      const company = new Company();
+      expect(company.id).to.be.undefined();
+    });
+  });
+
   test('can set/get a GUID ID', async () => {
     company.id = TEST_GUID;
     expect(company.id).to.equal(TEST_GUID);

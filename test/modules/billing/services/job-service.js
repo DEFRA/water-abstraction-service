@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -10,7 +12,7 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const { batchStatus, jobStatus } = require('../../../../src/modules/billing/lib/batch');
-const jobService = require('../../../../src/modules/billing/services/jobService');
+const jobService = require('../../../../src/modules/billing/services/job-service');
 const repos = require('../../../../src/lib/connectors/repository');
 const event = require('../../../../src/lib/event');
 

@@ -1,33 +1,25 @@
-const Joi = require('@hapi/joi');
-const Address = require('./address.js');
-const Company = require('./company');
-const Contact = require('./contact-v2');
-const Licence = require('./licence');
+'use strict';
+
 const { assert } = require('@hapi/hoek');
 const { get } = require('lodash');
 
-const VALID_GUID = Joi.string().guid().required();
+const Address = require('./address');
+const Company = require('./company');
+const Contact = require('./contact-v2');
+const Licence = require('./licence');
+const Transaction = require('./transaction');
 
-class InvoiceLicence {
+const {
+  assertIsArrayOfType,
+  assertIsInstanceOf
+} = require('./validators');
+
+const Model = require('./model');
+
+class InvoiceLicence extends Model {
   constructor () {
+    super();
     this._transactions = [];
-  }
-
-  /**
-   * Sets the ID for this invoice
-   * @param {String} - GUID
-   */
-  set id (id) {
-    Joi.assert(id, VALID_GUID);
-    this._id = id;
-  }
-
-  /**
-   * Gets the ID for this invoice
-   * @return {String}
-   */
-  get id () {
-    return this._id;
   }
 
   /**
@@ -41,7 +33,7 @@ class InvoiceLicence {
 
   /**
    * Gets the licence instance
-   * @return {Address}
+   * @return {Licence}
    */
   get licence () {
     return this._licence;
@@ -52,7 +44,7 @@ class InvoiceLicence {
   * @param {Company} company
   */
   set company (company) {
-    assert(company instanceof Company, 'Company expected');
+    assertIsInstanceOf(company, Company);
     this._company = company;
   }
 
@@ -69,7 +61,7 @@ class InvoiceLicence {
   * @param {Contact} contact
   */
   set contact (contact) {
-    assert(contact instanceof Contact, 'Contact expected');
+    assertIsInstanceOf(contact, Contact);
     this._contact = contact;
   }
 
@@ -86,7 +78,7 @@ class InvoiceLicence {
    * @param {Address} address
    */
   set address (address) {
-    assert(address instanceof Address, 'Address expected');
+    assertIsInstanceOf(address, Address);
     this._address = address;
   }
 
@@ -96,6 +88,15 @@ class InvoiceLicence {
    */
   get address () {
     return this._address;
+  }
+
+  set transactions (transactions) {
+    assertIsArrayOfType(transactions, Transaction);
+    this._transactions = transactions;
+  }
+
+  get transactions () {
+    return this._transactions;
   }
 
   /**

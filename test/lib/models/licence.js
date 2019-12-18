@@ -1,7 +1,9 @@
+'use strict';
+
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const { Licence } = require('../../../src/lib/models');
+const Licence = require('../../../src/lib/models/licence');
 
 const data = {
   id: 'add1cf3b-7296-4817-b013-fea75a928580',
@@ -47,6 +49,19 @@ experiment('lib/models/licence', () => {
         licence.licenceNumber = '01/123/£$';
       };
       expect(func).to.throw();
+    });
+  });
+
+  experiment('.toJSON', () => {
+    test('returns the expected object', async () => {
+      const licence = new Licence();
+      licence.id = data.id;
+      licence.licenceNumber = data.licenceNumber;
+
+      expect(licence.toJSON()).to.equal({
+        id: data.id,
+        licenceNumber: data.licenceNumber
+      });
     });
   });
 });

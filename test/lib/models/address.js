@@ -1,3 +1,5 @@
+'use strict';
+
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
@@ -55,6 +57,18 @@ experiment('lib/models/address', () => {
 
   beforeEach(async () => {
     address = new Address();
+  });
+
+  experiment('construction', () => {
+    test('can include an id', async () => {
+      const address = new Address(TEST_GUID);
+      expect(address.id).to.equal(TEST_GUID);
+    });
+
+    test('can omit the id', async () => {
+      const address = new Address();
+      expect(address.id).to.be.undefined();
+    });
   });
 
   experiment('.id', () => {
@@ -120,6 +134,35 @@ experiment('lib/models/address', () => {
       const obj = address.toObject();
       expect(obj).to.equal({
         id: 'add1cf3b-7296-4817-b013-fea75a928580',
+        addressLine1: 'Daisy cottage',
+        addressLine2: 'Buttercup lane',
+        addressLine3: 'Babbling brook',
+        addressLine4: 'Stony hill',
+        town: 'Testington',
+        county: 'Testinshire',
+        postcode: 'TT1 1TT',
+        country: 'UK'
+      });
+    });
+  });
+
+  experiment('.toJSON', () => {
+    beforeEach(async () => {
+      address.id = TEST_GUID;
+      address.addressLine1 = 'Daisy cottage';
+      address.addressLine2 = 'Buttercup lane';
+      address.addressLine3 = 'Babbling brook';
+      address.addressLine4 = 'Stony hill';
+      address.town = 'Testington';
+      address.county = 'Testinshire';
+      address.postcode = 'TT1 1TT';
+      address.country = 'UK';
+    });
+
+    test('returns all required properties as plain object', async () => {
+      const obj = address.toJSON();
+      expect(obj).to.equal({
+        id: TEST_GUID,
         addressLine1: 'Daisy cottage',
         addressLine2: 'Buttercup lane',
         addressLine3: 'Babbling brook',

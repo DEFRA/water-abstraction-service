@@ -1,8 +1,9 @@
+'use strict';
+
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const { InvoiceAccount } =
-  require('../../../src/lib/models');
+const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
 const TEST_ACCOUNT_NUMBER = 'S12345678A';
@@ -39,6 +40,19 @@ experiment('lib/models/invoice-account', () => {
         invoiceAccount.accountNumber = 'S1234A';
       };
       expect(func).to.throw();
+    });
+  });
+
+  experiment('.toJSON', () => {
+    test('returns the expected object', async () => {
+      const invoiceAccount = new InvoiceAccount();
+      invoiceAccount.id = TEST_GUID;
+      invoiceAccount.accountNumber = TEST_ACCOUNT_NUMBER;
+
+      expect(invoiceAccount.toJSON()).to.equal({
+        id: TEST_GUID,
+        accountNumber: TEST_ACCOUNT_NUMBER
+      });
     });
   });
 });
