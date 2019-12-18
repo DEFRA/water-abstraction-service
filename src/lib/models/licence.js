@@ -1,38 +1,14 @@
-const Joi = require('@hapi/joi');
-const VALID_GUID = Joi.string().guid().required();
-const VALID_LICENCE_NUMBER = Joi.string().regex(/^[&()*-./0-9A-Z]+$/).required();
+'use strict';
 
-class Licence {
-  /**
-   * Sets the ID for this invoice
-   * @param {String} - GUID
-   */
-  set id (id) {
-    Joi.assert(id, VALID_GUID);
-    this._id = id;
-  }
+const Model = require('./model');
+const { assertLicenceNumber } = require('./validators');
 
-  /**
-   * Gets the ID for this invoice
-   * @return {String}
-   */
-  get id () {
-    return this._id;
-  }
-
-  /**
-   * Sets the ID for this invoice
-   * @param {String} - GUID
-   */
+class Licence extends Model {
   set licenceNumber (licenceNumber) {
-    Joi.assert(licenceNumber, VALID_LICENCE_NUMBER);
+    assertLicenceNumber(licenceNumber);
     this._licenceNumber = licenceNumber;
   }
 
-  /**
-   * Gets the ID for this invoice
-   * @return {String}
-   */
   get licenceNumber () {
     return this._licenceNumber;
   }

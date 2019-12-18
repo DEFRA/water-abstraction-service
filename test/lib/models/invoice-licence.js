@@ -1,9 +1,15 @@
+'use strict';
+
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
+const uuid = require('uuid/v4');
 
-const { InvoiceLicence, Address, Company, Licence } =
-  require('../../../src/lib/models');
+const InvoiceLicence = require('../../../src/lib/models/invoice-licence');
+const Address = require('../../../src/lib/models/address');
+const Company = require('../../../src/lib/models/company');
+const Licence = require('../../../src/lib/models/licence');
 const Contact = require('../../../src/lib/models/contact-v2');
+const Transaction = require('../../../src/lib/models/transaction');
 
 const createData = () => {
   const licence = new Licence();
@@ -121,6 +127,58 @@ experiment('lib/models/invoice-licence', () => {
       expect(invoiceLicence.uniqueId).to.equal(
         '01/123.8e1052db-08e0-4b21-bce0-c3497892a890.11c0fdc8-0645-45a1-86e3-5413d4a203ba.276fc2f4-bfe0-45a9-8fdb-6bf0d481b7ea'
       );
+    });
+  });
+
+  experiment('.set transactions', () => {
+    test('throws for an array containing items other than Transaction objects', async () => {
+      const invoiceLicence = new InvoiceLicence();
+      const func = () => (invoiceLicence.transactions = ['one', 'two']);
+      expect(func).to.throw();
+    });
+
+    test('throws for non array', async () => {
+      const invoiceLicence = new InvoiceLicence();
+      const func = () => (invoiceLicence.transactions = 'one');
+      expect(func).to.throw();
+    });
+
+    test('sets the value when passed an array of Transaction objects', async () => {
+      const invoiceLicence = new InvoiceLicence();
+      const tx1 = new Transaction();
+      const tx2 = new Transaction();
+      invoiceLicence.transactions = [tx1, tx2];
+      expect(invoiceLicence.transactions).to.have.length(2);
+      expect(invoiceLicence.transactions[0]).to.equal(tx1);
+      expect(invoiceLicence.transactions[1]).to.equal(tx2);
+    });
+  });
+
+  experiment('.toJSON', () => {
+    test('returns the expected object', async () => {
+      const invoiceLicence = new InvoiceLicence();
+      const transaction = new Transaction();
+      transaction.id = uuid();
+      transaction.value = 123;
+
+      const data = createData();
+
+      invoiceLicence.id = data.id;
+      invoiceLicence.licence = data.licence;
+      invoiceLicence.company = data.company;
+      invoiceLicence.contact = data.contact;
+      invoiceLicence.address = data.address;
+      invoiceLicence.transactions = [transaction];
+
+      const json = invoiceLicence.toJSON();
+
+      expect(json.id).to.equal(data.id);
+      expect(json.licence.licenceNumber).to.equal(data.licence.licenceNumber);
+      expect(json.company.id).to.equal(data.company.id);
+      expect(json.contact.id).to.equal(data.contact.id);
+      expect(json.address.id).to.equal(data.address.id);
+      expect(json.transactions[0].id).to.equal(transaction.id);
+      expect(json.transactions[0].value).to.equal(transaction.value);
     });
   });
 });

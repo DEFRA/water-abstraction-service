@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -10,7 +12,7 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const { logger } = require('../../../../src/logger');
-const jobService = require('../../../../src/modules/billing/services/jobService');
+const jobService = require('../../../../src/modules/billing/services/job-service');
 
 const handlePrepareTransactionsComplete = require('../../../../src/modules/billing/jobs/prepare-transactions-complete');
 

@@ -1,10 +1,13 @@
+'use strict';
+
 const Boom = require('@hapi/boom');
+
 const repos = require('../../lib/connectors/repository');
 const event = require('../../lib/event');
-
 const { envelope, errorEnvelope } = require('../../lib/response');
 const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-versions');
 const { jobStatus } = require('./lib/batch');
+const invoiceService = require('./services/invoice-service');
 
 const createBatchEvent = async (userEmail, batch) => {
   const batchEvent = event.create({
@@ -75,23 +78,23 @@ const getBatch = async request => {
 
 const getBatchInvoices = async request => {
   const { batchId } = request.params;
-  const invoices = await repos.billingInvoices.findByBatchId(batchId);
+  const invoices = await invoiceService.getInvoicesForBatch(batchId);
 
   return invoices.length
     ? envelope(invoices, true)
     : Boom.notFound(`No invoices found for batch with id: ${batchId}`);
 };
 
-const getInvoiceDetail = async request => {
-  const { invoiceId } = request.params;
-  const invoice = await repos.billingInvoices.getInvoiceDetail(invoiceId);
+const getBatchInvoiceDetail = async request => {
+  const { batchId, invoiceId } = request.params;
+  const invoice = await invoiceService.getInvoiceForBatch(batchId, invoiceId);
 
   return invoice
     ? envelope(invoice, true)
-    : Boom.notFound(`No invoice found with id: ${invoiceId}`);
+    : Boom.notFound(`No invoice found with id: ${invoiceId} in batch with id: ${batchId}`);
 };
 
 exports.postCreateBatch = postCreateBatch;
 exports.getBatch = getBatch;
 exports.getBatchInvoices = getBatchInvoices;
-exports.getInvoiceDetail = getInvoiceDetail;
+exports.getBatchInvoiceDetail = getBatchInvoiceDetail;

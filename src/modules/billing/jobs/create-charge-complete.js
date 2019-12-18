@@ -1,5 +1,7 @@
+'use strict';
+
 const createChargeJob = require('./create-charge');
-const jobService = require('../services/jobService');
+const jobService = require('../services/job-service');
 
 const { logger } = require('../../../logger');
 

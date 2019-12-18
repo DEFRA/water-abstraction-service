@@ -1,3 +1,4 @@
+const uuid = require('uuid/v4');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
@@ -211,6 +212,24 @@ experiment('lib/models/batch', () => {
     test('returns undefined when an invoice with the account number is not found', async () => {
       const invoice = batch.getInvoiceByAccountNumber('NOT_HERE');
       expect(invoice).to.equal(undefined);
+    });
+  });
+
+  experiment('construction', () => {
+    test('accepts the id', async () => {
+      const id = uuid();
+      const batch = new Batch(id);
+      expect(batch.id).to.equal(id);
+    });
+
+    test('can be instantiated without the id', async () => {
+      const batch = new Batch();
+      expect(batch).to.exist();
+    });
+
+    test('sets the invoices to an empty array', () => {
+      const batch = new Batch();
+      expect(batch.invoices).to.equal([]);
     });
   });
 });

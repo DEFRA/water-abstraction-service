@@ -4,31 +4,16 @@ const FinancialYear = require('./financial-year');
 const { assert } = require('@hapi/hoek');
 const { isArray } = require('lodash');
 
-const VALID_GUID = Joi.string().guid().required();
 const VALID_BATCH_TYPE = Joi.string().valid('annual', 'supplementary', 'two_part_tariff').required();
 const VALID_SEASON = Joi.string().valid('summer', 'winter', 'all year').required();
 const VALID_STATUS = Joi.string().valid('processing', 'complete', 'error').required();
 
-class Batch {
-  constructor () {
+const Model = require('./model');
+
+class Batch extends Model {
+  constructor (id) {
+    super(id);
     this._invoices = [];
-  }
-
-  /**
-   * Sets the GUID ID for this batch
-   * @param {String} id
-   */
-  set id (id) {
-    Joi.assert(id, VALID_GUID);
-    this._id = id;
-  }
-
-  /**
-   * Gets the GUID ID for this batch
-   * @return {String}
-   */
-  get id () {
-    return this._id;
   }
 
   /**

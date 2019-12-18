@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -11,7 +13,7 @@ const sandbox = sinon.createSandbox();
 
 const { logger } = require('../../../../src/logger');
 const createChargeComplete = require('../../../../src/modules/billing/jobs/create-charge-complete');
-const jobService = require('../../../../src/modules/billing/services/jobService');
+const jobService = require('../../../../src/modules/billing/services/job-service');
 
 experiment('modules/billing/jobs/create-charge-complete', () => {
   beforeEach(async () => {

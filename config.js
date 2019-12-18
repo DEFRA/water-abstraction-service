@@ -1,3 +1,5 @@
+'use strict';
+
 require('dotenv').config();
 const testMode = parseInt(process.env.TEST_MODE) === 1;
 const isAcceptanceTestTarget = ['local', 'dev', 'development', 'test', 'preprod'].includes(process.env.NODE_ENV);
@@ -119,7 +121,8 @@ module.exports = {
     idm: process.env.IDM_URI || 'http://127.0.0.1:8003/idm/1.0',
     permits: process.env.PERMIT_URI || 'http://127.0.0.1:8004/API/1.0/',
     returns: process.env.RETURNS_URI || 'http://127.0.0.1:8006/returns/1.0',
-    import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0'
+    import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0',
+    chargeModule: process.env.CHARGE_MODULE_ORIGIN
   },
 
   isAcceptanceTestTarget

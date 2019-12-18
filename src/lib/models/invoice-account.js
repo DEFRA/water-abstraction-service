@@ -1,32 +1,17 @@
-const Joi = require('@hapi/joi');
-const VALID_GUID = Joi.string().guid().required();
-const VALID_ACCOUNT_NUMBER = Joi.string().regex(/^[ABENSTWY][0-9]{8}A$/).required();
+'use strict';
 
-class InvoiceAccount {
-  /**
-   * Sets the CRM invoice account ID
-   * @param {String} id - GUID
-   */
-  set id (id) {
-    Joi.assert(id, VALID_GUID);
-    this._id = id;
-  }
+const { assertAccountNumber, assertIsInstanceOf } = require('./validators');
+const Model = require('./model');
+const Company = require('./company');
 
-  /**
-   * Gets the CRM invoice account ID
-   * @return {String} - GUID
-   */
-  get id () {
-    return this._id;
-  }
-
+class InvoiceAccount extends Model {
   /**
    * Sets the invoice account number
    * Must be in the form [region letter]01234567A
    * @param {String} accountNumber
    */
   set accountNumber (accountNumber) {
-    Joi.assert(accountNumber, VALID_ACCOUNT_NUMBER);
+    assertAccountNumber(accountNumber);
     this._accountNumber = accountNumber;
   }
 
@@ -36,6 +21,23 @@ class InvoiceAccount {
    */
   get accountNumber () {
     return this._accountNumber;
+  }
+
+  /**
+  * Sets the account company
+  * @param {Company} company
+  */
+  set company (company) {
+    assertIsInstanceOf(company, Company);
+    this._company = company;
+  }
+
+  /**
+ * Gets the company
+ * @return {Company}
+ */
+  get company () {
+    return this._company;
   }
 }
 

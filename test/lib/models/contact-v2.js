@@ -108,6 +108,18 @@ experiment('lib/models/contact-v2 model', () => {
     }
   });
 
+  experiment('construction', () => {
+    test('can include an id', async () => {
+      const contact = new Contact(data.id);
+      expect(contact.id).to.equal(data.id);
+    });
+
+    test('can omit the id', async () => {
+      const contact = new Contact();
+      expect(contact.id).to.be.undefined();
+    });
+  });
+
   experiment('when contact is populated', () => {
     beforeEach(async () => {
       contact.id = data.id;
