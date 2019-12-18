@@ -12,14 +12,4 @@ pool.on('acquire', () => {
   }
 });
 
-const query = async (queryString, params) => {
-  try {
-    const result = await pool.query(queryString, params);
-    return { data: result.rows, error: null };
-  } catch (error) {
-    return { data: null, error };
-  }
-};
-
-exports.query = query;
 exports.pool = pool;

@@ -7,7 +7,7 @@ const { throwIfError } = require('@envage/hapi-pg-rest-api');
  * for easier consumption upstream
  */
 const getRegions = async () => {
-  const { data: regions, error } = await regionsConnector.getRegions();
+  const { rows: regions, error } = await regionsConnector.getRegions();
   throwIfError(error);
   return {
     data: camelCaseKeys(regions)

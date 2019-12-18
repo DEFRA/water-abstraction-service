@@ -14,7 +14,7 @@ const regionsConnector = require('../../../src/lib/connectors/regions');
 experiment('modules/regions/controller', () => {
   beforeEach(async () => {
     sandbox.stub(regionsConnector, 'getRegions').resolves({
-      data: [
+      rows: [
         {
           region_id: '00000000-0000-0000-0000-000000000000',
           charge_region_id: 'A',
