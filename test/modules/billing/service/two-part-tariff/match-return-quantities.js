@@ -296,9 +296,10 @@ experiment('modules/charging/lib/match-return-quantities', async () => {
         startDate: '2016-04-01',
         endDate: '2017-03-31',
         actualReturnQuantity: 0,
-        proRataAuthorisedAnnualQuantity: 5.9996,
+        proRataAuthorisedQuantity: 5.9996,
         totalDays: 214,
-        billableDays: 214
+        billableDays: 214,
+        maxPossibleReturnQuantity: 3
       });
       test('charge element actualReturnQuantity remains the same', async () => {
         const { updatedElementQuantity } = matchReturnLineToElement(returnLine, chargeElement);

@@ -1,4 +1,12 @@
-const createChargeElement = options => {
+const defaults = {
+  abstractionPeriodStartDay: 1,
+  abstractionPeriodStartMonth: 1,
+  abstractionPeriodEndDay: 31,
+  abstractionPeriodEndMonth: 12
+};
+
+const createChargeElement = (opts = {}) => {
+  const options = Object.assign({}, defaults, opts);
   return {
     chargeElementId: options.chargeElementId || 'charge-element-id',
     chargeVersionId: 'charge-version-id',
