@@ -1,6 +1,5 @@
 'use strict';
 
-const { assert } = require('@hapi/hoek');
 const { get } = require('lodash');
 
 const Address = require('./address');
@@ -8,6 +7,7 @@ const Company = require('./company');
 const Contact = require('./contact-v2');
 const Licence = require('./licence');
 const Transaction = require('./transaction');
+const Role = require('./role');
 
 const {
   assertIsArrayOfType,
@@ -27,7 +27,7 @@ class InvoiceLicence extends Model {
   * @param {Licence} licence
   */
   set licence (licence) {
-    assert(licence instanceof Licence, 'Licence expected');
+    assertIsInstanceOf(licence, Licence);
     this._licence = licence;
   }
 
@@ -97,6 +97,15 @@ class InvoiceLicence extends Model {
 
   get transactions () {
     return this._transactions;
+  }
+
+  set roles (roles) {
+    assertIsArrayOfType(roles, Role);
+    this._roles = roles;
+  }
+
+  get roles () {
+    return this._roles;
   }
 
   /**
