@@ -2,8 +2,10 @@ const { isArray } = require('lodash');
 const { assert } = require('@hapi/hoek');
 const Joi = require('joi');
 
+const ROLE_LICENCE_HOLDER = 'licenceHolder';
+
 const dateRegex = /^\d{4}-([0][1-9]|[1][0-2])-([0][1-9]|[1-2][0-9]|[3][0-1])$/;
-const validRoleNames = ['licenceHolder'];
+const validRoleNames = [ROLE_LICENCE_HOLDER];
 
 const VALID_DATE = Joi.string().regex(dateRegex).required();
 const VALID_ROLE_NAME = Joi.string().valid(validRoleNames).required();
@@ -32,6 +34,7 @@ const assertDate = date => Joi.assert(date, VALID_DATE);
 const assertNullableDate = date => Joi.assert(date, VALID_DATE.allow(null));
 const assertRoleName = role => Joi.assert(role, VALID_ROLE_NAME);
 
+exports.ROLE_LICENCE_HOLDER = ROLE_LICENCE_HOLDER;
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
 exports.assertIsArrayOfType = assertIsArrayOfType;

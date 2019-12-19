@@ -51,10 +51,8 @@ class Role extends Model {
   }
 
   set contact (contact) {
-    if (contact) {
-      assertIsInstanceOf(contact, Contact);
-      this._contact = contact;
-    } else { this._contact = null; }
+    assertIsInstanceOf(contact, Contact);
+    this._contact = contact;
   }
 
   get contact () {

@@ -120,16 +120,6 @@ experiment('lib/models/licence', () => {
       expect(role.contact).to.equal(data.contact);
     });
 
-    test('can be set to null', async () => {
-      role.contact = null;
-      expect(role.contact).to.be.null();
-    });
-
-    test('is set to null if contact is undefined', async () => {
-      role.contact = undefined;
-      expect(role.contact).to.be.null();
-    });
-
     test('throws an error if set to an invalid type', async () => {
       const func = () => {
         role.contact = data.company;
