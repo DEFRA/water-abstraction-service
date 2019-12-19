@@ -10,6 +10,7 @@ const Company = require('../../../src/lib/models/company');
 const Licence = require('../../../src/lib/models/licence');
 const Contact = require('../../../src/lib/models/contact-v2');
 const Transaction = require('../../../src/lib/models/transaction');
+const Role = require('../../../src/lib/models/role');
 
 const createData = () => {
   const licence = new Licence();
@@ -132,19 +133,16 @@ experiment('lib/models/invoice-licence', () => {
 
   experiment('.set transactions', () => {
     test('throws for an array containing items other than Transaction objects', async () => {
-      const invoiceLicence = new InvoiceLicence();
       const func = () => (invoiceLicence.transactions = ['one', 'two']);
       expect(func).to.throw();
     });
 
     test('throws for non array', async () => {
-      const invoiceLicence = new InvoiceLicence();
       const func = () => (invoiceLicence.transactions = 'one');
       expect(func).to.throw();
     });
 
     test('sets the value when passed an array of Transaction objects', async () => {
-      const invoiceLicence = new InvoiceLicence();
       const tx1 = new Transaction();
       const tx2 = new Transaction();
       invoiceLicence.transactions = [tx1, tx2];
@@ -154,9 +152,29 @@ experiment('lib/models/invoice-licence', () => {
     });
   });
 
+  experiment('.roles', () => {
+    test('throws for an array containing items other than Role objects', async () => {
+      const func = () => (invoiceLicence.roles = [new Role(), 'two']);
+      expect(func).to.throw();
+    });
+
+    test('throws for non array', async () => {
+      const func = () => (invoiceLicence.roles = 'one');
+      expect(func).to.throw();
+    });
+
+    test('sets the value when passed an array of Role objects', async () => {
+      const tx1 = new Role();
+      const tx2 = new Role();
+      invoiceLicence.roles = [tx1, tx2];
+      expect(invoiceLicence.roles).to.have.length(2);
+      expect(invoiceLicence.roles[0]).to.equal(tx1);
+      expect(invoiceLicence.roles[1]).to.equal(tx2);
+    });
+  });
+
   experiment('.toJSON', () => {
     test('returns the expected object', async () => {
-      const invoiceLicence = new InvoiceLicence();
       const transaction = new Transaction();
       transaction.id = uuid();
       transaction.value = 123;
