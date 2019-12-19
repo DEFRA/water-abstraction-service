@@ -2,13 +2,9 @@ const { isArray } = require('lodash');
 const { assert } = require('@hapi/hoek');
 const Joi = require('joi');
 
-const ROLE_LICENCE_HOLDER = 'licenceHolder';
-
 const dateRegex = /^\d{4}-([0][1-9]|[1][0-2])-([0][1-9]|[1-2][0-9]|[3][0-1])$/;
-const validRoleNames = [ROLE_LICENCE_HOLDER];
 
 const VALID_DATE = Joi.string().regex(dateRegex).required();
-const VALID_ROLE_NAME = Joi.string().valid(validRoleNames).required();
 const VALID_ACCOUNT_NUMBER = Joi.string().regex(/^[ABENSTWY][0-9]{8}A$/).required();
 const VALID_LICENCE_NUMBER = Joi.string().regex(/^[&()*-./0-9A-Z]+$/).required();
 const VALID_GUID = Joi.string().guid().required();
@@ -32,9 +28,8 @@ const assertNullableString = value => Joi.assert(value, VALID_NULLABLE_STRING);
 const assertIsBoolean = value => Joi.assert(value, Joi.boolean().required());
 const assertDate = date => Joi.assert(date, VALID_DATE);
 const assertNullableDate = date => Joi.assert(date, VALID_DATE.allow(null));
-const assertRoleName = role => Joi.assert(role, VALID_ROLE_NAME);
+const assertEnum = (str, values) => Joi.assert(str, Joi.string().valid(values).required());
 
-exports.ROLE_LICENCE_HOLDER = ROLE_LICENCE_HOLDER;
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
 exports.assertIsArrayOfType = assertIsArrayOfType;
@@ -44,4 +39,4 @@ exports.assertId = assertId;
 exports.assertNullableString = assertNullableString;
 exports.assertDate = assertDate;
 exports.assertNullableDate = assertNullableDate;
-exports.assertRoleName = assertRoleName;
+exports.assertEnum = assertEnum;

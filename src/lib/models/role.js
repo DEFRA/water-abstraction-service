@@ -9,9 +9,12 @@ const Address = require('./address');
 const {
   assertDate,
   assertNullableDate,
-  assertRoleName,
+  assertEnum,
   assertIsInstanceOf
 } = require('./validators');
+
+const ROLE_LICENCE_HOLDER = 'licenceHolder';
+const validRoleNames = [ROLE_LICENCE_HOLDER];
 
 class Role extends Model {
   set startDate (startDate) {
@@ -33,7 +36,7 @@ class Role extends Model {
   }
 
   set roleName (roleName) {
-    assertRoleName(roleName);
+    assertEnum(roleName, validRoleNames);
     this._roleName = roleName;
   }
 
