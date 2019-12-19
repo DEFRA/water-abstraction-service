@@ -1,4 +1,4 @@
-const db = require('./db');
+const { pool } = require('./db');
 
 const getRegionsQuery = `
   select
@@ -11,6 +11,6 @@ const getRegionsQuery = `
   from water.regions;
 `;
 
-const getRegions = () => db.query(getRegionsQuery);
+const getRegions = () => pool.query(getRegionsQuery);
 
 exports.getRegions = getRegions;

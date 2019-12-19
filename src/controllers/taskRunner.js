@@ -1,4 +1,4 @@
-const DB = require('../lib/connectors/db');
+const { pool } = require('../lib/connectors/db');
 const os = require('os');
 const { logger } = require('../logger');
 
@@ -6,7 +6,7 @@ async function reset () {
   logger.debug('resetting scheduler');
   var query = `
       UPDATE "water"."scheduler" SET running=0 where running_on = '${os.hostname()}'`;
-  await DB.query(query);
+  await pool.query(query);
   return true;
 }
 
@@ -25,7 +25,7 @@ const getNextJob = async () => {
     where job.task_id = s.task_id
     RETURNING * ;`;
 
-  const job = await DB.query(query);
+  const { rows: [job] } = await pool.query(query);
   return job;
 };
 
@@ -40,7 +40,7 @@ const getJobInterval = job => {
 
 const updateTaskTimeStarted = async taskId => {
   const query = 'UPDATE "water"."scheduler" SET last_run_started=NOW() where task_id=$1';
-  await DB.query(query, [taskId]);
+  await pool.query(query, [taskId]);
 };
 
 const endTask = async (taskId, log, interval) => {
@@ -50,7 +50,7 @@ const endTask = async (taskId, log, interval) => {
     where task_id=$1`;
 
   const params = [taskId, JSON.stringify(log)];
-  await DB.query(query, params);
+  await pool.query(query, params);
 };
 
 async function run () {
@@ -63,8 +63,8 @@ async function run () {
   try {
     const job = await getNextJob();
 
-    if (job.data.length > 0) {
-      const { task_type: taskType, task_id: taskId } = job.data[0];
+    if (job) {
+      const { task_type: taskType, task_id: taskId } = job;
 
       // Record the time the task started
       await updateTaskTimeStarted(taskId);
@@ -74,7 +74,7 @@ async function run () {
 
       try {
         logger.debug('starting task: ' + taskType);
-        log = await taskHandler.run(job.data[0]);
+        log = await taskHandler.run(job);
         logger.debug('task completed: ' + taskType);
       } catch (e) {
         logger.error('task completed IN ERROR', e, { job });

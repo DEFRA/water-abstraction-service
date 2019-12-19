@@ -1,8 +1,8 @@
-const db = require('../../../lib/connectors/db');
+const { pool } = require('../../../lib/connectors/db');
 const { TEST_COMPANY_NAME } = require('./constants');
 
 const deleteAll = () => {
-  return db.query(`
+  return pool.query(`
     delete
     from water.sessions
     where session_data::jsonb->>'companyName' = '${TEST_COMPANY_NAME}';
