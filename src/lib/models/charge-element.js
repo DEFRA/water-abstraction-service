@@ -65,3 +65,6 @@ class ChargeElement extends Model {
 }
 
 module.exports = ChargeElement;
+module.exports.sources = validSources;
+module.exports.seasons = validSeasons;
+module.exports.losses = validLosses;
