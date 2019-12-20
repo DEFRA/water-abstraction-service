@@ -82,4 +82,20 @@ experiment('lib/models/date-range', () => {
       expect(func).to.throw();
     });
   });
+
+  experiment('.toJSON', () => {
+    let dateRange, result;
+
+    beforeEach(async () => {
+      dateRange = new DateRange(TEST_START_DATE, TEST_END_DATE);
+      result = dateRange.toJSON();
+    });
+
+    test('returns the properties as a plain object', async () => {
+      expect(result).to.equal({
+        startDate: TEST_START_DATE,
+        endDate: TEST_END_DATE
+      });
+    });
+  });
 });
