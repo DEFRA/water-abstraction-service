@@ -11,7 +11,8 @@ const VALID_LICENCE_NUMBER = Joi.string().regex(/^[&()*-./0-9A-Z]+$/).required()
 const VALID_GUID = Joi.string().guid().required();
 const VALID_STRING = Joi.string().required();
 const VALID_NULLABLE_STRING = VALID_STRING.allow(null);
-const VALID_POSITIVE_INTEGER = Joi.number().positive().min(1);
+const VALID_INTEGER = Joi.number().integer();
+const VALID_POSITIVE_INTEGER = VALID_INTEGER.positive();
 
 const assertIsArrayOfType = (values, Type) => {
   assert(isArray(values), 'Array expected');
@@ -33,7 +34,8 @@ const assertIsBoolean = value => Joi.assert(value, Joi.boolean().required());
 const assertDate = date => Joi.assert(date, VALID_DATE);
 const assertNullableDate = date => Joi.assert(date, VALID_NULLABLE_DATE);
 const assertEnum = (str, values) => Joi.assert(str, VALID_STRING.valid(values));
-const assertDaysInYear = value => Joi.assert(value, VALID_POSITIVE_INTEGER.max(366));
+const assertAuthorisedDays = value => Joi.assert(value, VALID_POSITIVE_INTEGER.max(366));
+const assertBillableDays = value => Joi.assert(value, VALID_INTEGER.min(0).max(366));
 const assertPositiveInteger = value => Joi.assert(value, VALID_POSITIVE_INTEGER);
 
 exports.assertIsBoolean = assertIsBoolean;
@@ -47,5 +49,6 @@ exports.assertNullableString = assertNullableString;
 exports.assertDate = assertDate;
 exports.assertNullableDate = assertNullableDate;
 exports.assertEnum = assertEnum;
-exports.assertDaysInYear = assertDaysInYear;
+exports.assertAuthorisedDays = assertAuthorisedDays;
+exports.assertBillableDays = assertBillableDays;
 exports.assertPositiveInteger = assertPositiveInteger;

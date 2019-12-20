@@ -9,7 +9,8 @@ const ChargeElement = require('./charge-element');
 const {
   assertString,
   assertIsBoolean,
-  assertDaysInYear,
+  assertAuthorisedDays,
+  assertBillableDays,
   assertIsArrayOfType,
   assertIsInstanceOf
 } = require('./validators');
@@ -60,7 +61,7 @@ class Transaction extends Model {
   }
 
   set authorisedDays (days) {
-    assertDaysInYear(days);
+    assertAuthorisedDays(days);
     this._authorisedDays = days;
   }
 
@@ -74,7 +75,7 @@ class Transaction extends Model {
   }
 
   set billableDays (days) {
-    assertDaysInYear(days);
+    assertBillableDays(days);
     this._billableDays = days;
   }
 

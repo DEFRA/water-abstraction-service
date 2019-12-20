@@ -77,4 +77,66 @@ experiment('lib/models/transaction', () => {
       expect(transaction.isCredit).to.equal(chargeModuleTransaction.isCredit);
     });
   });
+
+  experiment('.authorisedDays', () => {
+    test('can be set to a number of days in year', async () => {
+      const transaction = new Transaction();
+      transaction.authorisedDays = 125;
+      expect(transaction.authorisedDays).to.equal(125);
+    });
+
+    test('setting to zero throws an error', async () => {
+      const transaction = new Transaction();
+      const func = () => {
+        transaction.authorisedDays = 0;
+      };
+      expect(func).to.throw();
+    });
+
+    test('setting to a value >366 throws an error', async () => {
+      const transaction = new Transaction();
+      const func = () => {
+        transaction.authorisedDays = 367;
+      };
+      expect(func).to.throw();
+    });
+
+    test('setting to a non-integer throws an error', async () => {
+      const transaction = new Transaction();
+      const func = () => {
+        transaction.authorisedDays = 55.432;
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.billableDays', () => {
+    test('can be set to a number of days in year', async () => {
+      const transaction = new Transaction();
+      transaction.billableDays = 125;
+      expect(transaction.billableDays).to.equal(125);
+    });
+
+    test('can be set to zero', async () => {
+      const transaction = new Transaction();
+      transaction.billableDays = 0;
+      expect(transaction.billableDays).to.equal(0);
+    });
+
+    test('setting to a value >366 throws an error', async () => {
+      const transaction = new Transaction();
+      const func = () => {
+        transaction.billableDays = 367;
+      };
+      expect(func).to.throw();
+    });
+
+    test('setting to a non-integer throws an error', async () => {
+      const transaction = new Transaction();
+      const func = () => {
+        transaction.billableDays = 55.432;
+      };
+      expect(func).to.throw();
+    });
+  });
 });
