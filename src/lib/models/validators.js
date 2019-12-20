@@ -5,6 +5,7 @@ const Joi = require('joi');
 const dateRegex = /^\d{4}-([0][1-9]|[1][0-2])-([0][1-9]|[1-2][0-9]|[3][0-1])$/;
 
 const VALID_DATE = Joi.string().regex(dateRegex).required();
+const VALID_NULLABLE_DATE = VALID_DATE.allow(null);
 const VALID_ACCOUNT_NUMBER = Joi.string().regex(/^[ABENSTWY][0-9]{8}A$/).required();
 const VALID_LICENCE_NUMBER = Joi.string().regex(/^[&()*-./0-9A-Z]+$/).required();
 const VALID_GUID = Joi.string().guid().required();
@@ -30,7 +31,7 @@ const assertString = value => Joi.assert(value, VALID_STRING);
 const assertNullableString = value => Joi.assert(value, VALID_NULLABLE_STRING);
 const assertIsBoolean = value => Joi.assert(value, Joi.boolean().required());
 const assertDate = date => Joi.assert(date, VALID_DATE);
-const assertNullableDate = date => Joi.assert(date, VALID_DATE.allow(null));
+const assertNullableDate = date => Joi.assert(date, VALID_NULLABLE_DATE);
 const assertEnum = (str, values) => Joi.assert(str, VALID_STRING.valid(values));
 const assertDaysInYear = value => Joi.assert(value, VALID_POSITIVE_INTEGER.max(366));
 const assertPositiveInteger = value => Joi.assert(value, VALID_POSITIVE_INTEGER);
