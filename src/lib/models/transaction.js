@@ -4,16 +4,15 @@ const { pick } = require('lodash');
 const Model = require('./model');
 const Agreement = require('./agreement');
 const DateRange = require('./date-range');
+const ChargeElement = require('./charge-element');
+
 const {
   assertString,
   assertIsBoolean,
   assertDaysInYear,
   assertIsArrayOfType,
-  assertIsInstanceOf,
-  assertEnum
+  assertIsInstanceOf
 } = require('./validators');
-
-const { sources, seasons, losses } = require('./charge-element');
 
 class Transaction extends Model {
   constructor (id, value, isCredit = false) {
@@ -150,42 +149,16 @@ class Transaction extends Model {
   }
 
   /**
-   * Gets source
-   * @return {String}
+   * Gets the charge element instance that created this transaction
+   * @return {ChargeElement}
    */
-  get source () {
-    return this._source;
+  get chargeElement () {
+    return this._chargeElement;
   }
 
-  set source (source) {
-    assertEnum(source, Object.values(sources));
-    this._source = source;
-  }
-
-  /**
-   * Gets season
-   * @return {String}
-   */
-  get season () {
-    return this._season;
-  }
-
-  set season (season) {
-    assertEnum(season, Object.values(seasons));
-    this._season = season;
-  }
-
-  /**
-   * Gets loss
-   * @return {String}
-   */
-  get loss () {
-    return this._loss;
-  }
-
-  set loss (loss) {
-    assertEnum(loss, Object.values(losses));
-    this._loss = loss;
+  set chargeElement (chargeElement) {
+    assertIsInstanceOf(chargeElement, ChargeElement);
+    this._chargeElement = chargeElement;
   }
 }
 
