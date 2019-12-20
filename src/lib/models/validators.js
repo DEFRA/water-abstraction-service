@@ -8,7 +8,9 @@ const VALID_DATE = Joi.string().regex(dateRegex).required();
 const VALID_ACCOUNT_NUMBER = Joi.string().regex(/^[ABENSTWY][0-9]{8}A$/).required();
 const VALID_LICENCE_NUMBER = Joi.string().regex(/^[&()*-./0-9A-Z]+$/).required();
 const VALID_GUID = Joi.string().guid().required();
-const VALID_NULLABLE_STRING = Joi.string().allow(null).required();
+const VALID_STRING = Joi.string().required();
+const VALID_NULLABLE_STRING = VALID_STRING.allow(null);
+const VALID_POSITIVE_INTEGER = Joi.number().positive().min(1);
 
 const assertIsArrayOfType = (values, Type) => {
   assert(isArray(values), 'Array expected');
@@ -24,11 +26,14 @@ const assertIsInstanceOf = (value, Type) => {
 const assertAccountNumber = accountNumber => Joi.assert(accountNumber, VALID_ACCOUNT_NUMBER);
 const assertLicenceNumber = licenceNumber => Joi.assert(licenceNumber, VALID_LICENCE_NUMBER);
 const assertId = id => Joi.assert(id, VALID_GUID);
+const assertString = value => Joi.assert(value, VALID_STRING);
 const assertNullableString = value => Joi.assert(value, VALID_NULLABLE_STRING);
 const assertIsBoolean = value => Joi.assert(value, Joi.boolean().required());
 const assertDate = date => Joi.assert(date, VALID_DATE);
 const assertNullableDate = date => Joi.assert(date, VALID_DATE.allow(null));
-const assertEnum = (str, values) => Joi.assert(str, Joi.string().valid(values).required());
+const assertEnum = (str, values) => Joi.assert(str, VALID_STRING.valid(values));
+const assertDaysInYear = value => Joi.assert(value, VALID_POSITIVE_INTEGER.max(366));
+const assertPositiveInteger = value => Joi.assert(value, VALID_POSITIVE_INTEGER);
 
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
@@ -36,7 +41,10 @@ exports.assertIsArrayOfType = assertIsArrayOfType;
 exports.assertAccountNumber = assertAccountNumber;
 exports.assertLicenceNumber = assertLicenceNumber;
 exports.assertId = assertId;
+exports.assertString = assertString;
 exports.assertNullableString = assertNullableString;
 exports.assertDate = assertDate;
 exports.assertNullableDate = assertNullableDate;
 exports.assertEnum = assertEnum;
+exports.assertDaysInYear = assertDaysInYear;
+exports.assertPositiveInteger = assertPositiveInteger;

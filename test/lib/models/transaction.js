@@ -59,7 +59,8 @@ experiment('lib/models/transaction', () => {
       expect(transaction.toJSON()).to.equal({
         id: transaction.id,
         value: transaction.value,
-        isCredit: transaction.isCredit
+        isCredit: transaction.isCredit,
+        agreements: []
       });
     });
   });

@@ -1,8 +1,11 @@
 const Joi = require('@hapi/joi');
 const Invoice = require('./invoice');
 const FinancialYear = require('./financial-year');
+const Region = require('./region');
 const { assert } = require('@hapi/hoek');
 const { isArray } = require('lodash');
+
+const { assertIsInstanceOf } = require('./validators');
 
 const VALID_BATCH_TYPE = Joi.string().valid('annual', 'supplementary', 'two_part_tariff').required();
 const VALID_SEASON = Joi.string().valid('summer', 'winter', 'all year').required();
@@ -141,6 +144,20 @@ class Batch extends Model {
    */
   get invoices () {
     return this._invoices;
+  }
+
+  /**
+   * Sets the region for the batch.
+   * A batch can only be related to a single region at present
+   * @return {Region}
+   */
+  get region () {
+    return this._region;
+  }
+
+  set region (region) {
+    assertIsInstanceOf(region, Region);
+    this._region = region;
   }
 }
 
