@@ -22,7 +22,7 @@ experiment('modules/billing/services/charge-elements-service', () => {
 
   experiment('.mapRowToModel', () => {
     beforeEach(async () => {
-      result = chargeElementsService.mapChargeToElement(data.chargeElement);
+      result = chargeElementsService.mapRowToModel(data.chargeElement);
     });
 
     test('returns an instance of Agreement', async () => {

@@ -1,7 +1,12 @@
 'use strict';
 
+const Transaction = require('../../../lib/models/transaction');
+const DateRange = require('../../../lib/models/date-range');
+
 const chargeModuleTransactionsConnector = require('../../../lib/connectors/charge-module/transactions');
 const ChargeModuleTransaction = require('../../../lib/models/charge-module-transaction');
+const agreeementsService = require('./agreements-service');
+const chargeElementsService = require('./charge-elements-service');
 const { logger } = require('../../../logger');
 
 const mapTransaction = chargeModuleTransaction => {
@@ -51,5 +56,55 @@ const getTransactionsForBatchInvoice = async (batchId, invoiceReference) => {
   }
 };
 
+const createTransaction = (chargeLine, chargeElement, data = {}) => {
+  const transaction = new Transaction();
+  transaction.fromHash({
+    ...data,
+    authorisedDays: chargeElement.totalDays,
+    billableDays: chargeElement.billableDays,
+    agreements: agreeementsService.mapChargeToAgreements(chargeLine),
+    chargePeriod: new DateRange(chargeLine.startDate, chargeLine.endDate),
+    description: chargeElement.description,
+    chargeElement: chargeElementsService.mapRowToModel(chargeElement)
+  });
+  return transaction;
+};
+
+const transactionDefaults = {
+  isTwoPartTariffSupplementaryCharge: false,
+  isCredit: false
+};
+
+/**
+ * Generates an array of transactions from a charge line output
+ * from the charge processor
+ * @param {Object} chargeLine
+ * @param {Object} options
+ * @param {Boolean} options.isTwoPartTariffSupplementaryCharge
+ * @param {Boolean} options.isCredit
+ * @param {Boolean} isCompensation - false for water undertakers
+ * @return {Array<Transaction>}
+ */
+const mapChargeToTransactions = (chargeLine, options = {}, isCompensation = true) => {
+  const data = Object.assign({}, transactionDefaults, options);
+
+  return chargeLine.chargeElements.reduce((acc, chargeElement) => {
+    acc.push(createTransaction(chargeLine, chargeElement, {
+      ...data,
+      isCompensationCharge: false
+    }));
+
+    if (isCompensation) {
+      acc.push(createTransaction(chargeLine, chargeElement, {
+        ...data,
+        isCompensationCharge: true
+      }));
+    }
+
+    return acc;
+  }, []);
+};
+
 exports.getTransactionsForBatch = getTransactionsForBatch;
 exports.getTransactionsForBatchInvoice = getTransactionsForBatchInvoice;
+exports.mapChargeToTransactions = mapChargeToTransactions;
