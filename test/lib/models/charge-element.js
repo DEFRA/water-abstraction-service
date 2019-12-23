@@ -2,8 +2,11 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 const { expect } = require('@hapi/code');
 
 const ChargeElement = require('../../../src/lib/models/charge-element');
+const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
+
+class TestModel {};
 
 experiment('lib/models/charge-element', () => {
   let chargeElement;
@@ -69,6 +72,21 @@ experiment('lib/models/charge-element', () => {
     test('throws an error if set to an invalid loss', async () => {
       const func = () => {
         chargeElement.loss = 'somewhere between high and low';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.abstractionPeriod', () => {
+    test('can be set to an AbstractionPeriod instance', async () => {
+      const absPeriod = new AbstractionPeriod();
+      chargeElement.abstractionPeriod = absPeriod;
+      expect(chargeElement.abstractionPeriod).to.equal(absPeriod);
+    });
+
+    test('throws an error if set to another type', async () => {
+      const func = () => {
+        chargeElement.abstractionPeriod = new TestModel();
       };
       expect(func).to.throw();
     });
