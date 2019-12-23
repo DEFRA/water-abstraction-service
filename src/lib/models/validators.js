@@ -13,7 +13,7 @@ const VALID_STRING = Joi.string().required();
 const VALID_NULLABLE_STRING = VALID_STRING.allow(null);
 const VALID_INTEGER = Joi.number().integer();
 const VALID_POSITIVE_INTEGER = VALID_INTEGER.positive();
-const VALID_AGREEMENT_CODE = Joi.string().valid('127', '130U', '130S', '130T', '130W');
+const VALID_AGREEMENT_CODE = Joi.string().valid('126', '127', '130U', '130S', '130T', '130W');
 
 const assertIsArrayOfType = (values, Type) => {
   assert(isArray(values), 'Array expected');

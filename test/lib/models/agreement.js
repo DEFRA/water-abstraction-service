@@ -27,14 +27,14 @@ experiment('lib/models/agreement', () => {
   });
 
   experiment('.code', () => {
-    test('can be set to a positive integer', async () => {
-      agreement.code = 127;
-      expect(agreement.code).to.equal(127);
+    test('can be set to a valid code', async () => {
+      agreement.code = '127';
+      expect(agreement.code).to.equal('127');
     });
 
-    test('cannot be set to a non-numeric value', async () => {
+    test('cannot be set to an invalid value', async () => {
       const func = () => {
-        agreement.code = 'not-a-number';
+        agreement.code = '1270';
       };
       expect(func).to.throw();
     });
