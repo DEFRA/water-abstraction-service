@@ -146,7 +146,7 @@ class Transaction extends Model {
 
   set description (description) {
     assertString(description);
-    return this._description;
+    this._description = description;
   }
 
   /**
