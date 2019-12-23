@@ -1,6 +1,7 @@
 'use strict';
 const Model = require('./model');
-const { assertEnum } = require('./validators');
+const AbstractionPeriod = require('./abstraction-period');
+const { assertEnum, assertIsInstanceOf } = require('./validators');
 
 const validSources = {
   supported: 'supported',
@@ -61,6 +62,19 @@ class ChargeElement extends Model {
   set loss (loss) {
     assertEnum(loss, Object.values(validLosses));
     this._loss = loss;
+  }
+
+  /**
+   * Abstraction period
+   * @return {AbstractionPeriod}
+   */
+  get abstractionPeriod () {
+    return this._abstractionPeriod;
+  }
+
+  set abstractionPeriod (abstractionPeriod) {
+    assertIsInstanceOf(abstractionPeriod, AbstractionPeriod);
+    this._abstractionPeriod = abstractionPeriod;
   }
 }
 
