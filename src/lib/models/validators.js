@@ -13,6 +13,7 @@ const VALID_STRING = Joi.string().required();
 const VALID_NULLABLE_STRING = VALID_STRING.allow(null);
 const VALID_INTEGER = Joi.number().integer();
 const VALID_POSITIVE_INTEGER = VALID_INTEGER.positive();
+const VALID_AGREEMENT_CODE = Joi.string().valid('127', '130U', '130S', '130T', '130W');
 
 const assertIsArrayOfType = (values, Type) => {
   assert(isArray(values), 'Array expected');
@@ -37,6 +38,7 @@ const assertEnum = (str, values) => Joi.assert(str, VALID_STRING.valid(values));
 const assertAuthorisedDays = value => Joi.assert(value, VALID_POSITIVE_INTEGER.max(366));
 const assertBillableDays = value => Joi.assert(value, VALID_INTEGER.min(0).max(366));
 const assertPositiveInteger = value => Joi.assert(value, VALID_POSITIVE_INTEGER);
+const assertAgreementCode = value => Joi.assert(value, VALID_AGREEMENT_CODE);
 
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
@@ -52,3 +54,4 @@ exports.assertEnum = assertEnum;
 exports.assertAuthorisedDays = assertAuthorisedDays;
 exports.assertBillableDays = assertBillableDays;
 exports.assertPositiveInteger = assertPositiveInteger;
+exports.assertAgreementCode = assertAgreementCode;

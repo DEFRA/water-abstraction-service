@@ -1,7 +1,7 @@
 'use strict';
 
 const Model = require('./model');
-const { assertPositiveInteger } = require('./validators');
+const { assertAgreementCode } = require('./validators');
 
 class Agreement extends Model {
   get code () {
@@ -9,7 +9,7 @@ class Agreement extends Model {
   }
 
   set code (code) {
-    assertPositiveInteger(code);
+    assertAgreementCode(code);
     this._code = code;
   }
 }
