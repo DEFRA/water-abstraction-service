@@ -124,10 +124,19 @@ const start = async function () {
   }
 };
 
-process.on('unhandledRejection', (err) => {
-  logger.error('Server unhandledRejection', err);
+const processError = message => err => {
+  logger.error(message, err);
   process.exit(1);
-});
+};
+
+process
+  .on('unhandledRejection', processError('unhandledRejection'))
+  .on('uncaughtException', processError('uncaughtException'))
+  .on('SIGINT', async () => {
+    logger.info('stopping water service');
+    await server.stop();
+    return process.exit(0);
+  });
 
 if (!module.parent) {
   start();
