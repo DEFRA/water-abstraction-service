@@ -149,8 +149,17 @@ experiment('modules/billing/services/transactions-service', () => {
           expect(result[0].isTwoPartTariffSupplementaryCharge).to.equal(false);
         });
 
-        test('is not a credit by default', async () => {
+        test('is not a credit', async () => {
           expect(result[0].isCredit).to.equal(false);
+        });
+
+        test('has the correct billable and authorised days', async () => {
+          expect(result[0].authorisedDays).to.equal(chargeLine.chargeElements[0].totalDays);
+          expect(result[0].billableDays).to.equal(chargeLine.chargeElements[0].billableDays);
+        });
+
+        test('has the correct description', async () => {
+          expect(result[0].description).to.equal(chargeLine.chargeElements[0].description);
         });
 
         test('has the charge period mapped correctly', async () => {
@@ -201,6 +210,24 @@ experiment('modules/billing/services/transactions-service', () => {
         test('is a standard charge', async () => {
           expect(result[0].isCompensationCharge).to.be.false();
         });
+      });
+    });
+
+    experiment('when processing two-part tariff supplementary', () => {
+      beforeEach(async () => {
+        result = transactionsService.mapChargeToTransactions(chargeLine, { isTwoPartTariffSupplementaryCharge: true }, false);
+      });
+
+      test('1 transactions is created', async () => {
+        expect(result).to.be.an.array().length(1);
+      });
+
+      test('the transaction is a standard charge', async () => {
+        expect(result[0].isCompensationCharge).to.be.false();
+      });
+
+      test('the transaction is a two-part tariff supplementary charge', async () => {
+        expect(result[0].isTwoPartTariffSupplementaryCharge).to.be.true();
       });
     });
   });
