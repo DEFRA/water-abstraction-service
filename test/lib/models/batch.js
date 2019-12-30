@@ -2,7 +2,7 @@ const uuid = require('uuid/v4');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const { Batch, FinancialYear, Invoice, InvoiceAccount } =
+const { Batch, FinancialYear, Invoice, InvoiceAccount, Region } =
   require('../../../src/lib/models');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
@@ -230,6 +230,27 @@ experiment('lib/models/batch', () => {
     test('sets the invoices to an empty array', () => {
       const batch = new Batch();
       expect(batch.invoices).to.equal([]);
+    });
+  });
+
+  experiment('.region', () => {
+    let batch;
+
+    beforeEach(async () => {
+      batch = new Batch();
+    });
+
+    test('can be set to a Region model', async () => {
+      const region = new Region();
+      batch.region = region;
+      expect(batch.region).to.equal(region);
+    });
+
+    test('throws an error if set to a class that is not an instance of Region', async () => {
+      const func = () => {
+        batch.region = TEST_MODEL;
+      };
+      expect(func).to.throw();
     });
   });
 });
