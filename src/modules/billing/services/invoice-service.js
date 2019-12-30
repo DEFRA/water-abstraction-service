@@ -23,6 +23,7 @@ const mapRowToModels = row => {
 
   const invoiceLicence = new InvoiceLicence();
   invoiceLicence.id = row['billing_invoice_licences.billing_invoice_licence_id'];
+  // Do we need to do some updating here?
   invoiceLicence.address = new Address(row['billing_invoice_licences.address_id']);
   invoiceLicence.company = new Company(row['billing_invoice_licences.company_id']);
   invoiceLicence.contact = new Contact(row['billing_invoice_licences.contact_id']);

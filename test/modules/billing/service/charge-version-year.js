@@ -8,11 +8,12 @@ const {
 const { expect } = require('@hapi/code');
 
 const sandbox = require('sinon').createSandbox();
-const { Address, Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence } = require('../../../../src/lib/models');
+const { Address, Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence, Role } = require('../../../../src/lib/models');
 const Contact = require('../../../../src/lib/models/contact-v2');
 
 const chargeVersionYear = require('../../../../src/modules/billing/service/charge-version-year');
 const chargeProcessor = require('../../../../src/modules/billing/service/charge-processor');
+const chargeProcessorErrors = require('../../../../src/modules/billing/service/charge-processor/errors');
 const repository = require('../../../../src/lib/connectors/repository');
 const { logger } = require('../../../../src/logger');
 
@@ -84,6 +85,13 @@ const createAddress = () =>
 
 const createInvoiceAccount = () =>
   Object.assign(new InvoiceAccount(), data.invoiceAccount);
+
+const createRole = () =>
+  Object.assign(new Role(), {
+    company: createCompany(),
+    contact: createContact(),
+    address: createAddress()
+  });
 
 experiment('modules/billing/service/charge-version-year.js', () => {
   beforeEach(async () => {
@@ -160,23 +168,35 @@ experiment('modules/billing/service/charge-version-year.js', () => {
     });
 
     experiment('when there is an error', () => {
-      beforeEach(async () => {
-        chargeProcessor.processCharges.resolves({
-          error: 'Oh no!',
-          data: data.charges
+      experiment('returned from .processCharges', () => {
+        beforeEach(async () => {
+          chargeProcessor.processCharges.resolves({
+            error: 'Oh no!',
+            data: data.charges
+          });
+          try {
+            await chargeVersionYear.createBatchFromChargeVersionYear(data.chargeVersionYear);
+            fail();
+          } catch (err) {
+          }
         });
-        try {
-          await chargeVersionYear.createBatchFromChargeVersionYear(data.chargeVersionYear);
-          fail();
-        } catch (err) {
-        }
-      });
 
-      test('logs an error', async () => {
-        const [msg, error, data] = logger.error.lastCall.args;
-        expect(msg).to.equal('Oh no!');
-        expect(error).to.be.an.error();
-        expect(data).to.equal({ chargeVersionYear: data.chargeVersionYear });
+        test('logs an error', async () => {
+          const [msg, error, data] = logger.error.lastCall.args;
+          expect(msg).to.equal('Oh no!');
+          expect(error).to.be.an.error();
+          expect(data).to.equal({ chargeVersionYear: data.chargeVersionYear });
+        });
+      });
+      experiment('when no chargeVersion is returned', () => {
+        let result;
+        beforeEach(async () => {
+          chargeProcessor.getChargeVersion.resolves();
+          result = await chargeVersionYear.createBatchFromChargeVersionYear(data.chargeVersionYear);
+        });
+        test('error is as expected', () => {
+          expect(result.error).to.equal(chargeProcessorErrors.ERROR_CHARGE_VERSION_NOT_FOUND);
+        });
       });
     });
   });
@@ -198,9 +218,7 @@ experiment('modules/billing/service/charge-version-year.js', () => {
         // Set up invoice licence
         const invoiceLicence = new InvoiceLicence();
         invoiceLicence.licence = createLicence();
-        invoiceLicence.company = createCompany();
-        invoiceLicence.contact = createContact();
-        invoiceLicence.address = createAddress();
+        invoiceLicence.roles = [createRole()];
         invoice.invoiceLicences = [invoiceLicence];
 
         batch.addInvoice(invoice);
@@ -237,6 +255,7 @@ experiment('modules/billing/service/charge-version-year.js', () => {
       });
 
       test('persists each licence in the batch', async () => {
+        const role = createRole();
         const [row] = repository.billingInvoiceLicences.create.lastCall.args;
         expect(row).to.equal({
           billing_invoice_id: data.billingInvoiceId,
@@ -244,23 +263,7 @@ experiment('modules/billing/service/charge-version-year.js', () => {
           contact_id: data.contact.id,
           address_id: data.address.id,
           licence_ref: data.licence.licenceNumber,
-          licence_holder_name: {
-            id: data.contact.id,
-            salutation: data.contact.salutation,
-            firstName: data.contact.firstName,
-            lastName: data.contact.lastName
-          },
-          licence_holder_address: {
-            addressLine1: 'Daisy Farm',
-            addressLine2: 'Buttercup Lane',
-            addressLine3: 'Windy Hill',
-            addressLine4: 'Green Meadows',
-            country: 'England',
-            county: 'Testingshire',
-            id: '1f8a29a9-7d07-4c21-8fba-f73f72f5a72b',
-            postcode: 'TT1 1TT',
-            town: 'Testington'
-          },
+          licence_holders: [role],
           licence_id: data.licence.id
         });
       });

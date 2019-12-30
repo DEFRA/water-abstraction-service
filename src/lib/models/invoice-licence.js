@@ -39,57 +39,6 @@ class InvoiceLicence extends Model {
     return this._licence;
   }
 
-  /**
-  * Sets the company instance for this licence holder
-  * @param {Company} company
-  */
-  set company (company) {
-    assertIsInstanceOf(company, Company);
-    this._company = company;
-  }
-
-  /**
-   * Gets the address instance for this licence holder
-   * @return {Address}
-   */
-  get company () {
-    return this._company;
-  }
-
-  /**
-  * Sets the contact instance for this licence holder
-  * @param {Contact} contact
-  */
-  set contact (contact) {
-    assertIsInstanceOf(contact, Contact);
-    this._contact = contact;
-  }
-
-  /**
-   * Gets the contact instance for this licence holder
-   * @return {Contact}
-   */
-  get contact () {
-    return this._contact;
-  }
-
-  /**
-   * Sets the address instance for this licence holder
-   * @param {Address} address
-   */
-  set address (address) {
-    assertIsInstanceOf(address, Address);
-    this._address = address;
-  }
-
-  /**
-   * Gets the address instance for this licence holder
-   * @return {Address}
-   */
-  get address () {
-    return this._address;
-  }
-
   set transactions (transactions) {
     assertIsArrayOfType(transactions, Transaction);
     this._transactions = transactions;
@@ -108,19 +57,19 @@ class InvoiceLicence extends Model {
     return this._roles;
   }
 
-  /**
-   * Gets a unique ID for this invoice licence which can be used
-   * for unique comparisons
-   * @return {String}
-   */
-  get uniqueId () {
-    return [
-      get(this, '_licence.licenceNumber'),
-      get(this, '_company.id'),
-      get(this, '_address.id'),
-      get(this, '_contact.id')
-    ].join('.');
-  }
+  // /**
+  //  * Gets a unique ID for this invoice licence which can be used
+  //  * for unique comparisons
+  //  * @return {String}
+  //  */
+  // get uniqueId () {
+  //   return [
+  //     get(this, '_licence.licenceNumber'),
+  //     get(this, '_company.id'),
+  //     get(this, '_address.id'),
+  //     get(this, '_contact.id')
+  //   ].join('.');
+  // }
 }
 
 module.exports = InvoiceLicence;
