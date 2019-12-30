@@ -14,6 +14,7 @@ const Address = require('../../../lib/models/address');
 const Company = require('../../../lib/models/company');
 const Contact = require('../../../lib/models/contact-v2');
 const Transaction = require('../../../lib/models/transaction');
+const Role = require('../../../lib/models/role');
 
 const mapRowToModels = row => {
   const invoice = new Invoice(row['billing_invoices.billing_invoice_id']);
@@ -23,15 +24,27 @@ const mapRowToModels = row => {
 
   const invoiceLicence = new InvoiceLicence();
   invoiceLicence.id = row['billing_invoice_licences.billing_invoice_licence_id'];
-  // Do we need to do some updating here?
-  invoiceLicence.address = new Address(row['billing_invoice_licences.address_id']);
-  invoiceLicence.company = new Company(row['billing_invoice_licences.company_id']);
-  invoiceLicence.contact = new Contact(row['billing_invoice_licences.contact_id']);
+  invoiceLicence.roles = mapRolesToModel(row['billing_invoice_licences.licence_holders']);
   invoiceLicence.licence = new Licence();
   invoiceLicence.licence.id = row['billing_invoice_licences.licence_id'];
   invoiceLicence.licence.licenceNumber = row['billing_invoice_licences.licence_ref'];
 
   return { invoice, invoiceLicence };
+};
+
+const mapRolesToModel = rolesData => {
+  return rolesData.map(data => {
+    const role = new Role();
+
+    role.startDate = data.startDate;
+    role.endDate = data.endDate;
+    role.roleName = data.roleName;
+    role.company = Object.assign(new Company(), data.company);
+    if (data.contact) role.contact = Object.assign(new Contact(), data.contact);
+    role.address = Object.assign(new Address(), data.address);
+
+    return role;
+  });
 };
 
 /**

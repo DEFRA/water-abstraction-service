@@ -24,7 +24,7 @@ const createBatchInvoiceLicence = async (billingInvoiceId, invoiceLicence) => {
     company_id: invoiceLicence.roles[0].company.id,
     contact_id: get(invoiceLicence.roles[0], 'contact.id', null),
     address_id: invoiceLicence.roles[0].address.id,
-    licence_ref: invoiceLicence.licence.licenceNumber,
+    licence_ref: licenceNumber,
     licence_holders: invoiceLicence.roles,
     licence_id: licence.licence_id
   };
