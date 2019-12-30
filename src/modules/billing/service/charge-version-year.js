@@ -4,6 +4,7 @@ const { logger } = require('../../../logger');
 const repository = require('../../../lib/connectors/repository');
 const { Batch } = require('../../../lib/models');
 const { assert } = require('@hapi/hoek');
+const { ERROR_CHARGE_VERSION_NOT_FOUND } = require('./charge-processor/errors');
 
 const createBatchInvoiceLicence = async (billingInvoiceId, invoiceLicence) => {
   const { licenceNumber } = invoiceLicence.licence;
@@ -78,8 +79,17 @@ const createBatchFromChargeVersionYear = async chargeVersionYear => {
     billing_batch_id: batchId
   } = chargeVersionYear;
 
+  // Load charge version data
+  const chargeVersion = await chargeProcessor.getChargeVersion(chargeVersionId);
+  if (!chargeVersion) {
+    return { error: ERROR_CHARGE_VERSION_NOT_FOUND, data: null };
+  }
+
+  // Load CRM docs
+  const docs = await chargeProcessor.getCRMDocuments(chargeVersion.licenceRef);
+
   // Process charge data
-  const { error, data } = await chargeProcessor.processCharges(financialYearEnding, chargeVersionId);
+  const { error, data } = await chargeProcessor.processCharges(financialYearEnding, chargeVersion, docs);
 
   if (error) {
     const err = new Error(error);
@@ -87,8 +97,11 @@ const createBatchFromChargeVersionYear = async chargeVersionYear => {
     throw err;
   }
 
+  // Merge Licence holders history
+  const roles = chargeProcessor.processRoles(financialYearEnding, docs);
+
   // Create batch and persist to DB
-  return chargeProcessor.modelMapper(batchId, data);
+  return chargeProcessor.modelMapper(batchId, data, roles);
 };
 
 /**

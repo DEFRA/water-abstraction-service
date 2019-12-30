@@ -13,10 +13,11 @@ const {
   assertIsInstanceOf
 } = require('./validators');
 
-const ROLE_LICENCE_HOLDER = 'licenceHolder';
-const validRoleNames = [ROLE_LICENCE_HOLDER];
-
 class Role extends Model {
+  get ROLE_LICENCE_HOLDER () {
+    return 'licenceHolder';
+  }
+
   set startDate (startDate) {
     assertDate(startDate);
     this._startDate = startDate;
@@ -36,6 +37,7 @@ class Role extends Model {
   }
 
   set roleName (roleName) {
+    const validRoleNames = [this.ROLE_LICENCE_HOLDER];
     assertEnum(roleName, validRoleNames);
     this._roleName = roleName;
   }

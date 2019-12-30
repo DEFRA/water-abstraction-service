@@ -5,7 +5,7 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const { Batch, Invoice, InvoiceAccount, Address, Company } = require('../../../../../src/lib/models');
+const { Batch, Invoice, InvoiceAccount, Address, Company, Role } = require('../../../../../src/lib/models');
 const Contact = require('../../../../../src/lib/models/contact-v2');
 const modelMapper = require('../../../../../src/modules/billing/service/charge-processor/model-mapper');
 
@@ -19,7 +19,7 @@ const createCrmAddress = index => ({
   address4: `address4_${index}`,
   town: `town_${index}`,
   county: `county_${index}`,
-  postcode: `country_${index}`,
+  postcode: `postcode_${index}`,
   country: `country_${index}`
 });
 
@@ -40,32 +40,33 @@ const createCrmContact = () => ({
   lastName: 'Kirk'
 });
 
-const createCrmLicenceHolder = withContact => ({
+const createCrmLicenceHolder = (withContact, options = {}) => ({
+  roleName: new Role().ROLE_LICENCE_HOLDER,
+  startDate: '2000-09-30',
+  endDate: null,
   company: {
     companyId: 'a4d2ad99-4cda-4634-b1a2-a665aa125554',
     name: 'Big Farm Ltd'
   },
   contact: withContact ? createCrmContact() : null,
-  address: createCrmAddress(1)
+  address: createCrmAddress(1),
+  ...options
 });
 
 const createData = () => [{
   chargeVersion: createChargeVersion('01/123'),
-  licenceHolder: createCrmLicenceHolder(),
   invoiceAccount: {
     invoiceAccount: createCrmInvoiceAccount(1),
     address: createCrmAddress(1)
   }
 }, {
   chargeVersion: createChargeVersion('02/345'),
-  licenceHolder: createCrmLicenceHolder(true),
   invoiceAccount: {
     invoiceAccount: createCrmInvoiceAccount(2),
     address: createCrmAddress(2)
   }
 }, {
   chargeVersion: createChargeVersion('03/456'),
-  licenceHolder: createCrmLicenceHolder(),
   invoiceAccount: {
     invoiceAccount: createCrmInvoiceAccount(1),
     address: createCrmAddress(1)
@@ -74,11 +75,13 @@ const createData = () => [{
 
 experiment('modules/billing/service/charge-processor/model-mapper.js', () => {
   experiment('modelMapper', () => {
-    let data, result, invoice;
+    let data, roles, result, invoice;
 
     beforeEach(async () => {
       data = createData();
-      result = modelMapper.modelMapper(BATCH_ID, data);
+      roles = [createCrmLicenceHolder(true, { endDate: '2001-02-23' }), createCrmLicenceHolder(false, { startDate: '2001-02-24' })];
+
+      result = modelMapper.modelMapper(BATCH_ID, data, roles);
     });
 
     test('should return a batch with the correct ID', async () => {
@@ -118,28 +121,49 @@ experiment('modules/billing/service/charge-processor/model-mapper.js', () => {
         expect(invoice.invoiceLicences[1].licence.licenceNumber).to.equal('03/456');
       });
 
-      test('the first invoiceLicence has an address', async () => {
-        expect(invoice.invoiceLicences[0].address instanceof Address).to.be.true();
+      test('the first invoiceLicence has 2 licenceholder roles', async () => {
+        expect(invoice.invoiceLicences[0].roles).to.have.length(2);
+        expect(invoice.invoiceLicences[0].roles[0].roleName).to.equal(new Role().ROLE_LICENCE_HOLDER);
+        expect(invoice.invoiceLicences[0].roles[1].roleName).to.equal(new Role().ROLE_LICENCE_HOLDER);
       });
 
-      test('the first invoiceLicence has a company', async () => {
-        expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
+      experiment('the first role', async () => {
+        let role;
+        beforeEach(async () => {
+          role = result.invoices[0].invoiceLicences[0].roles[0];
+        });
+
+        test('has a company', async () => {
+          expect(role.company instanceof Company).to.be.true();
+        });
+
+        test('has a contact', async () => {
+          expect(role.contact instanceof Contact).to.be.true();
+          expect(role.contact.fullName).to.equal('Captain J T Kirk');
+        });
+
+        test('has an address', async () => {
+          expect(role.address instanceof Address).to.be.true();
+        });
       });
 
-      test('the first invoiceLicence has no contact', async () => {
-        expect(invoice.invoiceLicences[0].contact).to.be.undefined();
-      });
+      experiment('the second role', async () => {
+        let role;
+        beforeEach(async () => {
+          role = result.invoices[0].invoiceLicences[0].roles[1];
+        });
 
-      test('the second invoiceLicence has an address', async () => {
-        expect(invoice.invoiceLicences[1].address instanceof Address).to.be.true();
-      });
+        test('has a company', async () => {
+          expect(role.company instanceof Company).to.be.true();
+        });
 
-      test('the second invoiceLicence has a company', async () => {
-        expect(invoice.invoiceLicences[1].company instanceof Company).to.be.true();
-      });
+        test('does not have a contact', async () => {
+          expect(role.contact).to.be.undefined();
+        });
 
-      test('the second invoiceLicence has no contact', async () => {
-        expect(invoice.invoiceLicences[1].contact).to.be.undefined();
+        test('has an address', async () => {
+          expect(role.address instanceof Address).to.be.true();
+        });
       });
     });
 
@@ -170,18 +194,49 @@ experiment('modules/billing/service/charge-processor/model-mapper.js', () => {
         expect(invoice.invoiceLicences[0].licence.licenceNumber).to.equal('02/345');
       });
 
-      test('the first invoiceLicence has an address', async () => {
-        expect(invoice.invoiceLicences[0].address instanceof Address).to.be.true();
+      test('the first invoiceLicence has 2 licenceholder roles', async () => {
+        expect(invoice.invoiceLicences[0].roles).to.have.length(2);
+        expect(invoice.invoiceLicences[0].roles[0].roleName).to.equal(new Role().ROLE_LICENCE_HOLDER);
+        expect(invoice.invoiceLicences[0].roles[1].roleName).to.equal(new Role().ROLE_LICENCE_HOLDER);
       });
 
-      test('the first invoiceLicence has a company', async () => {
-        expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
+      experiment('the first role', async () => {
+        let role;
+        beforeEach(async () => {
+          role = result.invoices[0].invoiceLicences[0].roles[0];
+        });
+
+        test('has a company', async () => {
+          expect(role.company instanceof Company).to.be.true();
+        });
+
+        test('has a contact', async () => {
+          expect(role.contact instanceof Contact).to.be.true();
+          expect(role.contact.fullName).to.equal('Captain J T Kirk');
+        });
+
+        test('has an address', async () => {
+          expect(role.address instanceof Address).to.be.true();
+        });
       });
 
-      test('the first invoiceLicence has a contact', async () => {
-        const { contact } = invoice.invoiceLicences[0];
-        expect(contact instanceof Contact).to.be.true();
-        expect(contact.fullName).to.equal('Captain J T Kirk');
+      experiment('the second role', async () => {
+        let role;
+        beforeEach(async () => {
+          role = result.invoices[0].invoiceLicences[0].roles[1];
+        });
+
+        test('has a company', async () => {
+          expect(role.company instanceof Company).to.be.true();
+        });
+
+        test('does not have a contact', async () => {
+          expect(role.contact).to.be.undefined();
+        });
+
+        test('has an address', async () => {
+          expect(role.address instanceof Address).to.be.true();
+        });
       });
     });
   });

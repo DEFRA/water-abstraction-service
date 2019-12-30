@@ -18,6 +18,7 @@ const { logger } = require('../../../../src/logger');
 
 const batchId = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
 const chargeVersionId = 'charge_version_1';
+const licenceRef = 'licence_reference_1';
 
 const data = {
   billingInvoiceId: '991675b7-4760-49eb-8adf-e240770d21eb',
@@ -25,6 +26,10 @@ const data = {
     charge_version_id: chargeVersionId,
     financial_year_ending: 2020,
     billing_batch_id: batchId
+  },
+  chargeVersion: {
+    charge_version_id: chargeVersionId,
+    licenceRef: licenceRef
   },
   charges: [{
 
@@ -59,7 +64,10 @@ const data = {
   invoiceAccount: {
     id: 'b5b37451-27e5-457e-a2d8-2751ee99cd01',
     accountNumber: 'S12345678A'
-  }
+  },
+  crmDocs: [{
+    documentId: 'f4068f75-cf48-4dd6-9507-06edf1f8f1fd'
+  }]
 };
 
 const createCompany = () =>
@@ -91,6 +99,12 @@ experiment('modules/billing/service/charge-version-year.js', () => {
       licence_id: data.licence.id
     });
     sandbox.stub(repository.billingInvoiceLicences, 'create').resolves();
+    sandbox.stub(repository.chargeVersions, 'findOneById').resolves({
+      chargeVersionId: 'd2f7fdfd-72f4-4e31-a917-9149175933f7'
+    });
+    sandbox.stub(chargeProcessor, 'getChargeVersion').resolves(data.chargeVersion);
+    sandbox.stub(chargeProcessor, 'getCRMDocuments').resolves(data.crmDocs);
+    sandbox.stub(chargeProcessor, 'processRoles').resolves();
   });
 
   afterEach(async () => {
@@ -106,13 +120,33 @@ experiment('modules/billing/service/charge-version-year.js', () => {
           error: null,
           data: data.charges
         });
+        chargeProcessor.modelMapper.resolves(data.modelMapperResponse);
         result = await chargeVersionYear.createBatchFromChargeVersionYear(data.chargeVersionYear);
+      });
+
+      test('gets Charge Version', async () => {
+        expect(chargeProcessor.getChargeVersion.calledWith(
+          data.chargeVersion.charge_version_id
+        )).to.be.true();
+      });
+
+      test('gets CRM documents', async () => {
+        expect(chargeProcessor.getCRMDocuments.calledWith(
+          data.chargeVersion.licenceRef
+        )).to.be.true();
       });
 
       test('calls the charge processor', async () => {
         expect(chargeProcessor.processCharges.calledWith(
           data.chargeVersionYear.financial_year_ending,
-          data.chargeVersionYear.charge_version_id
+          data.chargeVersion
+        )).to.be.true();
+      });
+
+      test('calls the role processor', async () => {
+        expect(chargeProcessor.processRoles.calledWith(
+          data.chargeVersionYear.financial_year_ending,
+          data.crmDocs
         )).to.be.true();
       });
 

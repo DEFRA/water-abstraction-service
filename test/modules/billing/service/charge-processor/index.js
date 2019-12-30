@@ -7,9 +7,8 @@ const {
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
-const documents = require('../../../../../src/lib/connectors/crm-v2/documents');
 const repository = require('../../../../../src/lib/connectors/repository');
-const { processCharges } = require('../../../../../src/modules/billing/service/charge-processor/');
+const { processRoles, processCharges } = require('../../../../../src/modules/billing/service/charge-processor/');
 
 const companyA = '76f90254-5916-4b48-92a3-aaaaaaaaaaaa';
 const companyB = 'a2fe1f06-3ca4-487f-a79b-bbbbbbbbbbbb';
@@ -50,14 +49,6 @@ const chargeElement2 = '320df419-2222-40a8-8420-b9351f49dead';
 const chargeElement3 = '320df419-3333-40a8-8420-b9351f49dead';
 
 const data = {
-  singleDocument: [{
-    documentId: 'f4068f75-cf48-4dd6-9507-06edf1f8f1fd'
-  }],
-  multipleDocuments: [{
-    documentId: 'f4068f75-cf48-4dd6-9507-06edf1f8f1fd'
-  }, {
-    documentId: 'aacfa1ad-d2ca-4462-aaf5-e45e3ce96785'
-  }],
   chargeVersions: {
     nonExpiring: {
       chargeVersionId,
@@ -110,15 +101,20 @@ const data = {
   }
 };
 
+const getDocsData = (endDate, documentRoles) => {
+  return [{
+    documentRef: '01/123',
+    startDate: '1993-02-12',
+    endDate,
+    documentRoles
+  }];
+};
+
 experiment('modules/billing/service/charge-processor/index.js', () => {
   let result;
 
   beforeEach(async () => {
-    sandbox.stub(documents, 'getDocuments');
-    sandbox.stub(documents, 'getDocument');
-
     sandbox.stub(repository.chargeElements, 'findByChargeVersionId').resolves(data.chargeElements);
-    sandbox.stub(repository.chargeVersions, 'findOneById');
     sandbox.stub(repository.licenceAgreements, 'findByLicenceNumber').resolves([]);
   });
 
@@ -126,26 +122,94 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
     sandbox.restore();
   });
 
-  experiment('processCharges', () => {
-    experiment('when there is 1x document, non-expiring charge version, ', () => {
+  experiment('.processRoles', () => {
+    experiment('2x licence holders for same company', () => {
+      let result;
       beforeEach(async () => {
-        documents.getDocuments.resolves(data.singleDocument);
-        repository.chargeVersions.findOneById.resolves(data.chargeVersions.nonExpiring);
+        const docsData = getDocsData(null, [
+          createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: '2016-05-31' }),
+          createLicenceHolderRole(companyA, { startDate: '2016-06-01' })
+        ]);
+        result = await processRoles(2017, docsData);
       });
 
+      test('merges role history for matching licence holders', () => {
+        expect(result).to.have.length(1);
+      });
+
+      test('constrains dates to financial year', () => {
+        const [{ startDate, endDate }] = result;
+        expect(startDate).to.equal('2016-04-01');
+        expect(endDate).to.equal('2017-03-31');
+      });
+    });
+    experiment('2x licence holders for different companies', () => {
+      let result;
+      beforeEach(async () => {
+        const docsData = getDocsData(null, [
+          createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: '2016-05-31' }),
+          createLicenceHolderRole(companyB, { startDate: '2016-06-01' })
+        ]);
+        result = await processRoles(2017, docsData);
+      });
+
+      test('does not merges role history for non-matching licence holders', () => {
+        expect(result).to.have.length(2);
+      });
+
+      experiment('first licence holder', () => {
+        test('constrains dates to financial year', () => {
+          const { startDate, endDate } = result[0];
+          expect(startDate).to.equal('2016-04-01');
+          expect(endDate).to.equal('2016-05-31');
+        });
+      });
+
+      experiment('second licence holder', () => {
+        test('constrains dates to financial year', () => {
+          const { startDate, endDate } = result[1];
+          expect(startDate).to.equal('2016-06-01');
+          expect(endDate).to.equal('2017-03-31');
+        });
+      });
+    });
+
+    experiment('4x licence holders for 2 different companies', () => {
+      let result;
+      beforeEach(async () => {
+        const docsData = getDocsData(null, [
+          createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: '2015-05-31' }),
+          createLicenceHolderRole(companyA, { startDate: '2015-06-01', endDate: '2016-10-20' }),
+          createLicenceHolderRole(companyB, { startDate: '2016-10-21', endDate: '2017-08-31' }),
+          createLicenceHolderRole(companyB, {
+            startDate: '2017-09-01',
+            contact: { contactId: 'a247b588-d0e6-45d8-9d63-47f45cdd9639' }
+          })
+        ]);
+
+        result = await processRoles(2016, docsData);
+      });
+      test('filters out licence holders not relevant to financial year', () => {
+        expect(result).to.have.length(1);
+      });
+      test('constrains dates to financial year', () => {
+        const [{ startDate, endDate }] = result;
+        expect(startDate).to.equal('2015-04-01');
+        expect(endDate).to.equal('2016-03-31');
+      });
+    });
+  });
+
+  experiment('.processCharges', () => {
+    experiment('when there is 1x document, non-expiring charge version, ', () => {
       experiment('non-expiring licence, 1x licence holder and 1x billing role', () => {
         beforeEach(async () => {
-          documents.getDocument.withArgs(data.singleDocument[0].documentId).resolves({
-            documentRef: '01/123',
-            startDate: '1993-02-12',
-            endDate: null,
-            documentRoles: [
-              createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: null }),
-              createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
-            ]
-          });
+          const docsData = getDocsData(null, [
+            createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: null }),
+            createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
+          ]);
 
-          result = await processCharges(2019, chargeVersionId);
+          result = await processCharges(2019, data.chargeVersions.nonExpiring, docsData);
         });
 
         test('there is no error', async () => {
@@ -215,17 +279,12 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
 
       experiment('expiring licence, 1x licence holder and 1x billing role', () => {
         beforeEach(async () => {
-          documents.getDocument.withArgs(data.singleDocument[0].documentId).resolves({
-            documentRef: '01/123',
-            startDate: '1993-02-12',
-            endDate: '2018-10-31',
-            documentRoles: [
-              createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: null }),
-              createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
-            ]
-          });
+          const docsData = getDocsData('2018-10-31', [
+            createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: null }),
+            createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
+          ]);
 
-          result = await processCharges(2019, chargeVersionId);
+          result = await processCharges(2019, data.chargeVersions.nonExpiring, docsData);
         });
 
         test('there is no error', async () => {
@@ -295,18 +354,13 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
 
       experiment('expiring licence, 1x licence holder and 2x billing roles', () => {
         beforeEach(async () => {
-          documents.getDocument.withArgs(data.singleDocument[0].documentId).resolves({
-            documentRef: '01/123',
-            startDate: '1993-02-12',
-            endDate: '2018-10-31',
-            documentRoles: [
-              createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: null }),
-              createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: '2018-06-01' }),
-              createBillingRole(companyB, invoiceAccountB, { startDate: '2018-06-02', endDate: null })
-            ]
-          });
+          const docsData = getDocsData('2018-10-31', [
+            createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: null }),
+            createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: '2018-06-01' }),
+            createBillingRole(companyB, invoiceAccountB, { startDate: '2018-06-02', endDate: null })
+          ]);
 
-          result = await processCharges(2019, chargeVersionId);
+          result = await processCharges(2019, data.chargeVersions.nonExpiring, docsData);
         });
 
         test('there is no error', async () => {
@@ -444,26 +498,21 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
 
       experiment('expiring licence, 2x licence holder and 1x billing roles', () => {
         beforeEach(async () => {
-          documents.getDocument.withArgs(data.singleDocument[0].documentId).resolves({
-            documentRef: '01/123',
-            startDate: '1993-02-12',
-            endDate: '2018-10-31',
-            documentRoles: [
-              createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: '2018-06-01' }),
-              createLicenceHolderRole(companyB, { startDate: '2018-06-02', endDate: null }),
-              createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
-            ]
-          });
+          const docsData = getDocsData('2018-10-31', [
+            createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: '2018-06-01' }),
+            createLicenceHolderRole(companyB, { startDate: '2018-06-02', endDate: null }),
+            createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
+          ]);
 
-          result = await processCharges(2019, chargeVersionId);
+          result = await processCharges(2019, data.chargeVersions.nonExpiring, docsData);
         });
 
         test('there is no error', async () => {
           expect(result.error).to.equal(null);
         });
 
-        test('there is a charge date range for each invoice account', async () => {
-          expect(result.data).to.have.length(2);
+        test('the charge data is not split on licenceHolder change', async () => {
+          expect(result.data).to.have.length(1);
         });
 
         experiment('for the first charge date range', () => {
@@ -473,74 +522,12 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
             range = result.data[0];
           });
 
-          test('the licence holder relates to the first billing role', async () => {
-            expect(range.licenceHolder.company.companyId).to.equal(companyA);
+          test('the licence holder does not exist in charge data', async () => {
+            expect(range.licenceHolder).to.be.undefined();
           });
 
-          test('the charge date range ends on the billing role end date', async () => {
+          test('the charge date range ends on the licence end date', async () => {
             expect(range.startDate).to.equal('2018-04-01');
-            expect(range.endDate).to.equal('2018-06-01');
-          });
-
-          test('the first charge element has the correct ID', async () => {
-            const { chargeElementId } = range.chargeElements[0];
-            expect(chargeElementId).to.equal(chargeElement1);
-          });
-
-          test('the first charge element covers the correct charge period', async () => {
-            const { startDate, endDate } = range.chargeElements[0];
-            expect(startDate).to.equal('2018-04-01');
-            expect(endDate).to.equal('2018-06-01');
-          });
-
-          test('the first charge element has the correct pro-rata billable days', async () => {
-            const { totalDays, billableDays } = range.chargeElements[0];
-            expect(totalDays).to.equal(276);
-            expect(billableDays).to.equal(32);
-          });
-
-          test('the second charge element has the correct ID', async () => {
-            const { chargeElementId } = range.chargeElements[1];
-            expect(chargeElementId).to.equal(chargeElement2);
-          });
-
-          test('the second charge element is all year', async () => {
-            const { totalDays, billableDays } = range.chargeElements[1];
-            expect(totalDays).to.equal(365);
-            expect(billableDays).to.equal(62);
-          });
-
-          test('the third charge element has the correct ID', async () => {
-            const { chargeElementId } = range.chargeElements[2];
-            expect(chargeElementId).to.equal(chargeElement3);
-          });
-
-          test('the third charge element period covers the correct charge period', async () => {
-            const { startDate, endDate } = range.chargeElements[2];
-            expect(startDate).to.equal('2018-04-01');
-            expect(endDate).to.equal('2018-06-01');
-          });
-
-          test('the third charge element is all year, and the billing role ends before the time-limited end date', async () => {
-            const { totalDays, billableDays } = range.chargeElements[2];
-            expect(totalDays).to.equal(365);
-            expect(billableDays).to.equal(62);
-          });
-        });
-
-        experiment('for the second charge date range', () => {
-          let range;
-
-          beforeEach(async () => {
-            range = result.data[1];
-          });
-
-          test('the licence holder relates to the first billing role', async () => {
-            expect(range.licenceHolder.company.companyId).to.equal(companyB);
-          });
-
-          test('the charge date range starts on the second billing role start date and ends on the licence end date', async () => {
-            expect(range.startDate).to.equal('2018-06-02');
             expect(range.endDate).to.equal('2018-10-31');
           });
 
@@ -551,14 +538,14 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
 
           test('the first charge element covers the correct charge period', async () => {
             const { startDate, endDate } = range.chargeElements[0];
-            expect(startDate).to.equal('2018-06-02');
+            expect(startDate).to.equal('2018-04-01');
             expect(endDate).to.equal('2018-10-31');
           });
 
           test('the first charge element has the correct pro-rata billable days', async () => {
             const { totalDays, billableDays } = range.chargeElements[0];
             expect(totalDays).to.equal(276);
-            expect(billableDays).to.equal(152);
+            expect(billableDays).to.equal(184);
           });
 
           test('the second charge element has the correct ID', async () => {
@@ -569,7 +556,7 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
           test('the second charge element is all year', async () => {
             const { totalDays, billableDays } = range.chargeElements[1];
             expect(totalDays).to.equal(365);
-            expect(billableDays).to.equal(152);
+            expect(billableDays).to.equal(214);
           });
 
           test('the third charge element has the correct ID', async () => {
@@ -579,14 +566,14 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
 
           test('the third charge element period covers the correct charge period', async () => {
             const { startDate, endDate } = range.chargeElements[2];
-            expect(startDate).to.equal('2018-06-02');
+            expect(startDate).to.equal('2018-04-01');
             expect(endDate).to.equal('2018-10-31');
           });
 
           test('the third charge element is all year, and the billing role ends before the time-limited end date', async () => {
             const { totalDays, billableDays } = range.chargeElements[2];
             expect(totalDays).to.equal(365);
-            expect(billableDays).to.equal(152);
+            expect(billableDays).to.equal(214);
           });
         });
       });
@@ -594,24 +581,14 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
   });
 
   experiment('when there is 1x document, expiring charge version, ', () => {
-    beforeEach(async () => {
-      documents.getDocuments.resolves(data.singleDocument);
-      repository.chargeVersions.findOneById.resolves(data.chargeVersions.expiring);
-    });
-
     experiment('non-expiring licence, 1x licence holder and 1x billing role', () => {
       beforeEach(async () => {
-        documents.getDocument.withArgs(data.singleDocument[0].documentId).resolves({
-          documentRef: '01/123',
-          startDate: '1993-02-12',
-          endDate: null,
-          documentRoles: [
-            createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: null }),
-            createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
-          ]
-        });
+        const docsData = getDocsData(null, [
+          createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: null }),
+          createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
+        ]);
 
-        result = await processCharges(2019, chargeVersionId);
+        result = await processCharges(2019, data.chargeVersions.expiring, docsData);
       });
 
       test('there is no error', async () => {
@@ -680,34 +657,19 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
     });
 
     experiment('when there are 2x documents, non-expiring charge version, ', () => {
-      beforeEach(async () => {
-        documents.getDocuments.resolves(data.multipleDocuments);
-        repository.chargeVersions.findOneById.resolves(data.chargeVersions.nonExpiring);
-      });
-
       experiment('non-expiring licence, 1x licence holder and 1x billing role', () => {
         beforeEach(async () => {
-          documents.getDocument.withArgs(data.multipleDocuments[0].documentId).resolves({
-            documentRef: '01/123',
-            startDate: '1993-02-12',
-            endDate: '2018-06-01',
-            documentRoles: [
+          const docsData = [
+            ...getDocsData('2018-06-01', [
               createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: null }),
               createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
-            ]
-          });
-
-          documents.getDocument.withArgs(data.multipleDocuments[1].documentId).resolves({
-            documentRef: '01/123',
-            startDate: '2018-06-02',
-            endDate: null,
-            documentRoles: [
+            ]),
+            ...getDocsData(null, [
               createLicenceHolderRole(companyA, { startDate: '2018-06-02', endDate: null }),
               createBillingRole(companyA, invoiceAccountA, { startDate: '2018-06-02', endDate: null })
-            ]
-          });
+            ])];
 
-          result = await processCharges(2019, chargeVersionId);
+          result = await processCharges(2019, data.chargeVersions.nonExpiring, docsData);
         });
 
         test('there is no error', async () => {
@@ -778,24 +740,17 @@ experiment('modules/billing/service/charge-processor/index.js', () => {
 
     experiment('when there is 1x document, non-expiring charge version, mid-year section 127 agreement', () => {
       beforeEach(async () => {
-        documents.getDocuments.resolves(data.singleDocument);
-        repository.chargeVersions.findOneById.resolves(data.chargeVersions.nonExpiring);
         repository.licenceAgreements.findByLicenceNumber.resolves([data.licenceAgreements.section127]);
       });
 
       experiment('non-expiring licence, 1x licence holder and 1x billing role', () => {
         beforeEach(async () => {
-          documents.getDocument.withArgs(data.singleDocument[0].documentId).resolves({
-            documentRef: '01/123',
-            startDate: '1993-02-12',
-            endDate: null,
-            documentRoles: [
-              createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: null }),
-              createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
-            ]
-          });
+          const docsData = getDocsData(null, [
+            createLicenceHolderRole(companyA, { startDate: '1993-02-12', endDate: null }),
+            createBillingRole(companyA, invoiceAccountA, { startDate: '1993-02-12', endDate: null })
+          ]);
 
-          result = await processCharges(2019, chargeVersionId);
+          result = await processCharges(2019, data.chargeVersions.nonExpiring, docsData);
         });
 
         test('there is no error', async () => {

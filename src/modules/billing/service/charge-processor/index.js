@@ -11,7 +11,6 @@ const dateHelpers = require('./date-helpers');
 const { mergeHistory } = require('@envage/water-abstraction-helpers').charging;
 const camelCaseKeys = require('../../../../lib/camel-case-keys');
 const repository = require('../../../../lib/connectors/repository');
-const { ERROR_CHARGE_VERSION_NOT_FOUND } = require('./errors');
 const { modelMapper } = require('./model-mapper');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -226,13 +225,10 @@ const processChargingElements = async (data, chargeVersionId) => {
  * @param {Array} docs - CRM docs
  * @return {Array}
  */
-const processLicenceHolders = (data, docs) => {
-  const licenceHolders = mergeHistory(
+const mergeLicenceHoldersHistory = docs => {
+  return mergeHistory(
     crmMappers.getLicenceHolderRoles(docs), isSameLicenceHolder
   );
-  return helpers.charging
-    .dateRangeSplitter(data, licenceHolders, 'licenceHolder')
-    .map(applyEffectiveDates);
 };
 
 /**
@@ -247,6 +243,45 @@ const processInvoiceAccounts = (data, docs) => {
   return flatMap(data.map(row => helpers.charging
     .dateRangeSplitter(row, billing, 'invoiceAccount')
     .map(applyEffectiveDates)));
+};
+
+/**
+ * Checks for overlap between date ranges of role and year objects
+ * @param {Object} role
+ * @param {Object} year
+ * @return {Boolean}
+ */
+const isRoleInFinancialYear = (role, year) => {
+  const roleRange = moment.range(role.startDate, role.endDate);
+  const yearRange = moment.range(year.startDate, year.endDate);
+  return yearRange.overlaps(roleRange);
+};
+
+/**
+ * Constrains role object to financial year
+ * @param {Object} role to be constrained
+ * @param {Object} year financial year start & end dates
+ * @return {Object}
+ */
+const constrainDates = (role, year) => ({
+  ...role,
+  startDate: moment(role.startDate).isBefore(year.startDate) ? year.startDate : role.startDate,
+  endDate: moment(role.endDate || undefined).isAfter(year.endDate) ? year.endDate : role.endDate
+});
+
+/**
+ * Merges history, filter and constraing licence holder roles to financial
+ * year date range in preparation for model mapping
+ * @param {Number} year financial year ending
+ * @param {Array} docs - an array of documents returned from CRM
+ * @return {Array}
+ */
+const processRoles = (year, docs) => {
+  const financialYear = dateHelpers.getFinancialYearRange(year);
+  const roles = mergeLicenceHoldersHistory(docs);
+
+  return roles.filter(role => isRoleInFinancialYear(role, financialYear))
+    .map(role => constrainDates(role, financialYear));
 };
 
 /**
@@ -269,17 +304,8 @@ const getDocumentDateRange = docs => ({
  * @param {Boolean} isTwoPart
  * @param {Boolean} isSummer
  */
-const processCharges = async (year, chargeVersionId, isTwoPart = false, isSummer) => {
+const processCharges = async (year, chargeVersion, docs, isTwoPart = false, isSummer) => {
   const financialYear = dateHelpers.getFinancialYearRange(year);
-
-  // Load charge version data
-  const chargeVersion = await getChargeVersion(chargeVersionId);
-  if (!chargeVersion) {
-    return { error: ERROR_CHARGE_VERSION_NOT_FOUND, data: null };
-  }
-
-  // Load CRM docs
-  const docs = await getCRMDocuments(chargeVersion.licenceRef);
 
   // Calculate the valid date range for this licence
   const documentDateRange = getDocumentDateRange(docs);
@@ -290,16 +316,17 @@ const processCharges = async (year, chargeVersionId, isTwoPart = false, isSummer
     chargeVersion,
     documentDateRange
   ]);
-  let data = { chargeVersion, financialYear, ...dateRange, isTwoPart, isSummer };
 
-  // Process and split into date ranges
-  data = processLicenceHolders(data, docs);
+  let data = [{ chargeVersion, financialYear, ...dateRange, isTwoPart, isSummer }];
+
   data = processInvoiceAccounts(data, docs);
   data = await processAgreements(data, chargeVersion.licenceRef);
-  data = await processChargingElements(data, chargeVersionId);
-
+  data = await processChargingElements(data, chargeVersion.chargeVersionId);
   return { error: null, data };
 };
 
+module.exports.getCRMDocuments = getCRMDocuments;
+module.exports.getChargeVersion = getChargeVersion;
+module.exports.processRoles = processRoles;
 module.exports.processCharges = processCharges;
 module.exports.modelMapper = modelMapper;

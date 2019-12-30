@@ -2,7 +2,7 @@
  * This maps the data output from the charge processor
  * to service models
  */
-const { Address, Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence } = require('../../../../lib/models');
+const { Address, Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence, Role } = require('../../../../lib/models');
 const Contact = require('../../../../lib/models/contact-v2');
 const { uniqBy } = require('lodash');
 
@@ -31,6 +31,17 @@ const mapInvoiceAccount = data => {
   invoiceAccount.accountNumber = data.invoiceAccountNumber;
   return invoiceAccount;
 };
+
+const mapRoles = roles => roles.map(row => {
+  const role = new Role();
+  role.startDate = row.startDate;
+  role.endDate = row.endDate;
+  role.roleName = row.roleName;
+  role.company = mapCompany(row.company);
+  if (row.contact) role.contact = mapContact(row.contact);
+  role.address = mapAddress(row.address);
+  return role;
+});
 
 /**
  * Maps a row of CRM v2 contact data to a Company instance
@@ -75,14 +86,10 @@ const mapContact = contactData => {
  * @param {Object} data - processed charge version
  * @return {InvoiceLicence}
  */
-const mapInvoiceLicence = data => {
+const mapInvoiceLicence = (data, roles) => {
   const invoiceLicence = new InvoiceLicence();
   invoiceLicence.licence = mapLicence(data.chargeVersion);
-  invoiceLicence.company = mapCompany(data.licenceHolder.company);
-  invoiceLicence.address = mapAddress(data.licenceHolder.address);
-  if (data.licenceHolder.contact) {
-    invoiceLicence.contact = mapContact(data.licenceHolder.contact);
-  }
+  invoiceLicence.roles = mapRoles(roles);
   return invoiceLicence;
 };
 
@@ -95,18 +102,19 @@ const getInvoiceAccountNumber = row => row.invoiceAccount.invoiceAccount.invoice
  * @param {Array} data - processed charge versions
  * @return {Array<InvoiceLicence>}
  */
-const mapInvoiceLicences = (invoice, data) => {
+const mapInvoiceLicences = (invoice, data, roles) => {
   // Find rows with invoice account number that match the supplied invoice
   const { accountNumber } = invoice.invoiceAccount;
   const filtered = data.filter(row => getInvoiceAccountNumber(row) === accountNumber);
+
   // Create array of InvoiceLicences
-  const invoiceLicences = filtered.map(mapInvoiceLicence);
+  const invoiceLicences = filtered.map(row => mapInvoiceLicence(row, roles));
   // @todo attach transactions to InvoiceLicences
   // Return a unique list
   return uniqBy(invoiceLicences, invoiceLicence => invoiceLicence.uniqueId);
 };
 
-const mapInvoices = data => {
+const mapInvoices = (data, roles) => {
   // Create unique list of invoice accounts within data
   const rows = uniqBy(
     data.map(row => row.invoiceAccount),
@@ -124,7 +132,7 @@ const mapInvoices = data => {
     invoice.address = mapAddress(row.address);
 
     // Create invoiceLicences array
-    invoice.invoiceLicences = mapInvoiceLicences(invoice, data);
+    invoice.invoiceLicences = mapInvoiceLicences(invoice, data, roles);
 
     return invoice;
   });
@@ -137,13 +145,13 @@ const mapInvoices = data => {
  * @param {Array} data - array of data from charge processor
  * @return {Batch} water Batch instance
  */
-const modelMapper = (batchId, data) => {
+const modelMapper = (batchId, data, roles) => {
   // Create batch
   const batch = new Batch();
   batch.id = batchId;
 
   // Add invoices to batch
-  batch.addInvoices(mapInvoices(data));
+  batch.addInvoices(mapInvoices(data, roles));
 
   return batch;
 };

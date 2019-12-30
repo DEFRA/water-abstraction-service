@@ -7,5 +7,6 @@ module.exports = {
   Invoice: require('./invoice'),
   InvoiceAccount: require('./invoice-account'),
   InvoiceLicence: require('./invoice-licence'),
-  Licence: require('./licence')
+  Licence: require('./licence'),
+  Role: require('./role')
 };
