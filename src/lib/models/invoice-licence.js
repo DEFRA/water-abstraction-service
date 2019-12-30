@@ -57,19 +57,19 @@ class InvoiceLicence extends Model {
     return this._roles;
   }
 
-  // /**
-  //  * Gets a unique ID for this invoice licence which can be used
-  //  * for unique comparisons
-  //  * @return {String}
-  //  */
-  // get uniqueId () {
-  //   return [
-  //     get(this, '_licence.licenceNumber'),
-  //     get(this, '_company.id'),
-  //     get(this, '_address.id'),
-  //     get(this, '_contact.id')
-  //   ].join('.');
-  // }
+  /**
+   * Gets a unique ID for this invoice licence which can be used
+   * for unique comparisons
+   * @return {String}
+   */
+  get uniqueId () {
+    return [
+      get(this, '_licence.licenceNumber'),
+      get(this.roles[0], '_company.id'),
+      get(this.roles[0], '_address.id'),
+      get(this.roles[0], '_contact.id')
+    ].join('.');
+  }
 }
 
 module.exports = InvoiceLicence;

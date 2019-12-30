@@ -25,12 +25,18 @@ const createData = () => {
   const address = new Address();
   address.id = '11c0fdc8-0645-45a1-86e3-5413d4a203ba';
 
+  const role = new Role();
+  role.company = company;
+  role.contact = contact;
+  role.address = address;
+
   return {
     id: 'bc9541fc-bc20-4cf4-a72e-412795748e5d',
     licence,
     company,
     contact,
-    address
+    address,
+    roles: [role]
   };
 };
 
@@ -70,24 +76,22 @@ experiment('lib/models/invoice-licence', () => {
     });
   });
 
-  // experiment('.uniqueId', () => {
-  //   beforeEach(async () => {
-  //     invoiceLicence.licence = data.licence;
-  //     invoiceLicence.company = data.company;
-  //     invoiceLicence.address = data.address;
-  //     invoiceLicence.contact = data.contact;
-  //   });
+  experiment('.uniqueId', () => {
+    beforeEach(async () => {
+      invoiceLicence.licence = data.licence;
+      invoiceLicence.roles = data.roles;
+    });
 
-  //   test('returns a string', async () => {
-  //     expect(invoiceLicence.uniqueId).to.be.a.string();
-  //   });
+    test('returns a string', async () => {
+      expect(invoiceLicence.uniqueId).to.be.a.string();
+    });
 
-  //   test('string is a composite of licence number, company ID, address ID and contact ID', async () => {
-  //     expect(invoiceLicence.uniqueId).to.equal(
-  //       '01/123.8e1052db-08e0-4b21-bce0-c3497892a890.11c0fdc8-0645-45a1-86e3-5413d4a203ba.276fc2f4-bfe0-45a9-8fdb-6bf0d481b7ea'
-  //     );
-  //   });
-  // });
+    test('string is a composite of licence number, company ID, address ID and contact ID', async () => {
+      expect(invoiceLicence.uniqueId).to.equal(
+        '01/123.8e1052db-08e0-4b21-bce0-c3497892a890.11c0fdc8-0645-45a1-86e3-5413d4a203ba.276fc2f4-bfe0-45a9-8fdb-6bf0d481b7ea'
+      );
+    });
+  });
 
   experiment('.set transactions', () => {
     test('throws for an array containing items other than Transaction objects', async () => {
