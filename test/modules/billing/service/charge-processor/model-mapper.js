@@ -226,12 +226,6 @@ experiment('modules/billing/service/charge-processor/model-mapper.js', () => {
         expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
       });
 
-      test('the first invoiceLicence has a contact', async () => {
-        const { contact } = invoice.invoiceLicences[0];
-        expect(contact instanceof Contact).to.be.true();
-        expect(contact.fullName).to.equal('Captain J T Kirk');
-      });
-
       test('the first invoiceLicence has 2 licenceholder roles', async () => {
         expect(invoice.invoiceLicences[0].roles).to.have.length(2);
         expect(invoice.invoiceLicences[0].roles[0].roleName).to.equal(new Role().ROLE_LICENCE_HOLDER);
