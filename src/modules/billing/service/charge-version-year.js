@@ -1,5 +1,5 @@
 const chargeProcessor = require('./charge-processor');
-const { omit, get } = require('lodash');
+const { omit, get, last } = require('lodash');
 const { logger } = require('../../../logger');
 const repository = require('../../../lib/connectors/repository');
 const { Batch } = require('../../../lib/models');
@@ -16,14 +16,15 @@ const createBatchInvoiceLicence = async (billingInvoiceId, invoiceLicence) => {
     throw new Error(`Licence ${licenceNumber} not found`);
   }
 
+  const lastRole = last(invoiceLicence.roles);
   // Map data to new row in water.billing_invoice_licences
   // @todo - it feels odd here writing either a contact or a company object
   // suggest we expand the table to include company and contact fields and write both separately
   const row = {
     billing_invoice_id: billingInvoiceId,
-    company_id: invoiceLicence.roles[0].company.id,
-    contact_id: get(invoiceLicence.roles[0], 'contact.id', null),
-    address_id: invoiceLicence.roles[0].address.id,
+    company_id: lastRole.company.id,
+    contact_id: get(lastRole, 'contact.id', null),
+    address_id: lastRole.address.id,
     licence_ref: licenceNumber,
     licence_holders: invoiceLicence.roles,
     licence_id: licence.licence_id

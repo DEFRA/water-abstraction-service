@@ -121,6 +121,30 @@ experiment('modules/billing/service/charge-processor/model-mapper.js', () => {
         expect(invoice.invoiceLicences[1].licence.licenceNumber).to.equal('03/456');
       });
 
+      test('the first invoiceLicence has an address', async () => {
+        expect(invoice.invoiceLicences[0].address instanceof Address).to.be.true();
+      });
+
+      test('the first invoiceLicence has a company', async () => {
+        expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
+      });
+
+      test('the first invoiceLicence has no contact', async () => {
+        expect(invoice.invoiceLicences[0].contact).to.be.undefined();
+      });
+
+      test('the second invoiceLicence has an address', async () => {
+        expect(invoice.invoiceLicences[1].address instanceof Address).to.be.true();
+      });
+
+      test('the second invoiceLicence has a company', async () => {
+        expect(invoice.invoiceLicences[1].company instanceof Company).to.be.true();
+      });
+
+      test('the second invoiceLicence has no contact', async () => {
+        expect(invoice.invoiceLicences[1].contact).to.be.undefined();
+      });
+
       test('the first invoiceLicence has 2 licenceholder roles', async () => {
         expect(invoice.invoiceLicences[0].roles).to.have.length(2);
         expect(invoice.invoiceLicences[0].roles[0].roleName).to.equal(new Role().ROLE_LICENCE_HOLDER);
@@ -192,6 +216,20 @@ experiment('modules/billing/service/charge-processor/model-mapper.js', () => {
       test('has an invoiceLicence for each licence', async () => {
         expect(invoice.invoiceLicences).to.have.length(1);
         expect(invoice.invoiceLicences[0].licence.licenceNumber).to.equal('02/345');
+      });
+
+      test('the first invoiceLicence has an address', async () => {
+        expect(invoice.invoiceLicences[0].address instanceof Address).to.be.true();
+      });
+
+      test('the first invoiceLicence has a company', async () => {
+        expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
+      });
+
+      test('the first invoiceLicence has a contact', async () => {
+        const { contact } = invoice.invoiceLicences[0];
+        expect(contact instanceof Contact).to.be.true();
+        expect(contact.fullName).to.equal('Captain J T Kirk');
       });
 
       test('the first invoiceLicence has 2 licenceholder roles', async () => {

@@ -4,7 +4,7 @@
  */
 const { Address, Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence, Role } = require('../../../../lib/models');
 const Contact = require('../../../../lib/models/contact-v2');
-const { uniqBy } = require('lodash');
+const { uniqBy, last } = require('lodash');
 
 /**
  * Maps address data from CRM to water service Address model
@@ -84,12 +84,19 @@ const mapContact = contactData => {
 /**
  * Maps a row of data from the charge processor to an InvoiceLicence instance
  * @param {Object} data - processed charge version
+ * @param {Array} roles - processed roles objects
  * @return {InvoiceLicence}
  */
 const mapInvoiceLicence = (data, roles) => {
   const invoiceLicence = new InvoiceLicence();
   invoiceLicence.licence = mapLicence(data.chargeVersion);
   invoiceLicence.roles = mapRoles(roles);
+
+  const { address, company, contact } = last(roles);
+  invoiceLicence.company = mapCompany(company);
+  invoiceLicence.address = mapAddress(address);
+  if (contact) invoiceLicence.contact = mapContact(contact);
+
   return invoiceLicence;
 };
 

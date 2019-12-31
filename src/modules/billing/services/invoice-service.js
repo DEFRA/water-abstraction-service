@@ -24,6 +24,9 @@ const mapRowToModels = row => {
 
   const invoiceLicence = new InvoiceLicence();
   invoiceLicence.id = row['billing_invoice_licences.billing_invoice_licence_id'];
+  invoiceLicence.address = new Address(row['billing_invoice_licences.address_id']);
+  invoiceLicence.company = new Company(row['billing_invoice_licences.company_id']);
+  invoiceLicence.contact = new Contact(row['billing_invoice_licences.contact_id']);
   invoiceLicence.roles = mapRolesToModel(row['billing_invoice_licences.licence_holders']);
   invoiceLicence.licence = new Licence();
   invoiceLicence.licence.id = row['billing_invoice_licences.licence_id'];

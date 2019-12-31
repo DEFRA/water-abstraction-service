@@ -16,6 +16,9 @@ const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const Transaction = require('../../../../src/lib/models/transaction');
 const ChargeModuleTransaction = require('../../../../src/lib/models/charge-module-transaction');
 const Company = require('../../../../src/lib/models/company');
+const Contact = require('../../../../src/lib/models/contact-v2');
+const Address = require('../../../../src/lib/models/address');
+const Role = require('../../../../src/lib/models/role');
 
 const repos = require('../../../../src/lib/connectors/repository');
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
@@ -32,6 +35,24 @@ const COMPANY_1_ID = uuid();
 const COMPANY_2_ID = uuid();
 const CONTACT_1_ID = uuid();
 const CONTACT_2_ID = uuid();
+const LICENCE_HOLDER_1 = {
+  startDate: '2018-01-01',
+  endDate: null,
+  roleName: 'licenceHolder',
+  contact: new Contact(CONTACT_1_ID),
+  company: new Company(COMPANY_1_ID),
+  address: new Address(uuid())
+};
+const LICENCE_HOLDER_2 = {
+  startDate: '2017-01-01',
+  endDate: '2017-12-31',
+  roleName: 'licenceHolder',
+  contact: new Contact(CONTACT_2_ID),
+  company: new Company(COMPANY_2_ID),
+  address: new Address(uuid())
+};
+
+const createRole = data => Object.assign(new Role(), data);
 
 const testResponse = [
   {
@@ -45,7 +66,8 @@ const testResponse = [
     'billing_invoice_licences.licence_ref': '111/LIC',
     'billing_invoice_licences.contact_id': CONTACT_1_ID,
     'billing_invoice_licences.address_id': uuid(),
-    'billing_invoice_licences.company_id': uuid()
+    'billing_invoice_licences.company_id': uuid(),
+    'billing_invoice_licences.licence_holders': [createRole(LICENCE_HOLDER_1)]
   },
   {
     'billing_invoices.billing_invoice_id': INVOICE_1_ID,
@@ -58,7 +80,8 @@ const testResponse = [
     'billing_invoice_licences.licence_ref': '222/LIC',
     'billing_invoice_licences.contact_id': CONTACT_1_ID,
     'billing_invoice_licences.address_id': uuid(),
-    'billing_invoice_licences.company_id': uuid()
+    'billing_invoice_licences.company_id': uuid(),
+    'billing_invoice_licences.licence_holders': [createRole(LICENCE_HOLDER_1)]
   },
   {
     'billing_invoices.billing_invoice_id': INVOICE_2_ID,
@@ -71,7 +94,8 @@ const testResponse = [
     'billing_invoice_licences.licence_ref': '333/LIC',
     'billing_invoice_licences.contact_id': CONTACT_2_ID,
     'billing_invoice_licences.address_id': uuid(),
-    'billing_invoice_licences.company_id': uuid()
+    'billing_invoice_licences.company_id': uuid(),
+    'billing_invoice_licences.licence_holders': [createRole(LICENCE_HOLDER_2), createRole(LICENCE_HOLDER_1)]
   }
 ];
 
@@ -186,7 +210,7 @@ experiment('modules/billing/services/invoiceService', () => {
       expect(invoices[1].invoiceAccount.company.name).to.equal(invoiceAccount2.company.name);
     });
 
-    test('the InvoiceLicences objects have the expected transactions', async () => {
+    test('the InvoiceLicence objects have the expected transactions', async () => {
       // the first licence on the first invoice has a transaction
       expect(invoices[0].invoiceLicences[0].transactions).to.have.length(1);
       expect(invoices[0].invoiceLicences[0].transactions[0]).to.be.instanceOf(Transaction);
@@ -200,6 +224,20 @@ experiment('modules/billing/services/invoiceService', () => {
       expect(invoices[1].invoiceLicences[0].transactions).to.have.length(1);
       expect(invoices[1].invoiceLicences[0].transactions[0].value).to.equal(200);
       expect(invoices[1].invoiceLicences[0].transactions[0].isCredit).to.be.true();
+    });
+
+    test('the InvoiceLicence objects have the expected roles', async () => {
+      expect(invoices[0].invoiceLicences[0].roles).to.equal(
+        testResponse[0]['billing_invoice_licences.licence_holders']
+      );
+
+      expect(invoices[0].invoiceLicences[1].roles).to.equal(
+        testResponse[1]['billing_invoice_licences.licence_holders']
+      );
+
+      expect(invoices[1].invoiceLicences[0].roles).to.equal(
+        testResponse[2]['billing_invoice_licences.licence_holders']
+      );
     });
   });
 });
