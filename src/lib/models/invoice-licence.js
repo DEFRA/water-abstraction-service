@@ -40,52 +40,52 @@ class InvoiceLicence extends Model {
   }
 
   /**
-    * Sets the company instance for this licence holder
-    * @param {Company} company
-    */
+   * Sets the company instance for this licence holder
+   * @param {Company} company
+   */
   set company (company) {
     assertIsInstanceOf(company, Company);
     this._company = company;
   }
 
   /**
-    * Gets the address instance for this licence holder
-    * @return {Address}
-    */
+   * Gets the address instance for this licence holder
+   * @return {Address}
+   */
   get company () {
     return this._company;
   }
 
   /**
-    * Sets the contact instance for this licence holder
-    * @param {Contact} contact
-    */
+   * Sets the contact instance for this licence holder
+   * @param {Contact} contact
+   */
   set contact (contact) {
     assertIsInstanceOf(contact, Contact);
     this._contact = contact;
   }
 
   /**
-    * Gets the contact instance for this licence holder
-    * @return {Contact}
-    */
+   * Gets the contact instance for this licence holder
+   * @return {Contact}
+   */
   get contact () {
     return this._contact;
   }
 
   /**
-    * Sets the address instance for this licence holder
-    * @param {Address} address
-    */
+   * Sets the address instance for this licence holder
+   * @param {Address} address
+   */
   set address (address) {
     assertIsInstanceOf(address, Address);
     this._address = address;
   }
 
   /**
-    * Gets the address instance for this licence holder
-    * @return {Address}
-    */
+   * Gets the address instance for this licence holder
+   * @return {Address}
+   */
   get address () {
     return this._address;
   }
@@ -116,9 +116,9 @@ class InvoiceLicence extends Model {
   get uniqueId () {
     return [
       get(this, '_licence.licenceNumber'),
-      get(this.roles[0], '_company.id'),
-      get(this.roles[0], '_address.id'),
-      get(this.roles[0], '_contact.id')
+      get(this, '_company.id'),
+      get(this, '_address.id'),
+      get(this, '_contact.id')
     ].join('.');
   }
 }

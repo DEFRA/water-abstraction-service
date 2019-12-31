@@ -76,9 +76,54 @@ experiment('lib/models/invoice-licence', () => {
     });
   });
 
+  experiment('.company', () => {
+    test('can be set to a Company instance', async () => {
+      invoiceLicence.company = data.company;
+      expect(invoiceLicence.company).to.equal(data.company);
+    });
+
+    test('throws an error if set to an invalid type', async () => {
+      const func = () => {
+        invoiceLicence.company = data.licence;
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.contact', () => {
+    test('can be set to a Contact instance', async () => {
+      invoiceLicence.contact = data.contact;
+      expect(invoiceLicence.contact).to.equal(data.contact);
+    });
+
+    test('throws an error if set to an invalid type', async () => {
+      const func = () => {
+        invoiceLicence.contact = data.company;
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.address', () => {
+    test('can be set to a Address instance', async () => {
+      invoiceLicence.address = data.address;
+      expect(invoiceLicence.address).to.equal(data.address);
+    });
+
+    test('throws an error if set to an invalid type', async () => {
+      const func = () => {
+        invoiceLicence.address = data.company;
+      };
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.uniqueId', () => {
     beforeEach(async () => {
       invoiceLicence.licence = data.licence;
+      invoiceLicence.company = data.company;
+      invoiceLicence.contact = data.contact;
+      invoiceLicence.address = data.address;
       invoiceLicence.roles = data.roles;
     });
 
