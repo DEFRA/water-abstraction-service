@@ -11,17 +11,18 @@ const modelMapper = require('../../../../../src/modules/billing/service/charge-p
 
 const BATCH_ID = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
 
-const createCrmAddress = index => ({
-  addressId: `7d78cca3-4ed5-457d-a594-2b9687b7870${index}`,
-  address1: `address1_${index}`,
-  address2: `address2_${index}`,
-  address3: `address3_${index}`,
-  address4: `address4_${index}`,
-  town: `town_${index}`,
-  county: `county_${index}`,
-  postcode: `postcode_${index}`,
-  country: `country_${index}`
-});
+const createCrmAddress = index =>
+  Object.assign(new Address(), {
+    addressId: `7d78cca3-4ed5-457d-a594-2b9687b7870${index}`,
+    address1: `address1_${index}`,
+    address2: `address2_${index}`,
+    address3: `address3_${index}`,
+    address4: `address4_${index}`,
+    town: `town_${index}`,
+    county: `county_${index}`,
+    postcode: `postcode_${index}`,
+    country: `country_${index}`
+  });
 
 const createCrmInvoiceAccount = index => ({
   invoiceAccountId: `20776517-ce06-4a3d-a898-7ffa921b802${index}`,
@@ -32,26 +33,27 @@ const createChargeVersion = licenceRef => ({
   licenceRef
 });
 
-const createCrmContact = () => ({
-  contactId: '8d72ac2f-a16e-4226-ab56-0065b5af058d',
-  salutation: 'Captain',
-  initials: 'J T',
-  firstName: 'James',
-  lastName: 'Kirk'
-});
+const createCrmContact = () =>
+  Object.assign(new Contact(), {
+    contactId: '8d72ac2f-a16e-4226-ab56-0065b5af058d',
+    salutation: 'Captain',
+    initials: 'J T',
+    firstName: 'James',
+    lastName: 'Kirk'
+  });
 
-const createCrmLicenceHolder = (withContact, options = {}) => ({
-  roleName: new Role().ROLE_LICENCE_HOLDER,
-  startDate: '2000-09-30',
-  endDate: null,
-  company: {
-    companyId: 'a4d2ad99-4cda-4634-b1a2-a665aa125554',
-    name: 'Big Farm Ltd'
-  },
-  contact: withContact ? createCrmContact() : null,
-  address: createCrmAddress(1),
-  ...options
-});
+const createCrmLicenceHolder = (options = {}) =>
+  Object.assign(new Role(), {
+    roleName: new Role().ROLE_LICENCE_HOLDER,
+    startDate: '2000-09-30',
+    endDate: null,
+    company: Object.assign(new Company(), {
+      companyId: 'a4d2ad99-4cda-4634-b1a2-a665aa125554',
+      name: 'Big Farm Ltd'
+    }),
+    address: createCrmAddress(1),
+    ...options
+  });
 
 const createData = () => [{
   chargeVersion: createChargeVersion('01/123'),
@@ -79,7 +81,7 @@ experiment('modules/billing/service/charge-processor/model-mapper.js', () => {
 
     beforeEach(async () => {
       data = createData();
-      roles = [createCrmLicenceHolder(true, { endDate: '2001-02-23' }), createCrmLicenceHolder(false, { startDate: '2001-02-24' })];
+      roles = [createCrmLicenceHolder({ endDate: '2001-02-23', contact: createCrmContact() }), createCrmLicenceHolder({ startDate: '2001-02-24' })];
 
       result = modelMapper.modelMapper(BATCH_ID, data, roles);
     });
@@ -224,6 +226,11 @@ experiment('modules/billing/service/charge-processor/model-mapper.js', () => {
 
       test('the first invoiceLicence has a company', async () => {
         expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
+      });
+
+      test('the first invoiceLicence does not have a contact', async () => {
+        const { contact } = invoice.invoiceLicences[0];
+        expect(contact).to.be.undefined();
       });
 
       test('the first invoiceLicence has 2 licenceholder roles', async () => {

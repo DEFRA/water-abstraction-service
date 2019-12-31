@@ -92,10 +92,10 @@ const mapInvoiceLicence = (data, roles) => {
   invoiceLicence.licence = mapLicence(data.chargeVersion);
   invoiceLicence.roles = mapRoles(roles);
 
-  const { address, company, contact } = last(roles);
-  invoiceLicence.company = mapCompany(company);
-  invoiceLicence.address = mapAddress(address);
-  if (contact) invoiceLicence.contact = mapContact(contact);
+  const lastLicenceHolder = last(roles.filter(role => role.roleName === role.ROLE_LICENCE_HOLDER));
+  invoiceLicence.company = mapCompany(lastLicenceHolder.company);
+  invoiceLicence.address = mapAddress(lastLicenceHolder.address);
+  if (lastLicenceHolder.contact) invoiceLicence.contact = mapContact(lastLicenceHolder.contact);
 
   return invoiceLicence;
 };

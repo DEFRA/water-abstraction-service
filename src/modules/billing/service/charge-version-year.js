@@ -15,16 +15,15 @@ const createBatchInvoiceLicence = async (billingInvoiceId, invoiceLicence) => {
   if (!licence) {
     throw new Error(`Licence ${licenceNumber} not found`);
   }
-
-  const lastRole = last(invoiceLicence.roles);
+  const lastLicenceHolder = last(invoiceLicence.roles.filter(role => role.roleName === role.ROLE_LICENCE_HOLDER));
   // Map data to new row in water.billing_invoice_licences
   // @todo - it feels odd here writing either a contact or a company object
   // suggest we expand the table to include company and contact fields and write both separately
   const row = {
     billing_invoice_id: billingInvoiceId,
-    company_id: lastRole.company.id,
-    contact_id: get(lastRole, 'contact.id', null),
-    address_id: lastRole.address.id,
+    company_id: lastLicenceHolder.company.id,
+    contact_id: get(lastLicenceHolder, 'contact.id', null),
+    address_id: lastLicenceHolder.address.id,
     licence_ref: licenceNumber,
     licence_holders: invoiceLicence.roles,
     licence_id: licence.licence_id

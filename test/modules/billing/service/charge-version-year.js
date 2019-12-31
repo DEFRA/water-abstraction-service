@@ -88,6 +88,7 @@ const createInvoiceAccount = () =>
 
 const createRole = () =>
   Object.assign(new Role(), {
+    roleName: 'licenceHolder',
     company: createCompany(),
     contact: createContact(),
     address: createAddress()
