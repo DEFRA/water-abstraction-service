@@ -2,24 +2,13 @@
  * This maps the data output from the charge processor
  * to service models
  */
-const { Batch, Company, Invoice, InvoiceLicence, Licence } = require('../../../../lib/models');
-const Contact = require('../../../../lib/models/contact-v2');
+const { Batch, Invoice, InvoiceLicence, Licence } = require('../../../../lib/models');
 const { uniqBy } = require('lodash');
 
 const { mapCRMAddressToModel } = require('../../services/address-service');
 const { mapCRMInvoiceAccountToModel } = require('../../services/invoice-accounts-service');
-
-/**
- * Maps a row of CRM v2 contact data to a Company instance
- * @param {Object} companyData
- * @return {Company}
- */
-const mapCompany = companyData => {
-  const company = new Company();
-  company.id = companyData.companyId;
-  company.name = companyData.name;
-  return company;
-};
+const { mapCRMCompanyToModel } = require('../../services/companies-service');
+const { mapCRMContactToModel } = require('../../services/contacts-service');
 
 /**
  * Maps a charge version from the charge processor to a Licence instance
@@ -33,21 +22,6 @@ const mapLicence = chargeVersion => {
 };
 
 /**
- * Maps a row of CRM v2 contact data to a Contact instance
- * @param {Object} contactData
- * @return {Contact}
- */
-const mapContact = contactData => {
-  const contact = new Contact();
-  contact.id = contactData.contactId;
-  contact.salutation = contactData.salutation;
-  contact.firstName = contactData.firstName;
-  contact.lastName = contactData.lastName;
-  contact.initials = contactData.initials;
-  return contact;
-};
-
-/**
  * Maps a row of data from the charge processor to an InvoiceLicence instance
  * @param {Object} data - processed charge version
  * @return {InvoiceLicence}
@@ -55,10 +29,10 @@ const mapContact = contactData => {
 const mapInvoiceLicence = data => {
   const invoiceLicence = new InvoiceLicence();
   invoiceLicence.licence = mapLicence(data.chargeVersion);
-  invoiceLicence.company = mapCompany(data.licenceHolder.company);
+  invoiceLicence.company = mapCRMCompanyToModel(data.licenceHolder.company);
   invoiceLicence.address = mapCRMAddressToModel(data.licenceHolder.address);
   if (data.licenceHolder.contact) {
-    invoiceLicence.contact = mapContact(data.licenceHolder.contact);
+    invoiceLicence.contact = mapCRMContactToModel(data.licenceHolder.contact);
   }
   return invoiceLicence;
 };
