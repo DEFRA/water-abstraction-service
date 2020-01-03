@@ -55,21 +55,24 @@ const createData = () => [{
   invoiceAccount: {
     invoiceAccount: createCrmInvoiceAccount(1),
     address: createCrmAddress(1)
-  }
+  },
+  chargeElements: []
 }, {
   chargeVersion: createChargeVersion('02/345'),
   licenceHolder: createCrmLicenceHolder(true),
   invoiceAccount: {
     invoiceAccount: createCrmInvoiceAccount(2),
     address: createCrmAddress(2)
-  }
+  },
+  chargeElements: []
 }, {
   chargeVersion: createChargeVersion('03/456'),
   licenceHolder: createCrmLicenceHolder(),
   invoiceAccount: {
     invoiceAccount: createCrmInvoiceAccount(1),
     address: createCrmAddress(1)
-  }
+  },
+  chargeElements: []
 }];
 
 experiment('modules/billing/services/batch-service', () => {

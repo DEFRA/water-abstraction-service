@@ -4,6 +4,7 @@ const InvoiceLicence = require('../../../lib/models/invoice-licence');
 const { mapCRMAddressToModel } = require('./address-service');
 const { mapCRMCompanyToModel } = require('./companies-service');
 const { mapCRMContactToModel } = require('./contacts-service');
+const { mapChargeToTransactions } = require('./transactions-service');
 
 /**
  * Maps a charge version from the charge processor to a Licence instance
@@ -29,6 +30,9 @@ const mapChargeRowToModel = data => {
   if (data.licenceHolder.contact) {
     invoiceLicence.contact = mapCRMContactToModel(data.licenceHolder.contact);
   }
+
+  // @TODO add relevant flags for compensation, TPT, credit
+  invoiceLicence.transactions = data.chargeElements.map(mapChargeToTransactions);
   return invoiceLicence;
 };
 
