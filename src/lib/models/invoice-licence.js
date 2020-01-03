@@ -17,8 +17,8 @@ const {
 const Model = require('./model');
 
 class InvoiceLicence extends Model {
-  constructor () {
-    super();
+  constructor (id) {
+    super(id);
     this._transactions = [];
   }
 

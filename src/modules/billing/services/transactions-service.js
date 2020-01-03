@@ -120,12 +120,12 @@ const mapTransactionToDB = (invoiceLicence, transaction) => ({
   end_date: transaction.chargePeriod.endDate,
   abstraction_period: transaction.chargeElement.abstractionPeriod.toJSON(),
   source: transaction.chargeElement.source,
-  season: transaction.chargeElementseason,
+  season: transaction.chargeElement.season,
   loss: transaction.chargeElement.loss,
   is_credit: transaction.isCredit,
   charge_type: transaction.isCompensationCharge ? 'compensation' : 'standard',
-  authorised_quantity: transaction.chargeElement.authorisedQuantity,
-  billable_quantity: transaction.chargeElement.billableQuantity,
+  authorised_quantity: transaction.chargeElement.authorisedAnnualQuantity,
+  billable_quantity: transaction.chargeElement.billableAnnualQuantity,
   authorisedDays: transaction.authorisedDays,
   billableDays: transaction.billableDays,
   description: transaction.description
@@ -146,4 +146,5 @@ const saveTransactionToDB = (invoiceLicence, transaction) => {
 exports.getTransactionsForBatch = getTransactionsForBatch;
 exports.getTransactionsForBatchInvoice = getTransactionsForBatchInvoice;
 exports.mapChargeToTransactions = mapChargeToTransactions;
+exports.mapTransactionToDB = mapTransactionToDB;
 exports.saveTransactionToDB = saveTransactionToDB;

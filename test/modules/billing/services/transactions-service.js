@@ -11,6 +11,52 @@ const sandbox = sinon.createSandbox();
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
 const chargeModuleTransactionsConnector = require('../../../../src/lib/connectors/charge-module/transactions');
 const ChargeModuleTransaction = require('../../../../src/lib/models/charge-module-transaction');
+const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
+const Transaction = require('../../../../src/lib/models/transaction');
+const ChargeElement = require('../../../../src/lib/models/charge-element');
+const AbstractionPeriod = require('../../../../src/lib/models/abstraction-period');
+const DateRange = require('../../../../src/lib/models/date-range');
+
+const createChargeElement = () => {
+  const chargeElement = new ChargeElement('29328315-9b24-473b-bde7-02c60e881501');
+  chargeElement.fromHash({
+    source: 'supported',
+    season: 'summer',
+    loss: 'low',
+    authorisedAnnualQuantity: '12.5',
+    billableAnnualQuantity: '10'
+  });
+  chargeElement.abstractionPeriod = new AbstractionPeriod();
+  chargeElement.abstractionPeriod.fromHash({
+    startDay: 1,
+    startMonth: 1,
+    endDay: 31,
+    endMonth: 12
+  });
+  return chargeElement;
+};
+
+const createTransaction = (options = {}) => {
+  const transaction = new Transaction();
+  transaction.fromHash({
+    chargeElement: createChargeElement(),
+    chargePeriod: new DateRange('2019-04-01', '2020-03-31'),
+    isCredit: false,
+    isCompensationCharge: !!options.isCompensationCharge,
+    authorisedDays: 366,
+    billableDays: 366,
+    description: 'Tiny pond'
+  });
+  return transaction;
+};
+
+const createInvoiceLicence = (options = {}) => {
+  const invoiceLicence = new InvoiceLicence('c4fd4bf6-9565-4ff8-bdba-e49355446d7b');
+  invoiceLicence.transactions = [
+    createTransaction(options)
+  ];
+  return invoiceLicence;
+};
 
 experiment('modules/billing/services/transactions-service', () => {
   let transactions;
@@ -228,6 +274,55 @@ experiment('modules/billing/services/transactions-service', () => {
 
       test('the transaction is a two-part tariff supplementary charge', async () => {
         expect(result[0].isTwoPartTariffSupplementaryCharge).to.be.true();
+      });
+    });
+  });
+
+  experiment('.mapTransactionToDB', () => {
+    let invoiceLicence, result;
+
+    experiment('when the transaction is a standard charge', () => {
+      beforeEach(async () => {
+        invoiceLicence = createInvoiceLicence();
+        result = transactionsService.mapTransactionToDB(invoiceLicence, invoiceLicence.transactions[0]);
+      });
+
+      test('the result is mapped correctly', async () => {
+        expect(result).to.equal({
+          billing_invoice_licence_id: 'c4fd4bf6-9565-4ff8-bdba-e49355446d7b',
+          charge_element_id: '29328315-9b24-473b-bde7-02c60e881501',
+          start_date: '2019-04-01',
+          end_date: '2020-03-31',
+          abstraction_period: {
+            startDay: 1,
+            startMonth: 1,
+            endDay: 31,
+            endMonth: 12
+          },
+          source: 'supported',
+          loss: 'low',
+          season: 'summer',
+          is_credit: false,
+          charge_type: 'standard',
+          authorised_quantity: 12.5,
+          billable_quantity: 10,
+          authorisedDays: 366,
+          billableDays: 366,
+          description: 'Tiny pond'
+        });
+      });
+    });
+
+    experiment('when the transaction is a compensation charge', () => {
+      beforeEach(async () => {
+        invoiceLicence = createInvoiceLicence({
+          isCompensationCharge: true
+        });
+        result = transactionsService.mapTransactionToDB(invoiceLicence, invoiceLicence.transactions[0]);
+      });
+
+      test('the charge type is "compensation"', async () => {
+        expect(result.charge_type).to.equal('compensation');
       });
     });
   });

@@ -86,26 +86,26 @@ class ChargeElement extends Model {
    * Authorised annual quantity - Ml
    * @return {Number}
    */
-  get authorisedQuantity () {
-    return this._authorisedQuantity;
+  get authorisedAnnualQuantity () {
+    return this._authorisedAnnualQuantity;
   }
 
-  set authorisedQuantity (quantity) {
+  set authorisedAnnualQuantity (quantity) {
     assertQuantity(quantity);
-    this._authorisedQuantity = quantity;
+    this._authorisedAnnualQuantity = parseFloat(quantity);
   }
 
   /**
    * Billable annual quantity - Ml
    * @return {Number}
    */
-  get billableQuantity () {
-    return this._billableQuantity;
+  get billableAnnualQuantity () {
+    return this._billableAnnualQuantity;
   }
 
-  set billableQuantity (quantity) {
+  set billableAnnualQuantity (quantity) {
     assertNullableQuantity(quantity);
-    this._billableQuantity = quantity;
+    this._billableAnnualQuantity = parseFloat(quantity);
   }
 }
 
