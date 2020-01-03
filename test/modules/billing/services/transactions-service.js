@@ -10,6 +10,9 @@ const sandbox = sinon.createSandbox();
 
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
 const chargeModuleTransactionsConnector = require('../../../../src/lib/connectors/charge-module/transactions');
+const repos = require('../../../../src/lib/connectors/repository');
+
+// Models
 const ChargeModuleTransaction = require('../../../../src/lib/models/charge-module-transaction');
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Transaction = require('../../../../src/lib/models/transaction');
@@ -93,6 +96,8 @@ experiment('modules/billing/services/transactions-service', () => {
         transactions
       }
     });
+
+    sandbox.stub(repos.billingTransactions, 'create');
   });
 
   afterEach(async () => {
@@ -324,6 +329,40 @@ experiment('modules/billing/services/transactions-service', () => {
       test('the charge type is "compensation"', async () => {
         expect(result.charge_type).to.equal('compensation');
       });
+    });
+  });
+
+  experiment('.saveTransactionToDB', () => {
+    let invoiceLicence;
+
+    beforeEach(async () => {
+      invoiceLicence = createInvoiceLicence();
+      await transactionsService.saveTransactionToDB(invoiceLicence, invoiceLicence.transactions[0]);
+    });
+
+    test('the create() method is called on the repo', async () => {
+      expect(repos.billingTransactions.create.called).to.be.true();
+    });
+
+    test('an object of the correct shape is passed to the create() method of the repo', async () => {
+      const [data] = repos.billingTransactions.create.lastCall.args;
+      expect(data).to.be.an.object();
+      expect(Object.keys(data)).to.include(['billing_invoice_licence_id',
+        'charge_element_id',
+        'start_date',
+        'end_date',
+        'abstraction_period',
+        'source',
+        'season',
+        'loss',
+        'is_credit',
+        'charge_type',
+        'authorised_quantity',
+        'billable_quantity',
+        'authorisedDays',
+        'billableDays',
+        'description'
+      ]);
     });
   });
 });
