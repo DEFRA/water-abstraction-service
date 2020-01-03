@@ -2,7 +2,7 @@
  * This maps the data output from the charge processor
  * to service models
  */
-const { Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence } = require('../../../../lib/models');
+const { Batch, Company, Invoice, InvoiceLicence, Licence } = require('../../../../lib/models');
 const Contact = require('../../../../lib/models/contact-v2');
 const { uniqBy } = require('lodash');
 
