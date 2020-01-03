@@ -2,28 +2,11 @@
  * This maps the data output from the charge processor
  * to service models
  */
-const { Address, Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence } = require('../../../../lib/models');
+const { Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence } = require('../../../../lib/models');
 const Contact = require('../../../../lib/models/contact-v2');
 const { uniqBy } = require('lodash');
 
-/**
- * Maps address data from CRM to water service Address model
- * @param {Object} data - address data from CRM
- * @return {Address}
- */
-const mapAddress = data => {
-  const address = new Address();
-  address.id = data.addressId;
-  address.addressLine1 = data.address1;
-  address.addressLine2 = data.address2;
-  address.addressLine3 = data.address3;
-  address.addressLine4 = data.address4;
-  address.town = data.town;
-  address.county = data.county;
-  address.postcode = data.postcode;
-  address.country = data.country;
-  return address;
-};
+const { mapCRMAddressToModel } = require('../../services/address-service');
 
 const mapInvoiceAccount = data => {
   const invoiceAccount = new InvoiceAccount();
@@ -79,7 +62,7 @@ const mapInvoiceLicence = data => {
   const invoiceLicence = new InvoiceLicence();
   invoiceLicence.licence = mapLicence(data.chargeVersion);
   invoiceLicence.company = mapCompany(data.licenceHolder.company);
-  invoiceLicence.address = mapAddress(data.licenceHolder.address);
+  invoiceLicence.address = mapCRMAddressToModel(data.licenceHolder.address);
   if (data.licenceHolder.contact) {
     invoiceLicence.contact = mapContact(data.licenceHolder.contact);
   }
@@ -121,7 +104,7 @@ const mapInvoices = data => {
     invoice.invoiceAccount = mapInvoiceAccount(row.invoiceAccount);
 
     // Create invoice address model
-    invoice.address = mapAddress(row.address);
+    invoice.address = mapCRMAddressToModel(row.address);
 
     // Create invoiceLicences array
     invoice.invoiceLicences = mapInvoiceLicences(invoice, data);
