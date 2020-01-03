@@ -13,6 +13,7 @@ const Contact = require('../../../../src/lib/models/contact-v2');
 
 const chargeVersionYear = require('../../../../src/modules/billing/service/charge-version-year');
 const chargeProcessor = require('../../../../src/modules/billing/service/charge-processor');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
 const repository = require('../../../../src/lib/connectors/repository');
 const { logger } = require('../../../../src/logger');
 
@@ -81,7 +82,7 @@ experiment('modules/billing/service/charge-version-year.js', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
     sandbox.stub(chargeProcessor, 'processCharges');
-    sandbox.stub(chargeProcessor, 'modelMapper').returns(data.modelMapperResponse);
+    sandbox.stub(batchService, 'mapChargeDataToModel').returns(data.modelMapperResponse);
     sandbox.stub(repository.billingInvoices, 'create').resolves({
       rows: [{
         billing_invoice_id: data.billingInvoiceId

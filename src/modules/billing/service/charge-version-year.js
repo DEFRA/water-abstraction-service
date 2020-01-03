@@ -5,6 +5,8 @@ const repository = require('../../../lib/connectors/repository');
 const { Batch } = require('../../../lib/models');
 const { assert } = require('@hapi/hoek');
 
+const batchService = require('../services/batch-service');
+
 const createBatchInvoiceLicence = async (billingInvoiceId, invoiceLicence) => {
   const { licenceNumber } = invoiceLicence.licence;
 
@@ -87,8 +89,8 @@ const createBatchFromChargeVersionYear = async chargeVersionYear => {
     throw err;
   }
 
-  // Create batch and persist to DB
-  return chargeProcessor.modelMapper(batchId, data);
+  // Create Batch instance
+  return batchService.mapChargeDataToModel(batchId, data);
 };
 
 /**
