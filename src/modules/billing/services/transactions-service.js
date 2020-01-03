@@ -5,9 +5,10 @@ const DateRange = require('../../../lib/models/date-range');
 
 const chargeModuleTransactionsConnector = require('../../../lib/connectors/charge-module/transactions');
 const ChargeModuleTransaction = require('../../../lib/models/charge-module-transaction');
-const agreeementsService = require('./agreements-service');
+const agreementsService = require('./agreements-service');
 const chargeElementsService = require('./charge-elements-service');
 const { logger } = require('../../../logger');
+const repos = require('../../../lib/connectors/repository');
 
 const mapTransaction = chargeModuleTransaction => {
   const transaction = new ChargeModuleTransaction(chargeModuleTransaction.id);
@@ -62,7 +63,7 @@ const createTransaction = (chargeLine, chargeElement, data = {}) => {
     ...data,
     authorisedDays: chargeElement.totalDays,
     billableDays: chargeElement.billableDays,
-    agreements: agreeementsService.mapChargeToAgreements(chargeLine),
+    agreements: agreementsService.mapChargeToAgreements(chargeLine),
     chargePeriod: new DateRange(chargeLine.startDate, chargeLine.endDate),
     description: chargeElement.description,
     chargeElement: chargeElementsService.mapRowToModel(chargeElement)
@@ -105,6 +106,44 @@ const mapChargeToTransactions = (chargeLine, options = {}, isCompensation = true
   }, []);
 };
 
+/**
+ * Maps a Transaction instance (with associated InvoiceLicence) to
+ * a row of data ready for persistence to water.billing_transactions
+ * @param {InvoiceLicence} invoiceLicence
+ * @param {Transaction} transaction
+ * @return {Object}
+ */
+const mapTransactionToDB = (invoiceLicence, transaction) => ({
+  billing_invoice_licence_id: invoiceLicence.id,
+  charge_element_id: transaction.chargeElement.id,
+  start_date: transaction.chargePeriod.startDate,
+  end_date: transaction.chargePeriod.endDate,
+  abstraction_period: transaction.chargeElement.abstractionPeriod.toJSON(),
+  source: transaction.chargeElement.source,
+  season: transaction.chargeElementseason,
+  loss: transaction.chargeElement.loss,
+  is_credit: transaction.isCredit,
+  charge_type: transaction.isCompensationCharge ? 'compensation' : 'standard',
+  authorised_quantity: transaction.chargeElement.authorisedQuantity,
+  billable_quantity: transaction.chargeElement.billableQuantity,
+  authorisedDays: transaction.authorisedDays,
+  billableDays: transaction.billableDays,
+  description: transaction.description
+});
+
+/**
+ * Saves a row to water.billing_transactions for the given Transaction
+ * instance
+ * @param {InvoiceLicence} invoiceLicence
+ * @param {Transaction} transaction
+ * @return {Promise}
+ */
+const saveTransactionToDB = (invoiceLicence, transaction) => {
+  const data = mapTransactionToDB(invoiceLicence, transaction);
+  return repos.billingTransactions.create(data);
+};
+
 exports.getTransactionsForBatch = getTransactionsForBatch;
 exports.getTransactionsForBatchInvoice = getTransactionsForBatchInvoice;
 exports.mapChargeToTransactions = mapChargeToTransactions;
+exports.saveTransactionToDB = saveTransactionToDB;

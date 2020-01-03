@@ -16,6 +16,8 @@ const VALID_POSITIVE_INTEGER = VALID_INTEGER.positive();
 const VALID_AGREEMENT_CODE = Joi.string().valid('126', '127', '130U', '130S', '130T', '130W');
 const VALID_DAY = VALID_POSITIVE_INTEGER.max(31);
 const VALID_MONTH = VALID_POSITIVE_INTEGER.max(12);
+const VALID_QUANTITY = Joi.number().min(0);
+const VALID_NULLABLE_QUANTITY = VALID_QUANTITY.allow(null);
 
 const assertIsArrayOfType = (values, Type) => {
   assert(isArray(values), 'Array expected');
@@ -43,6 +45,8 @@ const assertPositiveInteger = value => Joi.assert(value, VALID_POSITIVE_INTEGER)
 const assertAgreementCode = value => Joi.assert(value, VALID_AGREEMENT_CODE);
 const assertDay = value => Joi.assert(value, VALID_DAY);
 const assertMonth = value => Joi.assert(value, VALID_MONTH);
+const assertQuantity = value => Joi.assert(value, VALID_QUANTITY);
+const assertNullableQuantity = value => Joi.assert(value, VALID_NULLABLE_QUANTITY);
 
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
@@ -61,3 +65,5 @@ exports.assertPositiveInteger = assertPositiveInteger;
 exports.assertAgreementCode = assertAgreementCode;
 exports.assertDay = assertDay;
 exports.assertMonth = assertMonth;
+exports.assertQuantity = assertQuantity;
+exports.assertNullableQuantity = assertNullableQuantity;

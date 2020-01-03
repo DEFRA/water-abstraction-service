@@ -1,7 +1,12 @@
 'use strict';
 const Model = require('./model');
 const AbstractionPeriod = require('./abstraction-period');
-const { assertEnum, assertIsInstanceOf } = require('./validators');
+const {
+  assertEnum,
+  assertIsInstanceOf,
+  assertQuantity,
+  assertNullableQuantity
+} = require('./validators');
 
 const validSources = {
   supported: 'supported',
@@ -75,6 +80,32 @@ class ChargeElement extends Model {
   set abstractionPeriod (abstractionPeriod) {
     assertIsInstanceOf(abstractionPeriod, AbstractionPeriod);
     this._abstractionPeriod = abstractionPeriod;
+  }
+
+  /**
+   * Authorised annual quantity - Ml
+   * @return {Number}
+   */
+  get authorisedQuantity () {
+    return this._authorisedQuantity;
+  }
+
+  set authorisedQuantity (quantity) {
+    assertQuantity(quantity);
+    this._authorisedQuantity = quantity;
+  }
+
+  /**
+   * Billable annual quantity - Ml
+   * @return {Number}
+   */
+  get billableQuantity () {
+    return this._billableQuantity;
+  }
+
+  set billableQuantity (quantity) {
+    assertNullableQuantity(quantity);
+    this._billableQuantity = quantity;
   }
 }
 
