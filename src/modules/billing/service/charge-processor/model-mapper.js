@@ -7,13 +7,7 @@ const Contact = require('../../../../lib/models/contact-v2');
 const { uniqBy } = require('lodash');
 
 const { mapCRMAddressToModel } = require('../../services/address-service');
-
-const mapInvoiceAccount = data => {
-  const invoiceAccount = new InvoiceAccount();
-  invoiceAccount.id = data.invoiceAccountId;
-  invoiceAccount.accountNumber = data.invoiceAccountNumber;
-  return invoiceAccount;
-};
+const { mapCRMInvoiceAccountToModel } = require('../../services/invoice-accounts-service');
 
 /**
  * Maps a row of CRM v2 contact data to a Company instance
@@ -101,7 +95,7 @@ const mapInvoices = data => {
     const invoice = new Invoice();
 
     // Create invoice account model
-    invoice.invoiceAccount = mapInvoiceAccount(row.invoiceAccount);
+    invoice.invoiceAccount = mapCRMInvoiceAccountToModel(row.invoiceAccount);
 
     // Create invoice address model
     invoice.address = mapCRMAddressToModel(row.address);
