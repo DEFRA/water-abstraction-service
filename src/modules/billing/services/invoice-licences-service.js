@@ -32,7 +32,7 @@ const mapChargeRowToModel = data => {
   }
 
   // @TODO add relevant flags for compensation, TPT, credit
-  invoiceLicence.transactions = data.chargeElements.map(mapChargeToTransactions);
+  invoiceLicence.transactions = mapChargeToTransactions(data);
   return invoiceLicence;
 };
 

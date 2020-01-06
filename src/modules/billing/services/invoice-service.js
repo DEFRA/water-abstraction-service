@@ -1,6 +1,6 @@
 'use strict';
 
-const { first, uniqBy } = require('lodash');
+const { first, uniqBy, omit } = require('lodash');
 
 const repos = require('../../../lib/connectors/repository');
 
@@ -198,6 +198,32 @@ const mapChargeDataToModels = data => {
   });
 };
 
+/**
+ * Maps data from an Invoice model to the correct shape for water.billing_invoices
+ * @param {Batch} batch
+ * @param {Invoice} invoice
+ * @return {Object}
+ */
+const mapModelToDB = (batch, invoice) => ({
+  invoice_account_id: invoice.invoiceAccount.id,
+  invoice_account_number: invoice.invoiceAccount.accountNumber,
+  address: omit(invoice.address.toObject(), 'id'),
+  billing_batch_id: batch.id
+});
+
+/**
+ * Saves an Invoice model to water.billing_invoices
+ * @param {Batch} batch
+ * @param {Invoice} invoice
+ * @return {Promise<Object>} row data inserted
+ */
+const saveInvoiceToDB = async (batch, invoice) => {
+  const data = mapModelToDB(batch, invoice);
+  const { rows: [row] } = await repos.billingInvoices.create(data);
+  return row;
+};
+
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.mapChargeDataToModels = mapChargeDataToModels;
+exports.saveInvoiceToDB = saveInvoiceToDB;

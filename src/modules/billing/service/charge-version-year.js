@@ -1,11 +1,12 @@
 const chargeProcessor = require('./charge-processor');
-const { omit, get } = require('lodash');
+const { get } = require('lodash');
 const { logger } = require('../../../logger');
 const repository = require('../../../lib/connectors/repository');
 const { Batch } = require('../../../lib/models');
 const { assert } = require('@hapi/hoek');
 
 const batchService = require('../services/batch-service');
+const invoiceService = require('../services/invoice-service');
 
 const createBatchInvoiceLicence = async (billingInvoiceId, invoiceLicence) => {
   const { licenceNumber } = invoiceLicence.licence;
@@ -38,17 +39,11 @@ const createBatchInvoiceLicence = async (billingInvoiceId, invoiceLicence) => {
 
 const createBatchInvoice = async (batch, invoice) => {
   // Write water.billing_invoices
-  const row = {
-    invoice_account_id: invoice.invoiceAccount.id,
-    invoice_account_number: invoice.invoiceAccount.accountNumber,
-    address: omit(invoice.address.toObject(), 'id'),
-    billing_batch_id: batch.id
-  };
-  const { rows } = await repository.billingInvoices.create(row);
+  const row = await invoiceService.saveInvoiceToDB(batch, invoice);
 
   // Write water.billing_invoice_licences
   const tasks = invoice.invoiceLicences.map(invoiceLicence =>
-    createBatchInvoiceLicence(rows[0].billing_invoice_id, invoiceLicence)
+    createBatchInvoiceLicence(row.billing_invoice_id, invoiceLicence)
   );
 
   return Promise.all(tasks);
