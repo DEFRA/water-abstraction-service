@@ -8,13 +8,16 @@ const {
 const { expect } = require('@hapi/code');
 
 const sandbox = require('sinon').createSandbox();
-const { Address, Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence } = require('../../../../src/lib/models');
+const { Address, Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence, Transaction } = require('../../../../src/lib/models');
 const Contact = require('../../../../src/lib/models/contact-v2');
 
 const chargeVersionYear = require('../../../../src/modules/billing/service/charge-version-year');
 const chargeProcessor = require('../../../../src/modules/billing/service/charge-processor');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
+const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
+
 const repository = require('../../../../src/lib/connectors/repository');
+
 const { logger } = require('../../../../src/logger');
 
 const batchId = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
@@ -22,6 +25,8 @@ const chargeVersionId = 'charge_version_1';
 
 const data = {
   billingInvoiceId: '991675b7-4760-49eb-8adf-e240770d21eb',
+  transactionId1: 'd34d196f-15a9-4d1e-9d24-e6d446aef493',
+  transactionId2: '6697bf08-0602-40d1-947d-4cb80d2c2d84',
   chargeVersionYear: {
     charge_version_id: chargeVersionId,
     financial_year_ending: 2020,
@@ -96,6 +101,7 @@ experiment('modules/billing/service/charge-version-year.js', () => {
         billing_invoice_licence_id: data.billingInvoiceId
       }]
     });
+    sandbox.stub(transactionsService, 'saveTransactionToDB').resolves();
   });
 
   afterEach(async () => {
@@ -174,6 +180,12 @@ experiment('modules/billing/service/charge-version-year.js', () => {
         invoiceLicence.address = createAddress();
         invoice.invoiceLicences = [invoiceLicence];
 
+        // Set up transactions
+        invoiceLicence.transactions = [
+          new Transaction(data.transactionId1),
+          new Transaction(data.transactionId2)
+        ];
+
         batch.addInvoice(invoice);
 
         await chargeVersionYear.persistChargeVersionYearBatch(batch);
@@ -181,6 +193,20 @@ experiment('modules/billing/service/charge-version-year.js', () => {
 
       test('one invoice is created for each licence in batch', async () => {
         expect(repository.billingInvoices.create.callCount).to.equal(1);
+      });
+
+      test('calls transactionService.saveTransactionToDB for the first transaction', async () => {
+        const [invoiceLicence, transaction] = transactionsService.saveTransactionToDB.firstCall.args;
+        expect(invoiceLicence instanceof InvoiceLicence).to.be.true();
+        expect(transaction instanceof Transaction).to.be.true();
+        expect(transaction.id).to.equal(data.transactionId1);
+      });
+
+      test('calls transactionService.saveTransactionToDB for the second transaction', async () => {
+        const [invoiceLicence, transaction] = transactionsService.saveTransactionToDB.lastCall.args;
+        expect(invoiceLicence instanceof InvoiceLicence).to.be.true();
+        expect(transaction instanceof Transaction).to.be.true();
+        expect(transaction.id).to.equal(data.transactionId2);
       });
 
       test('persists each invoice in the batch', async () => {
