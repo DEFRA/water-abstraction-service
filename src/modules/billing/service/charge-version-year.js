@@ -1,49 +1,36 @@
 const chargeProcessor = require('./charge-processor');
-const { get } = require('lodash');
 const { logger } = require('../../../logger');
-const repository = require('../../../lib/connectors/repository');
 const { Batch } = require('../../../lib/models');
 const { assert } = require('@hapi/hoek');
 
 const batchService = require('../services/batch-service');
 const invoiceService = require('../services/invoice-service');
+const invoiceLicencesService = require('../services/invoice-licences-service');
+const transactionsService = require('../services/transactions-service');
 
-const createBatchInvoiceLicence = async (billingInvoiceId, invoiceLicence) => {
-  const { licenceNumber } = invoiceLicence.licence;
+const createInvoiceLicence = async (invoice, invoiceLicence) => {
+  // Write water.billing_invoice_licences row and update model with ID
+  const row = await invoiceLicencesService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
+  invoiceLicence.id = row.billing_invoice_licence_id;
 
-  // Fetch licence id
-  const licence = await repository.licences.findOneByLicenceNumber(licenceNumber);
+  // Write transactions
+  const tasks = invoiceLicence.transactions.map(transaction => {
+    transactionsService.saveTransactionToDB(invoiceLicence, transaction);
+  });
 
-  if (!licence) {
-    throw new Error(`Licence ${licenceNumber} not found`);
-  }
-
-  // Map data to new row in water.billing_invoice_licences
-  // @todo - it feels odd here writing either a contact or a company object
-  // suggest we expand the table to include company and contact fields and write both separately
-  const licenceHolder = invoiceLicence.contact ? invoiceLicence.contact.toJSON() : invoiceLicence.company.toJSON();
-  const row = {
-    billing_invoice_id: billingInvoiceId,
-    company_id: invoiceLicence.company.id,
-    contact_id: get(invoiceLicence, 'contact.id', null),
-    address_id: invoiceLicence.address.id,
-    licence_ref: invoiceLicence.licence.licenceNumber,
-    licence_holder_name: licenceHolder,
-    licence_holder_address: invoiceLicence.address.toObject(),
-    licence_id: licence.licence_id
-  };
-
-  // Persist to DB
-  return repository.billingInvoiceLicences.create(row);
+  return Promise.all(tasks);
 };
 
 const createBatchInvoice = async (batch, invoice) => {
   // Write water.billing_invoices
   const row = await invoiceService.saveInvoiceToDB(batch, invoice);
 
+  // Update ID
+  invoice.id = row.billing_invoice_id;
+
   // Write water.billing_invoice_licences
-  const tasks = invoice.invoiceLicences.map(invoiceLicence =>
-    createBatchInvoiceLicence(row.billing_invoice_id, invoiceLicence)
+  const tasks = invoice.invoiceLicences.map(
+    invoiceLicence => createInvoiceLicence(invoice, invoiceLicence)
   );
 
   return Promise.all(tasks);

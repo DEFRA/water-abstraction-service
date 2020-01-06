@@ -92,7 +92,7 @@ class ChargeElement extends Model {
 
   set authorisedAnnualQuantity (quantity) {
     assertQuantity(quantity);
-    this._authorisedAnnualQuantity = parseFloat(quantity);
+    this._authorisedAnnualQuantity = quantity;
   }
 
   /**
@@ -105,7 +105,7 @@ class ChargeElement extends Model {
 
   set billableAnnualQuantity (quantity) {
     assertNullableQuantity(quantity);
-    this._billableAnnualQuantity = parseFloat(quantity);
+    this._billableAnnualQuantity = quantity;
   }
 }
 

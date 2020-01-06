@@ -126,8 +126,8 @@ const mapTransactionToDB = (invoiceLicence, transaction) => ({
   charge_type: transaction.isCompensationCharge ? 'compensation' : 'standard',
   authorised_quantity: transaction.chargeElement.authorisedAnnualQuantity,
   billable_quantity: transaction.chargeElement.billableAnnualQuantity,
-  authorisedDays: transaction.authorisedDays,
-  billableDays: transaction.billableDays,
+  authorised_days: transaction.authorisedDays,
+  billable_days: transaction.billableDays,
   description: transaction.description
 });
 

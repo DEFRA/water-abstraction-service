@@ -91,7 +91,11 @@ experiment('modules/billing/service/charge-version-year.js', () => {
     sandbox.stub(repository.licences, 'findOneByLicenceNumber').resolves({
       licence_id: data.licence.id
     });
-    sandbox.stub(repository.billingInvoiceLicences, 'create').resolves();
+    sandbox.stub(repository.billingInvoiceLicences, 'create').resolves({
+      rows: [{
+        billing_invoice_licence_id: data.billingInvoiceId
+      }]
+    });
   });
 
   afterEach(async () => {

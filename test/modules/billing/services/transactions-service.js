@@ -26,8 +26,8 @@ const createChargeElement = () => {
     source: 'supported',
     season: 'summer',
     loss: 'low',
-    authorisedAnnualQuantity: '12.5',
-    billableAnnualQuantity: '10'
+    authorisedAnnualQuantity: 12.5,
+    billableAnnualQuantity: 10
   });
   chargeElement.abstractionPeriod = new AbstractionPeriod();
   chargeElement.abstractionPeriod.fromHash({
@@ -311,8 +311,8 @@ experiment('modules/billing/services/transactions-service', () => {
           charge_type: 'standard',
           authorised_quantity: 12.5,
           billable_quantity: 10,
-          authorisedDays: 366,
-          billableDays: 366,
+          authorised_days: 366,
+          billable_days: 366,
           description: 'Tiny pond'
         });
       });
@@ -359,8 +359,8 @@ experiment('modules/billing/services/transactions-service', () => {
         'charge_type',
         'authorised_quantity',
         'billable_quantity',
-        'authorisedDays',
-        'billableDays',
+        'authorised_days',
+        'billable_days',
         'description'
       ]);
     });

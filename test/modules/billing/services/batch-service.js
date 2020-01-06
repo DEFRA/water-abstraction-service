@@ -29,7 +29,8 @@ const createCrmInvoiceAccount = index => ({
 });
 
 const createChargeVersion = licenceRef => ({
-  licenceRef
+  licenceRef,
+  licenceId: 'dc6468fd-5991-4de8-ace3-f8609db03186'
 });
 
 const createCrmContact = () => ({
