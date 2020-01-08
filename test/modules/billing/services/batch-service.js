@@ -5,9 +5,9 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const { Batch, Invoice, InvoiceAccount, Address, Company } = require('../../../../../src/lib/models');
-const Contact = require('../../../../../src/lib/models/contact-v2');
-const modelMapper = require('../../../../../src/modules/billing/service/charge-processor/model-mapper');
+const { Batch, Invoice, InvoiceAccount, Address, Company } = require('../../../../src/lib/models');
+const Contact = require('../../../../src/lib/models/contact-v2');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 const BATCH_ID = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
 
@@ -29,7 +29,8 @@ const createCrmInvoiceAccount = index => ({
 });
 
 const createChargeVersion = licenceRef => ({
-  licenceRef
+  licenceRef,
+  licenceId: 'dc6468fd-5991-4de8-ace3-f8609db03186'
 });
 
 const createCrmContact = () => ({
@@ -55,30 +56,33 @@ const createData = () => [{
   invoiceAccount: {
     invoiceAccount: createCrmInvoiceAccount(1),
     address: createCrmAddress(1)
-  }
+  },
+  chargeElements: []
 }, {
   chargeVersion: createChargeVersion('02/345'),
   licenceHolder: createCrmLicenceHolder(true),
   invoiceAccount: {
     invoiceAccount: createCrmInvoiceAccount(2),
     address: createCrmAddress(2)
-  }
+  },
+  chargeElements: []
 }, {
   chargeVersion: createChargeVersion('03/456'),
   licenceHolder: createCrmLicenceHolder(),
   invoiceAccount: {
     invoiceAccount: createCrmInvoiceAccount(1),
     address: createCrmAddress(1)
-  }
+  },
+  chargeElements: []
 }];
 
-experiment('modules/billing/service/charge-processor/model-mapper.js', () => {
-  experiment('modelMapper', () => {
+experiment('modules/billing/services/batch-service', () => {
+  experiment('.mapChargeDataToModel', () => {
     let data, result, invoice;
 
     beforeEach(async () => {
       data = createData();
-      result = modelMapper.modelMapper(BATCH_ID, data);
+      result = batchService.mapChargeDataToModel(BATCH_ID, data);
     });
 
     test('should return a batch with the correct ID', async () => {

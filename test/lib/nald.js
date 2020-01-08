@@ -1,13 +1,17 @@
 const { before, experiment, test } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
-const server = require('../../index.js');
+const hapi = require('@hapi/hapi');
+const server = new hapi.Server();
 const licenceCreator = require('../../scripts/licence-creator/index.js');
 const { copyTestFiles } = require('../../src/modules/import/extract.js');
+const routes = Object.values(require('../../src/modules/import/routes'));
 
 let licenceData;
 
 experiment('Test NALD import', () => {
   before(async () => {
+    await server.route(routes);
+
     // Generate dummy NALD data
     await licenceCreator();
     await copyTestFiles();
@@ -37,10 +41,10 @@ experiment('Test NALD import', () => {
   });
 
   test('Test expiry date', async () => {
-    expect(licenceData.EXPIRY_DATE).to.equal('01/01/2020');
+    expect(licenceData.EXPIRY_DATE).to.equal('01/01/2220');
   });
 
-  test('Test current vertsion', async () => {
+  test('Test current version', async () => {
     expect(licenceData.data.current_version.licence.STATUS).to.equal('CURR');
   });
 

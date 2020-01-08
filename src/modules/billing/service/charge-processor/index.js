@@ -12,7 +12,6 @@ const { mergeHistory } = require('@envage/water-abstraction-helpers').charging;
 const camelCaseKeys = require('../../../../lib/camel-case-keys');
 const repository = require('../../../../lib/connectors/repository');
 const { ERROR_CHARGE_VERSION_NOT_FOUND } = require('./errors');
-const { modelMapper } = require('./model-mapper');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
@@ -302,4 +301,3 @@ const processCharges = async (year, chargeVersionId, isTwoPart = false, isSummer
 };
 
 module.exports.processCharges = processCharges;
-module.exports.modelMapper = modelMapper;

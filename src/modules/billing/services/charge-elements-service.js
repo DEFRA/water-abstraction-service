@@ -13,7 +13,9 @@ const mapRowToModel = chargeElementRow => {
     source: chargeElementRow.source,
     season: chargeElementRow.season,
     loss: chargeElementRow.loss,
-    abstractionPeriod: abstractionPeriodService.mapRowToModel(chargeElementRow)
+    abstractionPeriod: abstractionPeriodService.mapRowToModel(chargeElementRow),
+    authorisedAnnualQuantity: chargeElementRow.authorisedAnnualQuantity,
+    billableAnnualQuantity: chargeElementRow.billableAnnualQuantity
   });
   return element;
 };
