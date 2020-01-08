@@ -15,6 +15,7 @@ const chargeVersionYear = require('../../../../src/modules/billing/service/charg
 const chargeProcessor = require('../../../../src/modules/billing/service/charge-processor');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
+const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 
 const repository = require('../../../../src/lib/connectors/repository');
 
@@ -22,6 +23,11 @@ const { logger } = require('../../../../src/logger');
 
 const batchId = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
 const chargeVersionId = 'charge_version_1';
+
+const createBatch = id => {
+  const batch = new Batch(id);
+  return batch;
+};
 
 const data = {
   billingInvoiceId: '991675b7-4760-49eb-8adf-e240770d21eb',
@@ -35,7 +41,6 @@ const data = {
   charges: [{
 
   }],
-  modelMapperResponse: new Batch(),
   company: {
     id: '710014ac-381e-41b6-a14b-0696efa4fc31',
     type: 'organisation',
@@ -87,7 +92,7 @@ experiment('modules/billing/service/charge-version-year.js', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
     sandbox.stub(chargeProcessor, 'processCharges');
-    sandbox.stub(batchService, 'mapChargeDataToModel').returns(data.modelMapperResponse);
+    sandbox.stub(batchService, 'getBatchById');
     sandbox.stub(repository.billingInvoices, 'create').resolves({
       rows: [{
         billing_invoice_id: data.billingInvoiceId
@@ -102,6 +107,7 @@ experiment('modules/billing/service/charge-version-year.js', () => {
       }]
     });
     sandbox.stub(transactionsService, 'saveTransactionToDB').resolves();
+    sandbox.stub(invoiceService, 'mapChargeDataToModels').returns([]);
   });
 
   afterEach(async () => {
@@ -109,10 +115,12 @@ experiment('modules/billing/service/charge-version-year.js', () => {
   });
 
   experiment('.createBatchFromChargeVersionYear', () => {
-    let result;
+    let result, batch;
 
     experiment('when there are no errors', () => {
       beforeEach(async () => {
+        batch = createBatch();
+        batchService.getBatchById.resolves(batch);
         chargeProcessor.processCharges.resolves({
           error: null,
           data: data.charges
@@ -131,8 +139,8 @@ experiment('modules/billing/service/charge-version-year.js', () => {
         expect(logger.error.called).to.be.false();
       });
 
-      test('resolves with the result of the model mapping', async () => {
-        expect(result).to.equal(data.modelMapperResponse);
+      test('resolves with the batch', async () => {
+        expect(result).to.equal(batch);
       });
     });
 

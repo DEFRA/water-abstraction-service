@@ -20,6 +20,7 @@ class ChargeVersionRepository extends Repository {
    * @return {Promise<Object>}
    */
   async findOneById (chargeVersionId) {
+    // @todo add l.is_water_undertaker to field list when ready
     const query = `select v.*, l.licence_id 
       from water.charge_versions v
       join water.licences l on v.licence_ref=l.licence_ref

@@ -19,6 +19,7 @@ const Transaction = require('../../../../src/lib/models/transaction');
 const ChargeElement = require('../../../../src/lib/models/charge-element');
 const AbstractionPeriod = require('../../../../src/lib/models/abstraction-period');
 const DateRange = require('../../../../src/lib/models/date-range');
+const Batch = require('../../../../src/lib/models/batch');
 
 const createChargeElement = () => {
   const chargeElement = new ChargeElement('29328315-9b24-473b-bde7-02c60e881501');
@@ -60,6 +61,28 @@ const createInvoiceLicence = (options = {}) => {
   ];
   return invoiceLicence;
 };
+
+const createChargeLine = (isWaterUndertaker = false) => ({
+  startDate: '2018-04-01',
+  endDate: '2019-03-31',
+  section127Agreement: true,
+  chargeVersion: {
+    isWaterUndertaker
+  },
+  chargeElements: [{
+    chargeElementId: 'bf679fc9-dec9-42cd-bc32-542578be01d9',
+    source: 'supported',
+    season: 'summer',
+    loss: 'low',
+    totalDays: 365,
+    billableDays: 200,
+    description: 'Tiny pond',
+    abstractionPeriodStartDay: 1,
+    abstractionPeriodStartMonth: 2,
+    abstractionPeriodEndDay: 3,
+    abstractionPeriodEndMonth: 4
+  }]
+});
 
 experiment('modules/billing/services/transactions-service', () => {
   let transactions;
@@ -161,30 +184,16 @@ experiment('modules/billing/services/transactions-service', () => {
   });
 
   experiment('.mapChargeToTransactions', () => {
-    let result;
+    let result, chargeLine;
 
-    const chargeLine = {
-      startDate: '2018-04-01',
-      endDate: '2019-03-31',
-      section127Agreement: true,
-      chargeElements: [{
-        chargeElementId: 'bf679fc9-dec9-42cd-bc32-542578be01d9',
-        source: 'supported',
-        season: 'summer',
-        loss: 'low',
-        totalDays: 365,
-        billableDays: 200,
-        description: 'Tiny pond',
-        abstractionPeriodStartDay: 1,
-        abstractionPeriodStartMonth: 2,
-        abstractionPeriodEndDay: 3,
-        abstractionPeriodEndMonth: 4
-      }]
-    };
+    experiment('for a supplementary batch, and a non-water undertaker licence', () => {
+      let batch;
 
-    experiment('when a compensation charge is applicable', () => {
       beforeEach(async () => {
-        result = transactionsService.mapChargeToTransactions(chargeLine, {}, true);
+        chargeLine = createChargeLine();
+        batch = new Batch();
+        batch.type = 'supplementary';
+        result = transactionsService.mapChargeToTransactions(chargeLine, batch);
       });
 
       test('2 transactions are created', async () => {
@@ -248,25 +257,14 @@ experiment('modules/billing/services/transactions-service', () => {
       });
     });
 
-    experiment('when a compensation charge is not applicable', () => {
-      beforeEach(async () => {
-        result = transactionsService.mapChargeToTransactions(chargeLine, {}, false);
-      });
-
-      test('1 transaction is created', async () => {
-        expect(result).to.be.an.array().length(1);
-      });
-
-      experiment('the first transaction', () => {
-        test('is a standard charge', async () => {
-          expect(result[0].isCompensationCharge).to.be.false();
-        });
-      });
-    });
-
     experiment('when processing two-part tariff supplementary', () => {
+      let batch, chargeLine;
+
       beforeEach(async () => {
-        result = transactionsService.mapChargeToTransactions(chargeLine, { isTwoPartTariffSupplementaryCharge: true }, false);
+        chargeLine = createChargeLine();
+        batch = new Batch();
+        batch.type = 'two_part_tariff';
+        result = transactionsService.mapChargeToTransactions(chargeLine, batch);
       });
 
       test('1 transactions is created', async () => {
@@ -279,6 +277,29 @@ experiment('modules/billing/services/transactions-service', () => {
 
       test('the transaction is a two-part tariff supplementary charge', async () => {
         expect(result[0].isTwoPartTariffSupplementaryCharge).to.be.true();
+      });
+    });
+
+    experiment('when processing a supplementary charge for a water undertaker', () => {
+      let batch, chargeLine;
+
+      beforeEach(async () => {
+        chargeLine = createChargeLine(true);
+        batch = new Batch();
+        batch.type = 'supplementary';
+        result = transactionsService.mapChargeToTransactions(chargeLine, batch);
+      });
+
+      test('1 transactions is created', async () => {
+        expect(result).to.be.an.array().length(1);
+      });
+
+      test('the transaction is a standard charge', async () => {
+        expect(result[0].isCompensationCharge).to.be.false();
+      });
+
+      test('the transaction is not a two-part tariff supplementary charge', async () => {
+        expect(result[0].isTwoPartTariffSupplementaryCharge).to.be.false();
       });
     });
   });
