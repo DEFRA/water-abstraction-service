@@ -177,9 +177,6 @@ const mapInvoiceLicences = (invoice, data, batch) => {
  * @return {Array<Invoice>}
  */
 const mapChargeDataToModels = (data, batch) => {
-  console.log(data);
-  console.log(batch);
-
   // Create unique list of invoice accounts within data
   const rows = uniqBy(
     data.map(row => row.invoiceAccount),
