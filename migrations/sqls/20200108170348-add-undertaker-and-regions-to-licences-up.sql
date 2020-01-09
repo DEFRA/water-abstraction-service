@@ -8,4 +8,4 @@ alter table water.licences
   add column regions jsonb not null,
   add column date_created timestamp not null default now(),
   add column date_updated timestamp not null default now(),
-  add constraint c_licences_lic_ref_region unique (region_id, licence_ref);
+  add constraint uidx_licences_lic_ref unique (licence_ref);

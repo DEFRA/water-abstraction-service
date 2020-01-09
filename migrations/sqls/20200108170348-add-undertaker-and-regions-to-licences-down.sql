@@ -3,4 +3,4 @@ alter table water.licences
   drop column regions,
   drop column date_created,
   drop column date_updated,
-  drop constraint c_licences_lic_ref_region;
+  drop constraint uidx_licences_lic_ref;
