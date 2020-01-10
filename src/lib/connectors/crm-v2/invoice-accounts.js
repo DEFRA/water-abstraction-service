@@ -18,4 +18,11 @@ const getInvoiceAccountsByIds = ids => {
   });
 };
 
+/**
+ * Gets an invoice account including company data for the given invoice account id
+ * @param String id The invoice account id
+ */
+const getInvoiceAccountById = id => serviceRequest.get(getUri(id));
+
+exports.getInvoiceAccountById = getInvoiceAccountById;
 exports.getInvoiceAccountsByIds = getInvoiceAccountsByIds;

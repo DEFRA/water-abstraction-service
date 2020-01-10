@@ -197,4 +197,39 @@ experiment('modules/billing/routes', () => {
       expect(response.statusCode).to.equal(400);
     });
   });
+
+  experiment('deleteAccountFromBatch', () => {
+    let request;
+    let server;
+    let validBatchId;
+    let validAccountId;
+
+    beforeEach(async () => {
+      server = getServer(routes.deleteAccountFromBatch);
+      validBatchId = uuid();
+      validAccountId = uuid();
+
+      request = {
+        method: 'DELETE',
+        url: `/water/1.0/billing/batches/${validBatchId}/account/${validAccountId}`
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the batch id is not a uuid', async () => {
+      request.url = request.url.replace(validBatchId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the account id is not a uuid', async () => {
+      request.url = request.url.replace(validAccountId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+  });
 });
