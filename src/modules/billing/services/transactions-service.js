@@ -1,7 +1,7 @@
 'use strict';
-
-const { get } = require('lodash');
-
+const moment = require('moment');
+const { identity, get } = require('lodash');
+const sentenceCase = require('sentence-case');
 const Transaction = require('../../../lib/models/transaction');
 const DateRange = require('../../../lib/models/date-range');
 
@@ -148,8 +148,80 @@ const saveTransactionToDB = (invoiceLicence, transaction) => {
   return repos.billingTransactions.create(data);
 };
 
+const DATE_FORMAT = 'YYYY-MM-DD';
+const CM_DATE_FORMAT = 'DD-MMM-YYYY';
+
+/**
+ * Converts a service date to a Charge Module date
+ * @param {String} str - ISO date YYYY-MM-DD
+ * @return {String} Charge Module format date, DD-MMM-YYYY
+ */
+const mapChargeModuleDate = str =>
+  moment(str, DATE_FORMAT).format(CM_DATE_FORMAT).toUpperCase();
+
+/**
+ * Gets all charge agreement variables/flags from transaction
+ * for Charge Module
+ * @param {Transaction} transaction
+ * @return {Object}
+ */
+const mapAgreementsToChargeModule = transaction => {
+  const section130Agreement = ['130U', '130S', '130T', '130W']
+    .map(code => transaction.getAgreementByCode(code))
+    .some(identity);
+  return {
+    section126Factor: 1,
+    section126Agreement: !!transaction.getAgreementByCode('126'),
+    section127Agreement: !!transaction.getAgreementByCode('127'),
+    section130Agreement
+  };
+};
+
+/**
+ * Maps service models to Charge Module transaction data that
+ * can be used to generate a charge
+ * @param {Batch} batch
+ * @param {Invoice} invoice
+ * @param {InvoiceLicence} invoiceLicence
+ * @param {Transaction} transaction
+ * @return {Object}
+ */
+const mapToChargeModuleTransaction = (batch, invoice, invoiceLicence, transaction) => {
+  const periodStart = mapChargeModuleDate(transaction.chargePeriod.startDate);
+  const periodEnd = mapChargeModuleDate(Transaction.chargePeriod.endDate);
+
+  return {
+    periodStart,
+    periodEnd,
+    credit: transaction.isCredit,
+    billableDays: transaction.billableDays,
+    authorisedDays: transaction.authorisedDays,
+    volume: transaction.volume,
+    source: sentenceCase(transaction.chargeElement.source),
+    season: sentenceCase(transaction.chargeElement.season),
+    loss: sentenceCase(transaction.chargeElement.loss),
+    twoPartTariff: transaction.isTwoPartTariffSupplementaryCharge,
+    compensationCharge: transaction.isCompensationCharge,
+    eiucSource: sentenceCase(transaction.chargeElement.eiucSource),
+    waterUndertaker: invoiceLicence.licence.isWaterUndertaker,
+    regionalChargingArea: invoiceLicence.licence.regionalChargingArea.name, // @TODO
+    ...mapAgreementsToChargeModule(transaction),
+    customerReference: invoice.invoiceAccount.accountNumber,
+    transactionDate: mapChargeModuleDate(transaction.chargePeriod.startDate), // @TODO
+    invoiceDate: mapChargeModuleDate(transaction.chargePeriod.startDate), // @TODO
+    lineDescription: transaction.description,
+    licenceNumber: invoiceLicence.licence.licenceNumber,
+    chargePeriod: `${periodStart} - ${periodEnd}`,
+    chargeElementId: transaction.chargeElement.id,
+    batchNumber: batch.id,
+    region: invoiceLicence.licence.region.code,
+    areaCode: invoiceLicence.licence.historicalArea.code
+  };
+};
+
 exports.getTransactionsForBatch = getTransactionsForBatch;
 exports.getTransactionsForBatchInvoice = getTransactionsForBatchInvoice;
 exports.mapChargeToTransactions = mapChargeToTransactions;
 exports.mapTransactionToDB = mapTransactionToDB;
 exports.saveTransactionToDB = saveTransactionToDB;
+exports.mapToChargeModuleTransaction = mapToChargeModuleTransaction;

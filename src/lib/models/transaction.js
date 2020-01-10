@@ -95,6 +95,15 @@ class Transaction extends Model {
   }
 
   /**
+   * Returns the first Agreement with the given code (if exists)
+   * @param {String} code
+   * @return {Agreement}
+   */
+  getAgreementByCode (code) {
+    return this._agreements.find(agreement => agreement.code === code);
+  }
+
+  /**
    * The period of time this charge covers - usually financial
    * year but can be limited by changes to licence or charge version
    * @return {DateRange}
