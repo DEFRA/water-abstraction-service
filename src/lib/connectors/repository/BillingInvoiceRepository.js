@@ -21,15 +21,12 @@ const findByBatchIdQuery = `
     il.licence_ref as "billing_invoice_licences.licence_ref",
     il.licence_id as "billing_invoice_licences.licence_id"
 
-  from water.billing_batch_invoices bi
-
-    join water.billing_invoices i
-      on bi.billing_invoice_id = i.billing_invoice_id
+  from water.billing_invoices i
 
     join water.billing_invoice_licences il
-      on il.billing_invoice_id = bi.billing_invoice_id
+      on il.billing_invoice_id = i.billing_invoice_id
 
-  where bi.billing_batch_id = $1;
+  where i.billing_batch_id = $1;
 `;
 
 const getInvoiceDetailQuery = `
