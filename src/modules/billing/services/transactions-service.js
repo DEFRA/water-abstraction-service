@@ -1,5 +1,7 @@
 'use strict';
 
+const { get } = require('lodash');
+
 const Transaction = require('../../../lib/models/transaction');
 const DateRange = require('../../../lib/models/date-range');
 
@@ -71,33 +73,36 @@ const createTransaction = (chargeLine, chargeElement, data = {}) => {
   return transaction;
 };
 
-const transactionDefaults = {
-  isTwoPartTariffSupplementaryCharge: false,
-  isCredit: false
+const getOptions = (chargeLine, batch) => {
+  // @TODO handle credits
+  const isWaterUndertaker = get(chargeLine, 'chargeVersion.isWaterUndertaker', false);
+  const isTwoPartTariffSupplementaryCharge = batch.type === 'two_part_tariff';
+  return {
+    isCredit: false,
+    isCompensation: !(isWaterUndertaker || isTwoPartTariffSupplementaryCharge),
+    isTwoPartTariffSupplementaryCharge
+  };
 };
 
 /**
  * Generates an array of transactions from a charge line output
  * from the charge processor
  * @param {Object} chargeLine
- * @param {Object} options
- * @param {Boolean} options.isTwoPartTariffSupplementaryCharge
- * @param {Boolean} options.isCredit
- * @param {Boolean} isCompensation - false for water undertakers
+ * @param {Batch} batch - the current batch instance
  * @return {Array<Transaction>}
  */
-const mapChargeToTransactions = (chargeLine, options = {}, isCompensation = true) => {
-  const data = Object.assign({}, transactionDefaults, options);
+const mapChargeToTransactions = (chargeLine, batch) => {
+  const { isCompensation, ...transactionData } = getOptions(chargeLine, batch);
 
   return chargeLine.chargeElements.reduce((acc, chargeElement) => {
     acc.push(createTransaction(chargeLine, chargeElement, {
-      ...data,
+      ...transactionData,
       isCompensationCharge: false
     }));
 
     if (isCompensation) {
       acc.push(createTransaction(chargeLine, chargeElement, {
-        ...data,
+        ...transactionData,
         isCompensationCharge: true
       }));
     }

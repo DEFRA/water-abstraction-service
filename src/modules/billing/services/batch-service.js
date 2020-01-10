@@ -1,22 +1,28 @@
 const Batch = require('../../../lib/models/batch');
-const invoiceService = require('./invoice-service');
+const repos = require('../../../lib/connectors/repository');
+const FinancialYear = require('../../../lib/models/financial-year');
 
-/**
- * Maps the charge data to water service models ready for use
- * within this service
- * @param {String} batchId - the guid batch ID in water.billing_batches
- * @param {Array} data - array of data from charge processor
- * @return {Batch} water Batch instance
- */
-const mapChargeDataToModel = (batchId, data) => {
-  // Create batch
+const mapDBToModel = row => {
   const batch = new Batch();
-  batch.id = batchId;
-
-  // Add invoices to batch
-  batch.addInvoices(invoiceService.mapChargeDataToModels(data));
-
+  batch.fromHash({
+    id: row.billing_batch_id,
+    type: row.batch_type,
+    season: row.season,
+    startYear: new FinancialYear(row.from_financial_year_ending),
+    endYear: new FinancialYear(row.to_financial_year_ending),
+    status: row.status
+  });
   return batch;
 };
 
-exports.mapChargeDataToModel = mapChargeDataToModel;
+/**
+ * Loads a Batch instance by ID
+ * @param {String} id - batch ID GUID
+ * @return {Promise<Batch>}
+ */
+const getBatchById = async id => {
+  const row = await repos.billingBatches.getById(id);
+  return mapDBToModel(row);
+};
+
+exports.getBatchById = getBatchById;

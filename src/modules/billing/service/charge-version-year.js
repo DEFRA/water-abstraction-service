@@ -71,8 +71,12 @@ const createBatchFromChargeVersionYear = async chargeVersionYear => {
     throw err;
   }
 
-  // Create Batch instance
-  return batchService.mapChargeDataToModel(batchId, data);
+  // Load batch and add invoices
+  const batch = await batchService.getBatchById(batchId);
+  const invoices = invoiceService.mapChargeDataToModels(data, batch);
+  batch.addInvoices(invoices);
+
+  return batch;
 };
 
 /**

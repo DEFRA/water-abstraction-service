@@ -20,7 +20,7 @@ class ChargeVersionRepository extends Repository {
    * @return {Promise<Object>}
    */
   async findOneById (chargeVersionId) {
-    const query = `select v.*, l.licence_id 
+    const query = `select v.*, l.licence_id, l.is_water_undertaker 
       from water.charge_versions v
       join water.licences l on v.licence_ref=l.licence_ref
       where v.charge_version_id=$1`;

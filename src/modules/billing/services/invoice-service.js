@@ -155,9 +155,10 @@ const getInvoiceAccountNumber = row => row.invoiceAccount.invoiceAccount.invoice
  * matching the invoice account number of the supplied Invoice instance
  * @param {Invoice} invoice - invoice instance
  * @param {Array} data - processed charge versions
+ * @param {Batch} batch - current batch model
  * @return {Array<InvoiceLicence>}
  */
-const mapInvoiceLicences = (invoice, data) => {
+const mapInvoiceLicences = (invoice, data, batch) => {
   // Find rows with invoice account number that match the supplied invoice
   const { accountNumber } = invoice.invoiceAccount;
   const filtered = data.filter(row => getInvoiceAccountNumber(row) === accountNumber);
@@ -171,10 +172,11 @@ const mapInvoiceLicences = (invoice, data) => {
 /**
  * Given an array of data output from the charge processor,
  * maps it to an array of Invoice instances
- * @param {Array} data
+ * @param {Array} data - output from charge processor
+ * @param {Batch} batch
  * @return {Array<Invoice>}
  */
-const mapChargeDataToModels = data => {
+const mapChargeDataToModels = (data, batch) => {
   // Create unique list of invoice accounts within data
   const rows = uniqBy(
     data.map(row => row.invoiceAccount),
@@ -192,7 +194,7 @@ const mapChargeDataToModels = data => {
     invoice.address = addressService.mapCRMAddressToModel(row.address);
 
     // Create invoiceLicences array
-    invoice.invoiceLicences = mapInvoiceLicences(invoice, data);
+    invoice.invoiceLicences = mapInvoiceLicences(invoice, data, batch);
 
     return invoice;
   });

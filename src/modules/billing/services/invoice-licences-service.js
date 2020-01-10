@@ -29,7 +29,7 @@ const mapLicence = chargeVersion => {
  * @param {Object} data - processed charge version
  * @return {InvoiceLicence}
  */
-const mapChargeRowToModel = data => {
+const mapChargeRowToModel = (data, batch) => {
   const invoiceLicence = new InvoiceLicence();
   invoiceLicence.licence = mapLicence(data.chargeVersion);
   invoiceLicence.company = mapCRMCompanyToModel(data.licenceHolder.company);
@@ -38,8 +38,7 @@ const mapChargeRowToModel = data => {
     invoiceLicence.contact = mapCRMContactToModel(data.licenceHolder.contact);
   }
 
-  // @TODO add relevant flags for compensation, TPT, credit
-  invoiceLicence.transactions = mapChargeToTransactions(data);
+  invoiceLicence.transactions = mapChargeToTransactions(data, batch);
   return invoiceLicence;
 };
 
