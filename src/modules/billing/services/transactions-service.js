@@ -178,6 +178,34 @@ const mapAgreementsToChargeModule = transaction => {
 };
 
 /**
+ * Gets all charge agreement variables from ChargeElement
+ * for Charge Module
+ * @param {ChargeElement} chargeElement
+ * @return {Object}
+ */
+const mapChargeElementToChargeModuleTransaction = chargeElement => ({
+  source: sentenceCase(chargeElement.source),
+  season: sentenceCase(chargeElement.season),
+  loss: sentenceCase(chargeElement.loss),
+  eiucSource: sentenceCase(chargeElement.eiucSource),
+  chargeElementId: chargeElement.id
+});
+
+/**
+ * Gets all charge agreement variables from Licence
+ * for Charge Module
+ * @param {Licence} licence
+ * @return {Object}
+ */
+const mapLicenceToChargeElementTransaction = licence => ({
+  waterUndertaker: licence.isWaterUndertaker,
+  regionalChargingArea: licence.regionalChargingArea.name, // @TODO
+  licenceNumber: licence.licenceNumber,
+  region: licence.region.code,
+  areaCode: licence.historicalArea.code
+});
+
+/**
  * Maps service models to Charge Module transaction data that
  * can be used to generate a charge
  * @param {Batch} batch
@@ -197,25 +225,17 @@ const mapToChargeModuleTransaction = (batch, invoice, invoiceLicence, transactio
     billableDays: transaction.billableDays,
     authorisedDays: transaction.authorisedDays,
     volume: transaction.volume,
-    source: sentenceCase(transaction.chargeElement.source),
-    season: sentenceCase(transaction.chargeElement.season),
-    loss: sentenceCase(transaction.chargeElement.loss),
     twoPartTariff: transaction.isTwoPartTariffSupplementaryCharge,
     compensationCharge: transaction.isCompensationCharge,
-    eiucSource: sentenceCase(transaction.chargeElement.eiucSource),
-    waterUndertaker: invoiceLicence.licence.isWaterUndertaker,
-    regionalChargingArea: invoiceLicence.licence.regionalChargingArea.name, // @TODO
     ...mapAgreementsToChargeModule(transaction),
     customerReference: invoice.invoiceAccount.accountNumber,
     transactionDate: mapChargeModuleDate(transaction.chargePeriod.startDate), // @TODO
     invoiceDate: mapChargeModuleDate(transaction.chargePeriod.startDate), // @TODO
     lineDescription: transaction.description,
-    licenceNumber: invoiceLicence.licence.licenceNumber,
     chargePeriod: `${periodStart} - ${periodEnd}`,
-    chargeElementId: transaction.chargeElement.id,
     batchNumber: batch.id,
-    region: invoiceLicence.licence.region.code,
-    areaCode: invoiceLicence.licence.historicalArea.code
+    ...mapChargeElementToChargeModuleTransaction(transaction.chargeElement),
+    ...mapLicenceToChargeElementTransaction(invoiceLicence.licence)
   };
 };
 
