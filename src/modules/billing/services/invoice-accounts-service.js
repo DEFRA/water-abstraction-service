@@ -29,7 +29,11 @@ const mapCRMInvoiceAccountToModel = (invoiceAccount, company) => {
  * @param {Array<String>} ids - GUIDs for CRM invoice account IDs
  * @return {Promise<Array>}
  */
-const getByInvoiceAccountIds = async ids => {
+const getByInvoiceAccountIds = async (ids = []) => {
+  if (ids.length === 0) {
+    return [];
+  }
+
   const invoiceAccounts = await invoiceAccountsConnector.getInvoiceAccountsByIds(ids);
 
   return invoiceAccounts.map(invoiceAccount =>

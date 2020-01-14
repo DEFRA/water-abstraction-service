@@ -16,6 +16,7 @@ const Invoice = require('../../../src/lib/models/invoice');
 const repos = require('../../../src/lib/connectors/repository');
 const event = require('../../../src/lib/event');
 const invoiceService = require('../../../src/modules/billing/services/invoice-service');
+const batchService = require('../../../src/modules/billing/services/batch-service');
 
 const controller = require('../../../src/modules/billing/controller');
 
@@ -38,6 +39,7 @@ experiment('modules/billing/controller', () => {
 
     sandbox.stub(repos.billingBatches, 'getById').resolves();
 
+    sandbox.stub(batchService, 'getBatches').resolves();
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
 
@@ -204,6 +206,36 @@ experiment('modules/billing/controller', () => {
     });
   });
 
+  experiment('.getBatches', () => {
+    test('passes pagination options to the batch service', async () => {
+      const request = {
+        query: {
+          page: 5,
+          perPage: 10
+        }
+
+      };
+      await controller.getBatches(request);
+
+      const [page, perPage] = batchService.getBatches.lastCall.args;
+      expect(page).to.equal(5);
+      expect(perPage).to.equal(10);
+    });
+
+    test('directly returns the response from the batchService', async () => {
+      const request = { query: {} };
+      const batchResponse = {
+        data: [],
+        pagination: {}
+      };
+      batchService.getBatches.resolves(batchResponse);
+
+      const response = await controller.getBatches(request);
+
+      expect(response).to.equal(batchResponse);
+    });
+  });
+
   experiment('.getBatchInvoices', () => {
     experiment('when the batch is found', () => {
       let response;
@@ -228,27 +260,6 @@ experiment('modules/billing/controller', () => {
 
       test('the error object is null', async () => {
         expect(response.error).to.be.null();
-      });
-    });
-
-    experiment('when the batch does not exist', () => {
-      let response;
-
-      beforeEach(async () => {
-        invoiceService.getInvoicesForBatch.resolves([]);
-        response = await controller.getBatchInvoices({
-          params: {
-            batchId: 'test-batch-id'
-          }
-        });
-      });
-
-      test('the data object is null', async () => {
-        expect(response.data).to.be.null();
-      });
-
-      test('the error contains a not found message', async () => {
-        expect(response.output.payload.message).to.equal('No invoices found for batch with id: test-batch-id');
       });
     });
   });
