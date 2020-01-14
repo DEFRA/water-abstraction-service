@@ -4,6 +4,20 @@ const Joi = require('@hapi/joi');
 
 const controller = require('./controller');
 
+const getBatches = {
+  method: 'GET',
+  path: '/water/1.0/billing/batches',
+  handler: controller.getBatches,
+  config: {
+    validate: {
+      query: {
+        page: Joi.number().integer().optional(),
+        perPage: Joi.number().integer().optional()
+      }
+    }
+  }
+};
+
 const postCreateBatch = {
   method: 'POST',
   path: '/water/1.0/billing/batches',
@@ -63,5 +77,6 @@ const getBatchInvoiceDetail = {
 
 exports.postCreateBatch = postCreateBatch;
 exports.getBatch = getBatch;
+exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;

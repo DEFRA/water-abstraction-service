@@ -253,4 +253,13 @@ experiment('lib/models/batch', () => {
       expect(func).to.throw();
     });
   });
+
+  experiment('.dateCreated', () => {
+    test('works as a getter an setter', async () => {
+      const batch = new Batch();
+      const date = Date.now();
+      batch.dateCreated = date;
+      expect(batch.dateCreated).to.equal(date);
+    });
+  });
 });

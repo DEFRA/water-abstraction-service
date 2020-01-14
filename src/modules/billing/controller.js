@@ -8,6 +8,7 @@ const { envelope, errorEnvelope } = require('../../lib/response');
 const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-versions');
 const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
+const batchService = require('./services/batch-service');
 
 const createBatchEvent = async (userEmail, batch) => {
   const batchEvent = event.create({
@@ -76,6 +77,12 @@ const getBatch = async request => {
     : Boom.notFound(`No batch found with id: ${batchId}`);
 };
 
+const getBatches = async request => {
+  const { page, perPage } = request.query;
+  const batches = await batchService.getBatches(page, perPage);
+  return batches;
+};
+
 const getBatchInvoices = async request => {
   const { batchId } = request.params;
   const invoices = await invoiceService.getInvoicesForBatch(batchId);
@@ -96,5 +103,6 @@ const getBatchInvoiceDetail = async request => {
 
 exports.postCreateBatch = postCreateBatch;
 exports.getBatch = getBatch;
+exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
