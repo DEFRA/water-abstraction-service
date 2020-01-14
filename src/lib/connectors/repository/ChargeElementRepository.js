@@ -29,6 +29,16 @@ class ChargeElementRepository extends Repository {
     const { rows } = await this.dbQuery(query, params);
     return rows;
   }
+
+  /**
+   * Find a single charge element record by ID
+   * @param {String} chargeElementId
+   * @return {Promise<Object>} resolves with DB row if found
+   */
+  async findOneById (chargeElementId) {
+    const { rows: [chargeElement] } = await this.find({ charge_element_id: chargeElementId });
+    return chargeElement;
+  };
 }
 
 module.exports = ChargeElementRepository;

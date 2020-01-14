@@ -1,11 +1,13 @@
 const jobs = require('./jobs');
 
-const createSubscription = async (server, jobContainer) => {
+const createSubscription = async (server, jobContainer, isMultiJob) => {
   const { job: billingJob, onCompleteHandler } = jobContainer;
 
   await server.messageQueue.subscribe(
     billingJob.jobName,
+    billingJob.options || {},
     billingJob.handler
+
   );
 
   if (onCompleteHandler) {

@@ -25,4 +25,5 @@ const getBatchById = async id => {
   return mapDBToModel(row);
 };
 
+exports.mapDBToModel = mapDBToModel;
 exports.getBatchById = getBatchById;

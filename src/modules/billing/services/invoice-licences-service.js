@@ -2,6 +2,8 @@ const { get } = require('lodash');
 
 const repos = require('../../../lib/connectors/repository');
 
+const Address = require('../../../lib/models/address');
+const Company = require('../../../lib/models/company');
 const Licence = require('../../../lib/models/licence');
 const InvoiceLicence = require('../../../lib/models/invoice-licence');
 
@@ -9,6 +11,7 @@ const { mapCRMAddressToModel } = require('./address-service');
 const { mapCRMCompanyToModel } = require('./companies-service');
 const { mapCRMContactToModel } = require('./contacts-service');
 const { mapChargeToTransactions } = require('./transactions-service');
+const licenceService = require('./licence-service');
 
 /**
  * Maps a charge version from the charge processor to a Licence instance
@@ -78,5 +81,37 @@ const saveInvoiceLicenceToDB = async (invoice, invoiceLicence) => {
   return row;
 };
 
+/**
+ * Maps a row of data from water.billing_invoice_licences
+ * to an InvoiceLicence model
+ * @param {Object} row
+ * @return {InvoiceLicence}
+ */
+const mapDBToModel = row => {
+  const invoiceLicence = new InvoiceLicence(row.billing_invoice_licence_id);
+
+  // @todo suggest we serialise company, address and contact to jsonb fields in table
+  invoiceLicence.company = new Company(row.company_id);
+  invoiceLicence.address = new Address(row.address_id);
+  if (row.contact_id) {
+    invoiceLicence.contact = row.contact_id;
+  }
+  return invoiceLicence;
+};
+
+/**
+ * Retrieves an invoice licence row from water.billing_invoices relating to the
+ * given transaction ID, and returns an Invoice model
+ * @param {String} transactionId - GUID
+ * @return {Promise<Invoice>}
+ */
+const getByTransactionId = async transactionId => {
+  const data = await repos.billingInvoiceLicences.findOneByTransactionId(transactionId);
+  const invoiceLicence = mapDBToModel(data);
+  invoiceLicence.licence = await licenceService.getByLicenceNumber(data.licence_ref);
+  return invoiceLicence;
+};
+
 exports.mapChargeRowToModel = mapChargeRowToModel;
 exports.saveInvoiceLicenceToDB = saveInvoiceLicenceToDB;
+exports.getByTransactionId = getByTransactionId;

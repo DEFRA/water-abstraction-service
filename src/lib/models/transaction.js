@@ -12,8 +12,17 @@ const {
   assertAuthorisedDays,
   assertBillableDays,
   assertIsArrayOfType,
-  assertIsInstanceOf
+  assertIsInstanceOf,
+  assertEnum,
+  assertQuantity
 } = require('./validators');
+
+const statuses = {
+  candidate: 'candidate',
+  chargeCreated: 'charge_created',
+  approved: 'approved',
+  error: 'error'
+};
 
 class Transaction extends Model {
   constructor (id, value, isCredit = false) {
@@ -21,6 +30,7 @@ class Transaction extends Model {
     this.value = value;
     this.isCredit = isCredit;
     this._agreements = [];
+    this.status = statuses.candidate;
   }
 
   /**
@@ -131,20 +141,6 @@ class Transaction extends Model {
   }
 
   /**
-   * Whether the transaction is a two-part tariff supplementary charge
-   * (that relates to the actual abstraction)
-   * @return {Boolean}
-   */
-  get isTwoPartTariffSupplementaryCharge () {
-    return this._isTwoPartTariffSupplementaryCharge;
-  }
-
-  set isTwoPartTariffSupplementaryCharge (isTwoPartTariffSupplementaryCharge) {
-    assertIsBoolean(isTwoPartTariffSupplementaryCharge);
-    this._isTwoPartTariffSupplementaryCharge = isTwoPartTariffSupplementaryCharge;
-  }
-
-  /**
    * Gets the transaction line description
    * As sent to the Charge Module
    * @return {String}
@@ -170,6 +166,29 @@ class Transaction extends Model {
     assertIsInstanceOf(chargeElement, ChargeElement);
     this._chargeElement = chargeElement;
   }
+
+  get status () {
+    return this._status;
+  }
+
+  set status (status) {
+    assertEnum(status, Object.values(statuses));
+    this._status = status;
+  }
+
+  /**
+   * The authorised/billable/actual volume for billing
+   * @return {Number}
+   */
+  get volume () {
+    return this._volume;
+  }
+
+  set volume (volume) {
+    assertQuantity(volume);
+    this._volume = volume;
+  }
 }
 
 module.exports = Transaction;
+module.exports.statuses = statuses;

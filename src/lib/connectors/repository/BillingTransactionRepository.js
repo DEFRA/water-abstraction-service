@@ -49,6 +49,22 @@ class BillingTransactionRepository extends Repository {
     const { rows } = await this.dbQuery(getByBatchIdQuery, [batchId]);
     return rows;
   }
+
+  /**
+   * Sets status, optionally with external ID
+   * @param {String} transactionId - GUID
+   * @param {String} status - one of the statuses defined in the Transaction model
+   * @param {String} externalId - GUID
+   * @return {Promise}
+   */
+  setStatus (transactionId, status, externalId) {
+    const filter = { billing_transaction_id: transactionId };
+    const data = {
+      status,
+      ...(externalId && { external_id: externalId })
+    };
+    return this.update(filter, data);
+  }
 }
 
 module.exports = BillingTransactionRepository;

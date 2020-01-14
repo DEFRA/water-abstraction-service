@@ -1,5 +1,5 @@
 'use strict';
-
+const { get } = require('lodash');
 const Repository = require('@envage/hapi-pg-rest-api/src/repository');
 const db = require('../db');
 
@@ -79,6 +79,14 @@ const getInvoiceDetailQuery = `
   where i.billing_invoice_id = $1;
 `;
 
+const findOneByTransactionIdQuery = `
+select i.* from 
+water.billing_transactions t
+join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
+join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
+where t.billing_transaction_id=$1;
+`;
+
 /**
  * Given a row of data from the data, return an object containing only
  * the keys that start with the prefix, but with the prefix removed.
@@ -152,6 +160,16 @@ class BillingInvoiceRepository extends Repository {
 
       return invoice;
     }, null);
+  }
+
+  /**
+   * Find a single invoice by transaction ID that references it
+   * @param {String} transactionId
+   * @return {Promise<Object>}
+   */
+  async findOneByTransactionId (transactionId) {
+    const result = await this.dbQuery(findOneByTransactionIdQuery, [transactionId]);
+    return get(result, 'rows.0');
   }
 }
 
