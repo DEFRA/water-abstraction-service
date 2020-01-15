@@ -24,7 +24,7 @@ const data = {
 
 experiment('lib/connectors/repository/LicenceRepository', () => {
   beforeEach(async () => {
-    sandbox.stub(LicenceRepository.prototype, 'find');
+    sandbox.stub(LicenceRepository.prototype, 'dbQuery');
   });
 
   afterEach(async () => {
@@ -35,16 +35,16 @@ experiment('lib/connectors/repository/LicenceRepository', () => {
     let result;
 
     beforeEach(async () => {
-      LicenceRepository.prototype.find.resolves({
+      LicenceRepository.prototype.dbQuery.resolves({
         rows: data.singleRow
       });
       result = await repo.findOneByLicenceNumber(data.licenceNumber);
     });
 
-    test('calls this.find with appropriate filter', async () => {
-      expect(LicenceRepository.prototype.find.calledWith({
-        licence_ref: data.licenceNumber
-      })).to.be.true();
+    test('calls this.dbQuery with appropriate params', async () => {
+      expect(LicenceRepository.prototype.dbQuery.calledWith(
+        LicenceRepository._findOneByLicenceNumberQuery, [data.licenceNumber]
+      )).to.be.true();
     });
 
     test('resolves with first row found', async () => {

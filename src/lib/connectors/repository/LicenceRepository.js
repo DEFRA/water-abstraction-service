@@ -30,3 +30,4 @@ class LicenceRepository extends Repository {
 };
 
 module.exports = LicenceRepository;
+module.exports._findOneByLicenceNumberQuery = findOneByLicenceNumberQuery;

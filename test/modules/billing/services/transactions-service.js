@@ -49,7 +49,8 @@ const createTransaction = (options = {}) => {
     isCompensationCharge: !!options.isCompensationCharge,
     authorisedDays: 366,
     billableDays: 366,
-    description: 'Tiny pond'
+    description: 'Tiny pond',
+    volume: 5.64
   });
   return transaction;
 };
@@ -98,7 +99,8 @@ experiment('modules/billing/services/transactions-service', () => {
         chargeValue: 6134,
         credit: false,
         transactionStatus: 'unbilled',
-        approvedForBilling: false
+        approvedForBilling: false,
+        volume: 4.2
       },
       {
         id: '888fa748-4b1c-4466-ad07-4d7705728da0',
@@ -109,7 +111,8 @@ experiment('modules/billing/services/transactions-service', () => {
         chargeValue: -1421,
         credit: true,
         transactionStatus: 'unbilled',
-        approvedForBilling: false
+        approvedForBilling: false,
+        volume: 5.6
       }
     ];
 
@@ -334,7 +337,9 @@ experiment('modules/billing/services/transactions-service', () => {
           billable_quantity: 10,
           authorised_days: 366,
           billable_days: 366,
-          description: 'Tiny pond'
+          description: 'Tiny pond',
+          status: Transaction.statuses.candidate,
+          volume: 5.64
         });
       });
     });

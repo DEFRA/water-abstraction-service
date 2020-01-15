@@ -1,6 +1,6 @@
 const jobs = require('./jobs');
 
-const createSubscription = async (server, jobContainer, isMultiJob) => {
+const createSubscription = async (server, jobContainer) => {
   const { job: billingJob, onCompleteHandler } = jobContainer;
 
   await server.messageQueue.subscribe(
