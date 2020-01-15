@@ -15,7 +15,6 @@ const getRequestOptions = (path, query) => ({
 const getPostRequestOptions = (path, payload = {}) => ({
   uri: getURI(path),
   json: true,
-  method: 'POST',
   body: payload
 });
 
