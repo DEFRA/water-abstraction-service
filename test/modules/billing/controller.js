@@ -36,7 +36,7 @@ experiment('modules/billing/controller', () => {
       billing_batch_id: '00000000-0000-0000-0000-000000000000'
     });
 
-    sandbox.stub(repos.billingBatches, 'getById');
+    sandbox.stub(repos.billingBatches, 'getById').resolves();
 
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
@@ -299,6 +299,63 @@ experiment('modules/billing/controller', () => {
       test('the error contains a not found message', async () => {
         expect(response.output.payload.message).to.equal('No invoice found with id: test-invoice-id in batch with id: test-batch-id');
       });
+    });
+  });
+
+  experiment('.deleteAccountFromBatch', () => {
+    test('returns a 404 if the batch cannot be found', async () => {
+      const request = {
+        params: { batchId: 'test-batch-id' }
+      };
+
+      const response = await controller.deleteAccountFromBatch(request);
+      expect(response.output.payload.statusCode).to.equal(404);
+      expect(response.output.payload.message).to.equal('No batch found with id: test-batch-id');
+    });
+
+    test('returns a 403 if the found batch is not in the review state', async () => {
+      const request = {
+        params: { batchId: 'test-batch-id' }
+      };
+
+      const batch = { status: 'processing' };
+
+      repos.billingBatches.getById.resolves(batch);
+
+      const response = await controller.deleteAccountFromBatch(request);
+
+      expect(repos.billingBatches.getById.calledWith('test-batch-id')).to.be.true();
+      expect(response.output.payload.statusCode).to.equal(403);
+      expect(response.output.payload.message).to.equal(`Cannot delete account from batch (test-batch-id) when status is ${batch.status}`);
+    });
+
+    test('returns a 404 if there are no invoices for the invoice account id', async () => {
+      const request = {
+        params: {
+          batchId: 'test-batch-id',
+          accountId: 'test-account-id'
+        }
+      };
+
+      const batch = { status: 'review' };
+      repos.billingBatches.getById.resolves(batch);
+
+      const invoices = [{
+        invoiceLicences: [
+          { transactions: [] }
+        ],
+        invoiceAccount: {
+          id: 'not-test-account-id',
+          accountNumber: 'A88888888A'
+        }
+      }];
+
+      invoiceService.getInvoicesForBatch.resolves(invoices);
+
+      const response = await controller.deleteAccountFromBatch(request);
+      expect(invoiceService.getInvoicesForBatch.calledWith('test-batch-id')).to.be.true();
+      expect(response.output.payload.statusCode).to.equal(404);
+      expect(response.output.payload.message).to.equal('No invoices for account (test-account-id) in batch (test-batch-id)');
     });
   });
 });

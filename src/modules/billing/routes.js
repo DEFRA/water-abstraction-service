@@ -61,7 +61,22 @@ const getBatchInvoiceDetail = {
   }
 };
 
+const deleteAccountFromBatch = {
+  method: 'DELETE',
+  path: '/water/1.0/billing/batches/{batchId}/account/{accountId}',
+  handler: controller.deleteAccountFromBatch,
+  config: {
+    validate: {
+      params: {
+        batchId: Joi.string().uuid().required(),
+        accountId: Joi.string().uuid().required()
+      }
+    }
+  }
+};
+
 exports.postCreateBatch = postCreateBatch;
 exports.getBatch = getBatch;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
+exports.deleteAccountFromBatch = deleteAccountFromBatch;

@@ -94,7 +94,50 @@ const getBatchInvoiceDetail = async request => {
     : Boom.notFound(`No invoice found with id: ${invoiceId} in batch with id: ${batchId}`);
 };
 
+const deleteAccountFromBatch = async request => {
+  const { batchId, accountId } = request.params;
+  const batch = await repos.billingBatches.getById(batchId);
+
+  if (!batch) {
+    return Boom.notFound(`No batch found with id: ${batchId}`);
+  }
+
+  if (batch.status !== 'review') {
+    return Boom.forbidden(`Cannot delete account from batch (${batchId}) when status is ${batch.status}`);
+  }
+
+  const invoices = await invoiceService.getInvoicesForBatch(batchId);
+
+  const invoicesForAccount = invoices.filter(invoice => invoice.invoiceAccount.id === accountId);
+
+  if (invoicesForAccount.length === 0) {
+    return Boom.notFound(`No invoices for account (${accountId}) in batch (${batchId})`);
+  }
+
+  /*
+    TODO: Temporary implementation
+
+    Currently only removes the transactions from the local
+    water.billing_transactions table.
+
+    This needs to also remove the transactions at the charge module,
+    but we are currently waiting on the decision whether this will happen
+    in bulk or one transaction at a time.
+
+    After this is resolved the following connector code can be extracted
+    out to a service layer function where charge module interaction will
+    also take place.
+
+    The code below this comment is not included in the unit tests.
+  */
+  const { rowCount } = await repos.billingTransactions.deleteByInvoiceAccount(batchId, accountId);
+  return {
+    transactionsDeleted: rowCount
+  };
+};
+
 exports.postCreateBatch = postCreateBatch;
 exports.getBatch = getBatch;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
+exports.deleteAccountFromBatch = deleteAccountFromBatch;

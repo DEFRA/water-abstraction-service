@@ -37,5 +37,17 @@ const getByInvoiceAccountIds = async ids => {
   );
 };
 
+/**
+ * Gets the invoice accounts with the specified ID from CRM and
+ * returns as an InvoiceAccount model
+ * @param String id - GUID for CRM invoice account ID
+ * @return {Promise<InvoiceAccount>}
+ */
+const getByInvoiceAccountId = async id => {
+  const invoiceAccount = await invoiceAccountsConnector.getInvoiceAccountById(id);
+  return mapCRMInvoiceAccountToModel(invoiceAccount, invoiceAccount.company);
+};
+
 exports.mapCRMInvoiceAccountToModel = mapCRMInvoiceAccountToModel;
 exports.getByInvoiceAccountIds = getByInvoiceAccountIds;
+exports.getByInvoiceAccountId = getByInvoiceAccountId;
