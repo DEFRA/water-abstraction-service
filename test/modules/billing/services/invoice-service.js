@@ -78,6 +78,12 @@ const testResponse = [
   }
 ];
 
+const dbRow = {
+  billing_invoice_id: '5a1577d7-8dc9-4d67-aadc-37d7ea85abca',
+  invoice_account_id: 'aea355f7-b931-4824-8465-575f5b95657f',
+  invoice_account_number: 'A12345678A'
+};
+
 let transaction1;
 let transaction2;
 
@@ -115,6 +121,8 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountIds').resolves([
       invoiceAccount1, invoiceAccount2
     ]);
+
+    sandbox.stub(repos.billingInvoices, 'findOneByTransactionId').resolves(dbRow);
   });
 
   afterEach(async () => {
@@ -379,6 +387,46 @@ experiment('modules/billing/services/invoiceService', () => {
         expect(contact instanceof Contact).to.be.true();
         expect(contact.fullName).to.equal('Captain J T Kirk');
       });
+    });
+  });
+
+  experiment('.mapDBToModel', () => {
+    let result;
+
+    beforeEach(async () => {
+      result = invoiceService.mapDBToModel(dbRow);
+    });
+
+    test('returns an Invoice instance with correct ID', async () => {
+      expect(result instanceof Invoice).to.be.true();
+      expect(result.id).to.equal(dbRow.billing_invoice_id);
+    });
+
+    test('has an invoiceAccount property which is an InvoiceAccount instance', async () => {
+      const { invoiceAccount } = result;
+      expect(invoiceAccount instanceof InvoiceAccount).to.be.true();
+      expect(invoiceAccount.id).to.equal(dbRow.invoice_account_id);
+      expect(invoiceAccount.accountNumber).to.equal(dbRow.invoice_account_number);
+    });
+  });
+
+  experiment('.getByTransactionId', () => {
+    let result;
+
+    beforeEach(async () => {
+      result = await invoiceService.getByTransactionId(dbRow);
+    });
+
+    test('returns an Invoice instance with correct ID', async () => {
+      expect(result instanceof Invoice).to.be.true();
+      expect(result.id).to.equal(dbRow.billing_invoice_id);
+    });
+
+    test('has an invoiceAccount property which is an InvoiceAccount instance', async () => {
+      const { invoiceAccount } = result;
+      expect(invoiceAccount instanceof InvoiceAccount).to.be.true();
+      expect(invoiceAccount.id).to.equal(dbRow.invoice_account_id);
+      expect(invoiceAccount.accountNumber).to.equal(dbRow.invoice_account_number);
     });
   });
 });
