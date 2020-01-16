@@ -68,3 +68,4 @@ class BillingTransactionRepository extends Repository {
 }
 
 module.exports = BillingTransactionRepository;
+module.exports._getByBatchIdQuery = getByBatchIdQuery;
