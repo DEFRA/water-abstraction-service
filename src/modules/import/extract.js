@@ -124,14 +124,16 @@ async function getSqlForFile (file, schemaName) {
 
   const indexableFields = intersection(indexableFieldsList, cols);
 
-  for (const field of indexableFields) {
-    const indexName = `${table}_${field}_index`;
-    tableCreate += `\ndrop INDEX  if exists "${indexName}";`;
-  }
   tableCreate += `\n \\copy ${schemaName}."${table}" FROM '${finalPath}/${file}' HEADER DELIMITER ',' CSV;`;
-  for (const field of indexableFields) {
-    const indexName = `${table}_${field}_index`;
-    tableCreate += `\nCREATE INDEX "${indexName}" ON ${schemaName}."${table}" ("${field}");`;
+
+  if (table === 'NALD_RET_LINES') {
+    // NALD_RET_LINES is large so more care is required when creating indexes which can take a long time to create
+    tableCreate += `\nCREATE INDEX idx_nald_ret_lines_id_and_region ON ${schemaName}."NALD_RET_LINES" ("ARFL_ARTY_ID", "FGAC_REGION_CODE");`;
+  } else {
+    for (const field of indexableFields) {
+      const indexName = `${table}_${field}_index`;
+      tableCreate += `\nCREATE INDEX "${indexName}" ON ${schemaName}."${table}" ("${field}");`;
+    }
   }
 
   return tableCreate;
