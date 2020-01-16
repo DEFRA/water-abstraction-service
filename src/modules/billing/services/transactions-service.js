@@ -70,7 +70,7 @@ const createTransaction = (chargeLine, chargeElement, data = {}) => {
     chargePeriod: new DateRange(chargeLine.startDate, chargeLine.endDate),
     description: chargeElement.description,
     chargeElement: chargeElementsService.mapRowToModel(chargeElement),
-    volume: chargeElement.volume
+    volume: chargeElement.billableAnnualQuantity || chargeElement.authorisedAnnualQuantity
   });
   return transaction;
 };
