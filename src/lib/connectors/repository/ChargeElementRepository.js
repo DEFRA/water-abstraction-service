@@ -1,4 +1,5 @@
 const Repository = require('@envage/hapi-pg-rest-api/src/repository');
+const { get } = require('lodash');
 
 class ChargeElementRepository extends Repository {
   /**
@@ -36,8 +37,8 @@ class ChargeElementRepository extends Repository {
    * @return {Promise<Object>} resolves with DB row if found
    */
   async findOneById (chargeElementId) {
-    const { rows: [chargeElement] } = await this.find({ charge_element_id: chargeElementId });
-    return chargeElement;
+    const result = await this.find({ charge_element_id: chargeElementId });
+    return get(result, 'rows.0', null);
   };
 }
 
