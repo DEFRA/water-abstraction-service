@@ -408,6 +408,53 @@ experiment('modules/billing/services/transactions-service', () => {
     });
   });
 
+  experiment('.mapDBToModel', () => {
+    let result, chargeElement;
+
+    const dbRow = {
+      billing_transaction_id: '7d2c249d-0f56-40fa-90f0-fb2b7f8f698a',
+      status: 'candidate',
+      is_credit: false,
+      authorised_days: 365,
+      billable_days: 250,
+      start_date: '2019-04-01',
+      end_date: '2020-03-31',
+      charge_type: 'compensation',
+      description: 'Little stream',
+      chargeElement,
+      volume: '43.45'
+    };
+    beforeEach(async () => {
+      chargeElement = new ChargeElement();
+      result = transactionsService.mapDBToModel(dbRow, chargeElement);
+    });
+
+    test('should return a Transaction model', async () => {
+      expect(result instanceof Transaction).to.be.true();
+    });
+
+    test('should have data mapped correctly', async () => {
+      expect(result.id).to.equal(dbRow.billing_transaction_id);
+      expect(result.status).to.equal(dbRow.status);
+      expect(result.isCredit).to.equal(dbRow.is_credit);
+      expect(result.authorisedDays).to.equal(dbRow.authorised_days);
+      expect(result.billableDays).to.equal(dbRow.billable_days);
+      expect(result.isCompensationCharge).to.be.true();
+      expect(result.description).to.equal(dbRow.description);
+      expect(result.volume).to.equal(43.45);
+    });
+
+    test('charge period is mapped correctly', async () => {
+      expect(result.chargePeriod instanceof DateRange).to.be.true();
+      expect(result.chargePeriod.startDate).to.equal(dbRow.start_date);
+      expect(result.chargePeriod.endDate).to.equal(dbRow.end_date);
+    });
+
+    test('sets the chargeElement to that supplied', async () => {
+      expect(result.chargeElement).to.equal(chargeElement);
+    });
+  });
+
   experiment('.saveTransactionToDB', () => {
     let invoiceLicence;
 
