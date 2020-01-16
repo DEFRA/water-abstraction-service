@@ -4,6 +4,7 @@ const repos = require('../../../lib/connectors/repository');
 
 const Address = require('../../../lib/models/address');
 const Company = require('../../../lib/models/company');
+const Contact = require('../../../lib/models/contact-v2');
 const Licence = require('../../../lib/models/licence');
 const InvoiceLicence = require('../../../lib/models/invoice-licence');
 
@@ -94,7 +95,7 @@ const mapDBToModel = row => {
   invoiceLicence.company = new Company(row.company_id);
   invoiceLicence.address = new Address(row.address_id);
   if (row.contact_id) {
-    invoiceLicence.contact = row.contact_id;
+    invoiceLicence.contact = new Contact(row.contact_id);
   }
   return invoiceLicence;
 };
@@ -114,4 +115,5 @@ const getByTransactionId = async transactionId => {
 
 exports.mapChargeRowToModel = mapChargeRowToModel;
 exports.saveInvoiceLicenceToDB = saveInvoiceLicenceToDB;
+exports.mapDBToModel = mapDBToModel;
 exports.getByTransactionId = getByTransactionId;
