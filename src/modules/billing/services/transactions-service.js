@@ -198,7 +198,6 @@ const mapAgreementsToChargeModule = transaction => {
     .some(identity);
   return {
     section126Factor: 1,
-    // section126Agreement: !!transaction.getAgreementByCode('126'),
     section127Agreement: !!transaction.getAgreementByCode('127'),
     section130Agreement
   };

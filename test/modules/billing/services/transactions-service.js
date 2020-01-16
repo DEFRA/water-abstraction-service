@@ -13,13 +13,18 @@ const chargeModuleTransactionsConnector = require('../../../../src/lib/connector
 const repos = require('../../../../src/lib/connectors/repository');
 
 // Models
+const Agreement = require('../../../../src/lib/models/agreement');
 const ChargeModuleTransaction = require('../../../../src/lib/models/charge-module-transaction');
+const Invoice = require('../../../../src/lib/models/invoice');
+const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
+const Licence = require('../../../../src/lib/models/licence');
 const Transaction = require('../../../../src/lib/models/transaction');
 const ChargeElement = require('../../../../src/lib/models/charge-element');
 const AbstractionPeriod = require('../../../../src/lib/models/abstraction-period');
 const DateRange = require('../../../../src/lib/models/date-range');
 const Batch = require('../../../../src/lib/models/batch');
+const Region = require('../../../../src/lib/models/region');
 
 const createChargeElement = () => {
   const chargeElement = new ChargeElement('29328315-9b24-473b-bde7-02c60e881501');
@@ -55,12 +60,49 @@ const createTransaction = (options = {}) => {
   return transaction;
 };
 
+const createLicence = () => {
+  const licence = new Licence();
+  licence.fromHash({
+    id: '4838e713-9499-4b9d-a7c0-c4c9a008a589',
+    licenceNumber: '01/123/ABC',
+    isWaterUndertaker: true
+  });
+  licence.region = new Region();
+  licence.region.fromHash({
+    type: Region.types.region,
+    name: 'Anglian',
+    code: 'A',
+    numericCode: 3
+  });
+  licence.regionalChargeArea = new Region();
+  licence.regionalChargeArea.fromHash({
+    type: Region.types.regionalChargeArea,
+    name: 'Anglian'
+  });
+  licence.historicalArea = new Region();
+  licence.historicalArea.fromHash({
+    type: Region.types.environmentAgencyArea,
+    code: 'ARCA'
+  });
+  return licence;
+};
+
 const createInvoiceLicence = (options = {}) => {
   const invoiceLicence = new InvoiceLicence('c4fd4bf6-9565-4ff8-bdba-e49355446d7b');
   invoiceLicence.transactions = [
     createTransaction(options)
   ];
+  invoiceLicence.licence = createLicence();
   return invoiceLicence;
+};
+
+const createInvoice = () => {
+  const invoice = new Invoice();
+  invoice.invoiceAccount = new InvoiceAccount();
+  invoice.invoiceAccount.fromHash({
+    accountNumber: 'A12345678A'
+  });
+  return invoice;
 };
 
 const createChargeLine = (isWaterUndertaker = false) => ({
@@ -84,6 +126,14 @@ const createChargeLine = (isWaterUndertaker = false) => ({
     abstractionPeriodEndMonth: 4
   }]
 });
+
+const createBatch = () => {
+  const batch = new Batch('d65bf89e-4a84-4f2e-8fc1-ebc5ff08c125');
+  batch.fromHash({
+    type: 'supplementary'
+  });
+  return batch;
+};
 
 experiment('modules/billing/services/transactions-service', () => {
   let transactions;
@@ -389,6 +439,102 @@ experiment('modules/billing/services/transactions-service', () => {
         'billable_days',
         'description'
       ]);
+    });
+  });
+
+  experiment('.mapModelToChargeModule', () => {
+    let batch, invoice, invoiceLicence, transaction, result;
+
+    beforeEach(async () => {
+      batch = createBatch();
+      invoice = createInvoice();
+      invoiceLicence = createInvoiceLicence();
+      transaction = createTransaction();
+    });
+
+    experiment('for a supplementary bill run', async () => {
+      beforeEach(async () => {
+        result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
+      });
+
+      test('the data is mapped correctly', async () => {
+        expect(result).to.equal({
+          periodStart: '01-APR-2019',
+          periodEnd: '31-MAR-2020',
+          credit: false,
+          billableDays: 366,
+          authorisedDays: 366,
+          volume: 5.64,
+          twoPartTariff: false,
+          compensationCharge: false,
+          section126Factor: 1,
+          section127Agreement: false,
+          section130Agreement: false,
+          customerReference: 'A12345678A',
+          lineDescription: 'Tiny pond',
+          chargePeriod: '01-APR-2019 - 31-MAR-2020',
+          batchNumber: 'd65bf89e-4a84-4f2e-8fc1-ebc5ff08c125',
+          source: 'Supported',
+          season: 'Summer',
+          loss: 'Low',
+          eiucSource: 'Other',
+          chargeElementId: '29328315-9b24-473b-bde7-02c60e881501',
+          waterUndertaker: true,
+          regionalChargingArea: 'Anglian',
+          licenceNumber: '01/123/ABC',
+          region: 'A',
+          areaCode: 'ARCA'
+        });
+      });
+    });
+
+    experiment('when the batch type is two-part tariff', () => {
+      beforeEach(async () => {
+        batch.type = Batch.types.twoPartTariff;
+        result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
+      });
+
+      test('the twoPartTariff flag is set', async () => {
+        expect(result.twoPartTariff).to.be.true();
+      });
+    });
+
+    experiment('when the licence as a section 127 agreement', () => {
+      beforeEach(async () => {
+        const agreement = new Agreement();
+        agreement.fromHash({
+          code: '127'
+        });
+        transaction.agreements = [agreement];
+        result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
+      });
+
+      test('the section 127 flag is set', async () => {
+        expect(result.section127Agreement).to.be.true();
+      });
+
+      test('the section 130 flag is not set', async () => {
+        expect(result.section130Agreement).to.be.false();
+      });
+    });
+
+    experiment('when the licence as a section 130 agreement', () => {
+      beforeEach(async () => {
+        const agreement = new Agreement();
+        agreement.fromHash({
+          code: '130U'
+        });
+        transaction.agreements = [agreement];
+        result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
+      });
+
+      test('the section 127 flag is not set', async () => {
+        expect(result.section127Agreement).to.be.false();
+      });
+
+      test('the section 130 flag is set', async () => {
+        expect(result.section130Agreement).to.be.true();
+      });
     });
   });
 });
