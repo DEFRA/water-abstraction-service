@@ -135,6 +135,15 @@ const createBatch = () => {
   return batch;
 };
 
+const createAgreement = (code, factor) => {
+  const agreement = new Agreement();
+  agreement.code = code;
+  if (factor !== undefined) {
+    agreement.factor = factor;
+  }
+  return agreement;
+};
+
 experiment('modules/billing/services/transactions-service', () => {
   let transactions;
 
@@ -407,6 +416,54 @@ experiment('modules/billing/services/transactions-service', () => {
 
       test('the charge type is "compensation"', async () => {
         expect(result.charge_type).to.equal('compensation');
+      });
+    });
+
+    experiment('when the transaction has a two-part tariff agreement', () => {
+      beforeEach(async () => {
+        invoiceLicence = createInvoiceLicence({
+          isCompensationCharge: true
+        });
+        invoiceLicence.transactions[0].agreements = [createAgreement('S127')];
+        result = transactionsService.mapTransactionToDB(invoiceLicence, invoiceLicence.transactions[0]);
+      });
+
+      test('the correct agreement fields are set', async () => {
+        expect(result.section_126_factor).to.equal(1);
+        expect(result.section_127_agreement).to.equal(true);
+        expect(result.section_130_agreement).to.equal(null);
+      });
+    });
+
+    experiment('when the transaction has a canal & rivers trust agreement agreement', () => {
+      beforeEach(async () => {
+        invoiceLicence = createInvoiceLicence({
+          isCompensationCharge: true
+        });
+        invoiceLicence.transactions[0].agreements = [createAgreement('S130U')];
+        result = transactionsService.mapTransactionToDB(invoiceLicence, invoiceLicence.transactions[0]);
+      });
+
+      test('the correct agreement fields are set', async () => {
+        expect(result.section_126_factor).to.equal(1);
+        expect(result.section_127_agreement).to.equal(false);
+        expect(result.section_130_agreement).to.equal('S130U');
+      });
+    });
+
+    experiment('when the transaction has an abatement', () => {
+      beforeEach(async () => {
+        invoiceLicence = createInvoiceLicence({
+          isCompensationCharge: true
+        });
+        invoiceLicence.transactions[0].agreements = [createAgreement('S126', 0.4)];
+        result = transactionsService.mapTransactionToDB(invoiceLicence, invoiceLicence.transactions[0]);
+      });
+
+      test('the correct agreement fields are set', async () => {
+        expect(result.section_126_factor).to.equal(0.4);
+        expect(result.section_127_agreement).to.equal(false);
+        expect(result.section_130_agreement).to.equal(null);
       });
     });
   });

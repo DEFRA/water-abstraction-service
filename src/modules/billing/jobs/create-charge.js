@@ -62,8 +62,6 @@ const handleCreateCharge = async job => {
     const cmTransaction = transactionsService
       .mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
 
-    console.log(cmTransaction);
-
     // Create transaction in Charge Module
     const response = await chargeModuleTransactions.createTransaction(cmTransaction);
     const externalId = get(response, 'transaction.id');
