@@ -1,14 +1,18 @@
+'use strict';
+
 const { pool } = require('../lib/connectors/db');
 const os = require('os');
 const { logger } = require('../logger');
 
-async function reset () {
+const reset = () => {
   logger.debug('resetting scheduler');
-  var query = `
-      UPDATE "water"."scheduler" SET running=0 where running_on = '${os.hostname()}'`;
-  await pool.query(query);
-  return true;
-}
+  const query = `
+    UPDATE "water"."scheduler"
+    SET running=0
+    WHERE running_on = '${os.hostname()}';
+  `;
+  return pool.query(query);
+};
 
 const getNextJob = async () => {
   const query = `
@@ -23,7 +27,7 @@ const getNextJob = async () => {
     SET running=1, running_on = '${os.hostname()}'
     from job
     where job.task_id = s.task_id
-    RETURNING * ;`;
+    RETURNING *;`;
 
   const { rows: [job] } = await pool.query(query);
   return job;
@@ -31,26 +35,34 @@ const getNextJob = async () => {
 
 const getJobInterval = job => {
   try {
-    const interval = JSON.parse(job.data[0].task_config);
+    const interval = JSON.parse(job.task_config);
     return interval;
   } catch (e) {
-    return { count: 1, period: 'minute' };
+    return { count: 1, period: 'day' };
   }
 };
 
-const updateTaskTimeStarted = async taskId => {
-  const query = 'UPDATE "water"."scheduler" SET last_run_started=NOW() where task_id=$1';
-  await pool.query(query, [taskId]);
+const updateTaskTimeStarted = taskId => {
+  const query = `
+    UPDATE "water"."scheduler"
+    SET
+      last_run_started = NOW(),
+      date_updated = NOW(),
+      running_on = '${os.hostname()}'
+    where task_id=$1;
+  `;
+  return pool.query(query, [taskId]);
 };
 
-const endTask = async (taskId, log, interval) => {
+const endTask = (taskId, log, interval) => {
   const query = `
     UPDATE "water"."scheduler"
     SET running=0, running_on=null, log=$2, last_run=now(), next_run= now() + interval '${interval.count}' ${interval.period}
-    where task_id=$1`;
+    where task_id=$1;
+  `;
 
   const params = [taskId, JSON.stringify(log)];
-  await pool.query(query, params);
+  return pool.query(query, params);
 };
 
 async function run () {
@@ -93,7 +105,5 @@ async function run () {
   }
 }
 
-module.exports = {
-  run,
-  reset
-};
+exports.run = run;
+exports.reset = reset;
