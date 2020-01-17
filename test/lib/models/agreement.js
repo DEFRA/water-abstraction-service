@@ -28,8 +28,8 @@ experiment('lib/models/agreement', () => {
 
   experiment('.code', () => {
     test('can be set to a valid code', async () => {
-      agreement.code = '127';
-      expect(agreement.code).to.equal('127');
+      agreement.code = 'S127';
+      expect(agreement.code).to.equal('S127');
     });
 
     test('cannot be set to an invalid value', async () => {
