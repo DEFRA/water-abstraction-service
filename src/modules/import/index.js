@@ -30,7 +30,8 @@ module.exports = (messageQueue) => {
   return {
     importNald: () => {
       messageQueue.publish('import.start', {}, {
-        expireIn: '1 hours'
+        expireIn: '1 hours',
+        singletonKey: 'defra-nald-import'
       });
     },
     registerSubscribers: async () => {

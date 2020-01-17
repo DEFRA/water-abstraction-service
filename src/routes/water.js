@@ -44,6 +44,7 @@ module.exports = [
 const cron = require('node-cron');
 
 taskRunner.reset();
-cron.schedule('*/5 * * * * * *', function () {
+
+cron.schedule('*/1 * * * *', function () {
   taskRunner.run();
 });
