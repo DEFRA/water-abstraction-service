@@ -299,7 +299,7 @@ experiment('modules/billing/services/transactions-service', () => {
         test('has agreements mapped correctly', async () => {
           const { agreements } = result[0];
           expect(agreements).to.be.an.array().length(1);
-          expect(agreements[0].code).to.equal('127');
+          expect(agreements[0].code).to.equal('S127');
         });
       });
 
@@ -389,7 +389,10 @@ experiment('modules/billing/services/transactions-service', () => {
           billable_days: 366,
           description: 'Tiny pond',
           status: Transaction.statuses.candidate,
-          volume: 5.64
+          volume: 5.64,
+          section_126_factor: 1,
+          section_127_agreement: false,
+          section_130_agreement: null
         });
       });
     });
@@ -550,7 +553,7 @@ experiment('modules/billing/services/transactions-service', () => {
       beforeEach(async () => {
         const agreement = new Agreement();
         agreement.fromHash({
-          code: '127'
+          code: 'S127'
         });
         transaction.agreements = [agreement];
         result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
@@ -569,7 +572,7 @@ experiment('modules/billing/services/transactions-service', () => {
       beforeEach(async () => {
         const agreement = new Agreement();
         agreement.fromHash({
-          code: '130U'
+          code: 'S130U'
         });
         transaction.agreements = [agreement];
         result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
