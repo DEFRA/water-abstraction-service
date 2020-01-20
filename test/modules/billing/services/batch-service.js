@@ -1,3 +1,4 @@
+const moment = require('moment');
 const {
   experiment,
   test,
@@ -21,7 +22,8 @@ const data = {
     season: 'summer',
     from_financial_year_ending: 2014,
     to_financial_year_ending: 2019,
-    status: 'processing'
+    status: 'processing',
+    date_created: (new Date()).toISOString()
   }
 };
 
@@ -173,7 +175,7 @@ experiment('modules/billing/services/batch-service', () => {
       expect(batches[0].startYear.yearEnding).to.equal(response.rows[0].from_financial_year_ending);
       expect(batches[0].endYear.yearEnding).to.equal(response.rows[0].to_financial_year_ending);
       expect(batches[0].status).to.equal(response.rows[0].status);
-      expect(batches[0].dateCreated).to.equal(response.rows[0].date_created);
+      expect(batches[0].dateCreated).to.equal(moment(response.rows[0].date_created));
       expect(batches[0].region.id).to.equal(response.rows[0].region_id);
 
       expect(batches[1]).to.be.instanceOf(Batch);
@@ -183,7 +185,7 @@ experiment('modules/billing/services/batch-service', () => {
       expect(batches[1].startYear.yearEnding).to.equal(response.rows[1].from_financial_year_ending);
       expect(batches[1].endYear.yearEnding).to.equal(response.rows[1].to_financial_year_ending);
       expect(batches[1].status).to.equal(response.rows[1].status);
-      expect(batches[1].dateCreated).to.equal(response.rows[1].date_created);
+      expect(batches[1].dateCreated).to.equal(moment(response.rows[1].date_created));
       expect(batches[1].region.id).to.equal(response.rows[1].region_id);
     });
 

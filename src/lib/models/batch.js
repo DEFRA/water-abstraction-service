@@ -105,7 +105,7 @@ class Batch extends Model {
   }
 
   set dateCreated (value) {
-    this._dateCreated = value;
+    this._dateCreated = this.getDateTimeFromValue(value);
   }
 
   get dateCreated () {
