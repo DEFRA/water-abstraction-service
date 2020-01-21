@@ -53,6 +53,7 @@
     "base64url": "^3.0.1",
     "blipp": "^4.0.1",
     "bookshelf": "^1.0.1",
+    "bookshelf-case-converter-plugin": "^1.0.0",
     "camelcase": "^5.3.1",
     "commander": "^2.20.3",
     "csv-parse": "^2.4.0",

@@ -1,8 +1,7 @@
-const { bookshelf } = require('../../../connectors/bookshelf');
+const { bookshelf } = require('./bookshelf.js');
 
 module.exports = bookshelf.model('BillingTransaction', {
   tableName: 'billing_transactions',
-  idAttribute: 'billing_transaction_id',
   billingInvoiceLicence () {
     return this.hasOne('BillingInvoiceLicence', 'billing_invoice_licence_id', 'billing_invoice_licence_id');
   },
