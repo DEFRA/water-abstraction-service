@@ -482,7 +482,10 @@ experiment('modules/billing/services/transactions-service', () => {
       charge_type: 'compensation',
       description: 'Little stream',
       chargeElement,
-      volume: '43.45'
+      volume: '43.45',
+      section_126_factor: null,
+      section_127_agreement: false,
+      section_130_agreement: null
     };
     beforeEach(async () => {
       chargeElement = new ChargeElement();
@@ -512,6 +515,65 @@ experiment('modules/billing/services/transactions-service', () => {
 
     test('sets the chargeElement to that supplied', async () => {
       expect(result.chargeElement).to.equal(chargeElement);
+    });
+
+    test('there are no agreements', async () => {
+      expect(result.agreements).to.have.length(0);
+    });
+
+    experiment('when the DB row contains a section 126 factor', () => {
+      beforeEach(async () => {
+        chargeElement = new ChargeElement();
+        result = transactionsService.mapDBToModel({
+          ...dbRow,
+          section_126_factor: 0.8
+        }, chargeElement);
+      });
+
+      test('the transaction includes an agreement', async () => {
+        expect(result.agreements).to.have.length(1);
+      });
+
+      test('the agreement contains the right code and factor', async () => {
+        expect(result.agreements[0].code).to.equal('S126');
+        expect(result.agreements[0].factor).to.equal(0.8);
+      });
+    });
+
+    experiment('when the DB row contains a section 127 factor', () => {
+      beforeEach(async () => {
+        chargeElement = new ChargeElement();
+        result = transactionsService.mapDBToModel({
+          ...dbRow,
+          section_127_agreement: true
+        }, chargeElement);
+      });
+
+      test('the transaction includes an agreement', async () => {
+        expect(result.agreements).to.have.length(1);
+      });
+
+      test('the agreement contains the right code', async () => {
+        expect(result.agreements[0].code).to.equal('S127');
+      });
+    });
+
+    experiment('when the DB row contains a section 130 factor', () => {
+      beforeEach(async () => {
+        chargeElement = new ChargeElement();
+        result = transactionsService.mapDBToModel({
+          ...dbRow,
+          section_130_agreement: 'S130T'
+        }, chargeElement);
+      });
+
+      test('the transaction includes an agreement', async () => {
+        expect(result.agreements).to.have.length(1);
+      });
+
+      test('the agreement contains the right code', async () => {
+        expect(result.agreements[0].code).to.equal('S130T');
+      });
     });
   });
 
