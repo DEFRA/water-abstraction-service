@@ -92,10 +92,9 @@ class ChargeModuleRequest {
    * @param {String} method - HTTP method
    * @return {Object}
    */
-  _decorateRequestOptions (options, method = 'GET') {
+  _decorateRequestOptions (options) {
     const opts = cloneDeep(options); ;
     set(opts, 'headers.Authorization', `Bearer ${this.token}`);
-    set(opts, 'method', method);
     return opts;
   }
 
@@ -107,16 +106,21 @@ class ChargeModuleRequest {
     this.expires = null;
   }
 
-  async request (method, options, retryCount = 0) {
+  /**
+   * Make an HTTP request with the cognito auth token
+   * @param {Object} options - request options
+   * @param {Number} retryCount
+   */
+  async request (options, retryCount = 0) {
     await this._refreshToken();
     try {
-      const response = await rp.get(this._decorateRequestOptions(options, method));
+      const response = await rp.get(this._decorateRequestOptions(options));
       return response;
     } catch (err) {
       if (err.statusCode === 401 && retryCount < 3) {
         logger.info(`invalid/expired token attempt ${retryCount}`);
         this._clearToken();
-        return this.request(method, options, retryCount + 1);
+        return this.request(options, retryCount + 1);
       }
       logger.error('charge module request error', err, { retryCount });
       throw err;
@@ -129,7 +133,7 @@ class ChargeModuleRequest {
    * @return {Promise<Object>}
    */
   get (options) {
-    return this.request('GET', options);
+    return this.request({ ...options, method: 'GET' });
   }
 
   /**
@@ -138,7 +142,7 @@ class ChargeModuleRequest {
    * @return {Promise<Object>}
    */
   post (options) {
-    return this.request('POST', options);
+    return this.request({ ...options, method: 'POST' });
   }
 }
 
