@@ -5,13 +5,18 @@ const Region = require('./region');
 const { assert } = require('@hapi/hoek');
 const { isArray } = require('lodash');
 
-const { assertIsInstanceOf } = require('./validators');
+const { assertIsInstanceOf, assertEnum } = require('./validators');
 
-const VALID_BATCH_TYPE = Joi.string().valid('annual', 'supplementary', 'two_part_tariff').required();
 const VALID_SEASON = Joi.string().valid('summer', 'winter', 'all year').required();
 const VALID_STATUS = Joi.string().valid('processing', 'review', 'complete', 'error').required();
 
 const Model = require('./model');
+
+const types = {
+  annual: 'annual',
+  supplementary: 'supplementary',
+  twoPartTariff: 'two_part_tariff'
+};
 
 class Batch extends Model {
   constructor (id) {
@@ -24,7 +29,7 @@ class Batch extends Model {
    * @param {String} batchType
    */
   set type (batchType) {
-    Joi.assert(batchType, VALID_BATCH_TYPE);
+    assertEnum(batchType, Object.values(types));
     this._type = batchType;
   }
 
@@ -170,3 +175,4 @@ class Batch extends Model {
 }
 
 module.exports = Batch;
+module.exports.types = types;

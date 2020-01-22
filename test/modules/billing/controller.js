@@ -6,6 +6,8 @@ const {
   beforeEach,
   afterEach
 } = exports.lab = require('@hapi/lab').script();
+
+const config = require('../../../config');
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
@@ -54,7 +56,7 @@ experiment('modules/billing/controller', () => {
     sandbox.restore();
   });
 
-  experiment('.postCreateBatch', () => {
+  experiment('.postCreateBatch for annual billing', () => {
     let request;
 
     beforeEach(async () => {
@@ -150,6 +152,41 @@ experiment('modules/billing/controller', () => {
         const [code] = hapiResponseStub.code.lastCall.args;
         expect(code).to.equal(202);
       });
+    });
+  });
+
+  experiment('.postCreateBatch for supplementary billing', () => {
+    let request;
+
+    const years = 3;
+
+    beforeEach(async () => {
+      sandbox.stub(config.billing, 'supplementaryYears').value(years);
+
+      request = {
+        payload: {
+          userEmail: 'test@example.com',
+          regionId: '22222222-2222-2222-2222-222222222222',
+          batchType: 'supplementary',
+          financialYearEnding: 2019,
+          season: 'summer'
+        },
+        messageQueue: {
+          publish: sandbox.stub().resolves()
+        }
+      };
+
+      await controller.postCreateBatch(request, h);
+    });
+
+    test('re-runs billing over a time period specified in the config', async () => {
+      expect(repos.billingBatches.createBatch.calledWith(
+        request.payload.regionId,
+        request.payload.batchType,
+        request.payload.financialYearEnding - years,
+        request.payload.financialYearEnding,
+        request.payload.season
+      )).to.be.true();
     });
   });
 

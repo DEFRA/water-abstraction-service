@@ -2,6 +2,7 @@
 
 const Boom = require('@hapi/boom');
 
+const config = require('../../../config');
 const repos = require('../../lib/connectors/repository');
 const event = require('../../lib/event');
 const { envelope, errorEnvelope } = require('../../lib/response');
@@ -24,7 +25,7 @@ const createBatchEvent = async (userEmail, batch) => {
 };
 
 const createBatch = (regionId, batchType, financialYearEnding, season) => {
-  const fromFinancialYearEnding = batchType === 'supplementary' ? financialYearEnding - 6 : financialYearEnding;
+  const fromFinancialYearEnding = batchType === 'supplementary' ? financialYearEnding - config.billing.supplementaryYears : financialYearEnding;
 
   return repos.billingBatches.createBatch(
     regionId,

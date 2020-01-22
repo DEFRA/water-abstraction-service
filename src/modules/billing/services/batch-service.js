@@ -46,5 +46,6 @@ const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
   };
 };
 
+exports.mapDBToModel = mapDBToModel;
 exports.getBatchById = getBatchById;
 exports.getBatches = getBatches;

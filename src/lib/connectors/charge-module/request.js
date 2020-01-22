@@ -4,10 +4,18 @@ const rp = require('request-promise-native');
 const config = require('../../../../config.js');
 const urlJoin = require('url-join');
 
+const getURI = path => urlJoin(config.services.chargeModule, path);
+
 const getRequestOptions = (path, query) => ({
-  uri: urlJoin(config.services.chargeModule, path),
+  uri: getURI(path),
   json: true,
   ...(query && { qs: query })
+});
+
+const getPostRequestOptions = (path, payload = {}) => ({
+  uri: getURI(path),
+  json: true,
+  body: payload
 });
 
 /**
@@ -20,4 +28,7 @@ const getRequestOptions = (path, query) => ({
  */
 const get = (path, query) => rp.get(getRequestOptions(path, query));
 
+const post = (path, payload) => rp.post(getPostRequestOptions(path, payload));
+
 exports.get = get;
+exports.post = post;

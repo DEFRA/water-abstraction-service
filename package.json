@@ -83,6 +83,7 @@
     "sha1": "^1.1.1",
     "snake-case": "^2.1.0",
     "snakecase-keys": "^1.1.1",
+    "title-case": "^3.0.2",
     "url-join": "^4.0.1",
     "uuid": "^3.3.3"
   }

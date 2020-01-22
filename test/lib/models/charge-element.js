@@ -91,4 +91,34 @@ experiment('lib/models/charge-element', () => {
       expect(func).to.throw();
     });
   });
+
+  experiment('.eiucSource', () => {
+    test('is "tidal" when source is "tidal"', async () => {
+      const chargeElement = new ChargeElement();
+      chargeElement.source = 'tidal';
+      expect(chargeElement.eiucSource).to.equal('tidal');
+    });
+
+    test('is "other" when source is not "tidal"', async () => {
+      const chargeElement = new ChargeElement();
+      chargeElement.source = 'supported';
+      expect(chargeElement.eiucSource).to.equal('other');
+    });
+  });
+
+  experiment('.volume', () => {
+    test('is the billableAnnualQuantity if set', async () => {
+      const chargeElement = new ChargeElement();
+      chargeElement.authorisedAnnualQuantity = 10.7;
+      chargeElement.billableAnnualQuantity = 9.3;
+      expect(chargeElement.volume).to.equal(9.3);
+    });
+
+    test('is the authorisedQuantity if billableAnnualQuantity is null', async () => {
+      const chargeElement = new ChargeElement();
+      chargeElement.authorisedAnnualQuantity = 10.7;
+      chargeElement.billableAnnualQuantity = null;
+      expect(chargeElement.volume).to.equal(10.7);
+    });
+  });
 });

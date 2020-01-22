@@ -95,29 +95,15 @@ experiment('lib/models/licence', () => {
     });
   });
 
-  experiment('.standardUnitChargeArea', async () => {
+  experiment('.regionalChargeArea', async () => {
     test('can be set to a region instance', async () => {
-      licence.standardUnitChargeArea = data.region;
-      expect(licence.standardUnitChargeArea).to.equal(data.region);
+      licence.regionalChargeArea = data.region;
+      expect(licence.regionalChargeArea).to.equal(data.region);
     });
 
     test('throws an error if set to a value which is not an instance of Region', async () => {
       const func = () => {
-        licence.standardUnitChargeArea = {};
-      };
-      expect(func).to.throw();
-    });
-  });
-
-  experiment('.environmentalImprovementUnitChargeArea', async () => {
-    test('can be set to a region instance', async () => {
-      licence.environmentalImprovementUnitChargeArea = data.region;
-      expect(licence.environmentalImprovementUnitChargeArea).to.equal(data.region);
-    });
-
-    test('throws an error if set to a value which is not an instance of Region', async () => {
-      const func = () => {
-        licence.environmentalImprovementUnitChargeArea = {};
+        licence.regionalChargeArea = {};
       };
       expect(func).to.throw();
     });

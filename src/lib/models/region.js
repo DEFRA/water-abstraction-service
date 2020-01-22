@@ -10,9 +10,8 @@ const {
 
 const validTypes = {
   region: 'region',
-  standardUnitChargeArea: 'SUCA',
   environmentAgencyArea: 'EAAR',
-  environmentalImprovementUnitChargeArea: 'EIUCA'
+  regionalChargeArea: 'regionalChargeArea'
 };
 
 /**

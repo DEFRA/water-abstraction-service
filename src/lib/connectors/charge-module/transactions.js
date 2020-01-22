@@ -20,4 +20,14 @@ const getTransactionQueue = (batchId, customerReference) => {
   return request.get('v1/wrls/transaction_queue', query);
 };
 
+/**
+ * Create a transaction in the charge module
+ * @param {Object} payload
+ * @return {Promise} resolves with HTTP response json
+ */
+const createTransaction = payload => {
+  return request.post('v1/wrls/transaction_queue', payload);
+};
+
 exports.getTransactionQueue = getTransactionQueue;
+exports.createTransaction = createTransaction;

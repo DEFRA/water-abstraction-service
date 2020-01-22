@@ -56,7 +56,7 @@ experiment('modules/billing/register-subscribers', () => {
     experiment('for the populateBatchChargeVersions job', () => {
       test('a subscribe handler is registered', async () => {
         const { job } = jobs.populateBatchChargeVersions;
-        expect(server.messageQueue.subscribe.calledWith(job.jobName, job.handler)).to.be.true();
+        expect(server.messageQueue.subscribe.calledWith(job.jobName, {}, job.handler)).to.be.true();
       });
 
       test('an onComplete handler is registered', async () => {
@@ -78,7 +78,7 @@ experiment('modules/billing/register-subscribers', () => {
     experiment('for the processChargeVersion job', () => {
       test('a subscribe handler is registered for processChargeVersion', async () => {
         const { job } = jobs.processChargeVersion;
-        expect(server.messageQueue.subscribe.calledWith(job.jobName, job.handler)).to.be.true();
+        expect(server.messageQueue.subscribe.calledWith(job.jobName, job.options, job.handler)).to.be.true();
       });
 
       test('an onComplete handler is registered for processChargeVersion', async () => {
@@ -100,7 +100,7 @@ experiment('modules/billing/register-subscribers', () => {
     experiment('for the prepareTransactions job', () => {
       test('a subscribe handler is registered', async () => {
         const { job } = jobs.prepareTransactions;
-        expect(server.messageQueue.subscribe.calledWith(job.jobName, job.handler)).to.be.true();
+        expect(server.messageQueue.subscribe.calledWith(job.jobName, {}, job.handler)).to.be.true();
       });
 
       test('an onComplete handler is registered', async () => {
@@ -122,7 +122,7 @@ experiment('modules/billing/register-subscribers', () => {
     experiment('for the createCharge job', () => {
       test('a subscribe handler is registered', async () => {
         const { job } = jobs.createCharge;
-        expect(server.messageQueue.subscribe.calledWith(job.jobName, job.handler)).to.be.true();
+        expect(server.messageQueue.subscribe.calledWith(job.jobName, job.options, job.handler)).to.be.true();
       });
 
       test('an onComplete handler is registered', async () => {
