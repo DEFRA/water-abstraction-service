@@ -1,9 +1,6 @@
 'use strict';
 
-const rp = require('request-promise-native').defaults({
-  proxy: null,
-  strictSSL: false
-});
+const { http } = require('@envage/water-abstraction-helpers');
 const urlJoin = require('url-join');
 const moment = require('moment');
 const { set, cloneDeep } = require('lodash');
@@ -32,7 +29,7 @@ const makeTokenRequest = async () => {
     }
   };
   try {
-    const response = await rp(options);
+    const response = await http.request(options);
     return response;
   } catch (err) {
     logger.error('error getting cognito token', err);
@@ -114,7 +111,7 @@ class ChargeModuleRequest {
   async request (options, retryCount = 0) {
     await this._refreshToken();
     try {
-      const response = await rp.get(this._decorateRequestOptions(options));
+      const response = await http.request(this._decorateRequestOptions(options));
       return response;
     } catch (err) {
       if (err.statusCode === 401 && retryCount < 3) {
