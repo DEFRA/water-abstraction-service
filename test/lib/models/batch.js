@@ -1,3 +1,4 @@
+const moment = require('moment');
 const uuid = require('uuid/v4');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
@@ -251,6 +252,56 @@ experiment('lib/models/batch', () => {
         batch.region = TEST_MODEL;
       };
       expect(func).to.throw();
+    });
+  });
+
+  experiment('.dateCreated', () => {
+    test('converts an ISO date string to a moment internally', async () => {
+      const dateString = '2020-01-20T14:51:42.024Z';
+      const batch = new Batch();
+      batch.dateCreated = dateString;
+
+      expect(batch.dateCreated).to.equal(moment(dateString));
+    });
+
+    test('converts a JS Date to a moment internally', async () => {
+      const date = new Date();
+      const batch = new Batch();
+      batch.dateCreated = date;
+
+      expect(batch.dateCreated).to.equal(moment(date));
+    });
+
+    test('can be set using a moment', async () => {
+      const now = moment();
+
+      const batch = new Batch();
+      batch.dateCreated = now;
+
+      expect(batch.dateCreated).to.equal(now);
+    });
+
+    test('throws for an invalid string', async () => {
+      const dateString = 'not a date';
+      const batch = new Batch();
+
+      expect(() => {
+        batch.dateCreated = dateString;
+      }).to.throw();
+    });
+
+    test('throws for a boolean value', async () => {
+      const batch = new Batch();
+
+      expect(() => {
+        batch.dateCreated = true;
+      }).to.throw();
+    });
+
+    test('allows null', async () => {
+      const batch = new Batch();
+      batch.dateCreated = null;
+      expect(batch.dateCreated).to.be.null();
     });
   });
 });

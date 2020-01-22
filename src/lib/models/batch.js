@@ -9,7 +9,7 @@ const { assertIsInstanceOf } = require('./validators');
 
 const VALID_BATCH_TYPE = Joi.string().valid('annual', 'supplementary', 'two_part_tariff').required();
 const VALID_SEASON = Joi.string().valid('summer', 'winter', 'all year').required();
-const VALID_STATUS = Joi.string().valid('processing', 'complete', 'error').required();
+const VALID_STATUS = Joi.string().valid('processing', 'review', 'complete', 'error').required();
 
 const Model = require('./model');
 
@@ -102,6 +102,14 @@ class Batch extends Model {
    */
   get status () {
     return this._status;
+  }
+
+  set dateCreated (value) {
+    this._dateCreated = this.getDateTimeFromValue(value);
+  }
+
+  get dateCreated () {
+    return this._dateCreated;
   }
 
   /**
