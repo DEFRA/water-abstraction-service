@@ -622,37 +622,55 @@ experiment('modules/billing/services/transactions-service', () => {
     });
 
     experiment('for a supplementary bill run', async () => {
-      beforeEach(async () => {
-        result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
-      });
+      experiment('with no section 126 agreement', () => {
+        beforeEach(async () => {
+          result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
+        });
 
-      test('the data is mapped correctly', async () => {
-        expect(result).to.equal({
-          periodStart: '01-APR-2019',
-          periodEnd: '31-MAR-2020',
-          credit: false,
-          billableDays: 366,
-          authorisedDays: 366,
-          volume: 5.64,
-          twoPartTariff: false,
-          compensationCharge: false,
-          section126Factor: 1,
-          section127Agreement: false,
-          section130Agreement: false,
-          customerReference: 'A12345678A',
-          lineDescription: 'Tiny pond',
-          chargePeriod: '01-APR-2019 - 31-MAR-2020',
-          batchNumber: 'd65bf89e-4a84-4f2e-8fc1-ebc5ff08c125',
-          source: 'Supported',
-          season: 'Summer',
-          loss: 'Low',
-          eiucSource: 'Other',
-          chargeElementId: '29328315-9b24-473b-bde7-02c60e881501',
-          waterUndertaker: true,
-          regionalChargingArea: 'Anglian',
-          licenceNumber: '01/123/ABC',
-          region: 'A',
-          areaCode: 'ARCA'
+        test('the data is mapped correctly', async () => {
+          expect(result).to.equal({
+            periodStart: '01-APR-2019',
+            periodEnd: '31-MAR-2020',
+            credit: false,
+            billableDays: 366,
+            authorisedDays: 366,
+            volume: 5.64,
+            twoPartTariff: false,
+            compensationCharge: false,
+            section126Factor: 1,
+            section127Agreement: false,
+            section130Agreement: false,
+            customerReference: 'A12345678A',
+            lineDescription: 'Tiny pond',
+            chargePeriod: '01-APR-2019 - 31-MAR-2020',
+            batchNumber: 'd65bf89e-4a84-4f2e-8fc1-ebc5ff08c125',
+            source: 'Supported',
+            season: 'Summer',
+            loss: 'Low',
+            eiucSource: 'Other',
+            chargeElementId: '29328315-9b24-473b-bde7-02c60e881501',
+            waterUndertaker: true,
+            regionalChargingArea: 'Anglian',
+            licenceNumber: '01/123/ABC',
+            region: 'A',
+            areaCode: 'ARCA'
+          });
+        });
+
+        experiment('with a section 126 agreement', () => {
+          beforeEach(async () => {
+            const agreement = new Agreement();
+            agreement.fromHash({
+              code: 'S126',
+              factor: 0.75
+            });
+            transaction.agreements = [agreement];
+            result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
+          });
+
+          test('the data is mapped correctly', async () => {
+            expect(result.section126Factor).to.equal(0.75);
+          });
         });
       });
     });
