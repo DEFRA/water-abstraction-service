@@ -1,3 +1,5 @@
+'use strict';
+
 const messageQueue = require('../../lib/message-queue');
 const { importNald } = require('../../modules/import')(messageQueue);
 
@@ -10,6 +12,4 @@ const run = async (data) => {
   }
 };
 
-module.exports = {
-  run
-};
+exports.run = run;

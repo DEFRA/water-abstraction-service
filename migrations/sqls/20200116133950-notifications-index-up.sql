@@ -1,0 +1,2 @@
+CREATE INDEX idx_scheduled_notification_statuses ON water.scheduled_notification(status, notify_status);
+CREATE INDEX idx_gauging_stations_station_reference ON water.gauging_stations(station_reference);
