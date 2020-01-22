@@ -16,6 +16,10 @@ module.exports = {
     }
   },
 
+  billing: {
+    supplementaryYears: 0
+  },
+
   blipp: {
     showAuth: true
   },

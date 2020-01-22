@@ -137,6 +137,46 @@ experiment('modules/billing/routes', () => {
     });
   });
 
+  experiment('getBatches', () => {
+    let request;
+    let server;
+
+    beforeEach(async () => {
+      server = getServer(routes.getBatches);
+
+      request = {
+        method: 'GET',
+        url: '/water/1.0/billing/batches'
+      };
+    });
+
+    test('returns 200 with no query params payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns 200 when pagination params are added to the query string', async () => {
+      request.url += '?page=1&perPage=10';
+
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the page is not an integer', async () => {
+      request.url += '?page=___one___&perPage=10';
+
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the perPage param is not an integer', async () => {
+      request.url += '?page=1&perPage=___ten___';
+
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+  });
+
   experiment('getBatchInvoices', () => {
     let request;
     let server;

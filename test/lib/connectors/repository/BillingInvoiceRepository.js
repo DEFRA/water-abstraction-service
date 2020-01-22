@@ -122,4 +122,47 @@ experiment('lib/connectors/repository/BillingInvoiceRepository', () => {
       expect(licence.transactions.find(t => t.authorised_days === 33)).to.exist();
     });
   });
+
+  experiment('.findOneByTransactionId', async () => {
+    const transactionId = 'transaction-id';
+
+    experiment('when a row is found', () => {
+      let result;
+      beforeEach(async () => {
+        BillingInvoiceRepository.prototype.dbQuery.resolves({
+          rows: [{
+            transaction_id: transactionId
+          }]
+        });
+        const repo = new BillingInvoiceRepository();
+        result = await repo.findOneByTransactionId(transactionId);
+      });
+
+      test('calls dbQuery() with correct params', async () => {
+        const [query, params] = BillingInvoiceRepository.prototype.dbQuery.lastCall.args;
+        expect(query).to.equal(BillingInvoiceRepository._findOneByTransactionIdQuery);
+        expect(params).to.equal([transactionId]);
+      });
+
+      test('resolves with found row', async () => {
+        expect(result).to.be.an.object();
+        expect(result.transaction_id).to.equal(transactionId);
+      });
+    });
+
+    experiment('when a row is not found', () => {
+      let result;
+      beforeEach(async () => {
+        BillingInvoiceRepository.prototype.dbQuery.resolves({
+          rows: []
+        });
+        const repo = new BillingInvoiceRepository();
+        result = await repo.findOneByTransactionId(transactionId);
+      });
+
+      test('resolves with null', async () => {
+        expect(result).to.equal(null);
+      });
+    });
+  });
 });

@@ -6,6 +6,8 @@ const {
   beforeEach,
   afterEach
 } = exports.lab = require('@hapi/lab').script();
+
+const config = require('../../../config');
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
@@ -16,6 +18,7 @@ const Invoice = require('../../../src/lib/models/invoice');
 const repos = require('../../../src/lib/connectors/repository');
 const event = require('../../../src/lib/event');
 const invoiceService = require('../../../src/modules/billing/services/invoice-service');
+const batchService = require('../../../src/modules/billing/services/batch-service');
 
 const controller = require('../../../src/modules/billing/controller');
 
@@ -38,6 +41,7 @@ experiment('modules/billing/controller', () => {
 
     sandbox.stub(repos.billingBatches, 'getById').resolves();
 
+    sandbox.stub(batchService, 'getBatches').resolves();
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
 
@@ -52,7 +56,7 @@ experiment('modules/billing/controller', () => {
     sandbox.restore();
   });
 
-  experiment('.postCreateBatch', () => {
+  experiment('.postCreateBatch for annual billing', () => {
     let request;
 
     beforeEach(async () => {
@@ -151,6 +155,41 @@ experiment('modules/billing/controller', () => {
     });
   });
 
+  experiment('.postCreateBatch for supplementary billing', () => {
+    let request;
+
+    const years = 3;
+
+    beforeEach(async () => {
+      sandbox.stub(config.billing, 'supplementaryYears').value(years);
+
+      request = {
+        payload: {
+          userEmail: 'test@example.com',
+          regionId: '22222222-2222-2222-2222-222222222222',
+          batchType: 'supplementary',
+          financialYearEnding: 2019,
+          season: 'summer'
+        },
+        messageQueue: {
+          publish: sandbox.stub().resolves()
+        }
+      };
+
+      await controller.postCreateBatch(request, h);
+    });
+
+    test('re-runs billing over a time period specified in the config', async () => {
+      expect(repos.billingBatches.createBatch.calledWith(
+        request.payload.regionId,
+        request.payload.batchType,
+        request.payload.financialYearEnding - years,
+        request.payload.financialYearEnding,
+        request.payload.season
+      )).to.be.true();
+    });
+  });
+
   experiment('.getBatch', () => {
     experiment('when the batch is found', () => {
       let response;
@@ -204,6 +243,36 @@ experiment('modules/billing/controller', () => {
     });
   });
 
+  experiment('.getBatches', () => {
+    test('passes pagination options to the batch service', async () => {
+      const request = {
+        query: {
+          page: 5,
+          perPage: 10
+        }
+
+      };
+      await controller.getBatches(request);
+
+      const [page, perPage] = batchService.getBatches.lastCall.args;
+      expect(page).to.equal(5);
+      expect(perPage).to.equal(10);
+    });
+
+    test('directly returns the response from the batchService', async () => {
+      const request = { query: {} };
+      const batchResponse = {
+        data: [],
+        pagination: {}
+      };
+      batchService.getBatches.resolves(batchResponse);
+
+      const response = await controller.getBatches(request);
+
+      expect(response).to.equal(batchResponse);
+    });
+  });
+
   experiment('.getBatchInvoices', () => {
     experiment('when the batch is found', () => {
       let response;
@@ -228,27 +297,6 @@ experiment('modules/billing/controller', () => {
 
       test('the error object is null', async () => {
         expect(response.error).to.be.null();
-      });
-    });
-
-    experiment('when the batch does not exist', () => {
-      let response;
-
-      beforeEach(async () => {
-        invoiceService.getInvoicesForBatch.resolves([]);
-        response = await controller.getBatchInvoices({
-          params: {
-            batchId: 'test-batch-id'
-          }
-        });
-      });
-
-      test('the data object is null', async () => {
-        expect(response.data).to.be.null();
-      });
-
-      test('the error contains a not found message', async () => {
-        expect(response.output.payload.message).to.equal('No invoices found for batch with id: test-batch-id');
       });
     });
   });

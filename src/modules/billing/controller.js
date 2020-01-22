@@ -2,12 +2,14 @@
 
 const Boom = require('@hapi/boom');
 
+const config = require('../../../config');
 const repos = require('../../lib/connectors/repository');
 const event = require('../../lib/event');
 const { envelope, errorEnvelope } = require('../../lib/response');
 const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-versions');
 const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
+const batchService = require('./services/batch-service');
 
 const createBatchEvent = async (userEmail, batch) => {
   const batchEvent = event.create({
@@ -23,7 +25,7 @@ const createBatchEvent = async (userEmail, batch) => {
 };
 
 const createBatch = (regionId, batchType, financialYearEnding, season) => {
-  const fromFinancialYearEnding = batchType === 'supplementary' ? financialYearEnding - 6 : financialYearEnding;
+  const fromFinancialYearEnding = batchType === 'supplementary' ? financialYearEnding - config.billing.supplementaryYears : financialYearEnding;
 
   return repos.billingBatches.createBatch(
     regionId,
@@ -76,13 +78,17 @@ const getBatch = async request => {
     : Boom.notFound(`No batch found with id: ${batchId}`);
 };
 
+const getBatches = async request => {
+  const { page, perPage } = request.query;
+  const batches = await batchService.getBatches(page, perPage);
+  return batches;
+};
+
 const getBatchInvoices = async request => {
   const { batchId } = request.params;
   const invoices = await invoiceService.getInvoicesForBatch(batchId);
 
-  return invoices.length
-    ? envelope(invoices, true)
-    : Boom.notFound(`No invoices found for batch with id: ${batchId}`);
+  return envelope(invoices, true);
 };
 
 const getBatchInvoiceDetail = async request => {
@@ -138,6 +144,7 @@ const deleteAccountFromBatch = async request => {
 
 exports.postCreateBatch = postCreateBatch;
 exports.getBatch = getBatch;
+exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.deleteAccountFromBatch = deleteAccountFromBatch;

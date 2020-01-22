@@ -5,7 +5,9 @@ const createSubscription = async (server, jobContainer) => {
 
   await server.messageQueue.subscribe(
     billingJob.jobName,
+    billingJob.options || {},
     billingJob.handler
+
   );
 
   if (onCompleteHandler) {

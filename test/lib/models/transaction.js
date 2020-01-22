@@ -65,6 +65,7 @@ experiment('lib/models/transaction', () => {
         id: transaction.id,
         value: transaction.value,
         isCredit: transaction.isCredit,
+        status: 'candidate',
         agreements: []
       });
     });
@@ -211,24 +212,6 @@ experiment('lib/models/transaction', () => {
 
       const func = () => {
         transaction.isCompensationCharge = 'not-a-boolean';
-      };
-
-      expect(func).to.throw();
-    });
-  });
-
-  experiment('.isTwoPartTariffSupplementaryCharge', () => {
-    test('can be set to a boolean', async () => {
-      const transaction = new Transaction();
-      transaction.isTwoPartTariffSupplementaryCharge = false;
-      expect(transaction.isTwoPartTariffSupplementaryCharge).to.equal(false);
-    });
-
-    test('throws an error if set to any other type', async () => {
-      const transaction = new Transaction();
-
-      const func = () => {
-        transaction.isTwoPartTariffSupplementaryCharge = 'not-a-boolean';
       };
 
       expect(func).to.throw();

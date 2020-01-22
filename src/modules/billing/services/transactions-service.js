@@ -1,7 +1,8 @@
 'use strict';
-
-const { get } = require('lodash');
-
+const moment = require('moment');
+const { identity, get } = require('lodash');
+const { titleCase } = require('title-case');
+const Batch = require('../../../lib/models/batch');
 const Transaction = require('../../../lib/models/transaction');
 const DateRange = require('../../../lib/models/date-range');
 
@@ -68,7 +69,8 @@ const createTransaction = (chargeLine, chargeElement, data = {}) => {
     agreements: agreementsService.mapChargeToAgreements(chargeLine),
     chargePeriod: new DateRange(chargeLine.startDate, chargeLine.endDate),
     description: chargeElement.description,
-    chargeElement: chargeElementsService.mapRowToModel(chargeElement)
+    chargeElement: chargeElementsService.mapRowToModel(chargeElement),
+    volume: chargeElement.billableAnnualQuantity || chargeElement.authorisedAnnualQuantity
   });
   return transaction;
 };
@@ -133,8 +135,33 @@ const mapTransactionToDB = (invoiceLicence, transaction) => ({
   billable_quantity: transaction.chargeElement.billableAnnualQuantity,
   authorised_days: transaction.authorisedDays,
   billable_days: transaction.billableDays,
-  description: transaction.description
+  description: transaction.description,
+  status: transaction.status,
+  volume: transaction.volume
 });
+
+/**
+ * Maps a row from water.billing_transactions to a Transaction model
+ * @param {Object} row - from water.billing_transactions
+ * @param {ChargeElement} chargeElement
+ */
+const mapDBToModel = (row, chargeElement) => {
+  const transaction = new Transaction();
+  transaction.fromHash({
+    id: row.billing_transaction_id,
+    status: row.status,
+    isCredit: row.is_credit,
+    authorisedDays: row.authorised_days,
+    billableDays: row.billable_days,
+    // @todo agreements
+    chargePeriod: new DateRange(row.start_date, row.end_date),
+    isCompensationCharge: row.charge_type === 'compensation',
+    description: row.description,
+    chargeElement,
+    volume: parseFloat(row.volume)
+  });
+  return transaction;
+};
 
 /**
  * Saves a row to water.billing_transactions for the given Transaction
@@ -148,8 +175,98 @@ const saveTransactionToDB = (invoiceLicence, transaction) => {
   return repos.billingTransactions.create(data);
 };
 
+const DATE_FORMAT = 'YYYY-MM-DD';
+const CM_DATE_FORMAT = 'DD-MMM-YYYY';
+
+/**
+ * Converts a service date to a Charge Module date
+ * @param {String} str - ISO date YYYY-MM-DD
+ * @return {String} Charge Module format date, DD-MMM-YYYY
+ */
+const mapChargeModuleDate = str =>
+  moment(str, DATE_FORMAT).format(CM_DATE_FORMAT).toUpperCase();
+
+/**
+ * Gets all charge agreement variables/flags from transaction
+ * for Charge Module
+ * @param {Transaction} transaction
+ * @return {Object}
+ */
+const mapAgreementsToChargeModule = transaction => {
+  const section130Agreement = ['130U', '130S', '130T', '130W']
+    .map(code => transaction.getAgreementByCode(code))
+    .some(identity);
+  return {
+    section126Factor: 1,
+    section127Agreement: !!transaction.getAgreementByCode('127'),
+    section130Agreement
+  };
+};
+
+/**
+ * Gets all charge agreement variables from ChargeElement
+ * for Charge Module
+ * @param {ChargeElement} chargeElement
+ * @return {Object}
+ */
+const mapChargeElementToChargeModuleTransaction = chargeElement => ({
+  source: titleCase(chargeElement.source),
+  season: titleCase(chargeElement.season),
+  loss: titleCase(chargeElement.loss),
+  eiucSource: titleCase(chargeElement.eiucSource),
+  chargeElementId: chargeElement.id
+});
+
+/**
+ * Gets all charge agreement variables from Licence
+ * for Charge Module
+ * @param {Licence} licence
+ * @return {Object}
+ */
+const mapLicenceToChargeElementTransaction = licence => ({
+  waterUndertaker: licence.isWaterUndertaker,
+  regionalChargingArea: licence.regionalChargeArea.name, // @TODO
+  licenceNumber: licence.licenceNumber,
+  region: licence.region.code,
+  areaCode: licence.historicalArea.code
+});
+
+/**
+ * Maps service models to Charge Module transaction data that
+ * can be used to generate a charge
+ * @param {Batch} batch
+ * @param {Invoice} invoice
+ * @param {InvoiceLicence} invoiceLicence
+ * @param {Transaction} transaction
+ * @return {Object}
+ */
+const mapModelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
+  const periodStart = mapChargeModuleDate(transaction.chargePeriod.startDate);
+  const periodEnd = mapChargeModuleDate(transaction.chargePeriod.endDate);
+
+  return {
+    periodStart,
+    periodEnd,
+    credit: transaction.isCredit,
+    billableDays: transaction.billableDays,
+    authorisedDays: transaction.authorisedDays,
+    volume: transaction.volume,
+    twoPartTariff: batch.type === Batch.types.twoPartTariff,
+    compensationCharge: transaction.isCompensationCharge,
+    ...mapAgreementsToChargeModule(transaction),
+    customerReference: invoice.invoiceAccount.accountNumber,
+    lineDescription: transaction.description,
+    chargePeriod: `${periodStart} - ${periodEnd}`,
+    batchNumber: batch.id,
+    ...mapChargeElementToChargeModuleTransaction(transaction.chargeElement),
+    ...mapLicenceToChargeElementTransaction(invoiceLicence.licence)
+  };
+};
+
 exports.getTransactionsForBatch = getTransactionsForBatch;
 exports.getTransactionsForBatchInvoice = getTransactionsForBatchInvoice;
 exports.mapChargeToTransactions = mapChargeToTransactions;
 exports.mapTransactionToDB = mapTransactionToDB;
+exports.mapDBToModel = mapDBToModel;
 exports.saveTransactionToDB = saveTransactionToDB;
+exports.mapModelToChargeModule = mapModelToChargeModule;

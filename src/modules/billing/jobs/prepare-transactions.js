@@ -1,4 +1,5 @@
 const { logger } = require('../../../logger');
+const repos = require('../../../lib/connectors/repository');
 
 const JOB_NAME = 'billing.prepare-transactions';
 
@@ -11,6 +12,9 @@ const handlePrepareTransactions = async job => {
   logger.info(`Handling ${JOB_NAME}`);
 
   const { batch } = job.data;
+
+  const transactions = await repos.billingTransactions.getByBatchId(batch.billing_batch_id);
+
   /**
    * Placeholder:
    *
@@ -30,7 +34,7 @@ const handlePrepareTransactions = async job => {
    */
   return {
     batch,
-    transactions: []
+    transactions
   };
 };
 

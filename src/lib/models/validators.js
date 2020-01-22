@@ -20,6 +20,7 @@ const VALID_DAY = VALID_POSITIVE_INTEGER.max(31);
 const VALID_MONTH = VALID_POSITIVE_INTEGER.max(12);
 const VALID_QUANTITY = Joi.number().min(0);
 const VALID_NULLABLE_QUANTITY = VALID_QUANTITY.allow(null);
+const VALID_ISO_DATE_STRING = Joi.string().isoDate();
 
 const assertIsArrayOfType = (values, Type) => {
   hoek.assert(isArray(values), 'Array expected');
@@ -49,6 +50,7 @@ const assertDay = value => assert(value, VALID_DAY);
 const assertMonth = value => assert(value, VALID_MONTH);
 const assertQuantity = value => assert(value, VALID_QUANTITY);
 const assertNullableQuantity = value => assert(value, VALID_NULLABLE_QUANTITY);
+const assertIsoString = value => assert(value, VALID_ISO_DATE_STRING);
 
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
@@ -69,3 +71,5 @@ exports.assertDay = assertDay;
 exports.assertMonth = assertMonth;
 exports.assertQuantity = assertQuantity;
 exports.assertNullableQuantity = assertNullableQuantity;
+exports.assertIsoString = assertIsoString
+;

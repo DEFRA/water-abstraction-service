@@ -213,6 +213,13 @@ const mapModelToDB = (batch, invoice) => ({
   billing_batch_id: batch.id
 });
 
+const mapDBToModel = row => {
+  const invoice = new Invoice(row.billing_invoice_id);
+  invoice.invoiceAccount = new InvoiceAccount(row.invoice_account_id);
+  invoice.invoiceAccount.accountNumber = row.invoice_account_number;
+  return invoice;
+};
+
 /**
  * Saves an Invoice model to water.billing_invoices
  * @param {Batch} batch
@@ -225,7 +232,20 @@ const saveInvoiceToDB = async (batch, invoice) => {
   return row;
 };
 
+/**
+ * Retrieves an invoice row from water.billing_invoices relating to the
+ * given transaction ID, and returns an Invoice model
+ * @param {String} transactionId - GUID
+ * @return {Promise<Invoice>}
+ */
+const getByTransactionId = async transactionId => {
+  const data = await repos.billingInvoices.findOneByTransactionId(transactionId);
+  return mapDBToModel(data);
+};
+
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.mapChargeDataToModels = mapChargeDataToModels;
+exports.mapDBToModel = mapDBToModel;
 exports.saveInvoiceToDB = saveInvoiceToDB;
+exports.getByTransactionId = getByTransactionId;

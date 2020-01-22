@@ -17,6 +17,8 @@ const request = require('../../../../src/lib/connectors/charge-module/request');
 experiment('lib/connectors/charge-module/request', () => {
   beforeEach(async () => {
     sandbox.stub(requestPromise, 'get').resolves();
+    sandbox.stub(requestPromise, 'post').resolves();
+
     sandbox.stub(config.services, 'chargeModule').value('https://test.example.com');
   });
 
@@ -71,6 +73,28 @@ experiment('lib/connectors/charge-module/request', () => {
           two: 2
         });
       });
+    });
+  });
+
+  experiment('.post', () => {
+    let options;
+    const payload = { foo: 'bar' };
+
+    beforeEach(async () => {
+      await request.post('path/to/somewhere', payload);
+      options = requestPromise.post.lastCall.args[0];
+    });
+
+    test('the options object has json set to true', async () => {
+      expect(options.json).to.be.true();
+    });
+
+    test('the options object has the correct URL', async () => {
+      expect(options.uri).to.equal('https://test.example.com/path/to/somewhere');
+    });
+
+    test('the payload is included', async () => {
+      expect(options.body).equal(payload);
     });
   });
 });
