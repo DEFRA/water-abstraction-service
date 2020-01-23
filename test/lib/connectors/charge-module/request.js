@@ -16,8 +16,8 @@ const request = require('../../../../src/lib/connectors/charge-module/request');
 
 experiment('lib/connectors/charge-module/request', () => {
   beforeEach(async () => {
-    sandbox.stub(requestPromise, 'get').resolves();
-    sandbox.stub(requestPromise, 'post').resolves();
+    sandbox.stub(request.cmRequest, 'get').resolves();
+    sandbox.stub(request.cmRequest, 'post').resolves();
 
     sandbox.stub(config.services, 'chargeModule').value('https://test.example.com');
   });
@@ -32,7 +32,7 @@ experiment('lib/connectors/charge-module/request', () => {
 
       beforeEach(async () => {
         await request.get('path/to/somewhere');
-        options = requestPromise.get.lastCall.args[0];
+        options = request.cmRequest.get.lastCall.args[0];
       });
 
       test('the options object has json set to true', async () => {
@@ -56,7 +56,7 @@ experiment('lib/connectors/charge-module/request', () => {
           one: 1,
           two: 2
         });
-        options = requestPromise.get.lastCall.args[0];
+        options = request.cmRequest.get.lastCall.args[0];
       });
 
       test('the options object has json set to true', async () => {
@@ -82,7 +82,7 @@ experiment('lib/connectors/charge-module/request', () => {
 
     beforeEach(async () => {
       await request.post('path/to/somewhere', payload);
-      options = requestPromise.post.lastCall.args[0];
+      options = request.cmRequest.post.lastCall.args[0];
     });
 
     test('the options object has json set to true', async () => {

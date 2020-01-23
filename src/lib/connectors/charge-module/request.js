@@ -34,3 +34,4 @@ const post = (path, payload) => cmRequest.post(getPostRequestOptions(path, paylo
 
 exports.get = get;
 exports.post = post;
+exports.cmRequest = cmRequest;
