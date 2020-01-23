@@ -120,24 +120,15 @@ const mapChargeToTransactions = (chargeLine, batch) => {
  * @return {Object}
  */
 const mapAgreementsToDB = agreements => {
-  const skeleton = {
-    section_127_agreement: false,
-    section_126_factor: 1,
-    section_130_agreement: null
-  };
+  const twoPartTariffAgreement = agreements.find(agreement => agreement.isTwoPartTariff());
+  const abatementAgreement = agreements.find(agreement => agreement.isAbatement());
+  const canalAndRiversTrustAgreement = agreements.find(agreement => agreement.isCanalAndRiversTrust());
 
-  return agreements.reduce((acc, agreement) => {
-    if (agreement.code === 'S127') {
-      acc.section_127_agreement = true;
-    }
-    if (agreement.code === 'S126') {
-      acc.section_126_factor = agreement.factor;
-    }
-    if (agreement.code.startsWith('S130')) {
-      acc.section_130_agreement = agreement.code;
-    }
-    return acc;
-  }, skeleton);
+  return {
+    section_127_agreement: !!twoPartTariffAgreement,
+    section_126_factor: abatementAgreement ? abatementAgreement.factor : 1,
+    section_130_agreement: canalAndRiversTrustAgreement ? canalAndRiversTrustAgreement.code : null
+  };
 };
 
 /**
