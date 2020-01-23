@@ -11,7 +11,6 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const config = require('../../../../config.js');
-const requestPromise = require('request-promise-native');
 const request = require('../../../../src/lib/connectors/charge-module/request');
 
 experiment('lib/connectors/charge-module/request', () => {
