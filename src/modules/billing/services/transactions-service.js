@@ -126,7 +126,7 @@ const mapAgreementsToDB = agreements => {
 
   return {
     section_127_agreement: !!twoPartTariffAgreement,
-    section_126_factor: abatementAgreement ? abatementAgreement.factor : 1,
+    section_126_factor: abatementAgreement ? abatementAgreement.factor : null,
     section_130_agreement: canalAndRiversTrustAgreement ? canalAndRiversTrustAgreement.code : null
   };
 };

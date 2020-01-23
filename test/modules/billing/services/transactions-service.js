@@ -399,7 +399,7 @@ experiment('modules/billing/services/transactions-service', () => {
           description: 'Tiny pond',
           status: Transaction.statuses.candidate,
           volume: 5.64,
-          section_126_factor: 1,
+          section_126_factor: null,
           section_127_agreement: false,
           section_130_agreement: null
         });
@@ -429,7 +429,7 @@ experiment('modules/billing/services/transactions-service', () => {
       });
 
       test('the correct agreement fields are set', async () => {
-        expect(result.section_126_factor).to.equal(1);
+        expect(result.section_126_factor).to.equal(null);
         expect(result.section_127_agreement).to.equal(true);
         expect(result.section_130_agreement).to.equal(null);
       });
@@ -445,7 +445,7 @@ experiment('modules/billing/services/transactions-service', () => {
       });
 
       test('the correct agreement fields are set', async () => {
-        expect(result.section_126_factor).to.equal(1);
+        expect(result.section_126_factor).to.equal(null);
         expect(result.section_127_agreement).to.equal(false);
         expect(result.section_130_agreement).to.equal('S130U');
       });
