@@ -135,6 +135,15 @@ const createBatch = () => {
   return batch;
 };
 
+const createAgreement = (code, factor) => {
+  const agreement = new Agreement();
+  agreement.code = code;
+  if (factor !== undefined) {
+    agreement.factor = factor;
+  }
+  return agreement;
+};
+
 experiment('modules/billing/services/transactions-service', () => {
   let transactions;
 
@@ -299,7 +308,7 @@ experiment('modules/billing/services/transactions-service', () => {
         test('has agreements mapped correctly', async () => {
           const { agreements } = result[0];
           expect(agreements).to.be.an.array().length(1);
-          expect(agreements[0].code).to.equal('127');
+          expect(agreements[0].code).to.equal('S127');
         });
       });
 
@@ -389,7 +398,10 @@ experiment('modules/billing/services/transactions-service', () => {
           billable_days: 366,
           description: 'Tiny pond',
           status: Transaction.statuses.candidate,
-          volume: 5.64
+          volume: 5.64,
+          section_126_factor: null,
+          section_127_agreement: false,
+          section_130_agreement: null
         });
       });
     });
@@ -404,6 +416,54 @@ experiment('modules/billing/services/transactions-service', () => {
 
       test('the charge type is "compensation"', async () => {
         expect(result.charge_type).to.equal('compensation');
+      });
+    });
+
+    experiment('when the transaction has a two-part tariff agreement', () => {
+      beforeEach(async () => {
+        invoiceLicence = createInvoiceLicence({
+          isCompensationCharge: true
+        });
+        invoiceLicence.transactions[0].agreements = [createAgreement('S127')];
+        result = transactionsService.mapTransactionToDB(invoiceLicence, invoiceLicence.transactions[0]);
+      });
+
+      test('the correct agreement fields are set', async () => {
+        expect(result.section_126_factor).to.equal(null);
+        expect(result.section_127_agreement).to.equal(true);
+        expect(result.section_130_agreement).to.equal(null);
+      });
+    });
+
+    experiment('when the transaction has a canal & rivers trust agreement agreement', () => {
+      beforeEach(async () => {
+        invoiceLicence = createInvoiceLicence({
+          isCompensationCharge: true
+        });
+        invoiceLicence.transactions[0].agreements = [createAgreement('S130U')];
+        result = transactionsService.mapTransactionToDB(invoiceLicence, invoiceLicence.transactions[0]);
+      });
+
+      test('the correct agreement fields are set', async () => {
+        expect(result.section_126_factor).to.equal(null);
+        expect(result.section_127_agreement).to.equal(false);
+        expect(result.section_130_agreement).to.equal('S130U');
+      });
+    });
+
+    experiment('when the transaction has an abatement', () => {
+      beforeEach(async () => {
+        invoiceLicence = createInvoiceLicence({
+          isCompensationCharge: true
+        });
+        invoiceLicence.transactions[0].agreements = [createAgreement('S126', 0.4)];
+        result = transactionsService.mapTransactionToDB(invoiceLicence, invoiceLicence.transactions[0]);
+      });
+
+      test('the correct agreement fields are set', async () => {
+        expect(result.section_126_factor).to.equal(0.4);
+        expect(result.section_127_agreement).to.equal(false);
+        expect(result.section_130_agreement).to.equal(null);
       });
     });
   });
@@ -422,7 +482,10 @@ experiment('modules/billing/services/transactions-service', () => {
       charge_type: 'compensation',
       description: 'Little stream',
       chargeElement,
-      volume: '43.45'
+      volume: '43.45',
+      section_126_factor: null,
+      section_127_agreement: false,
+      section_130_agreement: null
     };
     beforeEach(async () => {
       chargeElement = new ChargeElement();
@@ -452,6 +515,65 @@ experiment('modules/billing/services/transactions-service', () => {
 
     test('sets the chargeElement to that supplied', async () => {
       expect(result.chargeElement).to.equal(chargeElement);
+    });
+
+    test('there are no agreements', async () => {
+      expect(result.agreements).to.have.length(0);
+    });
+
+    experiment('when the DB row contains a section 126 factor', () => {
+      beforeEach(async () => {
+        chargeElement = new ChargeElement();
+        result = transactionsService.mapDBToModel({
+          ...dbRow,
+          section_126_factor: 0.8
+        }, chargeElement);
+      });
+
+      test('the transaction includes an agreement', async () => {
+        expect(result.agreements).to.have.length(1);
+      });
+
+      test('the agreement contains the right code and factor', async () => {
+        expect(result.agreements[0].code).to.equal('S126');
+        expect(result.agreements[0].factor).to.equal(0.8);
+      });
+    });
+
+    experiment('when the DB row contains a section 127 factor', () => {
+      beforeEach(async () => {
+        chargeElement = new ChargeElement();
+        result = transactionsService.mapDBToModel({
+          ...dbRow,
+          section_127_agreement: true
+        }, chargeElement);
+      });
+
+      test('the transaction includes an agreement', async () => {
+        expect(result.agreements).to.have.length(1);
+      });
+
+      test('the agreement contains the right code', async () => {
+        expect(result.agreements[0].code).to.equal('S127');
+      });
+    });
+
+    experiment('when the DB row contains a section 130 factor', () => {
+      beforeEach(async () => {
+        chargeElement = new ChargeElement();
+        result = transactionsService.mapDBToModel({
+          ...dbRow,
+          section_130_agreement: 'S130T'
+        }, chargeElement);
+      });
+
+      test('the transaction includes an agreement', async () => {
+        expect(result.agreements).to.have.length(1);
+      });
+
+      test('the agreement contains the right code', async () => {
+        expect(result.agreements[0].code).to.equal('S130T');
+      });
     });
   });
 
@@ -500,37 +622,55 @@ experiment('modules/billing/services/transactions-service', () => {
     });
 
     experiment('for a supplementary bill run', async () => {
-      beforeEach(async () => {
-        result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
-      });
+      experiment('with no section 126 agreement', () => {
+        beforeEach(async () => {
+          result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
+        });
 
-      test('the data is mapped correctly', async () => {
-        expect(result).to.equal({
-          periodStart: '01-APR-2019',
-          periodEnd: '31-MAR-2020',
-          credit: false,
-          billableDays: 366,
-          authorisedDays: 366,
-          volume: 5.64,
-          twoPartTariff: false,
-          compensationCharge: false,
-          section126Factor: 1,
-          section127Agreement: false,
-          section130Agreement: false,
-          customerReference: 'A12345678A',
-          lineDescription: 'Tiny pond',
-          chargePeriod: '01-APR-2019 - 31-MAR-2020',
-          batchNumber: 'd65bf89e-4a84-4f2e-8fc1-ebc5ff08c125',
-          source: 'Supported',
-          season: 'Summer',
-          loss: 'Low',
-          eiucSource: 'Other',
-          chargeElementId: '29328315-9b24-473b-bde7-02c60e881501',
-          waterUndertaker: true,
-          regionalChargingArea: 'Anglian',
-          licenceNumber: '01/123/ABC',
-          region: 'A',
-          areaCode: 'ARCA'
+        test('the data is mapped correctly', async () => {
+          expect(result).to.equal({
+            periodStart: '01-APR-2019',
+            periodEnd: '31-MAR-2020',
+            credit: false,
+            billableDays: 366,
+            authorisedDays: 366,
+            volume: 5.64,
+            twoPartTariff: false,
+            compensationCharge: false,
+            section126Factor: 1,
+            section127Agreement: false,
+            section130Agreement: false,
+            customerReference: 'A12345678A',
+            lineDescription: 'Tiny pond',
+            chargePeriod: '01-APR-2019 - 31-MAR-2020',
+            batchNumber: 'd65bf89e-4a84-4f2e-8fc1-ebc5ff08c125',
+            source: 'Supported',
+            season: 'Summer',
+            loss: 'Low',
+            eiucSource: 'Other',
+            chargeElementId: '29328315-9b24-473b-bde7-02c60e881501',
+            waterUndertaker: true,
+            regionalChargingArea: 'Anglian',
+            licenceNumber: '01/123/ABC',
+            region: 'A',
+            areaCode: 'ARCA'
+          });
+        });
+
+        experiment('with a section 126 agreement', () => {
+          beforeEach(async () => {
+            const agreement = new Agreement();
+            agreement.fromHash({
+              code: 'S126',
+              factor: 0.75
+            });
+            transaction.agreements = [agreement];
+            result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
+          });
+
+          test('the data is mapped correctly', async () => {
+            expect(result.section126Factor).to.equal(0.75);
+          });
         });
       });
     });
@@ -550,7 +690,7 @@ experiment('modules/billing/services/transactions-service', () => {
       beforeEach(async () => {
         const agreement = new Agreement();
         agreement.fromHash({
-          code: '127'
+          code: 'S127'
         });
         transaction.agreements = [agreement];
         result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
@@ -569,7 +709,7 @@ experiment('modules/billing/services/transactions-service', () => {
       beforeEach(async () => {
         const agreement = new Agreement();
         agreement.fromHash({
-          code: '130U'
+          code: 'S130U'
         });
         transaction.agreements = [agreement];
         result = transactionsService.mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);

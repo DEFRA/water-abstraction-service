@@ -2,6 +2,7 @@
 const moment = require('moment');
 const { identity, get } = require('lodash');
 const { titleCase } = require('title-case');
+const Agreement = require('../../../lib/models/agreement');
 const Batch = require('../../../lib/models/batch');
 const Transaction = require('../../../lib/models/transaction');
 const DateRange = require('../../../lib/models/date-range');
@@ -114,6 +115,23 @@ const mapChargeToTransactions = (chargeLine, batch) => {
 };
 
 /**
+ * Maps agreements array to fields in water.billing_transactions table
+ * @param {Array<Agreement>} agreements
+ * @return {Object}
+ */
+const mapAgreementsToDB = agreements => {
+  const twoPartTariffAgreement = agreements.find(agreement => agreement.isTwoPartTariff());
+  const abatementAgreement = agreements.find(agreement => agreement.isAbatement());
+  const canalAndRiversTrustAgreement = agreements.find(agreement => agreement.isCanalAndRiversTrust());
+
+  return {
+    section_127_agreement: !!twoPartTariffAgreement,
+    section_126_factor: abatementAgreement ? abatementAgreement.factor : null,
+    section_130_agreement: canalAndRiversTrustAgreement ? canalAndRiversTrustAgreement.code : null
+  };
+};
+
+/**
  * Maps a Transaction instance (with associated InvoiceLicence) to
  * a row of data ready for persistence to water.billing_transactions
  * @param {InvoiceLicence} invoiceLicence
@@ -137,8 +155,32 @@ const mapTransactionToDB = (invoiceLicence, transaction) => ({
   billable_days: transaction.billableDays,
   description: transaction.description,
   status: transaction.status,
-  volume: transaction.volume
+  volume: transaction.volume,
+  ...mapAgreementsToDB(transaction.agreements)
 });
+
+const createAgreement = (code, factor) => {
+  const agreement = new Agreement();
+  agreement.fromHash({
+    code,
+    ...(factor !== undefined && { factor })
+  });
+  return agreement;
+};
+
+/**
+ * Maps a DB row to an array of Agreement models
+ * @param {Object} row - from water.billing_transactions
+ * @return {Array<Agreement>}
+ */
+const mapDBToAgreements = row => {
+  const agreements = [
+    row.section_126_factor !== null && createAgreement('S126', row.section_126_factor),
+    row.section_127_agreement && createAgreement('S127'),
+    row.section_130_agreement && createAgreement(row.section_130_agreement)
+  ];
+  return agreements.filter(identity);
+};
 
 /**
  * Maps a row from water.billing_transactions to a Transaction model
@@ -153,12 +195,12 @@ const mapDBToModel = (row, chargeElement) => {
     isCredit: row.is_credit,
     authorisedDays: row.authorised_days,
     billableDays: row.billable_days,
-    // @todo agreements
     chargePeriod: new DateRange(row.start_date, row.end_date),
     isCompensationCharge: row.charge_type === 'compensation',
     description: row.description,
     chargeElement,
-    volume: parseFloat(row.volume)
+    volume: parseFloat(row.volume),
+    agreements: mapDBToAgreements(row)
   });
   return transaction;
 };
@@ -193,12 +235,13 @@ const mapChargeModuleDate = str =>
  * @return {Object}
  */
 const mapAgreementsToChargeModule = transaction => {
-  const section130Agreement = ['130U', '130S', '130T', '130W']
+  const section130Agreement = ['S130U', 'S130S', 'S130T', 'S130W']
     .map(code => transaction.getAgreementByCode(code))
     .some(identity);
+  const section126Agreement = transaction.getAgreementByCode('S126');
   return {
-    section126Factor: 1,
-    section127Agreement: !!transaction.getAgreementByCode('127'),
+    section126Factor: section126Agreement ? section126Agreement.factor : 1,
+    section127Agreement: !!transaction.getAgreementByCode('S127'),
     section130Agreement
   };
 };
