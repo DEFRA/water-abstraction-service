@@ -4,7 +4,8 @@ const {
   experiment,
   test,
   beforeEach,
-  afterEach
+  afterEach,
+  fail
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
@@ -238,6 +239,34 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
         test('resolves with the data obtained from the charge module', async () => {
           expect(result).to.equal(data.cmResponse);
         });
+      });
+    });
+  });
+
+  experiment('when a valid token is present', () => {
+    experiment('and the charge module responds with a non-401 status code', () => {
+      beforeEach(async () => {
+        const err = new Error();
+        err.statusCode = 400;
+
+        // Simulate a valid token
+        sandbox.stub(cmRequest, 'token').value('valid-token');
+        sandbox.stub(cmRequest, 'expires').value(moment().add(100, 'second'));
+
+        // Simulate the charge module responding with a 401 (unauthorised)
+        http.request.onCall(0).rejects(err);
+      });
+
+      test('the method rejects and logs an error', async () => {
+        try {
+          await cmRequest.get(data.request);
+          fail();
+        } catch (err) {
+          const [msg, , data] = logger.error.lastCall.args;
+          expect(logger.error.callCount).to.equal(1);
+          expect(msg).to.equal('charge module request error');
+          expect(data).to.equal({ retryCount: 0 });
+        }
       });
     });
   });
