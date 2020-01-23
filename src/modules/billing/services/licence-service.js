@@ -2,7 +2,7 @@ const repos = require('../../../lib/connectors/repository');
 const Licence = require('../../../lib/models/licence');
 const Region = require('../../../lib/models/region');
 
-const mapDBToModel = row => {
+const mapDBToModel = (row) => {
   const licence = new Licence();
   licence.fromHash({
     id: row.licence_id,
@@ -14,10 +14,10 @@ const mapDBToModel = row => {
   licence.region = new Region();
   licence.region.fromHash({
     type: Region.types.region,
-    id: row.region_id,
-    name: row.region_name,
-    code: row.charge_region_id,
-    numericCode: row.nald_region_id
+    id: row.region.region_id,
+    name: row.region.name,
+    code: row.region.charge_region_id,
+    numericCode: row.region.nald_region_id
   });
 
   // Historical EA area

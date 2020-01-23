@@ -4,5 +4,8 @@ module.exports = bookshelf.model('BillingBatch', {
   tableName: 'billing_batches',
   billingInvoices () {
     return this.hasMany('BillingInvoice', 'billing_batch_id', 'billing_batch_id');
+  },
+  region () {
+    return this.hasOne('Region', 'region_id', 'region_id');
   }
 });

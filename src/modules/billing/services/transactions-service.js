@@ -6,6 +6,11 @@ const Batch = require('../../../lib/models/batch');
 const Transaction = require('../../../lib/models/transaction');
 const DateRange = require('../../../lib/models/date-range');
 
+const batchService = require('./batch-service');
+const invoiceService = require('./invoice-service');
+const invoiceLicencesService = require('./invoice-licences-service');
+const licenceService = require('./licence-service');
+
 const chargeModuleTransactionsConnector = require('../../../lib/connectors/charge-module/transactions');
 const ChargeModuleTransaction = require('../../../lib/models/charge-module-transaction');
 const agreementsService = require('./agreements-service');
@@ -145,7 +150,7 @@ const mapTransactionToDB = (invoiceLicence, transaction) => ({
  * @param {Object} row - from water.billing_transactions
  * @param {ChargeElement} chargeElement
  */
-const mapDBToModel = (row, chargeElement) => {
+const mapDBToModel = (row) => {
   const transaction = new Transaction();
   transaction.fromHash({
     id: row.billing_transaction_id,
@@ -157,7 +162,7 @@ const mapDBToModel = (row, chargeElement) => {
     chargePeriod: new DateRange(row.start_date, row.end_date),
     isCompensationCharge: row.charge_type === 'compensation',
     description: row.description,
-    chargeElement,
+    chargeElement: chargeElementsService.mapDBToModel(row.chargeElement),
     volume: parseFloat(row.volume)
   });
   return transaction;
@@ -263,6 +268,43 @@ const mapModelToChargeModule = (batch, invoice, invoiceLicence, transaction) => 
   };
 };
 
+const mapBatchToChargeModuleTransactions = batch => {
+  return batch.invoices.reduce((acc, invoice) => {
+    invoice.invoiceLicences.forEach(invoiceLicence => {
+      invoiceLicence.transactions.forEach(transaction => {
+        acc.push(mapModelToChargeModule(batch, invoice, invoiceLicence, transaction));
+      });
+    });
+    return acc;
+  }, []);
+};
+
+/**
+ * Gets a transaction in its context within a batch
+ * @param {String} transactionId
+ * @return {Promise<Batch>}
+ */
+const getById = async transactionId => {
+  const data = await repos.billingTransactions.getById(transactionId);
+
+  // Create models
+  const batch = batchService.mapDBToModel(data.billingInvoiceLicence.billingInvoice.billingBatch);
+  const invoice = invoiceService.mapDBToModel(data.billingInvoiceLicence.billingInvoice);
+  const invoiceLicence = invoiceLicencesService.mapDBToModel(data.billingInvoiceLicence);
+  const licence = licenceService.mapDBToModel(data.billingInvoiceLicence.licence);
+  const transaction = mapDBToModel(data);
+
+  // Place in heirarchy
+  invoiceLicence.transactions = [transaction];
+  invoice.invoiceLicences = [invoiceLicence];
+  invoiceLicence.licence = licence;
+  batch.invoices = [
+    invoice
+  ];
+
+  return batch;
+};
+
 exports.getTransactionsForBatch = getTransactionsForBatch;
 exports.getTransactionsForBatchInvoice = getTransactionsForBatchInvoice;
 exports.mapChargeToTransactions = mapChargeToTransactions;
@@ -270,3 +312,5 @@ exports.mapTransactionToDB = mapTransactionToDB;
 exports.mapDBToModel = mapDBToModel;
 exports.saveTransactionToDB = saveTransactionToDB;
 exports.mapModelToChargeModule = mapModelToChargeModule;
+exports.getById = getById;
+exports.mapBatchToChargeModuleTransactions = mapBatchToChargeModuleTransactions;

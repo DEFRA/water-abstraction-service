@@ -2,10 +2,6 @@ const { get } = require('lodash');
 const { logger } = require('../../../logger');
 const Transaction = require('../../../lib/models/transaction');
 const transactionsService = require('../services/transactions-service');
-const batchService = require('../services/batch-service');
-const chargeElementsService = require('../services/charge-elements-service');
-const invoiceLicencesService = require('../services/invoice-licences-service');
-const invoiceService = require('../services/invoice-service');
 const chargeModuleTransactions = require('../../../lib/connectors/charge-module/transactions');
 const repos = require('../../../lib/connectors/repository');
 
@@ -27,47 +23,24 @@ const createMessage = (eventId, batch, transaction) => ({
   data: { eventId, batch, transaction }
 });
 
-/**
- * Loads the models needed for the job
- * @param {Object} job
- * @return {Object}
- */
-const loadModels = async job => {
-  const { transaction, batch } = job.data;
-
-  const tasks = [
-    chargeElementsService.getById(transaction.charge_element_id),
-    invoiceLicencesService.getByTransactionId(transaction.billing_transaction_id),
-    invoiceService.getByTransactionId(transaction.billing_transaction_id)
-  ];
-
-  const [chargeElement, invoiceLicence, invoice] = await Promise.all(tasks);
-
-  return {
-    invoiceLicence,
-    invoice,
-    transaction: transactionsService.mapDBToModel(transaction, chargeElement),
-    batch: batchService.mapDBToModel(batch)
-  };
-};
-
 const handleCreateCharge = async job => {
   logger.info(`Handling ${JOB_NAME}`);
 
-  try {
-    // Load service models
-    const { batch, invoice, invoiceLicence, transaction } = await loadModels(job);
+  const transactionId = get(job, 'data.transaction.billing_transaction_id');
 
-    // Map to Charge Module data packet
-    const cmTransaction = transactionsService
-      .mapModelToChargeModule(batch, invoice, invoiceLicence, transaction);
+  try {
+    // Create batch model from loaded data
+    const batch = await transactionsService.getById(transactionId);
+
+    // Map data to charge module transaction
+    const [cmTransaction] = transactionsService.mapBatchToChargeModuleTransactions(batch);
 
     // Create transaction in Charge Module
     const response = await chargeModuleTransactions.createTransaction(cmTransaction);
     const externalId = get(response, 'transaction.id');
 
     // Update status
-    await repos.billingTransactions.setStatus(transaction.id, Transaction.statuses.chargeCreated, externalId);
+    await repos.billingTransactions.setStatus(transactionId, Transaction.statuses.chargeCreated, externalId);
   } catch (err) {
     // Log error
     logger.error(`${JOB_NAME} error`, err, {

@@ -2,6 +2,7 @@ const Batch = require('../../../lib/models/batch');
 const Region = require('../../../lib/models/region');
 const repos = require('../../../lib/connectors/repository');
 const FinancialYear = require('../../../lib/models/financial-year');
+const regionsService = require('./regions-service');
 
 const mapDBToModel = row => {
   const batch = new Batch();
@@ -12,9 +13,9 @@ const mapDBToModel = row => {
     startYear: new FinancialYear(row.from_financial_year_ending),
     endYear: new FinancialYear(row.to_financial_year_ending),
     status: row.status,
-    dateCreated: row.date_created
+    dateCreated: row.date_created,
+    region: regionsService.mapDBToModel(row.region)
   });
-  batch.region = new Region(row.region_id);
   return batch;
 };
 
