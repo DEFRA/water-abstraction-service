@@ -29,6 +29,12 @@ class BillingBatchChargeVersionYearsRepository extends Repository {
       status: 'processing'
     });
   }
+
+  deleteByBatchId (batchId) {
+    return this.delete({
+      billing_batch_id: batchId
+    });
+  }
 }
 
 module.exports = BillingBatchChargeVersionYearsRepository;

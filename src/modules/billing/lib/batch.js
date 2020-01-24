@@ -39,7 +39,8 @@ exports.jobStatus = {
   start: 'start',
   complete: 'complete',
   processing: 'processing',
-  error: 'error'
+  error: 'error',
+  deleted: 'deleted'
 };
 
 /**

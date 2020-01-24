@@ -81,11 +81,11 @@ const getInvoiceDetailQuery = `
 `;
 
 const findOneByTransactionIdQuery = `
-select i.* from 
-water.billing_transactions t
-join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
-join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
-where t.billing_transaction_id=$1;
+  select i.*
+  from water.billing_transactions t
+    join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
+    join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
+  where t.billing_transaction_id=$1;
 `;
 
 /**
@@ -171,6 +171,12 @@ class BillingInvoiceRepository extends Repository {
   async findOneByTransactionId (transactionId) {
     const result = await this.dbQuery(findOneByTransactionIdQuery, [transactionId]);
     return get(result, 'rows.0', null);
+  }
+
+  deleteByBatchId (batchId) {
+    return this.delete({
+      billing_batch_id: batchId
+    });
   }
 }
 

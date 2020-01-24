@@ -10,6 +10,7 @@ const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-ver
 const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
 const batchService = require('./services/batch-service');
+const eventService = require('./services/event-service');
 
 const createBatchEvent = async (userEmail, batch) => {
   const batchEvent = event.create({
@@ -69,14 +70,7 @@ const postCreateBatch = async (request, h) => {
   })).code(202);
 };
 
-const getBatch = async request => {
-  const { batchId } = request.params;
-  const batch = await repos.billingBatches.getById(batchId);
-
-  return batch
-    ? envelope(batch, true)
-    : Boom.notFound(`No batch found with id: ${batchId}`);
-};
+const getBatch = async request => envelope(request.pre.batch, true);
 
 const getBatches = async request => {
   const { page, perPage } = request.query;
@@ -102,15 +96,6 @@ const getBatchInvoiceDetail = async request => {
 
 const deleteAccountFromBatch = async request => {
   const { batchId, accountId } = request.params;
-  const batch = await repos.billingBatches.getById(batchId);
-
-  if (!batch) {
-    return Boom.notFound(`No batch found with id: ${batchId}`);
-  }
-
-  if (batch.status !== 'review') {
-    return Boom.forbidden(`Cannot delete account from batch (${batchId}) when status is ${batch.status}`);
-  }
 
   const invoices = await invoiceService.getInvoicesForBatch(batchId);
 
@@ -142,9 +127,25 @@ const deleteAccountFromBatch = async request => {
   };
 };
 
+const deleteBatch = async (request, h) => {
+  const { batch } = request.pre;
+  const batchId = batch.billing_batch_id;
+
+  await batchService.deleteBatch(batchId);
+
+  const evt = await eventService.getEventForBatch(batchId);
+
+  if (event) {
+    await event.updateStatus(evt.event_id, jobStatus.deleted);
+  }
+
+  return h.response().code(204);
+};
+
 exports.postCreateBatch = postCreateBatch;
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
+exports.deleteBatch = deleteBatch;

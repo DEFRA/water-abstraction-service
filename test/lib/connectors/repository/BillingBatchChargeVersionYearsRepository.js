@@ -14,6 +14,7 @@ experiment('lib/connectors/repository/BillingBatchChargeVersionYearsRepository',
   beforeEach(async () => {
     sandbox.stub(BillingBatchChargeVersionYearsRepository.prototype, 'find');
     sandbox.stub(BillingBatchChargeVersionYearsRepository.prototype, 'update');
+    sandbox.stub(BillingBatchChargeVersionYearsRepository.prototype, 'delete');
   });
 
   afterEach(async () => {
@@ -60,6 +61,19 @@ experiment('lib/connectors/repository/BillingBatchChargeVersionYearsRepository',
       const [filter] = repo.find.lastCall.args;
 
       expect(filter.status).to.equal('processing');
+    });
+  });
+
+  experiment('.deleteByBatchId', () => {
+    test('calls delete with the expected filter', async () => {
+      const repo = new BillingBatchChargeVersionYearsRepository();
+      await repo.deleteByBatchId('test-id');
+
+      const [filter] = repo.delete.lastCall.args;
+
+      expect(filter).to.equal({
+        billing_batch_id: 'test-id'
+      });
     });
   });
 });

@@ -2,6 +2,7 @@
 
 const Joi = require('@hapi/joi');
 
+const preHandlers = require('./pre-handlers');
 const controller = require('./controller');
 
 const getBatches = {
@@ -44,7 +45,10 @@ const getBatch = {
       params: {
         batchId: Joi.string().uuid().required()
       }
-    }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
   }
 };
 
@@ -85,7 +89,28 @@ const deleteAccountFromBatch = {
         batchId: Joi.string().uuid().required(),
         accountId: Joi.string().uuid().required()
       }
-    }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' },
+      { method: preHandlers.ensureBatchInReviewState }
+    ]
+  }
+};
+
+const deleteBatch = {
+  method: 'DELETE',
+  path: '/water/1.0/billing/batches/{batchId}',
+  handler: controller.deleteBatch,
+  config: {
+    validate: {
+      params: {
+        batchId: Joi.string().uuid().required()
+      }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' },
+      { method: preHandlers.ensureBatchInReviewState }
+    ]
   }
 };
 
@@ -95,3 +120,4 @@ exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
+exports.deleteBatch = deleteBatch;
