@@ -2,12 +2,14 @@
 
 const Boom = require('@hapi/boom');
 
+const config = require('../../../config');
 const repos = require('../../lib/connectors/repository');
 const event = require('../../lib/event');
 const { envelope, errorEnvelope } = require('../../lib/response');
 const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-versions');
 const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
+const batchService = require('./services/batch-service');
 
 const createBatchEvent = async (userEmail, batch) => {
   const batchEvent = event.create({
@@ -23,7 +25,7 @@ const createBatchEvent = async (userEmail, batch) => {
 };
 
 const createBatch = (regionId, batchType, financialYearEnding, season) => {
-  const fromFinancialYearEnding = batchType === 'supplementary' ? financialYearEnding - 6 : financialYearEnding;
+  const fromFinancialYearEnding = batchType === 'supplementary' ? financialYearEnding - config.billing.supplementaryYears : financialYearEnding;
 
   return repos.billingBatches.createBatch(
     regionId,
@@ -76,13 +78,17 @@ const getBatch = async request => {
     : Boom.notFound(`No batch found with id: ${batchId}`);
 };
 
+const getBatches = async request => {
+  const { page, perPage } = request.query;
+  const batches = await batchService.getBatches(page, perPage);
+  return batches;
+};
+
 const getBatchInvoices = async request => {
   const { batchId } = request.params;
   const invoices = await invoiceService.getInvoicesForBatch(batchId);
 
-  return invoices.length
-    ? envelope(invoices, true)
-    : Boom.notFound(`No invoices found for batch with id: ${batchId}`);
+  return envelope(invoices, true);
 };
 
 const getBatchInvoiceDetail = async request => {
@@ -94,7 +100,51 @@ const getBatchInvoiceDetail = async request => {
     : Boom.notFound(`No invoice found with id: ${invoiceId} in batch with id: ${batchId}`);
 };
 
+const deleteAccountFromBatch = async request => {
+  const { batchId, accountId } = request.params;
+  const batch = await repos.billingBatches.getById(batchId);
+
+  if (!batch) {
+    return Boom.notFound(`No batch found with id: ${batchId}`);
+  }
+
+  if (batch.status !== 'review') {
+    return Boom.forbidden(`Cannot delete account from batch (${batchId}) when status is ${batch.status}`);
+  }
+
+  const invoices = await invoiceService.getInvoicesForBatch(batchId);
+
+  const invoicesForAccount = invoices.filter(invoice => invoice.invoiceAccount.id === accountId);
+
+  if (invoicesForAccount.length === 0) {
+    return Boom.notFound(`No invoices for account (${accountId}) in batch (${batchId})`);
+  }
+
+  /*
+    TODO: Temporary implementation
+
+    Currently only removes the transactions from the local
+    water.billing_transactions table.
+
+    This needs to also remove the transactions at the charge module,
+    but we are currently waiting on the decision whether this will happen
+    in bulk or one transaction at a time.
+
+    After this is resolved the following connector code can be extracted
+    out to a service layer function where charge module interaction will
+    also take place.
+
+    The code below this comment is not included in the unit tests.
+  */
+  const { rowCount } = await repos.billingTransactions.deleteByInvoiceAccount(batchId, accountId);
+  return {
+    transactionsDeleted: rowCount
+  };
+};
+
 exports.postCreateBatch = postCreateBatch;
 exports.getBatch = getBatch;
+exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
+exports.deleteAccountFromBatch = deleteAccountFromBatch;

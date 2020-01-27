@@ -1,7 +1,12 @@
 'use strict';
 const Model = require('./model');
 const AbstractionPeriod = require('./abstraction-period');
-const { assertEnum, assertIsInstanceOf } = require('./validators');
+const {
+  assertEnum,
+  assertIsInstanceOf,
+  assertQuantity,
+  assertNullableQuantity
+} = require('./validators');
 
 const validSources = {
   supported: 'supported',
@@ -36,6 +41,15 @@ class ChargeElement extends Model {
   set source (source) {
     assertEnum(source, Object.values(validSources));
     this._source = source;
+  }
+
+  /**
+   * EIUC source is derived from source
+   * and is either tidal|other
+   * @return {String}
+   */
+  get eiucSource () {
+    return this._source === 'tidal' ? 'tidal' : 'other';
   }
 
   /**
@@ -75,6 +89,41 @@ class ChargeElement extends Model {
   set abstractionPeriod (abstractionPeriod) {
     assertIsInstanceOf(abstractionPeriod, AbstractionPeriod);
     this._abstractionPeriod = abstractionPeriod;
+  }
+
+  /**
+   * Authorised annual quantity - Ml
+   * @return {Number}
+   */
+  get authorisedAnnualQuantity () {
+    return this._authorisedAnnualQuantity;
+  }
+
+  set authorisedAnnualQuantity (quantity) {
+    assertQuantity(quantity);
+    this._authorisedAnnualQuantity = quantity;
+  }
+
+  /**
+   * Billable annual quantity - Ml
+   * @return {Number}
+   */
+  get billableAnnualQuantity () {
+    return this._billableAnnualQuantity;
+  }
+
+  set billableAnnualQuantity (quantity) {
+    assertNullableQuantity(quantity);
+    this._billableAnnualQuantity = quantity;
+  }
+
+  /**
+   * Gets billing quantity to use
+   * This could be auth, billable or actual quantity
+   * @return {Number}
+   */
+  get volume () {
+    return this._billableAnnualQuantity || this._authorisedAnnualQuantity;
   }
 }
 

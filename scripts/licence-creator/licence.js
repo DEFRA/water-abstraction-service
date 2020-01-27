@@ -11,7 +11,7 @@ class Licence {
     this.id = getNextId();
     this.licenceNumber = licenceNumber;
     this.startDate = '01/01/2018';
-    this.expiryDate = '01/01/2020';
+    this.expiryDate = '01/01/2220';
 
     this.versions = [];
     this.repUnit = new RepUnit();

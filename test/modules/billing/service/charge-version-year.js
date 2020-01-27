@@ -8,19 +8,31 @@ const {
 const { expect } = require('@hapi/code');
 
 const sandbox = require('sinon').createSandbox();
-const { Address, Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence } = require('../../../../src/lib/models');
+const { Address, Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence, Transaction } = require('../../../../src/lib/models');
 const Contact = require('../../../../src/lib/models/contact-v2');
 
 const chargeVersionYear = require('../../../../src/modules/billing/service/charge-version-year');
 const chargeProcessor = require('../../../../src/modules/billing/service/charge-processor');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
+const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
+const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
+
 const repository = require('../../../../src/lib/connectors/repository');
+
 const { logger } = require('../../../../src/logger');
 
 const batchId = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
 const chargeVersionId = 'charge_version_1';
 
+const createBatch = id => {
+  const batch = new Batch(id);
+  return batch;
+};
+
 const data = {
   billingInvoiceId: '991675b7-4760-49eb-8adf-e240770d21eb',
+  transactionId1: 'd34d196f-15a9-4d1e-9d24-e6d446aef493',
+  transactionId2: '6697bf08-0602-40d1-947d-4cb80d2c2d84',
   chargeVersionYear: {
     charge_version_id: chargeVersionId,
     financial_year_ending: 2020,
@@ -29,7 +41,6 @@ const data = {
   charges: [{
 
   }],
-  modelMapperResponse: new Batch(),
   company: {
     id: '710014ac-381e-41b6-a14b-0696efa4fc31',
     type: 'organisation',
@@ -81,7 +92,7 @@ experiment('modules/billing/service/charge-version-year.js', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
     sandbox.stub(chargeProcessor, 'processCharges');
-    sandbox.stub(chargeProcessor, 'modelMapper').returns(data.modelMapperResponse);
+    sandbox.stub(batchService, 'getBatchById');
     sandbox.stub(repository.billingInvoices, 'create').resolves({
       rows: [{
         billing_invoice_id: data.billingInvoiceId
@@ -90,7 +101,13 @@ experiment('modules/billing/service/charge-version-year.js', () => {
     sandbox.stub(repository.licences, 'findOneByLicenceNumber').resolves({
       licence_id: data.licence.id
     });
-    sandbox.stub(repository.billingInvoiceLicences, 'create').resolves();
+    sandbox.stub(repository.billingInvoiceLicences, 'create').resolves({
+      rows: [{
+        billing_invoice_licence_id: data.billingInvoiceId
+      }]
+    });
+    sandbox.stub(transactionsService, 'saveTransactionToDB').resolves();
+    sandbox.stub(invoiceService, 'mapChargeDataToModels').returns([]);
   });
 
   afterEach(async () => {
@@ -98,10 +115,12 @@ experiment('modules/billing/service/charge-version-year.js', () => {
   });
 
   experiment('.createBatchFromChargeVersionYear', () => {
-    let result;
+    let result, batch;
 
     experiment('when there are no errors', () => {
       beforeEach(async () => {
+        batch = createBatch();
+        batchService.getBatchById.resolves(batch);
         chargeProcessor.processCharges.resolves({
           error: null,
           data: data.charges
@@ -120,8 +139,8 @@ experiment('modules/billing/service/charge-version-year.js', () => {
         expect(logger.error.called).to.be.false();
       });
 
-      test('resolves with the result of the model mapping', async () => {
-        expect(result).to.equal(data.modelMapperResponse);
+      test('resolves with the batch', async () => {
+        expect(result).to.equal(batch);
       });
     });
 
@@ -169,6 +188,12 @@ experiment('modules/billing/service/charge-version-year.js', () => {
         invoiceLicence.address = createAddress();
         invoice.invoiceLicences = [invoiceLicence];
 
+        // Set up transactions
+        invoiceLicence.transactions = [
+          new Transaction(data.transactionId1),
+          new Transaction(data.transactionId2)
+        ];
+
         batch.addInvoice(invoice);
 
         await chargeVersionYear.persistChargeVersionYearBatch(batch);
@@ -176,6 +201,20 @@ experiment('modules/billing/service/charge-version-year.js', () => {
 
       test('one invoice is created for each licence in batch', async () => {
         expect(repository.billingInvoices.create.callCount).to.equal(1);
+      });
+
+      test('calls transactionService.saveTransactionToDB for the first transaction', async () => {
+        const [invoiceLicence, transaction] = transactionsService.saveTransactionToDB.firstCall.args;
+        expect(invoiceLicence instanceof InvoiceLicence).to.be.true();
+        expect(transaction instanceof Transaction).to.be.true();
+        expect(transaction.id).to.equal(data.transactionId1);
+      });
+
+      test('calls transactionService.saveTransactionToDB for the second transaction', async () => {
+        const [invoiceLicence, transaction] = transactionsService.saveTransactionToDB.lastCall.args;
+        expect(invoiceLicence instanceof InvoiceLicence).to.be.true();
+        expect(transaction instanceof Transaction).to.be.true();
+        expect(transaction.id).to.equal(data.transactionId2);
       });
 
       test('persists each invoice in the batch', async () => {

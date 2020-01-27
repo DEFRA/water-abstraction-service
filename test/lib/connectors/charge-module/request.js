@@ -11,12 +11,13 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const config = require('../../../../config.js');
-const requestPromise = require('request-promise-native');
 const request = require('../../../../src/lib/connectors/charge-module/request');
 
 experiment('lib/connectors/charge-module/request', () => {
   beforeEach(async () => {
-    sandbox.stub(requestPromise, 'get').resolves();
+    sandbox.stub(request.cmRequest, 'get').resolves();
+    sandbox.stub(request.cmRequest, 'post').resolves();
+
     sandbox.stub(config.services, 'chargeModule').value('https://test.example.com');
   });
 
@@ -30,7 +31,7 @@ experiment('lib/connectors/charge-module/request', () => {
 
       beforeEach(async () => {
         await request.get('path/to/somewhere');
-        options = requestPromise.get.lastCall.args[0];
+        options = request.cmRequest.get.lastCall.args[0];
       });
 
       test('the options object has json set to true', async () => {
@@ -54,7 +55,7 @@ experiment('lib/connectors/charge-module/request', () => {
           one: 1,
           two: 2
         });
-        options = requestPromise.get.lastCall.args[0];
+        options = request.cmRequest.get.lastCall.args[0];
       });
 
       test('the options object has json set to true', async () => {
@@ -71,6 +72,28 @@ experiment('lib/connectors/charge-module/request', () => {
           two: 2
         });
       });
+    });
+  });
+
+  experiment('.post', () => {
+    let options;
+    const payload = { foo: 'bar' };
+
+    beforeEach(async () => {
+      await request.post('path/to/somewhere', payload);
+      options = request.cmRequest.post.lastCall.args[0];
+    });
+
+    test('the options object has json set to true', async () => {
+      expect(options.json).to.be.true();
+    });
+
+    test('the options object has the correct URL', async () => {
+      expect(options.uri).to.equal('https://test.example.com/path/to/somewhere');
+    });
+
+    test('the payload is included', async () => {
+      expect(options.body).equal(payload);
     });
   });
 });

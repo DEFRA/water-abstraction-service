@@ -17,7 +17,7 @@ const createAgreement = flag => {
  * @return {String} the code, e.g. 130S
  */
 const getCode = flag =>
-  flag.match(/([0-9]+[A-Z]?)Agreement$/)[1];
+  'S' + flag.match(/([0-9]+[A-Z]?)Agreement$/)[1];
 
 const flags = [
   'section127Agreement',

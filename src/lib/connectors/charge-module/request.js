@@ -1,13 +1,23 @@
 'use strict';
 
-const rp = require('request-promise-native');
-const config = require('../../../../config.js');
 const urlJoin = require('url-join');
 
+const getURI = path => urlJoin(config.services.chargeModule, path);
+const config = require('../../../../config.js');
+const ChargeModuleRequest = require('./ChargeModuleRequest');
+
+const cmRequest = new ChargeModuleRequest();
+
 const getRequestOptions = (path, query) => ({
-  uri: urlJoin(config.services.chargeModule, path),
+  uri: getURI(path),
   json: true,
   ...(query && { qs: query })
+});
+
+const getPostRequestOptions = (path, payload = {}) => ({
+  uri: getURI(path),
+  json: true,
+  body: payload
 });
 
 /**
@@ -18,6 +28,10 @@ const getRequestOptions = (path, query) => ({
  * @param {String} path The path of the URL that the request will be made to.
  * @param {Object} query Optional query params to pass
  */
-const get = (path, query) => rp.get(getRequestOptions(path, query));
+const get = (path, query) => cmRequest.get(getRequestOptions(path, query));
+
+const post = (path, payload) => cmRequest.post(getPostRequestOptions(path, payload));
 
 exports.get = get;
+exports.post = post;
+exports.cmRequest = cmRequest;

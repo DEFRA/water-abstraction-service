@@ -64,4 +64,22 @@ experiment('lib/connectors/crm-v2/invoice-accounts', () => {
       ]);
     });
   });
+
+  experiment('.getInvoiceAccountById', () => {
+    let response;
+
+    beforeEach(async () => {
+      serviceRequest.get.resolves({ invoiceAccountId: 'test-id-1' });
+      response = await invoiceAccountConnector.getInvoiceAccountById('test-id-1');
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url] = serviceRequest.get.lastCall.args;
+      expect(url).to.equal('http://test.defra/invoice-accounts/test-id-1');
+    });
+
+    test('returns the result from the crm', async () => {
+      expect(response).to.equal({ invoiceAccountId: 'test-id-1' });
+    });
+  });
 });

@@ -16,6 +16,7 @@ const request = require('../../../../src/lib/connectors/charge-module/request');
 experiment('lib/connectors/charge-module/transactions', () => {
   beforeEach(async () => {
     sandbox.stub(request, 'get').resolves();
+    sandbox.stub(request, 'post').resolves();
   });
 
   afterEach(async () => {
@@ -75,6 +76,26 @@ experiment('lib/connectors/charge-module/transactions', () => {
       test('the query params include the customer reference', async () => {
         expect(query.customerReference).to.equal('test-customer');
       });
+    });
+  });
+
+  experiment('.createTransaction', () => {
+    let path, payload;
+    const transaction = {
+      foo: 'bar'
+    };
+
+    beforeEach(async () => {
+      await transactionsConnector.createTransaction(transaction);
+      ([path, payload] = request.post.lastCall.args);
+    });
+
+    test('the expected URL path is used', async () => {
+      expect(path).to.equal('v1/wrls/transaction_queue');
+    });
+
+    test('the expected payload is used', async () => {
+      expect(payload).to.equal(transaction);
     });
   });
 });

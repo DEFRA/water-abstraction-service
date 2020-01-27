@@ -2,10 +2,13 @@ const evt = require('../../../lib/event');
 const { jobStatus } = require('../lib/batch');
 const repos = require('../../../lib/connectors/repository');
 const service = require('../service');
+const { logger } = require('../../../logger');
 
 const JOB_NAME = 'billing.process-charge-version';
 
-const { logger } = require('../../../logger');
+const options = {
+  teamSize: 10
+};
 
 const createMessage = (eventId, chargeVersionYear) => ({
   name: JOB_NAME,
@@ -47,3 +50,4 @@ const handleProcessChargeVersion = async job => {
 exports.createMessage = createMessage;
 exports.handler = handleProcessChargeVersion;
 exports.jobName = JOB_NAME;
+exports.options = options;

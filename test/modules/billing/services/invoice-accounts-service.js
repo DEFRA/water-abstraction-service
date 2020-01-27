@@ -50,6 +50,7 @@ experiment('modules/billing/services/invoice-accounts-service', () => {
       }
     ];
     sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountsByIds').resolves(connectorResponse);
+    sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountById').resolves(connectorResponse[0]);
   });
 
   afterEach(async () => {
@@ -84,6 +85,28 @@ experiment('modules/billing/services/invoice-accounts-service', () => {
       expect(response[1].company.id).to.equal(connectorResponse[1].company.companyId);
       expect(response[1].company.name).to.equal(connectorResponse[1].company.name);
       expect(response[1].company.type).to.equal(connectorResponse[1].company.type);
+    });
+  });
+
+  experiment('.getByInvoiceAccountId', () => {
+    test('passes the invoice account id to the connector', async () => {
+      const id = uuid();
+      await invoiceAccountsService.getByInvoiceAccountId(id);
+
+      const [passedId] = invoiceAccountsConnector.getInvoiceAccountById.lastCall.args;
+      expect(passedId).to.equal(id);
+    });
+
+    test('returns the data as an InvoiceAccount object', async () => {
+      const response = await invoiceAccountsService.getByInvoiceAccountId(uuid());
+
+      expect(response).to.be.an.instanceOf(InvoiceAccount);
+      expect(response.id).to.equal(connectorResponse[0].invoiceAccountId);
+      expect(response.accountNumber).to.equal(connectorResponse[0].invoiceAccountNumber);
+      expect(response.company).to.be.an.instanceOf(Company);
+      expect(response.company.id).to.equal(connectorResponse[0].company.companyId);
+      expect(response.company.name).to.equal(connectorResponse[0].company.name);
+      expect(response.company.type).to.equal(connectorResponse[0].company.type);
     });
   });
 });

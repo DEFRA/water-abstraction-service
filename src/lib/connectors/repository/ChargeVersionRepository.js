@@ -15,13 +15,17 @@ class ChargeVersionRepository extends Repository {
   }
 
   /**
-   * Finds a complete single charge version
+   * Finds a complete single charge version, including the licence ID
    * @param  {String}  chargeVersionId
    * @return {Promise<Object>}
    */
   async findOneById (chargeVersionId) {
-    const filter = { charge_version_id: chargeVersionId };
-    const { rows: [row] } = await this.find(filter);
+    const query = `select v.*, l.licence_id, l.is_water_undertaker 
+      from water.charge_versions v
+      join water.licences l on v.licence_ref=l.licence_ref
+      where v.charge_version_id=$1`;
+
+    const { rows: [row] } = await this.dbQuery(query, [chargeVersionId]);
     return row;
   }
 

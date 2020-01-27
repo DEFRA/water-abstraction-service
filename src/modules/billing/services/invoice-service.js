@@ -1,11 +1,16 @@
 'use strict';
 
-const { first } = require('lodash');
+const { first, uniqBy, omit } = require('lodash');
 
 const repos = require('../../../lib/connectors/repository');
+
+// Services
 const transactionsService = require('./transactions-service');
 const invoiceAccountsService = require('./invoice-accounts-service');
+const addressService = require('./address-service');
+const invoiceLicencesService = require('./invoice-licences-service');
 
+// Models
 const Invoice = require('../../../lib/models/invoice');
 const InvoiceAccount = require('../../../lib/models/invoice-account');
 const InvoiceLicence = require('../../../lib/models/invoice-licence');
@@ -143,5 +148,104 @@ const getInvoiceForBatch = async (batchId, invoiceId) => {
   }
 };
 
+const getInvoiceAccountNumber = row => row.invoiceAccount.invoiceAccount.invoiceAccountNumber;
+
+/**
+ * Maps output data from charge processor into an array of unique invoice licences
+ * matching the invoice account number of the supplied Invoice instance
+ * @param {Invoice} invoice - invoice instance
+ * @param {Array} data - processed charge versions
+ * @param {Batch} batch - current batch model
+ * @return {Array<InvoiceLicence>}
+ */
+const mapInvoiceLicences = (invoice, data, batch) => {
+  // Find rows with invoice account number that match the supplied invoice
+  const { accountNumber } = invoice.invoiceAccount;
+  const filtered = data.filter(row => getInvoiceAccountNumber(row) === accountNumber);
+  // Create array of InvoiceLicences
+  const invoiceLicences = filtered.map(invoiceLicencesService.mapChargeRowToModel);
+  // @todo attach transactions to InvoiceLicences
+  // Return a unique list
+  return uniqBy(invoiceLicences, invoiceLicence => invoiceLicence.uniqueId);
+};
+
+/**
+ * Given an array of data output from the charge processor,
+ * maps it to an array of Invoice instances
+ * @param {Array} data - output from charge processor
+ * @param {Batch} batch
+ * @return {Array<Invoice>}
+ */
+const mapChargeDataToModels = (data, batch) => {
+  // Create unique list of invoice accounts within data
+  const rows = uniqBy(
+    data.map(row => row.invoiceAccount),
+    row => row.invoiceAccount.invoiceAccountId
+  );
+
+  // Map to invoice models
+  return rows.map(row => {
+    const invoice = new Invoice();
+
+    // Create invoice account model
+    invoice.invoiceAccount = invoiceAccountsService.mapCRMInvoiceAccountToModel(row.invoiceAccount);
+
+    // Create invoice address model
+    invoice.address = addressService.mapCRMAddressToModel(row.address);
+
+    // Create invoiceLicences array
+    invoice.invoiceLicences = mapInvoiceLicences(invoice, data, batch);
+
+    return invoice;
+  });
+};
+
+/**
+ * Maps data from an Invoice model to the correct shape for water.billing_invoices
+ * @param {Batch} batch
+ * @param {Invoice} invoice
+ * @return {Object}
+ */
+const mapModelToDB = (batch, invoice) => ({
+  invoice_account_id: invoice.invoiceAccount.id,
+  invoice_account_number: invoice.invoiceAccount.accountNumber,
+  address: omit(invoice.address.toObject(), 'id'),
+  billing_batch_id: batch.id
+});
+
+const mapDBToModel = row => {
+  const invoice = new Invoice(row.billing_invoice_id);
+  invoice.invoiceAccount = new InvoiceAccount(row.invoice_account_id);
+  invoice.invoiceAccount.accountNumber = row.invoice_account_number;
+  return invoice;
+};
+
+/**
+ * Saves an Invoice model to water.billing_invoices
+ * @param {Batch} batch
+ * @param {Invoice} invoice
+ * @return {Promise<Object>} row data inserted
+ */
+const saveInvoiceToDB = async (batch, invoice) => {
+  const data = mapModelToDB(batch, invoice);
+  const { rows: [row] } = await repos.billingInvoices.create(data);
+  return row;
+};
+
+/**
+ * Retrieves an invoice row from water.billing_invoices relating to the
+ * given transaction ID, and returns an Invoice model
+ * @param {String} transactionId - GUID
+ * @return {Promise<Invoice>}
+ */
+const getByTransactionId = async transactionId => {
+  const data = await repos.billingInvoices.findOneByTransactionId(transactionId);
+  return mapDBToModel(data);
+};
+
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
+exports.mapChargeDataToModels = mapChargeDataToModels;
+exports.mapDBToModel = mapDBToModel;
+exports.saveInvoiceToDB = saveInvoiceToDB;
+exports.getByTransactionId = getByTransactionId;

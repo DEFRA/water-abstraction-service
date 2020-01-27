@@ -137,6 +137,46 @@ experiment('modules/billing/routes', () => {
     });
   });
 
+  experiment('getBatches', () => {
+    let request;
+    let server;
+
+    beforeEach(async () => {
+      server = getServer(routes.getBatches);
+
+      request = {
+        method: 'GET',
+        url: '/water/1.0/billing/batches'
+      };
+    });
+
+    test('returns 200 with no query params payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns 200 when pagination params are added to the query string', async () => {
+      request.url += '?page=1&perPage=10';
+
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the page is not an integer', async () => {
+      request.url += '?page=___one___&perPage=10';
+
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the perPage param is not an integer', async () => {
+      request.url += '?page=1&perPage=___ten___';
+
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+  });
+
   experiment('getBatchInvoices', () => {
     let request;
     let server;
@@ -193,6 +233,41 @@ experiment('modules/billing/routes', () => {
 
     test('returns a 400 if the invoice id is not a uuid', async () => {
       request.url = request.url.replace(validInvoiceId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+  });
+
+  experiment('deleteAccountFromBatch', () => {
+    let request;
+    let server;
+    let validBatchId;
+    let validAccountId;
+
+    beforeEach(async () => {
+      server = getServer(routes.deleteAccountFromBatch);
+      validBatchId = uuid();
+      validAccountId = uuid();
+
+      request = {
+        method: 'DELETE',
+        url: `/water/1.0/billing/batches/${validBatchId}/account/${validAccountId}`
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the batch id is not a uuid', async () => {
+      request.url = request.url.replace(validBatchId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the account id is not a uuid', async () => {
+      request.url = request.url.replace(validAccountId, '123');
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
