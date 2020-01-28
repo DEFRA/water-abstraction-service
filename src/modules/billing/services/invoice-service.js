@@ -22,6 +22,7 @@ const Transaction = require('../../../lib/models/transaction');
 
 const mapRowToModels = row => {
   const invoice = new Invoice(row['billing_invoices.billing_invoice_id']);
+  invoice.dateCreated = row['billing_invoices.date_created'];
   invoice.invoiceAccount = new InvoiceAccount();
   invoice.invoiceAccount.id = row['billing_invoices.invoice_account_id'];
   invoice.invoiceAccount.accountNumber = row['billing_invoices.invoice_account_number'];

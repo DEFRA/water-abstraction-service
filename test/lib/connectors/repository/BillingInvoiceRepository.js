@@ -52,6 +52,7 @@ experiment('lib/connectors/repository/BillingInvoiceRepository', () => {
             'invoices.invoice_account_number': '1122',
             'invoices.net_amount': 192,
             'invoices.is_credit': true,
+            'invoices.date_created': '2020-01-27',
 
             'invoice_licence.licence_id': 'licence-1',
             'invoice_licence.licence_ref': '111/111',
@@ -65,6 +66,7 @@ experiment('lib/connectors/repository/BillingInvoiceRepository', () => {
             'invoices.invoice_account_number': '1122',
             'invoices.net_amount': 192,
             'invoices.is_credit': true,
+            'invoices.date_created': '2020-01-27',
 
             'invoice_licence.licence_id': 'licence-1',
             'invoice_licence.licence_ref': '111/111',
@@ -78,6 +80,7 @@ experiment('lib/connectors/repository/BillingInvoiceRepository', () => {
             'invoices.invoice_account_number': '1122',
             'invoices.net_amount': 192,
             'invoices.is_credit': true,
+            'invoices.date_created': '2020-01-27',
 
             'invoice_licence.licence_id': 'licence-2',
             'invoice_licence.licence_ref': '222/222',
@@ -98,6 +101,7 @@ experiment('lib/connectors/repository/BillingInvoiceRepository', () => {
       expect(invoice.invoice_account_number).to.equal('1122');
       expect(invoice.net_amount).to.equal(192);
       expect(invoice.is_credit).to.equal(true);
+      expect(invoice.date_created).to.equal('2020-01-27');
     });
 
     test('maps the two licences', async () => {
