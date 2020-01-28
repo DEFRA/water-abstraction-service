@@ -19,8 +19,6 @@ const repos = require('../../../src/lib/connectors/repository');
 const event = require('../../../src/lib/event');
 const invoiceService = require('../../../src/modules/billing/services/invoice-service');
 const batchService = require('../../../src/modules/billing/services/batch-service');
-const eventService = require('../../../src/modules/billing/services/event-service');
-const { jobStatus } = require('../../../src/modules/billing/lib/batch');
 const controller = require('../../../src/modules/billing/controller');
 
 experiment('modules/billing/controller', () => {
@@ -46,7 +44,6 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(batchService, 'deleteBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
-    sandbox.stub(eventService, 'getEventForBatch').resolves();
 
     sandbox.stub(event, 'save').resolves({
       rows: [
@@ -374,11 +371,13 @@ experiment('modules/billing/controller', () => {
     let request;
 
     beforeEach(async () => {
-      eventService.getEventForBatch.resolves({
-        event_id: 'test-event-id'
-      });
-
       request = {
+        defra: {
+          internalCallingUser: {
+            email: 'test@example.com',
+            id: 1234
+          }
+        },
         pre: {
           batch: {
             billing_batch_id: 'test-batch-id'
@@ -393,15 +392,13 @@ experiment('modules/billing/controller', () => {
       expect(batchService.deleteBatch.calledWith('test-batch-id')).to.be.true();
     });
 
-    test('loads the batch event', async () => {
-      expect(eventService.getEventForBatch.calledWith('test-batch-id')).to.be.true();
-    });
-
-    test('sets the event status to deleted', async () => {
-      expect(event.updateStatus.calledWith(
-        'test-event-id',
-        jobStatus.deleted
-      )).to.be.true();
+    test('create an event which audits the change', async () => {
+      const [evt] = event.save.lastCall.args;
+      expect(evt.issuer).to.equal('test@example.com');
+      expect(evt.type).to.equal('billing-batch:cancel');
+      expect(evt.metadata.batch.billing_batch_id).to.equal('test-batch-id');
+      expect(evt.metadata.user.id).to.equal(1234);
+      expect(evt.status).to.equal('deleted');
     });
 
     test('returns a 204 response', async () => {

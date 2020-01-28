@@ -10,7 +10,6 @@ const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-ver
 const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
 const batchService = require('./services/batch-service');
-const eventService = require('./services/event-service');
 
 const createBatchEvent = async (userEmail, batch) => {
   const batchEvent = event.create({
@@ -133,11 +132,15 @@ const deleteBatch = async (request, h) => {
 
   await batchService.deleteBatch(batchId);
 
-  const evt = await eventService.getEventForBatch(batchId);
-
-  if (event) {
-    await event.updateStatus(evt.event_id, jobStatus.deleted);
-  }
+  await event.save(event.create({
+    issuer: request.defra.internalCallingUser.email,
+    type: 'billing-batch:cancel',
+    metadata: {
+      user: request.defra.internalCallingUser,
+      batch
+    },
+    status: 'deleted'
+  }));
 
   return h.response().code(204);
 };

@@ -105,6 +105,9 @@ const deleteBatch = {
     validate: {
       params: {
         batchId: Joi.string().uuid().required()
+      },
+      headers: async values => {
+        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
       }
     },
     pre: [

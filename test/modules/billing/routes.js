@@ -309,7 +309,10 @@ experiment('modules/billing/routes', () => {
 
       request = {
         method: 'DELETE',
-        url: `/water/1.0/billing/batches/${validBatchId}`
+        url: `/water/1.0/billing/batches/${validBatchId}`,
+        headers: {
+          'defra-internal-user-id': 1234
+        }
       };
     });
 
@@ -318,8 +321,26 @@ experiment('modules/billing/routes', () => {
       expect(response.statusCode).to.equal(200);
     });
 
+    test('returns a 200 if unknown headers are passed', async () => {
+      request.headers['x-custom-header'] = '123';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
     test('returns a 400 if the batch id is not a uuid', async () => {
       request.url = request.url.replace(validBatchId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the calling user id is not supplied', async () => {
+      request.headers = {};
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('returns a 400 if the calling user id is not a number', async () => {
+      request.headers['defra-internal-user-id'] = 'a string';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
