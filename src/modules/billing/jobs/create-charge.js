@@ -4,6 +4,7 @@ const Transaction = require('../../../lib/models/transaction');
 const transactionsService = require('../services/transactions-service');
 const chargeModuleTransactions = require('../../../lib/connectors/charge-module/transactions');
 const repos = require('../../../lib/connectors/repository');
+const mappers = require('../mappers');
 
 const JOB_NAME = 'billing.create-charge';
 
@@ -33,7 +34,7 @@ const handleCreateCharge = async job => {
     const batch = await transactionsService.getById(transactionId);
 
     // Map data to charge module transaction
-    const [cmTransaction] = transactionsService.mapBatchToChargeModuleTransactions(batch);
+    const [cmTransaction] = mappers.batch.modelToChargeModule(batch);
 
     // Create transaction in Charge Module
     const response = await chargeModuleTransactions.createTransaction(cmTransaction);

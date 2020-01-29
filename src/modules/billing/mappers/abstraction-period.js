@@ -1,11 +1,13 @@
+'use strict';
+
 const AbstractionPeriod = require('../../../lib/models/abstraction-period');
 
 /**
- * Creates an AbstractionPeriod instance from camel-cased charge element daya
+ * Creates an AbstractionPeriod instance from camel-cased charge element data
  * @param {Object} chargeElementRow - charge element row from the charge processor
  * @return {AbstractionPeriod}
  */
-const mapRowToModel = chargeElementRow => {
+const chargeToModel = chargeElementRow => {
   const element = new AbstractionPeriod();
   element.fromHash({
     startDay: chargeElementRow.abstractionPeriodStartDay,
@@ -16,4 +18,4 @@ const mapRowToModel = chargeElementRow => {
   return element;
 };
 
-exports.mapRowToModel = mapRowToModel;
+exports.chargeToModel = chargeToModel;

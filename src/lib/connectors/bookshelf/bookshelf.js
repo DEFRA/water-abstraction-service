@@ -11,5 +11,6 @@ const knex = require('knex')({
 
 // Create instance and register camel case converter
 const bookshelfInstance = bookshelf(knex);
+bookshelfInstance.plugin('bookshelf-case-converter-plugin');
 
 exports.bookshelf = bookshelfInstance;

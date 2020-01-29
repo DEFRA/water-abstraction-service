@@ -1,6 +1,5 @@
 const Repository = require('@envage/hapi-pg-rest-api/src/repository');
 const db = require('../db');
-const { BillingTransaction } = require('../bookshelf');
 
 const deleteByInvoiceAccountQuery = `
   delete
@@ -65,28 +64,6 @@ class BillingTransactionRepository extends Repository {
       ...(externalId && { external_id: externalId })
     };
     return this.update(filter, data);
-  }
-
-  /**
-   * Gets transaction and related models by GUID
-   * @param {String} billingTransactionId - guid
-   * @return {Object}
-   */
-  async getById (billingTransactionId) {
-    const model = await new BillingTransaction({ billing_transaction_id: billingTransactionId })
-      .fetch({
-        withRelated: [
-          'chargeElement',
-          'billingInvoiceLicence',
-          'billingInvoiceLicence.licence',
-          'billingInvoiceLicence.licence.region',
-          'billingInvoiceLicence.billingInvoice',
-          'billingInvoiceLicence.billingInvoice.billingBatch',
-          'billingInvoiceLicence.billingInvoice.billingBatch.region'
-        ]
-      });
-
-    return model.toJSON();
   }
 }
 
