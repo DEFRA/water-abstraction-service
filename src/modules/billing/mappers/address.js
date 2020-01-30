@@ -1,3 +1,5 @@
+'use strict';
+
 const { pick } = require('lodash');
 const Address = require('../../../lib/models/address');
 
@@ -6,7 +8,7 @@ const Address = require('../../../lib/models/address');
  * @param {Object} data - address data from CRM
  * @return {Address}
  */
-const mapCRMAddressToModel = data => {
+const crmToModel = data => {
   const address = new Address();
   address.fromHash({
     id: data.addressId,
@@ -19,4 +21,4 @@ const mapCRMAddressToModel = data => {
   return address;
 };
 
-exports.mapCRMAddressToModel = mapCRMAddressToModel;
+exports.crmToModel = crmToModel;
