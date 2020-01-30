@@ -23,7 +23,6 @@ const findPage = async (page, pageSize) => {
         'region'
       ]
     });
-  console.log(result);
   return paginatedEnvelope(result);
 };
 

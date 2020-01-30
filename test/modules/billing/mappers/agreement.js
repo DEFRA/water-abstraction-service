@@ -50,17 +50,17 @@ experiment('modules/billing/mappers/agreement', () => {
 
       test('the first agreement has the 127 code', async () => {
         expect(result[0] instanceof Agreement).to.be.true();
-        expect(result[0].code).to.equal('127');
+        expect(result[0].code).to.equal('S127');
       });
 
       test('the second agreement has the 130S code', async () => {
         expect(result[1] instanceof Agreement).to.be.true();
-        expect(result[1].code).to.equal('130S');
+        expect(result[1].code).to.equal('S130S');
       });
 
       test('the third agreement has the 130W code', async () => {
         expect(result[2] instanceof Agreement).to.be.true();
-        expect(result[2].code).to.equal('130W');
+        expect(result[2].code).to.equal('S130W');
       });
     });
   });

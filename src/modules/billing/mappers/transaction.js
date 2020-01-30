@@ -6,6 +6,7 @@ const { get, pick, identity } = require('lodash');
 const Batch = require('../../../lib/models/batch');
 const DateRange = require('../../../lib/models/date-range');
 const Transaction = require('../../../lib/models/transaction');
+const Agreement = require('../../../lib/models/agreement');
 
 const agreement = require('./agreement');
 const chargeElementMapper = require('./charge-element');
@@ -64,6 +65,36 @@ const chargeToModels = (chargeLine, batch) => {
 };
 
 /**
+ * Create agreement model with supplied code
+ * and optional factor (for abatements)
+ * @param {String} code
+ * @param {Number} [factor]
+ * @return {Agreement}
+ */
+const createAgreement = (code, factor) => {
+  const agreement = new Agreement();
+  agreement.fromHash({
+    code,
+    ...(factor !== undefined && { factor })
+  });
+  return agreement;
+};
+
+/**
+ * Maps a DB row to an array of Agreement models
+ * @param {Object} row - from water.billing_transactions
+ * @return {Array<Agreement>}
+ */
+const mapDBToAgreements = row => {
+  const agreements = [
+    row.section126Factor !== null && createAgreement('S126', row.section126Factor),
+    row.section127Agreement && createAgreement('S127'),
+    row.section130Agreement && createAgreement(row.section130Agreement)
+  ];
+  return agreements.filter(identity);
+};
+
+/**
  * Maps a row from water.billing_transactions to a Transaction model
  * @param {Object} row - from water.billing_transactions, camel cased
  * @param {ChargeElement} chargeElement
@@ -73,13 +104,30 @@ const dbToModel = row => {
   transaction.fromHash({
     id: row.billingTransactionId,
     ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description']),
-    // @todo agreements
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
-    volume: parseFloat(row.volume)
+    volume: parseFloat(row.volume),
+    agreements: mapDBToAgreements(row)
   });
   return transaction;
+};
+
+/**
+ * Maps agreements array to fields in water.billing_transactions table
+ * @param {Array<Agreement>} agreements
+ * @return {Object}
+ */
+const mapAgreementsToDB = agreements => {
+  const twoPartTariffAgreement = agreements.find(agreement => agreement.isTwoPartTariff());
+  const abatementAgreement = agreements.find(agreement => agreement.isAbatement());
+  const canalAndRiversTrustAgreement = agreements.find(agreement => agreement.isCanalAndRiversTrust());
+
+  return {
+    section_127_agreement: !!twoPartTariffAgreement,
+    section_126_factor: abatementAgreement ? abatementAgreement.factor : null,
+    section_130_agreement: canalAndRiversTrustAgreement ? canalAndRiversTrustAgreement.code : null
+  };
 };
 
 /**
@@ -106,7 +154,8 @@ const modelToDb = (invoiceLicence, transaction) => ({
   billable_days: transaction.billableDays,
   description: transaction.description,
   status: transaction.status,
-  volume: transaction.volume
+  volume: transaction.volume,
+  ...mapAgreementsToDB(transaction.agreements)
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -127,12 +176,13 @@ const mapChargeModuleDate = str =>
  * @return {Object}
  */
 const mapAgreementsToChargeModule = transaction => {
-  const section130Agreement = ['130U', '130S', '130T', '130W']
+  const section130Agreement = ['S130U', 'S130S', 'S130T', 'S130W']
     .map(code => transaction.getAgreementByCode(code))
     .some(identity);
+  const section126Agreement = transaction.getAgreementByCode('S126');
   return {
-    section126Factor: 1,
-    section127Agreement: !!transaction.getAgreementByCode('127'),
+    section126Factor: section126Agreement ? section126Agreement.factor : 1,
+    section127Agreement: !!transaction.getAgreementByCode('S127'),
     section130Agreement
   };
 };
