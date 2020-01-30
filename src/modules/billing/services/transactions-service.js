@@ -1,9 +1,5 @@
 'use strict';
 
-const invoiceService = require('./invoice-service');
-const invoiceLicencesService = require('./invoice-licences-service');
-const licenceService = require('./licence-service');
-
 const chargeModuleTransactionsConnector = require('../../../lib/connectors/charge-module/transactions');
 const ChargeModuleTransaction = require('../../../lib/models/charge-module-transaction');
 const { logger } = require('../../../logger');
@@ -66,7 +62,7 @@ const getTransactionsForBatchInvoice = async (batchId, invoiceReference) => {
  * @return {Promise}
  */
 const saveTransactionToDB = (invoiceLicence, transaction) => {
-  const data = mappers.transactions.modelToDb(invoiceLicence, transaction);
+  const data = mappers.transaction.modelToDb(invoiceLicence, transaction);
   return repos.billingTransactions.create(data);
 };
 
@@ -83,7 +79,7 @@ const getById = async transactionId => {
   const invoice = mappers.invoice.dbToModel(data.billingInvoiceLicence.billingInvoice);
   const invoiceLicence = mappers.invoiceLicence.dbToModel(data.billingInvoiceLicence);
   const licence = mappers.licence.dbToModel(data.billingInvoiceLicence.licence);
-  const transaction = mappers.transactions.dbToModel(data);
+  const transaction = mappers.transaction.dbToModel(data);
 
   // Place in heirarchy
   invoiceLicence.transactions = [transaction];

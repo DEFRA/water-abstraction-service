@@ -7,8 +7,8 @@ const Batch = require('../../../lib/models/batch');
 const DateRange = require('../../../lib/models/date-range');
 const Transaction = require('../../../lib/models/transaction');
 
-const agreements = require('./agreements');
-const chargeElements = require('./charge-elements');
+const agreement = require('./agreement');
+const chargeElementMapper = require('./charge-element');
 
 const createTransaction = (chargeLine, chargeElement, data = {}) => {
   const transaction = new Transaction();
@@ -16,10 +16,10 @@ const createTransaction = (chargeLine, chargeElement, data = {}) => {
     ...data,
     authorisedDays: chargeElement.totalDays,
     billableDays: chargeElement.billableDays,
-    agreements: agreements.chargeToModels(chargeLine),
+    agreements: agreement.chargeToModels(chargeLine),
     chargePeriod: new DateRange(chargeLine.startDate, chargeLine.endDate),
     description: chargeElement.description,
-    chargeElement: chargeElements.chargeToModel(chargeElement),
+    chargeElement: chargeElementMapper.chargeToModel(chargeElement),
     volume: chargeElement.billableAnnualQuantity || chargeElement.authorisedAnnualQuantity
   });
   return transaction;
@@ -76,7 +76,7 @@ const dbToModel = row => {
     // @todo agreements
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
-    chargeElement: chargeElements.dbToModel(row.chargeElement),
+    chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
     volume: parseFloat(row.volume)
   });
   return transaction;

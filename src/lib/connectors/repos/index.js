@@ -11,6 +11,8 @@
  * Finding multiple records:
  * - find() - find all records
  * - findBySomeParam() - find all records by some other query
+ * - findPage() - find a page of results
+ * - findPageBySomeParam()
  *
  * Other operations:
  * - create(data)

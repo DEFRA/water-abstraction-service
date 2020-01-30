@@ -8,7 +8,7 @@ const mappers = require('../mappers');
  */
 const getById = async chargeElementId => {
   const data = await repos.chargeElements.findOneById(chargeElementId);
-  return mappers.chargeElements.dbToModel(data);
+  return mappers.chargeElement.dbToModel(data);
 };
 
 exports.getById = getById;

@@ -5,7 +5,7 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const agreementsService = require('../../../../src/modules/billing/services/agreements-service');
+const agreementMapper = require('../../../../src/modules/billing/mappers/agreement');
 const Agreement = require('../../../../src/lib/models/agreement');
 
 const data = {
@@ -25,13 +25,13 @@ const data = {
   }
 };
 
-experiment('modules/billing/services/agreements-service', () => {
+experiment('modules/billing/mappers/agreement', () => {
   let result;
 
   experiment('.mapChargeToAgreements', () => {
     experiment('when there are no agreements', () => {
       beforeEach(async () => {
-        result = agreementsService.mapChargeToAgreements(data.chargeLineWithoutAgreements);
+        result = agreementMapper.chargeToModels(data.chargeLineWithoutAgreements);
       });
 
       test('the result is an empty array', async () => {
@@ -41,7 +41,7 @@ experiment('modules/billing/services/agreements-service', () => {
 
     experiment('when there are agreements', () => {
       beforeEach(async () => {
-        result = agreementsService.mapChargeToAgreements(data.chargeLineWithAgreements);
+        result = agreementMapper.chargeToModels(data.chargeLineWithAgreements);
       });
 
       test('the result is an array with 3 elements', async () => {

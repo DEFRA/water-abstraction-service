@@ -4,7 +4,7 @@ const { get } = require('lodash');
 
 const Address = require('../../../lib/models/address');
 const Company = require('../../../lib/models/company');
-const Contact = require('../../../lib/models/contact');
+const Contact = require('../../../lib/models/contact-v2');
 
 const InvoiceLicence = require('../../../lib/models/invoice-licence');
 const Licence = require('../../../lib/models/licence');
@@ -13,7 +13,7 @@ const Licence = require('../../../lib/models/licence');
 const address = require('./address');
 const company = require('./company');
 const contact = require('./contact');
-const transactions = require('./transactions');
+const transaction = require('./transaction');
 
 /**
  * Maps a row of data from water.billing_invoice_licences
@@ -84,7 +84,7 @@ const chargeToModel = (data, batch) => {
   if (data.licenceHolder.contact) {
     invoiceLicence.contact = contact.crmToModel(data.licenceHolder.contact);
   }
-  invoiceLicence.transactions = transactions.chargeToModels(data, batch);
+  invoiceLicence.transactions = transaction.chargeToModels(data, batch);
   return invoiceLicence;
 };
 

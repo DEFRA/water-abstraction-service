@@ -1,5 +1,6 @@
 'use strict';
 
+const camelCaseKeys = require('../../../lib/camel-case-keys');
 const Region = require('../../../lib/models/region');
 
 /**
@@ -7,7 +8,8 @@ const Region = require('../../../lib/models/region');
  * @param {Object} row - camel cased
  * @return {Region}
  */
-const dbToModel = row => {
+const dbToModel = data => {
+  const row = camelCaseKeys(data);
   const region = new Region();
   region.fromHash({
     type: Region.types.region,

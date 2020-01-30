@@ -5,7 +5,7 @@ const { pick } = require('lodash');
 const Batch = require('../../../lib/models/batch');
 const FinancialYear = require('../../../lib/models/financial-year');
 const region = require('./region');
-const transactions = require('./transactions');
+const transactionMapper = require('./transaction');
 
 /**
  * @param {Object} row - DB row, camel cased
@@ -32,7 +32,7 @@ const modelToChargeModule = batch => {
   return batch.invoices.reduce((acc, invoice) => {
     invoice.invoiceLicences.forEach(invoiceLicence => {
       invoiceLicence.transactions.forEach(transaction => {
-        acc.push(transactions.modelToChargeModule(batch, invoice, invoiceLicence, transaction));
+        acc.push(transactionMapper.modelToChargeModule(batch, invoice, invoiceLicence, transaction));
       });
     });
     return acc;
