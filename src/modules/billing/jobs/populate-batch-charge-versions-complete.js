@@ -1,3 +1,5 @@
+'use strict';
+
 const { get } = require('lodash');
 const repos = require('../../../lib/connectors/repository');
 
@@ -7,8 +9,9 @@ const processChargeVersion = require('./process-charge-version');
 const { logger } = require('../../../logger');
 
 const { batchStatus } = require('../lib/batch');
-const FinancialYear = require('../lib/financial-year');
+const { FinancialYear } = require('../../../lib/models');
 const { isValidForFinancialYear } = require('../lib/charge-version');
+const jobService = require('../services/job-service');
 
 /**
  * Create an object ready for saving to the
@@ -84,7 +87,7 @@ const handlePopulateBatchChargeVersionsComplete = async (job, messageQueue) => {
   const { eventId } = job.data.request.data;
 
   if (billingBatchChargeVersions.length === 0) {
-    return;
+    return jobService.setCompletedJob(eventId, batch.billing_batch_id);
   }
 
   try {
@@ -92,7 +95,7 @@ const handlePopulateBatchChargeVersionsComplete = async (job, messageQueue) => {
     await processBillingBatchChargeVersions(billingBatchChargeVersions, financialYears, messageQueue, eventId);
   } catch (err) {
     logger.error('Failed to create charge version years', err);
-    return job.done(err);
+    throw err;
   }
 };
 

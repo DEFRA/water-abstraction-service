@@ -63,17 +63,15 @@ experiment('lib/connectors/repository/ChargeVersionRepository.js', () => {
     const chargeVersionId = 'version_1';
 
     beforeEach(async () => {
-      ChargeVersionRepository.prototype.find.resolves({
+      ChargeVersionRepository.prototype.dbQuery.resolves({
         rows: [chargeVersions[0]]
       });
       result = await repo.findOneById(chargeVersionId);
     });
 
     test('filters charge versions by charge version ID', async () => {
-      const [filter] = ChargeVersionRepository.prototype.find.lastCall.args;
-      expect(filter).to.equal({
-        charge_version_id: chargeVersionId
-      });
+      const [, params] = ChargeVersionRepository.prototype.dbQuery.lastCall.args;
+      expect(params[0]).to.equal(chargeVersionId);
     });
 
     test('resolves with charge version', async () => {

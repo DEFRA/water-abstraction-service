@@ -1,9 +1,5 @@
 const Repository = require('./lib/repository');
-const { pgImport } = require('../../../config');
-
-// Create a pool just for imports
-const { Pool } = require('pg');
-const pool = new Pool(pgImport);
+const { pool } = require('../../lib/connectors/db');
 
 const repoConfig = {
 

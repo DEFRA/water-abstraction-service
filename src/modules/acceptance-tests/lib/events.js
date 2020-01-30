@@ -1,8 +1,8 @@
-const db = require('../../../lib/connectors/db');
+const { pool } = require('../../../lib/connectors/db');
 const { TEST_EXTERNAL_USER_EMAIL } = require('./constants');
 
 const deleteAll = () => {
-  return db.query(`
+  return pool.query(`
     delete from
     water.events
     where issuer = '${TEST_EXTERNAL_USER_EMAIL}';

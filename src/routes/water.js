@@ -4,7 +4,6 @@ API page, pending real back end - uses fs to read and write to lkocal json files
 */
 const sessionRoutes = require('../controllers/sessions');
 const schedulerRoutes = require('../controllers/scheduler');
-const lookupRoutes = require('../controllers/lookup');
 const notificationsRoutes = require('../controllers/notifications');
 const eventsRoutes = require('../controllers/events');
 const notifyTemplatesRoutes = require('../controllers/notifytemplates');
@@ -27,7 +26,6 @@ module.exports = [
   ...notificationsRoutes,
   ...notifyTemplatesRoutes,
   ...importedLicencesClient.getRoutes(),
-  ...lookupRoutes,
   ...taskConfigRoutes,
   ...moduleRoutes,
   ...gaugingStationRoutes,
@@ -46,6 +44,7 @@ module.exports = [
 const cron = require('node-cron');
 
 taskRunner.reset();
-cron.schedule('*/5 * * * * * *', function () {
+
+cron.schedule('*/1 * * * *', function () {
   taskRunner.run();
 });

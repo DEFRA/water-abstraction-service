@@ -1,3 +1,5 @@
+'use strict';
+
 const Joi = require('@hapi/joi');
 
 const controller = require('./controller');
@@ -45,14 +47,29 @@ const getBatchInvoices = {
   }
 };
 
-const getInvoiceDetail = {
+const getBatchInvoiceDetail = {
   method: 'GET',
-  path: '/water/1.0/billing/invoices/{invoiceId}',
-  handler: controller.getInvoiceDetail,
+  path: '/water/1.0/billing/batches/{batchId}/invoices/{invoiceId}',
+  handler: controller.getBatchInvoiceDetail,
   config: {
     validate: {
       params: {
+        batchId: Joi.string().uuid().required(),
         invoiceId: Joi.string().uuid().required()
+      }
+    }
+  }
+};
+
+const deleteAccountFromBatch = {
+  method: 'DELETE',
+  path: '/water/1.0/billing/batches/{batchId}/account/{accountId}',
+  handler: controller.deleteAccountFromBatch,
+  config: {
+    validate: {
+      params: {
+        batchId: Joi.string().uuid().required(),
+        accountId: Joi.string().uuid().required()
       }
     }
   }
@@ -61,4 +78,5 @@ const getInvoiceDetail = {
 exports.postCreateBatch = postCreateBatch;
 exports.getBatch = getBatch;
 exports.getBatchInvoices = getBatchInvoices;
-exports.getInvoiceDetail = getInvoiceDetail;
+exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
+exports.deleteAccountFromBatch = deleteAccountFromBatch;

@@ -1,10 +1,12 @@
+'use strict';
+
 const { get } = require('lodash');
 const evt = require('../../../lib/event');
 const { chargeVersions } = require('../../../lib/connectors/repository');
 
 const JOB_NAME = 'billing.populate-batch-charge-versions';
 
-const { isSupplementaryBatch, jobStatus } = require('../lib/batch');
+const { isSupplementaryBatch } = require('../lib/batch');
 const { logger } = require('../../../logger');
 
 const createMessage = eventId => ({
@@ -16,37 +18,32 @@ const createMessage = eventId => ({
  * Handles a batch that is supplementary
  *
  * @param {Object} job PG-Boss job object
- * @param {Object} batchEvent The event record that is tracking the batch run
+ * @param {Object} batch The batch run
  */
-const handleSupplementaryBatch = async (job, batchEvent) => {
-  const { batch } = batchEvent.metadata;
-
+const handleSupplementaryBatch = async (batch) => {
   logger.info('Handling supplementary batch', batch);
 
   // move any found charge versions into water.billing_batch_charge_versions
   const rows = await chargeVersions.createSupplementaryChargeVersions(batch);
 
-  batchEvent.status = rows.length === 0 ? jobStatus.complete : jobStatus.processing;
-  await evt.save(batchEvent);
-
   // Include the charge versions in the response data. This information
   // can then be used in the onComplete callback to decide if a new job
   // should be published.
-  return job.done(null, { chargeVersions: rows, batch });
+  return { chargeVersions: rows, batch };
 };
 
 const handlePopulateBatch = async job => {
+  logger.info(`Handling ${JOB_NAME}`);
+
   const eventId = get(job, 'data.eventId');
   const batchEvent = await evt.load(eventId);
   const { batch } = batchEvent.metadata;
 
   if (isSupplementaryBatch(batch)) {
-    return handleSupplementaryBatch(job, batchEvent);
-  } else {
-    logger.info('handle annual batches in a future story');
-    batchEvent.status = jobStatus.complete;
-    await evt.save(batchEvent);
+    return handleSupplementaryBatch(batch);
   }
+
+  logger.info('handle annual batches in a future story');
 };
 
 exports.createMessage = createMessage;

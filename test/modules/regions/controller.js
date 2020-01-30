@@ -14,7 +14,7 @@ const regionsConnector = require('../../../src/lib/connectors/regions');
 experiment('modules/regions/controller', () => {
   beforeEach(async () => {
     sandbox.stub(regionsConnector, 'getRegions').resolves({
-      data: [
+      rows: [
         {
           region_id: '00000000-0000-0000-0000-000000000000',
           charge_region_id: 'A',
@@ -37,14 +37,8 @@ experiment('modules/regions/controller', () => {
       expect(regionsConnector.getRegions.called).to.be.true();
     });
 
-    test('throws an error if returned from the regionConnector', async () => {
-      regionsConnector.getRegions.resolves({
-        data: null,
-        error: {
-          test: true
-        }
-      });
-
+    test('throws an error if thrown by the regionConnector', async () => {
+      regionsConnector.getRegions.rejects();
       await expect(controller.getRegions()).to.reject();
     });
 

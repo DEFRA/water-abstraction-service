@@ -1,0 +1,2 @@
+DROP INDEX water.idx_scheduled_notification_statuses;
+DROP INDEX water.idx_gauging_stations_station_reference;

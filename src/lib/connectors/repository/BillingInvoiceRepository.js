@@ -1,5 +1,33 @@
+'use strict';
+
 const Repository = require('@envage/hapi-pg-rest-api/src/repository');
 const db = require('../db');
+
+const findByBatchIdQuery = `
+  select
+    i.billing_invoice_id as "billing_invoices.billing_invoice_id",
+    i.invoice_account_id as "billing_invoices.invoice_account_id",
+    i.address as "billing_invoices.address",
+    i.invoice_account_number as "billing_invoices.invoice_account_number",
+    i.net_amount as "billing_invoices.net_amount",
+    i.is_credit as "billing_invoices.is_credit",
+    i.date_created as "billing_invoices.date_created",
+    i.date_updated as "billing_invoices.date_updated",
+
+    il.billing_invoice_licence_id as "billing_invoice_licences.billing_invoice_licence_id",
+    il.company_id as "billing_invoice_licences.company_id",
+    il.contact_id as "billing_invoice_licences.contact_id",
+    il.address_id as "billing_invoice_licences.address_id",
+    il.licence_ref as "billing_invoice_licences.licence_ref",
+    il.licence_id as "billing_invoice_licences.licence_id"
+
+  from water.billing_invoices i
+
+    join water.billing_invoice_licences il
+      on il.billing_invoice_id = i.billing_invoice_id
+
+  where i.billing_batch_id = $1;
+`;
 
 const getInvoiceDetailQuery = `
   select
@@ -83,20 +111,16 @@ class BillingInvoiceRepository extends Repository {
     super(Object.assign({
       connection: db.pool,
       table: 'water.billing_invoices',
-      primaryKey: 'billing_invoice_id'
+      primaryKey: 'billing_invoice_id',
+      upsert: {
+        fields: ['billing_batch_id', 'invoice_account_id'],
+        set: ['date_updated']
+      }
     }, config));
   }
 
   async findByBatchId (batchId) {
-    const query = `
-      select i.*
-      from water.billing_batch_invoices bi
-        join water.billing_invoices i
-          on bi.billing_invoice_id = i.billing_invoice_id
-      where bi.billing_batch_id = $1;
-    `;
-
-    const { rows } = await this.dbQuery(query, [batchId]);
+    const { rows } = await this.dbQuery(findByBatchIdQuery, [batchId]);
     return rows;
   };
 

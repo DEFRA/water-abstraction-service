@@ -1,6 +1,9 @@
+'use strict';
+
 require('dotenv').config();
 const testMode = parseInt(process.env.TEST_MODE) === 1;
 const isAcceptanceTestTarget = ['local', 'dev', 'development', 'test', 'preprod'].includes(process.env.NODE_ENV);
+const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0';
 
 module.exports = {
 
@@ -29,20 +32,29 @@ module.exports = {
     airbrakeLevel: 'error'
   },
 
-  // 125 available db connections
-  // 2 instances each with 2 cores running 5 applicatons that use
-  // the database.
-  // Therefore 125 / (2 x 2 x 5) = 6.25 connections per application pool.
+  // Database has 125 available connections
+  //
+  // Outside of development each process runs on 2 instances on 2 cores.
+  // So there will be 4 connection pools per service but just 1 locally
+  //
+  // Allocations:
+  //
+  // | ----------------------------------- | --------------- | --------------- |
+  // | Service                             | Local Dev Count | Non local count |
+  // | ----------------------------------- | --------------- | --------------- |
+  // | water-abstraction-import            |              16 |               4 |
+  // | water-abstraction-permit-repository |              12 |               3 |
+  // | water-abstraction-returns           |              16 |               4 |
+  // | water-abstraction-service           |              40 |              10 |
+  // | water-abstraction-tactical-crm      |              20 |               5 |
+  // | water-abstraction-tactical-idm      |              20 |               5 |
+  // | ----------------------------------- | --------------- | --------------- |
+  // | TOTAL                               |             124 |              31 |
+  // | ----------------------------------- | --------------- | --------------- |
+  //
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: 8,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 5000
-  },
-
-  pgImport: {
-    connectionString: process.env.DATABASE_URL,
-    max: 2,
+    max: process.env.NODE_ENV === 'local' ? 40 : 10,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000
   },
@@ -113,11 +125,13 @@ module.exports = {
   },
 
   services: {
-    crm: process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0',
+    crm: crmUri,
+    crm_v2: crmUri.replace('1.0', '2.0'),
     idm: process.env.IDM_URI || 'http://127.0.0.1:8003/idm/1.0',
     permits: process.env.PERMIT_URI || 'http://127.0.0.1:8004/API/1.0/',
     returns: process.env.RETURNS_URI || 'http://127.0.0.1:8006/returns/1.0',
-    import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0'
+    import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0',
+    chargeModule: process.env.CHARGE_MODULE_ORIGIN
   },
 
   isAcceptanceTestTarget

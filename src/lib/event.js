@@ -107,9 +107,23 @@ const load = async (eventId) => {
   return mapFromRepo(result.rows[0]);
 };
 
-module.exports = {
-  repo,
-  create,
-  save,
-  load
+/**
+ * Updates an events status value to the supplied value
+ * and returns the updated event.
+ *
+ * @param {String} eventId The event id to update
+ * @param {String} status The status to set
+ */
+const updateStatus = async (eventId, status) => {
+  const result = await repo.update(
+    { event_id: eventId },
+    { status }
+  );
+  return mapFromRepo(result.rows[0]);
 };
+
+exports.repo = repo;
+exports.create = create;
+exports.save = save;
+exports.load = load;
+exports.updateStatus = updateStatus;
