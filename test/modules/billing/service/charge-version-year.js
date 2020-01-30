@@ -15,7 +15,8 @@ const chargeVersionYear = require('../../../../src/modules/billing/service/charg
 const chargeProcessor = require('../../../../src/modules/billing/service/charge-processor');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
-const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
+
+const mappers = require('../../../../src/modules/billing/mappers');
 
 const repository = require('../../../../src/lib/connectors/repository');
 
@@ -107,7 +108,7 @@ experiment('modules/billing/service/charge-version-year.js', () => {
       }]
     });
     sandbox.stub(transactionsService, 'saveTransactionToDB').resolves();
-    sandbox.stub(invoiceService, 'mapChargeDataToModels').returns([]);
+    sandbox.stub(mappers.invoice, 'chargeToModels').returns([]);
   });
 
   afterEach(async () => {

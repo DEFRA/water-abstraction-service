@@ -1,6 +1,6 @@
 'use strict';
 
-const { pick, isString, isObject } = require('lodash');
+const { pick, isString } = require('lodash');
 const moment = require('moment');
 
 const { assertId, assertIsoString } = require('./validators');
@@ -34,7 +34,7 @@ class Model {
   toJSON () {
     return Object.keys(this).reduce((acc, key) => {
       const value = this[key];
-      acc[key.replace('_', '')] = isObject(value) ? value.toJSON() : value;
+      acc[key.replace('_', '')] = value.toJSON ? value.toJSON() : value;
       return acc;
     }, {});
   }
