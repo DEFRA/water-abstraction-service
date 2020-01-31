@@ -8,6 +8,7 @@
     "temp",
     "test",
     "src/modules/acceptance-tests",
-    "src/modules/**/routes.js"
+    "src/modules/**/routes.js",
+    "src/lib/connectors/bookshelf"
   ]
 }

@@ -8,6 +8,8 @@ const invoiceService = require('../services/invoice-service');
 const invoiceLicencesService = require('../services/invoice-licences-service');
 const transactionsService = require('../services/transactions-service');
 
+const mappers = require('../mappers');
+
 const createInvoiceLicence = async (invoice, invoiceLicence) => {
   // Write water.billing_invoice_licences row and update model with ID
   const row = await invoiceLicencesService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
@@ -73,7 +75,7 @@ const createBatchFromChargeVersionYear = async chargeVersionYear => {
 
   // Load batch and add invoices
   const batch = await batchService.getBatchById(batchId);
-  const invoices = invoiceService.mapChargeDataToModels(data, batch);
+  const invoices = mappers.invoice.chargeToModels(data, batch);
   batch.addInvoices(invoices);
 
   return batch;

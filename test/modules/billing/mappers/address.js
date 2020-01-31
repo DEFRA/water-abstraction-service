@@ -6,7 +6,7 @@ const {
 
 const { expect } = require('@hapi/code');
 
-const addressService = require('../../../../src/modules/billing/services/address-service');
+const addressMapper = require('../../../../src/modules/billing/mappers/address');
 
 const createCrmAddress = (index = 0) => ({
   addressId: `7d78cca3-4ed5-457d-a594-2b9687b7870${index}`,
@@ -20,13 +20,13 @@ const createCrmAddress = (index = 0) => ({
   country: `country_${index}`
 });
 
-experiment('modules/billing/services/address-service', () => {
-  experiment('.mapCRMAddressToModel', () => {
+experiment('modules/billing/mappers/address', () => {
+  experiment('.crmToModel', () => {
     let crmAddress, address;
 
     beforeEach(async () => {
       crmAddress = createCrmAddress();
-      address = addressService.mapCRMAddressToModel(crmAddress);
+      address = addressMapper.crmToModel(crmAddress);
     });
 
     test('address is mapped correctly', async () => {

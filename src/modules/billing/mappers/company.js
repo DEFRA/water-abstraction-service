@@ -1,3 +1,5 @@
+'use strict';
+
 const Company = require('../../../lib/models/company');
 
 /**
@@ -5,11 +7,11 @@ const Company = require('../../../lib/models/company');
  * @param {Object} companyData
  * @return {Company}
  */
-const mapCRMCompanyToModel = companyData => {
+const crmToModel = companyData => {
   const company = new Company();
   company.id = companyData.companyId;
   company.name = companyData.name;
   return company;
 };
 
-exports.mapCRMCompanyToModel = mapCRMCompanyToModel;
+exports.crmToModel = crmToModel;
