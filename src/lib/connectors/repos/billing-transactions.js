@@ -6,7 +6,8 @@ const { BillingTransaction } = require('../bookshelf');
  * @return {Object}
  */
 const findOne = async id => {
-  const model = await new BillingTransaction({ billing_transaction_id: id })
+  const model = await BillingTransaction
+    .forge({ billing_transaction_id: id })
     .fetch({
       withRelated: [
         'chargeElement',
