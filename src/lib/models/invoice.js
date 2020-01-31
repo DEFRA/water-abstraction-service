@@ -75,6 +75,22 @@ class Invoice extends Model {
     return this._address;
   }
 
+  /**
+   * Sets the date created for this invoice
+   * @param {String} dateCreated
+   */
+  set dateCreated (dateCreated) {
+    this._dateCreated = dateCreated;
+  }
+
+  /**
+   * Gets the date created for this invoice
+   * @return {String}
+   */
+  get dateCreated () {
+    return this._dateCreated;
+  }
+
   set invoiceLicences (invoiceLicences) {
     assertIsArrayOfType(invoiceLicences, InvoiceLicence);
     this._invoiceLicences = invoiceLicences;

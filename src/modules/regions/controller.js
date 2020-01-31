@@ -1,14 +1,10 @@
-const regionsConnector = require('../../lib/connectors/regions');
-const camelCaseKeys = require('../../lib/camel-case-keys');
+'use strict';
 
-/**
- * Gets the regions from the database and transforms all keys to camel case
- * for easier consumption upstream
- */
+const regionsRepo = require('../../lib/connectors/repos/regions');
+
 const getRegions = async () => {
-  const { rows: regions } = await regionsConnector.getRegions();
   return {
-    data: camelCaseKeys(regions)
+    data: await regionsRepo.find()
   };
 };
 
