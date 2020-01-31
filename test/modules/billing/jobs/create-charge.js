@@ -16,12 +16,9 @@ const createChargeJob = require('../../../../src/modules/billing/jobs/create-cha
 // Connectors
 const chargeModuleTransactions = require('../../../../src/lib/connectors/charge-module/transactions');
 const repos = require('../../../../src/lib/connectors/repository');
+const mappers = require('../../../../src/modules/billing/mappers');
 
 // Services
-const batchService = require('../../../../src/modules/billing/services/batch-service');
-const chargeElementsService = require('../../../../src/modules/billing/services/charge-elements-service');
-const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
-const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 const transactionService = require('../../../../src/modules/billing/services/transactions-service');
 
 // Models
@@ -84,18 +81,18 @@ const data = {
 };
 
 experiment('modules/billing/jobs/create-charge', () => {
+  let batch;
+
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
     sandbox.stub(logger, 'error');
 
-    sandbox.stub(batchService, 'mapDBToModel').returns(data.models.batch);
-    sandbox.stub(chargeElementsService, 'getById').resolves(data.models.chargeElement);
-    sandbox.stub(invoiceLicencesService, 'getByTransactionId').resolves(data.models.invoiceLicence);
-    sandbox.stub(invoiceService, 'getByTransactionId').resolves(data.models.invoice);
-    sandbox.stub(transactionService, 'mapDBToModel').returns(data.models.transaction);
-    sandbox.stub(transactionService, 'mapModelToChargeModule').returns(data.chargeModuleTransaction);
+    batch = new Batch('accafbe7-3eca-45f7-a56b-a37dce17af30');
+
+    sandbox.stub(transactionService, 'getById').resolves(batch);
     sandbox.stub(chargeModuleTransactions, 'createTransaction').resolves(data.chargeModuleResponse);
     sandbox.stub(repos.billingTransactions, 'setStatus');
+    sandbox.stub(mappers.batch, 'modelToChargeModule').returns([data.chargeModuleTransaction]);
   });
 
   afterEach(async () => {
@@ -142,37 +139,14 @@ experiment('modules/billing/jobs/create-charge', () => {
         result = await createChargeJob.handler(job);
       });
 
-      test('charge element is loaded with charge element ID from transaction', async () => {
-        const [id] = chargeElementsService.getById.lastCall.args;
-        expect(id).to.equal(job.data.transaction.charge_element_id);
-      });
-
-      test('invoice licence is loaded with transaction ID from transaction', async () => {
-        const [id] = invoiceLicencesService.getByTransactionId.lastCall.args;
+      test('the transaction is loaded within the context of its batch', async () => {
+        const [id] = transactionService.getById.lastCall.args;
         expect(id).to.equal(job.data.transaction.billing_transaction_id);
       });
 
-      test('invoice is loaded by transaction ID from transaction', async () => {
-        const [id] = invoiceService.getByTransactionId.lastCall.args;
-        expect(id).to.equal(job.data.transaction.billing_transaction_id);
-      });
-
-      test('transaction is mapped from transaction data in job', async () => {
-        const [data] = transactionService.mapDBToModel.lastCall.args;
-        expect(data).to.equal(job.data.transaction);
-      });
-
-      test('batch is mapped from batch data in job', async () => {
-        const [data] = batchService.mapDBToModel.lastCall.args;
-        expect(data).to.equal(job.data.batch);
-      });
-
-      test('the correct models are mapped to a charge module payload', async () => {
-        const [batch, invoice, invoiceLicence, transaction] = transactionService.mapModelToChargeModule.lastCall.args;
-        expect(batch).to.equal(data.models.batch);
-        expect(invoice).to.equal(data.models.invoice);
-        expect(invoiceLicence).to.equal(data.models.invoiceLicence);
-        expect(transaction).to.equal(data.models.transaction);
+      test('the batch is mapped to charge module transactions', async () => {
+        const { args } = mappers.batch.modelToChargeModule.lastCall;
+        expect(args[0]).to.equal(batch);
       });
 
       test('the charge module payload is sent to the .createTransaction connector', async () => {

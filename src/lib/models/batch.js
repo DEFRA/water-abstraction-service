@@ -5,7 +5,7 @@ const Region = require('./region');
 const { assert } = require('@hapi/hoek');
 const { isArray } = require('lodash');
 
-const { assertIsInstanceOf, assertEnum } = require('./validators');
+const { assertIsInstanceOf, assertEnum, assertIsArrayOfType } = require('./validators');
 
 const VALID_SEASON = Joi.string().valid('summer', 'winter', 'all year').required();
 const VALID_STATUS = Joi.string().valid('processing', 'review', 'complete', 'error').required();
@@ -157,6 +157,11 @@ class Batch extends Model {
    */
   get invoices () {
     return this._invoices;
+  }
+
+  set invoices (invoices) {
+    assertIsArrayOfType(invoices, Invoice);
+    this._invoices = invoices;
   }
 
   /**

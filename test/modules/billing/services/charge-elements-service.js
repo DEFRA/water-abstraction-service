@@ -37,58 +37,6 @@ experiment('modules/billing/services/charge-elements-service', () => {
     sandbox.restore();
   });
 
-  experiment('.mapRowToModel', () => {
-    beforeEach(async () => {
-      result = chargeElementsService.mapRowToModel(data.chargeElement);
-    });
-
-    test('returns an instance of ChargeElement', async () => {
-      expect(result instanceof ChargeElement).to.be.true();
-    });
-
-    test('sets the .id property', async () => {
-      expect(result.id).to.equal(data.chargeElement.chargeElementId);
-    });
-
-    test('sets the .source property', async () => {
-      expect(result.source).to.equal(data.chargeElement.source);
-    });
-
-    test('sets the .season property', async () => {
-      expect(result.season).to.equal(data.chargeElement.season);
-    });
-
-    test('sets the .loss property', async () => {
-      expect(result.loss).to.equal(data.chargeElement.loss);
-    });
-  });
-
-  experiment('.mapDBToModel', () => {
-    beforeEach(async () => {
-      result = chargeElementsService.mapDBToModel(data.dbRow);
-    });
-
-    test('returns an instance of ChargeElement', async () => {
-      expect(result instanceof ChargeElement).to.be.true();
-    });
-
-    test('sets the .id property', async () => {
-      expect(result.id).to.equal(data.chargeElement.chargeElementId);
-    });
-
-    test('sets the .source property', async () => {
-      expect(result.source).to.equal(data.chargeElement.source);
-    });
-
-    test('sets the .season property', async () => {
-      expect(result.season).to.equal(data.chargeElement.season);
-    });
-
-    test('sets the .loss property', async () => {
-      expect(result.loss).to.equal(data.chargeElement.loss);
-    });
-  });
-
   experiment('.getById', () => {
     beforeEach(async () => {
       repos.chargeElements.findOneById.resolves(data.dbRow);
