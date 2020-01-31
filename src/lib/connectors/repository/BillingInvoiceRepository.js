@@ -38,6 +38,7 @@ const getInvoiceDetailQuery = `
     i.invoice_account_number as "invoices.invoice_account_number",
     i.net_amount as "invoices.net_amount",
     i.is_credit as "invoices.is_credit",
+    i.date_created as "invoices.date_created",
 
     il.billing_invoice_licence_id as "invoice_licence.billing_invoice_licence_id",
     il.billing_invoice_id as "invoice_licence.billing_invoice_id",
