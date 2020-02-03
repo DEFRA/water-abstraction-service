@@ -25,6 +25,7 @@ class Model {
     for (const key in valueHash) {
       this[key] = valueHash[key];
     }
+    return this;
   };
 
   pickFrom (source, keys) {

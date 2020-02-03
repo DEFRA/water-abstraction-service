@@ -1,18 +1,59 @@
 'use strict';
 
-const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
+const sandbox = require('sinon').createSandbox();
 
+const hashers = require('../../../src/lib/hash');
 const ChargeModuleTransaction = require('../../../src/lib/models/charge-module-transaction');
 const Transaction = require('../../../src/lib/models/transaction');
 const Agreement = require('../../../src/lib/models/agreement');
 const DateRange = require('../../../src/lib/models/date-range');
 const ChargeElement = require('../../../src/lib/models/charge-element');
+const Licence = require('../../../src/lib/models/licence');
+const Region = require('../../../src/lib/models/region');
 
 class TestModel {};
 
+const getTestDataForHashing = () => {
+  const accountNumber = 'test-acc-number';
+
+  const region = new Region();
+  region.code = 'A';
+
+  const licence = new Licence();
+  licence.region = region;
+  licence.licenceNumber = 'ABCCBA';
+
+  const chargeElement = new ChargeElement();
+  chargeElement.source = 'supported';
+  chargeElement.season = 'summer';
+  chargeElement.loss = 'low';
+
+  const transaction = new Transaction();
+  transaction.chargePeriod = new DateRange('2010-01-01', '2020-01-01');
+  transaction.billableDays = 1;
+  transaction.authorisedDays = 2;
+  transaction.volume = 3;
+
+  transaction.agreements = [
+    new Agreement().fromHash({ code: 'S130T' }),
+    new Agreement().fromHash({ code: 'S127' }),
+    new Agreement().fromHash({ code: 'S130W' })
+  ];
+
+  transaction.chargeElement = chargeElement;
+  transaction.description = 'description';
+
+  return { accountNumber, licence, transaction };
+};
+
 experiment('lib/models/transaction', () => {
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
   experiment('construction', () => {
     test('can be passed no initial values', async () => {
       const transaction = new Transaction();
@@ -255,6 +296,92 @@ experiment('lib/models/transaction', () => {
       };
 
       expect(func).to.throw();
+    });
+  });
+
+  experiment('.transactionKey', () => {
+    test('can set the transaction key to a valid 32 char string', async () => {
+      const transaction = new Transaction();
+      const validKey = '0123456789ABCDEFFEDCBA9876543210';
+      transaction.transactionKey = validKey;
+      expect(transaction.transactionKey).to.equal(validKey);
+    });
+
+    test('will throw if an invalid value is set', async () => {
+      const transaction = new Transaction();
+
+      expect(() => {
+        transaction.transactionKey = 'nope';
+      }).to.throw();
+    });
+  });
+
+  experiment('.getHashData', () => {
+    test('returns a flat object containing the data to feed to the hash', () => {
+      const { accountNumber, licence, transaction } = getTestDataForHashing();
+
+      const hashData = transaction.getHashData(accountNumber, licence);
+
+      expect(hashData.periodStart).to.equal(transaction.chargePeriod.startDate);
+      expect(hashData.periodEnd).to.equal(transaction.chargePeriod.endDate);
+      expect(hashData.billableDays).to.equal(transaction.billableDays);
+      expect(hashData.authorisedDays).to.equal(transaction.authorisedDays);
+      expect(hashData.volume).to.equal(transaction.volume);
+      expect(hashData.agreements).to.equal('S127-S130T-S130W');
+      expect(hashData.accountNumber).to.equal(accountNumber);
+      expect(hashData.source).to.equal(transaction.chargeElement.source);
+      expect(hashData.season).to.equal(transaction.chargeElement.season);
+      expect(hashData.loss).to.equal(transaction.chargeElement.loss);
+      expect(hashData.description).to.equal(transaction.description);
+      expect(hashData.licenceNumber).to.equal(licence.licenceNumber);
+      expect(hashData.regionCode).to.equal(licence.region.code);
+    });
+  });
+
+  experiment('.createTransactionKey', () => {
+    test('sets the transactionKey value on the transaction', () => {
+      const { accountNumber, licence, transaction } = getTestDataForHashing();
+      transaction.createTransactionKey(accountNumber, licence);
+
+      expect(transaction.transactionKey).to.equal('a5e648260b517646a353aa88996eb6c5');
+    });
+
+    test('returns the transactionKey', () => {
+      const { accountNumber, licence, transaction } = getTestDataForHashing();
+      const transactionKey = transaction.createTransactionKey(accountNumber, licence);
+
+      expect(transactionKey).to.equal('a5e648260b517646a353aa88996eb6c5');
+    });
+
+    test('sets the value to the result of calling createMd5Hash', async () => {
+      sandbox.stub(hashers, 'createMd5Hash').returns('0123456789ABCDEF0123456789ABCDEF');
+      const { accountNumber, licence, transaction } = getTestDataForHashing();
+      const transactionKey = transaction.createTransactionKey(accountNumber, licence);
+
+      expect(transactionKey).to.equal('0123456789ABCDEF0123456789ABCDEF');
+    });
+
+    test('sorts by key for consistent behaviour', async () => {
+      sandbox.stub(hashers, 'createMd5Hash');
+      const { accountNumber, licence, transaction } = getTestDataForHashing();
+      transaction.createTransactionKey(accountNumber, licence);
+
+      const [hashInput] = hashers.createMd5Hash.lastCall.args;
+      expect(hashInput.split(',')).to.equal([
+        'accountNumber:test-acc-number',
+        'agreements:S127-S130T-S130W',
+        'authorisedDays:2',
+        'billableDays:1',
+        'description:description',
+        'licenceNumber:ABCCBA',
+        'loss:low',
+        'periodEnd:2020-01-01',
+        'periodStart:2010-01-01',
+        'regionCode:A',
+        'season:summer',
+        'source:supported',
+        'volume:3'
+      ]);
     });
   });
 });

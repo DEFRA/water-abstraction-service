@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -9,6 +11,9 @@ const { expect } = require('@hapi/code');
 
 const sandbox = require('sinon').createSandbox();
 const { Address, Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence, Transaction } = require('../../../../src/lib/models');
+const DateRange = require('../../../../src/lib/models/date-range');
+const Region = require('../../../../src/lib/models/region');
+const ChargeElement = require('../../../../src/lib/models/charge-element');
 const Contact = require('../../../../src/lib/models/contact-v2');
 
 const chargeVersionYear = require('../../../../src/modules/billing/service/charge-version-year');
@@ -77,8 +82,12 @@ const data = {
 const createCompany = () =>
   Object.assign(new Company(), data.company);
 
-const createLicence = () =>
-  Object.assign(new Licence(), data.licence);
+const createLicence = () => {
+  return new Licence().fromHash({
+    region: new Region().fromHash({ code: 'A' }),
+    ...data.licence
+  });
+};
 
 const createContact = () =>
   Object.assign(new Contact(), data.contact);
@@ -191,8 +200,16 @@ experiment('modules/billing/service/charge-version-year.js', () => {
 
         // Set up transactions
         invoiceLicence.transactions = [
-          new Transaction(data.transactionId1),
+          new Transaction(data.transactionId1)
+            .fromHash({
+              chargeElement: new ChargeElement(),
+              chargePeriod: new DateRange('2010-01-01', '2011-01-01')
+            }),
           new Transaction(data.transactionId2)
+            .fromHash({
+              chargeElement: new ChargeElement(),
+              chargePeriod: new DateRange('2010-01-01', '2011-01-01')
+            })
         ];
 
         batch.addInvoice(invoice);

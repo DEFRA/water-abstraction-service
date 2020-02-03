@@ -1,21 +1,14 @@
 'use strict';
+
 const { pick } = require('lodash');
+const hashers = require('../../lib/hash');
 
 const Model = require('./model');
 const Agreement = require('./agreement');
 const DateRange = require('./date-range');
 const ChargeElement = require('./charge-element');
 
-const {
-  assertString,
-  assertIsBoolean,
-  assertAuthorisedDays,
-  assertBillableDays,
-  assertIsArrayOfType,
-  assertIsInstanceOf,
-  assertEnum,
-  assertQuantity
-} = require('./validators');
+const validators = require('./validators');
 
 const statuses = {
   candidate: 'candidate',
@@ -57,7 +50,7 @@ class Transaction extends Model {
   }
 
   set isCredit (isCredit) {
-    assertIsBoolean(isCredit);
+    validators.assertIsBoolean(isCredit);
     this._isCredit = isCredit;
   }
 
@@ -71,7 +64,7 @@ class Transaction extends Model {
   }
 
   set authorisedDays (days) {
-    assertAuthorisedDays(days);
+    validators.assertAuthorisedDays(days);
     this._authorisedDays = days;
   }
 
@@ -85,7 +78,7 @@ class Transaction extends Model {
   }
 
   set billableDays (days) {
-    assertBillableDays(days);
+    validators.assertBillableDays(days);
     this._billableDays = days;
   }
 
@@ -100,7 +93,7 @@ class Transaction extends Model {
   }
 
   set agreements (agreements) {
-    assertIsArrayOfType(agreements, Agreement);
+    validators.assertIsArrayOfType(agreements, Agreement);
     this._agreements = agreements;
   }
 
@@ -123,7 +116,7 @@ class Transaction extends Model {
   }
 
   set chargePeriod (dateRange) {
-    assertIsInstanceOf(dateRange, DateRange);
+    validators.assertIsInstanceOf(dateRange, DateRange);
     this._chargePeriod = dateRange;
   }
 
@@ -136,7 +129,7 @@ class Transaction extends Model {
   }
 
   set isCompensationCharge (isCompensationCharge) {
-    assertIsBoolean(isCompensationCharge);
+    validators.assertIsBoolean(isCompensationCharge);
     this._isCompensationCharge = isCompensationCharge;
   }
 
@@ -150,7 +143,7 @@ class Transaction extends Model {
   }
 
   set description (description) {
-    assertString(description);
+    validators.assertString(description);
     this._description = description;
   }
 
@@ -163,7 +156,7 @@ class Transaction extends Model {
   }
 
   set chargeElement (chargeElement) {
-    assertIsInstanceOf(chargeElement, ChargeElement);
+    validators.assertIsInstanceOf(chargeElement, ChargeElement);
     this._chargeElement = chargeElement;
   }
 
@@ -172,7 +165,7 @@ class Transaction extends Model {
   }
 
   set status (status) {
-    assertEnum(status, Object.values(statuses));
+    validators.assertEnum(status, Object.values(statuses));
     this._status = status;
   }
 
@@ -185,8 +178,59 @@ class Transaction extends Model {
   }
 
   set volume (volume) {
-    assertQuantity(volume);
+    validators.assertQuantity(volume);
     this._volume = volume;
+  }
+
+  /**
+   * Creates a POJO containing a single layer of data that will be
+   * used to create a unique hash for this transaction
+   *
+   * @param {String} accountNumber The account number
+   * @param {Licence} licence Licence information
+   * @param {Region} region Region object
+   */
+  getHashData (accountNumber, licence) {
+    return {
+      periodStart: this.chargePeriod.startDate,
+      periodEnd: this.chargePeriod.endDate,
+      billableDays: this.billableDays,
+      authorisedDays: this.authorisedDays,
+      volume: this.volume,
+      agreements: this.agreements.map(ag => ag.code).sort().join('-'),
+      accountNumber,
+      source: this.chargeElement.source,
+      season: this.chargeElement.season,
+      loss: this.chargeElement.loss,
+      description: this.description,
+      licenceNumber: licence.licenceNumber,
+      regionCode: licence.region.code
+    };
+  }
+
+  /**
+   * Sets the transactionKey values to a unique hash for this transaction
+   *
+   * @param {String} accountNumber The account number
+   * @param {Object} licence Licence information
+   * @param {Obejct} region Region object
+   */
+  createTransactionKey (accountNumber, licence) {
+    const hash = this.getHashData(accountNumber, licence);
+    const hashInput = Object.entries(hash)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(entry => `${entry[0]}:${entry[1]}`)
+      .join(',');
+
+    this.transactionKey = hashers.createMd5Hash(hashInput);
+    return this.transactionKey;
+  }
+
+  get transactionKey () { return this._transactionKey; }
+
+  set transactionKey (transactionKey) {
+    validators.assertTransactionKey(transactionKey);
+    this._transactionKey = transactionKey;
   }
 }
 

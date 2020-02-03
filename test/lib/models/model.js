@@ -1,3 +1,5 @@
+'use strict';
+
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
@@ -37,6 +39,12 @@ experiment('lib/models/model', () => {
       });
 
       expect(bike.numberOfGears).to.equal(1);
+      expect(bike.id).to.equal(id);
+    });
+
+    test('returns the instance', async () => {
+      const id = uuid();
+      const bike = new Bike().fromHash({ id });
       expect(bike.id).to.equal(id);
     });
   });

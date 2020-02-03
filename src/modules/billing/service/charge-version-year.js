@@ -1,3 +1,5 @@
+'use strict';
+
 const chargeProcessor = require('./charge-processor');
 const { logger } = require('../../../logger');
 const { Batch } = require('../../../lib/models');
@@ -17,6 +19,7 @@ const createInvoiceLicence = async (invoice, invoiceLicence) => {
 
   // Write transactions
   const tasks = invoiceLicence.transactions.map(transaction => {
+    transaction.createTransactionKey(invoice.invoiceAccount.accountNumber, invoiceLicence.licence);
     transactionsService.saveTransactionToDB(invoiceLicence, transaction);
   });
 
@@ -86,9 +89,9 @@ const createBatchFromChargeVersionYear = async chargeVersionYear => {
  * @param {Batch} batch
  * @return {Promise}
  */
-const persistChargeVersionYearBatch = async batch => {
+const persistChargeVersionYearBatch = batch => {
   assert(batch instanceof Batch, 'Batch expected');
-  await createBatchInvoices(batch);
+  return createBatchInvoices(batch);
 };
 
 exports.createBatchFromChargeVersionYear = createBatchFromChargeVersionYear;
