@@ -28,5 +28,11 @@ const findPage = async (page, pageSize) => {
   return paginatedEnvelope(result);
 };
 
+const update = (id, data) => BillingBatch
+  .forge({ billing_batch_id: id })
+  .set(data)
+  .save();
+
 exports.findOne = findOne;
 exports.findPage = findPage;
+exports.update = update;

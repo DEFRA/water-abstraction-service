@@ -2,7 +2,7 @@
 
 const moment = require('moment');
 const { titleCase } = require('title-case');
-const { get, pick, identity } = require('lodash');
+const { get, pick, identity, omit } = require('lodash');
 
 const Batch = require('../../../lib/models/batch');
 const DateRange = require('../../../lib/models/date-range');
@@ -95,21 +95,37 @@ const mapDBToAgreements = row => {
   return agreements.filter(identity);
 };
 
+const dbToHash = row => ({
+  id: row.billingTransactionId,
+  ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description']),
+  chargePeriod: new DateRange(row.startDate, row.endDate),
+  isCompensationCharge: row.chargeType === 'compensation',
+  chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
+  volume: parseFloat(row.volume),
+  agreements: mapDBToAgreements(row)
+});
+
 /**
  * Maps a row from water.billing_transactions to a Transaction model
  * @param {Object} row - from water.billing_transactions, camel cased
- * @param {ChargeElement} chargeElement
  */
 const dbToModel = row => {
   const transaction = new Transaction();
+  transaction.fromHash(dbToHash(row));
+  return transaction;
+};
+
+/**
+ * Maps an existing charge row from water.billing_transactions to a new credit Transaction model
+ * @param {Object} row - from water.billing_transactions, camel cased
+ */
+const dbToCreditModel = row => {
+  const data = omit(dbToHash(row), ['id']);
+  const transaction = new Transaction();
   transaction.fromHash({
-    id: row.billingTransactionId,
-    ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey']),
-    chargePeriod: new DateRange(row.startDate, row.endDate),
-    isCompensationCharge: row.chargeType === 'compensation',
-    chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
-    volume: parseFloat(row.volume),
-    agreements: mapDBToAgreements(row)
+    ...data,
+    isCredit: true,
+    status: Transaction.statuses.candidate
   });
   return transaction;
 };
@@ -251,5 +267,6 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
 
 exports.chargeToModels = chargeToModels;
 exports.dbToModel = dbToModel;
+exports.dbToCreditModel = dbToCreditModel;
 exports.modelToDb = modelToDb;
 exports.modelToChargeModule = modelToChargeModule;

@@ -3,6 +3,7 @@ const mappers = require('../mappers');
 const repos = require('../../../lib/connectors/repository');
 
 const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
+const Batch = require('../../../lib/models/batch');
 
 /**
  * Loads a Batch instance by ID
@@ -37,6 +38,15 @@ const deleteBatch = async batchId => {
   await repos.billingBatches.deleteByBatchId(batchId);
 };
 
+/**
+ * Sets the specified batch to 'error' status
+ * @param {String} batchId
+ * @return {Promise}
+ */
+const setErrorStatus = batchId =>
+  newRepos.billingBatches.update(batchId, Batch.statuses.error);
+
 exports.getBatchById = getBatchById;
 exports.getBatches = getBatches;
 exports.deleteBatch = deleteBatch;
+exports.setErrorStatus = setErrorStatus;

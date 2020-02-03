@@ -87,6 +87,19 @@ const chargeToModels = (data, batch) => {
   });
 };
 
+const crmToModel = row => {
+  const invoice = new Invoice();
+
+  // Create invoice account model
+  invoice.invoiceAccount = invoiceAccount.crmToModel(row);
+
+  // Create invoice address model
+  invoice.address = address.crmToModel(row.address);
+
+  return invoice;
+};
+
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
 exports.chargeToModels = chargeToModels;
+exports.crmToModel = crmToModel;

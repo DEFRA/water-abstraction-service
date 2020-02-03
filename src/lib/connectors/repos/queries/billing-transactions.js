@@ -17,6 +17,7 @@ where
   and b.billing_batch_id<>:batchId
   and t.start_date>=il_2.min_date
   and t.end_date<=il_2.max_date
+order by t.date_created ASC
 `;
 
 exports.findByBatchId = `
