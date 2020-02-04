@@ -3,6 +3,8 @@
 const { first } = require('lodash');
 
 const repos = require('../../../lib/connectors/repository');
+const newRepos = require('../../../lib/connectors/repos');
+
 const mappers = require('../mappers');
 
 // Services
@@ -152,12 +154,11 @@ const getInvoiceForBatch = async (batchId, invoiceId) => {
  * Saves an Invoice model to water.billing_invoices
  * @param {Batch} batch
  * @param {Invoice} invoice
- * @return {Promise<Object>} row data inserted
+ * @return {Promise<Object>} row data inserted (camel case)
  */
 const saveInvoiceToDB = async (batch, invoice) => {
   const data = mappers.invoice.modelToDb(batch, invoice);
-  const { rows: [row] } = await repos.billingInvoices.create(data);
-  return row;
+  return newRepos.billingInvoices.upsert(data);
 };
 
 /**

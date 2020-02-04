@@ -6,52 +6,8 @@ const { Batch } = require('../../../lib/models');
 const { assert } = require('@hapi/hoek');
 
 const batchService = require('../services/batch-service');
-const invoiceService = require('../services/invoice-service');
-const invoiceLicencesService = require('../services/invoice-licences-service');
-const transactionsService = require('../services/transactions-service');
 
 const mappers = require('../mappers');
-
-const createInvoiceLicence = async (invoice, invoiceLicence, batch) => {
-  // Write water.billing_invoice_licences row and update model with ID
-  const row = await invoiceLicencesService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
-  invoiceLicence.id = row.billing_invoice_licence_id;
-
-  // Write transactions
-  const tasks = invoiceLicence.transactions.map(transaction => {
-    transaction.createTransactionKey(invoice.invoiceAccount, invoiceLicence.licence, batch);
-    transactionsService.saveTransactionToDB(invoiceLicence, transaction);
-  });
-
-  return Promise.all(tasks);
-};
-
-const createBatchInvoice = async (batch, invoice) => {
-  // Write water.billing_invoices
-  const row = await invoiceService.saveInvoiceToDB(batch, invoice);
-
-  // Update ID
-  invoice.id = row.billing_invoice_id;
-
-  // Write water.billing_invoice_licences
-  const tasks = invoice.invoiceLicences.map(
-    invoiceLicence => createInvoiceLicence(invoice, invoiceLicence, batch)
-  );
-
-  return Promise.all(tasks);
-};
-
-/**
- * Given a Batch instance, writes all the invoices within the batch
- * to the water.billing_invoices table
- * @param {Batch} batch
- * @return {Promise} resolves when all records written
- */
-const createBatchInvoices = batch => {
-  assert(batch instanceof Batch, 'Batch expected');
-  const tasks = batch.invoices.map(row => createBatchInvoice(batch, row));
-  return Promise.all(tasks);
-};
 
 /**
  * Given a charge version year record from the water.billing_batch_charge_version_years,
@@ -91,7 +47,7 @@ const createBatchFromChargeVersionYear = async chargeVersionYear => {
  */
 const persistChargeVersionYearBatch = batch => {
   assert(batch instanceof Batch, 'Batch expected');
-  return createBatchInvoices(batch);
+  await batchService.saveInvoicesToDB(batch);
 };
 
 exports.createBatchFromChargeVersionYear = createBatchFromChargeVersionYear;

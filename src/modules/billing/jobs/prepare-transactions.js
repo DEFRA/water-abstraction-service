@@ -2,7 +2,7 @@ const { logger } = require('../../../logger');
 const repos = require('../../../lib/connectors/repository');
 
 const batchService = require('../services/batch-service');
-const transactionsService = require('../services/transactions-service');
+const supplementaryBillingService = require('../services/supplementary-billing-service');
 
 const JOB_NAME = 'billing.prepare-transactions';
 
@@ -19,7 +19,7 @@ const handlePrepareTransactions = async job => {
 
     if (batch.isSupplementary()) {
       logger.info(`Processing supplementary transactions ${JOB_NAME}`);
-      await transactionsService.processSupplementary(batch.id);
+      await supplementaryBillingService.processBatch(batch.id);
     }
 
     // @TODO replace with newRepos.billingBatches.findByBatchId when downstream handlers can cope

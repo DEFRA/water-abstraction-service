@@ -72,10 +72,23 @@ const findHistoryByBatchId = async batchId => {
  */
 const deleteRecords = id => bookshelf
   .knex('water.billing_transactions')
-  .whereIn('billing_transaction_id', makeArray(id));
+  .whereIn('billing_transaction_id', makeArray(id))
+  .delete();
+
+/**
+ * Insert a new transaction record
+ * @param {Object} data - camel case
+ */
+const create = async data => {
+  const model = await BillingTransaction
+    .forge(data)
+    .save();
+  return model.toJSON();
+};
 
 exports.findOne = findOne;
 exports.find = find;
 exports.findHistoryByBatchId = findHistoryByBatchId;
 exports.findByBatchId = findByBatchId;
 exports.delete = deleteRecords;
+exports.create = create;

@@ -5,6 +5,10 @@ const repos = require('../../../lib/connectors/repository');
 const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
 const Batch = require('../../../lib/models/batch');
 
+const invoiceService = require('./invoice-service');
+const invoiceLicenceService = require('./invoice-licences-service');
+const transactionsService = require('./transactions-service');
+
 /**
  * Loads a Batch instance by ID
  * @param {String} id - batch ID GUID
@@ -46,7 +50,31 @@ const deleteBatch = async batchId => {
 const setErrorStatus = batchId =>
   newRepos.billingBatches.update(batchId, Batch.statuses.error);
 
+const saveInvoiceLicenceTransactions = async invoiceLicence => {
+  for (const transaction of invoiceLicence.transactions) {
+    const { billingTransactionId } = await transactionsService.saveTransactionToDB(invoiceLicence, transaction);
+    transaction.id = billingTransactionId;
+  }
+};
+
+const saveInvoiceLicences = async invoice => {
+  for (const invoiceLicence of invoice.invoiceLicences) {
+    const { billingInvoiceLicenceId } = await invoiceLicenceService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
+    invoiceLicence.id = billingInvoiceLicenceId;
+    await saveInvoiceLicenceTransactions(invoiceLicence);
+  }
+};
+
+const saveInvoicesToDB = async batch => {
+  for (const invoice of batch.invoices) {
+    const { billingInvoiceId } = await invoiceService.saveInvoiceToDB(batch, invoice);
+    invoice.id = billingInvoiceId;
+    await saveInvoiceLicences(invoice);
+  }
+};
+
 exports.getBatchById = getBatchById;
 exports.getBatches = getBatches;
 exports.deleteBatch = deleteBatch;
 exports.setErrorStatus = setErrorStatus;
+exports.saveInvoicesToDB = saveInvoicesToDB;

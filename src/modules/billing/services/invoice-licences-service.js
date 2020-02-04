@@ -1,6 +1,8 @@
 'use strict';
 
 const repos = require('../../../lib/connectors/repository');
+const newRepos = require('../../../lib/connectors/repos');
+
 const mappers = require('../mappers');
 
 const licenceService = require('./licence-service');
@@ -11,10 +13,9 @@ const licenceService = require('./licence-service');
  * @param {InvoiceLicence} invoiceLicence
  * @return {Promise<Object>} row data inserted
  */
-const saveInvoiceLicenceToDB = async (invoice, invoiceLicence) => {
+const saveInvoiceLicenceToDB = (invoice, invoiceLicence) => {
   const data = mappers.invoiceLicence.modelToDB(invoice, invoiceLicence);
-  const { rows: [row] } = await repos.billingInvoiceLicences.create(data);
-  return row;
+  return newRepos.billingInvoiceLicences.upsert(data);
 };
 
 /**
