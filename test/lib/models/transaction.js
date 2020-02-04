@@ -36,6 +36,7 @@ const getTestDataForHashing = () => {
   transaction.billableDays = 1;
   transaction.authorisedDays = 2;
   transaction.volume = 3;
+  transaction.isCompensationCharge = true;
 
   transaction.agreements = [
     new Agreement().fromHash({ code: 'S130T' }),
@@ -335,6 +336,7 @@ experiment('lib/models/transaction', () => {
       expect(hashData.description).to.equal(transaction.description);
       expect(hashData.licenceNumber).to.equal(licence.licenceNumber);
       expect(hashData.regionCode).to.equal(licence.region.code);
+      expect(hashData.isCompensationCharge).to.equal(transaction.isCompensationCharge);
     });
   });
 
@@ -343,14 +345,14 @@ experiment('lib/models/transaction', () => {
       const { accountNumber, licence, transaction } = getTestDataForHashing();
       transaction.createTransactionKey(accountNumber, licence);
 
-      expect(transaction.transactionKey).to.equal('a5e648260b517646a353aa88996eb6c5');
+      expect(transaction.transactionKey).to.equal('136666ba69339e0f40fe80aed9e0203d');
     });
 
     test('returns the transactionKey', () => {
       const { accountNumber, licence, transaction } = getTestDataForHashing();
       const transactionKey = transaction.createTransactionKey(accountNumber, licence);
 
-      expect(transactionKey).to.equal('a5e648260b517646a353aa88996eb6c5');
+      expect(transactionKey).to.equal('136666ba69339e0f40fe80aed9e0203d');
     });
 
     test('sets the value to the result of calling createMd5Hash', async () => {
@@ -373,6 +375,7 @@ experiment('lib/models/transaction', () => {
         'authorisedDays:2',
         'billableDays:1',
         'description:description',
+        'isCompensationCharge:true',
         'licenceNumber:ABCCBA',
         'loss:low',
         'periodEnd:2020-01-01',

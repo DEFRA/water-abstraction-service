@@ -204,7 +204,8 @@ class Transaction extends Model {
       loss: this.chargeElement.loss,
       description: this.description,
       licenceNumber: licence.licenceNumber,
-      regionCode: licence.region.code
+      regionCode: licence.region.code,
+      isCompensationCharge: this.isCompensationCharge
     };
   }
 
