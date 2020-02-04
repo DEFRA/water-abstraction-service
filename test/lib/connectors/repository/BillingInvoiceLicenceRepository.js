@@ -62,4 +62,17 @@ experiment('lib/connectors/repository/BillingInvoiceLicenceRepository', () => {
       });
     });
   });
+
+  experiment('.deleteByBatchId', () => {
+    beforeEach(async () => {
+      const repo = new BillingInvoiceLicenceRepository();
+      await repo.deleteByBatchId('test-batch-id');
+    });
+
+    test('passes the expected parameters to the query', async () => {
+      const [, params] = BillingInvoiceLicenceRepository.prototype.dbQuery.lastCall.args;
+      expect(params).to.have.length(1);
+      expect(params[0]).to.equal('test-batch-id');
+    });
+  });
 });

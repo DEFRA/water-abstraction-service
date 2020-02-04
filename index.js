@@ -43,6 +43,8 @@ const registerServerPlugins = async (server) => {
     plugin: require('./src/modules/billing/register-subscribers')
   });
 
+  await server.register({ plugin: require('./src/plugins/internal-calling-user') });
+
   // Third-party plugins
   await server.register({
     plugin: Good,

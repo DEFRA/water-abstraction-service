@@ -63,6 +63,12 @@ class BillingBatchRepository extends Repository {
       { status, date_updated: new Date() }
     );
   }
+
+  deleteByBatchId (batchId) {
+    return this.delete({
+      billing_batch_id: batchId
+    });
+  }
 }
 
 module.exports = BillingBatchRepository;

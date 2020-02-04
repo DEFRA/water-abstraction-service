@@ -10,9 +10,18 @@ const deleteByInvoiceAccountQuery = `
     and i.billing_batch_id = $1
     and i.invoice_account_id = $2;`;
 
+const deleteByBatchIdQuery = `
+  delete
+  from water.billing_transactions tx
+  using water.billing_invoice_licences il, water.billing_invoices i
+  where il.billing_invoice_licence_id = tx.billing_invoice_licence_id
+  and i.billing_invoice_id = il.billing_invoice_id
+  and i.billing_batch_id = $1;
+`;
+
 const getByBatchIdQuery = `
-select t.* 
-from water.billing_batches b 
+select t.*
+from water.billing_batches b
 join water.billing_invoices i on b.billing_batch_id=i.billing_batch_id
 join water.billing_invoice_licences l on i.billing_invoice_id=l.billing_invoice_id
 join water.billing_transactions t on l.billing_invoice_licence_id=t.billing_invoice_licence_id
@@ -37,6 +46,16 @@ class BillingTransactionRepository extends Repository {
    */
   deleteByInvoiceAccount (batchId, invoiceAccountId) {
     return this.dbQuery(deleteByInvoiceAccountQuery, [batchId, invoiceAccountId]);
+  }
+
+  /**
+   * Deletes all transactions from water.billing_transactions that are associated
+   * with the batch specified in the parameters.
+   *
+   * @param {String} batchId UUID of the batch containing the transactions to delete
+   */
+  deleteByBatchId (batchId) {
+    return this.dbQuery(deleteByBatchIdQuery, [batchId]);
   }
 
   /**

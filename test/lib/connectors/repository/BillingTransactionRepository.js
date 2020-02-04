@@ -33,6 +33,19 @@ experiment('lib/connectors/repository/BillingTransactionRepository', () => {
     });
   });
 
+  experiment('.deleteByBatchId', () => {
+    beforeEach(async () => {
+      const repo = new BillingTransactionRepository();
+      await repo.deleteByBatchId('test-batch-id');
+    });
+
+    test('passes the expected parameters to the query', async () => {
+      const [, params] = BillingTransactionRepository.prototype.dbQuery.lastCall.args;
+      expect(params).to.have.length(1);
+      expect(params[0]).to.equal('test-batch-id');
+    });
+  });
+
   experiment('.getByBatchId', () => {
     let result;
 

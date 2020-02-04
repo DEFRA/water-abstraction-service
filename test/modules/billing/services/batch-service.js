@@ -7,11 +7,14 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
+const uuid = require('uuid/v4');
 
 const { Batch, FinancialYear } = require('../../../../src/lib/models');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 const newRepos = require('../../../../src/lib/connectors/repos');
+const chargeModuleBatchConnector = require('../../../../src/lib/connectors/charge-module/batches');
+const repos = require('../../../../src/lib/connectors/repository');
 
 const BATCH_ID = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
 
@@ -44,6 +47,15 @@ experiment('modules/billing/services/batch-service', () => {
   beforeEach(async () => {
     sandbox.stub(newRepos.billingBatches, 'findOne').resolves(data.batch);
     sandbox.stub(newRepos.billingBatches, 'findPage').resolves();
+
+    sandbox.stub(repos.billingBatches, 'deleteByBatchId').resolves();
+    sandbox.stub(repos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
+    sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
+    sandbox.stub(repos.billingInvoices, 'deleteByBatchId').resolves();
+    sandbox.stub(repos.billingInvoiceLicences, 'deleteByBatchId').resolves();
+    sandbox.stub(repos.billingTransactions, 'deleteByBatchId').resolves();
+
+    sandbox.stub(chargeModuleBatchConnector, 'deleteBatch').resolves();
   });
 
   afterEach(async () => {
@@ -191,6 +203,42 @@ experiment('modules/billing/services/batch-service', () => {
     test('includes a pagination object', async () => {
       const { pagination } = await batchService.getBatches();
       expect(pagination).to.equal(response.pagination);
+    });
+  });
+
+  experiment('.deleteBatch', () => {
+    let batchId;
+    beforeEach(async () => {
+      batchId = uuid();
+      await batchService.deleteBatch(batchId);
+    });
+
+    test('delete the batch at the charge module', async () => {
+      expect(chargeModuleBatchConnector.deleteBatch.called).to.be.true();
+    });
+
+    test('deletes the charge version years', async () => {
+      expect(repos.billingBatchChargeVersionYears.deleteByBatchId.calledWith(batchId)).to.be.true();
+    });
+
+    test('deletes the charge versions', async () => {
+      expect(repos.billingBatchChargeVersions.deleteByBatchId.calledWith(batchId)).to.be.true();
+    });
+
+    test('deletes the transactions', async () => {
+      expect(repos.billingTransactions.deleteByBatchId.calledWith(batchId)).to.be.true();
+    });
+
+    test('deletes the invoice licences', async () => {
+      expect(repos.billingInvoiceLicences.deleteByBatchId.calledWith(batchId)).to.be.true();
+    });
+
+    test('deletes the invoices', async () => {
+      expect(repos.billingInvoices.deleteByBatchId.calledWith(batchId)).to.be.true();
+    });
+
+    test('deletes the batch', async () => {
+      expect(repos.billingBatches.deleteByBatchId.calledWith(batchId)).to.be.true();
     });
   });
 });

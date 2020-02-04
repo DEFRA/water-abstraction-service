@@ -1,5 +1,8 @@
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
+const repos = require('../../../lib/connectors/repository');
+
+const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
 
 /**
  * Loads a Batch instance by ID
@@ -19,5 +22,21 @@ const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
   };
 };
 
+const deleteBatch = async batchId => {
+  // TODO: This function is a stub and will eventually
+  // have a defined signature and response behaviour.
+  // If this fails, the batch should not be deleted from
+  // the WRLS database tables.
+  await chargeModuleBatchConnector.deleteBatch();
+
+  await repos.billingBatchChargeVersionYears.deleteByBatchId(batchId);
+  await repos.billingBatchChargeVersions.deleteByBatchId(batchId);
+  await repos.billingTransactions.deleteByBatchId(batchId);
+  await repos.billingInvoiceLicences.deleteByBatchId(batchId);
+  await repos.billingInvoices.deleteByBatchId(batchId);
+  await repos.billingBatches.deleteByBatchId(batchId);
+};
+
 exports.getBatchById = getBatchById;
 exports.getBatches = getBatches;
+exports.deleteBatch = deleteBatch;
