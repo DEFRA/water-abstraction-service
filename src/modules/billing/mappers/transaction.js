@@ -2,7 +2,7 @@
 
 const moment = require('moment');
 const { titleCase } = require('title-case');
-const { get, pick, identity, omit } = require('lodash');
+const { get, pick, identity } = require('lodash');
 
 const Batch = require('../../../lib/models/batch');
 const DateRange = require('../../../lib/models/date-range');

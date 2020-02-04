@@ -161,18 +161,6 @@ const saveInvoiceToDB = async (batch, invoice) => {
   return newRepos.billingInvoices.upsert(data);
 };
 
-/**
- * Retrieves an invoice row from water.billing_invoices relating to the
- * given transaction ID, and returns an Invoice model
- * @param {String} transactionId - GUID
- * @return {Promise<Invoice>}
- */
-const getByTransactionId = async transactionId => {
-  const data = await repos.billingInvoices.findOneByTransactionId(transactionId);
-  return mappers.invoice.dbToModel(data);
-};
-
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;
-exports.getByTransactionId = getByTransactionId;

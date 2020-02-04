@@ -6,7 +6,6 @@ const newRepos = require('../../../lib/connectors/repos');
 const crmV2Connector = require('../../../lib/connectors/crm-v2');
 const mappers = require('../mappers');
 const batchService = require('./batch-service');
-const { logger } = require('../../../logger');
 
 /**
  * Builds an index where the most recent transaction with a given key
