@@ -50,18 +50,19 @@ const deleteBatch = async batchId => {
 const setErrorStatus = batchId =>
   newRepos.billingBatches.update(batchId, { status: Batch.statuses.error });
 
-const saveInvoiceLicenceTransactions = async invoiceLicence => {
+const saveInvoiceLicenceTransactions = async (batch, invoice, invoiceLicence) => {
   for (const transaction of invoiceLicence.transactions) {
+    transaction.createTransactionKey(invoice.invoiceAccount, invoiceLicence.licence, batch);
     const { billingTransactionId } = await transactionsService.saveTransactionToDB(invoiceLicence, transaction);
     transaction.id = billingTransactionId;
   }
 };
 
-const saveInvoiceLicences = async invoice => {
+const saveInvoiceLicences = async (batch, invoice) => {
   for (const invoiceLicence of invoice.invoiceLicences) {
     const { billingInvoiceLicenceId } = await invoiceLicenceService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
     invoiceLicence.id = billingInvoiceLicenceId;
-    await saveInvoiceLicenceTransactions(invoiceLicence);
+    await saveInvoiceLicenceTransactions(batch, invoice, invoiceLicence);
   }
 };
 
@@ -69,7 +70,7 @@ const saveInvoicesToDB = async batch => {
   for (const invoice of batch.invoices) {
     const { billingInvoiceId } = await invoiceService.saveInvoiceToDB(batch, invoice);
     invoice.id = billingInvoiceId;
-    await saveInvoiceLicences(invoice);
+    await saveInvoiceLicences(batch, invoice);
   }
 };
 

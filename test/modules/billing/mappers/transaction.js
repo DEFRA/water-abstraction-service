@@ -352,7 +352,7 @@ experiment('modules/billing/mappers/transaction', () => {
           section126Factor: null,
           section127Agreement: false,
           section130Agreement: null,
-          transactionKey: 'standard.29328315-9b24-473b-bde7-02c60e881501'
+          transactionKey: '0123456789ABCDEF0123456789ABCDEF'
         });
       });
     });

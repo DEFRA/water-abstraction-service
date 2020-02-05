@@ -47,7 +47,7 @@ const createBatchFromChargeVersionYear = async chargeVersionYear => {
  */
 const persistChargeVersionYearBatch = batch => {
   assert(batch instanceof Batch, 'Batch expected');
-  await batchService.saveInvoicesToDB(batch);
+  return batchService.saveInvoicesToDB(batch);
 };
 
 exports.createBatchFromChargeVersionYear = createBatchFromChargeVersionYear;

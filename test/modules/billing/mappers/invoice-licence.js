@@ -15,6 +15,7 @@ const Address = require('../../../../src/lib/models/address');
 const Company = require('../../../../src/lib/models/company');
 const Contact = require('../../../../src/lib/models/contact-v2');
 const Licence = require('../../../../src/lib/models/licence');
+const Region = require('../../../../src/lib/models/region');
 
 const createLicence = () => ({
   licenceId: 'd563b2b9-e87e-4a9c-8990-1acc96fe2c17',

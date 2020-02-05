@@ -10,8 +10,7 @@ const {
 const { expect } = require('@hapi/code');
 
 const sandbox = require('sinon').createSandbox();
-const { Batch, Licence } = require('../../../../src/lib/models');
-const Region = require('../../../../src/lib/models/region');
+const { Batch } = require('../../../../src/lib/models');
 
 const chargeVersionYear = require('../../../../src/modules/billing/service/charge-version-year');
 const chargeProcessor = require('../../../../src/modules/billing/service/charge-processor');
