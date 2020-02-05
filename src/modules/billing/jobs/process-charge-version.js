@@ -1,3 +1,5 @@
+'use strict';
+
 const evt = require('../../../lib/event');
 const { jobStatus } = require('../lib/batch');
 const repos = require('../../../lib/connectors/repository');
@@ -26,8 +28,10 @@ const handleProcessChargeVersion = async job => {
 
     // Create batch model
     const batch = await service.chargeVersionYear.createBatchFromChargeVersionYear(chargeVersionYear);
+
     // Persist data
     await service.chargeVersionYear.persistChargeVersionYearBatch(batch);
+
     // Update status in water.billing_batch_charge_version_year
     await repos.billingBatchChargeVersionYears.setStatus(chargeVersionYear.billing_batch_charge_version_year_id, jobStatus.complete);
 

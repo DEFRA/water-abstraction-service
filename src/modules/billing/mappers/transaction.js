@@ -1,4 +1,5 @@
 'use strict';
+
 const moment = require('moment');
 const { titleCase } = require('title-case');
 const { get, pick, identity } = require('lodash');
@@ -103,7 +104,7 @@ const dbToModel = row => {
   const transaction = new Transaction();
   transaction.fromHash({
     id: row.billingTransactionId,
-    ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description']),
+    ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
@@ -155,7 +156,8 @@ const modelToDb = (invoiceLicence, transaction) => ({
   description: transaction.description,
   status: transaction.status,
   volume: transaction.volume,
-  ...mapAgreementsToDB(transaction.agreements)
+  ...mapAgreementsToDB(transaction.agreements),
+  transaction_key: transaction.transactionKey
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';

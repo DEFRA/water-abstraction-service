@@ -304,4 +304,21 @@ experiment('lib/models/batch', () => {
       expect(batch.dateCreated).to.be.null();
     });
   });
+
+  experiment('.isTwoPartTariff', () => {
+    test('returns false if the type is annual', async () => {
+      const batch = new Batch().fromHash({ type: Batch.types.annual });
+      expect(batch.isTwoPartTariff()).to.be.false();
+    });
+
+    test('returns false if the type is supplementary', async () => {
+      const batch = new Batch().fromHash({ type: Batch.types.supplementary });
+      expect(batch.isTwoPartTariff()).to.be.false();
+    });
+
+    test('returns true if the type is twoPartTariff', async () => {
+      const batch = new Batch().fromHash({ type: Batch.types.twoPartTariff });
+      expect(batch.isTwoPartTariff()).to.be.true();
+    });
+  });
 });

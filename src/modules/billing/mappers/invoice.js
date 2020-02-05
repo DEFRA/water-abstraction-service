@@ -49,7 +49,7 @@ const mapInvoiceLicences = (invoice, data, batch) => {
   const { accountNumber } = invoice.invoiceAccount;
   const filtered = data.filter(row => getInvoiceAccountNumber(row) === accountNumber);
   // Create array of InvoiceLicences
-  const invoiceLicences = filtered.map(invoiceLicence.chargeToModel);
+  const invoiceLicences = filtered.map(il => invoiceLicence.chargeToModel(il, batch));
 
   // @todo attach transactions to InvoiceLicences
   // Return a unique list

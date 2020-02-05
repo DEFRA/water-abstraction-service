@@ -7,6 +7,7 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
+const Region = require('../../../../src/lib/models/region');
 const Address = require('../../../../src/lib/models/address');
 const Batch = require('../../../../src/lib/models/batch');
 const Company = require('../../../../src/lib/models/company');
@@ -96,6 +97,8 @@ experiment('modules/billing/mappers/invoice', () => {
     beforeEach(async () => {
       data = createData();
       const batch = new Batch(BATCH_ID);
+      batch.region = new Region().fromHash({ code: 'A' });
+
       result = invoiceMapper.chargeToModels(data, batch);
     });
 

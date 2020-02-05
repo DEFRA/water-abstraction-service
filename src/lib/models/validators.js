@@ -1,3 +1,5 @@
+'use strict';
+
 const { isArray } = require('lodash');
 const hoek = require('@hapi/hoek');
 const Joi = require('joi');
@@ -22,6 +24,7 @@ const VALID_QUANTITY = Joi.number().min(0);
 const VALID_NULLABLE_QUANTITY = VALID_QUANTITY.allow(null);
 const VALID_ISO_DATE_STRING = Joi.string().isoDate();
 const VALID_FACTOR = Joi.number().min(0).max(1);
+const VALID_TRANSACTION_KEY = Joi.string().hex().length(32).allow(null);
 
 const assertIsArrayOfType = (values, Type) => {
   hoek.assert(isArray(values), 'Array expected');
@@ -53,6 +56,7 @@ const assertQuantity = value => assert(value, VALID_QUANTITY);
 const assertNullableQuantity = value => assert(value, VALID_NULLABLE_QUANTITY);
 const assertIsoString = value => assert(value, VALID_ISO_DATE_STRING);
 const assertFactor = value => assert(value, VALID_FACTOR);
+const assertTransactionKey = value => assert(value, VALID_TRANSACTION_KEY);
 
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
@@ -74,5 +78,5 @@ exports.assertMonth = assertMonth;
 exports.assertQuantity = assertQuantity;
 exports.assertNullableQuantity = assertNullableQuantity;
 exports.assertIsoString = assertIsoString;
-exports.assertFactor = assertFactor
-;
+exports.assertFactor = assertFactor;
+exports.assertTransactionKey = assertTransactionKey;
