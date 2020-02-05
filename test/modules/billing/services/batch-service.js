@@ -9,7 +9,7 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
-const { Batch, FinancialYear, Invoice, InvoiceLicence, Transaction } = require('../../../../src/lib/models');
+const { Batch, FinancialYear, Invoice, InvoiceLicence, Licence, Transaction, InvoiceAccount } = require('../../../../src/lib/models');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 const newRepos = require('../../../../src/lib/connectors/repos');
@@ -264,24 +264,26 @@ experiment('modules/billing/services/batch-service', () => {
   });
 
   experiment('.saveInvoicesToDB', () => {
-    let batch;
+    let models;
 
     const billingTransactionId = '0dcd5a7e-1971-4399-a8b5-0c3a10de0e77';
     const billingInvoiceLicenceId = '4c25c4e1-d66a-4860-b9a8-f8be1e278204';
     const billingInvoiceId = '51f4ab6f-431c-4ffe-9609-d1da706aa11b';
 
-    const createBatch = () => {
+    const createModels = () => {
       const batch = new Batch();
-      batch.invoices = [
-        new Invoice()
-      ];
-      batch.invoices[0].invoiceLicences = [
-        new InvoiceLicence()
-      ];
-      batch.invoices[0].invoiceLicences[0].transactions = [
-        new Transaction()
-      ];
-      return batch;
+      const invoice = new Invoice();
+      const invoiceAccount = new InvoiceAccount();
+      invoice.invoiceAccount = invoiceAccount;
+      batch.invoices = [invoice];
+      const invoiceLicence = new InvoiceLicence();
+      const licence = new Licence();
+      invoiceLicence.licence = licence;
+      invoice.invoiceLicences = [invoiceLicence];
+      const transaction = new Transaction();
+      invoiceLicence.transactions = [transaction];
+
+      return { batch, invoice, invoiceLicence, licence, transaction, invoiceAccount };
     };
 
     beforeEach(async () => {
@@ -289,41 +291,48 @@ experiment('modules/billing/services/batch-service', () => {
       invoiceLicencesService.saveInvoiceLicenceToDB.resolves({ billingInvoiceLicenceId });
       invoiceService.saveInvoiceToDB.resolves({ billingInvoiceId });
 
-      batch = createBatch();
-      await batchService.saveInvoicesToDB(batch);
+      models = createModels();
+      sandbox.stub(models.transaction, 'createTransactionKey');
+      await batchService.saveInvoicesToDB(models.batch);
     });
 
     test('each invoice in the batch is saved', async () => {
       expect(
-        invoiceService.saveInvoiceToDB.calledWith(batch, batch.invoices[0])
+        invoiceService.saveInvoiceToDB.calledWith(models.batch, models.invoice)
       ).to.be.true();
     });
 
     test('the invoice model is updated with the returned ID', async () => {
-      expect(batch.invoices[0].id).to.equal(billingInvoiceId);
+      expect(models.invoice.id).to.equal(billingInvoiceId);
     });
 
     test('each invoice licence in the batch is saved', async () => {
       expect(
-        invoiceLicencesService.saveInvoiceLicenceToDB.calledWith(batch.invoices[0], batch.invoices[0].invoiceLicences[0])
+        invoiceLicencesService.saveInvoiceLicenceToDB.calledWith(models.invoice, models.invoiceLicence)
       ).to.be.true();
     });
 
     test('the invoice licence model is updated with the returned ID', async () => {
-      expect(batch.invoices[0].invoiceLicences[0].id).to.equal(billingInvoiceLicenceId);
+      expect(models.invoiceLicence.id).to.equal(billingInvoiceLicenceId);
+    });
+
+    test('.createTransactionKey is called on each transaction', async () => {
+      expect(models.transaction.createTransactionKey.calledWith(
+        models.invoiceAccount, models.licence, models.batch
+      ));
     });
 
     test('each transaction in the batch is saved', async () => {
       expect(
         transactionsService.saveTransactionToDB.calledWith(
-          batch.invoices[0].invoiceLicences[0],
-          batch.invoices[0].invoiceLicences[0].transactions[0]
+          models.invoiceLicence,
+          models.transaction
         )
       ).to.be.true();
     });
 
     test('the transaction model is updated with the returned ID', async () => {
-      expect(batch.invoices[0].invoiceLicences[0].transactions[0].id).to.equal(billingTransactionId);
+      expect(models.transaction.id).to.equal(billingTransactionId);
     });
   });
 });
