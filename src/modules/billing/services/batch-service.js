@@ -48,7 +48,7 @@ const deleteBatch = async batchId => {
  * @return {Promise}
  */
 const setErrorStatus = batchId =>
-  newRepos.billingBatches.update(batchId, Batch.statuses.error);
+  newRepos.billingBatches.update(batchId, { status: Batch.statuses.error });
 
 const saveInvoiceLicenceTransactions = async invoiceLicence => {
   for (const transaction of invoiceLicence.transactions) {

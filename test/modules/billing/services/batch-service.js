@@ -9,12 +9,16 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
-const { Batch, FinancialYear } = require('../../../../src/lib/models');
+const { Batch, FinancialYear, Invoice, InvoiceLicence, Transaction } = require('../../../../src/lib/models');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 const newRepos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBatchConnector = require('../../../../src/lib/connectors/charge-module/batches');
 const repos = require('../../../../src/lib/connectors/repository');
+
+const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
+const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
+const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
 
 const BATCH_ID = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
 
@@ -56,6 +60,10 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(repos.billingTransactions, 'deleteByBatchId').resolves();
 
     sandbox.stub(chargeModuleBatchConnector, 'deleteBatch').resolves();
+
+    sandbox.stub(transactionsService, 'saveTransactionToDB');
+    sandbox.stub(invoiceLicencesService, 'saveInvoiceLicenceToDB');
+    sandbox.stub(invoiceService, 'saveInvoiceToDB');
   });
 
   afterEach(async () => {
@@ -239,6 +247,83 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('deletes the batch', async () => {
       expect(repos.billingBatches.deleteByBatchId.calledWith(batchId)).to.be.true();
+    });
+  });
+
+  experiment('.setErrorStatus', () => {
+    beforeEach(async () => {
+      sandbox.stub(newRepos.billingBatches, 'update');
+      await batchService.setErrorStatus('batch-id');
+    });
+
+    test('calls billingBatches.update() with correct params', async () => {
+      const [id, data] = newRepos.billingBatches.update.lastCall.args;
+      expect(id).to.equal('batch-id');
+      expect(data).to.equal({ status: 'error' });
+    });
+  });
+
+  experiment('.saveInvoicesToDB', () => {
+    let batch;
+
+    const billingTransactionId = '0dcd5a7e-1971-4399-a8b5-0c3a10de0e77';
+    const billingInvoiceLicenceId = '4c25c4e1-d66a-4860-b9a8-f8be1e278204';
+    const billingInvoiceId = '51f4ab6f-431c-4ffe-9609-d1da706aa11b';
+
+    const createBatch = () => {
+      const batch = new Batch();
+      batch.invoices = [
+        new Invoice()
+      ];
+      batch.invoices[0].invoiceLicences = [
+        new InvoiceLicence()
+      ];
+      batch.invoices[0].invoiceLicences[0].transactions = [
+        new Transaction()
+      ];
+      return batch;
+    };
+
+    beforeEach(async () => {
+      transactionsService.saveTransactionToDB.resolves({ billingTransactionId });
+      invoiceLicencesService.saveInvoiceLicenceToDB.resolves({ billingInvoiceLicenceId });
+      invoiceService.saveInvoiceToDB.resolves({ billingInvoiceId });
+
+      batch = createBatch();
+      await batchService.saveInvoicesToDB(batch);
+    });
+
+    test('each invoice in the batch is saved', async () => {
+      expect(
+        invoiceService.saveInvoiceToDB.calledWith(batch, batch.invoices[0])
+      ).to.be.true();
+    });
+
+    test('the invoice model is updated with the returned ID', async () => {
+      expect(batch.invoices[0].id).to.equal(billingInvoiceId);
+    });
+
+    test('each invoice licence in the batch is saved', async () => {
+      expect(
+        invoiceLicencesService.saveInvoiceLicenceToDB.calledWith(batch.invoices[0], batch.invoices[0].invoiceLicences[0])
+      ).to.be.true();
+    });
+
+    test('the invoice licence model is updated with the returned ID', async () => {
+      expect(batch.invoices[0].invoiceLicences[0].id).to.equal(billingInvoiceLicenceId);
+    });
+
+    test('each transaction in the batch is saved', async () => {
+      expect(
+        transactionsService.saveTransactionToDB.calledWith(
+          batch.invoices[0].invoiceLicences[0],
+          batch.invoices[0].invoiceLicences[0].transactions[0]
+        )
+      ).to.be.true();
+    });
+
+    test('the transaction model is updated with the returned ID', async () => {
+      expect(batch.invoices[0].invoiceLicences[0].transactions[0].id).to.equal(billingTransactionId);
     });
   });
 });

@@ -128,7 +128,7 @@ const addCreditsToBatch = async (batchId, transactionIds) => {
   decorateBatchWithLicences(batch, transactions);
 
   // Persist batch
-  await batchService.saveInvoicesToDB(batch);
+  return batchService.saveInvoicesToDB(batch);
 };
 
 /**
