@@ -12,7 +12,6 @@ const { bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-invoices');
 
 const billingInvoices = require('../../../../src/lib/connectors/repos/billing-invoices');
-const { BillingBatch } = require('../../../../src/lib/connectors/bookshelf/');
 
 const result = {
   rows: [{
@@ -21,8 +20,6 @@ const result = {
 };
 
 experiment('lib/connectors/repos/billing-invoices', () => {
-  let model, stub;
-
   beforeEach(async () => {
     sandbox.stub(bookshelf.knex, 'raw').resolves(result);
   });
