@@ -1,6 +1,6 @@
 'use strict';
 
-const { pick, isString, isObject } = require('lodash');
+const { pick: _pick, isString, isObject } = require('lodash');
 const moment = require('moment');
 
 const { assertId, assertIsoString } = require('./validators');
@@ -29,7 +29,16 @@ class Model {
   };
 
   pickFrom (source, keys) {
-    this.fromHash(pick(source, keys));
+    this.fromHash(_pick(source, keys));
+  }
+
+  /**
+   * Creates an object containing the key values pairs requested.
+   *
+   * @param  {...String} keys The keys to extract from this instance
+   */
+  pick (...keys) {
+    return _pick(this, ...keys);
   }
 
   toJSON () {

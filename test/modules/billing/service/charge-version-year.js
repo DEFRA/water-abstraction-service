@@ -184,6 +184,7 @@ experiment('modules/billing/service/charge-version-year.js', () => {
         // Create batch
         batch = new Batch();
         batch.id = batchId;
+        batch.region = new Region().fromHash({ code: 'A' });
 
         // Create invoice
         const invoice = new Invoice();

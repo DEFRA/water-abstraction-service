@@ -9,6 +9,9 @@ const uuid = require('uuid/v4');
 class Bike extends Model {
   get numberOfGears () { return this._numberOfGears; }
   set numberOfGears (numberOfGears) { this._numberOfGears = numberOfGears; }
+
+  get frameMaterial () { return this._frameMaterial; }
+  set frameMaterial (frameMaterial) { this._frameMaterial = frameMaterial; }
 }
 
 experiment('lib/models/model', () => {
@@ -62,6 +65,46 @@ experiment('lib/models/model', () => {
     expect(bike.id).to.equal(other.id);
     expect(bike.numberOfGears).to.equal(other.numberOfGears);
     expect(bike.hasSuspension).to.be.undefined();
+  });
+
+  experiment('.pick', () => {
+    test('returns an object with the requested values', async () => {
+      const bike = new Bike(uuid());
+      bike.numberOfGears = 22;
+      bike.frameMaterial = 'C';
+
+      const picked = bike.pick('numberOfGears', 'frameMaterial');
+
+      expect(picked).to.equal({
+        numberOfGears: 22,
+        frameMaterial: 'C'
+      });
+    });
+
+    test('ignores non existent keys', async () => {
+      const bike = new Bike(uuid());
+      bike.numberOfGears = 22;
+      bike.frameMaterial = 'C';
+
+      const picked = bike.pick('numberOfGears', 'engineSize');
+
+      expect(picked).to.equal({
+        numberOfGears: 22
+      });
+    });
+
+    test('accepts an array of keys', async () => {
+      const bike = new Bike(uuid());
+      bike.numberOfGears = 22;
+      bike.frameMaterial = 'C';
+
+      const picked = bike.pick(['numberOfGears', 'frameMaterial']);
+
+      expect(picked).to.equal({
+        numberOfGears: 22,
+        frameMaterial: 'C'
+      });
+    });
   });
 
   experiment('.toJSON', () => {

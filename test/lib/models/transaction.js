@@ -13,14 +13,20 @@ const DateRange = require('../../../src/lib/models/date-range');
 const ChargeElement = require('../../../src/lib/models/charge-element');
 const Licence = require('../../../src/lib/models/licence');
 const Region = require('../../../src/lib/models/region');
+const InvoiceAccount = require('../../../src/lib/models/invoice-account');
+const Batch = require('../../../src/lib/models/batch');
 
 class TestModel {};
 
 const getTestDataForHashing = () => {
-  const accountNumber = 'test-acc-number';
+  const region = new Region().fromHash({ code: 'A' });
 
-  const region = new Region();
-  region.code = 'A';
+  const batch = new Batch().fromHash({
+    type: Batch.types.twoPartTariff,
+    region
+  });
+
+  const invoiceAccount = new InvoiceAccount().fromHash({ accountNumber: 'A00000000A' });
 
   const licence = new Licence();
   licence.region = region;
@@ -47,7 +53,7 @@ const getTestDataForHashing = () => {
   transaction.chargeElement = chargeElement;
   transaction.description = 'description';
 
-  return { accountNumber, licence, transaction };
+  return { batch, invoiceAccount, licence, transaction };
 };
 
 experiment('lib/models/transaction', () => {
@@ -319,9 +325,9 @@ experiment('lib/models/transaction', () => {
 
   experiment('.getHashData', () => {
     test('returns a flat object containing the data to feed to the hash', () => {
-      const { accountNumber, licence, transaction } = getTestDataForHashing();
+      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
 
-      const hashData = transaction.getHashData(accountNumber, licence);
+      const hashData = transaction.getHashData(invoiceAccount, licence, batch);
 
       expect(hashData.periodStart).to.equal(transaction.chargePeriod.startDate);
       expect(hashData.periodEnd).to.equal(transaction.chargePeriod.endDate);
@@ -329,53 +335,55 @@ experiment('lib/models/transaction', () => {
       expect(hashData.authorisedDays).to.equal(transaction.authorisedDays);
       expect(hashData.volume).to.equal(transaction.volume);
       expect(hashData.agreements).to.equal('S127-S130T-S130W');
-      expect(hashData.accountNumber).to.equal(accountNumber);
+      expect(hashData.accountNumber).to.equal(invoiceAccount.accountNumber);
       expect(hashData.source).to.equal(transaction.chargeElement.source);
       expect(hashData.season).to.equal(transaction.chargeElement.season);
       expect(hashData.loss).to.equal(transaction.chargeElement.loss);
       expect(hashData.description).to.equal(transaction.description);
       expect(hashData.licenceNumber).to.equal(licence.licenceNumber);
-      expect(hashData.regionCode).to.equal(licence.region.code);
+      expect(hashData.regionCode).to.equal(batch.region.code);
       expect(hashData.isCompensationCharge).to.equal(transaction.isCompensationCharge);
+      expect(hashData.isTwoPartTariff).to.equal(batch.isTwoPartTariff());
     });
   });
 
   experiment('.createTransactionKey', () => {
     test('sets the transactionKey value on the transaction', () => {
-      const { accountNumber, licence, transaction } = getTestDataForHashing();
-      transaction.createTransactionKey(accountNumber, licence);
+      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
+      transaction.createTransactionKey(invoiceAccount, licence, batch);
 
-      expect(transaction.transactionKey).to.equal('136666ba69339e0f40fe80aed9e0203d');
+      expect(transaction.transactionKey).to.equal('3b4865e9e4dba1145457e2d614c860cc');
     });
 
     test('returns the transactionKey', () => {
-      const { accountNumber, licence, transaction } = getTestDataForHashing();
-      const transactionKey = transaction.createTransactionKey(accountNumber, licence);
+      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
+      const transactionKey = transaction.createTransactionKey(invoiceAccount, licence, batch);
 
-      expect(transactionKey).to.equal('136666ba69339e0f40fe80aed9e0203d');
+      expect(transactionKey).to.equal('3b4865e9e4dba1145457e2d614c860cc');
     });
 
     test('sets the value to the result of calling createMd5Hash', async () => {
       sandbox.stub(hashers, 'createMd5Hash').returns('0123456789ABCDEF0123456789ABCDEF');
-      const { accountNumber, licence, transaction } = getTestDataForHashing();
-      const transactionKey = transaction.createTransactionKey(accountNumber, licence);
+      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
+      const transactionKey = transaction.createTransactionKey(invoiceAccount, licence, batch);
 
       expect(transactionKey).to.equal('0123456789ABCDEF0123456789ABCDEF');
     });
 
     test('sorts by key for consistent behaviour', async () => {
       sandbox.stub(hashers, 'createMd5Hash');
-      const { accountNumber, licence, transaction } = getTestDataForHashing();
-      transaction.createTransactionKey(accountNumber, licence);
+      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
+      transaction.createTransactionKey(invoiceAccount, licence, batch);
 
       const [hashInput] = hashers.createMd5Hash.lastCall.args;
       expect(hashInput.split(',')).to.equal([
-        'accountNumber:test-acc-number',
+        'accountNumber:A00000000A',
         'agreements:S127-S130T-S130W',
         'authorisedDays:2',
         'billableDays:1',
         'description:description',
         'isCompensationCharge:true',
+        'isTwoPartTariff:true',
         'licenceNumber:ABCCBA',
         'loss:low',
         'periodEnd:2020-01-01',

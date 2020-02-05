@@ -186,38 +186,34 @@ class Transaction extends Model {
    * Creates a POJO containing a single layer of data that will be
    * used to create a unique hash for this transaction
    *
-   * @param {String} accountNumber The account number
+   * @param {InvoiceAccount} invoiceAccount The invoice account for the transaction
    * @param {Licence} licence Licence information
-   * @param {Region} region Region object
+   * @param {Batch} batch The batch this transaction appears in
    */
-  getHashData (accountNumber, licence) {
+  getHashData (invoiceAccount, licence, batch) {
     return {
       periodStart: this.chargePeriod.startDate,
       periodEnd: this.chargePeriod.endDate,
-      billableDays: this.billableDays,
-      authorisedDays: this.authorisedDays,
-      volume: this.volume,
+      ...this.pick('billableDays', 'authorisedDays', 'volume', 'description', 'isCompensationCharge'),
       agreements: this.agreements.map(ag => ag.code).sort().join('-'),
-      accountNumber,
-      source: this.chargeElement.source,
-      season: this.chargeElement.season,
-      loss: this.chargeElement.loss,
-      description: this.description,
+      accountNumber: invoiceAccount.accountNumber,
+      ...this.chargeElement.pick('source', 'season', 'loss'),
       licenceNumber: licence.licenceNumber,
-      regionCode: licence.region.code,
-      isCompensationCharge: this.isCompensationCharge
+      regionCode: batch.region.code,
+      isTwoPartTariff: batch.isTwoPartTariff()
     };
   }
 
   /**
    * Sets the transactionKey values to a unique hash for this transaction
    *
-   * @param {String} accountNumber The account number
+   * @param {String} invoiceAccount The invoice account for the transaction
    * @param {Object} licence Licence information
-   * @param {Obejct} region Region object
+   * @param {Obejct} batch The batch this transaction appears in
    */
-  createTransactionKey (accountNumber, licence) {
-    const hash = this.getHashData(accountNumber, licence);
+  createTransactionKey (invoiceAccount, licence, batch) {
+    const hash = this.getHashData(invoiceAccount, licence, batch);
+
     const hashInput = Object.entries(hash)
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(entry => `${entry[0]}:${entry[1]}`)
