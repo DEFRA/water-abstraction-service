@@ -88,6 +88,13 @@ const createLetter = (ev, contact, context, messageRef) => ({
   }
 });
 
+const templateRandomiser = templateType => {
+  const options = ['1', '2', '3', '4'];
+  // generate a number between 0-3
+  const random = Math.floor(Math.random() * 4);
+  return templateType.concat('_', options[random]);
+};
+
 const emailTemplate = template => ({ method: createEmail, messageRef: template });
 const letterTemplate = template => ({ method: createLetter, messageRef: template });
 
@@ -124,7 +131,8 @@ const templateMap = {
  */
 const createNotificationData = (ev, contact, context) => {
   const { method, messageRef } = templateMap[ev.subtype][contact.role];
-  return method(ev, contact, context, messageRef);
+
+  return method(ev, contact, context, templateRandomiser(messageRef));
 };
 
 exports._getReturnPersonalisation = getReturnPersonalisation;
