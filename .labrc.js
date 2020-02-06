@@ -10,6 +10,6 @@ module.exports = {
     'migrations',
     'node_modules',
     'scripts',
-    'test',
+    'test'
   ]
 };
