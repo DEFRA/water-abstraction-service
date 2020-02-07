@@ -14,6 +14,7 @@ const address = require('./address');
 const company = require('./company');
 const contact = require('./contact');
 const transaction = require('./transaction');
+const licence = require('./licence');
 
 /**
  * Maps a row of data from water.billing_invoice_licences
@@ -27,9 +28,12 @@ const dbToModel = row => {
   // @todo suggest we serialise company, address and contact to jsonb fields in table
   invoiceLicence.company = new Company(row.companyId);
   invoiceLicence.address = new Address(row.addressId);
+  invoiceLicence.address.fromHash(row.licenceHolderAddress);
+
   if (row.contactId) {
     invoiceLicence.contact = new Contact(row.contactId);
   }
+  invoiceLicence.licence = licence.dbToModel(row.licence);
   return invoiceLicence;
 };
 
@@ -46,14 +50,14 @@ const modelToDb = (invoice, invoiceLicence) => {
   const licenceHolder = invoiceLicence.contact ? invoiceLicence.contact.toJSON() : invoiceLicence.company.toJSON();
 
   return {
-    billing_invoice_id: invoice.id,
-    company_id: invoiceLicence.company.id,
-    contact_id: get(invoiceLicence, 'contact.id', null),
-    address_id: invoiceLicence.address.id,
-    licence_ref: invoiceLicence.licence.licenceNumber,
-    licence_holder_name: licenceHolder,
-    licence_holder_address: invoiceLicence.address.toObject(),
-    licence_id: invoiceLicence.licence.id
+    billingInvoiceId: invoice.id,
+    companyId: invoiceLicence.company.id,
+    contactId: get(invoiceLicence, 'contact.id', null),
+    addressId: invoiceLicence.address.id,
+    licenceRef: invoiceLicence.licence.licenceNumber,
+    licenceHolderName: licenceHolder,
+    licenceHolderAddress: invoiceLicence.address.toObject(),
+    licenceId: invoiceLicence.licence.id
   };
 };
 

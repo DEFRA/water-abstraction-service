@@ -3,6 +3,11 @@ const mappers = require('../mappers');
 const repos = require('../../../lib/connectors/repository');
 
 const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
+const Batch = require('../../../lib/models/batch');
+
+const invoiceService = require('./invoice-service');
+const invoiceLicenceService = require('./invoice-licences-service');
+const transactionsService = require('./transactions-service');
 
 /**
  * Loads a Batch instance by ID
@@ -37,6 +42,40 @@ const deleteBatch = async batchId => {
   await repos.billingBatches.deleteByBatchId(batchId);
 };
 
+/**
+ * Sets the specified batch to 'error' status
+ * @param {String} batchId
+ * @return {Promise}
+ */
+const setErrorStatus = batchId =>
+  newRepos.billingBatches.update(batchId, { status: Batch.statuses.error });
+
+const saveInvoiceLicenceTransactions = async (batch, invoice, invoiceLicence) => {
+  for (const transaction of invoiceLicence.transactions) {
+    transaction.createTransactionKey(invoice.invoiceAccount, invoiceLicence.licence, batch);
+    const { billingTransactionId } = await transactionsService.saveTransactionToDB(invoiceLicence, transaction);
+    transaction.id = billingTransactionId;
+  }
+};
+
+const saveInvoiceLicences = async (batch, invoice) => {
+  for (const invoiceLicence of invoice.invoiceLicences) {
+    const { billingInvoiceLicenceId } = await invoiceLicenceService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
+    invoiceLicence.id = billingInvoiceLicenceId;
+    await saveInvoiceLicenceTransactions(batch, invoice, invoiceLicence);
+  }
+};
+
+const saveInvoicesToDB = async batch => {
+  for (const invoice of batch.invoices) {
+    const { billingInvoiceId } = await invoiceService.saveInvoiceToDB(batch, invoice);
+    invoice.id = billingInvoiceId;
+    await saveInvoiceLicences(batch, invoice);
+  }
+};
+
 exports.getBatchById = getBatchById;
 exports.getBatches = getBatches;
 exports.deleteBatch = deleteBatch;
+exports.setErrorStatus = setErrorStatus;
+exports.saveInvoicesToDB = saveInvoicesToDB;

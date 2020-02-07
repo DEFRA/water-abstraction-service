@@ -98,7 +98,6 @@ const mapDBToAgreements = row => {
 /**
  * Maps a row from water.billing_transactions to a Transaction model
  * @param {Object} row - from water.billing_transactions, camel cased
- * @param {ChargeElement} chargeElement
  */
 const dbToModel = row => {
   const transaction = new Transaction();
@@ -125,9 +124,9 @@ const mapAgreementsToDB = agreements => {
   const canalAndRiversTrustAgreement = agreements.find(agreement => agreement.isCanalAndRiversTrust());
 
   return {
-    section_127_agreement: !!twoPartTariffAgreement,
-    section_126_factor: abatementAgreement ? abatementAgreement.factor : null,
-    section_130_agreement: canalAndRiversTrustAgreement ? canalAndRiversTrustAgreement.code : null
+    section127Agreement: !!twoPartTariffAgreement,
+    section126Factor: abatementAgreement ? abatementAgreement.factor : null,
+    section130Agreement: canalAndRiversTrustAgreement ? canalAndRiversTrustAgreement.code : null
   };
 };
 
@@ -139,25 +138,25 @@ const mapAgreementsToDB = agreements => {
  * @return {Object}
  */
 const modelToDb = (invoiceLicence, transaction) => ({
-  billing_invoice_licence_id: invoiceLicence.id,
-  charge_element_id: transaction.chargeElement.id,
-  start_date: transaction.chargePeriod.startDate,
-  end_date: transaction.chargePeriod.endDate,
-  abstraction_period: transaction.chargeElement.abstractionPeriod.toJSON(),
+  billingInvoiceLicenceId: invoiceLicence.id,
+  chargeElementId: transaction.chargeElement.id,
+  startDate: transaction.chargePeriod.startDate,
+  endDate: transaction.chargePeriod.endDate,
+  abstractionPeriod: transaction.chargeElement.abstractionPeriod.toJSON(),
   source: transaction.chargeElement.source,
   season: transaction.chargeElement.season,
   loss: transaction.chargeElement.loss,
-  is_credit: transaction.isCredit,
-  charge_type: transaction.isCompensationCharge ? 'compensation' : 'standard',
-  authorised_quantity: transaction.chargeElement.authorisedAnnualQuantity,
-  billable_quantity: transaction.chargeElement.billableAnnualQuantity,
-  authorised_days: transaction.authorisedDays,
-  billable_days: transaction.billableDays,
+  isCredit: transaction.isCredit,
+  chargeType: transaction.isCompensationCharge ? 'compensation' : 'standard',
+  authorisedQuantity: transaction.chargeElement.authorisedAnnualQuantity,
+  billableQuantity: transaction.chargeElement.billableAnnualQuantity,
+  authorisedDays: transaction.authorisedDays,
+  billableDays: transaction.billableDays,
   description: transaction.description,
   status: transaction.status,
   volume: transaction.volume,
   ...mapAgreementsToDB(transaction.agreements),
-  transaction_key: transaction.transactionKey
+  transactionKey: transaction.transactionKey
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';

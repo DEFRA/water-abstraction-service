@@ -327,11 +327,11 @@ experiment('modules/billing/mappers/transaction', () => {
 
       test('the result is mapped correctly', async () => {
         expect(result).to.equal({
-          billing_invoice_licence_id: 'c4fd4bf6-9565-4ff8-bdba-e49355446d7b',
-          charge_element_id: '29328315-9b24-473b-bde7-02c60e881501',
-          start_date: '2019-04-01',
-          end_date: '2020-03-31',
-          abstraction_period: {
+          billingInvoiceLicenceId: 'c4fd4bf6-9565-4ff8-bdba-e49355446d7b',
+          chargeElementId: '29328315-9b24-473b-bde7-02c60e881501',
+          startDate: '2019-04-01',
+          endDate: '2020-03-31',
+          abstractionPeriod: {
             startDay: 1,
             startMonth: 1,
             endDay: 31,
@@ -340,19 +340,19 @@ experiment('modules/billing/mappers/transaction', () => {
           source: 'supported',
           loss: 'low',
           season: 'summer',
-          is_credit: false,
-          charge_type: 'standard',
-          authorised_quantity: 12.5,
-          billable_quantity: 10,
-          authorised_days: 366,
-          billable_days: 366,
+          isCredit: false,
+          chargeType: 'standard',
+          authorisedQuantity: 12.5,
+          billableQuantity: 10,
+          authorisedDays: 366,
+          billableDays: 366,
           description: 'Tiny pond',
           status: Transaction.statuses.candidate,
           volume: 5.64,
-          section_126_factor: null,
-          section_127_agreement: false,
-          section_130_agreement: null,
-          transaction_key: '0123456789ABCDEF0123456789ABCDEF'
+          section126Factor: null,
+          section127Agreement: false,
+          section130Agreement: null,
+          transactionKey: '0123456789ABCDEF0123456789ABCDEF'
         });
       });
     });
@@ -366,7 +366,7 @@ experiment('modules/billing/mappers/transaction', () => {
       });
 
       test('the charge type is "compensation"', async () => {
-        expect(result.charge_type).to.equal('compensation');
+        expect(result.chargeType).to.equal('compensation');
       });
     });
 
@@ -380,9 +380,9 @@ experiment('modules/billing/mappers/transaction', () => {
       });
 
       test('the correct agreement fields are set', async () => {
-        expect(result.section_126_factor).to.equal(null);
-        expect(result.section_127_agreement).to.equal(true);
-        expect(result.section_130_agreement).to.equal(null);
+        expect(result.section126Factor).to.equal(null);
+        expect(result.section127Agreement).to.equal(true);
+        expect(result.section130Agreement).to.equal(null);
       });
     });
 
@@ -396,9 +396,9 @@ experiment('modules/billing/mappers/transaction', () => {
       });
 
       test('the correct agreement fields are set', async () => {
-        expect(result.section_126_factor).to.equal(null);
-        expect(result.section_127_agreement).to.equal(false);
-        expect(result.section_130_agreement).to.equal('S130U');
+        expect(result.section126Factor).to.equal(null);
+        expect(result.section127Agreement).to.equal(false);
+        expect(result.section130Agreement).to.equal('S130U');
       });
     });
 
@@ -412,9 +412,9 @@ experiment('modules/billing/mappers/transaction', () => {
       });
 
       test('the correct agreement fields are set', async () => {
-        expect(result.section_126_factor).to.equal(0.4);
-        expect(result.section_127_agreement).to.equal(false);
-        expect(result.section_130_agreement).to.equal(null);
+        expect(result.section126Factor).to.equal(0.4);
+        expect(result.section127Agreement).to.equal(false);
+        expect(result.section130Agreement).to.equal(null);
       });
     });
   });

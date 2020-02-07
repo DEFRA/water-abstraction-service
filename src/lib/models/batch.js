@@ -8,7 +8,6 @@ const { isArray } = require('lodash');
 const { assertIsInstanceOf, assertEnum, assertIsArrayOfType } = require('./validators');
 
 const VALID_SEASON = Joi.string().valid('summer', 'winter', 'all year').required();
-const VALID_STATUS = Joi.string().valid('processing', 'review', 'complete', 'error').required();
 
 const Model = require('./model');
 
@@ -16,6 +15,13 @@ const types = {
   annual: 'annual',
   supplementary: 'supplementary',
   twoPartTariff: 'two_part_tariff'
+};
+
+const statuses = {
+  processing: 'processing',
+  review: 'review',
+  complete: 'complete',
+  error: 'error'
 };
 
 class Batch extends Model {
@@ -39,6 +45,14 @@ class Batch extends Model {
    */
   get type () {
     return this._type;
+  }
+
+  /**
+   * Checks whether this is a supplementary batch
+   * @return {Boolean}
+   */
+  isSupplementary () {
+    return this._type === types.supplementary;
   }
 
   /**
@@ -97,7 +111,7 @@ class Batch extends Model {
    * @param {String} status
    */
   set status (status) {
-    Joi.assert(status, VALID_STATUS);
+    assertEnum(status, Object.keys(statuses));
     this._status = status;
   }
 
@@ -185,3 +199,4 @@ class Batch extends Model {
 
 module.exports = Batch;
 module.exports.types = types;
+module.exports.statuses = statuses;

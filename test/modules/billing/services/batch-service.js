@@ -9,12 +9,16 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
-const { Batch, FinancialYear } = require('../../../../src/lib/models');
+const { Batch, FinancialYear, Invoice, InvoiceLicence, Licence, Transaction, InvoiceAccount } = require('../../../../src/lib/models');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 const newRepos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBatchConnector = require('../../../../src/lib/connectors/charge-module/batches');
 const repos = require('../../../../src/lib/connectors/repository');
+
+const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
+const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
+const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
 
 const BATCH_ID = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
 
@@ -56,6 +60,10 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(repos.billingTransactions, 'deleteByBatchId').resolves();
 
     sandbox.stub(chargeModuleBatchConnector, 'deleteBatch').resolves();
+
+    sandbox.stub(transactionsService, 'saveTransactionToDB');
+    sandbox.stub(invoiceLicencesService, 'saveInvoiceLicenceToDB');
+    sandbox.stub(invoiceService, 'saveInvoiceToDB');
   });
 
   afterEach(async () => {
@@ -239,6 +247,92 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('deletes the batch', async () => {
       expect(repos.billingBatches.deleteByBatchId.calledWith(batchId)).to.be.true();
+    });
+  });
+
+  experiment('.setErrorStatus', () => {
+    beforeEach(async () => {
+      sandbox.stub(newRepos.billingBatches, 'update');
+      await batchService.setErrorStatus('batch-id');
+    });
+
+    test('calls billingBatches.update() with correct params', async () => {
+      const [id, data] = newRepos.billingBatches.update.lastCall.args;
+      expect(id).to.equal('batch-id');
+      expect(data).to.equal({ status: 'error' });
+    });
+  });
+
+  experiment('.saveInvoicesToDB', () => {
+    let models;
+
+    const billingTransactionId = '0dcd5a7e-1971-4399-a8b5-0c3a10de0e77';
+    const billingInvoiceLicenceId = '4c25c4e1-d66a-4860-b9a8-f8be1e278204';
+    const billingInvoiceId = '51f4ab6f-431c-4ffe-9609-d1da706aa11b';
+
+    const createModels = () => {
+      const batch = new Batch();
+      const invoice = new Invoice();
+      const invoiceAccount = new InvoiceAccount();
+      invoice.invoiceAccount = invoiceAccount;
+      batch.invoices = [invoice];
+      const invoiceLicence = new InvoiceLicence();
+      const licence = new Licence();
+      invoiceLicence.licence = licence;
+      invoice.invoiceLicences = [invoiceLicence];
+      const transaction = new Transaction();
+      invoiceLicence.transactions = [transaction];
+
+      return { batch, invoice, invoiceLicence, licence, transaction, invoiceAccount };
+    };
+
+    beforeEach(async () => {
+      transactionsService.saveTransactionToDB.resolves({ billingTransactionId });
+      invoiceLicencesService.saveInvoiceLicenceToDB.resolves({ billingInvoiceLicenceId });
+      invoiceService.saveInvoiceToDB.resolves({ billingInvoiceId });
+
+      models = createModels();
+      sandbox.stub(models.transaction, 'createTransactionKey');
+      await batchService.saveInvoicesToDB(models.batch);
+    });
+
+    test('each invoice in the batch is saved', async () => {
+      expect(
+        invoiceService.saveInvoiceToDB.calledWith(models.batch, models.invoice)
+      ).to.be.true();
+    });
+
+    test('the invoice model is updated with the returned ID', async () => {
+      expect(models.invoice.id).to.equal(billingInvoiceId);
+    });
+
+    test('each invoice licence in the batch is saved', async () => {
+      expect(
+        invoiceLicencesService.saveInvoiceLicenceToDB.calledWith(models.invoice, models.invoiceLicence)
+      ).to.be.true();
+    });
+
+    test('the invoice licence model is updated with the returned ID', async () => {
+      expect(models.invoiceLicence.id).to.equal(billingInvoiceLicenceId);
+    });
+
+    test('.createTransactionKey is called on each transaction', async () => {
+      expect(models.transaction.createTransactionKey.calledWith(
+        models.invoiceAccount, models.licence, models.batch
+      ));
+    });
+
+    test('each transaction in the batch is saved', async () => {
+      expect(
+        transactionsService.saveTransactionToDB.calledWith(
+          models.invoiceLicence,
+          models.transaction
+        )
+      ).to.be.true();
+    });
+
+    test('the transaction model is updated with the returned ID', async () => {
+      expect(models.transaction.id).to.equal(billingTransactionId);
     });
   });
 });

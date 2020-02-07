@@ -321,4 +321,24 @@ experiment('lib/models/batch', () => {
       expect(batch.isTwoPartTariff()).to.be.true();
     });
   });
+
+  experiment('.isSupplementary', () => {
+    test('returns true when the batch type is supplementary', async () => {
+      const batch = new Batch();
+      batch.type = Batch.types.supplementary;
+      expect(batch.isSupplementary()).to.be.true();
+    });
+
+    test('returns false when the batch type is two-part-tariff', async () => {
+      const batch = new Batch();
+      batch.type = Batch.types.twoPartTariff;
+      expect(batch.isSupplementary()).to.be.false();
+    });
+
+    test('returns false when the batch type is annual', async () => {
+      const batch = new Batch();
+      batch.type = Batch.types.annual;
+      expect(batch.isSupplementary()).to.be.false();
+    });
+  });
 });

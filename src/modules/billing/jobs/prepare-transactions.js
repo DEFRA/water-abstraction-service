@@ -1,6 +1,9 @@
 const { logger } = require('../../../logger');
 const repos = require('../../../lib/connectors/repository');
 
+const batchService = require('../services/batch-service');
+const supplementaryBillingService = require('../services/supplementary-billing-service');
+
 const JOB_NAME = 'billing.prepare-transactions';
 
 const createMessage = (eventId, batch) => ({
@@ -11,31 +14,29 @@ const createMessage = (eventId, batch) => ({
 const handlePrepareTransactions = async job => {
   logger.info(`Handling ${JOB_NAME}`);
 
-  const { batch } = job.data;
+  try {
+    const batch = await batchService.getBatchById(job.data.batch.billing_batch_id);
 
-  const transactions = await repos.billingTransactions.getByBatchId(batch.billing_batch_id);
+    if (batch.isSupplementary()) {
+      logger.info(`Processing supplementary transactions ${JOB_NAME}`);
+      await supplementaryBillingService.processBatch(batch.id);
+    }
 
-  /**
-   * Placeholder:
-   *
-   * get the batch from the job data
-   *
-   * loadCandidateTransactions
-   *
-   * if (isSupplementaryBatch?) {
-   *  loadExistingTransactions
-   *  diff transactions deleting any candidate transactions that are not required
-   * }
-   *
-   * persist new transactions to water.billing.transactions
-   *
-   * return all the transactions that have been created
-   * return the batch
-   */
-  return {
-    batch,
-    transactions
-  };
+    // @TODO replace with newRepos.billingBatches.findByBatchId when downstream handlers can cope
+    // with camel case
+    const transactions = await repos.billingTransactions.getByBatchId(batch.id);
+
+    return {
+      batch: job.data.batch,
+      transactions
+    };
+  } catch (err) {
+    logger.error(`Error handling ${JOB_NAME}`, err, {
+      batch: job.data.batch
+    });
+    await batchService.setErrorStatus(job.data.batch.billing_batch_id);
+    throw err;
+  }
 };
 
 exports.jobName = JOB_NAME;
