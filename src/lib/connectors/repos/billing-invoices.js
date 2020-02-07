@@ -1,17 +1,12 @@
 const { bookshelf } = require('../bookshelf');
-
-const camelCaseKeys = require('../../camel-case-keys');
-
+const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoices');
 
 /**
  * Upserts a water.billing_invoices record
  * @param {Object} data - camel case
  */
-const upsert = async data => {
-  const result = await bookshelf.knex.raw(queries.upsert, data);
-  return camelCaseKeys(result.rows[0]);
-};
+const upsert = async data => raw.singleRow(queries.upsert, data);
 
 /**
  * Deletes invoices in the batch which have no invoice licences
