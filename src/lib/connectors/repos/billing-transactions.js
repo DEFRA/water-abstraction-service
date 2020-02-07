@@ -1,6 +1,5 @@
 const { BillingTransaction, bookshelf } = require('../bookshelf');
 const queries = require('./queries/billing-transactions');
-const camelCaseKeys = require('../../camel-case-keys');
 const makeArray = require('../../../lib/make-array');
 const raw = require('./lib/raw');
 
