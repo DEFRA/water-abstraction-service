@@ -1,10 +1,12 @@
+'use strict';
+
 const controller = require('./controller');
-const { version, isAcceptanceTestTarget } = require('../../../config');
+const { isAcceptanceTestTarget } = require('../../../config');
 
 if (isAcceptanceTestTarget) {
   exports.postSetup = {
     method: 'POST',
-    path: `/water/${version}/acceptance-tests/set-up`,
+    path: '/water/1.0/acceptance-tests/set-up',
     handler: controller.postSetup,
     config: {
       description: 'Creates the required data to allow acceptance tests to run'
@@ -13,7 +15,7 @@ if (isAcceptanceTestTarget) {
 
   exports.postTearDown = {
     method: 'POST',
-    path: `/water/${version}/acceptance-tests/tear-down`,
+    path: '/water/1.0/acceptance-tests/tear-down',
     handler: controller.postTearDown,
     config: {
       description: 'Deletes an data created for use with acceptance tests'
