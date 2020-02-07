@@ -1,3 +1,5 @@
+'use strict';
+
 const chargeProcessor = require('./charge-processor');
 const { logger } = require('../../../logger');
 const { Batch } = require('../../../lib/models');
@@ -10,13 +12,14 @@ const transactionsService = require('../services/transactions-service');
 
 const mappers = require('../mappers');
 
-const createInvoiceLicence = async (invoice, invoiceLicence) => {
+const createInvoiceLicence = async (invoice, invoiceLicence, batch) => {
   // Write water.billing_invoice_licences row and update model with ID
   const row = await invoiceLicencesService.saveInvoiceLicenceToDB(invoice, invoiceLicence);
   invoiceLicence.id = row.billing_invoice_licence_id;
 
   // Write transactions
   const tasks = invoiceLicence.transactions.map(transaction => {
+    transaction.createTransactionKey(invoice.invoiceAccount, invoiceLicence.licence, batch);
     transactionsService.saveTransactionToDB(invoiceLicence, transaction);
   });
 
@@ -32,7 +35,7 @@ const createBatchInvoice = async (batch, invoice) => {
 
   // Write water.billing_invoice_licences
   const tasks = invoice.invoiceLicences.map(
-    invoiceLicence => createInvoiceLicence(invoice, invoiceLicence)
+    invoiceLicence => createInvoiceLicence(invoice, invoiceLicence, batch)
   );
 
   return Promise.all(tasks);
@@ -86,9 +89,9 @@ const createBatchFromChargeVersionYear = async chargeVersionYear => {
  * @param {Batch} batch
  * @return {Promise}
  */
-const persistChargeVersionYearBatch = async batch => {
+const persistChargeVersionYearBatch = batch => {
   assert(batch instanceof Batch, 'Batch expected');
-  await createBatchInvoices(batch);
+  return createBatchInvoices(batch);
 };
 
 exports.createBatchFromChargeVersionYear = createBatchFromChargeVersionYear;

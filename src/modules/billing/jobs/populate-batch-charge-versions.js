@@ -9,9 +9,12 @@ const JOB_NAME = 'billing.populate-batch-charge-versions';
 const { isSupplementaryBatch } = require('../lib/batch');
 const { logger } = require('../../../logger');
 
-const createMessage = eventId => ({
+const createMessage = (eventId, batch) => ({
   name: JOB_NAME,
-  data: { eventId }
+  data: {
+    eventId,
+    batch
+  }
 });
 
 /**

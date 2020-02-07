@@ -1,5 +1,8 @@
+'use strict';
+
 const { get } = require('lodash');
 
+const batches = require('./lib/batches');
 const returns = require('./lib/returns');
 const permits = require('./lib/permits');
 const entities = require('./lib/entities');
@@ -162,6 +165,7 @@ const postSetup = async (request, h) => {
 };
 
 const postTearDown = async () => {
+  await batches.delete();
   await returns.delete();
   await events.delete();
   await permits.delete();

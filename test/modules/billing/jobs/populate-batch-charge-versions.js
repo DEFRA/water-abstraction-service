@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -6,8 +8,7 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 
 const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
 
 const { logger } = require('../../../../src/logger');
 const repos = require('../../../../src/lib/connectors/repository');
@@ -36,10 +37,14 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
 
   experiment('.createMessage', () => {
     test('creates the expected request object', async () => {
-      const message = populateBatchChargeVersionsJob.createMessage('test-event-id');
+      const batch = { id: 'test-batch' };
+      const message = populateBatchChargeVersionsJob.createMessage('test-event-id', batch);
       expect(message.name).to.equal('billing.populate-batch-charge-versions');
       expect(message.data).to.equal({
-        eventId: 'test-event-id'
+        eventId: 'test-event-id',
+        batch: {
+          id: 'test-batch'
+        }
       });
     });
   });

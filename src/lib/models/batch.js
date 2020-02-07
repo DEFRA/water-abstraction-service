@@ -177,6 +177,10 @@ class Batch extends Model {
     assertIsInstanceOf(region, Region);
     this._region = region;
   }
+
+  isTwoPartTariff () {
+    return this.type === types.twoPartTariff;
+  }
 }
 
 module.exports = Batch;

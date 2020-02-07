@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -54,7 +56,8 @@ const createTransaction = (options = {}) => {
     authorisedDays: 366,
     billableDays: 366,
     description: 'Tiny pond',
-    volume: 5.64
+    volume: 5.64,
+    transactionKey: '0123456789ABCDEF0123456789ABCDEF'
   });
   return transaction;
 };
@@ -348,7 +351,8 @@ experiment('modules/billing/mappers/transaction', () => {
           volume: 5.64,
           section_126_factor: null,
           section_127_agreement: false,
-          section_130_agreement: null
+          section_130_agreement: null,
+          transaction_key: '0123456789ABCDEF0123456789ABCDEF'
         });
       });
     });
@@ -432,7 +436,8 @@ experiment('modules/billing/mappers/transaction', () => {
       volume: '43.45',
       section126Factor: null,
       section127Agreement: false,
-      section130Agreement: null
+      section130Agreement: null,
+      transactionKey: 'ABCDEF1234567890ABCDEF1234567890'
     };
     beforeEach(async () => {
       result = transactionMapper.dbToModel(dbRow);
@@ -451,6 +456,7 @@ experiment('modules/billing/mappers/transaction', () => {
       expect(result.isCompensationCharge).to.be.true();
       expect(result.description).to.equal(dbRow.description);
       expect(result.volume).to.equal(43.45);
+      expect(result.transactionKey).to.equal('ABCDEF1234567890ABCDEF1234567890');
     });
 
     test('charge period is mapped correctly', async () => {

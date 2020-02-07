@@ -1,3 +1,5 @@
+'use strict';
+
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { expect, fail } = require('@hapi/code');
 const uuid = require('uuid/v4');
@@ -162,6 +164,38 @@ experiment('lib/models/validators', () => {
 
     test('throws for undefined', async () => {
       const func = () => validators.assertIsBoolean();
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('assertTransactionKey', () => {
+    test('does not throw for a valid 32 char key', async () => {
+      const valid = '0123456789ABCDEF0123456789ABCDEF';
+      const func = () => validators.assertTransactionKey(valid);
+      expect(func).not.to.throw();
+    });
+
+    test('does not throw for null', async () => {
+      const valid = null;
+      const func = () => validators.assertTransactionKey(valid);
+      expect(func).not.to.throw();
+    });
+
+    test('throws for 32 char string with invalid hex values', async () => {
+      const invalid = '3456789ABCDEF0123456789ABCDEF_GH';
+      const func = () => validators.assertTransactionKey(invalid);
+      expect(func).to.throw();
+    });
+
+    test('throws if string is less than 32 chars', async () => {
+      const invalid = '0123456789ABCDEF';
+      const func = () => validators.assertTransactionKey(invalid);
+      expect(func).to.throw();
+    });
+
+    test('throws if string is longer than 32 chars', async () => {
+      const invalid = '0123456789ABCDEF0123456789ABCDEF0';
+      const func = () => validators.assertTransactionKey(invalid);
       expect(func).to.throw();
     });
   });

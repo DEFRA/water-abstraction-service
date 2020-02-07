@@ -62,11 +62,13 @@ const modelToDb = (invoice, invoiceLicence) => {
  * @param {Object} chargeVersion
  * @return {Licence}
  */
-const mapLicence = chargeVersion => {
+const mapLicence = (chargeVersion, region) => {
   const licence = new Licence();
+
   licence.fromHash({
     id: chargeVersion.licenceId,
-    licenceNumber: chargeVersion.licenceRef
+    licenceNumber: chargeVersion.licenceRef,
+    region
   });
   return licence;
 };
@@ -78,7 +80,7 @@ const mapLicence = chargeVersion => {
  */
 const chargeToModel = (data, batch) => {
   const invoiceLicence = new InvoiceLicence();
-  invoiceLicence.licence = mapLicence(data.chargeVersion);
+  invoiceLicence.licence = mapLicence(data.chargeVersion, batch.region);
   invoiceLicence.company = company.crmToModel(data.licenceHolder.company);
   invoiceLicence.address = address.crmToModel(data.licenceHolder.address);
   if (data.licenceHolder.contact) {
