@@ -142,7 +142,7 @@ experiment('lib/event', () => {
     });
 
     experiment('it should map JSON fields to strings', async () => {
-      beforeEach( async () => {
+      beforeEach(async () => {
         sandbox.stub(repo.events, 'create').resolves(obj);
       });
       test('it should stringify objects in jsonb fields', async () => {
