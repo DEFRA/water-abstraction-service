@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -5,9 +7,9 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
 
+const batches = require('../../../src/modules/acceptance-tests/lib/batches');
 const users = require('../../../src/modules/acceptance-tests/lib/users');
 const entities = require('../../../src/modules/acceptance-tests/lib/entities');
 const permits = require('../../../src/modules/acceptance-tests/lib/permits');
@@ -50,6 +52,7 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(documents, 'create').resolves({});
     sandbox.stub(returns, 'createDueReturn').resolves({});
 
+    sandbox.stub(batches, 'delete').resolves();
     sandbox.stub(returns, 'delete').resolves();
     sandbox.stub(events, 'delete').resolves();
     sandbox.stub(permits, 'delete').resolves();
@@ -72,6 +75,7 @@ experiment('modules/acceptance-tests/controller', () => {
       });
 
       test('the existing data is torn down', async () => {
+        expect(batches.delete.called).to.be.true();
         expect(returns.delete.called).to.be.true();
         expect(events.delete.called).to.be.true();
         expect(permits.delete.called).to.be.true();
@@ -209,6 +213,7 @@ experiment('modules/acceptance-tests/controller', () => {
   experiment('postTearDown', () => {
     test('deletes the test data that has been created', async () => {
       await controller.postTearDown();
+      expect(batches.delete.called).to.be.true();
       expect(returns.delete.called).to.be.true();
       expect(events.delete.called).to.be.true();
       expect(permits.delete.called).to.be.true();
