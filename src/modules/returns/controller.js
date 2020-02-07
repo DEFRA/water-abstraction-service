@@ -100,29 +100,30 @@ const getEventStatusLink = eventId => {
 const postUpload = async (request, h) => {
   const { type } = request.params;
   const evt = createXmlUploadEvent(request.payload.userName, type);
+  let eventModel;
 
   try {
-    await event.save(evt);
-
-    const filename = getUploadFilename(evt.eventId, type);
+    const { rows } = await event.save(evt);
+    eventModel = rows[0];
+    const filename = getUploadFilename(eventModel.eventId, type);
     const data = await s3.upload(filename, request.payload.fileData);
-    const jobId = await startUploadJob.publish(evt.eventId);
+    const jobId = await startUploadJob.publish(eventModel.eventId);
 
     return h.response({
       data: {
-        eventId: evt.eventId,
+        eventId: eventModel.eventId,
         filename,
         location: data.Location,
-        statusLink: getEventStatusLink(evt.eventId),
+        statusLink: getEventStatusLink(eventModel.eventId),
         jobId
       },
       error: null
     }).code(202);
   } catch (error) {
     logger.error('Failed to upload returns xml', error);
-    if (evt.eventId) {
-      evt.status = uploadStatus.ERROR;
-      await event.save(evt);
+    if (eventModel.eventId) {
+      eventModel.status = uploadStatus.ERROR;
+      await event.save(eventModel);
     }
 
     return h.response({ data: null, error }).code(500);

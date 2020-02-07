@@ -29,18 +29,12 @@ const options = {
 };
 
 const eventKeys = [
-  'eventId',
   'referenceCode',
   'type',
   'subtype',
-  'issuer',
-  'licences',
-  'entities',
-  'comment',
+  '_licences',
   'metadata',
-  'status',
-  'created',
-  'modified'];
+  'status'];
 
 experiment('batch notifications event helpers', () => {
   beforeEach(async () => {
