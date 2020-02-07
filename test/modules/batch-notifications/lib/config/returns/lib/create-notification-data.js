@@ -88,7 +88,11 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       test('the correct message type is used', async () => {
         expect(result.message_type).to.equal('letter');
         expect(result.recipient).to.equal('n/a');
-        expect(result.message_ref).to.equal('returns_invitation_licence_holder_letter');
+        expect(result.message_ref).to.startWith('returns_invitation_licence_holder_letter');
+      });
+
+      test('the message ref is one of random BI templates', async () => {
+        expect(result.message_ref).to.part.include(createNotificationData.BI_TEMPLATES);
       });
 
       test('contains the correct personalisation fields', async () => {
@@ -117,7 +121,11 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       test('the correct message type is used', async () => {
         expect(result.message_type).to.equal('letter');
         expect(result.recipient).to.equal('n/a');
-        expect(result.message_ref).to.equal('returns_invitation_returns_to_letter');
+        expect(result.message_ref).to.startWith('returns_invitation_returns_to_letter');
+      });
+
+      test('the message ref is one of random BI templates', async () => {
+        expect(result.message_ref).to.part.include(createNotificationData.BI_TEMPLATES);
       });
 
       test('contains the correct personalisation fields', async () => {
@@ -146,7 +154,11 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       test('the correct message type is used', async () => {
         expect(result.message_type).to.equal('email');
         expect(result.recipient).to.equal('mail@example.com');
-        expect(result.message_ref).to.equal('returns_invitation_primary_user_email');
+        expect(result.message_ref).to.startWith('returns_invitation_primary_user_email');
+      });
+
+      test('the message ref is one of random BI templates', async () => {
+        expect(result.message_ref).to.part.include(createNotificationData.BI_TEMPLATES);
       });
 
       test('contains the correct personalisation fields', async () => {
@@ -167,7 +179,11 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       test('the correct message type is used', async () => {
         expect(result.message_type).to.equal('email');
         expect(result.recipient).to.equal('mail@example.com');
-        expect(result.message_ref).to.equal('returns_invitation_returns_agent_email');
+        expect(result.message_ref).to.startWith('returns_invitation_returns_agent_email');
+      });
+
+      test('the message ref is one of random BI templates', async () => {
+        expect(result.message_ref).to.part.include(createNotificationData.BI_TEMPLATES);
       });
 
       test('contains the correct personalisation fields', async () => {
