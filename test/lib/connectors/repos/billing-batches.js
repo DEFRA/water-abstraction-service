@@ -28,7 +28,9 @@ experiment('lib/connectors/repos/billing-batches', () => {
     stub = {
       fetch: sandbox.stub().resolves(model),
       orderBy: sandbox.stub().returnsThis(),
-      fetchPage: sandbox.stub().resolves(model)
+      fetchPage: sandbox.stub().resolves(model),
+      set: sandbox.stub().returnsThis(),
+      save: sandbox.stub().resolves(model)
     };
     sandbox.stub(BillingBatch, 'forge').returns(stub);
   });
@@ -96,6 +98,26 @@ experiment('lib/connectors/repos/billing-batches', () => {
         perPage: 15,
         totalRows: 53
       });
+    });
+  });
+
+  experiment('.update', () => {
+    beforeEach(async () => {
+      await billingBatches.update('test-id', { foo: 'bar' });
+    });
+
+    test('calls model.forge with correct id', async () => {
+      const [params] = BillingBatch.forge.lastCall.args;
+      expect(params).to.equal({ billing_batch_id: 'test-id' });
+    });
+
+    test('calls model.set with correct data', async () => {
+      const [data] = stub.set.lastCall.args;
+      expect(data).to.equal({ foo: 'bar' });
+    });
+
+    test('calls model.save', async () => {
+      expect(stub.save.callCount).to.equal(1);
     });
   });
 });
