@@ -1,16 +1,11 @@
-const uuidv4 = require('uuid/v4');
 const moment = require('moment');
-const { pool } = require('./connectors/db');
-const Repository = require('@envage/hapi-pg-rest-api/src/repository');
+// const { pool } = require('./connectors/db');
+// const Repository = require('@envage/hapi-pg-rest-api/src/repository');
+const repo = require('./connectors/repos');
 const { mapValues, mapKeys } = require('lodash');
 const camelCase = require('camelcase');
 const snakeCase = require('snake-case');
-
-const repo = new Repository({
-  connection: pool,
-  table: 'water.events',
-  primaryKey: 'event_id'
-});
+const Event = require('./models/event');
 
 /**
  * Checks whether the supplied value/key is a JSON field and is not null
@@ -58,21 +53,19 @@ const mapFromRepo = data => keyMapper(data, camelCase);
  * @return {Object}           event object
  */
 const create = (data = {}) => {
-  const defaults = {
-    eventId: null,
-    referenceCode: null,
-    type: null,
-    subtype: null,
-    issuer: null,
-    licences: [],
-    entities: [],
-    comment: null,
-    metadata: {},
-    status: null,
-    created: moment().format('YYYY-MM-DD HH:mm:ss'),
-    modified: null
-  };
-  return Object.assign({}, defaults, data);
+  const event = new Event();
+  event.comment = null;
+  event.entities = [];
+  event.issuer = null;
+  event.licences = [];
+  event.metadata = {};
+  event.modified = null;
+  event.referenceCode = null;
+  event.status = null;
+  event.subtype = null;
+  event.type = null;
+  event.created = null;
+  return Object.assign({}, event, data);
 };
 
 /**
@@ -81,30 +74,33 @@ const create = (data = {}) => {
  * @param  {Object} event - plain JS event object
  * @return {Promise}        resolves when event saved
  */
-const save = (event) => {
+const save = async (event) => {
   // Update existing record
   if (event.eventId) {
     event.modified = moment().format('YYYY-MM-DD HH:mm:ss');
-    return repo.update({ event_id: event.eventId }, mapToRepo(event));
+    const result = await repo.events.update({ event_id: event.eventId }, mapToRepo(event));
+    const model = mapFromRepo(result);
+    return wrapBookshelfModel(model);
   }
   // Create new event
-  event.eventId = uuidv4();
-  return repo.create(mapToRepo(event));
+  const result = await repo.events.create(mapToRepo(event));
+  const model = mapFromRepo(result);
+  return wrapBookshelfModel(model);
 };
 
 /**
- * Loads an event with the specified ID
+ * Fetches an event with the specified ID from the DB
  * @param  {String}  eventId - water service events GUID
  * @return {Promise}         [description]
  */
 const load = async (eventId) => {
-  const result = await repo.find({ event_id: eventId });
-
-  if (result.rowCount === 0) {
+  const result = await repo.events.findOne(eventId);
+  if (!result.event_id) {
     return null;
   }
-
-  return mapFromRepo(result.rows[0]);
+  const model = mapFromRepo(result);
+  model.event_id = model.eventId;
+  return model;
 };
 
 /**
@@ -115,11 +111,13 @@ const load = async (eventId) => {
  * @param {String} status The status to set
  */
 const updateStatus = async (eventId, status) => {
-  const result = await repo.update(
-    { event_id: eventId },
-    { status }
-  );
-  return mapFromRepo(result.rows[0]);
+  const result = await repo.events.updateStatus(eventId, status);
+  return mapFromRepo(result);
+};
+
+const wrapBookshelfModel = (event) => {
+  event.event_id = event.eventId;
+  return { rowCount: 1, rows: [event] };
 };
 
 exports.repo = repo;
