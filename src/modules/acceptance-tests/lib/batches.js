@@ -2,6 +2,7 @@
 
 const { pool } = require('../../../lib/connectors/db');
 const repos = require('../../../lib/connectors/repository');
+const newRepos = require('../../../lib/connectors/repos');
 
 const deleteBatchJobs = batchId => {
   const query = `
@@ -19,7 +20,7 @@ const deleteBatch = async batchId => {
   await repos.billingTransactions.deleteByBatchId(batchId);
   await repos.billingInvoiceLicences.deleteByBatchId(batchId);
   await repos.billingInvoices.deleteByBatchId(batchId);
-  await repos.billingBatches.deleteByBatchId(batchId);
+  await newRepos.billingBatches.delete(batchId);
 };
 
 const getAcceptanceTestUserBatchIds = async () => {

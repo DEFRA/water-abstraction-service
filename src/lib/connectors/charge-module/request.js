@@ -32,6 +32,9 @@ const get = (path, query) => cmRequest.get(getRequestOptions(path, query));
 
 const post = (path, payload) => cmRequest.post(getPostRequestOptions(path, payload));
 
+const patch = (path, payload) => cmRequest.patch(getPostRequestOptions(path, payload));
+
 exports.get = get;
 exports.post = post;
+exports.patch = patch;
 exports.cmRequest = cmRequest;
