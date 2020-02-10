@@ -1,3 +1,5 @@
+'use strict';
+
 const moment = require('moment');
 const {
   experiment,
@@ -11,6 +13,8 @@ const uuid = require('uuid/v4');
 
 const { Batch, FinancialYear, Invoice, InvoiceLicence, Licence, Transaction, InvoiceAccount } = require('../../../../src/lib/models');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
+const event = require('../../../../src/lib/event');
+const { logger } = require('../../../../src/logger');
 
 const newRepos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBatchConnector = require('../../../../src/lib/connectors/charge-module/batches');
@@ -49,21 +53,30 @@ experiment('modules/billing/services/batch-service', () => {
   let result;
 
   beforeEach(async () => {
+    sandbox.stub(logger, 'error');
+
     sandbox.stub(newRepos.billingBatches, 'findOne').resolves(data.batch);
     sandbox.stub(newRepos.billingBatches, 'findPage').resolves();
+    sandbox.stub(newRepos.billingBatches, 'update').resolves();
+    sandbox.stub(newRepos.billingBatches, 'delete').resolves();
 
-    sandbox.stub(repos.billingBatches, 'deleteByBatchId').resolves();
     sandbox.stub(repos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
     sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
     sandbox.stub(repos.billingInvoices, 'deleteByBatchId').resolves();
     sandbox.stub(repos.billingInvoiceLicences, 'deleteByBatchId').resolves();
     sandbox.stub(repos.billingTransactions, 'deleteByBatchId').resolves();
 
-    sandbox.stub(chargeModuleBatchConnector, 'deleteBatch').resolves();
-
     sandbox.stub(transactionsService, 'saveTransactionToDB');
+
     sandbox.stub(invoiceLicencesService, 'saveInvoiceLicenceToDB');
+
     sandbox.stub(invoiceService, 'saveInvoiceToDB');
+
+    sandbox.stub(chargeModuleBatchConnector, 'delete').resolves();
+    sandbox.stub(chargeModuleBatchConnector, 'approve').resolves();
+    sandbox.stub(chargeModuleBatchConnector, 'send').resolves();
+
+    sandbox.stub(event, 'save').resolves();
   });
 
   afterEach(async () => {
@@ -216,43 +229,219 @@ experiment('modules/billing/services/batch-service', () => {
 
   experiment('.deleteBatch', () => {
     let batchId;
+    let batch;
+    let internalCallingUser;
+
+    beforeEach(async () => {
+      batch = {
+        batchId: batchId = uuid(),
+        region: {
+          code: 'A'
+        }
+      };
+
+      internalCallingUser = {
+        email: 'test@example.com',
+        id: 1234
+      };
+    });
+
+    experiment('when all deletions succeed', () => {
+      beforeEach(async () => {
+        await batchService.deleteBatch(batch, internalCallingUser);
+      });
+
+      test('delete the batch at the charge module', async () => {
+        const [code, batchId] = chargeModuleBatchConnector.delete.lastCall.args;
+        expect(code).to.equal('A');
+        expect(batchId).to.equal(batchId);
+      });
+
+      test('deletes the charge version years', async () => {
+        expect(repos.billingBatchChargeVersionYears.deleteByBatchId.calledWith(batchId)).to.be.true();
+      });
+
+      test('deletes the charge versions', async () => {
+        expect(repos.billingBatchChargeVersions.deleteByBatchId.calledWith(batchId)).to.be.true();
+      });
+
+      test('deletes the transactions', async () => {
+        expect(repos.billingTransactions.deleteByBatchId.calledWith(batchId)).to.be.true();
+      });
+
+      test('deletes the invoice licences', async () => {
+        expect(repos.billingInvoiceLicences.deleteByBatchId.calledWith(batchId)).to.be.true();
+      });
+
+      test('deletes the invoices', async () => {
+        expect(repos.billingInvoices.deleteByBatchId.calledWith(batchId)).to.be.true();
+      });
+
+      test('deletes the batch', async () => {
+        expect(newRepos.billingBatches.delete.calledWith(batchId)).to.be.true();
+      });
+
+      test('creates an event showing the calling user successfully deleted the batch', async () => {
+        const [savedEvent] = event.save.lastCall.args;
+        expect(savedEvent.issuer).to.equal(internalCallingUser.email);
+        expect(savedEvent.type).to.equal('billing-batch:cancel');
+        expect(savedEvent.status).to.equal('delete');
+        expect(savedEvent.metadata.user).to.equal(internalCallingUser);
+        expect(savedEvent.metadata.batch).to.equal(batch);
+      });
+    });
+
+    experiment('when the batch does not delete', () => {
+      let err;
+      beforeEach(async () => {
+        err = new Error('whoops');
+        chargeModuleBatchConnector.delete.rejects(err);
+        try {
+          await batchService.deleteBatch(batch, internalCallingUser);
+        } catch (err) {
+
+        }
+      });
+
+      test('the error is logged', async () => {
+        const [message, error, batch] = logger.error.lastCall.args;
+        expect(message).to.equal('Failed to delete the batch');
+        expect(error).to.equal(err);
+        expect(batch).to.equal(batch);
+      });
+
+      test('creates an event showing the calling user could not delete the batch', async () => {
+        const [savedEvent] = event.save.lastCall.args;
+        expect(savedEvent.issuer).to.equal(internalCallingUser.email);
+        expect(savedEvent.type).to.equal('billing-batch:cancel');
+        expect(savedEvent.status).to.equal('error');
+        expect(savedEvent.metadata.user).to.equal(internalCallingUser);
+        expect(savedEvent.metadata.batch).to.equal(batch);
+      });
+
+      test('sets the status of the batch to error', async () => {
+        const [id, changes] = newRepos.billingBatches.update.lastCall.args;
+        expect(id).to.equal(batch.batchId);
+        expect(changes).to.equal({
+          status: 'error'
+        });
+      });
+    });
+  });
+
+  experiment('.setStatus', () => {
+    beforeEach(async () => {
+      await batchService.setStatus(BATCH_ID, 'sent');
+    });
+
+    test('passes the batch id to the repo function', async () => {
+      const [batchId] = newRepos.billingBatches.update.lastCall.args;
+      expect(batchId).to.equal(BATCH_ID);
+    });
+
+    test('passes the new status repo function', async () => {
+      const [, changes] = newRepos.billingBatches.update.lastCall.args;
+      expect(changes).to.equal({
+        status: 'sent'
+      });
+    });
+  });
+
+  experiment('.approveBatch', () => {
+    let batchId;
+    let batch;
+    let internalCallingUser;
+
     beforeEach(async () => {
       batchId = uuid();
-      await batchService.deleteBatch(batchId);
+      batch = {
+        batchId,
+        region: {
+          code: 'A'
+        }
+      };
+
+      internalCallingUser = {
+        email: 'test@example.com',
+        id: 1234
+      };
     });
 
-    test('delete the batch at the charge module', async () => {
-      expect(chargeModuleBatchConnector.deleteBatch.called).to.be.true();
+    experiment('when the approval succeeds', () => {
+      beforeEach(async () => {
+        await batchService.approveBatch(batch, internalCallingUser);
+      });
+
+      test('approves the batch at the charge module', async () => {
+        const [code, batchId] = chargeModuleBatchConnector.approve.lastCall.args;
+        expect(code).to.equal('A');
+        expect(batchId).to.equal(batchId);
+      });
+
+      test('sends the batch at the charge module', async () => {
+        const [code, batchId, isDraft] = chargeModuleBatchConnector.send.lastCall.args;
+        expect(code).to.equal('A');
+        expect(batchId).to.equal(batchId);
+        expect(isDraft).to.be.false();
+      });
+
+      test('creates an event showing the calling user successfully approved the batch', async () => {
+        const [savedEvent] = event.save.lastCall.args;
+        expect(savedEvent.issuer).to.equal(internalCallingUser.email);
+        expect(savedEvent.type).to.equal('billing-batch:approve');
+        expect(savedEvent.status).to.equal('sent');
+        expect(savedEvent.metadata.user).to.equal(internalCallingUser);
+        expect(savedEvent.metadata.batch).to.equal(batch);
+      });
+
+      test('sets the status of the batch to sent', async () => {
+        const [id, changes] = newRepos.billingBatches.update.lastCall.args;
+        expect(id).to.equal(batch.batchId);
+        expect(changes).to.equal({
+          status: 'sent'
+        });
+      });
     });
 
-    test('deletes the charge version years', async () => {
-      expect(repos.billingBatchChargeVersionYears.deleteByBatchId.calledWith(batchId)).to.be.true();
-    });
+    experiment('when the batch does not approve', () => {
+      let err;
+      beforeEach(async () => {
+        err = new Error('whoops');
+        chargeModuleBatchConnector.send.rejects(err);
+        try {
+          await batchService.approveBatch(batch, internalCallingUser);
+        } catch (err) {
+        }
+      });
 
-    test('deletes the charge versions', async () => {
-      expect(repos.billingBatchChargeVersions.deleteByBatchId.calledWith(batchId)).to.be.true();
-    });
+      test('the error is logged', async () => {
+        const [message, error, batch] = logger.error.lastCall.args;
+        expect(message).to.equal('Failed to approve the batch');
+        expect(error).to.equal(err);
+        expect(batch).to.equal(batch);
+      });
 
-    test('deletes the transactions', async () => {
-      expect(repos.billingTransactions.deleteByBatchId.calledWith(batchId)).to.be.true();
-    });
+      test('creates an event showing the calling user could not approve the batch', async () => {
+        const [savedEvent] = event.save.lastCall.args;
+        expect(savedEvent.issuer).to.equal(internalCallingUser.email);
+        expect(savedEvent.type).to.equal('billing-batch:approve');
+        expect(savedEvent.status).to.equal('error');
+        expect(savedEvent.metadata.user).to.equal(internalCallingUser);
+        expect(savedEvent.metadata.batch).to.equal(batch);
+      });
 
-    test('deletes the invoice licences', async () => {
-      expect(repos.billingInvoiceLicences.deleteByBatchId.calledWith(batchId)).to.be.true();
-    });
-
-    test('deletes the invoices', async () => {
-      expect(repos.billingInvoices.deleteByBatchId.calledWith(batchId)).to.be.true();
-    });
-
-    test('deletes the batch', async () => {
-      expect(repos.billingBatches.deleteByBatchId.calledWith(batchId)).to.be.true();
+      test('sets the status of the batch to error', async () => {
+        const [id, changes] = newRepos.billingBatches.update.lastCall.args;
+        expect(id).to.equal(batch.batchId);
+        expect(changes).to.equal({
+          status: 'error'
+        });
+      });
     });
   });
 
   experiment('.setErrorStatus', () => {
     beforeEach(async () => {
-      sandbox.stub(newRepos.billingBatches, 'update');
       await batchService.setErrorStatus('batch-id');
     });
 

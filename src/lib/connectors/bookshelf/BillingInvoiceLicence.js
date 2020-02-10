@@ -1,7 +1,11 @@
+'use strict';
+
 const { bookshelf } = require('./bookshelf.js');
 
 module.exports = bookshelf.model('BillingInvoiceLicence', {
   tableName: 'billing_invoice_licences',
+
+  hasTimestamps: ['date_created', 'date_updated'],
 
   billingInvoice () {
     return this.hasOne('BillingInvoice', 'billing_invoice_id', 'billing_invoice_id');

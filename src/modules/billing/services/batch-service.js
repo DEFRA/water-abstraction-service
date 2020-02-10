@@ -1,6 +1,11 @@
+'use strict';
+
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const repos = require('../../../lib/connectors/repository');
+const { BATCH_STATUS } = require('../../../lib/models/batch');
+const { logger } = require('../../../logger');
+const event = require('../../../lib/event');
 
 const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
 const Batch = require('../../../lib/models/batch');
@@ -27,19 +32,55 @@ const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
   };
 };
 
-const deleteBatch = async batchId => {
-  // TODO: This function is a stub and will eventually
-  // have a defined signature and response behaviour.
-  // If this fails, the batch should not be deleted from
-  // the WRLS database tables.
-  await chargeModuleBatchConnector.deleteBatch();
+const saveEvent = (type, status, user, batch) => {
+  return event.save(event.create({
+    issuer: user.email,
+    type,
+    metadata: { user, batch },
+    status
+  }));
+};
 
-  await repos.billingBatchChargeVersionYears.deleteByBatchId(batchId);
-  await repos.billingBatchChargeVersions.deleteByBatchId(batchId);
-  await repos.billingTransactions.deleteByBatchId(batchId);
-  await repos.billingInvoiceLicences.deleteByBatchId(batchId);
-  await repos.billingInvoices.deleteByBatchId(batchId);
-  await repos.billingBatches.deleteByBatchId(batchId);
+const deleteBatch = async (batch, internalCallingUser) => {
+  const { batchId } = batch;
+
+  try {
+    await chargeModuleBatchConnector.delete(batch.region.code, batchId);
+
+    await repos.billingBatchChargeVersionYears.deleteByBatchId(batchId);
+    await repos.billingBatchChargeVersions.deleteByBatchId(batchId);
+    await repos.billingTransactions.deleteByBatchId(batchId);
+    await repos.billingInvoiceLicences.deleteByBatchId(batchId);
+    await repos.billingInvoices.deleteByBatchId(batchId);
+    await newRepos.billingBatches.delete(batchId);
+
+    await saveEvent('billing-batch:cancel', 'delete', internalCallingUser, batch);
+  } catch (err) {
+    logger.error('Failed to delete the batch', err, batch);
+    await saveEvent('billing-batch:cancel', 'error', internalCallingUser, batch);
+    await setStatus(batchId, BATCH_STATUS.error);
+    throw err;
+  }
+};
+
+const setStatus = (batchId, status) =>
+  newRepos.billingBatches.update(batchId, { status });
+
+const approveBatch = async (batch, internalCallingUser) => {
+  const { batchId } = batch;
+  try {
+    await chargeModuleBatchConnector.approve(batch.region.code, batchId);
+    await chargeModuleBatchConnector.send(batch.region.code, batchId, false);
+
+    await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
+
+    return setStatus(batchId, BATCH_STATUS.sent);
+  } catch (err) {
+    logger.error('Failed to approve the batch', err, batch);
+    await saveEvent('billing-batch:approve', 'error', internalCallingUser, batch);
+    await setStatus(batchId, BATCH_STATUS.error);
+    throw err;
+  }
 };
 
 /**
@@ -48,7 +89,7 @@ const deleteBatch = async batchId => {
  * @return {Promise}
  */
 const setErrorStatus = batchId =>
-  newRepos.billingBatches.update(batchId, { status: Batch.statuses.error });
+  newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error });
 
 const saveInvoiceLicenceTransactions = async (batch, invoice, invoiceLicence) => {
   for (const transaction of invoiceLicence.transactions) {
@@ -74,8 +115,10 @@ const saveInvoicesToDB = async batch => {
   }
 };
 
+exports.approveBatch = approveBatch;
+exports.deleteBatch = deleteBatch;
 exports.getBatchById = getBatchById;
 exports.getBatches = getBatches;
-exports.deleteBatch = deleteBatch;
-exports.setErrorStatus = setErrorStatus;
 exports.saveInvoicesToDB = saveInvoicesToDB;
+exports.setErrorStatus = setErrorStatus;
+exports.setStatus = setStatus;

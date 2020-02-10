@@ -11,15 +11,16 @@ const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const { batchStatus, jobStatus } = require('../../../../src/modules/billing/lib/batch');
+const { BATCH_STATUS } = require('../../../../src/lib/models/batch');
+const { jobStatus } = require('../../../../src/modules/billing/lib/batch');
 const jobService = require('../../../../src/modules/billing/services/job-service');
-const repos = require('../../../../src/lib/connectors/repository');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
 const event = require('../../../../src/lib/event');
 
 experiment('modules/billing/services/jobService', () => {
   beforeEach(async () => {
     sandbox.stub(event, 'updateStatus').resolves();
-    sandbox.stub(repos.billingBatches, 'setStatus').resolves();
+    sandbox.stub(batchService, 'setStatus').resolves();
   });
 
   afterEach(async () => {
@@ -38,9 +39,9 @@ experiment('modules/billing/services/jobService', () => {
     });
 
     test('updates the batch status', async () => {
-      const [batchId, status] = repos.billingBatches.setStatus.lastCall.args;
+      const [batchId, status] = batchService.setStatus.lastCall.args;
       expect(batchId).to.equal('test-batch-id');
-      expect(status).to.equal(batchStatus.complete);
+      expect(status).to.equal(BATCH_STATUS.complete);
     });
   });
 
@@ -56,9 +57,9 @@ experiment('modules/billing/services/jobService', () => {
     });
 
     test('updates the batch status', async () => {
-      const [batchId, status] = repos.billingBatches.setStatus.lastCall.args;
+      const [batchId, status] = batchService.setStatus.lastCall.args;
       expect(batchId).to.equal('test-batch-id');
-      expect(status).to.equal(batchStatus.error);
+      expect(status).to.equal(BATCH_STATUS.error);
     });
   });
 });

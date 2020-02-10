@@ -593,7 +593,7 @@ experiment('modules/billing/mappers/transaction', () => {
 
     experiment('when the batch type is two-part tariff', () => {
       beforeEach(async () => {
-        batch.type = Batch.types.twoPartTariff;
+        batch.type = Batch.BATCH_TYPE.twoPartTariff;
         result = transactionMapper.modelToChargeModule(batch, invoice, invoiceLicence, transaction);
       });
 

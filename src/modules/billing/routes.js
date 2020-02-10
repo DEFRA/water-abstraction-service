@@ -117,10 +117,32 @@ const deleteBatch = {
   }
 };
 
-exports.postCreateBatch = postCreateBatch;
+const postApproveBatch = {
+  method: 'POST',
+  path: '/water/1.0/billing/batches/{batchId}/approve',
+  handler: controller.postApproveBatch,
+  config: {
+    validate: {
+      params: {
+        batchId: Joi.string().uuid().required()
+      },
+      headers: async values => {
+        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+      }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
+
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
 exports.deleteBatch = deleteBatch;
+
+exports.postApproveBatch = postApproveBatch;
+exports.postCreateBatch = postCreateBatch;
