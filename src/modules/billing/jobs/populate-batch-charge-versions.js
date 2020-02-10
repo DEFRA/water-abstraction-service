@@ -6,7 +6,10 @@ const { chargeVersions } = require('../../../lib/connectors/repository');
 
 const JOB_NAME = 'billing.populate-batch-charge-versions';
 
-const { isSupplementaryBatch } = require('../lib/batch');
+const {
+  isSupplementaryBatch,
+  isTwoPartTariffBatch
+} = require('../lib/batch');
 const { logger } = require('../../../logger');
 
 const createMessage = (eventId, batch) => ({
@@ -35,6 +38,27 @@ const handleSupplementaryBatch = async (batch) => {
   return { chargeVersions: rows, batch };
 };
 
+/**
+ * Handles a batch that is two-part-tariff
+ *
+ * @param {Object} job PG-Boss job object
+ * @param {Object} batch The batch run
+ */
+const handleTwoPartTariffBatch = async (batch) => {
+  logger.info('Handling two part tariff batch', batch);
+
+  // move any found charge versions into water.billing_batch_charge_versions
+  const rows = await chargeVersions.createTwoPartTariffChargeVersions(batch);
+
+  // Include the charge versions in the response data. This information
+  // can then be used in the onComplete callback to decide if a new job
+  // should be published.
+  return {
+    chargeVersions: rows,
+    batch
+  };
+};
+
 const handlePopulateBatch = async job => {
   logger.info(`Handling ${JOB_NAME}`);
 
@@ -44,6 +68,9 @@ const handlePopulateBatch = async job => {
 
   if (isSupplementaryBatch(batch)) {
     return handleSupplementaryBatch(batch);
+  }
+  if (isTwoPartTariffBatch(batch)) {
+    return handleTwoPartTariffBatch(batch);
   }
 
   logger.info('handle annual batches in a future story');

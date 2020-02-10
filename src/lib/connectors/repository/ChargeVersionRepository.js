@@ -37,7 +37,7 @@ class ChargeVersionRepository extends Repository {
    *
    * Charge versions will be pulled back from the start of the financial year 6 years ago.
    *
-   * @param {String} regionId The UUID representing the region to get charge versions for
+   * @param {String} batch The batch metadata from water.events
    * @param {Date} now The date now, here to facilitate unit tests.
    */
   async createSupplementaryChargeVersions (batch, now = Date.now()) {
@@ -56,6 +56,44 @@ class ChargeVersionRepository extends Repository {
         l.include_in_supplementary_billing = true
         and l.region_id = $2::uuid
         and (cv.end_date is null or cv.end_date > $3)
+      returning *;
+    `;
+
+    const params = [batchId, regionId, fromDate];
+    const { rows } = await this.dbQuery(query, params);
+    return rows;
+  }
+
+  /**
+   * Writes into billing_batch_charge_versions a list of charge versions for
+   * the given region that relate to licences that have a valid two part tariff
+   * licence agreement.
+   *
+   * @param {String} batch The batch metadata from water.events
+   * @param {Date} now The date now, here to facilitate unit tests.
+   */
+  async createTwoPartTariffChargeVersions (batch, now = Date.now()) {
+    const { getFinancialYear, getFinancialYearDate } = helpers.charging;
+    const fromDate = getFinancialYearDate(1, 4, getFinancialYear(now));
+
+    const { billing_batch_id: batchId, region_id: regionId, season } = batch;
+
+    // @TODO: Add more conditions for checking licence end dates & suspended from billing flag
+    const seasonFilter = season === 'summer' ? "ce.season = 'summer'" : "(ce.season = 'winter' or ce.season = 'all year')";
+    const query = `
+      insert into
+      water.billing_batch_charge_versions (billing_batch_id, charge_version_id)
+      select $1, cv.charge_version_id
+      from water.licence_agreements l
+        join water.charge_versions cv on l.licence_ref = cv.licence_ref
+        join water.licence_agreements la on l.licence_ref = la.licence_ref
+        join water.charge_elements ce on cv.charge_version_id = ce.charge_version_id
+      where
+        l.financial_agreement_type_id = 'S127'
+        and l.region_id = $2::uuid
+        and (cv.end_date is null or cv.end_date > $3)
+        and (la.end_date is null or la.end_date > $3)
+        and ${seasonFilter}
       returning *;
     `;
 
