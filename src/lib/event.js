@@ -1,6 +1,4 @@
 const moment = require('moment');
-// const { pool } = require('./connectors/db');
-// const Repository = require('@envage/hapi-pg-rest-api/src/repository');
 const repo = require('./connectors/repos');
 const { mapValues, mapKeys } = require('lodash');
 const camelCase = require('camelcase');
