@@ -17,7 +17,7 @@ const getByInvoiceAccountIds = async (ids = []) => {
   const invoiceAccounts = await invoiceAccountsConnector.getInvoiceAccountsByIds(ids);
 
   return invoiceAccounts.map(invoiceAccount =>
-    mappers.invoiceAccount.crmToModel(invoiceAccount, invoiceAccount.company)
+    mappers.invoiceAccount.crmToModel(invoiceAccount)
   );
 };
 
@@ -29,7 +29,7 @@ const getByInvoiceAccountIds = async (ids = []) => {
  */
 const getByInvoiceAccountId = async id => {
   const invoiceAccount = await invoiceAccountsConnector.getInvoiceAccountById(id);
-  return mappers.invoiceAccount.crmToModel(invoiceAccount, invoiceAccount.company);
+  return mappers.invoiceAccount.crmToModel(invoiceAccount);
 };
 
 exports.getByInvoiceAccountIds = getByInvoiceAccountIds;

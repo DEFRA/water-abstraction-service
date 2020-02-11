@@ -307,18 +307,38 @@ experiment('lib/models/batch', () => {
 
   experiment('.isTwoPartTariff', () => {
     test('returns false if the type is annual', async () => {
-      const batch = new Batch().fromHash({ type: Batch.types.annual });
+      const batch = new Batch().fromHash({ type: Batch.BATCH_TYPE.annual });
       expect(batch.isTwoPartTariff()).to.be.false();
     });
 
     test('returns false if the type is supplementary', async () => {
-      const batch = new Batch().fromHash({ type: Batch.types.supplementary });
+      const batch = new Batch().fromHash({ type: Batch.BATCH_TYPE.supplementary });
       expect(batch.isTwoPartTariff()).to.be.false();
     });
 
     test('returns true if the type is twoPartTariff', async () => {
-      const batch = new Batch().fromHash({ type: Batch.types.twoPartTariff });
+      const batch = new Batch().fromHash({ type: Batch.BATCH_TYPE.twoPartTariff });
       expect(batch.isTwoPartTariff()).to.be.true();
+    });
+  });
+
+  experiment('.isSupplementary', () => {
+    test('returns true when the batch type is supplementary', async () => {
+      const batch = new Batch();
+      batch.type = Batch.BATCH_TYPE.supplementary;
+      expect(batch.isSupplementary()).to.be.true();
+    });
+
+    test('returns false when the batch type is two-part-tariff', async () => {
+      const batch = new Batch();
+      batch.type = Batch.BATCH_TYPE.twoPartTariff;
+      expect(batch.isSupplementary()).to.be.false();
+    });
+
+    test('returns false when the batch type is annual', async () => {
+      const batch = new Batch();
+      batch.type = Batch.BATCH_TYPE.annual;
+      expect(batch.isSupplementary()).to.be.false();
     });
   });
 });

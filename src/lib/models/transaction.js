@@ -37,6 +37,24 @@ class Transaction extends Model {
     return transaction;
   }
 
+  /**
+   * Creates a fresh model (with no ID) from the current model, set up as
+   * a credit
+   * @return {Transaction}
+   */
+  toCredit () {
+    const transaction = new Transaction();
+    transaction.pickFrom(this, [
+      'value', 'authorisedDays', 'billableDays', 'agreements', 'chargePeriod',
+      'isCompensationCharge', 'description', 'chargeElement', 'volume'
+    ]);
+    transaction.fromHash({
+      isCredit: true,
+      status: statuses.candidate
+    });
+    return transaction;
+  }
+
   get value () {
     return this._value;
   }

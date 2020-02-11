@@ -9,7 +9,9 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const billingTransactions = require('../../../../src/lib/connectors/repos/billing-transactions');
-const { BillingTransaction } = require('../../../../src/lib/connectors/bookshelf');
+const { BillingTransaction, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
+const raw = require('../../../../src/lib/connectors/repos/lib/raw');
+const queries = require('../../../../src/lib/connectors/repos/queries/billing-transactions');
 
 experiment('lib/connectors/repos/billing-transactions', () => {
   let model, stub;
@@ -28,9 +30,13 @@ experiment('lib/connectors/repos/billing-transactions', () => {
     stub = {
       fetch: sandbox.stub().resolves(model),
       orderBy: sandbox.stub().returnsThis(),
-      fetchPage: sandbox.stub().resolves(model)
+      fetchPage: sandbox.stub().resolves(model),
+      where: sandbox.stub().returnsThis(),
+      save: sandbox.stub().resolves(model)
     };
     sandbox.stub(BillingTransaction, 'forge').returns(stub);
+    sandbox.stub(BillingTransaction, 'collection').returns(stub);
+    sandbox.stub(raw, 'multiRow');
   });
 
   afterEach(async () => {
@@ -60,6 +66,128 @@ experiment('lib/connectors/repos/billing-transactions', () => {
         'billingInvoiceLicence.billingInvoice.billingBatch',
         'billingInvoiceLicence.billingInvoice.billingBatch.region'
       ]);
+    });
+
+    test('calls toJSON() on returned models', async () => {
+      expect(model.toJSON.callCount).to.equal(1);
+    });
+
+    test('returns the result of the toJSON() call', async () => {
+      expect(result).to.equal({ foo: 'bar' });
+    });
+  });
+
+  experiment('.find', () => {
+    let result;
+
+    beforeEach(async () => {
+      result = await billingTransactions.find(['test-id-1', 'test-id-2']);
+    });
+
+    test('calls model.collection', async () => {
+      expect(BillingTransaction.collection.callCount).to.equal(1);
+    });
+
+    test('queries for matching ID(s)', async () => {
+      const [field, operator, values] = stub.where.lastCall.args;
+      expect(field).to.equal('billing_transaction_id');
+      expect(operator).to.equal('in');
+      expect(values).to.equal(['test-id-1', 'test-id-2']);
+    });
+
+    test('calls fetch() with related models', async () => {
+      const [params] = stub.fetch.lastCall.args;
+      expect(params.withRelated).to.equal([
+        'chargeElement',
+        'billingInvoiceLicence',
+        'billingInvoiceLicence.licence',
+        'billingInvoiceLicence.licence.region',
+        'billingInvoiceLicence.billingInvoice',
+        'billingInvoiceLicence.billingInvoice.billingBatch',
+        'billingInvoiceLicence.billingInvoice.billingBatch.region'
+      ]);
+    });
+
+    test('calls toJSON() on returned models', async () => {
+      expect(model.toJSON.callCount).to.equal(1);
+    });
+
+    test('returns the result of the toJSON() call', async () => {
+      expect(result).to.equal({ foo: 'bar' });
+    });
+  });
+
+  experiment('.findByBatchId', () => {
+    beforeEach(async () => {
+      await billingTransactions.findByBatchId('batch-id');
+    });
+
+    test('performs multi-row query with correct params', async () => {
+      expect(raw.multiRow.calledWith(
+        queries.findByBatchId, { batchId: 'batch-id' }
+      )).to.be.true();
+    });
+  });
+
+  experiment('.findHistoryByBatchId', () => {
+    beforeEach(async () => {
+      await billingTransactions.findHistoryByBatchId('batch-id');
+    });
+
+    test('performs multi-row query with correct params', async () => {
+      expect(raw.multiRow.calledWith(
+        queries.findHistoryByBatchId, { batchId: 'batch-id' }
+      )).to.be.true();
+    });
+  });
+
+  experiment('.deleteRecords', () => {
+    beforeEach(async () => {
+      stub = {
+        whereIn: sandbox.stub().returnsThis(),
+        delete: sandbox.stub()
+      };
+
+      sandbox.stub(bookshelf, 'knex').returns(stub);
+      await billingTransactions.delete('transaction-id');
+    });
+
+    test('intialises knex() with the correct table', async () => {
+      expect(
+        bookshelf.knex.calledWith('water.billing_transactions')
+      ).to.be.true();
+    });
+
+    test('calles .whereIn() on query builder with supplied IDs in an array', async () => {
+      expect(
+        stub.whereIn.calledWith('billing_transaction_id', ['transaction-id'])
+      ).to.be.true();
+    });
+
+    test('calls .delete() on query builder', async () => {
+      expect(stub.delete.called).to.be.true();
+    });
+  });
+
+  experiment('.create', () => {
+    let result;
+
+    const data = {
+      billingInvoiceLicenceId: '82edd393-c53b-4ea9-bd51-f56cc065777e',
+      chargeElementId: 'd40278b2-3cdd-4dd0-8546-d5e0baf070cb'
+    };
+
+    beforeEach(async () => {
+      result = await billingTransactions.create(data);
+    });
+
+    test('calls model.forge with correct data', async () => {
+      const [params] = BillingTransaction.forge.lastCall.args;
+      expect(params).to.equal(data);
+    });
+
+    test('.save() on the model', async () => {
+      expect(stub.save.called).to.be.true();
     });
 
     test('calls toJSON() on returned models', async () => {

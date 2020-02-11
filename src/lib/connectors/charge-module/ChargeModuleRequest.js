@@ -141,6 +141,10 @@ class ChargeModuleRequest {
   post (options) {
     return this.request({ ...options, method: 'POST' });
   }
+
+  patch (options) {
+    return this.request({ ...options, method: 'PATCH' });
+  }
 }
 
 module.exports = ChargeModuleRequest;

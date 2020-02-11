@@ -128,27 +128,35 @@ const deleteAccountFromBatch = async request => {
 
 const deleteBatch = async (request, h) => {
   const { batch } = request.pre;
-  const batchId = batch.billing_batch_id;
+  const { internalCallingUser } = request.defra;
 
-  await batchService.deleteBatch(batchId);
-
-  await event.save(event.create({
-    issuer: request.defra.internalCallingUser.email,
-    type: 'billing-batch:cancel',
-    metadata: {
-      user: request.defra.internalCallingUser,
-      batch
-    },
-    status: 'deleted'
-  }));
-
-  return h.response().code(204);
+  try {
+    await batchService.deleteBatch(batch, internalCallingUser);
+    return h.response().code(204);
+  } catch (err) {
+    return err;
+  }
 };
 
-exports.postCreateBatch = postCreateBatch;
+const postApproveBatch = async (request, h) => {
+  const { batch } = request.pre;
+  const { internalCallingUser } = request.defra;
+
+  try {
+    const approvedBatch = await batchService.approveBatch(batch, internalCallingUser);
+    return approvedBatch;
+  } catch (err) {
+    return err;
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
+
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
 exports.deleteBatch = deleteBatch;
+
+exports.postApproveBatch = postApproveBatch;
+exports.postCreateBatch = postCreateBatch;
