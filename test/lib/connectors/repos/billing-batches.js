@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -30,7 +32,8 @@ experiment('lib/connectors/repos/billing-batches', () => {
       orderBy: sandbox.stub().returnsThis(),
       fetchPage: sandbox.stub().resolves(model),
       set: sandbox.stub().returnsThis(),
-      save: sandbox.stub().resolves(model)
+      save: sandbox.stub().resolves(model),
+      destroy: sandbox.spy()
     };
     sandbox.stub(BillingBatch, 'forge').returns(stub);
   });
@@ -48,7 +51,7 @@ experiment('lib/connectors/repos/billing-batches', () => {
 
     test('calls model.forge with correct id', async () => {
       const [params] = BillingBatch.forge.lastCall.args;
-      expect(params).to.equal({ billing_batch_id: 'test-id' });
+      expect(params).to.equal({ billingBatchId: 'test-id' });
     });
 
     test('calls fetch() with related models', async () => {
@@ -103,21 +106,36 @@ experiment('lib/connectors/repos/billing-batches', () => {
 
   experiment('.update', () => {
     beforeEach(async () => {
-      await billingBatches.update('test-id', { foo: 'bar' });
+      await billingBatches.update('00000000-0000-0000-0000-000000000000', { foo: 'bar' });
     });
 
-    test('calls model.forge with correct id', async () => {
-      const [params] = BillingBatch.forge.lastCall.args;
-      expect(params).to.equal({ billing_batch_id: 'test-id' });
+    test('forges a model with the expected id', async () => {
+      const [forgeArg] = BillingBatch.forge.lastCall.args;
+      expect(forgeArg).to.equal({
+        billingBatchId: '00000000-0000-0000-0000-000000000000'
+      });
     });
 
-    test('calls model.set with correct data', async () => {
-      const [data] = stub.set.lastCall.args;
-      expect(data).to.equal({ foo: 'bar' });
+    test('passes through the expected changes', async () => {
+      const [changes] = stub.save.lastCall.args;
+      expect(changes).to.equal({ foo: 'bar' });
+    });
+  });
+
+  experiment('.delete', () => {
+    beforeEach(async () => {
+      await billingBatches.delete('00000000-0000-0000-0000-000000000000');
     });
 
-    test('calls model.save', async () => {
-      expect(stub.save.callCount).to.equal(1);
+    test('forges a model with the expected id', async () => {
+      const [forgeArg] = BillingBatch.forge.lastCall.args;
+      expect(forgeArg).to.equal({
+        billingBatchId: '00000000-0000-0000-0000-000000000000'
+      });
+    });
+
+    test('call destroy to remove the entity', async () => {
+      expect(stub.destroy.called).to.be.true();
     });
   });
 });

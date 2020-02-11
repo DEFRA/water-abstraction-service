@@ -9,12 +9,12 @@ const {
 
 const config = require('../../../config');
 const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
 const Invoice = require('../../../src/lib/models/invoice');
 
+const newRepos = require('../../../src/lib/connectors/repos');
 const repos = require('../../../src/lib/connectors/repository');
 const event = require('../../../src/lib/event');
 const invoiceService = require('../../../src/modules/billing/services/invoice-service');
@@ -38,10 +38,11 @@ experiment('modules/billing/controller', () => {
       billing_batch_id: '00000000-0000-0000-0000-000000000000'
     });
 
-    sandbox.stub(repos.billingBatches, 'getById').resolves();
+    sandbox.stub(newRepos.billingBatches, 'findOne').resolves();
 
     sandbox.stub(batchService, 'getBatches').resolves();
     sandbox.stub(batchService, 'deleteBatch').resolves();
+    sandbox.stub(batchService, 'approveBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
 
@@ -50,8 +51,6 @@ experiment('modules/billing/controller', () => {
         { event_id: '11111111-1111-1111-1111-111111111111' }
       ]
     });
-
-    sandbox.stub(event, 'updateStatus').resolves();
   });
 
   afterEach(async () => {
@@ -369,19 +368,25 @@ experiment('modules/billing/controller', () => {
 
   experiment('.deleteBatch', () => {
     let request;
+    let batch;
+    let internalCallingUser;
 
     beforeEach(async () => {
+      internalCallingUser = {
+        email: 'test@example.com',
+        id: 1234
+      };
+
+      batch = {
+        billingBatchId: 'test-batch-id'
+      };
+
       request = {
         defra: {
-          internalCallingUser: {
-            email: 'test@example.com',
-            id: 1234
-          }
+          internalCallingUser
         },
         pre: {
-          batch: {
-            billing_batch_id: 'test-batch-id'
-          }
+          batch
         }
       };
 
@@ -389,21 +394,72 @@ experiment('modules/billing/controller', () => {
     });
 
     test('deletes the batch via the batch service', async () => {
-      expect(batchService.deleteBatch.calledWith('test-batch-id')).to.be.true();
-    });
-
-    test('create an event which audits the change', async () => {
-      const [evt] = event.save.lastCall.args;
-      expect(evt.issuer).to.equal('test@example.com');
-      expect(evt.type).to.equal('billing-batch:cancel');
-      expect(evt.metadata.batch.billing_batch_id).to.equal('test-batch-id');
-      expect(evt.metadata.user.id).to.equal(1234);
-      expect(evt.status).to.equal('deleted');
+      expect(batchService.deleteBatch.calledWith(batch, internalCallingUser)).to.be.true();
     });
 
     test('returns a 204 response', async () => {
       const [code] = hapiResponseStub.code.lastCall.args;
       expect(code).to.equal(204);
+    });
+
+    test('returns the error from the service if it fails', async () => {
+      const err = new Error('whoops');
+      batchService.deleteBatch.rejects(err);
+
+      const result = await controller.deleteBatch(request, h);
+      expect(result).to.equal(err);
+    });
+  });
+
+  experiment('.postApproveBatch', () => {
+    let request;
+    let batch;
+    let internalCallingUser;
+
+    beforeEach(async () => {
+      internalCallingUser = {
+        email: 'test@example.com',
+        id: 1234
+      };
+
+      batch = {
+        billingBatchId: 'test-batch-id'
+      };
+
+      request = {
+        defra: {
+          internalCallingUser
+        },
+        pre: {
+          batch
+        }
+      };
+
+      await controller.postApproveBatch(request, h);
+    });
+
+    test('approves the batch via the batch service', async () => {
+      expect(batchService.approveBatch.calledWith(batch, internalCallingUser)).to.be.true();
+    });
+
+    test('returns the approved batch', async () => {
+      const approvedBatch = {
+        billingBatchId: 'test-batch-id',
+        status: 'sent'
+      };
+      batchService.approveBatch.resolves(approvedBatch);
+
+      const result = await controller.postApproveBatch(request, h);
+
+      expect(result).to.equal(approvedBatch);
+    });
+
+    test('returns the error from the service if it fails', async () => {
+      const err = new Error('whoops');
+      batchService.approveBatch.rejects(err);
+
+      const result = await controller.postApproveBatch(request, h);
+      expect(result).to.equal(err);
     });
   });
 });

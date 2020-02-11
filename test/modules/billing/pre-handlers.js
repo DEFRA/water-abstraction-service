@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -8,7 +10,7 @@ const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const repos = require('../../../src/lib/connectors/repository');
+const newRepos = require('../../../src/lib/connectors/repos');
 const preHandlers = require('../../../src/modules/billing/pre-handlers');
 
 experiment('modules/billing/pre-handlers', () => {
@@ -21,12 +23,14 @@ experiment('modules/billing/pre-handlers', () => {
     };
 
     batch = {
-      billing_batch_id: '7bfdb410-8fe2-41df-bb3a-e85984112f3b',
-      region_id: '6a464833-d218-4377-98b7-aa5f39acd42c',
+      billingBatchId: '7bfdb410-8fe2-41df-bb3a-e85984112f3b',
+      region: {
+        regionId: '6a464833-d218-4377-98b7-aa5f39acd42c'
+      },
       status: 'complete'
     };
 
-    sandbox.stub(repos.billingBatches, 'getById').resolves(batch);
+    sandbox.stub(newRepos.billingBatches, 'findOne').resolves(batch);
   });
 
   afterEach(async () => {
@@ -46,7 +50,7 @@ experiment('modules/billing/pre-handlers', () => {
 
     experiment('when the batch is not found', () => {
       test('a not found error is thrown', async () => {
-        repos.billingBatches.getById.resolves(null);
+        newRepos.billingBatches.findOne.resolves(null);
 
         const result = await expect(preHandlers.loadBatch(request)).to.reject();
         const { statusCode, message } = result.output.payload;

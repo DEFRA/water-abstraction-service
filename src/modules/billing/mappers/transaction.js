@@ -236,7 +236,7 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     billableDays: transaction.billableDays,
     authorisedDays: transaction.authorisedDays,
     volume: transaction.volume,
-    twoPartTariff: batch.type === Batch.types.twoPartTariff,
+    twoPartTariff: batch.type === Batch.BATCH_TYPE.twoPartTariff,
     compensationCharge: transaction.isCompensationCharge,
     ...mapAgreementsToChargeModule(transaction),
     customerReference: invoice.invoiceAccount.accountNumber,
