@@ -41,7 +41,7 @@ experiment('lib/connectors/repos/events', () => {
 
     test('calls model.forge with correct id', async () => {
       const [params] = Event.forge.lastCall.args;
-      expect(params).to.equal({ event_id: 'test-id' });
+      expect(params).to.equal({ eventId: 'test-id' });
     });
 
     test('calls toJSON() on returned models', async () => {
@@ -84,7 +84,7 @@ experiment('lib/connectors/repos/events', () => {
 
     test('calls model.forge.where with id', async () => {
       const { args } = stub.where.lastCall;
-      expect(args[0].event_id).to.equal('test-id');
+      expect(args[0].eventId).to.equal('test-id');
     });
 
     test('returns a JSON object of the model updated', async () => {
@@ -101,7 +101,7 @@ experiment('lib/connectors/repos/events', () => {
 
     test('calls model.forge.where with id', async () => {
       const { args } = stub.where.lastCall;
-      expect(args[0].event_id).to.equal('test-id');
+      expect(args[0].eventId).to.equal('test-id');
     });
 
     test('calls model.forge.where.save with correct parameters', async () => {
