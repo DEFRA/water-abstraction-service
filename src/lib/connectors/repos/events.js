@@ -16,7 +16,7 @@ const create = async (event) => {
  * @param {*} id // uuid for the event_id
  */
 const findOne = async (id) => {
-  const model = await Event.forge({ event_id: id }).fetch();
+  const model = await Event.forge({ eventId: id }).fetch();
   return model.toJSON();
 };
 
@@ -27,7 +27,7 @@ const findOne = async (id) => {
  */
 const update = async (id, event) => {
   event.modified = moment().format('YYYY-MM-DD HH:mm:ss');
-  const model = await Event.forge(event).where({ event_id: id }).save();
+  const model = await Event.forge(event).where({ eventId: id }).save();
   return model.toJSON();
 };
 
@@ -41,7 +41,7 @@ const update = async (id, event) => {
 const updateStatus = async (id, status) => {
   const modifiedDate = moment().format('YYYY-MM-DD HH:mm:ss');
   const model = await Event.forge()
-    .where({ event_id: id })
+    .where({ eventId: id })
     .save({ status: status, modified: modifiedDate }, { patch: true });
   return model.toJSON();
 };
