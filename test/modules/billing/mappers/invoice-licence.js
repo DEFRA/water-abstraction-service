@@ -14,7 +14,19 @@ const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Address = require('../../../../src/lib/models/address');
 const Company = require('../../../../src/lib/models/company');
 const Contact = require('../../../../src/lib/models/contact-v2');
+const Licence = require('../../../../src/lib/models/licence');
 const Region = require('../../../../src/lib/models/region');
+
+const createLicence = () => ({
+  licenceId: 'd563b2b9-e87e-4a9c-8990-1acc96fe2c17',
+  licenceRef: '01/123',
+  region: {
+    regionId: '80bb8d61-786c-4b86-9bb4-8959fa6a2d20',
+    name: 'Anglian',
+    chargeRegionId: 'A'
+  },
+  regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' }
+});
 
 experiment('modules/billing/mappers/invoice-licence', () => {
   experiment('.dbToModel', () => {
@@ -23,7 +35,8 @@ experiment('modules/billing/mappers/invoice-licence', () => {
       const dbRow = {
         billingInvoiceLicenceId: '4e44ea0b-62fc-4a3d-82ed-6ff563f1e39b',
         companyId: '40283a80-766f-481f-ba54-484ac0b7ea6d',
-        addressId: '399282c3-f9b4-4a4b-af1b-0019e040ad61'
+        addressId: '399282c3-f9b4-4a4b-af1b-0019e040ad61',
+        licence: createLicence()
       };
 
       beforeEach(async () => {
@@ -48,6 +61,10 @@ experiment('modules/billing/mappers/invoice-licence', () => {
       test('the contact is not set', async () => {
         expect(result.contact).to.be.undefined();
       });
+
+      test('the invoiceLicence has a Licence', async () => {
+        expect(result.licence instanceof Licence).to.be.true();
+      });
     });
 
     experiment('when there contact ID is set', () => {
@@ -55,7 +72,8 @@ experiment('modules/billing/mappers/invoice-licence', () => {
         billingInvoiceLicenceId: '4e44ea0b-62fc-4a3d-82ed-6ff563f1e39b',
         companyId: '40283a80-766f-481f-ba54-484ac0b7ea6d',
         addressId: '399282c3-f9b4-4a4b-af1b-0019e040ad61',
-        contactId: 'b21a7769-942e-4166-a787-a16701f25e4e'
+        contactId: 'b21a7769-942e-4166-a787-a16701f25e4e',
+        licence: createLicence()
       };
 
       beforeEach(async () => {

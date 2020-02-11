@@ -10,11 +10,7 @@ const {
 const { expect } = require('@hapi/code');
 
 const sandbox = require('sinon').createSandbox();
-const { Address, Batch, Company, Invoice, InvoiceAccount, InvoiceLicence, Licence, Transaction } = require('../../../../src/lib/models');
-const DateRange = require('../../../../src/lib/models/date-range');
-const Region = require('../../../../src/lib/models/region');
-const ChargeElement = require('../../../../src/lib/models/charge-element');
-const Contact = require('../../../../src/lib/models/contact-v2');
+const { Batch } = require('../../../../src/lib/models');
 
 const chargeVersionYear = require('../../../../src/modules/billing/service/charge-version-year');
 const chargeProcessor = require('../../../../src/modules/billing/service/charge-processor');
@@ -79,24 +75,24 @@ const data = {
   }
 };
 
-const createCompany = () =>
-  Object.assign(new Company(), data.company);
+// const createCompany = () =>
+//   Object.assign(new Company(), data.company);
 
-const createLicence = () => {
-  return new Licence().fromHash({
-    region: new Region().fromHash({ code: 'A' }),
-    ...data.licence
-  });
-};
+// const createLicence = () => {
+//   return new Licence().fromHash({
+//     region: new Region().fromHash({ code: 'A' }),
+//     ...data.licence
+//   });
+// };
 
-const createContact = () =>
-  Object.assign(new Contact(), data.contact);
+// const createContact = () =>
+//   Object.assign(new Contact(), data.contact);
 
-const createAddress = () =>
-  Object.assign(new Address(), data.address);
+// const createAddress = () =>
+//   Object.assign(new Address(), data.address);
 
-const createInvoiceAccount = () =>
-  Object.assign(new InvoiceAccount(), data.invoiceAccount);
+// const createInvoiceAccount = () =>
+//   Object.assign(new InvoiceAccount(), data.invoiceAccount);
 
 experiment('modules/billing/service/charge-version-year.js', () => {
   beforeEach(async () => {
@@ -176,6 +172,7 @@ experiment('modules/billing/service/charge-version-year.js', () => {
     });
   });
 
+  /*
   experiment('.persistChargeVersionYearBatch', async () => {
     let batch;
 
@@ -305,4 +302,5 @@ experiment('modules/billing/service/charge-version-year.js', () => {
       });
     });
   });
+  */
 });
