@@ -13,8 +13,7 @@ const findOne = async (id) => {
     });
 
   return model.toJSON();
-}
-;
+};
 
 const findPage = async (page, pageSize) => {
   const result = await BillingBatch
@@ -49,7 +48,21 @@ const deleteById = batchId => BillingBatch
   .forge({ billingBatchId: batchId })
   .destroy();
 
+const findOneWithInvoices = async (id) => {
+  const model = await BillingBatch
+    .forge({ billingBatchId: id })
+    .fetch({
+      withRelated: [
+        'region',
+        'billingInvoices'
+      ]
+    });
+
+  return model.toJSON();
+};
+
 exports.delete = deleteById;
 exports.findOne = findOne;
 exports.findPage = findPage;
 exports.update = update;
+exports.findOneWithInvoices = findOneWithInvoices;

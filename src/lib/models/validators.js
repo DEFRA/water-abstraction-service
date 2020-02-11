@@ -57,6 +57,7 @@ const assertNullableQuantity = value => assert(value, VALID_NULLABLE_QUANTITY);
 const assertIsoString = value => assert(value, VALID_ISO_DATE_STRING);
 const assertFactor = value => assert(value, VALID_FACTOR);
 const assertTransactionKey = value => assert(value, VALID_TRANSACTION_KEY);
+const assertPositiveOrZeroInteger = value => assert(value, VALID_POSITIVE_INTEGER.allow(0));
 
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
@@ -80,3 +81,4 @@ exports.assertNullableQuantity = assertNullableQuantity;
 exports.assertIsoString = assertIsoString;
 exports.assertFactor = assertFactor;
 exports.assertTransactionKey = assertTransactionKey;
+exports.assertPositiveOrZeroInteger = assertPositiveOrZeroInteger;

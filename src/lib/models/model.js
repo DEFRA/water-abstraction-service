@@ -30,6 +30,7 @@ class Model {
 
   pickFrom (source, keys) {
     this.fromHash(_pick(source, keys));
+    return this;
   }
 
   /**

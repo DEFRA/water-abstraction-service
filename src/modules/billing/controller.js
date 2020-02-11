@@ -79,9 +79,7 @@ const getBatches = async request => {
 
 const getBatchInvoices = async request => {
   const { batchId } = request.params;
-  const invoices = await invoiceService.getInvoicesForBatch(batchId);
-
-  return envelope(invoices, true);
+  return invoiceService.getInvoicesForBatch(batchId);
 };
 
 const getBatchInvoiceDetail = async request => {

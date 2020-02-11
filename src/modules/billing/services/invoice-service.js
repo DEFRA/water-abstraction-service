@@ -1,11 +1,14 @@
 'use strict';
 
-const { first } = require('lodash');
+const { first, find } = require('lodash');
 
 const repos = require('../../../lib/connectors/repository');
 const newRepos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
+
+// Connectors
+const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
 
 // Services
 const transactionsService = require('./transactions-service');
@@ -69,7 +72,7 @@ const decorateInvoicesWithTransactions = (invoices, chargeModuleTransactions) =>
  *
  * @param {Array<Invoice>} invoices The invoices to add invoice account companies to
  */
-const decorateInvoicesWithCompanies = async (invoices) => {
+const decorateInvoicesWithCompanies = async invoices => {
   const invoiceAccountIds = invoices.map(invoice => invoice.invoiceAccount.id);
   const invoiceAccounts = await invoiceAccountsService.getByInvoiceAccountIds(invoiceAccountIds);
 
@@ -116,22 +119,6 @@ const createInvoiceModelsFromBatchInvoiceRows = batchInvoiceRows => {
 };
 
 /**
- * Finds all invoices and their licences for the given batch, then
- * overlays the transactions found from the charge-module, and the
- * contacts from the CRM
- *
- * @param {String} batchId UUID of the batch to find invoices for
- */
-const getInvoicesForBatch = async batchId => {
-  const batchInvoiceRows = await repos.billingInvoices.findByBatchId(batchId);
-  const chargeModuleTransactions = await transactionsService.getTransactionsForBatch(batchId);
-
-  const models = createInvoiceModelsFromBatchInvoiceRows(batchInvoiceRows);
-
-  return decorateInvoices(models, chargeModuleTransactions);
-};
-
-/**
  * Finds an invoice and its licences for the given batch, then
  * overlays the transactions found from the charge-module, and the
  * contacts from the CRM
@@ -159,6 +146,46 @@ const getInvoiceForBatch = async (batchId, invoiceId) => {
 const saveInvoiceToDB = async (batch, invoice) => {
   const data = mappers.invoice.modelToDb(batch, invoice);
   return newRepos.billingInvoices.upsert(data);
+};
+
+/**
+ * Given an Invoice model and the data from a charge module bill run call,
+ * decorates the invoice model with a ChargeModuleSummary model
+ * @param {Invoice} invoice
+ * @param {Object} chargeModuleBillRun
+ * @return {Invoice} - the decorated invoice
+ */
+const decorateInvoiceWithTotals = (invoice, chargeModuleBillRun) => {
+  const { accountNumber } = invoice.invoiceAccount;
+  const cmInvoice = find(chargeModuleBillRun.customers, row => row.customerReference === accountNumber);
+  if (!cmInvoice) {
+    throw new Error('Customer not found in charge module draft batch', { accountNumber });
+  }
+  invoice.totals = mappers.totals.chargeModuleSummaryByFinancialYearToModel(cmInvoice.summaryByFinancialYear);
+  return invoice;
+};
+
+/**
+ * Converts a row of invoice row data from water.billing_invoices to Invoice models
+ * And decorates with charge module summaries and company data from CRM
+ * @param {Array} rows - array of invoice data loaded from water.billing_invoices
+ * @param {Object} chargeModuleSummary - response from charge module bill run API call
+ * @return {Promise<Array>} array of Invoice instances
+ */
+const getInvoicesForBatch = async batchId => {
+  // Load Batch instance from repo with invoices
+  const data = await newRepos.billingBatches.findOneWithInvoices(batchId);
+
+  // Load Charge Module summary data
+  const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
+
+  // Map data to Invoice models
+  const invoices = data.billingInvoices.map(mappers.invoice.dbToModel);
+
+  // Decorate with Charge Module summary data and CRM company data
+  invoices.forEach(invoice => decorateInvoiceWithTotals(invoice, chargeModuleSummary));
+  await decorateInvoicesWithCompanies(invoices);
+  return invoices;
 };
 
 exports.getInvoicesForBatch = getInvoicesForBatch;

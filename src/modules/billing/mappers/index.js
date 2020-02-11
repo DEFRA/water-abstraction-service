@@ -3,6 +3,7 @@ exports.abstractionPeriod = require('./abstraction-period');
 exports.batch = require('./batch');
 exports.agreement = require('./agreement');
 exports.chargeElement = require('./charge-element');
+exports.totals = require('./totals');
 exports.company = require('./company');
 exports.contact = require('./contact');
 exports.invoice = require('./invoice');

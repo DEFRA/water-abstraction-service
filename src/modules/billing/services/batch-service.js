@@ -10,7 +10,6 @@ const event = require('../../../lib/event');
 const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
 const Batch = require('../../../lib/models/batch');
 
-const invoiceService = require('./invoice-service');
 const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
 

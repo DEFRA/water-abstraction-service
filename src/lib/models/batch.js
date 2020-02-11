@@ -4,6 +4,7 @@ const Joi = require('@hapi/joi');
 const Invoice = require('./invoice');
 const FinancialYear = require('./financial-year');
 const Region = require('./region');
+const Totals = require('./totals');
 const { assert } = require('@hapi/hoek');
 const { isArray } = require('lodash');
 
@@ -202,6 +203,20 @@ class Batch extends Model {
 
   isTwoPartTariff () {
     return this.type === BATCH_TYPE.twoPartTariff;
+  }
+
+  /**
+   * The charge module summary contains data on
+   * invoice/credit count, invoice/credit totals, net total
+   * @param {Totals} totals
+   */
+  set totals (totals) {
+    assertIsInstanceOf(totals, Totals);
+    this._totals = totals;
+  }
+
+  get totals () {
+    return this._totals;
   }
 }
 
