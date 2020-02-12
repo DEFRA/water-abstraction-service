@@ -13,6 +13,11 @@ const { logger } = require('../../../../src/logger');
 const prepareTransactions = require('../../../../src/modules/billing/jobs/prepare-transactions');
 const repos = require('../../../../src/lib/connectors/repository');
 
+const batchService = require('../../../../src/modules/billing/services/batch-service');
+const supplementaryBillingService = require('../../../../src/modules/billing/services/supplementary-billing-service');
+
+const Batch = require('../../../../src/lib/models/batch');
+
 const data = {
   eventId: 'test-event-id',
   transactions: [{
@@ -24,10 +29,17 @@ const data = {
 };
 
 experiment('modules/billing/jobs/process-charge-version', () => {
+  let batch;
+
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
 
+    batch = new Batch(data.batch.billing_batch_id);
+    sandbox.stub(batchService, 'getBatchById').resolves(batch);
+    sandbox.stub(batchService, 'setErrorStatus').resolves();
     sandbox.stub(repos.billingTransactions, 'getByBatchId').resolves(data.transactions);
+    sandbox.stub(supplementaryBillingService, 'processBatch');
+    sandbox.stub(batch, 'isSupplementary');
   });
 
   afterEach(async () => {
@@ -67,23 +79,47 @@ experiment('modules/billing/jobs/process-charge-version', () => {
           batch: data.batch
         }
       };
-
-      result = await prepareTransactions.handler(job);
     });
 
-    test('a message is logged', async () => {
-      const [message] = logger.info.lastCall.args;
-      expect(message).to.equal('Handling billing.prepare-transactions');
+    experiment('for a supplementary batch', () => {
+      beforeEach(async () => {
+        batch.isSupplementary.returns(true);
+        result = await prepareTransactions.handler(job);
+      });
+
+      test('a message is logged', async () => {
+        const [message] = logger.info.firstCall.args;
+        expect(message).to.equal('Handling billing.prepare-transactions');
+      });
+
+      test('the supplementary batch service is called', async () => {
+        expect(
+          supplementaryBillingService.processBatch.calledWith(data.batch.billing_batch_id)
+        ).to.be.true();
+      });
+
+      test('calls repos.billingTransactions.getByBatchId with batch ID', async () => {
+        const [batchId] = repos.billingTransactions.getByBatchId.lastCall.args;
+        expect(batchId).to.equal(data.batch.billing_batch_id);
+      });
+
+      test('resolves with batch and transactions', async () => {
+        expect(result.batch).to.equal(data.batch);
+        expect(result.transactions).to.equal(data.transactions);
+      });
     });
 
-    test('calls repos.billingTransactions.getByBatchId with batch ID', async () => {
-      const [batchId] = repos.billingTransactions.getByBatchId.lastCall.args;
-      expect(batchId).to.equal(data.batch.billing_batch_id);
-    });
+    experiment('for a non-supplementary batch', () => {
+      beforeEach(async () => {
+        batch.isSupplementary.returns(false);
+        result = await prepareTransactions.handler(job);
+      });
 
-    test('resolves with batch and transactions', async () => {
-      expect(result.batch).to.equal(data.batch);
-      expect(result.transactions).to.equal(data.transactions);
+      test('the supplementary batch service is not called', async () => {
+        expect(
+          supplementaryBillingService.processBatch.callCount
+        ).to.equal(0);
+      });
     });
   });
 });

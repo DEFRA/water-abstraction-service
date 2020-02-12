@@ -1,5 +1,8 @@
+'use strict';
+
 const Boom = require('@hapi/boom');
-const repos = require('../../lib/connectors/repository');
+const newRepos = require('../../lib/connectors/repos');
+const { BATCH_STATUS } = require('../../lib/models/batch');
 
 /**
  * Pre handler for loading a batch. This function returns the
@@ -10,7 +13,7 @@ const repos = require('../../lib/connectors/repository');
  */
 const loadBatch = async request => {
   const { batchId } = request.params;
-  const batch = await repos.billingBatches.getById(batchId);
+  const batch = await newRepos.billingBatches.findOne(batchId);
 
   if (!batch) {
     throw Boom.notFound(`No batch found with id: ${batchId}`);
@@ -33,7 +36,7 @@ const ensureBatchInReviewState = async (request, h) => {
     throw new Error('The batch needs to be assigned to the batch property of pre');
   }
 
-  if (batch.status !== 'review') {
+  if (batch.status !== BATCH_STATUS.review) {
     throw Boom.forbidden(`Batch must be in review state. Current status is ${batch.status}`);
   }
 
