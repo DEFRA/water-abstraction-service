@@ -28,10 +28,10 @@ const dbToModel = row => {
  * @return {Object}
  */
 const modelToDb = (batch, invoice) => ({
-  invoice_account_id: invoice.invoiceAccount.id,
-  invoice_account_number: invoice.invoiceAccount.accountNumber,
+  invoiceAccountId: invoice.invoiceAccount.id,
+  invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
   address: omit(invoice.address.toObject(), 'id'),
-  billing_batch_id: batch.id
+  billingBatchId: batch.id
 });
 
 const getInvoiceAccountNumber = row => row.invoiceAccount.invoiceAccount.invoiceAccountNumber;
@@ -87,6 +87,19 @@ const chargeToModels = (data, batch) => {
   });
 };
 
+const crmToModel = row => {
+  const invoice = new Invoice();
+
+  // Create invoice account model
+  invoice.invoiceAccount = invoiceAccount.crmToModel(row);
+
+  // Create invoice address model
+  invoice.address = address.crmToModel(row.address);
+
+  return invoice;
+};
+
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
 exports.chargeToModels = chargeToModels;
+exports.crmToModel = crmToModel;

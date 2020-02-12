@@ -3,7 +3,6 @@
 const chargeModuleTransactionsConnector = require('../../../lib/connectors/charge-module/transactions');
 const ChargeModuleTransaction = require('../../../lib/models/charge-module-transaction');
 const { logger } = require('../../../logger');
-const repos = require('../../../lib/connectors/repository');
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 
@@ -63,7 +62,7 @@ const getTransactionsForBatchInvoice = async (batchId, invoiceReference) => {
  */
 const saveTransactionToDB = (invoiceLicence, transaction) => {
   const data = mappers.transaction.modelToDb(invoiceLicence, transaction);
-  return repos.billingTransactions.create(data);
+  return newRepos.billingTransactions.create(data);
 };
 
 /**

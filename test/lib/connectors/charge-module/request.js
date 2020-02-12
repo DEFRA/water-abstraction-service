@@ -17,6 +17,7 @@ experiment('lib/connectors/charge-module/request', () => {
   beforeEach(async () => {
     sandbox.stub(request.cmRequest, 'get').resolves();
     sandbox.stub(request.cmRequest, 'post').resolves();
+    sandbox.stub(request.cmRequest, 'patch').resolves();
 
     sandbox.stub(config.services, 'chargeModule').value('https://test.example.com');
   });
@@ -82,6 +83,28 @@ experiment('lib/connectors/charge-module/request', () => {
     beforeEach(async () => {
       await request.post('path/to/somewhere', payload);
       options = request.cmRequest.post.lastCall.args[0];
+    });
+
+    test('the options object has json set to true', async () => {
+      expect(options.json).to.be.true();
+    });
+
+    test('the options object has the correct URL', async () => {
+      expect(options.uri).to.equal('https://test.example.com/path/to/somewhere');
+    });
+
+    test('the payload is included', async () => {
+      expect(options.body).equal(payload);
+    });
+  });
+
+  experiment('.patch', () => {
+    let options;
+    const payload = { foo: 'bar' };
+
+    beforeEach(async () => {
+      await request.patch('path/to/somewhere', payload);
+      options = request.cmRequest.patch.lastCall.args[0];
     });
 
     test('the options object has json set to true', async () => {

@@ -22,7 +22,7 @@ const getTestDataForHashing = () => {
   const region = new Region().fromHash({ code: 'A' });
 
   const batch = new Batch().fromHash({
-    type: Batch.types.twoPartTariff,
+    type: Batch.BATCH_TYPE.twoPartTariff,
     region
   });
 

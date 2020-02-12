@@ -10,7 +10,7 @@ const sandbox = sinon.createSandbox();
 
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
 const chargeModuleTransactionsConnector = require('../../../../src/lib/connectors/charge-module/transactions');
-const repos = require('../../../../src/lib/connectors/repository');
+const repos = require('../../../../src/lib/connectors/repos');
 
 // Models
 const ChargeModuleTransaction = require('../../../../src/lib/models/charge-module-transaction');
@@ -208,20 +208,21 @@ experiment('modules/billing/services/transactions-service', () => {
     test('an object of the correct shape is passed to the create() method of the repo', async () => {
       const [data] = repos.billingTransactions.create.lastCall.args;
       expect(data).to.be.an.object();
-      expect(Object.keys(data)).to.include(['billing_invoice_licence_id',
-        'charge_element_id',
-        'start_date',
-        'end_date',
-        'abstraction_period',
+      expect(Object.keys(data)).to.include([
+        'billingInvoiceLicenceId',
+        'chargeElementId',
+        'startDate',
+        'endDate',
+        'abstractionPeriod',
         'source',
         'season',
         'loss',
-        'is_credit',
-        'charge_type',
-        'authorised_quantity',
-        'billable_quantity',
-        'authorised_days',
-        'billable_days',
+        'isCredit',
+        'chargeType',
+        'authorisedQuantity',
+        'billableQuantity',
+        'authorisedDays',
+        'billableDays',
         'description'
       ]);
     });

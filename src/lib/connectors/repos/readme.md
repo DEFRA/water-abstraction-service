@@ -21,4 +21,5 @@ Note: these methods return an empty result set if nothing found (default Bookshe
 Other operations:
 - create(data)
 - update(id, data)
+- upsert(data)
 - delete(id)

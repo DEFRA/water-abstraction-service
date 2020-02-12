@@ -3,6 +3,8 @@
 const { first } = require('lodash');
 
 const repos = require('../../../lib/connectors/repository');
+const newRepos = require('../../../lib/connectors/repos');
+
 const mappers = require('../mappers');
 
 // Services
@@ -152,26 +154,13 @@ const getInvoiceForBatch = async (batchId, invoiceId) => {
  * Saves an Invoice model to water.billing_invoices
  * @param {Batch} batch
  * @param {Invoice} invoice
- * @return {Promise<Object>} row data inserted
+ * @return {Promise<Object>} row data inserted (camel case)
  */
 const saveInvoiceToDB = async (batch, invoice) => {
   const data = mappers.invoice.modelToDb(batch, invoice);
-  const { rows: [row] } = await repos.billingInvoices.create(data);
-  return row;
-};
-
-/**
- * Retrieves an invoice row from water.billing_invoices relating to the
- * given transaction ID, and returns an Invoice model
- * @param {String} transactionId - GUID
- * @return {Promise<Invoice>}
- */
-const getByTransactionId = async transactionId => {
-  const data = await repos.billingInvoices.findOneByTransactionId(transactionId);
-  return mappers.invoice.dbToModel(data);
+  return newRepos.billingInvoices.upsert(data);
 };
 
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;
-exports.getByTransactionId = getByTransactionId;

@@ -8,7 +8,7 @@ const processChargeVersion = require('./process-charge-version');
 
 const { logger } = require('../../../logger');
 
-const { batchStatus } = require('../lib/batch');
+const { BATCH_STATUS } = require('../../../lib/models/batch');
 const { FinancialYear } = require('../../../lib/models');
 const { isValidForFinancialYear } = require('../lib/charge-version');
 const jobService = require('../services/job-service');
@@ -26,7 +26,7 @@ const createChargeVersionYear = async (billingBatchChargeVersion, financialYearE
     charge_version_id: billingBatchChargeVersion.charge_version_id,
     billing_batch_id: billingBatchChargeVersion.billing_batch_id,
     financial_year_ending: financialYearEnding,
-    status: batchStatus.processing
+    status: BATCH_STATUS.processing
   };
 
   const result = await repos.billingBatchChargeVersionYears.create(chargeVersionYear);

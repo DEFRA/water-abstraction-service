@@ -9,13 +9,13 @@ const Company = require('../../../lib/models/company');
  * @param {Object} company - CRM company data
  * @return {InvoiceAccount}
  */
-const crmToModel = (invoiceAccount, company) => {
+const crmToModel = (invoiceAccount) => {
   const invoiceAccountModel = new InvoiceAccount(invoiceAccount.invoiceAccountId);
   invoiceAccountModel.accountNumber = invoiceAccount.invoiceAccountNumber;
 
-  if (company) {
-    const companyModel = new Company(company.companyId);
-    companyModel.pickFrom(company, ['type', 'name']);
+  if (invoiceAccount.company) {
+    const companyModel = new Company(invoiceAccount.company.companyId);
+    companyModel.pickFrom(invoiceAccount.company, ['type', 'name']);
     invoiceAccountModel.company = companyModel;
   }
 

@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -10,6 +12,7 @@ const sandbox = require('sinon').createSandbox();
 const batches = require('../../../../src/modules/acceptance-tests/lib/batches');
 const { pool } = require('../../../../src/lib/connectors/db');
 const repos = require('../../../../src/lib/connectors/repository');
+const newRepos = require('../../../../src/lib/connectors/repos');
 
 experiment('modules/acceptance-tests/batches', () => {
   beforeEach(async () => {
@@ -20,7 +23,7 @@ experiment('modules/acceptance-tests/batches', () => {
     sandbox.stub(repos.billingTransactions, 'deleteByBatchId').resolves();
     sandbox.stub(repos.billingInvoiceLicences, 'deleteByBatchId').resolves();
     sandbox.stub(repos.billingInvoices, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingBatches, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingBatches, 'delete').resolves();
   });
 
   afterEach(async () => {
@@ -68,9 +71,9 @@ experiment('modules/acceptance-tests/batches', () => {
       expect(repos.billingInvoices.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
       expect(repos.billingInvoices.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
 
-      expect(repos.billingBatches.deleteByBatchId.callCount).to.equal(2);
-      expect(repos.billingBatches.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
-      expect(repos.billingBatches.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
+      expect(newRepos.billingBatches.delete.callCount).to.equal(2);
+      expect(newRepos.billingBatches.delete.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+      expect(newRepos.billingBatches.delete.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
     });
   });
 });
