@@ -80,8 +80,7 @@ class ChargeVersionRepository extends Repository {
 
     const seasonFilter = season === 'summer' ? "ce.season = 'summer'" : "(ce.season = 'winter' or ce.season = 'all year')";
     const query = `
-      insert into
-      water.billing_batch_charge_versions (billing_batch_id, charge_version_id)
+      insert into water.billing_batch_charge_versions (billing_batch_id, charge_version_id)
       select $1, cv.charge_version_id
       from water.licence_agreements l
         join water.charge_versions cv on l.licence_ref = cv.licence_ref
@@ -97,8 +96,7 @@ class ChargeVersionRepository extends Repository {
         and (cv.end_date is null or cv.end_date > $3)
         and (la.end_date is null or la.end_date > $3)
         and ${seasonFilter}
-      returning *;
-    `;
+      returning *;`;
 
     const params = [batchId, regionId, fromDate];
     const { rows } = await this.dbQuery(query, params);
