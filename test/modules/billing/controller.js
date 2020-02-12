@@ -13,6 +13,7 @@ const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
 const Invoice = require('../../../src/lib/models/invoice');
+const Batch = require('../../../src/lib/models/batch');
 
 const newRepos = require('../../../src/lib/connectors/repos');
 const repos = require('../../../src/lib/connectors/repository');
@@ -43,6 +44,7 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(batchService, 'getBatches').resolves();
     sandbox.stub(batchService, 'deleteBatch').resolves();
     sandbox.stub(batchService, 'approveBatch').resolves();
+    sandbox.stub(batchService, 'decorateBatchWithTotals').resolves();
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
 
@@ -193,35 +195,47 @@ experiment('modules/billing/controller', () => {
 
   experiment('.getBatch', () => {
     experiment('when the batch is found', () => {
-      let response;
+      let response, request;
 
       beforeEach(async () => {
-        const request = {
+        request = {
           params: {
             batchId: 'test-batch-id'
           },
+          query: {
+            totals: false
+          },
           pre: {
-            batch: {
-              billing_batch_id: 'test-batch-id',
-              region_id: 'test-region-id',
-              batch_type: 'annual'
-            }
+            batch: new Batch('00000000-0000-0000-0000-000000000000')
           }
         };
-
-        response = await controller.getBatch(request);
       });
 
-      test('a camel case representation of the batch is returned', async () => {
-        expect(response.data).to.equal({
-          billingBatchId: 'test-batch-id',
-          regionId: 'test-region-id',
-          batchType: 'annual'
+      experiment('when totals query param is false', () => {
+        beforeEach(async () => {
+          response = await controller.getBatch(request);
+        });
+
+        test('the batch is returned', async () => {
+          expect(response).to.equal(request.pre.batch);
+        });
+
+        test('the batch is not decorated with totals', async () => {
+          expect(batchService.decorateBatchWithTotals.called).to.be.false();
         });
       });
 
-      test('the error object is null', async () => {
-        expect(response.error).to.be.null();
+      experiment('when the totals are requested', () => {
+        beforeEach(async () => {
+          request.query.totals = true;
+          response = await controller.getBatch(request);
+        });
+
+        test('the batch is decorated with totals', async () => {
+          expect(batchService.decorateBatchWithTotals.calledWith(
+            request.pre.batch
+          )).to.be.true();
+        });
       });
     });
   });
@@ -258,15 +272,13 @@ experiment('modules/billing/controller', () => {
 
   experiment('.getBatchInvoices', () => {
     experiment('when the batch is found', () => {
-      let response;
-
       beforeEach(async () => {
         invoiceService.getInvoicesForBatch.resolves([
           new Invoice(),
           new Invoice()
         ]);
 
-        response = await controller.getBatchInvoices({
+        await controller.getBatchInvoices({
           params: {
             batchId: 'test-batch-id'
           }
@@ -276,10 +288,6 @@ experiment('modules/billing/controller', () => {
       test('the batch id is passed to the invoice service', async () => {
         const [batchId] = invoiceService.getInvoicesForBatch.lastCall.args;
         expect(batchId).to.equal('test-batch-id');
-      });
-
-      test('the error object is null', async () => {
-        expect(response.error).to.be.null();
       });
     });
   });

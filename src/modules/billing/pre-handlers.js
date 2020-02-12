@@ -13,7 +13,7 @@ const { BATCH_STATUS } = require('../../lib/models/batch');
  */
 const loadBatch = async request => {
   const { batchId } = request.params;
-  const batch = batchService.getBatchById(batchId);
+  const batch = await batchService.getBatchById(batchId);
 
   if (!batch) {
     throw Boom.notFound(`No batch found with id: ${batchId}`);

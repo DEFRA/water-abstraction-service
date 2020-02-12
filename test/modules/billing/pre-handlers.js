@@ -10,8 +10,10 @@ const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const newRepos = require('../../../src/lib/connectors/repos');
+const batchService = require('../../../src/modules/billing/services/batch-service');
 const preHandlers = require('../../../src/modules/billing/pre-handlers');
+const Batch = require('../../../src/lib/models/batch');
+const Region = require('../../../src/lib/models/region');
 
 experiment('modules/billing/pre-handlers', () => {
   let batch;
@@ -22,15 +24,17 @@ experiment('modules/billing/pre-handlers', () => {
       continue: 'continue'
     };
 
-    batch = {
-      billingBatchId: '7bfdb410-8fe2-41df-bb3a-e85984112f3b',
-      region: {
-        regionId: '6a464833-d218-4377-98b7-aa5f39acd42c'
-      },
+    batch = new Batch();
+    batch.fromHash({
+      id: '7bfdb410-8fe2-41df-bb3a-e85984112f3b',
       status: 'complete'
-    };
+    });
+    batch.region = new Region();
+    batch.region.fromHash({
+      id: '6a464833-d218-4377-98b7-aa5f39acd42c'
+    });
 
-    sandbox.stub(newRepos.billingBatches, 'findOne').resolves(batch);
+    sandbox.stub(batchService, 'getBatchById').resolves(batch);
   });
 
   afterEach(async () => {
@@ -50,7 +54,7 @@ experiment('modules/billing/pre-handlers', () => {
 
     experiment('when the batch is not found', () => {
       test('a not found error is thrown', async () => {
-        newRepos.billingBatches.findOne.resolves(null);
+        batchService.getBatchById.resolves(null);
 
         const result = await expect(preHandlers.loadBatch(request)).to.reject();
         const { statusCode, message } = result.output.payload;

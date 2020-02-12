@@ -1,4 +1,4 @@
-const { bookshelf, BillingInvoice } = require('../bookshelf');
+const { bookshelf } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoices');
 

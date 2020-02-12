@@ -21,7 +21,7 @@ const invoiceService = require('./invoice-service');
  */
 const getBatchById = async id => {
   const row = await newRepos.billingBatches.findOne(id);
-  return mappers.batch.dbToModel(row);
+  return row ? mappers.batch.dbToModel(row) : null;
 };
 
 const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
