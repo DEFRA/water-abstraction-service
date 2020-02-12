@@ -78,7 +78,6 @@ class ChargeVersionRepository extends Repository {
 
     const { billing_batch_id: batchId, region_id: regionId, season } = batch;
 
-    // @TODO: Add more conditions for checking licence end dates & suspended from billing flag
     const seasonFilter = season === 'summer' ? "ce.season = 'summer'" : "(ce.season = 'winter' or ce.season = 'all year')";
     const query = `
       insert into
@@ -91,6 +90,10 @@ class ChargeVersionRepository extends Repository {
       where
         l.financial_agreement_type_id = 'S127'
         and l.region_id = $2::uuid
+        and l.suspend_from_billing = FALSE
+        and (l.expired_date is null or l.expired_date > $3)
+        and (l.lapsed_date is null or l.lapsed_date > $3)
+        and (l.revoked_date is null or l.revoked_date > $3)
         and (cv.end_date is null or cv.end_date > $3)
         and (la.end_date is null or la.end_date > $3)
         and ${seasonFilter}
