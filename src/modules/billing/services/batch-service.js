@@ -12,6 +12,7 @@ const Batch = require('../../../lib/models/batch');
 
 const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
+const invoiceService = require('./invoice-service');
 
 /**
  * Loads a Batch instance by ID
@@ -114,6 +115,12 @@ const saveInvoicesToDB = async batch => {
   }
 };
 
+const decorateBatchWithTotals = async batch => {
+  const chargeModuleSummary = await chargeModuleBatchConnector.send(batch.region.code, batch.id, true);
+  batch.totals = mappers.totals.chargeModuleBatchSummaryToModel(chargeModuleSummary.summary);
+  return batch;
+};
+
 exports.approveBatch = approveBatch;
 exports.deleteBatch = deleteBatch;
 exports.getBatchById = getBatchById;
@@ -121,3 +128,4 @@ exports.getBatches = getBatches;
 exports.saveInvoicesToDB = saveInvoicesToDB;
 exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
+exports.decorateBatchWithTotals = decorateBatchWithTotals;

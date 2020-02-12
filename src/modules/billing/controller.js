@@ -69,7 +69,15 @@ const postCreateBatch = async (request, h) => {
   })).code(202);
 };
 
-const getBatch = async request => envelope(request.pre.batch, true);
+/**
+ * Get batch with region, and optionally include batch totals
+ * @param {Boolean} request.query.totals - indicates that batch totals should be included in response
+ * @return {Promise<Batch>}
+ */
+const getBatch = async request => {
+  const { totals } = request.query;
+  return totals ? batchService.decorateBatchWithTotals(request.pre.batch) : request.pre.batch;
+};
 
 const getBatches = async request => {
   const { page, perPage } = request.query;

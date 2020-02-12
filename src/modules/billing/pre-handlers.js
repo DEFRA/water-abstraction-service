@@ -1,7 +1,7 @@
 'use strict';
 
 const Boom = require('@hapi/boom');
-const newRepos = require('../../lib/connectors/repos');
+const batchService = require('./services/batch-service');
 const { BATCH_STATUS } = require('../../lib/models/batch');
 
 /**
@@ -13,7 +13,7 @@ const { BATCH_STATUS } = require('../../lib/models/batch');
  */
 const loadBatch = async request => {
   const { batchId } = request.params;
-  const batch = await newRepos.billingBatches.findOne(batchId);
+  const batch = batchService.getBatchById(batchId);
 
   if (!batch) {
     throw Boom.notFound(`No batch found with id: ${batchId}`);
