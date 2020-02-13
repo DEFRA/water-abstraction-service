@@ -11,7 +11,7 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
-const { Batch, FinancialYear, Invoice, InvoiceLicence, Licence, Transaction, InvoiceAccount } = require('../../../../src/lib/models');
+const { Batch, FinancialYear, Invoice, InvoiceLicence, Licence, Transaction, InvoiceAccount, Region, Totals } = require('../../../../src/lib/models');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const event = require('../../../../src/lib/event');
 const { logger } = require('../../../../src/logger');
@@ -532,6 +532,47 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('the transaction model is updated with the returned ID', async () => {
       expect(models.transaction.id).to.equal(billingTransactionId);
+    });
+  });
+
+  experiment('.decorateBatchWithTotals', () => {
+    let batch;
+
+    const summary = {
+      creditNoteCount: 0,
+      creditNoteValue: 0,
+      invoiceCount: 3,
+      invoiceValue: 15022872,
+      creditLineCount: 0,
+      creditLineValue: 0,
+      debitLineCount: 15,
+      debitLineValue: 15022872,
+      netTotal: 15022872
+    };
+
+    beforeEach(async () => {
+      chargeModuleBatchConnector.send.resolves({
+        summary
+      });
+      batch = new Batch(uuid());
+      batch.region = new Region();
+      batch.region.code = 'A';
+      await batchService.decorateBatchWithTotals(batch);
+    });
+
+    test('calls charge module batch API with correct params', async () => {
+      const [regionCode, batchId, draft] = chargeModuleBatchConnector.send.lastCall.args;
+      expect(regionCode).to.equal(batch.region.code);
+      expect(batchId).to.equal(batch.id);
+      expect(draft).to.equal(true);
+    });
+
+    test('adds a Totals instance to the batch', async () => {
+      expect(batch.totals instanceof Totals).to.be.true();
+    });
+
+    test('copies totals correctly', async () => {
+      expect(batch.totals.toJSON()).to.equal(summary);
     });
   });
 });
