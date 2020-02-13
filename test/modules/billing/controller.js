@@ -22,6 +22,8 @@ const invoiceService = require('../../../src/modules/billing/services/invoice-se
 const batchService = require('../../../src/modules/billing/services/batch-service');
 const controller = require('../../../src/modules/billing/controller');
 
+const mappers = require('../../../src/modules/billing/mappers');
+
 experiment('modules/billing/controller', () => {
   let h, hapiResponseStub;
 
@@ -53,6 +55,8 @@ experiment('modules/billing/controller', () => {
         { event_id: '11111111-1111-1111-1111-111111111111' }
       ]
     });
+
+    sandbox.stub(mappers.api.invoice, 'modelToBatchInvoices');
   });
 
   afterEach(async () => {
@@ -272,11 +276,15 @@ experiment('modules/billing/controller', () => {
 
   experiment('.getBatchInvoices', () => {
     experiment('when the batch is found', () => {
+      let invoices;
+
       beforeEach(async () => {
-        invoiceService.getInvoicesForBatch.resolves([
+        invoices = [
           new Invoice(),
           new Invoice()
-        ]);
+        ];
+
+        invoiceService.getInvoicesForBatch.resolves(invoices);
 
         await controller.getBatchInvoices({
           params: {
@@ -288,6 +296,12 @@ experiment('modules/billing/controller', () => {
       test('the batch id is passed to the invoice service', async () => {
         const [batchId] = invoiceService.getInvoicesForBatch.lastCall.args;
         expect(batchId).to.equal('test-batch-id');
+      });
+
+      test('the response is mapped using the appropriate mapper', async () => {
+        expect(mappers.api.invoice.modelToBatchInvoices.callCount).to.equal(2);
+        expect(mappers.api.invoice.modelToBatchInvoices.calledWith(invoices[0])).to.be.true();
+        expect(mappers.api.invoice.modelToBatchInvoices.calledWith(invoices[1])).to.be.true();
       });
     });
   });

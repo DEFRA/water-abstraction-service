@@ -54,7 +54,11 @@ const findOneWithInvoices = async (id) => {
     .fetch({
       withRelated: [
         'region',
-        'billingInvoices'
+        'billingInvoices',
+        'billingInvoices.billingInvoiceLicences',
+        'billingInvoices.billingInvoiceLicences.licence',
+        'billingInvoices.billingInvoiceLicences.licence.region'
+
       ]
     });
 

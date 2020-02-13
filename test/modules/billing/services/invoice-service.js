@@ -31,6 +31,12 @@ let invoiceAccount2;
 
 const BATCH_ID = '00000000-0000-0000-0000-000000000000';
 
+const REGION_ID = '00000000-0000-0000-0000-000000000001';
+const REGION_NAME = 'Anglian';
+const CHARGE_REGION_ID = 'A';
+
+const LICENCE_ID = '00000000-0000-0000-0000-000000000002';
+
 const createBatchData = () => ({
   batchId: BATCH_ID,
   region: {
@@ -38,10 +44,45 @@ const createBatchData = () => ({
   },
   billingInvoices: [{
     invoiceAccountId: INVOICE_1_ACCOUNT_ID,
-    invoiceAccountNumber: INVOICE_1_ACCOUNT_NUMBER
+    invoiceAccountNumber: INVOICE_1_ACCOUNT_NUMBER,
+    billingInvoiceLicences: [{
+      licence: {
+        licenceId: LICENCE_ID,
+        licenceRef: '01/123/ABC',
+        regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
+        region: {
+          regionId: REGION_ID,
+          name: REGION_NAME,
+          chargeRegionId: CHARGE_REGION_ID
+        }
+      }
+    }, {
+      licence: {
+        licenceId: LICENCE_ID,
+        licenceRef: '02/345',
+        regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
+        region: {
+          regionId: REGION_ID,
+          name: REGION_NAME,
+          chargeRegionId: CHARGE_REGION_ID
+        }
+      }
+    }]
   }, {
     invoiceAccountId: INVOICE_2_ACCOUNT_ID,
-    invoiceAccountNumber: INVOICE_2_ACCOUNT_NUMBER
+    invoiceAccountNumber: INVOICE_2_ACCOUNT_NUMBER,
+    billingInvoiceLicences: [{
+      licence: {
+        licenceId: LICENCE_ID,
+        licenceRef: '04/563',
+        regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
+        region: {
+          regionId: REGION_ID,
+          name: REGION_NAME,
+          chargeRegionId: CHARGE_REGION_ID
+        }
+      }
+    }]
   }]
 });
 

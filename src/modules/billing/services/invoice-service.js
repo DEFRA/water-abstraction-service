@@ -160,6 +160,12 @@ const decorateInvoiceWithTotals = (invoice, chargeModuleBillRun) => {
   invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(chargeModuleBillRun, accountNumber);
 };
 
+const mapInvoice = row => {
+  const invoice = mappers.invoice.dbToModel(row);
+  invoice.invoiceLicences = row.billingInvoiceLicences.map(mappers.invoiceLicence.dbToModel);
+  return invoice;
+};
+
 /**
  * Converts a row of invoice row data from water.billing_invoices to Invoice models
  * And decorates with charge module summaries and company data from CRM
@@ -175,7 +181,7 @@ const getInvoicesForBatch = async batchId => {
   const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
 
   // Map data to Invoice models
-  const invoices = data.billingInvoices.map(mappers.invoice.dbToModel);
+  const invoices = data.billingInvoices.map(mapInvoice);
 
   // Decorate with Charge Module summary data and CRM company data
   invoices.forEach(invoice => decorateInvoiceWithTotals(invoice, chargeModuleSummary));

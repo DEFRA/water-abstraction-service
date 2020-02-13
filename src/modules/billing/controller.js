@@ -11,6 +11,8 @@ const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
 const batchService = require('./services/batch-service');
 
+const mappers = require('./mappers');
+
 const createBatchEvent = async (userEmail, batch) => {
   const batchEvent = event.create({
     type: 'billing-batch',
@@ -87,7 +89,8 @@ const getBatches = async request => {
 
 const getBatchInvoices = async request => {
   const { batchId } = request.params;
-  return invoiceService.getInvoicesForBatch(batchId);
+  const invoices = await invoiceService.getInvoicesForBatch(batchId);
+  return invoices.map(mappers.api.invoice.modelToBatchInvoices);
 };
 
 const getBatchInvoiceDetail = async request => {
