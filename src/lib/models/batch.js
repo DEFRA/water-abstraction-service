@@ -15,10 +15,10 @@ const { assertIsInstanceOf, assertEnum, assertIsArrayOfType } = require('./valid
  * be run at a time.
  */
 const BATCH_STATUS = {
-  sent: 'sent',
-  processing: 'processing',
-  review: 'review',
-  ready: 'ready',
+  processing: 'processing', // processing trasactions
+  review: 'review', // two-part tariff only - reviewing results of returns matching
+  ready: 'ready', // processing completed - awaiting approval
+  sent: 'sent', // approved & sent to Charge Module
   error: 'error'
 };
 
