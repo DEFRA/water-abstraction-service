@@ -32,6 +32,12 @@ const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
   };
 };
 
+const getProcessingBatchByRegion = async regionId => {
+  const batches = await newRepos.billingBatches.findByStatus(BATCH_STATUS.processing);
+  const batch = batches.find(b => b.regionId === regionId);
+  return batch ? mappers.batch.dbToModel(batch) : null;
+};
+
 const saveEvent = (type, status, user, batch) => {
   return event.save(event.create({
     issuer: user.email,
@@ -117,8 +123,9 @@ const saveInvoicesToDB = async batch => {
 
 exports.approveBatch = approveBatch;
 exports.deleteBatch = deleteBatch;
-exports.getBatchById = getBatchById;
 exports.getBatches = getBatches;
+exports.getBatchById = getBatchById;
+exports.getProcessingBatchByRegion = getProcessingBatchByRegion;
 exports.saveInvoicesToDB = saveInvoicesToDB;
 exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
