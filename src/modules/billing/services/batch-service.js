@@ -117,7 +117,7 @@ const saveInvoicesToDB = async batch => {
 
 const decorateBatchWithTotals = async batch => {
   const chargeModuleSummary = await chargeModuleBatchConnector.send(batch.region.code, batch.id, true);
-  batch.totals = mappers.totals.chargeModuleBatchSummaryToModel(chargeModuleSummary.summary);
+  batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(chargeModuleSummary.summary);
   return batch;
 };
 

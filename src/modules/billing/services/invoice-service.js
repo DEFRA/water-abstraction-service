@@ -1,6 +1,6 @@
 'use strict';
 
-const { first, find } = require('lodash');
+const { first } = require('lodash');
 
 const repos = require('../../../lib/connectors/repository');
 const newRepos = require('../../../lib/connectors/repos');
@@ -157,12 +157,7 @@ const saveInvoiceToDB = async (batch, invoice) => {
  */
 const decorateInvoiceWithTotals = (invoice, chargeModuleBillRun) => {
   const { accountNumber } = invoice.invoiceAccount;
-  const cmInvoice = find(chargeModuleBillRun.customers, row => row.customerReference === accountNumber);
-  if (!cmInvoice) {
-    throw new Error('Customer not found in charge module draft batch', { accountNumber });
-  }
-  invoice.totals = mappers.totals.chargeModuleSummaryByFinancialYearToModel(cmInvoice.summaryByFinancialYear);
-  return invoice;
+  invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(chargeModuleBillRun, accountNumber);
 };
 
 /**

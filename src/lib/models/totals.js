@@ -21,7 +21,7 @@ class Totals extends Model {
    */
   set creditNoteValue (value) {
     assertPositiveOrZeroInteger(value);
-    this._creditNoteCount = value;
+    this._creditNoteValue = value;
   }
 
   get creditNoteValue () {

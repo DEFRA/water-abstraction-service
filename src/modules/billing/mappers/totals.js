@@ -1,6 +1,7 @@
+const { find } = require('lodash');
 const Totals = require('../../../lib/models/totals');
 
-const chargeModuleBatchSummaryToModel = data => {
+const chargeModuleBillRunToBatchModel = data => {
   const totals = new Totals();
   return totals.pickFrom(data, [
     'creditNoteCount',
@@ -31,8 +32,19 @@ const sumProperties = arr => arr.reduce((acc, row) => {
   netTotal: 0
 });
 
-const chargeModuleSummaryByFinancialYearToModel = arr => {
-  const data = sumProperties(arr);
+/**
+ * Sums all transaction summaries for the supplied invoice account
+ * number and returns as a Totals instance
+ * @param {Object} billRun - response from Charge Module bill run call
+ * @param {String} invoiceAccountNumber
+ * @return {Totals} - totals for the supplied invoice account
+ */
+const chargeModuleBillRunToInvoiceModel = (billRun, invoiceAccountNumber) => {
+  const customer = find(billRun.customers, row => row.customerReference === invoiceAccountNumber);
+  if (!customer) {
+    return null;
+  }
+  const data = sumProperties(customer.summaryByFinancialYear);
   const totals = new Totals();
   return totals.pickFrom(data, [
     'creditLineCount',
@@ -43,5 +55,5 @@ const chargeModuleSummaryByFinancialYearToModel = arr => {
   ]);
 };
 
-exports.chargeModuleBatchSummaryToModel = chargeModuleBatchSummaryToModel;
-exports.chargeModuleSummaryByFinancialYearToModel = chargeModuleSummaryByFinancialYearToModel;
+exports.chargeModuleBillRunToBatchModel = chargeModuleBillRunToBatchModel;
+exports.chargeModuleBillRunToInvoiceModel = chargeModuleBillRunToInvoiceModel;
