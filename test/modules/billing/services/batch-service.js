@@ -134,6 +134,16 @@ experiment('modules/billing/services/batch-service', () => {
         expect(result.status).to.equal(data.batch.status);
       });
     });
+
+    experiment('when no batch is found', () => {
+      beforeEach(async () => {
+        newRepos.billingBatches.findOne.resolves(null);
+        result = await batchService.getBatchById(BATCH_ID);
+      });
+      test('resolves null', async () => {
+        expect(result).to.be.null();
+      });
+    });
   });
 
   experiment('.getBatches', () => {
