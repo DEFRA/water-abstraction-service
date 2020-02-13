@@ -18,7 +18,7 @@ const BATCH_STATUS = {
   sent: 'sent',
   processing: 'processing',
   review: 'review',
-  complete: 'complete',
+  ready: 'ready',
   error: 'error'
 };
 

@@ -22,7 +22,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
 
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
-    sandbox.stub(jobService, 'setCompletedJob');
+    sandbox.stub(jobService, 'setReadyJob');
     sandbox.stub(repos.chargeVersions, 'findOneById');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'create');
 
@@ -67,7 +67,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
     });
 
     test('the batch is set to complete', async () => {
-      const [eventId, batchId] = jobService.setCompletedJob.lastCall.args;
+      const [eventId, batchId] = jobService.setReadyJob.lastCall.args;
       expect(eventId).to.equal('test-event-id');
       expect(batchId).to.equal('test-batch-id');
     });
