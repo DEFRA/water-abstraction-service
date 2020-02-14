@@ -124,9 +124,9 @@ experiment('lib/models/batch', () => {
       expect(batch.status).to.equal('processing');
     });
 
-    test('can be set to "complete"', async () => {
-      batch.status = 'complete';
-      expect(batch.status).to.equal('complete');
+    test('can be set to "ready"', async () => {
+      batch.status = 'ready';
+      expect(batch.status).to.equal('ready');
     });
 
     test('can be set to "error"', async () => {

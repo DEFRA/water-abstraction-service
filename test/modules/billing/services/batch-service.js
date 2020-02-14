@@ -151,7 +151,7 @@ experiment('modules/billing/services/batch-service', () => {
             season: 'all year',
             dateCreated: '2020-01-09T16:23:24.753Z',
             dateUpdated: '2020-01-09T16:23:32.631Z',
-            status: 'complete',
+            status: 'ready',
             fromFinancialYearEnding: 2014,
             toFinancialYearEnding: 2020
           },

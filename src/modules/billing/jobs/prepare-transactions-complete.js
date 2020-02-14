@@ -15,7 +15,7 @@ const handlePrepareTransactionsComplete = async (job, messageQueue) => {
     // no transactions created for this batch, update the
     // batch status to complete
     logger.info(`No transactions produced for batch ${batchId}, finalising batch run`);
-    return jobService.setCompletedJob(eventId, batchId);
+    return jobService.setReadyJob(eventId, batchId);
   }
 
   logger.info(`${transactions.length} transactions produced for batch ${batchId}, creating charges...`);
