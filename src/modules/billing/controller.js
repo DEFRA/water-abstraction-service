@@ -5,7 +5,7 @@ const Boom = require('@hapi/boom');
 const config = require('../../../config');
 const repos = require('../../lib/connectors/repository');
 const event = require('../../lib/event');
-const { envelope, errorEnvelope } = require('../../lib/response');
+const { envelope } = require('../../lib/response');
 const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-versions');
 const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
@@ -51,7 +51,10 @@ const postCreateBatch = async (request, h) => {
   const batch = await createBatch(regionId, batchType, financialYearEnding, season);
 
   if (!batch) {
-    const data = errorEnvelope(`Batch already processing for region ${regionId}`);
+    const data = {
+      message: `Batch already processing for region ${regionId}`,
+      existingBatch: await batchService.getProcessingBatchByRegion(regionId)
+    };
     return h.response(data).code(409);
   }
 

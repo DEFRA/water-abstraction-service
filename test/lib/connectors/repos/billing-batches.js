@@ -29,9 +29,11 @@ experiment('lib/connectors/repos/billing-batches', () => {
 
     stub = {
       fetch: sandbox.stub().resolves(model),
+      fetchAll: sandbox.stub().resolves(model),
       orderBy: sandbox.stub().returnsThis(),
       fetchPage: sandbox.stub().resolves(model),
       set: sandbox.stub().returnsThis(),
+      where: sandbox.stub().returnsThis(),
       save: sandbox.stub().resolves(model),
       destroy: sandbox.spy()
     };
@@ -101,6 +103,29 @@ experiment('lib/connectors/repos/billing-batches', () => {
         perPage: 15,
         totalRows: 53
       });
+    });
+  });
+
+  experiment('.findByStatus', () => {
+    beforeEach(async () => {
+      await billingBatches.findByStatus('processing');
+    });
+
+    test('calls model.forge with no arguments', async () => {
+      const { args } = BillingBatch.forge.lastCall;
+      expect(args).to.equal([]);
+    });
+
+    test('calls where() to filter by status', async () => {
+      const [params] = stub.where.lastCall.args;
+      expect(params).to.equal({
+        status: 'processing'
+      });
+    });
+
+    test('calls fetchAll() with the relationships', async () => {
+      const [options] = stub.fetchAll.lastCall.args;
+      expect(options.withRelated).to.equal(['region']);
     });
   });
 

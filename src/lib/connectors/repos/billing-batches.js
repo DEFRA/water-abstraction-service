@@ -13,8 +13,7 @@ const findOne = async (id) => {
     });
 
   return model.toJSON();
-}
-;
+};
 
 const findPage = async (page, pageSize) => {
   const result = await BillingBatch
@@ -28,6 +27,15 @@ const findPage = async (page, pageSize) => {
       ]
     });
   return paginatedEnvelope(result);
+};
+
+const findByStatus = async status => {
+  const batches = await BillingBatch
+    .forge()
+    .where({ status })
+    .fetchAll({ withRelated: ['region'] });
+
+  return batches.toJSON();
 };
 
 /**
@@ -50,6 +58,7 @@ const deleteById = batchId => BillingBatch
   .destroy();
 
 exports.delete = deleteById;
+exports.findByStatus = findByStatus;
 exports.findOne = findOne;
 exports.findPage = findPage;
 exports.update = update;
