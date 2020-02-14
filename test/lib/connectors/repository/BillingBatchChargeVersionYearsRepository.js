@@ -21,29 +21,6 @@ experiment('lib/connectors/repository/BillingBatchChargeVersionYearsRepository',
     sandbox.restore();
   });
 
-  experiment('.setStatus', () => {
-    test('updates by billing_batch_charge_version_year_id', async () => {
-      const repo = new BillingBatchChargeVersionYearsRepository();
-      await repo.setStatus('test-id', 'complete');
-
-      const [filter] = repo.update.lastCall.args;
-
-      expect(filter).to.equal({
-        billing_batch_charge_version_year_id: 'test-id'
-      });
-    });
-
-    test('updates the status', async () => {
-      const repo = new BillingBatchChargeVersionYearsRepository();
-      await repo.setStatus('test-id', 'complete');
-
-      const [, newData] = repo.update.lastCall.args;
-
-      expect(newData.status).to.equal('complete');
-      expect(newData.date_updated).to.be.a.date();
-    });
-  });
-
   experiment('.findProcessingByBatch', () => {
     test('searches by billing_batch_id', async () => {
       const repo = new BillingBatchChargeVersionYearsRepository();
