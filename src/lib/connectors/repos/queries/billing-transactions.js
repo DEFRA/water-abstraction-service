@@ -13,7 +13,7 @@ join (
   where b.billing_batch_id=:batchId
 ) il_2 on il.licence_id=il_2.licence_id
 where 
-  b.status='complete' 
+  b.status='sent' 
   and b.billing_batch_id<>:batchId
   and b.batch_type<>'two_part_tariff' 
   and t.start_date>=il_2.min_date
