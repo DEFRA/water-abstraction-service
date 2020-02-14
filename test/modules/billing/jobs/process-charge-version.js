@@ -13,10 +13,11 @@ const sandbox = sinon.createSandbox();
 const { logger } = require('../../../../src/logger');
 const event = require('../../../../src/lib/event');
 const processChargeVersion = require('../../../../src/modules/billing/jobs/process-charge-version');
-const { jobStatus } = require('../../../../src/modules/billing/lib/batch');
+
+const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
+
 const service = require('../../../../src/modules/billing/service');
 const { Batch } = require('../../../../src/lib/models');
-const repository = require('../../../../src/lib/connectors/repository');
 
 const eventId = '00000000-0000-0000-0000-000000000000';
 
@@ -40,7 +41,10 @@ experiment('modules/billing/jobs/process-charge-version', () => {
     batch = new Batch();
     sandbox.stub(service.chargeVersionYear, 'createBatchFromChargeVersionYear').resolves(batch);
     sandbox.stub(service.chargeVersionYear, 'persistChargeVersionYearBatch');
-    sandbox.stub(repository.billingBatchChargeVersionYears, 'setStatus');
+    // sandbox.stub(repository.billingBatchChargeVersionYears, 'setStatus');
+
+    sandbox.stub(chargeVersionYearService, 'setErrorStatus').resolves();
+    sandbox.stub(chargeVersionYearService, 'setReadyStatus').resolves();
   });
 
   afterEach(async () => {
@@ -119,16 +123,16 @@ experiment('modules/billing/jobs/process-charge-version', () => {
         )).to.be.true();
       });
 
-      test('the billing batch charge version year status is updated to "complete"', async () => {
-        expect(repository.billingBatchChargeVersionYears.setStatus.calledWith(
-          chargeVersionYear.billing_batch_charge_version_year_id, jobStatus.complete
+      test('the billing batch charge version year status is updated to "ready"', async () => {
+        expect(chargeVersionYearService.setReadyStatus.calledWith(
+          chargeVersionYear.billing_batch_charge_version_year_id
         )).to.be.true();
       });
     });
 
     experiment('when there is an error', () => {
       beforeEach(async () => {
-        repository.billingBatchChargeVersionYears.setStatus.rejects();
+        chargeVersionYearService.setReadyStatus.rejects();
         try {
           await processChargeVersion.handler(job);
           fail();
@@ -148,8 +152,8 @@ experiment('modules/billing/jobs/process-charge-version', () => {
       });
 
       test('the billing batch charge version year status is updated to "error"', async () => {
-        expect(repository.billingBatchChargeVersionYears.setStatus.calledWith(
-          chargeVersionYear.billing_batch_charge_version_year_id, jobStatus.error
+        expect(chargeVersionYearService.setErrorStatus.calledWith(
+          chargeVersionYear.billing_batch_charge_version_year_id
         )).to.be.true();
       });
     });
