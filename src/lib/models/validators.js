@@ -25,6 +25,7 @@ const VALID_NULLABLE_QUANTITY = VALID_QUANTITY.allow(null);
 const VALID_ISO_DATE_STRING = Joi.string().isoDate();
 const VALID_FACTOR = Joi.number().min(0).max(1);
 const VALID_TRANSACTION_KEY = Joi.string().hex().length(32).allow(null);
+const VALID_NEGATIVE_INTEGER = VALID_INTEGER.negative();
 
 const assertIsArrayOfType = (values, Type) => {
   hoek.assert(isArray(values), 'Array expected');
@@ -58,6 +59,8 @@ const assertIsoString = value => assert(value, VALID_ISO_DATE_STRING);
 const assertFactor = value => assert(value, VALID_FACTOR);
 const assertTransactionKey = value => assert(value, VALID_TRANSACTION_KEY);
 const assertPositiveOrZeroInteger = value => assert(value, VALID_POSITIVE_INTEGER.allow(0));
+const assertNegativeOrZeroInteger = value => assert(value, VALID_NEGATIVE_INTEGER.allow(0));
+const assertInteger = value => assert(value, VALID_INTEGER);
 
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
@@ -82,3 +85,5 @@ exports.assertIsoString = assertIsoString;
 exports.assertFactor = assertFactor;
 exports.assertTransactionKey = assertTransactionKey;
 exports.assertPositiveOrZeroInteger = assertPositiveOrZeroInteger;
+exports.assertNegativeOrZeroInteger = assertNegativeOrZeroInteger;
+exports.assertInteger = assertInteger;

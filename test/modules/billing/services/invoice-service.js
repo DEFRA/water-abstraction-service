@@ -115,7 +115,7 @@ const createChargeModuleData = () => ({
         {
           financialYear: 2020,
           creditLineCount: 3,
-          creditLineValue: 15324,
+          creditLineValue: -15324,
           debitLineCount: 4,
           debitLineValue: 234,
           netTotal: -15090
@@ -197,7 +197,7 @@ experiment('modules/billing/services/invoiceService', () => {
       const { totals } = invoices[1];
 
       expect(totals.creditLineCount).to.equal(3);
-      expect(totals.creditLineValue).to.equal(15324);
+      expect(totals.creditLineValue).to.equal(-15324);
       expect(totals.debitLineCount).to.equal(10);
       expect(totals.debitLineValue).to.equal(120267);
       expect(totals.netTotal).to.equal(104943);

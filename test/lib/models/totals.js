@@ -32,15 +32,61 @@ experiment('lib/models/totals', () => {
     });
   });
 
+  const negativeOrZeroIntegerExperiment = key => experiment(`.${key}`, () => {
+    test('can be set to negative integer', async () => {
+      totals[key] = -5;
+      expect(totals[key]).to.equal(-5);
+    });
+
+    test('can be set to zero', async () => {
+      totals[key] = 0;
+      expect(totals[key]).to.equal(0);
+    });
+
+    test('cannot be set to a decimal', async () => {
+      const func = () => { totals[key] = -0.55; };
+      expect(func).to.throw();
+    });
+
+    test('cannot be set to a positive number', async () => {
+      const func = () => { totals[key] = 1; };
+      expect(func).to.throw();
+    });
+  });
+
   [
     'creditNoteCount',
-    'creditNoteValue',
     'invoiceCount',
     'invoiceValue',
     'creditLineCount',
-    'creditLineValue',
     'debitLineCount',
-    'debitLineValue',
-    'netTotal'
+    'debitLineValue'
   ].map(positiveOrZeroIntegerExperiment);
+
+  [
+    'creditNoteValue',
+    'creditLineValue'
+  ].map(negativeOrZeroIntegerExperiment);
+
+  experiment('.netTotal', () => {
+    test('can be set to positive integer', async () => {
+      totals.netTotal = 5;
+      expect(totals.netTotal).to.equal(5);
+    });
+
+    test('can be set to zero', async () => {
+      totals.netTotal = 0;
+      expect(totals.netTotal).to.equal(0);
+    });
+
+    test('cannot be set to a decimal', async () => {
+      const func = () => { totals.netTotal = 0.55; };
+      expect(func).to.throw();
+    });
+
+    test('can be set to a negative number', async () => {
+      totals.netTotal = -1;
+      expect(totals.netTotal).to.equal(-1);
+    });
+  });
 });

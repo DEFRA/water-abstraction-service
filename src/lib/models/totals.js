@@ -1,5 +1,9 @@
 const Model = require('./model');
-const { assertPositiveOrZeroInteger } = require('./validators');
+const {
+  assertPositiveOrZeroInteger,
+  assertNegativeOrZeroInteger,
+  assertInteger
+} = require('./validators');
 
 class Totals extends Model {
   /**
@@ -20,7 +24,7 @@ class Totals extends Model {
    * @param {Number} value - in pence
    */
   set creditNoteValue (value) {
-    assertPositiveOrZeroInteger(value);
+    assertNegativeOrZeroInteger(value);
     this._creditNoteValue = value;
   }
 
@@ -72,7 +76,7 @@ class Totals extends Model {
    * @param {Number} value - in pence
    */
   set creditLineValue (value) {
-    assertPositiveOrZeroInteger(value);
+    assertNegativeOrZeroInteger(value);
     this._creditLineValue = value;
   }
 
@@ -111,7 +115,7 @@ class Totals extends Model {
    * @param {Number} value - in pence
    */
   set netTotal (value) {
-    assertPositiveOrZeroInteger(value);
+    assertInteger(value);
     this._netTotal = value;
   }
 
