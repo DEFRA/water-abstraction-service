@@ -2,9 +2,9 @@
 
 const { BillingBatchChargeVersionYear } = require('../bookshelf');
 
-const setStatus = (id, status) =>
+const update = (id, data) =>
   BillingBatchChargeVersionYear
     .forge({ billingBatchChargeVersionYearId: id })
-    .save({ status });
+    .save(data);
 
-exports.setStatus = setStatus;
+exports.update = update;

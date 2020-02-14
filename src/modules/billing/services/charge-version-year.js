@@ -1,11 +1,21 @@
-const newRepos = require('../../../lib/connectors/repos');
+const repos = require('../../../lib/connectors/repos');
 const { CHARGE_VERSION_YEAR_STATUS } = require('../../../lib/models/charge-version-year.js');
 
+/**
+ * Sets water.billing_batch_charge_version_years to "ready"
+ * @param {String} id
+ * @return {Promise}
+ */
 const setReadyStatus = id =>
-  newRepos.billingBatchChargeVersionYears.setStatus(id, CHARGE_VERSION_YEAR_STATUS.ready);
+  repos.billingBatchChargeVersionYears.update(id, { status: CHARGE_VERSION_YEAR_STATUS.ready });
 
+/**
+ * Sets water.billing_batch_charge_version_years to "error"
+ * @param {String} id
+ * @return {Promise}
+ */
 const setErrorStatus = id =>
-  newRepos.billingBatchChargeVersionYears.setStatus(id, CHARGE_VERSION_YEAR_STATUS.error);
+  repos.billingBatchChargeVersionYears.update(id, { status: CHARGE_VERSION_YEAR_STATUS.error });
 
 exports.setReadyStatus = setReadyStatus;
 exports.setErrorStatus = setErrorStatus;
