@@ -87,7 +87,7 @@ const handlePopulateBatchChargeVersionsComplete = async (job, messageQueue) => {
   const { eventId } = job.data.request.data;
 
   if (billingBatchChargeVersions.length === 0) {
-    return jobService.setCompletedJob(eventId, batch.billing_batch_id);
+    return jobService.setReadyJob(eventId, batch.billing_batch_id);
   }
 
   try {
