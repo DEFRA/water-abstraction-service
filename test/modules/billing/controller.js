@@ -47,6 +47,8 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(batchService, 'deleteBatch').resolves();
     sandbox.stub(batchService, 'approveBatch').resolves();
     sandbox.stub(batchService, 'decorateBatchWithTotals').resolves();
+    sandbox.stub(batchService, 'getProcessingBatchByRegion').resolves();
+
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
 
@@ -84,6 +86,10 @@ experiment('modules/billing/controller', () => {
     experiment('if there is a batch being processed for the region', () => {
       beforeEach(async () => {
         repos.billingBatches.createBatch.resolves(null);
+
+        batchService.getProcessingBatchByRegion.resolves({
+          id: 'test-batch-id'
+        });
         await controller.postCreateBatch(request, h);
       });
 
@@ -106,8 +112,13 @@ experiment('modules/billing/controller', () => {
       });
 
       test('the response contains an error message', async () => {
-        const [{ error }] = h.response.lastCall.args;
-        expect(error).to.equal('Batch already processing for region 22222222-2222-2222-2222-222222222222');
+        const [{ message }] = h.response.lastCall.args;
+        expect(message).to.equal('Batch already processing for region 22222222-2222-2222-2222-222222222222');
+      });
+
+      test('the response contains the currently processing batch', async () => {
+        const [{ existingBatch }] = h.response.lastCall.args;
+        expect(existingBatch).to.equal({ id: 'test-batch-id' });
       });
 
       test('a 409 response code is used', async () => {

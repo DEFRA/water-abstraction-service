@@ -37,6 +37,7 @@ const batch = {
   billingBatchId: BATCH_ID,
   batchType: 'supplementary',
   season: 'summer',
+  regionId: region.regionId,
   fromFinancialYearEnding: 2014,
   toFinancialYearEnding: 2019,
   status: 'processing',
@@ -55,6 +56,7 @@ experiment('modules/billing/services/batch-service', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
 
+    sandbox.stub(newRepos.billingBatches, 'findByStatus').resolves(data.batch);
     sandbox.stub(newRepos.billingBatches, 'findOne').resolves(data.batch);
     sandbox.stub(newRepos.billingBatches, 'findPage').resolves();
     sandbox.stub(newRepos.billingBatches, 'update').resolves();
@@ -532,6 +534,53 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('the transaction model is updated with the returned ID', async () => {
       expect(models.transaction.id).to.equal(billingTransactionId);
+    });
+  });
+
+  experiment('.getProcessingBatchByRegion', () => {
+    let result;
+    let regionId;
+
+    beforeEach(async () => {
+      regionId = '44444444-0000-0000-0000-000000000000';
+      newRepos.billingBatches.findByStatus.resolves([
+        {
+          billingBatchId: '11111111-0000-0000-0000-000000000000',
+          regionId: '22222222-0000-0000-0000-000000000000',
+          batchType: 'supplementary',
+          season: 'all year',
+          status: 'processing',
+          region: {
+            regionId: '22222222-0000-0000-0000-000000000000',
+            chargeRegionId: 'A',
+            naldRegionId: 1,
+            name: 'Anglian'
+          }
+        },
+        {
+          billingBatchId: '33333333-0000-0000-0000-000000000000',
+          regionId: '44444444-0000-0000-0000-000000000000',
+          batchType: 'supplementary',
+          season: 'all year',
+          status: 'processing',
+          region: {
+            regionId: '22222222-0000-0000-0000-000000000000',
+            chargeRegionId: 'A',
+            naldRegionId: 1,
+            name: 'Anglian'
+          }
+        }
+      ]);
+
+      result = await batchService.getProcessingBatchByRegion(regionId);
+    });
+
+    test('returns the expected batch', async () => {
+      expect(result.id).to.equal('33333333-0000-0000-0000-000000000000');
+    });
+
+    test('returns a srvice layer model', async () => {
+      expect(result).to.be.instanceOf(Batch);
     });
   });
 

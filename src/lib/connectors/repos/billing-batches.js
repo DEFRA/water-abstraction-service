@@ -29,6 +29,15 @@ const findPage = async (page, pageSize) => {
   return paginatedEnvelope(result);
 };
 
+const findByStatus = async status => {
+  const batches = await BillingBatch
+    .forge()
+    .where({ status })
+    .fetchAll({ withRelated: ['region'] });
+
+  return batches.toJSON();
+};
+
 /**
  * Updates a billing_batch records for the given id
  *
@@ -66,6 +75,7 @@ const findOneWithInvoices = async (id) => {
 };
 
 exports.delete = deleteById;
+exports.findByStatus = findByStatus;
 exports.findOne = findOne;
 exports.findPage = findPage;
 exports.update = update;
