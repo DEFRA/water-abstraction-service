@@ -1,19 +1,17 @@
 const { Event } = require('../bookshelf');
-const moment = require('moment');
 
 /**
  * creates a new event record in the database
  * @param {*} event // event model
  */
 const create = async (event) => {
-  event.created = moment().format('YYYY-MM-DD HH:mm:ss');
   const model = await Event.forge(event).save();
   return model.toJSON();
 };
 
 /**
  * returns the event record for the given id
- * @param {*} id // uuid for the event_id
+ * @param {*} id // uuid for the eventId
  */
 const findOne = async (id) => {
   const model = await Event.forge({ eventId: id }).fetch();
@@ -22,11 +20,10 @@ const findOne = async (id) => {
 
 /**
  * Updates the all the fileds for the event record
- * @param {uuid} id // event_id
+ * @param {uuid} id // eventId
  * @param {Event} event // event model
  */
 const update = async (id, event) => {
-  event.modified = moment().format('YYYY-MM-DD HH:mm:ss');
   const model = await Event.forge(event).where({ eventId: id }).save();
   return model.toJSON();
 };
@@ -39,10 +36,9 @@ const update = async (id, event) => {
  * @param {String} status The status to set
  */
 const updateStatus = async (id, status) => {
-  const modifiedDate = moment().format('YYYY-MM-DD HH:mm:ss');
   const model = await Event.forge()
     .where({ eventId: id })
-    .save({ status: status, modified: modifiedDate }, { patch: true });
+    .save({ status: status }, { patch: true });
   return model.toJSON();
 };
 

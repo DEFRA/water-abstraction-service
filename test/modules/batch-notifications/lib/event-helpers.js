@@ -32,7 +32,7 @@ const eventKeys = [
   'referenceCode',
   'type',
   'subtype',
-  '_licences',
+  'licences',
   'metadata',
   'status'];
 

@@ -60,11 +60,6 @@ experiment('lib/connectors/repos/events', () => {
       result = await events.create(model);
     });
 
-    test('assigns timestamp to created field in model', async () => {
-      const { created } = await Event.forge().save();
-      expect(created).to.match(/[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]:[0-5][0-9]/);
-    });
-
     test('returns a JSON object of the model created', async () => {
       expect(result).to.equal(model.toJSON());
     });
@@ -75,11 +70,6 @@ experiment('lib/connectors/repos/events', () => {
 
     beforeEach(async () => {
       result = await events.update('test-id', model);
-    });
-
-    test('assigns timestamp to modified field in model', async () => {
-      const { modified } = await Event.forge().where().save();
-      expect(modified).to.match(/[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]:[0-5][0-9]/);
     });
 
     test('calls model.forge.where with id', async () => {
@@ -107,7 +97,6 @@ experiment('lib/connectors/repos/events', () => {
     test('calls model.forge.where.save with correct parameters', async () => {
       const { args } = stub.save.lastCall;
       expect(args[0].status).to.equal('test-status');
-      expect(args[0].modified).to.match(/[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1]) (2[0-3]|[01][0-9]):[0-5][0-9]:[0-5][0-9]/);
       expect(args[1].patch).to.be.true();
     });
 

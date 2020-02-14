@@ -3,7 +3,7 @@ const repo = require('./connectors/repos');
 const { mapValues, mapKeys } = require('lodash');
 const camelCase = require('camelcase');
 const snakeCase = require('snake-case');
-const Event = require('./models/event');
+const { logger } = require('./../logger');
 
 /**
  * Checks whether the supplied value/key is a JSON field and is not null
@@ -12,7 +12,7 @@ const Event = require('./models/event');
  * @return {Boolean} true if key is a JSON field and value is not null
  */
 const isMappedField = (value, key) => {
-  const jsonFields = ['licences', 'entities', 'metadata'];
+  const jsonFields = ['licences', 'entities', 'metadata', '_licences', '_entities', '_metadata'];
   return jsonFields.includes(key) && (value !== null);
 };
 
@@ -51,19 +51,22 @@ const mapFromRepo = data => keyMapper(data, camelCase);
  * @return {Object}           event object
  */
 const create = (data = {}) => {
-  const event = new Event();
-  event.comment = null;
-  event.entities = [];
-  event.issuer = null;
-  event.licences = [];
-  event.metadata = {};
-  event.modified = null;
-  event.referenceCode = null;
-  event.status = null;
-  event.subtype = null;
-  event.type = null;
-  event.created = null;
-  return Object.assign({}, event, data);
+  logDeprecatedWarning();
+  const defaults = {
+    eventId: null,
+    referenceCode: null,
+    type: null,
+    subtype: null,
+    issuer: null,
+    licences: [],
+    entities: [],
+    comment: null,
+    metadata: {},
+    status: null,
+    created: moment().format('YYYY-MM-DD HH:mm:ss'),
+    modified: null
+  };
+  return Object.assign({}, defaults, data);
 };
 
 /**
@@ -73,10 +76,11 @@ const create = (data = {}) => {
  * @return {Promise}        resolves when event saved
  */
 const save = async (event) => {
+  logDeprecatedWarning();
   // Update existing record
   if (event.eventId) {
-    event.modified = moment().format('YYYY-MM-DD HH:mm:ss');
-    const result = await repo.events.update({ event_id: event.eventId }, mapToRepo(event));
+    event.updatedAt = moment().format('YYYY-MM-DD HH:mm:ss');
+    const result = await repo.events.update({ eventId: event.eventId }, mapToRepo(event));
     const model = mapFromRepo(result);
     return wrapBookshelfModel(model);
   }
@@ -92,12 +96,15 @@ const save = async (event) => {
  * @return {Promise}         [description]
  */
 const load = async (eventId) => {
+  logDeprecatedWarning();
   const result = await repo.events.findOne(eventId);
   if (!result.event_id) {
     return null;
   }
   const model = mapFromRepo(result);
   model.event_id = model.eventId;
+  model.modified = model.updatedAt;
+  model.created = model.createdAt;
   return model;
 };
 
@@ -109,13 +116,21 @@ const load = async (eventId) => {
  * @param {String} status The status to set
  */
 const updateStatus = async (eventId, status) => {
+  logDeprecatedWarning();
   const result = await repo.events.updateStatus(eventId, status);
   return mapFromRepo(result);
 };
 
 const wrapBookshelfModel = (event) => {
   event.event_id = event.eventId;
+  event.modified = event.updatedAt;
+  event.created = event.createdAt;
   return { rowCount: 1, rows: [event] };
+};
+
+const logDeprecatedWarning = () => {
+  const err = new Error();
+  logger.warn('This Event service has been deprecated. Use the new Event service at ./lib/services/events \n', err.stack);
 };
 
 exports.repo = repo;

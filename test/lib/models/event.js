@@ -130,18 +130,18 @@ experiment('lib/models/event', () => {
       event.created = dateString;
       event.modified = dateString;
 
-      expect(event.created).to.equal(moment(dateString));
-      expect(event.modified).to.equal(moment(dateString));
+      expect(event.created).to.equal(dateString);
+      expect(event.modified).to.equal(dateString);
     });
 
     test('converts a JS Date to a moment internally', async () => {
       const date = new Date();
       const event = new Event();
-      event.created = date;
-      event.modified = date;
+      event.createdAt = date;
+      event.updatedAt = date;
 
-      expect(event.created).to.equal(moment(date));
-      expect(event.modified).to.equal(moment(date));
+      expect(event.createdAt).to.equal(moment(date));
+      expect(event.updatedAt).to.equal(moment(date));
     });
 
     test('can be set using a moment', async () => {
@@ -160,11 +160,11 @@ experiment('lib/models/event', () => {
       const event = new Event();
 
       expect(() => {
-        event.created = dateString;
+        event.createdAt = dateString;
       }).to.throw();
 
       expect(() => {
-        event.modified = dateString;
+        event.updatedAt = dateString;
       }).to.throw();
     });
 
@@ -172,11 +172,11 @@ experiment('lib/models/event', () => {
       const event = new Event();
 
       expect(() => {
-        event.created = true;
+        event.createdAt = true;
       }).to.throw();
 
       expect(() => {
-        event.modified = true;
+        event.updatedAt = true;
       }).to.throw();
     });
 

@@ -158,32 +158,32 @@ class Event extends Model {
    * Sets the created date for this event
    * @param {string} created
    */
-  set created (created) {
-    this._created = this.getDateTimeFromValue(created);
+  set createdAt (createdAt) {
+    this._createdAt = this.getDateTimeFromValue(createdAt);
   }
 
   /**
    * Gets the date created for this event
    * @return {string}
    */
-  get created () {
-    return this._created;
+  get createdAt () {
+    return this._createdAt;
   }
 
   /**
    * Sets the modified date for this event
    * @param {string} modified
    */
-  set modified (modified) {
-    this._modified = this.getDateTimeFromValue(modified);
+  set updatedAt (updatedAt) {
+    this._updatedAt = this.getDateTimeFromValue(updatedAt);
   }
 
   /**
    * Gets the date modified for this event
    * @return {string}
    */
-  get modified () {
-    return this._modified;
+  get updatedAt () {
+    return this._updatedAt;
   }
 }
 
