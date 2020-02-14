@@ -3,7 +3,7 @@ const uuid = require('uuid/v4');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const { Batch, FinancialYear, Invoice, InvoiceAccount, Region } =
+const { Batch, FinancialYear, Invoice, InvoiceAccount, Region, Totals } =
   require('../../../src/lib/models');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
@@ -339,6 +339,23 @@ experiment('lib/models/batch', () => {
       const batch = new Batch();
       batch.type = Batch.BATCH_TYPE.annual;
       expect(batch.isSupplementary()).to.be.false();
+    });
+  });
+
+  experiment('.totals', () => {
+    test('can be set to a totals instance', async () => {
+      const batch = new Batch();
+      const totals = new Totals();
+      batch.totals = new Totals();
+      expect(batch.totals).to.equal(totals);
+    });
+
+    test('throws an error if set to a different type', async () => {
+      const batch = new Batch();
+      const func = () => {
+        batch.totals = new Region();
+      };
+      expect(func).to.throw();
     });
   });
 });

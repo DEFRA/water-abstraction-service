@@ -1,6 +1,7 @@
 module.exports = {
   Address: require('./address'),
   Batch: require('./batch'),
+  Totals: require('./totals'),
   Company: require('./company'),
   Contact: require('./contact'),
   FinancialYear: require('./financial-year'),

@@ -11,7 +11,7 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
-const { Batch, FinancialYear, Invoice, InvoiceLicence, Licence, Transaction, InvoiceAccount } = require('../../../../src/lib/models');
+const { Batch, FinancialYear, Invoice, InvoiceLicence, Licence, Transaction, InvoiceAccount, Region, Totals } = require('../../../../src/lib/models');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const event = require('../../../../src/lib/event');
 const { logger } = require('../../../../src/logger');
@@ -134,6 +134,16 @@ experiment('modules/billing/services/batch-service', () => {
 
       test('with correct status', async () => {
         expect(result.status).to.equal(data.batch.status);
+      });
+    });
+
+    experiment('when no batch is found', () => {
+      beforeEach(async () => {
+        newRepos.billingBatches.findOne.resolves(null);
+        result = await batchService.getBatchById(BATCH_ID);
+      });
+      test('resolves null', async () => {
+        expect(result).to.be.null();
       });
     });
   });
@@ -571,6 +581,47 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('returns a srvice layer model', async () => {
       expect(result).to.be.instanceOf(Batch);
+    });
+  });
+
+  experiment('.decorateBatchWithTotals', () => {
+    let batch;
+
+    const summary = {
+      creditNoteCount: 0,
+      creditNoteValue: 0,
+      invoiceCount: 3,
+      invoiceValue: 15022872,
+      creditLineCount: 0,
+      creditLineValue: 0,
+      debitLineCount: 15,
+      debitLineValue: 15022872,
+      netTotal: 15022872
+    };
+
+    beforeEach(async () => {
+      chargeModuleBatchConnector.send.resolves({
+        summary
+      });
+      batch = new Batch(uuid());
+      batch.region = new Region();
+      batch.region.code = 'A';
+      await batchService.decorateBatchWithTotals(batch);
+    });
+
+    test('calls charge module batch API with correct params', async () => {
+      const [regionCode, batchId, draft] = chargeModuleBatchConnector.send.lastCall.args;
+      expect(regionCode).to.equal(batch.region.code);
+      expect(batchId).to.equal(batch.id);
+      expect(draft).to.equal(true);
+    });
+
+    test('adds a Totals instance to the batch', async () => {
+      expect(batch.totals instanceof Totals).to.be.true();
+    });
+
+    test('copies totals correctly', async () => {
+      expect(batch.totals.toJSON()).to.equal(summary);
     });
   });
 });

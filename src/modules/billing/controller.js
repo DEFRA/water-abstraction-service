@@ -11,6 +11,8 @@ const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
 const batchService = require('./services/batch-service');
 
+const mappers = require('./mappers');
+
 const createBatchEvent = async (userEmail, batch) => {
   const batchEvent = event.create({
     type: 'billing-batch',
@@ -72,7 +74,15 @@ const postCreateBatch = async (request, h) => {
   })).code(202);
 };
 
-const getBatch = async request => envelope(request.pre.batch, true);
+/**
+ * Get batch with region, and optionally include batch totals
+ * @param {Boolean} request.query.totals - indicates that batch totals should be included in response
+ * @return {Promise<Batch>}
+ */
+const getBatch = async request => {
+  const { totals } = request.query;
+  return totals ? batchService.decorateBatchWithTotals(request.pre.batch) : request.pre.batch;
+};
 
 const getBatches = async request => {
   const { page, perPage } = request.query;
@@ -83,8 +93,7 @@ const getBatches = async request => {
 const getBatchInvoices = async request => {
   const { batchId } = request.params;
   const invoices = await invoiceService.getInvoicesForBatch(batchId);
-
-  return envelope(invoices, true);
+  return invoices.map(mappers.api.invoice.modelToBatchInvoices);
 };
 
 const getBatchInvoiceDetail = async request => {

@@ -13,6 +13,7 @@ const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
 const Invoice = require('../../../src/lib/models/invoice');
+const Batch = require('../../../src/lib/models/batch');
 
 const newRepos = require('../../../src/lib/connectors/repos');
 const repos = require('../../../src/lib/connectors/repository');
@@ -20,6 +21,8 @@ const event = require('../../../src/lib/event');
 const invoiceService = require('../../../src/modules/billing/services/invoice-service');
 const batchService = require('../../../src/modules/billing/services/batch-service');
 const controller = require('../../../src/modules/billing/controller');
+
+const mappers = require('../../../src/modules/billing/mappers');
 
 experiment('modules/billing/controller', () => {
   let h, hapiResponseStub;
@@ -43,6 +46,7 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(batchService, 'getBatches').resolves();
     sandbox.stub(batchService, 'deleteBatch').resolves();
     sandbox.stub(batchService, 'approveBatch').resolves();
+    sandbox.stub(batchService, 'decorateBatchWithTotals').resolves();
     sandbox.stub(batchService, 'getProcessingBatchByRegion').resolves();
 
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
@@ -53,6 +57,8 @@ experiment('modules/billing/controller', () => {
         { event_id: '11111111-1111-1111-1111-111111111111' }
       ]
     });
+
+    sandbox.stub(mappers.api.invoice, 'modelToBatchInvoices');
   });
 
   afterEach(async () => {
@@ -204,35 +210,47 @@ experiment('modules/billing/controller', () => {
 
   experiment('.getBatch', () => {
     experiment('when the batch is found', () => {
-      let response;
+      let response, request;
 
       beforeEach(async () => {
-        const request = {
+        request = {
           params: {
             batchId: 'test-batch-id'
           },
+          query: {
+            totals: false
+          },
           pre: {
-            batch: {
-              billing_batch_id: 'test-batch-id',
-              region_id: 'test-region-id',
-              batch_type: 'annual'
-            }
+            batch: new Batch('00000000-0000-0000-0000-000000000000')
           }
         };
-
-        response = await controller.getBatch(request);
       });
 
-      test('a camel case representation of the batch is returned', async () => {
-        expect(response.data).to.equal({
-          billingBatchId: 'test-batch-id',
-          regionId: 'test-region-id',
-          batchType: 'annual'
+      experiment('when totals query param is false', () => {
+        beforeEach(async () => {
+          response = await controller.getBatch(request);
+        });
+
+        test('the batch is returned', async () => {
+          expect(response).to.equal(request.pre.batch);
+        });
+
+        test('the batch is not decorated with totals', async () => {
+          expect(batchService.decorateBatchWithTotals.called).to.be.false();
         });
       });
 
-      test('the error object is null', async () => {
-        expect(response.error).to.be.null();
+      experiment('when the totals are requested', () => {
+        beforeEach(async () => {
+          request.query.totals = true;
+          response = await controller.getBatch(request);
+        });
+
+        test('the batch is decorated with totals', async () => {
+          expect(batchService.decorateBatchWithTotals.calledWith(
+            request.pre.batch
+          )).to.be.true();
+        });
       });
     });
   });
@@ -269,15 +287,17 @@ experiment('modules/billing/controller', () => {
 
   experiment('.getBatchInvoices', () => {
     experiment('when the batch is found', () => {
-      let response;
+      let invoices;
 
       beforeEach(async () => {
-        invoiceService.getInvoicesForBatch.resolves([
+        invoices = [
           new Invoice(),
           new Invoice()
-        ]);
+        ];
 
-        response = await controller.getBatchInvoices({
+        invoiceService.getInvoicesForBatch.resolves(invoices);
+
+        await controller.getBatchInvoices({
           params: {
             batchId: 'test-batch-id'
           }
@@ -289,8 +309,10 @@ experiment('modules/billing/controller', () => {
         expect(batchId).to.equal('test-batch-id');
       });
 
-      test('the error object is null', async () => {
-        expect(response.error).to.be.null();
+      test('the response is mapped using the appropriate mapper', async () => {
+        expect(mappers.api.invoice.modelToBatchInvoices.callCount).to.equal(2);
+        expect(mappers.api.invoice.modelToBatchInvoices.calledWith(invoices[0])).to.be.true();
+        expect(mappers.api.invoice.modelToBatchInvoices.calledWith(invoices[1])).to.be.true();
       });
     });
   });
