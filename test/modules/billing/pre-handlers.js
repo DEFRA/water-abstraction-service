@@ -27,7 +27,7 @@ experiment('modules/billing/pre-handlers', () => {
     batch = new Batch();
     batch.fromHash({
       id: '7bfdb410-8fe2-41df-bb3a-e85984112f3b',
-      status: 'complete'
+      status: 'ready'
     });
     batch.region = new Region();
     batch.region.fromHash({
