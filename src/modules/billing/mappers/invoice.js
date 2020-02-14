@@ -1,6 +1,6 @@
 'use strict';
 
-const { omit, uniqBy } = require('lodash');
+const { get, compact, omit, uniqBy } = require('lodash');
 
 const Invoice = require('../../../lib/models/invoice');
 const InvoiceAccount = require('../../../lib/models/invoice-account');
@@ -34,7 +34,7 @@ const modelToDb = (batch, invoice) => ({
   billingBatchId: batch.id
 });
 
-const getInvoiceAccountNumber = row => row.invoiceAccount.invoiceAccount.invoiceAccountNumber;
+const getInvoiceAccountNumber = row => get(row, 'invoiceAccount.invoiceAccount.invoiceAccountNumber');
 
 /**
  * Maps output data from charge processor into an array of unique invoice licences
@@ -64,14 +64,16 @@ const mapInvoiceLicences = (invoice, data, batch) => {
  * @return {Array<Invoice>}
  */
 const chargeToModels = (data, batch) => {
+  // Remove any items where the Invoice Account is null
+  const dataWithInvoiceAccounts = compact(data.map(item => item.invoiceAccount));
+
   // Create unique list of invoice accounts within data
-  const rows = uniqBy(
-    data.map(row => row.invoiceAccount),
-    row => row.invoiceAccount.invoiceAccountId
+  const uniqueInvoiceAccounts = uniqBy(
+    dataWithInvoiceAccounts,
+    'invoiceAccount.invoiceAccountId'
   );
 
-  // Map to invoice models
-  return rows.map(row => {
+  return uniqueInvoiceAccounts.map(row => {
     const invoice = new Invoice();
 
     // Create invoice account model

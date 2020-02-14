@@ -92,112 +92,124 @@ experiment('modules/billing/mappers/invoice', () => {
       chargeElements: []
     }];
 
-    let data, result, invoice;
+    let data, result, invoice, batch;
 
     beforeEach(async () => {
       data = createData();
-      const batch = new Batch(BATCH_ID);
+      batch = new Batch(BATCH_ID);
       batch.region = new Region().fromHash({ code: 'A' });
-
-      result = invoiceMapper.chargeToModels(data, batch);
     });
 
-    test('should have 2 invoices (invoice account IDs must be unique in batch)', async () => {
-      expect(result).to.be.an.array().length(2);
-    });
-
-    experiment('the first invoice', () => {
+    experiment('if all the invoice accounts are found', () => {
       beforeEach(async () => {
-        invoice = result[0];
+        result = invoiceMapper.chargeToModels(data, batch);
       });
 
-      test('is an instance of Invoice', async () => {
-        expect(invoice instanceof Invoice).to.be.true();
+      test('should have 2 invoices (invoice account IDs must be unique in batch)', async () => {
+        expect(result).to.be.an.array().length(2);
       });
 
-      test('has an InvoiceAccount instance', async () => {
-        expect(invoice.invoiceAccount instanceof InvoiceAccount).to.be.true();
+      experiment('the first invoice', () => {
+        beforeEach(async () => {
+          invoice = result[0];
+        });
+
+        test('is an instance of Invoice', async () => {
+          expect(invoice instanceof Invoice).to.be.true();
+        });
+
+        test('has an InvoiceAccount instance', async () => {
+          expect(invoice.invoiceAccount instanceof InvoiceAccount).to.be.true();
+        });
+
+        test('has the correct account number', async () => {
+          expect(invoice.invoiceAccount.accountNumber).to.equal('S12345671A');
+        });
+
+        test('has the correct address', async () => {
+          expect(invoice.address instanceof Address).to.be.true();
+          expect(invoice.address.id).to.equal(data[0].invoiceAccount.address.addressId);
+        });
+
+        test('has an invoiceLicence for each licence', async () => {
+          expect(invoice.invoiceLicences).to.have.length(2);
+          expect(invoice.invoiceLicences[0].licence.licenceNumber).to.equal('01/123');
+          expect(invoice.invoiceLicences[1].licence.licenceNumber).to.equal('03/456');
+        });
+
+        test('the first invoiceLicence has an address', async () => {
+          expect(invoice.invoiceLicences[0].address instanceof Address).to.be.true();
+        });
+
+        test('the first invoiceLicence has a company', async () => {
+          expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
+        });
+
+        test('the first invoiceLicence has no contact', async () => {
+          expect(invoice.invoiceLicences[0].contact).to.be.undefined();
+        });
+
+        test('the second invoiceLicence has an address', async () => {
+          expect(invoice.invoiceLicences[1].address instanceof Address).to.be.true();
+        });
+
+        test('the second invoiceLicence has a company', async () => {
+          expect(invoice.invoiceLicences[1].company instanceof Company).to.be.true();
+        });
+
+        test('the second invoiceLicence has no contact', async () => {
+          expect(invoice.invoiceLicences[1].contact).to.be.undefined();
+        });
       });
 
-      test('has the correct account number', async () => {
-        expect(invoice.invoiceAccount.accountNumber).to.equal('S12345671A');
-      });
+      experiment('the second invoice', () => {
+        beforeEach(async () => {
+          invoice = result[1];
+        });
 
-      test('has the correct address', async () => {
-        expect(invoice.address instanceof Address).to.be.true();
-        expect(invoice.address.id).to.equal(data[0].invoiceAccount.address.addressId);
-      });
+        test('is an instance of Invoice', async () => {
+          expect(invoice instanceof Invoice).to.be.true();
+        });
 
-      test('has an invoiceLicence for each licence', async () => {
-        expect(invoice.invoiceLicences).to.have.length(2);
-        expect(invoice.invoiceLicences[0].licence.licenceNumber).to.equal('01/123');
-        expect(invoice.invoiceLicences[1].licence.licenceNumber).to.equal('03/456');
-      });
+        test('has an InvoiceAccount instance', async () => {
+          expect(invoice.invoiceAccount instanceof InvoiceAccount).to.be.true();
+        });
 
-      test('the first invoiceLicence has an address', async () => {
-        expect(invoice.invoiceLicences[0].address instanceof Address).to.be.true();
-      });
+        test('has the correct account number', async () => {
+          expect(invoice.invoiceAccount.accountNumber).to.equal('S12345672A');
+        });
 
-      test('the first invoiceLicence has a company', async () => {
-        expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
-      });
+        test('has the correct address', async () => {
+          expect(invoice.address instanceof Address).to.be.true();
+          expect(invoice.address.id).to.equal(data[1].invoiceAccount.address.addressId);
+        });
 
-      test('the first invoiceLicence has no contact', async () => {
-        expect(invoice.invoiceLicences[0].contact).to.be.undefined();
-      });
+        test('has an invoiceLicence for each licence', async () => {
+          expect(invoice.invoiceLicences).to.have.length(1);
+          expect(invoice.invoiceLicences[0].licence.licenceNumber).to.equal('02/345');
+        });
 
-      test('the second invoiceLicence has an address', async () => {
-        expect(invoice.invoiceLicences[1].address instanceof Address).to.be.true();
-      });
+        test('the first invoiceLicence has an address', async () => {
+          expect(invoice.invoiceLicences[0].address instanceof Address).to.be.true();
+        });
 
-      test('the second invoiceLicence has a company', async () => {
-        expect(invoice.invoiceLicences[1].company instanceof Company).to.be.true();
-      });
+        test('the first invoiceLicence has a company', async () => {
+          expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
+        });
 
-      test('the second invoiceLicence has no contact', async () => {
-        expect(invoice.invoiceLicences[1].contact).to.be.undefined();
+        test('the first invoiceLicence has a contact', async () => {
+          const { contact } = invoice.invoiceLicences[0];
+          expect(contact instanceof Contact).to.be.true();
+          expect(contact.fullName).to.equal('Captain J T Kirk');
+        });
       });
     });
 
-    experiment('the second invoice', () => {
-      beforeEach(async () => {
-        invoice = result[1];
-      });
-
-      test('is an instance of Invoice', async () => {
-        expect(invoice instanceof Invoice).to.be.true();
-      });
-
-      test('has an InvoiceAccount instance', async () => {
-        expect(invoice.invoiceAccount instanceof InvoiceAccount).to.be.true();
-      });
-
-      test('has the correct account number', async () => {
-        expect(invoice.invoiceAccount.accountNumber).to.equal('S12345672A');
-      });
-
-      test('has the correct address', async () => {
-        expect(invoice.address instanceof Address).to.be.true();
-        expect(invoice.address.id).to.equal(data[1].invoiceAccount.address.addressId);
-      });
-
-      test('has an invoiceLicence for each licence', async () => {
-        expect(invoice.invoiceLicences).to.have.length(1);
-        expect(invoice.invoiceLicences[0].licence.licenceNumber).to.equal('02/345');
-      });
-
-      test('the first invoiceLicence has an address', async () => {
-        expect(invoice.invoiceLicences[0].address instanceof Address).to.be.true();
-      });
-
-      test('the first invoiceLicence has a company', async () => {
-        expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
-      });
-
-      test('the first invoiceLicence has a contact', async () => {
-        const { contact } = invoice.invoiceLicences[0];
-        expect(contact instanceof Contact).to.be.true();
-        expect(contact.fullName).to.equal('Captain J T Kirk');
+    experiment('when an invoice account is null', () => {
+      test('the null invoice account is excluded', async () => {
+        data[1].invoiceAccount = null;
+        result = invoiceMapper.chargeToModels(data, batch);
+        expect(result).to.have.length(1);
       });
     });
   });
