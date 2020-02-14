@@ -18,7 +18,7 @@ const jobService = require('../../../../src/modules/billing/services/job-service
 experiment('modules/billing/jobs/create-charge-complete', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
-    sandbox.stub(jobService, 'setCompletedJob').resolves();
+    sandbox.stub(jobService, 'setReadyJob').resolves();
   });
 
   afterEach(async () => {
@@ -45,7 +45,7 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
     });
 
     test('the batch is marked as completed', async () => {
-      const [eventId, batchId] = jobService.setCompletedJob.lastCall.args;
+      const [eventId, batchId] = jobService.setReadyJob.lastCall.args;
       expect(eventId).to.equal('test-event-id');
       expect(batchId).to.equal('test-batch-id');
     });

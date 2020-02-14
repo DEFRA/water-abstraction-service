@@ -13,11 +13,11 @@ const setStatuses = (eventId, eventStatus, batchId, batchStatus) => {
   ]);
 };
 
-const setCompletedJob = (eventId, batchId) =>
-  setStatuses(eventId, jobStatus.complete, batchId, BATCH_STATUS.complete);
+const setReadyJob = (eventId, batchId) =>
+  setStatuses(eventId, jobStatus.complete, batchId, BATCH_STATUS.ready);
 
 const setFailedJob = (eventId, batchId) =>
   setStatuses(eventId, jobStatus.error, batchId, BATCH_STATUS.error);
 
-exports.setCompletedJob = setCompletedJob;
+exports.setReadyJob = setReadyJob;
 exports.setFailedJob = setFailedJob;

@@ -10,13 +10,6 @@ class BillingBatchChargeVersionYearsRepository extends Repository {
     }, config));
   }
 
-  setStatus (id, status) {
-    return this.update(
-      { billing_batch_charge_version_year_id: id },
-      { status, date_updated: new Date() }
-    );
-  }
-
   /**
    * Finds all rows in the water.billing_batch_charge_version_years table for
    * a given billing_batch_id where the status is 'processing'

@@ -4,6 +4,7 @@ const Joi = require('@hapi/joi');
 const Invoice = require('./invoice');
 const FinancialYear = require('./financial-year');
 const Region = require('./region');
+const Totals = require('./totals');
 const { assert } = require('@hapi/hoek');
 const { isArray } = require('lodash');
 
@@ -15,10 +16,10 @@ const { assertIsInstanceOf, assertEnum, assertIsArrayOfType } = require('./valid
  * be run at a time.
  */
 const BATCH_STATUS = {
-  sent: 'sent',
-  processing: 'processing',
-  review: 'review',
-  complete: 'complete',
+  processing: 'processing', // processing trasactions
+  review: 'review', // two-part tariff only - reviewing results of returns matching
+  ready: 'ready', // processing completed - awaiting approval
+  sent: 'sent', // approved & sent to Charge Module
   error: 'error'
 };
 
@@ -202,6 +203,20 @@ class Batch extends Model {
 
   isTwoPartTariff () {
     return this.type === BATCH_TYPE.twoPartTariff;
+  }
+
+  /**
+   * The charge module summary contains data on
+   * invoice/credit count, invoice/credit totals, net total
+   * @param {Totals} totals
+   */
+  set totals (totals) {
+    assertIsInstanceOf(totals, Totals);
+    this._totals = totals;
+  }
+
+  get totals () {
+    return this._totals;
   }
 }
 

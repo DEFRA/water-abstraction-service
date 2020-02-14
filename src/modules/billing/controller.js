@@ -5,11 +5,13 @@ const Boom = require('@hapi/boom');
 const config = require('../../../config');
 const repos = require('../../lib/connectors/repository');
 const event = require('../../lib/event');
-const { envelope, errorEnvelope } = require('../../lib/response');
+const { envelope } = require('../../lib/response');
 const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-versions');
 const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
 const batchService = require('./services/batch-service');
+
+const mappers = require('./mappers');
 
 const createBatchEvent = async (userEmail, batch) => {
   const batchEvent = event.create({
@@ -51,7 +53,10 @@ const postCreateBatch = async (request, h) => {
   const batch = await createBatch(regionId, batchType, financialYearEnding, season);
 
   if (!batch) {
-    const data = errorEnvelope(`Batch already processing for region ${regionId}`);
+    const data = {
+      message: `Batch already processing for region ${regionId}`,
+      existingBatch: await batchService.getProcessingBatchByRegion(regionId)
+    };
     return h.response(data).code(409);
   }
 
@@ -69,7 +74,15 @@ const postCreateBatch = async (request, h) => {
   })).code(202);
 };
 
-const getBatch = async request => envelope(request.pre.batch, true);
+/**
+ * Get batch with region, and optionally include batch totals
+ * @param {Boolean} request.query.totals - indicates that batch totals should be included in response
+ * @return {Promise<Batch>}
+ */
+const getBatch = async request => {
+  const { totals } = request.query;
+  return totals ? batchService.decorateBatchWithTotals(request.pre.batch) : request.pre.batch;
+};
 
 const getBatches = async request => {
   const { page, perPage } = request.query;
@@ -80,8 +93,7 @@ const getBatches = async request => {
 const getBatchInvoices = async request => {
   const { batchId } = request.params;
   const invoices = await invoiceService.getInvoicesForBatch(batchId);
-
-  return envelope(invoices, true);
+  return invoices.map(mappers.api.invoice.modelToBatchInvoices);
 };
 
 const getBatchInvoiceDetail = async request => {

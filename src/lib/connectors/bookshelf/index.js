@@ -1,4 +1,5 @@
 exports.BillingBatch = require('./BillingBatch');
+exports.BillingBatchChargeVersionYear = require('./BillingBatchChargeVersionYear');
 exports.BillingInvoice = require('./BillingInvoice');
 exports.BillingInvoiceLicence = require('./BillingInvoiceLicence');
 exports.BillingTransaction = require('./BillingTransaction');
