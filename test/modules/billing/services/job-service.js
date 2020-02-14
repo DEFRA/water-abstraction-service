@@ -27,9 +27,9 @@ experiment('modules/billing/services/jobService', () => {
     sandbox.restore();
   });
 
-  experiment('.setCompletedJob', () => {
+  experiment('.setReadyJob', () => {
     beforeEach(async () => {
-      await jobService.setCompletedJob('test-event-id', 'test-batch-id');
+      await jobService.setReadyJob('test-event-id', 'test-batch-id');
     });
 
     test('updates the event status', async () => {
@@ -41,7 +41,7 @@ experiment('modules/billing/services/jobService', () => {
     test('updates the batch status', async () => {
       const [batchId, status] = batchService.setStatus.lastCall.args;
       expect(batchId).to.equal('test-batch-id');
-      expect(status).to.equal(BATCH_STATUS.complete);
+      expect(status).to.equal(BATCH_STATUS.ready);
     });
   });
 
