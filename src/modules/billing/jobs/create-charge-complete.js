@@ -8,6 +8,11 @@ const batchService = require('../services/batch-service');
 
 const { logger } = require('../../../logger');
 
+const isProcessingTransactions = async batchId => {
+  const statuses = await batchService.getTransactionStatusCounts(batchId);
+  return statuses.candidate > 0;
+};
+
 const handleCreateChargeComplete = async (job, messageQueue) => {
   const { eventId } = job.data.request.data;
   const { batch } = job.data.response;
@@ -16,13 +21,11 @@ const handleCreateChargeComplete = async (job, messageQueue) => {
   logger.info(`onComplete - ${createChargeJob.jobName}`);
 
   try {
-    const statuses = await batchService.getTransactionStatusCounts(batchId);
-    if (statuses.candidate > 0) {
-      logger.info(`onComplete - ${createChargeJob.jobName} skipping as still candidate transactions`);
+    if (await isProcessingTransactions()) {
       return;
     }
 
-    // If there are no candidate transactions, publish job to
+    // If there are no remaining candidate transactions, publish job to
     // read batch totals in the CM
     await messageQueue.publish(refreshTotalsJob.createMessage(eventId, batch));
 

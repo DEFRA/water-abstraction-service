@@ -1,6 +1,6 @@
 'use strict';
 
-const { pick, compact, pickBy } = require('lodash');
+const { pick } = require('lodash');
 
 const Batch = require('../../../lib/models/batch');
 const FinancialYear = require('../../../lib/models/financial-year');
