@@ -1,23 +1,30 @@
 'use strict';
 
 const createChargeJob = require('./create-charge');
+const refreshTotalsJob = require('./refresh-totals');
 const jobService = require('../services/job-service');
 
 const batchService = require('../services/batch-service');
 
 const { logger } = require('../../../logger');
 
-const handleCreateChargeComplete = async job => {
+const handleCreateChargeComplete = async (job, messageQueue) => {
   const { eventId } = job.data.request.data;
-  const { billing_batch_id: batchId } = job.data.response.batch;
+  const { batch } = job.data.response;
+  const { billing_batch_id: batchId } = batch;
 
   logger.info(`onComplete - ${createChargeJob.jobName}`);
 
   try {
-    const batch = await batchService.getBatchById(batchId);
+    const statuses = await batchService.getTransactionStatusCounts(batchId);
+    if (statuses.candidate > 0) {
+      logger.info(`onComplete - ${createChargeJob.jobName} skipping as still candidate transactions`);
+      return;
+    }
 
-    // Update batch with totals/bill run ID from charge module
-    await batchService.refreshTotals(batch);
+    // If there are no candidate transactions, publish job to
+    // read batch totals in the CM
+    await messageQueue.publish(refreshTotalsJob.createMessage(eventId, batch));
 
     /**
      * Placeholder
@@ -32,9 +39,9 @@ const handleCreateChargeComplete = async job => {
      * event status
      */
 
-    await jobService.setReadyJob(eventId, batch.id);
+    await jobService.setReadyJob(eventId, batchId);
   } catch (err) {
-    logger.error(`Error handling ${createChargeJob.jobName}`, err, {
+    logger.error(`Error handling onComplete - ${createChargeJob.jobName}`, err, {
       batchId
     });
     await batchService.setErrorStatus(batchId);

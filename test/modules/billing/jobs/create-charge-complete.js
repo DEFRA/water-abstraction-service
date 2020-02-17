@@ -10,15 +10,23 @@ const {
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const uuid = require('uuid/v4');
 
 const { logger } = require('../../../../src/logger');
 const createChargeComplete = require('../../../../src/modules/billing/jobs/create-charge-complete');
 const jobService = require('../../../../src/modules/billing/services/job-service');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
+const Batch = require('../../../../src/lib/models/batch');
+
+const BATCH_ID = uuid();
 
 experiment('modules/billing/jobs/create-charge-complete', () => {
+  const batch = new Batch();
+
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
     sandbox.stub(jobService, 'setReadyJob').resolves();
+    sandbox.stub(batchService, 'getBatchById').resolves(batch);
   });
 
   afterEach(async () => {

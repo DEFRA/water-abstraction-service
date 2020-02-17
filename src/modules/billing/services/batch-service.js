@@ -1,5 +1,7 @@
 'use strict';
 
+const { camelCase } = require('lodash');
+
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const repos = require('../../../lib/connectors/repository');
@@ -142,6 +144,19 @@ const refreshTotals = async batch => {
   });
 };
 
+/**
+ * Gets counts of the number of transactions in each status for the
+ * supplied batch ID
+ * @param {String} batchId
+ */
+const getTransactionStatusCounts = async batchId => {
+  const data = await newRepos.billingTransactions.findStatusCountsByBatchId(batchId);
+  return data.reduce((acc, row) => ({
+    ...acc,
+    [camelCase(row.status)]: row.count
+  }), {});
+};
+
 exports.approveBatch = approveBatch;
 exports.deleteBatch = deleteBatch;
 exports.getBatches = getBatches;
@@ -152,3 +167,4 @@ exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
 exports.decorateBatchWithTotals = decorateBatchWithTotals;
 exports.refreshTotals = refreshTotals;
+exports.getTransactionStatusCounts = getTransactionStatusCounts;
