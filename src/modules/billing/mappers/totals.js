@@ -55,5 +55,20 @@ const chargeModuleBillRunToInvoiceModel = (billRun, invoiceAccountNumber) => {
   ]);
 };
 
+/**
+ * Maps a partial set of fields in water.billing_batches table to a Totals model
+ * @param {Object} row - row of data from water.billing_batches table
+ * @return {Totals}
+ */
+const dbToModel = row => {
+  if (!row.externalId) {
+    return null;
+  }
+  const totals = new Totals();
+  totals.pickFrom(row, ['creditNoteCount', 'invoiceCount', 'netTotal']);
+  return totals;
+};
+
 exports.chargeModuleBillRunToBatchModel = chargeModuleBillRunToBatchModel;
 exports.chargeModuleBillRunToInvoiceModel = chargeModuleBillRunToInvoiceModel;
+exports.dbToModel = dbToModel;

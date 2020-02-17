@@ -127,6 +127,21 @@ const decorateBatchWithTotals = async batch => {
   return batch;
 };
 
+/**
+ * Updates water.billing_batches with summary info from the charge module
+ * @param {Batch} batch
+ * @return {Promise}
+ */
+const refreshTotals = async batch => {
+  const { billRunId, summary } = await chargeModuleBatchConnector.send(batch.region.code, batch.id, true);
+  return newRepos.billingBatches.update(batch.id, {
+    invoiceCount: summary.invoiceCount,
+    creditNoteCount: summary.creditNoteCount,
+    netTotal: summary.netTotal,
+    externalId: billRunId
+  });
+};
+
 exports.approveBatch = approveBatch;
 exports.deleteBatch = deleteBatch;
 exports.getBatches = getBatches;
@@ -136,3 +151,4 @@ exports.saveInvoicesToDB = saveInvoicesToDB;
 exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
 exports.decorateBatchWithTotals = decorateBatchWithTotals;
+exports.refreshTotals = refreshTotals;

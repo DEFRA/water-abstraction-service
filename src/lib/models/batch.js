@@ -8,7 +8,7 @@ const Totals = require('./totals');
 const { assert } = require('@hapi/hoek');
 const { isArray } = require('lodash');
 
-const { assertIsInstanceOf, assertEnum, assertIsArrayOfType } = require('./validators');
+const { assertIsInstanceOf, assertEnum, assertIsArrayOfType, assertPositiveInteger } = require('./validators');
 
 /**
  * Statuses that the batch (water.billing_batches) may have. These
@@ -217,6 +217,20 @@ class Batch extends Model {
 
   get totals () {
     return this._totals;
+  }
+
+  /**
+   * Sets the region for the batch.
+   * A batch can only be related to a single region at present
+   * @return {Region}
+   */
+  get externalId () {
+    return this._externalId;
+  }
+
+  set externalId (externalId) {
+    assertPositiveInteger(externalId);
+    this._externalId = externalId;
   }
 }
 
