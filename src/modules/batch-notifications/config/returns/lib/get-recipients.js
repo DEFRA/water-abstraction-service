@@ -42,7 +42,7 @@ const getRecipients = async (data) => {
     const { contact, ...context } = message;
 
     if (contact) {
-      const scheduledNotification = createNotificationData(data.ev, contact, context);
+      const scheduledNotification = await createNotificationData(data.ev, contact, context);
       const rowData = stringifyValues(scheduledNotification);
       await scheduledNotifications.repository.create(rowData);
 
