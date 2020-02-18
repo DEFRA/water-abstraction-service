@@ -220,8 +220,7 @@ class Batch extends Model {
   }
 
   /**
-   * Sets the region for the batch.
-   * A batch can only be related to a single region at present
+   * Sets the external ID.  This is the bill run ID in the charge module.
    * @return {Region}
    */
   get externalId () {

@@ -21,7 +21,7 @@ const handleCreateChargeComplete = async (job, messageQueue) => {
   logger.info(`onComplete - ${createChargeJob.jobName}`);
 
   try {
-    if (await isProcessingTransactions()) {
+    if (await isProcessingTransactions(batchId)) {
       return;
     }
 
