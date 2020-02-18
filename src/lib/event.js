@@ -78,7 +78,7 @@ const save = async (event) => {
   logDeprecatedWarning();
   // Update existing record
   if (event.event_id) {
-    event.updatedAt = moment().format('YYYY-MM-DD HH:mm:ss');
+    event.modified = moment().format('YYYY-MM-DD HH:mm:ss');
     const result = await repo.events.update({ eventId: event.event_id }, mapToRepo(event));
     const model = mapFromRepo(result);
     return wrapBookshelfModel(model);
@@ -102,8 +102,6 @@ const load = async (eventId) => {
   }
   const model = mapFromRepo(result);
   model.event_id = model.eventId;
-  model.modified = model.updatedAt;
-  model.created = model.createdAt;
   return model;
 };
 
@@ -124,8 +122,6 @@ const updateStatus = async (eventId, status) => {
 
 const wrapBookshelfModel = (event) => {
   event.event_id = event.eventId;
-  event.modified = event.updatedAt;
-  event.created = event.createdAt;
   return { rowCount: 1, rows: [event] };
 };
 

@@ -138,7 +138,6 @@ experiment('lib/event', () => {
           'created',
           'modified',
           'eventId',
-          'updatedAt',
           'event_id'
         ];
         const { rows } = await event.save(testEvent);
