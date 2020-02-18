@@ -112,7 +112,7 @@ const getRelevantTemplate = async (context, reminderRef) => {
   const { rows, rowCount } = await events.getMostRecentReturnsInvitationByLicence(context.licenceNumbers[0]);
   if (rowCount === 0) return `${reminderRef}_control`;
 
-  const data = getRelevantRowData(rows, reminderRef);
+  const data = rows.length > 1 ? getRelevantRowData(rows, reminderRef) : rows[0];
   const suffix = getTemplateSuffix(data.message_ref);
 
   return `${reminderRef}${suffix}`;

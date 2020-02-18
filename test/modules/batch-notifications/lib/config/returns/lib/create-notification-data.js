@@ -62,10 +62,10 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       };
     });
 
-    experiment('when the contact has "licence holder" role', () => {
+    experiment('when the contact has "licence holder" role', async () => {
       beforeEach(async () => {
         const contact = createContact(Contact.CONTACT_ROLE_LICENCE_HOLDER);
-        result = createNotificationData.createNotificationData(ev, contact, context);
+        result = await createNotificationData.createNotificationData(ev, contact, context);
       });
 
       test('the message has an ID', async () => {
@@ -112,10 +112,10 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       });
     });
 
-    experiment('when the contact has "returns to" role', () => {
+    experiment('when the contact has "returns to" role', async () => {
       beforeEach(async () => {
         const contact = createContact(Contact.CONTACT_ROLE_RETURNS_TO);
-        result = createNotificationData.createNotificationData(ev, contact, context);
+        result = await createNotificationData.createNotificationData(ev, contact, context);
       });
 
       test('the correct message type is used', async () => {
@@ -145,10 +145,10 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       });
     });
 
-    experiment('when the contact has "primary user" role', () => {
+    experiment('when the contact has "primary user" role', async () => {
       beforeEach(async () => {
         const contact = createContact(Contact.CONTACT_ROLE_PRIMARY_USER);
-        result = createNotificationData.createNotificationData(ev, contact, context);
+        result = await createNotificationData.createNotificationData(ev, contact, context);
       });
 
       test('the correct message type is used', async () => {
@@ -170,10 +170,10 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       });
     });
 
-    experiment('when the contact has "returns agent" role', () => {
+    experiment('when the contact has "returns agent" role', async () => {
       beforeEach(async () => {
         const contact = createContact(Contact.CONTACT_ROLE_RETURNS_AGENT);
-        result = createNotificationData.createNotificationData(ev, contact, context);
+        result = await createNotificationData.createNotificationData(ev, contact, context);
       });
 
       test('the correct message type is used', async () => {
