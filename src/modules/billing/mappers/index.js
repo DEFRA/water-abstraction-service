@@ -1,8 +1,10 @@
 exports.address = require('./address');
 exports.abstractionPeriod = require('./abstraction-period');
+exports.api = require('./api');
 exports.batch = require('./batch');
 exports.agreement = require('./agreement');
 exports.chargeElement = require('./charge-element');
+exports.totals = require('./totals');
 exports.company = require('./company');
 exports.contact = require('./contact');
 exports.invoice = require('./invoice');

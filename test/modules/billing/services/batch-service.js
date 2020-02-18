@@ -11,7 +11,7 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
-const { Batch, FinancialYear, Invoice, InvoiceLicence, Licence, Transaction, InvoiceAccount } = require('../../../../src/lib/models');
+const { Batch, FinancialYear, Invoice, InvoiceLicence, Licence, Transaction, InvoiceAccount, Region, Totals } = require('../../../../src/lib/models');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const event = require('../../../../src/lib/event');
 const { logger } = require('../../../../src/logger');
@@ -37,6 +37,7 @@ const batch = {
   billingBatchId: BATCH_ID,
   batchType: 'supplementary',
   season: 'summer',
+  regionId: region.regionId,
   fromFinancialYearEnding: 2014,
   toFinancialYearEnding: 2019,
   status: 'processing',
@@ -55,6 +56,7 @@ experiment('modules/billing/services/batch-service', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
 
+    sandbox.stub(newRepos.billingBatches, 'findByStatus').resolves(data.batch);
     sandbox.stub(newRepos.billingBatches, 'findOne').resolves(data.batch);
     sandbox.stub(newRepos.billingBatches, 'findPage').resolves();
     sandbox.stub(newRepos.billingBatches, 'update').resolves();
@@ -134,6 +136,16 @@ experiment('modules/billing/services/batch-service', () => {
         expect(result.status).to.equal(data.batch.status);
       });
     });
+
+    experiment('when no batch is found', () => {
+      beforeEach(async () => {
+        newRepos.billingBatches.findOne.resolves(null);
+        result = await batchService.getBatchById(BATCH_ID);
+      });
+      test('resolves null', async () => {
+        expect(result).to.be.null();
+      });
+    });
   });
 
   experiment('.getBatches', () => {
@@ -149,7 +161,7 @@ experiment('modules/billing/services/batch-service', () => {
             season: 'all year',
             dateCreated: '2020-01-09T16:23:24.753Z',
             dateUpdated: '2020-01-09T16:23:32.631Z',
-            status: 'complete',
+            status: 'ready',
             fromFinancialYearEnding: 2014,
             toFinancialYearEnding: 2020
           },
@@ -522,6 +534,94 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('the transaction model is updated with the returned ID', async () => {
       expect(models.transaction.id).to.equal(billingTransactionId);
+    });
+  });
+
+  experiment('.getProcessingBatchByRegion', () => {
+    let result;
+    let regionId;
+
+    beforeEach(async () => {
+      regionId = '44444444-0000-0000-0000-000000000000';
+      newRepos.billingBatches.findByStatus.resolves([
+        {
+          billingBatchId: '11111111-0000-0000-0000-000000000000',
+          regionId: '22222222-0000-0000-0000-000000000000',
+          batchType: 'supplementary',
+          season: 'all year',
+          status: 'processing',
+          region: {
+            regionId: '22222222-0000-0000-0000-000000000000',
+            chargeRegionId: 'A',
+            naldRegionId: 1,
+            name: 'Anglian'
+          }
+        },
+        {
+          billingBatchId: '33333333-0000-0000-0000-000000000000',
+          regionId: '44444444-0000-0000-0000-000000000000',
+          batchType: 'supplementary',
+          season: 'all year',
+          status: 'processing',
+          region: {
+            regionId: '22222222-0000-0000-0000-000000000000',
+            chargeRegionId: 'A',
+            naldRegionId: 1,
+            name: 'Anglian'
+          }
+        }
+      ]);
+
+      result = await batchService.getProcessingBatchByRegion(regionId);
+    });
+
+    test('returns the expected batch', async () => {
+      expect(result.id).to.equal('33333333-0000-0000-0000-000000000000');
+    });
+
+    test('returns a srvice layer model', async () => {
+      expect(result).to.be.instanceOf(Batch);
+    });
+  });
+
+  experiment('.decorateBatchWithTotals', () => {
+    let batch;
+
+    const summary = {
+      creditNoteCount: 0,
+      creditNoteValue: 0,
+      invoiceCount: 3,
+      invoiceValue: 15022872,
+      creditLineCount: 0,
+      creditLineValue: 0,
+      debitLineCount: 15,
+      debitLineValue: 15022872,
+      netTotal: 15022872
+    };
+
+    beforeEach(async () => {
+      chargeModuleBatchConnector.send.resolves({
+        summary
+      });
+      batch = new Batch(uuid());
+      batch.region = new Region();
+      batch.region.code = 'A';
+      await batchService.decorateBatchWithTotals(batch);
+    });
+
+    test('calls charge module batch API with correct params', async () => {
+      const [regionCode, batchId, draft] = chargeModuleBatchConnector.send.lastCall.args;
+      expect(regionCode).to.equal(batch.region.code);
+      expect(batchId).to.equal(batch.id);
+      expect(draft).to.equal(true);
+    });
+
+    test('adds a Totals instance to the batch', async () => {
+      expect(batch.totals instanceof Totals).to.be.true();
+    });
+
+    test('copies totals correctly', async () => {
+      expect(batch.totals.toJSON()).to.equal(summary);
     });
   });
 });

@@ -10,9 +10,9 @@ const event = require('../../../lib/event');
 const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
 const Batch = require('../../../lib/models/batch');
 
-const invoiceService = require('./invoice-service');
 const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
+const invoiceService = require('./invoice-service');
 
 /**
  * Loads a Batch instance by ID
@@ -21,7 +21,7 @@ const transactionsService = require('./transactions-service');
  */
 const getBatchById = async id => {
   const row = await newRepos.billingBatches.findOne(id);
-  return mappers.batch.dbToModel(row);
+  return row ? mappers.batch.dbToModel(row) : null;
 };
 
 const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
@@ -30,6 +30,12 @@ const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
     data: result.data.map(mappers.batch.dbToModel),
     pagination: result.pagination
   };
+};
+
+const getProcessingBatchByRegion = async regionId => {
+  const batches = await newRepos.billingBatches.findByStatus(BATCH_STATUS.processing);
+  const batch = batches.find(b => b.regionId === regionId);
+  return batch ? mappers.batch.dbToModel(batch) : null;
 };
 
 const saveEvent = (type, status, user, batch) => {
@@ -115,10 +121,18 @@ const saveInvoicesToDB = async batch => {
   }
 };
 
+const decorateBatchWithTotals = async batch => {
+  const chargeModuleSummary = await chargeModuleBatchConnector.send(batch.region.code, batch.id, true);
+  batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(chargeModuleSummary.summary);
+  return batch;
+};
+
 exports.approveBatch = approveBatch;
 exports.deleteBatch = deleteBatch;
-exports.getBatchById = getBatchById;
 exports.getBatches = getBatches;
+exports.getBatchById = getBatchById;
+exports.getProcessingBatchByRegion = getProcessingBatchByRegion;
 exports.saveInvoicesToDB = saveInvoicesToDB;
 exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
+exports.decorateBatchWithTotals = decorateBatchWithTotals;

@@ -22,7 +22,7 @@ const handleCreateChargeComplete = async job => {
    */
   const { eventId } = job.data.request.data;
   const { batch } = job.data.response;
-  await jobService.setCompletedJob(eventId, batch.billing_batch_id);
+  await jobService.setReadyJob(eventId, batch.billing_batch_id);
 };
 
 module.exports = handleCreateChargeComplete;
