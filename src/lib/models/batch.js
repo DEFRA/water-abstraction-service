@@ -140,6 +140,14 @@ class Batch extends Model {
     return this._dateCreated;
   }
 
+  set dateUpdated (value) {
+    this._dateUpdated = this.getDateTimeFromValue(value);
+  }
+
+  get dateUpdated () {
+    return this._dateUpdated;
+  }
+
   /**
    * Adds a single invoice to the batch
    * @return {Invoice}
