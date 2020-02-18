@@ -53,7 +53,6 @@ const mapFromRepo = data => keyMapper(data, camelCase);
 const create = (data = {}) => {
   logDeprecatedWarning();
   const defaults = {
-    eventId: null,
     referenceCode: null,
     type: null,
     subtype: null,
@@ -78,9 +77,9 @@ const create = (data = {}) => {
 const save = async (event) => {
   logDeprecatedWarning();
   // Update existing record
-  if (event.eventId) {
+  if (event.event_id) {
     event.updatedAt = moment().format('YYYY-MM-DD HH:mm:ss');
-    const result = await repo.events.update({ eventId: event.eventId }, mapToRepo(event));
+    const result = await repo.events.update({ eventId: event.event_id }, mapToRepo(event));
     const model = mapFromRepo(result);
     return wrapBookshelfModel(model);
   }
@@ -118,7 +117,9 @@ const load = async (eventId) => {
 const updateStatus = async (eventId, status) => {
   logDeprecatedWarning();
   const result = await repo.events.updateStatus(eventId, status);
-  return mapFromRepo(result);
+  const model = mapFromRepo(result);
+  model.event_id = model.eventId;
+  return model;
 };
 
 const wrapBookshelfModel = (event) => {

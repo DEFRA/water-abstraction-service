@@ -41,7 +41,7 @@ experiment('lib/event', () => {
   testEvent.status = 'completed';
   testEvent.created = null;
   testEvent.modified = null;
-  testEvent.eventId = 'abc123';
+  testEvent.eventId = 'test-id';
 
   experiment('.create', () => {
     test('it should create an event with default params', async () => {
@@ -107,7 +107,7 @@ experiment('lib/event', () => {
 
     experiment('it should save an existing event', async () => {
       beforeEach(async () => {
-        testEvent.eventId = 'f6378a83-015b-4afd-8de1-d7eb2ce8e032';
+        testEvent.event_id = 'test-id';
         sandbox.stub(repo.events, 'update').resolves(testEvent);
       });
 
@@ -178,29 +178,29 @@ experiment('lib/event', () => {
     });
 
     test('it should load an event by id', async () => {
-      await event.load('eventId');
+      await event.load('event_id');
       const [filter] = repo.events.findOne.firstCall.args;
-      expect(filter).to.equal('eventId');
+      expect(filter).to.equal('event_id');
     });
 
     test('it should parse an object in a jsonb field', async () => {
-      const ev = await event.load('eventId');
+      const ev = await event.load('event_id');
       expect(ev.licences).to.equal(testEvent.licences);
     });
 
     test('it should parse an array in a jsonb field', async () => {
-      const ev = await event.load('eventId');
+      const ev = await event.load('event_id');
       expect(ev.entities).to.equal(testEvent.entities);
     });
 
     test('it should pass through a null unchanged in a jsonb field', async () => {
-      const ev = await event.load('eventId');
+      const ev = await event.load('event_id');
       expect(ev.metadata).to.equal(null);
     });
 
     test('it should return null if event not found', async () => {
       repo.events.findOne.resolves([]);
-      const ev = await event.load('eventId');
+      const ev = await event.load('event_id');
       expect(ev).to.equal(null);
     });
   });
@@ -228,7 +228,7 @@ experiment('lib/event', () => {
     });
 
     test('returns the event', async () => {
-      expect(result.eventId).to.equal('test-id');
+      expect(result.event_id).to.equal('test-id');
       expect(result.status).to.equal('new-status');
     });
   });

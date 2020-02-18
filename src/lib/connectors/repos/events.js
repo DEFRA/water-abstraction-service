@@ -24,21 +24,18 @@ const findOne = async (id) => {
  * @param {Event} event // event model
  */
 const update = async (id, event) => {
-  const model = await Event.forge(event).where({ eventId: id }).save();
+  const model = await Event.forge({ eventId: id }).save({ event });
   return model.toJSON();
 };
 
 /**
  * Updates an events status value to the supplied value
  * and returns the updated event.
- *
  * @param {String} id The event id to update
  * @param {String} status The status to set
  */
 const updateStatus = async (id, status) => {
-  const model = await Event.forge()
-    .where({ eventId: id })
-    .save({ status: status }, { patch: true });
+  const model = await Event.forge({ eventId: id }).save({ status: status });
   return model.toJSON();
 };
 

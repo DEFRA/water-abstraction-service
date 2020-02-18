@@ -21,7 +21,6 @@ experiment('lib/connectors/repos/events', () => {
 
     stub = {
       fetch: sandbox.stub().resolves(model),
-      where: sandbox.stub().returnsThis(),
       save: sandbox.stub().resolves(model)
     };
 
@@ -73,7 +72,7 @@ experiment('lib/connectors/repos/events', () => {
     });
 
     test('calls model.forge.where with id', async () => {
-      const { args } = stub.where.lastCall;
+      const { args } = Event.forge.lastCall;
       expect(args[0].eventId).to.equal('test-id');
     });
 
@@ -90,14 +89,13 @@ experiment('lib/connectors/repos/events', () => {
     });
 
     test('calls model.forge.where with id', async () => {
-      const { args } = stub.where.lastCall;
+      const { args } = Event.forge.lastCall;
       expect(args[0].eventId).to.equal('test-id');
     });
 
     test('calls model.forge.where.save with correct parameters', async () => {
-      const { args } = stub.save.lastCall;
+      const { args } = Event.forge.lastCall.returnValue.save.lastCall;
       expect(args[0].status).to.equal('test-status');
-      expect(args[1].patch).to.be.true();
     });
 
     test('returns a JSON object of the model updated', async () => {
