@@ -24,10 +24,11 @@ const invoiceService = require('../../../../src/modules/billing/services/invoice
 const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
 
+const REGION_ID = '3e91fd44-dead-4748-a312-83806245c3da';
 const BATCH_ID = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
 
 const region = {
-  regionId: '3e91fd44-dead-4748-a312-83806245c3da',
+  regionId: REGION_ID,
   chargeRegionId: 'A',
   naldRegionId: 1,
   name: 'Anglian'
@@ -61,6 +62,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingBatches, 'findPage').resolves();
     sandbox.stub(newRepos.billingBatches, 'update').resolves();
     sandbox.stub(newRepos.billingBatches, 'delete').resolves();
+    sandbox.stub(newRepos.billingTransactions, 'findStatusCountsByBatchId').resolves();
 
     sandbox.stub(repos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
     sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
@@ -622,6 +624,69 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('copies totals correctly', async () => {
       expect(batch.totals.toJSON()).to.equal(summary);
+    });
+  });
+
+  experiment('.refreshTotals', () => {
+    beforeEach(async () => {
+      const batch = new Batch(BATCH_ID);
+      batch.region = new Region();
+      batch.region.code = REGION_ID;
+      chargeModuleBatchConnector.send.resolves({
+        billRunId: 4353,
+        summary: {
+          invoiceCount: 3,
+          creditNoteCount: 5,
+          netTotal: 343553,
+          externalId: 335
+        }
+      });
+      await batchService.refreshTotals(batch);
+    });
+
+    test('gets the bill run summary from the charge module', async () => {
+      expect(
+        chargeModuleBatchConnector.send.calledWith(REGION_ID, BATCH_ID, true)
+      ).to.be.true();
+    });
+
+    test('updates the billing batch with the totals', async () => {
+      const [id, updates] = newRepos.billingBatches.update.lastCall.args;
+      expect(id).to.equal(BATCH_ID);
+      expect(updates.externalId).to.equal(4353);
+      expect(updates.invoiceCount).to.equal(3);
+      expect(updates.creditNoteCount).to.equal(5);
+      expect(updates.netTotal).to.equal(343553);
+      expect(updates.externalId).to.equal(4353);
+    });
+  });
+
+  experiment('.getTransactionStatusCounts', () => {
+    let result;
+
+    beforeEach(async () => {
+      newRepos.billingTransactions.findStatusCountsByBatchId.resolves([
+        {
+          status: 'candidate',
+          count: 3
+        }, {
+          status: 'charge_created',
+          count: 7
+        }
+      ]);
+      result = await batchService.getTransactionStatusCounts(BATCH_ID);
+    });
+
+    test('calls the .findStatusCountsByBatchId with correct params', async () => {
+      const [id] = newRepos.billingTransactions.findStatusCountsByBatchId.lastCall.args;
+      expect(id).to.equal(BATCH_ID);
+    });
+
+    test('returns the results mapped to camel-cased key/value pairs', async () => {
+      expect(result).to.equal({
+        candidate: 3,
+        chargeCreated: 7
+      });
     });
   });
 });

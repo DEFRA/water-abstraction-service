@@ -29,3 +29,14 @@ join water.billing_batches b on i.billing_batch_id=b.billing_batch_id
 where b.billing_batch_id=:batchId
 `
 ;
+
+exports.findStatusCountsByBatchId = `
+select t.status, count(t.status)
+  from water.billing_batches b 
+  join water.billing_invoices i on b.billing_batch_id=i.billing_batch_id
+  join water.billing_invoice_licences il on i.billing_invoice_id=il.billing_invoice_id
+  join water.billing_transactions t on t.billing_invoice_licence_id=il.billing_invoice_licence_id
+  where b.billing_batch_id=:batchId
+  group by t.status
+`
+;

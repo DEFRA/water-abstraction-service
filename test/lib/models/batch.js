@@ -305,6 +305,56 @@ experiment('lib/models/batch', () => {
     });
   });
 
+  experiment('.dateUpdated', () => {
+    test('converts an ISO date string to a moment internally', async () => {
+      const dateString = '2020-01-20T14:51:42.024Z';
+      const batch = new Batch();
+      batch.dateUpdated = dateString;
+
+      expect(batch.dateUpdated).to.equal(moment(dateString));
+    });
+
+    test('converts a JS Date to a moment internally', async () => {
+      const date = new Date();
+      const batch = new Batch();
+      batch.dateUpdated = date;
+
+      expect(batch.dateUpdated).to.equal(moment(date));
+    });
+
+    test('can be set using a moment', async () => {
+      const now = moment();
+
+      const batch = new Batch();
+      batch.dateUpdated = now;
+
+      expect(batch.dateUpdated).to.equal(now);
+    });
+
+    test('throws for an invalid string', async () => {
+      const dateString = 'not a date';
+      const batch = new Batch();
+
+      expect(() => {
+        batch.dateUpdated = dateString;
+      }).to.throw();
+    });
+
+    test('throws for a boolean value', async () => {
+      const batch = new Batch();
+
+      expect(() => {
+        batch.dateUpdated = true;
+      }).to.throw();
+    });
+
+    test('allows null', async () => {
+      const batch = new Batch();
+      batch.dateUpdated = null;
+      expect(batch.dateUpdated).to.be.null();
+    });
+  });
+
   experiment('.isTwoPartTariff', () => {
     test('returns false if the type is annual', async () => {
       const batch = new Batch().fromHash({ type: Batch.BATCH_TYPE.annual });
@@ -355,6 +405,44 @@ experiment('lib/models/batch', () => {
       const func = () => {
         batch.totals = new Region();
       };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.externalId', () => {
+    test('can be set to a positive integer', async () => {
+      const batch = new Batch();
+      batch.externalId = 123;
+      expect(batch.externalId).to.equal(123);
+    });
+
+    test('cannot be set to zero', async () => {
+      const batch = new Batch();
+      const func = () => { batch.externalId = 0; };
+      expect(func).to.throw();
+    });
+
+    test('cannot be set to a decimal', async () => {
+      const batch = new Batch();
+      const func = () => { batch.externalId = 43.55; };
+      expect(func).to.throw();
+    });
+
+    test('cannot be set to a string', async () => {
+      const batch = new Batch();
+      const func = () => { batch.externalId = 'hello'; };
+      expect(func).to.throw();
+    });
+
+    test('cannot be set to a negative integer', async () => {
+      const batch = new Batch();
+      const func = () => { batch.externalId = -45; };
+      expect(func).to.throw();
+    });
+
+    test('cannot be set to null', async () => {
+      const batch = new Batch();
+      const func = () => { batch.externalId = null; };
       expect(func).to.throw();
     });
   });

@@ -8,7 +8,7 @@ const Totals = require('./totals');
 const { assert } = require('@hapi/hoek');
 const { isArray } = require('lodash');
 
-const { assertIsInstanceOf, assertEnum, assertIsArrayOfType } = require('./validators');
+const { assertIsInstanceOf, assertEnum, assertIsArrayOfType, assertPositiveInteger } = require('./validators');
 
 /**
  * Statuses that the batch (water.billing_batches) may have. These
@@ -140,6 +140,14 @@ class Batch extends Model {
     return this._dateCreated;
   }
 
+  set dateUpdated (value) {
+    this._dateUpdated = this.getDateTimeFromValue(value);
+  }
+
+  get dateUpdated () {
+    return this._dateUpdated;
+  }
+
   /**
    * Adds a single invoice to the batch
    * @return {Invoice}
@@ -217,6 +225,19 @@ class Batch extends Model {
 
   get totals () {
     return this._totals;
+  }
+
+  /**
+   * Sets the external ID.  This is the bill run ID in the charge module.
+   * @return {Region}
+   */
+  get externalId () {
+    return this._externalId;
+  }
+
+  set externalId (externalId) {
+    assertPositiveInteger(externalId);
+    this._externalId = externalId;
   }
 }
 
