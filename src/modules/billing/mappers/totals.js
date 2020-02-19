@@ -42,7 +42,6 @@ const sumProperties = arr => arr.reduce((acc, row) => {
 const chargeModuleBillRunToInvoiceModel = (billRun, invoiceAccountNumber) => {
   const customer = find(billRun.customers, { customerReference: invoiceAccountNumber });
 
-  // row => row.customerReference === invoiceAccountNumber);
   if (!customer) {
     return null;
   }
