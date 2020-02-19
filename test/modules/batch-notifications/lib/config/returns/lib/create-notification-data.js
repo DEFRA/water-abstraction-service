@@ -226,15 +226,16 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
 
       experiment('handles multiple invitation templates', async () => {
         test('selects the appropriate template when available', async () => {
+          contact = createContact(Contact.CONTACT_ROLE_LICENCE_HOLDER);
           const templateData = {
             rows: [
-              { message_ref: 'returns_invitation_returns_agent_email_formal' },
-              { message_ref: 'returns_invitation_primary_user_email_suasion' }],
+              { message_ref: 'returns_invitation_returns_to_letter_formal' },
+              { message_ref: 'returns_invitation_licence_holder_letter_suasion' }],
             rowCount: 2
           };
           event.getMostRecentReturnsInvitationByLicence.resolves(templateData);
           result = await createNotificationData.createNotificationData(ev, contact, context);
-          expect(result.message_ref).to.equal('returns_reminder_primary_user_email_suasion');
+          expect(result.message_ref).to.equal('returns_reminder_licence_holder_letter_suasion');
         });
 
         test('selects control if matching template not found', async () => {
