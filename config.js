@@ -186,6 +186,7 @@ module.exports = {
 
   cognito: {
     username: process.env.COGNITO_USERNAME,
-    password: process.env.COGNITO_PASSWORD
+    password: process.env.COGNITO_PASSWORD,
+    proxy: process.env.PROXY
   }
 };

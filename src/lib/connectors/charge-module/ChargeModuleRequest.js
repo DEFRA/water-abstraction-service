@@ -3,7 +3,7 @@
 const { http } = require('@envage/water-abstraction-helpers');
 const urlJoin = require('url-join');
 const moment = require('moment');
-const { set, cloneDeep } = require('lodash');
+const { set, cloneDeep, get } = require('lodash');
 const config = require('../../../../config.js');
 const { logger } = require('../../../logger');
 
@@ -16,9 +16,11 @@ const { logger } = require('../../../logger');
 const makeTokenRequest = async () => {
   logger.info('getting cognito token');
   const buff = Buffer.from(config.cognito.username + ':' + config.cognito.password);
+  const proxy = get(config, 'cognito.proxy', null);
   const options = {
     method: 'POST',
     json: true,
+    proxy,
     uri: urlJoin(config.services.cognito, '/oauth2/token'),
     qs: {
       grant_type: 'client_credentials'
