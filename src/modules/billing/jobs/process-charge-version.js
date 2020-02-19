@@ -1,9 +1,8 @@
 'use strict';
 
 const evt = require('../../../lib/event');
-const { jobStatus } = require('../lib/batch');
-const repos = require('../../../lib/connectors/repository');
 const service = require('../service');
+const chargeVersionYearService = require('../services/charge-version-year');
 const { logger } = require('../../../logger');
 
 const JOB_NAME = 'billing.process-charge-version';
@@ -33,7 +32,7 @@ const handleProcessChargeVersion = async job => {
     await service.chargeVersionYear.persistChargeVersionYearBatch(batch);
 
     // Update status in water.billing_batch_charge_version_year
-    await repos.billingBatchChargeVersionYears.setStatus(chargeVersionYear.billing_batch_charge_version_year_id, jobStatus.complete);
+    await chargeVersionYearService.setReadyStatus(chargeVersionYear.billing_batch_charge_version_year_id);
 
     return {
       chargeVersionYear,
@@ -45,7 +44,7 @@ const handleProcessChargeVersion = async job => {
       chargeVersionYear
     });
     // Mark as error
-    await repos.billingBatchChargeVersionYears.setStatus(chargeVersionYear.billing_batch_charge_version_year_id, jobStatus.error);
+    await chargeVersionYearService.setErrorStatus(chargeVersionYear.billing_batch_charge_version_year_id);
     // Rethrow
     throw err;
   }
