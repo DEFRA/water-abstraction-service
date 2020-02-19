@@ -12,8 +12,13 @@ const sandbox = sinon.createSandbox();
 const createNotificationData = require('../../../../../../../src/modules/batch-notifications/config/returns/lib/create-notification-data');
 const Contact = require('../../../../../../../src/lib/models/contact');
 const { MESSAGE_STATUS_DRAFT } = require('../../../../../../../src/modules/batch-notifications/lib/message-statuses');
+const event = require('../../../../../../../src/lib/event');
 
 experiment('modules/batch-notifications/config/return-invitation/create-notification-data', () => {
+  beforeEach(async () => {
+    sandbox.stub(event, 'getMostRecentReturnsInvitationByLicence');
+  });
+
   afterEach(async () => {
     sandbox.restore();
   });
@@ -192,6 +197,57 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
             'periodEndDate',
             'returnDueDate']
         );
+      });
+    });
+
+    experiment('when matching return reminder template to invitation template', async () => {
+      let contact;
+      beforeEach(async () => {
+        contact = createContact(Contact.CONTACT_ROLE_PRIMARY_USER);
+        ev.subtype = 'returnReminder';
+      });
+
+      test('reminder template matches invitation template', async () => {
+        const templateData = {
+          rows: [{ message_ref: 'returns_invitation_primary_user_email_suasion' }],
+          rowCount: 1
+        };
+        event.getMostRecentReturnsInvitationByLicence.resolves(templateData);
+        result = await createNotificationData.createNotificationData(ev, contact, context);
+
+        expect(result.message_ref).to.equal('returns_reminder_primary_user_email_suasion');
+      });
+
+      test('template defaults to "control" when invitation template not found', async () => {
+        event.getMostRecentReturnsInvitationByLicence.resolves({ rows: [], rowCount: 0 });
+        result = await createNotificationData.createNotificationData(ev, contact, context);
+        expect(result.message_ref).to.equal('returns_reminder_primary_user_email_control');
+      });
+
+      experiment('handles multiple invitation templates', async () => {
+        test('selects the appropriate template when available', async () => {
+          const templateData = {
+            rows: [
+              { message_ref: 'returns_invitation_returns_agent_email_formal' },
+              { message_ref: 'returns_invitation_primary_user_email_suasion' }],
+            rowCount: 2
+          };
+          event.getMostRecentReturnsInvitationByLicence.resolves(templateData);
+          result = await createNotificationData.createNotificationData(ev, contact, context);
+          expect(result.message_ref).to.equal('returns_reminder_primary_user_email_suasion');
+        });
+
+        test('selects control if matching template not found', async () => {
+          const templateData = {
+            rows: [
+              { message_ref: 'returns_invitation_licence_holder_letter_formal' },
+              { message_ref: 'returns_invitation_returns_to_letter_suasion' }],
+            rowCount: 2
+          };
+          event.getMostRecentReturnsInvitationByLicence.resolves(templateData);
+          result = await createNotificationData.createNotificationData(ev, contact, context);
+          expect(result.message_ref).to.equal('returns_reminder_primary_user_email_control');
+        });
       });
     });
   });

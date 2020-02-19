@@ -12,7 +12,7 @@ const {
   CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO
 } = require('../../../../../lib/models/contact');
 const BI_TEMPLATES = ['control', 'suasion', 'social_norm', 'formal'];
-const events = require('../../../../../lib/event');
+const event = require('../../../../../lib/event');
 
 /**
  * Gets personalisation data for the notification - this relates to the
@@ -109,12 +109,11 @@ const getTemplateSuffix = messageRef => {
 };
 
 const getRelevantTemplate = async (context, reminderRef) => {
-  const { rows, rowCount } = await events.getMostRecentReturnsInvitationByLicence(context.licenceNumbers[0]);
-  if (rowCount === 0) return `${reminderRef}_control`;
-
+  const { rows, rowCount } = await event.getMostRecentReturnsInvitationByLicence(context.licenceNumbers[0]);
   const data = rows.length > 1 ? getRelevantRowData(rows, reminderRef) : rows[0];
-  const suffix = getTemplateSuffix(data.message_ref);
+  if (rowCount === 0 || !data) return `${reminderRef}_control`;
 
+  const suffix = getTemplateSuffix(data.message_ref);
   return `${reminderRef}${suffix}`;
 };
 
