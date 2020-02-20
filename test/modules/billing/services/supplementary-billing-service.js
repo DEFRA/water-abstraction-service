@@ -45,6 +45,7 @@ const createFullTransaction = (...args) => ({
       region: {
         regionId: '74241f84-de5f-4ec5-b437-377af15289fd',
         name: 'Anglian',
+        displayName: 'Anglian',
         naldRegionId: 1,
         chargeRegionId: 'A'
       }

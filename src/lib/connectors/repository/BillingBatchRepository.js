@@ -40,7 +40,8 @@ class BillingBatchRepository extends Repository {
         not exists (
           select b.billing_batch_id
           from water.billing_batches b
-          where b.status = 'processing' and b.region_id = $1
+          where b.region_id = $1
+          and b.status in ('processing', 'ready', 'review')
         )
       returning *;
     `;
