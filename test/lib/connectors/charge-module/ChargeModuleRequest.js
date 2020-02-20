@@ -49,7 +49,7 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
     sandbox.stub(config.services, 'cognito').value(data.cognito.url);
     sandbox.stub(config.cognito, 'username').value(data.cognito.username);
     sandbox.stub(config.cognito, 'password').value(data.cognito.password);
-    sandbox.stub(config.cognito, 'proxy').value('https://some-proxy');
+    sandbox.stub(config, 'proxy').value('https://some-proxy');
 
     sandbox.stub(logger, 'info');
     sandbox.stub(logger, 'error');
@@ -141,7 +141,7 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
 
       experiment('when a GET request is made and no proxy is set', () => {
         beforeEach(async () => {
-          sandbox.stub(config.cognito, 'proxy').value(undefined);
+          sandbox.stub(config, 'proxy').value(undefined);
           result = await cmRequest.get(data.request);
         });
 

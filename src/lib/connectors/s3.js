@@ -3,12 +3,12 @@ const aws = require('aws-sdk');
 const proxyAgent = require('proxy-agent');
 
 const config = require('../../../config.js');
-const { bucket, proxy, ...credentials } = config.s3;
+const { bucket, ...credentials } = config.s3;
 aws.config.update(credentials);
 
-if (proxy) {
+if (config.proxy) {
   aws.config.update({
-    httpOptions: { agent: proxyAgent(proxy) }
+    httpOptions: { agent: proxyAgent(config.proxy) }
   });
 }
 

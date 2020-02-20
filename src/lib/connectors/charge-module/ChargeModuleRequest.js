@@ -16,11 +16,10 @@ const { logger } = require('../../../logger');
 const makeTokenRequest = async () => {
   logger.info('getting cognito token');
   const buff = Buffer.from(config.cognito.username + ':' + config.cognito.password);
-  const proxy = get(config, 'cognito.proxy', null);
   const options = {
     method: 'POST',
     json: true,
-    proxy,
+    proxy: config.proxy || null,
     uri: urlJoin(config.services.cognito, '/oauth2/token'),
     qs: {
       grant_type: 'client_credentials'
