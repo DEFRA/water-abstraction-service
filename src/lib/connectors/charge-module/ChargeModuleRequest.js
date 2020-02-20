@@ -93,6 +93,7 @@ class ChargeModuleRequest {
   _decorateRequestOptions (options) {
     const opts = cloneDeep(options); ;
     set(opts, 'headers.Authorization', `Bearer ${this.token}`);
+    opts.proxy = config.proxy || null;
     return opts;
   }
 

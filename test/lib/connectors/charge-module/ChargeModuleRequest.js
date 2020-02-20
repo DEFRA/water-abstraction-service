@@ -19,6 +19,7 @@ const ChargeModuleRequest = require('../../../../src/lib/connectors/charge-modul
 const { logger } = require('../../../../src/logger');
 
 const data = {
+  proxy: 'https://some-proxy',
   cognito: {
     url: 'https://example.com',
     username: 'username',
@@ -49,7 +50,7 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
     sandbox.stub(config.services, 'cognito').value(data.cognito.url);
     sandbox.stub(config.cognito, 'username').value(data.cognito.username);
     sandbox.stub(config.cognito, 'password').value(data.cognito.password);
-    sandbox.stub(config, 'proxy').value('https://some-proxy');
+    sandbox.stub(config, 'proxy').value(data.proxy);
 
     sandbox.stub(logger, 'info');
     sandbox.stub(logger, 'error');
@@ -69,7 +70,7 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
         json: true,
         uri: 'https://example.com/oauth2/token',
         qs: { grant_type: 'client_credentials' },
-        proxy: 'https://some-proxy',
+        proxy: data.proxy,
         headers:
            {
              'content-type': 'application/x-www-form-urlencoded',
@@ -99,7 +100,8 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
             uri: 'https://example.com/some/path',
             qs: { bar: 'foo' },
             headers: { foo: 'baz', Authorization: 'Bearer cognito_token' },
-            method: 'GET'
+            method: 'GET',
+            proxy: data.proxy
           });
         });
 
@@ -121,7 +123,8 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
             uri: 'https://example.com/some/path',
             qs: { bar: 'foo' },
             headers: { foo: 'baz', Authorization: 'Bearer cognito_token' },
-            method: 'POST'
+            method: 'POST',
+            proxy: data.proxy
           });
         });
 
@@ -132,24 +135,22 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
     });
   });
 
-  experiment('when a token is not set', () => {
-    experiment('and a token is retrieved successfully', () => {
-      beforeEach(async () => {
-        http.request.onCall(0).resolves(data.tokenResponse);
-        http.request.onCall(1).resolves(data.cmResponse);
-      });
+  experiment('when the proxy is not set in the config', async () => {
+    beforeEach(async () => {
+      http.request.onCall(0).resolves(data.tokenResponse);
+      http.request.onCall(1).resolves(data.cmResponse);
+      sandbox.stub(config, 'proxy').value(undefined);
+      result = await cmRequest.get(data.request);
+    });
 
-      experiment('when a GET request is made and no proxy is set', () => {
-        beforeEach(async () => {
-          sandbox.stub(config, 'proxy').value(undefined);
-          result = await cmRequest.get(data.request);
-        });
+    test('the cognito token request proxy set to null', async () => {
+      const [options] = http.request.firstCall.args;
+      expect(options.proxy).to.be.null();
+    });
 
-        test('the token request proxy setting is null', async () => {
-          const [options] = http.request.firstCall.args;
-          expect(options.proxy).to.be.null();
-        });
-      });
+    test('requests to the charge module have the proxy set to null', async () => {
+      const [options] = http.request.lastCall.args;
+      expect(options.proxy).to.be.null();
     });
   });
 
@@ -177,7 +178,8 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
             uri: 'https://example.com/some/path',
             qs: { bar: 'foo' },
             headers: { foo: 'baz', Authorization: 'Bearer cognito_token' },
-            method: 'GET'
+            method: 'GET',
+            proxy: data.proxy
           });
         });
 
@@ -212,7 +214,8 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
           uri: 'https://example.com/some/path',
           qs: { bar: 'foo' },
           headers: { foo: 'baz', Authorization: 'Bearer valid-token' },
-          method: 'GET'
+          method: 'GET',
+          proxy: data.proxy
         });
       });
 
@@ -255,7 +258,8 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
             uri: 'https://example.com/some/path',
             qs: { bar: 'foo' },
             headers: { foo: 'baz', Authorization: 'Bearer cognito_token' },
-            method: 'GET'
+            method: 'GET',
+            proxy: data.proxy
           });
         });
 
