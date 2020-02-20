@@ -3,7 +3,7 @@
 const { http } = require('@envage/water-abstraction-helpers');
 const urlJoin = require('url-join');
 const moment = require('moment');
-const { set, cloneDeep, get } = require('lodash');
+const { set, cloneDeep } = require('lodash');
 const config = require('../../../../config.js');
 const { logger } = require('../../../logger');
 
