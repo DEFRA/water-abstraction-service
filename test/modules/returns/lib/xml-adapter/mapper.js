@@ -1,12 +1,15 @@
+'use strict';
+
 const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
+
 const {
   beforeEach,
   afterEach,
   experiment,
   test
 } = exports.lab = require('@hapi/lab').script();
+
 const {
   getReturnFrequency,
   getNilReturn,
@@ -20,6 +23,7 @@ const {
   getReadingType,
   mapXml
 } = require('../../../../../src/modules/returns/lib/xml-adapter/mapper');
+
 const path = require('path');
 const fs = require('fs');
 const util = require('util');
@@ -32,6 +36,11 @@ const returnsConnector = require('../../../../../src/lib/connectors/returns');
 
 const getTestFile = name => {
   return readFile(path.join(__dirname, '../xml-files-for-tests', name + '.xml'), 'utf-8');
+};
+
+const getNode = (document, xpath) => {
+  const options = { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' };
+  return document.get(xpath, options);
 };
 
 const getTestUser = () => ({
@@ -51,7 +60,7 @@ experiment('XML to JSON Mapping', () => {
     beforeEach(async () => {
       const xmlFileToParse = await getTestFile('single-monthly-return');
       returnXml = await libxmljs.parseXml(xmlFileToParse);
-      returnXmlNode = returnXml.get('//tns:Return', { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' });
+      returnXmlNode = getNode(returnXml, '//tns:Return');
 
       const licenceRegionCodes = {
         '123abc': 1
@@ -89,7 +98,7 @@ experiment('XML to JSON Mapping', () => {
     beforeEach(async () => {
       const xmlFileToParse = await getTestFile('nil-return');
       returnXml = await libxmljs.parseXml(xmlFileToParse);
-      returnXmlNode = returnXml.get('//tns:Return', { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' });
+      returnXmlNode = getNode(returnXml, '//tns:Return');
     });
 
     afterEach(async () => sandbox.restore());
@@ -125,7 +134,7 @@ experiment('XML to JSON Mapping', () => {
     beforeEach(async () => {
       const xmlFileToParse = await getTestFile('daily-return');
       returnXml = await libxmljs.parseXml(xmlFileToParse);
-      returnXmlNode = returnXml.get('//tns:Return', { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' });
+      returnXmlNode = getNode(returnXml, '//tns:Return');
     });
 
     test("returns 'day' for Daily return", async () => {
@@ -138,7 +147,7 @@ experiment('XML to JSON Mapping', () => {
     beforeEach(async () => {
       const xmlFileToParse = await getTestFile('single-weekly-return');
       returnXml = await libxmljs.parseXml(xmlFileToParse);
-      returnXmlNode = returnXml.get('//tns:Return', { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' });
+      returnXmlNode = getNode(returnXml, '//tns:Return');
     });
 
     test("returns 'week' for Weekly return", async () => {
@@ -151,7 +160,7 @@ experiment('XML to JSON Mapping', () => {
     beforeEach(async () => {
       const xmlFileToParse = await getTestFile('single-monthly-return');
       returnXml = await libxmljs.parseXml(xmlFileToParse);
-      returnXmlNode = returnXml.get('//tns:Return', { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' });
+      returnXmlNode = getNode(returnXml, '//tns:Return');
     });
 
     test("returns 'month' for Monthly return", async () => {
@@ -164,7 +173,7 @@ experiment('XML to JSON Mapping', () => {
     beforeEach(async () => {
       const xmlFileToParse = await getTestFile('single-yearly-return');
       returnXml = await libxmljs.parseXml(xmlFileToParse);
-      returnXmlNode = returnXml.get('//tns:Return', { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' });
+      returnXmlNode = getNode(returnXml, '//tns:Return');
     });
 
     test("returns 'year' for Yearly return", async () => {
@@ -177,7 +186,7 @@ experiment('XML to JSON Mapping', () => {
     beforeEach(async () => {
       const xmlFileToParse = await getTestFile('single-yearly-return');
       returnXml = await libxmljs.parseXml(xmlFileToParse);
-      returnXmlNode = returnXml.get('//tns:Return', { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' });
+      returnXmlNode = getNode(returnXml, '//tns:Return');
       sandbox.stub(permitConnector, 'getLicenceRegionCodes').resolves({ '123abc': 1 });
       sandbox.stub(returnsConnector.returns, 'findAll').resolves([
         {
@@ -199,7 +208,7 @@ experiment('XML to JSON Mapping', () => {
     });
 
     test('getReadingType returns "measured" if EstimatedIndicator ="N"', async () => {
-      const returnLine = returnXmlNode.get('//tns:YearlyReturnLine', { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' });
+      const returnLine = getNode(returnXmlNode, '//tns:YearlyReturnLine');
       const returnReadingType = getReadingType(returnLine);
 
       expect(returnReadingType).to.equal('measured');
@@ -208,7 +217,7 @@ experiment('XML to JSON Mapping', () => {
     test('getReadingType returns "estimated" if EstimatedIndicator ="Y"', async () => {
       const xmlFileToParse = await getTestFile('estimated-monthly-return');
       returnXml = await libxmljs.parseXml(xmlFileToParse);
-      const returnLine = returnXml.get('//tns:MonthlyReturnLine', { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' });
+      const returnLine = getNode(returnXml, '//tns:MonthlyReturnLine');
       const returnReadingType = getReadingType(returnLine);
 
       expect(returnReadingType).to.equal('estimated');
@@ -219,7 +228,7 @@ experiment('XML to JSON Mapping', () => {
     beforeEach(async () => {
       const xmlFileToParse = await getTestFile('single-monthly-return');
       returnXml = await libxmljs.parseXml(xmlFileToParse);
-      returnXmlNode = returnXml.get('//tns:Return', { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' });
+      returnXmlNode = getNode(returnXml, '//tns:Return');
     });
 
     test('getMeterDetails returns a meter object', () => {
@@ -235,7 +244,7 @@ experiment('XML to JSON Mapping', () => {
 
     experiment('WasMeterUsed = "Y"', () => {
       test('wasMeterUsed returns true', () => {
-        const meterUsage = returnXmlNode.get('//tns:MeterUsage', { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' });
+        const meterUsage = getNode(returnXmlNode, '//tns:MeterUsage');
         const meterUsed = wasMeterUsed(meterUsage);
 
         expect(meterUsed).to.be.a.boolean().and.to.be.true();
@@ -256,11 +265,11 @@ experiment('XML to JSON Mapping', () => {
       beforeEach(async () => {
         const xmlFileToParse = await getTestFile('estimated-monthly-return');
         returnXml = await libxmljs.parseXml(xmlFileToParse);
-        returnXmlNode = returnXml.get('//tns:Return', { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' });
+        returnXmlNode = getNode(returnXml, '//tns:Return');
       });
 
       test('wasMeterUsed returns false', () => {
-        const meterUsage = returnXmlNode.get('//tns:MeterUsage', { tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06' });
+        const meterUsage = getNode(returnXmlNode, '//tns:MeterUsage');
         const meterUsed = wasMeterUsed(meterUsage);
 
         expect(meterUsed).to.be.a.boolean().and.to.be.false();
@@ -285,9 +294,7 @@ experiment('XML to JSON Mapping', () => {
         const xmlFileToParse = await getTestFile('estimated-monthly-return');
         const noUnitOfMeasurementXml = xmlFileToParse.replace('<tns:UnitOfMeasurement>CubicMetres</tns:UnitOfMeasurement>', '<tns:UnitOfMeasurement></tns:UnitOfMeasurement>');
         returnXml = await libxmljs.parseXml(noUnitOfMeasurementXml);
-        returnXmlNode = returnXml.get('//tns:Return', {
-          tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06'
-        });
+        returnXmlNode = getNode(returnXml, '//tns:Return');
 
         const units = getUnits(returnXmlNode);
         expect(units).to.equal(null);
@@ -432,6 +439,33 @@ experiment('mapXml', () => {
       email: 'upload@example.com',
       type: 'external',
       entityId: '1234-4321'
+    });
+  });
+});
+
+experiment('.getMeterDetails', () => {
+  experiment('when the meter details contains a meter serial number', () => {
+    test('the value is mapped', async () => {
+      const xmlFileToParse = await getTestFile('single-yearly-return');
+      const returnXml = await libxmljs.parseXml(xmlFileToParse);
+      const returnXmlNode = getNode(returnXml, '//tns:Return');
+
+      const meterDetails = getMeterDetails(returnXmlNode);
+      expect(meterDetails[0].serialNumber).to.equal('unknown');
+    });
+  });
+
+  experiment('when the meter details contains a meter serial number', () => {
+    test('the value set to a default value', async () => {
+      const xmlFileToParse = await getTestFile('single-yearly-return');
+
+      // replace the entire node to simulate its absence
+      const withoutSerialNumber = xmlFileToParse.replace('<tns:SerialNumber>unknown</tns:SerialNumber>', '');
+      const returnXml = await libxmljs.parseXml(withoutSerialNumber);
+      const returnXmlNode = getNode(returnXml, '//tns:Return');
+
+      const meterDetails = getMeterDetails(returnXmlNode);
+      expect(meterDetails[0].serialNumber).to.equal('-');
     });
   });
 });
