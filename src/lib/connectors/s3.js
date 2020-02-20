@@ -15,7 +15,6 @@ const getS3 = () => {
       }
     }
   };
-  console.log(awsConfig);
   aws.config.update(awsConfig);
   return new aws.S3();
 };
