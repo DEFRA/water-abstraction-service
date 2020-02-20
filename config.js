@@ -73,8 +73,7 @@ module.exports = {
     accessKeyId: process.env.S3_KEY,
     secretAccessKey: process.env.S3_SECRET,
     region: 'eu-west-1',
-    bucket: process.env.S3_BUCKET,
-    proxy: process.env.PROXY
+    bucket: process.env.S3_BUCKET
   },
 
   server: {
@@ -187,5 +186,7 @@ module.exports = {
   cognito: {
     username: process.env.COGNITO_USERNAME,
     password: process.env.COGNITO_PASSWORD
-  }
+  },
+
+  proxy: process.env.PROXY
 };

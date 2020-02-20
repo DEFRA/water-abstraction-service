@@ -49,6 +49,7 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
     sandbox.stub(config.services, 'cognito').value(data.cognito.url);
     sandbox.stub(config.cognito, 'username').value(data.cognito.username);
     sandbox.stub(config.cognito, 'password').value(data.cognito.password);
+    sandbox.stub(config, 'proxy').value('https://some-proxy');
 
     sandbox.stub(logger, 'info');
     sandbox.stub(logger, 'error');
@@ -61,13 +62,14 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
     sandbox.restore();
   });
 
-  const testTokenIsRequested = () => test('a request is made to get the token', async () => {
+  const testTokenIsRequested = () => test('a request is made to get the token with proxy', async () => {
     expect(http.request.calledWith(
       {
         method: 'POST',
         json: true,
         uri: 'https://example.com/oauth2/token',
         qs: { grant_type: 'client_credentials' },
+        proxy: 'https://some-proxy',
         headers:
            {
              'content-type': 'application/x-www-form-urlencoded',
@@ -125,6 +127,27 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
 
         test('resolves with the data obtained from the charge module', async () => {
           expect(result).to.equal(data.cmResponse);
+        });
+      });
+    });
+  });
+
+  experiment('when a token is not set', () => {
+    experiment('and a token is retrieved successfully', () => {
+      beforeEach(async () => {
+        http.request.onCall(0).resolves(data.tokenResponse);
+        http.request.onCall(1).resolves(data.cmResponse);
+      });
+
+      experiment('when a GET request is made and no proxy is set', () => {
+        beforeEach(async () => {
+          sandbox.stub(config, 'proxy').value(undefined);
+          result = await cmRequest.get(data.request);
+        });
+
+        test('the token request proxy setting is null', async () => {
+          const [options] = http.request.firstCall.args;
+          expect(options.proxy).to.be.null();
         });
       });
     });

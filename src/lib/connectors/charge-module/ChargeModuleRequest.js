@@ -19,6 +19,7 @@ const makeTokenRequest = async () => {
   const options = {
     method: 'POST',
     json: true,
+    proxy: config.proxy || null,
     uri: urlJoin(config.services.cognito, '/oauth2/token'),
     qs: {
       grant_type: 'client_credentials'
