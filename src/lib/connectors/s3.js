@@ -3,11 +3,12 @@ const aws = require('aws-sdk');
 const proxyAgent = require('proxy-agent');
 
 const config = require('../../../config.js');
-const { bucket, ...credentials } = config.s3;
+const { bucket } = config.s3;
 
-const getS3 = () => {
+const getS3Options = () => {
+  const { bucket, ...credentials } = config.s3;
   const { proxy } = config;
-  const awsConfig = {
+  return {
     ...credentials,
     ...proxy && {
       httpOptions: {
@@ -15,11 +16,9 @@ const getS3 = () => {
       }
     }
   };
-  aws.config.update(awsConfig);
-  return new aws.S3();
 };
 
-const s3 = getS3();
+const s3 = new aws.S3(getS3Options());
 
 const upload = async (filename, buffer) => {
   const options = {
@@ -59,7 +58,7 @@ const download = async (key, destination) => {
   });
 };
 
-exports.getS3 = getS3;
+exports.getS3Options = getS3Options;
 exports.upload = upload;
 exports.getObject = getObject;
 exports.download = download;
