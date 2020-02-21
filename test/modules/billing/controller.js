@@ -335,11 +335,7 @@ experiment('modules/billing/controller', () => {
       });
 
       test('the invoice is returned', async () => {
-        expect(response.data.id).to.equal(invoice.id);
-      });
-
-      test('the error object is null', async () => {
-        expect(response.error).to.be.null();
+        expect(response.id).to.equal(invoice.id);
       });
     });
 

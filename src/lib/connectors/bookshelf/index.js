@@ -7,3 +7,6 @@ exports.ChargeElement = require('./ChargeElement');
 exports.Region = require('./Region');
 exports.Licence = require('./Licence');
 exports.bookshelf = require('./bookshelf').bookshelf;
+exports.PurposePrimary = require('./PurposePrimary');
+exports.PurposeSecondary = require('./PurposeSecondary');
+exports.PurposeUse = require('./PurposeUse');

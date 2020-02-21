@@ -33,6 +33,9 @@ const dbToModel = row => {
   if (row.contactId) {
     invoiceLicence.contact = new Contact(row.contactId);
   }
+  if (row.billingTransactions) {
+    invoiceLicence.transactions = row.billingTransactions.map(transaction.dbToModel);
+  }
   invoiceLicence.licence = licence.dbToModel(row.licence);
   return invoiceLicence;
 };

@@ -138,10 +138,12 @@ experiment('modules/billing/services/invoiceService', () => {
     invoiceAccount1 = new InvoiceAccount(INVOICE_1_ACCOUNT_ID);
     invoiceAccount1.company = new Company(COMPANY_1_ID);
     invoiceAccount1.company.name = 'Test Company 1';
+    invoiceAccount1.accountNumber = INVOICE_1_ACCOUNT_NUMBER;
 
     invoiceAccount2 = new InvoiceAccount(INVOICE_2_ACCOUNT_ID);
     invoiceAccount2.company = new Company(COMPANY_2_ID);
     invoiceAccount2.company.name = 'Test Company 2';
+    invoiceAccount2.accountNumber = INVOICE_2_ACCOUNT_NUMBER;
 
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountIds').resolves([
       invoiceAccount1, invoiceAccount2

@@ -72,7 +72,8 @@ const data = {
     invoiceAccountId,
     invoiceAccountNumber: 'A12345678A',
     company: {
-      companyId: 'c3fea19d-f5da-4293-bf31-38d7b79d5bf5'
+      companyId: 'c3fea19d-f5da-4293-bf31-38d7b79d5bf5',
+      name: 'A test co'
     },
     address: {
       addressId: '3b0c8648-e6c0-41a4-aae0-4e1b5b8f7a3a',

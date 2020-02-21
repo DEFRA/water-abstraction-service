@@ -103,7 +103,7 @@ const dbToModel = row => {
   const transaction = new Transaction();
   transaction.fromHash({
     id: row.billingTransactionId,
-    ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey']),
+    ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey', 'externalId']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),

@@ -1,6 +1,8 @@
 'use strict';
 const Model = require('./model');
 const AbstractionPeriod = require('./abstraction-period');
+const Purpose = require('./purpose');
+
 const {
   assertEnum,
   assertIsInstanceOf,
@@ -124,6 +126,19 @@ class ChargeElement extends Model {
    */
   get volume () {
     return this._billableAnnualQuantity || this._authorisedAnnualQuantity;
+  }
+
+  /**
+   * An instance of Purpose for the tertiary/use purpose
+   * @param {Purpose}
+   */
+  set purposeUse (purpose) {
+    assertIsInstanceOf(purpose, Purpose);
+    this._purposeUse = purpose;
+  }
+
+  get purposeUse () {
+    return this._purposeUse;
   }
 }
 

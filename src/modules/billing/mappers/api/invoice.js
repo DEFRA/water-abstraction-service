@@ -1,6 +1,11 @@
 const objectMapper = require('object-mapper');
 
-const modelToBatchInvoice = invoices => {
+/**
+ * Maps an invoice to the API invoice list view
+ * @param {Invoice} invoice
+ * @return {Object}
+ */
+const modelToBatchInvoice = invoice => {
   const map = {
     id: 'id',
     'invoiceAccount.accountNumber': 'accountNumber',
@@ -8,7 +13,7 @@ const modelToBatchInvoice = invoices => {
     'totals.netTotal': 'netTotal',
     'invoiceLicences[].licence.licenceNumber': 'licenceNumbers[]'
   };
-  return objectMapper(invoices, map);
+  return objectMapper(invoice, map);
 };
 
 exports.modelToBatchInvoices = modelToBatchInvoice;

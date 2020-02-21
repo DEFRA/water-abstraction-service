@@ -99,10 +99,7 @@ const getBatchInvoices = async request => {
 const getBatchInvoiceDetail = async request => {
   const { batchId, invoiceId } = request.params;
   const invoice = await invoiceService.getInvoiceForBatch(batchId, invoiceId);
-
-  return invoice
-    ? envelope(invoice, true)
-    : Boom.notFound(`No invoice found with id: ${invoiceId} in batch with id: ${batchId}`);
+  return invoice || Boom.notFound(`No invoice found with id: ${invoiceId} in batch with id: ${batchId}`);
 };
 
 const deleteAccountFromBatch = async request => {

@@ -8,10 +8,8 @@ const Company = require('../../../lib/models/company');
  * @return {Company}
  */
 const crmToModel = companyData => {
-  const company = new Company();
-  company.id = companyData.companyId;
-  company.name = companyData.name;
-  return company;
+  const company = new Company(companyData.companyId);
+  return company.pickFrom(companyData, ['name', 'type']);
 };
 
 exports.crmToModel = crmToModel;
