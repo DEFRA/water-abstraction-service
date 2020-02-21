@@ -34,8 +34,8 @@ experiment('lib/event', () => {
     comment: 'test',
     metadata: null,
     status: 'completed',
-    created_at: moment().format('YYYY-MM-DD HH:mm:ss'),
-    updated_at: null
+    created: moment().format('YYYY-MM-DD HH:mm:ss'),
+    modified: null
   };
 
   experiment('.create', () => {
@@ -50,20 +50,11 @@ experiment('lib/event', () => {
       expect(typeof ev).to.equal(typeof event);
     });
 
-    test('should map the model keys to snake_case before sending it to database repos layer', async () => {
-      const event = new Event();
-      event.type = 'test-type';
-      event.referenceCode = 'testRef123';
-      await eventsService.create(event);
-      const { args } = repo.events.create.firstCall;
-      expect(Object.keys(args[0])).to.include('reference_code');
-    });
-
     test('should map the object key receveived from the database repos layer to camelCase', async () => {
       const event = new Event();
       event.type = 'test-type';
-      const { createdAt } = await eventsService.create(event);
-      expect(moment.isMoment(createdAt)).to.equal(true);
+      const { created } = await eventsService.create(event);
+      expect(moment.isMoment(created)).to.equal(true);
     });
 
     test('should send the correct data to the database repos layer', async () => {
@@ -80,7 +71,7 @@ experiment('lib/event', () => {
       await eventsService.create(event);
       const { args } = repo.events.create.firstCall;
       expect(args[0].type).to.equal(event.type);
-      expect(args[0].reference_code).to.equal(event.referenceCode);
+      expect(args[0].referenceCode).to.equal(event.referenceCode);
       expect(args[0].issuer).to.equal(event.issuer);
       expect(args[0].licences).to.equal(event.licences);
       expect(args[0].entities).to.equal(event.entities);
@@ -117,14 +108,14 @@ experiment('lib/event', () => {
       event.referenceCode = 'testRef123';
       await eventsService.update(event);
       const { args } = repo.events.update.firstCall;
-      expect(Object.keys(args[1])).to.include('reference_code');
+      expect(Object.keys(args[1])).to.include('referenceCode');
     });
 
     test('should map the object key receveived from the database repos layer to camelCase', async () => {
       const event = new Event();
       event.type = 'test-type';
-      const { createdAt } = await eventsService.update(event);
-      expect(moment.isMoment(createdAt)).to.equal(true);
+      const { created } = await eventsService.update(event);
+      expect(moment.isMoment(created)).to.equal(true);
     });
 
     test('should send the correct data to the database repos layer', async () => {
@@ -141,7 +132,7 @@ experiment('lib/event', () => {
       await eventsService.update(event);
       const { args } = repo.events.update.firstCall;
       expect(args[1].type).to.equal(event.type);
-      expect(args[1].reference_code).to.equal(event.referenceCode);
+      expect(args[1].referenceCode).to.equal(event.referenceCode);
       expect(args[1].issuer).to.equal(event.issuer);
       expect(args[1].licences).to.equal(event.licences);
       expect(args[1].entities).to.equal(event.entities);
@@ -172,8 +163,8 @@ experiment('lib/event', () => {
     test('should map the object key receveived from the database repos layer to camelCase', async () => {
       const event = new Event();
       event.type = 'test-type';
-      const { createdAt } = await eventsService.updateStatus(event);
-      expect(moment.isMoment(createdAt)).to.equal(true);
+      const { created } = await eventsService.updateStatus(event);
+      expect(moment.isMoment(created)).to.equal(true);
     });
   });
 
@@ -197,8 +188,8 @@ experiment('lib/event', () => {
     test('should map the object key receveived from the database repos layer to camelCase', async () => {
       const event = new Event();
       event.type = 'test-type';
-      const { createdAt } = await eventsService.findOne(event);
-      expect(moment.isMoment(createdAt)).to.equal(true);
+      const { created } = await eventsService.findOne(event);
+      expect(moment.isMoment(created)).to.equal(true);
     });
   });
 });

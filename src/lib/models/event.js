@@ -1,6 +1,11 @@
 const Model = require('./model');
 const Licence = require('./licence');
-const { assertIsArrayOfType, assertIsInstanceOf } = require('./validators');
+const {
+  assertIsArrayOfType,
+  assertIsInstanceOf,
+  assertNullableString,
+  assertString
+} = require('./validators');
 
 class Event extends Model {
   constructor (id) {
@@ -26,9 +31,11 @@ class Event extends Model {
 
   /**
    * Sets the type for this event
+   * not nullable database constraint
    * @param {String} type
    */
   set type (type) {
+    assertString(type);
     this._type = type;
   }
 
@@ -45,6 +52,7 @@ class Event extends Model {
    * @param {String} subtype
    */
   set subtype (subtype) {
+    assertString(subtype);
     this._subtype = subtype;
   }
 
@@ -61,6 +69,7 @@ class Event extends Model {
      * @param {String} issuer
      */
   set issuer (issuer) {
+    assertNullableString(issuer);
     this._issuer = issuer;
   }
 
@@ -111,6 +120,7 @@ class Event extends Model {
    * @param {String} comment
    */
   set comment (comment) {
+    assertNullableString(comment);
     this._comment = comment;
   }
 
@@ -124,15 +134,16 @@ class Event extends Model {
 
   /**
      * Sets the metaData for this event
-     * @param {String} metaData
+     * @param {Object} metaData
      */
   set metaData (metaData) {
+    assertIsInstanceOf(metaData, Object);
     this._metaData = metaData;
   }
 
   /**
    * Gets the metaData for this event
-   * @return {String}
+   * @return {Object}
    */
   get metaData () {
     return this._metaData;
@@ -143,6 +154,7 @@ class Event extends Model {
    * @param {String} status
    */
   set status (status) {
+    assertNullableString(status);
     this._status = status;
   }
 
@@ -158,32 +170,32 @@ class Event extends Model {
    * Sets the created date for this event
    * @param {string} created
    */
-  set createdAt (createdAt) {
-    this._createdAt = this.getDateTimeFromValue(createdAt);
+  set created (created) {
+    this._created = this.getDateTimeFromValue(created);
   }
 
   /**
    * Gets the date created for this event
    * @return {string}
    */
-  get createdAt () {
-    return this._createdAt;
+  get created () {
+    return this._created;
   }
 
   /**
    * Sets the modified date for this event
    * @param {string} modified
    */
-  set updatedAt (updatedAt) {
-    this._updatedAt = this.getDateTimeFromValue(updatedAt);
+  set modified (modified) {
+    this._modified = this.getDateTimeFromValue(modified);
   }
 
   /**
    * Gets the date modified for this event
    * @return {string}
    */
-  get updatedAt () {
-    return this._updatedAt;
+  get modified () {
+    return this._modified;
   }
 }
 

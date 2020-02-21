@@ -29,7 +29,7 @@ experiment('postUpload', () => {
 
   beforeEach(async () => {
     sandbox.stub(eventRepo, 'update').resolves({});
-    sandbox.stub(eventRepo, 'create').returns({ event_id: 'f6378a83-015b-4afd-8de1-d7eb2ce8e032' });
+    sandbox.stub(eventRepo, 'create').returns({ eventId: 'f6378a83-015b-4afd-8de1-d7eb2ce8e032' });
 
     sandbox.stub(s3, 'upload').resolves({
       Location: 'test-s3-location',
@@ -60,7 +60,7 @@ experiment('postUpload', () => {
 
   test('an event is saved with the expected values', async () => {
     await controller.postUpload(request, h);
-    const [eventValues] = event.repo.events.create.firstCall.args;
+    const [eventValues] = eventRepo.create.firstCall.args;
     expect(eventValues.type).to.equal('returns-upload');
     expect(eventValues.subtype).to.equal('xml');
     expect(eventValues.issuer).to.equal('test-user');
@@ -70,7 +70,6 @@ experiment('postUpload', () => {
   test('file data is uploaded to S3', async () => {
     await controller.postUpload(request, h);
     const [filename, fileData] = s3.upload.lastCall.args;
-
     expect(filename.substr(0, 15)).to.equal('returns-upload/');
     expect(filename.substr(15, 36)).to.match(UUIDV4_REGEX);
     expect(filename.substr(51, 4)).to.equal('.xml');

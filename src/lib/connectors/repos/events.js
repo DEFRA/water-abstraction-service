@@ -2,41 +2,44 @@ const { Event } = require('../bookshelf');
 
 /**
  * creates a new event record in the database
- * @param {*} event // event model
+ * @param {Object} event event pojo
+ * @returns {Object} event pojo
  */
 const create = async (event) => {
-  const model = await Event.forge(event).save();
-  return model.toJSON();
+  const result = await Event.forge(event).save();
+  return result.toJSON();
 };
 
 /**
  * returns the event record for the given id
- * @param {*} id // uuid for the eventId
+ * @param {String} id UUID eventId
+ * @returns {Object} event pojo
  */
 const findOne = async (id) => {
-  const model = await Event.forge({ eventId: id }).fetch();
-  return model.toJSON();
+  const result = await Event.forge({ eventId: id }).fetch();
+  return result.toJSON();
 };
 
 /**
  * Updates the all the fileds for the event record
- * @param {uuid} id // eventId
- * @param {Event} event // event model
+ * @param {String} id // UUID eventId
+ * @param {Object} event // event pojo
  */
 const update = async (id, event) => {
-  const model = await Event.forge({ eventId: id }).save({ event });
-  return model.toJSON();
+  const result = await Event.forge({ eventId: id }).save({ event });
+  return result.toJSON();
 };
 
 /**
  * Updates an events status value to the supplied value
  * and returns the updated event.
- * @param {String} id The event id to update
+ * @param {String} id UUID eventId
  * @param {String} status The status to set
+ * @returns {Object} event pojo
  */
 const updateStatus = async (id, status) => {
-  const model = await Event.forge({ eventId: id }).save({ status: status });
-  return model.toJSON();
+  const result = await Event.forge({ eventId: id }).save({ status: status });
+  return result.toJSON();
 };
 
 exports.create = create;
