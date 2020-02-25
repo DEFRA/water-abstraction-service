@@ -43,22 +43,24 @@ module.exports = {
   //
   // Allocations:
   //
-  // | ----------------------------------- | --------------- | --------------- |
-  // | Service                             | Local Dev Count | Non local count |
-  // | ----------------------------------- | --------------- | --------------- |
-  // | water-abstraction-import            |              40 |              10 |
-  // | water-abstraction-permit-repository |              16 |               4 |
-  // | water-abstraction-returns           |              20 |               5 |
-  // | water-abstraction-service           |              80 |              20 |
-  // | water-abstraction-tactical-crm      |              20 |               5 |
-  // | water-abstraction-tactical-idm      |              20 |               5 |
-  // | ----------------------------------- | --------------- | --------------- |
-  // | TOTAL                               |             196 |              49 |
-  // | ----------------------------------- | --------------- | --------------- |
+  // | ----------------------------------- | ------- | ---------- | --------- | ---------- |
+  // | Service                             | Local   | Local      | Non local | Non local  |
+  // |                                     | process | connection | process   | connection |
+  // |                                     | count   | count      | count     | count      |
+  // | ----------------------------------- | ------- | ---------- | --------- | ---------- |
+  // | water-abstraction-import            |       1 |         20 |         2 | (20)    10 |
+  // | water-abstraction-permit-repository |       1 |         16 |         4 | (16)     4 |
+  // | water-abstraction-returns           |       1 |         20 |         4 | (20)     5 |
+  // | water-abstraction-service           |       2 | (100)   50 |         5 | (100)   20 |
+  // | water-abstraction-tactical-crm      |       1 |         20 |         4 | (20)     5 |
+  // | water-abstraction-tactical-idm      |       1 |         20 |         4 | (20)     5 |
+  // | ----------------------------------- | ------- | ---------- | --------- | ---------- |
+  // | TOTAL                               |       6 |        196 |        23 |        196 |
+  // | ----------------------------------- | ------- | ---------- | --------- | ---------- |
   //
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: process.env.NODE_ENV === 'local' ? 80 : 20,
+    max: process.env.NODE_ENV === 'local' ? 50 : 20,
     idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 5000
   },
