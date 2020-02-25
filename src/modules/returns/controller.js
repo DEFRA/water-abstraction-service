@@ -76,11 +76,11 @@ const patchReturnHeader = async (request, h) => {
 
 /**
  * Creates the event object that represent the upload
- * of a returns xml document.
+ * of a bulk returns document.
  * @param uploadUserName The username of end user.
  * @returns {Object}
  */
-const createXmlUploadEvent = (uploadUserName, subtype = 'xml') => {
+const createBulkUploadEvent = (uploadUserName, subtype = 'csv') => {
   return event.create({
     type: 'returns-upload',
     subtype,
@@ -89,37 +89,30 @@ const createXmlUploadEvent = (uploadUserName, subtype = 'xml') => {
   });
 };
 
-/**
- * Creates the relative URL for a consumer to find out
- * the status of the event described by the eventId parameter.
- */
-const getEventStatusLink = eventId => {
-  return `/water/1.0/event/${eventId}`;
-};
-
 const postUpload = async (request, h) => {
   const { type } = request.params;
-  const evt = createXmlUploadEvent(request.payload.userName, type);
+  const evt = createBulkUploadEvent(request.payload.userName, type);
 
   try {
     await event.save(evt);
 
-    const filename = getUploadFilename(evt.eventId, type);
+    const { eventId } = evt;
+    const filename = getUploadFilename(eventId, type);
     const data = await s3.upload(filename, request.payload.fileData);
-    const jobId = await startUploadJob.publish(evt.eventId);
+    const jobId = await startUploadJob.publish(eventId);
 
     return h.response({
       data: {
-        eventId: evt.eventId,
+        eventId,
         filename,
         location: data.Location,
-        statusLink: getEventStatusLink(evt.eventId),
+        statusLink: `/water/1.0/event/${eventId}`,
         jobId
       },
       error: null
     }).code(202);
   } catch (error) {
-    logger.error('Failed to upload returns xml', error);
+    logger.error(`Failed to upload bulk returns ${type}`, error);
     if (evt.eventId) {
       evt.status = uploadStatus.ERROR;
       await event.save(evt);

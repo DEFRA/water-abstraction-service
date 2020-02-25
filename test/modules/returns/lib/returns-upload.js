@@ -8,12 +8,12 @@ const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 
 experiment('getUploadFilename', () => {
-  test('uses xml extension by default', async () => {
+  test('uses csv extension by default', async () => {
     const filename = returnsUpload.getUploadFilename('test-id');
-    expect(filename).to.equal('returns-upload/test-id.xml');
+    expect(filename).to.equal('returns-upload/test-id.csv');
   });
 
-  test('uses xml extension by default', async () => {
+  test('uses given extension if provided', async () => {
     const filename = returnsUpload.getUploadFilename('test-id', 'json');
     expect(filename).to.equal('returns-upload/test-id.json');
   });
@@ -34,19 +34,19 @@ experiment('getReturnsS3Object', () => {
     expect(key).to.equal('returns-upload/test-event-id.json');
   });
 
-  test('creates the expected S3 Object key using xml by default', async () => {
+  test('creates the expected S3 Object key using csv by default', async () => {
     await returnsUpload.getReturnsS3Object('test-event-id');
     const [key] = s3.getObject.lastCall.args;
-    expect(key).to.equal('returns-upload/test-event-id.xml');
+    expect(key).to.equal('returns-upload/test-event-id.csv');
   });
 });
 
 experiment('buildJobData', () => {
-  test('uses xml for the subtype by default', async () => {
+  test('uses csv for the subtype by default', async () => {
     const jobData = returnsUpload.buildJobData('test-event-id');
     expect(jobData).to.equal({
       eventId: 'test-event-id',
-      subType: 'xml'
+      subType: 'csv'
     });
   });
 
