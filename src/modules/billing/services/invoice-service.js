@@ -1,5 +1,6 @@
 'use strict';
 
+const { find, flatMap, get } = require('lodash');
 const newRepos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
@@ -9,59 +10,6 @@ const chargeModuleBatchConnector = require('../../../lib/connectors/charge-modul
 
 // Services
 const invoiceAccountsService = require('./invoice-accounts-service');
-
-// Models
-// const Invoice = require('../../../lib/models/invoice');
-// const InvoiceAccount = require('../../../lib/models/invoice-account');
-// const InvoiceLicence = require('../../../lib/models/invoice-licence');
-// const Licence = require('../../../lib/models/licence');
-// const Address = require('../../../lib/models/address');
-// const Company = require('../../../lib/models/company');
-// const Contact = require('../../../lib/models/contact-v2');
-// const Transaction = require('../../../lib/models/transaction');
-
-// const mapRowToModels = row => {
-//   const invoice = new Invoice(row['billing_invoices.billing_invoice_id']);
-//   invoice.dateCreated = row['billing_invoices.date_created'];
-//   invoice.invoiceAccount = new InvoiceAccount();
-//   invoice.invoiceAccount.id = row['billing_invoices.invoice_account_id'];
-//   invoice.invoiceAccount.accountNumber = row['billing_invoices.invoice_account_number'];
-
-//   const invoiceLicence = new InvoiceLicence();
-//   invoiceLicence.id = row['billing_invoice_licences.billing_invoice_licence_id'];
-//   invoiceLicence.address = new Address(row['billing_invoice_licences.address_id']);
-//   invoiceLicence.company = new Company(row['billing_invoice_licences.company_id']);
-//   invoiceLicence.contact = new Contact(row['billing_invoice_licences.contact_id']);
-//   invoiceLicence.licence = new Licence();
-//   invoiceLicence.licence.id = row['billing_invoice_licences.licence_id'];
-//   invoiceLicence.licence.licenceNumber = row['billing_invoice_licences.licence_ref'];
-
-//   return { invoice, invoiceLicence };
-// };
-
-/**
- * Applies any matching transactions to the invoices
- *
- * @param {Array<Invoice>} invoices THe invoices that are to have any mathcing transactions applied
- * @param {Array<ChargeModuleTransaction>} chargeModuleTransactions The transactions from the charge module api
- */
-// const decorateInvoicesWithTransactions = (invoices, chargeModuleTransactions) => {
-//   return invoices.map(invoice => {
-//     invoice.invoiceLicences = invoice.invoiceLicences.map(invoiceLicence => {
-//       const chargeModuleTransaction = chargeModuleTransactions.find(tx => {
-//         return tx.licenceNumber === invoiceLicence.licence.licenceNumber &&
-//         tx.accountNumber === invoice.invoiceAccount.accountNumber;
-//       });
-
-//       if (chargeModuleTransaction) {
-//         const transaction = Transaction.fromChargeModuleTransaction(chargeModuleTransaction);
-//         invoiceLicence.transactions = [...invoiceLicence.transactions, transaction];
-//       }
-//       return invoiceLicence;
-//     });
-//     return invoice;
-//   });
-// };
 
 /**
  * Adds the Company object to the InvoiceAccount objects in the Invoice.
@@ -85,38 +33,6 @@ const decorateInvoicesWithCompanies = async invoices => {
 };
 
 /**
- *  Adds contacts and transactions to the Invoice objects
- *
- * @param {Array<Invoice>} invoices A list of invoices that are to be decorated
- * @param {Array<Transaction>} transactions A list of transactions to apply to the invoices
- */
-// const decorateInvoices = async (invoices, transactions) => {
-//   return decorateInvoicesWithTransactions(
-//     await decorateInvoicesWithCompanies(invoices),
-//     transactions
-//   );
-// };
-
-// const createInvoiceModelsFromBatchInvoiceRows = batchInvoiceRows => {
-//   const invoicesHash = batchInvoiceRows.reduce((acc, row) => {
-//     const invoiceId = row['billing_invoices.billing_invoice_id'];
-//     const rowModels = mapRowToModels(row);
-
-//     if (!acc[invoiceId]) {
-//       acc[invoiceId] = rowModels.invoice;
-//     }
-
-//     const invoice = acc[invoiceId];
-//     const { invoiceLicence } = rowModels;
-//     invoice.invoiceLicences = [...invoice.invoiceLicences, invoiceLicence];
-
-//     return acc;
-//   }, {});
-
-//   return Object.values(invoicesHash);
-// };
-
-/**
  * Finds an invoice and its licences for the given batch, then
  * overlays the transactions found from the charge-module, and the
  * contacts from the CRM
@@ -126,21 +42,26 @@ const decorateInvoicesWithCompanies = async invoices => {
  * @return {Promise<Invoice>}
  */
 const getInvoiceForBatch = async (batchId, invoiceId) => {
+  // Get object graph of invoice and related data
   const data = await newRepos.billingInvoices.findOne(invoiceId);
   if (!data || data.billingBatch.billingBatchId !== batchId) {
     return null;
   }
+  // Map to Invoice service model
   const invoice = mappers.invoice.dbToModel(data);
-  await decorateInvoicesWithCompanies([invoice]);
 
-  // @TODO decorate transaction rows with transaction values from CM
+  // Get CRM company and Charge Module summary data
+  const accountNumber = get(data, 'invoice.invoiceAccount.accountNumber');
+  const regionId = get(data, 'billingBatch.region.chargeRegionId');
+  const [, chargeModuleSummary] = await Promise.all([
+    decorateInvoicesWithCompanies([invoice]),
+    chargeModuleBatchConnector.send(regionId, batchId, true, accountNumber)
+  ]);
 
-  // @TODO get real totals
-  invoice.totals = mappers.totals.chargeModuleBillRunToBatchModel({
-    netTotal: 1234,
-    debitLineValue: 232,
-    creditLineValue: -4343
-  });
+  // Use Charge Module data to populate totals and transaction values
+  console.log(mappers.totals.chargeModuleBillRunToBatchModel(chargeModuleSummary));
+  invoice.totals = mappers.totals.chargeModuleBillRunToBatchModel(chargeModuleSummary.summary);
+  decorateInvoiceTransactionValues(invoice, chargeModuleSummary);
 
   return invoice;
 };
@@ -166,6 +87,46 @@ const saveInvoiceToDB = async (batch, invoice) => {
 const decorateInvoiceWithTotals = (invoice, chargeModuleBillRun) => {
   const { accountNumber } = invoice.invoiceAccount;
   invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(chargeModuleBillRun, accountNumber);
+};
+
+/**
+ * Returns key/value pairs where key is Charge Module transaction ID
+ * and value is transaction value
+ * @param {Object} chargeModuleBillRun
+ * @param {String} customerReference
+ */
+const indexChargeModuleTransactions = (chargeModuleBillRun, customerReference) => {
+  // Find customer in bill run
+  const customer = find(chargeModuleBillRun.customers, { customerReference });
+  // Generate flat array of transactions for customer
+  const transactions = flatMap(customer.summaryByFinancialYear.map(row => row.transactions));
+  // Return key/value pairs
+  return transactions.reduce((acc, row) => ({
+    ...acc,
+    [row.id]: row.chargeValue
+  }), {});
+};
+
+/**
+ * Get all transactions in invoice as flat list
+ * @param {Invoice} invoice
+ * @return {Array<Transaction>}
+ */
+const getInvoiceTransactions = invoice =>
+  flatMap(invoice.invoiceLicences.map(invoiceLicence => invoiceLicence.transactions));
+
+/**
+ * Sets the transaction values on an invoice
+ * @param {Invoice} invoice
+ * @param {Object} chargeModuleBillRun
+ */
+const decorateInvoiceTransactionValues = (invoice, chargeModuleBillRun) => {
+  const { accountNumber } = invoice.invoiceAccount;
+
+  const index = indexChargeModuleTransactions(chargeModuleBillRun, accountNumber);
+  getInvoiceTransactions(invoice).forEach(transaction => {
+    transaction.value = index[transaction.externalId];
+  });
 };
 
 /**
