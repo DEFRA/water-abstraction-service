@@ -86,10 +86,6 @@ const getNextImportBatch = async (batchSize = 10) => {
     returning pi.*;
   `;
   const rows = await dbQuery(sql, [batchSize]);
-
-  if (rows.length) {
-    console.log('got row', rows[0]);
-  }
   return rows;
 };
 
