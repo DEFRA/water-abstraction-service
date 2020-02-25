@@ -36,7 +36,7 @@ module.exports = {
     airbrakeLevel: 'error'
   },
 
-  // Database has 125 available connections
+  // Database has 198 available connections
   //
   // Outside of development each process runs on 2 instances on 2 cores.
   // So there will be 4 connection pools per service but just 1 locally
@@ -46,20 +46,20 @@ module.exports = {
   // | ----------------------------------- | --------------- | --------------- |
   // | Service                             | Local Dev Count | Non local count |
   // | ----------------------------------- | --------------- | --------------- |
-  // | water-abstraction-import            |              16 |               4 |
-  // | water-abstraction-permit-repository |              12 |               3 |
-  // | water-abstraction-returns           |              16 |               4 |
-  // | water-abstraction-service           |              40 |              10 |
+  // | water-abstraction-import            |              40 |              10 |
+  // | water-abstraction-permit-repository |              16 |               4 |
+  // | water-abstraction-returns           |              20 |               5 |
+  // | water-abstraction-service           |              80 |              20 |
   // | water-abstraction-tactical-crm      |              20 |               5 |
   // | water-abstraction-tactical-idm      |              20 |               5 |
   // | ----------------------------------- | --------------- | --------------- |
-  // | TOTAL                               |             124 |              31 |
+  // | TOTAL                               |             196 |              49 |
   // | ----------------------------------- | --------------- | --------------- |
   //
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: process.env.NODE_ENV === 'local' ? 40 : 10,
-    idleTimeoutMillis: 30000,
+    max: process.env.NODE_ENV === 'local' ? 80 : 20,
+    idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 5000
   },
 
