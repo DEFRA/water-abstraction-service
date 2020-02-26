@@ -13,7 +13,10 @@ const options = {
   tns: 'http://www.environment-agency.gov.uk/XMLSchemas/GOR/SAPMultiReturn/06'
 };
 
-const getText = (from, path) => from.get(path, options).text();
+const getText = (from, path, defaultValue) => {
+  const node = from.get(path, options);
+  return node ? node.text() : defaultValue;
+};
 
 const getChildNames = node => node.childNodes().map(node => node.name());
 
@@ -61,7 +64,7 @@ const getMeterDetails = (ret) => {
 
     return {
       manufacturer: getText(meter, 'tns:EaListedManufacturer'),
-      serialNumber: getText(meter, 'tns:SerialNumber'),
+      serialNumber: getText(meter, 'tns:SerialNumber', '-'),
       meterDetailsProvided: true,
       multiplier: 1
     };
