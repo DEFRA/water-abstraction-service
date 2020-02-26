@@ -114,8 +114,7 @@ const postUpload = async (request, h) => {
   } catch (error) {
     logger.error(`Failed to upload bulk returns ${type}`, error);
     if (evt.eventId) {
-      evt.status = uploadStatus.ERROR;
-      await event.save(evt);
+      await event.save({ ...evt, status: uploadStatus.ERROR });
     }
 
     return h.response({ data: null, error }).code(500);

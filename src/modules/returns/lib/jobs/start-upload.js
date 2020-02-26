@@ -15,6 +15,11 @@ const uploadAdapters = require('../upload-adapters');
 const publishReturnsUploadStart = eventId =>
   messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(eventId));
 
+const getValidationError = (validationErrors, subtype) => {
+  if (!validationErrors) return errorEvent.keys[subtype].INVALID;
+  const dateErrors = validationErrors.filter(e => e.message === 'Unexpected date format for return line');
+  return (dateErrors.length > 0) ? errorEvent.keys.INVALID_DATE : errorEvent.keys[subtype].INVALID;
+};
 /**
  * Validates the object from the S3 bucket using an appropriate adatper
  * If validation errors are found, an error is thrown with a key which
@@ -29,12 +34,7 @@ const validateS3Object = async (evt, s3Object) => {
   const { isValid, validationErrors } = await adapter.validator(s3Object.Body);
   if (!isValid) {
     const err = new Error('Failed Schema Validation', validationErrors);
-    if (validationErrors) {
-      const dateErrors = validationErrors.filter(e => e.message === 'Unexpected date format for return line');
-      err.key = (dateErrors.length > 0) ? errorEvent.keys.INVALID_DATE : errorEvent.keys[subtype].INVALID;
-    } else {
-      err.key = errorEvent.keys[subtype].INVALID;
-    }
+    err.key = getValidationError(validationErrors, subtype);
 
     throw err;
   }
