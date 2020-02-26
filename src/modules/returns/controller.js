@@ -92,29 +92,30 @@ const createBulkUploadEvent = (uploadUserName, subtype = 'csv') => {
 const postUpload = async (request, h) => {
   const { type } = request.params;
   const evt = createBulkUploadEvent(request.payload.userName, type);
+  let eventModel;
 
   try {
-    await event.save(evt);
-
-    const { eventId } = evt;
-    const filename = getUploadFilename(eventId, type);
+    const { rows } = await event.save(evt);
+    eventModel = rows[0];
+    const filename = getUploadFilename(eventModel.eventId, type);
     const data = await s3.upload(filename, request.payload.fileData);
-    const jobId = await startUploadJob.publish(eventId);
+    const jobId = await startUploadJob.publish(eventModel.eventId);
 
     return h.response({
       data: {
-        eventId,
+        eventId: eventModel.eventId,
         filename,
         location: data.Location,
-        statusLink: `/water/1.0/event/${eventId}`,
+        statusLink: getEventStatusLink(eventModel.eventId),
         jobId
       },
       error: null
     }).code(202);
   } catch (error) {
-    logger.error(`Failed to upload bulk returns ${type}`, error);
-    if (evt.eventId) {
-      await event.save({ ...evt, status: uploadStatus.ERROR });
+    logger.error('Failed to upload returns xml', error);
+    if (eventModel.eventId) {
+      eventModel.status = uploadStatus.ERROR;
+      await event.save(eventModel);
     }
 
     return h.response({ data: null, error }).code(500);
