@@ -27,7 +27,7 @@ const lines = Joi.when('isNil', {
         startDate: Joi.string().regex(isoDateRegex).required(),
         endDate: Joi.string().regex(isoDateRegex).required(),
         timePeriod: Joi.string().valid(allowedPeriods).required(),
-        quantity: Joi.number().allow(null).required(),
+        quantity: Joi.number().allow(null, 0).positive().required(),
         readingType: Joi.string().valid(readingTypes)
       })
 });

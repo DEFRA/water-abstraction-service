@@ -8,7 +8,7 @@ const { returnIDRegex, parseReturnId } = require('../../../../lib/returns');
 const { GDS_MONTH_FORMATS } = require('./mapper');
 
 const lineErrorRegex = /line (\d*)$/;
-const validAbstractionVolumeRegex = /(^Do not edit$)|(^\d[\d|.|,]*$)|(^\s*$)/;
+const validAbstractionVolumeRegex = /(^Do not edit$)|(^-?\d[\d.,]*$)|(^\s*$)/;
 
 const parseOptions = {
   skip_lines_with_empty_values: true,
