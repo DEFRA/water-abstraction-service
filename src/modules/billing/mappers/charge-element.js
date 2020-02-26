@@ -20,7 +20,8 @@ const chargeToModel = chargeElementRow => {
     loss: chargeElementRow.loss,
     abstractionPeriod: abstractionPeriod.chargeToModel(chargeElementRow),
     authorisedAnnualQuantity: chargeElementRow.authorisedAnnualQuantity,
-    billableAnnualQuantity: chargeElementRow.billableAnnualQuantity
+    billableAnnualQuantity: chargeElementRow.billableAnnualQuantity,
+    description: chargeElementRow.description
   });
   if (chargeElementRow.purposeUse) {
     element.purposeUse = purpose.dbToModelUse(chargeElementRow.purposeUse);
