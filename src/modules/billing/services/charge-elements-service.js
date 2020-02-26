@@ -1,23 +1,14 @@
-const ChargeElement = require('../../../lib/models/charge-element');
-const abstractionPeriodService = require('./abstraction-period-service');
+const repos = require('../../../lib/connectors/repository');
+const mappers = require('../mappers');
 
 /**
- * Creates a ChargeElement instance given a row of charge element data
- * @param {Object} chargeElementRow - charge element row from the charge processor
- * @return {ChargeElement>}
+ * Gets a single charge element model by ID
+ * @param {String} chargeElementId - GUID
+ * @return {Promise<ChargeElement>}
  */
-const mapRowToModel = chargeElementRow => {
-  const element = new ChargeElement();
-  element.fromHash({
-    id: chargeElementRow.chargeElementId,
-    source: chargeElementRow.source,
-    season: chargeElementRow.season,
-    loss: chargeElementRow.loss,
-    abstractionPeriod: abstractionPeriodService.mapRowToModel(chargeElementRow),
-    authorisedAnnualQuantity: chargeElementRow.authorisedAnnualQuantity,
-    billableAnnualQuantity: chargeElementRow.billableAnnualQuantity
-  });
-  return element;
+const getById = async chargeElementId => {
+  const data = await repos.chargeElements.findOneById(chargeElementId);
+  return mappers.chargeElement.dbToModel(data);
 };
 
-exports.mapRowToModel = mapRowToModel;
+exports.getById = getById;

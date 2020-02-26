@@ -8,6 +8,14 @@
     "temp",
     "test",
     "src/modules/acceptance-tests",
-    "src/modules/**/routes.js"
-  ]
+    "src/modules/**/routes.js",
+    "src/lib/connectors/bookshelf"
+  ],
+  "checks": {
+    "method-count": {
+      "config": {
+        "threshold": 30
+      }
+    }
+  }
 }

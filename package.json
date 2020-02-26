@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "1.35.0",
+  "version": "1.36.2",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "repository": {
@@ -20,7 +20,8 @@
     "version": "auto-changelog -p --commit-limit false && git add CHANGELOG.md"
   },
   "engines": {
-    "node": ">=8.0"
+    "node": ">=8.0",
+    "npm": ">=6.0"
   },
   "author": "",
   "license": "ISC",
@@ -28,13 +29,13 @@
     "@hapi/code": "^5.2.4",
     "@hapi/lab": "^19.1.0",
     "auto-changelog": "^1.16.2",
-    "codecov": "^3.6.1",
+    "codecov": "^3.6.4",
     "csv-stringify": "^2.0.4",
     "db-migrate": "^0.11.6",
     "db-migrate-pg": "^1.0.0",
     "eslint": "^6.8.0",
     "eslint-config-standard": "^14.1.0",
-    "eslint-plugin-import": "^2.19.1",
+    "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-node": "^10.0.0",
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
@@ -45,13 +46,16 @@
     "@envage/hapi-pg-rest-api": "^5.0.0",
     "@envage/water-abstraction-helpers": "^4.1.1",
     "@hapi/boom": "^7.4.11",
+    "@hapi/good": "^8.2.4",
     "@hapi/hapi": "^18.4.0",
     "@hapi/joi": "^15.1.1",
     "@hapi/vision": "^5.5.4",
     "async-waterfall": "^0.1.5",
-    "aws-sdk": "^2.595.0",
+    "aws-sdk": "^2.610.0",
     "base64url": "^3.0.1",
     "blipp": "^4.0.1",
+    "bookshelf": "^1.1.0",
+    "bookshelf-case-converter-plugin": "^1.0.0",
     "camelcase": "^5.3.1",
     "commander": "^2.20.3",
     "csv-parse": "^2.4.0",
@@ -60,9 +64,9 @@
     "dotenv": "^4.0.0",
     "es6-error": "^4.1.1",
     "firstline": "^2.0.2",
-    "good": "^8.1.2",
     "good-winston": "^4.0.0",
     "hapi-auth-jwt2": "^8.8.1",
+    "knex": "^0.20.8",
     "libxmljs": "^0.19.7",
     "lodash": "^4.17.15",
     "moment": "^2.24.0",
@@ -70,9 +74,10 @@
     "node-cron": "^1.2.1",
     "notifications-node-client": "^4.7.0",
     "nunjucks": "^3.2.0",
+    "object-mapper": "^6.2.0",
     "path": "^0.12.7",
-    "pg": "^7.15.1",
-    "pg-boss": "^3.1.7",
+    "pg": "^7.18.1",
+    "pg-boss": "^3.2.2",
     "promise-retry": "^1.0.2",
     "proxy-agent": "^2.3.1",
     "puppeteer": "^1.18.1",
@@ -83,7 +88,8 @@
     "sha1": "^1.1.1",
     "snake-case": "^2.1.0",
     "snakecase-keys": "^1.1.1",
+    "title-case": "^3.0.2",
     "url-join": "^4.0.1",
-    "uuid": "^3.3.3"
+    "uuid": "^3.4.0"
   }
 }

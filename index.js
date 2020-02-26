@@ -3,7 +3,7 @@ require('dotenv').config();
 
 // -------------- Require vendor code -----------------
 const Blipp = require('blipp');
-const Good = require('good');
+const Good = require('@hapi/good');
 const GoodWinston = require('good-winston');
 const Hapi = require('@hapi/hapi');
 const HapiAuthJwt2 = require('hapi-auth-jwt2');
@@ -42,6 +42,8 @@ const registerServerPlugins = async (server) => {
   await server.register({
     plugin: require('./src/modules/billing/register-subscribers')
   });
+
+  await server.register({ plugin: require('./src/plugins/internal-calling-user') });
 
   // Third-party plugins
   await server.register({

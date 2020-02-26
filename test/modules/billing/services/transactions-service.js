@@ -10,16 +10,17 @@ const sandbox = sinon.createSandbox();
 
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
 const chargeModuleTransactionsConnector = require('../../../../src/lib/connectors/charge-module/transactions');
-const repos = require('../../../../src/lib/connectors/repository');
+const repos = require('../../../../src/lib/connectors/repos');
 
 // Models
 const ChargeModuleTransaction = require('../../../../src/lib/models/charge-module-transaction');
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
+const Licence = require('../../../../src/lib/models/licence');
 const Transaction = require('../../../../src/lib/models/transaction');
 const ChargeElement = require('../../../../src/lib/models/charge-element');
 const AbstractionPeriod = require('../../../../src/lib/models/abstraction-period');
 const DateRange = require('../../../../src/lib/models/date-range');
-const Batch = require('../../../../src/lib/models/batch');
+const Region = require('../../../../src/lib/models/region');
 
 const createChargeElement = () => {
   const chargeElement = new ChargeElement('29328315-9b24-473b-bde7-02c60e881501');
@@ -49,9 +50,37 @@ const createTransaction = (options = {}) => {
     isCompensationCharge: !!options.isCompensationCharge,
     authorisedDays: 366,
     billableDays: 366,
-    description: 'Tiny pond'
+    description: 'Tiny pond',
+    volume: 5.64
   });
   return transaction;
+};
+
+const createLicence = () => {
+  const licence = new Licence();
+  licence.fromHash({
+    id: '4838e713-9499-4b9d-a7c0-c4c9a008a589',
+    licenceNumber: '01/123/ABC',
+    isWaterUndertaker: true
+  });
+  licence.region = new Region();
+  licence.region.fromHash({
+    type: Region.types.region,
+    name: 'Anglian',
+    code: 'A',
+    numericCode: 3
+  });
+  licence.regionalChargeArea = new Region();
+  licence.regionalChargeArea.fromHash({
+    type: Region.types.regionalChargeArea,
+    name: 'Anglian'
+  });
+  licence.historicalArea = new Region();
+  licence.historicalArea.fromHash({
+    type: Region.types.environmentAgencyArea,
+    code: 'ARCA'
+  });
+  return licence;
 };
 
 const createInvoiceLicence = (options = {}) => {
@@ -59,30 +88,9 @@ const createInvoiceLicence = (options = {}) => {
   invoiceLicence.transactions = [
     createTransaction(options)
   ];
+  invoiceLicence.licence = createLicence();
   return invoiceLicence;
 };
-
-const createChargeLine = (isWaterUndertaker = false) => ({
-  startDate: '2018-04-01',
-  endDate: '2019-03-31',
-  section127Agreement: true,
-  chargeVersion: {
-    isWaterUndertaker
-  },
-  chargeElements: [{
-    chargeElementId: 'bf679fc9-dec9-42cd-bc32-542578be01d9',
-    source: 'supported',
-    season: 'summer',
-    loss: 'low',
-    totalDays: 365,
-    billableDays: 200,
-    description: 'Tiny pond',
-    abstractionPeriodStartDay: 1,
-    abstractionPeriodStartMonth: 2,
-    abstractionPeriodEndDay: 3,
-    abstractionPeriodEndMonth: 4
-  }]
-});
 
 experiment('modules/billing/services/transactions-service', () => {
   let transactions;
@@ -98,7 +106,8 @@ experiment('modules/billing/services/transactions-service', () => {
         chargeValue: 6134,
         credit: false,
         transactionStatus: 'unbilled',
-        approvedForBilling: false
+        approvedForBilling: false,
+        volume: 4.2
       },
       {
         id: '888fa748-4b1c-4466-ad07-4d7705728da0',
@@ -109,7 +118,8 @@ experiment('modules/billing/services/transactions-service', () => {
         chargeValue: -1421,
         credit: true,
         transactionStatus: 'unbilled',
-        approvedForBilling: false
+        approvedForBilling: false,
+        volume: 5.6
       }
     ];
 
@@ -183,176 +193,6 @@ experiment('modules/billing/services/transactions-service', () => {
     });
   });
 
-  experiment('.mapChargeToTransactions', () => {
-    let result, chargeLine;
-
-    experiment('for a supplementary batch, and a non-water undertaker licence', () => {
-      let batch;
-
-      beforeEach(async () => {
-        chargeLine = createChargeLine();
-        batch = new Batch();
-        batch.type = 'supplementary';
-        result = transactionsService.mapChargeToTransactions(chargeLine, batch);
-      });
-
-      test('2 transactions are created', async () => {
-        expect(result).to.be.an.array().length(2);
-      });
-
-      experiment('the first transaction', () => {
-        test('is a standard charge', async () => {
-          expect(result[0].isCompensationCharge).to.be.false();
-        });
-
-        test('is not two-part tariff supplementary charge by default', async () => {
-          expect(result[0].isTwoPartTariffSupplementaryCharge).to.equal(false);
-        });
-
-        test('is not a credit', async () => {
-          expect(result[0].isCredit).to.equal(false);
-        });
-
-        test('has the correct billable and authorised days', async () => {
-          expect(result[0].authorisedDays).to.equal(chargeLine.chargeElements[0].totalDays);
-          expect(result[0].billableDays).to.equal(chargeLine.chargeElements[0].billableDays);
-        });
-
-        test('has the correct description', async () => {
-          expect(result[0].description).to.equal(chargeLine.chargeElements[0].description);
-        });
-
-        test('has the charge period mapped correctly', async () => {
-          expect(result[0].chargePeriod.startDate).to.equal(chargeLine.startDate);
-          expect(result[0].chargePeriod.endDate).to.equal(chargeLine.endDate);
-        });
-
-        test('has the charge element mapped correctly', async () => {
-          const { chargeElement } = result[0];
-          expect(chargeElement.id).to.equal(chargeLine.chargeElements[0].chargeElementId);
-          expect(chargeElement.source).to.equal(chargeLine.chargeElements[0].source);
-          expect(chargeElement.season).to.equal(chargeLine.chargeElements[0].season);
-          expect(chargeElement.loss).to.equal(chargeLine.chargeElements[0].loss);
-        });
-
-        test('has the abstraction period mapped correctly', async () => {
-          const { abstractionPeriod } = result[0].chargeElement;
-          expect(abstractionPeriod.startDay).to.equal(chargeLine.chargeElements[0].abstractionPeriodStartDay);
-          expect(abstractionPeriod.startMonth).to.equal(chargeLine.chargeElements[0].abstractionPeriodStartMonth);
-          expect(abstractionPeriod.endDay).to.equal(chargeLine.chargeElements[0].abstractionPeriodEndDay);
-          expect(abstractionPeriod.endMonth).to.equal(chargeLine.chargeElements[0].abstractionPeriodEndMonth);
-        });
-
-        test('has agreements mapped correctly', async () => {
-          const { agreements } = result[0];
-          expect(agreements).to.be.an.array().length(1);
-          expect(agreements[0].code).to.equal('127');
-        });
-      });
-
-      experiment('the second transaction', () => {
-        test('is a compensation charge', async () => {
-          expect(result[1].isCompensationCharge).to.be.true();
-        });
-      });
-    });
-
-    experiment('when processing two-part tariff supplementary', () => {
-      let batch, chargeLine;
-
-      beforeEach(async () => {
-        chargeLine = createChargeLine();
-        batch = new Batch();
-        batch.type = 'two_part_tariff';
-        result = transactionsService.mapChargeToTransactions(chargeLine, batch);
-      });
-
-      test('1 transactions is created', async () => {
-        expect(result).to.be.an.array().length(1);
-      });
-
-      test('the transaction is a standard charge', async () => {
-        expect(result[0].isCompensationCharge).to.be.false();
-      });
-
-      test('the transaction is a two-part tariff supplementary charge', async () => {
-        expect(result[0].isTwoPartTariffSupplementaryCharge).to.be.true();
-      });
-    });
-
-    experiment('when processing a supplementary charge for a water undertaker', () => {
-      let batch, chargeLine;
-
-      beforeEach(async () => {
-        chargeLine = createChargeLine(true);
-        batch = new Batch();
-        batch.type = 'supplementary';
-        result = transactionsService.mapChargeToTransactions(chargeLine, batch);
-      });
-
-      test('1 transactions is created', async () => {
-        expect(result).to.be.an.array().length(1);
-      });
-
-      test('the transaction is a standard charge', async () => {
-        expect(result[0].isCompensationCharge).to.be.false();
-      });
-
-      test('the transaction is not a two-part tariff supplementary charge', async () => {
-        expect(result[0].isTwoPartTariffSupplementaryCharge).to.be.false();
-      });
-    });
-  });
-
-  experiment('.mapTransactionToDB', () => {
-    let invoiceLicence, result;
-
-    experiment('when the transaction is a standard charge', () => {
-      beforeEach(async () => {
-        invoiceLicence = createInvoiceLicence();
-        result = transactionsService.mapTransactionToDB(invoiceLicence, invoiceLicence.transactions[0]);
-      });
-
-      test('the result is mapped correctly', async () => {
-        expect(result).to.equal({
-          billing_invoice_licence_id: 'c4fd4bf6-9565-4ff8-bdba-e49355446d7b',
-          charge_element_id: '29328315-9b24-473b-bde7-02c60e881501',
-          start_date: '2019-04-01',
-          end_date: '2020-03-31',
-          abstraction_period: {
-            startDay: 1,
-            startMonth: 1,
-            endDay: 31,
-            endMonth: 12
-          },
-          source: 'supported',
-          loss: 'low',
-          season: 'summer',
-          is_credit: false,
-          charge_type: 'standard',
-          authorised_quantity: 12.5,
-          billable_quantity: 10,
-          authorised_days: 366,
-          billable_days: 366,
-          description: 'Tiny pond'
-        });
-      });
-    });
-
-    experiment('when the transaction is a compensation charge', () => {
-      beforeEach(async () => {
-        invoiceLicence = createInvoiceLicence({
-          isCompensationCharge: true
-        });
-        result = transactionsService.mapTransactionToDB(invoiceLicence, invoiceLicence.transactions[0]);
-      });
-
-      test('the charge type is "compensation"', async () => {
-        expect(result.charge_type).to.equal('compensation');
-      });
-    });
-  });
-
   experiment('.saveTransactionToDB', () => {
     let invoiceLicence;
 
@@ -368,20 +208,21 @@ experiment('modules/billing/services/transactions-service', () => {
     test('an object of the correct shape is passed to the create() method of the repo', async () => {
       const [data] = repos.billingTransactions.create.lastCall.args;
       expect(data).to.be.an.object();
-      expect(Object.keys(data)).to.include(['billing_invoice_licence_id',
-        'charge_element_id',
-        'start_date',
-        'end_date',
-        'abstraction_period',
+      expect(Object.keys(data)).to.include([
+        'billingInvoiceLicenceId',
+        'chargeElementId',
+        'startDate',
+        'endDate',
+        'abstractionPeriod',
         'source',
         'season',
         'loss',
-        'is_credit',
-        'charge_type',
-        'authorised_quantity',
-        'billable_quantity',
-        'authorised_days',
-        'billable_days',
+        'isCredit',
+        'chargeType',
+        'authorisedQuantity',
+        'billableQuantity',
+        'authorisedDays',
+        'billableDays',
         'description'
       ]);
     });

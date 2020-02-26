@@ -1,3 +1,5 @@
+'use strict';
+
 const batchTypes = {
   supplementary: 'supplementary',
   annual: 'annual',
@@ -39,16 +41,6 @@ exports.jobStatus = {
   start: 'start',
   complete: 'complete',
   processing: 'processing',
-  error: 'error'
-};
-
-/**
- * Statuses that the batch (water.billing_batches) may have. These
- * are here to help enforce that only one batch per region may
- * be run at a time.
- */
-exports.batchStatus = {
-  processing: 'processing',
-  complete: 'complete',
-  error: 'error'
+  error: 'error',
+  deleted: 'deleted'
 };

@@ -6,18 +6,23 @@ const {
   beforeEach,
   afterEach
 } = exports.lab = require('@hapi/lab').script();
+
+const config = require('../../../config');
 const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
 const Invoice = require('../../../src/lib/models/invoice');
+const Batch = require('../../../src/lib/models/batch');
 
+const newRepos = require('../../../src/lib/connectors/repos');
 const repos = require('../../../src/lib/connectors/repository');
 const event = require('../../../src/lib/event');
 const invoiceService = require('../../../src/modules/billing/services/invoice-service');
-
+const batchService = require('../../../src/modules/billing/services/batch-service');
 const controller = require('../../../src/modules/billing/controller');
+
+const mappers = require('../../../src/modules/billing/mappers');
 
 experiment('modules/billing/controller', () => {
   let h, hapiResponseStub;
@@ -36,7 +41,13 @@ experiment('modules/billing/controller', () => {
       billing_batch_id: '00000000-0000-0000-0000-000000000000'
     });
 
-    sandbox.stub(repos.billingBatches, 'getById').resolves();
+    sandbox.stub(newRepos.billingBatches, 'findOne').resolves();
+
+    sandbox.stub(batchService, 'getBatches').resolves();
+    sandbox.stub(batchService, 'deleteBatch').resolves();
+    sandbox.stub(batchService, 'approveBatch').resolves();
+    sandbox.stub(batchService, 'decorateBatchWithTotals').resolves();
+    sandbox.stub(batchService, 'getProcessingBatchByRegion').resolves();
 
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
@@ -46,13 +57,15 @@ experiment('modules/billing/controller', () => {
         { event_id: '11111111-1111-1111-1111-111111111111' }
       ]
     });
+
+    sandbox.stub(mappers.api.invoice, 'modelToBatchInvoices');
   });
 
   afterEach(async () => {
     sandbox.restore();
   });
 
-  experiment('.postCreateBatch', () => {
+  experiment('.postCreateBatch for annual billing', () => {
     let request;
 
     beforeEach(async () => {
@@ -73,6 +86,10 @@ experiment('modules/billing/controller', () => {
     experiment('if there is a batch being processed for the region', () => {
       beforeEach(async () => {
         repos.billingBatches.createBatch.resolves(null);
+
+        batchService.getProcessingBatchByRegion.resolves({
+          id: 'test-batch-id'
+        });
         await controller.postCreateBatch(request, h);
       });
 
@@ -95,8 +112,13 @@ experiment('modules/billing/controller', () => {
       });
 
       test('the response contains an error message', async () => {
-        const [{ error }] = h.response.lastCall.args;
-        expect(error).to.equal('Batch already processing for region 22222222-2222-2222-2222-222222222222');
+        const [{ message }] = h.response.lastCall.args;
+        expect(message).to.equal('Batch already processing for region 22222222-2222-2222-2222-222222222222');
+      });
+
+      test('the response contains the currently processing batch', async () => {
+        const [{ existingBatch }] = h.response.lastCall.args;
+        expect(existingBatch).to.equal({ id: 'test-batch-id' });
       });
 
       test('a 409 response code is used', async () => {
@@ -151,70 +173,131 @@ experiment('modules/billing/controller', () => {
     });
   });
 
-  experiment('.getBatch', () => {
-    experiment('when the batch is found', () => {
-      let response;
+  experiment('.postCreateBatch for supplementary billing', () => {
+    let request;
 
-      beforeEach(async () => {
-        repos.billingBatches.getById.resolves({
-          billing_batch_id: 'test-batch-id',
-          region_id: 'test-region-id',
-          batch_type: 'annual'
-        });
+    const years = 3;
 
-        response = await controller.getBatch({
-          params: {
-            batchId: 'test-batch-id'
-          }
-        });
-      });
+    beforeEach(async () => {
+      sandbox.stub(config.billing, 'supplementaryYears').value(years);
 
-      test('a camel case representation of the batch is returned', async () => {
-        expect(response.data).to.equal({
-          billingBatchId: 'test-batch-id',
-          regionId: 'test-region-id',
-          batchType: 'annual'
-        });
-      });
+      request = {
+        payload: {
+          userEmail: 'test@example.com',
+          regionId: '22222222-2222-2222-2222-222222222222',
+          batchType: 'supplementary',
+          financialYearEnding: 2019,
+          season: 'summer'
+        },
+        messageQueue: {
+          publish: sandbox.stub().resolves()
+        }
+      };
 
-      test('the error object is null', async () => {
-        expect(response.error).to.be.null();
-      });
+      await controller.postCreateBatch(request, h);
     });
 
-    experiment('when the batch is not found', () => {
-      let response;
+    test('re-runs billing over a time period specified in the config', async () => {
+      expect(repos.billingBatches.createBatch.calledWith(
+        request.payload.regionId,
+        request.payload.batchType,
+        request.payload.financialYearEnding - years,
+        request.payload.financialYearEnding,
+        request.payload.season
+      )).to.be.true();
+    });
+  });
+
+  experiment('.getBatch', () => {
+    experiment('when the batch is found', () => {
+      let response, request;
 
       beforeEach(async () => {
-        repos.billingBatches.getById.resolves(null);
-        response = await controller.getBatch({
+        request = {
           params: {
             batchId: 'test-batch-id'
+          },
+          query: {
+            totals: false
+          },
+          pre: {
+            batch: new Batch('00000000-0000-0000-0000-000000000000')
           }
+        };
+      });
+
+      experiment('when totals query param is false', () => {
+        beforeEach(async () => {
+          response = await controller.getBatch(request);
+        });
+
+        test('the batch is returned', async () => {
+          expect(response).to.equal(request.pre.batch);
+        });
+
+        test('the batch is not decorated with totals', async () => {
+          expect(batchService.decorateBatchWithTotals.called).to.be.false();
         });
       });
 
-      test('the data object is null', async () => {
-        expect(response.data).to.be.null();
-      });
+      experiment('when the totals are requested', () => {
+        beforeEach(async () => {
+          request.query.totals = true;
+          response = await controller.getBatch(request);
+        });
 
-      test('the error contains a not found message', async () => {
-        expect(response.output.payload.message).to.equal('No batch found with id: test-batch-id');
+        test('the batch is decorated with totals', async () => {
+          expect(batchService.decorateBatchWithTotals.calledWith(
+            request.pre.batch
+          )).to.be.true();
+        });
       });
+    });
+  });
+
+  experiment('.getBatches', () => {
+    test('passes pagination options to the batch service', async () => {
+      const request = {
+        query: {
+          page: 5,
+          perPage: 10
+        }
+
+      };
+      await controller.getBatches(request);
+
+      const [page, perPage] = batchService.getBatches.lastCall.args;
+      expect(page).to.equal(5);
+      expect(perPage).to.equal(10);
+    });
+
+    test('directly returns the response from the batchService', async () => {
+      const request = { query: {} };
+      const batchResponse = {
+        data: [],
+        pagination: {}
+      };
+      batchService.getBatches.resolves(batchResponse);
+
+      const response = await controller.getBatches(request);
+
+      expect(response).to.equal(batchResponse);
     });
   });
 
   experiment('.getBatchInvoices', () => {
     experiment('when the batch is found', () => {
-      let response;
+      let invoices;
 
       beforeEach(async () => {
-        invoiceService.getInvoicesForBatch.resolves([
+        invoices = [
           new Invoice(),
           new Invoice()
-        ]);
+        ];
 
-        response = await controller.getBatchInvoices({
+        invoiceService.getInvoicesForBatch.resolves(invoices);
+
+        await controller.getBatchInvoices({
           params: {
             batchId: 'test-batch-id'
           }
@@ -226,29 +309,10 @@ experiment('modules/billing/controller', () => {
         expect(batchId).to.equal('test-batch-id');
       });
 
-      test('the error object is null', async () => {
-        expect(response.error).to.be.null();
-      });
-    });
-
-    experiment('when the batch does not exist', () => {
-      let response;
-
-      beforeEach(async () => {
-        invoiceService.getInvoicesForBatch.resolves([]);
-        response = await controller.getBatchInvoices({
-          params: {
-            batchId: 'test-batch-id'
-          }
-        });
-      });
-
-      test('the data object is null', async () => {
-        expect(response.data).to.be.null();
-      });
-
-      test('the error contains a not found message', async () => {
-        expect(response.output.payload.message).to.equal('No invoices found for batch with id: test-batch-id');
+      test('the response is mapped using the appropriate mapper', async () => {
+        expect(mappers.api.invoice.modelToBatchInvoices.callCount).to.equal(2);
+        expect(mappers.api.invoice.modelToBatchInvoices.calledWith(invoices[0])).to.be.true();
+        expect(mappers.api.invoice.modelToBatchInvoices.calledWith(invoices[1])).to.be.true();
       });
     });
   });
@@ -303,42 +367,18 @@ experiment('modules/billing/controller', () => {
   });
 
   experiment('.deleteAccountFromBatch', () => {
-    test('returns a 404 if the batch cannot be found', async () => {
-      const request = {
-        params: { batchId: 'test-batch-id' }
-      };
-
-      const response = await controller.deleteAccountFromBatch(request);
-      expect(response.output.payload.statusCode).to.equal(404);
-      expect(response.output.payload.message).to.equal('No batch found with id: test-batch-id');
-    });
-
-    test('returns a 403 if the found batch is not in the review state', async () => {
-      const request = {
-        params: { batchId: 'test-batch-id' }
-      };
-
-      const batch = { status: 'processing' };
-
-      repos.billingBatches.getById.resolves(batch);
-
-      const response = await controller.deleteAccountFromBatch(request);
-
-      expect(repos.billingBatches.getById.calledWith('test-batch-id')).to.be.true();
-      expect(response.output.payload.statusCode).to.equal(403);
-      expect(response.output.payload.message).to.equal(`Cannot delete account from batch (test-batch-id) when status is ${batch.status}`);
-    });
-
     test('returns a 404 if there are no invoices for the invoice account id', async () => {
       const request = {
         params: {
           batchId: 'test-batch-id',
           accountId: 'test-account-id'
+        },
+        pre: {
+          batch: {
+            status: 'review'
+          }
         }
       };
-
-      const batch = { status: 'review' };
-      repos.billingBatches.getById.resolves(batch);
 
       const invoices = [{
         invoiceLicences: [
@@ -356,6 +396,103 @@ experiment('modules/billing/controller', () => {
       expect(invoiceService.getInvoicesForBatch.calledWith('test-batch-id')).to.be.true();
       expect(response.output.payload.statusCode).to.equal(404);
       expect(response.output.payload.message).to.equal('No invoices for account (test-account-id) in batch (test-batch-id)');
+    });
+  });
+
+  experiment('.deleteBatch', () => {
+    let request;
+    let batch;
+    let internalCallingUser;
+
+    beforeEach(async () => {
+      internalCallingUser = {
+        email: 'test@example.com',
+        id: 1234
+      };
+
+      batch = {
+        billingBatchId: 'test-batch-id'
+      };
+
+      request = {
+        defra: {
+          internalCallingUser
+        },
+        pre: {
+          batch
+        }
+      };
+
+      await controller.deleteBatch(request, h);
+    });
+
+    test('deletes the batch via the batch service', async () => {
+      expect(batchService.deleteBatch.calledWith(batch, internalCallingUser)).to.be.true();
+    });
+
+    test('returns a 204 response', async () => {
+      const [code] = hapiResponseStub.code.lastCall.args;
+      expect(code).to.equal(204);
+    });
+
+    test('returns the error from the service if it fails', async () => {
+      const err = new Error('whoops');
+      batchService.deleteBatch.rejects(err);
+
+      const result = await controller.deleteBatch(request, h);
+      expect(result).to.equal(err);
+    });
+  });
+
+  experiment('.postApproveBatch', () => {
+    let request;
+    let batch;
+    let internalCallingUser;
+
+    beforeEach(async () => {
+      internalCallingUser = {
+        email: 'test@example.com',
+        id: 1234
+      };
+
+      batch = {
+        billingBatchId: 'test-batch-id'
+      };
+
+      request = {
+        defra: {
+          internalCallingUser
+        },
+        pre: {
+          batch
+        }
+      };
+
+      await controller.postApproveBatch(request, h);
+    });
+
+    test('approves the batch via the batch service', async () => {
+      expect(batchService.approveBatch.calledWith(batch, internalCallingUser)).to.be.true();
+    });
+
+    test('returns the approved batch', async () => {
+      const approvedBatch = {
+        billingBatchId: 'test-batch-id',
+        status: 'sent'
+      };
+      batchService.approveBatch.resolves(approvedBatch);
+
+      const result = await controller.postApproveBatch(request, h);
+
+      expect(result).to.equal(approvedBatch);
+    });
+
+    test('returns the error from the service if it fails', async () => {
+      const err = new Error('whoops');
+      batchService.approveBatch.rejects(err);
+
+      const result = await controller.postApproveBatch(request, h);
+      expect(result).to.equal(err);
     });
   });
 });

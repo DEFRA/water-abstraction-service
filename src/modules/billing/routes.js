@@ -2,7 +2,22 @@
 
 const Joi = require('@hapi/joi');
 
+const preHandlers = require('./pre-handlers');
 const controller = require('./controller');
+
+const getBatches = {
+  method: 'GET',
+  path: '/water/1.0/billing/batches',
+  handler: controller.getBatches,
+  config: {
+    validate: {
+      query: {
+        page: Joi.number().integer().optional(),
+        perPage: Joi.number().integer().optional()
+      }
+    }
+  }
+};
 
 const postCreateBatch = {
   method: 'POST',
@@ -29,8 +44,14 @@ const getBatch = {
     validate: {
       params: {
         batchId: Joi.string().uuid().required()
+      },
+      query: {
+        totals: Joi.boolean().truthy('1').falsy('0').default(false)
       }
-    }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
   }
 };
 
@@ -71,12 +92,60 @@ const deleteAccountFromBatch = {
         batchId: Joi.string().uuid().required(),
         accountId: Joi.string().uuid().required()
       }
-    }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' },
+      { method: preHandlers.ensureBatchInReviewState }
+    ]
   }
 };
 
-exports.postCreateBatch = postCreateBatch;
+const deleteBatch = {
+  method: 'DELETE',
+  path: '/water/1.0/billing/batches/{batchId}',
+  handler: controller.deleteBatch,
+  config: {
+    validate: {
+      params: {
+        batchId: Joi.string().uuid().required()
+      },
+      headers: async values => {
+        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+      }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' },
+      { method: preHandlers.ensureBatchInReviewState }
+    ]
+  }
+};
+
+const postApproveBatch = {
+  method: 'POST',
+  path: '/water/1.0/billing/batches/{batchId}/approve',
+  handler: controller.postApproveBatch,
+  config: {
+    validate: {
+      params: {
+        batchId: Joi.string().uuid().required()
+      },
+      headers: async values => {
+        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+      }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
+  }
+};
+
 exports.getBatch = getBatch;
+exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
+
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
+exports.deleteBatch = deleteBatch;
+
+exports.postApproveBatch = postApproveBatch;
+exports.postCreateBatch = postCreateBatch;

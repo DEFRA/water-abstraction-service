@@ -41,29 +41,16 @@ class Licence extends Model {
   }
 
   /**
-   * Gets the standard unit charge area
+   * Gets the regional charge area
    * @return {Region}
    */
-  get standardUnitChargeArea () {
-    return this._standardUnitChargeArea;
+  get regionalChargeArea () {
+    return this._regionalChargeArea;
   }
 
-  set standardUnitChargeArea (region) {
+  set regionalChargeArea (region) {
     assertIsInstanceOf(region, Region);
-    this._standardUnitChargeArea = region;
-  }
-
-  /**
-   * Gets the environmental improvement unit charge area
-   * @return {Region}
-   */
-  get environmentalImprovementUnitChargeArea () {
-    return this._environmentalImprovementUnitChargeArea;
-  }
-
-  set environmentalImprovementUnitChargeArea (region) {
-    assertIsInstanceOf(region, Region);
-    this._environmentalImprovementUnitChargeArea = region;
+    this._regionalChargeArea = region;
   }
 }
 

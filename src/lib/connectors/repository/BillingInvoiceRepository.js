@@ -1,5 +1,5 @@
 'use strict';
-
+const { get } = require('lodash');
 const Repository = require('@envage/hapi-pg-rest-api/src/repository');
 const db = require('../db');
 
@@ -38,6 +38,7 @@ const getInvoiceDetailQuery = `
     i.invoice_account_number as "invoices.invoice_account_number",
     i.net_amount as "invoices.net_amount",
     i.is_credit as "invoices.is_credit",
+    i.date_created as "invoices.date_created",
 
     il.billing_invoice_licence_id as "invoice_licence.billing_invoice_licence_id",
     il.billing_invoice_id as "invoice_licence.billing_invoice_id",
@@ -77,6 +78,14 @@ const getInvoiceDetailQuery = `
     join water.billing_transactions t
       on il.billing_invoice_licence_id = t.billing_invoice_licence_id
   where i.billing_invoice_id = $1;
+`;
+
+const findOneByTransactionIdQuery = `
+  select i.*
+  from water.billing_transactions t
+    join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
+    join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
+  where t.billing_transaction_id=$1;
 `;
 
 /**
@@ -153,6 +162,23 @@ class BillingInvoiceRepository extends Repository {
       return invoice;
     }, null);
   }
+
+  /**
+   * Find a single invoice by transaction ID that references it
+   * @param {String} transactionId
+   * @return {Promise<Object>}
+   */
+  async findOneByTransactionId (transactionId) {
+    const result = await this.dbQuery(findOneByTransactionIdQuery, [transactionId]);
+    return get(result, 'rows.0', null);
+  }
+
+  deleteByBatchId (batchId) {
+    return this.delete({
+      billing_batch_id: batchId
+    });
+  }
 }
 
 module.exports = BillingInvoiceRepository;
+module.exports._findOneByTransactionIdQuery = findOneByTransactionIdQuery;

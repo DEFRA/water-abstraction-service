@@ -1,17 +1,37 @@
+'use strict';
+
 const Joi = require('@hapi/joi');
 const Invoice = require('./invoice');
 const FinancialYear = require('./financial-year');
 const Region = require('./region');
+const Totals = require('./totals');
 const { assert } = require('@hapi/hoek');
 const { isArray } = require('lodash');
 
-const { assertIsInstanceOf } = require('./validators');
+const { assertIsInstanceOf, assertEnum, assertIsArrayOfType, assertPositiveInteger } = require('./validators');
 
-const VALID_BATCH_TYPE = Joi.string().valid('annual', 'supplementary', 'two_part_tariff').required();
+/**
+ * Statuses that the batch (water.billing_batches) may have. These
+ * are here to help enforce that only one batch per region may
+ * be run at a time.
+ */
+const BATCH_STATUS = {
+  processing: 'processing', // processing trasactions
+  review: 'review', // two-part tariff only - reviewing results of returns matching
+  ready: 'ready', // processing completed - awaiting approval
+  sent: 'sent', // approved & sent to Charge Module
+  error: 'error'
+};
+
 const VALID_SEASON = Joi.string().valid('summer', 'winter', 'all year').required();
-const VALID_STATUS = Joi.string().valid('processing', 'complete', 'error').required();
 
 const Model = require('./model');
+
+const BATCH_TYPE = {
+  annual: 'annual',
+  supplementary: 'supplementary',
+  twoPartTariff: 'two_part_tariff'
+};
 
 class Batch extends Model {
   constructor (id) {
@@ -24,7 +44,7 @@ class Batch extends Model {
    * @param {String} batchType
    */
   set type (batchType) {
-    Joi.assert(batchType, VALID_BATCH_TYPE);
+    assertEnum(batchType, Object.values(BATCH_TYPE));
     this._type = batchType;
   }
 
@@ -34,6 +54,14 @@ class Batch extends Model {
    */
   get type () {
     return this._type;
+  }
+
+  /**
+   * Checks whether this is a supplementary batch
+   * @return {Boolean}
+   */
+  isSupplementary () {
+    return this._type === BATCH_TYPE.supplementary;
   }
 
   /**
@@ -92,7 +120,7 @@ class Batch extends Model {
    * @param {String} status
    */
   set status (status) {
-    Joi.assert(status, VALID_STATUS);
+    assertEnum(status, Object.keys(BATCH_STATUS));
     this._status = status;
   }
 
@@ -102,6 +130,22 @@ class Batch extends Model {
    */
   get status () {
     return this._status;
+  }
+
+  set dateCreated (value) {
+    this._dateCreated = this.getDateTimeFromValue(value);
+  }
+
+  get dateCreated () {
+    return this._dateCreated;
+  }
+
+  set dateUpdated (value) {
+    this._dateUpdated = this.getDateTimeFromValue(value);
+  }
+
+  get dateUpdated () {
+    return this._dateUpdated;
   }
 
   /**
@@ -146,6 +190,11 @@ class Batch extends Model {
     return this._invoices;
   }
 
+  set invoices (invoices) {
+    assertIsArrayOfType(invoices, Invoice);
+    this._invoices = invoices;
+  }
+
   /**
    * Sets the region for the batch.
    * A batch can only be related to a single region at present
@@ -159,6 +208,39 @@ class Batch extends Model {
     assertIsInstanceOf(region, Region);
     this._region = region;
   }
+
+  isTwoPartTariff () {
+    return this.type === BATCH_TYPE.twoPartTariff;
+  }
+
+  /**
+   * The charge module summary contains data on
+   * invoice/credit count, invoice/credit totals, net total
+   * @param {Totals} totals
+   */
+  set totals (totals) {
+    assertIsInstanceOf(totals, Totals);
+    this._totals = totals;
+  }
+
+  get totals () {
+    return this._totals;
+  }
+
+  /**
+   * Sets the external ID.  This is the bill run ID in the charge module.
+   * @return {Region}
+   */
+  get externalId () {
+    return this._externalId;
+  }
+
+  set externalId (externalId) {
+    assertPositiveInteger(externalId);
+    this._externalId = externalId;
+  }
 }
 
 module.exports = Batch;
+module.exports.BATCH_TYPE = BATCH_TYPE;
+module.exports.BATCH_STATUS = BATCH_STATUS;

@@ -1,3 +1,5 @@
+'use strict';
+
 const { get } = require('lodash');
 const Repository = require('@envage/hapi-pg-rest-api/src/repository');
 const db = require('../db');
@@ -45,23 +47,6 @@ class BillingBatchRepository extends Repository {
 
     const result = await this.dbQuery(query, [regionId, batchType, fromFinancialYearEnding, toFinancialYearEnding, season]);
     return get(result, 'rows[0]', null);
-  }
-
-  async getById (batchId) {
-    const result = await this.find({ billing_batch_id: batchId });
-    return get(result, 'rows[0]', null);
-  }
-
-  /**
-   * Updates the status of a batch
-   * @param {String/UUID} batchId The batch id to update
-   * @param {String} status The status to set [complete | error | processing]
-   */
-  setStatus (batchId, status) {
-    return this.update(
-      { billing_batch_id: batchId },
-      { status, date_updated: new Date() }
-    );
   }
 }
 

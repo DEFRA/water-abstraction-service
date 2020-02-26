@@ -1,16 +1,25 @@
 const {
   experiment,
   test,
-  beforeEach
+  beforeEach,
+  afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
+const sandbox = require('sinon').createSandbox();
 
 const ChargeElement = require('../../../../src/lib/models/charge-element');
 const chargeElementsService = require('../../../../src/modules/billing/services/charge-elements-service');
+const repos = require('../../../../src/lib/connectors/repository');
 
 const data = {
   chargeElement: {
     chargeElementId: '90d4af8a-1717-452c-84bd-467a7d55ade4',
+    source: 'supported',
+    season: 'summer',
+    loss: 'high'
+  },
+  dbRow: {
+    charge_element_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
     source: 'supported',
     season: 'summer',
     loss: 'high'
@@ -20,12 +29,21 @@ const data = {
 experiment('modules/billing/services/charge-elements-service', () => {
   let result;
 
-  experiment('.mapRowToModel', () => {
+  beforeEach(async () => {
+    sandbox.stub(repos.chargeElements, 'findOneById');
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  experiment('.getById', () => {
     beforeEach(async () => {
-      result = chargeElementsService.mapRowToModel(data.chargeElement);
+      repos.chargeElements.findOneById.resolves(data.dbRow);
+      result = await chargeElementsService.getById(data.dbRow);
     });
 
-    test('returns an instance of Agreement', async () => {
+    test('returns an instance of ChargeElement', async () => {
       expect(result instanceof ChargeElement).to.be.true();
     });
 

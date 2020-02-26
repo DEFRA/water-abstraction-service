@@ -11,6 +11,7 @@ const {
   CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_RETURNS_AGENT,
   CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO
 } = require('../../../../../lib/models/contact');
+const BI_TEMPLATES = ['control', 'bi_style', 'social_norm', 'formal'];
 
 /**
  * Gets personalisation data for the notification - this relates to the
@@ -88,6 +89,12 @@ const createLetter = (ev, contact, context, messageRef) => ({
   }
 });
 
+const templateRandomiser = templateType => {
+  // generate a number between 0-3
+  const random = Math.floor(Math.random() * 4);
+  return templateType.concat('_', BI_TEMPLATES[random]);
+};
+
 const emailTemplate = template => ({ method: createEmail, messageRef: template });
 const letterTemplate = template => ({ method: createLetter, messageRef: template });
 
@@ -124,8 +131,11 @@ const templateMap = {
  */
 const createNotificationData = (ev, contact, context) => {
   const { method, messageRef } = templateMap[ev.subtype][contact.role];
-  return method(ev, contact, context, messageRef);
+
+  return method(ev, contact, context, templateRandomiser(messageRef));
 };
+
+exports.BI_TEMPLATES = BI_TEMPLATES;
 
 exports._getReturnPersonalisation = getReturnPersonalisation;
 exports.createNotificationData = createNotificationData;

@@ -44,6 +44,15 @@ class ChargeElement extends Model {
   }
 
   /**
+   * EIUC source is derived from source
+   * and is either tidal|other
+   * @return {String}
+   */
+  get eiucSource () {
+    return this._source === 'tidal' ? 'tidal' : 'other';
+  }
+
+  /**
    * Season
    * @return {String}
    */
@@ -106,6 +115,15 @@ class ChargeElement extends Model {
   set billableAnnualQuantity (quantity) {
     assertNullableQuantity(quantity);
     this._billableAnnualQuantity = quantity;
+  }
+
+  /**
+   * Gets billing quantity to use
+   * This could be auth, billable or actual quantity
+   * @return {Number}
+   */
+  get volume () {
+    return this._billableAnnualQuantity || this._authorisedAnnualQuantity;
   }
 }
 

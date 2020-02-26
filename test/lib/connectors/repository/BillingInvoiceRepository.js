@@ -52,6 +52,7 @@ experiment('lib/connectors/repository/BillingInvoiceRepository', () => {
             'invoices.invoice_account_number': '1122',
             'invoices.net_amount': 192,
             'invoices.is_credit': true,
+            'invoices.date_created': '2020-01-27',
 
             'invoice_licence.licence_id': 'licence-1',
             'invoice_licence.licence_ref': '111/111',
@@ -65,6 +66,7 @@ experiment('lib/connectors/repository/BillingInvoiceRepository', () => {
             'invoices.invoice_account_number': '1122',
             'invoices.net_amount': 192,
             'invoices.is_credit': true,
+            'invoices.date_created': '2020-01-27',
 
             'invoice_licence.licence_id': 'licence-1',
             'invoice_licence.licence_ref': '111/111',
@@ -78,6 +80,7 @@ experiment('lib/connectors/repository/BillingInvoiceRepository', () => {
             'invoices.invoice_account_number': '1122',
             'invoices.net_amount': 192,
             'invoices.is_credit': true,
+            'invoices.date_created': '2020-01-27',
 
             'invoice_licence.licence_id': 'licence-2',
             'invoice_licence.licence_ref': '222/222',
@@ -98,6 +101,7 @@ experiment('lib/connectors/repository/BillingInvoiceRepository', () => {
       expect(invoice.invoice_account_number).to.equal('1122');
       expect(invoice.net_amount).to.equal(192);
       expect(invoice.is_credit).to.equal(true);
+      expect(invoice.date_created).to.equal('2020-01-27');
     });
 
     test('maps the two licences', async () => {
@@ -120,6 +124,62 @@ experiment('lib/connectors/repository/BillingInvoiceRepository', () => {
       const licence = invoice.licences.find(l => l.licence_id === 'licence-2');
       expect(licence.transactions.length).to.equal(1);
       expect(licence.transactions.find(t => t.authorised_days === 33)).to.exist();
+    });
+  });
+
+  experiment('.findOneByTransactionId', async () => {
+    const transactionId = 'transaction-id';
+
+    experiment('when a row is found', () => {
+      let result;
+      beforeEach(async () => {
+        BillingInvoiceRepository.prototype.dbQuery.resolves({
+          rows: [{
+            transaction_id: transactionId
+          }]
+        });
+        const repo = new BillingInvoiceRepository();
+        result = await repo.findOneByTransactionId(transactionId);
+      });
+
+      test('calls dbQuery() with correct params', async () => {
+        const [query, params] = BillingInvoiceRepository.prototype.dbQuery.lastCall.args;
+        expect(query).to.equal(BillingInvoiceRepository._findOneByTransactionIdQuery);
+        expect(params).to.equal([transactionId]);
+      });
+
+      test('resolves with found row', async () => {
+        expect(result).to.be.an.object();
+        expect(result.transaction_id).to.equal(transactionId);
+      });
+    });
+
+    experiment('when a row is not found', () => {
+      let result;
+      beforeEach(async () => {
+        BillingInvoiceRepository.prototype.dbQuery.resolves({
+          rows: []
+        });
+        const repo = new BillingInvoiceRepository();
+        result = await repo.findOneByTransactionId(transactionId);
+      });
+
+      test('resolves with null', async () => {
+        expect(result).to.equal(null);
+      });
+    });
+  });
+
+  experiment('.deleteByBatchId', () => {
+    beforeEach(async () => {
+      const repo = new BillingInvoiceRepository();
+      await repo.deleteByBatchId('test-batch-id');
+    });
+
+    test('passes the expected parameters to the query', async () => {
+      const [, params] = BillingInvoiceRepository.prototype.dbQuery.lastCall.args;
+      expect(params).to.have.length(1);
+      expect(params[0]).to.equal('test-batch-id');
     });
   });
 });

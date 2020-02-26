@@ -14,33 +14,11 @@ experiment('lib/connectors/repository/BillingBatchChargeVersionYearsRepository',
   beforeEach(async () => {
     sandbox.stub(BillingBatchChargeVersionYearsRepository.prototype, 'find');
     sandbox.stub(BillingBatchChargeVersionYearsRepository.prototype, 'update');
+    sandbox.stub(BillingBatchChargeVersionYearsRepository.prototype, 'delete');
   });
 
   afterEach(async () => {
     sandbox.restore();
-  });
-
-  experiment('.setStatus', () => {
-    test('updates by billing_batch_charge_version_year_id', async () => {
-      const repo = new BillingBatchChargeVersionYearsRepository();
-      await repo.setStatus('test-id', 'complete');
-
-      const [filter] = repo.update.lastCall.args;
-
-      expect(filter).to.equal({
-        billing_batch_charge_version_year_id: 'test-id'
-      });
-    });
-
-    test('updates the status', async () => {
-      const repo = new BillingBatchChargeVersionYearsRepository();
-      await repo.setStatus('test-id', 'complete');
-
-      const [, newData] = repo.update.lastCall.args;
-
-      expect(newData.status).to.equal('complete');
-      expect(newData.date_updated).to.be.a.date();
-    });
   });
 
   experiment('.findProcessingByBatch', () => {
@@ -60,6 +38,19 @@ experiment('lib/connectors/repository/BillingBatchChargeVersionYearsRepository',
       const [filter] = repo.find.lastCall.args;
 
       expect(filter.status).to.equal('processing');
+    });
+  });
+
+  experiment('.deleteByBatchId', () => {
+    test('calls delete with the expected filter', async () => {
+      const repo = new BillingBatchChargeVersionYearsRepository();
+      await repo.deleteByBatchId('test-id');
+
+      const [filter] = repo.delete.lastCall.args;
+
+      expect(filter).to.equal({
+        billing_batch_id: 'test-id'
+      });
     });
   });
 });

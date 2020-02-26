@@ -1,18 +1,66 @@
 'use strict';
 
-const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
+const sandbox = require('sinon').createSandbox();
 
+const hashers = require('../../../src/lib/hash');
 const ChargeModuleTransaction = require('../../../src/lib/models/charge-module-transaction');
 const Transaction = require('../../../src/lib/models/transaction');
 const Agreement = require('../../../src/lib/models/agreement');
 const DateRange = require('../../../src/lib/models/date-range');
 const ChargeElement = require('../../../src/lib/models/charge-element');
+const Licence = require('../../../src/lib/models/licence');
+const Region = require('../../../src/lib/models/region');
+const InvoiceAccount = require('../../../src/lib/models/invoice-account');
+const Batch = require('../../../src/lib/models/batch');
 
 class TestModel {};
 
+const getTestDataForHashing = () => {
+  const region = new Region().fromHash({ code: 'A' });
+
+  const batch = new Batch().fromHash({
+    type: Batch.BATCH_TYPE.twoPartTariff,
+    region
+  });
+
+  const invoiceAccount = new InvoiceAccount().fromHash({ accountNumber: 'A00000000A' });
+
+  const licence = new Licence();
+  licence.region = region;
+  licence.licenceNumber = 'ABCCBA';
+
+  const chargeElement = new ChargeElement();
+  chargeElement.source = 'supported';
+  chargeElement.season = 'summer';
+  chargeElement.loss = 'low';
+
+  const transaction = new Transaction();
+  transaction.chargePeriod = new DateRange('2010-01-01', '2020-01-01');
+  transaction.billableDays = 1;
+  transaction.authorisedDays = 2;
+  transaction.volume = 3;
+  transaction.isCompensationCharge = true;
+
+  transaction.agreements = [
+    new Agreement().fromHash({ code: 'S130T' }),
+    new Agreement().fromHash({ code: 'S127' }),
+    new Agreement().fromHash({ code: 'S130W' })
+  ];
+
+  transaction.chargeElement = chargeElement;
+  transaction.description = 'description';
+
+  return { batch, invoiceAccount, licence, transaction };
+};
+
 experiment('lib/models/transaction', () => {
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
   experiment('construction', () => {
     test('can be passed no initial values', async () => {
       const transaction = new Transaction();
@@ -65,6 +113,7 @@ experiment('lib/models/transaction', () => {
         id: transaction.id,
         value: transaction.value,
         isCredit: transaction.isCredit,
+        status: 'candidate',
         agreements: []
       });
     });
@@ -217,24 +266,6 @@ experiment('lib/models/transaction', () => {
     });
   });
 
-  experiment('.isTwoPartTariffSupplementaryCharge', () => {
-    test('can be set to a boolean', async () => {
-      const transaction = new Transaction();
-      transaction.isTwoPartTariffSupplementaryCharge = false;
-      expect(transaction.isTwoPartTariffSupplementaryCharge).to.equal(false);
-    });
-
-    test('throws an error if set to any other type', async () => {
-      const transaction = new Transaction();
-
-      const func = () => {
-        transaction.isTwoPartTariffSupplementaryCharge = 'not-a-boolean';
-      };
-
-      expect(func).to.throw();
-    });
-  });
-
   experiment('.description', () => {
     const testDescription = 'Charge description';
 
@@ -272,6 +303,96 @@ experiment('lib/models/transaction', () => {
       };
 
       expect(func).to.throw();
+    });
+  });
+
+  experiment('.transactionKey', () => {
+    test('can set the transaction key to a valid 32 char string', async () => {
+      const transaction = new Transaction();
+      const validKey = '0123456789ABCDEFFEDCBA9876543210';
+      transaction.transactionKey = validKey;
+      expect(transaction.transactionKey).to.equal(validKey);
+    });
+
+    test('will throw if an invalid value is set', async () => {
+      const transaction = new Transaction();
+
+      expect(() => {
+        transaction.transactionKey = 'nope';
+      }).to.throw();
+    });
+  });
+
+  experiment('.getHashData', () => {
+    test('returns a flat object containing the data to feed to the hash', () => {
+      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
+
+      const hashData = transaction.getHashData(invoiceAccount, licence, batch);
+
+      expect(hashData.periodStart).to.equal(transaction.chargePeriod.startDate);
+      expect(hashData.periodEnd).to.equal(transaction.chargePeriod.endDate);
+      expect(hashData.billableDays).to.equal(transaction.billableDays);
+      expect(hashData.authorisedDays).to.equal(transaction.authorisedDays);
+      expect(hashData.volume).to.equal(transaction.volume);
+      expect(hashData.agreements).to.equal('S127-S130T-S130W');
+      expect(hashData.accountNumber).to.equal(invoiceAccount.accountNumber);
+      expect(hashData.source).to.equal(transaction.chargeElement.source);
+      expect(hashData.season).to.equal(transaction.chargeElement.season);
+      expect(hashData.loss).to.equal(transaction.chargeElement.loss);
+      expect(hashData.description).to.equal(transaction.description);
+      expect(hashData.licenceNumber).to.equal(licence.licenceNumber);
+      expect(hashData.regionCode).to.equal(batch.region.code);
+      expect(hashData.isCompensationCharge).to.equal(transaction.isCompensationCharge);
+      expect(hashData.isTwoPartTariff).to.equal(batch.isTwoPartTariff());
+    });
+  });
+
+  experiment('.createTransactionKey', () => {
+    test('sets the transactionKey value on the transaction', () => {
+      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
+      transaction.createTransactionKey(invoiceAccount, licence, batch);
+
+      expect(transaction.transactionKey).to.equal('3b4865e9e4dba1145457e2d614c860cc');
+    });
+
+    test('returns the transactionKey', () => {
+      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
+      const transactionKey = transaction.createTransactionKey(invoiceAccount, licence, batch);
+
+      expect(transactionKey).to.equal('3b4865e9e4dba1145457e2d614c860cc');
+    });
+
+    test('sets the value to the result of calling createMd5Hash', async () => {
+      sandbox.stub(hashers, 'createMd5Hash').returns('0123456789ABCDEF0123456789ABCDEF');
+      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
+      const transactionKey = transaction.createTransactionKey(invoiceAccount, licence, batch);
+
+      expect(transactionKey).to.equal('0123456789ABCDEF0123456789ABCDEF');
+    });
+
+    test('sorts by key for consistent behaviour', async () => {
+      sandbox.stub(hashers, 'createMd5Hash');
+      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
+      transaction.createTransactionKey(invoiceAccount, licence, batch);
+
+      const [hashInput] = hashers.createMd5Hash.lastCall.args;
+      expect(hashInput.split(',')).to.equal([
+        'accountNumber:A00000000A',
+        'agreements:S127-S130T-S130W',
+        'authorisedDays:2',
+        'billableDays:1',
+        'description:description',
+        'isCompensationCharge:true',
+        'isTwoPartTariff:true',
+        'licenceNumber:ABCCBA',
+        'loss:low',
+        'periodEnd:2020-01-01',
+        'periodStart:2010-01-01',
+        'regionCode:A',
+        'season:summer',
+        'source:supported',
+        'volume:3'
+      ]);
     });
   });
 });

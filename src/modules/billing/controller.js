@@ -2,12 +2,16 @@
 
 const Boom = require('@hapi/boom');
 
+const config = require('../../../config');
 const repos = require('../../lib/connectors/repository');
 const event = require('../../lib/event');
-const { envelope, errorEnvelope } = require('../../lib/response');
+const { envelope } = require('../../lib/response');
 const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-versions');
 const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
+const batchService = require('./services/batch-service');
+
+const mappers = require('./mappers');
 
 const createBatchEvent = async (userEmail, batch) => {
   const batchEvent = event.create({
@@ -23,7 +27,7 @@ const createBatchEvent = async (userEmail, batch) => {
 };
 
 const createBatch = (regionId, batchType, financialYearEnding, season) => {
-  const fromFinancialYearEnding = batchType === 'supplementary' ? financialYearEnding - 6 : financialYearEnding;
+  const fromFinancialYearEnding = batchType === 'supplementary' ? financialYearEnding - config.billing.supplementaryYears : financialYearEnding;
 
   return repos.billingBatches.createBatch(
     regionId,
@@ -49,7 +53,10 @@ const postCreateBatch = async (request, h) => {
   const batch = await createBatch(regionId, batchType, financialYearEnding, season);
 
   if (!batch) {
-    const data = errorEnvelope(`Batch already processing for region ${regionId}`);
+    const data = {
+      message: `Batch already processing for region ${regionId}`,
+      existingBatch: await batchService.getProcessingBatchByRegion(regionId)
+    };
     return h.response(data).code(409);
   }
 
@@ -58,7 +65,7 @@ const postCreateBatch = async (request, h) => {
 
   // add a new job to the queue so that the batch can be filled
   // with charge versions
-  const message = populateBatchChargeVersionsJob.createMessage(batchEvent.event_id);
+  const message = populateBatchChargeVersionsJob.createMessage(batchEvent.event_id, batch);
   await request.messageQueue.publish(message);
 
   return h.response(envelope({
@@ -67,22 +74,26 @@ const postCreateBatch = async (request, h) => {
   })).code(202);
 };
 
+/**
+ * Get batch with region, and optionally include batch totals
+ * @param {Boolean} request.query.totals - indicates that batch totals should be included in response
+ * @return {Promise<Batch>}
+ */
 const getBatch = async request => {
-  const { batchId } = request.params;
-  const batch = await repos.billingBatches.getById(batchId);
+  const { totals } = request.query;
+  return totals ? batchService.decorateBatchWithTotals(request.pre.batch) : request.pre.batch;
+};
 
-  return batch
-    ? envelope(batch, true)
-    : Boom.notFound(`No batch found with id: ${batchId}`);
+const getBatches = async request => {
+  const { page, perPage } = request.query;
+  const batches = await batchService.getBatches(page, perPage);
+  return batches;
 };
 
 const getBatchInvoices = async request => {
   const { batchId } = request.params;
   const invoices = await invoiceService.getInvoicesForBatch(batchId);
-
-  return invoices.length
-    ? envelope(invoices, true)
-    : Boom.notFound(`No invoices found for batch with id: ${batchId}`);
+  return invoices.map(mappers.api.invoice.modelToBatchInvoices);
 };
 
 const getBatchInvoiceDetail = async request => {
@@ -96,15 +107,6 @@ const getBatchInvoiceDetail = async request => {
 
 const deleteAccountFromBatch = async request => {
   const { batchId, accountId } = request.params;
-  const batch = await repos.billingBatches.getById(batchId);
-
-  if (!batch) {
-    return Boom.notFound(`No batch found with id: ${batchId}`);
-  }
-
-  if (batch.status !== 'review') {
-    return Boom.forbidden(`Cannot delete account from batch (${batchId}) when status is ${batch.status}`);
-  }
 
   const invoices = await invoiceService.getInvoicesForBatch(batchId);
 
@@ -136,8 +138,37 @@ const deleteAccountFromBatch = async request => {
   };
 };
 
-exports.postCreateBatch = postCreateBatch;
+const deleteBatch = async (request, h) => {
+  const { batch } = request.pre;
+  const { internalCallingUser } = request.defra;
+
+  try {
+    await batchService.deleteBatch(batch, internalCallingUser);
+    return h.response().code(204);
+  } catch (err) {
+    return err;
+  }
+};
+
+const postApproveBatch = async (request, h) => {
+  const { batch } = request.pre;
+  const { internalCallingUser } = request.defra;
+
+  try {
+    const approvedBatch = await batchService.approveBatch(batch, internalCallingUser);
+    return approvedBatch;
+  } catch (err) {
+    return err;
+  }
+};
+
 exports.getBatch = getBatch;
+exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
+
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
+exports.deleteBatch = deleteBatch;
+
+exports.postApproveBatch = postApproveBatch;
+exports.postCreateBatch = postCreateBatch;

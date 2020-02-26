@@ -1,3 +1,5 @@
+'use strict';
+
 const Agreement = require('../../../lib/models/agreement');
 
 /**
@@ -17,7 +19,7 @@ const createAgreement = flag => {
  * @return {String} the code, e.g. 130S
  */
 const getCode = flag =>
-  flag.match(/([0-9]+[A-Z]?)Agreement$/)[1];
+  'S' + flag.match(/([0-9]+[A-Z]?)Agreement$/)[1];
 
 const flags = [
   'section127Agreement',
@@ -32,8 +34,8 @@ const flags = [
  * @param {Object} chargeLine - transaction line object from the charge processor
  * @return {Array<Agreement>}
  */
-const mapChargeToAgreements = chargeLine => flags
+const chargeToModels = chargeLine => flags
   .filter(flag => chargeLine[flag])
   .map(flag => createAgreement(flag));
 
-exports.mapChargeToAgreements = mapChargeToAgreements;
+exports.chargeToModels = chargeToModels;

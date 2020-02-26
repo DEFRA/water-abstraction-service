@@ -1,16 +1,10 @@
 'use strict';
 
-const { get } = require('lodash');
-
-const Transaction = require('../../../lib/models/transaction');
-const DateRange = require('../../../lib/models/date-range');
-
 const chargeModuleTransactionsConnector = require('../../../lib/connectors/charge-module/transactions');
 const ChargeModuleTransaction = require('../../../lib/models/charge-module-transaction');
-const agreementsService = require('./agreements-service');
-const chargeElementsService = require('./charge-elements-service');
 const { logger } = require('../../../logger');
-const repos = require('../../../lib/connectors/repository');
+const newRepos = require('../../../lib/connectors/repos');
+const mappers = require('../mappers');
 
 const mapTransaction = chargeModuleTransaction => {
   const transaction = new ChargeModuleTransaction(chargeModuleTransaction.id);
@@ -59,83 +53,6 @@ const getTransactionsForBatchInvoice = async (batchId, invoiceReference) => {
   }
 };
 
-const createTransaction = (chargeLine, chargeElement, data = {}) => {
-  const transaction = new Transaction();
-  transaction.fromHash({
-    ...data,
-    authorisedDays: chargeElement.totalDays,
-    billableDays: chargeElement.billableDays,
-    agreements: agreementsService.mapChargeToAgreements(chargeLine),
-    chargePeriod: new DateRange(chargeLine.startDate, chargeLine.endDate),
-    description: chargeElement.description,
-    chargeElement: chargeElementsService.mapRowToModel(chargeElement)
-  });
-  return transaction;
-};
-
-const getOptions = (chargeLine, batch) => {
-  // @TODO handle credits
-  const isWaterUndertaker = get(chargeLine, 'chargeVersion.isWaterUndertaker', false);
-  const isTwoPartTariffSupplementaryCharge = batch.type === 'two_part_tariff';
-  return {
-    isCredit: false,
-    isCompensation: !(isWaterUndertaker || isTwoPartTariffSupplementaryCharge),
-    isTwoPartTariffSupplementaryCharge
-  };
-};
-
-/**
- * Generates an array of transactions from a charge line output
- * from the charge processor
- * @param {Object} chargeLine
- * @param {Batch} batch - the current batch instance
- * @return {Array<Transaction>}
- */
-const mapChargeToTransactions = (chargeLine, batch) => {
-  const { isCompensation, ...transactionData } = getOptions(chargeLine, batch);
-
-  return chargeLine.chargeElements.reduce((acc, chargeElement) => {
-    acc.push(createTransaction(chargeLine, chargeElement, {
-      ...transactionData,
-      isCompensationCharge: false
-    }));
-
-    if (isCompensation) {
-      acc.push(createTransaction(chargeLine, chargeElement, {
-        ...transactionData,
-        isCompensationCharge: true
-      }));
-    }
-
-    return acc;
-  }, []);
-};
-
-/**
- * Maps a Transaction instance (with associated InvoiceLicence) to
- * a row of data ready for persistence to water.billing_transactions
- * @param {InvoiceLicence} invoiceLicence
- * @param {Transaction} transaction
- * @return {Object}
- */
-const mapTransactionToDB = (invoiceLicence, transaction) => ({
-  billing_invoice_licence_id: invoiceLicence.id,
-  charge_element_id: transaction.chargeElement.id,
-  start_date: transaction.chargePeriod.startDate,
-  end_date: transaction.chargePeriod.endDate,
-  abstraction_period: transaction.chargeElement.abstractionPeriod.toJSON(),
-  source: transaction.chargeElement.source,
-  season: transaction.chargeElement.season,
-  loss: transaction.chargeElement.loss,
-  is_credit: transaction.isCredit,
-  charge_type: transaction.isCompensationCharge ? 'compensation' : 'standard',
-  authorised_quantity: transaction.chargeElement.authorisedAnnualQuantity,
-  billable_quantity: transaction.chargeElement.billableAnnualQuantity,
-  authorised_days: transaction.authorisedDays,
-  billable_days: transaction.billableDays,
-  description: transaction.description
-});
-
 /**
  * Saves a row to water.billing_transactions for the given Transaction
  * instance
@@ -144,12 +61,37 @@ const mapTransactionToDB = (invoiceLicence, transaction) => ({
  * @return {Promise}
  */
 const saveTransactionToDB = (invoiceLicence, transaction) => {
-  const data = mapTransactionToDB(invoiceLicence, transaction);
-  return repos.billingTransactions.create(data);
+  const data = mappers.transaction.modelToDb(invoiceLicence, transaction);
+  return newRepos.billingTransactions.create(data);
+};
+
+/**
+ * Gets a transaction in its context within a batch
+ * @param {String} transactionId
+ * @return {Promise<Batch>}
+ */
+const getById = async transactionId => {
+  const data = await newRepos.billingTransactions.findOne(transactionId);
+
+  // Create models
+  const batch = mappers.batch.dbToModel(data.billingInvoiceLicence.billingInvoice.billingBatch);
+  const invoice = mappers.invoice.dbToModel(data.billingInvoiceLicence.billingInvoice);
+  const invoiceLicence = mappers.invoiceLicence.dbToModel(data.billingInvoiceLicence);
+  const licence = mappers.licence.dbToModel(data.billingInvoiceLicence.licence);
+  const transaction = mappers.transaction.dbToModel(data);
+
+  // Place in heirarchy
+  invoiceLicence.transactions = [transaction];
+  invoice.invoiceLicences = [invoiceLicence];
+  invoiceLicence.licence = licence;
+  batch.invoices = [
+    invoice
+  ];
+
+  return batch;
 };
 
 exports.getTransactionsForBatch = getTransactionsForBatch;
 exports.getTransactionsForBatchInvoice = getTransactionsForBatchInvoice;
-exports.mapChargeToTransactions = mapChargeToTransactions;
-exports.mapTransactionToDB = mapTransactionToDB;
 exports.saveTransactionToDB = saveTransactionToDB;
+exports.getById = getById;

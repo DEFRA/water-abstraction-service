@@ -5,7 +5,9 @@ const createSubscription = async (server, jobContainer) => {
 
   await server.messageQueue.subscribe(
     billingJob.jobName,
+    billingJob.options || {},
     billingJob.handler
+
   );
 
   if (onCompleteHandler) {
@@ -23,5 +25,6 @@ module.exports = {
     await createSubscription(server, jobs.processChargeVersion);
     await createSubscription(server, jobs.prepareTransactions);
     await createSubscription(server, jobs.createCharge);
+    await createSubscription(server, jobs.refreshTotals);
   }
 };

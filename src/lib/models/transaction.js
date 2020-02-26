@@ -1,19 +1,21 @@
 'use strict';
+
 const { pick } = require('lodash');
+const hashers = require('../../lib/hash');
 
 const Model = require('./model');
 const Agreement = require('./agreement');
 const DateRange = require('./date-range');
 const ChargeElement = require('./charge-element');
 
-const {
-  assertString,
-  assertIsBoolean,
-  assertAuthorisedDays,
-  assertBillableDays,
-  assertIsArrayOfType,
-  assertIsInstanceOf
-} = require('./validators');
+const validators = require('./validators');
+
+const statuses = {
+  candidate: 'candidate',
+  chargeCreated: 'charge_created',
+  approved: 'approved',
+  error: 'error'
+};
 
 class Transaction extends Model {
   constructor (id, value, isCredit = false) {
@@ -21,6 +23,7 @@ class Transaction extends Model {
     this.value = value;
     this.isCredit = isCredit;
     this._agreements = [];
+    this.status = statuses.candidate;
   }
 
   /**
@@ -31,6 +34,24 @@ class Transaction extends Model {
   static fromChargeModuleTransaction (chargeModuleTransaction) {
     const transaction = new Transaction();
     transaction.fromHash(pick(chargeModuleTransaction, ['value', 'isCredit']));
+    return transaction;
+  }
+
+  /**
+   * Creates a fresh model (with no ID) from the current model, set up as
+   * a credit
+   * @return {Transaction}
+   */
+  toCredit () {
+    const transaction = new Transaction();
+    transaction.pickFrom(this, [
+      'value', 'authorisedDays', 'billableDays', 'agreements', 'chargePeriod',
+      'isCompensationCharge', 'description', 'chargeElement', 'volume'
+    ]);
+    transaction.fromHash({
+      isCredit: true,
+      status: statuses.candidate
+    });
     return transaction;
   }
 
@@ -47,7 +68,7 @@ class Transaction extends Model {
   }
 
   set isCredit (isCredit) {
-    assertIsBoolean(isCredit);
+    validators.assertIsBoolean(isCredit);
     this._isCredit = isCredit;
   }
 
@@ -61,7 +82,7 @@ class Transaction extends Model {
   }
 
   set authorisedDays (days) {
-    assertAuthorisedDays(days);
+    validators.assertAuthorisedDays(days);
     this._authorisedDays = days;
   }
 
@@ -75,7 +96,7 @@ class Transaction extends Model {
   }
 
   set billableDays (days) {
-    assertBillableDays(days);
+    validators.assertBillableDays(days);
     this._billableDays = days;
   }
 
@@ -90,8 +111,17 @@ class Transaction extends Model {
   }
 
   set agreements (agreements) {
-    assertIsArrayOfType(agreements, Agreement);
+    validators.assertIsArrayOfType(agreements, Agreement);
     this._agreements = agreements;
+  }
+
+  /**
+   * Returns the first Agreement with the given code (if exists)
+   * @param {String} code
+   * @return {Agreement}
+   */
+  getAgreementByCode (code) {
+    return this._agreements.find(agreement => agreement.code === code);
   }
 
   /**
@@ -104,7 +134,7 @@ class Transaction extends Model {
   }
 
   set chargePeriod (dateRange) {
-    assertIsInstanceOf(dateRange, DateRange);
+    validators.assertIsInstanceOf(dateRange, DateRange);
     this._chargePeriod = dateRange;
   }
 
@@ -117,22 +147,8 @@ class Transaction extends Model {
   }
 
   set isCompensationCharge (isCompensationCharge) {
-    assertIsBoolean(isCompensationCharge);
+    validators.assertIsBoolean(isCompensationCharge);
     this._isCompensationCharge = isCompensationCharge;
-  }
-
-  /**
-   * Whether the transaction is a two-part tariff supplementary charge
-   * (that relates to the actual abstraction)
-   * @return {Boolean}
-   */
-  get isTwoPartTariffSupplementaryCharge () {
-    return this._isTwoPartTariffSupplementaryCharge;
-  }
-
-  set isTwoPartTariffSupplementaryCharge (isTwoPartTariffSupplementaryCharge) {
-    assertIsBoolean(isTwoPartTariffSupplementaryCharge);
-    this._isTwoPartTariffSupplementaryCharge = isTwoPartTariffSupplementaryCharge;
   }
 
   /**
@@ -145,7 +161,7 @@ class Transaction extends Model {
   }
 
   set description (description) {
-    assertString(description);
+    validators.assertString(description);
     this._description = description;
   }
 
@@ -158,9 +174,80 @@ class Transaction extends Model {
   }
 
   set chargeElement (chargeElement) {
-    assertIsInstanceOf(chargeElement, ChargeElement);
+    validators.assertIsInstanceOf(chargeElement, ChargeElement);
     this._chargeElement = chargeElement;
+  }
+
+  get status () {
+    return this._status;
+  }
+
+  set status (status) {
+    validators.assertEnum(status, Object.values(statuses));
+    this._status = status;
+  }
+
+  /**
+   * The authorised/billable/actual volume for billing
+   * @return {Number}
+   */
+  get volume () {
+    return this._volume;
+  }
+
+  set volume (volume) {
+    validators.assertQuantity(volume);
+    this._volume = volume;
+  }
+
+  /**
+   * Creates a POJO containing a single layer of data that will be
+   * used to create a unique hash for this transaction
+   *
+   * @param {InvoiceAccount} invoiceAccount The invoice account for the transaction
+   * @param {Licence} licence Licence information
+   * @param {Batch} batch The batch this transaction appears in
+   */
+  getHashData (invoiceAccount, licence, batch) {
+    return {
+      periodStart: this.chargePeriod.startDate,
+      periodEnd: this.chargePeriod.endDate,
+      ...this.pick('billableDays', 'authorisedDays', 'volume', 'description', 'isCompensationCharge'),
+      agreements: this.agreements.map(ag => ag.code).sort().join('-'),
+      accountNumber: invoiceAccount.accountNumber,
+      ...this.chargeElement.pick('source', 'season', 'loss'),
+      licenceNumber: licence.licenceNumber,
+      regionCode: batch.region.code,
+      isTwoPartTariff: batch.isTwoPartTariff()
+    };
+  }
+
+  /**
+   * Sets the transactionKey values to a unique hash for this transaction
+   *
+   * @param {String} invoiceAccount The invoice account for the transaction
+   * @param {Object} licence Licence information
+   * @param {Obejct} batch The batch this transaction appears in
+   */
+  createTransactionKey (invoiceAccount, licence, batch) {
+    const hash = this.getHashData(invoiceAccount, licence, batch);
+
+    const hashInput = Object.entries(hash)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(entry => `${entry[0]}:${entry[1]}`)
+      .join(',');
+
+    this.transactionKey = hashers.createMd5Hash(hashInput);
+    return this.transactionKey;
+  }
+
+  get transactionKey () { return this._transactionKey; }
+
+  set transactionKey (transactionKey) {
+    validators.assertTransactionKey(transactionKey);
+    this._transactionKey = transactionKey;
   }
 }
 
 module.exports = Transaction;
+module.exports.statuses = statuses;

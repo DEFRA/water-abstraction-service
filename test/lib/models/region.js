@@ -36,7 +36,7 @@ experiment('lib/models/region', () => {
     });
 
     experiment('.type', () => {
-      for (const type of ['region', 'SUCA', 'EAAR', 'EIUCA']) {
+      for (const type of ['region', 'EAAR', 'regionalChargeArea']) {
         test(`can set the type to "${type}"`, async () => {
           region.type = type;
           expect(region.type).to.equal(type);

@@ -28,8 +28,8 @@ experiment('lib/models/agreement', () => {
 
   experiment('.code', () => {
     test('can be set to a valid code', async () => {
-      agreement.code = '127';
-      expect(agreement.code).to.equal('127');
+      agreement.code = 'S127';
+      expect(agreement.code).to.equal('S127');
     });
 
     test('cannot be set to an invalid value', async () => {
@@ -49,6 +49,44 @@ experiment('lib/models/agreement', () => {
     test('cannot be set to a negative integer', async () => {
       const func = () => {
         agreement.code = -127;
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.factor', () => {
+    test('can be set to zero', async () => {
+      agreement.factor = 0;
+      expect(agreement.factor).to.equal(0);
+    });
+
+    test('can be set to 1', async () => {
+      agreement.factor = 1;
+      expect(agreement.factor).to.equal(1);
+    });
+
+    test('can be set to 0.5', async () => {
+      agreement.factor = 0.5;
+      expect(agreement.factor).to.equal(0.5);
+    });
+
+    test('cannot be set < 0', async () => {
+      const func = () => {
+        agreement.factor = -0.1;
+      };
+      expect(func).to.throw();
+    });
+
+    test('cannot be set > 1', async () => {
+      const func = () => {
+        agreement.factor = 1.1;
+      };
+      expect(func).to.throw();
+    });
+
+    test('cannot be set to a non-numeric value', async () => {
+      const func = () => {
+        agreement.factor = 'not-a-number';
       };
       expect(func).to.throw();
     });

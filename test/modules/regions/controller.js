@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -9,22 +11,21 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const controller = require('../../../src/modules/regions/controller');
-const regionsConnector = require('../../../src/lib/connectors/regions');
+const regionsRepo = require('../../../src/lib/connectors/repos/regions');
 
 experiment('modules/regions/controller', () => {
   beforeEach(async () => {
-    sandbox.stub(regionsConnector, 'getRegions').resolves({
-      rows: [
-        {
-          region_id: '00000000-0000-0000-0000-000000000000',
-          charge_region_id: 'A',
-          nald_region_id: 1,
-          name: 'Anglian',
-          date_created: '2019-10-01 11:22:33.456789',
-          date_updated: '2019-10-01 11:22:33.456789'
-        }
-      ]
-    });
+    sandbox.stub(regionsRepo, 'find').resolves([
+      {
+        regionId: '00000000-0000-0000-0000-000000000000',
+        chargeRegionId: 'A',
+        naldRegionId: 1,
+        name: 'Anglian',
+        dateCreated: '2019-10-01 11:22:33.456789',
+        dateUpdated: '2019-10-01 11:22:33.456789'
+      }
+    ]
+    );
   });
 
   afterEach(async () => {
@@ -32,17 +33,12 @@ experiment('modules/regions/controller', () => {
   });
 
   experiment('.getRegions', () => {
-    test('calls the getRegions function of regionConnector', async () => {
+    test('calls the find function of regions repo', async () => {
       await controller.getRegions();
-      expect(regionsConnector.getRegions.called).to.be.true();
+      expect(regionsRepo.find.called).to.be.true();
     });
 
-    test('throws an error if thrown by the regionConnector', async () => {
-      regionsConnector.getRegions.rejects();
-      await expect(controller.getRegions()).to.reject();
-    });
-
-    test('camel cases the response', async () => {
+    test('returns the expected response', async () => {
       const response = await controller.getRegions();
       expect(response).to.equal({
         data: [
