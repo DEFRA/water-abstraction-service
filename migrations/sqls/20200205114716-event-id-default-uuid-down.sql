@@ -1,0 +1,1 @@
+ALTER TABLE water.events ALTER COLUMN event_id DROP DEFAULT;

@@ -1,65 +1,15 @@
-const uuidv4 = require('uuid/v4');
 const moment = require('moment');
-const { pool } = require('./connectors/db');
-const Repository = require('@envage/hapi-pg-rest-api/src/repository');
-const { mapValues, mapKeys } = require('lodash');
-const camelCase = require('camelcase');
-const snakeCase = require('snake-case');
-
-const repo = new Repository({
-  connection: pool,
-  table: 'water.events',
-  primaryKey: 'event_id'
-});
-
-/**
- * Checks whether the supplied value/key is a JSON field and is not null
- * @param {Mixed} value
- * @param {String} key
- * @return {Boolean} true if key is a JSON field and value is not null
- */
-const isMappedField = (value, key) => {
-  const jsonFields = ['licences', 'entities', 'metadata'];
-  return jsonFields.includes(key) && (value !== null);
-};
-
-/**
- * Maps keys of the data using the supplied mapper function
- * @param  {Object} data     - data to map
- * @param  {Function} mapper - function to use for mapping keys
- * @return {Object}        data with keys mapped
- */
-const keyMapper = (data, mapper) => {
-  return mapKeys(data, (value, key) => mapper(key));
-};
-
-/**
- * Maps data to the format expected by the repository class
- * @param  {Object} data - event data
- * @return {Object}      - event data mapped to DB column names/types
- */
-const mapToRepo = data => {
-  const mapped = mapValues(data, (value, key) => {
-    return isMappedField(value, key) ? JSON.stringify(value) : value;
-  });
-  return keyMapper(mapped, snakeCase);
-};
-
-/**
- * Maps keys for data coming from repository class
- * @param  {Object} data - data from repository class
- * @return {Object}      - data with keys camel cased
- */
-const mapFromRepo = data => keyMapper(data, camelCase);
-
+const { logger } = require('../logger');
+const newEventService = require('./services/events');
+const Event = require('./models/event');
 /**
  * Creates an event as a plain object
  * @param  {Object} [data={}] data for the event
  * @return {Object}           event object
  */
 const create = (data = {}) => {
+  logDeprecatedWarning();
   const defaults = {
-    eventId: null,
     referenceCode: null,
     type: null,
     subtype: null,
@@ -81,30 +31,34 @@ const create = (data = {}) => {
  * @param  {Object} event - plain JS event object
  * @return {Promise}        resolves when event saved
  */
-const save = (event) => {
+const save = async (event) => {
+  logDeprecatedWarning();
   // Update existing record
-  if (event.eventId) {
-    event.modified = moment().format('YYYY-MM-DD HH:mm:ss');
-    return repo.update({ event_id: event.eventId }, mapToRepo(event));
+  if (event.event_id) {
+    event.eventId = event.event_id;
+    const eventModel = new Event();
+    const result = await newEventService.update(eventModel.fromHash(event));
+    return wrapBookshelfModel(mapToEventPojo(result));
   }
   // Create new event
-  event.eventId = uuidv4();
-  return repo.create(mapToRepo(event));
+  const eventModel = new Event();
+  eventModel.fromHash(event);
+  const result = await newEventService.create(eventModel);
+  return wrapBookshelfModel(mapToEventPojo(result));
 };
 
 /**
- * Loads an event with the specified ID
+ * Fetches an event with the specified ID from the DB
  * @param  {String}  eventId - water service events GUID
  * @return {Promise}         [description]
  */
 const load = async (eventId) => {
-  const result = await repo.find({ event_id: eventId });
-
-  if (result.rowCount === 0) {
+  logDeprecatedWarning();
+  const result = await newEventService.findOne(eventId);
+  if (!result.eventId) {
     return null;
   }
-
-  return mapFromRepo(result.rows[0]);
+  return mapToEventPojo(result);
 };
 
 /**
@@ -115,14 +69,26 @@ const load = async (eventId) => {
  * @param {String} status The status to set
  */
 const updateStatus = async (eventId, status) => {
-  const result = await repo.update(
-    { event_id: eventId },
-    { status }
-  );
-  return mapFromRepo(result.rows[0]);
+  logDeprecatedWarning();
+  const result = await newEventService.updateStatus(eventId, status);
+  return mapToEventPojo(result);
 };
 
-exports.repo = repo;
+const wrapBookshelfModel = (event) => {
+  return { rowCount: 1, rows: [event] };
+};
+
+const logDeprecatedWarning = () => {
+  const err = new Error();
+  logger.warn('This Event service has been deprecated. Use the new Event service at ./lib/services/events \n', err.stack);
+};
+
+const mapToEventPojo = (event) => {
+  const eventPOJO = event.toJSON();
+  eventPOJO.event_id = event.eventId;
+  return eventPOJO;
+};
+
 exports.create = create;
 exports.save = save;
 exports.load = load;
