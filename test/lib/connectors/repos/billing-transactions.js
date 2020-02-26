@@ -198,4 +198,16 @@ experiment('lib/connectors/repos/billing-transactions', () => {
       expect(result).to.equal({ foo: 'bar' });
     });
   });
+
+  experiment('.findStatusCountsByBatchId', () => {
+    beforeEach(async () => {
+      await billingTransactions.findStatusCountsByBatchId('batch-id');
+    });
+
+    test('performs multi-row query with correct params', async () => {
+      expect(raw.multiRow.calledWith(
+        queries.findStatusCountsByBatchId, { batchId: 'batch-id' }
+      )).to.be.true();
+    });
+  });
 });

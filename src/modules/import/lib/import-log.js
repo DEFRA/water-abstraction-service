@@ -4,6 +4,12 @@
  */
 const { dbQuery } = require('./db');
 
+const PENDING_JOB_STATUS = {
+  pending: 0,
+  processing: 2,
+  complete: 1
+};
+
 /**
  * Clears the import log ready for a new batch
  * @return {Promise} resolves when done
@@ -48,18 +54,13 @@ const createImportLog = async (licenceNumbers = [], filter = false) => {
  * @return Promise
  */
 const setImportStatus = async (licenceNumber, message = '', status = 1) => {
-  const sql = 'UPDATE water.pending_import SET status=$1, log=$2 WHERE licence_ref=$3';
-  await dbQuery(sql, [status, message, licenceNumber]);
-};
+  const sql = `
+    UPDATE water.pending_import
+    SET status=$1, log=$2, date_updated = now()
+    WHERE licence_ref=$3;
+  `;
 
-/**
- * Gets the next licence to import
- * @return {Object} - pending_import row, or null if all complete
- */
-const getNextImport = async () => {
-  const sql = 'SELECT * FROM water.pending_import WHERE status=0 ORDER BY priority DESC LIMIT 1';
-  const rows = await dbQuery(sql);
-  return rows.length ? rows[0] : null;
+  await dbQuery(sql, [status, message, licenceNumber]);
 };
 
 /**
@@ -68,15 +69,31 @@ const getNextImport = async () => {
  * @return {Object} - pending_import row, or null if all complete
  */
 const getNextImportBatch = async (batchSize = 10) => {
-  const sql = 'SELECT * FROM water.pending_import WHERE status=0 ORDER BY priority DESC LIMIT $1';
+  const sql = `
+    with nextBatch as (
+      select id
+      from water.pending_import
+      where status = ${PENDING_JOB_STATUS.pending}
+      order by priority desc
+      limit $1
+      for update skip locked
+    )
+    update water.pending_import pi set
+      status = ${PENDING_JOB_STATUS.processing},
+      date_updated = now()
+    from nextBatch
+    where pi.id = nextBatch.id
+    returning pi.*;
+  `;
   const rows = await dbQuery(sql, [batchSize]);
+
+  if (rows.length) {
+    console.log('got row', rows[0]);
+  }
   return rows;
 };
 
-module.exports = {
-  clearImportLog,
-  createImportLog,
-  getNextImport,
-  getNextImportBatch,
-  setImportStatus
-};
+exports.clearImportLog = clearImportLog;
+exports.createImportLog = createImportLog;
+exports.getNextImportBatch = getNextImportBatch;
+exports.setImportStatus = setImportStatus;
