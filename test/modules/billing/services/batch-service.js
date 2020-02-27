@@ -31,7 +31,8 @@ const region = {
   regionId: REGION_ID,
   chargeRegionId: 'A',
   naldRegionId: 1,
-  name: 'Anglian'
+  name: 'Anglian',
+  displayName: 'Anglian'
 };
 
 const batch = {
@@ -57,7 +58,7 @@ experiment('modules/billing/services/batch-service', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
 
-    sandbox.stub(newRepos.billingBatches, 'findByStatus').resolves(data.batch);
+    sandbox.stub(newRepos.billingBatches, 'findByStatuses');
     sandbox.stub(newRepos.billingBatches, 'findOne').resolves(data.batch);
     sandbox.stub(newRepos.billingBatches, 'findPage').resolves();
     sandbox.stub(newRepos.billingBatches, 'update').resolves();
@@ -362,14 +363,12 @@ experiment('modules/billing/services/batch-service', () => {
   });
 
   experiment('.approveBatch', () => {
-    let batchId;
     let batch;
     let internalCallingUser;
 
     beforeEach(async () => {
-      batchId = uuid();
       batch = {
-        batchId,
+        id: uuid(),
         region: {
           code: 'A'
         }
@@ -389,13 +388,13 @@ experiment('modules/billing/services/batch-service', () => {
       test('approves the batch at the charge module', async () => {
         const [code, batchId] = chargeModuleBatchConnector.approve.lastCall.args;
         expect(code).to.equal('A');
-        expect(batchId).to.equal(batchId);
+        expect(batchId).to.equal(batch.id);
       });
 
       test('sends the batch at the charge module', async () => {
         const [code, batchId, isDraft] = chargeModuleBatchConnector.send.lastCall.args;
         expect(code).to.equal('A');
-        expect(batchId).to.equal(batchId);
+        expect(batchId).to.equal(batch.id);
         expect(isDraft).to.be.false();
       });
 
@@ -410,7 +409,7 @@ experiment('modules/billing/services/batch-service', () => {
 
       test('sets the status of the batch to sent', async () => {
         const [id, changes] = newRepos.billingBatches.update.lastCall.args;
-        expect(id).to.equal(batch.batchId);
+        expect(id).to.equal(batch.id);
         expect(changes).to.equal({
           status: 'sent'
         });
@@ -446,7 +445,7 @@ experiment('modules/billing/services/batch-service', () => {
 
       test('sets the status of the batch to error', async () => {
         const [id, changes] = newRepos.billingBatches.update.lastCall.args;
-        expect(id).to.equal(batch.batchId);
+        expect(id).to.equal(batch.id);
         expect(changes).to.equal({
           status: 'error'
         });
@@ -539,13 +538,13 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.getProcessingBatchByRegion', () => {
+  experiment('.getMostRecentLiveBatchByRegion', () => {
     let result;
     let regionId;
 
     beforeEach(async () => {
       regionId = '44444444-0000-0000-0000-000000000000';
-      newRepos.billingBatches.findByStatus.resolves([
+      newRepos.billingBatches.findByStatuses.resolves([
         {
           billingBatchId: '11111111-0000-0000-0000-000000000000',
           regionId: '22222222-0000-0000-0000-000000000000',
@@ -556,32 +555,34 @@ experiment('modules/billing/services/batch-service', () => {
             regionId: '22222222-0000-0000-0000-000000000000',
             chargeRegionId: 'A',
             naldRegionId: 1,
-            name: 'Anglian'
+            name: 'Anglian',
+            displayName: 'Anglian'
           }
         },
         {
           billingBatchId: '33333333-0000-0000-0000-000000000000',
-          regionId: '44444444-0000-0000-0000-000000000000',
+          regionId,
           batchType: 'supplementary',
           season: 'all year',
           status: 'processing',
           region: {
-            regionId: '22222222-0000-0000-0000-000000000000',
+            regionId,
             chargeRegionId: 'A',
-            naldRegionId: 1,
-            name: 'Anglian'
+            naldRegionId: 2,
+            name: 'South',
+            displayName: 'South'
           }
         }
       ]);
 
-      result = await batchService.getProcessingBatchByRegion(regionId);
+      result = await batchService.getMostRecentLiveBatchByRegion(regionId);
     });
 
     test('returns the expected batch', async () => {
       expect(result.id).to.equal('33333333-0000-0000-0000-000000000000');
     });
 
-    test('returns a srvice layer model', async () => {
+    test('returns a service layer model', async () => {
       expect(result).to.be.instanceOf(Batch);
     });
   });
