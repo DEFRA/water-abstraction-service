@@ -1,12 +1,12 @@
-const { Event } = require('../bookshelf');
-
+const { Event, bookshelf } = require('../bookshelf');
+const queries = require('./queries/events');
 /**
  * creates a new event record in the database
  * @param {Object} event event pojo
  * @returns {Object} event pojo
  */
 const create = async (event) => {
-  const result = await Event.forge(event).save();
+  const result = await Event.forge().save(event);
   return result.toJSON();
 };
 
@@ -22,11 +22,12 @@ const findOne = async (id) => {
 
 /**
  * Updates the all the fileds for the event record
- * @param {String} id // UUID eventId
  * @param {Object} event // event pojo
+ * @param {Object} changes // Optional: key value pairs of changes to be made
  */
-const update = async (id, event) => {
-  const result = await Event.forge({ eventId: id }).save({ event });
+const update = async (event, changes) => {
+  const saveData = changes || event;
+  const result = await Event.forge({ eventId: event.eventId }).save(saveData);
   return result.toJSON();
 };
 
@@ -42,7 +43,12 @@ const updateStatus = async (id, status) => {
   return result.toJSON();
 };
 
+const getMostRecentReturnsInvitationByLicence = async licenceRef => {
+  return bookshelf.knex.raw(queries.getMostRecentReturnInvitation, { licenceRef });
+};
+
 exports.create = create;
 exports.update = update;
 exports.updateStatus = updateStatus;
 exports.findOne = findOne;
+exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitationByLicence;

@@ -2,6 +2,7 @@ const moment = require('moment');
 const { logger } = require('../logger');
 const newEventService = require('./services/events');
 const Event = require('./models/event');
+const uuid = require('uuid/v4');
 /**
  * Creates an event as a plain object
  * @param  {Object} [data={}] data for the event
@@ -41,6 +42,7 @@ const save = async (event) => {
     return wrapBookshelfModel(mapToEventPojo(result));
   }
   // Create new event
+  event.eventId = uuid();
   const eventModel = new Event();
   eventModel.fromHash(event);
   const result = await newEventService.create(eventModel);
@@ -89,22 +91,7 @@ const mapToEventPojo = (event) => {
   return eventPOJO;
 };
 
-/**
- * Get all scheduled notifications for the most recent
- * returns_invitations sent
- */
-const getMostRecentReturnsInvitationByLicence = async licenceRef => {
-  const query = `SELECT * FROM water.scheduled_notification
-    WHERE event_id = (SELECT event_id FROM water.events 
-      WHERE subtype = 'returnInvitation'
-      ORDER BY created DESC LIMIT 1)
-    AND licences ? $1`;
-
-  return repo.dbQuery(query, [licenceRef]);
-};
-
 exports.create = create;
 exports.save = save;
 exports.load = load;
 exports.updateStatus = updateStatus;
-exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitationByLicence;
