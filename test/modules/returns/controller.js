@@ -12,6 +12,7 @@ const sandbox = sinon.createSandbox();
 
 const controller = require('../../../src/modules/returns/controller');
 const event = require('../../../src/lib/event');
+const eventRepo = require('../../../src/lib/connectors/repos/events');
 const s3 = require('../../../src/lib/connectors/s3');
 const startUploadJob = require('../../../src/modules/returns/lib/jobs/start-upload');
 const persistReturnsJob = require('../../../src/modules/returns/lib/jobs/persist-returns');
@@ -27,8 +28,8 @@ experiment('postUpload', () => {
   let h;
 
   beforeEach(async () => {
-    sandbox.stub(event.repo, 'update').resolves({});
-    sandbox.stub(event.repo, 'create').resolves({});
+    sandbox.stub(eventRepo, 'update').resolves({});
+    sandbox.stub(eventRepo, 'create').returns({ eventId: 'f6378a83-015b-4afd-8de1-d7eb2ce8e032' });
 
     sandbox.stub(s3, 'upload').resolves({
       Location: 'test-s3-location',
@@ -59,7 +60,7 @@ experiment('postUpload', () => {
 
   test('an event is saved with the expected values', async () => {
     await controller.postUpload(request, h);
-    const [eventValues] = event.repo.create.firstCall.args;
+    const [eventValues] = eventRepo.create.firstCall.args;
     expect(eventValues.type).to.equal('returns-upload');
     expect(eventValues.subtype).to.equal('xml');
     expect(eventValues.issuer).to.equal('test-user');
@@ -69,7 +70,6 @@ experiment('postUpload', () => {
   test('file data is uploaded to S3', async () => {
     await controller.postUpload(request, h);
     const [filename, fileData] = s3.upload.lastCall.args;
-
     expect(filename.substr(0, 15)).to.equal('returns-upload/');
     expect(filename.substr(15, 36)).to.match(UUIDV4_REGEX);
     expect(filename.substr(51, 4)).to.equal('.xml');
@@ -80,7 +80,6 @@ experiment('postUpload', () => {
   test('creates a new job for the task queue', async () => {
     await controller.postUpload(request, h);
     const [eventId] = startUploadJob.publish.lastCall.args;
-
     expect(eventId).to.match(UUIDV4_REGEX);
   });
 

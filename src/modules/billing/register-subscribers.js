@@ -25,5 +25,6 @@ module.exports = {
     await createSubscription(server, jobs.processChargeVersion);
     await createSubscription(server, jobs.prepareTransactions);
     await createSubscription(server, jobs.createCharge);
+    await createSubscription(server, jobs.refreshTotals);
   }
 };

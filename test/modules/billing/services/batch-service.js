@@ -24,13 +24,15 @@ const invoiceService = require('../../../../src/modules/billing/services/invoice
 const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
 
+const REGION_ID = '3e91fd44-dead-4748-a312-83806245c3da';
 const BATCH_ID = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
 
 const region = {
-  regionId: '3e91fd44-dead-4748-a312-83806245c3da',
+  regionId: REGION_ID,
   chargeRegionId: 'A',
   naldRegionId: 1,
-  name: 'Anglian'
+  name: 'Anglian',
+  displayName: 'Anglian'
 };
 
 const batch = {
@@ -56,11 +58,12 @@ experiment('modules/billing/services/batch-service', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
 
-    sandbox.stub(newRepos.billingBatches, 'findByStatus').resolves(data.batch);
+    sandbox.stub(newRepos.billingBatches, 'findByStatuses');
     sandbox.stub(newRepos.billingBatches, 'findOne').resolves(data.batch);
     sandbox.stub(newRepos.billingBatches, 'findPage').resolves();
     sandbox.stub(newRepos.billingBatches, 'update').resolves();
     sandbox.stub(newRepos.billingBatches, 'delete').resolves();
+    sandbox.stub(newRepos.billingTransactions, 'findStatusCountsByBatchId').resolves();
 
     sandbox.stub(repos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
     sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
@@ -360,14 +363,12 @@ experiment('modules/billing/services/batch-service', () => {
   });
 
   experiment('.approveBatch', () => {
-    let batchId;
     let batch;
     let internalCallingUser;
 
     beforeEach(async () => {
-      batchId = uuid();
       batch = {
-        batchId,
+        id: uuid(),
         region: {
           code: 'A'
         }
@@ -387,13 +388,13 @@ experiment('modules/billing/services/batch-service', () => {
       test('approves the batch at the charge module', async () => {
         const [code, batchId] = chargeModuleBatchConnector.approve.lastCall.args;
         expect(code).to.equal('A');
-        expect(batchId).to.equal(batchId);
+        expect(batchId).to.equal(batch.id);
       });
 
       test('sends the batch at the charge module', async () => {
         const [code, batchId, isDraft] = chargeModuleBatchConnector.send.lastCall.args;
         expect(code).to.equal('A');
-        expect(batchId).to.equal(batchId);
+        expect(batchId).to.equal(batch.id);
         expect(isDraft).to.be.false();
       });
 
@@ -408,7 +409,7 @@ experiment('modules/billing/services/batch-service', () => {
 
       test('sets the status of the batch to sent', async () => {
         const [id, changes] = newRepos.billingBatches.update.lastCall.args;
-        expect(id).to.equal(batch.batchId);
+        expect(id).to.equal(batch.id);
         expect(changes).to.equal({
           status: 'sent'
         });
@@ -444,7 +445,7 @@ experiment('modules/billing/services/batch-service', () => {
 
       test('sets the status of the batch to error', async () => {
         const [id, changes] = newRepos.billingBatches.update.lastCall.args;
-        expect(id).to.equal(batch.batchId);
+        expect(id).to.equal(batch.id);
         expect(changes).to.equal({
           status: 'error'
         });
@@ -537,13 +538,13 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.getProcessingBatchByRegion', () => {
+  experiment('.getMostRecentLiveBatchByRegion', () => {
     let result;
     let regionId;
 
     beforeEach(async () => {
       regionId = '44444444-0000-0000-0000-000000000000';
-      newRepos.billingBatches.findByStatus.resolves([
+      newRepos.billingBatches.findByStatuses.resolves([
         {
           billingBatchId: '11111111-0000-0000-0000-000000000000',
           regionId: '22222222-0000-0000-0000-000000000000',
@@ -554,32 +555,34 @@ experiment('modules/billing/services/batch-service', () => {
             regionId: '22222222-0000-0000-0000-000000000000',
             chargeRegionId: 'A',
             naldRegionId: 1,
-            name: 'Anglian'
+            name: 'Anglian',
+            displayName: 'Anglian'
           }
         },
         {
           billingBatchId: '33333333-0000-0000-0000-000000000000',
-          regionId: '44444444-0000-0000-0000-000000000000',
+          regionId,
           batchType: 'supplementary',
           season: 'all year',
           status: 'processing',
           region: {
-            regionId: '22222222-0000-0000-0000-000000000000',
+            regionId,
             chargeRegionId: 'A',
-            naldRegionId: 1,
-            name: 'Anglian'
+            naldRegionId: 2,
+            name: 'South',
+            displayName: 'South'
           }
         }
       ]);
 
-      result = await batchService.getProcessingBatchByRegion(regionId);
+      result = await batchService.getMostRecentLiveBatchByRegion(regionId);
     });
 
     test('returns the expected batch', async () => {
       expect(result.id).to.equal('33333333-0000-0000-0000-000000000000');
     });
 
-    test('returns a srvice layer model', async () => {
+    test('returns a service layer model', async () => {
       expect(result).to.be.instanceOf(Batch);
     });
   });
@@ -622,6 +625,69 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('copies totals correctly', async () => {
       expect(batch.totals.toJSON()).to.equal(summary);
+    });
+  });
+
+  experiment('.refreshTotals', () => {
+    beforeEach(async () => {
+      const batch = new Batch(BATCH_ID);
+      batch.region = new Region();
+      batch.region.code = REGION_ID;
+      chargeModuleBatchConnector.send.resolves({
+        billRunId: 4353,
+        summary: {
+          invoiceCount: 3,
+          creditNoteCount: 5,
+          netTotal: 343553,
+          externalId: 335
+        }
+      });
+      await batchService.refreshTotals(batch);
+    });
+
+    test('gets the bill run summary from the charge module', async () => {
+      expect(
+        chargeModuleBatchConnector.send.calledWith(REGION_ID, BATCH_ID, true)
+      ).to.be.true();
+    });
+
+    test('updates the billing batch with the totals', async () => {
+      const [id, updates] = newRepos.billingBatches.update.lastCall.args;
+      expect(id).to.equal(BATCH_ID);
+      expect(updates.externalId).to.equal(4353);
+      expect(updates.invoiceCount).to.equal(3);
+      expect(updates.creditNoteCount).to.equal(5);
+      expect(updates.netTotal).to.equal(343553);
+      expect(updates.externalId).to.equal(4353);
+    });
+  });
+
+  experiment('.getTransactionStatusCounts', () => {
+    let result;
+
+    beforeEach(async () => {
+      newRepos.billingTransactions.findStatusCountsByBatchId.resolves([
+        {
+          status: 'candidate',
+          count: 3
+        }, {
+          status: 'charge_created',
+          count: 7
+        }
+      ]);
+      result = await batchService.getTransactionStatusCounts(BATCH_ID);
+    });
+
+    test('calls the .findStatusCountsByBatchId with correct params', async () => {
+      const [id] = newRepos.billingTransactions.findStatusCountsByBatchId.lastCall.args;
+      expect(id).to.equal(BATCH_ID);
+    });
+
+    test('returns the results mapped to camel-cased key/value pairs', async () => {
+      expect(result).to.equal({
+        candidate: 3,
+        chargeCreated: 7
+      });
     });
   });
 });

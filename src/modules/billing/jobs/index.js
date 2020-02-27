@@ -17,3 +17,7 @@ exports.createCharge = {
   job: require('./create-charge'),
   onCompleteHandler: require('./create-charge-complete')
 };
+
+exports.refreshTotals = {
+  job: require('./refresh-totals')
+};

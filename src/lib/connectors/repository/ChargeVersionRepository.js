@@ -20,7 +20,7 @@ class ChargeVersionRepository extends Repository {
    * @return {Promise<Object>}
    */
   async findOneById (chargeVersionId) {
-    const query = `select v.*, l.licence_id, l.is_water_undertaker 
+    const query = `select v.*, l.licence_id, l.is_water_undertaker
       from water.charge_versions v
       join water.licences l on v.licence_ref=l.licence_ref
       where v.charge_version_id=$1`;
@@ -82,7 +82,7 @@ class ChargeVersionRepository extends Repository {
     const query = `
       insert into water.billing_batch_charge_versions (billing_batch_id, charge_version_id)
       select $1, cv.charge_version_id
-      from water.licence_agreements l
+      from water.licences l
         join water.charge_versions cv on l.licence_ref = cv.licence_ref
         join water.licence_agreements la on l.licence_ref = la.licence_ref
         join water.charge_elements ce on cv.charge_version_id = ce.charge_version_id
@@ -99,6 +99,40 @@ class ChargeVersionRepository extends Repository {
       returning *;`;
 
     const params = [batchId, regionId, fromDate];
+    const { rows } = await this.dbQuery(query, params);
+    return rows;
+  }
+
+  /**
+   * Writes into billing_batch_charge_versions a list of charge versions for
+   * the given region for annual billing.
+   *
+   * @param {String} batch The batch metadata from water.events
+   * @param {Date} now The date now, here to facilitate unit tests.
+   */
+  async createAnnualChargeVersions (batch, now = Date.now()) {
+    const { getFinancialYear, getFinancialYearDate } = helpers.charging;
+    const fromDate = getFinancialYearDate(1, 4, getFinancialYear(now));
+
+    const { billing_batch_id: batchId, region_id: regionId } = batch;
+
+    const query = `
+      insert into water.billing_batch_charge_versions (billing_batch_id, charge_version_id)
+      select $1, cv.charge_version_id
+      from water.licences l
+        join water.charge_versions cv on l.licence_ref = cv.licence_ref
+        join water.charge_elements ce on cv.charge_version_id = ce.charge_version_id
+      where
+        l.region_id = $2::uuid
+        and l.suspend_from_billing is false
+        and (l.expired_date is null or l.expired_date > $3)
+        and (l.lapsed_date is null or l.lapsed_date > $3)
+        and (l.revoked_date is null or l.revoked_date > $3)
+        and (cv.end_date is null or cv.end_date > $3)
+      returning *;`;
+
+    const params = [batchId, regionId, fromDate];
+
     const { rows } = await this.dbQuery(query, params);
     return rows;
   }

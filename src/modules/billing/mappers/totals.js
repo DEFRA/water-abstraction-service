@@ -40,7 +40,8 @@ const sumProperties = arr => arr.reduce((acc, row) => {
  * @return {Totals} - totals for the supplied invoice account
  */
 const chargeModuleBillRunToInvoiceModel = (billRun, invoiceAccountNumber) => {
-  const customer = find(billRun.customers, row => row.customerReference === invoiceAccountNumber);
+  const customer = find(billRun.customers, { customerReference: invoiceAccountNumber });
+
   if (!customer) {
     return null;
   }
@@ -55,5 +56,20 @@ const chargeModuleBillRunToInvoiceModel = (billRun, invoiceAccountNumber) => {
   ]);
 };
 
+/**
+ * Maps a partial set of fields in water.billing_batches table to a Totals model
+ * @param {Object} row - row of data from water.billing_batches table
+ * @return {Totals}
+ */
+const dbToModel = row => {
+  if (row.externalId === null) {
+    return null;
+  }
+  const totals = new Totals();
+  totals.pickFrom(row, ['creditNoteCount', 'invoiceCount', 'netTotal']);
+  return totals;
+};
+
 exports.chargeModuleBillRunToBatchModel = chargeModuleBillRunToBatchModel;
 exports.chargeModuleBillRunToInvoiceModel = chargeModuleBillRunToInvoiceModel;
+exports.dbToModel = dbToModel;

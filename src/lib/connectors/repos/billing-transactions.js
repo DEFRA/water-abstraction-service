@@ -80,9 +80,12 @@ const create = async data => {
   return model.toJSON();
 };
 
+const findStatusCountsByBatchId = batchId => raw.multiRow(queries.findStatusCountsByBatchId, { batchId });
+
 exports.findOne = findOne;
 exports.find = find;
 exports.findHistoryByBatchId = findHistoryByBatchId;
 exports.findByBatchId = findByBatchId;
 exports.delete = deleteRecords;
 exports.create = create;
+exports.findStatusCountsByBatchId = findStatusCountsByBatchId;

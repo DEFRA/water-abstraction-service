@@ -1,16 +1,15 @@
 'use strict';
 
 const { get } = require('lodash');
+
 const evt = require('../../../lib/event');
 const { chargeVersions } = require('../../../lib/connectors/repository');
 
 const JOB_NAME = 'billing.populate-batch-charge-versions';
 
-const {
-  isSupplementaryBatch,
-  isTwoPartTariffBatch
-} = require('../lib/batch');
 const { logger } = require('../../../logger');
+
+const { isAnnualBatch, isTwoPartTariffBatch, isSupplementaryBatch } = require('../lib/batch');
 
 const createMessage = (eventId, batch) => ({
   name: JOB_NAME,
@@ -20,43 +19,20 @@ const createMessage = (eventId, batch) => ({
   }
 });
 
-/**
- * Handles a batch that is supplementary
- *
- * @param {Object} job PG-Boss job object
- * @param {Object} batch The batch run
- */
-const handleSupplementaryBatch = async (batch) => {
-  logger.info('Handling supplementary batch', batch);
+const getChargeVersionRows = async batch => {
+  logger.info(`Getting charge version rows for Batch of type ${batch.batch_type}`);
 
-  // move any found charge versions into water.billing_batch_charge_versions
-  const rows = await chargeVersions.createSupplementaryChargeVersions(batch);
+  if (isAnnualBatch(batch)) {
+    return chargeVersions.createAnnualChargeVersions(batch);
+  }
 
-  // Include the charge versions in the response data. This information
-  // can then be used in the onComplete callback to decide if a new job
-  // should be published.
-  return { chargeVersions: rows, batch };
-};
+  if (isSupplementaryBatch(batch)) {
+    return chargeVersions.createSupplementaryChargeVersions(batch);
+  }
 
-/**
- * Handles a batch that is two-part-tariff
- *
- * @param {Object} job PG-Boss job object
- * @param {Object} batch The batch run
- */
-const handleTwoPartTariffBatch = async (batch) => {
-  logger.info('Handling two part tariff batch', batch);
-
-  // move any found charge versions into water.billing_batch_charge_versions
-  const rows = await chargeVersions.createTwoPartTariffChargeVersions(batch);
-
-  // Include the charge versions in the response data. This information
-  // can then be used in the onComplete callback to decide if a new job
-  // should be published.
-  return {
-    chargeVersions: rows,
-    batch
-  };
+  if (isTwoPartTariffBatch(batch)) {
+    return chargeVersions.createTwoPartTariffChargeVersions(batch);
+  }
 };
 
 const handlePopulateBatch = async job => {
@@ -66,14 +42,12 @@ const handlePopulateBatch = async job => {
   const batchEvent = await evt.load(eventId);
   const { batch } = batchEvent.metadata;
 
-  if (isSupplementaryBatch(batch)) {
-    return handleSupplementaryBatch(batch);
-  }
-  if (isTwoPartTariffBatch(batch)) {
-    return handleTwoPartTariffBatch(batch);
-  }
+  const rows = await getChargeVersionRows(batch);
 
-  logger.info('handle annual batches in a future story');
+  // Include the charge versions in the response data. This information
+  // can then be used in the onComplete callback to decide if a new job
+  // should be published.
+  return { chargeVersions: rows, batch };
 };
 
 exports.createMessage = createMessage;

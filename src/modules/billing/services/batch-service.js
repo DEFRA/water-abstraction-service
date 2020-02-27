@@ -1,5 +1,7 @@
 'use strict';
 
+const { camelCase } = require('lodash');
+
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const repos = require('../../../lib/connectors/repository');
@@ -32,9 +34,14 @@ const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
   };
 };
 
-const getProcessingBatchByRegion = async regionId => {
-  const batches = await newRepos.billingBatches.findByStatus(BATCH_STATUS.processing);
+const getMostRecentLiveBatchByRegion = async regionId => {
+  const batches = await newRepos.billingBatches.findByStatuses([
+    BATCH_STATUS.processing,
+    BATCH_STATUS.ready,
+    BATCH_STATUS.review
+  ]);
   const batch = batches.find(b => b.regionId === regionId);
+
   return batch ? mappers.batch.dbToModel(batch) : null;
 };
 
@@ -73,18 +80,17 @@ const setStatus = (batchId, status) =>
   newRepos.billingBatches.update(batchId, { status });
 
 const approveBatch = async (batch, internalCallingUser) => {
-  const { batchId } = batch;
   try {
-    await chargeModuleBatchConnector.approve(batch.region.code, batchId);
-    await chargeModuleBatchConnector.send(batch.region.code, batchId, false);
+    await chargeModuleBatchConnector.approve(batch.region.code, batch.id);
+    await chargeModuleBatchConnector.send(batch.region.code, batch.id, false);
 
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
 
-    return setStatus(batchId, BATCH_STATUS.sent);
+    return setStatus(batch.id, BATCH_STATUS.sent);
   } catch (err) {
     logger.error('Failed to approve the batch', err, batch);
     await saveEvent('billing-batch:approve', 'error', internalCallingUser, batch);
-    await setStatus(batchId, BATCH_STATUS.error);
+    await setStatus(batch.id, BATCH_STATUS.error);
     throw err;
   }
 };
@@ -127,12 +133,42 @@ const decorateBatchWithTotals = async batch => {
   return batch;
 };
 
+/**
+ * Updates water.billing_batches with summary info from the charge module
+ * @param {Batch} batch
+ * @return {Promise}
+ */
+const refreshTotals = async batch => {
+  const { billRunId, summary } = await chargeModuleBatchConnector.send(batch.region.code, batch.id, true);
+  return newRepos.billingBatches.update(batch.id, {
+    invoiceCount: summary.invoiceCount,
+    creditNoteCount: summary.creditNoteCount,
+    netTotal: summary.netTotal,
+    externalId: billRunId
+  });
+};
+
+/**
+ * Gets counts of the number of transactions in each status for the
+ * supplied batch ID
+ * @param {String} batchId
+ */
+const getTransactionStatusCounts = async batchId => {
+  const data = await newRepos.billingTransactions.findStatusCountsByBatchId(batchId);
+  return data.reduce((acc, row) => ({
+    ...acc,
+    [camelCase(row.status)]: row.count
+  }), {});
+};
+
 exports.approveBatch = approveBatch;
 exports.deleteBatch = deleteBatch;
 exports.getBatches = getBatches;
 exports.getBatchById = getBatchById;
-exports.getProcessingBatchByRegion = getProcessingBatchByRegion;
+exports.getMostRecentLiveBatchByRegion = getMostRecentLiveBatchByRegion;
 exports.saveInvoicesToDB = saveInvoicesToDB;
 exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
 exports.decorateBatchWithTotals = decorateBatchWithTotals;
+exports.refreshTotals = refreshTotals;
+exports.getTransactionStatusCounts = getTransactionStatusCounts;
