@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -7,12 +9,11 @@ const {
 
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
 
-const { logger } = require('../../../../src/logger');
 const refreshTotals = require('../../../../src/modules/billing/jobs/refresh-totals');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
+const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const Batch = require('../../../../src/lib/models/batch');
 
 const BATCH_ID = uuid();
@@ -27,8 +28,8 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     };
     batch = new Batch();
     sandbox.stub(batchService, 'getBatchById');
-    sandbox.stub(logger, 'error');
-    sandbox.stub(logger, 'info');
+    sandbox.stub(batchJob, 'logHandling');
+    sandbox.stub(batchJob, 'logHandlingError');
     sandbox.stub(batchService, 'refreshTotals');
   });
 
@@ -38,19 +39,30 @@ experiment('modules/billing/jobs/refresh-totals', () => {
 
   experiment('.jobName', () => {
     test('is set to the expected value', async () => {
-      expect(refreshTotals.jobName).to.equal('billing.refreshTotals');
+      expect(refreshTotals.jobName).to.equal('billing.refreshTotals.*');
     });
   });
 
   experiment('.createMessage', () => {
-    test('creates an message object of the expected shape for PG boss', async () => {
-      const message = refreshTotals.createMessage(EVENT_ID, dbBatchRow);
-      expect(message).to.equal({
-        name: refreshTotals.jobName,
-        data: { eventId: EVENT_ID, batch: dbBatchRow },
-        options: {
-          singletonKey: BATCH_ID
-        }
+    let message;
+    beforeEach(async () => {
+      message = refreshTotals.createMessage(EVENT_ID, dbBatchRow);
+    });
+
+    test('message has the expected name', async () => {
+      expect(message.name).to.equal(`billing.refreshTotals.${BATCH_ID}`);
+    });
+
+    test('message has the expected data', async () => {
+      expect(message.data).to.equal({ eventId: EVENT_ID, batch: dbBatchRow });
+    });
+
+    test('message has the expected options', async () => {
+      expect(message.options).to.equal({
+        singletonKey: BATCH_ID,
+        retryLimit: 5,
+        retryDelay: 120,
+        retryBackoff: true
       });
     });
   });
@@ -75,7 +87,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
       });
 
       test('logs an info message', async () => {
-        expect(logger.info.called).to.be.true();
+        expect(batchJob.logHandling.calledWith(job)).to.be.true();
       });
 
       test('gets the batch by ID', async () => {
@@ -87,7 +99,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
       });
 
       test('no error is logged', async () => {
-        expect(logger.error.called).to.be.false();
+        expect(batchJob.logHandlingError.called).to.be.false();
       });
 
       test('the batch is returned', async () => {
@@ -96,15 +108,18 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     });
 
     experiment('when there are errors', () => {
+      let error;
+
       beforeEach(async () => {
-        batchService.getBatchById.rejects();
-        expect(refreshTotals.handler(job)).to.reject();
+        error = new Error('refresh error');
+        batchService.getBatchById.rejects(error);
+        await expect(refreshTotals.handler(job)).to.reject();
       });
 
       test('a message is logged', async () => {
-        const [msg, , params] = logger.error.lastCall.args;
-        expect(msg).to.be.a.string();
-        expect(params).to.equal({ batchId: BATCH_ID });
+        const errorArgs = batchJob.logHandlingError.lastCall.args;
+        expect(errorArgs[0]).to.equal(job);
+        expect(errorArgs[1]).to.equal(error);
       });
     });
   });

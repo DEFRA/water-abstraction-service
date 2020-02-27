@@ -1,11 +1,18 @@
-const prepareTransactionsJob = require('./prepare-transactions');
+'use strict';
+
 const createChargeJob = require('./create-charge');
 const jobService = require('../services/job-service');
+const batchJob = require('./lib/batch-job');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 
 const { logger } = require('../../../logger');
 
 const handlePrepareTransactionsComplete = async (job, messageQueue) => {
-  logger.info(`onComplete - ${prepareTransactionsJob.jobName}`);
+  batchJob.logOnComplete(job);
+
+  if (batchJob.hasJobFailed(job)) {
+    return batchJob.failBatch(job, messageQueue, BATCH_ERROR_CODE.failedToPrepareTransactions);
+  }
 
   const { eventId } = job.data.request.data;
   const { batch, transactions } = job.data.response;

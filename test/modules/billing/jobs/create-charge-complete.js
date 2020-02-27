@@ -13,10 +13,10 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 const uuid = require('uuid/v4');
 
-const { logger } = require('../../../../src/logger');
 const createChargeComplete = require('../../../../src/modules/billing/jobs/create-charge-complete');
 const jobService = require('../../../../src/modules/billing/services/job-service');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
+const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const Batch = require('../../../../src/lib/models/batch');
 
 const BATCH_ID = uuid();
@@ -42,13 +42,14 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
       }
     };
 
-    sandbox.stub(logger, 'info');
-    sandbox.stub(logger, 'error');
-
     sandbox.stub(jobService, 'setReadyJob').resolves();
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
     sandbox.stub(batchService, 'getTransactionStatusCounts').resolves({});
     sandbox.stub(batchService, 'setErrorStatus').resolves();
+
+    sandbox.stub(batchJob, 'failBatch').resolves();
+    sandbox.stub(batchJob, 'logOnComplete').resolves();
+    sandbox.stub(batchJob, 'logOnCompleteError').resolves();
 
     messageQueue = {
       publish: sandbox.stub().resolves()
@@ -57,6 +58,23 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
 
   afterEach(async () => {
     sandbox.restore();
+  });
+
+  experiment('when the job fails', () => {
+    test('the batch is set to error and cancelled ', async () => {
+      const job = {
+        name: 'testing',
+        data: {
+          failed: true
+        }
+      };
+      await createChargeComplete(job, messageQueue);
+
+      const failArgs = batchJob.failBatch.lastCall.args;
+      expect(failArgs[0]).to.equal(job);
+      expect(failArgs[1]).to.equal(messageQueue);
+      expect(failArgs[2]).to.equal(Batch.BATCH_ERROR_CODE.failedToCreateCharge);
+    });
   });
 
   experiment('when there are still candidate transactions to process', () => {
@@ -109,14 +127,14 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
     });
 
     test('a message is logged', async () => {
-      const [msg, , params] = logger.error.lastCall.args;
-      expect(msg).to.be.a.string();
-      expect(params.batchId).to.equal(BATCH_ID);
+      const args = batchJob.logOnCompleteError.lastCall.args;
+      expect(args[0]).to.equal(job);
     });
 
     test('the batch is set to error status', async () => {
-      const [batchId] = batchService.setErrorStatus.lastCall.args;
+      const [batchId, errorCode] = batchService.setErrorStatus.lastCall.args;
       expect(batchId).to.equal(BATCH_ID);
+      expect(errorCode).to.equal(Batch.BATCH_ERROR_CODE.failedToCreateCharge);
     });
   });
 });
