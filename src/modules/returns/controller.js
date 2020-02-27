@@ -89,6 +89,8 @@ const createBulkUploadEvent = (uploadUserName, subtype = 'csv') => {
   });
 };
 
+const getEventStatusLink = eventId => `/water/1.0/event/${eventId}`;
+
 const postUpload = async (request, h) => {
   const { type } = request.params;
   const evt = createBulkUploadEvent(request.payload.userName, type);
@@ -112,7 +114,7 @@ const postUpload = async (request, h) => {
       error: null
     }).code(202);
   } catch (error) {
-    logger.error('Failed to upload returns xml', error);
+    logger.error('Failed to upload bulk returns', error);
     if (eventModel.eventId) {
       eventModel.status = uploadStatus.ERROR;
       await event.save(eventModel);
