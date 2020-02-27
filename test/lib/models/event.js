@@ -81,16 +81,9 @@ experiment('lib/models/event', () => {
 
   experiment('licences', () => {
     test('returns the correct licence number from an array', async () => {
-      const licence1 = new Licence();
-      const licence2 = new Licence();
-      const licence3 = new Licence();
-      licence1.licenceNumber = 'LIC1';
-      licence2.licenceNumber = 'LIC2';
-      licence3.licenceNumber = 'LIC3';
-
       const event = new Event();
-      event.licences = [licence1, licence2, licence3];
-      expect(event.licences[1].licenceNumber).to.equal('LIC2');
+      event.licences = ['LIC1', 'LIC2', 'LIC3'];
+      expect(event.licences[1]).to.equal('LIC2');
     });
 
     test('returns an empty array if there is no licence data', async () => {
@@ -98,7 +91,7 @@ experiment('lib/models/event', () => {
       expect(event.licences).to.equal([]);
     });
 
-    test('throws an error if set to the wrong model type', async () => {
+    test('throws an error if licence is not string', async () => {
       const event = new Event();
       const func = () => {
         event.licences = [TEST_MODEL];

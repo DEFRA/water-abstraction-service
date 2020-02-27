@@ -8,5 +8,5 @@ module.exports = bookshelf.model('Event', {
   hasTimestamps: ['created', 'modified']
 },
 {
-  jsonColumns: ['licences', 'entities', 'metaData']
+  jsonColumns: ['licences', 'entities', 'metadata']
 });

@@ -12,11 +12,11 @@ const sandbox = sinon.createSandbox();
 const createNotificationData = require('../../../../../../../src/modules/batch-notifications/config/returns/lib/create-notification-data');
 const Contact = require('../../../../../../../src/lib/models/contact');
 const { MESSAGE_STATUS_DRAFT } = require('../../../../../../../src/modules/batch-notifications/lib/message-statuses');
-const event = require('../../../../../../../src/lib/event');
+const events = require('../../../../../../../src/lib/services/events');
 
 experiment('modules/batch-notifications/config/return-invitation/create-notification-data', () => {
   beforeEach(async () => {
-    sandbox.stub(event, 'getMostRecentReturnsInvitationByLicence');
+    sandbox.stub(events, 'getMostRecentReturnsInvitationByLicence');
   });
 
   afterEach(async () => {
@@ -212,14 +212,14 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
           rows: [{ message_ref: 'returns_invitation_primary_user_email_suasion' }],
           rowCount: 1
         };
-        event.getMostRecentReturnsInvitationByLicence.resolves(templateData);
+        events.getMostRecentReturnsInvitationByLicence.resolves(templateData);
         result = await createNotificationData.createNotificationData(ev, contact, context);
 
         expect(result.message_ref).to.equal('returns_reminder_primary_user_email_suasion');
       });
 
       test('template defaults to "control" when invitation template not found', async () => {
-        event.getMostRecentReturnsInvitationByLicence.resolves({ rows: [], rowCount: 0 });
+        events.getMostRecentReturnsInvitationByLicence.resolves({ rows: [], rowCount: 0 });
         result = await createNotificationData.createNotificationData(ev, contact, context);
         expect(result.message_ref).to.equal('returns_reminder_primary_user_email_control');
       });
@@ -233,7 +233,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
               { message_ref: 'returns_invitation_licence_holder_letter_suasion' }],
             rowCount: 2
           };
-          event.getMostRecentReturnsInvitationByLicence.resolves(templateData);
+          events.getMostRecentReturnsInvitationByLicence.resolves(templateData);
           result = await createNotificationData.createNotificationData(ev, contact, context);
           expect(result.message_ref).to.equal('returns_reminder_licence_holder_letter_suasion');
         });
@@ -245,7 +245,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
               { message_ref: 'returns_invitation_returns_to_letter_suasion' }],
             rowCount: 2
           };
-          event.getMostRecentReturnsInvitationByLicence.resolves(templateData);
+          events.getMostRecentReturnsInvitationByLicence.resolves(templateData);
           result = await createNotificationData.createNotificationData(ev, contact, context);
           expect(result.message_ref).to.equal('returns_reminder_primary_user_email_control');
         });

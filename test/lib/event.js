@@ -2,14 +2,15 @@ const sinon = require('sinon');
 const Joi = require('@hapi/joi');
 const sandbox = sinon.createSandbox();
 const { expect } = require('@hapi/code');
-const repo = require('../../src/lib/connectors/repos');
+const newEvtRepo = require('../../src/lib/services/events');
 const {
   experiment,
   test,
   beforeEach,
   afterEach
 } = exports.lab = require('@hapi/lab').script();
-const Licence = require('../../src/lib/models/licence');
+const Event = require('../../src/lib/models/event');
+const moment = require('moment');
 
 const isDateString = str => {
   const { error } = Joi.validate(str, Joi.date().iso());
@@ -17,35 +18,49 @@ const isDateString = str => {
 };
 
 const event = require('../../src/lib/event');
-
 const arr = ['foo', 'bar'];
+const eventModel = new Event();
+eventModel.referenceCode = 'abc';
+eventModel.type = 'batch';
+eventModel.subtype = 'test-subtype';
+eventModel.issuer = 'test@example.com';
+eventModel.licences = ['122434'];
+eventModel.entities = arr;
+eventModel.comment = 'test';
+eventModel.status = 'completed';
+eventModel.created = null;
+eventModel.modified = null;
+
+const eventObject = {
+  referenceCode: 'abc',
+  type: 'batch',
+  subtype: 'test-subtype',
+  issuer: 'test@example.com',
+  licences: ['122434'],
+  entities: arr,
+  comment: 'test',
+  metadata: {},
+  status: 'completed',
+  created: moment().format('YYYY-MM-DD HH:mm:ss'),
+  modified: null
+};
+
+const eventPOJO = {
+  ...eventObject,
+  toJSON: sandbox.stub().returns(eventObject)
+};
 
 experiment('lib/event', () => {
+  beforeEach(async () => {
+    sandbox.stub(Event.prototype, 'fromHash').returns(eventObject);
+  });
   afterEach(async () => {
     sandbox.restore();
   });
 
-  const licence = new Licence();
-  licence.licenceNumber = '122434';
-
-  const data = {
-    referenceCode: 'abc',
-    type: 'batch',
-    subtype: 'test-subtype',
-    issuer: 'test@user.eu',
-    licences: [licence],
-    entities: arr,
-    comment: 'test',
-    metadata: null,
-    status: 'completed',
-    created: null,
-    modified: null
-  };
-  const eventPOJO = event.create(data);
-
   experiment('.create', () => {
     test('it should create an event with default params', async () => {
-      const ev = event.create();
+      const ev = eventObject;
       const { created } = ev;
       expect(isDateString(created)).to.equal(true);
     });
@@ -62,17 +77,18 @@ experiment('lib/event', () => {
 
   experiment('.save', () => {
     const expectedKeys = [
-      'licences',
       'referenceCode',
       'type',
       'subtype',
       'issuer',
+      'licences',
       'entities',
       'comment',
       'metadata',
       'status',
       'created',
       'modified',
+      'eventId',
       'event_id'
     ];
 
@@ -80,56 +96,46 @@ experiment('lib/event', () => {
       let ev;
 
       beforeEach(async () => {
-        ev = event.create(data);
-        sandbox.stub(repo.events, 'create').resolves(eventPOJO);
+        ev = eventObject;
+        sandbox.stub(newEvtRepo, 'create').resolves(eventPOJO);
       });
 
       test('it should call repo.create() once', async () => {
         await event.save(ev);
 
-        expect(repo.events.create.callCount).to.equal(1);
+        expect(newEvtRepo.create.callCount).to.equal(1);
       });
 
       test('it should contain the correct keys', async () => {
         const { rows } = await event.save(ev);
         expect(Object.keys(rows[0])).to.equal(expectedKeys);
       });
-
-      test('modified date should be null', async () => {
-        await event.save(ev);
-
-        const [data] = repo.events.create.firstCall.args;
-
-        expect(data.modified).to.equal(null);
-      });
     });
 
     experiment('it should save an existing event', async () => {
       beforeEach(async () => {
         eventPOJO.event_id = 'test-id';
-        const ev = event.create(data);
-        ev.eventId = 'test-id';
-        sandbox.stub(repo.events, 'update').resolves(ev);
+        sandbox.stub(newEvtRepo, 'update').resolves({ ...eventPOJO, eventId: 'test-id' });
       });
 
       test('it should call repo.update() once', async () => {
         await event.save(eventPOJO);
-        expect(repo.events.update.callCount).to.equal(1);
+        expect(newEvtRepo.update.callCount).to.equal(1);
       });
 
-      test('it should pass the correct filter to repo.update', async () => {
+      test('it should pass the result of eventModel.fromHash to repo.update', async () => {
         await event.save(eventPOJO);
-        const [filter] = repo.events.update.firstCall.args;
-        expect(filter).to.equal({ eventId: 'test-id' });
+        const [param] = newEvtRepo.update.firstCall.args;
+        expect(param).to.equal(eventObject);
       });
 
       test('it should pass data with the correct keys to repo.update', async () => {
         const keys = [
-          'licences',
           'referenceCode',
           'type',
           'subtype',
           'issuer',
+          'licences',
           'entities',
           'comment',
           'metadata',
@@ -146,13 +152,13 @@ experiment('lib/event', () => {
 
     experiment('it should map JSON fields to strings', async () => {
       beforeEach(async () => {
-        sandbox.stub(repo.events, 'update').resolves(eventPOJO);
+        sandbox.stub(newEvtRepo, 'update').resolves(eventPOJO);
       });
 
-      test('it should leave null unchanged in jsonb fields', async () => {
-        await event.save(eventPOJO);
-        const [, data] = repo.events.update.firstCall.args;
-        expect(data.metadata).to.equal(null);
+      test('it should leave empty object in jsonb fields', async () => {
+        await event.save(eventObject);
+        const [data] = newEvtRepo.update.firstCall.args;
+        expect(data.metadata).to.equal({});
       });
     });
   });
@@ -160,12 +166,12 @@ experiment('lib/event', () => {
   experiment('.load', () => {
     beforeEach(async () => {
       eventPOJO.eventId = 'event-id';
-      sandbox.stub(repo.events, 'findOne').resolves(eventPOJO);
+      sandbox.stub(newEvtRepo, 'findOne').resolves(eventPOJO);
     });
 
     test('it should load an event by id', async () => {
       await event.load('event-id');
-      const [filter] = repo.events.findOne.firstCall.args;
+      const [filter] = newEvtRepo.findOne.firstCall.args;
       expect(filter).to.equal('event-id');
     });
 
@@ -179,37 +185,37 @@ experiment('lib/event', () => {
       expect(ev.entities).to.equal(eventPOJO.entities);
     });
 
-    test('it should pass through a null unchanged in a jsonb field', async () => {
+    test('it should pass through an empty object in a jsonb field', async () => {
       const ev = await event.load('event-id');
-      expect(ev.metadata).to.equal(null);
+      expect(ev.metadata).to.equal({});
     });
 
     test('it should return null if event not found', async () => {
-      repo.events.findOne.resolves([]);
+      newEvtRepo.findOne.resolves([]);
       const ev = await event.load('event_id');
       expect(ev).to.equal(null);
     });
   });
 
   experiment('.updateStatus', () => {
-    let result;
+    let result, pojoStub;
 
     beforeEach(async () => {
-      sandbox.stub(repo.events, 'updateStatus').resolves({
-        eventId: 'test-id',
-        status: 'new-status'
-      });
+      pojoStub = {
+        toJSON: sandbox.stub().resolves({ ...eventPOJO, status: 'new-status' })
+      };
+      sandbox.stub(newEvtRepo, 'updateStatus').resolves(pojoStub);
 
       result = await event.updateStatus('test-id', 'new-status');
     });
 
     test('passes the correct filter', async () => {
-      const [filter] = repo.events.updateStatus.lastCall.args;
+      const [filter] = newEvtRepo.updateStatus.lastCall.args;
       expect(filter).to.equal('test-id');
     });
 
     test('passes the correct update data', async () => {
-      const [, data] = repo.events.updateStatus.lastCall.args;
+      const [, data] = newEvtRepo.updateStatus.lastCall.args;
       expect(data).to.equal('new-status');
     });
 

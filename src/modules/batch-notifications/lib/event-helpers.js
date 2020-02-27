@@ -9,7 +9,7 @@ const { MESSAGE_STATUS_SENT, MESSAGE_STATUS_ERROR } =
 const evt = require('../../../lib/event');
 const newEvtRepo = require('../../../lib/connectors/repos/events.js');
 const queries = require('./queries');
-const Licence = require('../../../lib/models/licence.js');
+
 /**
  * Creates a notification event
  * @param  {String}  issuer - email address of user sending message
@@ -45,11 +45,11 @@ const createEvent = async (issuer, config, options) => {
  */
 const updateEventStatus = async (eventId, status, data = {}) => {
   const ev = await evt.load(eventId);
-  Object.assign(ev, {
+  const updates = {
     ...data,
     status
-  });
-  await evt.save(ev);
+  };
+  await newEvtRepo.update(ev, updates);
   return ev;
 };
 
@@ -64,12 +64,6 @@ const updateEventStatus = async (eventId, status, data = {}) => {
 const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
   const ev = await evt.load(eventId);
 
-  const mappedLicences = uniq(licenceNumbers).map(licence => {
-    const lic = new Licence();
-    lic.licenceNumber = licence;
-    return lic;
-  });
-
   const metadata = cloneDeep(ev.metadata);
   set(metadata, 'sent', 0);
   set(metadata, 'error', 0);
@@ -77,7 +71,7 @@ const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
 
   const eventUpdates = {
     status: EVENT_STATUS_PROCESSED,
-    licences: mappedLicences,
+    licences: uniq(licenceNumbers),
     metadata
   };
 

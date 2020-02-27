@@ -10,7 +10,6 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const repo = require('../../../src/lib/connectors/repos');
 const Event = require('../../../src/lib/models/event');
-const Licence = require('../../../src/lib/models/licence');
 const eventsService = require('../../../src/lib/services/events');
 
 const arr = ['foo', 'bar'];
@@ -20,8 +19,7 @@ experiment('lib/event', () => {
     sandbox.restore();
   });
 
-  const licence = new Licence();
-  licence.licenceNumber = '122434';
+  const licence = '122434';
 
   const testEvent = {
     event_id: 'abc123',
@@ -32,7 +30,7 @@ experiment('lib/event', () => {
     licences: [licence],
     entities: arr,
     comment: 'test',
-    metadata: null,
+    metadata: {},
     status: 'completed',
     created: moment().format('YYYY-MM-DD HH:mm:ss'),
     modified: null
@@ -66,7 +64,7 @@ experiment('lib/event', () => {
       event.licences = [licence];
       event.entities = arr;
       event.comment = 'test';
-      event.metadata = null;
+      event.metadata = {};
       event.status = 'completed';
       await eventsService.create(event);
       const { args } = repo.events.create.firstCall;
@@ -76,7 +74,7 @@ experiment('lib/event', () => {
       expect(args[0].licences).to.equal(event.licences);
       expect(args[0].entities).to.equal(event.entities);
       expect(args[0].comment).to.equal(event.comment);
-      expect(args[0].metadata).to.equal(null);
+      expect(args[0].metadata).to.be.an.object().and.to.be.empty();
       expect(args[0].status).to.equal(event.status);
     });
   });
@@ -91,15 +89,6 @@ experiment('lib/event', () => {
       event.type = 'test-type';
       const ev = await eventsService.update(event);
       expect(typeof ev).to.equal(typeof event);
-    });
-
-    test('should include the eventId when calling the update method at the database repos layer', async () => {
-      const event = new Event();
-      event.type = 'test-type';
-      event.referenceCode = 'testRef123';
-      await eventsService.update(event);
-      const { args } = repo.events.update.firstCall;
-      expect(Object.keys(args[0])).to.include('eventId');
     });
 
     test('should map the model keys to snake_case before sending it to database repos layer', async () => {
@@ -127,7 +116,7 @@ experiment('lib/event', () => {
       event.licences = [licence];
       event.entities = arr;
       event.comment = 'test';
-      event.metadata = null;
+      event.metadata = {};
       event.status = 'completed';
       await eventsService.update(event);
       const { args } = repo.events.update.firstCall;
@@ -137,7 +126,7 @@ experiment('lib/event', () => {
       expect(args[1].licences).to.equal(event.licences);
       expect(args[1].entities).to.equal(event.entities);
       expect(args[1].comment).to.equal(event.comment);
-      expect(args[1].metadata).to.equal(null);
+      expect(args[1].metadata).to.be.an.object().and.to.be.empty();
       expect(args[1].status).to.equal(event.status);
     });
   });
