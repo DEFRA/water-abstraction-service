@@ -29,10 +29,11 @@ const findPage = async (page, pageSize) => {
   return paginatedEnvelope(result);
 };
 
-const findByStatus = async status => {
+const findByStatuses = async statuses => {
   const batches = await BillingBatch
     .forge()
-    .where({ status })
+    .query('whereIn', 'status', statuses)
+    .orderBy('date_created', 'desc')
     .fetchAll({ withRelated: ['region'] });
 
   return batches.toJSON();
@@ -75,7 +76,7 @@ const findOneWithInvoices = async (id) => {
 };
 
 exports.delete = deleteById;
-exports.findByStatus = findByStatus;
+exports.findByStatuses = findByStatuses;
 exports.findOne = findOne;
 exports.findPage = findPage;
 exports.update = update;

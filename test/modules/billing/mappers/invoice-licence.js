@@ -23,6 +23,7 @@ const createLicence = () => ({
   region: {
     regionId: '80bb8d61-786c-4b86-9bb4-8959fa6a2d20',
     name: 'Anglian',
+    displayName: 'Anglian',
     chargeRegionId: 'A'
   },
   regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' }

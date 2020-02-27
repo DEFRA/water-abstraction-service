@@ -30,6 +30,7 @@ const data = {
     region: {
       regionId: 'ef627969-9636-4d9c-abc6-ad42f64ec340',
       name: 'Anglian',
+      displayName: 'Anglian',
       chargeRegionId: 'A',
       naldRegionId: 1
     }
