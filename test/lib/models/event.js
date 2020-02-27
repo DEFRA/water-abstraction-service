@@ -3,8 +3,7 @@ const moment = require('moment');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const { Event, Licence } =
-  require('../../../src/lib/models');
+const { Event } = require('../../../src/lib/models');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a921234';
 
