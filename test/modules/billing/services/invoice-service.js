@@ -12,10 +12,12 @@ const sandbox = sinon.createSandbox();
 const uuid = require('uuid/v4');
 
 const Address = require('../../../../src/lib/models/address');
+const Batch = require('../../../../src/lib/models/batch');
 const Company = require('../../../../src/lib/models/company');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const Invoice = require('../../../../src/lib/models/invoice');
 
+const mappers = require('../../../../src/modules/billing/mappers');
 const newRepos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBatchConnector = require('../../../../src/lib/connectors/charge-module/batches');
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
@@ -188,6 +190,7 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(newRepos.billingBatches, 'findOneWithInvoices').resolves(batch);
     sandbox.stub(chargeModuleBatchConnector, 'send').resolves(chargeModuleData);
     sandbox.stub(newRepos.billingInvoices, 'findOne').resolves();
+    sandbox.stub(newRepos.billingInvoices, 'upsert').resolves();
 
     // Stub CRM invoice account data
     invoiceAccount1 = new InvoiceAccount(INVOICE_1_ACCOUNT_ID);
@@ -331,6 +334,24 @@ experiment('modules/billing/services/invoiceService', () => {
       test('the transaction is decorated with the value from the charge module', async () => {
         expect(result.invoiceLicences[0].transactions[0].value).to.equal(2345);
       });
+    });
+  });
+
+  experiment('.saveInvoiceToDB', () => {
+    const batch = new Batch();
+    const invoice = new Invoice();
+
+    beforeEach(async () => {
+      sandbox.stub(mappers.invoice, 'modelToDb').returns({ foo: 'bar' });
+      await invoiceService.saveInvoiceToDB(batch, invoice);
+    });
+
+    test('calls the relevant mapper with the batch and invoice', async () => {
+      expect(mappers.invoice.modelToDb.calledWith(batch, invoice)).to.be.true();
+    });
+
+    test('calls .upsert() on the repo with the result of the mapping', async () => {
+      expect(newRepos.billingInvoices.upsert.calledWith({ foo: 'bar' })).to.be.true();
     });
   });
 });
