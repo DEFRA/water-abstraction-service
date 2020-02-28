@@ -475,34 +475,6 @@ experiment('csv-schema-validation', () => {
     });
   });
 
-  // experiment('meter details', () => {
-  //   test('can be a character string', async () => {
-  //     const records = getValidSingleLicenceReturn();
-
-  //     const csv = csvStringify(records);
-  //     const { isValid } = await csvSchemaValidation.validate(csv);
-
-  //     expect(isValid).to.be.true();
-  //   });
-  //   test('must be filled in if a meter was used', async () => {
-  //     const records = getValidSingleLicenceReturn();
-  //     records[4][1] = '';
-  //     records[5][1] = '';
-
-  //     const csv = csvStringify(records);
-  //     const { isValid, validationErrors } = await csvSchemaValidation.validate(csv);
-
-  //     expect(isValid).to.be.false();
-
-  //     const errorMessage = 'You must provide the manufacturer and serial number of the water meter';
-  //     const error = validationErrors.find(err => err.message === errorMessage);
-  //     expect(error).to.equal({
-  //       message: errorMessage,
-  //       line: [5, 6]
-  //     });
-  //   });
-  // });
-
   experiment('abstraction volumes', () => {
     test('can be empty', async () => {
       const records = getValidSingleLicenceReturn();
@@ -539,23 +511,6 @@ experiment('csv-schema-validation', () => {
 
       expect(isValid).to.be.true();
     });
-
-    // test('cannot include a negative number', async () => {
-    //   const records = getValidSingleLicenceReturn();
-    //   records[6][1] = '-15';
-
-    //   const csv = csvStringify(records);
-    //   const { isValid, validationErrors } = await csvSchemaValidation.validate(csv);
-
-    //   expect(isValid).to.be.false();
-
-    //   const errorMessage = 'The volumes must be a positive number';
-    //   const error = validationErrors.find(err => err.message === errorMessage);
-    //   expect(error).to.equal({
-    //     message: errorMessage,
-    //     line: 7
-    //   });
-    // });
 
     test('cannot be other values', async () => {
       const records = getValidSingleLicenceReturn();
