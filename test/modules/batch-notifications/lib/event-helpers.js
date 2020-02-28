@@ -37,18 +37,20 @@ const eventKeys = [
   'metadata',
   'status'];
 
+const testEvent = {
+  eventId: 'testEventId',
+  status: 'testStatus',
+  type: 'notification',
+  metadata: {
+    foo: 'bar'
+  }
+};
+
 experiment('batch notifications event helpers', () => {
   beforeEach(async () => {
     sandbox.stub(newEvtRepo, 'update');
-    sandbox.stub(evt, 'save');
-    sandbox.stub(evt, 'load').resolves({
-      eventId: 'testEventId',
-      status: 'testStatus',
-      type: 'notification',
-      metadata: {
-        foo: 'bar'
-      }
-    });
+    sandbox.stub(evt, 'save').resolves({ rows: [testEvent] });
+    sandbox.stub(evt, 'load').resolves(testEvent);
     sandbox.stub(queries, 'getMessageStatuses').resolves([
       { status: MESSAGE_STATUS_SENT, count: 5 },
       { status: MESSAGE_STATUS_ERROR, count: 2 }
@@ -106,8 +108,7 @@ experiment('batch notifications event helpers', () => {
 
     test('returns the created event', async () => {
       const result = await createEvent(issuer, config, options);
-      const keys = Object.keys(result);
-      expect(keys).to.include(eventKeys);
+      expect(result).to.equal(testEvent);
     });
   });
 

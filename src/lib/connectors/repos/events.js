@@ -6,7 +6,7 @@ const queries = require('./queries/events');
  * @returns {Object} event pojo
  */
 const create = async (event) => {
-  const result = await Event.forge().save(event);
+  const result = await Event.forge(event).save();
   return result.toJSON();
 };
 

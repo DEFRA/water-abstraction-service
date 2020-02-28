@@ -2,7 +2,6 @@ const moment = require('moment');
 const { logger } = require('../logger');
 const newEventService = require('./services/events');
 const Event = require('./models/event');
-const uuid = require('uuid/v4');
 /**
  * Creates an event as a plain object
  * @param  {Object} [data={}] data for the event
@@ -42,7 +41,6 @@ const save = async (event) => {
     return wrapBookshelfModel(mapToEventPojo(result));
   }
   // Create new event
-  event.eventId = uuid();
   const eventModel = new Event();
   eventModel.fromHash(event);
   const result = await newEventService.create(eventModel);

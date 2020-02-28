@@ -88,7 +88,6 @@ experiment('lib/event', () => {
       'status',
       'created',
       'modified',
-      'eventId',
       'event_id'
     ];
 
@@ -142,7 +141,6 @@ experiment('lib/event', () => {
           'status',
           'created',
           'modified',
-          'eventId',
           'event_id'
         ];
         const { rows } = await event.save(eventPOJO);

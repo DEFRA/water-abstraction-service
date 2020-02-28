@@ -32,8 +32,8 @@ const createEvent = async (issuer, config, options) => {
     },
     status: EVENT_STATUS_PROCESSING
   });
-  await evt.save(ev);
-  return ev;
+  const { rows } = await evt.save(ev);
+  return rows[0];
 };
 
 /**
