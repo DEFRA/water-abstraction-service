@@ -1,7 +1,6 @@
 const Model = require('./model');
-const Licence = require('./licence');
 const {
-  assertIsArrayOfType,
+  assertIsArrayOfNullableStrings,
   assertIsInstanceOf,
   assertNullableString,
   assertString
@@ -86,7 +85,7 @@ class Event extends Model {
      * @param {Licence} Licence
      */
   set licences (licences) {
-    assertIsArrayOfType(licences, Licence);
+    assertIsArrayOfNullableStrings(licences);
     this._licences = licences;
   }
 
@@ -133,20 +132,20 @@ class Event extends Model {
   }
 
   /**
-     * Sets the metaData for this event
-     * @param {Object} metaData
+     * Sets the metadata for this event
+     * @param {Object} metadata
      */
-  set metaData (metaData) {
-    assertIsInstanceOf(metaData, Object);
-    this._metaData = metaData;
+  set metadata (metadata) {
+    assertIsInstanceOf(metadata, Object);
+    this._metadata = metadata;
   }
 
   /**
-   * Gets the metaData for this event
+   * Gets the metadata for this event
    * @return {Object}
    */
-  get metaData () {
-    return this._metaData;
+  get metadata () {
+    return this._metadata;
   }
 
   /**

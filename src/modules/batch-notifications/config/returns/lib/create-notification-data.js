@@ -1,6 +1,6 @@
 const uuidv4 = require('uuid/v4');
 const moment = require('moment');
-const { last } = require('lodash');
+const { first, last } = require('lodash');
 
 const helpers = require('@envage/water-abstraction-helpers');
 
@@ -11,7 +11,8 @@ const {
   CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_RETURNS_AGENT,
   CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO
 } = require('../../../../../lib/models/contact');
-const BI_TEMPLATES = ['control', 'bi_style', 'social_norm', 'formal'];
+const BI_TEMPLATES = ['control', 'suasion', 'social_norm', 'formal'];
+const events = require('../../../../../lib/services/events');
 
 /**
  * Gets personalisation data for the notification - this relates to the
@@ -95,6 +96,27 @@ const templateRandomiser = templateType => {
   return templateType.concat('_', BI_TEMPLATES[random]);
 };
 
+const getRelevantRowData = (rows, reminderRef) => {
+  const contactAndMessageType = reminderRef.substring(17); // remove 'returns_invitation' from beginning
+  return first(rows.filter(row => row.message_ref.includes(contactAndMessageType)));
+};
+
+const getTemplateSuffix = messageRef => {
+  const suffixIndex = (messageRef.indexOf('letter') > 0)
+    ? messageRef.indexOf('letter') + 6
+    : messageRef.indexOf('email') + 5;
+  return messageRef.substring(suffixIndex);
+};
+
+const getRelevantTemplate = async (context, reminderRef) => {
+  const { rows, rowCount } = await events.getMostRecentReturnsInvitationByLicence(context.licenceNumbers[0]);
+  const data = rowCount > 1 ? getRelevantRowData(rows, reminderRef) : rows[0];
+  if (rowCount === 0 || !data) return `${reminderRef}_control`;
+
+  const suffix = getTemplateSuffix(data.message_ref);
+  return `${reminderRef}${suffix}`;
+};
+
 const emailTemplate = template => ({ method: createEmail, messageRef: template });
 const letterTemplate = template => ({ method: createLetter, messageRef: template });
 
@@ -129,10 +151,12 @@ const templateMap = {
  * @param {String} messageRef - the message ref in the config.js file
  * @return {Object}         - scheduled_notification data
  */
-const createNotificationData = (ev, contact, context) => {
+const createNotificationData = async (ev, contact, context) => {
   const { method, messageRef } = templateMap[ev.subtype][contact.role];
 
-  return method(ev, contact, context, templateRandomiser(messageRef));
+  const selectedMessageRef = messageRef.startsWith('returns_reminder') ? await getRelevantTemplate(context, messageRef) : templateRandomiser(messageRef);
+
+  return method(ev, contact, context, selectedMessageRef);
 };
 
 exports.BI_TEMPLATES = BI_TEMPLATES;

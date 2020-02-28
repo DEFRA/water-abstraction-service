@@ -17,6 +17,7 @@ require('../../../../src/modules/batch-notifications/lib/event-statuses');
 const { MESSAGE_STATUS_SENT, MESSAGE_STATUS_ERROR } =
 require('../../../../src/modules/batch-notifications/lib/message-statuses');
 const evt = require('../../../../src/lib/event');
+const newEvtRepo = require('../../../../src/lib/connectors/repos/events');
 
 const issuer = 'mail@example.com';
 const config = {
@@ -36,17 +37,20 @@ const eventKeys = [
   'metadata',
   'status'];
 
+const testEvent = {
+  eventId: 'testEventId',
+  status: 'testStatus',
+  type: 'notification',
+  metadata: {
+    foo: 'bar'
+  }
+};
+
 experiment('batch notifications event helpers', () => {
   beforeEach(async () => {
-    sandbox.stub(evt, 'save');
-    sandbox.stub(evt, 'load').resolves({
-      eventId: 'testEventId',
-      status: 'testStatus',
-      type: 'notification',
-      metadata: {
-        foo: 'bar'
-      }
-    });
+    sandbox.stub(newEvtRepo, 'update');
+    sandbox.stub(evt, 'save').resolves({ rows: [testEvent] });
+    sandbox.stub(evt, 'load').resolves(testEvent);
     sandbox.stub(queries, 'getMessageStatuses').resolves([
       { status: MESSAGE_STATUS_SENT, count: 5 },
       { status: MESSAGE_STATUS_ERROR, count: 2 }
@@ -104,8 +108,7 @@ experiment('batch notifications event helpers', () => {
 
     test('returns the created event', async () => {
       const result = await createEvent(issuer, config, options);
-      const keys = Object.keys(result);
-      expect(keys).to.include(eventKeys);
+      expect(result).to.equal(testEvent);
     });
   });
 
@@ -115,11 +118,11 @@ experiment('batch notifications event helpers', () => {
       expect(evt.load.firstCall.args[0]).to.equal('testEventId');
     });
 
-    test('should save the event with the new status', async () => {
+    test('should update the event with the new status', async () => {
       await updateEventStatus('testEventId', 'newStatus');
-      const [ev] = evt.save.firstCall.args;
+      const [ev, changes] = newEvtRepo.update.firstCall.args;
       expect(ev.eventId).to.equal('testEventId');
-      expect(ev.status).to.equal('newStatus');
+      expect(changes.status).to.equal('newStatus');
     });
 
     test('should return the updated event', async () => {
@@ -139,28 +142,28 @@ experiment('batch notifications event helpers', () => {
 
     test('should mark the event as processed', async () => {
       await markAsProcessed('testEventId', licenceNumbers, recipients);
-      const [ev] = evt.save.lastCall.args;
-      expect(ev.status).to.equal(EVENT_STATUS_PROCESSED);
+      const [, changes] = newEvtRepo.update.firstCall.args;
+      expect(changes.status).to.equal(EVENT_STATUS_PROCESSED);
     });
 
     test('should record the affected licence numbers', async () => {
       await markAsProcessed('testEventId', licenceNumbers, recipients);
-      const [ev] = evt.save.lastCall.args;
-      expect(ev.licences).to.equal(licenceNumbers);
+      const [, changes] = newEvtRepo.update.firstCall.args;
+      expect(changes.licences).to.equal(licenceNumbers);
     });
 
     test('should update the event metadata', async () => {
       await markAsProcessed('testEventId', licenceNumbers, recipients);
-      const [ev] = evt.save.lastCall.args;
-      expect(ev.metadata.sent).to.equal(0);
-      expect(ev.metadata.error).to.equal(0);
-      expect(ev.metadata.recipients).to.equal(recipients);
+      const [, changes] = newEvtRepo.update.firstCall.args;
+      expect(changes.metadata.sent).to.equal(0);
+      expect(changes.metadata.error).to.equal(0);
+      expect(changes.metadata.recipients).to.equal(recipients);
     });
 
     test('should not alter existing metadata', async () => {
       await markAsProcessed('testEventId', licenceNumbers, recipients);
-      const [ev] = evt.save.lastCall.args;
-      expect(ev.metadata.foo).to.equal('bar');
+      const [, changes] = newEvtRepo.update.firstCall.args;
+      expect(changes.metadata.foo).to.equal('bar');
     });
   });
 

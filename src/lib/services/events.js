@@ -37,7 +37,7 @@ const findOne = async (eventId) => {
  * @returns {Event} Event model object
  */
 const update = async (eventModel) => {
-  const result = await repo.events.update({ eventId: eventModel.eventId }, eventModel.toJSON());
+  const result = await repo.events.update(eventModel.eventId, eventModel.toJSON());
   return mapFromRepo(result);
 };
 
@@ -54,7 +54,12 @@ const updateStatus = async (eventId, status) => {
   return mapFromRepo(result);
 };
 
+const getMostRecentReturnsInvitationByLicence = async licenceRef => {
+  return repo.events.getMostRecentReturnsInvitationByLicence(licenceRef);
+};
+
 exports.create = create;
 exports.findOne = findOne;
 exports.update = update;
 exports.updateStatus = updateStatus;
+exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitationByLicence;
