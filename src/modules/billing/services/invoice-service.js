@@ -1,7 +1,7 @@
 'use strict';
 
 const { find, flatMap, get } = require('lodash');
-const newRepos = require('../../../lib/connectors/repos');
+const repos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
 
@@ -43,7 +43,7 @@ const decorateInvoicesWithCompanies = async invoices => {
  */
 const getInvoiceForBatch = async (batchId, invoiceId) => {
   // Get object graph of invoice and related data
-  const data = await newRepos.billingInvoices.findOne(invoiceId);
+  const data = await repos.billingInvoices.findOne(invoiceId);
   if (!data || data.billingBatch.billingBatchId !== batchId) {
     return null;
   }
@@ -59,7 +59,6 @@ const getInvoiceForBatch = async (batchId, invoiceId) => {
   ]);
 
   // Use Charge Module data to populate totals and transaction values
-  console.log(mappers.totals.chargeModuleBillRunToBatchModel(chargeModuleSummary));
   invoice.totals = mappers.totals.chargeModuleBillRunToBatchModel(chargeModuleSummary.summary);
   decorateInvoiceTransactionValues(invoice, chargeModuleSummary);
 
@@ -74,7 +73,7 @@ const getInvoiceForBatch = async (batchId, invoiceId) => {
  */
 const saveInvoiceToDB = async (batch, invoice) => {
   const data = mappers.invoice.modelToDb(batch, invoice);
-  return newRepos.billingInvoices.upsert(data);
+  return repos.billingInvoices.upsert(data);
 };
 
 /**
@@ -100,11 +99,12 @@ const indexChargeModuleTransactions = (chargeModuleBillRun, customerReference) =
   const customer = find(chargeModuleBillRun.customers, { customerReference });
   // Generate flat array of transactions for customer
   const transactions = flatMap(customer.summaryByFinancialYear.map(row => row.transactions));
+
   // Return key/value pairs
-  return transactions.reduce((acc, row) => ({
-    ...acc,
-    [row.id]: row.chargeValue
-  }), {});
+  return transactions.reduce(
+    (map, row) => map.set(row.id, row.chargeValue),
+    new Map()
+  );
 };
 
 /**
@@ -123,9 +123,10 @@ const getInvoiceTransactions = invoice =>
 const decorateInvoiceTransactionValues = (invoice, chargeModuleBillRun) => {
   const { accountNumber } = invoice.invoiceAccount;
 
-  const index = indexChargeModuleTransactions(chargeModuleBillRun, accountNumber);
+  const map = indexChargeModuleTransactions(chargeModuleBillRun, accountNumber);
+
   getInvoiceTransactions(invoice).forEach(transaction => {
-    transaction.value = index[transaction.externalId];
+    transaction.value = map.get(transaction.externalId);
   });
 };
 
@@ -138,7 +139,7 @@ const decorateInvoiceTransactionValues = (invoice, chargeModuleBillRun) => {
  */
 const getInvoicesForBatch = async batchId => {
   // Load Batch instance from repo with invoices
-  const data = await newRepos.billingBatches.findOneWithInvoices(batchId);
+  const data = await repos.billingBatches.findOneWithInvoices(batchId);
 
   // Load Charge Module summary data
   const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
