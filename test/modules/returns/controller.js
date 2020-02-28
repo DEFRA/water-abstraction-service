@@ -11,8 +11,8 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const controller = require('../../../src/modules/returns/controller');
-const event = require('../../../src/lib/event');
 const eventRepo = require('../../../src/lib/connectors/repos/events');
+const newEvtRepo = require('../../../src/lib/connectors/repos/events.js');
 const s3 = require('../../../src/lib/connectors/s3');
 const startUploadJob = require('../../../src/modules/returns/lib/jobs/start-upload');
 const persistReturnsJob = require('../../../src/modules/returns/lib/jobs/persist-returns');
@@ -274,7 +274,7 @@ experiment('postUploadSubmit', () => {
 
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
-    sandbox.stub(event, 'save');
+    sandbox.stub(newEvtRepo, 'update');
     h = {
       response: sinon.stub().returns({
         code: sinon.spy()
@@ -332,9 +332,9 @@ experiment('postUploadSubmit', () => {
     test('it should update the event status to "submitted"', async () => {
       const request = requestFactory();
       await controller.postUploadSubmit(request, h);
-      const [{ eventId, status }] = event.save.lastCall.args;
-      expect(eventId).to.equal(request.params.eventId);
-      expect(status).to.equal(uploadStatus.SUBMITTING);
+      const [event, changes] = newEvtRepo.update.lastCall.args;
+      expect(event.eventId).to.equal(request.params.eventId);
+      expect(changes.status).to.equal(uploadStatus.SUBMITTING);
     });
   });
 });

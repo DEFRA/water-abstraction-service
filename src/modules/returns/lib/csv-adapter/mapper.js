@@ -268,4 +268,6 @@ exports._mapReturn = mapReturn;
 exports._mapQuantity = mapQuantity;
 exports._isEmptyReturn = isEmptyReturn;
 
+exports.GDS_DATE_FORMATS = GDS_DATE_FORMATS;
+exports.GDS_MONTH_FORMATS = GDS_MONTH_FORMATS;
 exports.mapCsv = mapCsv;
