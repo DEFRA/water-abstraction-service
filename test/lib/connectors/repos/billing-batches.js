@@ -34,6 +34,7 @@ experiment('lib/connectors/repos/billing-batches', () => {
       fetchPage: sandbox.stub().resolves(model),
       set: sandbox.stub().returnsThis(),
       where: sandbox.stub().returnsThis(),
+      query: sandbox.stub().returnsThis(),
       save: sandbox.stub().resolves(model),
       destroy: sandbox.spy()
     };
@@ -106,9 +107,9 @@ experiment('lib/connectors/repos/billing-batches', () => {
     });
   });
 
-  experiment('.findByStatus', () => {
+  experiment('.findByStatuses', () => {
     beforeEach(async () => {
-      await billingBatches.findByStatus('processing');
+      await billingBatches.findByStatuses(['review', 'processing']);
     });
 
     test('calls model.forge with no arguments', async () => {
@@ -116,11 +117,18 @@ experiment('lib/connectors/repos/billing-batches', () => {
       expect(args).to.equal([]);
     });
 
-    test('calls where() to filter by status', async () => {
-      const [params] = stub.where.lastCall.args;
-      expect(params).to.equal({
-        status: 'processing'
-      });
+    test('calls query() to filter by status', async () => {
+      const params = stub.query.lastCall.args;
+      expect(params[0]).to.equal('whereIn');
+      expect(params[1]).to.equal('status');
+      expect(params[2]).to.equal(['review', 'processing']);
+    });
+
+    test('orders by date_created desc', async () => {
+      const params = stub.orderBy.lastCall.args;
+
+      expect(params[0]).to.equal('date_created');
+      expect(params[1]).to.equal('desc');
     });
 
     test('calls fetchAll() with the relationships', async () => {

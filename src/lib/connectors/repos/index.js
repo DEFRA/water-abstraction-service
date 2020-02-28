@@ -3,3 +3,4 @@ exports.billingBatchChargeVersionYears = require('./billing-batch-charge-version
 exports.billingInvoices = require('./billing-invoices');
 exports.billingInvoiceLicences = require('./billing-invoice-licences');
 exports.billingTransactions = require('./billing-transactions');
+exports.events = require('./events');

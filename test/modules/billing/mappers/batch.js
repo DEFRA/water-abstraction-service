@@ -27,7 +27,8 @@ const data = {
     region: {
       regionId: uuid(),
       chargeRegionId: 'A',
-      name: 'Anglian'
+      name: 'Anglian',
+      displayName: 'Anglian'
     },
     externalId: null,
     netTotal: 3552,

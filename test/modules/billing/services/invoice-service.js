@@ -53,6 +53,7 @@ const createBatchData = () => ({
         region: {
           regionId: REGION_ID,
           name: REGION_NAME,
+          displayName: REGION_NAME,
           chargeRegionId: CHARGE_REGION_ID
         }
       }
@@ -64,6 +65,7 @@ const createBatchData = () => ({
         region: {
           regionId: REGION_ID,
           name: REGION_NAME,
+          displayName: REGION_NAME,
           chargeRegionId: CHARGE_REGION_ID
         }
       }
@@ -79,6 +81,7 @@ const createBatchData = () => ({
         region: {
           regionId: REGION_ID,
           name: REGION_NAME,
+          displayName: REGION_NAME,
           chargeRegionId: CHARGE_REGION_ID
         }
       }

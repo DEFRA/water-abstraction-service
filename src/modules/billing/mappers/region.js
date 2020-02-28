@@ -16,7 +16,8 @@ const dbToModel = data => {
     id: row.regionId,
     name: row.name,
     code: row.chargeRegionId,
-    numericCode: row.naldRegionId
+    numericCode: row.naldRegionId,
+    displayName: row.displayName
   });
   return region;
 };

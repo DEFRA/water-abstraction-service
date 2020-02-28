@@ -54,8 +54,8 @@ const postCreateBatch = async (request, h) => {
 
   if (!batch) {
     const data = {
-      message: `Batch already processing for region ${regionId}`,
-      existingBatch: await batchService.getProcessingBatchByRegion(regionId)
+      message: `Batch already live for region ${regionId}`,
+      existingBatch: await batchService.getMostRecentLiveBatchByRegion(regionId)
     };
     return h.response(data).code(409);
   }
