@@ -16,6 +16,7 @@ experiment('lib/connectors/repos/events', () => {
 
   beforeEach(async () => {
     model = {
+      eventId: 'test-id',
       toJSON: sandbox.stub().returns({ foo: 'bar' })
     };
 
@@ -68,12 +69,12 @@ experiment('lib/connectors/repos/events', () => {
     let result;
 
     beforeEach(async () => {
-      result = await events.update('test-id', model);
+      result = await events.update(model);
     });
 
     test('calls model.forge.where with id', async () => {
-      const { args } = Event.forge.lastCall;
-      expect(args[0].eventId).to.equal('test-id');
+      const [{ eventId }] = Event.forge.lastCall.args;
+      expect(eventId).to.equal('test-id');
     });
 
     test('returns a JSON object of the model updated', async () => {

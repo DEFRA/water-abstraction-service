@@ -1,4 +1,4 @@
-const { find, get, set, uniq } = require('lodash');
+const { find, get, set, uniq, cloneDeep } = require('lodash');
 const generateReference = require('../../../lib/reference-generator');
 const {
   EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING,
@@ -7,6 +7,7 @@ const {
 const { MESSAGE_STATUS_SENT, MESSAGE_STATUS_ERROR } =
     require('./message-statuses');
 const evt = require('../../../lib/event');
+const newEvtRepo = require('../../../lib/connectors/repos/events.js');
 const queries = require('./queries');
 
 /**
@@ -31,8 +32,8 @@ const createEvent = async (issuer, config, options) => {
     },
     status: EVENT_STATUS_PROCESSING
   });
-  await evt.save(ev);
-  return ev;
+  const { rows } = await evt.save(ev);
+  return rows[0];
 };
 
 /**
@@ -44,11 +45,11 @@ const createEvent = async (issuer, config, options) => {
  */
 const updateEventStatus = async (eventId, status, data = {}) => {
   const ev = await evt.load(eventId);
-  Object.assign(ev, {
+  const updates = {
     ...data,
     status
-  });
-  await evt.save(ev);
+  };
+  await newEvtRepo.update(ev, updates);
   return ev;
 };
 
@@ -63,13 +64,18 @@ const updateEventStatus = async (eventId, status, data = {}) => {
 const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
   const ev = await evt.load(eventId);
 
-  set(ev, 'status', EVENT_STATUS_PROCESSED);
-  set(ev, 'licences', uniq(licenceNumbers));
-  set(ev, 'metadata.sent', 0);
-  set(ev, 'metadata.error', 0);
-  set(ev, 'metadata.recipients', recipientCount);
+  const metadata = cloneDeep(ev.metadata);
+  set(metadata, 'sent', 0);
+  set(metadata, 'error', 0);
+  set(metadata, 'recipients', recipientCount);
 
-  return evt.save(ev);
+  const eventUpdates = {
+    status: EVENT_STATUS_PROCESSED,
+    licences: uniq(licenceNumbers),
+    metadata
+  };
+
+  return newEvtRepo.update(ev, eventUpdates);
 };
 
 /**
