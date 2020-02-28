@@ -14,6 +14,7 @@ const returnsUpload = require('../../../../../src/modules/returns/lib/returns-up
 const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('../../../../../src/logger');
 const event = require('../../../../../src/lib/event');
+const newEvtRepo = require('../../../../../src/lib/connectors/repos/events.js');
 const returnsConnector = require('../../../../../src/modules/returns/lib/api-connector');
 
 experiment('publish', () => {
@@ -55,6 +56,7 @@ experiment('handler', () => {
       }
     });
     sandbox.stub(event, 'save').resolves();
+    sandbox.stub(newEvtRepo, 'update').resolves();
 
     sandbox.stub(returnsUpload, 'getReturnsS3Object').resolves({
       Body: Buffer.from(JSON.stringify([
@@ -109,8 +111,8 @@ experiment('handler', () => {
 
   test('updates the event metadata with the upload result', async () => {
     await persistReturnsJob.handler(job);
-    const [evt] = event.save.lastCall.args;
-    expect(evt.metadata).to.equal({
+    const [, changes] = newEvtRepo.update.lastCall.args;
+    expect(changes.metadata).to.equal({
       returns: [
         { returnId: 'test-return-1', submitted: true, error: null },
         { returnId: 'test-return-2', submitted: false, error: testError }
@@ -120,8 +122,8 @@ experiment('handler', () => {
 
   test('sets the event status to submitted on completion', async () => {
     await persistReturnsJob.handler(job);
-    const [evt] = event.save.lastCall.args;
-    expect(evt.status).to.equal(returnsUpload.uploadStatus.SUBMITTED);
+    const [, changes] = newEvtRepo.update.lastCall.args;
+    expect(changes.status).to.equal(returnsUpload.uploadStatus.SUBMITTED);
   });
 
   test('finishes the job', async () => {

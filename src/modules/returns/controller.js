@@ -9,6 +9,7 @@ const { eventFactory } = require('./lib/event-factory');
 const { repository: eventRepository } = require('../../controllers/events');
 const s3 = require('../../lib/connectors/s3');
 const event = require('../../lib/event');
+const newEvtRepo = require('../../lib/connectors/repos/events.js');
 const { uploadStatus, getUploadFilename } = require('./lib/returns-upload');
 const { logger } = require('../../logger');
 const startUploadJob = require('./lib/jobs/start-upload');
@@ -195,9 +196,8 @@ const getUploadPreviewReturn = async (request, h) => {
  * @param  {Array} data - array of return objects
  * @return {Object}
  */
-const applySubmitting = (evt, data) => {
+const applySubmitting = (data) => {
   return {
-    ...evt,
     metadata: {
       returns: data.map(ret => ({
         returnId: ret.returnId,
@@ -247,8 +247,7 @@ const postUploadSubmit = async (request, h) => {
     }
 
     // Update event
-    const updatedEvent = applySubmitting(request.evt, valid);
-    await event.save(updatedEvent);
+    await newEvtRepo.update(request.evt, applySubmitting(valid));
 
     await persistReturnsJob.publish(get(request, 'evt.eventId'));
 
