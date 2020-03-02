@@ -11,9 +11,13 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 const uuid = require('uuid/v4');
 
+const Address = require('../../../../src/lib/models/address');
+const Batch = require('../../../../src/lib/models/batch');
 const Company = require('../../../../src/lib/models/company');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
+const Invoice = require('../../../../src/lib/models/invoice');
 
+const mappers = require('../../../../src/modules/billing/mappers');
 const newRepos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBatchConnector = require('../../../../src/lib/connectors/charge-module/batches');
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
@@ -100,7 +104,11 @@ const createChargeModuleData = () => ({
           creditLineValue: 0,
           debitLineCount: 5,
           debitLineValue: 12345,
-          netTotal: 12345
+          netTotal: 12345,
+          transactions: [{
+            id: CHARGE_MODULE_TRANSACTION_ID,
+            chargeValue: 2345
+          }]
         }
       ]
     },
@@ -125,7 +133,52 @@ const createChargeModuleData = () => ({
         }
       ]
     }
-  ]
+  ],
+  summary: {
+    creditNoteCount: 0,
+    creditNoteValue: 0,
+    invoiceCount: 1,
+    invoiceValue: 2003,
+    creditLineCount: 0,
+    creditLineValue: 0,
+    debitLineCount: 2,
+    debitLineValue: 2003,
+    netTotal: 2003
+  }
+});
+
+const CHARGE_MODULE_TRANSACTION_ID = '00000000-0000-0000-0000-000000000006';
+
+const createInvoiceData = () => ({
+  billingBatch: {
+    billingBatchId: BATCH_ID
+  },
+  invoiceAccountId: INVOICE_1_ACCOUNT_ID,
+  invoiceAccountNumber: INVOICE_1_ACCOUNT_NUMBER,
+  billingInvoiceLicences: [{
+    licence: {
+      licenceId: LICENCE_ID,
+      licenceRef: '01/123/ABC',
+      regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
+      region: {
+        regionId: REGION_ID,
+        name: REGION_NAME,
+        displayName: REGION_NAME,
+        chargeRegionId: CHARGE_REGION_ID
+      }
+    },
+    billingTransactions: [{
+      billingTransactionId: uuid(),
+      volume: 10.6,
+      chargeElement: {
+        chargeElementId: uuid(),
+        source: 'supported',
+        season: 'summer',
+        loss: 'high'
+      },
+      externalId: CHARGE_MODULE_TRANSACTION_ID
+    }]
+  }]
 });
 
 experiment('modules/billing/services/invoiceService', () => {
@@ -136,15 +189,21 @@ experiment('modules/billing/services/invoiceService', () => {
     chargeModuleData = createChargeModuleData();
     sandbox.stub(newRepos.billingBatches, 'findOneWithInvoices').resolves(batch);
     sandbox.stub(chargeModuleBatchConnector, 'send').resolves(chargeModuleData);
+    sandbox.stub(newRepos.billingInvoices, 'findOne').resolves();
+    sandbox.stub(newRepos.billingInvoices, 'upsert').resolves();
 
     // Stub CRM invoice account data
     invoiceAccount1 = new InvoiceAccount(INVOICE_1_ACCOUNT_ID);
     invoiceAccount1.company = new Company(COMPANY_1_ID);
     invoiceAccount1.company.name = 'Test Company 1';
+    invoiceAccount1.accountNumber = INVOICE_1_ACCOUNT_NUMBER;
+    invoiceAccount1.address = new Address();
+    invoiceAccount1.address.addressLine1 = 'Daisy Cottage';
 
     invoiceAccount2 = new InvoiceAccount(INVOICE_2_ACCOUNT_ID);
     invoiceAccount2.company = new Company(COMPANY_2_ID);
     invoiceAccount2.company.name = 'Test Company 2';
+    invoiceAccount2.accountNumber = INVOICE_2_ACCOUNT_NUMBER;
 
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountIds').resolves([
       invoiceAccount1, invoiceAccount2
@@ -204,6 +263,95 @@ experiment('modules/billing/services/invoiceService', () => {
       expect(totals.debitLineCount).to.equal(10);
       expect(totals.debitLineValue).to.equal(120267);
       expect(totals.netTotal).to.equal(104943);
+    });
+  });
+
+  experiment('.getInvoiceForBatch', () => {
+    let result;
+    const INVOICE_ID = '00000000-0000-0000-0000-000000000005';
+
+    experiment('when invoice not found in repo', () => {
+      beforeEach(async () => {
+        newRepos.billingInvoices.findOne.resolves(null);
+        result = await invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
+      });
+
+      test('null is returned', async () => {
+        expect(result).to.equal(null);
+      });
+    });
+
+    experiment('when invoice found, but batch ID does not match that requested', () => {
+      beforeEach(async () => {
+        newRepos.billingInvoices.findOne.resolves({
+          billingBatch: {
+            billingBatchId: 'wrong-id'
+          }
+        });
+        result = await invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
+      });
+
+      test('null is returned', async () => {
+        expect(result).to.equal(null);
+      });
+    });
+
+    experiment('when invoice is found and batch ID does match that requested', () => {
+      let invoice;
+
+      beforeEach(async () => {
+        invoice = createInvoiceData();
+        newRepos.billingInvoices.findOne.resolves(invoice);
+        result = await invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
+      });
+
+      test('the invoice repo .findOne() method is called with the correct invoice ID', async () => {
+        expect(newRepos.billingInvoices.findOne.calledWith(
+          INVOICE_ID
+        )).to.be.true();
+      });
+
+      test('returns an Invoice instance', async () => {
+        expect(result instanceof Invoice).to.be.true();
+      });
+
+      test('the invoice is decorated with totals from the charge module', async () => {
+        expect(result.totals.creditNoteCount).to.equal(chargeModuleData.summary.creditNoteCount);
+        expect(result.totals.creditNoteValue).to.equal(chargeModuleData.summary.creditNoteValue);
+        expect(result.totals.invoiceCount).to.equal(chargeModuleData.summary.invoiceCount);
+        expect(result.totals.invoiceValue).to.equal(chargeModuleData.summary.invoiceValue);
+        expect(result.totals.creditLineCount).to.equal(chargeModuleData.summary.creditLineCount);
+        expect(result.totals.creditLineValue).to.equal(chargeModuleData.summary.creditLineValue);
+        expect(result.totals.debitLineCount).to.equal(chargeModuleData.summary.debitLineCount);
+        expect(result.totals.debitLineValue).to.equal(chargeModuleData.summary.debitLineValue);
+        expect(result.totals.netTotal).to.equal(chargeModuleData.summary.netTotal);
+      });
+
+      test('the invoice is decorated with invoice account company/address data from the CRM', async () => {
+        expect(result.invoiceAccount).to.equal(invoiceAccount1);
+      });
+
+      test('the transaction is decorated with the value from the charge module', async () => {
+        expect(result.invoiceLicences[0].transactions[0].value).to.equal(2345);
+      });
+    });
+  });
+
+  experiment('.saveInvoiceToDB', () => {
+    const batch = new Batch();
+    const invoice = new Invoice();
+
+    beforeEach(async () => {
+      sandbox.stub(mappers.invoice, 'modelToDb').returns({ foo: 'bar' });
+      await invoiceService.saveInvoiceToDB(batch, invoice);
+    });
+
+    test('calls the relevant mapper with the batch and invoice', async () => {
+      expect(mappers.invoice.modelToDb.calledWith(batch, invoice)).to.be.true();
+    });
+
+    test('calls .upsert() on the repo with the result of the mapping', async () => {
+      expect(newRepos.billingInvoices.upsert.calledWith({ foo: 'bar' })).to.be.true();
     });
   });
 });

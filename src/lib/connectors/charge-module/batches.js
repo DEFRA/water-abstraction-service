@@ -2,10 +2,11 @@
 
 const request = require('./request');
 
-const getBatchPayload = (regionCode, batchId) => ({
+const getBatchPayload = (regionCode, batchId, customerReference) => ({
   region: regionCode,
   filter: {
-    batchNumber: batchId
+    batchNumber: batchId,
+    ...customerReference && { customerReference }
   }
 });
 
@@ -19,8 +20,8 @@ const approve = async (regionCode, batchId) => {
   return request.patch('v1/wrls/transaction_queue/approve', payload);
 };
 
-const send = async (regionCode, batchId, isDraft = true) => {
-  const payload = getBatchPayload(regionCode, batchId);
+const send = async (regionCode, batchId, isDraft = true, customerReference) => {
+  const payload = getBatchPayload(regionCode, batchId, customerReference);
   payload.draft = isDraft;
   return request.post('v1/wrls/billruns', payload);
 };

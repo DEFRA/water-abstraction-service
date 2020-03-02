@@ -3,12 +3,15 @@
 const {
   experiment,
   test,
-  beforeEach
+  beforeEach,
+  afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
+const sandbox = require('sinon').createSandbox();
 
 const invoiceLicenceMapper = require('../../../../src/modules/billing/mappers/invoice-licence');
+const transactionMapper = require('../../../../src/modules/billing/mappers/transaction');
 
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Address = require('../../../../src/lib/models/address');
@@ -16,6 +19,7 @@ const Company = require('../../../../src/lib/models/company');
 const Contact = require('../../../../src/lib/models/contact-v2');
 const Licence = require('../../../../src/lib/models/licence');
 const Region = require('../../../../src/lib/models/region');
+const Transaction = require('../../../../src/lib/models/transaction');
 
 const createLicence = () => ({
   licenceId: 'd563b2b9-e87e-4a9c-8990-1acc96fe2c17',
@@ -30,6 +34,14 @@ const createLicence = () => ({
 });
 
 experiment('modules/billing/mappers/invoice-licence', () => {
+  beforeEach(async () => {
+    sandbox.stub(transactionMapper, 'dbToModel').returns(new Transaction());
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
   experiment('.dbToModel', () => {
     let result;
     experiment('when there is no contact ID', () => {
@@ -84,6 +96,38 @@ experiment('modules/billing/mappers/invoice-licence', () => {
       test('the invoiceLicence has a contact with correct ID', async () => {
         expect(result.contact instanceof Contact).to.be.true();
         expect(result.contact.id).to.equal(dbRow.contactId);
+      });
+    });
+
+    experiment('when there are billingTransactions', async () => {
+      let dbRow;
+
+      beforeEach(async () => {
+        dbRow = {
+          billingInvoiceLicenceId: '4e44ea0b-62fc-4a3d-82ed-6ff563f1e39b',
+          companyId: '40283a80-766f-481f-ba54-484ac0b7ea6d',
+          addressId: '399282c3-f9b4-4a4b-af1b-0019e040ad61',
+          contactId: 'b21a7769-942e-4166-a787-a16701f25e4e',
+          licence: createLicence(),
+          billingTransactions: [{
+            billingTransactionId: uuid()
+          }, {
+            billingTransactionId: uuid()
+          }]
+        };
+        result = invoiceLicenceMapper.dbToModel(dbRow);
+      });
+
+      test('the transaction mapper .dbToModel is called for each billingTransaction', async () => {
+        expect(transactionMapper.dbToModel.callCount).to.equal(2);
+        expect(transactionMapper.dbToModel.calledWith(dbRow.billingTransactions[0])).to.be.true();
+        expect(transactionMapper.dbToModel.calledWith(dbRow.billingTransactions[1])).to.be.true();
+      });
+
+      test('the transactions property contains an array of Transaction instances', async () => {
+        expect(result.transactions).to.be.an.array().length(2);
+        expect(result.transactions[0] instanceof Transaction).to.be.true();
+        expect(result.transactions[1] instanceof Transaction).to.be.true();
       });
     });
   });
