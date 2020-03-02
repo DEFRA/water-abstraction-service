@@ -22,6 +22,7 @@ const returnsNotifications = require('./src/modules/returns-notifications');
 const importer = require('./src/modules/import');
 const returnsUpload = require('./src/modules/returns/lib/jobs/init-upload');
 const batchNotifications = require('./src/modules/batch-notifications/lib/jobs/init-batch-notifications');
+const db = require('./src/lib/connectors/db');
 
 // Notification cron jobs
 require('./src/modules/batch-notifications/cron').scheduleJobs();
@@ -135,9 +136,21 @@ process
   .on('unhandledRejection', processError('unhandledRejection'))
   .on('uncaughtException', processError('uncaughtException'))
   .on('SIGINT', async () => {
-    logger.info('stopping water service');
+    logger.info('Stopping water service');
+
     await server.stop();
-    return process.exit(0);
+    logger.info('1/3: Hapi server stopped');
+
+    await server.messageQueue.stop();
+    logger.info('2/3: Message queue stopped');
+    logger.info('Waiting 5 secs to allow pg-boss to finish');
+
+    setTimeout(async () => {
+      await db.pool.end();
+      logger.info('3/3: Connection pool closed');
+
+      return process.exit(0);
+    }, 5000);
   });
 
 if (!module.parent) {
