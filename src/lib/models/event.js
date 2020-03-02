@@ -49,7 +49,7 @@ class Event extends Model {
    * @param {String} subtype
    */
   set subtype (subtype) {
-    validators.assertString(subtype);
+    validators.assertNullableString(subtype);
     this._subtype = subtype;
   }
 
