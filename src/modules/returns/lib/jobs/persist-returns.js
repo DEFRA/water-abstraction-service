@@ -1,6 +1,7 @@
 const { find, get } = require('lodash');
 const messageQueue = require('../../../../lib/message-queue');
 const event = require('../../../../lib/event');
+const newEvtRepo = require('../../../../lib/connectors/repos/events.js');
 const { logger } = require('../../../../logger');
 const returnsUpload = require('../../lib/returns-upload');
 const { uploadStatus } = returnsUpload;
@@ -22,11 +23,14 @@ const publishPersistBulkReturns = eventId => {
 };
 
 const updateEvent = (evt, updatedReturns) => {
-  evt.metadata = Object.assign({}, evt.metadata, {
+  const metadata = Object.assign({}, evt.metadata, {
     returns: updatedReturns
   });
-  evt.status = uploadStatus.SUBMITTED;
-  return event.save(evt);
+  const changes = {
+    metadata,
+    status: uploadStatus.SUBMITTED
+  };
+  return newEvtRepo.update(evt, changes);
 };
 
 /**

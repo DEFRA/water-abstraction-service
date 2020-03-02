@@ -12,15 +12,15 @@ const uploadStatus = {
  * Gets the location of the file in the S3 bucket
  * where a returns document would be saved
  * @param eventId
- * @param fileExtension Defaults to xml
+ * @param fileExtension Defaults to csv
  * @returns {string}
  */
-const getUploadFilename = (eventId, fileExtension = 'xml') => {
+const getUploadFilename = (eventId, fileExtension = 'csv') => {
   const folder = 'returns-upload';
   return `${folder}/${eventId}.${fileExtension}`;
 };
 
-const getReturnsS3Object = (eventId, fileExtension = 'xml') => {
+const getReturnsS3Object = (eventId, fileExtension = 'csv') => {
   const key = getUploadFilename(eventId, fileExtension);
   return s3.getObject(key);
 };
@@ -37,10 +37,10 @@ const s3ObjectToJson = s3Object => JSON.parse(s3Object.Body.toString());
  * buildJobData
  *
  * @param {string} eventId The event id
- * @param {string} subType='xml' The return upload sub type (default to xml)
+ * @param {string} subType='csv' The return upload sub type (default to csv)
  * @returns {Object} The object containing the required job data
  */
-const buildJobData = (eventId, subType = 'xml') => ({ eventId, subType });
+const buildJobData = (eventId, subType = 'csv') => ({ eventId, subType });
 
 exports.uploadStatus = uploadStatus;
 exports.getUploadFilename = getUploadFilename;

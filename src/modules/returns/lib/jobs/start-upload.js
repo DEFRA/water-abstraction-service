@@ -7,7 +7,7 @@ const errorEvent = require('./error-event');
 const uploadAdapters = require('../upload-adapters');
 
 /**
- * Begins the XML returns process by adding a new task to PG Boss.
+ * Begins the bulk returns process by adding a new task to PG Boss.
  *
  * @param {string} eventId The UUID of the event
  * @returns {Promise}
@@ -15,11 +15,16 @@ const uploadAdapters = require('../upload-adapters');
 const publishReturnsUploadStart = eventId =>
   messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(eventId));
 
+const getValidationError = (validationErrors, subtype) => {
+  if (!validationErrors) return errorEvent.keys[subtype].INVALID;
+  const dateErrors = validationErrors.filter(e => e.message === 'Unexpected date format for return line');
+  return (dateErrors.length > 0) ? errorEvent.keys.INVALID_DATE : errorEvent.keys[subtype].INVALID;
+};
 /**
  * Validates the object from the S3 bucket using an appropriate adatper
  * If validation errors are found, an error is thrown with a key which
  * allows the error type to be stored in the event metadata
- * @param  {Object}  evt      - upload event
+ * @param  {Object}  evt   ◊   - upload event
  * @param  {String}  s3Object - the file data
  * @return {Promise}          resolves when validation complete
  */
@@ -29,7 +34,8 @@ const validateS3Object = async (evt, s3Object) => {
   const { isValid, validationErrors } = await adapter.validator(s3Object.Body);
   if (!isValid) {
     const err = new Error('Failed Schema Validation', validationErrors);
-    err.key = errorEvent.keys[subtype].INVALID;
+    err.key = getValidationError(validationErrors, subtype);
+
     throw err;
   }
 };
@@ -47,15 +53,11 @@ const handleReturnsUploadStart = async job => {
   const evt = await event.load(eventId);
 
   try {
-    // Job key is the S3 key for the persisted document
-    // which is currently xml only, but could be other formats
-    // in the future. In which case check the sub type.
     const s3Object = await returnsUpload.getReturnsS3Object(eventId, evt.subtype);
 
-    // Pass parsed xml doc to the validation function
+    // Pass parsed xml or csv doc to the validation function
     // returns true if the validation passes
     // returns an array of objects containing error messages and lines
-    //
     await validateS3Object(evt, s3Object);
 
     return job.done();

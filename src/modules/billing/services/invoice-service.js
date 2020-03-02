@@ -4,6 +4,7 @@ const { find, flatMap, get } = require('lodash');
 const repos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
+const { logger } = require('../../../logger');
 
 // Connectors
 const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
@@ -141,14 +142,18 @@ const getInvoicesForBatch = async batchId => {
   // Load Batch instance from repo with invoices
   const data = await repos.billingBatches.findOneWithInvoices(batchId);
 
-  // Load Charge Module summary data
-  const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
-
   // Map data to Invoice models
   const invoices = data.billingInvoices.map(mappers.invoice.dbToModel);
 
-  // Decorate with Charge Module summary data and CRM company data
-  invoices.forEach(invoice => decorateInvoiceWithTotals(invoice, chargeModuleSummary));
+  try {
+    // Load Charge Module summary data
+    const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
+    // Decorate with Charge Module summary data and CRM company data
+    invoices.forEach(invoice => decorateInvoiceWithTotals(invoice, chargeModuleSummary));
+  } catch (err) {
+    logger.info('CM error', err);
+  }
+
   await decorateInvoicesWithCompanies(invoices);
   return invoices;
 };

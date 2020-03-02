@@ -1,10 +1,8 @@
+'use strict';
+
 const Model = require('./model');
-const {
-  assertIsArrayOfNullableStrings,
-  assertIsInstanceOf,
-  assertNullableString,
-  assertString
-} = require('./validators');
+
+const validators = require('./validators');
 
 class Event extends Model {
   constructor (id) {
@@ -34,7 +32,7 @@ class Event extends Model {
    * @param {String} type
    */
   set type (type) {
-    assertString(type);
+    validators.assertString(type);
     this._type = type;
   }
 
@@ -51,7 +49,7 @@ class Event extends Model {
    * @param {String} subtype
    */
   set subtype (subtype) {
-    assertString(subtype);
+    validators.assertString(subtype);
     this._subtype = subtype;
   }
 
@@ -68,7 +66,7 @@ class Event extends Model {
      * @param {String} issuer
      */
   set issuer (issuer) {
-    assertNullableString(issuer);
+    validators.assertNullableString(issuer);
     this._issuer = issuer;
   }
 
@@ -85,7 +83,7 @@ class Event extends Model {
      * @param {Licence} Licence
      */
   set licences (licences) {
-    assertIsArrayOfNullableStrings(licences);
+    validators.assertIsArrayOfNullableStrings(licences);
     this._licences = licences;
   }
 
@@ -102,7 +100,7 @@ class Event extends Model {
      * @param {Object} entities
      */
   set entities (entities) {
-    assertIsInstanceOf(entities, Object);
+    validators.assertIsNullableInstanceOf(entities, Object);
     this._entities = entities;
   }
 
@@ -119,7 +117,7 @@ class Event extends Model {
    * @param {String} comment
    */
   set comment (comment) {
-    assertNullableString(comment);
+    validators.assertNullableString(comment);
     this._comment = comment;
   }
 
@@ -136,7 +134,7 @@ class Event extends Model {
      * @param {Object} metadata
      */
   set metadata (metadata) {
-    assertIsInstanceOf(metadata, Object);
+    validators.assertIsInstanceOf(metadata, Object);
     this._metadata = metadata;
   }
 
@@ -153,7 +151,7 @@ class Event extends Model {
    * @param {String} status
    */
   set status (status) {
-    assertNullableString(status);
+    validators.assertNullableString(status);
     this._status = status;
   }
 

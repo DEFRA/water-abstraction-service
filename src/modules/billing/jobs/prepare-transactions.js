@@ -3,22 +3,22 @@ const repos = require('../../../lib/connectors/repository');
 
 const batchService = require('../services/batch-service');
 const supplementaryBillingService = require('../services/supplementary-billing-service');
+const batchJob = require('./lib/batch-job');
 
-const JOB_NAME = 'billing.prepare-transactions';
+const JOB_NAME = 'billing.prepare-transactions.*';
 
-const createMessage = (eventId, batch) => ({
-  name: JOB_NAME,
-  data: { eventId, batch }
-});
+const createMessage = (eventId, batch) => {
+  return batchJob.createMessage(JOB_NAME, batch, { eventId });
+};
 
 const handlePrepareTransactions = async job => {
-  logger.info(`Handling ${JOB_NAME}`);
+  batchJob.logHandling(job);
 
   try {
     const batch = await batchService.getBatchById(job.data.batch.billing_batch_id);
 
     if (batch.isSupplementary()) {
-      logger.info(`Processing supplementary transactions ${JOB_NAME}`);
+      logger.info(`Processing supplementary transactions ${job.name}`);
       await supplementaryBillingService.processBatch(batch.id);
     }
 
@@ -31,10 +31,7 @@ const handlePrepareTransactions = async job => {
       transactions
     };
   } catch (err) {
-    logger.error(`Error handling ${JOB_NAME}`, err, {
-      batch: job.data.batch
-    });
-    await batchService.setErrorStatus(job.data.batch.billing_batch_id);
+    batchJob.logHandlingError(job, err);
     throw err;
   }
 };

@@ -1,7 +1,7 @@
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 const { expect } = require('@hapi/code');
-const { omit } = require('lodash');
+const { cloneDeep, set, omit } = require('lodash');
 const { experiment, test, afterEach, beforeEach } = exports.lab = require('@hapi/lab').script();
 const returnsUploadValidator = require('../../../../src/modules/returns/lib/returns-upload-validator');
 
@@ -94,6 +94,14 @@ experiment('validate', () => {
     expect(errors).to.equal([ERR_NOT_DUE]);
   });
 
+  test('fails validation if any of the abstraction volumes are negative', async () => {
+    const { ERR_VOLUMES } = returnsUploadValidator.uploadErrors;
+    const returnData = cloneDeep([data.upload[5]]);
+    returnData[0].lines[0].quantity = '-4';
+    const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId);
+    expect(errors).to.equal([ERR_VOLUMES]);
+  });
+
   test('passes validation if data is OK', async () => {
     const [{ errors }] = await returnsUploadValidator.validate([data.upload[4]], data.companyId);
     expect(errors).to.equal([]);
@@ -107,9 +115,43 @@ experiment('validate', () => {
 
   test('it should fail validation if it doesnt match the Joi schema', async () => {
     const { ERR_SCHEMA } = returnsUploadValidator.uploadErrors;
-    const upload = [omit(data.upload[4], 'isNil')];
+    const upload = [omit(data.upload[4], 'isCurrent')];
     const [{ errors }] = await returnsUploadValidator.validate(upload, data.companyId);
     expect(errors).to.equal([ERR_SCHEMA]);
+  });
+
+  experiment('if a meter is used', async () => {
+    let returnData;
+    beforeEach(async () => {
+      returnData = cloneDeep([data.upload[4]]);
+      set(returnData[0], 'lines', []);
+      returnData[0].meters.push({
+        meterDetailsProvided: true,
+        manufacturer: 'Test Meters Ltd',
+        serialNumber: 'W11',
+        multiplier: 1
+      });
+    });
+    test('passes validation if meter details are present', async () => {
+      const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId);
+      expect(errors).to.equal([]);
+    });
+
+    test('fails validation if manufacturer is missing', async () => {
+      const { ERR_METER_DETAILS } = returnsUploadValidator.uploadErrors;
+      set(returnData[0], 'isNil', false);
+      returnData[0].meters[0].manufacturer = '';
+      const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId);
+      expect(errors).to.equal([ERR_METER_DETAILS]);
+    });
+
+    test('fails validation if serial number is missing', async () => {
+      const { ERR_METER_DETAILS } = returnsUploadValidator.uploadErrors;
+      set(returnData[0], 'isNil', false);
+      returnData[0].meters[0].serialNumber = '';
+      const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId);
+      expect(errors).to.equal([ERR_METER_DETAILS]);
+    });
   });
 });
 

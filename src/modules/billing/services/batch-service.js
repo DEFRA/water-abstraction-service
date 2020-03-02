@@ -7,7 +7,8 @@ const mappers = require('../mappers');
 const repos = require('../../../lib/connectors/repository');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
-const event = require('../../../lib/event');
+const Event = require('../../../lib/models/event');
+const eventService = require('../../../lib/services/events');
 
 const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
 const Batch = require('../../../lib/models/batch');
@@ -46,12 +47,14 @@ const getMostRecentLiveBatchByRegion = async regionId => {
 };
 
 const saveEvent = (type, status, user, batch) => {
-  return event.save(event.create({
+  const event = new Event().fromHash({
     issuer: user.email,
     type,
     metadata: { user, batch },
     status
-  }));
+  });
+
+  return eventService.create(event);
 };
 
 const deleteBatch = async (batch, internalCallingUser) => {
@@ -97,11 +100,17 @@ const approveBatch = async (batch, internalCallingUser) => {
 
 /**
  * Sets the specified batch to 'error' status
+ *
  * @param {String} batchId
+ * @param {BATCH_ERROR_CODE} errorCode The origin of the failure
  * @return {Promise}
  */
-const setErrorStatus = batchId =>
-  newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error });
+const setErrorStatus = (batchId, errorCode) => {
+  return newRepos.billingBatches.update(batchId, {
+    status: Batch.BATCH_STATUS.error,
+    errorCode
+  });
+};
 
 const saveInvoiceLicenceTransactions = async (batch, invoice, invoiceLicence) => {
   for (const transaction of invoiceLicence.transactions) {
@@ -128,8 +137,12 @@ const saveInvoicesToDB = async batch => {
 };
 
 const decorateBatchWithTotals = async batch => {
-  const chargeModuleSummary = await chargeModuleBatchConnector.send(batch.region.code, batch.id, true);
-  batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(chargeModuleSummary.summary);
+  try {
+    const chargeModuleSummary = await chargeModuleBatchConnector.send(batch.region.code, batch.id, true);
+    batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(chargeModuleSummary.summary);
+  } catch (err) {
+    logger.info('Failed to decorate batch with totals. Waiting for CM API', err);
+  }
   return batch;
 };
 

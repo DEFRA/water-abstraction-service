@@ -13,7 +13,7 @@ const uuid = require('uuid/v4');
 
 const { Batch, FinancialYear, Invoice, InvoiceLicence, Licence, Transaction, InvoiceAccount, Region, Totals } = require('../../../../src/lib/models');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
-const event = require('../../../../src/lib/event');
+const eventService = require('../../../../src/lib/services/events');
 const { logger } = require('../../../../src/logger');
 
 const newRepos = require('../../../../src/lib/connectors/repos');
@@ -81,7 +81,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(chargeModuleBatchConnector, 'approve').resolves();
     sandbox.stub(chargeModuleBatchConnector, 'send').resolves();
 
-    sandbox.stub(event, 'save').resolves();
+    sandbox.stub(eventService, 'create').resolves();
   });
 
   afterEach(async () => {
@@ -297,7 +297,7 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('creates an event showing the calling user successfully deleted the batch', async () => {
-        const [savedEvent] = event.save.lastCall.args;
+        const [savedEvent] = eventService.create.lastCall.args;
         expect(savedEvent.issuer).to.equal(internalCallingUser.email);
         expect(savedEvent.type).to.equal('billing-batch:cancel');
         expect(savedEvent.status).to.equal('delete');
@@ -326,7 +326,7 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('creates an event showing the calling user could not delete the batch', async () => {
-        const [savedEvent] = event.save.lastCall.args;
+        const [savedEvent] = eventService.create.lastCall.args;
         expect(savedEvent.issuer).to.equal(internalCallingUser.email);
         expect(savedEvent.type).to.equal('billing-batch:cancel');
         expect(savedEvent.status).to.equal('error');
@@ -399,7 +399,7 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('creates an event showing the calling user successfully approved the batch', async () => {
-        const [savedEvent] = event.save.lastCall.args;
+        const [savedEvent] = eventService.create.lastCall.args;
         expect(savedEvent.issuer).to.equal(internalCallingUser.email);
         expect(savedEvent.type).to.equal('billing-batch:approve');
         expect(savedEvent.status).to.equal('sent');
@@ -435,7 +435,7 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('creates an event showing the calling user could not approve the batch', async () => {
-        const [savedEvent] = event.save.lastCall.args;
+        const [savedEvent] = eventService.create.lastCall.args;
         expect(savedEvent.issuer).to.equal(internalCallingUser.email);
         expect(savedEvent.type).to.equal('billing-batch:approve');
         expect(savedEvent.status).to.equal('error');
@@ -455,13 +455,13 @@ experiment('modules/billing/services/batch-service', () => {
 
   experiment('.setErrorStatus', () => {
     beforeEach(async () => {
-      await batchService.setErrorStatus('batch-id');
+      await batchService.setErrorStatus('batch-id', 10);
     });
 
     test('calls billingBatches.update() with correct params', async () => {
       const [id, data] = newRepos.billingBatches.update.lastCall.args;
       expect(id).to.equal('batch-id');
-      expect(data).to.equal({ status: 'error' });
+      expect(data).to.equal({ status: 'error', errorCode: 10 });
     });
   });
 

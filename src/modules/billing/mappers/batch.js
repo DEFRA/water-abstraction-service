@@ -19,7 +19,7 @@ const dbToModel = row => {
   batch.fromHash({
     id: row.billingBatchId,
     type: row.batchType,
-    ...pick(row, ['season', 'status', 'dateCreated', 'dateUpdated']),
+    ...pick(row, ['season', 'status', 'dateCreated', 'dateUpdated', 'errorCode']),
     startYear: new FinancialYear(row.fromFinancialYearEnding),
     endYear: new FinancialYear(row.toFinancialYearEnding),
     region: regionMapper.dbToModel(row.region),

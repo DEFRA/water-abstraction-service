@@ -446,4 +446,27 @@ experiment('lib/models/batch', () => {
       expect(func).to.throw();
     });
   });
+
+  experiment('.errorCode', () => {
+    Object.values(Batch.BATCH_ERROR_CODE).forEach(code => {
+      test(`can be set to ${code}`, async () => {
+        const batch = new Batch();
+        batch.errorCode = code;
+
+        expect(batch.errorCode).to.equal(code);
+      });
+    });
+
+    test('can be null', async () => {
+      const batch = new Batch();
+      batch.errorCode = null;
+      expect(batch.errorCode).to.equal(null);
+    });
+    test('cannot be other values', async () => {
+      expect(() => {
+        const batch = new Batch();
+        batch.errorCode = -1;
+      }).to.throw();
+    });
+  });
 });

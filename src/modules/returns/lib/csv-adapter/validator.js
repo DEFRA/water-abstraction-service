@@ -2,22 +2,13 @@ const parse = require('csv-parse');
 const util = require('util');
 const parseCsv = util.promisify(parse);
 const { isEmpty, flatten, compact, isString, times } = require('lodash');
+const moment = require('moment');
 
 const { returnIDRegex, parseReturnId } = require('../../../../lib/returns');
+const { GDS_MONTH_FORMATS } = require('./mapper');
 
-/**
- * Optionally starts with 'Week ending'
- * Optionally contains a leading numeric date (1 or 08) or month string
- * Then mandatory numeric date (1 or 08) or month string
- * Then 2-4 digit year
- * Each segment can be separted with ' ', '-', or '/'
- *
- * Designed to be as flexible as possible to cater for the formatting
- * changes seen when saving a CSV in a spreadsheet application.
- */
-const validDateRegex = /^(Week ending )?([a-z\d]{1,9}[ -/])?[a-z\d]{1,9}[ -/]\d{2,4}$/i;
 const lineErrorRegex = /line (\d*)$/;
-const validAbstractionVolumeRegex = /(^Do not edit$)|(^\d[\d|.|,]*$)|(^\s*$)/;
+const validAbstractionVolumeRegex = /(^Do not edit$)|(^-?\d[\d.,]*$)|(^\s*$)/;
 
 const parseOptions = {
   skip_lines_with_empty_values: true,
@@ -71,6 +62,11 @@ const getHeadingExpectation = expectation => ({
   errorMessage: `${expectation} field not in expected position`
 });
 
+const validateDate = val => {
+  const dateString = val.startsWith('Week ending') ? val.substring(12) : val;
+  return moment(dateString, GDS_MONTH_FORMATS, true).isValid();
+};
+
 /**
  * Gets an array of validations to perform where each validator
  * sits at the same index of the target array.
@@ -87,7 +83,7 @@ const getHeadingValidation = column => {
 
   times(column.length - 7, () => {
     validators.push({
-      expectation: val => validDateRegex.test(val),
+      expectation: val => validateDate(val),
       errorMessage: 'Unexpected date format for return line'
     });
   });

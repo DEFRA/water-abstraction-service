@@ -39,7 +39,7 @@ experiment('publish', () => {
     const [, data] = messageQueue.publish.lastCall.args;
     expect(data).to.equal({
       eventId: 'test-event-id',
-      subType: 'xml'
+      subType: 'csv'
     });
   });
 });
@@ -54,6 +54,7 @@ experiment('handler', () => {
       subtype: 'xml'
     });
     sandbox.stub(event, 'save').resolves();
+    sandbox.stub(event, 'updateStatus').resolves();
 
     const str = fs.readFileSync(path.join(__dirname, '../xml-files-for-tests/weekly-return-pass.xml'));
 
@@ -113,8 +114,8 @@ experiment('handler', () => {
 
   test('updates the event status to validated', async () => {
     await mapToJsonJob.handler(job);
-    const [evt] = event.save.lastCall.args;
-    expect(evt.status).to.equal('validated');
+    const [, status] = event.updateStatus.lastCall.args;
+    expect(status).to.equal('validated');
   });
 
   test('finishes the job', async () => {

@@ -52,7 +52,7 @@ experiment('lib/models/event', () => {
     event.subtype = 'test-subtype';
     event.issuer = 'test-issuer';
     event.comment = 'test-comment';
-    event.metaData = { test: 'data' };
+    event.metadata = { test: 'data' };
     event.status = 'test-status';
 
     test('referenceCode', () => {
@@ -71,7 +71,7 @@ experiment('lib/models/event', () => {
       expect(event.comment).to.equal('test-comment');
     });
     test('metadata', () => {
-      expect(event.metaData).to.equal({ test: 'data' });
+      expect(event.metadata).to.equal({ test: 'data' });
     });
     test('status', () => {
       expect(event.status).to.equal('test-status');

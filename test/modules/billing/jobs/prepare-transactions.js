@@ -15,6 +15,7 @@ const repos = require('../../../../src/lib/connectors/repository');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const supplementaryBillingService = require('../../../../src/modules/billing/services/supplementary-billing-service');
+const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 
 const Batch = require('../../../../src/lib/models/batch');
 
@@ -33,6 +34,8 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
+    sandbox.stub(batchJob, 'logHandling');
+    sandbox.stub(batchJob, 'logHandlingError');
 
     batch = new Batch(data.batch.billing_batch_id);
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
@@ -47,7 +50,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
   });
 
   test('exports the expected job name', async () => {
-    expect(prepareTransactions.jobName).to.equal('billing.prepare-transactions');
+    expect(prepareTransactions.jobName).to.equal('billing.prepare-transactions.*');
   });
 
   experiment('.createMessage', () => {
@@ -58,7 +61,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
     });
 
     test('using the expected job name', async () => {
-      expect(message.name).to.equal(prepareTransactions.jobName);
+      expect(message.name).to.equal('billing.prepare-transactions.00000000-0000-0000-0000-000000000002');
     });
 
     test('includes a data object with the event id', async () => {
@@ -77,8 +80,23 @@ experiment('modules/billing/jobs/process-charge-version', () => {
       job = {
         data: {
           batch: data.batch
-        }
+        },
+        name: 'billing.prepare-transactions.00000000-0000-0000-0000-000000000002'
       };
+    });
+
+    experiment('if there is an error', () => {
+      test('the error details are logged', async () => {
+        const error = new Error('oops');
+        batchService.getBatchById.rejects(error);
+
+        await expect(prepareTransactions.handler(job))
+          .to.reject();
+
+        const errorArgs = batchJob.logHandlingError.lastCall.args;
+        expect(errorArgs[0]).to.equal(job);
+        expect(errorArgs[1]).to.equal(error);
+      });
     });
 
     experiment('for a supplementary batch', () => {
@@ -88,8 +106,8 @@ experiment('modules/billing/jobs/process-charge-version', () => {
       });
 
       test('a message is logged', async () => {
-        const [message] = logger.info.firstCall.args;
-        expect(message).to.equal('Handling billing.prepare-transactions');
+        const [loggedJob] = batchJob.logHandling.lastCall.args;
+        expect(loggedJob).to.equal(job);
       });
 
       test('the supplementary batch service is called', async () => {

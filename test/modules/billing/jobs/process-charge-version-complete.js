@@ -12,7 +12,8 @@ const sandbox = sinon.createSandbox();
 const { logger } = require('../../../../src/logger');
 const repos = require('../../../../src/lib/connectors/repository');
 const processChargeVersionComplete = require('../../../../src/modules/billing/jobs/process-charge-version-complete');
-const prepareTransactionsJob = require('../../../../src/modules/billing/jobs/prepare-transactions');
+const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
+const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch');
 
 experiment('modules/billing/jobs/process-charge-version-complete', () => {
   let messageQueue;
@@ -22,6 +23,8 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
       publish: sandbox.spy()
     };
 
+    sandbox.stub(batchJob, 'logOnComplete');
+    sandbox.stub(batchJob, 'failBatch');
     sandbox.stub(logger, 'info');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'findProcessingByBatch').resolves({
       rowCount: 10
@@ -30,6 +33,23 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
 
   afterEach(async () => {
     sandbox.restore();
+  });
+
+  experiment('when the job has failed', () => {
+    test('the batch is set to error and cancelled ', async () => {
+      const job = {
+        name: 'testing',
+        data: {
+          failed: true
+        }
+      };
+      await processChargeVersionComplete(job, messageQueue);
+
+      const failArgs = batchJob.failBatch.lastCall.args;
+      expect(failArgs[0]).to.equal(job);
+      expect(failArgs[1]).to.equal(messageQueue);
+      expect(failArgs[2]).to.equal(BATCH_ERROR_CODE.failedToProcessChargeVersions);
+    });
   });
 
   experiment('if there are more charge version years to process', () => {
@@ -85,7 +105,7 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
       expect(repos.billingBatchChargeVersionYears.findProcessingByBatch.calledWith('test-batch-id')).to.be.true();
 
       const [message] = messageQueue.publish.lastCall.args;
-      expect(message.name).to.equal(prepareTransactionsJob.jobName);
+      expect(message.name).to.equal('billing.prepare-transactions.test-billing-batch-id');
     });
 
     test('the job is published including the eventId', async () => {

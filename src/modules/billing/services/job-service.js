@@ -1,14 +1,14 @@
 'use strict';
 
-const evt = require('../../../lib/event');
 const { jobStatus } = require('../lib/batch');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 
+const eventService = require('../../../lib/services/events');
 const batchService = require('./batch-service');
 
 const setStatuses = (eventId, eventStatus, batchId, batchStatus) => {
   return Promise.all([
-    evt.updateStatus(eventId, eventStatus),
+    eventService.updateStatus(eventId, eventStatus),
     batchService.setStatus(batchId, batchStatus)
   ]);
 };
