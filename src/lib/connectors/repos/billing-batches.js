@@ -75,9 +75,29 @@ const findOneWithInvoices = async (id) => {
   return model.toJSON();
 };
 
+const findOneWithInvoicesWithTransactions = async (id) => {
+  const model = await BillingBatch
+    .forge({ billingBatchId: id })
+    .fetch({
+      withRelated: [
+        'region',
+        'billingInvoices',
+        'billingInvoices.billingInvoiceLicences',
+        'billingInvoices.billingInvoiceLicences.licence',
+        'billingInvoices.billingInvoiceLicences.licence.region',
+        'billingInvoices.billingInvoiceLicences.billingTransactions',
+        'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement',
+        'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
+      ]
+    });
+
+  return model.toJSON();
+};
+
 exports.delete = deleteById;
 exports.findByStatuses = findByStatuses;
 exports.findOne = findOne;
 exports.findPage = findPage;
 exports.update = update;
 exports.findOneWithInvoices = findOneWithInvoices;
+exports.findOneWithInvoicesWithTransactions = findOneWithInvoicesWithTransactions;
