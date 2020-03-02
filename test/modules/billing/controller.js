@@ -17,7 +17,7 @@ const Batch = require('../../../src/lib/models/batch');
 
 const newRepos = require('../../../src/lib/connectors/repos');
 const repos = require('../../../src/lib/connectors/repository');
-const event = require('../../../src/lib/event');
+const eventService = require('../../../src/lib/services/events');
 const invoiceService = require('../../../src/modules/billing/services/invoice-service');
 const batchService = require('../../../src/modules/billing/services/batch-service');
 const controller = require('../../../src/modules/billing/controller');
@@ -52,10 +52,8 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
 
-    sandbox.stub(event, 'save').resolves({
-      rows: [
-        { event_id: '11111111-1111-1111-1111-111111111111' }
-      ]
+    sandbox.stub(eventService, 'create').resolves({
+      eventId: '11111111-1111-1111-1111-111111111111'
     });
 
     sandbox.stub(mappers.api.invoice, 'modelToBatchInvoices');
@@ -104,7 +102,7 @@ experiment('modules/billing/controller', () => {
       });
 
       test('no event is created', async () => {
-        expect(event.save.called).to.be.false();
+        expect(eventService.create.called).to.be.false();
       });
 
       test('no job is published', async () => {
@@ -143,7 +141,7 @@ experiment('modules/billing/controller', () => {
       });
 
       test('creates a new event with the created batch', async () => {
-        const [savedEvent] = event.save.lastCall.args;
+        const [savedEvent] = eventService.create.lastCall.args;
         expect(savedEvent.type).to.equal('billing-batch');
         expect(savedEvent.subtype).to.equal(request.payload.batchType);
         expect(savedEvent.issuer).to.equal(request.payload.userEmail);
@@ -158,7 +156,7 @@ experiment('modules/billing/controller', () => {
 
       test('the response contains the event', async () => {
         const [{ data }] = h.response.lastCall.args;
-        expect(data.event.event_id).to.equal('11111111-1111-1111-1111-111111111111');
+        expect(data.event.eventId).to.equal('11111111-1111-1111-1111-111111111111');
       });
 
       test('the response contains a URL to the event', async () => {

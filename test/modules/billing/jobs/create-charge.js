@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -7,10 +9,9 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 
 const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
 
-const { logger } = require('../../../../src/logger');
+const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const createChargeJob = require('../../../../src/modules/billing/jobs/create-charge');
 
 // Connectors
@@ -84,8 +85,8 @@ experiment('modules/billing/jobs/create-charge', () => {
   let batch;
 
   beforeEach(async () => {
-    sandbox.stub(logger, 'info');
-    sandbox.stub(logger, 'error');
+    sandbox.stub(batchJob, 'logHandling');
+    sandbox.stub(batchJob, 'logHandlingError');
 
     batch = new Batch('accafbe7-3eca-45f7-a56b-a37dce17af30');
 
@@ -100,7 +101,7 @@ experiment('modules/billing/jobs/create-charge', () => {
   });
 
   test('exports the expected job name', async () => {
-    expect(createChargeJob.jobName).to.equal('billing.create-charge');
+    expect(createChargeJob.jobName).to.equal('billing.create-charge.*');
   });
 
   experiment('.createMessage', () => {
@@ -112,7 +113,7 @@ experiment('modules/billing/jobs/create-charge', () => {
       );
 
       expect(message).to.equal({
-        name: 'billing.create-charge',
+        name: 'billing.create-charge.test-batch-id',
         data: {
           eventId: data.eventId,
           batch: data.batch,
@@ -130,7 +131,8 @@ experiment('modules/billing/jobs/create-charge', () => {
         data: {
           batch: data.batch,
           transaction: data.transaction
-        }
+        },
+        name: 'billing.create-charge.test-batch-id'
       };
     });
 
@@ -180,14 +182,10 @@ experiment('modules/billing/jobs/create-charge', () => {
           result = await createChargeJob.handler(job);
           fail();
         } catch (error) {
-          const { args } = logger.error.lastCall;
+          const { args } = batchJob.logHandlingError.lastCall;
 
-          expect(args[0]).to.equal('billing.create-charge error');
+          expect(args[0]).to.equal(job);
           expect(args[1]).to.equal(err);
-          expect(args[2]).to.equal({
-            batch_id: data.batch.billing_batch_id,
-            transaction_id: data.transaction.billing_transaction_id
-          });
         }
       });
 

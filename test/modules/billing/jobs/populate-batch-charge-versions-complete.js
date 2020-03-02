@@ -11,9 +11,10 @@ const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const { logger } = require('../../../../src/logger');
 const repos = require('../../../../src/lib/connectors/repository');
 const jobService = require('../../../../src/modules/billing/services/job-service');
+const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
+const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch');
 
 const handlePopulateBatchChargeVersionsComplete = require('../../../../src/modules/billing/jobs/populate-batch-charge-versions-complete');
 
@@ -21,8 +22,12 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
   let messageQueue;
 
   beforeEach(async () => {
-    sandbox.stub(logger, 'info');
+    sandbox.stub(batchJob, 'logOnComplete');
+    sandbox.stub(batchJob, 'logOnCompleteError');
+    sandbox.stub(batchJob, 'failBatch');
+
     sandbox.stub(jobService, 'setReadyJob');
+
     sandbox.stub(repos.chargeVersions, 'findOneById');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'create');
 
@@ -33,6 +38,23 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
 
   afterEach(async () => {
     sandbox.restore();
+  });
+
+  experiment('when the job fails', () => {
+    test('the batch is set to error and cancelled ', async () => {
+      const job = {
+        name: 'testing',
+        data: {
+          failed: true
+        }
+      };
+      await handlePopulateBatchChargeVersionsComplete(job, messageQueue);
+
+      const failArgs = batchJob.failBatch.lastCall.args;
+      expect(failArgs[0]).to.equal(job);
+      expect(failArgs[1]).to.equal(messageQueue);
+      expect(failArgs[2]).to.equal(BATCH_ERROR_CODE.failedToPopulateChargeVersions);
+    });
   });
 
   experiment('when there are no chargeVersions', () => {
@@ -114,6 +136,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
                 { charge_version_id: 'invalid-1' }
               ],
               batch: {
+                billing_batch_id: 'test-batch-id',
                 from_financial_year_ending: 2019,
                 to_financial_year_ending: 2019
               }
@@ -163,11 +186,14 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
         expect(
           messageQueue.publish.calledWith(
             sinon.match({
-              name: 'billing.process-charge-version',
+              name: 'billing.process-charge-version.test-batch-id',
               data: {
                 eventId: 'test-event-id',
                 chargeVersionYear: {
                   charge_version_id: 'valid-1'
+                },
+                batch: {
+                  billing_batch_id: 'test-batch-id'
                 }
               }
             })
@@ -179,11 +205,14 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
         expect(
           messageQueue.publish.calledWith(
             sinon.match({
-              name: 'billing.process-charge-version',
+              name: 'billing.process-charge-version.test-batch-id',
               data: {
                 eventId: 'test-event-id',
                 chargeVersionYear: {
                   charge_version_id: 'valid-2'
+                },
+                batch: {
+                  billing_batch_id: 'test-batch-id'
                 }
               }
             })
@@ -231,6 +260,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
                 { charge_version_id: 'invalid-1' }
               ],
               batch: {
+                billing_batch_id: 'test-batch-id',
                 from_financial_year_ending: 2019,
                 to_financial_year_ending: 2020
               }
@@ -247,7 +277,10 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
       test('creates a version year record for the first valid charge version for both years', async () => {
         expect(
           repos.billingBatchChargeVersionYears.create.calledWith(
-            sinon.match({ charge_version_id: 'valid-1', financial_year_ending: 2019 })
+            sinon.match({
+              charge_version_id: 'valid-1',
+              financial_year_ending: 2019
+            })
           )
         ).to.be.true();
 
@@ -294,12 +327,17 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
         expect(
           messageQueue.publish.calledWith(
             sinon.match({
-              name: 'billing.process-charge-version',
+              name: 'billing.process-charge-version.test-batch-id',
               data: {
                 eventId: 'test-event-id',
                 chargeVersionYear: {
                   charge_version_id: 'valid-1',
                   financial_year_ending: 2019
+                },
+                batch: {
+                  billing_batch_id: 'test-batch-id',
+                  from_financial_year_ending: 2019,
+                  to_financial_year_ending: 2020
                 }
               }
             })
@@ -309,12 +347,17 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
         expect(
           messageQueue.publish.calledWith(
             sinon.match({
-              name: 'billing.process-charge-version',
+              name: 'billing.process-charge-version.test-batch-id',
               data: {
                 eventId: 'test-event-id',
                 chargeVersionYear: {
                   charge_version_id: 'valid-1',
                   financial_year_ending: 2020
+                },
+                batch: {
+                  billing_batch_id: 'test-batch-id',
+                  from_financial_year_ending: 2019,
+                  to_financial_year_ending: 2020
                 }
               }
             })
@@ -326,12 +369,17 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
         expect(
           messageQueue.publish.calledWith(
             sinon.match({
-              name: 'billing.process-charge-version',
+              name: 'billing.process-charge-version.test-batch-id',
               data: {
                 eventId: 'test-event-id',
                 chargeVersionYear: {
                   charge_version_id: 'valid-2',
                   financial_year_ending: 2019
+                },
+                batch: {
+                  billing_batch_id: 'test-batch-id',
+                  from_financial_year_ending: 2019,
+                  to_financial_year_ending: 2020
                 }
               }
             })
@@ -341,12 +389,17 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
         expect(
           messageQueue.publish.calledWith(
             sinon.match({
-              name: 'billing.process-charge-version',
+              name: 'billing.process-charge-version.test-batch-id',
               data: {
                 eventId: 'test-event-id',
                 chargeVersionYear: {
                   charge_version_id: 'valid-2',
                   financial_year_ending: 2020
+                },
+                batch: {
+                  billing_batch_id: 'test-batch-id',
+                  from_financial_year_ending: 2019,
+                  to_financial_year_ending: 2020
                 }
               }
             })

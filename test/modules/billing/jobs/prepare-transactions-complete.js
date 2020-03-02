@@ -8,11 +8,12 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 
 const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
 
 const { logger } = require('../../../../src/logger');
 const jobService = require('../../../../src/modules/billing/services/job-service');
+const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
+const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch');
 
 const handlePrepareTransactionsComplete = require('../../../../src/modules/billing/jobs/prepare-transactions-complete');
 
@@ -21,6 +22,8 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
 
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
+    sandbox.stub(batchJob, 'logOnComplete');
+    sandbox.stub(batchJob, 'failBatch');
     sandbox.stub(jobService, 'setReadyJob');
 
     messageQueue = {
@@ -30,6 +33,23 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
 
   afterEach(async () => {
     sandbox.restore();
+  });
+
+  experiment('when the job has failed', () => {
+    test('the batch is set to error and cancelled ', async () => {
+      const job = {
+        name: 'testing',
+        data: {
+          failed: true
+        }
+      };
+      await handlePrepareTransactionsComplete(job, messageQueue);
+
+      const failArgs = batchJob.failBatch.lastCall.args;
+      expect(failArgs[0]).to.equal(job);
+      expect(failArgs[1]).to.equal(messageQueue);
+      expect(failArgs[2]).to.equal(BATCH_ERROR_CODE.failedToPrepareTransactions);
+    });
   });
 
   experiment('when there are no transactions to create', () => {
@@ -93,7 +113,7 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
       const [message2] = messageQueue.publish.secondCall.args;
 
       expect(message1).to.equal({
-        name: 'billing.create-charge',
+        name: 'billing.create-charge.test-batch-id',
         data: {
           eventId: 'test-event-id',
           batch: {
@@ -106,7 +126,7 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
       });
 
       expect(message2).to.equal({
-        name: 'billing.create-charge',
+        name: 'billing.create-charge.test-batch-id',
         data: {
           eventId: 'test-event-id',
           batch: {

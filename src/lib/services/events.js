@@ -1,3 +1,5 @@
+'use strict';
+
 const repo = require('../connectors/repos');
 const Event = require('../models/event');
 

@@ -33,7 +33,8 @@ const data = {
     externalId: null,
     netTotal: 3552,
     creditNoteCount: 4,
-    invoiceCount: 3
+    invoiceCount: 3,
+    errorCode: 10
   }
 };
 
@@ -79,6 +80,10 @@ experiment('modules/billing/mappers/batch', () => {
 
       test('totals are not set', async () => {
         expect(batch.totals).to.be.undefined();
+      });
+
+      test('sets the errorCode property', async () => {
+        expect(batch.errorCode).to.equal(10);
       });
     });
 

@@ -1,11 +1,16 @@
 const repo = require('../../../lib/connectors/repository');
 
-const processChargeVersion = require('./process-charge-version');
 const prepareTransactionsJob = require('./prepare-transactions');
 const { logger } = require('../../../logger');
+const batchJob = require('./lib/batch-job');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 
 const handleProcessChargeVersionComplete = async (job, messageQueue) => {
-  logger.info(`onComplete - ${processChargeVersion.jobName}`);
+  batchJob.logOnComplete(job);
+
+  if (batchJob.hasJobFailed(job)) {
+    return batchJob.failBatch(job, messageQueue, BATCH_ERROR_CODE.failedToProcessChargeVersions);
+  }
 
   const { eventId } = job.data.request.data;
   const { chargeVersionYear, batch } = job.data.response;

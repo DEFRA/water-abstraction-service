@@ -45,6 +45,12 @@ const assertIsInstanceOf = (value, Type) => {
   hoek.assert(value instanceof Type, `${new Type().constructor.name} expected`);
 };
 
+const assertIsNullableInstanceOf = (value, Type) => {
+  if (value !== null) {
+    assertIsInstanceOf(value, Type);
+  }
+};
+
 const assertAccountNumber = accountNumber => assert(accountNumber, VALID_ACCOUNT_NUMBER);
 const assertLicenceNumber = licenceNumber => assert(licenceNumber, VALID_LICENCE_NUMBER);
 const assertId = id => assert(id, VALID_GUID);
@@ -54,6 +60,7 @@ const assertIsBoolean = value => assert(value, Joi.boolean().required());
 const assertDate = date => assert(date, VALID_DATE);
 const assertNullableDate = date => assert(date, VALID_NULLABLE_DATE);
 const assertEnum = (str, values) => assert(str, VALID_STRING.valid(values));
+const assertNullableEnum = (str, values) => assert(str, VALID_NULLABLE_STRING.valid(values));
 const assertAuthorisedDays = value => assert(value, VALID_POSITIVE_INTEGER.max(366));
 const assertBillableDays = value => assert(value, VALID_INTEGER.min(0).max(366));
 const assertPositiveInteger = value => assert(value, VALID_POSITIVE_INTEGER);
@@ -71,6 +78,7 @@ const assertInteger = value => assert(value, VALID_INTEGER);
 
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
+exports.assertIsNullableInstanceOf = assertIsNullableInstanceOf;
 exports.assertIsArrayOfType = assertIsArrayOfType;
 exports.assertIsArrayOfNullableStrings = assertIsArrayOfNullableStrings;
 exports.assertAccountNumber = assertAccountNumber;
@@ -81,6 +89,7 @@ exports.assertNullableString = assertNullableString;
 exports.assertDate = assertDate;
 exports.assertNullableDate = assertNullableDate;
 exports.assertEnum = assertEnum;
+exports.assertNullableEnum = assertNullableEnum;
 exports.assertAuthorisedDays = assertAuthorisedDays;
 exports.assertBillableDays = assertBillableDays;
 exports.assertPositiveInteger = assertPositiveInteger;

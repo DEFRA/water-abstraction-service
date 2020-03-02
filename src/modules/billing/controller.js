@@ -4,30 +4,32 @@ const Boom = require('@hapi/boom');
 
 const config = require('../../../config');
 const repos = require('../../lib/connectors/repository');
-const event = require('../../lib/event');
+const Event = require('../../lib/models/event');
+
 const { envelope } = require('../../lib/response');
 const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-versions');
 const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
 const batchService = require('./services/batch-service');
+const eventService = require('../../lib/services/events');
 
 const mappers = require('./mappers');
 
-const createBatchEvent = async (userEmail, batch) => {
-  const batchEvent = event.create({
-    type: 'billing-batch',
-    subtype: batch.batch_type,
-    issuer: userEmail,
-    metadata: { batch },
-    status: jobStatus.start
-  });
+const createBatchEvent = (userEmail, batch) => {
+  const batchEvent = new Event();
+  batchEvent.type = 'billing-batch';
+  batchEvent.subtype = batch.batch_type;
+  batchEvent.issuer = userEmail;
+  batchEvent.metadata = { batch };
+  batchEvent.status = jobStatus.start;
 
-  const response = await event.save(batchEvent);
-  return response.rows[0];
+  return eventService.create(batchEvent);
 };
 
 const createBatch = (regionId, batchType, financialYearEnding, season) => {
-  const fromFinancialYearEnding = batchType === 'supplementary' ? financialYearEnding - config.billing.supplementaryYears : financialYearEnding;
+  const fromFinancialYearEnding = batchType === 'supplementary'
+    ? financialYearEnding - config.billing.supplementaryYears
+    : financialYearEnding;
 
   return repos.billingBatches.createBatch(
     regionId,
@@ -65,12 +67,12 @@ const postCreateBatch = async (request, h) => {
 
   // add a new job to the queue so that the batch can be filled
   // with charge versions
-  const message = populateBatchChargeVersionsJob.createMessage(batchEvent.event_id, batch);
+  const message = populateBatchChargeVersionsJob.createMessage(batchEvent.eventId, batch);
   await request.messageQueue.publish(message);
 
   return h.response(envelope({
     event: batchEvent,
-    url: `/water/1.0/event/${batchEvent.event_id}`
+    url: `/water/1.0/event/${batchEvent.eventId}`
   })).code(202);
 };
 

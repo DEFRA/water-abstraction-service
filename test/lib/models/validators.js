@@ -6,9 +6,7 @@ const uuid = require('uuid/v4');
 
 const validators = require('../../../src/lib/models/validators');
 
-class TestClass {
-
-}
+class TestClass {}
 
 experiment('lib/models/validators', () => {
   experiment('assertIsArrayOfType', () => {
@@ -43,9 +41,35 @@ experiment('lib/models/validators', () => {
       expect(func).not.to.throw();
     });
 
-    test('does not throw when the value is not of the specified type', async () => {
+    test('throws when the value is not of the specified type', async () => {
       const func = () => validators.assertIsInstanceOf('Not valid', TestClass);
       expect(func).to.throw();
+    });
+
+    test('reports the error with the Type name', async () => {
+      try {
+        validators.assertIsInstanceOf(123, TestClass);
+        fail('Should not get here');
+      } catch (err) {
+        expect(err.message).to.equal('TestClass expected');
+      }
+    });
+  });
+
+  experiment('assertIsNullableInstanceOf', () => {
+    test('does not throw when the value is of the specified type', async () => {
+      const func = () => validators.assertIsNullableInstanceOf(new TestClass(), TestClass);
+      expect(func).not.to.throw();
+    });
+
+    test('throws when the value is not of the specified type', async () => {
+      const func = () => validators.assertIsNullableInstanceOf('Not valid', TestClass);
+      expect(func).to.throw();
+    });
+
+    test('allows null', async () => {
+      const func = () => validators.assertIsNullableInstanceOf(null, TestClass);
+      expect(func).not.to.throw();
     });
 
     test('reports the error with the Type name', async () => {
@@ -197,6 +221,29 @@ experiment('lib/models/validators', () => {
       const invalid = '0123456789ABCDEF0123456789ABCDEF0';
       const func = () => validators.assertTransactionKey(invalid);
       expect(func).to.throw();
+    });
+  });
+
+  experiment('.assertNullableEnum', () => {
+    test('allows null', async () => {
+      const numberEnum = { one: 1, two: 2 };
+      expect(() => {
+        validators.assertNullableEnum(null, Object.values(numberEnum));
+      }).not.to.throw();
+    });
+
+    test('allows a value from the defined enum', async () => {
+      const numberEnum = { one: 1, two: 2 };
+      expect(() => {
+        validators.assertNullableEnum(numberEnum.two, Object.values(numberEnum));
+      }).not.to.throw();
+    });
+
+    test('rejects a value from outside the defined enum', async () => {
+      const numberEnum = { one: 1, two: 2 };
+      expect(() => {
+        validators.assertNullableEnum(1123, Object.values(numberEnum));
+      }).to.throw();
     });
   });
 });
