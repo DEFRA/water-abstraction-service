@@ -102,6 +102,16 @@ const getBatchInvoiceDetail = async request => {
   return invoice || Boom.notFound(`No invoice found with id: ${invoiceId} in batch with id: ${batchId}`);
 };
 
+const getBatchInvoicesDetails = async request => {
+  // get all invoices for batch
+  const { batchId } = request.params;
+  const data = await invoiceService.getInvoicesTransactionsForBatch(batchId);
+  // loop and get all incoive details
+
+  // return data
+  return data;
+};
+
 const deleteAccountFromBatch = async request => {
   const { batchId, accountId } = request.params;
 
@@ -163,6 +173,7 @@ exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
+exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
 
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
 exports.deleteBatch = deleteBatch;

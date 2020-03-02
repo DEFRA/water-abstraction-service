@@ -153,6 +153,19 @@ const getInvoicesForBatch = async batchId => {
   return invoices;
 };
 
+const getInvoicesTransactionsForBatch = async batchId => {
+  const data = await repos.billingBatches.findOneWithInvoicesWithTransactions(batchId);
+  const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
+  const invoices = [];
+  data.billingInvoices.forEach(invoice => {
+    const invoiceModel = mappers.invoice.dbToModel(invoice);
+    decorateInvoiceTransactionValues(invoiceModel, chargeModuleSummary);
+    invoices.push(invoiceModel);
+  });
+  return decorateInvoicesWithCompanies(invoices);
+};
+
 exports.getInvoicesForBatch = getInvoicesForBatch;
+exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;
