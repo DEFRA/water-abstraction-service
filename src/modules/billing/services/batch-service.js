@@ -58,23 +58,21 @@ const saveEvent = (type, status, user, batch) => {
 };
 
 const deleteBatch = async (batch, internalCallingUser) => {
-  const { batchId } = batch;
-
   try {
-    await chargeModuleBatchConnector.delete(batch.region.code, batchId);
+    await chargeModuleBatchConnector.delete(batch.region.code, batch.id);
 
-    await repos.billingBatchChargeVersionYears.deleteByBatchId(batchId);
-    await repos.billingBatchChargeVersions.deleteByBatchId(batchId);
-    await repos.billingTransactions.deleteByBatchId(batchId);
-    await repos.billingInvoiceLicences.deleteByBatchId(batchId);
-    await repos.billingInvoices.deleteByBatchId(batchId);
-    await newRepos.billingBatches.delete(batchId);
+    await repos.billingBatchChargeVersionYears.deleteByBatchId(batch.id);
+    await repos.billingBatchChargeVersions.deleteByBatchId(batch.id);
+    await repos.billingTransactions.deleteByBatchId(batch.id);
+    await repos.billingInvoiceLicences.deleteByBatchId(batch.id);
+    await repos.billingInvoices.deleteByBatchId(batch.id);
+    await newRepos.billingBatches.delete(batch.id);
 
     await saveEvent('billing-batch:cancel', 'delete', internalCallingUser, batch);
   } catch (err) {
     logger.error('Failed to delete the batch', err, batch);
     await saveEvent('billing-batch:cancel', 'error', internalCallingUser, batch);
-    await setStatus(batchId, BATCH_STATUS.error);
+    await setStatus(batch.id, BATCH_STATUS.error);
     throw err;
   }
 };
