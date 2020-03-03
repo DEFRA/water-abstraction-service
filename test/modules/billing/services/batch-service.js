@@ -243,13 +243,12 @@ experiment('modules/billing/services/batch-service', () => {
   });
 
   experiment('.deleteBatch', () => {
-    let batchId;
     let batch;
     let internalCallingUser;
 
     beforeEach(async () => {
       batch = {
-        batchId: batchId = uuid(),
+        id: uuid(),
         region: {
           code: 'A'
         }
@@ -269,31 +268,31 @@ experiment('modules/billing/services/batch-service', () => {
       test('delete the batch at the charge module', async () => {
         const [code, batchId] = chargeModuleBatchConnector.delete.lastCall.args;
         expect(code).to.equal('A');
-        expect(batchId).to.equal(batchId);
+        expect(batchId).to.equal(batch.id);
       });
 
       test('deletes the charge version years', async () => {
-        expect(repos.billingBatchChargeVersionYears.deleteByBatchId.calledWith(batchId)).to.be.true();
+        expect(repos.billingBatchChargeVersionYears.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the charge versions', async () => {
-        expect(repos.billingBatchChargeVersions.deleteByBatchId.calledWith(batchId)).to.be.true();
+        expect(repos.billingBatchChargeVersions.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the transactions', async () => {
-        expect(repos.billingTransactions.deleteByBatchId.calledWith(batchId)).to.be.true();
+        expect(repos.billingTransactions.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the invoice licences', async () => {
-        expect(repos.billingInvoiceLicences.deleteByBatchId.calledWith(batchId)).to.be.true();
+        expect(repos.billingInvoiceLicences.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the invoices', async () => {
-        expect(repos.billingInvoices.deleteByBatchId.calledWith(batchId)).to.be.true();
+        expect(repos.billingInvoices.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the batch', async () => {
-        expect(newRepos.billingBatches.delete.calledWith(batchId)).to.be.true();
+        expect(newRepos.billingBatches.delete.calledWith(batch.id)).to.be.true();
       });
 
       test('creates an event showing the calling user successfully deleted the batch', async () => {
@@ -336,7 +335,7 @@ experiment('modules/billing/services/batch-service', () => {
 
       test('sets the status of the batch to error', async () => {
         const [id, changes] = newRepos.billingBatches.update.lastCall.args;
-        expect(id).to.equal(batch.batchId);
+        expect(id).to.equal(batch.id);
         expect(changes).to.equal({
           status: 'error'
         });
