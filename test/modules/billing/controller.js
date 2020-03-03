@@ -416,22 +416,92 @@ experiment('modules/billing/controller', () => {
           batch
         }
       };
-
-      await controller.deleteBatch(request, h);
     });
 
-    test('deletes the batch via the batch service', async () => {
-      expect(batchService.deleteBatch.calledWith(batch, internalCallingUser)).to.be.true();
+    experiment('for a batch that is processing', () => {
+      test('a 422 is returned because the batch cannot be deleted yet', async () => {
+        batch.status = Batch.BATCH_STATUS.processing;
+
+        await controller.deleteBatch(request, h);
+
+        expect(batchService.deleteBatch.called).to.equal(false);
+        expect(hapiResponseStub.code.calledWith(422)).to.be.true();
+
+        const [message] = h.response.lastCall.args;
+
+        expect(message).to.equal('Cannot delete batch when status is processing');
+      });
     });
 
-    test('returns a 204 response', async () => {
-      const [code] = hapiResponseStub.code.lastCall.args;
-      expect(code).to.equal(204);
+    experiment('for a batch that is sent', () => {
+      test('a 422 is returned because the batch cannot be deleted', async () => {
+        batch.status = Batch.BATCH_STATUS.sent;
+
+        await controller.deleteBatch(request, h);
+
+        expect(batchService.deleteBatch.called).to.equal(false);
+        expect(hapiResponseStub.code.calledWith(422)).to.be.true();
+
+        const [message] = h.response.lastCall.args;
+
+        expect(message).to.equal('Cannot delete batch when status is sent');
+      });
+    });
+
+    experiment('for a batch that is in revew', () => {
+      test('deletes the batch via the batch service', async () => {
+        batch.status = Batch.BATCH_STATUS.review;
+        await controller.deleteBatch(request, h);
+        expect(batchService.deleteBatch.calledWith(batch, internalCallingUser)).to.be.true();
+      });
+
+      test('returns a 204 response', async () => {
+        batch.status = Batch.BATCH_STATUS.review;
+        await controller.deleteBatch(request, h);
+
+        const [code] = hapiResponseStub.code.lastCall.args;
+        expect(code).to.equal(204);
+      });
+    });
+
+    experiment('for a batch that is ready', () => {
+      test('deletes the batch via the batch service', async () => {
+        batch.status = Batch.BATCH_STATUS.ready;
+        await controller.deleteBatch(request, h);
+        expect(batchService.deleteBatch.calledWith(batch, internalCallingUser)).to.be.true();
+      });
+
+      test('returns a 204 response', async () => {
+        batch.status = Batch.BATCH_STATUS.ready;
+        await controller.deleteBatch(request, h);
+
+        const [code] = hapiResponseStub.code.lastCall.args;
+        expect(code).to.equal(204);
+      });
+    });
+
+    experiment('for a batch that has errored', () => {
+      test('deletes the batch via the batch service', async () => {
+        batch.status = Batch.BATCH_STATUS.error;
+        await controller.deleteBatch(request, h);
+        expect(batchService.deleteBatch.calledWith(batch, internalCallingUser)).to.be.true();
+      });
+
+      test('returns a 204 response', async () => {
+        batch.status = Batch.BATCH_STATUS.error;
+        await controller.deleteBatch(request, h);
+
+        const [code] = hapiResponseStub.code.lastCall.args;
+        expect(code).to.equal(204);
+      });
     });
 
     test('returns the error from the service if it fails', async () => {
       const err = new Error('whoops');
       batchService.deleteBatch.rejects(err);
+
+      batch.status = Batch.BATCH_STATUS.error;
+      await controller.deleteBatch(request, h);
 
       const result = await controller.deleteBatch(request, h);
       expect(result).to.equal(err);

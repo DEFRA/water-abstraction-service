@@ -12,6 +12,7 @@ const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
 const batchService = require('./services/batch-service');
 const eventService = require('../../lib/services/events');
+const { BATCH_STATUS } = require('../../lib/models/batch');
 
 const mappers = require('./mappers');
 
@@ -140,6 +141,11 @@ const deleteAccountFromBatch = async request => {
 const deleteBatch = async (request, h) => {
   const { batch } = request.pre;
   const { internalCallingUser } = request.defra;
+  const validStatuses = [BATCH_STATUS.ready, BATCH_STATUS.review, BATCH_STATUS.error];
+
+  if (!validStatuses.includes(batch.status)) {
+    return h.response(`Cannot delete batch when status is ${batch.status}`).code(422);
+  }
 
   try {
     await batchService.deleteBatch(batch, internalCallingUser);
