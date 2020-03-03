@@ -329,7 +329,7 @@ experiment('modules/billing/services/invoiceService', () => {
       expect(totals.netTotal).to.equal(104943);
     });
   });
-  // ############### START ##############
+
   experiment('.getInvoicesTransactionsForBatch', () => {
     let invoices;
     const batchData = createOneWithInvoicesWithTransactions();
@@ -367,7 +367,6 @@ experiment('modules/billing/services/invoiceService', () => {
       expect(invoices[0].invoiceLicences[0].transactions[0].value).to.equal(2345);
     });
   });
-  // #########################
 
   experiment('.getInvoiceForBatch', () => {
     let result;
