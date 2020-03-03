@@ -101,7 +101,7 @@ const getBatchInvoices = async request => {
 const getBatchInvoicesDetails = async request => {
   const { batchId } = request.params;
   const data = await invoiceService.getInvoicesTransactionsForBatch(batchId);
-  return data;
+  return data || Boom.notFound(`No invoices found in batch with id: ${batchId}`);
 };
 
 const getBatchInvoiceDetail = async request => {

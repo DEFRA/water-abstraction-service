@@ -171,4 +171,48 @@ experiment('lib/connectors/repos/billing-batches', () => {
       expect(stub.destroy.called).to.be.true();
     });
   });
+
+  experiment('.findOneWithInvoicesWithTransactions', () => {
+    beforeEach(async () => {
+      await billingBatches.findOneWithInvoicesWithTransactions('00000000-0000-0000-0000-000000000000');
+    });
+
+    test('forges a model with the expected id', async () => {
+      const [forgeArg] = BillingBatch.forge.lastCall.args;
+      expect(forgeArg).to.equal({
+        billingBatchId: '00000000-0000-0000-0000-000000000000'
+      });
+    });
+
+    test('call fetch with correct parameters', async () => {
+      expect(stub.fetch.lastCall.args[0].withRelated[0]).to.equal('region');
+      expect(stub.fetch.lastCall.args[0].withRelated[1]).to.equal('billingInvoices');
+      expect(stub.fetch.lastCall.args[0].withRelated[2]).to.equal('billingInvoices.billingInvoiceLicences');
+      expect(stub.fetch.lastCall.args[0].withRelated[3]).to.equal('billingInvoices.billingInvoiceLicences.licence');
+      expect(stub.fetch.lastCall.args[0].withRelated[4]).to.equal('billingInvoices.billingInvoiceLicences.licence.region');
+      expect(stub.fetch.lastCall.args[0].withRelated[5]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions');
+      expect(stub.fetch.lastCall.args[0].withRelated[6]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement');
+      expect(stub.fetch.lastCall.args[0].withRelated[7]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse');
+    });
+  });
+  experiment('.findOneWithInvoices', () => {
+    beforeEach(async () => {
+      await billingBatches.findOneWithInvoices('00000000-0000-0000-0000-000000000000');
+    });
+
+    test('forges a model with the expected id', async () => {
+      const [forgeArg] = BillingBatch.forge.lastCall.args;
+      expect(forgeArg).to.equal({
+        billingBatchId: '00000000-0000-0000-0000-000000000000'
+      });
+    });
+
+    test('call fetch with correct parameters', async () => {
+      expect(stub.fetch.lastCall.args[0].withRelated[0]).to.equal('region');
+      expect(stub.fetch.lastCall.args[0].withRelated[1]).to.equal('billingInvoices');
+      expect(stub.fetch.lastCall.args[0].withRelated[2]).to.equal('billingInvoices.billingInvoiceLicences');
+      expect(stub.fetch.lastCall.args[0].withRelated[3]).to.equal('billingInvoices.billingInvoiceLicences.licence');
+      expect(stub.fetch.lastCall.args[0].withRelated[4]).to.equal('billingInvoices.billingInvoiceLicences.licence.region');
+    });
+  });
 });
