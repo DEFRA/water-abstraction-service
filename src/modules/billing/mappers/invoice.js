@@ -16,8 +16,11 @@ const invoiceLicence = require('./invoice-licence');
  */
 const dbToModel = row => {
   const invoice = new Invoice(row.billingInvoiceId);
+  invoice.dateCreated = row.dateCreated;
+
   invoice.invoiceAccount = new InvoiceAccount(row.invoiceAccountId);
   invoice.invoiceAccount.accountNumber = row.invoiceAccountNumber;
+
   if (row.billingInvoiceLicences) {
     invoice.invoiceLicences = row.billingInvoiceLicences.map(invoiceLicence.dbToModel);
   }

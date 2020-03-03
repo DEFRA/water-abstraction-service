@@ -286,15 +286,9 @@ experiment('modules/billing/routes', () => {
 
     test('contains a pre handler to load the batch', async () => {
       const { pre } = routes.deleteAccountFromBatch.config;
-      expect(pre).to.have.length(2);
+      expect(pre).to.have.length(1);
       expect(pre[0].method).to.equal(preHandlers.loadBatch);
       expect(pre[0].assign).to.equal('batch');
-    });
-
-    test('contains a pre handler to ensure the batch is in the review state', async () => {
-      const { pre } = routes.deleteAccountFromBatch.config;
-      expect(pre).to.have.length(2);
-      expect(pre[1].method).to.equal(preHandlers.ensureBatchInReviewState);
     });
   });
 
@@ -347,7 +341,7 @@ experiment('modules/billing/routes', () => {
 
     test('contains a pre handler to load the batch', async () => {
       const { pre } = routes.deleteAccountFromBatch.config;
-      expect(pre).to.have.length(2);
+      expect(pre).to.have.length(1);
       expect(pre[0].method).to.equal(preHandlers.loadBatch);
       expect(pre[0].assign).to.equal('batch');
     });

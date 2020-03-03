@@ -94,8 +94,7 @@ const deleteAccountFromBatch = {
       }
     },
     pre: [
-      { method: preHandlers.loadBatch, assign: 'batch' },
-      { method: preHandlers.ensureBatchInReviewState }
+      { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
 };

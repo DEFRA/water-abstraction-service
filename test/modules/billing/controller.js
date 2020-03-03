@@ -42,12 +42,12 @@ experiment('modules/billing/controller', () => {
     });
 
     sandbox.stub(newRepos.billingBatches, 'findOne').resolves();
-
     sandbox.stub(batchService, 'getBatches').resolves();
     sandbox.stub(batchService, 'deleteBatch').resolves();
     sandbox.stub(batchService, 'approveBatch').resolves();
     sandbox.stub(batchService, 'decorateBatchWithTotals').resolves();
     sandbox.stub(batchService, 'getMostRecentLiveBatchByRegion').resolves();
+    sandbox.stub(batchService, 'deleteAccountFromBatch').resolves();
 
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
@@ -361,20 +361,18 @@ experiment('modules/billing/controller', () => {
   });
 
   experiment('.deleteAccountFromBatch', () => {
-    test('returns a 404 if there are no invoices for the invoice account id', async () => {
-      const request = {
-        params: {
-          batchId: 'test-batch-id',
-          accountId: 'test-account-id'
-        },
-        pre: {
-          batch: {
-            status: 'review'
-          }
-        }
+    let batch;
+    let request;
+    let invoices;
+
+    beforeEach(async () => {
+      batch = new Batch(uuid());
+      request = {
+        params: { batchId: batch.id, accountId: 'test-account-id' },
+        pre: { batch }
       };
 
-      const invoices = [{
+      invoices = [{
         invoiceLicences: [
           { transactions: [] }
         ],
@@ -385,11 +383,57 @@ experiment('modules/billing/controller', () => {
       }];
 
       invoiceService.getInvoicesForBatch.resolves(invoices);
+    });
 
+    experiment('when accounts cannot be deleted from the batch', () => {
+      const invalidStatuses = [
+        Batch.BATCH_STATUS.processing,
+        Batch.BATCH_STATUS.error,
+        Batch.BATCH_STATUS.sent
+      ];
+
+      invalidStatuses.forEach(status => {
+        test(`a 422 is returned for the ${status} status`, async () => {
+          batch.status = status;
+
+          await controller.deleteAccountFromBatch(request, h);
+
+          expect(batchService.deleteAccountFromBatch.called).to.equal(false);
+          expect(hapiResponseStub.code.calledWith(422)).to.be.true();
+
+          const [message] = h.response.lastCall.args;
+
+          expect(message).to.equal(`Cannot delete account from batch when status is ${status}`);
+        });
+      });
+    });
+
+    experiment('when accounts can be deleted from the batch', () => {
+      const validStatuses = [
+        Batch.BATCH_STATUS.ready,
+        Batch.BATCH_STATUS.review
+      ];
+
+      validStatuses.forEach(status => {
+        test(`the account is deleted for the ${status} status`, async () => {
+          batch.status = status;
+          invoices[0].invoiceAccount.id = 'test-account-id';
+          await controller.deleteAccountFromBatch(request, h);
+
+          const [batchArg, accountId] = batchService.deleteAccountFromBatch.lastCall.args;
+
+          expect(batchArg.id).to.equal(batch.id);
+          expect(accountId).to.equal('test-account-id');
+        });
+      });
+    });
+
+    test('returns a 404 if there are no invoices for the invoice account id', async () => {
+      batch.status = Batch.BATCH_STATUS.ready;
       const response = await controller.deleteAccountFromBatch(request);
-      expect(invoiceService.getInvoicesForBatch.calledWith('test-batch-id')).to.be.true();
+      expect(invoiceService.getInvoicesForBatch.calledWith(batch.id)).to.be.true();
       expect(response.output.payload.statusCode).to.equal(404);
-      expect(response.output.payload.message).to.equal('No invoices for account (test-account-id) in batch (test-batch-id)');
+      expect(response.output.payload.message).to.equal(`No invoices for account (test-account-id) in batch (${batch.id})`);
     });
   });
 
@@ -404,17 +448,11 @@ experiment('modules/billing/controller', () => {
         id: 1234
       };
 
-      batch = {
-        billingBatchId: 'test-batch-id'
-      };
+      batch = new Batch(uuid());
 
       request = {
-        defra: {
-          internalCallingUser
-        },
-        pre: {
-          batch
-        }
+        defra: { internalCallingUser },
+        pre: { batch }
       };
     });
 
@@ -501,10 +539,9 @@ experiment('modules/billing/controller', () => {
       batchService.deleteBatch.rejects(err);
 
       batch.status = Batch.BATCH_STATUS.error;
-      await controller.deleteBatch(request, h);
 
-      const result = await controller.deleteBatch(request, h);
-      expect(result).to.equal(err);
+      const error = await expect(controller.deleteBatch(request, h)).to.reject();
+      expect(error).to.equal(err);
     });
   });
 
