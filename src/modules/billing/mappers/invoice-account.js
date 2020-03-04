@@ -1,7 +1,9 @@
 'use strict';
 
 const InvoiceAccount = require('../../../lib/models/invoice-account');
-const Company = require('../../../lib/models/company');
+
+const company = require('./company');
+const address = require('./address');
 
 /**
  * Maps CRM invoice account and (optionally) company data to a water service model
@@ -14,9 +16,11 @@ const crmToModel = (invoiceAccount) => {
   invoiceAccountModel.accountNumber = invoiceAccount.invoiceAccountNumber;
 
   if (invoiceAccount.company) {
-    const companyModel = new Company(invoiceAccount.company.companyId);
-    companyModel.pickFrom(invoiceAccount.company, ['type', 'name']);
-    invoiceAccountModel.company = companyModel;
+    invoiceAccountModel.company = company.crmToModel(invoiceAccount.company);
+  }
+
+  if (invoiceAccount.address) {
+    invoiceAccountModel.address = address.crmToModel(invoiceAccount.address);
   }
 
   return invoiceAccountModel;

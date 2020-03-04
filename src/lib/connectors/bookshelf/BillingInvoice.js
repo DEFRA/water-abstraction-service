@@ -8,7 +8,7 @@ module.exports = bookshelf.model('BillingInvoice', {
   hasTimestamps: ['date_created', 'date_updated'],
 
   billingBatch () {
-    return this.hasOne('BillingBatch', 'billing_batch_id', 'billing_batch_id');
+    return this.belongsTo('BillingBatch', 'billing_batch_id', 'billing_batch_id');
   },
 
   billingInvoiceLicences () {

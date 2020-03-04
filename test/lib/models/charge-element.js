@@ -3,6 +3,7 @@ const { expect } = require('@hapi/code');
 
 const ChargeElement = require('../../../src/lib/models/charge-element');
 const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
+const Purpose = require('../../../src/lib/models/purpose');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
 
@@ -94,13 +95,11 @@ experiment('lib/models/charge-element', () => {
 
   experiment('.eiucSource', () => {
     test('is "tidal" when source is "tidal"', async () => {
-      const chargeElement = new ChargeElement();
       chargeElement.source = 'tidal';
       expect(chargeElement.eiucSource).to.equal('tidal');
     });
 
     test('is "other" when source is not "tidal"', async () => {
-      const chargeElement = new ChargeElement();
       chargeElement.source = 'supported';
       expect(chargeElement.eiucSource).to.equal('other');
     });
@@ -108,17 +107,29 @@ experiment('lib/models/charge-element', () => {
 
   experiment('.volume', () => {
     test('is the billableAnnualQuantity if set', async () => {
-      const chargeElement = new ChargeElement();
       chargeElement.authorisedAnnualQuantity = 10.7;
       chargeElement.billableAnnualQuantity = 9.3;
       expect(chargeElement.volume).to.equal(9.3);
     });
 
     test('is the authorisedQuantity if billableAnnualQuantity is null', async () => {
-      const chargeElement = new ChargeElement();
       chargeElement.authorisedAnnualQuantity = 10.7;
       chargeElement.billableAnnualQuantity = null;
       expect(chargeElement.volume).to.equal(10.7);
+    });
+  });
+
+  experiment('.purposeUse', () => {
+    test('can be set to a Purpose instance', async () => {
+      const purpose = new Purpose();
+      chargeElement.purposeUse = purpose;
+      expect(chargeElement.purposeUse).to.equal(purpose);
+    });
+
+    test('throws an error if setting to an instance of another model', async () => {
+      const period = new AbstractionPeriod();
+      const func = () => { chargeElement.purposeUse = period; };
+      expect(func).to.throw();
     });
   });
 });
