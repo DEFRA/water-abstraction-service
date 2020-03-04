@@ -36,7 +36,8 @@ const uploadErrors = {
   ERR_VOLUMES: 'The volumes must be a positive number',
   ERR_METER_DETAILS: 'You must provide the manufacturer and serial number of the water meter',
   ERR_LINES: 'You have entered data into a field marked "Do not edit"',
-  ERR_SCHEMA: 'The selected file must use the template'
+  ERR_SCHEMA: 'The selected file must use the template',
+  ERR_DATE_FORMAT: 'The dates in the first column must have the same format'
 };
 
 /**
@@ -80,17 +81,6 @@ const getCompanyDocumentFilter = (licenceNumber, companyId) => ({
 });
 
 /**
- * Converts an array of return line objects to a single string so it can be
- * compared with another
- * @param  {Array} lines
- * @return {String}       - a string that can be used for comparison
- */
-const linesToString = (lines = []) => {
-  const mapped = lines.map(line => `${line.startDate}:${line.endDate}`);
-  return mapped.sort().join(',');
-};
-
-/**
  * Checks that the return lines in the uploaded data match those calculated
  * @param  {Object} ret - return upload object
  * @return {boolean}     - true if return lines OK or nil return
@@ -101,7 +91,29 @@ const validateReturnlines = ret => {
   }
   const { startDate, endDate, frequency } = ret;
   const requiredLines = returnLines.getRequiredLines(startDate, endDate, frequency);
-  return linesToString(requiredLines) === linesToString(ret.lines);
+
+  return ret.lines.length === requiredLines.length;
+};
+
+/**
+ * Checks that the return frequency is as consistent with expectations
+ * @param  {Object} ret - return upload object
+ * @return {boolean}     - true if return lines OK or nil return
+ */
+const validateLineFrequency = ret => {
+  if (ret.isNil) {
+    return true;
+  }
+  // if first date line has an invalid date format, frequency won't exist and the
+  // following code will throw an error which surfaces in the UI
+  try {
+    const { startDate, endDate, frequency } = ret;
+    const requiredLines = returnLines.getRequiredLines(startDate, endDate, frequency);
+    const returnTimePeriod = uniq(ret.lines.map(line => line.timePeriod));
+    return returnTimePeriod.length === 1 && returnTimePeriod[0] === requiredLines[0].timePeriod;
+  } catch (err) {
+    return false;
+  }
 };
 
 /**
@@ -189,8 +201,9 @@ const validator = cond([
   createPair(validateReturnDue, uploadErrors.ERR_NOT_DUE),
   createPair(validateAbstractionVolumes, uploadErrors.ERR_VOLUMES),
   createPair(validateMeterDetails, uploadErrors.ERR_METER_DETAILS),
-  createPair(validateReturnSchema, uploadErrors.ERR_SCHEMA),
-  createPair(validateReturnlines, uploadErrors.ERR_LINES)
+  createPair(validateLineFrequency, uploadErrors.ERR_DATE_FORMAT),
+  createPair(validateReturnlines, uploadErrors.ERR_LINES),
+  createPair(validateReturnSchema, uploadErrors.ERR_SCHEMA)
 ]);
 
 /**
