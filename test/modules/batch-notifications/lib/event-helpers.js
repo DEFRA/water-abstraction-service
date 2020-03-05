@@ -178,38 +178,63 @@ experiment('batch notifications event helpers', () => {
         status: 'wrongStatus'
       });
       await refreshEventStatus('testId');
-      expect(evt.save.callCount).to.equal(0);
+      expect(newEvtRepo.update.callCount).to.equal(0);
     });
 
     test('updates the event when status is "sending"', async () => {
-      evt.load.resolves({
+      const event = {
         metadata: {
           recipients: 8
         },
         status: EVENT_STATUS_SENDING
-      });
+      };
+      evt.load.resolves(event);
 
       await refreshEventStatus('testId');
 
-      const [ev] = evt.save.lastCall.args;
+      const [ev, changes] = newEvtRepo.update.lastCall.args;
 
-      expect(ev.status).to.equal(EVENT_STATUS_SENDING);
-      expect(ev.metadata.sent).to.equal(5);
-      expect(ev.metadata.error).to.equal(2);
+      expect(ev).to.equal(event);
+      expect(changes.status).to.equal(EVENT_STATUS_SENDING);
+      expect(changes.metadata.sent).to.equal(5);
+      expect(changes.metadata.error).to.equal(2);
+    });
+
+    test('does not alter existing metadata', async () => {
+      const event = {
+        metadata: {
+          name: 'Returns: invitation',
+          recipients: 8
+        },
+        status: EVENT_STATUS_SENDING
+      };
+      evt.load.resolves(event);
+
+      await refreshEventStatus('testId');
+
+      const [ev, changes] = newEvtRepo.update.lastCall.args;
+
+      expect(ev).to.equal(event);
+      expect(changes.status).to.equal(EVENT_STATUS_SENDING);
+      expect(changes.metadata.name).to.equal(event.metadata.name);
+      expect(changes.metadata.sent).to.equal(5);
+      expect(changes.metadata.error).to.equal(2);
     });
 
     test('updates event status to "completed" when all messages are sent/errored', async () => {
-      evt.load.resolves({
+      const event = {
         metadata: {
           recipients: 7
         },
         status: EVENT_STATUS_SENDING
-      });
+      };
+      evt.load.resolves(event);
 
       await refreshEventStatus('testId');
 
-      const [ev] = evt.save.lastCall.args;
-      expect(ev.status).to.equal(EVENT_STATUS_COMPLETED);
+      const [ev, changes] = newEvtRepo.update.lastCall.args;
+      expect(ev).to.equal(event);
+      expect(changes.status).to.equal(EVENT_STATUS_COMPLETED);
     });
 
     test('resolves with the event object', async () => {

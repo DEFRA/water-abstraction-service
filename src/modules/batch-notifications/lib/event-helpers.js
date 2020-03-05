@@ -32,6 +32,7 @@ const createEvent = async (issuer, config, options) => {
     },
     status: EVENT_STATUS_PROCESSING
   });
+
   const { rows } = await evt.save(ev);
   return rows[0];
 };
@@ -110,12 +111,15 @@ const refreshEventStatus = async (eventId) => {
 
   const isComplete = (sent + error) === get(ev, 'metadata.recipients');
 
-  set(ev, 'status', isComplete ? EVENT_STATUS_COMPLETED : EVENT_STATUS_SENDING);
-  set(ev, 'metadata.sent', sent);
-  set(ev, 'metadata.error', error);
+  const metadata = cloneDeep(ev.metadata);
+  set(metadata, 'sent', sent);
+  set(metadata, 'error', error);
 
-  await evt.save(ev);
-  return ev;
+  const updates = {
+    status: isComplete ? EVENT_STATUS_COMPLETED : EVENT_STATUS_SENDING,
+    metadata
+  };
+  return newEvtRepo.update(ev, updates);
 };
 
 module.exports = {
