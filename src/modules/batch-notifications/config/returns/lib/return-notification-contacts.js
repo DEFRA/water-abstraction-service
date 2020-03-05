@@ -2,6 +2,7 @@ const { chunk, groupBy } = require('lodash');
 const returnsConnector = require('../../../../../lib/connectors/returns');
 const documentsConnector = require('../../../../../lib/connectors/crm/documents');
 const { createContacts } = require('../../../../../lib/models/factory/crm-contact-list');
+const moment = require('moment');
 
 const groupReturnsByLicenceNumber = returns => groupBy(returns, ret => ret.licence_ref);
 
@@ -41,8 +42,12 @@ const getCRMContacts = async groupedReturns => {
  *                         licence, and a ContactList instance
  */
 const getReturnContacts = async excludeLicences => {
+  // The reference date is today + 14 days.  This allows returns notifications
+  // to be sent for the following return cycle up to 14 days before the cycle ends
+  const refDate = moment().add(14, 'day');
+
   // Load due returns in current cycle from return service
-  const returns = await returnsConnector.getCurrentDueReturns(excludeLicences);
+  const returns = await returnsConnector.getCurrentDueReturns(excludeLicences, refDate);
 
   // Group returns by licence number
   const groupedReturns = groupReturnsByLicenceNumber(returns);

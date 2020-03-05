@@ -8,6 +8,7 @@ const {
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const moment = require('moment');
 
 const notificationContacts = require('../../../../../../../src/modules/batch-notifications/config/returns/lib/return-notification-contacts');
 const documentsConnector = require('../../../../../../../src/lib/connectors/crm/documents');
@@ -57,10 +58,22 @@ experiment('modules/batch-notifications/config/return-invitation/return-notifica
       result = await notificationContacts.getReturnContacts(['01/123', '02/456']);
     });
 
-    test('calls returnsConnector.getCurrentDueReturns with array of licences to exclude', async () => {
-      expect(returnsConnector.getCurrentDueReturns.calledWith(
-        ['01/123', '02/456']
-      )).to.be.true();
+    experiment('calls returnsConnector.getCurrentDueReturns', () => {
+      test('once', async () => {
+        expect(returnsConnector.getCurrentDueReturns.callCount).to.equal(1);
+      });
+
+      test('with array of licences to exclude', async () => {
+        const [licenceNumbers] = returnsConnector.getCurrentDueReturns.lastCall.args;
+        expect(licenceNumbers).to.equal(['01/123', '02/456']);
+      });
+
+      test('supplies a reference date moment that is 14 days in the future', async () => {
+        const [, refDate] = returnsConnector.getCurrentDueReturns.lastCall.args;
+        const today = moment().format('YYYY-MM-DD');
+        const differenceInDays = refDate.diff(today, 'days');
+        expect(differenceInDays).to.equal(14);
+      });
     });
 
     test('resolves with an array of objects for each licence, with contact and return lists', async () => {
