@@ -11,7 +11,7 @@ const {
   CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_RETURNS_AGENT,
   CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO
 } = require('../../../../../lib/models/contact');
-const BI_TEMPLATES = ['control', 'suasion', 'social_norm', 'formal'];
+const BI_TEMPLATES = ['control', 'moral_suasion', 'social_norm', 'formality'];
 const events = require('../../../../../lib/services/events');
 
 /**
@@ -101,10 +101,18 @@ const getRelevantRowData = (rows, reminderRef) => {
   return first(rows.filter(row => row.message_ref.includes(contactAndMessageType)));
 };
 
-const getTemplateSuffix = messageRef => {
+const reminderSuffixMap = {
+  moral_suasion: 'active_choice',
+  social_norm: 'loss_aversion',
+  formality: 'enforcement_action'
+};
+
+const getReminderSuffix = invitationSuffix => reminderSuffixMap[invitationSuffix] || 'control';
+
+const getInvitationSuffix = messageRef => {
   const suffixIndex = (messageRef.indexOf('letter') > 0)
-    ? messageRef.indexOf('letter') + 6
-    : messageRef.indexOf('email') + 5;
+    ? messageRef.indexOf('letter') + 7
+    : messageRef.indexOf('email') + 6;
   return messageRef.substring(suffixIndex);
 };
 
@@ -113,8 +121,8 @@ const getRelevantTemplate = async (context, reminderRef) => {
   const data = rowCount > 1 ? getRelevantRowData(rows, reminderRef) : rows[0];
   if (rowCount === 0 || !data) return `${reminderRef}_control`;
 
-  const suffix = getTemplateSuffix(data.message_ref);
-  return `${reminderRef}${suffix}`;
+  const suffix = getInvitationSuffix(data.message_ref);
+  return `${reminderRef}_${getReminderSuffix(suffix)}`;
 };
 
 const emailTemplate = template => ({ method: createEmail, messageRef: template });
@@ -162,4 +170,5 @@ const createNotificationData = async (ev, contact, context) => {
 exports.BI_TEMPLATES = BI_TEMPLATES;
 
 exports._getReturnPersonalisation = getReturnPersonalisation;
+exports._reminderSuffixMap = reminderSuffixMap;
 exports.createNotificationData = createNotificationData;
