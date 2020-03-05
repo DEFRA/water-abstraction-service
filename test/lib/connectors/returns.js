@@ -64,18 +64,76 @@ experiment('connectors/returns', () => {
       sandbox.stub(returns.returns, 'findAll').resolves(response);
     });
 
-    test('calls the returns API with the correct arguments', async () => {
-      await returns.getCurrentDueReturns([], '2019-03-31');
+    experiment('for winter/all year returns, when no due date is specified', () => {
+      beforeEach(async () => {
+        await returns.getCurrentDueReturns([], {
+          startDate: '2018-04-01',
+          endDate: '2019-03-31',
+          isSummer: false
+        });
+      });
 
-      const [filter] = returns.returns.findAll.lastCall.args;
-      expect(filter).to.equal({
-        end_date: { $lte: '2019-03-31' },
-        start_date: { $gte: '2018-04-01' },
-        due_date: '2019-04-28',
-        status: 'due',
-        regime: 'water',
-        licence_type: 'abstraction',
-        'metadata->>isCurrent': 'true'
+      test('calls the returns API with the correct arguments', async () => {
+        const [filter] = returns.returns.findAll.lastCall.args;
+        expect(filter).to.equal({
+          end_date: { $lte: '2019-03-31' },
+          start_date: { $gte: '2018-04-01' },
+          status: 'due',
+          regime: 'water',
+          licence_type: 'abstraction',
+          'metadata->>isCurrent': 'true',
+          'metadata->>isSummer': 'false'
+        });
+      });
+    });
+
+    experiment('for winter/all year returns, when a due date is specified', () => {
+      beforeEach(async () => {
+        await returns.getCurrentDueReturns([], {
+          startDate: '2018-04-01',
+          endDate: '2019-03-31',
+          isSummer: false,
+          dueDate: '2019-04-28'
+        });
+      });
+
+      test('calls the returns API with the correct arguments', async () => {
+        const [filter] = returns.returns.findAll.lastCall.args;
+        expect(filter).to.equal({
+          end_date: { $lte: '2019-03-31' },
+          start_date: { $gte: '2018-04-01' },
+          due_date: '2019-04-28',
+          status: 'due',
+          regime: 'water',
+          licence_type: 'abstraction',
+          'metadata->>isCurrent': 'true',
+          'metadata->>isSummer': 'false'
+        });
+      });
+    });
+
+    experiment('for summer returns', () => {
+      beforeEach(async () => {
+        await returns.getCurrentDueReturns([], {
+          startDate: '2018-11-01',
+          endDate: '2019-10-31',
+          isSummer: true,
+          dueDate: '2019-11-28'
+        });
+      });
+
+      test('calls the returns API with the correct arguments', async () => {
+        const [filter] = returns.returns.findAll.lastCall.args;
+        expect(filter).to.equal({
+          end_date: { $lte: '2019-10-31' },
+          start_date: { $gte: '2018-11-01' },
+          due_date: '2019-11-28',
+          status: 'due',
+          regime: 'water',
+          licence_type: 'abstraction',
+          'metadata->>isCurrent': 'true',
+          'metadata->>isSummer': 'true'
+        });
       });
     });
 

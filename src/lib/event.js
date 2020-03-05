@@ -2,6 +2,7 @@ const moment = require('moment');
 const { logger } = require('../logger');
 const newEventService = require('./services/events');
 const Event = require('./models/event');
+
 /**
  * Creates an event as a plain object
  * @param  {Object} [data={}] data for the event
@@ -32,18 +33,14 @@ const create = (data = {}) => {
  * @return {Promise}        resolves when event saved
  */
 const save = async (event) => {
-  logDeprecatedWarning();
-  // Update existing record
-  if (event.event_id) {
-    event.eventId = event.event_id;
-    const eventModel = new Event();
-    const result = await newEventService.update(eventModel.fromHash(event));
-    return wrapBookshelfModel(mapToEventPojo(result));
-  }
-  // Create new event
-  const eventModel = new Event();
-  eventModel.fromHash(event);
-  const result = await newEventService.create(eventModel);
+  // Create service model
+  const eventModel = mapToModel(event);
+
+  // Create/update
+  const method = eventModel.id ? 'update' : 'create';
+  const result = await newEventService[method](eventModel);
+
+  // Map to PG pool.query response
   return wrapBookshelfModel(mapToEventPojo(result));
 };
 
@@ -55,10 +52,10 @@ const save = async (event) => {
 const load = async (eventId) => {
   logDeprecatedWarning();
   const result = await newEventService.findOne(eventId);
-  if (!result.eventId) {
-    return null;
+  if (result) {
+    return mapToEventPojo(result);
   }
-  return mapToEventPojo(result);
+  return null;
 };
 
 /**
@@ -84,9 +81,17 @@ const logDeprecatedWarning = () => {
 };
 
 const mapToEventPojo = (event) => {
-  const eventPOJO = event.toJSON();
-  eventPOJO.event_id = event.eventId;
-  return eventPOJO;
+  const { id, ...rest } = event.toJSON();
+  return {
+    event_id: id,
+    ...rest
+  };
+};
+
+const mapToModel = event => {
+  const { event_id: eventId, ...rest } = event;
+  const eventModel = new Event(eventId);
+  return eventModel.fromHash(rest);
 };
 
 exports.create = create;

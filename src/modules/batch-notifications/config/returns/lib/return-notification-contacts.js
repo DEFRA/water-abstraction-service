@@ -37,17 +37,14 @@ const getCRMContacts = async groupedReturns => {
  * instance
  * @param {Array} excludeLicences - a list of licences to exclude from the
  *                                  list of returns
+ * @param {Object} returnCycle
  * @param {Promise<Array>} an array of objects, each object represents a licence
  *                         number, with an array of return IDs due for that
  *                         licence, and a ContactList instance
  */
-const getReturnContacts = async excludeLicences => {
-  // The reference date is today + 14 days.  This allows returns notifications
-  // to be sent for the following return cycle up to 14 days before the cycle ends
-  const refDate = moment().add(14, 'day');
-
+const getReturnContacts = async (excludeLicences, returnCycle) => {
   // Load due returns in current cycle from return service
-  const returns = await returnsConnector.getCurrentDueReturns(excludeLicences, refDate);
+  const returns = await returnsConnector.getCurrentDueReturns(excludeLicences, returnCycle);
 
   // Group returns by licence number
   const groupedReturns = groupReturnsByLicenceNumber(returns);

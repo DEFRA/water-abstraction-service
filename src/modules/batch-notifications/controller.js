@@ -3,17 +3,16 @@ const Boom = require('@hapi/boom');
 const { logger } = require('../../logger');
 const { get, find } = require('lodash');
 
-const evt = require('../../lib/event');
-
 const { EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING } =
   require('./lib/event-statuses');
 const { MESSAGE_STATUS_SENDING } = require('./lib/message-statuses');
 
-const eventHelpers = require('./lib/event-helpers');
 const messageHelpers = require('./lib/message-helpers');
 
 const configs = require('./config');
 const getRecipients = require('./lib/jobs/get-recipients');
+
+const eventsService = require('../../lib/services/events');
 
 /**
  * Prepares batch notification ready for sending
@@ -34,11 +33,12 @@ const postPrepare = async (request, h) => {
       throw Boom.badRequest('Invalid payload', error);
     }
 
-    // Generate an event
-    const ev = await eventHelpers.createEvent(issuer, config, data);
+    // Create and persist event
+    let ev = await config.createEvent(issuer, config, data);
+    ev = await eventsService.create(ev);
 
     // Kick off PG boss job to get recipients
-    await getRecipients.publish(ev.eventId);
+    await getRecipients.publish(ev.id);
 
     // Return event details
     return {
@@ -93,14 +93,14 @@ const postSend = async (request, h) => {
 
   try {
     // Load and check event
-    const ev = await evt.load(eventId);
+    const event = await eventsService.findOne(eventId);
 
-    checkEventIsValid(ev, request);
+    checkEventIsValid(event, request);
 
     // Update scheduled_notifications to new status
     const tasks = [
-      messageHelpers.updateMessageStatuses(eventId, MESSAGE_STATUS_SENDING),
-      eventHelpers.updateEventStatus(eventId, EVENT_STATUS_SENDING)
+      messageHelpers.updateMessageStatuses(event.id, MESSAGE_STATUS_SENDING),
+      eventsService.updateStatus(event.id, EVENT_STATUS_SENDING)
     ];
 
     const [, data] = await Promise.all(tasks);

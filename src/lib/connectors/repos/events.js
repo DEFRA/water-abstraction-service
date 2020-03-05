@@ -21,25 +21,12 @@ const findOne = async (id) => {
 };
 
 /**
- * Updates the all the fileds for the event record
- * @param {Object} event // event pojo
- * @param {Object} changes // Optional: key value pairs of changes to be made
+ * Updates the all the fields for the event record
+ * @param {String} id
+ * @param {Object} changes // event pojo
  */
-const update = async (event, changes) => {
-  const saveData = changes || event;
-  const result = await Event.forge({ eventId: event.eventId }).save(saveData);
-  return result.toJSON();
-};
-
-/**
- * Updates an events status value to the supplied value
- * and returns the updated event.
- * @param {String} id UUID eventId
- * @param {String} status The status to set
- * @returns {Object} event pojo
- */
-const updateStatus = async (id, status) => {
-  const result = await Event.forge({ eventId: id }).save({ status: status });
+const update = async (id, changes) => {
+  const result = await Event.forge({ eventId: id }).save(changes);
   return result.toJSON();
 };
 
@@ -49,6 +36,5 @@ const getMostRecentReturnsInvitationByLicence = async licenceRef => {
 
 exports.create = create;
 exports.update = update;
-exports.updateStatus = updateStatus;
 exports.findOne = findOne;
 exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitationByLicence;

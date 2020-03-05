@@ -1,6 +1,5 @@
 const apiClientFactory = require('./api-client-factory');
 const moment = require('moment');
-const { last } = require('lodash');
 const helpers = require('@envage/water-abstraction-helpers');
 const urlJoin = require('url-join');
 const { URL } = require('url');
@@ -44,22 +43,21 @@ const getActiveReturns = (returnIds) => {
  * Gets due returns in the current cycle that relate to the current version
  * of a licence.
  * @param  {Array} excludeLicences - if passed in, these licences will be excluded
- * @param  {String} [refDate]      - optional ref date, used for testing
+ * @param  {Object} returnCycle    - the return cycle to find due returns in
  * @return {Promise<Array>}        - all returns matching criteria
  */
-const getCurrentDueReturns = async (excludeLicences, refDate) => {
-  const cycles = helpers.returns.date.createReturnCycles(undefined, refDate);
-  const { startDate, endDate } = last(cycles);
-  const dueDate = moment(endDate).add(28, 'day').format(DATE_FORMAT);
+const getCurrentDueReturns = async (excludeLicences, returnCycle) => {
+  const { startDate, endDate, isSummer, dueDate } = returnCycle;
 
   const filter = {
     start_date: { $gte: startDate },
     end_date: { $lte: endDate },
-    due_date: dueDate,
     status: 'due',
     regime: 'water',
     licence_type: 'abstraction',
-    'metadata->>isCurrent': 'true'
+    'metadata->>isCurrent': 'true',
+    'metadata->>isSummer': isSummer ? 'true' : 'false',
+    ...dueDate && { due_date: dueDate }
   };
 
   const results = await returnsClient.findAll(filter);

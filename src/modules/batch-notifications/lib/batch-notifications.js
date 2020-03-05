@@ -1,7 +1,7 @@
 const { find } = require('lodash');
-const event = require('../../../lib/event');
 const configs = require('../config');
 const messageQueue = require('../../../lib/message-queue');
+const eventsService = require('../../../lib/services/events');
 
 /**
  * Creates a function which publishes a job on the PG boss queue
@@ -24,18 +24,19 @@ const createJobPublisher = (jobName, key, isSingleton = true) => {
  * @return {Promise<Object>} - resolves with { ev, config }
  */
 const loadJobData = async (eventId) => {
-  // Load event
-  const ev = await event.load(eventId);
-  if (!ev) {
-    throw new Error('Batch notification event not found');
+  const event = await eventsService.findOne(eventId);
+
+  if (!event) {
+    throw new Error(`Batch notification event "${eventId}" not found`);
   }
+
   // Load config
-  const config = find(configs, { messageType: ev.subtype });
+  const config = find(configs, { messageType: event.subtype });
   if (!config) {
-    throw new Error(`Batch notification ${ev.subtype} not found`);
+    throw new Error(`Batch notification ${event.subtype} not found`);
   }
   return {
-    ev,
+    ev: event.toJSON(),
     config
   };
 };
