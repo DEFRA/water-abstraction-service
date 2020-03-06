@@ -92,7 +92,6 @@ const approveBatch = async (batch, internalCallingUser) => {
   } catch (err) {
     logger.error('Failed to approve the batch', err, batch);
     await saveEvent('billing-batch:approve', 'error', internalCallingUser, batch);
-    await setStatus(batch.id, BATCH_STATUS.error);
     throw err;
   }
 };
