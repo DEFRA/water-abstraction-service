@@ -1,7 +1,7 @@
 const messageQueue = require('../../../../lib/message-queue');
 const JOB_NAME = 'returns-upload-to-json';
 const s3 = require('../../../../lib/connectors/s3');
-const event = require('../../../../lib/event');
+const eventsService = require('../../../../lib/services/events');
 const returnsUpload = require('../returns-upload');
 const uploadStatus = returnsUpload.uploadStatus;
 const { logger } = require('../../../../logger');
@@ -49,29 +49,27 @@ const mapToJson = async (evt, s3Object, user) => {
  * @param {Object} job The job data from PG Boss
  */
 const handleReturnsMapToJsonStart = async job => {
-  const evt = await event.load(job.data.eventId);
+  const event = await eventsService.findOne(job.data.eventId);
 
   try {
     const application = config.idm.application.externalUser;
 
     const [s3Object, user] = await Promise.all([
-      returnsUpload.getReturnsS3Object(job.data.eventId, evt.subtype),
-      idmConnector.usersClient.getUserByUsername(evt.issuer, application)
+      returnsUpload.getReturnsS3Object(job.data.eventId, event.subtype),
+      idmConnector.usersClient.getUserByUsername(event.issuer, application)
     ]);
 
     validateUser(user);
 
-    const json = await mapToJson(evt, s3Object, user);
+    const json = await mapToJson(event, s3Object, user);
 
-    await uploadJsonToS3(evt.eventId, json);
+    await uploadJsonToS3(event.id, json);
 
-    await event.updateStatus(evt.eventId, uploadStatus.VALIDATED);
-
-    return job.done();
+    await eventsService.updateStatus(event.id, uploadStatus.VALIDATED);
   } catch (error) {
     logger.error('Failed to convert XML to JSON', error, { job });
-    await errorEvent.setEventError(evt, error);
-    return job.done(error);
+    await errorEvent.setEventError(event, error);
+    throw error;
   }
 };
 

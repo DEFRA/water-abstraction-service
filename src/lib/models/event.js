@@ -130,11 +130,11 @@ class Event extends Model {
   }
 
   /**
-     * Sets the metadata for this event
-     * @param {Object} metadata
-     */
+   * Sets the metadata for this event
+   * @param {Object} metadata
+   */
   set metadata (metadata) {
-    validators.assertIsInstanceOf(metadata, Object);
+    validators.assertIsNullableInstanceOf(metadata, Object);
     this._metadata = metadata;
   }
 

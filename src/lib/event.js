@@ -40,6 +40,9 @@ const save = async (event) => {
   const method = eventModel.id ? 'update' : 'create';
   const result = await newEventService[method](eventModel);
 
+  // Mutate the event ID
+  event.eventId = result.id;
+
   // Map to PG pool.query response
   return wrapBookshelfModel(mapToEventPojo(result));
 };
