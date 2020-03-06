@@ -186,6 +186,24 @@ const deleteAccountFromBatch = async (batch, accountId) => {
   await repos.billingTransactions.deleteByInvoiceAccount(batch.id, accountId);
   await newRepos.billingInvoiceLicences.deleteByBatchAndInvoiceAccount(batch.id, accountId);
   await newRepos.billingInvoices.deleteByBatchAndInvoiceAccountId(batch.id, accountId);
+
+  return setStatusToEmptyWhenNoTransactions(batch);
+};
+
+/**
+ * If the batch has no more transactions then the batch is set
+ * to empty, otherwise it stays the same
+ *
+ * @param {Batch} batch
+ * @returns {Batch} The updated batch if no transactions
+ */
+const setStatusToEmptyWhenNoTransactions = async batch => {
+  const remainingTransactions = await newRepos.billingTransactions.findByBatchId(batch.id);
+
+  if (remainingTransactions.length === 0) {
+    return setStatus(batch.id, BATCH_STATUS.empty);
+  }
+  return batch;
 };
 
 exports.approveBatch = approveBatch;
@@ -202,3 +220,4 @@ exports.refreshTotals = refreshTotals;
 exports.saveInvoicesToDB = saveInvoicesToDB;
 exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
+exports.setStatusToEmptyWhenNoTransactions = setStatusToEmptyWhenNoTransactions;

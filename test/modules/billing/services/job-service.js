@@ -8,8 +8,7 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 
 const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
 
 const { BATCH_STATUS } = require('../../../../src/lib/models/batch');
 const { jobStatus } = require('../../../../src/modules/billing/lib/batch');
@@ -42,6 +41,24 @@ experiment('modules/billing/services/jobService', () => {
       const [batchId, status] = batchService.setStatus.lastCall.args;
       expect(batchId).to.equal('test-batch-id');
       expect(status).to.equal(BATCH_STATUS.ready);
+    });
+  });
+
+  experiment('.setEmptyBatch', () => {
+    beforeEach(async () => {
+      await jobService.setEmptyBatch('test-event-id', 'test-batch-id');
+    });
+
+    test('updates the event status', async () => {
+      const [eventId, status] = eventService.updateStatus.lastCall.args;
+      expect(eventId).to.equal('test-event-id');
+      expect(status).to.equal(jobStatus.complete);
+    });
+
+    test('updates the batch status', async () => {
+      const [batchId, status] = batchService.setStatus.lastCall.args;
+      expect(batchId).to.equal('test-batch-id');
+      expect(status).to.equal(BATCH_STATUS.empty);
     });
   });
 
