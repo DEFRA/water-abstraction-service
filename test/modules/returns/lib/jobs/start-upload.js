@@ -3,18 +3,24 @@ const {
   beforeEach,
   afterEach,
   experiment,
-  test
+  test,
+  fail
 } = exports.lab = require('@hapi/lab').script();
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+
+const uuid = require('uuid/v4');
 
 const startUploadJob = require('../../../../../src/modules/returns/lib/jobs/start-upload');
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload');
 const uploadAdapters = require('../../../../../src/modules/returns/lib/upload-adapters');
 const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('../../../../../src/logger');
-const event = require('../../../../../src/lib/event');
+const eventsService = require('../../../../../src/lib/services/events');
+const Event = require('../../../../../src/lib/models/event');
+
+const eventId = uuid();
 
 experiment('publish', () => {
   beforeEach(async () => {
@@ -45,24 +51,28 @@ experiment('handler', () => {
   let job;
 
   beforeEach(async () => {
-    sandbox.stub(event, 'load').resolves({
-      eventId: 'test-event-id',
+    const event = new Event(eventId);
+    event.fromHash({
+      type: 'returns-upload',
       subtype: 'xml'
     });
-    sandbox.stub(event, 'save').resolves();
+
+    sandbox.stub(eventsService, 'findOne').resolves(event);
+    sandbox.stub(eventsService, 'update').resolves(event);
     sandbox.stub(returnsUpload, 'getReturnsS3Object').resolves({
       Body: Buffer.from('<xml></xml>', 'utf-8')
     });
-    sandbox.stub(uploadAdapters.xml, 'validator').resolves(true);
+    sandbox.stub(uploadAdapters.xml, 'validator').resolves({
+      isValid: true
+    });
 
-    sandbox.spy(logger, 'error');
+    sandbox.stub(logger, 'error');
 
     job = {
       data: {
-        eventId: 'test-event-id',
+        eventId,
         key: 'test-s3-key'
-      },
-      done: sinon.spy()
+      }
     };
   });
 
@@ -72,24 +82,24 @@ experiment('handler', () => {
 
   test('loads the event', async () => {
     await startUploadJob.handler(job);
-    expect(event.load.calledWith(job.data.eventId)).to.be.true();
+    expect(eventsService.findOne.calledWith(job.data.eventId)).to.be.true();
   });
 
   test('loads the S3 object', async () => {
     await startUploadJob.handler(job);
-    const [eventId] = returnsUpload.getReturnsS3Object.lastCall.args;
-    expect(eventId).to.equal('test-event-id');
-  });
-
-  test('finishes the job', async () => {
-    await startUploadJob.handler(job);
-    expect(job.done.called).to.be.true();
+    const [id] = returnsUpload.getReturnsS3Object.lastCall.args;
+    expect(id).to.equal(eventId);
   });
 
   experiment('when there is an error', async () => {
     beforeEach(async () => {
-      returnsUpload.getReturnsS3Object.rejects({ name: 'test-error' });
-      await startUploadJob.handler(job);
+      try {
+        returnsUpload.getReturnsS3Object.rejects({ name: 'test-error' });
+        await startUploadJob.handler(job);
+        fail();
+      } catch (err) {
+
+      }
     });
 
     test('the error is logged', async () => {
@@ -98,29 +108,30 @@ experiment('handler', () => {
     });
 
     test('the status is set to error', async () => {
-      const [evt] = event.save.lastCall.args;
+      const [evt] = eventsService.update.lastCall.args;
       expect(evt.status).to.equal('error');
     });
 
     test('the event metadata is updated', async () => {
-      const [evt] = event.save.lastCall.args;
+      const [evt] = eventsService.update.lastCall.args;
       expect(evt.metadata.error.key).to.equal('server');
-    });
-
-    test('the job is completed', async () => {
-      const [error] = job.done.lastCall.args;
-      expect(error.name).to.equal('test-error');
     });
   });
 
   experiment('when the xml does not validate', async () => {
     beforeEach(async () => {
       uploadAdapters.xml.validator.resolves({
-        errors: [
+        isValid: false,
+        validationErrors: [
           { one: 1 }
         ]
       });
-      await startUploadJob.handler(job);
+      try {
+        await startUploadJob.handler(job);
+        fail();
+      } catch (err) {
+
+      }
     });
 
     test('the error is logged', async () => {
@@ -129,18 +140,13 @@ experiment('handler', () => {
     });
 
     test('the status is set to error', async () => {
-      const [evt] = event.save.lastCall.args;
+      const [evt] = eventsService.update.lastCall.args;
       expect(evt.status).to.equal('error');
     });
 
     test('the event metadata is updated', async () => {
-      const [evt] = event.save.lastCall.args;
+      const [evt] = eventsService.update.lastCall.args;
       expect(evt.metadata.error.key).to.equal('invalid-xml');
-    });
-
-    test('the job is completed', async () => {
-      const [error] = job.done.lastCall.args;
-      expect(error).to.exist();
     });
   });
 });

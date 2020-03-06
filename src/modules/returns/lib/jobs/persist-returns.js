@@ -108,15 +108,12 @@ const handlePersistReturns = async job => {
   logger.info('persist job started returns', { eventId });
 
   try {
-    const [evt, returns] = await Promise.all([
-      eventsService.findOne(eventId),
-      getReturnsFromS3(eventId)
-    ]);
-    event = evt;
+    event = await eventsService.findOne(eventId);
+    const returns = await getReturnsFromS3(eventId);
 
     const validatedReturns = get(event, 'metadata.returns', []);
     const updatedReturns = await persistReturns(validatedReturns, returns);
-    await updateEvent(evt, updatedReturns);
+    await updateEvent(event, updatedReturns);
   } catch (err) {
     logger.error('Failed to persist bulk returns upload', err, { job });
     await errorEvent.setEventError(event, err);

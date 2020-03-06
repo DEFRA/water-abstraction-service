@@ -1,5 +1,4 @@
 const { expect } = require('@hapi/code');
-const { omit } = require('lodash');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const eventFactory = require('../../../../src/modules/returns/lib/event-factory');
 
@@ -19,8 +18,6 @@ const ret = {
 const version = {
   version_id: 'd00b67dd-54bd-4f00-b3c0-f3e83aa16315'
 };
-
-const isoDateRegex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\+[0-9]{2}:[0-9]{2}$/;
 
 experiment('eventFactory', () => {
   experiment('.createSubmissionEvent', () => {

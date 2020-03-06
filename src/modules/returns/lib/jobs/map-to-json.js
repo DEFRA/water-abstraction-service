@@ -55,7 +55,7 @@ const handleReturnsMapToJsonStart = async job => {
     const application = config.idm.application.externalUser;
 
     const [s3Object, user] = await Promise.all([
-      returnsUpload.getReturnsS3Object(job.data.eventId, event.subtype),
+      returnsUpload.getReturnsS3Object(event.id, event.subtype),
       idmConnector.usersClient.getUserByUsername(event.issuer, application)
     ]);
 
