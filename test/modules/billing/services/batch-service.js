@@ -451,12 +451,8 @@ experiment('modules/billing/services/batch-service', () => {
         expect(savedEvent.metadata.batch).to.equal(batch);
       });
 
-      test('sets the status of the batch to error', async () => {
-        const [id, changes] = newRepos.billingBatches.update.lastCall.args;
-        expect(id).to.equal(batch.id);
-        expect(changes).to.equal({
-          status: 'error'
-        });
+      test('does not set the status of the batch to error so the user can retry', async () => {
+        expect(newRepos.billingBatches.update.called).to.be.false();
       });
     });
   });
