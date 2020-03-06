@@ -38,6 +38,16 @@ const findOne = async id => {
   return model.toJSON();
 };
 
-exports.upsert = upsert;
+const deleteByBatchAndInvoiceAccountId = (batchId, invoiceAccountId) => {
+  return BillingInvoice
+    .forge()
+    .where({
+      invoice_account_id: invoiceAccountId,
+      billing_batch_id: batchId
+    }).destroy();
+};
+
+exports.deleteByBatchAndInvoiceAccountId = deleteByBatchAndInvoiceAccountId;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;
+exports.upsert = upsert;

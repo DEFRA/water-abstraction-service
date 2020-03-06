@@ -72,6 +72,33 @@ experiment('lib/connectors/charge-module/batches', () => {
     });
   });
 
+  experiment('.deleteAccountFromBatch', () => {
+    let batchId;
+    let customerReference;
+
+    beforeEach(async () => {
+      batchId = uuid();
+      customerReference = 'A11111111A';
+      await batches.deleteAccountFromBatch('S', batchId, customerReference);
+    });
+
+    test('sends a post request using the expected path', async () => {
+      const [path] = request.post.lastCall.args;
+      expect(path).to.equal('v1/wrls/transaction_queue/remove');
+    });
+
+    test('sends a post request with the expected payload', async () => {
+      const [, payload] = request.post.lastCall.args;
+      expect(payload).to.equal({
+        region: 'S',
+        filter: {
+          batchNumber: batchId,
+          customerReference
+        }
+      });
+    });
+  });
+
   experiment('.send', () => {
     test('sends a post request using the expected path', async () => {
       await batches.send('S', uuid());

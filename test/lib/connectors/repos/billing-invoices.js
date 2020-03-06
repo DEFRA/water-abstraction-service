@@ -34,7 +34,8 @@ experiment('lib/connectors/repos/billing-invoices', () => {
       orderBy: sandbox.stub().returnsThis(),
       fetchPage: sandbox.stub().resolves(model),
       where: sandbox.stub().returnsThis(),
-      save: sandbox.stub().resolves(model)
+      save: sandbox.stub().resolves(model),
+      destroy: sandbox.stub().resolves(model)
     };
 
     sandbox.stub(BillingInvoice, 'forge').returns(stub);
@@ -79,6 +80,27 @@ experiment('lib/connectors/repos/billing-invoices', () => {
       expect(params).to.equal({
         batchId: 'test-batch-id'
       });
+    });
+  });
+
+  experiment('.deleteByBatchAndInvoiceAccountId', () => {
+    beforeEach(async () => {
+      await billingInvoices.deleteByBatchAndInvoiceAccountId(
+        'test-batch-id',
+        'test-invoice-account-id'
+      );
+    });
+
+    test('filters using the expected where clause', async () => {
+      const [clause] = stub.where.lastCall.args;
+      expect(clause).to.equal({
+        invoice_account_id: 'test-invoice-account-id',
+        billing_batch_id: 'test-batch-id'
+      });
+    });
+
+    test('deletes the found data via destroy', async () => {
+      expect(stub.destroy.called).to.equal(true);
     });
   });
 

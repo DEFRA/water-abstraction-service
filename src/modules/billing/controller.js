@@ -12,7 +12,6 @@ const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
 const batchService = require('./services/batch-service');
 const eventService = require('../../lib/services/events');
-const { BATCH_STATUS } = require('../../lib/models/batch');
 
 const mappers = require('./mappers');
 
@@ -111,54 +110,35 @@ const getBatchInvoiceDetail = async request => {
   return invoice || Boom.notFound(`No invoice found with id: ${invoiceId} in batch with id: ${batchId}`);
 };
 
-const deleteAccountFromBatch = async request => {
-  const { batchId, accountId } = request.params;
+const deleteAccountFromBatch = async (request, h) => {
+  const { batch } = request.pre;
+  const { accountId } = request.params;
 
-  const invoices = await invoiceService.getInvoicesForBatch(batchId);
+  if (!batch.canDeleteAccounts()) {
+    return h.response(`Cannot delete account from batch when status is ${batch.status}`).code(422);
+  }
 
+  const invoices = await invoiceService.getInvoicesForBatch(batch.id);
   const invoicesForAccount = invoices.filter(invoice => invoice.invoiceAccount.id === accountId);
 
   if (invoicesForAccount.length === 0) {
-    return Boom.notFound(`No invoices for account (${accountId}) in batch (${batchId})`);
+    return Boom.notFound(`No invoices for account (${accountId}) in batch (${batch.id})`);
   }
 
-  /*
-    TODO: Temporary implementation
-
-    Currently only removes the transactions from the local
-    water.billing_transactions table.
-
-    This needs to also remove the transactions at the charge module,
-    but we are currently waiting on the decision whether this will happen
-    in bulk or one transaction at a time.
-
-    After this is resolved the following connector code can be extracted
-    out to a service layer function where charge module interaction will
-    also take place.
-
-    The code below this comment is not included in the unit tests.
-  */
-  const { rowCount } = await repos.billingTransactions.deleteByInvoiceAccount(batchId, accountId);
-  return {
-    transactionsDeleted: rowCount
-  };
+  await batchService.deleteAccountFromBatch(batch, accountId);
+  return h.response().code(204);
 };
 
 const deleteBatch = async (request, h) => {
   const { batch } = request.pre;
   const { internalCallingUser } = request.defra;
-  const validStatuses = [BATCH_STATUS.ready, BATCH_STATUS.review, BATCH_STATUS.error];
 
-  if (!validStatuses.includes(batch.status)) {
+  if (!batch.canBeDeleted()) {
     return h.response(`Cannot delete batch when status is ${batch.status}`).code(422);
   }
 
-  try {
-    await batchService.deleteBatch(batch, internalCallingUser);
-    return h.response().code(204);
-  } catch (err) {
-    return err;
-  }
+  await batchService.deleteBatch(batch, internalCallingUser);
+  return h.response().code(204);
 };
 
 const postApproveBatch = async (request, h) => {
