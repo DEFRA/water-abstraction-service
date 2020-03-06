@@ -98,6 +98,12 @@ const getBatchInvoices = async request => {
   return invoices.map(mappers.api.invoice.modelToBatchInvoices);
 };
 
+const getBatchInvoicesDetails = async request => {
+  const { batchId } = request.params;
+  const data = await invoiceService.getInvoicesTransactionsForBatch(batchId);
+  return data || Boom.notFound(`No invoices found in batch with id: ${batchId}`);
+};
+
 const getBatchInvoiceDetail = async request => {
   const { batchId, invoiceId } = request.params;
   const invoice = await invoiceService.getInvoiceForBatch(batchId, invoiceId);
@@ -151,6 +157,7 @@ exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
+exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
 
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
 exports.deleteBatch = deleteBatch;

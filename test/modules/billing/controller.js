@@ -51,6 +51,7 @@ experiment('modules/billing/controller', () => {
 
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
+    sandbox.stub(invoiceService, 'getInvoicesTransactionsForBatch').resolves();
 
     sandbox.stub(eventService, 'create').resolves({
       eventId: '11111111-1111-1111-1111-111111111111'
@@ -356,6 +357,47 @@ experiment('modules/billing/controller', () => {
 
       test('the error contains a not found message', async () => {
         expect(response.output.payload.message).to.equal('No invoice found with id: test-invoice-id in batch with id: test-batch-id');
+      });
+    });
+  });
+
+  experiment('.getBatchInvoicesDetails', () => {
+    experiment('when the invoice is found', () => {
+      let response;
+      let invoices;
+
+      beforeEach(async () => {
+        const invoice = new Invoice(uuid());
+        invoices = [invoice, invoice];
+
+        invoiceService.getInvoicesTransactionsForBatch.resolves(invoices);
+
+        response = await controller.getBatchInvoicesDetails({
+          params: {
+            batchId: 'test-batch-id'
+          }
+        });
+      });
+
+      test('the invoice is returned', async () => {
+        expect(response[0].id).to.equal(invoices[0].id);
+      });
+    });
+
+    experiment('when the batch is not found', () => {
+      let response;
+
+      beforeEach(async () => {
+        invoiceService.getInvoicesTransactionsForBatch.resolves();
+        response = await controller.getBatchInvoicesDetails({
+          params: {
+            batchId: 'test-batch-id'
+          }
+        });
+      });
+
+      test('the error contains a not found message', async () => {
+        expect(response.output.payload.message).to.equal('No invoices found in batch with id: test-batch-id');
       });
     });
   });

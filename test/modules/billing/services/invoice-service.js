@@ -181,6 +181,70 @@ const createInvoiceData = () => ({
   }]
 });
 
+const createOneWithInvoicesWithTransactions = () => ({
+  batchId: BATCH_ID,
+  region: {
+    chargeRegionId: 'A'
+  },
+  billingInvoices: [{
+    invoiceAccountId: INVOICE_1_ACCOUNT_ID,
+    invoiceAccountNumber: INVOICE_1_ACCOUNT_NUMBER,
+    billingInvoiceLicences: [{
+      licence: {
+        licenceId: LICENCE_ID,
+        licenceRef: '01/123/ABC',
+        regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
+        region: {
+          regionId: REGION_ID,
+          name: REGION_NAME,
+          displayName: REGION_NAME,
+          chargeRegionId: CHARGE_REGION_ID
+        }
+      },
+      billingTransactions: [{
+        billingTransactionId: uuid(),
+        volume: 10.6,
+        chargeElement: {
+          chargeElementId: uuid(),
+          source: 'supported',
+          season: 'summer',
+          loss: 'high'
+        },
+        externalId: CHARGE_MODULE_TRANSACTION_ID
+      }]
+    }]
+  },
+  {
+    invoiceAccountId: INVOICE_2_ACCOUNT_ID,
+    invoiceAccountNumber: INVOICE_2_ACCOUNT_NUMBER,
+    billingInvoiceLicences: [{
+      licence: {
+        licenceId: LICENCE_ID,
+        licenceRef: '01/123/ABC',
+        regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
+        region: {
+          regionId: REGION_ID,
+          name: REGION_NAME,
+          displayName: REGION_NAME,
+          chargeRegionId: CHARGE_REGION_ID
+        }
+      }
+    }, {
+      licence: {
+        licenceId: LICENCE_ID,
+        licenceRef: '02/345',
+        regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
+        region: {
+          regionId: REGION_ID,
+          name: REGION_NAME,
+          displayName: REGION_NAME,
+          chargeRegionId: CHARGE_REGION_ID
+        }
+      }
+    }]
+  }]
+});
+
 experiment('modules/billing/services/invoiceService', () => {
   let batch, chargeModuleData;
 
@@ -263,6 +327,44 @@ experiment('modules/billing/services/invoiceService', () => {
       expect(totals.debitLineCount).to.equal(10);
       expect(totals.debitLineValue).to.equal(120267);
       expect(totals.netTotal).to.equal(104943);
+    });
+  });
+
+  experiment('.getInvoicesTransactionsForBatch', () => {
+    let invoices;
+    const batchData = createOneWithInvoicesWithTransactions();
+
+    beforeEach(async () => {
+      sandbox.stub(newRepos.billingBatches, 'findOneWithInvoicesWithTransactions').resolves(batchData);
+      invoices = await invoiceService.getInvoicesTransactionsForBatch(BATCH_ID);
+    });
+
+    test('gets batch with correct ID', async () => {
+      expect(
+        newRepos.billingBatches.findOneWithInvoicesWithTransactions.calledWith(BATCH_ID)
+      ).to.be.true();
+    });
+
+    test('gets draft batch summary data from charge module with correct region and batch ID', async () => {
+      const [region, batchId, isDraft] = chargeModuleBatchConnector.send.lastCall.args;
+      expect(region).to.equal(batch.region.chargeRegionId);
+      expect(batchId).to.equal(BATCH_ID);
+      expect(isDraft).to.be.true();
+    });
+
+    test('there is an invoice for each customer', async () => {
+      expect(invoices.length).to.equal(2);
+      expect(invoices[0].invoiceAccount.accountNumber).to.equal(INVOICE_1_ACCOUNT_NUMBER);
+      expect(invoices[1].invoiceAccount.accountNumber).to.equal(INVOICE_2_ACCOUNT_NUMBER);
+    });
+
+    test('the invoices have been decorated with the company', async () => {
+      expect(invoices[0].invoiceAccount.company.id).to.equal(COMPANY_1_ID);
+      expect(invoices[1].invoiceAccount.company.id).to.equal(COMPANY_2_ID);
+    });
+
+    test('the transaction is decorated with the value from the charge module', async () => {
+      expect(invoices[0].invoiceLicences[0].transactions[0].value).to.equal(2345);
     });
   });
 
