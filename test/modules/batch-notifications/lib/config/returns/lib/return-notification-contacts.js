@@ -8,7 +8,6 @@ const {
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
-const moment = require('moment');
 
 const notificationContacts = require('../../../../../../../src/modules/batch-notifications/config/returns/lib/return-notification-contacts');
 const documentsConnector = require('../../../../../../../src/lib/connectors/crm/documents');

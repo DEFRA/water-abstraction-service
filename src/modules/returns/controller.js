@@ -79,14 +79,10 @@ const getEventStatusLink = eventId => `/water/1.0/event/${eventId}`;
 const postUpload = async (request, h) => {
   const { type } = request.params;
 
-  console.log(request.params, request.payload);
   let event = eventFactory.createBulkUploadEvent(request.payload.userName, type);
 
-  console.log(event);
   try {
-    event = await eventsService.update(event);
-
-    console.log(event);
+    event = await eventsService.create(event);
 
     const filename = getUploadFilename(event.id, type);
     const data = await s3.upload(filename, request.payload.fileData);

@@ -124,8 +124,6 @@ experiment('lib/event', () => {
     });
 
     experiment('when there is an ID', async () => {
-      let ev;
-
       beforeEach(async () => {
         const data = {
           ...createPojo(),
