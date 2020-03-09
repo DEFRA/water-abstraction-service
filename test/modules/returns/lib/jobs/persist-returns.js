@@ -3,7 +3,8 @@ const {
   beforeEach,
   afterEach,
   experiment,
-  test
+  test,
+  fail
 } = exports.lab = require('@hapi/lab').script();
 
 const sinon = require('sinon');
@@ -13,9 +14,9 @@ const persistReturnsJob = require('../../../../../src/modules/returns/lib/jobs/p
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload');
 const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('../../../../../src/logger');
-const event = require('../../../../../src/lib/event');
-const newEvtRepo = require('../../../../../src/lib/connectors/repos/events.js');
 const returnsConnector = require('../../../../../src/modules/returns/lib/api-connector');
+
+const eventsService = require('../../../../../src/lib/services/events');
 
 experiment('publish', () => {
   beforeEach(async () => {
@@ -47,7 +48,7 @@ experiment('handler', () => {
   let testError;
 
   beforeEach(async () => {
-    sandbox.stub(event, 'load').resolves({
+    sandbox.stub(eventsService, 'findOne').resolves({
       metadata: {
         returns: [
           { returnId: 'test-return-1', submitted: false, error: null },
@@ -55,8 +56,7 @@ experiment('handler', () => {
         ]
       }
     });
-    sandbox.stub(event, 'save').resolves();
-    sandbox.stub(newEvtRepo, 'update').resolves();
+    sandbox.stub(eventsService, 'update').resolves();
 
     sandbox.stub(returnsUpload, 'getReturnsS3Object').resolves({
       Body: Buffer.from(JSON.stringify([
@@ -89,7 +89,7 @@ experiment('handler', () => {
 
   test('loads the event', async () => {
     await persistReturnsJob.handler(job);
-    expect(event.load.calledWith(job.data.eventId)).to.be.true();
+    expect(eventsService.findOne.calledWith(job.data.eventId)).to.be.true();
   });
 
   test('loads the S3 object', async () => {
@@ -111,8 +111,8 @@ experiment('handler', () => {
 
   test('updates the event metadata with the upload result', async () => {
     await persistReturnsJob.handler(job);
-    const [, changes] = newEvtRepo.update.lastCall.args;
-    expect(changes.metadata).to.equal({
+    const [event] = eventsService.update.lastCall.args;
+    expect(event.metadata).to.equal({
       returns: [
         { returnId: 'test-return-1', submitted: true, error: null },
         { returnId: 'test-return-2', submitted: false, error: testError }
@@ -122,36 +122,31 @@ experiment('handler', () => {
 
   test('sets the event status to submitted on completion', async () => {
     await persistReturnsJob.handler(job);
-    const [, changes] = newEvtRepo.update.lastCall.args;
-    expect(changes.status).to.equal(returnsUpload.uploadStatus.SUBMITTED);
-  });
-
-  test('finishes the job', async () => {
-    await persistReturnsJob.handler(job);
-    expect(job.done.called).to.be.true();
+    const [event] = eventsService.update.lastCall.args;
+    expect(event.status).to.equal(returnsUpload.uploadStatus.SUBMITTED);
   });
 
   experiment('when there is an error', async () => {
     beforeEach(async () => {
-      returnsUpload.getReturnsS3Object.rejects(testError);
-      await persistReturnsJob.handler(job);
+      try {
+        returnsUpload.getReturnsS3Object.rejects(testError);
+        await persistReturnsJob.handler(job);
+        fail();
+      } catch (err) {
+
+      }
     });
 
     test('the error is logged', async () => {
       const [message, error, params] = logger.error.lastCall.args;
-      expect(message).to.be.a.string();
+      expect(message).to.equal('Failed to persist bulk returns upload');
       expect(error).to.equal(testError);
       expect(params.job).to.equal(job);
     });
 
     test('the status is set to error', async () => {
-      const [evt] = event.save.lastCall.args;
+      const [evt] = eventsService.update.lastCall.args;
       expect(evt.status).to.equal('error');
-    });
-
-    test('the job is completed', async () => {
-      const [error] = job.done.lastCall.args;
-      expect(error.message).to.equal('test-error');
     });
   });
 });

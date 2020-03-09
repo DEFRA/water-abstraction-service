@@ -12,20 +12,29 @@ const sandbox = sinon.createSandbox();
 const { createJobPublisher, loadJobData } =
 require('../../../../src/modules/batch-notifications/lib/batch-notifications');
 const messageQueue = require('../../../../src/lib/message-queue');
-const evt = require('../../../../src/lib/event');
+const eventsService = require('../../../../src/lib/services/events');
+const Event = require('../../../../src/lib/models/event');
+const uuid = require('uuid/v4');
 
 const JOB_NAME = 'jobName';
 const key = 'testKey';
-const id = 'id';
-const ev = {
-  eventId: 'testEvent',
-  subtype: 'returnReminder'
+
+const eventId = uuid();
+
+const createEvent = () => {
+  const event = new Event();
+  return event.fromHash({
+    id: eventId,
+    subtype: 'returnReminder'
+  });
 };
 
 experiment('batch notifications helpers', () => {
+  const event = createEvent();
+
   beforeEach(async () => {
     sandbox.stub(messageQueue, 'publish').resolves();
-    sandbox.stub(evt, 'load').resolves(ev);
+    sandbox.stub(eventsService, 'findOne').resolves(event);
   });
 
   afterEach(async () => {
@@ -41,10 +50,10 @@ experiment('batch notifications helpers', () => {
     experiment('when the third argument is false', () => {
       test('the created function publishes job with no options', async () => {
         const func = createJobPublisher(JOB_NAME, key, false);
-        await (func(id));
+        await (func(eventId));
         const [jobName, data, options] = messageQueue.publish.lastCall.args;
         expect(jobName).to.equal(JOB_NAME);
-        expect(data).to.equal({ [key]: id });
+        expect(data).to.equal({ [key]: eventId });
         expect(options).to.equal({});
       });
     });
@@ -52,31 +61,33 @@ experiment('batch notifications helpers', () => {
     experiment('when the third argument is true', () => {
       test('the created function publishes job with singletonKey option', async () => {
         const func = createJobPublisher(JOB_NAME, key, true);
-        await (func(id));
+        await (func(eventId));
         const [jobName, data, options] = messageQueue.publish.lastCall.args;
         expect(jobName).to.equal(JOB_NAME);
-        expect(data).to.equal({ [key]: id });
-        expect(options).to.equal({ singletonKey: id });
+        expect(data).to.equal({ [key]: eventId });
+        expect(options).to.equal({ singletonKey: eventId });
       });
     });
   });
 
   experiment('loadJobData', () => {
     test('throws an error if the event cannot be found', async () => {
-      evt.load.resolves(undefined);
+      eventsService.findOne.resolves(undefined);
       expect(loadJobData()).to.reject();
     });
 
     test('throws an error if the config cannot be found', async () => {
-      evt.load.resolves({
-        subtype: 'unknownMessageType'
-      });
+      eventsService.findOne.resolves(
+        createEvent().fromHash({
+          subtype: 'unknownMessageType'
+        })
+      );
       expect(loadJobData()).to.reject();
     });
 
     test('resolves with event and message data if found', async () => {
       const result = await loadJobData();
-      expect(result.ev).to.equal(ev);
+      expect(result.ev.id).to.equal(event.id);
       expect(result.config.messageType).to.equal('returnReminder');
     });
   });

@@ -9,16 +9,32 @@ const Event = require('../models/event');
  * @return {Object}      - data with keys camel cased
  */
 const mapFromRepo = (data) => {
-  const event = new Event();
-  return event.fromHash(data);
+  const { eventId, ...rest } = data;
+  const event = new Event(eventId);
+  return event.fromHash(rest);
 };
+
+/**
+ * Maps data from event model back to the Bookshelf repo
+ * @param {Event} eventModel
+ * @return {Object}
+ */
+const mapToRepo = eventModel => {
+  const { id, ...rest } = eventModel.toJSON();
+  return {
+    eventId: id,
+    ...rest
+  };
+};
+
 /**
  * Creates an Event model object
  * @param  {Event} eventModel for the event
  * @returns {Event} Event model object
  */
 const create = async (eventModel) => {
-  const result = await repo.events.create(eventModel.toJSON());
+  const data = mapToRepo(eventModel);
+  const result = await repo.events.create(data);
   return mapFromRepo(result);
 };
 
@@ -39,7 +55,7 @@ const findOne = async (eventId) => {
  * @returns {Event} Event model object
  */
 const update = async (eventModel) => {
-  const result = await repo.events.update(eventModel.eventId, eventModel.toJSON());
+  const result = await repo.events.update(eventModel.id, mapToRepo(eventModel));
   return mapFromRepo(result);
 };
 
@@ -52,7 +68,7 @@ const update = async (eventModel) => {
  * @returns {Event} Event model object
  */
 const updateStatus = async (eventId, status) => {
-  const result = await repo.events.updateStatus(eventId, status);
+  const result = await repo.events.update(eventId, { status });
   return mapFromRepo(result);
 };
 

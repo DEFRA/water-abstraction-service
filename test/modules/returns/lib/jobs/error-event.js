@@ -9,12 +9,12 @@ const {
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const event = require('../../../../../src/lib/event');
 const errorEvent = require('../../../../../src/modules/returns/lib/jobs/error-event');
+const eventsService = require('../../../../../src/lib/services/events');
 
 experiment('setEventError', () => {
   beforeEach(async () => {
-    sandbox.stub(event, 'save').resolves();
+    sandbox.stub(eventsService, 'update');
   });
 
   afterEach(async () => {
@@ -27,14 +27,14 @@ experiment('setEventError', () => {
 
     await errorEvent.setEventError(evt, error);
 
-    expect(event.save.called).to.be.true();
+    expect(eventsService.update.called).to.be.true();
   });
 
   test('sets the event status to error', async () => {
     const error = new Error('error-message');
     await errorEvent.setEventError({}, error);
 
-    const [evt] = event.save.lastCall.args;
+    const [evt] = eventsService.update.lastCall.args;
     expect(evt.status).to.equal('error');
   });
 
@@ -43,7 +43,7 @@ experiment('setEventError', () => {
 
     await errorEvent.setEventError({}, error);
 
-    const [evt] = event.save.lastCall.args;
+    const [evt] = eventsService.update.lastCall.args;
     expect(evt.metadata.error.key).to.equal('server');
   });
 
@@ -52,7 +52,7 @@ experiment('setEventError', () => {
 
     await errorEvent.setEventError({}, error);
 
-    const [evt] = event.save.lastCall.args;
+    const [evt] = eventsService.update.lastCall.args;
     expect(evt.metadata.error.message).to.equal('error-message');
   });
 
@@ -62,7 +62,7 @@ experiment('setEventError', () => {
 
     await errorEvent.setEventError({}, error);
 
-    const [evt] = event.save.lastCall.args;
+    const [evt] = eventsService.update.lastCall.args;
     expect(evt.metadata.error.key).to.equal('error-key');
   });
 
@@ -75,7 +75,7 @@ experiment('setEventError', () => {
 
     await errorEvent.setEventError(evt, error);
 
-    const [savedEvent] = event.save.lastCall.args;
+    const [savedEvent] = eventsService.update.lastCall.args;
     expect(savedEvent.metadata).to.equal({
       date: { day: 'Thursday' },
       error: { key: 'server', message: 'error-message' }
