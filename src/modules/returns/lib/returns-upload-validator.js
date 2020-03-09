@@ -110,7 +110,7 @@ const validateLineFrequency = ret => {
     const { startDate, endDate, frequency } = ret;
     const requiredLines = returnLines.getRequiredLines(startDate, endDate, frequency);
     const returnTimePeriod = uniq(ret.lines.map(line => line.timePeriod));
-    return returnTimePeriod[0] === requiredLines[0].timePeriod;
+    return returnTimePeriod[0] === [requiredLines[0].timePeriod];
   } catch (err) {
     return false;
   }
