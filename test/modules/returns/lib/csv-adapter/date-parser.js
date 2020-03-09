@@ -126,6 +126,14 @@ experiment('modules/returns/lib/csv-adapter/date-parser', () => {
       });
     });
 
+    weekDateFormats.forEach(date => {
+      test(`returns "week" for day format: ${date}`, () => {
+        const { timePeriod, moment: m } = dateParser._getDateFrequency(`week ending ${date}`);
+        expect(timePeriod).to.equal('week');
+        expect(m.format('YYYY-MM-DD')).to.equal('2019-08-03');
+      });
+    });
+
     monthDateFormats.forEach(date => {
       test(`returns "month" for month format: ${date}`, () => {
         const { timePeriod, moment: m } = dateParser._getDateFrequency(date);
