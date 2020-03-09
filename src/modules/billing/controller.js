@@ -67,12 +67,12 @@ const postCreateBatch = async (request, h) => {
 
   // add a new job to the queue so that the batch can be filled
   // with charge versions
-  const message = populateBatchChargeVersionsJob.createMessage(batchEvent.eventId, batch);
+  const message = populateBatchChargeVersionsJob.createMessage(batchEvent.id, batch);
   await request.messageQueue.publish(message);
 
   return h.response(envelope({
     event: batchEvent,
-    url: `/water/1.0/event/${batchEvent.eventId}`
+    url: `/water/1.0/event/${batchEvent.id}`
   })).code(202);
 };
 
