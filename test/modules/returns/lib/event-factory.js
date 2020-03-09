@@ -23,7 +23,6 @@ experiment('eventFactory', () => {
   experiment('.createSubmissionEvent', () => {
     test('creates event object for submit event', async () => {
       const event = eventFactory.createSubmissionEvent(ret, version);
-      // const data = event.toJSON();
 
       expect(event.type).to.equal('return');
       expect(event.subtype).to.equal('internal');

@@ -108,8 +108,8 @@ experiment('batch notifications controller', () => {
     test('publishes event to start building recipient list', async () => {
       await controller.postPrepare(request, h);
       expect(getRecipients.publish.callCount).to.equal(1);
-      const [eventId] = getRecipients.publish.lastCall.args;
-      expect(eventId).to.equal(eventId);
+      const { args } = getRecipients.publish.lastCall;
+      expect(args[0]).to.equal(eventId);
     });
 
     test('responds with event data', async () => {
