@@ -1,6 +1,7 @@
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const dateParser = require('../../../../../src/modules/returns/lib/csv-adapter/date-parser');
+const moment = require('moment');
 
 const dayDateFormats = [
   '7 Aug 2019',
@@ -111,21 +112,25 @@ experiment('modules/returns/lib/csv-adapter/date-parser', () => {
 
   experiment('.getDateFrequency', async () => {
     test('returns "week" if date startsWith "week ending"', () => {
-      const frequency = dateParser._getDateFrequency('week ending 14 April 2018');
-      expect(frequency).to.equal('week');
+      const { timePeriod, moment: m } = dateParser._getDateFrequency('week ending 14 April 2018');
+
+      expect(timePeriod).to.equal('week');
+      expect(m.format('YYYY-MM-DD')).to.equal('2018-04-14');
     });
 
-    dayDateFormats.forEach(format => {
-      test(`returns "day" for day format: ${format}`, () => {
-        const frequency = dateParser._getDateFrequency(format);
-        expect(frequency).to.equal('day');
+    dayDateFormats.forEach(date => {
+      test(`returns "day" for day format: ${date}`, () => {
+        const { timePeriod, moment: m } = dateParser._getDateFrequency(date);
+        expect(timePeriod).to.equal('day');
+        expect(m.format('YYYY-MM-DD')).to.equal('2019-08-07');
       });
     });
 
-    monthDateFormats.forEach(format => {
-      test(`returns "month" for month format: ${format}`, () => {
-        const frequency = dateParser._getDateFrequency(format);
-        expect(frequency).to.equal('month');
+    monthDateFormats.forEach(date => {
+      test(`returns "month" for month format: ${date}`, () => {
+        const { timePeriod, moment: m } = dateParser._getDateFrequency(date);
+        expect(timePeriod).to.equal('month');
+        expect(m.format('YYYY-MM-DD')).to.equal('2019-08-01');
       });
     });
 
@@ -136,28 +141,8 @@ experiment('modules/returns/lib/csv-adapter/date-parser', () => {
   });
 
   experiment('.createDay', async () => {
-    test('creates a day return line skeleton from preferred data format', async () => {
-      const result = dateParser._createDay('7 May 2019');
-      expect(result).to.equal({
-        startDate: '2019-05-07',
-        endDate: '2019-05-07',
-        timePeriod: 'day'
-      });
-    });
-
-    dayDateFormats.forEach(format => {
-      test(`${format} creates a day return line skeleton for other date formats`, async () => {
-        const result = dateParser._createDay(format);
-        expect(result).to.equal({
-          startDate: '2019-08-07',
-          endDate: '2019-08-07',
-          timePeriod: 'day'
-        });
-      });
-    });
-
-    test('creates a day return line skeleton from DD  data format', async () => {
-      const result = dateParser._createDay('7 May 2019');
+    test('creates a day return line skeleton from a moment', async () => {
+      const result = dateParser._createDay(moment('2019-05-07'));
       expect(result).to.equal({
         startDate: '2019-05-07',
         endDate: '2019-05-07',
@@ -167,45 +152,23 @@ experiment('modules/returns/lib/csv-adapter/date-parser', () => {
   });
 
   experiment('.createWeek', async () => {
-    test('create a weekly return line skeleton from the preferred date format', async () => {
-      const result = dateParser._createWeek('11 May 2019');
+    test('creates a week return line skeleton from a moment', async () => {
+      const result = dateParser._createWeek(moment('2019-05-11'));
       expect(result).to.equal({
         startDate: '2019-05-05',
         endDate: '2019-05-11',
         timePeriod: 'week'
       });
     });
-
-    weekDateFormats.forEach(format => {
-      test(`${format} creates a day return line skeleton for other date formats`, async () => {
-        const result = dateParser._createWeek(format);
-        expect(result).to.equal({
-          startDate: '2019-07-28',
-          endDate: '2019-08-03',
-          timePeriod: 'week'
-        });
-      });
-    });
   });
 
   experiment('.createMonth', async () => {
-    test('creates a month return line skeleton for preferred format', async () => {
-      const result = dateParser._createMonth('May 2019');
+    test('creates a month return line skeleton from a moment', async () => {
+      const result = dateParser._createMonth(moment('2019-05-01'));
       expect(result).to.equal({
         startDate: '2019-05-01',
         endDate: '2019-05-31',
         timePeriod: 'month'
-      });
-    });
-
-    monthDateFormats.forEach(format => {
-      test(`${format} creates a day return line skeleton for other date formats`, async () => {
-        const result = dateParser._createMonth(format);
-        expect(result).to.equal({
-          startDate: '2019-08-01',
-          endDate: '2019-08-31',
-          timePeriod: 'month'
-        });
       });
     });
   });

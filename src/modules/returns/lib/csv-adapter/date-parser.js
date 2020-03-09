@@ -1,5 +1,5 @@
 const moment = require('moment');
-const { flatMap } = require('lodash');
+const { flatMap, compact } = require('lodash');
 const DATE_FORMAT = 'YYYY-MM-DD';
 
 // preferred format for dates is D MMMM YYYY, but some applications
@@ -31,19 +31,27 @@ const GDS_MONTH_FORMATS = flatMap([
 ]));
 const removeWeekEnding = string => string.replace(/week ending /i, '');
 
-const validateDailyDate = dateString => moment(dateString, GDS_DATE_FORMATS, true).isValid();
+const parseDailyDate = dateString => moment(dateString, GDS_DATE_FORMATS, true);
 
-const validateMonthlyDate = dateString => moment(dateString, GDS_MONTH_FORMATS, true).isValid();
+const parseWeeklyDate = dateString => parseDailyDate(removeWeekEnding(dateString));
 
+const parseMonthlyDate = dateString => moment(dateString, GDS_MONTH_FORMATS, true);
 /**
  * Finds the return frequency based on the format of the date string
  * @param {String} date trimmed and in lowercase
  * @return {String} return frequency
  */
 const getDateFrequency = date => {
-  if (date.startsWith('week ending')) return 'week';
-  if (validateDailyDate(date)) return 'day';
-  if (validateMonthlyDate(date)) return 'month';
+  const parsers = {
+    day: parseDailyDate,
+    week: parseWeeklyDate,
+    month: parseMonthlyDate
+  };
+  const result = Object.keys(parsers).map(timePeriod => {
+    const m = parsers[timePeriod](date);
+    return m.isValid() ? { timePeriod, moment: m } : null;
+  });
+  return compact(result)[0];
 };
 
 /**
@@ -51,10 +59,10 @@ const getDateFrequency = date => {
  * @param  {String} date - the date label in the CSV
  * @return {Object}      - a return line skeleton
  */
-const createDay = date => {
+const createDay = m => {
   return {
-    startDate: moment(date, GDS_DATE_FORMATS, true).format(DATE_FORMAT),
-    endDate: moment(date, GDS_DATE_FORMATS, true).format(DATE_FORMAT),
+    startDate: moment(m).format(DATE_FORMAT),
+    endDate: moment(m).format(DATE_FORMAT),
     timePeriod: 'day'
   };
 };
@@ -64,12 +72,10 @@ const createDay = date => {
  * @param  {String} date - the date label in the CSV
  * @return {Object}      - a return line skeleton
  */
-const createWeek = dateString => {
-  const date = removeWeekEnding(dateString);
-  if (!validateDailyDate(date)) return null;
+const createWeek = m => {
   return {
-    startDate: moment(date, GDS_DATE_FORMATS, true).subtract(6, 'day').format(DATE_FORMAT),
-    endDate: moment(date, GDS_DATE_FORMATS, true).format(DATE_FORMAT),
+    startDate: moment(m).subtract(6, 'day').format(DATE_FORMAT),
+    endDate: moment(m).format(DATE_FORMAT),
     timePeriod: 'week'
   };
 };
@@ -79,10 +85,10 @@ const createWeek = dateString => {
  * @param  {String} date - the date label in the CSV
  * @return {Object}      - a return line skeleton
  */
-const createMonth = date => {
+const createMonth = m => {
   return {
-    startDate: moment(date, GDS_MONTH_FORMATS, true).startOf('month').format(DATE_FORMAT),
-    endDate: moment(date, GDS_MONTH_FORMATS, true).endOf('month').format(DATE_FORMAT),
+    startDate: moment(m).startOf('month').format(DATE_FORMAT),
+    endDate: moment(m).endOf('month').format(DATE_FORMAT),
     timePeriod: 'month'
   };
 };
@@ -100,8 +106,8 @@ const dateMethods = {
  */
 const parse = (dateString) => {
   const normalisedDateString = dateString.trim().toLowerCase();
-  const frequency = getDateFrequency(normalisedDateString);
-  return (frequency) ? dateMethods[frequency](normalisedDateString) : null;
+  const date = getDateFrequency(normalisedDateString);
+  return (date) ? dateMethods[date.timePeriod](date.moment) : null;
 };
 
 /**
