@@ -1,10 +1,10 @@
 const messageQueue = require('../../../../lib/message-queue');
 const JOB_NAME = 'returns-upload';
-const event = require('../../../../lib/event');
 const { logger } = require('../../../../logger');
 const returnsUpload = require('../../lib/returns-upload');
 const errorEvent = require('./error-event');
 const uploadAdapters = require('../upload-adapters');
+const eventsService = require('../../../../lib/services/events');
 
 /**
  * Begins the bulk returns process by adding a new task to PG Boss.
@@ -50,22 +50,21 @@ const validateS3Object = async (evt, s3Object) => {
  */
 const handleReturnsUploadStart = async job => {
   const { eventId } = job.data;
-  const evt = await event.load(eventId);
+
+  const event = await eventsService.findOne(eventId);
 
   try {
-    const s3Object = await returnsUpload.getReturnsS3Object(eventId, evt.subtype);
+    const s3Object = await returnsUpload.getReturnsS3Object(eventId, event.subtype);
 
     // Pass parsed xml or csv doc to the validation function
     // returns true if the validation passes
     // returns an array of objects containing error messages and lines
-    await validateS3Object(evt, s3Object);
-
-    return job.done();
+    await validateS3Object(event, s3Object);
   } catch (error) {
     logger.error('Returns upload failure', error, { job });
 
-    await errorEvent.setEventError(evt, error);
-    return job.done(error);
+    await errorEvent.setEventError(event, error);
+    throw error;
   }
 };
 

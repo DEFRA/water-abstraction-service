@@ -13,7 +13,7 @@ const sandbox = sinon.createSandbox();
 const batchNotifications = require('../../../../../src/modules/batch-notifications/lib/batch-notifications');
 const messageQueue = require('../../../../../src/lib/message-queue');
 const getRecipients = require('../../../../../src/modules/batch-notifications/lib/jobs/get-recipients');
-const eventHelpers = require('../../../../../src/modules/batch-notifications/lib/event-helpers');
+const eventsService = require('../../../../../src/lib/services/events');
 const { EVENT_STATUS_ERROR } = require('../../../../../src/modules/batch-notifications/lib/event-statuses');
 const { logger } = require('../../../../../src/logger');
 
@@ -23,7 +23,7 @@ experiment('getRecipients job', () => {
   beforeEach(async () => {
     sandbox.stub(messageQueue, 'publish').resolves();
     sandbox.stub(batchNotifications, 'loadJobData').resolves();
-    sandbox.stub(eventHelpers, 'updateEventStatus').resolves();
+    sandbox.stub(eventsService, 'updateStatus').resolves();
     sandbox.stub(logger, 'error');
   });
 
@@ -71,7 +71,7 @@ experiment('getRecipients job', () => {
       });
 
       test('updates the event status to error', async () => {
-        const [id, status] = eventHelpers.updateEventStatus.lastCall.args;
+        const [id, status] = eventsService.updateStatus.lastCall.args;
         expect(id).to.equal(eventId);
         expect(status).to.equal(EVENT_STATUS_ERROR);
       });

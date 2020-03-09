@@ -4,14 +4,16 @@ const {
   experiment,
   test,
   beforeEach,
-  afterEach
+  afterEach,
+  fail
 } = exports.lab = require('@hapi/lab').script();
 
 const sinon = require('sinon');
 
 const preHandlers = require('../../../src/modules/returns/pre-handlers');
-const event = require('../../../src/lib/event');
 const returnsUpload = require('../../../src/modules/returns/lib/returns-upload');
+const eventsService = require('../../../src/lib/services/events');
+const Event = require('../../../src/lib/models/event');
 
 const eventId = 'df1c0fcc-9ef1-4287-8d6a-e80e451fb987';
 
@@ -28,10 +30,12 @@ const requestFactory = () => {
 
 const h = { continue: 'CONTINUE' };
 
-const evt = {
-  eventId,
-  referenceCode: 'TEST',
-  issuer: 'bob@example.com'
+const createEvent = () => {
+  const event = new Event(eventId);
+  return event.fromHash({
+    referenceCode: 'TEST',
+    issuer: 'bob@example.com'
+  });
 };
 
 const data = {
@@ -42,7 +46,7 @@ experiment('preLoadEvent', () => {
   const sandbox = sinon.createSandbox();
 
   beforeEach(async () => {
-    sandbox.stub(event, 'load').resolves(evt);
+    sandbox.stub(eventsService, 'findOne').resolves(createEvent());
     sandbox.stub(Boom, 'notFound').throws();
   });
 
@@ -53,14 +57,14 @@ experiment('preLoadEvent', () => {
   test('it should load the event with the ID specified in the params', async () => {
     const request = requestFactory();
     await preHandlers.preLoadEvent(request, h);
-    const [id] = event.load.firstCall.args;
+    const [id] = eventsService.findOne.firstCall.args;
     expect(id).to.equal(eventId);
   });
 
-  test('it should place the loaded event at request.evt', async () => {
+  test('it should place the loaded event at request.event', async () => {
     const request = requestFactory();
     await preHandlers.preLoadEvent(request, h);
-    expect(request.evt).to.equal(evt);
+    expect(request.event instanceof Event).to.be.true();
   });
 
   test('it should return h.continue', async () => {
@@ -70,10 +74,11 @@ experiment('preLoadEvent', () => {
   });
 
   test('it should throw Boom.notFound if event not loaded', async () => {
-    event.load.resolves(null);
+    eventsService.findOne.resolves(null);
     const request = requestFactory();
     try {
       await preHandlers.preLoadEvent(request, h);
+      fail();
     } catch (err) {
       expect(Boom.notFound.callCount).to.equal(1);
       expect(Boom.notFound.firstCall.args[1].eventId).to.equal(eventId);
@@ -129,7 +134,7 @@ experiment('preCheckIssuer', () => {
 
   test('returns h.continue if the username in the payload matches event issuer', async () => {
     const request = requestFactory();
-    request.evt = evt;
+    request.event = createEvent();
     const result = await preHandlers.preCheckIssuer(request, h);
     expect(result).to.equal(h.continue);
   });
@@ -137,15 +142,16 @@ experiment('preCheckIssuer', () => {
   test('throws Boom.unauthorized error if username in payload does not match event issuer', async () => {
     const request = requestFactory();
     request.query.userName = 'invisible@example.com';
-    request.evt = evt;
+    request.event = createEvent();
     try {
       await preHandlers.preCheckIssuer(request, h);
+      fail();
     } catch (err) {
-
+      expect(Boom.unauthorized.callCount).to.equal(1);
+      const [, params] = Boom.unauthorized.firstCall.args;
+      expect(params.eventId).to.equal(eventId);
+      expect(params.issuer).to.equal(request.query.userName);
+      expect(params.originalIssuer).to.equal(request.event.issuer);
     }
-    expect(Boom.unauthorized.callCount).to.equal(1);
-    const [, params] = Boom.unauthorized.firstCall.args;
-    expect(params.eventId).to.equal(eventId);
-    expect(params.userName).to.equal(request.query.userName);
   });
 });

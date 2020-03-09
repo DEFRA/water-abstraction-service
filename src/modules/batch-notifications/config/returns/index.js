@@ -1,5 +1,6 @@
 const Joi = require('@hapi/joi');
 const { getRecipients } = require('./lib/get-recipients');
+const { createEvent } = require('./lib/create-event');
 
 const schema = {
   excludeLicences: Joi.array().items(Joi.string().trim())
@@ -10,11 +11,13 @@ module.exports = [{
   name: 'Returns: invitation',
   messageType: 'returnInvitation',
   schema,
-  getRecipients
+  getRecipients,
+  createEvent
 }, {
   prefix: 'RREM-',
   name: 'Returns: reminder',
   messageType: 'returnReminder',
   schema,
-  getRecipients
+  getRecipients,
+  createEvent
 }];

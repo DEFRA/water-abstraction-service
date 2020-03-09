@@ -1,4 +1,4 @@
-const { find, get, set, uniq, cloneDeep } = require('lodash');
+const { find, get, set, uniq } = require('lodash');
 const generateReference = require('../../../lib/reference-generator');
 const {
   EVENT_STATUS_PROCESSING, EVENT_STATUS_PROCESSED, EVENT_STATUS_SENDING,
@@ -6,22 +6,26 @@ const {
 } = require('./event-statuses');
 const { MESSAGE_STATUS_SENT, MESSAGE_STATUS_ERROR } =
     require('./message-statuses');
-const evt = require('../../../lib/event');
-const newEvtRepo = require('../../../lib/connectors/repos/events.js');
 const queries = require('./queries');
 
+// Use new event service
+const Event = require('../../../lib/models/event');
+const eventsService = require('../../../lib/services/events');
+
 /**
- * Creates a notification event
+ * Creates a notification event (but does not save it)
  * @param  {String}  issuer - email address of user sending message
  * @param {Object} config   - message config
  * @param  {Object}  options   - message data - placed in event metadata
  * @return {Promise}          resolves with event data
  */
-const createEvent = async (issuer, config, options) => {
+const createEvent = (issuer, config, options) => {
   // Create a reference code
   const referenceCode = generateReference(config.prefix);
 
-  const ev = evt.create({
+  // Create event model
+  const ev = new Event();
+  return ev.fromHash({
     referenceCode,
     type: 'notification',
     subtype: config.messageType,
@@ -32,25 +36,6 @@ const createEvent = async (issuer, config, options) => {
     },
     status: EVENT_STATUS_PROCESSING
   });
-  const { rows } = await evt.save(ev);
-  return rows[0];
-};
-
-/**
- * Updates event status
- * @param  {String}  eventId   - water service event GUID
- * @param  {String}  status    - new status for event
- * @param  {Object}  [data={}] - optional additional fields to set
- * @return {Promise<Object>}     resolves when event saved with event object
- */
-const updateEventStatus = async (eventId, status, data = {}) => {
-  const ev = await evt.load(eventId);
-  const updates = {
-    ...data,
-    status
-  };
-  await newEvtRepo.update(ev, updates);
-  return ev;
 };
 
 /**
@@ -62,20 +47,18 @@ const updateEventStatus = async (eventId, status, data = {}) => {
  * @return {Promise}         resolves when event updated
  */
 const markAsProcessed = async (eventId, licenceNumbers, recipientCount) => {
-  const ev = await evt.load(eventId);
+  const ev = await eventsService.findOne(eventId);
 
-  const metadata = cloneDeep(ev.metadata);
-  set(metadata, 'sent', 0);
-  set(metadata, 'error', 0);
-  set(metadata, 'recipients', recipientCount);
-
-  const eventUpdates = {
+  // Update event details
+  set(ev, 'metadata.sent', 0);
+  set(ev, 'metadata.error', 0);
+  set(ev, 'metadata.recipients', recipientCount);
+  ev.fromHash({
     status: EVENT_STATUS_PROCESSED,
-    licences: uniq(licenceNumbers),
-    metadata
-  };
+    licences: uniq(licenceNumbers)
+  });
 
-  return newEvtRepo.update(ev, eventUpdates);
+  return eventsService.update(ev);
 };
 
 /**
@@ -96,8 +79,7 @@ const getStatusCount = (statuses, status) => {
  * @param {Promise} resolves with event data
  */
 const refreshEventStatus = async (eventId) => {
-  // Load the event
-  const ev = await evt.load(eventId);
+  const ev = await eventsService.findOne(eventId);
 
   if (ev.status !== EVENT_STATUS_SENDING) {
     return ev;
@@ -114,13 +96,11 @@ const refreshEventStatus = async (eventId) => {
   set(ev, 'metadata.sent', sent);
   set(ev, 'metadata.error', error);
 
-  await evt.save(ev);
-  return ev;
+  return eventsService.update(ev);
 };
 
 module.exports = {
   createEvent,
-  updateEventStatus,
   markAsProcessed,
   refreshEventStatus
 };

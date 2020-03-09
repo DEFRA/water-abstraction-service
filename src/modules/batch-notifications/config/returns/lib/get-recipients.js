@@ -26,11 +26,14 @@ const getExcludeLicences = job => {
  * @return {Promise}
  */
 const getRecipients = async (data) => {
+  const { id: eventId } = data.ev;
+  const { returnCycle } = data.ev.metadata;
+
   const excludeLicences = getExcludeLicences(data);
 
   // Get a list of returns grouped by licence number
   const returnContacts = await notificationContacts
-    .getReturnContacts(excludeLicences);
+    .getReturnContacts(excludeLicences, returnCycle);
 
   // Get a list of recipients from the grouped returns
   const messages = notificationRecipients.getRecipientList(returnContacts);
@@ -55,7 +58,7 @@ const getRecipients = async (data) => {
   }
 
   // Update event status
-  return eventHelpers.markAsProcessed(data.ev.eventId, licenceNumbers, recipientCount);
+  return eventHelpers.markAsProcessed(eventId, licenceNumbers, recipientCount);
 };
 
 exports.getRecipients = getRecipients;
