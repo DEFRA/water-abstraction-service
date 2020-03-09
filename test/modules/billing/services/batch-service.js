@@ -12,7 +12,6 @@ const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
 const { Batch, FinancialYear, Invoice, InvoiceLicence, Licence, Transaction, InvoiceAccount, Region, Totals } = require('../../../../src/lib/models');
-const batchService = require('../../../../src/modules/billing/services/batch-service');
 const eventService = require('../../../../src/lib/services/events');
 const { logger } = require('../../../../src/logger');
 
@@ -20,6 +19,8 @@ const newRepos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBatchConnector = require('../../../../src/lib/connectors/charge-module/batches');
 const repos = require('../../../../src/lib/connectors/repository');
 
+const batchService = require('../../../../src/modules/billing/services/batch-service');
+const invoiceAccountsService = require('../../../../src/modules/billing/services/invoice-accounts-service');
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
@@ -58,11 +59,16 @@ experiment('modules/billing/services/batch-service', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
 
+    sandbox.stub(newRepos.billingBatches, 'delete').resolves();
     sandbox.stub(newRepos.billingBatches, 'findByStatuses');
     sandbox.stub(newRepos.billingBatches, 'findOne').resolves(data.batch);
     sandbox.stub(newRepos.billingBatches, 'findPage').resolves();
     sandbox.stub(newRepos.billingBatches, 'update').resolves();
-    sandbox.stub(newRepos.billingBatches, 'delete').resolves();
+
+    sandbox.stub(newRepos.billingInvoices, 'deleteByBatchAndInvoiceAccountId').resolves();
+
+    sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchAndInvoiceAccount').resolves();
+
     sandbox.stub(newRepos.billingTransactions, 'findStatusCountsByBatchId').resolves();
 
     sandbox.stub(repos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
@@ -70,16 +76,19 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(repos.billingInvoices, 'deleteByBatchId').resolves();
     sandbox.stub(repos.billingInvoiceLicences, 'deleteByBatchId').resolves();
     sandbox.stub(repos.billingTransactions, 'deleteByBatchId').resolves();
+    sandbox.stub(repos.billingTransactions, 'deleteByInvoiceAccount').resolves();
 
     sandbox.stub(transactionsService, 'saveTransactionToDB');
 
     sandbox.stub(invoiceLicencesService, 'saveInvoiceLicenceToDB');
 
     sandbox.stub(invoiceService, 'saveInvoiceToDB');
+    sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId');
 
     sandbox.stub(chargeModuleBatchConnector, 'delete').resolves();
     sandbox.stub(chargeModuleBatchConnector, 'approve').resolves();
     sandbox.stub(chargeModuleBatchConnector, 'send').resolves();
+    sandbox.stub(chargeModuleBatchConnector, 'deleteAccountFromBatch').resolves();
 
     sandbox.stub(eventService, 'create').resolves();
   });
@@ -442,12 +451,8 @@ experiment('modules/billing/services/batch-service', () => {
         expect(savedEvent.metadata.batch).to.equal(batch);
       });
 
-      test('sets the status of the batch to error', async () => {
-        const [id, changes] = newRepos.billingBatches.update.lastCall.args;
-        expect(id).to.equal(batch.id);
-        expect(changes).to.equal({
-          status: 'error'
-        });
+      test('does not set the status of the batch to error so the user can retry', async () => {
+        expect(newRepos.billingBatches.update.called).to.be.false();
       });
     });
   });
@@ -687,6 +692,58 @@ experiment('modules/billing/services/batch-service', () => {
         candidate: 3,
         chargeCreated: 7
       });
+    });
+  });
+
+  experiment('.deleteAccountFromBatch', () => {
+    let batch;
+    let invoiceAccount;
+
+    beforeEach(async () => {
+      batch = {
+        id: 'test-batch-id',
+        region: {
+          code: 'A'
+        }
+      };
+
+      invoiceAccount = {
+        accountNumber: 'A123443321A'
+      };
+
+      invoiceAccountsService.getByInvoiceAccountId.resolves(invoiceAccount);
+      await batchService.deleteAccountFromBatch(batch, 'test-invoice-account-id');
+    });
+
+    test('uses the invoice account service to get the account number', async () => {
+      const [accountId] = invoiceAccountsService.getByInvoiceAccountId.lastCall.args;
+      expect(accountId).to.equal('test-invoice-account-id');
+    });
+
+    test('deletes all the transactions at the charge module', async () => {
+      const [regionCode, batchId, accountNumber] = chargeModuleBatchConnector.deleteAccountFromBatch.lastCall.args;
+
+      expect(regionCode).to.equal(batch.region.code);
+      expect(batchId).to.equal(batch.id);
+      expect(accountNumber).to.equal(invoiceAccount.accountNumber);
+    });
+
+    test('deletes the local transactions', async () => {
+      const [batchId, accountId] = repos.billingTransactions.deleteByInvoiceAccount.lastCall.args;
+      expect(batchId).to.equal(batch.id);
+      expect(accountId).to.equal('test-invoice-account-id');
+    });
+
+    test('deletes the local invoice licences', async () => {
+      const [batchId, accountId] = newRepos.billingInvoiceLicences.deleteByBatchAndInvoiceAccount.lastCall.args;
+      expect(batchId).to.equal(batch.id);
+      expect(accountId).to.equal('test-invoice-account-id');
+    });
+
+    test('deletes the local invoice', async () => {
+      const [batchId, accountId] = newRepos.billingInvoices.deleteByBatchAndInvoiceAccountId.lastCall.args;
+      expect(batchId).to.equal(batch.id);
+      expect(accountId).to.equal('test-invoice-account-id');
     });
   });
 });

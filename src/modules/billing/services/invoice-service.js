@@ -158,6 +158,26 @@ const getInvoicesForBatch = async batchId => {
   return invoices;
 };
 
+const getInvoicesTransactionsForBatch = async batchId => {
+  // Load Batch instance from repo with invoices
+  const data = await repos.billingBatches.findOneWithInvoicesWithTransactions(batchId);
+
+  // Map data to Invoice models
+  const invoices = data.billingInvoices.map(mappers.invoice.dbToModel);
+  try {
+    // Load Charge Module summary data
+    const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
+    invoices.forEach(invoice => decorateInvoiceTransactionValues(invoice, chargeModuleSummary));
+  } catch (err) {
+    logger.info('CM error', err);
+  }
+
+  // Add CRM company data
+  await decorateInvoicesWithCompanies(invoices);
+  return invoices;
+};
+
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
+exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;

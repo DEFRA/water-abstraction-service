@@ -15,5 +15,17 @@ const upsert = async data => raw.singleRow(queries.upsert, data);
 const deleteEmptyByBatchId = batchId =>
   bookshelf.knex.raw(queries.deleteEmptyByBatchId, { batchId });
 
+/**
+ * Deletes invoice licences for the invoice account and batch
+ * @param {String} batchId
+ * @param {String} invoiceAccountId
+ */
+const deleteByBatchAndInvoiceAccount = (batchId, invoiceAccountId) =>
+  bookshelf.knex.raw(
+    queries.deleteByBatchAndInvoiceAccount,
+    { batchId, invoiceAccountId }
+  );
+
 exports.upsert = upsert;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
+exports.deleteByBatchAndInvoiceAccount = deleteByBatchAndInvoiceAccount;

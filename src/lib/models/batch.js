@@ -253,6 +253,34 @@ class Batch extends Model {
     validators.assertNullableEnum(errorCode, Object.values(BATCH_ERROR_CODE));
     this._errorCode = errorCode;
   }
+
+  /**
+   * Checks if the status of the batch matches any of the passed status values
+   *
+   * @param  {...String} statuses A list of statuses to match with the batch status
+   */
+  statusIsOneOf (...statuses) {
+    return statuses.includes(this.status);
+  }
+
+  /**
+   * Does this batch have a status that means the batch can be deleted?
+   */
+  canBeDeleted () {
+    return this.statusIsOneOf(
+      BATCH_STATUS.error,
+      BATCH_STATUS.ready,
+      BATCH_STATUS.review
+    );
+  }
+
+  /**
+   * Does this batch have a status that means the batch customers
+   * associated with the batch can be deleted?
+   */
+  canDeleteAccounts () {
+    return this.statusIsOneOf(BATCH_STATUS.ready, BATCH_STATUS.review);
+  }
 }
 
 module.exports = Batch;
