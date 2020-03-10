@@ -70,6 +70,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchAndInvoiceAccount').resolves();
 
     sandbox.stub(newRepos.billingTransactions, 'findStatusCountsByBatchId').resolves();
+    sandbox.stub(newRepos.billingTransactions, 'findByBatchId').resolves();
 
     sandbox.stub(repos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
     sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
@@ -698,10 +699,12 @@ experiment('modules/billing/services/batch-service', () => {
   experiment('.deleteAccountFromBatch', () => {
     let batch;
     let invoiceAccount;
+    let result;
 
     beforeEach(async () => {
       batch = {
         id: 'test-batch-id',
+        status: 'ready',
         region: {
           code: 'A'
         }
@@ -712,7 +715,10 @@ experiment('modules/billing/services/batch-service', () => {
       };
 
       invoiceAccountsService.getByInvoiceAccountId.resolves(invoiceAccount);
-      await batchService.deleteAccountFromBatch(batch, 'test-invoice-account-id');
+      newRepos.billingTransactions.findByBatchId.resolves([
+        { id: 1 }, { id: 2 }
+      ]);
+      result = await batchService.deleteAccountFromBatch(batch, 'test-invoice-account-id');
     });
 
     test('uses the invoice account service to get the account number', async () => {
@@ -744,6 +750,64 @@ experiment('modules/billing/services/batch-service', () => {
       const [batchId, accountId] = newRepos.billingInvoices.deleteByBatchAndInvoiceAccountId.lastCall.args;
       expect(batchId).to.equal(batch.id);
       expect(accountId).to.equal('test-invoice-account-id');
+    });
+
+    test('gets the remaining transactions', async () => {
+      const [batchId] = newRepos.billingTransactions.findByBatchId.lastCall.args;
+      expect(batchId).to.equal(batch.id);
+    });
+
+    test('returns the batch with the status unchanged', async () => {
+      expect(result.status).to.equal(Batch.BATCH_STATUS.ready);
+    });
+
+    experiment('when there are no transactions left', () => {
+      test('test', async () => {
+        newRepos.billingTransactions.findByBatchId.resolves([]);
+        newRepos.billingBatches.update.resolves({
+          status: Batch.BATCH_STATUS.empty
+        });
+        result = await batchService.deleteAccountFromBatch(batch, 'test-invoice-account-id');
+
+        expect(result.status).to.equal(Batch.BATCH_STATUS.empty);
+      });
+    });
+  });
+
+  experiment('.setStatusToEmptyWhenNoTransactions', () => {
+    experiment('when the batch has more transactions', () => {
+      test('the status is not updated', async () => {
+        const batch = new Batch(uuid());
+        batch.status = Batch.BATCH_STATUS.ready;
+
+        newRepos.billingTransactions.findByBatchId.resolves([
+          { id: 1 }, { id: 2 }
+        ]);
+
+        const result = await batchService.setStatusToEmptyWhenNoTransactions(batch);
+
+        expect(newRepos.billingBatches.update.called).to.equal(false);
+        expect(result.id).to.equal(batch.id);
+        expect(result.status).to.equal(batch.status);
+      });
+    });
+
+    experiment('when the batch has no more transactions', () => {
+      test('the status is updated to empty', async () => {
+        const batch = new Batch(uuid());
+        batch.status = Batch.BATCH_STATUS.ready;
+
+        newRepos.billingTransactions.findByBatchId.resolves([]);
+
+        newRepos.billingBatches.update.resolves({
+          id: batch.id,
+          status: Batch.BATCH_STATUS.empty
+        });
+
+        const result = await batchService.setStatusToEmptyWhenNoTransactions(batch);
+        expect(result.id).to.equal(batch.id);
+        expect(result.status).to.equal(Batch.BATCH_STATUS.empty);
+      });
     });
   });
 });

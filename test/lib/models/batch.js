@@ -134,6 +134,11 @@ experiment('lib/models/batch', () => {
       expect(batch.status).to.equal('error');
     });
 
+    test('can be set to "empty"', async () => {
+      batch.status = 'empty';
+      expect(batch.status).to.equal('empty');
+    });
+
     test('cannot be set to an invalid status', async () => {
       const func = () => {
         batch.status = 'pondering';
@@ -540,6 +545,12 @@ experiment('lib/models/batch', () => {
       batch.status = Batch.BATCH_STATUS.review;
       expect(batch.canBeDeleted()).to.equal(true);
     });
+
+    test('returns true if the batch status is empty', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.empty;
+      expect(batch.canBeDeleted()).to.equal(true);
+    });
   });
 
   experiment('.canDeleteAccounts', () => {
@@ -557,6 +568,12 @@ experiment('lib/models/batch', () => {
     test('returns false if the batch status is processing', async () => {
       const batch = new Batch();
       batch.status = Batch.BATCH_STATUS.processing;
+      expect(batch.canDeleteAccounts()).to.equal(false);
+    });
+
+    test('returns false if the batch status is empty', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.empty;
       expect(batch.canDeleteAccounts()).to.equal(false);
     });
 
