@@ -409,6 +409,7 @@ experiment('modules/billing/controller', () => {
 
     beforeEach(async () => {
       batch = new Batch(uuid());
+      batch.status = Batch.BATCH_STATUS.ready;
       request = {
         params: { batchId: batch.id, accountId: 'test-account-id' },
         pre: { batch }
@@ -425,6 +426,7 @@ experiment('modules/billing/controller', () => {
       }];
 
       invoiceService.getInvoicesForBatch.resolves(invoices);
+      batchService.deleteAccountFromBatch.resolves(batch);
     });
 
     experiment('when accounts cannot be deleted from the batch', () => {
@@ -476,6 +478,12 @@ experiment('modules/billing/controller', () => {
       expect(invoiceService.getInvoicesForBatch.calledWith(batch.id)).to.be.true();
       expect(response.output.payload.statusCode).to.equal(404);
       expect(response.output.payload.message).to.equal(`No invoices for account (test-account-id) in batch (${batch.id})`);
+    });
+
+    test('returns the batch', async () => {
+      invoices[0].invoiceAccount.id = 'test-account-id';
+      const response = await controller.deleteAccountFromBatch(request);
+      expect(response.id).to.equal(batch.id);
     });
   });
 
