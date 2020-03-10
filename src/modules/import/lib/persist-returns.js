@@ -4,6 +4,7 @@
 const { pick } = require('lodash');
 const moment = require('moment');
 const returnsApi = require('../../../lib/connectors/returns');
+const config = require('../../../../config');
 
 const { returns } = returnsApi;
 
@@ -40,17 +41,22 @@ const getUpdateRow = (row) => {
  * @param {Object} row
  * @return {Promise} resolves when row is created/updated
  */
-const createOrUpdateReturn = async (row) => {
+const createOrUpdateReturn = async (row, date) => {
   const { return_id: returnId } = row;
 
-  const exists = await returnExists(returnId);
+  const configYear = moment(date).year() - config.import.returns.importYears;
+  const rowYear = moment(row.start_date).year();
 
-  // Conditional update
-  if (exists) {
-    return returns.updateOne(returnId, getUpdateRow(row));
-  } else {
-    // Insert
-    return returns.create(row);
+  if (rowYear > configYear) {
+    const exists = await returnExists(returnId);
+
+    // Conditional update
+    if (exists) {
+      return returns.updateOne(returnId, getUpdateRow(row));
+    } else {
+      // Insert
+      return returns.create(row);
+    }
   }
 };
 

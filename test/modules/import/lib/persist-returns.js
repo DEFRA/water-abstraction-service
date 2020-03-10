@@ -94,16 +94,24 @@ experiment('createOrUpdateReturn', () => {
   test('It should create a row if the record is not present', async () => {
     stubs.findOne.resolves({ error: { name: 'NotFoundError' }, data: null });
     stubs.create.resolves({ error: null });
-    await persistReturns.createOrUpdateReturn(naldReturn);
+    await persistReturns.createOrUpdateReturn(naldReturn, '2018-01-01');
 
     expect(stubs.create.firstCall.args[0]).to.equal(naldReturn);
+    expect(stubs.updateOne.firstCall).to.equal(null);
+  });
+
+  test('It should not create a row if the record is old', async () => {
+    stubs.findOne.resolves({ error: { name: 'NotFoundError' }, data: null });
+    stubs.create.resolves({ error: null });
+    await persistReturns.createOrUpdateReturn(naldReturn, '2020-01-01');
+    expect(stubs.create.firstCall).to.equal(null);
     expect(stubs.updateOne.firstCall).to.equal(null);
   });
 
   test('It should update a NALD return if the record is present', async () => {
     stubs.findOne.resolves({ error: null, data: naldReturn });
     stubs.updateOne.resolves({ error: null });
-    await persistReturns.createOrUpdateReturn(naldReturn);
+    await persistReturns.createOrUpdateReturn(naldReturn, '2018-01-01');
 
     expect(stubs.create.firstCall).to.equal(null);
     expect(stubs.updateOne.firstCall.args).to.equal([naldReturn.return_id, {
@@ -114,10 +122,19 @@ experiment('createOrUpdateReturn', () => {
     }]);
   });
 
+  test('It should not update a NALD return if the record is old', async () => {
+    stubs.findOne.resolves({ error: null, data: naldReturn });
+    stubs.updateOne.resolves({ error: null });
+    await persistReturns.createOrUpdateReturn(naldReturn, '2020-01-01');
+
+    expect(stubs.create.firstCall).to.equal(null);
+    expect(stubs.updateOne.firstCall).to.equal(null);
+  });
+
   test('It should update a digital service return metadata only if the record is present', async () => {
     stubs.findOne.resolves({ error: null, data: digitalServiceReturn });
     stubs.updateOne.resolves({ error: null });
-    await persistReturns.createOrUpdateReturn(digitalServiceReturn);
+    await persistReturns.createOrUpdateReturn(digitalServiceReturn, '2018-01-01');
 
     expect(stubs.create.firstCall).to.equal(null);
     expect(stubs.updateOne.firstCall.args).to.equal([digitalServiceReturn.return_id, {
