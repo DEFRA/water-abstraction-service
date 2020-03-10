@@ -19,7 +19,7 @@
 ]
  */
 const Joi = require('@hapi/joi');
-const { chunk, flatMap, find, uniq, cond, negate, get } = require('lodash');
+const { chunk, flatMap, find, uniq, cond, negate, get, isEqual } = require('lodash');
 
 const returnsConnector = require('../../../lib/connectors/returns');
 const documents = require('../../../lib/connectors/crm/documents');
@@ -110,7 +110,7 @@ const validateLineFrequency = ret => {
     const { startDate, endDate, frequency } = ret;
     const requiredLines = returnLines.getRequiredLines(startDate, endDate, frequency);
     const returnTimePeriod = uniq(ret.lines.map(line => line.timePeriod));
-    return returnTimePeriod[0] === requiredLines[0].timePeriod;
+    return isEqual(returnTimePeriod, [requiredLines[0].timePeriod]);
   } catch (err) {
     return false;
   }
