@@ -54,7 +54,7 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(invoiceService, 'getInvoicesTransactionsForBatch').resolves();
 
     sandbox.stub(eventService, 'create').resolves({
-      eventId: '11111111-1111-1111-1111-111111111111'
+      id: '11111111-1111-1111-1111-111111111111'
     });
 
     sandbox.stub(mappers.api.invoice, 'modelToBatchInvoices');
@@ -157,7 +157,7 @@ experiment('modules/billing/controller', () => {
 
       test('the response contains the event', async () => {
         const [{ data }] = h.response.lastCall.args;
-        expect(data.event.eventId).to.equal('11111111-1111-1111-1111-111111111111');
+        expect(data.event.id).to.equal('11111111-1111-1111-1111-111111111111');
       });
 
       test('the response contains a URL to the event', async () => {
