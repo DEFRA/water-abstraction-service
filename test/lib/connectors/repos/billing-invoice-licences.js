@@ -7,6 +7,7 @@ const {
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const uuid = require('uuid/v4');
 
 const billingInvoiceLicences = require('../../../../src/lib/connectors/repos/billing-invoice-licences');
 const { bookshelf } = require('../../../../src/lib/connectors/bookshelf');
@@ -53,6 +54,23 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       const { args } = bookshelf.knex.raw.lastCall;
       expect(args[0]).to.equal(queries.deleteEmptyByBatchId);
       expect(args[1]).to.equal({ batchId });
+    });
+  });
+
+  experiment('.deleteByBatchAndInvoiceAccount', () => {
+    let batchId;
+    let invoiceAccountId;
+
+    beforeEach(async () => {
+      batchId = uuid();
+      invoiceAccountId = uuid();
+      await billingInvoiceLicences.deleteByBatchAndInvoiceAccount(batchId, invoiceAccountId);
+    });
+
+    test('calls bookshelf.knex.raw with correct params', async () => {
+      const { args } = bookshelf.knex.raw.lastCall;
+      expect(args[0]).to.equal(queries.deleteByBatchAndInvoiceAccount);
+      expect(args[1]).to.equal({ batchId, invoiceAccountId });
     });
   });
 });

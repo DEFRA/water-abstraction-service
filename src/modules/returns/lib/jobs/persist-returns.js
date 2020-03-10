@@ -1,7 +1,6 @@
-const { find, get } = require('lodash');
+const { find, get, set } = require('lodash');
 const messageQueue = require('../../../../lib/message-queue');
-const event = require('../../../../lib/event');
-const newEvtRepo = require('../../../../lib/connectors/repos/events.js');
+const eventsService = require('../../../../lib/services/events');
 const { logger } = require('../../../../logger');
 const returnsUpload = require('../../lib/returns-upload');
 const { uploadStatus } = returnsUpload;
@@ -22,15 +21,10 @@ const publishPersistBulkReturns = eventId => {
   messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(eventId));
 };
 
-const updateEvent = (evt, updatedReturns) => {
-  const metadata = Object.assign({}, evt.metadata, {
-    returns: updatedReturns
-  });
-  const changes = {
-    metadata,
-    status: uploadStatus.SUBMITTED
-  };
-  return newEvtRepo.update(evt, changes);
+const updateEvent = (event, updatedReturns) => {
+  set(event, 'metadata.returns', updatedReturns);
+  event.status = uploadStatus.SUBMITTED;
+  return eventsService.update(event);
 };
 
 /**
@@ -109,22 +103,21 @@ const getReturnsFromS3 = async eventId => {
  */
 const handlePersistReturns = async job => {
   const { eventId } = job.data;
-  let evt;
+  let event;
 
   logger.info('persist job started returns', { eventId });
 
   try {
-    evt = await event.load(eventId);
+    event = await eventsService.findOne(eventId);
     const returns = await getReturnsFromS3(eventId);
 
-    const validatedReturns = get(evt, 'metadata.returns', []);
+    const validatedReturns = get(event, 'metadata.returns', []);
     const updatedReturns = await persistReturns(validatedReturns, returns);
-    await updateEvent(evt, updatedReturns);
-    job.done();
+    await updateEvent(event, updatedReturns);
   } catch (err) {
     logger.error('Failed to persist bulk returns upload', err, { job });
-    await errorEvent.setEventError(evt, err);
-    job.done(err);
+    await errorEvent.setEventError(event, err);
+    throw err;
   }
 };
 

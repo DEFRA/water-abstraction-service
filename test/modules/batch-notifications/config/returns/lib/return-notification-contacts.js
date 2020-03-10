@@ -23,6 +23,13 @@ experiment('modules/batch-notifications/config/return-invitation/return-notifica
   experiment('getRecipientList', () => {
     let result;
 
+    const returnCycle = {
+      startDate: '2019-04-01',
+      endDate: '2020-03-31',
+      dueDate: '2020-04-28',
+      isSummer: false
+    };
+
     const returns = [{
       return_id: 'return_1',
       licence_ref: 'licence_1'
@@ -54,13 +61,23 @@ experiment('modules/batch-notifications/config/return-invitation/return-notifica
       sandbox.stub(documentsConnector, 'getLicenceContacts').resolves(documentContacts);
       sandbox.stub(returnsConnector, 'getCurrentDueReturns').resolves(returns);
 
-      result = await notificationContacts.getReturnContacts(['01/123', '02/456']);
+      result = await notificationContacts.getReturnContacts(['01/123', '02/456'], returnCycle);
     });
 
-    test('calls returnsConnector.getCurrentDueReturns with array of licences to exclude', async () => {
-      expect(returnsConnector.getCurrentDueReturns.calledWith(
-        ['01/123', '02/456']
-      )).to.be.true();
+    experiment('calls returnsConnector.getCurrentDueReturns', () => {
+      test('once', async () => {
+        expect(returnsConnector.getCurrentDueReturns.callCount).to.equal(1);
+      });
+
+      test('the first argument is an array of licence numbers to exclude', async () => {
+        const [licenceNumbers] = returnsConnector.getCurrentDueReturns.lastCall.args;
+        expect(licenceNumbers).to.equal(['01/123', '02/456']);
+      });
+
+      test('the second argument is the return cycle', async () => {
+        const [, cycle] = returnsConnector.getCurrentDueReturns.lastCall.args;
+        expect(cycle).to.equal(returnCycle);
+      });
     });
 
     test('resolves with an array of objects for each licence, with contact and return lists', async () => {

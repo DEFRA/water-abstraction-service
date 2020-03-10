@@ -16,6 +16,7 @@ const Batch = require('../../../lib/models/batch');
 const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
 const invoiceService = require('./invoice-service');
+const invoiceAccountsService = require('./invoice-accounts-service');
 
 /**
  * Loads a Batch instance by ID
@@ -91,7 +92,6 @@ const approveBatch = async (batch, internalCallingUser) => {
   } catch (err) {
     logger.error('Failed to approve the batch', err, batch);
     await saveEvent('billing-batch:approve', 'error', internalCallingUser, batch);
-    await setStatus(batch.id, BATCH_STATUS.error);
     throw err;
   }
 };
@@ -172,14 +172,33 @@ const getTransactionStatusCounts = async batchId => {
   }), {});
 };
 
+const deleteAccountFromBatch = async (batch, accountId) => {
+  // get the invoice account from the CRM to access
+  // the customer reference number.
+  const invoiceAccount = await invoiceAccountsService.getByInvoiceAccountId(accountId);
+
+  await chargeModuleBatchConnector.deleteAccountFromBatch(
+    batch.region.code,
+    batch.id,
+    invoiceAccount.accountNumber
+  );
+
+  await repos.billingTransactions.deleteByInvoiceAccount(batch.id, accountId);
+  await newRepos.billingInvoiceLicences.deleteByBatchAndInvoiceAccount(batch.id, accountId);
+  await newRepos.billingInvoices.deleteByBatchAndInvoiceAccountId(batch.id, accountId);
+};
+
 exports.approveBatch = approveBatch;
+exports.decorateBatchWithTotals = decorateBatchWithTotals;
+exports.deleteAccountFromBatch = deleteAccountFromBatch;
 exports.deleteBatch = deleteBatch;
-exports.getBatches = getBatches;
+
 exports.getBatchById = getBatchById;
+exports.getBatches = getBatches;
 exports.getMostRecentLiveBatchByRegion = getMostRecentLiveBatchByRegion;
+exports.getTransactionStatusCounts = getTransactionStatusCounts;
+
+exports.refreshTotals = refreshTotals;
 exports.saveInvoicesToDB = saveInvoicesToDB;
 exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
-exports.decorateBatchWithTotals = decorateBatchWithTotals;
-exports.refreshTotals = refreshTotals;
-exports.getTransactionStatusCounts = getTransactionStatusCounts;

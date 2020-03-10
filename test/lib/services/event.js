@@ -133,7 +133,7 @@ experiment('lib/event', () => {
 
   experiment('.updateStatus', () => {
     beforeEach(async () => {
-      sandbox.stub(repo.events, 'updateStatus').resolves(testEvent);
+      sandbox.stub(repo.events, 'update').resolves(testEvent);
     });
 
     test('should return an Event data model', async () => {
@@ -142,11 +142,11 @@ experiment('lib/event', () => {
       expect(typeof ev).to.equal(typeof event);
     });
 
-    test('should include the eventId when calling the updateStatus method at the database repos layer', async () => {
+    test('should include the eventId when calling the update() method at the database repos layer', async () => {
       await eventsService.updateStatus('testEventId', 'testStatus');
-      const { args } = repo.events.updateStatus.firstCall;
+      const { args } = repo.events.update.firstCall;
       expect(args[0]).to.equal('testEventId');
-      expect(args[1]).to.equal('testStatus');
+      expect(args[1]).to.equal({ status: 'testStatus' });
     });
 
     test('should map the object key receveived from the database repos layer to camelCase', async () => {

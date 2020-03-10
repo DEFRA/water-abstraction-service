@@ -11,8 +11,6 @@ const importedLicencesClient = require('../controllers/imported_licences');
 const taskRunner = require('../controllers/taskRunner');
 const taskConfigRoutes = require('../controllers/task-config');
 const gaugingStationRoutes = require('../controllers/gauging-stations');
-const picklistRoutes = require('../controllers/picklists');
-const picklistItemRoutes = require('../controllers/picklist-items');
 const moduleRoutes = require('../modules/routes');
 const arAnalysisLicencesRoutes = require('../controllers/ar-analysis-licences');
 
@@ -29,8 +27,6 @@ module.exports = [
   ...taskConfigRoutes,
   ...moduleRoutes,
   ...gaugingStationRoutes,
-  ...picklistRoutes,
-  ...picklistItemRoutes,
   ...arAnalysisLicencesRoutes,
   {
     method: 'GET',

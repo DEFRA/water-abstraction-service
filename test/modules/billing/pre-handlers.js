@@ -17,13 +17,8 @@ const Region = require('../../../src/lib/models/region');
 
 experiment('modules/billing/pre-handlers', () => {
   let batch;
-  let h;
 
   beforeEach(async () => {
-    h = {
-      continue: 'continue'
-    };
-
     batch = new Batch();
     batch.fromHash({
       id: '7bfdb410-8fe2-41df-bb3a-e85984112f3b',
@@ -68,56 +63,6 @@ experiment('modules/billing/pre-handlers', () => {
       test('the batch is returned from the function', async () => {
         const result = await preHandlers.loadBatch(request);
         expect(result).to.equal(batch);
-      });
-    });
-  });
-
-  experiment('.ensureBatchInReviewState', () => {
-    experiment('when the batch is not already assigned to request.pre', () => {
-      test('an error is thrown', async () => {
-        const request = { pre: {} };
-
-        const result = await expect(preHandlers.ensureBatchInReviewState(request, h)).to.reject();
-        expect(result.message).to.equal('The batch needs to be assigned to the batch property of pre');
-      });
-    });
-
-    experiment('when the batch status is not review', () => {
-      test('an error is thrown', async () => {
-        const request = {
-          pre: {
-            batch: {
-              status: 'processing'
-            }
-          }
-        };
-
-        const result = await expect(preHandlers.ensureBatchInReviewState(request, h)).to.reject();
-        const { statusCode, message } = result.output.payload;
-
-        expect(statusCode).to.equal(403);
-        expect(message).to.equal('Batch must be in review state. Current status is processing');
-      });
-    });
-
-    experiment('when the batch status is review', () => {
-      let request;
-
-      beforeEach(async () => {
-        request = {
-          pre: {
-            batch: { status: 'review' }
-          }
-        };
-      });
-
-      test('no error is thrown', async () => {
-        await expect(preHandlers.ensureBatchInReviewState(request, h)).not.to.reject();
-      });
-
-      test('continue is returned', async () => {
-        const result = await preHandlers.ensureBatchInReviewState(request, h);
-        expect(result).to.equal(h.continue);
       });
     });
   });

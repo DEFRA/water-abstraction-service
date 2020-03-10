@@ -23,12 +23,18 @@ const eventHelpers =
 experiment('getRecipients', () => {
   const jobData = {
     ev: {
-      eventId: 'event_1',
+      id: 'event_1',
       subtype: 'returnInvitation',
       metadata: {
         name: 'Returns: invitation',
         options: {
           excludeLicences: ['01/123']
+        },
+        returnCycle: {
+          startDate: '2019-04-01',
+          endDate: '2020-03-31',
+          dueDate: '2020-04-28',
+          isSummer: false
         }
       }
     }

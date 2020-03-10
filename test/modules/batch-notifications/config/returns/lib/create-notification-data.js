@@ -8,11 +8,30 @@ const {
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const uuid = require('uuid/v4');
 
 const createNotificationData = require('../../../../../../src/modules/batch-notifications/config/returns/lib/create-notification-data');
 const Contact = require('../../../../../../src/lib/models/contact');
 const { MESSAGE_STATUS_DRAFT } = require('../../../../../../src/modules/batch-notifications/lib/message-statuses');
 const events = require('../../../../../../src/lib/services/events');
+const Event = require('../../../../../../src/lib/models/event');
+
+const eventId = uuid();
+
+const createEvent = () => {
+  const event = new Event(eventId);
+  return event.fromHash({
+    subtype: 'returnInvitation',
+    metadata: {
+      returnCycle: {
+        startDate: '2018-04-01',
+        endDate: '2019-03-31',
+        dueDate: '2019-04-28',
+        isSummer: false
+      }
+    }
+  });
+};
 
 experiment('modules/batch-notifications/config/return-invitation/create-notification-data', () => {
   beforeEach(async () => {
@@ -25,7 +44,8 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
 
   experiment('_getReturnPersonalisation', () => {
     test('gets return cycle personalisation fields', async () => {
-      const result = createNotificationData._getReturnPersonalisation('2019-05-01');
+      const event = createEvent();
+      const result = createNotificationData._getReturnPersonalisation(event);
       expect(result).to.equal({
         periodStartDate: '1 April 2018',
         periodEndDate: '31 March 2019',
@@ -56,10 +76,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
     });
 
     beforeEach(async () => {
-      ev = {
-        eventId: 'event_1',
-        subtype: 'returnInvitation'
-      };
+      ev = createEvent();
 
       context = {
         licenceNumbers: ['licence_1', 'licence_2'],
@@ -78,7 +95,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       });
 
       test('the message references the event', async () => {
-        expect(result.event_id).to.equal(ev.eventId);
+        expect(result.event_id).to.equal(ev.id);
       });
 
       test('the message references the licences and returns', async () => {
