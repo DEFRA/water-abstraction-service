@@ -1,7 +1,10 @@
+'use strict';
+
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
 const ChargeElement = require('../../../src/lib/models/charge-element');
+const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
 const Purpose = require('../../../src/lib/models/purpose');
 
@@ -47,7 +50,7 @@ experiment('lib/models/charge-element', () => {
   });
 
   experiment('.season', () => {
-    ['summer', 'winter', 'all year'].forEach(season => {
+    [CHARGE_SEASON.summer, CHARGE_SEASON.winter, CHARGE_SEASON.allYear].forEach(season => {
       test(`can be set to ${season}`, async () => {
         chargeElement.season = season;
         expect(chargeElement.season).to.equal(season);

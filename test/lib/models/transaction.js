@@ -15,6 +15,7 @@ const Licence = require('../../../src/lib/models/licence');
 const Region = require('../../../src/lib/models/region');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 const Batch = require('../../../src/lib/models/batch');
+const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
 class TestModel {};
 
@@ -34,7 +35,7 @@ const getTestDataForHashing = () => {
 
   const chargeElement = new ChargeElement();
   chargeElement.source = 'supported';
-  chargeElement.season = 'summer';
+  chargeElement.season = CHARGE_SEASON.summer;
   chargeElement.loss = 'low';
 
   const transaction = new Transaction();

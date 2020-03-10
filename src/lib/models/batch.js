@@ -1,12 +1,12 @@
 'use strict';
 
-const Joi = require('@hapi/joi');
 const Invoice = require('./invoice');
 const FinancialYear = require('./financial-year');
 const Region = require('./region');
 const Totals = require('./totals');
 const { assert } = require('@hapi/hoek');
 const { isArray } = require('lodash');
+const { CHARGE_SEASON } = require('./constants');
 
 const validators = require('./validators');
 
@@ -32,8 +32,6 @@ const BATCH_ERROR_CODE = {
   failedToPrepareTransactions: 30,
   failedToCreateCharge: 40
 };
-
-const VALID_SEASON = Joi.string().valid('summer', 'winter', 'all year').required();
 
 const Model = require('./model');
 
@@ -79,7 +77,7 @@ class Batch extends Model {
    * @param {String} season
    */
   set season (season) {
-    Joi.assert(season, VALID_SEASON);
+    validators.assertEnum(season, Object.values(CHARGE_SEASON));
     this._season = season;
   }
 
@@ -284,6 +282,10 @@ class Batch extends Model {
    */
   canDeleteAccounts () {
     return this.statusIsOneOf(BATCH_STATUS.ready, BATCH_STATUS.review);
+  }
+
+  isSummer () {
+    return this.season === CHARGE_SEASON.summer;
   }
 }
 

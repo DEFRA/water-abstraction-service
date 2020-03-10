@@ -7,6 +7,7 @@ const { expect } = require('@hapi/code');
 
 const ChargeElement = require('../../../../src/lib/models/charge-element');
 const Purpose = require('../../../../src/lib/models/purpose');
+const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const chargeElementsMapper = require('../../../../src/modules/billing/mappers/charge-element');
 
@@ -14,19 +15,19 @@ const data = {
   chargeElement: {
     chargeElementId: '90d4af8a-1717-452c-84bd-467a7d55ade4',
     source: 'supported',
-    season: 'summer',
+    season: CHARGE_SEASON.summer,
     loss: 'high'
   },
   dbRow: {
     charge_element_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
     source: 'supported',
-    season: 'summer',
+    season: CHARGE_SEASON.summer,
     loss: 'high'
   },
   dbRowWithPurposeUse: {
     charge_element_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
     source: 'supported',
-    season: 'summer',
+    season: CHARGE_SEASON.summer,
     loss: 'high',
     purposeUse: {
       id: 'A',

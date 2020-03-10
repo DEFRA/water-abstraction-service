@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -5,9 +7,9 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
 
+const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 const ChargeVersionRepository = require('../../../../src/lib/connectors/repository/ChargeVersionRepository');
 
 const repo = new ChargeVersionRepository();
@@ -131,7 +133,7 @@ experiment('lib/connectors/repository/ChargeVersionRepository.js', () => {
       batch = {
         billing_batch_id: 'test-batch-id',
         region_id: 'test-region-id',
-        season: 'summer'
+        season: CHARGE_SEASON.summer
       };
 
       now = new Date(2019, 11, 8);

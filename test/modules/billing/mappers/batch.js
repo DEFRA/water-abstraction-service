@@ -13,12 +13,13 @@ const Batch = require('../../../../src/lib/models/batch');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const Region = require('../../../../src/lib/models/region');
 const Totals = require('../../../../src/lib/models/totals');
+const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const data = {
   batch: {
     billingBatchId: uuid(),
     batchType: 'supplementary',
-    season: 'summer',
+    season: CHARGE_SEASON.summer,
     status: 'processing',
     dateCreated: '2020-02-18T13:54:25+00:00',
     dateUpdated: '2020-02-18T13:54:25+00:00',
