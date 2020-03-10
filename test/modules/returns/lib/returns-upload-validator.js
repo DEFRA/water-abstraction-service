@@ -113,6 +113,18 @@ experiment('validate', () => {
     expect(errors).to.equal([ERR_LINES]);
   });
 
+  test('fails validation if there is an error with the line frequency', async () => {
+    const { ERR_DATE_FORMAT } = returnsUploadValidator.uploadErrors;
+    const testData = data.upload[5];
+    testData.lines[0] = {
+      startDate: '2019-02-01',
+      endDate: '2019-02-28',
+      quantity: '0'
+    };
+    const [{ errors }] = await returnsUploadValidator.validate([testData], data.companyId);
+    expect(errors).to.equal([ERR_DATE_FORMAT]);
+  });
+
   test('it should fail validation if it doesnt match the Joi schema', async () => {
     const { ERR_SCHEMA } = returnsUploadValidator.uploadErrors;
     const upload = [omit(data.upload[4], 'isCurrent')];
