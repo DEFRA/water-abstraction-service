@@ -1,28 +1,12 @@
-const { unzip, flatMap } = require('lodash');
+const { unzip } = require('lodash');
 const common = require('../common-mapping');
 const util = require('util');
 const parseCsv = util.promisify(require('csv-parse'));
 const moment = require('moment');
 const DATE_FORMAT = 'YYYY-MM-DD';
-// preferred format for dates is D MMMM YYYY, but some applications
-// may output the CSV in another format. This list attempts to deal
-// with the unexpected formats without risking potential
-// crossovers between formats such at DD/MM/YYYY and MM/DD/YYYY
-// by using a sample of potential separators.
-const GDS_DATE_FORMATS = flatMap([
-  ['D', 'MMMM', 'YYYY'],
-  ['D', 'MMM', 'YYYY'],
-  ['D', 'MM', 'YYYY'],
-  ['D', 'MMMM', 'YY'],
-  ['D', 'MMM', 'YY'],
-  ['D', 'MM', 'YY']
-], date => ([
-  date.join(' '),
-  date.join('/'),
-  date.join('-')
-]));
 
-const GDS_MONTH_FORMATS = ['MMMM YYYY', ...GDS_DATE_FORMATS];
+const dateParser = require('./date-parser');
+
 const { parseReturnId } = require('../../../../lib/returns');
 
 /**
@@ -33,72 +17,12 @@ const { parseReturnId } = require('../../../../lib/returns');
 const normalize = value => value.trim().toLowerCase();
 
 /**
- * Parses a date label found in the CSV into a frequency
- * @param  {String} date - the date label from the CSV
- * @param {Number} numberOfDataLines - how many lines of data for this return?
- * @return {String}      - return frequency day|week|month
- */
-const parseDateFrequency = (date, numberOfDataLines) => {
-  const d = normalize(date);
-  if (d.startsWith('week ending ')) {
-    return 'week';
-  };
-
-  return (numberOfDataLines === 12) ? 'month' : 'day';
-};
-
-/**
- * Creates a day line skeleton for the return
- * @param  {String} date - the date label in the CSV
- * @return {Object}      - a return line skeleton
- */
-const createDay = date => ({
-  startDate: moment(date, GDS_DATE_FORMATS, true).format(DATE_FORMAT),
-  endDate: moment(date, GDS_DATE_FORMATS, true).format(DATE_FORMAT),
-  timePeriod: 'day'
-});
-
-/**
- * Creates a week line skeleton for the return
- * @param  {String} date - the date label in the CSV
- * @return {Object}      - a return line skeleton
- */
-const createWeek = date => ({
-  startDate: moment(date, GDS_DATE_FORMATS, true).subtract(6, 'day').format(DATE_FORMAT),
-  endDate: moment(date, GDS_DATE_FORMATS, true).format(DATE_FORMAT),
-  timePeriod: 'week'
-});
-
-/**
- * Creates a month line skeleton for the return
- * @param  {String} date - the date label in the CSV
- * @return {Object}      - a return line skeleton
- */
-const createMonth = date => ({
-  startDate: moment(date, GDS_MONTH_FORMATS, true).startOf('month').format(DATE_FORMAT),
-  endDate: moment(date, GDS_MONTH_FORMATS, true).endOf('month').format(DATE_FORMAT),
-  timePeriod: 'month'
-});
-
-/**
  * Creates a skeleton return line object
  * @param  {String} dateLabel - the date label in the CSV
  * @param {Number} numberOfDataLines - how many lines of data for this return?
  * @return {Object}           - return line object
  */
-const createReturnLine = (dateLabel, numberOfDataLines) => {
-  const frequency = parseDateFrequency(dateLabel, numberOfDataLines);
-
-  const actions = {
-    day: createDay,
-    week: createWeek,
-    month: createMonth
-  };
-
-  const date = normalize(dateLabel).replace(/week ending /i, '');
-
-  return actions[frequency](date);
-};
+const createReturnLine = (dateLabel) => dateParser.parse(dateLabel);
 
 /**
  * Maps an abstracted volume to a float
@@ -134,7 +58,7 @@ const mapLines = (headers, column, readingType) => {
     return [...acc, {
       unit: 'm³',
       userUnit: 'm³',
-      ...createReturnLine(dateLabel, lineCells.length),
+      ...createReturnLine(dateLabel),
       quantity: mapQuantity(value),
       readingType
     }];
@@ -256,10 +180,6 @@ const mapCsv = async (csvStr, user, today) => {
 };
 
 exports._normalize = normalize;
-exports._parseDateFrequency = parseDateFrequency;
-exports._createDay = createDay;
-exports._createWeek = createWeek;
-exports._createMonth = createMonth;
 exports._createReturnLine = createReturnLine;
 exports._mapLines = mapLines;
 exports._mapReading = mapReading;
@@ -268,6 +188,4 @@ exports._mapReturn = mapReturn;
 exports._mapQuantity = mapQuantity;
 exports._isEmptyReturn = isEmptyReturn;
 
-exports.GDS_DATE_FORMATS = GDS_DATE_FORMATS;
-exports.GDS_MONTH_FORMATS = GDS_MONTH_FORMATS;
 exports.mapCsv = mapCsv;
