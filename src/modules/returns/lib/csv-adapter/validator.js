@@ -2,10 +2,9 @@ const parse = require('csv-parse');
 const util = require('util');
 const parseCsv = util.promisify(parse);
 const { isEmpty, flatten, compact, isString, times } = require('lodash');
-const moment = require('moment');
 
 const { returnIDRegex, parseReturnId } = require('../../../../lib/returns');
-const { GDS_MONTH_FORMATS } = require('./mapper');
+const dateParser = require('./date-parser');
 
 const lineErrorRegex = /line (\d*)$/;
 const validAbstractionVolumeRegex = /(^Do not edit$)|(^-?\d[\d.,]*$)|(^\s*$)/;
@@ -62,11 +61,6 @@ const getHeadingExpectation = expectation => ({
   errorMessage: `${expectation} field not in expected position`
 });
 
-const validateDate = val => {
-  const dateString = val.startsWith('Week ending') ? val.substring(12) : val;
-  return moment(dateString, GDS_MONTH_FORMATS, true).isValid();
-};
-
 /**
  * Gets an array of validations to perform where each validator
  * sits at the same index of the target array.
@@ -83,7 +77,7 @@ const getHeadingValidation = column => {
 
   times(column.length - 7, () => {
     validators.push({
-      expectation: val => validateDate(val),
+      expectation: val => dateParser.validate(val),
       errorMessage: 'Unexpected date format for return line'
     });
   });

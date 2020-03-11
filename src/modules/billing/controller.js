@@ -125,8 +125,8 @@ const deleteAccountFromBatch = async (request, h) => {
     return Boom.notFound(`No invoices for account (${accountId}) in batch (${batch.id})`);
   }
 
-  await batchService.deleteAccountFromBatch(batch, accountId);
-  return h.response().code(204);
+  const updatedBatch = await batchService.deleteAccountFromBatch(batch, accountId);
+  return updatedBatch;
 };
 
 const deleteBatch = async (request, h) => {

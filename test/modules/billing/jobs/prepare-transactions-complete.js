@@ -25,6 +25,7 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
     sandbox.stub(batchJob, 'logOnComplete');
     sandbox.stub(batchJob, 'failBatch');
     sandbox.stub(jobService, 'setReadyJob');
+    sandbox.stub(jobService, 'setEmptyBatch');
 
     messageQueue = {
       publish: sandbox.spy()
@@ -71,10 +72,12 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
       }, messageQueue);
     });
 
-    test('the batch is completed', async () => {
-      const [eventId, batchId] = jobService.setReadyJob.lastCall.args;
+    test('the batch is set as empty', async () => {
+      const [eventId, batchId] = jobService.setEmptyBatch.lastCall.args;
       expect(eventId).to.equal('test-event-id');
       expect(batchId).to.equal('test-batch-id');
+
+      expect(jobService.setReadyJob.called).to.equal(false);
     });
 
     test('no further jobs are published', async () => {
