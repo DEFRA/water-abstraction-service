@@ -127,7 +127,9 @@ const decorateInvoiceTransactionValues = (invoice, chargeModuleBillRun) => {
   const map = indexChargeModuleTransactions(chargeModuleBillRun, accountNumber);
 
   getInvoiceTransactions(invoice).forEach(transaction => {
-    transaction.value = map.get(transaction.externalId);
+    // a transaction is not created in the CM if its value evaluates to 0,
+    // therefore, it does not have an externalId
+    transaction.value = map.get(transaction.externalId) || 0;
   });
 };
 
