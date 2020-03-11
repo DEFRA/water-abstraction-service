@@ -171,7 +171,7 @@ module.exports = {
       returns_reminder_returns_to_letter_formal: '3e788afa-bc7d-4fa8-b7da-32472b5d0f55'
     }
   },
-  import: { returns: { importYears: 3 } },
+  import: { returns: { importYears: process.env.IMPORT_RETURNS_YEARS } },
   services: {
     crm: crmUri,
     crm_v2: crmUri.replace('1.0', '2.0'),
