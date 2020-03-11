@@ -21,7 +21,7 @@ const createMessage = (eventId, chargeVersionYear, batch) => {
 };
 
 const handleProcessChargeVersion = async job => {
-  batchJob.logHandlingError(job);
+  batchJob.logHandling(job);
 
   const { chargeVersionYear } = job.data;
 

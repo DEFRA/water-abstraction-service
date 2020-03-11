@@ -91,6 +91,7 @@ experiment('modules/billing/jobs/create-charge', () => {
     batch = new Batch('accafbe7-3eca-45f7-a56b-a37dce17af30');
 
     sandbox.stub(transactionService, 'getById').resolves(batch);
+    sandbox.stub(transactionService, 'updateWithChargeModuleResponse').resolves();
     sandbox.stub(chargeModuleTransactions, 'createTransaction').resolves(data.chargeModuleResponse);
     sandbox.stub(repos.billingTransactions, 'setStatus');
     sandbox.stub(mappers.batch, 'modelToChargeModule').returns([data.chargeModuleTransaction]);
@@ -156,11 +157,10 @@ experiment('modules/billing/jobs/create-charge', () => {
         expect(payload).to.equal(data.chargeModuleTransaction);
       });
 
-      test('the water.billing_transactions status is updated', async () => {
-        const [id, status, externalId] = repos.billingTransactions.setStatus.lastCall.args;
-        expect(id).to.equal(data.transaction.billing_transaction_id);
-        expect(status).to.equal('charge_created');
-        expect(externalId).to.equal(data.chargeModuleResponse.transaction.id);
+      test('the transaction is updated with the charge module response', async () => {
+        const [id, response] = transactionService.updateWithChargeModuleResponse.lastCall.args;
+        expect(id).to.equal(transactionId);
+        expect(response).to.equal(data.chargeModuleResponse);
       });
 
       test('returns the batch', async () => {

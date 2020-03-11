@@ -82,6 +82,16 @@ const create = async data => {
 
 const findStatusCountsByBatchId = batchId => raw.multiRow(queries.findStatusCountsByBatchId, { batchId });
 
+/**
+ * Updates a water.billing_transactions record for the given id
+ *
+ * @param {String} transactionId UUID of the transaction to update
+ * @param {Object} changes Key values pairs of the changes to make
+ */
+const update = (transactionId, changes) => BillingTransaction
+  .forge({ billingTransactionId: transactionId })
+  .save(changes);
+
 exports.findOne = findOne;
 exports.find = find;
 exports.findHistoryByBatchId = findHistoryByBatchId;
@@ -89,3 +99,4 @@ exports.findByBatchId = findByBatchId;
 exports.delete = deleteRecords;
 exports.create = create;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
+exports.update = update;

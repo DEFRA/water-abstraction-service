@@ -39,10 +39,9 @@ const handleCreateCharge = async job => {
 
     // Create transaction in Charge Module
     const response = await chargeModuleTransactions.createTransaction(cmTransaction);
-    const externalId = get(response, 'transaction.id');
 
-    // Update status
-    await repos.billingTransactions.setStatus(transactionId, Transaction.statuses.chargeCreated, externalId);
+    // Update/remove our local transaction in water.billing_transactions
+    await transactionsService.updateWithChargeModuleResponse(transactionId, response);
   } catch (err) {
     batchJob.logHandlingError(job, err);
 
