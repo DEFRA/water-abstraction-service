@@ -1,7 +1,10 @@
-const Lab = require('@hapi/lab');
-const sinon = require('sinon');
-const { experiment, test, beforeEach, afterEach } = exports.lab = Lab.script();
+'use strict';
+
+const sandbox = require('sinon').createSandbox();
+
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
+const config = require('../../../../config');
 
 const returnsApi = require('../../../../src/lib/connectors/returns');
 const persistReturns = require('../../../../src/modules/import/lib/persist-returns');
@@ -38,108 +41,107 @@ const digitalServiceReturn = {
   due_date: '2018-11-28'
 };
 
-experiment('returnExists', () => {
-  test('It should return true if return exists', async () => {
-    const stub = sinon.stub(returnsApi.returns, 'findOne').resolves({ error: null, data: digitalServiceReturn });
-    const exists = await persistReturns.returnExists('01/123');
-    expect(exists).to.equal(true);
-    stub.restore();
-  });
-
-  test('It should return false if return does not exist', async () => {
-    const stub = sinon.stub(returnsApi.returns, 'findOne').resolves({ error: { name: 'NotFoundError' }, data: null });
-    const exists = await persistReturns.returnExists('01/123');
-    expect(exists).to.equal(false);
-    stub.restore();
-  });
-});
-
-experiment('getUpdateRow', () => {
-  test('It should update metadata, status, date received and due date for a past return', async () => {
-    const data = persistReturns.getUpdateRow(naldReturn);
-    expect(data).to.equal({
-      status: 'completed',
-      metadata: { param: 'value' },
-      received_date: '2017-11-24',
-      due_date: '2017-11-28'
-    });
-  });
-
-  test('It should update metadata and due date only for a return managed by the digital service', async () => {
-    const data = persistReturns.getUpdateRow(digitalServiceReturn);
-    expect(data).to.equal({
-      metadata: { param: 'value' },
-      due_date: '2018-11-28'
-    });
-  });
-});
-
-experiment('createOrUpdateReturn', () => {
-  let stubs;
-
+experiment('test/modules/import/lib/persist-returns', () => {
   beforeEach(async () => {
-    stubs = {
-      findOne: sinon.stub(returnsApi.returns, 'findOne'),
-      create: sinon.stub(returnsApi.returns, 'create'),
-      updateOne: sinon.stub(returnsApi.returns, 'updateOne')
-    };
+    sandbox.stub(returnsApi.returns, 'findOne');
+    sandbox.stub(returnsApi.returns, 'create');
+    sandbox.stub(returnsApi.returns, 'updateOne');
+    sandbox.stub(config.import.returns, 'importYears').value(3);
   });
 
   afterEach(async () => {
-    stubs.findOne.restore();
-    stubs.create.restore();
-    stubs.updateOne.restore();
+    sandbox.restore();
   });
 
-  test('It should create a row if the record is not present', async () => {
-    stubs.findOne.resolves({ error: { name: 'NotFoundError' }, data: null });
-    stubs.create.resolves({ error: null });
-    await persistReturns.createOrUpdateReturn(naldReturn, '2018-01-01');
+  experiment('.returnExists', () => {
+    test('returns true if return exists', async () => {
+      returnsApi.returns.findOne.resolves({ error: null, data: digitalServiceReturn });
+      const exists = await persistReturns.returnExists('01/123');
+      expect(exists).to.equal(true);
+    });
 
-    expect(stubs.create.firstCall.args[0]).to.equal(naldReturn);
-    expect(stubs.updateOne.firstCall).to.equal(null);
+    test('returns false if return does not exist', async () => {
+      returnsApi.returns.findOne.resolves({ error: { name: 'NotFoundError' }, data: null });
+      const exists = await persistReturns.returnExists('01/123');
+      expect(exists).to.equal(false);
+    });
   });
 
-  test('It should not create a row if the record is old', async () => {
-    stubs.findOne.resolves({ error: { name: 'NotFoundError' }, data: null });
-    stubs.create.resolves({ error: null });
-    await persistReturns.createOrUpdateReturn(naldReturn, '2020-01-01');
-    expect(stubs.create.firstCall).to.equal(null);
-    expect(stubs.updateOne.firstCall).to.equal(null);
+  experiment('.getUpdateRow', () => {
+    test('updates metadata, status, date received and due date for a past return', async () => {
+      const data = persistReturns.getUpdateRow(naldReturn);
+      expect(data).to.equal({
+        status: 'completed',
+        metadata: { param: 'value' },
+        received_date: '2017-11-24',
+        due_date: '2017-11-28'
+      });
+    });
+
+    test('updates metadata and due date only for a return managed by the digital service', async () => {
+      const data = persistReturns.getUpdateRow(digitalServiceReturn);
+      expect(data).to.equal({
+        metadata: { param: 'value' },
+        due_date: '2018-11-28'
+      });
+    });
   });
 
-  test('It should update a NALD return if the record is present', async () => {
-    stubs.findOne.resolves({ error: null, data: naldReturn });
-    stubs.updateOne.resolves({ error: null });
-    await persistReturns.createOrUpdateReturn(naldReturn, '2018-01-01');
+  experiment('.createOrUpdateReturn', () => {
+    test('creates a row if the record is not present', async () => {
+      returnsApi.returns.findOne.resolves({ error: { name: 'NotFoundError' }, data: null });
+      returnsApi.returns.create.resolves({ error: null });
 
-    expect(stubs.create.firstCall).to.equal(null);
-    expect(stubs.updateOne.firstCall.args).to.equal([naldReturn.return_id, {
-      metadata: naldReturn.metadata,
-      status: naldReturn.status,
-      received_date: naldReturn.received_date,
-      due_date: naldReturn.due_date
-    }]);
+      await persistReturns.createOrUpdateReturn(naldReturn, '2018-01-01');
+
+      expect(returnsApi.returns.create.firstCall.args[0]).to.equal(naldReturn);
+      expect(returnsApi.returns.updateOne.firstCall).to.equal(null);
+    });
+
+    test('does not create a row if the record is old', async () => {
+      returnsApi.returns.findOne.resolves({ error: { name: 'NotFoundError' }, data: null });
+      returnsApi.returns.create.resolves({ error: null });
+
+      await persistReturns.createOrUpdateReturn(naldReturn, '2020-01-01');
+
+      expect(returnsApi.returns.create.firstCall).to.equal(null);
+      expect(returnsApi.returns.updateOne.firstCall).to.equal(null);
+    });
+
+    test('updates a NALD return if the record is present', async () => {
+      returnsApi.returns.findOne.resolves({ error: null, data: naldReturn });
+      returnsApi.returns.updateOne.resolves({ error: null });
+      await persistReturns.createOrUpdateReturn(naldReturn, '2018-01-01');
+
+      expect(returnsApi.returns.create.firstCall).to.equal(null);
+      expect(returnsApi.returns.updateOne.firstCall.args).to.equal([naldReturn.return_id, {
+        metadata: naldReturn.metadata,
+        status: naldReturn.status,
+        received_date: naldReturn.received_date,
+        due_date: naldReturn.due_date
+      }]);
+    });
+
+    test('does not update a NALD return if the record is old', async () => {
+      returnsApi.returns.findOne.resolves({ error: null, data: naldReturn });
+      returnsApi.returns.updateOne.resolves({ error: null });
+      await persistReturns.createOrUpdateReturn(naldReturn, '2020-01-01');
+
+      expect(returnsApi.returns.create.firstCall).to.equal(null);
+      expect(returnsApi.returns.updateOne.firstCall).to.equal(null);
+    });
+
+    test('updates a digital service return metadata only if the record is present', async () => {
+      returnsApi.returns.findOne.resolves({ error: null, data: digitalServiceReturn });
+      returnsApi.returns.updateOne.resolves({ error: null });
+      await persistReturns.createOrUpdateReturn(digitalServiceReturn, '2018-01-01');
+
+      expect(returnsApi.returns.create.firstCall).to.equal(null);
+      expect(returnsApi.returns.updateOne.firstCall.args).to.equal([digitalServiceReturn.return_id, {
+        metadata: digitalServiceReturn.metadata,
+        due_date: digitalServiceReturn.due_date
+      }]);
+    });
   });
-
-  test('It should not update a NALD return if the record is old', async () => {
-    stubs.findOne.resolves({ error: null, data: naldReturn });
-    stubs.updateOne.resolves({ error: null });
-    await persistReturns.createOrUpdateReturn(naldReturn, '2020-01-01');
-
-    expect(stubs.create.firstCall).to.equal(null);
-    expect(stubs.updateOne.firstCall).to.equal(null);
-  });
-
-  test('It should update a digital service return metadata only if the record is present', async () => {
-    stubs.findOne.resolves({ error: null, data: digitalServiceReturn });
-    stubs.updateOne.resolves({ error: null });
-    await persistReturns.createOrUpdateReturn(digitalServiceReturn, '2018-01-01');
-
-    expect(stubs.create.firstCall).to.equal(null);
-    expect(stubs.updateOne.firstCall.args).to.equal([digitalServiceReturn.return_id, {
-      metadata: digitalServiceReturn.metadata,
-      due_date: digitalServiceReturn.due_date
-    }]);
-  });
-});
+})
+;

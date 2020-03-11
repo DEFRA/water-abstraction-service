@@ -53,10 +53,9 @@ const createOrUpdateReturn = async (row, date) => {
     // Conditional update
     if (exists) {
       return returns.updateOne(returnId, getUpdateRow(row));
-    } else {
-      // Insert
-      return returns.create(row);
     }
+    // Insert
+    return returns.create(row);
   }
 };
 
