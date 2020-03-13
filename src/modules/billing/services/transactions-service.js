@@ -122,8 +122,14 @@ const updateTransactionWithChargeModuleResponse = (transactionId, response) => {
   throw err;
 };
 
+const setErrorStatus = transactionId =>
+  newRepos.billingTransactions.update(transactionId, {
+    status: Transaction.statuses.error
+  });
+
 exports.getTransactionsForBatch = getTransactionsForBatch;
 exports.getTransactionsForBatchInvoice = getTransactionsForBatchInvoice;
 exports.saveTransactionToDB = saveTransactionToDB;
 exports.getById = getById;
 exports.updateWithChargeModuleResponse = updateTransactionWithChargeModuleResponse;
+exports.setErrorStatus = setErrorStatus;

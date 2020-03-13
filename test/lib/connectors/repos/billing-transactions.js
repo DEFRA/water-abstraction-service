@@ -52,7 +52,7 @@ experiment('lib/connectors/repos/billing-transactions', () => {
 
     test('calls model.forge with correct id', async () => {
       const [params] = BillingTransaction.forge.lastCall.args;
-      expect(params).to.equal({ billing_transaction_id: 'test-id' });
+      expect(params).to.equal({ billingTransactionId: 'test-id' });
     });
 
     test('calls fetch() with related models', async () => {

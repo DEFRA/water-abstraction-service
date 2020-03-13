@@ -21,26 +21,6 @@ experiment('lib/connectors/repository/BillingBatchChargeVersionYearsRepository',
     sandbox.restore();
   });
 
-  experiment('.findProcessingByBatch', () => {
-    test('searches by billing_batch_id', async () => {
-      const repo = new BillingBatchChargeVersionYearsRepository();
-      await repo.findProcessingByBatch('test-id');
-
-      const [filter] = repo.find.lastCall.args;
-
-      expect(filter.billing_batch_id).to.equal('test-id');
-    });
-
-    test('searches by using the processing status', async () => {
-      const repo = new BillingBatchChargeVersionYearsRepository();
-      await repo.findProcessingByBatch('test-id');
-
-      const [filter] = repo.find.lastCall.args;
-
-      expect(filter.status).to.equal('processing');
-    });
-  });
-
   experiment('.deleteByBatchId', () => {
     test('calls delete with the expected filter', async () => {
       const repo = new BillingBatchChargeVersionYearsRepository();

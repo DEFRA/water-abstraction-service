@@ -20,7 +20,7 @@ const withRelated = [
  */
 const findOne = async id => {
   const model = await BillingTransaction
-    .forge({ billing_transaction_id: id })
+    .forge({ billingTransactionId: id })
     .fetch({
       withRelated
     });
@@ -88,9 +88,9 @@ const findStatusCountsByBatchId = batchId => raw.multiRow(queries.findStatusCoun
  * @param {String} transactionId UUID of the transaction to update
  * @param {Object} changes Key values pairs of the changes to make
  */
-const update = (transactionId, changes) => BillingTransaction
-  .forge({ billingTransactionId: transactionId })
-  .save(changes);
+const update = (billingTransactionId, changes) => BillingTransaction
+  .forge({ billingTransactionId })
+  .save(changes, { patch: true });
 
 exports.findOne = findOne;
 exports.find = find;

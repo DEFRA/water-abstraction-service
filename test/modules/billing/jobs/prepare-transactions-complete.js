@@ -125,6 +125,9 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
           transaction: {
             billing_transaction_id: 'test-transaction-id-1'
           }
+        },
+        options: {
+          singletonKey: 'billing.create-charge.test-transaction-id-1'
         }
       });
 
@@ -138,6 +141,9 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
           transaction: {
             billing_transaction_id: 'test-transaction-id-2'
           }
+        },
+        options: {
+          singletonKey: 'billing.create-charge.test-transaction-id-2'
         }
       });
     });

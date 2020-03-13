@@ -691,7 +691,7 @@ experiment('modules/billing/services/batch-service', () => {
     test('returns the results mapped to camel-cased key/value pairs', async () => {
       expect(result).to.equal({
         candidate: 3,
-        chargeCreated: 7
+        charge_created: 7
       });
     });
   });

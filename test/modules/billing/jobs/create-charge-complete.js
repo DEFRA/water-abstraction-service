@@ -43,9 +43,12 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
     };
 
     sandbox.stub(jobService, 'setReadyJob').resolves();
+    sandbox.stub(jobService, 'setEmptyBatch').resolves();
+
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
     sandbox.stub(batchService, 'getTransactionStatusCounts').resolves({});
     sandbox.stub(batchService, 'setErrorStatus').resolves();
+    sandbox.stub(batchService, 'cleanup').resolves();
 
     sandbox.stub(batchJob, 'failBatch').resolves();
     sandbox.stub(batchJob, 'logOnComplete').resolves();
@@ -92,13 +95,23 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
     test('the job is not marked as ready', async () => {
       expect(jobService.setReadyJob.called).to.be.false();
     });
+
+    test('the batch cleanup is not called', async () => {
+      expect(batchService.cleanup.called).to.be.false();
+    });
   });
 
-  experiment('when there are no candidate transactions to process', () => {
+  experiment('when a non-empty batch is processed', () => {
     beforeEach(async () => {
       batchService.getTransactionStatusCounts.resolves({
+        processing: 0,
+        charge_created: 2
       });
       await createChargeComplete(job, messageQueue);
+    });
+
+    test('the batch cleanup is called', async () => {
+      expect(batchService.cleanup.called).to.be.true();
     });
 
     test('a job is published to get Charge Module totals', async () => {
@@ -109,6 +122,30 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
 
     test('the job is marked as ready', async () => {
       expect(jobService.setReadyJob.calledWith(
+        EVENT_ID, BATCH_ID
+      )).to.be.true();
+    });
+  });
+
+  experiment('when an empty batch is processed', () => {
+    beforeEach(async () => {
+      batchService.getTransactionStatusCounts.resolves({
+        processing: 0,
+        charge_created: 0
+      });
+      await createChargeComplete(job, messageQueue);
+    });
+
+    test('the batch cleanup is called', async () => {
+      expect(batchService.cleanup.called).to.be.true();
+    });
+
+    test('no further jobs are published', async () => {
+      expect(messageQueue.publish.called).to.be.false();
+    });
+
+    test('the job is marked as empty', async () => {
+      expect(jobService.setEmptyBatch.calledWith(
         EVENT_ID, BATCH_ID
       )).to.be.true();
     });
