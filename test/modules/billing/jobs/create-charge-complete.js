@@ -103,8 +103,7 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
 
     test('a job is published to get Charge Module totals', async () => {
       const { data } = messageQueue.publish.lastCall.args[0];
-      expect(data.eventId).to.equal(EVENT_ID);
-      expect(data.batch).to.equal(job.data.response.batch);
+      expect(data.batchId).to.equal(BATCH_ID);
     });
 
     test('the job is marked as ready', async () => {

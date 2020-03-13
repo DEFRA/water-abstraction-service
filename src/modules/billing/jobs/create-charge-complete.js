@@ -30,7 +30,7 @@ const handleCreateChargeComplete = async (job, messageQueue) => {
 
     // If there are no remaining candidate transactions, publish job to
     // read batch totals in the CM
-    await messageQueue.publish(refreshTotalsJob.createMessage(eventId, batch));
+    await messageQueue.publish(refreshTotalsJob.createMessage(batchId));
 
     await jobService.setReadyJob(eventId, batchId);
   } catch (err) {
