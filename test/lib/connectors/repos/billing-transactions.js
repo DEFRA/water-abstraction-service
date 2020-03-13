@@ -210,4 +210,24 @@ experiment('lib/connectors/repos/billing-transactions', () => {
       )).to.be.true();
     });
   });
+
+  experiment('.update', () => {
+    const transactionId = 'test-transaction-id';
+    const changes = {
+      status: 'error'
+    };
+
+    beforeEach(async () => {
+      await billingTransactions.update(transactionId, changes);
+    });
+
+    test('calls model.forge with correct data', async () => {
+      const [params] = BillingTransaction.forge.lastCall.args;
+      expect(params).to.equal({ billingTransactionId: transactionId });
+    });
+
+    test('calls .save() on the model using patch mode', async () => {
+      expect(stub.save.calledWith(changes, { patch: true })).to.be.true();
+    });
+  });
 });
