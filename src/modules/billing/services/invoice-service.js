@@ -52,7 +52,7 @@ const getInvoiceForBatch = async (batchId, invoiceId) => {
   const invoice = mappers.invoice.dbToModel(data);
 
   // Get CRM company and Charge Module summary data
-  const accountNumber = get(data, 'invoice.invoiceAccount.accountNumber');
+  const accountNumber = get(invoice, 'invoiceAccount.accountNumber');
   const regionId = get(data, 'billingBatch.region.chargeRegionId');
   const [, chargeModuleSummary] = await Promise.all([
     decorateInvoicesWithCompanies([invoice]),
