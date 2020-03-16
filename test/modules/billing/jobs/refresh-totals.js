@@ -17,15 +17,11 @@ const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const Batch = require('../../../../src/lib/models/batch');
 
 const BATCH_ID = uuid();
-const EVENT_ID = uuid();
 
 experiment('modules/billing/jobs/refresh-totals', () => {
-  let batch, dbBatchRow;
+  let batch;
 
   beforeEach(async () => {
-    dbBatchRow = {
-      billing_batch_id: BATCH_ID
-    };
     batch = new Batch();
     sandbox.stub(batchService, 'getBatchById');
     sandbox.stub(batchJob, 'logHandling');
@@ -46,7 +42,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
   experiment('.createMessage', () => {
     let message;
     beforeEach(async () => {
-      message = refreshTotals.createMessage(EVENT_ID, dbBatchRow);
+      message = refreshTotals.createMessage(BATCH_ID);
     });
 
     test('message has the expected name', async () => {
@@ -54,7 +50,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     });
 
     test('message has the expected data', async () => {
-      expect(message.data).to.equal({ eventId: EVENT_ID, batch: dbBatchRow });
+      expect(message.data).to.equal({ batchId: BATCH_ID });
     });
 
     test('message has the expected options', async () => {
@@ -72,9 +68,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     beforeEach(async () => {
       job = {
         data: {
-          batch: {
-            billing_batch_id: BATCH_ID
-          }
+          batchId: BATCH_ID
         }
       };
     });

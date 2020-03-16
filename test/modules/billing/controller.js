@@ -412,7 +412,10 @@ experiment('modules/billing/controller', () => {
       batch.status = Batch.BATCH_STATUS.ready;
       request = {
         params: { batchId: batch.id, accountId: 'test-account-id' },
-        pre: { batch }
+        pre: { batch },
+        messageQueue: {
+          publish: sandbox.stub()
+        }
       };
 
       invoices = [{
@@ -459,15 +462,23 @@ experiment('modules/billing/controller', () => {
       ];
 
       validStatuses.forEach(status => {
-        test(`the account is deleted for the ${status} status`, async () => {
-          batch.status = status;
-          invoices[0].invoiceAccount.id = 'test-account-id';
-          await controller.deleteAccountFromBatch(request, h);
+        experiment(`for the ${status} status`, () => {
+          beforeEach(async () => {
+            batch.status = status;
+            invoices[0].invoiceAccount.id = 'test-account-id';
+            await controller.deleteAccountFromBatch(request, h);
+          });
 
-          const [batchArg, accountId] = batchService.deleteAccountFromBatch.lastCall.args;
+          test('the account is deleted', async () => {
+            const [batchArg, accountId] = batchService.deleteAccountFromBatch.lastCall.args;
+            expect(batchArg.id).to.equal(batch.id);
+            expect(accountId).to.equal('test-account-id');
+          });
 
-          expect(batchArg.id).to.equal(batch.id);
-          expect(accountId).to.equal('test-account-id');
+          test('a job is published to refresh the batch totals', async () => {
+            const [message] = request.messageQueue.publish.lastCall.args;
+            expect(message.data.batchId).to.equal(request.params.batchId);
+          });
         });
       });
     });
