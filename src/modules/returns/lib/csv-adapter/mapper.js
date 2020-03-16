@@ -7,6 +7,13 @@ const DATE_FORMAT = 'YYYY-MM-DD';
 
 const dateParser = require('./date-parser');
 
+const ROW_INDEX = {
+  nilReturn: 4,
+  meterUsed: 5,
+  meterMake: 6,
+  meterSerial: 7
+};
+
 const { parseReturnId } = require('../../../../lib/returns');
 
 /**
@@ -47,8 +54,8 @@ const mapQuantity = value => {
  * @return {Array}              - return lines array
  */
 const mapLines = (headers, column, readingType) => {
-  const lineHeaders = headers.slice(6, -1);
-  const lineCells = column.slice(6, -1);
+  const lineHeaders = headers.slice(8, -1);
+  const lineCells = column.slice(8, -1);
 
   return lineHeaders.reduce((acc, dateLabel, index) => {
     const value = normalize(lineCells[index]);
@@ -70,12 +77,15 @@ const mapLines = (headers, column, readingType) => {
  * @param  {Array} column  - column of return data from CSV
  * @return {Object}        - return reading object
  */
-const mapReading = column => ({
-  type: normalize(column[3]) === 'y' ? 'measured' : 'estimated',
-  method: 'abstractionVolumes',
-  units: 'm³',
-  totalFlag: false
-});
+const mapReading = column => {
+  const value = column[ROW_INDEX.meterUsed];
+  return {
+    type: normalize(value) === 'y' ? 'measured' : 'estimated',
+    method: 'abstractionVolumes',
+    units: 'm³',
+    totalFlag: false
+  };
+};
 
 /**
  * Maps CSV column data and reading type to a meters array for the return
@@ -91,8 +101,8 @@ const mapMeters = (column, readingType) => {
 
   return [{
     meterDetailsProvided: true,
-    manufacturer: column[4].trim(),
-    serialNumber: column[5].trim(),
+    manufacturer: column[ROW_INDEX.meterMake].trim(),
+    serialNumber: column[ROW_INDEX.meterSerial].trim(),
     multiplier: 1
   }];
 };
@@ -108,7 +118,7 @@ const mapMeters = (column, readingType) => {
  * @return {Object}         a single return object
  */
 const mapReturn = (column, context) => {
-  const isNil = normalize(column[2]) === 'y';
+  const isNil = normalize(column[ROW_INDEX.nilReturn]) === 'y';
   const returnId = column.slice(-1)[0];
   const { startDate, endDate, licenceNumber } = parseReturnId(returnId);
 
@@ -152,7 +162,7 @@ const isNotEmptyCell = value => !['', 'do not edit'].includes(normalize(value));
  * @return {Boolean}          true if the return is empty
  */
 const isEmptyReturn = column => {
-  const cells = column.slice(2, -1);
+  const cells = column.slice(4, -1);
   return !cells.some(isNotEmptyCell);
 };
 

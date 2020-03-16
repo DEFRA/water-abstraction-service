@@ -16,7 +16,6 @@ const createChargeJob = require('../../../../src/modules/billing/jobs/create-cha
 
 // Connectors
 const chargeModuleTransactions = require('../../../../src/lib/connectors/charge-module/transactions');
-const repos = require('../../../../src/lib/connectors/repository');
 const mappers = require('../../../../src/modules/billing/mappers');
 
 // Services
@@ -91,8 +90,10 @@ experiment('modules/billing/jobs/create-charge', () => {
     batch = new Batch('accafbe7-3eca-45f7-a56b-a37dce17af30');
 
     sandbox.stub(transactionService, 'getById').resolves(batch);
+    sandbox.stub(transactionService, 'updateWithChargeModuleResponse').resolves();
+    sandbox.stub(transactionService, 'setErrorStatus').resolves();
+
     sandbox.stub(chargeModuleTransactions, 'createTransaction').resolves(data.chargeModuleResponse);
-    sandbox.stub(repos.billingTransactions, 'setStatus');
     sandbox.stub(mappers.batch, 'modelToChargeModule').returns([data.chargeModuleTransaction]);
   });
 
@@ -118,6 +119,9 @@ experiment('modules/billing/jobs/create-charge', () => {
           eventId: data.eventId,
           batch: data.batch,
           transaction: data.transaction
+        },
+        options: {
+          singletonKey: `billing.create-charge.${transactionId}`
         }
       });
     });
@@ -156,11 +160,10 @@ experiment('modules/billing/jobs/create-charge', () => {
         expect(payload).to.equal(data.chargeModuleTransaction);
       });
 
-      test('the water.billing_transactions status is updated', async () => {
-        const [id, status, externalId] = repos.billingTransactions.setStatus.lastCall.args;
-        expect(id).to.equal(data.transaction.billing_transaction_id);
-        expect(status).to.equal('charge_created');
-        expect(externalId).to.equal(data.chargeModuleResponse.transaction.id);
+      test('the transaction is updated with the charge module response', async () => {
+        const [id, response] = transactionService.updateWithChargeModuleResponse.lastCall.args;
+        expect(id).to.equal(transactionId);
+        expect(response).to.equal(data.chargeModuleResponse);
       });
 
       test('returns the batch', async () => {
@@ -194,9 +197,8 @@ experiment('modules/billing/jobs/create-charge', () => {
           result = await createChargeJob.handler(job);
           fail();
         } catch (error) {
-          const [id, status] = repos.billingTransactions.setStatus.lastCall.args;
+          const [id] = transactionService.setErrorStatus.lastCall.args;
           expect(id).to.equal(data.transaction.billing_transaction_id);
-          expect(status).to.equal('error');
         }
       });
 

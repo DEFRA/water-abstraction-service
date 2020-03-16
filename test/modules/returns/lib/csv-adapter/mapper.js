@@ -9,6 +9,8 @@ const dateParser = require('../../../../../src/modules/returns/lib/csv-adapter/d
 const headers = [
   'Licence number',
   'Return reference',
+  'Site description',
+  'Purpose',
   'Nil return Y/N',
   'Did you use a meter Y/N',
   'Meter make',
@@ -22,6 +24,8 @@ const headers = [
 const column = [
   '01/123',
   '01234',
+  'Test site',
+  'Test purpose',
   'N',
   'Y',
   'Superpump',
@@ -35,6 +39,8 @@ const column = [
 const nilReturn = [
   '01/123',
   '01234',
+  'Test site',
+  'Test purpose',
   'Y',
   '',
   '',
@@ -48,6 +54,8 @@ const nilReturn = [
 const emptyReturn = [
   '01/123',
   '01234',
+  'Test site',
+  'Test purpose',
   ' ',
   '',
   '',
@@ -60,6 +68,8 @@ const emptyReturn = [
 
 const csv = `Licence number,01/23,02/34
 Return reference,1234,5678
+Site description,Test site,Test site
+Purpose,Test purpose,Test purpose
 Nil return Y/N,N,
 Did you use a meter Y/N,N,
 Meter make,Superpump,
@@ -101,7 +111,9 @@ experiment('returns CSV to JSON mapper', () => {
     dateParser.parse.withArgs('Week ending 13 April 2019').returns(getWeekLine('2019-04-13'));
     dateParser.parse.withArgs('Week ending 20 April 2019').returns(getWeekLine('2019-04-20'));
   });
+
   afterEach(() => sandbox.restore());
+
   experiment('normalize', () => {
     test('should trim and lowercase values', async () => {
       const result = csvMapper._normalize('  Some Data ');
@@ -179,7 +191,7 @@ experiment('returns CSV to JSON mapper', () => {
 
   experiment('mapReading', () => {
     test('maps reading type to "measured" when cell marked as "Y"', async () => {
-      const column = ['', '', '', 'Y'];
+      const column = ['', '', '', '', '', 'Y'];
       const result = csvMapper._mapReading(column);
       expect(result).to.equal({
         type: 'measured',
@@ -190,7 +202,7 @@ experiment('returns CSV to JSON mapper', () => {
     });
 
     test('maps reading type to "estimated" when cell marked as "N"', async () => {
-      const column = ['', '', '', 'N'];
+      const column = ['', '', '', '', '', 'N'];
       const result = csvMapper._mapReading(column);
       expect(result).to.equal({
         type: 'estimated',
@@ -209,7 +221,7 @@ experiment('returns CSV to JSON mapper', () => {
     });
 
     test('returns meter details when reading type is "measured"', async () => {
-      const column = ['', '', '', '', 'Superpump', '1234'];
+      const column = ['', '', '', '', '', '', 'Superpump', '1234'];
       const result = csvMapper._mapMeters(column, 'measured');
       expect(result).to.equal([{
         meterDetailsProvided: true,
@@ -220,7 +232,7 @@ experiment('returns CSV to JSON mapper', () => {
     });
 
     test('returns meter details with meterDetailsProvided flag true even when manufacturer/serial are blank"', async () => {
-      const column = ['', '', '', '', '', ''];
+      const column = ['', '', '', '', '', '', '', ''];
       const result = csvMapper._mapMeters(column, 'measured');
       expect(result).to.equal([{
         meterDetailsProvided: true,
