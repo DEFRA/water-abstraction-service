@@ -51,6 +51,15 @@ class Region extends Model {
     this._name = name;
   }
 
+  get displayName () {
+    return this._displayName;
+  }
+
+  set displayName (displayName) {
+    assertString(displayName);
+    this._displayName = displayName;
+  }
+
   /**
    * Alphanumeric code
    * @return {String}

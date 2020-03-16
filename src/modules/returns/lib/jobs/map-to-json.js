@@ -65,8 +65,7 @@ const handleReturnsMapToJsonStart = async job => {
 
     await uploadJsonToS3(evt.eventId, json);
 
-    evt.status = uploadStatus.VALIDATED;
-    await event.save(evt);
+    await event.updateStatus(evt.eventId, uploadStatus.VALIDATED);
 
     return job.done();
   } catch (error) {

@@ -33,7 +33,9 @@ const uploadErrors = {
   ERR_PERMISSION: 'You do not have permission to submit returns for this licence',
   ERR_NOT_DUE: 'This return has already been completed',
   ERR_NOT_FOUND: 'The return dates or reference do not match our records',
-  ERR_LINES: 'The data you sent does not match our requirements',
+  ERR_VOLUMES: 'The volumes must be a positive number',
+  ERR_METER_DETAILS: 'You must provide the manufacturer and serial number of the water meter',
+  ERR_LINES: 'You have entered data into a field marked "Do not edit"',
   ERR_SCHEMA: 'The selected file must use the template'
 };
 
@@ -151,6 +153,19 @@ const validateReturnSchema = (ret, context) => {
   return !error;
 };
 
+const validateAbstractionVolumes = (ret, context) => {
+  if (ret.isNil) return true;
+  const linesWithIssues = ret.lines.filter(line => {
+    return !(line.quantity === null || line.quantity >= 0);
+  });
+  return linesWithIssues.length === 0;
+};
+
+const validateMeterDetails = (ret, context) => {
+  if (ret.isNil || ret.meters.length === 0) return true;
+  return (ret.meters[0].manufacturer !== '' && ret.meters[0].serialNumber !== '');
+};
+
 /**
  * Creates a pair for use in the lodash cond function, in the form:
  * [predicate, func]
@@ -172,6 +187,8 @@ const validator = cond([
   createPair(validatePermission, uploadErrors.ERR_PERMISSION),
   createPair(validateReturnExists, uploadErrors.ERR_NOT_FOUND),
   createPair(validateReturnDue, uploadErrors.ERR_NOT_DUE),
+  createPair(validateAbstractionVolumes, uploadErrors.ERR_VOLUMES),
+  createPair(validateMeterDetails, uploadErrors.ERR_METER_DETAILS),
   createPair(validateReturnSchema, uploadErrors.ERR_SCHEMA),
   createPair(validateReturnlines, uploadErrors.ERR_LINES)
 ]);

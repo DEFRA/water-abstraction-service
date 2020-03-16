@@ -34,6 +34,13 @@ const assertIsArrayOfType = (values, Type) => {
   );
 };
 
+const assertIsArrayOfNullableStrings = (values) => {
+  hoek.assert(isArray(values), 'Array expected');
+  values.forEach((value, i) =>
+    hoek.assert(typeof value === 'string' || value === null, `String expected at position ${i}`)
+  );
+};
+
 const assertIsInstanceOf = (value, Type) => {
   hoek.assert(value instanceof Type, `${new Type().constructor.name} expected`);
 };
@@ -65,6 +72,7 @@ const assertInteger = value => assert(value, VALID_INTEGER);
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
 exports.assertIsArrayOfType = assertIsArrayOfType;
+exports.assertIsArrayOfNullableStrings = assertIsArrayOfNullableStrings;
 exports.assertAccountNumber = assertAccountNumber;
 exports.assertLicenceNumber = assertLicenceNumber;
 exports.assertId = assertId;

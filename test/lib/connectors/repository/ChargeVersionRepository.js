@@ -148,7 +148,45 @@ experiment('lib/connectors/repository/ChargeVersionRepository.js', () => {
       expect(regionId).to.equal(batch.region_id);
     });
 
-    test('passes the start of the financial year, six years ago', async () => {
+    test('passes the start of the financial year', async () => {
+      const [, [, , fromDate]] = repo.dbQuery.lastCall.args;
+      expect(fromDate).to.equal('2019-04-01');
+    });
+
+    test('returns the affected database rows', async () => {
+      expect(result).to.equal([{ id: 'test-row-1' }]);
+    });
+  });
+
+  experiment('.createAnnualChargeVersions', () => {
+    let batch;
+    let result;
+
+    beforeEach(async () => {
+      ChargeVersionRepository.prototype.dbQuery.resolves({
+        rows: [{ id: 'test-row-1' }]
+      });
+
+      batch = {
+        billing_batch_id: 'test-batch-id',
+        region_id: 'test-region-id'
+      };
+
+      const now = new Date(2020, 1, 21);
+      result = await repo.createAnnualChargeVersions(batch, now);
+    });
+
+    test('passes the batch id as the first param', async () => {
+      const [, [batchId]] = repo.dbQuery.lastCall.args;
+      expect(batchId).to.equal(batch.billing_batch_id);
+    });
+
+    test('passes the region id as the second param', async () => {
+      const [, [, regionId]] = repo.dbQuery.lastCall.args;
+      expect(regionId).to.equal(batch.region_id);
+    });
+
+    test('passes the start of the financial year', async () => {
       const [, [, , fromDate]] = repo.dbQuery.lastCall.args;
       expect(fromDate).to.equal('2019-04-01');
     });

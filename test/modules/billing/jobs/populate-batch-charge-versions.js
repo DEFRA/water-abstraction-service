@@ -26,6 +26,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
     });
     sandbox.stub(repos.chargeVersions, 'createSupplementaryChargeVersions').resolves([]);
     sandbox.stub(repos.chargeVersions, 'createTwoPartTariffChargeVersions').resolves([]);
+    sandbox.stub(repos.chargeVersions, 'createAnnualChargeVersions').resolves([]);
   });
 
   afterEach(async () => {
@@ -166,6 +167,69 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
         beforeEach(async () => {
           repos.chargeVersions.createTwoPartTariffChargeVersions.resolves([]);
 
+          result = await populateBatchChargeVersionsJob.handler(job);
+        });
+
+        test('the result includes the charge versions', async () => {
+          const { chargeVersions } = result;
+          expect(chargeVersions).to.equal([]);
+        });
+
+        test('the result includes the batch', async () => {
+          const { batch } = result;
+          expect(batch.billing_batch_id).to.equal('test-batch-id');
+        });
+      });
+    });
+
+    experiment('when the batch is an annual batch', () => {
+      beforeEach(async () => {
+        job = {
+          data: {
+            eventId: '22222222-2222-2222-2222-222222222222'
+          },
+          done: sandbox.spy()
+        };
+
+        event.load.resolves({
+          metadata: {
+            batch: {
+              batch_type: 'annual',
+              billing_batch_id: 'test-batch-id'
+            }
+          }
+        });
+      });
+      experiment('if there are charge versions for the batch', () => {
+        let result;
+
+        beforeEach(async () => {
+          repos.chargeVersions.createAnnualChargeVersions.resolves([
+            { charge_version_id: 1 }, { charge_version_id: 2 }
+          ]);
+
+          result = await populateBatchChargeVersionsJob.handler(job);
+        });
+
+        test('the result includes the charge versions', async () => {
+          const { chargeVersions } = result;
+          expect(chargeVersions).to.equal([
+            { charge_version_id: 1 },
+            { charge_version_id: 2 }
+          ]);
+        });
+
+        test('the result includes the batch', async () => {
+          const { batch } = result;
+          expect(batch.billing_batch_id).to.equal('test-batch-id');
+        });
+      });
+
+      experiment('if there are no charge versions for the batch', () => {
+        let result;
+
+        beforeEach(async () => {
+          repos.chargeVersions.createAnnualChargeVersions.resolves([]);
           result = await populateBatchChargeVersionsJob.handler(job);
         });
 

@@ -4,11 +4,12 @@ const createReturn = data => ({
   endDate: '2018-10-31',
   dueDate: '2018-11-28',
   receivedDate: '2018-11-15',
-  frequency: 'week',
+  frequency: 'month',
   isNil: true,
   status: 'due',
   versionNumber: 1,
   isCurrent: true,
+  meters:[],
   user: {
     email: 'mail@example.com',
     entityId: 'd9c5412c-8993-49b9-9d20-b8f2208ccd8e',

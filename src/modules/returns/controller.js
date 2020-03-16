@@ -9,6 +9,7 @@ const { eventFactory } = require('./lib/event-factory');
 const { repository: eventRepository } = require('../../controllers/events');
 const s3 = require('../../lib/connectors/s3');
 const event = require('../../lib/event');
+const newEvtRepo = require('../../lib/connectors/repos/events.js');
 const { uploadStatus, getUploadFilename } = require('./lib/returns-upload');
 const { logger } = require('../../logger');
 const startUploadJob = require('./lib/jobs/start-upload');
@@ -76,11 +77,11 @@ const patchReturnHeader = async (request, h) => {
 
 /**
  * Creates the event object that represent the upload
- * of a returns xml document.
+ * of a bulk returns document.
  * @param uploadUserName The username of end user.
  * @returns {Object}
  */
-const createXmlUploadEvent = (uploadUserName, subtype = 'xml') => {
+const createBulkUploadEvent = (uploadUserName, subtype = 'csv') => {
   return event.create({
     type: 'returns-upload',
     subtype,
@@ -89,40 +90,35 @@ const createXmlUploadEvent = (uploadUserName, subtype = 'xml') => {
   });
 };
 
-/**
- * Creates the relative URL for a consumer to find out
- * the status of the event described by the eventId parameter.
- */
-const getEventStatusLink = eventId => {
-  return `/water/1.0/event/${eventId}`;
-};
+const getEventStatusLink = eventId => `/water/1.0/event/${eventId}`;
 
 const postUpload = async (request, h) => {
   const { type } = request.params;
-  const evt = createXmlUploadEvent(request.payload.userName, type);
+  const evt = createBulkUploadEvent(request.payload.userName, type);
+  let eventModel;
 
   try {
-    await event.save(evt);
-
-    const filename = getUploadFilename(evt.eventId, type);
+    const { rows } = await event.save(evt);
+    eventModel = rows[0];
+    const filename = getUploadFilename(eventModel.eventId, type);
     const data = await s3.upload(filename, request.payload.fileData);
-    const jobId = await startUploadJob.publish(evt.eventId);
+    const jobId = await startUploadJob.publish(eventModel.eventId);
 
     return h.response({
       data: {
-        eventId: evt.eventId,
+        eventId: eventModel.eventId,
         filename,
         location: data.Location,
-        statusLink: getEventStatusLink(evt.eventId),
+        statusLink: getEventStatusLink(eventModel.eventId),
         jobId
       },
       error: null
     }).code(202);
   } catch (error) {
-    logger.error('Failed to upload returns xml', error);
-    if (evt.eventId) {
-      evt.status = uploadStatus.ERROR;
-      await event.save(evt);
+    logger.error('Failed to upload bulk returns', error);
+    if (eventModel.eventId) {
+      eventModel.status = uploadStatus.ERROR;
+      await event.save(eventModel);
     }
 
     return h.response({ data: null, error }).code(500);
@@ -200,9 +196,8 @@ const getUploadPreviewReturn = async (request, h) => {
  * @param  {Array} data - array of return objects
  * @return {Object}
  */
-const applySubmitting = (evt, data) => {
+const applySubmitting = (data) => {
   return {
-    ...evt,
     metadata: {
       returns: data.map(ret => ({
         returnId: ret.returnId,
@@ -252,8 +247,7 @@ const postUploadSubmit = async (request, h) => {
     }
 
     // Update event
-    const updatedEvent = applySubmitting(request.evt, valid);
-    await event.save(updatedEvent);
+    await newEvtRepo.update(request.evt, applySubmitting(valid));
 
     await persistReturnsJob.publish(get(request, 'evt.eventId'));
 

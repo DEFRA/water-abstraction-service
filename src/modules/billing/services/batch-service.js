@@ -34,9 +34,14 @@ const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
   };
 };
 
-const getProcessingBatchByRegion = async regionId => {
-  const batches = await newRepos.billingBatches.findByStatus(BATCH_STATUS.processing);
+const getMostRecentLiveBatchByRegion = async regionId => {
+  const batches = await newRepos.billingBatches.findByStatuses([
+    BATCH_STATUS.processing,
+    BATCH_STATUS.ready,
+    BATCH_STATUS.review
+  ]);
   const batch = batches.find(b => b.regionId === regionId);
+
   return batch ? mappers.batch.dbToModel(batch) : null;
 };
 
@@ -75,18 +80,17 @@ const setStatus = (batchId, status) =>
   newRepos.billingBatches.update(batchId, { status });
 
 const approveBatch = async (batch, internalCallingUser) => {
-  const { batchId } = batch;
   try {
-    await chargeModuleBatchConnector.approve(batch.region.code, batchId);
-    await chargeModuleBatchConnector.send(batch.region.code, batchId, false);
+    await chargeModuleBatchConnector.approve(batch.region.code, batch.id);
+    await chargeModuleBatchConnector.send(batch.region.code, batch.id, false);
 
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
 
-    return setStatus(batchId, BATCH_STATUS.sent);
+    return setStatus(batch.id, BATCH_STATUS.sent);
   } catch (err) {
     logger.error('Failed to approve the batch', err, batch);
     await saveEvent('billing-batch:approve', 'error', internalCallingUser, batch);
-    await setStatus(batchId, BATCH_STATUS.error);
+    await setStatus(batch.id, BATCH_STATUS.error);
     throw err;
   }
 };
@@ -161,7 +165,7 @@ exports.approveBatch = approveBatch;
 exports.deleteBatch = deleteBatch;
 exports.getBatches = getBatches;
 exports.getBatchById = getBatchById;
-exports.getProcessingBatchByRegion = getProcessingBatchByRegion;
+exports.getMostRecentLiveBatchByRegion = getMostRecentLiveBatchByRegion;
 exports.saveInvoicesToDB = saveInvoicesToDB;
 exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
