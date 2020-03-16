@@ -27,16 +27,19 @@ const errorMessages = {
 /**
  * Takes a column of CSV data and maps to an object to represent
  * a single licence return item.
+ *
+ * Ignore the data on rows 3 and 4 which is purely presentational
+ * data for the site description and purpose.
  */
 const createLicenceReturn = column => ({
   licenceNumber: { line: 1, value: column[0] },
   returnReference: { line: 2, value: column[1] },
-  isNilReturn: { line: 3, value: column[2] },
-  meterUsed: { line: 4, value: column[3] },
-  meterMake: { line: 5, value: column[4] },
-  meterSerialNumber: { line: 6, value: column[5] },
-  abstractionVolumes: column.slice(6, column.length - 1).map((value, index) => ({
-    line: 7 + index,
+  isNilReturn: { line: 5, value: column[4] },
+  meterUsed: { line: 6, value: column[5] },
+  meterMake: { line: 7, value: column[6] },
+  meterSerialNumber: { line: 8, value: column[7] },
+  abstractionVolumes: column.slice(8, column.length - 1).map((value, index) => ({
+    line: 9 + index,
     value
   })),
   returnId: { line: column.length, value: column.reverse()[0] }
@@ -69,13 +72,15 @@ const getHeadingValidation = column => {
   const validators = [
     getHeadingExpectation('Licence number'),
     getHeadingExpectation('Return reference'),
+    getHeadingExpectation('Site description'),
+    getHeadingExpectation('Purpose'),
     getHeadingExpectation('Nil return Y/N'),
     getHeadingExpectation('Did you use a meter Y/N'),
     getHeadingExpectation('Meter make'),
     getHeadingExpectation('Meter serial number')
   ];
 
-  times(column.length - 7, () => {
+  times(column.length - 9, () => {
     validators.push({
       expectation: val => dateParser.validate(val),
       errorMessage: 'Unexpected date format for return line'

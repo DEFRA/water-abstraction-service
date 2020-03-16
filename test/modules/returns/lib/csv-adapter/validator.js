@@ -1,11 +1,15 @@
+'use strict';
+
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
-
+const { partial } = require('lodash');
 const csvSchemaValidation = require('../../../../../src/modules/returns/lib/csv-adapter/validator');
 const csvStringify = require('csv-stringify/lib/sync');
 
 const validLicenceNumberRecord = ['Licence number', '123', '123abc'];
 const validReturnReferenceRecord = ['Return reference', '1234', '4321'];
+const validSiteDescriptionRecord = ['Site description', '', 'Main site'];
+const validPurposeRecord = ['Purpose', 'Irrigation', 'Spray'];
 const validNilReturnRecord = ['Nil return Y/N', 'Y', 'N'];
 const validUseAMeterRecord = ['Did you use a meter Y/N', 'Y', 'N'];
 const validMeterMakeRecord = ['Meter make', 'Make 1', ''];
@@ -30,6 +34,8 @@ const validMonthlyRecords = [
 const getValidSingleLicenceReturn = () => ([
   ['Licence number', '123'],
   ['Return reference', '123456'],
+  ['Site description', 'Test site'],
+  ['Purpose', 'Test purpose'],
   ['Nil return Y/N', 'N'],
   ['Did you use a meter Y/N', 'Y'],
   ['Meter make', 'Make 1'],
@@ -39,6 +45,19 @@ const getValidSingleLicenceReturn = () => ([
   ['11 April 2018', '30'],
   ['Unique return reference', 'v1:1:123:123456:2018-04-01:2019-03-31']
 ]);
+
+const setRecords = (rowIndex, records, value) => (records[rowIndex][1] = value);
+
+const setLicenceNumber = partial(setRecords, 0);
+const setReturnReference = partial(setRecords, 1);
+const setNilReturn = partial(setRecords, 4);
+const setMeterUsed = partial(setRecords, 5);
+const setMeterMake = partial(setRecords, 6);
+const setMeterSerialNumber = partial(setRecords, 7);
+const setFirstVolume = partial(setRecords, 8);
+const setSecondVolume = partial(setRecords, 9);
+const setThirdVolume = partial(setRecords, 10);
+const setReturnId = partial(setRecords, 11);
 
 experiment('csv-schema-validation', () => {
   test('handles inconsistent record lengths', async () => {
@@ -96,10 +115,51 @@ experiment('csv-schema-validation', () => {
       });
     });
 
+    test('returns error if Site description field is incorrect', async () => {
+      const records = [
+        validLicenceNumberRecord,
+        validReturnReferenceRecord,
+        ['Not the site description', 'One', 'Two']
+      ];
+      const csv = csvStringify(records);
+      const { isValid, validationErrors } = await csvSchemaValidation.validate(csv);
+
+      expect(isValid).to.be.false();
+
+      const errorMessage = 'Site description field not in expected position';
+      const error = validationErrors.find(err => err.message === errorMessage);
+      expect(error).to.equal({
+        message: errorMessage,
+        line: 3
+      });
+    });
+
+    test('returns error if Purpose field is incorrect', async () => {
+      const records = [
+        validLicenceNumberRecord,
+        validReturnReferenceRecord,
+        validSiteDescriptionRecord,
+        ['Not the purpose field', 'One', 'Two']
+      ];
+      const csv = csvStringify(records);
+      const { isValid, validationErrors } = await csvSchemaValidation.validate(csv);
+
+      expect(isValid).to.be.false();
+
+      const errorMessage = 'Purpose field not in expected position';
+      const error = validationErrors.find(err => err.message === errorMessage);
+      expect(error).to.equal({
+        message: errorMessage,
+        line: 4
+      });
+    });
+
     test('returns error if Nil return field is incorrect', async () => {
       const records = [
         validLicenceNumberRecord,
         validReturnReferenceRecord,
+        validSiteDescriptionRecord,
+        validPurposeRecord,
         ['Not the nil return field', 'Y', 'N']
       ];
       const csv = csvStringify(records);
@@ -111,7 +171,7 @@ experiment('csv-schema-validation', () => {
       const error = validationErrors.find(err => err.message === errorMessage);
       expect(error).to.equal({
         message: errorMessage,
-        line: 3
+        line: 5
       });
     });
 
@@ -119,6 +179,8 @@ experiment('csv-schema-validation', () => {
       const records = [
         validLicenceNumberRecord,
         validReturnReferenceRecord,
+        validSiteDescriptionRecord,
+        validPurposeRecord,
         validNilReturnRecord,
         ['Not the Did you use a meter field', 'Y', 'N']
       ];
@@ -131,7 +193,7 @@ experiment('csv-schema-validation', () => {
       const error = validationErrors.find(err => err.message === errorMessage);
       expect(error).to.equal({
         message: errorMessage,
-        line: 4
+        line: 6
       });
     });
 
@@ -139,6 +201,8 @@ experiment('csv-schema-validation', () => {
       const records = [
         validLicenceNumberRecord,
         validReturnReferenceRecord,
+        validSiteDescriptionRecord,
+        validPurposeRecord,
         validNilReturnRecord,
         validUseAMeterRecord,
         ['Not the Meter make record', 'Make 1', '']
@@ -152,7 +216,7 @@ experiment('csv-schema-validation', () => {
       const error = validationErrors.find(err => err.message === errorMessage);
       expect(error).to.equal({
         message: errorMessage,
-        line: 5
+        line: 7
       });
     });
 
@@ -160,6 +224,8 @@ experiment('csv-schema-validation', () => {
       const records = [
         validLicenceNumberRecord,
         validReturnReferenceRecord,
+        validSiteDescriptionRecord,
+        validPurposeRecord,
         validNilReturnRecord,
         validUseAMeterRecord,
         validMeterMakeRecord,
@@ -174,7 +240,7 @@ experiment('csv-schema-validation', () => {
       const error = validationErrors.find(err => err.message === errorMessage);
       expect(error).to.equal({
         message: errorMessage,
-        line: 6
+        line: 8
       });
     });
 
@@ -182,6 +248,8 @@ experiment('csv-schema-validation', () => {
       const records = [
         validLicenceNumberRecord,
         validReturnReferenceRecord,
+        validSiteDescriptionRecord,
+        validPurposeRecord,
         validNilReturnRecord,
         validUseAMeterRecord,
         validMeterMakeRecord,
@@ -201,7 +269,7 @@ experiment('csv-schema-validation', () => {
       const error = validationErrors.find(err => err.message === errorMessage);
       expect(error).to.equal({
         message: errorMessage,
-        line: 16
+        line: 18
       });
     });
 
@@ -232,7 +300,7 @@ experiment('csv-schema-validation', () => {
       dates.forEach(date => {
         test(date.format, async () => {
           const records = getValidSingleLicenceReturn();
-          records.splice(6, 0, [date.value, '5']);
+          records.splice(8, 0, [date.value, '5']);
 
           const csv = csvStringify(records);
           const { isValid } = await csvSchemaValidation.validate(csv);
@@ -246,6 +314,8 @@ experiment('csv-schema-validation', () => {
       const records = [
         validLicenceNumberRecord,
         validReturnReferenceRecord,
+        validSiteDescriptionRecord,
+        validPurposeRecord,
         validNilReturnRecord,
         validUseAMeterRecord,
         validMeterMakeRecord,
@@ -264,7 +334,7 @@ experiment('csv-schema-validation', () => {
       const error = validationErrors.find(err => err.message === errorMessage);
       expect(error).to.equal({
         message: errorMessage,
-        line: 16
+        line: 18
       });
     });
   });
@@ -274,7 +344,7 @@ experiment('csv-schema-validation', () => {
       const records = getValidSingleLicenceReturn();
 
       // update the licence number to empty
-      records[0][1] = '';
+      setLicenceNumber(records, '');
 
       const csv = csvStringify(records);
       const { isValid, validationErrors } = await csvSchemaValidation.validate(csv);
@@ -295,7 +365,7 @@ experiment('csv-schema-validation', () => {
       const records = getValidSingleLicenceReturn();
 
       // update the return reference to empty
-      records[1][1] = '';
+      setReturnReference(records, '');
 
       const csv = csvStringify(records);
       const { isValid, validationErrors } = await csvSchemaValidation.validate(csv);
@@ -313,8 +383,8 @@ experiment('csv-schema-validation', () => {
     test('must be integers', async () => {
       const records = getValidSingleLicenceReturn();
 
-      // update the return reference to a non integer valie
-      records[1][1] = 'not a number';
+      // update the return reference to a non integer value
+      setReturnReference(records, 'not a number');
 
       const csv = csvStringify(records);
       const { isValid, validationErrors } = await csvSchemaValidation.validate(csv);
@@ -333,7 +403,7 @@ experiment('csv-schema-validation', () => {
   experiment('Nil return', () => {
     test('can be Y', async () => {
       const records = getValidSingleLicenceReturn();
-      records[2][1] = 'Y';
+      setNilReturn(records, 'Y');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
@@ -343,7 +413,7 @@ experiment('csv-schema-validation', () => {
 
     test('can be y', async () => {
       const records = getValidSingleLicenceReturn();
-      records[2][1] = 'y';
+      setNilReturn(records, 'y');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
@@ -353,7 +423,7 @@ experiment('csv-schema-validation', () => {
 
     test('can be N', async () => {
       const records = getValidSingleLicenceReturn();
-      records[2][1] = 'N';
+      setNilReturn(records, 'N');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
@@ -363,7 +433,7 @@ experiment('csv-schema-validation', () => {
 
     test('can be n', async () => {
       const records = getValidSingleLicenceReturn();
-      records[2][1] = 'n';
+      setNilReturn(records, 'n');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
@@ -373,7 +443,7 @@ experiment('csv-schema-validation', () => {
 
     test('can be empty', async () => {
       const records = getValidSingleLicenceReturn();
-      records[2][1] = '';
+      setNilReturn(records, '');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
@@ -383,7 +453,7 @@ experiment('csv-schema-validation', () => {
 
     test('cannot be anything else', async () => {
       const records = getValidSingleLicenceReturn();
-      records[2][1] = 'Not valid';
+      setNilReturn(records, 'Not valid');
 
       const csv = csvStringify(records);
       const { isValid, validationErrors } = await csvSchemaValidation.validate(csv);
@@ -394,7 +464,7 @@ experiment('csv-schema-validation', () => {
       const error = validationErrors.find(err => err.message === errorMessage);
       expect(error).to.equal({
         message: errorMessage,
-        line: 3
+        line: 5
       });
     });
   });
@@ -402,7 +472,7 @@ experiment('csv-schema-validation', () => {
   experiment('Meter used', () => {
     test('can be Y', async () => {
       const records = getValidSingleLicenceReturn();
-      records[3][1] = 'Y';
+      setMeterUsed(records, 'Y');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
@@ -412,7 +482,7 @@ experiment('csv-schema-validation', () => {
 
     test('can be y', async () => {
       const records = getValidSingleLicenceReturn();
-      records[3][1] = 'y';
+      setMeterUsed(records, 'y');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
@@ -422,9 +492,9 @@ experiment('csv-schema-validation', () => {
 
     test('can be N', async () => {
       const records = getValidSingleLicenceReturn();
-      records[3][1] = 'N';
-      records[4][1] = '';
-      records[5][1] = '';
+      setMeterUsed(records, 'N');
+      setMeterMake(records, '');
+      setMeterSerialNumber(records, '');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
@@ -434,9 +504,9 @@ experiment('csv-schema-validation', () => {
 
     test('can be n', async () => {
       const records = getValidSingleLicenceReturn();
-      records[3][1] = 'n';
-      records[4][1] = '';
-      records[5][1] = '';
+      setMeterUsed(records, 'n');
+      setMeterMake(records, '');
+      setMeterSerialNumber(records, '');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
@@ -447,9 +517,9 @@ experiment('csv-schema-validation', () => {
     test('can be empty', async () => {
       const records = getValidSingleLicenceReturn();
 
-      records[3][1] = '';
-      records[4][1] = '';
-      records[5][1] = '';
+      setMeterUsed(records, '');
+      setMeterMake(records, '');
+      setMeterSerialNumber(records, '');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
@@ -459,7 +529,7 @@ experiment('csv-schema-validation', () => {
 
     test('cannot be anything else', async () => {
       const records = getValidSingleLicenceReturn();
-      records[3][1] = 'Not valid';
+      setMeterUsed(records, 'Not valid');
 
       const csv = csvStringify(records);
       const { isValid, validationErrors } = await csvSchemaValidation.validate(csv);
@@ -470,7 +540,7 @@ experiment('csv-schema-validation', () => {
       const error = validationErrors.find(err => err.message === errorMessage);
       expect(error).to.equal({
         message: errorMessage,
-        line: 4
+        line: 6
       });
     });
   });
@@ -478,9 +548,9 @@ experiment('csv-schema-validation', () => {
   experiment('abstraction volumes', () => {
     test('can be empty', async () => {
       const records = getValidSingleLicenceReturn();
-      records[6][1] = '';
-      records[7][1] = '';
-      records[8][1] = '';
+      setFirstVolume(records, '');
+      setSecondVolume(records, '');
+      setThirdVolume(records, '');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
@@ -490,9 +560,9 @@ experiment('csv-schema-validation', () => {
 
     test('can be "Do not edit"', async () => {
       const records = getValidSingleLicenceReturn();
-      records[6][1] = 'Do not edit';
-      records[7][1] = 'Do not edit';
-      records[8][1] = 'Do not edit';
+      setFirstVolume(records, 'Do not edit');
+      setSecondVolume(records, 'Do not edit');
+      setThirdVolume(records, 'Do not edit');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
@@ -502,9 +572,9 @@ experiment('csv-schema-validation', () => {
 
     test('can be numbers including commas', async () => {
       const records = getValidSingleLicenceReturn();
-      records[6][1] = '1';
-      records[7][1] = '1.0';
-      records[8][1] = '1,234,567.89';
+      setFirstVolume(records, '1');
+      setSecondVolume(records, '1.0');
+      setThirdVolume(records, '1,234,567.89');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
@@ -514,9 +584,9 @@ experiment('csv-schema-validation', () => {
 
     test('cannot be other values', async () => {
       const records = getValidSingleLicenceReturn();
-      records[6][1] = 'not valid';
-      records[7][1] = '';
-      records[8][1] = '';
+      setFirstVolume(records, 'not valid');
+      setSecondVolume(records, '');
+      setThirdVolume(records, '');
 
       const csv = csvStringify(records);
       const { isValid, validationErrors } = await csvSchemaValidation.validate(csv);
@@ -527,7 +597,7 @@ experiment('csv-schema-validation', () => {
       const error = validationErrors.find(err => err.message === errorMessage);
       expect(error).to.equal({
         message: errorMessage,
-        line: 7
+        line: 9
       });
     });
   });
@@ -537,7 +607,7 @@ experiment('csv-schema-validation', () => {
       const records = getValidSingleLicenceReturn();
       // update the return id on the last row to not include
       // the licence number that is included in the first line.
-      records[9][1] = 'v1:1:--INVALID--:123456:2018-04-01:2019-03-31';
+      setReturnId(records, 'v1:1:--INVALID--:123456:2018-04-01:2019-03-31');
 
       const csv = csvStringify(records);
       const { isValid, validationErrors } = await csvSchemaValidation.validate(csv);
@@ -548,7 +618,7 @@ experiment('csv-schema-validation', () => {
       const error = validationErrors.find(err => err.message === errorMessage);
       expect(error).to.equal({
         message: errorMessage,
-        line: 10
+        line: 12
       });
     });
 
@@ -556,7 +626,7 @@ experiment('csv-schema-validation', () => {
       const records = getValidSingleLicenceReturn();
       // update the return id on the last row to not include
       // the return reference that is included in the second line.
-      records[9][1] = 'v1:1:123:--INVALID--:2018-04-01:2019-03-31';
+      setReturnId(records, 'v1:1:123:--INVALID--:2018-04-01:2019-03-31');
 
       const csv = csvStringify(records);
       const { isValid, validationErrors } = await csvSchemaValidation.validate(csv);
@@ -567,7 +637,7 @@ experiment('csv-schema-validation', () => {
       const error = validationErrors.find(err => err.message === errorMessage);
       expect(error).to.equal({
         message: errorMessage,
-        line: 10
+        line: 12
       });
     });
 
@@ -575,7 +645,7 @@ experiment('csv-schema-validation', () => {
       const records = getValidSingleLicenceReturn();
       // update the return id on the last row to not include
       // unexpected date formats
-      records[9][1] = 'v1:1:123:123456:not-a-date:2019-03-31';
+      setReturnId(records, 'v1:1:123:123456:not-a-date:2019-03-31');
 
       const csv = csvStringify(records);
       const { isValid, validationErrors } = await csvSchemaValidation.validate(csv);
@@ -586,7 +656,7 @@ experiment('csv-schema-validation', () => {
       const error = validationErrors.find(err => err.message === errorMessage);
       expect(error).to.equal({
         message: errorMessage,
-        line: 10
+        line: 12
       });
     });
   });
@@ -607,7 +677,7 @@ experiment('csv-schema-validation', () => {
     test('data is trimmed for inspection', async () => {
       const records = getValidSingleLicenceReturn();
       records[0] = ['  Licence number', '123   '];
-      records[6] = ['9 April 2018', '   10     '];
+      records[8] = ['9 April 2018', '   10     '];
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);
