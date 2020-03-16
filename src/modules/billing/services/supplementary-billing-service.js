@@ -132,18 +132,6 @@ const addCreditsToBatch = async (batchId, transactionIds) => {
 };
 
 /**
- * Cleans up any
- * - billing_invoice_licences with no related billing_transactions
- * - billing_invoices with no related billing_invoice_licences
- * @param {String} batchId
- * @return {Promise}
- */
-const cleanup = async batchId => {
-  await newRepos.billingInvoiceLicences.deleteEmptyByBatchId(batchId);
-  await newRepos.billingInvoices.deleteEmptyByBatchId(batchId);
-};
-
-/**
  * Processes the supplementary billing batch specified by
  * deleting some transactions in the batch and crediting others
  * previously billed
@@ -172,8 +160,6 @@ const processBatch = async batchId => {
     newRepos.billingTransactions.delete(actions.delete),
     addCreditsToBatch(batchId, actions.credit)
   ]);
-
-  await cleanup(batchId);
 };
 
 exports.processBatch = processBatch;

@@ -66,8 +66,10 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingBatches, 'update').resolves();
 
     sandbox.stub(newRepos.billingInvoices, 'deleteByBatchAndInvoiceAccountId').resolves();
+    sandbox.stub(newRepos.billingInvoices, 'deleteEmptyByBatchId').resolves();
 
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchAndInvoiceAccount').resolves();
+    sandbox.stub(newRepos.billingInvoiceLicences, 'deleteEmptyByBatchId').resolves();
 
     sandbox.stub(newRepos.billingTransactions, 'findStatusCountsByBatchId').resolves();
     sandbox.stub(newRepos.billingTransactions, 'findByBatchId').resolves();
@@ -691,7 +693,7 @@ experiment('modules/billing/services/batch-service', () => {
     test('returns the results mapped to camel-cased key/value pairs', async () => {
       expect(result).to.equal({
         candidate: 3,
-        chargeCreated: 7
+        charge_created: 7
       });
     });
   });
@@ -808,6 +810,24 @@ experiment('modules/billing/services/batch-service', () => {
         expect(result.id).to.equal(batch.id);
         expect(result.status).to.equal(Batch.BATCH_STATUS.empty);
       });
+    });
+  });
+
+  experiment('.cleanup', async () => {
+    beforeEach(async () => {
+      await batchService.cleanup(BATCH_ID);
+    });
+
+    test('deletes licences in the batch that have no transactions', async () => {
+      expect(
+        newRepos.billingInvoiceLicences.deleteEmptyByBatchId.calledWith(BATCH_ID)
+      ).to.be.true();
+    });
+
+    test('deletes invoices in the batch that have no licences', async () => {
+      expect(
+        newRepos.billingInvoices.deleteEmptyByBatchId.calledWith(BATCH_ID)
+      ).to.be.true();
     });
   });
 });

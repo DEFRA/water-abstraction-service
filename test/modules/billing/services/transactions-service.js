@@ -2,15 +2,18 @@ const {
   experiment,
   test,
   beforeEach,
-  afterEach
+  afterEach,
+  fail
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const uuid = require('uuid/v4');
 
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
 const chargeModuleTransactionsConnector = require('../../../../src/lib/connectors/charge-module/transactions');
 const repos = require('../../../../src/lib/connectors/repos');
+const { logger } = require('../../../../src/logger');
 
 // Models
 const ChargeModuleTransaction = require('../../../../src/lib/models/charge-module-transaction');
@@ -131,6 +134,10 @@ experiment('modules/billing/services/transactions-service', () => {
     });
 
     sandbox.stub(repos.billingTransactions, 'create');
+    sandbox.stub(repos.billingTransactions, 'update');
+    sandbox.stub(repos.billingTransactions, 'delete');
+
+    sandbox.stub(logger, 'error');
   });
 
   afterEach(async () => {
@@ -225,6 +232,73 @@ experiment('modules/billing/services/transactions-service', () => {
         'billableDays',
         'description'
       ]);
+    });
+  });
+
+  experiment('.updateTransactionWithChargeModuleResponse', () => {
+    const transactionId = uuid();
+    const externalId = uuid();
+
+    experiment('when there is a transaction ID', () => {
+      beforeEach(async () => {
+        await transactionsService.updateWithChargeModuleResponse(transactionId, {
+          transaction: {
+            id: externalId
+          }
+        });
+      });
+
+      test('the transaction status and external ID are updated', async () => {
+        const [id, changes] = repos.billingTransactions.update.lastCall.args;
+        expect(id).to.equal(transactionId);
+        expect(changes).to.equal({
+          externalId,
+          status: 'charge_created'
+        });
+      });
+    });
+
+    experiment('when there is a zero charge response', () => {
+      beforeEach(async () => {
+        await transactionsService.updateWithChargeModuleResponse(transactionId, {
+          status: 'Zero value charge calculated'
+        });
+      });
+
+      test('the transaction is deleted', async () => {
+        const [id] = repos.billingTransactions.delete.lastCall.args;
+        expect(id).to.equal(transactionId);
+      });
+    });
+
+    experiment('when there is an unrecognised response', () => {
+      const response = {
+        message: 'Something strange'
+      };
+
+      test('throws an error', async () => {
+        try {
+          transactionsService.updateWithChargeModuleResponse(transactionId, response);
+          fail();
+        } catch (err) {
+          expect(err instanceof Error).to.be.true();
+        }
+      });
+
+      test('logs an error', async () => {
+        try {
+          transactionsService.updateWithChargeModuleResponse(transactionId, response);
+          fail();
+        } catch (err) {
+          const [message, error, params] = logger.error.lastCall.args;
+          expect(message).to.be.a.string();
+          expect(error instanceof Error).to.be.true();
+          expect(params).to.equal({
+            transactionId,
+            response
+          });
+        }
+      });
     });
   });
 });
