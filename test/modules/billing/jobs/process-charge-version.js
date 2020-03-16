@@ -92,6 +92,11 @@ experiment('modules/billing/jobs/process-charge-version', () => {
       result = await processChargeVersion.handler(job);
     });
 
+    test('a message is logged', async () => {
+      const errorArgs = batchJob.logHandling.lastCall.args;
+      expect(errorArgs[0]).to.equal(job);
+    });
+
     test('resolves including the chargeVersionYear', async () => {
       expect(result.chargeVersionYear.billing_batch_charge_version_year_id).to.equal('test-id');
     });

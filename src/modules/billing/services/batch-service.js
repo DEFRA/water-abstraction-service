@@ -1,7 +1,5 @@
 'use strict';
 
-const { camelCase } = require('lodash');
-
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const repos = require('../../../lib/connectors/repository');
@@ -88,6 +86,9 @@ const approveBatch = async (batch, internalCallingUser) => {
 
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
 
+    // @TODO for supplementary billing, reset water.licence.include_in_supplementary_billing
+    // flags
+
     return setStatus(batch.id, BATCH_STATUS.sent);
   } catch (err) {
     logger.error('Failed to approve the batch', err, batch);
@@ -168,7 +169,7 @@ const getTransactionStatusCounts = async batchId => {
   const data = await newRepos.billingTransactions.findStatusCountsByBatchId(batchId);
   return data.reduce((acc, row) => ({
     ...acc,
-    [camelCase(row.status)]: row.count
+    [row.status]: parseInt(row.count)
   }), {});
 };
 
@@ -206,6 +207,18 @@ const setStatusToEmptyWhenNoTransactions = async batch => {
   return batch;
 };
 
+/**
+ * Cleans up any
+ * - billing_invoice_licences with no related billing_transactions
+ * - billing_invoices with no related billing_invoice_licences
+ * @param {String} batchId
+ * @return {Promise}
+ */
+const cleanup = async batchId => {
+  await newRepos.billingInvoiceLicences.deleteEmptyByBatchId(batchId);
+  await newRepos.billingInvoices.deleteEmptyByBatchId(batchId);
+};
+
 exports.approveBatch = approveBatch;
 exports.decorateBatchWithTotals = decorateBatchWithTotals;
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
@@ -221,3 +234,4 @@ exports.saveInvoicesToDB = saveInvoicesToDB;
 exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
 exports.setStatusToEmptyWhenNoTransactions = setStatusToEmptyWhenNoTransactions;
+exports.cleanup = cleanup;
