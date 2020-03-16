@@ -13,19 +13,23 @@ const JOB_NAME = 'billing.refreshTotals.*';
  * @param {String} eventId The UUID of the event
  * @param {Object} batch The object from the batch database table
  */
-const createMessage = (eventId, batch) => {
-  return batchJob.createMessage(JOB_NAME, batch, { eventId }, {
-    singletonKey: batch.billing_batch_id,
+const createMessage = batchId => ({
+  name: JOB_NAME.replace('*', batchId),
+  data: {
+    batchId
+  },
+  options: {
+    singletonKey: batchId,
     retryLimit: 5,
     retryDelay: 120,
     retryBackoff: true
-  });
-};
+  }
+});
 
 const handleRefreshTotals = async job => {
   batchJob.logHandling(job);
 
-  const batchId = get(job, 'data.batch.billing_batch_id');
+  const batchId = get(job, 'data.batchId');
 
   try {
     const batch = await batchService.getBatchById(batchId);

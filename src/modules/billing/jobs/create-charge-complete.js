@@ -79,9 +79,9 @@ const finaliseEmptyBatch = async (job) => {
  * @return {Promise}
  */
 const finaliseReadyBatch = async (job, messageQueue) => {
-  const { eventId, batchId, batch } = parseJob(job);
+  const { eventId, batchId } = parseJob(job);
   await batchService.cleanup(batchId);
-  await messageQueue.publish(refreshTotalsJob.createMessage(eventId, batch));
+  await messageQueue.publish(refreshTotalsJob.createMessage(batchId));
   await jobService.setReadyJob(eventId, batchId);
 };
 
