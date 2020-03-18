@@ -8,7 +8,9 @@ const batchJob = require('./lib/batch-job');
 const JOB_NAME = 'billing.prepare-transactions.*';
 
 const createMessage = (eventId, batch) => {
-  return batchJob.createMessage(JOB_NAME, batch, { eventId });
+  return batchJob.createMessage(JOB_NAME, batch, { eventId }, {
+    singletonKey: JOB_NAME.replace('*', batch.billing_batch_id)
+  });
 };
 
 const handlePrepareTransactions = async job => {

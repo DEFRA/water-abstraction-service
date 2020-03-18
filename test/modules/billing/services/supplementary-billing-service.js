@@ -195,14 +195,5 @@ experiment('modules/billing/services/supplementary-billing-service', () => {
         });
       });
     });
-
-    test('empty billing records are removed from the DB', async () => {
-      expect(
-        newRepos.billingInvoiceLicences.deleteEmptyByBatchId.calledWith(batchId)
-      ).to.be.true();
-      expect(
-        newRepos.billingInvoices.deleteEmptyByBatchId.calledWith(batchId)
-      ).to.be.true();
-    });
   });
 });

@@ -13,3 +13,4 @@ lcov.info
 temp/
 notification-log.json
 .vscode
+.DS_Store

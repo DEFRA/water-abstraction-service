@@ -10,19 +10,6 @@ class BillingBatchChargeVersionYearsRepository extends Repository {
     }, config));
   }
 
-  /**
-   * Finds all rows in the water.billing_batch_charge_version_years table for
-   * a given billing_batch_id where the status is 'processing'
-   *
-   * @param {String} batchId The billing_batch_id value
-   */
-  findProcessingByBatch (batchId) {
-    return this.find({
-      billing_batch_id: batchId,
-      status: 'processing'
-    });
-  }
-
   deleteByBatchId (batchId) {
     return this.delete({
       billing_batch_id: batchId

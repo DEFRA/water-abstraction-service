@@ -1,10 +1,8 @@
 'use strict';
 
 const { get } = require('lodash');
-const Transaction = require('../../../lib/models/transaction');
 const transactionsService = require('../services/transactions-service');
 const chargeModuleTransactions = require('../../../lib/connectors/charge-module/transactions');
-const repos = require('../../../lib/connectors/repository');
 const mappers = require('../mappers');
 const batchJob = require('./lib/batch-job');
 
@@ -22,7 +20,9 @@ const options = {
  * @param {Object} transaction The transaction to create
  */
 const createMessage = (eventId, batch, transaction) => {
-  return batchJob.createMessage(JOB_NAME, batch, { transaction, eventId });
+  return batchJob.createMessage(JOB_NAME, batch, { transaction, eventId }, {
+    singletonKey: JOB_NAME.replace('*', transaction.billing_transaction_id)
+  });
 };
 
 const handleCreateCharge = async job => {
@@ -39,15 +39,14 @@ const handleCreateCharge = async job => {
 
     // Create transaction in Charge Module
     const response = await chargeModuleTransactions.createTransaction(cmTransaction);
-    const externalId = get(response, 'transaction.id');
 
-    // Update status
-    await repos.billingTransactions.setStatus(transactionId, Transaction.statuses.chargeCreated, externalId);
+    // Update/remove our local transaction in water.billing_transactions
+    await transactionsService.updateWithChargeModuleResponse(transactionId, response);
   } catch (err) {
     batchJob.logHandlingError(job, err);
 
     // Mark transaction as error in DB
-    repos.billingTransactions.setStatus(job.data.transaction.billing_transaction_id, Transaction.statuses.error);
+    transactionsService.setErrorStatus(transactionId);
     throw err;
   }
 

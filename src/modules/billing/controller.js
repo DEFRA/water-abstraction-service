@@ -8,6 +8,7 @@ const Event = require('../../lib/models/event');
 
 const { envelope } = require('../../lib/response');
 const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-versions');
+const refreshTotalsJob = require('./jobs/refresh-totals');
 const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
 const batchService = require('./services/batch-service');
@@ -124,6 +125,9 @@ const deleteAccountFromBatch = async (request, h) => {
   if (invoicesForAccount.length === 0) {
     return Boom.notFound(`No invoices for account (${accountId}) in batch (${batch.id})`);
   }
+
+  // Refresh batch net total / counts
+  await request.messageQueue.publish(refreshTotalsJob.createMessage(batch.id));
 
   const updatedBatch = await batchService.deleteAccountFromBatch(batch, accountId);
   return updatedBatch;

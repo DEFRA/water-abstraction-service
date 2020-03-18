@@ -20,7 +20,7 @@ const withRelated = [
  */
 const findOne = async id => {
   const model = await BillingTransaction
-    .forge({ billing_transaction_id: id })
+    .forge({ billingTransactionId: id })
     .fetch({
       withRelated
     });
@@ -82,6 +82,16 @@ const create = async data => {
 
 const findStatusCountsByBatchId = batchId => raw.multiRow(queries.findStatusCountsByBatchId, { batchId });
 
+/**
+ * Updates a water.billing_transactions record for the given id
+ *
+ * @param {String} transactionId UUID of the transaction to update
+ * @param {Object} changes Key values pairs of the changes to make
+ */
+const update = (billingTransactionId, changes) => BillingTransaction
+  .forge({ billingTransactionId })
+  .save(changes, { patch: true });
+
 exports.findOne = findOne;
 exports.find = find;
 exports.findHistoryByBatchId = findHistoryByBatchId;
@@ -89,3 +99,4 @@ exports.findByBatchId = findByBatchId;
 exports.delete = deleteRecords;
 exports.create = create;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
+exports.update = update;

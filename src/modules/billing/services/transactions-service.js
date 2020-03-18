@@ -2,9 +2,12 @@
 
 const chargeModuleTransactionsConnector = require('../../../lib/connectors/charge-module/transactions');
 const ChargeModuleTransaction = require('../../../lib/models/charge-module-transaction');
+const Transaction = require('../../../lib/models/transaction');
+
 const { logger } = require('../../../logger');
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
+const { get } = require('lodash');
 
 const mapTransaction = chargeModuleTransaction => {
   const transaction = new ChargeModuleTransaction(chargeModuleTransaction.id);
@@ -91,7 +94,42 @@ const getById = async transactionId => {
   return batch;
 };
 
+/**
+ * Updates a transaction using the response from the Charge Module
+ * create charge API endpoint
+ * Either:
+ * - the transaction is created successfully, in which case
+ *   the charge module transaction ID is stored
+ * - a zero value charge is calculated, in which case the
+ *   transaction is deleted.
+ *
+ * @param {String} transactionId
+ * @param {Object} response
+ */
+const updateTransactionWithChargeModuleResponse = (transactionId, response) => {
+  const externalId = get(response, 'transaction.id');
+  if (externalId) {
+    return newRepos.billingTransactions.update(transactionId, {
+      status: Transaction.statuses.chargeCreated,
+      externalId
+    });
+  }
+  if (get(response, 'status') === 'Zero value charge calculated') {
+    return newRepos.billingTransactions.delete(transactionId);
+  }
+  const err = new Error('Charge module error');
+  logger.error('Unexpected create transaction response from charge module', err, { transactionId, response });
+  throw err;
+};
+
+const setErrorStatus = transactionId =>
+  newRepos.billingTransactions.update(transactionId, {
+    status: Transaction.statuses.error
+  });
+
 exports.getTransactionsForBatch = getTransactionsForBatch;
 exports.getTransactionsForBatchInvoice = getTransactionsForBatchInvoice;
 exports.saveTransactionToDB = saveTransactionToDB;
 exports.getById = getById;
+exports.updateWithChargeModuleResponse = updateTransactionWithChargeModuleResponse;
+exports.setErrorStatus = setErrorStatus;
