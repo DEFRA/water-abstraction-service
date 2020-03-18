@@ -260,6 +260,19 @@ const getDocumentDateRange = docs => ({
 });
 
 /**
+ * If a two part tariff bill run is being run then this will remove
+ * and data that is not specific to a 2PT bill
+ *
+ * @param {Array<Object>} data The data range data items
+ * @param {Boolean} isTwoPartTariffRun Whether or not a 2PT run is being executed
+ */
+const filterTwoPartTariff = (data, isTwoPartTariffRun) => {
+  return isTwoPartTariffRun
+    ? data.filter(dataItem => dataItem.section127Agreement === true)
+    : data;
+};
+
+/**
  * @TODO handle two-part billing summer/winter
  * @TODO split by licence-level agreements - TPT/canal
  *
@@ -296,8 +309,9 @@ const processCharges = async (year, chargeVersionId, isTwoPart = false, isSummer
   data = processInvoiceAccounts(data, docs);
   data = await processAgreements(data, chargeVersion.licenceRef);
   data = await processChargingElements(data, chargeVersionId);
+  data = filterTwoPartTariff(data, isTwoPart);
 
   return { error: null, data };
 };
 
-module.exports.processCharges = processCharges;
+exports.processCharges = processCharges;

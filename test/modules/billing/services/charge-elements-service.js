@@ -8,6 +8,8 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
 const ChargeElement = require('../../../../src/lib/models/charge-element');
+const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
+
 const chargeElementsService = require('../../../../src/modules/billing/services/charge-elements-service');
 const repos = require('../../../../src/lib/connectors/repository');
 
@@ -15,13 +17,13 @@ const data = {
   chargeElement: {
     chargeElementId: '90d4af8a-1717-452c-84bd-467a7d55ade4',
     source: 'supported',
-    season: 'summer',
+    season: CHARGE_SEASON.summer,
     loss: 'high'
   },
   dbRow: {
     charge_element_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
     source: 'supported',
-    season: 'summer',
+    season: CHARGE_SEASON.summer,
     loss: 'high'
   }
 };

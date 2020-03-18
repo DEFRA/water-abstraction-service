@@ -14,6 +14,7 @@ const uuid = require('uuid/v4');
 
 const Invoice = require('../../../src/lib/models/invoice');
 const Batch = require('../../../src/lib/models/batch');
+const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
 const newRepos = require('../../../src/lib/connectors/repos');
 const repos = require('../../../src/lib/connectors/repository');
@@ -74,7 +75,7 @@ experiment('modules/billing/controller', () => {
           regionId: '22222222-2222-2222-2222-222222222222',
           batchType: 'annual',
           financialYearEnding: 2019,
-          season: 'summer'
+          season: CHARGE_SEASON.summer
         },
         messageQueue: {
           publish: sandbox.stub().resolves()
@@ -186,7 +187,7 @@ experiment('modules/billing/controller', () => {
           regionId: '22222222-2222-2222-2222-222222222222',
           batchType: 'supplementary',
           financialYearEnding: 2019,
-          season: 'summer'
+          season: CHARGE_SEASON.summer
         },
         messageQueue: {
           publish: sandbox.stub().resolves()

@@ -7,8 +7,7 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
 
 const transactionMapper = require('../../../../src/modules/billing/mappers/transaction');
 const chargeModuleTransactionsConnector = require('../../../../src/lib/connectors/charge-module/transactions');
@@ -26,12 +25,13 @@ const ChargeElement = require('../../../../src/lib/models/charge-element');
 const AbstractionPeriod = require('../../../../src/lib/models/abstraction-period');
 const DateRange = require('../../../../src/lib/models/date-range');
 const Region = require('../../../../src/lib/models/region');
+const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const createChargeElement = () => {
   const chargeElement = new ChargeElement('29328315-9b24-473b-bde7-02c60e881501');
   chargeElement.fromHash({
     source: 'supported',
-    season: 'summer',
+    season: CHARGE_SEASON.summer,
     loss: 'low',
     authorisedAnnualQuantity: 12.5,
     billableAnnualQuantity: 10
@@ -110,7 +110,7 @@ const createInvoice = () => {
 const createChargeElementRow = () => ({
   chargeElementId: 'bf679fc9-dec9-42cd-bc32-542578be01d9',
   source: 'supported',
-  season: 'summer',
+  season: CHARGE_SEASON.summer,
   loss: 'low',
   totalDays: 365,
   billableDays: 200,
@@ -399,7 +399,7 @@ experiment('modules/billing/mappers/transaction', () => {
           },
           source: 'supported',
           loss: 'low',
-          season: 'summer',
+          season: CHARGE_SEASON.summer,
           isCredit: false,
           chargeType: 'standard',
           authorisedQuantity: 12.5,

@@ -9,6 +9,7 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 
 const routes = require('../../../src/modules/billing/routes');
 const preHandlers = require('../../../src/modules/billing/pre-handlers');
+const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
 /**
  * Creates a test Hapi server that has no other plugins loaded,
@@ -45,7 +46,7 @@ experiment('modules/billing/routes', () => {
           regionId: '054517f2-be00-4505-a3cc-df65a89cd8e1',
           batchType: 'annual',
           financialYearEnding: 2019,
-          season: 'summer'
+          season: CHARGE_SEASON.summer
         }
       };
     });

@@ -4,6 +4,7 @@ const Joi = require('@hapi/joi');
 
 const preHandlers = require('./pre-handlers');
 const controller = require('./controller');
+const { CHARGE_SEASON } = require('../../lib/models/constants');
 
 const getBatches = {
   method: 'GET',
@@ -30,7 +31,7 @@ const postCreateBatch = {
         regionId: Joi.string().uuid().required(),
         batchType: Joi.string().valid('annual', 'supplementary', 'two_part_tariff').required(),
         financialYearEnding: Joi.number().required(),
-        season: Joi.string().valid('summer', 'winter', 'all year').required()
+        season: Joi.string().valid(Object.values(CHARGE_SEASON)).required()
       }
     }
   }

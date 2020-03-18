@@ -11,6 +11,7 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const BillingBatchRepository = require('../../../../src/lib/connectors/repository/BillingBatchRepository');
+const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 experiment('lib/connectors/repository/BillingBatchRepository', () => {
   beforeEach(async () => {
@@ -29,7 +30,7 @@ experiment('lib/connectors/repository/BillingBatchRepository', () => {
       });
 
       const repo = new BillingBatchRepository();
-      const result = await repo.createBatch('region-id', 'annual', 2019, 'summer');
+      const result = await repo.createBatch('region-id', 'annual', 2019, CHARGE_SEASON.summer);
       expect(result).to.be.null();
     });
 
@@ -39,13 +40,13 @@ experiment('lib/connectors/repository/BillingBatchRepository', () => {
       });
 
       const repo = new BillingBatchRepository();
-      const result = await repo.createBatch('region-id', 'annual', 2019, 'summer');
+      const result = await repo.createBatch('region-id', 'annual', 2019, CHARGE_SEASON.summer);
       expect(result).to.equal(1);
     });
 
     test('forwards the expected params to the query', async () => {
       const repo = new BillingBatchRepository();
-      await repo.createBatch('region-id', 'supplementary', 2013, 2019, 'summer');
+      await repo.createBatch('region-id', 'supplementary', 2013, 2019, CHARGE_SEASON.summer);
 
       const [, params] = BillingBatchRepository.prototype.dbQuery.lastCall.args;
       const [regionId, batchType, fromFinancialYearEnding, toFinancialYearEnding, season] = params;
@@ -55,7 +56,7 @@ experiment('lib/connectors/repository/BillingBatchRepository', () => {
       expect(batchType).to.equal('supplementary');
       expect(fromFinancialYearEnding).to.equal(2013);
       expect(toFinancialYearEnding).to.equal(2019);
-      expect(season).to.equal('summer');
+      expect(season).to.equal(CHARGE_SEASON.summer);
     });
   });
 });

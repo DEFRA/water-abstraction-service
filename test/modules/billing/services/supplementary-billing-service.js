@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -8,6 +10,7 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
 const { Batch } = require('../../../../src/lib/models');
+const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 const crmV2Connector = require('../../../../src/lib/connectors/crm-v2');
@@ -31,7 +34,7 @@ const createFullTransaction = (...args) => ({
   chargeElement: {
     chargeElementId: '0b76bf54-57f4-428e-8fc8-3494c84affc6',
     source: 'supported',
-    season: 'summer',
+    season: CHARGE_SEASON.summer,
     loss: 'high'
   },
   billingInvoiceLicence: {
