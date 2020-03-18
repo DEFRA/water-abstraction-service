@@ -18,6 +18,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
   beforeEach(async () => {
     sandbox.stub(bookshelf.knex, 'raw');
     sandbox.stub(raw, 'singleRow');
+    sandbox.stub(raw, 'multiRow');
   });
 
   afterEach(async () => {
@@ -71,6 +72,21 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       const { args } = bookshelf.knex.raw.lastCall;
       expect(args[0]).to.equal(queries.deleteByBatchAndInvoiceAccount);
       expect(args[1]).to.equal({ batchId, invoiceAccountId });
+    });
+  });
+
+  experiment('.findLicencesWithTransactionStatusesForBatch', () => {
+    let batchId;
+
+    beforeEach(async () => {
+      batchId = uuid();
+      await billingInvoiceLicences.findLicencesWithTransactionStatusesForBatch(batchId);
+    });
+
+    test('calls raw.multiRow with correct argumements', async () => {
+      const { args } = raw.multiRow.lastCall;
+      expect(args[0]).to.equal(queries.findLicencesWithTransactionStatusesForBatch);
+      expect(args[1]).to.equal({ batchId });
     });
   });
 });

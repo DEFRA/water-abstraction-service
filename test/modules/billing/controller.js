@@ -14,12 +14,15 @@ const uuid = require('uuid/v4');
 
 const Invoice = require('../../../src/lib/models/invoice');
 const Batch = require('../../../src/lib/models/batch');
+const BATCH_STATUS = Batch.BATCH_STATUS;
+
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
 const newRepos = require('../../../src/lib/connectors/repos');
 const repos = require('../../../src/lib/connectors/repository');
 const eventService = require('../../../src/lib/services/events');
 const invoiceService = require('../../../src/modules/billing/services/invoice-service');
+const invoiceLicenceService = require('../../../src/modules/billing/services/invoice-licences-service');
 const batchService = require('../../../src/modules/billing/services/batch-service');
 const controller = require('../../../src/modules/billing/controller');
 
@@ -53,6 +56,8 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesTransactionsForBatch').resolves();
+
+    sandbox.stub(invoiceLicenceService, 'getLicencesWithTransactionStatusesForBatch').resolves();
 
     sandbox.stub(eventService, 'create').resolves({
       id: '11111111-1111-1111-1111-111111111111'
@@ -656,6 +661,90 @@ experiment('modules/billing/controller', () => {
 
       const result = await controller.postApproveBatch(request, h);
       expect(result).to.equal(err);
+    });
+  });
+
+  experiment('.getBatchLicences', () => {
+    const createBatchStatusRequest = batchStatus => ({
+      pre: {
+        batch: new Batch().fromHash({
+          status: batchStatus
+        })
+      }
+    });
+
+    experiment('when a batch has a processing state', () => {
+      let request;
+
+      beforeEach(async () => {
+        request = createBatchStatusRequest(BATCH_STATUS.processing);
+        await controller.getBatchLicences(request, h);
+      });
+
+      test('a 403 is returned', async () => {
+        const [code] = hapiResponseStub.code.lastCall.args;
+        expect(code).to.equal(403);
+      });
+
+      test('no attempt is made to get the underlying data', async () => {
+        expect(invoiceLicenceService.getLicencesWithTransactionStatusesForBatch.called).to.be.false();
+      });
+    });
+
+    experiment('when a batch has an error state', () => {
+      let request;
+
+      beforeEach(async () => {
+        request = createBatchStatusRequest(BATCH_STATUS.error);
+        await controller.getBatchLicences(request, h);
+      });
+
+      test('a 403 is returned', async () => {
+        const [code] = hapiResponseStub.code.lastCall.args;
+        expect(code).to.equal(403);
+      });
+
+      test('no attempt is made to get the underlying data', async () => {
+        expect(invoiceLicenceService.getLicencesWithTransactionStatusesForBatch.called).to.be.false();
+      });
+    });
+
+    experiment('when a batch has an empty state', () => {
+      let request;
+      let response;
+
+      beforeEach(async () => {
+        request = createBatchStatusRequest(BATCH_STATUS.empty);
+        response = await controller.getBatchLicences(request, h);
+      });
+
+      test('an empty array is returned', async () => {
+        expect(response).to.equal([]);
+      });
+
+      test('no attempt is made to get the underlying data', async () => {
+        expect(invoiceLicenceService.getLicencesWithTransactionStatusesForBatch.called).to.be.false();
+      });
+    });
+
+    experiment('when a batch is in a state to return data', () => {
+      const validStatuses = [
+        BATCH_STATUS.sent,
+        BATCH_STATUS.ready,
+        BATCH_STATUS.review
+      ];
+
+      validStatuses.forEach(status => {
+        test(`the expected data is returned for a ${status} batch`, async () => {
+          const fakeResponse = [{ id: 1 }, { id: 2 }];
+          invoiceLicenceService.getLicencesWithTransactionStatusesForBatch.resolves(fakeResponse);
+
+          const request = createBatchStatusRequest(status);
+          const response = await controller.getBatchLicences(request, h);
+
+          expect(response).to.equal(fakeResponse);
+        });
+      });
     });
   });
 });
