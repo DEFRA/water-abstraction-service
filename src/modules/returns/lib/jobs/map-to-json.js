@@ -13,7 +13,7 @@ const config = require('../../../../../config');
 /**
  * Begins mapping XML/CSV returns to JSON process by adding a new task to PG Boss.
  *
- * @param {string} eventId The UUID of the event
+ * @param {Object} data containing eventId and companyId
  * @returns {Promise}
  */
 const publishReturnsMapToJsonStart = data =>

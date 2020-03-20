@@ -76,6 +76,13 @@ const patchReturnHeader = async (request, h) => {
 
 const getEventStatusLink = eventId => `/water/1.0/event/${eventId}`;
 
+/**
+ * An API endpoint to upload a bulk return file.
+ *  Kicks off job to upload submitted data.
+ * @param {String} request.params.type - file type csv|xml
+ * @param {String} request.query.companyId - the company CRM entity ID
+ * @return {Promise} resolves with return data { error : null, data : {} }
+ */
 const postUpload = async (request, h) => {
   const { type } = request.params;
   const { companyId } = request.payload;

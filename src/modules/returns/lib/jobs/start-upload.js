@@ -9,7 +9,7 @@ const eventsService = require('../../../../lib/services/events');
 /**
  * Begins the bulk returns process by adding a new task to PG Boss.
  *
- * @param {string} eventId The UUID of the event
+ * @param {Object} data containing eventId and companyId
  * @returns {Promise}
  */
 const publishReturnsUploadStart = data =>

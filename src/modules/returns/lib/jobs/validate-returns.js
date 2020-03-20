@@ -11,7 +11,7 @@ const { set } = require('lodash');
 /**
  * Validates the submitted returns data after it's been mapped to JSON
  *
- * @param {string} eventId The UUID of the event
+ * @param {Object} data containing eventId and companyId
  * @returns {Promise}
  */
 const publishValidateReturnsStart = data =>
@@ -47,7 +47,7 @@ const handleValidateReturnsStart = async job => {
 };
 
 /**
- * Pre-handler to load return JSON from S3 bucket
+ * Load return JSON from S3 bucket
  * @type {Object}
  */
 const loadJson = async eventId => {
@@ -55,6 +55,11 @@ const loadJson = async eventId => {
   return JSON.parse(response.Body.toString());
 };
 
+/**
+ * Maps relevant data for storing in event metadata
+ * @param {Object} data return data after validation
+ * @return {Array} of return data objects
+ */
 const getEventReturnData = data =>
   data.map(ret => ({
     returnId: ret.returnId,
