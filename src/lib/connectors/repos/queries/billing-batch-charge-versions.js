@@ -1,0 +1,70 @@
+exports.createSupplementary = `
+insert into
+water.billing_batch_charge_versions (billing_batch_id, charge_version_id)
+select :billingBatchId, cv.charge_version_id
+from water.licences l
+  join water.charge_versions cv on l.licence_ref = cv.licence_ref
+where
+  l.include_in_supplementary_billing = true
+  and l.region_id = :regionId::uuid
+  and (cv.end_date is null or cv.end_date > :fromDate)
+returning *;`;
+
+exports.createAnnual = `
+    insert into water.billing_batch_charge_versions (billing_batch_id, charge_version_id)
+    select :billingBatchId, cv.charge_version_id
+    from water.licences l
+      join water.charge_versions cv on l.licence_ref = cv.licence_ref
+      join water.charge_elements ce on cv.charge_version_id = ce.charge_version_id
+    where
+      l.region_id = :regionId::uuid
+      and l.suspend_from_billing is false
+      and (l.expired_date is null or l.expired_date > :fromDate)
+      and (l.lapsed_date is null or l.lapsed_date > :fromDate)
+      and (l.revoked_date is null or l.revoked_date > :fromDate)
+      and (cv.end_date is null or cv.end_date > :fromDate)
+      and cv.status='current'
+      and cv.charge_version_id not in (
+        select distinct cv.charge_version_id
+        from water.billing_batches b 
+        join water.billing_batch_charge_versions cv on b.billing_batch_id=cv.billing_batch_id
+        join water.billing_batch_charge_version_years y on 
+          b.billing_batch_id=y.billing_batch_id 
+          and cv.charge_version_id=y.charge_version_id
+        where b.batch_type in ('annual', 'supplementary')
+          and y.financial_year_ending=:toFinancialYearEnding  
+      )
+    returning *;`;
+
+exports.createTwoPartTariff = `
+      insert into water.billing_batch_charge_versions (billing_batch_id, charge_version_id)
+      select :billingBatchId, cv.charge_version_id
+      from water.licences l
+        join water.charge_versions cv on l.licence_ref = cv.licence_ref
+        join water.licence_agreements la on l.licence_ref = la.licence_ref
+        join water.charge_elements ce on cv.charge_version_id = ce.charge_version_id
+      where
+        la.financial_agreement_type_id = 'S127'
+        and l.region_id = :regionId::uuid
+        and l.suspend_from_billing = FALSE
+        and (l.expired_date is null or l.expired_date > :fromDate)
+        and (l.lapsed_date is null or l.lapsed_date > :fromDate)
+        and (l.revoked_date is null or l.revoked_date > :fromDate)
+        and (cv.end_date is null or cv.end_date > :fromDate)
+        and (la.end_date is null or la.end_date > :fromDate)
+        and case  
+          when :season='summer' then ce.season in ('summer')
+          when :season='winter' then ce.season in ('winter', 'all year')
+        end
+        and cv.charge_version_id not in (
+          select distinct cv.charge_version_id
+          from water.billing_batches b 
+          join water.billing_batch_charge_versions cv on b.billing_batch_id=cv.billing_batch_id
+          join water.billing_batch_charge_version_years y on 
+            b.billing_batch_id=y.billing_batch_id 
+            and cv.charge_version_id=y.charge_version_id
+          where b.batch_type='two_part_tariff'
+            and b.season=:season 
+            and y.financial_year_ending=:toFinancialYearEnding  
+        )
+      returning *;`;

@@ -28,7 +28,7 @@ const getTransactionDescription = (batch, chargeLine, chargeElement, isCompensat
     ? getTwoPartTariffTransactionDescription(batch, chargeElement)
     : chargeElement.description;
 
-  return titleCase(description);
+  return titleCase(description || '');
 };
 
 const createTransaction = (batch, chargeLine, chargeElement, data = {}) => {

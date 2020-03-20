@@ -2,6 +2,7 @@
 
 const { get } = require('lodash');
 const repos = require('../../../lib/connectors/repository');
+const newRepos = require('../../../lib/connectors/repos');
 
 const processChargeVersion = require('./process-charge-version');
 
@@ -21,8 +22,8 @@ const batchJob = require('./lib/batch-job');
  */
 const createChargeVersionYear = async (billingBatchChargeVersion, financialYearEnding) => {
   const chargeVersionYear = {
-    charge_version_id: billingBatchChargeVersion.charge_version_id,
-    billing_batch_id: billingBatchChargeVersion.billing_batch_id,
+    charge_version_id: billingBatchChargeVersion.chargeVersionId,
+    billing_batch_id: billingBatchChargeVersion.billingBatchId,
     financial_year_ending: financialYearEnding,
     status: BATCH_STATUS.processing
   };
@@ -43,7 +44,7 @@ const createChargeVersionYear = async (billingBatchChargeVersion, financialYearE
 const processBillingBatchChargeVersions = async (batch, billingBatchChargeVersions, messageQueue, eventId) => {
   for (const billingBatchChargeVersion of billingBatchChargeVersions) {
     // load the charge version and publish for each year it is valid for
-    const chargeVersion = await repos.chargeVersions.findOneById(billingBatchChargeVersion.charge_version_id);
+    const chargeVersion = await newRepos.chargeVersions.findOne(billingBatchChargeVersion.chargeVersionId);
     await publishForValidChargeVersion(batch, chargeVersion, billingBatchChargeVersion, messageQueue, eventId);
   }
 };
@@ -86,7 +87,7 @@ const handlePopulateBatchChargeVersionsComplete = async (job, messageQueue) => {
     return batchJob.failBatch(job, messageQueue, BATCH_ERROR_CODE.failedToPopulateChargeVersions);
   }
 
-  const { chargeVersions: billingBatchChargeVersions, batch } = job.data.response;
+  const { billingBatchChargeVersions, batch } = job.data.response;
   const { eventId } = job.data.request.data;
 
   if (billingBatchChargeVersions.length === 0) {
