@@ -11,19 +11,50 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
 const { logger } = require('../../../../src/logger');
-const repos = require('../../../../src/lib/connectors/repository');
 const messageQueue = require('../../../../src/lib/message-queue');
 const populateBatchChargeVersionsJob = require('../../../../src/modules/billing/jobs/populate-batch-charge-versions');
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 
+const batchService = require('../../../../src/modules/billing/services/batch-service');
+const chargeVersionService = require('../../../../src/modules/billing/services/charge-version-service');
+
+const Batch = require('../../../../src/lib/models/batch');
+const Region = require('../../../../src/lib/models/region');
+
+const uuid = require('uuid/v4');
+
+const createBatch = () => {
+  const batch = new Batch(uuid());
+  batch.region = new Region(uuid());
+  return batch;
+};
+
+const createBillingBatchChargeVersions = batch => [
+  {
+    billingBatchChargeVersionId: uuid(),
+    billingBatchId: batch.id,
+    chargeVersionId: uuid()
+  },
+  {
+    billingBatchChargeVersionId: uuid(),
+    billingBatchId: batch.id,
+    chargeVersionId: uuid()
+  }
+];
+
 experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
+  let batch, billingBatchChargeVersions;
+
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(messageQueue, 'publish').resolves();
-    sandbox.stub(repos.chargeVersions, 'createSupplementaryChargeVersions').resolves([]);
-    sandbox.stub(repos.chargeVersions, 'createTwoPartTariffChargeVersions').resolves([]);
-    sandbox.stub(repos.chargeVersions, 'createAnnualChargeVersions').resolves([]);
+
+    batch = createBatch();
+    billingBatchChargeVersions = createBillingBatchChargeVersions(batch);
+
+    sandbox.stub(batchService, 'getBatchById').resolves(batch);
+    sandbox.stub(chargeVersionService, 'createForBatch').resolves(billingBatchChargeVersions);
   });
 
   afterEach(async () => {
@@ -49,190 +80,40 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
   });
 
   experiment('.handler', () => {
-    let job;
+    let result, job;
 
-    experiment('when the batch is supplementary', () => {
-      beforeEach(async () => {
-        job = {
-          data: {
-            eventId: '22222222-2222-2222-2222-222222222222',
-            batch: {
-              batch_type: 'supplementary',
-              billing_batch_id: 'test-batch-id'
-            }
-          },
-          done: sandbox.spy()
-        };
-      });
-
-      test('the handling of the job is logged', async () => {
-        await populateBatchChargeVersionsJob.handler(job);
-        expect(batchJob.logHandling.calledWith(job)).to.be.true();
-      });
-
-      experiment('if there are charge versions for the batch', () => {
-        let result;
-
-        beforeEach(async () => {
-          repos.chargeVersions.createSupplementaryChargeVersions.resolves([
-            { charge_version_id: 1 }, { charge_version_id: 2 }
-          ]);
-
-          result = await populateBatchChargeVersionsJob.handler(job);
-        });
-
-        test('the result includes the charge versions', async () => {
-          const { chargeVersions } = result;
-          expect(chargeVersions).to.equal([
-            { charge_version_id: 1 },
-            { charge_version_id: 2 }
-          ]);
-        });
-
-        test('the result includes the batch', async () => {
-          const { batch } = result;
-          expect(batch.billing_batch_id).to.equal('test-batch-id');
-        });
-      });
-
-      experiment('if there are no charge versions for the batch', () => {
-        let result;
-
-        beforeEach(async () => {
-          repos.chargeVersions.createSupplementaryChargeVersions.resolves([]);
-
-          result = await populateBatchChargeVersionsJob.handler(job);
-        });
-
-        test('the result includes the charge versions', async () => {
-          const { chargeVersions } = result;
-          expect(chargeVersions).to.equal([]);
-        });
-
-        test('the result includes the batch', async () => {
-          const { batch } = result;
-          expect(batch.billing_batch_id).to.equal('test-batch-id');
-        });
-      });
+    beforeEach(async () => {
+      job = {
+        data: {
+          eventId: '22222222-2222-2222-2222-222222222222',
+          batch: {
+            batch_type: 'supplementary',
+            billing_batch_id: batch.id
+          }
+        },
+        done: sandbox.spy()
+      };
+      result = await populateBatchChargeVersionsJob.handler(job);
     });
 
-    experiment('when the batch is two part tariff', () => {
-      beforeEach(async () => {
-        job = {
-          data: {
-            eventId: '22222222-2222-2222-2222-222222222222',
-            batch: {
-              batch_type: 'two_part_tariff',
-              billing_batch_id: 'test-batch-id'
-            }
-          },
-          done: sandbox.spy()
-        };
-      });
-
-      experiment('if there are charge versions for the batch', () => {
-        let result;
-
-        beforeEach(async () => {
-          repos.chargeVersions.createTwoPartTariffChargeVersions.resolves([
-            { charge_version_id: 1 }, { charge_version_id: 2 }
-          ]);
-
-          result = await populateBatchChargeVersionsJob.handler(job);
-        });
-
-        test('the result includes the charge versions', async () => {
-          const { chargeVersions } = result;
-          expect(chargeVersions).to.equal([
-            { charge_version_id: 1 },
-            { charge_version_id: 2 }
-          ]);
-        });
-
-        test('the result includes the batch', async () => {
-          const { batch } = result;
-          expect(batch.billing_batch_id).to.equal('test-batch-id');
-        });
-      });
-
-      experiment('if there are no charge versions for the batch', () => {
-        let result;
-
-        beforeEach(async () => {
-          repos.chargeVersions.createTwoPartTariffChargeVersions.resolves([]);
-
-          result = await populateBatchChargeVersionsJob.handler(job);
-        });
-
-        test('the result includes the charge versions', async () => {
-          const { chargeVersions } = result;
-          expect(chargeVersions).to.equal([]);
-        });
-
-        test('the result includes the batch', async () => {
-          const { batch } = result;
-          expect(batch.billing_batch_id).to.equal('test-batch-id');
-        });
-      });
+    test('fetches the correct batch from the batch service', async () => {
+      expect(batchService.getBatchById.calledWith(
+        batch.id
+      )).to.be.true();
     });
 
-    experiment('when the batch is an annual batch', () => {
-      beforeEach(async () => {
-        job = {
-          data: {
-            eventId: '22222222-2222-2222-2222-222222222222',
-            batch: {
-              batch_type: 'annual',
-              billing_batch_id: 'test-batch-id'
-            }
-          },
-          done: sandbox.spy()
-        };
-      });
+    test('creates billingBatchChargeVersions using the batch', async () => {
+      expect(chargeVersionService.createForBatch.calledWith(
+        batch
+      )).to.be.true();
+    });
 
-      experiment('if there are charge versions for the batch', () => {
-        let result;
+    test('includes the batch in the job response', async () => {
+      expect(result.batch).to.equal(job.data.batch);
+    });
 
-        beforeEach(async () => {
-          repos.chargeVersions.createAnnualChargeVersions.resolves([
-            { charge_version_id: 1 }, { charge_version_id: 2 }
-          ]);
-
-          result = await populateBatchChargeVersionsJob.handler(job);
-        });
-
-        test('the result includes the charge versions', async () => {
-          const { chargeVersions } = result;
-          expect(chargeVersions).to.equal([
-            { charge_version_id: 1 },
-            { charge_version_id: 2 }
-          ]);
-        });
-
-        test('the result includes the batch', async () => {
-          const { batch } = result;
-          expect(batch.billing_batch_id).to.equal('test-batch-id');
-        });
-      });
-
-      experiment('if there are no charge versions for the batch', () => {
-        let result;
-
-        beforeEach(async () => {
-          repos.chargeVersions.createAnnualChargeVersions.resolves([]);
-          result = await populateBatchChargeVersionsJob.handler(job);
-        });
-
-        test('the result includes the charge versions', async () => {
-          const { chargeVersions } = result;
-          expect(chargeVersions).to.equal([]);
-        });
-
-        test('the result includes the batch', async () => {
-          const { batch } = result;
-          expect(batch.billing_batch_id).to.equal('test-batch-id');
-        });
-      });
+    test('includes the billingBatchChargeVersions in the job response', async () => {
+      expect(result.billingBatchChargeVersions).to.equal(billingBatchChargeVersions);
     });
   });
 });

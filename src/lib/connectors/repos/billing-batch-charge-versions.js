@@ -4,7 +4,7 @@ const queries = require('./queries/billing-batch-charge-versions');
 
 const getParams = params => ({
   ...params,
-  fromDate: getFinancialYearDate(1, 4, params.toFinancialYearEnding)
+  fromDate: getFinancialYearDate(1, 4, params.fromFinancialYearEnding)
 });
 
 /**

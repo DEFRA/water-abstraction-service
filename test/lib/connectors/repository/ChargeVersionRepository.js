@@ -81,6 +81,7 @@ experiment('lib/connectors/repository/ChargeVersionRepository.js', () => {
     });
   });
 
+  /*
   experiment('.createSupplementaryChargeVersions', () => {
     let batch;
     let now;
@@ -119,7 +120,9 @@ experiment('lib/connectors/repository/ChargeVersionRepository.js', () => {
       expect(result).to.equal([{ id: 'test-row-1' }]);
     });
   });
+  */
 
+  /*
   experiment('.createTwoPartTariffChargeVersions', () => {
     let batch;
     let now;
@@ -159,7 +162,9 @@ experiment('lib/connectors/repository/ChargeVersionRepository.js', () => {
       expect(result).to.equal([{ id: 'test-row-1' }]);
     });
   });
+  */
 
+  /*
   experiment('.createAnnualChargeVersions', () => {
     let batch;
     let result;
@@ -197,4 +202,5 @@ experiment('lib/connectors/repository/ChargeVersionRepository.js', () => {
       expect(result).to.equal([{ id: 'test-row-1' }]);
     });
   });
+  */
 });
