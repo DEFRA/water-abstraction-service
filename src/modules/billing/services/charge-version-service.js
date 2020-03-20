@@ -1,11 +1,5 @@
 const repos = require('../../../lib/connectors/repos');
 
-const actions = {
-  annual: repos.billingBatchChargeVersions.createAnnual,
-  supplementary: repos.billingBatchChargeVersions.createSupplementary,
-  two_part_tariff: repos.billingBatchChargeVersions.createTwoPartTariff
-};
-
 /**
  * Creates the required billing_batch_charge_versions for the given
  * Batch
@@ -13,6 +7,11 @@ const actions = {
  * @return {Promise<Array>} created rows (camel-cased)
  */
 const createForBatch = batch => {
+  const actions = {
+    annual: repos.billingBatchChargeVersions.createAnnual,
+    supplementary: repos.billingBatchChargeVersions.createSupplementary,
+    two_part_tariff: repos.billingBatchChargeVersions.createTwoPartTariff
+  };
   const params = {
     billingBatchId: batch.id,
     regionId: batch.region.id,
