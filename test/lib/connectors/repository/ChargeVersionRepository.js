@@ -9,7 +9,6 @@ const {
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
-const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 const ChargeVersionRepository = require('../../../../src/lib/connectors/repository/ChargeVersionRepository');
 
 const repo = new ChargeVersionRepository();
