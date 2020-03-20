@@ -3,6 +3,7 @@ const s3 = require('../../../lib/connectors/s3');
 const uploadStatus = {
   PROCESSING: 'processing',
   VALIDATED: 'validated',
+  READY: 'ready',
   ERROR: 'error',
   SUBMITTING: 'submitting',
   SUBMITTED: 'submitted'
@@ -40,7 +41,7 @@ const s3ObjectToJson = s3Object => JSON.parse(s3Object.Body.toString());
  * @param {string} subType='csv' The return upload sub type (default to csv)
  * @returns {Object} The object containing the required job data
  */
-const buildJobData = (eventId, subType = 'csv') => ({ eventId, subType });
+const buildJobData = data => ({ ...data, subtype: data.subtype || 'csv' });
 
 exports.uploadStatus = uploadStatus;
 exports.getUploadFilename = getUploadFilename;

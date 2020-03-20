@@ -12,8 +12,8 @@ const eventsService = require('../../../../lib/services/events');
  * @param {string} eventId The UUID of the event
  * @returns {Promise}
  */
-const publishReturnsUploadStart = eventId =>
-  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(eventId));
+const publishReturnsUploadStart = data =>
+  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(data));
 
 const getValidationError = (validationErrors, subtype) => {
   if (!validationErrors) return errorEvent.keys[subtype].INVALID;

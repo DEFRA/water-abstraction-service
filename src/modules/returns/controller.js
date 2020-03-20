@@ -13,7 +13,7 @@ const { logger } = require('../../logger');
 const startUploadJob = require('./lib/jobs/start-upload');
 const persistReturnsJob = require('./lib/jobs/persist-returns');
 const uploadValidator = require('./lib/returns-upload-validator');
-const { mapSingleReturn, mapMultipleReturn } = require('./lib/upload-preview-mapper');
+const { mapSingleReturn } = require('./lib/upload-preview-mapper');
 const returnsConnector = require('../../lib/connectors/returns');
 
 /**
@@ -78,6 +78,7 @@ const getEventStatusLink = eventId => `/water/1.0/event/${eventId}`;
 
 const postUpload = async (request, h) => {
   const { type } = request.params;
+  const { companyId } = request.payload;
 
   let event = eventFactory.createBulkUploadEvent(request.payload.userName, type);
 
@@ -85,14 +86,12 @@ const postUpload = async (request, h) => {
     event = await eventsService.create(event);
 
     const filename = getUploadFilename(event.id, type);
-    const data = await s3.upload(filename, request.payload.fileData);
-    const jobId = await startUploadJob.publish(event.id);
+    await s3.upload(filename, request.payload.fileData);
+    const jobId = await startUploadJob.publish({ eventId: event.id, companyId });
 
     return h.response({
       data: {
         eventId: event.id,
-        filename,
-        location: data.Location,
         statusLink: getEventStatusLink(event.id),
         jobId
       },
@@ -106,31 +105,6 @@ const postUpload = async (request, h) => {
     }
 
     return h.response({ data: null, error }).code(500);
-  }
-};
-
-/**
- * An API endpoint to preview uploaded returns including any validation errors.
- * @param {String} request.params.eventId - the upload event ID
- * @param {String} request.query.companyId - the company CRM entity ID
- * @param {String} request.query.userName - email address of current user
- * @return {Promise} resolves with returns data { error : null, data : [] }
- */
-const getUploadPreview = async (request, h) => {
-  const { eventId, companyId } = parseRequest(request);
-
-  try {
-    const validated = await uploadValidator.validate(request.jsonData, companyId);
-
-    const data = validated.map(mapMultipleReturn);
-
-    return {
-      error: null,
-      data
-    };
-  } catch (error) {
-    logger.error('Return upload preview failed', error, { eventId, companyId });
-    throw error;
   }
 };
 
@@ -194,7 +168,7 @@ const applySubmitting = (event, data) => {
 };
 
 const isValidReturn = ret => ret.errors.length === 0;
-const isValidatedEvent = evt => evt.status === 'validated';
+const isReadyEvent = evt => evt.status === uploadStatus.READY;
 
 const parseRequest = (request) => {
   const { eventId, returnId } = request.params;
@@ -216,8 +190,8 @@ const postUploadSubmit = async (request, h) => {
 
   try {
     // Check event status is 'validated'
-    if (!isValidatedEvent(request.event)) {
-      throw Boom.badRequest('Event status not \'validated\'');
+    if (!isReadyEvent(request.event)) {
+      throw Boom.badRequest('Event status not \'ready\'');
     }
 
     // Validate data in JSON
@@ -246,6 +220,5 @@ exports.getReturn = getReturn;
 exports.postReturn = postReturn;
 exports.patchReturnHeader = patchReturnHeader;
 exports.postUpload = postUpload;
-exports.getUploadPreview = getUploadPreview;
 exports.getUploadPreviewReturn = getUploadPreviewReturn;
 exports.postUploadSubmit = postUploadSubmit;

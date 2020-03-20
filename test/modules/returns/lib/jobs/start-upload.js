@@ -32,17 +32,17 @@ experiment('publish', () => {
   });
 
   test('publishes a job with the expected name', async () => {
-    await startUploadJob.publish('test-event-id');
+    await startUploadJob.publish({ eventId: 'test-event-id' });
     const [jobName] = messageQueue.publish.lastCall.args;
     expect(jobName).to.equal(startUploadJob.jobName);
   });
 
   test('sends the expected job data', async () => {
-    await startUploadJob.publish('test-event-id');
+    await startUploadJob.publish({ eventId: 'test-event-id' });
     const [, data] = messageQueue.publish.lastCall.args;
     expect(data).to.equal({
       eventId: 'test-event-id',
-      subType: 'csv'
+      subtype: 'csv'
     });
   });
 });

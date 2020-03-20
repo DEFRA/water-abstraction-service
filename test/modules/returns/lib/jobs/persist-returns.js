@@ -38,7 +38,7 @@ experiment('publish', () => {
     const [, data] = messageQueue.publish.lastCall.args;
     expect(data).to.equal({
       eventId: 'test-event-id',
-      subType: 'csv'
+      subtype: 'csv'
     });
   });
 });

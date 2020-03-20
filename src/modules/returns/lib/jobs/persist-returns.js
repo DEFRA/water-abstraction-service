@@ -18,7 +18,7 @@ const JOB_NAME = 'persist-bulk-returns';
  * @returns {Promise}
  */
 const publishPersistBulkReturns = eventId => {
-  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(eventId));
+  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData({ eventId }));
 };
 
 const updateEvent = (event, updatedReturns) => {
