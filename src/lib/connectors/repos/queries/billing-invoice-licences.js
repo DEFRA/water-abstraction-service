@@ -34,3 +34,24 @@ exports.deleteByBatchAndInvoiceAccount = `
   and bi.billing_batch_id = :batchId
   and bi.invoice_account_id = :invoiceAccountId;
 `;
+
+exports.findLicencesWithTransactionStatusesForBatch = `
+  select
+    bil.billing_invoice_id,
+    bil.billing_invoice_licence_id,
+    bil.licence_id,
+    bil.licence_ref,
+    bil.licence_holder_name,
+    array_agg(bt.two_part_tariff_status) as "two_part_tariff_statuses"
+  from water.billing_invoices bi
+    join water.billing_invoice_licences bil
+      on bi.billing_invoice_id = bil.billing_invoice_id
+    join water.billing_transactions bt
+      on bt.billing_invoice_licence_id = bil.billing_invoice_licence_id
+  where bi.billing_batch_id = :batchId
+  group by
+    bil.billing_invoice_id,
+    bil.billing_invoice_licence_id,
+    bil.licence_ref,
+    bil.licence_holder_name;
+`;

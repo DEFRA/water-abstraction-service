@@ -1,3 +1,5 @@
+'use strict';
+
 const { bookshelf } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoice-licences');
@@ -26,6 +28,15 @@ const deleteByBatchAndInvoiceAccount = (batchId, invoiceAccountId) =>
     { batchId, invoiceAccountId }
   );
 
-exports.upsert = upsert;
-exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
+/**
+ * Finds all the licences in a batch and aggregates the two part tariff
+ * error codes for a licence's underlying transactions.
+ * @param {String} batchId
+ */
+const findLicencesWithTransactionStatusesForBatch = batchId =>
+  raw.multiRow(queries.findLicencesWithTransactionStatusesForBatch, { batchId });
+
 exports.deleteByBatchAndInvoiceAccount = deleteByBatchAndInvoiceAccount;
+exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
+exports.findLicencesWithTransactionStatusesForBatch = findLicencesWithTransactionStatusesForBatch;
+exports.upsert = upsert;
