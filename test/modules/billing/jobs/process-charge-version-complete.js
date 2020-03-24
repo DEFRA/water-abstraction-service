@@ -27,6 +27,7 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
     sandbox.stub(chargeVersionYearService, 'getStatusCounts');
     sandbox.stub(batchJob, 'logOnComplete');
     sandbox.stub(batchJob, 'failBatch');
+    sandbox.stub(batchJob, 'deleteOnCompleteQueue');
     sandbox.stub(logger, 'info');
   });
 
@@ -82,15 +83,21 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
     test('the prepare-transactions job is not published', async () => {
       expect(messageQueue.publish.called).to.be.false();
     });
+
+    test('remaining onComplete jobs are not deleted', async () => {
+      expect(batchJob.deleteOnCompleteQueue.called).to.be.false();
+    });
   });
 
   experiment('if all the charge version years have been processed', () => {
+    let job;
+
     beforeEach(async () => {
       chargeVersionYearService.getStatusCounts.resolves({
         processing: 0
       });
 
-      const job = {
+      job = {
         data: {
           request: {
             data: {
@@ -132,6 +139,12 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
       expect(message.data.batch).to.equal({
         billing_batch_id: 'test-batch-id'
       });
+    });
+
+    test('remaining onComplete jobs are deleted', async () => {
+      expect(batchJob.deleteOnCompleteQueue.calledWith(
+        job, messageQueue
+      )).to.be.true();
     });
   });
 });

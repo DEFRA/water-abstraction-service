@@ -65,10 +65,11 @@ const doNothing = () => {};
  * @param {Object} job
  * @return {Promise}
  */
-const finaliseEmptyBatch = async (job) => {
+const finaliseEmptyBatch = async (job, messageQueue) => {
   const { eventId, batchId } = parseJob(job);
   await batchService.cleanup(batchId);
   await jobService.setEmptyBatch(eventId, batchId);
+  await batchJob.deleteOnCompleteQueue(job, messageQueue);
 };
 
 /**
@@ -83,6 +84,7 @@ const finaliseReadyBatch = async (job, messageQueue) => {
   await batchService.cleanup(batchId);
   await messageQueue.publish(refreshTotalsJob.createMessage(batchId));
   await jobService.setReadyJob(eventId, batchId);
+  await batchJob.deleteOnCompleteQueue(job, messageQueue);
 };
 
 const actions = {
