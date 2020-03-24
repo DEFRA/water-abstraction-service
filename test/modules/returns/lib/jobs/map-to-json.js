@@ -21,6 +21,7 @@ const s3 = require('../../../../../src/lib/connectors/s3');
 const { usersClient } = require('../../../../../src/lib/connectors/idm');
 const eventsService = require('../../../../../src/lib/services/events');
 const Event = require('../../../../../src/lib/models/event');
+const errorEvent = require('../../../../../src/modules/returns/lib/jobs/error-event');
 
 const eventId = uuid();
 
@@ -63,6 +64,7 @@ experiment('handler', () => {
     sandbox.stub(eventsService, 'findOne').resolves(event);
     sandbox.stub(eventsService, 'update').resolves(event);
     sandbox.stub(eventsService, 'updateStatus').resolves(event);
+    sandbox.stub(errorEvent, 'throwEventNotFoundError');
 
     const str = fs.readFileSync(path.join(__dirname, '../xml-files-for-tests/weekly-return-pass.xml'));
 
@@ -93,6 +95,12 @@ experiment('handler', () => {
   test('loads the event', async () => {
     await mapToJsonJob.handler(job);
     expect(eventsService.findOne.calledWith(job.data.eventId)).to.be.true();
+  });
+
+  test('calls throwEventNotFoundError if event is not found', async () => {
+    eventsService.findOne.resolves();
+    await mapToJsonJob.handler(job);
+    expect(errorEvent.throwEventNotFoundError.calledWith(job.data.eventId)).to.be.true();
   });
 
   test('loads the S3 object', async () => {

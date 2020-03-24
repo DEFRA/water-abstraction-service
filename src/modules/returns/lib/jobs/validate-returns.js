@@ -29,9 +29,11 @@ const publishValidateReturnsStart = data =>
 const handleValidateReturnsStart = async job => {
   const { eventId, companyId } = job.data;
   const event = await eventsService.findOne(eventId);
-  const jsonData = await loadJson(eventId);
+  if (!event) return errorEvent.throwEventNotFoundError(eventId);
 
   try {
+    const jsonData = await loadJson(eventId);
+
     const validated = await uploadValidator.validate(jsonData, companyId);
     const data = validated.map(mapMultipleReturn);
 

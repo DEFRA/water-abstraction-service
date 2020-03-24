@@ -109,6 +109,8 @@ const handlePersistReturns = async job => {
 
   try {
     event = await eventsService.findOne(eventId);
+    if (!event) return errorEvent.throwEventNotFoundError(eventId);
+
     const returns = await getReturnsFromS3(eventId);
 
     const validatedReturns = get(event, 'metadata.returns', []);

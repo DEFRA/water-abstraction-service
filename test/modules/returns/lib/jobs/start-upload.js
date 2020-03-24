@@ -19,6 +19,7 @@ const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('../../../../../src/logger');
 const eventsService = require('../../../../../src/lib/services/events');
 const Event = require('../../../../../src/lib/models/event');
+const errorEvent = require('../../../../../src/modules/returns/lib/jobs/error-event');
 
 const eventId = uuid();
 
@@ -59,6 +60,8 @@ experiment('handler', () => {
 
     sandbox.stub(eventsService, 'findOne').resolves(event);
     sandbox.stub(eventsService, 'update').resolves(event);
+    sandbox.stub(errorEvent, 'throwEventNotFoundError');
+
     sandbox.stub(returnsUpload, 'getReturnsS3Object').resolves({
       Body: Buffer.from('<xml></xml>', 'utf-8')
     });
@@ -83,6 +86,12 @@ experiment('handler', () => {
   test('loads the event', async () => {
     await startUploadJob.handler(job);
     expect(eventsService.findOne.calledWith(job.data.eventId)).to.be.true();
+  });
+
+  test('calls throwEventNotFoundError if event is not found', async () => {
+    eventsService.findOne.resolves();
+    await startUploadJob.handler(job);
+    expect(errorEvent.throwEventNotFoundError.calledWith(job.data.eventId)).to.be.true();
   });
 
   test('loads the S3 object', async () => {

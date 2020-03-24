@@ -4,13 +4,27 @@ const jobs = {
   validateReturns: require('./validate-returns'),
   persist: require('./persist-returns')
 };
+const eventsService = require('../../../../lib/services/events');
+const { logger } = require('../../../../logger');
+const errorEvent = require('./error-event');
+
+const startUploadError = async data => {
+  const { eventId } = data.request.data;
+  const event = await eventsService.findOne(eventId);
+  if (!event) return errorEvent.throwEventNotFoundError(eventId);
+
+  const error = { message: 'returns-upload-to-json job failed' };
+  logger.error('Returns upload failure', error, { data }); ;
+
+  return errorEvent.setEventError(event, error);
+};
 
 const registerSubscribers = async messageQueue => {
   await messageQueue.subscribe(jobs.start.jobName, jobs.start.handler);
   await messageQueue.subscribe(jobs.mapToJson.jobName, jobs.mapToJson.handler);
 
   await messageQueue.onComplete(jobs.start.jobName, async job => {
-    if (job.data.failed) return messageQueue.stop();
+    if (job.data.failed) return startUploadError(job.data);
     // Bulk upload document has been validated against schema.
     // Publish a new job which will convert the valid XML/CSV into a JSON blob.
     const { eventId, companyId } = job.data.request.data;

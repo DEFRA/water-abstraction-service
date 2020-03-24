@@ -52,6 +52,7 @@ const handleReturnsUploadStart = async job => {
   const { eventId } = job.data;
 
   const event = await eventsService.findOne(eventId);
+  if (!event) return errorEvent.throwEventNotFoundError(eventId);
 
   try {
     const s3Object = await returnsUpload.getReturnsS3Object(eventId, event.subtype);

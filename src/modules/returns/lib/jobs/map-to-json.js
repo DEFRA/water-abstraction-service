@@ -50,6 +50,7 @@ const mapToJson = async (evt, s3Object, user) => {
  */
 const handleReturnsMapToJsonStart = async job => {
   const event = await eventsService.findOne(job.data.eventId);
+  if (!event) return errorEvent.throwEventNotFoundError(job.data.eventId);
 
   try {
     const application = config.idm.application.externalUser;

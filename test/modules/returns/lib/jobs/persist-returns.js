@@ -17,6 +17,7 @@ const { logger } = require('../../../../../src/logger');
 const returnsConnector = require('../../../../../src/modules/returns/lib/api-connector');
 
 const eventsService = require('../../../../../src/lib/services/events');
+const errorEvent = require('../../../../../src/modules/returns/lib/jobs/error-event');
 
 experiment('publish', () => {
   beforeEach(async () => {
@@ -57,6 +58,7 @@ experiment('handler', () => {
       }
     });
     sandbox.stub(eventsService, 'update').resolves();
+    sandbox.stub(errorEvent, 'throwEventNotFoundError');
 
     sandbox.stub(returnsUpload, 'getReturnsS3Object').resolves({
       Body: Buffer.from(JSON.stringify([
@@ -90,6 +92,12 @@ experiment('handler', () => {
   test('loads the event', async () => {
     await persistReturnsJob.handler(job);
     expect(eventsService.findOne.calledWith(job.data.eventId)).to.be.true();
+  });
+
+  test('calls throwEventNotFoundError if event is not found', async () => {
+    eventsService.findOne.resolves();
+    await persistReturnsJob.handler(job);
+    expect(errorEvent.throwEventNotFoundError.calledWith(job.data.eventId)).to.be.true();
   });
 
   test('loads the S3 object', async () => {

@@ -8,6 +8,9 @@ const mapToJsonJob = require('../../../../../src/modules/returns/lib/jobs/map-to
 const validateReturnsJob = require('../../../../../src/modules/returns/lib/jobs/validate-returns');
 const persistReturnsJob = require('../../../../../src/modules/returns/lib/jobs/persist-returns');
 const { registerSubscribers } = require('../../../../../src/modules/returns/lib/jobs/init-upload');
+const eventsService = require('../../../../../src/lib/services/events');
+const { logger } = require('../../../../../src/logger');
+const errorEvent = require('../../../../../src/modules/returns/lib/jobs/error-event');
 
 const eventId = 'test-event-id';
 const companyId = 'test-company-id';
@@ -31,9 +34,9 @@ experiment('/modules/returns/lib/jobs/init-upload .registerSubscribers', () => {
     sandbox.stub(validateReturnsJob, 'publish').resolves({});
     messageQueue = {
       subscribe: sandbox.spy(),
-      onComplete: sandbox.spy(),
-      stop: sandbox.stub()
+      onComplete: sandbox.spy()
     };
+
     await registerSubscribers(messageQueue);
   });
 
@@ -51,11 +54,50 @@ experiment('/modules/returns/lib/jobs/init-upload .registerSubscribers', () => {
     expect(messageQueue.subscribe.calledWith(jobName, handler)).to.be.true();
   });
 
-  test('if the start job fails, the process is stopped', async () => {
-    const [, handler] = messageQueue.onComplete.args.find(call => call[0] === startUploadJob.jobName);
+  experiment('if the start job fails', async () => {
+    beforeEach(async () => {
+      sandbox.stub(eventsService, 'findOne').resolves({ eventId });
+      sandbox.stub(logger, 'error').resolves({});
+      sandbox.stub(errorEvent, 'throwEventNotFoundError').returns();
+      sandbox.stub(errorEvent, 'setEventError').resolves({});
+    });
 
-    await handler({ data: { ...job.data, failed: true } });
-    expect(messageQueue.stop.calledOnce).to.be.true();
+    test('finds the event', async () => {
+      const [, handler] = messageQueue.onComplete.args.find(call => call[0] === startUploadJob.jobName);
+      await handler({ data: { ...job.data, failed: true } });
+      expect(eventsService.findOne.calledWith(eventId)).to.be.true();
+    });
+
+    test('throws error if event is not found', async () => {
+      eventsService.findOne.resolves({});
+      const [, handler] = messageQueue.onComplete.args.find(call => call[0] === startUploadJob.jobName);
+
+      try {
+        await handler({ data: { ...job.data, failed: true } });
+      } catch (err) {
+        expect(err.message).to.equal(`Bulk upload event "${eventId}" not found`);
+      }
+    });
+
+    test('log the error', async () => {
+      const [, handler] = messageQueue.onComplete.args.find(call => call[0] === startUploadJob.jobName);
+
+      await handler({ data: { ...job.data, failed: true } });
+      const [message, error, { data }] = logger.error.lastCall.args;
+      expect(message).to.equal('Returns upload failure');
+      expect(error.message).to.equal('returns-upload-to-json job failed');
+      expect(data.failed).to.be.true();
+      expect(data.request.data).to.equal({ eventId, companyId });
+    });
+
+    test('set the event to error', async () => {
+      const [, handler] = messageQueue.onComplete.args.find(call => call[0] === startUploadJob.jobName);
+
+      await handler({ data: { ...job.data, failed: true } });
+      const [event, error] = errorEvent.setEventError.lastCall.args;
+      expect(event).to.equal({ eventId });
+      expect(error.message).to.equal('returns-upload-to-json job failed');
+    });
   });
 
   test('when the start job finishes, the map to JSON job is published', async () => {
