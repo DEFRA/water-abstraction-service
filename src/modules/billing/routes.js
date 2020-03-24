@@ -151,11 +151,28 @@ const postApproveBatch = {
   }
 };
 
+const getBatchLicences = {
+  method: 'GET',
+  path: '/water/1.0/billing/batches/{batchId}/licences',
+  handler: controller.getBatchLicences,
+  config: {
+    validate: {
+      params: {
+        batchId: Joi.string().uuid().required()
+      }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
+exports.getBatchLicences = getBatchLicences;
 
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
 exports.deleteBatch = deleteBatch;
