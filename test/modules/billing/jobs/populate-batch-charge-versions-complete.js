@@ -12,6 +12,8 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const repos = require('../../../../src/lib/connectors/repository');
+const newRepos = require('../../../../src/lib/connectors/repos');
+
 const jobService = require('../../../../src/modules/billing/services/job-service');
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch');
@@ -28,7 +30,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
 
     sandbox.stub(jobService, 'setEmptyBatch');
 
-    sandbox.stub(repos.chargeVersions, 'findOneById');
+    sandbox.stub(newRepos.chargeVersions, 'findOne');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'create');
 
     messageQueue = {
@@ -62,7 +64,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
       await handlePopulateBatchChargeVersionsComplete({
         data: {
           response: {
-            chargeVersions: [],
+            billingBatchChargeVersions: [],
             batch: {
               billing_batch_id: 'test-batch-id'
             }
@@ -77,7 +79,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
     });
 
     test('no calls are made to retrieve a chargeVersion', async () => {
-      expect(repos.chargeVersions.findOneById.called).to.be.false();
+      expect(newRepos.chargeVersions.findOne.called).to.be.false();
     });
 
     test('no chargeVersionYear records are created', async () => {
@@ -98,22 +100,22 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
   experiment('when there are chargeVersions', () => {
     experiment('for a single year batch', () => {
       beforeEach(async () => {
-        repos.chargeVersions.findOneById.withArgs('valid-1').resolves({
-          charge_version_id: 'valid-1',
-          start_date: '2018-04-01',
-          end_date: null
+        newRepos.chargeVersions.findOne.withArgs('valid-1').resolves({
+          chargeVersionId: 'valid-1',
+          startDate: '2018-04-01',
+          endDate: null
         });
 
-        repos.chargeVersions.findOneById.withArgs('valid-2').resolves({
-          charge_version_id: 'valid-2',
-          start_date: '2018-04-01',
-          end_date: '2020-03-31'
+        newRepos.chargeVersions.findOne.withArgs('valid-2').resolves({
+          chargeVersionId: 'valid-2',
+          startDate: '2018-04-01',
+          endDate: '2020-03-31'
         });
 
-        repos.chargeVersions.findOneById.withArgs('invalid-1').resolves({
-          charge_version_id: 'invalid-1',
-          start_date: '2016-04-01',
-          end_date: '2017-03-31'
+        newRepos.chargeVersions.findOne.withArgs('invalid-1').resolves({
+          chargeVersionId: 'invalid-1',
+          startDate: '2016-04-01',
+          endDate: '2017-03-31'
         });
 
         repos.billingBatchChargeVersionYears.create.callsFake(async chargeVersionYear => {
@@ -130,10 +132,10 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
         await handlePopulateBatchChargeVersionsComplete({
           data: {
             response: {
-              chargeVersions: [
-                { charge_version_id: 'valid-1' },
-                { charge_version_id: 'valid-2' },
-                { charge_version_id: 'invalid-1' }
+              billingBatchChargeVersions: [
+                { chargeVersionId: 'valid-1' },
+                { chargeVersionId: 'valid-2' },
+                { chargeVersionId: 'invalid-1' }
               ],
               batch: {
                 billing_batch_id: 'test-batch-id',
@@ -223,22 +225,22 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
 
     experiment('for a multi year batch', () => {
       beforeEach(async () => {
-        repos.chargeVersions.findOneById.withArgs('valid-1').resolves({
-          charge_version_id: 'valid-1',
-          start_date: '2018-04-01',
-          end_date: null
+        newRepos.chargeVersions.findOne.withArgs('valid-1').resolves({
+          chargeVersionId: 'valid-1',
+          startDate: '2018-04-01',
+          endDate: null
         });
 
-        repos.chargeVersions.findOneById.withArgs('valid-2').resolves({
-          charge_version_id: 'valid-2',
-          start_date: '2018-04-01',
-          end_date: '2019-03-31'
+        newRepos.chargeVersions.findOne.withArgs('valid-2').resolves({
+          chargeVersionId: 'valid-2',
+          startDate: '2018-04-01',
+          endDate: '2019-03-31'
         });
 
-        repos.chargeVersions.findOneById.withArgs('invalid-1').resolves({
-          charge_version_id: 'invalid-1',
-          start_date: '2016-04-01',
-          end_date: '2017-03-31'
+        newRepos.chargeVersions.findOne.withArgs('invalid-1').resolves({
+          chargeVersionId: 'invalid-1',
+          startDate: '2016-04-01',
+          endDate: '2017-03-31'
         });
 
         repos.billingBatchChargeVersionYears.create.callsFake(async chargeVersionYear => {
@@ -254,10 +256,10 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
         await handlePopulateBatchChargeVersionsComplete({
           data: {
             response: {
-              chargeVersions: [
-                { charge_version_id: 'valid-1' },
-                { charge_version_id: 'valid-2' },
-                { charge_version_id: 'invalid-1' }
+              billingBatchChargeVersions: [
+                { chargeVersionId: 'valid-1' },
+                { chargeVersionId: 'valid-2' },
+                { chargeVersionId: 'invalid-1' }
               ],
               batch: {
                 billing_batch_id: 'test-batch-id',
