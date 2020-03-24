@@ -9,7 +9,6 @@ const {
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
-const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 const ChargeVersionRepository = require('../../../../src/lib/connectors/repository/ChargeVersionRepository');
 
 const repo = new ChargeVersionRepository();
@@ -81,6 +80,7 @@ experiment('lib/connectors/repository/ChargeVersionRepository.js', () => {
     });
   });
 
+  /*
   experiment('.createSupplementaryChargeVersions', () => {
     let batch;
     let now;
@@ -119,7 +119,9 @@ experiment('lib/connectors/repository/ChargeVersionRepository.js', () => {
       expect(result).to.equal([{ id: 'test-row-1' }]);
     });
   });
+  */
 
+  /*
   experiment('.createTwoPartTariffChargeVersions', () => {
     let batch;
     let now;
@@ -159,7 +161,9 @@ experiment('lib/connectors/repository/ChargeVersionRepository.js', () => {
       expect(result).to.equal([{ id: 'test-row-1' }]);
     });
   });
+  */
 
+  /*
   experiment('.createAnnualChargeVersions', () => {
     let batch;
     let result;
@@ -197,4 +201,5 @@ experiment('lib/connectors/repository/ChargeVersionRepository.js', () => {
       expect(result).to.equal([{ id: 'test-row-1' }]);
     });
   });
+  */
 });
