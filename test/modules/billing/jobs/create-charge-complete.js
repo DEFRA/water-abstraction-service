@@ -53,6 +53,7 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
     sandbox.stub(batchJob, 'failBatch').resolves();
     sandbox.stub(batchJob, 'logOnComplete').resolves();
     sandbox.stub(batchJob, 'logOnCompleteError').resolves();
+    sandbox.stub(batchJob, 'deleteOnCompleteQueue').resolves();
 
     messageQueue = {
       publish: sandbox.stub().resolves()
@@ -99,6 +100,10 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
     test('the batch cleanup is not called', async () => {
       expect(batchService.cleanup.called).to.be.false();
     });
+
+    test('remaining onComplete jobs are not deleted', async () => {
+      expect(batchJob.deleteOnCompleteQueue.called).to.be.false();
+    });
   });
 
   experiment('when a non-empty batch is processed', () => {
@@ -124,6 +129,12 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
         EVENT_ID, BATCH_ID
       )).to.be.true();
     });
+
+    test('remaining onComplete jobs are deleted', async () => {
+      expect(batchJob.deleteOnCompleteQueue.calledWith(
+        job, messageQueue
+      )).to.be.true();
+    });
   });
 
   experiment('when an empty batch is processed', () => {
@@ -146,6 +157,12 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
     test('the job is marked as empty', async () => {
       expect(jobService.setEmptyBatch.calledWith(
         EVENT_ID, BATCH_ID
+      )).to.be.true();
+    });
+
+    test('remaining onComplete jobs are deleted', async () => {
+      expect(batchJob.deleteOnCompleteQueue.calledWith(
+        job, messageQueue
       )).to.be.true();
     });
   });

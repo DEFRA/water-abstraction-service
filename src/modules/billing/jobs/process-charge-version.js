@@ -6,7 +6,10 @@ const batchJob = require('./lib/batch-job');
 
 const JOB_NAME = 'billing.process-charge-version.*';
 
-const options = { teamSize: 10 };
+const options = {
+  teamSize: 50,
+  teamConcurrency: 2
+};
 
 /**
  * Creates the request object for publishing a new job for processing a

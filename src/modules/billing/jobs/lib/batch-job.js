@@ -73,6 +73,17 @@ const createMessage = (nameTemplate, batch, data, options) => {
  */
 const hasJobFailed = job => job.data.failed === true;
 
+/**
+ * Deletes all onComplete jobs in queue for the supplied job
+ * @param {Object} job
+ * @param {Object<PgBoss>} messageQueue The PgBoss message queue
+ */
+const deleteOnCompleteQueue = (job, messageQueue) => {
+  const name = `__state__completed__${getRequestName(job)}`;
+  logger.info(`Deleting queue ${name}`);
+  return messageQueue.deleteQueue(name);
+};
+
 exports.createMessage = createMessage;
 exports.failBatch = failBatch;
 exports.hasJobFailed = hasJobFailed;
@@ -80,3 +91,4 @@ exports.logHandling = logHandling;
 exports.logHandlingError = logHandlingError;
 exports.logOnComplete = logOnComplete;
 exports.logOnCompleteError = logOnCompleteError;
+exports.deleteOnCompleteQueue = deleteOnCompleteQueue;
