@@ -20,7 +20,9 @@ const handleProcessChargeVersionComplete = async (job, messageQueue) => {
 
   if (processing === 0) {
     logger.info(`No more charge version year entries to process for batch: ${batchId}`);
+
     const message = prepareTransactionsJob.createMessage(eventId, batch);
+    await batchJob.deleteOnCompleteQueue(job, messageQueue);
     return messageQueue.publish(message);
   }
 
