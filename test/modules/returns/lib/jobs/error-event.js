@@ -12,7 +12,7 @@ const sandbox = sinon.createSandbox();
 const errorEvent = require('../../../../../src/modules/returns/lib/jobs/error-event');
 const eventsService = require('../../../../../src/lib/services/events');
 
-experiment('setEventError', () => {
+experiment('.setEventError', () => {
   beforeEach(async () => {
     sandbox.stub(eventsService, 'update');
   });
@@ -80,5 +80,15 @@ experiment('setEventError', () => {
       date: { day: 'Thursday' },
       error: { key: 'server', message: 'error-message' }
     });
+  });
+});
+
+experiment('.throwEventNotFoundError', () => {
+  test('throws an error containing the eventId', async () => {
+    try {
+      errorEvent.throwEventNotFoundError('test-event-id');
+    } catch (err) {
+      expect(err.message).to.equal('Bulk upload event "test-event-id" not found');
+    }
   });
 });

@@ -18,7 +18,7 @@ const JOB_NAME = 'persist-bulk-returns';
  * @returns {Promise}
  */
 const publishPersistBulkReturns = eventId => {
-  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(eventId));
+  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData({ eventId }));
 };
 
 const updateEvent = (event, updatedReturns) => {
@@ -109,6 +109,8 @@ const handlePersistReturns = async job => {
 
   try {
     event = await eventsService.findOne(eventId);
+    if (!event) return errorEvent.throwEventNotFoundError(eventId);
+
     const returns = await getReturnsFromS3(eventId);
 
     const validatedReturns = get(event, 'metadata.returns', []);

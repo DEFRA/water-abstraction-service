@@ -11,13 +11,13 @@ const uploadAdapters = require('../upload-adapters');
 const config = require('../../../../../config');
 
 /**
- * Begins the returns XML to JSON process by adding a new task to PG Boss.
+ * Begins mapping XML/CSV returns to JSON process by adding a new task to PG Boss.
  *
- * @param {string} eventId The UUID of the event
+ * @param {Object} data containing eventId and companyId
  * @returns {Promise}
  */
-const publishReturnsMapToJsonStart = eventId =>
-  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(eventId));
+const publishReturnsMapToJsonStart = data =>
+  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(data));
 
 const validateUser = user => {
   if (!user) {
@@ -40,16 +40,17 @@ const mapToJson = async (evt, s3Object, user) => {
 };
 
 /**
- * Handler for the 'return-upload-xml-to-json' job in PG Boss.
+ * Handler for the 'return-upload-to-json' job in PG Boss.
  *
  * This will acquire the saved document from AWS S3,
- * convert the XML to a JSON representation, then put the JSON
+ * convert the XML/CSV to a JSON representation, then put the JSON
  * back to S3 for future processing.
  *
  * @param {Object} job The job data from PG Boss
  */
 const handleReturnsMapToJsonStart = async job => {
   const event = await eventsService.findOne(job.data.eventId);
+  if (!event) return errorEvent.throwEventNotFoundError(job.data.eventId);
 
   try {
     const application = config.idm.application.externalUser;
@@ -67,7 +68,7 @@ const handleReturnsMapToJsonStart = async job => {
 
     await eventsService.updateStatus(event.id, uploadStatus.VALIDATED);
   } catch (error) {
-    logger.error('Failed to convert XML to JSON', error, { job });
+    logger.error(`Failed to convert ${event.subtype} to JSON`, error, { job });
     await errorEvent.setEventError(event, error);
     throw error;
   }

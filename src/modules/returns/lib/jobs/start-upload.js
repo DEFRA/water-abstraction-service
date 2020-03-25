@@ -9,11 +9,11 @@ const eventsService = require('../../../../lib/services/events');
 /**
  * Begins the bulk returns process by adding a new task to PG Boss.
  *
- * @param {string} eventId The UUID of the event
+ * @param {Object} data containing eventId and companyId
  * @returns {Promise}
  */
-const publishReturnsUploadStart = eventId =>
-  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(eventId));
+const publishReturnsUploadStart = data =>
+  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(data));
 
 const getValidationError = (validationErrors, subtype) => {
   if (!validationErrors) return errorEvent.keys[subtype].INVALID;
@@ -52,6 +52,7 @@ const handleReturnsUploadStart = async job => {
   const { eventId } = job.data;
 
   const event = await eventsService.findOne(eventId);
+  if (!event) return errorEvent.throwEventNotFoundError(eventId);
 
   try {
     const s3Object = await returnsUpload.getReturnsS3Object(eventId, event.subtype);
