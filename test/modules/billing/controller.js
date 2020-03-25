@@ -17,7 +17,7 @@ const Batch = require('../../../src/lib/models/batch');
 
 const newRepos = require('../../../src/lib/connectors/repos');
 const repos = require('../../../src/lib/connectors/repository');
-const event = require('../../../src/lib/event');
+const eventService = require('../../../src/lib/services/events');
 const invoiceService = require('../../../src/modules/billing/services/invoice-service');
 const batchService = require('../../../src/modules/billing/services/batch-service');
 const controller = require('../../../src/modules/billing/controller');
@@ -42,20 +42,19 @@ experiment('modules/billing/controller', () => {
     });
 
     sandbox.stub(newRepos.billingBatches, 'findOne').resolves();
-
     sandbox.stub(batchService, 'getBatches').resolves();
     sandbox.stub(batchService, 'deleteBatch').resolves();
     sandbox.stub(batchService, 'approveBatch').resolves();
     sandbox.stub(batchService, 'decorateBatchWithTotals').resolves();
     sandbox.stub(batchService, 'getMostRecentLiveBatchByRegion').resolves();
+    sandbox.stub(batchService, 'deleteAccountFromBatch').resolves();
 
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
+    sandbox.stub(invoiceService, 'getInvoicesTransactionsForBatch').resolves();
 
-    sandbox.stub(event, 'save').resolves({
-      rows: [
-        { event_id: '11111111-1111-1111-1111-111111111111' }
-      ]
+    sandbox.stub(eventService, 'create').resolves({
+      id: '11111111-1111-1111-1111-111111111111'
     });
 
     sandbox.stub(mappers.api.invoice, 'modelToBatchInvoices');
@@ -104,7 +103,7 @@ experiment('modules/billing/controller', () => {
       });
 
       test('no event is created', async () => {
-        expect(event.save.called).to.be.false();
+        expect(eventService.create.called).to.be.false();
       });
 
       test('no job is published', async () => {
@@ -143,7 +142,7 @@ experiment('modules/billing/controller', () => {
       });
 
       test('creates a new event with the created batch', async () => {
-        const [savedEvent] = event.save.lastCall.args;
+        const [savedEvent] = eventService.create.lastCall.args;
         expect(savedEvent.type).to.equal('billing-batch');
         expect(savedEvent.subtype).to.equal(request.payload.batchType);
         expect(savedEvent.issuer).to.equal(request.payload.userEmail);
@@ -158,7 +157,7 @@ experiment('modules/billing/controller', () => {
 
       test('the response contains the event', async () => {
         const [{ data }] = h.response.lastCall.args;
-        expect(data.event.event_id).to.equal('11111111-1111-1111-1111-111111111111');
+        expect(data.event.id).to.equal('11111111-1111-1111-1111-111111111111');
       });
 
       test('the response contains a URL to the event', async () => {
@@ -335,11 +334,7 @@ experiment('modules/billing/controller', () => {
       });
 
       test('the invoice is returned', async () => {
-        expect(response.data.id).to.equal(invoice.id);
-      });
-
-      test('the error object is null', async () => {
-        expect(response.error).to.be.null();
+        expect(response.id).to.equal(invoice.id);
       });
     });
 
@@ -366,21 +361,64 @@ experiment('modules/billing/controller', () => {
     });
   });
 
-  experiment('.deleteAccountFromBatch', () => {
-    test('returns a 404 if there are no invoices for the invoice account id', async () => {
-      const request = {
-        params: {
-          batchId: 'test-batch-id',
-          accountId: 'test-account-id'
-        },
-        pre: {
-          batch: {
-            status: 'review'
+  experiment('.getBatchInvoicesDetails', () => {
+    experiment('when the invoice is found', () => {
+      let response;
+      let invoices;
+
+      beforeEach(async () => {
+        const invoice = new Invoice(uuid());
+        invoices = [invoice, invoice];
+
+        invoiceService.getInvoicesTransactionsForBatch.resolves(invoices);
+
+        response = await controller.getBatchInvoicesDetails({
+          params: {
+            batchId: 'test-batch-id'
           }
+        });
+      });
+
+      test('the invoice is returned', async () => {
+        expect(response[0].id).to.equal(invoices[0].id);
+      });
+    });
+
+    experiment('when the batch is not found', () => {
+      let response;
+
+      beforeEach(async () => {
+        invoiceService.getInvoicesTransactionsForBatch.resolves();
+        response = await controller.getBatchInvoicesDetails({
+          params: {
+            batchId: 'test-batch-id'
+          }
+        });
+      });
+
+      test('the error contains a not found message', async () => {
+        expect(response.output.payload.message).to.equal('No invoices found in batch with id: test-batch-id');
+      });
+    });
+  });
+
+  experiment('.deleteAccountFromBatch', () => {
+    let batch;
+    let request;
+    let invoices;
+
+    beforeEach(async () => {
+      batch = new Batch(uuid());
+      batch.status = Batch.BATCH_STATUS.ready;
+      request = {
+        params: { batchId: batch.id, accountId: 'test-account-id' },
+        pre: { batch },
+        messageQueue: {
+          publish: sandbox.stub()
         }
       };
 
-      const invoices = [{
+      invoices = [{
         invoiceLicences: [
           { transactions: [] }
         ],
@@ -391,11 +429,72 @@ experiment('modules/billing/controller', () => {
       }];
 
       invoiceService.getInvoicesForBatch.resolves(invoices);
+      batchService.deleteAccountFromBatch.resolves(batch);
+    });
 
+    experiment('when accounts cannot be deleted from the batch', () => {
+      const invalidStatuses = [
+        Batch.BATCH_STATUS.processing,
+        Batch.BATCH_STATUS.error,
+        Batch.BATCH_STATUS.sent
+      ];
+
+      invalidStatuses.forEach(status => {
+        test(`a 422 is returned for the ${status} status`, async () => {
+          batch.status = status;
+
+          await controller.deleteAccountFromBatch(request, h);
+
+          expect(batchService.deleteAccountFromBatch.called).to.equal(false);
+          expect(hapiResponseStub.code.calledWith(422)).to.be.true();
+
+          const [message] = h.response.lastCall.args;
+
+          expect(message).to.equal(`Cannot delete account from batch when status is ${status}`);
+        });
+      });
+    });
+
+    experiment('when accounts can be deleted from the batch', () => {
+      const validStatuses = [
+        Batch.BATCH_STATUS.ready,
+        Batch.BATCH_STATUS.review
+      ];
+
+      validStatuses.forEach(status => {
+        experiment(`for the ${status} status`, () => {
+          beforeEach(async () => {
+            batch.status = status;
+            invoices[0].invoiceAccount.id = 'test-account-id';
+            await controller.deleteAccountFromBatch(request, h);
+          });
+
+          test('the account is deleted', async () => {
+            const [batchArg, accountId] = batchService.deleteAccountFromBatch.lastCall.args;
+            expect(batchArg.id).to.equal(batch.id);
+            expect(accountId).to.equal('test-account-id');
+          });
+
+          test('a job is published to refresh the batch totals', async () => {
+            const [message] = request.messageQueue.publish.lastCall.args;
+            expect(message.data.batchId).to.equal(request.params.batchId);
+          });
+        });
+      });
+    });
+
+    test('returns a 404 if there are no invoices for the invoice account id', async () => {
+      batch.status = Batch.BATCH_STATUS.ready;
       const response = await controller.deleteAccountFromBatch(request);
-      expect(invoiceService.getInvoicesForBatch.calledWith('test-batch-id')).to.be.true();
+      expect(invoiceService.getInvoicesForBatch.calledWith(batch.id)).to.be.true();
       expect(response.output.payload.statusCode).to.equal(404);
-      expect(response.output.payload.message).to.equal('No invoices for account (test-account-id) in batch (test-batch-id)');
+      expect(response.output.payload.message).to.equal(`No invoices for account (test-account-id) in batch (${batch.id})`);
+    });
+
+    test('returns the batch', async () => {
+      invoices[0].invoiceAccount.id = 'test-account-id';
+      const response = await controller.deleteAccountFromBatch(request);
+      expect(response.id).to.equal(batch.id);
     });
   });
 
@@ -410,37 +509,100 @@ experiment('modules/billing/controller', () => {
         id: 1234
       };
 
-      batch = {
-        billingBatchId: 'test-batch-id'
-      };
+      batch = new Batch(uuid());
 
       request = {
-        defra: {
-          internalCallingUser
-        },
-        pre: {
-          batch
-        }
+        defra: { internalCallingUser },
+        pre: { batch }
       };
-
-      await controller.deleteBatch(request, h);
     });
 
-    test('deletes the batch via the batch service', async () => {
-      expect(batchService.deleteBatch.calledWith(batch, internalCallingUser)).to.be.true();
+    experiment('for a batch that is processing', () => {
+      test('a 422 is returned because the batch cannot be deleted yet', async () => {
+        batch.status = Batch.BATCH_STATUS.processing;
+
+        await controller.deleteBatch(request, h);
+
+        expect(batchService.deleteBatch.called).to.equal(false);
+        expect(hapiResponseStub.code.calledWith(422)).to.be.true();
+
+        const [message] = h.response.lastCall.args;
+
+        expect(message).to.equal('Cannot delete batch when status is processing');
+      });
     });
 
-    test('returns a 204 response', async () => {
-      const [code] = hapiResponseStub.code.lastCall.args;
-      expect(code).to.equal(204);
+    experiment('for a batch that is sent', () => {
+      test('a 422 is returned because the batch cannot be deleted', async () => {
+        batch.status = Batch.BATCH_STATUS.sent;
+
+        await controller.deleteBatch(request, h);
+
+        expect(batchService.deleteBatch.called).to.equal(false);
+        expect(hapiResponseStub.code.calledWith(422)).to.be.true();
+
+        const [message] = h.response.lastCall.args;
+
+        expect(message).to.equal('Cannot delete batch when status is sent');
+      });
+    });
+
+    experiment('for a batch that is in revew', () => {
+      test('deletes the batch via the batch service', async () => {
+        batch.status = Batch.BATCH_STATUS.review;
+        await controller.deleteBatch(request, h);
+        expect(batchService.deleteBatch.calledWith(batch, internalCallingUser)).to.be.true();
+      });
+
+      test('returns a 204 response', async () => {
+        batch.status = Batch.BATCH_STATUS.review;
+        await controller.deleteBatch(request, h);
+
+        const [code] = hapiResponseStub.code.lastCall.args;
+        expect(code).to.equal(204);
+      });
+    });
+
+    experiment('for a batch that is ready', () => {
+      test('deletes the batch via the batch service', async () => {
+        batch.status = Batch.BATCH_STATUS.ready;
+        await controller.deleteBatch(request, h);
+        expect(batchService.deleteBatch.calledWith(batch, internalCallingUser)).to.be.true();
+      });
+
+      test('returns a 204 response', async () => {
+        batch.status = Batch.BATCH_STATUS.ready;
+        await controller.deleteBatch(request, h);
+
+        const [code] = hapiResponseStub.code.lastCall.args;
+        expect(code).to.equal(204);
+      });
+    });
+
+    experiment('for a batch that has errored', () => {
+      test('deletes the batch via the batch service', async () => {
+        batch.status = Batch.BATCH_STATUS.error;
+        await controller.deleteBatch(request, h);
+        expect(batchService.deleteBatch.calledWith(batch, internalCallingUser)).to.be.true();
+      });
+
+      test('returns a 204 response', async () => {
+        batch.status = Batch.BATCH_STATUS.error;
+        await controller.deleteBatch(request, h);
+
+        const [code] = hapiResponseStub.code.lastCall.args;
+        expect(code).to.equal(204);
+      });
     });
 
     test('returns the error from the service if it fails', async () => {
       const err = new Error('whoops');
       batchService.deleteBatch.rejects(err);
 
-      const result = await controller.deleteBatch(request, h);
-      expect(result).to.equal(err);
+      batch.status = Batch.BATCH_STATUS.error;
+
+      const error = await expect(controller.deleteBatch(request, h)).to.reject();
+      expect(error).to.equal(err);
     });
   });
 

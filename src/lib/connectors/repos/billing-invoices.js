@@ -1,4 +1,4 @@
-const { bookshelf } = require('../bookshelf');
+const { bookshelf, BillingInvoice } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoices');
 
@@ -15,5 +15,39 @@ const upsert = async data => raw.singleRow(queries.upsert, data);
 const deleteEmptyByBatchId = batchId =>
   bookshelf.knex.raw(queries.deleteEmptyByBatchId, { batchId });
 
-exports.upsert = upsert;
+/**
+ * Finds an invoice with related model data by ID
+ * @param {String} id
+ */
+const findOne = async id => {
+  const model = await BillingInvoice
+    .forge({ billingInvoiceId: id })
+    .fetch({
+      withRelated: [
+        'billingBatch',
+        'billingBatch.region',
+        'billingInvoiceLicences',
+        'billingInvoiceLicences.licence',
+        'billingInvoiceLicences.licence.region',
+        'billingInvoiceLicences.billingTransactions',
+        'billingInvoiceLicences.billingTransactions.chargeElement',
+        'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
+      ]
+    });
+
+  return model.toJSON();
+};
+
+const deleteByBatchAndInvoiceAccountId = (batchId, invoiceAccountId) => {
+  return BillingInvoice
+    .forge()
+    .where({
+      invoice_account_id: invoiceAccountId,
+      billing_batch_id: batchId
+    }).destroy();
+};
+
+exports.deleteByBatchAndInvoiceAccountId = deleteByBatchAndInvoiceAccountId;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
+exports.findOne = findOne;
+exports.upsert = upsert;

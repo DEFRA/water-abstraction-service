@@ -5,6 +5,7 @@ const documentsHelper = require('./lib/documents');
 const returnsHelper = require('./lib/returns');
 
 const rowMapper = ret => {
+  const { purposes = [] } = ret.metadata;
   return {
     licenceNumber: ret.licence_ref,
     returnId: ret.return_id,
@@ -12,7 +13,11 @@ const rowMapper = ret => {
     endDate: ret.end_date,
     frequency: ret.returns_frequency,
     returnRequirement: ret.return_requirement,
-    status: ret.status
+    status: ret.status,
+    siteDescription: ret.metadata.description,
+    purposes: purposes.map(purpose => {
+      return purpose.alias || purpose.tertiary.description;
+    })
   };
 };
 
@@ -31,7 +36,7 @@ const getReturns = async (request, h) => {
   const returnsFilter = returnsHelper.createReturnsFilter(request, documents);
   const columms = [
     'return_id', 'licence_ref', 'start_date', 'end_date',
-    'returns_frequency', 'return_requirement', 'status'
+    'returns_frequency', 'return_requirement', 'status', 'metadata'
   ];
   const returns = await returnsConnector.returns.findAll(returnsFilter, null, columms);
 

@@ -1,12 +1,12 @@
+'use strict';
+
 const { get } = require('lodash');
-const { logger } = require('../../../logger');
-const Transaction = require('../../../lib/models/transaction');
 const transactionsService = require('../services/transactions-service');
 const chargeModuleTransactions = require('../../../lib/connectors/charge-module/transactions');
-const repos = require('../../../lib/connectors/repository');
 const mappers = require('../mappers');
+const batchJob = require('./lib/batch-job');
 
-const JOB_NAME = 'billing.create-charge';
+const JOB_NAME = 'billing.create-charge.*';
 
 const options = {
   teamSize: 10
@@ -19,13 +19,14 @@ const options = {
  * @param {Object} batch The object from the batch database table
  * @param {Object} transaction The transaction to create
  */
-const createMessage = (eventId, batch, transaction) => ({
-  name: JOB_NAME,
-  data: { eventId, batch, transaction }
-});
+const createMessage = (eventId, batch, transaction) => {
+  return batchJob.createMessage(JOB_NAME, batch, { transaction, eventId }, {
+    singletonKey: JOB_NAME.replace('*', transaction.billing_transaction_id)
+  });
+};
 
 const handleCreateCharge = async job => {
-  logger.info(`Handling ${JOB_NAME}`);
+  batchJob.logHandling(job);
 
   const transactionId = get(job, 'data.transaction.billing_transaction_id');
 
@@ -38,18 +39,14 @@ const handleCreateCharge = async job => {
 
     // Create transaction in Charge Module
     const response = await chargeModuleTransactions.createTransaction(cmTransaction);
-    const externalId = get(response, 'transaction.id');
 
-    // Update status
-    await repos.billingTransactions.setStatus(transactionId, Transaction.statuses.chargeCreated, externalId);
+    // Update/remove our local transaction in water.billing_transactions
+    await transactionsService.updateWithChargeModuleResponse(transactionId, response);
   } catch (err) {
-    // Log error
-    logger.error(`${JOB_NAME} error`, err, {
-      batch_id: job.data.batch.billing_batch_id,
-      transaction_id: job.data.transaction.billing_transaction_id
-    });
+    batchJob.logHandlingError(job, err);
+
     // Mark transaction as error in DB
-    repos.billingTransactions.setStatus(job.data.transaction.billing_transaction_id, Transaction.statuses.error);
+    transactionsService.setErrorStatus(transactionId);
     throw err;
   }
 

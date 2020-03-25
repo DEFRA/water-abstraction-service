@@ -3,15 +3,13 @@
 const { get } = require('lodash');
 const repos = require('../../../lib/connectors/repository');
 
-const populateBatchChargeVersions = require('./populate-batch-charge-versions');
 const processChargeVersion = require('./process-charge-version');
 
-const { logger } = require('../../../logger');
-
-const { BATCH_STATUS } = require('../../../lib/models/batch');
+const { BATCH_STATUS, BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const { FinancialYear } = require('../../../lib/models');
 const { isValidForFinancialYear } = require('../lib/charge-version');
 const jobService = require('../services/job-service');
+const batchJob = require('./lib/batch-job');
 
 /**
  * Create an object ready for saving to the
@@ -42,11 +40,11 @@ const createChargeVersionYear = async (billingBatchChargeVersion, financialYearE
  * @param {Object} messageQueue The PG-Boss message queue
  * @param {String} eventId The event id for use when publishing
  */
-const processBillingBatchChargeVersions = async (billingBatchChargeVersions, financialYears, messageQueue, eventId) => {
+const processBillingBatchChargeVersions = async (batch, billingBatchChargeVersions, messageQueue, eventId) => {
   for (const billingBatchChargeVersion of billingBatchChargeVersions) {
     // load the charge version and publish for each year it is valid for
     const chargeVersion = await repos.chargeVersions.findOneById(billingBatchChargeVersion.charge_version_id);
-    await publishForValidChargeVersion(chargeVersion, financialYears, billingBatchChargeVersion, messageQueue, eventId);
+    await publishForValidChargeVersion(batch, chargeVersion, billingBatchChargeVersion, messageQueue, eventId);
   }
 };
 
@@ -60,12 +58,13 @@ const processBillingBatchChargeVersions = async (billingBatchChargeVersions, fin
  * @param {Object} messageQueue The PG-Boss message queue
  * @param {String} eventId The event id used for publishing
  */
-const publishForValidChargeVersion = async (chargeVersion, financialYears, billingBatchChargeVersion, messageQueue, eventId) => {
+const publishForValidChargeVersion = async (batch, chargeVersion, billingBatchChargeVersion, messageQueue, eventId) => {
+  const financialYears = FinancialYear.getFinancialYears(batch.from_financial_year_ending, batch.to_financial_year_ending);
+
   for (const financialYear of financialYears) {
     if (isValidForFinancialYear(chargeVersion, financialYear)) {
       const chargeVersionYear = await createChargeVersionYear(billingBatchChargeVersion, financialYear.endYear);
-
-      const message = processChargeVersion.createMessage(eventId, chargeVersionYear);
+      const message = processChargeVersion.createMessage(eventId, chargeVersionYear, batch);
       await messageQueue.publish(message);
     }
   }
@@ -81,20 +80,23 @@ const publishForValidChargeVersion = async (chargeVersion, financialYears, billi
  * @param {Object} job PG Boss job (including response from populateBatchChargeVersions handler)
  */
 const handlePopulateBatchChargeVersionsComplete = async (job, messageQueue) => {
-  logger.info(`onComplete - ${populateBatchChargeVersions.jobName}`);
+  batchJob.logOnComplete(job);
+
+  if (batchJob.hasJobFailed(job)) {
+    return batchJob.failBatch(job, messageQueue, BATCH_ERROR_CODE.failedToPopulateChargeVersions);
+  }
 
   const { chargeVersions: billingBatchChargeVersions, batch } = job.data.response;
   const { eventId } = job.data.request.data;
 
   if (billingBatchChargeVersions.length === 0) {
-    return jobService.setReadyJob(eventId, batch.billing_batch_id);
+    return jobService.setEmptyBatch(eventId, batch.billing_batch_id);
   }
 
   try {
-    const financialYears = FinancialYear.getFinancialYears(batch.from_financial_year_ending, batch.to_financial_year_ending);
-    await processBillingBatchChargeVersions(billingBatchChargeVersions, financialYears, messageQueue, eventId);
+    await processBillingBatchChargeVersions(batch, billingBatchChargeVersions, messageQueue, eventId);
   } catch (err) {
-    logger.error('Failed to create charge version years', err);
+    batchJob.logOnCompleteError(job, err);
     throw err;
   }
 };

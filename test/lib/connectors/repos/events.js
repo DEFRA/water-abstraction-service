@@ -69,34 +69,18 @@ experiment('lib/connectors/repos/events', () => {
     let result;
 
     beforeEach(async () => {
-      result = await events.update(model);
+      result = await events.update('test-id', { status: 'updated' });
     });
 
     test('calls model.forge.where with id', async () => {
-      const [{ eventId }] = Event.forge.lastCall.args;
-      expect(eventId).to.equal('test-id');
+      expect(Event.forge.calledWith({
+        eventId: 'test-id'
+      })).to.be.true();
     });
 
-    test('returns a JSON object of the model updated', async () => {
-      expect(result).to.equal(model.toJSON());
-    });
-  });
-
-  experiment('.updateStatus', () => {
-    let result;
-
-    beforeEach(async () => {
-      result = await events.updateStatus('test-id', 'test-status');
-    });
-
-    test('calls model.forge.where with id', async () => {
-      const { args } = Event.forge.lastCall;
-      expect(args[0].eventId).to.equal('test-id');
-    });
-
-    test('calls model.forge.where.save with correct parameters', async () => {
-      const { args } = Event.forge.lastCall.returnValue.save.lastCall;
-      expect(args[0].status).to.equal('test-status');
+    test('calls .save() with the updates', async () => {
+      const [updates] = stub.save.lastCall.args;
+      expect(updates).to.equal({ status: 'updated' });
     });
 
     test('returns a JSON object of the model updated', async () => {

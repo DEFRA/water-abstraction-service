@@ -72,6 +72,33 @@ experiment('lib/connectors/charge-module/batches', () => {
     });
   });
 
+  experiment('.deleteAccountFromBatch', () => {
+    let batchId;
+    let customerReference;
+
+    beforeEach(async () => {
+      batchId = uuid();
+      customerReference = 'A11111111A';
+      await batches.deleteAccountFromBatch('S', batchId, customerReference);
+    });
+
+    test('sends a post request using the expected path', async () => {
+      const [path] = request.post.lastCall.args;
+      expect(path).to.equal('v1/wrls/transaction_queue/remove');
+    });
+
+    test('sends a post request with the expected payload', async () => {
+      const [, payload] = request.post.lastCall.args;
+      expect(payload).to.equal({
+        region: 'S',
+        filter: {
+          batchNumber: batchId,
+          customerReference
+        }
+      });
+    });
+  });
+
   experiment('.send', () => {
     test('sends a post request using the expected path', async () => {
       await batches.send('S', uuid());
@@ -94,7 +121,7 @@ experiment('lib/connectors/charge-module/batches', () => {
       });
     });
 
-    test('isDraft can be set to true to send the bill run', async () => {
+    test('isDraft can be set to false to send the bill run', async () => {
       const batchId = uuid();
       await batches.send('S', batchId, false);
 
@@ -105,6 +132,23 @@ experiment('lib/connectors/charge-module/batches', () => {
         draft: false,
         filter: {
           batchNumber: batchId
+        }
+      });
+    });
+
+    test('a customer reference number can be included to filter on that customer', async () => {
+      const batchId = uuid();
+      const customerReference = 'A12345678SA';
+      await batches.send('S', batchId, true, customerReference);
+
+      const [, payload] = request.post.lastCall.args;
+
+      expect(payload).to.equal({
+        region: 'S',
+        draft: true,
+        filter: {
+          batchNumber: batchId,
+          customerReference
         }
       });
     });

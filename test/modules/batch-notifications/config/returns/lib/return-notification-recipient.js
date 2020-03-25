@@ -5,10 +5,10 @@ const {
   beforeEach
 } = exports.lab = require('@hapi/lab').script();
 
-const notificationRecipients = require('../../../../../../../src/modules/batch-notifications/config/returns/lib/return-notification-recipients');
+const notificationRecipients = require('../../../../../../src/modules/batch-notifications/config/returns/lib/return-notification-recipients');
 
-const ContactList = require('../../../../../../../src/lib/models/contact-list');
-const Contact = require('../../../../../../../src/lib/models/contact');
+const ContactList = require('../../../../../../src/lib/models/contact-list');
+const Contact = require('../../../../../../src/lib/models/contact');
 
 experiment('modules/batch-notifications/config/return-invitation/return-notification-recipients', () => {
   const licenceHolder = new Contact({

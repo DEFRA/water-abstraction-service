@@ -52,7 +52,7 @@ experiment('lib/connectors/repos/billing-transactions', () => {
 
     test('calls model.forge with correct id', async () => {
       const [params] = BillingTransaction.forge.lastCall.args;
-      expect(params).to.equal({ billing_transaction_id: 'test-id' });
+      expect(params).to.equal({ billingTransactionId: 'test-id' });
     });
 
     test('calls fetch() with related models', async () => {
@@ -208,6 +208,26 @@ experiment('lib/connectors/repos/billing-transactions', () => {
       expect(raw.multiRow.calledWith(
         queries.findStatusCountsByBatchId, { batchId: 'batch-id' }
       )).to.be.true();
+    });
+  });
+
+  experiment('.update', () => {
+    const transactionId = 'test-transaction-id';
+    const changes = {
+      status: 'error'
+    };
+
+    beforeEach(async () => {
+      await billingTransactions.update(transactionId, changes);
+    });
+
+    test('calls model.forge with correct data', async () => {
+      const [params] = BillingTransaction.forge.lastCall.args;
+      expect(params).to.equal({ billingTransactionId: transactionId });
+    });
+
+    test('calls .save() on the model using patch mode', async () => {
+      expect(stub.save.calledWith(changes, { patch: true })).to.be.true();
     });
   });
 });

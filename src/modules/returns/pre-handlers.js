@@ -1,5 +1,6 @@
+const { get } = require('lodash');
 const Boom = require('@hapi/boom');
-const event = require('../../lib/event');
+const eventsService = require('../../lib/services/events');
 const returnsUpload = require('./lib/returns-upload');
 
 /**
@@ -10,12 +11,11 @@ const preLoadEvent = async (request, h) => {
   const { eventId } = request.params;
 
   // Load event - 404 if not found
-  const evt = await event.load(eventId);
-  if (!evt) {
+  request.event = await eventsService.findOne(eventId);
+  if (!request.event) {
     throw Boom.notFound('Return upload event not found', { eventId });
   }
 
-  request.evt = evt;
   return h.continue;
 };
 
@@ -35,16 +35,17 @@ const preLoadJson = async (request, h) => {
  * has the same issuer email address as the username present in the
  * request payload
  * Throws Boom.unauthorized if no match
- * @param  {Object}  request.evt  - event loaded by preLoadEvent
+ * @param  {Object}  request.event  - event loaded by preLoadEvent
  * @param {String} request.payload.userName - current user email address
  * @return {Promise} resolves with h.continue
  */
 const preCheckIssuer = async (request, h) => {
-  const { evt } = request;
-  const { eventId } = evt;
-  const { userName } = request.query;
-  if (evt.issuer !== userName) {
-    throw Boom.unauthorized('Return upload permission denied', { eventId, userName });
+  const issuer = get(request, 'query.userName');
+  const originalIssuer = get(request, 'event.issuer');
+  const eventId = get(request, 'event.id');
+
+  if (issuer !== originalIssuer) {
+    throw Boom.unauthorized('Return upload permission denied', { eventId, issuer, originalIssuer });
   }
   return h.continue;
 };

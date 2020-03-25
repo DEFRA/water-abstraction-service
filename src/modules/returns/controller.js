@@ -1,15 +1,13 @@
 const Boom = require('@hapi/boom');
-const { find, first, get } = require('lodash');
+const { find, first, get, set } = require('lodash');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 
 const { persistReturnData, patchReturnData } = require('./lib/api-connector');
 const { mapReturnToModel } = require('./lib/model-returns-mapper');
 const { getReturnData } = require('./lib/facade');
-const { eventFactory } = require('./lib/event-factory');
-const { repository: eventRepository } = require('../../controllers/events');
+const eventFactory = require('./lib/event-factory');
+const eventsService = require('../../lib/services/events');
 const s3 = require('../../lib/connectors/s3');
-const event = require('../../lib/event');
-const newEvtRepo = require('../../lib/connectors/repos/events.js');
 const { uploadStatus, getUploadFilename } = require('./lib/returns-upload');
 const { logger } = require('../../logger');
 const startUploadJob = require('./lib/jobs/start-upload');
@@ -40,8 +38,8 @@ const postReturn = async (request, h) => {
   const returnServiceData = await persistReturnData(ret);
 
   // Log event in water service event log
-  const event = eventFactory(ret, returnServiceData.version);
-  await eventRepository.create(event);
+  const event = eventFactory.createSubmissionEvent(ret, returnServiceData.version);
+  await eventsService.update(event);
 
   return {
     error: null
@@ -64,8 +62,9 @@ const patchReturnHeader = async (request, h) => {
     ...request.payload,
     licenceNumber: data.licence_ref
   };
-  const event = eventFactory(eventData, null, 'return.status');
-  await eventRepository.create(event);
+
+  const event = eventFactory.createSubmissionEvent(eventData, null, 'return.status');
+  await eventsService.update(event);
 
   return {
     returnId: data.return_id,
@@ -75,50 +74,35 @@ const patchReturnHeader = async (request, h) => {
   };
 };
 
-/**
- * Creates the event object that represent the upload
- * of a bulk returns document.
- * @param uploadUserName The username of end user.
- * @returns {Object}
- */
-const createBulkUploadEvent = (uploadUserName, subtype = 'csv') => {
-  return event.create({
-    type: 'returns-upload',
-    subtype,
-    issuer: uploadUserName,
-    status: uploadStatus.PROCESSING
-  });
-};
-
 const getEventStatusLink = eventId => `/water/1.0/event/${eventId}`;
 
 const postUpload = async (request, h) => {
   const { type } = request.params;
-  const evt = createBulkUploadEvent(request.payload.userName, type);
-  let eventModel;
+
+  let event = eventFactory.createBulkUploadEvent(request.payload.userName, type);
 
   try {
-    const { rows } = await event.save(evt);
-    eventModel = rows[0];
-    const filename = getUploadFilename(eventModel.eventId, type);
+    event = await eventsService.create(event);
+
+    const filename = getUploadFilename(event.id, type);
     const data = await s3.upload(filename, request.payload.fileData);
-    const jobId = await startUploadJob.publish(eventModel.eventId);
+    const jobId = await startUploadJob.publish(event.id);
 
     return h.response({
       data: {
-        eventId: eventModel.eventId,
+        eventId: event.id,
         filename,
         location: data.Location,
-        statusLink: getEventStatusLink(eventModel.eventId),
+        statusLink: getEventStatusLink(event.id),
         jobId
       },
       error: null
     }).code(202);
   } catch (error) {
     logger.error('Failed to upload bulk returns', error);
-    if (eventModel.eventId) {
-      eventModel.status = uploadStatus.ERROR;
-      await event.save(eventModel);
+    if (event.id) {
+      event.status = uploadStatus.ERROR;
+      await eventsService.update(event);
     }
 
     return h.response({ data: null, error }).code(500);
@@ -192,21 +176,21 @@ const getUploadPreviewReturn = async (request, h) => {
 
 /**
  * Update event to submitting status
- * @param  {Object} evt  - the event object
+ * @param  {Event} event  - the event object
  * @param  {Array} data - array of return objects
- * @return {Object}
+ * @return {Event}
  */
-const applySubmitting = (data) => {
-  return {
-    metadata: {
-      returns: data.map(ret => ({
-        returnId: ret.returnId,
-        submitted: false,
-        error: null
-      }))
-    },
-    status: uploadStatus.SUBMITTING
-  };
+const applySubmitting = (event, data) => {
+  const returns = data.map(ret => ({
+    returnId: ret.returnId,
+    submitted: false,
+    error: null
+  }));
+
+  set(event, 'metadata.returns', returns);
+  event.status = uploadStatus.SUBMITTING;
+
+  return event;
 };
 
 const isValidReturn = ret => ret.errors.length === 0;
@@ -232,7 +216,7 @@ const postUploadSubmit = async (request, h) => {
 
   try {
     // Check event status is 'validated'
-    if (!isValidatedEvent(request.evt)) {
+    if (!isValidatedEvent(request.event)) {
       throw Boom.badRequest('Event status not \'validated\'');
     }
 
@@ -247,9 +231,9 @@ const postUploadSubmit = async (request, h) => {
     }
 
     // Update event
-    await newEvtRepo.update(request.evt, applySubmitting(valid));
+    eventsService.update(applySubmitting(request.event, valid));
 
-    await persistReturnsJob.publish(get(request, 'evt.eventId'));
+    await persistReturnsJob.publish(get(request, 'event.id'));
 
     return { data, error: null };
   } catch (error) {

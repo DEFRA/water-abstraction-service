@@ -1,8 +1,5 @@
 const uuidv4 = require('uuid/v4');
-const moment = require('moment');
-const { first, last } = require('lodash');
-
-const helpers = require('@envage/water-abstraction-helpers');
+const { first } = require('lodash');
 
 const { MESSAGE_STATUS_DRAFT } = require('../../../lib/message-statuses');
 const notifyHelpers = require('../../../lib/notify-helpers');
@@ -11,7 +8,7 @@ const {
   CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_RETURNS_AGENT,
   CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO
 } = require('../../../../../lib/models/contact');
-const BI_TEMPLATES = ['control', 'suasion', 'social_norm', 'formal'];
+const BI_TEMPLATES = ['control', 'moral_suasion', 'social_norm', 'formality'];
 const events = require('../../../../../lib/services/events');
 
 /**
@@ -20,14 +17,13 @@ const events = require('../../../../../lib/services/events');
  * @param  {String} refDate - used for unit testing, sets todays date
  * @return {Object}         - start, end and due dates of return cycle
  */
-const getReturnPersonalisation = refDate => {
-  const cycles = helpers.returns.date.createReturnCycles(undefined, refDate);
-  const { startDate, endDate } = last(cycles);
-  const returnDueDate = moment(endDate).add(28, 'day').format('YYYY-MM-DD');
+const getReturnPersonalisation = evt => {
+  const { startDate, endDate, dueDate } = evt.metadata.returnCycle;
+
   return {
     periodStartDate: readableDate(startDate),
     periodEndDate: readableDate(endDate),
-    returnDueDate: readableDate(returnDueDate)
+    returnDueDate: readableDate(dueDate)
   };
 };
 
@@ -42,7 +38,7 @@ const getReturnPersonalisation = refDate => {
  */
 const createNotification = (ev, contact, context) => ({
   id: uuidv4(),
-  event_id: ev.eventId,
+  event_id: ev.id,
   licences: context.licenceNumbers,
   metadata: {
     returnIds: context.returnIds
@@ -65,7 +61,7 @@ const createEmail = (ev, contact, context, messageRef) => ({
   message_type: 'email',
   message_ref: messageRef,
   recipient: contact.email,
-  personalisation: getReturnPersonalisation()
+  personalisation: getReturnPersonalisation(ev)
 });
 
 /**
@@ -84,7 +80,7 @@ const createLetter = (ev, contact, context, messageRef) => ({
   message_ref: messageRef,
   recipient: 'n/a',
   personalisation: {
-    ...getReturnPersonalisation(),
+    ...getReturnPersonalisation(ev),
     name: contact.getFullName(),
     ...notifyHelpers.mapContactAddress(contact)
   }
@@ -101,10 +97,18 @@ const getRelevantRowData = (rows, reminderRef) => {
   return first(rows.filter(row => row.message_ref.includes(contactAndMessageType)));
 };
 
-const getTemplateSuffix = messageRef => {
+const reminderSuffixMap = {
+  moral_suasion: 'active_choice',
+  social_norm: 'loss_aversion',
+  formality: 'enforcement_action'
+};
+
+const getReminderSuffix = invitationSuffix => reminderSuffixMap[invitationSuffix] || 'control';
+
+const getInvitationSuffix = messageRef => {
   const suffixIndex = (messageRef.indexOf('letter') > 0)
-    ? messageRef.indexOf('letter') + 6
-    : messageRef.indexOf('email') + 5;
+    ? messageRef.indexOf('letter') + 7
+    : messageRef.indexOf('email') + 6;
   return messageRef.substring(suffixIndex);
 };
 
@@ -113,8 +117,8 @@ const getRelevantTemplate = async (context, reminderRef) => {
   const data = rowCount > 1 ? getRelevantRowData(rows, reminderRef) : rows[0];
   if (rowCount === 0 || !data) return `${reminderRef}_control`;
 
-  const suffix = getTemplateSuffix(data.message_ref);
-  return `${reminderRef}${suffix}`;
+  const suffix = getInvitationSuffix(data.message_ref);
+  return `${reminderRef}_${getReminderSuffix(suffix)}`;
 };
 
 const emailTemplate = template => ({ method: createEmail, messageRef: template });
@@ -162,4 +166,5 @@ const createNotificationData = async (ev, contact, context) => {
 exports.BI_TEMPLATES = BI_TEMPLATES;
 
 exports._getReturnPersonalisation = getReturnPersonalisation;
+exports._reminderSuffixMap = reminderSuffixMap;
 exports.createNotificationData = createNotificationData;

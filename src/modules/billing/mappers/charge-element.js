@@ -4,6 +4,8 @@ const ChargeElement = require('../../../lib/models/charge-element');
 const abstractionPeriod = require('./abstraction-period');
 const camelCaseKeys = require('../../../lib/camel-case-keys');
 
+const purpose = require('./purpose');
+
 /**
  * Creates a ChargeElement instance given a row of charge element data
  * @param {Object} chargeElementRow - charge element row from the charge processor
@@ -18,8 +20,12 @@ const chargeToModel = chargeElementRow => {
     loss: chargeElementRow.loss,
     abstractionPeriod: abstractionPeriod.chargeToModel(chargeElementRow),
     authorisedAnnualQuantity: chargeElementRow.authorisedAnnualQuantity,
-    billableAnnualQuantity: chargeElementRow.billableAnnualQuantity
+    billableAnnualQuantity: chargeElementRow.billableAnnualQuantity,
+    description: chargeElementRow.description
   });
+  if (chargeElementRow.purposeUse) {
+    element.purposeUse = purpose.dbToModelUse(chargeElementRow.purposeUse);
+  }
   return element;
 };
 

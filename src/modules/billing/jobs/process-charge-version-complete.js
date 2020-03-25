@@ -1,25 +1,30 @@
-const repo = require('../../../lib/connectors/repository');
-
-const processChargeVersion = require('./process-charge-version');
 const prepareTransactionsJob = require('./prepare-transactions');
 const { logger } = require('../../../logger');
+const batchJob = require('./lib/batch-job');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+
+const chargeVersionYearService = require('../services/charge-version-year');
 
 const handleProcessChargeVersionComplete = async (job, messageQueue) => {
-  logger.info(`onComplete - ${processChargeVersion.jobName}`);
+  batchJob.logOnComplete(job);
+
+  if (batchJob.hasJobFailed(job)) {
+    return batchJob.failBatch(job, messageQueue, BATCH_ERROR_CODE.failedToProcessChargeVersions);
+  }
 
   const { eventId } = job.data.request.data;
   const { chargeVersionYear, batch } = job.data.response;
   const batchId = chargeVersionYear.billing_batch_id;
 
-  const { rowCount } = await repo.billingBatchChargeVersionYears.findProcessingByBatch(batchId);
+  const { processing } = await chargeVersionYearService.getStatusCounts(batchId);
 
-  if (rowCount === 0) {
+  if (processing === 0) {
     logger.info(`No more charge version year entries to process for batch: ${batchId}`);
     const message = prepareTransactionsJob.createMessage(eventId, batch);
     return messageQueue.publish(message);
   }
 
-  logger.info(`${rowCount} items yet to be processed for batch ${batchId}`);
+  logger.info(`${processing} items yet to be processed for batch ${batchId}`);
 };
 
 module.exports = handleProcessChargeVersionComplete;

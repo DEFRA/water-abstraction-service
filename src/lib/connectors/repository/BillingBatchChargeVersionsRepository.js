@@ -1,7 +1,7 @@
 const Repository = require('@envage/hapi-pg-rest-api/src/repository');
 const db = require('../db');
 
-class BillingBatchChargeVersionYearsRepository extends Repository {
+class BillingBatchChargeVersionsRepository extends Repository {
   constructor (config = {}) {
     super(Object.assign({
       connection: db.pool,
@@ -17,4 +17,4 @@ class BillingBatchChargeVersionYearsRepository extends Repository {
   }
 }
 
-module.exports = BillingBatchChargeVersionYearsRepository;
+module.exports = BillingBatchChargeVersionsRepository;

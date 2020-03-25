@@ -7,9 +7,9 @@ const {
 const Joi = require('@hapi/joi');
 
 const [invitationConfig, reminderConfig] =
-  require('../../../../../../src/modules/batch-notifications/config/returns/index');
+  require('../../../../../src/modules/batch-notifications/config/returns/index');
 const { getRecipients } =
-  require('../../../../../../src/modules/batch-notifications/config/returns/lib/get-recipients');
+  require('../../../../../src/modules/batch-notifications/config/returns/lib/get-recipients');
 
 experiment('returns notifications config', () => {
   experiment('return invitation config', () => {

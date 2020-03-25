@@ -1,71 +1,16 @@
 'use strict';
 
-const { first } = require('lodash');
-
-const repos = require('../../../lib/connectors/repository');
-const newRepos = require('../../../lib/connectors/repos');
+const { find, flatMap, get } = require('lodash');
+const repos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
+const { logger } = require('../../../logger');
 
 // Connectors
 const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
 
 // Services
-const transactionsService = require('./transactions-service');
 const invoiceAccountsService = require('./invoice-accounts-service');
-
-// Models
-const Invoice = require('../../../lib/models/invoice');
-const InvoiceAccount = require('../../../lib/models/invoice-account');
-const InvoiceLicence = require('../../../lib/models/invoice-licence');
-const Licence = require('../../../lib/models/licence');
-const Address = require('../../../lib/models/address');
-const Company = require('../../../lib/models/company');
-const Contact = require('../../../lib/models/contact-v2');
-const Transaction = require('../../../lib/models/transaction');
-
-const mapRowToModels = row => {
-  const invoice = new Invoice(row['billing_invoices.billing_invoice_id']);
-  invoice.dateCreated = row['billing_invoices.date_created'];
-  invoice.invoiceAccount = new InvoiceAccount();
-  invoice.invoiceAccount.id = row['billing_invoices.invoice_account_id'];
-  invoice.invoiceAccount.accountNumber = row['billing_invoices.invoice_account_number'];
-
-  const invoiceLicence = new InvoiceLicence();
-  invoiceLicence.id = row['billing_invoice_licences.billing_invoice_licence_id'];
-  invoiceLicence.address = new Address(row['billing_invoice_licences.address_id']);
-  invoiceLicence.company = new Company(row['billing_invoice_licences.company_id']);
-  invoiceLicence.contact = new Contact(row['billing_invoice_licences.contact_id']);
-  invoiceLicence.licence = new Licence();
-  invoiceLicence.licence.id = row['billing_invoice_licences.licence_id'];
-  invoiceLicence.licence.licenceNumber = row['billing_invoice_licences.licence_ref'];
-
-  return { invoice, invoiceLicence };
-};
-
-/**
- * Applies any matching transactions to the invoices
- *
- * @param {Array<Invoice>} invoices THe invoices that are to have any mathcing transactions applied
- * @param {Array<ChargeModuleTransaction>} chargeModuleTransactions The transactions from the charge module api
- */
-const decorateInvoicesWithTransactions = (invoices, chargeModuleTransactions) => {
-  return invoices.map(invoice => {
-    invoice.invoiceLicences = invoice.invoiceLicences.map(invoiceLicence => {
-      const chargeModuleTransaction = chargeModuleTransactions.find(tx => {
-        return tx.licenceNumber === invoiceLicence.licence.licenceNumber &&
-        tx.accountNumber === invoice.invoiceAccount.accountNumber;
-      });
-
-      if (chargeModuleTransaction) {
-        const transaction = Transaction.fromChargeModuleTransaction(chargeModuleTransaction);
-        invoiceLicence.transactions = [...invoiceLicence.transactions, transaction];
-      }
-      return invoiceLicence;
-    });
-    return invoice;
-  });
-};
 
 /**
  * Adds the Company object to the InvoiceAccount objects in the Invoice.
@@ -79,43 +24,13 @@ const decorateInvoicesWithCompanies = async invoices => {
   return invoices.map(invoice => {
     const invoiceAccount = invoiceAccounts.find(ia => ia.id === invoice.invoiceAccount.id);
 
-    if (invoiceAccount && invoiceAccount.company) {
-      invoice.invoiceAccount.company = invoiceAccount.company;
+    // Replace with CRM invoice account
+    if (invoiceAccount) {
+      invoice.invoiceAccount = invoiceAccount;
     }
+
     return invoice;
   });
-};
-
-/**
- *  Adds contacts and transactions to the Invoice objects
- *
- * @param {Array<Invoice>} invoices A list of invoices that are to be decorated
- * @param {Array<Transaction>} transactions A list of transactions to apply to the invoices
- */
-const decorateInvoices = async (invoices, transactions) => {
-  return decorateInvoicesWithTransactions(
-    await decorateInvoicesWithCompanies(invoices),
-    transactions
-  );
-};
-
-const createInvoiceModelsFromBatchInvoiceRows = batchInvoiceRows => {
-  const invoicesHash = batchInvoiceRows.reduce((acc, row) => {
-    const invoiceId = row['billing_invoices.billing_invoice_id'];
-    const rowModels = mapRowToModels(row);
-
-    if (!acc[invoiceId]) {
-      acc[invoiceId] = rowModels.invoice;
-    }
-
-    const invoice = acc[invoiceId];
-    const { invoiceLicence } = rowModels;
-    invoice.invoiceLicences = [...invoice.invoiceLicences, invoiceLicence];
-
-    return acc;
-  }, {});
-
-  return Object.values(invoicesHash);
 };
 
 /**
@@ -125,16 +40,30 @@ const createInvoiceModelsFromBatchInvoiceRows = batchInvoiceRows => {
  *
  * @param {String} batchId UUID of the batch to find invoices for
  * @param {String} invoiceId UUID of the invoice
+ * @return {Promise<Invoice>}
  */
 const getInvoiceForBatch = async (batchId, invoiceId) => {
-  const batchInvoiceRows = await repos.billingInvoices.findByBatchId(batchId);
-  const invoiceRows = batchInvoiceRows.filter(invoice => invoice['billing_invoices.billing_invoice_id'] === invoiceId);
-
-  if (invoiceRows.length > 0) {
-    const [invoice] = createInvoiceModelsFromBatchInvoiceRows(invoiceRows);
-    const chargeModuleTransactions = await transactionsService.getTransactionsForBatchInvoice(batchId, invoice.invoiceAccount.accountNumber);
-    return first(await decorateInvoices([invoice], chargeModuleTransactions));
+  // Get object graph of invoice and related data
+  const data = await repos.billingInvoices.findOne(invoiceId);
+  if (!data || data.billingBatch.billingBatchId !== batchId) {
+    return null;
   }
+  // Map to Invoice service model
+  const invoice = mappers.invoice.dbToModel(data);
+
+  // Get CRM company and Charge Module summary data
+  const accountNumber = get(invoice, 'invoiceAccount.accountNumber');
+  const regionId = get(data, 'billingBatch.region.chargeRegionId');
+  const [, chargeModuleSummary] = await Promise.all([
+    decorateInvoicesWithCompanies([invoice]),
+    chargeModuleBatchConnector.send(regionId, batchId, true, accountNumber)
+  ]);
+
+  // Use Charge Module data to populate totals and transaction values
+  invoice.totals = mappers.totals.chargeModuleBillRunToBatchModel(chargeModuleSummary.summary);
+  decorateInvoiceTransactionValues(invoice, chargeModuleSummary);
+
+  return invoice;
 };
 
 /**
@@ -145,7 +74,7 @@ const getInvoiceForBatch = async (batchId, invoiceId) => {
  */
 const saveInvoiceToDB = async (batch, invoice) => {
   const data = mappers.invoice.modelToDb(batch, invoice);
-  return newRepos.billingInvoices.upsert(data);
+  return repos.billingInvoices.upsert(data);
 };
 
 /**
@@ -160,10 +89,46 @@ const decorateInvoiceWithTotals = (invoice, chargeModuleBillRun) => {
   invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(chargeModuleBillRun, accountNumber);
 };
 
-const mapInvoice = row => {
-  const invoice = mappers.invoice.dbToModel(row);
-  invoice.invoiceLicences = row.billingInvoiceLicences.map(mappers.invoiceLicence.dbToModel);
-  return invoice;
+/**
+ * Returns key/value pairs where key is Charge Module transaction ID
+ * and value is transaction value
+ * @param {Object} chargeModuleBillRun
+ * @param {String} customerReference
+ */
+const indexChargeModuleTransactions = (chargeModuleBillRun, customerReference) => {
+  // Find customer in bill run
+  const customer = find(chargeModuleBillRun.customers, { customerReference });
+  // Generate flat array of transactions for customer
+  const transactions = flatMap(customer.summaryByFinancialYear.map(row => row.transactions));
+
+  // Return key/value pairs
+  return transactions.reduce(
+    (map, row) => map.set(row.id, row.chargeValue),
+    new Map()
+  );
+};
+
+/**
+ * Get all transactions in invoice as flat list
+ * @param {Invoice} invoice
+ * @return {Array<Transaction>}
+ */
+const getInvoiceTransactions = invoice =>
+  flatMap(invoice.invoiceLicences.map(invoiceLicence => invoiceLicence.transactions));
+
+/**
+ * Sets the transaction values on an invoice
+ * @param {Invoice} invoice
+ * @param {Object} chargeModuleBillRun
+ */
+const decorateInvoiceTransactionValues = (invoice, chargeModuleBillRun) => {
+  const { accountNumber } = invoice.invoiceAccount;
+
+  const map = indexChargeModuleTransactions(chargeModuleBillRun, accountNumber);
+
+  getInvoiceTransactions(invoice).forEach(transaction => {
+    transaction.value = map.get(transaction.externalId);
+  });
 };
 
 /**
@@ -175,20 +140,44 @@ const mapInvoice = row => {
  */
 const getInvoicesForBatch = async batchId => {
   // Load Batch instance from repo with invoices
-  const data = await newRepos.billingBatches.findOneWithInvoices(batchId);
-
-  // Load Charge Module summary data
-  const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
+  const data = await repos.billingBatches.findOneWithInvoices(batchId);
 
   // Map data to Invoice models
-  const invoices = data.billingInvoices.map(mapInvoice);
+  const invoices = data.billingInvoices.map(mappers.invoice.dbToModel);
 
-  // Decorate with Charge Module summary data and CRM company data
-  invoices.forEach(invoice => decorateInvoiceWithTotals(invoice, chargeModuleSummary));
+  try {
+    // Load Charge Module summary data
+    const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
+    // Decorate with Charge Module summary data and CRM company data
+    invoices.forEach(invoice => decorateInvoiceWithTotals(invoice, chargeModuleSummary));
+  } catch (err) {
+    logger.info('CM error', err);
+  }
+
+  await decorateInvoicesWithCompanies(invoices);
+  return invoices;
+};
+
+const getInvoicesTransactionsForBatch = async batchId => {
+  // Load Batch instance from repo with invoices
+  const data = await repos.billingBatches.findOneWithInvoicesWithTransactions(batchId);
+
+  // Map data to Invoice models
+  const invoices = data.billingInvoices.map(mappers.invoice.dbToModel);
+  try {
+    // Load Charge Module summary data
+    const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
+    invoices.forEach(invoice => decorateInvoiceTransactionValues(invoice, chargeModuleSummary));
+  } catch (err) {
+    logger.info('CM error', err);
+  }
+
+  // Add CRM company data
   await decorateInvoicesWithCompanies(invoices);
   return invoices;
 };
 
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
+exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;

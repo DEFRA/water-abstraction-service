@@ -2,10 +2,9 @@ const parse = require('csv-parse');
 const util = require('util');
 const parseCsv = util.promisify(parse);
 const { isEmpty, flatten, compact, isString, times } = require('lodash');
-const moment = require('moment');
 
 const { returnIDRegex, parseReturnId } = require('../../../../lib/returns');
-const { GDS_MONTH_FORMATS } = require('./mapper');
+const dateParser = require('./date-parser');
 
 const lineErrorRegex = /line (\d*)$/;
 const validAbstractionVolumeRegex = /(^Do not edit$)|(^-?\d[\d.,]*$)|(^\s*$)/;
@@ -28,16 +27,19 @@ const errorMessages = {
 /**
  * Takes a column of CSV data and maps to an object to represent
  * a single licence return item.
+ *
+ * Ignore the data on rows 3 and 4 which is purely presentational
+ * data for the site description and purpose.
  */
 const createLicenceReturn = column => ({
   licenceNumber: { line: 1, value: column[0] },
   returnReference: { line: 2, value: column[1] },
-  isNilReturn: { line: 3, value: column[2] },
-  meterUsed: { line: 4, value: column[3] },
-  meterMake: { line: 5, value: column[4] },
-  meterSerialNumber: { line: 6, value: column[5] },
-  abstractionVolumes: column.slice(6, column.length - 1).map((value, index) => ({
-    line: 7 + index,
+  isNilReturn: { line: 5, value: column[4] },
+  meterUsed: { line: 6, value: column[5] },
+  meterMake: { line: 7, value: column[6] },
+  meterSerialNumber: { line: 8, value: column[7] },
+  abstractionVolumes: column.slice(8, column.length - 1).map((value, index) => ({
+    line: 9 + index,
     value
   })),
   returnId: { line: column.length, value: column.reverse()[0] }
@@ -62,11 +64,6 @@ const getHeadingExpectation = expectation => ({
   errorMessage: `${expectation} field not in expected position`
 });
 
-const validateDate = val => {
-  const dateString = val.startsWith('Week ending') ? val.substring(12) : val;
-  return moment(dateString, GDS_MONTH_FORMATS, true).isValid();
-};
-
 /**
  * Gets an array of validations to perform where each validator
  * sits at the same index of the target array.
@@ -75,15 +72,17 @@ const getHeadingValidation = column => {
   const validators = [
     getHeadingExpectation('Licence number'),
     getHeadingExpectation('Return reference'),
+    getHeadingExpectation('Site description'),
+    getHeadingExpectation('Purpose'),
     getHeadingExpectation('Nil return Y/N'),
     getHeadingExpectation('Did you use a meter Y/N'),
     getHeadingExpectation('Meter make'),
     getHeadingExpectation('Meter serial number')
   ];
 
-  times(column.length - 7, () => {
+  times(column.length - 9, () => {
     validators.push({
-      expectation: val => validateDate(val),
+      expectation: val => dateParser.validate(val),
       errorMessage: 'Unexpected date format for return line'
     });
   });

@@ -1,7 +1,7 @@
 const { get } = require('lodash');
 const batchNotifications = require('../batch-notifications');
 const { logger } = require('../../../../logger');
-const eventHelpers = require('../event-helpers');
+const eventsService = require('../../../../lib/services/events');
 const { EVENT_STATUS_ERROR } = require('../event-statuses');
 const { createJobPublisher } = require('../batch-notifications');
 
@@ -23,7 +23,7 @@ const handleGetRecipients = async job => {
     await data.config.getRecipients(data);
   } catch (err) {
     logger.error('Batch notifications handleGetRecipients error:', err, { eventId });
-    return eventHelpers.updateEventStatus(eventId, EVENT_STATUS_ERROR);
+    return eventsService.updateStatus(eventId, EVENT_STATUS_ERROR);
   }
 };
 

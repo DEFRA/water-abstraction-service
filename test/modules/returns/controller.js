@@ -11,8 +11,10 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const controller = require('../../../src/modules/returns/controller');
-const eventRepo = require('../../../src/lib/connectors/repos/events');
-const newEvtRepo = require('../../../src/lib/connectors/repos/events.js');
+
+const eventsService = require('../../../src/lib/services/events');
+const Event = require('../../../src/lib/models/event');
+
 const s3 = require('../../../src/lib/connectors/s3');
 const startUploadJob = require('../../../src/modules/returns/lib/jobs/start-upload');
 const persistReturnsJob = require('../../../src/modules/returns/lib/jobs/persist-returns');
@@ -23,13 +25,16 @@ const { uploadStatus } = require('../../../src/modules/returns/lib/returns-uploa
 
 const UUIDV4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i);
 
+const eventId = 'f6378a83-015b-4afd-8de1-d7eb2ce8e032';
+
 experiment('postUpload', () => {
   let request;
   let h;
 
   beforeEach(async () => {
-    sandbox.stub(eventRepo, 'update').resolves({});
-    sandbox.stub(eventRepo, 'create').returns({ eventId: 'f6378a83-015b-4afd-8de1-d7eb2ce8e032' });
+    const event = new Event(eventId);
+    sandbox.stub(eventsService, 'update').resolves(event);
+    sandbox.stub(eventsService, 'create').resolves(event);
 
     sandbox.stub(s3, 'upload').resolves({
       Location: 'test-s3-location',
@@ -60,11 +65,11 @@ experiment('postUpload', () => {
 
   test('an event is saved with the expected values', async () => {
     await controller.postUpload(request, h);
-    const [eventValues] = eventRepo.create.firstCall.args;
-    expect(eventValues.type).to.equal('returns-upload');
-    expect(eventValues.subtype).to.equal('xml');
-    expect(eventValues.issuer).to.equal('test-user');
-    expect(eventValues.status).to.equal('processing');
+    const [eventModel] = eventsService.create.firstCall.args;
+    expect(eventModel.type).to.equal('returns-upload');
+    expect(eventModel.subtype).to.equal('xml');
+    expect(eventModel.issuer).to.equal('test-user');
+    expect(eventModel.status).to.equal('processing');
   });
 
   test('file data is uploaded to S3', async () => {
@@ -109,8 +114,8 @@ const requestFactory = (returnId) => {
     query: {
       companyId: '2dc953ff-c80e-4a1c-8f59-65c641bdbe45'
     },
-    evt: {
-      eventId: 'bb69e563-1a0c-4661-8e33-51ddf737740d',
+    event: {
+      id: 'bb69e563-1a0c-4661-8e33-51ddf737740d',
       status: 'validated'
     },
     jsonData: [{
@@ -273,8 +278,8 @@ experiment('postUploadSubmit', () => {
   let h;
 
   beforeEach(async () => {
+    sandbox.stub(eventsService, 'update');
     sandbox.stub(logger, 'error');
-    sandbox.stub(newEvtRepo, 'update');
     h = {
       response: sinon.stub().returns({
         code: sinon.spy()
@@ -297,7 +302,7 @@ experiment('postUploadSubmit', () => {
 
   test('it should throw a bad request error if the event is the wrong status', async () => {
     const request = requestFactory();
-    request.evt.status = 'submitted';
+    request.event.status = 'submitted';
 
     try {
       await controller.postUploadSubmit(request, h);
@@ -332,9 +337,9 @@ experiment('postUploadSubmit', () => {
     test('it should update the event status to "submitted"', async () => {
       const request = requestFactory();
       await controller.postUploadSubmit(request, h);
-      const [event, changes] = newEvtRepo.update.lastCall.args;
-      expect(event.eventId).to.equal(request.params.eventId);
-      expect(changes.status).to.equal(uploadStatus.SUBMITTING);
+      const [event] = eventsService.update.lastCall.args;
+      expect(event.id).to.equal(request.params.eventId);
+      expect(event.status).to.equal(uploadStatus.SUBMITTING);
     });
   });
 });

@@ -134,6 +134,11 @@ experiment('lib/models/batch', () => {
       expect(batch.status).to.equal('error');
     });
 
+    test('can be set to "empty"', async () => {
+      batch.status = 'empty';
+      expect(batch.status).to.equal('empty');
+    });
+
     test('cannot be set to an invalid status', async () => {
       const func = () => {
         batch.status = 'pondering';
@@ -444,6 +449,150 @@ experiment('lib/models/batch', () => {
       const batch = new Batch();
       const func = () => { batch.externalId = null; };
       expect(func).to.throw();
+    });
+  });
+
+  experiment('.errorCode', () => {
+    Object.values(Batch.BATCH_ERROR_CODE).forEach(code => {
+      test(`can be set to ${code}`, async () => {
+        const batch = new Batch();
+        batch.errorCode = code;
+
+        expect(batch.errorCode).to.equal(code);
+      });
+    });
+
+    test('can be null', async () => {
+      const batch = new Batch();
+      batch.errorCode = null;
+      expect(batch.errorCode).to.equal(null);
+    });
+    test('cannot be other values', async () => {
+      expect(() => {
+        const batch = new Batch();
+        batch.errorCode = -1;
+      }).to.throw();
+    });
+  });
+
+  experiment('.statusIsOneOf', () => {
+    test('returns false if status not set', async () => {
+      const batch = new Batch();
+      expect(batch.statusIsOneOf(Batch.BATCH_STATUS.processing)).to.equal(false);
+    });
+
+    test('returns false if no statuses are passed', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.error;
+      expect(batch.statusIsOneOf()).to.equal(false);
+    });
+
+    test('returns false if the batch status is not in the list', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.sent;
+
+      expect(batch.statusIsOneOf(
+        Batch.BATCH_STATUS.processing,
+        Batch.BATCH_STATUS.ready,
+        Batch.BATCH_STATUS.review
+      )).to.equal(false);
+    });
+
+    test('returns true if the batch status is in the list', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.ready;
+
+      expect(batch.statusIsOneOf(
+        Batch.BATCH_STATUS.processing,
+        Batch.BATCH_STATUS.ready,
+        Batch.BATCH_STATUS.review
+      )).to.equal(true);
+    });
+  });
+
+  experiment('.canBeDeleted', () => {
+    test('returns false if the batch has no status', async () => {
+      const batch = new Batch();
+      expect(batch.canBeDeleted()).to.equal(false);
+    });
+
+    test('returns false if the batch status is processing', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.processing;
+      expect(batch.canBeDeleted()).to.equal(false);
+    });
+
+    test('returns false if the batch status is sent', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.sent;
+      expect(batch.canBeDeleted()).to.equal(false);
+    });
+
+    test('returns true if the batch status is error', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.error;
+      expect(batch.canBeDeleted()).to.equal(true);
+    });
+
+    test('returns true if the batch status is ready', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.ready;
+      expect(batch.canBeDeleted()).to.equal(true);
+    });
+
+    test('returns true if the batch status is review', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.review;
+      expect(batch.canBeDeleted()).to.equal(true);
+    });
+
+    test('returns true if the batch status is empty', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.empty;
+      expect(batch.canBeDeleted()).to.equal(true);
+    });
+  });
+
+  experiment('.canDeleteAccounts', () => {
+    test('returns false if the batch has no status', async () => {
+      const batch = new Batch();
+      expect(batch.canDeleteAccounts()).to.equal(false);
+    });
+
+    test('returns false if the batch status is error', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.error;
+      expect(batch.canDeleteAccounts()).to.equal(false);
+    });
+
+    test('returns false if the batch status is processing', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.processing;
+      expect(batch.canDeleteAccounts()).to.equal(false);
+    });
+
+    test('returns false if the batch status is empty', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.empty;
+      expect(batch.canDeleteAccounts()).to.equal(false);
+    });
+
+    test('returns false if the batch status is sent', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.sent;
+      expect(batch.canDeleteAccounts()).to.equal(false);
+    });
+
+    test('returns true if the batch status is ready', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.ready;
+      expect(batch.canDeleteAccounts()).to.equal(true);
+    });
+
+    test('returns true if the batch status is review', async () => {
+      const batch = new Batch();
+      batch.status = Batch.BATCH_STATUS.review;
+      expect(batch.canDeleteAccounts()).to.equal(true);
     });
   });
 });

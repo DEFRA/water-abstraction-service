@@ -7,28 +7,34 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const sandbox = require('sinon').createSandbox();
 
-const { logger } = require('../../../../../../../src/logger');
-const Contact = require('../../../../../../../src/lib/models/contact');
+const { logger } = require('../../../../../../src/logger');
+const Contact = require('../../../../../../src/lib/models/contact');
 const notificationContacts =
-  require('../../../../../../../src/modules/batch-notifications/config/returns/lib/return-notification-contacts');
+  require('../../../../../../src/modules/batch-notifications/config/returns/lib/return-notification-contacts');
 const notificationRecipients =
-  require('../../../../../../../src/modules/batch-notifications/config/returns/lib/return-notification-recipients');
+  require('../../../../../../src/modules/batch-notifications/config/returns/lib/return-notification-recipients');
 const { getRecipients } =
-  require('../../../../../../../src/modules/batch-notifications/config/returns/lib/get-recipients');
+  require('../../../../../../src/modules/batch-notifications/config/returns/lib/get-recipients');
 const scheduledNotifications =
-  require('../../../../../../../src/controllers/notifications');
+  require('../../../../../../src/controllers/notifications');
 const eventHelpers =
-  require('../../../../../../../src/modules/batch-notifications/lib/event-helpers');
+  require('../../../../../../src/modules/batch-notifications/lib/event-helpers');
 
 experiment('getRecipients', () => {
   const jobData = {
     ev: {
-      eventId: 'event_1',
+      id: 'event_1',
       subtype: 'returnInvitation',
       metadata: {
         name: 'Returns: invitation',
         options: {
           excludeLicences: ['01/123']
+        },
+        returnCycle: {
+          startDate: '2019-04-01',
+          endDate: '2020-03-31',
+          dueDate: '2020-04-28',
+          isSummer: false
         }
       }
     }

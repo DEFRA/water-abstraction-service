@@ -8,11 +8,30 @@ const {
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const uuid = require('uuid/v4');
 
-const createNotificationData = require('../../../../../../../src/modules/batch-notifications/config/returns/lib/create-notification-data');
-const Contact = require('../../../../../../../src/lib/models/contact');
-const { MESSAGE_STATUS_DRAFT } = require('../../../../../../../src/modules/batch-notifications/lib/message-statuses');
-const events = require('../../../../../../../src/lib/services/events');
+const createNotificationData = require('../../../../../../src/modules/batch-notifications/config/returns/lib/create-notification-data');
+const Contact = require('../../../../../../src/lib/models/contact');
+const { MESSAGE_STATUS_DRAFT } = require('../../../../../../src/modules/batch-notifications/lib/message-statuses');
+const events = require('../../../../../../src/lib/services/events');
+const Event = require('../../../../../../src/lib/models/event');
+
+const eventId = uuid();
+
+const createEvent = () => {
+  const event = new Event(eventId);
+  return event.fromHash({
+    subtype: 'returnInvitation',
+    metadata: {
+      returnCycle: {
+        startDate: '2018-04-01',
+        endDate: '2019-03-31',
+        dueDate: '2019-04-28',
+        isSummer: false
+      }
+    }
+  });
+};
 
 experiment('modules/batch-notifications/config/return-invitation/create-notification-data', () => {
   beforeEach(async () => {
@@ -25,7 +44,8 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
 
   experiment('_getReturnPersonalisation', () => {
     test('gets return cycle personalisation fields', async () => {
-      const result = createNotificationData._getReturnPersonalisation('2019-05-01');
+      const event = createEvent();
+      const result = createNotificationData._getReturnPersonalisation(event);
       expect(result).to.equal({
         periodStartDate: '1 April 2018',
         periodEndDate: '31 March 2019',
@@ -56,10 +76,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
     });
 
     beforeEach(async () => {
-      ev = {
-        eventId: 'event_1',
-        subtype: 'returnInvitation'
-      };
+      ev = createEvent();
 
       context = {
         licenceNumbers: ['licence_1', 'licence_2'],
@@ -78,7 +95,7 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       });
 
       test('the message references the event', async () => {
-        expect(result.event_id).to.equal(ev.eventId);
+        expect(result.event_id).to.equal(ev.id);
       });
 
       test('the message references the licences and returns', async () => {
@@ -200,22 +217,58 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
       });
     });
 
-    experiment('when matching return reminder template to invitation template', async () => {
+    experiment('selects the correct return reminder template', async () => {
       let contact;
       beforeEach(async () => {
         contact = createContact(Contact.CONTACT_ROLE_PRIMARY_USER);
         ev.subtype = 'returnReminder';
       });
 
-      test('reminder template matches invitation template', async () => {
+      test('when invitation template was "moral_suasion"', async () => {
         const templateData = {
-          rows: [{ message_ref: 'returns_invitation_primary_user_email_suasion' }],
+          rows: [{ message_ref: 'returns_invitation_primary_user_email_moral_suasion' }],
+          rowCount: 1
+        };
+        events.getMostRecentReturnsInvitationByLicence.resolves(templateData);
+        result = await createNotificationData.createNotificationData(ev, contact, context);
+        const reminderSuffix = createNotificationData._reminderSuffixMap.moral_suasion;
+
+        expect(result.message_ref).to.equal(`returns_reminder_primary_user_email_${reminderSuffix}`);
+      });
+
+      test('when invitation template was "social_norm"', async () => {
+        const templateData = {
+          rows: [{ message_ref: 'returns_invitation_primary_user_email_social_norm' }],
+          rowCount: 1
+        };
+        events.getMostRecentReturnsInvitationByLicence.resolves(templateData);
+        result = await createNotificationData.createNotificationData(ev, contact, context);
+        const reminderSuffix = createNotificationData._reminderSuffixMap.social_norm;
+
+        expect(result.message_ref).to.equal(`returns_reminder_primary_user_email_${reminderSuffix}`);
+      });
+
+      test('when invitation template was "formality"', async () => {
+        const templateData = {
+          rows: [{ message_ref: 'returns_invitation_primary_user_email_formality' }],
+          rowCount: 1
+        };
+        events.getMostRecentReturnsInvitationByLicence.resolves(templateData);
+        result = await createNotificationData.createNotificationData(ev, contact, context);
+        const reminderSuffix = createNotificationData._reminderSuffixMap.formality;
+
+        expect(result.message_ref).to.equal(`returns_reminder_primary_user_email_${reminderSuffix}`);
+      });
+
+      test('when invitation template was "control"', async () => {
+        const templateData = {
+          rows: [{ message_ref: 'returns_invitation_primary_user_email_control' }],
           rowCount: 1
         };
         events.getMostRecentReturnsInvitationByLicence.resolves(templateData);
         result = await createNotificationData.createNotificationData(ev, contact, context);
 
-        expect(result.message_ref).to.equal('returns_reminder_primary_user_email_suasion');
+        expect(result.message_ref).to.equal('returns_reminder_primary_user_email_control');
       });
 
       test('template defaults to "control" when invitation template not found', async () => {
@@ -229,20 +282,22 @@ experiment('modules/batch-notifications/config/return-invitation/create-notifica
           contact = createContact(Contact.CONTACT_ROLE_LICENCE_HOLDER);
           const templateData = {
             rows: [
-              { message_ref: 'returns_invitation_returns_to_letter_formal' },
-              { message_ref: 'returns_invitation_licence_holder_letter_suasion' }],
+              { message_ref: 'returns_invitation_returns_to_letter_formality' },
+              { message_ref: 'returns_invitation_licence_holder_letter_moral_suasion' }],
             rowCount: 2
           };
           events.getMostRecentReturnsInvitationByLicence.resolves(templateData);
           result = await createNotificationData.createNotificationData(ev, contact, context);
-          expect(result.message_ref).to.equal('returns_reminder_licence_holder_letter_suasion');
+          const reminderSuffix = createNotificationData._reminderSuffixMap.moral_suasion;
+
+          expect(result.message_ref).to.equal(`returns_reminder_licence_holder_letter_${reminderSuffix}`);
         });
 
         test('selects control if matching template not found', async () => {
           const templateData = {
             rows: [
-              { message_ref: 'returns_invitation_licence_holder_letter_formal' },
-              { message_ref: 'returns_invitation_returns_to_letter_suasion' }],
+              { message_ref: 'returns_invitation_licence_holder_letter_formality' },
+              { message_ref: 'returns_invitation_returns_to_letter_moral_suasion' }],
             rowCount: 2
           };
           events.getMostRecentReturnsInvitationByLicence.resolves(templateData);

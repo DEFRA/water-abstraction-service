@@ -130,48 +130,48 @@ module.exports = {
 
       // variants of return invitation for behavioural insights work
       returns_invitation_primary_user_email_control: '2fa7fc83-4df1-4f52-bccf-ff0faeb12b6f',
-      returns_invitation_primary_user_email_suasion: 'a4bf8001-cc25-4e66-a40f-a5ca735ac69f',
+      returns_invitation_primary_user_email_moral_suasion: 'a4bf8001-cc25-4e66-a40f-a5ca735ac69f',
       returns_invitation_primary_user_email_social_norm: '4176ec3b-ffcd-4085-8972-aaa5902ba7a8',
-      returns_invitation_primary_user_email_formal: '37da0d9f-5254-43c5-a3d2-abc4e91994b5',
+      returns_invitation_primary_user_email_formality: '37da0d9f-5254-43c5-a3d2-abc4e91994b5',
 
       returns_invitation_returns_agent_email_control: '41c45bd4-8225-4d7e-a175-b48b613b5510',
-      returns_invitation_returns_agent_email_suasion: 'd4566779-67d8-4ce0-be07-014ed774d9d2',
+      returns_invitation_returns_agent_email_moral_suasion: 'd4566779-67d8-4ce0-be07-014ed774d9d2',
       returns_invitation_returns_agent_email_social_norm: 'edb920ea-cc10-4764-ae07-16822cb9075c',
-      returns_invitation_returns_agent_email_formal: '40e1691d-ddbe-4f41-badf-13690b33e258',
+      returns_invitation_returns_agent_email_formality: '40e1691d-ddbe-4f41-badf-13690b33e258',
 
       returns_invitation_licence_holder_letter_control: '4fe80aed-c5dd-44c3-9044-d0289d635019',
-      returns_invitation_licence_holder_letter_suasion: '9a85085a-fcf3-4c0d-b6d6-925409433126',
+      returns_invitation_licence_holder_letter_moral_suasion: '9a85085a-fcf3-4c0d-b6d6-925409433126',
       returns_invitation_licence_holder_letter_social_norm: '7fe2267d-0263-47a5-bbf2-620543d2764e',
-      returns_invitation_licence_holder_letter_formal: '4a3bcd84-053e-4ce7-a66b-401f534fa0da',
+      returns_invitation_licence_holder_letter_formality: '4a3bcd84-053e-4ce7-a66b-401f534fa0da',
 
       returns_invitation_returns_to_letter_control: '0e535549-99a2-44a9-84a7-589b12d00879',
-      returns_invitation_returns_to_letter_suasion: '505a785f-ee05-48c3-8b1b-0d0031d5ea72',
+      returns_invitation_returns_to_letter_moral_suasion: '505a785f-ee05-48c3-8b1b-0d0031d5ea72',
       returns_invitation_returns_to_letter_social_norm: '237fbb49-ce48-4338-a876-2d56d96dd3a0',
-      returns_invitation_returns_to_letter_formal: '9c82e205-9566-4327-bebb-35c6ff9dead9',
+      returns_invitation_returns_to_letter_formality: '9c82e205-9566-4327-bebb-35c6ff9dead9',
 
       // variants of return reminders for behavioural insights work
       returns_reminder_primary_user_email_control: 'f1144bc7-8bdc-4e82-87cb-1a6c69445836',
-      returns_reminder_primary_user_email_suasion: '0b856cf8-b76d-4f12-8085-e57900f34557',
-      returns_reminder_primary_user_email_social_norm: '71425894-deb2-40db-bb49-cc408d888bff',
-      returns_reminder_primary_user_email_formal: '6bdd8ec1-49b8-4da3-af8d-07a806d4e436',
+      returns_reminder_primary_user_email_active_choice: '0b856cf8-b76d-4f12-8085-e57900f34557',
+      returns_reminder_primary_user_email_loss_aversion: '71425894-deb2-40db-bb49-cc408d888bff',
+      returns_reminder_primary_user_email_enforcement_action: '6bdd8ec1-49b8-4da3-af8d-07a806d4e436',
 
       returns_reminder_returns_agent_email_control: '038e1807-d1b5-4f09-a5a6-d7eee9030a7a',
-      returns_reminder_returns_agent_email_suasion: '6de9e5b3-f35e-441a-8314-50b6c04ab3b4',
-      returns_reminder_returns_agent_email_social_norm: 'a10f019a-9ae8-46fa-abaf-eb8adbad4563',
-      returns_reminder_returns_agent_email_formal: '8ed028f7-7179-4274-91d9-a27988b9be70',
+      returns_reminder_returns_agent_email_active_choice: '6de9e5b3-f35e-441a-8314-50b6c04ab3b4',
+      returns_reminder_returns_agent_email_loss_aversion: 'a10f019a-9ae8-46fa-abaf-eb8adbad4563',
+      returns_reminder_returns_agent_email_enforcement_action: '8ed028f7-7179-4274-91d9-a27988b9be70',
 
       returns_reminder_licence_holder_letter_control: 'c01c808b-094b-4a3a-ab9f-a6e86bad36ba',
-      returns_reminder_licence_holder_letter_suasion: '25831f1e-9c9c-4e28-b0f3-97da5941fe9b',
-      returns_reminder_licence_holder_letter_social_norm: '5c9f369e-5bc7-4ef7-8b1c-efea86d76d66',
-      returns_reminder_licence_holder_letter_formal: 'e1fa5bb4-3c8d-4358-acac-aabb42fc198e',
+      returns_reminder_licence_holder_letter_active_choice: '25831f1e-9c9c-4e28-b0f3-97da5941fe9b',
+      returns_reminder_licence_holder_letter_loss_aversion: '5c9f369e-5bc7-4ef7-8b1c-efea86d76d66',
+      returns_reminder_licence_holder_letter_enforcement_action: 'e1fa5bb4-3c8d-4358-acac-aabb42fc198e',
 
       returns_reminder_returns_to_letter_control: 'e9f132c7-a550-4e18-a5c1-78375f07aa2d',
-      returns_reminder_returns_to_letter_suasion: '826140d7-562e-4d49-8bf8-37cc298a6661',
-      returns_reminder_returns_to_letter_social_norm: 'f80bfa93-8afa-4aef-8f87-ec64d1cb5a58',
-      returns_reminder_returns_to_letter_formal: '3e788afa-bc7d-4fa8-b7da-32472b5d0f55'
+      returns_reminder_returns_to_letter_active_choice: '826140d7-562e-4d49-8bf8-37cc298a6661',
+      returns_reminder_returns_to_letter_loss_aversion: 'f80bfa93-8afa-4aef-8f87-ec64d1cb5a58',
+      returns_reminder_returns_to_letter_enforcement_action: '3e788afa-bc7d-4fa8-b7da-32472b5d0f55'
     }
   },
-
+  import: { returns: { importYears: process.env.IMPORT_RETURNS_YEARS || 3 } },
   services: {
     crm: crmUri,
     crm_v2: crmUri.replace('1.0', '2.0'),

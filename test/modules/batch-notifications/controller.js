@@ -6,18 +6,29 @@ const {
   test
 } = exports.lab = require('@hapi/lab').script();
 
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
+const uuid = require('uuid/v4');
 
 const controller = require('../../../src/modules/batch-notifications/controller');
-const eventHelpers = require('../../../src/modules/batch-notifications/lib/event-helpers');
+const eventsService = require('../../../src/lib/services/events');
+const Event = require('../../../src/lib/models/event');
 const messageHelpers = require('../../../src/modules/batch-notifications/lib/message-helpers');
 const getRecipients = require('../../../src/modules/batch-notifications/lib/jobs/get-recipients');
 const { EVENT_STATUS_SENDING, EVENT_STATUS_PROCESSED } = require('../../../src/modules/batch-notifications/lib/event-statuses');
 const { MESSAGE_STATUS_SENDING } = require('../../../src/modules/batch-notifications/lib/message-statuses');
 
-const evt = require('../../../src/lib/event');
+const eventId = uuid();
 
+const createEvent = () => {
+  const event = new Event(eventId);
+  event.fromHash({
+    type: 'notification',
+    eventId: 'testEvent',
+    status: EVENT_STATUS_PROCESSED,
+    issuer: 'mail@example.com'
+  });
+  return event;
+};
 experiment('batch notifications controller', () => {
   let request, h, code;
 
@@ -38,19 +49,16 @@ experiment('batch notifications controller', () => {
       })
     };
 
+    const eventModel = createEvent();
+
     // Other APIs
-    sandbox.stub(eventHelpers, 'createEvent').resolves({
-      eventId: 'testEvent'
-    });
+    sandbox.stub(eventsService, 'create').resolves(eventModel);
+    sandbox.stub(eventsService, 'findOne').resolves(eventModel);
+    sandbox.stub(eventsService, 'updateStatus').resolves(eventModel);
+
     sandbox.stub(getRecipients, 'publish').resolves();
-    sandbox.stub(evt, 'load').resolves({
-      type: 'notification',
-      eventId: 'testEvent',
-      status: EVENT_STATUS_PROCESSED,
-      issuer: 'mail@example.com'
-    });
+
     sandbox.stub(messageHelpers, 'updateMessageStatuses').resolves();
-    sandbox.stub(eventHelpers, 'updateEventStatus').resolves();
   });
 
   afterEach(async () => sandbox.restore());
@@ -76,29 +84,42 @@ experiment('batch notifications controller', () => {
       expectErrorResponse(400);
     });
 
+    test('persists an event', async () => {
+      await controller.postPrepare(request, h);
+      expect(eventsService.create.callCount).to.equal(1);
+    });
+
     test('creates an event using issuer, config, and payload data', async () => {
       await controller.postPrepare(request, h);
-      const [issuer, config, data] = eventHelpers.createEvent.lastCall.args;
-      expect(issuer).to.equal(request.payload.issuer);
-      expect(config.messageType).to.equal(request.params.messageType);
-      expect(data).to.equal(request.payload.data);
+      const event = eventsService.create.lastCall.args[0];
+
+      expect(event.issuer).to.equal(request.payload.issuer);
+      expect(event.subtype).to.equal(request.params.messageType);
+      expect(event.metadata.options).to.equal(request.payload.data);
+    });
+
+    test('event metadata includes return cycle data', async () => {
+      await controller.postPrepare(request, h);
+      const event = eventsService.create.lastCall.args[0];
+      const keys = Object.keys(event.metadata.returnCycle);
+      expect(keys).to.only.include(['startDate', 'endDate', 'isSummer', 'dueDate']);
     });
 
     test('publishes event to start building recipient list', async () => {
       await controller.postPrepare(request, h);
       expect(getRecipients.publish.callCount).to.equal(1);
-      const [eventId] = getRecipients.publish.lastCall.args;
-      expect(eventId).to.equal('testEvent');
+      const { args } = getRecipients.publish.lastCall;
+      expect(args[0]).to.equal(eventId);
     });
 
     test('responds with event data', async () => {
       const response = await controller.postPrepare(request, h);
       expect(response.error).to.equal(null);
-      expect(response.data.eventId).to.equal('testEvent');
+      expect(response.data.id).to.equal(eventId);
     });
 
     test('responds with a 500 error if an error is thrown', async () => {
-      eventHelpers.createEvent.throws();
+      eventsService.create.throws();
       await controller.postPrepare(request, h);
       expectErrorResponse(500);
     });
@@ -117,43 +138,37 @@ experiment('batch notifications controller', () => {
     });
 
     test('throws 404 error if event not found', async () => {
-      evt.load.resolves(null);
+      eventsService.findOne.resolves(null);
       await controller.postSend(request, h);
       expectErrorResponse(404);
     });
 
     test('throws 400 error if event not a "notification"', async () => {
-      evt.load.resolves({
-        type: 'notANotification'
-      });
+      eventsService.findOne.resolves(
+        createEvent().fromHash({
+          type: 'not-a-notification'
+        })
+      );
       await controller.postSend(request, h);
       expectErrorResponse(400);
     });
 
     test('throws 400 error if event not in "processed" status', async () => {
-      evt.load.resolves({
-        type: 'notification',
-        status: EVENT_STATUS_SENDING
-      });
-      await controller.postSend(request, h);
-      expectErrorResponse(400);
-    });
-
-    test('throws 400 error if event not in "processed" status', async () => {
-      evt.load.resolves({
-        type: 'notification',
-        status: EVENT_STATUS_SENDING
-      });
+      eventsService.findOne.resolves(
+        createEvent().fromHash({
+          status: EVENT_STATUS_SENDING
+        })
+      );
       await controller.postSend(request, h);
       expectErrorResponse(400);
     });
 
     test('throws 401 error if issuer does not match', async () => {
-      evt.load.resolves({
-        issuer: 'unknown@example.com',
-        type: 'notification',
-        status: EVENT_STATUS_PROCESSED
-      });
+      eventsService.findOne.resolves(
+        createEvent().fromHash({
+          issuer: 'unknown@example.com'
+        })
+      );
       await controller.postSend(request, h);
       expectErrorResponse(401);
     });
@@ -161,25 +176,21 @@ experiment('batch notifications controller', () => {
     test('updates event and message statuses', async () => {
       await controller.postSend(request, h);
       const { args: messageArgs } = messageHelpers.updateMessageStatuses.lastCall;
-      expect(messageArgs[0]).to.equal('testEvent');
+      expect(messageArgs[0]).to.equal(eventId);
       expect(messageArgs[1]).to.equal(MESSAGE_STATUS_SENDING);
-      const { args: eventArgs } = eventHelpers.updateEventStatus.lastCall;
-      expect(eventArgs[0]).to.equal('testEvent');
+      const { args: eventArgs } = eventsService.updateStatus.lastCall;
+      expect(eventArgs[0]).to.equal(eventId);
       expect(eventArgs[1]).to.equal(EVENT_STATUS_SENDING);
     });
 
     test('responds with updated event data', async () => {
-      const data = { eventId: 'testEvent', status: EVENT_STATUS_SENDING };
-      eventHelpers.updateEventStatus.resolves(data);
       const response = await controller.postSend(request, h);
-      expect(response).to.equal({
-        data,
-        error: null
-      });
+      expect(response.error).to.be.null();
+      expect(response.data.id).to.equal(eventId);
     });
 
     test('responds with 500 error if an error is thrown', async () => {
-      eventHelpers.updateEventStatus.rejects();
+      eventsService.updateStatus.rejects();
       await controller.postSend(request, h);
       expectErrorResponse(500);
     });

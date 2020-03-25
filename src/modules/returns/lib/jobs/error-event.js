@@ -1,4 +1,5 @@
-const event = require('../../../../lib/event');
+const eventsService = require('../../../../lib/services/events');
+const { set } = require('lodash');
 const { uploadStatus } = require('../returns-upload');
 
 /**
@@ -14,17 +15,6 @@ const createEventError = (error = {}) => {
 };
 
 /**
- * Adds the new event error details to the event metadata whilst
- * preserving any existing data.
- *
- * @param {Object} evt The current event
- * @param {Object} eventError The error details to save with the event
- * @returns {Object} The updated metadata including the new error details
- */
-const getUpdatedEventMetadata = (evt, eventError) =>
-  Object.assign({}, evt.metadata, { error: eventError });
-
-/**
  * Updates the event to include error information.
  *
  * The error may have been an unexpected exception in which case the key will
@@ -37,11 +27,11 @@ const getUpdatedEventMetadata = (evt, eventError) =>
  * @param {Error} error The thrown JavaScript error
  * @returns {Promise}
  */
-const setEventError = (evt, error) => {
+const setEventError = (event, error) => {
   const eventError = createEventError(error);
-  evt.metadata = getUpdatedEventMetadata(evt, eventError);
-  evt.status = uploadStatus.ERROR;
-  return event.save(evt);
+  set(event, 'metadata.error', eventError);
+  event.status = uploadStatus.ERROR;
+  return eventsService.update(event);
 };
 
 exports.setEventError = setEventError;

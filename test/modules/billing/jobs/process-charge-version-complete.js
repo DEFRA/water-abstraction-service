@@ -10,9 +10,12 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const { logger } = require('../../../../src/logger');
-const repos = require('../../../../src/lib/connectors/repository');
 const processChargeVersionComplete = require('../../../../src/modules/billing/jobs/process-charge-version-complete');
-const prepareTransactionsJob = require('../../../../src/modules/billing/jobs/prepare-transactions');
+const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
+const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch');
+const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
+
+const batchId = 'test-batch-id';
 
 experiment('modules/billing/jobs/process-charge-version-complete', () => {
   let messageQueue;
@@ -21,19 +24,39 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
     messageQueue = {
       publish: sandbox.spy()
     };
-
+    sandbox.stub(chargeVersionYearService, 'getStatusCounts');
+    sandbox.stub(batchJob, 'logOnComplete');
+    sandbox.stub(batchJob, 'failBatch');
     sandbox.stub(logger, 'info');
-    sandbox.stub(repos.billingBatchChargeVersionYears, 'findProcessingByBatch').resolves({
-      rowCount: 10
-    });
   });
 
   afterEach(async () => {
     sandbox.restore();
   });
 
+  experiment('when the job has failed', () => {
+    test('the batch is set to error and cancelled ', async () => {
+      const job = {
+        name: 'testing',
+        data: {
+          failed: true
+        }
+      };
+      await processChargeVersionComplete(job, messageQueue);
+
+      const failArgs = batchJob.failBatch.lastCall.args;
+      expect(failArgs[0]).to.equal(job);
+      expect(failArgs[1]).to.equal(messageQueue);
+      expect(failArgs[2]).to.equal(BATCH_ERROR_CODE.failedToProcessChargeVersions);
+    });
+  });
+
   experiment('if there are more charge version years to process', () => {
-    test('the prepare-transactions job is not published', async () => {
+    beforeEach(async () => {
+      chargeVersionYearService.getStatusCounts.resolves({
+        processing: 2
+      });
+
       await processChargeVersionComplete({
         data: {
           request: {
@@ -43,21 +66,28 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
           },
           response: {
             chargeVersionYear: {
-              billing_batch_id: 'test-batch-id'
+              billing_batch_id: batchId
             }
           }
         }
       });
+    });
 
-      expect(repos.billingBatchChargeVersionYears.findProcessingByBatch.calledWith('test-batch-id')).to.be.true();
+    test('.findProcessingByBatch() is called with the batch ID', async () => {
+      expect(
+        chargeVersionYearService.getStatusCounts.calledWith(batchId)
+      ).to.be.true();
+    });
+
+    test('the prepare-transactions job is not published', async () => {
       expect(messageQueue.publish.called).to.be.false();
     });
   });
 
   experiment('if all the charge version years have been processed', () => {
     beforeEach(async () => {
-      repos.billingBatchChargeVersionYears.findProcessingByBatch.resolves({
-        rowCount: 0
+      chargeVersionYearService.getStatusCounts.resolves({
+        processing: 0
       });
 
       const job = {
@@ -69,10 +99,10 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
           },
           response: {
             chargeVersionYear: {
-              billing_batch_id: 'test-batch-id'
+              billing_batch_id: batchId
             },
             batch: {
-              billing_batch_id: 'test-billing-batch-id'
+              billing_batch_id: batchId
             }
           }
         }
@@ -81,11 +111,15 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
       await processChargeVersionComplete(job, messageQueue);
     });
 
-    test('the prepare-transactions job is published', async () => {
-      expect(repos.billingBatchChargeVersionYears.findProcessingByBatch.calledWith('test-batch-id')).to.be.true();
+    test('.findProcessingByBatch() is called with the batch ID', async () => {
+      expect(
+        chargeVersionYearService.getStatusCounts.calledWith(batchId)
+      ).to.be.true();
+    });
 
+    test('the prepare-transactions job is published', async () => {
       const [message] = messageQueue.publish.lastCall.args;
-      expect(message.name).to.equal(prepareTransactionsJob.jobName);
+      expect(message.name).to.equal('billing.prepare-transactions.test-batch-id');
     });
 
     test('the job is published including the eventId', async () => {
@@ -96,7 +130,7 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
     test('the job is published including the batch object', async () => {
       const [message] = messageQueue.publish.lastCall.args;
       expect(message.data.batch).to.equal({
-        billing_batch_id: 'test-billing-batch-id'
+        billing_batch_id: 'test-batch-id'
       });
     });
   });

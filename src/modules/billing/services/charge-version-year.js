@@ -17,5 +17,19 @@ const setReadyStatus = id =>
 const setErrorStatus = id =>
   repos.billingBatchChargeVersionYears.update(id, { status: CHARGE_VERSION_YEAR_STATUS.error });
 
+/**
+ * Gets the number of water.billing_batch_charge_version_years in each status
+ * @param {String} batchId
+ * @return {Object} { ready, error, processing }
+ */
+const getStatusCounts = async batchId => {
+  const data = await repos.billingBatchChargeVersionYears.findStatusCountsByBatchId(batchId);
+  return data.reduce((acc, row) => ({
+    ...acc,
+    [row.status]: parseInt(row.count)
+  }), { ready: 0, error: 0, processing: 0 });
+};
+
 exports.setReadyStatus = setReadyStatus;
 exports.setErrorStatus = setErrorStatus;
+exports.getStatusCounts = getStatusCounts;

@@ -2,22 +2,16 @@
 
 const { get } = require('lodash');
 
-const evt = require('../../../lib/event');
 const { chargeVersions } = require('../../../lib/connectors/repository');
-
-const JOB_NAME = 'billing.populate-batch-charge-versions';
-
+const { isAnnualBatch, isTwoPartTariffBatch, isSupplementaryBatch } = require('../lib/batch');
+const batchJob = require('./lib/batch-job');
 const { logger } = require('../../../logger');
 
-const { isAnnualBatch, isTwoPartTariffBatch, isSupplementaryBatch } = require('../lib/batch');
+const JOB_NAME = 'billing.populate-batch-charge-versions.*';
 
-const createMessage = (eventId, batch) => ({
-  name: JOB_NAME,
-  data: {
-    eventId,
-    batch
-  }
-});
+const createMessage = (eventId, batch) => {
+  return batchJob.createMessage(JOB_NAME, batch, { eventId });
+};
 
 const getChargeVersionRows = async batch => {
   logger.info(`Getting charge version rows for Batch of type ${batch.batch_type}`);
@@ -36,12 +30,9 @@ const getChargeVersionRows = async batch => {
 };
 
 const handlePopulateBatch = async job => {
-  logger.info(`Handling ${JOB_NAME}`);
+  batchJob.logHandling(job);
 
-  const eventId = get(job, 'data.eventId');
-  const batchEvent = await evt.load(eventId);
-  const { batch } = batchEvent.metadata;
-
+  const batch = get(job, 'data.batch');
   const rows = await getChargeVersionRows(batch);
 
   // Include the charge versions in the response data. This information

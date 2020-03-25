@@ -1,11 +1,16 @@
 const { expect } = require('@hapi/code');
 const { find } = require('lodash');
-const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
+const sandbox = require('sinon').createSandbox();
+const moment = require('moment');
 const csvMapper = require('../../../../../src/modules/returns/lib/csv-adapter/mapper');
+const dateParser = require('../../../../../src/modules/returns/lib/csv-adapter/date-parser');
 
 const headers = [
   'Licence number',
   'Return reference',
+  'Site description',
+  'Purpose',
   'Nil return Y/N',
   'Did you use a meter Y/N',
   'Meter make',
@@ -19,6 +24,8 @@ const headers = [
 const column = [
   '01/123',
   '01234',
+  'Test site',
+  'Test purpose',
   'N',
   'Y',
   'Superpump',
@@ -32,6 +39,8 @@ const column = [
 const nilReturn = [
   '01/123',
   '01234',
+  'Test site',
+  'Test purpose',
   'Y',
   '',
   '',
@@ -45,6 +54,8 @@ const nilReturn = [
 const emptyReturn = [
   '01/123',
   '01234',
+  'Test site',
+  'Test purpose',
   ' ',
   '',
   '',
@@ -57,6 +68,8 @@ const emptyReturn = [
 
 const csv = `Licence number,01/23,02/34
 Return reference,1234,5678
+Site description,Test site,Test site
+Purpose,Test purpose,Test purpose
 Nil return Y/N,N,
 Did you use a meter Y/N,N,
 Meter make,Superpump,
@@ -83,7 +96,24 @@ const user = {
   external_id: 'entity_id'
 };
 
+const getWeekLine = endDate => {
+  return {
+    startDate: moment(endDate).subtract(6, 'days').format('YYYY-MM-DD'),
+    endDate,
+    timePeriod: 'week'
+  };
+};
+
 experiment('returns CSV to JSON mapper', () => {
+  beforeEach(async () => {
+    sandbox.stub(dateParser, 'parse');
+    dateParser.parse.withArgs('Week ending 6 April 2019').returns(getWeekLine('2019-04-06'));
+    dateParser.parse.withArgs('Week ending 13 April 2019').returns(getWeekLine('2019-04-13'));
+    dateParser.parse.withArgs('Week ending 20 April 2019').returns(getWeekLine('2019-04-20'));
+  });
+
+  afterEach(() => sandbox.restore());
+
   experiment('normalize', () => {
     test('should trim and lowercase values', async () => {
       const result = csvMapper._normalize('  Some Data ');
@@ -91,207 +121,10 @@ experiment('returns CSV to JSON mapper', () => {
     });
   });
 
-  experiment('parseDateFrequency', () => {
-    experiment('when there are 12 data lines', () => {
-      test('the data is considered to be monthly', async () => {
-        const result = csvMapper._parseDateFrequency('31 January 2019', 12);
-        expect(result).to.equal('month');
-      });
-    });
-
-    experiment('when the data starts with "week ending"', () => {
-      test('the data is considered to be weekly', async () => {
-        const date = 'week ending 31 January 2019';
-        const result = csvMapper._parseDateFrequency(date, 12);
-        expect(result).to.equal('week');
-      });
-    });
-
-    experiment('for more than 12 lines and a date not starting with "week ending"', () => {
-      test('the data is considered to be daily', async () => {
-        const date = '31 January 2019';
-        const result = csvMapper._parseDateFrequency(date, 120);
-        expect(result).to.equal('day');
-      });
-    });
-  });
-
-  experiment('createDay', async () => {
-    test('creates a day return line skeleton from preferred data format', async () => {
-      const result = csvMapper._createDay('7 May 2019');
-      expect(result).to.equal({
-        startDate: '2019-05-07',
-        endDate: '2019-05-07',
-        timePeriod: 'day'
-      });
-    });
-
-    const otherFormats = [
-      '7 Aug 2019',
-      '07 Aug 2019',
-      '7-Aug-2019',
-      '07-Aug-2019',
-      '7/Aug/2019',
-      '07/Aug/2019',
-
-      '07 Aug 19',
-      '07-Aug-19',
-      '07/Aug/19',
-      '7 Aug 19',
-      '7-Aug-19',
-      '7/Aug/19',
-
-      '7 August 2019',
-      '07 August 2019',
-      '7-August-2019',
-      '07-August-2019',
-      '7/August/2019',
-      '07/August/2019',
-      '07-08-2019',
-      '07/08/2019'
-    ];
-
-    otherFormats.forEach(format => {
-      test(`${format} creates a day return line skeleton for other date formats`, async () => {
-        const result = csvMapper._createDay(format);
-        expect(result).to.equal({
-          startDate: '2019-08-07',
-          endDate: '2019-08-07',
-          timePeriod: 'day'
-        });
-      });
-    });
-
-    test('creates a day return line skeleton from DD  data format', async () => {
-      const result = csvMapper._createDay('7 May 2019');
-      expect(result).to.equal({
-        startDate: '2019-05-07',
-        endDate: '2019-05-07',
-        timePeriod: 'day'
-      });
-    });
-  });
-
-  experiment('createWeek', async () => {
-    test('create a weekly return line skeleton from the preferred date format', async () => {
-      const result = csvMapper._createWeek('11 May 2019');
-      expect(result).to.equal({
-        startDate: '2019-05-05',
-        endDate: '2019-05-11',
-        timePeriod: 'week'
-      });
-    });
-
-    const otherFormats = [
-      '3 Aug 2019',
-      '03 Aug 2019',
-      '3-Aug-2019',
-      '03-Aug-2019',
-      '3/Aug/2019',
-      '03/Aug/2019',
-
-      '03 Aug 19',
-      '03-Aug-19',
-      '03/Aug/19',
-      '3 Aug 19',
-      '3-Aug-19',
-      '3/Aug/19',
-
-      '3 August 2019',
-      '03 August 2019',
-      '3-August-2019',
-      '03-August-2019',
-      '3/August/2019',
-      '03/August/2019',
-      '03-08-2019',
-      '03/08/2019'
-    ];
-
-    otherFormats.forEach(format => {
-      test(`${format} creates a day return line skeleton for other date formats`, async () => {
-        const result = csvMapper._createWeek(format);
-        expect(result).to.equal({
-          startDate: '2019-07-28',
-          endDate: '2019-08-03',
-          timePeriod: 'week'
-        });
-      });
-    });
-  });
-
-  experiment('createMonth', async () => {
-    test('creates a month return line skeleton for preferred format', async () => {
-      const result = csvMapper._createMonth('May 2019');
-      expect(result).to.equal({
-        startDate: '2019-05-01',
-        endDate: '2019-05-31',
-        timePeriod: 'month'
-      });
-    });
-
-    const otherFormats = [
-      '1 Aug 2019',
-      '01 Aug 2019',
-      '1-Aug-2019',
-      '01-Aug-2019',
-      '1/Aug/2019',
-      '01/Aug/2019',
-
-      '01 Aug 19',
-      '01-Aug-19',
-      '01/Aug/19',
-      '1 Aug 19',
-      '1-Aug-19',
-      '1/Aug/19',
-
-      '1 August 2019',
-      '01 August 2019',
-      '1-August-2019',
-      '01-August-2019',
-      '1/August/2019',
-      '01/August/2019',
-      '01-08-2019',
-      '01/08/2019'
-    ];
-
-    otherFormats.forEach(format => {
-      test(`${format} creates a day return line skeleton for other date formats`, async () => {
-        const result = csvMapper._createMonth(format);
-        expect(result).to.equal({
-          startDate: '2019-08-01',
-          endDate: '2019-08-31',
-          timePeriod: 'month'
-        });
-      });
-    });
-  });
-
   experiment('createReturnLine', async () => {
-    test('detects and returns a daily line', async () => {
-      const result = csvMapper._createReturnLine('7 May 2019', 200);
-      expect(result).to.equal({
-        startDate: '2019-05-07',
-        endDate: '2019-05-07',
-        timePeriod: 'day'
-      });
-    });
-
-    test('detects and returns a weekly line', async () => {
-      const result = csvMapper._createReturnLine('Week ending 11 May 2019', 52);
-      expect(result).to.equal({
-        startDate: '2019-05-05',
-        endDate: '2019-05-11',
-        timePeriod: 'week'
-      });
-    });
-
-    test('detects and returns a monthly line', async () => {
-      const result = csvMapper._createReturnLine('May 2019', 12);
-      expect(result).to.equal({
-        startDate: '2019-05-01',
-        endDate: '2019-05-31',
-        timePeriod: 'month'
-      });
+    test('calls dateParser with dateLabel', async () => {
+      csvMapper._createReturnLine('7 May 2019');
+      expect(dateParser.parse.calledWith('7 May 2019')).to.be.true();
     });
   });
 
@@ -358,7 +191,7 @@ experiment('returns CSV to JSON mapper', () => {
 
   experiment('mapReading', () => {
     test('maps reading type to "measured" when cell marked as "Y"', async () => {
-      const column = ['', '', '', 'Y'];
+      const column = ['', '', '', '', '', 'Y'];
       const result = csvMapper._mapReading(column);
       expect(result).to.equal({
         type: 'measured',
@@ -369,7 +202,7 @@ experiment('returns CSV to JSON mapper', () => {
     });
 
     test('maps reading type to "estimated" when cell marked as "N"', async () => {
-      const column = ['', '', '', 'N'];
+      const column = ['', '', '', '', '', 'N'];
       const result = csvMapper._mapReading(column);
       expect(result).to.equal({
         type: 'estimated',
@@ -388,7 +221,7 @@ experiment('returns CSV to JSON mapper', () => {
     });
 
     test('returns meter details when reading type is "measured"', async () => {
-      const column = ['', '', '', '', 'Superpump', '1234'];
+      const column = ['', '', '', '', '', '', 'Superpump', '1234'];
       const result = csvMapper._mapMeters(column, 'measured');
       expect(result).to.equal([{
         meterDetailsProvided: true,
@@ -399,7 +232,7 @@ experiment('returns CSV to JSON mapper', () => {
     });
 
     test('returns meter details with meterDetailsProvided flag true even when manufacturer/serial are blank"', async () => {
-      const column = ['', '', '', '', '', ''];
+      const column = ['', '', '', '', '', '', '', ''];
       const result = csvMapper._mapMeters(column, 'measured');
       expect(result).to.equal([{
         meterDetailsProvided: true,

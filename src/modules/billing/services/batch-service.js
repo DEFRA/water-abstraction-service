@@ -1,13 +1,12 @@
 'use strict';
 
-const { camelCase } = require('lodash');
-
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const repos = require('../../../lib/connectors/repository');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
-const event = require('../../../lib/event');
+const Event = require('../../../lib/models/event');
+const eventService = require('../../../lib/services/events');
 
 const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
 const Batch = require('../../../lib/models/batch');
@@ -15,6 +14,7 @@ const Batch = require('../../../lib/models/batch');
 const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
 const invoiceService = require('./invoice-service');
+const invoiceAccountsService = require('./invoice-accounts-service');
 
 /**
  * Loads a Batch instance by ID
@@ -46,32 +46,32 @@ const getMostRecentLiveBatchByRegion = async regionId => {
 };
 
 const saveEvent = (type, status, user, batch) => {
-  return event.save(event.create({
+  const event = new Event().fromHash({
     issuer: user.email,
     type,
     metadata: { user, batch },
     status
-  }));
+  });
+
+  return eventService.create(event);
 };
 
 const deleteBatch = async (batch, internalCallingUser) => {
-  const { batchId } = batch;
-
   try {
-    await chargeModuleBatchConnector.delete(batch.region.code, batchId);
+    await chargeModuleBatchConnector.delete(batch.region.code, batch.id);
 
-    await repos.billingBatchChargeVersionYears.deleteByBatchId(batchId);
-    await repos.billingBatchChargeVersions.deleteByBatchId(batchId);
-    await repos.billingTransactions.deleteByBatchId(batchId);
-    await repos.billingInvoiceLicences.deleteByBatchId(batchId);
-    await repos.billingInvoices.deleteByBatchId(batchId);
-    await newRepos.billingBatches.delete(batchId);
+    await repos.billingBatchChargeVersionYears.deleteByBatchId(batch.id);
+    await repos.billingBatchChargeVersions.deleteByBatchId(batch.id);
+    await repos.billingTransactions.deleteByBatchId(batch.id);
+    await repos.billingInvoiceLicences.deleteByBatchId(batch.id);
+    await repos.billingInvoices.deleteByBatchId(batch.id);
+    await newRepos.billingBatches.delete(batch.id);
 
     await saveEvent('billing-batch:cancel', 'delete', internalCallingUser, batch);
   } catch (err) {
     logger.error('Failed to delete the batch', err, batch);
     await saveEvent('billing-batch:cancel', 'error', internalCallingUser, batch);
-    await setStatus(batchId, BATCH_STATUS.error);
+    await setStatus(batch.id, BATCH_STATUS.error);
     throw err;
   }
 };
@@ -86,22 +86,30 @@ const approveBatch = async (batch, internalCallingUser) => {
 
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
 
+    // @TODO for supplementary billing, reset water.licence.include_in_supplementary_billing
+    // flags
+
     return setStatus(batch.id, BATCH_STATUS.sent);
   } catch (err) {
     logger.error('Failed to approve the batch', err, batch);
     await saveEvent('billing-batch:approve', 'error', internalCallingUser, batch);
-    await setStatus(batch.id, BATCH_STATUS.error);
     throw err;
   }
 };
 
 /**
  * Sets the specified batch to 'error' status
+ *
  * @param {String} batchId
+ * @param {BATCH_ERROR_CODE} errorCode The origin of the failure
  * @return {Promise}
  */
-const setErrorStatus = batchId =>
-  newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error });
+const setErrorStatus = (batchId, errorCode) => {
+  return newRepos.billingBatches.update(batchId, {
+    status: Batch.BATCH_STATUS.error,
+    errorCode
+  });
+};
 
 const saveInvoiceLicenceTransactions = async (batch, invoice, invoiceLicence) => {
   for (const transaction of invoiceLicence.transactions) {
@@ -128,8 +136,12 @@ const saveInvoicesToDB = async batch => {
 };
 
 const decorateBatchWithTotals = async batch => {
-  const chargeModuleSummary = await chargeModuleBatchConnector.send(batch.region.code, batch.id, true);
-  batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(chargeModuleSummary.summary);
+  try {
+    const chargeModuleSummary = await chargeModuleBatchConnector.send(batch.region.code, batch.id, true);
+    batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(chargeModuleSummary.summary);
+  } catch (err) {
+    logger.info('Failed to decorate batch with totals. Waiting for CM API', err);
+  }
   return batch;
 };
 
@@ -157,18 +169,69 @@ const getTransactionStatusCounts = async batchId => {
   const data = await newRepos.billingTransactions.findStatusCountsByBatchId(batchId);
   return data.reduce((acc, row) => ({
     ...acc,
-    [camelCase(row.status)]: row.count
+    [row.status]: parseInt(row.count)
   }), {});
 };
 
+const deleteAccountFromBatch = async (batch, accountId) => {
+  // get the invoice account from the CRM to access
+  // the customer reference number.
+  const invoiceAccount = await invoiceAccountsService.getByInvoiceAccountId(accountId);
+
+  await chargeModuleBatchConnector.deleteAccountFromBatch(
+    batch.region.code,
+    batch.id,
+    invoiceAccount.accountNumber
+  );
+
+  await repos.billingTransactions.deleteByInvoiceAccount(batch.id, accountId);
+  await newRepos.billingInvoiceLicences.deleteByBatchAndInvoiceAccount(batch.id, accountId);
+  await newRepos.billingInvoices.deleteByBatchAndInvoiceAccountId(batch.id, accountId);
+
+  return setStatusToEmptyWhenNoTransactions(batch);
+};
+
+/**
+ * If the batch has no more transactions then the batch is set
+ * to empty, otherwise it stays the same
+ *
+ * @param {Batch} batch
+ * @returns {Batch} The updated batch if no transactions
+ */
+const setStatusToEmptyWhenNoTransactions = async batch => {
+  const remainingTransactions = await newRepos.billingTransactions.findByBatchId(batch.id);
+
+  if (remainingTransactions.length === 0) {
+    return setStatus(batch.id, BATCH_STATUS.empty);
+  }
+  return batch;
+};
+
+/**
+ * Cleans up any
+ * - billing_invoice_licences with no related billing_transactions
+ * - billing_invoices with no related billing_invoice_licences
+ * @param {String} batchId
+ * @return {Promise}
+ */
+const cleanup = async batchId => {
+  await newRepos.billingInvoiceLicences.deleteEmptyByBatchId(batchId);
+  await newRepos.billingInvoices.deleteEmptyByBatchId(batchId);
+};
+
 exports.approveBatch = approveBatch;
+exports.decorateBatchWithTotals = decorateBatchWithTotals;
+exports.deleteAccountFromBatch = deleteAccountFromBatch;
 exports.deleteBatch = deleteBatch;
-exports.getBatches = getBatches;
+
 exports.getBatchById = getBatchById;
+exports.getBatches = getBatches;
 exports.getMostRecentLiveBatchByRegion = getMostRecentLiveBatchByRegion;
+exports.getTransactionStatusCounts = getTransactionStatusCounts;
+
+exports.refreshTotals = refreshTotals;
 exports.saveInvoicesToDB = saveInvoicesToDB;
 exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
-exports.decorateBatchWithTotals = decorateBatchWithTotals;
-exports.refreshTotals = refreshTotals;
-exports.getTransactionStatusCounts = getTransactionStatusCounts;
+exports.setStatusToEmptyWhenNoTransactions = setStatusToEmptyWhenNoTransactions;
+exports.cleanup = cleanup;

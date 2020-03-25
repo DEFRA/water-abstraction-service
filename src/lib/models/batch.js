@@ -8,7 +8,7 @@ const Totals = require('./totals');
 const { assert } = require('@hapi/hoek');
 const { isArray } = require('lodash');
 
-const { assertIsInstanceOf, assertEnum, assertIsArrayOfType, assertPositiveInteger } = require('./validators');
+const validators = require('./validators');
 
 /**
  * Statuses that the batch (water.billing_batches) may have. These
@@ -20,7 +20,17 @@ const BATCH_STATUS = {
   review: 'review', // two-part tariff only - reviewing results of returns matching
   ready: 'ready', // processing completed - awaiting approval
   sent: 'sent', // approved & sent to Charge Module
-  error: 'error'
+  error: 'error',
+  // if there are no charge versions, or all billing has already happened
+  // in earlier run, or all customers have been removed from the batch
+  empty: 'empty'
+};
+
+const BATCH_ERROR_CODE = {
+  failedToPopulateChargeVersions: 10,
+  failedToProcessChargeVersions: 20,
+  failedToPrepareTransactions: 30,
+  failedToCreateCharge: 40
 };
 
 const VALID_SEASON = Joi.string().valid('summer', 'winter', 'all year').required();
@@ -44,7 +54,7 @@ class Batch extends Model {
    * @param {String} batchType
    */
   set type (batchType) {
-    assertEnum(batchType, Object.values(BATCH_TYPE));
+    validators.assertEnum(batchType, Object.values(BATCH_TYPE));
     this._type = batchType;
   }
 
@@ -120,7 +130,7 @@ class Batch extends Model {
    * @param {String} status
    */
   set status (status) {
-    assertEnum(status, Object.keys(BATCH_STATUS));
+    validators.assertEnum(status, Object.keys(BATCH_STATUS));
     this._status = status;
   }
 
@@ -191,7 +201,7 @@ class Batch extends Model {
   }
 
   set invoices (invoices) {
-    assertIsArrayOfType(invoices, Invoice);
+    validators.assertIsArrayOfType(invoices, Invoice);
     this._invoices = invoices;
   }
 
@@ -205,7 +215,7 @@ class Batch extends Model {
   }
 
   set region (region) {
-    assertIsInstanceOf(region, Region);
+    validators.assertIsInstanceOf(region, Region);
     this._region = region;
   }
 
@@ -219,7 +229,7 @@ class Batch extends Model {
    * @param {Totals} totals
    */
   set totals (totals) {
-    assertIsInstanceOf(totals, Totals);
+    validators.assertIsInstanceOf(totals, Totals);
     this._totals = totals;
   }
 
@@ -236,11 +246,48 @@ class Batch extends Model {
   }
 
   set externalId (externalId) {
-    assertPositiveInteger(externalId);
+    validators.assertPositiveInteger(externalId);
     this._externalId = externalId;
+  }
+
+  get errorCode () { return this._errorCode; }
+
+  set errorCode (errorCode) {
+    validators.assertNullableEnum(errorCode, Object.values(BATCH_ERROR_CODE));
+    this._errorCode = errorCode;
+  }
+
+  /**
+   * Checks if the status of the batch matches any of the passed status values
+   *
+   * @param  {...String} statuses A list of statuses to match with the batch status
+   */
+  statusIsOneOf (...statuses) {
+    return statuses.includes(this.status);
+  }
+
+  /**
+   * Does this batch have a status that means the batch can be deleted?
+   */
+  canBeDeleted () {
+    return this.statusIsOneOf(
+      BATCH_STATUS.empty,
+      BATCH_STATUS.error,
+      BATCH_STATUS.ready,
+      BATCH_STATUS.review
+    );
+  }
+
+  /**
+   * Does this batch have a status that means the batch customers
+   * associated with the batch can be deleted?
+   */
+  canDeleteAccounts () {
+    return this.statusIsOneOf(BATCH_STATUS.ready, BATCH_STATUS.review);
   }
 }
 
 module.exports = Batch;
 module.exports.BATCH_TYPE = BATCH_TYPE;
 module.exports.BATCH_STATUS = BATCH_STATUS;
+module.exports.BATCH_ERROR_CODE = BATCH_ERROR_CODE;

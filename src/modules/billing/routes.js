@@ -68,6 +68,19 @@ const getBatchInvoices = {
   }
 };
 
+const getBatchInvoicesDetails = {
+  method: 'GET',
+  path: '/water/1.0/billing/batches/{batchId}/invoices/details',
+  handler: controller.getBatchInvoicesDetails,
+  config: {
+    validate: {
+      params: {
+        batchId: Joi.string().uuid().required()
+      }
+    }
+  }
+};
+
 const getBatchInvoiceDetail = {
   method: 'GET',
   path: '/water/1.0/billing/batches/{batchId}/invoices/{invoiceId}',
@@ -94,8 +107,7 @@ const deleteAccountFromBatch = {
       }
     },
     pre: [
-      { method: preHandlers.loadBatch, assign: 'batch' },
-      { method: preHandlers.ensureBatchInReviewState }
+      { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
 };
@@ -114,8 +126,7 @@ const deleteBatch = {
       }
     },
     pre: [
-      { method: preHandlers.loadBatch, assign: 'batch' },
-      { method: preHandlers.ensureBatchInReviewState }
+      { method: preHandlers.loadBatch, assign: 'batch' }
     ]
   }
 };
@@ -143,6 +154,7 @@ exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
+exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
 
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
 exports.deleteBatch = deleteBatch;

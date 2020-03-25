@@ -45,14 +45,30 @@ experiment('lib/models/event', () => {
     });
   });
 
+  experiment('.subtype', () => {
+    test('can be set to a string', async () => {
+      event.subtype = 'test-subtype';
+      expect(event.subtype).to.equal('test-subtype');
+    });
+
+    test('can be set to null', async () => {
+      event.subtype = null;
+      expect(event.subtype).to.equal(null);
+    });
+
+    test('throws an error if not null/string', async () => {
+      const func = () => { event.subtype = 1.2344; };
+      expect(func).to.throw();
+    });
+  });
+
   experiment('get and set for event fields', () => {
     const event = new Event();
     event.referenceCode = 'test-reference-code';
     event.type = 'test-type';
-    event.subtype = 'test-subtype';
     event.issuer = 'test-issuer';
     event.comment = 'test-comment';
-    event.metaData = { test: 'data' };
+    event.metadata = { test: 'data' };
     event.status = 'test-status';
 
     test('referenceCode', () => {
@@ -61,9 +77,6 @@ experiment('lib/models/event', () => {
     test('type', () => {
       expect(event.type).to.equal('test-type');
     });
-    test('subtype', () => {
-      expect(event.subtype).to.equal('test-subtype');
-    });
     test('issuer', () => {
       expect(event.issuer).to.equal('test-issuer');
     });
@@ -71,7 +84,7 @@ experiment('lib/models/event', () => {
       expect(event.comment).to.equal('test-comment');
     });
     test('metadata', () => {
-      expect(event.metaData).to.equal({ test: 'data' });
+      expect(event.metadata).to.equal({ test: 'data' });
     });
     test('status', () => {
       expect(event.status).to.equal('test-status');

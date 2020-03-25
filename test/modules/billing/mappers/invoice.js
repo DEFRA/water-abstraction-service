@@ -17,10 +17,11 @@ const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 
 const invoiceMapper = require('../../../../src/modules/billing/mappers/invoice');
 
-const dbRow = {
+const invoiceRow = {
   billingInvoiceId: '5a1577d7-8dc9-4d67-aadc-37d7ea85abca',
   invoiceAccountId: 'aea355f7-b931-4824-8465-575f5b95657f',
-  invoiceAccountNumber: 'A12345678A'
+  invoiceAccountNumber: 'A12345678A',
+  dateCreated: '2020-03-05T10:57:23.911Z'
 };
 
 experiment('modules/billing/mappers/invoice', () => {
@@ -206,19 +207,23 @@ experiment('modules/billing/mappers/invoice', () => {
     let result;
 
     beforeEach(async () => {
-      result = invoiceMapper.dbToModel(dbRow);
+      result = invoiceMapper.dbToModel(invoiceRow);
     });
 
     test('returns an Invoice instance with correct ID', async () => {
       expect(result instanceof Invoice).to.be.true();
-      expect(result.id).to.equal(dbRow.billingInvoiceId);
+      expect(result.id).to.equal(invoiceRow.billingInvoiceId);
     });
 
     test('has an invoiceAccount property which is an InvoiceAccount instance', async () => {
       const { invoiceAccount } = result;
       expect(invoiceAccount instanceof InvoiceAccount).to.be.true();
-      expect(invoiceAccount.id).to.equal(dbRow.invoiceAccountId);
-      expect(invoiceAccount.accountNumber).to.equal(dbRow.invoiceAccountNumber);
+      expect(invoiceAccount.id).to.equal(invoiceRow.invoiceAccountId);
+      expect(invoiceAccount.accountNumber).to.equal(invoiceRow.invoiceAccountNumber);
+    });
+
+    test('maps the date created value', async () => {
+      expect(result.dateCreated).to.equal(invoiceRow.dateCreated);
     });
   });
 });
