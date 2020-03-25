@@ -1,4 +1,3 @@
-const messageQueue = require('../../../../lib/message-queue');
 const JOB_NAME = 'validate-uploaded-returns-data';
 const returnsUpload = require('../../lib/returns-upload');
 const eventsService = require('../../../../lib/services/events');
@@ -9,13 +8,14 @@ const { mapMultipleReturn } = require('../../lib/upload-preview-mapper');
 const { set } = require('lodash');
 
 /**
- * Validates the submitted returns data after it's been mapped to JSON
- *
+ * Creates a message for PG Boss
  * @param {Object} data containing eventId and companyId
- * @returns {Promise}
+ * @returns {Object}
  */
-const publishValidateReturnsStart = data =>
-  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(data));
+const createMessage = data => ({
+  name: JOB_NAME,
+  data: returnsUpload.buildJobData(data)
+});
 
 /**
 * Handler for the 'validate-uploaded-returns-data' job in PG Boss.
@@ -71,6 +71,6 @@ const getEventReturnData = data =>
     totalVolume: ret.totalVolume
   }));
 
-exports.publish = publishValidateReturnsStart;
+exports.createMessage = createMessage;
 exports.handler = handleValidateReturnsStart;
 exports.jobName = JOB_NAME;
