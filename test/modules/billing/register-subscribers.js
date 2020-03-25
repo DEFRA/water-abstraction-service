@@ -14,20 +14,9 @@ const jobs = require('../../../src/modules/billing/jobs');
 experiment('modules/billing/register-subscribers', () => {
   let server;
 
-  const getOnCompleteHandlerForJobName = jobName => {
-    const onCompleteCall = server.messageQueue.onComplete.getCalls().find(call => {
-      return call.args[0] === jobName;
-    });
-
-    return onCompleteCall.args[1];
-  };
-
   beforeEach(async () => {
     server = {
-      messageQueue: {
-        subscribe: sandbox.stub().resolves(),
-        onComplete: sandbox.stub().resolves()
-      }
+      createSubscription: sandbox.stub().resolves()
     };
 
     sandbox.stub(jobs.populateBatchChargeVersions, 'onCompleteHandler').resolves();
@@ -48,97 +37,39 @@ experiment('modules/billing/register-subscribers', () => {
     expect(registerSubscribers.register).to.be.a.function();
   });
 
-  experiment('when the plugin is registered with the server', async () => {
+  experiment('when the plugin is registered', async () => {
     beforeEach(async () => {
       await registerSubscribers.register(server);
     });
 
-    experiment('for the populateBatchChargeVersions job', () => {
-      test('a subscribe handler is registered', async () => {
-        const { job } = jobs.populateBatchChargeVersions;
-        expect(server.messageQueue.subscribe.calledWith(job.jobName, {}, job.handler)).to.be.true();
-      });
-
-      test('an onComplete handler is registered', async () => {
-        const { job } = jobs.populateBatchChargeVersions;
-        expect(server.messageQueue.onComplete.calledWith(job.jobName)).to.be.true();
-      });
-
-      test('on execution, the onComplete is passed a job and the message queue', async () => {
-        const { job, onCompleteHandler } = jobs.populateBatchChargeVersions;
-        const pgBossOnCompleteHandler = getOnCompleteHandlerForJobName(job.jobName);
-
-        const testJob = { id: 'test-job' };
-        await pgBossOnCompleteHandler(testJob);
-
-        expect(onCompleteHandler.calledWith(testJob, server.messageQueue)).to.be.true();
-      });
+    test('registers populateBatchChargeVersions job', async () => {
+      expect(server.createSubscription.calledWith(
+        jobs.populateBatchChargeVersions
+      )).to.be.true();
     });
 
-    experiment('for the processChargeVersion job', () => {
-      test('a subscribe handler is registered for processChargeVersion', async () => {
-        const { job } = jobs.processChargeVersion;
-        expect(server.messageQueue.subscribe.calledWith(job.jobName, job.options, job.handler)).to.be.true();
-      });
-
-      test('an onComplete handler is registered for processChargeVersion', async () => {
-        const { job } = jobs.processChargeVersion;
-        expect(server.messageQueue.onComplete.calledWith(job.jobName)).to.be.true();
-      });
-
-      test('on execution, the onComplete is passed a job and the message queue', async () => {
-        const { job, onCompleteHandler } = jobs.processChargeVersion;
-        const pgBossOnCompleteHandler = getOnCompleteHandlerForJobName(job.jobName);
-
-        const testJob = { id: 'test-job' };
-        await pgBossOnCompleteHandler(testJob);
-
-        expect(onCompleteHandler.calledWith(testJob, server.messageQueue)).to.be.true();
-      });
+    test('registers processChargeVersion job', async () => {
+      expect(server.createSubscription.calledWith(
+        jobs.processChargeVersion
+      )).to.be.true();
     });
 
-    experiment('for the prepareTransactions job', () => {
-      test('a subscribe handler is registered', async () => {
-        const { job } = jobs.prepareTransactions;
-        expect(server.messageQueue.subscribe.calledWith(job.jobName, {}, job.handler)).to.be.true();
-      });
-
-      test('an onComplete handler is registered', async () => {
-        const { job } = jobs.prepareTransactions;
-        expect(server.messageQueue.onComplete.calledWith(job.jobName)).to.be.true();
-      });
-
-      test('on execution, the onComplete is passed a job and the message queue', async () => {
-        const { job, onCompleteHandler } = jobs.prepareTransactions;
-        const pgBossOnCompleteHandler = getOnCompleteHandlerForJobName(job.jobName);
-
-        const testJob = { id: 'test-job' };
-        await pgBossOnCompleteHandler(testJob);
-
-        expect(onCompleteHandler.calledWith(testJob, server.messageQueue)).to.be.true();
-      });
+    test('registers prepareTransactions job', async () => {
+      expect(server.createSubscription.calledWith(
+        jobs.prepareTransactions
+      )).to.be.true();
     });
 
-    experiment('for the createCharge job', () => {
-      test('a subscribe handler is registered', async () => {
-        const { job } = jobs.createCharge;
-        expect(server.messageQueue.subscribe.calledWith(job.jobName, job.options, job.handler)).to.be.true();
-      });
+    test('registers createCharge job', async () => {
+      expect(server.createSubscription.calledWith(
+        jobs.createCharge
+      )).to.be.true();
+    });
 
-      test('an onComplete handler is registered', async () => {
-        const { job } = jobs.createCharge;
-        expect(server.messageQueue.onComplete.calledWith(job.jobName)).to.be.true();
-      });
-
-      test('on execution, the onComplete is passed a job and the message queue', async () => {
-        const { job, onCompleteHandler } = jobs.createCharge;
-        const pgBossOnCompleteHandler = getOnCompleteHandlerForJobName(job.jobName);
-
-        const testJob = { id: 'test-job' };
-        await pgBossOnCompleteHandler(testJob);
-
-        expect(onCompleteHandler.calledWith(testJob, server.messageQueue)).to.be.true();
-      });
+    test('registers refreshTotals job', async () => {
+      expect(server.createSubscription.calledWith(
+        jobs.refreshTotals
+      )).to.be.true();
     });
   });
 });

@@ -13,7 +13,6 @@ const uuid = require('uuid/v4');
 const validateReturnsJob = require('../../../../../src/modules/returns/lib/jobs/validate-returns');
 const uploadValidator = require('../../../../../src/modules/returns/lib/returns-upload-validator');
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload');
-const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('../../../../../src/logger');
 const eventsService = require('../../../../../src/lib/services/events');
 const Event = require('../../../../../src/lib/models/event');
@@ -21,26 +20,20 @@ const errorEvent = require('../../../../../src/modules/returns/lib/jobs/error-ev
 
 const eventId = uuid();
 
-experiment('publish', () => {
+experiment('.createMessage', () => {
+  let message;
+
   beforeEach(async () => {
-    sandbox.stub(messageQueue, 'publish').resolves('test-job-id');
+    message = validateReturnsJob.createMessage({ eventId });
   });
 
-  afterEach(async () => {
-    sandbox.restore();
+  test('creates a message with the expected name', async () => {
+    expect(message.name).to.equal(validateReturnsJob.jobName);
   });
 
-  test('publishes a job with the expected name', async () => {
-    await validateReturnsJob.publish({ eventId: 'test-event-id' });
-    const [jobName] = messageQueue.publish.lastCall.args;
-    expect(jobName).to.equal(validateReturnsJob.jobName);
-  });
-
-  test('sends the expected job data', async () => {
-    await validateReturnsJob.publish({ eventId: 'test-event-id' });
-    const [, data] = messageQueue.publish.lastCall.args;
-    expect(data).to.equal({
-      eventId: 'test-event-id',
+  test('the message has the expected job data', async () => {
+    expect(message.data).to.equal({
+      eventId,
       subtype: 'csv'
     });
   });
