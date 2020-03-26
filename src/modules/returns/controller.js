@@ -1,5 +1,5 @@
 const Boom = require('@hapi/boom');
-const { find, first, get, set } = require('lodash');
+const { find, first, set } = require('lodash');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 
 const { persistReturnData, patchReturnData } = require('./lib/api-connector');
@@ -90,11 +90,16 @@ const postUpload = async (request, h) => {
   let event = eventFactory.createBulkUploadEvent(request.payload.userName, type);
 
   try {
+    // Create event
     event = await eventsService.create(event);
 
+    // Upload user data to S3 bucket
     const filename = getUploadFilename(event.id, type);
     await s3.upload(filename, request.payload.fileData);
-    const jobId = await startUploadJob.publish({ eventId: event.id, companyId });
+
+    // Format and publish PG boss message
+    const message = startUploadJob.createMessage(event, companyId);
+    const jobId = await request.messageQueue.publish(message);
 
     return h.response({
       data: {
@@ -214,7 +219,9 @@ const postUploadSubmit = async (request, h) => {
     // Update event
     eventsService.update(applySubmitting(request.event, valid));
 
-    await persistReturnsJob.publish(get(request, 'event.id'));
+    // Format and publish PG boss message
+    const message = persistReturnsJob.createMessage({ eventId, companyId });
+    await request.messageQueue.publish(message);
 
     return { data, error: null };
   } catch (error) {
