@@ -1,6 +1,7 @@
 'use strict';
 
 const { bookshelf } = require('../bookshelf');
+const billingInvoiceLicence = require('../bookshelf/BillingInvoiceLicence');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoice-licences');
 
@@ -36,7 +37,30 @@ const deleteByBatchAndInvoiceAccount = (batchId, invoiceAccountId) =>
 const findLicencesWithTransactionStatusesForBatch = batchId =>
   raw.multiRow(queries.findLicencesWithTransactionStatusesForBatch, { batchId });
 
+/**
+ * Find One the licence in a batch and aggregate the two part tariff
+ * error codes for a licence's underlying transactions.
+ * @param {String} batchId
+ */
+const findOneInvoiceLicenceWithTransactions = async (id) => {
+  // exports.BillingInvoiceLicence = require('./BillingInvoiceLicence');
+  const model = await billingInvoiceLicence
+    .forge({ billingInvoiceLicenceId: id })
+    .fetch({
+      withRelated: [
+        'licence',
+        'licence.region',
+        'billingTransactions',
+        'billingTransactions.chargeElement',
+        'billingTransactions.chargeElement.purposeUse'
+      ]
+    });
+
+  return model.toJSON();
+};
+
 exports.deleteByBatchAndInvoiceAccount = deleteByBatchAndInvoiceAccount;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findLicencesWithTransactionStatusesForBatch = findLicencesWithTransactionStatusesForBatch;
+exports.findOneInvoiceLicenceWithTransactions = findOneInvoiceLicenceWithTransactions;
 exports.upsert = upsert;

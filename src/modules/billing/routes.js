@@ -167,13 +167,29 @@ const getBatchLicences = {
   }
 };
 
+const getBatchInvoiceLicence = {
+  method: 'GET',
+  path: '/water/1.0/billing/batches/{batchId}/licences/{invoiceLicenceId}',
+  handler: controller.getInvoiceLicenceWithTransactions,
+  config: {
+    validate: {
+      params: {
+        batchId: Joi.string().uuid().required(),
+        invoiceLicenceId: Joi.string().uuid().required()
+      }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
+  }
+};
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
 exports.getBatchLicences = getBatchLicences;
-
+exports.getBatchInvoiceLicence = getBatchInvoiceLicence;
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
 exports.deleteBatch = deleteBatch;
 
