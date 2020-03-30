@@ -3,15 +3,17 @@ const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(Moment);
 const Decimal = require('decimal.js-light');
 const { identity } = require('lodash');
+const { TPT_PURPOSES } = require('./two-part-tariff-helpers');
 const {
-  TPT_PURPOSES,
-  ERROR_NO_RETURNS_FOR_MATCHING,
-  ERROR_NO_RETURNS_SUBMITTED,
-  ERROR_SOME_RETURNS_DUE,
-  ERROR_LATE_RETURNS,
-  ERROR_UNDER_QUERY,
-  ERROR_RECEIVED_NO_DATA
-} = require('./two-part-tariff-helpers');
+  twoPartTariffStatuses: {
+    ERROR_NO_RETURNS_FOR_MATCHING,
+    ERROR_NO_RETURNS_SUBMITTED,
+    ERROR_SOME_RETURNS_DUE,
+    ERROR_LATE_RETURNS,
+    ERROR_UNDER_QUERY,
+    ERROR_RECEIVED_NO_DATA
+  }
+} = require('../../../../lib/models/transaction');
 
 const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
 

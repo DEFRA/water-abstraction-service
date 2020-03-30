@@ -1,9 +1,7 @@
 const { flatMap, identity, groupBy } = require('lodash');
 const Decimal = require('decimal.js-light');
-const {
-  getChargeElementReturnData,
-  ERROR_OVER_ABSTRACTION
-} = require('./two-part-tariff-helpers');
+const { getChargeElementReturnData } = require('./two-part-tariff-helpers');
+const { twoPartTariffStatuses: { ERROR_OVER_ABSTRACTION } } = require('../../../../lib/models/transaction');
 const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
 
 const dateRegex = new RegExp(/^\d{4}-\d{2}-\d{2}$/);

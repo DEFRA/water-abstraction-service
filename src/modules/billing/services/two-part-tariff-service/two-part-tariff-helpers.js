@@ -1,13 +1,14 @@
 const Decimal = require('decimal.js-light');
+const { set } = require('lodash');
 const TPT_PURPOSES = [380, 390, 400, 410, 420];
 const dateFormat = 'YYYY-MM-DD';
-const ERROR_NO_RETURNS_FOR_MATCHING = 'no-returns-for-matching';
-const ERROR_NO_RETURNS_SUBMITTED = 'no-returns-submitted';
-const ERROR_SOME_RETURNS_DUE = 'some-returns-due';
-const ERROR_LATE_RETURNS = 'late-returns';
-const ERROR_UNDER_QUERY = 'under-query';
-const ERROR_RECEIVED = 'received';
-const ERROR_OVER_ABSTRACTION = 'over-abstraction';
+const {
+  twoPartTariffStatuses: {
+    ERROR_NO_RETURNS_SUBMITTED,
+    ERROR_SOME_RETURNS_DUE,
+    ERROR_LATE_RETURNS
+  }
+} = require('../../../../lib/models/transaction');
 
 /**
  * Checks whether error is one which requires a null return
@@ -36,12 +37,11 @@ const returnsError = (error, chargeElements) => {
  * @param {Array} chargeElements objects
  * @return {Object}
  *         {null} error
- *         {Array} data chargeElementId & null actualReturnQuantity
+ *         {Array} data chargeElement.id & null actualReturnQuantity
  */
 const getNullActualReturnQuantities = (error, chargeElements) => {
-  const data = chargeElements.map(element =>
-    getChargeElementReturnData({ ...element, actualReturnQuantity: null })
-  );
+  // @TODO: return actualReturnQuantity without adding it to charge element
+  const data = chargeElements.map(element => getChargeElementReturnData(set(element, 'actualReturnQuantity', null)));
   return { error, data };
 };
 
@@ -56,11 +56,10 @@ const getChargeElementReturnData = (chargeElement, error) => {
   const actualReturnQuantity = (chargeElement.actualReturnQuantity !== null)
     ? new Decimal(chargeElement.actualReturnQuantity).toDecimalPlaces(3).toNumber()
     : null;
-
   return {
     error: error || null,
     data: {
-      chargeElementId: chargeElement.chargeElementId,
+      chargeElementId: chargeElement.id,
       proRataAuthorisedQuantity: chargeElement.proRataAuthorisedQuantity,
       actualReturnQuantity
     }
@@ -82,13 +81,6 @@ const returnPurposeMatchesElementPurpose = (ret, ele) => {
 
 exports.TPT_PURPOSES = TPT_PURPOSES;
 exports.dateFormat = dateFormat;
-exports.ERROR_NO_RETURNS_FOR_MATCHING = ERROR_NO_RETURNS_FOR_MATCHING;
-exports.ERROR_NO_RETURNS_SUBMITTED = ERROR_NO_RETURNS_SUBMITTED;
-exports.ERROR_OVER_ABSTRACTION = ERROR_OVER_ABSTRACTION;
-exports.ERROR_SOME_RETURNS_DUE = ERROR_SOME_RETURNS_DUE;
-exports.ERROR_LATE_RETURNS = ERROR_LATE_RETURNS;
-exports.ERROR_UNDER_QUERY = ERROR_UNDER_QUERY;
-exports.ERROR_RECEIVED = ERROR_RECEIVED;
 exports.getNullActualReturnQuantities = getNullActualReturnQuantities;
 exports.returnsError = returnsError;
 exports.getChargeElementReturnData = getChargeElementReturnData;
