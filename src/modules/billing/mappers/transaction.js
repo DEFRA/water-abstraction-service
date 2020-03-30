@@ -8,6 +8,7 @@ const Batch = require('../../../lib/models/batch');
 const DateRange = require('../../../lib/models/date-range');
 const Transaction = require('../../../lib/models/transaction');
 const Agreement = require('../../../lib/models/agreement');
+const User = require('../../../lib/models/user');
 
 const agreement = require('./agreement');
 const chargeElementMapper = require('./charge-element');
@@ -42,6 +43,9 @@ const createTransaction = (batch, chargeLine, chargeElement, data = {}) => {
     chargeElement: chargeElementMapper.chargeToModel(chargeElement),
     volume: chargeElement.billableAnnualQuantity || chargeElement.authorisedAnnualQuantity
   });
+  if (data.twoPartTariffReview) {
+    transaction.twoPartTariffReview = mapReviewDataToUser(data.twoPartTariffReview);
+  }
 
   transaction.description = getTransactionDescription(
     batch,
@@ -122,6 +126,20 @@ const mapDBToAgreements = row => {
 };
 
 /**
+ * Maps json data from DB to User model
+ * @param {Object} data user data from DB
+ * @return {User}
+ */
+const mapReviewDataToUser = data => {
+  const user = new User();
+  user.fromHash({
+    id: data.id,
+    emailAddress: data.emailAddress
+  });
+  return user;
+};
+
+/**
  * Maps a row from water.billing_transactions to a Transaction model
  * @param {Object} row - from water.billing_transactions, camel cased
  */
@@ -130,12 +148,13 @@ const dbToModel = row => {
   transaction.fromHash({
     id: row.billingTransactionId,
     ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
-      'externalId', 'calculatedVolume', 'twoPartTariffError', 'twoPartTariffStatus', 'twoPartTariffReview']),
+      'externalId', 'calculatedVolume', 'twoPartTariffError', 'twoPartTariffStatus']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
     volume: parseFloat(row.volume),
-    agreements: mapDBToAgreements(row)
+    agreements: mapDBToAgreements(row),
+    twoPartTariffReview: mapReviewDataToUser(row.twoPartTariffReview)
   });
   return transaction;
 };

@@ -7,6 +7,7 @@ const Model = require('./model');
 const Agreement = require('./agreement');
 const DateRange = require('./date-range');
 const ChargeElement = require('./charge-element');
+const User = require('./user');
 
 const validators = require('./validators');
 
@@ -247,6 +248,19 @@ class Transaction extends Model {
   set twoPartTariffError (twoPartTariffError) {
     validators.assertIsBoolean(twoPartTariffError);
     this._twoPartTariffError = twoPartTariffError;
+  }
+
+  /**
+  * The User who has reviewed the two part tariff error
+  * @return {User}
+  */
+  get twoPartTariffReview () {
+    return this._twoPartTariffReview;
+  }
+
+  set twoPartTariffReview (twoPartTariffReview) {
+    validators.assertIsInstanceOf(twoPartTariffReview, User);
+    this._twoPartTariffReview = twoPartTariffReview;
   }
 
   /**
