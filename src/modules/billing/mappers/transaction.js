@@ -129,7 +129,8 @@ const dbToModel = row => {
   const transaction = new Transaction();
   transaction.fromHash({
     id: row.billingTransactionId,
-    ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey', 'externalId']),
+    ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
+      'externalId', 'calculatedVolume', 'twoPartTariffError', 'twoPartTariffStatus', 'twoPartTariffReview']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
@@ -182,7 +183,11 @@ const modelToDb = (invoiceLicence, transaction) => ({
   status: transaction.status,
   volume: transaction.volume,
   ...mapAgreementsToDB(transaction.agreements),
-  transactionKey: transaction.transactionKey
+  transactionKey: transaction.transactionKey,
+  calculatedVolume: transaction.calculatedVolume,
+  twoPartTariffError: transaction.twoPartTariffError,
+  twoPartTariffStatus: transaction.twoPartTariffStatus,
+  twoPartTariffReview: transaction.twoPartTariffReview
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';
