@@ -4,7 +4,7 @@ const { bookshelf } = require('./bookshelf.js');
 
 module.exports = bookshelf.model('BillingInvoiceLicence', {
   tableName: 'billing_invoice_licences',
-
+  idAttribute: 'billing_invoice_licence_id',
   hasTimestamps: ['date_created', 'date_updated'],
 
   billingInvoice () {
