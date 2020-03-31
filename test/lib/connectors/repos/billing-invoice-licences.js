@@ -92,7 +92,6 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
   });
 
   experiment('.findOneInvoiceLicenceWithTransactions', () => {
-
     beforeEach(async () => {
       const model = { toJSON: sandbox.stub().returns({ foo: 'bar' }) };
       const stub = {
