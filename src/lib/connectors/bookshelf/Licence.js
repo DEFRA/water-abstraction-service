@@ -9,5 +9,9 @@ module.exports = bookshelf.model('Licence', {
 
   region () {
     return this.hasOne('Region', 'region_id', 'region_id');
+  },
+
+  licenceAgreements () {
+    return this.hasMany('LicenceAgreement', 'licence_ref', 'licence_ref');
   }
 });
