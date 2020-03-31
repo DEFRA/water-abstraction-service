@@ -43,7 +43,6 @@ const findLicencesWithTransactionStatusesForBatch = batchId =>
  * @param {String} batchId
  */
 const findOneInvoiceLicenceWithTransactions = async (id) => {
-  // exports.BillingInvoiceLicence = require('./BillingInvoiceLicence');
   const model = await billingInvoiceLicence
     .forge({ billingInvoiceLicenceId: id })
     .fetch({
