@@ -175,17 +175,13 @@ const getBatchLicences = async (request, h) => {
 };
 
 const getInvoiceLicenceWithTransactions = async (request, h) => {
-  const { batch } = request.pre;
   const { invoiceLicenceId } = request.params;
-  if (batch.statusIsOneOf(BATCH_STATUS.processing, BATCH_STATUS.error)) {
-    return h.response('Cannot get licences for processing or errored batch').code(403);
+  try {
+    const invoiceLicence = await invoiceLicenceService.getInvoiceLicenceWithTransactions(invoiceLicenceId);
+    return invoiceLicence;
+  } catch (err) {
+    return err;
   }
-
-  if (batch.status === BATCH_STATUS.empty) {
-    return [];
-  }
-
-  return invoiceLicenceService.getInvoiceLicenceWithTransactions(invoiceLicenceId);
 };
 
 exports.getBatch = getBatch;
