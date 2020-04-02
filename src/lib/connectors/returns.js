@@ -102,6 +102,30 @@ const deleteAcceptanceTestData = () => {
   return helpers.serviceRequest.delete(url);
 };
 
+const getReturnsForLicence = async (licenceNumber, startDate, endDate) => {
+  const filter = {
+    licence_ref: licenceNumber,
+    status: {
+      $ne: 'void'
+    },
+    start_date: { $gte: startDate },
+    end_date: { $lte: endDate }
+  };
+  return returnsClient.findAll(filter);
+};
+
+const getLinesForReturn = async ret => {
+  const versionFilter = {
+    return_id: ret.return_id,
+    current: true
+  };
+  const versionSort = { version_number: -1 };
+  const versions = await versionsClient.findAll(versionFilter, versionSort);
+
+  const linesFilter = { version_id: versions[0].version_id };
+  return linesClient.findAll(linesFilter);
+};
+
 exports.returns = returnsClient;
 exports.versions = versionsClient;
 exports.lines = linesClient;
@@ -109,6 +133,8 @@ exports.getActiveReturns = getActiveReturns;
 exports.getCurrentDueReturns = getCurrentDueReturns;
 exports.voidReturns = voidReturns;
 exports.getServiceVersion = getServiceVersion;
+exports.getReturnsForLicence = getReturnsForLicence;
+exports.getLinesForReturn = getLinesForReturn;
 
 if (config.isAcceptanceTestTarget) {
   exports.deleteAcceptanceTestData = deleteAcceptanceTestData;

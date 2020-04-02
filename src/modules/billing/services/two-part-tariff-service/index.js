@@ -1,25 +1,34 @@
 const { set } = require('lodash');
-const returns = require('../../../../lib/connectors/returns');
-const { getFinancialYearDate } = require('@envage/water-abstraction-helpers').charging;
-const matchReturnsToChargeElements = require('./two-part-tariff-matching');
+const { matchReturnsToChargeElements } = require('./two-part-tariff-matching');
+const returnHelpers = require('./returns-helpers');
+const Purpose = require('../../../../lib/models/purpose');
 
-/**
- * Determine return cycle details from information in batch
- *
- * @param {Batch} batch
- * @return {startDate} moment - start of return cycle
- * @return {endDate} moment - end of return cycle
- */
-const getReturnCycleFromBatch = batch => {
-  const { endYear: { yearEnding } } = batch;
-  const returnCycleEndYear = batch.isSummer() ? yearEnding - 1 : yearEnding;
-  const returnCycleStartMonth = batch.isSummer() ? 11 : 4;
-  return {
-    startDate: getFinancialYearDate(1, returnCycleStartMonth, returnCycleEndYear),
-    endDate: getFinancialYearDate(31, returnCycleStartMonth - 1, returnCycleEndYear)
+const mapResultsWithData = (overallError, data, transactions) => {
+  const updatedTransactions = [];
+  for (const result of data) {
+    const { error, data: { chargeElementId, actualReturnQuantity } } = result;
+    const [transaction] = transactions.filter(transaction => transaction.chargeElement.id === chargeElementId);
+
+    const twoPartTariffStatus = overallError || error;
+    set(transaction, 'calculatedVolume', actualReturnQuantity);
+    set(transaction, 'volume', twoPartTariffStatus ? null : actualReturnQuantity);
+
+    set(transaction, 'twoPartTariffStatus', twoPartTariffStatus);
+    set(transaction, 'twoPartTariffError', !!twoPartTariffStatus);
+
+    updatedTransactions.push(transaction);
   };
+  return updatedTransactions;
 };
 
+const mapResultsWithoutData = (overallError, transactions) => {
+  for (const transaction of transactions) {
+    set(transaction, 'twoPartTariffStatus', overallError);
+    set(transaction, 'twoPartTariffError', !!overallError);
+    set(transaction, 'volume', null);
+  }
+  return transactions;
+};
 /**
  * Incorporates output of returns algorithm with charge element data
  *
@@ -27,21 +36,34 @@ const getReturnCycleFromBatch = batch => {
  * @param {ChargeVersion} chargeVersion
  * @return {chargeVersion} including returns matching results
  */
-const mapMatchingResultsToElements = (matchingResults, chargeVersion) => {
+const mapMatchingResultsToElements = (matchingResults, invoiceLicence) => {
   const { error: overallError, data } = matchingResults;
-  const updatedChargeElements = data.map(result => {
-    const { error, data: { chargeElementId, actualReturnQuantity, proRataAuthorisedQuantity } } = result;
-    const [chargeElement] = chargeVersion.chargeElements.filter(ele => ele.chargeElementId === chargeElementId);
-    return {
-      ...chargeElement,
-      actualReturnQuantity,
-      ...proRataAuthorisedQuantity && proRataAuthorisedQuantity,
-      matchingError: overallError || error
-    };
-  });
-  set(chargeVersion, 'chargeElements', updatedChargeElements);
-  return chargeVersion;
+  const { transactions } = invoiceLicence;
+  if (data) return mapResultsWithData(overallError, data, transactions);
+  return mapResultsWithoutData(overallError, transactions);
 };
+
+const fixPurpose = chargeElement => {
+  const purposeUse = new Purpose();
+  purposeUse.fromHash({
+    type: Purpose.PURPOSE_TYPES.use,
+    name: 'Spray irrigation',
+    code: '420'
+  });
+  return purposeUse;
+};
+
+const getChargeElementsForMatching = transactions => transactions.map(trans =>
+  ({
+    ...trans.chargeElement.toJSON(),
+    startDate: trans.chargePeriod.startDate,
+    endDate: trans.chargePeriod.endDate,
+    totalDays: trans.authorisedDays,
+    billableDays: trans.billableDays,
+    // @TODO: REMOVE FIXED PURPOSE
+    // remove when bookshelf to retreive charge element data
+    purposeUse: fixPurpose(trans.chargeElement)
+  }));
 
 /**
  * Process returns matching for given charge version
@@ -50,17 +72,23 @@ const mapMatchingResultsToElements = (matchingResults, chargeVersion) => {
  * @param {Batch} batch
  * @return {chargeVersion} including returns matching results
  */
-const processReturnsMatching = async (chargeVersion, batch) => {
-  const { startDate, endDate } = getReturnCycleFromBatch(batch);
+const processReturnsMatching = async (batch, invoiceLicence) => {
+  const { licence, transactions } = invoiceLicence;
+  const returnsForLicence = await returnHelpers.getReturnsForMatching(licence, batch);
 
-  const returnsForLicence = await returns.getReturnsForLicence(chargeVersion.licenceRef, startDate, endDate);
-  const matchingResults = matchReturnsToChargeElements(chargeVersion, returnsForLicence);
-  return mapMatchingResultsToElements(matchingResults, chargeVersion);
+  return matchReturnsToChargeElements(getChargeElementsForMatching(transactions), returnsForLicence);
 };
 
 const processBatch = async batch => {
-  console.log('-----------BATCH------------');
-  console.log(batch);
+  for (const invoice of batch.invoices) {
+    for (const invoiceLicence of invoice.invoiceLicences) {
+      const matchingResults = await processReturnsMatching(batch, invoiceLicence);
+
+      set(invoiceLicence, 'transactions', mapMatchingResultsToElements(matchingResults, invoiceLicence));
+    }
+  }
+
+  return batch;
 };
 
 exports.processBatch = processBatch;
