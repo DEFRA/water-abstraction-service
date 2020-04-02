@@ -8,13 +8,15 @@ const { logger } = require('../../../logger');
 const Event = require('../../../lib/models/event');
 const eventService = require('../../../lib/services/events');
 
-const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
+const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
+
 const Batch = require('../../../lib/models/batch');
 
 const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
 const invoiceService = require('./invoice-service');
 const invoiceAccountsService = require('./invoice-accounts-service');
+const config = require('../../../../config');
 
 /**
  * Loads a Batch instance by ID
@@ -58,7 +60,7 @@ const saveEvent = (type, status, user, batch) => {
 
 const deleteBatch = async (batch, internalCallingUser) => {
   try {
-    await chargeModuleBatchConnector.delete(batch.region.code, batch.id);
+    await chargeModuleBillRunConnector.delete(batch.externalId);
 
     await repos.billingBatchChargeVersionYears.deleteByBatchId(batch.id);
     await repos.billingBatchChargeVersions.deleteByBatchId(batch.id);
@@ -81,8 +83,8 @@ const setStatus = (batchId, status) =>
 
 const approveBatch = async (batch, internalCallingUser) => {
   try {
-    await chargeModuleBatchConnector.approve(batch.region.code, batch.id);
-    await chargeModuleBatchConnector.send(batch.region.code, batch.id, false);
+    await chargeModuleBillRunConnector.approve(batch.externalId);
+    await chargeModuleBillRunConnector.send(batch.externalId);
 
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
 
@@ -137,8 +139,8 @@ const saveInvoicesToDB = async batch => {
 
 const decorateBatchWithTotals = async batch => {
   try {
-    const chargeModuleSummary = await chargeModuleBatchConnector.send(batch.region.code, batch.id, true);
-    batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(chargeModuleSummary.summary);
+    const { billRun: { summary } } = await chargeModuleBillRunConnector.get(batch.externalId);
+    batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(summary);
   } catch (err) {
     logger.info('Failed to decorate batch with totals. Waiting for CM API', err);
   }
@@ -151,12 +153,11 @@ const decorateBatchWithTotals = async batch => {
  * @return {Promise}
  */
 const refreshTotals = async batch => {
-  const { billRunId, summary } = await chargeModuleBatchConnector.send(batch.region.code, batch.id, true);
+  const { billRun: { summary } } = await chargeModuleBillRunConnector.get(batch.externalId);
   return newRepos.billingBatches.update(batch.id, {
     invoiceCount: summary.invoiceCount,
     creditNoteCount: summary.creditNoteCount,
-    netTotal: summary.netTotal,
-    externalId: billRunId
+    netTotal: summary.netTotal
   });
 };
 
@@ -174,20 +175,22 @@ const getTransactionStatusCounts = async batchId => {
 };
 
 const deleteAccountFromBatch = async (batch, accountId) => {
+  console.log(1, batch);
   // get the invoice account from the CRM to access
   // the customer reference number.
   const invoiceAccount = await invoiceAccountsService.getByInvoiceAccountId(accountId);
 
-  await chargeModuleBatchConnector.deleteAccountFromBatch(
-    batch.region.code,
-    batch.id,
-    invoiceAccount.accountNumber
-  );
+  console.log(2, invoiceAccount);
 
+  // Delete from CM
+  await chargeModuleBillRunConnector.removeCustomer(batch.externalId, invoiceAccount.accountNumber);
+
+  // Delete from local DB
   await repos.billingTransactions.deleteByInvoiceAccount(batch.id, accountId);
   await newRepos.billingInvoiceLicences.deleteByBatchAndInvoiceAccount(batch.id, accountId);
   await newRepos.billingInvoices.deleteByBatchAndInvoiceAccountId(batch.id, accountId);
 
+  // @TODO delete charge versions no longer affected
   return setStatusToEmptyWhenNoTransactions(batch);
 };
 
@@ -219,6 +222,68 @@ const cleanup = async batchId => {
   await newRepos.billingInvoices.deleteEmptyByBatchId(batchId);
 };
 
+/**
+ * Finds open (processing/ready/review) batches in given region
+ * @param {String} regionId
+ * @return {Promise<Array>}
+ */
+const findOpenInRegion = async regionId => {
+  const statuses = [
+    Batch.BATCH_STATUS.processing,
+    Batch.BATCH_STATUS.ready,
+    Batch.BATCH_STATUS.review
+  ];
+  const batches = await newRepos.billingBatches.findByStatuses(statuses);
+  return batches.filter(batch => batch.region.regionId === regionId);
+};
+
+/**
+ * Creates batch locally and on CM, responds with Batch service model
+ * @param {String} regionId - guid from water.regions.region_id
+ * @param {String} batchType - annual|supplementary|two_part_tariff
+ * @param {Number} toFinancialYearEnding
+ * @param {String} season - summer|winter|all_year
+ * @return {Promise<Batch>} resolves with Batch service model
+ */
+const create = async (regionId, batchType, toFinancialYearEnding, season) => {
+  // If there is already an open batch in this region, return null
+  const openBatches = await findOpenInRegion(regionId);
+  if (openBatches.length > 0) {
+    return null;
+  }
+
+  const fromFinancialYearEnding = batchType === 'supplementary'
+    ? toFinancialYearEnding - config.billing.supplementaryYears
+    : toFinancialYearEnding;
+
+  const { billingBatchId } = await newRepos.billingBatches.create({
+    status: Batch.BATCH_STATUS.processing,
+    regionId,
+    batchType,
+    fromFinancialYearEnding,
+    toFinancialYearEnding,
+    season
+  });
+
+  return getBatchById(billingBatchId);
+};
+
+const createChargeModuleBillRun = async batchId => {
+  const batch = await getBatchById(batchId);
+
+  // Create CM batch
+  const { billRun: cmBillRun } = await chargeModuleBillRunConnector.create(batch.region.code);
+
+  // Update DB row
+  const row = await newRepos.billingBatches.update(batch.id, {
+    externalId: cmBillRun.id,
+    billRunId: cmBillRun.billRunId
+  });
+
+  // Return updated batch
+  return batch.pickFrom(row, ['externalId', 'billRunId']);
+};
+
 exports.approveBatch = approveBatch;
 exports.decorateBatchWithTotals = decorateBatchWithTotals;
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
@@ -235,3 +300,5 @@ exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
 exports.setStatusToEmptyWhenNoTransactions = setStatusToEmptyWhenNoTransactions;
 exports.cleanup = cleanup;
+exports.create = create;
+exports.createChargeModuleBillRun = createChargeModuleBillRun;

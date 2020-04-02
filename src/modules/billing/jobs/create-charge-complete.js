@@ -46,11 +46,10 @@ const getBatchProgressStatus = async batchId => {
 const parseJob = job => {
   const { eventId } = job.data.request.data;
   const { batch } = job.data.response;
-  const { billing_batch_id: batchId } = batch;
   return {
     eventId,
     batch,
-    batchId
+    batchId: batch.id
   };
 };
 

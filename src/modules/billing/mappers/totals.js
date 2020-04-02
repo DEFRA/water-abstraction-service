@@ -62,7 +62,7 @@ const chargeModuleBillRunToInvoiceModel = (billRun, invoiceAccountNumber) => {
  * @return {Totals}
  */
 const dbToModel = row => {
-  if (row.externalId === null) {
+  if (row.netTotal === null) {
     return null;
   }
   const totals = new Totals();

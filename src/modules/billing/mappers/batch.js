@@ -15,16 +15,18 @@ const totalsMapper = require('./totals');
 const dbToModel = row => {
   const batch = new Batch();
   const totals = totalsMapper.dbToModel(row);
-  const { externalId } = row;
+  const region = regionMapper.dbToModel(row.region);
+  const { externalId, billRunId } = row;
   batch.fromHash({
     id: row.billingBatchId,
     type: row.batchType,
     ...pick(row, ['season', 'status', 'dateCreated', 'dateUpdated', 'errorCode']),
     startYear: new FinancialYear(row.fromFinancialYearEnding),
     endYear: new FinancialYear(row.toFinancialYearEnding),
-    region: regionMapper.dbToModel(row.region),
+    ...region && { region },
     ...totals && { totals },
-    ...externalId && { externalId }
+    ...externalId && { externalId },
+    ...billRunId && { billRunId }
   });
   return batch;
 };

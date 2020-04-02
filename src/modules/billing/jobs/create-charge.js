@@ -2,7 +2,7 @@
 
 const { get } = require('lodash');
 const transactionsService = require('../services/transactions-service');
-const chargeModuleTransactions = require('../../../lib/connectors/charge-module/transactions');
+const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 const mappers = require('../mappers');
 const batchJob = require('./lib/batch-job');
 
@@ -39,7 +39,7 @@ const handleCreateCharge = async job => {
     const [cmTransaction] = mappers.batch.modelToChargeModule(batch);
 
     // Create transaction in Charge Module
-    const response = await chargeModuleTransactions.createTransaction(cmTransaction);
+    const response = await chargeModuleBillRunConnector.addTransaction(batch.externalId, cmTransaction);
 
     // Update/remove our local transaction in water.billing_transactions
     await transactionsService.updateWithChargeModuleResponse(transactionId, response);

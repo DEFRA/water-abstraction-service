@@ -17,7 +17,7 @@ const handlePrepareTransactions = async job => {
   batchJob.logHandling(job);
 
   try {
-    const batch = await batchService.getBatchById(job.data.batch.billing_batch_id);
+    const batch = await batchService.getBatchById(job.data.batch.id);
 
     if (batch.isSupplementary()) {
       logger.info(`Processing supplementary transactions ${job.name}`);

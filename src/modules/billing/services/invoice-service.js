@@ -7,7 +7,7 @@ const mappers = require('../mappers');
 const { logger } = require('../../../logger');
 
 // Connectors
-const chargeModuleBatchConnector = require('../../../lib/connectors/charge-module/batches');
+const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
 // Services
 const invoiceAccountsService = require('./invoice-accounts-service');
@@ -38,14 +38,14 @@ const decorateInvoicesWithCompanies = async invoices => {
  * overlays the transactions found from the charge-module, and the
  * contacts from the CRM
  *
- * @param {String} batchId UUID of the batch to find invoices for
+ * @param {Batch} batch - batch model
  * @param {String} invoiceId UUID of the invoice
  * @return {Promise<Invoice>}
  */
-const getInvoiceForBatch = async (batchId, invoiceId) => {
+const getInvoiceForBatch = async (batch, invoiceId) => {
   // Get object graph of invoice and related data
   const data = await repos.billingInvoices.findOne(invoiceId);
-  if (!data || data.billingBatch.billingBatchId !== batchId) {
+  if (!data || data.billingBatch.billingBatchId !== batch.id) {
     return null;
   }
   // Map to Invoice service model
@@ -53,15 +53,16 @@ const getInvoiceForBatch = async (batchId, invoiceId) => {
 
   // Get CRM company and Charge Module summary data
   const accountNumber = get(invoice, 'invoiceAccount.accountNumber');
-  const regionId = get(data, 'billingBatch.region.chargeRegionId');
-  const [, chargeModuleSummary] = await Promise.all([
+  const [, { billRun }] = await Promise.all([
     decorateInvoicesWithCompanies([invoice]),
-    chargeModuleBatchConnector.send(regionId, batchId, true, accountNumber)
+    chargeModuleBillRunConnector.getCustomer(batch.externalId, accountNumber)
   ]);
 
+  console.log(billRun);
+
   // Use Charge Module data to populate totals and transaction values
-  invoice.totals = mappers.totals.chargeModuleBillRunToBatchModel(chargeModuleSummary.summary);
-  decorateInvoiceTransactionValues(invoice, chargeModuleSummary);
+  invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(billRun, accountNumber);
+  decorateInvoiceTransactionValues(invoice, billRun);
 
   return invoice;
 };
@@ -138,18 +139,19 @@ const decorateInvoiceTransactionValues = (invoice, chargeModuleBillRun) => {
  * @param {Object} chargeModuleSummary - response from charge module bill run API call
  * @return {Promise<Array>} array of Invoice instances
  */
-const getInvoicesForBatch = async batchId => {
+const getInvoicesForBatch = async batch => {
   // Load Batch instance from repo with invoices
-  const data = await repos.billingBatches.findOneWithInvoices(batchId);
+  const data = await repos.billingBatches.findOneWithInvoices(batch.id);
 
   // Map data to Invoice models
   const invoices = data.billingInvoices.map(mappers.invoice.dbToModel);
 
   try {
     // Load Charge Module summary data
-    const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
+    const { billRun } = await chargeModuleBillRunConnector.get(batch.externalId);
+
     // Decorate with Charge Module summary data and CRM company data
-    invoices.forEach(invoice => decorateInvoiceWithTotals(invoice, chargeModuleSummary));
+    invoices.forEach(invoice => decorateInvoiceWithTotals(invoice, billRun));
   } catch (err) {
     logger.info('CM error', err);
   }
@@ -158,16 +160,18 @@ const getInvoicesForBatch = async batchId => {
   return invoices;
 };
 
-const getInvoicesTransactionsForBatch = async batchId => {
+const getInvoicesTransactionsForBatch = async batch => {
   // Load Batch instance from repo with invoices
-  const data = await repos.billingBatches.findOneWithInvoicesWithTransactions(batchId);
+  const data = await repos.billingBatches.findOneWithInvoicesWithTransactions(batch.id);
 
   // Map data to Invoice models
   const invoices = data.billingInvoices.map(mappers.invoice.dbToModel);
   try {
     // Load Charge Module summary data
-    const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
-    invoices.forEach(invoice => decorateInvoiceTransactionValues(invoice, chargeModuleSummary));
+    const { billRun } = await chargeModuleBillRunConnector.get(batch.externalId);
+
+    // const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
+    invoices.forEach(invoice => decorateInvoiceTransactionValues(invoice, billRun));
   } catch (err) {
     logger.info('CM error', err);
   }

@@ -15,7 +15,7 @@ const createMessage = (eventId, batch) => {
 const handlePopulateBatch = async job => {
   batchJob.logHandling(job);
 
-  const batchId = get(job, 'data.batch.billing_batch_id');
+  const batchId = get(job, 'data.batch.id');
 
   const batch = await batchService.getBatchById(batchId);
 
