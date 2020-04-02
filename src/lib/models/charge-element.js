@@ -136,6 +136,13 @@ class ChargeElement extends Model {
   get purposeUse () {
     return this._purposeUse;
   }
+
+  toJSON () {
+    return {
+      ...super.toJSON(),
+      eiucSource: this.eiucSource
+    };
+  }
 }
 
 module.exports = ChargeElement;
