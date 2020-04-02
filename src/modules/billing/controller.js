@@ -41,7 +41,7 @@ const getFromFinancialYearEndingForBatch = (batchType, financialYearEnding) => {
 
 const createBatch = (regionId, batchType, financialYearEnding, season) => {
   const fromFinancialYearEnding = getFromFinancialYearEndingForBatch(batchType, financialYearEnding);
-  const toFinancialYearEnding = batchType === 'two_part_tariff' ? financialYearEnding - 1 : financialYearEnding;
+  const toFinancialYearEnding = batchType === 'two_part_tariff' ? fromFinancialYearEnding : financialYearEnding;
 
   return repos.billingBatches.createBatch(
     regionId,
