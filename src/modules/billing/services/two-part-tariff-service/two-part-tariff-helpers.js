@@ -74,9 +74,17 @@ const returnPurposeMatchesElementPurpose = (ret, ele) => {
   return purposeMatch.includes(true);
 };
 
+const getAbstractionPeriodDates = absPeriod => ({
+  periodStartDay: absPeriod.startDay,
+  periodStartMonth: absPeriod.startMonth,
+  periodEndDay: absPeriod.endDay,
+  periodEndMonth: absPeriod.endMonth
+});
+
 exports.TPT_PURPOSES = TPT_PURPOSES;
 exports.dateFormat = dateFormat;
 exports.getNullActualReturnQuantities = getNullActualReturnQuantities;
 exports.returnsError = returnsError;
 exports.getChargeElementReturnData = getChargeElementReturnData;
 exports.returnPurposeMatchesElementPurpose = returnPurposeMatchesElementPurpose;
+exports.getAbstractionPeriodDates = getAbstractionPeriodDates;

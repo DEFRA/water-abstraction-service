@@ -1,6 +1,6 @@
 const { flatMap, identity, groupBy } = require('lodash');
 const Decimal = require('decimal.js-light');
-const { getChargeElementReturnData } = require('./two-part-tariff-helpers');
+const { getChargeElementReturnData, getAbstractionPeriodDates } = require('./two-part-tariff-helpers');
 const { twoPartTariffStatuses: { ERROR_OVER_ABSTRACTION } } = require('../../../../lib/models/transaction');
 const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
 
@@ -54,12 +54,7 @@ const reallocateQuantitiesInOrder = chargeElementGroup => {
  */
 const isSubElementWithinBaseElement = (subEle, baseEle) => {
   const year = subEle.startDate.slice(0, 4);
-  const options = {
-    periodStartDay: baseEle.abstractionPeriod.startDay,
-    periodStartMonth: baseEle.abstractionPeriod.startMonth,
-    periodEndDay: baseEle.abstractionPeriod.endDay,
-    periodEndMonth: baseEle.abstractionPeriod.endMonth
-  };
+  const options = getAbstractionPeriodDates(baseEle.abstractionPeriod);
   return isDateWithinAbstractionPeriod(`${year}-${subEle.abstractionPeriod.startMonth}-${subEle.abstractionPeriod.startDay}`, options) &&
     isDateWithinAbstractionPeriod(`${year}-${subEle.abstractionPeriod.endMonth}-${subEle.abstractionPeriod.endDay}`, options);
 };

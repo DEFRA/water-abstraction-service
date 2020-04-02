@@ -4,7 +4,7 @@ const moment = MomentRange.extendMoment(Moment);
 const Decimal = require('decimal.js-light');
 const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
 
-const { dateFormat } = require('./two-part-tariff-helpers');
+const { dateFormat, getAbstractionPeriodDates } = require('./two-part-tariff-helpers');
 
 /**
  * Create moment range for return line or charge element
@@ -18,12 +18,7 @@ const getDateRange = obj => moment.range([
  * Checks whether the return line overlaps the effective date range of the charge element
  */
 const doesLineOverlapChargeElementDateRange = (line, ele) => {
-  const options = {
-    periodStartDay: ele.abstractionPeriod.startDay,
-    periodStartMonth: ele.abstractionPeriod.startMonth,
-    periodEndDay: ele.abstractionPeriod.endDay,
-    periodEndMonth: ele.abstractionPeriod.endMonth
-  };
+  const options = getAbstractionPeriodDates(ele.abstractionPeriod);
   const lineOverlapsChargeElement = getDateRange(ele).overlaps(getDateRange(line));
   const lineIsInAbstractionPeriod = isDateWithinAbstractionPeriod(line.startDate, options) || isDateWithinAbstractionPeriod(line.endDate, options);
 
