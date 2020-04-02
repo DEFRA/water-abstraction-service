@@ -15,6 +15,20 @@ const {
 } = require('./two-part-tariff-helpers');
 const { reshuffleQuantities } = require('./reshuffle-quantities');
 
+const matchReturnLines = (ret, ele) => {
+  for (const retLine of ret.lines) {
+    const {
+      updatedLineQuantityAllocated,
+      updatedElementQuantity,
+      updatedMaxPossibleReturnQuantity
+    } = matchReturns.matchReturnLineToElement(retLine, ele);
+
+    retLine.quantityAllocated = updatedLineQuantityAllocated;
+    ele.actualReturnQuantity = updatedElementQuantity;
+    ele.maxPossibleReturnQuantity = updatedMaxPossibleReturnQuantity;
+  };
+};
+
 /**
  * Matches prepared returns to sorted charge elements
  * @param {Array} chargeElements - sorted charge elements for matching
@@ -24,19 +38,7 @@ const { reshuffleQuantities } = require('./reshuffle-quantities');
 const matchReturnQuantities = (chargeElements, returnsToMatch) => {
   for (const ele of chargeElements) {
     for (const ret of returnsToMatch) {
-      if (returnPurposeMatchesElementPurpose(ret, ele)) {
-        for (const retLine of ret.lines) {
-          const {
-            updatedLineQuantityAllocated,
-            updatedElementQuantity,
-            updatedMaxPossibleReturnQuantity
-          } = matchReturns.matchReturnLineToElement(retLine, ele);
-
-          retLine.quantityAllocated = updatedLineQuantityAllocated;
-          ele.actualReturnQuantity = updatedElementQuantity;
-          ele.maxPossibleReturnQuantity = updatedMaxPossibleReturnQuantity;
-        };
-      }
+      if (returnPurposeMatchesElementPurpose(ret, ele)) matchReturnLines(ret, ele);
     };
   };
   return chargeElements;
