@@ -1,7 +1,8 @@
 const prepareTransactionsJob = require('./prepare-transactions');
 const { logger } = require('../../../logger');
 const batchJob = require('./lib/batch-job');
-const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+const { BATCH_ERROR_CODE, BATCH_STATUS } = require('../../../lib/models/batch');
+const batchService = require('../services/batch-service');
 
 const chargeVersionYearService = require('../services/charge-version-year');
 
@@ -21,8 +22,13 @@ const handleProcessChargeVersionComplete = async (job, messageQueue) => {
   if (processing === 0) {
     logger.info(`No more charge version year entries to process for batch: ${batchId}`);
 
-    const message = prepareTransactionsJob.createMessage(eventId, batch);
     await batchJob.deleteOnCompleteQueue(job, messageQueue);
+
+    if (batch.batch_type === 'two_part_tariff') {
+      return batchService.setStatus(batchId, BATCH_STATUS.review);
+    }
+
+    const message = prepareTransactionsJob.createMessage(eventId, batch);
     return messageQueue.publish(message);
   }
 
