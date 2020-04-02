@@ -7,6 +7,7 @@ const { expect } = require('@hapi/code');
 
 const ChargeElement = require('../../../../src/lib/models/charge-element');
 const Purpose = require('../../../../src/lib/models/purpose');
+const DateRange = require('../../../../src/lib/models/date-range');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const chargeElementsMapper = require('../../../../src/modules/billing/mappers/charge-element');
@@ -17,6 +18,14 @@ const data = {
     source: 'supported',
     season: CHARGE_SEASON.summer,
     loss: 'high'
+  },
+  timeLimitedChargeElement: {
+    chargeElementId: '90d4af8a-1717-452c-84bd-467a7d55ade4',
+    source: 'supported',
+    season: CHARGE_SEASON.summer,
+    loss: 'high',
+    timeLimitedStartDate: '2012-03-01',
+    timeLimitedEndDate: '2020-10-31'
   },
   dbRow: {
     charge_element_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
@@ -62,6 +71,28 @@ experiment('modules/billing/mappers/charge-element', () => {
 
     test('sets the .loss property', async () => {
       expect(result.loss).to.equal(data.chargeElement.loss);
+    });
+
+    experiment('when charge element has time limited dates', async => {
+      beforeEach(() => {
+        result = chargeElementsMapper.chargeToModel(data.timeLimitedChargeElement);
+      });
+      test('sets the .timeLimitedPeriod property', async () => {
+        const timeLimitedPeriod = new DateRange(
+          data.timeLimitedChargeElement.timeLimitedStartDate,
+          data.timeLimitedChargeElement.timeLimitedEndDate
+        );
+        expect(result.timeLimitedPeriod).to.equal(timeLimitedPeriod);
+      });
+    });
+
+    experiment('when charge element does not have time limited dates', async => {
+      beforeEach(() => {
+        result = chargeElementsMapper.chargeToModel(data.chargeElement);
+      });
+      test('sets the .timeLimitedPeriod property', async () => {
+        expect(result.timeLimitedPeriod).to.be.undefined();
+      });
     });
   });
 
