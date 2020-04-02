@@ -1,6 +1,7 @@
 'use strict';
 
 const ChargeElement = require('../../../lib/models/charge-element');
+const DateRange = require('../../../lib/models/date-range');
 const abstractionPeriod = require('./abstraction-period');
 const camelCaseKeys = require('../../../lib/camel-case-keys');
 
@@ -25,6 +26,10 @@ const chargeToModel = chargeElementRow => {
   });
   if (chargeElementRow.purposeUse) {
     element.purposeUse = purpose.dbToModelUse(chargeElementRow.purposeUse);
+  }
+  if (chargeElementRow.timeLimitedStartDate || chargeElementRow.timeLimitedEndDate) {
+    element.timeLimitedPeriod = new DateRange(
+      chargeElementRow.timeLimitedStartDate, chargeElementRow.timeLimitedEndDate);
   }
   return element;
 };

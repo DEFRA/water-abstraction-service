@@ -19,13 +19,13 @@ const statuses = {
 };
 
 const twoPartTariffStatuses = {
-  ERROR_NO_RETURNS_FOR_MATCHING: 10,
-  ERROR_NO_RETURNS_SUBMITTED: 20,
-  ERROR_UNDER_QUERY: 30,
-  ERROR_RECEIVED: 40,
-  ERROR_SOME_RETURNS_DUE: 50,
-  ERROR_LATE_RETURNS: 60,
-  ERROR_OVER_ABSTRACTION: 70
+  ERROR_NO_RETURNS_SUBMITTED: 10,
+  ERROR_UNDER_QUERY: 20,
+  ERROR_RECEIVED: 30,
+  ERROR_SOME_RETURNS_DUE: 40,
+  ERROR_LATE_RETURNS: 50,
+  ERROR_OVER_ABSTRACTION: 60,
+  ERROR_NO_RETURNS_FOR_MATCHING: 70
 };
 
 class Transaction extends Model {
@@ -207,7 +207,7 @@ class Transaction extends Model {
   }
 
   set volume (volume) {
-    validators.assertQuantity(volume);
+    validators.assertNullableQuantity(volume);
     this._volume = volume;
   }
 
