@@ -1,10 +1,8 @@
-const { flatMap, identity, groupBy } = require('lodash');
+const { flatMap, identity, groupBy, set } = require('lodash');
 const Decimal = require('decimal.js-light');
 const { getChargeElementReturnData } = require('./two-part-tariff-helpers');
 const { twoPartTariffStatuses: { ERROR_OVER_ABSTRACTION } } = require('../../../../lib/models/transaction');
 const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
-
-const dateRegex = new RegExp(/^\d{4}-\d{2}-\d{2}$/);
 
 /**
  * Reduce function for calculating the total allocated quantity
@@ -19,33 +17,7 @@ const getTotalBillableQuantity = (total, element) => total.plus(element.proRataA
 /**
  * Checks whether or not the charge element is time limited, but checking if it has time limited dates
  */
-const isTimeLimited = element => dateRegex.test(element.timeLimitedStartDate) && dateRegex.test(element.timeLimitedEndDate);
-
-/**
- * Calculates the quantity to allocate for a charge element
- * @param {Decimal} totalActual return quantity to reshuffle
- * @param {Decimal} totalBillable quantity across charge elements
- * @param {Number} maxAllowable quantity for single charge element
- * @param {Number} maxForPeriod quantity for single charge element
- * @return {Object}
- *         {String} err  over abstraction error or null
- *         {Decimal} quantityToAllocate  for charge element
- */
-const getQuantityToAllocate = (totalActual, totalBillable, maxAllowable, maxForPeriod) => {
-  let err, quantityToAllocate;
-  const overAbstraction = totalActual.minus(totalBillable);
-
-  if (overAbstraction.gt(0)) {
-    err = ERROR_OVER_ABSTRACTION;
-    quantityToAllocate = overAbstraction.plus(maxAllowable);
-  } else {
-    quantityToAllocate = new Decimal(Math.min(totalActual, maxAllowable, maxForPeriod));
-  }
-  return {
-    err,
-    quantityToAllocate
-  };
-};
+const isTimeLimited = element => !!element.timeLimitedPeriod;
 
 /**
  * Reallocate quantities to fill elements in order, over abstractions are allocated to first element
@@ -63,30 +35,15 @@ const reallocateQuantitiesInOrder = chargeElementGroup => {
   const data = elements.map(element => {
     const quantityToAllocate = Math.min(totalActual, element.proRataAuthorisedQuantity, element.maxPossibleReturnQuantity);
     totalActual = totalActual.minus(quantityToAllocate);
-    return getChargeElementReturnData({ ...element, actualReturnQuantity: quantityToAllocate }, null);
+    return getChargeElementReturnData(set(element, 'actualReturnQuantity', quantityToAllocate), null);
   });
 
+  // if there's any unallocated quantity left, add over abstraction amount to first element
   if (totalActual.gt(0)) {
     data[0].data.actualReturnQuantity = totalActual.plus(data[0].data.actualReturnQuantity).toDecimalPlaces(3).toNumber();
     data[0].error = overallErr;
   }
   return { data, error: overallErr };
-};
-
-/**
- * Filters the charge elements by source and whether or not they are time limited
- * @param {Array} chargeElements
- * @param {String} source - supported or unsupported
- * @param {Boolean} timeLimited - whether filter for an element that is time limited
- * @return {Array} filtered charge elements based on source and time limited
- */
-const getElementsBySource = (chargeElements, source, timeLimited) => {
-  return chargeElements.filter(element => {
-    if (timeLimited) {
-      return element.source === source && isTimeLimited(element);
-    }
-    return element.source === source && !isTimeLimited(element);
-  });
 };
 
 /**
@@ -98,13 +55,13 @@ const getElementsBySource = (chargeElements, source, timeLimited) => {
 const isSubElementWithinBaseElement = (subEle, baseEle) => {
   const year = subEle.startDate.slice(0, 4);
   const options = {
-    periodStartDay: baseEle.abstractionPeriodStartDay,
-    periodStartMonth: baseEle.abstractionPeriodStartMonth,
-    periodEndDay: baseEle.abstractionPeriodEndDay,
-    periodEndMonth: baseEle.abstractionPeriodEndMonth
+    periodStartDay: baseEle.abstractionPeriod.startDay,
+    periodStartMonth: baseEle.abstractionPeriod.startMonth,
+    periodEndDay: baseEle.abstractionPeriod.endDay,
+    periodEndMonth: baseEle.abstractionPeriod.endMonth
   };
-  return isDateWithinAbstractionPeriod(`${year}-${subEle.abstractionPeriodStartMonth}-${subEle.abstractionPeriodStartDay}`, options) &&
-    isDateWithinAbstractionPeriod(`${year}-${subEle.abstractionPeriodEndMonth}-${subEle.abstractionPeriodEndDay}`, options);
+  return isDateWithinAbstractionPeriod(`${year}-${subEle.abstractionPeriod.startMonth}-${subEle.abstractionPeriod.startDay}`, options) &&
+    isDateWithinAbstractionPeriod(`${year}-${subEle.abstractionPeriod.endMonth}-${subEle.abstractionPeriod.endDay}`, options);
 };
 
 /**
@@ -159,10 +116,8 @@ const reshuffleQuantities = chargeElements => {
   return checkQuantitiesInElementGroups(elementGroups);
 };
 
-exports.getQuantityToAllocate = getQuantityToAllocate;
 exports.reallocateQuantitiesInOrder = reallocateQuantitiesInOrder;
 exports.isTimeLimited = isTimeLimited;
-exports.getElementsBySource = getElementsBySource;
 exports.isSubElementWithinBaseElement = isSubElementWithinBaseElement;
 exports.sortElementsIntoGroupsForReallocation = sortElementsIntoGroupsForReallocation;
 exports.checkQuantitiesInElementGroups = checkQuantitiesInElementGroups;

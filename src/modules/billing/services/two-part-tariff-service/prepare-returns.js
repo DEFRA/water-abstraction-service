@@ -117,17 +117,16 @@ const isReturnPurposeTPT = purposes => {
  * @param {Array} returns objects
  * @return {Array} returns objects ready for matching with required data points
  */
-const getTPTReturns = returns => {
-  return returns.filter(ret => isReturnPurposeTPT(ret.metadata.purposes));
-};
+const getTPTReturns = returns =>
+  returns.filter(ret => isReturnPurposeTPT(ret.metadata.purposes));
 
 /**
  * Removes null and nil return lines, converts quantity to ML and adds quantityAllocated
  * @param {Array} returns objects
  * @return {Array} Updated returns array
  */
-const prepareReturnLinesData = returns => {
-  return returns.map(ret => {
+const prepareReturnLinesData = returns =>
+  returns.map(ret => {
     return {
       ...ret,
       lines: ret.lines.filter(line => {
@@ -141,7 +140,6 @@ const prepareReturnLinesData = returns => {
       })
     };
   });
-};
 
 exports.isLineWithinAbstractionPeriod = isLineWithinAbstractionPeriod;
 exports.checkForReturnsErrors = checkForReturnsErrors;

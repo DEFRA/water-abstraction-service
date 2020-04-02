@@ -1,5 +1,4 @@
 const Decimal = require('decimal.js-light');
-const { set } = require('lodash');
 const TPT_PURPOSES = [380, 390, 400, 410, 420];
 const dateFormat = 'YYYY-MM-DD';
 const {
@@ -25,7 +24,7 @@ const isNullReturnRequired = error => {
  * @param {Array} chargeElements
  */
 const returnsError = (error, chargeElements) => {
-  if (isNullReturnRequired(error)) return getNullActualReturnQuantities(error, chargeElements);
+  if (isNullReturnRequired(error)) return getNullActualReturnQuantities(chargeElements, error);
   return {
     error,
     data: null
@@ -33,15 +32,14 @@ const returnsError = (error, chargeElements) => {
 };
 
 /**
- * Sets actualReturnQuantities set to null for all chargeElements
+ * Sets up charge elemets with acturalReturnQuantity = null
  * @param {Array} chargeElements objects
  * @return {Object}
- *         {null} error
+ *         {Integer} error passed in
  *         {Array} data chargeElement.id & null actualReturnQuantity
  */
-const getNullActualReturnQuantities = (error, chargeElements) => {
-  // @TODO: return actualReturnQuantity without adding it to charge element
-  const data = chargeElements.map(element => getChargeElementReturnData(set(element, 'actualReturnQuantity', null)));
+const getNullActualReturnQuantities = (chargeElements, error) => {
+  const data = chargeElements.map(element => getChargeElementReturnData(element));
   return { error, data };
 };
 
@@ -53,7 +51,7 @@ const getNullActualReturnQuantities = (error, chargeElements) => {
  *         {Object} data result of matching exercise for specific charge element
  */
 const getChargeElementReturnData = (chargeElement, error) => {
-  const actualReturnQuantity = (chargeElement.actualReturnQuantity !== null)
+  const actualReturnQuantity = chargeElement.actualReturnQuantity
     ? new Decimal(chargeElement.actualReturnQuantity).toDecimalPlaces(3).toNumber()
     : null;
   return {
@@ -73,9 +71,8 @@ const getChargeElementReturnData = (chargeElement, error) => {
  * @return {Boolean} whether or not the return contains a purpose that matches the charge element purpose
  */
 const returnPurposeMatchesElementPurpose = (ret, ele) => {
-  const purposeMatch = ret.metadata.purposes.map(purpose => {
-    return parseInt(purpose.tertiary.code) === parseInt(ele.purposeTertiary);
-  });
+  const purposeMatch = ret.metadata.purposes.map(purpose =>
+    parseInt(purpose.tertiary.code) === parseInt(ele.purposeUse.code));
   return purposeMatch.includes(true);
 };
 

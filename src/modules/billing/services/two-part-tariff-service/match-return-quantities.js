@@ -19,10 +19,10 @@ const getDateRange = obj => moment.range([
  */
 const doesLineOverlapChargeElementDateRange = (line, ele) => {
   const options = {
-    periodStartDay: ele.abstractionPeriodStartDay,
-    periodStartMonth: ele.abstractionPeriodStartMonth,
-    periodEndDay: ele.abstractionPeriodEndDay,
-    periodEndMonth: ele.abstractionPeriodEndMonth
+    periodStartDay: ele.abstractionPeriod.startDay,
+    periodStartMonth: ele.abstractionPeriod.startMonth,
+    periodEndDay: ele.abstractionPeriod.endDay,
+    periodEndMonth: ele.abstractionPeriod.endMonth
   };
   const lineOverlapsChargeElement = getDateRange(ele).overlaps(getDateRange(line));
   const lineIsInAbstractionPeriod = isDateWithinAbstractionPeriod(line.startDate, options) || isDateWithinAbstractionPeriod(line.endDate, options);
