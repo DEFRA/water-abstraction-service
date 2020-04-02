@@ -5,75 +5,17 @@ const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { createChargeElement } = require('./test-charge-data');
 const Decimal = require('decimal.js-light');
 const {
-  getQuantityToAllocate,
   reallocateQuantitiesInOrder,
   isTimeLimited,
-  getElementsBySource,
   isSubElementWithinBaseElement,
   sortElementsIntoGroupsForReallocation,
   checkQuantitiesInElementGroups,
   reshuffleQuantities
-} = require('../../../../../src/modules/billing/service/two-part-tariff/reshuffle-quantities');
-const { ERROR_OVER_ABSTRACTION } = require('../../../../../src/modules/billing/service/two-part-tariff/two-part-tariff-helpers');
+} = require('../../../../../src/modules/billing/services/two-part-tariff-service/reshuffle-quantities');
+const { ERROR_OVER_ABSTRACTION } = require('../../../../../src/lib/models/transaction').twoPartTariffStatuses;
 const { CHARGE_SEASON } = require('../../../../../src/lib/models/constants');
 
 experiment('modules/charging/lib/reshuffle-quantities', async () => {
-  experiment('.getQuantityToAllocate', async () => {
-    test('if over abstraction, return error and expected quantityToAllocate', async () => {
-      const totalActual = new Decimal(120);
-      const totalBillable = new Decimal(100);
-      const maxAllowable = 75;
-      const maxForPeriod = 100;
-      const expectedQuantityToAllocate = totalActual.minus(totalBillable).plus(maxAllowable);
-
-      const { err, quantityToAllocate } = getQuantityToAllocate(totalActual, totalBillable, maxAllowable, maxForPeriod);
-
-      expect(err).to.equal(ERROR_OVER_ABSTRACTION);
-      expect(quantityToAllocate).to.equal(expectedQuantityToAllocate);
-    });
-    test('returns undefined error and maxForPeriod when it is the lowest', async () => {
-      const totalActual = new Decimal(100);
-      const totalBillable = new Decimal(100);
-      const maxAllowable = 75;
-      const maxForPeriod = new Decimal(65);
-
-      const {
-        err,
-        quantityToAllocate
-      } = getQuantityToAllocate(totalActual, totalBillable, maxAllowable, maxForPeriod);
-
-      expect(err).to.be.undefined();
-      expect(quantityToAllocate).to.equal(maxForPeriod);
-    });
-    test('returns undefined error and maxAllowable when it is the lowest', async () => {
-      const totalActual = new Decimal(100);
-      const totalBillable = new Decimal(100);
-      const maxAllowable = new Decimal(75);
-      const maxForPeriod = new Decimal(90);
-
-      const {
-        err,
-        quantityToAllocate
-      } = getQuantityToAllocate(totalActual, totalBillable, maxAllowable, maxForPeriod);
-
-      expect(err).to.be.undefined();
-      expect(quantityToAllocate).to.equal(maxAllowable);
-    });
-    test('returns undefined error and totalActual when it is the lowest', async () => {
-      const totalActual = new Decimal(60);
-      const totalBillable = new Decimal(100);
-      const maxAllowable = new Decimal(75);
-      const maxForPeriod = new Decimal(90);
-
-      const {
-        err,
-        quantityToAllocate
-      } = getQuantityToAllocate(totalActual, totalBillable, maxAllowable, maxForPeriod);
-
-      expect(err).to.be.undefined();
-      expect(quantityToAllocate).to.equal(totalActual);
-    });
-  });
   experiment('.reallocateQuantitiesInOrder', async () => {
     experiment('when all elements are not full', async () => {
       test('move quantity from sub element into base element', async () => {
@@ -342,14 +284,14 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       test('and an under abstraction in sub element, sub element is equal to max for period, excess is put on base element', async () => {
         const chargeElementsGroup = {
           baseElement: createChargeElement({
-            chargeElementId: 'charge-element-2',
+            chargeElementId: 'charge-element-1',
             source: 'unsupported',
             actualReturnQuantity: 110,
             proRataAuthorisedQuantity: 100,
             maxPossibleReturnQuantity: 156
           }),
           subElements: [createChargeElement({
-            chargeElementId: 'charge-element-1',
+            chargeElementId: 'charge-element-2',
             source: 'unsupported',
             timeLimitedStartDate: '2016-04-01',
             timeLimitedEndDate: '2017-03-31',
@@ -422,37 +364,6 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         timeLimitedEndDate: '2017-03-31'
       }));
       expect(result).to.be.true();
-    });
-  });
-  experiment('.getElementsBySource', async () => {
-    const unsupportedSourceElement = createChargeElement({ source: 'unsupported' });
-    const supportedSourceElement = createChargeElement({ source: 'supported' });
-    const unsupportedSourceTLElement = createChargeElement({
-      source: 'unsupported',
-      timeLimitedStartDate: '2018-01-01',
-      timeLimitedEndDate: '2018-12-31'
-    });
-    const supportedSourceTLElement = createChargeElement({
-      source: 'supported',
-      timeLimitedStartDate: '2018-01-01',
-      timeLimitedEndDate: '2018-12-31'
-    });
-    const chargeElements = [unsupportedSourceElement, supportedSourceElement, unsupportedSourceTLElement, supportedSourceTLElement];
-    test('only returns unsupported source elements', async () => {
-      const filteredElements = getElementsBySource([...chargeElements, unsupportedSourceElement], 'unsupported', false);
-      expect(filteredElements).to.equal([unsupportedSourceElement, unsupportedSourceElement]);
-    });
-    test('only returns unsupported source time limited elements', async () => {
-      const filteredElements = getElementsBySource(chargeElements, 'unsupported', true);
-      expect(filteredElements).to.equal([unsupportedSourceTLElement]);
-    });
-    test('only returns supported source elements', async () => {
-      const filteredElements = getElementsBySource(chargeElements, 'supported', false);
-      expect(filteredElements).to.equal([supportedSourceElement]);
-    });
-    test('only returns supported source time limited elements', async () => {
-      const filteredElements = getElementsBySource([...chargeElements, supportedSourceTLElement], 'supported', true);
-      expect(filteredElements).to.equal([supportedSourceTLElement, supportedSourceTLElement]);
     });
   });
   experiment('.isSubElementWithinBaseElement', async () => {

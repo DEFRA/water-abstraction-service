@@ -1,4 +1,4 @@
-const { flatMap, identity, groupBy, set } = require('lodash');
+const { flatMap, identity, groupBy } = require('lodash');
 const Decimal = require('decimal.js-light');
 const { getChargeElementReturnData } = require('./two-part-tariff-helpers');
 const { twoPartTariffStatuses: { ERROR_OVER_ABSTRACTION } } = require('../../../../lib/models/transaction');
@@ -35,7 +35,7 @@ const reallocateQuantitiesInOrder = chargeElementGroup => {
   const data = elements.map(element => {
     const quantityToAllocate = Math.min(totalActual, element.proRataAuthorisedQuantity, element.maxPossibleReturnQuantity);
     totalActual = totalActual.minus(quantityToAllocate);
-    return getChargeElementReturnData(set(element, 'actualReturnQuantity', quantityToAllocate), null);
+    return getChargeElementReturnData({ ...element, actualReturnQuantity: quantityToAllocate }, null);
   });
 
   // if there's any unallocated quantity left, add over abstraction amount to first element
@@ -74,7 +74,7 @@ const sortElementsIntoGroupsForReallocation = chargeElements => {
 
   return baseElements.map(baseEle => {
     const groupedElements = groupBy(chargeElements, ele => {
-      const areFactorsMatching = ele.source === baseEle.source && ele.season === baseEle.season && ele.purposeTertiary === baseEle.purposeTertiary;
+      const areFactorsMatching = ele.source === baseEle.source && ele.season === baseEle.season && ele.purposeUse.code === baseEle.purposeUse.code;
       return (isTimeLimited(ele) && areFactorsMatching && isSubElementWithinBaseElement(ele, baseEle)) ? 'subElements' : 'notMatching';
     });
 

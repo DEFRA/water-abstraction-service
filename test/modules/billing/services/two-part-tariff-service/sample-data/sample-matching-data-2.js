@@ -1,63 +1,45 @@
-const chargeVersion = {
-  chargeVersionId: 'charge-version-1',
-  licenceRef: 'licence-ref',
-  scheme: 'alcs',
-  versionNumber: 2,
-  startDate: '2018-02-27T00:00:00.000Z',
-  status: 'current',
-  apportionment: false,
-  error: false,
-  endDate: null,
-  billedUptoDate: '2020-03-30T23:00:00.000Z',
-  dateCreated: '2019-09-26T08:12:02.492Z',
-  dateUpdated: '2019-09-26T08:12:02.492Z',
-  source: 'nald',
-  chargeElements: [{
-    chargeElementId: 'charge-element-1',
-    chargeVersionId: 'charge-version-1',
-    abstractionPeriodStartDay: 1,
-    abstractionPeriodStartMonth: 3,
-    abstractionPeriodEndDay: 31,
-    abstractionPeriodEndMonth: 10,
-    startDate: '2017-04-01',
-    endDate: '2018-03-31',
-    totalDays: 245,
-    billableDays: 245,
-    authorisedAnnualQuantity: '19.32',
-    season: 'summer',
-    seasonDerived: 'summer',
-    source: 'unsupported',
-    loss: 'high',
-    purposePrimary: 'A',
-    purposeSecondary: 'AGR',
-    purposeTertiary: '400',
-    factorsOverridden: false,
-    billableAnnualQuantity: null,
-    timeLimitedStartDate: null,
-    timeLimitedEndDate: null,
-    description: 'GOLF CLUB BOREHOLE',
-    srocCategory: null,
-    dateCreated: '2019-09-26T08:12:08.346Z',
-    dateUpdated: '2019-09-26T08:12:08.346Z',
-    purposePrimaryDescription: 'Agriculture',
-    purposeSecondaryDescription: 'General Agriculture',
-    purposeTertiaryDescription: 'Spray Irrigation - Direct',
-    eiucSource: 'other',
-    chargeAgreements: [{
-      chargeAgreementId: 'charge-agreement-1',
-      chargeElementId: 'charge-element-1',
-      agreementCode: 'S127',
-      startDate: '2018-02-27T00:00:00.000Z',
-      endDate: null,
-      signedDate: '2018-03-07T00:00:00.000Z',
-      fileReference: null,
-      description: null,
-      dateCreated: '2019-09-26T08:12:17.107Z',
-      dateUpdated: '2019-09-26T08:12:17.107Z',
-      agreementDescription: 'Section 127 (Two Part Tariff)'
-    }]
+const chargeElements = [{
+  id: 'charge-element-1',
+  abstractionPeriod: {
+    startDay: 1,
+    startMonth: 3,
+    endDay: 31,
+    endMonth: 10
+  },
+  startDate: '2017-04-01',
+  endDate: '2018-03-31',
+  totalDays: 245,
+  billableDays: 245,
+  authorisedAnnualQuantity: '19.32',
+  season: 'summer',
+  source: 'unsupported',
+  loss: 'high',
+  purposeUse: {
+    type: 'use',
+    code: '400',
+    name: 'Spray Irrigation - Direct'
+  },
+  factorsOverridden: false,
+  billableAnnualQuantity: null,
+  description: 'GOLF CLUB BOREHOLE',
+  srocCategory: null,
+  dateCreated: '2019-09-26T08:12:08.346Z',
+  dateUpdated: '2019-09-26T08:12:08.346Z',
+  eiucSource: 'other',
+  chargeAgreements: [{
+    chargeAgreementId: 'charge-agreement-1',
+    id: 'charge-element-1',
+    agreementCode: 'S127',
+    startDate: '2018-02-27T00:00:00.000Z',
+    endDate: null,
+    signedDate: '2018-03-07T00:00:00.000Z',
+    fileReference: null,
+    description: null,
+    dateCreated: '2019-09-26T08:12:17.107Z',
+    dateUpdated: '2019-09-26T08:12:17.107Z',
+    agreementDescription: 'Section 127 (Two Part Tariff)'
   }]
-};
+}];
 
 const returns = [{
   returnId: 'return-1',
@@ -278,6 +260,6 @@ const returns = [{
 }];
 
 module.exports = {
-  chargeVersion,
+  chargeElements,
   returns
 };

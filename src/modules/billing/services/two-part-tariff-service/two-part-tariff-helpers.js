@@ -2,12 +2,10 @@ const Decimal = require('decimal.js-light');
 const TPT_PURPOSES = [380, 390, 400, 410, 420];
 const dateFormat = 'YYYY-MM-DD';
 const {
-  twoPartTariffStatuses: {
-    ERROR_NO_RETURNS_SUBMITTED,
-    ERROR_SOME_RETURNS_DUE,
-    ERROR_LATE_RETURNS
-  }
-} = require('../../../../lib/models/transaction');
+  ERROR_NO_RETURNS_SUBMITTED,
+  ERROR_SOME_RETURNS_DUE,
+  ERROR_LATE_RETURNS
+} = require('../../../../lib/models/transaction').twoPartTariffStatuses;
 
 /**
  * Checks whether error is one which requires a null return
@@ -51,7 +49,7 @@ const getNullActualReturnQuantities = (chargeElements, error) => {
  *         {Object} data result of matching exercise for specific charge element
  */
 const getChargeElementReturnData = (chargeElement, error) => {
-  const actualReturnQuantity = chargeElement.actualReturnQuantity
+  const actualReturnQuantity = (typeof chargeElement.actualReturnQuantity === 'number')
     ? new Decimal(chargeElement.actualReturnQuantity).toDecimalPlaces(3).toNumber()
     : null;
   return {
