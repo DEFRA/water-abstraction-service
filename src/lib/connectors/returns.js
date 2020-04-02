@@ -114,15 +114,19 @@ const getReturnsForLicence = async (licenceNumber, startDate, endDate) => {
   return returnsClient.findAll(filter);
 };
 
-const getLinesForReturn = async ret => {
-  const versionFilter = {
+const getVersion = async ret => {
+  const filter = {
     return_id: ret.return_id,
     current: true
   };
-  const versionSort = { version_number: -1 };
-  const versions = await versionsClient.findAll(versionFilter, versionSort);
+  const sort = { version_number: -1 };
+  const versions = await versionsClient.findAll(filter, sort);
+  return versions[0];
+};
 
-  const linesFilter = { version_id: versions[0].version_id };
+const getLinesForReturn = async ret => {
+  const version = await getVersion(ret);
+  const linesFilter = { version_id: version.version_id };
   return linesClient.findAll(linesFilter);
 };
 
