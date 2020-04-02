@@ -30,16 +30,24 @@ const createBatchEvent = (userEmail, batch) => {
   return eventService.create(batchEvent);
 };
 
+const getFromFinancialYearEndingForBatch = (batchType, financialYearEnding) => {
+  const financialYearEndingForBatchType = {
+    annual: financialYearEnding,
+    supplementary: financialYearEnding - config.billing.supplementaryYears,
+    two_part_tariff: financialYearEnding - 1
+  };
+  return financialYearEndingForBatchType[batchType];
+};
+
 const createBatch = (regionId, batchType, financialYearEnding, season) => {
-  const fromFinancialYearEnding = batchType === 'supplementary'
-    ? financialYearEnding - config.billing.supplementaryYears
-    : financialYearEnding;
+  const fromFinancialYearEnding = getFromFinancialYearEndingForBatch(batchType, financialYearEnding);
+  const toFinancialYearEnding = batchType === 'two_part_tariff' ? financialYearEnding - 1 : financialYearEnding;
 
   return repos.billingBatches.createBatch(
     regionId,
     batchType,
     fromFinancialYearEnding,
-    financialYearEnding,
+    toFinancialYearEnding,
     season
   );
 };
