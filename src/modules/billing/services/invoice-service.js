@@ -1,6 +1,6 @@
 'use strict';
 
-const { find, flatMap, get } = require('lodash');
+const { find, flatMap, partialRight } = require('lodash');
 const repos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
@@ -48,19 +48,39 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
   if (!data || data.billingBatch.billingBatchId !== batch.id) {
     return null;
   }
-  // Map to Invoice service model
-  const invoice = mappers.invoice.dbToModel(data);
 
-  // Get CRM company and Charge Module summary data
-  const accountNumber = get(invoice, 'invoiceAccount.accountNumber');
-  const [, { billRun }] = await Promise.all([
-    decorateInvoicesWithCompanies([invoice]),
-    chargeModuleBillRunConnector.getCustomer(batch.externalId, accountNumber)
-  ]);
+  // Get CM data
+  const { billRun } = await chargeModuleBillRunConnector.get(batch.externalId, data.invoiceAccountNumber);
+  const invoice = mapInvoice(data, billRun);
 
-  // Use Charge Module data to populate totals and transaction values
-  invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(billRun, accountNumber);
-  decorateInvoiceTransactionValues(invoice, billRun);
+  // Add licence holder/invoice account data from CRM
+  await decorateInvoicesWithCompanies([invoice]);
+
+  return invoice;
+};
+
+/**
+ * Given a billingInvoice object from the Bookshelf repo,
+ * maps to an Invoice service model, optionally with full
+ * transaction list.
+ * @param {Object} invoiceData
+ * @param {Object} billRun - bill run data from CM bill run API
+ * @return {Promise<Invoice>}
+ */
+const mapInvoice = (invoiceData, billRun) => {
+  // Create invoice service model
+  const invoice = mappers.invoice.dbToModel(invoiceData);
+
+  if (billRun && invoiceData.invoiceAccountNumber) {
+    // Map transaction values from CM to Transaction models
+    const map = indexChargeModuleTransactions(billRun, invoiceData.invoiceAccountNumber);
+    getInvoiceTransactions(invoice).forEach(transaction => {
+      transaction.value = map.get(transaction.externalId);
+    });
+
+    // Add invoice totals
+    invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(billRun, invoiceData.invoiceAccountNumber);
+  }
 
   return invoice;
 };
@@ -74,18 +94,6 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
 const saveInvoiceToDB = async (batch, invoice) => {
   const data = mappers.invoice.modelToDb(batch, invoice);
   return repos.billingInvoices.upsert(data);
-};
-
-/**
- * Given an Invoice model and the data from a charge module bill run call,
- * decorates the invoice model with a ChargeModuleSummary model
- * @param {Invoice} invoice
- * @param {Object} chargeModuleBillRun
- * @return {Invoice} - the decorated invoice
- */
-const decorateInvoiceWithTotals = (invoice, chargeModuleBillRun) => {
-  const { accountNumber } = invoice.invoiceAccount;
-  invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(chargeModuleBillRun, accountNumber);
 };
 
 /**
@@ -116,68 +124,35 @@ const getInvoiceTransactions = invoice =>
   flatMap(invoice.invoiceLicences.map(invoiceLicence => invoiceLicence.transactions));
 
 /**
- * Sets the transaction values on an invoice
- * @param {Invoice} invoice
- * @param {Object} chargeModuleBillRun
+ * Attempts to get CM bill run data - if this fails, the error is caught
+ * @param {Batch} batch
+ * @return {Object}
  */
-const decorateInvoiceTransactionValues = (invoice, chargeModuleBillRun) => {
-  const { accountNumber } = invoice.invoiceAccount;
-
-  const map = indexChargeModuleTransactions(chargeModuleBillRun, accountNumber);
-
-  getInvoiceTransactions(invoice).forEach(transaction => {
-    transaction.value = map.get(transaction.externalId);
-  });
-};
-
-/**
- * Converts a row of invoice row data from water.billing_invoices to Invoice models
- * And decorates with charge module summaries and company data from CRM
- * @param {Array} rows - array of invoice data loaded from water.billing_invoices
- * @param {Object} chargeModuleSummary - response from charge module bill run API call
- * @return {Promise<Array>} array of Invoice instances
- */
-const getInvoicesForBatch = async batch => {
-  // Load Batch instance from repo with invoices
-  const data = await repos.billingBatches.findOneWithInvoices(batch.id);
-
-  // Map data to Invoice models
-  const invoices = data.billingInvoices.map(mappers.invoice.dbToModel);
-
+const getCMBillRun = async batch => {
   try {
     // Load Charge Module summary data
     const { billRun } = await chargeModuleBillRunConnector.get(batch.externalId);
-
-    // Decorate with Charge Module summary data and CRM company data
-    invoices.forEach(invoice => decorateInvoiceWithTotals(invoice, billRun));
+    return billRun;
   } catch (err) {
-    logger.info('CM error', err);
+    logger.error('CM error', err);
   }
+};
 
+const getInvoicesForBatch = async (batch, includeTransactions = false) => {
+  const method = includeTransactions ? 'findOneWithInvoicesWithTransactions' : 'findOneWithInvoices';
+  const data = await repos.billingBatches[method](batch.id);
+
+  // Get CM bill run data and decorate invoices
+  const billRun = await getCMBillRun(batch);
+  const invoices = data.billingInvoices.map(billingInvoice => mapInvoice(billingInvoice, billRun));
+
+  // Decorate with CRM data
   await decorateInvoicesWithCompanies(invoices);
+
   return invoices;
 };
 
-const getInvoicesTransactionsForBatch = async batch => {
-  // Load Batch instance from repo with invoices
-  const data = await repos.billingBatches.findOneWithInvoicesWithTransactions(batch.id);
-
-  // Map data to Invoice models
-  const invoices = data.billingInvoices.map(mappers.invoice.dbToModel);
-  try {
-    // Load Charge Module summary data
-    const { billRun } = await chargeModuleBillRunConnector.get(batch.externalId);
-
-    // const chargeModuleSummary = await chargeModuleBatchConnector.send(data.region.chargeRegionId, batchId, true);
-    invoices.forEach(invoice => decorateInvoiceTransactionValues(invoice, billRun));
-  } catch (err) {
-    logger.info('CM error', err);
-  }
-
-  // Add CRM company data
-  await decorateInvoicesWithCompanies(invoices);
-  return invoices;
-};
+const getInvoicesTransactionsForBatch = partialRight(getInvoicesForBatch, true);
 
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
