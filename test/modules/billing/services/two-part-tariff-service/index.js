@@ -69,6 +69,7 @@ experiment('modules/billing/services/two-part-tariff-service .processBatch', asy
       source: 'unsupported',
       season: 'summer',
       loss: 'medium',
+      eiucSource: 'other',
       abstractionPeriod: {
         startDay: abstractionPeriod.startDay,
         startMonth: abstractionPeriod.startMonth,

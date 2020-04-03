@@ -148,6 +148,9 @@ experiment('lib/models/charge-element', () => {
       const period = new AbstractionPeriod();
       const func = () => { chargeElement.timeLimitedPeriod = period; };
       expect(func).to.throw();
+    });
+  });
+
   experiment('.toJSON', () => {
     test('result is an object', async () => {
       const result = chargeElement.toJSON();
