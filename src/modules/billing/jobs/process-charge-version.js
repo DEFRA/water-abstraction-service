@@ -20,7 +20,9 @@ const options = {
  * @param {Object} batch The batch object
  */
 const createMessage = (eventId, chargeVersionYear, batch) => {
-  return batchJob.createMessage(JOB_NAME, batch, { eventId, chargeVersionYear });
+  return batchJob.createMessage(JOB_NAME, batch, { eventId, chargeVersionYear }, {
+    singletonKey: chargeVersionYear.billing_batch_charge_version_year_id
+  });
 };
 
 const handleProcessChargeVersion = async job => {

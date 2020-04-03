@@ -126,7 +126,7 @@ experiment('modules/billing/jobs/create-charge', () => {
           transaction: data.transaction
         },
         options: {
-          singletonKey: `billing.create-charge.${transactionId}`
+          singletonKey: transactionId
         }
       });
     });

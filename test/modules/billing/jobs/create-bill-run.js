@@ -29,7 +29,7 @@ const data = {
   }
 };
 
-experiment('modules/billing/jobs/create-charge', () => {
+experiment('modules/billing/jobs/create-bill-run', () => {
   let batch;
 
   beforeEach(async () => {
@@ -64,7 +64,7 @@ experiment('modules/billing/jobs/create-charge', () => {
           batch: data.batch
         },
         options: {
-          singletonKey: `billing.create-bill-run.${batchId}`
+          singletonKey: batchId
         }
       });
     });

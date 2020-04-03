@@ -127,7 +127,7 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
           }
         },
         options: {
-          singletonKey: 'billing.create-charge.test-transaction-id-1'
+          singletonKey: 'test-transaction-id-1'
         }
       });
 
@@ -143,7 +143,7 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
           }
         },
         options: {
-          singletonKey: 'billing.create-charge.test-transaction-id-2'
+          singletonKey: 'test-transaction-id-2'
         }
       });
     });

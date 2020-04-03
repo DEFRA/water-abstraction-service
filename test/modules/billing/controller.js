@@ -128,6 +128,17 @@ experiment('modules/billing/controller', () => {
       });
     });
 
+    experiment('if some other error occurs', () => {
+      beforeEach(async () => {
+        batchService.create.rejects();
+      });
+
+      test('the handler throws the error', async () => {
+        const func = () => controller.postCreateBatch(request, h);
+        expect(func()).to.reject();
+      });
+    });
+
     experiment('if there is not a batch already being processed for the region', () => {
       beforeEach(async () => {
         await controller.postCreateBatch(request, h);

@@ -73,7 +73,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
     });
 
     test('includes a singleton key for the batch', async () => {
-      expect(message.options.singletonKey).to.equal('billing.prepare-transactions.00000000-0000-0000-0000-000000000002');
+      expect(message.options.singletonKey).to.equal('00000000-0000-0000-0000-000000000002');
     });
   });
 

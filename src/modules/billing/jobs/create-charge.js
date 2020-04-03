@@ -22,7 +22,7 @@ const options = {
  */
 const createMessage = (eventId, batch, transaction) => {
   return batchJob.createMessage(JOB_NAME, batch, { transaction, eventId }, {
-    singletonKey: JOB_NAME.replace('*', transaction.billing_transaction_id)
+    singletonKey: transaction.billing_transaction_id
   });
 };
 

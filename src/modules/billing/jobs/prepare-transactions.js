@@ -9,7 +9,7 @@ const JOB_NAME = 'billing.prepare-transactions.*';
 
 const createMessage = (eventId, batch) => {
   return batchJob.createMessage(JOB_NAME, batch, { eventId }, {
-    singletonKey: JOB_NAME.replace('*', batch.id)
+    singletonKey: batch.id
   });
 };
 
