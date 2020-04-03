@@ -15,7 +15,6 @@ const uuid = require('uuid/v4');
 
 const mapToJsonJob = require('../../../../../src/modules/returns/lib/jobs/map-to-json');
 const uploadAdapters = require('../../../../../src/modules/returns/lib/upload-adapters');
-const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('../../../../../src/logger');
 const s3 = require('../../../../../src/lib/connectors/s3');
 const { usersClient } = require('../../../../../src/lib/connectors/idm');
@@ -25,26 +24,20 @@ const errorEvent = require('../../../../../src/modules/returns/lib/jobs/error-ev
 
 const eventId = uuid();
 
-experiment('publish', () => {
+experiment('.createMessage', () => {
+  let message;
+
   beforeEach(async () => {
-    sandbox.stub(messageQueue, 'publish').resolves('test-job-id');
+    message = mapToJsonJob.createMessage({ eventId });
   });
 
-  afterEach(async () => {
-    sandbox.restore();
+  test('creates a message with the expected name', async () => {
+    expect(message.name).to.equal(mapToJsonJob.jobName);
   });
 
-  test('publishes a job with the expected name', async () => {
-    await mapToJsonJob.publish({ eventId: 'test-event-id' });
-    const [jobName] = messageQueue.publish.lastCall.args;
-    expect(jobName).to.equal(mapToJsonJob.jobName);
-  });
-
-  test('sends the expected job data', async () => {
-    await mapToJsonJob.publish({ eventId: 'test-event-id' });
-    const [, data] = messageQueue.publish.lastCall.args;
-    expect(data).to.equal({
-      eventId: 'test-event-id',
+  test('the message has the expected job data', async () => {
+    expect(message.data).to.equal({
+      eventId,
       subtype: 'csv'
     });
   });

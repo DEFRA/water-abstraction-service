@@ -1,19 +1,24 @@
-const messageQueue = require('../../../../lib/message-queue');
 const JOB_NAME = 'returns-upload';
 const { logger } = require('../../../../logger');
-const returnsUpload = require('../../lib/returns-upload');
+const returnsUpload = require('../returns-upload');
 const errorEvent = require('./error-event');
 const uploadAdapters = require('../upload-adapters');
 const eventsService = require('../../../../lib/services/events');
 
 /**
- * Begins the bulk returns process by adding a new task to PG Boss.
- *
- * @param {Object} data containing eventId and companyId
- * @returns {Promise}
+ * Creates a message for PG Boss
+ * @param {Event} event
+ * @param {String} companyId
+ * @returns {Object} PG boss message
  */
-const publishReturnsUploadStart = data =>
-  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(data));
+const createMessage = (event, companyId) => ({
+  name: JOB_NAME,
+  data: {
+    eventId: event.id,
+    subtype: event.subtype,
+    companyId
+  }
+});
 
 const getValidationError = (validationErrors, subtype) => {
   if (!validationErrors) return errorEvent.keys[subtype].INVALID;
@@ -69,6 +74,6 @@ const handleReturnsUploadStart = async job => {
   }
 };
 
-exports.publish = publishReturnsUploadStart;
+exports.createMessage = createMessage;
 exports.handler = handleReturnsUploadStart;
 exports.jobName = JOB_NAME;

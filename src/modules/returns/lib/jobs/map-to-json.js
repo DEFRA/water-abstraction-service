@@ -1,4 +1,3 @@
-const messageQueue = require('../../../../lib/message-queue');
 const JOB_NAME = 'returns-upload-to-json';
 const s3 = require('../../../../lib/connectors/s3');
 const eventsService = require('../../../../lib/services/events');
@@ -11,13 +10,14 @@ const uploadAdapters = require('../upload-adapters');
 const config = require('../../../../../config');
 
 /**
- * Begins mapping XML/CSV returns to JSON process by adding a new task to PG Boss.
- *
+ * Creates a message for PG Boss
  * @param {Object} data containing eventId and companyId
- * @returns {Promise}
+ * @returns {Object}
  */
-const publishReturnsMapToJsonStart = data =>
-  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(data));
+const createMessage = data => ({
+  name: JOB_NAME,
+  data: returnsUpload.buildJobData(data)
+});
 
 const validateUser = user => {
   if (!user) {
@@ -87,6 +87,6 @@ const uploadJsonToS3 = (eventId, json) => {
   return s3.upload(jsonFileName, Buffer.from(str, 'utf8'));
 };
 
-exports.publish = publishReturnsMapToJsonStart;
+exports.createMessage = createMessage;
 exports.handler = handleReturnsMapToJsonStart;
 exports.jobName = JOB_NAME;

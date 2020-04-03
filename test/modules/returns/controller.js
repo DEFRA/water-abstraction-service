@@ -16,8 +16,6 @@ const eventsService = require('../../../src/lib/services/events');
 const Event = require('../../../src/lib/models/event');
 
 const s3 = require('../../../src/lib/connectors/s3');
-const startUploadJob = require('../../../src/modules/returns/lib/jobs/start-upload');
-const persistReturnsJob = require('../../../src/modules/returns/lib/jobs/persist-returns');
 const uploadValidator = require('../../../src/modules/returns/lib/returns-upload-validator');
 const { logger } = require('../../../src/logger');
 const returnsConnector = require('../../../src/lib/connectors/returns');
@@ -47,7 +45,10 @@ const requestFactory = (returnId) => {
     }, {
       returnId: 'y',
       lines: []
-    }]
+    }],
+    messageQueue: {
+      publish: sandbox.stub()
+    }
   };
 };
 
@@ -58,11 +59,11 @@ experiment('modules/returns/controller', async () => {
 
     beforeEach(async () => {
       const event = new Event(testEventId);
+      event.subtype = 'xml';
       sandbox.stub(eventsService, 'update').resolves(event);
       sandbox.stub(eventsService, 'create').resolves(event);
 
       sandbox.stub(s3, 'upload').resolves();
-      sandbox.stub(startUploadJob, 'publish').resolves('test-job-id');
 
       request = {
         payload: {
@@ -72,6 +73,9 @@ experiment('modules/returns/controller', async () => {
         },
         params: {
           type: 'xml'
+        },
+        messageQueue: {
+          publish: sandbox.stub().resolves('test-job-id')
         }
       };
 
@@ -107,9 +111,15 @@ experiment('modules/returns/controller', async () => {
 
     test('creates a new job for the task queue', async () => {
       await controller.postUpload(request, h);
-      const [{ eventId, companyId }] = startUploadJob.publish.lastCall.args;
-      expect(eventId).to.match(UUIDV4_REGEX);
-      expect(companyId).to.match(UUIDV4_REGEX);
+
+      expect(request.messageQueue.publish.calledWith({
+        name: 'returns-upload',
+        data: {
+          eventId: testEventId,
+          companyId: request.payload.companyId,
+          subtype: 'xml'
+        }
+      })).to.be.true();
     });
 
     test('response contains the expected data', async () => {
@@ -220,7 +230,6 @@ experiment('modules/returns/controller', async () => {
         errors: ['Some error']
       }
       ]);
-      sandbox.stub(persistReturnsJob, 'publish').resolves();
     });
 
     afterEach(async () => {

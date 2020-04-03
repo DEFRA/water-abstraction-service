@@ -148,6 +148,16 @@ experiment('lib/models/charge-element', () => {
       const period = new AbstractionPeriod();
       const func = () => { chargeElement.timeLimitedPeriod = period; };
       expect(func).to.throw();
+  experiment('.toJSON', () => {
+    test('result is an object', async () => {
+      const result = chargeElement.toJSON();
+      expect(result).to.be.an.object();
+    });
+
+    test('the eiucSource property is included', async () => {
+      chargeElement.source = 'tidal';
+      const result = chargeElement.toJSON();
+      expect(result.eiucSource).to.equal('tidal');
     });
   });
 });

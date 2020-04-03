@@ -15,35 +15,54 @@ const uuid = require('uuid/v4');
 const startUploadJob = require('../../../../../src/modules/returns/lib/jobs/start-upload');
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload');
 const uploadAdapters = require('../../../../../src/modules/returns/lib/upload-adapters');
-const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('../../../../../src/logger');
 const eventsService = require('../../../../../src/lib/services/events');
 const Event = require('../../../../../src/lib/models/event');
 const errorEvent = require('../../../../../src/modules/returns/lib/jobs/error-event');
 
 const eventId = uuid();
+const companyId = uuid();
 
-experiment('publish', () => {
-  beforeEach(async () => {
-    sandbox.stub(messageQueue, 'publish').resolves('test-job-id');
+experiment('.createMessage', () => {
+  let message, event;
+
+  experiment('when the upload type is CSV', () => {
+    beforeEach(async () => {
+      event = new Event(eventId);
+      event.subtype = 'csv';
+      message = startUploadJob.createMessage(event, companyId);
+    });
+
+    test('creates a message with the expected name', async () => {
+      expect(message.name).to.equal(startUploadJob.jobName);
+    });
+
+    test('the message has the expected job data', async () => {
+      expect(message.data).to.equal({
+        eventId,
+        companyId,
+        subtype: 'csv'
+      });
+    });
   });
 
-  afterEach(async () => {
-    sandbox.restore();
-  });
+  experiment('when the upload type is XML', () => {
+    beforeEach(async () => {
+      event = new Event(eventId);
+      event.subtype = 'xml';
+      message = startUploadJob.createMessage(event, companyId);
+    });
 
-  test('publishes a job with the expected name', async () => {
-    await startUploadJob.publish({ eventId: 'test-event-id' });
-    const [jobName] = messageQueue.publish.lastCall.args;
-    expect(jobName).to.equal(startUploadJob.jobName);
-  });
+    test('creates a message with the expected name', async () => {
+      expect(message.name).to.equal(startUploadJob.jobName);
+    });
 
-  test('sends the expected job data', async () => {
-    await startUploadJob.publish({ eventId: 'test-event-id' });
-    const [, data] = messageQueue.publish.lastCall.args;
-    expect(data).to.equal({
-      eventId: 'test-event-id',
-      subtype: 'csv'
+    test('the message has the expected job data', async () => {
+      expect(message.data).to.equal({
+        eventId,
+        companyId,
+        subtype: 'xml'
+      });
     });
   });
 });

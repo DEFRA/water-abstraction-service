@@ -9,36 +9,32 @@ const {
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const uuid = require('uuid/v4');
 
 const persistReturnsJob = require('../../../../../src/modules/returns/lib/jobs/persist-returns');
 const returnsUpload = require('../../../../../src/modules/returns/lib/returns-upload');
-const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('../../../../../src/logger');
 const returnsConnector = require('../../../../../src/modules/returns/lib/api-connector');
 
 const eventsService = require('../../../../../src/lib/services/events');
 const errorEvent = require('../../../../../src/modules/returns/lib/jobs/error-event');
 
-experiment('publish', () => {
+const eventId = uuid();
+
+experiment('.createMessage', () => {
+  let message;
+
   beforeEach(async () => {
-    sandbox.stub(messageQueue, 'publish').resolves('test-job-id');
+    message = persistReturnsJob.createMessage({ eventId });
   });
 
-  afterEach(async () => {
-    sandbox.restore();
+  test('creates a message with the expected name', async () => {
+    expect(message.name).to.equal(persistReturnsJob.jobName);
   });
 
-  test('publishes a job with the expected name', async () => {
-    await persistReturnsJob.publish('test-event-id');
-    const [jobName] = messageQueue.publish.lastCall.args;
-    expect(jobName).to.equal(persistReturnsJob.jobName);
-  });
-
-  test('sends the expected job data', async () => {
-    await persistReturnsJob.publish('test-event-id');
-    const [, data] = messageQueue.publish.lastCall.args;
-    expect(data).to.equal({
-      eventId: 'test-event-id',
+  test('the message has the expected job data', async () => {
+    expect(message.data).to.equal({
+      eventId,
       subtype: 'csv'
     });
   });

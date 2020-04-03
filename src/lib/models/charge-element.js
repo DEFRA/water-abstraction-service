@@ -150,6 +150,11 @@ class ChargeElement extends Model {
 
   get timeLimitedPeriod () {
     return this._timeLimitedPeriod;
+  toJSON () {
+    return {
+      ...super.toJSON(),
+      eiucSource: this.eiucSource
+    };
   }
 }
 
