@@ -16,16 +16,18 @@ const {
 const { reshuffleQuantities } = require('./reshuffle-quantities');
 
 const matchReturnLines = (ret, ele) => {
-  for (const retLine of ret.lines) {
-    const {
-      updatedLineQuantityAllocated,
-      updatedElementQuantity,
-      updatedMaxPossibleReturnQuantity
-    } = matchReturns.matchReturnLineToElement(retLine, ele);
+  if (returnPurposeMatchesElementPurpose(ret, ele)) {
+    for (const retLine of ret.lines) {
+      const {
+        updatedLineQuantityAllocated,
+        updatedElementQuantity,
+        updatedMaxPossibleReturnQuantity
+      } = matchReturns.matchReturnLineToElement(retLine, ele);
 
-    retLine.quantityAllocated = updatedLineQuantityAllocated;
-    ele.actualReturnQuantity = updatedElementQuantity;
-    ele.maxPossibleReturnQuantity = updatedMaxPossibleReturnQuantity;
+      retLine.quantityAllocated = updatedLineQuantityAllocated;
+      ele.actualReturnQuantity = updatedElementQuantity;
+      ele.maxPossibleReturnQuantity = updatedMaxPossibleReturnQuantity;
+    }
   };
 };
 
@@ -38,7 +40,7 @@ const matchReturnLines = (ret, ele) => {
 const matchReturnQuantities = (chargeElements, returnsToMatch) => {
   for (const ele of chargeElements) {
     for (const ret of returnsToMatch) {
-      if (returnPurposeMatchesElementPurpose(ret, ele)) matchReturnLines(ret, ele);
+      matchReturnLines(ret, ele);
     };
   };
   return chargeElements;
