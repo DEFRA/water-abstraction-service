@@ -13,8 +13,8 @@ const JOB_NAME = 'billing.create-bill-run.*';
  * @param {Object} batch The object from the batch database table
  * @param {Object} transaction The transaction to create
  */
-const createMessage = (eventId, batch, transaction) => {
-  return batchJob.createMessage(JOB_NAME, batch, { transaction, eventId }, {
+const createMessage = (eventId, batch) => {
+  return batchJob.createMessage(JOB_NAME, batch, { eventId }, {
     singletonKey: JOB_NAME.replace('*', batch.id)
   });
 };
@@ -31,7 +31,6 @@ const handleCreateBillRun = async job => {
     return { batch, eventId };
   } catch (err) {
     batchJob.logHandlingError(job, err);
-
     throw err;
   }
 };

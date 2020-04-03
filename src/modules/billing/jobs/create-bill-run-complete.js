@@ -15,7 +15,7 @@ const handleCreateBillRunComplete = async (job, messageQueue) => {
   try {
     // Publish next job in process
     const message = populateBatchChargeVersionsJob.createMessage(eventId, batch);
-    return messageQueue.publish(message);
+    await messageQueue.publish(message);
   } catch (err) {
     batchJob.logOnCompleteError(job);
     throw err;
