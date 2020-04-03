@@ -10,12 +10,13 @@ const {
 
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
+const uuid = require('uuid/v4');
 
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const createChargeJob = require('../../../../src/modules/billing/jobs/create-charge');
 
 // Connectors
-const chargeModuleTransactions = require('../../../../src/lib/connectors/charge-module/transactions');
+const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
 const mappers = require('../../../../src/modules/billing/mappers');
 
 // Services
@@ -28,12 +29,15 @@ const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Invoice = require('../../../../src/lib/models/invoice');
 const Transaction = require('../../../../src/lib/models/transaction');
 
-const transactionId = '46e5c0f1-ad0c-4274-8abd-8b8837ee473a';
+const transactionId = uuid();
+const batchId = uuid();
+const chargeModuleBillRunId = uuid();
 
 const data = {
   eventId: 'test-event-id',
   batch: {
-    billing_batch_id: 'test-batch-id'
+    id: batchId,
+    externalId: chargeModuleBillRunId
   },
   transaction: {
     billing_transaction_id: transactionId,
@@ -87,13 +91,14 @@ experiment('modules/billing/jobs/create-charge', () => {
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingError');
 
-    batch = new Batch('accafbe7-3eca-45f7-a56b-a37dce17af30');
+    batch = new Batch();
+    batch.fromHash(data.batch);
 
     sandbox.stub(transactionService, 'getById').resolves(batch);
     sandbox.stub(transactionService, 'updateWithChargeModuleResponse').resolves();
     sandbox.stub(transactionService, 'setErrorStatus').resolves();
 
-    sandbox.stub(chargeModuleTransactions, 'createTransaction').resolves(data.chargeModuleResponse);
+    sandbox.stub(chargeModuleBillRunConnector, 'addTransaction').resolves(data.chargeModuleResponse);
     sandbox.stub(mappers.batch, 'modelToChargeModule').returns([data.chargeModuleTransaction]);
   });
 
@@ -114,7 +119,7 @@ experiment('modules/billing/jobs/create-charge', () => {
       );
 
       expect(message).to.equal({
-        name: 'billing.create-charge.test-batch-id',
+        name: `billing.create-charge.${batchId}`,
         data: {
           eventId: data.eventId,
           batch: data.batch,
@@ -156,7 +161,8 @@ experiment('modules/billing/jobs/create-charge', () => {
       });
 
       test('the charge module payload is sent to the .createTransaction connector', async () => {
-        const [payload] = chargeModuleTransactions.createTransaction.lastCall.args;
+        const [externalId, payload] = chargeModuleBillRunConnector.addTransaction.lastCall.args;
+        expect(externalId).to.equal(data.batch.externalId);
         expect(payload).to.equal(data.chargeModuleTransaction);
       });
 
@@ -177,7 +183,7 @@ experiment('modules/billing/jobs/create-charge', () => {
       const err = new Error('Test error');
 
       beforeEach(async () => {
-        chargeModuleTransactions.createTransaction.rejects(err);
+        chargeModuleBillRunConnector.addTransaction.rejects(err);
       });
 
       test('logs an error', async () => {

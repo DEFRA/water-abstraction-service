@@ -67,13 +67,13 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
 
   experiment('.createMessage', () => {
     test('creates the expected request object', async () => {
-      const batch = { billing_batch_id: 'test-batch' };
+      const batch = { id: 'test-batch' };
       const message = populateBatchChargeVersionsJob.createMessage('test-event-id', batch);
       expect(message.name).to.equal('billing.populate-batch-charge-versions.test-batch');
       expect(message.data).to.equal({
         eventId: 'test-event-id',
         batch: {
-          billing_batch_id: 'test-batch'
+          id: 'test-batch'
         }
       });
     });
@@ -87,8 +87,8 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
         data: {
           eventId: '22222222-2222-2222-2222-222222222222',
           batch: {
-            batch_type: 'supplementary',
-            billing_batch_id: batch.id
+            type: 'supplementary',
+            id: batch.id
           }
         },
         done: sandbox.spy()

@@ -117,10 +117,10 @@ experiment('modules/billing/mappers/totals', () => {
   experiment('.dbToModel', () => {
     let result;
 
-    experiment('when the external ID field is null', () => {
+    experiment('when the net total is null', () => {
       beforeEach(async () => {
         result = totalsMapper.dbToModel({
-          externalId: null
+          netTotal: null
         });
       });
 

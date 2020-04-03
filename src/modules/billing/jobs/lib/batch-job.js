@@ -38,7 +38,7 @@ const logHandlingError = (job, error) => {
 const failBatch = (job, messageQueue, errorCode) => {
   const name = getRequestName(job);
   const {
-    batch: { billing_batch_id: batchId }
+    batch: { id: batchId }
   } = job.data.request.data;
 
   return Promise.all([

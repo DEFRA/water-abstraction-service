@@ -39,29 +39,30 @@ const createBatchEvent = (userEmail, batch) => {
 const postCreateBatch = async (request, h) => {
   const { userEmail, regionId, batchType, financialYearEnding, season } = request.payload;
 
-  // create a new entry in the batch table
-  const batch = await batchService.create(regionId, batchType, financialYearEnding, season);
+  try {
+    // create a new entry in the batch table
+    const batch = await batchService.create(regionId, batchType, financialYearEnding, season);
 
-  if (!batch) {
-    const data = {
-      message: `Batch already live for region ${regionId}`,
-      existingBatch: await batchService.getMostRecentLiveBatchByRegion(regionId)
-    };
-    return h.response(data).code(409);
+    // add these details to the event log
+    const batchEvent = await createBatchEvent(userEmail, batch);
+
+    // add a new job to the queue so that the batch can be created in the CM
+    const message = createBillRunJob.createMessage(batchEvent.id, batch);
+    await request.messageQueue.publish(message);
+
+    return h.response(envelope({
+      event: batchEvent,
+      url: `/water/1.0/event/${batchEvent.id}`
+    })).code(202);
+  } catch (err) {
+    if (err.existingBatch) {
+      return h.response({
+        message: err.message,
+        existingBatch: err.existingBatch
+      }).code(409);
+    }
+    throw err;
   }
-
-  // add these details to the event log
-  const batchEvent = await createBatchEvent(userEmail, batch);
-
-  // add a new job to the queue so that the batch can be filled
-  // with charge versions
-  const message = createBillRunJob.createMessage(batchEvent.id, batch);
-  await request.messageQueue.publish(message);
-
-  return h.response(envelope({
-    event: batchEvent,
-    url: `/water/1.0/event/${batchEvent.id}`
-  })).code(202);
 };
 
 /**

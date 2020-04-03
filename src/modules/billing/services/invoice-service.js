@@ -58,8 +58,6 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
     chargeModuleBillRunConnector.getCustomer(batch.externalId, accountNumber)
   ]);
 
-  console.log(billRun);
-
   // Use Charge Module data to populate totals and transaction values
   invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(billRun, accountNumber);
   decorateInvoiceTransactionValues(invoice, billRun);

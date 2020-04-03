@@ -20,7 +20,7 @@ const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const mappers = require('../../../../src/modules/billing/mappers');
 const newRepos = require('../../../../src/lib/connectors/repos');
-const chargeModuleBatchConnector = require('../../../../src/lib/connectors/charge-module/batches');
+const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 const invoiceAccountsService = require('../../../../src/modules/billing/services/invoice-accounts-service');
 
@@ -35,12 +35,20 @@ let invoiceAccount1;
 let invoiceAccount2;
 
 const BATCH_ID = '00000000-0000-0000-0000-000000000000';
+const EXTERNAL_ID = '00000000-0000-0000-0000-000000000004';
 
 const REGION_ID = '00000000-0000-0000-0000-000000000001';
 const REGION_NAME = 'Anglian';
 const CHARGE_REGION_ID = 'A';
 
 const LICENCE_ID = '00000000-0000-0000-0000-000000000002';
+
+const createBatch = () => {
+  const batch = new Batch(BATCH_ID);
+  return batch.fromHash({
+    externalId: EXTERNAL_ID
+  });
+};
 
 const createBatchData = () => ({
   batchId: BATCH_ID,
@@ -95,56 +103,60 @@ const createBatchData = () => ({
 });
 
 const createChargeModuleData = () => ({
-  customers: [
-    {
-      customerReference: INVOICE_1_ACCOUNT_NUMBER,
-      summaryByFinancialYear: [
-        {
-          financialYear: 2019,
-          creditLineCount: 0,
-          creditLineValue: 0,
-          debitLineCount: 5,
-          debitLineValue: 12345,
-          netTotal: 12345,
-          transactions: [{
-            id: CHARGE_MODULE_TRANSACTION_ID,
-            chargeValue: 2345
-          }]
-        }
-      ]
-    },
-    {
-      customerReference: INVOICE_2_ACCOUNT_NUMBER,
-      summaryByFinancialYear: [
-        {
-          financialYear: 2019,
-          creditLineCount: 0,
-          creditLineValue: 0,
-          debitLineCount: 6,
-          debitLineValue: 120033,
-          netTotal: 120033
-        },
-        {
-          financialYear: 2020,
-          creditLineCount: 3,
-          creditLineValue: -15324,
-          debitLineCount: 4,
-          debitLineValue: 234,
-          netTotal: -15090
-        }
-      ]
+  billRun: {
+    customers: [
+      {
+        customerReference: INVOICE_1_ACCOUNT_NUMBER,
+        summaryByFinancialYear: [
+          {
+            financialYear: 2019,
+            creditLineCount: 0,
+            creditLineValue: 0,
+            debitLineCount: 5,
+            debitLineValue: 12345,
+            netTotal: 12345,
+            transactions: [{
+              id: CHARGE_MODULE_TRANSACTION_ID,
+              chargeValue: 2345
+            }]
+          }
+        ]
+      },
+      {
+        customerReference: INVOICE_2_ACCOUNT_NUMBER,
+        summaryByFinancialYear: [
+          {
+            financialYear: 2019,
+            creditLineCount: 0,
+            creditLineValue: 0,
+            debitLineCount: 6,
+            debitLineValue: 120033,
+            netTotal: 120033,
+            transactions: []
+          },
+          {
+            financialYear: 2020,
+            creditLineCount: 3,
+            creditLineValue: -15324,
+            debitLineCount: 4,
+            debitLineValue: 234,
+            netTotal: -15090,
+            transactions: []
+          }
+        ]
+      }
+    ],
+    summary: {
+      creditNoteCount: 0,
+      creditNoteValue: 0,
+      invoiceCount: 1,
+      invoiceValue: 2003,
+      creditLineCount: 0,
+      creditLineValue: 0,
+      debitLineCount: 2,
+      debitLineValue: 2003,
+      netTotal: 2003
     }
-  ],
-  summary: {
-    creditNoteCount: 0,
-    creditNoteValue: 0,
-    invoiceCount: 1,
-    invoiceValue: 2003,
-    creditLineCount: 0,
-    creditLineValue: 0,
-    debitLineCount: 2,
-    debitLineValue: 2003,
-    netTotal: 2003
   }
 });
 
@@ -247,13 +259,16 @@ const createOneWithInvoicesWithTransactions = () => ({
 });
 
 experiment('modules/billing/services/invoiceService', () => {
-  let batch, chargeModuleData;
+  let batch, batchData, chargeModuleData;
 
   beforeEach(async () => {
-    batch = createBatchData();
+    batch = createBatch();
+    batchData = createBatchData();
     chargeModuleData = createChargeModuleData();
-    sandbox.stub(newRepos.billingBatches, 'findOneWithInvoices').resolves(batch);
-    sandbox.stub(chargeModuleBatchConnector, 'send').resolves(chargeModuleData);
+    sandbox.stub(newRepos.billingBatches, 'findOneWithInvoices').resolves(batchData);
+    sandbox.stub(chargeModuleBillRunConnector, 'get').resolves(chargeModuleData);
+    sandbox.stub(chargeModuleBillRunConnector, 'getCustomer').resolves(chargeModuleData);
+
     sandbox.stub(newRepos.billingInvoices, 'findOne').resolves();
     sandbox.stub(newRepos.billingInvoices, 'upsert').resolves();
 
@@ -283,7 +298,7 @@ experiment('modules/billing/services/invoiceService', () => {
     let invoices;
 
     beforeEach(async () => {
-      invoices = await invoiceService.getInvoicesForBatch(BATCH_ID);
+      invoices = await invoiceService.getInvoicesForBatch(batch);
     });
 
     test('gets batch with correct ID', async () => {
@@ -292,11 +307,9 @@ experiment('modules/billing/services/invoiceService', () => {
       ).to.be.true();
     });
 
-    test('gets draft batch summary data from charge module with correct region and batch ID', async () => {
-      const [region, batchId, isDraft] = chargeModuleBatchConnector.send.lastCall.args;
-      expect(region).to.equal(batch.region.chargeRegionId);
-      expect(batchId).to.equal(BATCH_ID);
-      expect(isDraft).to.be.true();
+    test('gets batch summary data from charge module with correct external ID', async () => {
+      const [externalId] = chargeModuleBillRunConnector.get.lastCall.args;
+      expect(externalId).to.equal(EXTERNAL_ID);
     });
 
     test('there is an invoice for each customer', async () => {
@@ -337,7 +350,7 @@ experiment('modules/billing/services/invoiceService', () => {
 
     beforeEach(async () => {
       sandbox.stub(newRepos.billingBatches, 'findOneWithInvoicesWithTransactions').resolves(batchData);
-      invoices = await invoiceService.getInvoicesTransactionsForBatch(BATCH_ID);
+      invoices = await invoiceService.getInvoicesTransactionsForBatch(batch);
     });
 
     test('gets batch with correct ID', async () => {
@@ -346,11 +359,10 @@ experiment('modules/billing/services/invoiceService', () => {
       ).to.be.true();
     });
 
-    test('gets draft batch summary data from charge module with correct region and batch ID', async () => {
-      const [region, batchId, isDraft] = chargeModuleBatchConnector.send.lastCall.args;
-      expect(region).to.equal(batch.region.chargeRegionId);
-      expect(batchId).to.equal(BATCH_ID);
-      expect(isDraft).to.be.true();
+    test('gets summary data from charge module with correct external ID', async () => {
+      expect(
+        chargeModuleBillRunConnector.get.calledWith(EXTERNAL_ID)
+      ).to.be.true();
     });
 
     test('there is an invoice for each customer', async () => {
@@ -405,7 +417,7 @@ experiment('modules/billing/services/invoiceService', () => {
       beforeEach(async () => {
         invoice = createInvoiceData();
         newRepos.billingInvoices.findOne.resolves(invoice);
-        result = await invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
+        result = await invoiceService.getInvoiceForBatch(batch, INVOICE_ID);
       });
 
       test('the invoice repo .findOne() method is called with the correct invoice ID', async () => {
@@ -419,15 +431,12 @@ experiment('modules/billing/services/invoiceService', () => {
       });
 
       test('the invoice is decorated with totals from the charge module', async () => {
-        expect(result.totals.creditNoteCount).to.equal(chargeModuleData.summary.creditNoteCount);
-        expect(result.totals.creditNoteValue).to.equal(chargeModuleData.summary.creditNoteValue);
-        expect(result.totals.invoiceCount).to.equal(chargeModuleData.summary.invoiceCount);
-        expect(result.totals.invoiceValue).to.equal(chargeModuleData.summary.invoiceValue);
-        expect(result.totals.creditLineCount).to.equal(chargeModuleData.summary.creditLineCount);
-        expect(result.totals.creditLineValue).to.equal(chargeModuleData.summary.creditLineValue);
-        expect(result.totals.debitLineCount).to.equal(chargeModuleData.summary.debitLineCount);
-        expect(result.totals.debitLineValue).to.equal(chargeModuleData.summary.debitLineValue);
-        expect(result.totals.netTotal).to.equal(chargeModuleData.summary.netTotal);
+        const summary = chargeModuleData.billRun.customers[0].summaryByFinancialYear[0];
+        expect(result.totals.creditLineCount).to.equal(summary.creditLineCount);
+        expect(result.totals.creditLineValue).to.equal(summary.creditLineValue);
+        expect(result.totals.debitLineCount).to.equal(summary.debitLineCount);
+        expect(result.totals.debitLineValue).to.equal(summary.debitLineValue);
+        expect(result.totals.netTotal).to.equal(summary.netTotal);
       });
 
       test('the invoice is decorated with invoice account company/address data from the CRM', async () => {

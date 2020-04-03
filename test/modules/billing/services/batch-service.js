@@ -17,7 +17,6 @@ const Invoice = require('../../../../src/lib/models/invoice');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../src/lib/models/licence');
-const Region = require('../../../../src/lib/models/region');
 const Totals = require('../../../../src/lib/models/totals');
 const Transaction = require('../../../../src/lib/models/transaction');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
@@ -26,7 +25,7 @@ const eventService = require('../../../../src/lib/services/events');
 const { logger } = require('../../../../src/logger');
 
 const newRepos = require('../../../../src/lib/connectors/repos');
-const chargeModuleBatchConnector = require('../../../../src/lib/connectors/charge-module/batches');
+const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
 const repos = require('../../../../src/lib/connectors/repository');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
@@ -98,10 +97,12 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(invoiceService, 'saveInvoiceToDB');
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId');
 
-    sandbox.stub(chargeModuleBatchConnector, 'delete').resolves();
-    sandbox.stub(chargeModuleBatchConnector, 'approve').resolves();
-    sandbox.stub(chargeModuleBatchConnector, 'send').resolves();
-    sandbox.stub(chargeModuleBatchConnector, 'deleteAccountFromBatch').resolves();
+    sandbox.stub(chargeModuleBillRunConnector, 'create').resolves();
+    sandbox.stub(chargeModuleBillRunConnector, 'removeCustomer').resolves();
+    sandbox.stub(chargeModuleBillRunConnector, 'get').resolves();
+    sandbox.stub(chargeModuleBillRunConnector, 'delete').resolves();
+    sandbox.stub(chargeModuleBillRunConnector, 'approve').resolves();
+    sandbox.stub(chargeModuleBillRunConnector, 'send').resolves();
 
     sandbox.stub(eventService, 'create').resolves();
   });
@@ -270,10 +271,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     beforeEach(async () => {
       batch = {
-        id: uuid(),
-        region: {
-          code: 'A'
-        }
+        externalId: uuid()
       };
 
       internalCallingUser = {
@@ -288,9 +286,8 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('delete the batch at the charge module', async () => {
-        const [code, batchId] = chargeModuleBatchConnector.delete.lastCall.args;
-        expect(code).to.equal('A');
-        expect(batchId).to.equal(batch.id);
+        const [externalId] = chargeModuleBillRunConnector.delete.lastCall.args;
+        expect(externalId).to.equal(batch.externalId);
       });
 
       test('deletes the charge version years', async () => {
@@ -331,7 +328,7 @@ experiment('modules/billing/services/batch-service', () => {
       let err;
       beforeEach(async () => {
         err = new Error('whoops');
-        chargeModuleBatchConnector.delete.rejects(err);
+        chargeModuleBillRunConnector.delete.rejects(err);
         try {
           await batchService.deleteBatch(batch, internalCallingUser);
         } catch (err) {
@@ -389,10 +386,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     beforeEach(async () => {
       batch = {
-        id: uuid(),
-        region: {
-          code: 'A'
-        }
+        externalId: uuid()
       };
 
       internalCallingUser = {
@@ -407,16 +401,13 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('approves the batch at the charge module', async () => {
-        const [code, batchId] = chargeModuleBatchConnector.approve.lastCall.args;
-        expect(code).to.equal('A');
-        expect(batchId).to.equal(batch.id);
+        const [externalId] = chargeModuleBillRunConnector.approve.lastCall.args;
+        expect(externalId).to.equal(batch.externalId);
       });
 
       test('sends the batch at the charge module', async () => {
-        const [code, batchId, isDraft] = chargeModuleBatchConnector.send.lastCall.args;
-        expect(code).to.equal('A');
-        expect(batchId).to.equal(batch.id);
-        expect(isDraft).to.be.false();
+        const [externalId] = chargeModuleBillRunConnector.send.lastCall.args;
+        expect(externalId).to.equal(batch.externalId);
       });
 
       test('creates an event showing the calling user successfully approved the batch', async () => {
@@ -441,7 +432,7 @@ experiment('modules/billing/services/batch-service', () => {
       let err;
       beforeEach(async () => {
         err = new Error('whoops');
-        chargeModuleBatchConnector.send.rejects(err);
+        chargeModuleBillRunConnector.send.rejects(err);
         try {
           await batchService.approveBatch(batch, internalCallingUser);
         } catch (err) {
@@ -620,20 +611,19 @@ experiment('modules/billing/services/batch-service', () => {
     };
 
     beforeEach(async () => {
-      chargeModuleBatchConnector.send.resolves({
-        summary
+      chargeModuleBillRunConnector.get.resolves({
+        billRun: {
+          summary
+        }
       });
       batch = new Batch(uuid());
-      batch.region = new Region();
-      batch.region.code = 'A';
+      batch.externalId = uuid();
       await batchService.decorateBatchWithTotals(batch);
     });
 
     test('calls charge module batch API with correct params', async () => {
-      const [regionCode, batchId, draft] = chargeModuleBatchConnector.send.lastCall.args;
-      expect(regionCode).to.equal(batch.region.code);
-      expect(batchId).to.equal(batch.id);
-      expect(draft).to.equal(true);
+      const [externalId] = chargeModuleBillRunConnector.get.lastCall.args;
+      expect(externalId).to.equal(batch.externalId);
     });
 
     test('adds a Totals instance to the batch', async () => {
@@ -646,17 +636,19 @@ experiment('modules/billing/services/batch-service', () => {
   });
 
   experiment('.refreshTotals', () => {
+    let batch;
+
     beforeEach(async () => {
-      const batch = new Batch(BATCH_ID);
-      batch.region = new Region();
-      batch.region.code = REGION_ID;
-      chargeModuleBatchConnector.send.resolves({
-        billRunId: 4353,
-        summary: {
-          invoiceCount: 3,
-          creditNoteCount: 5,
-          netTotal: 343553,
-          externalId: 335
+      batch = new Batch(BATCH_ID);
+      batch.externalId = uuid();
+      chargeModuleBillRunConnector.get.resolves({
+        billRun: {
+          summary: {
+            invoiceCount: 3,
+            creditNoteCount: 5,
+            netTotal: 343553,
+            externalId: 335
+          }
         }
       });
       await batchService.refreshTotals(batch);
@@ -664,18 +656,16 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('gets the bill run summary from the charge module', async () => {
       expect(
-        chargeModuleBatchConnector.send.calledWith(REGION_ID, BATCH_ID, true)
+        chargeModuleBillRunConnector.get.calledWith(batch.externalId)
       ).to.be.true();
     });
 
     test('updates the billing batch with the totals', async () => {
       const [id, updates] = newRepos.billingBatches.update.lastCall.args;
       expect(id).to.equal(BATCH_ID);
-      expect(updates.externalId).to.equal(4353);
       expect(updates.invoiceCount).to.equal(3);
       expect(updates.creditNoteCount).to.equal(5);
       expect(updates.netTotal).to.equal(343553);
-      expect(updates.externalId).to.equal(4353);
     });
   });
 
@@ -715,11 +705,8 @@ experiment('modules/billing/services/batch-service', () => {
 
     beforeEach(async () => {
       batch = {
-        id: 'test-batch-id',
-        status: 'ready',
-        region: {
-          code: 'A'
-        }
+        externalId: uuid(),
+        status: 'ready'
       };
 
       invoiceAccount = {
@@ -739,10 +726,9 @@ experiment('modules/billing/services/batch-service', () => {
     });
 
     test('deletes all the transactions at the charge module', async () => {
-      const [regionCode, batchId, accountNumber] = chargeModuleBatchConnector.deleteAccountFromBatch.lastCall.args;
+      const [externalId, accountNumber] = chargeModuleBillRunConnector.removeCustomer.lastCall.args;
 
-      expect(regionCode).to.equal(batch.region.code);
-      expect(batchId).to.equal(batch.id);
+      expect(externalId).to.equal(batch.externalId);
       expect(accountNumber).to.equal(invoiceAccount.accountNumber);
     });
 

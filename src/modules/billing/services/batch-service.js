@@ -175,12 +175,9 @@ const getTransactionStatusCounts = async batchId => {
 };
 
 const deleteAccountFromBatch = async (batch, accountId) => {
-  console.log(1, batch);
   // get the invoice account from the CRM to access
   // the customer reference number.
   const invoiceAccount = await invoiceAccountsService.getByInvoiceAccountId(accountId);
-
-  console.log(2, invoiceAccount);
 
   // Delete from CM
   await chargeModuleBillRunConnector.removeCustomer(batch.externalId, invoiceAccount.accountNumber);
@@ -223,21 +220,6 @@ const cleanup = async batchId => {
 };
 
 /**
- * Finds open (processing/ready/review) batches in given region
- * @param {String} regionId
- * @return {Promise<Array>}
- */
-const findOpenInRegion = async regionId => {
-  const statuses = [
-    Batch.BATCH_STATUS.processing,
-    Batch.BATCH_STATUS.ready,
-    Batch.BATCH_STATUS.review
-  ];
-  const batches = await newRepos.billingBatches.findByStatuses(statuses);
-  return batches.filter(batch => batch.region.regionId === regionId);
-};
-
-/**
  * Creates batch locally and on CM, responds with Batch service model
  * @param {String} regionId - guid from water.regions.region_id
  * @param {String} batchType - annual|supplementary|two_part_tariff
@@ -246,10 +228,12 @@ const findOpenInRegion = async regionId => {
  * @return {Promise<Batch>} resolves with Batch service model
  */
 const create = async (regionId, batchType, toFinancialYearEnding, season) => {
-  // If there is already an open batch in this region, return null
-  const openBatches = await findOpenInRegion(regionId);
-  if (openBatches.length > 0) {
-    return null;
+  const existingBatch = await getMostRecentLiveBatchByRegion(regionId);
+
+  if (existingBatch) {
+    const err = new Error(`Batch already live for region ${regionId}`);
+    err.existingBatch = existingBatch;
+    throw err;
   }
 
   const fromFinancialYearEnding = batchType === 'supplementary'
