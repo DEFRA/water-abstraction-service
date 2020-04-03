@@ -1,80 +1,16 @@
 const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 const sandbox = require('sinon').createSandbox();
-const uuid = require('uuid/v4');
 
 const { processBatch } = require('../../../../../src/modules/billing/services/two-part-tariff-service');
 const returnsHelpers = require('../../../../../src/modules/billing/services/two-part-tariff-service/returns-helpers');
 const twoPartTariffMatching = require('../../../../../src/modules/billing/services/two-part-tariff-service/two-part-tariff-matching');
 
 const Batch = require('../../../../../src/lib/models/batch');
-const Invoice = require('../../../../../src/lib/models/invoice');
-const InvoiceAccount = require('../../../../../src/lib/models/invoice-account');
-const InvoiceLicence = require('../../../../../src/lib/models/invoice-licence');
-const Licence = require('../../../../../src/lib/models/licence');
 const Transaction = require('../../../../../src/lib/models/transaction');
 const ChargeElement = require('../../../../../src/lib/models/charge-element');
-const AbstractionPeriod = require('../../../../../src/lib/models/abstraction-period');
-const DateRange = require('../../../../../src/lib/models/date-range');
-const FinancialYear = require('../../../../../src/lib/models/financial-year');
 
-const abstractionPeriod = new AbstractionPeriod();
-abstractionPeriod.fromHash({
-  startDay: '1',
-  startMonth: '4',
-  endDay: '31',
-  endMonth: '3'
-});
-
-const chargeElementId = uuid();
-const chargeElement = new ChargeElement(chargeElementId);
-chargeElement.fromHash({
-  source: 'unsupported',
-  season: 'summer',
-  loss: 'medium',
-  abstractionPeriod,
-  authorisedAnnualQuantity: 20,
-  billabledAnnualQuantity: null
-});
-
-const transaction = new Transaction();
-transaction.fromHash({
-  authorisedDays: 366,
-  billableDays: 366,
-  chargePeriod: new DateRange('2019-04-01', '2020-03-31'),
-  chargeElement
-});
-
-const licenceId = uuid();
-const licence = new Licence(licenceId);
-
-const invoiceAccount = new InvoiceAccount();
-invoiceAccount.fromHash({
-  accountNumber: 'A12345678A'
-});
-
-const invoiceLicence = new InvoiceLicence();
-invoiceLicence.fromHash({
-  licence
-});
-invoiceLicence.transactions = [transaction];
-
-const invoice = new Invoice();
-invoice.fromHash({
-  invoiceLicences: [invoiceLicence],
-  invoiceAccount
-});
-
-const batch = new Batch();
-batch.fromHash({
-  type: Batch.BATCH_TYPE.twoPartTariff,
-  season: 'summer',
-  status: Batch.BATCH_STATUS.processing,
-  startYear: new FinancialYear(2020),
-  endYear: new FinancialYear(2020)
-});
-
-batch.addInvoice(invoice);
+const { batch, chargeElement, licence, abstractionPeriod, transaction } = require('./test-batch');
 
 const returns = [
   {
@@ -102,7 +38,7 @@ const matchingResults = {
   data: [{
     error: null,
     data: {
-      chargeElementId,
+      chargeElementId: chargeElement.id,
       actualReturnQuantity: 1.96
     }
   }]
@@ -129,7 +65,7 @@ experiment('modules/billing/services/two-part-tariff-service .processBatch', asy
     const [chargeElements] = twoPartTariffMatching.matchReturnsToChargeElements.lastCall.args;
     expect(chargeElements[0]).not.to.be.instanceOf(ChargeElement);
     expect(chargeElements[0]).to.equal({
-      id: chargeElementId,
+      id: chargeElement.id,
       source: 'unsupported',
       season: 'summer',
       loss: 'medium',

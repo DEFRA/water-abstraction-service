@@ -13,7 +13,7 @@ const getReturnCycleFromBatch = batch => {
   const { endYear: { yearEnding } } = batch;
   const returnCycleStartMonth = batch.isSummer() ? 11 : 4;
   return {
-    startDate: getFinancialYearDate(1, returnCycleStartMonth, yearEnding),
+    startDate: getFinancialYearDate(1, returnCycleStartMonth, yearEnding - 1),
     endDate: getFinancialYearDate(31, returnCycleStartMonth - 1, yearEnding)
   };
 };
