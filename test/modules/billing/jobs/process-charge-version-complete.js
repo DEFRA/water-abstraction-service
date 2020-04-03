@@ -157,7 +157,7 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
               billing_batch_id: batchId
             },
             batch: {
-              billing_batch_id: batchId
+              id: batchId
             }
           }
         }
@@ -185,7 +185,7 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
     test('the job is published including the batch object', async () => {
       const [message] = messageQueue.publish.lastCall.args;
       expect(message.data.batch).to.equal({
-        billing_batch_id: 'test-batch-id'
+        id: 'test-batch-id'
       });
     });
 

@@ -50,7 +50,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
     beforeEach(async () => {
       chargeVersionYear = { billing_batch_charge_version_year_id: 1 };
-      batch = { billing_batch_id: 'test-batch-id' };
+      batch = { id: 'test-batch-id' };
       message = processChargeVersion.createMessage('test-event-id', chargeVersionYear, batch);
     });
 

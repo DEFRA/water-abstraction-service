@@ -1,6 +1,5 @@
 'use strict';
 
-const { pick } = require('lodash');
 const hashers = require('../../lib/hash');
 
 const Model = require('./model');
@@ -35,17 +34,6 @@ class Transaction extends Model {
     this.isCredit = isCredit;
     this._agreements = [];
     this.status = statuses.candidate;
-  }
-
-  /**
-   * Extracts a subset of the ChargeModuleTransaction object data and returns
-   * a Transaction model
-   * @param {ChargeModuleTransaction} chargeModuleTransaction The source data
-   */
-  static fromChargeModuleTransaction (chargeModuleTransaction) {
-    const transaction = new Transaction();
-    transaction.fromHash(pick(chargeModuleTransaction, ['value', 'isCredit']));
-    return transaction;
   }
 
   /**

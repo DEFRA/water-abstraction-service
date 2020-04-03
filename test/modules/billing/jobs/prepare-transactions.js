@@ -25,7 +25,7 @@ const data = {
     billing_transaction_id: '00000000-0000-0000-0000-000000000001'
   }],
   batch: {
-    billing_batch_id: '00000000-0000-0000-0000-000000000002'
+    id: '00000000-0000-0000-0000-000000000002'
   }
 };
 
@@ -70,6 +70,10 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
     test('includes a data object with the batch', async () => {
       expect(message.data.batch).to.equal(data.batch);
+    });
+
+    test('includes a singleton key for the batch', async () => {
+      expect(message.options.singletonKey).to.equal('00000000-0000-0000-0000-000000000002');
     });
   });
 
