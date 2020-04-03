@@ -45,13 +45,22 @@ experiment('modules/billing/services/two-part-tariff-service/returns-helpers .ge
     expect(licenceNumber).to.equal(licence.licenceNumber);
   });
 
-  test('gets return cycle dates from batch', async () => {
+  test('gets correct return cycle dates for summer batch', async () => {
     const [, startDate, endDate] = returns.getReturnsForLicence.lastCall.args;
     expect(startDate).to.equal('2017-11-01');
     expect(endDate).to.equal('2018-10-31');
   });
 
-  test('returns returns for licence with lines', async () => {
+  test('gets correct return cycle dates for winter batch', async () => {
+    batch.season = 'winter';
+    result = await returnsHelpers.getReturnsForMatching(licence, batch);
+
+    const [, startDate, endDate] = returns.getReturnsForLicence.lastCall.args;
+    expect(startDate).to.equal('2018-04-01');
+    expect(endDate).to.equal('2019-03-31');
+  });
+
+  test('returns the returns for licence with lines', async () => {
     const camelCaseLines = [{
       startDate: returnsLines[0].start_date,
       endDate: returnsLines[0].end_date,

@@ -12,8 +12,10 @@ const camelCaseKeys = require('../../../../lib/camel-case-keys');
 const getReturnCycleFromBatch = batch => {
   const { endYear: { yearEnding } } = batch;
   const returnCycleStartMonth = batch.isSummer() ? 11 : 4;
+  const yearStarting = batch.isSummer() ? yearEnding - 1 : yearEnding;
+
   return {
-    startDate: getFinancialYearDate(1, returnCycleStartMonth, yearEnding - 1),
+    startDate: getFinancialYearDate(1, returnCycleStartMonth, yearStarting),
     endDate: getFinancialYearDate(31, returnCycleStartMonth - 1, yearEnding)
   };
 };
