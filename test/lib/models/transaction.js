@@ -432,6 +432,12 @@ experiment('lib/models/transaction', () => {
       expect(transaction.twoPartTariffReview).to.equal(twoPartTariffReview);
     });
 
+    test('can be set to null', async () => {
+      const transaction = new Transaction();
+      transaction.twoPartTariffReview = null;
+      expect(transaction.twoPartTariffReview).to.be.null();
+    });
+
     test('throws an error if set to any other type', async () => {
       const transaction = new Transaction();
 

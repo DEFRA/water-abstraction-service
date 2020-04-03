@@ -25,6 +25,7 @@ const ChargeElement = require('../../../../src/lib/models/charge-element');
 const AbstractionPeriod = require('../../../../src/lib/models/abstraction-period');
 const DateRange = require('../../../../src/lib/models/date-range');
 const Region = require('../../../../src/lib/models/region');
+const User = require('../../../../src/lib/models/user');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const createChargeElement = () => {
@@ -57,7 +58,11 @@ const createTransaction = (options = {}) => {
     billableDays: 366,
     description: 'Tiny pond',
     volume: 5.64,
-    transactionKey: '0123456789ABCDEF0123456789ABCDEF'
+    transactionKey: '0123456789ABCDEF0123456789ABCDEF',
+    calculatedVolume: null,
+    twoPartTariffError: false,
+    twoPartTariffStatus: null,
+    twoPartTariffReview: null
   });
   return transaction;
 };
@@ -412,7 +417,11 @@ experiment('modules/billing/mappers/transaction', () => {
           section126Factor: null,
           section127Agreement: false,
           section130Agreement: null,
-          transactionKey: '0123456789ABCDEF0123456789ABCDEF'
+          transactionKey: '0123456789ABCDEF0123456789ABCDEF',
+          calculatedVolume: null,
+          twoPartTariffError: false,
+          twoPartTariffStatus: null,
+          twoPartTariffReview: null
         });
       });
     });
@@ -497,7 +506,11 @@ experiment('modules/billing/mappers/transaction', () => {
       section126Factor: null,
       section127Agreement: false,
       section130Agreement: null,
-      transactionKey: 'ABCDEF1234567890ABCDEF1234567890'
+      transactionKey: 'ABCDEF1234567890ABCDEF1234567890',
+      calculatedVolume: '37.52',
+      twoPartTariffError: false,
+      twoPartTariffStatus: null,
+      twoPartTariffReview: { id: 1234, emailAddress: 'user@example.com' }
     };
     beforeEach(async () => {
       result = transactionMapper.dbToModel(dbRow);
@@ -532,6 +545,18 @@ experiment('modules/billing/mappers/transaction', () => {
 
     test('there are no agreements', async () => {
       expect(result.agreements).to.have.length(0);
+    });
+
+    test('sets the correct two part tariff data', async () => {
+      expect(result.calculatedVolume).to.equal('37.52');
+      expect(result.twoPartTariffError).to.be.false();
+      expect(result.twoPartTariffStatus).to.be.null();
+    });
+
+    test('sets the twoPartTariffReview to a User instance', async () => {
+      expect(result.twoPartTariffReview instanceof User).to.be.true();
+      expect(result.twoPartTariffReview.id).to.equal(dbRow.twoPartTariffReview.id);
+      expect(result.twoPartTariffReview.emailAddress).to.equal(dbRow.twoPartTariffReview.emailAddress);
     });
 
     experiment('when the DB row contains a section 126 factor', () => {

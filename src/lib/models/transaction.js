@@ -259,7 +259,7 @@ class Transaction extends Model {
   }
 
   set twoPartTariffReview (twoPartTariffReview) {
-    validators.assertIsInstanceOf(twoPartTariffReview, User);
+    validators.assertIsNullableInstanceOf(twoPartTariffReview, User);
     this._twoPartTariffReview = twoPartTariffReview;
   }
 
