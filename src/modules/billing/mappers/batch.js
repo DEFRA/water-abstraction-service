@@ -1,6 +1,6 @@
 'use strict';
 
-const { pick } = require('lodash');
+const { pick, pickBy, identity } = require('lodash');
 
 const Batch = require('../../../lib/models/batch');
 const FinancialYear = require('../../../lib/models/financial-year');
@@ -14,19 +14,18 @@ const totalsMapper = require('./totals');
  */
 const dbToModel = row => {
   const batch = new Batch();
-  const totals = totalsMapper.dbToModel(row);
-  const region = regionMapper.dbToModel(row.region);
-  const { externalId, billRunId } = row;
   batch.fromHash({
     id: row.billingBatchId,
     type: row.batchType,
     ...pick(row, ['season', 'status', 'dateCreated', 'dateUpdated', 'errorCode']),
     startYear: new FinancialYear(row.fromFinancialYearEnding),
     endYear: new FinancialYear(row.toFinancialYearEnding),
-    ...region && { region },
-    ...totals && { totals },
-    ...externalId && { externalId },
-    ...billRunId && { billRunId }
+    ...pickBy({
+      region: regionMapper.dbToModel(row.region),
+      totals: totalsMapper.dbToModel(row),
+      externalId: row.externalId,
+      billRunId: row.billRunId
+    }, identity)
   });
   return batch;
 };
