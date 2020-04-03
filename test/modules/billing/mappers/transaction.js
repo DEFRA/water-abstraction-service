@@ -61,8 +61,7 @@ const createTransaction = (options = {}) => {
     transactionKey: '0123456789ABCDEF0123456789ABCDEF',
     calculatedVolume: null,
     twoPartTariffError: false,
-    twoPartTariffStatus: null,
-    twoPartTariffReview: null
+    twoPartTariffStatus: null
   });
   return transaction;
 };

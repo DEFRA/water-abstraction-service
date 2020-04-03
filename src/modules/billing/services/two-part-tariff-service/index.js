@@ -1,5 +1,5 @@
 const { set } = require('lodash');
-const { matchReturnsToChargeElements } = require('./two-part-tariff-matching');
+const twoPartTariffMatching = require('./two-part-tariff-matching');
 const returnHelpers = require('./returns-helpers');
 const Purpose = require('../../../../lib/models/purpose');
 
@@ -26,6 +26,7 @@ const mapResultsWithoutData = (overallError, transactions) => {
     set(transaction, 'twoPartTariffStatus', overallError);
     set(transaction, 'twoPartTariffError', !!overallError);
     set(transaction, 'volume', null);
+    set(transaction, 'calculatedVolume', null);
   }
   return transactions;
 };
@@ -43,15 +44,11 @@ const mapMatchingResultsToElements = (matchingResults, invoiceLicence) => {
   return mapResultsWithoutData(overallError, transactions);
 };
 
-const fixPurpose = chargeElement => {
-  const purposeUse = new Purpose();
-  purposeUse.fromHash({
-    type: Purpose.PURPOSE_TYPES.use,
-    name: 'Spray irrigation',
-    code: '420'
-  });
-  return purposeUse;
-};
+const fixPurpose = chargeElement => ({
+  type: Purpose.PURPOSE_TYPES.use,
+  name: 'Spray irrigation',
+  code: '420'
+});
 
 const getChargeElementsForMatching = transactions => transactions.map(trans =>
   ({
@@ -66,17 +63,17 @@ const getChargeElementsForMatching = transactions => transactions.map(trans =>
   }));
 
 /**
- * Process returns matching for given charge version
+ * Process returns matching for given invoice licence
  *
- * @param {chargeVersion} chargeVersion
  * @param {Batch} batch
- * @return {chargeVersion} including returns matching results
+ * @param {InvoiceLicence} invoiceLicence
+ * @return {Batch} including returns matching results in transactions
  */
 const processReturnsMatching = async (batch, invoiceLicence) => {
   const { licence, transactions } = invoiceLicence;
   const returnsForLicence = await returnHelpers.getReturnsForMatching(licence, batch);
 
-  return matchReturnsToChargeElements(getChargeElementsForMatching(transactions), returnsForLicence);
+  return twoPartTariffMatching.matchReturnsToChargeElements(getChargeElementsForMatching(transactions), returnsForLicence);
 };
 
 const processBatch = async batch => {

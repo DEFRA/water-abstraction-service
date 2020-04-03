@@ -131,6 +131,7 @@ const mapDBToAgreements = row => {
  * @return {User}
  */
 const mapReviewDataToUser = data => {
+  if (!data) return null;
   const user = new User();
   user.fromHash({
     id: data.id,
@@ -206,7 +207,7 @@ const modelToDb = (invoiceLicence, transaction) => ({
   calculatedVolume: transaction.calculatedVolume,
   twoPartTariffError: transaction.twoPartTariffError,
   twoPartTariffStatus: transaction.twoPartTariffStatus,
-  twoPartTariffReview: transaction.twoPartTariffReview
+  twoPartTariffReview: transaction.twoPartTariffReview || null
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';
