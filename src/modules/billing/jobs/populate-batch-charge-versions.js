@@ -9,13 +9,15 @@ const chargeVersionService = require('../services/charge-version-service');
 const JOB_NAME = 'billing.populate-batch-charge-versions.*';
 
 const createMessage = (eventId, batch) => {
-  return batchJob.createMessage(JOB_NAME, batch, { eventId });
+  return batchJob.createMessage(JOB_NAME, batch, { eventId }, {
+    singletonKey: batch.id
+  });
 };
 
 const handlePopulateBatch = async job => {
   batchJob.logHandling(job);
 
-  const batchId = get(job, 'data.batch.billing_batch_id');
+  const batchId = get(job, 'data.batch.id');
 
   const batch = await batchService.getBatchById(batchId);
 

@@ -7,4 +7,17 @@ const find = async () => {
   return regions.toJSON();
 };
 
+/**
+ * Find single region by ID
+ * @param {String} regionId
+ * @return {Promise<Object>}
+ */
+const findOne = async regionId => {
+  const model = await Region
+    .forge({ regionId })
+    .fetch();
+  return model.toJSON();
+};
+
 exports.find = find;
+exports.findOne = findOne;

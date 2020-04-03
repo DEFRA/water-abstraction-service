@@ -31,8 +31,7 @@ const data = {
       name: 'Anglian',
       displayName: 'Anglian'
     },
-    externalId: null,
-    netTotal: 3552,
+    netTotal: null,
     creditNoteCount: 4,
     invoiceCount: 3,
     errorCode: 10
@@ -43,7 +42,7 @@ experiment('modules/billing/mappers/batch', () => {
   let batch;
 
   experiment('.dbToModel', () => {
-    experiment('when the external ID is null', () => {
+    experiment('when the net total is null', () => {
       beforeEach(async () => {
         batch = batchMapper.dbToModel(data.batch);
       });
@@ -88,16 +87,12 @@ experiment('modules/billing/mappers/batch', () => {
       });
     });
 
-    experiment('when the external ID is null', () => {
+    experiment('when the net total is not null', () => {
       beforeEach(async () => {
         batch = batchMapper.dbToModel({
           ...data.batch,
-          externalId: 2345
+          netTotal: 2345
         });
-      });
-
-      test('externalId is set', async () => {
-        expect(batch.externalId).to.equal(2345);
       });
 
       test('totals is a Totals instance', async () => {

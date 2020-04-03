@@ -94,6 +94,17 @@ const findOneWithInvoicesWithTransactions = async (id) => {
   return model.toJSON();
 };
 
+/**
+ * Create a new billing batch
+ * @param {Object} data - camel case
+ */
+const create = async data => {
+  const model = await BillingBatch
+    .forge(data)
+    .save();
+  return model.toJSON();
+};
+
 exports.delete = deleteById;
 exports.findByStatuses = findByStatuses;
 exports.findOne = findOne;
@@ -101,3 +112,4 @@ exports.findPage = findPage;
 exports.update = update;
 exports.findOneWithInvoices = findOneWithInvoices;
 exports.findOneWithInvoicesWithTransactions = findOneWithInvoicesWithTransactions;
+exports.create = create;

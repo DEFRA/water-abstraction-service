@@ -10,7 +10,6 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
 const transactionMapper = require('../../../../src/modules/billing/mappers/transaction');
-const chargeModuleTransactionsConnector = require('../../../../src/lib/connectors/charge-module/transactions');
 const repos = require('../../../../src/lib/connectors/repository');
 
 // Models
@@ -149,43 +148,7 @@ const createAgreement = (code, factor) => {
 };
 
 experiment('modules/billing/mappers/transaction', () => {
-  let transactions;
-
   beforeEach(async () => {
-    transactions = [
-      {
-        id: '782cdbcb-8975-4058-bccf-932f36af678a',
-        customerReference: 'A11223344A',
-        batchNumber: 'ABC1',
-        licenceNumber: '123/ABC',
-        twoPartTariff: false,
-        chargeValue: 6134,
-        credit: false,
-        transactionStatus: 'unbilled',
-        approvedForBilling: false,
-        volume: 4.2
-      },
-      {
-        id: '888fa748-4b1c-4466-ad07-4d7705728da0',
-        customerReference: 'A55667788A',
-        batchNumber: 'ABC1',
-        licenceNumber: '123/ABC',
-        twoPartTariff: false,
-        chargeValue: -1421,
-        credit: true,
-        transactionStatus: 'unbilled',
-        approvedForBilling: false,
-        volume: 5.6
-      }
-    ];
-
-    sandbox.stub(chargeModuleTransactionsConnector, 'getTransactionQueue').resolves({
-      pagination: { page: 1, perPage: 50, pageCount: 1, recordCount: 2 },
-      data: {
-        transactions
-      }
-    });
-
     sandbox.stub(repos.billingTransactions, 'create');
   });
 

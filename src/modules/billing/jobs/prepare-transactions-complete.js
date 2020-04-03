@@ -16,7 +16,7 @@ const handlePrepareTransactionsComplete = async (job, messageQueue) => {
 
   const { eventId } = job.data.request.data;
   const { batch, transactions } = job.data.response;
-  const batchId = batch.billing_batch_id;
+  const batchId = batch.id;
 
   if (transactions.length === 0) {
     // no transactions created for this batch, update the

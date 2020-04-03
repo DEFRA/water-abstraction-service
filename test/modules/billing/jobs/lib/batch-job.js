@@ -47,7 +47,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
             data: {
               eventId,
               batch: {
-                billing_batch_id: batchId
+                id: batchId
               }
             }
           }
@@ -94,7 +94,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
         name: 'test-name',
         data: {
           batch: {
-            billing_batch_id: 'test-batch-id'
+            id: 'test-batch-id'
           }
         }
       };
@@ -160,7 +160,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
             name: 'test-name',
             data: {
               batch: {
-                billing_batch_id: 'test-batch-id'
+                id: 'test-batch-id'
               }
             }
           }
@@ -194,7 +194,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     beforeEach(async () => {
       batch = {
-        billing_batch_id: 'test-batch-id'
+        id: 'test-batch-id'
       };
     });
 
@@ -206,7 +206,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
         name: 'hello.test-batch-id',
         data: {
           batch: {
-            billing_batch_id: 'test-batch-id'
+            id: 'test-batch-id'
           }
         }
       });
@@ -234,7 +234,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
             id: 'test-charge-version-id'
           },
           batch: {
-            billing_batch_id: 'test-batch-id'
+            id: 'test-batch-id'
           }
         }
       });
@@ -261,7 +261,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
             id: 'test-licence-id'
           },
           batch: {
-            billing_batch_id: 'test-batch-id'
+            id: 'test-batch-id'
           }
         },
         options: {
