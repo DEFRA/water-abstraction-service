@@ -15,16 +15,22 @@ const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const { BATCH_ERROR_CODE, BATCH_STATUS } = require('../../../../src/lib/models/batch');
 const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
+const Batch = require('../../../../src/lib/models/batch');
 
 const batchId = 'test-batch-id';
 
 experiment('modules/billing/jobs/process-charge-version-complete', () => {
-  let messageQueue;
+  let messageQueue, batch;
 
   beforeEach(async () => {
     messageQueue = {
       publish: sandbox.spy()
     };
+
+    batch = new Batch();
+    batch.type = Batch.BATCH_TYPE.twoPartTariff;
+    sandbox.stub(batchService, 'getBatchById').resolves(batch);
+
     sandbox.stub(chargeVersionYearService, 'getStatusCounts');
     sandbox.stub(batchJob, 'logOnComplete');
     sandbox.stub(batchJob, 'failBatch');
@@ -141,6 +147,9 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
     let job;
 
     beforeEach(async () => {
+      batch.type = Batch.BATCH_TYPE.supplementary;
+      batchService.getBatchById.resolves(batch);
+
       chargeVersionYearService.getStatusCounts.resolves({
         processing: 0
       });

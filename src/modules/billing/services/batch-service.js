@@ -219,15 +219,6 @@ const cleanup = async batchId => {
   await newRepos.billingInvoices.deleteEmptyByBatchId(batchId);
 };
 
-const getFromFinancialYearEndingForBatch = (batchType, financialYearEnding) => {
-  const financialYearEndingForBatchType = {
-    annual: financialYearEnding,
-    supplementary: financialYearEnding - config.billing.supplementaryYears,
-    two_part_tariff: financialYearEnding - 1
-  };
-  return financialYearEndingForBatchType[batchType];
-};
-
 /**
  * Creates batch locally and on CM, responds with Batch service model
  * @param {String} regionId - guid from water.regions.region_id
@@ -245,15 +236,16 @@ const create = async (regionId, batchType, toFinancialYearEnding, season) => {
     throw err;
   }
 
-  const fromFinancialYearEnding = getFromFinancialYearEndingForBatch(batchType, toFinancialYearEnding);
-  const toFinancialYearEndingForBatch = batchType === 'two_part_tariff' ? fromFinancialYearEnding : toFinancialYearEnding;
+  const fromFinancialYearEnding = batchType === 'supplementary'
+    ? toFinancialYearEnding - config.billing.supplementaryYears
+    : toFinancialYearEnding;
 
   const { billingBatchId } = await newRepos.billingBatches.create({
     status: Batch.BATCH_STATUS.processing,
     regionId,
     batchType,
     fromFinancialYearEnding,
-    toFinancialYearEnding: toFinancialYearEndingForBatch,
+    toFinancialYearEnding,
     season
   });
 
