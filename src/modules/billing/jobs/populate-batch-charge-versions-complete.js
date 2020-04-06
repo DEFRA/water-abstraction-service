@@ -60,7 +60,7 @@ const processBillingBatchChargeVersions = async (batch, billingBatchChargeVersio
  * @param {String} eventId The event id used for publishing
  */
 const publishForValidChargeVersion = async (batch, chargeVersion, billingBatchChargeVersion, messageQueue, eventId) => {
-  const financialYears = FinancialYear.getFinancialYears(batch.from_financial_year_ending, batch.to_financial_year_ending);
+  const financialYears = FinancialYear.getFinancialYears(batch.startYear.yearEnding, batch.endYear.yearEnding);
 
   for (const financialYear of financialYears) {
     if (isValidForFinancialYear(chargeVersion, financialYear)) {
@@ -91,7 +91,7 @@ const handlePopulateBatchChargeVersionsComplete = async (job, messageQueue) => {
   const { eventId } = job.data.request.data;
 
   if (billingBatchChargeVersions.length === 0) {
-    return jobService.setEmptyBatch(eventId, batch.billing_batch_id);
+    return jobService.setEmptyBatch(eventId, batch.id);
   }
 
   try {

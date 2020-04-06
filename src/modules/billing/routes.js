@@ -65,7 +65,10 @@ const getBatchInvoices = {
       params: {
         batchId: Joi.string().uuid().required()
       }
-    }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
   }
 };
 
@@ -78,7 +81,10 @@ const getBatchInvoicesDetails = {
       params: {
         batchId: Joi.string().uuid().required()
       }
-    }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
   }
 };
 
@@ -92,7 +98,10 @@ const getBatchInvoiceDetail = {
         batchId: Joi.string().uuid().required(),
         invoiceId: Joi.string().uuid().required()
       }
-    }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
   }
 };
 

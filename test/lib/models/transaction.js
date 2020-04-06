@@ -6,7 +6,6 @@ const uuid = require('uuid/v4');
 const sandbox = require('sinon').createSandbox();
 
 const hashers = require('../../../src/lib/hash');
-const ChargeModuleTransaction = require('../../../src/lib/models/charge-module-transaction');
 const Transaction = require('../../../src/lib/models/transaction');
 const Agreement = require('../../../src/lib/models/agreement');
 const DateRange = require('../../../src/lib/models/date-range');
@@ -117,19 +116,6 @@ experiment('lib/models/transaction', () => {
         status: 'candidate',
         agreements: []
       });
-    });
-  });
-
-  experiment('.fromChargeModuleTransaction', () => {
-    test('copies across the expected values', async () => {
-      const chargeModuleTransaction = new ChargeModuleTransaction();
-      chargeModuleTransaction.id = uuid();
-      chargeModuleTransaction.value = 100;
-      chargeModuleTransaction.isCredit = false;
-
-      const transaction = Transaction.fromChargeModuleTransaction(chargeModuleTransaction);
-      expect(transaction.value).to.equal(chargeModuleTransaction.value);
-      expect(transaction.isCredit).to.equal(chargeModuleTransaction.isCredit);
     });
   });
 

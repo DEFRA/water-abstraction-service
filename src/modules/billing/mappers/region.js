@@ -9,6 +9,9 @@ const Region = require('../../../lib/models/region');
  * @return {Region}
  */
 const dbToModel = data => {
+  if (!data) {
+    return null;
+  }
   const row = camelCaseKeys(data);
   const region = new Region();
   region.fromHash({

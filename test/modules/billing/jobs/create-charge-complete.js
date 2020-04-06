@@ -36,7 +36,7 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
         },
         response: {
           batch: {
-            billing_batch_id: BATCH_ID
+            id: BATCH_ID
           }
         }
       }

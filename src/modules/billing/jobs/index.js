@@ -1,3 +1,8 @@
+exports.createBillRun = {
+  job: require('./create-bill-run'),
+  onCompleteHandler: require('./create-bill-run-complete')
+};
+
 exports.populateBatchChargeVersions = {
   job: require('./populate-batch-charge-versions'),
   onCompleteHandler: require('./populate-batch-charge-versions-complete')

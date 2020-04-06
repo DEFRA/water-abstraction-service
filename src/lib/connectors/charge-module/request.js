@@ -34,7 +34,10 @@ const post = (path, payload) => cmRequest.post(getPostRequestOptions(path, paylo
 
 const patch = (path, payload) => cmRequest.patch(getPostRequestOptions(path, payload));
 
+const deleteRequest = (path, query) => cmRequest.delete(getRequestOptions(path, query));
+
 exports.get = get;
 exports.post = post;
 exports.patch = patch;
 exports.cmRequest = cmRequest;
+exports.delete = deleteRequest;

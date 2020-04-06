@@ -66,7 +66,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
           response: {
             billingBatchChargeVersions: [],
             batch: {
-              billing_batch_id: 'test-batch-id'
+              id: 'test-batch-id'
             }
           },
           request: {
@@ -138,9 +138,13 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
                 { chargeVersionId: 'invalid-1' }
               ],
               batch: {
-                billing_batch_id: 'test-batch-id',
-                from_financial_year_ending: 2019,
-                to_financial_year_ending: 2019
+                id: 'test-batch-id',
+                startYear: {
+                  yearEnding: 2019
+                },
+                endYear: {
+                  yearEnding: 2019
+                }
               }
             },
             request: {
@@ -195,7 +199,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
                   charge_version_id: 'valid-1'
                 },
                 batch: {
-                  billing_batch_id: 'test-batch-id'
+                  id: 'test-batch-id'
                 }
               }
             })
@@ -214,7 +218,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
                   charge_version_id: 'valid-2'
                 },
                 batch: {
-                  billing_batch_id: 'test-batch-id'
+                  id: 'test-batch-id'
                 }
               }
             })
@@ -262,9 +266,13 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
                 { chargeVersionId: 'invalid-1' }
               ],
               batch: {
-                billing_batch_id: 'test-batch-id',
-                from_financial_year_ending: 2019,
-                to_financial_year_ending: 2020
+                id: 'test-batch-id',
+                startYear: {
+                  yearEnding: 2019
+                },
+                endYear: {
+                  yearEnding: 2020
+                }
               }
             },
             request: {
@@ -337,9 +345,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
                   financial_year_ending: 2019
                 },
                 batch: {
-                  billing_batch_id: 'test-batch-id',
-                  from_financial_year_ending: 2019,
-                  to_financial_year_ending: 2020
+                  id: 'test-batch-id'
                 }
               }
             })
@@ -357,9 +363,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
                   financial_year_ending: 2020
                 },
                 batch: {
-                  billing_batch_id: 'test-batch-id',
-                  from_financial_year_ending: 2019,
-                  to_financial_year_ending: 2020
+                  id: 'test-batch-id'
                 }
               }
             })
@@ -379,9 +383,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
                   financial_year_ending: 2019
                 },
                 batch: {
-                  billing_batch_id: 'test-batch-id',
-                  from_financial_year_ending: 2019,
-                  to_financial_year_ending: 2020
+                  id: 'test-batch-id'
                 }
               }
             })
@@ -399,9 +401,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
                   financial_year_ending: 2020
                 },
                 batch: {
-                  billing_batch_id: 'test-batch-id',
-                  from_financial_year_ending: 2019,
-                  to_financial_year_ending: 2020
+                  id: 'test-batch-id'
                 }
               }
             })

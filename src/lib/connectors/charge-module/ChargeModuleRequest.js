@@ -147,6 +147,10 @@ class ChargeModuleRequest {
   patch (options) {
     return this.request({ ...options, method: 'PATCH' });
   }
+
+  delete (options) {
+    return this.request({ ...options, method: 'DELETE' });
+  }
 }
 
 module.exports = ChargeModuleRequest;
