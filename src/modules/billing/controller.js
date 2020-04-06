@@ -163,12 +163,8 @@ const getBatchLicences = async (request, h) => {
 
 const getInvoiceLicenceWithTransactions = async (request, h) => {
   const { invoiceLicenceId } = request.params;
-  try {
-    const invoiceLicence = await invoiceLicenceService.getInvoiceLicenceWithTransactions(invoiceLicenceId);
-    return invoiceLicence;
-  } catch (err) {
-    return err;
-  }
+  const invoiceLicence = await invoiceLicenceService.getInvoiceLicenceWithTransactions(invoiceLicenceId);
+  return invoiceLicence || Boom.notFound(`Invoice licence ${invoiceLicenceId} not found`);
 };
 
 exports.getBatch = getBatch;
