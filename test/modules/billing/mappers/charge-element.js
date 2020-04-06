@@ -74,12 +74,19 @@ experiment('modules/billing/mappers/charge-element', () => {
     });
 
     experiment('when charge element has time limited dates', async => {
-      beforeEach(() => {
+      test('sets the .timeLimitedPeriod property when both dates are present', async () => {
         result = chargeElementsMapper.chargeToModel(data.timeLimitedChargeElement);
-      });
-      test('sets the .timeLimitedPeriod property', async () => {
         const timeLimitedPeriod = new DateRange(
           data.timeLimitedChargeElement.timeLimitedStartDate,
+          data.timeLimitedChargeElement.timeLimitedEndDate
+        );
+        expect(result.timeLimitedPeriod).to.equal(timeLimitedPeriod);
+      });
+
+      test('sets the .timeLimitedPeriod property when only end date is present', async () => {
+        result = chargeElementsMapper.chargeToModel({ ...data.timeLimitedChargeElement, timeLimitedStartDate: null });
+        const timeLimitedPeriod = new DateRange(
+          null,
           data.timeLimitedChargeElement.timeLimitedEndDate
         );
         expect(result.timeLimitedPeriod).to.equal(timeLimitedPeriod);
