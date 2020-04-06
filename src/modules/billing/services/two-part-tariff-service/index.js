@@ -3,30 +3,31 @@ const twoPartTariffMatching = require('./two-part-tariff-matching');
 const returnHelpers = require('./returns-helpers');
 const Purpose = require('../../../../lib/models/purpose');
 
-const mapResultsWithData = (overallError, data, transactions) => {
-  const updatedTransactions = [];
+const decorateWithResultsContainingData = (overallError, data, transactions) => {
   for (const result of data) {
     const { error, data: { chargeElementId, actualReturnQuantity } } = result;
-    const [transaction] = transactions.filter(transaction => transaction.chargeElement.id === chargeElementId);
+    const transaction = transactions.find(transaction => transaction.chargeElement.id === chargeElementId);
 
     const twoPartTariffStatus = overallError || error;
-    set(transaction, 'calculatedVolume', actualReturnQuantity);
-    set(transaction, 'volume', twoPartTariffStatus ? null : actualReturnQuantity);
-
-    set(transaction, 'twoPartTariffStatus', twoPartTariffStatus);
-    set(transaction, 'twoPartTariffError', !!twoPartTariffStatus);
-
-    updatedTransactions.push(transaction);
+    transaction.fromHash({
+      twoPartTariffStatus: twoPartTariffStatus,
+      twoPartTariffError: !!twoPartTariffStatus,
+      calculatedVolume: actualReturnQuantity,
+      volume: twoPartTariffStatus ? null : actualReturnQuantity
+    });
   };
-  return updatedTransactions;
+
+  return transactions;
 };
 
-const mapResultsWithoutData = (overallError, transactions) => {
+const decorateWithResultsNotContainingData = (overallError, transactions) => {
   for (const transaction of transactions) {
-    set(transaction, 'twoPartTariffStatus', overallError);
-    set(transaction, 'twoPartTariffError', !!overallError);
-    set(transaction, 'volume', null);
-    set(transaction, 'calculatedVolume', null);
+    transaction.fromHash({
+      twoPartTariffStatus: overallError,
+      twoPartTariffError: !!overallError,
+      volume: null,
+      calculatedVolume: null
+    });
   }
   return transactions;
 };
@@ -37,11 +38,11 @@ const mapResultsWithoutData = (overallError, transactions) => {
  * @param {ChargeVersion} chargeVersion
  * @return {chargeVersion} including returns matching results
  */
-const mapMatchingResultsToElements = (matchingResults, invoiceLicence) => {
+const decorateTransactionsWithMatchingResults = (matchingResults, invoiceLicence) => {
   const { error: overallError, data } = matchingResults;
   const { transactions } = invoiceLicence;
-  if (data) return mapResultsWithData(overallError, data, transactions);
-  return mapResultsWithoutData(overallError, transactions);
+  if (data) return decorateWithResultsContainingData(overallError, data, transactions);
+  return decorateWithResultsNotContainingData(overallError, transactions);
 };
 
 const fixPurpose = chargeElement => ({
@@ -58,7 +59,7 @@ const getChargeElementsForMatching = transactions => transactions.map(trans =>
     totalDays: trans.authorisedDays,
     billableDays: trans.billableDays,
     // @TODO: REMOVE FIXED PURPOSE
-    // remove when bookshelf to retreive charge element data
+    // remove once using bookshelf to retrieve charge element data
     purposeUse: fixPurpose(trans.chargeElement)
   }));
 
@@ -81,7 +82,7 @@ const processBatch = async batch => {
     for (const invoiceLicence of invoice.invoiceLicences) {
       const matchingResults = await processReturnsMatching(batch, invoiceLicence);
 
-      set(invoiceLicence, 'transactions', mapMatchingResultsToElements(matchingResults, invoiceLicence));
+      set(invoiceLicence, 'transactions', decorateTransactionsWithMatchingResults(matchingResults, invoiceLicence));
     }
   }
 

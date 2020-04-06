@@ -133,11 +133,10 @@ const mapDBToAgreements = row => {
 const mapReviewDataToUser = data => {
   if (!data) return null;
   const user = new User();
-  user.fromHash({
+  return user.fromHash({
     id: data.id,
     emailAddress: data.emailAddress
   });
-  return user;
 };
 
 /**

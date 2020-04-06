@@ -111,7 +111,7 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
             },
             batch: {
               billing_batch_id: batchId,
-              batch_type: 'two_part_tariff'
+              type: 'two_part_tariff'
             }
           }
         }

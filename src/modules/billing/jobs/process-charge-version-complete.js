@@ -24,7 +24,7 @@ const handleProcessChargeVersionComplete = async (job, messageQueue) => {
 
     await batchJob.deleteOnCompleteQueue(job, messageQueue);
 
-    if (batch.batch_type === 'two_part_tariff') {
+    if (batch.type === 'two_part_tariff') {
       return batchService.setStatus(batchId, BATCH_STATUS.review);
     }
 

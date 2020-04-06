@@ -218,39 +218,6 @@ experiment('modules/billing/controller', () => {
     });
   });
 
-  experiment('.postCreateBatch for two part tariff billing', () => {
-    let request;
-
-    beforeEach(async () => {
-      request = {
-        payload: {
-          userEmail: 'test@example.com',
-          regionId: '22222222-2222-2222-2222-222222222222',
-          batchType: 'two_part_tariff',
-          financialYearEnding: 2019,
-          season: CHARGE_SEASON.summer
-        },
-        messageQueue: {
-          publish: sandbox.stub().resolves()
-        }
-      };
-    });
-
-    beforeEach(async () => {
-      await controller.postCreateBatch(request, h);
-    });
-
-    test('created batch with correct parameters', async () => {
-      expect(repos.billingBatches.createBatch.calledWith(
-        request.payload.regionId,
-        request.payload.batchType,
-        request.payload.financialYearEnding - 1,
-        request.payload.financialYearEnding - 1,
-        request.payload.season
-      )).to.be.true();
-    });
-  });
-
   experiment('.getBatch', () => {
     experiment('when the batch is found', () => {
       let response, request;
