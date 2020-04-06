@@ -24,7 +24,7 @@ experiment('connectors/returns', () => {
     sandbox.restore();
   });
 
-  experiment('getActiveReturns', () => {
+  experiment('.getActiveReturns', () => {
     beforeEach(async () => {
       sandbox.stub(returns.returns, 'findAll').resolves({});
     });
@@ -51,7 +51,7 @@ experiment('connectors/returns', () => {
     });
   });
 
-  experiment('getCurrentDueReturns', () => {
+  experiment('.getCurrentDueReturns', () => {
     const response = [{
       licence_ref: '01/123'
     }, {
@@ -181,6 +181,55 @@ experiment('connectors/returns', () => {
 
       const [url] = helpers.serviceRequest.delete.lastCall.args;
       expect(url).to.equal(`${config.services.returns}/acceptance-tests`);
+    });
+  });
+
+  experiment('.getReturnsForLicence', () => {
+    beforeEach(async () => {
+      sandbox.stub(returns.returns, 'findAll').resolves({});
+    });
+
+    test('calls returns API with correct arguments', async () => {
+      await returns.getReturnsForLicence('test-licence-id', '2019-04-01', '2020-03-31');
+
+      const [filter] = returns.returns.findAll.lastCall.args;
+      expect(filter).to.equal({
+        licence_ref: 'test-licence-id',
+        status: { $ne: 'void' },
+        start_date: { $gte: '2019-04-01' },
+        end_date: { $lte: '2020-03-31' }
+      });
+    });
+  });
+
+  experiment('.getLinesForReturn', () => {
+    let versions;
+    beforeEach(async () => {
+      versions = [{
+        version_id: 'relevant-version-id'
+      }, {
+        version_id: 'irrelevant-version-id'
+      }];
+      sandbox.stub(returns.versions, 'findAll').resolves(versions);
+      sandbox.stub(returns.lines, 'findAll').resolves({});
+    });
+
+    test('calls versions API with correct arguments', async () => {
+      await returns.getLinesForReturn({ return_id: 'test-return-id' });
+
+      const [filter, sort] = returns.versions.findAll.lastCall.args;
+      expect(filter).to.equal({
+        return_id: 'test-return-id',
+        current: true
+      });
+      expect(sort).to.equal({ version_number: -1 });
+    });
+
+    test('calls lines API with id of first version from result of versions API call', async () => {
+      await returns.getLinesForReturn({ return_id: 'test-return-id' });
+
+      const [filter] = returns.lines.findAll.lastCall.args;
+      expect(filter).to.equal({ version_id: versions[0].version_id });
     });
   });
 });

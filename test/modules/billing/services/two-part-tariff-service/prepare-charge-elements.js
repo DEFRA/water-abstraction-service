@@ -1,11 +1,11 @@
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
-const { createChargeElement, wrapElementsInVersion } = require('./test-charge-data');
+const { createChargeElement } = require('./test-charge-data');
 const {
   getTptChargeElements,
   prepareChargeElementData,
   sortChargeElementsForMatching
-} = require('../../../../../src/modules/billing/service/two-part-tariff/prepare-charge-elements');
+} = require('../../../../../src/modules/billing/services/two-part-tariff-service/prepare-charge-elements');
 
 experiment('modules/charging/lib/prepare-charge-elements', async () => {
   experiment('.getTptChargeElements', async () => {
@@ -35,11 +35,11 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
         createChargeElement({ purposeTertiary: 180, ...chargeElementOptions }),
         createChargeElement({ purposeTertiary: 620, ...chargeElementOptions })
       ];
-      const chargeVersion = wrapElementsInVersion([
+      const chargeElements = [
         ...chargeElementsWithTPTPurposes,
         ...chargeElementsWithOtherPurposes
-      ], '2019-04-01', '2019-08-31');
-      const filteredElements = getTptChargeElements(chargeVersion.chargeElements);
+      ];
+      const filteredElements = getTptChargeElements(chargeElements);
       expect(filteredElements).to.equal(chargeElementsWithTPTPurposes);
     });
     test('returns empty array if no TPT charge elements present', async () => {
@@ -48,8 +48,8 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
         createChargeElement({ purposeTertiary: 180, ...chargeElementOptions }),
         createChargeElement({ purposeTertiary: 620, ...chargeElementOptions })
       ];
-      const chargeVersion = wrapElementsInVersion(nonTPTChargeElements, '2019-04-01', '2019-08-31');
-      const filteredElements = getTptChargeElements(chargeVersion.chargeElements);
+
+      const filteredElements = getTptChargeElements(nonTPTChargeElements);
       expect(filteredElements).to.be.empty().and.to.be.an.array();
     });
   });

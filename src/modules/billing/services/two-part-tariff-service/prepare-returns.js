@@ -3,15 +3,17 @@ const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(Moment);
 const Decimal = require('decimal.js-light');
 const { identity } = require('lodash');
+const { TPT_PURPOSES } = require('./two-part-tariff-helpers');
 const {
-  TPT_PURPOSES,
-  ERROR_NO_RETURNS_FOR_MATCHING,
-  ERROR_NO_RETURNS_SUBMITTED,
-  ERROR_SOME_RETURNS_DUE,
-  ERROR_LATE_RETURNS,
-  ERROR_UNDER_QUERY,
-  ERROR_RECEIVED_NO_DATA
-} = require('./two-part-tariff-helpers');
+  twoPartTariffStatuses: {
+    ERROR_NO_RETURNS_FOR_MATCHING,
+    ERROR_NO_RETURNS_SUBMITTED,
+    ERROR_SOME_RETURNS_DUE,
+    ERROR_LATE_RETURNS,
+    ERROR_UNDER_QUERY,
+    ERROR_RECEIVED_NO_DATA
+  }
+} = require('../../../../lib/models/transaction');
 
 const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
 
@@ -115,17 +117,16 @@ const isReturnPurposeTPT = purposes => {
  * @param {Array} returns objects
  * @return {Array} returns objects ready for matching with required data points
  */
-const getTPTReturns = returns => {
-  return returns.filter(ret => isReturnPurposeTPT(ret.metadata.purposes));
-};
+const getTPTReturns = returns =>
+  returns.filter(ret => isReturnPurposeTPT(ret.metadata.purposes));
 
 /**
  * Removes null and nil return lines, converts quantity to ML and adds quantityAllocated
  * @param {Array} returns objects
  * @return {Array} Updated returns array
  */
-const prepareReturnLinesData = returns => {
-  return returns.map(ret => {
+const prepareReturnLinesData = returns =>
+  returns.map(ret => {
     return {
       ...ret,
       lines: ret.lines.filter(line => {
@@ -139,7 +140,6 @@ const prepareReturnLinesData = returns => {
       })
     };
   });
-};
 
 exports.isLineWithinAbstractionPeriod = isLineWithinAbstractionPeriod;
 exports.checkForReturnsErrors = checkForReturnsErrors;

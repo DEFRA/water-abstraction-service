@@ -7,9 +7,8 @@ const Decimal = require('decimal.js-light');
  * @param {Object} chargeVersion contains the charge elements
  * @return {Array} charge elements with required data points for matching
  */
-const getTptChargeElements = chargeElements => chargeElements.filter(element => {
-  return TPT_PURPOSES.includes(parseInt(element.purposeTertiary));
-});
+const getTptChargeElements = chargeElements =>
+  chargeElements.filter(element => TPT_PURPOSES.includes(parseInt(element.purposeUse.code)));
 
 /**
  * Pro rata the quantity - multiply by billable days & divide by total days

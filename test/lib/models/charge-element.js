@@ -7,6 +7,7 @@ const ChargeElement = require('../../../src/lib/models/charge-element');
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
 const Purpose = require('../../../src/lib/models/purpose');
+const DateRange = require('../../../src/lib/models/date-range');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
 
@@ -132,6 +133,20 @@ experiment('lib/models/charge-element', () => {
     test('throws an error if setting to an instance of another model', async () => {
       const period = new AbstractionPeriod();
       const func = () => { chargeElement.purposeUse = period; };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.timeLimitedPeriod', () => {
+    test('can be set to a DateRange instance', async () => {
+      const timeLimitedPeriod = new DateRange();
+      chargeElement.timeLimitedPeriod = timeLimitedPeriod;
+      expect(chargeElement.timeLimitedPeriod).to.equal(timeLimitedPeriod);
+    });
+
+    test('throws an error if setting to an instance of another model', async () => {
+      const period = new AbstractionPeriod();
+      const func = () => { chargeElement.timeLimitedPeriod = period; };
       expect(func).to.throw();
     });
   });

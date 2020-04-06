@@ -1,20 +1,20 @@
 const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
-const { createChargeElement, wrapElementsInVersion } = require('./test-charge-data');
+const { createChargeElement } = require('./test-charge-data');
 const { createReturn, createLineData, createMonthlyReturn, createPurposeData } = require('./test-return-data');
 const sandbox = require('sinon').createSandbox();
 const Decimal = require('decimal.js-light');
-const matchRetQuantities = require('../../../../../src/modules/billing/service/two-part-tariff/match-return-quantities');
+const matchRetQuantities = require('../../../../../src/modules/billing/services/two-part-tariff-service/match-return-quantities');
 const {
   matchReturnQuantities,
   prepareChargeElementsForMatching,
   prepareReturnsForMatching,
   matchReturnsToChargeElements
-} = require('../../../../../src/modules/billing/service/two-part-tariff/two-part-tariff-matching');
+} = require('../../../../../src/modules/billing/services/two-part-tariff-service/two-part-tariff-matching');
 const {
   ERROR_NO_RETURNS_FOR_MATCHING,
   ERROR_OVER_ABSTRACTION
-} = require('../../../../../src/modules/billing/service/two-part-tariff/two-part-tariff-helpers');
+} = require('../../../../../src/lib/models/transaction').twoPartTariffStatuses;
 
 const roundTo3DP = decimal => {
   return decimal.toDecimalPlaces(3).toNumber();
@@ -249,7 +249,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           createReturn({ status: 'due', tertiaryCode: '400' }),
           createReturn({ status: 'due', tertiaryCode: '400' })
         ];
-        const { data: matchedElements } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
+        const { data: matchedElements } = matchReturnsToChargeElements(chargeElements, returns);
 
         expect(matchedElements[0].data.chargeElementId).to.equal('charge-element-1');
         expect(matchedElements[0].data.actualReturnQuantity).to.be.null();
@@ -320,18 +320,18 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         quantities: [0, 0, 0, 15, 4, 7, 9, 11, 14, 0, 0, 0] // total: 60
       })];
       test('only return quantities with matching purpose are applied to the charge element', async () => {
-        const { data: matchedElements } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), [...tptReturns, ...otherPurposeReturns]);
+        const { data: matchedElements } = matchReturnsToChargeElements(chargeElement, [...tptReturns, ...otherPurposeReturns]);
         expect(matchedElements[0].data.actualReturnQuantity).to.equal(0.147);
         expect(matchedElements[0].error).to.be.null();
       });
       test('no quantity is allocated if there are no TPT returns', async () => {
-        const { error, data } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), otherPurposeReturns);
+        const { error, data } = matchReturnsToChargeElements(chargeElement, otherPurposeReturns);
         expect(data).to.be.null();
         expect(error).to.equal(ERROR_NO_RETURNS_FOR_MATCHING);
       });
       test('when there are charge elements and returns with different TPT purposes', async () => {
-        const { data: matchedElements, error } = matchReturnsToChargeElements(wrapElementsInVersion(
-          [...chargeElement, secondChargeElement]), [...tptReturns, ...otherPurposeReturns]);
+        const { data: matchedElements, error } = matchReturnsToChargeElements(
+          [...chargeElement, secondChargeElement], [...tptReturns, ...otherPurposeReturns]);
 
         expect(error).to.be.null();
         expect(matchedElements[0].data.actualReturnQuantity).to.equal(0.147);
@@ -350,8 +350,8 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           return ret;
         });
 
-        const { data: matchedElements, error } = matchReturnsToChargeElements(wrapElementsInVersion(
-          [...chargeElement, secondChargeElement]), [...updatedTpTReturns, ...updatedOtherReturns]);
+        const { data: matchedElements, error } = matchReturnsToChargeElements(
+          [...chargeElement, secondChargeElement], [...updatedTpTReturns, ...updatedOtherReturns]);
 
         expect(error).to.be.null();
         expect(matchedElements[0].data.actualReturnQuantity).to.equal(0.147);
@@ -399,7 +399,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           tertiaryCode: '400',
           quantities: secondQuantities
         })];
-        const { error, data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+        const { error, data: [matchedChargeElement] } = matchReturnsToChargeElements(chargeElement, returns);
         const totalReturnQuantities = firstQuantities.reduce((a, b) => a + b, 0) + secondQuantities.reduce((a, b) => a + b, 0);
         const expectedactualReturnQuantity = convertToML(totalReturnQuantities, true);
         expect(error).to.equal(ERROR_OVER_ABSTRACTION);
@@ -418,7 +418,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           tertiaryCode: '400',
           quantities: secondQuantities
         })];
-        const { data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+        const { data: [matchedChargeElement] } = matchReturnsToChargeElements(chargeElement, returns);
         const totalReturnQuantities = firstQuantities.reduce((a, b) => a + b, 0) + secondQuantities.reduce((a, b) => a + b, 0);
         const expectedactualReturnQuantity = convertToML(totalReturnQuantities);
         expect(matchedChargeElement.data.actualReturnQuantity).to.equal(expectedactualReturnQuantity);
@@ -464,7 +464,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         const sumOfRelevantQuantities = returnQuantities.slice(0, 6).reduce((a, b) => a + b, 0);
         const expectedactualReturnQuantity = convertToML(sumOfRelevantQuantities);
 
-        const { data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+        const { data: [matchedChargeElement] } = matchReturnsToChargeElements(chargeElement, returns);
         expect(matchedChargeElement.data.actualReturnQuantity).to.equal(expectedactualReturnQuantity);
         expect(matchedChargeElement.error).to.be.null();
       });
@@ -497,7 +497,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         const sumOfRelevantQuantities = returnQuantities1.slice(0, 8).reduce((a, b) => a + b, 0) + returnQuantities2.slice(0, 8).reduce((a, b) => a + b, 0);
         const expectedactualReturnQuantity = convertToML(sumOfRelevantQuantities);
 
-        const { data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+        const { data: [matchedChargeElement] } = matchReturnsToChargeElements(chargeElement, returns);
         expect(matchedChargeElement.data.actualReturnQuantity).to.equal(expectedactualReturnQuantity);
         expect(matchedChargeElement.error).to.be.null();
       });
@@ -530,7 +530,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         const sumOfRelevantQuantities = returnQuantities.slice(0, 5).reduce((a, b) => a + b, 0);
         const expectedActualReturnQuantity = convertToML(sumOfRelevantQuantities);
 
-        const { data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+        const { data: [matchedChargeElement] } = matchReturnsToChargeElements(chargeElement, returns);
         expect(matchedChargeElement.data.actualReturnQuantity).to.equal(expectedActualReturnQuantity);
         expect(matchedChargeElement.error).to.be.null();
       });
@@ -559,7 +559,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           const sumOfRelevantQuantities = returnQuantities.slice(0, 9).reduce((a, b) => a + b, 0) + new Decimal(returnQuantities[9]).times(18).dividedBy(31).toNumber();
           const expectedactualReturnQuantity = convertToML(sumOfRelevantQuantities, true);
 
-          const { data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+          const { data: [matchedChargeElement] } = matchReturnsToChargeElements(chargeElement, returns);
           expect(matchedChargeElement.data.actualReturnQuantity).to.equal(expectedactualReturnQuantity);
           expect(matchedChargeElement.error).to.be.null();
         });
@@ -613,7 +613,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           const sumOfRelevantQuantities = lineData.slice(0, 14).reduce((a, b) => a + b.quantity, 0) +
             new Decimal(lineData[14].quantity).times(3).dividedBy(7).toNumber();
           const expectedActualReturnQuantity = convertToML(sumOfRelevantQuantities, true);
-          const { data: [matchedChargeElement] } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElement), returns);
+          const { data: [matchedChargeElement] } = matchReturnsToChargeElements(chargeElement, returns);
           expect(matchedChargeElement.data.actualReturnQuantity).to.equal(expectedActualReturnQuantity);
           expect(matchedChargeElement.error).to.be.null();
         });
@@ -639,8 +639,10 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           createChargeElement(chargeElementOptions), // pro rata authorised 0.49863
           {
             ...createChargeElement(chargeElementOptions),
-            timeLimitedStartDate: '2016-04-01',
-            timeLimitedEndDate: '2016-05-31',
+            timeLimitedPeriod: {
+              endDate: '2016-05-31',
+              startDate: '2016-04-01'
+            },
             endDate: '2016-05-31',
             totalDays: 365,
             billableDays: 60,
@@ -668,7 +670,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           quantities: returnQuantities2
         })];
 
-        const { data: matchedChargeElements } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
+        const { data: matchedChargeElements } = matchReturnsToChargeElements(chargeElements, returns);
         const proRataAuthorisedQuantity = getProRataAuthorisedQuantity(chargeElements[0]);
 
         const sumOfRelevantQuantities = returnQuantities1.slice(0, 6).reduce((a, b) => a + b, 0) + returnQuantities2.slice(0, 6).reduce((a, b) => a + b, 0);
@@ -684,16 +686,20 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           createChargeElement(chargeElementOptions), // pro rata authorised 0.49863
           {
             ...createChargeElement(chargeElementOptions),
-            timeLimitedStartDate: '2016-04-01',
-            timeLimitedEndDate: '2016-05-31',
+            timeLimitedPeriod: {
+              startDate: '2016-04-01',
+              endDate: '2016-05-31'
+            },
             endDate: '2016-05-31',
             totalDays: 365,
             billableDays: 60,
             authorisedAnnualQuantity: 1 // pro rata authorised 0.16438
           }, {
             ...createChargeElement(chargeElementOptions),
-            timeLimitedStartDate: '2016-06-01',
-            timeLimitedEndDate: '2017-03-31',
+            timeLimitedPeriod: {
+              startDate: '2016-06-01',
+              endDate: '2017-03-31'
+            },
             totalDays: 365,
             billableDays: 304,
             authorisedAnnualQuantity: 1 // pro rata authorised 0.49863
@@ -719,7 +725,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           tertiaryCode: '400',
           quantities: returnQuantities2
         })];
-        const { data: matchedChargeElements } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
+        const { data: matchedChargeElements } = matchReturnsToChargeElements(chargeElements, returns);
         const proRataAuthorisedQuantityFirstElement = getProRataAuthorisedQuantity(chargeElements[0]);
         const proRataAuthorisedQuantitySecondElement = getProRataAuthorisedQuantity(chargeElements[1]);
 
@@ -739,15 +745,17 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       });
       test('first three elements are filled before fourth', async () => {
         const chargeElements = [
-          createChargeElement({
-            ...chargeElementOptions,
-            chargeElementId: 'base-element'
-          }), // pro rata quantity 0.49863
           {
             ...createChargeElement(chargeElementOptions),
-            chargeElementId: 'TL-element-61-days',
-            timeLimitedStartDate: '2016-04-01',
-            timeLimitedEndDate: '2016-05-31',
+            id: 'base-element'
+          }, // pro rata quantity 0.49863
+          {
+            ...createChargeElement(chargeElementOptions),
+            id: 'TL-element-61-days',
+            timeLimitedPeriod: {
+              startDate: '2016-04-01',
+              endDate: '2016-05-31'
+            },
             startDate: '2016-04-01',
             endDate: '2016-05-31',
             totalDays: 365,
@@ -755,9 +763,11 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
             authorisedAnnualQuantity: 1 // pro rata quantity 0.16712
           }, {
             ...createChargeElement(chargeElementOptions),
-            chargeElementId: 'TL-element-30-days',
-            timeLimitedStartDate: '2016-06-01',
-            timeLimitedEndDate: '2016-06-30',
+            id: 'TL-element-30-days',
+            timeLimitedPeriod: {
+              startDate: '2016-06-01',
+              endDate: '2016-06-30'
+            },
             startDate: '2016-06-01',
             endDate: '2016-06-30',
             totalDays: 365,
@@ -766,9 +776,11 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           },
           {
             ...createChargeElement(chargeElementOptions),
-            chargeElementId: 'TL-element-92-days',
-            timeLimitedStartDate: '2016-07-01',
-            timeLimitedEndDate: '2016-09-30',
+            id: 'TL-element-92-days',
+            timeLimitedPeriod: {
+              startDate: '2016-07-01',
+              endDate: '2016-09-30'
+            },
             startDate: '2016-07-01',
             endDate: '2016-09-30',
             totalDays: 365,
@@ -801,11 +813,11 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
           tertiaryCode: '400',
           quantities: returnQuantities3
         })];
-        const { data: matchedChargeElements } = matchReturnsToChargeElements(wrapElementsInVersion(chargeElements), returns);
+        const { data: matchedChargeElements } = matchReturnsToChargeElements(chargeElements, returns);
 
-        const proRataAuthorisedQuantityFirstElement = getProRataAuthorisedQuantity(chargeElements.filter(ele => ele.chargeElementId === 'base-element').shift());
-        const proRataAuthorisedQuantitySecondElement = getProRataAuthorisedQuantity(chargeElements.filter(ele => ele.chargeElementId === 'TL-element-30-days').shift());
-        const proRataAuthorisedQuantityThirdElement = getProRataAuthorisedQuantity(chargeElements.filter(ele => ele.chargeElementId === 'TL-element-61-days').shift());
+        const proRataAuthorisedQuantityFirstElement = getProRataAuthorisedQuantity(chargeElements.filter(ele => ele.id === 'base-element').shift());
+        const proRataAuthorisedQuantitySecondElement = getProRataAuthorisedQuantity(chargeElements.filter(ele => ele.id === 'TL-element-30-days').shift());
+        const proRataAuthorisedQuantityThirdElement = getProRataAuthorisedQuantity(chargeElements.filter(ele => ele.id === 'TL-element-61-days').shift());
 
         const sumOfAllocatedQuantities = new Decimal(matchedChargeElements[0].data.actualReturnQuantity)
           .plus(matchedChargeElements[1].data.actualReturnQuantity)

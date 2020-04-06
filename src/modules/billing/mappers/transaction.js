@@ -8,6 +8,7 @@ const Batch = require('../../../lib/models/batch');
 const DateRange = require('../../../lib/models/date-range');
 const Transaction = require('../../../lib/models/transaction');
 const Agreement = require('../../../lib/models/agreement');
+const User = require('../../../lib/models/user');
 
 const agreement = require('./agreement');
 const chargeElementMapper = require('./charge-element');
@@ -42,6 +43,9 @@ const createTransaction = (batch, chargeLine, chargeElement, data = {}) => {
     chargeElement: chargeElementMapper.chargeToModel(chargeElement),
     volume: chargeElement.billableAnnualQuantity || chargeElement.authorisedAnnualQuantity
   });
+  if (data.twoPartTariffReview) {
+    transaction.twoPartTariffReview = mapReviewDataToUser(data.twoPartTariffReview);
+  }
 
   transaction.description = getTransactionDescription(
     batch,
@@ -122,6 +126,20 @@ const mapDBToAgreements = row => {
 };
 
 /**
+ * Maps json data from DB to User model
+ * @param {Object} data user data from DB
+ * @return {User}
+ */
+const mapReviewDataToUser = data => {
+  if (!data) return null;
+  const user = new User();
+  return user.fromHash({
+    id: data.id,
+    emailAddress: data.emailAddress
+  });
+};
+
+/**
  * Maps a row from water.billing_transactions to a Transaction model
  * @param {Object} row - from water.billing_transactions, camel cased
  */
@@ -129,12 +147,14 @@ const dbToModel = row => {
   const transaction = new Transaction();
   transaction.fromHash({
     id: row.billingTransactionId,
-    ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey', 'externalId']),
+    ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
+      'externalId', 'calculatedVolume', 'twoPartTariffError', 'twoPartTariffStatus']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
     volume: parseFloat(row.volume),
-    agreements: mapDBToAgreements(row)
+    agreements: mapDBToAgreements(row),
+    twoPartTariffReview: mapReviewDataToUser(row.twoPartTariffReview)
   });
   return transaction;
 };
@@ -182,7 +202,11 @@ const modelToDb = (invoiceLicence, transaction) => ({
   status: transaction.status,
   volume: transaction.volume,
   ...mapAgreementsToDB(transaction.agreements),
-  transactionKey: transaction.transactionKey
+  transactionKey: transaction.transactionKey,
+  calculatedVolume: transaction.calculatedVolume,
+  twoPartTariffError: transaction.twoPartTariffError,
+  twoPartTariffStatus: transaction.twoPartTariffStatus,
+  twoPartTariffReview: transaction.twoPartTariffReview || null
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';

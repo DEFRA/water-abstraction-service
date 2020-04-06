@@ -6,7 +6,7 @@ const {
   getProRataQuantityToAllocate,
   doesLineOverlapChargeElementDateRange,
   matchReturnLineToElement
-} = require('../../../../../src/modules/billing/service/two-part-tariff/match-return-quantities');
+} = require('../../../../../src/modules/billing/services/two-part-tariff-service/match-return-quantities');
 
 const createReturnLine = options => {
   return {
@@ -18,7 +18,7 @@ const createReturnLine = options => {
   };
 };
 
-experiment('modules/charging/lib/match-return-quantities', async () => {
+experiment('modules/billing/services/two-part-tariff-service/match-return-quantities', async () => {
   experiment('.getProRataQuantityToAllocate', async () => {
     experiment('when return line is completely within charge element', async () => {
       const chargeElementOptions = {
