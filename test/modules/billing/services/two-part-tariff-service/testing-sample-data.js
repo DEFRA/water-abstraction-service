@@ -1,21 +1,21 @@
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
-const { matchReturnsToChargeElements } = require('../../../../../src/modules/billing/service/two-part-tariff/two-part-tariff-matching');
+const { matchReturnsToChargeElements } = require('../../../../../src/modules/billing/services/two-part-tariff-service/two-part-tariff-matching');
 const {
   ERROR_NO_RETURNS_SUBMITTED,
   ERROR_SOME_RETURNS_DUE
-} = require('../../../../../src/modules/billing/service/two-part-tariff/two-part-tariff-helpers');
-const sampleData1 = require('./sample-data/two-due-rets-two-tpt-ce');
-const sampleData2 = require('./sample-data/two-ret-one-nil-one-ce');
-const sampleData3 = require('./sample-data/two-ret-four-ce-three-purposes');
-const sampleData4 = require('./sample-data/one-ret-one-ce');
-const sampleData5 = require('./sample-data/one-ret-three-ce');
-const sampleData6 = require('./sample-data/one-ret-one-ce-2');
+} = require('../../../../../src/lib/models/transaction').twoPartTariffStatuses;
+const sampleData1 = require('./sample-data/sample-matching-data-1');
+const sampleData2 = require('./sample-data/sample-matching-data-2');
+const sampleData3 = require('./sample-data/sample-matching-data-3');
+const sampleData4 = require('./sample-data/sample-matching-data-4');
+const sampleData5 = require('./sample-data/sample-matching-data-5');
+const sampleData6 = require('./sample-data/sample-matching-data-6');
 
 experiment('2PT Returns Matching - Sample Data', async () => {
   experiment('Two due returns, two TPT charge elements', async () => {
     test('returns expected error and null actualReturnQuantities', async () => {
-      const { error, data } = matchReturnsToChargeElements(sampleData1.chargeVersion, sampleData1.returns);
+      const { error, data } = matchReturnsToChargeElements(sampleData1.chargeElements, sampleData1.returns);
 
       expect(error).to.equal(ERROR_NO_RETURNS_SUBMITTED);
       expect(data).to.be.an.array().and.to.have.length(2);
@@ -27,7 +27,7 @@ experiment('2PT Returns Matching - Sample Data', async () => {
   });
   experiment('Two returns, one nil return, one charge element', async () => {
     test('returns null error and expected actualReturnQuantity', async () => {
-      const { error, data } = matchReturnsToChargeElements(sampleData2.chargeVersion, sampleData2.returns);
+      const { error, data } = matchReturnsToChargeElements(sampleData2.chargeElements, sampleData2.returns);
 
       expect(error).to.be.null();
       expect(data).to.be.an.array().and.to.have.length(1);
@@ -37,7 +37,7 @@ experiment('2PT Returns Matching - Sample Data', async () => {
   });
   experiment('Two returns, four charge elements with three different purposes', async () => {
     test('returns expected error and null actualReturnQuantities', async () => {
-      const { error, data } = matchReturnsToChargeElements(sampleData3.chargeVersion, sampleData3.returns);
+      const { error, data } = matchReturnsToChargeElements(sampleData3.chargeElements, sampleData3.returns);
 
       expect(error).to.equal(ERROR_SOME_RETURNS_DUE);
       expect(data).to.be.an.array().and.to.have.length(3);
@@ -51,7 +51,7 @@ experiment('2PT Returns Matching - Sample Data', async () => {
   });
   experiment('One return, one charge element', async () => {
     test('returns null error and expedcted actualReturnQuantity', async () => {
-      const { error, data } = matchReturnsToChargeElements(sampleData4.chargeVersion, sampleData4.returns);
+      const { error, data } = matchReturnsToChargeElements(sampleData4.chargeElements, sampleData4.returns);
 
       expect(error).to.be.null();
       expect(data).to.be.an.array().and.to.have.length(1);
@@ -61,7 +61,7 @@ experiment('2PT Returns Matching - Sample Data', async () => {
   });
   experiment('One return, three charge elements', async () => {
     test('returns expected actualReturnQuantities for each element', async () => {
-      const { error, data } = matchReturnsToChargeElements(sampleData5.chargeVersion, sampleData5.returns);
+      const { error, data } = matchReturnsToChargeElements(sampleData5.chargeElements, sampleData5.returns);
 
       const [chargeElement1] = data.filter(ele => ele.data.chargeElementId === 'charge-element-1');
       const [chargeElement2] = data.filter(ele => ele.data.chargeElementId === 'charge-element-2');
@@ -79,7 +79,7 @@ experiment('2PT Returns Matching - Sample Data', async () => {
   });
   experiment('One return, one charge element', async () => {
     test('returns null error and expedcted actualReturnQuantity', async () => {
-      const { error, data } = matchReturnsToChargeElements(sampleData6.chargeVersion1, sampleData6.returns);
+      const { error, data } = matchReturnsToChargeElements(sampleData6.chargeElement1, sampleData6.returns);
 
       expect(error).to.be.null();
       expect(data).to.be.an.array().and.to.have.length(1);
@@ -87,7 +87,7 @@ experiment('2PT Returns Matching - Sample Data', async () => {
       expect(data[0].error).to.be.null();
     });
     test('returns null error and expedcted actualReturnQuantity', async () => {
-      const { error, data } = matchReturnsToChargeElements(sampleData6.chargeVersion2, sampleData6.returns);
+      const { error, data } = matchReturnsToChargeElements(sampleData6.chargeElement2, sampleData6.returns);
 
       expect(error).to.be.null();
       expect(data).to.be.an.array().and.to.have.length(1);

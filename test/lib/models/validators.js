@@ -246,4 +246,18 @@ experiment('lib/models/validators', () => {
       }).to.throw();
     });
   });
+
+  experiment('.assertEmailAddress', () => {
+    test('allows a valid email address', async () => {
+      expect(() => {
+        validators.assertEmailAddress('test@example.com');
+      }).not.to.throw();
+    });
+
+    test('rejects an invalid email address', async () => {
+      expect(() => {
+        validators.assertNullableEnum('test@example');
+      }).to.throw();
+    });
+  });
 });

@@ -1,4 +1,3 @@
-const { cloneDeep } = require('lodash');
 const {
   getTptChargeElements,
   prepareChargeElementData,
@@ -9,12 +8,28 @@ const {
   getTPTReturns,
   prepareReturnLinesData
 } = require('./prepare-returns');
-const matchRets = require('./match-return-quantities');
+const matchReturns = require('./match-return-quantities');
 const {
   returnsError,
   returnPurposeMatchesElementPurpose
 } = require('./two-part-tariff-helpers');
 const { reshuffleQuantities } = require('./reshuffle-quantities');
+
+const matchReturnLines = (ret, ele) => {
+  if (returnPurposeMatchesElementPurpose(ret, ele)) {
+    for (const retLine of ret.lines) {
+      const {
+        updatedLineQuantityAllocated,
+        updatedElementQuantity,
+        updatedMaxPossibleReturnQuantity
+      } = matchReturns.matchReturnLineToElement(retLine, ele);
+
+      retLine.quantityAllocated = updatedLineQuantityAllocated;
+      ele.actualReturnQuantity = updatedElementQuantity;
+      ele.maxPossibleReturnQuantity = updatedMaxPossibleReturnQuantity;
+    }
+  };
+};
 
 /**
  * Matches prepared returns to sorted charge elements
@@ -23,27 +38,12 @@ const { reshuffleQuantities } = require('./reshuffle-quantities');
  * @return {Array} charge elements array with allocated quantities
  */
 const matchReturnQuantities = (chargeElements, returnsToMatch) => {
-  const returns = cloneDeep(returnsToMatch);
-  const elements = cloneDeep(chargeElements);
-
-  elements.forEach(ele => {
-    returns.forEach(ret => {
-      if (returnPurposeMatchesElementPurpose(ret, ele)) {
-        ret.lines.forEach(retLine => {
-          const {
-            updatedLineQuantityAllocated,
-            updatedElementQuantity,
-            updatedMaxPossibleReturnQuantity
-          } = matchRets.matchReturnLineToElement(retLine, ele);
-
-          retLine.quantityAllocated = updatedLineQuantityAllocated;
-          ele.actualReturnQuantity = updatedElementQuantity;
-          ele.maxPossibleReturnQuantity = updatedMaxPossibleReturnQuantity;
-        });
-      }
-    });
-  });
-  return elements;
+  for (const ele of chargeElements) {
+    for (const ret of returnsToMatch) {
+      matchReturnLines(ret, ele);
+    };
+  };
+  return chargeElements;
 };
 
 /**
@@ -83,13 +83,13 @@ const prepareReturnsForMatching = returns => {
 /**
  * @param  {Array}  returns - return objects for matching with elements
  * @param  {Object} chargeVersion - charge version object containing charging elements
- * @return {Array}           - objects with chargeElementIds and actualQuantities for each
+ * @return {Array}           - objects with chargeElement.id and actualQuantities for each
  */
-const matchReturnsToChargeElements = (chargeVersion, returns) => {
+const matchReturnsToChargeElements = (chargeElements, returns) => {
   const { error, data: preparedReturns } = prepareReturnsForMatching(returns);
-  if (error) return returnsError(error, getTptChargeElements(chargeVersion.chargeElements));
+  if (error) return returnsError(error, getTptChargeElements(chargeElements));
 
-  const preparedChargeElements = prepareChargeElementsForMatching(chargeVersion.chargeElements);
+  const preparedChargeElements = prepareChargeElementsForMatching(chargeElements);
 
   const matchedChargeElements = matchReturnQuantities(preparedChargeElements, preparedReturns);
 

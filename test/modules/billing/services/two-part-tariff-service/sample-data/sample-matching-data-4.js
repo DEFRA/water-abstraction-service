@@ -1,51 +1,33 @@
-const chargeVersion = {
-  chargeVersionId: 'charge-version-1',
-  licenceRef: 'licence-ref',
-  scheme: 'alcs',
-  versionNumber: 102,
-  startDate: '2018-03-28T23:00:00.000Z',
-  status: 'superseded',
-  apportionment: false,
-  error: false,
-  endDate: '2018-03-30T23:00:00.000Z',
-  billedUptoDate: '2018-03-30T23:00:00.000Z',
-  dateCreated: '2019-09-26T08:12:02.492Z',
-  dateUpdated: '2019-09-26T08:12:02.492Z',
-  source: 'nald',
-  chargeElements: [{
-    chargeElementId: 'charge-element-1',
-    chargeVersionId: 'charge-version-1',
-    abstractionPeriodStartDay: 1,
-    abstractionPeriodStartMonth: 1,
-    abstractionPeriodEndDay: 31,
-    abstractionPeriodEndMonth: 12,
-    startDate: '2017-04-01',
-    endDate: '2018-03-31',
-    totalDays: 365,
-    billableDays: 365,
-    authorisedAnnualQuantity: '25',
-    season: 'summer',
-    seasonDerived: 'all year',
-    source: 'unsupported',
-    loss: 'high',
-    purposePrimary: 'A',
-    purposeSecondary: 'AGR',
-    purposeTertiary: '400',
-    factorsOverridden: false,
-    billableAnnualQuantity: '25',
-    timeLimitedStartDate: null,
-    timeLimitedEndDate: null,
-    description: 'BORE AT FARM',
-    srocCategory: null,
-    dateCreated: '2019-09-26T08:12:08.346Z',
-    dateUpdated: '2019-09-26T08:12:08.346Z',
-    purposePrimaryDescription: 'Agriculture',
-    purposeSecondaryDescription: 'General Agriculture',
-    purposeTertiaryDescription: 'Spray Irrigation - Direct',
-    eiucSource: 'other',
-    chargeAgreements: []
-  }]
-};
+const chargeElements = [{
+  id: 'charge-element-1',
+  abstractionPeriod: {
+    startDay: 1,
+    startMonth: 1,
+    endDay: 31,
+    endMonth: 12
+  },
+  startDate: '2017-04-01',
+  endDate: '2018-03-31',
+  totalDays: 365,
+  billableDays: 365,
+  authorisedAnnualQuantity: '25',
+  season: 'summer',
+  source: 'unsupported',
+  loss: 'high',
+  purposeUse: {
+    type: 'use',
+    code: '400',
+    name: 'Spray Irrigation - Direct'
+  },
+  factorsOverridden: false,
+  billableAnnualQuantity: '25',
+  description: 'BORE AT FARM',
+  srocCategory: null,
+  dateCreated: '2019-09-26T08:12:08.346Z',
+  dateUpdated: '2019-09-26T08:12:08.346Z',
+  eiucSource: 'other',
+  chargeAgreements: []
+}];
 
 const returns = [{
   returnId: 'return-1',
@@ -194,6 +176,6 @@ const returns = [{
 }];
 
 module.exports = {
-  chargeVersion,
+  chargeElements,
   returns
 };

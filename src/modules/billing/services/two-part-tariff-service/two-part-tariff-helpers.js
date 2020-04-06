@@ -1,13 +1,11 @@
 const Decimal = require('decimal.js-light');
 const TPT_PURPOSES = [380, 390, 400, 410, 420];
 const dateFormat = 'YYYY-MM-DD';
-const ERROR_NO_RETURNS_FOR_MATCHING = 'no-returns-for-matching';
-const ERROR_NO_RETURNS_SUBMITTED = 'no-returns-submitted';
-const ERROR_SOME_RETURNS_DUE = 'some-returns-due';
-const ERROR_LATE_RETURNS = 'late-returns';
-const ERROR_UNDER_QUERY = 'under-query';
-const ERROR_RECEIVED = 'received';
-const ERROR_OVER_ABSTRACTION = 'over-abstraction';
+const {
+  ERROR_NO_RETURNS_SUBMITTED,
+  ERROR_SOME_RETURNS_DUE,
+  ERROR_LATE_RETURNS
+} = require('../../../../lib/models/transaction').twoPartTariffStatuses;
 
 /**
  * Checks whether error is one which requires a null return
@@ -24,7 +22,7 @@ const isNullReturnRequired = error => {
  * @param {Array} chargeElements
  */
 const returnsError = (error, chargeElements) => {
-  if (isNullReturnRequired(error)) return getNullActualReturnQuantities(error, chargeElements);
+  if (isNullReturnRequired(error)) return getNullActualReturnQuantities(chargeElements, error);
   return {
     error,
     data: null
@@ -32,16 +30,14 @@ const returnsError = (error, chargeElements) => {
 };
 
 /**
- * Sets actualReturnQuantities set to null for all chargeElements
+ * Sets up charge elemets with acturalReturnQuantity = null
  * @param {Array} chargeElements objects
  * @return {Object}
- *         {null} error
- *         {Array} data chargeElementId & null actualReturnQuantity
+ *         {Integer} error passed in
+ *         {Array} data chargeElement.id & null actualReturnQuantity
  */
-const getNullActualReturnQuantities = (error, chargeElements) => {
-  const data = chargeElements.map(element =>
-    getChargeElementReturnData({ ...element, actualReturnQuantity: null })
-  );
+const getNullActualReturnQuantities = (chargeElements, error) => {
+  const data = chargeElements.map(element => getChargeElementReturnData(element));
   return { error, data };
 };
 
@@ -53,14 +49,13 @@ const getNullActualReturnQuantities = (error, chargeElements) => {
  *         {Object} data result of matching exercise for specific charge element
  */
 const getChargeElementReturnData = (chargeElement, error) => {
-  const actualReturnQuantity = (chargeElement.actualReturnQuantity !== null)
+  const actualReturnQuantity = (typeof chargeElement.actualReturnQuantity === 'number')
     ? new Decimal(chargeElement.actualReturnQuantity).toDecimalPlaces(3).toNumber()
     : null;
-
   return {
     error: error || null,
     data: {
-      chargeElementId: chargeElement.chargeElementId,
+      chargeElementId: chargeElement.id,
       proRataAuthorisedQuantity: chargeElement.proRataAuthorisedQuantity,
       actualReturnQuantity
     }
@@ -74,22 +69,22 @@ const getChargeElementReturnData = (chargeElement, error) => {
  * @return {Boolean} whether or not the return contains a purpose that matches the charge element purpose
  */
 const returnPurposeMatchesElementPurpose = (ret, ele) => {
-  const purposeMatch = ret.metadata.purposes.map(purpose => {
-    return parseInt(purpose.tertiary.code) === parseInt(ele.purposeTertiary);
-  });
+  const purposeMatch = ret.metadata.purposes.map(purpose =>
+    parseInt(purpose.tertiary.code) === parseInt(ele.purposeUse.code));
   return purposeMatch.includes(true);
 };
 
+const getAbstractionPeriodDates = absPeriod => ({
+  periodStartDay: absPeriod.startDay,
+  periodStartMonth: absPeriod.startMonth,
+  periodEndDay: absPeriod.endDay,
+  periodEndMonth: absPeriod.endMonth
+});
+
 exports.TPT_PURPOSES = TPT_PURPOSES;
 exports.dateFormat = dateFormat;
-exports.ERROR_NO_RETURNS_FOR_MATCHING = ERROR_NO_RETURNS_FOR_MATCHING;
-exports.ERROR_NO_RETURNS_SUBMITTED = ERROR_NO_RETURNS_SUBMITTED;
-exports.ERROR_OVER_ABSTRACTION = ERROR_OVER_ABSTRACTION;
-exports.ERROR_SOME_RETURNS_DUE = ERROR_SOME_RETURNS_DUE;
-exports.ERROR_LATE_RETURNS = ERROR_LATE_RETURNS;
-exports.ERROR_UNDER_QUERY = ERROR_UNDER_QUERY;
-exports.ERROR_RECEIVED = ERROR_RECEIVED;
 exports.getNullActualReturnQuantities = getNullActualReturnQuantities;
 exports.returnsError = returnsError;
 exports.getChargeElementReturnData = getChargeElementReturnData;
 exports.returnPurposeMatchesElementPurpose = returnPurposeMatchesElementPurpose;
+exports.getAbstractionPeriodDates = getAbstractionPeriodDates;

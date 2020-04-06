@@ -3,12 +3,14 @@ const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { createReturn, createPurposeData } = require('./test-return-data');
 const { createChargeElement } = require('./test-charge-data');
 const {
-  ERROR_UNDER_QUERY,
-  ERROR_NO_RETURNS_SUBMITTED,
   returnsError,
   getChargeElementReturnData,
   returnPurposeMatchesElementPurpose
-} = require('../../../../../src/modules/billing/service/two-part-tariff/two-part-tariff-helpers');
+} = require('../../../../../src/modules/billing/services/two-part-tariff-service/two-part-tariff-helpers');
+const {
+  ERROR_UNDER_QUERY,
+  ERROR_NO_RETURNS_SUBMITTED
+} = require('../../../../../src/lib/models/transaction').twoPartTariffStatuses;
 
 experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
   experiment('.returnsError', async () => {
@@ -27,10 +29,10 @@ experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
 
       expect(error).to.equal(ERROR_NO_RETURNS_SUBMITTED);
       expect(data).to.be.an.array().and.to.have.length(2);
-      expect(data[0].data.chargeElementId).to.equal(chargeElement1.chargeElementId);
+      expect(data[0].data.chargeElementId).to.equal(chargeElement1.id);
       expect(data[0].data.actualReturnQuantity).to.be.null();
       expect(data[0].error).to.be.null();
-      expect(data[1].data.chargeElementId).to.equal(chargeElement2.chargeElementId);
+      expect(data[1].data.chargeElementId).to.equal(chargeElement2.id);
       expect(data[1].data.actualReturnQuantity).to.be.null();
       expect(data[1].error).to.be.null();
     });
@@ -65,7 +67,7 @@ experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
       };
       const { data } = getChargeElementReturnData(chargeElement);
 
-      expect(data.chargeElementId).to.equal(chargeElement.chargeElementId);
+      expect(data.chargeElementId).to.equal(chargeElement.id);
       expect(data.proRataAuthorisedQuantity).to.equal(chargeElement.proRataAuthorisedQuantity);
       expect(data.actualReturnQuantity).to.equal(chargeElement.actualReturnQuantity);
     });
