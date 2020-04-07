@@ -463,4 +463,31 @@ experiment('modules/billing/routes', () => {
       expect(pre[0].assign).to.equal('batch');
     });
   });
+
+  experiment('getInvoiceLicence', () => {
+    let request;
+    let server;
+    let invoiceLicenceId;
+
+    beforeEach(async () => {
+      server = getServer(routes.getInvoiceLicence);
+      invoiceLicenceId = uuid();
+
+      request = {
+        method: 'GET',
+        url: `/water/1.0/billing/invoice-licences/${invoiceLicenceId}`
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the invoice licence id is not a uuid', async () => {
+      request.url = request.url.replace(invoiceLicenceId, '123');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+  });
 });

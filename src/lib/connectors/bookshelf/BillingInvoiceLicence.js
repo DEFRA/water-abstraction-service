@@ -4,8 +4,9 @@ const { bookshelf } = require('./bookshelf.js');
 
 module.exports = bookshelf.model('BillingInvoiceLicence', {
   tableName: 'billing_invoice_licences',
-
+  idAttribute: 'billing_invoice_licence_id',
   hasTimestamps: ['date_created', 'date_updated'],
+  requireFetch: false,
 
   billingInvoice () {
     return this.belongsTo('BillingInvoice', 'billing_invoice_id', 'billing_invoice_id');
