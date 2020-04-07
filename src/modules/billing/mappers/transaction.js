@@ -2,7 +2,7 @@
 
 const moment = require('moment');
 const { titleCase } = require('title-case');
-const { get, pick, identity } = require('lodash');
+const { get, pick, identity, pickBy, isBoolean } = require('lodash');
 
 const Batch = require('../../../lib/models/batch');
 const DateRange = require('../../../lib/models/date-range');
@@ -148,13 +148,16 @@ const dbToModel = row => {
   transaction.fromHash({
     id: row.billingTransactionId,
     ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
-      'externalId', 'calculatedVolume', 'twoPartTariffError', 'twoPartTariffStatus']),
+      'externalId', 'calculatedVolume', 'twoPartTariffStatus']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
     volume: parseFloat(row.volume),
     agreements: mapDBToAgreements(row),
-    twoPartTariffReview: mapReviewDataToUser(row.twoPartTariffReview)
+    twoPartTariffReview: mapReviewDataToUser(row.twoPartTariffReview),
+    ...pickBy({
+      twoPartTariffError: row.twoPartTariffError
+    }, isBoolean)
   });
   return transaction;
 };
