@@ -148,7 +148,7 @@ const dbToModel = row => {
   transaction.fromHash({
     id: row.billingTransactionId,
     ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
-      'externalId', 'calculatedVolume', 'twoPartTariffStatus']),
+      'externalId', 'calculatedVolume', 'twoPartTariffError', 'twoPartTariffStatus']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
