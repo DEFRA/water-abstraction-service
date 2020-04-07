@@ -57,6 +57,7 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(invoiceService, 'getInvoicesTransactionsForBatch').resolves();
 
     sandbox.stub(invoiceLicenceService, 'getLicencesWithTransactionStatusesForBatch').resolves();
+    sandbox.stub(invoiceLicenceService, 'getInvoiceLicenceWithTransactions').resolves();
 
     sandbox.stub(eventService, 'create').resolves({
       id: '11111111-1111-1111-1111-111111111111'
@@ -772,6 +773,22 @@ experiment('modules/billing/controller', () => {
           expect(response).to.equal(fakeResponse);
         });
       });
+    });
+  });
+
+  experiment('.getInvoiceLicenceWithTransactions', () => {
+    const request = {
+      params: { invoiceLicenceId: 'test-id' }
+    };
+    beforeEach(async () => {
+      await controller.getInvoiceLicenceWithTransactions(request, h);
+    });
+
+    test('calls the invoice licence service', () => {
+      expect(invoiceLicenceService.getInvoiceLicenceWithTransactions.called).to.be.true();
+    });
+    test('calls the invoice licence service with the correct invoice licence id', () => {
+      expect(invoiceLicenceService.getInvoiceLicenceWithTransactions.lastCall.args[0]).to.equal('test-id');
     });
   });
 });

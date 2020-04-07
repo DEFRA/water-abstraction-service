@@ -13,6 +13,7 @@ const billingInvoiceLicences = require('../../../../src/lib/connectors/repos/bil
 const { bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-invoice-licences');
+const billingInvoiceLicence = require('../../../../src/lib/connectors/bookshelf/BillingInvoiceLicence');
 
 experiment('lib/connectors/repos/billing-invoice-licences', () => {
   beforeEach(async () => {
@@ -87,6 +88,30 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       const { args } = raw.multiRow.lastCall;
       expect(args[0]).to.equal(queries.findLicencesWithTransactionStatusesForBatch);
       expect(args[1]).to.equal({ batchId });
+    });
+  });
+
+  experiment('.findOneInvoiceLicenceWithTransactions', () => {
+    beforeEach(async () => {
+      const model = { toJSON: sandbox.stub().returns({ foo: 'bar' }) };
+      const stub = {
+        fetch: sandbox.stub().resolves(model)
+      };
+      sandbox.stub(billingInvoiceLicence, 'forge').returns(stub);
+      await billingInvoiceLicences.findOneInvoiceLicenceWithTransactions('00000000-0000-0000-0000-000000000000');
+    });
+
+    test('calls forge with correct argumements', async () => {
+      const { args } = billingInvoiceLicence.forge.lastCall;
+      expect(args[0]).to.equal({ billingInvoiceLicenceId: '00000000-0000-0000-0000-000000000000' });
+    });
+    test('calls forge().fetch with correct argumements', async () => {
+      const { args } = billingInvoiceLicence.forge().fetch.lastCall;
+      expect(args[0].withRelated[0]).to.equal('licence');
+      expect(args[0].withRelated[1]).to.equal('licence.region');
+      expect(args[0].withRelated[2]).to.equal('billingTransactions');
+      expect(args[0].withRelated[3]).to.equal('billingTransactions.chargeElement');
+      expect(args[0].withRelated[4]).to.equal('billingTransactions.chargeElement.purposeUse');
     });
   });
 });
