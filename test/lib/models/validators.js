@@ -192,6 +192,33 @@ experiment('lib/models/validators', () => {
     });
   });
 
+  experiment('assertNullableBoolean', () => {
+    test('does not throw for false', async () => {
+      const func = () => validators.assertIsNullableBoolean(false);
+      expect(func).not.to.throw();
+    });
+
+    test('does not throw for true', async () => {
+      const func = () => validators.assertIsNullableBoolean(true);
+      expect(func).not.to.throw();
+    });
+
+    test('does not throw for null', async () => {
+      const func = () => validators.assertIsNullableBoolean(null);
+      expect(func).not.to.throw();
+    });
+
+    test('throws for an integer', async () => {
+      const func = () => validators.assertIsNullableBoolean(1234);
+      expect(func).to.throw();
+    });
+
+    test('throws for undefined', async () => {
+      const func = () => validators.assertIsNullableBoolean();
+      expect(func).to.throw();
+    });
+  });
+
   experiment('assertTransactionKey', () => {
     test('does not throw for a valid 32 char key', async () => {
       const valid = '0123456789ABCDEF0123456789ABCDEF';

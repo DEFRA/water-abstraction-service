@@ -234,7 +234,7 @@ class Transaction extends Model {
   }
 
   set twoPartTariffError (twoPartTariffError) {
-    validators.assertIsBoolean(twoPartTariffError);
+    validators.assertIsNullableBoolean(twoPartTariffError);
     this._twoPartTariffError = twoPartTariffError;
   }
 

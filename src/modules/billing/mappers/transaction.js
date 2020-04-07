@@ -154,8 +154,7 @@ const dbToModel = row => {
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
     volume: parseFloat(row.volume),
     agreements: mapDBToAgreements(row),
-    twoPartTariffReview: mapReviewDataToUser(row.twoPartTariffReview),
-    twoPartTariffError: (!!row.twoPartTariffError)
+    twoPartTariffReview: mapReviewDataToUser(row.twoPartTariffReview)
   });
   return transaction;
 };
