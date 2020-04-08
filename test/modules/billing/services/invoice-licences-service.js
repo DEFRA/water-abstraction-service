@@ -20,6 +20,7 @@ experiment('modules/billing/services/invoice-licences-service', () => {
   beforeEach(async () => {
     sandbox.stub(newRepos.billingInvoiceLicences, 'findLicencesWithTransactionStatusesForBatch');
     sandbox.stub(newRepos.billingInvoiceLicences, 'upsert');
+    sandbox.stub(newRepos.billingInvoiceLicences, 'findOneInvoiceLicenceWithTransactions');
     sandbox.stub(mappers.invoiceLicence, 'modelToDB').returns({
       licenceRef: '01/123'
     });
@@ -65,6 +66,10 @@ experiment('modules/billing/services/invoice-licences-service', () => {
               id: 'licence-holder-1',
               name: 'licence-holder-1-name'
             },
+            twoPartTariffErrors: [
+              false,
+              false
+            ],
             twoPartTariffStatuses: [
               null,
               null
@@ -82,6 +87,10 @@ experiment('modules/billing/services/invoice-licences-service', () => {
               firstName: 'First',
               salutation: null
             },
+            twoPartTariffErrors: [
+              false,
+              true
+            ],
             twoPartTariffStatuses: [
               100,
               null,
@@ -129,12 +138,44 @@ experiment('modules/billing/services/invoice-licences-service', () => {
         });
       });
 
+      test('a false error flag when the none of the values are true', async () => {
+        expect(result[0].twoPartTariffError).to.be.false();
+      });
+
+      test('a true error flag when one or more of the values are true', async () => {
+        expect(result[1].twoPartTariffError).to.be.true();
+      });
+
       test('an empty array status codes when the values are all null', async () => {
         expect(result[0].twoPartTariffStatuses).to.equal([]);
       });
 
       test('an array of unique status codes when the values are not all null', async () => {
         expect(result[1].twoPartTariffStatuses).to.equal([100, 200]);
+      });
+    });
+  });
+
+  experiment('.getInvoiceLicenceWithTransactions', () => {
+    experiment('when there is data returned it contains', () => {
+      beforeEach(async () => {
+        newRepos.billingInvoiceLicences.findOneInvoiceLicenceWithTransactions.resolves(
+          {
+            billingInvoiceLicenceId: 'db-invoice-licence-id'
+          }
+        );
+        sandbox.stub(mappers.invoiceLicence, 'dbToModel').returns({
+          billingInvoiceLicenceId: 'mapper-invoice-licence-id'
+        });
+        await invoiceLicencesService.getInvoiceLicenceWithTransactions('invoice-licence-id');
+      });
+
+      test('calls the billing licence invoice repo with the correct id', async () => {
+        expect(newRepos.billingInvoiceLicences.findOneInvoiceLicenceWithTransactions.lastCall.args[0]).to.equal('invoice-licence-id');
+      });
+
+      test('calls the invoice mapper to map the data from database to the correct models', async () => {
+        expect(mappers.invoiceLicence.dbToModel.lastCall.args[0]).to.equal({ billingInvoiceLicenceId: 'db-invoice-licence-id' });
       });
     });
   });

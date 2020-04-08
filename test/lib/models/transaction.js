@@ -398,6 +398,22 @@ experiment('lib/models/transaction', () => {
       expect(transaction.twoPartTariffError).to.equal(true);
     });
 
+    test('can be set to a null', async () => {
+      const transaction = new Transaction();
+      transaction.twoPartTariffError = null;
+      expect(transaction.twoPartTariffError).to.equal(null);
+    });
+
+    test('throws an error if set to undefined', async () => {
+      const transaction = new Transaction();
+
+      const func = () => {
+        transaction.twoPartTariffError = undefined;
+      };
+
+      expect(func).to.throw();
+    });
+
     test('throws an error if set to any other type', async () => {
       const transaction = new Transaction();
 

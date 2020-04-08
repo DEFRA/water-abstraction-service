@@ -180,13 +180,19 @@ const patchTransaction = async (request, h) => {
   return h.response().code(204);
 };
 
+const getInvoiceLicenceWithTransactions = async (request, h) => {
+  const { invoiceLicenceId } = request.params;
+  const invoiceLicence = await invoiceLicenceService.getInvoiceLicenceWithTransactions(invoiceLicenceId);
+  return invoiceLicence || Boom.notFound(`Invoice licence ${invoiceLicenceId} not found`);
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
 exports.getBatchLicences = getBatchLicences;
-
+exports.getInvoiceLicenceWithTransactions = getInvoiceLicenceWithTransactions;
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
 exports.deleteBatch = deleteBatch;
 

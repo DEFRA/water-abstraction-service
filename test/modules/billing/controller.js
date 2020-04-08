@@ -61,6 +61,7 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(invoiceService, 'getInvoicesTransactionsForBatch').resolves();
 
     sandbox.stub(invoiceLicenceService, 'getLicencesWithTransactionStatusesForBatch').resolves();
+    sandbox.stub(invoiceLicenceService, 'getInvoiceLicenceWithTransactions').resolves();
 
     tptBatch = new Batch();
     tptBatch.fromHash({
@@ -859,6 +860,22 @@ experiment('modules/billing/controller', () => {
           expect(err.message).to.equal('No transaction (00112233-4455-6677-8899-aabbccddeeff) found');
         }
       });
+    });
+  });
+
+  experiment('.getInvoiceLicenceWithTransactions', () => {
+    const request = {
+      params: { invoiceLicenceId: 'test-id' }
+    };
+    beforeEach(async () => {
+      await controller.getInvoiceLicenceWithTransactions(request, h);
+    });
+
+    test('calls the invoice licence service', () => {
+      expect(invoiceLicenceService.getInvoiceLicenceWithTransactions.called).to.be.true();
+    });
+    test('calls the invoice licence service with the correct invoice licence id', () => {
+      expect(invoiceLicenceService.getInvoiceLicenceWithTransactions.lastCall.args[0]).to.equal('test-id');
     });
   });
 });

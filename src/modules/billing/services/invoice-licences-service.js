@@ -36,6 +36,7 @@ const getLicencesWithTransactionStatusesForBatch = async batchId => {
       licenceRef: item.licenceRef,
       licenceId: item.licenceId,
       licenceHolder: item.licenceHolderName,
+      twoPartTariffError: item.twoPartTariffErrors.includes(true),
       twoPartTariffStatuses: Array.from(
         item.twoPartTariffStatuses.reduce((statuses, status) => {
           return (status === null) ? statuses : statuses.add(status);
@@ -45,5 +46,14 @@ const getLicencesWithTransactionStatusesForBatch = async batchId => {
   });
 };
 
+const getInvoiceLicenceWithTransactions = async invoiceLicenceId => {
+  // Get InvoiceLicence with transactions from repo
+  const data = await newRepos.billingInvoiceLicences.findOneInvoiceLicenceWithTransactions(invoiceLicenceId);
+  // Map data to InvoiceLicence model
+  const invoiceLicence = mappers.invoiceLicence.dbToModel(data);
+  return invoiceLicence;
+};
+
 exports.getLicencesWithTransactionStatusesForBatch = getLicencesWithTransactionStatusesForBatch;
 exports.saveInvoiceLicenceToDB = saveInvoiceLicenceToDB;
+exports.getInvoiceLicenceWithTransactions = getInvoiceLicenceWithTransactions;
