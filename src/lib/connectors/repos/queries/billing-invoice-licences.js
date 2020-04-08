@@ -42,7 +42,8 @@ exports.findLicencesWithTransactionStatusesForBatch = `
     bil.licence_id,
     bil.licence_ref,
     bil.licence_holder_name,
-    array_agg(bt.two_part_tariff_status) as "two_part_tariff_statuses"
+    array_agg(bt.two_part_tariff_status) as "two_part_tariff_statuses",
+    array_agg(bt.two_part_tariff_error) as "two_part_tariff_errors" 
   from water.billing_invoices bi
     join water.billing_invoice_licences bil
       on bi.billing_invoice_id = bil.billing_invoice_id

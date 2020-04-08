@@ -36,6 +36,7 @@ const getLicencesWithTransactionStatusesForBatch = async batchId => {
       licenceRef: item.licenceRef,
       licenceId: item.licenceId,
       licenceHolder: item.licenceHolderName,
+      twoPartTariffError: item.twoPartTariffErrors.includes(true),
       twoPartTariffStatuses: Array.from(
         item.twoPartTariffStatuses.reduce((statuses, status) => {
           return (status === null) ? statuses : statuses.add(status);

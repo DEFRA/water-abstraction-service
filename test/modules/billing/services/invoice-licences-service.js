@@ -66,6 +66,10 @@ experiment('modules/billing/services/invoice-licences-service', () => {
               id: 'licence-holder-1',
               name: 'licence-holder-1-name'
             },
+            twoPartTariffErrors: [
+              false,
+              false
+            ],
             twoPartTariffStatuses: [
               null,
               null
@@ -83,6 +87,10 @@ experiment('modules/billing/services/invoice-licences-service', () => {
               firstName: 'First',
               salutation: null
             },
+            twoPartTariffErrors: [
+              false,
+              true
+            ],
             twoPartTariffStatuses: [
               100,
               null,
@@ -128,6 +136,14 @@ experiment('modules/billing/services/invoice-licences-service', () => {
           firstName: 'First',
           salutation: null
         });
+      });
+
+      test('a false error flag when the none of the values are true', async () => {
+        expect(result[0].twoPartTariffError).to.be.false();
+      });
+
+      test('a true error flag when one or more of the values are true', async () => {
+        expect(result[1].twoPartTariffError).to.be.true();
       });
 
       test('an empty array status codes when the values are all null', async () => {
