@@ -176,6 +176,25 @@ const getBatchLicences = {
   }
 };
 
+const patchTransaction = {
+  method: 'PATCH',
+  path: '/water/1.0/billing/transactions/{transactionId}',
+  handler: controller.patchTransaction,
+  config: {
+    validate: {
+      params: {
+        transactionId: Joi.string().uuid().required()
+      },
+      payload: {
+        volume: Joi.number().positive().allow(0).required()
+      },
+      headers: async values => {
+        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+      }
+    }
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
@@ -188,3 +207,5 @@ exports.deleteBatch = deleteBatch;
 
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
+
+exports.patchTransaction = patchTransaction;

@@ -22,7 +22,16 @@ const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../src/lib/models/licence');
 const Region = require('../../../../src/lib/models/region');
 const Transaction = require('../../../../src/lib/models/transaction');
+const User = require('../../../../src/lib/models/user');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
+
+const createUser = options => {
+  const user = new User();
+  return user.fromHash({
+    id: options.id,
+    emailAddress: options.emailAddress
+  });
+};
 
 const createChargeElement = () => {
   const chargeElement = new ChargeElement('29328315-9b24-473b-bde7-02c60e881501');
@@ -44,7 +53,7 @@ const createChargeElement = () => {
 };
 
 const createTransaction = (options = {}) => {
-  const transaction = new Transaction();
+  const transaction = new Transaction(options.id || '');
   transaction.fromHash({
     chargeElement: createChargeElement(),
     chargePeriod: new DateRange('2019-04-01', '2020-03-31'),
@@ -53,8 +62,13 @@ const createTransaction = (options = {}) => {
     authorisedDays: 366,
     billableDays: 366,
     description: 'Tiny pond',
-    volume: 5.64
+    volume: 5.64,
+    twoPartTariffError: !!options.twoPartTariffError
   });
+
+  if (options.twoPartTariffReview) {
+    transaction.twoPartTariffReview = createUser(options.twoPartTariffReview);
+  }
   return transaction;
 };
 
@@ -205,6 +219,35 @@ experiment('modules/billing/services/transactions-service', () => {
             response
           });
         }
+      });
+    });
+  });
+
+  experiment('.updateTransactionVolume', () => {
+    let transactionId, transaction;
+
+    beforeEach(async () => {
+      const options = {
+        id: transactionId,
+        twoPartTariffError: false,
+        twoPartTariffReview: { id: 1234, emailAddress: 'test@example.com' }
+      };
+      transaction = createTransaction(options);
+
+      await transactionsService.updateTransactionVolume(transaction);
+    });
+
+    test('the update() method is called on the repo', () => {
+      expect(repos.billingTransactions.update.called).to.be.true();
+    });
+
+    test('the transaction volume, twoPartTariffError and twoPartTariffReview are updated', () => {
+      const [id, changes] = repos.billingTransactions.update.lastCall.args;
+      expect(id).to.equal(transactionId);
+      expect(changes).to.equal({
+        volume: 5.64,
+        twoPartTariffError: false,
+        twoPartTariffReview: { id: 1234, emailAddress: 'test@example.com' }
       });
     });
   });

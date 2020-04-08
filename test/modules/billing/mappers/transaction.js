@@ -554,6 +554,14 @@ experiment('modules/billing/mappers/transaction', () => {
       test('the agreement contains the right code', async () => {
         expect(result.agreements[0].code).to.equal('S127');
       });
+
+      test('handles a null volume', async () => {
+        result = transactionMapper.dbToModel({
+          ...dbRow,
+          volume: null
+        });
+        expect(result.volume).to.equal(null);
+      });
     });
 
     experiment('when the DB row contains a section 130 factor', () => {

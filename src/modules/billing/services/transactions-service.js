@@ -78,7 +78,17 @@ const setErrorStatus = transactionId =>
     status: Transaction.statuses.error
   });
 
+const updateTransactionVolume = (transaction) => {
+  const changes = {
+    ...transaction.pick('volume', 'twoPartTariffError'),
+    twoPartTariffReview: transaction.twoPartTariffReview.toJSON()
+  };
+
+  return newRepos.billingTransactions.update(transaction.id, changes);
+};
+
 exports.saveTransactionToDB = saveTransactionToDB;
 exports.getById = getById;
 exports.updateWithChargeModuleResponse = updateTransactionWithChargeModuleResponse;
 exports.setErrorStatus = setErrorStatus;
+exports.updateTransactionVolume = updateTransactionVolume;

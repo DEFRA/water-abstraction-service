@@ -14,6 +14,8 @@ const uuid = require('uuid/v4');
 
 const Invoice = require('../../../src/lib/models/invoice');
 const Batch = require('../../../src/lib/models/batch');
+const Transaction = require('../../../src/lib/models/transaction');
+const User = require('../../../src/lib/models/user');
 const BATCH_STATUS = Batch.BATCH_STATUS;
 
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
@@ -23,12 +25,14 @@ const eventService = require('../../../src/lib/services/events');
 const invoiceService = require('../../../src/modules/billing/services/invoice-service');
 const invoiceLicenceService = require('../../../src/modules/billing/services/invoice-licences-service');
 const batchService = require('../../../src/modules/billing/services/batch-service');
+const transactionsService = require('../../../src/modules/billing/services/transactions-service');
 const controller = require('../../../src/modules/billing/controller');
 
 const mappers = require('../../../src/modules/billing/mappers');
+const { invoice } = require('./test-data/test-batch-data');
 
 experiment('modules/billing/controller', () => {
-  let h, hapiResponseStub, batch;
+  let h, hapiResponseStub, batch, tptBatch;
 
   beforeEach(async () => {
     hapiResponseStub = {
@@ -57,6 +61,15 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(invoiceService, 'getInvoicesTransactionsForBatch').resolves();
 
     sandbox.stub(invoiceLicenceService, 'getLicencesWithTransactionStatusesForBatch').resolves();
+
+    tptBatch = new Batch();
+    tptBatch.fromHash({
+      type: Batch.BATCH_TYPE.twoPartTariff,
+      status: BATCH_STATUS.review
+    });
+    tptBatch.addInvoice(invoice);
+    sandbox.stub(transactionsService, 'getById').resolves(tptBatch);
+    sandbox.stub(transactionsService, 'updateTransactionVolume').resolves();
 
     sandbox.stub(eventService, 'create').resolves({
       id: '11111111-1111-1111-1111-111111111111'
@@ -580,7 +593,7 @@ experiment('modules/billing/controller', () => {
       });
     });
 
-    experiment('for a batch that is in revew', () => {
+    experiment('for a batch that is in review', () => {
       test('deletes the batch via the batch service', async () => {
         batch.status = Batch.BATCH_STATUS.review;
         await controller.deleteBatch(request, h);
@@ -771,6 +784,80 @@ experiment('modules/billing/controller', () => {
 
           expect(response).to.equal(fakeResponse);
         });
+      });
+    });
+  });
+
+  experiment('.patchTransaction', () => {
+    let request;
+    const createRequest = volume => ({
+      defra: {
+        internalCallingUser: {
+          id: 1234,
+          email: 'test@example.com'
+        }
+      },
+      params: { transactionId: 'test-transaction-id' },
+      payload: { volume }
+    });
+
+    beforeEach(async () => {
+      request = createRequest(20);
+      await controller.patchTransaction(request, h);
+    });
+
+    test('the transactions service is called to get the transaction with related data', async () => {
+      expect(
+        transactionsService.getById.calledWith(request.params.transactionId)
+      ).to.be.true();
+    });
+    experiment('when the transaction data is found', async () => {
+      experiment('and the update criteria is met', async () => {
+        test('the transaction data is updated and passed to transaction service', async () => {
+          const { id: userId, email: userEmail } = request.defra.internalCallingUser;
+          const [updatedTransaction] = transactionsService.updateTransactionVolume.lastCall.args;
+
+          expect(updatedTransaction).to.be.an.instanceOf(Transaction);
+          expect(updatedTransaction.volume).to.equal(request.payload.volume);
+          expect(updatedTransaction.twoPartTariffError).to.be.false();
+          expect(updatedTransaction.twoPartTariffReview).to.be.an.instanceOf(User);
+          expect(updatedTransaction.twoPartTariffReview.id).to.equal(userId);
+          expect(updatedTransaction.twoPartTariffReview.emailAddress).to.equal(userEmail);
+        });
+
+        test('a 204 response is sent', async () => {
+          const [code] = hapiResponseStub.code.lastCall.args;
+          expect(code).to.equal(204);
+        });
+
+        test('when updateTransactionVolume rejects, error is thrown', async () => {
+          transactionsService.updateTransactionVolume.rejects();
+          const func = () => controller.patchTransaction(request, h);
+          expect(func()).to.reject();
+        });
+      });
+      experiment('and the update criteria is not met', async () => {
+        test('throws Boom bad request error', async () => {
+          tptBatch.status = BATCH_STATUS.ready;
+          try {
+            await controller.patchTransaction(request, h);
+          } catch (err) {
+            expect(err.isBoom).to.be.true();
+            expect(err.output.statusCode).to.equal(400);
+          }
+        });
+      });
+    });
+    experiment('when the transaction data is not found', async () => {
+      test('throws Boom not found error', async () => {
+        transactionsService.getById.resolves();
+        try {
+          await controller.patchTransaction(request, h);
+        } catch (err) {
+          expect(err.isBoom).to.be.true();
+          expect(err.output.statusCode).to.equal(404);
+          expect(err.message).to.equal('No transaction (00112233-4455-6677-8899-aabbccddeeff) found');
+        }
       });
     });
   });

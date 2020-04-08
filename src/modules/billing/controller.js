@@ -9,10 +9,12 @@ const BATCH_STATUS = Batch.BATCH_STATUS;
 const { envelope } = require('../../lib/response');
 const createBillRunJob = require('./jobs/create-bill-run');
 const refreshTotalsJob = require('./jobs/refresh-totals');
-const { jobStatus } = require('./lib/batch');
+const { jobStatus } = require('./lib/event');
+const { checkVolumeUpdateCriteriaMet, decorateTransactionWithVolume } = require('./lib/transaction');
 const invoiceService = require('./services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
 const batchService = require('./services/batch-service');
+const transactionsService = require('./services/transactions-service');
 const eventService = require('../../lib/services/events');
 
 const mappers = require('./mappers');
@@ -161,6 +163,23 @@ const getBatchLicences = async (request, h) => {
   return invoiceLicenceService.getLicencesWithTransactionStatusesForBatch(batch.id);
 };
 
+const patchTransaction = async (request, h) => {
+  const { transactionId } = request.params;
+  const { volume } = request.payload;
+  const { internalCallingUser: user } = request.defra;
+
+  const batch = await transactionsService.getById(transactionId);
+  if (!batch) return Boom.notFound(`No transaction (${transactionId}) found`);
+
+  checkVolumeUpdateCriteriaMet(batch, volume);
+
+  const updatedTransaction = decorateTransactionWithVolume(batch, volume, user);
+
+  await transactionsService.updateTransactionVolume(updatedTransaction);
+
+  return h.response().code(204);
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
@@ -173,3 +192,5 @@ exports.deleteBatch = deleteBatch;
 
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
+
+exports.patchTransaction = patchTransaction;

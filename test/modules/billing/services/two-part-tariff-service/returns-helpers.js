@@ -5,7 +5,7 @@ const sandbox = require('sinon').createSandbox();
 const returnsHelpers = require('../../../../../src/modules/billing/services/two-part-tariff-service/returns-helpers');
 const returns = require('../../../../../src/lib/connectors/returns');
 
-const { batch, licence } = require('./test-batch');
+const { tptBatch, licence } = require('../../test-data/test-batch-data');
 
 const returnsforLicence = [{
   returnId: 'test-return-id',
@@ -35,7 +35,7 @@ experiment('modules/billing/services/two-part-tariff-service/returns-helpers .ge
     sandbox.stub(returns, 'getReturnsForLicence').resolves(returnsforLicence);
     sandbox.stub(returns, 'getLinesForReturn').resolves(returnsLines);
 
-    result = await returnsHelpers.getReturnsForMatching(licence, batch);
+    result = await returnsHelpers.getReturnsForMatching(licence, tptBatch);
   });
 
   afterEach(async () => sandbox.restore());
@@ -52,8 +52,8 @@ experiment('modules/billing/services/two-part-tariff-service/returns-helpers .ge
   });
 
   test('gets correct return cycle dates for winter batch', async () => {
-    batch.season = 'winter';
-    result = await returnsHelpers.getReturnsForMatching(licence, batch);
+    tptBatch.season = 'winter';
+    result = await returnsHelpers.getReturnsForMatching(licence, tptBatch);
 
     const [, startDate, endDate] = returns.getReturnsForLicence.lastCall.args;
     expect(startDate).to.equal('2018-04-01');

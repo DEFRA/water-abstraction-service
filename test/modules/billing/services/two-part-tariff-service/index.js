@@ -10,7 +10,7 @@ const Batch = require('../../../../../src/lib/models/batch');
 const Transaction = require('../../../../../src/lib/models/transaction');
 const ChargeElement = require('../../../../../src/lib/models/charge-element');
 
-const { batch, chargeElement, licence, abstractionPeriod, transaction } = require('./test-batch');
+const { tptBatch, chargeElement, licence, abstractionPeriod, transaction } = require('../../test-data/test-batch-data');
 
 const returns = [
   {
@@ -50,7 +50,7 @@ experiment('modules/billing/services/two-part-tariff-service .processBatch', asy
     sandbox.stub(returnsHelpers, 'getReturnsForMatching').resolves(returns);
     sandbox.stub(twoPartTariffMatching, 'matchReturnsToChargeElements').returns(matchingResults);
 
-    result = await processBatch(batch);
+    result = await processBatch(tptBatch);
   });
 
   afterEach(async () => sandbox.restore());
@@ -58,7 +58,7 @@ experiment('modules/billing/services/two-part-tariff-service .processBatch', asy
   test('calls returns helpers with correct arguments to get returns data', async () => {
     const [licenceArg, batchArg] = returnsHelpers.getReturnsForMatching.lastCall.args;
     expect(licenceArg).to.equal(licence);
-    expect(batchArg).to.equal(batch);
+    expect(batchArg).to.equal(tptBatch);
   });
 
   test('maps required charge element data from transactions', async () => {
@@ -116,7 +116,7 @@ experiment('modules/billing/services/two-part-tariff-service .processBatch', asy
         data: null
       });
 
-      result = await processBatch(batch);
+      result = await processBatch(tptBatch);
 
       const { transactions: [transaction] } = result.invoices[0].invoiceLicences[0];
       expect(transaction.calculatedVolume).to.be.null();
@@ -133,7 +133,7 @@ experiment('modules/billing/services/two-part-tariff-service .processBatch', asy
         error: Transaction.twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE
       });
 
-      result = await processBatch(batch);
+      result = await processBatch(tptBatch);
 
       const { transactions: [transaction] } = result.invoices[0].invoiceLicences[0];
       expect(transaction.calculatedVolume).to.equal(matchingResults.data[0].data.actualReturnQuantity);
@@ -151,7 +151,7 @@ experiment('modules/billing/services/two-part-tariff-service .processBatch', asy
         }]
       });
 
-      result = await processBatch(batch);
+      result = await processBatch(tptBatch);
 
       const { transactions: [transaction] } = result.invoices[0].invoiceLicences[0];
       expect(transaction.calculatedVolume).to.equal(matchingResults.data[0].data.actualReturnQuantity);
