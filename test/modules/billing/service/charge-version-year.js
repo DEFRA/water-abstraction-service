@@ -11,6 +11,7 @@ const { expect } = require('@hapi/code');
 
 const sandbox = require('sinon').createSandbox();
 const { Batch } = require('../../../../src/lib/models');
+const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const chargeVersionYear = require('../../../../src/modules/billing/service/charge-version-year');
 const chargeProcessor = require('../../../../src/modules/billing/service/charge-processor');
@@ -135,9 +136,11 @@ experiment('modules/billing/service/charge-version-year.js', () => {
       });
 
       test('calls the charge processor', async () => {
+        const isTwoPartTariff = false;
         expect(chargeProcessor.processCharges.calledWith(
           data.chargeVersionYear.financial_year_ending,
-          data.chargeVersionYear.charge_version_id
+          data.chargeVersionYear.charge_version_id,
+          isTwoPartTariff
         )).to.be.true();
       });
 
@@ -152,6 +155,8 @@ experiment('modules/billing/service/charge-version-year.js', () => {
 
     experiment('when there is an error', () => {
       beforeEach(async () => {
+        batchService.getBatchById.resolves(createBatch());
+
         chargeProcessor.processCharges.resolves({
           error: 'Oh no!',
           data: data.charges
@@ -168,6 +173,67 @@ experiment('modules/billing/service/charge-version-year.js', () => {
         expect(msg).to.equal('Oh no!');
         expect(error).to.be.an.error();
         expect(data).to.equal({ chargeVersionYear: data.chargeVersionYear });
+      });
+    });
+
+    experiment('if the batch has the two part tariff type', () => {
+      test('the charge processor is setup as a two part tariff', async () => {
+        const batch = createBatch();
+        batch.type = Batch.BATCH_TYPE.twoPartTariff;
+
+        batchService.getBatchById.resolves(batch);
+
+        chargeProcessor.processCharges.resolves({
+          error: null,
+          data: data.charges
+        });
+
+        await chargeVersionYear.createBatchFromChargeVersionYear(data.chargeVersionYear);
+
+        const [, , isTwoPartTariff] = chargeProcessor.processCharges.lastCall.args;
+        expect(isTwoPartTariff).to.equal(true);
+      });
+    });
+
+    experiment('if the batch is for the summer season', () => {
+      test('the charge processor is setup with the summer flag', async () => {
+        const batch = createBatch();
+        batch.season = CHARGE_SEASON.summer;
+
+        batchService.getBatchById.resolves(batch);
+
+        chargeProcessor.processCharges.resolves({
+          error: null,
+          data: data.charges
+        });
+
+        await chargeVersionYear.createBatchFromChargeVersionYear(data.chargeVersionYear);
+
+        const [, , , isSummer] = chargeProcessor.processCharges.lastCall.args;
+        expect(isSummer).to.equal(true);
+      });
+    });
+
+    experiment('if the batch is not for the summer season', () => {
+      const notSummer = [CHARGE_SEASON.winter, CHARGE_SEASON.allYear];
+
+      notSummer.forEach(season => {
+        test('the charge processor is not setup with the summer flag', async () => {
+          const batch = createBatch();
+          batch.season = season;
+
+          batchService.getBatchById.resolves(batch);
+
+          chargeProcessor.processCharges.resolves({
+            error: null,
+            data: data.charges
+          });
+
+          await chargeVersionYear.createBatchFromChargeVersionYear(data.chargeVersionYear);
+
+          const [, , , isSummer] = chargeProcessor.processCharges.lastCall.args;
+          expect(isSummer).to.equal(false);
+        });
       });
     });
   });

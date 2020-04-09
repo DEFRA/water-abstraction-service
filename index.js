@@ -20,7 +20,6 @@ const routes = require('./src/routes/water.js');
 const notify = require('./src/modules/notify');
 const returnsNotifications = require('./src/modules/returns-notifications');
 const importer = require('./src/modules/import');
-const returnsUpload = require('./src/modules/returns/lib/jobs/init-upload');
 const batchNotifications = require('./src/modules/batch-notifications/lib/jobs/init-batch-notifications');
 const db = require('./src/lib/connectors/db');
 
@@ -40,11 +39,13 @@ const registerServerPlugins = async (server) => {
     plugin: require('./src/lib/message-queue').plugin
   });
 
-  await server.register({
+  await server.register([{
     plugin: require('./src/modules/billing/register-subscribers')
-  });
-
-  await server.register({ plugin: require('./src/plugins/internal-calling-user') });
+  }, {
+    plugin: require('./src/modules/returns/register-subscribers')
+  }, {
+    plugin: require('./src/plugins/internal-calling-user')
+  }]);
 
   // Third-party plugins
   await server.register({
@@ -79,7 +80,6 @@ const configureMessageQueue = async (server) => {
   notify(messageQueue).registerSubscribers();
   await importer(messageQueue).registerSubscribers();
   await returnsNotifications(messageQueue).registerSubscribers();
-  await returnsUpload.registerSubscribers(messageQueue);
   await batchNotifications.registerSubscribers(messageQueue);
   server.log('info', 'Message queue started');
 };

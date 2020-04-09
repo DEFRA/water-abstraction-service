@@ -1,5 +1,5 @@
 const Boom = require('@hapi/boom');
-const { find, first, get, set } = require('lodash');
+const { find, first, set } = require('lodash');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 
 const { persistReturnData, patchReturnData } = require('./lib/api-connector');
@@ -13,7 +13,7 @@ const { logger } = require('../../logger');
 const startUploadJob = require('./lib/jobs/start-upload');
 const persistReturnsJob = require('./lib/jobs/persist-returns');
 const uploadValidator = require('./lib/returns-upload-validator');
-const { mapSingleReturn, mapMultipleReturn } = require('./lib/upload-preview-mapper');
+const { mapSingleReturn } = require('./lib/upload-preview-mapper');
 const returnsConnector = require('../../lib/connectors/returns');
 
 /**
@@ -76,23 +76,34 @@ const patchReturnHeader = async (request, h) => {
 
 const getEventStatusLink = eventId => `/water/1.0/event/${eventId}`;
 
+/**
+ * An API endpoint to upload a bulk return file.
+ *  Kicks off job to upload submitted data.
+ * @param {String} request.params.type - file type csv|xml
+ * @param {String} request.query.companyId - the company CRM entity ID
+ * @return {Promise} resolves with return data { error : null, data : {} }
+ */
 const postUpload = async (request, h) => {
   const { type } = request.params;
+  const { companyId } = request.payload;
 
   let event = eventFactory.createBulkUploadEvent(request.payload.userName, type);
 
   try {
+    // Create event
     event = await eventsService.create(event);
 
+    // Upload user data to S3 bucket
     const filename = getUploadFilename(event.id, type);
-    const data = await s3.upload(filename, request.payload.fileData);
-    const jobId = await startUploadJob.publish(event.id);
+    await s3.upload(filename, request.payload.fileData);
+
+    // Format and publish PG boss message
+    const message = startUploadJob.createMessage(event, companyId);
+    const jobId = await request.messageQueue.publish(message);
 
     return h.response({
       data: {
         eventId: event.id,
-        filename,
-        location: data.Location,
         statusLink: getEventStatusLink(event.id),
         jobId
       },
@@ -106,31 +117,6 @@ const postUpload = async (request, h) => {
     }
 
     return h.response({ data: null, error }).code(500);
-  }
-};
-
-/**
- * An API endpoint to preview uploaded returns including any validation errors.
- * @param {String} request.params.eventId - the upload event ID
- * @param {String} request.query.companyId - the company CRM entity ID
- * @param {String} request.query.userName - email address of current user
- * @return {Promise} resolves with returns data { error : null, data : [] }
- */
-const getUploadPreview = async (request, h) => {
-  const { eventId, companyId } = parseRequest(request);
-
-  try {
-    const validated = await uploadValidator.validate(request.jsonData, companyId);
-
-    const data = validated.map(mapMultipleReturn);
-
-    return {
-      error: null,
-      data
-    };
-  } catch (error) {
-    logger.error('Return upload preview failed', error, { eventId, companyId });
-    throw error;
   }
 };
 
@@ -194,7 +180,7 @@ const applySubmitting = (event, data) => {
 };
 
 const isValidReturn = ret => ret.errors.length === 0;
-const isValidatedEvent = evt => evt.status === 'validated';
+const isReadyEvent = evt => evt.status === uploadStatus.READY;
 
 const parseRequest = (request) => {
   const { eventId, returnId } = request.params;
@@ -216,8 +202,8 @@ const postUploadSubmit = async (request, h) => {
 
   try {
     // Check event status is 'validated'
-    if (!isValidatedEvent(request.event)) {
-      throw Boom.badRequest('Event status not \'validated\'');
+    if (!isReadyEvent(request.event)) {
+      throw Boom.badRequest('Event status not \'ready\'');
     }
 
     // Validate data in JSON
@@ -233,7 +219,9 @@ const postUploadSubmit = async (request, h) => {
     // Update event
     eventsService.update(applySubmitting(request.event, valid));
 
-    await persistReturnsJob.publish(get(request, 'event.id'));
+    // Format and publish PG boss message
+    const message = persistReturnsJob.createMessage({ eventId, companyId });
+    await request.messageQueue.publish(message);
 
     return { data, error: null };
   } catch (error) {
@@ -246,6 +234,5 @@ exports.getReturn = getReturn;
 exports.postReturn = postReturn;
 exports.patchReturnHeader = patchReturnHeader;
 exports.postUpload = postUpload;
-exports.getUploadPreview = getUploadPreview;
 exports.getUploadPreviewReturn = getUploadPreviewReturn;
 exports.postUploadSubmit = postUploadSubmit;

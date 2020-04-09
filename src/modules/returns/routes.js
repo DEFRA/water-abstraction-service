@@ -88,17 +88,11 @@ module.exports = {
         },
         payload: {
           fileData: Joi.binary().required(),
-          userName: Joi.string().email().required()
+          userName: Joi.string().email().required(),
+          companyId: Joi.string().uuid().required()
         }
       }
     }
-  },
-
-  getUploadPreview: {
-    path: '/water/1.0/returns/upload-preview/{eventId}',
-    method: 'GET',
-    handler: controller.getUploadPreview,
-    config: getSubmitConfig()
   },
 
   getUploadPreviewSingleReturn: {

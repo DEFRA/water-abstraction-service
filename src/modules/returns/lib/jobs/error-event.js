@@ -48,3 +48,5 @@ exports.keys = {
     MAPPING: 'csv-to-json-mapping-failure'
   }
 };
+
+exports.throwEventNotFoundError = eventId => { throw new Error(`Bulk upload event "${eventId}" not found`); };

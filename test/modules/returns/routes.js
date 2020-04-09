@@ -27,7 +27,8 @@ experiment('postUploadReturns', () => {
       url,
       payload: {
         userName: 'test@example.com',
-        fileData: '00001'
+        fileData: '00001',
+        companyId: '79606c11-d2e3-4ee2-b0c7-d1c02c2ef2f2'
       }
     });
     expect(output.statusCode).to.be.between(199, 300);

@@ -9,6 +9,7 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 
 const routes = require('../../../src/modules/billing/routes');
 const preHandlers = require('../../../src/modules/billing/pre-handlers');
+const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
 /**
  * Creates a test Hapi server that has no other plugins loaded,
@@ -45,7 +46,7 @@ experiment('modules/billing/routes', () => {
           regionId: '054517f2-be00-4505-a3cc-df65a89cd8e1',
           batchType: 'annual',
           financialYearEnding: 2019,
-          season: 'summer'
+          season: CHARGE_SEASON.summer
         }
       };
     });
@@ -417,6 +418,40 @@ experiment('modules/billing/routes', () => {
 
     test('returns a 400 if the calling user id is not a number', async () => {
       request.headers['defra-internal-user-id'] = 'a string';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('contains a pre handler to load the batch', async () => {
+      const { pre } = routes.postApproveBatch.config;
+      expect(pre).to.have.length(1);
+      expect(pre[0].method).to.equal(preHandlers.loadBatch);
+      expect(pre[0].assign).to.equal('batch');
+    });
+  });
+
+  experiment('getBatchLicences', () => {
+    let request;
+    let server;
+    let validBatchId;
+
+    beforeEach(async () => {
+      server = getServer(routes.getBatchLicences);
+      validBatchId = uuid();
+
+      request = {
+        method: 'GET',
+        url: `/water/1.0/billing/batches/${validBatchId}/licences`
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the batch id is not a uuid', async () => {
+      request.url = request.url.replace(validBatchId, '123');
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });

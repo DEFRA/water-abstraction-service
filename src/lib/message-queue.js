@@ -3,6 +3,7 @@
  * @see {@link https://github.com/timgit/pg-boss/blob/master/docs/usage.md#start}
  */
 const PgBoss = require('pg-boss');
+const Joi = require('@hapi/joi');
 const config = require('../../config.js');
 const { logger } = require('../logger');
 const { pool } = require('./connectors/db');
@@ -22,12 +23,50 @@ boss.on('error', error => {
   logger.error('PG Boss Error', error);
 });
 
+const jobContainerSchema = Joi.object({
+  job: Joi.object({
+    createMessage: Joi.func().required(),
+    jobName: Joi.string().required(),
+    options: Joi.object().optional(),
+    handler: Joi.func().required()
+  }),
+  onCompleteHandler: Joi.func().optional()
+});
+
+/**
+ * Creates a subscription using a standard pattern
+ * @param {Object} server - HAPI server instance
+ * @param {Object} jobContainer
+ */
+const createSubscription = async (messageQueue, jobContainer) => {
+  Joi.assert(jobContainer, jobContainerSchema);
+
+  const { job, onCompleteHandler } = jobContainer;
+
+  await messageQueue.subscribe(
+    job.jobName,
+    job.options || {},
+    job.handler
+  );
+
+  if (onCompleteHandler) {
+    await messageQueue.onComplete(
+      job.jobName,
+      job => onCompleteHandler(job, messageQueue)
+    );
+  }
+};
+
 module.exports = boss;
 module.exports.plugin = {
   name: 'hapiPgBoss',
   register: async server => {
     await boss.start();
     server.decorate('server', 'messageQueue', boss);
+    server.decorate('server', 'createSubscription', jobContainer => {
+      return createSubscription(server.messageQueue, jobContainer);
+    });
     server.decorate('request', 'messageQueue', boss);
   }
 };
+module.exports.createSubscription = createSubscription;

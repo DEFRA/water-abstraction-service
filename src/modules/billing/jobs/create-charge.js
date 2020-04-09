@@ -9,7 +9,8 @@ const batchJob = require('./lib/batch-job');
 const JOB_NAME = 'billing.create-charge.*';
 
 const options = {
-  teamSize: 10
+  teamSize: 50,
+  teamConcurrency: 2
 };
 
 /**

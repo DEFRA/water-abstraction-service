@@ -12,7 +12,26 @@ const Agreement = require('../../../lib/models/agreement');
 const agreement = require('./agreement');
 const chargeElementMapper = require('./charge-element');
 
-const createTransaction = (chargeLine, chargeElement, data = {}) => {
+const getTwoPartTariffTransactionDescription = (batch, chargeElement) => {
+  const prefix = batch.isTwoPartTariff() ? 'Second' : 'First';
+  const { purposeTertiaryDescription: purpose, description } = chargeElement;
+
+  return `${prefix} part ${purpose} charge at ${description}`;
+};
+
+const getTransactionDescription = (batch, chargeLine, chargeElement, isCompensationCharge) => {
+  if (isCompensationCharge) {
+    return 'Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element';
+  }
+
+  const description = chargeLine.section127Agreement
+    ? getTwoPartTariffTransactionDescription(batch, chargeElement)
+    : chargeElement.description;
+
+  return titleCase(description || '');
+};
+
+const createTransaction = (batch, chargeLine, chargeElement, data = {}) => {
   const transaction = new Transaction();
   transaction.fromHash({
     ...data,
@@ -20,10 +39,17 @@ const createTransaction = (chargeLine, chargeElement, data = {}) => {
     billableDays: chargeElement.billableDays,
     agreements: agreement.chargeToModels(chargeLine),
     chargePeriod: new DateRange(chargeLine.startDate, chargeLine.endDate),
-    description: chargeElement.description,
     chargeElement: chargeElementMapper.chargeToModel(chargeElement),
     volume: chargeElement.billableAnnualQuantity || chargeElement.authorisedAnnualQuantity
   });
+
+  transaction.description = getTransactionDescription(
+    batch,
+    chargeLine,
+    chargeElement,
+    data.isCompensationCharge
+  );
+
   return transaction;
 };
 
@@ -49,13 +75,13 @@ const chargeToModels = (chargeLine, batch) => {
   const { isCompensation, ...transactionData } = getOptions(chargeLine, batch);
 
   return chargeLine.chargeElements.reduce((acc, chargeElement) => {
-    acc.push(createTransaction(chargeLine, chargeElement, {
+    acc.push(createTransaction(batch, chargeLine, chargeElement, {
       ...transactionData,
       isCompensationCharge: false
     }));
 
     if (isCompensation) {
-      acc.push(createTransaction(chargeLine, chargeElement, {
+      acc.push(createTransaction(batch, chargeLine, chargeElement, {
         ...transactionData,
         isCompensationCharge: true
       }));

@@ -1,5 +1,4 @@
 const { find, get, set } = require('lodash');
-const messageQueue = require('../../../../lib/message-queue');
 const eventsService = require('../../../../lib/services/events');
 const { logger } = require('../../../../logger');
 const returnsUpload = require('../../lib/returns-upload');
@@ -11,15 +10,14 @@ const bluebird = require('bluebird');
 const JOB_NAME = 'persist-bulk-returns';
 
 /**
- * Begins the process of persisting the returns that are declared
- * valid in the metadata of the event with the given event id.
- *
- * @param {String/UUID} eventId The event id that contains the returns to persist
- * @returns {Promise}
+ * Creates a message for PG Boss
+ * @param {Object} data containing eventId and companyId
+ * @returns {Object}
  */
-const publishPersistBulkReturns = eventId => {
-  messageQueue.publish(JOB_NAME, returnsUpload.buildJobData(eventId));
-};
+const createMessage = data => ({
+  name: JOB_NAME,
+  data: returnsUpload.buildJobData(data)
+});
 
 const updateEvent = (event, updatedReturns) => {
   set(event, 'metadata.returns', updatedReturns);
@@ -109,6 +107,8 @@ const handlePersistReturns = async job => {
 
   try {
     event = await eventsService.findOne(eventId);
+    if (!event) return errorEvent.throwEventNotFoundError(eventId);
+
     const returns = await getReturnsFromS3(eventId);
 
     const validatedReturns = get(event, 'metadata.returns', []);
@@ -122,5 +122,5 @@ const handlePersistReturns = async job => {
 };
 
 exports.jobName = JOB_NAME;
-exports.publish = publishPersistBulkReturns;
+exports.createMessage = createMessage;
 exports.handler = handlePersistReturns;

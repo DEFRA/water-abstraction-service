@@ -1,3 +1,5 @@
+'use strict';
+
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { createChargeElement } = require('./test-charge-data');
@@ -13,6 +15,7 @@ const {
   reshuffleQuantities
 } = require('../../../../../src/modules/billing/service/two-part-tariff/reshuffle-quantities');
 const { ERROR_OVER_ABSTRACTION } = require('../../../../../src/modules/billing/service/two-part-tariff/two-part-tariff-helpers');
+const { CHARGE_SEASON } = require('../../../../../src/lib/models/constants');
 
 experiment('modules/charging/lib/reshuffle-quantities', async () => {
   experiment('.getQuantityToAllocate', async () => {
@@ -520,7 +523,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       const baseElement1 = createChargeElement({
         purposeTertiary: 400,
         source: 'unsupported',
-        season: 'summer',
+        season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
         abstractionPeriodStartMonth: 4,
         abstractionPeriodEndDay: 31,
@@ -529,7 +532,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       const baseElement2 = createChargeElement({
         purposeTertiary: 400,
         source: 'unsupported',
-        season: 'summer',
+        season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
         abstractionPeriodStartMonth: 1,
         abstractionPeriodEndDay: 31,
@@ -546,7 +549,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       const baseElement1 = createChargeElement({
         purposeTertiary: 400,
         source: 'unsupported',
-        season: 'summer',
+        season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
         abstractionPeriodStartMonth: 4,
         abstractionPeriodEndDay: 31,
@@ -555,7 +558,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       const baseElement2 = createChargeElement({
         purposeTertiary: 400,
         source: 'unsupported',
-        season: 'summer',
+        season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
         abstractionPeriodStartMonth: 1,
         abstractionPeriodEndDay: 31,
@@ -564,7 +567,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       const subElement = createChargeElement({
         purposeTertiary: 400,
         source: 'unsupported',
-        season: 'summer',
+        season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
         abstractionPeriodStartMonth: 4,
         abstractionPeriodEndDay: 31,
@@ -584,7 +587,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       const baseElement = createChargeElement({
         purposeTertiary: 400,
         source: 'unsupported',
-        season: 'summer',
+        season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
         abstractionPeriodStartMonth: 4,
         abstractionPeriodEndDay: 31,
@@ -593,7 +596,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       const subElement = createChargeElement({
         purposeTertiary: 400,
         source: 'supported',
-        season: 'summer',
+        season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
         abstractionPeriodStartMonth: 4,
         abstractionPeriodEndDay: 31,

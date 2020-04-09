@@ -290,4 +290,24 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
       expect(batchJob.hasJobFailed(job)).to.equal(false);
     });
   });
+
+  experiment('.deleteOnCompleteQueue', () => {
+    let job;
+
+    beforeEach(async () => {
+      job = {
+        data: {
+          request: {
+            name: 'test-name'
+          }
+        }
+      };
+      await batchJob.deleteOnCompleteQueue(job, messageQueue);
+    });
+
+    test('deletes onComplete queue related to current job', async () => {
+      const [name] = messageQueue.deleteQueue.lastCall.args;
+      expect(name).to.equal('__state__completed__test-name');
+    });
+  });
 });

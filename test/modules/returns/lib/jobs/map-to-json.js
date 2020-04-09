@@ -15,36 +15,30 @@ const uuid = require('uuid/v4');
 
 const mapToJsonJob = require('../../../../../src/modules/returns/lib/jobs/map-to-json');
 const uploadAdapters = require('../../../../../src/modules/returns/lib/upload-adapters');
-const messageQueue = require('../../../../../src/lib/message-queue');
 const { logger } = require('../../../../../src/logger');
 const s3 = require('../../../../../src/lib/connectors/s3');
 const { usersClient } = require('../../../../../src/lib/connectors/idm');
 const eventsService = require('../../../../../src/lib/services/events');
 const Event = require('../../../../../src/lib/models/event');
+const errorEvent = require('../../../../../src/modules/returns/lib/jobs/error-event');
 
 const eventId = uuid();
 
-experiment('publish', () => {
+experiment('.createMessage', () => {
+  let message;
+
   beforeEach(async () => {
-    sandbox.stub(messageQueue, 'publish').resolves('test-job-id');
+    message = mapToJsonJob.createMessage({ eventId });
   });
 
-  afterEach(async () => {
-    sandbox.restore();
+  test('creates a message with the expected name', async () => {
+    expect(message.name).to.equal(mapToJsonJob.jobName);
   });
 
-  test('publishes a job with the expected name', async () => {
-    await mapToJsonJob.publish('test-event-id');
-    const [jobName] = messageQueue.publish.lastCall.args;
-    expect(jobName).to.equal(mapToJsonJob.jobName);
-  });
-
-  test('sends the expected job data', async () => {
-    await mapToJsonJob.publish('test-event-id');
-    const [, data] = messageQueue.publish.lastCall.args;
-    expect(data).to.equal({
-      eventId: 'test-event-id',
-      subType: 'csv'
+  test('the message has the expected job data', async () => {
+    expect(message.data).to.equal({
+      eventId,
+      subtype: 'csv'
     });
   });
 });
@@ -63,6 +57,7 @@ experiment('handler', () => {
     sandbox.stub(eventsService, 'findOne').resolves(event);
     sandbox.stub(eventsService, 'update').resolves(event);
     sandbox.stub(eventsService, 'updateStatus').resolves(event);
+    sandbox.stub(errorEvent, 'throwEventNotFoundError');
 
     const str = fs.readFileSync(path.join(__dirname, '../xml-files-for-tests/weekly-return-pass.xml'));
 
@@ -93,6 +88,12 @@ experiment('handler', () => {
   test('loads the event', async () => {
     await mapToJsonJob.handler(job);
     expect(eventsService.findOne.calledWith(job.data.eventId)).to.be.true();
+  });
+
+  test('calls throwEventNotFoundError if event is not found', async () => {
+    eventsService.findOne.resolves();
+    await mapToJsonJob.handler(job);
+    expect(errorEvent.throwEventNotFoundError.calledWith(job.data.eventId)).to.be.true();
   });
 
   test('loads the S3 object', async () => {

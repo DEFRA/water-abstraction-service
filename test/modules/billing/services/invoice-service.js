@@ -16,6 +16,7 @@ const Batch = require('../../../../src/lib/models/batch');
 const Company = require('../../../../src/lib/models/company');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const Invoice = require('../../../../src/lib/models/invoice');
+const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const mappers = require('../../../../src/modules/billing/mappers');
 const newRepos = require('../../../../src/lib/connectors/repos');
@@ -173,7 +174,7 @@ const createInvoiceData = () => ({
       chargeElement: {
         chargeElementId: uuid(),
         source: 'supported',
-        season: 'summer',
+        season: CHARGE_SEASON.summer,
         loss: 'high'
       },
       externalId: CHARGE_MODULE_TRANSACTION_ID
@@ -207,7 +208,7 @@ const createOneWithInvoicesWithTransactions = () => ({
         chargeElement: {
           chargeElementId: uuid(),
           source: 'supported',
-          season: 'summer',
+          season: CHARGE_SEASON.summer,
           loss: 'high'
         },
         externalId: CHARGE_MODULE_TRANSACTION_ID

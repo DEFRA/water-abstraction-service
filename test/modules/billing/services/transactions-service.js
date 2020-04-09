@@ -16,20 +16,21 @@ const repos = require('../../../../src/lib/connectors/repos');
 const { logger } = require('../../../../src/logger');
 
 // Models
+const AbstractionPeriod = require('../../../../src/lib/models/abstraction-period');
+const ChargeElement = require('../../../../src/lib/models/charge-element');
 const ChargeModuleTransaction = require('../../../../src/lib/models/charge-module-transaction');
+const DateRange = require('../../../../src/lib/models/date-range');
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../src/lib/models/licence');
-const Transaction = require('../../../../src/lib/models/transaction');
-const ChargeElement = require('../../../../src/lib/models/charge-element');
-const AbstractionPeriod = require('../../../../src/lib/models/abstraction-period');
-const DateRange = require('../../../../src/lib/models/date-range');
 const Region = require('../../../../src/lib/models/region');
+const Transaction = require('../../../../src/lib/models/transaction');
+const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const createChargeElement = () => {
   const chargeElement = new ChargeElement('29328315-9b24-473b-bde7-02c60e881501');
   chargeElement.fromHash({
     source: 'supported',
-    season: 'summer',
+    season: CHARGE_SEASON.summer,
     loss: 'low',
     authorisedAnnualQuantity: 12.5,
     billableAnnualQuantity: 10

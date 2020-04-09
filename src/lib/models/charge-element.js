@@ -1,7 +1,9 @@
 'use strict';
+
 const Model = require('./model');
 const AbstractionPeriod = require('./abstraction-period');
 const Purpose = require('./purpose');
+const { CHARGE_SEASON } = require('./constants');
 
 const {
   assertEnum,
@@ -15,12 +17,6 @@ const validSources = {
   unsupported: 'unsupported',
   tidal: 'tidal',
   kielder: 'kielder'
-};
-
-const validSeasons = {
-  summer: 'summer',
-  winter: 'winter',
-  allYear: 'all year'
 };
 
 const validLosses = {
@@ -63,7 +59,7 @@ class ChargeElement extends Model {
   }
 
   set season (season) {
-    assertEnum(season, Object.values(validSeasons));
+    assertEnum(season, Object.values(CHARGE_SEASON));
     this._season = season;
   }
 
@@ -144,5 +140,4 @@ class ChargeElement extends Model {
 
 module.exports = ChargeElement;
 module.exports.sources = validSources;
-module.exports.seasons = validSeasons;
 module.exports.losses = validLosses;

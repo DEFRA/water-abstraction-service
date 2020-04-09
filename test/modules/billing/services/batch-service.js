@@ -11,7 +11,17 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
-const { Batch, FinancialYear, Invoice, InvoiceLicence, Licence, Transaction, InvoiceAccount, Region, Totals } = require('../../../../src/lib/models');
+const Batch = require('../../../../src/lib/models/batch');
+const FinancialYear = require('../../../../src/lib/models/financial-year');
+const Invoice = require('../../../../src/lib/models/invoice');
+const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
+const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
+const Licence = require('../../../../src/lib/models/licence');
+const Region = require('../../../../src/lib/models/region');
+const Totals = require('../../../../src/lib/models/totals');
+const Transaction = require('../../../../src/lib/models/transaction');
+const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
+
 const eventService = require('../../../../src/lib/services/events');
 const { logger } = require('../../../../src/logger');
 
@@ -39,7 +49,7 @@ const region = {
 const batch = {
   billingBatchId: BATCH_ID,
   batchType: 'supplementary',
-  season: 'summer',
+  season: CHARGE_SEASON.summer,
   regionId: region.regionId,
   fromFinancialYearEnding: 2014,
   toFinancialYearEnding: 2019,
@@ -173,7 +183,7 @@ experiment('modules/billing/services/batch-service', () => {
             billingBatchId: 'a9e9334e-4709-4b86-9b75-19e58f3f0d8c',
             region,
             batchType: 'supplementary',
-            season: 'all year',
+            season: CHARGE_SEASON.allYear,
             dateCreated: '2020-01-09T16:23:24.753Z',
             dateUpdated: '2020-01-09T16:23:32.631Z',
             status: 'ready',
@@ -184,7 +194,7 @@ experiment('modules/billing/services/batch-service', () => {
             billingBatchId: 'b08b07e0-8467-4e43-888f-a23d08c98a28',
             region,
             batchType: 'supplementary',
-            season: 'all year',
+            season: CHARGE_SEASON.allYear,
             dateCreated: '2020-01-09T16:11:09.981Z',
             dateUpdated: '2020-01-09T16:11:17.077Z',
             status: 'review',
@@ -556,7 +566,7 @@ experiment('modules/billing/services/batch-service', () => {
           billingBatchId: '11111111-0000-0000-0000-000000000000',
           regionId: '22222222-0000-0000-0000-000000000000',
           batchType: 'supplementary',
-          season: 'all year',
+          season: CHARGE_SEASON.allYear,
           status: 'processing',
           region: {
             regionId: '22222222-0000-0000-0000-000000000000',
@@ -570,7 +580,7 @@ experiment('modules/billing/services/batch-service', () => {
           billingBatchId: '33333333-0000-0000-0000-000000000000',
           regionId,
           batchType: 'supplementary',
-          season: 'all year',
+          season: CHARGE_SEASON.allYear,
           status: 'processing',
           region: {
             regionId,

@@ -23,8 +23,15 @@ const createBatchFromChargeVersionYear = async chargeVersionYear => {
     billing_batch_id: batchId
   } = chargeVersionYear;
 
+  const batch = await batchService.getBatchById(batchId);
+
   // Process charge data
-  const { error, data } = await chargeProcessor.processCharges(financialYearEnding, chargeVersionId);
+  const { error, data } = await chargeProcessor.processCharges(
+    financialYearEnding,
+    chargeVersionId,
+    batch.isTwoPartTariff(),
+    batch.isSummer()
+  );
 
   if (error) {
     const err = new Error(error);
@@ -32,8 +39,6 @@ const createBatchFromChargeVersionYear = async chargeVersionYear => {
     throw err;
   }
 
-  // Load batch and add invoices
-  const batch = await batchService.getBatchById(batchId);
   const invoices = mappers.invoice.chargeToModels(data, batch);
   batch.addInvoices(invoices);
 

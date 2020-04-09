@@ -7,8 +7,7 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
 
 const transactionMapper = require('../../../../src/modules/billing/mappers/transaction');
 const chargeModuleTransactionsConnector = require('../../../../src/lib/connectors/charge-module/transactions');
@@ -26,12 +25,13 @@ const ChargeElement = require('../../../../src/lib/models/charge-element');
 const AbstractionPeriod = require('../../../../src/lib/models/abstraction-period');
 const DateRange = require('../../../../src/lib/models/date-range');
 const Region = require('../../../../src/lib/models/region');
+const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const createChargeElement = () => {
   const chargeElement = new ChargeElement('29328315-9b24-473b-bde7-02c60e881501');
   chargeElement.fromHash({
     source: 'supported',
-    season: 'summer',
+    season: CHARGE_SEASON.summer,
     loss: 'low',
     authorisedAnnualQuantity: 12.5,
     billableAnnualQuantity: 10
@@ -110,7 +110,7 @@ const createInvoice = () => {
 const createChargeElementRow = () => ({
   chargeElementId: 'bf679fc9-dec9-42cd-bc32-542578be01d9',
   source: 'supported',
-  season: 'summer',
+  season: CHARGE_SEASON.summer,
   loss: 'low',
   totalDays: 365,
   billableDays: 200,
@@ -120,7 +120,8 @@ const createChargeElementRow = () => ({
   abstractionPeriodEndDay: 3,
   abstractionPeriodEndMonth: 4,
   authorisedAnnualQuantity: 24.45,
-  billableAnnualQuantity: 31.5
+  billableAnnualQuantity: 31.5,
+  purposeTertiaryDescription: 'Spray irrigation'
 });
 
 const createChargeLine = (isWaterUndertaker = false) => ({
@@ -133,12 +134,9 @@ const createChargeLine = (isWaterUndertaker = false) => ({
   chargeElements: [createChargeElementRow()]
 });
 
-const createBatch = () => {
+const createBatch = (type = 'supplementary') => {
   const batch = new Batch('d65bf89e-4a84-4f2e-8fc1-ebc5ff08c125');
-  batch.fromHash({
-    type: 'supplementary'
-  });
-  return batch;
+  return batch.fromHash({ type });
 };
 
 const createAgreement = (code, factor) => {
@@ -231,7 +229,7 @@ experiment('modules/billing/mappers/transaction', () => {
         });
 
         test('has the correct description', async () => {
-          expect(result[0].description).to.equal(chargeLine.chargeElements[0].description);
+          expect(result[0].description).to.equal('First Part Spray Irrigation Charge at Tiny Pond');
         });
 
         test('has the charge period mapped correctly', async () => {
@@ -265,6 +263,12 @@ experiment('modules/billing/mappers/transaction', () => {
       experiment('the second transaction', () => {
         test('is a compensation charge', async () => {
           expect(result[1].isCompensationCharge).to.be.true();
+        });
+
+        test('has the compensation description', async () => {
+          expect(result[1].description)
+            .to
+            .equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
         });
       });
     });
@@ -314,6 +318,62 @@ experiment('modules/billing/mappers/transaction', () => {
         expect(result[0].isTwoPartTariffSupplementaryCharge).to.be.false();
       });
     });
+
+    experiment('prepares the required transaction description for two part tariff', () => {
+      const scenarios = [
+        {
+          batchType: Batch.BATCH_TYPE.supplementary,
+          isTpt: true,
+          purposeDesc: 'Spray',
+          chargeElementDescription: 'Turbo turnips',
+          expected: 'First Part Spray Charge at Turbo Turnips'
+        },
+        {
+          batchType: Batch.BATCH_TYPE.supplementary,
+          isTpt: false,
+          purposeDesc: 'Washing',
+          chargeElementDescription: 'Power peas',
+          expected: 'Power Peas'
+        },
+        {
+          batchType: Batch.BATCH_TYPE.annual,
+          isTpt: true,
+          purposeDesc: 'Vegetable Washing',
+          chargeElementDescription: 'Super sprouts',
+          expected: 'First Part Vegetable Washing Charge at Super Sprouts'
+        },
+
+        {
+          batchType: Batch.BATCH_TYPE.annual,
+          isTpt: false,
+          purposeDesc: 'Vegetable Washing',
+          chargeElementDescription: 'Monster marrows',
+          expected: 'Monster Marrows'
+        },
+        {
+          batchType: Batch.BATCH_TYPE.twoPartTariff,
+          isTpt: true,
+          purposeDesc: 'Spray irrigation',
+          chargeElementDescription: 'Power parsnips',
+          expected: 'Second Part Spray Irrigation Charge at Power Parsnips'
+        }
+      ];
+
+      scenarios.forEach(scenario => {
+        test(`[Batch Type: ${scenario.batchType}, isTPT: ${scenario.isTpt}] has expected description of ${scenario.expected}`, async () => {
+          const batch = createBatch(scenario.batchType);
+          const chargeLine = createChargeLine();
+          chargeLine.section127Agreement = scenario.isTpt;
+
+          chargeLine.chargeElements[0].purposeTertiaryDescription = scenario.purposeDesc;
+          chargeLine.chargeElements[0].description = scenario.chargeElementDescription;
+
+          const model = transactionMapper.chargeToModels(chargeLine, batch);
+
+          expect(model[0].description).to.equal(scenario.expected);
+        });
+      });
+    });
   });
 
   experiment('.modelToDb', () => {
@@ -339,7 +399,7 @@ experiment('modules/billing/mappers/transaction', () => {
           },
           source: 'supported',
           loss: 'low',
-          season: 'summer',
+          season: CHARGE_SEASON.summer,
           isCredit: false,
           chargeType: 'standard',
           authorisedQuantity: 12.5,

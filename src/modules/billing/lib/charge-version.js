@@ -1,9 +1,9 @@
 const moment = require('moment');
 
 const isValidForFinancialYear = (chargeVersion, financialYear) => {
-  const chargeVersionStart = moment(chargeVersion.start_date);
-  const chargeVersionEnd = chargeVersion.end_date
-    ? moment(chargeVersion.end_date)
+  const chargeVersionStart = moment(chargeVersion.startDate);
+  const chargeVersionEnd = chargeVersion.endDate
+    ? moment(chargeVersion.endDate)
     : moment().add(100, 'years');
 
   return chargeVersionStart.isSameOrBefore(financialYear.end) &&
