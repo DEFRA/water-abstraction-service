@@ -74,6 +74,14 @@ class Batch extends Model {
   }
 
   /**
+   * Checks whether this is a two-part tariff batch
+   * @return {Boolean}
+   */
+  isTwoPartTariff () {
+    return this.type === BATCH_TYPE.twoPartTariff;
+  }
+
+  /**
    * Sets the season for this batch
    * @param {String} season
    */
@@ -216,10 +224,6 @@ class Batch extends Model {
   set region (region) {
     validators.assertIsInstanceOf(region, Region);
     this._region = region;
-  }
-
-  isTwoPartTariff () {
-    return this.type === BATCH_TYPE.twoPartTariff;
   }
 
   /**

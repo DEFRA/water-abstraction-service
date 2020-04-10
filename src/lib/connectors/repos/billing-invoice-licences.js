@@ -5,6 +5,26 @@ const billingInvoiceLicence = require('../bookshelf/BillingInvoiceLicence');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoice-licences');
 
+const withRelated = [
+  'billingInvoice',
+  'billingInvoice.billingBatch',
+  'billingInvoice.billingBatch.region'
+];
+
+/**
+ * Gets billingInvoiceLicence and related models by GUID
+ * @param {String} id - guid
+ * @return {Promise<Object>}
+ */
+const findOne = async id => {
+  const model = await billingInvoiceLicence
+    .forge({ billingInvoiceLicenceId: id })
+    .fetch({
+      withRelated
+    });
+  return model ? model.toJSON() : null;
+};
+
 /**
  * Upserts a water.billing_invoice_licences record
  * @param {Object} data - camel case
@@ -58,8 +78,18 @@ const findOneInvoiceLicenceWithTransactions = async (id) => {
   return model.toJSON();
 };
 
+/**
+ * Delete a single record by ID
+ * @param {String} id - one or many IDs
+ */
+const deleteRecord = billingInvoiceLicenceId => billingInvoiceLicence
+  .forge({ billingInvoiceLicenceId })
+  .destroy();
+
+exports.findOne = findOne;
 exports.deleteByBatchAndInvoiceAccount = deleteByBatchAndInvoiceAccount;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findLicencesWithTransactionStatusesForBatch = findLicencesWithTransactionStatusesForBatch;
 exports.findOneInvoiceLicenceWithTransactions = findOneInvoiceLicenceWithTransactions;
 exports.upsert = upsert;
+exports.delete = deleteRecord;
