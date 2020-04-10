@@ -4,12 +4,27 @@ const { bookshelf } = require('../bookshelf');
 const billingInvoiceLicence = require('../bookshelf/BillingInvoiceLicence');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoice-licences');
+const makeArray = require('../../../lib/make-array');
 
 const withRelated = [
   'billingInvoice',
   'billingInvoice.billingBatch',
   'billingInvoice.billingBatch.region'
 ];
+
+/**
+ * Gets billingInvoiceLicence and related models by GUID
+ * @param {String} id - guid
+ * @return {Promise<Object>}
+ */
+const findOne = async id => {
+  const model = await billingInvoiceLicence
+    .forge({ billingInvoiceLicenceId: id })
+    .fetch({
+      withRelated
+    });
+  return model ? model.toJSON() : null;
+};
 
 /**
  * Gets billingInvoiceLicence and related models by GUID
