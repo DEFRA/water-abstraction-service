@@ -16,10 +16,21 @@ const queries = require('../../../../src/lib/connectors/repos/queries/billing-in
 const billingInvoiceLicence = require('../../../../src/lib/connectors/bookshelf/BillingInvoiceLicence');
 
 experiment('lib/connectors/repos/billing-invoice-licences', () => {
+  let bookshelfStub, model;
+
   beforeEach(async () => {
     sandbox.stub(bookshelf.knex, 'raw');
     sandbox.stub(raw, 'singleRow');
     sandbox.stub(raw, 'multiRow');
+
+    model = {
+      toJSON: sandbox.stub()
+    };
+    bookshelfStub = {
+      fetch: sandbox.stub().resolves(model),
+      destroy: sandbox.stub()
+    };
+    sandbox.stub(billingInvoiceLicence, 'forge').returns(bookshelfStub);
   });
 
   afterEach(async () => {
@@ -93,11 +104,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
 
   experiment('.findOneInvoiceLicenceWithTransactions', () => {
     beforeEach(async () => {
-      const model = { toJSON: sandbox.stub().returns({ foo: 'bar' }) };
-      const stub = {
-        fetch: sandbox.stub().resolves(model)
-      };
-      sandbox.stub(billingInvoiceLicence, 'forge').returns(stub);
+      model.toJSON.returns({ foo: 'bar' });
       await billingInvoiceLicences.findOneInvoiceLicenceWithTransactions('00000000-0000-0000-0000-000000000000');
     });
 
@@ -112,6 +119,70 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       expect(args[0].withRelated[2]).to.equal('billingTransactions');
       expect(args[0].withRelated[3]).to.equal('billingTransactions.chargeElement');
       expect(args[0].withRelated[4]).to.equal('billingTransactions.chargeElement.purposeUse');
+    });
+  });
+
+  experiment('.findOne', async () => {
+    let result;
+    const billingInvoiceLicenceId = uuid();
+    experiment('when the model is not found', () => {
+      beforeEach(async () => {
+        bookshelfStub.fetch.resolves(null);
+        result = await billingInvoiceLicences.findOne(billingInvoiceLicenceId);
+      });
+
+      test('the model is forged with correct params', async () => {
+        expect(billingInvoiceLicence.forge.calledWith({
+          billingInvoiceLicenceId
+        })).to.be.true();
+      });
+
+      test('fetch is called on the model with related models', async () => {
+        expect(bookshelfStub.fetch.calledWith({
+          withRelated: [
+            'billingInvoice',
+            'billingInvoice.billingBatch',
+            'billingInvoice.billingBatch.region'
+          ]
+        })).to.be.true();
+      });
+
+      test('resolves with null', async () => {
+        expect(result).to.be.null();
+      });
+    });
+
+    experiment('when the model is found', () => {
+      beforeEach(async () => {
+        model.toJSON.returns({ billingInvoiceLicenceId });
+        result = await billingInvoiceLicences.findOne(billingInvoiceLicenceId);
+      });
+
+      test('model.toJSON() is called on the model', async () => {
+        expect(model.toJSON.called).to.be.true();
+      });
+
+      test('resolves with the result of the toJSON() call', async () => {
+        expect(result).to.equal({ billingInvoiceLicenceId });
+      });
+    });
+  });
+
+  experiment('.delete', async () => {
+    const billingInvoiceLicenceId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoiceLicences.delete(billingInvoiceLicenceId);
+    });
+
+    test('the model is forged with correct params', async () => {
+      expect(billingInvoiceLicence.forge.calledWith({
+        billingInvoiceLicenceId
+      })).to.be.true();
+    });
+
+    test('the model is destroyed', async () => {
+      expect(bookshelfStub.destroy.called).to.be.true();
     });
   });
 });

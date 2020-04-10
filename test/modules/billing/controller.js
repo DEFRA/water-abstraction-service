@@ -840,5 +840,16 @@ experiment('modules/billing/controller', () => {
         expect(response.output.statusCode).to.equal(403);
       });
     });
+
+    experiment('if an unexpected error occurs', () => {
+      beforeEach(async () => {
+        invoiceLicenceService.delete.rejects(new Error('oh no'));
+      });
+
+      test('the error is rethrown', async () => {
+        const func = () => controller.deleteInvoiceLicence(request, h);
+        expect(func()).to.reject();
+      });
+    });
   });
 });

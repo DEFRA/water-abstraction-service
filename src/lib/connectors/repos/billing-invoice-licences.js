@@ -80,13 +80,12 @@ const findOneInvoiceLicenceWithTransactions = async (id) => {
 };
 
 /**
- * Delete one or many records
- * @param {String|Array<String>} id - one or many IDs
+ * Delete a single record by ID
+ * @param {String} id - one or many IDs
  */
-const deleteRecords = id => bookshelf
-  .knex('water.billing_invoice_licences')
-  .whereIn('billing_invoice_licence_id', makeArray(id))
-  .delete();
+const deleteRecord = billingInvoiceLicenceId => billingInvoiceLicence
+  .forge({ billingInvoiceLicenceId })
+  .destroy();
 
 exports.findOne = findOne;
 exports.deleteByBatchAndInvoiceAccount = deleteByBatchAndInvoiceAccount;
@@ -94,4 +93,4 @@ exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findLicencesWithTransactionStatusesForBatch = findLicencesWithTransactionStatusesForBatch;
 exports.findOneInvoiceLicenceWithTransactions = findOneInvoiceLicenceWithTransactions;
 exports.upsert = upsert;
-exports.delete = deleteRecords;
+exports.delete = deleteRecord;
