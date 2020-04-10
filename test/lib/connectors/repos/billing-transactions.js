@@ -14,9 +14,17 @@ const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-transactions');
 
 experiment('lib/connectors/repos/billing-transactions', () => {
-  let model, stub;
+  let model, stub, knexStub;
 
   beforeEach(async () => {
+    knexStub = {
+      where: sandbox.stub().returnsThis(),
+      whereIn: sandbox.stub().returnsThis(),
+      delete: sandbox.stub()
+    };
+
+    sandbox.stub(bookshelf, 'knex').returns(knexStub);
+
     model = {
       toJSON: sandbox.stub().returns({ foo: 'bar' }),
       pagination: {
@@ -143,12 +151,6 @@ experiment('lib/connectors/repos/billing-transactions', () => {
 
   experiment('.deleteRecords', () => {
     beforeEach(async () => {
-      stub = {
-        whereIn: sandbox.stub().returnsThis(),
-        delete: sandbox.stub()
-      };
-
-      sandbox.stub(bookshelf, 'knex').returns(stub);
       await billingTransactions.delete('transaction-id');
     });
 
@@ -160,12 +162,12 @@ experiment('lib/connectors/repos/billing-transactions', () => {
 
     test('calles .whereIn() on query builder with supplied IDs in an array', async () => {
       expect(
-        stub.whereIn.calledWith('billing_transaction_id', ['transaction-id'])
+        knexStub.whereIn.calledWith('billing_transaction_id', ['transaction-id'])
       ).to.be.true();
     });
 
     test('calls .delete() on query builder', async () => {
-      expect(stub.delete.called).to.be.true();
+      expect(knexStub.delete.called).to.be.true();
     });
   });
 
@@ -228,6 +230,28 @@ experiment('lib/connectors/repos/billing-transactions', () => {
 
     test('calls .save() on the model using patch mode', async () => {
       expect(stub.save.calledWith(changes, { patch: true })).to.be.true();
+    });
+  });
+
+  experiment('.deleteByInvoiceLicenceId', () => {
+    beforeEach(async () => {
+      await billingTransactions.deleteByInvoiceLicenceId('test-invoice-licence-id');
+    });
+
+    test('intialises knex() with the correct table', async () => {
+      expect(
+        bookshelf.knex.calledWith('water.billing_transactions')
+      ).to.be.true();
+    });
+
+    test('calles .where() on query builder with supplied ID', async () => {
+      expect(
+        knexStub.where.calledWith('billing_invoice_licence_id', 'test-invoice-licence-id')
+      ).to.be.true();
+    });
+
+    test('calls .delete() on query builder', async () => {
+      expect(knexStub.delete.called).to.be.true();
     });
   });
 });
