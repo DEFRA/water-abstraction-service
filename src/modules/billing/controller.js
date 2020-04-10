@@ -17,6 +17,9 @@ const eventService = require('../../lib/services/events');
 
 const mappers = require('./mappers');
 
+const { NotFoundError } = require('../../lib/errors');
+const { BatchStatusError } = require('./lib/errors');
+
 const createBatchEvent = (userEmail, batch) => {
   const batchEvent = new Event();
   batchEvent.type = 'billing-batch';
@@ -167,6 +170,31 @@ const getInvoiceLicenceWithTransactions = async (request, h) => {
   return invoiceLicence || Boom.notFound(`Invoice licence ${invoiceLicenceId} not found`);
 };
 
+const mapErrorResponse = error => {
+  if (error instanceof NotFoundError) {
+    return Boom.notFound(error.message);
+  }
+  if (error instanceof BatchStatusError) {
+    return Boom.forbidden(error.message);
+  }
+  // Unexpected error
+  throw error;
+};
+
+/**
+ * Deletes an InvoiceLicence by ID
+ * @param {String} request.params.invoiceLicenceId
+ */
+const deleteInvoiceLicence = async (request, h) => {
+  const { invoiceLicenceId } = request.params;
+  try {
+    await invoiceLicenceService.delete(invoiceLicenceId);
+    return h.response().code(204);
+  } catch (error) {
+    return mapErrorResponse(error);
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
@@ -179,3 +207,5 @@ exports.deleteBatch = deleteBatch;
 
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
+
+exports.deleteInvoiceLicence = deleteInvoiceLicence;
