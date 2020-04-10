@@ -4,7 +4,6 @@ const { bookshelf } = require('../bookshelf');
 const billingInvoiceLicence = require('../bookshelf/BillingInvoiceLicence');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoice-licences');
-const makeArray = require('../../../lib/make-array');
 
 const withRelated = [
   'billingInvoice',
