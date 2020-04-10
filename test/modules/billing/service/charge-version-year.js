@@ -11,7 +11,6 @@ const { expect } = require('@hapi/code');
 
 const sandbox = require('sinon').createSandbox();
 const { Batch } = require('../../../../src/lib/models');
-const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const chargeVersionYear = require('../../../../src/modules/billing/service/charge-version-year');
 const chargeProcessor = require('../../../../src/modules/billing/service/charge-processor');
@@ -198,7 +197,7 @@ experiment('modules/billing/service/charge-version-year.js', () => {
     experiment('if the batch is for the summer season', () => {
       test('the charge processor is setup with the summer flag', async () => {
         const batch = createBatch();
-        batch.season = CHARGE_SEASON.summer;
+        batch.isSummer = true;
 
         batchService.getBatchById.resolves(batch);
 
@@ -215,25 +214,21 @@ experiment('modules/billing/service/charge-version-year.js', () => {
     });
 
     experiment('if the batch is not for the summer season', () => {
-      const notSummer = [CHARGE_SEASON.winter, CHARGE_SEASON.allYear];
+      test('the charge processor is setup with the summer flag', async () => {
+        const batch = createBatch();
+        batch.isSummer = false;
 
-      notSummer.forEach(season => {
-        test('the charge processor is not setup with the summer flag', async () => {
-          const batch = createBatch();
-          batch.season = season;
+        batchService.getBatchById.resolves(batch);
 
-          batchService.getBatchById.resolves(batch);
-
-          chargeProcessor.processCharges.resolves({
-            error: null,
-            data: data.charges
-          });
-
-          await chargeVersionYear.createBatchFromChargeVersionYear(data.chargeVersionYear);
-
-          const [, , , isSummer] = chargeProcessor.processCharges.lastCall.args;
-          expect(isSummer).to.equal(false);
+        chargeProcessor.processCharges.resolves({
+          error: null,
+          data: data.charges
         });
+
+        await chargeVersionYear.createBatchFromChargeVersionYear(data.chargeVersionYear);
+
+        const [, , , isSummer] = chargeProcessor.processCharges.lastCall.args;
+        expect(isSummer).to.equal(false);
       });
     });
   });
