@@ -24,8 +24,10 @@ const invoiceService = require('../../../src/modules/billing/services/invoice-se
 const invoiceLicenceService = require('../../../src/modules/billing/services/invoice-licences-service');
 const batchService = require('../../../src/modules/billing/services/batch-service');
 const controller = require('../../../src/modules/billing/controller');
-
 const mappers = require('../../../src/modules/billing/mappers');
+
+const { NotFoundError } = require('../../../src/lib/errors');
+const { BatchStatusError } = require('../../../src/modules/billing/lib/errors');
 
 experiment('modules/billing/controller', () => {
   let h, hapiResponseStub, batch;
@@ -58,6 +60,7 @@ experiment('modules/billing/controller', () => {
 
     sandbox.stub(invoiceLicenceService, 'getLicencesWithTransactionStatusesForBatch').resolves();
     sandbox.stub(invoiceLicenceService, 'getInvoiceLicenceWithTransactions').resolves();
+    sandbox.stub(invoiceLicenceService, 'delete').resolves();
 
     sandbox.stub(eventService, 'create').resolves({
       id: '11111111-1111-1111-1111-111111111111'
@@ -789,6 +792,53 @@ experiment('modules/billing/controller', () => {
     });
     test('calls the invoice licence service with the correct invoice licence id', () => {
       expect(invoiceLicenceService.getInvoiceLicenceWithTransactions.lastCall.args[0]).to.equal('test-id');
+    });
+  });
+
+  experiment('.deleteInvoiceLicence', () => {
+    let response;
+    const request = {
+      params: {
+        invoiceLicenceId: uuid()
+      }
+    };
+
+    experiment('when the invoiceLicence is deleted', () => {
+      beforeEach(async () => {
+        await controller.deleteInvoiceLicence(request, h);
+      });
+
+      test('the invoiceLicence service method is called with the correct ID', async () => {
+        expect(invoiceLicenceService.delete.calledWith(request.params.invoiceLicenceId)).to.be.true();
+      });
+
+      test('the response has a 204 HTTP status code', async () => {
+        expect(hapiResponseStub.code.calledWith(204)).to.be.true();
+      });
+    });
+
+    experiment('when the invoiceLicence is not found', () => {
+      beforeEach(async () => {
+        invoiceLicenceService.delete.rejects(new NotFoundError());
+        response = await controller.deleteInvoiceLicence(request, h);
+      });
+
+      test('the response is a Boom 404 error', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when the batch has the wrong status is not found', () => {
+      beforeEach(async () => {
+        invoiceLicenceService.delete.rejects(new BatchStatusError());
+        response = await controller.deleteInvoiceLicence(request, h);
+      });
+
+      test('the response is a Boom 403 error - forbidden', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(403);
+      });
     });
   });
 });
