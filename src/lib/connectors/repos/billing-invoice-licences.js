@@ -26,20 +26,6 @@ const findOne = async id => {
 };
 
 /**
- * Gets billingInvoiceLicence and related models by GUID
- * @param {String} id - guid
- * @return {Promise<Object>}
- */
-const findOne = async id => {
-  const model = await billingInvoiceLicence
-    .forge({ billingInvoiceLicenceId: id })
-    .fetch({
-      withRelated
-    });
-  return model ? model.toJSON() : null;
-};
-
-/**
  * Upserts a water.billing_invoice_licences record
  * @param {Object} data - camel case
  */
