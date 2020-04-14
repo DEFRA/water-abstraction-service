@@ -3,6 +3,10 @@
 const newRepos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
+const { NotFoundError } = require('../../../lib/errors');
+const { BatchStatusError } = require('../lib/errors');
+const Batch = require('../../../lib/models/batch');
+const batchService = require('./batch-service');
 
 /**
  * Saves an Invoice model to water.billing_invoices
@@ -54,6 +58,36 @@ const getInvoiceLicenceWithTransactions = async invoiceLicenceId => {
   return invoiceLicence;
 };
 
+/**
+ * Deletes an InvoiceLicence by ID
+ * The batch must be in 'review' status to be deleted
+ * @param {String} invoiceLicenceId
+ * @return {Promise}
+ */
+const deleteInvoiceLicence = async (invoiceLicenceId) => {
+  // Load data from DB
+  const invoiceLicence = await newRepos.billingInvoiceLicences.findOne(invoiceLicenceId);
+  if (!invoiceLicence) {
+    throw new NotFoundError(`Invoice licence ${invoiceLicenceId} not found`);
+  }
+
+  // Create batch service model from retrieved data
+  const batch = mappers.batch.dbToModel(invoiceLicence.billingInvoice.billingBatch);
+  if (!batch.statusIsOneOf(Batch.BATCH_STATUS.review)) {
+    throw new BatchStatusError(`Batch ${batch.id} status '${Batch.BATCH_STATUS.review}' expected`);
+  }
+
+  // Delete transactions for invoice licence
+  await newRepos.billingTransactions.deleteByInvoiceLicenceId(invoiceLicenceId);
+
+  // Delete invoice licence
+  await newRepos.billingInvoiceLicences.delete(invoiceLicenceId);
+
+  // Set batch to empty if required
+  return batchService.setStatusToEmptyWhenNoTransactions(batch);
+};
+
 exports.getLicencesWithTransactionStatusesForBatch = getLicencesWithTransactionStatusesForBatch;
 exports.saveInvoiceLicenceToDB = saveInvoiceLicenceToDB;
 exports.getInvoiceLicenceWithTransactions = getInvoiceLicenceWithTransactions;
+exports.delete = deleteInvoiceLicence;

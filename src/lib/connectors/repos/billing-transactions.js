@@ -16,7 +16,7 @@ const withRelated = [
 /**
  * Gets transaction and related models by GUID
  * @param {String} id - guid
- * @return {Object}
+ * @return {Promise<Object>}
  */
 const findOne = async id => {
   const model = await BillingTransaction
@@ -24,7 +24,6 @@ const findOne = async id => {
     .fetch({
       withRelated
     });
-
   return model.toJSON();
 };
 
@@ -92,6 +91,16 @@ const update = (billingTransactionId, changes) => BillingTransaction
   .forge({ billingTransactionId })
   .save(changes, { patch: true });
 
+/**
+ * Deletes all transactions by invoice licence ID
+ * @param {String} invoiceLicenceId
+ * @return {Promise}
+ */
+const deleteByInvoiceLicenceId = invoiceLicenceId => bookshelf
+  .knex('water.billing_transactions')
+  .where('billing_invoice_licence_id', invoiceLicenceId)
+  .delete();
+
 exports.findOne = findOne;
 exports.find = find;
 exports.findHistoryByBatchId = findHistoryByBatchId;
@@ -100,3 +109,4 @@ exports.delete = deleteRecords;
 exports.create = create;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
 exports.update = update;
+exports.deleteByInvoiceLicenceId = deleteByInvoiceLicenceId;
