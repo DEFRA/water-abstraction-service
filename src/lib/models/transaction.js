@@ -196,6 +196,12 @@ class Transaction extends Model {
 
   set volume (volume) {
     validators.assertNullableQuantity(volume);
+
+    // volume cannot be greater than the authorised quantity
+    const authorisedQuantity = this.chargeElement.billableAnnualQuantity || this.chargeElement.authorisedAnnualQuantity;
+    if (volume > authorisedQuantity) {
+      throw new Error('The volume cannot exceed the authorised quantity');
+    }
     this._volume = volume;
   }
 

@@ -6,11 +6,11 @@ const Event = require('../../lib/models/event');
 const Batch = require('../../lib/models/batch');
 const BATCH_STATUS = Batch.BATCH_STATUS;
 
+const { get } = require('lodash');
 const { envelope } = require('../../lib/response');
 const createBillRunJob = require('./jobs/create-bill-run');
 const refreshTotalsJob = require('./jobs/refresh-totals');
 const { jobStatus } = require('./lib/event');
-const { checkVolumeUpdateCriteriaMet, decorateTransactionWithVolume } = require('./lib/transaction');
 const invoiceService = require('./services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
 const batchService = require('./services/batch-service');
@@ -171,13 +171,13 @@ const patchTransaction = async (request, h) => {
   const batch = await transactionsService.getById(transactionId);
   if (!batch) return Boom.notFound(`No transaction (${transactionId}) found`);
 
-  checkVolumeUpdateCriteriaMet(batch, volume);
-
-  const updatedTransaction = decorateTransactionWithVolume(batch, volume, user);
-
-  await transactionsService.updateTransactionVolume(updatedTransaction);
-
-  return h.response().code(204);
+  try {
+    const transaction = get(batch, 'invoices[0].invoiceLicences[0].transactions[0]');
+    const updatedTransaction = await transactionsService.updateTransactionVolume(batch, transaction, volume, user);
+    return updatedTransaction;
+  } catch (err) {
+    return Boom.badRequest(err.message);
+  }
 };
 
 const getInvoiceLicenceWithTransactions = async (request, h) => {

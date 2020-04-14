@@ -37,11 +37,14 @@ const getTestDataForHashing = () => {
   chargeElement.source = 'supported';
   chargeElement.season = CHARGE_SEASON.summer;
   chargeElement.loss = 'low';
+  chargeElement.authorisedAnnualQuantity = 5;
+  chargeElement.billableAnnualQuantity = null;
 
   const transaction = new Transaction();
   transaction.chargePeriod = new DateRange('2010-01-01', '2020-01-01');
   transaction.billableDays = 1;
   transaction.authorisedDays = 2;
+  transaction.chargeElement = chargeElement;
   transaction.volume = 3;
   transaction.isCompensationCharge = true;
   transaction.calculatedVolume = 4;
@@ -54,7 +57,6 @@ const getTestDataForHashing = () => {
     new Agreement().fromHash({ code: 'S130W' })
   ];
 
-  transaction.chargeElement = chargeElement;
   transaction.description = 'description';
 
   return { batch, invoiceAccount, licence, transaction };
@@ -318,21 +320,48 @@ experiment('lib/models/transaction', () => {
   });
 
   experiment('.volume', () => {
+    let transaction;
+    beforeEach(() => {
+      transaction = new Transaction();
+      transaction.chargeElement = new ChargeElement();
+      transaction.chargeElement.authorisedAnnualQuantity = 15;
+    });
     test('can be set to a positive number', async () => {
-      const transaction = new Transaction();
       transaction.volume = 4.465;
       expect(transaction.volume).to.equal(4.465);
     });
 
     test('can be set to null', async () => {
-      const transaction = new Transaction();
       transaction.volume = null;
       expect(transaction.volume).to.be.null();
     });
 
-    test('throws an error if set to any other type', async () => {
-      const transaction = new Transaction();
+    test('throws an error if set a negative number', async () => {
+      const func = () => {
+        transaction.volume = -5.34;
+      };
 
+      expect(func).to.throw();
+    });
+
+    test('throws an error if volume is greater than authorised quantity', async () => {
+      const func = () => {
+        transaction.volume = 20;
+      };
+
+      expect(func).to.throw();
+    });
+
+    test('throws an error if volume is greater than billable quantity', async () => {
+      const func = () => {
+        transaction.chargeElement.billableAnnualQuantity = 12;
+        transaction.volume = 20;
+      };
+
+      expect(func).to.throw();
+    });
+
+    test('throws an error if set to any other type', async () => {
       const func = () => {
         transaction.volume = 'a string';
       };

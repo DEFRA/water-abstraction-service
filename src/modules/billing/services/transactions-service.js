@@ -1,6 +1,7 @@
 'use strict';
 
 const Transaction = require('../../../lib/models/transaction');
+const Batch = require('../../../lib/models/batch');
 
 const { logger } = require('../../../logger');
 const newRepos = require('../../../lib/connectors/repos');
@@ -78,13 +79,42 @@ const setErrorStatus = transactionId =>
     status: Transaction.statuses.error
   });
 
-const updateTransactionVolume = (transaction) => {
+const batchIsTwoPartTariff = batch => batch.isTwoPartTariff();
+const batchIsInReviewStatus = batch => batch.statusIsOneOf(Batch.BATCH_STATUS.review);
+const transactionIsCandidate = transaction => transaction.status === Transaction.statuses.candidate;
+
+const volumeUpdateErrors = [
+  'Batch type must be two part tariff',
+  'Batch must have review status',
+  'Transaction must have candidate status'
+];
+
+/**
+ * Validates batch, transaction and submitted volume
+ * Checks that:
+ * - the batch is a two part tariff
+ * - the batch is in review status
+ * - the transaction is in candidate status
+ *
+ * Throws error with corresponding message if criteria is not met
+ *
+ * @param  {Batch} batch   for the transaction
+ * @param  {Transaction} transaction   in question
+ * @param  {Integer} volume   to update transaction with
+ * @param  {Object} user   id and email of internal user making the update
+ */
+const updateTransactionVolume = async (batch, transaction, volume, user) => {
+  const flags = [batchIsTwoPartTariff(batch), batchIsInReviewStatus(batch), transactionIsCandidate(transaction)];
+  if (flags.includes(false)) throw new Error(volumeUpdateErrors[flags.indexOf(false)]);
+
   const changes = {
-    ...transaction.pick('volume', 'twoPartTariffError'),
-    twoPartTariffReview: transaction.twoPartTariffReview.toJSON()
+    volume,
+    twoPartTariffError: false,
+    twoPartTariffReview: { id: user.id, email: user.email }
   };
 
-  return newRepos.billingTransactions.update(transaction.id, changes);
+  const data = await newRepos.billingTransactions.update(transaction.id, changes);
+  return mappers.transaction.dbToModel(data);
 };
 
 exports.saveTransactionToDB = saveTransactionToDB;

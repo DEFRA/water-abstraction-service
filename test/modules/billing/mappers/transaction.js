@@ -464,15 +464,15 @@ experiment('modules/billing/mappers/transaction', () => {
       chargeType: 'compensation',
       description: 'Little stream',
       chargeElement: createChargeElementRow(),
-      volume: '43.45',
+      volume: '29.76',
       section126Factor: null,
       section127Agreement: false,
       section130Agreement: null,
       transactionKey: 'ABCDEF1234567890ABCDEF1234567890',
-      calculatedVolume: '37.52',
+      calculatedVolume: '29.76',
       twoPartTariffError: false,
       twoPartTariffStatus: null,
-      twoPartTariffReview: { id: 1234, emailAddress: 'user@example.com' }
+      twoPartTariffReview: { id: 1234, email: 'user@example.com' }
     };
     beforeEach(async () => {
       result = transactionMapper.dbToModel(dbRow);
@@ -490,7 +490,7 @@ experiment('modules/billing/mappers/transaction', () => {
       expect(result.billableDays).to.equal(dbRow.billableDays);
       expect(result.isCompensationCharge).to.be.true();
       expect(result.description).to.equal(dbRow.description);
-      expect(result.volume).to.equal(43.45);
+      expect(result.volume).to.equal(29.76);
       expect(result.transactionKey).to.equal('ABCDEF1234567890ABCDEF1234567890');
     });
 
@@ -510,7 +510,7 @@ experiment('modules/billing/mappers/transaction', () => {
     });
 
     test('sets the correct two part tariff data', async () => {
-      expect(result.calculatedVolume).to.equal('37.52');
+      expect(result.calculatedVolume).to.equal('29.76');
       expect(result.twoPartTariffError).to.be.false();
       expect(result.twoPartTariffStatus).to.be.null();
     });
@@ -518,7 +518,7 @@ experiment('modules/billing/mappers/transaction', () => {
     test('sets the twoPartTariffReview to a User instance', async () => {
       expect(result.twoPartTariffReview instanceof User).to.be.true();
       expect(result.twoPartTariffReview.id).to.equal(dbRow.twoPartTariffReview.id);
-      expect(result.twoPartTariffReview.emailAddress).to.equal(dbRow.twoPartTariffReview.emailAddress);
+      expect(result.twoPartTariffReview.email).to.equal(dbRow.twoPartTariffReview.email);
     });
 
     experiment('when the DB row contains a section 126 factor', () => {

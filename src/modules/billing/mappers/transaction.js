@@ -135,7 +135,7 @@ const mapReviewDataToUser = data => {
   const user = new User();
   return user.fromHash({
     id: data.id,
-    emailAddress: data.emailAddress
+    email: data.email
   });
 };
 

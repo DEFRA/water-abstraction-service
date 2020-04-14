@@ -5,7 +5,8 @@ const sandbox = require('sinon').createSandbox();
 const returnsHelpers = require('../../../../../src/modules/billing/services/two-part-tariff-service/returns-helpers');
 const returns = require('../../../../../src/lib/connectors/returns');
 
-const { tptBatch, licence } = require('../../test-data/test-batch-data');
+const { BATCH_TYPE, BATCH_STATUS } = require('../../../../../src/lib/models/batch');
+const { createLicence, createInvoice, createInvoiceLicence, createBatch, createFinancialYear } = require('../../test-data/test-billing-data');
 
 const returnsforLicence = [{
   returnId: 'test-return-id',
@@ -30,12 +31,23 @@ const returnsLines = [{
 }];
 
 experiment('modules/billing/services/two-part-tariff-service/returns-helpers .getReturnsForMatching', async () => {
-  let result;
+  let result, licence, batch;
+
   beforeEach(async () => {
     sandbox.stub(returns, 'getReturnsForLicence').resolves(returnsforLicence);
     sandbox.stub(returns, 'getLinesForReturn').resolves(returnsLines);
 
-    result = await returnsHelpers.getReturnsForMatching(licence, tptBatch);
+    licence = createLicence();
+    const invoice = createInvoice({}, [createInvoiceLicence({}, licence)]);
+    batch = createBatch({
+      type: BATCH_TYPE.twoPartTariff,
+      status: BATCH_STATUS.review,
+      season: 'summer',
+      startYear: createFinancialYear(2019),
+      endYear: createFinancialYear(2019)
+    }, invoice);
+
+    result = await returnsHelpers.getReturnsForMatching(licence, batch);
   });
 
   afterEach(async () => sandbox.restore());
@@ -52,8 +64,8 @@ experiment('modules/billing/services/two-part-tariff-service/returns-helpers .ge
   });
 
   test('gets correct return cycle dates for winter batch', async () => {
-    tptBatch.season = 'winter';
-    result = await returnsHelpers.getReturnsForMatching(licence, tptBatch);
+    batch.season = 'winter';
+    result = await returnsHelpers.getReturnsForMatching(licence, batch);
 
     const [, startDate, endDate] = returns.getReturnsForLicence.lastCall.args;
     expect(startDate).to.equal('2018-04-01');
