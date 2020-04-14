@@ -50,12 +50,10 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
   return mapInvoice(data, billRun, invoiceAccounts);
 };
 
-const mapInvoiceAccount = (invoice, invoiceAccounts = []) => {
-  const invoiceAccount = find(invoiceAccounts, invoiceAccount =>
+const mapInvoiceAccount = (invoice, invoiceAccounts = []) =>
+  find(invoiceAccounts, invoiceAccount => (
     invoiceAccount.id === invoice.invoiceAccount.id
-  );
-  return invoiceAccount || invoice.invoiceAccount;
-};
+  ));
 
 /**
  * Given a billingInvoice object from the Bookshelf repo,

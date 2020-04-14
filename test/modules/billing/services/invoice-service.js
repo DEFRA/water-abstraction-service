@@ -18,6 +18,8 @@ const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const Invoice = require('../../../../src/lib/models/invoice');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
+const { NotFoundError } = require('../../../../src/lib/errors');
+
 const mappers = require('../../../../src/modules/billing/mappers');
 const repos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
@@ -472,6 +474,18 @@ experiment('modules/billing/services/invoiceService', () => {
   experiment('.getInvoiceByInvoiceLicenceId', () => {
     const invoiceLicenceId = uuid();
     let result;
+
+    experiment('when the invoiceLicence is not found', () => {
+      beforeEach(async () => {
+        repos.billingInvoiceLicences.findOne.resolves(null);
+      });
+
+      test('rejects with a NotFoundError', async () => {
+        const func = () => invoiceService.getInvoiceByInvoiceLicenceId(invoiceLicenceId);
+        const err = await expect(func()).to.reject();
+        expect(err instanceof NotFoundError).to.be.true();
+      });
+    });
 
     experiment('when the invoiceLicence is found', () => {
       const data = {
