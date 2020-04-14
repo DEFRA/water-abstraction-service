@@ -195,6 +195,16 @@ const deleteInvoiceLicence = async (request, h) => {
   }
 };
 
+const getInvoiceLicenceInvoice = async (request, h) => {
+  const { invoiceLicenceId } = request.params;
+  try {
+    const invoice = await invoiceService.getInvoiceByInvoiceLicenceId(invoiceLicenceId);
+    return invoice;
+  } catch (error) {
+    return mapErrorResponse(error);
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
@@ -209,3 +219,4 @@ exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 
 exports.deleteInvoiceLicence = deleteInvoiceLicence;
+exports.getInvoiceLicenceInvoice = getInvoiceLicenceInvoice;
