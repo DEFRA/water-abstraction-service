@@ -57,6 +57,7 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesTransactionsForBatch').resolves();
+    sandbox.stub(invoiceService, 'getInvoiceByInvoiceLicenceId').resolves();
 
     sandbox.stub(invoiceLicenceService, 'getLicencesWithTransactionStatusesForBatch').resolves();
     sandbox.stub(invoiceLicenceService, 'getInvoiceLicenceWithTransactions').resolves();
@@ -849,6 +850,59 @@ experiment('modules/billing/controller', () => {
       test('the error is rethrown', async () => {
         const func = () => controller.deleteInvoiceLicence(request, h);
         expect(func()).to.reject();
+      });
+    });
+  });
+
+  experiment('.getInvoiceLicenceInvoice', () => {
+    let response;
+    const invoiceLicenceId = uuid();
+    const request = {
+      params: {
+        invoiceLicenceId
+      }
+    };
+
+    experiment('when the invoiceLicence is found', () => {
+      beforeEach(async () => {
+        invoiceService.getInvoiceByInvoiceLicenceId.resolves({
+          id: invoiceLicenceId
+        });
+        response = await controller.getInvoiceLicenceInvoice(request, h);
+      });
+
+      test('the service method is called with the correct invoiceLicence ID', async () => {
+        expect(invoiceService.getInvoiceByInvoiceLicenceId.calledWith(
+          invoiceLicenceId
+        )).to.be.true();
+      });
+
+      test('responds with the data retrieved from the service', async () => {
+        expect(response.id).to.equal(invoiceLicenceId);
+      });
+    });
+
+    experiment('when the invoiceLicence is not found', () => {
+      beforeEach(async () => {
+        const err = new NotFoundError();
+        invoiceService.getInvoiceByInvoiceLicenceId.rejects(err);
+        response = await controller.getInvoiceLicenceInvoice(request, h);
+      });
+
+      test('responds with a Boom not found error', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when an unexpected error occurs', () => {
+      beforeEach(async () => {
+        invoiceService.getInvoiceByInvoiceLicenceId.rejects();
+      });
+
+      test('the handler rejects', async () => {
+        const func = () => controller.getInvoiceLicenceInvoice(request, h);
+        await expect(func()).to.reject();
       });
     });
   });

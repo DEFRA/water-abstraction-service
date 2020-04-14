@@ -15,6 +15,18 @@ const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-mod
 const invoiceAccountsService = require('./invoice-accounts-service');
 
 /**
+ * Load CRM invoice accounts for the supplied array of billingInvoice records
+ * loaded from Bookshelf repo
+ * @param {Object|Array} billingInvoices
+ * @return {Promise<Array>}
+ */
+const getCRMInvoiceAccounts = billingInvoices => {
+  const arr = isArray(billingInvoices) ? billingInvoices : [billingInvoices];
+  const invoiceAccountIds = arr.map(billingInvoice => billingInvoice.invoiceAccountId);
+  return invoiceAccountsService.getByInvoiceAccountIds(invoiceAccountIds);
+};
+
+/**
  * Finds an invoice and its licences for the given batch, then
  * overlays the transactions found from the charge-module, and the
  * contacts from the CRM
@@ -141,18 +153,6 @@ const getInvoicesForBatch = async (batch, includeTransactions = false) => {
 };
 
 const getInvoicesTransactionsForBatch = partialRight(getInvoicesForBatch, true);
-
-/**
- * Load CRM invoice accounts for the supplied array of billingInvoice records
- * loaded from Bookshelf repo
- * @param {Object|Array} billingInvoices
- * @return {Promise<Array>}
- */
-const getCRMInvoiceAccounts = billingInvoices => {
-  const arr = isArray(billingInvoices) ? billingInvoices : [billingInvoices];
-  const invoiceAccountIds = arr.map(billingInvoice => billingInvoice.invoiceAccountId);
-  return invoiceAccountsService.getByInvoiceAccountIds(invoiceAccountIds);
-};
 
 /**
  * Gets a single Invoice service model by id
