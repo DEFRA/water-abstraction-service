@@ -1,37 +1,18 @@
 'use strict';
 
-const { find, flatMap, partialRight } = require('lodash');
+const { find, flatMap, partialRight, isArray } = require('lodash');
 const repos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
 const { logger } = require('../../../logger');
+
+const { NotFoundError } = require('../../../lib/errors');
 
 // Connectors
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
 // Services
 const invoiceAccountsService = require('./invoice-accounts-service');
-
-/**
- * Adds the Company object to the InvoiceAccount objects in the Invoice.
- *
- * @param {Array<Invoice>} invoices The invoices to add invoice account companies to
- */
-const decorateInvoicesWithCompanies = async invoices => {
-  const invoiceAccountIds = invoices.map(invoice => invoice.invoiceAccount.id);
-  const invoiceAccounts = await invoiceAccountsService.getByInvoiceAccountIds(invoiceAccountIds);
-
-  return invoices.map(invoice => {
-    const invoiceAccount = invoiceAccounts.find(ia => ia.id === invoice.invoiceAccount.id);
-
-    // Replace with CRM invoice account
-    if (invoiceAccount) {
-      invoice.invoiceAccount = invoiceAccount;
-    }
-
-    return invoice;
-  });
-};
 
 /**
  * Finds an invoice and its licences for the given batch, then
@@ -49,14 +30,19 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
     return null;
   }
 
-  // Get CM data
-  const { billRun } = await chargeModuleBillRunConnector.get(batch.externalId, data.invoiceAccountNumber);
-  const invoice = mapInvoice(data, billRun);
+  const [{ billRun }, invoiceAccounts] = await Promise.all([
+    chargeModuleBillRunConnector.getCustomer(batch.externalId, data.invoiceAccountNumber),
+    getCRMInvoiceAccounts(data)
+  ]);
 
-  // Add licence holder/invoice account data from CRM
-  await decorateInvoicesWithCompanies([invoice]);
+  return mapInvoice(data, billRun, invoiceAccounts);
+};
 
-  return invoice;
+const mapInvoiceAccount = (invoice, invoiceAccounts = []) => {
+  const invoiceAccount = find(invoiceAccounts, invoiceAccount =>
+    invoiceAccount.id === invoice.invoiceAccount.id
+  );
+  return invoiceAccount || invoice.invoiceAccount;
 };
 
 /**
@@ -65,9 +51,10 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
  * transaction list.
  * @param {Object} invoiceData
  * @param {Object} billRun - bill run data from CM bill run API
+ * @param {Array} invoiceAccounts - an array of InvoiceAccount models
  * @return {Promise<Invoice>}
  */
-const mapInvoice = (invoiceData, billRun) => {
+const mapInvoice = (invoiceData, billRun, invoiceAccounts = []) => {
   // Create invoice service model
   const invoice = mappers.invoice.dbToModel(invoiceData);
 
@@ -81,6 +68,8 @@ const mapInvoice = (invoiceData, billRun) => {
     // Add invoice totals
     invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(billRun, invoiceData.invoiceAccountNumber);
   }
+
+  invoice.invoiceAccount = mapInvoiceAccount(invoice, invoiceAccounts);
 
   return invoice;
 };
@@ -142,19 +131,47 @@ const getInvoicesForBatch = async (batch, includeTransactions = false) => {
   const method = includeTransactions ? 'findOneWithInvoicesWithTransactions' : 'findOneWithInvoices';
   const data = await repos.billingBatches[method](batch.id);
 
+  const [billRun, invoiceAccounts] = await Promise.all([
+    getCMBillRun(batch),
+    getCRMInvoiceAccounts(data.billingInvoices)
+  ]);
+
   // Get CM bill run data and decorate invoices
-  const billRun = await getCMBillRun(batch);
-  const invoices = data.billingInvoices.map(billingInvoice => mapInvoice(billingInvoice, billRun));
-
-  // Decorate with CRM data
-  await decorateInvoicesWithCompanies(invoices);
-
-  return invoices;
+  return data.billingInvoices.map(billingInvoice => mapInvoice(billingInvoice, billRun, invoiceAccounts));
 };
 
 const getInvoicesTransactionsForBatch = partialRight(getInvoicesForBatch, true);
+
+/**
+ * Load CRM invoice accounts for the supplied array of billingInvoice records
+ * loaded from Bookshelf repo
+ * @param {Object|Array} billingInvoices
+ * @return {Promise<Array>}
+ */
+const getCRMInvoiceAccounts = billingInvoices => {
+  const arr = isArray(billingInvoices) ? billingInvoices : [billingInvoices];
+  const invoiceAccountIds = arr.map(billingInvoice => billingInvoice.invoiceAccountId);
+  return invoiceAccountsService.getByInvoiceAccountIds(invoiceAccountIds);
+};
+
+/**
+ * Gets a single Invoice service model by id
+ * @param {String} invoiceId
+ * @return {Promise<Invoice>}
+ */
+const getInvoiceByInvoiceLicenceId = async invoiceLicenceId => {
+  const data = await repos.billingInvoiceLicences.findOne(invoiceLicenceId);
+  if (!data) {
+    throw new NotFoundError(`Invoice licence ${invoiceLicenceId} not found`);
+  }
+
+  const invoiceAccounts = await getCRMInvoiceAccounts([data.billingInvoice]);
+
+  return mapInvoice(data.billingInvoice, null, invoiceAccounts);
+};
 
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;
+exports.getInvoiceByInvoiceLicenceId = getInvoiceByInvoiceLicenceId;
