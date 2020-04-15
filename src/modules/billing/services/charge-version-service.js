@@ -17,7 +17,7 @@ const createForBatch = batch => {
     regionId: batch.region.id,
     fromFinancialYearEnding: batch.startYear.endYear,
     toFinancialYearEnding: batch.endYear.endYear,
-    season: batch.season
+    isSummer: batch.isSummer
   };
   return actions[batch.type](params);
 };

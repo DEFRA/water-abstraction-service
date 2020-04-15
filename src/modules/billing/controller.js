@@ -40,11 +40,11 @@ const createBatchEvent = (userEmail, batch) => {
  * @param {Object} h HAPI response toolkit
  */
 const postCreateBatch = async (request, h) => {
-  const { userEmail, regionId, batchType, financialYearEnding, season } = request.payload;
+  const { userEmail, regionId, batchType, financialYearEnding, isSummer } = request.payload;
 
   try {
     // create a new entry in the batch table
-    const batch = await batchService.create(regionId, batchType, financialYearEnding, season);
+    const batch = await batchService.create(regionId, batchType, financialYearEnding, isSummer);
 
     // add these details to the event log
     const batchEvent = await createBatchEvent(userEmail, batch);

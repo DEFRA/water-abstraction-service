@@ -9,7 +9,6 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 
 const routes = require('../../../src/modules/billing/routes');
 const preHandlers = require('../../../src/modules/billing/pre-handlers');
-const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
 /**
  * Creates a test Hapi server that has no other plugins loaded,
@@ -46,7 +45,7 @@ experiment('modules/billing/routes', () => {
           regionId: '054517f2-be00-4505-a3cc-df65a89cd8e1',
           batchType: 'annual',
           financialYearEnding: 2019,
-          season: CHARGE_SEASON.summer
+          isSummer: true
         }
       };
     });
@@ -104,16 +103,19 @@ experiment('modules/billing/routes', () => {
       expect(response.statusCode).to.equal(400);
     });
 
-    test('returns a 400 if the season is an unexpected value', async () => {
-      request.payload.season = 'spring';
+    test('returns a 400 if the isSummer is an unexpected value', async () => {
+      request.payload.isSummer = 'nope';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
-    test('returns a 400 if the season is omitted', async () => {
-      delete request.payload.season;
+    test('returns a 200 if the isSummer is omitted (defaults to false)', async () => {
+      delete request.payload.isSummer;
+
       const response = await server.inject(request);
-      expect(response.statusCode).to.equal(400);
+
+      expect(response.statusCode).to.equal(200);
+      expect(response.request.payload.isSummer).to.equal(false);
     });
   });
 

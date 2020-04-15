@@ -30,7 +30,7 @@ const createBatchFromChargeVersionYear = async chargeVersionYear => {
     financialYearEnding,
     chargeVersionId,
     batch.isTwoPartTariff(),
-    batch.isSummer()
+    batch.isSummer
   );
 
   if (error) {

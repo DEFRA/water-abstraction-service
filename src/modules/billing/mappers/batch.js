@@ -17,7 +17,7 @@ const dbToModel = row => {
   batch.fromHash({
     id: row.billingBatchId,
     type: row.batchType,
-    ...pick(row, ['season', 'status', 'dateCreated', 'dateUpdated', 'errorCode']),
+    ...pick(row, ['isSummer', 'status', 'dateCreated', 'dateUpdated', 'errorCode']),
     startYear: new FinancialYear(row.fromFinancialYearEnding),
     endYear: new FinancialYear(row.toFinancialYearEnding),
     ...pickBy({
