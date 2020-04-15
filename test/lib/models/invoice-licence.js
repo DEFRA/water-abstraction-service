@@ -27,6 +27,7 @@ const createData = () => {
 
   return {
     id: 'bc9541fc-bc20-4cf4-a72e-412795748e5d',
+    invoiceId: 'abdc7d1d-3389-48d3-991e-1eeedacc6a59',
     licence,
     company,
     contact,
@@ -197,6 +198,20 @@ experiment('lib/models/invoice-licence', () => {
       expect(json.address.id).to.equal(data.address.id);
       expect(json.transactions[0].id).to.equal(transaction.id);
       expect(json.transactions[0].value).to.equal(transaction.value);
+    });
+  });
+
+  experiment('.invoiceId', () => {
+    test('can be set to a guid string', async () => {
+      invoiceLicence.invoiceId = data.invoiceId;
+      expect(invoiceLicence.invoiceId).to.equal(data.invoiceId);
+    });
+
+    test('throws an error if set to a non-guid string', async () => {
+      const func = () => {
+        invoiceLicence.invoiceId = 'hey';
+      };
+      expect(func).to.throw();
     });
   });
 });

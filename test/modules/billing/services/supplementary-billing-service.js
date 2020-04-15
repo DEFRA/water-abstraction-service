@@ -38,6 +38,7 @@ const createFullTransaction = (...args) => ({
     loss: 'high'
   },
   billingInvoiceLicence: {
+    billingInvoiceId: '6046df4e-c5fa-462c-8afb-dee31c88d62d',
     billingInvoice: {
       invoiceAccountId
     },
