@@ -2,7 +2,7 @@
 
 const Transaction = require('../../../lib/models/transaction');
 const Batch = require('../../../lib/models/batch');
-
+const { BatchStatusError, TransactionStatusError } = require('../lib/errors');
 const { logger } = require('../../../logger');
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
@@ -84,9 +84,9 @@ const batchIsInReviewStatus = batch => batch.statusIsOneOf(Batch.BATCH_STATUS.re
 const transactionIsCandidate = transaction => transaction.status === Transaction.statuses.candidate;
 
 const volumeUpdateErrors = [
-  'Batch type must be two part tariff',
-  'Batch must have review status',
-  'Transaction must have candidate status'
+  new BatchStatusError('Batch type must be two part tariff'),
+  new BatchStatusError('Batch must have review status'),
+  new TransactionStatusError('Transaction must have candidate status')
 ];
 
 /**
@@ -105,7 +105,7 @@ const volumeUpdateErrors = [
  */
 const updateTransactionVolume = async (batch, transaction, volume, user) => {
   const flags = [batchIsTwoPartTariff(batch), batchIsInReviewStatus(batch), transactionIsCandidate(transaction)];
-  if (flags.includes(false)) throw new Error(volumeUpdateErrors[flags.indexOf(false)]);
+  if (flags.includes(false)) throw volumeUpdateErrors[flags.indexOf(false)];
 
   const changes = {
     volume,

@@ -35,7 +35,8 @@ const createFullTransaction = (...args) => ({
     chargeElementId: '0b76bf54-57f4-428e-8fc8-3494c84affc6',
     source: 'supported',
     season: CHARGE_SEASON.summer,
-    loss: 'high'
+    loss: 'high',
+    authorisedAnnualQuantity: 30
   },
   billingInvoiceLicence: {
     billingInvoice: {

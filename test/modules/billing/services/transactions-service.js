@@ -17,6 +17,7 @@ const { logger } = require('../../../../src/logger');
 const { BATCH_TYPE, BATCH_STATUS } = require('../../../../src/lib/models/batch');
 const Transaction = require('../../../../src/lib/models/transaction');
 const User = require('../../../../src/lib/models/user');
+const { BatchStatusError, TransactionStatusError } = require('../../../../src/modules/billing/lib/errors');
 const { createTransaction, createInvoiceLicence, createBatch, createInvoice } = require('../test-data/test-billing-data');
 
 const chargeElementDBData = {
@@ -230,6 +231,8 @@ experiment('modules/billing/services/transactions-service', () => {
         try {
           await transactionsService.updateTransactionVolume(batch, transaction, 5.64, user);
         } catch (err) {
+          expect(err).to.be.an.instanceOf(BatchStatusError);
+          expect(err.name).to.equal('BatchStatusError');
           expect(err.message).to.equal('Batch type must be two part tariff');
         }
       });
@@ -239,6 +242,8 @@ experiment('modules/billing/services/transactions-service', () => {
         try {
           await transactionsService.updateTransactionVolume(batch, transaction, 5.64, user);
         } catch (err) {
+          expect(err).to.be.an.instanceOf(BatchStatusError);
+          expect(err.name).to.equal('BatchStatusError');
           expect(err.message).to.equal('Batch must have review status');
         }
       });
@@ -248,6 +253,8 @@ experiment('modules/billing/services/transactions-service', () => {
         try {
           await transactionsService.updateTransactionVolume(batch, transaction, 5.64, user);
         } catch (err) {
+          expect(err).to.be.an.instanceOf(TransactionStatusError);
+          expect(err.name).to.equal('TransactionStatusError');
           expect(err.message).to.equal('Transaction must have candidate status');
         }
       });
