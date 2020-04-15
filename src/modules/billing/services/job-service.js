@@ -1,6 +1,6 @@
 'use strict';
 
-const { jobStatus } = require('../lib/batch');
+const { jobStatus } = require('../lib/event');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 
 const eventService = require('../../../lib/services/events');

@@ -135,7 +135,7 @@ const mapReviewDataToUser = data => {
   const user = new User();
   return user.fromHash({
     id: data.id,
-    emailAddress: data.emailAddress
+    email: data.email
   });
 };
 
@@ -152,7 +152,7 @@ const dbToModel = row => {
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
-    volume: parseFloat(row.volume),
+    volume: row.volume ? parseFloat(row.volume) : null,
     agreements: mapDBToAgreements(row),
     twoPartTariffReview: mapReviewDataToUser(row.twoPartTariffReview)
   });

@@ -19,13 +19,13 @@ class User extends Model {
   /**
    * @param {String} type - user email address
    */
-  set emailAddress (emailAddress) {
-    assertEmailAddress(emailAddress);
-    this._emailAddress = emailAddress;
+  set email (email) {
+    assertEmailAddress(email);
+    this._email = email;
   }
 
-  get emailAddress () {
-    return this._emailAddress;
+  get email () {
+    return this._email;
   }
 }
 

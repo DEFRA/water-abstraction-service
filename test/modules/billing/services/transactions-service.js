@@ -14,90 +14,45 @@ const transactionsService = require('../../../../src/modules/billing/services/tr
 const repos = require('../../../../src/lib/connectors/repos');
 const { logger } = require('../../../../src/logger');
 
-// Models
-const AbstractionPeriod = require('../../../../src/lib/models/abstraction-period');
-const ChargeElement = require('../../../../src/lib/models/charge-element');
-const DateRange = require('../../../../src/lib/models/date-range');
-const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
-const Licence = require('../../../../src/lib/models/licence');
-const Region = require('../../../../src/lib/models/region');
+const { BATCH_TYPE, BATCH_STATUS } = require('../../../../src/lib/models/batch');
 const Transaction = require('../../../../src/lib/models/transaction');
-const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
+const User = require('../../../../src/lib/models/user');
+const { BatchStatusError, TransactionStatusError } = require('../../../../src/modules/billing/lib/errors');
+const { createTransaction, createInvoiceLicence, createBatch, createInvoice } = require('../test-data/test-billing-data');
 
-const createChargeElement = () => {
-  const chargeElement = new ChargeElement('29328315-9b24-473b-bde7-02c60e881501');
-  chargeElement.fromHash({
-    source: 'supported',
-    season: CHARGE_SEASON.summer,
-    loss: 'low',
-    authorisedAnnualQuantity: 12.5,
-    billableAnnualQuantity: 10
-  });
-  chargeElement.abstractionPeriod = new AbstractionPeriod();
-  chargeElement.abstractionPeriod.fromHash({
-    startDay: 1,
-    startMonth: 1,
-    endDay: 31,
-    endMonth: 12
-  });
-  return chargeElement;
+const chargeElementDBData = {
+  chargeElementId: 'ae7197b3-a00b-4a49-be36-af63df6f8583',
+  source: 'unsupported',
+  season: 'winter',
+  loss: 'medium',
+  abstractionPeriodStartDay: 1,
+  abstractionPeriodStartMonth: 4,
+  abstractionPeriodEndDay: 31,
+  abstractionPeriodEndMonth: 3,
+  authorisedAnnualQuantity: 20
 };
-
-const createTransaction = (options = {}) => {
-  const transaction = new Transaction();
-  transaction.fromHash({
-    chargeElement: createChargeElement(),
-    chargePeriod: new DateRange('2019-04-01', '2020-03-31'),
-    isCredit: false,
-    isCompensationCharge: !!options.isCompensationCharge,
-    authorisedDays: 366,
-    billableDays: 366,
-    description: 'Tiny pond',
-    volume: 5.64
-  });
-  return transaction;
+const transactionDBRow = {
+  billingTransactionId: '56bee20e-d65e-4110-bf35-5681e2c73d66',
+  status: 'candidate',
+  startDate: '2019-04-01',
+  endDate: '2020-03-31',
+  chargeType: 'standard',
+  chargeElement: chargeElementDBData,
+  volume: 5.64,
+  twoPartTariffStatus: null,
+  twoPartTariffError: false,
+  twoPartTariffReview: {
+    id: 1234,
+    email: 'test@example.com'
+  },
+  section126Factor: null,
+  section127Agreement: true,
+  section130Agreement: false
 };
-
-const createLicence = () => {
-  const licence = new Licence();
-  licence.fromHash({
-    id: '4838e713-9499-4b9d-a7c0-c4c9a008a589',
-    licenceNumber: '01/123/ABC',
-    isWaterUndertaker: true
-  });
-  licence.region = new Region();
-  licence.region.fromHash({
-    type: Region.types.region,
-    name: 'Anglian',
-    code: 'A',
-    numericCode: 3
-  });
-  licence.regionalChargeArea = new Region();
-  licence.regionalChargeArea.fromHash({
-    type: Region.types.regionalChargeArea,
-    name: 'Anglian'
-  });
-  licence.historicalArea = new Region();
-  licence.historicalArea.fromHash({
-    type: Region.types.environmentAgencyArea,
-    code: 'ARCA'
-  });
-  return licence;
-};
-
-const createInvoiceLicence = (options = {}) => {
-  const invoiceLicence = new InvoiceLicence('c4fd4bf6-9565-4ff8-bdba-e49355446d7b');
-  invoiceLicence.transactions = [
-    createTransaction(options)
-  ];
-  invoiceLicence.licence = createLicence();
-  return invoiceLicence;
-};
-
 experiment('modules/billing/services/transactions-service', () => {
   beforeEach(async () => {
     sandbox.stub(repos.billingTransactions, 'create');
-    sandbox.stub(repos.billingTransactions, 'update');
+    sandbox.stub(repos.billingTransactions, 'update').resolves(transactionDBRow);
     sandbox.stub(repos.billingTransactions, 'delete');
 
     sandbox.stub(logger, 'error');
@@ -111,7 +66,7 @@ experiment('modules/billing/services/transactions-service', () => {
     let invoiceLicence;
 
     beforeEach(async () => {
-      invoiceLicence = createInvoiceLicence();
+      invoiceLicence = createInvoiceLicence({ transactions: [createTransaction()] });
       await transactionsService.saveTransactionToDB(invoiceLicence, invoiceLicence.transactions[0]);
     });
 
@@ -204,6 +159,103 @@ experiment('modules/billing/services/transactions-service', () => {
             transactionId,
             response
           });
+        }
+      });
+    });
+  });
+
+  experiment('.updateTransactionVolume', () => {
+    let batch, transaction, transactionId, user, result;
+
+    beforeEach(async () => {
+      const options = {
+        id: transactionId,
+        status: Transaction.statuses.candidate,
+        twoPartTariffError: false,
+        twoPartTariffReview: { id: 1234, email: 'test@example.com' }
+      };
+      transaction = createTransaction(options);
+
+      const invoice = createInvoice({}, [createInvoiceLicence({ transactions: [transaction] })]);
+      batch = createBatch({
+        type: BATCH_TYPE.twoPartTariff,
+        status: BATCH_STATUS.review
+      }, invoice);
+
+      user = transaction.twoPartTariffReview;
+      result = await transactionsService.updateTransactionVolume(batch, transaction, 5.64, user);
+    });
+
+    experiment('when all criteria for update is met', () => {
+      test('the update() method is called on the repo', () => {
+        expect(repos.billingTransactions.update.called).to.be.true();
+      });
+
+      test('the transaction volume, twoPartTariffError and twoPartTariffReview are updated', () => {
+        const [id, changes] = repos.billingTransactions.update.lastCall.args;
+        expect(id).to.equal(transactionId);
+        expect(changes).to.equal({
+          volume: 5.64,
+          twoPartTariffError: false,
+          twoPartTariffReview: { id: 1234, email: 'test@example.com' }
+        });
+      });
+
+      experiment('the updated Transaction', () => {
+        test('is returned', () => {
+          expect(result).to.be.an.instanceOf(Transaction);
+          expect(result.volume).to.equal(5.64);
+          expect(result.twoPartTariffError).to.be.false();
+          expect(result.twoPartTariffReview).to.be.an.instanceOf(User);
+        });
+
+        test('contains the updated volume', () => {
+          expect(result.volume).to.equal(5.64);
+        });
+
+        test('has two part tariff error set to false', () => {
+          expect(result.twoPartTariffError).to.be.false();
+        });
+
+        test('contains the user who made the changes', () => {
+          expect(result.twoPartTariffReview).to.be.an.instanceOf(User);
+          expect(result.twoPartTariffReview.id).to.equal(user.id);
+          expect(result.twoPartTariffReview.email).to.equal(user.email);
+        });
+      });
+    });
+
+    experiment('when criteria for update is not met', () => {
+      test('throws expected error when batch is the wrong type', async () => {
+        batch.type = BATCH_TYPE.annual;
+        try {
+          await transactionsService.updateTransactionVolume(batch, transaction, 5.64, user);
+        } catch (err) {
+          expect(err).to.be.an.instanceOf(BatchStatusError);
+          expect(err.name).to.equal('BatchStatusError');
+          expect(err.message).to.equal('Batch type must be two part tariff');
+        }
+      });
+
+      test('throws expected error when batch does not have review status', async () => {
+        batch.status = BATCH_STATUS.processing;
+        try {
+          await transactionsService.updateTransactionVolume(batch, transaction, 5.64, user);
+        } catch (err) {
+          expect(err).to.be.an.instanceOf(BatchStatusError);
+          expect(err.name).to.equal('BatchStatusError');
+          expect(err.message).to.equal('Batch must have review status');
+        }
+      });
+
+      test('throws expected error when transaction does not have candidate status', async () => {
+        transaction.status = Transaction.statuses.chargeCreated;
+        try {
+          await transactionsService.updateTransactionVolume(batch, transaction, 5.64, user);
+        } catch (err) {
+          expect(err).to.be.an.instanceOf(TransactionStatusError);
+          expect(err.name).to.equal('TransactionStatusError');
+          expect(err.message).to.equal('Transaction must have candidate status');
         }
       });
     });
