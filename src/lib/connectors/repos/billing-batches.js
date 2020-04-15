@@ -104,7 +104,7 @@ const create = async data => {
   const model = await BillingBatch
     .forge(data)
     .save();
-  return mapModel(model);
+  return model.toJSON();
 };
 
 exports.delete = deleteById;
