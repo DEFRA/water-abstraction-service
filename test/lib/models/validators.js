@@ -287,4 +287,64 @@ experiment('lib/models/validators', () => {
       }).to.throw();
     });
   });
+
+  experiment('assertQuantity', () => {
+    test('allows a positive number', async () => {
+      expect(() => {
+        validators.assertQuantity(20.75);
+      }).not.to.throw();
+    });
+
+    test('allows zero', async () => {
+      expect(() => {
+        validators.assertQuantity(0);
+      }).not.to.throw();
+    });
+
+    test('allows a number as a string', async () => {
+      expect(() => {
+        validators.assertQuantity('30.56');
+      }).not.to.throw();
+    });
+
+    test('throws for a negative number', async () => {
+      expect(() => {
+        validators.assertQuantity(-2.6);
+      }).to.throw();
+    });
+
+    test('throws for null', async () => {
+      expect(() => {
+        validators.assertQuantity(null);
+      }).to.throw();
+    });
+
+    test('throws for a string', async () => {
+      expect(() => {
+        validators.assertQuantity('string');
+      }).to.throw();
+    });
+  });
+
+  experiment('assertNullableQuantity', () => {
+    test('allows null', async () => {
+      expect(() => {
+        validators.assertNullableQuantity(null);
+      }).not.to.throw();
+    });
+  });
+
+  experiment('assertNullableQuantityWithMaximum', () => {
+    test('allows a number equal to max', async () => {
+      expect(() => {
+        validators.assertNullableQuantityWithMaximum(35.75, 35.75);
+      }).not.to.throw();
+    });
+
+    test('throws for a number larger than max', async () => {
+      expect(() => {
+        validators.assertNullableQuantityWithMaximum(40, 35.75);
+      }).to.throw();
+    });
+  });
 });

@@ -1,6 +1,6 @@
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
-const { createReturn, createMonthlyReturn, createPurposeData } = require('./test-return-data');
+const { createReturn, createMonthlyReturn, createPurposeData } = require('../../test-data/test-return-data');
 const Decimal = require('decimal.js-light');
 const { flatMap } = require('lodash');
 const {

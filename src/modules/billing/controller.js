@@ -6,13 +6,15 @@ const Event = require('../../lib/models/event');
 const Batch = require('../../lib/models/batch');
 const BATCH_STATUS = Batch.BATCH_STATUS;
 
+const { get } = require('lodash');
 const { envelope } = require('../../lib/response');
 const createBillRunJob = require('./jobs/create-bill-run');
 const refreshTotalsJob = require('./jobs/refresh-totals');
-const { jobStatus } = require('./lib/batch');
+const { jobStatus } = require('./lib/event');
 const invoiceService = require('./services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
 const batchService = require('./services/batch-service');
+const transactionsService = require('./services/transactions-service');
 const eventService = require('../../lib/services/events');
 
 const mappers = require('./mappers');
@@ -168,6 +170,23 @@ const getBatchLicences = async (request, h) => {
   return invoiceLicenceService.getLicencesWithTransactionStatusesForBatch(batch.id);
 };
 
+const patchTransaction = async (request, h) => {
+  const { transactionId } = request.params;
+  const { volume } = request.payload;
+  const { internalCallingUser: user } = request.defra;
+
+  const batch = await transactionsService.getById(transactionId);
+  if (!batch) return Boom.notFound(`No transaction (${transactionId}) found`);
+
+  try {
+    const transaction = get(batch, 'invoices[0].invoiceLicences[0].transactions[0]');
+    const updatedTransaction = await transactionsService.updateTransactionVolume(batch, transaction, volume, user);
+    return updatedTransaction;
+  } catch (err) {
+    return Boom.badRequest(err.message);
+  }
+};
+
 const getInvoiceLicenceWithTransactions = async (request, h) => {
   const { invoiceLicenceId } = request.params;
   const invoiceLicence = await invoiceLicenceService.getInvoiceLicenceWithTransactions(invoiceLicenceId);
@@ -212,4 +231,5 @@ exports.deleteBatch = deleteBatch;
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 
+exports.patchTransaction = patchTransaction;
 exports.deleteInvoiceLicence = deleteInvoiceLicence;
