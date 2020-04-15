@@ -24,6 +24,8 @@ const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/cha
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 const invoiceAccountsService = require('../../../../src/modules/billing/services/invoice-accounts-service');
 
+const { NotFoundError } = require('../../../../src/lib/errors');
+
 const INVOICE_1_ACCOUNT_ID = uuid();
 const INVOICE_1_ACCOUNT_NUMBER = 'A11111111A';
 const INVOICE_2_ACCOUNT_ID = uuid();
@@ -397,11 +399,12 @@ experiment('modules/billing/services/invoiceService', () => {
     experiment('when invoice not found in repo', () => {
       beforeEach(async () => {
         repos.billingInvoices.findOne.resolves(null);
-        result = await invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
       });
 
-      test('null is returned', async () => {
-        expect(result).to.equal(null);
+      test('a NotFoundError is thrown', async () => {
+        const func = () => invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
+        const err = await expect(func()).to.reject();
+        expect(err instanceof NotFoundError).to.be.true();
       });
     });
 
@@ -412,11 +415,12 @@ experiment('modules/billing/services/invoiceService', () => {
             billingBatchId: 'wrong-id'
           }
         });
-        result = await invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
       });
 
-      test('null is returned', async () => {
-        expect(result).to.equal(null);
+      test('a NotFoundError is thrown', async () => {
+        const func = () => invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
+        const err = await expect(func()).to.reject();
+        expect(err instanceof NotFoundError).to.be.true();
       });
     });
 

@@ -9,6 +9,8 @@ module.exports = bookshelf.model('BillingBatch', {
 
   hasTimestamps: ['date_created', 'date_updated'],
 
+  requireFetch: false,
+
   billingInvoices () {
     return this.hasMany('BillingInvoice', 'billing_batch_id', 'billing_batch_id');
   },

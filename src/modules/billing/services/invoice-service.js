@@ -12,6 +12,9 @@ const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-mod
 // Services
 const invoiceAccountsService = require('./invoice-accounts-service');
 
+// Errors
+const { NotFoundError } = require('../../../lib/errors');
+
 /**
  * Load CRM invoice accounts for the supplied array of billingInvoice records
  * loaded from Bookshelf repo
@@ -36,8 +39,12 @@ const getCRMInvoiceAccounts = billingInvoices => {
 const getInvoiceForBatch = async (batch, invoiceId) => {
   // Get object graph of invoice and related data
   const data = await repos.billingInvoices.findOne(invoiceId);
-  if (!data || data.billingBatch.billingBatchId !== batch.id) {
-    return null;
+
+  if (!data) {
+    throw new NotFoundError(`Invoice ${invoiceId} not found`);
+  }
+  if (data.billingBatch.billingBatchId !== batch.id) {
+    throw new NotFoundError(`Invoice ${invoiceId} not found in batch ${batch.id}`);
   }
 
   const [{ billRun }, invoiceAccounts] = await Promise.all([
