@@ -11,7 +11,8 @@ const Role = require('./role');
 
 const {
   assertIsArrayOfType,
-  assertIsInstanceOf
+  assertIsInstanceOf,
+  assertId
 } = require('./validators');
 
 const Model = require('./model');
@@ -120,6 +121,19 @@ class InvoiceLicence extends Model {
       get(this, '_address.id'),
       get(this, '_contact.id')
     ].join('.');
+  }
+
+  /**
+   * Parent invoice ID
+   * @param {String} invoiceId - GUID
+   */
+  set invoiceId (invoiceId) {
+    assertId(invoiceId);
+    this._invoiceId = invoiceId;
+  }
+
+  get invoiceId () {
+    return this._invoiceId;
   }
 }
 
