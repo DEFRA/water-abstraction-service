@@ -60,7 +60,7 @@ invoice.fromHash({
 const batch = new Batch();
 batch.fromHash({
   type: Batch.BATCH_TYPE.twoPartTariff,
-  season: 'summer',
+  isSummer: true,
   status: Batch.BATCH_STATUS.processing,
   startYear: new FinancialYear(2019),
   endYear: new FinancialYear(2019)

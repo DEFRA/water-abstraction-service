@@ -224,10 +224,10 @@ const cleanup = async batchId => {
  * @param {String} regionId - guid from water.regions.region_id
  * @param {String} batchType - annual|supplementary|two_part_tariff
  * @param {Number} toFinancialYearEnding
- * @param {String} season - summer|winter|all_year
+ * @param {Boolean} isSummer - Is this a summer season two part tariff run
  * @return {Promise<Batch>} resolves with Batch service model
  */
-const create = async (regionId, batchType, toFinancialYearEnding, season) => {
+const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
   const existingBatch = await getMostRecentLiveBatchByRegion(regionId);
 
   if (existingBatch) {
@@ -246,7 +246,7 @@ const create = async (regionId, batchType, toFinancialYearEnding, season) => {
     batchType,
     fromFinancialYearEnding,
     toFinancialYearEnding,
-    season
+    isSummer
   });
 
   return getBatchById(billingBatchId);

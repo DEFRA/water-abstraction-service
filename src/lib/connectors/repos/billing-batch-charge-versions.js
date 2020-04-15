@@ -35,7 +35,7 @@ const createAnnual = params =>
   * @param {String} regionId - GUID from water.regions.region_id
   * @param {String} billingBatchId - GUID from water.billing_batches.billing_batch_id
   * @param {Number} toFinancialYearEnding - the year in which the financial year being processed ends
-  * @param {String} season - summer|winter - the season of the two-part billing batch
+  * @param {Boolean} isSummer - is it the summer season for a two-part billing batch
   * @return {Promise<Array>} charge versions, properties are camel-cased
   */
 const createTwoPartTariff = params =>

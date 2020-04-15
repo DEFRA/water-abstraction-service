@@ -13,13 +13,12 @@ const Batch = require('../../../../src/lib/models/batch');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const Region = require('../../../../src/lib/models/region');
 const Totals = require('../../../../src/lib/models/totals');
-const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const data = {
   batch: {
     billingBatchId: uuid(),
     batchType: 'supplementary',
-    season: CHARGE_SEASON.summer,
+    isSummer: true,
     status: 'processing',
     dateCreated: '2020-02-18T13:54:25+00:00',
     dateUpdated: '2020-02-18T13:54:25+00:00',
@@ -54,7 +53,7 @@ experiment('modules/billing/mappers/batch', () => {
       test('scalar properties are mapped correctly', async () => {
         expect(batch.id).to.equal(data.batch.billingBatchId);
         expect(batch.type).to.equal(data.batch.batchType);
-        expect(batch.season).to.equal(data.batch.season);
+        expect(batch.isSummer).to.equal(data.batch.isSummer);
         expect(batch.status).to.equal(data.batch.status);
         expect(batch.dateCreated.format()).to.equal(data.batch.dateCreated);
         expect(batch.dateUpdated.format()).to.equal(data.batch.dateUpdated);
