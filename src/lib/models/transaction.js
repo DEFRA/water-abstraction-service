@@ -195,8 +195,7 @@ class Transaction extends Model {
   }
 
   set volume (volume) {
-    const maximum = this.chargeElement.billableAnnualQuantity || this.chargeElement.authorisedAnnualQuantity;
-    validators.assertNullableQuantityWithMaximum(volume, maximum);
+    validators.assertNullableQuantityWithMaximum(volume, this.chargeElement.volume);
     this._volume = volume;
   }
 
