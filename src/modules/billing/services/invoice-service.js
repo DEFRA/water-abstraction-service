@@ -6,8 +6,6 @@ const repos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const { logger } = require('../../../logger');
 
-const { NotFoundError } = require('../../../lib/errors');
-
 // Connectors
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
@@ -152,24 +150,7 @@ const getInvoicesForBatch = async (batch, includeTransactions = false) => {
 
 const getInvoicesTransactionsForBatch = partialRight(getInvoicesForBatch, true);
 
-/**
- * Gets a single Invoice service model by id
- * @param {String} invoiceId
- * @return {Promise<Invoice>}
- */
-const getInvoiceByInvoiceLicenceId = async invoiceLicenceId => {
-  const data = await repos.billingInvoiceLicences.findOne(invoiceLicenceId);
-  if (!data) {
-    throw new NotFoundError(`Invoice licence ${invoiceLicenceId} not found`);
-  }
-
-  const invoiceAccounts = await getCRMInvoiceAccounts([data.billingInvoice]);
-
-  return mapInvoice(data.billingInvoice, null, invoiceAccounts);
-};
-
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;
-exports.getInvoiceByInvoiceLicenceId = getInvoiceByInvoiceLicenceId;

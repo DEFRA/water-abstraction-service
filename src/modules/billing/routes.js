@@ -201,19 +201,6 @@ const deleteInvoiceLicence = {
   }
 };
 
-const getInvoiceLicenceInvoice = {
-  method: 'GET',
-  path: '/water/1.0/billing/invoice-licences/{invoiceLicenceId}/invoice',
-  handler: controller.getInvoiceLicenceInvoice,
-  config: {
-    validate: {
-      params: {
-        invoiceLicenceId: Joi.string().uuid().required()
-      }
-    }
-  }
-};
-
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
@@ -228,4 +215,3 @@ exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 
 exports.deleteInvoiceLicence = deleteInvoiceLicence;
-exports.getInvoiceLicenceInvoice = getInvoiceLicenceInvoice;

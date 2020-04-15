@@ -18,8 +18,6 @@ const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const Invoice = require('../../../../src/lib/models/invoice');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
-const { NotFoundError } = require('../../../../src/lib/errors');
-
 const mappers = require('../../../../src/modules/billing/mappers');
 const repos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
@@ -475,59 +473,6 @@ experiment('modules/billing/services/invoiceService', () => {
 
     test('calls .upsert() on the repo with the result of the mapping', async () => {
       expect(repos.billingInvoices.upsert.calledWith({ foo: 'bar' })).to.be.true();
-    });
-  });
-
-  experiment('.getInvoiceByInvoiceLicenceId', () => {
-    const invoiceLicenceId = uuid();
-    let result;
-
-    experiment('when the invoiceLicence is not found', () => {
-      beforeEach(async () => {
-        repos.billingInvoiceLicences.findOne.resolves(null);
-      });
-
-      test('rejects with a NotFoundError', async () => {
-        const func = () => invoiceService.getInvoiceByInvoiceLicenceId(invoiceLicenceId);
-        const err = await expect(func()).to.reject();
-        expect(err instanceof NotFoundError).to.be.true();
-      });
-    });
-
-    experiment('when the invoiceLicence is found', () => {
-      const data = {
-
-        billingInvoice: {
-          id: uuid(),
-          invoiceAccountId: INVOICE_1_ACCOUNT_ID,
-          invoiceAccountNumber: INVOICE_1_ACCOUNT_NUMBER
-        }
-      };
-
-      beforeEach(async () => {
-        repos.billingInvoiceLicences.findOne.resolves(data);
-        result = await invoiceService.getInvoiceByInvoiceLicenceId(invoiceLicenceId);
-      });
-
-      test('the repo method is called with the correct ID', async () => {
-        expect(repos.billingInvoiceLicences.findOne.calledWith(
-          invoiceLicenceId
-        )).to.be.true();
-      });
-
-      test('the correct invoice account is requested from the CRM', async () => {
-        expect(invoiceAccountsService.getByInvoiceAccountIds.calledWith(
-          [data.billingInvoice.invoiceAccountId]
-        )).to.be.true();
-      });
-
-      test('resolves with an Invoice model', async () => {
-        expect(result instanceof Invoice).to.be.true();
-      });
-
-      test('resolves with the invoice account data from the CRM', async () => {
-        expect(result.invoiceAccount.accountNumber).to.equal(INVOICE_1_ACCOUNT_NUMBER);
-      });
     });
   });
 });
