@@ -1,7 +1,7 @@
 const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
-const { createChargeElement } = require('./test-charge-data');
-const { createReturn, createLineData, createMonthlyReturn, createPurposeData } = require('./test-return-data');
+const { createChargeElement } = require('../../test-data/test-charge-element-data');
+const { createReturn, createLineData, createMonthlyReturn, createPurposeData } = require('../../test-data/test-return-data');
 const sandbox = require('sinon').createSandbox();
 const Decimal = require('decimal.js-light');
 const matchRetQuantities = require('../../../../../src/modules/billing/services/two-part-tariff-service/match-return-quantities');

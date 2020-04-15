@@ -10,4 +10,12 @@ class BatchStatusError extends StateError {
   }
 }
 
+class TransactionStatusError extends StateError {
+  constructor (message) {
+    super(message);
+    this.name = 'TransactionStatusError';
+  }
+}
+
 exports.BatchStatusError = BatchStatusError;
+exports.TransactionStatusError = TransactionStatusError;

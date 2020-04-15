@@ -191,7 +191,8 @@ const createInvoiceData = () => ({
         chargeElementId: uuid(),
         source: 'supported',
         season: CHARGE_SEASON.summer,
-        loss: 'high'
+        loss: 'high',
+        authorisedAnnualQuantity: 12
       },
       externalId: CHARGE_MODULE_TRANSACTION_ID
     }]
@@ -226,7 +227,8 @@ const createOneWithInvoicesWithTransactions = () => ({
           chargeElementId: uuid(),
           source: 'supported',
           season: CHARGE_SEASON.summer,
-          loss: 'high'
+          loss: 'high',
+          authorisedAnnualQuantity: 12
         },
         externalId: CHARGE_MODULE_TRANSACTION_ID
       }]

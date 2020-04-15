@@ -5,7 +5,8 @@ const sandbox = require('sinon').createSandbox();
 const returnsHelpers = require('../../../../../src/modules/billing/services/two-part-tariff-service/returns-helpers');
 const returns = require('../../../../../src/lib/connectors/returns');
 
-const { batch, licence } = require('./test-batch');
+const { BATCH_TYPE, BATCH_STATUS } = require('../../../../../src/lib/models/batch');
+const { createLicence, createInvoice, createInvoiceLicence, createBatch, createFinancialYear } = require('../../test-data/test-billing-data');
 
 const returnsforLicence = [{
   returnId: 'test-return-id',
@@ -30,10 +31,21 @@ const returnsLines = [{
 }];
 
 experiment('modules/billing/services/two-part-tariff-service/returns-helpers .getReturnsForMatching', async () => {
-  let result;
+  let result, licence, batch;
+
   beforeEach(async () => {
     sandbox.stub(returns, 'getReturnsForLicence').resolves(returnsforLicence);
     sandbox.stub(returns, 'getLinesForReturn').resolves(returnsLines);
+
+    licence = createLicence();
+    const invoice = createInvoice({}, [createInvoiceLicence({}, licence)]);
+    batch = createBatch({
+      type: BATCH_TYPE.twoPartTariff,
+      status: BATCH_STATUS.review,
+      isSummer: true,
+      startYear: createFinancialYear(2019),
+      endYear: createFinancialYear(2019)
+    }, invoice);
 
     result = await returnsHelpers.getReturnsForMatching(licence, batch);
   });

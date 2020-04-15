@@ -78,6 +78,7 @@ const assertNegativeOrZeroInteger = value => assert(value, VALID_NEGATIVE_INTEGE
 const assertInteger = value => assert(value, VALID_INTEGER);
 const assertEmailAddress = value => assert(value, VALID_EMAIL_ADDRESS);
 const assertIsNullableBoolean = value => assert(value, Joi.boolean().required().allow(null));
+const assertNullableQuantityWithMaximum = (value, max) => assert(value, VALID_NULLABLE_QUANTITY.max(max));
 
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
@@ -109,3 +110,4 @@ exports.assertNegativeOrZeroInteger = assertNegativeOrZeroInteger;
 exports.assertInteger = assertInteger;
 exports.assertEmailAddress = assertEmailAddress;
 exports.assertIsNullableBoolean = assertIsNullableBoolean;
+exports.assertNullableQuantityWithMaximum = assertNullableQuantityWithMaximum;

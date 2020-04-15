@@ -1,7 +1,7 @@
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
-const { createReturn, createPurposeData } = require('./test-return-data');
-const { createChargeElement } = require('./test-charge-data');
+const { createReturn, createPurposeData } = require('../../test-data/test-return-data');
+const { createChargeElement } = require('../../test-data/test-charge-element-data');
 const {
   returnsError,
   getChargeElementReturnData,

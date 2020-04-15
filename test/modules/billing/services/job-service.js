@@ -11,7 +11,7 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
 const { BATCH_STATUS } = require('../../../../src/lib/models/batch');
-const { jobStatus } = require('../../../../src/modules/billing/lib/batch');
+const { jobStatus } = require('../../../../src/modules/billing/lib/event');
 const jobService = require('../../../../src/modules/billing/services/job-service');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const eventService = require('../../../../src/lib/services/events');
