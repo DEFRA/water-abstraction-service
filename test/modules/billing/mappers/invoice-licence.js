@@ -49,7 +49,8 @@ experiment('modules/billing/mappers/invoice-licence', () => {
         billingInvoiceLicenceId: '4e44ea0b-62fc-4a3d-82ed-6ff563f1e39b',
         companyId: '40283a80-766f-481f-ba54-484ac0b7ea6d',
         addressId: '399282c3-f9b4-4a4b-af1b-0019e040ad61',
-        licence: createLicence()
+        licence: createLicence(),
+        billingInvoiceId: 'cf796261-fc3a-4203-86fd-a4b39e9f3f88'
       };
 
       beforeEach(async () => {
@@ -78,15 +79,20 @@ experiment('modules/billing/mappers/invoice-licence', () => {
       test('the invoiceLicence has a Licence', async () => {
         expect(result.licence instanceof Licence).to.be.true();
       });
+
+      test('the invoiceId is set', async () => {
+        expect(result.invoiceId).to.equal(dbRow.billingInvoiceId);
+      });
     });
 
-    experiment('when there contact ID is set', () => {
+    experiment('when the contact ID is set', () => {
       const dbRow = {
         billingInvoiceLicenceId: '4e44ea0b-62fc-4a3d-82ed-6ff563f1e39b',
         companyId: '40283a80-766f-481f-ba54-484ac0b7ea6d',
         addressId: '399282c3-f9b4-4a4b-af1b-0019e040ad61',
         contactId: 'b21a7769-942e-4166-a787-a16701f25e4e',
-        licence: createLicence()
+        licence: createLicence(),
+        billingInvoiceId: 'cf796261-fc3a-4203-86fd-a4b39e9f3f88'
       };
 
       beforeEach(async () => {
@@ -113,7 +119,8 @@ experiment('modules/billing/mappers/invoice-licence', () => {
             billingTransactionId: uuid()
           }, {
             billingTransactionId: uuid()
-          }]
+          }],
+          billingInvoiceId: 'cf796261-fc3a-4203-86fd-a4b39e9f3f88'
         };
         result = invoiceLicenceMapper.dbToModel(dbRow);
       });

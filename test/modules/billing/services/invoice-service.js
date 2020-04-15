@@ -59,6 +59,7 @@ const createBatchData = () => ({
     invoiceAccountId: INVOICE_1_ACCOUNT_ID,
     invoiceAccountNumber: INVOICE_1_ACCOUNT_NUMBER,
     billingInvoiceLicences: [{
+      billingInvoiceId: uuid(),
       licence: {
         licenceId: LICENCE_ID,
         licenceRef: '01/123/ABC',
@@ -71,6 +72,7 @@ const createBatchData = () => ({
         }
       }
     }, {
+      billingInvoiceId: uuid(),
       licence: {
         licenceId: LICENCE_ID,
         licenceRef: '02/345',
@@ -87,6 +89,7 @@ const createBatchData = () => ({
     invoiceAccountId: INVOICE_2_ACCOUNT_ID,
     invoiceAccountNumber: INVOICE_2_ACCOUNT_NUMBER,
     billingInvoiceLicences: [{
+      billingInvoiceId: uuid(),
       licence: {
         licenceId: LICENCE_ID,
         licenceRef: '04/563',
@@ -169,6 +172,7 @@ const createInvoiceData = () => ({
   invoiceAccountId: INVOICE_1_ACCOUNT_ID,
   invoiceAccountNumber: INVOICE_1_ACCOUNT_NUMBER,
   billingInvoiceLicences: [{
+    billingInvoiceId: uuid(),
     licence: {
       licenceId: LICENCE_ID,
       licenceRef: '01/123/ABC',
@@ -204,6 +208,7 @@ const createOneWithInvoicesWithTransactions = () => ({
     invoiceAccountId: INVOICE_1_ACCOUNT_ID,
     invoiceAccountNumber: INVOICE_1_ACCOUNT_NUMBER,
     billingInvoiceLicences: [{
+      billingInvoiceId: uuid(),
       licence: {
         licenceId: LICENCE_ID,
         licenceRef: '01/123/ABC',
@@ -233,6 +238,7 @@ const createOneWithInvoicesWithTransactions = () => ({
     invoiceAccountId: INVOICE_2_ACCOUNT_ID,
     invoiceAccountNumber: INVOICE_2_ACCOUNT_NUMBER,
     billingInvoiceLicences: [{
+      billingInvoiceId: uuid(),
       licence: {
         licenceId: LICENCE_ID,
         licenceRef: '01/123/ABC',
@@ -245,6 +251,7 @@ const createOneWithInvoicesWithTransactions = () => ({
         }
       }
     }, {
+      billingInvoiceId: uuid(),
       licence: {
         licenceId: LICENCE_ID,
         licenceRef: '02/345',

@@ -39,6 +39,7 @@ const createFullTransaction = (...args) => ({
     authorisedAnnualQuantity: 30
   },
   billingInvoiceLicence: {
+    billingInvoiceId: '6046df4e-c5fa-462c-8afb-dee31c88d62d',
     billingInvoice: {
       invoiceAccountId
     },
