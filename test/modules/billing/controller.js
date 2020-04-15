@@ -17,8 +17,6 @@ const Invoice = require('../../../src/lib/models/invoice');
 const Batch = require('../../../src/lib/models/batch');
 const { BATCH_STATUS, BATCH_TYPE } = Batch;
 
-const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
-
 const newRepos = require('../../../src/lib/connectors/repos');
 const eventService = require('../../../src/lib/services/events');
 const invoiceService = require('../../../src/modules/billing/services/invoice-service');
@@ -96,7 +94,7 @@ experiment('modules/billing/controller', () => {
           regionId: '22222222-2222-2222-2222-222222222222',
           batchType: 'annual',
           financialYearEnding: 2019,
-          season: CHARGE_SEASON.summer
+          isSummer: true
         },
         messageQueue: {
           publish: sandbox.stub().resolves()
@@ -117,7 +115,7 @@ experiment('modules/billing/controller', () => {
           request.payload.regionId,
           request.payload.batchType,
           request.payload.financialYearEnding,
-          request.payload.season
+          request.payload.isSummer
         )).to.be.true();
       });
 
@@ -166,7 +164,7 @@ experiment('modules/billing/controller', () => {
           request.payload.regionId,
           request.payload.batchType,
           request.payload.financialYearEnding,
-          request.payload.season
+          request.payload.isSummer
         )).to.be.true();
       });
 
@@ -215,7 +213,7 @@ experiment('modules/billing/controller', () => {
           regionId: '22222222-2222-2222-2222-222222222222',
           batchType: 'supplementary',
           financialYearEnding: 2019,
-          season: CHARGE_SEASON.summer
+          isSummer: true
         },
         messageQueue: {
           publish: sandbox.stub().resolves()
@@ -230,7 +228,7 @@ experiment('modules/billing/controller', () => {
         request.payload.regionId,
         request.payload.batchType,
         request.payload.financialYearEnding,
-        request.payload.season
+        request.payload.isSummer
       )).to.be.true();
     });
   });

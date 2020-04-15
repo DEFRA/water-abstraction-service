@@ -20,7 +20,6 @@ const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../src/lib/models/licence');
 const Totals = require('../../../../src/lib/models/totals');
 const Transaction = require('../../../../src/lib/models/transaction');
-const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const eventService = require('../../../../src/lib/services/events');
 const { logger } = require('../../../../src/logger');
@@ -51,7 +50,7 @@ const region = {
 const batch = {
   billingBatchId: BATCH_ID,
   batchType: 'supplementary',
-  season: CHARGE_SEASON.summer,
+  isSummer: true,
   regionId: region.regionId,
   fromFinancialYearEnding: 2014,
   toFinancialYearEnding: 2019,
@@ -138,8 +137,8 @@ experiment('modules/billing/services/batch-service', () => {
         expect(result.type).to.equal(data.batch.batchType);
       });
 
-      test('with correct season', async () => {
-        expect(result.season).to.equal(data.batch.season);
+      test('with correct isSummer flag', async () => {
+        expect(result.isSummer).to.equal(data.batch.isSummer);
       });
 
       experiment('with start year', () => {
@@ -188,7 +187,7 @@ experiment('modules/billing/services/batch-service', () => {
             billingBatchId: 'a9e9334e-4709-4b86-9b75-19e58f3f0d8c',
             region,
             batchType: 'supplementary',
-            season: CHARGE_SEASON.allYear,
+            isSummer: false,
             dateCreated: '2020-01-09T16:23:24.753Z',
             dateUpdated: '2020-01-09T16:23:32.631Z',
             status: 'ready',
@@ -199,7 +198,7 @@ experiment('modules/billing/services/batch-service', () => {
             billingBatchId: 'b08b07e0-8467-4e43-888f-a23d08c98a28',
             region,
             batchType: 'supplementary',
-            season: CHARGE_SEASON.allYear,
+            isSummer: false,
             dateCreated: '2020-01-09T16:11:09.981Z',
             dateUpdated: '2020-01-09T16:11:17.077Z',
             status: 'review',
@@ -245,7 +244,7 @@ experiment('modules/billing/services/batch-service', () => {
       expect(batches[0]).to.be.instanceOf(Batch);
       expect(batches[0].id).to.equal(response.data[0].billingBatchId);
       expect(batches[0].type).to.equal(response.data[0].batchType);
-      expect(batches[0].season).to.equal(response.data[0].season);
+      expect(batches[0].isSummer).to.equal(response.data[0].isSummer);
       expect(batches[0].startYear.yearEnding).to.equal(response.data[0].fromFinancialYearEnding);
       expect(batches[0].endYear.yearEnding).to.equal(response.data[0].toFinancialYearEnding);
       expect(batches[0].status).to.equal(response.data[0].status);
@@ -255,7 +254,7 @@ experiment('modules/billing/services/batch-service', () => {
       expect(batches[1]).to.be.instanceOf(Batch);
       expect(batches[1].id).to.equal(response.data[1].billingBatchId);
       expect(batches[1].type).to.equal(response.data[1].batchType);
-      expect(batches[1].season).to.equal(response.data[1].season);
+      expect(batches[1].isSummer).to.equal(response.data[1].isSummer);
       expect(batches[1].startYear.yearEnding).to.equal(response.data[1].fromFinancialYearEnding);
       expect(batches[1].endYear.yearEnding).to.equal(response.data[1].toFinancialYearEnding);
       expect(batches[1].status).to.equal(response.data[1].status);
@@ -561,7 +560,7 @@ experiment('modules/billing/services/batch-service', () => {
           billingBatchId: '11111111-0000-0000-0000-000000000000',
           regionId: '22222222-0000-0000-0000-000000000000',
           batchType: 'supplementary',
-          season: CHARGE_SEASON.allYear,
+          isSummer: false,
           status: 'processing',
           region: {
             regionId: '22222222-0000-0000-0000-000000000000',
@@ -575,7 +574,7 @@ experiment('modules/billing/services/batch-service', () => {
           billingBatchId: '33333333-0000-0000-0000-000000000000',
           regionId,
           batchType: 'supplementary',
-          season: CHARGE_SEASON.allYear,
+          isSummer: false,
           status: 'processing',
           region: {
             regionId,
@@ -840,7 +839,7 @@ experiment('modules/billing/services/batch-service', () => {
         newRepos.billingBatches.findByStatuses.resolves([{
           billingBatchId: existingBatchId,
           batchType: 'supplementary',
-          season: CHARGE_SEASON.allYear,
+          isSummer: false,
           status: 'processing',
           regionId,
           region: {
@@ -893,7 +892,7 @@ experiment('modules/billing/services/batch-service', () => {
             batchType: 'annual',
             fromFinancialYearEnding: 2019,
             toFinancialYearEnding: 2019,
-            season: 'all-year'
+            isSummer: false
           }));
         });
 
@@ -914,7 +913,7 @@ experiment('modules/billing/services/batch-service', () => {
             batchType: 'supplementary',
             fromFinancialYearEnding: 2013,
             toFinancialYearEnding: 2019,
-            season: 'all-year'
+            isSummer: false
           }));
         });
 
@@ -935,7 +934,7 @@ experiment('modules/billing/services/batch-service', () => {
             batchType: 'two_part_tariff',
             fromFinancialYearEnding: 2019,
             toFinancialYearEnding: 2019,
-            season: 'summer'
+            isSummer: true
           }));
         });
 

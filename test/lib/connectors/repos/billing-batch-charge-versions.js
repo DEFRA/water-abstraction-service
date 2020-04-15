@@ -21,7 +21,7 @@ const getParams = (fromFinancialYearEnding = 2020) => ({
   billingBatchId: uuid(),
   regionId: uuid(),
   toFinancialYearEnding: 2020,
-  season: 'summer'
+  isSummer: true
 });
 
 const response = [{
@@ -57,7 +57,7 @@ experiment('lib/connectors/repos/billing-batch-charge-versions', () => {
       expect(queryParams.regionId).to.equal(params.regionId);
       expect(queryParams.fromFinancialYearEnding).to.equal(params.fromFinancialYearEnding);
       expect(queryParams.toFinancialYearEnding).to.equal(params.toFinancialYearEnding);
-      expect(queryParams.season).to.equal(params.season);
+      expect(queryParams.isSummer).to.equal(params.isSummer);
       expect(queryParams.fromDate).to.equal('2013-04-01');
     });
 
@@ -83,7 +83,7 @@ experiment('lib/connectors/repos/billing-batch-charge-versions', () => {
       expect(queryParams.regionId).to.equal(params.regionId);
       expect(queryParams.fromFinancialYearEnding).to.equal(params.fromFinancialYearEnding);
       expect(queryParams.toFinancialYearEnding).to.equal(params.toFinancialYearEnding);
-      expect(queryParams.season).to.equal(params.season);
+      expect(queryParams.isSummer).to.equal(params.isSummer);
       expect(queryParams.fromDate).to.equal('2019-04-01');
     });
 
@@ -109,7 +109,7 @@ experiment('lib/connectors/repos/billing-batch-charge-versions', () => {
       expect(queryParams.regionId).to.equal(params.regionId);
       expect(queryParams.fromFinancialYearEnding).to.equal(params.fromFinancialYearEnding);
       expect(queryParams.toFinancialYearEnding).to.equal(params.toFinancialYearEnding);
-      expect(queryParams.season).to.equal(params.season);
+      expect(queryParams.isSummer).to.equal(params.isSummer);
       expect(queryParams.fromDate).to.equal('2019-04-01');
     });
 

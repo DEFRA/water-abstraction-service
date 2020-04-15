@@ -6,7 +6,6 @@ const Region = require('./region');
 const Totals = require('./totals');
 const { assert } = require('@hapi/hoek');
 const { isArray } = require('lodash');
-const { CHARGE_SEASON } = require('./constants');
 
 const validators = require('./validators');
 
@@ -82,20 +81,20 @@ class Batch extends Model {
   }
 
   /**
-   * Sets the season for this batch
-   * @param {String} season
+   * Sets if this batch is for a summer season two part tariff run
+   * @param {Boolean} isSummer
    */
-  set season (season) {
-    validators.assertEnum(season, Object.values(CHARGE_SEASON));
-    this._season = season;
+  set isSummer (isSummer) {
+    validators.assertIsBoolean(isSummer);
+    this._isSummer = isSummer;
   }
 
   /**
-   * Gets the season for this batch
-   * @return {String}
+   * Is this batch a summer season two part tariff run
+   * @return {Boolean}
    */
-  get season () {
-    return this._season;
+  get isSummer () {
+    return this._isSummer;
   }
 
   /**
@@ -287,10 +286,6 @@ class Batch extends Model {
    */
   canDeleteAccounts () {
     return this.statusIsOneOf(BATCH_STATUS.ready, BATCH_STATUS.review);
-  }
-
-  isSummer () {
-    return this.season === CHARGE_SEASON.summer;
   }
 
   /**

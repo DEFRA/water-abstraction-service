@@ -42,7 +42,7 @@ experiment('modules/billing/services/two-part-tariff-service/returns-helpers .ge
     batch = createBatch({
       type: BATCH_TYPE.twoPartTariff,
       status: BATCH_STATUS.review,
-      season: 'summer',
+      isSummer: true,
       startYear: createFinancialYear(2019),
       endYear: createFinancialYear(2019)
     }, invoice);
@@ -64,7 +64,7 @@ experiment('modules/billing/services/two-part-tariff-service/returns-helpers .ge
   });
 
   test('gets correct return cycle dates for winter batch', async () => {
-    batch.season = 'winter';
+    batch.isSummer = false;
     result = await returnsHelpers.getReturnsForMatching(licence, batch);
 
     const [, startDate, endDate] = returns.getReturnsForLicence.lastCall.args;

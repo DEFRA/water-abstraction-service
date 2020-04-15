@@ -26,13 +26,13 @@ exports.createAnnual = `
       and cv.status='current'
       and cv.charge_version_id not in (
         select distinct cv.charge_version_id
-        from water.billing_batches b 
+        from water.billing_batches b
         join water.billing_batch_charge_versions cv on b.billing_batch_id=cv.billing_batch_id
-        join water.billing_batch_charge_version_years y on 
-          b.billing_batch_id=y.billing_batch_id 
+        join water.billing_batch_charge_version_years y on
+          b.billing_batch_id=y.billing_batch_id
           and cv.charge_version_id=y.charge_version_id
         where b.batch_type in ('annual', 'supplementary')
-          and y.financial_year_ending=:toFinancialYearEnding  
+          and y.financial_year_ending=:toFinancialYearEnding
       )
     returning *;`;
 
@@ -52,19 +52,19 @@ exports.createTwoPartTariff = `
         and (l.revoked_date is null or l.revoked_date > :fromDate)
         and (cv.end_date is null or cv.end_date > :fromDate)
         and (la.end_date is null or la.end_date > :fromDate)
-        and case  
-          when :season='summer' then ce.season in ('summer')
-          when :season='all year' then ce.season in ('winter', 'all year')
+        and case
+          when :isSummer is true then ce.season in ('summer')
+          when :isSummer is false then ce.season in ('winter', 'all year')
         end
         and cv.charge_version_id not in (
           select distinct cv.charge_version_id
-          from water.billing_batches b 
+          from water.billing_batches b
           join water.billing_batch_charge_versions cv on b.billing_batch_id=cv.billing_batch_id
-          join water.billing_batch_charge_version_years y on 
-            b.billing_batch_id=y.billing_batch_id 
+          join water.billing_batch_charge_version_years y on
+            b.billing_batch_id=y.billing_batch_id
             and cv.charge_version_id=y.charge_version_id
           where b.batch_type='two_part_tariff'
-            and b.season=:season 
-            and y.financial_year_ending=:toFinancialYearEnding  
+            and b.isSummer=:isSummer
+            and y.financial_year_ending=:toFinancialYearEnding
         )
       returning *;`;
