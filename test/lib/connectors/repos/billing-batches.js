@@ -48,26 +48,39 @@ experiment('lib/connectors/repos/billing-batches', () => {
   experiment('.findOne', () => {
     let result;
 
-    beforeEach(async () => {
-      result = await billingBatches.findOne('test-id');
+    experiment('when a record is found', () => {
+      beforeEach(async () => {
+        result = await billingBatches.findOne('test-id');
+      });
+
+      test('calls model.forge with correct id', async () => {
+        const [params] = BillingBatch.forge.lastCall.args;
+        expect(params).to.equal({ billingBatchId: 'test-id' });
+      });
+
+      test('calls fetch() with related models', async () => {
+        const [params] = stub.fetch.lastCall.args;
+        expect(params.withRelated).to.equal(['region']);
+      });
+
+      test('calls toJSON() on returned models', async () => {
+        expect(model.toJSON.callCount).to.equal(1);
+      });
+
+      test('returns the result of the toJSON() call', async () => {
+        expect(result).to.equal({ foo: 'bar' });
+      });
     });
 
-    test('calls model.forge with correct id', async () => {
-      const [params] = BillingBatch.forge.lastCall.args;
-      expect(params).to.equal({ billingBatchId: 'test-id' });
-    });
+    experiment('when a record is not found', () => {
+      beforeEach(async () => {
+        stub.fetch.resolves(null);
+        result = await billingBatches.findOne('test-id');
+      });
 
-    test('calls fetch() with related models', async () => {
-      const [params] = stub.fetch.lastCall.args;
-      expect(params.withRelated).to.equal(['region']);
-    });
-
-    test('calls toJSON() on returned models', async () => {
-      expect(model.toJSON.callCount).to.equal(1);
-    });
-
-    test('returns the result of the toJSON() call', async () => {
-      expect(result).to.equal({ foo: 'bar' });
+      test('resolves with null', async () => {
+        expect(result).to.equal(null);
+      });
     });
   });
 
@@ -173,46 +186,75 @@ experiment('lib/connectors/repos/billing-batches', () => {
   });
 
   experiment('.findOneWithInvoicesWithTransactions', () => {
-    beforeEach(async () => {
-      await billingBatches.findOneWithInvoicesWithTransactions('00000000-0000-0000-0000-000000000000');
-    });
+    let result;
+    experiment('when a record is found', () => {
+      beforeEach(async () => {
+        await billingBatches.findOneWithInvoicesWithTransactions('00000000-0000-0000-0000-000000000000');
+      });
 
-    test('forges a model with the expected id', async () => {
-      const [forgeArg] = BillingBatch.forge.lastCall.args;
-      expect(forgeArg).to.equal({
-        billingBatchId: '00000000-0000-0000-0000-000000000000'
+      test('forges a model with the expected id', async () => {
+        const [forgeArg] = BillingBatch.forge.lastCall.args;
+        expect(forgeArg).to.equal({
+          billingBatchId: '00000000-0000-0000-0000-000000000000'
+        });
+      });
+
+      test('call fetch with correct parameters', async () => {
+        expect(stub.fetch.lastCall.args[0].withRelated[0]).to.equal('region');
+        expect(stub.fetch.lastCall.args[0].withRelated[1]).to.equal('billingInvoices');
+        expect(stub.fetch.lastCall.args[0].withRelated[2]).to.equal('billingInvoices.billingInvoiceLicences');
+        expect(stub.fetch.lastCall.args[0].withRelated[3]).to.equal('billingInvoices.billingInvoiceLicences.licence');
+        expect(stub.fetch.lastCall.args[0].withRelated[4]).to.equal('billingInvoices.billingInvoiceLicences.licence.region');
+        expect(stub.fetch.lastCall.args[0].withRelated[5]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions');
+        expect(stub.fetch.lastCall.args[0].withRelated[6]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement');
+        expect(stub.fetch.lastCall.args[0].withRelated[7]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse');
       });
     });
 
-    test('call fetch with correct parameters', async () => {
-      expect(stub.fetch.lastCall.args[0].withRelated[0]).to.equal('region');
-      expect(stub.fetch.lastCall.args[0].withRelated[1]).to.equal('billingInvoices');
-      expect(stub.fetch.lastCall.args[0].withRelated[2]).to.equal('billingInvoices.billingInvoiceLicences');
-      expect(stub.fetch.lastCall.args[0].withRelated[3]).to.equal('billingInvoices.billingInvoiceLicences.licence');
-      expect(stub.fetch.lastCall.args[0].withRelated[4]).to.equal('billingInvoices.billingInvoiceLicences.licence.region');
-      expect(stub.fetch.lastCall.args[0].withRelated[5]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions');
-      expect(stub.fetch.lastCall.args[0].withRelated[6]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement');
-      expect(stub.fetch.lastCall.args[0].withRelated[7]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse');
+    experiment('when a record is not found', () => {
+      beforeEach(async () => {
+        stub.fetch.resolves(null);
+        result = await billingBatches.findOneWithInvoicesWithTransactions('00000000-0000-0000-0000-000000000000');
+      });
+
+      test('resolves with null', async () => {
+        expect(result).to.equal(null);
+      });
     });
   });
   experiment('.findOneWithInvoices', () => {
-    beforeEach(async () => {
-      await billingBatches.findOneWithInvoices('00000000-0000-0000-0000-000000000000');
-    });
+    let result;
 
-    test('forges a model with the expected id', async () => {
-      const [forgeArg] = BillingBatch.forge.lastCall.args;
-      expect(forgeArg).to.equal({
-        billingBatchId: '00000000-0000-0000-0000-000000000000'
+    experiment('when a record is found', () => {
+      beforeEach(async () => {
+        await billingBatches.findOneWithInvoices('00000000-0000-0000-0000-000000000000');
+      });
+
+      test('forges a model with the expected id', async () => {
+        const [forgeArg] = BillingBatch.forge.lastCall.args;
+        expect(forgeArg).to.equal({
+          billingBatchId: '00000000-0000-0000-0000-000000000000'
+        });
+      });
+
+      test('call fetch with correct parameters', async () => {
+        expect(stub.fetch.lastCall.args[0].withRelated[0]).to.equal('region');
+        expect(stub.fetch.lastCall.args[0].withRelated[1]).to.equal('billingInvoices');
+        expect(stub.fetch.lastCall.args[0].withRelated[2]).to.equal('billingInvoices.billingInvoiceLicences');
+        expect(stub.fetch.lastCall.args[0].withRelated[3]).to.equal('billingInvoices.billingInvoiceLicences.licence');
+        expect(stub.fetch.lastCall.args[0].withRelated[4]).to.equal('billingInvoices.billingInvoiceLicences.licence.region');
       });
     });
 
-    test('call fetch with correct parameters', async () => {
-      expect(stub.fetch.lastCall.args[0].withRelated[0]).to.equal('region');
-      expect(stub.fetch.lastCall.args[0].withRelated[1]).to.equal('billingInvoices');
-      expect(stub.fetch.lastCall.args[0].withRelated[2]).to.equal('billingInvoices.billingInvoiceLicences');
-      expect(stub.fetch.lastCall.args[0].withRelated[3]).to.equal('billingInvoices.billingInvoiceLicences.licence');
-      expect(stub.fetch.lastCall.args[0].withRelated[4]).to.equal('billingInvoices.billingInvoiceLicences.licence.region');
+    experiment('when a record is not found', () => {
+      beforeEach(async () => {
+        stub.fetch.resolves(null);
+        result = await billingBatches.findOneWithInvoices('00000000-0000-0000-0000-000000000000');
+      });
+
+      test('resolves with null', async () => {
+        expect(result).to.equal(null);
+      });
     });
   });
 });
