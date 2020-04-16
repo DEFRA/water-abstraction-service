@@ -15,6 +15,7 @@ const { get } = require('lodash');
 
 const Invoice = require('../../../src/lib/models/invoice');
 const Batch = require('../../../src/lib/models/batch');
+const Event = require('../../../src/lib/models/event');
 const { BATCH_STATUS, BATCH_TYPE } = Batch;
 
 const newRepos = require('../../../src/lib/connectors/repos');
@@ -28,10 +29,10 @@ const mappers = require('../../../src/modules/billing/mappers');
 const { createBatch, createInvoice, createInvoiceLicence, createTransaction } = require('./test-data/test-billing-data');
 
 const { NotFoundError } = require('../../../src/lib/errors');
-const { BatchStatusError } = require('../../../src/modules/billing/lib/errors');
+const { BatchStatusError, TransactionStatusError } = require('../../../src/modules/billing/lib/errors');
 
 experiment('modules/billing/controller', () => {
-  let h, hapiResponseStub, batch, tptBatch, transaction;
+  let h, hapiResponseStub, batch, tptBatch, transaction, processingBatch;
 
   beforeEach(async () => {
     hapiResponseStub = {
@@ -42,18 +43,32 @@ experiment('modules/billing/controller', () => {
       response: sandbox.stub().returns(hapiResponseStub)
     };
 
+    batch = new Batch('00000000-0000-0000-0000-000000000000');
+    batch.type = 'annual';
+
+    transaction = createTransaction();
+    const invoice = createInvoice({}, [createInvoiceLicence({ transactions: [transaction] })]);
+    tptBatch = createBatch({
+      type: BATCH_TYPE.twoPartTariff,
+      status: BATCH_STATUS.review
+    }, invoice);
+
+    processingBatch = createBatch({
+      id: '33333333-3333-3333-3333-333333333333',
+      type: BATCH_TYPE.twoPartTariff,
+      status: BATCH_STATUS.processing
+    });
+
     sandbox.stub(newRepos.billingBatches, 'findOne').resolves();
+
+    sandbox.stub(batchService, 'create').resolves(batch);
     sandbox.stub(batchService, 'getBatches').resolves();
     sandbox.stub(batchService, 'deleteBatch').resolves();
     sandbox.stub(batchService, 'approveBatch').resolves();
     sandbox.stub(batchService, 'decorateBatchWithTotals').resolves();
     sandbox.stub(batchService, 'getMostRecentLiveBatchByRegion').resolves();
     sandbox.stub(batchService, 'deleteAccountFromBatch').resolves();
-
-    batch = new Batch('00000000-0000-0000-0000-000000000000');
-    batch.type = 'annual';
-
-    sandbox.stub(batchService, 'create').resolves(batch);
+    sandbox.stub(batchService, 'approveTptBatchReview').resolves(processingBatch);
 
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
@@ -62,13 +77,6 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(invoiceLicenceService, 'getLicencesWithTransactionStatusesForBatch').resolves();
     sandbox.stub(invoiceLicenceService, 'getInvoiceLicenceWithTransactions').resolves();
     sandbox.stub(invoiceLicenceService, 'delete').resolves();
-
-    transaction = createTransaction();
-    const invoice = createInvoice({}, [createInvoiceLicence({ transactions: [transaction] })]);
-    tptBatch = createBatch({
-      type: BATCH_TYPE.twoPartTariff,
-      status: BATCH_STATUS.review
-    }, invoice);
 
     sandbox.stub(transactionsService, 'getById').resolves(tptBatch);
     sandbox.stub(transactionsService, 'updateTransactionVolume').resolves(transaction);
@@ -927,6 +935,99 @@ experiment('modules/billing/controller', () => {
 
       test('the error is rethrown', async () => {
         const func = () => controller.deleteInvoiceLicence(request, h);
+        expect(func()).to.reject();
+      });
+    });
+  });
+
+  experiment('.postApproveReviewBatch', () => {
+    let request, batch, internalCallingUser, response;
+
+    beforeEach(async () => {
+      internalCallingUser = {
+        email: 'test@example.com',
+        id: 1234
+      };
+
+      batch = new Batch('33333333-3333-3333-3333-333333333333');
+
+      request = {
+        defra: { internalCallingUser },
+        pre: { batch },
+        messageQueue: {
+          publish: sandbox.stub().resolves()
+        }
+      };
+    });
+
+    experiment('review is approved succesfully', () => {
+      beforeEach(async () => {
+        response = await controller.postApproveReviewBatch(request, h);
+      });
+
+      test('calls the batchService to approve review', async () => {
+        expect(
+          batchService.approveTptBatchReview.calledWith(batch)
+        ).to.be.true();
+      });
+
+      test('calls the event service to create new event', async () => {
+        const [savedEvent] = eventService.create.lastCall.args;
+        expect(savedEvent).to.be.an.instanceOf(Event);
+        expect(savedEvent.type).to.equal('billing-batch:approve-review');
+        expect(savedEvent.subtype).to.be.null();
+        expect(savedEvent.issuer).to.equal(internalCallingUser.email);
+        expect(savedEvent.metadata).to.equal({ batch: processingBatch });
+        expect(savedEvent.status).to.equal('processing');
+      });
+
+      test('publishes a new job to the message queue with the event id', async () => {
+        const [message] = request.messageQueue.publish.lastCall.args;
+        expect(message.data.eventId).to.equal('11111111-1111-1111-1111-111111111111');
+        expect(message.data.batch).to.equal(processingBatch);
+      });
+
+      test('the response contains the event', async () => {
+        const { data } = response;
+        expect(data.event.id).to.equal('11111111-1111-1111-1111-111111111111');
+      });
+
+      test('the response contains a URL to the event', async () => {
+        const { data } = response;
+        expect(data.url).to.equal('/water/1.0/event/11111111-1111-1111-1111-111111111111');
+      });
+    });
+
+    experiment('when the batchService throws a TransactionStatusError', () => {
+      let response;
+      beforeEach(async () => {
+        const error = new TransactionStatusError('uh-oh');
+        batchService.approveTptBatchReview.rejects(error);
+        response = await controller.postApproveReviewBatch(request, h);
+      });
+
+      test('no event is created', async () => {
+        expect(eventService.create.called).to.be.false();
+      });
+
+      test('no job is published', async () => {
+        expect(request.messageQueue.publish.called).to.be.false();
+      });
+
+      test('a Boom badRequest error is returned containing the error message', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(403);
+        expect(response.message).to.equal('uh-oh');
+      });
+    });
+
+    experiment('when there is an unexpected error', () => {
+      beforeEach(async () => {
+        eventService.create.rejects(new Error('event error'));
+      });
+
+      test('the error is rethrown', async () => {
+        const func = () => controller.postApproveReviewBatch(request, h);
         expect(func()).to.reject();
       });
     });

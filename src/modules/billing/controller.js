@@ -1,7 +1,6 @@
 'use strict';
 
 const Boom = require('@hapi/boom');
-
 const Event = require('../../lib/models/event');
 const Batch = require('../../lib/models/batch');
 const BATCH_STATUS = Batch.BATCH_STATUS;
@@ -9,6 +8,7 @@ const BATCH_STATUS = Batch.BATCH_STATUS;
 const { get } = require('lodash');
 const { envelope } = require('../../lib/response');
 const createBillRunJob = require('./jobs/create-bill-run');
+const prepareTransactionsJob = require('./jobs/prepare-transactions');
 const refreshTotalsJob = require('./jobs/refresh-totals');
 const { jobStatus } = require('./lib/event');
 const invoiceService = require('./services/invoice-service');
@@ -20,15 +20,15 @@ const eventService = require('../../lib/services/events');
 const mappers = require('./mappers');
 
 const { NotFoundError } = require('../../lib/errors');
-const { BatchStatusError } = require('./lib/errors');
+const { BatchStatusError, TransactionStatusError } = require('./lib/errors');
 
-const createBatchEvent = (userEmail, batch) => {
+const createBatchEvent = (options) => {
   const batchEvent = new Event();
-  batchEvent.type = 'billing-batch';
-  batchEvent.subtype = batch.type;
-  batchEvent.issuer = userEmail;
-  batchEvent.metadata = { batch };
-  batchEvent.status = jobStatus.start;
+  batchEvent.type = options.type || 'billing-batch';
+  batchEvent.subtype = options.subtype || null;
+  batchEvent.issuer = options.issuer;
+  batchEvent.metadata = { batch: options.batch };
+  batchEvent.status = options.status;
 
   return eventService.create(batchEvent);
 };
@@ -49,7 +49,12 @@ const postCreateBatch = async (request, h) => {
     const batch = await batchService.create(regionId, batchType, financialYearEnding, isSummer);
 
     // add these details to the event log
-    const batchEvent = await createBatchEvent(userEmail, batch);
+    const batchEvent = await createBatchEvent({
+      issuer: userEmail,
+      batch,
+      subtype: batch.type,
+      status: jobStatus.start
+    });
 
     // add a new job to the queue so that the batch can be created in the CM
     const message = createBillRunJob.createMessage(batchEvent.id, batch);
@@ -196,6 +201,9 @@ const mapErrorResponse = error => {
   if (error instanceof BatchStatusError) {
     return Boom.forbidden(error.message);
   }
+  if (error instanceof TransactionStatusError) {
+    return Boom.forbidden(error.message);
+  }
   // Unexpected error
   throw error;
 };
@@ -214,6 +222,32 @@ const deleteInvoiceLicence = async (request, h) => {
   }
 };
 
+const postApproveReviewBatch = async (request, h) => {
+  const { batch } = request.pre;
+  const { internalCallingUser } = request.defra;
+
+  try {
+    const updatedBatch = await batchService.approveTptBatchReview(batch);
+
+    const batchEvent = await createBatchEvent({
+      type: 'billing-batch:approve-review',
+      status: jobStatus.processing,
+      issuer: internalCallingUser.email,
+      batch: updatedBatch
+    });
+
+    const message = prepareTransactionsJob.createMessage(batchEvent.id, updatedBatch);
+    await request.messageQueue.publish(message);
+
+    return envelope({
+      event: batchEvent,
+      url: `/water/1.0/event/${batchEvent.id}`
+    });
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
@@ -226,6 +260,7 @@ exports.deleteBatch = deleteBatch;
 
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
+exports.postApproveReviewBatch = postApproveReviewBatch;
 
 exports.patchTransaction = patchTransaction;
 exports.deleteInvoiceLicence = deleteInvoiceLicence;
