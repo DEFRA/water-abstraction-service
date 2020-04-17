@@ -20,6 +20,7 @@ const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../src/lib/models/licence');
 const Totals = require('../../../../src/lib/models/totals');
 const Transaction = require('../../../../src/lib/models/transaction');
+const { BatchStatusError, TransactionStatusError } = require('../../../../src/modules/billing/lib/errors');
 
 const eventService = require('../../../../src/lib/services/events');
 const { logger } = require('../../../../src/logger');
@@ -33,7 +34,7 @@ const invoiceAccountsService = require('../../../../src/modules/billing/services
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
-
+const { createBatch, createInvoice, createInvoiceLicence, createTransaction } = require('../test-data/test-billing-data');
 const config = require('../../../../config');
 
 const REGION_ID = '3e91fd44-dead-4748-a312-83806245c3da';
@@ -985,6 +986,83 @@ experiment('modules/billing/services/batch-service', () => {
       expect(result.id).to.equal(BATCH_ID);
       expect(result.externalId).to.equal(cmResponse.billRun.id);
       expect(result.billRunId).to.equal(cmResponse.billRun.billRunId);
+    });
+  });
+
+  experiment('.approveTptBillRunReview', async () => {
+    let result, transaction, invoiceLicence, batch;
+
+    beforeEach(async () => {
+      transaction = createTransaction({
+        status: Transaction.statuses.candidate,
+        twoPartTariffError: false,
+        twoPartTariffStatus: Transaction.twoPartTariffStatuses.ERROR_RECEIVED,
+        volume: 25,
+        calculatedVolume: 25
+      });
+      invoiceLicence = createInvoiceLicence({ transactions: [transaction] });
+      const invoice = createInvoice({}, [invoiceLicence]);
+      batch = createBatch({
+        id: BATCH_ID,
+        type: Batch.BATCH_TYPE.twoPartTariff,
+        status: Batch.BATCH_STATUS.review
+      }, invoice);
+    });
+
+    experiment('when the batch is validated', () => {
+      beforeEach(async () => {
+        result = await batchService.approveTptBatchReview(batch);
+      });
+
+      test('updated the batch status to "processing"', async () => {
+        expect(
+          newRepos.billingBatches.update.calledWith(
+            batch.id,
+            { status: Batch.BATCH_STATUS.processing })
+        ).to.be.true();
+      });
+
+      test('the updated batch is returned', async () => {
+        expect(result).to.be.an.instanceOf(Batch);
+        expect(result.id).to.equal(BATCH_ID);
+        expect(result.status).to.equal(Batch.BATCH_STATUS.processing);
+      });
+    });
+
+    experiment('the batch is not validated when ', () => {
+      test('it has the wrong status', async () => {
+        batch.status = Batch.BATCH_STATUS.ready;
+        try {
+          await batchService.approveTptBatchReview(batch);
+        } catch (err) {
+          expect(err).to.be.an.instanceOf(BatchStatusError);
+          expect(err.message).to.equal('Cannot approve review. Batch status must be "review"');
+        }
+      });
+
+      test('there are outstanding twoPartTariffErrors to resolve', async () => {
+        const transactionWithError = createTransaction({
+          status: Transaction.statuses.candidate,
+          twoPartTariffError: false,
+          twoPartTariffStatus: Transaction.twoPartTariffStatuses.ERROR_RECEIVED,
+          volume: 25,
+          calculatedVolume: 25
+        });
+        const invoiceLicence2 = createInvoiceLicence({ transactions: [transaction, transactionWithError] });
+        const invoice = createInvoice({}, [invoiceLicence, invoiceLicence2]);
+        batch = createBatch({
+          id: BATCH_ID,
+          type: Batch.BATCH_TYPE.twoPartTariff,
+          status: Batch.BATCH_STATUS.review
+        }, invoice);
+
+        try {
+          await batchService.approveTptBatchReview(batch);
+        } catch (err) {
+          expect(err).to.be.an.instanceOf(TransactionStatusError);
+          expect(err.message).to.equal('Cannot approve review. There are outstanding two part tariff errors to resolve');
+        }
+      });
     });
   });
 });
