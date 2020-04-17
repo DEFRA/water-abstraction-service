@@ -274,11 +274,23 @@ const getTransactionsWithTwoPartError = batch => {
     invoice.invoiceLicences.forEach(invoiceLicence => {
       invoiceLicence.transactions.forEach(transaction => {
         if (transaction.twoPartTariffError) acc.push(transaction);
-        return acc;
       });
     });
     return acc;
   }, []);
+};
+
+const assertNoTransactionsWithTwoPartError = batch => {
+  const transactions = getTransactionsWithTwoPartError(batch);
+  if (transactions.length) {
+    throw new TransactionStatusError('Cannot approve review. There are outstanding two part tariff errors to resolve');
+  }
+};
+
+const assertBatchStatusIsReview = batch => {
+  if (batch.status !== BATCH_STATUS.review) {
+    throw new BatchStatusError('Cannot approve review. Batch status must be "review"');
+  }
 };
 
 /**
@@ -293,20 +305,9 @@ const getTransactionsWithTwoPartError = batch => {
  * @return {Promise<Batch>} resolves with Batch service model
  */
 const approveTptBatchReview = async batch => {
-  const tptBillRunErrors = [
-    new BatchStatusError('Cannot approve review. Batch status must be "review"'),
-    new TransactionStatusError('Cannot approve review. There are outstanding two part tariff errors to resolve')
-  ];
-
-  const transactionsWithTwoPartError = getTransactionsWithTwoPartError(batch);
-  const flags = [
-    batch.status === BATCH_STATUS.review,
-    transactionsWithTwoPartError.length === 0
-  ];
-
-  if (flags.includes(false)) throw tptBillRunErrors[flags.indexOf(false)];
+  assertNoTransactionsWithTwoPartError(batch);
+  assertBatchStatusIsReview(batch);
   await setStatus(batch.id, BATCH_STATUS.processing);
-
   return getBatchById(batch.id);
 };
 
