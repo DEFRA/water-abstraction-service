@@ -19,10 +19,12 @@ const Invoice = require('../../../../src/lib/models/invoice');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const mappers = require('../../../../src/modules/billing/mappers');
-const newRepos = require('../../../../src/lib/connectors/repos');
+const repos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 const invoiceAccountsService = require('../../../../src/modules/billing/services/invoice-accounts-service');
+
+const { NotFoundError } = require('../../../../src/lib/errors');
 
 const INVOICE_1_ACCOUNT_ID = uuid();
 const INVOICE_1_ACCOUNT_NUMBER = 'A11111111A';
@@ -274,12 +276,12 @@ experiment('modules/billing/services/invoiceService', () => {
     batch = createBatch();
     batchData = createBatchData();
     chargeModuleData = createChargeModuleData();
-    sandbox.stub(newRepos.billingBatches, 'findOneWithInvoices').resolves(batchData);
+    sandbox.stub(repos.billingBatches, 'findOneWithInvoices').resolves(batchData);
     sandbox.stub(chargeModuleBillRunConnector, 'get').resolves(chargeModuleData);
     sandbox.stub(chargeModuleBillRunConnector, 'getCustomer').resolves(chargeModuleData);
 
-    sandbox.stub(newRepos.billingInvoices, 'findOne').resolves();
-    sandbox.stub(newRepos.billingInvoices, 'upsert').resolves();
+    sandbox.stub(repos.billingInvoices, 'findOne').resolves();
+    sandbox.stub(repos.billingInvoices, 'upsert').resolves();
 
     // Stub CRM invoice account data
     invoiceAccount1 = new InvoiceAccount(INVOICE_1_ACCOUNT_ID);
@@ -297,6 +299,8 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountIds').resolves([
       invoiceAccount1, invoiceAccount2
     ]);
+
+    sandbox.stub(repos.billingInvoiceLicences, 'findOne');
   });
 
   afterEach(async () => {
@@ -312,7 +316,7 @@ experiment('modules/billing/services/invoiceService', () => {
 
     test('gets batch with correct ID', async () => {
       expect(
-        newRepos.billingBatches.findOneWithInvoices.calledWith(BATCH_ID)
+        repos.billingBatches.findOneWithInvoices.calledWith(BATCH_ID)
       ).to.be.true();
     });
 
@@ -358,13 +362,13 @@ experiment('modules/billing/services/invoiceService', () => {
     const batchData = createOneWithInvoicesWithTransactions();
 
     beforeEach(async () => {
-      sandbox.stub(newRepos.billingBatches, 'findOneWithInvoicesWithTransactions').resolves(batchData);
+      sandbox.stub(repos.billingBatches, 'findOneWithInvoicesWithTransactions').resolves(batchData);
       invoices = await invoiceService.getInvoicesTransactionsForBatch(batch);
     });
 
     test('gets batch with correct ID', async () => {
       expect(
-        newRepos.billingBatches.findOneWithInvoicesWithTransactions.calledWith(BATCH_ID)
+        repos.billingBatches.findOneWithInvoicesWithTransactions.calledWith(BATCH_ID)
       ).to.be.true();
     });
 
@@ -396,27 +400,29 @@ experiment('modules/billing/services/invoiceService', () => {
 
     experiment('when invoice not found in repo', () => {
       beforeEach(async () => {
-        newRepos.billingInvoices.findOne.resolves(null);
-        result = await invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
+        repos.billingInvoices.findOne.resolves(null);
       });
 
-      test('null is returned', async () => {
-        expect(result).to.equal(null);
+      test('a NotFoundError is thrown', async () => {
+        const func = () => invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
+        const err = await expect(func()).to.reject();
+        expect(err instanceof NotFoundError).to.be.true();
       });
     });
 
     experiment('when invoice found, but batch ID does not match that requested', () => {
       beforeEach(async () => {
-        newRepos.billingInvoices.findOne.resolves({
+        repos.billingInvoices.findOne.resolves({
           billingBatch: {
             billingBatchId: 'wrong-id'
           }
         });
-        result = await invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
       });
 
-      test('null is returned', async () => {
-        expect(result).to.equal(null);
+      test('a NotFoundError is thrown', async () => {
+        const func = () => invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
+        const err = await expect(func()).to.reject();
+        expect(err instanceof NotFoundError).to.be.true();
       });
     });
 
@@ -425,12 +431,12 @@ experiment('modules/billing/services/invoiceService', () => {
 
       beforeEach(async () => {
         invoice = createInvoiceData();
-        newRepos.billingInvoices.findOne.resolves(invoice);
+        repos.billingInvoices.findOne.resolves(invoice);
         result = await invoiceService.getInvoiceForBatch(batch, INVOICE_ID);
       });
 
       test('the invoice repo .findOne() method is called with the correct invoice ID', async () => {
-        expect(newRepos.billingInvoices.findOne.calledWith(
+        expect(repos.billingInvoices.findOne.calledWith(
           INVOICE_ID
         )).to.be.true();
       });
@@ -472,7 +478,7 @@ experiment('modules/billing/services/invoiceService', () => {
     });
 
     test('calls .upsert() on the repo with the result of the mapping', async () => {
-      expect(newRepos.billingInvoices.upsert.calledWith({ foo: 'bar' })).to.be.true();
+      expect(repos.billingInvoices.upsert.calledWith({ foo: 'bar' })).to.be.true();
     });
   });
 });

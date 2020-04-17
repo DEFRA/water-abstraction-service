@@ -109,6 +109,45 @@ experiment('lib/models/charge-element', () => {
     });
   });
 
+  experiment('.authorisedAnnualQuantity', () => {
+    test('can be set to a float', async () => {
+      chargeElement.authorisedAnnualQuantity = 9.3;
+      expect(chargeElement.authorisedAnnualQuantity).to.equal(9.3);
+    });
+
+    test('a non-numeric value that passes validation is parsed as a float', async () => {
+      chargeElement.authorisedAnnualQuantity = '10.2';
+      expect(chargeElement.authorisedAnnualQuantity).to.be.a.number().equal(10.2);
+    });
+
+    test('throws an error if set to a non-numeric value', () => {
+      const func = () => { chargeElement.authorisedAnnualQuantity = 'hello'; };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.billableAnnualQuantity', () => {
+    test('can be set to a float', async () => {
+      chargeElement.billableAnnualQuantity = 9.3;
+      expect(chargeElement.billableAnnualQuantity).to.equal(9.3);
+    });
+
+    test('a non-numeric value that passes validation is parsed as a float', async () => {
+      chargeElement.billableAnnualQuantity = '10.2';
+      expect(chargeElement.billableAnnualQuantity).to.be.a.number().equal(10.2);
+    });
+
+    test('can be set to null', async () => {
+      chargeElement.billableAnnualQuantity = null;
+      expect(chargeElement.billableAnnualQuantity).to.be.a.equal(null);
+    });
+
+    test('throws an error if set to a non-numeric value', () => {
+      const func = () => { chargeElement.billableAnnualQuantity = 'hello'; };
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.volume', () => {
     test('is the billableAnnualQuantity if set', async () => {
       chargeElement.authorisedAnnualQuantity = 10.7;

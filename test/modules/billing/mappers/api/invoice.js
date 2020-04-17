@@ -19,7 +19,7 @@ const apiInvoiceMapper = require('../../../../../src/modules/billing/mappers/api
 
 const INVOICE_ID = uuid();
 
-const createInvoice = () => {
+const createInvoice = (isWaterUndertaker = false) => {
   const invoice = new Invoice(INVOICE_ID);
   invoice.invoiceAccount = new InvoiceAccount();
   invoice.invoiceAccount.accountNumber = 'A12345678A';
@@ -29,7 +29,11 @@ const createInvoice = () => {
     new InvoiceLicence()
   ];
   const licence = new Licence();
-  licence.licenceNumber = '01/123/ABC';
+  licence.fromHash({
+    licenceNumber: '01/123/ABC',
+    isWaterUndertaker
+  });
+
   invoice.invoiceLicences[0].licence = licence;
   invoice.totals = new Totals();
   invoice.totals.netTotal = 3634654;
@@ -38,18 +42,33 @@ const createInvoice = () => {
 
 experiment('modules/billing/mappers/api/invoice', () => {
   let result, invoice;
-  beforeEach(async () => {
-    invoice = createInvoice();
-    result = apiInvoiceMapper.modelToBatchInvoices(invoice);
+
+  experiment('when none of the licences in the invoice are for a water undertaker', () => {
+    beforeEach(async () => {
+      invoice = createInvoice();
+      result = apiInvoiceMapper.modelToBatchInvoices(invoice);
+    });
+
+    test('the model is mapped to the API response shape', async () => {
+      expect(result).to.equal({
+        id: INVOICE_ID,
+        accountNumber: 'A12345678A',
+        name: 'Test Co Ltd.',
+        netTotal: 3634654,
+        licenceNumbers: ['01/123/ABC'],
+        isWaterUndertaker: false
+      });
+    });
   });
 
-  test('the model is mapped to the API response shape', async () => {
-    expect(result).to.equal({
-      id: INVOICE_ID,
-      accountNumber: 'A12345678A',
-      name: 'Test Co Ltd.',
-      netTotal: 3634654,
-      licenceNumbers: ['01/123/ABC']
+  experiment('when 1 or more of the licences in the invoice are for a water undertaker', () => {
+    beforeEach(async () => {
+      invoice = createInvoice(true);
+      result = apiInvoiceMapper.modelToBatchInvoices(invoice);
+    });
+
+    test('the isWaterUndertaker flag is true', async () => {
+      expect(result.isWaterUndertaker).to.be.true();
     });
   });
 });

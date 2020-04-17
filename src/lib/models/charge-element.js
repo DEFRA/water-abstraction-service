@@ -1,5 +1,6 @@
 'use strict';
 
+const { isNull } = require('lodash');
 const Model = require('./model');
 const AbstractionPeriod = require('./abstraction-period');
 const Purpose = require('./purpose');
@@ -100,7 +101,7 @@ class ChargeElement extends Model {
 
   set authorisedAnnualQuantity (quantity) {
     assertQuantity(quantity);
-    this._authorisedAnnualQuantity = quantity;
+    this._authorisedAnnualQuantity = parseFloat(quantity);
   }
 
   /**
@@ -113,7 +114,7 @@ class ChargeElement extends Model {
 
   set billableAnnualQuantity (quantity) {
     assertNullableQuantity(quantity);
-    this._billableAnnualQuantity = quantity;
+    this._billableAnnualQuantity = isNull(quantity) ? null : parseFloat(quantity);
   }
 
   /**

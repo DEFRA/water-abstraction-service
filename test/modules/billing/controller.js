@@ -319,7 +319,7 @@ experiment('modules/billing/controller', () => {
   });
 
   experiment('.getBatchInvoices', () => {
-    let request;
+    let request, response;
 
     beforeEach(async () => {
       request = {
@@ -354,6 +354,18 @@ experiment('modules/billing/controller', () => {
         expect(mappers.api.invoice.modelToBatchInvoices.callCount).to.equal(2);
         expect(mappers.api.invoice.modelToBatchInvoices.calledWith(invoices[0])).to.be.true();
         expect(mappers.api.invoice.modelToBatchInvoices.calledWith(invoices[1])).to.be.true();
+      });
+    });
+
+    experiment('when the batch is not found', async () => {
+      beforeEach(async () => {
+        invoiceService.getInvoicesForBatch.rejects(new NotFoundError());
+        response = await controller.getBatchInvoices(request);
+      });
+
+      test('returns a Boom not found error', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(404);
       });
     });
   });
