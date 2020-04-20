@@ -1,8 +1,9 @@
+'use strict';
 
-const { setImportStatus, PENDING_JOB_STATUS } = require('../lib/import-log.js');
-const { load } = require('../load');
+const importLog = require('../lib/import-log.js');
+const licenceLoader = require('../load');
 const logger = require('./lib/logger');
-const { assertImportTableExists } = require('../lib/assert-import-tables-exist');
+const assertImportTableExists = require('../lib/assert-import-tables-exist');
 
 const JOB_NAME = 'import.licence';
 
@@ -29,15 +30,15 @@ const handler = async job => {
   logger.logHandlingJob(job);
 
   try {
-    await assertImportTableExists();
+    await assertImportTableExists.assertImportTableExists();
 
     const { licenceNumber } = job.data;
 
     // Mark as importing the licence
-    await setImportStatus(licenceNumber, 'Importing', PENDING_JOB_STATUS.processing);
+    await importLog.setImportStatus(licenceNumber, 'Importing', importLog.PENDING_JOB_STATUS.processing);
 
     // Import the licence
-    await load(licenceNumber);
+    await licenceLoader.load(licenceNumber);
   } catch (err) {
     logger.logJobError(job, err);
     throw err;

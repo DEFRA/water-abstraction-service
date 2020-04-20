@@ -1,3 +1,5 @@
+'use strict';
+
 exports.s3Download = {
   job: require('./s3-download'),
   onCompleteHandler: require('./s3-download-complete')

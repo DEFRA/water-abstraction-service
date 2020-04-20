@@ -1,4 +1,6 @@
-const { setImportStatus, PENDING_JOB_STATUS } = require('../lib/import-log.js');
+'use strict';
+
+const importLog = require('../lib/import-log.js');
 const logger = require('./lib/logger');
 
 const options = {
@@ -12,7 +14,7 @@ const importLicenceComplete = async job => {
 
   const message = job.failed ? 'Error' : 'OK';
 
-  return setImportStatus(licenceNumber, message, PENDING_JOB_STATUS.complete);
+  return importLog.setImportStatus(licenceNumber, message, importLog.PENDING_JOB_STATUS.complete);
 };
 
 exports.handler = importLicenceComplete;

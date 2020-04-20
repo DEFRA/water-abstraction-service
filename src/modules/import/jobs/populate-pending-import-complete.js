@@ -1,3 +1,5 @@
+'use strict';
+
 const logger = require('./lib/logger');
 const importLicenceJob = require('./import-licence');
 

@@ -10,7 +10,7 @@ const logHandlingOnCompleteJob = job =>
   logger.info(`Handling onComplete job: ${job.data.request.name}`, job.data.request.data);
 
 const logHandlingOnCompleteError = (job, err) =>
-  logger.info(`Handling onComplete job: ${job.data.request.name}`, err, job.data.request.data);
+  logger.error(`Handling onComplete job: ${job.data.request.name}`, err, job.data.request.data);
 
 exports.logHandlingJob = logHandlingJob;
 exports.logHandlingOnCompleteJob = logHandlingOnCompleteJob;

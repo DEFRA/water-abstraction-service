@@ -1,3 +1,5 @@
+'use strict';
+
 const { createImportLog, clearImportLog } = require('../lib/import-log.js');
 const logger = require('./lib/logger');
 const { assertImportTableExists } = require('../lib/assert-import-tables-exist');

@@ -1,3 +1,5 @@
+'use strict';
+
 const { clearImportLog } = require('../lib/import-log');
 const { downloadAndExtract } = require('../extract');
 const logger = require('./lib/logger');

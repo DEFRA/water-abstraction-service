@@ -1,3 +1,5 @@
+'use strict';
+
 const logger = require('./lib/logger');
 
 const populatePendingImportJob = require('./populate-pending-import');
