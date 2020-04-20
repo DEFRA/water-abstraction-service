@@ -6,6 +6,10 @@ const { assertImportTableExists } = require('../lib/assert-import-tables-exist')
 
 const JOB_NAME = 'import.licence';
 
+const options = {
+  teamSize: 50
+};
+
 const createMessage = licenceNumber => ({
   name: JOB_NAME,
   data: {
@@ -43,3 +47,4 @@ const handler = async job => {
 exports.createMessage = createMessage;
 exports.handler = handler;
 exports.jobName = JOB_NAME;
+exports.options = options;

@@ -1,6 +1,10 @@
 const { setImportStatus, PENDING_JOB_STATUS } = require('../lib/import-log.js');
 const logger = require('./lib/logger');
 
+const options = {
+  teamSize: 50
+};
+
 const importLicenceComplete = async job => {
   logger.logHandlingOnCompleteJob(job);
 
@@ -11,4 +15,5 @@ const importLicenceComplete = async job => {
   return setImportStatus(licenceNumber, message, PENDING_JOB_STATUS.complete);
 };
 
-module.exports = importLicenceComplete;
+exports.handler = importLicenceComplete;
+exports.options = options;
