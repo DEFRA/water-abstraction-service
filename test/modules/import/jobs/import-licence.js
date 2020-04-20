@@ -28,6 +28,17 @@ experiment('modules/import/jobs/import-licence', () => {
     });
   });
 
+  experiment('.createMessage', () => {
+    test('formats a message for PG boss', async () => {
+      const job = importLicence.createMessage('test-licence-number');
+      expect(job).to.equal({
+        data: { licenceNumber: 'test-licence-number' },
+        name: 'import.licence',
+        options: { singletonKey: 'test-licence-number' }
+      });
+    });
+  });
+
   experiment('.handler', () => {
     experiment('when the licence import was successful', () => {
       const job = {

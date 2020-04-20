@@ -32,22 +32,17 @@ const goodWinstonStream = new GoodWinston({ winston: logger });
 // Define server
 const server = Hapi.server(config.server);
 
-const registerServerPlugins = async (server) => {
-  // Message queue plugin
-  await server.register({
-    plugin: require('./src/lib/message-queue').plugin
-  });
+const plugins = [
+  require('./src/lib/message-queue').plugin,
+  require('./src/modules/billing/register-subscribers'),
+  require('./src/modules/returns/register-subscribers'),
+  require('./src/modules/import/register-subscribers'),
+  require('./src/plugins/internal-calling-user')
+];
 
-  await server.register([{
-    plugin: require('./src/modules/billing/register-subscribers')
-  }, {
-    plugin: require('./src/modules/returns/register-subscribers')
-  }, {
-    plugin: require('./src/modules/import/register-subscribers')
-  },
-  {
-    plugin: require('./src/plugins/internal-calling-user')
-  }]);
+const registerServerPlugins = async (server) => {
+  // Service plugins
+  await server.register(plugins);
 
   // Third-party plugins
   await server.register({

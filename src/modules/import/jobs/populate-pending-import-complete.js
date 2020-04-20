@@ -6,6 +6,10 @@ const importLicenceJob = require('./import-licence');
 const importLicenceComplete = async (job, messageQueue) => {
   logger.logHandlingOnCompleteJob(job);
 
+  if (job.failed) {
+    return;
+  }
+
   try {
     const { licenceNumbers } = job.data.response;
     for (const licenceNumber of licenceNumbers) {
