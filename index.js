@@ -19,7 +19,6 @@ const messageQueue = require('./src/lib/message-queue');
 const routes = require('./src/routes/water.js');
 const notify = require('./src/modules/notify');
 const returnsNotifications = require('./src/modules/returns-notifications');
-const importer = require('./src/modules/import');
 const batchNotifications = require('./src/modules/batch-notifications/lib/jobs/init-batch-notifications');
 const db = require('./src/lib/connectors/db');
 
@@ -44,6 +43,9 @@ const registerServerPlugins = async (server) => {
   }, {
     plugin: require('./src/modules/returns/register-subscribers')
   }, {
+    plugin: require('./src/modules/import/register-subscribers')
+  },
+  {
     plugin: require('./src/plugins/internal-calling-user')
   }]);
 
@@ -78,7 +80,6 @@ const configureServerAuthStrategy = (server) => {
 
 const configureMessageQueue = async (server) => {
   notify(messageQueue).registerSubscribers();
-  await importer(messageQueue).registerSubscribers();
   await returnsNotifications(messageQueue).registerSubscribers();
   await batchNotifications.registerSubscribers(messageQueue);
   server.log('info', 'Message queue started');
