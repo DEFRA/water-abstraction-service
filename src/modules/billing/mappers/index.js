@@ -13,3 +13,4 @@ exports.invoiceLicence = require('./invoice-licence');
 exports.licence = require('./licence');
 exports.region = require('./region');
 exports.transaction = require('./transaction');
+exports.user = require('./user');

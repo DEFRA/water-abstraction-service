@@ -8,10 +8,10 @@ const Batch = require('../../../lib/models/batch');
 const DateRange = require('../../../lib/models/date-range');
 const Transaction = require('../../../lib/models/transaction');
 const Agreement = require('../../../lib/models/agreement');
-const User = require('../../../lib/models/user');
 
 const agreement = require('./agreement');
 const chargeElementMapper = require('./charge-element');
+const userMapper = require('./user');
 
 const getTwoPartTariffTransactionDescription = (batch, chargeElement) => {
   const prefix = batch.isTwoPartTariff() ? 'Second' : 'First';
@@ -44,7 +44,7 @@ const createTransaction = (batch, chargeLine, chargeElement, data = {}) => {
     volume: chargeElement.billableAnnualQuantity || chargeElement.authorisedAnnualQuantity
   });
   if (data.twoPartTariffReview) {
-    transaction.twoPartTariffReview = mapReviewDataToUser(data.twoPartTariffReview);
+    transaction.twoPartTariffReview = userMapper.mapToModel(data.twoPartTariffReview);
   }
 
   transaction.description = getTransactionDescription(
@@ -126,20 +126,6 @@ const mapDBToAgreements = row => {
 };
 
 /**
- * Maps json data from DB to User model
- * @param {Object} data user data from DB
- * @return {User}
- */
-const mapReviewDataToUser = data => {
-  if (!data) return null;
-  const user = new User();
-  return user.fromHash({
-    id: data.id,
-    email: data.email
-  });
-};
-
-/**
  * Maps a row from water.billing_transactions to a Transaction model
  * @param {Object} row - from water.billing_transactions, camel cased
  */
@@ -154,7 +140,7 @@ const dbToModel = row => {
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
     volume: row.volume ? parseFloat(row.volume) : null,
     agreements: mapDBToAgreements(row),
-    twoPartTariffReview: mapReviewDataToUser(row.twoPartTariffReview)
+    twoPartTariffReview: userMapper.mapToModel(row.twoPartTariffReview)
   });
   return transaction;
 };
