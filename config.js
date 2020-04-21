@@ -51,16 +51,16 @@ module.exports = {
   // | water-abstraction-import            |       1 |         20 |         2 | (20)    10 |
   // | water-abstraction-permit-repository |       1 |         16 |         4 | (16)     4 |
   // | water-abstraction-returns           |       1 |         20 |         4 | (20)     5 |
-  // | water-abstraction-service           |       2 | (100)   50 |         5 | (100)   20 |
+  // | water-abstraction-service           |       1 |         50 |         4 | (96)    24 |
   // | water-abstraction-tactical-crm      |       1 |         20 |         4 | (20)     5 |
   // | water-abstraction-tactical-idm      |       1 |         20 |         4 | (20)     5 |
   // | ----------------------------------- | ------- | ---------- | --------- | ---------- |
-  // | TOTAL                               |       6 |        196 |        23 |        196 |
+  // | TOTAL                               |       6 |        196 |        23 |        192 |
   // | ----------------------------------- | ------- | ---------- | --------- | ---------- |
   //
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: process.env.NODE_ENV === 'local' ? 50 : 20,
+    max: process.env.NODE_ENV === 'local' ? 50 : 24,
     idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 5000
   },
