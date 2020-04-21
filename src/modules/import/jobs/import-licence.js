@@ -1,6 +1,5 @@
 'use strict';
 
-const importLog = require('../lib/import-log.js');
 const licenceLoader = require('../load');
 const logger = require('./lib/logger');
 const assertImportTableExists = require('../lib/assert-import-tables-exist');
