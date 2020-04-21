@@ -1,11 +1,11 @@
 'use strict';
 
-const messageQueue = require('../../lib/message-queue');
+const server = require('../../../index');
 const s3DownloadJob = require('../../modules/import/jobs/s3-download');
 
 const run = async (data) => {
   try {
-    await messageQueue.publish(s3DownloadJob.createMessage());
+    await server.messageQueue.publish(s3DownloadJob.createMessage());
     return { error: null };
   } catch (error) {
     return { error };

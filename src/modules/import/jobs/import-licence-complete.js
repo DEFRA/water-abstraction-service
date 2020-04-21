@@ -4,7 +4,8 @@ const importLog = require('../lib/import-log.js');
 const logger = require('./lib/logger');
 
 const options = {
-  teamSize: 50
+  teamSize: 100,
+  teamConcurrency: 1
 };
 
 const importLicenceComplete = async job => {

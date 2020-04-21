@@ -7,7 +7,8 @@ const assertImportTableExists = require('../lib/assert-import-tables-exist');
 const JOB_NAME = 'import.licence';
 
 const options = {
-  teamSize: 50
+  teamSize: 100,
+  teamConcurrency: 1
 };
 
 const createMessage = licenceNumber => ({
