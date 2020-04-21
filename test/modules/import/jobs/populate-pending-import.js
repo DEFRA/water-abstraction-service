@@ -4,79 +4,82 @@ const sandbox = require('sinon').createSandbox();
 
 const { logger } = require('../../../../src/logger');
 const importLog = require('../../../../src/modules/import/lib/import-log.js');
-const importLicence = require('../../../../src/modules/import/jobs/import-licence');
-const licenceLoader = require('../../../../src/modules/import/load');
+const populatePendingImport = require('../../../../src/modules/import/jobs/populate-pending-import');
 const assertImportTableExists = require('../../../../src/modules/import/lib/assert-import-tables-exist');
 
-experiment('modules/import/jobs/import-licence', () => {
+experiment('modules/import/jobs/populate-pending-import', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
     sandbox.stub(logger, 'error');
 
-    sandbox.stub(importLog, 'setImportStatus');
-    sandbox.stub(licenceLoader, 'load');
     sandbox.stub(assertImportTableExists, 'assertImportTableExists');
+
+    sandbox.stub(importLog, 'clearImportLog');
+    sandbox.stub(importLog, 'createImportLog').resolves([{
+      licence_ref: 'licence_1'
+    }, {
+      licence_ref: 'licence_2'
+    }]);
   });
 
   afterEach(async () => {
     sandbox.restore();
   });
 
-  experiment('.options', () => {
-    test('has teamSize set to 50', async () => {
-      expect(importLicence.options.teamSize).to.equal(50);
-    });
-  });
-
   experiment('.createMessage', () => {
     test('formats a message for PG boss', async () => {
-      const job = importLicence.createMessage('test-licence-number');
+      const job = populatePendingImport.createMessage();
       expect(job).to.equal({
-        data: { licenceNumber: 'test-licence-number' },
-        name: 'import.licence',
-        options: { singletonKey: 'test-licence-number' }
+        name: 'import.populate-pending-import',
+        options: {
+          expireIn: '1 hours',
+          singletonKey: 'import.populate-pending-import'
+        }
       });
     });
   });
 
   experiment('.handler', () => {
-    experiment('when the licence import was successful', () => {
+    let result;
+
+    experiment('when the job is successful', () => {
       const job = {
-        name: 'import.licence',
-        data: {
-          licenceNumber: 'test-licence-number'
-        }
+        name: 'import.populate-pending-import'
       };
 
       beforeEach(async () => {
-        await importLicence.handler(job);
+        result = await populatePendingImport.handler(job);
       });
 
       test('a message is logged', async () => {
-        const [message, params] = logger.info.lastCall.args;
-        expect(message).to.equal('Handling job: import.licence');
-        expect(params).to.equal({
-          licenceNumber: 'test-licence-number'
-        });
+        const [message] = logger.info.lastCall.args;
+        expect(message).to.equal('Handling job: import.populate-pending-import');
       });
 
       test('asserts that the import tables exist', async () => {
         expect(assertImportTableExists.assertImportTableExists.called).to.be.true();
       });
 
-      test('loads the requested licence', async () => {
-        expect(licenceLoader.load.calledWith('test-licence-number')).to.be.true();
+      test('clears the import table', async () => {
+        expect(importLog.clearImportLog.called).to.be.true();
+      });
+
+      test('creates a new import log', async () => {
+        expect(importLog.createImportLog.called).to.be.true();
+      });
+
+      test('resolves with an array of licence numbers', async () => {
+        expect(result).to.equal({
+          licenceNumbers: ['licence_1', 'licence_2']
+        });
       });
     });
 
-    experiment('when the licence import fails', () => {
+    experiment('when the job fails', () => {
       const err = new Error('Oops!');
 
       const job = {
-        name: 'import.licence',
-        data: {
-          licenceNumber: 'test-licence-number'
-        }
+        name: 'import.populate-pending-import'
       };
 
       beforeEach(async () => {
@@ -84,15 +87,15 @@ experiment('modules/import/jobs/import-licence', () => {
       });
 
       test('logs an error message', async () => {
-        const func = () => importLicence.handler(job);
+        const func = () => populatePendingImport.handler(job);
         await expect(func()).to.reject();
         expect(logger.error.calledWith(
-          'Error handling job import.licence', err, { licenceNumber: 'test-licence-number' }
+          'Error handling job import.populate-pending-import', err
         )).to.be.true();
       });
 
       test('rethrows the error', async () => {
-        const func = () => importLicence.handler(job);
+        const func = () => populatePendingImport.handler(job);
         const err = await expect(func()).to.reject();
         expect(err.message).to.equal('Oops!');
       });

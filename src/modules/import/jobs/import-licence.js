@@ -34,9 +34,6 @@ const handler = async job => {
 
     const { licenceNumber } = job.data;
 
-    // Mark as importing the licence
-    await importLog.setImportStatus(licenceNumber, 'Importing', importLog.PENDING_JOB_STATUS.processing);
-
     // Import the licence
     await licenceLoader.load(licenceNumber);
   } catch (err) {

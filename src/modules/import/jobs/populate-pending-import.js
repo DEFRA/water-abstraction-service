@@ -1,8 +1,8 @@
 'use strict';
 
-const { createImportLog, clearImportLog } = require('../lib/import-log.js');
+const importLog = require('../lib/import-log.js');
 const logger = require('./lib/logger');
-const { assertImportTableExists } = require('../lib/assert-import-tables-exist');
+const assertImportTableExists = require('../lib/assert-import-tables-exist');
 
 const JOB_NAME = 'import.populate-pending-import';
 
@@ -25,10 +25,10 @@ const handler = async job => {
   logger.logHandlingJob(job);
 
   try {
-    await assertImportTableExists();
+    await assertImportTableExists.assertImportTableExists();
 
-    await clearImportLog();
-    const pendingImports = await createImportLog();
+    await importLog.clearImportLog();
+    const pendingImports = await importLog.createImportLog();
     return {
       licenceNumbers: mapLicenceNumbers(pendingImports)
     };
