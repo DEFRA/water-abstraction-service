@@ -2,7 +2,7 @@
 
 const importLog = require('../lib/import-log.js');
 const logger = require('./lib/logger');
-const assertImportTableExists = require('../lib/assert-import-tables-exist');
+const assertImportTablesExist = require('../lib/assert-import-tables-exist');
 
 const JOB_NAME = 'import.populate-pending-import';
 
@@ -25,7 +25,7 @@ const handler = async job => {
   logger.logHandlingJob(job);
 
   try {
-    await assertImportTableExists.assertImportTableExists();
+    await assertImportTablesExist.assertImportTablesExist();
 
     await importLog.clearImportLog();
     const pendingImports = await importLog.createImportLog();

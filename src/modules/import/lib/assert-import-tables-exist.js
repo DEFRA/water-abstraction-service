@@ -1,11 +1,13 @@
+'use strict';
+
 const { NALDImportTablesError } = require('./errors');
-const { importTableExists } = require('./nald-queries');
+const naldQueries = require('./nald-queries');
 
 const assertImportTablesExist = async () => {
-  const exists = await importTableExists();
+  const exists = await naldQueries.importTableExists();
   if (!exists) {
     throw new NALDImportTablesError();
   }
 };
 
-exports.assertImportTableExists = assertImportTablesExist;
+exports.assertImportTablesExist = assertImportTablesExist;

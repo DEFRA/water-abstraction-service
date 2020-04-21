@@ -2,7 +2,7 @@
 
 const licenceLoader = require('../load');
 const logger = require('./lib/logger');
-const assertImportTableExists = require('../lib/assert-import-tables-exist');
+const assertImportTablesExist = require('../lib/assert-import-tables-exist');
 
 const JOB_NAME = 'import.licence';
 
@@ -30,7 +30,7 @@ const handler = async job => {
   logger.logHandlingJob(job);
 
   try {
-    await assertImportTableExists.assertImportTableExists();
+    await assertImportTablesExist.assertImportTablesExist();
 
     const { licenceNumber } = job.data;
 

@@ -5,14 +5,14 @@ const sandbox = require('sinon').createSandbox();
 const { logger } = require('../../../../src/logger');
 const importLog = require('../../../../src/modules/import/lib/import-log.js');
 const populatePendingImport = require('../../../../src/modules/import/jobs/populate-pending-import');
-const assertImportTableExists = require('../../../../src/modules/import/lib/assert-import-tables-exist');
+const assertImportTablesExist = require('../../../../src/modules/import/lib/assert-import-tables-exist');
 
 experiment('modules/import/jobs/populate-pending-import', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
     sandbox.stub(logger, 'error');
 
-    sandbox.stub(assertImportTableExists, 'assertImportTableExists');
+    sandbox.stub(assertImportTablesExist, 'assertImportTablesExist');
 
     sandbox.stub(importLog, 'clearImportLog');
     sandbox.stub(importLog, 'createImportLog').resolves([{
@@ -57,7 +57,7 @@ experiment('modules/import/jobs/populate-pending-import', () => {
       });
 
       test('asserts that the import tables exist', async () => {
-        expect(assertImportTableExists.assertImportTableExists.called).to.be.true();
+        expect(assertImportTablesExist.assertImportTablesExist.called).to.be.true();
       });
 
       test('clears the import table', async () => {
@@ -83,7 +83,7 @@ experiment('modules/import/jobs/populate-pending-import', () => {
       };
 
       beforeEach(async () => {
-        assertImportTableExists.assertImportTableExists.throws(err);
+        assertImportTablesExist.assertImportTablesExist.throws(err);
       });
 
       test('logs an error message', async () => {

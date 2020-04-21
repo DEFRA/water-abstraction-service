@@ -17,7 +17,7 @@ class MetaDataError extends Error {
 class NALDImportTablesError extends DBError {
   constructor (message) {
     super(message);
-    this.name = 'MetaDataError';
+    this.name = 'NALDImportTablesError';
   }
 }
 
