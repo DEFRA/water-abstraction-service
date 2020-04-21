@@ -17,8 +17,12 @@ experiment('modules/import/jobs/import-licence-complete', () => {
   });
 
   experiment('.options', () => {
-    test('has teamSize set to 50', async () => {
-      expect(importLicenceComplete.options.teamSize).to.equal(50);
+    test('has teamSize set to 100', async () => {
+      expect(importLicenceComplete.options.teamSize).to.equal(100);
+    });
+
+    test('has teamConcurrency set to 1', async () => {
+      expect(importLicenceComplete.options.teamConcurrency).to.equal(1);
     });
   });
 

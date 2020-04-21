@@ -23,8 +23,12 @@ experiment('modules/import/jobs/import-licence', () => {
   });
 
   experiment('.options', () => {
-    test('has teamSize set to 50', async () => {
-      expect(importLicence.options.teamSize).to.equal(50);
+    test('has teamSize set to 100', async () => {
+      expect(importLicence.options.teamSize).to.equal(100);
+    });
+
+    test('has teamConcurrency set to 1', async () => {
+      expect(importLicence.options.teamConcurrency).to.equal(1);
     });
   });
 
