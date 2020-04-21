@@ -6,10 +6,14 @@ const populatePendingImportJob = require('./populate-pending-import');
 const importLicenceJob = require('./import-licence');
 
 const s3DownloadComplete = async (job, messageQueue) => {
+  if (job.failed) {
+    return logger.logFailedJob(job);
+  }
+
   logger.logHandlingOnCompleteJob(job);
 
   try {
-    // Delete existing import queues
+    // Delete existing PG boss import queues
     await Promise.all([
       messageQueue.deleteQueue(importLicenceJob.jobName),
       messageQueue.deleteQueue(populatePendingImportJob.jobName)

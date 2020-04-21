@@ -8,6 +8,10 @@ const options = {
 };
 
 const importLicenceComplete = async job => {
+  if (job.failed) {
+    logger.logFailedJob(job);
+  }
+
   logger.logHandlingOnCompleteJob(job);
 
   const { licenceNumber } = job.data.request.data;

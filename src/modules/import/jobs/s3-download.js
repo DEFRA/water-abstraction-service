@@ -1,7 +1,6 @@
 'use strict';
 
-const { clearImportLog } = require('../lib/import-log');
-const { downloadAndExtract } = require('../extract');
+const extract = require('../extract');
 const logger = require('./lib/logger');
 
 const JOB_NAME = 'import.s3-download';
@@ -23,8 +22,7 @@ const handler = async job => {
   logger.logHandlingJob(job);
 
   try {
-    await clearImportLog();
-    await downloadAndExtract();
+    await extract.downloadAndExtract();
   } catch (err) {
     logger.logJobError(job, err);
     throw err;

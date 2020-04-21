@@ -4,11 +4,11 @@ const logger = require('./lib/logger');
 const importLicenceJob = require('./import-licence');
 
 const importLicenceComplete = async (job, messageQueue) => {
-  logger.logHandlingOnCompleteJob(job);
-
   if (job.failed) {
-    return;
+    return logger.logFailedJob(job);
   }
+
+  logger.logHandlingOnCompleteJob(job);
 
   try {
     const { licenceNumbers } = job.data.response;

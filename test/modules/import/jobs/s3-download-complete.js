@@ -4,21 +4,18 @@ const sandbox = require('sinon').createSandbox();
 
 const { logger } = require('../../../../src/logger');
 const importLog = require('../../../../src/modules/import/lib/import-log.js');
-const populatePendingImportComplete = require('../../../../src/modules/import/jobs/populate-pending-import-complete');
+const s3DownloadComplete = require('../../../../src/modules/import/jobs/s3-download-complete');
 
 const createJob = failed => ({
   failed,
   data: {
-    response: {
-      licenceNumbers: ['licence-1', 'licence-2']
-    },
     request: {
-      name: 'import.populate-pending-import'
+      name: 'import.s3-download'
     }
   }
 });
 
-experiment('modules/import/jobs/populate-pending-import-complete', () => {
+experiment('modules/import/jobs/s3-download-import-complete', () => {
   let messageQueue;
 
   beforeEach(async () => {
@@ -27,7 +24,8 @@ experiment('modules/import/jobs/populate-pending-import-complete', () => {
 
     sandbox.stub(importLog, 'setImportStatus');
     messageQueue = {
-      publish: sandbox.stub()
+      publish: sandbox.stub(),
+      deleteQueue: sandbox.stub()
     };
   });
 
@@ -40,22 +38,25 @@ experiment('modules/import/jobs/populate-pending-import-complete', () => {
       const job = createJob(false);
 
       beforeEach(async () => {
-        await populatePendingImportComplete(job, messageQueue);
+        await s3DownloadComplete(job, messageQueue);
       });
 
       test('a message is logged', async () => {
         const [message] = logger.info.lastCall.args;
-        expect(message).to.equal('Handling onComplete job: import.populate-pending-import');
+        expect(message).to.equal('Handling onComplete job: import.s3-download');
       });
 
-      test('a job is published to import the first licence', async () => {
-        const [job] = messageQueue.publish.firstCall.args;
-        expect(job.data.licenceNumber).to.equal('licence-1');
+      test('existing import.licence job queue is deleted', async () => {
+        expect(messageQueue.deleteQueue.calledWith('import.licence')).to.be.true();
       });
 
-      test('a job is published to import the second licence', async () => {
+      test('existing import.populate-pending-import job queue is deleted', async () => {
+        expect(messageQueue.deleteQueue.calledWith('import.populate-pending-import')).to.be.true();
+      });
+
+      test('a new job is published to populate the pending import table', async () => {
         const [job] = messageQueue.publish.lastCall.args;
-        expect(job.data.licenceNumber).to.equal('licence-2');
+        expect(job.name).to.equal('import.populate-pending-import');
       });
     });
 
@@ -63,12 +64,12 @@ experiment('modules/import/jobs/populate-pending-import-complete', () => {
       const job = createJob(true);
 
       beforeEach(async () => {
-        await populatePendingImportComplete(job, messageQueue);
+        await s3DownloadComplete(job, messageQueue);
       });
 
       test('a message is logged', async () => {
         const [message] = logger.error.lastCall.args;
-        expect(message).to.equal('Job: import.populate-pending-import failed, aborting');
+        expect(message).to.equal('Job: import.s3-download failed, aborting');
       });
 
       test('no further jobs are published', async () => {
@@ -86,11 +87,11 @@ experiment('modules/import/jobs/populate-pending-import-complete', () => {
       });
 
       test('an error message is logged and rethrown', async () => {
-        const func = () => populatePendingImportComplete(job, messageQueue);
+        const func = () => s3DownloadComplete(job, messageQueue);
         await expect(func()).to.reject();
 
         const [message, error] = logger.error.lastCall.args;
-        expect(message).to.equal('Error handling onComplete job: import.populate-pending-import');
+        expect(message).to.equal('Error handling onComplete job: import.s3-download');
         expect(error).to.equal(err);
       });
     });
