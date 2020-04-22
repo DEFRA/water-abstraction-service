@@ -231,5 +231,21 @@ experiment('connectors/returns', () => {
       const [filter] = returns.lines.findAll.lastCall.args;
       expect(filter).to.equal({ version_id: versions[0].version_id });
     });
+
+    experiment('if version is not found', () => {
+      let result;
+      beforeEach(async () => {
+        returns.versions.findAll.resolves([null]);
+        result = await returns.getLinesForReturn({ return_id: 'test-return-id' });
+      });
+
+      test('returns null', () => {
+        expect(result).to.be.null();
+      });
+
+      test('does not call lines client', () => {
+        expect(returns.lines.findAll.called).to.false();
+      });
+    });
   });
 });

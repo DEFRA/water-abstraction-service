@@ -168,6 +168,8 @@ experiment('modules/billing/services/transactions-service', () => {
     let batch, transaction, transactionId, user, result;
 
     beforeEach(async () => {
+      repos.billingTransactions.update.resolves({ attributes: transactionDBRow });
+
       const options = {
         id: transactionId,
         status: Transaction.statuses.candidate,

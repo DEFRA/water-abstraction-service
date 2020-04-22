@@ -1,6 +1,6 @@
 'use strict';
 
-const { find, flatMap, partialRight, isArray } = require('lodash');
+const { find, flatMap, partialRight, isArray, isEmpty } = require('lodash');
 const repos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
@@ -73,7 +73,7 @@ const mapInvoice = (invoiceData, billRun, invoiceAccounts = []) => {
   // Create invoice service model
   const invoice = mappers.invoice.dbToModel(invoiceData);
 
-  if (billRun && invoiceData.invoiceAccountNumber) {
+  if (billRun && invoiceData.invoiceAccountNumber && !isEmpty(billRun.customers)) {
     // Map transaction values from CM to Transaction models
     const map = indexChargeModuleTransactions(billRun, invoiceData.invoiceAccountNumber);
     getInvoiceTransactions(invoice).forEach(transaction => {

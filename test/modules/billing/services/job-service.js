@@ -79,4 +79,22 @@ experiment('modules/billing/services/jobService', () => {
       expect(status).to.equal(BATCH_STATUS.error);
     });
   });
+
+  experiment('.setReviewJob', () => {
+    beforeEach(async () => {
+      await jobService.setReviewJob('test-event-id', 'test-batch-id');
+    });
+
+    test('updates the event status', async () => {
+      const [eventId, status] = eventService.updateStatus.lastCall.args;
+      expect(eventId).to.equal('test-event-id');
+      expect(status).to.equal(jobStatus.review);
+    });
+
+    test('updates the batch status', async () => {
+      const [batchId, status] = batchService.setStatus.lastCall.args;
+      expect(batchId).to.equal('test-batch-id');
+      expect(status).to.equal(BATCH_STATUS.review);
+    });
+  });
 });

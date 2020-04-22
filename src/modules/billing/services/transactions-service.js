@@ -112,9 +112,13 @@ const updateTransactionVolume = async (batch, transaction, volume, user) => {
     twoPartTariffError: false,
     twoPartTariffReview: { id: user.id, email: user.email }
   };
+  const { attributes: data } = await newRepos.billingTransactions.update(transaction.id, changes);
 
-  const data = await newRepos.billingTransactions.update(transaction.id, changes);
-  return mappers.transaction.dbToModel(data);
+  return transaction.fromHash({
+    volume: data.volume,
+    twoPartTariffError: data.twoPartTariffError,
+    twoPartTariffReview: mappers.user.mapToModel(data.twoPartTariffReview)
+  });
 };
 
 exports.saveTransactionToDB = saveTransactionToDB;

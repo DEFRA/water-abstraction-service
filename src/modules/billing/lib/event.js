@@ -8,5 +8,6 @@ exports.jobStatus = {
   complete: 'complete',
   processing: 'processing',
   error: 'error',
-  deleted: 'deleted'
+  deleted: 'deleted',
+  review: 'review-ready'
 };

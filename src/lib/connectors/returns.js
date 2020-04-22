@@ -126,6 +126,7 @@ const getVersion = async ret => {
 
 const getLinesForReturn = async ret => {
   const version = await getVersion(ret);
+  if (!version) return null;
   const linesFilter = { version_id: version.version_id };
   return linesClient.findAll(linesFilter);
 };

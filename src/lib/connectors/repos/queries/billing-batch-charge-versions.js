@@ -64,7 +64,7 @@ exports.createTwoPartTariff = `
             b.billing_batch_id=y.billing_batch_id
             and cv.charge_version_id=y.charge_version_id
           where b.batch_type='two_part_tariff'
-            and b.isSummer=:isSummer
+            and b.is_summer=:isSummer
             and y.financial_year_ending=:toFinancialYearEnding
         )
       returning *;`;
