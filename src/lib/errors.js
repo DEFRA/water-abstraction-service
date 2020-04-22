@@ -19,5 +19,16 @@ class StateError extends Error {
   }
 }
 
+/**
+ * There is a database problem
+ */
+class DBError extends Error {
+  constructor (message) {
+    super(message);
+    this.name = 'DBError';
+  }
+}
+
 exports.NotFoundError = NotFoundError;
 exports.StateError = StateError;
+exports.DBError = DBError;

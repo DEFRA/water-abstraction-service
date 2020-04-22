@@ -19,7 +19,6 @@ const messageQueue = require('./src/lib/message-queue');
 const routes = require('./src/routes/water.js');
 const notify = require('./src/modules/notify');
 const returnsNotifications = require('./src/modules/returns-notifications');
-const importer = require('./src/modules/import');
 const batchNotifications = require('./src/modules/batch-notifications/lib/jobs/init-batch-notifications');
 const db = require('./src/lib/connectors/db');
 
@@ -33,19 +32,17 @@ const goodWinstonStream = new GoodWinston({ winston: logger });
 // Define server
 const server = Hapi.server(config.server);
 
-const registerServerPlugins = async (server) => {
-  // Message queue plugin
-  await server.register({
-    plugin: require('./src/lib/message-queue').plugin
-  });
+const plugins = [
+  require('./src/lib/message-queue').plugin,
+  require('./src/modules/billing/register-subscribers'),
+  require('./src/modules/returns/register-subscribers'),
+  require('./src/modules/import/register-subscribers'),
+  require('./src/plugins/internal-calling-user')
+];
 
-  await server.register([{
-    plugin: require('./src/modules/billing/register-subscribers')
-  }, {
-    plugin: require('./src/modules/returns/register-subscribers')
-  }, {
-    plugin: require('./src/plugins/internal-calling-user')
-  }]);
+const registerServerPlugins = async (server) => {
+  // Service plugins
+  await server.register(plugins);
 
   // Third-party plugins
   await server.register({
@@ -78,7 +75,6 @@ const configureServerAuthStrategy = (server) => {
 
 const configureMessageQueue = async (server) => {
   notify(messageQueue).registerSubscribers();
-  await importer(messageQueue).registerSubscribers();
   await returnsNotifications(messageQueue).registerSubscribers();
   await batchNotifications.registerSubscribers(messageQueue);
   server.log('info', 'Message queue started');

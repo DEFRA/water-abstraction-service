@@ -5,8 +5,6 @@ const uuidV4 = require('uuid/v4');
 const { buildCRMPacket } = require('./transform-crm');
 const { buildReturnsPacket } = require('./transform-returns');
 const { getLicenceJson, buildPermitRepoPacket } = require('./transform-permit');
-const { setImportStatus } = require('./lib/import-log.js');
-const { importTableExists } = require('./lib/nald-queries');
 const returnsConnector = require('../../lib/connectors/returns');
 const { persistReturns } = require('./lib/persist-returns');
 
@@ -48,56 +46,21 @@ const loadReturns = async (licenceNumber) => {
   await returnsConnector.voidReturns(licenceNumber, returnIds);
 };
 
-const validateTableExists = async licenceNumber => {
-  if (!await importTableExists()) {
-    logger.info(`Import: skip ${licenceNumber} - import table does not exist`);
-    return false;
-  }
-  return true;
-};
-
-const handleLoadError = async (error, licenceNumber) => {
-  logger.error('Import failure', error, { licenceNumber });
-  await setImportStatus(licenceNumber, error.toString());
-};
-
-const logLoadStart = async licenceNumber => {
-  logger.info(`Import: permit ${licenceNumber}`);
-  await setImportStatus(licenceNumber, 'Importing');
-};
-
-const logLoadEnd = async licenceNumber => {
-  logger.info(`Import: complete for ${licenceNumber}`);
-  await setImportStatus(licenceNumber, 'OK');
-};
-
 /**
  * Imports the whole licence
  * @param {String} licenceNumber
  * @return {Promise} resolves when complete
  */
 const load = async (licenceNumber) => {
-  try {
-    if (!await validateTableExists()) {
-      return;
-    }
+  const licenceData = await getLicenceJson(licenceNumber);
 
-    await logLoadStart(licenceNumber);
-
-    const licenceData = await getLicenceJson(licenceNumber);
-
-    if (licenceData.data.versions.length > 0) {
-      await Promise.all([
-        loadPermitAndDocumentHeader(licenceNumber, licenceData),
-        loadReturns(licenceNumber)
-      ]);
-    } else {
-      logger.info(`No versions found for ${licenceNumber}`);
-    }
-
-    await logLoadEnd(licenceNumber);
-  } catch (error) {
-    await handleLoadError(error, licenceNumber);
+  if (licenceData.data.versions.length > 0) {
+    await Promise.all([
+      loadPermitAndDocumentHeader(licenceNumber, licenceData),
+      loadReturns(licenceNumber)
+    ]);
+  } else {
+    logger.info(`No versions found for ${licenceNumber}`);
   }
 };
 

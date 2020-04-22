@@ -3,6 +3,7 @@
  * @see {@link https://github.com/timgit/pg-boss/blob/master/docs/usage.md#start}
  */
 const PgBoss = require('pg-boss');
+
 const Joi = require('@hapi/joi');
 const config = require('../../config.js');
 const { logger } = require('../logger');
@@ -30,8 +31,19 @@ const jobContainerSchema = Joi.object({
     options: Joi.object().optional(),
     handler: Joi.func().required()
   }),
-  onCompleteHandler: Joi.func().optional()
+  onCompleteHandler: Joi.alternatives(
+    Joi.func(),
+    Joi.object({
+      handler: Joi.func(),
+      options: Joi.object().optional()
+    })
+  ).optional()
 });
+
+const getOnCompleteHandler = jobContainer => {
+  const { onCompleteHandler } = jobContainer;
+  return onCompleteHandler.handler || onCompleteHandler;
+};
 
 /**
  * Creates a subscription using a standard pattern
@@ -50,9 +62,13 @@ const createSubscription = async (messageQueue, jobContainer) => {
   );
 
   if (onCompleteHandler) {
+    const options = onCompleteHandler.options || {};
+    const handler = getOnCompleteHandler(jobContainer);
+
     await messageQueue.onComplete(
       job.jobName,
-      job => onCompleteHandler(job, messageQueue)
+      options,
+      job => handler(job, messageQueue)
     );
   }
 };

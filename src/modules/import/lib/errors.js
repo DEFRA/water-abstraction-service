@@ -1,3 +1,5 @@
+const { DBError } = require('../../../lib/errors');
+
 class LicenceNotFoundError extends Error {
   constructor (message) {
     super(message);
@@ -12,7 +14,15 @@ class MetaDataError extends Error {
   }
 }
 
+class NALDImportTablesError extends DBError {
+  constructor (message) {
+    super(message);
+    this.name = 'NALDImportTablesError';
+  }
+}
+
 module.exports = {
   LicenceNotFoundError,
-  MetaDataError
+  MetaDataError,
+  NALDImportTablesError
 };
