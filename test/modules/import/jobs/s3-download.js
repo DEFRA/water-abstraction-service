@@ -3,15 +3,42 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
 const { logger } = require('../../../../src/logger');
-const extract = require('../../../../src/modules/import/services/extract-service.js');
+const extractService = require('../../../../src/modules/import/services/extract-service.js');
+const applicationStateService = require('../../../../src/modules/import/services/application-state-service.js');
+const s3Service = require('../../../../src/modules/import/services/s3-service.js');
+
 const s3Download = require('../../../../src/modules/import/jobs/s3-download');
+
+const testDownloadOccurs = () => {
+  test('a message is logged', async () => {
+    const [message] = logger.info.lastCall.args;
+    expect(message).to.equal('Handling job: import.s3-download');
+  });
+
+  test('updates the application state with the new etag', async () => {
+    expect(applicationStateService.save.firstCall.args).to.equal(['test-etag']);
+  });
+
+  test('downloads and extracts from S3 bucket', async () => {
+    expect(extractService.downloadAndExtract.called).to.be.true();
+  });
+
+  test('updates the application state when file imported', async () => {
+    expect(applicationStateService.save.secondCall.args).to.equal(['test-etag', true]);
+  });
+};
 
 experiment('modules/import/jobs/s3-download', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
     sandbox.stub(logger, 'error');
 
-    sandbox.stub(extract, 'downloadAndExtract');
+    sandbox.stub(extractService, 'downloadAndExtract');
+
+    sandbox.stub(applicationStateService, 'get');
+    sandbox.stub(applicationStateService, 'save');
+
+    sandbox.stub(s3Service, 'getEtag').resolves('test-etag');
   });
 
   afterEach(async () => {
@@ -32,34 +59,100 @@ experiment('modules/import/jobs/s3-download', () => {
   });
 
   experiment('.handler', () => {
-    experiment('when the job is successful', () => {
-      const job = {
-        name: 'import.s3-download'
-      };
+    let result;
 
+    const job = {
+      name: 'import.s3-download'
+    };
+
+    experiment('when there is no import state stored', () => {
       beforeEach(async () => {
-        await s3Download.handler(job);
+        applicationStateService.get.resolves({});
+        result = await s3Download.handler(job);
       });
 
-      test('a message is logged', async () => {
-        const [message] = logger.info.lastCall.args;
-        expect(message).to.equal('Handling job: import.s3-download');
+      testDownloadOccurs();
+
+      test('the handler resolves with the expected values', async () => {
+        expect(result).to.equal({
+          etag: 'test-etag',
+          state: {},
+          isRequired: true
+        });
+      });
+    });
+
+    experiment('when the import state indicates download did not complete', () => {
+      beforeEach(async () => {
+        applicationStateService.get.resolves({
+          etag: 'test-etag',
+          isDownloaded: false
+        });
+        result = await s3Download.handler(job);
       });
 
-      test('downloads and extracts from S3 bucket', async () => {
-        expect(extract.downloadAndExtract.called).to.be.true();
+      testDownloadOccurs();
+
+      test('the handler resolves with the expected values', async () => {
+        expect(result).to.equal({
+          etag: 'test-etag',
+          state: { etag: 'test-etag', isDownloaded: false },
+          isRequired: true
+        });
+      });
+    });
+
+    experiment('when the import state indicates etag has changed', () => {
+      beforeEach(async () => {
+        applicationStateService.get.resolves({
+          etag: 'some-old-etag',
+          isDownloaded: true
+        });
+        result = await s3Download.handler(job);
+      });
+
+      testDownloadOccurs();
+
+      test('the handler resolves with the expected values', async () => {
+        expect(result).to.equal({
+          etag: 'test-etag',
+          state: { etag: 'some-old-etag', isDownloaded: true },
+          isRequired: true
+        });
+      });
+    });
+
+    experiment('when the import state indicates etag has not changed', () => {
+      beforeEach(async () => {
+        applicationStateService.get.resolves({
+          etag: 'test-etag',
+          isDownloaded: true
+        });
+        result = await s3Download.handler(job);
+      });
+
+      test('the application state is not updated', async () => {
+        expect(applicationStateService.save.called).to.be.false();
+      });
+
+      test('the file is not imported from S3', async () => {
+        expect(extractService.downloadAndExtract.called).to.be.false();
+      });
+
+      test('the handler resolves with the expected values', async () => {
+        expect(result).to.equal({
+          etag: 'test-etag',
+          state: { etag: 'test-etag', isDownloaded: true },
+          isRequired: false
+        });
       });
     });
 
     experiment('when the job fails', () => {
       const err = new Error('Oops!');
 
-      const job = {
-        name: 'import.s3-download'
-      };
-
       beforeEach(async () => {
-        extract.downloadAndExtract.throws(err);
+        s3Service.getEtag.throws(err);
       });
 
       test('logs an error message', async () => {
