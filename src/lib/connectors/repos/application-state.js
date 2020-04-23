@@ -3,18 +3,23 @@
 const { ApplicationState } = require('../bookshelf');
 const mapModel = model => model ? model.toJSON() : null;
 
-const create = (applicationStateId, data) =>
+const create = data =>
+  ApplicationState
+    .forge(data)
+    .save();
+
+const update = (applicationStateId, changes) =>
   ApplicationState
     .forge({ applicationStateId })
-    .save(data);
+    .save(changes);
 
-const findOne = async applicationStateId => {
+const findOneByKey = async key => {
   const model = await ApplicationState
-    .forge({ applicationStateId })
+    .forge({ key })
     .fetch();
-
   return mapModel(model);
 };
 
 exports.create = create;
-exports.findOne = findOne;
+exports.update = update;
+exports.findOneByKey = findOneByKey;

@@ -3,6 +3,7 @@
 require('dotenv').config();
 const testMode = parseInt(process.env.TEST_MODE) === 1;
 const isAcceptanceTestTarget = ['local', 'dev', 'development', 'test', 'preprod'].includes(process.env.NODE_ENV);
+const isProduction = ['production'].includes(process.env.NODE_ENV);
 const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0';
 
 module.exports = {
@@ -184,6 +185,8 @@ module.exports = {
   },
 
   isAcceptanceTestTarget,
+
+  isProduction,
 
   cognito: {
     username: process.env.COGNITO_USERNAME,

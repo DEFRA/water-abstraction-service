@@ -3,7 +3,7 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
 const { logger } = require('../../../../src/logger');
-const extract = require('../../../../src/modules/import/extract.js');
+const extract = require('../../../../src/modules/import/services/extract-service.js');
 const s3Download = require('../../../../src/modules/import/jobs/s3-download');
 
 experiment('modules/import/jobs/s3-download', () => {

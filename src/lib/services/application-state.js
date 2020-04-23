@@ -3,11 +3,11 @@ const repos = require('../connectors/repos');
 /**
  * Get application state data by key
  * @param {String} key
- * @return {Promise<Object|Null>}
+ * @return {Promise<Object>}
  */
 const get = async key => {
-  const data = await repos.applicationState.findOne(key);
-  return data.data || null;
+  const data = await repos.applicationState.findOneByKey(key);
+  return data ? data.data : {};
 };
 
 /**
@@ -16,8 +16,14 @@ const get = async key => {
  * @param {Object} data
  * @return {Promise}
  */
-const save = (key, data) =>
-  repos.applicationState.create(key, { data });
+const save = async (key, data) => {
+  const existing = await repos.applicationState.findOneByKey(key);
+
+  if (existing) {
+    return repos.applicationState.update(existing.applicationStateId, { data });
+  }
+  return repos.applicationState.create({ key, data });
+};
 
 exports.get = get;
 exports.save = save;

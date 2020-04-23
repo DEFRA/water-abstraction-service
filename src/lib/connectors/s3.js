@@ -20,13 +20,14 @@ const getS3Options = () => {
 
 const s3 = new aws.S3(getS3Options());
 
-const upload = async (filename, buffer) => {
-  const options = {
-    Bucket: bucket,
-    Key: filename,
-    Body: buffer
-  };
+const getOptions = (key, options = {}) => ({
+  Bucket: bucket,
+  Key: key,
+  ...options
+});
 
+const upload = async (filename, buffer) => {
+  const options = getOptions(filename, { Body: buffer });
   return s3.upload(options).promise();
 };
 
@@ -34,7 +35,7 @@ const upload = async (filename, buffer) => {
  * Wraps the call to getObject from the sdk returning a Promise.
  */
 const getObject = key => {
-  const options = { Bucket: bucket, Key: key };
+  const options = getOptions(key);
   return s3.getObject(options).promise();
 };
 
@@ -46,7 +47,7 @@ const getObject = key => {
  */
 const download = async (key, destination) => {
   return new Promise((resolve, reject) => {
-    const options = { Bucket: bucket, Key: key };
+    const options = getOptions(key);
     const file = fs.createWriteStream(destination);
 
     file.on('close', () => resolve());
@@ -58,7 +59,13 @@ const download = async (key, destination) => {
   });
 };
 
+const getHead = key => {
+  const options = getOptions(key);
+  return s3.headObject(options).promise();
+};
+
 exports.getS3Options = getS3Options;
 exports.upload = upload;
 exports.getObject = getObject;
 exports.download = download;
+exports.getHead = getHead;

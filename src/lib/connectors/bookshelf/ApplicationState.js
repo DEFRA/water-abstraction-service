@@ -9,5 +9,7 @@ module.exports = bookshelf.model('ApplicationState', {
 
   hasTimestamps: ['date_created', 'date_updated'],
 
-  requireFetch: false
+  requireFetch: false,
+
+  jsonColumns: ['data']
 });
