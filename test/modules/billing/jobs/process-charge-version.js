@@ -15,6 +15,7 @@ const chargeVersionYearService = require('../../../../src/modules/billing/servic
 
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const service = require('../../../../src/modules/billing/service');
+const twoPartTariffService = require('../../../../src/modules/billing/services/two-part-tariff-service');
 const { Batch } = require('../../../../src/lib/models');
 
 const eventId = '00000000-0000-0000-0000-000000000000';
@@ -49,7 +50,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
     beforeEach(async () => {
       chargeVersionYear = { billing_batch_charge_version_year_id: 1 };
-      batch = { billing_batch_id: 'test-batch-id' };
+      batch = { id: 'test-batch-id' };
       message = processChargeVersion.createMessage('test-event-id', chargeVersionYear, batch);
     });
 
@@ -103,6 +104,20 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
     test('resolves including the batch details', async () => {
       expect(result.batch.billing_batch_id).to.equal('test-batch-id');
+    });
+
+    experiment('if batch is two part tariff', async () => {
+      beforeEach(async () => {
+        sandbox.stub(twoPartTariffService, 'processBatch');
+
+        batch.type = Batch.BATCH_TYPE.twoPartTariff;
+        service.chargeVersionYear.createBatchFromChargeVersionYear.resolves(batch);
+
+        await processChargeVersion.handler(job);
+      });
+      test('calls two part tariff service with batch', async () => {
+        expect(twoPartTariffService.processBatch.calledWith(batch)).to.be.true();
+      });
     });
 
     experiment('when there are no errors', () => {

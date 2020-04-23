@@ -9,7 +9,7 @@ const JOB_NAME = 'billing.prepare-transactions.*';
 
 const createMessage = (eventId, batch) => {
   return batchJob.createMessage(JOB_NAME, batch, { eventId }, {
-    singletonKey: JOB_NAME.replace('*', batch.billing_batch_id)
+    singletonKey: batch.id
   });
 };
 
@@ -17,7 +17,7 @@ const handlePrepareTransactions = async job => {
   batchJob.logHandling(job);
 
   try {
-    const batch = await batchService.getBatchById(job.data.batch.billing_batch_id);
+    const batch = await batchService.getBatchById(job.data.batch.id);
 
     if (batch.isSupplementary()) {
       logger.info(`Processing supplementary transactions ${job.name}`);

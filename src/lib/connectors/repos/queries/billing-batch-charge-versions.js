@@ -54,7 +54,7 @@ exports.createTwoPartTariff = `
         and (la.end_date is null or la.end_date > :fromDate)
         and case  
           when :season='summer' then ce.season in ('summer')
-          when :season='winter' then ce.season in ('winter', 'all year')
+          when :season='all year' then ce.season in ('winter', 'all year')
         end
         and cv.charge_version_id not in (
           select distinct cv.charge_version_id

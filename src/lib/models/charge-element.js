@@ -3,6 +3,7 @@
 const Model = require('./model');
 const AbstractionPeriod = require('./abstraction-period');
 const Purpose = require('./purpose');
+const DateRange = require('./date-range');
 const { CHARGE_SEASON } = require('./constants');
 
 const {
@@ -135,6 +136,27 @@ class ChargeElement extends Model {
 
   get purposeUse () {
     return this._purposeUse;
+  }
+
+  /**
+  * An instance of Date Range containing the time limited start
+  * and end dates, only exists if one of the dates exist
+  * @param {dateRange}
+  */
+  set timeLimitedPeriod (dateRange) {
+    assertIsInstanceOf(dateRange, DateRange);
+    this._timeLimitedPeriod = dateRange;
+  }
+
+  get timeLimitedPeriod () {
+    return this._timeLimitedPeriod;
+  }
+
+  toJSON () {
+    return {
+      ...super.toJSON(),
+      eiucSource: this.eiucSource
+    };
   }
 }
 

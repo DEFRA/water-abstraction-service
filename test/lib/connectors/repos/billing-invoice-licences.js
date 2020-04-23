@@ -13,12 +13,24 @@ const billingInvoiceLicences = require('../../../../src/lib/connectors/repos/bil
 const { bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-invoice-licences');
+const billingInvoiceLicence = require('../../../../src/lib/connectors/bookshelf/BillingInvoiceLicence');
 
 experiment('lib/connectors/repos/billing-invoice-licences', () => {
+  let bookshelfStub, model;
+
   beforeEach(async () => {
     sandbox.stub(bookshelf.knex, 'raw');
     sandbox.stub(raw, 'singleRow');
     sandbox.stub(raw, 'multiRow');
+
+    model = {
+      toJSON: sandbox.stub()
+    };
+    bookshelfStub = {
+      fetch: sandbox.stub().resolves(model),
+      destroy: sandbox.stub()
+    };
+    sandbox.stub(billingInvoiceLicence, 'forge').returns(bookshelfStub);
   });
 
   afterEach(async () => {
@@ -87,6 +99,90 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       const { args } = raw.multiRow.lastCall;
       expect(args[0]).to.equal(queries.findLicencesWithTransactionStatusesForBatch);
       expect(args[1]).to.equal({ batchId });
+    });
+  });
+
+  experiment('.findOneInvoiceLicenceWithTransactions', () => {
+    beforeEach(async () => {
+      model.toJSON.returns({ foo: 'bar' });
+      await billingInvoiceLicences.findOneInvoiceLicenceWithTransactions('00000000-0000-0000-0000-000000000000');
+    });
+
+    test('calls forge with correct argumements', async () => {
+      const { args } = billingInvoiceLicence.forge.lastCall;
+      expect(args[0]).to.equal({ billingInvoiceLicenceId: '00000000-0000-0000-0000-000000000000' });
+    });
+    test('calls forge().fetch with correct argumements', async () => {
+      const { args } = billingInvoiceLicence.forge().fetch.lastCall;
+      expect(args[0].withRelated[0]).to.equal('licence');
+      expect(args[0].withRelated[1]).to.equal('licence.region');
+      expect(args[0].withRelated[2]).to.equal('billingTransactions');
+      expect(args[0].withRelated[3]).to.equal('billingTransactions.chargeElement');
+      expect(args[0].withRelated[4]).to.equal('billingTransactions.chargeElement.purposeUse');
+    });
+  });
+
+  experiment('.findOne', async () => {
+    let result;
+    const billingInvoiceLicenceId = uuid();
+    experiment('when the model is not found', () => {
+      beforeEach(async () => {
+        bookshelfStub.fetch.resolves(null);
+        result = await billingInvoiceLicences.findOne(billingInvoiceLicenceId);
+      });
+
+      test('the model is forged with correct params', async () => {
+        expect(billingInvoiceLicence.forge.calledWith({
+          billingInvoiceLicenceId
+        })).to.be.true();
+      });
+
+      test('fetch is called on the model with related models', async () => {
+        expect(bookshelfStub.fetch.calledWith({
+          withRelated: [
+            'billingInvoice',
+            'billingInvoice.billingBatch',
+            'billingInvoice.billingBatch.region'
+          ]
+        })).to.be.true();
+      });
+
+      test('resolves with null', async () => {
+        expect(result).to.be.null();
+      });
+    });
+
+    experiment('when the model is found', () => {
+      beforeEach(async () => {
+        model.toJSON.returns({ billingInvoiceLicenceId });
+        result = await billingInvoiceLicences.findOne(billingInvoiceLicenceId);
+      });
+
+      test('model.toJSON() is called on the model', async () => {
+        expect(model.toJSON.called).to.be.true();
+      });
+
+      test('resolves with the result of the toJSON() call', async () => {
+        expect(result).to.equal({ billingInvoiceLicenceId });
+      });
+    });
+  });
+
+  experiment('.delete', async () => {
+    const billingInvoiceLicenceId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoiceLicences.delete(billingInvoiceLicenceId);
+    });
+
+    test('the model is forged with correct params', async () => {
+      expect(billingInvoiceLicence.forge.calledWith({
+        billingInvoiceLicenceId
+      })).to.be.true();
+    });
+
+    test('the model is destroyed', async () => {
+      expect(bookshelfStub.destroy.called).to.be.true();
     });
   });
 });

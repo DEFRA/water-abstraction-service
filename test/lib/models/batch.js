@@ -419,39 +419,54 @@ experiment('lib/models/batch', () => {
   });
 
   experiment('.externalId', () => {
+    test('can be set to guid', async () => {
+      const id = uuid();
+      const batch = new Batch();
+      batch.externalId = id;
+      expect(batch.externalId).to.equal(id);
+    });
+
+    test('cannot be set to a non-guid', async () => {
+      const batch = new Batch();
+      const func = () => { batch.externalId = 'not-a-proper-guid-here'; };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.billRunId', () => {
     test('can be set to a positive integer', async () => {
       const batch = new Batch();
-      batch.externalId = 123;
-      expect(batch.externalId).to.equal(123);
+      batch.billRunId = 123;
+      expect(batch.billRunId).to.equal(123);
     });
 
     test('cannot be set to zero', async () => {
       const batch = new Batch();
-      const func = () => { batch.externalId = 0; };
+      const func = () => { batch.billRunId = 0; };
       expect(func).to.throw();
     });
 
     test('cannot be set to a decimal', async () => {
       const batch = new Batch();
-      const func = () => { batch.externalId = 43.55; };
+      const func = () => { batch.billRunId = 43.55; };
       expect(func).to.throw();
     });
 
     test('cannot be set to a string', async () => {
       const batch = new Batch();
-      const func = () => { batch.externalId = 'hello'; };
+      const func = () => { batch.billRunId = 'hello'; };
       expect(func).to.throw();
     });
 
     test('cannot be set to a negative integer', async () => {
       const batch = new Batch();
-      const func = () => { batch.externalId = -45; };
+      const func = () => { batch.billRunId = -45; };
       expect(func).to.throw();
     });
 
     test('cannot be set to null', async () => {
       const batch = new Batch();
-      const func = () => { batch.externalId = null; };
+      const func = () => { batch.billRunId = null; };
       expect(func).to.throw();
     });
   });

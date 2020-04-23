@@ -2,14 +2,12 @@
 
 const Boom = require('@hapi/boom');
 
-const config = require('../../../config');
-const repos = require('../../lib/connectors/repository');
 const Event = require('../../lib/models/event');
 const Batch = require('../../lib/models/batch');
 const BATCH_STATUS = Batch.BATCH_STATUS;
 
 const { envelope } = require('../../lib/response');
-const populateBatchChargeVersionsJob = require('./jobs/populate-batch-charge-versions');
+const createBillRunJob = require('./jobs/create-bill-run');
 const refreshTotalsJob = require('./jobs/refresh-totals');
 const { jobStatus } = require('./lib/batch');
 const invoiceService = require('./services/invoice-service');
@@ -19,29 +17,18 @@ const eventService = require('../../lib/services/events');
 
 const mappers = require('./mappers');
 
+const { NotFoundError } = require('../../lib/errors');
+const { BatchStatusError } = require('./lib/errors');
+
 const createBatchEvent = (userEmail, batch) => {
   const batchEvent = new Event();
   batchEvent.type = 'billing-batch';
-  batchEvent.subtype = batch.batch_type;
+  batchEvent.subtype = batch.type;
   batchEvent.issuer = userEmail;
   batchEvent.metadata = { batch };
   batchEvent.status = jobStatus.start;
 
   return eventService.create(batchEvent);
-};
-
-const createBatch = (regionId, batchType, financialYearEnding, season) => {
-  const fromFinancialYearEnding = batchType === 'supplementary'
-    ? financialYearEnding - config.billing.supplementaryYears
-    : financialYearEnding;
-
-  return repos.billingBatches.createBatch(
-    regionId,
-    batchType,
-    fromFinancialYearEnding,
-    financialYearEnding,
-    season
-  );
 };
 
 /**
@@ -55,29 +42,30 @@ const createBatch = (regionId, batchType, financialYearEnding, season) => {
 const postCreateBatch = async (request, h) => {
   const { userEmail, regionId, batchType, financialYearEnding, season } = request.payload;
 
-  // create a new entry in the batch table
-  const batch = await createBatch(regionId, batchType, financialYearEnding, season);
+  try {
+    // create a new entry in the batch table
+    const batch = await batchService.create(regionId, batchType, financialYearEnding, season);
 
-  if (!batch) {
-    const data = {
-      message: `Batch already live for region ${regionId}`,
-      existingBatch: await batchService.getMostRecentLiveBatchByRegion(regionId)
-    };
-    return h.response(data).code(409);
+    // add these details to the event log
+    const batchEvent = await createBatchEvent(userEmail, batch);
+
+    // add a new job to the queue so that the batch can be created in the CM
+    const message = createBillRunJob.createMessage(batchEvent.id, batch);
+    await request.messageQueue.publish(message);
+
+    return h.response(envelope({
+      event: batchEvent,
+      url: `/water/1.0/event/${batchEvent.id}`
+    })).code(202);
+  } catch (err) {
+    if (err.existingBatch) {
+      return h.response({
+        message: err.message,
+        existingBatch: err.existingBatch
+      }).code(409);
+    }
+    throw err;
   }
-
-  // add these details to the event log
-  const batchEvent = await createBatchEvent(userEmail, batch);
-
-  // add a new job to the queue so that the batch can be filled
-  // with charge versions
-  const message = populateBatchChargeVersionsJob.createMessage(batchEvent.id, batch);
-  await request.messageQueue.publish(message);
-
-  return h.response(envelope({
-    event: batchEvent,
-    url: `/water/1.0/event/${batchEvent.id}`
-  })).code(202);
 };
 
 /**
@@ -97,21 +85,22 @@ const getBatches = async request => {
 };
 
 const getBatchInvoices = async request => {
-  const { batchId } = request.params;
-  const invoices = await invoiceService.getInvoicesForBatch(batchId);
+  const { batch } = request.pre;
+  const invoices = await invoiceService.getInvoicesForBatch(batch);
   return invoices.map(mappers.api.invoice.modelToBatchInvoices);
 };
 
 const getBatchInvoicesDetails = async request => {
-  const { batchId } = request.params;
-  const data = await invoiceService.getInvoicesTransactionsForBatch(batchId);
-  return data || Boom.notFound(`No invoices found in batch with id: ${batchId}`);
+  const { batch } = request.pre;
+  const data = await invoiceService.getInvoicesTransactionsForBatch(batch);
+  return data || Boom.notFound(`No invoices found in batch with id: ${batch.id}`);
 };
 
 const getBatchInvoiceDetail = async request => {
-  const { batchId, invoiceId } = request.params;
-  const invoice = await invoiceService.getInvoiceForBatch(batchId, invoiceId);
-  return invoice || Boom.notFound(`No invoice found with id: ${invoiceId} in batch with id: ${batchId}`);
+  const { invoiceId } = request.params;
+  const { batch } = request.pre;
+  const invoice = await invoiceService.getInvoiceForBatch(batch, invoiceId);
+  return invoice || Boom.notFound(`No invoice found with id: ${invoiceId} in batch with id: ${batch.id}`);
 };
 
 const deleteAccountFromBatch = async (request, h) => {
@@ -122,17 +111,18 @@ const deleteAccountFromBatch = async (request, h) => {
     return h.response(`Cannot delete account from batch when status is ${batch.status}`).code(422);
   }
 
-  const invoices = await invoiceService.getInvoicesForBatch(batch.id);
+  const invoices = await invoiceService.getInvoicesForBatch(batch);
   const invoicesForAccount = invoices.filter(invoice => invoice.invoiceAccount.id === accountId);
 
   if (invoicesForAccount.length === 0) {
     return Boom.notFound(`No invoices for account (${accountId}) in batch (${batch.id})`);
   }
 
+  const updatedBatch = await batchService.deleteAccountFromBatch(batch, accountId);
+
   // Refresh batch net total / counts
   await request.messageQueue.publish(refreshTotalsJob.createMessage(batch.id));
 
-  const updatedBatch = await batchService.deleteAccountFromBatch(batch, accountId);
   return updatedBatch;
 };
 
@@ -174,15 +164,48 @@ const getBatchLicences = async (request, h) => {
   return invoiceLicenceService.getLicencesWithTransactionStatusesForBatch(batch.id);
 };
 
+const getInvoiceLicenceWithTransactions = async (request, h) => {
+  const { invoiceLicenceId } = request.params;
+  const invoiceLicence = await invoiceLicenceService.getInvoiceLicenceWithTransactions(invoiceLicenceId);
+  return invoiceLicence || Boom.notFound(`Invoice licence ${invoiceLicenceId} not found`);
+};
+
+const mapErrorResponse = error => {
+  if (error instanceof NotFoundError) {
+    return Boom.notFound(error.message);
+  }
+  if (error instanceof BatchStatusError) {
+    return Boom.forbidden(error.message);
+  }
+  // Unexpected error
+  throw error;
+};
+
+/**
+ * Deletes an InvoiceLicence by ID
+ * @param {String} request.params.invoiceLicenceId
+ */
+const deleteInvoiceLicence = async (request, h) => {
+  const { invoiceLicenceId } = request.params;
+  try {
+    await invoiceLicenceService.delete(invoiceLicenceId);
+    return h.response().code(204);
+  } catch (error) {
+    return mapErrorResponse(error);
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
 exports.getBatchLicences = getBatchLicences;
-
+exports.getInvoiceLicenceWithTransactions = getInvoiceLicenceWithTransactions;
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
 exports.deleteBatch = deleteBatch;
 
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
+
+exports.deleteInvoiceLicence = deleteInvoiceLicence;

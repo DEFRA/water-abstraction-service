@@ -1,12 +1,12 @@
 'use strict';
 
-const { pick } = require('lodash');
 const hashers = require('../../lib/hash');
 
 const Model = require('./model');
 const Agreement = require('./agreement');
 const DateRange = require('./date-range');
 const ChargeElement = require('./charge-element');
+const User = require('./user');
 
 const validators = require('./validators');
 
@@ -17,6 +17,16 @@ const statuses = {
   error: 'error'
 };
 
+const twoPartTariffStatuses = {
+  ERROR_NO_RETURNS_SUBMITTED: 10,
+  ERROR_UNDER_QUERY: 20,
+  ERROR_RECEIVED: 30,
+  ERROR_SOME_RETURNS_DUE: 40,
+  ERROR_LATE_RETURNS: 50,
+  ERROR_OVER_ABSTRACTION: 60,
+  ERROR_NO_RETURNS_FOR_MATCHING: 70
+};
+
 class Transaction extends Model {
   constructor (id, value, isCredit = false) {
     super(id);
@@ -24,17 +34,6 @@ class Transaction extends Model {
     this.isCredit = isCredit;
     this._agreements = [];
     this.status = statuses.candidate;
-  }
-
-  /**
-   * Extracts a subset of the ChargeModuleTransaction object data and returns
-   * a Transaction model
-   * @param {ChargeModuleTransaction} chargeModuleTransaction The source data
-   */
-  static fromChargeModuleTransaction (chargeModuleTransaction) {
-    const transaction = new Transaction();
-    transaction.fromHash(pick(chargeModuleTransaction, ['value', 'isCredit']));
-    return transaction;
   }
 
   /**
@@ -196,8 +195,60 @@ class Transaction extends Model {
   }
 
   set volume (volume) {
-    validators.assertQuantity(volume);
+    validators.assertNullableQuantity(volume);
     this._volume = volume;
+  }
+
+  /**
+  * The authorised/billable/actual volume for billing
+  * @return {Number}
+  */
+  get calculatedVolume () {
+    return this._calculatedVolume;
+  }
+
+  set calculatedVolume (calculatedVolume) {
+    validators.assertNullableQuantity(calculatedVolume);
+    this._calculatedVolume = calculatedVolume;
+  }
+
+  /**
+  * The error code from two part tariff matching exercise, null if no error
+  * @return {Number}
+  */
+  get twoPartTariffStatus () {
+    return this._twoPartTariffStatus;
+  }
+
+  set twoPartTariffStatus (twoPartTariffStatus) {
+    validators.assertNullableEnum(twoPartTariffStatus, Object.values(twoPartTariffStatuses));
+    this._twoPartTariffStatus = twoPartTariffStatus;
+  }
+
+  /**
+  * Whether there is an error from two part tariff matching
+  * @return {Boolean}
+  */
+  get twoPartTariffError () {
+    return this._twoPartTariffError;
+  }
+
+  set twoPartTariffError (twoPartTariffError) {
+    validators.assertIsNullableBoolean(twoPartTariffError);
+    this._twoPartTariffError = twoPartTariffError;
+  }
+
+  /**
+  * The User who has reviewed the two part tariff error
+  * @return {User}
+  */
+  get twoPartTariffReview () {
+    return this._twoPartTariffReview;
+  }
+
+  set twoPartTariffReview (twoPartTariffReview) {
+    validators.assertIsNullableInstanceOf(twoPartTariffReview, User);
+    this._twoPartTariffReview = twoPartTariffReview;
   }
 
   /**
@@ -251,3 +302,4 @@ class Transaction extends Model {
 
 module.exports = Transaction;
 module.exports.statuses = statuses;
+module.exports.twoPartTariffStatuses = twoPartTariffStatuses;

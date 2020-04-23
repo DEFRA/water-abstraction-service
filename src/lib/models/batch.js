@@ -30,7 +30,8 @@ const BATCH_ERROR_CODE = {
   failedToPopulateChargeVersions: 10,
   failedToProcessChargeVersions: 20,
   failedToPrepareTransactions: 30,
-  failedToCreateCharge: 40
+  failedToCreateCharge: 40,
+  failedToCreateBillRun: 50
 };
 
 const Model = require('./model');
@@ -70,6 +71,14 @@ class Batch extends Model {
    */
   isSupplementary () {
     return this._type === BATCH_TYPE.supplementary;
+  }
+
+  /**
+   * Checks whether this is a two-part tariff batch
+   * @return {Boolean}
+   */
+  isTwoPartTariff () {
+    return this.type === BATCH_TYPE.twoPartTariff;
   }
 
   /**
@@ -217,10 +226,6 @@ class Batch extends Model {
     this._region = region;
   }
 
-  isTwoPartTariff () {
-    return this.type === BATCH_TYPE.twoPartTariff;
-  }
-
   /**
    * The charge module summary contains data on
    * invoice/credit count, invoice/credit totals, net total
@@ -244,7 +249,7 @@ class Batch extends Model {
   }
 
   set externalId (externalId) {
-    validators.assertPositiveInteger(externalId);
+    validators.assertId(externalId);
     this._externalId = externalId;
   }
 
@@ -286,6 +291,23 @@ class Batch extends Model {
 
   isSummer () {
     return this.season === CHARGE_SEASON.summer;
+  }
+
+  /**
+   * The bill run ID is an integer ID for the bill run sent to SSCL
+   * Only unique within a region
+   * @param {Number} integer
+   */
+  set billRunId (billRunId) {
+    validators.assertPositiveInteger(billRunId);
+    this._billRunId = billRunId;
+  }
+
+  /**
+   * @return {Number} integer
+   */
+  get billRunId () {
+    return this._billRunId;
   }
 }
 

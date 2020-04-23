@@ -60,7 +60,7 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
           response: {
             transactions: [],
             batch: {
-              billing_batch_id: 'test-batch-id'
+              id: 'test-batch-id'
             }
           },
           request: {
@@ -95,7 +95,7 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
               { billing_transaction_id: 'test-transaction-id-2' }
             ],
             batch: {
-              billing_batch_id: 'test-batch-id'
+              id: 'test-batch-id'
             }
           },
           request: {
@@ -120,14 +120,14 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
         data: {
           eventId: 'test-event-id',
           batch: {
-            billing_batch_id: 'test-batch-id'
+            id: 'test-batch-id'
           },
           transaction: {
             billing_transaction_id: 'test-transaction-id-1'
           }
         },
         options: {
-          singletonKey: 'billing.create-charge.test-transaction-id-1'
+          singletonKey: 'test-transaction-id-1'
         }
       });
 
@@ -136,14 +136,14 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
         data: {
           eventId: 'test-event-id',
           batch: {
-            billing_batch_id: 'test-batch-id'
+            id: 'test-batch-id'
           },
           transaction: {
             billing_transaction_id: 'test-transaction-id-2'
           }
         },
         options: {
-          singletonKey: 'billing.create-charge.test-transaction-id-2'
+          singletonKey: 'test-transaction-id-2'
         }
       });
     });

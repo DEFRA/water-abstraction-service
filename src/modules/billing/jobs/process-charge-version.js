@@ -3,6 +3,7 @@
 const service = require('../service');
 const chargeVersionYearService = require('../services/charge-version-year');
 const batchJob = require('./lib/batch-job');
+const twoPartTariffService = require('../../billing/services/two-part-tariff-service');
 
 const JOB_NAME = 'billing.process-charge-version.*';
 
@@ -20,7 +21,9 @@ const options = {
  * @param {Object} batch The batch object
  */
 const createMessage = (eventId, chargeVersionYear, batch) => {
-  return batchJob.createMessage(JOB_NAME, batch, { eventId, chargeVersionYear });
+  return batchJob.createMessage(JOB_NAME, batch, { eventId, chargeVersionYear }, {
+    singletonKey: chargeVersionYear.billing_batch_charge_version_year_id
+  });
 };
 
 const handleProcessChargeVersion = async job => {
@@ -31,7 +34,12 @@ const handleProcessChargeVersion = async job => {
   // Process charge version year
   try {
     // Create batch model
-    const batch = await service.chargeVersionYear.createBatchFromChargeVersionYear(chargeVersionYear);
+    let batch = await service.chargeVersionYear.createBatchFromChargeVersionYear(chargeVersionYear);
+
+    // If TPT, send batch to TPT processor - note batch only contains a single licence here
+    if (batch.isTwoPartTariff()) {
+      batch = await twoPartTariffService.processBatch(batch);
+    }
 
     // Persist data
     await service.chargeVersionYear.persistChargeVersionYearBatch(batch);

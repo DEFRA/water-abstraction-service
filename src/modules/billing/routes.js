@@ -65,7 +65,10 @@ const getBatchInvoices = {
       params: {
         batchId: Joi.string().uuid().required()
       }
-    }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
   }
 };
 
@@ -78,7 +81,10 @@ const getBatchInvoicesDetails = {
       params: {
         batchId: Joi.string().uuid().required()
       }
-    }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
   }
 };
 
@@ -92,7 +98,10 @@ const getBatchInvoiceDetail = {
         batchId: Joi.string().uuid().required(),
         invoiceId: Joi.string().uuid().required()
       }
-    }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
   }
 };
 
@@ -167,15 +176,43 @@ const getBatchLicences = {
   }
 };
 
+const getInvoiceLicence = {
+  method: 'GET',
+  path: '/water/1.0/billing/invoice-licences/{invoiceLicenceId}',
+  handler: controller.getInvoiceLicenceWithTransactions,
+  config: {
+    validate: {
+      params: {
+        invoiceLicenceId: Joi.string().uuid().required()
+      }
+    }
+  }
+};
+
+const deleteInvoiceLicence = {
+  method: 'DELETE',
+  path: '/water/1.0/billing/invoice-licences/{invoiceLicenceId}',
+  handler: controller.deleteInvoiceLicence,
+  config: {
+    validate: {
+      params: {
+        invoiceLicenceId: Joi.string().uuid().required()
+      }
+    }
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
 exports.getBatchLicences = getBatchLicences;
-
+exports.getInvoiceLicence = getInvoiceLicence;
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
 exports.deleteBatch = deleteBatch;
 
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
+
+exports.deleteInvoiceLicence = deleteInvoiceLicence;
