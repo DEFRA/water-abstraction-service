@@ -1,5 +1,5 @@
 const path = require('path');
-const { execCommand } = require('../../../lib/helpers.js');
+const helpers = require('../../../lib/helpers.js');
 const Slack = require('../../../lib/slack');
 const { logger } = require('../../../logger');
 
@@ -17,9 +17,9 @@ const FINAL_PATH = path.join(constants.LOCAL_TEMP_PATH, constants.CSV_DIRECTORY)
  * Prepares for import by removing files from tempory folder and creating directory
  */
 const prepare = async () => {
-  await execCommand(`rm -rf ${constants.LOCAL_TEMP_PATH}`);
-  await execCommand(`mkdir -p ${constants.LOCAL_TEMP_PATH}`);
-  await execCommand(`mkdir -p ${FINAL_PATH}`);
+  await helpers.execCommand(`rm -rf ${constants.LOCAL_TEMP_PATH}`);
+  await helpers.execCommand(`mkdir -p ${constants.LOCAL_TEMP_PATH}`);
+  await helpers.execCommand(`mkdir -p ${FINAL_PATH}`);
 };
 
 const logToConsoleAndSlack = message => {
@@ -34,11 +34,11 @@ const steps = [
   },
   {
     message: 'downloading from s3',
-    action: s3Service.download
+    action: () => s3Service.download()
   },
   {
     message: 'extracting files from zip',
-    action: zipService.extract
+    action: () => zipService.extract()
   },
   {
     message: 'create import_temp schema',
@@ -50,7 +50,7 @@ const steps = [
   },
   {
     message: 'swapping schema from import_temp to import',
-    action: () => schemaService.swapTemporarySchema
+    action: () => schemaService.swapTemporarySchema()
   },
   {
     message: 'cleaning up local files',
@@ -82,7 +82,7 @@ const copyTestFiles = async () => {
   await schemaService.dropAndCreateSchema(constants.SCHEMA_IMPORT);
 
   // move dummy data files
-  await execCommand(`cp ./test/dummy-csv/* ${FINAL_PATH}`);
+  await helpers.execCommand(`cp ./test/dummy-csv/* ${FINAL_PATH}`);
 
   // Import CSV
   return loadCsvService.importFiles(constants.SCHEMA_IMPORT);
