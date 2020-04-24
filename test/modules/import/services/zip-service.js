@@ -7,6 +7,7 @@ moment.locale('en-gb');
 
 const { logger } = require('../../../../src/logger');
 const helpers = require('../../../../src/lib/helpers');
+const config = require('../../../../config');
 
 const zipService = require('../../../../src/modules/import/services/zip-service');
 
@@ -16,7 +17,7 @@ experiment('modules/import/services/zip-service', () => {
     sandbox.stub(logger, 'info');
     sandbox.stub(logger, 'error');
 
-    sandbox.stub(process.env, 'NALD_ZIP_PASSWORD').value('test-password');
+    sandbox.stub(config.import, 'zipPassword').value('test-password');
   });
 
   afterEach(async () => {
