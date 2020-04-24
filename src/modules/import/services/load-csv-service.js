@@ -29,14 +29,36 @@ async function getImportFiles () {
   });
 }
 
+const indexableFieldsList = ['ID', 'LIC_NO', 'FGAC_REGION_CODE', 'CODE ', 'AABL_ID', 'WA_ALTY_CODE', 'EFF_END_DATE', 'EFF_ST_DATE', 'STATUS', 'EXPIRY_DATE', 'LAPSED_DATE', 'REV_DATE', 'ISSUE_NO', 'INCR_NO', 'AADD_ID', 'APAR_ID', 'ACNT_CODE', 'ACON_APAR_ID', 'ACON_AADD_ID', 'ALRT_CODE', 'AABV_AABL_ID', 'AABV_ISSUE_NO', 'AABV_INCR_NO', 'AMOA_CODE', 'AAIP_ID', 'ASRC_CODE', 'AABP_ID', 'ACIN_CODE', 'ACIN_SUBCODE', 'DISP_ORD', 'ARTY_ID', 'ARFL_ARTY_ID', 'ARFL_DATE_FROM'];
+
+/**
+ * Gets SQL for indexes to add to the supplied table
+ * @param {String} schemaName
+ * @param {String} table
+ * @param {Array<String>} cols
+ * @return {String}
+ */
+const getIndexes = (schemaName, table, cols) => {
+  const indexableFields = intersection(indexableFieldsList, cols);
+  if (table === 'NALD_RET_LINES') {
+    // NALD_RET_LINES is large so more care is required when creating indexes which can take a long time to create
+    return `\nCREATE INDEX idx_nald_ret_lines_id_and_region ON ${schemaName}."NALD_RET_LINES" ("ARFL_ARTY_ID", "FGAC_REGION_CODE");`;
+  } else {
+    let str = '';
+    for (const field of indexableFields) {
+      const indexName = `${table}_${field}_index`;
+      str += `\nCREATE INDEX "${indexName}" ON ${schemaName}."${table}" ("${field}");`;
+    }
+    return str;
+  }
+};
+
 /**
  * Gets import SQL for single file in import
  * @param {String} file - the CSV file to import
  * @return {String} the SQL statements to import the CSV file
  */
 async function getSqlForFile (file, schemaName) {
-  const indexableFieldsList = ['ID', 'LIC_NO', 'FGAC_REGION_CODE', 'CODE ', 'AABL_ID', 'WA_ALTY_CODE', 'EFF_END_DATE', 'EFF_ST_DATE', 'STATUS', 'EXPIRY_DATE', 'LAPSED_DATE', 'REV_DATE', 'ISSUE_NO', 'INCR_NO', 'AADD_ID', 'APAR_ID', 'ACNT_CODE', 'ACON_APAR_ID', 'ACON_AADD_ID', 'ALRT_CODE', 'AABV_AABL_ID', 'AABV_ISSUE_NO', 'AABV_INCR_NO', 'AMOA_CODE', 'AAIP_ID', 'ASRC_CODE', 'AABP_ID', 'ACIN_CODE', 'ACIN_SUBCODE', 'DISP_ORD', 'ARTY_ID', 'ARFL_ARTY_ID', 'ARFL_DATE_FROM'];
-
   const table = file.split('.')[0];
   const tablePath = path.join(finalPath, `${table}.txt`);
   const line = await readFirstLine(tablePath);
@@ -53,22 +75,11 @@ async function getSqlForFile (file, schemaName) {
     }
   }
 
-  const indexableFields = intersection(indexableFieldsList, cols);
-
   tableCreate += `\n \\copy ${schemaName}."${table}" FROM '${finalPath}/${file}' HEADER DELIMITER ',' CSV;`;
-
-  if (table === 'NALD_RET_LINES') {
-    // NALD_RET_LINES is large so more care is required when creating indexes which can take a long time to create
-    tableCreate += `\nCREATE INDEX idx_nald_ret_lines_id_and_region ON ${schemaName}."NALD_RET_LINES" ("ARFL_ARTY_ID", "FGAC_REGION_CODE");`;
-  } else {
-    for (const field of indexableFields) {
-      const indexName = `${table}_${field}_index`;
-      tableCreate += `\nCREATE INDEX "${indexName}" ON ${schemaName}."${table}" ("${field}");`;
-    }
-  }
+  tableCreate += getIndexes(schemaName, table, cols);
 
   return tableCreate;
-}
+};
 
 /**
  * Imports a single CSV file
