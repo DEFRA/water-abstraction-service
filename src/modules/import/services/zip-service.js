@@ -1,5 +1,5 @@
 const path = require('path');
-const { execCommand } = require('../../../lib/helpers.js');
+const helpers = require('../../../lib/helpers.js');
 const { logger } = require('../../../logger');
 const constants = require('../lib/constants');
 
@@ -13,11 +13,11 @@ const secondaryPath = path.join(constants.LOCAL_TEMP_PATH, `${constants.CSV_DIRE
  * @param {String} [password] - password if encrypted
  */
 const extractArchive = async (source, destination, password) => {
-  let command = `7z x ${source} -o${destination}`;
+  let command = `7z x ${source} -o ${destination}`;
   if (password) {
-    command += ` -p${password}`;
+    command += ` -p ${password}`;
   }
-  await execCommand(command);
+  await helpers.execCommand(command);
 };
 
 /**
@@ -31,6 +31,7 @@ const extract = async () => {
     await extractArchive(secondaryPath, constants.LOCAL_TEMP_PATH);
   } catch (err) {
     logger.error('Could not extract NALD zip', err);
+    throw err;
   }
 };
 
