@@ -21,15 +21,17 @@ const upload = async (filename, buffer) => {
   return s3Connector.getS3().upload(options).promise();
 };
 
+const callS3MethodWithKey = (method, key) => {
+  const options = getOptions(key);
+  return s3Connector.getS3()[method](options).promise();
+};
+
 /**
  * Wraps the call to getObject from the sdk returning a Promise.
  * @param {Sting} key - on s3 bucket
  * @return {Promise}
  */
-const getObject = key => {
-  const options = getOptions(key);
-  return s3Connector.getS3().getObject(options).promise();
-};
+const getObject = key => callS3MethodWithKey('getObject', key);
 
 /**
  * Downloads file with key 'key' from bucket and places
@@ -57,10 +59,7 @@ const download = async (key, destination) => {
  * @param {String} key
  * @return {Promise}
  */
-const getHead = key => {
-  const options = getOptions(key);
-  return s3Connector.getS3().headObject(options).promise();
-};
+const getHead = key => callS3MethodWithKey('headObject', key);
 
 exports.upload = upload;
 exports.getObject = getObject;

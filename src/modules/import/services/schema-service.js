@@ -1,9 +1,9 @@
-const { dbQuery } = require('../lib/db');
+const db = require('../lib/db');
 const constants = require('../lib/constants');
 
-const dropSchema = name => dbQuery(`drop schema if exists ${name} cascade`);
-const createSchema = name => dbQuery(`create schema if not exists ${name}`);
-const renameSchema = (from, to) => dbQuery(`alter schema ${from} rename to ${to};`);
+const dropSchema = name => db.dbQuery(`drop schema if exists ${name} cascade`);
+const createSchema = name => db.dbQuery(`create schema if not exists ${name}`);
+const renameSchema = (from, to) => db.dbQuery(`alter schema ${from} rename to ${to};`);
 
 /**
  * Drops and creates the import schema ready to import the CSVs as tables
