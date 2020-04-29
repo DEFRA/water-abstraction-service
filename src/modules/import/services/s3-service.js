@@ -1,5 +1,5 @@
 const path = require('path');
-const s3 = require('../../../lib/connectors/s3');
+const s3 = require('../../../lib/services/s3');
 const constants = require('../lib/constants');
 
 const s3Path = path.join(constants.S3_IMPORT_PATH, constants.S3_IMPORT_FILE);

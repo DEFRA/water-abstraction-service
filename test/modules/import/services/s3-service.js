@@ -5,10 +5,10 @@ const sandbox = sinon.createSandbox();
 const moment = require('moment');
 moment.locale('en-gb');
 
-const s3 = require('../../../../src/lib/connectors/s3');
+const s3 = require('../../../../src/lib/services/s3');
 const s3Service = require('../../../../src/modules/import/services/s3-service');
 
-experiment('modules/import/services/s3-service', () => {
+experiment('modules/import/services/s3', () => {
   beforeEach(async () => {
     sandbox.stub(s3, 'download');
     sandbox.stub(s3, 'getHead').resolves({
