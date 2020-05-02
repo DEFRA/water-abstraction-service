@@ -31,7 +31,11 @@ const dbToModel = row => {
     isWaterUndertaker: row.isWaterUndertaker,
     region: region.dbToModel(row.region),
     historicalArea: dbToHistoricalArea(row.regions),
-    regionalChargeArea: dbToRegionalChargeArea(row.regions)
+    regionalChargeArea: dbToRegionalChargeArea(row.regions),
+    startDate: row.startDate,
+    expiredDate: row.expiredDate,
+    lapsedDate: row.lapsedDate,
+    revokedDate: row.revokedDate
   });
   return licence;
 };

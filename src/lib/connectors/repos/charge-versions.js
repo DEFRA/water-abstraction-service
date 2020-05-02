@@ -5,7 +5,9 @@ const findOne = async (id) => {
     .forge({ chargeVersionId: id })
     .fetch({
       withRelated: [
-        'chargeElements'
+        'chargeElements',
+        'licence',
+        'licence.region'
       ]
     });
 

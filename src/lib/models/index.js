@@ -3,6 +3,7 @@ module.exports = {
   Batch: require('./batch'),
   Totals: require('./totals'),
   Company: require('./company'),
+  ChargeVersion: require('./charge-version'),
   Contact: require('./contact'),
   FinancialYear: require('./financial-year'),
   Invoice: require('./invoice'),
@@ -12,5 +13,4 @@ module.exports = {
   Region: require('./region'),
   Transaction: require('./transaction'),
   Event: require('./event')
-
 };
