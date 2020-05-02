@@ -4,6 +4,7 @@ const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const documentsConnector = require('../../../../src/lib/connectors/crm-v2/documents');
+const uuid = require('uuid/v4');
 
 const config = require('../../../../config');
 
@@ -18,6 +19,7 @@ const DOCUMENT_ID = '0948217c-e89b-44f6-8329-4bc5ef2fe0f8';
 experiment('lib/connectors/crm-2/documents', () => {
   beforeEach(async () => {
     sandbox.stub(serviceRequest, 'get').resolves(TEST_RESPONSE);
+    sandbox.stub(serviceRequest, 'post');
   });
 
   afterEach(async () => {
@@ -66,6 +68,60 @@ experiment('lib/connectors/crm-2/documents', () => {
 
     test('resolves with the HTTP response', async () => {
       expect(response).to.equal(TEST_RESPONSE);
+    });
+  });
+
+  experiment('.createDocumentRole', () => {
+    let documentRole;
+    let documentId;
+    let createdDocumentRole;
+    let result;
+
+    beforeEach(async () => {
+      documentId = uuid();
+      documentRole = {
+        role: 'billing'
+      };
+
+      createdDocumentRole = { documentId, ...documentRole };
+      serviceRequest.post.resolves(createdDocumentRole);
+      result = await documentsConnector.createDocumentRole(documentId, documentRole);
+    });
+
+    test('makes a post request to the expected URL', async () => {
+      const [url] = serviceRequest.post.lastCall.args;
+      expect(url).to.equal(`${config.services.crm_v2}/documents/${documentId}/roles`);
+    });
+
+    test('passes the expected document role data in the body', async () => {
+      const [, options] = serviceRequest.post.lastCall.args;
+      expect(options.body).to.equal(documentRole);
+    });
+
+    test('returns the received data from the CRM', async () => {
+      expect(result).to.equal(createdDocumentRole);
+    });
+  });
+
+  experiment('.getDocumentRole', () => {
+    let documentRoleId;
+    let documentRole;
+    let result;
+
+    beforeEach(async () => {
+      documentRoleId = uuid();
+      documentRole = { documentRoleId };
+      serviceRequest.get.resolves(documentRole);
+      result = await documentsConnector.getDocumentRole(documentRoleId);
+    });
+
+    test('makes a get request to the expected URL', async () => {
+      const [url] = serviceRequest.get.lastCall.args;
+      expect(url).to.equal(`${config.services.crm_v2}/document-roles/${documentRoleId}`);
+    });
+
+    test('returns the received data from the CRM', async () => {
+      expect(result).to.equal(documentRole);
     });
   });
 });

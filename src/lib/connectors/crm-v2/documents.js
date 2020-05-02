@@ -9,6 +9,14 @@ const config = require('../../../../config');
 const VALID_LICENCE_NUMBER = Joi.string().required().example('01/123/R01');
 const VALID_GUID = Joi.string().guid().required();
 
+const getDocumentsUrl = (...tail) => {
+  return urlJoin(config.services.crm_v2, 'documents', ...tail);
+};
+
+const getDocumentRolesUrl = (...tail) => {
+  return urlJoin(config.services.crm_v2, 'document-roles', ...tail);
+};
+
 /**
  * Get a list of documents for the given licence number
  * @param {String} licenceNumber
@@ -16,8 +24,7 @@ const VALID_GUID = Joi.string().guid().required();
  */
 const getDocuments = licenceNumber => {
   Joi.assert(licenceNumber, VALID_LICENCE_NUMBER);
-  const uri = urlJoin(config.services.crm_v2, '/documents');
-  return serviceRequest.get(uri, {
+  return serviceRequest.get(getDocumentsUrl(), {
     qs: {
       documentRef: licenceNumber,
       regime: 'water',
@@ -33,9 +40,24 @@ const getDocuments = licenceNumber => {
  */
 const getDocument = documentId => {
   Joi.assert(documentId, VALID_GUID);
-  const uri = urlJoin(config.services.crm_v2, '/documents/', documentId);
-  return serviceRequest.get(uri);
+  return serviceRequest.get(getDocumentsUrl(documentId));
 };
 
-exports.getDocuments = getDocuments;
+const createDocumentRole = async (documentId, documentRole) => {
+  const url = getDocumentsUrl(documentId, 'roles');
+  return serviceRequest.post(url, { body: documentRole });
+};
+
+/**
+ * Get a single document role for the requested ID
+ * @param {String} licenceNumber
+ * @return {Promise<Array>}
+ */
+const getDocumentRole = documentRoleId => {
+  return serviceRequest.get(getDocumentRolesUrl(documentRoleId));
+};
+
+exports.createDocumentRole = createDocumentRole;
 exports.getDocument = getDocument;
+exports.getDocumentRole = getDocumentRole;
+exports.getDocuments = getDocuments;
