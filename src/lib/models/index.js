@@ -10,6 +10,7 @@ module.exports = {
   InvoiceAccount: require('./invoice-account'),
   InvoiceLicence: require('./invoice-licence'),
   Licence: require('./licence'),
+  LicenceAgreement: require('./licence-agreement'),
   Region: require('./region'),
   Transaction: require('./transaction'),
   Event: require('./event')

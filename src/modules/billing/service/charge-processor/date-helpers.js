@@ -44,3 +44,5 @@ const getSmallestDateRange = arr => {
 
 exports.getFinancialYearRange = getFinancialYearRange;
 exports.getSmallestDateRange = getSmallestDateRange;
+exports.getMinDate = getMinDate;
+exports.getMaxDate = getMaxDate;

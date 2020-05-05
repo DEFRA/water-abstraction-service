@@ -1,8 +1,10 @@
 'use strict';
-
+const { compact, orderBy } = require('lodash');
+const moment = require('moment');
 const Model = require('./model');
-const { assertLicenceNumber, assertIsInstanceOf, assertDate, assertNullableDate } = require('./validators');
+const { assertLicenceNumber, assertIsInstanceOf, assertDate, assertNullableDate, assertIsArrayOfType } = require('./validators');
 const Region = require('./region');
+const LicenceAgreement = require('./licence-agreement');
 
 class Licence extends Model {
   set licenceNumber (licenceNumber) {
@@ -103,6 +105,29 @@ class Licence extends Model {
   set revokedDate (revokedDate) {
     assertNullableDate(revokedDate);
     this._revokedDate = revokedDate;
+  }
+
+  /**
+   * Gets the end date - the minumum of revoked, lapsed, expired, or null
+   * @return {String|null}
+   */
+  get endDate () {
+    const dates = compact([this.expiredDate, this.lapsedDate, this.revokedDate]);
+    const sorted = orderBy(dates, date => moment(date).unix());
+    return sorted[0] || null;
+  }
+
+  /**
+   * Licence agreements
+   * @return {Array<LicenceAgreement>}
+   */
+  get licenceAgreements () {
+    return this._licenceAgreements;
+  }
+
+  set licenceAgreements (licenceAgreements) {
+    assertIsArrayOfType(licenceAgreements, LicenceAgreement);
+    this._licenceAgreements = licenceAgreements;
   }
 }
 

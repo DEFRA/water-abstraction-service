@@ -6,8 +6,12 @@ const findOne = async (id) => {
     .fetch({
       withRelated: [
         'chargeElements',
+        'chargeElements.purposePrimary',
+        'chargeElements.purposeSecondary',
+        'chargeElements.purposeUse',
         'licence',
-        'licence.region'
+        'licence.region',
+        'licence.licenceAgreements'
       ]
     });
 

@@ -3,7 +3,8 @@
 const Licence = require('../../../lib/models/licence');
 const Region = require('../../../lib/models/region');
 
-const region = require('./region');
+const regionMapper = require('./region');
+const licenceAgreementMapper = require('./licence-agreement');
 
 const dbToHistoricalArea = licenceRegions => {
   const region = new Region();
@@ -29,7 +30,7 @@ const dbToModel = row => {
     id: row.licenceId,
     licenceNumber: row.licenceRef,
     isWaterUndertaker: row.isWaterUndertaker,
-    region: region.dbToModel(row.region),
+    region: regionMapper.dbToModel(row.region),
     historicalArea: dbToHistoricalArea(row.regions),
     regionalChargeArea: dbToRegionalChargeArea(row.regions),
     startDate: row.startDate,
@@ -37,6 +38,9 @@ const dbToModel = row => {
     lapsedDate: row.lapsedDate,
     revokedDate: row.revokedDate
   });
+  if (row.licenceAgreements) {
+    licence.licenceAgreements = row.licenceAgreements.map(licenceAgreementMapper.dbToModel);
+  }
   return licence;
 };
 

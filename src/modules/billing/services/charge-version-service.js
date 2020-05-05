@@ -27,26 +27,13 @@ const createForBatch = batch => {
 
 /**
  * Gets charge version by ID
- * including loading CRM company and invoice account data
  * @param {String} chargeVersionId
  * @return {Promise<ChargeVersion>}
  */
 const getByChargeVersionId = async chargeVersionId => {
   // Fetch DB data
   const data = await repos.chargeVersions.findOne(chargeVersionId);
-
-  // Get CRM data
-  const [company, invoiceAccount] = await Promise.all([
-    crmV2Connector.companies.getCompany(data.companyId),
-    crmV2Connector.invoiceAccounts.getInvoiceAccountById(data.invoiceAccountId)
-  ]);
-
-  // Map to service model
-  const chargeVersion = mappers.chargeVersion.dbToModel(data);
-  return chargeVersion.fromHash({
-    company: mappers.company.crmToModel(company),
-    invoiceAccount: mappers.invoiceAccount.crmToModel(invoiceAccount)
-  });
+  return mappers.chargeVersion.dbToModel(data);
 };
 
 exports.createForBatch = createForBatch;
