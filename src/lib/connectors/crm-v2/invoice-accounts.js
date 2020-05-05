@@ -32,5 +32,28 @@ const getInvoiceAccountsByIds = async ids => {
  */
 const getInvoiceAccountById = id => serviceRequest.get(getUri(id));
 
+/**
+ * Creates an invoice account entity in the CRM
+ *
+ * @param {Object} invoiceAccount The invoice account to persist
+ */
+const createInvoiceAccount = invoiceAccount => {
+  return serviceRequest.post(getUri(), { body: invoiceAccount });
+};
+
+/**
+ * Creates an invoice account address association to the invoice
+ * account with the given invoice account id
+ *
+ * @param {String} invoiceAccountId The invoice account to associate the address with
+ * @param {Object} invoiceAccountAddress The invoice account address to persist
+ */
+const createInvoiceAccountAddress = (invoiceAccountId, invoiceAccountAddress) => {
+  const url = getUri(invoiceAccountId, 'addresses');
+  return serviceRequest.post(url, { body: invoiceAccountAddress });
+};
+
+exports.createInvoiceAccount = createInvoiceAccount;
+exports.createInvoiceAccountAddress = createInvoiceAccountAddress;
 exports.getInvoiceAccountById = getInvoiceAccountById;
 exports.getInvoiceAccountsByIds = getInvoiceAccountsByIds;
