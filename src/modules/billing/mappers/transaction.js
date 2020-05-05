@@ -2,98 +2,15 @@
 
 const moment = require('moment');
 const { titleCase } = require('title-case');
-const { get, pick, identity } = require('lodash');
+const { pick, identity } = require('lodash');
 
 const Batch = require('../../../lib/models/batch');
 const DateRange = require('../../../lib/models/date-range');
 const Transaction = require('../../../lib/models/transaction');
 const Agreement = require('../../../lib/models/agreement');
 
-const agreement = require('./agreement');
 const chargeElementMapper = require('./charge-element');
 const userMapper = require('./user');
-
-const getTwoPartTariffTransactionDescription = (batch, chargeElement) => {
-  const prefix = batch.isTwoPartTariff() ? 'Second' : 'First';
-  const { purposeTertiaryDescription: purpose, description } = chargeElement;
-
-  return `${prefix} part ${purpose} charge at ${description}`;
-};
-
-const getTransactionDescription = (batch, chargeLine, chargeElement, isCompensationCharge) => {
-  if (isCompensationCharge) {
-    return 'Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element';
-  }
-
-  const description = chargeLine.section127Agreement
-    ? getTwoPartTariffTransactionDescription(batch, chargeElement)
-    : chargeElement.description;
-
-  return titleCase(description || '');
-};
-
-const createTransaction = (batch, chargeLine, chargeElement, data = {}) => {
-  const transaction = new Transaction();
-  transaction.fromHash({
-    ...data,
-    authorisedDays: chargeElement.totalDays,
-    billableDays: chargeElement.billableDays,
-    agreements: agreement.chargeToModels(chargeLine),
-    chargePeriod: new DateRange(chargeLine.startDate, chargeLine.endDate),
-    chargeElement: chargeElementMapper.chargeToModel(chargeElement),
-    volume: chargeElement.billableAnnualQuantity || chargeElement.authorisedAnnualQuantity
-  });
-  if (data.twoPartTariffReview) {
-    transaction.twoPartTariffReview = userMapper.mapToModel(data.twoPartTariffReview);
-  }
-
-  transaction.description = getTransactionDescription(
-    batch,
-    chargeLine,
-    chargeElement,
-    data.isCompensationCharge
-  );
-
-  return transaction;
-};
-
-const getOptions = (chargeLine, batch) => {
-  // @TODO handle credits
-  const isWaterUndertaker = get(chargeLine, 'chargeVersion.isWaterUndertaker', false);
-  const isTwoPartTariffSupplementaryCharge = batch.type === 'two_part_tariff';
-  return {
-    isCredit: false,
-    isCompensation: !(isWaterUndertaker || isTwoPartTariffSupplementaryCharge),
-    isTwoPartTariffSupplementaryCharge
-  };
-};
-
-/**
- * Generates an array of transactions from a charge line output
- * from the charge processor
- * @param {Object} chargeLine
- * @param {Batch} batch - the current batch instance
- * @return {Array<Transaction>}
- */
-const chargeToModels = (chargeLine, batch) => {
-  const { isCompensation, ...transactionData } = getOptions(chargeLine, batch);
-
-  return chargeLine.chargeElements.reduce((acc, chargeElement) => {
-    acc.push(createTransaction(batch, chargeLine, chargeElement, {
-      ...transactionData,
-      isCompensationCharge: false
-    }));
-
-    if (isCompensation) {
-      acc.push(createTransaction(batch, chargeLine, chargeElement, {
-        ...transactionData,
-        isCompensationCharge: true
-      }));
-    }
-
-    return acc;
-  }, []);
-};
 
 /**
  * Create agreement model with supplied code
@@ -134,7 +51,7 @@ const dbToModel = row => {
   transaction.fromHash({
     id: row.billingTransactionId,
     ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
-      'externalId', 'calculatedVolume', 'twoPartTariffError', 'twoPartTariffStatus']),
+      'externalId', 'calculatedVolume', 'twoPartTariffError', 'twoPartTariffStatus', 'isTwoPartTariffSupplementary']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
@@ -192,7 +109,8 @@ const modelToDb = (invoiceLicence, transaction) => ({
   calculatedVolume: transaction.calculatedVolume,
   twoPartTariffError: transaction.twoPartTariffError,
   twoPartTariffStatus: transaction.twoPartTariffStatus,
-  twoPartTariffReview: transaction.twoPartTariffReview || null
+  twoPartTariffReview: transaction.twoPartTariffReview || null,
+  isTwoPartTariffSupplementary: transaction.isTwoPartTariffSupplementary
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -272,7 +190,7 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     billableDays: transaction.billableDays,
     authorisedDays: transaction.authorisedDays,
     volume: transaction.volume,
-    twoPartTariff: batch.type === Batch.BATCH_TYPE.twoPartTariff,
+    twoPartTariff: transaction.isTwoPartTariffSupplementary,
     compensationCharge: transaction.isCompensationCharge,
     ...mapAgreementsToChargeModule(transaction),
     customerReference: invoice.invoiceAccount.accountNumber,
@@ -284,7 +202,6 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
   };
 };
 
-exports.chargeToModels = chargeToModels;
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
 exports.modelToChargeModule = modelToChargeModule;

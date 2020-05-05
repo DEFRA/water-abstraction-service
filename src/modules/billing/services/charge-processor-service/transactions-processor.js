@@ -15,7 +15,7 @@ const FinancialYear = require('../../../../lib/models/financial-year');
 const DateRange = require('../../../../lib/models/date-range');
 const Transaction = require('../../../../lib/models/transaction');
 
-const dateHelpers = require('../../service/charge-processor/date-helpers');
+const dateHelpers = require('./lib/date-helpers');
 const validators = require('../../../../lib/models/validators');
 
 const agreements = require('./lib/agreements');
@@ -79,8 +79,12 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
     agreements: agreements,
     chargePeriod,
     status: Transaction.statuses.candidate,
-    totalDays: helpers.charging.getBillableDays(absPeriod, financialYear.startDate, financialYear.endDate),
-    billableDays: helpers.charging.getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate)
+    authorisedDays: helpers.charging.getBillableDays(absPeriod, financialYear.startDate, financialYear.endDate),
+    billableDays: helpers.charging.getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate),
+    // @TODO include two-part tariff reported volume
+    volume: chargeElement.volume,
+    isTwoPartTariffSupplementary: flags.isTwoPartTariffSupplementary || false,
+    isCompensationCharge: flags.isCompensationCharge || false
   });
   transaction.createDescription();
   return transaction;
@@ -157,10 +161,10 @@ const getElementChargePeriod = (period, chargeElement) => {
  * @return {Array<Transaction>}
  */
 const createTransactionsForPeriod = (batch, period, chargeVersion, financialYear) => {
-  const { agreements } = period;
+  const { agreements, dateRange } = period;
 
   return chargeVersion.chargeElements.reduce((acc, chargeElement) => {
-    const elementChargePeriod = getElementChargePeriod(period, chargeElement);
+    const elementChargePeriod = getElementChargePeriod(dateRange, chargeElement);
     if (!elementChargePeriod) {
       return acc;
     }

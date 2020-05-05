@@ -7,6 +7,24 @@ const camelCaseKeys = require('../../../lib/camel-case-keys');
 
 const purpose = require('./purpose');
 
+const AbstractionPeriod = require('../../../lib/models/abstraction-period');
+
+/**
+ * Creates an AbstractionPeriod instance from camel-cased charge element data
+ * @param {Object} chargeElementRow - charge element row from the charge processor
+ * @return {AbstractionPeriod}
+ */
+const mapAbstractionPeriod = chargeElementRow => {
+  const element = new AbstractionPeriod();
+  element.fromHash({
+    startDay: chargeElementRow.abstractionPeriodStartDay,
+    startMonth: chargeElementRow.abstractionPeriodStartMonth,
+    endDay: chargeElementRow.abstractionPeriodEndDay,
+    endMonth: chargeElementRow.abstractionPeriodEndMonth
+  });
+  return element;
+};
+
 /**
  * Creates a ChargeElement instance given a row of charge element data
  * @param {Object} chargeElementRow - charge element row from the charge processor
@@ -19,7 +37,7 @@ const chargeToModel = chargeElementRow => {
     source: chargeElementRow.source,
     season: chargeElementRow.season,
     loss: chargeElementRow.loss,
-    abstractionPeriod: abstractionPeriod.chargeToModel(chargeElementRow),
+    abstractionPeriod: mapAbstractionPeriod(chargeElementRow),
     authorisedAnnualQuantity: chargeElementRow.authorisedAnnualQuantity,
     billableAnnualQuantity: chargeElementRow.billableAnnualQuantity,
     description: chargeElementRow.description
@@ -44,5 +62,4 @@ const dbToModel = row => {
   return chargeToModel(data);
 };
 
-exports.chargeToModel = chargeToModel;
 exports.dbToModel = dbToModel;

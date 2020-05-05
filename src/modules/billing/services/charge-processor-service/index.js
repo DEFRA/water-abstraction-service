@@ -8,6 +8,7 @@ const FinancialYear = require('../../../../lib/models/financial-year');
 const Invoice = require('../../../../lib/models/invoice');
 const InvoiceLicence = require('../../../../lib/models/invoice-licence');
 
+const dateHelpers = require('./lib/date-helpers');
 const transactionsProcessor = require('./transactions-processor');
 
 const mappers = require('../../mappers');
@@ -15,6 +16,12 @@ const mappers = require('../../mappers');
 // Services
 const chargeVersionService = require('../../services/charge-version-service');
 const crmV2 = require('../../../../lib/connectors/crm-v2');
+
+const getChargePeriodStartDate = (financialYear, chargeVersion) => dateHelpers.getMaxDate([
+  chargeVersion.licence.startDate,
+  financialYear.start,
+  chargeVersion.dateRange.startDate
+]);
 
 /**
  * Given an array of invoice account addresses from CRM data,
@@ -38,8 +45,6 @@ const getLastAddress = invoiceAccountAddresses => {
  */
 const createInvoice = invoiceAccount => {
   const invoice = new Invoice();
-  const lastAddress = getLastAddress(invoiceAccount.invoiceAccountAddresses);
-  console.log({ lastAddress });
   return invoice.fromHash({
     invoiceAccount: mappers.invoiceAccount.crmToModel(invoiceAccount),
     address: getLastAddress(invoiceAccount.invoiceAccountAddresses)
@@ -52,12 +57,35 @@ const createInvoice = invoiceAccount => {
  * @param {Object} company - data from CRM
  * @param {ChargeVersion} chargeVersion
  */
-const createInvoiceLicence = (company, chargeVersion) => {
+const createInvoiceLicence = (company, chargeVersion, licenceHolderRole) => {
   const invoiceLicence = new InvoiceLicence();
   return invoiceLicence.fromHash({
     licence: chargeVersion.licence,
-    company: mappers.company.crmToModel(company)
+    company: mappers.company.crmToModel(company),
+    contact: mappers.contact.crmToModel(licenceHolderRole.contact),
+    address: mappers.address.crmToModel(licenceHolderRole.address)
   });
+};
+
+/**
+ * Gets the licence holder role from the CRM for the licence p
+ * on the specified date
+ * @param {String} licenceNumber
+ * @param {String} chargePeriodStartDate - YYYY-MM-DD
+ * @return {Promise<Object>} CRM role data
+ */
+const getLicenceHolderRole = async (licenceNumber, chargePeriodStartDate) => {
+  // Load all CRM documents for licence number
+  const documents = await crmV2.documents.getDocuments(licenceNumber);
+  const document = dateHelpers.findByDate(documents, chargePeriodStartDate);
+  if (document) {
+    // Load document roles for relevant document
+    const { documentRoles } = await crmV2.documents.getDocument(document.documentId);
+    return dateHelpers.findByDate(
+      documentRoles.filter(role => role.roleName === 'licenceHolder'),
+      chargePeriodStartDate
+    );
+  }
 };
 
 /**
@@ -71,17 +99,22 @@ const processChargeVersionYear = async (batch, financialYear, chargeVersionId) =
   validators.assertIsInstanceOf(batch, Batch);
   validators.assertIsInstanceOf(financialYear, FinancialYear);
 
+  // Load ChargeVersion service model
   const chargeVersion = await chargeVersionService.getByChargeVersionId(chargeVersionId);
 
+  // Get charge period start date
+  const chargePeriodStartDate = getChargePeriodStartDate(financialYear, chargeVersion);
+
   // Load company/invoice account
-  const [company, invoiceAccount] = await Promise.all([
+  const [company, invoiceAccount, licenceHolderRole] = await Promise.all([
     crmV2.companies.getCompany(chargeVersion.company.id),
-    crmV2.invoiceAccounts.getInvoiceAccountById(chargeVersion.invoiceAccount.id)
+    crmV2.invoiceAccounts.getInvoiceAccountById(chargeVersion.invoiceAccount.id),
+    getLicenceHolderRole(chargeVersion.licence.licenceNumber, chargePeriodStartDate)
   ]);
 
   // Generate Invoice data structure
   const invoice = createInvoice(invoiceAccount);
-  const invoiceLicence = createInvoiceLicence(company, chargeVersion);
+  const invoiceLicence = createInvoiceLicence(company, chargeVersion, licenceHolderRole);
   invoiceLicence.transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
   invoice.invoiceLicences = [invoiceLicence];
 
