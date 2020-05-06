@@ -56,7 +56,7 @@ const getChargePeriod = (financialYear, chargeVersion) => {
 const isTwoPartPurpose = purpose => {
   const SPRAY_IRRIGATION_DIRECT = 400;
   const TRICKLE_IRRIGATION_DIRECT = 600;
-  return [SPRAY_IRRIGATION_DIRECT, TRICKLE_IRRIGATION_DIRECT].includes(purpose.code);
+  return [SPRAY_IRRIGATION_DIRECT, TRICKLE_IRRIGATION_DIRECT].includes(parseInt(purpose.code));
 };
 
 /**
@@ -79,7 +79,7 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
     agreements: agreements,
     chargePeriod,
     status: Transaction.statuses.candidate,
-    authorisedDays: helpers.charging.getBillableDays(absPeriod, financialYear.startDate, financialYear.endDate),
+    authorisedDays: helpers.charging.getBillableDays(absPeriod, financialYear.start.format(DATE_FORMAT), financialYear.end.format(DATE_FORMAT)),
     billableDays: helpers.charging.getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate),
     // @TODO include two-part tariff reported volume
     volume: chargeElement.volume,
