@@ -60,7 +60,8 @@ const createTransaction = (options = {}) => {
     transactionKey: '0123456789ABCDEF0123456789ABCDEF',
     calculatedVolume: null,
     twoPartTariffError: false,
-    twoPartTariffStatus: null
+    twoPartTariffStatus: null,
+    isTwoPartTariffSupplementary: !!options.isTwoPartTariffSupplementary
   });
   return transaction;
 };
@@ -127,16 +128,6 @@ const createChargeElementRow = () => ({
   purposeTertiaryDescription: 'Spray irrigation'
 });
 
-const createChargeLine = (isWaterUndertaker = false) => ({
-  startDate: '2018-04-01',
-  endDate: '2019-03-31',
-  section127Agreement: true,
-  chargeVersion: {
-    isWaterUndertaker
-  },
-  chargeElements: [createChargeElementRow()]
-});
-
 const createBatch = (type = 'supplementary') => {
   const batch = new Batch('d65bf89e-4a84-4f2e-8fc1-ebc5ff08c125');
   return batch.fromHash({ type });
@@ -158,189 +149,6 @@ experiment('modules/billing/mappers/transaction', () => {
 
   afterEach(async () => {
     sandbox.restore();
-  });
-
-  experiment('.chargeToModels', () => {
-    let result, chargeLine;
-
-    experiment('for a supplementary batch, and a non-water undertaker licence', () => {
-      let batch;
-
-      beforeEach(async () => {
-        chargeLine = createChargeLine();
-        batch = new Batch();
-        batch.type = 'supplementary';
-        result = transactionMapper.chargeToModels(chargeLine, batch);
-      });
-
-      test('2 transactions are created', async () => {
-        expect(result).to.be.an.array().length(2);
-      });
-
-      experiment('the first transaction', () => {
-        test('is a standard charge', async () => {
-          expect(result[0].isCompensationCharge).to.be.false();
-        });
-
-        test('is not two-part tariff supplementary charge by default', async () => {
-          expect(result[0].isTwoPartTariffSupplementaryCharge).to.equal(false);
-        });
-
-        test('is not a credit', async () => {
-          expect(result[0].isCredit).to.equal(false);
-        });
-
-        test('has the correct billable and authorised days', async () => {
-          expect(result[0].authorisedDays).to.equal(chargeLine.chargeElements[0].totalDays);
-          expect(result[0].billableDays).to.equal(chargeLine.chargeElements[0].billableDays);
-        });
-
-        test('has the correct description', async () => {
-          expect(result[0].description).to.equal('First Part Spray Irrigation Charge at Tiny Pond');
-        });
-
-        test('has the charge period mapped correctly', async () => {
-          expect(result[0].chargePeriod.startDate).to.equal(chargeLine.startDate);
-          expect(result[0].chargePeriod.endDate).to.equal(chargeLine.endDate);
-        });
-
-        test('has the charge element mapped correctly', async () => {
-          const { chargeElement } = result[0];
-          expect(chargeElement.id).to.equal(chargeLine.chargeElements[0].chargeElementId);
-          expect(chargeElement.source).to.equal(chargeLine.chargeElements[0].source);
-          expect(chargeElement.season).to.equal(chargeLine.chargeElements[0].season);
-          expect(chargeElement.loss).to.equal(chargeLine.chargeElements[0].loss);
-        });
-
-        test('has the abstraction period mapped correctly', async () => {
-          const { abstractionPeriod } = result[0].chargeElement;
-          expect(abstractionPeriod.startDay).to.equal(chargeLine.chargeElements[0].abstractionPeriodStartDay);
-          expect(abstractionPeriod.startMonth).to.equal(chargeLine.chargeElements[0].abstractionPeriodStartMonth);
-          expect(abstractionPeriod.endDay).to.equal(chargeLine.chargeElements[0].abstractionPeriodEndDay);
-          expect(abstractionPeriod.endMonth).to.equal(chargeLine.chargeElements[0].abstractionPeriodEndMonth);
-        });
-
-        test('has agreements mapped correctly', async () => {
-          const { agreements } = result[0];
-          expect(agreements).to.be.an.array().length(1);
-          expect(agreements[0].code).to.equal('S127');
-        });
-      });
-
-      experiment('the second transaction', () => {
-        test('is a compensation charge', async () => {
-          expect(result[1].isCompensationCharge).to.be.true();
-        });
-
-        test('has the compensation description', async () => {
-          expect(result[1].description)
-            .to
-            .equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
-        });
-      });
-    });
-
-    experiment('when processing two-part tariff supplementary', () => {
-      let batch, chargeLine;
-
-      beforeEach(async () => {
-        chargeLine = createChargeLine();
-        batch = new Batch();
-        batch.type = 'two_part_tariff';
-        result = transactionMapper.chargeToModels(chargeLine, batch);
-      });
-
-      test('1 transactions is created', async () => {
-        expect(result).to.be.an.array().length(1);
-      });
-
-      test('the transaction is a standard charge', async () => {
-        expect(result[0].isCompensationCharge).to.be.false();
-      });
-
-      test('the transaction is a two-part tariff supplementary charge', async () => {
-        expect(result[0].isTwoPartTariffSupplementaryCharge).to.be.true();
-      });
-    });
-
-    experiment('when processing a supplementary charge for a water undertaker', () => {
-      let batch, chargeLine;
-
-      beforeEach(async () => {
-        chargeLine = createChargeLine(true);
-        batch = new Batch();
-        batch.type = 'supplementary';
-        result = transactionMapper.chargeToModels(chargeLine, batch);
-      });
-
-      test('1 transactions is created', async () => {
-        expect(result).to.be.an.array().length(1);
-      });
-
-      test('the transaction is a standard charge', async () => {
-        expect(result[0].isCompensationCharge).to.be.false();
-      });
-
-      test('the transaction is not a two-part tariff supplementary charge', async () => {
-        expect(result[0].isTwoPartTariffSupplementaryCharge).to.be.false();
-      });
-    });
-
-    experiment('prepares the required transaction description for two part tariff', () => {
-      const scenarios = [
-        {
-          batchType: Batch.BATCH_TYPE.supplementary,
-          isTpt: true,
-          purposeDesc: 'Spray',
-          chargeElementDescription: 'Turbo turnips',
-          expected: 'First Part Spray Charge at Turbo Turnips'
-        },
-        {
-          batchType: Batch.BATCH_TYPE.supplementary,
-          isTpt: false,
-          purposeDesc: 'Washing',
-          chargeElementDescription: 'Power peas',
-          expected: 'Power Peas'
-        },
-        {
-          batchType: Batch.BATCH_TYPE.annual,
-          isTpt: true,
-          purposeDesc: 'Vegetable Washing',
-          chargeElementDescription: 'Super sprouts',
-          expected: 'First Part Vegetable Washing Charge at Super Sprouts'
-        },
-
-        {
-          batchType: Batch.BATCH_TYPE.annual,
-          isTpt: false,
-          purposeDesc: 'Vegetable Washing',
-          chargeElementDescription: 'Monster marrows',
-          expected: 'Monster Marrows'
-        },
-        {
-          batchType: Batch.BATCH_TYPE.twoPartTariff,
-          isTpt: true,
-          purposeDesc: 'Spray irrigation',
-          chargeElementDescription: 'Power parsnips',
-          expected: 'Second Part Spray Irrigation Charge at Power Parsnips'
-        }
-      ];
-
-      scenarios.forEach(scenario => {
-        test(`[Batch Type: ${scenario.batchType}, isTPT: ${scenario.isTpt}] has expected description of ${scenario.expected}`, async () => {
-          const batch = createBatch(scenario.batchType);
-          const chargeLine = createChargeLine();
-          chargeLine.section127Agreement = scenario.isTpt;
-
-          chargeLine.chargeElements[0].purposeTertiaryDescription = scenario.purposeDesc;
-          chargeLine.chargeElements[0].description = scenario.chargeElementDescription;
-
-          const model = transactionMapper.chargeToModels(chargeLine, batch);
-
-          expect(model[0].description).to.equal(scenario.expected);
-        });
-      });
-    });
   });
 
   experiment('.modelToDb', () => {
@@ -383,7 +191,8 @@ experiment('modules/billing/mappers/transaction', () => {
           calculatedVolume: null,
           twoPartTariffError: false,
           twoPartTariffStatus: null,
-          twoPartTariffReview: null
+          twoPartTariffReview: null,
+          isTwoPartTariffSupplementary: false
         });
       });
     });
@@ -403,8 +212,26 @@ experiment('modules/billing/mappers/transaction', () => {
 
     experiment('when the transaction has a two-part tariff agreement', () => {
       beforeEach(async () => {
+        invoiceLicence = createInvoiceLicence();
+        invoiceLicence.transactions[0].agreements = [createAgreement('S127')];
+        result = transactionMapper.modelToDb(invoiceLicence, invoiceLicence.transactions[0]);
+      });
+
+      test('the correct agreement fields are set', async () => {
+        expect(result.section126Factor).to.equal(null);
+        expect(result.section127Agreement).to.equal(true);
+        expect(result.section130Agreement).to.equal(null);
+      });
+
+      test('the transaction is not a two-part tariff supplementary', async () => {
+        expect(result.isTwoPartTariffSupplementary).to.equal(false);
+      });
+    });
+
+    experiment('when the transaction has a two-part tariff agreement and is two-part tariff supplementary', () => {
+      beforeEach(async () => {
         invoiceLicence = createInvoiceLicence({
-          isCompensationCharge: true
+          isTwoPartTariffSupplementary: true
         });
         invoiceLicence.transactions[0].agreements = [createAgreement('S127')];
         result = transactionMapper.modelToDb(invoiceLicence, invoiceLicence.transactions[0]);
@@ -414,6 +241,10 @@ experiment('modules/billing/mappers/transaction', () => {
         expect(result.section126Factor).to.equal(null);
         expect(result.section127Agreement).to.equal(true);
         expect(result.section130Agreement).to.equal(null);
+      });
+
+      test('the transaction is a two-part tariff supplementary', async () => {
+        expect(result.isTwoPartTariffSupplementary).to.equal(true);
       });
     });
 
@@ -646,9 +477,10 @@ experiment('modules/billing/mappers/transaction', () => {
       });
     });
 
-    experiment('when the batch type is two-part tariff', () => {
+    experiment('when the transaction is two-part tariff supplementary', () => {
       beforeEach(async () => {
         batch.type = Batch.BATCH_TYPE.twoPartTariff;
+        transaction.isTwoPartTariffSupplementary = true;
         result = transactionMapper.modelToChargeModule(batch, invoice, invoiceLicence, transaction);
       });
 

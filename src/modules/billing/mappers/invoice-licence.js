@@ -32,7 +32,9 @@ const dbToModel = row => {
   if (row.billingTransactions) {
     invoiceLicence.transactions = row.billingTransactions.map(transaction.dbToModel);
   }
-  invoiceLicence.licence = licence.dbToModel(row.licence);
+  if (row.licence) {
+    invoiceLicence.licence = licence.dbToModel(row.licence);
+  }
   invoiceLicence.invoiceId = row.billingInvoiceId;
   return invoiceLicence;
 };

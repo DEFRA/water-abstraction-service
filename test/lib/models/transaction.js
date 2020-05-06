@@ -50,6 +50,7 @@ const getTestDataForHashing = () => {
   transaction.calculatedVolume = 4;
   transaction.twoPartTariffStatus = null;
   transaction.twoPartTariffError = false;
+  transaction.isTwoPartTariffSupplementary = true;
 
   transaction.agreements = [
     new Agreement().fromHash({ code: 'S130T' }),
@@ -517,7 +518,7 @@ experiment('lib/models/transaction', () => {
       expect(hashData.licenceNumber).to.equal(licence.licenceNumber);
       expect(hashData.regionCode).to.equal(batch.region.code);
       expect(hashData.isCompensationCharge).to.equal(transaction.isCompensationCharge);
-      expect(hashData.isTwoPartTariff).to.equal(batch.isTwoPartTariff());
+      expect(hashData.isTwoPartTariff).to.equal(transaction.isTwoPartTariffSupplementary);
     });
   });
 

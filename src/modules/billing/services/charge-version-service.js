@@ -1,8 +1,6 @@
 const repos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 
-const crmV2Connector = require('../../../lib/connectors/crm-v2');
-
 /**
  * Creates the required billing_batch_charge_versions for the given
  * Batch

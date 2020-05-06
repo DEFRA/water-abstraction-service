@@ -2,7 +2,6 @@
 
 const ChargeElement = require('../../../lib/models/charge-element');
 const DateRange = require('../../../lib/models/date-range');
-const abstractionPeriod = require('./abstraction-period');
 const camelCaseKeys = require('../../../lib/camel-case-keys');
 
 const purpose = require('./purpose');
@@ -16,13 +15,12 @@ const AbstractionPeriod = require('../../../lib/models/abstraction-period');
  */
 const mapAbstractionPeriod = chargeElementRow => {
   const element = new AbstractionPeriod();
-  element.fromHash({
+  return element.fromHash({
     startDay: chargeElementRow.abstractionPeriodStartDay,
     startMonth: chargeElementRow.abstractionPeriodStartMonth,
     endDay: chargeElementRow.abstractionPeriodEndDay,
     endMonth: chargeElementRow.abstractionPeriodEndMonth
   });
-  return element;
 };
 
 /**

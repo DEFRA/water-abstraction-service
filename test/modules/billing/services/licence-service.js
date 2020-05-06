@@ -23,6 +23,10 @@ const data = {
     regionName: 'Anglian',
     chargeRegionId: 'A',
     naldRegionId: 1,
+    startDate: '2019-01-01',
+    expiredDate: null,
+    lapsedDate: null,
+    revokedDate: null,
     regions: {
       historicalAreaCode: 'ABC',
       regionalChargeArea: 'Anglian'

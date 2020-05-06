@@ -71,7 +71,11 @@ const createBatchData = () => ({
           name: REGION_NAME,
           displayName: REGION_NAME,
           chargeRegionId: CHARGE_REGION_ID
-        }
+        },
+        startDate: '2019-01-01',
+        expiredDate: null,
+        lapsedDate: null,
+        revokedDate: null
       }
     }, {
       billingInvoiceId: uuid(),
@@ -84,7 +88,11 @@ const createBatchData = () => ({
           name: REGION_NAME,
           displayName: REGION_NAME,
           chargeRegionId: CHARGE_REGION_ID
-        }
+        },
+        startDate: '2019-01-01',
+        expiredDate: null,
+        lapsedDate: null,
+        revokedDate: null
       }
     }]
   }, {
@@ -101,7 +109,11 @@ const createBatchData = () => ({
           name: REGION_NAME,
           displayName: REGION_NAME,
           chargeRegionId: CHARGE_REGION_ID
-        }
+        },
+        startDate: '2019-01-01',
+        expiredDate: null,
+        lapsedDate: null,
+        revokedDate: null
       }
     }]
   }]
@@ -184,7 +196,11 @@ const createInvoiceData = () => ({
         name: REGION_NAME,
         displayName: REGION_NAME,
         chargeRegionId: CHARGE_REGION_ID
-      }
+      },
+      startDate: '2019-01-01',
+      expiredDate: null,
+      lapsedDate: null,
+      revokedDate: null
     },
     billingTransactions: [{
       billingTransactionId: uuid(),
@@ -220,7 +236,11 @@ const createOneWithInvoicesWithTransactions = () => ({
           name: REGION_NAME,
           displayName: REGION_NAME,
           chargeRegionId: CHARGE_REGION_ID
-        }
+        },
+        startDate: '2019-01-01',
+        expiredDate: null,
+        lapsedDate: null,
+        revokedDate: null
       },
       billingTransactions: [{
         billingTransactionId: uuid(),
@@ -250,7 +270,11 @@ const createOneWithInvoicesWithTransactions = () => ({
           name: REGION_NAME,
           displayName: REGION_NAME,
           chargeRegionId: CHARGE_REGION_ID
-        }
+        },
+        startDate: '2019-01-01',
+        expiredDate: null,
+        lapsedDate: null,
+        revokedDate: null
       }
     }, {
       billingInvoiceId: uuid(),
@@ -263,7 +287,11 @@ const createOneWithInvoicesWithTransactions = () => ({
           name: REGION_NAME,
           displayName: REGION_NAME,
           chargeRegionId: CHARGE_REGION_ID
-        }
+        },
+        startDate: '2019-01-01',
+        expiredDate: null,
+        lapsedDate: null,
+        revokedDate: null
       }
     }]
   }]

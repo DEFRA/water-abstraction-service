@@ -10,11 +10,11 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
 const processChargeVersion = require('../../../../src/modules/billing/jobs/process-charge-version');
-
 const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
-const service = require('../../../../src/modules/billing/service');
+
 const twoPartTariffService = require('../../../../src/modules/billing/services/two-part-tariff-service');
 const { Batch } = require('../../../../src/lib/models');
 
@@ -28,9 +28,10 @@ experiment('modules/billing/jobs/process-charge-version', () => {
     sandbox.stub(batchJob, 'logHandlingError');
 
     batch = new Batch();
-    sandbox.stub(service.chargeVersionYear, 'createBatchFromChargeVersionYear').resolves(batch);
-    sandbox.stub(service.chargeVersionYear, 'persistChargeVersionYearBatch');
 
+    sandbox.stub(batchService, 'saveInvoicesToDB');
+
+    sandbox.stub(chargeVersionYearService, 'processChargeVersionYear').resolves(batch);
     sandbox.stub(chargeVersionYearService, 'setErrorStatus').resolves();
     sandbox.stub(chargeVersionYearService, 'setReadyStatus').resolves();
   });
@@ -111,7 +112,6 @@ experiment('modules/billing/jobs/process-charge-version', () => {
         sandbox.stub(twoPartTariffService, 'processBatch');
 
         batch.type = Batch.BATCH_TYPE.twoPartTariff;
-        service.chargeVersionYear.createBatchFromChargeVersionYear.resolves(batch);
 
         await processChargeVersion.handler(job);
       });
@@ -126,13 +126,13 @@ experiment('modules/billing/jobs/process-charge-version', () => {
       });
 
       test('a batch model is created from the charge version year', async () => {
-        expect(service.chargeVersionYear.createBatchFromChargeVersionYear.calledWith(
+        expect(chargeVersionYearService.processChargeVersionYear.calledWith(
           chargeVersionYear
         )).to.be.true();
       });
 
       test('the batch model is persisted', async () => {
-        expect(service.chargeVersionYear.persistChargeVersionYearBatch.calledWith(
+        expect(batchService.saveInvoicesToDB.calledWith(
           batch
         )).to.be.true();
       });

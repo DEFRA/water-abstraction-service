@@ -4,7 +4,6 @@ const moment = require('moment');
 const { titleCase } = require('title-case');
 const { pick, identity } = require('lodash');
 
-const Batch = require('../../../lib/models/batch');
 const DateRange = require('../../../lib/models/date-range');
 const Transaction = require('../../../lib/models/transaction');
 const Agreement = require('../../../lib/models/agreement');

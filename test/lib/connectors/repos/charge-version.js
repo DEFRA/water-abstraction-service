@@ -45,7 +45,15 @@ experiment('lib/connectors/repos/charge-versions', () => {
 
     test('.fetch() is called with related models', async () => {
       expect(stub.fetch.calledWith({
-        withRelated: ['chargeElements']
+        withRelated: [
+          'chargeElements',
+          'chargeElements.purposePrimary',
+          'chargeElements.purposeSecondary',
+          'chargeElements.purposeUse',
+          'licence',
+          'licence.region',
+          'licence.licenceAgreements'
+        ]
       })).to.be.true();
     });
 

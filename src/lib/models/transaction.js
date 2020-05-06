@@ -272,12 +272,13 @@ class Transaction extends Model {
     return {
       periodStart: this.chargePeriod.startDate,
       periodEnd: this.chargePeriod.endDate,
-      ...this.pick('billableDays', 'authorisedDays', 'volume', 'description', 'isCompensationCharge', 'isTwoPartTariffSupplementary'),
+      ...this.pick('billableDays', 'authorisedDays', 'volume', 'description', 'isCompensationCharge'),
       agreements: this.agreements.map(ag => ag.code).sort().join('-'),
       accountNumber: invoiceAccount.accountNumber,
       ...this.chargeElement.pick('source', 'season', 'loss'),
       licenceNumber: licence.licenceNumber,
-      regionCode: batch.region.code
+      regionCode: batch.region.code,
+      isTwoPartTariff: this.isTwoPartTariffSupplementary
     };
   }
 
