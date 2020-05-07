@@ -2,7 +2,7 @@ const cron = require('node-cron');
 const config = require('../../../config');
 const jobs = require('./jobs');
 
-const getSchedule = () => config.isProduction ? '0 1 * * *' : '0 13 * * *';
+const getSchedule = () => config.isProduction ? '0 1 * * *' : '0 * * * *';
 
 const publishJob = messageQueue => {
   messageQueue.publish(jobs.s3Download.job.createMessage());
