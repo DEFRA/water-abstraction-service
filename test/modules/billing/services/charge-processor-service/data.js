@@ -11,10 +11,10 @@ exports.createLicence = (overrides = {}) => {
   const licence = new Licence();
   return licence.fromHash({
     licenceNumber: '01/134',
-    startDate: '2000-01-01',
-    expiryDate: null,
-    revokedDate: null,
-    lapsedDate: null,
+    startDate: overrides.startDate || '2000-01-01',
+    expiryDate: overrides.endDate || null,
+    revokedDate: overrides.revokedDate || null,
+    lapsedDate: overrides.lapsedDate || null,
     licenceAgreements: []
   });
 };
@@ -43,6 +43,11 @@ exports.createChargeElement = (overrides = {}) => {
   });
 
   const chargeElement = new ChargeElement();
+
+  if (overrides.timeLimitedStartDate && overrides.timeLimitedEndDate) {
+    chargeElement.timeLimitedPeriod = new DateRange(overrides.timeLimitedStartDate, overrides.timeLimitedEndDate);
+  }
+
   return chargeElement.fromHash({
     description: 'Test description',
     source: 'supported',
