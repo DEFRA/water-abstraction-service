@@ -120,7 +120,7 @@ const fetchLines = async (returnId, versionId) => {
     version_id: versionId
   };
   const pagination = {
-    perPage: 365
+    perPage: 366
   };
   const { data, error } = await lines.findMany(filter, sort, pagination);
   if (error) {
