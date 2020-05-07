@@ -1,3 +1,4 @@
+exports.applicationState = require('./application-state');
 exports.billingBatches = require('./billing-batches');
 exports.billingBatchChargeVersions = require('./billing-batch-charge-versions');
 exports.billingBatchChargeVersionYears = require('./billing-batch-charge-version-years');
