@@ -1,450 +1,523 @@
 const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
-const { omit } = require('lodash');
 
 const transactionsProcessor = require('../../../../../src/modules/billing/services/charge-processor-service/transactions-processor');
-
 const data = require('./data');
 
-const getTransactionData = transaction =>
-  omit(transaction.toJSON(), ['value', 'chargeElement']);
-
 experiment('modules/billing/services/transactions-processor', async () => {
-  const financialYear = data.createFinancialYear();
+  experiment('.createTransactions', async () => {
+    const financialYear = data.createFinancialYear();
+    let chargeVersion, batch, transactions;
 
-  let chargeVersion, batch, transactions, licence;
+    experiment('for an annual batch', () => {
+      beforeEach(async () => {
+        batch = data.createBatch('annual');
+        chargeVersion = data.createChargeVersionWithTwoPartTariff();
+        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+      });
 
-  experiment('for an annual batch', () => {
-    beforeEach(async () => {
-      batch = data.createBatch('annual');
+      test('4 transactions are created', async () => {
+        expect(transactions.length).to.equal(4);
+      });
+
+      test('a standard charge transaction is created for the first element', async () => {
+        expect(transactions[0].chargeElement.purposeUse.code).to.equal('300');
+        expect(transactions[0].isCompensationCharge).to.equal(false);
+        expect(transactions[0].agreements).to.equal([]);
+        expect(transactions[0].isTwoPartTariffSupplementary).to.equal(false);
+        expect(transactions[0].description).to.equal('Test Description');
+      });
+
+      test('a compensation charge transaction is created for the first element', async () => {
+        expect(transactions[0].chargeElement.purposeUse.code).to.equal('300');
+        expect(transactions[1].isCompensationCharge).to.equal(true);
+        expect(transactions[1].agreements).to.equal([]);
+        expect(transactions[1].isTwoPartTariffSupplementary).to.equal(false);
+        expect(transactions[1].description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
+      });
+
+      test('a first-part two-part tariff charge is created for the second element', async () => {
+        expect(transactions[2].chargeElement.purposeUse.code).to.equal('400');
+        expect(transactions[2].isCompensationCharge).to.equal(false);
+        expect(transactions[2].agreements[0].code).to.equal('S127');
+        expect(transactions[2].isTwoPartTariffSupplementary).to.equal(false);
+        expect(transactions[2].description).to.equal('First Part Spray Irrigation Direct Charge at Test Description');
+      });
+
+      test('a first-part two-part tariff compensation charge is created for the second element', async () => {
+        expect(transactions[3].chargeElement.purposeUse.code).to.equal('400');
+        expect(transactions[3].isCompensationCharge).to.equal(true);
+        expect(transactions[3].agreements[0].code).to.equal('S127');
+        expect(transactions[3].isTwoPartTariffSupplementary).to.equal(false);
+        expect(transactions[3].description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
+      });
     });
 
-    experiment('for a non-expiring licence', async () => {
+    experiment('for a supplementaty batch', () => {
       beforeEach(async () => {
-        licence = data.createLicence();
+        batch = data.createBatch('supplementary');
+        chargeVersion = data.createChargeVersionWithTwoPartTariff();
+        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
       });
 
-      experiment('for a non-expiring charge version', async () => {
+      test('5 transactions are created', async () => {
+        expect(transactions.length).to.equal(5);
+      });
+
+      test('a standard charge transaction is created for the first element', async () => {
+        expect(transactions[0].chargeElement.purposeUse.code).to.equal('300');
+        expect(transactions[0].isCompensationCharge).to.equal(false);
+        expect(transactions[0].agreements).to.equal([]);
+        expect(transactions[0].isTwoPartTariffSupplementary).to.equal(false);
+        expect(transactions[0].description).to.equal('Test Description');
+      });
+
+      test('a compensation charge transaction is created for the first element', async () => {
+        expect(transactions[0].chargeElement.purposeUse.code).to.equal('300');
+        expect(transactions[1].isCompensationCharge).to.equal(true);
+        expect(transactions[1].agreements).to.equal([]);
+        expect(transactions[1].isTwoPartTariffSupplementary).to.equal(false);
+        expect(transactions[1].description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
+      });
+
+      test('a first-part two-part tariff charge is created for the second element', async () => {
+        expect(transactions[2].chargeElement.purposeUse.code).to.equal('400');
+        expect(transactions[2].isCompensationCharge).to.equal(false);
+        expect(transactions[2].agreements[0].code).to.equal('S127');
+        expect(transactions[2].isTwoPartTariffSupplementary).to.equal(false);
+        expect(transactions[2].description).to.equal('First Part Spray Irrigation Direct Charge at Test Description');
+      });
+
+      test('a first-part two-part tariff compensation charge is created for the second element', async () => {
+        expect(transactions[3].chargeElement.purposeUse.code).to.equal('400');
+        expect(transactions[3].isCompensationCharge).to.equal(true);
+        expect(transactions[3].agreements[0].code).to.equal('S127');
+        expect(transactions[3].isTwoPartTariffSupplementary).to.equal(false);
+        expect(transactions[3].description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
+      });
+
+      test('a second-part two-part tariff charge is created for the second element', async () => {
+        expect(transactions[4].chargeElement.purposeUse.code).to.equal('400');
+        expect(transactions[4].isCompensationCharge).to.equal(false);
+        expect(transactions[4].agreements[0].code).to.equal('S127');
+        expect(transactions[4].isTwoPartTariffSupplementary).to.equal(true);
+        expect(transactions[4].description).to.equal('Second Part Spray Irrigation Direct Charge at Test Description');
+      });
+    });
+
+    experiment('for a two-part tariff batch', () => {
+      beforeEach(async () => {
+        batch = data.createBatch('two_part_tariff');
+        chargeVersion = data.createChargeVersionWithTwoPartTariff();
+        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+      });
+
+      test('1 transaction is created', async () => {
+        expect(transactions.length).to.equal(1);
+      });
+
+      test('a second-part two-part tariff charge is created for the second element', async () => {
+        expect(transactions[0].chargeElement.purposeUse.code).to.equal('400');
+        expect(transactions[0].isCompensationCharge).to.equal(false);
+        expect(transactions[0].agreements[0].code).to.equal('S127');
+        expect(transactions[0].isTwoPartTariffSupplementary).to.equal(true);
+        expect(transactions[0].description).to.equal('Second Part Spray Irrigation Direct Charge at Test Description');
+      });
+    });
+
+    experiment('transaction charge periods', () => {
+      experiment('when licence, charge version, and elements span full financial year', () => {
+        beforeEach(async () => {
+          batch = data.createBatch('annual');
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence();
+          chargeVersion.chargeElements = [
+            data.createChargeElement()
+          ];
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+        });
+
+        test('the transaction charge period is the full financial year', async () => {
+          expect(transactions[0].chargePeriod.startDate).to.equal('2019-04-01');
+          expect(transactions[0].chargePeriod.endDate).to.equal('2020-03-31');
+        });
+
+        test('the transaction has the correct number of billable days', async () => {
+          expect(transactions[0].authorisedDays).to.equal(366);
+          expect(transactions[0].billableDays).to.equal(366);
+        });
+      });
+
+      experiment('for a summer abstraction period', () => {
+        beforeEach(async () => {
+          batch = data.createBatch('annual');
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence();
+          chargeVersion.chargeElements = [
+            data.createChargeElement({
+              abstractionPeriod: {
+                startDay: 1,
+                startMonth: 5,
+                endDay: 30,
+                endMonth: 9
+              }
+            })
+          ];
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+        });
+
+        test('the transaction charge period is the full financial year', async () => {
+          expect(transactions[0].chargePeriod.startDate).to.equal('2019-04-01');
+          expect(transactions[0].chargePeriod.endDate).to.equal('2020-03-31');
+        });
+
+        test('the transaction has the correct number of billable days', async () => {
+          expect(transactions[0].authorisedDays).to.equal(153);
+          expect(transactions[0].billableDays).to.equal(153);
+        });
+      });
+
+      experiment('for a winter abstraction period', () => {
+        batch = data.createBatch('annual');
+
         beforeEach(async () => {
           chargeVersion = data.createChargeVersion();
-          chargeVersion.licence = licence;
+          chargeVersion.licence = data.createLicence();
           chargeVersion.chargeElements = [
-            data.createChargeElement()
+            data.createChargeElement({
+              abstractionPeriod: {
+                startDay: 1,
+                startMonth: 11,
+                endDay: 1,
+                endMonth: 3
+              }
+            })
           ];
           transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
         });
 
-        test('creates 2 transactions', async () => {
-          expect(transactions).to.be.an.array().length(2);
-        });
-
-        test('both transactions relate to the same charge element', async () => {
-          expect(transactions[0].chargeElement).to.equal(chargeVersion.chargeElements[0]);
-          expect(transactions[1].chargeElement).to.equal(chargeVersion.chargeElements[0]);
-        });
-
-        test('the first transaction is a standard charge', async () => {
-          const t = getTransactionData(transactions[0]);
-          expect(t).to.equal({
-            isCredit: false,
-            agreements: [],
-            status: 'candidate',
-            chargePeriod: { startDate: '2019-04-01', endDate: '2020-03-31' },
-            authorisedDays: 366,
-            billableDays: 366,
-            volume: 8.43,
-            isTwoPartTariffSupplementary: false,
-            isCompensationCharge: false,
-            description: 'Test Description'
-          });
-        });
-
-        test('the second transaction is a compensation charge', async () => {
-          const t = getTransactionData(transactions[1]);
-          expect(t).to.equal({
-            isCredit: false,
-            agreements: [],
-            status: 'candidate',
-            chargePeriod: { startDate: '2019-04-01', endDate: '2020-03-31' },
-            authorisedDays: 366,
-            billableDays: 366,
-            volume: 8.43,
-            isTwoPartTariffSupplementary: false,
-            isCompensationCharge: true,
-            description: 'Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element'
-          });
-        });
-      });
-
-      experiment('for a charge version that ends within the financial year', async () => {
-        beforeEach(async () => {
-          chargeVersion = data.createChargeVersion({ endDate: '2019-12-31' });
-          chargeVersion.licence = licence;
-          chargeVersion.chargeElements = [
-            data.createChargeElement()
-          ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
-        });
-
-        test('creates 2 transactions', async () => {
-          expect(transactions).to.be.an.array().length(2);
-        });
-
-        test('the transactions start date is the start of the financial year', async () => {
+        test('the transaction charge period is the full financial year', async () => {
           expect(transactions[0].chargePeriod.startDate).to.equal('2019-04-01');
-          expect(transactions[1].chargePeriod.startDate).to.equal('2019-04-01');
+          expect(transactions[0].chargePeriod.endDate).to.equal('2020-03-31');
         });
 
-        test('the transactions end date is the end date of the charge version', async () => {
-          expect(transactions[0].chargePeriod.endDate).to.equal('2019-12-31');
-          expect(transactions[1].chargePeriod.endDate).to.equal('2019-12-31');
-        });
-
-        test('the transactions have the correct authorised/billable days', async () => {
-          expect(transactions[0].authorisedDays).to.equal(366);
-          expect(transactions[1].billableDays).to.equal(275);
+        test('the transaction has the correct number of billable days', async () => {
+          expect(transactions[0].authorisedDays).to.equal(122);
+          expect(transactions[0].billableDays).to.equal(122);
         });
       });
 
-      experiment('for a charge version that ends after the financial year end', async () => {
+      experiment('when the licence starts part-way through the financial year', () => {
         beforeEach(async () => {
-          chargeVersion = data.createChargeVersion({ endDate: '2025-12-31' });
-          chargeVersion.licence = licence;
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence({
+            startDate: '2019-05-01'
+          });
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
           transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
         });
 
-        test('creates 2 transactions', async () => {
-          expect(transactions).to.be.an.array().length(2);
+        test('the transaction charge period starts on the licence start date', async () => {
+          expect(transactions[0].chargePeriod.startDate).to.equal('2019-05-01');
+          expect(transactions[0].chargePeriod.endDate).to.equal('2020-03-31');
         });
 
-        test('the transactions start date is the start of the financial year', async () => {
+        test('the transaction has the correct number of billable days', async () => {
+          expect(transactions[0].authorisedDays).to.equal(366);
+          expect(transactions[0].billableDays).to.equal(336);
+        });
+      });
+
+      experiment('when the licence ends part-way through the financial year', () => {
+        beforeEach(async () => {
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence({
+            expiryDate: '2019-11-01',
+            lapsedDate: '2019-09-01',
+            revokedDate: '2019-10-01'
+          });
+          chargeVersion.chargeElements = [
+            data.createChargeElement()
+          ];
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+        });
+
+        test('the transaction charge period ends on the earliest of expiry, lapsed and revoked dates', async () => {
           expect(transactions[0].chargePeriod.startDate).to.equal('2019-04-01');
-          expect(transactions[1].chargePeriod.startDate).to.equal('2019-04-01');
+          expect(transactions[0].chargePeriod.endDate).to.equal('2019-09-01');
         });
 
-        test('the transactions end date is the end date of the financial year', async () => {
-          expect(transactions[0].chargePeriod.endDate).to.equal('2020-03-31');
-          expect(transactions[1].chargePeriod.endDate).to.equal('2020-03-31');
-        });
-
-        test('the transactions have the correct authorised/billable days', async () => {
+        test('the transaction has the correct number of billable days', async () => {
           expect(transactions[0].authorisedDays).to.equal(366);
-          expect(transactions[1].billableDays).to.equal(366);
+          expect(transactions[0].billableDays).to.equal(154);
         });
       });
 
-      experiment('for a charge version that starts within the financial year', async () => {
+      experiment('when the charge version starts part-way through the financial year', () => {
         beforeEach(async () => {
-          chargeVersion = data.createChargeVersion({ startDate: '2019-06-01' });
-          chargeVersion.licence = licence;
+          chargeVersion = data.createChargeVersion({ startDate: '2019-05-01' });
+          chargeVersion.licence = data.createLicence();
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
           transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
         });
 
-        test('creates 2 transactions', async () => {
-          expect(transactions).to.be.an.array().length(2);
-        });
-
-        test('the transactions start date is the start date of the charge version', async () => {
-          expect(transactions[0].chargePeriod.startDate).to.equal('2019-06-01');
-          expect(transactions[1].chargePeriod.startDate).to.equal('2019-06-01');
-        });
-
-        test('the transactions end date is the end of the financial year', async () => {
+        test('the transaction charge period starts when the charge version starts', async () => {
+          expect(transactions[0].chargePeriod.startDate).to.equal('2019-05-01');
           expect(transactions[0].chargePeriod.endDate).to.equal('2020-03-31');
-          expect(transactions[1].chargePeriod.endDate).to.equal('2020-03-31');
         });
 
-        test('the transactions have the correct authorised/billable days', async () => {
+        test('the transaction has the correct number of billable days', async () => {
           expect(transactions[0].authorisedDays).to.equal(366);
-          expect(transactions[1].billableDays).to.equal(305);
+          expect(transactions[0].billableDays).to.equal(336);
         });
       });
 
-      experiment('for a charge version that starts and ends within the financial year', async () => {
+      experiment('when the charge version ends part-way through the financial year', () => {
         beforeEach(async () => {
-          chargeVersion = data.createChargeVersion({ startDate: '2019-06-01', endDate: '2020-02-01' });
-          chargeVersion.licence = licence;
+          chargeVersion = data.createChargeVersion({ endDate: '2020-02-01' });
+          chargeVersion.licence = data.createLicence();
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
           transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
         });
 
-        test('creates 2 transactions', async () => {
-          expect(transactions).to.be.an.array().length(2);
-        });
-
-        test('the transactions start date is the start date of the charge version', async () => {
-          expect(transactions[0].chargePeriod.startDate).to.equal('2019-06-01');
-          expect(transactions[1].chargePeriod.startDate).to.equal('2019-06-01');
-        });
-
-        test('the transactions end date is the end date of the charge version', async () => {
+        test('the transaction charge period ends when the charge period ends', async () => {
+          expect(transactions[0].chargePeriod.startDate).to.equal('2019-04-01');
           expect(transactions[0].chargePeriod.endDate).to.equal('2020-02-01');
-          expect(transactions[1].chargePeriod.endDate).to.equal('2020-02-01');
         });
 
-        test('the transactions have the correct authorised/billable days', async () => {
+        test('the transaction has the correct number of billable days', async () => {
           expect(transactions[0].authorisedDays).to.equal(366);
-          expect(transactions[1].billableDays).to.equal(246);
+          expect(transactions[0].billableDays).to.equal(307);
         });
       });
 
-      experiment('for a charge version with time-limited elements', async () => {
-        experiment('when the time-limit is outside the range of the financial year', () => {
-          beforeEach(async () => {
-            chargeVersion = data.createChargeVersion();
-            chargeVersion.licence = licence;
-            chargeVersion.chargeElements = [
-              data.createChargeElement({
-                timeLimitedStartDate: '2000-01-01',
-                timeLimitedEndDate: '2005-01-01'
-              })
-            ];
-            transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
-          });
-
-          test('no transactions are generated', async () => {
-            expect(transactions).to.be.an.array().length(0);
-          });
+      experiment('when a time-limited element does not apply to the financial year', () => {
+        beforeEach(async () => {
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence();
+          chargeVersion.chargeElements = [
+            data.createChargeElement({ timeLimitedStartDate: '2015-01-01', timeLimitedEndDate: '2016-01-01' })
+          ];
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
         });
 
-        experiment('when the time-limit covers the whole financial year', () => {
-          beforeEach(async () => {
-            chargeVersion = data.createChargeVersion();
-            chargeVersion.licence = licence;
-            chargeVersion.chargeElements = [
-              data.createChargeElement({
-                timeLimitedStartDate: '2000-01-01',
-                timeLimitedEndDate: '2025-01-01'
-              })
-            ];
-            transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
-          });
+        test('no transactions are created', async () => {
+          expect(transactions).to.have.length(0);
+        });
+      });
 
-          test('creates 2 transactions', async () => {
-            expect(transactions).to.be.an.array().length(2);
-          });
-
-          test('the transactions start date is the start date of the financial year', async () => {
-            expect(transactions[0].chargePeriod.startDate).to.equal('2019-04-01');
-            expect(transactions[1].chargePeriod.startDate).to.equal('2019-04-01');
-          });
-
-          test('the transactions end date is the end of the financial year', async () => {
-            expect(transactions[0].chargePeriod.endDate).to.equal('2020-03-31');
-            expect(transactions[1].chargePeriod.endDate).to.equal('2020-03-31');
-          });
-
-          test('the transactions have the correct authorised/billable days', async () => {
-            expect(transactions[0].authorisedDays).to.equal(366);
-            expect(transactions[1].billableDays).to.equal(366);
-          });
+      experiment('when a time-limited element applies to the full financial year', () => {
+        beforeEach(async () => {
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence();
+          chargeVersion.chargeElements = [
+            data.createChargeElement({ timeLimitedStartDate: '2015-01-01', timeLimitedEndDate: '2025-01-01' })
+          ];
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
         });
 
-        experiment('when the time-limit ends in the financial year', () => {
-          beforeEach(async () => {
-            chargeVersion = data.createChargeVersion();
-            chargeVersion.licence = licence;
-            chargeVersion.chargeElements = [
-              data.createChargeElement({
-                timeLimitedStartDate: '2000-01-01',
-                timeLimitedEndDate: '2019-07-01'
-              })
-            ];
-            transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
-          });
-
-          test('creates 2 transactions', async () => {
-            expect(transactions).to.be.an.array().length(2);
-          });
-
-          test('the transactions start date is the start date of the financial year', async () => {
-            expect(transactions[0].chargePeriod.startDate).to.equal('2019-04-01');
-            expect(transactions[1].chargePeriod.startDate).to.equal('2019-04-01');
-          });
-
-          test('the transactions end date is the end of the time limit', async () => {
-            expect(transactions[0].chargePeriod.endDate).to.equal('2019-07-01');
-            expect(transactions[1].chargePeriod.endDate).to.equal('2019-07-01');
-          });
-
-          test('the transactions have the correct authorised/billable days', async () => {
-            expect(transactions[0].authorisedDays).to.equal(366);
-            expect(transactions[1].billableDays).to.equal(92);
-          });
+        test('the transaction charge period is the full financial year', async () => {
+          expect(transactions[0].chargePeriod.startDate).to.equal('2019-04-01');
+          expect(transactions[0].chargePeriod.endDate).to.equal('2020-03-31');
         });
 
-        experiment('when the time-limit starts in the financial year', () => {
-          beforeEach(async () => {
-            chargeVersion = data.createChargeVersion();
-            chargeVersion.licence = licence;
-            chargeVersion.chargeElements = [
-              data.createChargeElement({
-                timeLimitedStartDate: '2019-07-01',
-                timeLimitedEndDate: '2025-07-01'
-              })
-            ];
-            transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
-          });
+        test('the transaction has the correct number of billable days', async () => {
+          expect(transactions[0].authorisedDays).to.equal(366);
+          expect(transactions[0].billableDays).to.equal(366);
+        });
+      });
 
-          test('creates 2 transactions', async () => {
-            expect(transactions).to.be.an.array().length(2);
-          });
-
-          test('the transactions start date is the start date of the time limit', async () => {
-            expect(transactions[0].chargePeriod.startDate).to.equal('2019-07-01');
-            expect(transactions[1].chargePeriod.startDate).to.equal('2019-07-01');
-          });
-
-          test('the transactions end date is the end of the financial year', async () => {
-            expect(transactions[0].chargePeriod.endDate).to.equal('2020-03-31');
-            expect(transactions[1].chargePeriod.endDate).to.equal('2020-03-31');
-          });
-
-          test('the transactions have the correct authorised/billable days', async () => {
-            expect(transactions[0].authorisedDays).to.equal(366);
-            expect(transactions[1].billableDays).to.equal(275);
-          });
+      experiment('when a time-limited element starts within the full financial year', () => {
+        beforeEach(async () => {
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence();
+          chargeVersion.chargeElements = [
+            data.createChargeElement({ timeLimitedStartDate: '2019-05-01', timeLimitedEndDate: '2025-01-01' })
+          ];
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
         });
 
-        experiment('when the time-limit starts and ends in the financial year', () => {
-          beforeEach(async () => {
-            chargeVersion = data.createChargeVersion();
-            chargeVersion.licence = licence;
-            chargeVersion.chargeElements = [
-              data.createChargeElement({
-                timeLimitedStartDate: '2019-07-01',
-                timeLimitedEndDate: '2020-02-01'
-              })
-            ];
-            transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
-          });
+        test('the transaction charge period starts on the time-limited start date', async () => {
+          expect(transactions[0].chargePeriod.startDate).to.equal('2019-05-01');
+          expect(transactions[0].chargePeriod.endDate).to.equal('2020-03-31');
+        });
 
-          test('creates 2 transactions', async () => {
-            expect(transactions).to.be.an.array().length(2);
-          });
+        test('the transaction has the correct number of billable days', async () => {
+          expect(transactions[0].authorisedDays).to.equal(366);
+          expect(transactions[0].billableDays).to.equal(336);
+        });
+      });
 
-          test('the transactions start date is the start date of the time limit', async () => {
-            expect(transactions[0].chargePeriod.startDate).to.equal('2019-07-01');
-            expect(transactions[1].chargePeriod.startDate).to.equal('2019-07-01');
-          });
+      experiment('when a time-limited element ends within the financial year', () => {
+        beforeEach(async () => {
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence();
+          chargeVersion.chargeElements = [
+            data.createChargeElement({ timeLimitedStartDate: '2016-01-01', timeLimitedEndDate: '2019-06-01' })
+          ];
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+        });
 
-          test('the transactions end date is the end of the time limit', async () => {
-            expect(transactions[0].chargePeriod.endDate).to.equal('2020-02-01');
-            expect(transactions[1].chargePeriod.endDate).to.equal('2020-02-01');
-          });
+        test('the transaction charge period ends on the time-limited end date', async () => {
+          expect(transactions[0].chargePeriod.startDate).to.equal('2019-04-01');
+          expect(transactions[0].chargePeriod.endDate).to.equal('2019-06-01');
+        });
 
-          test('the transactions have the correct authorised/billable days', async () => {
-            expect(transactions[0].authorisedDays).to.equal(366);
-            expect(transactions[1].billableDays).to.equal(216);
-          });
+        test('the transaction has the correct number of billable days', async () => {
+          expect(transactions[0].authorisedDays).to.equal(366);
+          expect(transactions[0].billableDays).to.equal(62);
+        });
+      });
+
+      experiment('when a time-limited element starts and ends within the financial year', () => {
+        beforeEach(async () => {
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence();
+          chargeVersion.chargeElements = [
+            data.createChargeElement({ timeLimitedStartDate: '2019-05-01', timeLimitedEndDate: '2019-06-01' })
+          ];
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+        });
+
+        test('the transaction charge period starts and ends on the time-limited dates', async () => {
+          expect(transactions[0].chargePeriod.startDate).to.equal('2019-05-01');
+          expect(transactions[0].chargePeriod.endDate).to.equal('2019-06-01');
+        });
+
+        test('the transaction has the correct number of billable days', async () => {
+          expect(transactions[0].authorisedDays).to.equal(366);
+          expect(transactions[0].billableDays).to.equal(32);
         });
       });
     });
 
-    experiment('for a licence that ends within the financial year', async () => {
-      beforeEach(async () => {
-        licence = data.createLicence({
-          expiryDate: '2019-10-01',
-          revokedDate: '2019-09-01',
-          lapsedDate: '2019-08-01'
-        });
-      });
+    experiment('compensation charges', () => {
+      batch = data.createBatch('annual');
 
-      experiment('for a non-expiring charge version', async () => {
+      experiment('for licences that do not belong to water undertakers', () => {
         beforeEach(async () => {
           chargeVersion = data.createChargeVersion();
-          chargeVersion.licence = licence;
+          chargeVersion.licence = data.createLicence();
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
           transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
         });
 
-        test('creates 2 transactions', async () => {
-          expect(transactions).to.be.an.array().length(2);
+        test('generate 2 charges', async () => {
+          expect(transactions).length(2);
         });
 
-        test('the transactions start date is the start date of the financial year', async () => {
-          expect(transactions[0].chargePeriod.startDate).to.equal('2019-04-01');
-          expect(transactions[1].chargePeriod.startDate).to.equal('2019-04-01');
+        test('generates a standard charge', async () => {
+          expect(transactions[0].isCompensationCharge).to.equal(false);
         });
 
-        test('the transactions end date is the earliest of expiry, revoked and lapsed dates', async () => {
-          expect(transactions[0].chargePeriod.endDate).to.equal('2019-08-01');
-          expect(transactions[1].chargePeriod.endDate).to.equal('2019-08-01');
-        });
-
-        test('the transactions have the correct authorised/billable days', async () => {
-          expect(transactions[0].authorisedDays).to.equal(366);
-          expect(transactions[1].billableDays).to.equal(123);
+        test('generates a compensation charge', async () => {
+          expect(transactions[0].isCompensationCharge).to.equal(false);
         });
       });
 
-      experiment('for a charge version that ends after the licence', async () => {
+      experiment('for licences that belong to water undertakers', () => {
         beforeEach(async () => {
-          chargeVersion = data.createChargeVersion({ endDate: '2019-09-01' });
-          chargeVersion.licence = licence;
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence({ isWaterUndertaker: true });
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
           transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
         });
 
-        test('creates 2 transactions', async () => {
-          expect(transactions).to.be.an.array().length(2);
+        test('generate 1 charge', async () => {
+          expect(transactions).length(1);
         });
 
-        test('the transactions start date is the start date of the financial year', async () => {
-          expect(transactions[0].chargePeriod.startDate).to.equal('2019-04-01');
-          expect(transactions[1].chargePeriod.startDate).to.equal('2019-04-01');
+        test('generates a standard charge', async () => {
+          expect(transactions[0].isCompensationCharge).to.equal(false);
+        });
+      });
+    });
+
+    experiment('section 130 - canal and rivers trust agreements', () => {
+      batch = data.createBatch('annual');
+
+      experiment('for licences that do not have a Section 130 agreement', () => {
+        beforeEach(async () => {
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence();
+          chargeVersion.chargeElements = [
+            data.createChargeElement()
+          ];
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
         });
 
-        test('the transactions end date is the earliest of expiry, revoked and lapsed dates', async () => {
-          expect(transactions[0].chargePeriod.endDate).to.equal('2019-08-01');
-          expect(transactions[1].chargePeriod.endDate).to.equal('2019-08-01');
-        });
-
-        test('the transactions have the correct authorised/billable days', async () => {
-          expect(transactions[0].authorisedDays).to.equal(366);
-          expect(transactions[1].billableDays).to.equal(123);
+        test('transactions have no agreements', async () => {
+          expect(transactions[0].agreements).to.equal([]);
+          expect(transactions[1].agreements).to.equal([]);
         });
       });
 
-      experiment('for a charge version that ends before the licence', async () => {
+      experiment('for licences that have a Section 130 agreement', () => {
         beforeEach(async () => {
-          chargeVersion = data.createChargeVersion({ endDate: '2019-05-01' });
-          chargeVersion.licence = licence;
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence();
+          chargeVersion.licence.licenceAgreements = [
+            data.createLicenceAgreement({ code: 'S130U' })
+          ];
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
           transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
         });
 
-        test('creates 2 transactions', async () => {
-          expect(transactions).to.be.an.array().length(2);
+        test('transactions have the agreements applied', async () => {
+          expect(transactions[0].agreements).to.have.length(1);
+          expect(transactions[0].agreements[0].code).to.equal('S130U');
+          expect(transactions[1].agreements).to.have.length(1);
+          expect(transactions[1].agreements[0].code).to.equal('S130U');
+        });
+      });
+
+      experiment('when a Section 130 agreement starts within the financial year', () => {
+        beforeEach(async () => {
+          chargeVersion = data.createChargeVersion();
+          chargeVersion.licence = data.createLicence();
+          chargeVersion.licence.licenceAgreements = [
+            data.createLicenceAgreement({ code: 'S130U', startDate: '2019-05-01' })
+          ];
+          chargeVersion.chargeElements = [
+            data.createChargeElement()
+          ];
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
         });
 
-        test('the transactions start date is the start date of the financial year', async () => {
+        test('4 transactions are created', async () => {
+          expect(transactions).length(4);
+        });
+
+        test('the first pair of transactions have no agreements', async () => {
           expect(transactions[0].chargePeriod.startDate).to.equal('2019-04-01');
+          expect(transactions[0].chargePeriod.endDate).to.equal('2019-04-30');
+          expect(transactions[0].agreements).to.equal([]);
           expect(transactions[1].chargePeriod.startDate).to.equal('2019-04-01');
+          expect(transactions[1].chargePeriod.endDate).to.equal('2019-04-30');
+          expect(transactions[1].agreements).to.equal([]);
         });
 
-        test('the transactions end date is the end of the charge version', async () => {
-          expect(transactions[0].chargePeriod.endDate).to.equal('2019-05-01');
-          expect(transactions[1].chargePeriod.endDate).to.equal('2019-05-01');
-        });
-
-        test('the transactions have the correct authorised/billable days', async () => {
-          expect(transactions[0].authorisedDays).to.equal(366);
-          expect(transactions[1].billableDays).to.equal(31);
+        test('the second pair of transactions agreements applied', async () => {
+          expect(transactions[2].chargePeriod.startDate).to.equal('2019-05-01');
+          expect(transactions[2].chargePeriod.endDate).to.equal('2020-03-31');
+          expect(transactions[2].agreements).length(1);
+          expect(transactions[2].agreements[0].code).to.equal('S130U');
+          expect(transactions[3].chargePeriod.startDate).to.equal('2019-05-01');
+          expect(transactions[3].chargePeriod.endDate).to.equal('2020-03-31');
+          expect(transactions[3].agreements).length(1);
+          expect(transactions[3].agreements[0].code).to.equal('S130U');
         });
       });
     });

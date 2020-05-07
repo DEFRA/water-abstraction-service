@@ -60,6 +60,18 @@ const isTwoPartPurpose = purpose => {
 };
 
 /**
+ * Predicate to check whether an agreement should be applied to the transaction
+ * @param {Agreement} agreement
+ * @param {Purpose} purpose
+ * @return {Boolean}
+ */
+const agreementAppliesToTransaction = (agreement, purpose) => {
+  const isCanalApplied = agreement.isCanalAndRiversTrust();
+  const isTwoPartTariffApplied = agreement.isTwoPartTariff() && isTwoPartPurpose(purpose);
+  return isCanalApplied || isTwoPartTariffApplied;
+};
+
+/**
  * Creates a Transaction model
  * @param {DateRange} chargePeriod - charge period for this charge element - taking time-limits into account
  * @param {ChargeElement} chargeElement
@@ -76,7 +88,7 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
   transaction.fromHash({
     ...flags,
     chargeElement,
-    agreements: agreements,
+    agreements: agreements.filter(agreement => agreementAppliesToTransaction(agreement, chargeElement.purposeUse)),
     chargePeriod,
     status: Transaction.statuses.candidate,
     authorisedDays: helpers.charging.getBillableDays(absPeriod, financialYear.start.format(DATE_FORMAT), financialYear.end.format(DATE_FORMAT)),
