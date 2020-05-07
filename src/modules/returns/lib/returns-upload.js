@@ -1,4 +1,4 @@
-const s3 = require('../../../lib/connectors/s3');
+const s3 = require('../../../lib/services/s3');
 
 const uploadStatus = {
   PROCESSING: 'processing',

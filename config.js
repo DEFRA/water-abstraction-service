@@ -3,6 +3,7 @@
 require('dotenv').config();
 const testMode = parseInt(process.env.TEST_MODE) === 1;
 const isAcceptanceTestTarget = ['local', 'dev', 'development', 'test', 'preprod'].includes(process.env.NODE_ENV);
+const isProduction = ['production'].includes(process.env.NODE_ENV);
 const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0';
 
 module.exports = {
@@ -173,7 +174,10 @@ module.exports = {
       returns_reminder_returns_to_letter_enforcement_action: '3e788afa-bc7d-4fa8-b7da-32472b5d0f55'
     }
   },
-  import: { returns: { importYears: process.env.IMPORT_RETURNS_YEARS || 3 } },
+  import: {
+    returns: { importYears: process.env.IMPORT_RETURNS_YEARS || 3 },
+    zipPassword: process.env.NALD_ZIP_PASSWORD
+  },
   services: {
     crm: crmUri,
     crm_v2: crmUri.replace('1.0', '2.0'),
@@ -186,6 +190,8 @@ module.exports = {
   },
 
   isAcceptanceTestTarget,
+
+  isProduction,
 
   cognito: {
     username: process.env.COGNITO_USERNAME,
