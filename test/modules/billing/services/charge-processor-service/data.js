@@ -1,9 +1,12 @@
+const uuid = require('uuid/v4');
 const Agreement = require('../../../../../src/lib/models/agreement');
 const AbstractionPeriod = require('../../../../../src/lib/models/abstraction-period');
 const Batch = require('../../../../../src/lib/models/batch');
+const Company = require('../../../../../src/lib/models/company');
 const ChargeElement = require('../../../../../src/lib/models/charge-element');
 const ChargeVersion = require('../../../../../src/lib/models/charge-version');
 const DateRange = require('../../../../../src/lib/models/date-range');
+const InvoiceAccount = require('../../../../../src/lib/models/invoice-account');
 const Licence = require('../../../../../src/lib/models/licence');
 const LicenceAgreement = require('../../../../../src/lib/models/licence-agreement');
 const FinancialYear = require('../../../../../src/lib/models/financial-year');
@@ -24,6 +27,8 @@ const createLicence = (overrides = {}) => {
 
 const createChargeVersion = (overrides = {}) => {
   const chargeVersion = new ChargeVersion();
+  chargeVersion.company = new Company(uuid());
+  chargeVersion.invoiceAccount = new InvoiceAccount(uuid());
   return chargeVersion.fromHash({
     dateRange: new DateRange(overrides.startDate || '2000-01-01', overrides.endDate || null),
     ...overrides

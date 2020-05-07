@@ -4,7 +4,7 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 const transactionsProcessor = require('../../../../../src/modules/billing/services/charge-processor-service/transactions-processor');
 const data = require('./data');
 
-experiment('modules/billing/services/transactions-processor', async () => {
+experiment('modules/billing/services/charge-processor-service/transactions-processor', async () => {
   experiment('.createTransactions', async () => {
     const financialYear = data.createFinancialYear();
     let chargeVersion, batch, transactions;
