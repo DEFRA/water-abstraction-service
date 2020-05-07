@@ -81,9 +81,9 @@ experiment('modules/billing/register-subscribers', () => {
         await registerSubscribers.register(server);
       });
 
-      test('schedules cron job to run at 1 pm daily', async () => {
+      test('schedules cron job to run every hour', async () => {
         const [schedule] = cron.schedule.firstCall.args;
-        expect(schedule).to.equal('0 13 * * *');
+        expect(schedule).to.equal('0 * * * *');
       });
     });
   });
