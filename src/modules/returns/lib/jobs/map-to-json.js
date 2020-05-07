@@ -1,5 +1,5 @@
 const JOB_NAME = 'returns-upload-to-json';
-const s3 = require('../../../../lib/connectors/s3');
+const s3 = require('../../../../lib/services/s3');
 const eventsService = require('../../../../lib/services/events');
 const returnsUpload = require('../returns-upload');
 const uploadStatus = returnsUpload.uploadStatus;

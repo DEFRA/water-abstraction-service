@@ -3,7 +3,7 @@ const { expect } = require('@hapi/code');
 const hapi = require('@hapi/hapi');
 const server = new hapi.Server();
 const licenceCreator = require('../../scripts/licence-creator/index.js');
-const { copyTestFiles } = require('../../src/modules/import/extract.js');
+const { copyTestFiles } = require('../../src/modules/import/services/extract-service.js');
 const routes = Object.values(require('../../src/modules/import/routes'));
 
 let licenceData;

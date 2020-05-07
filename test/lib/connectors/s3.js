@@ -23,7 +23,7 @@ const S3_CREDENTIALS = {
   bucket: 'bucket-name'
 };
 
-experiment('lib/connectors/s3', () => {
+experiment('lib/services/s3', () => {
   beforeEach(async () => {
     sandbox.stub(config, 'proxy').value(PROXY);
     sandbox.stub(config, 's3').value(S3_CREDENTIALS);
@@ -34,12 +34,12 @@ experiment('lib/connectors/s3', () => {
     sandbox.restore();
   });
 
-  experiment('.getS3Options', () => {
+  experiment('._getS3Options', () => {
     experiment('when a proxy is defined', () => {
       let result;
 
       beforeEach(async () => {
-        result = s3.getS3Options();
+        result = s3._getS3Options();
       });
 
       test('result is an object', async () => {
@@ -65,7 +65,7 @@ experiment('lib/connectors/s3', () => {
 
       beforeEach(async () => {
         sandbox.stub(config, 'proxy').value(undefined);
-        result = s3.getS3Options();
+        result = s3._getS3Options();
       });
 
       test('result is an object', async () => {
