@@ -4,7 +4,7 @@ const { logger } = require('../../../logger');
 const constants = require('../lib/constants');
 const config = require('../../../../config');
 
-const primaryPath = path.join(constants.LOCAL_TEMP_PATH, 'nald_dl.zip');
+const primaryPath = path.join(constants.LOCAL_TEMP_PATH, constants.S3_IMPORT_FILE);
 const secondaryPath = path.join(constants.LOCAL_TEMP_PATH, `${constants.CSV_DIRECTORY}.zip`);
 
 /**
@@ -14,9 +14,9 @@ const secondaryPath = path.join(constants.LOCAL_TEMP_PATH, `${constants.CSV_DIRE
  * @param {String} [password] - password if encrypted
  */
 const extractArchive = async (source, destination, password) => {
-  let command = `7z x ${source} -o ${destination}`;
+  let command = `7z x ${source} -o${destination}`;
   if (password) {
-    command += ` -p ${password}`;
+    command += ` -p${password}`;
   }
   await helpers.execCommand(command);
 };
