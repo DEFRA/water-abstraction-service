@@ -44,7 +44,7 @@ const dbToModel = row => {
   if (chargeElementRow.purposeUse) {
     element.purposeUse = purpose.dbToModelUse(chargeElementRow.purposeUse);
   }
-  if (chargeElementRow.timeLimitedStartDate || chargeElementRow.timeLimitedEndDate) {
+  if (chargeElementRow.timeLimitedStartDate && chargeElementRow.timeLimitedEndDate) {
     element.timeLimitedPeriod = new DateRange(
       chargeElementRow.timeLimitedStartDate, chargeElementRow.timeLimitedEndDate);
   }
