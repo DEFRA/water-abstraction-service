@@ -5,6 +5,7 @@ const uuid = require('uuid/v4');
 const sandbox = require('sinon').createSandbox();
 
 const Invoice = require('../../../../../src/lib/models/invoice');
+const Transaction = require('../../../../../src/lib/models/transaction');
 
 const crmV2 = require('../../../../../src/lib/connectors/crm-v2');
 const chargeProcessorService = require('../../../../../src/modules/billing/services/charge-processor-service');
@@ -148,6 +149,42 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
       const { invoiceAccount } = invoice;
       expect(invoiceAccount.id).to.equal(crmData.invoiceAccount.invoiceAccountId);
       expect(invoiceAccount.accountNumber).to.equal(crmData.invoiceAccount.invoiceAccountNumber);
+    });
+
+    test('the Invoice has the most recent address on the invoice account', async () => {
+      const { address } = invoice;
+      const { address: crmAddress } = crmData.invoiceAccount.invoiceAccountAddresses[1];
+      expect(address.id).to.equal(crmAddress.addressId);
+      expect(address.addressLine1).to.equal(crmAddress.address1);
+      expect(address.addressLine2).to.equal(crmAddress.address2);
+      expect(address.addressLine3).to.equal(crmAddress.address3);
+      expect(address.addressLine4).to.equal(crmAddress.address4);
+      expect(address.town).to.equal(crmAddress.town);
+      expect(address.county).to.equal(crmAddress.county);
+      expect(address.postcode).to.equal(crmAddress.postcode);
+      expect(address.country).to.equal(crmAddress.country);
+    });
+
+    test('the Invoice returned has the correct licence-holder details', async () => {
+      expect(invoice.invoiceLicences).to.be.an.array().length(1);
+      const [invoiceLicence] = invoice.invoiceLicences;
+      expect(invoiceLicence.company.id).to.equal(crmData.company.companyId);
+      expect(invoiceLicence.address.id).to.equal(crmData.document.documentRoles[1].address.addressId);
+      expect(invoiceLicence.address.addressLine1).to.equal(crmData.document.documentRoles[1].address.address1);
+      expect(invoiceLicence.address.addressLine2).to.equal(crmData.document.documentRoles[1].address.address2);
+      expect(invoiceLicence.address.addressLine3).to.equal(crmData.document.documentRoles[1].address.address3);
+      expect(invoiceLicence.address.addressLine4).to.equal(crmData.document.documentRoles[1].address.address4);
+      expect(invoiceLicence.address.town).to.equal(crmData.document.documentRoles[1].address.town);
+      expect(invoiceLicence.address.county).to.equal(crmData.document.documentRoles[1].address.county);
+      expect(invoiceLicence.address.postcode).to.equal(crmData.document.documentRoles[1].address.postcode);
+      expect(invoiceLicence.address.country).to.equal(crmData.document.documentRoles[1].address.country);
+    });
+
+    test('the Invoice model returned has an array of transactions', async () => {
+      expect(invoice.invoiceLicences[0].transactions).to.be.an.array().length(4);
+      invoice.invoiceLicences[0].transactions.forEach(transaction => {
+        expect(transaction instanceof Transaction).to.be.true();
+      });
     });
   });
 });
