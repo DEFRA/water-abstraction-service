@@ -28,7 +28,8 @@ const mapAbstractionPeriod = chargeElementRow => {
  * @param {Object} chargeElementRow - charge element row from the charge processor
  * @return {ChargeElement}
  */
-const chargeToModel = chargeElementRow => {
+const dbToModel = row => {
+  const chargeElementRow = camelCaseKeys(row);
   const element = new ChargeElement();
   element.fromHash({
     id: chargeElementRow.chargeElementId,
@@ -48,16 +49,6 @@ const chargeToModel = chargeElementRow => {
       chargeElementRow.timeLimitedStartDate, chargeElementRow.timeLimitedEndDate);
   }
   return element;
-};
-
-/**
- * Maps a water.charge_elements DB row to a ChargeElement model
- * @param {Object} row
- * @return {ChargeElement}
- */
-const dbToModel = row => {
-  const data = camelCaseKeys(row);
-  return chargeToModel(data);
 };
 
 exports.dbToModel = dbToModel;

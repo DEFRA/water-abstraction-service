@@ -6,6 +6,7 @@ const {
 const { expect } = require('@hapi/code');
 
 const ChargeElement = require('../../../../src/lib/models/charge-element');
+const DateRange = require('../../../../src/lib/models/date-range');
 const Purpose = require('../../../../src/lib/models/purpose');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
@@ -85,6 +86,18 @@ experiment('modules/billing/mappers/charge-element', () => {
 
       test('the purposeUse property is not set', async () => {
         expect(result.purposeUse instanceof Purpose).to.be.true();
+      });
+    });
+
+    experiment('when the database row contains time-limited dates', () => {
+      beforeEach(async () => {
+        result = chargeElementsMapper.dbToModel(data.timeLimitedChargeElement);
+      });
+
+      test('the timeLimitedPeriod property is set', async () => {
+        expect(result.timeLimitedPeriod instanceof DateRange).to.be.true();
+        expect(result.timeLimitedPeriod.startDate).to.equal(data.timeLimitedChargeElement.timeLimitedStartDate);
+        expect(result.timeLimitedPeriod.endDate).to.equal(data.timeLimitedChargeElement.timeLimitedEndDate);
       });
     });
   });
