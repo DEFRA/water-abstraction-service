@@ -36,12 +36,12 @@ experiment('modules/import/services/zip-service', () => {
 
       test('the first call extracts the primary zip with password', async () => {
         const [cmd] = helpers.execCommand.firstCall.args;
-        expect(cmd).to.equal('7z x temp/nald_dl.zip -o ./temp/ -p test-password');
+        expect(cmd).to.equal('7z x temp/nald_enc.zip -o./temp/ -ptest-password');
       });
 
       test('the second call extracts the secondary zip without password', async () => {
         const [cmd] = helpers.execCommand.secondCall.args;
-        expect(cmd).to.equal('7z x temp/NALD.zip -o ./temp/');
+        expect(cmd).to.equal('7z x temp/NALD.zip -o./temp/');
       });
     });
 
