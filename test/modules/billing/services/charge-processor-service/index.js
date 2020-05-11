@@ -4,6 +4,8 @@ const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi
 const uuid = require('uuid/v4');
 const sandbox = require('sinon').createSandbox();
 
+const { NotFoundError } = require('../../../../../src/lib/errors');
+
 const Invoice = require('../../../../../src/lib/models/invoice');
 const Transaction = require('../../../../../src/lib/models/transaction');
 
@@ -104,86 +106,176 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
       // Create batch and charge version data
       batch = data.createBatch('annual');
       financialYear = data.createFinancialYear();
-      chargeVersion = data.createChargeVersionWithTwoPartTariff();
-      chargeVersionService.getByChargeVersionId.resolves(chargeVersion);
-
-      // Run charge processor
-      invoice = await chargeProcessorService.processChargeVersionYear(batch, financialYear, 'charge-version-id');
     });
 
-    test('the charge version is loaded with the correct ID', async () => {
-      expect(chargeVersionService.getByChargeVersionId.calledWith(
-        'charge-version-id'
-      )).to.be.true();
+    experiment('when all charge version/CRM data is found', () => {
+      beforeEach(async () => {
+        chargeVersion = data.createChargeVersionWithTwoPartTariff();
+        chargeVersionService.getByChargeVersionId.resolves(chargeVersion);
+
+        // Run charge processor
+        invoice = await chargeProcessorService.processChargeVersionYear(batch, financialYear, 'charge-version-id');
+      });
+
+      test('the charge version is loaded with the correct ID', async () => {
+        expect(chargeVersionService.getByChargeVersionId.calledWith(
+          'charge-version-id'
+        )).to.be.true();
+      });
+
+      test('the CRM company for the charge version is loaded', async () => {
+        expect(crmV2.companies.getCompany.calledWith(
+          chargeVersion.company.id
+        )).to.be.true();
+      });
+
+      test('the invoice account for the charge version is loaded', async () => {
+        expect(crmV2.invoiceAccounts.getInvoiceAccountById.calledWith(
+          chargeVersion.invoiceAccount.id
+        )).to.be.true();
+      });
+
+      test('CRM documents are loaded for the charge version licence number', async () => {
+        expect(crmV2.documents.getDocuments.calledWith(
+          chargeVersion.licence.licenceNumber
+        )).to.be.true();
+      });
+
+      test('the document relating to the start of the charge period is loaded', async () => {
+        expect(crmV2.documents.getDocument.calledWith(
+          crmData.documents[1].documentId
+        )).to.be.true();
+      });
+
+      test('an Invoice model is returned', async () => {
+        expect(invoice instanceof Invoice).to.be.true();
+      });
+
+      test('the Invoice returned has correct invoice account details from CRM', async () => {
+        const { invoiceAccount } = invoice;
+        expect(invoiceAccount.id).to.equal(crmData.invoiceAccount.invoiceAccountId);
+        expect(invoiceAccount.accountNumber).to.equal(crmData.invoiceAccount.invoiceAccountNumber);
+      });
+
+      test('the Invoice has the most recent address on the invoice account', async () => {
+        const { address } = invoice;
+        const { address: crmAddress } = crmData.invoiceAccount.invoiceAccountAddresses[1];
+        expect(address.id).to.equal(crmAddress.addressId);
+        expect(address.addressLine1).to.equal(crmAddress.address1);
+        expect(address.addressLine2).to.equal(crmAddress.address2);
+        expect(address.addressLine3).to.equal(crmAddress.address3);
+        expect(address.addressLine4).to.equal(crmAddress.address4);
+        expect(address.town).to.equal(crmAddress.town);
+        expect(address.county).to.equal(crmAddress.county);
+        expect(address.postcode).to.equal(crmAddress.postcode);
+        expect(address.country).to.equal(crmAddress.country);
+      });
+
+      test('the Invoice returned has the correct licence-holder details', async () => {
+        expect(invoice.invoiceLicences).to.be.an.array().length(1);
+        const [invoiceLicence] = invoice.invoiceLicences;
+        expect(invoiceLicence.company.id).to.equal(crmData.company.companyId);
+        expect(invoiceLicence.address.id).to.equal(crmData.document.documentRoles[1].address.addressId);
+        expect(invoiceLicence.address.addressLine1).to.equal(crmData.document.documentRoles[1].address.address1);
+        expect(invoiceLicence.address.addressLine2).to.equal(crmData.document.documentRoles[1].address.address2);
+        expect(invoiceLicence.address.addressLine3).to.equal(crmData.document.documentRoles[1].address.address3);
+        expect(invoiceLicence.address.addressLine4).to.equal(crmData.document.documentRoles[1].address.address4);
+        expect(invoiceLicence.address.town).to.equal(crmData.document.documentRoles[1].address.town);
+        expect(invoiceLicence.address.county).to.equal(crmData.document.documentRoles[1].address.county);
+        expect(invoiceLicence.address.postcode).to.equal(crmData.document.documentRoles[1].address.postcode);
+        expect(invoiceLicence.address.country).to.equal(crmData.document.documentRoles[1].address.country);
+      });
+
+      test('the Invoice model returned has an array of transactions', async () => {
+        expect(invoice.invoiceLicences[0].transactions).to.be.an.array().length(4);
+        invoice.invoiceLicences[0].transactions.forEach(transaction => {
+          expect(transaction instanceof Transaction).to.be.true();
+        });
+      });
     });
 
-    test('the CRM company for the charge version is loaded', async () => {
-      expect(crmV2.companies.getCompany.calledWith(
-        chargeVersion.company.id
-      )).to.be.true();
+    experiment('if the charge version is not found', () => {
+      beforeEach(async () => {
+        chargeVersionService.getByChargeVersionId.resolves(null);
+      });
+
+      test('a NotFoundError is thrown', async () => {
+        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, 'charge-version-id');
+
+        const err = await expect(func()).to.reject();
+
+        expect(err instanceof NotFoundError).to.be.true();
+        expect(err.message).to.equal('Charge version charge-version-id not found');
+      });
     });
 
-    test('the invoice account for the charge version is loaded', async () => {
-      expect(crmV2.invoiceAccounts.getInvoiceAccountById.calledWith(
-        chargeVersion.invoiceAccount.id
-      )).to.be.true();
+    experiment('if the CRM company is not found', () => {
+      beforeEach(async () => {
+        chargeVersion = data.createChargeVersionWithTwoPartTariff();
+        chargeVersionService.getByChargeVersionId.resolves(chargeVersion);
+        crmV2.companies.getCompany.resolves(null);
+      });
+
+      test('a NotFoundError is thrown', async () => {
+        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, 'charge-version-id');
+
+        const err = await expect(func()).to.reject();
+
+        expect(err instanceof NotFoundError).to.be.true();
+        expect(err.message).to.equal(`Company ${chargeVersion.company.id} not found in CRM`);
+      });
     });
 
-    test('CRM documents are loaded for the charge version licence number', async () => {
-      expect(crmV2.documents.getDocuments.calledWith(
-        chargeVersion.licence.licenceNumber
-      )).to.be.true();
+    experiment('if the CRM documents are not found', () => {
+      beforeEach(async () => {
+        chargeVersion = data.createChargeVersionWithTwoPartTariff();
+        chargeVersionService.getByChargeVersionId.resolves(chargeVersion);
+        crmV2.documents.getDocuments.resolves([]);
+      });
+
+      test('a NotFoundError is thrown', async () => {
+        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, 'charge-version-id');
+
+        const err = await expect(func()).to.reject();
+
+        expect(err instanceof NotFoundError).to.be.true();
+        expect(err.message).to.equal('Document not found in CRM for 01/134 on 2019-04-01');
+      });
     });
 
-    test('the document relating to the start of the charge period is loaded', async () => {
-      expect(crmV2.documents.getDocument.calledWith(
-        crmData.documents[1].documentId
-      )).to.be.true();
+    experiment('if the CRM document is not found', () => {
+      beforeEach(async () => {
+        chargeVersion = data.createChargeVersionWithTwoPartTariff();
+        chargeVersionService.getByChargeVersionId.resolves(chargeVersion);
+        crmV2.documents.getDocument.resolves(null);
+      });
+
+      test('a NotFoundError is thrown', async () => {
+        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, 'charge-version-id');
+
+        const err = await expect(func()).to.reject();
+
+        expect(err instanceof NotFoundError).to.be.true();
+        expect(err.message).to.equal('Document test-document-2 not found in CRM');
+      });
     });
 
-    test('an Invoice model is returned', async () => {
-      expect(invoice instanceof Invoice).to.be.true();
-    });
+    experiment('if there is no relevant role in the CRM document data', () => {
+      beforeEach(async () => {
+        chargeVersion = data.createChargeVersionWithTwoPartTariff();
+        chargeVersionService.getByChargeVersionId.resolves(chargeVersion);
+        crmV2.documents.getDocument.resolves({
+          documentRoles: []
+        });
+      });
 
-    test('the Invoice returned has correct invoice account details from CRM', async () => {
-      const { invoiceAccount } = invoice;
-      expect(invoiceAccount.id).to.equal(crmData.invoiceAccount.invoiceAccountId);
-      expect(invoiceAccount.accountNumber).to.equal(crmData.invoiceAccount.invoiceAccountNumber);
-    });
+      test('a NotFoundError is thrown', async () => {
+        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, 'charge-version-id');
 
-    test('the Invoice has the most recent address on the invoice account', async () => {
-      const { address } = invoice;
-      const { address: crmAddress } = crmData.invoiceAccount.invoiceAccountAddresses[1];
-      expect(address.id).to.equal(crmAddress.addressId);
-      expect(address.addressLine1).to.equal(crmAddress.address1);
-      expect(address.addressLine2).to.equal(crmAddress.address2);
-      expect(address.addressLine3).to.equal(crmAddress.address3);
-      expect(address.addressLine4).to.equal(crmAddress.address4);
-      expect(address.town).to.equal(crmAddress.town);
-      expect(address.county).to.equal(crmAddress.county);
-      expect(address.postcode).to.equal(crmAddress.postcode);
-      expect(address.country).to.equal(crmAddress.country);
-    });
+        const err = await expect(func()).to.reject();
 
-    test('the Invoice returned has the correct licence-holder details', async () => {
-      expect(invoice.invoiceLicences).to.be.an.array().length(1);
-      const [invoiceLicence] = invoice.invoiceLicences;
-      expect(invoiceLicence.company.id).to.equal(crmData.company.companyId);
-      expect(invoiceLicence.address.id).to.equal(crmData.document.documentRoles[1].address.addressId);
-      expect(invoiceLicence.address.addressLine1).to.equal(crmData.document.documentRoles[1].address.address1);
-      expect(invoiceLicence.address.addressLine2).to.equal(crmData.document.documentRoles[1].address.address2);
-      expect(invoiceLicence.address.addressLine3).to.equal(crmData.document.documentRoles[1].address.address3);
-      expect(invoiceLicence.address.addressLine4).to.equal(crmData.document.documentRoles[1].address.address4);
-      expect(invoiceLicence.address.town).to.equal(crmData.document.documentRoles[1].address.town);
-      expect(invoiceLicence.address.county).to.equal(crmData.document.documentRoles[1].address.county);
-      expect(invoiceLicence.address.postcode).to.equal(crmData.document.documentRoles[1].address.postcode);
-      expect(invoiceLicence.address.country).to.equal(crmData.document.documentRoles[1].address.country);
-    });
-
-    test('the Invoice model returned has an array of transactions', async () => {
-      expect(invoice.invoiceLicences[0].transactions).to.be.an.array().length(4);
-      invoice.invoiceLicences[0].transactions.forEach(transaction => {
-        expect(transaction instanceof Transaction).to.be.true();
+        expect(err instanceof NotFoundError).to.be.true();
+        expect(err.message).to.equal('Licence holder role not found in CRM for document test-document-2 on 2019-04-01');
       });
     });
   });

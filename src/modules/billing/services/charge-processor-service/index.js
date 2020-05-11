@@ -2,6 +2,7 @@ const { sortBy, last } = require('lodash');
 const moment = require('moment');
 
 const validators = require('../../../../lib/models/validators');
+const { NotFoundError } = require('../../../../lib/errors');
 
 const Batch = require('../../../../lib/models/batch');
 const FinancialYear = require('../../../../lib/models/financial-year');
@@ -21,7 +22,7 @@ const getChargePeriodStartDate = (financialYear, chargeVersion) => dateHelpers.g
   chargeVersion.licence.startDate,
   financialYear.start,
   chargeVersion.dateRange.startDate
-]);
+]).format('YYYY-MM-DD');
 
 /**
  * Given an array of invoice account addresses from CRM data,
@@ -35,7 +36,7 @@ const getLastAddress = invoiceAccountAddresses => {
     return moment(row.startDate).unix();
   });
   const lastAddress = last(sorted);
-  return lastAddress && mappers.address.crmToModel(lastAddress.address);
+  return mappers.address.crmToModel(lastAddress.address);
 };
 
 /**
@@ -67,25 +68,76 @@ const createInvoiceLicence = (company, chargeVersion, licenceHolderRole) => {
   });
 };
 
+const getDocumentByDate = async (chargeVersion, chargePeriodStartDate) => {
+  const { licenceNumber } = chargeVersion.licence;
+
+  // Load all CRM documents for licence
+  const result = await crmV2.documents.getDocuments(licenceNumber);
+  const documents = result || [];
+
+  const document = dateHelpers.findByDate(documents, chargePeriodStartDate);
+
+  if (!document) {
+    throw new NotFoundError(`Document not found in CRM for ${licenceNumber} on ${chargePeriodStartDate}`); ;
+  }
+  return document;
+};
+
 /**
- * Gets the licence holder role from the CRM for the licence p
- * on the specified date
- * @param {String} licenceNumber
+ * Gets CRM licence holder role for charge version or throws NotFoundError
+ * @param {ChargeVersion} chargeVersion
  * @param {String} chargePeriodStartDate - YYYY-MM-DD
  * @return {Promise<Object>} CRM role data
  */
-const getLicenceHolderRole = async (licenceNumber, chargePeriodStartDate) => {
-  // Load all CRM documents for licence number
-  const documents = await crmV2.documents.getDocuments(licenceNumber);
-  const document = dateHelpers.findByDate(documents, chargePeriodStartDate);
-  if (document) {
-    // Load document roles for relevant document
-    const { documentRoles } = await crmV2.documents.getDocument(document.documentId);
-    return dateHelpers.findByDate(
-      documentRoles.filter(role => role.roleName === 'licenceHolder'),
-      chargePeriodStartDate
-    );
+const getLicenceHolderRole = async (chargeVersion, chargePeriodStartDate) => {
+  const { licenceNumber } = chargeVersion.licence;
+
+  const { documentId } = await getDocumentByDate(chargeVersion, chargePeriodStartDate);
+
+  // Load document roles for relevant document, and filter to find
+  // the licence holder role at the start of the charge period
+  const document = await crmV2.documents.getDocument(documentId);
+
+  if (!document) {
+    throw new NotFoundError(`Document ${documentId} not found in CRM`); ;
   }
+
+  const role = dateHelpers.findByDate(
+    document.documentRoles.filter(role => role.roleName === 'licenceHolder'),
+    chargePeriodStartDate
+  );
+  if (!role) {
+    throw new NotFoundError(`Licence holder role not found in CRM for document ${documentId} on ${chargePeriodStartDate}`);
+  }
+  return role;
+};
+
+/**
+ * Gets CRM company for charge version or throws NotFoundError
+ * @param {ChargeVersion} chargeVersion
+ * @return {Promise<Object>}
+ */
+const getCompany = async chargeVersion => {
+  const { id } = chargeVersion.company;
+  const company = await crmV2.companies.getCompany(id);
+  if (!company) {
+    throw new NotFoundError(`Company ${id} not found in CRM`);
+  }
+  return company;
+};
+
+/**
+ * Gets CRM invoice account for charge version or throws NotFoundError
+ * @param {ChargeVersion} chargeVersion
+ * @return {Promise<Object>}
+ */
+const getInvoiceAccount = async chargeVersion => {
+  const { id } = chargeVersion.invoiceAccount;
+  const invoiceAccount = await crmV2.invoiceAccounts.getInvoiceAccountById(id);
+  if (!invoiceAccount) {
+    throw new NotFoundError(`Invoice account ${id} not found in CRM`);
+  }
+  return invoiceAccount;
 };
 
 /**
@@ -101,15 +153,18 @@ const processChargeVersionYear = async (batch, financialYear, chargeVersionId) =
 
   // Load ChargeVersion service model
   const chargeVersion = await chargeVersionService.getByChargeVersionId(chargeVersionId);
+  if (!chargeVersion) {
+    throw new NotFoundError(`Charge version ${chargeVersionId} not found`);
+  }
 
   // Get charge period start date
   const chargePeriodStartDate = getChargePeriodStartDate(financialYear, chargeVersion);
 
-  // Load company/invoice account
+  // Load company/invoice account/licence holder data from CRM
   const [company, invoiceAccount, licenceHolderRole] = await Promise.all([
-    crmV2.companies.getCompany(chargeVersion.company.id),
-    crmV2.invoiceAccounts.getInvoiceAccountById(chargeVersion.invoiceAccount.id),
-    getLicenceHolderRole(chargeVersion.licence.licenceNumber, chargePeriodStartDate)
+    getCompany(chargeVersion),
+    getInvoiceAccount(chargeVersion),
+    getLicenceHolderRole(chargeVersion, chargePeriodStartDate)
   ]);
 
   // Generate Invoice data structure
