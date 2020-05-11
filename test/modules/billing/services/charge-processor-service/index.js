@@ -114,12 +114,12 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
         chargeVersionService.getByChargeVersionId.resolves(chargeVersion);
 
         // Run charge processor
-        invoice = await chargeProcessorService.processChargeVersionYear(batch, financialYear, 'charge-version-id');
+        invoice = await chargeProcessorService.processChargeVersionYear(batch, financialYear, chargeVersion.id);
       });
 
       test('the charge version is loaded with the correct ID', async () => {
         expect(chargeVersionService.getByChargeVersionId.calledWith(
-          'charge-version-id'
+          chargeVersion.id
         )).to.be.true();
       });
 
@@ -200,12 +200,12 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
       });
 
       test('a NotFoundError is thrown', async () => {
-        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, 'charge-version-id');
+        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, chargeVersion.id);
 
         const err = await expect(func()).to.reject();
 
         expect(err instanceof NotFoundError).to.be.true();
-        expect(err.message).to.equal('Charge version charge-version-id not found');
+        expect(err.message).to.equal(`Charge version ${chargeVersion.id} not found`);
       });
     });
 
@@ -217,7 +217,7 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
       });
 
       test('a NotFoundError is thrown', async () => {
-        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, 'charge-version-id');
+        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, chargeVersion.id);
 
         const err = await expect(func()).to.reject();
 
@@ -234,7 +234,7 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
       });
 
       test('a NotFoundError is thrown', async () => {
-        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, 'charge-version-id');
+        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, chargeVersion.id);
 
         const err = await expect(func()).to.reject();
 
@@ -251,7 +251,7 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
       });
 
       test('a NotFoundError is thrown', async () => {
-        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, 'charge-version-id');
+        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, chargeVersion.id);
 
         const err = await expect(func()).to.reject();
 
@@ -270,7 +270,7 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
       });
 
       test('a NotFoundError is thrown', async () => {
-        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, 'charge-version-id');
+        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, chargeVersion.id);
 
         const err = await expect(func()).to.reject();
 

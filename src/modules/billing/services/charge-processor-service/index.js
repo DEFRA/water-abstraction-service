@@ -78,6 +78,7 @@ const createInvoiceLicence = (company, chargeVersion, licenceHolderRole) => {
 const processChargeVersionYear = async (batch, financialYear, chargeVersionId) => {
   validators.assertIsInstanceOf(batch, Batch);
   validators.assertIsInstanceOf(financialYear, FinancialYear);
+  validators.assertId(chargeVersionId);
 
   // Load ChargeVersion service model
   const chargeVersion = await chargeVersionService.getByChargeVersionId(chargeVersionId);

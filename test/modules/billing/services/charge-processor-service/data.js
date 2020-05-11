@@ -26,7 +26,7 @@ const createLicence = (overrides = {}) => {
 };
 
 const createChargeVersion = (overrides = {}) => {
-  const chargeVersion = new ChargeVersion();
+  const chargeVersion = new ChargeVersion(uuid());
   chargeVersion.company = new Company(uuid());
   chargeVersion.invoiceAccount = new InvoiceAccount(uuid());
   return chargeVersion.fromHash({
