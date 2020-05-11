@@ -1,4 +1,4 @@
-const { sortBy, last } = require('lodash');
+const { sortBy, last, get } = require('lodash');
 const moment = require('moment');
 
 const validators = require('../../../../lib/models/validators');
@@ -90,8 +90,6 @@ const getDocumentByDate = async (chargeVersion, chargePeriodStartDate) => {
  * @return {Promise<Object>} CRM role data
  */
 const getLicenceHolderRole = async (chargeVersion, chargePeriodStartDate) => {
-  const { licenceNumber } = chargeVersion.licence;
-
   const { documentId } = await getDocumentByDate(chargeVersion, chargePeriodStartDate);
 
   // Load document roles for relevant document, and filter to find
@@ -113,32 +111,44 @@ const getLicenceHolderRole = async (chargeVersion, chargePeriodStartDate) => {
 };
 
 /**
+ * Makes CRM API call and throws error if not found
+ * @param {ChargeVersion} chargeVersion
+ * @param {Object} config
+ * @param {String} config.property - the path to the ID property in the chargeVersion model
+ * @param {Function} config.apiCall - the CRM API call
+ * @param {String} config.name - the name of the entity, used to generate a meaningful error message
+ * @return {Promise<Object>}
+ */
+const makeCRMAPICall = async (chargeVersion, config) => {
+  const id = get(chargeVersion, config.property);
+  const data = await config.apiCall(id);
+  if (!data) {
+    throw new NotFoundError(`${config.name} ${id} not found in CRM`);
+  }
+  return data;
+};
+
+/**
  * Gets CRM company for charge version or throws NotFoundError
  * @param {ChargeVersion} chargeVersion
  * @return {Promise<Object>}
  */
-const getCompany = async chargeVersion => {
-  const { id } = chargeVersion.company;
-  const company = await crmV2.companies.getCompany(id);
-  if (!company) {
-    throw new NotFoundError(`Company ${id} not found in CRM`);
-  }
-  return company;
-};
+const getCompany = chargeVersion => makeCRMAPICall(chargeVersion, {
+  property: 'company.id',
+  apiCall: id => crmV2.companies.getCompany(id),
+  name: 'Company'
+});
 
 /**
  * Gets CRM invoice account for charge version or throws NotFoundError
  * @param {ChargeVersion} chargeVersion
  * @return {Promise<Object>}
  */
-const getInvoiceAccount = async chargeVersion => {
-  const { id } = chargeVersion.invoiceAccount;
-  const invoiceAccount = await crmV2.invoiceAccounts.getInvoiceAccountById(id);
-  if (!invoiceAccount) {
-    throw new NotFoundError(`Invoice account ${id} not found in CRM`);
-  }
-  return invoiceAccount;
-};
+const getInvoiceAccount = chargeVersion => makeCRMAPICall(chargeVersion, {
+  property: 'invoiceAccount.id',
+  apiCall: id => crmV2.invoiceAccounts.getInvoiceAccountById(id),
+  name: 'Invoice account'
+});
 
 /**
  * Creates the invoice data structure for a given charge version year
