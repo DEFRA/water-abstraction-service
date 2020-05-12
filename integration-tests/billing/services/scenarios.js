@@ -15,6 +15,10 @@ const schema = {
   licence: Joi.string().required(),
   chargeVersions: Joi.array().items({
     company: Joi.string().required(),
+    invoiceAccount: Joi.object({
+      company: Joi.string().required(),
+      invoiceAccount: Joi.string().required()
+    }),
     chargeVersion: Joi.string().required(),
     chargeElements: Joi.array().items(
       Joi.string()
@@ -29,7 +33,11 @@ const schema = {
  */
 const createCRMData = async chargeVersion => {
   const company = await crm.getOrCreateCompany(chargeVersion.company);
-  return { company };
+  const invoiceAccount = await crm.getOrCreateInvoiceAccount(
+    chargeVersion.invoiceAccount.company,
+    chargeVersion.invoiceAccount.invoiceAccount
+  );
+  return { company, invoiceAccount };
 };
 
 /**

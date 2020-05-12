@@ -14,6 +14,8 @@ const tearDown = async () => {
   await chargeVersions.tearDown();
   await regions.tearDown();
   await crm.tearDown();
+
+  // @TODO delete batch in charge module
 };
 
 exports.tearDown = tearDown;

@@ -11,7 +11,8 @@ const data = require('./data');
  * @type {Object}
  */
 const entityCache = {
-  companies: {}
+  companies: {},
+  invoiceAccounts: {}
 };
 
 /**
@@ -43,10 +44,44 @@ const getOrCreateCompany = async scenarioKey => {
 };
 
 /**
+ * Creates an invoice account in the CRM
+ * @param {String} companyKey
+ * @param {String} invoiceAccountKey
+ * @return {Promise<Object>} CRM invoice account entity
+ */
+const createInvoiceAccount = async (companyId, scenarioKey) => {
+  const uri = `${config.services.crm_v2}/invoice-accounts`;
+  const options = {
+    body: {
+      companyId,
+      ...data.invoiceAccounts[scenarioKey],
+      isTest: true
+    }
+  };
+  console.log(options);
+  return serviceRequest.post(uri, options);
+};
+
+/**
+ * Gets or creates invoice account
+ * @param {String} companyKey - scenario key for company
+ * @param {String} invoiceAccountKey - scenario key for invoice account
+ * @return {Promise<Object>} CRM invoice account entity
+ */
+const getOrCreateInvoiceAccount = async (companyKey, invoiceAccountKey) => {
+  if (!(invoiceAccountKey in entityCache.invoiceAccounts)) {
+    const company = await getOrCreateCompany(companyKey);
+    entityCache.invoiceAccounts[invoiceAccountKey] = await createInvoiceAccount(company.companyId, invoiceAccountKey);
+  }
+  return entityCache.invoiceAccounts[invoiceAccountKey];
+};
+
+/**
  * Clears the entity cache
  */
 const clearEntityCache = () => {
   entityCache.companies = {};
+  entityCache.invoiceAccounts = {};
 };
 
 /**
@@ -60,4 +95,5 @@ const tearDown = async () => {
 };
 
 exports.getOrCreateCompany = getOrCreateCompany;
+exports.getOrCreateInvoiceAccount = getOrCreateInvoiceAccount;
 exports.tearDown = tearDown;

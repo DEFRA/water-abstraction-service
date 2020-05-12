@@ -19,6 +19,10 @@ experiment('integration-tests/billing/index', () => {
       licence: 'l1',
       chargeVersions: [{
         company: 'co1',
+        invoiceAccount: {
+          company: 'co1',
+          invoiceAccount: 'ia1'
+        },
         chargeVersion: 'cv1',
         chargeElements: ['ce1']
       }]
