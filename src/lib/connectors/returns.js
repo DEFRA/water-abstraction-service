@@ -65,31 +65,6 @@ const getCurrentDueReturns = async (excludeLicences, returnCycle) => {
   return results.filter(ret => !excludeLicences.includes(ret.licence_ref));
 };
 
-/**
- * Makes a POST request to the returns service that causes any
- * returns not in the list of validReturnIds for the given
- * licence number to be marked as void.
- *
- * @param {String} licenceNumber The licence number
- * @param {Array} validReturnIds An array of return ids that are valid and
- * therefore will not be made void
- */
-const voidReturns = (licenceNumber, validReturnIds = []) => {
-  if (!validReturnIds.length) {
-    return Promise.resolve();
-  }
-
-  const url = `${config.services.returns}/void-returns`;
-  const body = {
-    regime: 'water',
-    licenceType: 'abstraction',
-    licenceNumber,
-    validReturnIds
-  };
-
-  return helpers.serviceRequest.patch(url, { body });
-};
-
 const getServiceVersion = async () => {
   const urlParts = new URL(config.services.returns);
   const url = urlJoin(urlParts.protocol, urlParts.host, 'status');
@@ -136,7 +111,6 @@ exports.versions = versionsClient;
 exports.lines = linesClient;
 exports.getActiveReturns = getActiveReturns;
 exports.getCurrentDueReturns = getCurrentDueReturns;
-exports.voidReturns = voidReturns;
 exports.getServiceVersion = getServiceVersion;
 exports.getReturnsForLicence = getReturnsForLicence;
 exports.getLinesForReturn = getLinesForReturn;

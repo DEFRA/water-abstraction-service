@@ -9,7 +9,7 @@ const { verificationsClient: crmVerificationsConnector } = require('../../lib/co
 const permitConnector = require('../../lib/connectors/permit');
 const returnsConnector = require('../../lib/connectors/returns');
 const importConnector = require('../../lib/connectors/import');
-const importedLicencesClient = require('../../controllers/imported_licences');
+const jobsConnector = require('../../lib/connectors/import/jobs');
 
 const pkg = require('../../../package.json');
 
@@ -19,8 +19,8 @@ const getStatus = async () => {
       versions: await getVersions(),
       ...await getIdmData(),
       ...await getCrmData(),
-      ...await getWaterData(),
-      ...await getPermitData()
+      ...await getPermitData(),
+      ...await getImportData()
     }
   };
 };
@@ -78,29 +78,6 @@ const getIdmUserCount = () => getCount(idmConnector.usersClient);
 const getCRMDocumentCount = () => getCount(crmDocumentsConnector);
 
 /**
- * Gets number of pending imports of given status in water service
- * @param {Number} status
- * @return {Promise} resolves with number of pending/completed imports
- */
-const getWaterImportStatus = async status => {
-  const filter = { status };
-  const { rowCount } = await importedLicencesClient.repo.find(filter);
-  return rowCount;
-};
-
-/**
- * Gets number of pending licence imports in water service
- * @return {Promise} - resolves with number of pending licence imports
- */
-const getWaterPendingImports = () => getWaterImportStatus(0);
-
-/**
- * Gets number of completed licence imports in water service
- * @return {Promise} - resolves with number of completed licence imports
- */
-const getWaterCompletedImports = () => getWaterImportStatus(1);
-
-/**
  * Gets number of verifications
  * @return {Promise} resolves with number of CRM verifications
  */
@@ -115,23 +92,22 @@ const getIdmData = async () => {
   };
 };
 
+const getImportData = async () => {
+  return {
+    import: {
+      jobs: {
+        summary: await jobsConnector.getSummary()
+      }
+    }
+  };
+};
+
 const getCrmData = async () => {
   return {
     crm: {
       documents: await getCRMDocumentCount(),
       ...mapCrmKpi(await getKpiData(crmKpiConnector)),
       verifications: await getCrmVerificationCount()
-    }
-  };
-};
-
-const getWaterData = async () => {
-  return {
-    waterService: {
-      import: {
-        pending: await getWaterPendingImports(),
-        complete: await getWaterCompletedImports()
-      }
     }
   };
 };

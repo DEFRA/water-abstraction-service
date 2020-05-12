@@ -1,3 +1,7 @@
+'use strict';
+
+const waterHelpers = require('@envage/water-abstraction-helpers');
+
 const { unzip } = require('lodash');
 const common = require('../common-mapping');
 
@@ -14,7 +18,7 @@ const ROW_INDEX = {
   meterSerial: 7
 };
 
-const { parseReturnId } = require('../../../../lib/returns');
+const { parseReturnId } = waterHelpers.returns;
 
 /**
  * Trims and lowercases value

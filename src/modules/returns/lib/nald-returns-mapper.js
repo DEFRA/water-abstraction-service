@@ -1,6 +1,10 @@
+'use strict';
+
 const moment = require('moment');
 const { maxBy } = require('lodash');
-const { mapQuantity, mapUnit, getStartDate, mapUsability } = require('../../import/lib/transform-returns-helpers');
+const abstractionHelpers = require('@envage/water-abstraction-helpers');
+
+const { mapQuantity, mapUnit, getStartDate, mapUsability } = abstractionHelpers.returns.mappers;
 
 /**
  * Maps a row of data from NALD to a fake line row in the new returns service
