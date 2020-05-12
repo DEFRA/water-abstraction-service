@@ -1,5 +1,7 @@
 'use strict';
 
+const { expect } = require('@hapi/code');
+
 const {
   experiment,
   test,
@@ -16,15 +18,16 @@ experiment('integration-tests/billing/index', () => {
     data = await services.scenarios.runScenario({
       licence: 'l1',
       chargeVersions: [{
+        company: 'co1',
         chargeVersion: 'cv1',
         chargeElements: ['ce1']
       }]
     }, 'annual');
   });
 
-  test('example test', async () => {
-    // @TODO - check data here
-    console.log(data);
+  // @TODO - add tests
+  test('bill run resolves to "ready" status', async () => {
+    expect(data.status).to.equal('ready');
   });
 
   after(async () => {

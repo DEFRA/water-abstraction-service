@@ -6,12 +6,13 @@ const { ChargeVersion, bookshelf } = require('../../../src/lib/connectors/booksh
  * @param {Object} region
  * @param {String} scenarioKey
  */
-const create = async (region, licence, scenarioKey) => ChargeVersion
+const create = async (region, licence, scenarioKey, crmData) => ChargeVersion
   .forge({
     isTest: true,
     regionCode: region.get('naldRegionId'),
     licenceRef: licence.get('licenceRef'),
-    ...data.chargeVersions[scenarioKey]
+    ...data.chargeVersions[scenarioKey],
+    companyId: crmData.company.companyId
   })
   .save();
 

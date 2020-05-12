@@ -2,6 +2,7 @@ const chargeVersions = require('./charge-versions');
 const regions = require('./regions');
 const licences = require('./licences');
 const batches = require('./batches');
+const crm = require('./crm');
 
 /**
  * Removes all created test data
@@ -12,6 +13,7 @@ const tearDown = async () => {
   await batches.tearDown();
   await chargeVersions.tearDown();
   await regions.tearDown();
+  await crm.tearDown();
 };
 
 exports.tearDown = tearDown;

@@ -9,15 +9,27 @@ const regions = require('./regions');
 const chargeElements = require('./charge-elements');
 const chargeVersions = require('./charge-versions');
 const tearDown = require('./tear-down');
+const crm = require('./crm');
 
 const schema = {
   licence: Joi.string().required(),
   chargeVersions: Joi.array().items({
+    company: Joi.string().required(),
     chargeVersion: Joi.string().required(),
     chargeElements: Joi.array().items(
       Joi.string()
     ).required()
   }).required()
+};
+
+/**
+ * Gets/creates the CRM entities needed for the specified charge version
+ * @param {Object} chargeVersion
+ * @return {Promise<Object>}
+ */
+const createCRMData = async chargeVersion => {
+  const company = await crm.getOrCreateCompany(chargeVersion.company);
+  return { company };
 };
 
 /**
@@ -31,7 +43,8 @@ const createScenario = async scenario => {
   const region = await regions.createTestRegion();
   const licence = await licences.create(region, scenario.licence);
   for (const row of scenario.chargeVersions) {
-    const chargeVersion = await chargeVersions.create(region, licence, row.chargeVersion);
+    const crmData = await createCRMData(row);
+    const chargeVersion = await chargeVersions.create(region, licence, row.chargeVersion, crmData);
     const tasks = row.chargeElements.map(key => chargeElements.create(chargeVersion, key));
     await Promise.all(tasks);
   }
