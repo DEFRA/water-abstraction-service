@@ -1,5 +1,6 @@
 const data = require('./data');
 const { Licence, bookshelf } = require('../../../src/lib/connectors/bookshelf');
+const { omit } = require('lodash');
 
 /**
  * Create the test licence in the region with the specified
@@ -10,7 +11,7 @@ const create = async (region, scenarioKey) => Licence
   .forge({
     isTest: true,
     regionId: region.get('regionId'),
-    ...data.licences[scenarioKey]
+    ...omit(data.licences[scenarioKey], 'documents')
   })
   .save();
 

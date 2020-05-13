@@ -10,7 +10,8 @@ const data = require('./data');
 const entityCache = {
   companies: {},
   invoiceAccounts: {},
-  addresses: {}
+  addresses: {},
+  documents: {}
 };
 
 /**
@@ -68,12 +69,69 @@ const createInvoiceAccount = async scenarioKey => {
 };
 
 /**
+ * Creates a document role
+ * @TODO support contact in role
+ * @param {Object} document - CRM document
+ * @param {Object} role
+ * @return {Promise}
+ */
+const createDocumentRole = async (document, role) => {
+  const { company: companyKey, address: addressKey, ...rest } = role;
+  const [{ companyId }, { addressId }] = await Promise.all([
+    createCompany(companyKey), createAddress(addressKey)
+  ]);
+  await crmConnector.createDocumentRole(document.documentId, {
+    ...rest, companyId, addressId, contactId: null
+  });
+};
+
+/**
+ * Gets or creates document
+ * @param {String} scenarioKey
+ * @param {Number} versionNumber
+ * @return {Promise<Object>} CRM document entity
+ */
+const createDocument = async (scenarioKey, versionNumber) => {
+  const cacheKey = `${scenarioKey}_${versionNumber}`;
+
+  if (!(cacheKey in entityCache.documents)) {
+    // Create document
+    const { roles, ...rest } = data.licences[scenarioKey].documents.find(doc => doc.versionNumber === versionNumber);
+    const document = await crmConnector.createDocument({
+      documentRef: data.licences[scenarioKey].licenceRef,
+      ...rest
+    });
+    entityCache.documents[cacheKey] = document;
+
+    // Create document roles for document
+    for (const role of roles) {
+      await createDocumentRole(document, role);
+    }
+  }
+  return entityCache.documents[cacheKey];
+};
+
+/**
+ * Creates the CRM document records for the licence specified by
+ * the scenario key
+ * @param {String} scenarioKey
+ * @return {Promise}
+ */
+const createDocuments = async scenarioKey => {
+  const { documents } = data.licences[scenarioKey];
+  for (const document of documents) {
+    await createDocument(scenarioKey, document.versionNumber);
+  }
+};
+
+/**
  * Clears the entity cache
  */
 const clearEntityCache = () => {
   entityCache.companies = {};
   entityCache.invoiceAccounts = {};
   entityCache.addresses = {};
+  entityCache.documents = {};
 };
 
 /**
@@ -87,4 +145,5 @@ const tearDown = async () => {
 
 exports.createCompany = createCompany;
 exports.createInvoiceAccount = createInvoiceAccount;
+exports.createDocuments = createDocuments;
 exports.tearDown = tearDown;

@@ -28,7 +28,7 @@ const schema = {
  * @param {Object} chargeVersion
  * @return {Promise<Object>}
  */
-const createCRMData = async chargeVersion => {
+const createCRMChargeVersionData = async chargeVersion => {
   const company = await crm.createCompany(chargeVersion.company);
   const invoiceAccount = await crm.createInvoiceAccount(
     chargeVersion.invoiceAccount
@@ -46,8 +46,9 @@ const createScenario = async scenario => {
   await tearDown.tearDown();
   const region = await regions.createTestRegion();
   const licence = await licences.create(region, scenario.licence);
+  await crm.createDocuments(scenario.licence);
   for (const row of scenario.chargeVersions) {
-    const crmData = await createCRMData(row);
+    const crmData = await createCRMChargeVersionData(row);
     const chargeVersion = await chargeVersions.create(region, licence, row.chargeVersion, crmData);
     const tasks = row.chargeElements.map(key => chargeElements.create(chargeVersion, key));
     await Promise.all(tasks);
