@@ -1,9 +1,6 @@
 'use strict';
 
-const { serviceRequest } = require('@envage/water-abstraction-helpers');
-
-const config = require('../../../config');
-
+const crmConnector = require('./connectors/crm');
 const data = require('./data');
 
 /**
@@ -12,68 +9,62 @@ const data = require('./data');
  */
 const entityCache = {
   companies: {},
-  invoiceAccounts: {}
+  invoiceAccounts: {},
+  addresses: {}
 };
 
 /**
- * Creates a company in the CRM
+ * Gets a company in the CRM or retrieves from entity cache
  * @param {String} scenarioKey
  * @return {Promise<Object>} CRM company entity
  */
 const createCompany = async scenarioKey => {
-  const uri = `${config.services.crm_v2}/companies`;
-  const options = {
-    body: {
-      ...data.companies[scenarioKey],
-      isTest: true
-    }
-  };
-  return serviceRequest.post(uri, options);
-};
-
-/**
- * Creates company in CRM or retrieves from cache
- * @param {String} scenarioKey
- * @return {Promise<Object>} CRM company entity
- */
-const getOrCreateCompany = async scenarioKey => {
   if (!(scenarioKey in entityCache.companies)) {
-    entityCache.companies[scenarioKey] = await createCompany(scenarioKey);
+    entityCache.companies[scenarioKey] = await crmConnector.createCompany(data.companies[scenarioKey]);
   }
   return entityCache.companies[scenarioKey];
 };
 
 /**
- * Creates an invoice account in the CRM
- * @param {String} companyKey
- * @param {String} invoiceAccountKey
- * @return {Promise<Object>} CRM invoice account entity
+ * Gets a company in the CRM or retrieves from entity cache
+ * @param {String} scenarioKey
+ * @return {Promise<Object>} CRM company entity
  */
-const createInvoiceAccount = async (companyId, scenarioKey) => {
-  const uri = `${config.services.crm_v2}/invoice-accounts`;
-  const options = {
-    body: {
-      companyId,
-      ...data.invoiceAccounts[scenarioKey],
-      isTest: true
-    }
-  };
-  console.log(options);
-  return serviceRequest.post(uri, options);
+const createAddress = async scenarioKey => {
+  if (!(scenarioKey in entityCache.addresses)) {
+    entityCache.addresses[scenarioKey] = await crmConnector.createAddress(data.addresses[scenarioKey]);
+  }
+  return entityCache.addresses[scenarioKey];
 };
 
 /**
  * Gets or creates invoice account
- * @param {String} companyKey - scenario key for company
- * @param {String} invoiceAccountKey - scenario key for invoice account
+ * @param {String} scenarioKey - scenario key for invoice account
  * @return {Promise<Object>} CRM invoice account entity
  */
-const getOrCreateInvoiceAccount = async (companyKey, invoiceAccountKey) => {
-  if (!(invoiceAccountKey in entityCache.invoiceAccounts)) {
-    const company = await getOrCreateCompany(companyKey);
-    entityCache.invoiceAccounts[invoiceAccountKey] = await createInvoiceAccount(company.companyId, invoiceAccountKey);
+const createInvoiceAccount = async scenarioKey => {
+  const { company: companyKey, addresses, ...rest } = data.invoiceAccounts[scenarioKey];
+
+  if (!(scenarioKey in entityCache.invoiceAccounts)) {
+    // Get or create company
+    const company = await createCompany(companyKey);
+
+    // Create invoice account
+    const invoiceAccount = await crmConnector.createInvoiceAccount(company.companyId, rest);
+    entityCache.invoiceAccounts[scenarioKey] = invoiceAccount;
+
+    // Create addresses
+    for (const invoiceAddress of addresses) {
+      const address = await createAddress(invoiceAddress.address);
+      await crmConnector.createInvoiceAccountAddress(
+        invoiceAccount.invoiceAccountId,
+        address.addressId,
+        invoiceAddress.startDate,
+        invoiceAddress.endDate
+      );
+    }
   }
-  return entityCache.invoiceAccounts[invoiceAccountKey];
+  return entityCache.invoiceAccounts[scenarioKey];
 };
 
 /**
@@ -82,6 +73,7 @@ const getOrCreateInvoiceAccount = async (companyKey, invoiceAccountKey) => {
 const clearEntityCache = () => {
   entityCache.companies = {};
   entityCache.invoiceAccounts = {};
+  entityCache.addresses = {};
 };
 
 /**
@@ -90,10 +82,9 @@ const clearEntityCache = () => {
  */
 const tearDown = async () => {
   clearEntityCache();
-  const uri = `${config.services.crm_v2}/test-data`;
-  return serviceRequest.delete(uri);
+  return crmConnector.tearDown();
 };
 
-exports.getOrCreateCompany = getOrCreateCompany;
-exports.getOrCreateInvoiceAccount = getOrCreateInvoiceAccount;
+exports.createCompany = createCompany;
+exports.createInvoiceAccount = createInvoiceAccount;
 exports.tearDown = tearDown;
