@@ -109,6 +109,22 @@ const createDocumentRole = (documentId, data) => {
 };
 
 /**
+ * Creates CRM contact
+ * @param {Object} data
+ * @return {Promise<Object>} CRM contact entity
+ */
+const createContact = data => {
+  const uri = `${config.services.crm_v2}/contacts`;
+  const options = {
+    body: {
+      ...data,
+      isTest: true
+    }
+  };
+  return serviceRequest.post(uri, options);
+};
+
+/**
  * Deletes all test data in CRM
  * @return {Promise}
  */
@@ -123,4 +139,5 @@ exports.createInvoiceAccount = createInvoiceAccount;
 exports.createInvoiceAccountAddress = createInvoiceAccountAddress;
 exports.createDocument = createDocument;
 exports.createDocumentRole = createDocumentRole;
+exports.createContact = createContact;
 exports.tearDown = tearDown;

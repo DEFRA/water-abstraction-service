@@ -11,7 +11,8 @@ const entityCache = {
   companies: {},
   invoiceAccounts: {},
   addresses: {},
-  documents: {}
+  documents: {},
+  contacts: {}
 };
 
 /**
@@ -36,6 +37,21 @@ const createAddress = async scenarioKey => {
     entityCache.addresses[scenarioKey] = await crmConnector.createAddress(data.addresses[scenarioKey]);
   }
   return entityCache.addresses[scenarioKey];
+};
+
+/**
+ * Gets a contact in the CRM or retrieves from entity cache
+ * @param {String} scenarioKey
+ * @return {Promise<Object>} CRM contact entity
+ */
+const createContact = async scenarioKey => {
+  if (!scenarioKey) {
+    return { contactId: null };
+  }
+  if (!(scenarioKey in entityCache.contacts)) {
+    entityCache.contacts[scenarioKey] = await crmConnector.createContact(data.contacts[scenarioKey]);
+  }
+  return entityCache.contacts[scenarioKey];
 };
 
 /**
@@ -76,12 +92,17 @@ const createInvoiceAccount = async scenarioKey => {
  * @return {Promise}
  */
 const createDocumentRole = async (document, role) => {
-  const { company: companyKey, address: addressKey, ...rest } = role;
-  const [{ companyId }, { addressId }] = await Promise.all([
-    createCompany(companyKey), createAddress(addressKey)
+  const { company: companyKey, address: addressKey, contact: contactKey, ...rest } = role;
+  const [{ companyId }, { addressId }, { contactId }] = await Promise.all([
+    createCompany(companyKey),
+    createAddress(addressKey),
+    createContact(contactKey)
   ]);
   await crmConnector.createDocumentRole(document.documentId, {
-    ...rest, companyId, addressId, contactId: null
+    companyId,
+    addressId,
+    contactId,
+    ...rest
   });
 };
 
@@ -132,6 +153,7 @@ const clearEntityCache = () => {
   entityCache.invoiceAccounts = {};
   entityCache.addresses = {};
   entityCache.documents = {};
+  entityCache.contacts = {};
 };
 
 /**

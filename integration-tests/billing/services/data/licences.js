@@ -21,7 +21,8 @@ exports.l1 = {
       startDate : '2008-04-01',
       endDate: null,
       company : 'co1',
-      address : 'ad1'
+      address : 'ad1',
+      contact: 'c1'
     }]
   }]
 };
