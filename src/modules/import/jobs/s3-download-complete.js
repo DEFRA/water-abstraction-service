@@ -13,6 +13,12 @@ const s3DownloadComplete = async (job, messageQueue) => {
   logger.logHandlingOnCompleteJob(job);
 
   try {
+    const { isRequired } = job.data.response;
+
+    if (!isRequired) {
+      return logger.logAbortingOnComplete(job);
+    }
+
     // Delete existing PG boss import queues
     await Promise.all([
       messageQueue.deleteQueue(importLicenceJob.jobName),

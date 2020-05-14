@@ -1,5 +1,5 @@
 const returnsUpload = require('../../../../src/modules/returns/lib/returns-upload');
-const s3 = require('../../../../src/lib/connectors/s3');
+const s3 = require('../../../../src/lib/services/s3');
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
