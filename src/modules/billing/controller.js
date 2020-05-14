@@ -61,6 +61,7 @@ const postCreateBatch = async (request, h) => {
     await request.messageQueue.publish(message);
 
     return h.response(envelope({
+      batch,
       event: batchEvent,
       url: `/water/1.0/event/${batchEvent.id}`
     })).code(202);
