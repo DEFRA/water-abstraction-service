@@ -1,18 +1,40 @@
 const billingVolumesRepo = require('../../../lib/connectors/repos/billing-volumes');
 const mappers = require('../mappers');
 const twoPartTariffMatching = require('./two-part-tariff-service');
-const { isEmpty } = require('lodash');
+const { isEmpty, flatMap } = require('lodash');
 
-const getChargeElementIds = chargeVersion => chargeVersion.chargeElements.map(chargeElement => chargeElement.chargeElementId);
+const chargeElementSeasonMatches = (chargeElement, isSummer) => {
+  const chargeElementIsSummer = chargeElement.season === 'summer';
+  return chargeElementIsSummer === isSummer;
+};
+
+const getChargeElementIds = (chargeVersion, isSummer) => {
+  return chargeVersion.chargeElements.filter(chargeElement => {
+    if (chargeElementSeasonMatches(chargeElement, isSummer)) {
+      return chargeElement.chargeElementId;
+    };
+  });
+};
 
 const billingVolumeToModel = volume => mappers.billingVolume.dbToModel(volume);
 
 const volumesToModels = volumes => volumes.map(billingVolumeToModel);
 
+const isMissingVolumes = volumes => {
+  const containsNull = volumes.map(volume => isEmpty(volume));
+  return containsNull.includes(true);
+};
+
 const getVolumesForChargeElements = async (chargeVersion, financialYear, isSummer) => {
-  const volumes = await billingVolumesRepo.find(getChargeElementIds(chargeVersion));
-  const relevantVolumes = volumes.filter(volume => volume.financialYear === financialYear && volume.isSummer === isSummer);
-  return isEmpty(relevantVolumes) ? null : volumesToModels(relevantVolumes);
+  const chargeElements = getChargeElementIds(chargeVersion, isSummer);
+  const billingVolumes = await Promise.all(
+    chargeElements.map(async chargeElement => {
+      return billingVolumesRepo.findByChargeElementId(chargeElement.chargeElementId);
+    }));
+  if (isMissingVolumes(billingVolumes)) return null;
+
+  const relevantVolumes = flatMap(billingVolumes).filter(volume => volume.financialYear === financialYear && volume.isSummer === isSummer);
+  return volumesToModels(relevantVolumes);
 };
 
 const mapMatchingResultsToBillingVolumeStructure = (matchingResults, financialYear, isSummer) => {

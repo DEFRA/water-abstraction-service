@@ -15,11 +15,11 @@ const create = async data => {
  * Gets billing volumes for charge elements
  * @param {Array<String>} ids - guids
  */
-const find = async ids => {
+const findByChargeElementId = async id => {
   const result = await BillingVolume
-    .collection()
-    .where('charge_element_id', 'in', ids)
-    .fetchAll();
+    .forge()
+    .where({ charge_element_id: id })
+    .fetch({ require: false });
 
   return result.toJSON();
 };
@@ -35,5 +35,5 @@ const update = async (id, changes) => {
 };
 
 exports.create = create;
-exports.find = find;
+exports.findByChargeElementId = findByChargeElementId;
 exports.update = update;

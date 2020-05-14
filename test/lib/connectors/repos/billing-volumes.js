@@ -21,11 +21,9 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     stub = {
       save: sandbox.stub().resolves(model),
       where: sandbox.stub().returnsThis(),
-      fetch: sandbox.stub().resolves(model),
-      fetchAll: sandbox.stub().resolves(model)
+      fetch: sandbox.stub().resolves(model)
     };
     sandbox.stub(BillingVolume, 'forge').returns(stub);
-    sandbox.stub(BillingVolume, 'collection').returns(stub);
   });
 
   afterEach(async () => sandbox.restore());
@@ -61,27 +59,26 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     });
   });
 
-  experiment('.find', () => {
+  experiment('.findByChargeElementId', () => {
     let result;
-    const ids = ['charge-element-id-1', 'charge-element-id-2'];
+    const id = 'charge-element-id';
 
     beforeEach(async () => {
-      result = await billingVolumes.find(ids);
+      result = await billingVolumes.findByChargeElementId(id);
     });
 
-    test('calls model.collection', () => {
-      expect(BillingVolume.collection.called).to.be.true();
+    test('calls model.forge', () => {
+      expect(BillingVolume.forge.called).to.be.true();
     });
 
-    test('queries for matching ID(s)', async () => {
-      const [field, operator, values] = stub.where.lastCall.args;
-      expect(field).to.equal('charge_element_id');
-      expect(operator).to.equal('in');
-      expect(values).to.equal(ids);
+    test('queries for matching charge element id', async () => {
+      const [filter] = stub.where.lastCall.args;
+      expect(filter).to.equal({ charge_element_id: id });
     });
 
-    test('calls fetchAll', () => {
-      expect(stub.fetchAll.called).to.be.true();
+    test('calls fetch with expected option', () => {
+      const [option] = stub.fetch.lastCall.args;
+      expect(option).to.equal({ require: false });
     });
 
     test('calls toJSON() on returned models', async () => {
