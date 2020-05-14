@@ -4,6 +4,7 @@ exports.BillingBatchChargeVersionYear = require('./BillingBatchChargeVersionYear
 exports.BillingInvoice = require('./BillingInvoice');
 exports.BillingInvoiceLicence = require('./BillingInvoiceLicence');
 exports.BillingTransaction = require('./BillingTransaction');
+exports.BillingVolume = require('./BillingVolume');
 exports.ChargeElement = require('./ChargeElement');
 exports.ChargeVersion = require('./ChargeVersion');
 exports.Event = require('./Event');

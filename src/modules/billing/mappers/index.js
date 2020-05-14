@@ -2,6 +2,7 @@ exports.address = require('./address');
 exports.abstractionPeriod = require('./abstraction-period');
 exports.api = require('./api');
 exports.batch = require('./batch');
+exports.billingVolume = require('./billing-volume');
 exports.agreement = require('./agreement');
 exports.chargeElement = require('./charge-element');
 exports.totals = require('./totals');

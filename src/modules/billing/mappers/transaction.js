@@ -11,7 +11,6 @@ const Agreement = require('../../../lib/models/agreement');
 
 const agreement = require('./agreement');
 const chargeElementMapper = require('./charge-element');
-const userMapper = require('./user');
 
 const getTwoPartTariffTransactionDescription = (batch, chargeElement) => {
   const prefix = batch.isTwoPartTariff() ? 'Second' : 'First';
@@ -43,9 +42,6 @@ const createTransaction = (batch, chargeLine, chargeElement, data = {}) => {
     chargeElement: chargeElementMapper.chargeToModel(chargeElement),
     volume: chargeElement.billableAnnualQuantity || chargeElement.authorisedAnnualQuantity
   });
-  if (data.twoPartTariffReview) {
-    transaction.twoPartTariffReview = userMapper.mapToModel(data.twoPartTariffReview);
-  }
 
   transaction.description = getTransactionDescription(
     batch,
@@ -134,13 +130,12 @@ const dbToModel = row => {
   transaction.fromHash({
     id: row.billingTransactionId,
     ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
-      'externalId', 'calculatedVolume', 'twoPartTariffError', 'twoPartTariffStatus']),
+      'externalId']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
     volume: row.volume ? parseFloat(row.volume) : null,
-    agreements: mapDBToAgreements(row),
-    twoPartTariffReview: userMapper.mapToModel(row.twoPartTariffReview)
+    agreements: mapDBToAgreements(row)
   });
   return transaction;
 };
@@ -188,11 +183,7 @@ const modelToDb = (invoiceLicence, transaction) => ({
   status: transaction.status,
   volume: transaction.volume,
   ...mapAgreementsToDB(transaction.agreements),
-  transactionKey: transaction.transactionKey,
-  calculatedVolume: transaction.calculatedVolume,
-  twoPartTariffError: transaction.twoPartTariffError,
-  twoPartTariffStatus: transaction.twoPartTariffStatus,
-  twoPartTariffReview: transaction.twoPartTariffReview || null
+  transactionKey: transaction.transactionKey
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';
