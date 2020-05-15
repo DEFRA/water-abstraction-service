@@ -12,14 +12,15 @@ const create = async data => {
 };
 
 /**
- * Gets billing volumes for charge elements
+ * Gets billing volumes for charge elements and financial year
  * @param {Array<String>} ids - guids
  */
-const findByChargeElementId = async id => {
+const findByChargeElementIdsAndFinancialYear = async (ids, financialYear) => {
   const result = await BillingVolume
     .forge()
-    .where({ charge_element_id: id })
-    .fetch({ require: false });
+    .where('charge_element_id', 'in', ids)
+    .andWhere({ financial_year: financialYear })
+    .fetchAll();
 
   return result.toJSON();
 };
@@ -35,5 +36,5 @@ const update = async (id, changes) => {
 };
 
 exports.create = create;
-exports.findByChargeElementId = findByChargeElementId;
+exports.findByChargeElementIdsAndFinancialYear = findByChargeElementIdsAndFinancialYear;
 exports.update = update;

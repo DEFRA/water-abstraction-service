@@ -34,7 +34,7 @@ const createBillingVolume = data => {
 
 experiment('modules/billing/services/billing-volumes-service', () => {
   beforeEach(async () => {
-    sandbox.stub(billingVolumesRepo, 'findByChargeElementId');
+    sandbox.stub(billingVolumesRepo, 'findByChargeElementIdsAndFinancialYear');
     sandbox.stub(billingVolumesRepo, 'create');
     sandbox.stub(mappers.billingVolume, 'dbToModel');
     sandbox.stub(twoPartTariffMatching, 'calculateVolumes');
@@ -44,34 +44,35 @@ experiment('modules/billing/services/billing-volumes-service', () => {
 
   experiment('.getVolumes', () => {
     experiment('when calculated volumes exist', () => {
-      let billingVolumes, result;
+      let billingVolumesData, result;
 
       beforeEach(async () => {
-        billingVolumes = [
+        billingVolumesData = [
           createBillingVolumeData(1, 2019, true),
-          createBillingVolumeData(2, 2020, true)
+          createBillingVolumeData(2, 2019, true)
         ];
         const chargeElements = [
           { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
-          { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'all year' }];
+          { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' },
+          { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3', season: 'all year' }];
+        billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves(billingVolumesData);
 
-        const billingVolume = createBillingVolume(billingVolumes[0]);
-        mappers.billingVolume.dbToModel.returns(billingVolume);
-        billingVolumesRepo.findByChargeElementId.resolves(billingVolumes);
+        mappers.billingVolume.dbToModel
+          .onFirstCall().returns(createBillingVolume(billingVolumesData[0]))
+          .onSecondCall().returns(createBillingVolume(billingVolumesData[1]));
 
         result = await billingVolumesService.getVolumes(createChargeVersion(chargeElements), 2019, true);
       });
 
-      test('only calls repo.find() with relevant charge element id', async () => {
-        expect(billingVolumesRepo.findByChargeElementId.calledOnce).to.be.true();
-        expect(billingVolumesRepo.findByChargeElementId.calledWith(
-          'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1'
-        )).to.be.true();
+      test('calls repo.findByChargeElementIdsAndFinancialYear() with correct params', async () => {
+        const [chargeElementIds, financialYear] = billingVolumesRepo.findByChargeElementIdsAndFinancialYear.lastCall.args;
+        expect(chargeElementIds).to.equal(['bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2']);
+        expect(financialYear).to.equal(2019);
       });
 
       test('calls mapper with billing volumes to be returned', async () => {
         expect(mappers.billingVolume.dbToModel.calledWith(
-          billingVolumes[0]
+          billingVolumesData[0]
         )).to.be.true();
       });
 
@@ -80,6 +81,11 @@ experiment('modules/billing/services/billing-volumes-service', () => {
         expect(result[0].chargeElementId).to.equal('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1');
         expect(result[0].financialYear.yearEnding).to.equal(2019);
         expect(result[0].isSummer).to.be.true();
+
+        expect(result[1]).to.be.instanceOf(BillingVolume);
+        expect(result[1].chargeElementId).to.equal('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2');
+        expect(result[1].financialYear.yearEnding).to.equal(2019);
+        expect(result[1].isSummer).to.be.true();
       });
     });
 
@@ -123,9 +129,9 @@ experiment('modules/billing/services/billing-volumes-service', () => {
           { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
           { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' }];
 
-        billingVolumesRepo.findByChargeElementId
-          .onFirstCall().resolves(null)
-          .onSecondCall().resolves(null);
+        billingVolumesRepo.findByChargeElementIdsAndFinancialYear
+          .onFirstCall().resolves([])
+          .onSecondCall().resolves([]);
 
         twoPartTariffMatching.calculateVolumes.resolves(matchingResults);
         billingVolumesRepo.create
@@ -140,10 +146,10 @@ experiment('modules/billing/services/billing-volumes-service', () => {
         result = await billingVolumesService.getVolumes(chargeVersion, 2019, true);
       });
 
-      test('calls repo.find() for each charge element id', async () => {
-        expect(billingVolumesRepo.findByChargeElementId.callCount).to.equal(2);
-        expect(billingVolumesRepo.findByChargeElementId.firstCall.args[0]).to.equal('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1');
-        expect(billingVolumesRepo.findByChargeElementId.secondCall.args[0]).to.equal('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2');
+      test('calls repo.findByChargeElementIdsAndFinancialYear() with correct params', async () => {
+        const [chargeElementIds, financialYear] = billingVolumesRepo.findByChargeElementIdsAndFinancialYear.lastCall.args;
+        expect(chargeElementIds).to.equal(['bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2']);
+        expect(financialYear).to.equal(2019);
       });
 
       test('calls two part tariff matching algorithm with correct params', async () => {
@@ -235,16 +241,15 @@ experiment('modules/billing/services/billing-volumes-service', () => {
 
       beforeEach(async () => {
         billingVolumes = [
-          createBillingVolumeData(1, 2019, true),
-          createBillingVolumeData(2, 2020, true)
+          createBillingVolumeData(1, 2019, true)
         ];
         const chargeElements = [
           { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
           { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' }];
 
-        billingVolumesRepo.findByChargeElementId
+        billingVolumesRepo.findByChargeElementIdsAndFinancialYear
           .onFirstCall().resolves(billingVolumes)
-          .onSecondCall().resolves(null);
+          .onSecondCall().resolves([]);
         twoPartTariffMatching.calculateVolumes.resolves(matchingResults);
 
         billingVolumesRepo.create
@@ -252,16 +257,16 @@ experiment('modules/billing/services/billing-volumes-service', () => {
           .onSecondCall().resolves(billingVolumesData[1]);
 
         mappers.billingVolume.dbToModel
-          .onFirstCall().returns(createBillingVolume(createBillingVolume(billingVolumesData[0])))
-          .onSecondCall().returns(createBillingVolume(createBillingVolume(billingVolumesData[1])));
+          .onFirstCall().returns(createBillingVolume(billingVolumesData[0]))
+          .onSecondCall().returns(createBillingVolume(billingVolumesData[1]));
 
         result = await billingVolumesService.getVolumes(createChargeVersion(chargeElements), 2019, true);
       });
 
-      test('calls repo with charge element ids', async () => {
-        expect(billingVolumesRepo.findByChargeElementId.callCount).to.equal(2);
-        expect(billingVolumesRepo.findByChargeElementId.firstCall.args[0]).to.equal('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1');
-        expect(billingVolumesRepo.findByChargeElementId.secondCall.args[0]).to.equal('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2');
+      test('calls repo.findByChargeElementIdsAndFinancialYear() with correct params', async () => {
+        const [chargeElementIds, financialYear] = billingVolumesRepo.findByChargeElementIdsAndFinancialYear.lastCall.args;
+        expect(chargeElementIds).to.equal(['bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2']);
+        expect(financialYear).to.equal(2019);
       });
 
       test('calls two part tariff matching algorithm', async () => {

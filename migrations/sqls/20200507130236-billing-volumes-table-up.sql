@@ -9,7 +9,8 @@ create table water.billing_volumes (
   two_part_tariff_error boolean not null default false,
   two_part_tariff_status integer,
   two_part_tariff_review jsonb,
-  is_approved boolean not null default false
+  is_approved boolean not null default false,
+  constraint uniq_charge_element_id_financial_year unique (charge_element_id, financial_year)
 );
 
 alter table water.billing_transactions

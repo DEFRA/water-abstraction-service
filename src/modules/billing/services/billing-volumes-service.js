@@ -1,40 +1,23 @@
 const billingVolumesRepo = require('../../../lib/connectors/repos/billing-volumes');
 const mappers = require('../mappers');
 const twoPartTariffMatching = require('./two-part-tariff-service');
-const { isEmpty, flatMap } = require('lodash');
 
-const chargeElementSeasonMatches = (chargeElement, isSummer) => {
-  const chargeElementIsSummer = chargeElement.season === 'summer';
-  return chargeElementIsSummer === isSummer;
-};
+const isSummerChargeElement = chargeElement => chargeElement.season === 'summer';
 
-const getChargeElementIds = (chargeVersion, isSummer) => {
-  return chargeVersion.chargeElements.filter(chargeElement => {
-    if (chargeElementSeasonMatches(chargeElement, isSummer)) {
-      return chargeElement.chargeElementId;
-    };
-  });
-};
+const getChargeElementsForSeason = (chargeVersion, isSummer) =>
+  chargeVersion.chargeElements.filter(chargeElement => isSummerChargeElement(chargeElement) === isSummer);
 
 const billingVolumeToModel = volume => mappers.billingVolume.dbToModel(volume);
 
 const volumesToModels = volumes => volumes.map(billingVolumeToModel);
 
-const isMissingVolumes = volumes => {
-  const containsNull = volumes.map(volume => isEmpty(volume));
-  return containsNull.includes(true);
-};
-
 const getVolumesForChargeElements = async (chargeVersion, financialYear, isSummer) => {
-  const chargeElements = getChargeElementIds(chargeVersion, isSummer);
-  const billingVolumes = await Promise.all(
-    chargeElements.map(async chargeElement => {
-      return billingVolumesRepo.findByChargeElementId(chargeElement.chargeElementId);
-    }));
-  if (isMissingVolumes(billingVolumes)) return null;
+  const chargeElements = getChargeElementsForSeason(chargeVersion, isSummer);
+  const chargeElementIds = chargeElements.map(chargeElement => chargeElement.chargeElementId);
+  const billingVolumes = await billingVolumesRepo.findByChargeElementIdsAndFinancialYear(chargeElementIds, financialYear);
 
-  const relevantVolumes = flatMap(billingVolumes).filter(volume => volume.financialYear === financialYear && volume.isSummer === isSummer);
-  return volumesToModels(relevantVolumes);
+  if (chargeElements.length !== billingVolumes.length) return null;
+  return volumesToModels(billingVolumes);
 };
 
 const mapMatchingResultsToBillingVolumeStructure = (matchingResults, financialYear, isSummer) => {
