@@ -11,5 +11,9 @@ module.exports = bookshelf.model('ChargeVersion', {
 
   chargeElements () {
     return this.hasMany('ChargeElement', 'charge_version_id', 'charge_version_id');
+  },
+
+  licence () {
+    return this.belongsTo('Licence', 'licence_ref', 'licence_ref');
   }
 });

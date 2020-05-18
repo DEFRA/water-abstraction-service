@@ -2,14 +2,12 @@
 
 const moment = require('moment');
 const { titleCase } = require('title-case');
-const { get, pick, identity } = require('lodash');
+const { pick, identity } = require('lodash');
 
-const Batch = require('../../../lib/models/batch');
 const DateRange = require('../../../lib/models/date-range');
 const Transaction = require('../../../lib/models/transaction');
 const Agreement = require('../../../lib/models/agreement');
 
-const agreement = require('./agreement');
 const chargeElementMapper = require('./charge-element');
 
 const getTwoPartTariffTransactionDescription = (batch, chargeElement) => {
@@ -183,7 +181,8 @@ const modelToDb = (invoiceLicence, transaction) => ({
   status: transaction.status,
   volume: transaction.volume,
   ...mapAgreementsToDB(transaction.agreements),
-  transactionKey: transaction.transactionKey
+  transactionKey: transaction.transactionKey,
+  isTwoPartTariffSupplementary: transaction.isTwoPartTariffSupplementary
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -263,7 +262,7 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     billableDays: transaction.billableDays,
     authorisedDays: transaction.authorisedDays,
     volume: transaction.volume,
-    twoPartTariff: batch.type === Batch.BATCH_TYPE.twoPartTariff,
+    twoPartTariff: transaction.isTwoPartTariffSupplementary,
     compensationCharge: transaction.isCompensationCharge,
     ...mapAgreementsToChargeModule(transaction),
     customerReference: invoice.invoiceAccount.accountNumber,
@@ -275,7 +274,6 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
   };
 };
 
-exports.chargeToModels = chargeToModels;
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
 exports.modelToChargeModule = modelToChargeModule;

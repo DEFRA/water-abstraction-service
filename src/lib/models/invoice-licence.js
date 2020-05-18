@@ -12,7 +12,8 @@ const Role = require('./role');
 const {
   assertIsArrayOfType,
   assertIsInstanceOf,
-  assertId
+  assertId,
+  assertIsNullableInstanceOf
 } = require('./validators');
 
 const Model = require('./model');
@@ -62,7 +63,7 @@ class InvoiceLicence extends Model {
   * @param {Contact} contact
   */
   set contact (contact) {
-    assertIsInstanceOf(contact, Contact);
+    assertIsNullableInstanceOf(contact, Contact);
     this._contact = contact;
   }
 

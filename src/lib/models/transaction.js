@@ -1,5 +1,7 @@
 'use strict';
 
+const { titleCase } = require('title-case');
+
 const hashers = require('../../lib/hash');
 
 const Model = require('./model');
@@ -24,6 +26,13 @@ const twoPartTariffStatuses = {
   ERROR_LATE_RETURNS: 50,
   ERROR_OVER_ABSTRACTION: 60,
   ERROR_NO_RETURNS_FOR_MATCHING: 70
+};
+
+const getTwoPartTariffTransactionDescription = (transaction) => {
+  const prefix = transaction.isTwoPartTariffSupplementary ? 'Second' : 'First';
+  const { purposeUse: { name: purpose }, description } = transaction.chargeElement;
+
+  return `${prefix} part ${purpose} charge at ${description}`;
 };
 
 class Transaction extends Model {
@@ -216,7 +225,7 @@ class Transaction extends Model {
       ...this.chargeElement.pick('source', 'season', 'loss'),
       licenceNumber: licence.licenceNumber,
       regionCode: batch.region.code,
-      isTwoPartTariff: batch.isTwoPartTariff()
+      isTwoPartTariff: this.isTwoPartTariffSupplementary
     };
   }
 
@@ -244,6 +253,37 @@ class Transaction extends Model {
   set transactionKey (transactionKey) {
     validators.assertTransactionKey(transactionKey);
     this._transactionKey = transactionKey;
+  }
+
+  /**
+   * Whether this transaction is a two-part tariff supplementary charge
+   * @return {Boolean}
+   */
+  get isTwoPartTariffSupplementary () {
+    return this._isTwoPartTariffSupplementary;
+  }
+
+  set isTwoPartTariffSupplementary (isTwoPartTariffSupplementary) {
+    validators.assertIsBoolean(isTwoPartTariffSupplementary);
+    this._isTwoPartTariffSupplementary = isTwoPartTariffSupplementary;
+  }
+
+  /**
+   * Creates and returns the transaction description
+   * @return {String}
+   */
+  createDescription () {
+    const isTwoPartTariff = !!this.getAgreementByCode('S127');
+    if (this.isCompensationCharge) {
+      this._description = 'Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element';
+    } else {
+      const description = isTwoPartTariff
+        ? getTwoPartTariffTransactionDescription(this)
+        : this.chargeElement.description;
+
+      this._description = titleCase(description || '');
+    }
+    return this._description;
   }
 }
 

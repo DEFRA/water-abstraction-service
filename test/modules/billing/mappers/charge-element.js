@@ -6,8 +6,8 @@ const {
 const { expect } = require('@hapi/code');
 
 const ChargeElement = require('../../../../src/lib/models/charge-element');
-const Purpose = require('../../../../src/lib/models/purpose');
 const DateRange = require('../../../../src/lib/models/date-range');
+const Purpose = require('../../../../src/lib/models/purpose');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const chargeElementsMapper = require('../../../../src/modules/billing/mappers/charge-element');
@@ -48,61 +48,6 @@ const data = {
 experiment('modules/billing/mappers/charge-element', () => {
   let result;
 
-  experiment('.chargeToModel', () => {
-    beforeEach(async () => {
-      result = chargeElementsMapper.chargeToModel(data.chargeElement);
-    });
-
-    test('returns an instance of ChargeElement', async () => {
-      expect(result instanceof ChargeElement).to.be.true();
-    });
-
-    test('sets the .id property', async () => {
-      expect(result.id).to.equal(data.chargeElement.chargeElementId);
-    });
-
-    test('sets the .source property', async () => {
-      expect(result.source).to.equal(data.chargeElement.source);
-    });
-
-    test('sets the .season property', async () => {
-      expect(result.season).to.equal(data.chargeElement.season);
-    });
-
-    test('sets the .loss property', async () => {
-      expect(result.loss).to.equal(data.chargeElement.loss);
-    });
-
-    experiment('when charge element has time limited dates', async => {
-      test('sets the .timeLimitedPeriod property when both dates are present', async () => {
-        result = chargeElementsMapper.chargeToModel(data.timeLimitedChargeElement);
-        const timeLimitedPeriod = new DateRange(
-          data.timeLimitedChargeElement.timeLimitedStartDate,
-          data.timeLimitedChargeElement.timeLimitedEndDate
-        );
-        expect(result.timeLimitedPeriod).to.equal(timeLimitedPeriod);
-      });
-
-      test('sets the .timeLimitedPeriod property when only end date is present', async () => {
-        result = chargeElementsMapper.chargeToModel({ ...data.timeLimitedChargeElement, timeLimitedStartDate: null });
-        const timeLimitedPeriod = new DateRange(
-          null,
-          data.timeLimitedChargeElement.timeLimitedEndDate
-        );
-        expect(result.timeLimitedPeriod).to.equal(timeLimitedPeriod);
-      });
-    });
-
-    experiment('when charge element does not have time limited dates', async => {
-      beforeEach(() => {
-        result = chargeElementsMapper.chargeToModel(data.chargeElement);
-      });
-      test('sets the .timeLimitedPeriod property', async () => {
-        expect(result.timeLimitedPeriod).to.be.undefined();
-      });
-    });
-  });
-
   experiment('.dbToModel', () => {
     beforeEach(async () => {
       result = chargeElementsMapper.dbToModel(data.dbRow);
@@ -141,6 +86,18 @@ experiment('modules/billing/mappers/charge-element', () => {
 
       test('the purposeUse property is not set', async () => {
         expect(result.purposeUse instanceof Purpose).to.be.true();
+      });
+    });
+
+    experiment('when the database row contains time-limited dates', () => {
+      beforeEach(async () => {
+        result = chargeElementsMapper.dbToModel(data.timeLimitedChargeElement);
+      });
+
+      test('the timeLimitedPeriod property is set', async () => {
+        expect(result.timeLimitedPeriod instanceof DateRange).to.be.true();
+        expect(result.timeLimitedPeriod.startDate).to.equal(data.timeLimitedChargeElement.timeLimitedStartDate);
+        expect(result.timeLimitedPeriod.endDate).to.equal(data.timeLimitedChargeElement.timeLimitedEndDate);
       });
     });
   });
