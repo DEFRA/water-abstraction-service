@@ -1,23 +1,30 @@
 const billingVolumesRepo = require('../../../lib/connectors/repos/billing-volumes');
 const mappers = require('../mappers');
 const twoPartTariffMatching = require('./two-part-tariff-service');
+const { NotFoundError } = require('../../../lib/errors');
 
 const isSummerChargeElement = chargeElement => chargeElement.season === 'summer';
 
 const getChargeElementsForSeason = (chargeVersion, isSummer) =>
   chargeVersion.chargeElements.filter(chargeElement => isSummerChargeElement(chargeElement) === isSummer);
 
-const billingVolumeToModel = volume => mappers.billingVolume.dbToModel(volume);
-
-const volumesToModels = volumes => volumes.map(billingVolumeToModel);
+const volumesToModels = volumes => volumes.map(mappers.billingVolume.dbToModel);
 
 const getVolumesForChargeElements = async (chargeVersion, financialYear, isSummer) => {
   const chargeElements = getChargeElementsForSeason(chargeVersion, isSummer);
   const chargeElementIds = chargeElements.map(chargeElement => chargeElement.chargeElementId);
   const billingVolumes = await billingVolumesRepo.findByChargeElementIdsAndFinancialYear(chargeElementIds, financialYear);
 
-  if (chargeElements.length !== billingVolumes.length) return null;
-  return volumesToModels(billingVolumes);
+  // The matching process has never run - no billing volumes have been persisted
+  if (billingVolumes.length === 0) {
+    return null;
+  }
+  // There is an exact match - billing volumes already calculated and persisted
+  if (chargeElements.length === billingVolumes.length) {
+    return volumesToModels(billingVolumes);
+  }
+  // There is a mismatch - something has gone wrong
+  throw new NotFoundError(`Billing volumes missing for charge version ${chargeVersion.id}`);
 };
 
 const mapMatchingResultsToBillingVolumeStructure = (matchingResults, financialYear, isSummer) => {
@@ -39,7 +46,7 @@ const mapMatchingResultsToBillingVolumeStructure = (matchingResults, financialYe
 const persistBillingVolumesData = async data => Promise.all(
   data.map(async row => {
     const result = await billingVolumesRepo.create(row);
-    return billingVolumeToModel(result);
+    return mappers.billingVolume.dbToModel(result);
   }));
 
 const calculateVolumesForChargeElements = async (chargeVersion, financialYear, isSummer) => {

@@ -31,7 +31,7 @@ const findByChargeElementIdsAndFinancialYear = async (ids, financialYear) => {
  * @param {Object} changes
  */
 const update = async (id, changes) => {
-  const result = await BillingVolume.forge({ billingEventId: id }).save(changes);
+  const result = await BillingVolume.forge({ billingVolumeId: id }).save(changes);
   return result.toJSON();
 };
 

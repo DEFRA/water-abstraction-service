@@ -111,7 +111,7 @@ experiment('lib/connectors/repos/billing-volumes', () => {
 
     test('calls model.forge with correct data', () => {
       const [params] = BillingVolume.forge.lastCall.args;
-      expect(params.billingEventId).to.equal(id);
+      expect(params.billingVolumeId).to.equal(id);
     });
 
     test('calls save with correct data', () => {
