@@ -5,12 +5,20 @@ const { expect } = require('@hapi/code');
 
 const Licence = require('../../../src/lib/models/licence');
 const Region = require('../../../src/lib/models/region');
+const LicenceAgreement = require('../../../src/lib/models/licence-agreement');
 
 const data = {
   id: 'add1cf3b-7296-4817-b013-fea75a928580',
   licenceNumber: '01/12/*G/R01',
-  region: new Region('d61551ec-7182-42dc-bb90-c1dbecaf1350', Region.types.region)
+  region: new Region('d61551ec-7182-42dc-bb90-c1dbecaf1350', Region.types.region),
+  startDate: '2019-01-01',
+  expiredDate: '2020-04-02',
+  lapsedDate: '2019-12-23',
+  revokedDate: '2019-06-03',
+  licenceAgreements: [new LicenceAgreement()]
 };
+
+class TestModel {};
 
 experiment('lib/models/licence', () => {
   let licence;
@@ -104,6 +112,122 @@ experiment('lib/models/licence', () => {
     test('throws an error if set to a value which is not an instance of Region', async () => {
       const func = () => {
         licence.regionalChargeArea = {};
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.startDate', async () => {
+    test('can be set to a date string', async () => {
+      licence.startDate = data.startDate;
+      expect(licence.startDate).to.equal(data.startDate);
+    });
+
+    test('throws an error if set to null', async () => {
+      const func = () => {
+        licence.startDate = null;
+      };
+      expect(func).to.throw();
+    });
+
+    test('throws an error if set to an invalid date', async () => {
+      const func = () => {
+        licence.startDate = 'not-a-date';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.expiredDate', async () => {
+    test('can be set to a date string', async () => {
+      licence.expiredDate = data.expiredDate;
+      expect(licence.expiredDate).to.equal(data.expiredDate);
+    });
+
+    test('can be set to null', async () => {
+      licence.expiredDate = null;
+      expect(licence.expiredDate).to.equal(null);
+    });
+
+    test('throws an error if set to an invalid date', async () => {
+      const func = () => {
+        licence.expiredDate = 'not-a-date';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.lapsedDate', async () => {
+    test('can be set to a date string', async () => {
+      licence.lapsedDate = data.lapsedDate;
+      expect(licence.lapsedDate).to.equal(data.lapsedDate);
+    });
+
+    test('can be set to null', async () => {
+      licence.lapsedDate = null;
+      expect(licence.lapsedDate).to.equal(null);
+    });
+
+    test('throws an error if set to an invalid date', async () => {
+      const func = () => {
+        licence.lapsedDate = 'not-a-date';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.revokedDate', async () => {
+    test('can be set to a date string', async () => {
+      licence.revokedDate = data.revokedDate;
+      expect(licence.revokedDate).to.equal(data.revokedDate);
+    });
+
+    test('can be set to null', async () => {
+      licence.revokedDate = null;
+      expect(licence.revokedDate).to.equal(null);
+    });
+
+    test('throws an error if set to an invalid date', async () => {
+      const func = () => {
+        licence.revokedDate = 'not-a-date';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.endDate', async () => {
+    test('returns null when expired, lapsed and revoked dates are null', async () => {
+      licence.expiredDate = null;
+      licence.lapsedDate = null;
+      licence.revokedDate = null;
+      expect(licence.endDate).to.equal(null);
+    });
+
+    test('returns earliest date if some are set', async () => {
+      licence.expiredDate = null;
+      licence.lapsedDate = data.lapsedDate;
+      licence.revokedDate = null;
+      expect(licence.endDate).to.equal(data.lapsedDate);
+    });
+
+    test('returns earliest date if all are set', async () => {
+      licence.expiredDate = data.expiredDate;
+      licence.lapsedDate = data.lapsedDate;
+      licence.revokedDate = data.revokedDate;
+      expect(licence.endDate).to.equal(data.revokedDate);
+    });
+  });
+
+  experiment('.licenceAgreements', () => {
+    test('can be set to an array of licence agreements', async () => {
+      licence.licenceAgreements = data.licenceAgreements;
+      expect(licence.licenceAgreements).to.equal(data.licenceAgreements);
+    });
+
+    test('throws an error if set to a different model type', async () => {
+      const func = () => {
+        const notLicenceAgreements = [new TestModel()];
+        licence.licenceAgreements = notLicenceAgreements;
       };
       expect(func).to.throw();
     });

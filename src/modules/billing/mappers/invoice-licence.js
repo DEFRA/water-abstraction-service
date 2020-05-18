@@ -7,12 +7,8 @@ const Company = require('../../../lib/models/company');
 const Contact = require('../../../lib/models/contact-v2');
 
 const InvoiceLicence = require('../../../lib/models/invoice-licence');
-const Licence = require('../../../lib/models/licence');
 
 // Mappers
-const address = require('./address');
-const company = require('./company');
-const contact = require('./contact');
 const transaction = require('./transaction');
 const licence = require('./licence');
 
@@ -36,7 +32,9 @@ const dbToModel = row => {
   if (row.billingTransactions) {
     invoiceLicence.transactions = row.billingTransactions.map(transaction.dbToModel);
   }
-  invoiceLicence.licence = licence.dbToModel(row.licence);
+  if (row.licence) {
+    invoiceLicence.licence = licence.dbToModel(row.licence);
+  }
   invoiceLicence.invoiceId = row.billingInvoiceId;
   return invoiceLicence;
 };
@@ -65,39 +63,5 @@ const modelToDb = (invoice, invoiceLicence) => {
   };
 };
 
-/**
- * Maps a charge version from the charge processor to a Licence instance
- * @param {Object} chargeVersion
- * @return {Licence}
- */
-const mapLicence = (chargeVersion, region) => {
-  const licence = new Licence();
-
-  licence.fromHash({
-    id: chargeVersion.licenceId,
-    licenceNumber: chargeVersion.licenceRef,
-    region
-  });
-  return licence;
-};
-
-/**
- * Maps a row of data from the charge processor to an InvoiceLicence instance
- * @param {Object} data - processed charge version
- * @return {InvoiceLicence}
- */
-const chargeToModel = (data, batch) => {
-  const invoiceLicence = new InvoiceLicence();
-  invoiceLicence.licence = mapLicence(data.chargeVersion, batch.region);
-  invoiceLicence.company = company.crmToModel(data.licenceHolder.company);
-  invoiceLicence.address = address.crmToModel(data.licenceHolder.address);
-  if (data.licenceHolder.contact) {
-    invoiceLicence.contact = contact.crmToModel(data.licenceHolder.contact);
-  }
-  invoiceLicence.transactions = transaction.chargeToModels(data, batch);
-  return invoiceLicence;
-};
-
 exports.dbToModel = dbToModel;
 exports.modelToDB = modelToDb;
-exports.chargeToModel = chargeToModel;
