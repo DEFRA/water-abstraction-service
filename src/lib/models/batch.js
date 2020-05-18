@@ -81,6 +81,14 @@ class Batch extends Model {
   }
 
   /**
+   * Checks whether this is an annual batch
+   * @return {Boolean}
+   */
+  isAnnual () {
+    return this.type === BATCH_TYPE.annual;
+  }
+
+  /**
    * Sets if this batch is for a summer season two part tariff run
    * @param {Boolean} isSummer
    */

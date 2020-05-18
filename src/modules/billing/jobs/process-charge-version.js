@@ -1,8 +1,8 @@
 'use strict';
 
-const service = require('../service');
 const chargeVersionYearService = require('../services/charge-version-year');
 const batchJob = require('./lib/batch-job');
+const batchService = require('../services/batch-service');
 const twoPartTariffService = require('../../billing/services/two-part-tariff-service');
 
 const JOB_NAME = 'billing.process-charge-version.*';
@@ -33,8 +33,7 @@ const handleProcessChargeVersion = async job => {
 
   // Process charge version year
   try {
-    // Create batch model
-    let batch = await service.chargeVersionYear.createBatchFromChargeVersionYear(chargeVersionYear);
+    let batch = await chargeVersionYearService.processChargeVersionYear(chargeVersionYear);
 
     // If TPT, send batch to TPT processor - note batch only contains a single licence here
     if (batch.isTwoPartTariff()) {
@@ -42,7 +41,7 @@ const handleProcessChargeVersion = async job => {
     }
 
     // Persist data
-    await service.chargeVersionYear.persistChargeVersionYearBatch(batch);
+    await batchService.saveInvoicesToDB(batch);
 
     // Update status in water.billing_batch_charge_version_year
     await chargeVersionYearService.setReadyStatus(chargeVersionYear.billing_batch_charge_version_year_id);

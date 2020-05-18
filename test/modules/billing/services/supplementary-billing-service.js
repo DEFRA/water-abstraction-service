@@ -47,6 +47,10 @@ const createFullTransaction = (...args) => ({
       licenceId: '4b4f2427-984e-48f6-8b20-f17380b870a8',
       licenceRef: '01/123/ABC',
       regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
+      startDate: '2019-02-01',
+      expiredDate: null,
+      lapsedDate: null,
+      revokedDate: null,
       region: {
         regionId: '74241f84-de5f-4ec5-b437-377af15289fd',
         name: 'Anglian',
