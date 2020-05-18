@@ -141,7 +141,7 @@ class ChargeElement extends Model {
 
   /**
   * An instance of Date Range containing the time limited start
-  * and end dates, only exists if one of the dates exist
+  * and end dates, only exists if both dates exist
   * @param {dateRange}
   */
   set timeLimitedPeriod (dateRange) {

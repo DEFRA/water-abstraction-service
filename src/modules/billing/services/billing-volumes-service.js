@@ -12,7 +12,7 @@ const volumesToModels = volumes => volumes.map(mappers.billingVolume.dbToModel);
 
 const getVolumesForChargeElements = async (chargeVersion, financialYear, isSummer) => {
   const chargeElements = getChargeElementsForSeason(chargeVersion, isSummer);
-  const chargeElementIds = chargeElements.map(chargeElement => chargeElement.chargeElementId);
+  const chargeElementIds = chargeElements.map(chargeElement => chargeElement.id);
   const billingVolumes = await billingVolumesRepo.findByChargeElementIdsAndFinancialYear(chargeElementIds, financialYear);
 
   // The matching process has never run - no billing volumes have been persisted
@@ -50,7 +50,6 @@ const persistBillingVolumesData = async data => Promise.all(
   }));
 
 const calculateVolumesForChargeElements = async (chargeVersion, financialYear, isSummer) => {
-  // @TODO: Update TPT service interface to match function call
   const matchingResults = await twoPartTariffMatching.calculateVolumes(chargeVersion, financialYear, isSummer);
   return mapMatchingResultsToBillingVolumeStructure(matchingResults, financialYear, isSummer);
 };
