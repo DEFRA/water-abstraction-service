@@ -14,4 +14,21 @@ const dbToModel = row => {
   });
 };
 
+const matchingResultsToDb = (matchingResults, financialYear, isSummer) => {
+  const { error: overallError } = matchingResults;
+  return matchingResults.data.map(result => {
+    const twoPartTariffStatus = overallError || result.error;
+    return {
+      chargeElementId: result.data.chargeElementId,
+      financialYear,
+      isSummer,
+      calculatedVolume: result.data.actualReturnQuantity,
+      twoPartTariffStatus: twoPartTariffStatus,
+      twoPartTariffError: !!twoPartTariffStatus,
+      isApproved: false
+    };
+  });
+};
+
 exports.dbToModel = dbToModel;
+exports.matchingResultsToDb = matchingResultsToDb;

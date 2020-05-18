@@ -10,6 +10,10 @@ const getChargeElementsForSeason = (chargeVersion, isSummer) =>
 
 const volumesToModels = volumes => volumes.map(mappers.billingVolume.dbToModel);
 
+/**
+ * Filter charge elements for matching season
+ * Call repo to retrieve billing volumes for charge elements and financial year
+ */
 const getVolumesForChargeElements = async (chargeVersion, financialYear, isSummer) => {
   const chargeElements = getChargeElementsForSeason(chargeVersion, isSummer);
   const chargeElementIds = chargeElements.map(chargeElement => chargeElement.id);
@@ -27,36 +31,28 @@ const getVolumesForChargeElements = async (chargeVersion, financialYear, isSumme
   throw new NotFoundError(`Billing volumes missing for charge version ${chargeVersion.id}`);
 };
 
-const mapMatchingResultsToBillingVolumeStructure = (matchingResults, financialYear, isSummer) => {
-  const { error: overallError } = matchingResults;
-  return matchingResults.data.map(result => {
-    const twoPartTariffStatus = overallError || result.error;
-    return {
-      chargeElementId: result.data.chargeElementId,
-      financialYear,
-      isSummer,
-      calculatedVolume: result.data.actualReturnQuantity,
-      twoPartTariffStatus: twoPartTariffStatus,
-      twoPartTariffError: !!twoPartTariffStatus,
-      isApproved: false
-    };
-  });
+/**
+ * Calls two part tariff matching algorithm
+ * @return {Object} matching results mapped to db
+ */
+const calculateVolumesForChargeElements = async (chargeVersion, financialYear, isSummer) => {
+  const matchingResults = await twoPartTariffMatching.calculateVolumes(chargeVersion, financialYear, isSummer);
+  return mappers.billingVolume.matchingResultsToDb(matchingResults, financialYear, isSummer);
 };
 
+/**
+ * Create a new record for calculated billing volume
+ * @return {BillingVolume}
+ */
 const persistBillingVolumesData = async data => Promise.all(
   data.map(async row => {
     const result = await billingVolumesRepo.create(row);
     return mappers.billingVolume.dbToModel(result);
   }));
 
-const calculateVolumesForChargeElements = async (chargeVersion, financialYear, isSummer) => {
-  const matchingResults = await twoPartTariffMatching.calculateVolumes(chargeVersion, financialYear, isSummer);
-  return mapMatchingResultsToBillingVolumeStructure(matchingResults, financialYear, isSummer);
-};
-
 /**
  * Get billing volumes from the DB or by calling the returns matching algorithm
- * @param {Object} chargeVersion containing licenceRef and chargeElements
+ * @param {ChargeVersion} chargeVersion containing licence and chargeElements
  * @param {Integer} financialYear
  * @param {Boolean} isSummer
  */
