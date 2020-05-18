@@ -8,6 +8,7 @@ const licences = require('./licences');
 const regions = require('./regions');
 const chargeElements = require('./charge-elements');
 const chargeVersions = require('./charge-versions');
+const purposeUses = require('./purpose-uses');
 const tearDown = require('./tear-down');
 const crm = require('./crm');
 
@@ -36,6 +37,13 @@ const createCRMChargeVersionData = async chargeVersion => {
   return { company, invoiceAccount };
 };
 
+const createChargeElement = async (chargeVersion, key) => {
+  // Create purpose
+  await purposeUses.createForChargeElement(key);
+  // Create charge element
+  return chargeElements.create(chargeVersion, key);
+};
+
 /**
  * Creates a new scenario in the database based on the provided description
  * @param {Object} scenario
@@ -50,7 +58,7 @@ const createScenario = async scenario => {
   for (const row of scenario.chargeVersions) {
     const crmData = await createCRMChargeVersionData(row);
     const chargeVersion = await chargeVersions.create(region, licence, row.chargeVersion, crmData);
-    const tasks = row.chargeElements.map(key => chargeElements.create(chargeVersion, key));
+    const tasks = row.chargeElements.map(key => createChargeElement(chargeVersion, key));
     await Promise.all(tasks);
   }
   return region.get('regionId');
@@ -60,10 +68,11 @@ const createScenario = async scenario => {
  * Run scenario by setting up database and injecting into hapi server
  * @param {Object} scenario
  * @param {String} batchType
+ * @param {Number} [financialYearEnding] - defaults to 2020
  * @param {Boolean} [isSummer]
  * @return {String} batchId
  */
-const runScenario = async (scenario, batchType, isSummer = false) => {
+const runScenario = async (scenario, batchType, financialYearEnding = 2020, isSummer = false) => {
   await server._start();
 
   // Set up test data in database
@@ -81,7 +90,7 @@ const runScenario = async (scenario, batchType, isSummer = false) => {
       userEmail: 'test@example.com',
       regionId,
       batchType,
-      financialYearEnding: 2020,
+      financialYearEnding,
       isSummer
     }
   });
@@ -111,7 +120,7 @@ const getProcessedBatch = async batchId => {
  */
 const getBatchWhenProcessed = batchId => promisePoller({
   taskFn: () => getProcessedBatch(batchId),
-  interval: 2000,
+  interval: 5000,
   retries: 30
 });
 
