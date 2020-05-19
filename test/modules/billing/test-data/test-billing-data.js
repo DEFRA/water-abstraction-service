@@ -5,6 +5,7 @@ const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../src/lib/models/licence');
 const Transaction = require('../../../../src/lib/models/transaction');
+const ChargeVersion = require('../../../../src/lib/models/charge-version');
 const ChargeElement = require('../../../../src/lib/models/charge-element');
 const AbstractionPeriod = require('../../../../src/lib/models/abstraction-period');
 const DateRange = require('../../../../src/lib/models/date-range');
@@ -20,8 +21,8 @@ const createUser = options => {
   return user.fromHash({ id, email });
 };
 
-const createChargeElement = () => {
-  const chargeElement = new ChargeElement('29328315-9b24-473b-bde7-02c60e881501');
+const createChargeElement = (options = {}) => {
+  const chargeElement = new ChargeElement(options.id || '29328315-9b24-473b-bde7-02c60e881501');
   chargeElement.fromHash({
     source: 'supported',
     season: CHARGE_SEASON.summer,
@@ -39,6 +40,14 @@ const createChargeElement = () => {
   return chargeElement;
 };
 
+const createChargeVersion = chargeElements => {
+  const chargeVersion = new ChargeVersion();
+  return chargeVersion.fromHash({
+    licence: createLicence(),
+    chargeElements: chargeElements || [createChargeElement()]
+  });
+};
+
 const createTransaction = (options = {}, chargeElement) => {
   const transaction = new Transaction(options.id || '');
   transaction.fromHash({
@@ -48,14 +57,8 @@ const createTransaction = (options = {}, chargeElement) => {
     isCompensationCharge: !!options.isCompensationCharge,
     authorisedDays: 366,
     billableDays: 366,
-    description: 'Tiny pond',
-    volume: 5.64,
-    twoPartTariffError: !!options.twoPartTariffError
+    description: 'Tiny pond'
   });
-
-  if (options.twoPartTariffReview) {
-    transaction.twoPartTariffReview = createUser(options.twoPartTariffReview);
-  }
   return transaction;
 };
 
@@ -119,4 +122,5 @@ exports.createBatch = createBatch;
 exports.createUser = createUser;
 exports.createLicence = createLicence;
 exports.createChargeElement = createChargeElement;
+exports.createChargeVersion = createChargeVersion;
 exports.createFinancialYear = createFinancialYear;
