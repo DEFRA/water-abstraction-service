@@ -2,8 +2,9 @@ const data = require('./data');
 const { ChargeElement, bookshelf } = require('../../../src/lib/connectors/bookshelf');
 
 /**
- * Create the test licence in the region with the specified
- * @param {Object} region
+ * Create the charge element with the scenario key, attached to the
+ * specified charge version
+ * @param {Object} chargeVersion - bookshelf model
  * @param {String} scenarioKey
  */
 const create = async (chargeVersion, scenarioKey) => ChargeElement
