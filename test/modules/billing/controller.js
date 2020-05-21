@@ -191,6 +191,11 @@ experiment('modules/billing/controller', () => {
         expect(data.url).to.equal('/water/1.0/event/11111111-1111-1111-1111-111111111111');
       });
 
+      test('the response contains the batch', async () => {
+        const [{ data }] = h.response.lastCall.args;
+        expect(data.batch).to.equal(batch);
+      });
+
       test('a 202 response code is used', async () => {
         const [code] = hapiResponseStub.code.lastCall.args;
         expect(code).to.equal(202);
