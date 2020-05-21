@@ -34,6 +34,7 @@ experiment('modules/acceptance-tests/batches', () => {
     beforeEach(async () => {
       pool.query.onFirstCall().resolves({
         rows: [
+          { billing_batch_id: null },
           { billing_batch_id: '00000000-0000-0000-0000-000000000000' }
         ]
       });
