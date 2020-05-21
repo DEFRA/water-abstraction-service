@@ -64,7 +64,9 @@ const deleteBatches = async () => {
     getAnglianAndMidlandsBatchIds()
   ]);
 
-  await deleteUniqueBatches(acceptanceTestBatchIds.concat(areaBatchIds));
+  const toDelete = [...acceptanceTestBatchIds, ...areaBatchIds].filter(id => id !== null);
+
+  await deleteUniqueBatches(toDelete);
 };
 
 exports.delete = deleteBatches;
