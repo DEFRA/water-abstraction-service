@@ -63,7 +63,6 @@ const postCreateBatch = async (request, h) => {
     return h.response(envelope({
       batch,
       event: batchEvent,
-      batch,
       url: `/water/1.0/event/${batchEvent.id}`
     })).code(202);
   } catch (err) {
