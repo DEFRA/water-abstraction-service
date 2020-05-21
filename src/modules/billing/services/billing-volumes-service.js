@@ -64,4 +64,7 @@ const getVolumes = async (chargeVersion, financialYear, isSummer) => {
   return persistBillingVolumesData(billingVolumesData);
 };
 
+const updateBillingVolume = async () => {};
+
 exports.getVolumes = getVolumes;
+exports.updateBillingVolume = updateBillingVolume;

@@ -12,7 +12,7 @@ const {
   checkQuantitiesInElementGroups,
   reshuffleQuantities
 } = require('../../../../../src/modules/billing/services/two-part-tariff-service/reshuffle-quantities');
-const { ERROR_OVER_ABSTRACTION } = require('../../../../../src/lib/models/transaction').twoPartTariffStatuses;
+const { ERROR_OVER_ABSTRACTION } = require('../../../../../src/lib/models/billing-volume').twoPartTariffStatuses;
 const { CHARGE_SEASON } = require('../../../../../src/lib/models/constants');
 
 experiment('modules/charging/lib/reshuffle-quantities', async () => {

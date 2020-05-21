@@ -5,15 +5,13 @@ const Decimal = require('decimal.js-light');
 const { identity } = require('lodash');
 const { TPT_PURPOSES } = require('./two-part-tariff-helpers');
 const {
-  twoPartTariffStatuses: {
-    ERROR_NO_RETURNS_FOR_MATCHING,
-    ERROR_NO_RETURNS_SUBMITTED,
-    ERROR_SOME_RETURNS_DUE,
-    ERROR_LATE_RETURNS,
-    ERROR_UNDER_QUERY,
-    ERROR_RECEIVED_NO_DATA
-  }
-} = require('../../../../lib/models/transaction');
+  ERROR_NO_RETURNS_FOR_MATCHING,
+  ERROR_NO_RETURNS_SUBMITTED,
+  ERROR_SOME_RETURNS_DUE,
+  ERROR_LATE_RETURNS,
+  ERROR_UNDER_QUERY,
+  ERROR_RECEIVED_NO_DATA
+} = require('../../../../lib/models/billing-volume').twoPartTariffStatuses;
 
 const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
 

@@ -995,10 +995,7 @@ experiment('modules/billing/services/batch-service', () => {
     beforeEach(async () => {
       transaction = createTransaction({
         status: Transaction.statuses.candidate,
-        twoPartTariffError: false,
-        twoPartTariffStatus: Transaction.twoPartTariffStatuses.ERROR_RECEIVED,
-        volume: 25,
-        calculatedVolume: 25
+        volume: 25
       });
       invoiceLicence = createInvoiceLicence({ transactions: [transaction] });
       const invoice = createInvoice({}, [invoiceLicence]);
@@ -1043,10 +1040,7 @@ experiment('modules/billing/services/batch-service', () => {
       test('there are outstanding twoPartTariffErrors to resolve', async () => {
         const transactionWithError = createTransaction({
           status: Transaction.statuses.candidate,
-          twoPartTariffError: false,
-          twoPartTariffStatus: Transaction.twoPartTariffStatuses.ERROR_RECEIVED,
-          volume: 25,
-          calculatedVolume: 25
+          volume: 25
         });
         const invoiceLicence2 = createInvoiceLicence({ transactions: [transaction, transactionWithError] });
         const invoice = createInvoice({}, [invoiceLicence, invoiceLicence2]);

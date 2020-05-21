@@ -13,12 +13,7 @@ const uuid = require('uuid/v4');
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
 const repos = require('../../../../src/lib/connectors/repos');
 const { logger } = require('../../../../src/logger');
-
-const { BATCH_TYPE, BATCH_STATUS } = require('../../../../src/lib/models/batch');
-const Transaction = require('../../../../src/lib/models/transaction');
-const User = require('../../../../src/lib/models/user');
-const { BatchStatusError, TransactionStatusError } = require('../../../../src/modules/billing/lib/errors');
-const { createTransaction, createInvoiceLicence, createBatch, createInvoice } = require('../test-data/test-billing-data');
+const { createTransaction, createInvoiceLicence } = require('../test-data/test-billing-data');
 
 const chargeElementDBData = {
   chargeElementId: 'ae7197b3-a00b-4a49-be36-af63df6f8583',
@@ -159,105 +154,6 @@ experiment('modules/billing/services/transactions-service', () => {
             transactionId,
             response
           });
-        }
-      });
-    });
-  });
-
-  experiment('.updateTransactionVolume', () => {
-    let batch, transaction, transactionId, user, result;
-
-    beforeEach(async () => {
-      repos.billingTransactions.update.resolves({ attributes: transactionDBRow });
-
-      const options = {
-        id: transactionId,
-        status: Transaction.statuses.candidate,
-        twoPartTariffError: false,
-        twoPartTariffReview: { id: 1234, email: 'test@example.com' }
-      };
-      transaction = createTransaction(options);
-
-      const invoice = createInvoice({}, [createInvoiceLicence({ transactions: [transaction] })]);
-      batch = createBatch({
-        type: BATCH_TYPE.twoPartTariff,
-        status: BATCH_STATUS.review
-      }, invoice);
-
-      user = transaction.twoPartTariffReview;
-      result = await transactionsService.updateTransactionVolume(batch, transaction, 5.64, user);
-    });
-
-    experiment('when all criteria for update is met', () => {
-      test('the update() method is called on the repo', () => {
-        expect(repos.billingTransactions.update.called).to.be.true();
-      });
-
-      test('the transaction volume, twoPartTariffError and twoPartTariffReview are updated', () => {
-        const [id, changes] = repos.billingTransactions.update.lastCall.args;
-        expect(id).to.equal(transactionId);
-        expect(changes).to.equal({
-          volume: 5.64,
-          twoPartTariffError: false,
-          twoPartTariffReview: { id: 1234, email: 'test@example.com' }
-        });
-      });
-
-      experiment('the updated Transaction', () => {
-        test('is returned', () => {
-          expect(result).to.be.an.instanceOf(Transaction);
-          expect(result.volume).to.equal(5.64);
-          expect(result.twoPartTariffError).to.be.false();
-          expect(result.twoPartTariffReview).to.be.an.instanceOf(User);
-        });
-
-        test('contains the updated volume', () => {
-          expect(result.volume).to.equal(5.64);
-        });
-
-        test('has two part tariff error set to false', () => {
-          expect(result.twoPartTariffError).to.be.false();
-        });
-
-        test('contains the user who made the changes', () => {
-          expect(result.twoPartTariffReview).to.be.an.instanceOf(User);
-          expect(result.twoPartTariffReview.id).to.equal(user.id);
-          expect(result.twoPartTariffReview.email).to.equal(user.email);
-        });
-      });
-    });
-
-    experiment('when criteria for update is not met', () => {
-      test('throws expected error when batch is the wrong type', async () => {
-        batch.type = BATCH_TYPE.annual;
-        try {
-          await transactionsService.updateTransactionVolume(batch, transaction, 5.64, user);
-        } catch (err) {
-          expect(err).to.be.an.instanceOf(BatchStatusError);
-          expect(err.name).to.equal('BatchStatusError');
-          expect(err.message).to.equal('Batch type must be two part tariff');
-        }
-      });
-
-      test('throws expected error when batch does not have review status', async () => {
-        batch.status = BATCH_STATUS.processing;
-        try {
-          await transactionsService.updateTransactionVolume(batch, transaction, 5.64, user);
-        } catch (err) {
-          expect(err).to.be.an.instanceOf(BatchStatusError);
-          expect(err.name).to.equal('BatchStatusError');
-          expect(err.message).to.equal('Batch must have review status');
-        }
-      });
-
-      test('throws expected error when transaction does not have candidate status', async () => {
-        transaction.status = Transaction.statuses.chargeCreated;
-        try {
-          await transactionsService.updateTransactionVolume(batch, transaction, 5.64, user);
-        } catch (err) {
-          expect(err).to.be.an.instanceOf(TransactionStatusError);
-          expect(err.name).to.equal('TransactionStatusError');
-          expect(err.message).to.equal('Transaction must have candidate status');
         }
       });
     });

@@ -14,7 +14,7 @@ const {
 const {
   ERROR_NO_RETURNS_FOR_MATCHING,
   ERROR_OVER_ABSTRACTION
-} = require('../../../../../src/lib/models/transaction').twoPartTariffStatuses;
+} = require('../../../../../src/lib/models/billing-volume').twoPartTariffStatuses;
 
 const roundTo3DP = decimal => {
   return decimal.toDecimalPlaces(3).toNumber();

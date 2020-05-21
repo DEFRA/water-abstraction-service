@@ -5,7 +5,6 @@ const Event = require('../../lib/models/event');
 const Batch = require('../../lib/models/batch');
 const BATCH_STATUS = Batch.BATCH_STATUS;
 
-const { get } = require('lodash');
 const { envelope } = require('../../lib/response');
 const createBillRunJob = require('./jobs/create-bill-run');
 const prepareTransactionsJob = require('./jobs/prepare-transactions');
@@ -14,7 +13,7 @@ const { jobStatus } = require('./lib/event');
 const invoiceService = require('./services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
 const batchService = require('./services/batch-service');
-const transactionsService = require('./services/transactions-service');
+const billingVolumesService = require('./services/billing-volumes-service');
 const eventService = require('../../lib/services/events');
 
 const mappers = require('./mappers');
@@ -176,17 +175,12 @@ const getBatchLicences = async (request, h) => {
 };
 
 const patchTransaction = async (request, h) => {
-  const { transactionId } = request.params;
-  const { volume } = request.payload;
-  const { internalCallingUser: user } = request.defra;
-
-  const batch = await transactionsService.getById(transactionId);
-  if (!batch) return Boom.notFound(`No transaction (${transactionId}) found`);
+// @TODO: needs to be updated to work with new billing volumes service
 
   try {
-    const transaction = get(batch, 'invoices[0].invoiceLicences[0].transactions[0]');
-    const updatedTransaction = await transactionsService.updateTransactionVolume(batch, transaction, volume, user);
-    return updatedTransaction;
+    // @TODO: implement below function in billing volumes service
+    const updatedBillingVolume = await billingVolumesService.updateBillingVolume();
+    return updatedBillingVolume;
   } catch (err) {
     return Boom.badRequest(err.message);
   }
