@@ -45,10 +45,8 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(error).to.be.null();
         expect(allocatedElements).to.be.an.array().and.to.have.length(2);
         expect(allocatedElements[0].data.actualReturnQuantity).to.equal(100);
-        expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(100);
         expect(allocatedElements[0].error).to.be.null();
         expect(allocatedElements[1].data.actualReturnQuantity).to.equal(75);
-        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(100);
         expect(allocatedElements[1].error).to.be.null();
       });
       test('moves quantities from sub elements filling elements in order passed', async () => {
@@ -88,13 +86,10 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(error).to.be.null();
         expect(allocatedElements).to.be.an.array().and.to.have.length(3);
         expect(allocatedElements[0].data.actualReturnQuantity).to.equal(100);
-        expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(100);
         expect(allocatedElements[0].error).to.be.null();
         expect(allocatedElements[1].data.actualReturnQuantity).to.equal(50);
-        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(50);
         expect(allocatedElements[1].error).to.be.null();
         expect(allocatedElements[2].data.actualReturnQuantity).to.equal(10);
-        expect(allocatedElements[2].data.proRataAuthorisedQuantity).to.equal(50);
         expect(allocatedElements[2].error).to.be.null();
       });
       test('actual quantities remain the same if no shuffling is needed', async () => {
@@ -132,13 +127,10 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(error).to.be.null();
         expect(allocatedElements).to.be.an.array().and.to.have.length(3);
         expect(allocatedElements[0].data.actualReturnQuantity).to.equal(chargeElementsGroup.baseElement.actualReturnQuantity);
-        expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(100);
         expect(allocatedElements[0].error).to.be.null();
         expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[0].actualReturnQuantity);
-        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(20);
         expect(allocatedElements[1].error).to.be.null();
         expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[1].actualReturnQuantity);
-        expect(allocatedElements[2].data.proRataAuthorisedQuantity).to.equal(20);
         expect(allocatedElements[2].error).to.be.null();
       });
     });
@@ -178,13 +170,10 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(error).to.be.null();
         expect(allocatedElements).to.be.an.array().and.to.have.length(3);
         expect(allocatedElements[0].data.actualReturnQuantity).to.equal(chargeElementsGroup.baseElement.proRataAuthorisedQuantity);
-        expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(chargeElementsGroup.baseElement.proRataAuthorisedQuantity);
         expect(allocatedElements[0].error).to.be.null();
         expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[0].proRataAuthorisedQuantity);
-        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(chargeElementsGroup.subElements[0].proRataAuthorisedQuantity);
         expect(allocatedElements[1].error).to.be.null();
         expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[1].proRataAuthorisedQuantity);
-        expect(allocatedElements[2].data.proRataAuthorisedQuantity).to.equal(chargeElementsGroup.subElements[1].proRataAuthorisedQuantity);
         expect(allocatedElements[2].error).to.be.null();
       });
       test('the actual quantities are equal to the authorised quantities, if no billable quantities provided', async () => {
@@ -222,13 +211,10 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(error).to.be.null();
         expect(allocatedElements).to.be.an.array().and.to.have.length(3);
         expect(allocatedElements[0].data.actualReturnQuantity).to.equal(chargeElementsGroup.baseElement.proRataAuthorisedQuantity);
-        expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(50);
         expect(allocatedElements[0].error).to.be.null();
         expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[0].proRataAuthorisedQuantity);
-        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(50);
         expect(allocatedElements[1].error).to.be.null();
         expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[1].proRataAuthorisedQuantity);
-        expect(allocatedElements[2].data.proRataAuthorisedQuantity).to.equal(100);
         expect(allocatedElements[2].error).to.be.null();
       });
     });
@@ -272,13 +258,10 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(error).to.equal(ERROR_OVER_ABSTRACTION);
         expect(allocatedElements).to.be.an.array().and.to.have.length(3);
         expect(allocatedElements[0].data.actualReturnQuantity).to.equal(overAbstraction.plus(chargeElementsGroup.baseElement.proRataAuthorisedQuantity).toDecimalPlaces(3).toNumber());
-        expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(chargeElementsGroup.baseElement.proRataAuthorisedQuantity);
         expect(allocatedElements[0].error).to.equal(ERROR_OVER_ABSTRACTION);
         expect(allocatedElements[1].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[0].proRataAuthorisedQuantity);
-        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(chargeElementsGroup.subElements[0].proRataAuthorisedQuantity);
         expect(allocatedElements[1].error).to.be.null();
         expect(allocatedElements[2].data.actualReturnQuantity).to.equal(chargeElementsGroup.subElements[1].proRataAuthorisedQuantity);
-        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(chargeElementsGroup.subElements[1].proRataAuthorisedQuantity);
         expect(allocatedElements[2].error).to.be.null();
       });
       test('and an under abstraction in sub element, sub element is equal to max for period, excess is put on base element', async () => {
@@ -338,10 +321,8 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         expect(error).to.be.null();
         expect(allocatedElements).to.be.an.array().and.to.have.length(2);
         expect(allocatedElements[0].data.actualReturnQuantity).to.equal(0);
-        expect(allocatedElements[0].data.proRataAuthorisedQuantity).to.equal(50);
         expect(allocatedElements[0].error).to.be.null();
         expect(allocatedElements[1].data.actualReturnQuantity).to.equal(0);
-        expect(allocatedElements[1].data.proRataAuthorisedQuantity).to.equal(50);
         expect(allocatedElements[1].error).to.be.null();
       });
     });
@@ -541,7 +522,6 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
 
         expect(error).to.be.null();
         expect(data).to.be.an.array().and.have.length(1);
-        expect(outputBaseElement.proRataAuthorisedQuantity).to.equal(inputBaseElement.proRataAuthorisedQuantity);
         expect(outputBaseElement.actualReturnQuantity).to.equal(inputBaseElement.actualReturnQuantity);
       });
       test('if the element is over abstracted, it returns an over abstraction error, but element remains the same', async () => {
@@ -561,7 +541,6 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
 
         expect(error).to.equal(ERROR_OVER_ABSTRACTION);
         expect(data).to.be.an.array().and.have.length(1);
-        expect(outputBaseElement.proRataAuthorisedQuantity).to.equal(inputBaseElement.proRataAuthorisedQuantity);
         expect(outputBaseElement.actualReturnQuantity).to.equal(inputBaseElement.actualReturnQuantity);
       });
     });
@@ -631,19 +610,15 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
       expect(error).to.be.null();
       expect(reshuffledElements[0].data.chargeElementId).to.equal('charge-element-2');
       expect(reshuffledElements[0].data.actualReturnQuantity).to.equal(100);
-      expect(reshuffledElements[0].data.proRataAuthorisedQuantity).to.equal(100);
       expect(reshuffledElements[0].error).to.be.null();
       expect(reshuffledElements[1].data.chargeElementId).to.equal('charge-element-1');
       expect(reshuffledElements[1].data.actualReturnQuantity).to.equal(75);
-      expect(reshuffledElements[1].data.proRataAuthorisedQuantity).to.equal(100);
       expect(reshuffledElements[1].error).to.be.null();
       expect(reshuffledElements[2].data.chargeElementId).to.equal('charge-element-4');
       expect(reshuffledElements[2].data.actualReturnQuantity).to.equal(100);
-      expect(reshuffledElements[2].data.proRataAuthorisedQuantity).to.equal(100);
       expect(reshuffledElements[2].error).to.be.null();
       expect(reshuffledElements[3].data.chargeElementId).to.equal('charge-element-3');
       expect(reshuffledElements[3].data.actualReturnQuantity).to.equal(30);
-      expect(reshuffledElements[3].data.proRataAuthorisedQuantity).to.equal(50);
       expect(reshuffledElements[3].error).to.be.null();
     });
   });
