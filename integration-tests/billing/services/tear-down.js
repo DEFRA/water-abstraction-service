@@ -1,6 +1,7 @@
 const chargeVersions = require('./charge-versions');
 const regions = require('./regions');
 const licences = require('./licences');
+const licenceAgreements = require('./licence-agreements');
 const batches = require('./batches');
 const crm = require('./crm');
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs');
@@ -13,6 +14,7 @@ const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs
 const tearDown = async (data) => {
   await batches.tearDown();
   await chargeVersions.tearDown();
+  await licenceAgreements.tearDown();
   await licences.tearDown();
   await regions.tearDown();
   await crm.tearDown();
