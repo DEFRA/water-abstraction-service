@@ -49,7 +49,7 @@ experiment('getDocuments', () => {
       },
       'metadata->>IsCurrent': { $ne: 'false' }
     });
-    expect(sort).to.equal(null);
+    expect(sort).to.equal({ system_external_id: +1 });
     expect(columns).to.equal(['system_external_id', 'company_entity_id']);
   });
 
