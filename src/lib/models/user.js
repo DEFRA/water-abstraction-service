@@ -4,11 +4,6 @@ const Model = require('./model');
 const { assertPositiveInteger, assertEmailAddress } = require('./validators');
 
 class User extends Model {
-  constructor (id, email) {
-    super(id);
-    this._email = email;
-  }
-
   /**
    * @param {Integer} id - user id
    */
