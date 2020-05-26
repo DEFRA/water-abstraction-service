@@ -1,7 +1,6 @@
 exports.address = require('./address');
 exports.api = require('./api');
 exports.batch = require('./batch');
-exports.billingVolume = require('./billing-volume');
 exports.chargeElement = require('./charge-element');
 exports.chargeVersion = require('./charge-version');
 exports.company = require('./company');
