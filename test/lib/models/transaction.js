@@ -15,6 +15,7 @@ const Licence = require('../../../src/lib/models/licence');
 const Region = require('../../../src/lib/models/region');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 const Batch = require('../../../src/lib/models/batch');
+const User = require('../../../src/lib/models/user');
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
 class TestModel {};
@@ -370,6 +371,116 @@ experiment('lib/models/transaction', () => {
     test('throws an error if set to any other type', async () => {
       const func = () => {
         transaction.volume = 'a string';
+      };
+
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.calculatedVolume', () => {
+    test('can be set to a positive number', async () => {
+      const transaction = new Transaction();
+      transaction.calculatedVolume = 4.465;
+      expect(transaction.calculatedVolume).to.equal(4.465);
+    });
+
+    test('can be set to null', async () => {
+      const transaction = new Transaction();
+      transaction.calculatedVolume = null;
+      expect(transaction.calculatedVolume).to.be.null();
+    });
+
+    test('throws an error if set to any other type', async () => {
+      const transaction = new Transaction();
+
+      const func = () => {
+        transaction.calculatedVolume = 'a string';
+      };
+
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.twoPartTariffStatus', () => {
+    let transaction;
+    beforeEach(() => {
+      transaction = new Transaction();
+    });
+    for (const status of [10, 20, 30, 40, 50, 60, 70]) {
+      test(`can set the twoPartTariffStatus to "${status}"`, async () => {
+        transaction.twoPartTariffStatus = status;
+        expect(transaction.twoPartTariffStatus).to.equal(status);
+      });
+    }
+
+    test('can be set to null', async () => {
+      const transaction = new Transaction();
+      transaction.twoPartTariffStatus = null;
+      expect(transaction.twoPartTariffStatus).to.be.null();
+    });
+
+    test('setting twoPartTariffStatus to invalid value throws an error', async () => {
+      const func = () => {
+        transaction.twoPartTariffStatus = 600;
+      };
+      expect(func).throw();
+    });
+  });
+
+  experiment('.twoPartTariffError', () => {
+    test('can be set to a boolean', async () => {
+      const transaction = new Transaction();
+      transaction.twoPartTariffError = true;
+      expect(transaction.twoPartTariffError).to.equal(true);
+    });
+
+    test('can be set to a null', async () => {
+      const transaction = new Transaction();
+      transaction.twoPartTariffError = null;
+      expect(transaction.twoPartTariffError).to.equal(null);
+    });
+
+    test('throws an error if set to undefined', async () => {
+      const transaction = new Transaction();
+
+      const func = () => {
+        transaction.twoPartTariffError = undefined;
+      };
+
+      expect(func).to.throw();
+    });
+
+    test('throws an error if set to any other type', async () => {
+      const transaction = new Transaction();
+
+      const func = () => {
+        transaction.twoPartTariffError = 'not-a-boolean';
+      };
+
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.twoPartTariffReview', () => {
+    const twoPartTariffReview = new User();
+
+    test('can be set to a User instance', async () => {
+      const transaction = new Transaction();
+      transaction.twoPartTariffReview = twoPartTariffReview;
+      expect(transaction.twoPartTariffReview).to.equal(twoPartTariffReview);
+    });
+
+    test('can be set to null', async () => {
+      const transaction = new Transaction();
+      transaction.twoPartTariffReview = null;
+      expect(transaction.twoPartTariffReview).to.be.null();
+    });
+
+    test('throws an error if set to any other type', async () => {
+      const transaction = new Transaction();
+
+      const func = () => {
+        transaction.twoPartTariffReview = new TestModel();
       };
 
       expect(func).to.throw();

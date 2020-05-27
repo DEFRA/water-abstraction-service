@@ -89,8 +89,4 @@ const processBatch = async batch => {
   return batch;
 };
 
-const calculateVolumes = async () => {};
-
-// @TODO replace processBatch with implementation of calculateVolumes
 exports.processBatch = processBatch;
-exports.calculateVolumes = calculateVolumes;
