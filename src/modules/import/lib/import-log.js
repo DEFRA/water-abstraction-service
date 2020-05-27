@@ -42,7 +42,7 @@ const createImportLog = async (licenceNumbers = [], filter = false) => {
     sql += ` WHERE "LIC_NO" IN (${placeholders})`;
   }
 
-  sql += ')';
+  sql += ') RETURNING *';
 
   return dbQuery(sql, licenceNumbers);
 };
@@ -94,3 +94,4 @@ exports.clearImportLog = clearImportLog;
 exports.createImportLog = createImportLog;
 exports.getNextImportBatch = getNextImportBatch;
 exports.setImportStatus = setImportStatus;
+exports.PENDING_JOB_STATUS = PENDING_JOB_STATUS;

@@ -8,8 +8,6 @@ const { expect } = require('@hapi/code');
 const { Batch, FinancialYear, Invoice, InvoiceAccount, Region, Totals } =
   require('../../../src/lib/models');
 
-const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
-
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
 const TEST_FINANCIAL_YEAR = new FinancialYear(2020);
 
@@ -70,25 +68,20 @@ experiment('lib/models/batch', () => {
     });
   });
 
-  experiment('.season', () => {
-    test('can be set to "summer"', async () => {
-      batch.season = CHARGE_SEASON.summer;
-      expect(batch.season).to.equal(CHARGE_SEASON.summer);
+  experiment('.isSummer', () => {
+    test('can be set to true', async () => {
+      batch.isSummer = true;
+      expect(batch.isSummer).to.equal(true);
     });
 
-    test('can be set to "winter"', async () => {
-      batch.season = CHARGE_SEASON.winter;
-      expect(batch.season).to.equal(CHARGE_SEASON.winter);
+    test('can be set to false', async () => {
+      batch.isSummer = false;
+      expect(batch.isSummer).to.equal(false);
     });
 
-    test('can be set to "all year"', async () => {
-      batch.season = CHARGE_SEASON.allYear;
-      expect(batch.season).to.equal(CHARGE_SEASON.allYear);
-    });
-
-    test('cannot be set to an invalid season', async () => {
+    test('cannot be set to an invalid value', async () => {
       const func = () => {
-        batch.season = 'autumn';
+        batch.isSummer = 123;
       };
       expect(func).to.throw();
     });
@@ -612,25 +605,6 @@ experiment('lib/models/batch', () => {
       const batch = new Batch();
       batch.status = Batch.BATCH_STATUS.review;
       expect(batch.canDeleteAccounts()).to.equal(true);
-    });
-  });
-
-  experiment('.isSummer()', () => {
-    const notSummer = [CHARGE_SEASON.allYear, CHARGE_SEASON.winter];
-    notSummer.forEach(season => {
-      test(`when the season is ${season} batch.isSummer() is false`, async () => {
-        const batch = new Batch();
-        batch.season = season;
-
-        expect(batch.isSummer()).to.equal(false);
-      });
-    });
-
-    test('when the season is summer batch.isSummer() is true', async () => {
-      const batch = new Batch();
-      batch.season = CHARGE_SEASON.summer;
-
-      expect(batch.isSummer()).to.equal(true);
     });
   });
 });

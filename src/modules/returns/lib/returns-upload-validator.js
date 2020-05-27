@@ -54,8 +54,12 @@ const getDocuments = (returns) => {
       $in: licenceNumbers
     }
   };
+  // Sort is required for multi-page result set to be stable
+  const sort = {
+    system_external_id: +1
+  };
   const columns = ['system_external_id', 'company_entity_id'];
-  return documents.findAll(filter, null, columns);
+  return documents.findAll(filter, sort, columns);
 };
 
 /**

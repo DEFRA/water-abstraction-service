@@ -1,4 +1,5 @@
 exports.bookshelf = require('./bookshelf').bookshelf;
+exports.ApplicationState = require('./ApplicationState');
 exports.BillingBatch = require('./BillingBatch');
 exports.BillingBatchChargeVersionYear = require('./BillingBatchChargeVersionYear');
 exports.BillingInvoice = require('./BillingInvoice');

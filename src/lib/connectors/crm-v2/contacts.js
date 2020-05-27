@@ -26,5 +26,18 @@ const getContacts = contactIds => {
   });
 };
 
+/**
+ * Creates a contact entity in the CRM
+ *
+ * @param {Object} contact The contact data
+ */
+const createContact = async contact => {
+  return serviceRequest.post(
+    getUri(),
+    { body: contact }
+  );
+};
+
+exports.createContact = createContact;
 exports.getContact = getContact;
 exports.getContacts = getContacts;

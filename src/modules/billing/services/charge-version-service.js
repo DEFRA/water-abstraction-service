@@ -1,4 +1,5 @@
 const repos = require('../../../lib/connectors/repos');
+const mappers = require('../mappers');
 
 /**
  * Creates the required billing_batch_charge_versions for the given
@@ -17,9 +18,21 @@ const createForBatch = batch => {
     regionId: batch.region.id,
     fromFinancialYearEnding: batch.startYear.endYear,
     toFinancialYearEnding: batch.endYear.endYear,
-    season: batch.season
+    isSummer: batch.isSummer
   };
   return actions[batch.type](params);
 };
 
+/**
+ * Gets charge version by ID
+ * @param {String} chargeVersionId
+ * @return {Promise<ChargeVersion>}
+ */
+const getByChargeVersionId = async chargeVersionId => {
+  // Fetch DB data
+  const data = await repos.chargeVersions.findOne(chargeVersionId);
+  return mappers.chargeVersion.dbToModel(data);
+};
+
 exports.createForBatch = createForBatch;
+exports.getByChargeVersionId = getByChargeVersionId;

@@ -7,6 +7,7 @@ const { BATCH_STATUS } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
 const Event = require('../../../lib/models/event');
 const eventService = require('../../../lib/services/events');
+const { BatchStatusError, TransactionStatusError } = require('../lib/errors');
 
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
@@ -224,10 +225,10 @@ const cleanup = async batchId => {
  * @param {String} regionId - guid from water.regions.region_id
  * @param {String} batchType - annual|supplementary|two_part_tariff
  * @param {Number} toFinancialYearEnding
- * @param {String} season - summer|winter|all_year
+ * @param {Boolean} isSummer - Is this a summer season two part tariff run
  * @return {Promise<Batch>} resolves with Batch service model
  */
-const create = async (regionId, batchType, toFinancialYearEnding, season) => {
+const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
   const existingBatch = await getMostRecentLiveBatchByRegion(regionId);
 
   if (existingBatch) {
@@ -246,7 +247,7 @@ const create = async (regionId, batchType, toFinancialYearEnding, season) => {
     batchType,
     fromFinancialYearEnding,
     toFinancialYearEnding,
-    season
+    isSummer
   });
 
   return getBatchById(billingBatchId);
@@ -268,6 +269,48 @@ const createChargeModuleBillRun = async batchId => {
   return batch.pickFrom(row, ['externalId', 'billRunId']);
 };
 
+const getTransactionsWithTwoPartError = batch => {
+  return batch.invoices.reduce((acc, invoice) => {
+    invoice.invoiceLicences.forEach(invoiceLicence => {
+      invoiceLicence.transactions.forEach(transaction => {
+        if (transaction.twoPartTariffError) acc.push(transaction);
+      });
+    });
+    return acc;
+  }, []);
+};
+
+const assertNoTransactionsWithTwoPartError = batch => {
+  const transactions = getTransactionsWithTwoPartError(batch);
+  if (transactions.length) {
+    throw new TransactionStatusError('Cannot approve review. There are outstanding two part tariff errors to resolve');
+  }
+};
+
+const assertBatchStatusIsReview = batch => {
+  if (batch.status !== BATCH_STATUS.review) {
+    throw new BatchStatusError('Cannot approve review. Batch status must be "review"');
+  }
+};
+
+/**
+ * Validates batch & transactions, then updates batch status to "processing"
+ *
+ * Validation:
+ *  - batch is in "review" status
+ *  - all twoPartTariff errors in transactions have been resolved
+ * throws relevant error if validation fails
+ *
+ * @param {Batch} batch to be approved
+ * @return {Promise<Batch>} resolves with Batch service model
+ */
+const approveTptBatchReview = async batch => {
+  assertNoTransactionsWithTwoPartError(batch);
+  assertBatchStatusIsReview(batch);
+  await setStatus(batch.id, BATCH_STATUS.processing);
+  return getBatchById(batch.id);
+};
+
 exports.approveBatch = approveBatch;
 exports.decorateBatchWithTotals = decorateBatchWithTotals;
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
@@ -286,3 +329,4 @@ exports.setStatusToEmptyWhenNoTransactions = setStatusToEmptyWhenNoTransactions;
 exports.cleanup = cleanup;
 exports.create = create;
 exports.createChargeModuleBillRun = createChargeModuleBillRun;
+exports.approveTptBatchReview = approveTptBatchReview;

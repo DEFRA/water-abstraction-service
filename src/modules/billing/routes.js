@@ -4,7 +4,6 @@ const Joi = require('@hapi/joi');
 
 const preHandlers = require('./pre-handlers');
 const controller = require('./controller');
-const { CHARGE_SEASON } = require('../../lib/models/constants');
 
 const getBatches = {
   method: 'GET',
@@ -31,7 +30,7 @@ const postCreateBatch = {
         regionId: Joi.string().uuid().required(),
         batchType: Joi.string().valid('annual', 'supplementary', 'two_part_tariff').required(),
         financialYearEnding: Joi.number().required(),
-        season: Joi.string().valid(Object.values(CHARGE_SEASON)).required()
+        isSummer: Joi.boolean().default(false)
       }
     }
   }
@@ -176,6 +175,25 @@ const getBatchLicences = {
   }
 };
 
+const patchTransaction = {
+  method: 'PATCH',
+  path: '/water/1.0/billing/transactions/{transactionId}',
+  handler: controller.patchTransaction,
+  config: {
+    validate: {
+      params: {
+        transactionId: Joi.string().uuid().required()
+      },
+      payload: {
+        volume: Joi.number().positive().allow(0).required()
+      },
+      headers: async values => {
+        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+      }
+    }
+  }
+};
+
 const getInvoiceLicence = {
   method: 'GET',
   path: '/water/1.0/billing/invoice-licences/{invoiceLicenceId}',
@@ -202,6 +220,25 @@ const deleteInvoiceLicence = {
   }
 };
 
+const postApproveReviewBatch = {
+  method: 'POST',
+  path: '/water/1.0/billing/batches/{batchId}/approve-review',
+  handler: controller.postApproveReviewBatch,
+  config: {
+    validate: {
+      params: {
+        batchId: Joi.string().uuid().required()
+      },
+      headers: async values => {
+        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+      }
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
@@ -214,5 +251,7 @@ exports.deleteBatch = deleteBatch;
 
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
+exports.postApproveReviewBatch = postApproveReviewBatch;
 
+exports.patchTransaction = patchTransaction;
 exports.deleteInvoiceLicence = deleteInvoiceLicence;

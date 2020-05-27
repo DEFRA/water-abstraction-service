@@ -26,15 +26,15 @@ experiment('lib/models/user', () => {
     });
   });
 
-  experiment('.emailAddress', () => {
+  experiment('.email', () => {
     test('can be set to a valid email address', async () => {
-      user.emailAddress = 'test@example.com';
-      expect(user.emailAddress).to.equal('test@example.com');
+      user.email = 'test@example.com';
+      expect(user.email).to.equal('test@example.com');
     });
 
     test('throws an error if string is not a valid email', async () => {
       const func = () => {
-        user.emailAddress = 'not-an-email';
+        user.email = 'not-an-email';
       };
       expect(func).to.throw();
     });

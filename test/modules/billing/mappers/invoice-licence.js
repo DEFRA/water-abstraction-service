@@ -18,7 +18,6 @@ const Address = require('../../../../src/lib/models/address');
 const Company = require('../../../../src/lib/models/company');
 const Contact = require('../../../../src/lib/models/contact-v2');
 const Licence = require('../../../../src/lib/models/licence');
-const Region = require('../../../../src/lib/models/region');
 const Transaction = require('../../../../src/lib/models/transaction');
 
 const createLicence = () => ({
@@ -30,7 +29,11 @@ const createLicence = () => ({
     displayName: 'Anglian',
     chargeRegionId: 'A'
   },
-  regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' }
+  regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
+  startDate: '2020-01-01',
+  expiredDate: null,
+  lapsedDate: null,
+  revokedDate: null
 });
 
 experiment('modules/billing/mappers/invoice-licence', () => {
@@ -49,7 +52,8 @@ experiment('modules/billing/mappers/invoice-licence', () => {
         billingInvoiceLicenceId: '4e44ea0b-62fc-4a3d-82ed-6ff563f1e39b',
         companyId: '40283a80-766f-481f-ba54-484ac0b7ea6d',
         addressId: '399282c3-f9b4-4a4b-af1b-0019e040ad61',
-        licence: createLicence()
+        licence: createLicence(),
+        billingInvoiceId: 'cf796261-fc3a-4203-86fd-a4b39e9f3f88'
       };
 
       beforeEach(async () => {
@@ -78,15 +82,20 @@ experiment('modules/billing/mappers/invoice-licence', () => {
       test('the invoiceLicence has a Licence', async () => {
         expect(result.licence instanceof Licence).to.be.true();
       });
+
+      test('the invoiceId is set', async () => {
+        expect(result.invoiceId).to.equal(dbRow.billingInvoiceId);
+      });
     });
 
-    experiment('when there contact ID is set', () => {
+    experiment('when the contact ID is set', () => {
       const dbRow = {
         billingInvoiceLicenceId: '4e44ea0b-62fc-4a3d-82ed-6ff563f1e39b',
         companyId: '40283a80-766f-481f-ba54-484ac0b7ea6d',
         addressId: '399282c3-f9b4-4a4b-af1b-0019e040ad61',
         contactId: 'b21a7769-942e-4166-a787-a16701f25e4e',
-        licence: createLicence()
+        licence: createLicence(),
+        billingInvoiceId: 'cf796261-fc3a-4203-86fd-a4b39e9f3f88'
       };
 
       beforeEach(async () => {
@@ -113,7 +122,8 @@ experiment('modules/billing/mappers/invoice-licence', () => {
             billingTransactionId: uuid()
           }, {
             billingTransactionId: uuid()
-          }]
+          }],
+          billingInvoiceId: 'cf796261-fc3a-4203-86fd-a4b39e9f3f88'
         };
         result = invoiceLicenceMapper.dbToModel(dbRow);
       });
@@ -129,79 +139,6 @@ experiment('modules/billing/mappers/invoice-licence', () => {
         expect(result.transactions[0] instanceof Transaction).to.be.true();
         expect(result.transactions[1] instanceof Transaction).to.be.true();
       });
-    });
-  });
-
-  experiment('.chargeToModel', () => {
-    let mappedInvoiceLicence;
-    let batch;
-    let data;
-
-    beforeEach(async () => {
-      data = {
-        chargeElements: [],
-        chargeVersion: {
-          licenceId: uuid(),
-          licenceRef: '123/321'
-        },
-        licenceHolder: {
-          company: {
-            companyId: uuid(),
-            name: 'Wheat Co'
-          },
-          address: {
-            addressId: uuid(),
-            address1: 'Add One',
-            address2: 'Add Two',
-            address3: null,
-            address4: null,
-            town: 'Add Town',
-            county: 'Add County',
-            postcode: 'AD1 1AD',
-            country: null
-          },
-          contact: {
-            salutation: 'Ms',
-            lastName: 'Teek'
-          }
-        }
-      };
-      batch = {
-        region: new Region().fromHash({ code: 'A ' })
-      };
-      mappedInvoiceLicence = invoiceLicenceMapper.chargeToModel(data, batch);
-    });
-
-    test('maps the licence', async () => {
-      const { licence } = mappedInvoiceLicence;
-      expect(licence.id).to.equal(data.chargeVersion.licenceId);
-      expect(licence.licenceNumber).to.equal(data.chargeVersion.licenceRef);
-      expect(licence.region.code).to.equal(batch.region.code);
-    });
-
-    test('maps the company', async () => {
-      const { company } = mappedInvoiceLicence;
-      expect(company.id).to.equal(data.licenceHolder.company.companyId);
-      expect(company.name).to.equal(data.licenceHolder.company.name);
-    });
-
-    test('maps the address', async () => {
-      const { address } = mappedInvoiceLicence;
-      expect(address.id).to.equal(data.licenceHolder.address.addressId);
-      expect(address.addressLine1).to.equal(data.licenceHolder.address.address1);
-      expect(address.addressLine2).to.equal(data.licenceHolder.address.address2);
-      expect(address.addressLine3).to.equal(data.licenceHolder.address.address3);
-      expect(address.addressLine4).to.equal(data.licenceHolder.address.address4);
-      expect(address.town).to.equal(data.licenceHolder.address.town);
-      expect(address.county).to.equal(data.licenceHolder.address.county);
-      expect(address.postcode).to.equal(data.licenceHolder.address.postcode);
-      expect(address.country).to.equal(data.licenceHolder.address.country);
-    });
-
-    test('maps the contact', async () => {
-      const { contact } = mappedInvoiceLicence;
-      expect(contact.salutation).to.equal(data.licenceHolder.contact.salutation);
-      expect(contact.lastName).to.equal(data.licenceHolder.contact.lastName);
     });
   });
 });

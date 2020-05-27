@@ -68,11 +68,9 @@ experiment('lib/models/date-range', () => {
       expect(dateRange.endDate).to.equal(TEST_END_DATE);
     });
 
-    test('throws an error if set to null', async () => {
-      const func = () => {
-        dateRange.endDate = null;
-      };
-      expect(func).to.throw();
+    test('can be set to null to create an open-ended range', async () => {
+      dateRange.endDate = null;
+      expect(dateRange.endDate).to.equal(null);
     });
 
     test('throws an error if set to an invalid date', async () => {

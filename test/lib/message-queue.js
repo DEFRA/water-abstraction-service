@@ -97,15 +97,58 @@ experiment('lib/message-queue', () => {
       });
 
       test('onComplete handler is registered', async () => {
-        const [jobName, handler] = messageQueue.onComplete.lastCall.args;
+        const [jobName, options, handler] = messageQueue.onComplete.lastCall.args;
         expect(jobName).to.equal(jobContainer.job.jobName);
+        expect(options).to.equal({});
         expect(handler).to.be.a.function();
       });
 
       test('the onComplete handler is called with the messageQueue', async () => {
-        const [, handler] = messageQueue.onComplete.lastCall.args;
+        const [, , handler] = messageQueue.onComplete.lastCall.args;
         handler({ foo: 'bar' });
         expect(jobContainer.onCompleteHandler.calledWith(
+          { foo: 'bar' }, messageQueue
+        )).to.be.true();
+      });
+    });
+
+    experiment('when there is an onComplete handler and custom options', () => {
+      beforeEach(async () => {
+        jobContainer = {
+          job: {
+            jobName: 'test-name',
+            handler: () => {},
+            createMessage: () => {},
+            options: { }
+          },
+          onCompleteHandler: {
+            handler: sandbox.stub(),
+            options: {
+              teamSize: 50
+            }
+          }
+        };
+        await createSubscription(messageQueue, jobContainer);
+      });
+
+      test('the subscription is created', async () => {
+        const [jobName, options, handler] = messageQueue.subscribe.lastCall.args;
+        expect(jobName).to.equal(jobContainer.job.jobName);
+        expect(options).to.equal({});
+        expect(handler).to.equal(jobContainer.job.handler);
+      });
+
+      test('onComplete handler is registered', async () => {
+        const [jobName, options, handler] = messageQueue.onComplete.lastCall.args;
+        expect(jobName).to.equal(jobContainer.job.jobName);
+        expect(options).to.equal({ teamSize: 50 });
+        expect(handler).to.be.a.function();
+      });
+
+      test('the onComplete handler is called with the messageQueue', async () => {
+        const [,, handler] = messageQueue.onComplete.lastCall.args;
+        handler({ foo: 'bar' });
+        expect(jobContainer.onCompleteHandler.handler.calledWith(
           { foo: 'bar' }, messageQueue
         )).to.be.true();
       });

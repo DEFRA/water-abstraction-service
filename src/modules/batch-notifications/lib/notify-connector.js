@@ -2,7 +2,7 @@ const notifyConnector = require('../../../lib/connectors/notify');
 const { get } = require('lodash');
 const pdfCreator = require('../../../lib/notify/pdf');
 const config = require('../../../../config');
-const s3Connector = require('../../../lib/connectors/s3');
+const s3Connector = require('../../../lib/services/s3');
 
 /**
  * Creates a string reference for a message in Notify so it can be

@@ -20,7 +20,7 @@ const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../src/lib/models/licence');
 const Totals = require('../../../../src/lib/models/totals');
 const Transaction = require('../../../../src/lib/models/transaction');
-const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
+const { BatchStatusError, TransactionStatusError } = require('../../../../src/modules/billing/lib/errors');
 
 const eventService = require('../../../../src/lib/services/events');
 const { logger } = require('../../../../src/logger');
@@ -34,7 +34,7 @@ const invoiceAccountsService = require('../../../../src/modules/billing/services
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
-
+const { createBatch, createInvoice, createInvoiceLicence, createTransaction } = require('../test-data/test-billing-data');
 const config = require('../../../../config');
 
 const REGION_ID = '3e91fd44-dead-4748-a312-83806245c3da';
@@ -51,7 +51,7 @@ const region = {
 const batch = {
   billingBatchId: BATCH_ID,
   batchType: 'supplementary',
-  season: CHARGE_SEASON.summer,
+  isSummer: true,
   regionId: region.regionId,
   fromFinancialYearEnding: 2014,
   toFinancialYearEnding: 2019,
@@ -138,8 +138,8 @@ experiment('modules/billing/services/batch-service', () => {
         expect(result.type).to.equal(data.batch.batchType);
       });
 
-      test('with correct season', async () => {
-        expect(result.season).to.equal(data.batch.season);
+      test('with correct isSummer flag', async () => {
+        expect(result.isSummer).to.equal(data.batch.isSummer);
       });
 
       experiment('with start year', () => {
@@ -188,7 +188,7 @@ experiment('modules/billing/services/batch-service', () => {
             billingBatchId: 'a9e9334e-4709-4b86-9b75-19e58f3f0d8c',
             region,
             batchType: 'supplementary',
-            season: CHARGE_SEASON.allYear,
+            isSummer: false,
             dateCreated: '2020-01-09T16:23:24.753Z',
             dateUpdated: '2020-01-09T16:23:32.631Z',
             status: 'ready',
@@ -199,7 +199,7 @@ experiment('modules/billing/services/batch-service', () => {
             billingBatchId: 'b08b07e0-8467-4e43-888f-a23d08c98a28',
             region,
             batchType: 'supplementary',
-            season: CHARGE_SEASON.allYear,
+            isSummer: false,
             dateCreated: '2020-01-09T16:11:09.981Z',
             dateUpdated: '2020-01-09T16:11:17.077Z',
             status: 'review',
@@ -245,7 +245,7 @@ experiment('modules/billing/services/batch-service', () => {
       expect(batches[0]).to.be.instanceOf(Batch);
       expect(batches[0].id).to.equal(response.data[0].billingBatchId);
       expect(batches[0].type).to.equal(response.data[0].batchType);
-      expect(batches[0].season).to.equal(response.data[0].season);
+      expect(batches[0].isSummer).to.equal(response.data[0].isSummer);
       expect(batches[0].startYear.yearEnding).to.equal(response.data[0].fromFinancialYearEnding);
       expect(batches[0].endYear.yearEnding).to.equal(response.data[0].toFinancialYearEnding);
       expect(batches[0].status).to.equal(response.data[0].status);
@@ -255,7 +255,7 @@ experiment('modules/billing/services/batch-service', () => {
       expect(batches[1]).to.be.instanceOf(Batch);
       expect(batches[1].id).to.equal(response.data[1].billingBatchId);
       expect(batches[1].type).to.equal(response.data[1].batchType);
-      expect(batches[1].season).to.equal(response.data[1].season);
+      expect(batches[1].isSummer).to.equal(response.data[1].isSummer);
       expect(batches[1].startYear.yearEnding).to.equal(response.data[1].fromFinancialYearEnding);
       expect(batches[1].endYear.yearEnding).to.equal(response.data[1].toFinancialYearEnding);
       expect(batches[1].status).to.equal(response.data[1].status);
@@ -561,7 +561,7 @@ experiment('modules/billing/services/batch-service', () => {
           billingBatchId: '11111111-0000-0000-0000-000000000000',
           regionId: '22222222-0000-0000-0000-000000000000',
           batchType: 'supplementary',
-          season: CHARGE_SEASON.allYear,
+          isSummer: false,
           status: 'processing',
           region: {
             regionId: '22222222-0000-0000-0000-000000000000',
@@ -575,7 +575,7 @@ experiment('modules/billing/services/batch-service', () => {
           billingBatchId: '33333333-0000-0000-0000-000000000000',
           regionId,
           batchType: 'supplementary',
-          season: CHARGE_SEASON.allYear,
+          isSummer: false,
           status: 'processing',
           region: {
             regionId,
@@ -840,7 +840,7 @@ experiment('modules/billing/services/batch-service', () => {
         newRepos.billingBatches.findByStatuses.resolves([{
           billingBatchId: existingBatchId,
           batchType: 'supplementary',
-          season: CHARGE_SEASON.allYear,
+          isSummer: false,
           status: 'processing',
           regionId,
           region: {
@@ -893,7 +893,7 @@ experiment('modules/billing/services/batch-service', () => {
             batchType: 'annual',
             fromFinancialYearEnding: 2019,
             toFinancialYearEnding: 2019,
-            season: 'all-year'
+            isSummer: false
           }));
         });
 
@@ -914,7 +914,7 @@ experiment('modules/billing/services/batch-service', () => {
             batchType: 'supplementary',
             fromFinancialYearEnding: 2013,
             toFinancialYearEnding: 2019,
-            season: 'all-year'
+            isSummer: false
           }));
         });
 
@@ -935,7 +935,7 @@ experiment('modules/billing/services/batch-service', () => {
             batchType: 'two_part_tariff',
             fromFinancialYearEnding: 2019,
             toFinancialYearEnding: 2019,
-            season: 'summer'
+            isSummer: true
           }));
         });
 
@@ -986,6 +986,83 @@ experiment('modules/billing/services/batch-service', () => {
       expect(result.id).to.equal(BATCH_ID);
       expect(result.externalId).to.equal(cmResponse.billRun.id);
       expect(result.billRunId).to.equal(cmResponse.billRun.billRunId);
+    });
+  });
+
+  experiment('.approveTptBillRunReview', async () => {
+    let result, transaction, invoiceLicence, batch;
+
+    beforeEach(async () => {
+      transaction = createTransaction({
+        status: Transaction.statuses.candidate,
+        twoPartTariffError: false,
+        twoPartTariffStatus: Transaction.twoPartTariffStatuses.ERROR_RECEIVED,
+        volume: 25,
+        calculatedVolume: 25
+      });
+      invoiceLicence = createInvoiceLicence({ transactions: [transaction] });
+      const invoice = createInvoice({}, [invoiceLicence]);
+      batch = createBatch({
+        id: BATCH_ID,
+        type: Batch.BATCH_TYPE.twoPartTariff,
+        status: Batch.BATCH_STATUS.review
+      }, invoice);
+    });
+
+    experiment('when the batch is validated', () => {
+      beforeEach(async () => {
+        result = await batchService.approveTptBatchReview(batch);
+      });
+
+      test('updated the batch status to "processing"', async () => {
+        expect(
+          newRepos.billingBatches.update.calledWith(
+            batch.id,
+            { status: Batch.BATCH_STATUS.processing })
+        ).to.be.true();
+      });
+
+      test('the updated batch is returned', async () => {
+        expect(result).to.be.an.instanceOf(Batch);
+        expect(result.id).to.equal(BATCH_ID);
+        expect(result.status).to.equal(Batch.BATCH_STATUS.processing);
+      });
+    });
+
+    experiment('the batch is not validated when ', () => {
+      test('it has the wrong status', async () => {
+        batch.status = Batch.BATCH_STATUS.ready;
+        try {
+          await batchService.approveTptBatchReview(batch);
+        } catch (err) {
+          expect(err).to.be.an.instanceOf(BatchStatusError);
+          expect(err.message).to.equal('Cannot approve review. Batch status must be "review"');
+        }
+      });
+
+      test('there are outstanding twoPartTariffErrors to resolve', async () => {
+        const transactionWithError = createTransaction({
+          status: Transaction.statuses.candidate,
+          twoPartTariffError: false,
+          twoPartTariffStatus: Transaction.twoPartTariffStatuses.ERROR_RECEIVED,
+          volume: 25,
+          calculatedVolume: 25
+        });
+        const invoiceLicence2 = createInvoiceLicence({ transactions: [transaction, transactionWithError] });
+        const invoice = createInvoice({}, [invoiceLicence, invoiceLicence2]);
+        batch = createBatch({
+          id: BATCH_ID,
+          type: Batch.BATCH_TYPE.twoPartTariff,
+          status: Batch.BATCH_STATUS.review
+        }, invoice);
+
+        try {
+          await batchService.approveTptBatchReview(batch);
+        } catch (err) {
+          expect(err).to.be.an.instanceOf(TransactionStatusError);
+          expect(err.message).to.equal('Cannot approve review. There are outstanding two part tariff errors to resolve');
+        }
+      });
     });
   });
 });

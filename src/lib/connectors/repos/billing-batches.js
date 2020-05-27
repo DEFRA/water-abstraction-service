@@ -3,6 +3,8 @@
 const { BillingBatch } = require('../bookshelf');
 const { paginatedEnvelope } = require('./lib/envelope');
 
+const mapModel = model => model ? model.toJSON() : null;
+
 const findOne = async (id) => {
   const model = await BillingBatch
     .forge({ billingBatchId: id })
@@ -12,7 +14,7 @@ const findOne = async (id) => {
       ]
     });
 
-  return model.toJSON();
+  return mapModel(model);
 };
 
 const findPage = async (page, pageSize) => {
@@ -72,7 +74,7 @@ const findOneWithInvoices = async (id) => {
       ]
     });
 
-  return model.toJSON();
+  return mapModel(model);
 };
 
 const findOneWithInvoicesWithTransactions = async (id) => {
@@ -91,7 +93,7 @@ const findOneWithInvoicesWithTransactions = async (id) => {
       ]
     });
 
-  return model.toJSON();
+  return mapModel(model);
 };
 
 /**

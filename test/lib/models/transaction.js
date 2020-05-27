@@ -10,6 +10,7 @@ const Transaction = require('../../../src/lib/models/transaction');
 const Agreement = require('../../../src/lib/models/agreement');
 const DateRange = require('../../../src/lib/models/date-range');
 const ChargeElement = require('../../../src/lib/models/charge-element');
+const Purpose = require('../../../src/lib/models/purpose');
 const Licence = require('../../../src/lib/models/licence');
 const Region = require('../../../src/lib/models/region');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
@@ -37,16 +38,25 @@ const getTestDataForHashing = () => {
   chargeElement.source = 'supported';
   chargeElement.season = CHARGE_SEASON.summer;
   chargeElement.loss = 'low';
+  chargeElement.authorisedAnnualQuantity = 5;
+  chargeElement.billableAnnualQuantity = null;
+  chargeElement.description = 'Test description';
+
+  const purpose = new Purpose();
+  purpose.name = 'Test Purpose';
+  chargeElement.purposeUse = purpose;
 
   const transaction = new Transaction();
   transaction.chargePeriod = new DateRange('2010-01-01', '2020-01-01');
   transaction.billableDays = 1;
   transaction.authorisedDays = 2;
+  transaction.chargeElement = chargeElement;
   transaction.volume = 3;
   transaction.isCompensationCharge = true;
   transaction.calculatedVolume = 4;
   transaction.twoPartTariffStatus = null;
   transaction.twoPartTariffError = false;
+  transaction.isTwoPartTariffSupplementary = true;
 
   transaction.agreements = [
     new Agreement().fromHash({ code: 'S130T' }),
@@ -54,7 +64,6 @@ const getTestDataForHashing = () => {
     new Agreement().fromHash({ code: 'S130W' })
   ];
 
-  transaction.chargeElement = chargeElement;
   transaction.description = 'description';
 
   return { batch, invoiceAccount, licence, transaction };
@@ -318,21 +327,48 @@ experiment('lib/models/transaction', () => {
   });
 
   experiment('.volume', () => {
+    let transaction;
+    beforeEach(() => {
+      transaction = new Transaction();
+      transaction.chargeElement = new ChargeElement();
+      transaction.chargeElement.authorisedAnnualQuantity = 15;
+    });
     test('can be set to a positive number', async () => {
-      const transaction = new Transaction();
       transaction.volume = 4.465;
       expect(transaction.volume).to.equal(4.465);
     });
 
     test('can be set to null', async () => {
-      const transaction = new Transaction();
       transaction.volume = null;
       expect(transaction.volume).to.be.null();
     });
 
-    test('throws an error if set to any other type', async () => {
-      const transaction = new Transaction();
+    test('throws an error if set a negative number', async () => {
+      const func = () => {
+        transaction.volume = -5.34;
+      };
 
+      expect(func).to.throw();
+    });
+
+    test('throws an error if volume is greater than authorised quantity', async () => {
+      const func = () => {
+        transaction.volume = 20;
+      };
+
+      expect(func).to.throw();
+    });
+
+    test('throws an error if volume is greater than billable quantity', async () => {
+      const func = () => {
+        transaction.chargeElement.billableAnnualQuantity = 12;
+        transaction.volume = 20;
+      };
+
+      expect(func).to.throw();
+    });
+
+    test('throws an error if set to any other type', async () => {
       const func = () => {
         transaction.volume = 'a string';
       };
@@ -488,7 +524,7 @@ experiment('lib/models/transaction', () => {
       expect(hashData.licenceNumber).to.equal(licence.licenceNumber);
       expect(hashData.regionCode).to.equal(batch.region.code);
       expect(hashData.isCompensationCharge).to.equal(transaction.isCompensationCharge);
-      expect(hashData.isTwoPartTariff).to.equal(batch.isTwoPartTariff());
+      expect(hashData.isTwoPartTariff).to.equal(transaction.isTwoPartTariffSupplementary);
     });
   });
 
@@ -538,6 +574,75 @@ experiment('lib/models/transaction', () => {
         'source:supported',
         'volume:3'
       ]);
+    });
+  });
+
+  experiment('.isTwoPartTariffSupplementary', () => {
+    test('can be set to boolean', async () => {
+      const transaction = new Transaction();
+      transaction.isTwoPartTariffSupplementary = true;
+      expect(transaction.isTwoPartTariffSupplementary).to.equal(true);
+    });
+
+    test('throws an error if set to any other type', async () => {
+      const transaction = new Transaction();
+
+      const func = () => {
+        transaction.isTwoPartTariffSupplementary = null;
+      };
+
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.createDescription', () => {
+    let transaction;
+
+    beforeEach(async () => {
+      transaction = getTestDataForHashing().transaction;
+    });
+
+    experiment('when the transaction has no two-part tariff agreements', () => {
+      beforeEach(async () => {
+        transaction.agreements = [];
+      });
+
+      test('the standard charge description is the charge element description', async () => {
+        transaction.isCompensationCharge = false;
+        const description = transaction.createDescription();
+        expect(description).to.equal('Test Description');
+        expect(transaction.description).to.equal(description);
+      });
+
+      test('the compensation charge text is preset', async () => {
+        transaction.isCompensationCharge = true;
+        const description = transaction.createDescription();
+        expect(description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
+      });
+    });
+
+    experiment('when the transaction has a two-part tariff agreement', () => {
+      test('the standard charge description includes the charge element description', async () => {
+        transaction.isCompensationCharge = false;
+        transaction.isTwoPartTariffSupplementary = false;
+        const description = transaction.createDescription();
+        expect(description).to.equal('First Part Test Purpose Charge at Test Description');
+        expect(transaction.description).to.equal(description);
+      });
+
+      test('the compensation charge text is preset', async () => {
+        transaction.isCompensationCharge = true;
+        transaction.isTwoPartTariffSupplementary = false;
+        const description = transaction.createDescription();
+        expect(description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
+      });
+
+      test('the two-part tariff supplementary charge text includes the charge element description', async () => {
+        transaction.isCompensationCharge = false;
+        transaction.isTwoPartTariffSupplementary = true;
+        const description = transaction.createDescription();
+        expect(description).to.equal('Second Part Test Purpose Charge at Test Description');
+      });
     });
   });
 });

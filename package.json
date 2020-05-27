@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "1.40.0",
+  "version": "1.43.0",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "repository": {
@@ -40,6 +40,7 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "mkdir": "^0.0.2",
+    "promise-poller": "^1.9.1",
     "sinon": "^7.5.0"
   },
   "dependencies": {

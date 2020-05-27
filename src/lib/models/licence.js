@@ -1,8 +1,10 @@
 'use strict';
-
+const { compact, orderBy } = require('lodash');
+const moment = require('moment');
 const Model = require('./model');
-const { assertLicenceNumber, assertIsInstanceOf } = require('./validators');
+const { assertLicenceNumber, assertIsInstanceOf, assertDate, assertNullableDate, assertIsArrayOfType } = require('./validators');
 const Region = require('./region');
+const LicenceAgreement = require('./licence-agreement');
 
 class Licence extends Model {
   set licenceNumber (licenceNumber) {
@@ -51,6 +53,81 @@ class Licence extends Model {
   set regionalChargeArea (region) {
     assertIsInstanceOf(region, Region);
     this._regionalChargeArea = region;
+  }
+
+  /**
+   * Gets the start date
+   * @return {String}
+   */
+  get startDate () {
+    return this._startDate;
+  }
+
+  set startDate (startDate) {
+    assertDate(startDate);
+    this._startDate = startDate;
+  }
+
+  /**
+   * Gets the expired date
+   * @return {String|null}
+   */
+  get expiredDate () {
+    return this._expiredDate;
+  }
+
+  set expiredDate (expiredDate) {
+    assertNullableDate(expiredDate);
+    this._expiredDate = expiredDate;
+  }
+
+  /**
+   * Gets the lapsed date
+   * @return {String|null}
+   */
+  get lapsedDate () {
+    return this._lapsedDate;
+  }
+
+  set lapsedDate (lapsedDate) {
+    assertNullableDate(lapsedDate);
+    this._lapsedDate = lapsedDate;
+  }
+
+  /**
+   * Gets the revoked date
+   * @return {String|null}
+   */
+  get revokedDate () {
+    return this._revokedDate;
+  }
+
+  set revokedDate (revokedDate) {
+    assertNullableDate(revokedDate);
+    this._revokedDate = revokedDate;
+  }
+
+  /**
+   * Gets the end date - the minumum of revoked, lapsed, expired, or null
+   * @return {String|null}
+   */
+  get endDate () {
+    const dates = compact([this.expiredDate, this.lapsedDate, this.revokedDate]);
+    const sorted = orderBy(dates, date => moment(date).unix());
+    return sorted[0] || null;
+  }
+
+  /**
+   * Licence agreements
+   * @return {Array<LicenceAgreement>}
+   */
+  get licenceAgreements () {
+    return this._licenceAgreements;
+  }
+
+  set licenceAgreements (licenceAgreements) {
+    assertIsArrayOfType(licenceAgreements, LicenceAgreement);
+    this._licenceAgreements = licenceAgreements;
   }
 }
 

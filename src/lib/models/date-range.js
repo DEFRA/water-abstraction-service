@@ -1,6 +1,6 @@
 'use strict';
 
-const { assertDate } = require('./validators');
+const validators = require('./validators');
 
 class DateRange {
   constructor (startDate, endDate) {
@@ -21,7 +21,7 @@ class DateRange {
   }
 
   set startDate (date) {
-    assertDate(date);
+    validators.assertDate(date);
     this._startDate = date;
   }
 
@@ -34,7 +34,7 @@ class DateRange {
   }
 
   set endDate (date) {
-    assertDate(date);
+    validators.assertNullableDate(date);
     this._endDate = date;
   }
 

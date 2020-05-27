@@ -1,6 +1,6 @@
 'use strict';
 
-const { jobStatus } = require('../lib/batch');
+const { jobStatus } = require('../lib/event');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 
 const eventService = require('../../../lib/services/events');
@@ -37,6 +37,15 @@ const setEmptyBatch = (eventId, batchId) =>
 const setFailedJob = (eventId, batchId) =>
   setStatuses(eventId, jobStatus.error, batchId, BATCH_STATUS.error);
 
+/**
+* Sets the event/job to error, and the batch to error
+* @param {String} eventId
+* @param {String} batchId
+*/
+const setReviewJob = (eventId, batchId) =>
+  setStatuses(eventId, jobStatus.review, batchId, BATCH_STATUS.review);
+
 exports.setEmptyBatch = setEmptyBatch;
 exports.setFailedJob = setFailedJob;
 exports.setReadyJob = setReadyJob;
+exports.setReviewJob = setReviewJob;

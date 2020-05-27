@@ -14,7 +14,7 @@ const eventsService = require('../../../src/lib/services/events');
 
 const arr = ['foo', 'bar'];
 
-experiment('lib/event', () => {
+experiment('lib/services/event', () => {
   afterEach(async () => {
     sandbox.restore();
   });

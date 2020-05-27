@@ -7,12 +7,11 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const Region = require('../../../../src/lib/models/region');
-const Address = require('../../../../src/lib/models/address');
+const uuid = require('uuid/v4');
+
 const Batch = require('../../../../src/lib/models/batch');
-const Company = require('../../../../src/lib/models/company');
-const Contact = require('../../../../src/lib/models/contact-v2');
 const Invoice = require('../../../../src/lib/models/invoice');
+const Address = require('../../../../src/lib/models/address');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 
 const invoiceMapper = require('../../../../src/modules/billing/mappers/invoice');
@@ -25,184 +24,6 @@ const invoiceRow = {
 };
 
 experiment('modules/billing/mappers/invoice', () => {
-  experiment('.chargeToModels', () => {
-    const BATCH_ID = '6556baab-4e69-4bba-89d8-7c6403f8ac8d';
-
-    const createCrmAddress = index => ({
-      addressId: `7d78cca3-4ed5-457d-a594-2b9687b7870${index}`,
-      address1: `address1_${index}`,
-      address2: `address2_${index}`,
-      address3: `address3_${index}`,
-      address4: `address4_${index}`,
-      town: `town_${index}`,
-      county: `county_${index}`,
-      postcode: `country_${index}`,
-      country: `country_${index}`
-    });
-
-    const createCrmInvoiceAccount = index => ({
-      invoiceAccountId: `20776517-ce06-4a3d-a898-7ffa921b802${index}`,
-      invoiceAccountNumber: `S1234567${index}A`
-    });
-
-    const createChargeVersion = licenceRef => ({
-      licenceRef,
-      licenceId: 'dc6468fd-5991-4de8-ace3-f8609db03186'
-    });
-
-    const createCrmContact = () => ({
-      contactId: '8d72ac2f-a16e-4226-ab56-0065b5af058d',
-      salutation: 'Captain',
-      initials: 'J T',
-      firstName: 'James',
-      lastName: 'Kirk'
-    });
-
-    const createCrmLicenceHolder = withContact => ({
-      company: {
-        companyId: 'a4d2ad99-4cda-4634-b1a2-a665aa125554',
-        name: 'Big Farm Ltd'
-      },
-      contact: withContact ? createCrmContact() : null,
-      address: createCrmAddress(1)
-    });
-
-    const createData = () => [{
-      chargeVersion: createChargeVersion('01/123'),
-      licenceHolder: createCrmLicenceHolder(),
-      invoiceAccount: {
-        invoiceAccount: createCrmInvoiceAccount(1),
-        address: createCrmAddress(1)
-      },
-      chargeElements: []
-    }, {
-      chargeVersion: createChargeVersion('02/345'),
-      licenceHolder: createCrmLicenceHolder(true),
-      invoiceAccount: {
-        invoiceAccount: createCrmInvoiceAccount(2),
-        address: createCrmAddress(2)
-      },
-      chargeElements: []
-    }, {
-      chargeVersion: createChargeVersion('03/456'),
-      licenceHolder: createCrmLicenceHolder(),
-      invoiceAccount: {
-        invoiceAccount: createCrmInvoiceAccount(1),
-        address: createCrmAddress(1)
-      },
-      chargeElements: []
-    }];
-
-    let data, result, invoice;
-
-    beforeEach(async () => {
-      data = createData();
-      const batch = new Batch(BATCH_ID);
-      batch.region = new Region().fromHash({ code: 'A' });
-
-      result = invoiceMapper.chargeToModels(data, batch);
-    });
-
-    test('should have 2 invoices (invoice account IDs must be unique in batch)', async () => {
-      expect(result).to.be.an.array().length(2);
-    });
-
-    experiment('the first invoice', () => {
-      beforeEach(async () => {
-        invoice = result[0];
-      });
-
-      test('is an instance of Invoice', async () => {
-        expect(invoice instanceof Invoice).to.be.true();
-      });
-
-      test('has an InvoiceAccount instance', async () => {
-        expect(invoice.invoiceAccount instanceof InvoiceAccount).to.be.true();
-      });
-
-      test('has the correct account number', async () => {
-        expect(invoice.invoiceAccount.accountNumber).to.equal('S12345671A');
-      });
-
-      test('has the correct address', async () => {
-        expect(invoice.address instanceof Address).to.be.true();
-        expect(invoice.address.id).to.equal(data[0].invoiceAccount.address.addressId);
-      });
-
-      test('has an invoiceLicence for each licence', async () => {
-        expect(invoice.invoiceLicences).to.have.length(2);
-        expect(invoice.invoiceLicences[0].licence.licenceNumber).to.equal('01/123');
-        expect(invoice.invoiceLicences[1].licence.licenceNumber).to.equal('03/456');
-      });
-
-      test('the first invoiceLicence has an address', async () => {
-        expect(invoice.invoiceLicences[0].address instanceof Address).to.be.true();
-      });
-
-      test('the first invoiceLicence has a company', async () => {
-        expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
-      });
-
-      test('the first invoiceLicence has no contact', async () => {
-        expect(invoice.invoiceLicences[0].contact).to.be.undefined();
-      });
-
-      test('the second invoiceLicence has an address', async () => {
-        expect(invoice.invoiceLicences[1].address instanceof Address).to.be.true();
-      });
-
-      test('the second invoiceLicence has a company', async () => {
-        expect(invoice.invoiceLicences[1].company instanceof Company).to.be.true();
-      });
-
-      test('the second invoiceLicence has no contact', async () => {
-        expect(invoice.invoiceLicences[1].contact).to.be.undefined();
-      });
-    });
-
-    experiment('the second invoice', () => {
-      beforeEach(async () => {
-        invoice = result[1];
-      });
-
-      test('is an instance of Invoice', async () => {
-        expect(invoice instanceof Invoice).to.be.true();
-      });
-
-      test('has an InvoiceAccount instance', async () => {
-        expect(invoice.invoiceAccount instanceof InvoiceAccount).to.be.true();
-      });
-
-      test('has the correct account number', async () => {
-        expect(invoice.invoiceAccount.accountNumber).to.equal('S12345672A');
-      });
-
-      test('has the correct address', async () => {
-        expect(invoice.address instanceof Address).to.be.true();
-        expect(invoice.address.id).to.equal(data[1].invoiceAccount.address.addressId);
-      });
-
-      test('has an invoiceLicence for each licence', async () => {
-        expect(invoice.invoiceLicences).to.have.length(1);
-        expect(invoice.invoiceLicences[0].licence.licenceNumber).to.equal('02/345');
-      });
-
-      test('the first invoiceLicence has an address', async () => {
-        expect(invoice.invoiceLicences[0].address instanceof Address).to.be.true();
-      });
-
-      test('the first invoiceLicence has a company', async () => {
-        expect(invoice.invoiceLicences[0].company instanceof Company).to.be.true();
-      });
-
-      test('the first invoiceLicence has a contact', async () => {
-        const { contact } = invoice.invoiceLicences[0];
-        expect(contact instanceof Contact).to.be.true();
-        expect(contact.fullName).to.equal('Captain J T Kirk');
-      });
-    });
-  });
-
   experiment('.dbToModel', () => {
     let result;
 
@@ -224,6 +45,86 @@ experiment('modules/billing/mappers/invoice', () => {
 
     test('maps the date created value', async () => {
       expect(result.dateCreated).to.equal(invoiceRow.dateCreated);
+    });
+  });
+
+  experiment('.modelToDB', () => {
+    let result;
+
+    const batch = new Batch(uuid());
+    const invoice = new Invoice();
+    invoice.invoiceAccount = new InvoiceAccount(uuid());
+    invoice.invoiceAccount.accountNumber = 'A12345678A';
+    invoice.address = new Address();
+    invoice.address.fromHash({
+      addressLine1: 'Test farm',
+      addressLine2: 'Test lane',
+      addressLine3: 'Test meadow',
+      addressLine4: 'Test hill',
+      town: 'Testington',
+      county: 'Testingshire',
+      postcode: 'TT1 1TT',
+      country: 'UK'
+    });
+
+    beforeEach(async () => {
+      result = invoiceMapper.modelToDb(batch, invoice);
+    });
+
+    test('maps to expected shape for the DB row', async () => {
+      expect(result.invoiceAccountId).to.equal(invoice.invoiceAccount.id);
+      expect(result.invoiceAccountNumber).to.equal(invoice.invoiceAccount.accountNumber);
+      expect(result.address).to.equal(invoice.address.toJSON());
+      expect(result.billingBatchId).to.equal(batch.id);
+    });
+  });
+
+  experiment('.crmToModel', () => {
+    let result;
+
+    const crmData = {
+      invoiceAccountId: uuid(),
+      invoiceAccountNumber: 'A12345678A',
+      address: {
+        addressId: uuid(),
+        address1: 'Test farm',
+        address2: 'Test lane',
+        address3: 'Test meadow',
+        address4: 'Test hill',
+        town: 'Testington',
+        county: 'Testingshire',
+        postcode: 'TT1 1TT',
+        country: 'UK'
+      }
+    };
+
+    beforeEach(async () => {
+      result = invoiceMapper.crmToModel(crmData);
+    });
+
+    test('returns an Invoice', async () => {
+      expect(result instanceof Invoice).to.be.true();
+    });
+
+    test('includes the invoice account', async () => {
+      const { invoiceAccount } = result;
+      expect(invoiceAccount instanceof InvoiceAccount).to.be.true();
+      expect(invoiceAccount.id).to.equal(crmData.invoiceAccountId);
+      expect(invoiceAccount.accountNumber).to.equal(crmData.invoiceAccountNumber);
+    });
+
+    test('includes the invoice account address', async () => {
+      const { address } = result;
+      expect(address instanceof Address).to.be.true();
+      expect(address.id).to.equal(crmData.address.addressId);
+      expect(address.addressLine1).to.equal(crmData.address.address1);
+      expect(address.addressLine2).to.equal(crmData.address.address2);
+      expect(address.addressLine3).to.equal(crmData.address.address3);
+      expect(address.addressLine4).to.equal(crmData.address.address4);
+      expect(address.town).to.equal(crmData.address.town);
+      expect(address.county).to.equal(crmData.address.county);
+      expect(address.postcode).to.equal(crmData.address.postcode);
+      expect(address.country).to.equal(crmData.address.country);
     });
   });
 });

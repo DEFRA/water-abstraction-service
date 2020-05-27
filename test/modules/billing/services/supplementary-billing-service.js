@@ -35,9 +35,11 @@ const createFullTransaction = (...args) => ({
     chargeElementId: '0b76bf54-57f4-428e-8fc8-3494c84affc6',
     source: 'supported',
     season: CHARGE_SEASON.summer,
-    loss: 'high'
+    loss: 'high',
+    authorisedAnnualQuantity: 30
   },
   billingInvoiceLicence: {
+    billingInvoiceId: '6046df4e-c5fa-462c-8afb-dee31c88d62d',
     billingInvoice: {
       invoiceAccountId
     },
@@ -45,6 +47,10 @@ const createFullTransaction = (...args) => ({
       licenceId: '4b4f2427-984e-48f6-8b20-f17380b870a8',
       licenceRef: '01/123/ABC',
       regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
+      startDate: '2019-02-01',
+      expiredDate: null,
+      lapsedDate: null,
+      revokedDate: null,
       region: {
         regionId: '74241f84-de5f-4ec5-b437-377af15289fd',
         name: 'Anglian',

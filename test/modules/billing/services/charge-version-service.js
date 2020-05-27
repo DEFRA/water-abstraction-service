@@ -23,7 +23,7 @@ const createBatch = (type = 'annual') => {
     region: new Region(uuid()),
     startYear: new FinancialYear(2016),
     endYear: new FinancialYear(2020),
-    season: 'summer',
+    isSummer: true,
     type
   });
 };
@@ -58,7 +58,7 @@ experiment('modules/billing/services/charge-version-service', () => {
         expect(params.regionId).to.equal(batch.region.id);
         expect(params.fromFinancialYearEnding).to.equal(2016);
         expect(params.toFinancialYearEnding).to.equal(2020);
-        expect(params.season).to.equal('summer');
+        expect(params.isSummer).to.equal(true);
       });
     });
 

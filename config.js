@@ -3,6 +3,7 @@
 require('dotenv').config();
 const testMode = parseInt(process.env.TEST_MODE) === 1;
 const isAcceptanceTestTarget = ['local', 'dev', 'development', 'test', 'preprod'].includes(process.env.NODE_ENV);
+const isProduction = ['production'].includes(process.env.NODE_ENV);
 const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0';
 
 module.exports = {
@@ -51,16 +52,18 @@ module.exports = {
   // | water-abstraction-import            |       1 |         20 |         2 | (20)    10 |
   // | water-abstraction-permit-repository |       1 |         16 |         4 | (16)     4 |
   // | water-abstraction-returns           |       1 |         20 |         4 | (20)     5 |
-  // | water-abstraction-service           |       2 | (100)   50 |         5 | (100)   20 |
+  // | water-abstraction-service           |       1 |         50 |         4 | (92)    23 |
+  // | water-abstraction-service(knex)     |         |          1 |           |  (4)     1 |
   // | water-abstraction-tactical-crm      |       1 |         20 |         4 | (20)     5 |
+  // | water-abstraction-tactical-crm(knex)|         |          1 |           |  (4)     1 |
   // | water-abstraction-tactical-idm      |       1 |         20 |         4 | (20)     5 |
   // | ----------------------------------- | ------- | ---------- | --------- | ---------- |
-  // | TOTAL                               |       6 |        196 |        23 |        196 |
+  // | TOTAL                               |       6 |        148 |        22 |        196 |
   // | ----------------------------------- | ------- | ---------- | --------- | ---------- |
   //
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: process.env.NODE_ENV === 'local' ? 50 : 20,
+    max: process.env.NODE_ENV === 'local' ? 50 : 23,
     idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 5000
   },
@@ -171,7 +174,10 @@ module.exports = {
       returns_reminder_returns_to_letter_enforcement_action: '3e788afa-bc7d-4fa8-b7da-32472b5d0f55'
     }
   },
-  import: { returns: { importYears: process.env.IMPORT_RETURNS_YEARS || 3 } },
+  import: {
+    returns: { importYears: process.env.IMPORT_RETURNS_YEARS || 3 },
+    zipPassword: process.env.NALD_ZIP_PASSWORD
+  },
   services: {
     crm: crmUri,
     crm_v2: crmUri.replace('1.0', '2.0'),
@@ -184,6 +190,8 @@ module.exports = {
   },
 
   isAcceptanceTestTarget,
+
+  isProduction,
 
   cognito: {
     username: process.env.COGNITO_USERNAME,

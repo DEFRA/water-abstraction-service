@@ -20,6 +20,10 @@ const data = {
     regionName: 'Anglian',
     chargeRegionId: 'A',
     naldRegionId: 1,
+    startDate: '2019-01-01',
+    expiredDate: null,
+    lapsedDate: '2020-02-03',
+    revokedDate: null,
     regions: {
       historicalAreaCode: 'ABC',
       regionalChargeArea: 'Anglian'
@@ -50,6 +54,13 @@ experiment('modules/billing/mappers/licence', () => {
       expect(result.id).to.equal(data.dbRow.licenceId);
       expect(result.licenceNumber).to.equal(data.dbRow.licenceRef);
       expect(result.isWaterUndertaker).to.equal(data.dbRow.isWaterUndertaker);
+    });
+
+    test('licence dates are mapped correctly', async () => {
+      expect(result.startDate).to.equal(data.dbRow.startDate);
+      expect(result.expiredDate).to.equal(data.dbRow.expiredDate);
+      expect(result.lapsedDate).to.equal(data.dbRow.lapsedDate);
+      expect(result.revokedDate).to.equal(data.dbRow.revokedDate);
     });
 
     test('includes a NALD region', async () => {

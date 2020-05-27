@@ -1,25 +1,32 @@
 const {
   experiment,
   test,
-  beforeEach
+  beforeEach,
+  afterEach
 } = exports.lab = require('@hapi/lab').script();
 
 const { expect } = require('@hapi/code');
 
+const sandbox = require('sinon').createSandbox();
+
 const batchMapper = require('../../../../src/modules/billing/mappers/batch');
+const transactionMapper = require('../../../../src/modules/billing/mappers/transaction');
+
 const uuid = require('uuid/v4');
 
 const Batch = require('../../../../src/lib/models/batch');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const Region = require('../../../../src/lib/models/region');
 const Totals = require('../../../../src/lib/models/totals');
-const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
+const Invoice = require('../../../../src/lib/models/invoice');
+const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
+const Transaction = require('../../../../src/lib/models/transaction');
 
 const data = {
   batch: {
     billingBatchId: uuid(),
     batchType: 'supplementary',
-    season: CHARGE_SEASON.summer,
+    isSummer: true,
     status: 'processing',
     dateCreated: '2020-02-18T13:54:25+00:00',
     dateUpdated: '2020-02-18T13:54:25+00:00',
@@ -41,6 +48,14 @@ const data = {
 experiment('modules/billing/mappers/batch', () => {
   let batch;
 
+  beforeEach(async () => {
+    sandbox.stub(transactionMapper, 'modelToChargeModule').returns({});
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
   experiment('.dbToModel', () => {
     experiment('when the net total is null', () => {
       beforeEach(async () => {
@@ -54,7 +69,7 @@ experiment('modules/billing/mappers/batch', () => {
       test('scalar properties are mapped correctly', async () => {
         expect(batch.id).to.equal(data.batch.billingBatchId);
         expect(batch.type).to.equal(data.batch.batchType);
-        expect(batch.season).to.equal(data.batch.season);
+        expect(batch.isSummer).to.equal(data.batch.isSummer);
         expect(batch.status).to.equal(data.batch.status);
         expect(batch.dateCreated.format()).to.equal(data.batch.dateCreated);
         expect(batch.dateUpdated.format()).to.equal(data.batch.dateUpdated);
@@ -98,6 +113,41 @@ experiment('modules/billing/mappers/batch', () => {
       test('totals is a Totals instance', async () => {
         expect(batch.totals instanceof Totals).to.be.true();
       });
+    });
+  });
+
+  experiment('.modelToChargeModule', () => {
+    let batch, cmTransactions;
+
+    beforeEach(async () => {
+      batch = new Batch();
+      batch.invoices = [new Invoice()];
+      batch.invoices[0].invoiceLicences = [new InvoiceLicence()];
+      batch.invoices[0].invoiceLicences[0].transactions = [
+        new Transaction(),
+        new Transaction()
+      ];
+      cmTransactions = batchMapper.modelToChargeModule(batch);
+    });
+
+    test('resolves with an array of each transaction', async () => {
+      expect(cmTransactions).to.be.an.array().length(2);
+    });
+
+    test('calls transaction mapper for each transaction in batch', async () => {
+      expect(transactionMapper.modelToChargeModule.callCount).to.equal(2);
+      expect(transactionMapper.modelToChargeModule.calledWith(
+        batch,
+        batch.invoices[0],
+        batch.invoices[0].invoiceLicences[0],
+        batch.invoices[0].invoiceLicences[0].transactions[0]
+      )).to.be.true();
+      expect(transactionMapper.modelToChargeModule.calledWith(
+        batch,
+        batch.invoices[0],
+        batch.invoices[0].invoiceLicences[0],
+        batch.invoices[0].invoiceLicences[0].transactions[1]
+      )).to.be.true();
     });
   });
 });

@@ -12,12 +12,15 @@ const sandbox = sinon.createSandbox();
 const { logger } = require('../../../../src/logger');
 const processChargeVersionComplete = require('../../../../src/modules/billing/jobs/process-charge-version-complete');
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
-const { BATCH_ERROR_CODE, BATCH_STATUS } = require('../../../../src/lib/models/batch');
+const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch');
 const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
+const jobService = require('../../../../src/modules/billing/services/job-service');
+
 const Batch = require('../../../../src/lib/models/batch');
 
 const batchId = 'test-batch-id';
+const eventId = 'test-event-id';
 
 experiment('modules/billing/jobs/process-charge-version-complete', () => {
   let messageQueue, batch;
@@ -69,7 +72,7 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
         data: {
           request: {
             data: {
-              eventId: 'test-event-id'
+              eventId
             }
           },
           response: {
@@ -99,7 +102,7 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
   experiment('for a two part tariff batch, when all charge version years have been processed', async () => {
     let job;
     beforeEach(async () => {
-      sandbox.stub(batchService, 'setStatus').resolves({});
+      sandbox.stub(jobService, 'setReviewJob').resolves({});
       chargeVersionYearService.getStatusCounts.resolves({
         processing: 0
       });
@@ -133,8 +136,8 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
     });
 
     test('sets the batch status to "review', async () => {
-      expect(batchService.setStatus.calledWith(
-        batchId, BATCH_STATUS.review
+      expect(jobService.setReviewJob.calledWith(
+        eventId, batchId
       )).to.be.true();
     });
 

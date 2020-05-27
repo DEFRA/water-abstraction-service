@@ -15,7 +15,7 @@ const controller = require('../../../src/modules/returns/controller');
 const eventsService = require('../../../src/lib/services/events');
 const Event = require('../../../src/lib/models/event');
 
-const s3 = require('../../../src/lib/connectors/s3');
+const s3 = require('../../../src/lib/services/s3');
 const uploadValidator = require('../../../src/modules/returns/lib/returns-upload-validator');
 const { logger } = require('../../../src/logger');
 const returnsConnector = require('../../../src/lib/connectors/returns');
