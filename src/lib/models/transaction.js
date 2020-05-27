@@ -8,7 +8,6 @@ const Model = require('./model');
 const Agreement = require('./agreement');
 const DateRange = require('./date-range');
 const ChargeElement = require('./charge-element');
-const User = require('./user');
 
 const validators = require('./validators');
 
@@ -206,58 +205,6 @@ class Transaction extends Model {
   set volume (volume) {
     validators.assertNullableQuantityWithMaximum(volume, this.chargeElement.volume);
     this._volume = volume;
-  }
-
-  /**
-  * The authorised/billable/actual volume for billing
-  * @return {Number}
-  */
-  get calculatedVolume () {
-    return this._calculatedVolume;
-  }
-
-  set calculatedVolume (calculatedVolume) {
-    validators.assertNullableQuantity(calculatedVolume);
-    this._calculatedVolume = calculatedVolume;
-  }
-
-  /**
-  * The error code from two part tariff matching exercise, null if no error
-  * @return {Number}
-  */
-  get twoPartTariffStatus () {
-    return this._twoPartTariffStatus;
-  }
-
-  set twoPartTariffStatus (twoPartTariffStatus) {
-    validators.assertNullableEnum(twoPartTariffStatus, Object.values(twoPartTariffStatuses));
-    this._twoPartTariffStatus = twoPartTariffStatus;
-  }
-
-  /**
-  * Whether there is an error from two part tariff matching
-  * @return {Boolean}
-  */
-  get twoPartTariffError () {
-    return this._twoPartTariffError;
-  }
-
-  set twoPartTariffError (twoPartTariffError) {
-    validators.assertIsNullableBoolean(twoPartTariffError);
-    this._twoPartTariffError = twoPartTariffError;
-  }
-
-  /**
-  * The User who has reviewed the two part tariff error
-  * @return {User}
-  */
-  get twoPartTariffReview () {
-    return this._twoPartTariffReview;
-  }
-
-  set twoPartTariffReview (twoPartTariffReview) {
-    validators.assertIsNullableInstanceOf(twoPartTariffReview, User);
-    this._twoPartTariffReview = twoPartTariffReview;
   }
 
   /**

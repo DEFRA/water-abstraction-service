@@ -9,7 +9,6 @@ const Transaction = require('../../../lib/models/transaction');
 const Agreement = require('../../../lib/models/agreement');
 
 const chargeElementMapper = require('./charge-element');
-const userMapper = require('./user');
 
 /**
  * Create agreement model with supplied code
@@ -50,13 +49,12 @@ const dbToModel = row => {
   transaction.fromHash({
     id: row.billingTransactionId,
     ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
-      'externalId', 'calculatedVolume', 'twoPartTariffError', 'twoPartTariffStatus', 'isTwoPartTariffSupplementary']),
+      'externalId', 'isTwoPartTariffSupplementary']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
     volume: row.volume ? parseFloat(row.volume) : null,
-    agreements: mapDBToAgreements(row),
-    twoPartTariffReview: userMapper.mapToModel(row.twoPartTariffReview)
+    agreements: mapDBToAgreements(row)
   });
   return transaction;
 };
@@ -105,10 +103,6 @@ const modelToDb = (invoiceLicence, transaction) => ({
   volume: transaction.volume,
   ...mapAgreementsToDB(transaction.agreements),
   transactionKey: transaction.transactionKey,
-  calculatedVolume: transaction.calculatedVolume,
-  twoPartTariffError: transaction.twoPartTariffError,
-  twoPartTariffStatus: transaction.twoPartTariffStatus,
-  twoPartTariffReview: transaction.twoPartTariffReview || null,
   isTwoPartTariffSupplementary: transaction.isTwoPartTariffSupplementary
 });
 
