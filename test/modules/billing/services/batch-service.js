@@ -951,7 +951,7 @@ experiment('modules/billing/services/batch-service', () => {
     const cmResponse = {
       billRun: {
         id: uuid(),
-        billRunId: 1234
+        billRunNumber: 1234
       }
     };
 
@@ -959,7 +959,7 @@ experiment('modules/billing/services/batch-service', () => {
       chargeModuleBillRunConnector.create.resolves(cmResponse);
       newRepos.billingBatches.update.resolves({
         externalId: cmResponse.billRun.id,
-        billRunId: cmResponse.billRun.billRunId
+        billRunNumber: cmResponse.billRun.billRunNumber
       });
       result = await batchService.createChargeModuleBillRun(BATCH_ID);
     });
@@ -976,7 +976,7 @@ experiment('modules/billing/services/batch-service', () => {
       expect(newRepos.billingBatches.update.calledWith(
         BATCH_ID, {
           externalId: cmResponse.billRun.id,
-          billRunId: cmResponse.billRun.billRunId
+          billRunNumber: cmResponse.billRun.billRunNumber
         }
       ));
     });
@@ -985,7 +985,7 @@ experiment('modules/billing/services/batch-service', () => {
       expect(result instanceof Batch).to.be.true();
       expect(result.id).to.equal(BATCH_ID);
       expect(result.externalId).to.equal(cmResponse.billRun.id);
-      expect(result.billRunId).to.equal(cmResponse.billRun.billRunId);
+      expect(result.billRunNumber).to.equal(cmResponse.billRun.billRunNumber);
     });
   });
 

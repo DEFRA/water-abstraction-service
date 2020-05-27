@@ -297,20 +297,20 @@ class Batch extends Model {
   }
 
   /**
-   * The bill run ID is an integer ID for the bill run sent to SSCL
+   * The bill run number is an integer ID for the bill run sent to SSCL
    * Only unique within a region
    * @param {Number} integer
    */
-  set billRunId (billRunId) {
-    validators.assertPositiveInteger(billRunId);
-    this._billRunId = billRunId;
+  set billRunNumber (billRunNumber) {
+    validators.assertPositiveInteger(billRunNumber);
+    this._billRunNumber = billRunNumber;
   }
 
   /**
    * @return {Number} integer
    */
-  get billRunId () {
-    return this._billRunId;
+  get billRunNumber () {
+    return this._billRunNumber;
   }
 }
 

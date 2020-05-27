@@ -262,11 +262,11 @@ const createChargeModuleBillRun = async batchId => {
   // Update DB row
   const row = await newRepos.billingBatches.update(batch.id, {
     externalId: cmBillRun.id,
-    billRunId: cmBillRun.billRunId
+    billRunNumber: cmBillRun.billRunNumber
   });
 
   // Return updated batch
-  return batch.pickFrom(row, ['externalId', 'billRunId']);
+  return batch.pickFrom(row, ['externalId', 'billRunNumber']);
 };
 
 const getTransactionsWithTwoPartError = batch => {
