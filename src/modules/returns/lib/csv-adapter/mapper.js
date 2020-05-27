@@ -1,10 +1,10 @@
 const { unzip } = require('lodash');
 const common = require('../common-mapping');
-const util = require('util');
-const parseCsv = util.promisify(require('csv-parse'));
+
 const moment = require('moment');
 const DATE_FORMAT = 'YYYY-MM-DD';
 
+const csvParser = require('./csv-parser');
 const dateParser = require('./date-parser');
 
 const ROW_INDEX = {
@@ -174,7 +174,7 @@ const isEmptyReturn = column => {
  * @return {Promise<Array>} resolves with array of return objects
  */
 const mapCsv = async (csvStr, user, today) => {
-  const data = await parseCsv(csvStr);
+  const data = await csvParser.parseCsv(csvStr);
 
   const [headers, ...returns] = unzip(data);
 
