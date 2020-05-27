@@ -7,16 +7,34 @@ const billingVolumesService = require('../../../../src/modules/billing/services/
 
 const BillingVolume = require('../../../../src/lib/models/billing-volume');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
+const ChargeVersion = require('../../../../src/lib/models/charge-version');
+const ChargeElement = require('../../../../src/lib/models/charge-element');
+const Licence = require('../../../../src/lib/models/licence');
 const billingVolumesRepo = require('../../../../src/lib/connectors/repos/billing-volumes');
 const { NotFoundError } = require('../../../../src/lib/errors');
 const mappers = require('../../../../src/modules/billing/mappers');
 const twoPartTariffMatching = require('../../../../src/modules/billing/services/two-part-tariff-service');
 
-const createChargeVersion = chargeElements => ({
-  id: 'test-charge-version-id',
-  licenceRef: '1/23/456',
-  chargeElements
-});
+const createChargeElement = data => {
+  const chargeElement = new ChargeElement();
+  return chargeElement.fromHash({
+    ...data
+  });
+};
+
+const createLicence = () => {
+  const licence = new Licence();
+  return licence.fromHash({ licenceNumber: '1/23/456' });
+};
+
+const createChargeVersion = chargeElements => {
+  const chargeVersion = new ChargeVersion();
+  return chargeVersion.fromHash({
+    id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
+    licence: createLicence(),
+    chargeElements: chargeElements.map(createChargeElement)
+  });
+};
 
 const createBillingVolumeData = (idSuffix, financialYear, isSummer, data = {}) => ({
   billingVolumeId: `aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa${idSuffix}`,
@@ -54,9 +72,9 @@ experiment('modules/billing/services/billing-volumes-service', () => {
           createBillingVolumeData(2, 2019, true)
         ];
         const chargeElements = [
-          { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
-          { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' },
-          { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3', season: 'all year' }];
+          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
+          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' },
+          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3', season: 'all year' }];
         billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves(billingVolumesData);
 
         mappers.billingVolume.dbToModel
@@ -128,8 +146,8 @@ experiment('modules/billing/services/billing-volumes-service', () => {
 
       beforeEach(async () => {
         const chargeElements = [
-          { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
-          { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' }];
+          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
+          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' }];
 
         billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves([]);
 
@@ -212,8 +230,8 @@ experiment('modules/billing/services/billing-volumes-service', () => {
           createBillingVolumeData(1, 2019, true)
         ];
         chargeElements = [
-          { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
-          { chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' }];
+          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
+          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' }];
 
         billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves(billingVolumes);
 
@@ -233,7 +251,7 @@ experiment('modules/billing/services/billing-volumes-service', () => {
           await billingVolumesService.getVolumes(createChargeVersion(chargeElements), 2019, true);
         } catch (err) {
           expect(err).to.be.instanceOf(NotFoundError);
-          expect(err.message).to.equal('Billing volumes missing for charge version test-charge-version-id');
+          expect(err.message).to.equal('Billing volumes missing for charge version cccccccc-cccc-cccc-cccc-cccccccccccc');
         }
       });
     });

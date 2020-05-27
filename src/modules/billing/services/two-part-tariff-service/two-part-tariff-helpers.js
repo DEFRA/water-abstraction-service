@@ -1,33 +1,6 @@
 const Decimal = require('decimal.js-light');
 const TPT_PURPOSES = [380, 390, 400, 410, 420];
 const dateFormat = 'YYYY-MM-DD';
-const {
-  ERROR_NO_RETURNS_SUBMITTED,
-  ERROR_SOME_RETURNS_DUE,
-  ERROR_LATE_RETURNS
-} = require('../../../../lib/models/transaction').twoPartTariffStatuses;
-
-/**
- * Checks whether error is one which requires a null return
- * @param {String} error
- */
-const isNullReturnRequired = error => {
-  const nullReturnErrors = [ERROR_NO_RETURNS_SUBMITTED, ERROR_SOME_RETURNS_DUE, ERROR_LATE_RETURNS];
-  return nullReturnErrors.includes(error);
-};
-
-/**
- * Checks whether a null return is required, otherwise returns error
- * @param {String} error
- * @param {Array} chargeElements
- */
-const returnsError = (error, chargeElements) => {
-  if (isNullReturnRequired(error)) return getNullActualReturnQuantities(chargeElements, error);
-  return {
-    error,
-    data: null
-  };
-};
 
 /**
  * Sets up charge elemets with acturalReturnQuantity = null
@@ -56,7 +29,6 @@ const getChargeElementReturnData = (chargeElement, error) => {
     error: error || null,
     data: {
       chargeElementId: chargeElement.id,
-      proRataAuthorisedQuantity: chargeElement.proRataAuthorisedQuantity,
       actualReturnQuantity
     }
   };
@@ -84,7 +56,6 @@ const getAbstractionPeriodDates = absPeriod => ({
 exports.TPT_PURPOSES = TPT_PURPOSES;
 exports.dateFormat = dateFormat;
 exports.getNullActualReturnQuantities = getNullActualReturnQuantities;
-exports.returnsError = returnsError;
 exports.getChargeElementReturnData = getChargeElementReturnData;
 exports.returnPurposeMatchesElementPurpose = returnPurposeMatchesElementPurpose;
 exports.getAbstractionPeriodDates = getAbstractionPeriodDates;

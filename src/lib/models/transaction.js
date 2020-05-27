@@ -18,16 +18,6 @@ const statuses = {
   error: 'error'
 };
 
-const twoPartTariffStatuses = {
-  ERROR_NO_RETURNS_SUBMITTED: 10,
-  ERROR_UNDER_QUERY: 20,
-  ERROR_RECEIVED: 30,
-  ERROR_SOME_RETURNS_DUE: 40,
-  ERROR_LATE_RETURNS: 50,
-  ERROR_OVER_ABSTRACTION: 60,
-  ERROR_NO_RETURNS_FOR_MATCHING: 70
-};
-
 const getTwoPartTariffTransactionDescription = (transaction) => {
   const prefix = transaction.isTwoPartTariffSupplementary ? 'Second' : 'First';
   const { purposeUse: { name: purpose }, description } = transaction.chargeElement;
@@ -289,4 +279,3 @@ class Transaction extends Model {
 
 module.exports = Transaction;
 module.exports.statuses = statuses;
-module.exports.twoPartTariffStatuses = twoPartTariffStatuses;

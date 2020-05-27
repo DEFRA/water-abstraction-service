@@ -3,26 +3,26 @@ const returns = require('../../../../lib/connectors/returns');
 const camelCaseKeys = require('../../../../lib/camel-case-keys');
 
 /**
- * Determine return cycle details from information in batch
- *
- * @param {Batch} batch
+ * Determine start and end date of return cycle
+ * using the financial year and isSummer flag
+ * @param {Integer} financialYear
+ * @param {Boolean} isSummer
  * @return {startDate} moment - start of return cycle
  * @return {endDate} moment - end of return cycle
  */
-const getReturnCycleFromBatch = batch => {
-  const { endYear: { yearEnding } } = batch;
-  const returnCycleStartMonth = batch.isSummer ? 11 : 4;
-  const yearStarting = batch.isSummer ? yearEnding - 1 : yearEnding;
+const getReturnCycle = (financialYear, isSummer) => {
+  const returnCycleStartMonth = isSummer ? 11 : 4;
+  const yearStarting = isSummer ? financialYear - 1 : financialYear;
 
   return {
     startDate: getFinancialYearDate(1, returnCycleStartMonth, yearStarting),
-    endDate: getFinancialYearDate(31, returnCycleStartMonth - 1, yearEnding)
+    endDate: getFinancialYearDate(31, returnCycleStartMonth - 1, financialYear)
   };
 };
 
-const getReturnsForMatching = async (licence, batch) => {
-  const { startDate, endDate } = getReturnCycleFromBatch(batch);
-  const returnsForLicence = await returns.getReturnsForLicence(licence.licenceNumber, startDate, endDate);
+const getReturnsForMatching = async (licenceRef, financialYear, isSummer) => {
+  const { startDate, endDate } = getReturnCycle(financialYear, isSummer);
+  const returnsForLicence = await returns.getReturnsForLicence(licenceRef, startDate, endDate);
 
   for (const ret of returnsForLicence) {
     const lines = await returns.getLinesForReturn(ret);

@@ -13,7 +13,7 @@ const getTptChargeElements = chargeElements =>
 /**
  * Pro rata the quantity - multiply by billable days & divide by total days
  */
-const getProRataQuantity = (quantity, ele) => new Decimal(quantity)
+const getProRataQuantity = (ele) => new Decimal(ele.billableAnnualQuantity || ele.authorisedAnnualQuantity)
   .times(ele.billableDays)
   .dividedBy(ele.totalDays)
   .toDecimalPlaces(3)
@@ -31,7 +31,7 @@ const prepareChargeElementData = chargeElements => chargeElements.map(ele => {
     ...ele,
     actualReturnQuantity: 0,
     maxPossibleReturnQuantity: 0,
-    proRataAuthorisedQuantity: getProRataQuantity(ele.billableAnnualQuantity || ele.authorisedAnnualQuantity, ele)
+    proRataAuthorisedQuantity: getProRataQuantity(ele)
   };
 });
 

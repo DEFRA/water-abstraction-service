@@ -14,7 +14,7 @@ const {
 const {
   ERROR_NO_RETURNS_FOR_MATCHING,
   ERROR_OVER_ABSTRACTION
-} = require('../../../../../src/lib/models/transaction').twoPartTariffStatuses;
+} = require('../../../../../src/lib/models/billing-volume').twoPartTariffStatuses;
 
 const roundTo3DP = decimal => {
   return decimal.toDecimalPlaces(3).toNumber();
@@ -326,8 +326,10 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       });
       test('no quantity is allocated if there are no TPT returns', async () => {
         const { error, data } = matchReturnsToChargeElements(chargeElement, otherPurposeReturns);
-        expect(data).to.be.null();
         expect(error).to.equal(ERROR_NO_RETURNS_FOR_MATCHING);
+        expect(data[0].error).to.be.null();
+        expect(data[0].data.chargeElementId).to.equal(chargeElementOptions.chargeElementId);
+        expect(data[0].data.actualReturnQuantity).to.be.null();
       });
       test('when there are charge elements and returns with different TPT purposes', async () => {
         const { data: matchedElements, error } = matchReturnsToChargeElements(

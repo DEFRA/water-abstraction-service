@@ -1,8 +1,6 @@
 'use strict';
 
 const Transaction = require('../../../lib/models/transaction');
-const Batch = require('../../../lib/models/batch');
-const { BatchStatusError, TransactionStatusError } = require('../lib/errors');
 const { logger } = require('../../../logger');
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
@@ -79,50 +77,7 @@ const setErrorStatus = transactionId =>
     status: Transaction.statuses.error
   });
 
-const batchIsTwoPartTariff = batch => batch.isTwoPartTariff();
-const batchIsInReviewStatus = batch => batch.statusIsOneOf(Batch.BATCH_STATUS.review);
-const transactionIsCandidate = transaction => transaction.status === Transaction.statuses.candidate;
-
-const volumeUpdateErrors = [
-  new BatchStatusError('Batch type must be two part tariff'),
-  new BatchStatusError('Batch must have review status'),
-  new TransactionStatusError('Transaction must have candidate status')
-];
-
-/**
- * Validates batch, transaction and submitted volume
- * Checks that:
- * - the batch is a two part tariff
- * - the batch is in review status
- * - the transaction is in candidate status
- *
- * Throws error with corresponding message if criteria is not met
- *
- * @param  {Batch} batch   for the transaction
- * @param  {Transaction} transaction   in question
- * @param  {Integer} volume   to update transaction with
- * @param  {Object} user   id and email of internal user making the update
- */
-const updateTransactionVolume = async (batch, transaction, volume, user) => {
-  const flags = [batchIsTwoPartTariff(batch), batchIsInReviewStatus(batch), transactionIsCandidate(transaction)];
-  if (flags.includes(false)) throw volumeUpdateErrors[flags.indexOf(false)];
-
-  const changes = {
-    volume,
-    twoPartTariffError: false,
-    twoPartTariffReview: { id: user.id, email: user.email }
-  };
-  const { attributes: data } = await newRepos.billingTransactions.update(transaction.id, changes);
-
-  return transaction.fromHash({
-    volume: data.volume,
-    twoPartTariffError: data.twoPartTariffError,
-    twoPartTariffReview: mappers.user.mapToModel(data.twoPartTariffReview)
-  });
-};
-
 exports.saveTransactionToDB = saveTransactionToDB;
 exports.getById = getById;
 exports.updateWithChargeModuleResponse = updateTransactionWithChargeModuleResponse;
 exports.setErrorStatus = setErrorStatus;
-exports.updateTransactionVolume = updateTransactionVolume;

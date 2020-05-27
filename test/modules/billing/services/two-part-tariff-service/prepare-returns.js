@@ -17,7 +17,7 @@ const {
   ERROR_LATE_RETURNS,
   ERROR_UNDER_QUERY,
   ERROR_RECEIVED_NO_DATA
-} = require('../../../../../src/lib/models/transaction').twoPartTariffStatuses;
+} = require('../../../../../src/lib/models/billing-volume').twoPartTariffStatuses;
 
 experiment('modules/charging/lib/prepare-returns', async () => {
   experiment('.isLineWithinAbstractionPeriod', async () => {
