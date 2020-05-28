@@ -295,12 +295,12 @@ experiment('modules/billing/mappers/transaction', () => {
       chargeType: 'compensation',
       description: 'Little stream',
       chargeElement: createChargeElementRow(),
-      volume: '29.76',
+      volume: '11.76',
       section126Factor: null,
       section127Agreement: false,
       section130Agreement: null,
       transactionKey: 'ABCDEF1234567890ABCDEF1234567890',
-      calculatedVolume: '29.76',
+      calculatedVolume: '11.76',
       twoPartTariffError: false,
       twoPartTariffStatus: null,
       twoPartTariffReview: { id: 1234, email: 'user@example.com' }
@@ -321,7 +321,7 @@ experiment('modules/billing/mappers/transaction', () => {
       expect(result.billableDays).to.equal(dbRow.billableDays);
       expect(result.isCompensationCharge).to.be.true();
       expect(result.description).to.equal(dbRow.description);
-      expect(result.volume).to.equal(29.76);
+      expect(result.volume).to.equal(11.76);
       expect(result.transactionKey).to.equal('ABCDEF1234567890ABCDEF1234567890');
     });
 
@@ -341,7 +341,7 @@ experiment('modules/billing/mappers/transaction', () => {
     });
 
     test('sets the correct two part tariff data', async () => {
-      expect(result.calculatedVolume).to.equal('29.76');
+      expect(result.calculatedVolume).to.equal('11.76');
       expect(result.twoPartTariffError).to.be.false();
       expect(result.twoPartTariffStatus).to.be.null();
     });
