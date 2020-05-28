@@ -24,7 +24,7 @@ const dbToModel = row => {
       region: regionMapper.dbToModel(row.region),
       totals: totalsMapper.dbToModel(row),
       externalId: row.externalId,
-      billRunId: row.billRunId
+      billRunNumber: row.billRunNumber
     }, identity)
   });
   return batch;
