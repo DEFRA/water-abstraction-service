@@ -148,33 +148,6 @@ experiment('connectors/returns', () => {
     });
   });
 
-  experiment('.voidReturns', () => {
-    beforeEach(async () => {
-      sandbox.stub(helpers.serviceRequest, 'patch').resolves({});
-    });
-
-    test('passes the expected data', async () => {
-      await returns.voidReturns('test-licence-id', [
-        'valid-return-id-2',
-        'valid-return-id-1'
-      ]);
-
-      const [, data] = helpers.serviceRequest.patch.lastCall.args;
-      expect(data.body.licenceNumber).to.equal('test-licence-id');
-      expect(data.body.validReturnIds).to.equal([
-        'valid-return-id-2',
-        'valid-return-id-1'
-      ]);
-      expect(data.body.regime).to.equal('water');
-      expect(data.body.licenceType).to.equal('abstraction');
-    });
-
-    test('does not make the request for no return ids', async () => {
-      await returns.voidReturns('test-licence-id', []);
-      expect(helpers.serviceRequest.patch.called).to.be.false();
-    });
-  });
-
   experiment('.deleteAcceptanceTestData', () => {
     test('makes a delete request to the expected url', async () => {
       await returns.deleteAcceptanceTestData();

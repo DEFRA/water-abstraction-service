@@ -7,7 +7,6 @@ const schedulerRoutes = require('../controllers/scheduler');
 const notificationsRoutes = require('../controllers/notifications');
 const eventsRoutes = require('../controllers/events');
 const notifyTemplatesRoutes = require('../controllers/notifytemplates');
-const importedLicencesClient = require('../controllers/imported_licences');
 const taskRunner = require('../controllers/taskRunner');
 const taskConfigRoutes = require('../controllers/task-config');
 const gaugingStationRoutes = require('../controllers/gauging-stations');
@@ -23,7 +22,6 @@ module.exports = [
   ...eventsRoutes,
   ...notificationsRoutes,
   ...notifyTemplatesRoutes,
-  ...importedLicencesClient.getRoutes(),
   ...taskConfigRoutes,
   ...moduleRoutes,
   ...gaugingStationRoutes,

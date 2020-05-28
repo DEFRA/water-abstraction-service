@@ -39,8 +39,12 @@ experiment('lib/services/application-state', () => {
         expect(repos.applicationState.findOneByKey.calledWith('test-key')).to.be.true();
       });
 
-      test('resolves with the value of the "data" column', async () => {
-        expect(result).to.equal({ etag: 'test-etag' });
+      test('resolves with the value of the entity', async () => {
+        expect(result).to.equal({
+          data: {
+            etag: 'test-etag'
+          }
+        });
       });
     });
 
@@ -50,8 +54,8 @@ experiment('lib/services/application-state', () => {
         result = await applicationStateService.get('test-key');
       });
 
-      test('resolves with an empty object', async () => {
-        expect(result).to.equal({});
+      test('resolves with null', async () => {
+        expect(result).to.equal(null);
       });
     });
   });

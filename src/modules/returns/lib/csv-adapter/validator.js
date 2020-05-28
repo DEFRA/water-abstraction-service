@@ -2,7 +2,8 @@
 
 const { isEmpty, flatten, compact, isString, times } = require('lodash');
 
-const { returnIDRegex, parseReturnId } = require('../../../../lib/returns');
+const waterHelpers = require('@envage/water-abstraction-helpers');
+const { returnIDRegex, parseReturnId } = waterHelpers.returns;
 
 const dateParser = require('./date-parser');
 const csvParser = require('./csv-parser');

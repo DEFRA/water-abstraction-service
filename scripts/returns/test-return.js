@@ -1,11 +1,14 @@
+'use strict';
+
 const { cloneDeep } = require('lodash');
-const { getReturnId } = require('../../src/lib/returns');
+
+const waterHelpers = require('@envage/water-abstraction-helpers');
 
 const startDate = '2018-11-01';
 const endDate = '2019-03-01';
 
 const createTestReturnId = existingReturn => {
-  return getReturnId(
+  return waterHelpers.returns.getReturnId(
     existingReturn.metadata.nald.regionCode,
     existingReturn.licence_ref,
     existingReturn.return_requirement,

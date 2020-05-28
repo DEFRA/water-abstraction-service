@@ -1,3 +1,5 @@
+'use strict';
+
 const Joi = require('@hapi/joi');
 const isoDateRegex = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 const allowedPeriods = ['year', 'month', 'week', 'day'];
@@ -6,7 +8,9 @@ const readingTypes = ['estimated', 'measured'];
 const statuses = ['due', 'completed', 'received', 'void'];
 const units = ['m³', 'l', 'Ml', 'gal'];
 const userTypes = ['internal', 'external'];
-const { returnIDRegex } = require('../../lib/returns');
+
+const waterHelpers = require('@envage/water-abstraction-helpers');
+const { returnIDRegex } = waterHelpers.returns;
 
 const userSchema = Joi.object().required().keys({
   email: Joi.string().required(),
