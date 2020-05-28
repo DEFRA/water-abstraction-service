@@ -3,13 +3,15 @@
  * @module lib/licence-transformer/nald-transformer
  */
 const { find, uniqBy, isArray } = require('lodash');
+const sentenceCase = require('sentence-case');
+
 const BaseTransformer = require('./base-transformer');
 const LicenceTitleLoader = require('./licence-title-loader');
 const licenceTitleLoader = new LicenceTitleLoader();
 const NALDHelpers = require('./nald-helpers');
-const sentenceCase = require('sentence-case');
-const { dateToIsoString } = require('../../lib/dates');
-const naldFunctional = require('./nald-functional');
+
+const waterHelpers = require('@envage/water-abstraction-helpers');
+const { nald } = waterHelpers;
 
 class NALDTransformer extends BaseTransformer {
   /**
@@ -17,9 +19,9 @@ class NALDTransformer extends BaseTransformer {
    * @param {Object} data - data loaded from NALD
    */
   async load (data) {
-    data = naldFunctional.transformNull(data);
+    data = nald.transformNull(data);
 
-    const currentVersion = naldFunctional.findCurrent(data.data.versions);
+    const currentVersion = nald.findCurrent(data.data.versions);
 
     const licenceHolderParty = find(currentVersion.parties, (party) => {
       return party.ID === currentVersion.ACON_APAR_ID;
@@ -33,9 +35,9 @@ class NALDTransformer extends BaseTransformer {
       licenceHolderInitials: licenceHolderParty.INITIALS,
       licenceHolderName: licenceHolderParty.NAME,
       licenceHolderFullName: this.fullNameFormatter(licenceHolderParty),
-      effectiveDate: dateToIsoString(data.ORIG_EFF_DATE),
-      currentVersionEffectiveStartDate: dateToIsoString(currentVersion.EFF_ST_DATE),
-      expiryDate: dateToIsoString(data.EXPIRY_DATE),
+      effectiveDate: nald.dates.calendarToIso(data.ORIG_EFF_DATE),
+      currentVersionEffectiveStartDate: nald.dates.calendarToIso(currentVersion.EFF_ST_DATE),
+      expiryDate: nald.dates.calendarToIso(data.EXPIRY_DATE),
       versionCount: data.data.versions.length,
       conditions: conditions,
       points: this.pointsFormatter(data.data.current_version.purposes),
@@ -67,7 +69,7 @@ class NALDTransformer extends BaseTransformer {
     return formats.map(row => {
       return {
         siteDescription: row.SITE_DESCR,
-        points: row.points.map(NALDHelpers.formatAbstractionPoint),
+        points: row.points.map(nald.formatting.formatAbstractionPoint),
         purposes: row.purposes.map(purpose => ({
           name: purpose.PURP_ALIAS
         }))
@@ -89,7 +91,7 @@ class NALDTransformer extends BaseTransformer {
       dailyQty: item.DAILY_QTY,
       hourlyQty: item.HOURLY_QTY,
       instantaneousQty: item.INST_QTY,
-      points: item.purposePoints.map(item => NALDHelpers.formatAbstractionPoint(item.point_detail))
+      points: item.purposePoints.map(item => nald.formatting.formatAbstractionPoint(item.point_detail))
     }));
 
     purposes = _dedupe(purposes);
@@ -124,16 +126,16 @@ class NALDTransformer extends BaseTransformer {
 
     contacts.push({
       type: 'Licence holder',
-      ...naldFunctional.nameFormatter(licenceHolderParty),
-      ...naldFunctional.addressFormatter(licenceHolderAddress.party_address)
+      ...nald.formatting.nameFormatter(licenceHolderParty),
+      ...nald.formatting.addressFormatter(licenceHolderAddress.party_address)
     });
 
     const contactCodes = ['FM', 'LA', 'LC', 'MG', 'RT'];
     roles.filter(role => contactCodes.includes(role.role_type.CODE)).forEach((role) => {
       contacts.push({
         type: sentenceCase(role.role_type.DESCR),
-        ...naldFunctional.nameFormatter(role.role_party),
-        ...naldFunctional.addressFormatter(role.role_address)
+        ...nald.formatting.nameFormatter(role.role_party),
+        ...nald.formatting.addressFormatter(role.role_address)
       });
     });
 
@@ -227,7 +229,7 @@ class NALDTransformer extends BaseTransformer {
       purpose.purposePoints.forEach((purposePoint) => {
         points.push({
           meansOfAbstraction: purposePoint.means_of_abstraction.DESCR,
-          ...NALDHelpers.formatAbstractionPoint(purposePoint.point_detail)
+          ...nald.formatting.formatAbstractionPoint(purposePoint.point_detail)
         });
       });
     });
@@ -278,7 +280,7 @@ class NALDTransformer extends BaseTransformer {
 
     purposes.forEach((purpose) => {
       const points = purpose.purposePoints.map((purposePoint) => {
-        return NALDHelpers.formatAbstractionPoint(purposePoint.point_detail);
+        return nald.formatting.formatAbstractionPoint(purposePoint.point_detail);
       });
 
       purpose.licenceConditions.forEach((condition) => {

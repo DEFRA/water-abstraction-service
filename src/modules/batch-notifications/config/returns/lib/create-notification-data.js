@@ -1,9 +1,14 @@
+'use strict';
+
 const uuidv4 = require('uuid/v4');
 const { first } = require('lodash');
 
 const { MESSAGE_STATUS_DRAFT } = require('../../../lib/message-statuses');
 const notifyHelpers = require('../../../lib/notify-helpers');
-const { readableDate } = require('../../../../../lib/dates');
+
+const waterHelpers = require('@envage/water-abstraction-helpers');
+
+const { isoToReadable } = waterHelpers.nald.dates;
 const {
   CONTACT_ROLE_PRIMARY_USER, CONTACT_ROLE_RETURNS_AGENT,
   CONTACT_ROLE_LICENCE_HOLDER, CONTACT_ROLE_RETURNS_TO
@@ -21,9 +26,9 @@ const getReturnPersonalisation = evt => {
   const { startDate, endDate, dueDate } = evt.metadata.returnCycle;
 
   return {
-    periodStartDate: readableDate(startDate),
-    periodEndDate: readableDate(endDate),
-    returnDueDate: readableDate(dueDate)
+    periodStartDate: isoToReadable(startDate),
+    periodEndDate: isoToReadable(endDate),
+    returnDueDate: isoToReadable(dueDate)
   };
 };
 

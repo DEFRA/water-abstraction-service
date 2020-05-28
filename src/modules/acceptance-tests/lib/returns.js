@@ -1,6 +1,8 @@
+'use strict';
+
 const returnsConnector = require('../../../lib/connectors/returns');
 const waterHelpers = require('@envage/water-abstraction-helpers');
-const { getReturnId } = require('../../../lib/returns');
+const { getReturnId } = waterHelpers.returns;
 const { ACCEPTANCE_TEST_SOURCE } = require('./constants');
 const moment = require('moment');
 const FORMAT_ID = '9999999';

@@ -1,8 +1,12 @@
+'use strict';
+
 const moment = require('moment');
-const helpers = require('@envage/water-abstraction-helpers');
+const waterHelpers = require('@envage/water-abstraction-helpers');
+const { getReturnId } = waterHelpers.returns;
+
 const { get, flatMap, uniq, find, intersection } = require('lodash');
 const libxmljs = require('libxmljs');
-const { getReturnId } = require('../../../../lib/returns');
+
 const returnsConnector = require('../../../../lib/connectors/returns');
 const permitConnector = require('../../../../lib/connectors/permit');
 const common = require('../common-mapping');
@@ -144,7 +148,7 @@ const getReturnLines = (ret) => {
  */
 const getStartDate = (startDate, freq) => {
   if (freq === 'week') {
-    return helpers.nald.dates.getWeek(startDate).start.format(DATE_FORMAT);
+    return waterHelpers.nald.dates.getWeek(startDate).start.format(DATE_FORMAT);
   }
   if (freq === 'month') {
     return moment(startDate).startOf('month').format(DATE_FORMAT);
@@ -157,7 +161,7 @@ const getEndDate = (startDate, freq) => {
     case 'day':
       return startDate;
     case 'week':
-      return helpers.nald.dates.getWeek(startDate).end.format(DATE_FORMAT);
+      return waterHelpers.nald.dates.getWeek(startDate).end.format(DATE_FORMAT);
     case 'month':
       return moment(startDate).endOf('month').format(DATE_FORMAT);
     case 'year':

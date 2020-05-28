@@ -36,7 +36,6 @@ const plugins = [
   require('./src/lib/message-queue').plugin,
   require('./src/modules/billing/register-subscribers'),
   require('./src/modules/returns/register-subscribers'),
-  require('./src/modules/import/register-subscribers'),
   require('./src/plugins/internal-calling-user')
 ];
 

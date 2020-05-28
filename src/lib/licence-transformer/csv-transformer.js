@@ -7,8 +7,8 @@ const BaseTransformer = require('./base-transformer');
 const LicenceTitleLoader = require('./licence-title-loader');
 const licenceTitleLoader = new LicenceTitleLoader();
 const { logger } = require('../../logger');
-const naldHelpers = require('./nald-helpers');
-const naldFunctional = require('./nald-functional');
+
+const nald = require('@envage/water-abstraction-helpers').nald;
 
 class CSVTransformer extends BaseTransformer {
   /**
@@ -16,7 +16,7 @@ class CSVTransformer extends BaseTransformer {
    * @param {Object} data - data loaded from NALD
    */
   async load (data) {
-    data = naldFunctional.transformNull(data);
+    data = nald.transformNull(data);
 
     this.data = {
       licenceNumber: data.id,
@@ -168,7 +168,7 @@ class CSVTransformer extends BaseTransformer {
     const conditionsArr = [];
 
     purposes.forEach((purpose) => {
-      const points = purpose.points.map(naldHelpers.formatAbstractionPoint);
+      const points = purpose.points.map(nald.formatting.formatAbstractionPoint);
 
       purpose.conditions.forEach((condition) => {
         const { code, subCode, parameter1, parameter2, text } = condition;
