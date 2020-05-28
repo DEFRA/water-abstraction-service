@@ -44,7 +44,7 @@ experiment('basic example scenario', () => {
     });
 
     test('the batch has been created in the charge module', async () => {
-      expect(batch.billRunId).to.be.a.number();
+      expect(batch.billRunNumber).to.be.a.number();
       expect(batch.externalId).to.be.a.string().length(36);
     });
 
