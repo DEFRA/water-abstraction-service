@@ -19,5 +19,7 @@ module.exports = [
   ...Object.values(require('./acceptance-tests/routes')),
   ...Object.values(require('./regions/routes')),
   ...Object.values(require('./billing/routes')),
-  ...Object.values(require('./application-state/routes'))
+  ...Object.values(require('./application-state/routes')),
+  ...Object.values(require('./change-reasons/routes'))
+
 ];
