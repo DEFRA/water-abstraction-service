@@ -1,3 +1,5 @@
+'use strict';
+
 const repos = require('../../lib/connectors/repos');
 
 /**
