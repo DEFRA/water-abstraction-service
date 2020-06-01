@@ -456,38 +456,68 @@ experiment('modules/billing/services/invoiceService', () => {
 
     experiment('when invoice is found and batch ID does match that requested', () => {
       let invoice;
-
       beforeEach(async () => {
         invoice = createInvoiceData();
         repos.billingInvoices.findOne.resolves(invoice);
-        result = await invoiceService.getInvoiceForBatch(batch, INVOICE_ID);
       });
 
-      test('the invoice repo .findOne() method is called with the correct invoice ID', async () => {
-        expect(repos.billingInvoices.findOne.calledWith(
-          INVOICE_ID
-        )).to.be.true();
+      experiment('when the batch status is not "ready" or "sent', () => {
+        beforeEach(async () => {
+          batch.status = Batch.BATCH_STATUS.review;
+          result = await invoiceService.getInvoiceForBatch(batch, INVOICE_ID);
+        });
+
+        test('the invoice repo .findOne() method is called with the correct invoice ID', async () => {
+          expect(repos.billingInvoices.findOne.calledWith(
+            INVOICE_ID
+          )).to.be.true();
+        });
+
+        test('returns an Invoice instance', async () => {
+          expect(result instanceof Invoice).to.be.true();
+        });
+
+        test('the charge module is not called', async () => {
+          expect(chargeModuleBillRunConnector.getCustomer.called).to.be.false();
+        });
+
+        test('the invoice is decorated with invoice account company/address data from the CRM', async () => {
+          expect(result.invoiceAccount).to.equal(invoiceAccount1);
+        });
       });
 
-      test('returns an Invoice instance', async () => {
-        expect(result instanceof Invoice).to.be.true();
-      });
+      experiment('when the batch status is "ready" or "sent', () => {
+        beforeEach(async () => {
+          batch.status = Batch.BATCH_STATUS.ready;
+          result = await invoiceService.getInvoiceForBatch(batch, INVOICE_ID);
+        });
 
-      test('the invoice is decorated with totals from the charge module', async () => {
-        const summary = chargeModuleData.billRun.customers[0].summaryByFinancialYear[0];
-        expect(result.totals.creditLineCount).to.equal(summary.creditLineCount);
-        expect(result.totals.creditLineValue).to.equal(summary.creditLineValue);
-        expect(result.totals.debitLineCount).to.equal(summary.debitLineCount);
-        expect(result.totals.debitLineValue).to.equal(summary.debitLineValue);
-        expect(result.totals.netTotal).to.equal(summary.netTotal);
-      });
+        test('the invoice repo .findOne() method is called with the correct invoice ID', async () => {
+          expect(repos.billingInvoices.findOne.calledWith(
+            INVOICE_ID
+          )).to.be.true();
+        });
 
-      test('the invoice is decorated with invoice account company/address data from the CRM', async () => {
-        expect(result.invoiceAccount).to.equal(invoiceAccount1);
-      });
+        test('returns an Invoice instance', async () => {
+          expect(result instanceof Invoice).to.be.true();
+        });
 
-      test('the transaction is decorated with the value from the charge module', async () => {
-        expect(result.invoiceLicences[0].transactions[0].value).to.equal(2345);
+        test('the invoice is decorated with totals from the charge module', async () => {
+          const summary = chargeModuleData.billRun.customers[0].summaryByFinancialYear[0];
+          expect(result.totals.creditLineCount).to.equal(summary.creditLineCount);
+          expect(result.totals.creditLineValue).to.equal(summary.creditLineValue);
+          expect(result.totals.debitLineCount).to.equal(summary.debitLineCount);
+          expect(result.totals.debitLineValue).to.equal(summary.debitLineValue);
+          expect(result.totals.netTotal).to.equal(summary.netTotal);
+        });
+
+        test('the invoice is decorated with invoice account company/address data from the CRM', async () => {
+          expect(result.invoiceAccount).to.equal(invoiceAccount1);
+        });
+
+        test('the transaction is decorated with the value from the charge module', async () => {
+          expect(result.invoiceLicences[0].transactions[0].value).to.equal(2345);
+        });
       });
     });
   });

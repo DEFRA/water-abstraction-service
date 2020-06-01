@@ -6,6 +6,9 @@ const repos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const { logger } = require('../../../logger');
 
+// Models
+const Batch = require('../../../lib/models/batch');
+
 // Connectors
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
@@ -25,6 +28,22 @@ const getCRMInvoiceAccounts = billingInvoices => {
   const arr = isArray(billingInvoices) ? billingInvoices : [billingInvoices];
   const invoiceAccountIds = arr.map(billingInvoice => billingInvoice.invoiceAccountId);
   return invoiceAccountsService.getByInvoiceAccountIds(invoiceAccountIds);
+};
+
+const isBatchReadyOrSent = batch =>
+  batch.statusIsOneOf(Batch.BATCH_STATUS.ready, Batch.BATCH_STATUS.sent);
+
+/**
+ * Loads customer from CM if the batch is in an expected status - ready or sent
+ * Otherwise returns an empty object
+ * @param {Object} batch
+ * @param {String} invoiceAccountNumber
+ */
+const getCustomer = (batch, invoiceAccountNumber) => {
+  if (isBatchReadyOrSent(batch)) {
+    return chargeModuleBillRunConnector.getCustomer(batch.externalId, invoiceAccountNumber);
+  }
+  return {};
 };
 
 /**
@@ -48,7 +67,7 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
   }
 
   const [{ billRun }, invoiceAccounts] = await Promise.all([
-    chargeModuleBillRunConnector.getCustomer(batch.externalId, data.invoiceAccountNumber),
+    getCustomer(batch, data.invoiceAccountNumber),
     getCRMInvoiceAccounts(data)
   ]);
 
