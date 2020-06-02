@@ -8,6 +8,8 @@ const licences = require('./licences');
 const regions = require('./regions');
 const chargeElements = require('./charge-elements');
 const chargeVersions = require('./charge-versions');
+const purposePrimary = require('./purpose-primary');
+const purposeSecondary = require('./purpose-secondary');
 const purposeUses = require('./purpose-uses');
 const tearDown = require('./tear-down');
 const crm = require('./crm');
@@ -38,9 +40,17 @@ const createCRMChargeVersionData = async chargeVersion => {
 };
 
 const createChargeElement = async (chargeVersion, key) => {
-  // Create purpose
-  await purposeUses.createForChargeElement(key);
-  // Create charge element
+  // Create purposes
+  const [primary, secondary, tertiary] = await Promise.all([
+    purposePrimary.createForChargeElement(key),
+    purposeSecondary.createForChargeElement(key),
+    purposeUses.createForChargeElement(key)
+  ]);
+
+  chargeVersion.set('purposePrimaryId', primary.get('purposePrimaryId'));
+  chargeVersion.set('purposeSecondaryId', secondary.get('purposeSecondaryId'));
+  chargeVersion.set('purposeTertiaryId', tertiary.get('purposeUseId'));
+
   return chargeElements.create(chargeVersion, key);
 };
 
