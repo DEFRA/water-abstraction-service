@@ -9,5 +9,4 @@ exports.changeReasons = require('./change-reasons');
 exports.chargeVersions = require('./charge-versions');
 exports.events = require('./events');
 exports.licenceAgreements = require('./licence-agreements');
-exports.licences = require('./licences');
 exports.regions = require('./regions');
