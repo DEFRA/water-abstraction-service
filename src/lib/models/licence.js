@@ -129,6 +129,13 @@ class Licence extends Model {
     assertIsArrayOfType(licenceAgreements, LicenceAgreement);
     this._licenceAgreements = licenceAgreements;
   }
+
+  toJSON () {
+    return {
+      ...super.toJSON(),
+      endDate: this.endDate
+    };
+  }
 }
 
 module.exports = Licence;
