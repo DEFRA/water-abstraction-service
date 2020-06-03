@@ -41,7 +41,7 @@ const createCRMChargeVersionData = async chargeVersion => {
 
 const createChargeElement = async (chargeVersion, key) => {
   // Create purposes
-  const [primary, secondary, tertiary] = await Promise.all([
+  const [primary, secondary, use] = await Promise.all([
     purposePrimary.createForChargeElement(key),
     purposeSecondary.createForChargeElement(key),
     purposeUses.createForChargeElement(key)
@@ -49,7 +49,7 @@ const createChargeElement = async (chargeVersion, key) => {
 
   chargeVersion.set('purposePrimaryId', primary.get('purposePrimaryId'));
   chargeVersion.set('purposeSecondaryId', secondary.get('purposeSecondaryId'));
-  chargeVersion.set('purposeTertiaryId', tertiary.get('purposeUseId'));
+  chargeVersion.set('purposeUseId', use.get('purposeUseId'));
 
   return chargeElements.create(chargeVersion, key);
 };

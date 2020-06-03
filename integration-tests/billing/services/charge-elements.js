@@ -17,8 +17,8 @@ const create = async (chargeVersion, scenarioKey) => ChargeElement
     chargeVersionId: chargeVersion.get('chargeVersionId'),
     purposePrimaryId: chargeVersion.get('purposePrimaryId'),
     purposeSecondaryId: chargeVersion.get('purposeSecondaryId'),
-    purposeTertiaryId: chargeVersion.get('purposeTertiaryId'),
-    ...omit(data.chargeElements[scenarioKey], ['purposePrimary', 'purposeSecondary', 'purposeTertiary'])
+    purposeUseId: chargeVersion.get('purposeUseId'),
+    ...omit(data.chargeElements[scenarioKey], ['purposePrimary', 'purposeSecondary', 'purposeUse'])
   })
   .save();
 

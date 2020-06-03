@@ -38,10 +38,10 @@ const createChargeElement = (opts = {}) => {
     billableDays: options.billableDays
   };
 
-  if (options.purposeTertiary) {
+  if (options.purposeUseCode) {
     chargeElement.purposeUse = {
       type: 'use',
-      code: options.purposeTertiary,
+      code: options.purposeUseCode,
       name: 'Spray Irrigation - Direct'
     };
   }

@@ -1,11 +1,11 @@
 'use strict';
 
 /**
- * purposePrimary, purposeSecondar and purposeTertiary are left in
+ * purposePrimary, purposeSecondary and purposeUse are left in
  * a more readable format but need to be replaced with references to
  * the entries in the tables when the charge element is saved.
  *
- * e.g. purpose_primary_id, purpose_secondary_id and purpose_tertiary_id
+ * e.g. purpose_primary_id, purpose_secondary_id and purpose_use_id
  */
 
 exports.ce1 = {
@@ -20,7 +20,7 @@ exports.ce1 = {
   loss : 'medium',
   purposePrimary : 'A',
   purposeSecondary : 'AGR',
-  purposeTertiary : 140,
+  purposeUse : 140,
   billableAnnualQuantity : null,
   description : 'CE1',
   factorsOverridden : false

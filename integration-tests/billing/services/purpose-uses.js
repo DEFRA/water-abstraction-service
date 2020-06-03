@@ -24,7 +24,7 @@ const getByLegacyId = id => PurposeUse.forge({ legacy_id: id }).fetch();
  * @param {String} key - charge element key
  */
 const createForChargeElement = async key => {
-  const code = data.chargeElements[key].purposeTertiary;
+  const code = data.chargeElements[key].purposeUse;
   await create(code);
   return getByLegacyId(code);
 };

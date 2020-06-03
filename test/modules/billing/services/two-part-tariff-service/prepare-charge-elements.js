@@ -26,14 +26,14 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
     };
     test('only returns charge elements with TPT purposes', async () => {
       const chargeElementsWithTPTPurposes = [
-        createChargeElement({ purposeTertiary: 380, ...chargeElementOptions }),
-        createChargeElement({ purposeTertiary: 410, ...chargeElementOptions }),
-        createChargeElement({ purposeTertiary: 420, ...chargeElementOptions })
+        createChargeElement({ purposeUseCode: 380, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: 410, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: 420, ...chargeElementOptions })
       ];
       const chargeElementsWithOtherPurposes = [
-        createChargeElement({ purposeTertiary: 200, ...chargeElementOptions }),
-        createChargeElement({ purposeTertiary: 180, ...chargeElementOptions }),
-        createChargeElement({ purposeTertiary: 620, ...chargeElementOptions })
+        createChargeElement({ purposeUseCode: 200, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: 180, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: 620, ...chargeElementOptions })
       ];
       const chargeElements = [
         ...chargeElementsWithTPTPurposes,
@@ -44,9 +44,9 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
     });
     test('returns empty array if no TPT charge elements present', async () => {
       const nonTPTChargeElements = [
-        createChargeElement({ purposeTertiary: 200, ...chargeElementOptions }),
-        createChargeElement({ purposeTertiary: 180, ...chargeElementOptions }),
-        createChargeElement({ purposeTertiary: 620, ...chargeElementOptions })
+        createChargeElement({ purposeUseCode: 200, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: 180, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: 620, ...chargeElementOptions })
       ];
 
       const filteredElements = getTptChargeElements(nonTPTChargeElements);
