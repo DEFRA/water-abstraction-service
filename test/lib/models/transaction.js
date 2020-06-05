@@ -359,13 +359,10 @@ experiment('lib/models/transaction', () => {
       expect(func).to.throw();
     });
 
-    test('throws an error if volume is greater than billable quantity', async () => {
-      const func = () => {
-        transaction.chargeElement.billableAnnualQuantity = 12;
-        transaction.volume = 20;
-      };
-
-      expect(func).to.throw();
+    test('can be set to a quantity between billable and auth quantity', async () => {
+      transaction.chargeElement.billableAnnualQuantity = 12;
+      transaction.volume = 13;
+      expect(transaction.volume).to.equal(13);
     });
 
     test('throws an error if set to any other type', async () => {

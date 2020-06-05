@@ -6,8 +6,7 @@ const repos = require('../connectors/repos');
  * @return {Promise<Object>}
  */
 const get = async key => {
-  const data = await repos.applicationState.findOneByKey(key);
-  return data ? data.data : {};
+  return repos.applicationState.findOneByKey(key);
 };
 
 /**

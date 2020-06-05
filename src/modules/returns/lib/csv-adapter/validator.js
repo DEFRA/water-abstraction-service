@@ -1,19 +1,15 @@
-const parse = require('csv-parse');
-const util = require('util');
-const parseCsv = util.promisify(parse);
+'use strict';
+
 const { isEmpty, flatten, compact, isString, times } = require('lodash');
 
-const { returnIDRegex, parseReturnId } = require('../../../../lib/returns');
+const waterHelpers = require('@envage/water-abstraction-helpers');
+const { returnIDRegex, parseReturnId } = waterHelpers.returns;
+
 const dateParser = require('./date-parser');
+const csvParser = require('./csv-parser');
 
 const lineErrorRegex = /line (\d*)$/;
 const validAbstractionVolumeRegex = /(^Do not edit$)|(^-?\d[\d.,]*$)|(^\s*$)/;
-
-const parseOptions = {
-  skip_lines_with_empty_values: true,
-  skip_empty_lines: true,
-  trim: true
-};
 
 const errorMessages = {
   licenceNumber: 'Licence number is missing',
@@ -244,7 +240,7 @@ const validateLicences = licences => {
 
 const validate = async csv => {
   try {
-    const records = await parseCsv(csv, parseOptions);
+    const records = await csvParser.parseCsv(csv);
 
     // validate the headings
     const headerErrors = validateHeadings(records);

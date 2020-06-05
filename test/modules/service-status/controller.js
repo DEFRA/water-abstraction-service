@@ -12,7 +12,7 @@ const { verificationsClient: crmVerificationsConnector } = require('../../../src
 const permitConnector = require('../../../src/lib/connectors/permit');
 const returnsConnector = require('../../../src/lib/connectors/returns');
 const importConnector = require('../../../src/lib/connectors/import');
-const importedLicencesClient = require('../../../src/controllers/imported_licences');
+const importJobsConnector = require('../../../src/lib/connectors/import/jobs');
 
 const controller = require('../../../src/modules/service-status/controller');
 const pkg = require('../../../package.json');
@@ -70,9 +70,10 @@ experiment('modules/service-status/controller', () => {
       }
     });
 
-    sandbox.stub(importedLicencesClient.repo, 'find').resolves({
-      rowCount: 25
-    });
+    sandbox.stub(importJobsConnector, 'getSummary').resolves([
+      { name: 'job-name', state: 'completed', count: 10 },
+      { name: 'job-name', state: 'active', count: 3 }
+    ]);
   });
 
   afterEach(async () => {
@@ -139,13 +140,17 @@ experiment('modules/service-status/controller', () => {
       expect(data.crm.verificationsStartedLastMonth).to.equal('8');
     });
 
-    test('extracts the expected water service import values', async () => {
-      expect(data.waterService.import.pending).to.equal(25);
-      expect(data.waterService.import.complete).to.equal(25);
-    });
-
     test('returns the total number of permits verifications', async () => {
       expect(data.permitRepo.permits).to.equal(4);
+    });
+
+    test('contains a summary of the jobs in the import service', async () => {
+      expect(data.import.jobs).to.equal({
+        summary: [
+          { name: 'job-name', state: 'completed', count: 10 },
+          { name: 'job-name', state: 'active', count: 3 }
+        ]
+      });
     });
   });
 });

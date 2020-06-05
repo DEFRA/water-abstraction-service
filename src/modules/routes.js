@@ -2,7 +2,6 @@ module.exports = [
   ...Object.values(require('./notifications/routes')),
   ...Object.values(require('./notify/routes')),
   ...Object.values(require('./river-levels/routes')),
-  ...Object.values(require('./import/routes')),
   ...Object.values(require('./returns/routes')),
   ...Object.values(require('./pdf-notifications/routes')),
   ...Object.values(require('./returns-notifications/routes')),
@@ -19,5 +18,8 @@ module.exports = [
   ...Object.values(require('./unlink-licence/routes')),
   ...Object.values(require('./acceptance-tests/routes')),
   ...Object.values(require('./regions/routes')),
-  ...Object.values(require('./billing/routes'))
+  ...Object.values(require('./billing/routes')),
+  ...Object.values(require('./application-state/routes')),
+  ...Object.values(require('./change-reasons/routes'))
+
 ];
