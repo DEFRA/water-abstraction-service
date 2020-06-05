@@ -1,3 +1,7 @@
+'use strict';
+
+const uuid = require('uuid/v4');
+
 const {
   experiment,
   test,
@@ -39,7 +43,8 @@ const data = {
     season: CHARGE_SEASON.summer,
     loss: 'high',
     purposeUse: {
-      id: 'A',
+      legacy_id: 'A',
+      purpose_use_id: uuid(),
       description: 'Trickling parsnips'
     }
   }
