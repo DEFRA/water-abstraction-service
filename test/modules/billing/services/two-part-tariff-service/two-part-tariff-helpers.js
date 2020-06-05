@@ -85,7 +85,7 @@ experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
 
   experiment('.returnPurposeMatchesElementPurpose', async () => {
     const chargeElement = createChargeElement({
-      purposeTertiary: 400
+      purposeUseCode: 400
     });
     const purpose120 = createPurposeData('120');
     test('return true if at least one of the return purposes is a TPT', async () => {
