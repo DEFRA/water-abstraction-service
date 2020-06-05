@@ -8,6 +8,7 @@ const documentsClient = require('../../../src/lib/connectors/crm/documents');
 const crmEntities = require('../../../src/lib/connectors/crm/entities');
 const idmConnector = require('../../../src/lib/connectors/idm');
 const { logger } = require('../../../src/logger');
+const eventService = require('../../../src/lib/services/events');
 
 const { cloneDeep } = require('lodash');
 const sinon = require('sinon');
@@ -444,5 +445,56 @@ experiment('getLicenceCompanyByDocumentId', () => {
     expect(data.companyName).to.equal(companyData.data.entityName);
     expect(data.licenceNumber).to.equal(documentResponse.data[0].system_external_id);
     expect(error).to.be.null();
+  });
+});
+
+experiment('postLicenceName', () => {
+  const testRequest = {
+    params: {
+      documentId: '00000000-0000-0000-0000-000000000000'
+    },
+    payload: {
+      rename: false,
+      documentName: 'test-doc-name',
+      userName: 'test-user@sinon.com'
+    }
+  };
+  beforeEach(async () => {
+    sandbox.stub(documentsClient, 'setLicenceName');
+    sandbox.stub(eventService, 'create');
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  test('returns the expected document header details with eventId and metadata', async () => {
+    const documentResponse = {
+      data: {
+        document_id: 'test-id',
+        document_name: 'test-doc-name',
+        system_internal_id: 'test-id',
+        company_entity_id: 'test-entity-id',
+        system_external_id: '01/118'
+      }
+    };
+    documentsClient.setLicenceName.resolves(documentResponse);
+    eventService.create.resolves({ id: 'event-id' });
+    const data = await controller.postLicenceName(testRequest);
+    expect(data.documentId).to.equal(testRequest.params.documentId);
+    expect(data.licenceNumber).to.equal(documentResponse.data.system_external_id);
+    expect(data.eventId).to.equal('event-id');
+    expect(data.documentName).to.equal(documentResponse.data.document_name);
+    expect(data.rename).to.equal(testRequest.payload.rename);
+  });
+
+  test('returns an error if the document has not been found', async () => {
+    documentsClient.setLicenceName.resolves({ data: null });
+    try {
+      await controller.postLicenceName(testRequest);
+    } catch (err) {
+      expect(err.isBoom).to.equal(true);
+      expect(err.output.statusCode).to.equal(404);
+    }
   });
 });
