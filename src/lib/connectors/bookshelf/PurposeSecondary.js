@@ -5,7 +5,7 @@ const { bookshelf } = require('./bookshelf.js');
 module.exports = bookshelf.model('PurposeSecondary', {
   tableName: 'purposes_secondary',
 
-  idAttribute: 'id',
+  idAttribute: 'purpose_secondary_id',
 
   hasTimestamps: ['date_created', 'date_updated']
 });
