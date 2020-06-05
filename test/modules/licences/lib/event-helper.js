@@ -1,7 +1,8 @@
 const {
   experiment,
   test,
-  beforeEach
+  beforeEach,
+  afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
@@ -18,6 +19,10 @@ experiment('modules/licences/lib/event-helper', () => {
       sandbox.stub(eventService, 'create').resolves({ eventId: 'test-id' });
       const metadata = { data: 'meta' };
       eventData = await eventHelper.saveEvent('type', 'subtype', ['licence-number'], 'status', 'user@test.com', metadata);
+    });
+
+    afterEach(async () => {
+      sandbox.restore();
     });
 
     test('returns true when the start dates match and there is no end date', async () => {

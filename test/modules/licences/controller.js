@@ -8,7 +8,7 @@ const documentsClient = require('../../../src/lib/connectors/crm/documents');
 const crmEntities = require('../../../src/lib/connectors/crm/entities');
 const idmConnector = require('../../../src/lib/connectors/idm');
 const { logger } = require('../../../src/logger');
-const eventService = require('../../../src/lib/services/events');
+const eventHelper = require('../../../src/modules/licences/lib/event-helper');
 
 const { cloneDeep } = require('lodash');
 const sinon = require('sinon');
@@ -461,7 +461,7 @@ experiment('postLicenceName', () => {
   };
   beforeEach(async () => {
     sandbox.stub(documentsClient, 'setLicenceName');
-    sandbox.stub(eventService, 'create');
+    sandbox.stub(eventHelper, 'saveEvent').resolves({ id: 'event-id' });
   });
 
   afterEach(async () => {
@@ -479,7 +479,6 @@ experiment('postLicenceName', () => {
       }
     };
     documentsClient.setLicenceName.resolves(documentResponse);
-    eventService.create.resolves({ id: 'event-id' });
     const data = await controller.postLicenceName(testRequest);
     expect(data.documentId).to.equal(testRequest.params.documentId);
     expect(data.licenceNumber).to.equal(documentResponse.data.system_external_id);
