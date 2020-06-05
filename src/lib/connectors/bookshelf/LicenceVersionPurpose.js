@@ -2,10 +2,16 @@
 
 const { bookshelf } = require('./bookshelf.js');
 
-module.exports = bookshelf.model('ChargeElement', {
-  tableName: 'charge_elements',
+module.exports = bookshelf.model('LicenceVersionPurpose', {
+  tableName: 'licence_version_purposes',
+
+  idAttribute: 'licence_version_purpose_id',
 
   hasTimestamps: ['date_created', 'date_updated'],
+
+  licenceVersion () {
+    return this.belongsTo('LicenceVersion', 'licence_version_id', 'licence_version_id');
+  },
 
   purposePrimary () {
     return this.hasOne('PurposePrimary', 'purpose_primary_id', 'purpose_primary_id');
