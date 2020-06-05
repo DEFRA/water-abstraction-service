@@ -8,7 +8,7 @@ const {
 
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
-const mapper = require('../../../../src/modules/billing/mappers/region');
+const mapper = require('../../../src/lib/mappers/region');
 
 experiment('modules/billing/mappers/region', () => {
   experiment('.dbToModel', () => {

@@ -69,7 +69,8 @@ experiment('lib/models/licence', () => {
 
       expect(licence.toJSON()).to.equal({
         id: data.id,
-        licenceNumber: data.licenceNumber
+        licenceNumber: data.licenceNumber,
+        endDate: null
       });
     });
   });

@@ -5,11 +5,11 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const licenceMapper = require('../../../../src/modules/billing/mappers/licence');
+const licenceMapper = require('../../../src/lib/mappers/licence');
 
 // Models
-const Licence = require('../../../../src/lib/models/licence');
-const Region = require('../../../../src/lib/models/region');
+const Licence = require('../../../src/lib/models/licence');
+const Region = require('../../../src/lib/models/region');
 
 const data = {
   dbRow: {
