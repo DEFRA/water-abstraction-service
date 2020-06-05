@@ -13,9 +13,7 @@ const LicenceTransformer = require('../../lib/licence-transformer');
 const { mapGaugingStation, getGaugingStations } = require('./lib/gauging-stations');
 const queries = require('./lib/queries');
 const { createContacts } = require('../../lib/models/factory/contact-list');
-const Event = require('../../lib/models/event');
-const eventService = require('../../lib/services/events');
-
+const eventHelper = require('./lib/event-helper');
 const getDocumentHeader = async (documentId, includeExpired = false) => {
   const documentResponse = await documentsClient.findMany({
     document_id: documentId,
@@ -294,30 +292,16 @@ const getLicenceCompanyByDocumentId = async (request, h) => {
   }
 };
 
-const saveEvent = (type, subtype, licences, status, userName, metadata) => {
-  const event = new Event().fromHash({
-    issuer: userName,
-    type,
-    subtype,
-    licences,
-    metadata,
-    status
-  });
-  return eventService.create(event);
-};
-
 const postLicenceName = async (request, h) => {
   const { documentId } = request.params;
   const { documentName, rename } = request.payload;
-
   try {
     const { data } = await documentsClient.setLicenceName(documentId, documentName);
     if (!data) {
       throw Boom.notFound(`Document ${documentId} not found`);
     };
     const metadata = { documentId, documentName, rename };
-    const subtype = rename ? 'rename' : 'name';
-    const eventData = await saveEvent('licence:name', subtype, [data.system_external_id], 'completed', request.payload.userName, metadata);
+    const eventData = await eventHelper.saveEvent('licence:name', rename ? 'rename' : 'name', [data.system_external_id], 'completed', request.payload.userName, metadata);
     return { companyId: data.company_entity_id, licenceNumber: data.system_external_id, eventId: eventData.id, ...metadata };
   } catch (err) {
     return handleUnexpectedError(err, documentId);
