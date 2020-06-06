@@ -9,11 +9,17 @@ module.exports = bookshelf.model('Licence', {
 
   requireFetch: false,
 
+  idAttribute: 'licence_id',
+
   region () {
     return this.hasOne('Region', 'region_id', 'region_id');
   },
 
   licenceAgreements () {
     return this.hasMany('LicenceAgreement', 'licence_ref', 'licence_ref');
+  },
+
+  licenceVersions () {
+    return this.hasMany('LicenceVersion', 'licence_id', 'licence_id');
   }
 });

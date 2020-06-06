@@ -1,3 +1,13 @@
+'use strict';
+
+/**
+ * purposePrimary, purposeSecondary and purposeUse are left in
+ * a more readable format but need to be replaced with references to
+ * the entries in the tables when the charge element is saved.
+ *
+ * e.g. purpose_primary_id, purpose_secondary_id and purpose_use_id
+ */
+
 exports.ce1 = {
   abstractionPeriodStartDay : 1,
   abstractionPeriodStartMonth : 1,
@@ -9,8 +19,8 @@ exports.ce1 = {
   source : 'unsupported',
   loss : 'medium',
   purposePrimary : 'A',
-  purposeSecondary : 'AGG',
-  purposeTertiary : 140,
+  purposeSecondary : 'AGR',
+  purposeUse : 140,
   billableAnnualQuantity : null,
   description : 'CE1',
   factorsOverridden : false

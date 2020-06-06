@@ -34,7 +34,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
     });
     const chargeElement = [createChargeElement({
       actualReturnQuantity: 0,
-      purposeTertiary: 400
+      purposeUseCode: 400
     })];
     const returnLines = [{
       startDate: '2016-11-01',
@@ -77,7 +77,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
     const unsupportedChargeElement = createChargeElement({
       ...options,
       chargeElementId: 'unsupported-code-400',
-      purposeTertiary: 400,
+      purposeUseCode: 400,
       source: 'unsupported',
       billableAnnualQuantity: 3.5,
       billableDays: 182
@@ -85,7 +85,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
     const unsupportedTLChargeElement = createChargeElement({
       ...options,
       chargeElementId: 'unsupported-TL-code-400',
-      purposeTertiary: 400,
+      purposeUseCode: 400,
       source: 'unsupported',
       timeLimitedStartDate: '2018-03-01',
       timeLimitedEndDate: '2018-09-15',
@@ -94,7 +94,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
     const getNonTptChargeElement = code => createChargeElement({
       ...options,
       chargeElementId: `non-tpt-code-${code}`,
-      purposeTertiary: code
+      purposeUseCode: code
     });
     test('only returns TPT charge elements', async () => {
       const code200ChargeElement = getNonTptChargeElement(200);
@@ -124,14 +124,14 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       const supportedChargeElement = createChargeElement({
         ...options,
         chargeElementId: 'supported-code-420',
-        purposeTertiary: 420,
+        purposeUseCode: 420,
         source: 'supported',
         billableDays: 175
       });
       const supportedTLChargeElement = createChargeElement({
         ...options,
         chargeElementId: 'supported-TL-code-420',
-        purposeTertiary: 420,
+        purposeUseCode: 420,
         source: 'supported',
         timeLimitedStartDate: '2018-03-01',
         timeLimitedEndDate: '2018-07-31',
@@ -240,9 +240,9 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
     experiment('no returns exist', async () => {
       test('return chargeElements with null actualReturnQuantity', async () => {
         const chargeElements = [
-          createChargeElement({ chargeElementId: 'charge-element-1', purposeTertiary: '400' }),
-          createChargeElement({ chargeElementId: 'charge-element-2', purposeTertiary: '400' }),
-          createChargeElement({ chargeElementId: 'charge-element-3', purposeTertiary: '400' })
+          createChargeElement({ chargeElementId: 'charge-element-1', purposeUseCode: '400' }),
+          createChargeElement({ chargeElementId: 'charge-element-2', purposeUseCode: '400' }),
+          createChargeElement({ chargeElementId: 'charge-element-3', purposeUseCode: '400' })
         ];
         const returns = [
           createReturn({ status: 'due', tertiaryCode: '400' }),
@@ -265,7 +265,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
     experiment('allocating quantities to correct charge elements', async () => {
       const chargeElementOptions = {
         chargeElementId: 'charge-element-400-purpose',
-        purposeTertiary: 400,
+        purposeUseCode: 400,
         startDate: '2016-04-01',
         endDate: '2017-03-31',
         abstractionPeriodStartDay: 1,
@@ -291,7 +291,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       const secondChargeElement = createChargeElement({
         ...chargeElementOptions,
         chargeElementId: 'charge-element-380-purpose',
-        purposeTertiary: 380
+        purposeUseCode: 380
       });
       const tptReturns = [createMonthlyReturn({
         ...returnOptions,
@@ -363,7 +363,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
 
     experiment('allocating correct quantities to charge elements', async () => {
       const chargeElementOptions = {
-        purposeTertiary: 400,
+        purposeUseCode: 400,
         startDate: '2016-10-01',
         endDate: '2017-03-31',
         abstractionPeriodStartDay: 1,
@@ -428,7 +428,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
 
     experiment('allocating quantities in the correct date range', async () => {
       const chargeElementOptions = {
-        purposeTertiary: 400,
+        purposeUseCode: 400,
         startDate: '2016-04-01',
         endDate: '2016-09-30',
         abstractionPeriodStartDay: 1,
@@ -622,7 +622,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
 
     experiment('allocating quantities to charge elements in correct order', async () => {
       const chargeElementOptions = {
-        purposeTertiary: 400,
+        purposeUseCode: 400,
         startDate: '2016-04-01',
         endDate: '2016-09-30',
         abstractionPeriodStartDay: 1,
