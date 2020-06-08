@@ -1,6 +1,6 @@
-const Agreement = require('../../../lib/models/agreement');
-const DateRange = require('../../../lib/models/date-range');
-const LicenceAgreement = require('../../../lib/models/licence-agreement');
+const Agreement = require('../models/agreement');
+const DateRange = require('../models/date-range');
+const LicenceAgreement = require('../models/licence-agreement');
 
 const dbToModel = row => {
   const licenceAgreement = new LicenceAgreement();
