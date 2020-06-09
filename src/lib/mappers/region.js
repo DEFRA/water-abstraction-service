@@ -1,7 +1,7 @@
 'use strict';
 
-const camelCaseKeys = require('../../../lib/camel-case-keys');
-const Region = require('../../../lib/models/region');
+const camelCaseKeys = require('../camel-case-keys');
+const Region = require('../models/region');
 
 /**
  * Maps a row from water.regions to a Region model

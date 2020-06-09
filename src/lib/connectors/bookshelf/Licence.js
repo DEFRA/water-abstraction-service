@@ -7,6 +7,8 @@ module.exports = bookshelf.model('Licence', {
 
   hasTimestamps: ['date_created', 'date_updated'],
 
+  requireFetch: false,
+
   idAttribute: 'licence_id',
 
   region () {

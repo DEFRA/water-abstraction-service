@@ -1,20 +1,20 @@
 const { expect } = require('@hapi/code');
 const { afterEach, beforeEach, experiment, test } = exports.lab = require('@hapi/lab').script();
 
-const controller = require('../../../src/modules/licences/controller');
-const queries = require('../../../src/modules/licences/lib/queries');
-const permitClient = require('../../../src/lib/connectors/permit');
-const documentsClient = require('../../../src/lib/connectors/crm/documents');
-const crmEntities = require('../../../src/lib/connectors/crm/entities');
-const idmConnector = require('../../../src/lib/connectors/idm');
-const { logger } = require('../../../src/logger');
-const eventHelper = require('../../../src/modules/licences/lib/event-helper');
+const controller = require('../../../../src/modules/licences/controllers/licences');
+const queries = require('../../../../src/modules/licences/lib/queries');
+const permitClient = require('../../../../src/lib/connectors/permit');
+const documentsClient = require('../../../../src/lib/connectors/crm/documents');
+const crmEntities = require('../../../../src/lib/connectors/crm/entities');
+const idmConnector = require('../../../../src/lib/connectors/idm');
+const { logger } = require('../../../../src/logger');
+const eventHelper = require('../../../../src/modules/licences/lib/event-helper');
 
 const { cloneDeep } = require('lodash');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const { licences } = require('../../responses/permits/licence');
+const { licences } = require('../../../responses/permits/licence');
 
 const testRequest = {
   params: {

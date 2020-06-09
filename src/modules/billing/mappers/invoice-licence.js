@@ -10,7 +10,7 @@ const InvoiceLicence = require('../../../lib/models/invoice-licence');
 
 // Mappers
 const transaction = require('./transaction');
-const licence = require('./licence');
+const licence = require('../../../lib/mappers/licence');
 
 /**
  * Maps a row of data from water.billing_invoice_licences

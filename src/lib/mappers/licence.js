@@ -1,7 +1,7 @@
 'use strict';
 
-const Licence = require('../../../lib/models/licence');
-const Region = require('../../../lib/models/region');
+const Licence = require('../models/licence');
+const Region = require('../models/region');
 
 const regionMapper = require('./region');
 const licenceAgreementMapper = require('./licence-agreement');
