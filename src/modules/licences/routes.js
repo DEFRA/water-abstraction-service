@@ -140,7 +140,6 @@ module.exports = {
         },
         payload: {
           documentName: Joi.string().required().allow(''),
-          rename: Joi.boolean().required(),
           userName: Joi.string().email().required()
         }
       }

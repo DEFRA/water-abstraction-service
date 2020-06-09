@@ -14,6 +14,8 @@ const { mapGaugingStation, getGaugingStations } = require('./lib/gauging-station
 const queries = require('./lib/queries');
 const { createContacts } = require('../../lib/models/factory/contact-list');
 const eventHelper = require('./lib/event-helper');
+const { isEmpty } = require('lodash');
+
 const getDocumentHeader = async (documentId, includeExpired = false) => {
   const documentResponse = await documentsClient.findMany({
     document_id: documentId,
@@ -294,8 +296,10 @@ const getLicenceCompanyByDocumentId = async (request, h) => {
 
 const postLicenceName = async (request, h) => {
   const { documentId } = request.params;
-  const { documentName, rename } = request.payload;
+  const { documentName } = request.payload;
   try {
+    const { data: { document_name: currentName } } = await documentsClient.findOne(documentId);
+    const rename = !isEmpty(currentName);
     const { data } = await documentsClient.setLicenceName(documentId, documentName);
     if (!data) {
       throw Boom.notFound(`Document ${documentId} not found`);
