@@ -1,5 +1,4 @@
 const Decimal = require('decimal.js-light');
-const TPT_PURPOSES = [380, 390, 400, 410, 420];
 const dateFormat = 'YYYY-MM-DD';
 
 /**
@@ -53,7 +52,6 @@ const getAbstractionPeriodDates = absPeriod => ({
   periodEndMonth: absPeriod.endMonth
 });
 
-exports.TPT_PURPOSES = TPT_PURPOSES;
 exports.dateFormat = dateFormat;
 exports.getNullActualReturnQuantities = getNullActualReturnQuantities;
 exports.getChargeElementReturnData = getChargeElementReturnData;

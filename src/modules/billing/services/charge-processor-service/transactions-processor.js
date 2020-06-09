@@ -1,6 +1,6 @@
 'use strict';
 
-const { isNull, flatMap } = require('lodash');
+const { isNull, flatMap, groupBy } = require('lodash');
 
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(require('moment'));
@@ -14,6 +14,7 @@ const ChargeVersion = require('../../../../lib/models/charge-version');
 const FinancialYear = require('../../../../lib/models/financial-year');
 const DateRange = require('../../../../lib/models/date-range');
 const Transaction = require('../../../../lib/models/transaction');
+const { TWO_PART_TARIFF_PURPOSE_CODES } = require('../../../../lib/models/purpose');
 
 const dateHelpers = require('./lib/date-helpers');
 const validators = require('../../../../lib/models/validators');
@@ -53,11 +54,8 @@ const getChargePeriod = (financialYear, chargeVersion) => {
  * @param {Purpose} purpose
  * @return {Boolean}
  */
-const isTwoPartPurpose = purpose => {
-  const SPRAY_IRRIGATION_DIRECT = 400;
-  const TRICKLE_IRRIGATION_DIRECT = 600;
-  return [SPRAY_IRRIGATION_DIRECT, TRICKLE_IRRIGATION_DIRECT].includes(parseInt(purpose.code));
-};
+const isTwoPartPurpose = purpose =>
+  TWO_PART_TARIFF_PURPOSE_CODES.includes(parseInt(purpose.code));
 
 /**
  * Predicate to check whether an agreement should be applied to the transaction
@@ -109,6 +107,41 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
  */
 const isAnnualChargesNeeded = batch => batch.isAnnual() || batch.isSupplementary();
 
+const getLicencesForBatch = batch => {
+  if (batch) {
+    const sentLicenceNumbers = batch[0].invoices.map(invoice => invoice.invoiceLicences.map(invoiceLicence => invoiceLicence.licence.licenceNumber));
+    return flatMap(sentLicenceNumbers);
+  }
+  return [];
+};
+
+const getTPTSentBatchFlags = (sentTPTBatches, licenceNumber) => {
+  const { summer, winterAllYear } = groupBy(sentTPTBatches, batch => batch.isSummer ? 'summer' : 'winterAllYear');
+  const summerLicencesRun = getLicencesForBatch(summer);
+  const winterAllYearLicencesRun = getLicencesForBatch(winterAllYear);
+
+  return {
+    hasSummerBeenRun: summerLicencesRun.includes(licenceNumber),
+    hasWinterBeenRun: winterAllYearLicencesRun.includes(licenceNumber)
+  };
+};
+
+/**
+ * Only want second part tariff transactions to be generated if the second
+ * part tariff has already been charged i.e. this transaction is correcting/
+ * making changes to an existing one
+ *
+ * @param {Batch} batch
+ * @param {chargeElement} chargeElement
+ * @param {Array<Object>} sentTPTBatches
+ */
+const checkSeasonIsValid = (batch, chargeElement, sentTPTBatches, licence) => {
+  const { hasSummerBeenRun, hasWinterBeenRun } = getTPTSentBatchFlags(sentTPTBatches, licence.licenceNumber);
+  const isSummerChargeElement = chargeElement.season === 'summer';
+  if (batch.isTwoPartTariff()) return batch.isSummer === isSummerChargeElement;
+  return isSummerChargeElement ? hasSummerBeenRun : hasWinterBeenRun;
+};
+
 /**
  * Predicate to check whether two-part supplementary transactions are needed
  * @param {Batch} batch
@@ -116,11 +149,13 @@ const isAnnualChargesNeeded = batch => batch.isAnnual() || batch.isSupplementary
  * @param {ChargeElement} chargeElement
  * @return {Boolean}
  */
-const isTwoPartTariffSupplementaryChargesNeeded = (batch, period, chargeElement) => {
+const isTwoPartTariffSupplementaryChargesNeeded = (batch, period, chargeElement, sentTPTBatches, licence) => {
   const isCorrectBatchType = batch.isTwoPartTariff() || batch.isSupplementary();
   const isAgreementInEffect = period.agreements.some(agreement => agreement.code === 'S127');
   const isValidPurpose = isTwoPartPurpose(chargeElement.purposeUse);
-  return isCorrectBatchType && isAgreementInEffect && isValidPurpose;
+  const isValidSeason = checkSeasonIsValid(batch, chargeElement, sentTPTBatches, licence);
+
+  return isCorrectBatchType && isAgreementInEffect && isValidPurpose && isValidSeason;
 };
 
 /**
@@ -172,7 +207,7 @@ const getElementChargePeriod = (period, chargeElement) => {
  * @param {FinancialYear} financialYear
  * @return {Array<Transaction>}
  */
-const createTransactionsForPeriod = (batch, period, chargeVersion, financialYear) => {
+const createTransactionsForPeriod = (batch, period, chargeVersion, financialYear, sentTPTBatches) => {
   const { agreements, dateRange } = period;
 
   return chargeVersion.chargeElements.reduce((acc, chargeElement) => {
@@ -187,7 +222,7 @@ const createTransactionsForPeriod = (batch, period, chargeVersion, financialYear
     if (isCompensationChargesNeeded(batch, chargeVersion)) {
       acc.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true }));
     }
-    if (isTwoPartTariffSupplementaryChargesNeeded(batch, period, chargeElement)) {
+    if (isTwoPartTariffSupplementaryChargesNeeded(batch, period, chargeElement, sentTPTBatches, chargeVersion.licence)) {
       // @TODO include two-part tariff reported volume
       acc.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isTwoPartTariffSupplementary: true }));
     }
@@ -195,7 +230,7 @@ const createTransactionsForPeriod = (batch, period, chargeVersion, financialYear
   }, []);
 };
 
-const createTransactions = (batch, financialYear, chargeVersion) => {
+const createTransactions = (batch, financialYear, chargeVersion, sentTPTBatches) => {
   // Validation
   validators.assertIsInstanceOf(batch, Batch);
   validators.assertIsInstanceOf(financialYear, FinancialYear);
@@ -208,7 +243,7 @@ const createTransactions = (batch, financialYear, chargeVersion) => {
 
   // Create transactions for each period in the history
   const transactions = history.map(period =>
-    createTransactionsForPeriod(batch, period, chargeVersion, financialYear));
+    createTransactionsForPeriod(batch, period, chargeVersion, financialYear, sentTPTBatches));
 
   return flatMap(transactions);
 };

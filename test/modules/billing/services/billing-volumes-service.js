@@ -1,40 +1,17 @@
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
-const { omit } = require('lodash');
 
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
 
 const BillingVolume = require('../../../../src/lib/models/billing-volume');
-const FinancialYear = require('../../../../src/lib/models/financial-year');
-const ChargeVersion = require('../../../../src/lib/models/charge-version');
-const ChargeElement = require('../../../../src/lib/models/charge-element');
-const Licence = require('../../../../src/lib/models/licence');
 const billingVolumesRepo = require('../../../../src/lib/connectors/repos/billing-volumes');
 const { NotFoundError } = require('../../../../src/lib/errors');
 const mappers = require('../../../../src/modules/billing/mappers');
 const twoPartTariffMatching = require('../../../../src/modules/billing/services/two-part-tariff-service');
+const { createBillingVolume, createUser, createBatch, createFinancialYear } = require('../test-data/test-billing-data');
 
-const createChargeElement = data => {
-  const chargeElement = new ChargeElement();
-  return chargeElement.fromHash({
-    ...data
-  });
-};
-
-const createLicence = () => {
-  const licence = new Licence();
-  return licence.fromHash({ licenceNumber: '1/23/456' });
-};
-
-const createChargeVersion = chargeElements => {
-  const chargeVersion = new ChargeVersion();
-  return chargeVersion.fromHash({
-    id: 'cccccccc-cccc-cccc-cccc-cccccccccccc',
-    licence: createLicence(),
-    chargeElements: chargeElements.map(createChargeElement)
-  });
-};
+const batchId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
 const createBillingVolumeData = (idSuffix, financialYear, isSummer, data = {}) => ({
   billingVolumeId: `aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa${idSuffix}`,
@@ -44,18 +21,12 @@ const createBillingVolumeData = (idSuffix, financialYear, isSummer, data = {}) =
   ...data
 });
 
-const createBillingVolume = data => {
-  const billingVolume = new BillingVolume();
-  return billingVolume.fromHash({
-    ...omit(data, 'billingVolumeId'),
-    financialYear: new FinancialYear(data.financialYear)
-  });
-};
-
 experiment('modules/billing/services/billing-volumes-service', () => {
   beforeEach(async () => {
+    sandbox.stub(billingVolumesRepo, 'getUnapprovedVolumesForBatch');
     sandbox.stub(billingVolumesRepo, 'findByChargeElementIdsAndFinancialYear');
     sandbox.stub(billingVolumesRepo, 'create');
+    sandbox.stub(billingVolumesRepo, 'update');
     sandbox.stub(mappers.billingVolume, 'dbToModel');
     sandbox.stub(twoPartTariffMatching, 'calculateVolumes');
   });
@@ -64,7 +35,7 @@ experiment('modules/billing/services/billing-volumes-service', () => {
 
   experiment('.getVolumes', () => {
     experiment('when calculated volumes exist', () => {
-      let billingVolumesData, result;
+      let billingVolumesData, result, batch;
 
       beforeEach(async () => {
         billingVolumesData = [
@@ -73,18 +44,19 @@ experiment('modules/billing/services/billing-volumes-service', () => {
         ];
         const chargeElements = [
           { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
-          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' },
-          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb3', season: 'all year' }];
+          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' }];
+        batch = createBatch({ id: batchId });
+
         billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves(billingVolumesData);
 
         mappers.billingVolume.dbToModel
           .onFirstCall().returns(createBillingVolume(billingVolumesData[0]))
           .onSecondCall().returns(createBillingVolume(billingVolumesData[1]));
 
-        result = await billingVolumesService.getVolumes(createChargeVersion(chargeElements), 2019, true);
+        result = await billingVolumesService.getVolumes(chargeElements, '12/34/567', 2019, true, batch);
       });
 
-      test('calls repo.findByChargeElementIdsAndFinancialYear() with correct params', async () => {
+      test('calls repo.findByChargeElementIdsAndFinancialYear() with charge element ids', async () => {
         const [chargeElementIds, financialYear] = billingVolumesRepo.findByChargeElementIdsAndFinancialYear.lastCall.args;
         expect(chargeElementIds).to.equal(['bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2']);
         expect(financialYear).to.equal(2019);
@@ -110,7 +82,7 @@ experiment('modules/billing/services/billing-volumes-service', () => {
     });
 
     experiment('when no billing volumes are found in db', () => {
-      let chargeVersion, result;
+      let chargeElements, result, batch;
 
       const matchingResults = {
         error: null,
@@ -145,9 +117,11 @@ experiment('modules/billing/services/billing-volumes-service', () => {
       ];
 
       beforeEach(async () => {
-        const chargeElements = [
+        chargeElements = [
           { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
           { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' }];
+
+        batch = createBatch({ id: batchId });
 
         billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves([]);
 
@@ -160,8 +134,7 @@ experiment('modules/billing/services/billing-volumes-service', () => {
           .onFirstCall().returns(createBillingVolume(createBillingVolume(billingVolumesData[0])))
           .onSecondCall().returns(createBillingVolume(createBillingVolume(billingVolumesData[1])));
 
-        chargeVersion = createChargeVersion(chargeElements);
-        result = await billingVolumesService.getVolumes(chargeVersion, 2019, true);
+        result = await billingVolumesService.getVolumes(chargeElements, '12/34/567', 2019, true, batch);
       });
 
       test('calls repo.findByChargeElementIdsAndFinancialYear() with correct params', async () => {
@@ -172,7 +145,8 @@ experiment('modules/billing/services/billing-volumes-service', () => {
 
       test('calls two part tariff matching algorithm with correct params', async () => {
         expect(twoPartTariffMatching.calculateVolumes.calledWith(
-          chargeVersion,
+          chargeElements,
+          '12/34/567',
           2019,
           true
         )).to.be.true();
@@ -223,7 +197,7 @@ experiment('modules/billing/services/billing-volumes-service', () => {
     });
 
     experiment('when some billing volumes are missing', () => {
-      let chargeElements;
+      let chargeElements, batch;
 
       beforeEach(async () => {
         const billingVolumes = [
@@ -233,10 +207,12 @@ experiment('modules/billing/services/billing-volumes-service', () => {
           { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
           { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' }];
 
+        batch = createBatch({ id: batchId });
+
         billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves(billingVolumes);
 
         try {
-          await billingVolumesService.getVolumes(createChargeVersion(chargeElements), 2019, true);
+          await billingVolumesService.getVolumes(chargeElements, '12/34/567', 2019, true, batch);
         } catch (err) {}
       });
 
@@ -248,12 +224,124 @@ experiment('modules/billing/services/billing-volumes-service', () => {
 
       test('an error is thrown ', async () => {
         try {
-          await billingVolumesService.getVolumes(createChargeVersion(chargeElements), 2019, true);
+          await billingVolumesService.getVolumes(chargeElements, '12/34/567', 2019, true, batch);
         } catch (err) {
           expect(err).to.be.instanceOf(NotFoundError);
-          expect(err.message).to.equal('Billing volumes missing for charge version cccccccc-cccc-cccc-cccc-cccccccccccc');
+          expect(err.message).to.equal('Billing volumes missing for charge elements bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1,bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2');
         }
       });
+    });
+  });
+
+  experiment('.updateBillingVolume', () => {
+    let batch, billingVolumeData;
+    beforeEach(async () => {
+      batch = createBatch({ id: batchId, isSummer: true, endYear: createFinancialYear(2019) });
+      billingVolumeData = createBillingVolumeData(1, 2019, true);
+      billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves([billingVolumeData]);
+    });
+
+    experiment('when the billing volume exists', () => {
+      let billingVolumeChanges, user;
+      beforeEach(async () => {
+        user = createUser({ id: '1234', email: 'user@example.com' });
+        billingVolumeChanges = {
+          calculatedVolume: 43.7,
+          twoPartTariffError: false,
+          twoPartTariffReview: {
+            id: user.id,
+            email: user.email
+          }
+        };
+        billingVolumesRepo.update.resolves({ ...billingVolumeData, ...billingVolumeChanges });
+
+        await billingVolumesService.updateBillingVolume(billingVolumeData.chargeElementId, batch, 43.7, user);
+      });
+
+      test('calls billingVolumesRepo to get relevant record', async () => {
+        expect(billingVolumesRepo.findByChargeElementIdsAndFinancialYear.calledWith(
+          [billingVolumeData.chargeElementId], 2019
+        )).to.be.true();
+      });
+
+      test('calls repo.update() with the billingVolumeId', () => {
+        const [billingVolumeId] = billingVolumesRepo.update.lastCall.args;
+        expect(billingVolumeId).to.equal(billingVolumeData.billingVolumeId);
+      });
+
+      test('maps the changes correctly', () => {
+        const [, changes] = billingVolumesRepo.update.lastCall.args;
+        expect(changes).to.equal(billingVolumeChanges);
+      });
+
+      test('returns the billingVolume mapped to model', () => {
+        expect(mappers.billingVolume.dbToModel.calledWith({
+          ...billingVolumeData, ...billingVolumeChanges
+        })).to.be.true();
+      });
+    });
+
+    experiment('when the billing volume does not exists', async () => {
+      beforeEach(async () => {
+        billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves([]);
+      });
+      test('does not call the billingVolumesRepo and throws a NotFoundError', async () => {
+        try {
+          const batch = createBatch({ id: batchId, isSummer: true, endYear: createFinancialYear(2019) });
+          const user = createUser({ id: '1234', email: 'user@example.com' });
+          await billingVolumesService.updateBillingVolume('test-charge-element-id', batch, 43.7, user);
+        } catch (err) {
+          expect(billingVolumesRepo.update.called).to.be.false();
+
+          const errMsg = 'Billing volume not found for chargeElementId test-charge-element-id, financialYear 2019 and isSummer true';
+          expect(err).to.be.instanceOf(NotFoundError);
+          expect(err.message).to.equal(errMsg);
+        }
+      });
+    });
+  });
+
+  experiment('.getUnapprovedVolumesForBatchCount', () => {
+    let batch, result;
+    beforeEach(async () => {
+      batch = createBatch({ id: batchId });
+      billingVolumesRepo.getUnapprovedVolumesForBatch.resolves([{ foo: 'bar' }, { foo: 'baz' }]);
+      result = await billingVolumesService.getUnapprovedVolumesForBatchCount(batch);
+    });
+    test('calls billingVolumesRepo with batch id', async () => {
+      expect(billingVolumesRepo.getUnapprovedVolumesForBatch.calledWith(
+        batchId
+      )).to.be.true();
+    });
+
+    test('returns the length of the results of the DB call', async () => {
+      expect(result).to.equal(2);
+    });
+  });
+
+  experiment('.approveVolumesForBatch', () => {
+    let batch;
+    beforeEach(async () => {
+      batch = createBatch({ id: batchId });
+      billingVolumesRepo.getUnapprovedVolumesForBatch.resolves([
+        { billingVolumeId: 'billing-volume-1' },
+        { billingVolumeId: 'billing-volume-2' }
+      ]);
+      await billingVolumesService.approveVolumesForBatch(batch);
+    });
+    test('calls billingVolumesRepo with batch id', async () => {
+      expect(billingVolumesRepo.getUnapprovedVolumesForBatch.calledWith(
+        batchId
+      )).to.be.true();
+    });
+
+    test('calls repo.update for each row', async () => {
+      const firstCallArgs = billingVolumesRepo.update.firstCall.args;
+      const secondCallArgs = billingVolumesRepo.update.secondCall.args;
+      expect(firstCallArgs[0]).to.equal('billing-volume-1');
+      expect(firstCallArgs[1]).to.equal({ isApproved: true });
+      expect(secondCallArgs[0]).to.equal('billing-volume-2');
+      expect(secondCallArgs[1]).to.equal({ isApproved: true });
     });
   });
 });

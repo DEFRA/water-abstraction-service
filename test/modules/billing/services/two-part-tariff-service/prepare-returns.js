@@ -223,12 +223,12 @@ experiment('modules/charging/lib/prepare-returns', async () => {
       const returns = [
         createReturn({ tertiaryCode: 400, returnId: 'return-1' }),
         createReturn({ tertiaryCode: 186, returnId: 'return-2' }),
-        createReturn({ tertiaryCode: 390, returnId: 'return-3' }),
+        createReturn({ tertiaryCode: 620, returnId: 'return-3' }),
         createReturn({ tertiaryCode: 260, returnId: 'return-4' })
       ];
       const tptReturns = [
         createReturn({ tertiaryCode: 400, returnId: 'return-1' }),
-        createReturn({ tertiaryCode: 390, returnId: 'return-3' })
+        createReturn({ tertiaryCode: 620, returnId: 'return-3' })
       ];
       const filteredReturns = getTPTReturns(returns);
       expect(filteredReturns).to.equal(tptReturns);

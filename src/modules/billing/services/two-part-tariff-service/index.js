@@ -9,9 +9,9 @@ const returnHelpers = require('./returns-helpers');
  * @param {Boolean} isSummer
  * @return {Object} matching results containing chargeElementId and actualReturnQuantity
  */
-const calculateVolumes = async (chargeVersion, financialYear, isSummer) => {
-  const returnsForLicence = await returnHelpers.getReturnsForMatching(chargeVersion.licence.licenceNumber, financialYear, isSummer);
-  return twoPartTariffMatching.matchReturnsToChargeElements(chargeVersion.chargeElements, returnsForLicence);
+const calculateVolumes = async (chargeElements, licenceNumber, financialYear, isSummer) => {
+  const returnsForLicence = await returnHelpers.getReturnsForMatching(licenceNumber, financialYear, isSummer);
+  return twoPartTariffMatching.matchReturnsToChargeElements(chargeElements, returnsForLicence);
 };
 
 exports.calculateVolumes = calculateVolumes;

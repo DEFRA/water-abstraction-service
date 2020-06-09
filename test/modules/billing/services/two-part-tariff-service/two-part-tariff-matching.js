@@ -98,11 +98,11 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
     });
     test('only returns TPT charge elements', async () => {
       const code200ChargeElement = getNonTptChargeElement(200);
-      const code600ChargeElement = getNonTptChargeElement(600);
+      const code300ChargeElement = getNonTptChargeElement(300);
       const tptChargeElements = prepareChargeElementsForMatching([
         code200ChargeElement,
         unsupportedTLChargeElement,
-        code600ChargeElement,
+        code300ChargeElement,
         unsupportedChargeElement
       ]);
       expect(tptChargeElements).to.have.length(2);
@@ -174,13 +174,13 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       isUnderQuery: false,
       tertiaryCode: 260
     });
-    const code600Ret = createReturn({
+    const code390Ret = createReturn({
       returnId: 'code-600-returns',
       status: 'completed',
       dueDate: '2018-11-01',
       receivedDate: '2018-10-15',
       isUnderQuery: false,
-      tertiaryCode: 600
+      tertiaryCode: 390
     });
 
     test('returns an error if .checkReturnsForErrors returns a value', async () => {
@@ -193,7 +193,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         code400Ret,
         code420Ret,
         code260Ret,
-        code600Ret
+        code390Ret
       ]);
       expect(error).to.be.null();
       expect(tptReturns).to.have.length(2);

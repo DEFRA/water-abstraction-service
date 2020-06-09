@@ -1,10 +1,7 @@
 'use strict';
-
 const chargeVersionYearService = require('../services/charge-version-year');
 const batchJob = require('./lib/batch-job');
 const batchService = require('../services/batch-service');
-const billingVolumesService = require('../../billing/services/billing-volumes-service');
-
 const JOB_NAME = 'billing.process-charge-version.*';
 
 const options = {
@@ -33,13 +30,7 @@ const handleProcessChargeVersion = async job => {
 
   // Process charge version year
   try {
-    let batch = await chargeVersionYearService.processChargeVersionYear(chargeVersionYear);
-
-    // If TPT, send batch to TPT processor - note batch only contains a single licence here
-    if (batch.isTwoPartTariff()) {
-      // @TODO: update to work with new billingVolumesService
-      batch = await billingVolumesService.getVolumes(batch);
-    }
+    const batch = await chargeVersionYearService.processChargeVersionYear(chargeVersionYear);
 
     // Persist data
     await batchService.saveInvoicesToDB(batch);

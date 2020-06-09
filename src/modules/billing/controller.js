@@ -5,6 +5,7 @@ const Event = require('../../lib/models/event');
 const Batch = require('../../lib/models/batch');
 const BATCH_STATUS = Batch.BATCH_STATUS;
 
+const { get } = require('lodash');
 const { envelope } = require('../../lib/response');
 const createBillRunJob = require('./jobs/create-bill-run');
 const prepareTransactionsJob = require('./jobs/prepare-transactions');
@@ -13,6 +14,7 @@ const { jobStatus } = require('./lib/event');
 const invoiceService = require('./services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
 const batchService = require('./services/batch-service');
+const transactionsService = require('./services/transactions-service');
 const billingVolumesService = require('./services/billing-volumes-service');
 const eventService = require('../../lib/services/events');
 
@@ -176,12 +178,22 @@ const getBatchLicences = async (request, h) => {
 };
 
 const patchTransaction = async (request, h) => {
-// @TODO: needs to be updated to work with new billing volumes service
+  const { transactionId } = request.params;
+  const { volume } = request.payload;
+  const { internalCallingUser: user } = request.defra;
+
+  const batch = await transactionsService.getById(transactionId);
+  if (!batch) return Boom.notFound(`No transaction (${transactionId}) found`);
 
   try {
-    // @TODO: implement below function in billing volumes service
-    const updatedBillingVolume = await billingVolumesService.updateBillingVolume();
-    return updatedBillingVolume;
+    const transaction = get(batch, 'invoices[0].invoiceLicences[0].transactions[0]');
+    const updatedTransaction = await transactionsService.updateTransactionVolume(batch, transaction, volume);
+
+    const updatedBillingVolume = await billingVolumesService.updateBillingVolume(transaction.chargeElement.id, batch, volume, user);
+    return {
+      updatedTransaction,
+      updatedBillingVolume
+    };
   } catch (err) {
     return Boom.badRequest(err.message);
   }
@@ -227,6 +239,8 @@ const postApproveReviewBatch = async (request, h) => {
 
   try {
     const updatedBatch = await batchService.approveTptBatchReview(batch);
+
+    await billingVolumesService.approveVolumesForBatch(batch);
 
     const batchEvent = await createBatchEvent({
       type: 'billing-batch:approve-review',

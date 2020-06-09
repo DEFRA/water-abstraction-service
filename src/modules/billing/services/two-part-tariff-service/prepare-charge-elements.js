@@ -1,4 +1,4 @@
-const { TPT_PURPOSES } = require('./two-part-tariff-helpers');
+const { TWO_PART_TARIFF_PURPOSE_CODES } = require('../../../../lib/models/purpose');
 const { sortBy } = require('lodash');
 const Decimal = require('decimal.js-light');
 
@@ -8,7 +8,7 @@ const Decimal = require('decimal.js-light');
  * @return {Array} charge elements with required data points for matching
  */
 const getTptChargeElements = chargeElements =>
-  chargeElements.filter(element => TPT_PURPOSES.includes(parseInt(element.purposeUse.code)));
+  chargeElements.filter(element => TWO_PART_TARIFF_PURPOSE_CODES.includes(parseInt(element.purposeUse.code)));
 
 /**
  * Pro rata the quantity - multiply by billable days & divide by total days

@@ -15,7 +15,6 @@ exports.createAnnual = `
     select :billingBatchId, cv.charge_version_id
     from water.licences l
       join water.charge_versions cv on l.licence_ref = cv.licence_ref
-      join water.charge_elements ce on cv.charge_version_id = ce.charge_version_id
     where
       l.region_id = :regionId::uuid
       and l.suspend_from_billing is false

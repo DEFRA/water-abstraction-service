@@ -6,7 +6,7 @@ const { calculateVolumes } = require('../../../../../src/modules/billing/service
 const returnsHelpers = require('../../../../../src/modules/billing/services/two-part-tariff-service/returns-helpers');
 const twoPartTariffMatching = require('../../../../../src/modules/billing/services/two-part-tariff-service/two-part-tariff-matching');
 
-const { createChargeVersion, createChargeElement } = require('../../test-data/test-billing-data');
+const { createChargeElement } = require('../../test-data/test-billing-data');
 
 const returns = [
   {
@@ -47,7 +47,7 @@ experiment('modules/billing/services/two-part-tariff-service .calculateVolumes',
     sandbox.stub(twoPartTariffMatching, 'matchReturnsToChargeElements').returns(matchingResults);
 
     chargeElement = [createChargeElement({ id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' })];
-    result = await calculateVolumes(createChargeVersion(chargeElement), 2019, true);
+    result = await calculateVolumes(chargeElement, '01/123/ABC', 2019, true);
   });
 
   afterEach(async () => sandbox.restore());
