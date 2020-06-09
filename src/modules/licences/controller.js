@@ -297,19 +297,13 @@ const getLicenceCompanyByDocumentId = async (request, h) => {
 const postLicenceName = async (request, h) => {
   const { documentId } = request.params;
   const { documentName } = request.payload;
-  try {
-    const { data: { document_name: currentName } } = await documentsClient.findOne(documentId);
-    const rename = !isEmpty(currentName);
-    const { data } = await documentsClient.setLicenceName(documentId, documentName);
-    if (!data) {
-      throw Boom.notFound(`Document ${documentId} not found`);
-    };
-    const metadata = { documentId, documentName, rename };
-    const eventData = await eventHelper.saveEvent('licence:name', rename ? 'rename' : 'name', [data.system_external_id], 'completed', request.payload.userName, metadata);
-    return { companyId: data.company_entity_id, licenceNumber: data.system_external_id, eventId: eventData.id, ...metadata };
-  } catch (err) {
-    return handleUnexpectedError(err, documentId);
-  }
+  const { data: currentDoc } = await documentsClient.findOne(documentId);
+  if (!currentDoc) { return Boom.notFound(`Document ${documentId} not found`); }
+  const rename = !isEmpty(currentDoc.document_name);
+  const { data } = await documentsClient.setLicenceName(documentId, documentName);
+  const metadata = { documentId, documentName, rename };
+  const eventData = await eventHelper.saveEvent('licence:name', rename ? 'rename' : 'name', [data.system_external_id], 'completed', request.payload.userName, metadata);
+  return { companyId: data.company_entity_id, licenceNumber: data.system_external_id, eventId: eventData.id, ...metadata };
 };
 
 exports.getLicenceByDocumentId = getLicenceByDocumentId;
