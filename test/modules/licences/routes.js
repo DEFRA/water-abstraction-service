@@ -134,7 +134,6 @@ experiment('/documents/{documentId}/rename', () => {
       url,
       payload: {
         userName: 'test@example.com',
-        rename: false,
         documentName: 'test-doc-name'
       }
     });
@@ -148,7 +147,6 @@ experiment('/documents/{documentId}/rename', () => {
       url,
       payload: {
         userName: 'not.an.email.address',
-        rename: false,
         documentName: 'test-doc-name'
       }
     });
@@ -176,19 +174,6 @@ experiment('/documents/{documentId}/rename', () => {
       payload: {
         userName: 'test@email.com',
         rename: 'something',
-        documentName: 'test-doc-name'
-      }
-    });
-    expect(output.statusCode).to.equal(400);
-  });
-
-  test('validates the rename as required', async () => {
-    const url = `/water/1.0/documents/${id}/rename`;
-    const output = await server.inject({
-      method: 'POST',
-      url,
-      payload: {
-        userName: 'test@email.com',
         documentName: 'test-doc-name'
       }
     });

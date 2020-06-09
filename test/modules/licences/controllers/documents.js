@@ -1,7 +1,7 @@
 const { expect } = require('@hapi/code');
 const { afterEach, beforeEach, experiment, test } = exports.lab = require('@hapi/lab').script();
 
-const controller = require('../../../../src/modules/licences/controllers/licences');
+const controller = require('../../../../src/modules/licences/controllers/documents');
 const queries = require('../../../../src/modules/licences/lib/queries');
 const permitClient = require('../../../../src/lib/connectors/permit');
 const documentsClient = require('../../../../src/lib/connectors/crm/documents');
@@ -68,6 +68,7 @@ experiment('getLicenceByDocumentId', () => {
   beforeEach(async () => {
     sandbox.stub(permitClient.licences, 'findMany');
     sandbox.stub(documentsClient, 'findMany');
+    sandbox.stub(documentsClient, 'findOne');
     sandbox.stub(logger, 'error');
   });
 
@@ -454,12 +455,12 @@ experiment('postLicenceName', () => {
       documentId: '00000000-0000-0000-0000-000000000000'
     },
     payload: {
-      rename: false,
       documentName: 'test-doc-name',
       userName: 'test-user@sinon.com'
     }
   };
   beforeEach(async () => {
+    sandbox.stub(documentsClient, 'findOne');
     sandbox.stub(documentsClient, 'setLicenceName');
     sandbox.stub(eventHelper, 'saveEvent').resolves({ id: 'event-id' });
   });
@@ -479,16 +480,17 @@ experiment('postLicenceName', () => {
       }
     };
     documentsClient.setLicenceName.resolves(documentResponse);
+    documentsClient.findOne.resolves({ data: { document_name: 'test-name' } });
     const data = await controller.postLicenceName(testRequest);
     expect(data.documentId).to.equal(testRequest.params.documentId);
     expect(data.licenceNumber).to.equal(documentResponse.data.system_external_id);
     expect(data.eventId).to.equal('event-id');
     expect(data.documentName).to.equal(documentResponse.data.document_name);
-    expect(data.rename).to.equal(testRequest.payload.rename);
+    expect(data.rename).to.equal(true);
   });
 
   test('returns an error if the document has not been found', async () => {
-    documentsClient.setLicenceName.resolves({ data: null });
+    documentsClient.findOne.resolves({ data: null });
     try {
       await controller.postLicenceName(testRequest);
     } catch (err) {
