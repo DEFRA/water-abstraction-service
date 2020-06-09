@@ -80,11 +80,8 @@ const checkDueReturnsErrors = returns => {
   }
 };
 
-const checkReturnsAndLines = returns => {
-  if (returns.length === 0) return true;
-  const returnsWithLines = returns.map(ret => !!ret.lines);
-  return returnsWithLines.includes(false);
-};
+const checkReturnsExistAndHaveLines = returns =>
+  returns.length === 0 ? true : returns.some(ret => !ret.lines);
 
 /**
  * Check if all returns are completed
@@ -94,7 +91,7 @@ const checkReturnsAndLines = returns => {
 const checkForReturnsErrors = returns => {
   const receivedReturns = getReturnsByStatus(returns, 'received');
   const errors = [
-    checkReturnsAndLines(returns) ? ERROR_NO_RETURNS_FOR_MATCHING : null,
+    checkReturnsExistAndHaveLines(returns) ? ERROR_NO_RETURNS_FOR_MATCHING : null,
     checkDueReturnsErrors(returns) || null,
     areReturnsLate(returns) ? ERROR_LATE_RETURNS : null,
     areAnyReturnsUnderQuery(returns) ? ERROR_UNDER_QUERY : null,

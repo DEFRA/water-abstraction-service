@@ -50,7 +50,7 @@ experiment('modules/charging/lib/prepare-returns', async () => {
         expect(result).to.be.false();
       });
     });
-    experiment('when abstraction period straddles financial year', async => {
+    experiment('when abstraction period straddles financial year', async () => {
       const returnOptions = {
         periodStartDay: 1,
         periodStartMonth: 1,
@@ -79,7 +79,7 @@ experiment('modules/charging/lib/prepare-returns', async () => {
         expect(result).to.be.false();
       });
     });
-    experiment('when abstraction period straddles calendar year', async => {
+    experiment('when abstraction period straddles calendar year', async () => {
       const returnOptions = {
         periodStartDay: 1,
         periodStartMonth: 10,
@@ -148,6 +148,11 @@ experiment('modules/charging/lib/prepare-returns', async () => {
 
     test('return error if there are no returns for matching', async () => {
       const returnError = checkForReturnsErrors([]);
+      expect(returnError).to.equal(ERROR_NO_RETURNS_FOR_MATCHING);
+    });
+
+    test('return error if any of the returns are missing return lines', async () => {
+      const returnError = checkForReturnsErrors([{ ...completedRet, lines: null }, completedRet]);
       expect(returnError).to.equal(ERROR_NO_RETURNS_FOR_MATCHING);
     });
 
