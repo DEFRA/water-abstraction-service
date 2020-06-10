@@ -290,7 +290,7 @@ experiment('modules/billing/mappers/transaction', () => {
       chargeType: 'compensation',
       description: 'Little stream',
       chargeElement: createChargeElementRow(),
-      volume: '29.76',
+      volume: '11.76',
       section126Factor: null,
       section127Agreement: false,
       section130Agreement: null,
@@ -312,7 +312,7 @@ experiment('modules/billing/mappers/transaction', () => {
       expect(result.billableDays).to.equal(dbRow.billableDays);
       expect(result.isCompensationCharge).to.be.true();
       expect(result.description).to.equal(dbRow.description);
-      expect(result.volume).to.equal(29.76);
+      expect(result.volume).to.equal(11.76);
       expect(result.transactionKey).to.equal('ABCDEF1234567890ABCDEF1234567890');
     });
 
@@ -329,6 +329,18 @@ experiment('modules/billing/mappers/transaction', () => {
 
     test('there are no agreements', async () => {
       expect(result.agreements).to.have.length(0);
+    });
+
+    test('sets the correct two part tariff data', async () => {
+      expect(result.calculatedVolume).to.equal('11.76');
+      expect(result.twoPartTariffError).to.be.false();
+      expect(result.twoPartTariffStatus).to.be.null();
+    });
+
+    test('sets the twoPartTariffReview to a User instance', async () => {
+      expect(result.twoPartTariffReview instanceof User).to.be.true();
+      expect(result.twoPartTariffReview.id).to.equal(dbRow.twoPartTariffReview.id);
+      expect(result.twoPartTariffReview.email).to.equal(dbRow.twoPartTariffReview.email);
     });
 
     experiment('when the DB row contains a section 126 factor', () => {

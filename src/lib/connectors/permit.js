@@ -1,12 +1,15 @@
-const { dateToIsoString } = require('../dates');
+'use strict';
+
+const { get } = require('lodash');
+const urlJoin = require('url-join');
+const helpers = require('@envage/water-abstraction-helpers');
+
 const apiClientFactory = require('./api-client-factory');
 const config = require('../../../config');
-const { get } = require('lodash');
 const { licence: { regimeId, typeId } } = config;
 
 const factory = require('./service-version-factory');
-const urlJoin = require('url-join');
-const helpers = require('@envage/water-abstraction-helpers');
+const calendarToIso = helpers.nald.dates.calendarToIso;
 
 const licences = apiClientFactory.create(`${config.services.permits}licence`);
 
@@ -52,9 +55,9 @@ const getLicenceEndDates = async licenceNumbers => {
     return {
       ...acc,
       [row.licence_ref]: {
-        dateRevoked: dateToIsoString(row.licence_data_value.REV_DATE),
-        dateExpired: dateToIsoString(row.licence_data_value.EXPIRY_DATE),
-        dateLapsed: dateToIsoString(row.licence_data_value.LAPSED_DATE)
+        dateRevoked: calendarToIso(row.licence_data_value.REV_DATE),
+        dateExpired: calendarToIso(row.licence_data_value.EXPIRY_DATE),
+        dateLapsed: calendarToIso(row.licence_data_value.LAPSED_DATE)
       }
     };
   }, {});

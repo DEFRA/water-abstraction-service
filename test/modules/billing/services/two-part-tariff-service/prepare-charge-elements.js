@@ -26,9 +26,9 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
     };
     test('only returns charge elements with TPT purposes', async () => {
       const chargeElementsWithTPTPurposes = [
-        createChargeElement({ purposeTertiary: 380, ...chargeElementOptions }),
-        createChargeElement({ purposeTertiary: 410, ...chargeElementOptions }),
-        createChargeElement({ purposeTertiary: 420, ...chargeElementOptions })
+        createChargeElement({ purposeUseCode: 380, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: 410, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: 420, ...chargeElementOptions })
       ];
       const chargeElementsWithOtherPurposes = [
         createChargeElement({ purposeTertiary: 200, ...chargeElementOptions }),

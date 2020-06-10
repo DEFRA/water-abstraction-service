@@ -4,7 +4,7 @@ const { find, get } = require('lodash');
 // Import models
 const Contact = require('../contact');
 const ContactList = require('../contact-list');
-const naldFunctional = require('../../licence-transformer/nald-functional');
+const nald = require('@envage/water-abstraction-helpers').nald;
 
 const { createContact } = require('./contact');
 
@@ -53,7 +53,7 @@ const createContacts = (data) => {
   const contacts = new ContactList();
 
   // Get current version
-  const currentVersion = naldFunctional.findCurrent(data.data.versions);
+  const currentVersion = nald.findCurrent(data.data.versions);
   if (!currentVersion) {
     return contacts;
   }

@@ -1027,9 +1027,10 @@ experiment('modules/billing/controller', () => {
         expect(message.data.batch).to.equal(processingBatch);
       });
 
-      test('the response contains the event', async () => {
+      test('the response contains the event and batch', async () => {
         const { data } = response;
         expect(data.event.id).to.equal('11111111-1111-1111-1111-111111111111');
+        expect(data.batch).to.equal(processingBatch);
       });
 
       test('the response contains a URL to the event', async () => {

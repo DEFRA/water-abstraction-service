@@ -193,7 +193,7 @@ class Transaction extends Model {
   }
 
   set volume (volume) {
-    validators.assertNullableQuantityWithMaximum(volume, this.chargeElement.volume);
+    validators.assertNullableQuantityWithMaximum(volume, this.chargeElement.authorisedAnnualQuantity);
     this._volume = volume;
   }
 

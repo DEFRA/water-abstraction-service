@@ -4,7 +4,7 @@ const { pick, pickBy, identity } = require('lodash');
 
 const Batch = require('../../../lib/models/batch');
 const FinancialYear = require('../../../lib/models/financial-year');
-const regionMapper = require('./region');
+const regionMapper = require('../../../lib/mappers/region');
 const transactionMapper = require('./transaction');
 const totalsMapper = require('./totals');
 
@@ -24,7 +24,7 @@ const dbToModel = row => {
       region: regionMapper.dbToModel(row.region),
       totals: totalsMapper.dbToModel(row),
       externalId: row.externalId,
-      billRunId: row.billRunId
+      billRunNumber: row.billRunNumber
     }, identity)
   });
   return batch;

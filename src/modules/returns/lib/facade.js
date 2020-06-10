@@ -6,7 +6,10 @@ const moment = require('moment');
 const { get } = require('lodash');
 const apiConnector = require('./api-connector');
 const naldConnector = require('../../import/lib/nald-returns-queries');
-const { parseReturnId, mapUnit } = require('../../import/lib/transform-returns-helpers');
+const waterHelpers = require('@envage/water-abstraction-helpers');
+
+const { parseReturnId } = waterHelpers.returns;
+const { mapUnit } = waterHelpers.returns.mappers;
 const { naldToReturnLines } = require('./nald-returns-mapper');
 
 /**

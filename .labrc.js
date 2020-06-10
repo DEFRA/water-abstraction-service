@@ -10,6 +10,7 @@ module.exports = {
     'migrations',
     'node_modules',
     'scripts',
+    'src/lib/connectors/bookshelf',
     'test',
     'integration-tests'
   ]

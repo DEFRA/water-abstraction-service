@@ -1,7 +1,10 @@
+'use strict';
+
+const waterHelpers = require('@envage/water-abstraction-helpers');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 const documents = require('../../../lib/connectors/crm/documents');
 const { getPagination } = require('./pagination');
-const { returnsDateToIso } = require('../../../lib/dates');
+const { returnsToIso } = waterHelpers.nald.dates;
 const { getFullName } = require('../../../lib/licence-transformer/nald-helpers');
 
 const validateRowMetadata = row => {
@@ -38,7 +41,7 @@ const mapRow = (row) => {
     licenceNumber: row.system_external_id,
     licenceHolder: getLicenceHolderNameFromDocumentHeader(row),
     documentName: row.document_name,
-    expires: returnsDateToIso(row.metadata.Expires),
+    expires: returnsToIso(row.metadata.Expires),
     isCurrent: row.metadata.IsCurrent
   };
 };
