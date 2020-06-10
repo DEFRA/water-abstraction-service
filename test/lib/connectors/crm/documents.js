@@ -12,6 +12,7 @@ experiment('lib/connectors/crm/documents', () => {
     sandbox.stub(serviceRequest, 'get').resolves({});
     sandbox.stub(serviceRequest, 'patch').resolves({});
     sandbox.stub(serviceRequest, 'delete').resolves({});
+    sandbox.stub(documentsConnector, 'updateOne').resolves({});
   });
 
   afterEach(async () => {
@@ -51,6 +52,15 @@ experiment('lib/connectors/crm/documents', () => {
 
       const [url] = serviceRequest.delete.lastCall.args;
       expect(url).to.equal(`${config.services.crm}/acceptance-tests/documents`);
+    });
+  });
+
+  experiment('.setLicenceName', () => {
+    test('makes a update request to the expected url', async () => {
+      await documentsConnector.setLicenceName('doc-id', 'name');
+      const args = documentsConnector.updateOne.lastCall.args;
+      expect(args[0]).to.equal('doc-id');
+      expect(args[1].document_name).to.equal('name');
     });
   });
 });
