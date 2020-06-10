@@ -15,8 +15,6 @@ const batchService = require('../../../../src/modules/billing/services/batch-ser
 
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 
-const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
-
 const { Batch } = require('../../../../src/lib/models');
 
 const eventId = '00000000-0000-0000-0000-000000000000';
@@ -106,19 +104,6 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
     test('resolves including the batch details', async () => {
       expect(result.batch.billing_batch_id).to.equal('test-batch-id');
-    });
-
-    experiment('if batch is two part tariff', async () => {
-      beforeEach(async () => {
-        sandbox.stub(billingVolumesService, 'getVolumes');
-
-        batch.type = Batch.BATCH_TYPE.twoPartTariff;
-
-        await processChargeVersion.handler(job);
-      });
-      test('calls two part tariff service with batch', async () => {
-        expect(billingVolumesService.getVolumes.calledWith(batch)).to.be.true();
-      });
     });
 
     experiment('when there are no errors', () => {

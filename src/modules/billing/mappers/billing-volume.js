@@ -14,7 +14,7 @@ const dbToModel = row => {
   });
 };
 
-const matchingResultsToDb = (matchingResults, financialYear, isSummer) => {
+const matchingResultsToDb = (matchingResults, financialYear, isSummer, billingBatchId) => {
   const { error: overallError } = matchingResults;
   return matchingResults.data.map(result => {
     const twoPartTariffStatus = overallError || result.error;
@@ -25,7 +25,8 @@ const matchingResultsToDb = (matchingResults, financialYear, isSummer) => {
       calculatedVolume: result.data.actualReturnQuantity,
       twoPartTariffStatus: twoPartTariffStatus,
       twoPartTariffError: !!twoPartTariffStatus,
-      isApproved: false
+      isApproved: false,
+      billingBatchId
     };
   });
 };

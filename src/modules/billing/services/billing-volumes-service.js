@@ -5,17 +5,13 @@ const { NotFoundError } = require('../../../lib/errors');
 
 const isSummerChargeElement = chargeElement => chargeElement.season === 'summer';
 
-const getChargeElementsForSeason = (chargeVersion, isSummer) =>
-  chargeVersion.chargeElements.filter(chargeElement => isSummerChargeElement(chargeElement) === isSummer);
-
 const volumesToModels = volumes => volumes.map(mappers.billingVolume.dbToModel);
 
 /**
  * Filter charge elements for matching season
  * Call repo to retrieve billing volumes for charge elements and financial year
  */
-const getVolumesForChargeElements = async (chargeVersion, financialYear, isSummer) => {
-  const chargeElements = getChargeElementsForSeason(chargeVersion, isSummer);
+const getVolumesForChargeElements = async (chargeElements, financialYear) => {
   const chargeElementIds = chargeElements.map(chargeElement => chargeElement.id);
   const billingVolumes = await billingVolumesRepo.findByChargeElementIdsAndFinancialYear(chargeElementIds, financialYear);
 
@@ -28,23 +24,23 @@ const getVolumesForChargeElements = async (chargeVersion, financialYear, isSumme
     return volumesToModels(billingVolumes);
   }
   // There is a mismatch - something has gone wrong
-  throw new NotFoundError(`Billing volumes missing for charge version ${chargeVersion.id}`);
+  throw new NotFoundError(`Billing volumes missing for charge elements ${chargeElementIds}`);
 };
 
 /**
  * Calls two part tariff matching algorithm
  * @return {Object} matching results mapped to db
  */
-const calculateVolumesForChargeElements = async (chargeVersion, financialYear, isSummer) => {
-  const matchingResults = await twoPartTariffMatching.calculateVolumes(chargeVersion, financialYear, isSummer);
-  return mappers.billingVolume.matchingResultsToDb(matchingResults, financialYear, isSummer);
+const calculateVolumesForChargeElements = async (chargeElements, licenceNumber, financialYear, isSummer, batch) => {
+  const matchingResults = await twoPartTariffMatching.calculateVolumes(chargeElements, licenceNumber, financialYear, isSummer);
+  return mappers.billingVolume.matchingResultsToDb(matchingResults, financialYear, isSummer, batch.id);
 };
 
 /**
  * Create a new record for calculated billing volume
  * @return {BillingVolume}
  */
-const persistBillingVolumesData = async data => Promise.all(
+const persistBillingVolumesData = async (data) => Promise.all(
   data.map(async row => {
     const result = await billingVolumesRepo.create(row);
     return mappers.billingVolume.dbToModel(result);
@@ -56,15 +52,69 @@ const persistBillingVolumesData = async data => Promise.all(
  * @param {Integer} financialYear
  * @param {Boolean} isSummer
  */
-const getVolumes = async (chargeVersion, financialYear, isSummer) => {
-  const volumes = await getVolumesForChargeElements(chargeVersion, financialYear, isSummer);
+const getVolumes = async (chargeElements, licenceNumber, financialYear, isSummer, batch) => {
+  const volumes = await getVolumesForChargeElements(chargeElements, financialYear);
   if (volumes) return volumes;
 
-  const billingVolumesData = await calculateVolumesForChargeElements(chargeVersion, financialYear, isSummer);
+  const billingVolumesData = await calculateVolumesForChargeElements(chargeElements, licenceNumber, financialYear, isSummer, batch);
   return persistBillingVolumesData(billingVolumesData);
 };
 
-const updateBillingVolume = async () => {};
+/**
+ * Find billing volume for given chargeElementId, financialYear and isSummer flag
+ *
+ * throws error if billingVolume is not found
+ * @param {String} chargeElementId
+ * @param {Integer} financialYear
+ * @param {Boolean} isSummer
+ */
+const getVolumeForChargeElement = async (chargeElementId, financialYear, isSummer) => {
+  const result = await billingVolumesRepo.findByChargeElementIdsAndFinancialYear([chargeElementId], financialYear);
+  return result.find(volume => volume.isSummer === isSummer);
+};
+
+/**
+ * Updates billingVolume with volume, updated twoPartTariffError to false
+ * and stores user data
+ *
+ * @param {String} chargeElementId
+ * @param {Batch} batch containing endYear and isSummer
+ * @param {Number} volume
+ * @param {Object} user containing id and email
+ */
+const updateBillingVolume = async (chargeElementId, batch, volume, user) => {
+  const { endYear: { yearEnding }, isSummer } = batch;
+  const billingVolume = await getVolumeForChargeElement(chargeElementId, yearEnding, isSummer);
+  if (!billingVolume) throw new NotFoundError(`Billing volume not found for chargeElementId ${chargeElementId}, financialYear ${yearEnding} and isSummer ${isSummer}`);
+
+  const changes = {
+    calculatedVolume: volume,
+    twoPartTariffError: false,
+    twoPartTariffReview: { id: user.id, email: user.email }
+  };
+  const updatedBillingVolume = await billingVolumesRepo.update(billingVolume.billingVolumeId, changes);
+  return mappers.billingVolume.dbToModel(updatedBillingVolume);
+};
+
+/**
+ * Calls the repo to get the number of billingVolumes for the batch
+ * with the isApproved flag set to false
+ * @param {Batch} batch
+ */
+const getUnapprovedVolumesForBatchCount = async batch => {
+  const result = await billingVolumesRepo.getUnapprovedVolumesForBatch(batch.id);
+  return result.length;
+};
+
+const approveVolumesForBatch = async batch => {
+  const billingVolumes = await billingVolumesRepo.getUnapprovedVolumesForBatch(batch.id);
+  for (const row of billingVolumes) {
+    await billingVolumesRepo.update(row.billingVolumeId, { isApproved: true });
+  }
+};
 
 exports.getVolumes = getVolumes;
 exports.updateBillingVolume = updateBillingVolume;
+exports.isSummerChargeElement = isSummerChargeElement;
+exports.getUnapprovedVolumesForBatchCount = getUnapprovedVolumesForBatchCount;
+exports.approveVolumesForBatch = approveVolumesForBatch;

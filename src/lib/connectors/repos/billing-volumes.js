@@ -18,8 +18,8 @@ const create = async data => {
 const findByChargeElementIdsAndFinancialYear = async (ids, financialYear) => {
   const result = await BillingVolume
     .forge()
-    .where('charge_element_id', 'in', ids)
-    .andWhere({ financial_year: financialYear })
+    .query('whereIn', 'charge_element_id', ids)
+    .where({ financial_year: financialYear })
     .fetchAll();
 
   return result.toJSON();
@@ -27,14 +27,28 @@ const findByChargeElementIdsAndFinancialYear = async (ids, financialYear) => {
 
 /**
  * Updates the record with the fields contained within changes object
- * @param {String} id
+ * @param {String} billingVolumeId
  * @param {Object} changes
  */
-const update = async (id, changes) => {
-  const result = await BillingVolume.forge({ billingVolumeId: id }).save(changes);
+const update = async (billingVolumeId, changes) => {
+  const result = await BillingVolume.forge({ billingVolumeId }).save(changes);
+  return result.toJSON();
+};
+
+/**
+ * Gets billing volumes for a given batchId where the isApproved flag = flase
+ * @param {String} batchId
+ */
+const getUnapprovedVolumesForBatch = async batchId => {
+  const result = await BillingVolume
+    .forge()
+    .where({ billing_batch_id: batchId, is_approved: false })
+    .fetchAll();
+
   return result.toJSON();
 };
 
 exports.create = create;
 exports.findByChargeElementIdsAndFinancialYear = findByChargeElementIdsAndFinancialYear;
 exports.update = update;
+exports.getUnapprovedVolumesForBatch = getUnapprovedVolumesForBatch;

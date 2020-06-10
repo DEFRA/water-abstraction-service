@@ -224,7 +224,7 @@ class Transaction extends Model {
    *
    * @param {String} invoiceAccount The invoice account for the transaction
    * @param {Object} licence Licence information
-   * @param {Obejct} batch The batch this transaction appears in
+   * @param {Object} batch The batch this transaction appears in
    */
   createTransactionKey (invoiceAccount, licence, batch) {
     const hash = this.getHashData(invoiceAccount, licence, batch);

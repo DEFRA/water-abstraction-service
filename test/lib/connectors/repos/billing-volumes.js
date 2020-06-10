@@ -21,7 +21,7 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     stub = {
       save: sandbox.stub().resolves(model),
       where: sandbox.stub().returnsThis(),
-      andWhere: sandbox.stub().returnsThis(),
+      query: sandbox.stub().returnsThis(),
       fetch: sandbox.stub().resolves(model),
       fetchAll: sandbox.stub().resolves(model)
     };
@@ -74,14 +74,14 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     });
 
     test('queries for matching ID(s)', async () => {
-      const [field, operator, values] = stub.where.lastCall.args;
+      const [operator, field, values] = stub.query.lastCall.args;
+      expect(operator).to.equal('whereIn');
       expect(field).to.equal('charge_element_id');
-      expect(operator).to.equal('in');
       expect(values).to.equal(['charge-element-id-1', 'charge-element-id-2']);
     });
 
     test('queries for matching financial year', async () => {
-      const [filter] = stub.andWhere.lastCall.args;
+      const [filter] = stub.where.lastCall.args;
       expect(filter).to.equal({ financial_year: 2019 });
     });
 
@@ -102,7 +102,7 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     let result;
     const id = 'test-id';
     const changes = {
-      isApproved: true,
+      calculatedVolume: 43.2,
       twoPartTariffReview: { id: 1234, email: 'test@example.com' }
     };
     beforeEach(async () => {
@@ -117,6 +117,35 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     test('calls save with correct data', () => {
       const [params] = stub.save.lastCall.args;
       expect(params).to.equal(changes);
+    });
+
+    test('calls toJSON() on returned models', async () => {
+      expect(model.toJSON.callCount).to.equal(1);
+    });
+
+    test('returns the result of the toJSON() call', async () => {
+      expect(result).to.equal({ foo: 'bar' });
+    });
+  });
+
+  experiment('.getUnapprovedVolumesForBatch', () => {
+    let result;
+    const id = 'test-id';
+    beforeEach(async () => {
+      result = await billingVolumes.getUnapprovedVolumesForBatch(id);
+    });
+
+    test('calls model.forge', () => {
+      expect(BillingVolume.forge.called).to.be.true();
+    });
+
+    test('queries for unapproved volumes with matching batch id', async () => {
+      const [filter] = stub.where.lastCall.args;
+      expect(filter).to.equal({ billing_batch_id: 'test-id', is_approved: false });
+    });
+
+    test('calls fetchAll', () => {
+      expect(stub.fetchAll.called).to.be.true();
     });
 
     test('calls toJSON() on returned models', async () => {

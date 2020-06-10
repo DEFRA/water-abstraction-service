@@ -33,7 +33,7 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
       const chargeElementsWithOtherPurposes = [
         createChargeElement({ purposeTertiary: 200, ...chargeElementOptions }),
         createChargeElement({ purposeTertiary: 180, ...chargeElementOptions }),
-        createChargeElement({ purposeTertiary: 620, ...chargeElementOptions })
+        createChargeElement({ purposeTertiary: 390, ...chargeElementOptions })
       ];
       const chargeElements = [
         ...chargeElementsWithTPTPurposes,
@@ -46,7 +46,7 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
       const nonTPTChargeElements = [
         createChargeElement({ purposeTertiary: 200, ...chargeElementOptions }),
         createChargeElement({ purposeTertiary: 180, ...chargeElementOptions }),
-        createChargeElement({ purposeTertiary: 620, ...chargeElementOptions })
+        createChargeElement({ purposeTertiary: 390, ...chargeElementOptions })
       ];
 
       const filteredElements = getTptChargeElements(nonTPTChargeElements);

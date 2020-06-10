@@ -1,6 +1,7 @@
 'use strict';
 
 const { BillingBatch } = require('../bookshelf');
+const { BATCH_STATUS, BATCH_TYPE } = require('../../models/batch');
 const { paginatedEnvelope } = require('./lib/envelope');
 
 const mapModel = model => model ? model.toJSON() : null;
@@ -107,6 +108,27 @@ const create = async data => {
   return model.toJSON();
 };
 
+const findSentTPTBatchesForFinancialYearAndRegion = async (financialYear, regionId) => {
+  const filters = {
+    status: BATCH_STATUS.sent,
+    batch_type: BATCH_TYPE.twoPartTariff,
+    to_financial_year_ending: financialYear,
+    region_id: regionId
+  };
+  const batches = await BillingBatch
+    .forge()
+    .where(filters)
+    .fetchAll({
+      withRelated: [
+        'billingInvoices',
+        'billingInvoices.billingInvoiceLicences',
+        'billingInvoices.billingInvoiceLicences.licence'
+      ]
+    });
+
+  return batches.toJSON();
+};
+
 exports.delete = deleteById;
 exports.findByStatuses = findByStatuses;
 exports.findOne = findOne;
@@ -115,3 +137,4 @@ exports.update = update;
 exports.findOneWithInvoices = findOneWithInvoices;
 exports.findOneWithInvoicesWithTransactions = findOneWithInvoicesWithTransactions;
 exports.create = create;
+exports.findSentTPTBatchesForFinancialYearAndRegion = findSentTPTBatchesForFinancialYearAndRegion;

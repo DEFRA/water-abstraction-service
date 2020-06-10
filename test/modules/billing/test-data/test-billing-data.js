@@ -5,6 +5,7 @@ const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../src/lib/models/licence');
 const Transaction = require('../../../../src/lib/models/transaction');
+const BillingVolume = require('../../../../src/lib/models/billing-volume');
 const ChargeVersion = require('../../../../src/lib/models/charge-version');
 const ChargeElement = require('../../../../src/lib/models/charge-element');
 const AbstractionPeriod = require('../../../../src/lib/models/abstraction-period');
@@ -12,7 +13,7 @@ const DateRange = require('../../../../src/lib/models/date-range');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const User = require('../../../../src/lib/models/user');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
-
+const { omit } = require('lodash');
 const createFinancialYear = year => new FinancialYear(year);
 
 const createUser = options => {
@@ -50,7 +51,7 @@ const createChargeVersion = chargeElements => {
 
 const createTransaction = (options = {}, chargeElement) => {
   const transaction = new Transaction(options.id || '');
-  transaction.fromHash({
+  return transaction.fromHash({
     chargeElement: chargeElement || createChargeElement(),
     chargePeriod: new DateRange('2019-04-01', '2020-03-31'),
     isCredit: false,
@@ -59,7 +60,17 @@ const createTransaction = (options = {}, chargeElement) => {
     billableDays: 366,
     description: 'Tiny pond'
   });
-  return transaction;
+};
+
+const createBillingVolume = (options = {}) => {
+  const billingVolume = new BillingVolume();
+  return billingVolume.fromHash({
+    ...omit(options, 'billingVolumeId'),
+    id: options.billingVolumeId || '0310af58-bb31-45ec-9a8a-f4a8f8da8ee7',
+    chargeElementId: options.chargeElementId || '29328315-9b24-473b-bde7-02c60e881501',
+    financialYear: createFinancialYear(options.financialYear || 2018),
+    isApproved: false
+  });
 };
 
 const createLicence = () => {
@@ -118,6 +129,7 @@ const createBatch = (options = {}, invoice) => {
 exports.createInvoiceLicence = createInvoiceLicence;
 exports.createInvoice = createInvoice;
 exports.createTransaction = createTransaction;
+exports.createBillingVolume = createBillingVolume;
 exports.createBatch = createBatch;
 exports.createUser = createUser;
 exports.createLicence = createLicence;

@@ -311,6 +311,10 @@ const approveTptBatchReview = async batch => {
   return getBatchById(batch.id);
 };
 
+const getSentTPTBatchesForFinancialYearAndRegion = async (financialYear, region) => {
+  await newRepos.billingBatches.findSentTPTBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id);
+};
+
 exports.approveBatch = approveBatch;
 exports.decorateBatchWithTotals = decorateBatchWithTotals;
 exports.deleteAccountFromBatch = deleteAccountFromBatch;
@@ -330,3 +334,4 @@ exports.cleanup = cleanup;
 exports.create = create;
 exports.createChargeModuleBillRun = createChargeModuleBillRun;
 exports.approveTptBatchReview = approveTptBatchReview;
+exports.getSentTPTBatchesForFinancialYearAndRegion = getSentTPTBatchesForFinancialYearAndRegion;
