@@ -27,7 +27,6 @@ const { logger } = require('../../../../src/logger');
 
 const newRepos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
-const repos = require('../../../../src/lib/connectors/repository');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const invoiceAccountsService = require('../../../../src/modules/billing/services/invoice-accounts-service');

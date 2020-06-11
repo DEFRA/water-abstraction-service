@@ -2,7 +2,6 @@
 
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
-const repos = require('../../../lib/connectors/repository');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
 const Event = require('../../../lib/models/event');
