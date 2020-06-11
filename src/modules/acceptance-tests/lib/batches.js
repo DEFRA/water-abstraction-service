@@ -1,7 +1,6 @@
 'use strict';
 
 const { pool } = require('../../../lib/connectors/db');
-const repos = require('../../../lib/connectors/repository');
 const newRepos = require('../../../lib/connectors/repos');
 
 const deleteBatchJobs = batchId => {
@@ -15,11 +14,12 @@ const deleteBatchJobs = batchId => {
 };
 
 const deleteBatch = async batchId => {
-  await repos.billingBatchChargeVersionYears.deleteByBatchId(batchId);
-  await repos.billingBatchChargeVersions.deleteByBatchId(batchId);
-  await repos.billingTransactions.deleteByBatchId(batchId);
-  await repos.billingInvoiceLicences.deleteByBatchId(batchId);
-  await repos.billingInvoices.deleteByBatchId(batchId);
+  await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batchId);
+  await newRepos.billingBatchChargeVersions.deleteByBatchId(batchId);
+  await newRepos.billingVolumes.deleteByBatchId(batchId);
+  await newRepos.billingTransactions.deleteByBatchId(batchId);
+  await newRepos.billingInvoiceLicences.deleteByBatchId(batchId);
+  await newRepos.billingInvoices.deleteByBatchId(batchId);
   await newRepos.billingBatches.delete(batchId);
 };
 

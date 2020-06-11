@@ -57,9 +57,6 @@ const createTransaction = (options = {}) => {
     description: 'Tiny pond',
     volume: 5.64,
     transactionKey: '0123456789ABCDEF0123456789ABCDEF',
-    calculatedVolume: null,
-    twoPartTariffError: false,
-    twoPartTariffStatus: null,
     isTwoPartTariffSupplementary: !!options.isTwoPartTariffSupplementary
   });
   return transaction;
@@ -329,18 +326,6 @@ experiment('modules/billing/mappers/transaction', () => {
 
     test('there are no agreements', async () => {
       expect(result.agreements).to.have.length(0);
-    });
-
-    test('sets the correct two part tariff data', async () => {
-      expect(result.calculatedVolume).to.equal('11.76');
-      expect(result.twoPartTariffError).to.be.false();
-      expect(result.twoPartTariffStatus).to.be.null();
-    });
-
-    test('sets the twoPartTariffReview to a User instance', async () => {
-      expect(result.twoPartTariffReview instanceof User).to.be.true();
-      expect(result.twoPartTariffReview.id).to.equal(dbRow.twoPartTariffReview.id);
-      expect(result.twoPartTariffReview.email).to.equal(dbRow.twoPartTariffReview.email);
     });
 
     experiment('when the DB row contains a section 126 factor', () => {

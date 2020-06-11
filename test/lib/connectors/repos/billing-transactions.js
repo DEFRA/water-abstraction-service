@@ -23,8 +23,6 @@ experiment('lib/connectors/repos/billing-transactions', () => {
       delete: sandbox.stub()
     };
 
-    sandbox.stub(bookshelf, 'knex').returns(knexStub);
-
     model = {
       toJSON: sandbox.stub().returns({ foo: 'bar' }),
       pagination: {
@@ -151,6 +149,7 @@ experiment('lib/connectors/repos/billing-transactions', () => {
 
   experiment('.deleteRecords', () => {
     beforeEach(async () => {
+      sandbox.stub(bookshelf, 'knex').returns(knexStub);
       await billingTransactions.delete('transaction-id');
     });
 
@@ -235,6 +234,7 @@ experiment('lib/connectors/repos/billing-transactions', () => {
 
   experiment('.deleteByInvoiceLicenceId', () => {
     beforeEach(async () => {
+      sandbox.stub(bookshelf, 'knex').returns(knexStub);
       await billingTransactions.deleteByInvoiceLicenceId('test-invoice-licence-id');
     });
 
@@ -252,6 +252,37 @@ experiment('lib/connectors/repos/billing-transactions', () => {
 
     test('calls .delete() on query builder', async () => {
       expect(knexStub.delete.called).to.be.true();
+    });
+  });
+
+  experiment('.deleteByBatchId', async () => {
+    const batchId = 'test-batch-id';
+
+    beforeEach(async () => {
+      sandbox.stub(bookshelf.knex, 'raw');
+      await billingTransactions.deleteByBatchId(batchId);
+    });
+
+    test('calls knex.raw() with correct argumements', async () => {
+      const [query, params] = bookshelf.knex.raw.lastCall.args;
+      expect(query).to.equal(queries.deleteByBatchId);
+      expect(params).to.equal({ batchId });
+    });
+  });
+
+  experiment('.deleteByBatchAndInvoiceAccountId', async () => {
+    const batchId = 'test-batch-id';
+    const invoiceAccountId = 'test-invoice-account-id';
+
+    beforeEach(async () => {
+      sandbox.stub(bookshelf.knex, 'raw');
+      await billingTransactions.deleteByBatchAndInvoiceAccountId(batchId, invoiceAccountId);
+    });
+
+    test('calls knex.raw() with correct argumements', async () => {
+      const [query, params] = bookshelf.knex.raw.lastCall.args;
+      expect(query).to.equal(queries.deleteByBatchAndInvoiceAccountId);
+      expect(params).to.equal({ batchId, invoiceAccountId });
     });
   });
 });

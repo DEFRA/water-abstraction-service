@@ -80,19 +80,22 @@ experiment('modules/billing/services/batch-service', () => {
 
     sandbox.stub(newRepos.billingInvoices, 'deleteByBatchAndInvoiceAccountId').resolves();
     sandbox.stub(newRepos.billingInvoices, 'deleteEmptyByBatchId').resolves();
+    sandbox.stub(newRepos.billingInvoices, 'deleteByBatchId').resolves();
 
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchAndInvoiceAccount').resolves();
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteEmptyByBatchId').resolves();
+    sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchId').resolves();
 
     sandbox.stub(newRepos.billingTransactions, 'findStatusCountsByBatchId').resolves();
+    sandbox.stub(newRepos.billingTransactions, 'deleteByBatchAndInvoiceAccountId').resolves();
     sandbox.stub(newRepos.billingTransactions, 'findByBatchId').resolves();
+    sandbox.stub(newRepos.billingTransactions, 'deleteByBatchId').resolves();
 
-    sandbox.stub(repos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingInvoices, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingInvoiceLicences, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingTransactions, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingTransactions, 'deleteByInvoiceAccount').resolves();
+    sandbox.stub(newRepos.billingVolumes, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingVolumes, 'deleteByBatchAndInvoiceAccountId').resolves();
+
+    sandbox.stub(newRepos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
 
     sandbox.stub(transactionsService, 'saveTransactionToDB');
 
@@ -295,23 +298,27 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('deletes the charge version years', async () => {
-        expect(repos.billingBatchChargeVersionYears.deleteByBatchId.calledWith(batch.id)).to.be.true();
+        expect(newRepos.billingBatchChargeVersionYears.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the charge versions', async () => {
-        expect(repos.billingBatchChargeVersions.deleteByBatchId.calledWith(batch.id)).to.be.true();
+        expect(newRepos.billingBatchChargeVersions.deleteByBatchId.calledWith(batch.id)).to.be.true();
+      });
+
+      test('deletes the billing volumes', async () => {
+        expect(newRepos.billingVolumes.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the transactions', async () => {
-        expect(repos.billingTransactions.deleteByBatchId.calledWith(batch.id)).to.be.true();
+        expect(newRepos.billingTransactions.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the invoice licences', async () => {
-        expect(repos.billingInvoiceLicences.deleteByBatchId.calledWith(batch.id)).to.be.true();
+        expect(newRepos.billingInvoiceLicences.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the invoices', async () => {
-        expect(repos.billingInvoices.deleteByBatchId.calledWith(batch.id)).to.be.true();
+        expect(newRepos.billingInvoices.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the batch', async () => {
@@ -736,8 +743,14 @@ experiment('modules/billing/services/batch-service', () => {
       expect(accountNumber).to.equal(invoiceAccount.accountNumber);
     });
 
+    test('deletes the local billing volumes', async () => {
+      const [batchId, accountId] = newRepos.billingVolumes.deleteByBatchAndInvoiceAccountId.lastCall.args;
+      expect(batchId).to.equal(batch.id);
+      expect(accountId).to.equal('test-invoice-account-id');
+    });
+
     test('deletes the local transactions', async () => {
-      const [batchId, accountId] = repos.billingTransactions.deleteByInvoiceAccount.lastCall.args;
+      const [batchId, accountId] = newRepos.billingTransactions.deleteByBatchAndInvoiceAccountId.lastCall.args;
       expect(batchId).to.equal(batch.id);
       expect(accountId).to.equal('test-invoice-account-id');
     });

@@ -138,4 +138,25 @@ experiment('lib/connectors/repos/billing-invoices', () => {
       expect(result).to.equal({ foo: 'bar' });
     });
   });
+
+  experiment('.deleteByBatchId', () => {
+    const batchId = 'test-batch-id';
+
+    beforeEach(async () => {
+      await billingInvoices.deleteByBatchId(batchId);
+    });
+
+    test('calls forge() on the model', async () => {
+      expect(BillingInvoice.forge.called).to.be.true();
+    });
+
+    test('calls where() with the correct params', async () => {
+      const [params] = stub.where.lastCall.args;
+      expect(params).to.equal({ billing_batch_id: batchId });
+    });
+
+    test('calls destroy() to delete found records', async () => {
+      expect(stub.destroy.called).to.be.true();
+    });
+  });
 });

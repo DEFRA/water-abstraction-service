@@ -23,7 +23,9 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
       toJSON: sandbox.stub().returns({ foo: 'bar' })
     };
     stub = {
-      save: sandbox.stub().resolves(model)
+      save: sandbox.stub().resolves(model),
+      destroy: sandbox.stub().resolves(),
+      where: sandbox.stub().returnsThis()
     };
     sandbox.stub(BillingBatchChargeVersionYear, 'forge').returns(stub);
     sandbox.stub(raw, 'multiRow');
@@ -64,6 +66,27 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
       const [query, params] = raw.multiRow.lastCall.args;
       expect(query).to.equal(queries.findStatusCountsByBatchId);
       expect(params).to.equal({ batchId });
+    });
+  });
+
+  experiment('.deleteByBatchId', () => {
+    const batchId = 'test-batch-id';
+
+    beforeEach(async () => {
+      await repos.billingBatchChargeVersionYears.deleteByBatchId(batchId);
+    });
+
+    test('calls forge() on the model', async () => {
+      expect(BillingBatchChargeVersionYear.forge.called).to.be.true();
+    });
+
+    test('calls where() with the correct params', async () => {
+      const [params] = stub.where.lastCall.args;
+      expect(params).to.equal({ billing_batch_id: batchId });
+    });
+
+    test('calls destroy() to delete found records', async () => {
+      expect(stub.destroy.called).to.be.true();
     });
   });
 });

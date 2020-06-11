@@ -20,32 +20,6 @@ experiment('lib/connectors/repository/BillingTransactionRepository', () => {
     sandbox.restore();
   });
 
-  experiment('.deleteByInvoiceAccount', () => {
-    beforeEach(async () => {
-      const repo = new BillingTransactionRepository();
-      await repo.deleteByInvoiceAccount('test-batch-id', 'test-invoice-account-id');
-    });
-
-    test('passes the expected parameters to the query', async () => {
-      const [, params] = BillingTransactionRepository.prototype.dbQuery.lastCall.args;
-      expect(params[0]).to.equal('test-batch-id');
-      expect(params[1]).to.equal('test-invoice-account-id');
-    });
-  });
-
-  experiment('.deleteByBatchId', () => {
-    beforeEach(async () => {
-      const repo = new BillingTransactionRepository();
-      await repo.deleteByBatchId('test-batch-id');
-    });
-
-    test('passes the expected parameters to the query', async () => {
-      const [, params] = BillingTransactionRepository.prototype.dbQuery.lastCall.args;
-      expect(params).to.have.length(1);
-      expect(params[0]).to.equal('test-batch-id');
-    });
-  });
-
   experiment('.getByBatchId', () => {
     let result;
 

@@ -1,4 +1,5 @@
-const { BillingVolume } = require('../bookshelf');
+const { BillingVolume, bookshelf } = require('../bookshelf');
+const queries = require('./queries/billing-volumes');
 
 /**
  * Create a new billing volume
@@ -48,7 +49,35 @@ const getUnapprovedVolumesForBatch = async batchId => {
   return result.toJSON();
 };
 
+/**
+ * Deletes all billing volumes for given batch
+ * @param {String} batchId - guid
+ */
+const deleteByBatchId = async batchId => BillingVolume
+  .forge()
+  .where({ billing_batch_id: batchId })
+  .destroy();
+
+/**
+* Deletes all billing volumes related to invoice licence
+* @param {String} invoiceLicenceId - guid
+* @param {String} batchId - guid
+*/
+const deleteByInvoiceLicenceAndBatchId = async (invoiceLicenceId, batchId) =>
+  bookshelf.knex.raw(queries.deleteByInvoiceLicenceAndBatchId, { invoiceLicenceId, batchId });
+
+/**
+* Deletes all billing volumes for given invoice account and batch
+* @param {String} batchId - guid
+* @param {String} invoiceAccountId - guid
+*/
+const deleteByBatchAndInvoiceAccountId = async (batchId, invoiceAccountId) =>
+  bookshelf.knex.raw(queries.deleteByBatchAndInvoiceAccountId, { batchId, invoiceAccountId });
+
 exports.create = create;
 exports.findByChargeElementIdsAndFinancialYear = findByChargeElementIdsAndFinancialYear;
 exports.update = update;
 exports.getUnapprovedVolumesForBatch = getUnapprovedVolumesForBatch;
+exports.deleteByBatchId = deleteByBatchId;
+exports.deleteByInvoiceLicenceAndBatchId = deleteByInvoiceLicenceAndBatchId;
+exports.deleteByBatchAndInvoiceAccountId = deleteByBatchAndInvoiceAccountId;
