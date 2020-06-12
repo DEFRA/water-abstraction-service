@@ -3,6 +3,8 @@ const moment = require('moment');
 const helpers = require('@envage/water-abstraction-helpers');
 const urlJoin = require('url-join');
 const { URL } = require('url');
+const { chunk, flatMap } = require('lodash');
+
 const DATE_FORMAT = 'YYYY-MM-DD';
 
 const config = require('../../../config');
@@ -14,12 +16,12 @@ const versionsClient = apiClientFactory.create(`${config.services.returns}/versi
 const linesClient = apiClientFactory.create(`${config.services.returns}/lines`);
 
 /**
- * Gets an array of returns in the return service matching the
- * uploaded returns that are not void and are current.
- * @param  {Array} returnIds - an array of return IDs to find
- * @return {Array} active returns found in returns service
+ * Get a single chunk of active returns with the return IDs
+ * specified
+ * @param {Array} returnIds
+ * @return {Promise<Array>} returns
  */
-const getActiveReturns = (returnIds) => {
+const getActiveReturnsChunk = (returnIds) => {
   const filter = {
     return_id: {
       $in: returnIds
@@ -37,6 +39,22 @@ const getActiveReturns = (returnIds) => {
   const columns = ['return_id', 'status', 'due_date'];
 
   return returnsClient.findAll(filter, null, columns);
+};
+
+/**
+ * Gets an array of returns in the return service matching the
+ * uploaded returns that are not void and are current.
+ * The requests are chunked into batches of 20 to avoid the
+ * query strings getting too long.
+ * @param  {Array} returnIds - an array of return IDs to find
+ * @return {Promise<Array>} active returns found in returns service
+ */
+const getActiveReturns = async returnIds => {
+  const returnIdBatches = chunk(returnIds, 20);
+  const returnsBatches = await Promise.all(
+    returnIdBatches.map(getActiveReturnsChunk)
+  );
+  return flatMap(returnsBatches);
 };
 
 /**
