@@ -1,5 +1,8 @@
+'use strict';
+
 const repos = require('../connectors/repos');
-const mappers = require('../mappers');
+const licenceMapper = require('../mappers/licence');
+const licenceVersionMapper = require('../mappers/licence-version');
 
 /**
  * Gets a licence model by ID
@@ -8,7 +11,13 @@ const mappers = require('../mappers');
  */
 const getLicenceById = async licenceId => {
   const data = await repos.licences.findOne(licenceId);
-  return data && mappers.licence.dbToModel(data);
+  return data && licenceMapper.dbToModel(data);
+};
+
+const getLicenceVersions = async licenceId => {
+  const versions = await repos.licenceVersions.findByLicenceId(licenceId);
+  return versions.map(licenceVersionMapper.dbToModel);
 };
 
 exports.getLicenceById = getLicenceById;
+exports.getLicenceVersions = getLicenceVersions;
