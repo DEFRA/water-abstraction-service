@@ -1,3 +1,5 @@
+'use strict';
+
 const {
   experiment,
   test,
@@ -5,14 +7,16 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const uuid = require('uuid/v4');
+
+const sandbox = require('sinon').createSandbox();
 
 const licencesService = require('../../../src/lib/services/licences');
 const repos = require('../../../src/lib/connectors/repos');
 
 // Models
 const Licence = require('../../../src/lib/models/licence');
+const LicenceVersion = require('../../../src/lib/models/licence-version');
 
 const data = {
   dbRow: {
@@ -44,6 +48,7 @@ const data = {
 experiment('src/lib/services/licences', () => {
   beforeEach(async () => {
     sandbox.stub(repos.licences, 'findOne');
+    sandbox.stub(repos.licenceVersions, 'findByLicenceId');
   });
 
   afterEach(async () => {
@@ -77,6 +82,57 @@ experiment('src/lib/services/licences', () => {
 
       test('resolves with null', async () => {
         expect(result).to.equal(null);
+      });
+    });
+  });
+
+  experiment('.getLicenceVersions', () => {
+    experiment('when there are no versions returned from the repository', () => {
+      test('an empty array is returned by the service', async () => {
+        repos.licenceVersions.findByLicenceId.resolves([]);
+        const result = await licencesService.getLicenceVersions(uuid());
+
+        expect(result).to.equal([]);
+      });
+    });
+
+    experiment('when versions are returned from the repository', () => {
+      test('the results are mapped to LicenceVersion models', async () => {
+        const licenceId = uuid();
+
+        repos.licenceVersions.findByLicenceId.resolves([
+          {
+            status: 'superseded',
+            endDate: '2010-10-10',
+            startDate: '2010-01-01',
+            externalId: '1:100:100:0',
+            dateUpdated: '2020-01-01 10:10:10.000000',
+            dateCreated: '2020-01-01 10:10:10.000000',
+            licenceId,
+            licenceVersionId: '17c45db7-aeaa-4c2e-bd58-584696b56681',
+            issue: 100,
+            increment: 0
+          },
+          {
+            status: 'current',
+            endDate: null,
+            startDate: '2010-01-01',
+            externalId: '1:100:100:1',
+            dateUpdated: '2020-01-01 10:10:10.000000',
+            dateCreated: '2020-01-01 10:10:10.000000',
+            licenceId,
+            licenceVersionId: '85b98b0e-6d75-4c26-ada2-079a86fe9701',
+            issue: 100,
+            increment: 1
+          }
+        ]);
+        const result = await licencesService.getLicenceVersions(uuid());
+
+        expect(result.length).to.equal(2);
+        expect(result[0].id).to.equal('17c45db7-aeaa-4c2e-bd58-584696b56681');
+        expect(result[0]).to.be.an.instanceOf(LicenceVersion);
+        expect(result[1].id).to.equal('85b98b0e-6d75-4c26-ada2-079a86fe9701');
+        expect(result[1]).to.be.an.instanceOf(LicenceVersion);
       });
     });
   });
