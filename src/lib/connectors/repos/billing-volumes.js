@@ -63,6 +63,7 @@ const deleteByBatchId = async batchId => BillingVolume
 * @param {String} invoiceLicenceId - guid
 * @param {String} batchId - guid
 */
+// @TODO: Check if this works as expected when functionality to delete invoices by financial year
 const deleteByInvoiceLicenceAndBatchId = async (invoiceLicenceId, batchId) =>
   bookshelf.knex.raw(queries.deleteByInvoiceLicenceAndBatchId, { invoiceLicenceId, batchId });
 
