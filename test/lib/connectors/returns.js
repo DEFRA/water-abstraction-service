@@ -49,6 +49,20 @@ experiment('connectors/returns', () => {
 
       expect(columns).to.include(['return_id', 'status', 'due_date']);
     });
+
+    test('when there are a large number of returns, return IDs are sent in batches of 20', async () => {
+      const returnIds = [...Array(40).keys()];
+      await returns.getActiveReturns(returnIds);
+      expect(returns.returns.findAll.callCount).to.equal(2);
+
+      const [firstBatchFilter] = returns.returns.findAll.firstCall.args;
+      expect(firstBatchFilter.return_id.$in).to.be.an.array().length(20);
+      expect(firstBatchFilter.return_id.$in[0]).to.equal(0);
+
+      const [secondBatchFilter] = returns.returns.findAll.secondCall.args;
+      expect(secondBatchFilter.return_id.$in).to.be.an.array().length(20);
+      expect(secondBatchFilter.return_id.$in[0]).to.equal(20);
+    });
   });
 
   experiment('.getCurrentDueReturns', () => {
