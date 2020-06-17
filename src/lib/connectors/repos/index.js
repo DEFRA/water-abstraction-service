@@ -1,3 +1,5 @@
+'use strict';
+
 exports.applicationState = require('./application-state');
 exports.billingBatches = require('./billing-batches');
 exports.billingBatchChargeVersions = require('./billing-batch-charge-versions');
@@ -10,5 +12,6 @@ exports.changeReasons = require('./change-reasons');
 exports.chargeVersions = require('./charge-versions');
 exports.events = require('./events');
 exports.licenceAgreements = require('./licence-agreements');
+exports.licenceVersions = require('./licence-versions');
 exports.licences = require('./licences');
 exports.regions = require('./regions');

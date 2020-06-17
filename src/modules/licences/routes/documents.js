@@ -126,5 +126,23 @@ module.exports = {
         }
       }
     }
+  },
+
+  postLicenceName: {
+    method: 'POST',
+    path: `${pathPrefix}{documentId}/rename`,
+    handler: controller.postLicenceName,
+    config: {
+      description: 'Sets name for a licence',
+      validate: {
+        params: {
+          documentId: Joi.string().guid().required()
+        },
+        payload: {
+          documentName: Joi.string().required().allow(''),
+          userName: Joi.string().email().required()
+        }
+      }
+    }
   }
 };
