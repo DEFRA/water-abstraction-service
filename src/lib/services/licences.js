@@ -19,5 +19,12 @@ const getLicenceVersions = async licenceId => {
   return versions.map(licenceVersionMapper.dbToModel);
 };
 
+const getLicenceVersionById = async licenceVersionId => {
+  const licenceVersion = await repos.licenceVersions.findOne(licenceVersionId);
+
+  return licenceVersion && licenceVersionMapper.dbToModel(licenceVersion);
+};
+
 exports.getLicenceById = getLicenceById;
+exports.getLicenceVersionById = getLicenceVersionById;
 exports.getLicenceVersions = getLicenceVersions;

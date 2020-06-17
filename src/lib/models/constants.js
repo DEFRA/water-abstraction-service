@@ -5,3 +5,11 @@ exports.CHARGE_SEASON = {
   winter: 'winter',
   allYear: 'all year'
 };
+
+exports.LOSSES = {
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+  veryLow: 'very low',
+  nonChargeable: 'non-chargeable'
+};

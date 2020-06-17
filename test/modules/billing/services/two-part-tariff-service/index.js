@@ -94,7 +94,6 @@ experiment('modules/billing/services/two-part-tariff-service .processBatch', asy
       startDate: transaction.chargePeriod.startDate,
       endDate: transaction.chargePeriod.endDate,
       purposeUse: {
-        type: 'use',
         name: 'Spray irrigation',
         code: '420'
       }
