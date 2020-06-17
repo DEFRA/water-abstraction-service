@@ -9,12 +9,6 @@ class BillingBatchChargeVersionYearsRepository extends Repository {
       primaryKey: 'billing_batch_charge_version_year_id'
     }, config));
   }
-
-  deleteByBatchId (batchId) {
-    return this.delete({
-      billing_batch_id: batchId
-    });
-  }
 }
 
 module.exports = BillingBatchChargeVersionYearsRepository;

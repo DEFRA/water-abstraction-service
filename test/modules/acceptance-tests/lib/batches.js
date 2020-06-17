@@ -11,18 +11,18 @@ const sandbox = require('sinon').createSandbox();
 
 const batches = require('../../../../src/modules/acceptance-tests/lib/batches');
 const { pool } = require('../../../../src/lib/connectors/db');
-const repos = require('../../../../src/lib/connectors/repository');
 const newRepos = require('../../../../src/lib/connectors/repos');
 
 experiment('modules/acceptance-tests/batches', () => {
   beforeEach(async () => {
     sandbox.stub(pool, 'query');
 
-    sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingTransactions, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingInvoiceLicences, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingInvoices, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingVolumes, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingTransactions, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingInvoices, 'deleteByBatchId').resolves();
     sandbox.stub(newRepos.billingBatches, 'delete').resolves();
   });
 
@@ -52,25 +52,29 @@ experiment('modules/acceptance-tests/batches', () => {
     });
 
     test('deletes the batches using the unique ids', async () => {
-      expect(repos.billingBatchChargeVersionYears.deleteByBatchId.callCount).to.equal(2);
-      expect(repos.billingBatchChargeVersionYears.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
-      expect(repos.billingBatchChargeVersionYears.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
+      expect(newRepos.billingBatchChargeVersionYears.deleteByBatchId.callCount).to.equal(2);
+      expect(newRepos.billingBatchChargeVersionYears.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+      expect(newRepos.billingBatchChargeVersionYears.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
 
-      expect(repos.billingBatchChargeVersions.deleteByBatchId.callCount).to.equal(2);
-      expect(repos.billingBatchChargeVersions.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
-      expect(repos.billingBatchChargeVersions.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
+      expect(newRepos.billingBatchChargeVersions.deleteByBatchId.callCount).to.equal(2);
+      expect(newRepos.billingBatchChargeVersions.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+      expect(newRepos.billingBatchChargeVersions.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
 
-      expect(repos.billingTransactions.deleteByBatchId.callCount).to.equal(2);
-      expect(repos.billingTransactions.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
-      expect(repos.billingTransactions.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
+      expect(newRepos.billingVolumes.deleteByBatchId.callCount).to.equal(2);
+      expect(newRepos.billingVolumes.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+      expect(newRepos.billingVolumes.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
 
-      expect(repos.billingInvoiceLicences.deleteByBatchId.callCount).to.equal(2);
-      expect(repos.billingInvoiceLicences.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
-      expect(repos.billingInvoiceLicences.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
+      expect(newRepos.billingTransactions.deleteByBatchId.callCount).to.equal(2);
+      expect(newRepos.billingTransactions.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+      expect(newRepos.billingTransactions.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
 
-      expect(repos.billingInvoices.deleteByBatchId.callCount).to.equal(2);
-      expect(repos.billingInvoices.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
-      expect(repos.billingInvoices.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
+      expect(newRepos.billingInvoiceLicences.deleteByBatchId.callCount).to.equal(2);
+      expect(newRepos.billingInvoiceLicences.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+      expect(newRepos.billingInvoiceLicences.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
+
+      expect(newRepos.billingInvoices.deleteByBatchId.callCount).to.equal(2);
+      expect(newRepos.billingInvoices.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();
+      expect(newRepos.billingInvoices.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111')).to.be.true();
 
       expect(newRepos.billingBatches.delete.callCount).to.equal(2);
       expect(newRepos.billingBatches.delete.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();

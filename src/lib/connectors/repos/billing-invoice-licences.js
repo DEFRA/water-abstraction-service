@@ -86,6 +86,12 @@ const deleteRecord = billingInvoiceLicenceId => billingInvoiceLicence
   .forge({ billingInvoiceLicenceId })
   .destroy();
 
+/**
+* Deletes all billing invoice licences for given batch
+* @param {String} batchId - guid
+*/
+const deleteByBatchId = async batchId => bookshelf.knex.raw(queries.deleteByBatchId, { batchId });
+
 exports.findOne = findOne;
 exports.deleteByBatchAndInvoiceAccount = deleteByBatchAndInvoiceAccount;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
@@ -93,3 +99,4 @@ exports.findLicencesWithTransactionStatusesForBatch = findLicencesWithTransactio
 exports.findOneInvoiceLicenceWithTransactions = findOneInvoiceLicenceWithTransactions;
 exports.upsert = upsert;
 exports.delete = deleteRecord;
+exports.deleteByBatchId = deleteByBatchId;

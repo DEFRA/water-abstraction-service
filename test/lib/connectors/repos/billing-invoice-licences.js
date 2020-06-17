@@ -185,4 +185,18 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       expect(bookshelfStub.destroy.called).to.be.true();
     });
   });
+
+  experiment('.deleteByBatchId', async () => {
+    const batchId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoiceLicences.deleteByBatchId(batchId);
+    });
+
+    test('calls knex.raw() with correct argumements', async () => {
+      const [query, params] = bookshelf.knex.raw.lastCall.args;
+      expect(query).to.equal(queries.deleteByBatchId);
+      expect(params).to.equal({ batchId });
+    });
+  });
 });

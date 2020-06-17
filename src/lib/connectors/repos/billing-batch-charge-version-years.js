@@ -16,5 +16,16 @@ const update = (id, data) =>
 const findStatusCountsByBatchId = batchId =>
   raw.multiRow(queries.findStatusCountsByBatchId, { batchId });
 
+/**
+ * Deletes all billing batch charge version years for given batch
+ * @param {String} batchId - guid
+ */
+const deleteByBatchId = async batchId => BillingBatchChargeVersionYear
+  .forge()
+  .where({ billing_batch_id: batchId })
+  .destroy();
+
+exports.deleteByBatchId = deleteByBatchId;
+
 exports.update = update;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;

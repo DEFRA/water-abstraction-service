@@ -47,7 +47,17 @@ const deleteByBatchAndInvoiceAccountId = (batchId, invoiceAccountId) => {
     }).destroy();
 };
 
+/**
+* Deletes all billing invoice licences for given batch
+* @param {String} batchId - guid
+*/
+const deleteByBatchId = async batchId => BillingInvoice
+  .forge()
+  .where({ billing_batch_id: batchId })
+  .destroy();
+
 exports.deleteByBatchAndInvoiceAccountId = deleteByBatchAndInvoiceAccountId;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;
 exports.upsert = upsert;
+exports.deleteByBatchId = deleteByBatchId;

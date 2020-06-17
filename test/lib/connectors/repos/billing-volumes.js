@@ -8,7 +8,8 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
 const billingVolumes = require('../../../../src/lib/connectors/repos/billing-volumes');
-const { BillingVolume } = require('../../../../src/lib/connectors/bookshelf');
+const { BillingVolume, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
+const queries = require('../../../../src/lib/connectors/repos/queries/billing-volumes');
 
 experiment('lib/connectors/repos/billing-volumes', () => {
   let stub, model;
@@ -23,9 +24,12 @@ experiment('lib/connectors/repos/billing-volumes', () => {
       where: sandbox.stub().returnsThis(),
       query: sandbox.stub().returnsThis(),
       fetch: sandbox.stub().resolves(model),
-      fetchAll: sandbox.stub().resolves(model)
+      fetchAll: sandbox.stub().resolves(model),
+      destroy: sandbox.stub().resolves()
     };
+
     sandbox.stub(BillingVolume, 'forge').returns(stub);
+    sandbox.stub(bookshelf.knex, 'raw');
   });
 
   afterEach(async () => sandbox.restore());
@@ -154,6 +158,56 @@ experiment('lib/connectors/repos/billing-volumes', () => {
 
     test('returns the result of the toJSON() call', async () => {
       expect(result).to.equal({ foo: 'bar' });
+    });
+  });
+
+  experiment('.deleteByBatchId', () => {
+    const batchId = 'test-batch-id';
+    beforeEach(async () => {
+      await billingVolumes.deleteByBatchId(batchId);
+    });
+
+    test('calls model.forge()', () => {
+      expect(BillingVolume.forge.called).to.be.true();
+    });
+
+    test('queries for volumes with matching batch id', async () => {
+      const [filter] = stub.where.lastCall.args;
+      expect(filter).to.equal({ billing_batch_id: 'test-batch-id' });
+    });
+
+    test('calls destroy() to delete records', () => {
+      expect(stub.destroy.called).to.be.true();
+    });
+  });
+
+  experiment('.deleteByInvoiceLicenceAndBatchId', async () => {
+    const invoiceLicenceId = 'test-invoice-licence-id';
+    const batchId = 'test-batch-id';
+
+    beforeEach(async () => {
+      await billingVolumes.deleteByInvoiceLicenceAndBatchId(invoiceLicenceId, batchId);
+    });
+
+    test('calls knex.raw() with correct argumements', async () => {
+      const [query, params] = bookshelf.knex.raw.lastCall.args;
+      expect(query).to.equal(queries.deleteByInvoiceLicenceAndBatchId);
+      expect(params).to.equal({ invoiceLicenceId, batchId });
+    });
+  });
+
+  experiment('.deleteByBatchAndInvoiceAccountId', async () => {
+    const batchId = 'test-batch-id';
+    const invoiceAccountId = 'test-invoice-account-id';
+
+    beforeEach(async () => {
+      await billingVolumes.deleteByBatchAndInvoiceAccountId(batchId, invoiceAccountId);
+    });
+
+    test('calls knex.raw() with correct argumements', async () => {
+      const [query, params] = bookshelf.knex.raw.lastCall.args;
+      expect(query).to.equal(queries.deleteByBatchAndInvoiceAccountId);
+      expect(params).to.equal({ batchId, invoiceAccountId });
     });
   });
 });

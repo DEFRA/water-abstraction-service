@@ -58,3 +58,10 @@ exports.findLicencesWithTransactionStatusesForBatch = `
     bil.licence_ref,
     bil.licence_holder_name;
 `;
+
+exports.deleteByBatchId = `
+  delete from water.billing_invoice_licences il
+  using water.billing_invoices i
+  where i.billing_invoice_id = il.billing_invoice_id
+  and i.billing_batch_id = :batchId;
+`;

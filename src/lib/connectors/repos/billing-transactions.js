@@ -101,6 +101,20 @@ const deleteByInvoiceLicenceId = invoiceLicenceId => bookshelf
   .where('billing_invoice_licence_id', invoiceLicenceId)
   .delete();
 
+/**
+* Deletes all transactions for given batch
+* @param {String} batchId - guid
+*/
+const deleteByBatchId = async batchId => bookshelf.knex.raw(queries.deleteByBatchId, { batchId });
+
+/**
+* Deletes all transactions for given invoice account and batch
+* @param {String} batchId - guid
+* @param {String} invoiceAccountId - guid
+*/
+const deleteByBatchAndInvoiceAccountId = async (batchId, invoiceAccountId) =>
+  bookshelf.knex.raw(queries.deleteByBatchAndInvoiceAccountId, { batchId, invoiceAccountId });
+
 exports.findOne = findOne;
 exports.find = find;
 exports.findHistoryByBatchId = findHistoryByBatchId;
@@ -110,3 +124,5 @@ exports.create = create;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
 exports.update = update;
 exports.deleteByInvoiceLicenceId = deleteByInvoiceLicenceId;
+exports.deleteByBatchId = deleteByBatchId;
+exports.deleteByBatchAndInvoiceAccountId = deleteByBatchAndInvoiceAccountId;

@@ -2,7 +2,6 @@
 
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
-const repos = require('../../../lib/connectors/repository');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
 const Event = require('../../../lib/models/event');
@@ -63,11 +62,12 @@ const deleteBatch = async (batch, internalCallingUser) => {
   try {
     await chargeModuleBillRunConnector.delete(batch.externalId);
 
-    await repos.billingBatchChargeVersionYears.deleteByBatchId(batch.id);
-    await repos.billingBatchChargeVersions.deleteByBatchId(batch.id);
-    await repos.billingTransactions.deleteByBatchId(batch.id);
-    await repos.billingInvoiceLicences.deleteByBatchId(batch.id);
-    await repos.billingInvoices.deleteByBatchId(batch.id);
+    await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batch.id);
+    await newRepos.billingBatchChargeVersions.deleteByBatchId(batch.id);
+    await newRepos.billingTransactions.deleteByBatchId(batch.id);
+    await newRepos.billingVolumes.deleteByBatchId(batch.id);
+    await newRepos.billingInvoiceLicences.deleteByBatchId(batch.id);
+    await newRepos.billingInvoices.deleteByBatchId(batch.id);
     await newRepos.billingBatches.delete(batch.id);
 
     await saveEvent('billing-batch:cancel', 'delete', internalCallingUser, batch);
@@ -184,7 +184,8 @@ const deleteAccountFromBatch = async (batch, accountId) => {
   await chargeModuleBillRunConnector.removeCustomer(batch.externalId, invoiceAccount.accountNumber);
 
   // Delete from local DB
-  await repos.billingTransactions.deleteByInvoiceAccount(batch.id, accountId);
+  await newRepos.billingVolumes.deleteByBatchAndInvoiceAccountId(batch.id, accountId);
+  await newRepos.billingTransactions.deleteByBatchAndInvoiceAccountId(batch.id, accountId);
   await newRepos.billingInvoiceLicences.deleteByBatchAndInvoiceAccount(batch.id, accountId);
   await newRepos.billingInvoices.deleteByBatchAndInvoiceAccountId(batch.id, accountId);
 
