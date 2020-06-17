@@ -1,18 +1,18 @@
 const moment = require('moment');
 const Boom = require('@hapi/boom');
 const { get, isObject } = require('lodash');
-const documentsClient = require('../../lib/connectors/crm/documents');
-const crmEntities = require('../../lib/connectors/crm/entities');
-const { usersClient } = require('../../lib/connectors/idm');
-const permitClient = require('../../lib/connectors/permit');
-const { logger } = require('../../logger');
-const extractConditions = require('./lib/extractConditions');
-const extractPoints = require('./lib/extractPoints');
-const { licence: { regimeId, typeId } } = require('../../../config');
-const LicenceTransformer = require('../../lib/licence-transformer');
-const { mapGaugingStation, getGaugingStations } = require('./lib/gauging-stations');
-const queries = require('./lib/queries');
-const { createContacts } = require('../../lib/models/factory/contact-list');
+const documentsClient = require('../../../lib/connectors/crm/documents');
+const crmEntities = require('../../../lib/connectors/crm/entities');
+const { usersClient } = require('../../../lib/connectors/idm');
+const permitClient = require('../../../lib/connectors/permit');
+const { logger } = require('../../../logger');
+const extractConditions = require('../lib/extractConditions');
+const extractPoints = require('../lib/extractPoints');
+const { licence: { regimeId, typeId } } = require('../../../../config');
+const LicenceTransformer = require('../../../lib/licence-transformer');
+const { mapGaugingStation, getGaugingStations } = require('../lib/gauging-stations');
+const queries = require('../lib/queries');
+const { createContacts } = require('../../../lib/models/factory/contact-list');
 
 const getDocumentHeader = async (documentId, includeExpired = false) => {
   const documentResponse = await documentsClient.findMany({

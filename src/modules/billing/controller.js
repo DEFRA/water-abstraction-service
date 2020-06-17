@@ -246,6 +246,7 @@ const postApproveReviewBatch = async (request, h) => {
 
     return envelope({
       event: batchEvent,
+      batch: updatedBatch,
       url: `/water/1.0/event/${batchEvent.id}`
     });
   } catch (err) {

@@ -4,7 +4,7 @@ const { pick, pickBy, identity } = require('lodash');
 
 const Batch = require('../../../lib/models/batch');
 const FinancialYear = require('../../../lib/models/financial-year');
-const regionMapper = require('./region');
+const regionMapper = require('../../../lib/mappers/region');
 const transactionMapper = require('./transaction');
 const totalsMapper = require('./totals');
 

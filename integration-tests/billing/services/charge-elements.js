@@ -1,3 +1,7 @@
+'use strict';
+
+const { omit } = require('lodash');
+
 const data = require('./data');
 const { ChargeElement, bookshelf } = require('../../../src/lib/connectors/bookshelf');
 
@@ -11,7 +15,10 @@ const create = async (chargeVersion, scenarioKey) => ChargeElement
   .forge({
     isTest: true,
     chargeVersionId: chargeVersion.get('chargeVersionId'),
-    ...data.chargeElements[scenarioKey]
+    purposePrimaryId: chargeVersion.get('purposePrimaryId'),
+    purposeSecondaryId: chargeVersion.get('purposeSecondaryId'),
+    purposeUseId: chargeVersion.get('purposeUseId'),
+    ...omit(data.chargeElements[scenarioKey], ['purposePrimary', 'purposeSecondary', 'purposeUse'])
   })
   .save();
 

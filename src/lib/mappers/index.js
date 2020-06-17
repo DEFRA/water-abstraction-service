@@ -1,0 +1,1 @@
+exports.licence = require('./licence');

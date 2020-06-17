@@ -432,7 +432,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
   experiment('.sortElementsIntoGroupsForReallocation', async () => {
     test('base elements are not grouped together', async () => {
       const baseElement1 = createChargeElement({
-        purposeTertiary: 400,
+        purposeUseCode: 400,
         source: 'unsupported',
         season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
@@ -441,7 +441,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         abstractionPeriodEndMonth: 10
       });
       const baseElement2 = createChargeElement({
-        purposeTertiary: 400,
+        purposeUseCode: 400,
         source: 'unsupported',
         season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
@@ -458,7 +458,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
     });
     test('time limited element is grouped with the correct base element', async () => {
       const baseElement1 = createChargeElement({
-        purposeTertiary: 400,
+        purposeUseCode: 400,
         source: 'unsupported',
         season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
@@ -467,7 +467,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         abstractionPeriodEndMonth: 10
       });
       const baseElement2 = createChargeElement({
-        purposeTertiary: 400,
+        purposeUseCode: 400,
         source: 'unsupported',
         season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
@@ -476,7 +476,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         abstractionPeriodEndMonth: 3
       });
       const subElement = createChargeElement({
-        purposeTertiary: 400,
+        purposeUseCode: 400,
         source: 'unsupported',
         season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
@@ -496,7 +496,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
     });
     test('time limited element is not grouped if source does not match', async () => {
       const baseElement = createChargeElement({
-        purposeTertiary: 400,
+        purposeUseCode: 400,
         source: 'unsupported',
         season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
@@ -505,7 +505,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
         abstractionPeriodEndMonth: 10
       });
       const subElement = createChargeElement({
-        purposeTertiary: 400,
+        purposeUseCode: 400,
         source: 'supported',
         season: CHARGE_SEASON.summer,
         abstractionPeriodStartDay: 1,
@@ -582,7 +582,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
           actualReturnQuantity: 75,
           proRataAuthorisedQuantity: 100,
           maxPossibleReturnQuantity: 100,
-          purposeTertiary: 400
+          purposeUseCode: 400
         }),
         createChargeElement({
           chargeElementId: 'charge-element-2',
@@ -594,7 +594,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
           actualReturnQuantity: 100,
           proRataAuthorisedQuantity: 100,
           maxPossibleReturnQuantity: 100,
-          purposeTertiary: 400
+          purposeUseCode: 400
         })
       ];
       const purpose420ChargeElements = [
@@ -611,7 +611,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
           actualReturnQuantity: 50,
           proRataAuthorisedQuantity: 50,
           maxPossibleReturnQuantity: 100,
-          purposeTertiary: 420
+          purposeUseCode: 420
         }),
         createChargeElement({
           chargeElementId: 'charge-element-4',
@@ -623,7 +623,7 @@ experiment('modules/charging/lib/reshuffle-quantities', async () => {
           actualReturnQuantity: 80,
           proRataAuthorisedQuantity: 100,
           maxPossibleReturnQuantity: 100,
-          purposeTertiary: 420
+          purposeUseCode: 420
         })
       ];
       const { error, data: reshuffledElements } = reshuffleQuantities([...purpose400ChargeElements, ...purpose420ChargeElements]);

@@ -9,11 +9,11 @@ const { expect } = require('@hapi/code');
 
 const uuid = require('uuid/v4');
 
-const Agreement = require('../../../../src/lib/models/agreement');
-const DateRange = require('../../../../src/lib/models/date-range');
-const LicenceAgreement = require('../../../../src/lib/models/licence-agreement');
+const Agreement = require('../../../src/lib/models/agreement');
+const DateRange = require('../../../src/lib/models/date-range');
+const LicenceAgreement = require('../../../src/lib/models/licence-agreement');
 
-const licenceAgreementMapper = require('../../../../src/modules/billing/mappers/licence-agreement');
+const licenceAgreementMapper = require('../../../src/lib/mappers/licence-agreement');
 
 const dbRow = {
   licenceAgreementId: uuid(),

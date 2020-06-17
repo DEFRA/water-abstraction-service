@@ -5,7 +5,7 @@ const InvoiceAccount = require('../../../lib/models/invoice-account');
 const Region = require('../../../lib/models/region');
 
 const chargeElementMapper = require('./charge-element');
-const licenceMapper = require('./licence');
+const licenceMapper = require('../../../lib/mappers/licence');
 
 const createRegion = regionCode => {
   const region = new Region();
