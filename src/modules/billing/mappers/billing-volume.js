@@ -8,7 +8,7 @@ const dbToModel = row => {
   return billingVolume.fromHash({
     id: row.billingVolumeId,
     ...pick(row, ['chargeElementId', 'isSummer', 'calculatedVolume', 'twoPartTariffError',
-      'twoPartTariffStatus', 'isApproved']),
+      'twoPartTariffStatus', 'isApproved', 'volume']),
     financialYear: new FinancialYear(row.financialYear),
     twoPartTariffReview: userMapper.mapToModel(row.twoPartTariffReview)
   });

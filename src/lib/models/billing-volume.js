@@ -45,7 +45,7 @@ class BillingVolume extends Model {
   }
 
   /**
-  * The authorised/billable/actual volume for billing
+  * The volume determined by returns algorithm
   * @return {Number}
   */
   get calculatedVolume () {
@@ -96,6 +96,10 @@ class BillingVolume extends Model {
     this._twoPartTariffReview = twoPartTariffReview;
   }
 
+  /**
+  * Whether the volume has been approved in the review stage
+  * @return {Boolean}
+  */
   get isApproved () {
     return this._isApproved;
   }
@@ -103,6 +107,20 @@ class BillingVolume extends Model {
   set isApproved (isApproved) {
     validators.assertIsBoolean(isApproved);
     this._isApproved = isApproved;
+  }
+
+  /**
+  * The volume that is approved by the reviewer
+  * same as calculated volume or overwritten by user
+  * @return {Number}
+  */
+  get volume () {
+    return this._volume;
+  }
+
+  set volume (volume) {
+    validators.assertNullableQuantity(volume);
+    this._volume = volume;
   }
 }
 
