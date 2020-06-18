@@ -23,6 +23,7 @@ const matchingResultsToDb = (matchingResults, financialYear, isSummer, billingBa
       financialYear,
       isSummer,
       calculatedVolume: result.data.actualReturnQuantity,
+      volume: result.data.actualReturnQuantity,
       twoPartTariffStatus: twoPartTariffStatus,
       twoPartTariffError: !!twoPartTariffStatus,
       isApproved: false,

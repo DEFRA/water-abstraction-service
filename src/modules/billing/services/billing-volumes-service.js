@@ -2,6 +2,7 @@ const billingVolumesRepo = require('../../../lib/connectors/repos/billing-volume
 const mappers = require('../mappers');
 const twoPartTariffMatching = require('./two-part-tariff-service');
 const { NotFoundError } = require('../../../lib/errors');
+const { BillingVolumeStatusError } = require('../lib/errors');
 
 const isSummerChargeElement = chargeElement => chargeElement.season === 'summer';
 
@@ -74,7 +75,8 @@ const getVolumeForChargeElement = async (chargeElementId, financialYear, isSumme
 };
 
 /**
- * Updates billingVolume with volume, updated twoPartTariffError to false
+ * Validates that the billingVolume has not been approved yet and
+ * updates billingVolume with volume, updated twoPartTariffError to false
  * and stores user data
  *
  * @param {String} chargeElementId
@@ -87,8 +89,11 @@ const updateBillingVolume = async (chargeElementId, batch, volume, user) => {
   const billingVolume = await getVolumeForChargeElement(chargeElementId, yearEnding, isSummer);
   if (!billingVolume) throw new NotFoundError(`Billing volume not found for chargeElementId ${chargeElementId}, financialYear ${yearEnding} and isSummer ${isSummer}`);
 
+  // validate that transaction is allowed to be altered
+  if (billingVolume.iApproved) throw BillingVolumeStatusError('Billing volume must not be approved to make changes');
+
   const changes = {
-    calculatedVolume: volume,
+    volume,
     twoPartTariffError: false,
     twoPartTariffReview: { id: user.id, email: user.email }
   };
