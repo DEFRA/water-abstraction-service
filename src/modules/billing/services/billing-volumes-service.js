@@ -111,6 +111,13 @@ const getUnapprovedVolumesForBatchCount = async batch => {
   return result.length;
 };
 
+const getVolumesForBatch = async batch => billingVolumesRepo.findByBatchId(batch.id);
+
+const getVolumesWithTwoPartError = async batch => {
+  const billingVolumes = await getVolumesForBatch(batch);
+  return billingVolumes.filter(billingVolume => billingVolume.twoPartTariffError);
+};
+
 const approveVolumesForBatch = async batch => {
   const billingVolumes = await billingVolumesRepo.getUnapprovedVolumesForBatch(batch.id);
   for (const row of billingVolumes) {
@@ -122,4 +129,6 @@ exports.getVolumes = getVolumes;
 exports.updateBillingVolume = updateBillingVolume;
 exports.isSummerChargeElement = isSummerChargeElement;
 exports.getUnapprovedVolumesForBatchCount = getUnapprovedVolumesForBatchCount;
+exports.getVolumesForBatch = getVolumesForBatch;
+exports.getVolumesWithTwoPartError = getVolumesWithTwoPartError;
 exports.approveVolumesForBatch = approveVolumesForBatch;

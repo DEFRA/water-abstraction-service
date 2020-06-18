@@ -26,9 +26,9 @@ const handleProcessChargeVersionComplete = async (job, messageQueue) => {
     const batch = await batchService.getBatchById(batchId);
     await batchJob.deleteOnCompleteQueue(job, messageQueue);
 
-    const numberOfBillingVolumesForBatch = await billingVolumeService.getUnapprovedVolumesForBatchCount(batch);
+    const numberOfUnapprovedBillingVolumes = await billingVolumeService.getUnapprovedVolumesForBatchCount(batch);
 
-    if (numberOfBillingVolumesForBatch > 0) {
+    if (numberOfUnapprovedBillingVolumes > 0) {
       return batchService.setStatus(batch.id, BATCH_STATUS.review);
     }
 

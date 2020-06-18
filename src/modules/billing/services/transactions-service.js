@@ -1,10 +1,9 @@
 'use strict';
 
 const Transaction = require('../../../lib/models/transaction');
-const Batch = require('../../../lib/models/batch');
-const { BatchStatusError, TransactionStatusError } = require('../lib/errors');
 const { logger } = require('../../../logger');
 const newRepos = require('../../../lib/connectors/repos');
+const billingVolumesService = require('./billing-volumes-service');
 const mappers = require('../mappers');
 const { get } = require('lodash');
 
@@ -79,7 +78,18 @@ const setErrorStatus = transactionId =>
     status: Transaction.statuses.error
   });
 
+const updateTransactionVolumes = async batch => {
+  const transactions = await newRepos.billingTransactions.findByBatchId(batch.id);
+  const billingVolumes = await billingVolumesService.getVolumesForBatch(batch);
+  for (const billingVolume of billingVolumes) {
+    const transaction = transactions.find(trans =>
+      trans.chargeElementId === billingVolume.chargeElementId);
+    transaction.volume = billingVolume.volume;
+  }
+};
+
 exports.saveTransactionToDB = saveTransactionToDB;
 exports.getById = getById;
 exports.updateWithChargeModuleResponse = updateTransactionWithChargeModuleResponse;
 exports.setErrorStatus = setErrorStatus;
+exports.updateTransactionVolumes = updateTransactionVolumes;
