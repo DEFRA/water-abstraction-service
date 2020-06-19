@@ -1,12 +1,10 @@
 'use strict';
 
-const { omit } = require('lodash');
+const { omit, pick } = require('lodash');
 
 const Invoice = require('../../../lib/models/invoice');
 const InvoiceAccount = require('../../../lib/models/invoice-account');
 
-// Mappers
-const address = require('./address');
 const invoiceAccount = require('./invoice-account');
 const invoiceLicence = require('./invoice-licence');
 
@@ -46,8 +44,11 @@ const crmToModel = row => {
   // Create invoice account model
   invoice.invoiceAccount = invoiceAccount.crmToModel(row);
 
-  // Create invoice address model
-  invoice.address = address.crmToModel(row.address);
+  // Get last address from invoice account
+  const { lastInvoiceAccountAddress } = invoice.invoiceAccount;
+  if (lastInvoiceAccountAddress) {
+    invoice.fromHash(pick(lastInvoiceAccountAddress, ['address', 'agentCompany', 'contact']));
+  }
 
   return invoice;
 };

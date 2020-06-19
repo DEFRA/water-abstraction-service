@@ -4,6 +4,8 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 const { expect } = require('@hapi/code');
 
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
+const Company = require('../../../src/lib/models/company');
+const Address = require('../../../src/lib/models/address');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
 const TEST_ACCOUNT_NUMBER = 'S12345678A';
@@ -38,6 +40,28 @@ experiment('lib/models/invoice-account', () => {
     test('throws an error if set to an invalid account number', async () => {
       const func = () => {
         invoiceAccount.accountNumber = 'S1234A';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.company', () => {
+    test('can be set to a valid Company', async () => {
+      const company = new Company();
+      invoiceAccount.company = company;
+      expect(invoiceAccount.company).to.equal(company);
+    });
+
+    test('throws an error if set to another model', async () => {
+      const func = () => {
+        invoiceAccount.company = new Address();
+      };
+      expect(func).to.throw();
+    });
+
+    test('throws an error if set to null', async () => {
+      const func = () => {
+        invoiceAccount.company = null;
       };
       expect(func).to.throw();
     });

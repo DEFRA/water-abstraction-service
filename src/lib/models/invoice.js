@@ -2,11 +2,14 @@
 
 const { get, flatMap } = require('lodash');
 
-const { assertIsInstanceOf, assertIsArrayOfType } = require('./validators');
+const { assertIsInstanceOf, assertIsArrayOfType, assertIsNullableInstanceOf } = require('./validators');
 const Model = require('./model');
 const Address = require('./address');
 const InvoiceAccount = require('./invoice-account');
 const InvoiceLicence = require('./invoice-licence');
+const Company = require('./company');
+const Contact = require('./contact-v2');
+
 const Totals = require('./totals');
 
 class Invoice extends Model {
@@ -47,6 +50,40 @@ class Invoice extends Model {
    */
   get address () {
     return this._address;
+  }
+
+  /**
+   * Sets the agent company
+   * @param {Company} company
+   */
+  set agentCompany (company) {
+    assertIsNullableInstanceOf(company, Company);
+    this._agentCompany = company;
+  }
+
+  /**
+   * Gets the agent company
+   * @return {Company}
+   */
+  get agentCompany () {
+    return this._agentCompany;
+  }
+
+  /**
+   * Sets the contact - for FAO
+   * @param {Contact} contact
+   */
+  set contact (contact) {
+    assertIsNullableInstanceOf(contact, Contact);
+    this._contact = contact;
+  }
+
+  /**
+   * Gets the agent company
+   * @return {Contact}
+   */
+  get contact () {
+    return this._contact;
   }
 
   /**

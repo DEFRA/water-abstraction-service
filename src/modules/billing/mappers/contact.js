@@ -1,6 +1,6 @@
 'use strict';
 
-const { isNull } = require('lodash');
+const { isEmpty } = require('lodash');
 const Contact = require('../../../lib/models/contact-v2');
 
 /**
@@ -9,7 +9,7 @@ const Contact = require('../../../lib/models/contact-v2');
  * @return {Contact}
  */
 const crmToModel = contact => {
-  if (isNull(contact)) {
+  if (isEmpty(contact)) {
     return null;
   }
   const contactModel = new Contact(contact.contactId);

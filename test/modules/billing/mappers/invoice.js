@@ -10,6 +10,8 @@ const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
 
 const Batch = require('../../../../src/lib/models/batch');
+const Company = require('../../../../src/lib/models/company');
+const Contact = require('../../../../src/lib/models/contact-v2');
 const Invoice = require('../../../../src/lib/models/invoice');
 const Address = require('../../../../src/lib/models/address');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
@@ -85,17 +87,36 @@ experiment('modules/billing/mappers/invoice', () => {
     const crmData = {
       invoiceAccountId: uuid(),
       invoiceAccountNumber: 'A12345678A',
-      address: {
-        addressId: uuid(),
-        address1: 'Test farm',
-        address2: 'Test lane',
-        address3: 'Test meadow',
-        address4: 'Test hill',
-        town: 'Testington',
-        county: 'Testingshire',
-        postcode: 'TT1 1TT',
-        country: 'UK'
-      }
+      company: {
+        companyId: uuid(),
+        name: 'Test company'
+      },
+      invoiceAccountAddresses: [
+        {
+          startDate: '2015-01-01',
+          address: {
+            addressId: uuid(),
+            address1: 'Test farm',
+            address2: 'Test lane',
+            address3: 'Test meadow',
+            address4: 'Test hill',
+            town: 'Testington',
+            county: 'Testingshire',
+            postcode: 'TT1 1TT',
+            country: 'UK'
+          },
+          agentCompany: {
+            companyId: uuid(),
+            name: 'Test agent company'
+          },
+          contact: {
+            contactId: uuid(),
+            salutation: 'Sir',
+            firstName: 'Bob',
+            lastName: 'Bobbins',
+            initials: null
+          }
+        }]
     };
 
     beforeEach(async () => {
@@ -115,16 +136,32 @@ experiment('modules/billing/mappers/invoice', () => {
 
     test('includes the invoice account address', async () => {
       const { address } = result;
+      const { address: iaAddress } = crmData.invoiceAccountAddresses[0];
       expect(address instanceof Address).to.be.true();
-      expect(address.id).to.equal(crmData.address.addressId);
-      expect(address.addressLine1).to.equal(crmData.address.address1);
-      expect(address.addressLine2).to.equal(crmData.address.address2);
-      expect(address.addressLine3).to.equal(crmData.address.address3);
-      expect(address.addressLine4).to.equal(crmData.address.address4);
-      expect(address.town).to.equal(crmData.address.town);
-      expect(address.county).to.equal(crmData.address.county);
-      expect(address.postcode).to.equal(crmData.address.postcode);
-      expect(address.country).to.equal(crmData.address.country);
+      expect(address.id).to.equal(iaAddress.addressId);
+      expect(address.addressLine1).to.equal(iaAddress.address1);
+      expect(address.addressLine2).to.equal(iaAddress.address2);
+      expect(address.addressLine3).to.equal(iaAddress.address3);
+      expect(address.addressLine4).to.equal(iaAddress.address4);
+      expect(address.town).to.equal(iaAddress.town);
+      expect(address.county).to.equal(iaAddress.county);
+      expect(address.postcode).to.equal(iaAddress.postcode);
+      expect(address.country).to.equal(iaAddress.country);
+    });
+
+    test('includes the agent company', async () => {
+      const { agentCompany } = result;
+      const { agentCompany: iaAgentCompany } = crmData.invoiceAccountAddresses[0];
+      expect(agentCompany instanceof Company).to.be.true();
+      expect(agentCompany.id).to.equal(iaAgentCompany.companyId);
+      expect(agentCompany.name).to.equal(iaAgentCompany.name);
+    });
+
+    test('includes the FAO contact', async () => {
+      const { contact } = result;
+      const { contact: iaContact } = crmData.invoiceAccountAddresses[0];
+      expect(contact instanceof Contact).to.be.true();
+      expect(contact.id).to.equal(iaContact.contactId);
     });
   });
 });

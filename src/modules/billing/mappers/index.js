@@ -9,6 +9,7 @@ exports.company = require('./company');
 exports.contact = require('./contact');
 exports.invoice = require('./invoice');
 exports.invoiceAccount = require('./invoice-account');
+exports.invoiceAccountAddress = require('./invoice-account-address');
 exports.invoiceLicence = require('./invoice-licence');
 exports.licence = require('../../../lib/mappers/licence');
 exports.transaction = require('./transaction');
