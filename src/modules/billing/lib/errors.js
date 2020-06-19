@@ -20,7 +20,7 @@ class TransactionStatusError extends StateError {
 class BillingVolumeStatusError extends StateError {
   constructor (message) {
     super(message);
-    this.name = 'BillingVolumesStatusError';
+    this.name = 'BillingVolumeStatusError';
   }
 }
 

@@ -83,7 +83,6 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(invoiceLicenceService, 'delete').resolves();
 
     sandbox.stub(transactionsService, 'getById').resolves(tptBatch);
-    sandbox.stub(transactionsService, 'updateTransactionVolume').resolves(transaction);
     sandbox.stub(billingVolumesService, 'updateBillingVolume').resolves(billingVolume);
     sandbox.stub(billingVolumesService, 'approveVolumesForBatch');
 
@@ -821,7 +820,7 @@ experiment('modules/billing/controller', () => {
     });
   });
 
-  experiment('.patchTransaction', () => {
+  experiment('.patchTransactionBillingVolume', () => {
     let request, result;
     const createRequest = volume => ({
       defra: {
@@ -836,7 +835,7 @@ experiment('modules/billing/controller', () => {
 
     beforeEach(async () => {
       request = createRequest(20);
-      result = await controller.patchTransaction(request, h);
+      result = await controller.patchTransactionBillingVolume(request, h);
     });
 
     test('the transactions service is called to get the transaction with related data', async () => {
@@ -844,17 +843,8 @@ experiment('modules/billing/controller', () => {
         transactionsService.getById.calledWith(request.params.transactionId)
       ).to.be.true();
     });
+
     experiment('when the transaction data is found', async () => {
-      test('the transaction service is called to update the transaction volume', async () => {
-        const transactionToBeUpdated = get(tptBatch, 'invoices[0].invoiceLicences[0].transactions[0]');
-
-        const [batch, transaction, volume] = transactionsService.updateTransactionVolume.lastCall.args;
-
-        expect(batch).to.equal(tptBatch);
-        expect(transaction).to.equal(transactionToBeUpdated);
-        expect(volume).to.equal(request.payload.volume);
-      });
-
       test('the billing volumes service is called to update the billing volume', async () => {
         const [chargeElementId, batch, volume, user] = billingVolumesService.updateBillingVolume.lastCall.args;
 
@@ -864,9 +854,10 @@ experiment('modules/billing/controller', () => {
         expect(user).to.equal(request.defra.internalCallingUser);
       });
 
-      test('the updated transaction is returned', async () => {
-        const { updatedTransaction } = result;
-        expect(updatedTransaction).to.equal(transaction);
+      test('the transaction is returned', async () => {
+        const relevantTransaction = get(tptBatch, 'invoices[0].invoiceLicences[0].transactions[0]');
+        const { transaction } = result;
+        expect(transaction).to.equal(relevantTransaction);
       });
 
       test('the updated billing volume is returned', async () => {
@@ -876,9 +867,9 @@ experiment('modules/billing/controller', () => {
 
       test('a Boom bad request error is thrown if an error occurs', async () => {
         const errMsg = 'oh no, something went wrong';
-        transactionsService.updateTransactionVolume.rejects(new Error(errMsg));
+        billingVolumesService.updateBillingVolume.rejects(new Error(errMsg));
         try {
-          await controller.patchTransaction(request, h);
+          await controller.patchTransactionBillingVolume(request, h);
         } catch (err) {
           expect(err.isBoom).to.be.true();
           expect(err.message).to.equal(errMsg);
@@ -890,7 +881,7 @@ experiment('modules/billing/controller', () => {
       test('throws Boom not found error', async () => {
         transactionsService.getById.resolves();
         try {
-          await controller.patchTransaction(request, h);
+          await controller.patchTransactionBillingVolume(request, h);
         } catch (err) {
           expect(err.isBoom).to.be.true();
           expect(err.output.statusCode).to.equal(404);

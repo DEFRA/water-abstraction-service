@@ -3,6 +3,7 @@
 const Model = require('./model');
 const FinancialYear = require('./financial-year');
 const User = require('./user');
+const { isNull } = require('lodash');
 
 const validators = require('./validators');
 
@@ -54,7 +55,7 @@ class BillingVolume extends Model {
 
   set calculatedVolume (calculatedVolume) {
     validators.assertNullableQuantity(calculatedVolume);
-    this._calculatedVolume = parseFloat(calculatedVolume);
+    this._calculatedVolume = isNull(calculatedVolume) ? null : parseFloat(calculatedVolume);
   }
 
   /**
@@ -120,7 +121,7 @@ class BillingVolume extends Model {
 
   set volume (volume) {
     validators.assertNullableQuantity(volume);
-    this._volume = parseFloat(volume);
+    this._volume = isNull(volume) ? null : parseFloat(volume);
   }
 }
 

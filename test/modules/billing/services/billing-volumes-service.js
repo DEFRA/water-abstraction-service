@@ -7,6 +7,7 @@ const billingVolumesService = require('../../../../src/modules/billing/services/
 const BillingVolume = require('../../../../src/lib/models/billing-volume');
 const billingVolumesRepo = require('../../../../src/lib/connectors/repos/billing-volumes');
 const { NotFoundError } = require('../../../../src/lib/errors');
+const { BillingVolumeStatusError } = require('../../../../src/modules/billing/lib/errors');
 const mappers = require('../../../../src/modules/billing/mappers');
 const twoPartTariffMatching = require('../../../../src/modules/billing/services/two-part-tariff-service');
 const { createBillingVolume, createUser, createBatch, createFinancialYear } = require('../test-data/test-billing-data');
@@ -24,6 +25,7 @@ const createBillingVolumeData = (idSuffix, financialYear, isSummer, data = {}) =
 experiment('modules/billing/services/billing-volumes-service', () => {
   beforeEach(async () => {
     sandbox.stub(billingVolumesRepo, 'getUnapprovedVolumesForBatch');
+    sandbox.stub(billingVolumesRepo, 'findByBatchId');
     sandbox.stub(billingVolumesRepo, 'findByChargeElementIdsAndFinancialYear');
     sandbox.stub(billingVolumesRepo, 'create');
     sandbox.stub(billingVolumesRepo, 'update');
@@ -246,7 +248,7 @@ experiment('modules/billing/services/billing-volumes-service', () => {
       beforeEach(async () => {
         user = createUser({ id: '1234', email: 'user@example.com' });
         billingVolumeChanges = {
-          calculatedVolume: 43.7,
+          volume: 43.7,
           twoPartTariffError: false,
           twoPartTariffReview: {
             id: user.id,
@@ -254,30 +256,45 @@ experiment('modules/billing/services/billing-volumes-service', () => {
           }
         };
         billingVolumesRepo.update.resolves({ ...billingVolumeData, ...billingVolumeChanges });
-
-        await billingVolumesService.updateBillingVolume(billingVolumeData.chargeElementId, batch, 43.7, user);
       });
 
-      test('calls billingVolumesRepo to get relevant record', async () => {
-        expect(billingVolumesRepo.findByChargeElementIdsAndFinancialYear.calledWith(
-          [billingVolumeData.chargeElementId], 2019
-        )).to.be.true();
+      experiment('and the volume is approved', () => {
+        test('throws a BillingVolumeStatusError', async () => {
+          billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves([{ ...billingVolumeData, isApproved: true }]);
+          try {
+            await billingVolumesService.updateBillingVolume(billingVolumeData.chargeElementId, batch, 43.7, user);
+          } catch (err) {
+            expect(err).to.be.instanceOf(BillingVolumeStatusError);
+            expect(err.message).to.equal('Approved billing volumes cannot be edited');
+          }
+        });
       });
 
-      test('calls repo.update() with the billingVolumeId', () => {
-        const [billingVolumeId] = billingVolumesRepo.update.lastCall.args;
-        expect(billingVolumeId).to.equal(billingVolumeData.billingVolumeId);
-      });
+      experiment('and the volume is not approved', () => {
+        beforeEach(async () => {
+          await billingVolumesService.updateBillingVolume(billingVolumeData.chargeElementId, batch, 43.7, user);
+        });
+        test('calls billingVolumesRepo to get relevant record', async () => {
+          expect(billingVolumesRepo.findByChargeElementIdsAndFinancialYear.calledWith(
+            [billingVolumeData.chargeElementId], 2019
+          )).to.be.true();
+        });
 
-      test('maps the changes correctly', () => {
-        const [, changes] = billingVolumesRepo.update.lastCall.args;
-        expect(changes).to.equal(billingVolumeChanges);
-      });
+        test('calls repo.update() with the billingVolumeId', () => {
+          const [billingVolumeId] = billingVolumesRepo.update.lastCall.args;
+          expect(billingVolumeId).to.equal(billingVolumeData.billingVolumeId);
+        });
 
-      test('returns the billingVolume mapped to model', () => {
-        expect(mappers.billingVolume.dbToModel.calledWith({
-          ...billingVolumeData, ...billingVolumeChanges
-        })).to.be.true();
+        test('maps the changes correctly', () => {
+          const [, changes] = billingVolumesRepo.update.lastCall.args;
+          expect(changes).to.equal(billingVolumeChanges);
+        });
+
+        test('returns the billingVolume mapped to model', () => {
+          expect(mappers.billingVolume.dbToModel.calledWith({
+            ...billingVolumeData, ...billingVolumeChanges
+          })).to.be.true();
+        });
       });
     });
 
@@ -316,6 +333,47 @@ experiment('modules/billing/services/billing-volumes-service', () => {
 
     test('returns the length of the results of the DB call', async () => {
       expect(result).to.equal(2);
+    });
+  });
+
+  experiment('.getVolumesForBatch', () => {
+    let batch, volumesForBatch, result;
+    beforeEach(async () => {
+      batch = createBatch({ id: batchId });
+      volumesForBatch = [{ billingVolumeId: 'test-billing-volume-1' }, { billingVolumeId: 'test-billing-volume-2' }];
+      billingVolumesRepo.findByBatchId.resolves(volumesForBatch);
+      result = await billingVolumesService.getVolumesForBatch(batch);
+    });
+    test('calls billingVolumesRepo with batch id', async () => {
+      expect(billingVolumesRepo.findByBatchId.calledWith(
+        batchId
+      )).to.be.true();
+    });
+
+    test('returns the results of the DB call', async () => {
+      expect(result).to.equal(volumesForBatch);
+    });
+  });
+
+  experiment('.getVolumesWithTwoPartError', () => {
+    let batch, volumesForBatch, result;
+    beforeEach(async () => {
+      batch = createBatch({ id: batchId });
+      volumesForBatch = [
+        { billingVolumeId: 'test-billing-volume-1', twoPartTariffError: false },
+        { billingVolumeId: 'test-billing-volume-2', twoPartTariffError: true }];
+      billingVolumesRepo.findByBatchId.resolves(volumesForBatch);
+      result = await billingVolumesService.getVolumesWithTwoPartError(batch);
+    });
+
+    test('calls billingVolumesRepo with batch id', async () => {
+      expect(billingVolumesRepo.findByBatchId.calledWith(
+        batchId
+      )).to.be.true();
+    });
+
+    test('returns the only the results of the DB call with have a TPT error', async () => {
+      expect(result).to.equal([volumesForBatch[1]]);
     });
   });
 

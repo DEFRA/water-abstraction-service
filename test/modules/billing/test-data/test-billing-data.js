@@ -69,7 +69,8 @@ const createBillingVolume = (options = {}) => {
     id: options.billingVolumeId || '0310af58-bb31-45ec-9a8a-f4a8f8da8ee7',
     chargeElementId: options.chargeElementId || '29328315-9b24-473b-bde7-02c60e881501',
     financialYear: createFinancialYear(options.financialYear || 2018),
-    isApproved: false
+    isApproved: false,
+    volume: options.volume || 0
   });
 };
 
@@ -126,6 +127,43 @@ const createBatch = (options = {}, invoice) => {
   return batch.addInvoice(invoice || createInvoice());
 };
 
+const createTransactionDBRow = (options = {}, chargeElement) => {
+  const dbRow = {
+    billingTransactionId: options.billingTransactionId || '56bee20e-d65e-4110-bf35-5681e2c73d66',
+    isCredit: false,
+    isCompensationCharge: !!options.isCompensationCharge,
+    authorisedDays: 366,
+    billableDays: 366,
+    description: 'Tiny pond',
+    status: 'candidate',
+    startDate: '2019-04-01',
+    endDate: '2020-03-31',
+    chargeType: 'standard',
+    chargeElement: options.chargeElement,
+    volume: 5.64,
+    section126Factor: null,
+    section127Agreement: true,
+    section130Agreement: false
+  };
+
+  if (options.chargeElementId) {
+    return {
+      ...omit(dbRow, chargeElement),
+      chargeElementId: options.chargeElementId
+    };
+  }
+
+  return dbRow;
+};
+
+const createBillingVolumeDBRow = (options = {}) => ({
+  billingVolumeId: options.billingVolumeId || '0310af58-bb31-45ec-9a8a-f4a8f8da8ee7',
+  chargeElementId: options.chargeElementId || '29328315-9b24-473b-bde7-02c60e881501',
+  financialYear: options.financialYear || 2018,
+  isApproved: false,
+  volume: options.volume || 0
+});
+
 exports.createInvoiceLicence = createInvoiceLicence;
 exports.createInvoice = createInvoice;
 exports.createTransaction = createTransaction;
@@ -136,3 +174,5 @@ exports.createLicence = createLicence;
 exports.createChargeElement = createChargeElement;
 exports.createChargeVersion = createChargeVersion;
 exports.createFinancialYear = createFinancialYear;
+exports.createTransactionDBRow = createTransactionDBRow;
+exports.createBillingVolumeDBRow = createBillingVolumeDBRow;

@@ -161,6 +161,26 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     });
   });
 
+  experiment('.findByBatchId', () => {
+    const batchId = 'test-batch-id';
+    beforeEach(async () => {
+      await billingVolumes.findByBatchId(batchId);
+    });
+
+    test('calls model.forge()', () => {
+      expect(BillingVolume.forge.called).to.be.true();
+    });
+
+    test('queries for volumes with matching batch id', async () => {
+      const [filter] = stub.where.lastCall.args;
+      expect(filter).to.equal({ billing_batch_id: 'test-batch-id' });
+    });
+
+    test('calls fetchAll() to find records', () => {
+      expect(stub.fetchAll.called).to.be.true();
+    });
+  });
+
   experiment('.deleteByBatchId', () => {
     const batchId = 'test-batch-id';
     beforeEach(async () => {

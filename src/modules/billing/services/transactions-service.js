@@ -4,6 +4,7 @@ const Transaction = require('../../../lib/models/transaction');
 const { logger } = require('../../../logger');
 const newRepos = require('../../../lib/connectors/repos');
 const billingVolumesService = require('./billing-volumes-service');
+const { NotFoundError } = require('../../../lib/errors');
 const mappers = require('../mappers');
 const { get } = require('lodash');
 
@@ -84,6 +85,7 @@ const updateTransactionVolumes = async batch => {
   for (const billingVolume of billingVolumes) {
     const transaction = transactions.find(trans =>
       trans.chargeElementId === billingVolume.chargeElementId);
+    if (!transaction) throw new NotFoundError(`No transaction found for billing volume ${billingVolume.billingVolumeId}`);
     await newRepos.billingTransactions.update(transaction.billingTransactionId, { volume: billingVolume.volume });
   }
 };

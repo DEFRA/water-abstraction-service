@@ -75,7 +75,7 @@ const getVolumeForChargeElement = async (chargeElementId, financialYear, isSumme
 };
 
 const assertBillingVolumeIsNotApproved = billingVolume => {
-  if (billingVolume.isApproved) throw BillingVolumeStatusError('Approved billing volumes cannot be edited');
+  if (billingVolume.isApproved) throw new BillingVolumeStatusError('Approved billing volumes cannot be edited');
 };
 /**
  * Validates that the billingVolume has not been approved yet and
