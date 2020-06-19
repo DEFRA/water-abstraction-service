@@ -6,6 +6,18 @@ const { paginatedEnvelope } = require('./lib/envelope');
 
 const mapModel = model => model ? model.toJSON() : null;
 
+const findRelevantBillingVolumes = billingBatch => {
+  for (const invoice of billingBatch.billingInvoices) {
+    for (const invoiceLicence of invoice.billingInvoiceLicences) {
+      for (const transaction of invoiceLicence.billingTransactions) {
+        transaction.chargeElement.billingVolume = transaction.chargeElement.billingVolume.find(
+          billingVolume => billingVolume.billingBatchId === billingBatch.billingBatchId);
+      }
+    }
+  }
+  return billingBatch;
+};
+
 const findOne = async (id) => {
   const model = await BillingBatch
     .forge({ billingBatchId: id })
@@ -79,7 +91,7 @@ const findOneWithInvoices = async (id) => {
 };
 
 const findOneWithInvoicesWithTransactions = async (id) => {
-  const model = await BillingBatch
+  const results = await BillingBatch
     .forge({ billingBatchId: id })
     .fetch({
       withRelated: [
@@ -90,11 +102,15 @@ const findOneWithInvoicesWithTransactions = async (id) => {
         'billingInvoices.billingInvoiceLicences.licence.region',
         'billingInvoices.billingInvoiceLicences.billingTransactions',
         'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement',
-        'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
+        'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse',
+        'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.billingVolume'
       ]
+    }).then(model => {
+      const billingBatch = mapModel(model);
+      return findRelevantBillingVolumes(billingBatch);
     });
 
-  return mapModel(model);
+  return results;
 };
 
 /**

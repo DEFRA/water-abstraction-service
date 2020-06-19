@@ -54,7 +54,7 @@ class BillingVolume extends Model {
 
   set calculatedVolume (calculatedVolume) {
     validators.assertNullableQuantity(calculatedVolume);
-    this._calculatedVolume = calculatedVolume;
+    this._calculatedVolume = parseFloat(calculatedVolume);
   }
 
   /**
@@ -120,7 +120,7 @@ class BillingVolume extends Model {
 
   set volume (volume) {
     validators.assertNullableQuantity(volume);
-    this._volume = volume;
+    this._volume = parseFloat(volume);
   }
 }
 

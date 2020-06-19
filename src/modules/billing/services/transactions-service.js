@@ -84,7 +84,7 @@ const updateTransactionVolumes = async batch => {
   for (const billingVolume of billingVolumes) {
     const transaction = transactions.find(trans =>
       trans.chargeElementId === billingVolume.chargeElementId);
-    transaction.volume = billingVolume.volume;
+    await newRepos.billingTransactions.update(transaction.billingTransactionId, { volume: billingVolume.volume });
   }
 };
 

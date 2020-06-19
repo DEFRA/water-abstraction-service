@@ -74,6 +74,9 @@ const getVolumeForChargeElement = async (chargeElementId, financialYear, isSumme
   return result.find(volume => volume.isSummer === isSummer);
 };
 
+const assertBillingVolumeIsNotApproved = billingVolume => {
+  if (billingVolume.isApproved) throw BillingVolumeStatusError('Approved billing volumes cannot be edited');
+};
 /**
  * Validates that the billingVolume has not been approved yet and
  * updates billingVolume with volume, updated twoPartTariffError to false
@@ -90,7 +93,7 @@ const updateBillingVolume = async (chargeElementId, batch, volume, user) => {
   if (!billingVolume) throw new NotFoundError(`Billing volume not found for chargeElementId ${chargeElementId}, financialYear ${yearEnding} and isSummer ${isSummer}`);
 
   // validate that transaction is allowed to be altered
-  if (billingVolume.iApproved) throw BillingVolumeStatusError('Billing volume must not be approved to make changes');
+  assertBillingVolumeIsNotApproved(billingVolume);
 
   const changes = {
     volume,

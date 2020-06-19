@@ -20,7 +20,7 @@ const handlePrepareTransactions = async job => {
 
   try {
     const batch = await batchService.getBatchById(job.data.batch.id);
-    const billingVolumesForBatch = billingVolumesService.getVolumesForBatch(batch);
+    const billingVolumesForBatch = await billingVolumesService.getVolumesForBatch(batch);
 
     if (billingVolumesForBatch.length > 0) {
       await transactionService.updateTransactionVolumes(batch);

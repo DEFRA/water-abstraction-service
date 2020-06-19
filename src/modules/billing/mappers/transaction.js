@@ -9,6 +9,7 @@ const Transaction = require('../../../lib/models/transaction');
 const Agreement = require('../../../lib/models/agreement');
 
 const chargeElementMapper = require('./charge-element');
+const billingVolumeMapper = require('./billing-volume');
 
 /**
  * Create agreement model with supplied code
@@ -56,6 +57,9 @@ const dbToModel = row => {
     volume: row.volume ? parseFloat(row.volume) : null,
     agreements: mapDBToAgreements(row)
   });
+  if (row.chargeElement.billingVolume) {
+    transaction.billingVolume = billingVolumeMapper.dbToModel(row.chargeElement.billingVolume);
+  }
   return transaction;
 };
 

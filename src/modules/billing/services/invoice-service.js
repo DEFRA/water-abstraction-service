@@ -58,6 +58,7 @@ const getCustomer = (batch, invoiceAccountNumber) => {
 const getInvoiceForBatch = async (batch, invoiceId) => {
   // Get object graph of invoice and related data
   const data = await repos.billingInvoices.findOne(invoiceId);
+  console.log(data.billingInvoiceLicences[0].billingTransactions[0].chargeElement.billingVolume);
 
   if (!data) {
     throw new NotFoundError(`Invoice ${invoiceId} not found`);
