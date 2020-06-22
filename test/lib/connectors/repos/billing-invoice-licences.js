@@ -103,9 +103,20 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
   });
 
   experiment('.findOneInvoiceLicenceWithTransactions', () => {
+    let result;
     beforeEach(async () => {
-      model.toJSON.returns({ foo: 'bar' });
-      await billingInvoiceLicences.findOneInvoiceLicenceWithTransactions('00000000-0000-0000-0000-000000000000');
+      model.toJSON.returns({
+        billingTransactions: [{
+          billingVolume: [{
+            billingVolumeId: 'approved-billing-volume',
+            isApproved: true
+          }, {
+            billingVolumeId: 'unapproved-billing-volume',
+            isApproved: false
+          }]
+        }]
+      });
+      result = await billingInvoiceLicences.findOneInvoiceLicenceWithTransactions('00000000-0000-0000-0000-000000000000');
     });
 
     test('calls forge with correct argumements', async () => {
@@ -117,8 +128,15 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       expect(args[0].withRelated[0]).to.equal('licence');
       expect(args[0].withRelated[1]).to.equal('licence.region');
       expect(args[0].withRelated[2]).to.equal('billingTransactions');
-      expect(args[0].withRelated[3]).to.equal('billingTransactions.chargeElement');
-      expect(args[0].withRelated[4]).to.equal('billingTransactions.chargeElement.purposeUse');
+      expect(args[0].withRelated[3]).to.equal('billingTransactions.billingVolume');
+      expect(args[0].withRelated[4]).to.equal('billingTransactions.chargeElement');
+      expect(args[0].withRelated[5]).to.equal('billingTransactions.chargeElement.purposeUse');
+    });
+
+    test('only includes unapproved billing volumes in results', () => {
+      const { billingTransactions: [{ billingVolume }] } = result;
+      expect(billingVolume).to.contain({ billingVolumeId: 'unapproved-billing-volume' });
+      expect(billingVolume).not.to.contain({ billingVolumeId: 'approved-billing-volume' });
     });
   });
 

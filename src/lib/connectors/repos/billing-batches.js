@@ -10,7 +10,7 @@ const findRelevantBillingVolumes = billingBatch => {
   for (const invoice of billingBatch.billingInvoices) {
     for (const invoiceLicence of invoice.billingInvoiceLicences) {
       for (const transaction of invoiceLicence.billingTransactions) {
-        transaction.chargeElement.billingVolume = transaction.chargeElement.billingVolume.find(
+        transaction.billingVolume = transaction.billingVolume.find(
           billingVolume => billingVolume.billingBatchId === billingBatch.billingBatchId);
       }
     }
@@ -101,12 +101,13 @@ const findOneWithInvoicesWithTransactions = async (id) => {
         'billingInvoices.billingInvoiceLicences.licence',
         'billingInvoices.billingInvoiceLicences.licence.region',
         'billingInvoices.billingInvoiceLicences.billingTransactions',
+        'billingInvoices.billingInvoiceLicences.billingTransactions.billingVolume',
         'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement',
-        'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse',
-        'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.billingVolume'
+        'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
       ]
     }).then(model => {
-      const billingBatch = mapModel(model);
+      if (!model) return null;
+      const billingBatch = model.toJSON();
       return findRelevantBillingVolumes(billingBatch);
     });
 

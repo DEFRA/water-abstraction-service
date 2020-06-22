@@ -18,7 +18,7 @@ const withRelated = [
  */
 const findUnapprovedBillingVolumes = invoiceLicence => {
   for (const transaction of invoiceLicence.billingTransactions) {
-    transaction.chargeElement.billingVolume = transaction.chargeElement.billingVolume.find(billingVolume => !billingVolume.isApproved);
+    transaction.billingVolume = transaction.billingVolume.find(billingVolume => !billingVolume.isApproved);
   }
   return invoiceLicence;
 };
@@ -81,11 +81,12 @@ const findOneInvoiceLicenceWithTransactions = async id => {
         'licence',
         'licence.region',
         'billingTransactions',
+        'billingTransactions.billingVolume',
         'billingTransactions.chargeElement',
-        'billingTransactions.chargeElement.purposeUse',
-        'billingTransactions.chargeElement.billingVolume'
+        'billingTransactions.chargeElement.purposeUse'
       ]
     }).then(model => {
+      if (!model) return null;
       const billingInvoiceLicence = model.toJSON();
       return findUnapprovedBillingVolumes(billingInvoiceLicence);
     });

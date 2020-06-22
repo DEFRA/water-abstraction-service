@@ -57,8 +57,8 @@ const dbToModel = row => {
     volume: row.volume ? parseFloat(row.volume) : null,
     agreements: mapDBToAgreements(row)
   });
-  if (row.chargeElement.billingVolume) {
-    transaction.billingVolume = billingVolumeMapper.dbToModel(row.chargeElement.billingVolume);
+  if (row.billingVolume) {
+    transaction.billingVolume = billingVolumeMapper.dbToModel(row.billingVolume);
   }
   return transaction;
 };

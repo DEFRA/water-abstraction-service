@@ -5,7 +5,7 @@ const queries = require('./queries/billing-invoices');
 const findRelevantBillingVolumes = billingInvoice => {
   for (const invoiceLicence of billingInvoice.billingInvoiceLicences) {
     for (const transaction of invoiceLicence.billingTransactions) {
-      transaction.chargeElement.billingVolume = transaction.chargeElement.billingVolume.find(
+      transaction.billingVolume = transaction.billingVolume.find(
         billingVolume => billingVolume.billingBatchId === billingInvoice.billingBatchId);
     }
   }
@@ -39,11 +39,12 @@ const findOne = async id => {
         'billingInvoiceLicences.licence',
         'billingInvoiceLicences.licence.region',
         'billingInvoiceLicences.billingTransactions',
+        'billingInvoiceLicences.billingTransactions.billingVolume',
         'billingInvoiceLicences.billingTransactions.chargeElement',
-        'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse',
-        'billingInvoiceLicences.billingTransactions.chargeElement.billingVolume'
+        'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
       ]
     }).then(model => {
+      if (!model) return null;
       const billingInvoice = model.toJSON();
       return findRelevantBillingVolumes(billingInvoice);
     });
