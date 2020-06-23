@@ -1,3 +1,5 @@
+'use strict';
+
 const Joi = require('@hapi/joi');
 
 const { version } = require('../../../../config');
@@ -15,6 +17,20 @@ module.exports = {
       validate: {
         params: {
           licenceId: Joi.string().guid().required()
+        }
+      }
+    }
+  },
+
+  getLicenceVersions: {
+    method: 'GET',
+    path: `${pathPrefix}{licenceId}/versions`,
+    handler: controller.getLicenceVersions,
+    config: {
+      description: 'Gets the licence versions by licence ID',
+      validate: {
+        params: {
+          licenceId: Joi.string().uuid().required()
         }
       }
     }
