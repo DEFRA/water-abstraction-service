@@ -1,5 +1,5 @@
 /* remove existing index */
-drop index unique_batch_invoice;
+alter table water.billing_invoices drop constraint if exists unique_batch_invoice;
 
 /* create financial year column without not null constraint */
 alter table water.billing_invoices add column financial_year_ending smallint;
