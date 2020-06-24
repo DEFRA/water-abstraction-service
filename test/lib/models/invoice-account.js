@@ -4,6 +4,7 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 const { expect } = require('@hapi/code');
 
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
+const InvoiceAccountAddress = require('../../../src/lib/models/invoice-account-address');
 const Company = require('../../../src/lib/models/company');
 const Address = require('../../../src/lib/models/address');
 
