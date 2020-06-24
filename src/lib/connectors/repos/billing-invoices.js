@@ -2,15 +2,6 @@ const { bookshelf, BillingInvoice } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoices');
 
-const findRelevantBillingVolumes = billingInvoice => {
-  for (const invoiceLicence of billingInvoice.billingInvoiceLicences) {
-    for (const transaction of invoiceLicence.billingTransactions) {
-      transaction.billingVolume = transaction.billingVolume.find(
-        billingVolume => billingVolume.billingBatchId === billingInvoice.billingBatchId);
-    }
-  }
-  return billingInvoice;
-};
 /**
  * Upserts a water.billing_invoices record
  * @param {Object} data - camel case
@@ -29,7 +20,7 @@ const deleteEmptyByBatchId = batchId =>
  * @param {String} id
  */
 const findOne = async id => {
-  const results = await BillingInvoice
+  const model = await BillingInvoice
     .forge({ billingInvoiceId: id })
     .fetch({
       withRelated: [
@@ -43,13 +34,9 @@ const findOne = async id => {
         'billingInvoiceLicences.billingTransactions.chargeElement',
         'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
       ]
-    }).then(model => {
-      if (!model) return null;
-      const billingInvoice = model.toJSON();
-      return findRelevantBillingVolumes(billingInvoice);
     });
 
-  return results;
+  return model.toJSON();
 };
 
 const deleteByBatchAndInvoiceAccountId = (batchId, invoiceAccountId) => {

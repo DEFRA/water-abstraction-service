@@ -105,17 +105,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
   experiment('.findOneInvoiceLicenceWithTransactions', () => {
     let result;
     beforeEach(async () => {
-      model.toJSON.returns({
-        billingTransactions: [{
-          billingVolume: [{
-            billingVolumeId: 'approved-billing-volume',
-            isApproved: true
-          }, {
-            billingVolumeId: 'unapproved-billing-volume',
-            isApproved: false
-          }]
-        }]
-      });
+      model.toJSON.returns({ foo: 'bar' });
       result = await billingInvoiceLicences.findOneInvoiceLicenceWithTransactions('00000000-0000-0000-0000-000000000000');
     });
 
@@ -133,10 +123,8 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       expect(args[0].withRelated[5]).to.equal('billingTransactions.chargeElement.purposeUse');
     });
 
-    test('only includes unapproved billing volumes in results', () => {
-      const { billingTransactions: [{ billingVolume }] } = result;
-      expect(billingVolume).to.contain({ billingVolumeId: 'unapproved-billing-volume' });
-      expect(billingVolume).not.to.contain({ billingVolumeId: 'approved-billing-volume' });
+    test('returns the result of the toJSON() call', async () => {
+      expect(result).to.equal({ foo: 'bar' });
     });
   });
 

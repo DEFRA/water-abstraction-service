@@ -12,18 +12,6 @@ const withRelated = [
 ];
 
 /**
- * Filters billingVolumes for chargeElements to only get
- * unapproved billing volumes
- * @param {Object} invoiceLicence
- */
-const findUnapprovedBillingVolumes = invoiceLicence => {
-  for (const transaction of invoiceLicence.billingTransactions) {
-    transaction.billingVolume = transaction.billingVolume.find(billingVolume => !billingVolume.isApproved);
-  }
-  return invoiceLicence;
-};
-
-/**
  * Gets billingInvoiceLicence and related models by GUID
  * @param {String} id - guid
  * @return {Promise<Object>}
@@ -74,7 +62,7 @@ const findLicencesWithTransactionStatusesForBatch = batchId =>
  * @param {String} id
  */
 const findOneInvoiceLicenceWithTransactions = async id => {
-  const results = await BillingInvoiceLicence
+  const model = await BillingInvoiceLicence
     .forge({ billingInvoiceLicenceId: id })
     .fetch({
       withRelated: [
@@ -85,13 +73,9 @@ const findOneInvoiceLicenceWithTransactions = async id => {
         'billingTransactions.chargeElement',
         'billingTransactions.chargeElement.purposeUse'
       ]
-    }).then(model => {
-      if (!model) return null;
-      const billingInvoiceLicence = model.toJSON();
-      return findUnapprovedBillingVolumes(billingInvoiceLicence);
     });
 
-  return results;
+  return model.toJSON();
 };
 
 /**

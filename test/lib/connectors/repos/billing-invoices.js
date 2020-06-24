@@ -108,18 +108,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     let result;
 
     beforeEach(async () => {
-      model.toJSON.returns({
-        billingBatchId: 'test-batch-id',
-        billingInvoiceLicences: [{
-          billingTransactions: [{
-            billingVolume: [{
-              billingBatchId: 'test-batch-id'
-            }, {
-              billingBatchId: 'irrelevant-batch-id'
-            }]
-          }]
-        }]
-      });
+      model.toJSON.returns({ foo: 'bar' });
       result = await billingInvoices.findOne('test-id');
     });
 
@@ -147,10 +136,8 @@ experiment('lib/connectors/repos/billing-invoices', () => {
       expect(model.toJSON.callCount).to.equal(1);
     });
 
-    test('only includes relevant billing volumes in results', () => {
-      const { billingInvoiceLicences: [{ billingTransactions: [{ billingVolume }] }] } = result;
-      expect(billingVolume).to.contain({ billingBatchId: 'test-batch-id' });
-      expect(billingVolume).not.to.contain({ billingBatchId: 'irrelevant-batch-id' });
+    test('returns the result of the toJSON() call', async () => {
+      expect(result).to.equal({ foo: 'bar' });
     });
   });
 

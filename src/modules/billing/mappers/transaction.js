@@ -41,6 +41,21 @@ const mapDBToAgreements = row => {
   return agreements.filter(identity);
 };
 
+const doesVolumeMatchTransaction = (volume, transaction) => {
+  const transactionFinacialYear = transaction.endDate.slice(0, 4);
+  const isSummerTransaction = transaction.season === 'summer';
+
+  const financialYearsMatch = parseInt(volume.financialYear) === parseInt(transactionFinacialYear);
+  const seasonsMatch = isSummerTransaction === volume.isSummer;
+
+  return financialYearsMatch && seasonsMatch;
+};
+
+const getBillingVolumeForTransaction = row => {
+  const relevantBillingVolume = row.billingVolume.find(volume => doesVolumeMatchTransaction(volume, row));
+  return relevantBillingVolume ? billingVolumeMapper.dbToModel(relevantBillingVolume) : null;
+};
+
 /**
  * Maps a row from water.billing_transactions to a Transaction model
  * @param {Object} row - from water.billing_transactions, camel cased
@@ -57,8 +72,10 @@ const dbToModel = row => {
     volume: row.volume ? parseFloat(row.volume) : null,
     agreements: mapDBToAgreements(row)
   });
-  if (row.billingVolume) {
-    transaction.billingVolume = billingVolumeMapper.dbToModel(row.billingVolume);
+
+  const relevantBillingVolume = getBillingVolumeForTransaction(row);
+  if (relevantBillingVolume) {
+    transaction.billingVolume = relevantBillingVolume;
   }
   return transaction;
 };

@@ -6,18 +6,6 @@ const { paginatedEnvelope } = require('./lib/envelope');
 
 const mapModel = model => model ? model.toJSON() : null;
 
-const findRelevantBillingVolumes = billingBatch => {
-  for (const invoice of billingBatch.billingInvoices) {
-    for (const invoiceLicence of invoice.billingInvoiceLicences) {
-      for (const transaction of invoiceLicence.billingTransactions) {
-        transaction.billingVolume = transaction.billingVolume.find(
-          billingVolume => billingVolume.billingBatchId === billingBatch.billingBatchId);
-      }
-    }
-  }
-  return billingBatch;
-};
-
 const findOne = async (id) => {
   const model = await BillingBatch
     .forge({ billingBatchId: id })
@@ -91,7 +79,7 @@ const findOneWithInvoices = async (id) => {
 };
 
 const findOneWithInvoicesWithTransactions = async (id) => {
-  const results = await BillingBatch
+  const model = await BillingBatch
     .forge({ billingBatchId: id })
     .fetch({
       withRelated: [
@@ -105,13 +93,9 @@ const findOneWithInvoicesWithTransactions = async (id) => {
         'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement',
         'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
       ]
-    }).then(model => {
-      if (!model) return null;
-      const billingBatch = model.toJSON();
-      return findRelevantBillingVolumes(billingBatch);
     });
 
-  return results;
+  return mapModel(model);
 };
 
 /**

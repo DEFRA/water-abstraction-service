@@ -190,21 +190,7 @@ experiment('lib/connectors/repos/billing-batches', () => {
     let result;
     experiment('when a record is found', () => {
       beforeEach(async () => {
-        model.toJSON.returns({
-          billingBatchId: 'test-batch-id',
-          billingInvoices: [{
-            billingInvoiceLicences: [{
-              billingTransactions: [{
-                billingVolume: [{
-                  billingBatchId: 'test-batch-id'
-                }, {
-                  billingBatchId: 'irrelevant-batch-id'
-                }]
-
-              }]
-            }]
-          }]
-        });
+        model.toJSON.returns({ foo: 'bar' });
         result = await billingBatches.findOneWithInvoicesWithTransactions('00000000-0000-0000-0000-000000000000');
       });
 
@@ -227,10 +213,8 @@ experiment('lib/connectors/repos/billing-batches', () => {
         expect(stub.fetch.lastCall.args[0].withRelated[8]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse');
       });
 
-      test('only includes relevant billing volumes in results', () => {
-        const { billingInvoices: [{ billingInvoiceLicences: [{ billingTransactions: [{ billingVolume }] }] }] } = result;
-        expect(billingVolume).to.contain({ billingBatchId: 'test-batch-id' });
-        expect(billingVolume).not.to.contain({ billingBatchId: 'irrelevant-batch-id' });
+      test('returns the result of the toJSON() call', async () => {
+        expect(result).to.equal({ foo: 'bar' });
       });
     });
 
