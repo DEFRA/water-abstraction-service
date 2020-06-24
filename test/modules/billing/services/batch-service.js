@@ -78,10 +78,8 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingBatches, 'update').resolves();
     sandbox.stub(newRepos.billingBatches, 'create').resolves();
 
-    sandbox.stub(newRepos.billingInvoices, 'deleteByBatchAndInvoiceAccountId').resolves();
     sandbox.stub(newRepos.billingInvoices, 'deleteEmptyByBatchId').resolves();
 
-    sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchAndInvoiceAccount').resolves();
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteEmptyByBatchId').resolves();
 
     sandbox.stub(newRepos.billingTransactions, 'findStatusCountsByBatchId').resolves();
@@ -102,7 +100,6 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId');
 
     sandbox.stub(chargeModuleBillRunConnector, 'create').resolves();
-    sandbox.stub(chargeModuleBillRunConnector, 'removeCustomer').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'get').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'delete').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'approve').resolves();
@@ -698,80 +695,6 @@ experiment('modules/billing/services/batch-service', () => {
       expect(result).to.equal({
         candidate: 3,
         charge_created: 7
-      });
-    });
-  });
-
-  experiment('.deleteAccountFromBatch', () => {
-    let batch;
-    let invoiceAccount;
-    let result;
-
-    beforeEach(async () => {
-      batch = {
-        externalId: uuid(),
-        status: 'ready'
-      };
-
-      invoiceAccount = {
-        accountNumber: 'A123443321A'
-      };
-
-      invoiceAccountsService.getByInvoiceAccountId.resolves(invoiceAccount);
-      newRepos.billingTransactions.findByBatchId.resolves([
-        { id: 1 }, { id: 2 }
-      ]);
-      result = await batchService.deleteAccountFromBatch(batch, 'test-invoice-account-id');
-    });
-
-    test('uses the invoice account service to get the account number', async () => {
-      const [accountId] = invoiceAccountsService.getByInvoiceAccountId.lastCall.args;
-      expect(accountId).to.equal('test-invoice-account-id');
-    });
-
-    test('deletes all the transactions at the charge module', async () => {
-      const [externalId, accountNumber] = chargeModuleBillRunConnector.removeCustomer.lastCall.args;
-
-      expect(externalId).to.equal(batch.externalId);
-      expect(accountNumber).to.equal(invoiceAccount.accountNumber);
-    });
-
-    test('deletes the local transactions', async () => {
-      const [batchId, accountId] = repos.billingTransactions.deleteByInvoiceAccount.lastCall.args;
-      expect(batchId).to.equal(batch.id);
-      expect(accountId).to.equal('test-invoice-account-id');
-    });
-
-    test('deletes the local invoice licences', async () => {
-      const [batchId, accountId] = newRepos.billingInvoiceLicences.deleteByBatchAndInvoiceAccount.lastCall.args;
-      expect(batchId).to.equal(batch.id);
-      expect(accountId).to.equal('test-invoice-account-id');
-    });
-
-    test('deletes the local invoice', async () => {
-      const [batchId, accountId] = newRepos.billingInvoices.deleteByBatchAndInvoiceAccountId.lastCall.args;
-      expect(batchId).to.equal(batch.id);
-      expect(accountId).to.equal('test-invoice-account-id');
-    });
-
-    test('gets the remaining transactions', async () => {
-      const [batchId] = newRepos.billingTransactions.findByBatchId.lastCall.args;
-      expect(batchId).to.equal(batch.id);
-    });
-
-    test('returns the batch with the status unchanged', async () => {
-      expect(result.status).to.equal(Batch.BATCH_STATUS.ready);
-    });
-
-    experiment('when there are no transactions left', () => {
-      test('test', async () => {
-        newRepos.billingTransactions.findByBatchId.resolves([]);
-        newRepos.billingBatches.update.resolves({
-          status: Batch.BATCH_STATUS.empty
-        });
-        result = await batchService.deleteAccountFromBatch(batch, 'test-invoice-account-id');
-
-        expect(result.status).to.equal(Batch.BATCH_STATUS.empty);
       });
     });
   });

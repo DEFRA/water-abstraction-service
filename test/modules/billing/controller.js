@@ -67,7 +67,6 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(batchService, 'approveBatch').resolves();
     sandbox.stub(batchService, 'decorateBatchWithTotals').resolves();
     sandbox.stub(batchService, 'getMostRecentLiveBatchByRegion').resolves();
-    sandbox.stub(batchService, 'deleteAccountFromBatch').resolves();
     sandbox.stub(batchService, 'approveTptBatchReview').resolves(processingBatch);
 
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
@@ -472,102 +471,6 @@ experiment('modules/billing/controller', () => {
       test('the error contains a not found message', async () => {
         expect(response.output.payload.message).to.equal('No invoices found in batch with id: test-batch-id');
       });
-    });
-  });
-
-  experiment('.deleteAccountFromBatch', () => {
-    let batch;
-    let request;
-    let invoices;
-
-    beforeEach(async () => {
-      batch = new Batch(uuid());
-      batch.status = Batch.BATCH_STATUS.ready;
-      request = {
-        params: { batchId: batch.id, accountId: 'test-account-id' },
-        pre: { batch },
-        messageQueue: {
-          publish: sandbox.stub()
-        }
-      };
-
-      invoices = [{
-        invoiceLicences: [
-          { transactions: [] }
-        ],
-        invoiceAccount: {
-          id: 'not-test-account-id',
-          accountNumber: 'A88888888A'
-        }
-      }];
-
-      invoiceService.getInvoicesForBatch.resolves(invoices);
-      batchService.deleteAccountFromBatch.resolves(batch);
-    });
-
-    experiment('when accounts cannot be deleted from the batch', () => {
-      const invalidStatuses = [
-        Batch.BATCH_STATUS.processing,
-        Batch.BATCH_STATUS.error,
-        Batch.BATCH_STATUS.sent
-      ];
-
-      invalidStatuses.forEach(status => {
-        test(`a 422 is returned for the ${status} status`, async () => {
-          batch.status = status;
-
-          await controller.deleteAccountFromBatch(request, h);
-
-          expect(batchService.deleteAccountFromBatch.called).to.equal(false);
-          expect(hapiResponseStub.code.calledWith(422)).to.be.true();
-
-          const [message] = h.response.lastCall.args;
-
-          expect(message).to.equal(`Cannot delete account from batch when status is ${status}`);
-        });
-      });
-    });
-
-    experiment('when accounts can be deleted from the batch', () => {
-      const validStatuses = [
-        Batch.BATCH_STATUS.ready,
-        Batch.BATCH_STATUS.review
-      ];
-
-      validStatuses.forEach(status => {
-        experiment(`for the ${status} status`, () => {
-          beforeEach(async () => {
-            batch.status = status;
-            invoices[0].invoiceAccount.id = 'test-account-id';
-            await controller.deleteAccountFromBatch(request, h);
-          });
-
-          test('the account is deleted', async () => {
-            const [batchArg, accountId] = batchService.deleteAccountFromBatch.lastCall.args;
-            expect(batchArg.id).to.equal(batch.id);
-            expect(accountId).to.equal('test-account-id');
-          });
-
-          test('a job is published to refresh the batch totals', async () => {
-            const [message] = request.messageQueue.publish.lastCall.args;
-            expect(message.data.batchId).to.equal(request.params.batchId);
-          });
-        });
-      });
-    });
-
-    test('returns a 404 if there are no invoices for the invoice account id', async () => {
-      batch.status = Batch.BATCH_STATUS.ready;
-      const response = await controller.deleteAccountFromBatch(request);
-      expect(invoiceService.getInvoicesForBatch.calledWith(batch)).to.be.true();
-      expect(response.output.payload.statusCode).to.equal(404);
-      expect(response.output.payload.message).to.equal(`No invoices for account (test-account-id) in batch (${batch.id})`);
-    });
-
-    test('returns the batch', async () => {
-      invoices[0].invoiceAccount.id = 'test-account-id';
-      const response = await controller.deleteAccountFromBatch(request);
-      expect(response.id).to.equal(batch.id);
     });
   });
 

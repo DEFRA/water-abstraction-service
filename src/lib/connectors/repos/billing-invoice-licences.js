@@ -17,7 +17,7 @@ const withRelated = [
  */
 const findOne = async id => {
   const model = await BillingInvoiceLicence
-    .forge({ BillingInvoiceLicenceId: id })
+    .forge({ billingInvoiceLicenceId: id })
     .fetch({
       withRelated
     });
@@ -52,7 +52,7 @@ const findLicencesWithTransactionStatusesForBatch = batchId =>
  */
 const findOneInvoiceLicenceWithTransactions = async (id) => {
   const model = await BillingInvoiceLicence
-    .forge({ BillingInvoiceLicenceId: id })
+    .forge({ billingInvoiceLicenceId: id })
     .fetch({
       withRelated: [
         'licence',
@@ -70,8 +70,8 @@ const findOneInvoiceLicenceWithTransactions = async (id) => {
  * Delete a single record by ID
  * @param {String} id - one or many IDs
  */
-const deleteRecord = BillingInvoiceLicenceId => BillingInvoiceLicence
-  .forge({ BillingInvoiceLicenceId })
+const deleteRecord = billingInvoiceLicenceId => BillingInvoiceLicence
+  .forge({ billingInvoiceLicenceId })
   .destroy();
 
 /**

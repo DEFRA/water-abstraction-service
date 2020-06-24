@@ -70,23 +70,6 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     });
   });
 
-  experiment('.deleteByBatchAndInvoiceAccount', () => {
-    let batchId;
-    let invoiceAccountId;
-
-    beforeEach(async () => {
-      batchId = uuid();
-      invoiceAccountId = uuid();
-      await billingInvoiceLicences.deleteByBatchAndInvoiceAccount(batchId, invoiceAccountId);
-    });
-
-    test('calls bookshelf.knex.raw with correct params', async () => {
-      const { args } = bookshelf.knex.raw.lastCall;
-      expect(args[0]).to.equal(queries.deleteByBatchAndInvoiceAccount);
-      expect(args[1]).to.equal({ batchId, invoiceAccountId });
-    });
-  });
-
   experiment('.findLicencesWithTransactionStatusesForBatch', () => {
     let batchId;
 

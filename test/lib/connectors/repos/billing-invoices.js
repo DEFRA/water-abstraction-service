@@ -83,27 +83,6 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     });
   });
 
-  experiment('.deleteByBatchAndInvoiceAccountId', () => {
-    beforeEach(async () => {
-      await billingInvoices.deleteByBatchAndInvoiceAccountId(
-        'test-batch-id',
-        'test-invoice-account-id'
-      );
-    });
-
-    test('filters using the expected where clause', async () => {
-      const [clause] = stub.where.lastCall.args;
-      expect(clause).to.equal({
-        invoice_account_id: 'test-invoice-account-id',
-        billing_batch_id: 'test-batch-id'
-      });
-    });
-
-    test('deletes the found data via destroy', async () => {
-      expect(stub.destroy.called).to.equal(true);
-    });
-  });
-
   experiment('.findOne', () => {
     let result;
 
