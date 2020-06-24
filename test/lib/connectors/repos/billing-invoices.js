@@ -7,6 +7,7 @@ const {
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const uuid = require('uuid/v4');
 
 const { bookshelf, BillingInvoice } = require('../../../../src/lib/connectors/bookshelf');
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-invoices');
@@ -115,6 +116,24 @@ experiment('lib/connectors/repos/billing-invoices', () => {
 
     test('returns the result of the toJSON() call', async () => {
       expect(result).to.equal({ foo: 'bar' });
+    });
+  });
+
+  experiment('.delete', async () => {
+    const billingInvoiceId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoices.delete(billingInvoiceId);
+    });
+
+    test('the model is forged with correct params', async () => {
+      expect(BillingInvoice.forge.calledWith({
+        billingInvoiceId
+      })).to.be.true();
+    });
+
+    test('the model is destroyed', async () => {
+      expect(stub.destroy.called).to.be.true();
     });
   });
 });

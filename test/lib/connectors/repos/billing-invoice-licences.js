@@ -27,6 +27,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       toJSON: sandbox.stub()
     };
     bookshelfStub = {
+      where: sandbox.stub().returnsThis(),
       fetch: sandbox.stub().resolves(model),
       destroy: sandbox.stub()
     };
@@ -165,6 +166,28 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     });
 
     test('the model is destroyed', async () => {
+      expect(bookshelfStub.destroy.called).to.be.true();
+    });
+  });
+
+  experiment('.deleteByInvoiceId', async () => {
+    const billingInvoiceId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoiceLicences.deleteByInvoiceId(billingInvoiceId);
+    });
+
+    test('the model is forged', async () => {
+      expect(billingInvoiceLicence.forge.called).to.be.true();
+    });
+
+    test('the correct invoice licences are selected for deletion', async () => {
+      expect(bookshelfStub.where.calledWith({
+        billing_invoice_id: billingInvoiceId
+      })).to.be.true();
+    });
+
+    test('the models are destroyed', async () => {
       expect(bookshelfStub.destroy.called).to.be.true();
     });
   });
