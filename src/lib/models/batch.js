@@ -289,11 +289,11 @@ class Batch extends Model {
   }
 
   /**
-   * Does this batch have a status that means the batch customers
+   * Does this batch have a status that means the batch invoices
    * associated with the batch can be deleted?
    */
-  canDeleteAccounts () {
-    return this.statusIsOneOf(BATCH_STATUS.ready, BATCH_STATUS.review);
+  canDeleteInvoices () {
+    return this.statusIsOneOf(BATCH_STATUS.ready);
   }
 
   /**

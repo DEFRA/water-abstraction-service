@@ -1,7 +1,6 @@
 'use strict';
 
-const { bookshelf } = require('../bookshelf');
-const billingInvoiceLicence = require('../bookshelf/BillingInvoiceLicence');
+const { bookshelf, BillingInvoiceLicence } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoice-licences');
 
@@ -12,13 +11,13 @@ const withRelated = [
 ];
 
 /**
- * Gets billingInvoiceLicence and related models by GUID
+ * Gets BillingInvoiceLicence and related models by GUID
  * @param {String} id - guid
  * @return {Promise<Object>}
  */
 const findOne = async id => {
-  const model = await billingInvoiceLicence
-    .forge({ billingInvoiceLicenceId: id })
+  const model = await BillingInvoiceLicence
+    .forge({ BillingInvoiceLicenceId: id })
     .fetch({
       withRelated
     });
@@ -39,17 +38,6 @@ const deleteEmptyByBatchId = batchId =>
   bookshelf.knex.raw(queries.deleteEmptyByBatchId, { batchId });
 
 /**
- * Deletes invoice licences for the invoice account and batch
- * @param {String} batchId
- * @param {String} invoiceAccountId
- */
-const deleteByBatchAndInvoiceAccount = (batchId, invoiceAccountId) =>
-  bookshelf.knex.raw(
-    queries.deleteByBatchAndInvoiceAccount,
-    { batchId, invoiceAccountId }
-  );
-
-/**
  * Finds all the licences in a batch and aggregates the two part tariff
  * error codes for a licence's underlying transactions.
  * @param {String} batchId
@@ -63,8 +51,8 @@ const findLicencesWithTransactionStatusesForBatch = batchId =>
  * @param {String} batchId
  */
 const findOneInvoiceLicenceWithTransactions = async (id) => {
-  const model = await billingInvoiceLicence
-    .forge({ billingInvoiceLicenceId: id })
+  const model = await BillingInvoiceLicence
+    .forge({ BillingInvoiceLicenceId: id })
     .fetch({
       withRelated: [
         'licence',
@@ -82,14 +70,23 @@ const findOneInvoiceLicenceWithTransactions = async (id) => {
  * Delete a single record by ID
  * @param {String} id - one or many IDs
  */
-const deleteRecord = billingInvoiceLicenceId => billingInvoiceLicence
-  .forge({ billingInvoiceLicenceId })
+const deleteRecord = BillingInvoiceLicenceId => BillingInvoiceLicence
+  .forge({ BillingInvoiceLicenceId })
+  .destroy();
+
+/**
+ * Delete multiple by invoice ID
+ * @param {String} id - one or many IDs
+ */
+const deleteByInvoiceId = billingInvoiceId => BillingInvoiceLicence
+  .forge()
+  .where({ billing_invoice_id: billingInvoiceId })
   .destroy();
 
 exports.findOne = findOne;
-exports.deleteByBatchAndInvoiceAccount = deleteByBatchAndInvoiceAccount;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findLicencesWithTransactionStatusesForBatch = findLicencesWithTransactionStatusesForBatch;
 exports.findOneInvoiceLicenceWithTransactions = findOneInvoiceLicenceWithTransactions;
 exports.upsert = upsert;
 exports.delete = deleteRecord;
+exports.deleteByInvoiceId = deleteByInvoiceId;
