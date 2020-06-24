@@ -325,7 +325,7 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
     await newRepos.billingInvoices.delete(invoiceId);
     return setStatusToEmptyWhenNoTransactions(batch);
   } catch (err) {
-    await setErrorStatus(batch.id);
+    await setErrorStatus(batch.id, Batch.BATCH_ERROR_CODE.failedToDeleteInvoice);
     throw err;
   }
 };

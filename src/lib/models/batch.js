@@ -30,7 +30,8 @@ const BATCH_ERROR_CODE = {
   failedToProcessChargeVersions: 20,
   failedToPrepareTransactions: 30,
   failedToCreateCharge: 40,
-  failedToCreateBillRun: 50
+  failedToCreateBillRun: 50,
+  failedToDeleteInvoice: 60
 };
 
 const Model = require('./model');
