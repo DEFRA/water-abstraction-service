@@ -68,6 +68,7 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(batchService, 'decorateBatchWithTotals').resolves();
     sandbox.stub(batchService, 'getMostRecentLiveBatchByRegion').resolves();
     sandbox.stub(batchService, 'approveTptBatchReview').resolves(processingBatch);
+    sandbox.stub(batchService, 'deleteBatchInvoice').resolves();
 
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
@@ -950,6 +951,81 @@ experiment('modules/billing/controller', () => {
       test('the error is rethrown', async () => {
         const func = () => controller.postApproveReviewBatch(request, h);
         expect(func()).to.reject();
+      });
+    });
+  });
+
+  experiment('.deleteBatchInvoice', () => {
+    let request;
+
+    beforeEach(async () => {
+      request = {
+        pre: {
+          batch: new Batch()
+        },
+        params: {
+          invoiceId: uuid()
+        },
+        messageQueue: {
+          publish: sandbox.stub()
+        }
+      };
+    });
+
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        await controller.deleteBatchInvoice(request, h);
+      });
+
+      test('calls the service method with the correct batch and invoice ID', async () => {
+        expect(batchService.deleteBatchInvoice.calledWith(
+          request.pre.batch, request.params.invoiceId
+        )).to.be.true();
+      });
+
+      test('responds with a 204 HTTP code', async () => {
+        expect(hapiResponseStub.code.calledWith(204)).to.be.true();
+      });
+    });
+
+    experiment('when there is a not found error', () => {
+      let response;
+
+      beforeEach(async () => {
+        batchService.deleteBatchInvoice.rejects(new NotFoundError());
+        response = await controller.deleteBatchInvoice(request, h);
+      });
+
+      test('responds with a Boom 404 error', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when there is a batch status error', () => {
+      let response;
+
+      beforeEach(async () => {
+        batchService.deleteBatchInvoice.rejects(new BatchStatusError());
+        response = await controller.deleteBatchInvoice(request, h);
+      });
+
+      test('responds with a Boom 403 error', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(403);
+      });
+    });
+
+    experiment('when there is an unexpected error', () => {
+      const err = new Error('Oh no!');
+      beforeEach(async () => {
+        batchService.deleteBatchInvoice.rejects(err);
+      });
+
+      test('re-throws the error', async () => {
+        const func = () => controller.deleteBatchInvoice(request, h);
+        const error = await expect(func()).to.reject();
+        expect(error).to.equal(err);
       });
     });
   });
