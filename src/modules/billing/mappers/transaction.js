@@ -62,7 +62,7 @@ const getBillingVolumeForTransaction = row => {
  */
 const dbToModel = row => {
   const transaction = new Transaction();
-  transaction.fromHash({
+  return transaction.fromHash({
     id: row.billingTransactionId,
     ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
       'externalId', 'isTwoPartTariffSupplementary']),
@@ -70,14 +70,9 @@ const dbToModel = row => {
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
     volume: row.volume ? parseFloat(row.volume) : null,
-    agreements: mapDBToAgreements(row)
+    agreements: mapDBToAgreements(row),
+    billingVolume: getBillingVolumeForTransaction(row)
   });
-
-  const relevantBillingVolume = getBillingVolumeForTransaction(row);
-  if (relevantBillingVolume) {
-    transaction.billingVolume = relevantBillingVolume;
-  }
-  return transaction;
 };
 
 /**

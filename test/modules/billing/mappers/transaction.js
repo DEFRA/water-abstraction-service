@@ -333,7 +333,7 @@ experiment('modules/billing/mappers/transaction', () => {
     });
 
     test('there is no billing Volume', () => {
-      expect(result.billingVolume).to.be.undefined();
+      expect(result.billingVolume).to.be.null();
     });
 
     experiment('when the DB row contains a section 126 factor', () => {

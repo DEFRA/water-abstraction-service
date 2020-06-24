@@ -207,7 +207,7 @@ class Transaction extends Model {
   }
 
   set billingVolume (billingVolume) {
-    validators.assertIsInstanceOf(billingVolume, BillingVolume);
+    validators.assertIsNullableInstanceOf(billingVolume, BillingVolume);
     this._billingVolume = billingVolume;
   }
 
