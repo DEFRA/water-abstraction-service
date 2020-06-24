@@ -6,7 +6,6 @@ const { expect } = require('@hapi/code');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 const Company = require('../../../src/lib/models/company');
 const Address = require('../../../src/lib/models/address');
-const InvoiceAccountAddresses = require('../../../src/lib/models/invoice-account-address');
 const InvoiceAccountAddress = require('../../../src/lib/models/invoice-account-address');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
