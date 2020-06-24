@@ -23,8 +23,6 @@ experiment('lib/connectors/repos/billing-transactions', () => {
       delete: sandbox.stub()
     };
 
-    sandbox.stub(bookshelf, 'knex').returns(knexStub);
-
     model = {
       toJSON: sandbox.stub().returns({ foo: 'bar' }),
       pagination: {
@@ -151,6 +149,7 @@ experiment('lib/connectors/repos/billing-transactions', () => {
 
   experiment('.deleteRecords', () => {
     beforeEach(async () => {
+      sandbox.stub(bookshelf, 'knex').returns(knexStub);
       await billingTransactions.delete('transaction-id');
     });
 
@@ -235,6 +234,7 @@ experiment('lib/connectors/repos/billing-transactions', () => {
 
   experiment('.deleteByInvoiceLicenceId', () => {
     beforeEach(async () => {
+      sandbox.stub(bookshelf, 'knex').returns(knexStub);
       await billingTransactions.deleteByInvoiceLicenceId('test-invoice-licence-id');
     });
 
@@ -252,6 +252,21 @@ experiment('lib/connectors/repos/billing-transactions', () => {
 
     test('calls .delete() on query builder', async () => {
       expect(knexStub.delete.called).to.be.true();
+    });
+  });
+
+  experiment('.deleteByInvoiceId', () => {
+    beforeEach(async () => {
+      sandbox.stub(bookshelf.knex, 'raw');
+      await billingTransactions.deleteByInvoiceId('test-invoice-id');
+    });
+
+    test('calls knex.raw with the correct query and params', async () => {
+      const [query, params] = bookshelf.knex.raw.lastCall.args;
+      expect(query).to.equal(queries.deleteByInvoiceId);
+      expect(params).to.equal({
+        billingInvoiceId: 'test-invoice-id'
+      });
     });
   });
 });
