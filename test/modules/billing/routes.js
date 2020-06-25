@@ -280,20 +280,20 @@ experiment('modules/billing/routes', () => {
     });
   });
 
-  experiment('deleteAccountFromBatch', () => {
+  experiment('deleteBatchInvoice', () => {
     let request;
     let server;
     let validBatchId;
-    let validAccountId;
+    let validInvoiceId;
 
     beforeEach(async () => {
-      server = getServer(routes.deleteAccountFromBatch);
+      server = getServer(routes.deleteBatchInvoice);
       validBatchId = uuid();
-      validAccountId = uuid();
+      validInvoiceId = uuid();
 
       request = {
         method: 'DELETE',
-        url: `/water/1.0/billing/batches/${validBatchId}/account/${validAccountId}`
+        url: `/water/1.0/billing/batches/${validBatchId}/invoices/${validInvoiceId}`
       };
     });
 
@@ -308,14 +308,14 @@ experiment('modules/billing/routes', () => {
       expect(response.statusCode).to.equal(400);
     });
 
-    test('returns a 400 if the account id is not a uuid', async () => {
-      request.url = request.url.replace(validAccountId, '123');
+    test('returns a 400 if the invoice id is not a uuid', async () => {
+      request.url = request.url.replace(validInvoiceId, '123');
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     test('contains a pre handler to load the batch', async () => {
-      const { pre } = routes.deleteAccountFromBatch.config;
+      const { pre } = routes.deleteBatchInvoice.config;
       expect(pre).to.have.length(1);
       expect(pre[0].method).to.equal(preHandlers.loadBatch);
       expect(pre[0].assign).to.equal('batch');
@@ -370,7 +370,7 @@ experiment('modules/billing/routes', () => {
     });
 
     test('contains a pre handler to load the batch', async () => {
-      const { pre } = routes.deleteAccountFromBatch.config;
+      const { pre } = routes.deleteBatch.config;
       expect(pre).to.have.length(1);
       expect(pre[0].method).to.equal(preHandlers.loadBatch);
       expect(pre[0].assign).to.equal('batch');

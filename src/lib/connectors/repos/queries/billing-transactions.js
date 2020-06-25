@@ -38,3 +38,11 @@ select t.status, count(t.status)
   where b.billing_batch_id=:batchId
   group by t.status;
 `;
+
+exports.deleteByInvoiceId = `
+delete from water.billing_transactions t
+  using water.billing_invoice_licences l
+  where 
+    t.billing_invoice_licence_id=l.billing_invoice_licence_id 
+    and l.billing_invoice_id=:billingInvoiceId
+`;

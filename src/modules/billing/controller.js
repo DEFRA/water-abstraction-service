@@ -115,27 +115,26 @@ const getBatchInvoiceDetail = async request => {
   return invoice || Boom.notFound(`No invoice found with id: ${invoiceId} in batch with id: ${batch.id}`);
 };
 
-const deleteAccountFromBatch = async (request, h) => {
+/**
+ * Delete an invoice by ID from the batch
+ * @param {Object} request
+ * @param {Batch} request.pre.batch
+ * @param {String} request.params.invoiceId
+ */
+const deleteBatchInvoice = async (request, h) => {
   const { batch } = request.pre;
-  const { accountId } = request.params;
+  const { invoiceId } = request.params;
+  try {
+    // Delete the invoice
+    await batchService.deleteBatchInvoice(batch, invoiceId);
 
-  if (!batch.canDeleteAccounts()) {
-    return h.response(`Cannot delete account from batch when status is ${batch.status}`).code(422);
+    // Refresh batch net total / counts
+    await request.messageQueue.publish(refreshTotalsJob.createMessage(batch.id));
+
+    return h.response().code(204);
+  } catch (err) {
+    return mapErrorResponse(err);
   }
-
-  const invoices = await invoiceService.getInvoicesForBatch(batch);
-  const invoicesForAccount = invoices.filter(invoice => invoice.invoiceAccount.id === accountId);
-
-  if (invoicesForAccount.length === 0) {
-    return Boom.notFound(`No invoices for account (${accountId}) in batch (${batch.id})`);
-  }
-
-  const updatedBatch = await batchService.deleteAccountFromBatch(batch, accountId);
-
-  // Refresh batch net total / counts
-  await request.messageQueue.publish(refreshTotalsJob.createMessage(batch.id));
-
-  return updatedBatch;
 };
 
 const deleteBatch = async (request, h) => {
@@ -261,7 +260,7 @@ exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
 exports.getBatchLicences = getBatchLicences;
 exports.getInvoiceLicenceWithTransactions = getInvoiceLicenceWithTransactions;
-exports.deleteAccountFromBatch = deleteAccountFromBatch;
+exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteBatch = deleteBatch;
 
 exports.postApproveBatch = postApproveBatch;
