@@ -18,6 +18,8 @@ const billingVolumeService = require('../../../../../src/modules/billing/service
 
 const data = require('./data');
 
+const companyId = uuid();
+
 const crmData = {
   documents: [{
     documentId: 'test-document-1',
@@ -36,7 +38,7 @@ const crmData = {
         endDate: '2019-03-31',
         contact: null,
         address: {
-
+          addressId: uuid()
         }
       },
       {
@@ -65,8 +67,18 @@ const crmData = {
       startDate: '2016-01-01',
       endDate: '2018-01-01',
       address: {
-
-      }
+        addressId: uuid(),
+        address1: 'The old office',
+        address2: 'Officey place',
+        address3: 'Central square',
+        address4: null,
+        town: 'Testington',
+        county: 'Testingshire',
+        postcode: 'TT1 1TT',
+        country: 'UK'
+      },
+      agentCompany: null,
+      contact: null
     }, {
       startDate: '2019-01-01',
       endDate: null,
@@ -80,11 +92,16 @@ const crmData = {
         county: 'Testingshire',
         postcode: 'TT1 1TT',
         country: 'UK'
-      }
-    }]
+      },
+      agentCompany: null,
+      contact: null
+    }],
+    company: {
+      companyId
+    }
   },
   company: {
-    companyId: uuid()
+    companyId
   }
 };
 

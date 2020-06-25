@@ -1,6 +1,6 @@
 'use strict';
 
-const { pick } = require('lodash');
+const { pick, isEmpty } = require('lodash');
 const Address = require('../../../lib/models/address');
 
 /**
@@ -9,6 +9,9 @@ const Address = require('../../../lib/models/address');
  * @return {Address}
  */
 const crmToModel = data => {
+  if (isEmpty(data)) {
+    return null;
+  }
   const address = new Address();
   address.fromHash({
     id: data.addressId,

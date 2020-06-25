@@ -1,12 +1,9 @@
-const { sortBy, last, groupBy } = require('lodash');
-const moment = require('moment');
-
+const { groupBy } = require('lodash');
 const validators = require('../../../../lib/models/validators');
 const { NotFoundError } = require('../../../../lib/errors');
 
 const Batch = require('../../../../lib/models/batch');
 const FinancialYear = require('../../../../lib/models/financial-year');
-const Invoice = require('../../../../lib/models/invoice');
 const InvoiceLicence = require('../../../../lib/models/invoice-licence');
 
 const dateHelpers = require('./lib/date-helpers');
@@ -32,34 +29,6 @@ const getChargePeriodEndDate = (financialYear, chargeVersion) => dateHelpers.get
   financialYear.end,
   chargeVersion.dateRange.endDate
 ]).format('YYYY-MM-DD');
-
-/**
- * Given an array of invoice account addresses from CRM data,
- * gets the last one (sorted by start date) and return
- * as an Address service model
- * @param {Array<Object>} invoiceAccountAddresses
- * @return {Address}
- */
-const getLastAddress = invoiceAccountAddresses => {
-  const sorted = sortBy(invoiceAccountAddresses, row => {
-    return moment(row.startDate).unix();
-  });
-  const lastAddress = last(sorted);
-  return mappers.address.crmToModel(lastAddress.address);
-};
-
-/**
- * Creates an Invoice service model from CRM data
- * @param {Object} invoiceAccount - data from CRM
- * @return {Invoice}
- */
-const createInvoice = invoiceAccount => {
-  const invoice = new Invoice();
-  return invoice.fromHash({
-    invoiceAccount: mappers.invoiceAccount.crmToModel(invoiceAccount),
-    address: getLastAddress(invoiceAccount.invoiceAccountAddresses)
-  });
-};
 
 /**
  * Given CRM company data and the charge version being processed,
@@ -104,7 +73,7 @@ const processChargeVersionYear = async (batch, financialYear, chargeVersionId) =
   const sentTPTBatches = await batchService.getSentTPTBatchesForFinancialYearAndRegion(financialYear, batch.region);
 
   // Generate Invoice data structure
-  const invoice = createInvoice(invoiceAccount);
+  const invoice = mappers.invoice.crmToModel(invoiceAccount);
   const invoiceLicence = createInvoiceLicence(company, chargeVersion, licenceHolderRole);
   invoiceLicence.transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
   invoice.invoiceLicences = [invoiceLicence];

@@ -11,18 +11,16 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 const uuid = require('uuid/v4');
 
-const Address = require('../../../../src/lib/models/address');
 const Batch = require('../../../../src/lib/models/batch');
-const Company = require('../../../../src/lib/models/company');
-const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const Invoice = require('../../../../src/lib/models/invoice');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const mappers = require('../../../../src/modules/billing/mappers');
 const repos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
+const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts');
+
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
-const invoiceAccountsService = require('../../../../src/modules/billing/services/invoice-accounts-service');
 
 const { NotFoundError } = require('../../../../src/lib/errors');
 
@@ -32,9 +30,8 @@ const INVOICE_2_ACCOUNT_ID = uuid();
 const INVOICE_2_ACCOUNT_NUMBER = 'A22222222A';
 const COMPANY_1_ID = uuid();
 const COMPANY_2_ID = uuid();
-
-let invoiceAccount1;
-let invoiceAccount2;
+const COMPANY_3_ID = uuid();
+const CONTACT_ID = uuid();
 
 const BATCH_ID = '00000000-0000-0000-0000-000000000000';
 const EXTERNAL_ID = '00000000-0000-0000-0000-000000000004';
@@ -180,6 +177,7 @@ const createChargeModuleData = () => ({
 const CHARGE_MODULE_TRANSACTION_ID = '00000000-0000-0000-0000-000000000006';
 
 const createInvoiceData = () => ({
+  billingInvoiceId: uuid(),
   billingBatch: {
     billingBatchId: BATCH_ID
   },
@@ -299,13 +297,71 @@ const createOneWithInvoicesWithTransactions = () => ({
   }]
 });
 
+const createCrmData = () => ([
+  {
+    invoiceAccountId: INVOICE_1_ACCOUNT_ID,
+    invoiceAccountNumber: INVOICE_1_ACCOUNT_NUMBER,
+    company: {
+      companyId: COMPANY_1_ID,
+      name: 'Test Company 1'
+    },
+    invoiceAccountAddresses: [
+      {
+        startDate: '2019-01-01',
+        address: {
+          addressId: uuid(),
+          address1: 'Daisy Cottage',
+          address2: null,
+          address3: null,
+          address4: null,
+          town: 'Testington',
+          county: 'Testingshire',
+          postcode: 'TT1 1TT',
+          country: 'UK'
+        },
+        agentCompany: {
+          companyId: COMPANY_3_ID
+        },
+        contact: {
+          contactId: CONTACT_ID
+        }
+      }
+    ]
+  },
+  {
+    invoiceAccountId: INVOICE_2_ACCOUNT_ID,
+    invoiceAccountNumber: INVOICE_2_ACCOUNT_NUMBER,
+    company: {
+      companyId: COMPANY_2_ID,
+      name: 'Test Company 2'
+    },
+    invoiceAccountAddresses: [{
+      startDate: '2018-01-01',
+      address: {
+        addressId: uuid(),
+        address1: 'Buttercup farm',
+        address2: null,
+        address3: null,
+        address4: null,
+        town: 'Testington',
+        county: 'Testingshire',
+        postcode: 'TT1 1TT',
+        country: 'UK'
+      }
+    }]
+
+  }
+]);
+
 experiment('modules/billing/services/invoiceService', () => {
-  let batch, batchData, chargeModuleData;
+  let batch, batchData, chargeModuleData, crmData;
 
   beforeEach(async () => {
     batch = createBatch();
     batchData = createBatchData();
     chargeModuleData = createChargeModuleData();
+    crmData = createCrmData();
+
     sandbox.stub(repos.billingBatches, 'findOneWithInvoices').resolves(batchData);
     sandbox.stub(chargeModuleBillRunConnector, 'get').resolves(chargeModuleData);
     sandbox.stub(chargeModuleBillRunConnector, 'getCustomer').resolves(chargeModuleData);
@@ -313,22 +369,7 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(repos.billingInvoices, 'findOne').resolves();
     sandbox.stub(repos.billingInvoices, 'upsert').resolves();
 
-    // Stub CRM invoice account data
-    invoiceAccount1 = new InvoiceAccount(INVOICE_1_ACCOUNT_ID);
-    invoiceAccount1.company = new Company(COMPANY_1_ID);
-    invoiceAccount1.company.name = 'Test Company 1';
-    invoiceAccount1.accountNumber = INVOICE_1_ACCOUNT_NUMBER;
-    invoiceAccount1.address = new Address();
-    invoiceAccount1.address.addressLine1 = 'Daisy Cottage';
-
-    invoiceAccount2 = new InvoiceAccount(INVOICE_2_ACCOUNT_ID);
-    invoiceAccount2.company = new Company(COMPANY_2_ID);
-    invoiceAccount2.company.name = 'Test Company 2';
-    invoiceAccount2.accountNumber = INVOICE_2_ACCOUNT_NUMBER;
-
-    sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountIds').resolves([
-      invoiceAccount1, invoiceAccount2
-    ]);
+    sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountsByIds').resolves(crmData);
 
     sandbox.stub(repos.billingInvoiceLicences, 'findOne');
   });
@@ -484,19 +525,24 @@ experiment('modules/billing/services/invoiceService', () => {
         });
 
         test('the invoice is decorated with invoice account company/address data from the CRM', async () => {
-          expect(result.invoiceAccount).to.equal(invoiceAccount1);
+          expect(result.invoiceAccount.id).to.equal(crmData[0].invoiceAccountId);
+          expect(result.invoiceAccount.accountNumber).to.equal(crmData[0].invoiceAccountNumber);
+          expect(result.invoiceAccount.company.id).to.equal(crmData[0].company.companyId);
+          expect(result.invoiceAccount.company.name).to.equal(crmData[0].company.name);
+          expect(result.agentCompany.id).to.equal(crmData[0].invoiceAccountAddresses[0].agentCompany.companyId);
+          expect(result.contact.id).to.equal(crmData[0].invoiceAccountAddresses[0].contact.contactId);
         });
       });
 
       experiment('when the batch status is "ready" or "sent', () => {
         beforeEach(async () => {
           batch.status = Batch.BATCH_STATUS.ready;
-          result = await invoiceService.getInvoiceForBatch(batch, INVOICE_ID);
+          result = await invoiceService.getInvoiceForBatch(batch, invoice.billingInvoiceId);
         });
 
         test('the invoice repo .findOne() method is called with the correct invoice ID', async () => {
           expect(repos.billingInvoices.findOne.calledWith(
-            INVOICE_ID
+            invoice.billingInvoiceId
           )).to.be.true();
         });
 
@@ -514,7 +560,12 @@ experiment('modules/billing/services/invoiceService', () => {
         });
 
         test('the invoice is decorated with invoice account company/address data from the CRM', async () => {
-          expect(result.invoiceAccount).to.equal(invoiceAccount1);
+          expect(result.invoiceAccount.id).to.equal(crmData[0].invoiceAccountId);
+          expect(result.invoiceAccount.accountNumber).to.equal(crmData[0].invoiceAccountNumber);
+          expect(result.invoiceAccount.company.id).to.equal(crmData[0].company.companyId);
+          expect(result.invoiceAccount.company.name).to.equal(crmData[0].company.name);
+          expect(result.agentCompany.id).to.equal(crmData[0].invoiceAccountAddresses[0].agentCompany.companyId);
+          expect(result.contact.id).to.equal(crmData[0].invoiceAccountAddresses[0].contact.contactId);
         });
 
         test('the transaction is decorated with the value from the charge module', async () => {
