@@ -3,6 +3,7 @@
 const moment = require('moment');
 const { titleCase } = require('title-case');
 const { pick, identity } = require('lodash');
+const helpers = require('@envage/water-abstraction-helpers').charging;
 
 const DateRange = require('../../../lib/models/date-range');
 const Transaction = require('../../../lib/models/transaction');
@@ -42,10 +43,10 @@ const mapDBToAgreements = row => {
 };
 
 const doesVolumeMatchTransaction = (volume, transaction) => {
-  const transactionFinacialYear = transaction.endDate.slice(0, 4);
+  const transactionFinancialYear = helpers.getFinancialYear(transaction.endDate);
   const isSummerTransaction = transaction.season === 'summer';
 
-  const financialYearsMatch = parseInt(volume.financialYear) === parseInt(transactionFinacialYear);
+  const financialYearsMatch = parseInt(volume.financialYear) === parseInt(transactionFinancialYear);
   const seasonsMatch = isSummerTransaction === volume.isSummer;
 
   return financialYearsMatch && seasonsMatch;
