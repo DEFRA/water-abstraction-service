@@ -9,7 +9,7 @@ const InvoiceAccount = require('./invoice-account');
 const InvoiceLicence = require('./invoice-licence');
 const Company = require('./company');
 const Contact = require('./contact-v2');
-
+const FinancialYear = require('./financial-year');
 const Totals = require('./totals');
 
 class Invoice extends Model {
@@ -134,6 +134,19 @@ class Invoice extends Model {
 
   get totals () {
     return this._totals;
+  }
+
+  /**
+   * Sets the financial year
+   * @param {FinancialYear} financialYear
+   */
+  set financialYear (financialYear) {
+    assertIsInstanceOf(financialYear, FinancialYear);
+    this._financialYear = financialYear;
+  }
+
+  get financialYear () {
+    return this._financialYear;
   }
 
   toJSON () {

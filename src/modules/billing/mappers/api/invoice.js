@@ -15,6 +15,7 @@ const map = {
   'invoiceAccount.company.name': 'name',
   'totals.netTotal': 'netTotal',
   'invoiceLicences[].licence.licenceNumber': 'licenceNumbers[]',
+  'financialYear.yearEnding': 'financialYearEnding',
   invoiceLicences: {
     key: 'isWaterUndertaker',
     transform: containsWaterUndertaker

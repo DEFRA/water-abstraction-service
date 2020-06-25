@@ -565,46 +565,46 @@ experiment('lib/models/batch', () => {
     });
   });
 
-  experiment('.canDeleteAccounts', () => {
+  experiment('.canDeleteInvoices', () => {
     test('returns false if the batch has no status', async () => {
       const batch = new Batch();
-      expect(batch.canDeleteAccounts()).to.equal(false);
+      expect(batch.canDeleteInvoices()).to.equal(false);
     });
 
     test('returns false if the batch status is error', async () => {
       const batch = new Batch();
       batch.status = Batch.BATCH_STATUS.error;
-      expect(batch.canDeleteAccounts()).to.equal(false);
+      expect(batch.canDeleteInvoices()).to.equal(false);
     });
 
     test('returns false if the batch status is processing', async () => {
       const batch = new Batch();
       batch.status = Batch.BATCH_STATUS.processing;
-      expect(batch.canDeleteAccounts()).to.equal(false);
+      expect(batch.canDeleteInvoices()).to.equal(false);
     });
 
     test('returns false if the batch status is empty', async () => {
       const batch = new Batch();
       batch.status = Batch.BATCH_STATUS.empty;
-      expect(batch.canDeleteAccounts()).to.equal(false);
+      expect(batch.canDeleteInvoices()).to.equal(false);
     });
 
     test('returns false if the batch status is sent', async () => {
       const batch = new Batch();
       batch.status = Batch.BATCH_STATUS.sent;
-      expect(batch.canDeleteAccounts()).to.equal(false);
+      expect(batch.canDeleteInvoices()).to.equal(false);
     });
 
     test('returns true if the batch status is ready', async () => {
       const batch = new Batch();
       batch.status = Batch.BATCH_STATUS.ready;
-      expect(batch.canDeleteAccounts()).to.equal(true);
+      expect(batch.canDeleteInvoices()).to.equal(true);
     });
 
-    test('returns true if the batch status is review', async () => {
+    test('returns false if the batch status is review', async () => {
       const batch = new Batch();
       batch.status = Batch.BATCH_STATUS.review;
-      expect(batch.canDeleteAccounts()).to.equal(true);
+      expect(batch.canDeleteInvoices()).to.equal(false);
     });
   });
 });
