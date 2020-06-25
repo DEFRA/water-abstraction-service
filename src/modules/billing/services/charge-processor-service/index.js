@@ -18,17 +18,27 @@ const chargeVersionService = require('../../services/charge-version-service');
 const batchService = require('../../services/batch-service');
 const billingVolumeService = require('../../services/billing-volumes-service');
 
-const getChargePeriodStartDate = (financialYear, chargeVersion) => dateHelpers.getMaxDate([
-  chargeVersion.licence.startDate,
-  financialYear.start,
-  chargeVersion.dateRange.startDate
-]).format('YYYY-MM-DD');
+/**
+ * Gets dates for charge period start and end date functions
+ * @param {FinancialYear} financialYear
+ * @param {ChargeVersion} chargeVersion
+ * @param {Boolean} isStartDate
+ */
+const getDates = (financialYear, chargeVersion, isStartDate = true) => {
+  const dateType = isStartDate ? 'start' : 'end';
+  const dateRef = `${dateType}Date`;
+  return [
+    chargeVersion.licence[dateRef],
+    financialYear[dateType],
+    chargeVersion.dateRange[dateRef]
+  ];
+};
 
-const getChargePeriodEndDate = (financialYear, chargeVersion) => dateHelpers.getMinDate([
-  chargeVersion.licence.endDate,
-  financialYear.end,
-  chargeVersion.dateRange.endDate
-]).format('YYYY-MM-DD');
+const getChargePeriodStartDate = (financialYear, chargeVersion) => dateHelpers.getMaxDate(
+  getDates(financialYear, chargeVersion)).format('YYYY-MM-DD');
+
+const getChargePeriodEndDate = (financialYear, chargeVersion) => dateHelpers.getMinDate(
+  getDates(financialYear, chargeVersion, false)).format('YYYY-MM-DD');
 
 /**
  * Given CRM company data and the charge version being processed,
@@ -44,6 +54,37 @@ const createInvoiceLicence = (company, chargeVersion, licenceHolderRole) => {
     contact: mappers.contact.crmToModel(licenceHolderRole.contact),
     address: mappers.address.crmToModel(licenceHolderRole.address)
   });
+};
+
+/**
+ * Checks if any transactions in the invoice licence have the
+ * isTwoPartTariffSupplementary flag set to true
+ * @param {InvoiceLicence} invoiceLicence
+ * @return {Boolean}
+ */
+const hasTptSupplementaryTransactions = invoiceLicence => {
+  const tptSupplementaryTransactions = invoiceLicence.transactions.filter(
+    transaction => transaction.isTwoPartTariffSupplementary);
+
+  return tptSupplementaryTransactions.length > 0;
+};
+
+/**
+ * Collates charge element data required for returns matching
+ * @param {Transaction} transaction
+ * @param {FinancialYear} financialYear
+ * @param {ChargeVersion} chargeVersion
+ * @param {Moment} chargePeriodStartDate
+ * @return {Object}
+ */
+const getChargeElementsForMatching = (transaction, financialYear, chargeVersion, chargePeriodStartDate) => {
+  const chargePeriodEndDate = getChargePeriodEndDate(financialYear, chargeVersion);
+  return {
+    ...transaction.chargeElement.toJSON(),
+    billableDays: transaction.billableDays,
+    authorisedDays: transaction.authorisedDays,
+    totalDays: helpers.charging.getTotalDays(chargePeriodStartDate, chargePeriodEndDate)
+  };
 };
 
 /**
@@ -79,20 +120,10 @@ const processChargeVersionYear = async (batch, financialYear, chargeVersionId) =
   invoice.invoiceLicences = [invoiceLicence];
 
   // Generate billing volumes if transactions are TPT supplementary
-  const tptSupplementaryTransactions = invoiceLicence.transactions.filter(transaction => transaction.isTwoPartTariffSupplementary);
+  if (hasTptSupplementaryTransactions) {
+    const chargeElements = invoiceLicence.transactions.map(
+      transaction => getChargeElementsForMatching(transaction, financialYear, chargeVersion, chargePeriodStartDate));
 
-  const getChargeElementsForMatching = transaction => {
-    const chargePeriodEndDate = getChargePeriodEndDate(financialYear, chargeVersion);
-    return {
-      ...transaction.chargeElement.toJSON(),
-      billableDays: transaction.billableDays,
-      authorisedDays: transaction.authorisedDays,
-      totalDays: helpers.charging.getTotalDays(chargePeriodStartDate, chargePeriodEndDate)
-    };
-  };
-
-  if (tptSupplementaryTransactions.length > 0) {
-    const chargeElements = invoiceLicence.transactions.map(getChargeElementsForMatching);
     const chargeElementsBySeason = groupBy(chargeElements, billingVolumeService.isSummerChargeElement);
     for (const key of Object.keys(chargeElementsBySeason)) {
       await billingVolumeService.getVolumes(chargeElementsBySeason[key], chargeVersion.licence.licenceNumber, financialYear.yearEnding, key, batch);
