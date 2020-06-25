@@ -6,7 +6,7 @@ const { BATCH_STATUS } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
 const Event = require('../../../lib/models/event');
 const eventService = require('../../../lib/services/events');
-const { BatchStatusError, TransactionStatusError } = require('../lib/errors');
+const { BatchStatusError, BillingVolumeStatusError } = require('../lib/errors');
 
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
@@ -14,6 +14,7 @@ const Batch = require('../../../lib/models/batch');
 
 const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
+const billingVolumesService = require('./billing-volumes-service');
 const invoiceService = require('./invoice-service');
 const invoiceAccountsService = require('./invoice-accounts-service');
 const config = require('../../../../config');
@@ -270,21 +271,10 @@ const createChargeModuleBillRun = async batchId => {
   return batch.pickFrom(row, ['externalId', 'billRunNumber']);
 };
 
-const getTransactionsWithTwoPartError = batch => {
-  return batch.invoices.reduce((acc, invoice) => {
-    invoice.invoiceLicences.forEach(invoiceLicence => {
-      invoiceLicence.transactions.forEach(transaction => {
-        if (transaction.twoPartTariffError) acc.push(transaction);
-      });
-    });
-    return acc;
-  }, []);
-};
-
-const assertNoTransactionsWithTwoPartError = batch => {
-  const transactions = getTransactionsWithTwoPartError(batch);
-  if (transactions.length) {
-    throw new TransactionStatusError('Cannot approve review. There are outstanding two part tariff errors to resolve');
+const assertNoBillingVolumesWithTwoPartError = async batch => {
+  const billingVolumesWithTwoPartError = await billingVolumesService.getVolumesWithTwoPartError(batch);
+  if (billingVolumesWithTwoPartError.length > 0) {
+    throw new BillingVolumeStatusError('Cannot approve review. There are outstanding two part tariff errors to resolve');
   }
 };
 
@@ -299,14 +289,14 @@ const assertBatchStatusIsReview = batch => {
  *
  * Validation:
  *  - batch is in "review" status
- *  - all twoPartTariff errors in transactions have been resolved
+ *  - all twoPartTariff errors in billingVolumes have been resolved
  * throws relevant error if validation fails
  *
  * @param {Batch} batch to be approved
  * @return {Promise<Batch>} resolves with Batch service model
  */
 const approveTptBatchReview = async batch => {
-  assertNoTransactionsWithTwoPartError(batch);
+  await assertNoBillingVolumesWithTwoPartError(batch);
   assertBatchStatusIsReview(batch);
   await setStatus(batch.id, BATCH_STATUS.processing);
   return getBatchById(batch.id);

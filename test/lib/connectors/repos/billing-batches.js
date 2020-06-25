@@ -190,7 +190,8 @@ experiment('lib/connectors/repos/billing-batches', () => {
     let result;
     experiment('when a record is found', () => {
       beforeEach(async () => {
-        await billingBatches.findOneWithInvoicesWithTransactions('00000000-0000-0000-0000-000000000000');
+        model.toJSON.returns({ foo: 'bar' });
+        result = await billingBatches.findOneWithInvoicesWithTransactions('00000000-0000-0000-0000-000000000000');
       });
 
       test('forges a model with the expected id', async () => {
@@ -207,8 +208,13 @@ experiment('lib/connectors/repos/billing-batches', () => {
         expect(stub.fetch.lastCall.args[0].withRelated[3]).to.equal('billingInvoices.billingInvoiceLicences.licence');
         expect(stub.fetch.lastCall.args[0].withRelated[4]).to.equal('billingInvoices.billingInvoiceLicences.licence.region');
         expect(stub.fetch.lastCall.args[0].withRelated[5]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions');
-        expect(stub.fetch.lastCall.args[0].withRelated[6]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement');
-        expect(stub.fetch.lastCall.args[0].withRelated[7]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse');
+        expect(stub.fetch.lastCall.args[0].withRelated[6]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.billingVolume');
+        expect(stub.fetch.lastCall.args[0].withRelated[7]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement');
+        expect(stub.fetch.lastCall.args[0].withRelated[8]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse');
+      });
+
+      test('returns the result of the toJSON() call', async () => {
+        expect(result).to.equal({ foo: 'bar' });
       });
     });
 

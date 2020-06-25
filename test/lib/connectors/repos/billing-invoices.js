@@ -108,6 +108,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     let result;
 
     beforeEach(async () => {
+      model.toJSON.returns({ foo: 'bar' });
       result = await billingInvoices.findOne('test-id');
     });
 
@@ -125,6 +126,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
         'billingInvoiceLicences.licence',
         'billingInvoiceLicences.licence.region',
         'billingInvoiceLicences.billingTransactions',
+        'billingInvoiceLicences.billingTransactions.billingVolume',
         'billingInvoiceLicences.billingTransactions.chargeElement',
         'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
       ]);

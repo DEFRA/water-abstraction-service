@@ -30,6 +30,7 @@ const findOne = async id => {
         'billingInvoiceLicences.licence',
         'billingInvoiceLicences.licence.region',
         'billingInvoiceLicences.billingTransactions',
+        'billingInvoiceLicences.billingTransactions.billingVolume',
         'billingInvoiceLicences.billingTransactions.chargeElement',
         'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
       ]

@@ -3,12 +3,14 @@
 const moment = require('moment');
 const { titleCase } = require('title-case');
 const { pick, identity } = require('lodash');
+const helpers = require('@envage/water-abstraction-helpers').charging;
 
 const DateRange = require('../../../lib/models/date-range');
 const Transaction = require('../../../lib/models/transaction');
 const Agreement = require('../../../lib/models/agreement');
 
 const chargeElementMapper = require('./charge-element');
+const billingVolumeMapper = require('./billing-volume');
 
 /**
  * Create agreement model with supplied code
@@ -40,13 +42,28 @@ const mapDBToAgreements = row => {
   return agreements.filter(identity);
 };
 
+const doesVolumeMatchTransaction = (volume, transaction) => {
+  const transactionFinancialYear = helpers.getFinancialYear(transaction.endDate);
+  const isSummerTransaction = transaction.season === 'summer';
+
+  const financialYearsMatch = parseInt(volume.financialYear) === parseInt(transactionFinancialYear);
+  const seasonsMatch = isSummerTransaction === volume.isSummer;
+
+  return financialYearsMatch && seasonsMatch;
+};
+
+const getBillingVolumeForTransaction = row => {
+  const relevantBillingVolume = row.billingVolume.find(volume => doesVolumeMatchTransaction(volume, row));
+  return relevantBillingVolume ? billingVolumeMapper.dbToModel(relevantBillingVolume) : null;
+};
+
 /**
  * Maps a row from water.billing_transactions to a Transaction model
  * @param {Object} row - from water.billing_transactions, camel cased
  */
 const dbToModel = row => {
   const transaction = new Transaction();
-  transaction.fromHash({
+  return transaction.fromHash({
     id: row.billingTransactionId,
     ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
       'externalId', 'isTwoPartTariffSupplementary']),
@@ -54,9 +71,9 @@ const dbToModel = row => {
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
     volume: row.volume ? parseFloat(row.volume) : null,
-    agreements: mapDBToAgreements(row)
+    agreements: mapDBToAgreements(row),
+    billingVolume: getBillingVolumeForTransaction(row)
   });
-  return transaction;
 };
 
 /**

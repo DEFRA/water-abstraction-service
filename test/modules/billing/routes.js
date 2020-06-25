@@ -466,16 +466,16 @@ experiment('modules/billing/routes', () => {
     });
   });
 
-  experiment('patchTransaction', () => {
+  experiment('patchTransactionBillingVolume', () => {
     let request, server, transactionId;
 
     beforeEach(async () => {
-      server = getServer(routes.patchTransaction);
+      server = getServer(routes.patchTransactionBillingVolume);
       transactionId = '054517f2-be00-4505-a3cc-df65a89cd8e1';
 
       request = {
         method: 'PATCH',
-        url: `/water/1.0/billing/transactions/${transactionId}`,
+        url: `/water/1.0/billing/transactions/${transactionId}/volume`,
         payload: {
           volume: 5
         },

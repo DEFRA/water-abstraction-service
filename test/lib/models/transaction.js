@@ -16,6 +16,7 @@ const Region = require('../../../src/lib/models/region');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 const Batch = require('../../../src/lib/models/batch');
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
+const BillingVolume = require('../../../src/lib/models/billing-volume');
 
 class TestModel {};
 
@@ -370,6 +371,32 @@ experiment('lib/models/transaction', () => {
       };
 
       expect(func).to.throw();
+    });
+  });
+
+  experiment('.billingVolume', () => {
+    let transaction;
+    beforeEach(() => {
+      transaction = new Transaction();
+    });
+
+    test('can be set to a BillingVolume instance', async () => {
+      const billingVolume = new BillingVolume();
+      transaction.billingVolume = billingVolume;
+      expect(transaction.billingVolume).to.equal(billingVolume);
+    });
+
+    test('throws an error if set to any other type', async () => {
+      const func = () => {
+        transaction.billingVolume = new TestModel();
+      };
+
+      expect(func).to.throw();
+    });
+
+    test('can be set to null', async () => {
+      transaction.billingVolume = null;
+      expect(transaction.billingVolume).to.be.null();
     });
   });
 

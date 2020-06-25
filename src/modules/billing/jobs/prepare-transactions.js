@@ -2,6 +2,8 @@ const { logger } = require('../../../logger');
 const repos = require('../../../lib/connectors/repository');
 
 const batchService = require('../services/batch-service');
+const transactionService = require('../services/transactions-service');
+const billingVolumesService = require('../services/billing-volumes-service');
 const supplementaryBillingService = require('../services/supplementary-billing-service');
 const batchJob = require('./lib/batch-job');
 
@@ -18,6 +20,11 @@ const handlePrepareTransactions = async job => {
 
   try {
     const batch = await batchService.getBatchById(job.data.batch.id);
+    const billingVolumesForBatch = await billingVolumesService.getVolumesForBatch(batch);
+
+    if (billingVolumesForBatch.length > 0) {
+      await transactionService.updateTransactionVolumes(batch);
+    }
 
     if (batch.isSupplementary()) {
       logger.info(`Processing supplementary transactions ${job.name}`);

@@ -89,6 +89,7 @@ const findOneWithInvoicesWithTransactions = async (id) => {
         'billingInvoices.billingInvoiceLicences.licence',
         'billingInvoices.billingInvoiceLicences.licence.region',
         'billingInvoices.billingInvoiceLicences.billingTransactions',
+        'billingInvoices.billingInvoiceLicences.billingTransactions.billingVolume',
         'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement',
         'billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
       ]

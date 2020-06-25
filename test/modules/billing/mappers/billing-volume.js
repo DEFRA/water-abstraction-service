@@ -26,7 +26,8 @@ experiment('modules/billing/mappers/billing-volume', () => {
       twoPartTariffError: false,
       twoPartTariffStatus: null,
       twoPartTariffReview: { id: 1234, email: 'test@example.com' },
-      isApproved: false
+      isApproved: false,
+      volume: 12.79
     };
 
     beforeEach(async () => {
@@ -45,6 +46,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
       expect(result.twoPartTariffError).to.equal(dbRow.twoPartTariffError);
       expect(result.twoPartTariffStatus).to.equal(dbRow.twoPartTariffStatus);
       expect(result.isApproved).to.equal(dbRow.isApproved);
+      expect(result.volume).to.equal(dbRow.volume);
     });
 
     test('sets the financialYear to a FinancialYear instance', async () => {
@@ -92,6 +94,10 @@ experiment('modules/billing/mappers/billing-volume', () => {
 
       test('maps actual return quantity to calculated volume', async () => {
         expect(result[0].calculatedVolume).to.equal(matchingResults.data[0].data.actualReturnQuantity);
+      });
+
+      test('maps actual return quantity to volume', async () => {
+        expect(result[0].volume).to.equal(matchingResults.data[0].data.actualReturnQuantity);
       });
 
       test('sets two part tariff status to null', async () => {

@@ -1,17 +1,17 @@
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const errors = require('../../src/lib/errors');
+const errors = require('../../../../src/modules/billing/lib/errors');
 
-experiment('lib/errors', () => {
+experiment('modules/billing/lib/errors', () => {
   let err;
 
-  experiment('NotFoundError', () => {
+  experiment('BatchStatusError', () => {
     beforeEach(async () => {
-      err = new errors.NotFoundError('oops');
+      err = new errors.BatchStatusError('oops');
     });
     test('has the correct name', async () => {
-      expect(err.name).to.equal('NotFoundError');
+      expect(err.name).to.equal('BatchStatusError');
     });
 
     test('has the correct message', async () => {
@@ -19,12 +19,12 @@ experiment('lib/errors', () => {
     });
   });
 
-  experiment('StateError', () => {
+  experiment('TransactionStatusError', () => {
     beforeEach(async () => {
-      err = new errors.StateError('oops');
+      err = new errors.TransactionStatusError('oops');
     });
     test('has the correct name', async () => {
-      expect(err.name).to.equal('StateError');
+      expect(err.name).to.equal('TransactionStatusError');
     });
 
     test('has the correct message', async () => {
@@ -32,12 +32,12 @@ experiment('lib/errors', () => {
     });
   });
 
-  experiment('DBError', () => {
+  experiment('BillingVolumeStatusError', () => {
     beforeEach(async () => {
-      err = new errors.DBError('oops');
+      err = new errors.BillingVolumeStatusError('oops');
     });
     test('has the correct name', async () => {
-      expect(err.name).to.equal('DBError');
+      expect(err.name).to.equal('BillingVolumeStatusError');
     });
 
     test('has the correct message', async () => {

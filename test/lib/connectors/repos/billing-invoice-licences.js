@@ -103,9 +103,10 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
   });
 
   experiment('.findOneInvoiceLicenceWithTransactions', () => {
+    let result;
     beforeEach(async () => {
       model.toJSON.returns({ foo: 'bar' });
-      await billingInvoiceLicences.findOneInvoiceLicenceWithTransactions('00000000-0000-0000-0000-000000000000');
+      result = await billingInvoiceLicences.findOneInvoiceLicenceWithTransactions('00000000-0000-0000-0000-000000000000');
     });
 
     test('calls forge with correct argumements', async () => {
@@ -117,8 +118,13 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       expect(args[0].withRelated[0]).to.equal('licence');
       expect(args[0].withRelated[1]).to.equal('licence.region');
       expect(args[0].withRelated[2]).to.equal('billingTransactions');
-      expect(args[0].withRelated[3]).to.equal('billingTransactions.chargeElement');
-      expect(args[0].withRelated[4]).to.equal('billingTransactions.chargeElement.purposeUse');
+      expect(args[0].withRelated[3]).to.equal('billingTransactions.billingVolume');
+      expect(args[0].withRelated[4]).to.equal('billingTransactions.chargeElement');
+      expect(args[0].withRelated[5]).to.equal('billingTransactions.chargeElement.purposeUse');
+    });
+
+    test('returns the result of the toJSON() call', async () => {
+      expect(result).to.equal({ foo: 'bar' });
     });
   });
 

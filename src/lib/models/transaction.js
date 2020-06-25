@@ -8,6 +8,7 @@ const Model = require('./model');
 const Agreement = require('./agreement');
 const DateRange = require('./date-range');
 const ChargeElement = require('./charge-element');
+const BillingVolume = require('./billing-volume');
 
 const validators = require('./validators');
 
@@ -195,6 +196,19 @@ class Transaction extends Model {
   set volume (volume) {
     validators.assertNullableQuantityWithMaximum(volume, this.chargeElement.authorisedAnnualQuantity);
     this._volume = volume;
+  }
+
+  /**
+ * Gets the charge element instance that created this transaction
+ * @return {ChargeElement}
+ */
+  get billingVolume () {
+    return this._billingVolume;
+  }
+
+  set billingVolume (billingVolume) {
+    validators.assertIsNullableInstanceOf(billingVolume, BillingVolume);
+    this._billingVolume = billingVolume;
   }
 
   /**

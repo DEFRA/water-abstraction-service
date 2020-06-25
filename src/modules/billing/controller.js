@@ -177,7 +177,7 @@ const getBatchLicences = async (request, h) => {
   return invoiceLicenceService.getLicencesWithTransactionStatusesForBatch(batch.id);
 };
 
-const patchTransaction = async (request, h) => {
+const patchTransactionBillingVolume = async (request, h) => {
   const { transactionId } = request.params;
   const { volume } = request.payload;
   const { internalCallingUser: user } = request.defra;
@@ -187,11 +187,9 @@ const patchTransaction = async (request, h) => {
 
   try {
     const transaction = get(batch, 'invoices[0].invoiceLicences[0].transactions[0]');
-    const updatedTransaction = await transactionsService.updateTransactionVolume(batch, transaction, volume);
-
     const updatedBillingVolume = await billingVolumesService.updateBillingVolume(transaction.chargeElement.id, batch, volume, user);
     return {
-      updatedTransaction,
+      transaction,
       updatedBillingVolume
     };
   } catch (err) {
@@ -276,5 +274,5 @@ exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 exports.postApproveReviewBatch = postApproveReviewBatch;
 
-exports.patchTransaction = patchTransaction;
+exports.patchTransactionBillingVolume = patchTransactionBillingVolume;
 exports.deleteInvoiceLicence = deleteInvoiceLicence;

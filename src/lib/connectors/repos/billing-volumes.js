@@ -49,6 +49,15 @@ const getUnapprovedVolumesForBatch = async batchId => {
   return result.toJSON();
 };
 
+const findByBatchId = async batchId => {
+  const result = await BillingVolume
+    .forge()
+    .where({ billing_batch_id: batchId })
+    .fetchAll();
+
+  return result.toJSON();
+};
+
 /**
  * Deletes all billing volumes for given batch
  * @param {String} batchId - guid
@@ -79,6 +88,7 @@ exports.create = create;
 exports.findByChargeElementIdsAndFinancialYear = findByChargeElementIdsAndFinancialYear;
 exports.update = update;
 exports.getUnapprovedVolumesForBatch = getUnapprovedVolumesForBatch;
+exports.findByBatchId = findByBatchId;
 exports.deleteByBatchId = deleteByBatchId;
 exports.deleteByInvoiceLicenceAndBatchId = deleteByInvoiceLicenceAndBatchId;
 exports.deleteByBatchAndInvoiceAccountId = deleteByBatchAndInvoiceAccountId;

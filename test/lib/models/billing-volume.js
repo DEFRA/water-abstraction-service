@@ -123,7 +123,7 @@ experiment('lib/models/billingVolume', () => {
       expect(billingVolume.twoPartTariffError).to.equal(true);
     });
 
-    test('throws an error if set to mull', async () => {
+    test('throws an error if set to null', async () => {
       const func = () => {
         billingVolume.twoPartTariffError = null;
       };
@@ -182,6 +182,60 @@ experiment('lib/models/billingVolume', () => {
     test('throws an error if set to any other type', async () => {
       const func = () => {
         billingVolume.twoPartTariffReview = new TestModel();
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.isApproved', () => {
+    test('can be set to a boolean', async () => {
+      billingVolume.isApproved = true;
+      expect(billingVolume.isApproved).to.equal(true);
+    });
+
+    test('throws an error if set to null', async () => {
+      const func = () => {
+        billingVolume.isApproved = null;
+      };
+      expect(func).to.throw();
+    });
+
+    test('throws an error if set to undefined', async () => {
+      const func = () => {
+        billingVolume.isApproved = undefined;
+      };
+      expect(func).to.throw();
+    });
+
+    test('throws an error if set to any other type', async () => {
+      const func = () => {
+        billingVolume.isApproved = 'not-a-boolean';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.volume', () => {
+    test('can be set to a positive number', async () => {
+      billingVolume.volume = 4.465;
+      expect(billingVolume.volume).to.equal(4.465);
+    });
+
+    test('can be set to null', async () => {
+      billingVolume.volume = null;
+      expect(billingVolume.volume).to.be.null();
+    });
+
+    test('throws an error if set to negative number', async () => {
+      const func = () => {
+        billingVolume.volume = -28.385;
+      };
+      expect(func).to.throw();
+    });
+
+    test('throws an error if set to any other type', async () => {
+      const func = () => {
+        billingVolume.volume = 'a string';
       };
       expect(func).to.throw();
     });

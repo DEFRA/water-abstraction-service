@@ -2,6 +2,7 @@ const billingVolumesRepo = require('../../../lib/connectors/repos/billing-volume
 const mappers = require('../mappers');
 const twoPartTariffMatching = require('./two-part-tariff-service');
 const { NotFoundError } = require('../../../lib/errors');
+const { BillingVolumeStatusError } = require('../lib/errors');
 
 const isSummerChargeElement = chargeElement => chargeElement.season === 'summer';
 
@@ -73,8 +74,12 @@ const getVolumeForChargeElement = async (chargeElementId, financialYear, isSumme
   return result.find(volume => volume.isSummer === isSummer);
 };
 
+const assertBillingVolumeIsNotApproved = billingVolume => {
+  if (billingVolume.isApproved) throw new BillingVolumeStatusError('Approved billing volumes cannot be edited');
+};
 /**
- * Updates billingVolume with volume, updated twoPartTariffError to false
+ * Validates that the billingVolume has not been approved yet and
+ * updates billingVolume with volume, updated twoPartTariffError to false
  * and stores user data
  *
  * @param {String} chargeElementId
@@ -87,8 +92,11 @@ const updateBillingVolume = async (chargeElementId, batch, volume, user) => {
   const billingVolume = await getVolumeForChargeElement(chargeElementId, yearEnding, isSummer);
   if (!billingVolume) throw new NotFoundError(`Billing volume not found for chargeElementId ${chargeElementId}, financialYear ${yearEnding} and isSummer ${isSummer}`);
 
+  // validate that transaction is allowed to be altered
+  assertBillingVolumeIsNotApproved(billingVolume);
+
   const changes = {
-    calculatedVolume: volume,
+    volume,
     twoPartTariffError: false,
     twoPartTariffReview: { id: user.id, email: user.email }
   };
@@ -106,6 +114,13 @@ const getUnapprovedVolumesForBatchCount = async batch => {
   return result.length;
 };
 
+const getVolumesForBatch = async batch => billingVolumesRepo.findByBatchId(batch.id);
+
+const getVolumesWithTwoPartError = async batch => {
+  const billingVolumes = await getVolumesForBatch(batch);
+  return billingVolumes.filter(billingVolume => billingVolume.twoPartTariffError);
+};
+
 const approveVolumesForBatch = async batch => {
   const billingVolumes = await billingVolumesRepo.getUnapprovedVolumesForBatch(batch.id);
   for (const row of billingVolumes) {
@@ -117,4 +132,6 @@ exports.getVolumes = getVolumes;
 exports.updateBillingVolume = updateBillingVolume;
 exports.isSummerChargeElement = isSummerChargeElement;
 exports.getUnapprovedVolumesForBatchCount = getUnapprovedVolumesForBatchCount;
+exports.getVolumesForBatch = getVolumesForBatch;
+exports.getVolumesWithTwoPartError = getVolumesWithTwoPartError;
 exports.approveVolumesForBatch = approveVolumesForBatch;

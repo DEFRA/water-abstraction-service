@@ -1,7 +1,7 @@
 'use strict';
 
 const { bookshelf } = require('../bookshelf');
-const billingInvoiceLicence = require('../bookshelf/BillingInvoiceLicence');
+const BillingInvoiceLicence = require('../bookshelf/BillingInvoiceLicence');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoice-licences');
 
@@ -17,7 +17,7 @@ const withRelated = [
  * @return {Promise<Object>}
  */
 const findOne = async id => {
-  const model = await billingInvoiceLicence
+  const model = await BillingInvoiceLicence
     .forge({ billingInvoiceLicenceId: id })
     .fetch({
       withRelated
@@ -58,18 +58,18 @@ const findLicencesWithTransactionStatusesForBatch = batchId =>
   raw.multiRow(queries.findLicencesWithTransactionStatusesForBatch, { batchId });
 
 /**
- * Find One the licence in a batch and aggregate the two part tariff
- * error codes for a licence's underlying transactions.
- * @param {String} batchId
+ * Find One licence in a batch with related transactions
+ * @param {String} id
  */
-const findOneInvoiceLicenceWithTransactions = async (id) => {
-  const model = await billingInvoiceLicence
+const findOneInvoiceLicenceWithTransactions = async id => {
+  const model = await BillingInvoiceLicence
     .forge({ billingInvoiceLicenceId: id })
     .fetch({
       withRelated: [
         'licence',
         'licence.region',
         'billingTransactions',
+        'billingTransactions.billingVolume',
         'billingTransactions.chargeElement',
         'billingTransactions.chargeElement.purposeUse'
       ]
@@ -82,7 +82,7 @@ const findOneInvoiceLicenceWithTransactions = async (id) => {
  * Delete a single record by ID
  * @param {String} id - one or many IDs
  */
-const deleteRecord = billingInvoiceLicenceId => billingInvoiceLicence
+const deleteRecord = billingInvoiceLicenceId => BillingInvoiceLicence
   .forge({ billingInvoiceLicenceId })
   .destroy();
 
