@@ -111,4 +111,32 @@ experiment('modules/notifications/lib/notification-factory.js', () => {
       expect(personalisation).to.not.include('address_line_7');
     });
   });
+
+  experiment('when address lines are null', () => {
+    let result;
+
+    beforeEach(async () => {
+      contactData.contact.method = 'letter';
+      contactData.contact.contact.email = null;
+      contactData.contact.contact.address_3 = null;
+      contactData.contact.contact.address_4 = null;
+      result = await notificationFactory(contactData, taskConfig, event);
+    });
+
+    test('the address is set correctly', async () => {
+      const { personalisation } = result;
+      expect(personalisation.address_line_1).to.equal('Mr John Doe');
+      expect(personalisation.address_line_2).to.equal('Buttercup Farm');
+      expect(personalisation.address_line_3).to.equal('Daisy meadow');
+      expect(personalisation.address_line_4).to.equal('Testington');
+      expect(personalisation.address_line_5).to.equal('Testingshire');
+
+      expect(personalisation.postcode).to.equal('TT1 1TT');
+    });
+
+    test('the address does not include more than 5 lines, as empty lines are removed', async () => {
+      const { personalisation } = result;
+      expect(personalisation).to.not.include('address_line_6');
+    });
+  });
 });

@@ -1,7 +1,7 @@
 const { logger } = require('../../../logger');
 const { identity } = require('lodash');
 
-const mapAddressLine = str => str.trim();
+const mapAddressLine = str => (str || '').trim();
 
 const formatAddress = contact => {
   // Format name
