@@ -294,8 +294,7 @@ experiment('modules/billing/mappers/transaction', () => {
       section126Factor: null,
       section127Agreement: false,
       section130Agreement: null,
-      transactionKey: 'ABCDEF1234567890ABCDEF1234567890',
-      billingVolume: []
+      transactionKey: 'ABCDEF1234567890ABCDEF1234567890'
     };
     beforeEach(async () => {
       result = transactionMapper.dbToModel(dbRow);
