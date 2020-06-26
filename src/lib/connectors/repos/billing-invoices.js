@@ -39,14 +39,13 @@ const findOne = async id => {
   return model.toJSON();
 };
 
-const deleteByBatchAndInvoiceAccountId = (batchId, invoiceAccountId) => {
-  return BillingInvoice
-    .forge()
-    .where({
-      invoice_account_id: invoiceAccountId,
-      billing_batch_id: batchId
-    }).destroy();
-};
+/**
+ * Delete a single record by ID
+ * @param {String} id - one or many IDs
+ */
+const deleteRecord = billingInvoiceId => BillingInvoice
+  .forge({ billingInvoiceId })
+  .destroy();
 
 /**
 * Deletes all billing invoice licences for given batch
@@ -57,8 +56,11 @@ const deleteByBatchId = async batchId => BillingInvoice
   .where({ billing_batch_id: batchId })
   .destroy();
 
-exports.deleteByBatchAndInvoiceAccountId = deleteByBatchAndInvoiceAccountId;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;
 exports.upsert = upsert;
+exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
+exports.findOne = findOne;
+exports.upsert = upsert;
+exports.delete = deleteRecord;
 exports.deleteByBatchId = deleteByBatchId;

@@ -270,19 +270,18 @@ experiment('lib/connectors/repos/billing-transactions', () => {
     });
   });
 
-  experiment('.deleteByBatchAndInvoiceAccountId', async () => {
-    const batchId = 'test-batch-id';
-    const invoiceAccountId = 'test-invoice-account-id';
-
+  experiment('.deleteByInvoiceId', () => {
     beforeEach(async () => {
       sandbox.stub(bookshelf.knex, 'raw');
-      await billingTransactions.deleteByBatchAndInvoiceAccountId(batchId, invoiceAccountId);
+      await billingTransactions.deleteByInvoiceId('test-invoice-id');
     });
 
-    test('calls knex.raw() with correct argumements', async () => {
+    test('calls knex.raw with the correct query and params', async () => {
       const [query, params] = bookshelf.knex.raw.lastCall.args;
-      expect(query).to.equal(queries.deleteByBatchAndInvoiceAccountId);
-      expect(params).to.equal({ batchId, invoiceAccountId });
+      expect(query).to.equal(queries.deleteByInvoiceId);
+      expect(params).to.equal({
+        billingInvoiceId: 'test-invoice-id'
+      });
     });
   });
 });

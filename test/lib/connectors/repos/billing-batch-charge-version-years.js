@@ -11,7 +11,7 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const repos = require('../../../../src/lib/connectors/repos');
-const { BillingBatchChargeVersionYear } = require('../../../../src/lib/connectors/bookshelf');
+const { BillingBatchChargeVersionYear, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-batch-charge-version-years');
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 
@@ -29,6 +29,7 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
     };
     sandbox.stub(BillingBatchChargeVersionYear, 'forge').returns(stub);
     sandbox.stub(raw, 'multiRow');
+    sandbox.stub(bookshelf.knex, 'raw');
   });
 
   afterEach(async () => {
@@ -87,6 +88,20 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
 
     test('calls destroy() to delete found records', async () => {
       expect(stub.destroy.called).to.be.true();
+    });
+  });
+
+  experiment('.deleteByInvoiceId', () => {
+    const billingInvoiceId = 'test-invoice-id';
+
+    beforeEach(async () => {
+      await repos.billingBatchChargeVersionYears.deleteByInvoiceId(billingInvoiceId);
+    });
+
+    test('calls knex.raw with correct query and params', async () => {
+      const [query, params] = bookshelf.knex.raw.lastCall.args;
+      expect(query).to.equal(queries.deleteByInvoiceId);
+      expect(params).to.equal({ billingInvoiceId });
     });
   });
 });

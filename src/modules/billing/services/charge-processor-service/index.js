@@ -115,6 +115,7 @@ const processChargeVersionYear = async (batch, financialYear, chargeVersionId) =
 
   // Generate Invoice data structure
   const invoice = mappers.invoice.crmToModel(invoiceAccount);
+  invoice.financialYear = financialYear;
   const invoiceLicence = createInvoiceLicence(company, chargeVersion, licenceHolderRole);
   invoiceLicence.transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
   invoice.invoiceLicences = [invoiceLicence];

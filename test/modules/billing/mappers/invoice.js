@@ -14,6 +14,7 @@ const Company = require('../../../../src/lib/models/company');
 const Contact = require('../../../../src/lib/models/contact-v2');
 const Invoice = require('../../../../src/lib/models/invoice');
 const Address = require('../../../../src/lib/models/address');
+const FinancialYear = require('../../../../src/lib/models/financial-year');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 
 const invoiceMapper = require('../../../../src/modules/billing/mappers/invoice');
@@ -22,7 +23,8 @@ const invoiceRow = {
   billingInvoiceId: '5a1577d7-8dc9-4d67-aadc-37d7ea85abca',
   invoiceAccountId: 'aea355f7-b931-4824-8465-575f5b95657f',
   invoiceAccountNumber: 'A12345678A',
-  dateCreated: '2020-03-05T10:57:23.911Z'
+  dateCreated: '2020-03-05T10:57:23.911Z',
+  financialYearEnding: 2019
 };
 
 experiment('modules/billing/mappers/invoice', () => {
@@ -48,6 +50,11 @@ experiment('modules/billing/mappers/invoice', () => {
     test('maps the date created value', async () => {
       expect(result.dateCreated).to.equal(invoiceRow.dateCreated);
     });
+
+    test('has a financial year instance', async () => {
+      expect(result.financialYear instanceof FinancialYear).to.be.true();
+      expect(result.financialYear.yearEnding).to.equal(invoiceRow.financialYearEnding);
+    });
   });
 
   experiment('.modelToDB', () => {
@@ -68,6 +75,7 @@ experiment('modules/billing/mappers/invoice', () => {
       postcode: 'TT1 1TT',
       country: 'UK'
     });
+    invoice.financialYear = new FinancialYear(2020);
 
     beforeEach(async () => {
       result = invoiceMapper.modelToDb(batch, invoice);
@@ -78,6 +86,7 @@ experiment('modules/billing/mappers/invoice', () => {
       expect(result.invoiceAccountNumber).to.equal(invoice.invoiceAccount.accountNumber);
       expect(result.address).to.equal(invoice.address.toJSON());
       expect(result.billingBatchId).to.equal(batch.id);
+      expect(result.financialYearEnding).to.equal(invoice.financialYear.yearEnding);
     });
   });
 

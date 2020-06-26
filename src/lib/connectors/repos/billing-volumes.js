@@ -81,8 +81,8 @@ const deleteByInvoiceLicenceAndBatchId = async (invoiceLicenceId, batchId) =>
 * @param {String} batchId - guid
 * @param {String} invoiceAccountId - guid
 */
-const deleteByBatchAndInvoiceAccountId = async (batchId, invoiceAccountId) =>
-  bookshelf.knex.raw(queries.deleteByBatchAndInvoiceAccountId, { batchId, invoiceAccountId });
+const deleteByBatchAndInvoiceId = async (batchId, billingInvoiceId) =>
+  bookshelf.knex.raw(queries.deleteByBatchAndInvoiceId, { batchId, billingInvoiceId });
 
 exports.create = create;
 exports.findByChargeElementIdsAndFinancialYear = findByChargeElementIdsAndFinancialYear;
@@ -91,4 +91,4 @@ exports.getUnapprovedVolumesForBatch = getUnapprovedVolumesForBatch;
 exports.findByBatchId = findByBatchId;
 exports.deleteByBatchId = deleteByBatchId;
 exports.deleteByInvoiceLicenceAndBatchId = deleteByInvoiceLicenceAndBatchId;
-exports.deleteByBatchAndInvoiceAccountId = deleteByBatchAndInvoiceAccountId;
+exports.deleteByBatchAndInvoiceId = deleteByBatchAndInvoiceId;

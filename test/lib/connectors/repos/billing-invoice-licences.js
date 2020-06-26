@@ -27,6 +27,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       toJSON: sandbox.stub()
     };
     bookshelfStub = {
+      where: sandbox.stub().returnsThis(),
       fetch: sandbox.stub().resolves(model),
       destroy: sandbox.stub()
     };
@@ -67,23 +68,6 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       const { args } = bookshelf.knex.raw.lastCall;
       expect(args[0]).to.equal(queries.deleteEmptyByBatchId);
       expect(args[1]).to.equal({ batchId });
-    });
-  });
-
-  experiment('.deleteByBatchAndInvoiceAccount', () => {
-    let batchId;
-    let invoiceAccountId;
-
-    beforeEach(async () => {
-      batchId = uuid();
-      invoiceAccountId = uuid();
-      await billingInvoiceLicences.deleteByBatchAndInvoiceAccount(batchId, invoiceAccountId);
-    });
-
-    test('calls bookshelf.knex.raw with correct params', async () => {
-      const { args } = bookshelf.knex.raw.lastCall;
-      expect(args[0]).to.equal(queries.deleteByBatchAndInvoiceAccount);
-      expect(args[1]).to.equal({ batchId, invoiceAccountId });
     });
   });
 
@@ -203,6 +187,28 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       const [query, params] = bookshelf.knex.raw.lastCall.args;
       expect(query).to.equal(queries.deleteByBatchId);
       expect(params).to.equal({ batchId });
+    });
+  });
+
+  experiment('.deleteByInvoiceId', async () => {
+    const billingInvoiceId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoiceLicences.deleteByInvoiceId(billingInvoiceId);
+    });
+
+    test('the model is forged', async () => {
+      expect(billingInvoiceLicence.forge.called).to.be.true();
+    });
+
+    test('the correct invoice licences are selected for deletion', async () => {
+      expect(bookshelfStub.where.calledWith({
+        billing_invoice_id: billingInvoiceId
+      })).to.be.true();
+    });
+
+    test('the models are destroyed', async () => {
+      expect(bookshelfStub.destroy.called).to.be.true();
     });
   });
 });

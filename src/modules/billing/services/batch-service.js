@@ -7,6 +7,7 @@ const { logger } = require('../../../logger');
 const Event = require('../../../lib/models/event');
 const eventService = require('../../../lib/services/events');
 const { BatchStatusError, BillingVolumeStatusError } = require('../lib/errors');
+const { NotFoundError } = require('../../../lib/errors');
 
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
@@ -16,7 +17,6 @@ const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
 const billingVolumesService = require('./billing-volumes-service');
 const invoiceService = require('./invoice-service');
-const invoiceAccountsService = require('./invoice-accounts-service');
 const config = require('../../../../config');
 
 /**
@@ -176,24 +176,6 @@ const getTransactionStatusCounts = async batchId => {
   }), {});
 };
 
-const deleteAccountFromBatch = async (batch, accountId) => {
-  // get the invoice account from the CRM to access
-  // the customer reference number.
-  const invoiceAccount = await invoiceAccountsService.getByInvoiceAccountId(accountId);
-
-  // Delete from CM
-  await chargeModuleBillRunConnector.removeCustomer(batch.externalId, invoiceAccount.accountNumber);
-
-  // Delete from local DB
-  await newRepos.billingVolumes.deleteByBatchAndInvoiceAccountId(batch.id, accountId);
-  await newRepos.billingTransactions.deleteByBatchAndInvoiceAccountId(batch.id, accountId);
-  await newRepos.billingInvoiceLicences.deleteByBatchAndInvoiceAccount(batch.id, accountId);
-  await newRepos.billingInvoices.deleteByBatchAndInvoiceAccountId(batch.id, accountId);
-
-  // @TODO delete charge versions no longer affected
-  return setStatusToEmptyWhenNoTransactions(batch);
-};
-
 /**
  * If the batch has no more transactions then the batch is set
  * to empty, otherwise it stays the same
@@ -302,13 +284,48 @@ const approveTptBatchReview = async batch => {
   return getBatchById(batch.id);
 };
 
-const getSentTPTBatchesForFinancialYearAndRegion = async (financialYear, region) => {
-  await newRepos.billingBatches.findSentTPTBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id);
+const getSentTPTBatchesForFinancialYearAndRegion = async (financialYear, region) =>
+  newRepos.billingBatches.findSentTPTBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id);
+
+/**
+ * Deletes an individual invoice from the batch.  Also deletes CM transactions
+ * @param {Batch} batch
+ * @param {String} invoiceId
+ * @return {Promise}
+ */
+const deleteBatchInvoice = async (batch, invoiceId) => {
+  // Check batch is in suitable state to delete invoices
+  if (!batch.canDeleteInvoices()) {
+    throw new BatchStatusError(`Cannot delete invoice from batch when status is ${batch.status}`);
+  }
+
+  // Load invoice
+  const invoice = await newRepos.billingInvoices.findOne(invoiceId);
+  if (!invoice) {
+    throw new NotFoundError(`Invoice ${invoiceId} not found`);
+  }
+
+  try {
+    // Delete CM transactions
+    const { invoiceAccountNumber, financialYearEnding } = invoice;
+    const { externalId } = invoice.billingBatch;
+    await chargeModuleBillRunConnector.removeCustomerInFinancialYear(externalId, invoiceAccountNumber, financialYearEnding);
+
+    // Delete local data
+    await newRepos.billingBatchChargeVersionYears.deleteByInvoiceId(invoiceId);
+    await newRepos.billingVolumes.deleteByBatchAndInvoiceId(batch.id, invoiceId);
+    await newRepos.billingTransactions.deleteByInvoiceId(invoiceId);
+    await newRepos.billingInvoiceLicences.deleteByInvoiceId(invoiceId);
+    await newRepos.billingInvoices.delete(invoiceId);
+    return setStatusToEmptyWhenNoTransactions(batch);
+  } catch (err) {
+    await setErrorStatus(batch.id, Batch.BATCH_ERROR_CODE.failedToDeleteInvoice);
+    throw err;
+  }
 };
 
 exports.approveBatch = approveBatch;
 exports.decorateBatchWithTotals = decorateBatchWithTotals;
-exports.deleteAccountFromBatch = deleteAccountFromBatch;
 exports.deleteBatch = deleteBatch;
 
 exports.getBatchById = getBatchById;
@@ -326,3 +343,4 @@ exports.create = create;
 exports.createChargeModuleBillRun = createChargeModuleBillRun;
 exports.approveTptBatchReview = approveTptBatchReview;
 exports.getSentTPTBatchesForFinancialYearAndRegion = getSentTPTBatchesForFinancialYearAndRegion;
+exports.deleteBatchInvoice = deleteBatchInvoice;

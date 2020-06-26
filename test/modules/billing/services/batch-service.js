@@ -21,6 +21,7 @@ const Licence = require('../../../../src/lib/models/licence');
 const Totals = require('../../../../src/lib/models/totals');
 const Transaction = require('../../../../src/lib/models/transaction');
 const { BatchStatusError, BillingVolumeStatusError } = require('../../../../src/modules/billing/lib/errors');
+const { NotFoundError } = require('../../../../src/lib/errors');
 
 const eventService = require('../../../../src/lib/services/events');
 const { logger } = require('../../../../src/logger');
@@ -78,21 +79,17 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingBatches, 'update').resolves();
     sandbox.stub(newRepos.billingBatches, 'create').resolves();
 
-    sandbox.stub(newRepos.billingInvoices, 'deleteByBatchAndInvoiceAccountId').resolves();
     sandbox.stub(newRepos.billingInvoices, 'deleteEmptyByBatchId').resolves();
     sandbox.stub(newRepos.billingInvoices, 'deleteByBatchId').resolves();
 
-    sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchAndInvoiceAccount').resolves();
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteEmptyByBatchId').resolves();
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchId').resolves();
 
     sandbox.stub(newRepos.billingTransactions, 'findStatusCountsByBatchId').resolves();
-    sandbox.stub(newRepos.billingTransactions, 'deleteByBatchAndInvoiceAccountId').resolves();
     sandbox.stub(newRepos.billingTransactions, 'findByBatchId').resolves();
     sandbox.stub(newRepos.billingTransactions, 'deleteByBatchId').resolves();
 
     sandbox.stub(newRepos.billingVolumes, 'deleteByBatchId').resolves();
-    sandbox.stub(newRepos.billingVolumes, 'deleteByBatchAndInvoiceAccountId').resolves();
 
     sandbox.stub(newRepos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
     sandbox.stub(newRepos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
@@ -107,13 +104,20 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId');
 
     sandbox.stub(chargeModuleBillRunConnector, 'create').resolves();
-    sandbox.stub(chargeModuleBillRunConnector, 'removeCustomer').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'get').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'delete').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'approve').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'send').resolves();
+    sandbox.stub(chargeModuleBillRunConnector, 'removeCustomerInFinancialYear').resolves();
 
     sandbox.stub(eventService, 'create').resolves();
+
+    sandbox.stub(newRepos.billingInvoices, 'findOne');
+    sandbox.stub(newRepos.billingBatchChargeVersionYears, 'deleteByInvoiceId');
+    sandbox.stub(newRepos.billingVolumes, 'deleteByBatchAndInvoiceId');
+    sandbox.stub(newRepos.billingTransactions, 'deleteByInvoiceId');
+    sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByInvoiceId');
+    sandbox.stub(newRepos.billingInvoices, 'delete');
   });
 
   afterEach(async () => {
@@ -711,86 +715,6 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.deleteAccountFromBatch', () => {
-    let batch;
-    let invoiceAccount;
-    let result;
-
-    beforeEach(async () => {
-      batch = {
-        externalId: uuid(),
-        status: 'ready'
-      };
-
-      invoiceAccount = {
-        accountNumber: 'A123443321A'
-      };
-
-      invoiceAccountsService.getByInvoiceAccountId.resolves(invoiceAccount);
-      newRepos.billingTransactions.findByBatchId.resolves([
-        { id: 1 }, { id: 2 }
-      ]);
-      result = await batchService.deleteAccountFromBatch(batch, 'test-invoice-account-id');
-    });
-
-    test('uses the invoice account service to get the account number', async () => {
-      const [accountId] = invoiceAccountsService.getByInvoiceAccountId.lastCall.args;
-      expect(accountId).to.equal('test-invoice-account-id');
-    });
-
-    test('deletes all the transactions at the charge module', async () => {
-      const [externalId, accountNumber] = chargeModuleBillRunConnector.removeCustomer.lastCall.args;
-
-      expect(externalId).to.equal(batch.externalId);
-      expect(accountNumber).to.equal(invoiceAccount.accountNumber);
-    });
-
-    test('deletes the local billing volumes', async () => {
-      const [batchId, accountId] = newRepos.billingVolumes.deleteByBatchAndInvoiceAccountId.lastCall.args;
-      expect(batchId).to.equal(batch.id);
-      expect(accountId).to.equal('test-invoice-account-id');
-    });
-
-    test('deletes the local transactions', async () => {
-      const [batchId, accountId] = newRepos.billingTransactions.deleteByBatchAndInvoiceAccountId.lastCall.args;
-      expect(batchId).to.equal(batch.id);
-      expect(accountId).to.equal('test-invoice-account-id');
-    });
-
-    test('deletes the local invoice licences', async () => {
-      const [batchId, accountId] = newRepos.billingInvoiceLicences.deleteByBatchAndInvoiceAccount.lastCall.args;
-      expect(batchId).to.equal(batch.id);
-      expect(accountId).to.equal('test-invoice-account-id');
-    });
-
-    test('deletes the local invoice', async () => {
-      const [batchId, accountId] = newRepos.billingInvoices.deleteByBatchAndInvoiceAccountId.lastCall.args;
-      expect(batchId).to.equal(batch.id);
-      expect(accountId).to.equal('test-invoice-account-id');
-    });
-
-    test('gets the remaining transactions', async () => {
-      const [batchId] = newRepos.billingTransactions.findByBatchId.lastCall.args;
-      expect(batchId).to.equal(batch.id);
-    });
-
-    test('returns the batch with the status unchanged', async () => {
-      expect(result.status).to.equal(Batch.BATCH_STATUS.ready);
-    });
-
-    experiment('when there are no transactions left', () => {
-      test('test', async () => {
-        newRepos.billingTransactions.findByBatchId.resolves([]);
-        newRepos.billingBatches.update.resolves({
-          status: Batch.BATCH_STATUS.empty
-        });
-        result = await batchService.deleteAccountFromBatch(batch, 'test-invoice-account-id');
-
-        expect(result.status).to.equal(Batch.BATCH_STATUS.empty);
-      });
-    });
-  });
-
   experiment('.setStatusToEmptyWhenNoTransactions', () => {
     experiment('when the batch has more transactions', () => {
       test('the status is not updated', async () => {
@@ -1054,6 +978,118 @@ experiment('modules/billing/services/batch-service', () => {
           expect(err).to.be.an.instanceOf(BillingVolumeStatusError);
           expect(err.message).to.equal('Cannot approve review. There are outstanding two part tariff errors to resolve');
         }
+      });
+    });
+  });
+
+  experiment('.deleteBatchinvoice', () => {
+    let batch, invoiceId;
+
+    experiment('when the batch is not in "ready" status', () => {
+      beforeEach(async () => {
+        batch = new Batch();
+        batch.status = Batch.BATCH_STATUS.review;
+      });
+
+      test('throws a BatchStatusError', async () => {
+        const func = () => batchService.deleteBatchInvoice(batch, invoiceId);
+        const err = await expect(func()).to.reject();
+        expect(err instanceof BatchStatusError).to.be.true();
+      });
+    });
+
+    experiment('when the batch is in "ready" status', () => {
+      beforeEach(async () => {
+        batch = new Batch(uuid());
+        batch.fromHash({
+          status: Batch.BATCH_STATUS.ready,
+          externalId: uuid()
+        });
+      });
+
+      test('throws a NotFoundError if the invoice is not found', async () => {
+        newRepos.billingInvoices.findOne.resolves(null);
+        const func = () => batchService.deleteBatchInvoice(batch, invoiceId);
+        const err = await expect(func()).to.reject();
+        expect(err instanceof NotFoundError).to.be.true();
+      });
+
+      experiment('when the invoice is found and there are no errors', () => {
+        beforeEach(async () => {
+          newRepos.billingInvoices.findOne.resolves({
+            invoiceAccountNumber: 'A12345678A',
+            financialYearEnding: 2020,
+            billingBatch: {
+              externalId: batch.externalId
+            }
+          });
+          newRepos.billingTransactions.findByBatchId.resolves([]);
+          await batchService.deleteBatchInvoice(batch, invoiceId);
+        });
+
+        test('loads the invoice with the supplied ID', async () => {
+          expect(newRepos.billingInvoices.findOne.calledWith(invoiceId)).to.be.true();
+        });
+
+        test('deletes the charge module transactions in the bill run with matching customer number and financial year', async () => {
+          expect(chargeModuleBillRunConnector.removeCustomerInFinancialYear.calledWith(
+            batch.externalId, 'A12345678A', 2020
+          )).to.be.true();
+        });
+
+        test('deletes associated charge version years from batch', async () => {
+          expect(newRepos.billingBatchChargeVersionYears.deleteByInvoiceId.calledWith(invoiceId)).to.be.true();
+        });
+
+        test('deletes associated billing volumes from batch', async () => {
+          expect(newRepos.billingVolumes.deleteByBatchAndInvoiceId.calledWith(batch.id, invoiceId)).to.be.true();
+        });
+
+        test('deletes associated transactions from batch', async () => {
+          expect(newRepos.billingTransactions.deleteByInvoiceId.calledWith(invoiceId)).to.be.true();
+        });
+
+        test('deletes associated invoice licences from batch', async () => {
+          expect(newRepos.billingInvoiceLicences.deleteByInvoiceId.calledWith(invoiceId)).to.be.true();
+        });
+
+        test('deletes invoice from batch', async () => {
+          expect(newRepos.billingInvoices.delete.calledWith(invoiceId)).to.be.true();
+        });
+
+        test('sets status of batch to empty when there are no transactions', () => {
+          expect(newRepos.billingBatches.update.calledWith(
+            batch.id, { status: 'empty' }
+          )).to.be.true();
+        });
+      });
+
+      experiment('when the invoice is found and there is an error errors', () => {
+        beforeEach(async () => {
+          newRepos.billingInvoices.findOne.resolves({
+            invoiceAccountNumber: 'A12345678A',
+            financialYearEnding: 2020,
+            billingBatch: {
+              externalId: batch.externalId
+            }
+          });
+          newRepos.billingTransactions.findByBatchId.resolves([]);
+          chargeModuleBillRunConnector.removeCustomerInFinancialYear.rejects(new Error('oh no!'));
+        });
+
+        test('the batch is set to error status with the correct code', async () => {
+          const func = () => batchService.deleteBatchInvoice(batch, invoiceId);
+          await expect(func()).to.reject();
+          expect(newRepos.billingBatches.update.calledWith(
+            batch.id, { status: Batch.BATCH_STATUS.error, errorCode: Batch.BATCH_ERROR_CODE.failedToDeleteInvoice }
+          )).to.be.true();
+        });
+
+        test('the error is rethrown', async () => {
+          const func = () => batchService.deleteBatchInvoice(batch, invoiceId);
+          const err = await expect(func()).to.reject();
+          expect(err.message).to.equal('oh no!');
+        });
       });
     });
   });

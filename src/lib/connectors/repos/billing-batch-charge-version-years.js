@@ -1,6 +1,6 @@
 'use strict';
 
-const { BillingBatchChargeVersionYear } = require('../bookshelf');
+const { BillingBatchChargeVersionYear, bookshelf } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-batch-charge-version-years');
 
@@ -25,7 +25,16 @@ const deleteByBatchId = async batchId => BillingBatchChargeVersionYear
   .where({ billing_batch_id: batchId })
   .destroy();
 
-exports.deleteByBatchId = deleteByBatchId;
+/*
+  * Deletes all charge version years associated with an invoice ID
+  * @param {String} billingInvoiceId
+  * @return {Promise}
+  */
+const deleteByInvoiceId = billingInvoiceId => bookshelf
+  .knex
+  .raw(queries.deleteByInvoiceId, { billingInvoiceId });
 
 exports.update = update;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
+exports.deleteByBatchId = deleteByBatchId;
+exports.deleteByInvoiceId = deleteByInvoiceId;

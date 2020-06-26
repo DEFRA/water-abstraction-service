@@ -26,15 +26,6 @@ delete from water.billing_invoice_licences l
   )
 `;
 
-exports.deleteByBatchAndInvoiceAccount = `
-  delete
-  from water.billing_invoice_licences bil
-  using water.billing_invoices bi
-  where bil.billing_invoice_id = bi.billing_invoice_id
-  and bi.billing_batch_id = :batchId
-  and bi.invoice_account_id = :invoiceAccountId;
-`;
-
 exports.findLicencesWithTransactionStatusesForBatch = `
   select
     bil.billing_invoice_id,

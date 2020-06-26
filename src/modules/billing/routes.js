@@ -104,15 +104,15 @@ const getBatchInvoiceDetail = {
   }
 };
 
-const deleteAccountFromBatch = {
+const deleteBatchInvoice = {
   method: 'DELETE',
-  path: '/water/1.0/billing/batches/{batchId}/account/{accountId}',
-  handler: controller.deleteAccountFromBatch,
+  path: '/water/1.0/billing/batches/{batchId}/invoices/{invoiceId}',
+  handler: controller.deleteBatchInvoice,
   config: {
     validate: {
       params: {
         batchId: Joi.string().uuid().required(),
-        accountId: Joi.string().uuid().required()
+        invoiceId: Joi.string().uuid().required()
       }
     },
     pre: [
@@ -246,7 +246,7 @@ exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
 exports.getBatchLicences = getBatchLicences;
 exports.getInvoiceLicence = getInvoiceLicence;
-exports.deleteAccountFromBatch = deleteAccountFromBatch;
+exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteBatch = deleteBatch;
 
 exports.postApproveBatch = postApproveBatch;

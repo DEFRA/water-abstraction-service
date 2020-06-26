@@ -1,7 +1,6 @@
 'use strict';
 
-const { bookshelf } = require('../bookshelf');
-const BillingInvoiceLicence = require('../bookshelf/BillingInvoiceLicence');
+const { bookshelf, BillingInvoiceLicence } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoice-licences');
 
@@ -12,7 +11,7 @@ const withRelated = [
 ];
 
 /**
- * Gets billingInvoiceLicence and related models by GUID
+ * Gets BillingInvoiceLicence and related models by GUID
  * @param {String} id - guid
  * @return {Promise<Object>}
  */
@@ -37,17 +36,6 @@ const upsert = async data => raw.singleRow(queries.upsert, data);
  */
 const deleteEmptyByBatchId = batchId =>
   bookshelf.knex.raw(queries.deleteEmptyByBatchId, { batchId });
-
-/**
- * Deletes invoice licences for the invoice account and batch
- * @param {String} batchId
- * @param {String} invoiceAccountId
- */
-const deleteByBatchAndInvoiceAccount = (batchId, invoiceAccountId) =>
-  bookshelf.knex.raw(
-    queries.deleteByBatchAndInvoiceAccount,
-    { batchId, invoiceAccountId }
-  );
 
 /**
  * Finds all the licences in a batch and aggregates the two part tariff
@@ -92,11 +80,20 @@ const deleteRecord = billingInvoiceLicenceId => BillingInvoiceLicence
 */
 const deleteByBatchId = async batchId => bookshelf.knex.raw(queries.deleteByBatchId, { batchId });
 
+/*
+ * Delete multiple by invoice ID
+ * @param {String} id - one or many IDs
+ */
+const deleteByInvoiceId = billingInvoiceId => BillingInvoiceLicence
+  .forge()
+  .where({ billing_invoice_id: billingInvoiceId })
+  .destroy();
+
 exports.findOne = findOne;
-exports.deleteByBatchAndInvoiceAccount = deleteByBatchAndInvoiceAccount;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findLicencesWithTransactionStatusesForBatch = findLicencesWithTransactionStatusesForBatch;
 exports.findOneInvoiceLicenceWithTransactions = findOneInvoiceLicenceWithTransactions;
 exports.upsert = upsert;
 exports.delete = deleteRecord;
 exports.deleteByBatchId = deleteByBatchId;
+exports.deleteByInvoiceId = deleteByInvoiceId;
