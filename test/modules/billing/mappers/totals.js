@@ -114,6 +114,16 @@ experiment('modules/billing/mappers/totals', () => {
         expect(result).to.be.null();
       });
     });
+
+    experiment('when the financial year is not present in the bill run summary', () => {
+      beforeEach(async () => {
+        result = totalsMapper.chargeModuleBillRunToInvoiceModel(data.billRun, INVOICE_ACCOUNT_NUMBER, 2001);
+      });
+
+      test('the result is null', async () => {
+        expect(result).to.be.null();
+      });
+    });
   });
 
   experiment('.dbToModel', () => {
