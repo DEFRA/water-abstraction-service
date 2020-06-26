@@ -1,7 +1,6 @@
 const { set } = require('lodash');
 const twoPartTariffMatching = require('./two-part-tariff-matching');
 const returnHelpers = require('./returns-helpers');
-const Purpose = require('../../../../lib/models/purpose');
 
 const decorateWithResultsContainingData = (overallError, data, transactions) => {
   for (const result of data) {
@@ -46,7 +45,6 @@ const decorateTransactionsWithMatchingResults = (matchingResults, invoiceLicence
 };
 
 const fixPurpose = chargeElement => ({
-  type: Purpose.PURPOSE_TYPES.use,
   name: 'Spray irrigation',
   code: '420'
 });

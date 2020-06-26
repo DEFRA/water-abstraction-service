@@ -10,7 +10,7 @@ const Transaction = require('../../../src/lib/models/transaction');
 const Agreement = require('../../../src/lib/models/agreement');
 const DateRange = require('../../../src/lib/models/date-range');
 const ChargeElement = require('../../../src/lib/models/charge-element');
-const Purpose = require('../../../src/lib/models/purpose');
+const PurposeUse = require('../../../src/lib/models/purpose-use');
 const Licence = require('../../../src/lib/models/licence');
 const Region = require('../../../src/lib/models/region');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
@@ -42,7 +42,7 @@ const getTestDataForHashing = () => {
   chargeElement.billableAnnualQuantity = null;
   chargeElement.description = 'Test description';
 
-  const purpose = new Purpose();
+  const purpose = new PurposeUse();
   purpose.name = 'Test Purpose';
   chargeElement.purposeUse = purpose;
 

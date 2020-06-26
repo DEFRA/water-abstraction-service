@@ -1,3 +1,5 @@
+'use strict';
+
 const uuid = require('uuid/v4');
 const Agreement = require('../../../../../src/lib/models/agreement');
 const AbstractionPeriod = require('../../../../../src/lib/models/abstraction-period');
@@ -10,7 +12,7 @@ const InvoiceAccount = require('../../../../../src/lib/models/invoice-account');
 const Licence = require('../../../../../src/lib/models/licence');
 const LicenceAgreement = require('../../../../../src/lib/models/licence-agreement');
 const FinancialYear = require('../../../../../src/lib/models/financial-year');
-const Purpose = require('../../../../../src/lib/models/purpose');
+const PurposeUse = require('../../../../../src/lib/models/purpose-use');
 
 const createLicence = (overrides = {}) => {
   const licence = new Licence();
@@ -45,10 +47,10 @@ const createChargeElement = (overrides = {}) => {
   });
 
   const purposeData = overrides.isSprayIrrigation
-    ? { code: '400', name: 'Spray Irrigation Direct' }
-    : { code: '300', name: 'Mineral washing' };
+    ? { code: '400', name: 'Spray Irrigation Direct', isTwoPartTariff: true }
+    : { code: '300', name: 'Mineral washing', isTwoPartTariff: false };
 
-  const purpose = new Purpose();
+  const purpose = new PurposeUse();
   purpose.fromHash(purposeData);
 
   const chargeElement = new ChargeElement();
