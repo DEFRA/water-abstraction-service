@@ -3,6 +3,11 @@
 const validators = require('./validators');
 
 class DateRange {
+  /**
+   *
+   * @param {String} startDate The start date in the format YYYY-MM-DD
+   * @param {String} [endDate] Optional end date in the format YYYY-MM-DD
+   */
   constructor (startDate, endDate) {
     if (startDate) {
       this.startDate = startDate;

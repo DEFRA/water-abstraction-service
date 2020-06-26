@@ -50,22 +50,14 @@ const getChargePeriod = (financialYear, chargeVersion) => {
 };
 
 /**
- * Predicate to check whether the supplied purpose is applicable for two-part tariff discounts
- * @param {Purpose} purpose
- * @return {Boolean}
- */
-const isTwoPartPurpose = purpose =>
-  TWO_PART_TARIFF_PURPOSE_CODES.includes(parseInt(purpose.code));
-
-/**
  * Predicate to check whether an agreement should be applied to the transaction
  * @param {Agreement} agreement
- * @param {Purpose} purpose
+ * @param {PurposeUse} purpose
  * @return {Boolean}
  */
 const agreementAppliesToTransaction = (agreement, purpose) => {
   const isCanalApplied = agreement.isCanalAndRiversTrust();
-  const isTwoPartTariffApplied = agreement.isTwoPartTariff() && isTwoPartPurpose(purpose);
+  const isTwoPartTariffApplied = agreement.isTwoPartTariff() && purpose.isTwoPartTariff;
   return isCanalApplied || isTwoPartTariffApplied;
 };
 
@@ -152,7 +144,7 @@ const checkSeasonIsValid = (batch, chargeElement, sentTPTBatches, licence) => {
 const isTwoPartTariffSupplementaryChargesNeeded = (batch, period, chargeElement, sentTPTBatches, licence) => {
   const isCorrectBatchType = batch.isTwoPartTariff() || batch.isSupplementary();
   const isAgreementInEffect = period.agreements.some(agreement => agreement.code === 'S127');
-  const isValidPurpose = isTwoPartPurpose(chargeElement.purposeUse);
+  const isValidPurpose = chargeElement.purposeUse.isTwoPartTariff;
   const isValidSeason = checkSeasonIsValid(batch, chargeElement, sentTPTBatches, licence);
 
   return isCorrectBatchType && isAgreementInEffect && isValidPurpose && isValidSeason;
