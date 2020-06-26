@@ -132,20 +132,20 @@ experiment('lib/services/charge-elements', () => {
         });
 
         experiment('and the abstraction period matches the summer bounds', () => {
-          test('the season is set to all year', async () => {
+          test('the season is set to summer', async () => {
             licenceVersionPurpose.abstractionPeriod = abstractionPeriods.matchingSummer;
             setElements();
 
-            expect(element.season).to.equal(CHARGE_SEASON.allYear);
+            expect(element.season).to.equal(CHARGE_SEASON.summer);
           });
         });
 
         experiment('and the abstraction period matches the winter bounds', () => {
-          test('the season is set to all year', async () => {
+          test('the season is set to winter', async () => {
             licenceVersionPurpose.abstractionPeriod = abstractionPeriods.matchingWinter;
             setElements();
 
-            expect(element.season).to.equal(CHARGE_SEASON.allYear);
+            expect(element.season).to.equal(CHARGE_SEASON.winter);
           });
         });
       });
@@ -156,7 +156,7 @@ experiment('lib/services/charge-elements', () => {
         { period: 'withinSummer', expectedSeason: CHARGE_SEASON.summer },
         { period: 'withinWinter', expectedSeason: CHARGE_SEASON.winter },
         { period: 'matchingSummer', expectedSeason: CHARGE_SEASON.summer },
-        { period: 'matchingWinter', expectedSeason: CHARGE_SEASON.summer }
+        { period: 'matchingWinter', expectedSeason: CHARGE_SEASON.winter }
       ];
 
       specs.forEach(spec => {
@@ -178,7 +178,7 @@ experiment('lib/services/charge-elements', () => {
         { period: 'withinSummer', expectedSeason: CHARGE_SEASON.summer },
         { period: 'withinWinter', expectedSeason: CHARGE_SEASON.winter },
         { period: 'matchingSummer', expectedSeason: CHARGE_SEASON.summer },
-        { period: 'matchingWinter', expectedSeason: CHARGE_SEASON.summer }
+        { period: 'matchingWinter', expectedSeason: CHARGE_SEASON.winter }
       ];
 
       specs.forEach(spec => {
@@ -200,7 +200,7 @@ experiment('lib/services/charge-elements', () => {
         { period: 'withinSummer', expectedSeason: CHARGE_SEASON.summer },
         { period: 'withinWinter', expectedSeason: CHARGE_SEASON.winter },
         { period: 'matchingSummer', expectedSeason: CHARGE_SEASON.summer },
-        { period: 'matchingWinter', expectedSeason: CHARGE_SEASON.summer }
+        { period: 'matchingWinter', expectedSeason: CHARGE_SEASON.winter }
       ];
 
       specs.forEach(spec => {
@@ -222,7 +222,7 @@ experiment('lib/services/charge-elements', () => {
         { period: 'withinSummer', expectedSeason: CHARGE_SEASON.summer },
         { period: 'withinWinter', expectedSeason: CHARGE_SEASON.winter },
         { period: 'matchingSummer', expectedSeason: CHARGE_SEASON.summer },
-        { period: 'matchingWinter', expectedSeason: CHARGE_SEASON.summer }
+        { period: 'matchingWinter', expectedSeason: CHARGE_SEASON.winter }
       ];
 
       specs.forEach(spec => {

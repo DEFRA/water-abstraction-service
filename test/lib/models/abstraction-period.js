@@ -163,29 +163,29 @@ experiment('lib/models/abstraction-period', () => {
 
   experiment('.isWithinAbstractionPeriod', () => {
     experiment('when the abstraction period is in the same year', () => {
-      test('returns false if the start dates are the same', async () => {
+      test('returns true if the start dates are the same', async () => {
         const summer = AbstractionPeriod.getSummer();
 
         const period = new AbstractionPeriod();
         period.setDates(1, 4, 1, 10);
 
-        expect(period.isWithinAbstractionPeriod(summer)).to.equal(false);
+        expect(period.isWithinAbstractionPeriod(summer)).to.equal(true);
       });
 
-      test('returns false if the end dates are the same', async () => {
+      test('returns true if the end dates are the same', async () => {
         const summer = AbstractionPeriod.getSummer();
 
         const period = new AbstractionPeriod();
         period.setDates(1, 5, 31, 10);
 
-        expect(period.isWithinAbstractionPeriod(summer)).to.equal(false);
+        expect(period.isWithinAbstractionPeriod(summer)).to.equal(true);
       });
 
-      test('returns false if both start and end dates are the same', async () => {
+      test('returns true if both start and end dates are the same', async () => {
         const summer = AbstractionPeriod.getSummer();
         const period = AbstractionPeriod.getSummer();
 
-        expect(period.isWithinAbstractionPeriod(summer)).to.equal(false);
+        expect(period.isWithinAbstractionPeriod(summer)).to.equal(true);
       });
 
       test('returns true if both dates are in between the period', async () => {
@@ -196,32 +196,57 @@ experiment('lib/models/abstraction-period', () => {
 
         expect(period.isWithinAbstractionPeriod(summer)).to.equal(true);
       });
+
+      test('return false if the start date is before the range', async () => {
+        const summer = AbstractionPeriod.getSummer();
+        const beforeSummer = AbstractionPeriod.getSummer();
+        beforeSummer.startMonth = summer.startMonth - 1;
+
+        expect(beforeSummer.isWithinAbstractionPeriod(summer)).to.equal(false);
+      });
+
+      test('return false if the end date is after the range', async () => {
+        const summer = AbstractionPeriod.getSummer();
+        const afterSummer = AbstractionPeriod.getSummer();
+        afterSummer.endMonth = summer.endMonth + 1;
+
+        expect(afterSummer.isWithinAbstractionPeriod(summer)).to.equal(false);
+      });
+
+      test('return false if the start and end dates are outside the range', async () => {
+        const summer = AbstractionPeriod.getSummer();
+        const notSummer = AbstractionPeriod.getSummer();
+        notSummer.startMonth = summer.startMonth - 1;
+        notSummer.endMonth = summer.endMonth + 1;
+
+        expect(notSummer.isWithinAbstractionPeriod(summer)).to.equal(false);
+      });
     });
 
     experiment('when the abstraction period spans two years', () => {
-      test('returns false if the start dates are the same', async () => {
+      test('returns true if the start dates are the same', async () => {
         const winter = AbstractionPeriod.getWinter();
 
         const period = new AbstractionPeriod();
         period.setDates(1, 11, 1, 3);
 
-        expect(period.isWithinAbstractionPeriod(winter)).to.equal(false);
+        expect(period.isWithinAbstractionPeriod(winter)).to.equal(true);
       });
 
-      test('returns false if the end dates are the same', async () => {
+      test('returns true if the end dates are the same', async () => {
         const winter = AbstractionPeriod.getWinter();
 
         const period = new AbstractionPeriod();
         period.setDates(1, 2, 31, 3);
 
-        expect(period.isWithinAbstractionPeriod(winter)).to.equal(false);
+        expect(period.isWithinAbstractionPeriod(winter)).to.equal(true);
       });
 
-      test('returns false if both start and end dates are the same', async () => {
+      test('returns true if both start and end dates are the same', async () => {
         const winter = AbstractionPeriod.getWinter();
         const period = AbstractionPeriod.getWinter();
 
-        expect(period.isWithinAbstractionPeriod(winter)).to.equal(false);
+        expect(period.isWithinAbstractionPeriod(winter)).to.equal(true);
       });
 
       test('returns true if both dates are in between the period', async () => {
@@ -232,6 +257,31 @@ experiment('lib/models/abstraction-period', () => {
 
         expect(period.isWithinAbstractionPeriod(winter)).to.equal(true);
       });
+
+      test('return false if the start date is before the range', async () => {
+        const winter = AbstractionPeriod.getWinter();
+        const beforewinter = AbstractionPeriod.getWinter();
+        beforewinter.startMonth = winter.startMonth - 1;
+
+        expect(beforewinter.isWithinAbstractionPeriod(winter)).to.equal(false);
+      });
+
+      test('return false if the end date is after the range', async () => {
+        const winter = AbstractionPeriod.getWinter();
+        const afterSummer = AbstractionPeriod.getWinter();
+        afterSummer.endMonth = winter.endMonth + 1;
+
+        expect(afterSummer.isWithinAbstractionPeriod(winter)).to.equal(false);
+      });
+
+      test('return false if the start and end dates are outside the range', async () => {
+        const winter = AbstractionPeriod.getWinter();
+        const notWinter = AbstractionPeriod.getWinter();
+        notWinter.startMonth = winter.startMonth - 1;
+        notWinter.endMonth = winter.endMonth + 1;
+
+        expect(notWinter.isWithinAbstractionPeriod(winter)).to.equal(false);
+      });
     });
   });
 
@@ -241,14 +291,14 @@ experiment('lib/models/abstraction-period', () => {
         const period = new AbstractionPeriod();
         period.setDates(1, 4, 31, 10);
 
-        expect(period.getChargeSeason()).to.equal(CHARGE_SEASON.allYear);
+        expect(period.getChargeSeason()).to.equal(CHARGE_SEASON.summer);
       });
     });
 
     experiment('when the period matches the winter period', () => {
       test('the season is all year', async () => {
         const winter = AbstractionPeriod.getWinter();
-        expect(winter.getChargeSeason()).to.equal(CHARGE_SEASON.allYear);
+        expect(winter.getChargeSeason()).to.equal(CHARGE_SEASON.winter);
       });
     });
 

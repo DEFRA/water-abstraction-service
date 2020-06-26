@@ -1,39 +1,24 @@
 'use strict';
 
+const moment = require('moment-range').extendMoment(require('moment'));
+
 const { CHARGE_SEASON } = require('./constants');
 const Model = require('./model');
 const { assertDay, assertMonth } = require('./validators');
 
-const moment = require('moment');
-
-const getDayOfYear = (day, month) =>
-  moment().month(month - 1).date(day).dayOfYear();
-
-const getDayOfYearRange = abstractionPeriod => {
-  const start = getDayOfYear(abstractionPeriod.startDay, abstractionPeriod.startMonth);
-  const end = getDayOfYear(abstractionPeriod.endDay, abstractionPeriod.endMonth);
-
-  return {
-    start,
-    end,
-    isCrossYear: end < start,
-    correction: moment().isLeapYear() ? 366 : 356
-  };
-};
-
-const singleYearRangeWithinMultiYearRange = (range, otherRange) => {
-  return (range.start > otherRange.start && range.end < otherRange.end + otherRange.correction) ||
-      (range.start < otherRange.end && range.end < otherRange.end);
-};
-
-const multiYearRangeWithinMultiYearRange = (range, otherRange) => {
-  return (range.start > otherRange.start) && (range.end < otherRange.end);
-};
-
-const multiYearRangeWithinSingleYearRange = (range, otherRange) => {
-  return (
-    (range.start > otherRange.start && range.start < otherRange.end) &&
-    (range.end > otherRange.start && range.end < otherRange.end)
+/**
+ * Creates a moment range from the supplied abs period in the specified year
+ * @param {AbstractionPeriod} abstractionPeriod
+ * @param {Number} startYear
+ * @return {MomentRange}
+ */
+const createRange = (abstractionPeriod, startYear) => {
+  const { startDay, endDay, startMonth, endMonth } = abstractionPeriod;
+  const isCrossYear = (startMonth > endMonth || (startMonth === endMonth && startDay > endDay));
+  const endYear = isCrossYear ? startYear + 1 : startYear;
+  return moment.range(
+    `${startYear}-${startMonth}-${startDay}`,
+    `${endYear}-${endMonth}-${endDay}`
   );
 };
 
@@ -125,31 +110,9 @@ class AbstractionPeriod extends Model {
    * @param {AbstractionPeriod} period The abstraction period to check if this instance fits within
    */
   isWithinAbstractionPeriod (period) {
-    const range = getDayOfYearRange(this);
-    const otherRange = getDayOfYearRange(period);
-
-    // ||----------------------------------------------------||
-    // ||--- other range ---|----------|---- other range ----||
-    // ||-------------|---- this range ----|-----------------||
-    if (!range.isCrossYear && otherRange.isCrossYear) {
-      return singleYearRangeWithinMultiYearRange(range, otherRange);
-    }
-
-    // ||----------------------------------------------------||
-    // ||--- other range ---|----------|---- other range ----||
-    // ||--- this range ---|--------------|--- this range ---||
-    if (range.isCrossYear && otherRange.isCrossYear) {
-      return multiYearRangeWithinMultiYearRange(range, otherRange);
-    }
-
-    // ||----------------------------------------------------||
-    // ||------------|---- other range ----|-----------------||
-    // ||--- this range ---|------------|---- this range ----||
-    if (range.isCrossYear) {
-      return multiYearRangeWithinSingleYearRange(range, otherRange);
-    }
-
-    return range.start > otherRange.start && range.end < otherRange.end;
+    const thisRange = createRange(this, 2018);
+    const testRanges = [createRange(period, 2017), createRange(period, 2018)];
+    return testRanges.some(range => range.contains(thisRange));
   }
 
   /**
@@ -160,15 +123,13 @@ class AbstractionPeriod extends Model {
    */
   getChargeSeason () {
     // For the season to be summer, this abstraction period must
-    // sit within (not touch the edges) of the summer period
-    // 01/04 - 31/10
+    // sit within the summer period (01/04 - 31/10)
     if (this.isWithinAbstractionPeriod(AbstractionPeriod.getSummer())) {
       return CHARGE_SEASON.summer;
     }
 
     // For the season to be winter, this abstraction period must
-    // sit within (not touch the edges) of the winter period
-    // 01/11 - 31/03
+    // sit within the winter period (01/11 - 31/03)
     if (this.isWithinAbstractionPeriod(AbstractionPeriod.getWinter())) {
       return CHARGE_SEASON.winter;
     }
