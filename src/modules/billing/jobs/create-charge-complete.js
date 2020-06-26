@@ -9,6 +9,11 @@ const batchJob = require('./lib/batch-job');
 const Transaction = require('../../../lib/models/transaction');
 const { get } = require('lodash');
 
+const options = {
+  teamSize: 50,
+  teamConcurrency: 2
+};
+
 /**
  * The current status of the batch - this is either:
  * - processing - there are still candidate transactions to process
@@ -113,3 +118,4 @@ const handleCreateChargeComplete = async (job, messageQueue) => {
 };
 
 module.exports = handleCreateChargeComplete;
+module.exports.options = options;

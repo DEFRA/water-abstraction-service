@@ -9,11 +9,11 @@ const {
 const uuid = require('uuid/v4');
 
 const { expect } = require('@hapi/code');
-const Purpose = require('../../../../src/lib/models/purpose');
-const purposeMapper = require('../../../../src/modules/billing/mappers/purpose');
+const PurposeUse = require('../../../../src/lib/models/purpose-use');
+const purposeUseMapper = require('../../../../src/modules/billing/mappers/purpose-use');
 
 experiment('modules/billing/mappers/purpose', () => {
-  experiment('.dbToModelUse', () => {
+  experiment('.dbToModel', () => {
     let row;
     let result;
 
@@ -21,18 +21,19 @@ experiment('modules/billing/mappers/purpose', () => {
       row = {
         purposeUseId: uuid(),
         legacyId: '10',
-        description: 'test-desc'
+        description: 'test-desc',
+        lossFactor: 'low'
       };
 
-      result = purposeMapper.dbToModelUse(row);
+      result = purposeUseMapper.dbToModel(row);
+    });
+
+    test('creates an instance of PurposeUse', async () => {
+      expect(result).to.be.an.instanceOf(PurposeUse);
     });
 
     test('sets the id', async () => {
       expect(result.id).to.equal(row.purposeUseId);
-    });
-
-    test('sets the type', async () => {
-      expect(result.type).to.equal(Purpose.PURPOSE_TYPES.use);
     });
 
     test('sets the code', async () => {

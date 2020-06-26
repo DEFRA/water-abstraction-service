@@ -3,3 +3,6 @@ alter table water.licence_versions
 
 alter table water.licence_version_purposes
   drop constraint uindx_licence_version_purposes_external_id;
+
+alter table water.licence_version_purposes
+  drop column "external_id";

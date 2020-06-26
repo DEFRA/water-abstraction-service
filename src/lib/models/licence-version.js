@@ -3,6 +3,7 @@
 const validators = require('./validators');
 
 const Model = require('./model');
+const LicenceVersionPurpose = require('./licence-version-purpose');
 
 const LICENCE_VERSION_STATUS = {
   draft: 'draft',
@@ -62,15 +63,11 @@ class LicenceVersion extends Model {
     this._dateUpdated = this.getDateOrThrow(dateUpdated, 'Date updated');
   }
 
-  getDateOrThrow (date, friendlyName) {
-    const momentDate = this.getDateTimeFromValue(date);
-
-    if (momentDate === null) {
-      throw new Error(`${friendlyName} cannot be null`);
-    }
-
-    return momentDate;
-  };
+  get licenceVersionPurposes () { return this._licenceVersionPurposes; }
+  set licenceVersionPurposes (licenceVersionPurposes) {
+    validators.assertIsArrayOfType(licenceVersionPurposes, LicenceVersionPurpose);
+    this._licenceVersionPurposes = licenceVersionPurposes;
+  }
 }
 
 module.exports = LicenceVersion;

@@ -4,24 +4,9 @@ const ChargeElement = require('../../../lib/models/charge-element');
 const DateRange = require('../../../lib/models/date-range');
 const camelCaseKeys = require('../../../lib/camel-case-keys');
 
-const purpose = require('./purpose');
+const purpose = require('./purpose-use');
 
-const AbstractionPeriod = require('../../../lib/models/abstraction-period');
-
-/**
- * Creates an AbstractionPeriod instance from camel-cased charge element data
- * @param {Object} chargeElementRow - charge element row from the charge processor
- * @return {AbstractionPeriod}
- */
-const mapAbstractionPeriod = chargeElementRow => {
-  const element = new AbstractionPeriod();
-  return element.fromHash({
-    startDay: chargeElementRow.abstractionPeriodStartDay,
-    startMonth: chargeElementRow.abstractionPeriodStartMonth,
-    endDay: chargeElementRow.abstractionPeriodEndDay,
-    endMonth: chargeElementRow.abstractionPeriodEndMonth
-  });
-};
+const abstractionPeriodMapper = require('../../../lib/mappers/abstraction-period');
 
 /**
  * Creates a ChargeElement instance given a row of charge element data
@@ -36,14 +21,19 @@ const dbToModel = row => {
     source: chargeElementRow.source,
     season: chargeElementRow.season,
     loss: chargeElementRow.loss,
-    abstractionPeriod: mapAbstractionPeriod(chargeElementRow),
+    abstractionPeriod: abstractionPeriodMapper.dbToModel(chargeElementRow),
     authorisedAnnualQuantity: chargeElementRow.authorisedAnnualQuantity,
-    billableAnnualQuantity: chargeElementRow.billableAnnualQuantity,
-    description: chargeElementRow.description
+    billableAnnualQuantity: chargeElementRow.billableAnnualQuantity
   });
-  if (chargeElementRow.purposeUse) {
-    element.purposeUse = purpose.dbToModelUse(chargeElementRow.purposeUse);
+
+  if (chargeElementRow.description) {
+    element.description = chargeElementRow.description;
   }
+
+  if (chargeElementRow.purposeUse) {
+    element.purposeUse = purpose.dbToModel(chargeElementRow.purposeUse);
+  }
+
   if (chargeElementRow.timeLimitedStartDate && chargeElementRow.timeLimitedEndDate) {
     element.timeLimitedPeriod = new DateRange(
       chargeElementRow.timeLimitedStartDate, chargeElementRow.timeLimitedEndDate);

@@ -6,7 +6,7 @@ const { expect } = require('@hapi/code');
 const ChargeElement = require('../../../src/lib/models/charge-element');
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
-const Purpose = require('../../../src/lib/models/purpose');
+const PurposeUse = require('../../../src/lib/models/purpose-use');
 const DateRange = require('../../../src/lib/models/date-range');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
@@ -163,8 +163,8 @@ experiment('lib/models/charge-element', () => {
   });
 
   experiment('.purposeUse', () => {
-    test('can be set to a Purpose instance', async () => {
-      const purpose = new Purpose();
+    test('can be set to a PurposeUse instance', async () => {
+      const purpose = new PurposeUse();
       chargeElement.purposeUse = purpose;
       expect(chargeElement.purposeUse).to.equal(purpose);
     });
@@ -200,6 +200,23 @@ experiment('lib/models/charge-element', () => {
       chargeElement.source = 'tidal';
       const result = chargeElement.toJSON();
       expect(result.eiucSource).to.equal('tidal');
+    });
+  });
+
+  experiment('description', () => {
+    test('can be set to null', async () => {
+      chargeElement.description = null;
+      expect(chargeElement.description).to.equal(null);
+    });
+
+    test('can be set to a string value', async () => {
+      chargeElement.description = 'test';
+      expect(chargeElement.description).to.equal('test');
+    });
+
+    test('throws an error if set to a number', async () => {
+      const func = () => { chargeElement.description = 123; };
+      expect(func).to.throw();
     });
   });
 });
