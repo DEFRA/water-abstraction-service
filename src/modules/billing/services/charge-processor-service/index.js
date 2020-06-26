@@ -77,14 +77,17 @@ const hasTptSupplementaryTransactions = invoiceLicence => {
  * @param {Moment} chargePeriodStartDate
  * @return {Object}
  */
-const getChargeElementsForMatching = (transaction, financialYear, chargeVersion, chargePeriodStartDate) => {
+const getChargeElementsForMatching = (transactions, financialYear, chargeVersion, chargePeriodStartDate) => {
   const chargePeriodEndDate = getChargePeriodEndDate(financialYear, chargeVersion);
-  return {
-    ...transaction.chargeElement.toJSON(),
-    billableDays: transaction.billableDays,
-    authorisedDays: transaction.authorisedDays,
-    totalDays: helpers.charging.getTotalDays(chargePeriodStartDate, chargePeriodEndDate)
-  };
+  return chargeVersion.chargeElements.map(chargeElement => {
+    const transaction = transactions.find(transaction => transaction.chargeElement.id === chargeElement.id);
+    return {
+      ...chargeElement.toJSON(),
+      billableDays: transaction.billableDays,
+      authorisedDays: transaction.authorisedDays,
+      totalDays: helpers.charging.getTotalDays(chargePeriodStartDate, chargePeriodEndDate)
+    };
+  });
 };
 
 /**
@@ -121,10 +124,8 @@ const processChargeVersionYear = async (batch, financialYear, chargeVersionId) =
   invoice.invoiceLicences = [invoiceLicence];
 
   // Generate billing volumes if transactions are TPT supplementary
-  if (hasTptSupplementaryTransactions) {
-    const chargeElements = invoiceLicence.transactions.map(
-      transaction => getChargeElementsForMatching(transaction, financialYear, chargeVersion, chargePeriodStartDate));
-
+  if (hasTptSupplementaryTransactions(invoiceLicence)) {
+    const chargeElements = getChargeElementsForMatching(invoiceLicence.transactions, financialYear, chargeVersion, chargePeriodStartDate);
     const chargeElementsBySeason = groupBy(chargeElements, billingVolumeService.isSummerChargeElement);
     for (const key of Object.keys(chargeElementsBySeason)) {
       await billingVolumeService.getVolumes(chargeElementsBySeason[key], chargeVersion.licence.licenceNumber, financialYear.yearEnding, key, batch);

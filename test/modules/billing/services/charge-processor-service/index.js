@@ -234,14 +234,19 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
       });
 
       test('the billingVolumes service is called with correct params', async () => {
-        const expectedChargeElement = {
-          ...transaction.chargeElement.toJSON(),
+        const expectedChargeElements = [{
+          ...chargeVersion.chargeElements[0].toJSON(),
           billableDays: 150,
           authorisedDays: 150,
           totalDays: 366
-        };
+        }, {
+          ...chargeVersion.chargeElements[1].toJSON(),
+          billableDays: 150,
+          authorisedDays: 150,
+          totalDays: 366
+        }];
         const [chargeElement, licenceNumber, finYear, isSummer, batchArg] = billingVolumeService.getVolumes.lastCall.args;
-        expect(chargeElement).to.equal([expectedChargeElement]);
+        expect(chargeElement).to.equal(expectedChargeElements);
         expect(licenceNumber).to.equal(chargeVersion.licence.licenceNumber);
         expect(finYear).to.equal(financialYear.yearEnding);
         expect(isSummer).to.equal('true');
