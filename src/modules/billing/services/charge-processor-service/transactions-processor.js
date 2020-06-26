@@ -14,7 +14,6 @@ const ChargeVersion = require('../../../../lib/models/charge-version');
 const FinancialYear = require('../../../../lib/models/financial-year');
 const DateRange = require('../../../../lib/models/date-range');
 const Transaction = require('../../../../lib/models/transaction');
-const { TWO_PART_TARIFF_PURPOSE_CODES } = require('../../../../lib/models/purpose');
 
 const dateHelpers = require('./lib/date-helpers');
 const validators = require('../../../../lib/models/validators');
