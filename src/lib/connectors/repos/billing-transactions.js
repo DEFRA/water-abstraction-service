@@ -102,6 +102,12 @@ const deleteByInvoiceLicenceId = invoiceLicenceId => bookshelf
   .delete();
 
 /**
+* Deletes all transactions for given batch
+* @param {String} batchId - guid
+*/
+const deleteByBatchId = async batchId => bookshelf.knex.raw(queries.deleteByBatchId, { batchId });
+
+/**
  * Deletes all transactions by invoice ID
  * @param {String} billingInvoiceId
  * @return {Promise}
@@ -119,4 +125,5 @@ exports.create = create;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
 exports.update = update;
 exports.deleteByInvoiceLicenceId = deleteByInvoiceLicenceId;
+exports.deleteByBatchId = deleteByBatchId;
 exports.deleteByInvoiceId = deleteByInvoiceId;

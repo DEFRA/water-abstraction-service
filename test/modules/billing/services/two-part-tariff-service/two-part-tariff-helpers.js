@@ -3,46 +3,15 @@ const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const { createReturn, createPurposeData } = require('../../test-data/test-return-data');
 const { createChargeElement } = require('../../test-data/test-charge-element-data');
 const {
-  returnsError,
   getChargeElementReturnData,
   returnPurposeMatchesElementPurpose
 } = require('../../../../../src/modules/billing/services/two-part-tariff-service/two-part-tariff-helpers');
-const {
-  ERROR_UNDER_QUERY,
-  ERROR_NO_RETURNS_SUBMITTED
-} = require('../../../../../src/lib/models/transaction').twoPartTariffStatuses;
 
 experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
-  experiment('.returnsError', async () => {
-    test('returns the error if it does not require a null return', async () => {
-      const { error, data } = returnsError(ERROR_UNDER_QUERY);
-
-      expect(error).to.equal(ERROR_UNDER_QUERY);
-      expect(data).to.be.null();
-    });
-
-    test('returns the error and a null return if one is required', async () => {
-      const chargeElement1 = createChargeElement({ chargeElementId: 'charge-element-1' });
-      const chargeElement2 = createChargeElement({ chargeElementId: 'charge-element-2' });
-      const { error, data } = returnsError(ERROR_NO_RETURNS_SUBMITTED,
-        [chargeElement1, chargeElement2]);
-
-      expect(error).to.equal(ERROR_NO_RETURNS_SUBMITTED);
-      expect(data).to.be.an.array().and.to.have.length(2);
-      expect(data[0].data.chargeElementId).to.equal(chargeElement1.id);
-      expect(data[0].data.actualReturnQuantity).to.be.null();
-      expect(data[0].error).to.be.null();
-      expect(data[1].data.chargeElementId).to.equal(chargeElement2.id);
-      expect(data[1].data.actualReturnQuantity).to.be.null();
-      expect(data[1].error).to.be.null();
-    });
-  });
-
   experiment('.getChargeElementReturnData', async () => {
     test('if no error is passed, returns a null error', async () => {
       const chargeElement = {
         chargeElementId: 'test-charge-element',
-        proRataAuthorisedQuantity: 50,
         actualReturnQuantity: 50
       };
       const { error } = getChargeElementReturnData(chargeElement);
@@ -52,7 +21,6 @@ experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
     test('if error is passed, returns the error', async () => {
       const chargeElement = {
         chargeElementId: 'test-charge-element',
-        proRataAuthorisedQuantity: 50,
         actualReturnQuantity: 50
       };
       const { error } = getChargeElementReturnData(chargeElement, 'bad-error');
@@ -62,7 +30,6 @@ experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
     test('data contains the expected values', async () => {
       const chargeElement = {
         chargeElementId: 'test-charge-element',
-        proRataAuthorisedQuantity: 50,
         actualReturnQuantity: 45.79
       };
       const { data } = getChargeElementReturnData(chargeElement);
@@ -74,7 +41,6 @@ experiment('modules/charging/lib/two-part-tariff-helpers', async () => {
     test('if actualReturnsQuantity is null, is returned as null', async () => {
       const chargeElement = {
         chargeElementId: 'test-charge-element',
-        proRataAuthorisedQuantity: 50,
         actualReturnQuantity: null
       };
       const { data } = getChargeElementReturnData(chargeElement);

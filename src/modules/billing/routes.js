@@ -175,10 +175,10 @@ const getBatchLicences = {
   }
 };
 
-const patchTransaction = {
+const patchTransactionBillingVolume = {
   method: 'PATCH',
-  path: '/water/1.0/billing/transactions/{transactionId}',
-  handler: controller.patchTransaction,
+  path: '/water/1.0/billing/transactions/{transactionId}/volume',
+  handler: controller.patchTransactionBillingVolume,
   config: {
     validate: {
       params: {
@@ -253,5 +253,5 @@ exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 exports.postApproveReviewBatch = postApproveReviewBatch;
 
-exports.patchTransaction = patchTransaction;
+exports.patchTransactionBillingVolume = patchTransactionBillingVolume;
 exports.deleteInvoiceLicence = deleteInvoiceLicence;

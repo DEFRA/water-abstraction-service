@@ -33,12 +33,14 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
       const chargeElementsWithOtherPurposes = [
         createChargeElement({ purposeUseCode: 200, ...chargeElementOptions }),
         createChargeElement({ purposeUseCode: 180, ...chargeElementOptions }),
-        createChargeElement({ purposeUseCode: 620, ...chargeElementOptions })
+        createChargeElement({ purposeUseCode: 390, ...chargeElementOptions })
       ];
       const chargeElements = [
         ...chargeElementsWithTPTPurposes,
         ...chargeElementsWithOtherPurposes
       ];
+      console.log(chargeElements);
+
       const filteredElements = getTptChargeElements(chargeElements);
       expect(filteredElements).to.equal(chargeElementsWithTPTPurposes);
     });
@@ -46,7 +48,7 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
       const nonTPTChargeElements = [
         createChargeElement({ purposeUseCode: 200, ...chargeElementOptions }),
         createChargeElement({ purposeUseCode: 180, ...chargeElementOptions }),
-        createChargeElement({ purposeUseCode: 620, ...chargeElementOptions })
+        createChargeElement({ purposeUseCode: 390, ...chargeElementOptions })
       ];
 
       const filteredElements = getTptChargeElements(nonTPTChargeElements);

@@ -1,3 +1,4 @@
+const { BillingBatchChargeVersion } = require('../bookshelf');
 const { getFinancialYearDate } = require('@envage/water-abstraction-helpers').charging;
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-batch-charge-versions');
@@ -41,6 +42,16 @@ const createAnnual = params =>
 const createTwoPartTariff = params =>
   raw.multiRow(queries.createTwoPartTariff, getParams(params));
 
+/**
+ * Deletes all billing batch charge versions for given batch
+ * @param {String} batchId - guid
+ */
+const deleteByBatchId = async batchId => BillingBatchChargeVersion
+  .forge()
+  .where({ billing_batch_id: batchId })
+  .destroy();
+
 exports.createAnnual = createAnnual;
 exports.createSupplementary = createSupplementary;
 exports.createTwoPartTariff = createTwoPartTariff;
+exports.deleteByBatchId = deleteByBatchId;

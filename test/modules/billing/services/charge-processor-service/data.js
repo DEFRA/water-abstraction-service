@@ -9,9 +9,13 @@ const ChargeElement = require('../../../../../src/lib/models/charge-element');
 const ChargeVersion = require('../../../../../src/lib/models/charge-version');
 const DateRange = require('../../../../../src/lib/models/date-range');
 const InvoiceAccount = require('../../../../../src/lib/models/invoice-account');
+const Invoice = require('../../../../../src/lib/models/invoice');
+const InvoiceLicence = require('../../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../../src/lib/models/licence');
 const LicenceAgreement = require('../../../../../src/lib/models/licence-agreement');
 const FinancialYear = require('../../../../../src/lib/models/financial-year');
+const Region = require('../../../../../src/lib/models/region');
+const Transaction = require('../../../../../src/lib/models/transaction');
 const PurposeUse = require('../../../../../src/lib/models/purpose-use');
 
 const createLicence = (overrides = {}) => {
@@ -73,10 +77,12 @@ const createChargeElement = (overrides = {}) => {
 
 const createFinancialYear = () => new FinancialYear(2020);
 
-const createBatch = (type) => {
+const createBatch = (type, options = {}) => {
   const batch = new Batch();
   return batch.fromHash({
-    type
+    type,
+    region: new Region(uuid(), 'region'),
+    ...options
   });
 };
 
@@ -106,6 +112,40 @@ const createChargeVersionWithTwoPartTariff = (overrides = {}) => {
   return cv;
 };
 
+const createTransaction = (options = {}) => {
+  const transaction = new Transaction();
+  return transaction.fromHash({
+    authorisedDays: 150,
+    billableDays: 150,
+    chargeElement: createChargeElement(),
+    ...options
+  });
+};
+
+const createInvoice = () => {
+  const invoiceLicence = new InvoiceLicence();
+  invoiceLicence.licence = createLicence();
+
+  const invoiceAccount = new InvoiceAccount();
+  invoiceAccount.accountNumber = 'A12345678A';
+
+  const invoice = new Invoice();
+  return invoice.fromHash({
+    invoiceAccount,
+    invoiceLicences: [invoiceLicence]
+  });
+};
+
+const createSentTPTBatches = () => {
+  const invoice = createInvoice();
+  const summerBatch = createBatch('two_part_tariff', { isSummer: true });
+  summerBatch.addInvoice(invoice);
+  return [
+    summerBatch,
+    createBatch('two_part_tariff', { isSummer: false, invoices: [invoice] })
+  ];
+};
+
 exports.createLicence = createLicence;
 exports.createChargeVersion = createChargeVersion;
 exports.createChargeElement = createChargeElement;
@@ -113,3 +153,5 @@ exports.createFinancialYear = createFinancialYear;
 exports.createBatch = createBatch;
 exports.createLicenceAgreement = createLicenceAgreement;
 exports.createChargeVersionWithTwoPartTariff = createChargeVersionWithTwoPartTariff;
+exports.createTransaction = createTransaction;
+exports.createSentTPTBatches = createSentTPTBatches;
