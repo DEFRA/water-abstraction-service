@@ -210,6 +210,7 @@ const createInvoiceData = () => ({
         loss: 'high',
         authorisedAnnualQuantity: 12
       },
+      billingVolume: [],
       externalId: CHARGE_MODULE_TRANSACTION_ID
     }]
   }]
@@ -250,6 +251,7 @@ const createOneWithInvoicesWithTransactions = () => ({
           loss: 'high',
           authorisedAnnualQuantity: 12
         },
+        billingVolume: [],
         externalId: CHARGE_MODULE_TRANSACTION_ID
       }]
     }]
@@ -502,7 +504,7 @@ experiment('modules/billing/services/invoiceService', () => {
         repos.billingInvoices.findOne.resolves(invoice);
       });
 
-      experiment('when the batch status is not "ready" or "sent', () => {
+      experiment('when the batch status is not "ready" or "sent"', () => {
         beforeEach(async () => {
           batch.status = Batch.BATCH_STATUS.review;
           result = await invoiceService.getInvoiceForBatch(batch, INVOICE_ID);

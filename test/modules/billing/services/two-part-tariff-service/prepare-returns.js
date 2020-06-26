@@ -17,7 +17,7 @@ const {
   ERROR_LATE_RETURNS,
   ERROR_UNDER_QUERY,
   ERROR_RECEIVED_NO_DATA
-} = require('../../../../../src/lib/models/transaction').twoPartTariffStatuses;
+} = require('../../../../../src/lib/models/billing-volume').twoPartTariffStatuses;
 
 experiment('modules/charging/lib/prepare-returns', async () => {
   experiment('.isLineWithinAbstractionPeriod', async () => {
@@ -50,7 +50,7 @@ experiment('modules/charging/lib/prepare-returns', async () => {
         expect(result).to.be.false();
       });
     });
-    experiment('when abstraction period straddles financial year', async => {
+    experiment('when abstraction period straddles financial year', async () => {
       const returnOptions = {
         periodStartDay: 1,
         periodStartMonth: 1,
@@ -79,7 +79,7 @@ experiment('modules/charging/lib/prepare-returns', async () => {
         expect(result).to.be.false();
       });
     });
-    experiment('when abstraction period straddles calendar year', async => {
+    experiment('when abstraction period straddles calendar year', async () => {
       const returnOptions = {
         periodStartDay: 1,
         periodStartMonth: 10,
@@ -148,6 +148,11 @@ experiment('modules/charging/lib/prepare-returns', async () => {
 
     test('return error if there are no returns for matching', async () => {
       const returnError = checkForReturnsErrors([]);
+      expect(returnError).to.equal(ERROR_NO_RETURNS_FOR_MATCHING);
+    });
+
+    test('return error if any of the returns are missing return lines', async () => {
+      const returnError = checkForReturnsErrors([{ ...completedRet, lines: null }, completedRet]);
       expect(returnError).to.equal(ERROR_NO_RETURNS_FOR_MATCHING);
     });
 
@@ -223,12 +228,12 @@ experiment('modules/charging/lib/prepare-returns', async () => {
       const returns = [
         createReturn({ tertiaryCode: 400, returnId: 'return-1' }),
         createReturn({ tertiaryCode: 186, returnId: 'return-2' }),
-        createReturn({ tertiaryCode: 390, returnId: 'return-3' }),
+        createReturn({ tertiaryCode: 620, returnId: 'return-3' }),
         createReturn({ tertiaryCode: 260, returnId: 'return-4' })
       ];
       const tptReturns = [
         createReturn({ tertiaryCode: 400, returnId: 'return-1' }),
-        createReturn({ tertiaryCode: 390, returnId: 'return-3' })
+        createReturn({ tertiaryCode: 620, returnId: 'return-3' })
       ];
       const filteredReturns = getTPTReturns(returns);
       expect(filteredReturns).to.equal(tptReturns);

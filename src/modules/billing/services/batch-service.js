@@ -2,13 +2,12 @@
 
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
-const repos = require('../../../lib/connectors/repository');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
 const Event = require('../../../lib/models/event');
 const eventService = require('../../../lib/services/events');
+const { BatchStatusError, BillingVolumeStatusError } = require('../lib/errors');
 const { NotFoundError } = require('../../../lib/errors');
-const { BatchStatusError, TransactionStatusError } = require('../lib/errors');
 
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
@@ -16,6 +15,7 @@ const Batch = require('../../../lib/models/batch');
 
 const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
+const billingVolumesService = require('./billing-volumes-service');
 const invoiceService = require('./invoice-service');
 const config = require('../../../../config');
 
@@ -63,11 +63,12 @@ const deleteBatch = async (batch, internalCallingUser) => {
   try {
     await chargeModuleBillRunConnector.delete(batch.externalId);
 
-    await repos.billingBatchChargeVersionYears.deleteByBatchId(batch.id);
-    await repos.billingBatchChargeVersions.deleteByBatchId(batch.id);
-    await repos.billingTransactions.deleteByBatchId(batch.id);
-    await repos.billingInvoiceLicences.deleteByBatchId(batch.id);
-    await repos.billingInvoices.deleteByBatchId(batch.id);
+    await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batch.id);
+    await newRepos.billingBatchChargeVersions.deleteByBatchId(batch.id);
+    await newRepos.billingTransactions.deleteByBatchId(batch.id);
+    await newRepos.billingVolumes.deleteByBatchId(batch.id);
+    await newRepos.billingInvoiceLicences.deleteByBatchId(batch.id);
+    await newRepos.billingInvoices.deleteByBatchId(batch.id);
     await newRepos.billingBatches.delete(batch.id);
 
     await saveEvent('billing-batch:cancel', 'delete', internalCallingUser, batch);
@@ -252,21 +253,10 @@ const createChargeModuleBillRun = async batchId => {
   return batch.pickFrom(row, ['externalId', 'billRunNumber']);
 };
 
-const getTransactionsWithTwoPartError = batch => {
-  return batch.invoices.reduce((acc, invoice) => {
-    invoice.invoiceLicences.forEach(invoiceLicence => {
-      invoiceLicence.transactions.forEach(transaction => {
-        if (transaction.twoPartTariffError) acc.push(transaction);
-      });
-    });
-    return acc;
-  }, []);
-};
-
-const assertNoTransactionsWithTwoPartError = batch => {
-  const transactions = getTransactionsWithTwoPartError(batch);
-  if (transactions.length) {
-    throw new TransactionStatusError('Cannot approve review. There are outstanding two part tariff errors to resolve');
+const assertNoBillingVolumesWithTwoPartError = async batch => {
+  const billingVolumesWithTwoPartError = await billingVolumesService.getVolumesWithTwoPartError(batch);
+  if (billingVolumesWithTwoPartError.length > 0) {
+    throw new BillingVolumeStatusError('Cannot approve review. There are outstanding two part tariff errors to resolve');
   }
 };
 
@@ -281,18 +271,21 @@ const assertBatchStatusIsReview = batch => {
  *
  * Validation:
  *  - batch is in "review" status
- *  - all twoPartTariff errors in transactions have been resolved
+ *  - all twoPartTariff errors in billingVolumes have been resolved
  * throws relevant error if validation fails
  *
  * @param {Batch} batch to be approved
  * @return {Promise<Batch>} resolves with Batch service model
  */
 const approveTptBatchReview = async batch => {
-  assertNoTransactionsWithTwoPartError(batch);
+  await assertNoBillingVolumesWithTwoPartError(batch);
   assertBatchStatusIsReview(batch);
   await setStatus(batch.id, BATCH_STATUS.processing);
   return getBatchById(batch.id);
 };
+
+const getSentTPTBatchesForFinancialYearAndRegion = async (financialYear, region) =>
+  newRepos.billingBatches.findSentTPTBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id);
 
 /**
  * Deletes an individual invoice from the batch.  Also deletes CM transactions
@@ -320,6 +313,7 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
 
     // Delete local data
     await newRepos.billingBatchChargeVersionYears.deleteByInvoiceId(invoiceId);
+    await newRepos.billingVolumes.deleteByBatchAndInvoiceId(batch.id, invoiceId);
     await newRepos.billingTransactions.deleteByInvoiceId(invoiceId);
     await newRepos.billingInvoiceLicences.deleteByInvoiceId(invoiceId);
     await newRepos.billingInvoices.delete(invoiceId);
@@ -348,4 +342,5 @@ exports.cleanup = cleanup;
 exports.create = create;
 exports.createChargeModuleBillRun = createChargeModuleBillRun;
 exports.approveTptBatchReview = approveTptBatchReview;
+exports.getSentTPTBatchesForFinancialYearAndRegion = getSentTPTBatchesForFinancialYearAndRegion;
 exports.deleteBatchInvoice = deleteBatchInvoice;

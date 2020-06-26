@@ -12,10 +12,10 @@ const sandbox = sinon.createSandbox();
 const { logger } = require('../../../../src/logger');
 const processChargeVersionComplete = require('../../../../src/modules/billing/jobs/process-charge-version-complete');
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
-const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch');
+const { BATCH_ERROR_CODE, BATCH_STATUS, BATCH_TYPE } = require('../../../../src/lib/models/batch');
 const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
-const jobService = require('../../../../src/modules/billing/services/job-service');
+const billingVolumeService = require('../../../../src/modules/billing/services/billing-volumes-service');
 
 const Batch = require('../../../../src/lib/models/batch');
 
@@ -30,9 +30,11 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
       publish: sandbox.spy()
     };
 
-    batch = new Batch();
-    batch.type = Batch.BATCH_TYPE.twoPartTariff;
+    batch = new Batch('0310af58-bb31-45ec-9a8a-f4a8f8da8ee7');
+    batch.type = BATCH_TYPE.twoPartTariff;
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
+    sandbox.stub(batchService, 'setStatus').resolves({});
+    sandbox.stub(billingVolumeService, 'getUnapprovedVolumesForBatchCount');
 
     sandbox.stub(chargeVersionYearService, 'getStatusCounts');
     sandbox.stub(batchJob, 'logOnComplete');
@@ -99,13 +101,13 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
     });
   });
 
-  experiment('for a two part tariff batch, when all charge version years have been processed', async () => {
+  experiment('for a batch with unapproved billing volumes', () => {
     let job;
     beforeEach(async () => {
-      sandbox.stub(jobService, 'setReviewJob').resolves({});
       chargeVersionYearService.getStatusCounts.resolves({
         processing: 0
       });
+      billingVolumeService.getUnapprovedVolumesForBatchCount.resolves(5);
 
       job = {
         data: {
@@ -119,8 +121,7 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
               billing_batch_id: batchId
             },
             batch: {
-              billing_batch_id: batchId,
-              type: 'two_part_tariff'
+              billing_batch_id: batchId
             }
           }
         }
@@ -129,15 +130,9 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
       await processChargeVersionComplete(job, messageQueue);
     });
 
-    test('remaining onComplete jobs are deleted', async () => {
-      expect(batchJob.deleteOnCompleteQueue.calledWith(
-        job, messageQueue
-      )).to.be.true();
-    });
-
-    test('sets the batch status to "review', async () => {
-      expect(jobService.setReviewJob.calledWith(
-        eventId, batchId
+    test('sets the batch status to "review"', async () => {
+      expect(batchService.setStatus.calledWith(
+        batch.id, BATCH_STATUS.review
       )).to.be.true();
     });
 
@@ -146,11 +141,51 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
     });
   });
 
+  experiment('for a batch with no unapproved billing volumes', () => {
+    let job;
+    beforeEach(async () => {
+      chargeVersionYearService.getStatusCounts.resolves({
+        processing: 0
+      });
+      billingVolumeService.getUnapprovedVolumesForBatchCount.resolves(0);
+
+      job = {
+        data: {
+          request: {
+            data: {
+              eventId: 'test-event-id'
+            }
+          },
+          response: {
+            chargeVersionYear: {
+              billing_batch_id: batchId
+            },
+            batch: {
+              billing_batch_id: batchId
+            }
+          }
+        }
+      };
+
+      await processChargeVersionComplete(job, messageQueue);
+    });
+
+    test('does not set the batch status to "review"', async () => {
+      expect(batchService.setStatus.calledWith(
+        batch.id, BATCH_STATUS.review
+      )).to.be.false();
+    });
+
+    test('publishes the prepare-transactions job', async () => {
+      expect(messageQueue.publish.called).to.be.true();
+    });
+  });
+
   experiment('if all the charge version years have been processed', () => {
     let job;
 
     beforeEach(async () => {
-      batch.type = Batch.BATCH_TYPE.supplementary;
+      batch.type = BATCH_TYPE.supplementary;
       batchService.getBatchById.resolves(batch);
 
       chargeVersionYearService.getStatusCounts.resolves({

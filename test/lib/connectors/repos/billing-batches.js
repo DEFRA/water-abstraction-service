@@ -12,6 +12,7 @@ const sandbox = sinon.createSandbox();
 
 const billingBatches = require('../../../../src/lib/connectors/repos/billing-batches');
 const { BillingBatch } = require('../../../../src/lib/connectors/bookshelf/');
+const { BATCH_STATUS, BATCH_TYPE } = require('../../../../src/lib/models/batch');
 
 experiment('lib/connectors/repos/billing-batches', () => {
   let model, stub;
@@ -189,7 +190,8 @@ experiment('lib/connectors/repos/billing-batches', () => {
     let result;
     experiment('when a record is found', () => {
       beforeEach(async () => {
-        await billingBatches.findOneWithInvoicesWithTransactions('00000000-0000-0000-0000-000000000000');
+        model.toJSON.returns({ foo: 'bar' });
+        result = await billingBatches.findOneWithInvoicesWithTransactions('00000000-0000-0000-0000-000000000000');
       });
 
       test('forges a model with the expected id', async () => {
@@ -206,8 +208,13 @@ experiment('lib/connectors/repos/billing-batches', () => {
         expect(stub.fetch.lastCall.args[0].withRelated[3]).to.equal('billingInvoices.billingInvoiceLicences.licence');
         expect(stub.fetch.lastCall.args[0].withRelated[4]).to.equal('billingInvoices.billingInvoiceLicences.licence.region');
         expect(stub.fetch.lastCall.args[0].withRelated[5]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions');
-        expect(stub.fetch.lastCall.args[0].withRelated[6]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement');
-        expect(stub.fetch.lastCall.args[0].withRelated[7]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse');
+        expect(stub.fetch.lastCall.args[0].withRelated[6]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.billingVolume');
+        expect(stub.fetch.lastCall.args[0].withRelated[7]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement');
+        expect(stub.fetch.lastCall.args[0].withRelated[8]).to.equal('billingInvoices.billingInvoiceLicences.billingTransactions.chargeElement.purposeUse');
+      });
+
+      test('returns the result of the toJSON() call', async () => {
+        expect(result).to.equal({ foo: 'bar' });
       });
     });
 
@@ -255,6 +262,30 @@ experiment('lib/connectors/repos/billing-batches', () => {
       test('resolves with null', async () => {
         expect(result).to.equal(null);
       });
+    });
+  });
+
+  experiment('.findSentTPTBatchesForFinancialYearAndRegion', () => {
+    beforeEach(async () => {
+      await billingBatches.findSentTPTBatchesForFinancialYearAndRegion(2020, '00000000-0000-0000-0000-000000000000');
+    });
+
+    test('forges a model', async () => {
+      expect(BillingBatch.forge.called).to.be.true();
+    });
+
+    test('calls where with correct parameters', async () => {
+      const [filters] = stub.where.lastCall.args;
+      expect(filters.status).to.equal(BATCH_STATUS.sent);
+      expect(filters.batch_type).to.equal(BATCH_TYPE.twoPartTariff);
+      expect(filters.to_financial_year_ending).to.equal(2020);
+      expect(filters.region_id).to.equal('00000000-0000-0000-0000-000000000000');
+    });
+
+    test('calls fetchAll with correct parameters', async () => {
+      expect(stub.fetchAll.lastCall.args[0].withRelated[0]).to.equal('billingInvoices');
+      expect(stub.fetchAll.lastCall.args[0].withRelated[1]).to.equal('billingInvoices.billingInvoiceLicences');
+      expect(stub.fetchAll.lastCall.args[0].withRelated[2]).to.equal('billingInvoices.billingInvoiceLicences.licence');
     });
   });
 });

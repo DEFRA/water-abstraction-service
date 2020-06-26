@@ -20,7 +20,7 @@ const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../src/lib/models/licence');
 const Totals = require('../../../../src/lib/models/totals');
 const Transaction = require('../../../../src/lib/models/transaction');
-const { BatchStatusError, TransactionStatusError } = require('../../../../src/modules/billing/lib/errors');
+const { BatchStatusError, BillingVolumeStatusError } = require('../../../../src/modules/billing/lib/errors');
 const { NotFoundError } = require('../../../../src/lib/errors');
 
 const eventService = require('../../../../src/lib/services/events');
@@ -28,14 +28,14 @@ const { logger } = require('../../../../src/logger');
 
 const newRepos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
-const repos = require('../../../../src/lib/connectors/repository');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const invoiceAccountsService = require('../../../../src/modules/billing/services/invoice-accounts-service');
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
-const { createBatch, createInvoice, createInvoiceLicence, createTransaction } = require('../test-data/test-billing-data');
+const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
+const { createBatch } = require('../test-data/test-billing-data');
 const config = require('../../../../config');
 
 const REGION_ID = '3e91fd44-dead-4748-a312-83806245c3da';
@@ -80,20 +80,23 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingBatches, 'create').resolves();
 
     sandbox.stub(newRepos.billingInvoices, 'deleteEmptyByBatchId').resolves();
+    sandbox.stub(newRepos.billingInvoices, 'deleteByBatchId').resolves();
 
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteEmptyByBatchId').resolves();
+    sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchId').resolves();
 
     sandbox.stub(newRepos.billingTransactions, 'findStatusCountsByBatchId').resolves();
     sandbox.stub(newRepos.billingTransactions, 'findByBatchId').resolves();
+    sandbox.stub(newRepos.billingTransactions, 'deleteByBatchId').resolves();
 
-    sandbox.stub(repos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingInvoices, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingInvoiceLicences, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingTransactions, 'deleteByBatchId').resolves();
-    sandbox.stub(repos.billingTransactions, 'deleteByInvoiceAccount').resolves();
+    sandbox.stub(newRepos.billingVolumes, 'deleteByBatchId').resolves();
+
+    sandbox.stub(newRepos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
 
     sandbox.stub(transactionsService, 'saveTransactionToDB');
+
+    sandbox.stub(billingVolumesService, 'getVolumesWithTwoPartError').resolves([]);
 
     sandbox.stub(invoiceLicencesService, 'saveInvoiceLicenceToDB');
 
@@ -111,6 +114,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     sandbox.stub(newRepos.billingInvoices, 'findOne');
     sandbox.stub(newRepos.billingBatchChargeVersionYears, 'deleteByInvoiceId');
+    sandbox.stub(newRepos.billingVolumes, 'deleteByBatchAndInvoiceId');
     sandbox.stub(newRepos.billingTransactions, 'deleteByInvoiceId');
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByInvoiceId');
     sandbox.stub(newRepos.billingInvoices, 'delete');
@@ -300,23 +304,27 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('deletes the charge version years', async () => {
-        expect(repos.billingBatchChargeVersionYears.deleteByBatchId.calledWith(batch.id)).to.be.true();
+        expect(newRepos.billingBatchChargeVersionYears.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the charge versions', async () => {
-        expect(repos.billingBatchChargeVersions.deleteByBatchId.calledWith(batch.id)).to.be.true();
+        expect(newRepos.billingBatchChargeVersions.deleteByBatchId.calledWith(batch.id)).to.be.true();
+      });
+
+      test('deletes the billing volumes', async () => {
+        expect(newRepos.billingVolumes.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the transactions', async () => {
-        expect(repos.billingTransactions.deleteByBatchId.calledWith(batch.id)).to.be.true();
+        expect(newRepos.billingTransactions.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the invoice licences', async () => {
-        expect(repos.billingInvoiceLicences.deleteByBatchId.calledWith(batch.id)).to.be.true();
+        expect(newRepos.billingInvoiceLicences.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the invoices', async () => {
-        expect(repos.billingInvoices.deleteByBatchId.calledWith(batch.id)).to.be.true();
+        expect(newRepos.billingInvoices.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the batch', async () => {
@@ -920,24 +928,15 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.approveTptBillRunReview', async () => {
-    let result, transaction, invoiceLicence, batch;
+  experiment('.approveTptBatchReview', async () => {
+    let result, batch;
 
     beforeEach(async () => {
-      transaction = createTransaction({
-        status: Transaction.statuses.candidate,
-        twoPartTariffError: false,
-        twoPartTariffStatus: Transaction.twoPartTariffStatuses.ERROR_RECEIVED,
-        volume: 25,
-        calculatedVolume: 25
-      });
-      invoiceLicence = createInvoiceLicence({ transactions: [transaction] });
-      const invoice = createInvoice({}, [invoiceLicence]);
       batch = createBatch({
         id: BATCH_ID,
         type: Batch.BATCH_TYPE.twoPartTariff,
         status: Batch.BATCH_STATUS.review
-      }, invoice);
+      });
     });
 
     experiment('when the batch is validated', () => {
@@ -972,25 +971,11 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('there are outstanding twoPartTariffErrors to resolve', async () => {
-        const transactionWithError = createTransaction({
-          status: Transaction.statuses.candidate,
-          twoPartTariffError: false,
-          twoPartTariffStatus: Transaction.twoPartTariffStatuses.ERROR_RECEIVED,
-          volume: 25,
-          calculatedVolume: 25
-        });
-        const invoiceLicence2 = createInvoiceLicence({ transactions: [transaction, transactionWithError] });
-        const invoice = createInvoice({}, [invoiceLicence, invoiceLicence2]);
-        batch = createBatch({
-          id: BATCH_ID,
-          type: Batch.BATCH_TYPE.twoPartTariff,
-          status: Batch.BATCH_STATUS.review
-        }, invoice);
-
+        billingVolumesService.getVolumesWithTwoPartError.resolves([{ billingVolumeId: 'test-billing-volume-id' }]);
         try {
           await batchService.approveTptBatchReview(batch);
         } catch (err) {
-          expect(err).to.be.an.instanceOf(TransactionStatusError);
+          expect(err).to.be.an.instanceOf(BillingVolumeStatusError);
           expect(err.message).to.equal('Cannot approve review. There are outstanding two part tariff errors to resolve');
         }
       });
@@ -1054,6 +1039,10 @@ experiment('modules/billing/services/batch-service', () => {
 
         test('deletes associated charge version years from batch', async () => {
           expect(newRepos.billingBatchChargeVersionYears.deleteByInvoiceId.calledWith(invoiceId)).to.be.true();
+        });
+
+        test('deletes associated billing volumes from batch', async () => {
+          expect(newRepos.billingVolumes.deleteByBatchAndInvoiceId.calledWith(batch.id, invoiceId)).to.be.true();
         });
 
         test('deletes associated transactions from batch', async () => {

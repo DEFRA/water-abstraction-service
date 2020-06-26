@@ -24,15 +24,16 @@ const invoiceService = require('../../../src/modules/billing/services/invoice-se
 const invoiceLicenceService = require('../../../src/modules/billing/services/invoice-licences-service');
 const batchService = require('../../../src/modules/billing/services/batch-service');
 const transactionsService = require('../../../src/modules/billing/services/transactions-service');
+const billingVolumesService = require('../../../src/modules/billing/services/billing-volumes-service');
 const controller = require('../../../src/modules/billing/controller');
 const mappers = require('../../../src/modules/billing/mappers');
-const { createBatch, createInvoice, createInvoiceLicence, createTransaction } = require('./test-data/test-billing-data');
+const { createBatch, createTransaction, createInvoice, createInvoiceLicence, createFinancialYear, createBillingVolume } = require('./test-data/test-billing-data');
 
 const { NotFoundError } = require('../../../src/lib/errors');
 const { BatchStatusError, TransactionStatusError } = require('../../../src/modules/billing/lib/errors');
 
 experiment('modules/billing/controller', () => {
-  let h, hapiResponseStub, batch, tptBatch, transaction, processingBatch;
+  let h, hapiResponseStub, batch, tptBatch, transaction, billingVolume, processingBatch;
 
   beforeEach(async () => {
     hapiResponseStub = {
@@ -47,10 +48,13 @@ experiment('modules/billing/controller', () => {
     batch.type = 'annual';
 
     transaction = createTransaction();
+    billingVolume = createBillingVolume();
     const invoice = createInvoice({}, [createInvoiceLicence({ transactions: [transaction] })]);
     tptBatch = createBatch({
       type: BATCH_TYPE.twoPartTariff,
-      status: BATCH_STATUS.review
+      status: BATCH_STATUS.review,
+      endYear: createFinancialYear(2018),
+      isSummer: true
     }, invoice);
 
     processingBatch = createBatch({
@@ -79,7 +83,8 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(invoiceLicenceService, 'delete').resolves();
 
     sandbox.stub(transactionsService, 'getById').resolves(tptBatch);
-    sandbox.stub(transactionsService, 'updateTransactionVolume').resolves(transaction);
+    sandbox.stub(billingVolumesService, 'updateBillingVolume').resolves(billingVolume);
+    sandbox.stub(billingVolumesService, 'approveVolumesForBatch');
 
     sandbox.stub(eventService, 'create').resolves({
       id: '11111111-1111-1111-1111-111111111111'
@@ -719,7 +724,7 @@ experiment('modules/billing/controller', () => {
     });
   });
 
-  experiment('.patchTransaction', () => {
+  experiment('.patchTransactionBillingVolume', () => {
     let request, result;
     const createRequest = volume => ({
       defra: {
@@ -734,7 +739,7 @@ experiment('modules/billing/controller', () => {
 
     beforeEach(async () => {
       request = createRequest(20);
-      result = await controller.patchTransaction(request, h);
+      result = await controller.patchTransactionBillingVolume(request, h);
     });
 
     test('the transactions service is called to get the transaction with related data', async () => {
@@ -742,42 +747,45 @@ experiment('modules/billing/controller', () => {
         transactionsService.getById.calledWith(request.params.transactionId)
       ).to.be.true();
     });
+
     experiment('when the transaction data is found', async () => {
-      experiment('and updateTransactionVolume is successful', async () => {
-        test('the transaction service is called to update the transaction', async () => {
-          const transactionToBeUpdated = get(tptBatch, 'invoices[0].invoiceLicences[0].transactions[0]');
+      test('the billing volumes service is called to update the billing volume', async () => {
+        const [chargeElementId, batch, volume, user] = billingVolumesService.updateBillingVolume.lastCall.args;
 
-          const [batch, transaction, volume, user] = transactionsService.updateTransactionVolume.lastCall.args;
-
-          expect(batch).to.equal(tptBatch);
-          expect(transaction).to.equal(transactionToBeUpdated);
-          expect(volume).to.equal(request.payload.volume);
-          expect(user).to.equal(request.defra.internalCallingUser);
-        });
-
-        test('the updated transaction is returned', async () => {
-          expect(result).to.equal(transaction);
-        });
+        expect(chargeElementId).to.equal(transaction.chargeElement.id);
+        expect(batch).to.equal(tptBatch);
+        expect(volume).to.equal(request.payload.volume);
+        expect(user).to.equal(request.defra.internalCallingUser);
       });
-      experiment('and updateTransactionVolume rejects', async () => {
-        test('it throws Boom bad request error', async () => {
-          const errMsg = 'oh no, something went wrong';
-          transactionsService.updateTransactionVolume.rejects(new Error(errMsg));
-          try {
-            await controller.patchTransaction(request, h);
-          } catch (err) {
-            expect(err.isBoom).to.be.true();
-            expect(err.message).to.equal(errMsg);
-            expect(err.output.statusCode).to.equal(400);
-          }
-        });
+
+      test('the transaction is returned', async () => {
+        const relevantTransaction = get(tptBatch, 'invoices[0].invoiceLicences[0].transactions[0]');
+        const { transaction } = result;
+        expect(transaction).to.equal(relevantTransaction);
+      });
+
+      test('the updated billing volume is returned', async () => {
+        const { updatedBillingVolume } = result;
+        expect(updatedBillingVolume).to.equal(billingVolume);
+      });
+
+      test('a Boom bad request error is thrown if an error occurs', async () => {
+        const errMsg = 'oh no, something went wrong';
+        billingVolumesService.updateBillingVolume.rejects(new Error(errMsg));
+        try {
+          await controller.patchTransactionBillingVolume(request, h);
+        } catch (err) {
+          expect(err.isBoom).to.be.true();
+          expect(err.message).to.equal(errMsg);
+          expect(err.output.statusCode).to.equal(400);
+        }
       });
     });
     experiment('when the transaction data is not found', async () => {
       test('throws Boom not found error', async () => {
         transactionsService.getById.resolves();
         try {
-          await controller.patchTransaction(request, h);
+          await controller.patchTransactionBillingVolume(request, h);
         } catch (err) {
           expect(err.isBoom).to.be.true();
           expect(err.output.statusCode).to.equal(404);
@@ -889,6 +897,12 @@ experiment('modules/billing/controller', () => {
       test('calls the batchService to approve review', async () => {
         expect(
           batchService.approveTptBatchReview.calledWith(batch)
+        ).to.be.true();
+      });
+
+      test('calls the billingVolumeService to approve volumes', async () => {
+        expect(
+          billingVolumesService.approveVolumesForBatch.calledWith(batch)
         ).to.be.true();
       });
 

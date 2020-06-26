@@ -1,7 +1,7 @@
 const { flatMap, identity, groupBy } = require('lodash');
 const Decimal = require('decimal.js-light');
 const { getChargeElementReturnData, getAbstractionPeriodDates } = require('./two-part-tariff-helpers');
-const { twoPartTariffStatuses: { ERROR_OVER_ABSTRACTION } } = require('../../../../lib/models/transaction');
+const { twoPartTariffStatuses: { ERROR_OVER_ABSTRACTION } } = require('../../../../lib/models/billing-volume');
 const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
 
 /**

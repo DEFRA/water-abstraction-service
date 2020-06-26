@@ -14,7 +14,7 @@ const {
 const {
   ERROR_NO_RETURNS_FOR_MATCHING,
   ERROR_OVER_ABSTRACTION
-} = require('../../../../../src/lib/models/transaction').twoPartTariffStatuses;
+} = require('../../../../../src/lib/models/billing-volume').twoPartTariffStatuses;
 
 const roundTo3DP = decimal => {
   return decimal.toDecimalPlaces(3).toNumber();
@@ -98,11 +98,11 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
     });
     test('only returns TPT charge elements', async () => {
       const code200ChargeElement = getNonTptChargeElement(200);
-      const code600ChargeElement = getNonTptChargeElement(600);
+      const code300ChargeElement = getNonTptChargeElement(300);
       const tptChargeElements = prepareChargeElementsForMatching([
         code200ChargeElement,
         unsupportedTLChargeElement,
-        code600ChargeElement,
+        code300ChargeElement,
         unsupportedChargeElement
       ]);
       expect(tptChargeElements).to.have.length(2);
@@ -174,13 +174,13 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       isUnderQuery: false,
       tertiaryCode: 260
     });
-    const code600Ret = createReturn({
+    const code390Ret = createReturn({
       returnId: 'code-600-returns',
       status: 'completed',
       dueDate: '2018-11-01',
       receivedDate: '2018-10-15',
       isUnderQuery: false,
-      tertiaryCode: 600
+      tertiaryCode: 390
     });
 
     test('returns an error if .checkReturnsForErrors returns a value', async () => {
@@ -193,7 +193,7 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
         code400Ret,
         code420Ret,
         code260Ret,
-        code600Ret
+        code390Ret
       ]);
       expect(error).to.be.null();
       expect(tptReturns).to.have.length(2);
@@ -326,8 +326,10 @@ experiment('modules/charging/lib/two-part-tariff-matching', async () => {
       });
       test('no quantity is allocated if there are no TPT returns', async () => {
         const { error, data } = matchReturnsToChargeElements(chargeElement, otherPurposeReturns);
-        expect(data).to.be.null();
         expect(error).to.equal(ERROR_NO_RETURNS_FOR_MATCHING);
+        expect(data[0].error).to.be.null();
+        expect(data[0].data.chargeElementId).to.equal(chargeElementOptions.chargeElementId);
+        expect(data[0].data.actualReturnQuantity).to.be.null();
       });
       test('when there are charge elements and returns with different TPT purposes', async () => {
         const { data: matchedElements, error } = matchReturnsToChargeElements(

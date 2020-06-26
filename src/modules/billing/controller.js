@@ -15,6 +15,7 @@ const invoiceService = require('./services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
 const batchService = require('./services/batch-service');
 const transactionsService = require('./services/transactions-service');
+const billingVolumesService = require('./services/billing-volumes-service');
 const eventService = require('../../lib/services/events');
 
 const mappers = require('./mappers');
@@ -175,7 +176,7 @@ const getBatchLicences = async (request, h) => {
   return invoiceLicenceService.getLicencesWithTransactionStatusesForBatch(batch.id);
 };
 
-const patchTransaction = async (request, h) => {
+const patchTransactionBillingVolume = async (request, h) => {
   const { transactionId } = request.params;
   const { volume } = request.payload;
   const { internalCallingUser: user } = request.defra;
@@ -185,8 +186,11 @@ const patchTransaction = async (request, h) => {
 
   try {
     const transaction = get(batch, 'invoices[0].invoiceLicences[0].transactions[0]');
-    const updatedTransaction = await transactionsService.updateTransactionVolume(batch, transaction, volume, user);
-    return updatedTransaction;
+    const updatedBillingVolume = await billingVolumesService.updateBillingVolume(transaction.chargeElement.id, batch, volume, user);
+    return {
+      transaction,
+      updatedBillingVolume
+    };
   } catch (err) {
     return Boom.badRequest(err.message);
   }
@@ -233,6 +237,8 @@ const postApproveReviewBatch = async (request, h) => {
   try {
     const updatedBatch = await batchService.approveTptBatchReview(batch);
 
+    await billingVolumesService.approveVolumesForBatch(batch);
+
     const batchEvent = await createBatchEvent({
       type: 'billing-batch:approve-review',
       status: jobStatus.processing,
@@ -267,5 +273,5 @@ exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 exports.postApproveReviewBatch = postApproveReviewBatch;
 
-exports.patchTransaction = patchTransaction;
+exports.patchTransactionBillingVolume = patchTransactionBillingVolume;
 exports.deleteInvoiceLicence = deleteInvoiceLicence;
