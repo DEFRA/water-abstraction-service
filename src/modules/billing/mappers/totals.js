@@ -16,38 +16,25 @@ const chargeModuleBillRunToBatchModel = data => {
   ]);
 };
 
-const sumProperties = arr => arr.reduce((acc, row) => {
-  return {
-    creditLineCount: acc.creditLineCount + row.creditLineCount,
-    creditLineValue: acc.creditLineValue + row.creditLineValue,
-    debitLineCount: acc.debitLineCount + row.debitLineCount,
-    debitLineValue: acc.debitLineValue + row.debitLineValue,
-    netTotal: acc.netTotal + row.netTotal
-  };
-}, {
-  creditLineCount: 0,
-  creditLineValue: 0,
-  debitLineCount: 0,
-  debitLineValue: 0,
-  netTotal: 0
-});
-
 /**
  * Sums all transaction summaries for the supplied invoice account
  * number and returns as a Totals instance
  * @param {Object} billRun - response from Charge Module bill run call
  * @param {String} invoiceAccountNumber
+ * @param {Number} financialYearEnding
  * @return {Totals} - totals for the supplied invoice account
  */
-const chargeModuleBillRunToInvoiceModel = (billRun, invoiceAccountNumber) => {
+const chargeModuleBillRunToInvoiceModel = (billRun, invoiceAccountNumber, financialYearEnding) => {
   const customer = find(billRun.customers, { customerReference: invoiceAccountNumber });
-
   if (!customer) {
     return null;
   }
-  const data = sumProperties(customer.summaryByFinancialYear);
+  const finYear = find(customer.summaryByFinancialYear, { financialYear: financialYearEnding - 1 });
+  if (!finYear) {
+    return null;
+  }
   const totals = new Totals();
-  return totals.pickFrom(data, [
+  return totals.pickFrom(finYear, [
     'creditLineCount',
     'creditLineValue',
     'debitLineCount',
