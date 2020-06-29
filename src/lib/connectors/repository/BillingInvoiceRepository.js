@@ -172,12 +172,6 @@ class BillingInvoiceRepository extends Repository {
     const result = await this.dbQuery(findOneByTransactionIdQuery, [transactionId]);
     return get(result, 'rows.0', null);
   }
-
-  deleteByBatchId (batchId) {
-    return this.delete({
-      billing_batch_id: batchId
-    });
-  }
 }
 
 module.exports = BillingInvoiceRepository;

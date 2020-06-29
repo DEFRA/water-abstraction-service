@@ -17,14 +17,24 @@ const findStatusCountsByBatchId = batchId =>
   raw.multiRow(queries.findStatusCountsByBatchId, { batchId });
 
 /**
- * Deletes all charge version years associated with an invoice ID
- * @param {String} billingInvoiceId
- * @return {Promise}
+ * Deletes all billing batch charge version years for given batch
+ * @param {String} batchId - guid
  */
+const deleteByBatchId = async batchId => BillingBatchChargeVersionYear
+  .forge()
+  .where({ billing_batch_id: batchId })
+  .destroy();
+
+/*
+  * Deletes all charge version years associated with an invoice ID
+  * @param {String} billingInvoiceId
+  * @return {Promise}
+  */
 const deleteByInvoiceId = billingInvoiceId => bookshelf
   .knex
   .raw(queries.deleteByInvoiceId, { billingInvoiceId });
 
 exports.update = update;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
+exports.deleteByBatchId = deleteByBatchId;
 exports.deleteByInvoiceId = deleteByInvoiceId;

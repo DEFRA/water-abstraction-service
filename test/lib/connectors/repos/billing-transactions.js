@@ -255,6 +255,21 @@ experiment('lib/connectors/repos/billing-transactions', () => {
     });
   });
 
+  experiment('.deleteByBatchId', async () => {
+    const batchId = 'test-batch-id';
+
+    beforeEach(async () => {
+      sandbox.stub(bookshelf.knex, 'raw');
+      await billingTransactions.deleteByBatchId(batchId);
+    });
+
+    test('calls knex.raw() with correct argumements', async () => {
+      const [query, params] = bookshelf.knex.raw.lastCall.args;
+      expect(query).to.equal(queries.deleteByBatchId);
+      expect(params).to.equal({ batchId });
+    });
+  });
+
   experiment('.deleteByInvoiceId', () => {
     beforeEach(async () => {
       sandbox.stub(bookshelf.knex, 'raw');

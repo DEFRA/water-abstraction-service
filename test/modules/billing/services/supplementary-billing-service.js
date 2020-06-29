@@ -24,7 +24,8 @@ const invoiceAccountId = '398b6f31-ff01-4621-b939-e720f1a77deb';
 const createTransactionRow = (index, transactionKey, isCredit = false) => ({
   billingTransactionId: `00000000-0000-0000-0000-00000000000${index}`,
   isCredit,
-  transactionKey
+  transactionKey,
+  billingVolume: []
 });
 
 const createFullTransaction = (...args) => ({

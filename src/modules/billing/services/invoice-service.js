@@ -130,7 +130,8 @@ const getInvoice = async context => {
   if (!data) {
     throw new NotFoundError(`Invoice ${invoiceId} not found`);
   }
-  if (data.billingBatch.billingBatchId !== batch.id) {
+
+  if (data.billingBatchId !== batch.id) {
     throw new NotFoundError(`Invoice ${invoiceId} not found in batch ${batch.id}`);
   }
 
@@ -156,7 +157,7 @@ const decorateInvoiceWithCMData = (invoice, context) => {
     });
 
     // Add invoice totals
-    invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(cmBillRun, accountNumber);
+    invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(cmBillRun, accountNumber, invoice.financialYear.yearEnding);
   }
 };
 

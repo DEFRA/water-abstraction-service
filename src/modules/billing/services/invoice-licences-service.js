@@ -64,7 +64,7 @@ const getInvoiceLicenceWithTransactions = async invoiceLicenceId => {
  * @param {String} invoiceLicenceId
  * @return {Promise}
  */
-const deleteInvoiceLicence = async (invoiceLicenceId) => {
+const deleteInvoiceLicence = async invoiceLicenceId => {
   // Load data from DB
   const invoiceLicence = await newRepos.billingInvoiceLicences.findOne(invoiceLicenceId);
   if (!invoiceLicence) {
@@ -76,6 +76,9 @@ const deleteInvoiceLicence = async (invoiceLicenceId) => {
   if (!batch.statusIsOneOf(Batch.BATCH_STATUS.review)) {
     throw new BatchStatusError(`Batch ${batch.id} status '${Batch.BATCH_STATUS.review}' expected`);
   }
+
+  // Delete billing volumes for invoice licence
+  await newRepos.billingVolumes.deleteByInvoiceLicenceAndBatchId(invoiceLicenceId, batch.id);
 
   // Delete transactions for invoice licence
   await newRepos.billingTransactions.deleteByInvoiceLicenceId(invoiceLicenceId);

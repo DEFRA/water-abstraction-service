@@ -12,6 +12,9 @@ const Transaction = require('../../../../../src/lib/models/transaction');
 const crmV2 = require('../../../../../src/lib/connectors/crm-v2');
 const chargeProcessorService = require('../../../../../src/modules/billing/services/charge-processor-service');
 const chargeVersionService = require('../../../../../src/modules/billing/services/charge-version-service');
+const transactionsProcessor = require('../../../../../src/modules/billing/services/charge-processor-service/transactions-processor');
+const batchService = require('../../../../../src/modules/billing/services/batch-service');
+const billingVolumeService = require('../../../../../src/modules/billing/services/billing-volumes-service');
 
 const data = require('./data');
 
@@ -110,6 +113,8 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
     sandbox.stub(crmV2.invoiceAccounts, 'getInvoiceAccountById').resolves(crmData.invoiceAccount);
 
     sandbox.stub(chargeVersionService, 'getByChargeVersionId');
+    sandbox.stub(batchService, 'getSentTPTBatchesForFinancialYearAndRegion');
+    sandbox.stub(billingVolumeService, 'getVolumes');
   });
 
   afterEach(async () => {
@@ -143,6 +148,12 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
       test('the CRM company for the charge version is loaded', async () => {
         expect(crmV2.companies.getCompany.calledWith(
           chargeVersion.company.id
+        )).to.be.true();
+      });
+
+      test('the sent TPT batches for the financial year are loaded', async () => {
+        expect(batchService.getSentTPTBatchesForFinancialYearAndRegion.calledWith(
+          financialYear, batch.region
         )).to.be.true();
       });
 
@@ -208,6 +219,38 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
         invoice.invoiceLicences[0].transactions.forEach(transaction => {
           expect(transaction instanceof Transaction).to.be.true();
         });
+      });
+    });
+
+    experiment('if transactions have isTwoPartTariffSupplementary flag set to true', () => {
+      let transaction, batch;
+      beforeEach(async () => {
+        chargeVersion = data.createChargeVersionWithTwoPartTariff();
+        chargeVersionService.getByChargeVersionId.resolves(chargeVersion);
+        transaction = data.createTransaction({ isTwoPartTariffSupplementary: true });
+        sandbox.stub(transactionsProcessor, 'createTransactions').returns([transaction]);
+        batch = data.createBatch('two_part_tariff');
+        invoice = await chargeProcessorService.processChargeVersionYear(batch, financialYear, chargeVersion.id);
+      });
+
+      test('the billingVolumes service is called with correct params', async () => {
+        const expectedChargeElements = [{
+          ...chargeVersion.chargeElements[0].toJSON(),
+          billableDays: 150,
+          authorisedDays: 150,
+          totalDays: 366
+        }, {
+          ...chargeVersion.chargeElements[1].toJSON(),
+          billableDays: 150,
+          authorisedDays: 150,
+          totalDays: 366
+        }];
+        const [chargeElement, licenceNumber, finYear, isSummer, batchArg] = billingVolumeService.getVolumes.lastCall.args;
+        expect(chargeElement).to.equal(expectedChargeElements);
+        expect(licenceNumber).to.equal(chargeVersion.licence.licenceNumber);
+        expect(finYear).to.equal(financialYear.yearEnding);
+        expect(isSummer).to.equal('true');
+        expect(batchArg).to.equal(batch);
       });
     });
 

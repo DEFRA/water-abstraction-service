@@ -7,13 +7,14 @@ const data = require('./data');
 experiment('modules/billing/services/charge-processor-service/transactions-processor', async () => {
   experiment('.createTransactions', async () => {
     const financialYear = data.createFinancialYear();
+    const sentTPTBatches = data.createSentTPTBatches();
     let chargeVersion, batch, transactions;
 
     experiment('for an annual batch', () => {
       beforeEach(async () => {
         batch = data.createBatch('annual');
         chargeVersion = data.createChargeVersionWithTwoPartTariff();
-        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
       });
 
       test('4 transactions are created', async () => {
@@ -57,7 +58,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
       beforeEach(async () => {
         batch = data.createBatch('supplementary');
         chargeVersion = data.createChargeVersionWithTwoPartTariff();
-        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
       });
 
       test('5 transactions are created', async () => {
@@ -107,9 +108,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
 
     experiment('for a two-part tariff batch', () => {
       beforeEach(async () => {
-        batch = data.createBatch('two_part_tariff');
+        batch = data.createBatch('two_part_tariff', { isSummer: true });
         chargeVersion = data.createChargeVersionWithTwoPartTariff();
-        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
       });
 
       test('1 transaction is created', async () => {
@@ -134,7 +135,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('the transaction charge period is the full financial year', async () => {
@@ -163,7 +164,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
               }
             })
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('the transaction charge period is the full financial year', async () => {
@@ -193,7 +194,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
               }
             })
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('the transaction charge period is the full financial year', async () => {
@@ -216,7 +217,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('the transaction charge period starts on the licence start date', async () => {
@@ -241,7 +242,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('the transaction charge period ends on the earliest of expiry, lapsed and revoked dates', async () => {
@@ -262,7 +263,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('the transaction charge period starts when the charge version starts', async () => {
@@ -283,7 +284,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('the transaction charge period ends when the charge period ends', async () => {
@@ -304,7 +305,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement({ timeLimitedStartDate: '2015-01-01', timeLimitedEndDate: '2016-01-01' })
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('no transactions are created', async () => {
@@ -319,7 +320,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement({ timeLimitedStartDate: '2015-01-01', timeLimitedEndDate: '2025-01-01' })
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('the transaction charge period is the full financial year', async () => {
@@ -340,7 +341,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement({ timeLimitedStartDate: '2019-05-01', timeLimitedEndDate: '2025-01-01' })
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('the transaction charge period starts on the time-limited start date', async () => {
@@ -361,7 +362,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement({ timeLimitedStartDate: '2016-01-01', timeLimitedEndDate: '2019-06-01' })
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('the transaction charge period ends on the time-limited end date', async () => {
@@ -382,7 +383,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement({ timeLimitedStartDate: '2019-05-01', timeLimitedEndDate: '2019-06-01' })
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('the transaction charge period starts and ends on the time-limited dates', async () => {
@@ -407,7 +408,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('generate 2 charges', async () => {
@@ -430,7 +431,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('generate 1 charge', async () => {
@@ -453,7 +454,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('transactions have no agreements', async () => {
@@ -472,7 +473,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('transactions have the agreements applied', async () => {
@@ -493,7 +494,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion);
+          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, sentTPTBatches);
         });
 
         test('4 transactions are created', async () => {

@@ -46,11 +46,10 @@ const findLicencesWithTransactionStatusesForBatch = batchId =>
   raw.multiRow(queries.findLicencesWithTransactionStatusesForBatch, { batchId });
 
 /**
- * Find One the licence in a batch and aggregate the two part tariff
- * error codes for a licence's underlying transactions.
- * @param {String} batchId
+ * Find One licence in a batch with related transactions
+ * @param {String} id
  */
-const findOneInvoiceLicenceWithTransactions = async (id) => {
+const findOneInvoiceLicenceWithTransactions = async id => {
   const model = await BillingInvoiceLicence
     .forge({ billingInvoiceLicenceId: id })
     .fetch({
@@ -58,6 +57,7 @@ const findOneInvoiceLicenceWithTransactions = async (id) => {
         'licence',
         'licence.region',
         'billingTransactions',
+        'billingTransactions.billingVolume',
         'billingTransactions.chargeElement',
         'billingTransactions.chargeElement.purposeUse'
       ]
@@ -75,6 +75,12 @@ const deleteRecord = billingInvoiceLicenceId => BillingInvoiceLicence
   .destroy();
 
 /**
+* Deletes all billing invoice licences for given batch
+* @param {String} batchId - guid
+*/
+const deleteByBatchId = async batchId => bookshelf.knex.raw(queries.deleteByBatchId, { batchId });
+
+/*
  * Delete multiple by invoice ID
  * @param {String} id - one or many IDs
  */
@@ -89,4 +95,5 @@ exports.findLicencesWithTransactionStatusesForBatch = findLicencesWithTransactio
 exports.findOneInvoiceLicenceWithTransactions = findOneInvoiceLicenceWithTransactions;
 exports.upsert = upsert;
 exports.delete = deleteRecord;
+exports.deleteByBatchId = deleteByBatchId;
 exports.deleteByInvoiceId = deleteByInvoiceId;

@@ -30,6 +30,7 @@ const findOne = async id => {
         'billingInvoiceLicences.licence',
         'billingInvoiceLicences.licence.region',
         'billingInvoiceLicences.billingTransactions',
+        'billingInvoiceLicences.billingTransactions.billingVolume',
         'billingInvoiceLicences.billingTransactions.chargeElement',
         'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
       ]
@@ -46,7 +47,20 @@ const deleteRecord = billingInvoiceId => BillingInvoice
   .forge({ billingInvoiceId })
   .destroy();
 
+/**
+* Deletes all billing invoice licences for given batch
+* @param {String} batchId - guid
+*/
+const deleteByBatchId = async batchId => BillingInvoice
+  .forge()
+  .where({ billing_batch_id: batchId })
+  .destroy();
+
+exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
+exports.findOne = findOne;
+exports.upsert = upsert;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;
 exports.upsert = upsert;
 exports.delete = deleteRecord;
+exports.deleteByBatchId = deleteByBatchId;
