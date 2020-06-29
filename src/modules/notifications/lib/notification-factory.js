@@ -1,4 +1,39 @@
 const { logger } = require('../../../logger');
+const { identity } = require('lodash');
+
+const mapAddressLine = str => (str || '').trim();
+
+const formatAddress = contact => {
+  // Format name
+  const { salutation, forename, name, postcode } = contact;
+  const fullName = [salutation, forename, name].filter(identity).join(' ');
+
+  // Format address lines
+  const addressLines = [
+    fullName,
+    contact.address_1,
+    contact.address_2,
+    contact.address_3,
+    contact.address_4,
+    contact.town,
+    contact.county
+  ];
+
+  // Notify can only accept a max of 6 address lines plus postcode
+  // so we omit county as postcode is sufficient
+  const finalAddressLines = addressLines
+    .map(mapAddressLine)
+    .filter(identity)
+    .slice(0, 6);
+
+  // Format personalisation with address lines and postcode
+  return finalAddressLines.reduce((acc, line, i) => {
+    return {
+      ...acc,
+      [`address_line_${i + 1}`]: line
+    };
+  }, { postcode });
+};
 
 /**
  * Compose and send a single message with notify
@@ -8,38 +43,14 @@ const { logger } = require('../../../logger');
  * @return {Object} ScheduledNotification instance
  */
 async function notificationFactory (contactData, taskConfig, event) {
-  // Format name
-  const { salutation, forename, name, entity_id: entityId } = contactData.contact.contact;
-  const fullName = [salutation, forename, name].filter(x => x).join(' ');
-
-  // Get address
-  const {
-    address_1: address1,
-    address_2: address2,
-    address_3: address3,
-    address_4: address4,
-    town,
-    county,
-    postcode
-  } = contactData.contact.contact;
-
-  const lines = [fullName, address1, address2, address3, address4, town, county];
-
-  // Format personalisation with address lines and postcode
-  const address = lines.filter(x => x).reduce((acc, line, i) => {
-    return {
-      ...acc,
-      [`address_line_${i + 1}`]: line
-    };
-  }, {});
+  const { entity_id: entityId } = contactData.contact.contact;
 
   // Compose notify personalisation
   const personalisation = {
     body: contactData.output,
     heading: taskConfig.config.subject,
     subject: taskConfig.config.subject,
-    ...address,
-    postcode
+    ...formatAddress(contactData.contact.contact)
   };
 
   // Get data for logging
