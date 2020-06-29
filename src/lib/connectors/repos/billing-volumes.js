@@ -65,7 +65,7 @@ const findByBatchId = async batchId => {
 const deleteByBatchId = async batchId => BillingVolume
   .forge()
   .where({ billing_batch_id: batchId })
-  .destroy();
+  .destroy({ require: false });
 
 /**
 * Deletes all billing volumes related to invoice licence
