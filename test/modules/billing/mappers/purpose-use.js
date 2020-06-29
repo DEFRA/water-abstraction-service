@@ -22,7 +22,8 @@ experiment('modules/billing/mappers/purpose', () => {
         purposeUseId: uuid(),
         legacyId: '10',
         description: 'test-desc',
-        lossFactor: 'low'
+        lossFactor: 'low',
+        isTwoPartTariff: false
       };
 
       result = purposeUseMapper.dbToModel(row);
@@ -42,6 +43,14 @@ experiment('modules/billing/mappers/purpose', () => {
 
     test('sets the name', async () => {
       expect(result.name).to.equal(row.description);
+    });
+
+    test('sets the loss factor', async () => {
+      expect(result.lossFactor).to.equal(row.lossFactor);
+    });
+
+    test('sets the isTwoPartTariff flag', async () => {
+      expect(result.isTwoPartTariff).to.equal(row.isTwoPartTariff);
     });
   });
 });

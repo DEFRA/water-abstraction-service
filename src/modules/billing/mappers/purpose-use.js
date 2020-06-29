@@ -7,7 +7,8 @@ const dbToModel = row => {
   purpose.fromHash({
     code: row.legacyId,
     name: row.description,
-    lossFactor: row.lossFactor
+    lossFactor: row.lossFactor,
+    isTwoPartTariff: row.isTwoPartTariff
   });
   return purpose;
 };
