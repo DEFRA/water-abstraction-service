@@ -196,8 +196,10 @@ experiment('lib/connectors/repos/billing-volumes', () => {
       expect(filter).to.equal({ billing_batch_id: 'test-batch-id' });
     });
 
-    test('calls destroy() to delete records', () => {
-      expect(stub.destroy.called).to.be.true();
+    test('calls destroy() with expected options', () => {
+      expect(stub.destroy.calledWith(
+        { require: false }
+      )).to.be.true();
     });
   });
 
