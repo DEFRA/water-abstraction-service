@@ -1,4 +1,4 @@
-const { groupBy } = require('lodash');
+const { groupBy, compact } = require('lodash');
 const validators = require('../../../../lib/models/validators');
 const { NotFoundError } = require('../../../../lib/errors');
 
@@ -79,15 +79,18 @@ const hasTptSupplementaryTransactions = invoiceLicence => {
  */
 const getChargeElementsForMatching = (transactions, financialYear, chargeVersion, chargePeriodStartDate) => {
   const chargePeriodEndDate = getChargePeriodEndDate(financialYear, chargeVersion);
-  return chargeVersion.chargeElements.map(chargeElement => {
+  const chargeElements = chargeVersion.chargeElements.map(chargeElement => {
     const transaction = transactions.find(transaction => transaction.chargeElement.id === chargeElement.id);
-    return {
-      ...chargeElement.toJSON(),
-      billableDays: transaction.billableDays,
-      authorisedDays: transaction.authorisedDays,
-      totalDays: helpers.charging.getTotalDays(chargePeriodStartDate, chargePeriodEndDate)
-    };
+    if (transaction) {
+      return {
+        ...chargeElement.toJSON(),
+        billableDays: transaction.billableDays,
+        authorisedDays: transaction.authorisedDays,
+        totalDays: helpers.charging.getTotalDays(chargePeriodStartDate, chargePeriodEndDate)
+      };
+    }
   });
+  return compact(chargeElements);
 };
 
 /**

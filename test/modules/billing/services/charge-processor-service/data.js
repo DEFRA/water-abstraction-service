@@ -64,6 +64,7 @@ const createChargeElement = (overrides = {}) => {
   }
 
   return chargeElement.fromHash({
+    id: overrides.id || '00000000-0000-0000-0000-000000000000',
     description: 'Test description',
     source: 'supported',
     season: 'summer',
@@ -103,7 +104,7 @@ const createChargeVersionWithTwoPartTariff = (overrides = {}) => {
   const cv = createChargeVersion();
   cv.licence = createLicence();
   cv.chargeElements = [
-    createChargeElement(),
+    createChargeElement({ id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' }),
     createChargeElement({ isSprayIrrigation: true })
   ];
   cv.licence.licenceAgreements = [

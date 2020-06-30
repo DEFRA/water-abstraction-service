@@ -228,29 +228,33 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
         chargeVersion = data.createChargeVersionWithTwoPartTariff();
         chargeVersionService.getByChargeVersionId.resolves(chargeVersion);
         transaction = data.createTransaction({ isTwoPartTariffSupplementary: true });
+        transaction.chargeElement.id = '00000000-0000-0000-0000-000000000000';
         sandbox.stub(transactionsProcessor, 'createTransactions').returns([transaction]);
         batch = data.createBatch('two_part_tariff');
         invoice = await chargeProcessorService.processChargeVersionYear(batch, financialYear, chargeVersion.id);
       });
 
       test('the billingVolumes service is called with correct params', async () => {
-        const expectedChargeElements = [{
-          ...chargeVersion.chargeElements[0].toJSON(),
-          billableDays: 150,
-          authorisedDays: 150,
-          totalDays: 366
-        }, {
+        const expectedChargeElement = [{
           ...chargeVersion.chargeElements[1].toJSON(),
           billableDays: 150,
           authorisedDays: 150,
           totalDays: 366
         }];
         const [chargeElement, licenceNumber, finYear, isSummer, batchArg] = billingVolumeService.getVolumes.lastCall.args;
-        expect(chargeElement).to.equal(expectedChargeElements);
+        expect(chargeElement).to.equal(expectedChargeElement);
         expect(licenceNumber).to.equal(chargeVersion.licence.licenceNumber);
         expect(finYear).to.equal(financialYear.yearEnding);
         expect(isSummer).to.equal('true');
         expect(batchArg).to.equal(batch);
+      });
+
+      test('does not include the charge element without a matching transaction', async () => {
+        const unrelatedElement = [
+          chargeVersion.chargeElements[0].toJSON()
+        ];
+        const [chargeElement] = billingVolumeService.getVolumes.lastCall.args;
+        expect(chargeElement).not.to.contain(unrelatedElement);
       });
     });
 
