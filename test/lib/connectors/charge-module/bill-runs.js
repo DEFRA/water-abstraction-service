@@ -169,4 +169,15 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
       });
     });
   });
+
+  experiment('.getTransactions', () => {
+    beforeEach(async () => {
+      await billRunsApiConnector.getTransactions('test-id');
+    });
+
+    test('the correct endpoint is called', async () => {
+      const [path] = request.get.lastCall.args;
+      expect(path).to.equal('v1/wrls/billruns/test-id/transactions');
+    });
+  });
 });
