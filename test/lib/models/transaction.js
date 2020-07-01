@@ -351,7 +351,7 @@ experiment('lib/models/transaction', () => {
       expect(func).to.throw();
     });
 
-    test('throws an error if volume is greater than authorised quantity', async () => {
+    test('throws an error if volume is greater than charge element max quantity', async () => {
       const func = () => {
         transaction.volume = 20;
       };

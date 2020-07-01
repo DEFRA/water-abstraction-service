@@ -1,6 +1,6 @@
 'use strict';
 
-const { isNull } = require('lodash');
+const { isNull, max } = require('lodash');
 const Model = require('./model');
 const AbstractionPeriod = require('./abstraction-period');
 const PurposeUse = require('./purpose-use');
@@ -102,6 +102,14 @@ class ChargeElement extends Model {
   set billableAnnualQuantity (quantity) {
     validators.assertNullableQuantity(quantity);
     this._billableAnnualQuantity = isNull(quantity) ? null : parseFloat(quantity);
+  }
+
+  /**
+   * Gets the maximum allowable annual quantity
+   * @return {Number}
+   */
+  get maxAnnualQuantity () {
+    return max([this.billableAnnualQuantity, this.authorisedAnnualQuantity]);
   }
 
   /**
