@@ -3,10 +3,25 @@
 const moment = require('moment');
 const { expect } = require('@hapi/code');
 
+/**
+ * Extracts the transactions from the batch and adds the licence
+ * and invoice data to the transactions to simplify comparisons
+ * with the charge module transactions.
+ *
+ * @param {Object} batch
+ */
 const getTransactions = batch => {
   return batch.billingInvoices.reduce((transactions, invoice) => {
     return invoice.billingInvoiceLicences.reduce((transactions, licence) => {
-      return [...transactions, ...licence.billingTransactions];
+      const augmentedTransactions = licence.billingTransactions.map(tx => {
+        tx.outerData = {
+          invoice,
+          licence: licence.licence
+        };
+        return tx;
+      });
+
+      return [...transactions, ...augmentedTransactions];
     }, transactions);
   }, []);
 };
@@ -62,10 +77,16 @@ const assertMatchingDates = (batchTransaction, chargeModuleTransaction) => {
 };
 
 const assertMatchingCredit = (batchTransaction, chargeModuleTransaction) => {
+  const isCompensationCharge = batchTransaction.chargeType === 'compensation';
+  expect(isCompensationCharge).to.equal(chargeModuleTransaction.compensationCharge);
+
   expect(batchTransaction.isCredit).to.equal(chargeModuleTransaction.credit);
 };
 
 const assertMatchingChargeElement = (batchTransaction, chargeModuleTransaction) => {
+  const expectedEiucSource = batchTransaction.source === 'tidal' ? 'tidal' : 'other';
+  expect(expectedEiucSource).to.equal(chargeModuleTransaction.eiucSource.toLowerCase());
+
   expect(batchTransaction.loss.toLowerCase()).to.equal(chargeModuleTransaction.loss.toLowerCase());
   expect(batchTransaction.season.toLowerCase()).to.equal(chargeModuleTransaction.season.toLowerCase());
   expect(batchTransaction.source.toLowerCase()).to.equal(chargeModuleTransaction.source.toLowerCase());
@@ -82,6 +103,7 @@ const assertMatchingDays = (batchTransaction, chargeModuleTransaction) => {
 };
 
 const assertMatchingAgreements = (batchTransaction, chargeModuleTransaction) => {
+  expect(batchTransaction.isTwoPartTariffSupplementary).to.equal(chargeModuleTransaction.twoPartTariff);
   expect(!!batchTransaction.section127Agreement).to.equal(chargeModuleTransaction.section127Agreement);
   expect(!!batchTransaction.section130Agreement).to.equal(chargeModuleTransaction.section130Agreement);
 };
@@ -92,6 +114,21 @@ const assertMatchingDescription = (batchTransaction, chargeModuleTransaction) =>
 
 const assertMatchingBatchId = (batch, chargeModuleTransaction) => {
   expect(batch.billingBatchId).to.equal(chargeModuleTransaction.batchNumber);
+};
+
+const assertMatchingCustomer = (batchTransaction, chargeModuleTransaction) => {
+  const { invoice } = batchTransaction.outerData;
+  expect(invoice.invoiceAccountNumber).to.equal(chargeModuleTransaction.customerReference);
+};
+
+const assertMatchingLicenceData = (batchTransaction, chargeModuleTransaction) => {
+  const { licence } = batchTransaction.outerData;
+
+  expect(licence.isWaterUndertaker).to.equal(chargeModuleTransaction.waterUndertaker);
+  expect(licence.licenceRef).to.equal(chargeModuleTransaction.licenceNumber);
+  expect(licence.regions.regionalChargeArea).to.equal(chargeModuleTransaction.regionalChargingArea);
+  expect(licence.regions.historicalAreaCode).to.equal(chargeModuleTransaction.areaCode);
+  expect(licence.region.chargeRegionId).to.equal(chargeModuleTransaction.region);
 };
 
 const assertBatchTransactionDataExistsInChargeModule = (batch, chargeModuleTransactions) => {
@@ -109,6 +146,8 @@ const assertBatchTransactionDataExistsInChargeModule = (batch, chargeModuleTrans
     assertMatchingDays(batchTransaction, chargeModuleTransaction);
     assertMatchingAgreements(batchTransaction, chargeModuleTransaction);
     assertMatchingDescription(batchTransaction, chargeModuleTransaction);
+    assertMatchingLicenceData(batchTransaction, chargeModuleTransaction);
+    assertMatchingCustomer(batchTransaction, chargeModuleTransaction);
   });
 };
 
