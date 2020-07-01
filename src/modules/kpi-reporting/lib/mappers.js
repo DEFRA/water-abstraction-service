@@ -1,0 +1,53 @@
+'use-strict';
+
+const months = ['January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'];
+
+const mapReturnsDataByCycle = (data, returnCycle) => {
+  return {
+    ...returnCycle,
+    ...data,
+    total: data.internalOnTime + data.internalLate + data.externalOnTime + data.externalLate
+  };
+};
+
+const mapReturnsDataMonthly = (data) => {
+  const year = new Date().getFullYear();
+  return data.reduce((acc, row) => {
+    acc.totals.allTime = acc.totals.allTime + row.return;
+    acc.totals.ytd = acc.totals.ytd + (row.currentYear ? row.return : 0);
+    if (row.currentYear) {
+      acc.monthly.push({ ...row, month: months[(row.month - 1)], currentYear: year });
+    }
+    return acc;
+  }, { totals: { allTime: 0, ytd: 0 }, monthly: [] });
+};
+
+const percentChange = (data, index, key) => {
+  return index < (data.length + 1) ? (data[[index]][key] - data[(index + 1)][key]) /
+            (data[(index + 1)][key] < 1 ? 1 : data[(index + 1)][key]) * 100 : 0;
+};
+
+const mapLicenceNamesData = (data) => {
+  const year = new Date().getFullYear();
+  return data.reduce((acc, row, index) => {
+    acc.totals.allTime = acc.totals.allTime + row.named + row.renamed;
+    acc.totals.ytd = acc.totals.ytd + (row.currentYear ? row.named + row.renamed : 0);
+    if (row.currentYear) {
+      acc.monthly.push(
+        {
+          ...row,
+          month: months[row.month],
+          year: year,
+          namedChange: index < (data.length - 1) ? percentChange(data, index, 'named') : 0,
+          renamedChange: index < (data.length - 1) ? percentChange(data, index, 'renamed') : 0
+        }
+      );
+    }
+    return acc;
+  }, { totals: { allTime: 0, ytd: 0 }, monthly: [] });
+};
+
+module.exports.mapLicenceNamesData = mapLicenceNamesData;
+module.exports.mapReturnsDataByCycle = mapReturnsDataByCycle;
+module.exports.mapReturnsDataMonthly = mapReturnsDataMonthly;

@@ -1,17 +1,17 @@
 
-const controller = require('../controller');
-const { version } = require('../../../../config');
+const controller = require('./controller');
+const { version } = require('../../../config');
 
-const pathPrefix = `/water/${version}/kpi-reporting/`;
+const pathPrefix = `/water/${version}/kpi-reporting`;
 
 module.exports = {
 
   getNamingLicencesKPIdata: {
     method: 'GET',
-    path: `${pathPrefix}/naming-licences`,
-    handler: controller.getNamingLicences,
+    path: `${pathPrefix}`,
+    handler: controller.getKPIData,
     config: {
-      description: 'Returns current year KPI data for naming of licences from events'
+      description: 'Returns all the data for KPI UI'
     }
   }
 };

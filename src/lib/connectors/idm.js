@@ -145,9 +145,14 @@ usersClient.disableUser = partialRight(setEnabled, false);
  */
 usersClient.enableUser = partialRight(setEnabled, true);
 
+const getKPIAccessRequests = async => {
+  return helpers.serviceRequest.get(`${config.services.idm}/kpi/registrations`);
+};
+
 exports.usersClient = usersClient;
 exports.getServiceVersion = factory.create(config.services.crm);
 exports.kpiClient = kpiClient;
 exports.startEmailChange = startEmailChange;
 exports.verifySecurityCode = verifySecurityCode;
 exports.getEmailChangeStatus = getEmailChangeStatus;
+exports.getKPIAccessRequests = getKPIAccessRequests;

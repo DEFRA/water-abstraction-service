@@ -124,6 +124,19 @@ const getLinesForReturn = async ret => {
   return linesClient.findAll(linesFilter);
 };
 
+/**
+ * Gets the returns KPI data by cycle within the specified parameters
+ * @param {Date} startDate
+ * @param {Date} endDate
+ * @param {Boolean} isSummer
+ * @returns Object
+ */
+const getKPIReturnsByCycle = async (startDate, endDate, isSummer) => {
+  // TODO get the ULR by attaching the query string
+  const url = `${config.services.returns}/kpi/licencesBySeason/?startDate=${startDate}&endDate=${endDate}&isSummer=${isSummer}`;
+  return helpers.serviceRequest.get(url);
+};
+
 exports.returns = returnsClient;
 exports.versions = versionsClient;
 exports.lines = linesClient;
@@ -132,6 +145,7 @@ exports.getCurrentDueReturns = getCurrentDueReturns;
 exports.getServiceVersion = getServiceVersion;
 exports.getReturnsForLicence = getReturnsForLicence;
 exports.getLinesForReturn = getLinesForReturn;
+exports.getKPIReturnsByCycle = getKPIReturnsByCycle;
 
 if (config.isAcceptanceTestTarget) {
   exports.deleteAcceptanceTestData = deleteAcceptanceTestData;

@@ -2,6 +2,7 @@
 
 const repo = require('../connectors/repos');
 const Event = require('../models/event');
+const camelCase = require('../camel-case-keys');
 
 /**
  * Creates Event object model from data received from the repo layer
@@ -76,8 +77,20 @@ const getMostRecentReturnsInvitationByLicence = async licenceRef => {
   return repo.events.getMostRecentReturnsInvitationByLicence(licenceRef);
 };
 
+const getKPIReturnsMonthly = async () => {
+  const result = await repo.events.getKPIReturnsMonthlyData();
+  return [...camelCase(result.rows)];
+};
+
+const getKPILicenceNames = async () => {
+  const result = await repo.events.getKPILicenceNamesData();
+  return [...camelCase(result.rows)];
+};
+
 exports.create = create;
 exports.findOne = findOne;
 exports.update = update;
 exports.updateStatus = updateStatus;
 exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitationByLicence;
+exports.getKPIReturnsMonthly = getKPIReturnsMonthly;
+exports.getKPILicenceNames = getKPILicenceNames;
