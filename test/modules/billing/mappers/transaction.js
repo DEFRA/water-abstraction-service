@@ -21,10 +21,11 @@ const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../src/lib/models/licence');
 const Transaction = require('../../../../src/lib/models/transaction');
 const ChargeElement = require('../../../../src/lib/models/charge-element');
+const BillingVolume = require('../../../../src/lib/models/billing-volume');
+const FinancialYear = require('../../../../src/lib/models/financial-year');
 const AbstractionPeriod = require('../../../../src/lib/models/abstraction-period');
 const DateRange = require('../../../../src/lib/models/date-range');
 const Region = require('../../../../src/lib/models/region');
-const User = require('../../../../src/lib/models/user');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const createChargeElement = () => {
@@ -58,9 +59,6 @@ const createTransaction = (options = {}) => {
     description: 'Tiny pond',
     volume: 5.64,
     transactionKey: '0123456789ABCDEF0123456789ABCDEF',
-    calculatedVolume: null,
-    twoPartTariffError: false,
-    twoPartTariffStatus: null,
     isTwoPartTariffSupplementary: !!options.isTwoPartTariffSupplementary
   });
   return transaction;
@@ -188,10 +186,6 @@ experiment('modules/billing/mappers/transaction', () => {
           section127Agreement: false,
           section130Agreement: null,
           transactionKey: '0123456789ABCDEF0123456789ABCDEF',
-          calculatedVolume: null,
-          twoPartTariffError: false,
-          twoPartTariffStatus: null,
-          twoPartTariffReview: null,
           isTwoPartTariffSupplementary: false
         });
       });
@@ -292,6 +286,7 @@ experiment('modules/billing/mappers/transaction', () => {
       billableDays: 250,
       startDate: '2019-04-01',
       endDate: '2020-03-31',
+      season: 'summer',
       chargeType: 'compensation',
       description: 'Little stream',
       chargeElement: createChargeElementRow(),
@@ -299,11 +294,7 @@ experiment('modules/billing/mappers/transaction', () => {
       section126Factor: null,
       section127Agreement: false,
       section130Agreement: null,
-      transactionKey: 'ABCDEF1234567890ABCDEF1234567890',
-      calculatedVolume: '11.76',
-      twoPartTariffError: false,
-      twoPartTariffStatus: null,
-      twoPartTariffReview: { id: 1234, email: 'user@example.com' }
+      transactionKey: 'ABCDEF1234567890ABCDEF1234567890'
     };
     beforeEach(async () => {
       result = transactionMapper.dbToModel(dbRow);
@@ -340,16 +331,8 @@ experiment('modules/billing/mappers/transaction', () => {
       expect(result.agreements).to.have.length(0);
     });
 
-    test('sets the correct two part tariff data', async () => {
-      expect(result.calculatedVolume).to.equal('11.76');
-      expect(result.twoPartTariffError).to.be.false();
-      expect(result.twoPartTariffStatus).to.be.null();
-    });
-
-    test('sets the twoPartTariffReview to a User instance', async () => {
-      expect(result.twoPartTariffReview instanceof User).to.be.true();
-      expect(result.twoPartTariffReview.id).to.equal(dbRow.twoPartTariffReview.id);
-      expect(result.twoPartTariffReview.email).to.equal(dbRow.twoPartTariffReview.email);
+    test('there is no billing Volume', () => {
+      expect(result.billingVolume).to.be.null();
     });
 
     experiment('when the DB row contains a section 126 factor', () => {
@@ -409,6 +392,30 @@ experiment('modules/billing/mappers/transaction', () => {
 
       test('the agreement contains the right code', async () => {
         expect(result.agreements[0].code).to.equal('S130T');
+      });
+    });
+
+    experiment('when there are billingVolumes', () => {
+      beforeEach(() => {
+        result = transactionMapper.dbToModel({
+          ...dbRow,
+          billingVolume: [
+            { billingVolumeId: '11111111-1111-1111-1111-111111111111', isSummer: true, financialYear: 2020 },
+            { billingVolumeId: '22222222-2222-2222-2222-222222222222', isSummer: false, financialYear: 2020 },
+            { billingVolumeId: '33333333-3333-3333-3333-333333333333', isSummer: true, financialYear: 2019 }
+          ]
+        });
+      });
+
+      test('the correct billing volume is selected', () => {
+        expect(result.billingVolume.id).to.equal('11111111-1111-1111-1111-111111111111');
+      });
+
+      test('billing volume is mapped correctly', () => {
+        expect(result.billingVolume).to.be.instanceOf(BillingVolume);
+        expect(result.billingVolume.isSummer).to.be.true();
+        expect(result.billingVolume.financialYear).to.be.instanceOf(FinancialYear);
+        expect(result.billingVolume.financialYear.yearEnding).to.equal(2020);
       });
     });
   });

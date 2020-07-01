@@ -10,7 +10,7 @@ const {
 } = require('./prepare-returns');
 const matchReturns = require('./match-return-quantities');
 const {
-  returnsError,
+  getNullActualReturnQuantities,
   returnPurposeMatchesElementPurpose
 } = require('./two-part-tariff-helpers');
 const { reshuffleQuantities } = require('./reshuffle-quantities');
@@ -72,11 +72,9 @@ const prepareReturnsForMatching = returns => {
   const returnError = checkForReturnsErrors(tptReturns);
   if (returnError) return { error: returnError, data: null };
 
-  const preparedReturns = prepareReturnLinesData(tptReturns);
-
   return {
     error: null,
-    data: preparedReturns
+    data: prepareReturnLinesData(tptReturns)
   };
 };
 
@@ -87,7 +85,7 @@ const prepareReturnsForMatching = returns => {
  */
 const matchReturnsToChargeElements = (chargeElements, returns) => {
   const { error, data: preparedReturns } = prepareReturnsForMatching(returns);
-  if (error) return returnsError(error, getTptChargeElements(chargeElements));
+  if (error) return getNullActualReturnQuantities(getTptChargeElements(chargeElements), error);
 
   const preparedChargeElements = prepareChargeElementsForMatching(chargeElements);
 

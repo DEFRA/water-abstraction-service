@@ -15,5 +15,9 @@ module.exports = bookshelf.model('BillingTransaction', {
 
   chargeElement () {
     return this.hasOne('ChargeElement', 'charge_element_id', 'charge_element_id');
+  },
+
+  billingVolume () {
+    return this.hasMany('BillingVolume', 'charge_element_id', 'charge_element_id');
   }
 });

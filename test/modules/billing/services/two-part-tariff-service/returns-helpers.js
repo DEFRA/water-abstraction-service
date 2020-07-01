@@ -5,9 +5,6 @@ const sandbox = require('sinon').createSandbox();
 const returnsHelpers = require('../../../../../src/modules/billing/services/two-part-tariff-service/returns-helpers');
 const returns = require('../../../../../src/lib/connectors/returns');
 
-const { BATCH_TYPE, BATCH_STATUS } = require('../../../../../src/lib/models/batch');
-const { createLicence, createInvoice, createInvoiceLicence, createBatch, createFinancialYear } = require('../../test-data/test-billing-data');
-
 const returnsforLicence = [{
   returnId: 'test-return-id',
   licenceRef: 'test-licence'
@@ -31,30 +28,20 @@ const returnsLines = [{
 }];
 
 experiment('modules/billing/services/two-part-tariff-service/returns-helpers .getReturnsForMatching', async () => {
-  let result, licence, batch;
+  let result;
 
   beforeEach(async () => {
     sandbox.stub(returns, 'getReturnsForLicence').resolves(returnsforLicence);
     sandbox.stub(returns, 'getLinesForReturn').resolves(returnsLines);
 
-    licence = createLicence();
-    const invoice = createInvoice({}, [createInvoiceLicence({}, licence)]);
-    batch = createBatch({
-      type: BATCH_TYPE.twoPartTariff,
-      status: BATCH_STATUS.review,
-      isSummer: true,
-      startYear: createFinancialYear(2019),
-      endYear: createFinancialYear(2019)
-    }, invoice);
-
-    result = await returnsHelpers.getReturnsForMatching(licence, batch);
+    result = await returnsHelpers.getReturnsForMatching('1/23/45', 2019, true);
   });
 
   afterEach(async () => sandbox.restore());
 
-  test('gets returns for licence', async () => {
+  test('gets returns for given licence number', async () => {
     const [licenceNumber] = returns.getReturnsForLicence.lastCall.args;
-    expect(licenceNumber).to.equal(licence.licenceNumber);
+    expect(licenceNumber).to.equal('1/23/45');
   });
 
   test('gets correct return cycle dates for summer batch', async () => {
@@ -63,9 +50,8 @@ experiment('modules/billing/services/two-part-tariff-service/returns-helpers .ge
     expect(endDate).to.equal('2018-10-31');
   });
 
-  test('gets correct return cycle dates for winter batch', async () => {
-    batch.isSummer = false;
-    result = await returnsHelpers.getReturnsForMatching(licence, batch);
+  test('gets correct return cycle dates for winter/all year batch', async () => {
+    result = await returnsHelpers.getReturnsForMatching('1/23/45', 2019, false);
 
     const [, startDate, endDate] = returns.getReturnsForLicence.lastCall.args;
     expect(startDate).to.equal('2018-04-01');

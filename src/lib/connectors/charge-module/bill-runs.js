@@ -37,10 +37,11 @@ const send = billRunId =>
  * Removes an individual customer from the bill run
  * @param {String} billRunId - CM bill ID GUID
  * @param {String} customerReference - invoice account number
+ * @param {Number} financialYearEnding
  * @return {Promise<Object>} response payload
  */
-const removeCustomer = (billRunId, customerReference) =>
-  request.delete(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference });
+const removeCustomerInFinancialYear = (billRunId, customerReference, financialYearEnding) =>
+  request.delete(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference, financialYear: financialYearEnding - 1 });
 
 /**
  * Deletes entire bill run
@@ -65,7 +66,7 @@ exports.create = create;
 exports.addTransaction = addTransaction;
 exports.approve = approve;
 exports.send = send;
-exports.removeCustomer = removeCustomer;
+exports.removeCustomerInFinancialYear = removeCustomerInFinancialYear;
 exports.delete = deleteBillRun;
 exports.get = get;
 exports.getCustomer = getCustomer;

@@ -75,6 +75,16 @@ class Model {
 
     throw new Error('Unexpected type for date input. Requires null, ISO string, date or moment');
   };
+
+  getDateOrThrow (date, friendlyName) {
+    const momentDate = this.getDateTimeFromValue(date);
+
+    if (momentDate === null) {
+      throw new Error(`${friendlyName} cannot be null`);
+    }
+
+    return momentDate;
+  };
 }
 
 module.exports = Model;

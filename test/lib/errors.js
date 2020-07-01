@@ -3,7 +3,7 @@ const { expect } = require('@hapi/code');
 
 const errors = require('../../src/lib/errors');
 
-experiment('modules/lib/errors', () => {
+experiment('lib/errors', () => {
   let err;
 
   experiment('NotFoundError', () => {

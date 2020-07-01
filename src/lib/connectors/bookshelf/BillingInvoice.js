@@ -7,6 +7,8 @@ module.exports = bookshelf.model('BillingInvoice', {
 
   hasTimestamps: ['date_created', 'date_updated'],
 
+  idAttribute: 'billing_invoice_id',
+
   billingBatch () {
     return this.belongsTo('BillingBatch', 'billing_batch_id', 'billing_batch_id');
   },

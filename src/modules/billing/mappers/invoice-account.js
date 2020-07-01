@@ -3,7 +3,7 @@
 const InvoiceAccount = require('../../../lib/models/invoice-account');
 
 const company = require('./company');
-const address = require('./address');
+const invoiceAccountAddress = require('./invoice-account-address');
 
 /**
  * Maps CRM invoice account and (optionally) company data to a water service model
@@ -13,16 +13,13 @@ const address = require('./address');
  */
 const crmToModel = (invoiceAccount) => {
   const invoiceAccountModel = new InvoiceAccount(invoiceAccount.invoiceAccountId);
-  invoiceAccountModel.accountNumber = invoiceAccount.invoiceAccountNumber;
-
-  if (invoiceAccount.company) {
-    invoiceAccountModel.company = company.crmToModel(invoiceAccount.company);
+  invoiceAccountModel.fromHash({
+    accountNumber: invoiceAccount.invoiceAccountNumber,
+    company: company.crmToModel(invoiceAccount.company)
+  });
+  if (invoiceAccount.invoiceAccountAddresses) {
+    invoiceAccountModel.invoiceAccountAddresses = invoiceAccount.invoiceAccountAddresses.map(invoiceAccountAddress.crmToModel);
   }
-
-  if (invoiceAccount.address) {
-    invoiceAccountModel.address = address.crmToModel(invoiceAccount.address);
-  }
-
   return invoiceAccountModel;
 };
 

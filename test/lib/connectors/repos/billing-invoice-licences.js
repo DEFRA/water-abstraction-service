@@ -27,6 +27,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       toJSON: sandbox.stub()
     };
     bookshelfStub = {
+      where: sandbox.stub().returnsThis(),
       fetch: sandbox.stub().resolves(model),
       destroy: sandbox.stub()
     };
@@ -70,23 +71,6 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     });
   });
 
-  experiment('.deleteByBatchAndInvoiceAccount', () => {
-    let batchId;
-    let invoiceAccountId;
-
-    beforeEach(async () => {
-      batchId = uuid();
-      invoiceAccountId = uuid();
-      await billingInvoiceLicences.deleteByBatchAndInvoiceAccount(batchId, invoiceAccountId);
-    });
-
-    test('calls bookshelf.knex.raw with correct params', async () => {
-      const { args } = bookshelf.knex.raw.lastCall;
-      expect(args[0]).to.equal(queries.deleteByBatchAndInvoiceAccount);
-      expect(args[1]).to.equal({ batchId, invoiceAccountId });
-    });
-  });
-
   experiment('.findLicencesWithTransactionStatusesForBatch', () => {
     let batchId;
 
@@ -103,9 +87,10 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
   });
 
   experiment('.findOneInvoiceLicenceWithTransactions', () => {
+    let result;
     beforeEach(async () => {
       model.toJSON.returns({ foo: 'bar' });
-      await billingInvoiceLicences.findOneInvoiceLicenceWithTransactions('00000000-0000-0000-0000-000000000000');
+      result = await billingInvoiceLicences.findOneInvoiceLicenceWithTransactions('00000000-0000-0000-0000-000000000000');
     });
 
     test('calls forge with correct argumements', async () => {
@@ -117,8 +102,13 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       expect(args[0].withRelated[0]).to.equal('licence');
       expect(args[0].withRelated[1]).to.equal('licence.region');
       expect(args[0].withRelated[2]).to.equal('billingTransactions');
-      expect(args[0].withRelated[3]).to.equal('billingTransactions.chargeElement');
-      expect(args[0].withRelated[4]).to.equal('billingTransactions.chargeElement.purposeUse');
+      expect(args[0].withRelated[3]).to.equal('billingTransactions.billingVolume');
+      expect(args[0].withRelated[4]).to.equal('billingTransactions.chargeElement');
+      expect(args[0].withRelated[5]).to.equal('billingTransactions.chargeElement.purposeUse');
+    });
+
+    test('returns the result of the toJSON() call', async () => {
+      expect(result).to.equal({ foo: 'bar' });
     });
   });
 
@@ -182,6 +172,42 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     });
 
     test('the model is destroyed', async () => {
+      expect(bookshelfStub.destroy.called).to.be.true();
+    });
+  });
+
+  experiment('.deleteByBatchId', async () => {
+    const batchId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoiceLicences.deleteByBatchId(batchId);
+    });
+
+    test('calls knex.raw() with correct argumements', async () => {
+      const [query, params] = bookshelf.knex.raw.lastCall.args;
+      expect(query).to.equal(queries.deleteByBatchId);
+      expect(params).to.equal({ batchId });
+    });
+  });
+
+  experiment('.deleteByInvoiceId', async () => {
+    const billingInvoiceId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoiceLicences.deleteByInvoiceId(billingInvoiceId);
+    });
+
+    test('the model is forged', async () => {
+      expect(billingInvoiceLicence.forge.called).to.be.true();
+    });
+
+    test('the correct invoice licences are selected for deletion', async () => {
+      expect(bookshelfStub.where.calledWith({
+        billing_invoice_id: billingInvoiceId
+      })).to.be.true();
+    });
+
+    test('the models are destroyed', async () => {
       expect(bookshelfStub.destroy.called).to.be.true();
     });
   });

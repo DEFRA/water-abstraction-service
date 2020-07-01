@@ -18,7 +18,7 @@ module.exports = {
   },
 
   billing: {
-    supplementaryYears: 0
+    supplementaryYears: 1
   },
 
   blipp: {

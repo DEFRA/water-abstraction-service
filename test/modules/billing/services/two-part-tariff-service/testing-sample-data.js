@@ -4,7 +4,7 @@ const { matchReturnsToChargeElements } = require('../../../../../src/modules/bil
 const {
   ERROR_NO_RETURNS_SUBMITTED,
   ERROR_SOME_RETURNS_DUE
-} = require('../../../../../src/lib/models/transaction').twoPartTariffStatuses;
+} = require('../../../../../src/lib/models/billing-volume').twoPartTariffStatuses;
 const sampleData1 = require('./sample-data/sample-matching-data-1');
 const sampleData2 = require('./sample-data/sample-matching-data-2');
 const sampleData3 = require('./sample-data/sample-matching-data-3');

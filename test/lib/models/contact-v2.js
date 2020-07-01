@@ -145,7 +145,8 @@ experiment('lib/models/contact-v2 model', () => {
         salutation: data.salutation,
         initials: data.initials,
         firstName: data.firstName,
-        lastName: data.lastName
+        lastName: data.lastName,
+        fullName: 'Captain A B C Doe'
       });
     });
   });

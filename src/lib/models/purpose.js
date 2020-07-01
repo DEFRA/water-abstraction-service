@@ -13,6 +13,11 @@ const PURPOSE_TYPES = {
   use: 'use'
 };
 
+const SPRAY_IRRIGATION_PURPOSE_CODES = [380, 400, 410, 420];
+const TRICKLE_IRRIGATION_PURPOSE_CODES = [600, 620];
+
+const TWO_PART_TARIFF_PURPOSE_CODES = [...SPRAY_IRRIGATION_PURPOSE_CODES, ...TRICKLE_IRRIGATION_PURPOSE_CODES];
+
 class Purpose extends Model {
   get type () {
     return this._type;
@@ -52,3 +57,4 @@ class Purpose extends Model {
 
 module.exports = Purpose;
 module.exports.PURPOSE_TYPES = PURPOSE_TYPES;
+module.exports.TWO_PART_TARIFF_PURPOSE_CODES = TWO_PART_TARIFF_PURPOSE_CODES;

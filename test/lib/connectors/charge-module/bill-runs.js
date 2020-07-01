@@ -95,9 +95,9 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
     });
   });
 
-  experiment('.removeCustomer', () => {
+  experiment('.removeCustomerInFinancialYear', () => {
     beforeEach(async () => {
-      await billRunsApiConnector.removeCustomer('test-id', 'customer-id');
+      await billRunsApiConnector.removeCustomerInFinancialYear('test-id', 'customer-id', 2020);
     });
 
     test('the method is DELETE', async () => {
@@ -109,10 +109,11 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
       expect(path).to.equal('v1/wrls/billruns/test-id/transactions');
     });
 
-    test('the correct customer is specified', async () => {
+    test('the correct customer and financial year starting is specified', async () => {
       const [, payload] = request.delete.lastCall.args;
       expect(payload).to.equal({
-        customerReference: 'customer-id'
+        customerReference: 'customer-id',
+        financialYear: 2019
       });
     });
   });

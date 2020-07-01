@@ -11,7 +11,7 @@ const { expect } = require('@hapi/code');
 
 const ChargeElement = require('../../../../src/lib/models/charge-element');
 const DateRange = require('../../../../src/lib/models/date-range');
-const Purpose = require('../../../../src/lib/models/purpose');
+const PurposeUse = require('../../../../src/lib/models/purpose-use');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const chargeElementsMapper = require('../../../../src/modules/billing/mappers/charge-element');
@@ -45,7 +45,9 @@ const data = {
     purposeUse: {
       legacy_id: 'A',
       purpose_use_id: uuid(),
-      description: 'Trickling parsnips'
+      description: 'Trickling parsnips',
+      lossFactor: 'high',
+      isTwoPartTariff: false
     }
   }
 };
@@ -89,8 +91,8 @@ experiment('modules/billing/mappers/charge-element', () => {
         result = chargeElementsMapper.dbToModel(data.dbRowWithPurposeUse);
       });
 
-      test('the purposeUse property is not set', async () => {
-        expect(result.purposeUse instanceof Purpose).to.be.true();
+      test('the purposeUse property is set', async () => {
+        expect(result.purposeUse instanceof PurposeUse).to.be.true();
       });
     });
 

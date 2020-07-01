@@ -15,6 +15,7 @@ const invoiceService = require('./services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
 const batchService = require('./services/batch-service');
 const transactionsService = require('./services/transactions-service');
+const billingVolumesService = require('./services/billing-volumes-service');
 const eventService = require('../../lib/services/events');
 
 const mappers = require('./mappers');
@@ -115,27 +116,26 @@ const getBatchInvoiceDetail = async request => {
   return invoice || Boom.notFound(`No invoice found with id: ${invoiceId} in batch with id: ${batch.id}`);
 };
 
-const deleteAccountFromBatch = async (request, h) => {
+/**
+ * Delete an invoice by ID from the batch
+ * @param {Object} request
+ * @param {Batch} request.pre.batch
+ * @param {String} request.params.invoiceId
+ */
+const deleteBatchInvoice = async (request, h) => {
   const { batch } = request.pre;
-  const { accountId } = request.params;
+  const { invoiceId } = request.params;
+  try {
+    // Delete the invoice
+    await batchService.deleteBatchInvoice(batch, invoiceId);
 
-  if (!batch.canDeleteAccounts()) {
-    return h.response(`Cannot delete account from batch when status is ${batch.status}`).code(422);
+    // Refresh batch net total / counts
+    await request.messageQueue.publish(refreshTotalsJob.createMessage(batch.id));
+
+    return h.response().code(204);
+  } catch (err) {
+    return mapErrorResponse(err);
   }
-
-  const invoices = await invoiceService.getInvoicesForBatch(batch);
-  const invoicesForAccount = invoices.filter(invoice => invoice.invoiceAccount.id === accountId);
-
-  if (invoicesForAccount.length === 0) {
-    return Boom.notFound(`No invoices for account (${accountId}) in batch (${batch.id})`);
-  }
-
-  const updatedBatch = await batchService.deleteAccountFromBatch(batch, accountId);
-
-  // Refresh batch net total / counts
-  await request.messageQueue.publish(refreshTotalsJob.createMessage(batch.id));
-
-  return updatedBatch;
 };
 
 const deleteBatch = async (request, h) => {
@@ -176,7 +176,7 @@ const getBatchLicences = async (request, h) => {
   return invoiceLicenceService.getLicencesWithTransactionStatusesForBatch(batch.id);
 };
 
-const patchTransaction = async (request, h) => {
+const patchTransactionBillingVolume = async (request, h) => {
   const { transactionId } = request.params;
   const { volume } = request.payload;
   const { internalCallingUser: user } = request.defra;
@@ -186,8 +186,11 @@ const patchTransaction = async (request, h) => {
 
   try {
     const transaction = get(batch, 'invoices[0].invoiceLicences[0].transactions[0]');
-    const updatedTransaction = await transactionsService.updateTransactionVolume(batch, transaction, volume, user);
-    return updatedTransaction;
+    const updatedBillingVolume = await billingVolumesService.updateBillingVolume(transaction.chargeElement.id, batch, volume, user);
+    return {
+      transaction,
+      updatedBillingVolume
+    };
   } catch (err) {
     return Boom.badRequest(err.message);
   }
@@ -234,6 +237,8 @@ const postApproveReviewBatch = async (request, h) => {
   try {
     const updatedBatch = await batchService.approveTptBatchReview(batch);
 
+    await billingVolumesService.approveVolumesForBatch(batch);
+
     const batchEvent = await createBatchEvent({
       type: 'billing-batch:approve-review',
       status: jobStatus.processing,
@@ -261,12 +266,12 @@ exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
 exports.getBatchLicences = getBatchLicences;
 exports.getInvoiceLicenceWithTransactions = getInvoiceLicenceWithTransactions;
-exports.deleteAccountFromBatch = deleteAccountFromBatch;
+exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteBatch = deleteBatch;
 
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 exports.postApproveReviewBatch = postApproveReviewBatch;
 
-exports.patchTransaction = patchTransaction;
+exports.patchTransactionBillingVolume = patchTransactionBillingVolume;
 exports.deleteInvoiceLicence = deleteInvoiceLicence;

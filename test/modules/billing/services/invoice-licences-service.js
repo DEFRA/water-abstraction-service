@@ -30,6 +30,8 @@ experiment('modules/billing/services/invoice-licences-service', () => {
     sandbox.stub(newRepos.billingInvoiceLicences, 'findOneInvoiceLicenceWithTransactions');
     sandbox.stub(newRepos.billingInvoiceLicences, 'delete');
 
+    sandbox.stub(newRepos.billingVolumes, 'deleteByInvoiceLicenceAndBatchId');
+
     sandbox.stub(newRepos.billingTransactions, 'deleteByInvoiceLicenceId');
 
     sandbox.stub(mappers.invoiceLicence, 'modelToDB').returns({
@@ -248,6 +250,12 @@ experiment('modules/billing/services/invoice-licences-service', () => {
           }
         });
         result = await invoiceLicencesService.delete(invoiceLicenceId);
+      });
+
+      test('related billing volumes are deleted', async () => {
+        expect(
+          newRepos.billingVolumes.deleteByInvoiceLicenceAndBatchId.calledWith(invoiceLicenceId, billingBatchId)
+        ).to.be.true();
       });
 
       test('related transactions are deleted', async () => {

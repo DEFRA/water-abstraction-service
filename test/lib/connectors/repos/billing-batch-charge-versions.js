@@ -13,6 +13,7 @@ const sandbox = sinon.createSandbox();
 
 const billingBatchChargeVersions = require('../../../../src/lib/connectors/repos/billing-batch-charge-versions');
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-batch-charge-versions');
+const { BillingBatchChargeVersion } = require('../../../../src/lib/connectors/bookshelf');
 
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 
@@ -30,10 +31,15 @@ const response = [{
 }];
 
 experiment('lib/connectors/repos/billing-batch-charge-versions', () => {
-  let result, params;
+  let result, params, stub;
 
   beforeEach(async () => {
     sandbox.stub(raw, 'multiRow').resolves(response);
+    stub = {
+      destroy: sandbox.stub().resolves(),
+      where: sandbox.stub().returnsThis()
+    };
+    sandbox.stub(BillingBatchChargeVersion, 'forge').returns(stub);
   });
 
   afterEach(async () => {
@@ -115,6 +121,27 @@ experiment('lib/connectors/repos/billing-batch-charge-versions', () => {
 
     test('resolves with the DB rows', async () => {
       expect(result).to.equal(response);
+    });
+  });
+
+  experiment('.deleteByBatchId', () => {
+    const batchId = 'test-batch-id';
+
+    beforeEach(async () => {
+      await billingBatchChargeVersions.deleteByBatchId(batchId);
+    });
+
+    test('calls forge() on the model', async () => {
+      expect(BillingBatchChargeVersion.forge.called).to.be.true();
+    });
+
+    test('calls where() with the correct params', async () => {
+      const [params] = stub.where.lastCall.args;
+      expect(params).to.equal({ billing_batch_id: batchId });
+    });
+
+    test('calls destroy() to delete found records', async () => {
+      expect(stub.destroy.called).to.be.true();
     });
   });
 });

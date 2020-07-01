@@ -3,30 +3,17 @@
 const { isNull } = require('lodash');
 const Model = require('./model');
 const AbstractionPeriod = require('./abstraction-period');
-const Purpose = require('./purpose');
+const PurposeUse = require('./purpose-use');
 const DateRange = require('./date-range');
-const { CHARGE_SEASON } = require('./constants');
+const { CHARGE_SEASON, LOSSES } = require('./constants');
 
-const {
-  assertEnum,
-  assertIsInstanceOf,
-  assertQuantity,
-  assertNullableQuantity
-} = require('./validators');
+const validators = require('./validators');
 
 const validSources = {
   supported: 'supported',
   unsupported: 'unsupported',
   tidal: 'tidal',
   kielder: 'kielder'
-};
-
-const validLosses = {
-  high: 'high',
-  medium: 'medium',
-  low: 'low',
-  veryLow: 'very low',
-  nonChargeable: 'non-chargeable'
 };
 
 class ChargeElement extends Model {
@@ -39,7 +26,7 @@ class ChargeElement extends Model {
   }
 
   set source (source) {
-    assertEnum(source, Object.values(validSources));
+    validators.assertEnum(source, Object.values(validSources));
     this._source = source;
   }
 
@@ -61,7 +48,7 @@ class ChargeElement extends Model {
   }
 
   set season (season) {
-    assertEnum(season, Object.values(CHARGE_SEASON));
+    validators.assertEnum(season, Object.values(CHARGE_SEASON));
     this._season = season;
   }
 
@@ -74,7 +61,7 @@ class ChargeElement extends Model {
   }
 
   set loss (loss) {
-    assertEnum(loss, Object.values(validLosses));
+    validators.assertEnum(loss, Object.values(LOSSES));
     this._loss = loss;
   }
 
@@ -87,7 +74,7 @@ class ChargeElement extends Model {
   }
 
   set abstractionPeriod (abstractionPeriod) {
-    assertIsInstanceOf(abstractionPeriod, AbstractionPeriod);
+    validators.assertIsInstanceOf(abstractionPeriod, AbstractionPeriod);
     this._abstractionPeriod = abstractionPeriod;
   }
 
@@ -100,7 +87,7 @@ class ChargeElement extends Model {
   }
 
   set authorisedAnnualQuantity (quantity) {
-    assertQuantity(quantity);
+    validators.assertQuantity(quantity);
     this._authorisedAnnualQuantity = parseFloat(quantity);
   }
 
@@ -113,7 +100,7 @@ class ChargeElement extends Model {
   }
 
   set billableAnnualQuantity (quantity) {
-    assertNullableQuantity(quantity);
+    validators.assertNullableQuantity(quantity);
     this._billableAnnualQuantity = isNull(quantity) ? null : parseFloat(quantity);
   }
 
@@ -127,12 +114,12 @@ class ChargeElement extends Model {
   }
 
   /**
-   * An instance of Purpose for the tertiary/use purpose
-   * @param {Purpose}
+   * An instance of PurposeUse for the tertiary/use purpose
+   * @param {PurposeUse}
    */
-  set purposeUse (purpose) {
-    assertIsInstanceOf(purpose, Purpose);
-    this._purposeUse = purpose;
+  set purposeUse (purposeUse) {
+    validators.assertIsInstanceOf(purposeUse, PurposeUse);
+    this._purposeUse = purposeUse;
   }
 
   get purposeUse () {
@@ -141,16 +128,22 @@ class ChargeElement extends Model {
 
   /**
   * An instance of Date Range containing the time limited start
-  * and end dates, only exists if one of the dates exist
+  * and end dates, only exists if both dates exist
   * @param {dateRange}
   */
   set timeLimitedPeriod (dateRange) {
-    assertIsInstanceOf(dateRange, DateRange);
+    validators.assertIsInstanceOf(dateRange, DateRange);
     this._timeLimitedPeriod = dateRange;
   }
 
   get timeLimitedPeriod () {
     return this._timeLimitedPeriod;
+  }
+
+  get description () { return this._description; }
+  set description (description) {
+    validators.assertNullableString(description);
+    this._description = description;
   }
 
   toJSON () {
@@ -163,4 +156,3 @@ class ChargeElement extends Model {
 
 module.exports = ChargeElement;
 module.exports.sources = validSources;
-module.exports.losses = validLosses;
