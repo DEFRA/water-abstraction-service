@@ -141,4 +141,16 @@ if (config.isAcceptanceTestTarget) {
   };
 }
 
+/**
+   * Set licence name
+   * @param {String} documentId - the CRM document ID identifying the permit
+   * @param {String} name - the user-defined document name
+   * @return {Promise} resolves when name updated
+   */
+client.setLicenceName = async (documentId, name) => {
+  return client.updateOne(documentId, {
+    document_name: name
+  });
+};
+
 module.exports = client;

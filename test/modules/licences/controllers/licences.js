@@ -1,3 +1,5 @@
+'use strict';
+
 const { expect } = require('@hapi/code');
 const { afterEach, beforeEach, experiment, test } = exports.lab = require('@hapi/lab').script();
 
@@ -5,12 +7,12 @@ const controller = require('../../../../src/modules/licences/controllers/licence
 const licencesService = require('../../../../src/lib/services/licences');
 const Licence = require('../../../../src/lib/models/licence');
 
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
 
 experiment('modules/licences/controllers/licences.js', () => {
   beforeEach(async () => {
     sandbox.stub(licencesService, 'getLicenceById');
+    sandbox.stub(licencesService, 'getLicenceVersions');
   });
 
   afterEach(async () => {
@@ -53,6 +55,38 @@ experiment('modules/licences/controllers/licences.js', () => {
         expect(result.isBoom).to.be.true();
         expect(result.output.statusCode).to.equal(404);
       });
+    });
+  });
+
+  experiment('.getLicenceVersions', () => {
+    let result;
+    let request;
+    let licenceVersions;
+
+    beforeEach(async () => {
+      licenceVersions = [
+        { licenceVersionId: '1' },
+        { licenceVersionId: '2' }
+      ];
+
+      licencesService.getLicenceVersions.resolves(licenceVersions);
+
+      request = {
+        params: {
+          licenceId: 'test-licence-id'
+        }
+      };
+
+      result = await controller.getLicenceVersions(request);
+    });
+
+    test('passes the licence id to the service layer', async () => {
+      const [id] = licencesService.getLicenceVersions.lastCall.args;
+      expect(id).to.equal(request.params.licenceId);
+    });
+
+    test('returns the licence versions', async () => {
+      expect(result).to.equal(licenceVersions);
     });
   });
 });

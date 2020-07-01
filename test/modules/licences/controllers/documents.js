@@ -8,6 +8,7 @@ const documentsClient = require('../../../../src/lib/connectors/crm/documents');
 const crmEntities = require('../../../../src/lib/connectors/crm/entities');
 const idmConnector = require('../../../../src/lib/connectors/idm');
 const { logger } = require('../../../../src/logger');
+const eventHelper = require('../../../../src/modules/licences/lib/event-helper');
 
 const { cloneDeep } = require('lodash');
 const sinon = require('sinon');
@@ -67,6 +68,7 @@ experiment('getLicenceByDocumentId', () => {
   beforeEach(async () => {
     sandbox.stub(permitClient.licences, 'findMany');
     sandbox.stub(documentsClient, 'findMany');
+    sandbox.stub(documentsClient, 'findOne');
     sandbox.stub(logger, 'error');
   });
 
@@ -444,5 +446,56 @@ experiment('getLicenceCompanyByDocumentId', () => {
     expect(data.companyName).to.equal(companyData.data.entityName);
     expect(data.licenceNumber).to.equal(documentResponse.data[0].system_external_id);
     expect(error).to.be.null();
+  });
+});
+
+experiment('postLicenceName', () => {
+  const testRequest = {
+    params: {
+      documentId: '00000000-0000-0000-0000-000000000000'
+    },
+    payload: {
+      documentName: 'test-doc-name',
+      userName: 'test-user@sinon.com'
+    }
+  };
+  beforeEach(async () => {
+    sandbox.stub(documentsClient, 'findOne');
+    sandbox.stub(documentsClient, 'setLicenceName');
+    sandbox.stub(eventHelper, 'saveEvent').resolves({ id: 'event-id' });
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  test('returns the expected document header details with eventId and metadata', async () => {
+    const documentResponse = {
+      data: {
+        document_id: 'test-id',
+        document_name: 'test-doc-name',
+        system_internal_id: 'test-id',
+        company_entity_id: 'test-entity-id',
+        system_external_id: '01/118'
+      }
+    };
+    documentsClient.setLicenceName.resolves(documentResponse);
+    documentsClient.findOne.resolves({ data: { document_name: 'test-name' } });
+    const data = await controller.postLicenceName(testRequest);
+    expect(data.documentId).to.equal(testRequest.params.documentId);
+    expect(data.licenceNumber).to.equal(documentResponse.data.system_external_id);
+    expect(data.eventId).to.equal('event-id');
+    expect(data.documentName).to.equal(documentResponse.data.document_name);
+    expect(data.rename).to.equal(true);
+  });
+
+  test('returns an error if the document has not been found', async () => {
+    documentsClient.findOne.resolves({ data: null });
+    try {
+      await controller.postLicenceName(testRequest);
+    } catch (err) {
+      expect(err.isBoom).to.equal(true);
+      expect(err.output.statusCode).to.equal(404);
+    }
   });
 });

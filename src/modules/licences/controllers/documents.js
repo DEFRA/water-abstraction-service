@@ -13,6 +13,8 @@ const LicenceTransformer = require('../../../lib/licence-transformer');
 const { mapGaugingStation, getGaugingStations } = require('../lib/gauging-stations');
 const queries = require('../lib/queries');
 const { createContacts } = require('../../../lib/models/factory/contact-list');
+const eventHelper = require('../lib/event-helper');
+const { isEmpty } = require('lodash');
 
 const getDocumentHeader = async (documentId, includeExpired = false) => {
   const documentResponse = await documentsClient.findMany({
@@ -292,6 +294,18 @@ const getLicenceCompanyByDocumentId = async (request, h) => {
   }
 };
 
+const postLicenceName = async (request, h) => {
+  const { documentId } = request.params;
+  const { documentName } = request.payload;
+  const { data: currentDoc } = await documentsClient.findOne(documentId);
+  if (!currentDoc) { return Boom.notFound(`Document ${documentId} not found`); }
+  const rename = !isEmpty(currentDoc.document_name);
+  const { data } = await documentsClient.setLicenceName(documentId, documentName);
+  const metadata = { documentId, documentName, rename };
+  const eventData = await eventHelper.saveEvent('licence:name', rename ? 'rename' : 'name', [data.system_external_id], 'completed', request.payload.userName, metadata);
+  return { companyId: data.company_entity_id, licenceNumber: data.system_external_id, eventId: eventData.id, ...metadata };
+};
+
 exports.getLicenceByDocumentId = getLicenceByDocumentId;
 exports.getLicenceConditionsByDocumentId = getLicenceConditionsByDocumentId;
 exports.getLicencePointsByDocumentId = getLicencePointsByDocumentId;
@@ -299,3 +313,4 @@ exports.getLicenceUsersByDocumentId = getLicenceUsersByDocumentId;
 exports.getLicenceSummaryByDocumentId = getLicenceSummaryByDocumentId;
 exports.getLicenceCommunicationsByDocumentId = getLicenceCommunicationsByDocumentId;
 exports.getLicenceCompanyByDocumentId = getLicenceCompanyByDocumentId;
+exports.postLicenceName = postLicenceName;
