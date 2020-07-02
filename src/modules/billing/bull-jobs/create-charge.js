@@ -39,7 +39,7 @@ const completedHandler = async (job, result) => {
   // Removes invoices/licences with no transactions
   await batchService.cleanup(batch.id);
 
-  // Empty batch - note: once the charge module allows zero transactions
+  // @TODO Empty batch - note: once the charge module allows zero transactions
   // again, this step can be removed, as we should never have an
   // empty batch at this stage
   if (get(statuses, Transaction.statuses.chargeCreated, 0) === 0) {
