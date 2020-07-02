@@ -58,6 +58,7 @@
     "bookshelf": "^1.1.1",
     "bookshelf-case-converter-plugin": "^1.0.0",
     "bookshelf-json-columns": "^3.0.0",
+    "bull": "^3.15.0",
     "camelcase": "^5.3.1",
     "commander": "^2.20.3",
     "csv-parse": "^2.4.0",

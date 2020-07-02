@@ -7,7 +7,6 @@ const BATCH_STATUS = Batch.BATCH_STATUS;
 
 const { get } = require('lodash');
 const { envelope } = require('../../lib/response');
-const createBillRunJob = require('./jobs/create-bill-run');
 const prepareTransactionsJob = require('./jobs/prepare-transactions');
 const refreshTotalsJob = require('./jobs/refresh-totals');
 const { jobStatus } = require('./lib/event');
@@ -34,6 +33,8 @@ const createBatchEvent = (options) => {
   return eventService.create(batchEvent);
 };
 
+const createBillRunJob = require('./bull-jobs/create-bill-run');
+
 /**
  * Resource that will create a new batch skeleton which will
  * then be asyncronously populated with charge versions by a
@@ -58,8 +59,7 @@ const postCreateBatch = async (request, h) => {
     });
 
     // add a new job to the queue so that the batch can be created in the CM
-    const message = createBillRunJob.createMessage(batchEvent.id, batch);
-    await request.messageQueue.publish(message);
+    await createBillRunJob.publish(batch, batchEvent.id);
 
     return h.response(envelope({
       batch,
