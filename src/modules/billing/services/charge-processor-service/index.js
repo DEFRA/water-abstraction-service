@@ -133,7 +133,7 @@ const processChargeVersionYear = async (batch, financialYear, chargeVersionId) =
 
     const tasks = mapValues(chargeElementsBySeason, (chargeElements, season) => {
       const isSummer = season === 'summer';
-      billingVolumeService.getVolumes(chargeElements, chargeVersion.licence.licenceNumber, financialYear.yearEnding, isSummer, batch);
+      return billingVolumeService.getVolumes(chargeElements, chargeVersion.licence.licenceNumber, financialYear.yearEnding, isSummer, batch);
     });
 
     await Promise.all(Object.values(tasks));
