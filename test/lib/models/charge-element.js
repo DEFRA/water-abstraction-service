@@ -148,6 +148,24 @@ experiment('lib/models/charge-element', () => {
     });
   });
 
+  experiment('.maxAnnualQuantity', () => {
+    test('returns billableAnnualQuantity when this is set', async () => {
+      chargeElement.billableAnnualQuantity = 9.3;
+      expect(chargeElement.maxAnnualQuantity).to.equal(9.3);
+    });
+
+    test('returns authorisedAnnualQuantity when this is set', async () => {
+      chargeElement.authorisedAnnualQuantity = 10.2;
+      expect(chargeElement.maxAnnualQuantity).to.equal(10.2);
+    });
+
+    test('returns maximum of authorisedAnnualQuantity and billableAnnualQuantity when both are set', async () => {
+      chargeElement.billableAnnualQuantity = 9.3;
+      chargeElement.authorisedAnnualQuantity = 10.2;
+      expect(chargeElement.maxAnnualQuantity).to.equal(10.2);
+    });
+  });
+
   experiment('.volume', () => {
     test('is the billableAnnualQuantity if set', async () => {
       chargeElement.authorisedAnnualQuantity = 10.7;
