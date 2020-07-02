@@ -245,7 +245,7 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
         expect(chargeElement).to.equal(expectedChargeElement);
         expect(licenceNumber).to.equal(chargeVersion.licence.licenceNumber);
         expect(finYear).to.equal(financialYear.yearEnding);
-        expect(isSummer).to.equal('true');
+        expect(isSummer).to.equal(true);
         expect(batchArg).to.equal(batch);
       });
 
