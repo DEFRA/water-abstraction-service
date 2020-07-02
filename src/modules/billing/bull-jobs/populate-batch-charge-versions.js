@@ -1,13 +1,11 @@
+const path = require('path');
 const Bull = require('bull');
-const { get } = require('lodash');
 
 const logger = require('./lib/logger');
 const helpers = require('./lib/helpers');
 
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const batchService = require('../services/batch-service');
-const chargeVersionService = require('../services/charge-version-service');
-const chargeVersionYearService = require('../services/charge-version-year');
 const JOB_NAME = 'billing.populate-batch-charge-versions.*';
 
 const queue = new Bull(JOB_NAME);
@@ -21,28 +19,6 @@ const processChargeVersionYearJob = require('./process-charge-version-year');
 const publish = data => queue.add(data, {
   jobId: helpers.createJobId(JOB_NAME, data.batch)
 });
-
-/**
- * Job handler - populates charge versions for billing batch
- * @param {Object} job
- * @param {Object} job.batch
- */
-const jobHandler = async job => {
-  logger.logHandling(job);
-
-  // Populate water.billing_batch_charge_versions
-  const batchId = get(job, 'data.batch.id');
-  const batch = await batchService.getBatchById(batchId);
-  await chargeVersionService.createForBatch(batch);
-
-  // Populate water.billing_batch_charge_version_years
-  const chargeVersionYears = await chargeVersionYearService.createForBatch(batch);
-
-  return {
-    batch,
-    chargeVersionYears
-  };
-};
 
 const completedHandler = async (job, result) => {
   logger.logCompleted(job);
@@ -67,11 +43,10 @@ const completedHandler = async (job, result) => {
 const failedHandler = helpers.createFailedHandler(BATCH_ERROR_CODE.failedToPopulateChargeVersions, queue, JOB_NAME);
 
 // Set up queue
-queue.process(jobHandler);
+queue.process(path.join(__dirname, '/processors/populate-batch-charge-versions.js'));
 queue.on('completed', completedHandler);
 queue.on('failed', failedHandler);
 
-exports.jobHandler = jobHandler;
 exports.failedHandler = failedHandler;
 exports.publish = publish;
 exports.JOB_NAME = JOB_NAME;

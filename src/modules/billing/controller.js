@@ -7,8 +7,8 @@ const BATCH_STATUS = Batch.BATCH_STATUS;
 
 const { get } = require('lodash');
 const { envelope } = require('../../lib/response');
-const prepareTransactionsJob = require('./jobs/prepare-transactions');
-const refreshTotalsJob = require('./jobs/refresh-totals');
+const prepareTransactionsJob = require('./bull-jobs/prepare-transactions');
+const refreshTotalsJob = require('./bull-jobs/refresh-totals');
 const { jobStatus } = require('./lib/event');
 const invoiceService = require('./services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
@@ -130,7 +130,7 @@ const deleteBatchInvoice = async (request, h) => {
     await batchService.deleteBatchInvoice(batch, invoiceId);
 
     // Refresh batch net total / counts
-    await request.messageQueue.publish(refreshTotalsJob.createMessage(batch.id));
+    await refreshTotalsJob.publish({ batch });
 
     return h.response().code(204);
   } catch (err) {
@@ -246,8 +246,7 @@ const postApproveReviewBatch = async (request, h) => {
       batch: updatedBatch
     });
 
-    const message = prepareTransactionsJob.createMessage(batchEvent.id, updatedBatch);
-    await request.messageQueue.publish(message);
+    await prepareTransactionsJob.publish({ batch: updatedBatch });
 
     return envelope({
       event: batchEvent,

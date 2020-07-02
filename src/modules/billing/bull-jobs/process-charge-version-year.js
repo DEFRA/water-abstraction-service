@@ -1,3 +1,4 @@
+const path = require('path');
 const Bull = require('bull');
 
 const logger = require('./lib/logger');
@@ -22,25 +23,6 @@ const publish = data => queue.add(data, {
   jobId: helpers.createJobId(JOB_NAME, data.batch, data.chargeVersionYear.billingBatchChargeVersionYearId)
 });
 
-/**
- * Job handler - processes charge version for a particular financial year
- * @param {Object} job
- * @param {Object} job.batch
- */
-const jobHandler = async job => {
-  logger.logHandling(job);
-
-  const { chargeVersionYear } = job.data;
-
-  const batch = await chargeVersionYearService.processChargeVersionYear(chargeVersionYear);
-
-  // Persist data
-  await batchService.saveInvoicesToDB(batch);
-
-  // Update status in water.billing_batch_charge_version_year
-  await chargeVersionYearService.setReadyStatus(chargeVersionYear.billingBatchChargeVersionYearId);
-};
-
 const completedHandler = async (job, result) => {
   logger.logCompleted(job);
 
@@ -55,7 +37,8 @@ const completedHandler = async (job, result) => {
     const numberOfUnapprovedBillingVolumes = await billingVolumesService.getUnapprovedVolumesForBatchCount(batch);
 
     if (numberOfUnapprovedBillingVolumes > 0) {
-      return batchService.setStatus(batch.id, BATCH_STATUS.review);
+      await batchService.setStatus(batch.id, BATCH_STATUS.review);
+      return;
     }
 
     // Otherwise continue to prepare transactions
@@ -68,11 +51,10 @@ const completedHandler = async (job, result) => {
 const failedHandler = helpers.createFailedHandler(BATCH_ERROR_CODE.failedToProcessChargeVersions, queue, JOB_NAME);
 
 // Set up queue
-queue.process(jobHandler);
+queue.process(path.join(__dirname, '/processors/process-charge-version-year.js'));
 queue.on('completed', completedHandler);
 queue.on('failed', failedHandler);
 
-exports.jobHandler = jobHandler;
 exports.failedHandler = failedHandler;
 exports.publish = publish;
 exports.JOB_NAME = JOB_NAME;

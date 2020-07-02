@@ -1,3 +1,4 @@
+const path = require('path');
 const Bull = require('bull');
 const { get } = require('lodash');
 
@@ -8,9 +9,6 @@ const { BATCH_ERROR_CODE, BATCH_STATUS } = require('../../../lib/models/batch');
 const Transaction = require('../../../lib/models/transaction');
 
 const batchService = require('../services/batch-service');
-const transactionsService = require('../services/transactions-service');
-const mappers = require('../mappers');
-const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
 const refreshTotalsJob = require('./refresh-totals');
 
@@ -25,29 +23,6 @@ const queue = new Bull(JOB_NAME);
 const publish = data => queue.add(data, {
   jobId: helpers.createJobId(JOB_NAME, data.batch, data.transaction.billingTransactionId)
 });
-
-/**
- * Job handler - creates bill run in charge module
- * @param {Object} job
- * @param {Object} job.batch
- */
-const jobHandler = async job => {
-  logger.logHandling(job);
-
-  const transactionId = get(job, 'data.transaction.billingTransactionId');
-
-  // Create batch model from loaded data
-  const batch = await transactionsService.getById(transactionId);
-
-  // Map data to charge module transaction
-  const [cmTransaction] = mappers.batch.modelToChargeModule(batch);
-
-  // Create transaction in Charge Module
-  const response = await chargeModuleBillRunConnector.addTransaction(batch.externalId, cmTransaction);
-
-  // Update/remove our local transaction in water.billing_transactions
-  await transactionsService.updateWithChargeModuleResponse(transactionId, response);
-};
 
 const completedHandler = async (job, result) => {
   logger.logCompleted(job);
@@ -68,7 +43,8 @@ const completedHandler = async (job, result) => {
   // again, this step can be removed, as we should never have an
   // empty batch at this stage
   if (get(statuses, Transaction.statuses.chargeCreated, 0) === 0) {
-    return batchService.setStatusToEmptyWhenNoTransactions(batch);
+    await batchService.setStatusToEmptyWhenNoTransactions(batch);
+    return;
   }
 
   // Mark batch as ready
@@ -81,11 +57,10 @@ const completedHandler = async (job, result) => {
 const failedHandler = helpers.createFailedHandler(BATCH_ERROR_CODE.failedToPrepareTransactions, queue, JOB_NAME);
 
 // Set up queue
-queue.process(jobHandler);
+queue.process(path.join(__dirname, '/processors/create-charge.js'));
 queue.on('completed', completedHandler);
 queue.on('failed', failedHandler);
 
-exports.jobHandler = jobHandler;
 exports.failedHandler = failedHandler;
 exports.publish = publish;
 exports.JOB_NAME = JOB_NAME;

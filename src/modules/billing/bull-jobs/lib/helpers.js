@@ -7,7 +7,7 @@ const createJobId = (jobName, batch, id) => {
 };
 
 const deleteJobs = async (queue, jobName, job) => {
-  const queueName = jobName.replace('*', job.batch.id);
+  const queueName = jobName.replace('*', job.data.batch.id);
   logger.logInfo(job, `Deleting queue ${queueName}`);
   return Promise.all([
     queue.removeJobs(queueName),
@@ -17,12 +17,13 @@ const deleteJobs = async (queue, jobName, job) => {
 
 const createFailedHandler = (errorCode, queue, jobName) => async (job, err) => {
   logger.logFailed(job, err);
-  batchService.setErrorStatus(job.data.batch.id, errorCode);
 
   // Delete remaining jobs in queue
   if (jobName) {
-    return deleteJobs(queue, jobName, job);
+    await deleteJobs(queue, jobName, job);
   }
+
+  await batchService.setErrorStatus(job.data.batch.id, errorCode);
 };
 
 exports.createJobId = createJobId;
