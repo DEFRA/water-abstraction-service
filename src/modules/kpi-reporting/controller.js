@@ -5,15 +5,8 @@ const dataService = require('./services/data-service');
 const Boom = require('@hapi/boom');
 const mappers = require('./lib/mappers');
 
-// generates a combined error message for any null data sets
-const confirmDataReturned =
-(registrations, delegatedAccess, returnsDataMonthly, returnsDataCycle1, returnsDataCycle2, licenceNamesData) => {
-  return (registrations === null ? 'IDM for registrations, ' : '') +
-  (delegatedAccess === null ? 'CRM for delegated access, ' : '') +
-  (returnsDataMonthly === null ? 'Events data for returns monthly, ' : '') +
-  (returnsDataCycle1 === null ? 'Returns data for cycle 1, ' : '') +
-  (returnsDataCycle2 === null ? 'Returns data for cycle 2, ' : '') +
-  (licenceNamesData === null ? 'Events data for naming licences' : '');
+const isDataNull = (data, errorMessage) => {
+  return data === null ? errorMessage : '';
 };
 
 /**
@@ -22,27 +15,28 @@ const confirmDataReturned =
  * @returns {Object} an object containing all the data sets required for the KPI UI
  */
 const getKPIData = async (request) => {
+  let errorMessage;
   // Registrations data from IDM
   const registrations = await dataService.getIDMRegistrationsData();
-
+  errorMessage = isDataNull(registrations, 'IDM for registrations, ');
   // Delegated access - CRM 1.0
   const delegatedAccess = await dataService.getCRMDelegatedAccessData();
-
+  errorMessage += isDataNull(delegatedAccess, 'CRM for delegated access, ');
   // Returns Monthly data - events table
   const returnsDataMonthly = await dataService.getReturnsDataByMonth();
-
+  errorMessage += isDataNull(returnsDataMonthly, 'Events data for returns monthly, ');
   // Returns by cycle for last 2 cycles
   const returnCycle = helpers.returns.date.createReturnCycles().slice(-2);
   const returnsDataCycle1 = await dataService.getReturnsDataByCycle(returnCycle[1].startDate, returnCycle[1].endDate, returnCycle[1].isSummer);
+  errorMessage += isDataNull(returnsDataCycle1, 'Returns data for cycle 1, ');
   const returnsDataCycle2 = await dataService.getReturnsDataByCycle(returnCycle[0].startDate, returnCycle[0].endDate, returnCycle[0].isSummer);
-
+  errorMessage += isDataNull(returnsDataCycle1, 'Returns data for cycle 2, ');
   // Naming documents - events table
   const licenceNamesData = await dataService.getLicenceNamesData();
-
+  errorMessage += isDataNull(returnsDataCycle2, 'Events data for naming licences');
   // check all the data has returned
-  const message = confirmDataReturned(registrations, delegatedAccess, returnsDataMonthly, returnsDataCycle1, returnsDataCycle2, licenceNamesData);
-  if (message.length > 0) {
-    return Boom.notFound(`Missing data: ${message}`);
+  if (errorMessage.length > 0) {
+    return Boom.notFound(`Missing data: ${errorMessage}`);
   };
 
   // Map and return the data
