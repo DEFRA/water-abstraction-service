@@ -73,7 +73,7 @@ const completedHandler = async (job, result) => {
   }
 };
 
-const failedHandler = helpers.createFailedHandler(BATCH_ERROR_CODE.failedToPrepareTransactions);
+const failedHandler = helpers.createFailedHandler(BATCH_ERROR_CODE.failedToPrepareTransactions, queue, JOB_NAME);
 
 // Set up queue
 queue.process(jobHandler);

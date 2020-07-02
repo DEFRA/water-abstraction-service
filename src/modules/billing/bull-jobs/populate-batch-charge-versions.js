@@ -47,11 +47,11 @@ const jobHandler = async job => {
 const completedHandler = async (job, result) => {
   logger.logCompleted(job);
 
-  const { chargeVersionYears } = result;
+  const { batch, chargeVersionYears } = result;
 
   // Handle empty batch
   if (chargeVersionYears.length === 0) {
-    await batchService.setStatusToEmptyWhenNoTransactions();
+    await batchService.setStatusToEmptyWhenNoTransactions(batch);
   } else {
     for (const chargeVersionYear of chargeVersionYears) {
       // Publish new jobs for each charge version year in the batch to process
@@ -64,7 +64,7 @@ const completedHandler = async (job, result) => {
   }
 };
 
-const failedHandler = helpers.createFailedHandler(BATCH_ERROR_CODE.failedToPopulateChargeVersions);
+const failedHandler = helpers.createFailedHandler(BATCH_ERROR_CODE.failedToPopulateChargeVersions, queue, JOB_NAME);
 
 // Set up queue
 queue.process(jobHandler);

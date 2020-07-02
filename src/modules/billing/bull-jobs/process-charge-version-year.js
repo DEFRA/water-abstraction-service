@@ -65,7 +65,7 @@ const completedHandler = async (job, result) => {
   logger.logInfo(job, `Processing: ${statusCounts.processing} Ready:  ${statusCounts.ready} `);
 };
 
-const failedHandler = helpers.createFailedHandler(BATCH_ERROR_CODE.failedToProcessChargeVersions);
+const failedHandler = helpers.createFailedHandler(BATCH_ERROR_CODE.failedToProcessChargeVersions, queue, JOB_NAME);
 
 // Set up queue
 queue.process(jobHandler);

@@ -78,7 +78,7 @@ const completedHandler = async (job, result) => {
   await refreshTotalsJob.publish({ batch });
 };
 
-const failedHandler = helpers.createFailedHandler(BATCH_ERROR_CODE.failedToPrepareTransactions);
+const failedHandler = helpers.createFailedHandler(BATCH_ERROR_CODE.failedToPrepareTransactions, queue, JOB_NAME);
 
 // Set up queue
 queue.process(jobHandler);
