@@ -132,8 +132,8 @@ const getLinesForReturn = async ret => {
  * @returns Object
  */
 const getKPIReturnsByCycle = async (startDate, endDate, isSummer) => {
-  // TODO get the ULR by attaching the query string
-  const url = `${config.services.returns}/kpi/licencesBySeason/?startDate=${startDate}&endDate=${endDate}&isSummer=${isSummer}`;
+  const qs = `startDate=${startDate}&endDate=${endDate}&isSummer=${isSummer}`;
+  const url = urlJoin(config.services.returns, `/kpi/licencesBySeason?${qs}`);
   return helpers.serviceRequest.get(url);
 };
 

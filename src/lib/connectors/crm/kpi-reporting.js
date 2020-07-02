@@ -3,9 +3,9 @@
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
 
-const getKPIAccessRequests = () => {
-  const url = `${config.services.crm}/kpi/access-requests`;
-  return serviceRequest.get(url);
+const getKPIAccessRequests = async () => {
+  const uri = `${config.services.crm}/kpi/access-requests`;
+  return serviceRequest.get(uri);
 };
 
 exports.getKPIAccessRequests = getKPIAccessRequests;

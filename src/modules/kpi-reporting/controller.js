@@ -1,17 +1,14 @@
 'use-strict';
 const helpers = require('@envage/water-abstraction-helpers');
+const dataService = require('./services/data-service');
 
-const crm = require('../../lib/connectors/crm/kpi-reporting');
-const idm = require('../../lib/connectors/idm');
-const events = require('../../lib/services/events');
-const returns = require('../../lib/connectors/returns');
 const Boom = require('@hapi/boom');
 const mappers = require('./lib/mappers');
 
-// generates a combined error message for the data sets
+// generates a combined error message for any null data sets
 const confirmDataReturned =
-(idmData, delegatedAccess, returnsDataMonthly, returnsDataCycle1, returnsDataCycle2, licenceNamesData) => {
-  return (idmData === null ? 'IDM for registrations, ' : '') +
+(registrations, delegatedAccess, returnsDataMonthly, returnsDataCycle1, returnsDataCycle2, licenceNamesData) => {
+  return (registrations === null ? 'IDM for registrations, ' : '') +
   (delegatedAccess === null ? 'CRM for delegated access, ' : '') +
   (returnsDataMonthly === null ? 'Events data for returns monthly, ' : '') +
   (returnsDataCycle1 === null ? 'Returns data for cycle 1, ' : '') +
@@ -26,33 +23,34 @@ const confirmDataReturned =
  */
 const getKPIData = async (request) => {
   // Registrations data from IDM
-  const { data: idmData } = await idm.getKPIAccessRequests();
+  const registrations = await dataService.getIDMRegistrationsData();
 
   // Delegated access - CRM 1.0
-  const { data: delegatedAccess } = await crm.getKPIAccessRequests();
+  const delegatedAccess = await dataService.getCRMDelegatedAccessData();
 
   // Returns Monthly data - events table
-  const returnsDataMonthly = await events.getKPIReturnsMonthly();
+  const returnsDataMonthly = await dataService.getReturnsDataByMonth();
 
   // Returns by cycle for last 2 cycles
   const returnCycle = helpers.returns.date.createReturnCycles().slice(-2);
-  const { data: returnsDataCycle1 } = await returns.getKPIReturnsByCycle(returnCycle[1].startDate, returnCycle[1].endDate, returnCycle[1].isSummer);
-  const { data: returnsDataCycle2 } = await returns.getKPIReturnsByCycle(returnCycle[0].startDate, returnCycle[0].endDate, returnCycle[0].isSummer);
+  const returnsDataCycle1 = await dataService.getReturnsDataByCycle(returnCycle[1].startDate, returnCycle[1].endDate, returnCycle[1].isSummer);
+  const returnsDataCycle2 = await dataService.getReturnsDataByCycle(returnCycle[0].startDate, returnCycle[0].endDate, returnCycle[0].isSummer);
 
   // Naming documents - events table
-  const licenceNamesData = await events.getKPILicenceNames();
+  const licenceNamesData = await dataService.getLicenceNamesData();
 
   // check all the data has returned
-  const message = confirmDataReturned(idmData, delegatedAccess, returnsDataMonthly, returnsDataCycle1, returnsDataCycle2, licenceNamesData);
+  const message = confirmDataReturned(registrations, delegatedAccess, returnsDataMonthly, returnsDataCycle1, returnsDataCycle2, licenceNamesData);
   if (message.length > 0) {
     return Boom.notFound(`Missing data: ${message}`);
   };
+
   // Map and return the data
   const returnsMonthly = mappers.mapReturnsDataMonthly(returnsDataMonthly);
-  const returnsCycle1 = mappers.mapReturnsDataByCycle(returnsDataCycle1[0], returnCycle[1]);
-  const returnsCycle2 = mappers.mapReturnsDataByCycle(returnsDataCycle2[0], returnCycle[0]);
+  const returnsCycle1 = mappers.mapReturnsDataByCycle(returnsDataCycle1, returnCycle[1]);
+  const returnsCycle2 = mappers.mapReturnsDataByCycle(returnsDataCycle2, returnCycle[0]);
   const licenceNames = mappers.mapLicenceNamesData(licenceNamesData);
-  return { data: { idmData, delegatedAccess, returnsMonthly, returnsCycle1, returnsCycle2, licenceNames } };
+  return { data: { registrations, delegatedAccess, returnsMonthly, returnsCycle1, returnsCycle2, licenceNames } };
 };
 
 module.exports.getKPIData = getKPIData;
