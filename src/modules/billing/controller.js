@@ -7,8 +7,7 @@ const BATCH_STATUS = Batch.BATCH_STATUS;
 
 const { get } = require('lodash');
 const { envelope } = require('../../lib/response');
-const prepareTransactionsJob = require('./bull-jobs/prepare-transactions');
-const refreshTotalsJob = require('./bull-jobs/refresh-totals');
+
 const { jobStatus } = require('./lib/event');
 const invoiceService = require('./services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
@@ -16,6 +15,11 @@ const batchService = require('./services/batch-service');
 const transactionsService = require('./services/transactions-service');
 const billingVolumesService = require('./services/billing-volumes-service');
 const eventService = require('../../lib/services/events');
+
+// Jobs
+const prepareTransactionsJob = require('./bull-jobs/prepare-transactions');
+const refreshTotalsJob = require('./bull-jobs/refresh-totals');
+const createBillRunJob = require('./bull-jobs/create-bill-run');
 
 const mappers = require('./mappers');
 
@@ -32,8 +36,6 @@ const createBatchEvent = (options) => {
 
   return eventService.create(batchEvent);
 };
-
-const createBillRunJob = require('./bull-jobs/create-bill-run');
 
 /**
  * Resource that will create a new batch skeleton which will
