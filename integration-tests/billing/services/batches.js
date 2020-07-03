@@ -13,6 +13,8 @@ const getBatchById = billingBatchId =>
       withRelated: [
         'billingInvoices',
         'billingInvoices.billingInvoiceLicences',
+        'billingInvoices.billingInvoiceLicences.licence',
+        'billingInvoices.billingInvoiceLicences.licence.region',
         'billingInvoices.billingInvoiceLicences.billingTransactions'
       ]
     });
