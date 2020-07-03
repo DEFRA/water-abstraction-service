@@ -84,6 +84,8 @@ const getChargeElementsForMatching = (transactions, financialYear, chargeVersion
     if (transaction) {
       return {
         ...chargeElement.toJSON(),
+        startDate: chargePeriodStartDate,
+        endDate: chargePeriodEndDate,
         billableDays: transaction.billableDays,
         authorisedDays: transaction.authorisedDays,
         totalDays: helpers.charging.getTotalDays(chargePeriodStartDate, chargePeriodEndDate)
