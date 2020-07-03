@@ -4,7 +4,6 @@ const transactionsService = require('../../services/transactions-service');
 const logger = require('../lib/logger');
 const mappers = require('../../mappers');
 const chargeModuleBillRunConnector = require('../../../../lib/connectors/charge-module/bill-runs');
-const Transaction = require('../../../../lib/models/transaction');
 
 /**
  * Job handler - creates bill run in charge module
