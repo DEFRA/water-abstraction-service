@@ -1,3 +1,5 @@
+const { redis } = require('../../../../config');
+
 const path = require('path');
 const Bull = require('bull');
 
@@ -11,7 +13,7 @@ const createChargeJob = require('./create-charge');
 
 const JOB_NAME = 'billing.prepare-transactions.*';
 
-const queue = new Bull(JOB_NAME);
+const queue = new Bull(JOB_NAME, { redis });
 
 /**
  * Publishes a new 'prepare transactions' job on the queue

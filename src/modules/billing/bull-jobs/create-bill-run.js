@@ -1,3 +1,4 @@
+const { redis } = require('../../../../config');
 const path = require('path');
 const Bull = require('bull');
 
@@ -8,7 +9,7 @@ const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 
 const JOB_NAME = 'billing.create-bill-run.*';
 
-const queue = new Bull(JOB_NAME);
+const queue = new Bull(JOB_NAME, { redis });
 const populateBatchChargeVersionsJob = require('./populate-batch-charge-versions');
 
 /**

@@ -1,3 +1,5 @@
+const { redis } = require('../../../../config');
+
 const path = require('path');
 const Bull = require('bull');
 
@@ -13,7 +15,7 @@ const prepareTransactionsJob = require('./prepare-transactions');
 
 const JOB_NAME = 'billing.process-charge-version-year.*';
 
-const queue = new Bull(JOB_NAME);
+const queue = new Bull(JOB_NAME, { redis });
 
 /**
  * Publishes a new 'process charge version year' job on the queue

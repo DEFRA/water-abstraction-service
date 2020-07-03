@@ -1,3 +1,5 @@
+const { redis } = require('../../../../config');
+
 const path = require('path');
 const Bull = require('bull');
 
@@ -7,7 +9,7 @@ const helpers = require('./lib/helpers');
 const JOB_NAME = 'billing.refresh-totals.*';
 const uuid = require('uuid/v4');
 
-const queue = new Bull(JOB_NAME);
+const queue = new Bull(JOB_NAME, { redis });
 
 /**
  * Publishes a new 'populate batch charge versions' job on the queue

@@ -1,3 +1,4 @@
+const { redis } = require('../../../../config');
 const path = require('path');
 const Bull = require('bull');
 const { get } = require('lodash');
@@ -14,7 +15,7 @@ const refreshTotalsJob = require('./refresh-totals');
 
 const JOB_NAME = 'billing.create-charge.*';
 
-const queue = new Bull(JOB_NAME);
+const queue = new Bull(JOB_NAME, { redis });
 
 /**
  * Publishes a new 'prepare transactions' job on the queue
