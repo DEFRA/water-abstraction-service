@@ -3,7 +3,6 @@ const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(Moment);
 const Decimal = require('decimal.js-light');
 const { identity } = require('lodash');
-const { TWO_PART_TARIFF_PURPOSE_CODES } = require('../../../../lib/models/purpose');
 const {
   ERROR_NO_RETURNS_FOR_MATCHING,
   ERROR_NO_RETURNS_SUBMITTED,
@@ -102,24 +101,26 @@ const checkForReturnsErrors = returns => {
 };
 
 /**
- * Check through all purposes for TPT purpose
- * @param {Array} purposes from return object
+ * Check through all return purposes for a match with charge element purposes
+ * @param {Array<Object>} purposes from return
+ * @param {Array<String>} purposesToMatch from prepared charge elements
  * @return {Boolean} whether or not the return has a TPT purpose
  */
-const isReturnPurposeTPT = purposes => {
-  const returnContainsTptPurpose = purposes.map(purpose => {
-    return TWO_PART_TARIFF_PURPOSE_CODES.includes(parseInt(purpose.tertiary.code));
+const doesReturnPurposeMatch = (purposes, purposesToMatch) => {
+  const returnContainsMatchingPurpose = purposes.map(purpose => {
+    return purposesToMatch.includes(purpose.tertiary.code);
   });
-  return returnContainsTptPurpose.includes(true);
+  return returnContainsMatchingPurpose.includes(true);
 };
 
 /**
- * Filter returns for TPT purposes
- * @param {Array} returns objects
- * @return {Array} returns objects ready for matching with required data points
+ * Filter returns with purposes which match those passed in
+ * @param {Array<Object>} returns
+ * @param {Array<String>} purposes codes from charge elements
+ * @return {Array<Object>} returns ready for matching
  */
-const getTPTReturns = returns =>
-  returns.filter(ret => isReturnPurposeTPT(ret.metadata.purposes));
+const getReturnsWithMatchingPurposes = (returns, purposes) =>
+  returns.filter(ret => doesReturnPurposeMatch(ret.metadata.purposes, purposes));
 
 /**
  * Prepares return lines for matching exercise
@@ -150,6 +151,6 @@ const prepareReturnLinesData = returns =>
 
 exports.isLineWithinAbstractionPeriod = isLineWithinAbstractionPeriod;
 exports.checkForReturnsErrors = checkForReturnsErrors;
-exports.isReturnPurposeTPT = isReturnPurposeTPT;
-exports.getTPTReturns = getTPTReturns;
+exports.doesReturnPurposeMatch = doesReturnPurposeMatch;
+exports.getReturnsWithMatchingPurposes = getReturnsWithMatchingPurposes;
 exports.prepareReturnLinesData = prepareReturnLinesData;
