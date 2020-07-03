@@ -1,4 +1,4 @@
-const { groupBy, compact } = require('lodash');
+const { groupBy, compact, mapValues } = require('lodash');
 const validators = require('../../../../lib/models/validators');
 const { NotFoundError } = require('../../../../lib/errors');
 
@@ -129,10 +129,14 @@ const processChargeVersionYear = async (batch, financialYear, chargeVersionId) =
   // Generate billing volumes if transactions are TPT supplementary
   if (hasTptSupplementaryTransactions(invoiceLicence)) {
     const chargeElements = getChargeElementsForMatching(invoiceLicence.transactions, financialYear, chargeVersion, chargePeriodStartDate);
-    const chargeElementsBySeason = groupBy(chargeElements, billingVolumeService.isSummerChargeElement);
-    for (const key of Object.keys(chargeElementsBySeason)) {
-      await billingVolumeService.getVolumes(chargeElementsBySeason[key], chargeVersion.licence.licenceNumber, financialYear.yearEnding, key, batch);
-    }
+    const chargeElementsBySeason = groupBy(chargeElements, chargeElement => chargeElement.season);
+
+    const tasks = mapValues(chargeElementsBySeason, (chargeElements, season) => {
+      const isSummer = season === 'summer';
+      return billingVolumeService.getVolumes(chargeElements, chargeVersion.licence.licenceNumber, financialYear.yearEnding, isSummer, batch);
+    });
+
+    await Promise.all(Object.values(tasks));
   }
 
   return invoice;
