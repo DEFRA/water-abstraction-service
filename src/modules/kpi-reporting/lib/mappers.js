@@ -23,6 +23,12 @@ const mapReturnsDataMonthly = (data) => {
   }, { totals: { allTime: 0, ytd: 0 }, monthly: [] });
 };
 
+/**
+ * Function to compare 2 integer values in the list of objects to calculate the percentage difference
+ * @param {array} data a list of monthly data with integer values
+ * @param {integer} index integer value to use with the data array of objects to compare the current monthly object with the next monthly object in the array
+ * @param {string} key string value to identify which property of the object in the aray to work with
+ */
 const percentChange = (data, index, key) => {
   return index < (data.length + 1) ? (data[[index]][key] - data[(index + 1)][key]) /
             (data[(index + 1)][key] < 1 ? 1 : data[(index + 1)][key]) * 100 : 0;

@@ -4,6 +4,7 @@ const helpers = require('@envage/water-abstraction-helpers');
 const urlJoin = require('url-join');
 const { URL } = require('url');
 const { chunk, flatMap } = require('lodash');
+const querystring = require('querystring');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
@@ -132,7 +133,7 @@ const getLinesForReturn = async ret => {
  * @returns Object
  */
 const getKPIReturnsByCycle = async (startDate, endDate, isSummer) => {
-  const qs = `startDate=${startDate}&endDate=${endDate}&isSummer=${isSummer}`;
+  const qs = querystring.stringify({ startDate, endDate, isSummer });
   const url = urlJoin(config.services.returns, `/kpi/licencesBySeason?${qs}`);
   return helpers.serviceRequest.get(url);
 };

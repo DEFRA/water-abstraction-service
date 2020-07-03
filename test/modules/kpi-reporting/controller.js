@@ -58,9 +58,8 @@ experiment('./modules/kpi-reporting/controller', () => {
     test('Boom not found error is returned', async () => {
       const response = await controller.getKPIData({});
       expect(response.isBoom).to.be.true();
-      expect(response.output.payload.message).to.be.equal('Missing data: IDM for registrations, CRM for delegated access, ' +
-      'Events data for returns monthly, Returns data for cycle 1, Returns data for ' +
-      'cycle 2, Events data for naming licences');
+      expect(response.output.payload.message).to.be.equal('Missing data for: registrations, delegatedAccess,' +
+      ' returnsDataMonthly, returnsDataCycle1, returnsDataCycle1, licenceNamesData');
     });
   });
 

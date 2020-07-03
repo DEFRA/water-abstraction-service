@@ -34,11 +34,11 @@ const getMostRecentReturnsInvitationByLicence = async licenceRef => {
   return bookshelf.knex.raw(queries.getMostRecentReturnInvitation, { licenceRef });
 };
 
-const getKPIReturnsMonthlyData = async () => {
+const getKPIReturnsMonthlyData = () => {
   return bookshelf.knex.raw(queries.getKPIReturnsMonthlyData);
 };
 
-const getKPILicenceNamesData = async () => {
+const getKPILicenceNamesData = () => {
   return bookshelf.knex.raw(queries.getKPILicenceNamesData);
 };
 
