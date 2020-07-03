@@ -62,11 +62,15 @@ const get = billRunId =>
 const getCustomer = (billRunId, customerReference) =>
   request.get(`v1/wrls/billruns/${billRunId}`, { customerReference });
 
-exports.create = create;
+const getTransactions = billRunId =>
+  request.get(`v1/wrls/billruns/${billRunId}/transactions`);
+
 exports.addTransaction = addTransaction;
 exports.approve = approve;
-exports.send = send;
-exports.removeCustomerInFinancialYear = removeCustomerInFinancialYear;
+exports.create = create;
 exports.delete = deleteBillRun;
 exports.get = get;
 exports.getCustomer = getCustomer;
+exports.getTransactions = getTransactions;
+exports.removeCustomerInFinancialYear = removeCustomerInFinancialYear;
+exports.send = send;
