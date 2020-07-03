@@ -6,8 +6,8 @@ const { flatMap } = require('lodash');
 const {
   isLineWithinAbstractionPeriod,
   checkForReturnsErrors,
-  isReturnPurposeTPT,
-  getTPTReturns,
+  doesReturnPurposeMatch,
+  getReturnsWithMatchingPurposes,
   prepareReturnLinesData
 } = require('../../../../../src/modules/billing/services/two-part-tariff-service/prepare-returns');
 const {
@@ -211,39 +211,40 @@ experiment('modules/charging/lib/prepare-returns', async () => {
       expect(returnErrors).to.be.undefined();
     });
   });
-  experiment('.isReturnPurposeTPT', async () => {
-    test('returns true when return contains TPT purpose', async () => {
+  experiment('.doesReturnPurposeMatch', async () => {
+    test('returns true when return matches the purposes passed in', async () => {
       const purposes = [createPurposeData('300'), createPurposeData('180'), createPurposeData('420'), createPurposeData('560'), createPurposeData('200')];
       const returnPurposes = flatMap(purposes);
-      expect(isReturnPurposeTPT(returnPurposes)).to.be.true();
+      expect(doesReturnPurposeMatch(returnPurposes, ['420'])).to.be.true();
     });
-    test('returns false when return does not contain a TPT purpose', async () => {
+    test('returns false when return does not match the purposes passed in', async () => {
       const purposes = [createPurposeData('300'), createPurposeData('180'), createPurposeData('560'), createPurposeData('200')];
       const returnPurposes = flatMap(purposes);
-      expect(isReturnPurposeTPT(returnPurposes)).to.be.false();
+      expect(doesReturnPurposeMatch(returnPurposes, ['420'])).to.be.false();
     });
   });
-  experiment('.getTPTReturns', async () => {
-    test('only return returns which are for TPT_PURPOSES', async () => {
+  experiment('.getReturnsWithMatchingPurposes', async () => {
+    const purposesToMatch = ['400', '620'];
+    test('only return returns which match purposes', async () => {
       const returns = [
-        createReturn({ tertiaryCode: 400, returnId: 'return-1' }),
-        createReturn({ tertiaryCode: 186, returnId: 'return-2' }),
-        createReturn({ tertiaryCode: 620, returnId: 'return-3' }),
-        createReturn({ tertiaryCode: 260, returnId: 'return-4' })
+        createReturn({ tertiaryCode: '400', returnId: 'return-1' }),
+        createReturn({ tertiaryCode: '180', returnId: 'return-2' }),
+        createReturn({ tertiaryCode: '620', returnId: 'return-3' }),
+        createReturn({ tertiaryCode: '260', returnId: 'return-4' })
       ];
       const tptReturns = [
-        createReturn({ tertiaryCode: 400, returnId: 'return-1' }),
-        createReturn({ tertiaryCode: 620, returnId: 'return-3' })
+        createReturn({ tertiaryCode: '400', returnId: 'return-1' }),
+        createReturn({ tertiaryCode: '620', returnId: 'return-3' })
       ];
-      const filteredReturns = getTPTReturns(returns);
+      const filteredReturns = getReturnsWithMatchingPurposes(returns, purposesToMatch);
       expect(filteredReturns).to.equal(tptReturns);
     });
     test('returns an empty array if no TPT returns available', async () => {
       const returns = [
-        createReturn({ tertiaryCode: 186 }),
-        createReturn({ tertiaryCode: 260 })
+        createReturn({ tertiaryCode: '180' }),
+        createReturn({ tertiaryCode: '260' })
       ];
-      const filteredReturns = getTPTReturns(returns);
+      const filteredReturns = getReturnsWithMatchingPurposes(returns, purposesToMatch);
       expect(filteredReturns).to.be.an.array().and.to.be.empty();
     });
   });

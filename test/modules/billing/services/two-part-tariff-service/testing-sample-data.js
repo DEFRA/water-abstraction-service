@@ -50,7 +50,7 @@ experiment('2PT Returns Matching - Sample Data', async () => {
     });
   });
   experiment('One return, one charge element', async () => {
-    test('returns null error and expedcted actualReturnQuantity', async () => {
+    test('returns null error and expected actualReturnQuantity', async () => {
       const { error, data } = matchReturnsToChargeElements(sampleData4.chargeElements, sampleData4.returns);
 
       expect(error).to.be.null();
@@ -78,7 +78,7 @@ experiment('2PT Returns Matching - Sample Data', async () => {
     });
   });
   experiment('One return, one charge element', async () => {
-    test('returns null error and expedcted actualReturnQuantity', async () => {
+    test('returns null error and expected actualReturnQuantity', async () => {
       const { error, data } = matchReturnsToChargeElements(sampleData6.chargeElement1, sampleData6.returns);
 
       expect(error).to.be.null();
@@ -86,7 +86,7 @@ experiment('2PT Returns Matching - Sample Data', async () => {
       expect(data[0].data.actualReturnQuantity).to.equal(13.974);
       expect(data[0].error).to.be.null();
     });
-    test('returns null error and expedcted actualReturnQuantity', async () => {
+    test('returns null error and expected actualReturnQuantity', async () => {
       const { error, data } = matchReturnsToChargeElements(sampleData6.chargeElement2, sampleData6.returns);
 
       expect(error).to.be.null();

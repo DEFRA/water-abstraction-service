@@ -5,7 +5,7 @@ const {
 } = require('./prepare-charge-elements');
 const {
   checkForReturnsErrors,
-  getTPTReturns,
+  getReturnsWithMatchingPurposes,
   prepareReturnLinesData
 } = require('./prepare-returns');
 const matchReturns = require('./match-return-quantities');
@@ -60,14 +60,22 @@ const prepareChargeElementsForMatching = chargeElements => {
 };
 
 /**
- * Check that returns are completed and ready to be matched, return error/s otherwise
- * @param {Array} returns for checking
- * @return {Object}
- *         {Array} errors about returns which are not in a ready state or
- *         {Array} data prepared returns
+ * Returns an array of the charge element purpose codes
  */
-const prepareReturnsForMatching = returns => {
-  const tptReturns = getTPTReturns(returns);
+const getChargeElementPurposeCodes = chargeElements =>
+  chargeElements.map(element => element.purposeUse.code);
+
+/**
+ * Check that returns are completed and ready to be matched, return error/s otherwise
+ * @param {Array<Object>} returns for checking
+ * @param {Array<Object>} chargeElements for checking
+ * @return {Object}
+ *         {Array<Object>} return related errors or
+ *         {Array<Object>} returns prepared for matching exercise
+ */
+const prepareReturnsForMatching = (returns, chargeElements) => {
+  const chargeElementPurposes = getChargeElementPurposeCodes(chargeElements);
+  const tptReturns = getReturnsWithMatchingPurposes(returns, chargeElementPurposes);
 
   const returnError = checkForReturnsErrors(tptReturns);
   if (returnError) return { error: returnError, data: null };
@@ -84,10 +92,10 @@ const prepareReturnsForMatching = returns => {
  * @return {Array}           - objects with chargeElement.id and actualQuantities for each
  */
 const matchReturnsToChargeElements = (chargeElements, returns) => {
-  const { error, data: preparedReturns } = prepareReturnsForMatching(returns);
-  if (error) return getNullActualReturnQuantities(getTptChargeElements(chargeElements), error);
-
   const preparedChargeElements = prepareChargeElementsForMatching(chargeElements);
+
+  const { error, data: preparedReturns } = prepareReturnsForMatching(returns, preparedChargeElements);
+  if (error) return getNullActualReturnQuantities(getTptChargeElements(chargeElements), error);
 
   const matchedChargeElements = matchReturnQuantities(preparedChargeElements, preparedReturns);
 

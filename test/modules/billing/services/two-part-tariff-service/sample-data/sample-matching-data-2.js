@@ -8,7 +8,7 @@ const chargeElements = [{
   },
   startDate: '2017-04-01',
   endDate: '2018-03-31',
-  totalDays: 245,
+  totalDays: 365,
   billableDays: 245,
   authorisedAnnualQuantity: '19.32',
   season: 'summer',
@@ -17,7 +17,8 @@ const chargeElements = [{
   purposeUse: {
     type: 'use',
     code: '400',
-    name: 'Spray Irrigation - Direct'
+    name: 'Spray Irrigation - Direct',
+    isTwoPartTariff: true
   },
   factorsOverridden: false,
   billableAnnualQuantity: null,

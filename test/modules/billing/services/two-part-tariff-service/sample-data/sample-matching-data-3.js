@@ -7,6 +7,10 @@ const chargeElements = [
       endDay: 31,
       endMonth: 3
     },
+    startDate: '2017-10-12',
+    endDate: '2018-03-31',
+    totalDays: 171,
+    billableDays: 151,
     authorisedAnnualQuantity: '82',
     season: 'winter',
     source: 'unsupported',
@@ -14,7 +18,8 @@ const chargeElements = [
     purposeUse: {
       type: 'use',
       code: '420',
-      name: 'Spray Irrigation - Storage'
+      name: 'Spray Irrigation - Storage',
+      isTwoPartTariff: true
     },
     factorsOverridden: false,
     billableAnnualQuantity: null,
@@ -49,6 +54,10 @@ const chargeElements = [
       endDay: 31,
       endMonth: 10
     },
+    startDate: '2017-04-01',
+    endDate: '2018-03-31',
+    totalDays: 365,
+    billableDays: 204,
     authorisedAnnualQuantity: '22.7',
     season: 'summer',
     source: 'unsupported',
@@ -56,7 +65,8 @@ const chargeElements = [
     purposeUse: {
       type: 'use',
       code: '400',
-      name: 'Spray Irrigation - Direct'
+      name: 'Spray Irrigation - Direct',
+      isTwoPartTariff: true
     },
     factorsOverridden: false,
     billableAnnualQuantity: '2.7',
@@ -94,7 +104,8 @@ const chargeElements = [
     purposeUse: {
       type: 'use',
       code: '650',
-      name: 'Transfer Between Sources (Post Water Act 2003)'
+      name: 'Transfer Between Sources (Post Water Act 2003)',
+      isTwoPartTariff: false
     },
     factorsOverridden: false,
     billableAnnualQuantity: null,
@@ -113,6 +124,10 @@ const chargeElements = [
       endDay: 31,
       endMonth: 10
     },
+    startDate: '2017-04-01',
+    endDate: '2018-03-31',
+    totalDays: 365,
+    billableDays: 204,
     authorisedAnnualQuantity: '22.7',
     season: 'winter',
     source: 'unsupported',
@@ -120,7 +135,8 @@ const chargeElements = [
     purposeUse: {
       type: 'use',
       code: '420',
-      name: 'Spray Irrigation - Direct'
+      name: 'Spray Irrigation - Direct',
+      isTwoPartTariff: true
     },
     factorsOverridden: true,
     billableAnnualQuantity: '20',
