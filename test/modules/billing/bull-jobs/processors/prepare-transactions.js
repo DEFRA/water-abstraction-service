@@ -23,7 +23,7 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 experiment('modules/billing/bull-jobs/processors/prepare-transactions', () => {
-  let batch, job, batchId;
+  let batch, job, batchId, result;
 
   beforeEach(async () => {
     batchId = uuid();
@@ -43,7 +43,9 @@ experiment('modules/billing/bull-jobs/processors/prepare-transactions', () => {
     sandbox.stub(billingVolumesService, 'getVolumesForBatch').resolves([]);
     sandbox.stub(transactionsService, 'updateTransactionVolumes');
     sandbox.stub(supplementaryBillingService, 'processBatch');
-    sandbox.stub(repos.billingTransactions, 'findByBatchId');
+    sandbox.stub(repos.billingTransactions, 'findByBatchId').resolves([{
+      billingTransactionId: 'test-transaction-id'
+    }]);
   });
 
   afterEach(async () => {
@@ -79,6 +81,11 @@ experiment('modules/billing/bull-jobs/processors/prepare-transactions', () => {
         expect(repos.billingTransactions.findByBatchId.calledWith(
           batchId
         )).to.be.true();
+      });
+
+      test('resolves with the batch and transactions', async () => {
+        expect(result.batch).to.equal(batch);
+        expect(result.transactions[0].billingTransactionId).to.equal('test-transaction-id');
       });
     });
 
