@@ -6,6 +6,10 @@ const chargeElements = [{
     endDay: 30,
     endMonth: 9
   },
+  startDate: '2017-04-01',
+  endDate: '2018-03-30',
+  totalDays: 364,
+  billableDays: 214,
   authorisedAnnualQuantity: '91.4',
   season: 'summer',
   source: 'unsupported',
@@ -13,7 +17,8 @@ const chargeElements = [{
   purposeUse: {
     type: 'use',
     code: '420',
-    name: 'Spray Irrigation - Storage'
+    name: 'Spray Irrigation - Storage',
+    isTwoPartTariff: true
   },
   factorsOverridden: false,
   billableAnnualQuantity: '91.4',
@@ -48,6 +53,10 @@ const chargeElements = [{
     endDay: 30,
     endMonth: 9
   },
+  startDate: '2017-04-01',
+  endDate: '2018-03-31',
+  totalDays: 365,
+  billableDays: 214,
   authorisedAnnualQuantity: '22.7',
   season: 'summer',
   source: 'unsupported',
@@ -55,7 +64,8 @@ const chargeElements = [{
   purposeUse: {
     type: 'use',
     code: '420',
-    name: 'Spray Irrigation - Storage'
+    name: 'Spray Irrigation - Storage',
+    isTwoPartTariff: true
   },
   factorsOverridden: false,
   billableAnnualQuantity: '22.7',
@@ -94,7 +104,8 @@ const chargeElements = [{
   purposeUse: {
     type: 'use',
     code: '140',
-    name: 'General Farming & Domestic'
+    name: 'General Farming & Domestic',
+    isTwoPartTariff: false
   },
   factorsOverridden: false,
   billableAnnualQuantity: '4.5',

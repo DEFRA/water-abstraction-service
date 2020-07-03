@@ -17,7 +17,8 @@ const chargeElements = [{
   purposeUse: {
     type: 'use',
     code: '420',
-    name: 'Spray Irrigation - Storage'
+    name: 'Spray Irrigation - Storage',
+    isTwoPartTariff: true
   },
   factorsOverridden: false,
   billableAnnualQuantity: '52',
@@ -59,7 +60,8 @@ const chargeElements = [{
   purposeUse: {
     type: 'use',
     code: '420',
-    name: 'Spray Irrigation - Storage'
+    name: 'Spray Irrigation - Storage',
+    isTwoPartTariff: true
   },
   factorsOverridden: false,
   billableAnnualQuantity: '10',
@@ -101,7 +103,8 @@ const chargeElements = [{
   purposeUse: {
     type: 'use',
     code: '420',
-    name: 'Spray Irrigation - Storage'
+    name: 'Spray Irrigation - Storage',
+    isTwoPartTariff: true
   },
   factorsOverridden: false,
   billableAnnualQuantity: '10',
