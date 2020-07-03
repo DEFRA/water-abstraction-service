@@ -23,7 +23,7 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 experiment('modules/billing/bull-jobs/processors/prepare-transactions', () => {
-  let batch, job, batchId, result;
+  let batch, job, batchId;
 
   beforeEach(async () => {
     batchId = uuid();
