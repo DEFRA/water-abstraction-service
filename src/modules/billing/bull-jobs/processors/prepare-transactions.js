@@ -1,3 +1,5 @@
+'use strict';
+
 const batchService = require('../../services/batch-service');
 const transactionService = require('../../services/transactions-service');
 const supplementaryBillingService = require('../../services/supplementary-billing-service');

@@ -1,7 +1,6 @@
-const { redis } = require('../../../../config');
+'use strict';
 
 const path = require('path');
-const Bull = require('bull');
 
 const logger = require('./lib/logger');
 const helpers = require('./lib/helpers');
@@ -10,7 +9,7 @@ const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const batchService = require('../services/batch-service');
 const JOB_NAME = 'billing.populate-batch-charge-versions.*';
 
-const queue = new Bull(JOB_NAME, { redis });
+const queue = helpers.createQueue(JOB_NAME);
 
 const processChargeVersionYearJob = require('./process-charge-version-year');
 

@@ -1,3 +1,5 @@
+'use strict';
+
 const chargeVersionYearService = require('../../services/charge-version-year');
 const batchService = require('../../services/batch-service');
 

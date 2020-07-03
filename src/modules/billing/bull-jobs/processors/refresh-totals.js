@@ -1,3 +1,5 @@
+'use strict';
+
 const batchService = require('../../services/batch-service');
 const logger = require('../lib/logger');
 
