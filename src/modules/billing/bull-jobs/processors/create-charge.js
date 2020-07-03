@@ -4,6 +4,7 @@ const transactionsService = require('../../services/transactions-service');
 const logger = require('../lib/logger');
 const mappers = require('../../mappers');
 const chargeModuleBillRunConnector = require('../../../../lib/connectors/charge-module/bill-runs');
+const Transaction = require('../../../../lib/models/transaction');
 
 /**
  * Job handler - creates bill run in charge module
@@ -17,6 +18,11 @@ const jobHandler = async job => {
 
   // Create batch model from loaded data
   const batch = await transactionsService.getById(transactionId);
+
+  const transaction = get(batch, 'invoices[0].invoiceLicences[0].transactions[0]');
+  if (!transaction.isCandidate()) {
+    return logger.logInfo(job, 'Transaction already processed');
+  }
 
   // Map data to charge module transaction
   const [cmTransaction] = mappers.batch.modelToChargeModule(batch);
