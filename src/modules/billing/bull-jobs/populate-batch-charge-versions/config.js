@@ -26,16 +26,17 @@ const completedHandler = async (job, result) => {
   // Handle empty batch
   if (chargeVersionYears.length === 0) {
     await batchService.setStatusToEmptyWhenNoTransactions(batch);
-  } else {
-    for (const chargeVersionYear of chargeVersionYears) {
-      // Publish new jobs for each charge version year in the batch to process
-      await processChargeVersionYearJob.publish({
-        ...job.data,
-        batch: result.batch,
-        chargeVersionYear
-      });
-    }
   }
+
+  // Publish a job to process each charge version year
+  const tasks = chargeVersionYears.map(chargeVersionYear =>
+    processChargeVersionYearJob.publish({
+      ...job.data,
+      batch: result.batch,
+      chargeVersionYear
+    }));
+
+  return Promise.all(tasks);
 };
 
 const failedHandler = helpers.createFailedHandler(JOB_NAME, BATCH_ERROR_CODE.failedToPopulateChargeVersions);
