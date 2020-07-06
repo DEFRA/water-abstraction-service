@@ -3,15 +3,15 @@
 const uuid = require('uuid/v4');
 
 // Service models
-const Batch = require('../../../../../src/lib/models/batch');
-const Invoice = require('../../../../../src/lib/models/invoice');
-const InvoiceLicence = require('../../../../../src/lib/models/invoice-licence');
-const Transaction = require('../../../../../src/lib/models/transaction');
-const ChargeElement = require('../../../../../src/lib/models/charge-element');
-const Licence = require('../../../../../src/lib/models/licence');
-const DateRange = require('../../../../../src/lib/models/date-range');
-const InvoiceAccount = require('../../../../../src/lib/models/invoice-account');
-const Region = require('../../../../../src/lib/models/region');
+const Batch = require('../../../../src/lib/models/batch');
+const Invoice = require('../../../../src/lib/models/invoice');
+const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
+const Transaction = require('../../../../src/lib/models/transaction');
+const ChargeElement = require('../../../../src/lib/models/charge-element');
+const Licence = require('../../../../src/lib/models/licence');
+const DateRange = require('../../../../src/lib/models/date-range');
+const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
+const Region = require('../../../../src/lib/models/region');
 
 const createRegion = () => {
   const region = new Region(uuid());

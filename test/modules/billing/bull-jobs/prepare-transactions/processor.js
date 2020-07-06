@@ -17,12 +17,12 @@ const supplementaryBillingService = require('../../../../../src/modules/billing/
 const billingVolumesService = require('../../../../../src/modules/billing/services/billing-volumes-service');
 const repos = require('../../../../../src/lib/connectors/repos');
 
-const prepareTransactionsProcessor = require('../../../../../src/modules/billing/bull-jobs/processors/prepare-transactions');
+const prepareTransactionsProcessor = require('../../../../../src/modules/billing/bull-jobs/prepare-transactions/processor');
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-experiment('modules/billing/bull-jobs/processors/prepare-transactions', () => {
+experiment('modules/billing/bull-jobs/prepare-transactions/processor', () => {
   let batch, job, batchId, result;
 
   beforeEach(async () => {

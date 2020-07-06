@@ -1,17 +1,7 @@
 'use strict';
 
-const Bull = require('bull');
-const config = require('../../../../../config');
 const batchService = require('../../services/batch-service');
 const logger = require('./logger');
-
-/**
- * Creates a Bull message queue with the supplied name and the
- * Redis config from the project config file
- * @param {String} name
- * @return {Queue}
- */
-const createQueue = name => new Bull(name, { redis: config.redis });
 
 const createJobId = (jobName, batch, id) => {
   const baseName = jobName.replace('*', batch.id);
@@ -27,7 +17,7 @@ const deleteJobs = async (queue, jobName, job) => {
   ]);
 };
 
-const createFailedHandler = (errorCode, queue, jobName) => async (job, err) => {
+const createFailedHandler = (jobName, errorCode) => async (queue, job, err) => {
   logger.logFailed(job, err);
 
   // Delete remaining jobs in queue
@@ -40,4 +30,3 @@ const createFailedHandler = (errorCode, queue, jobName) => async (job, err) => {
 
 exports.createJobId = createJobId;
 exports.createFailedHandler = createFailedHandler;
-exports.createQueue = createQueue;

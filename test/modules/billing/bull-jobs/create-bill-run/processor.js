@@ -12,10 +12,10 @@ const uuid = require('uuid/v4');
 const { logger } = require('../../../../../src/logger');
 const Batch = require('../../../../../src/lib/models/batch');
 const batchService = require('../../../../../src/modules/billing/services/batch-service');
-const createBillRunProcessor = require('../../../../../src/modules/billing/bull-jobs/processors/create-bill-run');
+const createBillRunProcessor = require('../../../../../src/modules/billing/bull-jobs/create-bill-run/processor');
 const sandbox = require('sinon').createSandbox();
 
-experiment('modules/billing/bull-jobs/processors/create-bill-run', () => {
+experiment('modules/billing/bull-jobs/create-bill-run/processor.js', () => {
   let batch, job, batchId, result;
 
   beforeEach(async () => {

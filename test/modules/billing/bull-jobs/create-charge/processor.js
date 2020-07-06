@@ -11,14 +11,14 @@ const uuid = require('uuid/v4');
 
 const chargeModuleBillRunConnector = require('../../../../../src/lib/connectors/charge-module/bill-runs');
 const transactionsService = require('../../../../../src/modules/billing/services/transactions-service');
-const createChargeProcessor = require('../../../../../src/modules/billing/bull-jobs/processors/create-charge');
+const createChargeProcessor = require('../../../../../src/modules/billing/bull-jobs/create-charge/processor');
 const { logger } = require('../../../../../src/logger');
 
 const sandbox = require('sinon').createSandbox();
 
-const { createBatch } = require('./helpers');
+const { createBatch } = require('../helpers');
 
-experiment('modules/billing/bull-jobs/processors/create-charge', () => {
+experiment('modules/billing/bull-jobs/create-charge/processor.js', () => {
   let batch, batchId, job, cmResponse, transactionId;
 
   beforeEach(async () => {

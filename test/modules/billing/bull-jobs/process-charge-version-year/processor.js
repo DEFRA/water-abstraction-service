@@ -14,13 +14,13 @@ const Batch = require('../../../../../src/lib/models/batch');
 const batchService = require('../../../../../src/modules/billing/services/batch-service');
 const chargeVersionYearService = require('../../../../../src/modules/billing/services/charge-version-year');
 
-const processChargeVersionYearProcessor = require('../../../../../src/modules/billing/bull-jobs/processors/process-charge-version-year');
+const processChargeVersionYearProcessor = require('../../../../../src/modules/billing/bull-jobs/process-charge-version-year/processor');
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-experiment('modules/billing/bull-jobs/processors/process-charge-version-year', () => {
-  let batch, job, batchId, result;
+experiment('modules/billing/bull-jobs/process-charge-version-year/processor.js', () => {
+  let batch, job, batchId;
 
   beforeEach(async () => {
     batchId = uuid();

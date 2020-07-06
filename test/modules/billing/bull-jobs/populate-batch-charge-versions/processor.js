@@ -15,7 +15,7 @@ const batchService = require('../../../../../src/modules/billing/services/batch-
 const chargeVersionService = require('../../../../../src/modules/billing/services/charge-version-service');
 const chargeVersionYearService = require('../../../../../src/modules/billing/services/charge-version-year');
 
-const populateBatchChargeVersionsProcessor = require('../../../../../src/modules/billing/bull-jobs/processors/populate-batch-charge-versions');
+const populateBatchChargeVersionsProcessor = require('../../../../../src/modules/billing/bull-jobs/populate-batch-charge-versions/processor');
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();

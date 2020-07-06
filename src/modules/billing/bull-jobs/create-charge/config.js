@@ -3,26 +3,27 @@
 const path = require('path');
 const { get } = require('lodash');
 
-const logger = require('./lib/logger');
-const helpers = require('./lib/helpers');
+const logger = require('../lib/logger');
+const helpers = require('../lib/helpers');
 
-const { BATCH_ERROR_CODE, BATCH_STATUS } = require('../../../lib/models/batch');
-const Transaction = require('../../../lib/models/transaction');
+const { BATCH_ERROR_CODE, BATCH_STATUS } = require('../../../../lib/models/batch');
+const Transaction = require('../../../../lib/models/transaction');
 
-const batchService = require('../services/batch-service');
+const batchService = require('../../services/batch-service');
 
-const refreshTotalsJob = require('./refresh-totals');
+const refreshTotalsJob = require('../refresh-totals');
 
 const JOB_NAME = 'billing.create-charge.*';
 
-const queue = helpers.createQueue(JOB_NAME);
-
 /**
- * Publishes a new 'prepare transactions' job on the queue
+ * Creates a message for a new 'prepare transactions' job on the queue
  * @param {Object} batch
  */
-const publish = data => queue.add(data, {
-  jobId: helpers.createJobId(JOB_NAME, data.batch, data.transaction.billingTransactionId)
+const createMessage = data => ({
+  data,
+  options: {
+    jobId: helpers.createJobId(JOB_NAME, data.batch, data.transaction.billingTransactionId)
+  }
 });
 
 const completedHandler = async (job, result) => {
@@ -55,13 +56,10 @@ const completedHandler = async (job, result) => {
   await refreshTotalsJob.publish({ batch });
 };
 
-const failedHandler = helpers.createFailedHandler(BATCH_ERROR_CODE.failedToPrepareTransactions, queue, JOB_NAME);
+const failedHandler = helpers.createFailedHandler(JOB_NAME, BATCH_ERROR_CODE.failedToCreateCharge);
 
-// Set up queue
-queue.process(path.join(__dirname, '/processors/create-charge.js'));
-queue.on('completed', completedHandler);
-queue.on('failed', failedHandler);
-
-exports.failedHandler = failedHandler;
-exports.publish = publish;
-exports.JOB_NAME = JOB_NAME;
+exports.jobName = JOB_NAME;
+exports.createMessage = createMessage;
+exports.processor = (path.join(__dirname, './processor.js'));
+exports.onComplete = completedHandler;
+exports.onFailed = failedHandler;

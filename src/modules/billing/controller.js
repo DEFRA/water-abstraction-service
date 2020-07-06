@@ -16,10 +16,7 @@ const transactionsService = require('./services/transactions-service');
 const billingVolumesService = require('./services/billing-volumes-service');
 const eventService = require('../../lib/services/events');
 
-// Jobs
-const prepareTransactionsJob = require('./bull-jobs/prepare-transactions');
-const refreshTotalsJob = require('./bull-jobs/refresh-totals');
-const createBillRunJob = require('./bull-jobs/create-bill-run');
+const jobs = require('./bull-jobs');
 
 const mappers = require('./mappers');
 
@@ -61,7 +58,7 @@ const postCreateBatch = async (request, h) => {
     });
 
     // add a new job to the queue so that the batch can be created in the CM
-    await createBillRunJob.publish(batch, batchEvent.id);
+    await jobs.createBillRun.publish(batch, batchEvent.id);
 
     return h.response(envelope({
       batch,
@@ -132,7 +129,7 @@ const deleteBatchInvoice = async (request, h) => {
     await batchService.deleteBatchInvoice(batch, invoiceId);
 
     // Refresh batch net total / counts
-    await refreshTotalsJob.publish({ batch });
+    await jobs.refreshTotals.publish({ batch });
 
     return h.response().code(204);
   } catch (err) {
@@ -248,7 +245,7 @@ const postApproveReviewBatch = async (request, h) => {
       batch: updatedBatch
     });
 
-    await prepareTransactionsJob.publish({ batch: updatedBatch });
+    await jobs.prepareTransactions.publish({ batch: updatedBatch });
 
     return envelope({
       event: batchEvent,
