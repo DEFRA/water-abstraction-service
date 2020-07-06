@@ -32,13 +32,13 @@ const completedHandler = async (job, result) => {
 
   logger.logInfo(job, `${transactions.length} transactions produced, creating charges...`);
 
-  for (const transaction of transactions) {
-    await createChargeJob.publish({
-      ...job.data,
-      batch,
-      transaction
-    });
-  }
+  const tasks = transactions.map(transaction => createChargeJob.publish({
+    ...job.data,
+    batch,
+    transaction
+  }));
+
+  return Promise.all(tasks);
 };
 
 const failedHandler = helpers.createFailedHandler(JOB_NAME, BATCH_ERROR_CODE.failedToPrepareTransactions);
