@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('path');
+const { partial } = require('lodash');
 
 const logger = require('../lib/logger');
 const helpers = require('../lib/helpers');
@@ -13,15 +14,10 @@ const createChargeJob = require('../create-charge');
 const JOB_NAME = 'billing.prepare-transactions.*';
 
 /**
- * Publishes a new 'prepare transactions' job on the queue
+ * Creates a message for a new 'prepare transactions' job on the queue
  * @param {Object} batch
  */
-const createMessage = data => ({
-  data,
-  options: {
-    jobId: helpers.createJobId(JOB_NAME, data.batch)
-  }
-});
+const createMessage = partial(helpers.createMessage, JOB_NAME);
 
 const completedHandler = async (job, result) => {
   logger.logCompleted(job);

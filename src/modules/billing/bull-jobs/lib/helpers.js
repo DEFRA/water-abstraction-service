@@ -28,5 +28,17 @@ const createFailedHandler = (jobName, errorCode) => async (queue, job, err) => {
   await batchService.setErrorStatus(job.data.batch.id, errorCode);
 };
 
+/**
+ * Default 'create message' implementation, includes the batch
+ * @param {Object} batch
+ */
+const createMessage = (jobName, data) => ({
+  data,
+  options: {
+    jobId: createJobId(jobName, data.batch)
+  }
+});
+
 exports.createJobId = createJobId;
 exports.createFailedHandler = createFailedHandler;
+exports.createMessage = createMessage;

@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('path');
+const { partial } = require('lodash');
 
 const logger = require('../lib/logger');
 const helpers = require('../lib/helpers');
@@ -12,15 +13,10 @@ const JOB_NAME = 'billing.populate-batch-charge-versions.*';
 const processChargeVersionYearJob = require('../process-charge-version-year');
 
 /**
- * Publishes a new 'populate batch charge versions' job on the queue
- * @param {Object} data
+ * Creates a message for a new 'populate batch charge versions' job on the queue
+ * @param {Object} batch
  */
-const createMessage = data => ({
-  data,
-  options: {
-    jobId: helpers.createJobId(JOB_NAME, data.batch)
-  }
-});
+const createMessage = partial(helpers.createMessage, JOB_NAME);
 
 const completedHandler = async (job, result) => {
   logger.logCompleted(job);
