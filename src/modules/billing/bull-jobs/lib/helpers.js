@@ -1,7 +1,12 @@
 'use strict';
 
+const Bull = require('bull');
+
+const config = require('../../../../../config');
 const batchService = require('../../services/batch-service');
 const logger = require('./logger');
+
+const createQueue = queueName => new Bull(queueName, { redis: config.redis });
 
 const createJobId = (jobName, batch, id) => {
   const baseName = jobName.replace('*', batch.id);
@@ -39,6 +44,7 @@ const createMessage = (jobName, data) => ({
   }
 });
 
+exports.createQueue = createQueue;
 exports.createJobId = createJobId;
 exports.createFailedHandler = createFailedHandler;
 exports.createMessage = createMessage;

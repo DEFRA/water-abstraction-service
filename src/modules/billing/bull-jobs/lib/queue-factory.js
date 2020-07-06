@@ -1,18 +1,16 @@
 'use strict';
 
-const Bull = require('bull');
-const config = require('../../../../../config');
+const helpers = require('./helpers');
 
 /**
  * Creates and configures a Bull Redis-backed message queue
  * @param {Object} jobConfig
  */
 const createQueue = jobConfig => {
-  const queue = new Bull(jobConfig.jobName, { redis: config.redis });
+  const queue = helpers.createQueue(jobConfig.jobName);
 
   const publish = (...args) => {
     const { data, options = {} } = jobConfig.createMessage(...args);
-    console.log('publish', { data, options });
     return queue.add(data, options);
   };
 
