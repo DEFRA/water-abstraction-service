@@ -25,7 +25,10 @@ experiment('modules/billing/bull-jobs/lib/queue-factory', () => {
       onComplete: sandbox.stub(),
       onFailed: sandbox.stub(),
       createMessage: data => ({
-        data
+        data,
+        options: {
+          jobId: 'test-job-id'
+        }
       })
     };
 
@@ -85,6 +88,13 @@ experiment('modules/billing/bull-jobs/lib/queue-factory', () => {
       test('the queue and a publish() function are returned', async () => {
         expect(result.queue).to.equal(queueStub);
         expect(result.publish).to.be.a.function();
+      });
+
+      test('calling the publish() method returned adds the job to the queue', async () => {
+        await result.publish({ foo: 'bar' });
+        expect(queueStub.add.calledWith(
+          { foo: 'bar' }, { jobId: 'test-job-id' }
+        )).to.be.true();
       });
     });
 
