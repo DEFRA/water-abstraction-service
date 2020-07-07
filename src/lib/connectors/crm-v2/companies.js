@@ -23,6 +23,12 @@ const createCompany = async company => {
 };
 
 /**
+ * Get addresses for the specififed company
+ * @param {String} companyId The uuid of the company to retrieve
+ */
+const getCompanyAddresses = companyId => serviceRequest.get(getUri(companyId, 'addresses'));
+
+/**
  * Creates a company addresses entity in the CRM
  *
  * @param {String} companyId The company that will have the address added to
@@ -46,5 +52,6 @@ const createCompanyContact = async (companyId, companyContact) => {
 
 exports.getCompany = getCompany;
 exports.createCompany = createCompany;
+exports.getCompanyAddresses = getCompanyAddresses;
 exports.createCompanyAddress = createCompanyAddress;
 exports.createCompanyContact = createCompanyContact;
