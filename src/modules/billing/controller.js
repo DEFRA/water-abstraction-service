@@ -7,9 +7,7 @@ const BATCH_STATUS = Batch.BATCH_STATUS;
 
 const { get } = require('lodash');
 const { envelope } = require('../../lib/response');
-const createBillRunJob = require('./jobs/create-bill-run');
-const prepareTransactionsJob = require('./jobs/prepare-transactions');
-const refreshTotalsJob = require('./jobs/refresh-totals');
+
 const { jobStatus } = require('./lib/event');
 const invoiceService = require('./services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
@@ -17,6 +15,8 @@ const batchService = require('./services/batch-service');
 const transactionsService = require('./services/transactions-service');
 const billingVolumesService = require('./services/billing-volumes-service');
 const eventService = require('../../lib/services/events');
+
+const jobs = require('./bull-jobs');
 
 const mappers = require('./mappers');
 
@@ -58,8 +58,7 @@ const postCreateBatch = async (request, h) => {
     });
 
     // add a new job to the queue so that the batch can be created in the CM
-    const message = createBillRunJob.createMessage(batchEvent.id, batch);
-    await request.messageQueue.publish(message);
+    await jobs.createBillRun.publish(batch, batchEvent.id);
 
     return h.response(envelope({
       batch,
@@ -130,7 +129,7 @@ const deleteBatchInvoice = async (request, h) => {
     await batchService.deleteBatchInvoice(batch, invoiceId);
 
     // Refresh batch net total / counts
-    await request.messageQueue.publish(refreshTotalsJob.createMessage(batch.id));
+    await jobs.refreshTotals.publish({ batch });
 
     return h.response().code(204);
   } catch (err) {
@@ -246,8 +245,7 @@ const postApproveReviewBatch = async (request, h) => {
       batch: updatedBatch
     });
 
-    const message = prepareTransactionsJob.createMessage(batchEvent.id, updatedBatch);
-    await request.messageQueue.publish(message);
+    await jobs.prepareTransactions.publish({ batch: updatedBatch });
 
     return envelope({
       event: batchEvent,

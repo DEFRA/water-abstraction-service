@@ -4,6 +4,10 @@ require('dotenv').config();
 const testMode = parseInt(process.env.TEST_MODE) === 1;
 const isAcceptanceTestTarget = ['local', 'dev', 'development', 'test', 'preprod'].includes(process.env.NODE_ENV);
 const isProduction = ['production'].includes(process.env.NODE_ENV);
+const isLocal = process.env.NODE_ENV === 'local';
+const isTravis = process.env.TRAVIS;
+const isTest = process.env.NODE_ENV === 'test';
+
 const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0';
 
 module.exports = {
@@ -198,5 +202,13 @@ module.exports = {
     password: process.env.COGNITO_PASSWORD
   },
 
-  proxy: process.env.PROXY
+  proxy: process.env.PROXY,
+
+  redis: {
+    host: process.env.REDIS_HOST || '127.0.0.1',
+    port: process.env.REDIS_PORT || 6379,
+    password: process.env.REDIS_PASSWORD || '',
+    ...!(isLocal || isTravis || isTest) && { tls: {} },
+    db: 2
+  }
 };
