@@ -15,15 +15,13 @@ const prepareTransactionsJob = require('../prepare-transactions');
 const JOB_NAME = 'billing.process-charge-version-year.*';
 
 /**
- * Publishes a new 'process charge version year' job on the queue
+ * Creates a message for a new 'process charge version year' job on the queue
  * @param {Object} data
+ * @return {Object}
  */
-const createMessage = data => ({
-  data,
-  options: {
-    jobId: helpers.createJobId(JOB_NAME, data.batch, data.chargeVersionYear.billingBatchChargeVersionYearId)
-  }
-});
+const createMessage = data => helpers.createMessage(JOB_NAME, data,
+  helpers.createJobId(JOB_NAME, data.batch, data.chargeVersionYear.billingBatchChargeVersionYearId)
+);
 
 const completedHandler = async (job, result) => {
   logger.logCompleted(job);

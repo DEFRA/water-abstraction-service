@@ -47,12 +47,14 @@ const createFailedHandler = (jobName, errorCode) => async (queue, job, err) => {
 
 /**
  * Default 'create message' implementation, includes the batch
- * @param {Object} batch
+ * @param {String} jobName
+ * @param {Object} data
+ * @param {String} [jobId] - optionally define job ID rather than use default
  */
-const createMessage = (jobName, data) => ({
+const createMessage = (jobName, data, jobId) => ({
   data,
   options: {
-    jobId: createJobId(jobName, data.batch)
+    jobId: jobId || createJobId(jobName, data.batch)
   }
 });
 
