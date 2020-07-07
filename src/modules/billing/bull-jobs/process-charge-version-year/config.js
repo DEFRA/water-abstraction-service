@@ -39,12 +39,14 @@ const completedHandler = async (job, result) => {
     const numberOfUnapprovedBillingVolumes = await billingVolumesService.getUnapprovedVolumesForBatchCount(batch);
 
     if (numberOfUnapprovedBillingVolumes > 0) {
+      // Move to two-part tariff stage if any unapproved billing volumes in batch
       await batchService.setStatus(batch.id, BATCH_STATUS.review);
-      return;
+    } else {
+      // Otherwise continue to prepare transactions
+      await prepareTransactionsJob.publish({ batch });
     }
 
-    // Otherwise continue to prepare transactions
-    await prepareTransactionsJob.publish({ batch });
+    return;
   }
 
   logger.logInfo(job, `Processing: ${statusCounts.processing} Ready:  ${statusCounts.ready} `);
