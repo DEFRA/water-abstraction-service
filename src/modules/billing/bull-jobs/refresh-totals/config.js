@@ -15,7 +15,8 @@ const uuid = require('uuid/v4');
 const createMessage = data => ({
   data,
   options: {
-    jobId: helpers.createJobId(JOB_NAME, data.batch, uuid())
+    jobId: helpers.createJobId(JOB_NAME, data.batch, uuid()),
+    attempts: 3
   }
 });
 

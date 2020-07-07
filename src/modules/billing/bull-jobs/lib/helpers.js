@@ -40,9 +40,7 @@ const createFailedHandler = (jobName, errorCode) => async (queue, job, err) => {
   logger.logFailed(job, err);
 
   // Delete remaining jobs in queue
-  if (jobName) {
-    await deleteJobs(queue, jobName, job);
-  }
+  await deleteJobs(queue, jobName, job);
 
   await batchService.setErrorStatus(job.data.batch.id, errorCode);
 };
