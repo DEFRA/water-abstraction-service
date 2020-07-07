@@ -237,6 +237,8 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
       test('the billingVolumes service is called with correct params', async () => {
         const expectedChargeElement = [{
           ...chargeVersion.chargeElements[1].toJSON(),
+          startDate: '2019-04-01',
+          endDate: '2020-03-31',
           billableDays: 150,
           authorisedDays: 150,
           totalDays: 366
@@ -245,7 +247,7 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
         expect(chargeElement).to.equal(expectedChargeElement);
         expect(licenceNumber).to.equal(chargeVersion.licence.licenceNumber);
         expect(finYear).to.equal(financialYear.yearEnding);
-        expect(isSummer).to.equal('true');
+        expect(isSummer).to.equal(true);
         expect(batchArg).to.equal(batch);
       });
 

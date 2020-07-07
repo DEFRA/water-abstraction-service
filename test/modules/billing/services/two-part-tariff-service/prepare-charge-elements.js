@@ -24,31 +24,30 @@ experiment('modules/charging/lib/prepare-charge-elements', async () => {
       effectiveEndDate: '2016-10-31',
       effectiveStartDate: '2016-04-01'
     };
-    test('only returns charge elements with TPT purposes', async () => {
+    test('only returns charge elements with isTwoPartTariff flag = true', async () => {
       const chargeElementsWithTPTPurposes = [
-        createChargeElement({ purposeUseCode: 380, ...chargeElementOptions }),
-        createChargeElement({ purposeUseCode: 410, ...chargeElementOptions }),
-        createChargeElement({ purposeUseCode: 420, ...chargeElementOptions })
+        createChargeElement({ purposeUseCode: '380', isTwoPartTariff: true, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: '410', isTwoPartTariff: true, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: '420', isTwoPartTariff: true, ...chargeElementOptions })
       ];
       const chargeElementsWithOtherPurposes = [
-        createChargeElement({ purposeUseCode: 200, ...chargeElementOptions }),
-        createChargeElement({ purposeUseCode: 180, ...chargeElementOptions }),
-        createChargeElement({ purposeUseCode: 390, ...chargeElementOptions })
+        createChargeElement({ purposeUseCode: '200', isTwoPartTariff: false, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: '180', isTwoPartTariff: false, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: '390', isTwoPartTariff: false, ...chargeElementOptions })
       ];
       const chargeElements = [
         ...chargeElementsWithTPTPurposes,
         ...chargeElementsWithOtherPurposes
       ];
-      console.log(chargeElements);
 
       const filteredElements = getTptChargeElements(chargeElements);
       expect(filteredElements).to.equal(chargeElementsWithTPTPurposes);
     });
     test('returns empty array if no TPT charge elements present', async () => {
       const nonTPTChargeElements = [
-        createChargeElement({ purposeUseCode: 200, ...chargeElementOptions }),
-        createChargeElement({ purposeUseCode: 180, ...chargeElementOptions }),
-        createChargeElement({ purposeUseCode: 390, ...chargeElementOptions })
+        createChargeElement({ purposeUseCode: '200', isTwoPartTariff: false, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: '180', isTwoPartTariff: false, ...chargeElementOptions }),
+        createChargeElement({ purposeUseCode: '390', isTwoPartTariff: false, ...chargeElementOptions })
       ];
 
       const filteredElements = getTptChargeElements(nonTPTChargeElements);

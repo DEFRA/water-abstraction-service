@@ -1,4 +1,4 @@
-const { groupBy, compact } = require('lodash');
+const { groupBy, compact, mapValues } = require('lodash');
 const validators = require('../../../../lib/models/validators');
 const { NotFoundError } = require('../../../../lib/errors');
 
@@ -84,6 +84,8 @@ const getChargeElementsForMatching = (transactions, financialYear, chargeVersion
     if (transaction) {
       return {
         ...chargeElement.toJSON(),
+        startDate: chargePeriodStartDate,
+        endDate: chargePeriodEndDate,
         billableDays: transaction.billableDays,
         authorisedDays: transaction.authorisedDays,
         totalDays: helpers.charging.getTotalDays(chargePeriodStartDate, chargePeriodEndDate)
@@ -92,6 +94,8 @@ const getChargeElementsForMatching = (transactions, financialYear, chargeVersion
   });
   return compact(chargeElements);
 };
+
+const getChargeElementGroup = chargeElement => chargeElement.season === 'summer' ? 'summer' : 'winter/all-year';
 
 /**
  * Creates the invoice data structure for a given charge version year
@@ -129,10 +133,14 @@ const processChargeVersionYear = async (batch, financialYear, chargeVersionId) =
   // Generate billing volumes if transactions are TPT supplementary
   if (hasTptSupplementaryTransactions(invoiceLicence)) {
     const chargeElements = getChargeElementsForMatching(invoiceLicence.transactions, financialYear, chargeVersion, chargePeriodStartDate);
-    const chargeElementsBySeason = groupBy(chargeElements, billingVolumeService.isSummerChargeElement);
-    for (const key of Object.keys(chargeElementsBySeason)) {
-      await billingVolumeService.getVolumes(chargeElementsBySeason[key], chargeVersion.licence.licenceNumber, financialYear.yearEnding, key, batch);
-    }
+    const chargeElementsBySeason = groupBy(chargeElements, getChargeElementGroup);
+
+    const tasks = mapValues(chargeElementsBySeason, (chargeElements, season) => {
+      const isSummer = season === 'summer';
+      return billingVolumeService.getVolumes(chargeElements, chargeVersion.licence.licenceNumber, financialYear.yearEnding, isSummer, batch);
+    });
+
+    await Promise.all(Object.values(tasks));
   }
 
   return invoice;
