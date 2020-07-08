@@ -32,11 +32,6 @@ const { createBatch, createTransaction, createInvoice, createInvoiceLicence, cre
 const { NotFoundError } = require('../../../src/lib/errors');
 const { BatchStatusError, TransactionStatusError } = require('../../../src/modules/billing/lib/errors');
 
-// Jobs
-const prepareTransactionsJob = require('../../../src/modules/billing/bull-jobs/prepare-transactions');
-const refreshTotalsJob = require('../../../src/modules/billing/bull-jobs/refresh-totals');
-const createBillRunJob = require('../../../src/modules/billing/bull-jobs/create-bill-run');
-
 experiment('modules/billing/controller', () => {
   let h, hapiResponseStub, batch, tptBatch, transaction, billingVolume, processingBatch;
 
@@ -96,10 +91,6 @@ experiment('modules/billing/controller', () => {
     });
 
     sandbox.stub(mappers.api.invoice, 'modelToBatchInvoices');
-
-    sandbox.stub(prepareTransactionsJob, 'publish').resolves();
-    sandbox.stub(refreshTotalsJob, 'publish').resolves();
-    sandbox.stub(createBillRunJob, 'publish').resolves();
   });
 
   afterEach(async () => {
@@ -117,6 +108,9 @@ experiment('modules/billing/controller', () => {
           batchType: 'annual',
           financialYearEnding: 2019,
           isSummer: true
+        },
+        messageQueue: {
+          publish: sandbox.stub().resolves()
         }
       };
     });
@@ -143,7 +137,7 @@ experiment('modules/billing/controller', () => {
       });
 
       test('no job is published', async () => {
-        expect(createBillRunJob.publish.called).to.be.false();
+        expect(request.messageQueue.publish.called).to.be.false();
       });
 
       test('the response contains an error message', async () => {
@@ -197,9 +191,8 @@ experiment('modules/billing/controller', () => {
       });
 
       test('publishes a new job to the message queue with the event id', async () => {
-        const [batch, eventId] = createBillRunJob.publish.lastCall.args;
-        expect(batch.id).to.equal('00000000-0000-0000-0000-000000000000');
-        expect(eventId).to.equal('11111111-1111-1111-1111-111111111111');
+        const [message] = request.messageQueue.publish.lastCall.args;
+        expect(message.data.eventId).to.equal('11111111-1111-1111-1111-111111111111');
       });
 
       test('the response contains the event', async () => {
@@ -239,6 +232,9 @@ experiment('modules/billing/controller', () => {
           batchType: 'supplementary',
           financialYearEnding: 2019,
           isSummer: true
+        },
+        messageQueue: {
+          publish: sandbox.stub().resolves()
         }
       };
 
@@ -886,7 +882,10 @@ experiment('modules/billing/controller', () => {
 
       request = {
         defra: { internalCallingUser },
-        pre: { batch }
+        pre: { batch },
+        messageQueue: {
+          publish: sandbox.stub().resolves()
+        }
       };
     });
 
@@ -917,9 +916,10 @@ experiment('modules/billing/controller', () => {
         expect(savedEvent.status).to.equal('processing');
       });
 
-      test('publishes a new job to the message queue with the batch', async () => {
-        const [data] = prepareTransactionsJob.publish.lastCall.args;
-        expect(data.batch.id).to.equal('33333333-3333-3333-3333-333333333333');
+      test('publishes a new job to the message queue with the event id', async () => {
+        const [message] = request.messageQueue.publish.lastCall.args;
+        expect(message.data.eventId).to.equal('11111111-1111-1111-1111-111111111111');
+        expect(message.data.batch).to.equal(processingBatch);
       });
 
       test('the response contains the event and batch', async () => {
@@ -947,7 +947,7 @@ experiment('modules/billing/controller', () => {
       });
 
       test('no job is published', async () => {
-        expect(prepareTransactionsJob.publish.called).to.be.false();
+        expect(request.messageQueue.publish.called).to.be.false();
       });
 
       test('a Boom badRequest error is returned containing the error message', async () => {
@@ -979,6 +979,9 @@ experiment('modules/billing/controller', () => {
         },
         params: {
           invoiceId: uuid()
+        },
+        messageQueue: {
+          publish: sandbox.stub()
         }
       };
     });

@@ -186,14 +186,6 @@ class Transaction extends Model {
   }
 
   /**
-   * Checks if the transaction is candidate
-   * @return {Boolean}
-   */
-  isCandidate () {
-    return this._status === statuses.candidate;
-  }
-
-  /**
    * The authorised/billable/actual volume for billing
    * @return {Number}
    */
