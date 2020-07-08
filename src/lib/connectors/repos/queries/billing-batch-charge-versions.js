@@ -55,6 +55,13 @@ exports.createTwoPartTariff = `
           when :isSummer is true then ce.season in ('summer')
           when :isSummer is false then ce.season in ('winter', 'all year')
         end
+        and (
+          ce.time_limited_start_date is null 
+          or (
+            ce.time_limited_start_date <= make_date(:toFinancialYearEnding, 3, 31)
+            and ce.time_limited_end_date >= make_date(:toFinancialYearEnding-1, 4, 1)
+          )
+        )
         and cv.charge_version_id not in (
           select distinct cv.charge_version_id
           from water.billing_batches b
