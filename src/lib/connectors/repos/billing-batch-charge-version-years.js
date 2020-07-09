@@ -34,16 +34,7 @@ const deleteByInvoiceId = billingInvoiceId => bookshelf
   .knex
   .raw(queries.deleteByInvoiceId, { billingInvoiceId });
 
-/**
- * Creates water.billing_batchcharge_version_year records for given batch ID
- * This assumes water.billing_batch_charge_versions is already populated
- * @param {String} billingBatchId
- */
-const createForBatch = billingBatchId =>
-  raw.multiRow(queries.createForBatch, { billingBatchId });
-
 exports.update = update;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
 exports.deleteByBatchId = deleteByBatchId;
 exports.deleteByInvoiceId = deleteByInvoiceId;
-exports.createForBatch = createForBatch;
