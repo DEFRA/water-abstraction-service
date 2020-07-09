@@ -1,30 +1,32 @@
 'use strict';
 
 const { expect } = require('@hapi/code');
+const { omit } = require('lodash');
 
 const {
   experiment,
   test,
   before,
-  after,
-  beforeEach
+  beforeEach,
+  after
 } = exports.lab = require('@hapi/lab').script();
-
-const { omit } = require('lodash');
 
 const services = require('../services');
 const chargeModuleTransactionsService = require('../services/charge-module-transactions');
 const transactionTests = require('./transaction-tests');
 
-experiment('basic example scenario', () => {
-  let batch;
-  let chargeModuleTransactions;
+experiment('basic supplementary scenario', () => {
+  let annualBatch;
+  let supplementaryBatch;
+  let supplementaryChargeModuleTransactions;
 
   before(async () => {
     await services.tearDown.tearDown();
+    console.log('tear down complete');
 
-    batch = await services.scenarios.runScenario({
-      licence: 'l1',
+    console.log('creating annual batch');
+    annualBatch = await services.scenarios.runScenario({
+      licence: 'l2',
       chargeVersions: [{
         company: 'co1',
         invoiceAccount: 'ia1',
@@ -33,43 +35,62 @@ experiment('basic example scenario', () => {
       }]
     }, 'annual');
 
-    chargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(batch);
+    // mark the annual batch as sent so a new batch for the same
+    // region can be created
+    await services.batches.updateStatus(annualBatch, 'sent');
+
+    // mark the existing charge version as superseded so the new
+    // charge version is the current one.
+    await services.chargeVersions.updateStatus('superseded');
+
+    console.log('creating supplementary batch');
+    supplementaryBatch = await services.scenarios.runScenario({
+      licence: 'l2',
+      chargeVersions: [{
+        company: 'co1',
+        invoiceAccount: 'ia1',
+        chargeVersion: 'cv2',
+        chargeElements: ['ce1']
+      }]
+    }, 'supplementary');
+
+    supplementaryChargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(supplementaryBatch);
   });
 
   experiment('has expected batch details', () => {
-    test('the batch is "annual"', async () => {
-      expect(batch.batchType).to.equal('annual');
+    test('the batch is "supplementary"', async () => {
+      expect(supplementaryBatch.batchType).to.equal('supplementary');
     });
 
     test('the batch has the correct financial year range', async () => {
-      expect(batch.fromFinancialYearEnding).to.equal(2020);
-      expect(batch.toFinancialYearEnding).to.equal(2020);
+      expect(supplementaryBatch.fromFinancialYearEnding).to.equal(2019);
+      expect(supplementaryBatch.toFinancialYearEnding).to.equal(2020);
     });
 
     test('the batch is in "ready" status', async () => {
-      expect(batch.status).to.equal('ready');
+      expect(supplementaryBatch.status).to.equal('ready');
     });
 
     test('the batch has been created in the charge module', async () => {
-      expect(batch.billRunNumber).to.be.a.number();
-      expect(batch.externalId).to.be.a.string().length(36);
+      expect(supplementaryBatch.billRunNumber).to.be.a.number();
+      expect(supplementaryBatch.externalId).to.be.a.string().length(36);
     });
 
     test('no error codes are generated', async () => {
-      expect(batch.errorCode).to.equal(null);
+      expect(supplementaryBatch.errorCode).to.equal(null);
     });
   });
 
   experiment('has expected invoice details', () => {
     test('1 invoice is generated', async () => {
-      expect(batch.billingInvoices).to.have.length(1);
+      expect(supplementaryBatch.billingInvoices.length).to.equal(1);
     });
 
     experiment('the first invoice', () => {
       let invoice;
 
       beforeEach(async () => {
-        invoice = batch.billingInvoices[0];
+        invoice = supplementaryBatch.billingInvoices[0];
       });
 
       test('has the correct invoice account', async () => {
@@ -120,20 +141,93 @@ experiment('basic example scenario', () => {
           });
         });
 
-        test('has 1 transaction', async () => {
-          expect(licence.billingTransactions).to.have.length(1);
+        test('has 2 transactions', async () => {
+          expect(licence.billingTransactions.length).to.equal(2);
         });
 
-        experiment('the first transaction', () => {
+        test('there is a debit', async () => {
+          const transaction = licence.billingTransactions.find(tx => tx.isCredit === false);
+          expect(transaction).to.exist();
+        });
+
+        test('there is a credit', async () => {
+          const transaction = licence.billingTransactions.find(tx => tx.isCredit === true);
+          expect(transaction).to.exist();
+        });
+
+        experiment('the debit transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions[0];
+            transaction = licence.billingTransactions.find(tx => tx.isCredit === false);
           });
 
           test('is a standard charge', async () => {
             expect(transaction.chargeType).to.equal('standard');
             expect(transaction.isCredit).to.be.false();
             expect(transaction.isTwoPartTariffSupplementary).to.be.false();
+          });
+
+          test('has the correct charge period', async () => {
+            expect(transaction.startDate).to.equal('2019-04-01');
+            expect(transaction.endDate).to.equal('2020-01-01');
+          });
+
+          test('has the correct abstraction period', async () => {
+            expect(transaction.abstractionPeriod).to.equal({
+              endDay: 31,
+              endMonth: 12,
+              startDay: 1,
+              startMonth: 1
+            });
+          });
+
+          test('has the correct factors', async () => {
+            expect(transaction.source).to.equal('unsupported');
+            expect(transaction.season).to.equal('all year');
+            expect(transaction.loss).to.equal('medium');
+          });
+
+          test('has the correct quantities', async () => {
+            expect(transaction.authorisedQuantity).to.equal('200');
+            expect(transaction.billableQuantity).to.equal(null);
+            expect(transaction.volume).to.equal('200');
+          });
+
+          test('has the correct authorised/billable days', async () => {
+            expect(transaction.authorisedDays).to.equal(366);
+            expect(transaction.billableDays).to.equal(275);
+          });
+
+          test('has been sent to the charge module', async () => {
+            expect(transaction.externalId).to.have.length(36);
+            expect(transaction.status).to.equal('charge_created');
+          });
+
+          test('has the correct description', async () => {
+            expect(transaction.description).to.equal('CE1');
+          });
+
+          test('has the correct agreements', async () => {
+            expect(transaction.section126Factor).to.equal(null);
+            expect(transaction.section127Agreement).to.equal(false);
+            expect(transaction.section130Agreement).to.equal(null);
+          });
+
+          test('has a stable transaction key', async () => {
+            expect(transaction.transactionKey).to.equal('8117abf683490ad2d496cc156bd15e23');
+          });
+        });
+
+        experiment('the credit transaction', () => {
+          let transaction;
+          beforeEach(async () => {
+            transaction = licence.billingTransactions.find(tx => tx.isCredit === true);
+          });
+
+          test('is a standard charge', async () => {
+            expect(transaction.chargeType).to.equal('standard');
+            expect(transaction.isCredit).to.equal(true);
+            expect(transaction.isTwoPartTariffSupplementary).to.equal(false);
           });
 
           test('has the correct charge period', async () => {
@@ -192,19 +286,28 @@ experiment('basic example scenario', () => {
 
   experiment('transactions', () => {
     test('the batch and charge module have the same number of transactions', async () => {
-      transactionTests.assertNumberOfTransactions(batch, chargeModuleTransactions);
+      transactionTests.assertNumberOfTransactions(
+        supplementaryBatch,
+        supplementaryChargeModuleTransactions
+      );
     });
 
     test('the batch and charge module contain the same transactions', async () => {
-      transactionTests.assertTransactionsAreInEachSet(batch, chargeModuleTransactions);
+      transactionTests.assertTransactionsAreInEachSet(
+        supplementaryBatch,
+        supplementaryChargeModuleTransactions
+      );
     });
 
     test('the charge module transaction contain the expected data', async () => {
-      transactionTests.assertBatchTransactionDataExistsInChargeModule(batch, chargeModuleTransactions);
+      transactionTests.assertBatchTransactionDataExistsInChargeModule(
+        supplementaryBatch,
+        supplementaryChargeModuleTransactions
+      );
     });
   });
 
   after(async () => {
-    await services.tearDown.tearDown(batch);
+    await services.tearDown.tearDown(annualBatch, supplementaryBatch);
   });
 });

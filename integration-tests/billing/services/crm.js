@@ -12,7 +12,15 @@ const entityCache = {
   invoiceAccounts: {},
   addresses: {},
   documents: {},
-  contacts: {}
+  contacts: {},
+  roles: {}
+};
+
+const getRoleIdFromName = async name => {
+  if (!entityCache.roles[name]) {
+    entityCache.roles[name] = await crmConnector.getRole(name);
+  }
+  return entityCache.roles[name].roleId;
 };
 
 /**
@@ -22,8 +30,25 @@ const entityCache = {
  */
 const createCompany = async scenarioKey => {
   if (!(scenarioKey in entityCache.companies)) {
-    entityCache.companies[scenarioKey] = await crmConnector.createCompany(data.companies[scenarioKey]);
+    const { addresses, ...companyData } = data.companies[scenarioKey];
+    const company = await crmConnector.createCompany(companyData);
+    entityCache.companies[scenarioKey] = company;
+
+    // Create addresses
+    for (const companyAddress of addresses) {
+      const address = await createAddress(companyAddress.address);
+
+      const roleId = await getRoleIdFromName(companyAddress.role);
+      await crmConnector.createCompanyAddress(
+        company.companyId,
+        address.addressId,
+        companyAddress.startDate,
+        companyAddress.endDate,
+        roleId
+      );
+    }
   }
+
   return entityCache.companies[scenarioKey];
 };
 
@@ -51,6 +76,7 @@ const createContact = async scenarioKey => {
   if (!(scenarioKey in entityCache.contacts)) {
     entityCache.contacts[scenarioKey] = await crmConnector.createContact(data.contacts[scenarioKey]);
   }
+
   return entityCache.contacts[scenarioKey];
 };
 
@@ -98,6 +124,7 @@ const createDocumentRole = async (document, role) => {
     createAddress(addressKey),
     createContact(contactKey)
   ]);
+
   await crmConnector.createDocumentRole(document.documentId, {
     companyId,
     addressId,
@@ -122,6 +149,7 @@ const createDocument = async (scenarioKey, versionNumber) => {
       documentRef: data.licences[scenarioKey].licenceRef,
       ...rest
     });
+
     entityCache.documents[cacheKey] = document;
 
     // Create document roles for document
@@ -154,6 +182,7 @@ const clearEntityCache = () => {
   entityCache.addresses = {};
   entityCache.documents = {};
   entityCache.contacts = {};
+  entityCache.roles = {};
 };
 
 /**

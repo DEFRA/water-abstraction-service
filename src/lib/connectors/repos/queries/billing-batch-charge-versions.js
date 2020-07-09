@@ -7,6 +7,7 @@ from water.licences l
 where
   l.include_in_supplementary_billing = true
   and l.region_id = :regionId::uuid
+  and cv.status='current'
   and (cv.end_date is null or cv.end_date > :fromDate)
 returning *;`;
 
@@ -56,7 +57,7 @@ exports.createTwoPartTariff = `
         when :isSummer is false then ce.season in ('winter', 'all year')
       end
       and (
-        ce.time_limited_start_date is null 
+        ce.time_limited_start_date is null
         or (
           ce.time_limited_start_date <= make_date(:toFinancialYearEnding, 3, 31)
           and ce.time_limited_end_date >= make_date(:toFinancialYearEnding-1, 4, 1)

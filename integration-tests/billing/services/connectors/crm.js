@@ -1,6 +1,12 @@
 'use strict';
+
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
+const urlJoin = require('url-join');
+
+const createCrmUrl = (...parts) => {
+  return urlJoin(config.services.crm_v2, ...parts);
+};
 
 /**
  * Creates a company in the CRM
@@ -8,14 +14,29 @@ const config = require('../../../../config');
  * @return {Promise<Object>} CRM company entity
  */
 const createCompany = data => {
-  const uri = `${config.services.crm_v2}/companies`;
   const options = {
     body: {
       ...data,
       isTest: true
     }
   };
-  return serviceRequest.post(uri, options);
+  return serviceRequest.post(createCrmUrl('companies'), options);
+};
+
+const createCompanyAddress = (companyId, addressId, startDate, endDate, roleId) => {
+  const url = createCrmUrl('companies', companyId, 'addresses');
+  const options = {
+    body: {
+      addressId,
+      roleId,
+      isDefault: true,
+      startDate,
+      endDate,
+      isTest: true
+    }
+  };
+
+  return serviceRequest.post(url, options);
 };
 
 /**
@@ -25,7 +46,6 @@ const createCompany = data => {
  * @return {Promise<Object>} CRM invoice account entity
  */
 const createInvoiceAccount = (companyId, data) => {
-  const uri = `${config.services.crm_v2}/invoice-accounts`;
   const options = {
     body: {
       companyId,
@@ -33,7 +53,7 @@ const createInvoiceAccount = (companyId, data) => {
       isTest: true
     }
   };
-  return serviceRequest.post(uri, options);
+  return serviceRequest.post(createCrmUrl('invoice-accounts'), options);
 };
 
 /**
@@ -42,14 +62,13 @@ const createInvoiceAccount = (companyId, data) => {
  * @return {Promise<Object>} CRM address entity
  */
 const createAddress = data => {
-  const uri = `${config.services.crm_v2}/addresses`;
   const options = {
     body: {
       ...data,
       isTest: true
     }
   };
-  return serviceRequest.post(uri, options);
+  return serviceRequest.post(createCrmUrl('addresses'), options);
 };
 
 /**
@@ -61,16 +80,19 @@ const createAddress = data => {
  * @return {Promise<Object>} CRM invoice account address entity
  */
 const createInvoiceAccountAddress = (invoiceAccountId, addressId, startDate, endDate) => {
-  const uri = `${config.services.crm_v2}/invoice-accounts/${invoiceAccountId}/addresses`;
+  const url = createCrmUrl('invoice-accounts', invoiceAccountId, 'addresses');
   const options = {
     body: {
       addressId,
       startDate,
       endDate,
+      contactId: null,
+      agentCompanyId: null,
       isTest: true
     }
   };
-  return serviceRequest.post(uri, options);
+
+  return serviceRequest.post(url, options);
 };
 
 /**
@@ -79,7 +101,7 @@ const createInvoiceAccountAddress = (invoiceAccountId, addressId, startDate, end
  * @return {Promise<Object>} CRM document entity
  */
 const createDocument = data => {
-  const uri = `${config.services.crm_v2}/documents`;
+  const url = createCrmUrl('documents');
   const options = {
     body: {
       ...data,
@@ -88,7 +110,7 @@ const createDocument = data => {
       isTest: true
     }
   };
-  return serviceRequest.post(uri, options);
+  return serviceRequest.post(url, options);
 };
 
 /**
@@ -98,14 +120,14 @@ const createDocument = data => {
  * @return {Promise<Object>}
  */
 const createDocumentRole = (documentId, data) => {
-  const uri = `${config.services.crm_v2}/documents/${documentId}/roles`;
+  const url = createCrmUrl('documents', documentId, 'roles');
   const options = {
     body: {
       ...data,
       isTest: true
     }
   };
-  return serviceRequest.post(uri, options);
+  return serviceRequest.post(url, options);
 };
 
 /**
@@ -114,14 +136,18 @@ const createDocumentRole = (documentId, data) => {
  * @return {Promise<Object>} CRM contact entity
  */
 const createContact = data => {
-  const uri = `${config.services.crm_v2}/contacts`;
   const options = {
     body: {
       ...data,
       isTest: true
     }
   };
-  return serviceRequest.post(uri, options);
+  return serviceRequest.post(createCrmUrl('contacts'), options);
+};
+
+const getRole = roleName => {
+  const url = createCrmUrl('roles', roleName);
+  return serviceRequest.get(url);
 };
 
 /**
@@ -129,15 +155,18 @@ const createContact = data => {
  * @return {Promise}
  */
 const tearDown = () => {
-  const uri = `${config.services.crm_v2}/test-data`;
-  return serviceRequest.delete(uri);
+  return serviceRequest.delete(createCrmUrl('test-data'));
 };
 
-exports.createCompany = createCompany;
 exports.createAddress = createAddress;
-exports.createInvoiceAccount = createInvoiceAccount;
-exports.createInvoiceAccountAddress = createInvoiceAccountAddress;
+exports.createCompany = createCompany;
+exports.createCompanyAddress = createCompanyAddress;
+exports.createContact = createContact;
 exports.createDocument = createDocument;
 exports.createDocumentRole = createDocumentRole;
-exports.createContact = createContact;
+exports.createInvoiceAccount = createInvoiceAccount;
+exports.createInvoiceAccountAddress = createInvoiceAccountAddress;
+
+exports.getRole = getRole;
+
 exports.tearDown = tearDown;
