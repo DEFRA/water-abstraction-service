@@ -9,13 +9,13 @@ const {
 const uuid = require('uuid/v4');
 const moment = require('moment');
 
-const Role = require('../../../src/lib/models/role-v2');
+const ContactRole = require('../../../src/lib/models/contact-role');
 
 experiment('lib/models/role-v2', () => {
   let role;
 
   beforeEach(async () => {
-    role = new Role();
+    role = new ContactRole();
   });
 
   experiment('.id', () => {

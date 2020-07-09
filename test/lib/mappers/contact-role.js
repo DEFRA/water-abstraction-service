@@ -8,9 +8,9 @@ const {
 const moment = require('moment');
 
 const { expect } = require('@hapi/code');
-const mapper = require('../../../src/lib/mappers/role');
+const mapper = require('../../../src/lib/mappers/contact-role');
 
-experiment('modules/billing/mappers/role', () => {
+experiment('modules/billing/mappers/contact-role', () => {
   experiment('.crmToModel', () => {
     let mapped;
     let row;

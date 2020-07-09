@@ -4,7 +4,7 @@ const validators = require('./validators');
 const Model = require('./model');
 const { CONTACT_ROLES } = require('./constants');
 
-class Role extends Model {
+class ContactRole extends Model {
   get name () { return this._name; }
   set name (name) {
     validators.assertEnum(name, Object.values(CONTACT_ROLES));
@@ -22,4 +22,4 @@ class Role extends Model {
   }
 }
 
-module.exports = Role;
+module.exports = ContactRole;

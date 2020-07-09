@@ -1,9 +1,9 @@
 'use strict';
 
-const Role = require('../models/role-v2');
+const ContactRole = require('../models/contact-role');
 
 const crmToModel = entity => {
-  const role = new Role(entity.roleId);
+  const role = new ContactRole(entity.roleId);
   return role.pickFrom(entity, ['name', 'dateCreated', 'dateUpdated']);
 };
 

@@ -1,7 +1,7 @@
 'use strict';
 
 const CompanyContact = require('../models/company-contact');
-const roleMapper = require('./role');
+const contactRoleMapper = require('./contact-role');
 const contactMapper = require('./contact');
 
 const crmToModel = entity => {
@@ -17,7 +17,7 @@ const crmToModel = entity => {
   ]);
 
   if (entity.role) {
-    companyContact.role = roleMapper.crmToModel(entity.role);
+    companyContact.role = contactRoleMapper.crmToModel(entity.role);
   }
 
   if (entity.contact) {

@@ -3,7 +3,7 @@
 const validators = require('./validators');
 const Model = require('./model');
 const Contact = require('./contact-v2');
-const Role = require('./role-v2');
+const ContactRole = require('./contact-role');
 
 class CompanyContact extends Model {
   get companyId () { return this._companyId; }
@@ -52,17 +52,13 @@ class CompanyContact extends Model {
 
   get contact () { return this._contact; }
   set contact (contact) {
-    if (contact !== null) {
-      validators.assertIsNullableInstanceOf(contact, Contact);
-    }
+    validators.assertIsNullableInstanceOf(contact, Contact);
     this._contact = contact;
   }
 
   get role () { return this._role; }
   set role (role) {
-    if (role != null) {
-      validators.assertIsNullableInstanceOf(role, Role);
-    }
+    validators.assertIsNullableInstanceOf(role, ContactRole);
     this._role = role;
   }
 }

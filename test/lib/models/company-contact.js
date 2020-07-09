@@ -10,7 +10,7 @@ const uuid = require('uuid/v4');
 const moment = require('moment');
 
 const CompanyContact = require('../../../src/lib/models/company-contact');
-const Role = require('../../../src/lib/models/role-v2');
+const ContactRole = require('../../../src/lib/models/contact-role');
 const Contact = require('../../../src/lib/models/contact-v2');
 
 experiment('lib/models/company-contact', () => {
@@ -266,8 +266,8 @@ experiment('lib/models/company-contact', () => {
   });
 
   experiment('.role', () => {
-    test('can be set to a Role instance', async () => {
-      const role = new Role(uuid());
+    test('can be set to a ContactRole instance', async () => {
+      const role = new ContactRole(uuid());
       companyContact.role = role;
       expect(companyContact.role.id).to.equal(role.id);
     });
