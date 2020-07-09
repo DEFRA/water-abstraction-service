@@ -41,14 +41,14 @@ experiment('modules/billing/services/contacts-service', () => {
       const response = await contactsService.getContacts([uuid()]);
       expect(response[0]).to.be.an.instanceOf(Contact);
       expect(response[0].id).to.equal(connectorResponse[0].contactId);
-      expect(response[0].salutation).to.equal(connectorResponse[0].salutation);
+      expect(response[0].title).to.equal(connectorResponse[0].salutation);
       expect(response[0].initials).to.equal(connectorResponse[0].initials);
       expect(response[0].firstName).to.equal(connectorResponse[0].firstName);
       expect(response[0].lastName).to.equal(connectorResponse[0].lastName);
 
       expect(response[1]).to.be.an.instanceOf(Contact);
       expect(response[1].id).to.equal(connectorResponse[1].contactId);
-      expect(response[1].salutation).to.equal(connectorResponse[1].salutation);
+      expect(response[1].title).to.equal(connectorResponse[1].salutation);
       expect(response[1].initials).to.equal(connectorResponse[1].initials);
       expect(response[1].firstName).to.equal(connectorResponse[1].firstName);
       expect(response[1].lastName).to.equal(connectorResponse[1].lastName);

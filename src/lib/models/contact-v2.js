@@ -1,7 +1,9 @@
 'use strict';
 
-const { assertNullableString } = require('./validators');
+const { assertNullableString, assertNullableEnum } = require('./validators');
 const Model = require('./model');
+
+const CONTACT_TYPES = ['person', 'department'];
 
 class Contact extends Model {
   set initials (initials) {
@@ -13,13 +15,13 @@ class Contact extends Model {
     return this._initials;
   }
 
-  set salutation (salutation) {
-    assertNullableString(salutation);
-    this._salutation = salutation;
+  set title (title) {
+    assertNullableString(title);
+    this._title = title;
   }
 
-  get salutation () {
-    return this._salutation;
+  get title () {
+    return this._title;
   }
 
   set firstName (firstName) {
@@ -40,13 +42,41 @@ class Contact extends Model {
     return this._lastName;
   }
 
+  set suffix (suffix) {
+    assertNullableString(suffix);
+    this._suffix = suffix;
+  }
+
+  get suffix () {
+    return this._suffix;
+  }
+
+  set department (department) {
+    assertNullableString(department);
+    this._department = department;
+  }
+
+  get department () {
+    return this._department;
+  }
+
+  set type (type) {
+    assertNullableEnum(type, CONTACT_TYPES);
+    this._type = type;
+  }
+
+  get type () {
+    return this._type;
+  }
+
   /**
-   * Gets the contact's full name including salutation, first name/initial and surname
+   * Gets the contact's full name including title, first name/initial, surname and suffix
    * @return {String}
    */
   get fullName () {
-    const parts = [this._salutation, this._initials || this._firstName, this._lastName];
-    return parts.filter(x => x).join(' ');
+    const parts = [this._title, this._initials || this._firstName, this._lastName];
+    const name = parts.filter(x => x).join(' ');
+    return this._suffix ? `${name}, ${this._suffix}` : name;
   }
 
   toJSON () {

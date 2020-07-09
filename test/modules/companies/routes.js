@@ -8,6 +8,7 @@ const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 
 const routes = require('../../../src/modules/companies/routes');
+const { COMPANY_TYPES, CONTACT_TYPES } = require('../../../src/modules/companies/validators/invoice-accounts');
 
 /**
  * Creates a test Hapi server that has no other plugins loaded,
@@ -194,9 +195,7 @@ experiment('modules/companies/routes', () => {
         expect(response.statusCode).to.equal(400);
       });
 
-      const agentTypes = ['individual', 'limitedCompany', 'partnership', 'limitedLiabilityPartnership'];
-
-      agentTypes.forEach(type => {
+      COMPANY_TYPES.forEach(type => {
         test(`returns a 200 when type is ${type}`, async () => {
           request.payload.agent = {
             type,
@@ -217,7 +216,7 @@ experiment('modules/companies/routes', () => {
 
       test('returns a 200 if the company number is omitted', async () => {
         request.payload.agent = {
-          type: 'partnership',
+          type: 'limitedCompany',
           name: 'Agent company'
         };
         const response = await server.inject(request);
@@ -244,9 +243,7 @@ experiment('modules/companies/routes', () => {
       });
     });
 
-    const contactTypes = ['person', 'department'];
-
-    contactTypes.forEach(type => {
+    CONTACT_TYPES.forEach(type => {
       test(`returns a 200 when type is ${type}`, async () => {
         request.payload.contact = {
           type

@@ -75,7 +75,7 @@ const getCompanyAddresses = async (request, h) => {
  * Creates new invoice account and links relevant roles to it
  */
 const createCompanyInvoiceAccount = async (request, h) => {
-  const { address, agent, contact } = await invoiceAccountsHelper.getInvoiceAccountEntities(request.payload);
+  const { address, agent, contact } = await invoiceAccountsHelper.getInvoiceAccountEntities(request);
 
   const invoiceAccount = await invoiceAccountsHelper.createInvoiceAccountAndRoles(request, address, agent, contact);
 

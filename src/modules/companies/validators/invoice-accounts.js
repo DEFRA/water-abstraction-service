@@ -1,7 +1,7 @@
 const Joi = require('@hapi/joi');
 
-const COMPANY_TYPES = ['individual', 'limitedCompany', 'partnership', 'limitedLiabilityPartnership'];
 const CONTACT_TYPES = ['person', 'department'];
+const COMPANY_TYPES = ['individual', 'limitedCompany', 'partnership', 'limitedLiabilityPartnership'];
 
 const mandatoryPostcodeCountries = [
   'united kingdom',

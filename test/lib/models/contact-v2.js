@@ -6,9 +6,11 @@ const Contact = require('../../../src/lib/models/contact-v2');
 const data = {
   id: '7931b58b-6410-44c0-b0a5-12a1ec14de64',
   initials: 'A B C',
-  salutation: 'Captain',
+  title: 'Captain',
   firstName: 'John',
-  lastName: 'Doe'
+  lastName: 'Doe',
+  suffix: 'PhD',
+  department: 'Naval Reserves'
 };
 
 experiment('lib/models/contact-v2 model', () => {
@@ -51,19 +53,19 @@ experiment('lib/models/contact-v2 model', () => {
     }
   });
 
-  test('can set/get salutation to a string', async () => {
-    contact.salutation = data.salutation;
-    expect(contact.salutation).to.equal(data.salutation);
+  test('can set/get title to a string', async () => {
+    contact.title = data.title;
+    expect(contact.title).to.equal(data.title);
   });
 
-  test('can set/get salutation to null', async () => {
-    contact.salutation = null;
-    expect(contact.salutation).to.equal(null);
+  test('can set/get title to null', async () => {
+    contact.title = null;
+    expect(contact.title).to.equal(null);
   });
 
-  test('setting salutation to a type other than string/null throws an error', async () => {
+  test('setting title to a type other than string/null throws an error', async () => {
     try {
-      contact.salutation = 123;
+      contact.title = 123;
       fail();
     } catch (err) {
       expect(err).to.be.an.error();
@@ -108,6 +110,68 @@ experiment('lib/models/contact-v2 model', () => {
     }
   });
 
+  test('can set/get suffix to a string', async () => {
+    contact.suffix = data.suffix;
+    expect(contact.suffix).to.equal(data.suffix);
+  });
+
+  test('can set/get suffix to null', async () => {
+    contact.suffix = null;
+    expect(contact.suffix).to.equal(null);
+  });
+
+  test('setting suffix to a type other than string/null throws an error', async () => {
+    try {
+      contact.suffix = 123;
+      fail();
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
+  test('can set/get department to a string', async () => {
+    contact.department = data.department;
+    expect(contact.department).to.equal(data.department);
+  });
+
+  test('can set/get department to null', async () => {
+    contact.department = null;
+    expect(contact.department).to.equal(null);
+  });
+
+  test('setting department to a type other than string/null throws an error', async () => {
+    try {
+      contact.department = 123;
+      fail();
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
+  test('can set/get type to a "person"', async () => {
+    contact.type = 'person';
+    expect(contact.type).to.equal('person');
+  });
+
+  test('can set/get type to a "department"', async () => {
+    contact.type = 'department';
+    expect(contact.type).to.equal('department');
+  });
+
+  test('can set/get type to null', async () => {
+    contact.type = null;
+    expect(contact.type).to.equal(null);
+  });
+
+  test('setting type to anything else', async () => {
+    try {
+      contact.type = 'individual';
+      fail();
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
   experiment('construction', () => {
     test('can include an id', async () => {
       const contact = new Contact(data.id);
@@ -124,7 +188,7 @@ experiment('lib/models/contact-v2 model', () => {
     beforeEach(async () => {
       contact.id = data.id;
       contact.initials = data.initials;
-      contact.salutation = data.salutation;
+      contact.title = data.title;
       contact.firstName = data.firstName;
       contact.lastName = data.lastName;
     });
@@ -138,11 +202,16 @@ experiment('lib/models/contact-v2 model', () => {
       expect(contact.fullName).to.equal('Captain John Doe');
     });
 
+    test('full name returns the suffix when it is not null', async () => {
+      contact.suffix = data.suffix;
+      expect(contact.fullName).to.equal('Captain A B C Doe, PhD');
+    });
+
     test('.toJSON returns all data', async () => {
       const json = contact.toJSON();
       expect(json).to.equal({
         id: data.id,
-        salutation: data.salutation,
+        title: data.title,
         initials: data.initials,
         firstName: data.firstName,
         lastName: data.lastName,

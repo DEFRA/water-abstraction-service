@@ -273,9 +273,9 @@ experiment('modules/companies/controller', () => {
       result = await controller.createCompanyInvoiceAccount(request);
     });
 
-    test('calls getInvoiceAccountEntities helper function with payload', () => {
+    test('calls getInvoiceAccountEntities helper function with request', () => {
       expect(invoiceAccountsHelper.getInvoiceAccountEntities.calledWith(
-        request.payload
+        request
       )).to.be.true();
     });
 

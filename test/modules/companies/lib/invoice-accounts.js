@@ -45,6 +45,8 @@ experiment('modules/companies/lib/invoice-accounts', () => {
     sandbox.stub(waterServiceRepos.regions, 'findOne').resolves({ chargeRegionId: 'A' });
     sandbox.stub(crmConnectors.addresses, 'createAddress').resolves(newAddress);
     sandbox.stub(crmConnectors.companies, 'createCompany').resolves(newAgentCompany);
+    sandbox.stub(crmConnectors.companies, 'createCompanyAddress').resolves();
+    sandbox.stub(crmConnectors.companies, 'createCompanyContact').resolves();
     sandbox.stub(crmConnectors.contacts, 'createContact').resolves(newContact);
     sandbox.stub(crmConnectors.invoiceAccounts, 'createInvoiceAccount').resolves(newInvoiceAccount);
     sandbox.stub(crmConnectors.invoiceAccounts, 'createInvoiceAccountAddress').resolves();
@@ -57,37 +59,56 @@ experiment('modules/companies/lib/invoice-accounts', () => {
   afterEach(async () => sandbox.restore());
 
   experiment('.getInvoiceAccountEntities', () => {
-    let address, agent, contact, result;
+    let request, result;
     beforeEach(async () => {
-      address = { addressId: uuid() };
-      agent = { companyId: uuid() };
-      contact = { contactId: uuid() };
+      request = {
+        params: {
+          companyId: uuid()
+        },
+        payload: {
+          address: {
+            addressId: uuid()
+          },
+          agent: {
+            companyId: uuid()
+          },
+          contact: {
+            contactId: uuid()
+          }
+        }
+      };
 
-      const payload = { address, agent, contact };
-      result = await invoiceAccountsHelper.getInvoiceAccountEntities(payload);
+      result = await invoiceAccountsHelper.getInvoiceAccountEntities(request);
     });
 
-    test('validates the address', () => {
-      expect(invoiceAccountsValidators.validateAddress.calledWith(
-        address
-      )).to.be.true();
-    });
+    experiment('validates the entities in the payload', () => {
+      test('does not throw an error if entities are validated', () => {
+        const func = async () => await invoiceAccountsHelper.getInvoiceAccountEntities(request);
+        expect(func()).to.not.reject();
+      });
 
-    test('validates the agent', () => {
-      expect(invoiceAccountsValidators.validateAgentCompany.calledWith(
-        agent
-      )).to.be.true();
-    });
+      test('throws an error if address is not valid', async () => {
+        request.payload.address.address1 = 'first floor';
+        const func = async () => await invoiceAccountsHelper.getInvoiceAccountEntities(request);
+        expect(func()).to.reject();
+      });
 
-    test('validates the contact', () => {
-      expect(invoiceAccountsValidators.validateContact.calledWith(
-        contact
-      )).to.be.true();
+      test('throws an error if agent is not valid', async () => {
+        request.payload.agent.name = 'agent name';
+        const func = async () => await invoiceAccountsHelper.getInvoiceAccountEntities(request);
+        expect(func()).to.reject();
+      });
+
+      test('throws an error if contact is not valid', async () => {
+        request.payload.contact.firstName = 'first name';
+        const func = async () => await invoiceAccountsHelper.getInvoiceAccountEntities(request);
+        expect(func()).to.reject();
+      });
     });
 
     experiment('when address exists', () => {
       test('the addressId is returned', () => {
-        expect(result.address).to.equal(address);
+        expect(result.address).to.equal(request.payload.address);
       });
 
       test('a new address is not created', () => {
@@ -97,22 +118,23 @@ experiment('modules/companies/lib/invoice-accounts', () => {
 
     experiment('when new address data is passed in', () => {
       beforeEach(async () => {
-        address = {
+        request.payload.address = {
           address3: '53',
           address4: 'evergreen terrace',
           country: 'USA'
         };
-        agent = { companyId: uuid() };
-        contact = { contactId: uuid() };
 
-        const payload = { address, agent, contact };
-        result = await invoiceAccountsHelper.getInvoiceAccountEntities(payload);
+        result = await invoiceAccountsHelper.getInvoiceAccountEntities(request);
       });
 
       test('a new address is created', () => {
         expect(crmConnectors.addresses.createAddress.calledWith(
-          address
+          request.payload.address
         )).to.be.true();
+      });
+
+      test('a new company address is created', () => {
+        expect(crmConnectors.companies.createCompanyAddress.called).to.be.true();
       });
 
       test('the new address is returned', () => {
@@ -122,7 +144,7 @@ experiment('modules/companies/lib/invoice-accounts', () => {
 
     experiment('when agent company exists', () => {
       test('the companyId is returned', () => {
-        expect(result.agent).to.equal(agent);
+        expect(result.agent).to.equal(request.payload.agent);
       });
 
       test('a new company is not created', () => {
@@ -132,11 +154,8 @@ experiment('modules/companies/lib/invoice-accounts', () => {
 
     experiment('when agent company does not exist', () => {
       beforeEach(async () => {
-        address = { addressId: uuid() };
-        contact = { contactId: uuid() };
-
-        const payload = { address, contact };
-        result = await invoiceAccountsHelper.getInvoiceAccountEntities(payload);
+        delete request.payload.agent;
+        result = await invoiceAccountsHelper.getInvoiceAccountEntities(request);
       });
 
       test('a new company is not created', () => {
@@ -150,20 +169,22 @@ experiment('modules/companies/lib/invoice-accounts', () => {
 
     experiment('when new agent company data is passed in', () => {
       beforeEach(async () => {
-        address = { addressId: uuid() };
-        agent = {
+        request.payload.agent = {
           type: 'individual',
           name: 'test-company'
         };
-        contact = { contactId: uuid() };
 
-        const payload = { address, agent, contact };
-        result = await invoiceAccountsHelper.getInvoiceAccountEntities(payload);
+        result = await invoiceAccountsHelper.getInvoiceAccountEntities(request);
       });
 
       test('a new company is created', () => {
+        const agentData = {
+          ...request.payload.agent,
+          type: 'person',
+          organisationType: 'individual'
+        };
         expect(crmConnectors.companies.createCompany.calledWith(
-          agent
+          agentData
         )).to.be.true();
       });
 
@@ -174,7 +195,7 @@ experiment('modules/companies/lib/invoice-accounts', () => {
 
     experiment('when contact exists', () => {
       test('the contactId is returned', () => {
-        expect(result.contact).to.equal(contact);
+        expect(result.contact).to.equal(request.payload.contact);
       });
 
       test('a new contact is not created', () => {
@@ -184,26 +205,148 @@ experiment('modules/companies/lib/invoice-accounts', () => {
 
     experiment('when new contact data is passed in', () => {
       beforeEach(async () => {
-        address = { addressId: uuid() };
-        agent = { companyId: uuid() };
-        contact = {
+        request.payload.contact = {
           type: 'person',
           firstName: 'Bob',
           lastName: 'Jones'
         };
 
-        const payload = { address, agent, contact };
-        result = await invoiceAccountsHelper.getInvoiceAccountEntities(payload);
+        result = await invoiceAccountsHelper.getInvoiceAccountEntities(request);
       });
 
       test('a new contact is created', () => {
         expect(crmConnectors.contacts.createContact.calledWith(
-          contact
+          request.payload.contact
         )).to.be.true();
+      });
+
+      test('a new company contact is created', () => {
+        expect(crmConnectors.companies.createCompanyContact.called).to.be.true();
       });
 
       test('the new contact is returned', () => {
         expect(result.contact).to.equal(newContact);
+      });
+    });
+  });
+
+  experiment('._createCompanyAddressOrContact', () => {
+    experiment('when a new agent company has been created', () => {
+      let request, newAgentCompany, newContact;
+      beforeEach(async () => {
+        request = {
+          params: {
+            companyId: uuid()
+          },
+          payload: {
+            startDate: '2020-04-01',
+            agent: {
+              type: 'partnership',
+              name: 'Test Company Ltd'
+            }
+          }
+        };
+
+        newAgentCompany = {
+          companyId: uuid(),
+          ...request.payload.agent
+        };
+        newContact = {
+          contactId: uuid(),
+          firstName: 'John',
+          lastName: 'Testington'
+        };
+
+        await invoiceAccountsHelper._createCompanyAddressOrContact(request, newContact, newAgentCompany, 'contact');
+      });
+
+      test('creates the company contact for the new agent company', () => {
+        const [companyId] = crmConnectors.companies.createCompanyContact.lastCall.args;
+        expect(companyId).to.equal(newAgentCompany.companyId);
+      });
+
+      test('passes the correct data to the crm', () => {
+        const [, data] = crmConnectors.companies.createCompanyContact.lastCall.args;
+        expect(data.contactId).to.equal(newContact.contactId);
+        expect(data.roleName).to.equal('billing');
+        expect(data.isDefault).to.equal(true);
+        expect(data.startDate).to.equal(request.payload.startDate);
+      });
+    });
+
+    experiment('when adding a new entity to an existing agent company', () => {
+      let request, agentCompany, newAddress;
+      beforeEach(async () => {
+        agentCompany = { companyId: uuid() };
+        request = {
+          params: {
+            companyId: uuid()
+          },
+          payload: {
+            startDate: '2020-04-01',
+            agent: agentCompany
+          }
+        };
+
+        newAddress = {
+          addressId: uuid(),
+          address3: '25',
+          address4: 'Test Lane',
+          town: 'Teston-super-mare',
+          country: 'England'
+        };
+
+        await invoiceAccountsHelper._createCompanyAddressOrContact(request, newAddress, agentCompany, 'address');
+      });
+
+      test('creates the company address for the existing agent company', () => {
+        const [companyId] = crmConnectors.companies.createCompanyAddress.lastCall.args;
+        expect(companyId).to.equal(agentCompany.companyId);
+      });
+
+      test('passes the correct data to the crm', () => {
+        const [, data] = crmConnectors.companies.createCompanyAddress.lastCall.args;
+        expect(data.addressId).to.equal(newAddress.addressId);
+        expect(data.roleName).to.equal('billing');
+        expect(data.isDefault).to.equal(true);
+        expect(data.startDate).to.equal(request.payload.startDate);
+      });
+    });
+
+    experiment('when there is no agent company', () => {
+      let request, newAddress;
+      beforeEach(async () => {
+        request = {
+          params: {
+            companyId: uuid()
+          },
+          payload: {
+            startDate: '2020-04-01'
+          }
+        };
+
+        newAddress = {
+          addressId: uuid(),
+          address3: '25',
+          address4: 'Test Lane',
+          town: 'Teston-super-mare',
+          country: 'England'
+        };
+
+        await invoiceAccountsHelper._createCompanyAddressOrContact(request, newAddress, null, 'address');
+      });
+
+      test('creates the company address for the existing agent company', () => {
+        const [companyId] = crmConnectors.companies.createCompanyAddress.lastCall.args;
+        expect(companyId).to.equal(request.params.companyId);
+      });
+
+      test('passes the correct data to the crm', () => {
+        const [, data] = crmConnectors.companies.createCompanyAddress.lastCall.args;
+        expect(data.addressId).to.equal(newAddress.addressId);
+        expect(data.roleName).to.equal('licenceHolder');
+        expect(data.isDefault).to.equal(true);
+        expect(data.startDate).to.equal(request.payload.startDate);
       });
     });
   });
@@ -224,7 +367,7 @@ experiment('modules/companies/lib/invoice-accounts', () => {
       const address = { addressId: 'test-address-id' };
       const contact = { contactId: 'test-contact-id' };
 
-      result = await invoiceAccountsHelper.createInvoiceAccountAndRoles(request, null, address, contact);
+      result = await invoiceAccountsHelper.createInvoiceAccountAndRoles(request, address, null, contact);
     });
 
     test('calls the water service to get the region code', () => {

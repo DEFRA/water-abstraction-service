@@ -316,9 +316,7 @@ experiment('modules/companies/validators/invoice-accounts', () => {
           expect(error).to.not.be.null();
         });
 
-        const types = ['individual', 'limitedCompany', 'partnership', 'limitedLiabilityPartnership'];
-
-        types.forEach(type => {
+        validators.COMPANY_TYPES.forEach(type => {
           test(`can be set to ${type}`, async () => {
             agentCompany.type = type;
 
