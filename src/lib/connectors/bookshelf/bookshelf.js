@@ -1,9 +1,6 @@
 const bookshelf = require('bookshelf');
 const config = require('../../../../config.js');
 
-// Ensure DB is included to set type parsers on PG module
-require('../db');
-
 // Setting up the database connection
 const knex = require('knex')({
   client: 'pg',

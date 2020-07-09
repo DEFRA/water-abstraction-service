@@ -50,11 +50,7 @@ const processChargeVersionYear = async dbRow => {
   return batch;
 };
 
-const createForBatch = batch =>
-  repos.billingBatchChargeVersionYears.createForBatch(batch.id);
-
 exports.setReadyStatus = setReadyStatus;
 exports.setErrorStatus = setErrorStatus;
 exports.getStatusCounts = getStatusCounts;
 exports.processChargeVersionYear = processChargeVersionYear;
-exports.createForBatch = createForBatch;
