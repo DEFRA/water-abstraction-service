@@ -3,7 +3,6 @@
 const { isEmpty, omitBy } = require('lodash');
 
 const Company = require('../../../lib/models/company');
-const Contact = require('../../../lib/models/contact');
 const Address = require('../../../lib/models/address');
 const Pagination = require('../../../lib/models/pagination');
 
@@ -13,21 +12,6 @@ organisationTypeMap.set('llp', Company.ORGANISATION_TYPES.limitedLiabilityPartne
 organisationTypeMap.set('plc', Company.ORGANISATION_TYPES.publicLimitedCompany);
 
 const mapCompanyType = companyType => organisationTypeMap.get(companyType);
-
-/**
- * Maps the 'care_of' property of a companies house
- * to a Contact model (if present)
- * @param {Object} address
- * @return {Contact}
- */
-const mapContact = address => {
-  if (address.care_of) {
-    const contact = new Contact();
-    contact.lastName = address.care_of;
-    return contact;
-  }
-  return null;
-};
 
 /**
  * Maps a companies house address to an Address service model
@@ -89,7 +73,6 @@ const mapPagination = response => {
 const mapItem = item => {
   return {
     company: mapCompany(item),
-    contact: mapContact(item),
     address: mapAddress(item.address)
   };
 };

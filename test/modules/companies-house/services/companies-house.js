@@ -65,51 +65,62 @@ experiment('modules/companies-house/services/companies-house-service', () => {
   experiment('.searchCompanies', () => {
     let result;
 
-    beforeEach(async () => {
-      sandbox.stub(companiesHouseApiConnector, 'searchCompanies').resolves(createCompaniesHouseResponse());
-      result = await companiesHouseService.searchCompanies('Test search', 3);
+    experiment('when the company type is supported and there is no "care of"', () => {
+      beforeEach(async () => {
+        sandbox.stub(companiesHouseApiConnector, 'searchCompanies').resolves(createCompaniesHouseResponse());
+        result = await companiesHouseService.searchCompanies('Test search', 3);
+      });
+
+      test('calls companies house API', async () => {
+        expect(companiesHouseApiConnector.searchCompanies.calledWith(
+          'Test search', 40, 20
+        )).to.be.true();
+      });
+
+      test('result includes a pagination service model', async () => {
+        const { pagination } = result;
+        expect(pagination instanceof Pagination).to.be.true();
+        expect(pagination.page).to.equal(2);
+        expect(pagination.perPage).to.equal(20);
+        expect(pagination.pageCount).to.equal(4);
+        expect(pagination.totalRows).to.equal(80);
+      });
+
+      test('result includes an array of items', async () => {
+        expect(result.data).to.be.array().length(1);
+      });
+
+      test('maps the company correctly', async () => {
+        const { company } = result.data[0];
+        expect(company instanceof Company).to.be.true();
+        expect(company.name).to.equal('BIG CO LIMITED');
+        expect(company.type).to.equal(Company.TYPE_ORGANISATION);
+        expect(company.organisationType).to.equal(Company.ORGANISATION_TYPES.limitedCompany);
+        expect(company.companyNumber).to.equal('012345');
+      });
+
+      test('maps the address correctly', async () => {
+        const { address } = result.data[0];
+        expect(address instanceof Address).to.be.true();
+        expect(address.addressLine2).to.equal('14');
+        expect(address.addressLine3).to.equal('Big Farm Road');
+        expect(address.town).to.equal('Testington');
+        expect(address.postcode).to.equal('TT1 1TT');
+      });
     });
 
-    test('calls companies house API', async () => {
-      expect(companiesHouseApiConnector.searchCompanies.calledWith(
-        'Test search', 40, 20
-      )).to.be.true();
-    });
+    experiment('when the company type is not supported', () => {
+      beforeEach(async () => {
+        const apiResponse = createCompaniesHouseResponse();
+        apiResponse.items[0].company_type = 'old-public-company';
+        sandbox.stub(companiesHouseApiConnector, 'searchCompanies').resolves(apiResponse);
+        result = await companiesHouseService.searchCompanies('Test search', 3);
+      });
 
-    test('result includes a pagination service model', async () => {
-      const { pagination } = result;
-      expect(pagination instanceof Pagination).to.be.true();
-      expect(pagination.page).to.equal(2);
-      expect(pagination.perPage).to.equal(20);
-      expect(pagination.pageCount).to.equal(4);
-      expect(pagination.totalRows).to.equal(80);
-    });
-
-    test('result includes an array of items', async () => {
-      expect(result.data).to.be.array().length(1);
-    });
-
-    test('maps the company correctly', async () => {
-      const { company } = result.data[0];
-      expect(company instanceof Company).to.be.true();
-      expect(company.name).to.equal('BIG CO LIMITED');
-      expect(company.type).to.equal(Company.TYPE_ORGANISATION);
-      expect(company.organisationType).to.equal(Company.ORGANISATION_TYPES.limitedCompany);
-      expect(company.companyNumber).to.equal('012345');
-    });
-
-    test('maps the address correctly', async () => {
-      const { address } = result.data[0];
-      expect(address instanceof Address).to.be.true();
-      expect(address.addressLine2).to.equal('14');
-      expect(address.addressLine3).to.equal('Big Farm Road');
-      expect(address.town).to.equal('Testington');
-      expect(address.postcode).to.equal('TT1 1TT');
-    });
-
-    test('the contact is null', async () => {
-      const { contact } = result.data[0];
-      expect(contact).to.be.null();
+      test('the company organisation type is not set', async () => {
+        const { company } = result.data[0];
+        expect(company.organisationType).to.be.undefined();
+      });
     });
   });
 });
