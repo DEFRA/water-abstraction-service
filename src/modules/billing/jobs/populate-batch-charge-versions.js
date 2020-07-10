@@ -5,6 +5,7 @@ const { get } = require('lodash');
 const batchJob = require('./lib/batch-job');
 const batchService = require('../services/batch-service');
 const chargeVersionService = require('../services/charge-version-service');
+const chargeVersionYearService = require('../services/charge-version-year');
 
 const JOB_NAME = 'billing.populate-batch-charge-versions.*';
 
@@ -21,12 +22,13 @@ const handlePopulateBatch = async job => {
 
   const batch = await batchService.getBatchById(batchId);
 
-  const billingBatchChargeVersions = await chargeVersionService.createForBatch(batch);
+  // Populate water.billing_batch_charge_versions
+  await chargeVersionService.createForBatch(batch);
 
-  // Include the charge versions in the response data. This information
-  // can then be used in the onComplete callback to decide if a new job
-  // should be published.
-  return { billingBatchChargeVersions, batch: job.data.batch };
+  // Populate water.billing_batch_charge_version_years
+  const billingBatchChargeVersionYears = await chargeVersionYearService.createForBatch(batch);
+
+  return { billingBatchChargeVersionYears, batch };
 };
 
 exports.createMessage = createMessage;
