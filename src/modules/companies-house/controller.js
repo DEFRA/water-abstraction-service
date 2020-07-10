@@ -1,6 +1,6 @@
 'use strict';
 
-const companiesHouseService = require('./services/companies-house');
+const companiesHouseService = require('./services/companies-house-service');
 
 /**
  * Search companies house API
