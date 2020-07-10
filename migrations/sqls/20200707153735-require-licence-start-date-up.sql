@@ -11,6 +11,20 @@ delete from water.charge_agreements a
 	  and v.licence_ref=l.licence_ref
 	  and l.start_date is null;
 
+delete from water.billing_transactions tx
+	using water.charge_elements e, water.charge_versions v, water.licences l
+	where tx.charge_element_id = e.charge_element_id
+	  and e.charge_version_id=v.charge_version_id
+	  and v.licence_ref=l.licence_ref
+	  and l.start_date is null;
+
+delete from water.billing_volumes bv
+	using water.charge_elements e, water.charge_versions v, water.licences l
+	where bv.charge_element_id = e.charge_element_id
+	  and e.charge_version_id=v.charge_version_id
+	  and v.licence_ref=l.licence_ref
+	  and l.start_date is null;
+
 delete from water.charge_elements e
 	using water.charge_versions v, water.licences l
 	where e.charge_version_id=v.charge_version_id
