@@ -23,6 +23,10 @@ class Return extends Model {
     this._id = id;
   }
 
+  get id () {
+    return this._id;
+  }
+
   /**
    * Date range of return
    * @param {DateRange} dateRange
@@ -116,7 +120,7 @@ class Return extends Model {
    */
   get isLateForBilling () {
     const comparisonDate = moment(this._dueDate).add(3, 'weeks');
-    return this.receivedDate && this.receivedDate.isAfter(comparisonDate, 'day');
+    return this._receivedDate && this._receivedDate.isAfter(comparisonDate, 'day');
   }
 
   /**
