@@ -18,3 +18,9 @@ exports.CONTACT_ROLES = {
   billing: 'billing',
   licenceHolder: 'licenceHolder'
 };
+
+exports.TIME_PERIODS = {
+  day: 'day',
+  week: 'week',
+  month: 'month'
+};
