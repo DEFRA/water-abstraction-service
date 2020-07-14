@@ -6,6 +6,10 @@ const Model = require('./model');
 const CONTACT_TYPES = ['person', 'department'];
 const DATA_SOURCE_TYPES = ['nald', 'wrls'];
 
+const getInitials = (firstName, middleInitials) => middleInitials
+  ? `${firstName.slice(0, 1)} ${middleInitials}`
+  : null;
+
 class Contact extends Model {
   set initials (initials) {
     assertNullableString(initials);
@@ -93,14 +97,7 @@ class Contact extends Model {
    * @return {String}
    */
   get fullName () {
-    let initials;
-    if (this._dataSource === 'nald') {
-      initials = this._initials;
-    } else {
-      initials = this._middleInitials
-        ? `${this._firstName.slice(0, 1)} ${this._middleInitials}`
-        : null;
-    }
+    const initials = this._dataSource === 'nald' ? this._initials : getInitials(this._firstName, this._middleInitials);
 
     const parts = [this._title, initials || this._firstName, this._lastName];
     const name = parts.filter(x => x).join(' ');
