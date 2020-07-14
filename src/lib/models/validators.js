@@ -7,6 +7,7 @@ const Joi = require('joi');
 const assert = (value, schema) => Joi.assert(value, schema, { convert: false });
 
 const dateRegex = /^\d{4}-([0][1-9]|[1][0-2])-([0][1-9]|[1-2][0-9]|[3][0-1])$/;
+const { returnIDRegex } = require('@envage/water-abstraction-helpers').returns;
 
 const VALID_DATE = Joi.string().regex(dateRegex).required();
 const VALID_NULLABLE_DATE = VALID_DATE.allow(null);
@@ -27,6 +28,7 @@ const VALID_FACTOR = Joi.number().min(0).max(1);
 const VALID_TRANSACTION_KEY = Joi.string().hex().length(32).allow(null);
 const VALID_NEGATIVE_INTEGER = VALID_INTEGER.negative();
 const VALID_EMAIL_ADDRESS = Joi.string().email();
+const VALID_RETURN_ID = Joi.string().regex(returnIDRegex);
 
 const assertIsArrayOfType = (values, Type) => {
   hoek.assert(isArray(values), 'Array expected');
@@ -80,6 +82,7 @@ const assertEmailAddress = value => assert(value, VALID_EMAIL_ADDRESS);
 const assertNullableEmailAddress = value => assert(value, VALID_EMAIL_ADDRESS.allow(null));
 const assertIsNullableBoolean = value => assert(value, Joi.boolean().required().allow(null));
 const assertNullableQuantityWithMaximum = (value, max) => assert(value, VALID_NULLABLE_QUANTITY.max(max));
+const assertReturnId = value => assert(value, VALID_RETURN_ID);
 
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
@@ -113,3 +116,4 @@ exports.assertEmailAddress = assertEmailAddress;
 exports.assertNullableEmailAddress = assertNullableEmailAddress;
 exports.assertIsNullableBoolean = assertIsNullableBoolean;
 exports.assertNullableQuantityWithMaximum = assertNullableQuantityWithMaximum;
+exports.assertReturnId = assertReturnId;
