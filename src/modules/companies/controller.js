@@ -1,5 +1,8 @@
+'use strict';
+
 const returnsConnector = require('../../lib/connectors/returns');
 const documentsConnector = require('../../lib/connectors/crm/documents');
+const companyContactsService = require('../../lib/services/company-contacts');
 
 const documentsHelper = require('./lib/documents');
 const returnsHelper = require('./lib/returns');
@@ -7,6 +10,7 @@ const companiesService = require('../../lib/services/companies-service');
 const invoiceAccountsService = require('../../lib/services/invoice-accounts-service');
 const Boom = require('@hapi/boom');
 const { NotFoundError } = require('../../lib/errors');
+const { envelope } = require('../../lib/response');
 
 // caters for error triggered in this service and 404s returned from the CRM
 const isNotFoundError = err => err instanceof NotFoundError || err.statusCode === 404;
@@ -97,7 +101,19 @@ const createCompanyInvoiceAccount = async (request, h) => {
   }
 };
 
+const getCompanyContacts = async (request) => {
+  const { companyId } = request.params;
+
+  try {
+    const companyContacts = await companyContactsService.getCompanyContacts(companyId);
+    return envelope(companyContacts);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
 exports.getReturns = getReturns;
 exports.getCompany = getCompany;
 exports.getCompanyAddresses = getCompanyAddresses;
 exports.createCompanyInvoiceAccount = createCompanyInvoiceAccount;
+exports.getCompanyContacts = getCompanyContacts;

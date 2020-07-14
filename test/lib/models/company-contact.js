@@ -1,13 +1,17 @@
 'use strict';
 
-const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
+const {
+  experiment,
+  test,
+  beforeEach
+} = exports.lab = require('@hapi/lab').script();
+const uuid = require('uuid/v4');
+const moment = require('moment');
 
 const CompanyContact = require('../../../src/lib/models/company-contact');
+const ContactRole = require('../../../src/lib/models/contact-role');
 const Contact = require('../../../src/lib/models/contact-v2');
-const DateRange = require('../../../src/lib/models/date-range');
-
-const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
 
 experiment('lib/models/company-contact', () => {
   let companyContact;
@@ -17,73 +21,58 @@ experiment('lib/models/company-contact', () => {
   });
 
   experiment('.id', () => {
-    test('can be set to a guid string', async () => {
-      companyContact.id = TEST_GUID;
-      expect(companyContact.id).to.equal(TEST_GUID);
+    test('can be set to a valid UUID', async () => {
+      const id = uuid();
+      companyContact.id = id;
+      expect(companyContact.id).to.equal(id);
     });
 
-    test('throws an error if set to a non-guid string', async () => {
-      const func = () => {
-        companyContact.id = 'hey';
-      };
-      expect(func).to.throw();
-    });
-  });
-
-  experiment('.contact', () => {
-    test('can be set to a valid Contact', async () => {
-      const contact = new Contact();
-      companyContact.contact = contact;
-      expect(companyContact.contact).to.equal(contact);
-    });
-
-    test('throws an error if set to another model', async () => {
-      const func = () => {
-        companyContact.contact = new DateRange();
-      };
-      expect(func).to.throw();
+    test('throws an error if attempting to set non-guid ID', async () => {
+      expect(() => {
+        companyContact.id = 'potatoes';
+      }).to.throw();
     });
   });
 
-  experiment('.emailAddress', () => {
-    test('can be set to an email address', async () => {
-      companyContact.emailAddress = 'test@example.com';
-      expect(companyContact.emailAddress).to.equal('test@example.com');
+  experiment('.companyId', () => {
+    test('can be set to a valid UUID', async () => {
+      const companyId = uuid();
+      companyContact.companyId = companyId;
+      expect(companyContact.companyId).to.equal(companyId);
     });
 
-    test('can be set to null', async () => {
-      companyContact.emailAddress = null;
-      expect(companyContact.emailAddress).to.equal(null);
-    });
-
-    test('throws an error if set to unexpected value', async () => {
-      const func = () => {
-        companyContact.emailAddress = 'not an email address';
-      };
-      expect(func).to.throw();
+    test('throws an error if attempting to set non-guid ID', async () => {
+      expect(() => {
+        companyContact.companyId = 'potatoes';
+      }).to.throw();
     });
   });
 
-  experiment('.roleName', () => {
-    CompanyContact.ROLE_NAMES.forEach(role => {
-      test(`can be set to a ${role}`, async () => {
-        companyContact.roleName = role;
-        expect(companyContact.roleName).to.equal(role);
-      });
+  experiment('.contactId', () => {
+    test('can be set to a valid UUID', async () => {
+      const contactId = uuid();
+      companyContact.contactId = contactId;
+      expect(companyContact.contactId).to.equal(contactId);
     });
 
-    test('throws an error if set to unexpected value', async () => {
-      const func = () => {
-        companyContact.roleName = 'invalid-role';
-      };
-      expect(func).to.throw();
+    test('throws an error if attempting to set non-guid ID', async () => {
+      expect(() => {
+        companyContact.contactId = 'potatoes';
+      }).to.throw();
+    });
+  });
+
+  experiment('.roleId', () => {
+    test('can be set to a valid UUID', async () => {
+      const roleId = uuid();
+      companyContact.roleId = roleId;
+      expect(companyContact.roleId).to.equal(roleId);
     });
 
-    test('throws an error if set to null', async () => {
-      const func = () => {
-        companyContact.roleName = null;
-      };
-      expect(func).to.throw();
+    test('throws an error if attempting to set non-guid ID', async () => {
+      expect(() => {
+        companyContact.roleId = 'potatoes';
+      }).to.throw();
     });
   });
 
@@ -93,39 +82,205 @@ experiment('lib/models/company-contact', () => {
       expect(companyContact.isDefault).to.equal(true);
     });
 
-    test('throws an error if set to anything other than a boolean', async () => {
-      const func = () => {
-        companyContact.isDefault = 'yeap';
-      };
-      expect(func).to.throw();
-    });
-
-    test('throws an error if set to null', async () => {
-      const func = () => {
-        companyContact.isDefault = null;
-      };
-      expect(func).to.throw();
+    test('throws an error if attempting to set to non boolean', async () => {
+      expect(() => {
+        companyContact.isDefault = 'potatoes';
+      }).to.throw();
     });
   });
 
-  experiment('.dateRange', () => {
-    let dateRange;
+  experiment('.startDate', () => {
+    test('converts an ISO date string to a moment internally', async () => {
+      const dateString = '2020-01-20T14:51:42.024Z';
+      companyContact.startDate = dateString;
 
-    beforeEach(async () => {
-      dateRange = new DateRange('2019-04-01', '2020-03-31');
+      expect(companyContact.startDate).to.equal(moment(dateString));
     });
 
-    test('can be set to a DateRange object', async () => {
-      companyContact.dateRange = dateRange;
-      expect(companyContact.dateRange).to.equal(dateRange);
+    test('converts a JS Date to a moment internally', async () => {
+      const date = new Date();
+      companyContact.startDate = date;
+
+      expect(companyContact.startDate).to.equal(moment(date));
     });
 
-    test('throws an error if set to any other type', async () => {
-      const func = () => {
-        companyContact.dateRange = new Contact();
-      };
+    test('can be set using a moment', async () => {
+      const now = moment();
+      companyContact.startDate = now;
 
-      expect(func).to.throw();
+      expect(companyContact.startDate).to.equal(now);
+    });
+
+    test('throws for an invalid string', async () => {
+      const dateString = 'not a date';
+      expect(() => { companyContact.startDate = dateString; }).to.throw();
+    });
+
+    test('throws for a boolean value', async () => {
+      expect(() => { companyContact.startDate = true; }).to.throw();
+    });
+
+    test('throws for null', async () => {
+      expect(() => { companyContact.startDate = null; }).to.throw();
+    });
+  });
+
+  experiment('.endDate', () => {
+    test('converts an ISO date string to a moment internally', async () => {
+      const dateString = '2020-01-20T14:51:42.024Z';
+      companyContact.endDate = dateString;
+
+      expect(companyContact.endDate).to.equal(moment(dateString));
+    });
+
+    test('converts a JS Date to a moment internally', async () => {
+      const date = new Date();
+      companyContact.endDate = date;
+
+      expect(companyContact.endDate).to.equal(moment(date));
+    });
+
+    test('can be set using a moment', async () => {
+      const now = moment();
+      companyContact.endDate = now;
+
+      expect(companyContact.endDate).to.equal(now);
+    });
+
+    test('throws for an invalid string', async () => {
+      const dateString = 'not a date';
+      expect(() => { companyContact.endDate = dateString; }).to.throw();
+    });
+
+    test('throws for a boolean value', async () => {
+      expect(() => { companyContact.endDate = true; }).to.throw();
+    });
+
+    test('allows null', async () => {
+      companyContact.endDate = null;
+      expect(companyContact.endDate).to.be.null();
+    });
+  });
+
+  experiment('.dateCreated', () => {
+    test('converts an ISO date string to a moment internally', async () => {
+      const dateString = '2020-01-20T14:51:42.024Z';
+      companyContact.dateCreated = dateString;
+
+      expect(companyContact.dateCreated).to.equal(moment(dateString));
+    });
+
+    test('converts a JS Date to a moment internally', async () => {
+      const date = new Date();
+      companyContact.dateCreated = date;
+
+      expect(companyContact.dateCreated).to.equal(moment(date));
+    });
+
+    test('can be set using a moment', async () => {
+      const now = moment();
+      companyContact.dateCreated = now;
+
+      expect(companyContact.dateCreated).to.equal(now);
+    });
+
+    test('throws for an invalid string', async () => {
+      const dateString = 'not a date';
+
+      expect(() => {
+        companyContact.dateCreated = dateString;
+      }).to.throw();
+    });
+
+    test('throws for a boolean value', async () => {
+      expect(() => {
+        companyContact.dateCreated = true;
+      }).to.throw();
+    });
+
+    test('allows null', async () => {
+      companyContact.dateCreated = null;
+      expect(companyContact.dateCreated).to.be.null();
+    });
+  });
+
+  experiment('.dateUpdated', () => {
+    test('converts an ISO date string to a moment internally', async () => {
+      const dateString = '2020-01-20T14:51:42.024Z';
+      companyContact.dateUpdated = dateString;
+
+      expect(companyContact.dateUpdated).to.equal(moment(dateString));
+    });
+
+    test('converts a JS Date to a moment internally', async () => {
+      const date = new Date();
+      companyContact.dateUpdated = date;
+
+      expect(companyContact.dateUpdated).to.equal(moment(date));
+    });
+
+    test('can be set using a moment', async () => {
+      const now = moment();
+      companyContact.dateUpdated = now;
+
+      expect(companyContact.dateUpdated).to.equal(now);
+    });
+
+    test('throws for an invalid string', async () => {
+      const dateString = 'not a date';
+
+      expect(() => {
+        companyContact.dateUpdated = dateString;
+      }).to.throw();
+    });
+
+    test('throws for a boolean value', async () => {
+      expect(() => {
+        companyContact.dateUpdated = true;
+      }).to.throw();
+    });
+
+    test('allows null', async () => {
+      companyContact.dateUpdated = null;
+      expect(companyContact.dateUpdated).to.be.null();
+    });
+  });
+
+  experiment('.contact', () => {
+    test('can be set to a Contact instance', async () => {
+      const contact = new Contact(uuid());
+      companyContact.contact = contact;
+      expect(companyContact.contact.id).to.equal(contact.id);
+    });
+
+    test('can be set to null', async () => {
+      companyContact.contact = null;
+      expect(companyContact.contact).to.equal(null);
+    });
+
+    test('throws for an invalid value', async () => {
+      expect(() => {
+        companyContact.contact = false;
+      }).to.throw();
+    });
+  });
+
+  experiment('.role', () => {
+    test('can be set to a ContactRole instance', async () => {
+      const role = new ContactRole(uuid());
+      companyContact.role = role;
+      expect(companyContact.role.id).to.equal(role.id);
+    });
+
+    test('can be set to null', async () => {
+      companyContact.role = null;
+      expect(companyContact.role).to.equal(null);
+    });
+
+    test('throws for an invalid value', async () => {
+      expect(() => {
+        companyContact.role = false;
+      }).to.throw();
     });
   });
 });

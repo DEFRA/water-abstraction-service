@@ -1,72 +1,66 @@
 'use strict';
 
-const DateRange = require('./date-range');
-const Contact = require('./contact-v2');
-
 const validators = require('./validators');
-
 const Model = require('./model');
-
-const ROLE_NAMES = ['licenceHolder', 'billing'];
+const Contact = require('./contact-v2');
+const ContactRole = require('./contact-role');
 
 class CompanyContact extends Model {
-  /**
-   * Valid date range
-   * @return {DateRange}
-   */
-  set dateRange (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
-    this._dateRange = dateRange;
+  get companyId () { return this._companyId; }
+  set companyId (companyId) {
+    validators.assertId(companyId);
+    this._companyId = companyId;
   }
 
-  get dateRange () {
-    return this._dateRange;
+  get contactId () { return this._contactId; }
+  set contactId (contactId) {
+    validators.assertId(contactId);
+    this._contactId = contactId;
   }
 
-  /**
-   * Sets the contact
-   * @param {Contact} contact
-   */
-  set contact (contact) {
-    validators.assertIsInstanceOf(contact, Contact);
-    this._contact = contact;
+  get roleId () { return this._roleId; }
+  set roleId (roleId) {
+    validators.assertId(roleId);
+    this._roleId = roleId;
   }
 
-  /**
-   * Gets the contact
-   * @return {Contact}
-   */
-  get contact () {
-    return this._contact;
-  }
-
-  set emailAddress (emailAddress) {
-    validators.assertNullableEmailAddress(emailAddress);
-    this._emailAddress = emailAddress;
-  }
-
-  get emailAddress () {
-    return this._emailAddress;
-  }
-
-  set roleName (roleName) {
-    validators.assertEnum(roleName, ROLE_NAMES);
-    this._roleName = roleName;
-  }
-
-  get roleName () {
-    return this._roleName;
-  }
-
+  get isDefault () { return this._isDefault; }
   set isDefault (isDefault) {
     validators.assertIsBoolean(isDefault);
     this._isDefault = isDefault;
   }
 
-  get isDefault () {
-    return this._isDefault;
+  get startDate () { return this._startDate; }
+  set startDate (startDate) {
+    this._startDate = this.getDateOrThrow(startDate);
+  }
+
+  get endDate () { return this._endDate; }
+  set endDate (endDate) {
+    this._endDate = this.getDateTimeFromValue(endDate);
+  }
+
+  get dateCreated () { return this._dateCreated; }
+  set dateCreated (dateCreated) {
+    this._dateCreated = this.getDateTimeFromValue(dateCreated);
+  }
+
+  get dateUpdated () { return this._dateUpdated; }
+  set dateUpdated (dateUpdated) {
+    this._dateUpdated = this.getDateTimeFromValue(dateUpdated);
+  }
+
+  get contact () { return this._contact; }
+  set contact (contact) {
+    validators.assertIsNullableInstanceOf(contact, Contact);
+    this._contact = contact;
+  }
+
+  get role () { return this._role; }
+  set role (role) {
+    validators.assertIsNullableInstanceOf(role, ContactRole);
+    this._role = role;
   }
 }
 
 module.exports = CompanyContact;
-module.exports.ROLE_NAMES = ROLE_NAMES;

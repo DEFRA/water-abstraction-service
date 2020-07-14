@@ -13,3 +13,8 @@ exports.LOSSES = {
   veryLow: 'very low',
   nonChargeable: 'non-chargeable'
 };
+
+exports.CONTACT_ROLES = {
+  billing: 'billing',
+  licenceHolder: 'licenceHolder'
+};

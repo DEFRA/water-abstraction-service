@@ -1,19 +1,28 @@
+'use strict';
+
 const CompanyContact = require('../models/company-contact');
-const DateRange = require('../models/date-range');
-
+const contactRoleMapper = require('./contact-role');
 const contactMapper = require('./contact');
-const { pick } = require('lodash');
 
-const crmToModel = row => {
-  const companyContact = new CompanyContact(row.companyContactId);
-  companyContact.fromHash({
-    ...pick(row, ['emailAddress', 'isDefault']),
-    dateRange: new DateRange(row.startDate, row.endDate)
-  });
+const crmToModel = entity => {
+  const companyContact = new CompanyContact(entity.companyContactId);
+  companyContact.pickFrom(entity, [
+    'contactId',
+    'roleId',
+    'isDefault',
+    'startDate',
+    'endDate',
+    'dateCreated',
+    'dateUpdated'
+  ]);
 
-  if (row.role) companyContact.roleName = row.role.name;
-  if (row.contact) companyContact.contact = contactMapper.crmToModel(row.contact);
+  if (entity.role) {
+    companyContact.role = contactRoleMapper.crmToModel(entity.role);
+  }
 
+  if (entity.contact) {
+    companyContact.contact = contactMapper.crmToModel(entity.contact);
+  }
   return companyContact;
 };
 

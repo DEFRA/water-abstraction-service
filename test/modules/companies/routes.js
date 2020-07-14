@@ -8,6 +8,7 @@ const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 
 const routes = require('../../../src/modules/companies/routes');
+const testHelpers = require('../../test-helpers');
 const { COMPANY_TYPES, CONTACT_TYPES } = require('../../../src/modules/companies/validators/invoice-accounts');
 
 /**
@@ -241,37 +242,63 @@ experiment('modules/companies/routes', () => {
         const response = await server.inject(request);
         expect(response.statusCode).to.equal(400);
       });
-    });
 
-    CONTACT_TYPES.forEach(type => {
-      test(`returns a 200 when type is ${type}`, async () => {
+      CONTACT_TYPES.forEach(type => {
+        test(`returns a 200 when type is ${type}`, async () => {
+          request.payload.contact = {
+            type
+          };
+          const response = await server.inject(request);
+          expect(response.statusCode).to.equal(200);
+        });
+      });
+
+      test('returns a 400 if type is an unexpected value', async () => {
         request.payload.contact = {
-          type
+          type: 'human',
+          title: 'Sir',
+          firstName: 'Johnny',
+          lastName: 'Test'
         };
         const response = await server.inject(request);
-        expect(response.statusCode).to.equal(200);
+        expect(response.statusCode).to.equal(400);
+      });
+
+      test('returns a 200 if contains data', async () => {
+        request.payload.contact = {
+          type: 'person',
+          title: 'Sir',
+          firstName: 'Johnny',
+          lastName: 'Test',
+          department: 'accounts payable'
+        };
       });
     });
+  });
 
-    test('returns a 400 if type is an unexpected value', async () => {
-      request.payload.contact = {
-        type: 'human',
-        title: 'Sir',
-        firstName: 'Johnny',
-        lastName: 'Test'
+  experiment('getCompanyContacts', () => {
+    let server;
+
+    beforeEach(async () => {
+      server = testHelpers.createServerForRoute(routes.getCompanyContacts);
+    });
+
+    test('returns a 400 response if the company id is not a uuid', async () => {
+      const request = {
+        method: 'GET',
+        url: '/water/1.0/companies/1234/contacts'
       };
+
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
-    test('returns a 200 if contains data', async () => {
-      request.payload.contact = {
-        type: 'person',
-        title: 'Sir',
-        firstName: 'Johnny',
-        lastName: 'Test',
-        department: 'accounts payable'
+    test('accepts a valid uuid for the company id', async () => {
+      const request = {
+        method: 'GET',
+        url: '/water/1.0/companies/ffffe5d7-b2d4-4f88-b2f5-d0b497bc276f/contacts'
       };
+
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(200);
     });

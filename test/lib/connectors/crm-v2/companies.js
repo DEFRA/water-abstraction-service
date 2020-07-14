@@ -169,4 +169,30 @@ experiment('lib/connectors/crm-v2/companies', () => {
       });
     });
   });
+
+  experiment('.getCompanyContacts', () => {
+    let response;
+    let testResponse;
+
+    beforeEach(async () => {
+      testResponse = [
+        { companyContactId: '1' },
+        { companyContactId: '2' },
+        { companyContactId: '3' }
+
+      ];
+      serviceRequest.get.resolves(testResponse);
+
+      response = await companyConnector.getCompanyContacts('test-company-id');
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url] = serviceRequest.get.lastCall.args;
+      expect(url).to.equal('http://test.defra/companies/test-company-id/contacts');
+    });
+
+    test('returns the result from the crm', async () => {
+      expect(response).to.equal(testResponse);
+    });
+  });
 });

@@ -12,6 +12,7 @@ const helpers = require('@envage/water-abstraction-helpers');
 const transactionsProcessor = require('./transactions-processor');
 
 const mappers = require('../../mappers');
+const contactMapper = require('../../../../lib/mappers/contact');
 
 // Services
 const chargeVersionService = require('../../services/charge-version-service');
@@ -51,7 +52,7 @@ const createInvoiceLicence = (company, chargeVersion, licenceHolderRole) => {
   return invoiceLicence.fromHash({
     licence: chargeVersion.licence,
     company: mappers.company.crmToModel(company),
-    contact: mappers.contact.crmToModel(licenceHolderRole.contact),
+    contact: contactMapper.crmToModel(licenceHolderRole.contact),
     address: mappers.address.crmToModel(licenceHolderRole.address)
   });
 };

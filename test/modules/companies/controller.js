@@ -8,11 +8,13 @@ const {
   test
 } = exports.lab = require('@hapi/lab').script();
 
+const uuid = require('uuid/v4');
 const sandbox = require('sinon').createSandbox();
 
 const returnsConnector = require('../../../src/lib/connectors/returns');
 const documentsConnector = require('../../../src/lib/connectors/crm/documents');
 const companiesService = require('../../../src/lib/services/companies-service');
+const companiesContactsService = require('../../../src/lib/services/company-contacts');
 
 const invoiceAccountsService = require('../../../src/lib/services/invoice-accounts-service');
 
@@ -67,6 +69,7 @@ experiment('modules/companies/controller', () => {
     sandbox.stub(invoiceAccountsService, 'createInvoiceAccount');
     sandbox.stub(invoiceAccountsService, 'createInvoiceAccountAddress');
     sandbox.stub(invoiceAccountsService, 'getNewEntities');
+    sandbox.stub(companiesContactsService, 'getCompanyContacts');
   });
 
   afterEach(async () => {
@@ -327,6 +330,66 @@ experiment('modules/companies/controller', () => {
       expect(err.isBoom).to.be.true();
       expect(err.output.statusCode).to.equal(404);
       expect(err.message).to.equal('oops!');
+    });
+  });
+
+  experiment('.getCompanyContacts', () => {
+    let response;
+    let companyId;
+
+    experiment('when no data is found', () => {
+      beforeEach(async () => {
+        companyId = uuid();
+        companiesContactsService.getCompanyContacts.rejects({
+          statusCode: 404,
+          message: 'Nope'
+        });
+
+        const request = {
+          params: {
+            companyId
+          }
+        };
+
+        response = await controller.getCompanyContacts(request);
+      });
+
+      test('the company id is passed to the service', async () => {
+        const [id] = companiesContactsService.getCompanyContacts.lastCall.args;
+        expect(id).to.equal(companyId);
+      });
+
+      test('a Boom notFound error is returned', async () => {
+        expect(response.output.payload.statusCode).to.equal(404);
+        expect(response.output.payload.message).to.equal('Nope');
+      });
+    });
+
+    experiment('when the data is found', () => {
+      beforeEach(async () => {
+        companyId = uuid();
+        companiesContactsService.getCompanyContacts.resolves([
+          { companyContactId: 'test-company-contact-id' }
+        ]);
+
+        const request = {
+          params: {
+            companyId
+          }
+        };
+
+        response = await controller.getCompanyContacts(request);
+      });
+
+      test('the company id is passed to the service', async () => {
+        const [id] = companiesContactsService.getCompanyContacts.lastCall.args;
+        expect(id).to.equal(companyId);
+      });
+
+      test('the array of items is wrapped in the data envelope', async () => {
+        expect(response.data.length).to.equal(1);
+        expect(response.data[0].companyContactId).to.equal('test-company-contact-id');
+      });
     });
   });
 });

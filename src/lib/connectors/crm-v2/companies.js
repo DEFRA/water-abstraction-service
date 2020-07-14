@@ -50,8 +50,18 @@ const createCompanyContact = async (companyId, companyContact) => {
   return serviceRequest.post(uri, { body: companyContact });
 };
 
-exports.getCompany = getCompany;
+/**
+ * Get the CompanyContacts for a given company id
+ *
+ * @param {String} companyId The uuid of the company to retrieve the contacts for
+ */
+const getCompanyContacts = companyId => {
+  return serviceRequest.get(getUri(companyId, 'contacts'));
+};
+
 exports.createCompany = createCompany;
 exports.getCompanyAddresses = getCompanyAddresses;
 exports.createCompanyAddress = createCompanyAddress;
 exports.createCompanyContact = createCompanyContact;
+exports.getCompany = getCompany;
+exports.getCompanyContacts = getCompanyContacts;
