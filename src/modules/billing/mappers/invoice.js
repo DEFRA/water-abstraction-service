@@ -6,7 +6,7 @@ const Invoice = require('../../../lib/models/invoice');
 const InvoiceAccount = require('../../../lib/models/invoice-account');
 const FinancialYear = require('../../../lib/models/financial-year');
 
-const invoiceAccount = require('./invoice-account');
+const invoiceAccount = require('../../../lib/mappers/invoice-account');
 const invoiceLicence = require('./invoice-licence');
 
 /**

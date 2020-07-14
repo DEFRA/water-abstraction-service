@@ -3,12 +3,21 @@ const documentsConnector = require('../../lib/connectors/crm/documents');
 
 const documentsHelper = require('./lib/documents');
 const returnsHelper = require('./lib/returns');
-const invoiceAccountsHelper = require('./lib/invoice-accounts');
-
-const crmConnectors = require('../../lib/connectors/crm-v2');
+const companiesService = require('../../lib/services/companies-service');
+const invoiceAccountsService = require('../../lib/services/invoice-accounts-service');
 const Boom = require('@hapi/boom');
+const { NotFoundError } = require('../../lib/errors');
 
-const { isEmpty } = require('lodash');
+// caters for error triggered in this service and 404s returned from the CRM
+const isNotFoundError = err => err instanceof NotFoundError || err.statusCode === 404;
+
+const mapErrorResponse = error => {
+  if (isNotFoundError) {
+    return Boom.notFound(error.message);
+  }
+  // Unexpected error
+  throw error;
+};
 
 const rowMapper = ret => {
   const { purposes = [] } = ret.metadata;
@@ -54,32 +63,38 @@ const getReturns = async (request, h) => {
  * Gets a company for the specified ID
  */
 const getCompany = async (request, h) => {
-  const { companyId } = request.params;
-  const company = await crmConnectors.companies.getCompany(companyId);
-  if (company) return company;
-  throw Boom.notFound(`Company ${companyId} not found`);
+  try {
+    return companiesService.getCompany(request.params.companyId);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
 };
 
 /**
  * Gets all addresses for a company
  */
 const getCompanyAddresses = async (request, h) => {
-  const { companyId } = request.params;
-  const companyAddresses = await crmConnectors.companies.getCompanyAddresses(companyId);
-  if (!isEmpty(companyAddresses)) return companyAddresses;
-  throw Boom.notFound(`Addresses for company ${companyId} not found`);
+  try {
+    return companiesService.getCompanyAddresses(request.params.companyId);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
 };
-
 /**
  * Creates new agent company, address, and/or contact, as required
  * Creates new invoice account and links relevant roles to it
  */
 const createCompanyInvoiceAccount = async (request, h) => {
-  const { address, agent, contact } = await invoiceAccountsHelper.getInvoiceAccountEntities(request);
+  try {
+    const { address, agent, contact } = await invoiceAccountsService.getInvoiceAccountEntities(request);
+    const invoiceAccount = await invoiceAccountsService.createInvoiceAccount(request);
 
-  const invoiceAccount = await invoiceAccountsHelper.createInvoiceAccountAndRoles(request, address, agent, contact);
+    await invoiceAccountsService.createInvoiceAccountAddress(request, invoiceAccount, address, agent, contact);
 
-  return invoiceAccountsHelper.getNewEntities(invoiceAccount, address, agent, contact);
+    return invoiceAccountsService.getNewEntities(invoiceAccount, address, agent, contact);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
 };
 
 exports.getReturns = getReturns;

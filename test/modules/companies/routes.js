@@ -166,8 +166,8 @@ experiment('modules/companies/routes', () => {
 
       test('returns a 200 if it contains data', async () => {
         request.payload.address = {
-          address2: '11',
-          address4: 'Test Lane',
+          addressLine2: '11',
+          addressLine4: 'Test Lane',
           postcode: 'T1 1TT',
           country: 'UK'
         };

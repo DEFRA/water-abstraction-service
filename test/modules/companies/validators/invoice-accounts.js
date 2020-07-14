@@ -36,8 +36,8 @@ experiment('modules/companies/validators/invoice-accounts', () => {
       test('other address data must not be present', () => {
         const address = {
           addressId: uuid(),
-          address3: '123',
-          address4: 'Assertion Avenue',
+          addressLine3: '123',
+          addressLine4: 'Assertion Avenue',
           town: 'Teston-super-mare',
           postcode: 'TT1 1TT'
         };
@@ -50,10 +50,10 @@ experiment('modules/companies/validators/invoice-accounts', () => {
       let address;
       beforeEach(() => {
         address = {
-          address1: 'First Floor',
-          address2: 'Test HQ',
-          address3: '123',
-          address4: 'Assertion Avenue',
+          addressLine1: 'First Floor',
+          addressLine2: 'Test HQ',
+          addressLine3: '123',
+          addressLine4: 'Assertion Avenue',
           town: 'Teston-super-mare',
           county: 'Testingshire',
           country: 'UK',
@@ -62,8 +62,8 @@ experiment('modules/companies/validators/invoice-accounts', () => {
         };
       });
 
-      experiment('address1, address2, address3, address4, town, county', () => {
-        const keys = ['address1', 'address2', 'address3', 'address4', 'town', 'county'];
+      experiment('addressLine1, addressLine2, addressLine3, addressLine4, town, county', () => {
+        const keys = ['addressLine1', 'addressLine2', 'addressLine3', 'addressLine4', 'town', 'county'];
 
         keys.forEach(key => {
           test(`${key}: is optional`, async () => {
@@ -81,18 +81,18 @@ experiment('modules/companies/validators/invoice-accounts', () => {
         });
       });
 
-      test('at least 1 of address2 and address3 are required', async () => {
-        address.address2 = '';
-        address.address3 = '';
+      test('at least 1 of addressLine2 and addressLine3 are required', async () => {
+        address.addressLine2 = '';
+        address.addressLine3 = '';
         const { error } = validators.validateAddress(address);
-        expect(error.details[0].message).to.equal('"address2" is not allowed to be empty');
+        expect(error.details[0].message).to.equal('"addressLine2" is not allowed to be empty');
       });
 
-      test('at least 1 of address4 and town are required', async () => {
-        address.address4 = '';
+      test('at least 1 of addressLine4 and town are required', async () => {
+        address.addressLine4 = '';
         address.town = '';
         const { error } = validators.validateAddress(address);
-        expect(error.details[0].message).to.equal('"address4" is not allowed to be empty');
+        expect(error.details[0].message).to.equal('"addressLine4" is not allowed to be empty');
       });
 
       experiment('country', () => {

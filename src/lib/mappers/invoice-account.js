@@ -1,6 +1,6 @@
 'use strict';
 
-const InvoiceAccount = require('../../../lib/models/invoice-account');
+const InvoiceAccount = require('../models/invoice-account');
 
 const company = require('./company');
 const invoiceAccountAddress = require('./invoice-account-address');
@@ -14,12 +14,18 @@ const invoiceAccountAddress = require('./invoice-account-address');
 const crmToModel = (invoiceAccount) => {
   const invoiceAccountModel = new InvoiceAccount(invoiceAccount.invoiceAccountId);
   invoiceAccountModel.fromHash({
-    accountNumber: invoiceAccount.invoiceAccountNumber,
-    company: company.crmToModel(invoiceAccount.company)
+    accountNumber: invoiceAccount.invoiceAccountNumber || invoiceAccount.accountNumber,
+    agentCompany: company.crmToModel(invoiceAccount.agentCompany)
   });
+
+  if (invoiceAccount.company) {
+    invoiceAccountModel.company = company.crmToModel(invoiceAccount.company);
+  }
+
   if (invoiceAccount.invoiceAccountAddresses) {
     invoiceAccountModel.invoiceAccountAddresses = invoiceAccount.invoiceAccountAddresses.map(invoiceAccountAddress.crmToModel);
   }
+
   return invoiceAccountModel;
 };
 

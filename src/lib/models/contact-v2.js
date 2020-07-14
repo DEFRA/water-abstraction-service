@@ -1,9 +1,10 @@
 'use strict';
 
-const { assertNullableString, assertNullableEnum } = require('./validators');
+const { assertNullableString, assertNullableEnum, assertEnum } = require('./validators');
 const Model = require('./model');
 
 const CONTACT_TYPES = ['person', 'department'];
+const DATA_SOURCE_TYPES = ['nald', 'wrls'];
 
 class Contact extends Model {
   set initials (initials) {
@@ -13,6 +14,15 @@ class Contact extends Model {
 
   get initials () {
     return this._initials;
+  }
+
+  set middleInitials (middleInitials) {
+    assertNullableString(middleInitials);
+    this._middleInitials = middleInitials;
+  }
+
+  get middleInitials () {
+    return this._middleInitials;
   }
 
   set title (title) {
@@ -69,12 +79,30 @@ class Contact extends Model {
     return this._type;
   }
 
+  set dataSource (dataSource) {
+    assertEnum(dataSource, DATA_SOURCE_TYPES);
+    this._dataSource = dataSource;
+  }
+
+  get dataSource () {
+    return this._dataSource;
+  }
+
   /**
    * Gets the contact's full name including title, first name/initial, surname and suffix
    * @return {String}
    */
   get fullName () {
-    const parts = [this._title, this._initials || this._firstName, this._lastName];
+    let initials;
+    if (this._dataSource === 'nald') {
+      initials = this._initials;
+    } else {
+      initials = this._middleInitials
+        ? `${this._firstName.slice(0, 1)} ${this._middleInitials}`
+        : null;
+    }
+
+    const parts = [this._title, initials || this._firstName, this._lastName];
     const name = parts.filter(x => x).join(' ');
     return this._suffix ? `${name}, ${this._suffix}` : name;
   }

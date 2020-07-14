@@ -6,10 +6,10 @@ const { COMPANY_TYPES, CONTACT_TYPES } = require('./validators/invoice-accounts'
 
 const addressSchema = Joi.object({
   addressId: Joi.string().guid().optional(),
-  address1: Joi.string().optional(),
-  address2: Joi.string().optional(),
-  address3: Joi.string().optional(),
-  address4: Joi.string().optional(),
+  addressLine1: Joi.string().optional(),
+  addressLine2: Joi.string().optional(),
+  addressLine3: Joi.string().optional(),
+  addressLine4: Joi.string().optional(),
   town: Joi.string().optional(),
   county: Joi.string().optional(),
   country: Joi.string().optional(),

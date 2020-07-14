@@ -1,7 +1,7 @@
 'use strict';
 
 const { pick, isEmpty } = require('lodash');
-const Address = require('../../../lib/models/address');
+const Address = require('../models/address');
 
 /**
  * Maps address data from CRM to water service Address model
@@ -24,4 +24,13 @@ const crmToModel = data => {
   return address;
 };
 
+const serviceToCrm = addressData => ({
+  ...addressData,
+  address1: addressData.addressLine1,
+  address2: addressData.addressLine2,
+  address3: addressData.addressLine3,
+  address4: addressData.addressLine4
+});
+
 exports.crmToModel = crmToModel;
+exports.serviceToCrm = serviceToCrm;

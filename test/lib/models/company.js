@@ -2,6 +2,8 @@ const { expect } = require('@hapi/code');
 const { experiment, test, fail, beforeEach } = exports.lab = require('@hapi/lab').script();
 
 const Company = require('../../../src/lib/models/company');
+const CompanyAddress = require('../../../src/lib/models/company-address');
+const CompanyContact = require('../../../src/lib/models/company-contact');
 
 const TEST_GUID = '7931b58b-6410-44c0-b0a5-12a1ec14de64';
 const TEST_NAME = 'Big co ltd';
@@ -22,6 +24,16 @@ experiment('lib/models/company model', () => {
     test('can omit the id', async () => {
       const company = new Company();
       expect(company.id).to.be.undefined();
+    });
+
+    test('sets company addresses to an empty array ', async () => {
+      const company = new Company();
+      expect(company.companyAddresses).to.equal([]);
+    });
+
+    test('sets company contacts to an empty array ', async () => {
+      const company = new Company();
+      expect(company.companyContacts).to.equal([]);
     });
   });
 
@@ -81,11 +93,56 @@ experiment('lib/models/company model', () => {
     }
   });
 
+  Company.ORGANISATION_TYPES.forEach(type => {
+    test(`can set/get organisation type to "${type}"`, async () => {
+      company.organisationType = type;
+      expect(company.organisationType).to.equal(type);
+    });
+  });
+
+  test('throws an error if attempting to set invalid organisation type', async () => {
+    try {
+      company.organisationType = 'invalid-type';
+      fail();
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
+  test('can set an array of company address to company addresses array', async () => {
+    const companyAddresses = [new CompanyAddress(), new CompanyAddress()];
+    company.companyAddresses = companyAddresses;
+    expect(company.companyAddresses).to.equal(companyAddresses);
+  });
+
+  test('throws an error if attempting to set an array of the wrong types', async () => {
+    try {
+      company.companyAddresses = [new CompanyContact()];
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
+  test('can set an array of company contacts to company contacts array', async () => {
+    const companyContacts = [new CompanyContact(), new CompanyContact()];
+    company.companyContacts = companyContacts;
+    expect(company.companyContacts).to.equal(companyContacts);
+  });
+
+  test('throws an error if attempting to set an array of the wrong types', async () => {
+    try {
+      company.companyContacts = [new CompanyAddress()];
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
   experiment('when company is populated', () => {
     beforeEach(async () => {
       company.id = TEST_GUID;
       company.name = TEST_NAME;
       company.type = Company.TYPE_PERSON;
+      company.organisationType = 'individual';
     });
 
     test('.toJSON returns all data', async () => {
@@ -93,7 +150,10 @@ experiment('lib/models/company model', () => {
       expect(data).to.equal({
         id: TEST_GUID,
         name: TEST_NAME,
-        type: Company.TYPE_PERSON
+        type: Company.TYPE_PERSON,
+        organisationType: 'individual',
+        companyAddresses: [],
+        companyContacts: []
       });
     });
   });

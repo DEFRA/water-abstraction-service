@@ -97,11 +97,17 @@ const crmData = {
       contact: null
     }],
     company: {
-      companyId
+      companyId,
+      name: 'company name',
+      type: 'organisation',
+      organisationType: null
     }
   },
   company: {
-    companyId
+    companyId,
+    name: 'company name',
+    type: 'organisation',
+    organisationType: null
   }
 };
 

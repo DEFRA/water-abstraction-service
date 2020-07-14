@@ -46,11 +46,9 @@ experiment('lib/models/invoice-account-address', () => {
       expect(func).to.throw();
     });
 
-    test('throws an error if set to null', async () => {
-      const func = () => {
-        invoiceAccountAddress.address = null;
-      };
-      expect(func).to.throw();
+    test('can be set to null', async () => {
+      invoiceAccountAddress.address = null;
+      expect(invoiceAccountAddress.address).to.equal(null);
     });
   });
 

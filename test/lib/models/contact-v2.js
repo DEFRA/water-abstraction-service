@@ -5,9 +5,10 @@ const Contact = require('../../../src/lib/models/contact-v2');
 
 const data = {
   id: '7931b58b-6410-44c0-b0a5-12a1ec14de64',
-  initials: 'A B C',
   title: 'Captain',
   firstName: 'John',
+  initials: 'A B C',
+  middleInitials: 'B C',
   lastName: 'Doe',
   suffix: 'PhD',
   department: 'Naval Reserves'
@@ -47,6 +48,25 @@ experiment('lib/models/contact-v2 model', () => {
   test('setting initials to a type other than string/null throws an error', async () => {
     try {
       contact.initials = 123;
+      fail();
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
+  test('can set/get middleInitials to a string', async () => {
+    contact.middleInitials = data.middleInitials;
+    expect(contact.middleInitials).to.equal(data.middleInitials);
+  });
+
+  test('can set/get middleInitials to null', async () => {
+    contact.middleInitials = null;
+    expect(contact.middleInitials).to.equal(null);
+  });
+
+  test('setting middleInitials to a type other than string/null throws an error', async () => {
+    try {
+      contact.middleInitials = 123;
       fail();
     } catch (err) {
       expect(err).to.be.an.error();
@@ -172,6 +192,34 @@ experiment('lib/models/contact-v2 model', () => {
     }
   });
 
+  test('can set/get dataSource to a "wrls"', async () => {
+    contact.dataSource = 'wrls';
+    expect(contact.dataSource).to.equal('wrls');
+  });
+
+  test('can set/get dataSource to a "nald"', async () => {
+    contact.dataSource = 'nald';
+    expect(contact.dataSource).to.equal('nald');
+  });
+
+  test('cannot set/get dataSource to null', async () => {
+    try {
+      contact.dataSource = null;
+      fail();
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
+  test('setting dataSource to anything else', async () => {
+    try {
+      contact.dataSource = 'somewhere else';
+      fail();
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
   experiment('construction', () => {
     test('can include an id', async () => {
       const contact = new Contact(data.id);
@@ -191,20 +239,43 @@ experiment('lib/models/contact-v2 model', () => {
       contact.title = data.title;
       contact.firstName = data.firstName;
       contact.lastName = data.lastName;
+      contact.dataSource = 'nald';
     });
 
-    test('full name returns the full name', async () => {
-      expect(contact.fullName).to.equal('Captain A B C Doe');
+    experiment('when data source is nald', () => {
+      test('full name returns the full name', async () => {
+        expect(contact.fullName).to.equal('Captain A B C Doe');
+      });
+
+      test('full name returns the full name when initials are null', async () => {
+        contact.initials = null;
+        expect(contact.fullName).to.equal('Captain John Doe');
+      });
+
+      test('full name returns the suffix when it is not null', async () => {
+        contact.suffix = data.suffix;
+        expect(contact.fullName).to.equal('Captain A B C Doe, PhD');
+      });
     });
 
-    test('full name returns the full name when initials are null', async () => {
-      contact.initials = null;
-      expect(contact.fullName).to.equal('Captain John Doe');
-    });
+    experiment('when data source is wrls', () => {
+      beforeEach(() => {
+        contact.middleInitials = data.middleInitials;
+        contact.dataSource = 'wrls';
+      });
+      test('full name returns the full name', async () => {
+        expect(contact.fullName).to.equal('Captain J B C Doe');
+      });
 
-    test('full name returns the suffix when it is not null', async () => {
-      contact.suffix = data.suffix;
-      expect(contact.fullName).to.equal('Captain A B C Doe, PhD');
+      test('full name returns the full name when initials are null', async () => {
+        contact.middleInitials = null;
+        expect(contact.fullName).to.equal('Captain John Doe');
+      });
+
+      test('full name returns the suffix when it is not null', async () => {
+        contact.suffix = data.suffix;
+        expect(contact.fullName).to.equal('Captain J B C Doe, PhD');
+      });
     });
 
     test('.toJSON returns all data', async () => {
@@ -215,7 +286,8 @@ experiment('lib/models/contact-v2 model', () => {
         initials: data.initials,
         firstName: data.firstName,
         lastName: data.lastName,
-        fullName: 'Captain A B C Doe'
+        fullName: 'Captain A B C Doe',
+        dataSource: 'nald'
       });
     });
   });

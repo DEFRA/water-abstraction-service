@@ -28,7 +28,7 @@ class InvoiceAccountAddress extends Model {
    * @param {Address} address
    */
   set address (address) {
-    validators.assertIsInstanceOf(address, Address);
+    validators.assertIsNullableInstanceOf(address, Address);
     this._address = address;
   }
 

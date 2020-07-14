@@ -12,10 +12,11 @@ const sandbox = require('sinon').createSandbox();
 
 const returnsConnector = require('../../../src/lib/connectors/returns');
 const documentsConnector = require('../../../src/lib/connectors/crm/documents');
-const crmConnectors = require('../../../src/lib/connectors/crm-v2');
+const companiesService = require('../../../src/lib/services/companies-service');
 
-const invoiceAccountsHelper = require('../../../src/modules/companies/lib/invoice-accounts');
+const invoiceAccountsService = require('../../../src/lib/services/invoice-accounts-service');
 
+const { NotFoundError } = require('../../../src/lib/errors');
 const controller = require('../../../src/modules/companies/controller');
 
 const documents = [
@@ -59,12 +60,13 @@ experiment('modules/companies/controller', () => {
     sandbox.stub(documentsConnector, 'findAll').resolves(documents);
     sandbox.stub(returnsConnector.returns, 'findAll').resolves(returns);
 
-    sandbox.stub(crmConnectors.companies, 'getCompany').resolves({ companyId: 'test-company-id' });
-    sandbox.stub(crmConnectors.companies, 'getCompanyAddresses').resolves([{ companyAddressId: 'test-company-address-id' }]);
+    sandbox.stub(companiesService, 'getCompany').resolves({ companyId: 'test-company-id' });
+    sandbox.stub(companiesService, 'getCompanyAddresses').resolves([{ companyAddressId: 'test-company-address-id' }]);
 
-    sandbox.stub(invoiceAccountsHelper, 'getInvoiceAccountEntities');
-    sandbox.stub(invoiceAccountsHelper, 'createInvoiceAccountAndRoles');
-    sandbox.stub(invoiceAccountsHelper, 'getNewEntities');
+    sandbox.stub(invoiceAccountsService, 'getInvoiceAccountEntities');
+    sandbox.stub(invoiceAccountsService, 'createInvoiceAccount');
+    sandbox.stub(invoiceAccountsService, 'createInvoiceAccountAddress');
+    sandbox.stub(invoiceAccountsService, 'getNewEntities');
   });
 
   afterEach(async () => {
@@ -193,7 +195,7 @@ experiment('modules/companies/controller', () => {
     });
 
     test('calls the company connector with company id', () => {
-      expect(crmConnectors.companies.getCompany.calledWith(
+      expect(companiesService.getCompany.calledWith(
         request.params.companyId
       )).to.be.true();
     });
@@ -202,14 +204,21 @@ experiment('modules/companies/controller', () => {
       expect(result).to.equal({ companyId: 'test-company-id' });
     });
 
-    test('throws a Boom not found error if a company is not found', async () => {
-      crmConnectors.companies.getCompany.resolves();
+    test('returns a Boom not found error if error is thrown', async () => {
+      companiesService.getCompany.throws(new NotFoundError('oops!'));
+      const err = await controller.getCompany(request);
+      expect(err.isBoom).to.be.true();
+      expect(err.output.statusCode).to.equal(404);
+      expect(err.message).to.equal('oops!');
+    });
+
+    test('throws error if unexpected error is thrown', async () => {
+      companiesService.getCompany.throws(new Error('oh no!'));
       try {
         await controller.getCompany(request);
       } catch (err) {
-        expect(err.isBoom).to.be.true();
-        expect(err.output.statusCode).to.equal(404);
-        expect(err.message).to.equal('Company test-company-id not found');
+        expect(err.isBoom).to.be.undefined();
+        expect(err.message).to.equal('oh no!');
       }
     });
   });
@@ -227,7 +236,7 @@ experiment('modules/companies/controller', () => {
     });
 
     test('calls the company connector with company id', () => {
-      expect(crmConnectors.companies.getCompanyAddresses.calledWith(
+      expect(companiesService.getCompanyAddresses.calledWith(
         request.params.companyId
       )).to.be.true();
     });
@@ -236,15 +245,18 @@ experiment('modules/companies/controller', () => {
       expect(result).to.equal([{ companyAddressId: 'test-company-address-id' }]);
     });
 
-    test('throws a Boom not found error if no addresses found', async () => {
-      crmConnectors.companies.getCompanyAddresses.resolves([]);
-      try {
-        await controller.getCompanyAddresses(request);
-      } catch (err) {
-        expect(err.isBoom).to.be.true();
-        expect(err.output.statusCode).to.equal(404);
-        expect(err.message).to.equal('Addresses for company test-company-id not found');
-      }
+    test('if no addresses are found, returns the output of the crm call', async () => {
+      companiesService.getCompanyAddresses.resolves([]);
+      result = await controller.getCompanyAddresses(request);
+      expect(result).to.equal([]);
+    });
+
+    test('returns a Boom not found if error is thrown', async () => {
+      companiesService.getCompanyAddresses.throws(new NotFoundError('oops!'));
+      const err = await controller.getCompanyAddresses(request);
+      expect(err.isBoom).to.be.true();
+      expect(err.output.statusCode).to.equal(404);
+      expect(err.message).to.equal('oops!');
     });
   });
 
@@ -255,9 +267,10 @@ experiment('modules/companies/controller', () => {
       agent = { companyId: 'new-agent-company' };
       contact = { contactId: 'new-contact' };
       invoiceAccount = { invoiceAccountId: 'new-invoice-account' };
-      invoiceAccountsHelper.getInvoiceAccountEntities.resolves({ address, agent, contact });
-      invoiceAccountsHelper.createInvoiceAccountAndRoles.resolves(invoiceAccount);
-      invoiceAccountsHelper.getNewEntities.resolves({ invoiceAccount, contact });
+      invoiceAccountsService.getInvoiceAccountEntities.resolves({ address, agent, contact });
+      invoiceAccountsService.createInvoiceAccount.resolves(invoiceAccount);
+      invoiceAccountsService.createInvoiceAccountAddress.resolves();
+      invoiceAccountsService.getNewEntities.resolves({ invoiceAccount, contact });
 
       request = {
         params: {
@@ -274,14 +287,21 @@ experiment('modules/companies/controller', () => {
     });
 
     test('calls getInvoiceAccountEntities helper function with request', () => {
-      expect(invoiceAccountsHelper.getInvoiceAccountEntities.calledWith(
+      expect(invoiceAccountsService.getInvoiceAccountEntities.calledWith(
         request
       )).to.be.true();
     });
 
-    test('calls the createInvoiceAccountAndRoles helper function with correct params', () => {
-      expect(invoiceAccountsHelper.createInvoiceAccountAndRoles.calledWith(
+    test('calls the createInvoiceAccount helper function with correct params', () => {
+      expect(invoiceAccountsService.createInvoiceAccount.calledWith(
+        request
+      )).to.be.true();
+    });
+
+    test('calls the createInvoiceAccountAddress helper function with correct params', () => {
+      expect(invoiceAccountsService.createInvoiceAccountAddress.calledWith(
         request,
+        invoiceAccount,
         address,
         agent,
         contact
@@ -289,7 +309,7 @@ experiment('modules/companies/controller', () => {
     });
 
     test('calls the getNewEntities helper function with correct params', () => {
-      expect(invoiceAccountsHelper.getNewEntities.calledWith(
+      expect(invoiceAccountsService.getNewEntities.calledWith(
         invoiceAccount,
         address,
         agent,
@@ -299,6 +319,14 @@ experiment('modules/companies/controller', () => {
 
     test('returns the return value from the getNewEntities helper function', () => {
       expect(result).to.equal({ invoiceAccount, contact });
+    });
+
+    test('returns  a Boom not found error if error is thrown', async () => {
+      invoiceAccountsService.createInvoiceAccount.throws(new NotFoundError('oops!'));
+      const err = await controller.createCompanyInvoiceAccount(request);
+      expect(err.isBoom).to.be.true();
+      expect(err.output.statusCode).to.equal(404);
+      expect(err.message).to.equal('oops!');
     });
   });
 });
