@@ -63,18 +63,20 @@ const getPurposeUses = async returns => {
  * @return {Promise<Return>}
  */
 const decorateWithCurrentVersion = async ret => {
-  if (ret.status === RETURN_STATUS.completed) {
-    const version = await apiConnector.getCurrentVersion(ret.id);
-    if (version) {
-      let lines;
-      if (!version.nil_return) {
-        lines = await apiConnector.getLines(version.version_id);
-      }
-      ret.returnVersions = [
-        returnVersionMapper.returnsServiceToModel(version, lines)
-      ];
-    }
+  if (ret.status !== RETURN_STATUS.completed) {
+    return ret;
   }
+  // Load current version
+  const version = await apiConnector.getCurrentVersion(ret.id);
+  // Load lines
+  let lines;
+  if (!version.nil_return) {
+    lines = await apiConnector.getLines(version.version_id);
+  }
+  // Map to service models
+  ret.returnVersions = [
+    returnVersionMapper.returnsServiceToModel(version, lines)
+  ];
   return ret;
 };
 
