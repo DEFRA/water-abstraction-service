@@ -3,7 +3,6 @@
 const returnsConnector = require('../../../lib/connectors/returns');
 const waterHelpers = require('@envage/water-abstraction-helpers');
 const { getReturnId } = waterHelpers.returns;
-const { ACCEPTANCE_TEST_SOURCE } = require('./constants');
 const moment = require('moment');
 const FORMAT_ID = '9999999';
 
@@ -25,11 +24,11 @@ const createReturnRow = (licenceRef, cycle, metadata, frequency = 'day', status 
     end_date: cycle.endDate,
     returns_frequency: frequency,
     status,
-    source: ACCEPTANCE_TEST_SOURCE,
     metadata: JSON.stringify(metadata),
     received_date: null,
     return_requirement: FORMAT_ID,
-    due_date: moment().add(1, 'month').format('YYYY-MM-DD')
+    due_date: moment().add(1, 'month').format('YYYY-MM-DD'),
+    is_test: true
   };
 };
 
