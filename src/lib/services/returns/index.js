@@ -68,6 +68,9 @@ const decorateWithCurrentVersion = async ret => {
   }
   // Load current version
   const version = await apiConnector.getCurrentVersion(ret.id);
+  if (!version) {
+    return ret;
+  }
   // Load lines
   let lines;
   if (!version.nil_return) {

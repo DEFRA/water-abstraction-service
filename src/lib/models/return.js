@@ -18,6 +18,11 @@ const RETURN_STATUS = {
 };
 
 class Return extends Model {
+  constructor (id) {
+    super(id);
+    this._returnVersions = [];
+  }
+
   set id (id) {
     validators.assertReturnId(id);
     this._id = id;

@@ -6,6 +6,11 @@ const ReturnLine = require('./return-line');
 const validators = require('./validators');
 
 class ReturnVersion extends Model {
+  constructor (id) {
+    super(id);
+    this._returnLines = [];
+  }
+
   /**
    * Sets return versions
    * @return {Array<ReturnVersion>}
