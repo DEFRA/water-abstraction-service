@@ -277,4 +277,15 @@ experiment('lib/models/return', () => {
       expect(func).to.throw();
     });
   });
+
+  experiment('.RETURN_STATUS', () => {
+    test('defines the return statuses', async () => {
+      const { RETURN_STATUS } = Return;
+      expect(Object.keys(RETURN_STATUS).length).to.equal(4);
+      expect(RETURN_STATUS.completed).to.equal('completed');
+      expect(RETURN_STATUS.due).to.equal('due');
+      expect(RETURN_STATUS.received).to.equal('received');
+      expect(RETURN_STATUS.void).to.equal('void');
+    });
+  });
 });
