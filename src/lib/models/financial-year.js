@@ -1,5 +1,6 @@
 const { range } = require('lodash');
 const moment = require('moment');
+const validators = require('./validators');
 
 class FinancialYear {
   /**
@@ -7,6 +8,7 @@ class FinancialYear {
    * @param {Number} yearEnding The year the financial year ends e.g. 2019 would be the year 01/04/2018 to 31/03/2019
    */
   constructor (yearEnding) {
+    validators.assertPositiveInteger(yearEnding);
     this.yearEnding = yearEnding;
   }
 
@@ -36,6 +38,17 @@ class FinancialYear {
    */
   get end () {
     return moment(`${this.endYear}-03-31`);
+  }
+
+  /**
+   * Checks if this financial year is equal to the one
+   * supplied
+   * @param {FinancialYear} financialYear
+   * @return {Boolean}
+   */
+  isEqualTo (financialYear) {
+    validators.assertIsInstanceOf(financialYear, FinancialYear);
+    return this.yearEnding === financialYear.yearEnding;
   }
 
   /**

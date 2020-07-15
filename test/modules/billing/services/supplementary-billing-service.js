@@ -20,12 +20,14 @@ const supplementaryBillingService = require('../../../../src/modules/billing/ser
 
 const batchId = '398b6f31-ff01-4621-b939-e720f1a77deb';
 const invoiceAccountId = '398b6f31-ff01-4621-b939-e720f1a77deb';
+const invoiceAccountNumber = 'A12345678A';
 
 const createTransactionRow = (index, transactionKey, isCredit = false) => ({
   billingTransactionId: `00000000-0000-0000-0000-00000000000${index}`,
   isCredit,
   transactionKey,
-  billingVolume: []
+  billingVolume: [],
+  isTwoPartTariffSupplementary: false
 });
 
 const createFullTransaction = (...args) => ({
@@ -41,8 +43,11 @@ const createFullTransaction = (...args) => ({
   },
   billingInvoiceLicence: {
     billingInvoiceId: '6046df4e-c5fa-462c-8afb-dee31c88d62d',
+    financialYearEnding: 2020,
+    licenceRef: '01/123/ABC',
     billingInvoice: {
-      invoiceAccountId
+      invoiceAccountId,
+      invoiceAccountNumber
     },
     licence: {
       licenceId: '4b4f2427-984e-48f6-8b20-f17380b870a8',
@@ -99,13 +104,14 @@ const data = {
         postcode: 'TT1 1TT'
       }
     }]
-  }],
-  models: {
-    batch: new Batch(batchId)
-  }
+  }]
 };
 
+const createBatch = () => new Batch(batchId);
+
 experiment('modules/billing/services/supplementary-billing-service', () => {
+  let batch;
+
   beforeEach(async () => {
     sandbox.stub(crmV2Connector.invoiceAccounts, 'getInvoiceAccountsByIds');
     sandbox.stub(batchService, 'getBatchById');
@@ -124,13 +130,12 @@ experiment('modules/billing/services/supplementary-billing-service', () => {
 
   experiment('.processBatch', () => {
     beforeEach(async () => {
+      batch = createBatch();
       newRepos.billingTransactions.findByBatchId.resolves(data.batchTransactions);
       newRepos.billingTransactions.findHistoryByBatchId.resolves(data.historicalTransactions);
       newRepos.billingTransactions.find.resolves(data.creditTransactions);
       crmV2Connector.invoiceAccounts.getInvoiceAccountsByIds.resolves(data.crmResponse);
-      batchService.getBatchById.resolves(
-        data.models.batch
-      );
+      batchService.getBatchById.resolves(batch);
       await supplementaryBillingService.processBatch(data.batchId);
     });
 
@@ -172,7 +177,7 @@ experiment('modules/billing/services/supplementary-billing-service', () => {
           batch = batchService.saveInvoicesToDB.lastCall.args[0];
         });
 
-        test('to the correct batch', async () => {
+        test('to be the correct batch', async () => {
           expect(batch.id).to.equal(batchId);
         });
 
