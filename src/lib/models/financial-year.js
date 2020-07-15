@@ -9,7 +9,7 @@ class FinancialYear {
    */
   constructor (yearEnding) {
     validators.assertPositiveInteger(yearEnding);
-    this.yearEnding = yearEnding;
+    this.yearEnding = parseInt(yearEnding);
   }
 
   /**
