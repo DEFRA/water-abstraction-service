@@ -24,15 +24,16 @@ const invoiceService = require('../../../src/modules/billing/services/invoice-se
 const invoiceLicenceService = require('../../../src/modules/billing/services/invoice-licences-service');
 const batchService = require('../../../src/modules/billing/services/batch-service');
 const transactionsService = require('../../../src/modules/billing/services/transactions-service');
+const billingVolumesService = require('../../../src/modules/billing/services/billing-volumes-service');
 const controller = require('../../../src/modules/billing/controller');
 const mappers = require('../../../src/modules/billing/mappers');
-const { createBatch, createInvoice, createInvoiceLicence, createTransaction } = require('./test-data/test-billing-data');
+const { createBatch, createTransaction, createInvoice, createInvoiceLicence, createFinancialYear, createBillingVolume } = require('./test-data/test-billing-data');
 
 const { NotFoundError } = require('../../../src/lib/errors');
 const { BatchStatusError, TransactionStatusError } = require('../../../src/modules/billing/lib/errors');
 
 experiment('modules/billing/controller', () => {
-  let h, hapiResponseStub, batch, tptBatch, transaction, processingBatch;
+  let h, hapiResponseStub, batch, tptBatch, transaction, billingVolume, processingBatch;
 
   beforeEach(async () => {
     hapiResponseStub = {
@@ -47,10 +48,13 @@ experiment('modules/billing/controller', () => {
     batch.type = 'annual';
 
     transaction = createTransaction();
+    billingVolume = createBillingVolume();
     const invoice = createInvoice({}, [createInvoiceLicence({ transactions: [transaction] })]);
     tptBatch = createBatch({
       type: BATCH_TYPE.twoPartTariff,
-      status: BATCH_STATUS.review
+      status: BATCH_STATUS.review,
+      endYear: createFinancialYear(2018),
+      isSummer: true
     }, invoice);
 
     processingBatch = createBatch({
@@ -67,8 +71,8 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(batchService, 'approveBatch').resolves();
     sandbox.stub(batchService, 'decorateBatchWithTotals').resolves();
     sandbox.stub(batchService, 'getMostRecentLiveBatchByRegion').resolves();
-    sandbox.stub(batchService, 'deleteAccountFromBatch').resolves();
     sandbox.stub(batchService, 'approveTptBatchReview').resolves(processingBatch);
+    sandbox.stub(batchService, 'deleteBatchInvoice').resolves();
 
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
@@ -79,7 +83,8 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(invoiceLicenceService, 'delete').resolves();
 
     sandbox.stub(transactionsService, 'getById').resolves(tptBatch);
-    sandbox.stub(transactionsService, 'updateTransactionVolume').resolves(transaction);
+    sandbox.stub(billingVolumesService, 'updateBillingVolume').resolves(billingVolume);
+    sandbox.stub(billingVolumesService, 'approveVolumesForBatch');
 
     sandbox.stub(eventService, 'create').resolves({
       id: '11111111-1111-1111-1111-111111111111'
@@ -475,102 +480,6 @@ experiment('modules/billing/controller', () => {
     });
   });
 
-  experiment('.deleteAccountFromBatch', () => {
-    let batch;
-    let request;
-    let invoices;
-
-    beforeEach(async () => {
-      batch = new Batch(uuid());
-      batch.status = Batch.BATCH_STATUS.ready;
-      request = {
-        params: { batchId: batch.id, accountId: 'test-account-id' },
-        pre: { batch },
-        messageQueue: {
-          publish: sandbox.stub()
-        }
-      };
-
-      invoices = [{
-        invoiceLicences: [
-          { transactions: [] }
-        ],
-        invoiceAccount: {
-          id: 'not-test-account-id',
-          accountNumber: 'A88888888A'
-        }
-      }];
-
-      invoiceService.getInvoicesForBatch.resolves(invoices);
-      batchService.deleteAccountFromBatch.resolves(batch);
-    });
-
-    experiment('when accounts cannot be deleted from the batch', () => {
-      const invalidStatuses = [
-        Batch.BATCH_STATUS.processing,
-        Batch.BATCH_STATUS.error,
-        Batch.BATCH_STATUS.sent
-      ];
-
-      invalidStatuses.forEach(status => {
-        test(`a 422 is returned for the ${status} status`, async () => {
-          batch.status = status;
-
-          await controller.deleteAccountFromBatch(request, h);
-
-          expect(batchService.deleteAccountFromBatch.called).to.equal(false);
-          expect(hapiResponseStub.code.calledWith(422)).to.be.true();
-
-          const [message] = h.response.lastCall.args;
-
-          expect(message).to.equal(`Cannot delete account from batch when status is ${status}`);
-        });
-      });
-    });
-
-    experiment('when accounts can be deleted from the batch', () => {
-      const validStatuses = [
-        Batch.BATCH_STATUS.ready,
-        Batch.BATCH_STATUS.review
-      ];
-
-      validStatuses.forEach(status => {
-        experiment(`for the ${status} status`, () => {
-          beforeEach(async () => {
-            batch.status = status;
-            invoices[0].invoiceAccount.id = 'test-account-id';
-            await controller.deleteAccountFromBatch(request, h);
-          });
-
-          test('the account is deleted', async () => {
-            const [batchArg, accountId] = batchService.deleteAccountFromBatch.lastCall.args;
-            expect(batchArg.id).to.equal(batch.id);
-            expect(accountId).to.equal('test-account-id');
-          });
-
-          test('a job is published to refresh the batch totals', async () => {
-            const [message] = request.messageQueue.publish.lastCall.args;
-            expect(message.data.batchId).to.equal(request.params.batchId);
-          });
-        });
-      });
-    });
-
-    test('returns a 404 if there are no invoices for the invoice account id', async () => {
-      batch.status = Batch.BATCH_STATUS.ready;
-      const response = await controller.deleteAccountFromBatch(request);
-      expect(invoiceService.getInvoicesForBatch.calledWith(batch)).to.be.true();
-      expect(response.output.payload.statusCode).to.equal(404);
-      expect(response.output.payload.message).to.equal(`No invoices for account (test-account-id) in batch (${batch.id})`);
-    });
-
-    test('returns the batch', async () => {
-      invoices[0].invoiceAccount.id = 'test-account-id';
-      const response = await controller.deleteAccountFromBatch(request);
-      expect(response.id).to.equal(batch.id);
-    });
-  });
-
   experiment('.deleteBatch', () => {
     let request;
     let batch;
@@ -815,7 +724,7 @@ experiment('modules/billing/controller', () => {
     });
   });
 
-  experiment('.patchTransaction', () => {
+  experiment('.patchTransactionBillingVolume', () => {
     let request, result;
     const createRequest = volume => ({
       defra: {
@@ -830,7 +739,7 @@ experiment('modules/billing/controller', () => {
 
     beforeEach(async () => {
       request = createRequest(20);
-      result = await controller.patchTransaction(request, h);
+      result = await controller.patchTransactionBillingVolume(request, h);
     });
 
     test('the transactions service is called to get the transaction with related data', async () => {
@@ -838,42 +747,45 @@ experiment('modules/billing/controller', () => {
         transactionsService.getById.calledWith(request.params.transactionId)
       ).to.be.true();
     });
+
     experiment('when the transaction data is found', async () => {
-      experiment('and updateTransactionVolume is successful', async () => {
-        test('the transaction service is called to update the transaction', async () => {
-          const transactionToBeUpdated = get(tptBatch, 'invoices[0].invoiceLicences[0].transactions[0]');
+      test('the billing volumes service is called to update the billing volume', async () => {
+        const [chargeElementId, batch, volume, user] = billingVolumesService.updateBillingVolume.lastCall.args;
 
-          const [batch, transaction, volume, user] = transactionsService.updateTransactionVolume.lastCall.args;
-
-          expect(batch).to.equal(tptBatch);
-          expect(transaction).to.equal(transactionToBeUpdated);
-          expect(volume).to.equal(request.payload.volume);
-          expect(user).to.equal(request.defra.internalCallingUser);
-        });
-
-        test('the updated transaction is returned', async () => {
-          expect(result).to.equal(transaction);
-        });
+        expect(chargeElementId).to.equal(transaction.chargeElement.id);
+        expect(batch).to.equal(tptBatch);
+        expect(volume).to.equal(request.payload.volume);
+        expect(user).to.equal(request.defra.internalCallingUser);
       });
-      experiment('and updateTransactionVolume rejects', async () => {
-        test('it throws Boom bad request error', async () => {
-          const errMsg = 'oh no, something went wrong';
-          transactionsService.updateTransactionVolume.rejects(new Error(errMsg));
-          try {
-            await controller.patchTransaction(request, h);
-          } catch (err) {
-            expect(err.isBoom).to.be.true();
-            expect(err.message).to.equal(errMsg);
-            expect(err.output.statusCode).to.equal(400);
-          }
-        });
+
+      test('the transaction is returned', async () => {
+        const relevantTransaction = get(tptBatch, 'invoices[0].invoiceLicences[0].transactions[0]');
+        const { transaction } = result;
+        expect(transaction).to.equal(relevantTransaction);
+      });
+
+      test('the updated billing volume is returned', async () => {
+        const { updatedBillingVolume } = result;
+        expect(updatedBillingVolume).to.equal(billingVolume);
+      });
+
+      test('a Boom bad request error is thrown if an error occurs', async () => {
+        const errMsg = 'oh no, something went wrong';
+        billingVolumesService.updateBillingVolume.rejects(new Error(errMsg));
+        try {
+          await controller.patchTransactionBillingVolume(request, h);
+        } catch (err) {
+          expect(err.isBoom).to.be.true();
+          expect(err.message).to.equal(errMsg);
+          expect(err.output.statusCode).to.equal(400);
+        }
       });
     });
     experiment('when the transaction data is not found', async () => {
       test('throws Boom not found error', async () => {
         transactionsService.getById.resolves();
         try {
-          await controller.patchTransaction(request, h);
+          await controller.patchTransactionBillingVolume(request, h);
         } catch (err) {
           expect(err.isBoom).to.be.true();
           expect(err.output.statusCode).to.equal(404);
@@ -988,6 +900,12 @@ experiment('modules/billing/controller', () => {
         ).to.be.true();
       });
 
+      test('calls the billingVolumeService to approve volumes', async () => {
+        expect(
+          billingVolumesService.approveVolumesForBatch.calledWith(batch)
+        ).to.be.true();
+      });
+
       test('calls the event service to create new event', async () => {
         const [savedEvent] = eventService.create.lastCall.args;
         expect(savedEvent).to.be.an.instanceOf(Event);
@@ -1047,6 +965,81 @@ experiment('modules/billing/controller', () => {
       test('the error is rethrown', async () => {
         const func = () => controller.postApproveReviewBatch(request, h);
         expect(func()).to.reject();
+      });
+    });
+  });
+
+  experiment('.deleteBatchInvoice', () => {
+    let request;
+
+    beforeEach(async () => {
+      request = {
+        pre: {
+          batch: new Batch()
+        },
+        params: {
+          invoiceId: uuid()
+        },
+        messageQueue: {
+          publish: sandbox.stub()
+        }
+      };
+    });
+
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        await controller.deleteBatchInvoice(request, h);
+      });
+
+      test('calls the service method with the correct batch and invoice ID', async () => {
+        expect(batchService.deleteBatchInvoice.calledWith(
+          request.pre.batch, request.params.invoiceId
+        )).to.be.true();
+      });
+
+      test('responds with a 204 HTTP code', async () => {
+        expect(hapiResponseStub.code.calledWith(204)).to.be.true();
+      });
+    });
+
+    experiment('when there is a not found error', () => {
+      let response;
+
+      beforeEach(async () => {
+        batchService.deleteBatchInvoice.rejects(new NotFoundError());
+        response = await controller.deleteBatchInvoice(request, h);
+      });
+
+      test('responds with a Boom 404 error', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when there is a batch status error', () => {
+      let response;
+
+      beforeEach(async () => {
+        batchService.deleteBatchInvoice.rejects(new BatchStatusError());
+        response = await controller.deleteBatchInvoice(request, h);
+      });
+
+      test('responds with a Boom 403 error', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(403);
+      });
+    });
+
+    experiment('when there is an unexpected error', () => {
+      const err = new Error('Oh no!');
+      beforeEach(async () => {
+        batchService.deleteBatchInvoice.rejects(err);
+      });
+
+      test('re-throws the error', async () => {
+        const func = () => controller.deleteBatchInvoice(request, h);
+        const error = await expect(func()).to.reject();
+        expect(error).to.equal(err);
       });
     });
   });

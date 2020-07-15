@@ -24,7 +24,8 @@ const invoiceAccountId = '398b6f31-ff01-4621-b939-e720f1a77deb';
 const createTransactionRow = (index, transactionKey, isCredit = false) => ({
   billingTransactionId: `00000000-0000-0000-0000-00000000000${index}`,
   isCredit,
-  transactionKey
+  transactionKey,
+  billingVolume: []
 });
 
 const createFullTransaction = (...args) => ({
@@ -85,16 +86,19 @@ const data = {
       companyId: 'c3fea19d-f5da-4293-bf31-38d7b79d5bf5',
       name: 'A test co'
     },
-    address: {
-      addressId: '3b0c8648-e6c0-41a4-aae0-4e1b5b8f7a3a',
-      address1: 'Daisy cottage',
-      address2: 'Long and winding road',
-      address3: null,
-      address4: null,
-      town: 'Testington',
-      county: 'Testingshire',
-      postcode: 'TT1 1TT'
-    }
+    invoiceAccountAddresses: [{
+      startDate: '2015-01-01',
+      address: {
+        addressId: '3b0c8648-e6c0-41a4-aae0-4e1b5b8f7a3a',
+        address1: 'Daisy cottage',
+        address2: 'Long and winding road',
+        address3: null,
+        address4: null,
+        town: 'Testington',
+        county: 'Testingshire',
+        postcode: 'TT1 1TT'
+      }
+    }]
   }],
   models: {
     batch: new Batch(batchId)
@@ -182,7 +186,7 @@ experiment('modules/billing/services/supplementary-billing-service', () => {
           expect(batch.invoices[0].invoiceAccount.id).to.equal(data.crmResponse[0].invoiceAccountId);
           expect(batch.invoices[0].invoiceAccount.accountNumber).to.equal(data.crmResponse[0].invoiceAccountNumber);
           expect(batch.invoices[0].invoiceAccount.company.id).to.equal(data.crmResponse[0].company.companyId);
-          expect(batch.invoices[0].address.id).to.equal(data.crmResponse[0].address.addressId);
+          expect(batch.invoices[0].address.id).to.equal(data.crmResponse[0].invoiceAccountAddresses[0].address.addressId);
         });
 
         test('the licence details are taken from the historical transaction', async () => {

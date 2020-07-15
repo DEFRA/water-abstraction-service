@@ -1,7 +1,11 @@
+'use strict';
+
 const Boom = require('@hapi/boom');
 const repository = require('../../lib/connectors/repository');
 const mappers = require('./lib/mappers');
 const documentsConnector = require('../../lib/connectors/crm/documents');
+const licencesService = require('../../lib/services/licences');
+const chargeElementsService = require('../../lib/services/charge-elements');
 
 const getChargeVersionsByLicenceRef = async licenceRef => {
   const rows = await repository.chargeVersions.findByLicenceRef(licenceRef);
@@ -47,6 +51,17 @@ const getChargeVersionsByDocumentId = async request => {
   return getChargeVersionsByLicenceRef(document.system_external_id);
 };
 
+const getDefaultChargesForLicenceVersion = async request => {
+  const { licenceVersionId } = request.params;
+
+  const licenceVersion = await licencesService.getLicenceVersionById(licenceVersionId);
+
+  return licenceVersion === null
+    ? Boom.notFound('No licence version found')
+    : chargeElementsService.getChargeElementsFromLicenceVersion(licenceVersion);
+};
+
 exports.getChargeVersions = getChargeVersions;
 exports.getChargeVersion = getChargeVersion;
 exports.getChargeVersionsByDocumentId = getChargeVersionsByDocumentId;
+exports.getDefaultChargesForLicenceVersion = getDefaultChargesForLicenceVersion;

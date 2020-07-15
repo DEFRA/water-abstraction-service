@@ -1,3 +1,5 @@
+'use strict';
+
 const uuid = require('uuid/v4');
 const Agreement = require('../../../../../src/lib/models/agreement');
 const AbstractionPeriod = require('../../../../../src/lib/models/abstraction-period');
@@ -7,10 +9,14 @@ const ChargeElement = require('../../../../../src/lib/models/charge-element');
 const ChargeVersion = require('../../../../../src/lib/models/charge-version');
 const DateRange = require('../../../../../src/lib/models/date-range');
 const InvoiceAccount = require('../../../../../src/lib/models/invoice-account');
+const Invoice = require('../../../../../src/lib/models/invoice');
+const InvoiceLicence = require('../../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../../src/lib/models/licence');
 const LicenceAgreement = require('../../../../../src/lib/models/licence-agreement');
 const FinancialYear = require('../../../../../src/lib/models/financial-year');
-const Purpose = require('../../../../../src/lib/models/purpose');
+const Region = require('../../../../../src/lib/models/region');
+const Transaction = require('../../../../../src/lib/models/transaction');
+const PurposeUse = require('../../../../../src/lib/models/purpose-use');
 
 const createLicence = (overrides = {}) => {
   const licence = new Licence();
@@ -45,10 +51,10 @@ const createChargeElement = (overrides = {}) => {
   });
 
   const purposeData = overrides.isSprayIrrigation
-    ? { code: '400', name: 'Spray Irrigation Direct' }
-    : { code: '300', name: 'Mineral washing' };
+    ? { code: '400', name: 'Spray Irrigation Direct', isTwoPartTariff: true }
+    : { code: '300', name: 'Mineral washing', isTwoPartTariff: false };
 
-  const purpose = new Purpose();
+  const purpose = new PurposeUse();
   purpose.fromHash(purposeData);
 
   const chargeElement = new ChargeElement();
@@ -58,6 +64,7 @@ const createChargeElement = (overrides = {}) => {
   }
 
   return chargeElement.fromHash({
+    id: overrides.id || '00000000-0000-0000-0000-000000000000',
     description: 'Test description',
     source: 'supported',
     season: 'summer',
@@ -71,10 +78,12 @@ const createChargeElement = (overrides = {}) => {
 
 const createFinancialYear = () => new FinancialYear(2020);
 
-const createBatch = (type) => {
+const createBatch = (type, options = {}) => {
   const batch = new Batch();
   return batch.fromHash({
-    type
+    type,
+    region: new Region(uuid(), 'region'),
+    ...options
   });
 };
 
@@ -95,13 +104,47 @@ const createChargeVersionWithTwoPartTariff = (overrides = {}) => {
   const cv = createChargeVersion();
   cv.licence = createLicence();
   cv.chargeElements = [
-    createChargeElement(),
+    createChargeElement({ id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' }),
     createChargeElement({ isSprayIrrigation: true })
   ];
   cv.licence.licenceAgreements = [
     createLicenceAgreement()
   ];
   return cv;
+};
+
+const createTransaction = (options = {}) => {
+  const transaction = new Transaction();
+  return transaction.fromHash({
+    authorisedDays: 150,
+    billableDays: 150,
+    chargeElement: createChargeElement(),
+    ...options
+  });
+};
+
+const createInvoice = () => {
+  const invoiceLicence = new InvoiceLicence();
+  invoiceLicence.licence = createLicence();
+
+  const invoiceAccount = new InvoiceAccount();
+  invoiceAccount.accountNumber = 'A12345678A';
+
+  const invoice = new Invoice();
+  return invoice.fromHash({
+    invoiceAccount,
+    invoiceLicences: [invoiceLicence]
+  });
+};
+
+const createSentTPTBatches = () => {
+  const invoice = createInvoice();
+  const summerBatch = createBatch('two_part_tariff', { isSummer: true });
+  summerBatch.addInvoice(invoice);
+  return [
+    summerBatch,
+    createBatch('two_part_tariff', { isSummer: false, invoices: [invoice] })
+  ];
 };
 
 exports.createLicence = createLicence;
@@ -111,3 +154,5 @@ exports.createFinancialYear = createFinancialYear;
 exports.createBatch = createBatch;
 exports.createLicenceAgreement = createLicenceAgreement;
 exports.createChargeVersionWithTwoPartTariff = createChargeVersionWithTwoPartTariff;
+exports.createTransaction = createTransaction;
+exports.createSentTPTBatches = createSentTPTBatches;

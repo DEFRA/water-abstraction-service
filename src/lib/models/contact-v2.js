@@ -48,6 +48,13 @@ class Contact extends Model {
     const parts = [this._salutation, this._initials || this._firstName, this._lastName];
     return parts.filter(x => x).join(' ');
   }
+
+  toJSON () {
+    return {
+      ...super.toJSON(),
+      fullName: this.fullName
+    };
+  }
 }
 
 module.exports = Contact;

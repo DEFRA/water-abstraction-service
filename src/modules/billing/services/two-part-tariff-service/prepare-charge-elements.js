@@ -1,4 +1,4 @@
-const { TPT_PURPOSES } = require('./two-part-tariff-helpers');
+const { TWO_PART_TARIFF_PURPOSE_CODES } = require('../../../../lib/models/purpose');
 const { sortBy } = require('lodash');
 const Decimal = require('decimal.js-light');
 
@@ -8,12 +8,12 @@ const Decimal = require('decimal.js-light');
  * @return {Array} charge elements with required data points for matching
  */
 const getTptChargeElements = chargeElements =>
-  chargeElements.filter(element => TPT_PURPOSES.includes(parseInt(element.purposeUse.code)));
+  chargeElements.filter(element => TWO_PART_TARIFF_PURPOSE_CODES.includes(parseInt(element.purposeUse.code)));
 
 /**
  * Pro rata the quantity - multiply by billable days & divide by total days
  */
-const getProRataQuantity = (quantity, ele) => new Decimal(quantity)
+const getProRataQuantity = (ele) => new Decimal(ele.billableAnnualQuantity || ele.authorisedAnnualQuantity)
   .times(ele.billableDays)
   .dividedBy(ele.totalDays)
   .toDecimalPlaces(3)
@@ -31,7 +31,7 @@ const prepareChargeElementData = chargeElements => chargeElements.map(ele => {
     ...ele,
     actualReturnQuantity: 0,
     maxPossibleReturnQuantity: 0,
-    proRataAuthorisedQuantity: getProRataQuantity(ele.billableAnnualQuantity || ele.authorisedAnnualQuantity, ele)
+    proRataAuthorisedQuantity: getProRataQuantity(ele)
   };
 });
 

@@ -3,17 +3,15 @@ const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(Moment);
 const Decimal = require('decimal.js-light');
 const { identity } = require('lodash');
-const { TPT_PURPOSES } = require('./two-part-tariff-helpers');
+const { TWO_PART_TARIFF_PURPOSE_CODES } = require('../../../../lib/models/purpose');
 const {
-  twoPartTariffStatuses: {
-    ERROR_NO_RETURNS_FOR_MATCHING,
-    ERROR_NO_RETURNS_SUBMITTED,
-    ERROR_SOME_RETURNS_DUE,
-    ERROR_LATE_RETURNS,
-    ERROR_UNDER_QUERY,
-    ERROR_RECEIVED_NO_DATA
-  }
-} = require('../../../../lib/models/transaction');
+  ERROR_NO_RETURNS_FOR_MATCHING,
+  ERROR_NO_RETURNS_SUBMITTED,
+  ERROR_SOME_RETURNS_DUE,
+  ERROR_LATE_RETURNS,
+  ERROR_UNDER_QUERY,
+  ERROR_RECEIVED_NO_DATA
+} = require('../../../../lib/models/billing-volume').twoPartTariffStatuses;
 
 const { returns: { date: { isDateWithinAbstractionPeriod } } } = require('@envage/water-abstraction-helpers');
 
@@ -82,6 +80,9 @@ const checkDueReturnsErrors = returns => {
   }
 };
 
+const checkReturnsExistAndHaveLines = returns =>
+  returns.length === 0 ? true : returns.some(ret => !ret.lines);
+
 /**
  * Check if all returns are completed
  * @param {Array} returns
@@ -90,7 +91,7 @@ const checkDueReturnsErrors = returns => {
 const checkForReturnsErrors = returns => {
   const receivedReturns = getReturnsByStatus(returns, 'received');
   const errors = [
-    returns.length === 0 ? ERROR_NO_RETURNS_FOR_MATCHING : null,
+    checkReturnsExistAndHaveLines(returns) ? ERROR_NO_RETURNS_FOR_MATCHING : null,
     checkDueReturnsErrors(returns) || null,
     areReturnsLate(returns) ? ERROR_LATE_RETURNS : null,
     areAnyReturnsUnderQuery(returns) ? ERROR_UNDER_QUERY : null,
@@ -107,7 +108,7 @@ const checkForReturnsErrors = returns => {
  */
 const isReturnPurposeTPT = purposes => {
   const returnContainsTptPurpose = purposes.map(purpose => {
-    return TPT_PURPOSES.includes(parseInt(purpose.tertiary.code));
+    return TWO_PART_TARIFF_PURPOSE_CODES.includes(parseInt(purpose.tertiary.code));
   });
   return returnContainsTptPurpose.includes(true);
 };
@@ -121,6 +122,20 @@ const getTPTReturns = returns =>
   returns.filter(ret => isReturnPurposeTPT(ret.metadata.purposes));
 
 /**
+ * Prepares return lines for matching exercise
+ * @param {Object} lines containing lines
+ */
+const prepareLines = ret => ret.lines.filter(line => {
+  return isLineWithinAbstractionPeriod(ret, line) ? line.quantity > 0 : false;
+}).map(line => {
+  return {
+    ...line,
+    quantityAllocated: 0,
+    quantity: new Decimal(line.quantity).dividedBy(1000).toNumber()
+  };
+});
+
+/**
  * Removes null and nil return lines, converts quantity to ML and adds quantityAllocated
  * @param {Array} returns objects
  * @return {Array} Updated returns array
@@ -129,15 +144,7 @@ const prepareReturnLinesData = returns =>
   returns.map(ret => {
     return {
       ...ret,
-      lines: ret.lines.filter(line => {
-        return isLineWithinAbstractionPeriod(ret, line) ? line.quantity > 0 : false;
-      }).map(line => {
-        return {
-          ...line,
-          quantityAllocated: 0,
-          quantity: new Decimal(line.quantity).dividedBy(1000).toNumber()
-        };
-      })
+      lines: ret.lines ? prepareLines(ret) : null
     };
   });
 

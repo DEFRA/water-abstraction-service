@@ -1,10 +1,15 @@
-const Lab = require('@hapi/lab');
-const { experiment, test, beforeEach, afterEach } = exports.lab = Lab.script();
+'use strict';
+
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
+const uuid = require('uuid/v4');
+
 const repository = require('../../../src/lib/connectors/repository');
 const controller = require('../../../src/modules/charge-versions/controller');
 const documentConnector = require('../../../src/lib/connectors/crm/documents');
+const licencesService = require('../../../src/lib/services/licences');
+const chargeElementsService = require('../../../src/lib/services/charge-elements');
 
 const chargeVersion = {
   charge_version_id: 'b58fd6d2-40b9-4ab8-a860-82eeb218ecdd'
@@ -21,18 +26,24 @@ const chargeAgreements = [{
   charge_element_id: 'c24a65cc-1a66-45bd-b55e-a2d7d0473988'
 }];
 
-experiment('./src/modules/charge-versions/controller.js', () => {
+experiment('modules/charge-versions/controller', () => {
   beforeEach(async () => {
     sandbox.stub(repository.chargeVersions, 'findByLicenceRef')
       .resolves([chargeVersion]);
+
     sandbox.stub(repository.chargeVersions, 'findOneById')
       .resolves(chargeVersion);
+
     sandbox.stub(repository.chargeElements, 'findByChargeVersionId')
       .resolves(chargeElements);
+
     sandbox.stub(repository.chargeAgreements, 'findByChargeVersionId')
       .resolves(chargeAgreements);
 
     sandbox.stub(documentConnector, 'getDocument');
+
+    sandbox.stub(licencesService, 'getLicenceVersionById');
+    sandbox.stub(chargeElementsService, 'getChargeElementsFromLicenceVersion');
   });
 
   afterEach(async () => {
@@ -154,6 +165,74 @@ experiment('./src/modules/charge-versions/controller.js', () => {
         data: [{
           chargeVersionId: chargeVersion.charge_version_id
         }]
+      });
+    });
+  });
+
+  experiment('getDefaultChargesForLicenceVersion', () => {
+    experiment('when the licence version is not found', () => {
+      let response;
+      let licenceVersionId;
+
+      beforeEach(async () => {
+        licencesService.getLicenceVersionById.resolves(null);
+
+        const request = {
+          params: {
+            licenceVersionId: licenceVersionId = uuid()
+          }
+        };
+
+        response = await controller.getDefaultChargesForLicenceVersion(request);
+      });
+
+      test('an attempt to find the licence version is made', async () => {
+        const [id] = licencesService.getLicenceVersionById.lastCall.args;
+        expect(id).to.equal(licenceVersionId);
+      });
+
+      test('a 404 is returned', async () => {
+        expect(response.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when the licence version is found', () => {
+      let response;
+      let licenceVersionId;
+
+      beforeEach(async () => {
+        const request = {
+          params: {
+            licenceVersionId: licenceVersionId = uuid()
+          }
+        };
+
+        licencesService.getLicenceVersionById.resolves({ licenceVersionId });
+        chargeElementsService.getChargeElementsFromLicenceVersion.resolves([
+          { season: 'summer' },
+          { season: 'winter' },
+          { season: 'all year' }
+        ]);
+
+        response = await controller.getDefaultChargesForLicenceVersion(request);
+      });
+
+      test('an attempt to find the licence version is made', async () => {
+        const [id] = licencesService.getLicenceVersionById.lastCall.args;
+        expect(id).to.equal(licenceVersionId);
+      });
+
+      test('the licence version is mapped to charge elements', async () => {
+        const [licenceVersion] = chargeElementsService.getChargeElementsFromLicenceVersion.lastCall.args;
+        expect(licenceVersion.licenceVersionId).to.equal(licenceVersionId);
+      });
+
+      test('the mapped charge elements are returned', async () => {
+        expect(response).to.equal([
+          { season: 'summer' },
+          { season: 'winter' },
+          { season: 'all year' }
+        ]);
       });
     });
   });

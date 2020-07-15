@@ -1,3 +1,5 @@
+'use strict';
+
 const controller = require('./controller');
 const Joi = require('joi');
 
@@ -40,6 +42,19 @@ module.exports = {
       validate: {
         params: {
           documentId: VALID_GUID
+        }
+      }
+    }
+  },
+
+  getDefaultChargesForLicenceVersion: {
+    method: 'GET',
+    path: '/water/1.0/charge-versions/default/{licenceVersionId}',
+    handler: controller.getDefaultChargesForLicenceVersion,
+    options: {
+      validate: {
+        params: {
+          licenceVersionId: VALID_GUID
         }
       }
     }

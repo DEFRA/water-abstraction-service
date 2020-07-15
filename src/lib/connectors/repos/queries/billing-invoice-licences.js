@@ -26,15 +26,6 @@ delete from water.billing_invoice_licences l
   )
 `;
 
-exports.deleteByBatchAndInvoiceAccount = `
-  delete
-  from water.billing_invoice_licences bil
-  using water.billing_invoices bi
-  where bil.billing_invoice_id = bi.billing_invoice_id
-  and bi.billing_batch_id = :batchId
-  and bi.invoice_account_id = :invoiceAccountId;
-`;
-
 exports.findLicencesWithTransactionStatusesForBatch = `
   select
     bil.billing_invoice_id,
@@ -42,17 +33,26 @@ exports.findLicencesWithTransactionStatusesForBatch = `
     bil.licence_id,
     bil.licence_ref,
     bil.licence_holder_name,
-    array_agg(bt.two_part_tariff_status) as "two_part_tariff_statuses",
-    array_agg(bt.two_part_tariff_error) as "two_part_tariff_errors" 
+    array_agg(bv.two_part_tariff_status) as "two_part_tariff_statuses",
+    array_agg(bv.two_part_tariff_error) as "two_part_tariff_errors" 
   from water.billing_invoices bi
     join water.billing_invoice_licences bil
       on bi.billing_invoice_id = bil.billing_invoice_id
     join water.billing_transactions bt
       on bt.billing_invoice_licence_id = bil.billing_invoice_licence_id
+    join water.billing_volumes bv
+      on bv.charge_element_id = bt.charge_element_id
   where bi.billing_batch_id = :batchId
   group by
     bil.billing_invoice_id,
     bil.billing_invoice_licence_id,
     bil.licence_ref,
     bil.licence_holder_name;
+`;
+
+exports.deleteByBatchId = `
+  delete from water.billing_invoice_licences il
+  using water.billing_invoices i
+  where i.billing_invoice_id = il.billing_invoice_id
+  and i.billing_batch_id = :batchId;
 `;

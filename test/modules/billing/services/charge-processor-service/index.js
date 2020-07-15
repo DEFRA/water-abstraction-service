@@ -12,8 +12,13 @@ const Transaction = require('../../../../../src/lib/models/transaction');
 const crmV2 = require('../../../../../src/lib/connectors/crm-v2');
 const chargeProcessorService = require('../../../../../src/modules/billing/services/charge-processor-service');
 const chargeVersionService = require('../../../../../src/modules/billing/services/charge-version-service');
+const transactionsProcessor = require('../../../../../src/modules/billing/services/charge-processor-service/transactions-processor');
+const batchService = require('../../../../../src/modules/billing/services/batch-service');
+const billingVolumeService = require('../../../../../src/modules/billing/services/billing-volumes-service');
 
 const data = require('./data');
+
+const companyId = uuid();
 
 const crmData = {
   documents: [{
@@ -33,7 +38,7 @@ const crmData = {
         endDate: '2019-03-31',
         contact: null,
         address: {
-
+          addressId: uuid()
         }
       },
       {
@@ -62,8 +67,18 @@ const crmData = {
       startDate: '2016-01-01',
       endDate: '2018-01-01',
       address: {
-
-      }
+        addressId: uuid(),
+        address1: 'The old office',
+        address2: 'Officey place',
+        address3: 'Central square',
+        address4: null,
+        town: 'Testington',
+        county: 'Testingshire',
+        postcode: 'TT1 1TT',
+        country: 'UK'
+      },
+      agentCompany: null,
+      contact: null
     }, {
       startDate: '2019-01-01',
       endDate: null,
@@ -77,11 +92,16 @@ const crmData = {
         county: 'Testingshire',
         postcode: 'TT1 1TT',
         country: 'UK'
-      }
-    }]
+      },
+      agentCompany: null,
+      contact: null
+    }],
+    company: {
+      companyId
+    }
   },
   company: {
-    companyId: uuid()
+    companyId
   }
 };
 
@@ -93,6 +113,8 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
     sandbox.stub(crmV2.invoiceAccounts, 'getInvoiceAccountById').resolves(crmData.invoiceAccount);
 
     sandbox.stub(chargeVersionService, 'getByChargeVersionId');
+    sandbox.stub(batchService, 'getSentTPTBatchesForFinancialYearAndRegion');
+    sandbox.stub(billingVolumeService, 'getVolumes');
   });
 
   afterEach(async () => {
@@ -126,6 +148,12 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
       test('the CRM company for the charge version is loaded', async () => {
         expect(crmV2.companies.getCompany.calledWith(
           chargeVersion.company.id
+        )).to.be.true();
+      });
+
+      test('the sent TPT batches for the financial year are loaded', async () => {
+        expect(batchService.getSentTPTBatchesForFinancialYearAndRegion.calledWith(
+          financialYear, batch.region
         )).to.be.true();
       });
 
@@ -191,6 +219,44 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
         invoice.invoiceLicences[0].transactions.forEach(transaction => {
           expect(transaction instanceof Transaction).to.be.true();
         });
+      });
+    });
+
+    experiment('if transactions have isTwoPartTariffSupplementary flag set to true', () => {
+      let transaction, batch;
+      beforeEach(async () => {
+        chargeVersion = data.createChargeVersionWithTwoPartTariff();
+        chargeVersionService.getByChargeVersionId.resolves(chargeVersion);
+        transaction = data.createTransaction({ isTwoPartTariffSupplementary: true });
+        transaction.chargeElement.id = '00000000-0000-0000-0000-000000000000';
+        sandbox.stub(transactionsProcessor, 'createTransactions').returns([transaction]);
+        batch = data.createBatch('two_part_tariff');
+        invoice = await chargeProcessorService.processChargeVersionYear(batch, financialYear, chargeVersion.id);
+      });
+
+      test('the billingVolumes service is called with correct params', async () => {
+        const expectedChargeElement = [{
+          ...chargeVersion.chargeElements[1].toJSON(),
+          startDate: '2019-04-01',
+          endDate: '2020-03-31',
+          billableDays: 150,
+          authorisedDays: 150,
+          totalDays: 366
+        }];
+        const [chargeElement, licenceNumber, finYear, isSummer, batchArg] = billingVolumeService.getVolumes.lastCall.args;
+        expect(chargeElement).to.equal(expectedChargeElement);
+        expect(licenceNumber).to.equal(chargeVersion.licence.licenceNumber);
+        expect(finYear).to.equal(financialYear.yearEnding);
+        expect(isSummer).to.equal(true);
+        expect(batchArg).to.equal(batch);
+      });
+
+      test('does not include the charge element without a matching transaction', async () => {
+        const unrelatedElement = [
+          chargeVersion.chargeElements[0].toJSON()
+        ];
+        const [chargeElement] = billingVolumeService.getVolumes.lastCall.args;
+        expect(chargeElement).not.to.contain(unrelatedElement);
       });
     });
 

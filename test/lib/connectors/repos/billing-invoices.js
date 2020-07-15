@@ -7,6 +7,7 @@ const {
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const uuid = require('uuid/v4');
 
 const { bookshelf, BillingInvoice } = require('../../../../src/lib/connectors/bookshelf');
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-invoices');
@@ -83,31 +84,11 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     });
   });
 
-  experiment('.deleteByBatchAndInvoiceAccountId', () => {
-    beforeEach(async () => {
-      await billingInvoices.deleteByBatchAndInvoiceAccountId(
-        'test-batch-id',
-        'test-invoice-account-id'
-      );
-    });
-
-    test('filters using the expected where clause', async () => {
-      const [clause] = stub.where.lastCall.args;
-      expect(clause).to.equal({
-        invoice_account_id: 'test-invoice-account-id',
-        billing_batch_id: 'test-batch-id'
-      });
-    });
-
-    test('deletes the found data via destroy', async () => {
-      expect(stub.destroy.called).to.equal(true);
-    });
-  });
-
   experiment('.findOne', () => {
     let result;
 
     beforeEach(async () => {
+      model.toJSON.returns({ foo: 'bar' });
       result = await billingInvoices.findOne('test-id');
     });
 
@@ -125,6 +106,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
         'billingInvoiceLicences.licence',
         'billingInvoiceLicences.licence.region',
         'billingInvoiceLicences.billingTransactions',
+        'billingInvoiceLicences.billingTransactions.billingVolume',
         'billingInvoiceLicences.billingTransactions.chargeElement',
         'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
       ]);
@@ -136,6 +118,45 @@ experiment('lib/connectors/repos/billing-invoices', () => {
 
     test('returns the result of the toJSON() call', async () => {
       expect(result).to.equal({ foo: 'bar' });
+    });
+  });
+
+  experiment('.deleteByBatchId', () => {
+    const batchId = 'test-batch-id';
+
+    beforeEach(async () => {
+      await billingInvoices.deleteByBatchId(batchId);
+    });
+
+    test('calls forge() on the model', async () => {
+      expect(BillingInvoice.forge.called).to.be.true();
+    });
+
+    test('calls where() with the correct params', async () => {
+      const [params] = stub.where.lastCall.args;
+      expect(params).to.equal({ billing_batch_id: batchId });
+    });
+
+    test('calls destroy() to delete found records', async () => {
+      expect(stub.destroy.called).to.be.true();
+    });
+  });
+
+  experiment('.delete', async () => {
+    const billingInvoiceId = uuid();
+
+    beforeEach(async () => {
+      await billingInvoices.delete(billingInvoiceId);
+    });
+
+    test('the model is forged with correct params', async () => {
+      expect(BillingInvoice.forge.calledWith({
+        billingInvoiceId
+      })).to.be.true();
+    });
+
+    test('the model is destroyed', async () => {
+      expect(stub.destroy.called).to.be.true();
     });
   });
 });

@@ -49,6 +49,7 @@ experiment('src/lib/services/licences', () => {
   beforeEach(async () => {
     sandbox.stub(repos.licences, 'findOne');
     sandbox.stub(repos.licenceVersions, 'findByLicenceId');
+    sandbox.stub(repos.licenceVersions, 'findOne');
   });
 
   afterEach(async () => {
@@ -133,6 +134,57 @@ experiment('src/lib/services/licences', () => {
         expect(result[0]).to.be.an.instanceOf(LicenceVersion);
         expect(result[1].id).to.equal('85b98b0e-6d75-4c26-ada2-079a86fe9701');
         expect(result[1]).to.be.an.instanceOf(LicenceVersion);
+      });
+    });
+  });
+
+  experiment('.getLicenceVersionById', () => {
+    let licenceVersion;
+    let licenceVersionId;
+
+    experiment('when no licence version is found for the id', () => {
+      beforeEach(async () => {
+        licenceVersionId = uuid();
+        repos.licenceVersions.findOne.resolves(null);
+        licenceVersion = await licencesService.getLicenceVersionById(licenceVersionId);
+      });
+
+      test('null is returned', async () => {
+        expect(licenceVersion).to.equal(null);
+      });
+
+      test('the expected call to the repository layer is made', async () => {
+        const [id] = repos.licenceVersions.findOne.lastCall.args;
+        expect(id).to.equal(licenceVersionId);
+      });
+    });
+
+    experiment('when a licence version is found for the id', () => {
+      beforeEach(async () => {
+        licenceVersionId = uuid();
+        repos.licenceVersions.findOne.resolves({
+          status: 'superseded',
+          endDate: '2001-11-01',
+          startDate: '2001-05-01',
+          externalId: '1:1:100:1',
+          dateUpdated: '2001-01-01 10:10:10.000000',
+          dateCreated: '2001-01-01 10:10:10.000000',
+          licenceId: uuid(),
+          licenceVersionId,
+          issue: 100,
+          increment: 1
+        });
+        licenceVersion = await licencesService.getLicenceVersionById(licenceVersionId);
+      });
+
+      test('the expected call to the repository layer is made', async () => {
+        const [id] = repos.licenceVersions.findOne.lastCall.args;
+        expect(id).to.equal(licenceVersionId);
+      });
+
+      test('the licence version is returned in a model instance', async () => {
+        expect(licenceVersion).to.be.an.instanceOf(LicenceVersion);
+        expect(licenceVersion.id).to.equal(licenceVersionId);
       });
     });
   });

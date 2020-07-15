@@ -6,6 +6,7 @@ const uuid = require('uuid/v4');
 const moment = require('moment');
 
 const LicenceVersion = require('../../../src/lib/models/licence-version');
+const LicenceVersionPurpose = require('../../../src/lib/models/licence-version-purpose');
 
 experiment('lib/models/licence-agreement', () => {
   let licenceVersion;
@@ -236,6 +237,21 @@ experiment('lib/models/licence-agreement', () => {
 
     test('throws for null', async () => {
       expect(() => { licenceVersion.externalId = null; }).to.throw();
+    });
+  });
+
+  experiment('.licenceVersionPurposes', () => {
+    test('throws when the items in the array are not LicenceVersionPurpose objects', async () => {
+      const arr = [1, 2, 3];
+      expect(() => { licenceVersion.licenceVersionPurposes = arr; }).to.throw();
+    });
+
+    test('can be set to an array of LicenceVersionPurpose objects', async () => {
+      const purposes = [new LicenceVersionPurpose(uuid())];
+      licenceVersion.licenceVersionPurposes = purposes;
+
+      expect(licenceVersion.licenceVersionPurposes.length).to.equal(1);
+      expect(licenceVersion.licenceVersionPurposes[0].id).to.equal(purposes[0].id);
     });
   });
 });

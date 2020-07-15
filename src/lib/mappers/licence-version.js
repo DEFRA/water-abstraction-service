@@ -1,9 +1,16 @@
 'use strict';
 
 const LicenceVersion = require('../models/licence-version');
+const licenceVersionPurposeMapper = require('../mappers/licence-version-purpose');
 
 const dbToModel = row => {
   const licenceVersion = new LicenceVersion(row.licenceVersionId);
+  const { licenceVersionPurposes } = row;
+
+  if (licenceVersionPurposes) {
+    const versionPurposes = licenceVersionPurposes.map(licenceVersionPurposeMapper.dbToModel);
+    licenceVersion.licenceVersionPurposes = versionPurposes;
+  }
 
   return licenceVersion.fromHash({
     status: row.status,

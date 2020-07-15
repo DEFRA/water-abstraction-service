@@ -10,155 +10,99 @@ const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 const uuid = require('uuid/v4');
+const { find } = require('lodash');
 
-const Address = require('../../../../src/lib/models/address');
 const Batch = require('../../../../src/lib/models/batch');
-const Company = require('../../../../src/lib/models/company');
-const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const Invoice = require('../../../../src/lib/models/invoice');
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const mappers = require('../../../../src/modules/billing/mappers');
 const repos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
+const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts');
+
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
-const invoiceAccountsService = require('../../../../src/modules/billing/services/invoice-accounts-service');
 
 const { NotFoundError } = require('../../../../src/lib/errors');
 
-const INVOICE_1_ACCOUNT_ID = uuid();
-const INVOICE_1_ACCOUNT_NUMBER = 'A11111111A';
-const INVOICE_2_ACCOUNT_ID = uuid();
-const INVOICE_2_ACCOUNT_NUMBER = 'A22222222A';
-const COMPANY_1_ID = uuid();
-const COMPANY_2_ID = uuid();
-
-let invoiceAccount1;
-let invoiceAccount2;
-
-const BATCH_ID = '00000000-0000-0000-0000-000000000000';
-const EXTERNAL_ID = '00000000-0000-0000-0000-000000000004';
-
-const REGION_ID = '00000000-0000-0000-0000-000000000001';
-const REGION_NAME = 'Anglian';
-const CHARGE_REGION_ID = 'A';
-
-const LICENCE_ID = '00000000-0000-0000-0000-000000000002';
-
-const createBatch = () => {
-  const batch = new Batch(BATCH_ID);
-  return batch.fromHash({
-    externalId: EXTERNAL_ID
-  });
+const IDS = {
+  batch: uuid(),
+  batchExternalId: uuid(),
+  invoices: [uuid(), uuid(), uuid()],
+  invoiceAccounts: [uuid(), uuid()],
+  transactions: [uuid(), uuid(), uuid(), uuid(), uuid(), uuid()],
+  accountNumbers: ['A11111111A', 'A22222222A'],
+  companies: [uuid(), uuid(), uuid()],
+  contacts: [uuid()]
 };
 
-const createBatchData = () => ({
-  batchId: BATCH_ID,
-  region: {
-    chargeRegionId: 'A'
-  },
-  billingInvoices: [{
-    invoiceAccountId: INVOICE_1_ACCOUNT_ID,
-    invoiceAccountNumber: INVOICE_1_ACCOUNT_NUMBER,
-    billingInvoiceLicences: [{
-      billingInvoiceId: uuid(),
-      licence: {
-        licenceId: LICENCE_ID,
-        licenceRef: '01/123/ABC',
-        regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
-        region: {
-          regionId: REGION_ID,
-          name: REGION_NAME,
-          displayName: REGION_NAME,
-          chargeRegionId: CHARGE_REGION_ID
-        },
-        startDate: '2019-01-01',
-        expiredDate: null,
-        lapsedDate: null,
-        revokedDate: null
-      }
-    }, {
-      billingInvoiceId: uuid(),
-      licence: {
-        licenceId: LICENCE_ID,
-        licenceRef: '02/345',
-        regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
-        region: {
-          regionId: REGION_ID,
-          name: REGION_NAME,
-          displayName: REGION_NAME,
-          chargeRegionId: CHARGE_REGION_ID
-        },
-        startDate: '2019-01-01',
-        expiredDate: null,
-        lapsedDate: null,
-        revokedDate: null
-      }
-    }]
-  }, {
-    invoiceAccountId: INVOICE_2_ACCOUNT_ID,
-    invoiceAccountNumber: INVOICE_2_ACCOUNT_NUMBER,
-    billingInvoiceLicences: [{
-      billingInvoiceId: uuid(),
-      licence: {
-        licenceId: LICENCE_ID,
-        licenceRef: '04/563',
-        regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
-        region: {
-          regionId: REGION_ID,
-          name: REGION_NAME,
-          displayName: REGION_NAME,
-          chargeRegionId: CHARGE_REGION_ID
-        },
-        startDate: '2019-01-01',
-        expiredDate: null,
-        lapsedDate: null,
-        revokedDate: null
-      }
-    }]
-  }]
-});
+const createBatch = () => {
+  const batch = new Batch(IDS.batch);
+  return batch.fromHash({
+    externalId: IDS.batchExternalId,
+    status: 'sent'
+  });
+};
 
 const createChargeModuleData = () => ({
   billRun: {
     customers: [
       {
-        customerReference: INVOICE_1_ACCOUNT_NUMBER,
+        // Customer 1
+        customerReference: IDS.accountNumbers[0],
         summaryByFinancialYear: [
+          // Year ending 2019
           {
-            financialYear: 2019,
+            financialYear: 2018,
             creditLineCount: 0,
             creditLineValue: 0,
-            debitLineCount: 5,
+            debitLineCount: 2,
             debitLineValue: 12345,
             netTotal: 12345,
             transactions: [{
-              id: CHARGE_MODULE_TRANSACTION_ID,
+              id: IDS.transactions[0],
               chargeValue: 2345
+            }, {
+              id: IDS.transactions[1],
+              chargeValue: 10000
+            }]
+          },
+          // Year ending 2020
+          {
+            financialYear: 2019,
+            creditLineCount: 1,
+            creditLineValue: -200,
+            debitLineCount: 1,
+            debitLineValue: 100,
+            netTotal: -100,
+            transactions: [{
+              id: IDS.transactions[4],
+              chargeValue: 100
+            }, {
+              id: IDS.transactions[5],
+              chargeValue: -200
             }]
           }
         ]
-      },
-      {
-        customerReference: INVOICE_2_ACCOUNT_NUMBER,
+      }, {
+        // Customer 2
+        customerReference: IDS.accountNumbers[1],
         summaryByFinancialYear: [
+          // Year ending 2019
           {
-            financialYear: 2019,
+            financialYear: 2018,
             creditLineCount: 0,
             creditLineValue: 0,
-            debitLineCount: 6,
-            debitLineValue: 120033,
-            netTotal: 120033,
-            transactions: []
-          },
-          {
-            financialYear: 2020,
-            creditLineCount: 3,
-            creditLineValue: -15324,
-            debitLineCount: 4,
-            debitLineValue: 234,
-            netTotal: -15090,
-            transactions: []
+            debitLineCount: 2,
+            debitLineValue: 523,
+            netTotal: 523,
+            transactions: [{
+              id: IDS.transactions[2],
+              chargeValue: 400
+            }, {
+              id: IDS.transactions[3],
+              chargeValue: 123
+            }]
           }
         ]
       }
@@ -177,156 +121,180 @@ const createChargeModuleData = () => ({
   }
 });
 
-const CHARGE_MODULE_TRANSACTION_ID = '00000000-0000-0000-0000-000000000006';
-
-const createInvoiceData = () => ({
-  billingBatch: {
-    billingBatchId: BATCH_ID
+const createTransaction = externalId => ({
+  billingTransactionId: uuid(),
+  volume: 10.6,
+  chargeElement: {
+    chargeElementId: uuid(),
+    source: 'supported',
+    season: CHARGE_SEASON.summer,
+    loss: 'high',
+    authorisedAnnualQuantity: 12
   },
-  invoiceAccountId: INVOICE_1_ACCOUNT_ID,
-  invoiceAccountNumber: INVOICE_1_ACCOUNT_NUMBER,
-  billingInvoiceLicences: [{
-    billingInvoiceId: uuid(),
-    licence: {
-      licenceId: LICENCE_ID,
-      licenceRef: '01/123/ABC',
-      regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
-      region: {
-        regionId: REGION_ID,
-        name: REGION_NAME,
-        displayName: REGION_NAME,
-        chargeRegionId: CHARGE_REGION_ID
-      },
-      startDate: '2019-01-01',
-      expiredDate: null,
-      lapsedDate: null,
-      revokedDate: null
-    },
-    billingTransactions: [{
-      billingTransactionId: uuid(),
-      volume: 10.6,
-      chargeElement: {
-        chargeElementId: uuid(),
-        source: 'supported',
-        season: CHARGE_SEASON.summer,
-        loss: 'high',
-        authorisedAnnualQuantity: 12
-      },
-      externalId: CHARGE_MODULE_TRANSACTION_ID
-    }]
-  }]
+  billingVolume: [],
+  externalId
 });
 
-const createOneWithInvoicesWithTransactions = () => ({
-  batchId: BATCH_ID,
+const createLicence = licenceRef => ({
+  licenceId: uuid(),
+  licenceRef: '01/123/ABC',
+  regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
   region: {
+    regionId: '00000000-0000-0000-0000-000000000001',
+    name: 'Anglian',
+    displayName: 'Anglian',
     chargeRegionId: 'A'
   },
-  billingInvoices: [{
-    invoiceAccountId: INVOICE_1_ACCOUNT_ID,
-    invoiceAccountNumber: INVOICE_1_ACCOUNT_NUMBER,
-    billingInvoiceLicences: [{
-      billingInvoiceId: uuid(),
-      licence: {
-        licenceId: LICENCE_ID,
-        licenceRef: '01/123/ABC',
-        regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
-        region: {
-          regionId: REGION_ID,
-          name: REGION_NAME,
-          displayName: REGION_NAME,
-          chargeRegionId: CHARGE_REGION_ID
-        },
-        startDate: '2019-01-01',
-        expiredDate: null,
-        lapsedDate: null,
-        revokedDate: null
-      },
-      billingTransactions: [{
-        billingTransactionId: uuid(),
-        volume: 10.6,
-        chargeElement: {
-          chargeElementId: uuid(),
-          source: 'supported',
-          season: CHARGE_SEASON.summer,
-          loss: 'high',
-          authorisedAnnualQuantity: 12
-        },
-        externalId: CHARGE_MODULE_TRANSACTION_ID
-      }]
-    }]
-  },
-  {
-    invoiceAccountId: INVOICE_2_ACCOUNT_ID,
-    invoiceAccountNumber: INVOICE_2_ACCOUNT_NUMBER,
-    billingInvoiceLicences: [{
-      billingInvoiceId: uuid(),
-      licence: {
-        licenceId: LICENCE_ID,
-        licenceRef: '01/123/ABC',
-        regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
-        region: {
-          regionId: REGION_ID,
-          name: REGION_NAME,
-          displayName: REGION_NAME,
-          chargeRegionId: CHARGE_REGION_ID
-        },
-        startDate: '2019-01-01',
-        expiredDate: null,
-        lapsedDate: null,
-        revokedDate: null
-      }
-    }, {
-      billingInvoiceId: uuid(),
-      licence: {
-        licenceId: LICENCE_ID,
-        licenceRef: '02/345',
-        regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
-        region: {
-          regionId: REGION_ID,
-          name: REGION_NAME,
-          displayName: REGION_NAME,
-          chargeRegionId: CHARGE_REGION_ID
-        },
-        startDate: '2019-01-01',
-        expiredDate: null,
-        lapsedDate: null,
-        revokedDate: null
-      }
-    }]
-  }]
+  startDate: '2019-01-01',
+  expiredDate: null,
+  lapsedDate: null,
+  revokedDate: null
 });
 
+const createBatchData = () => {
+  return {
+    batchId: IDS.batch,
+    region: {
+      chargeRegionId: 'A'
+    },
+    billingInvoices: [
+      // Invoice for customer 1 in 2019
+      {
+        billingBatchId: IDS.batch,
+        billingInvoiceId: IDS.invoices[0],
+        invoiceAccountId: IDS.invoiceAccounts[0],
+        invoiceAccountNumber: IDS.accountNumbers[0],
+        financialYearEnding: 2019,
+        billingInvoiceLicences: [{
+          billingInvoiceId: IDS.invoices[0],
+          billingInvoiceLicenceId: uuid(),
+          licence: createLicence('01/123'),
+          billingTransactions: [
+            createTransaction(IDS.transactions[0]),
+            createTransaction(IDS.transactions[1])
+          ]
+        }]
+      },
+      // Invoice for customer 2 in 2019
+      {
+        billingBatchId: IDS.batch,
+        billingInvoiceId: IDS.invoices[1],
+        invoiceAccountId: IDS.invoiceAccounts[1],
+        invoiceAccountNumber: IDS.accountNumbers[1],
+        financialYearEnding: 2019,
+        billingInvoiceLicences: [{
+          billingInvoiceId: IDS.invoices[1],
+          billingInvoiceLicenceId: uuid(),
+          licence: createLicence('02/456'),
+          billingTransactions: [
+            createTransaction(IDS.transactions[2]),
+            createTransaction(IDS.transactions[3])
+          ]
+        }]
+      },
+      // Invoice for customer 1 in 2020
+      {
+        billingBatchId: IDS.batch,
+        billingInvoiceId: IDS.invoices[2],
+        invoiceAccountId: IDS.invoiceAccounts[0],
+        invoiceAccountNumber: IDS.accountNumbers[0],
+        financialYearEnding: 2020,
+        billingInvoiceLicences: [{
+          billingInvoiceId: IDS.invoices[2],
+          billingInvoiceLicenceId: uuid(),
+          licence: createLicence('01/123'),
+          billingTransactions: [
+            createTransaction(IDS.transactions[4]),
+            createTransaction(IDS.transactions[5])
+          ]
+        }]
+      }
+    ]
+  };
+};
+
+const createBatchDataWithoutTransactions = () => {
+  const data = createBatchData();
+  for (const billingInvoice of data.billingInvoices) {
+    for (const billingInvoiceLicence of billingInvoice.billingInvoiceLicences) {
+      delete billingInvoiceLicence.billingTransactions;
+    }
+  }
+  return data;
+};
+
+const getInvoiceAccountNumber = invoice => invoice.invoiceAccount.accountNumber;
+const getInvoiceFinancialYear = invoice => invoice.financialYear.yearEnding;
+
+const findInvoice = (invoices, accountNumber, financialYear) => find(invoices, invoice =>
+  getInvoiceAccountNumber(invoice) === accountNumber && getInvoiceFinancialYear(invoice) === financialYear
+);
+
+const createAddress = address1 => ({
+  addressId: uuid(),
+  address1,
+  address2: null,
+  address3: null,
+  address4: null,
+  town: 'Testington',
+  county: 'Testingshire',
+  postcode: 'TT1 1TT',
+  country: 'UK'
+});
+
+const createCrmData = () => ([
+  {
+    invoiceAccountId: IDS.invoiceAccounts[0],
+    invoiceAccountNumber: IDS.accountNumbers[0],
+    company: {
+      companyId: IDS.companies[0],
+      name: 'Test Company 1'
+    },
+    invoiceAccountAddresses: [
+      {
+        startDate: '2019-01-01',
+        address: createAddress('Daisy cottage'),
+        agentCompany: {
+          companyId: IDS.companies[1]
+        },
+        contact: {
+          contactId: IDS.contacts[0]
+        }
+      }
+    ]
+  },
+  {
+    invoiceAccountId: IDS.invoiceAccounts[1],
+    invoiceAccountNumber: IDS.accountNumbers[1],
+    company: {
+      companyId: IDS.companies[2],
+      name: 'Test Company 2'
+    },
+    invoiceAccountAddresses: [{
+      startDate: '2018-01-01',
+      address: createAddress('Buttercup farm')
+    }]
+  }
+]);
+
 experiment('modules/billing/services/invoiceService', () => {
-  let batch, batchData, chargeModuleData;
+  let batch, chargeModuleData, crmData;
 
   beforeEach(async () => {
     batch = createBatch();
-    batchData = createBatchData();
     chargeModuleData = createChargeModuleData();
-    sandbox.stub(repos.billingBatches, 'findOneWithInvoices').resolves(batchData);
+    crmData = createCrmData();
+
+    sandbox.stub(repos.billingBatches, 'findOneWithInvoices').resolves(createBatchDataWithoutTransactions());
+    sandbox.stub(repos.billingBatches, 'findOneWithInvoicesWithTransactions').resolves(createBatchData());
+
     sandbox.stub(chargeModuleBillRunConnector, 'get').resolves(chargeModuleData);
     sandbox.stub(chargeModuleBillRunConnector, 'getCustomer').resolves(chargeModuleData);
 
     sandbox.stub(repos.billingInvoices, 'findOne').resolves();
     sandbox.stub(repos.billingInvoices, 'upsert').resolves();
 
-    // Stub CRM invoice account data
-    invoiceAccount1 = new InvoiceAccount(INVOICE_1_ACCOUNT_ID);
-    invoiceAccount1.company = new Company(COMPANY_1_ID);
-    invoiceAccount1.company.name = 'Test Company 1';
-    invoiceAccount1.accountNumber = INVOICE_1_ACCOUNT_NUMBER;
-    invoiceAccount1.address = new Address();
-    invoiceAccount1.address.addressLine1 = 'Daisy Cottage';
-
-    invoiceAccount2 = new InvoiceAccount(INVOICE_2_ACCOUNT_ID);
-    invoiceAccount2.company = new Company(COMPANY_2_ID);
-    invoiceAccount2.company.name = 'Test Company 2';
-    invoiceAccount2.accountNumber = INVOICE_2_ACCOUNT_NUMBER;
-
-    sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountIds').resolves([
-      invoiceAccount1, invoiceAccount2
-    ]);
+    sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountsByIds').resolves(crmData);
 
     sandbox.stub(repos.billingInvoiceLicences, 'findOne');
   });
@@ -344,179 +312,330 @@ experiment('modules/billing/services/invoiceService', () => {
 
     test('gets batch with correct ID', async () => {
       expect(
-        repos.billingBatches.findOneWithInvoices.calledWith(BATCH_ID)
+        repos.billingBatches.findOneWithInvoices.calledWith(IDS.batch)
       ).to.be.true();
     });
 
     test('gets batch summary data from charge module with correct external ID', async () => {
       const [externalId] = chargeModuleBillRunConnector.get.lastCall.args;
-      expect(externalId).to.equal(EXTERNAL_ID);
+      expect(externalId).to.equal(IDS.batchExternalId);
     });
 
-    test('there is an invoice for each customer', async () => {
-      expect(invoices.length).to.equal(2);
-      expect(invoices[0].invoiceAccount.accountNumber).to.equal(INVOICE_1_ACCOUNT_NUMBER);
-      expect(invoices[1].invoiceAccount.accountNumber).to.equal(INVOICE_2_ACCOUNT_NUMBER);
+    test('there is an invoice for each customer and financial year combination', async () => {
+      expect(invoices.length).to.equal(3);
     });
 
-    test('the invoices have been decorated with the company', async () => {
-      expect(invoices[0].invoiceAccount.company.id).to.equal(COMPANY_1_ID);
-      expect(invoices[1].invoiceAccount.company.id).to.equal(COMPANY_2_ID);
+    experiment('the 2019 invoice for customer 1', () => {
+      let invoice;
+
+      beforeEach(async () => {
+        invoice = findInvoice(invoices, IDS.accountNumbers[0], 2019);
+      });
+
+      test('is an instance of Invoice', async () => {
+        expect(invoice instanceof Invoice).to.be.true();
+      });
+
+      test('has the correct CRM company, agent and contact', async () => {
+        expect(invoice.invoiceAccount.company.id).to.equal(IDS.companies[0]);
+        expect(invoice.agentCompany.id).to.equal(IDS.companies[1]);
+        expect(invoice.contact.id).to.equal(IDS.contacts[0]);
+      });
+
+      test('has a correct financial summary', async () => {
+        const { totals } = invoice;
+
+        expect(totals.creditLineCount).to.equal(0);
+        expect(totals.creditLineValue).to.equal(0);
+        expect(totals.debitLineCount).to.equal(2);
+        expect(totals.debitLineValue).to.equal(12345);
+        expect(totals.netTotal).to.equal(12345);
+      });
     });
 
-    test('the first invoice has a correct financial summary', async () => {
-      const { totals } = invoices[0];
+    experiment('the 2020 invoice for customer 1', () => {
+      let invoice;
 
-      expect(totals.creditLineCount).to.equal(0);
-      expect(totals.creditLineValue).to.equal(0);
-      expect(totals.debitLineCount).to.equal(5);
-      expect(totals.debitLineValue).to.equal(12345);
-      expect(totals.netTotal).to.equal(12345);
+      beforeEach(async () => {
+        invoice = findInvoice(invoices, IDS.accountNumbers[0], 2020);
+      });
+
+      test('is an instance of Invoice', async () => {
+        expect(invoice instanceof Invoice).to.be.true();
+      });
+
+      test('has the correct CRM company, agent and contact', async () => {
+        expect(invoice.invoiceAccount.company.id).to.equal(IDS.companies[0]);
+        expect(invoice.agentCompany.id).to.equal(IDS.companies[1]);
+        expect(invoice.contact.id).to.equal(IDS.contacts[0]);
+      });
+
+      test('has a correct financial summary', async () => {
+        const { totals } = invoice;
+
+        expect(totals.creditLineCount).to.equal(1);
+        expect(totals.creditLineValue).to.equal(-200);
+        expect(totals.debitLineCount).to.equal(1);
+        expect(totals.debitLineValue).to.equal(100);
+        expect(totals.netTotal).to.equal(-100);
+      });
     });
 
-    test('the first invoice has a correct financial summary - totals are summed across financial years', async () => {
-      const { totals } = invoices[1];
+    experiment('the 2019 invoice for customer 2', () => {
+      let invoice;
 
-      expect(totals.creditLineCount).to.equal(3);
-      expect(totals.creditLineValue).to.equal(-15324);
-      expect(totals.debitLineCount).to.equal(10);
-      expect(totals.debitLineValue).to.equal(120267);
-      expect(totals.netTotal).to.equal(104943);
+      beforeEach(async () => {
+        invoice = findInvoice(invoices, IDS.accountNumbers[1], 2019);
+      });
+
+      test('is an instance of Invoice', async () => {
+        expect(invoice instanceof Invoice).to.be.true();
+      });
+
+      test('has the correct CRM company, agent and contact', async () => {
+        expect(invoice.invoiceAccount.company.id).to.equal(IDS.companies[2]);
+        expect(invoice.agentCompany).to.be.null();
+        expect(invoice.contact).to.be.null();
+      });
+
+      test('has a correct financial summary', async () => {
+        const { totals } = invoice;
+
+        expect(totals.creditLineCount).to.equal(0);
+        expect(totals.creditLineValue).to.equal(0);
+        expect(totals.debitLineCount).to.equal(2);
+        expect(totals.debitLineValue).to.equal(523);
+        expect(totals.netTotal).to.equal(523);
+      });
     });
   });
 
   experiment('.getInvoicesTransactionsForBatch', () => {
     let invoices;
-    const batchData = createOneWithInvoicesWithTransactions();
 
     beforeEach(async () => {
-      sandbox.stub(repos.billingBatches, 'findOneWithInvoicesWithTransactions').resolves(batchData);
       invoices = await invoiceService.getInvoicesTransactionsForBatch(batch);
     });
 
     test('gets batch with correct ID', async () => {
       expect(
-        repos.billingBatches.findOneWithInvoicesWithTransactions.calledWith(BATCH_ID)
+        repos.billingBatches.findOneWithInvoicesWithTransactions.calledWith(IDS.batch)
       ).to.be.true();
     });
 
-    test('gets summary data from charge module with correct external ID', async () => {
-      expect(
-        chargeModuleBillRunConnector.get.calledWith(EXTERNAL_ID)
-      ).to.be.true();
+    test('gets batch summary data from charge module with correct external ID', async () => {
+      const [externalId] = chargeModuleBillRunConnector.get.lastCall.args;
+      expect(externalId).to.equal(IDS.batchExternalId);
     });
 
-    test('there is an invoice for each customer', async () => {
-      expect(invoices.length).to.equal(2);
-      expect(invoices[0].invoiceAccount.accountNumber).to.equal(INVOICE_1_ACCOUNT_NUMBER);
-      expect(invoices[1].invoiceAccount.accountNumber).to.equal(INVOICE_2_ACCOUNT_NUMBER);
+    test('there is an invoice for each customer and financial year combination', async () => {
+      expect(invoices.length).to.equal(3);
     });
 
-    test('the invoices have been decorated with the company', async () => {
-      expect(invoices[0].invoiceAccount.company.id).to.equal(COMPANY_1_ID);
-      expect(invoices[1].invoiceAccount.company.id).to.equal(COMPANY_2_ID);
+    experiment('the 2019 invoice for customer 1', () => {
+      let invoice;
+
+      beforeEach(async () => {
+        invoice = findInvoice(invoices, IDS.accountNumbers[0], 2019);
+      });
+
+      test('is an instance of Invoice', async () => {
+        expect(invoice instanceof Invoice).to.be.true();
+      });
+
+      test('has the correct CRM company, agent and contact', async () => {
+        expect(invoice.invoiceAccount.company.id).to.equal(IDS.companies[0]);
+        expect(invoice.agentCompany.id).to.equal(IDS.companies[1]);
+        expect(invoice.contact.id).to.equal(IDS.contacts[0]);
+      });
+
+      test('has 2 transactions', async () => {
+        expect(invoice.invoiceLicences[0].transactions).to.be.an.array().length(2);
+      });
+
+      test('has the correct transaction amount for transaction 1', async () => {
+        const transaction = find(invoice.invoiceLicences[0].transactions, { externalId: IDS.transactions[0] });
+        expect(transaction.value).to.equal(2345);
+      });
+
+      test('has the correct transaction amount for transaction 2', async () => {
+        const transaction = find(invoice.invoiceLicences[0].transactions, { externalId: IDS.transactions[1] });
+        expect(transaction.value).to.equal(10000);
+      });
+
+      test(' has a correct financial summary', async () => {
+        const { totals } = invoice;
+
+        expect(totals.creditLineCount).to.equal(0);
+        expect(totals.creditLineValue).to.equal(0);
+        expect(totals.debitLineCount).to.equal(2);
+        expect(totals.debitLineValue).to.equal(12345);
+        expect(totals.netTotal).to.equal(12345);
+      });
     });
 
-    test('the transaction is decorated with the value from the charge module', async () => {
-      expect(invoices[0].invoiceLicences[0].transactions[0].value).to.equal(2345);
+    experiment('the 2020 invoice for customer 1', () => {
+      let invoice;
+
+      beforeEach(async () => {
+        invoice = findInvoice(invoices, IDS.accountNumbers[0], 2020);
+      });
+
+      test('is an instance of Invoice', async () => {
+        expect(invoice instanceof Invoice).to.be.true();
+      });
+
+      test('has the correct CRM company, agent and contact', async () => {
+        expect(invoice.invoiceAccount.company.id).to.equal(IDS.companies[0]);
+        expect(invoice.agentCompany.id).to.equal(IDS.companies[1]);
+        expect(invoice.contact.id).to.equal(IDS.contacts[0]);
+      });
+
+      test('has 2 transactions', async () => {
+        expect(invoice.invoiceLicences[0].transactions).to.be.an.array().length(2);
+      });
+
+      test('has the correct transaction amount for transaction 1', async () => {
+        const transaction = find(invoice.invoiceLicences[0].transactions, { externalId: IDS.transactions[4] });
+        expect(transaction.value).to.equal(100);
+      });
+
+      test('has the correct transaction amount for transaction 2', async () => {
+        const transaction = find(invoice.invoiceLicences[0].transactions, { externalId: IDS.transactions[5] });
+        expect(transaction.value).to.equal(-200);
+      });
+
+      test('has a correct financial summary', async () => {
+        const { totals } = invoice;
+
+        expect(totals.creditLineCount).to.equal(1);
+        expect(totals.creditLineValue).to.equal(-200);
+        expect(totals.debitLineCount).to.equal(1);
+        expect(totals.debitLineValue).to.equal(100);
+        expect(totals.netTotal).to.equal(-100);
+      });
+    });
+
+    experiment('the 2019 invoice for customer 2', () => {
+      let invoice;
+
+      beforeEach(async () => {
+        invoice = findInvoice(invoices, IDS.accountNumbers[1], 2019);
+      });
+
+      test('is an instance of Invoice', async () => {
+        expect(invoice instanceof Invoice).to.be.true();
+      });
+
+      test('has the correct CRM company, agent and contact', async () => {
+        expect(invoice.invoiceAccount.company.id).to.equal(IDS.companies[2]);
+        expect(invoice.agentCompany).to.be.null();
+        expect(invoice.contact).to.be.null();
+      });
+
+      test('has 2 transactions', async () => {
+        expect(invoice.invoiceLicences[0].transactions).to.be.an.array().length(2);
+      });
+
+      test('has the correct transaction amount for transaction 1', async () => {
+        const transaction = find(invoice.invoiceLicences[0].transactions, { externalId: IDS.transactions[2] });
+        expect(transaction.value).to.equal(400);
+      });
+
+      test('has the correct transaction amount for transaction 2', async () => {
+        const transaction = find(invoice.invoiceLicences[0].transactions, { externalId: IDS.transactions[3] });
+        expect(transaction.value).to.equal(123);
+      });
+
+      test('has a correct financial summary', async () => {
+        const { totals } = invoice;
+
+        expect(totals.creditLineCount).to.equal(0);
+        expect(totals.creditLineValue).to.equal(0);
+        expect(totals.debitLineCount).to.equal(2);
+        expect(totals.debitLineValue).to.equal(523);
+        expect(totals.netTotal).to.equal(523);
+      });
     });
   });
 
   experiment('.getInvoiceForBatch', () => {
-    let result;
-    const INVOICE_ID = '00000000-0000-0000-0000-000000000005';
-
-    experiment('when invoice not found in repo', () => {
+    experiment('when the billing invoice is not found', () => {
       beforeEach(async () => {
         repos.billingInvoices.findOne.resolves(null);
       });
 
       test('a NotFoundError is thrown', async () => {
-        const func = () => invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
+        const func = () => invoiceService.getInvoiceForBatch(batch, IDS.invoices[0]);
         const err = await expect(func()).to.reject();
         expect(err instanceof NotFoundError).to.be.true();
+        expect(err.message).to.equal(`Invoice ${IDS.invoices[0]} not found`);
       });
     });
 
-    experiment('when invoice found, but batch ID does not match that requested', () => {
+    experiment('when the billing batch ID does not match', () => {
       beforeEach(async () => {
-        repos.billingInvoices.findOne.resolves({
-          billingBatch: {
-            billingBatchId: 'wrong-id'
-          }
-        });
-      });
-
-      test('a NotFoundError is thrown', async () => {
-        const func = () => invoiceService.getInvoiceForBatch(BATCH_ID, INVOICE_ID);
-        const err = await expect(func()).to.reject();
-        expect(err instanceof NotFoundError).to.be.true();
-      });
-    });
-
-    experiment('when invoice is found and batch ID does match that requested', () => {
-      let invoice;
-      beforeEach(async () => {
-        invoice = createInvoiceData();
+        const invoice = {
+          ...createBatchData().billingInvoices[0],
+          billingBatchId: uuid()
+        };
         repos.billingInvoices.findOne.resolves(invoice);
       });
 
-      experiment('when the batch status is not "ready" or "sent', () => {
-        beforeEach(async () => {
-          batch.status = Batch.BATCH_STATUS.review;
-          result = await invoiceService.getInvoiceForBatch(batch, INVOICE_ID);
-        });
+      test('a NotFoundError is thrown', async () => {
+        const func = () => invoiceService.getInvoiceForBatch(batch, IDS.invoices[0]);
+        const err = await expect(func()).to.reject();
+        expect(err instanceof NotFoundError);
+        expect(err.message).to.equal(`Invoice ${IDS.invoices[0]} not found in batch ${IDS.batch}`);
+      });
+    });
 
-        test('the invoice repo .findOne() method is called with the correct invoice ID', async () => {
-          expect(repos.billingInvoices.findOne.calledWith(
-            INVOICE_ID
-          )).to.be.true();
-        });
+    experiment('when the billing batch ID does match', () => {
+      let invoice;
 
-        test('returns an Invoice instance', async () => {
-          expect(result instanceof Invoice).to.be.true();
-        });
-
-        test('the charge module is not called', async () => {
-          expect(chargeModuleBillRunConnector.getCustomer.called).to.be.false();
-        });
-
-        test('the invoice is decorated with invoice account company/address data from the CRM', async () => {
-          expect(result.invoiceAccount).to.equal(invoiceAccount1);
-        });
+      beforeEach(async () => {
+        const billingInvoice = createBatchData().billingInvoices[0];
+        repos.billingInvoices.findOne.resolves(billingInvoice);
+        invoice = await invoiceService.getInvoiceForBatch(batch, IDS.invoices[0]);
       });
 
-      experiment('when the batch status is "ready" or "sent', () => {
-        beforeEach(async () => {
-          batch.status = Batch.BATCH_STATUS.ready;
-          result = await invoiceService.getInvoiceForBatch(batch, INVOICE_ID);
+      test('the correct billing invoice is found', async () => {
+        expect(repos.billingInvoices.findOne.calledWith(IDS.invoices[0])).to.be.true();
+      });
+
+      experiment('the 2019 invoice for customer 1', () => {
+        test('is an instance of Invoice', async () => {
+          expect(invoice instanceof Invoice).to.be.true();
         });
 
-        test('the invoice repo .findOne() method is called with the correct invoice ID', async () => {
-          expect(repos.billingInvoices.findOne.calledWith(
-            INVOICE_ID
-          )).to.be.true();
+        test('has the correct CRM company, agent and contact', async () => {
+          expect(invoice.invoiceAccount.company.id).to.equal(IDS.companies[0]);
+          expect(invoice.agentCompany.id).to.equal(IDS.companies[1]);
+          expect(invoice.contact.id).to.equal(IDS.contacts[0]);
         });
 
-        test('returns an Invoice instance', async () => {
-          expect(result instanceof Invoice).to.be.true();
+        test('has 2 transactions', async () => {
+          expect(invoice.invoiceLicences[0].transactions).to.be.an.array().length(2);
         });
 
-        test('the invoice is decorated with totals from the charge module', async () => {
-          const summary = chargeModuleData.billRun.customers[0].summaryByFinancialYear[0];
-          expect(result.totals.creditLineCount).to.equal(summary.creditLineCount);
-          expect(result.totals.creditLineValue).to.equal(summary.creditLineValue);
-          expect(result.totals.debitLineCount).to.equal(summary.debitLineCount);
-          expect(result.totals.debitLineValue).to.equal(summary.debitLineValue);
-          expect(result.totals.netTotal).to.equal(summary.netTotal);
+        test('has the correct transaction amount for transaction 1', async () => {
+          const transaction = find(invoice.invoiceLicences[0].transactions, { externalId: IDS.transactions[0] });
+          expect(transaction.value).to.equal(2345);
         });
 
-        test('the invoice is decorated with invoice account company/address data from the CRM', async () => {
-          expect(result.invoiceAccount).to.equal(invoiceAccount1);
+        test('has the correct transaction amount for transaction 2', async () => {
+          const transaction = find(invoice.invoiceLicences[0].transactions, { externalId: IDS.transactions[1] });
+          expect(transaction.value).to.equal(10000);
         });
 
-        test('the transaction is decorated with the value from the charge module', async () => {
-          expect(result.invoiceLicences[0].transactions[0].value).to.equal(2345);
+        test(' has a correct financial summary', async () => {
+          const { totals } = invoice;
+
+          expect(totals.creditLineCount).to.equal(0);
+          expect(totals.creditLineValue).to.equal(0);
+          expect(totals.debitLineCount).to.equal(2);
+          expect(totals.debitLineValue).to.equal(12345);
+          expect(totals.netTotal).to.equal(12345);
         });
       });
     });

@@ -17,25 +17,23 @@ experiment('lib/connectors/repos/licence-versions', () => {
   let stub;
   let result;
 
-  beforeEach(async () => {
-    stub = {
-      fetchAll: sandbox.stub().resolves({
-        toJSON: () => ([
-          { licenceVersionId: 'ver-1' },
-          { licenceVersionId: 'ver-2' }
-        ])
-      }),
-      where: sandbox.stub().returnsThis()
-    };
-    sandbox.stub(LicenceVersion, 'forge').returns(stub);
-  });
-
   afterEach(async () => {
     sandbox.restore();
   });
 
   experiment('.findByLicenceId', () => {
     beforeEach(async () => {
+      stub = {
+        fetchAll: sandbox.stub().resolves({
+          toJSON: () => ([
+            { licenceVersionId: 'ver-1' },
+            { licenceVersionId: 'ver-2' }
+          ])
+        }),
+        where: sandbox.stub().returnsThis()
+      };
+      sandbox.stub(LicenceVersion, 'forge').returns(stub);
+
       result = await licenceVersionsRepo.findByLicenceId('test-licence-id');
     });
 
@@ -54,6 +52,55 @@ experiment('lib/connectors/repos/licence-versions', () => {
         { licenceVersionId: 'ver-1' },
         { licenceVersionId: 'ver-2' }
       ]);
+    });
+  });
+
+  experiment('.findOne', () => {
+    beforeEach(async () => {
+      stub = {
+        fetch: sandbox.stub().resolves({
+          toJSON: () => ({
+            licenceVersionId: 'ver-1'
+          })
+        })
+      };
+
+      sandbox.stub(LicenceVersion, 'forge').returns(stub);
+
+      result = await licenceVersionsRepo.findOne('test-licence-version-id');
+    });
+
+    test('queries by licence version id', async () => {
+      const [query] = LicenceVersion.forge.lastCall.args;
+      expect(query.licenceVersionId).to.equal('test-licence-version-id');
+    });
+
+    test('does not require the id matches a record', async () => {
+      const [options] = stub.fetch.lastCall.args;
+      expect(options.require).to.equal(false);
+    });
+
+    test('adds the purpose use relation', async () => {
+      const [options] = stub.fetch.lastCall.args;
+      expect(options.withRelated).to.include('licenceVersionPurposes.purposeUse');
+    });
+
+    test('resolves with the result', async () => {
+      expect(result).to.equal({
+        licenceVersionId: 'ver-1'
+      });
+    });
+
+    test('resolves with null if there is no result', async () => {
+      stub = {
+        fetch: sandbox.stub().resolves(null)
+      };
+
+      LicenceVersion.forge.returns(stub);
+
+      result = await licenceVersionsRepo.findOne('test-licence-version-id');
+
+      expect(result).to.equal(null);
     });
   });
 });

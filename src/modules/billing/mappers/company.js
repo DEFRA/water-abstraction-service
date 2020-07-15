@@ -1,5 +1,6 @@
 'use strict';
 
+const { isEmpty } = require('lodash');
 const Company = require('../../../lib/models/company');
 
 /**
@@ -8,6 +9,9 @@ const Company = require('../../../lib/models/company');
  * @return {Company}
  */
 const crmToModel = companyData => {
+  if (isEmpty(companyData)) {
+    return null;
+  }
   const company = new Company(companyData.companyId);
   return company.pickFrom(companyData, ['name', 'type']);
 };

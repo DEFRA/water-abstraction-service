@@ -1,8 +1,12 @@
 'use strict';
 
-const { assertAccountNumber, assertIsInstanceOf } = require('./validators');
+const moment = require('moment');
+const { sortBy, last } = require('lodash');
+
+const { assertAccountNumber, assertIsInstanceOf, assertIsArrayOfType } = require('./validators');
 const Model = require('./model');
 const Company = require('./company');
+const InvoiceAccountAddress = require('./invoice-account-address');
 
 class InvoiceAccount extends Model {
   /**
@@ -24,20 +28,41 @@ class InvoiceAccount extends Model {
   }
 
   /**
-  * Sets the account company
-  * @param {Company} company
-  */
+   * Sets the account company
+   * @param {Company} company
+   */
   set company (company) {
     assertIsInstanceOf(company, Company);
     this._company = company;
   }
 
   /**
- * Gets the company
- * @return {Company}
- */
+   * Gets the company
+   * @return {Company}
+   */
   get company () {
     return this._company;
+  }
+
+  get invoiceAccountAddresses () {
+    return this._invoiceAccountAddresses;
+  }
+
+  set invoiceAccountAddresses (invoiceAccountAddresses) {
+    assertIsArrayOfType(invoiceAccountAddresses, InvoiceAccountAddress);
+    this._invoiceAccountAddresses = invoiceAccountAddresses;
+  }
+
+  /**
+   * Gets the last invoice account address, sorted by start date
+   * @return {InvoiceAccountAddress}
+   */
+  get lastInvoiceAccountAddress () {
+    const arr = this.invoiceAccountAddresses || [];
+    const sorted = sortBy(arr, row => {
+      return moment(row.startDate).unix();
+    });
+    return last(sorted);
   }
 }
 
