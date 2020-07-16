@@ -117,7 +117,8 @@ const createInvoice = (options = {}, invoiceLicences) => {
   return invoice.fromHash({
     invoiceLicences: invoiceLicences || [createInvoiceLicence()],
     invoiceAccount,
-    options
+    options,
+    financialYear: new FinancialYear(2020)
   });
 };
 

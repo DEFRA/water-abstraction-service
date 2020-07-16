@@ -133,8 +133,8 @@ experiment('modules/billing/services/billing-volumes-service', () => {
           .onSecondCall().resolves(billingVolumesData[1]);
 
         mappers.billingVolume.dbToModel
-          .onFirstCall().returns(createBillingVolume(createBillingVolume(billingVolumesData[0])))
-          .onSecondCall().returns(createBillingVolume(createBillingVolume(billingVolumesData[1])));
+          .onFirstCall().returns(createBillingVolume(billingVolumesData[0]))
+          .onSecondCall().returns(createBillingVolume(billingVolumesData[1]));
 
         result = await billingVolumesService.getVolumes(chargeElements, '12/34/567', 2019, true, batch);
       });

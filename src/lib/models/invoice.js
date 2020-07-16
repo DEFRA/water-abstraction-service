@@ -112,6 +112,17 @@ class Invoice extends Model {
   }
 
   /**
+   * Gets the invoice licence with specified licence number
+   * @param {String} licenceNumber
+   * @return {InvoiceLicence|undefined}
+   */
+  getInvoiceLicenceByLicenceNumber (licenceNumber) {
+    return this._invoiceLicences.find(
+      invoiceLicence => invoiceLicence.licence.licenceNumber === licenceNumber
+    );
+  }
+
+  /**
    * Get the licence numbers for this invoice by inspecting
    * the Licence objects associated with each InvoiceLicence
    * object associated with this invoice

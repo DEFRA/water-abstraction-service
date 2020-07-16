@@ -15,3 +15,4 @@ exports.licenceAgreements = require('./licence-agreements');
 exports.licenceVersions = require('./licence-versions');
 exports.licences = require('./licences');
 exports.regions = require('./regions');
+exports.purposeUses = require('./purpose-uses');

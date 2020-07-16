@@ -16,10 +16,11 @@ class TestClass {
 }
 const TEST_MODEL = new TestClass();
 
-const createInvoice = accountNumber => {
+const createInvoice = (accountNumber, financialYearEnding = 2020) => {
   const invoice = new Invoice();
   invoice.invoiceAccount = new InvoiceAccount();
   invoice.invoiceAccount.accountNumber = accountNumber;
+  invoice.financialYear = new FinancialYear(financialYearEnding);
   return invoice;
 };
 
@@ -199,21 +200,22 @@ experiment('lib/models/batch', () => {
     });
   });
 
-  experiment('.getInvoiceByAccountNumber', () => {
+  experiment('.getInvoiceByAccountNumberAndFinancialYear', () => {
     let invoices;
 
     beforeEach(async () => {
-      invoices = [createInvoice('S12345678A'), createInvoice('S87654321A')];
+      invoices = [createInvoice('S12345678A', 2019), createInvoice('S87654321A', 2019), createInvoice('S87654321A', 2020)];
       batch.addInvoices(invoices);
     });
 
-    test('gets an invoice when an invoice with the account number is found', async () => {
-      const invoice = batch.getInvoiceByAccountNumber('S87654321A');
+    test('gets an invoice when an invoice with the account number and financial year is found', async () => {
+      const invoice = batch.getInvoiceByAccountNumberAndFinancialYear('S87654321A', new FinancialYear(2020));
       expect(invoice.invoiceAccount.accountNumber).to.equal('S87654321A');
+      expect(invoice.financialYear.yearEnding).to.equal(2020);
     });
 
     test('returns undefined when an invoice with the account number is not found', async () => {
-      const invoice = batch.getInvoiceByAccountNumber('NOT_HERE');
+      const invoice = batch.getInvoiceByAccountNumberAndFinancialYear('NOT_HERE', new FinancialYear(2020));
       expect(invoice).to.equal(undefined);
     });
   });

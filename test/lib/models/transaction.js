@@ -4,6 +4,7 @@ const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
 const sandbox = require('sinon').createSandbox();
+const { omit } = require('lodash');
 
 const hashers = require('../../../src/lib/hash');
 const Transaction = require('../../../src/lib/models/transaction');
@@ -53,9 +54,6 @@ const getTestDataForHashing = () => {
   transaction.chargeElement = chargeElement;
   transaction.volume = 3;
   transaction.isCompensationCharge = true;
-  transaction.calculatedVolume = 4;
-  transaction.twoPartTariffStatus = null;
-  transaction.twoPartTariffError = false;
   transaction.isTwoPartTariffSupplementary = true;
 
   transaction.agreements = [
@@ -104,6 +102,29 @@ experiment('lib/models/transaction', () => {
       expect(transaction.id).to.equal(id);
       expect(transaction.value).to.equal(100);
       expect(transaction.isCredit).to.be.true();
+    });
+  });
+
+  experiment('.toCredit', () => {
+    let credit, transaction;
+
+    beforeEach(async () => {
+      transaction = getTestDataForHashing().transaction;
+      credit = transaction.toCredit();
+    });
+
+    test('the id is not set', async () => {
+      expect(credit.id).to.be.undefined();
+    });
+
+    test('the isCredit flag is true', async () => {
+      expect(credit.isCredit).to.be.true();
+    });
+
+    test('the transactions match except for the id and credit flag', async () => {
+      const originalData = omit(transaction.toJSON(), ['id', 'isCredit']);
+      const creditData = omit(credit.toJSON(), ['id', 'isCredit']);
+      expect(originalData).to.equal(creditData);
     });
   });
 
