@@ -115,4 +115,30 @@ experiment('lib/models/invoice', () => {
       expect(invoice.getLicenceNumbers()).to.equal([]);
     });
   });
+
+  experiment('.getInvoiceLicenceByLicenceNumber', () => {
+    let invoiceLicenceA, invoiceLicenceB, invoice;
+
+    const createInvoiceLicence = licenceNumber => {
+      const licence = new Licence();
+      licence.licenceNumber = licenceNumber;
+      const invoiceLicence = new InvoiceLicence();
+      return invoiceLicence.fromHash({ licence });
+    };
+
+    beforeEach(async () => {
+      invoiceLicenceA = createInvoiceLicence('01/123');
+      invoiceLicenceB = createInvoiceLicence('02/345');
+      invoice = new Invoice();
+      invoice.invoiceLicences = [invoiceLicenceA, invoiceLicenceB];
+    });
+
+    test('gets an invoice licence by licence number', async () => {
+      expect(invoice.getInvoiceLicenceByLicenceNumber('02/345')).to.equal(invoiceLicenceB);
+    });
+
+    test('returns undefined if not found', async () => {
+      expect(invoice.getInvoiceLicenceByLicenceNumber('01/999')).to.be.undefined();
+    });
+  });
 });
