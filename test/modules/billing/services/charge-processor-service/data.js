@@ -133,7 +133,8 @@ const createInvoice = () => {
   const invoice = new Invoice();
   return invoice.fromHash({
     invoiceAccount,
-    invoiceLicences: [invoiceLicence]
+    invoiceLicences: [invoiceLicence],
+    financialYear: new FinancialYear(2019)
   });
 };
 

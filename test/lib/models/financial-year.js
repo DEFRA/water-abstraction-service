@@ -4,6 +4,8 @@ const moment = require('moment');
 
 const FinancialYear = require('../../../src/lib/models/financial-year');
 
+class TestModel {};
+
 experiment('lib/models/financial-year', () => {
   test('.startYear is the year before the year ending value', async () => {
     const financialYear = new FinancialYear(2019);
@@ -53,6 +55,28 @@ experiment('lib/models/financial-year', () => {
       expect(financialYears[2].endYear).to.equal(2022);
       expect(financialYears[2].start).to.equal(moment('2021-04-01'));
       expect(financialYears[2].end).to.equal(moment('2022-03-31'));
+    });
+  });
+
+  experiment('.isEqualTo', () => {
+    test('returns true if the financial year is the same as the one supplied', async () => {
+      const financialYear = new FinancialYear(2019);
+      const comparison = new FinancialYear(2019);
+      expect(financialYear.isEqualTo(comparison)).to.equal(true);
+    });
+
+    test('returns false if the financial year is different same as the one supplied', async () => {
+      const financialYear = new FinancialYear(2019);
+      const comparison = new FinancialYear(2020);
+      expect(financialYear.isEqualTo(comparison)).to.equal(false);
+    });
+
+    test('throws an error if the argument is not a FinancialYear instance', async () => {
+      const func = () => {
+        const financialYear = new FinancialYear(2019);
+        return financialYear.isEqualTo(new TestModel());
+      };
+      expect(func).to.throw();
     });
   });
 });
