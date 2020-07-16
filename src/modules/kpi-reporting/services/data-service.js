@@ -4,31 +4,17 @@ const idm = require('../../../lib/connectors/idm/kpi-reporting');
 const events = require('../../../lib/services/events');
 const returns = require('../../../lib/connectors/returns');
 
-const errorHandler = (error) => {
-  if (error.statusCode === 404) {
-    return null;
-  }
-  return error;
-};
-
-const getIDMRegistrationsData = async () => {
+const getDataFromResponseEnvelope = async connectorFunc => {
   try {
-    const { data } = await idm.getKPIRegistrations();
+    const { data } = await connectorFunc();
     return data;
   } catch (err) {
-    return errorHandler(err);
+    return err.statusCode === 404 ? null : err;
   }
 };
 
-// Delegated access - CRM 1.0
-const getCRMDelegatedAccessData = async () => {
-  try {
-    const { data } = await crm.getKPIAccessRequests();
-    return data;
-  } catch (err) {
-    return errorHandler(err);
-  }
-};
+const getIDMRegistrationsData = async () => getDataFromResponseEnvelope(idm.getKPIRegistrations);
+const getCRMDelegatedAccessData = async () => getDataFromResponseEnvelope(crm.getKPIAccessRequests);
 
 // Naming licences data - events table
 const getLicenceNamesData = async () => {
@@ -47,7 +33,10 @@ const getReturnsDataByCycle = async (startDate, endDate, isSummer) => {
     const { data: [data] } = await returns.getKPIReturnsByCycle(startDate, endDate, isSummer);
     return data;
   } catch (err) {
-    return errorHandler(err);
+    if (err.statusCode === 404) {
+      return null;
+    }
+    return err;
   }
 };
 

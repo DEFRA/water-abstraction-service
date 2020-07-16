@@ -77,14 +77,16 @@ const getMostRecentReturnsInvitationByLicence = async licenceRef => {
   return repo.events.getMostRecentReturnsInvitationByLicence(licenceRef);
 };
 
+const nullIfEmpty = (arr = []) => arr.length ? arr : null;
+
 const getKPIReturnsMonthly = async () => {
   const result = await repo.events.getKPIReturnsMonthlyData();
-  return result.rowCount > 0 ? [...camelCase(result.rows)] : null;
+  return nullIfEmpty(camelCase(result.rows));
 };
 
 const getKPILicenceNames = async () => {
   const result = await repo.events.getKPILicenceNamesData();
-  return result.rowCount > 0 ? [...camelCase(result.rows)] : null;
+  return nullIfEmpty(camelCase(result.rows));
 };
 
 exports.create = create;
