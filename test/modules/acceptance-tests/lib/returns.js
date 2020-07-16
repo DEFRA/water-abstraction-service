@@ -39,8 +39,8 @@ experiment('modules/acceptance-tests/lib/returns', () => {
       expect(createdReturn.returns_frequency).to.equal('day');
     });
 
-    test('includes a known source to allow the data to be deleted', async () => {
-      expect(createdReturn.source).to.equal('acceptance-test-setup');
+    test('sets the is test flag to true', async () => {
+      expect(createdReturn.is_test).to.equal(true);
     });
   });
 
