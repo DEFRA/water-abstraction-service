@@ -16,7 +16,7 @@ const handleProcessChargeVersionComplete = async (job, messageQueue) => {
 
   const { eventId } = job.data.request.data;
   const { chargeVersionYear, batch: batchFromJobData } = job.data.response;
-  const batchId = chargeVersionYear.billing_batch_id;
+  const batchId = chargeVersionYear.billingBatchId;
 
   const { processing } = await chargeVersionYearService.getStatusCounts(batchId);
 
