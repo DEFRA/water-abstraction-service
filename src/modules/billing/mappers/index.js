@@ -7,7 +7,6 @@ exports.chargeVersion = require('./charge-version');
 exports.company = require('./company');
 exports.totals = require('./totals');
 exports.company = require('./company');
-exports.contact = require('./contact');
 exports.invoice = require('./invoice');
 exports.invoiceAccount = require('./invoice-account');
 exports.invoiceAccountAddress = require('./invoice-account-address');

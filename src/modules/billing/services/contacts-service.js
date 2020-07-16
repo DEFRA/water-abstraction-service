@@ -1,7 +1,7 @@
 'use strict';
 
 const contactsConnector = require('../../../lib/connectors/crm-v2/contacts');
-const mappers = require('../mappers');
+const contactMapper = require('../../../lib/mappers/contact');
 
 /**
  * Gets contacts from CRM v2 API and returns as Contact models
@@ -10,7 +10,7 @@ const mappers = require('../mappers');
  */
 const getContacts = async contactIds => {
   const contacts = await contactsConnector.getContacts(contactIds);
-  return contacts.map(mappers.contact.crmToModel);
+  return contacts.map(contactMapper.crmToModel);
 };
 
 exports.getContacts = getContacts;

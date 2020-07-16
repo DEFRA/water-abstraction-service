@@ -1,8 +1,14 @@
+'use strict';
+
 const returnsConnector = require('../../lib/connectors/returns');
 const documentsConnector = require('../../lib/connectors/crm/documents');
+const companyContactsService = require('../../lib/services/company-contacts');
 
 const documentsHelper = require('./lib/documents');
 const returnsHelper = require('./lib/returns');
+
+const { envelope } = require('../../lib/response');
+const Boom = require('@hapi/boom');
 
 const rowMapper = ret => {
   const { purposes = [] } = ret.metadata;
@@ -44,4 +50,18 @@ const getReturns = async (request, h) => {
   return returns.map(rowMapper);
 };
 
+const getCompanyContacts = async (request) => {
+  const { companyId } = request.params;
+
+  try {
+    const companyContacts = await companyContactsService.getCompanyContacts(companyId);
+    return envelope(companyContacts);
+  } catch (err) {
+    return (err.statusCode === 404)
+      ? Boom.notFound(err.error.message)
+      : err;
+  }
+};
+
 exports.getReturns = getReturns;
+exports.getCompanyContacts = getCompanyContacts;
