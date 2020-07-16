@@ -104,4 +104,18 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
       expect(params).to.equal({ billingInvoiceId });
     });
   });
+
+  experiment('.createForBatch', () => {
+    const billingBatchId = 'test-invoice-id';
+
+    beforeEach(async () => {
+      await repos.billingBatchChargeVersionYears.createForBatch(billingBatchId);
+    });
+
+    test('calls knex.raw with correct query and params', async () => {
+      const [query, params] = raw.multiRow.lastCall.args;
+      expect(query).to.equal(queries.createForBatch);
+      expect(params).to.equal({ billingBatchId });
+    });
+  });
 });
