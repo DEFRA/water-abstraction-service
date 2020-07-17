@@ -3,7 +3,7 @@
 const InvoiceAccountAddress = require('../../../lib/models/invoice-account-address');
 const contactMapper = require('../../../lib/mappers/contact');
 const company = require('./company');
-const address = require('./address');
+const address = require('../../../lib/mappers/address');
 const DateRange = require('../../../lib/models/date-range');
 
 /**
