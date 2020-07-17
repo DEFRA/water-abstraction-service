@@ -56,6 +56,10 @@ experiment('modules/billing/mappers/address', () => {
       expect(address.source).to.equal(crmAddress.dataSource);
       expect(address.uprn).to.equal(crmAddress.uprn);
     });
+
+    test('returns null if the address data is null', async () => {
+      expect(addressMapper.crmToModel(null)).to.equal(null);
+    });
   });
 
   experiment('.eaAddressFacadeToModel', () => {
