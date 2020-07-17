@@ -2,8 +2,15 @@
 
 const Model = require('./model');
 const ReturnLine = require('./return-line');
+const AbstractionPeriod = require('./abstraction-period');
 
 const validators = require('./validators');
+
+const dateRangeIsInAbstractionPeriod = (abstractionPeriod, dateRange) => {
+  const isStartDateInAbstractionPeriod = abstractionPeriod.isDateWithinAbstractionPeriod(dateRange.startDate);
+  const isEndDateInAbstractionPeriod = abstractionPeriod.isDateWithinAbstractionPeriod(dateRange.endDate);
+  return isStartDateInAbstractionPeriod || isEndDateInAbstractionPeriod;
+};
 
 class ReturnVersion extends Model {
   constructor (id) {
@@ -48,6 +55,18 @@ class ReturnVersion extends Model {
 
   get isCurrentVersion () {
     return this._isCurrentVersion;
+  }
+
+  /**
+   * Gets an array of lines which fall in the supplied abs period.
+   * If either the start date or the end date is in the abs period,
+   * this is considered a match
+   * @param {abstractionPeriod} abstractionPeriod
+   * @return {Array}
+   */
+  getLinesInAbstractionPeriod (abstractionPeriod) {
+    validators.assertIsInstanceOf(abstractionPeriod, AbstractionPeriod);
+    return this._returnLines.filter(returnLine => dateRangeIsInAbstractionPeriod(abstractionPeriod, returnLine.dateRange));
   }
 }
 

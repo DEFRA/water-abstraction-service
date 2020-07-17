@@ -163,7 +163,7 @@ class Return extends Model {
    * @return {ReturnVersion}
    */
   get currentReturnVersion () {
-    return this._returnVersions.find(returnVersion => returnVersion.isCurrent);
+    return this._returnVersions.find(returnVersion => returnVersion.isCurrentVersion);
   }
 
   /**

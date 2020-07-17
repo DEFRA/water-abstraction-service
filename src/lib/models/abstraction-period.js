@@ -1,6 +1,7 @@
 'use strict';
 
 const moment = require('moment-range').extendMoment(require('moment'));
+const helpers = require('@envage/water-abstraction-helpers');
 
 const { CHARGE_SEASON } = require('./constants');
 const Model = require('./model');
@@ -16,10 +17,11 @@ const createRange = (abstractionPeriod, startYear) => {
   const { startDay, endDay, startMonth, endMonth } = abstractionPeriod;
   const isCrossYear = (startMonth > endMonth || (startMonth === endMonth && startDay > endDay));
   const endYear = isCrossYear ? startYear + 1 : startYear;
-  return moment.range(
-    `${startYear}-${startMonth}-${startDay}`,
-    `${endYear}-${endMonth}-${endDay}`
-  );
+
+  const mStart = moment().year(startYear).month(startMonth - 1).date(startDay);
+  const mEnd = moment().year(endYear).month(endMonth - 1).date(endDay);
+
+  return moment.range(mStart, mEnd);
 };
 
 class AbstractionPeriod extends Model {
@@ -45,7 +47,7 @@ class AbstractionPeriod extends Model {
 
   set startDay (day) {
     assertDay(day);
-    this._startDay = day;
+    this._startDay = parseInt(day);
   }
 
   /**
@@ -58,7 +60,7 @@ class AbstractionPeriod extends Model {
 
   set startMonth (month) {
     assertMonth(month);
-    this._startMonth = month;
+    this._startMonth = parseInt(month);
   }
 
   /**
@@ -71,7 +73,7 @@ class AbstractionPeriod extends Model {
 
   set endDay (day) {
     assertDay(day);
-    this._endDay = day;
+    this._endDay = parseInt(day);
   }
 
   /**
@@ -84,7 +86,7 @@ class AbstractionPeriod extends Model {
 
   set endMonth (month) {
     assertMonth(month);
-    this._endMonth = month;
+    this._endMonth = parseInt(month);
   }
 
   /**
@@ -135,6 +137,21 @@ class AbstractionPeriod extends Model {
     }
 
     return CHARGE_SEASON.allYear;
+  }
+
+  /**
+   * Checks whether the supplied date falls inside this abstraction period
+   * @param {String} date
+   * @return {Boolean}
+   */
+  isDateWithinAbstractionPeriod (date) {
+    const m = this.getDateOrThrow(date);
+    return helpers.returns.date.isDateWithinAbstractionPeriod(m.format('YYYY-MM-DD'), {
+      periodStartDay: this._startDay,
+      periodStartMonth: this._startMonth,
+      periodEndDay: this._endDay,
+      periodEndMonth: this._endMonth
+    });
   }
 }
 
