@@ -2,8 +2,8 @@
 
 const InvoiceAccountAddress = require('../../../lib/models/invoice-account-address');
 const contactMapper = require('../../../lib/mappers/contact');
-const company = require('./company');
-const address = require('../../../lib/mappers/address');
+const companyMapper = require('./company');
+const addressMapper = require('../../../lib/mappers/address');
 const DateRange = require('../../../lib/models/date-range');
 
 /**
@@ -16,9 +16,9 @@ const crmToModel = invoiceAccountAddress => {
   const model = new InvoiceAccountAddress(invoiceAccountAddress.invoiceAccountAddressId);
   return model.fromHash({
     dateRange: new DateRange(invoiceAccountAddress.startDate, invoiceAccountAddress.endDate),
-    address: address.crmToModel(invoiceAccountAddress.address),
+    address: addressMapper.crmToModel(invoiceAccountAddress.address),
     contact: contactMapper.crmToModel(invoiceAccountAddress.contact),
-    agentCompany: company.crmToModel(invoiceAccountAddress.agentCompany)
+    agentCompany: companyMapper.crmToModel(invoiceAccountAddress.agentCompany)
   });
 };
 

@@ -19,7 +19,8 @@ const crmToModel = data => {
     addressLine2: data.address2,
     addressLine3: data.address3,
     addressLine4: data.address4,
-    ...pick(data, ['town', 'county', 'postcode', 'country'])
+    ...pick(data, ['town', 'county', 'postcode', 'country', 'uprn']),
+    source: data.dataSource
   });
   return address;
 };

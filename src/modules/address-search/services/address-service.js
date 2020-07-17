@@ -10,7 +10,7 @@ const addressMapper = require('../../../lib/mappers/address');
  * @return {Promise<Array>}
  */
 const getAddresses = async query => {
-  const data = await eaAddressFacadeApi.searchAddresses(query);
+  const data = await eaAddressFacadeApi.matchAddresses(query);
 
   return {
     data: data.results.map(addressMapper.eaAddressFacadeToModel)

@@ -29,7 +29,7 @@ const eaAddressFacadeRequest = (tail, options = {}) => {
  * @param {Number} perPage - the number of results to retrieve per page
  * @return {Promise}
  */
-const searchAddresses = q => {
+const matchAddresses = q => {
   return eaAddressFacadeRequest('/address-service/v1/addresses/match', {
     qs: {
       'query-string': q
@@ -37,4 +37,4 @@ const searchAddresses = q => {
   });
 };
 
-exports.searchAddresses = searchAddresses;
+exports.matchAddresses = matchAddresses;
