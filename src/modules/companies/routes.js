@@ -22,5 +22,19 @@ module.exports = {
         }
       }
     }
+  },
+
+  getCompanyContacts: {
+    path: '/water/1.0/companies/{companyId}/contacts',
+    method: 'GET',
+    handler: controller.getCompanyContacts,
+    config: {
+      description: 'Gets the CompanyContact entities for the company',
+      validate: {
+        params: {
+          companyId: Joi.string().uuid().required()
+        }
+      }
+    }
   }
 };

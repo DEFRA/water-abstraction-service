@@ -1,7 +1,7 @@
 'use strict';
 
 const { isEmpty } = require('lodash');
-const Contact = require('../../../lib/models/contact-v2');
+const Contact = require('../models/contact-v2');
 
 /**
  * Maps a row of CRM v2 contact data to a Contact instance
