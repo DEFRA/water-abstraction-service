@@ -235,4 +235,22 @@ experiment('connectors/returns', () => {
       });
     });
   });
+
+  experiment('lib/connectors/idm/kpi-reporting', () => {
+    experiment('.getKPIRegistrations', () => {
+      beforeEach(async () => {
+        sandbox.stub(helpers.serviceRequest, 'get').resolves();
+        sandbox.stub(config.services, 'returns').value('http://test.defra/returns/1.0');
+        await returns.getKPIReturnsByCycle('2001-01-01', '2001-01-01', true);
+      });
+
+      afterEach(async => { sandbox.restore(); });
+
+      test('makes a request to the expected URL', async () => {
+        const testUrl = 'http://test.defra/returns/1.0/kpi/licencesBySeason?startDate=2001-01-01&endDate=2001-01-01&isSummer=true';
+        const [url] = helpers.serviceRequest.get.lastCall.args;
+        expect(url).to.equal(testUrl);
+      });
+    });
+  });
 });
