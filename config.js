@@ -198,5 +198,9 @@ module.exports = {
     password: process.env.COGNITO_PASSWORD
   },
 
-  proxy: process.env.PROXY
+  proxy: process.env.PROXY,
+
+  companiesHouse: {
+    apiKey: process.env.COMPANIES_HOUSE_API_KEY
+  }
 };
