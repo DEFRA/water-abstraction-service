@@ -9,7 +9,7 @@ module.exports = {
     method: 'GET',
     handler: controller.getCompaniesHouseCompanies,
     config: {
-      description: 'Gets a list of returns for the specified company',
+      description: 'Gets a list of companies from Companies House for the specified search query',
       validate: {
         query: {
           q: Joi.string().required(),
