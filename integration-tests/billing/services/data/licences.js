@@ -3,7 +3,7 @@ exports.l1 = {
   includeInSupplementaryBilling : false,
   isWaterUndertaker : false,
   regions : {
-    historicalAreaCode: 'ARCA', 
+    historicalAreaCode: 'ARCA',
     regionalChargeArea: 'Anglian'
   },
   startDate : '2008-04-01',
@@ -26,3 +26,5 @@ exports.l1 = {
     }]
   }]
 };
+
+exports.l2 = Object.assign({}, exports.l1, { includeInSupplementaryBilling: true })

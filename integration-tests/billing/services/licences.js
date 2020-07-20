@@ -2,23 +2,35 @@ const data = require('./data');
 const { Licence, bookshelf } = require('../../../src/lib/connectors/bookshelf');
 const { omit } = require('lodash');
 
+let cache = {};
+
 /**
  * Create the test licence in the region with the specified
  * @param {Object} region
  * @param {String} scenarioKey
  */
-const create = async (region, scenarioKey) => Licence
-  .forge({
-    isTest: true,
-    regionId: region.get('regionId'),
-    ...omit(data.licences[scenarioKey], 'documents')
-  })
-  .save();
+const create = async (region, scenarioKey) => {
+  if (!cache[scenarioKey]) {
+    const licence = await Licence
+      .forge({
+        isTest: true,
+        regionId: region.get('regionId'),
+        ...omit(data.licences[scenarioKey], 'documents')
+      })
+      .save();
 
-const tearDown = () =>
-  bookshelf.knex('water.licences')
+    cache[scenarioKey] = licence;
+  }
+  return cache[scenarioKey];
+};
+
+const tearDown = () => {
+  cache = {};
+
+  return bookshelf.knex('water.licences')
     .where('is_test', true)
     .del();
+};
 
 exports.create = create;
 exports.tearDown = tearDown;

@@ -1,3 +1,6 @@
+'use strict';
+
+exports.batches = require('./batches');
 exports.chargeElements = require('./charge-elements');
 exports.chargeVersions = require('./charge-versions');
 exports.crm = require('./crm');

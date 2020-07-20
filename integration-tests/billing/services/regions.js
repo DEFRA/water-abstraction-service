@@ -5,17 +5,26 @@ const Regions = bookshelf.collection('Regions', {
 });
 
 const data = require('./data');
+let cache = {};
 
 /**
  * Creates a test region, which otherwise behaves as Anglian
  * @return {Promise}
  */
-const createTestRegion = () => Region
-  .forge({
-    isTest: true,
-    ...data.regions.testRegion
-  })
-  .save();
+const createTestRegion = async () => {
+  const { chargeRegionId } = data.regions.testRegion;
+
+  if (!cache[chargeRegionId]) {
+    const region = await Region.forge({
+      isTest: true,
+      ...data.regions.testRegion
+    })
+      .save();
+
+    cache[chargeRegionId] = region;
+  }
+  return cache[chargeRegionId];
+};
 
 /**
  * Gets region id(s) for any test regions
@@ -33,10 +42,13 @@ const getTestRegionIds = async () => {
  * @param {Array} ids
  * @return {Promise}
  */
-const tearDown = () =>
-  bookshelf.knex('water.regions')
+const tearDown = () => {
+  cache = {};
+
+  return bookshelf.knex('water.regions')
     .where('is_test', true)
     .del();
+};
 
 exports.createTestRegion = createTestRegion;
 exports.getTestRegionIds = getTestRegionIds;
