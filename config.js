@@ -202,5 +202,9 @@ module.exports = {
 
   companiesHouse: {
     apiKey: process.env.COMPANIES_HOUSE_API_KEY
+  },
+
+  eaAddressFacade: {
+    uri: process.env.EA_ADDRESS_FACADE_URI || 'http://localhost:9002'
   }
 };

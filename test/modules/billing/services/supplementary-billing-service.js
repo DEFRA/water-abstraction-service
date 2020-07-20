@@ -109,7 +109,8 @@ const data = {
         address4: null,
         town: 'Testington',
         county: 'Testingshire',
-        postcode: 'TT1 1TT'
+        postcode: 'TT1 1TT',
+        dataSource: 'nald'
       }
     }]
   }]

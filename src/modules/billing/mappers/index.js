@@ -1,4 +1,4 @@
-exports.address = require('./address');
+exports.address = require('../../../lib/mappers/address');
 exports.api = require('./api');
 exports.batch = require('./batch');
 exports.billingVolume = require('./billing-volume');
