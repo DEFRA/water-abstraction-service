@@ -119,13 +119,28 @@ class Return extends Model {
   }
 
   /**
+   * Gets the due date for billing purposes
+   * @return {String} YYYY-MM-DD
+   */
+  get dueDateForBilling () {
+    return moment(this._dueDate).add(3, 'weeks').format('YYYY-MM-DD');
+  }
+
+  /**
    * Was the return received late for billing purposes?
    * The user must send the return date by the due date plus 3 week grace period
    * @return {Boolean}
    */
   get isLateForBilling () {
-    const comparisonDate = moment(this._dueDate).add(3, 'weeks');
-    return this._receivedDate && this._receivedDate.isAfter(comparisonDate, 'day');
+    return this._receivedDate && this._receivedDate.isAfter(this.dueDateForBilling, 'day');
+  }
+
+  /**
+   * Checks whether this return is due for billing
+   * @param {String} [referenceDate] - optional reference date (defaults to now)
+   */
+  isDueForBilling (referenceDate) {
+    return moment(referenceDate, 'YYYY-MM-DD').isAfter(this.dueDateForBilling, 'day');
   }
 
   /**

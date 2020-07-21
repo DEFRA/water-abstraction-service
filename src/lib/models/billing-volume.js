@@ -14,7 +14,8 @@ const twoPartTariffStatuses = {
   ERROR_SOME_RETURNS_DUE: 40,
   ERROR_LATE_RETURNS: 50,
   ERROR_OVER_ABSTRACTION: 60,
-  ERROR_NO_RETURNS_FOR_MATCHING: 70
+  ERROR_NO_RETURNS_FOR_MATCHING: 70,
+  ERROR_NOT_DUE_FOR_BILLING: 80
 };
 
 class BillingVolume extends Model {
@@ -122,6 +123,15 @@ class BillingVolume extends Model {
   set volume (volume) {
     validators.assertNullableQuantity(volume);
     this._volume = isNull(volume) ? null : parseFloat(volume);
+  }
+
+  /**
+   * Allocates billing volume
+   * @param {Number} ML
+   */
+  allocate (volume) {
+    validators.assertPositiveOrZeroInteger(volume);
+    this._volume = isNull(this._volume) ? volume : this._volume + volume;
   }
 }
 

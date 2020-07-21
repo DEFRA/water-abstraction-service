@@ -56,6 +56,17 @@ class DateRange {
   }
 
   /**
+   * Checks whether this date range includes the specified date
+   * @param {String} date
+   * @return {Boolean}
+   */
+  includes (date) {
+    const range = this.toMomentRange();
+    const m = moment(date, DATE_FORMAT);
+    return range.includes(m);
+  }
+
+  /**
    * Create a DateRange from a moment range
    * @param {MomentRange} momentRange
    * @return {DateRange}

@@ -5,7 +5,8 @@ const helpers = require('@envage/water-abstraction-helpers');
 
 const { CHARGE_SEASON } = require('./constants');
 const Model = require('./model');
-const { assertDay, assertMonth } = require('./validators');
+const DateRange = require('./date-range');
+const validators = require('./validators');
 
 /**
  * Creates a moment range from the supplied abs period in the specified year
@@ -46,7 +47,7 @@ class AbstractionPeriod extends Model {
   }
 
   set startDay (day) {
-    assertDay(day);
+    validators.assertDay(day);
     this._startDay = parseInt(day);
   }
 
@@ -59,7 +60,7 @@ class AbstractionPeriod extends Model {
   }
 
   set startMonth (month) {
-    assertMonth(month);
+    validators.assertMonth(month);
     this._startMonth = parseInt(month);
   }
 
@@ -72,7 +73,7 @@ class AbstractionPeriod extends Model {
   }
 
   set endDay (day) {
-    assertDay(day);
+    validators.assertDay(day);
     this._endDay = parseInt(day);
   }
 
@@ -85,7 +86,7 @@ class AbstractionPeriod extends Model {
   }
 
   set endMonth (month) {
-    assertMonth(month);
+    validators.assertMonth(month);
     this._endMonth = parseInt(month);
   }
 
@@ -152,6 +153,22 @@ class AbstractionPeriod extends Model {
       periodEndDay: this._endDay,
       periodEndMonth: this._endMonth
     });
+  }
+
+  /**
+   * Gets the number of abstraction days for the supplied DateRange
+   * @param {DateRange} dateRange
+   * @return {Number}
+   */
+  getDays (dateRange) {
+    validators.assertIsInstanceOf(dateRange, DateRange);
+    const absPeriod = {
+      startMonth: this._startMonth,
+      startDay: this._startDay,
+      endMonth: this._endMonth,
+      endDay: this._endDay
+    };
+    return helpers.charging.getBillableDays(absPeriod, dateRange.startDate, dateRange.endDate);
   }
 }
 

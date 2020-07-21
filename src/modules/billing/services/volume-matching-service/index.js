@@ -2,11 +2,13 @@
 
 require('../../../../lib/connectors/db');
 
+// const returnGroupService = require('./return-group-service');
+// const chargeVersionService = require('./data-service');
+const dataService = require('./data-service');
+const matchingService = require('./matching-service');
+
 const validators = require('../../../../lib/models/validators');
 const FinancialYear = require('../../../../lib/models/financial-year');
-
-const prepareMatching = require('./prepare-matching');
-const prepareReturns = require('./prepare-returns');
 
 /**
  * Returns matching to water.billing_volumes
@@ -21,15 +23,29 @@ const matchVolumes = async (chargeVersionId, financialYear, matchSummer, matchWi
   validators.assertIsBoolean(matchSummer);
   validators.assertIsBoolean(matchWinter);
 
-  const matching = await prepareMatching.getInitialDataStructure(chargeVersionId, financialYear);
+  const data = await dataService.getData(chargeVersionId, financialYear);
 
-  const returns = await prepareReturns.getReturns(matching.licence.licenceNumber, financialYear);
+  console.log(JSON.stringify(data, null, 2));
+  /*
+  const context = await chargeVersionService.getChargeVersion(chargeVersionId, financialYear);
 
-  console.log(JSON.stringify({ matching, returns }, null, 2));
+  const { chargeVersion, chargeElementGroups } = context;
+
+  const returnGroups = await returnGroupService.getReturnGroups(chargeVersion.licence.licenceNumber, financialYear, chargeElementGroups);
+
+  console.log(context);
+  console.log(returnGroups);
+
+  matchingService.match(context, returnGroups, true);
+  */
 };
 
 const func = async () => {
-  await matchVolumes('02940bef-d098-4439-971c-2f61813f48a1', new FinancialYear(2020), true, true);
+  try {
+    await matchVolumes('02940bef-d098-4439-971c-2f61813f48a1', new FinancialYear(2020), true, true);
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 func();
