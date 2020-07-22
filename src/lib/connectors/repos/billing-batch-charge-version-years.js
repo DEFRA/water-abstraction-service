@@ -19,11 +19,12 @@ const findStatusCountsByBatchId = batchId =>
 /**
  * Deletes all billing batch charge version years for given batch
  * @param {String} batchId - guid
+ * @param {String} isDeletionRequired - boolean
  */
-const deleteByBatchId = async batchId => BillingBatchChargeVersionYear
+const deleteByBatchId = async (batchId, isDeletionRequired = true) => BillingBatchChargeVersionYear
   .forge()
   .where({ billing_batch_id: batchId })
-  .destroy({ require: false });
+  .destroy({ require: isDeletionRequired });
 
 /*
   * Deletes all charge version years associated with an invoice ID

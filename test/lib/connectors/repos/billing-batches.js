@@ -181,7 +181,13 @@ experiment('lib/connectors/repos/billing-batches', () => {
       });
     });
 
-    test('calls destroy() with the correct params', async () => {
+    test('calls destroy() to delete found records', async () => {
+      const [params] = stub.destroy.lastCall.args;
+      expect(params).to.equal({ require: true });
+    });
+
+    test('when deletion is not required, calls destroy() with the correct params', async () => {
+      await billingBatches.delete('00000000-0000-0000-0000-000000000000', false);
       const [params] = stub.destroy.lastCall.args;
       expect(params).to.equal({ require: false });
     });

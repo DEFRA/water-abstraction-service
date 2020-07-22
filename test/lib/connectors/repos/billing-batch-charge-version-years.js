@@ -86,7 +86,13 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
       expect(params).to.equal({ billing_batch_id: batchId });
     });
 
-    test('calls destroy() with the correct params', async () => {
+    test('calls destroy() to delete found records', async () => {
+      const [params] = stub.destroy.lastCall.args;
+      expect(params).to.equal({ require: true });
+    });
+
+    test('when deletion is not required, calls destroy() with the correct params', async () => {
+      await repos.billingBatchChargeVersionYears.deleteByBatchId(batchId, false);
       const [params] = stub.destroy.lastCall.args;
       expect(params).to.equal({ require: false });
     });
