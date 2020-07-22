@@ -181,4 +181,36 @@ experiment('lib/services/event', () => {
       expect(moment.isMoment(created)).to.equal(true);
     });
   });
+
+  experiment('.getKPIReturnsMonthly', () => {
+    const testKPIData = { rowCount: 1, rows: [{ current_year: true }] };
+    beforeEach(async () => {
+      sandbox.stub(repo.events, 'getKPIReturnsMonthlyData').resolves(testKPIData);
+    });
+
+    afterEach(async => {
+      sandbox.restore();
+    });
+
+    test('should map the object key receveived from the database repos layer to camelCase', async () => {
+      const data = await eventsService.getKPIReturnsMonthly();
+      expect(data[0].currentYear).to.equal(true);
+    });
+  });
+
+  experiment('.getKPILicenceNames', () => {
+    const testKPIData = { rowCount: 1, rows: [{ current_year: true }] };
+    beforeEach(async () => {
+      sandbox.stub(repo.events, 'getKPILicenceNamesData').resolves(testKPIData);
+    });
+
+    afterEach(async => {
+      sandbox.restore();
+    });
+
+    test('should map the object key receveived from the database repos layer to camelCase', async () => {
+      const data = await eventsService.getKPILicenceNames();
+      expect(data[0].currentYear).to.equal(true);
+    });
+  });
 });

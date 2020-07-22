@@ -1,17 +1,20 @@
+'use strict';
+
+const batches = require('./batches');
 const chargeVersions = require('./charge-versions');
 const regions = require('./regions');
 const licences = require('./licences');
 const licenceAgreements = require('./licence-agreements');
-const batches = require('./batches');
 const crm = require('./crm');
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs');
 
 /**
  * Removes all created test data
- * @param {Object} [data] - billing batch data
+ *
+ * @param {Array} [batches] - billing batch data to delete
  * @return {Promise}
  */
-const tearDown = async (data) => {
+const tearDown = async (...batchesToDelete) => {
   await batches.tearDown();
   await chargeVersions.tearDown();
   await licenceAgreements.tearDown();
@@ -20,8 +23,12 @@ const tearDown = async (data) => {
   await crm.tearDown();
 
   // Delete batch in charge module
-  if (data && data.externalId) {
-    await cmConnector.delete(data.externalId);
+  const idsToDelete = (batchesToDelete || [])
+    .map(batch => batch.externalId)
+    .filter(i => i);
+
+  for (const externalId of idsToDelete) {
+    await cmConnector.delete(externalId);
   }
 };
 

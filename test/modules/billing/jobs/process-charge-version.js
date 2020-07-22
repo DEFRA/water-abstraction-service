@@ -76,17 +76,17 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
     beforeEach(async () => {
       chargeVersionYear = {
-        billing_batch_charge_version_year_id: 'test-id',
-        charge_version_id: 'charge_verion_id',
-        financial_year_ending: 2020,
-        billing_batch_id: 'billing_batch_id'
+        billingBatchChargeVersionYearId: 'test-id',
+        chargeVersionId: 'charge_verion_id',
+        financialYearEnding: 2020,
+        billingBatchId: 'billing_batch_id'
       };
 
       job = {
         data: {
           eventId,
           chargeVersionYear,
-          batch: { billing_batch_id: 'test-batch-id' }
+          batch: { id: 'test-batch-id' }
         }
       };
 
@@ -99,11 +99,11 @@ experiment('modules/billing/jobs/process-charge-version', () => {
     });
 
     test('resolves including the chargeVersionYear', async () => {
-      expect(result.chargeVersionYear.billing_batch_charge_version_year_id).to.equal('test-id');
+      expect(result.chargeVersionYear.billingBatchChargeVersionYearId).to.equal('test-id');
     });
 
     test('resolves including the batch details', async () => {
-      expect(result.batch.billing_batch_id).to.equal('test-batch-id');
+      expect(result.batch.id).to.equal('test-batch-id');
     });
 
     experiment('when there are no errors', () => {
@@ -125,7 +125,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
       test('the billing batch charge version year status is updated to "ready"', async () => {
         expect(chargeVersionYearService.setReadyStatus.calledWith(
-          chargeVersionYear.billing_batch_charge_version_year_id
+          chargeVersionYear.billingBatchChargeVersionYearId
         )).to.be.true();
       });
     });
@@ -151,7 +151,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
       test('the billing batch charge version year status is updated to "error"', async () => {
         expect(chargeVersionYearService.setErrorStatus.calledWith(
-          chargeVersionYear.billing_batch_charge_version_year_id
+          chargeVersionYear.billingBatchChargeVersionYearId
         )).to.be.true();
       });
     });
