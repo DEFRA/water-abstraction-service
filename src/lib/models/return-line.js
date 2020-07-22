@@ -48,6 +48,18 @@ class ReturnLine extends Model {
   get timePeriod () {
     return this._timePeriod;
   }
+
+  /**
+   * Checks whether this return line date range falls entirely
+   * within the provided date range
+   * @param {DateRange}
+   * @return {Boolean}
+   */
+  isWithinDateRange (dateRange) {
+    validators.assertIsInstanceOf(dateRange, DateRange);
+    const range = dateRange.toMomentRange();
+    return range.contains(this.dateRange.startDate) && range.contains(dateRange.endDate);
+  }
 }
 
 module.exports = ReturnLine;

@@ -17,7 +17,8 @@ const twoPartTariffStatuses = {
   ERROR_LATE_RETURNS: 50,
   ERROR_OVER_ABSTRACTION: 60,
   ERROR_NO_RETURNS_FOR_MATCHING: 70,
-  ERROR_NOT_DUE_FOR_BILLING: 80
+  ERROR_NOT_DUE_FOR_BILLING: 80,
+  ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD: 90
 };
 
 const assignBillableStatuses = [
@@ -30,7 +31,8 @@ const setErrorFlagStatuses = [
   twoPartTariffStatuses.ERROR_UNDER_QUERY,
   twoPartTariffStatuses.ERROR_RECEIVED,
   twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE,
-  twoPartTariffStatuses.ERROR_OVER_ABSTRACTION
+  twoPartTariffStatuses.ERROR_OVER_ABSTRACTION,
+  twoPartTariffStatuses.ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD
 ];
 
 const toFixedPrecision = number => parseFloat(number.toFixed(3));

@@ -23,6 +23,8 @@ const allocateReturnLine = (lineChargeElementGroups, returnLine) => {
   // Allocate volumes
   lineChargeElementGroups.forEach(chargeElementGroup => {
     // Get ratio of purposes for allocation
+    // This ensures where a return has multiple purposes, the volume is allocated
+    // according to the ratio of billable volumes in matching elements
     const purposeRatio = chargeElementGroup.volume / totalVolume;
     // Convert to ML
     const qty = purposeRatio * (returnLine.volume / 1000);
@@ -47,13 +49,14 @@ const match = (chargePeriod, chargeElementGroup, returnGroup) => {
     // Create list of charge elements for return
     const returnChargeElementGroup = chargeElementGroup.createForReturn(ret);
 
-    // Create list of pro-rated return lines
+    // Get list of return lines
     const returnLines = ret.currentReturnVersion.getReturnLinesForBilling(chargePeriod, ret.abstractionPeriod);
 
     returnLines.forEach(returnLine => {
       // Create matching groups
-      const lineChargeElementGroups = returnChargeElementGroup.createForReturnLine(returnLine);
+      const lineChargeElementGroups = returnChargeElementGroup.createForReturnLine(returnLine, chargePeriod);
 
+      // Allocate return line volume to matching elements
       allocateReturnLine(lineChargeElementGroups, returnLine);
     });
   });

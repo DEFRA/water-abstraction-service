@@ -14,7 +14,14 @@ const {
   ERROR_RECEIVED_NO_DATA,
   ERROR_NOT_DUE_FOR_BILLING
 } = require('../../../../../lib/models/billing-volume').twoPartTariffStatuses;
-const { getErrorIfEvery, getErrorIfSome } = require('../lib/error-handling');
+
+const getErrorIfSome = (arr, predicate, error) => {
+  return arr.some(predicate) ? error : null;
+};
+
+const getErrorIfEvery = (arr, predicate, error) => {
+  return arr.every(predicate) ? error : null;
+};
 
 // Predicates
 const isDueStatus = ret => ret.status === RETURN_STATUS.due;
@@ -23,7 +30,7 @@ const isLateForBilling = ret => ret.isLateForBilling;
 const isUnderQuery = ret => ret.isUnderQuery;
 const isNotDueForBilling = ret => !ret.isDueForBilling();
 
-const getReturnSortKey = ret => `${ret.startDate}_${ret.id}`;
+const getReturnSortKey = ret => `${ret.endDate}_${ret.id}`;
 
 class ReturnGroup {
   /**

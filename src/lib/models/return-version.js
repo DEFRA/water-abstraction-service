@@ -4,36 +4,13 @@ const { isFinite } = require('lodash');
 
 const Model = require('./model');
 const ReturnLine = require('./return-line');
-const DateRange = require('./date-range');
 
 const validators = require('./validators');
-const { TIME_PERIODS } = require('./constants');
 
 const dateRangeIsInAbstractionPeriod = (abstractionPeriod, dateRange) => {
   const isStartDateInAbstractionPeriod = abstractionPeriod.isDateWithinAbstractionPeriod(dateRange.startDate);
   const isEndDateInAbstractionPeriod = abstractionPeriod.isDateWithinAbstractionPeriod(dateRange.endDate);
   return isStartDateInAbstractionPeriod || isEndDateInAbstractionPeriod;
-};
-
-const proRataReturnLineForBilling = (returnLine, chargePeriod) => {
-  // No need to pro-rata daily lines as they are either in or out of charge period
-  if (returnLine.timePeriod === TIME_PERIODS.day) {
-    return returnLine;
-  }
-
-  // Calculate ratio of intersecting days between return line and charge period
-  const daysInLine = 1 + returnLine.dateRange.days;
-  const rangeA = returnLine.dateRange.toMomentRange();
-  const rangeB = chargePeriod.toMomentRange();
-
-  const intersectingDays = 1 + DateRange.fromMomentRange(rangeB.intersect(rangeA)).days;
-  const ratio = intersectingDays / daysInLine;
-
-  const newLine = new ReturnLine();
-  newLine.pickFrom(returnLine, ['id', 'dateRange', 'timePeriod']);
-  return newLine.fromHash({
-    volume: returnLine.volume * ratio
-  });
 };
 
 class ReturnVersion extends Model {
@@ -86,8 +63,6 @@ class ReturnVersion extends Model {
    * - overlap the charge period
    * - are in the return abstraction period
    * - have a non-zero/null value
-   * Lines with a date range partially intersecting the charge period have
-   * their volume pro-rated
    * @param {DateRange} chargePeriod
    * @param {DateRange} abstractionPeriod
    */
@@ -95,8 +70,7 @@ class ReturnVersion extends Model {
     return this._returnLines
       .filter(returnLine => isFinite(returnLine.volume) && returnLine.volume > 0)
       .filter(returnLine => dateRangeIsInAbstractionPeriod(abstractionPeriod, returnLine.dateRange))
-      .filter(returnLine => returnLine.dateRange.overlaps(chargePeriod))
-      .map(returnLine => proRataReturnLineForBilling(returnLine, chargePeriod));
+      .filter(returnLine => returnLine.dateRange.overlaps(chargePeriod));
   }
 }
 

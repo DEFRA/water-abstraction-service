@@ -2,13 +2,22 @@
 
 const { groupBy, sortBy, negate } = require('lodash');
 
+const { TIME_PERIODS } = require('../../../../../lib/models/constants');
 const validators = require('../../../../../lib/models/validators');
 const Return = require('../../../../../lib/models/return');
-
+const ReturnLine = require('../../../../../lib/models/return-line');
 const PurposeUse = require('../../../../../lib/models/purpose-use');
+const DateRange = require('../../../../../lib/models/date-range');
+
 const ChargeElement = require('../../../../../lib/models/charge-element');
 const ChargeElementContainer = require('./charge-element-container');
+
+const { ChargeElementMatchingError } = require('../errors');
+
 const { RETURN_SEASONS } = require('../../../../../lib/models/constants');
+const {
+  ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD
+} = require('../../../../../lib/models/billing-volume').twoPartTariffStatuses;
 
 /**
  * Checks whether the charge element purpose matches one of the purposes
@@ -45,6 +54,27 @@ const getElementSortScore = chargeElementContainer => {
     score -= 1000;
   }
   return score;
+};
+
+/**
+ * Checks if the return line is within the supplied charge period
+ * @param {DateRange} chargePeriod
+ * @param {ReturnLine} returnLine
+ * @return {Boolean}
+ */
+const isReturnLineStraddlingChargePeriodError = (returnLine, chargePeriod) => {
+  // No need to consider daily lines - they will fall perfectly within a charge period
+  if (returnLine.timePeriod === TIME_PERIODS.day) {
+    return false;
+  }
+  // No need to consider if the charge period is the full financial year.  In this
+  // case we wish to include all the return lines and don't need to flag
+  if (chargePeriod.startDate.endsWith('-04-01') && chargePeriod.endDate.endsWith('-03-31')) {
+    return false;
+  }
+
+  // Charge period is not full financial year - indicates possible transfer/variation
+  return !returnLine.isWithinDateRange(chargePeriod);
 };
 
 /**
@@ -204,16 +234,29 @@ class ChargeElementGroup {
    * Creates new ChargeElementGroups for each purpose that match the supplied
    * return line
    * @param {ReturnLine} returnLine
+   * @param {DateRange} chargePeriod
    * @return {Array<ChargeElementGroup>}
    */
-  createForReturnLine (returnLine) {
+  createForReturnLine (returnLine, chargePeriod) {
+    validators.assertIsInstanceOf(returnLine, ReturnLine);
+    validators.assertIsInstanceOf(chargePeriod, DateRange);
+
     // Only consider elements with abs period / time limits that match return line
     const elements = this._chargeElementContainers.filter(
       chargeElementContainer => chargeElementContainer.isReturnLineMatch(returnLine)
     );
 
+    if (elements.length === 0) {
+      throw new ChargeElementMatchingError(`No charge elements to match for return line ${returnLine.id}`);
+    }
+
     // Sort elements
     const sortedElements = sortBy(elements, getElementSortScore);
+
+    // Check return line falls in charge period
+    if (isReturnLineStraddlingChargePeriodError(returnLine, chargePeriod)) {
+      this.setTwoPartTariffStatus(ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD);
+    }
 
     // Group by purpose use
     const groups = groupBy(sortedElements,
