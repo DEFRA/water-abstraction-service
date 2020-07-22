@@ -81,7 +81,8 @@ const createPurposeUses = () => ([{
 experiment('lib/services/returns/index', () => {
   beforeEach(async () => {
     sandbox.stub(repos.purposeUses, 'findByCodes').resolves(createPurposeUses());
-    sandbox.stub(apiConnector, 'getReturnsForLicence').resolves(createReturns());
+    sandbox.stub(apiConnector, 'getReturnsForLicenceInCycle').resolves([]);
+    apiConnector.getReturnsForLicenceInCycle.onCall(0).resolves(createReturns());
     sandbox.stub(apiConnector, 'getCurrentVersion').resolves(createVersion());
     sandbox.stub(apiConnector, 'getLines').resolves(createLines());
   });
@@ -99,8 +100,11 @@ experiment('lib/services/returns/index', () => {
       });
 
       test('returns are fetched from the API with the financial year date range', async () => {
-        expect(apiConnector.getReturnsForLicence.calledWith(
-          licenceNumber, '2019-04-01', '2020-03-31'
+        expect(apiConnector.getReturnsForLicenceInCycle.calledWith(
+          licenceNumber, { startDate: '2019-04-01', endDate: '2020-03-31', isSummer: false }
+        )).to.be.true();
+        expect(apiConnector.getReturnsForLicenceInCycle.calledWith(
+          licenceNumber, { startDate: '2018-11-01', endDate: '2019-10-31', isSummer: true }
         )).to.be.true();
       });
 
@@ -142,7 +146,7 @@ experiment('lib/services/returns/index', () => {
 
     experiment('when the return is incomplete', async () => {
       beforeEach(async () => {
-        apiConnector.getReturnsForLicence.resolves(createReturns({ status: 'due' }));
+        apiConnector.getReturnsForLicenceInCycle.onCall(0).resolves(createReturns({ status: 'due' }));
         result = await returnsService.getReturnsForLicenceInFinancialYear(licenceNumber, financialYear);
       });
 

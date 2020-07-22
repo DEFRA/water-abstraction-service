@@ -1,6 +1,6 @@
 'use strict';
 
-const { isArray, isObject } = require('lodash');
+const { isArray } = require('lodash');
 const hoek = require('@hapi/hoek');
 const Joi = require('joi');
 

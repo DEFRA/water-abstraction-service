@@ -1,5 +1,7 @@
 'use strict';
 
+const { isNull } = require('lodash');
+
 const Model = require('./model');
 const DateRange = require('./date-range');
 
@@ -14,7 +16,7 @@ class ReturnLine extends Model {
    */
   set volume (volume) {
     validators.assertNullableQuantity(volume);
-    this._volume = parseFloat(volume);
+    this._volume = isNull(volume) ? null : parseFloat(volume);
   }
 
   get volume () {

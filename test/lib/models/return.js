@@ -248,7 +248,7 @@ experiment('lib/models/return', () => {
     });
 
     test('gets the current return version when present', async () => {
-      ret.returnVersions[1].isCurrent = true;
+      ret.returnVersions[1].isCurrentVersion = true;
       expect(ret.currentReturnVersion).to.equal(ret.returnVersions[1]);
     });
 

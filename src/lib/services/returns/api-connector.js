@@ -18,7 +18,11 @@ const getReturnsForLicenceInCycle = (licenceNumber, cycle) => {
     end_date: { $lte: cycle.endDate },
     'metadata->>isSummer': cycle.isSummer ? 'true' : 'false'
   };
-  return apiConnector.returns.findAll(filter);
+  const sort = {
+    end_date: +1,
+    return_id: +1
+  };
+  return apiConnector.returns.findAll(filter, sort);
 };
 
 /**
