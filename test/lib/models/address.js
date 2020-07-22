@@ -215,13 +215,6 @@ experiment('lib/models/address', () => {
         expect(error).to.equal(null);
       });
 
-      test('cannot be a string', async () => {
-        address.uprn = 'abc';
-
-        const { error } = address.isValid();
-        expect(error).to.not.equal(null);
-      });
-
       test('is valid when present', async () => {
         const { error, value } = address.isValid();
         expect(error).to.equal(null);

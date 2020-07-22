@@ -12,6 +12,7 @@ const COMPANY_TYPES = {
 };
 
 const ORGANISATION_TYPES = {
+  individual: 'individual',
   limitedCompany: 'limitedCompany',
   limitedLiabilityPartnership: 'limitedLiabilityPartnership',
   publicLimitedCompany: 'publicLimitedCompany'

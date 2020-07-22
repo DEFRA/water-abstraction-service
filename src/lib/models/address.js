@@ -133,7 +133,7 @@ class Address extends Model {
    * @param {Number} uprn
    */
   set uprn (uprn) {
-    validators.assertPositiveOrZeroInteger(uprn);
+    validators.assertNullablePositiveOrZeroInteger(uprn);
     this._uprn = uprn;
   }
 
