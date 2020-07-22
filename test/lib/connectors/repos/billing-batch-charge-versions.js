@@ -140,8 +140,9 @@ experiment('lib/connectors/repos/billing-batch-charge-versions', () => {
       expect(params).to.equal({ billing_batch_id: batchId });
     });
 
-    test('calls destroy() to delete found records', async () => {
-      expect(stub.destroy.called).to.be.true();
+    test('calls destroy() with the correct params', async () => {
+      const [params] = stub.destroy.lastCall.args;
+      expect(params).to.equal({ require: false });
     });
   });
 });

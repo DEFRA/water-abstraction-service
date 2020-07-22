@@ -181,8 +181,9 @@ experiment('lib/connectors/repos/billing-batches', () => {
       });
     });
 
-    test('call destroy to remove the entity', async () => {
-      expect(stub.destroy.called).to.be.true();
+    test('calls destroy() with the correct params', async () => {
+      const [params] = stub.destroy.lastCall.args;
+      expect(params).to.equal({ require: false });
     });
   });
 

@@ -49,7 +49,7 @@ const createTwoPartTariff = params =>
 const deleteByBatchId = async batchId => BillingBatchChargeVersion
   .forge()
   .where({ billing_batch_id: batchId })
-  .destroy();
+  .destroy({ require: false });
 
 exports.createAnnual = createAnnual;
 exports.createSupplementary = createSupplementary;

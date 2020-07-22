@@ -59,7 +59,7 @@ const update = (batchId, changes) => BillingBatch
  */
 const deleteById = batchId => BillingBatch
   .forge({ billingBatchId: batchId })
-  .destroy();
+  .destroy({ require: false });
 
 const findOneWithInvoices = async (id) => {
   const model = await BillingBatch

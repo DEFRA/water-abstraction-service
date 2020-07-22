@@ -54,7 +54,7 @@ const deleteRecord = billingInvoiceId => BillingInvoice
 const deleteByBatchId = async batchId => BillingInvoice
   .forge()
   .where({ billing_batch_id: batchId })
-  .destroy();
+  .destroy({ require: false });
 
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;
