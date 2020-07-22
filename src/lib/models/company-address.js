@@ -23,6 +23,15 @@ class CompanyAddress extends Model {
     return this._dateRange;
   }
 
+  get companyId () {
+    return this._companyId;
+  }
+
+  set companyId (companyId) {
+    validators.assertId(companyId);
+    this._companyId = companyId;
+  }
+
   /**
    * Sets the address
    * @param {Address} address

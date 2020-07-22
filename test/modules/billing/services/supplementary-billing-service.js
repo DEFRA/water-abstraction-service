@@ -87,6 +87,7 @@ const data = {
       name: 'A test co'
     },
     invoiceAccountAddresses: [{
+      invoiceAccountId,
       startDate: '2015-01-01',
       address: {
         addressId: '3b0c8648-e6c0-41a4-aae0-4e1b5b8f7a3a',

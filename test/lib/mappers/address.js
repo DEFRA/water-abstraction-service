@@ -87,31 +87,31 @@ experiment('modules/billing/mappers/address', () => {
     });
   });
 
-  experiment('.serviceToCrm', () => {
+  experiment('.uiToModel', () => {
     let result;
 
     beforeEach(async () => {
-      result = addressMapper.serviceToCrm(addressData);
+      result = addressMapper.uiToModel(addressData);
     });
 
     test('has the expected id value', async () => {
       expect(result.id).to.equal(addressData.addressId);
     });
 
-    test('has the expected address 1 value', async () => {
-      expect(result.address1).to.equal(addressData.addressLine1);
+    test('has the expected address line 1 value', async () => {
+      expect(result.addressLine1).to.equal(addressData.addressLine1);
     });
 
     test('has the expected address line 2 value', async () => {
-      expect(result.address2).to.equal(addressData.addressLine2);
+      expect(result.addressLine2).to.equal(addressData.addressLine2);
     });
 
     test('has the expected address line 3 value', async () => {
-      expect(result.address3).to.equal(addressData.addressLine3);
+      expect(result.addressLine3).to.equal(addressData.addressLine3);
     });
 
     test('has the expected address line 4 value', async () => {
-      expect(result.address4).to.equal(addressData.addressLine4);
+      expect(result.addressLine4).to.equal(addressData.addressLine4);
     });
 
     test('has the expected town value', async () => {
@@ -128,6 +128,46 @@ experiment('modules/billing/mappers/address', () => {
 
     test('has the expected country value', async () => {
       expect(result.country).to.equal(addressData.country);
+    });
+  });
+
+  experiment('.modelToCrm', () => {
+    let result, address;
+
+    beforeEach(async () => {
+      address = new Address();
+      address.fromHash(addressData);
+      result = addressMapper.modelToCrm(address);
+    });
+
+    test('has the expected address 1 value', async () => {
+      expect(result.address1).to.equal(address.addressLine1);
+    });
+
+    test('has the expected address line 2 value', async () => {
+      expect(result.address2).to.equal(address.addressLine2);
+    });
+
+    test('has the expected address line 3 value', async () => {
+      expect(result.address3).to.equal(address.addressLine3);
+    });
+
+    test('has the expected address line 4 value', async () => {
+      expect(result.address4).to.equal(address.addressLine4);
+    });
+
+    test('does not contain "addressLines"', () => {
+      expect(result.addressLine1).to.be.undefined();
+      expect(result.addressLine2).to.be.undefined();
+      expect(result.addressLine3).to.be.undefined();
+      expect(result.addressLine4).to.be.undefined();
+    });
+
+    test('passes other data as is', async () => {
+      expect(result.town).to.equal(address.town);
+      expect(result.county).to.equal(address.county);
+      expect(result.postcode).to.equal(address.postcode);
+      expect(result.country).to.equal(address.country);
     });
   });
 });

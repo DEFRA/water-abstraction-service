@@ -85,26 +85,44 @@ experiment('modules/billing/mappers/contact', () => {
     });
   });
 
-  experiment('.serviceToCrm', () => {
+  experiment('.uiToModel', () => {
     let result;
 
     beforeEach(async () => {
-      result = contactMapper.serviceToCrm(contactData);
+      result = contactMapper.uiToModel(contactData);
     });
 
-    test('maps title to salutation', async () => {
-      expect(result.salutation).to.equal(contactData.title);
+    test('returns an Contact instance', async () => {
+      expect(result instanceof Contact).to.be.true();
     });
 
-    test('remaining data does not include title', async () => {
-      expect(result.title).to.be.undefined();
-    });
-
-    test('returns remaining data as is', async () => {
+    test('maps data properly', async () => {
+      expect(result.title).to.equal(contactData.title);
       expect(result.firstName).to.equal(contactData.firstName);
       expect(result.middleInitials).to.equal(contactData.middleInitials);
       expect(result.lastName).to.equal(contactData.lastName);
       expect(result.dataSource).to.equal(contactData.dataSource);
+    });
+  });
+
+  experiment('.modelToCrm', () => {
+    let result, contact;
+
+    beforeEach(async () => {
+      contact = new Contact();
+      contact.fromHash(contactData);
+      result = contactMapper.modelToCrm(contact);
+    });
+
+    test('maps title to salutation', async () => {
+      expect(result.salutation).to.equal(contact.title);
+    });
+
+    test('maps data properly', async () => {
+      expect(result.firstName).to.equal(contact.firstName);
+      expect(result.middleInitials).to.equal(contact.middleInitials);
+      expect(result.lastName).to.equal(contact.lastName);
+      expect(result.dataSource).to.equal(contact.dataSource);
     });
   });
 });

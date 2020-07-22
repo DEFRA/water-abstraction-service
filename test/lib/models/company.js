@@ -52,13 +52,13 @@ experiment('lib/models/company model', () => {
   });
 
   test('can set/get type to "person"', async () => {
-    company.type = Company.TYPE_PERSON;
-    expect(company.type).to.equal(Company.TYPE_PERSON);
+    company.type = Company.COMPANY_TYPES.person;
+    expect(company.type).to.equal(Company.COMPANY_TYPES.person);
   });
 
   test('can set/get type to "organisation"', async () => {
-    company.type = Company.TYPE_ORGANISATION;
-    expect(company.type).to.equal(Company.TYPE_ORGANISATION);
+    company.type = Company.COMPANY_TYPES.organisation;
+    expect(company.type).to.equal(Company.COMPANY_TYPES.organisation);
   });
 
   test('throws an error if attempting to set invalid type', async () => {
@@ -93,7 +93,7 @@ experiment('lib/models/company model', () => {
     }
   });
 
-  Company.ORGANISATION_TYPES.forEach(type => {
+  Object.values(Company.ORGANISATION_TYPES).forEach(type => {
     test(`can set/get organisation type to "${type}"`, async () => {
       company.organisationType = type;
       expect(company.organisationType).to.equal(type);
@@ -137,12 +137,40 @@ experiment('lib/models/company model', () => {
     }
   });
 
+  test('can set/get company number to a string', async () => {
+    company.companyNumber = 'SL132456';
+    expect(company.companyNumber).to.equal('SL132456');
+  });
+
+  test('can set/get company number to null', async () => {
+    company.companyNumber = null;
+    expect(company.companyNumber).to.equal(null);
+  });
+
+  test('throws an error if attempting to set empty name', async () => {
+    try {
+      company.name = '';
+      fail();
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
+  test('throws an error if attempting to set name to non-string', async () => {
+    try {
+      company.name = 123;
+      fail();
+    } catch (err) {
+      expect(err).to.be.an.error();
+    }
+  });
+
   experiment('when company is populated', () => {
     beforeEach(async () => {
       company.id = TEST_GUID;
       company.name = TEST_NAME;
-      company.type = Company.TYPE_PERSON;
-      company.organisationType = 'individual';
+      company.type = Company.COMPANY_TYPES.person;
+      company.organisationType = Company.ORGANISATION_TYPES.individual;
     });
 
     test('.toJSON returns all data', async () => {
@@ -150,10 +178,71 @@ experiment('lib/models/company model', () => {
       expect(data).to.equal({
         id: TEST_GUID,
         name: TEST_NAME,
-        type: Company.TYPE_PERSON,
-        organisationType: 'individual',
+        type: Company.COMPANY_TYPES.person,
+        organisationType: Company.ORGANISATION_TYPES.individual,
         companyAddresses: [],
         companyContacts: []
+      });
+    });
+  });
+  experiment('.isValid', () => {
+    beforeEach(async () => {
+      company.name = TEST_NAME;
+      company.type = Company.COMPANY_TYPES.person;
+      company.organisationType = Company.ORGANISATION_TYPES.individual;
+    });
+    experiment('type', () => {
+      Object.values(Company.COMPANY_TYPES).forEach(type => {
+        test(`can be set to ${type}`, async () => {
+          company.type = type;
+
+          const { error, value } = company.isValid();
+          expect(error).to.be.null();
+          expect(value.type).to.equal(type);
+        });
+      });
+    });
+
+    experiment('organisation type', () => {
+      Object.values(Company.ORGANISATION_TYPES).forEach(type => {
+        test(`can be set to ${type}`, async () => {
+          company.organisationType = type;
+
+          const { error, value } = company.isValid();
+          expect(error).to.be.null();
+          expect(value.organisationType).to.equal(type);
+        });
+      });
+    });
+
+    experiment('name', () => {
+      test('is valid when present', async () => {
+        const { error, value } = company.isValid();
+        expect(error).to.be.null();
+        expect(value.name).to.equal(company.name);
+      });
+    });
+
+    experiment('companyNumber', () => {
+      test('is optional', async () => {
+        delete company.companyNumber;
+
+        const { error } = company.isValid();
+        expect(error).to.be.null();
+      });
+
+      test('must have a length of 8', async () => {
+        company.companyNumber = 'ABC123';
+
+        const { error } = company.isValid();
+        expect(error).to.not.be.null();
+      });
+
+      test('is valid when present', async () => {
+        company.companyNumber = 'SL123456';
+        const { error, value } = company.isValid();
+        expect(error).to.be.null();
+        expect(value.companyNumber).to.equal(company.companyNumber);
       });
     });
   });

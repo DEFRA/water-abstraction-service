@@ -2,13 +2,30 @@
 
 const { assertNullableString, assertNullableEnum, assertEnum } = require('./validators');
 const Model = require('./model');
+const Joi = require('@hapi/joi');
+const { omit } = require('lodash');
 
-const CONTACT_TYPES = ['person', 'department'];
-const DATA_SOURCE_TYPES = ['nald', 'wrls'];
+const CONTACT_TYPES = { person: 'person', department: 'department' };
+const DATA_SOURCE_TYPES = { nald: 'nald', wrls: 'wrls' };
 
 const getInitials = (firstName, middleInitials) => middleInitials
   ? `${firstName.slice(0, 1)} ${middleInitials}`
   : null;
+
+const contactPersonSchema = Joi.object({
+  title: Joi.string().allow(null).optional(),
+  firstName: Joi.string().required(),
+  middleInitials: Joi.string().allow(null).optional(),
+  lastName: Joi.string().required(),
+  suffix: Joi.string().allow(null).optional(),
+  department: Joi.string().allow(null).replace(/\./g, '').optional(),
+  dataSource: Joi.string().valid(Object.values(DATA_SOURCE_TYPES)).allow(null).optional()
+});
+
+const contactDepartmentSchema = Joi.object({
+  department: Joi.string().required(),
+  dataSource: Joi.string().valid(Object.values(DATA_SOURCE_TYPES)).allow(null).optional()
+});
 
 class Contact extends Model {
   set initials (initials) {
@@ -75,7 +92,7 @@ class Contact extends Model {
   }
 
   set type (type) {
-    assertNullableEnum(type, CONTACT_TYPES);
+    assertNullableEnum(type, Object.values(CONTACT_TYPES));
     this._type = type;
   }
 
@@ -84,7 +101,7 @@ class Contact extends Model {
   }
 
   set dataSource (dataSource) {
-    assertEnum(dataSource, DATA_SOURCE_TYPES);
+    assertEnum(dataSource, Object.values(DATA_SOURCE_TYPES));
     this._dataSource = dataSource;
   }
 
@@ -97,19 +114,26 @@ class Contact extends Model {
    * @return {String}
    */
   get fullName () {
-    const initials = this._dataSource === 'nald' ? this._initials : getInitials(this._firstName, this._middleInitials);
+    const initials = this._dataSource === DATA_SOURCE_TYPES.nald ? this._initials : getInitials(this._firstName, this._middleInitials);
 
-    const parts = [this._title, initials || this._firstName, this._lastName];
-    const name = parts.filter(x => x).join(' ');
-    return this._suffix ? `${name}, ${this._suffix}` : name;
+    const parts = [this._title, initials || this._firstName, this._lastName, this._suffix];
+    return parts.filter(x => x).join(' ');
   }
 
   toJSON () {
-    return {
-      ...super.toJSON(),
-      fullName: this.fullName
+    const data = {
+      ...super.toJSON()
     };
+    if (this._type === CONTACT_TYPES.person) data.fullName = this.fullName;
+    return data;
+  }
+
+  isValid () {
+    const schema = this._type === CONTACT_TYPES.person ? contactPersonSchema : contactDepartmentSchema;
+    return Joi.validate(omit(this.toJSON(), ['type', 'fullName']), schema, { abortEarly: false });
   }
 }
 
 module.exports = Contact;
+module.exports.CONTACT_TYPES = CONTACT_TYPES;
+module.exports.DATA_SOURCE_TYPES = DATA_SOURCE_TYPES;

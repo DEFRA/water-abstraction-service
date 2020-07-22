@@ -1,7 +1,8 @@
 'use strict';
 
-const { isEmpty } = require('lodash');
+const { isEmpty, omit } = require('lodash');
 const Company = require('../models/company');
+const { ORGANISATION_TYPES, COMPANY_TYPES } = Company;
 
 /**
  * Maps a row of CRM v2 contact data to a Company instance
@@ -16,11 +17,31 @@ const crmToModel = companyData => {
   return company.pickFrom(companyData, ['name', 'type', 'organisationType']);
 };
 
-const serviceToCrm = companyData => ({
-  ...companyData,
-  type: companyData.type === 'individual' ? 'person' : 'organisation',
-  organisationType: companyData.type
-});
+/**
+ * Maps only an id or new company data from the UI
+ * @param {Object} companyData from UI
+ * @return {Company}
+ */
+const uiToModel = companyData => {
+  if (!companyData) return null;
+  if (companyData.companyId) {
+    return new Company(companyData.companyId);
+  }
+  const company = new Company();
+  return company.fromHash({
+    ...companyData,
+    type: companyData.type === ORGANISATION_TYPES.individual ? COMPANY_TYPES.person : COMPANY_TYPES.organisation,
+    organisationType: companyData.type
+  });
+};
+
+/**
+ * Maps data from company service model to expected crm shape
+ * @param {Company} company service model
+ * @return {Object}
+ */
+const modelToCrm = company => omit(company.toJSON(), 'companyAddresses', 'companyContacts');
 
 exports.crmToModel = crmToModel;
-exports.serviceToCrm = serviceToCrm;
+exports.uiToModel = uiToModel;
+exports.modelToCrm = modelToCrm;

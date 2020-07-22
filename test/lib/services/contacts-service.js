@@ -13,6 +13,7 @@ const contactsService = require('../../../src/lib/services/contacts-service');
 const Contact = require('../../../src/lib/models/contact-v2');
 const contactsConnector = require('../../../src/lib/connectors/crm-v2/contacts');
 const contactsMapper = require('../../../src/lib/mappers/contact');
+const { InvalidEntityError } = require('../../../src/lib/errors');
 
 experiment('modules/billing/services/contacts-service', () => {
   let connectorResponse;
@@ -77,7 +78,7 @@ experiment('modules/billing/services/contacts-service', () => {
         lastName: 'Test'
       };
       contactModel = new Contact(contactId);
-      sandbox.stub(contactsMapper, 'serviceToCrm').returns(mappedData);
+      sandbox.stub(contactsMapper, 'modelToCrm').returns(mappedData);
       sandbox.stub(contactsMapper, 'crmToModel').resolves(contactModel);
 
       sandbox.stub(contactsConnector, 'createContact').resolves(newContact);
@@ -89,12 +90,12 @@ experiment('modules/billing/services/contacts-service', () => {
       sandbox.restore();
     });
 
-    test('calls the address mapper to map data for the DB call', async () => {
-      const [passedData] = contactsMapper.serviceToCrm.lastCall.args;
+    test('calls the contact mapper to map data for the DB call', async () => {
+      const [passedData] = contactsMapper.modelToCrm.lastCall.args;
       expect(passedData).to.equal(contactData);
     });
 
-    test('calls the address connector with the mapped data', async () => {
+    test('calls the contact connector with the mapped data', async () => {
       const [contactData] = contactsConnector.createContact.lastCall.args;
       expect(contactData).to.equal(mappedData);
     });
@@ -106,6 +107,85 @@ experiment('modules/billing/services/contacts-service', () => {
 
     test('returns the output from the mapper', async () => {
       expect(response).to.equal(contactModel);
+    });
+  });
+
+  experiment('.deleteContact', () => {
+    beforeEach(async () => {
+      sandbox.stub(contactsConnector, 'deleteContact').resolves();
+
+      await contactsService.deleteContact({ id: 'test-contact-id' });
+    });
+
+    test('the id is passed to the connector', () => {
+      const [passedId] = contactsConnector.deleteContact.lastCall.args;
+      expect(passedId).to.equal('test-contact-id');
+    });
+  });
+
+  experiment('.getContactModel', () => {
+    let contactData, contactModel, response;
+    const contactId = uuid();
+    beforeEach(async () => {
+      sandbox.stub(contactsMapper, 'uiToModel').resolves();
+    });
+    experiment('when only an contact id is provided', () => {
+      beforeEach(async () => {
+        contactData = {
+          contactId
+        };
+        contactModel = new Contact(contactId);
+        contactsMapper.uiToModel.returns(contactModel);
+        response = await contactsService.getContactModel(contactData);
+      });
+      test('calls the contact mapper to map data from the ui', async () => {
+        const [passedData] = contactsMapper.uiToModel.lastCall.args;
+        expect(passedData).to.equal(contactData);
+      });
+
+      test('returns the output from the mapper', async () => {
+        expect(response).to.equal(contactModel);
+      });
+    });
+
+    experiment('when new contact data is provided', () => {
+      beforeEach(async () => {
+        contactData = {
+          type: 'person',
+          firstName: 'Tommy',
+          lastName: 'Testington'
+        };
+        contactModel = new Contact();
+        contactModel.fromHash(contactData);
+        contactsMapper.uiToModel.returns(contactModel);
+
+        response = await contactsService.getContactModel(contactData);
+      });
+      test('calls the contact mapper to map data from the ui', async () => {
+        const [passedData] = contactsMapper.uiToModel.lastCall.args;
+        expect(passedData).to.equal(contactData);
+      });
+
+      test('returns the output from the mapper', async () => {
+        expect(response).to.equal(contactModel);
+      });
+
+      test('throws an invalid entity error when the contact data is invalid', async () => {
+        contactData = {
+          type: 'person',
+          lastName: 'Testington'
+        };
+        contactModel = new Contact();
+        contactModel.fromHash(contactData);
+        contactsMapper.uiToModel.returns(contactModel);
+
+        try {
+          await contactsService.getContactModel(contactData);
+        } catch (err) {
+          expect(err).to.be.instanceOf(InvalidEntityError);
+          expect(err.message).to.equal('Invalid contact');
+        }
+      });
     });
   });
 });

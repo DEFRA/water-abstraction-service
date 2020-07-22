@@ -22,5 +22,13 @@ const createAddress = async address => {
   return serviceRequest.post(uri, { body: address });
 };
 
+/**
+ * Deletes an address entity in the CRM
+ *
+ * @param {Object} address The address data to save in the CRM
+ */
+const deleteAddress = async addressId => serviceRequest.delete(getUri(addressId));
+
 exports.getAddress = getAddress;
 exports.createAddress = createAddress;
+exports.deleteAddress = deleteAddress;

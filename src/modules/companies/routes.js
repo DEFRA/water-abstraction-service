@@ -2,38 +2,39 @@ const Joi = require('@hapi/joi');
 const controller = require('./controller');
 const { statuses } = require('../returns/schema');
 
-const { COMPANY_TYPES, CONTACT_TYPES } = require('./validators/invoice-accounts');
+const { CONTACT_TYPES } = require('../../lib/models/contact-v2');
+const { ORGANISATION_TYPES } = require('../../lib/models/company');
 
 const addressSchema = Joi.object({
   addressId: Joi.string().guid().optional(),
-  addressLine1: Joi.string().optional(),
-  addressLine2: Joi.string().optional(),
-  addressLine3: Joi.string().optional(),
-  addressLine4: Joi.string().optional(),
-  town: Joi.string().optional(),
-  county: Joi.string().optional(),
-  country: Joi.string().optional(),
-  postcode: Joi.string().optional(),
+  addressLine1: Joi.string().trim().optional(),
+  addressLine2: Joi.string().trim().optional(),
+  addressLine3: Joi.string().trim().optional(),
+  addressLine4: Joi.string().trim().optional(),
+  town: Joi.string().trim().optional(),
+  county: Joi.string().trim().optional(),
+  country: Joi.string().trim().replace(/\./g, '').optional(),
+  postcode: Joi.string().trim().optional(),
   uprn: Joi.number().optional()
 }).required();
 
 const agentSchema = Joi.object({
   companyId: Joi.string().guid().optional(),
-  type: Joi.string().valid(COMPANY_TYPES).optional(),
-  name: Joi.string().optional(),
-  companyNumber: Joi.string().optional()
+  type: Joi.string().valid(Object.values(ORGANISATION_TYPES)).optional(),
+  name: Joi.string().trim().replace(/\./g, '').optional(),
+  companyNumber: Joi.string().trim().replace(/\./g, '').uppercase().optional()
 }).allow(null).optional();
 
 const contactSchema = Joi.object({
   contactId: Joi.string().guid().optional(),
-  type: Joi.string().valid(CONTACT_TYPES).optional(),
-  title: Joi.string().optional(),
-  firstName: Joi.string().optional(),
-  middleInitials: Joi.string().optional(),
-  lastName: Joi.string().optional(),
-  suffix: Joi.string().optional(),
-  department: Joi.string().optional()
-}).required();
+  type: Joi.string().valid(Object.values(CONTACT_TYPES)).optional(),
+  title: Joi.string().trim().optional(),
+  firstName: Joi.string().trim().optional(),
+  middleInitials: Joi.string().trim().optional(),
+  lastName: Joi.string().trim().optional(),
+  suffix: Joi.string().trim().optional(),
+  department: Joi.string().trim().replace(/\./g, '').optional()
+}).allow(null).optional();
 
 module.exports = {
   getReturns: {

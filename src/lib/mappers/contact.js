@@ -19,10 +19,33 @@ const crmToModel = contact => {
   return contactModel;
 };
 
-const serviceToCrm = contactData => ({
-  ...omit(contactData, 'title'),
-  salutation: contactData.title || contactData.salutation
-});
+/**
+ * Maps only an id or new contact data from the UI
+ * @param {Object} contactData from UI
+ * @return {Contact}
+ */
+const uiToModel = contactData => {
+  if (contactData.contactId) {
+    return new Contact(contactData.contactId);
+  }
+  const contact = new Contact();
+  contact.dataSource = Contact.DATA_SOURCE_TYPES.wrls;
+  return contact.fromHash(contactData);
+};
+
+/**
+ * Maps data from contact service model to expected crm shape
+ * @param {Contact} contact service model
+ * @return {Object}
+ */
+const modelToCrm = contact => {
+  const data = contact.toJSON();
+  return {
+    ...omit(data, 'title', 'fullName'),
+    salutation: data.title
+  };
+};
 
 exports.crmToModel = crmToModel;
-exports.serviceToCrm = serviceToCrm;
+exports.uiToModel = uiToModel;
+exports.modelToCrm = modelToCrm;

@@ -16,6 +16,8 @@ const documentsConnector = require('../../../src/lib/connectors/crm/documents');
 const companiesService = require('../../../src/lib/services/companies-service');
 const companiesContactsService = require('../../../src/lib/services/company-contacts');
 
+const InvoiceAccount = require('../../../src/lib/models/invoice-account');
+
 const invoiceAccountsService = require('../../../src/lib/services/invoice-accounts-service');
 
 const { NotFoundError } = require('../../../src/lib/errors');
@@ -58,17 +60,19 @@ const returns = [{
 }];
 
 experiment('modules/companies/controller', () => {
+  let h, responseStub;
   beforeEach(async () => {
+    responseStub = { code: sandbox.stub() };
+    h = { response: sandbox.stub().returns(responseStub) };
+
     sandbox.stub(documentsConnector, 'findAll').resolves(documents);
     sandbox.stub(returnsConnector.returns, 'findAll').resolves(returns);
 
     sandbox.stub(companiesService, 'getCompany').resolves({ companyId: 'test-company-id' });
     sandbox.stub(companiesService, 'getCompanyAddresses').resolves([{ companyAddressId: 'test-company-address-id' }]);
 
-    sandbox.stub(invoiceAccountsService, 'getInvoiceAccountEntities');
-    sandbox.stub(invoiceAccountsService, 'createInvoiceAccount');
-    sandbox.stub(invoiceAccountsService, 'createInvoiceAccountAddress');
-    sandbox.stub(invoiceAccountsService, 'getNewEntities');
+    sandbox.stub(invoiceAccountsService, 'getInvoiceAccount');
+    sandbox.stub(invoiceAccountsService, 'persist');
     sandbox.stub(companiesContactsService, 'getCompanyContacts');
   });
 
@@ -264,16 +268,10 @@ experiment('modules/companies/controller', () => {
   });
 
   experiment('createCompanyInvoiceAccount', () => {
-    let request, result, address, agent, contact, invoiceAccount;
+    let request, invoiceAccount;
     beforeEach(async () => {
-      address = { addressId: 'new-address' };
-      agent = { companyId: 'new-agent-company' };
-      contact = { contactId: 'new-contact' };
-      invoiceAccount = { invoiceAccountId: 'new-invoice-account' };
-      invoiceAccountsService.getInvoiceAccountEntities.resolves({ address, agent, contact });
-      invoiceAccountsService.createInvoiceAccount.resolves(invoiceAccount);
-      invoiceAccountsService.createInvoiceAccountAddress.resolves();
-      invoiceAccountsService.getNewEntities.resolves({ invoiceAccount, contact });
+      invoiceAccount = new InvoiceAccount();
+      invoiceAccountsService.getInvoiceAccount.returns(invoiceAccount);
 
       request = {
         params: {
@@ -286,46 +284,35 @@ experiment('modules/companies/controller', () => {
           contact: { contactId: 'test-contact-id' }
         }
       };
-      result = await controller.createCompanyInvoiceAccount(request);
+      await controller.createCompanyInvoiceAccount(request, h);
     });
 
-    test('calls getInvoiceAccountEntities helper function with request', () => {
-      expect(invoiceAccountsService.getInvoiceAccountEntities.calledWith(
-        request
-      )).to.be.true();
-    });
-
-    test('calls the createInvoiceAccount helper function with correct params', () => {
-      expect(invoiceAccountsService.createInvoiceAccount.calledWith(
-        request
-      )).to.be.true();
-    });
-
-    test('calls the createInvoiceAccountAddress helper function with correct params', () => {
-      expect(invoiceAccountsService.createInvoiceAccountAddress.calledWith(
-        request,
-        invoiceAccount,
+    test('calls the getInvoiceAccount helper function with correct params', () => {
+      const { startDate, address, agent, contact } = request.payload;
+      expect(invoiceAccountsService.getInvoiceAccount.calledWith(
+        request.params.companyId,
+        startDate,
         address,
         agent,
         contact
       )).to.be.true();
     });
 
-    test('calls the getNewEntities helper function with correct params', () => {
-      expect(invoiceAccountsService.getNewEntities.calledWith(
-        invoiceAccount,
-        address,
-        agent,
-        contact
+    test('calls the invoice account service to persist the data', () => {
+      const { regionId, startDate } = request.payload;
+      expect(invoiceAccountsService.persist.calledWith(
+        regionId,
+        startDate,
+        invoiceAccount
       )).to.be.true();
     });
 
-    test('returns the return value from the getNewEntities helper function', () => {
-      expect(result).to.equal({ invoiceAccount, contact });
+    test('returns a 201 response', () => {
+      expect(responseStub.code.calledWith(201)).to.be.true();
     });
 
-    test('returns  a Boom not found error if error is thrown', async () => {
-      invoiceAccountsService.createInvoiceAccount.throws(new NotFoundError('oops!'));
+    test('returns a Boom not found error if error is thrown', async () => {
+      invoiceAccountsService.getInvoiceAccount.throws(new NotFoundError('oops!'));
       const err = await controller.createCompanyInvoiceAccount(request);
       expect(err.isBoom).to.be.true();
       expect(err.output.statusCode).to.equal(404);

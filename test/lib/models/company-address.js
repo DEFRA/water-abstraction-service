@@ -30,6 +30,20 @@ experiment('lib/models/company-address', () => {
     });
   });
 
+  experiment('.companyId', () => {
+    test('can be set to a guid string', async () => {
+      companyAddress.companyId = TEST_GUID;
+      expect(companyAddress.companyId).to.equal(TEST_GUID);
+    });
+
+    test('throws an error if set to a non-guid string', async () => {
+      const func = () => {
+        companyAddress.companyId = 'hey';
+      };
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.address', () => {
     test('can be set to a valid Address', async () => {
       const address = new Address();

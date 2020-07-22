@@ -16,14 +16,11 @@ const CompanyContact = require('../../../src/lib/models/company-contact');
 const companiesService = require('../../../src/lib/services/companies-service');
 const companiesConnector = require('../../../src/lib/connectors/crm-v2/companies');
 const mappers = require('../../../src/lib/mappers');
-const { NotFoundError } = require('../../../src/lib/errors');
+const { NotFoundError, InvalidEntityError } = require('../../../src/lib/errors');
 
 const TEST_GUID = uuid();
 
 experiment('modules/billing/services/companies-service', () => {
-  beforeEach(() => {
-
-  });
   afterEach(async () => {
     sandbox.restore();
   });
@@ -35,7 +32,7 @@ experiment('modules/billing/services/companies-service', () => {
       companyData = {
         companyId,
         name: 'company name',
-        type: 'organisation'
+        type: Company.COMPANY_TYPES.organisation
       };
       companyModel = new Company(TEST_GUID);
 
@@ -111,29 +108,29 @@ experiment('modules/billing/services/companies-service', () => {
     beforeEach(async () => {
       companyData = {
         name: 'company name',
-        type: 'limitedCompany'
+        type: Company.ORGANISATION_TYPES.limitedCompany
       };
       mappedData = {
         name: 'company name',
-        type: 'organisation',
-        organisationType: 'limitedCompany'
+        type: Company.COMPANY_TYPES.organisation,
+        organisationType: Company.ORGANISATION_TYPES.limitedCompany
       };
       newCompany = {
         companyId: TEST_GUID,
         name: 'company name',
-        type: 'organisation',
-        organisationType: 'limitedCompany'
+        type: Company.COMPANY_TYPES.organisation,
+        organisationType: Company.ORGANISATION_TYPES.limitedCompany
       };
       companyModel = new Company(TEST_GUID);
 
       sandbox.stub(companiesConnector, 'createCompany').resolves(newCompany);
-      sandbox.stub(mappers.company, 'serviceToCrm').returns(mappedData);
+      sandbox.stub(mappers.company, 'modelToCrm').returns(mappedData);
       sandbox.stub(mappers.company, 'crmToModel').returns(companyModel);
 
       response = await companiesService.createCompany(companyData);
     });
     test('calls the company mapper to map data for the DB call', async () => {
-      const [passedData] = mappers.company.serviceToCrm.lastCall.args;
+      const [passedData] = mappers.company.modelToCrm.lastCall.args;
       expect(passedData).to.equal(companyData);
     });
 
@@ -157,7 +154,7 @@ experiment('modules/billing/services/companies-service', () => {
     beforeEach(async () => {
       companyId = uuid();
       companyAddressData = {
-        address: { addressId: uuid() },
+        address: { companyId: uuid() },
         startDate: '2020-04-01',
         endDate: null
       };
@@ -224,6 +221,84 @@ experiment('modules/billing/services/companies-service', () => {
 
     test('returns the output from the mapper', async () => {
       expect(response).to.equal(companyContactModel);
+    });
+  });
+
+  experiment('.getCompanyModel', () => {
+    let companyData, companyModel, response;
+    beforeEach(async () => {
+      companyData = {
+        name: 'company name',
+        type: Company.ORGANISATION_TYPES.limitedCompany
+      };
+      companyModel = new Company(TEST_GUID);
+
+      sandbox.stub(mappers.company, 'uiToModel').returns(companyModel);
+
+      response = await companiesService.getCompanyModel(companyData);
+    });
+
+    experiment('when only an address id is provided', () => {
+      beforeEach(async () => {
+        companyData = {
+          companyId: TEST_GUID
+        };
+        companyModel = new Company(TEST_GUID);
+        mappers.company.uiToModel.returns(companyModel);
+        response = await companiesService.getCompanyModel(companyData);
+      });
+      test('calls the address mapper to map data from the ui', async () => {
+        const [passedData] = mappers.company.uiToModel.lastCall.args;
+        expect(passedData).to.equal(companyData);
+      });
+
+      test('returns the output from the mapper', async () => {
+        expect(response).to.equal(companyModel);
+      });
+    });
+
+    experiment('when new address data is provided', () => {
+      beforeEach(async () => {
+        companyData = {
+          name: 'company name',
+          type: Company.ORGANISATION_TYPES.limitedCompany
+        };
+        companyModel = new Company();
+        companyModel.fromHash({
+          name: companyData.name,
+          type: Company.COMPANY_TYPES.organisation,
+          organisationType: companyData.type
+        });
+        mappers.company.uiToModel.returns(companyModel);
+
+        response = await companiesService.getCompanyModel(companyData);
+      });
+      test('calls the address mapper to map data from the ui', async () => {
+        const [passedData] = mappers.company.uiToModel.lastCall.args;
+        expect(passedData).to.equal(companyData);
+      });
+
+      test('returns the output from the mapper', async () => {
+        expect(response).to.equal(companyModel);
+      });
+
+      test('throws an invalid entity error when the address data is invalid', async () => {
+        companyData = {
+          addressLine2: '742',
+          addressLine3: 'Evergreen Terrace',
+          town: 'Springfield'
+        };
+        companyModel = new Company();
+        companyModel.fromHash(companyData);
+        mappers.company.uiToModel.returns(companyModel);
+
+        try {
+          await companiesService.getCompanyModel(companyData);
+        } catch (err) {
+          expect(err).to.be.instanceOf(InvalidEntityError);
+          expect(err.message).to.equal('Invalid company');
+        }
+      });
     });
   });
 });

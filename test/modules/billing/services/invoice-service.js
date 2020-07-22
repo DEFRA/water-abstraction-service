@@ -252,6 +252,7 @@ const createCrmData = () => ([
     },
     invoiceAccountAddresses: [
       {
+        invoiceAccountId: IDS.invoiceAccounts[0],
         startDate: '2019-01-01',
         address: createAddress('Daisy cottage'),
         agentCompany: {
@@ -271,6 +272,7 @@ const createCrmData = () => ([
       name: 'Test Company 2'
     },
     invoiceAccountAddresses: [{
+      invoiceAccountId: IDS.invoiceAccounts[1],
       startDate: '2018-01-01',
       address: createAddress('Buttercup farm')
     }]

@@ -1,15 +1,17 @@
 'use strict';
+const InvoiceAccount = require('../models/invoice-account');
 
 const invoiceAccountsConnector = require('../connectors/crm-v2/invoice-accounts');
+const invoiceAccountAddressesService = require('./invoice-account-addresses-service');
 const companiesService = require('./companies-service');
 const addressesService = require('./addresses-service');
 const contactsService = require('./contacts-service');
 const regionsService = require('./regions-service');
-const invoiceAccountsValidators = require('../../modules/companies/validators/invoice-accounts');
+const crmService = require('./crm-service');
 const mappers = require('../mappers');
 
 const moment = require('moment');
-const { omit } = require('lodash');
+const { isEmpty } = require('lodash');
 
 /**
  * Gets invoice accounts with specified IDs from CRM and
@@ -40,152 +42,141 @@ const getByInvoiceAccountId = async id => {
   return mappers.invoiceAccount.crmToModel(invoiceAccount);
 };
 
-const createInvoiceAccount = async request => {
-  const { companyId } = request.params;
-  const { startDate, regionId } = request.payload;
-
-  const regionCode = await regionsService.getRegionCode(regionId);
-
-  const invoiceAccount = await invoiceAccountsConnector.createInvoiceAccount({
-    companyId,
-    regionCode,
-    startDate: formatDate(startDate)
-  });
-
-  return mappers.invoiceAccount.crmToModel(invoiceAccount);
-};
+const deleteInvoiceAccount = async invoiceAccount =>
+  invoiceAccountsConnector.deleteInvoiceAccount(invoiceAccount.id);
 
 /**
  * get companyId of company which the new address is to be linked
  *   if there is an agent, link to agent,
  *   otherwise, link to licenceHolder company
  */
-const getCompanyIdForEntity = (request, agentCompany) => {
-  const { agent } = request.payload;
-  if (agent) {
-    return isNewEntity(agent) ? agentCompany.id : agent.companyId;
-  }
-  return request.params.companyId;
-};
+const getCompanyIdForEntity = (companyId, agentCompany) =>
+  agentCompany ? agentCompany.id : companyId;
 
 const formatDate = date => moment(date).format('YYYY-MM-DD');
 
-const getData = payload => ({
-  roleName: payload.agent ? 'billing' : 'licenceHolder',
+const getData = (agent, startDate) => ({
+  roleName: agent ? 'billing' : 'licenceHolder',
   isDefault: true,
-  startDate: formatDate(payload.startDate)
+  startDate
 });
 
-const createCompanyAddress = async (request, newAddress, agentCompany) => {
-  const companyId = getCompanyIdForEntity(request, agentCompany);
-  const data = {
-    addressId: newAddress.id,
-    ...getData(request.payload)
-  };
+const createCompanyAddress = async (companyId, data, addressId) =>
+  companiesService.createCompanyAddress(companyId, { ...data, addressId });
 
-  return companiesService.createCompanyAddress(companyId, data);
-};
+const createCompanyContact = async (companyId, data, contactId) =>
+  companiesService.createCompanyContact(companyId, { ...data, contactId });
 
-const createCompanyContact = async (request, newContact, agentCompany) => {
-  const companyId = getCompanyIdForEntity(request, agentCompany);
-  const data = {
-    contactId: newContact.id,
-    ...getData(request.payload)
-  };
-  const companyContact = await companiesService.createCompanyContact(companyId, data);
-  return companyContact;
-};
+const createCompanyAddressAndContact = async (companyId, startDate, invoiceAccount, newModels) => {
+  const { address, agentCompany, contact } = invoiceAccount.invoiceAccountAddresses[0];
+  const entityCompanyId = getCompanyIdForEntity(companyId, agentCompany);
+  const commonData = getData(agentCompany, startDate);
 
-const getAgentCompany = async agent => {
-  if (agent.companyId) return agent;
-  return companiesService.createCompany(mappers.company.serviceToCrm(agent));
-};
+  if (isNewEntity(address)) {
+    const companyAddress = await createCompanyAddress(entityCompanyId, commonData, address.id);
+    newModels.push(companyAddress);
+  }
 
-const validators = {
-  address: invoiceAccountsValidators.validateAddress,
-  agent: invoiceAccountsValidators.validateAgentCompany,
-  contact: invoiceAccountsValidators.validateContact
-};
-
-const validatePayloadEntities = payload => {
-  const entities = omit(payload, 'startDate', 'regionId');
-
-  for (const [key, value] of Object.entries(entities)) {
-    const { error } = validators[key](value);
-    if (error) throw error;
+  if (isNewEntity(contact)) {
+    const companyContact = await createCompanyContact(entityCompanyId, commonData, contact.id);
+    newModels.push(companyContact);
   }
 };
 
-const getInvoiceAccountEntities = async request => {
-  const { address, agent, contact } = request.payload;
-
-  validatePayloadEntities(request.payload);
-
-  const addressEntity = address.addressId ? address : await addressesService.createAddress(address);
-  const agentCompany = agent ? await getAgentCompany(agent) : null;
-  const contactEntity = contact.contactId ? contact : await contactsService.createContact(contact);
-
-  if (isNewEntity(address)) await createCompanyAddress(request, addressEntity, agentCompany);
-  if (isNewEntity(contact)) await createCompanyContact(request, contactEntity, agentCompany);
-
-  return {
-    address: addressEntity,
-    agent: agentCompany,
-    contact: contactEntity
-  };
+const getInvoiceAccountModel = (companyId, startDate, addressModel, agentCompanyModel, contactModel) => {
+  const invoiceAccountModel = new InvoiceAccount();
+  invoiceAccountModel.company = mappers.company.uiToModel({ companyId });
+  invoiceAccountModel.invoiceAccountAddresses.push(
+    invoiceAccountAddressesService.getInvoiceAccountAddressModel(formatDate(startDate), addressModel, agentCompanyModel, contactModel));
+  return invoiceAccountModel;
 };
 
 /**
- * Creates new invoice account and invoice account address
- * to link relevant roles to the invoice account
+ * Maps all of the data into the invoice account service model
+ * @param {String} companyId guid
+ * @param {String} startDate date YYYY-MM-DD
+ * @param {Object} address containing only id or address data
+ * @param {Object} agent containing only id or company data
+ * @param {Object} contact containing only id or company data
+ * @return {InvoiceAccount} containing all of the relevant data
  */
-const createInvoiceAccountAddress = async (request, invoiceAccount, address, agent, contact) => {
-  const { startDate } = request.payload;
-  const data = {
-    startDate: formatDate(startDate),
-    addressId: address.addressId || address.id,
-    agentCompanyId: agent ? agent.companyId || agent.id : null,
-    contactId: contact.contactId || contact.id
+const getInvoiceAccount = (companyId, startDate, address, agent, contact) => {
+  const addressModel = addressesService.getAddressModel(address);
+  const agentCompanyModel = companiesService.getCompanyModel(agent);
+  const contactModel = contactsService.getContactModel(contact);
+
+  return getInvoiceAccountModel(companyId, startDate, addressModel, agentCompanyModel, contactModel);
+};
+
+const persistMethods = {
+  address: addressesService.createAddress,
+  agentCompany: companiesService.createCompany,
+  contact: contactsService.createContact
+};
+
+const createEntityAndDecorateInvoiceAccount = async (invoiceAccount, newModels, entity, entityType) => {
+  if (isNewEntity(entity)) {
+    const newEntity = await persistMethods[entityType](entity);
+    invoiceAccount.invoiceAccountAddresses[0][entityType] = newEntity;
+    newModels.push(newEntity);
   };
+};
 
-  const invoiceAccountAddress = await invoiceAccountsConnector.createInvoiceAccountAddress(invoiceAccount.id, data);
+const createInvoiceAccount = async (regionId, companyId, startDate, invoiceAccount, newModels) => {
+  const regionCode = await regionsService.getRegionCode(regionId);
+  const invoiceAccountEntity = await invoiceAccountsConnector.createInvoiceAccount({
+    companyId,
+    regionCode,
+    startDate
+  });
 
-  return mappers.invoiceAccountAddress.crmToModel(invoiceAccountAddress);
+  invoiceAccount.id = invoiceAccountEntity.invoiceAccountId;
+  invoiceAccount.accountNumber = invoiceAccountEntity.invoiceAccountNumber;
+
+  newModels.push(invoiceAccount);
 };
 
 /**
- * Checks whether the entity is new by looking at the number of keys
- * NB: Exisiting entities only have the id key
+ *
+ * @param {String} regionId guid
+ * @param {String} startDate date
+ * @param {InvoiceAccount} invoiceAccount containing data to be persisted
+ */
+const persist = async (regionId, startDate, invoiceAccount) => {
+  const { address, agentCompany, contact } = invoiceAccount.invoiceAccountAddresses[0];
+  const formattedStartDate = formatDate(startDate);
+  const newModels = [];
+  try {
+    await createEntityAndDecorateInvoiceAccount(invoiceAccount, newModels, address, 'address');
+    await createEntityAndDecorateInvoiceAccount(invoiceAccount, newModels, agentCompany, 'agentCompany');
+    await createEntityAndDecorateInvoiceAccount(invoiceAccount, newModels, contact, 'contact');
+
+    await createCompanyAddressAndContact(invoiceAccount.company.id, formattedStartDate, invoiceAccount, newModels);
+
+    await createInvoiceAccount(regionId, invoiceAccount.company.id, formattedStartDate, invoiceAccount, newModels);
+
+    await invoiceAccountAddressesService.createInvoiceAccountAddress(invoiceAccount, formattedStartDate);
+  } catch (err) {
+    await crmService.deleteEntities(newModels);
+    throw err;
+  }
+};
+
+/**
+ * Checks whether the entity has data in the model other than the id
+ * NB: Exisiting entities only have the id key populated
  */
 const isNewEntity = entity => {
   if (!entity) return false;
-  const keys = Object.keys(entity);
-  return keys.length > 1;
-};
-
-/**
- * Returns only newly created objects
- *  Existing objects will only contain the object id
- * @param {Object} invoiceAccount
- * @param {Object} agent
- * @param {Object} address
- * @param {Object} contact
- * @return {Object} containing newly created entities
- */
-const getNewEntities = (invoiceAccount, address, agent, contact) => {
-  const newEntities = { invoiceAccount };
-  const entities = { address, agent, contact };
-
-  for (const [key, value] of Object.entries(entities)) {
-    if (isNewEntity(value)) newEntities[key] = value;
-  }
-
-  return newEntities;
+  const values = Object.values(entity);
+  // remove the id if present
+  if (entity.id) values.shift();
+  return values.length > 0 && values.some(value => !isEmpty(value));
 };
 
 exports.getByInvoiceAccountIds = getByInvoiceAccountIds;
 exports.getByInvoiceAccountId = getByInvoiceAccountId;
-exports.getInvoiceAccountEntities = getInvoiceAccountEntities;
-exports.createInvoiceAccount = createInvoiceAccount;
-exports.createInvoiceAccountAddress = createInvoiceAccountAddress;
-exports.getNewEntities = getNewEntities;
+exports.deleteInvoiceAccount = deleteInvoiceAccount;
+exports.getInvoiceAccount = getInvoiceAccount;
+exports.persist = persist;
+exports._isNewEntity = isNewEntity;

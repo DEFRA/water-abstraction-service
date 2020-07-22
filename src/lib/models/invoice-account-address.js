@@ -23,12 +23,21 @@ class InvoiceAccountAddress extends Model {
     return this._dateRange;
   }
 
+  get invoiceAccountId () {
+    return this._invoiceAccountId;
+  }
+
+  set invoiceAccountId (invoiceAccountId) {
+    validators.assertId(invoiceAccountId);
+    this._invoiceAccountId = invoiceAccountId;
+  }
+
   /**
    * Sets the address
    * @param {Address} address
    */
   set address (address) {
-    validators.assertIsNullableInstanceOf(address, Address);
+    validators.assertIsInstanceOf(address, Address);
     this._address = address;
   }
 

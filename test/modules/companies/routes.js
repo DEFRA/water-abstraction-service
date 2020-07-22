@@ -9,7 +9,8 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 
 const routes = require('../../../src/modules/companies/routes');
 const testHelpers = require('../../test-helpers');
-const { COMPANY_TYPES, CONTACT_TYPES } = require('../../../src/modules/companies/validators/invoice-accounts');
+const { CONTACT_TYPES } = require('../../../src/lib/models/contact-v2');
+const { ORGANISATION_TYPES } = require('../../../src/lib/models/company');
 
 /**
  * Creates a test Hapi server that has no other plugins loaded,
@@ -196,7 +197,7 @@ experiment('modules/companies/routes', () => {
         expect(response.statusCode).to.equal(400);
       });
 
-      COMPANY_TYPES.forEach(type => {
+      Object.values(ORGANISATION_TYPES).forEach(type => {
         test(`returns a 200 when type is ${type}`, async () => {
           request.payload.agent = {
             type,
@@ -231,19 +232,25 @@ experiment('modules/companies/routes', () => {
         expect(response.statusCode).to.equal(200);
       });
 
+      test('returns a 200 if it is omitted', async () => {
+        delete request.payload.contact;
+        const response = await server.inject(request);
+        expect(response.statusCode).to.equal(200);
+      });
+
+      test('returns a 200 if it is null', async () => {
+        request.payload.contact = null;
+        const response = await server.inject(request);
+        expect(response.statusCode).to.equal(200);
+      });
+
       test('returns a 400 if it is an unexpected value', async () => {
         request.payload.contact = 'a string';
         const response = await server.inject(request);
         expect(response.statusCode).to.equal(400);
       });
 
-      test('returns a 400 if it is omitted', async () => {
-        delete request.payload.contact;
-        const response = await server.inject(request);
-        expect(response.statusCode).to.equal(400);
-      });
-
-      CONTACT_TYPES.forEach(type => {
+      Object.values(CONTACT_TYPES).forEach(type => {
         test(`returns a 200 when type is ${type}`, async () => {
           request.payload.contact = {
             type

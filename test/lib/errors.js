@@ -44,4 +44,17 @@ experiment('lib/errors', () => {
       expect(err.message).to.equal('oops');
     });
   });
+
+  experiment('InvalidEntityError', () => {
+    beforeEach(async () => {
+      err = new errors.InvalidEntityError('oops');
+    });
+    test('has the correct name', async () => {
+      expect(err.name).to.equal('InvalidEntityError');
+    });
+
+    test('has the correct message', async () => {
+      expect(err.message).to.equal('oops');
+    });
+  });
 });

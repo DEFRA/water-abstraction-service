@@ -38,7 +38,7 @@ const dbToModel = row => {
 const modelToDb = (batch, invoice) => ({
   invoiceAccountId: invoice.invoiceAccount.id,
   invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
-  address: omit(invoice.address.toObject(), 'id'),
+  address: omit(invoice.address.toJSON(), 'id'),
   billingBatchId: batch.id,
   financialYearEnding: invoice.financialYear.endYear
 });

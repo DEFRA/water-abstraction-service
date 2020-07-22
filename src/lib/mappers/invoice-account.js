@@ -14,13 +14,9 @@ const invoiceAccountAddress = require('./invoice-account-address');
 const crmToModel = (invoiceAccount) => {
   const invoiceAccountModel = new InvoiceAccount(invoiceAccount.invoiceAccountId);
   invoiceAccountModel.fromHash({
-    accountNumber: invoiceAccount.invoiceAccountNumber || invoiceAccount.accountNumber,
-    agentCompany: company.crmToModel(invoiceAccount.agentCompany)
+    accountNumber: invoiceAccount.invoiceAccountNumber,
+    company: company.crmToModel(invoiceAccount.company)
   });
-
-  if (invoiceAccount.company) {
-    invoiceAccountModel.company = company.crmToModel(invoiceAccount.company);
-  }
 
   if (invoiceAccount.invoiceAccountAddresses) {
     invoiceAccountModel.invoiceAccountAddresses = invoiceAccount.invoiceAccountAddresses.map(invoiceAccountAddress.crmToModel);

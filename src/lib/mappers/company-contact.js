@@ -3,18 +3,19 @@
 const CompanyContact = require('../models/company-contact');
 const contactRoleMapper = require('./contact-role');
 const contactMapper = require('./contact');
+const DateRange = require('../models/date-range');
 
 const crmToModel = entity => {
   const companyContact = new CompanyContact(entity.companyContactId);
   companyContact.pickFrom(entity, [
-    'contactId',
+    'companyId',
     'roleId',
     'isDefault',
-    'startDate',
-    'endDate',
     'dateCreated',
     'dateUpdated'
   ]);
+
+  companyContact.dateRange = new DateRange(entity.startDate, entity.endDate);
 
   if (entity.role) {
     companyContact.role = contactRoleMapper.crmToModel(entity.role);
@@ -23,6 +24,11 @@ const crmToModel = entity => {
   if (entity.contact) {
     companyContact.contact = contactMapper.crmToModel(entity.contact);
   }
+
+  if (entity.contactId) {
+    companyContact.contact = contactMapper.crmToModel({ contactId: entity.contactId });
+  }
+
   return companyContact;
 };
 

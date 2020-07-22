@@ -15,6 +15,7 @@ const companyAddressMapper = require('../../../src/lib/mappers/company-address')
 
 const dbRow = {
   companyAddressId: '00000000-0000-0000-0000-000000000000',
+  companyId: '00000000-1111-1111-1111-000000000000',
   startDate: '2018-01-01',
   endDate: '2020-04-01',
   isDefault: true
@@ -34,6 +35,10 @@ experiment('modules/billing/mappers/company-address', () => {
 
     test('has the expected id value', async () => {
       expect(result.id).to.equal(dbRow.companyAddressId);
+    });
+
+    test('has the expected company id value', async () => {
+      expect(result.companyId).to.equal(dbRow.companyId);
     });
 
     test('has the expected date range values', async () => {
@@ -76,6 +81,12 @@ experiment('modules/billing/mappers/company-address', () => {
         expect(address instanceof Address).to.be.true();
         expect(address.id).to.equal(addressData.addressId);
       });
+    });
+
+    test('maps the address id correctly if present', async () => {
+      const { address } = companyAddressMapper.crmToModel({ ...dbRow, addressId: '00000000-1111-1111-1111-000000000000' });
+      expect(address instanceof Address).to.be.true();
+      expect(address.id).to.equal('00000000-1111-1111-1111-000000000000');
     });
   });
 });

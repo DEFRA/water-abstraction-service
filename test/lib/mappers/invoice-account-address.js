@@ -17,8 +17,18 @@ const invoiceAccountAddressMapper = require('../../../src/lib/mappers/invoice-ac
 
 const dbRow = {
   invoiceAccountAddressId: '00000000-0000-0000-0000-000000000000',
+  invoiceAccountId: '11111111-0000-0000-0000-000000000000',
   startDate: '2020-04-01',
-  endDate: null
+  endDate: null,
+  address: {
+    addressId: '11111111-1111-1111-1111-111111111111',
+    address1: 'First Floor',
+    address2: 'Test HQ',
+    address3: '123',
+    address4: 'Test Street',
+    postcode: 'TT1 1TT',
+    country: 'UK'
+  }
 };
 
 experiment('modules/billing/mappers/invoice-account-address', () => {
@@ -35,6 +45,10 @@ experiment('modules/billing/mappers/invoice-account-address', () => {
 
     test('has the expected id value', async () => {
       expect(result.id).to.equal(dbRow.invoiceAccountAddressId);
+    });
+
+    test('has the expected invoice account id value', async () => {
+      expect(result.invoiceAccountId).to.equal(dbRow.invoiceAccountId);
     });
 
     experiment('date range', () => {

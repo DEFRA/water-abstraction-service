@@ -10,6 +10,10 @@ const moment = require('moment');
 const { expect } = require('@hapi/code');
 const mapper = require('../../../src/lib/mappers/company-contact');
 
+const CompanyContact = require('../../../src/lib/models/company-contact');
+const DateRange = require('../../../src/lib/models/date-range');
+const Contact = require('../../../src/lib/models/contact-v2');
+
 experiment('modules/billing/mappers/company-contact', () => {
   experiment('.crmToModel', () => {
     let mapped;
@@ -19,7 +23,6 @@ experiment('modules/billing/mappers/company-contact', () => {
       row = {
         companyContactId: '62f285a6-928e-4872-8d00-6eac5325522e',
         companyId: 'ffffe5d7-b2d4-4f88-b2f5-d0b497bc276f',
-        contactId: 'f9d3b35c-b55b-4af8-98a2-beb3c1323ee9',
         roleId: '5774f9ac-94ef-4fa1-9d9c-8cda614d6f17',
         isDefault: true,
         emailAddress: null,
@@ -51,12 +54,16 @@ experiment('modules/billing/mappers/company-contact', () => {
       mapped = mapper.crmToModel(row);
     });
 
+    test('returns a CompanyContact instance', async () => {
+      expect(mapped).to.be.instanceOf(CompanyContact);
+    });
+
     test('has the mapped id', async () => {
       expect(mapped.id).to.equal(row.companyContactId);
     });
 
-    test('has the mapped contactId', async () => {
-      expect(mapped.contactId).to.equal(row.contactId);
+    test('has the mapped companyId', async () => {
+      expect(mapped.companyId).to.equal(row.companyId);
     });
 
     test('has the mapped roleId', async () => {
@@ -67,12 +74,11 @@ experiment('modules/billing/mappers/company-contact', () => {
       expect(mapped.isDefault).to.equal(row.isDefault);
     });
 
-    test('has the mapped startDate', async () => {
-      expect(mapped.startDate).to.equal(moment(row.startDate));
-    });
-
-    test('has the mapped endDate', async () => {
-      expect(mapped.endDate).to.equal(row.endDate);
+    test('has the expected date range values', async () => {
+      const { dateRange } = mapped;
+      expect(dateRange instanceof DateRange).to.be.true();
+      expect(dateRange.startDate).to.equal(row.startDate);
+      expect(dateRange.endDate).to.equal(row.endDate);
     });
 
     test('has the mapped dateCreated value', async () => {
@@ -84,6 +90,7 @@ experiment('modules/billing/mappers/company-contact', () => {
     });
 
     test('has the mapped contact', async () => {
+      expect(mapped.contact).to.be.instanceOf(Contact);
       expect(mapped.contact.id).to.equal(row.contact.contactId);
     });
 
@@ -101,6 +108,13 @@ experiment('modules/billing/mappers/company-contact', () => {
       delete row.contact;
       mapped = mapper.crmToModel(row);
       expect(mapped.contact).to.equal(undefined);
+    });
+
+    test('maps the contact id correctly if present', async () => {
+      delete row.contact;
+      const { contact } = mapper.crmToModel({ ...row, contactId: '00000000-1111-1111-1111-000000000000' });
+      expect(contact instanceof Contact).to.be.true();
+      expect(contact.id).to.equal('00000000-1111-1111-1111-000000000000');
     });
   });
 });

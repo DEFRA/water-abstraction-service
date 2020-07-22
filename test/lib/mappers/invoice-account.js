@@ -15,7 +15,13 @@ const invoiceAccountMapper = require('../../../src/lib/mappers/invoice-account')
 
 const dbRow = {
   invoiceAccountId: '00000000-0000-0000-0000-000000000000',
-  invoiceAccountNumber: 'A12345678A'
+  invoiceAccountNumber: 'A12345678A',
+  company: {
+    companyId: '11111111-1111-1111-1111-111111111111',
+    name: 'company name',
+    type: Company.COMPANY_TYPES.person,
+    organisationType: Company.ORGANISATION_TYPES.individual
+  }
 };
 
 experiment('modules/billing/mappers/invoice-account', () => {
@@ -38,29 +44,16 @@ experiment('modules/billing/mappers/invoice-account', () => {
       expect(result.accountNumber).to.equal(dbRow.invoiceAccountNumber);
     });
 
-    experiment('when company is provided,', () => {
-      let companyData;
-      beforeEach(() => {
-        companyData = {
-          companyId: '11111111-1111-1111-1111-111111111111',
-          name: 'company name',
-          type: 'person',
-          organisationType: 'individual'
-        };
-        result = invoiceAccountMapper.crmToModel({ ...dbRow, company: companyData });
-      });
+    test('company is a Company instance', () => {
+      expect(result.company instanceof Company).to.be.true();
+    });
 
-      test('it is a Company instance', () => {
-        expect(result.company instanceof Company).to.be.true();
-      });
-
-      test('it has the expected values', () => {
-        const { company } = result;
-        expect(company.id).to.equal(companyData.companyId);
-        expect(company.name).to.equal(companyData.name);
-        expect(company.type).to.equal(companyData.type);
-        expect(company.organisationType).to.equal(companyData.organisationType);
-      });
+    test('it has the expected values', () => {
+      const { company } = result;
+      expect(company.id).to.equal(dbRow.company.companyId);
+      expect(company.name).to.equal(dbRow.company.name);
+      expect(company.type).to.equal(dbRow.company.type);
+      expect(company.organisationType).to.equal(dbRow.company.organisationType);
     });
 
     experiment('when invoice address is provided,', () => {
@@ -68,8 +61,18 @@ experiment('modules/billing/mappers/invoice-account', () => {
       beforeEach(() => {
         invoiceAccountAddressData = {
           invoiceAccountAddressId: '11111111-1111-1111-1111-111111111111',
+          invoiceAccountId: '00000000-0000-0000-0000-000000000000',
           startDate: '2020-04-01',
-          endDate: null
+          endDate: null,
+          address: {
+            addressId: '11111111-1111-1111-1111-111111111111',
+            address1: 'First Floor',
+            address2: 'Test HQ',
+            address3: '123',
+            address4: 'Test Street',
+            postcode: 'TT1 1TT',
+            country: 'UK'
+          }
         };
         result = invoiceAccountMapper.crmToModel({ ...dbRow, invoiceAccountAddresses: [invoiceAccountAddressData] });
       });

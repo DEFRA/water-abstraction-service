@@ -29,6 +29,17 @@ class DBError extends Error {
   }
 }
 
+/**
+ * An entity is invalid
+ */
+class InvalidEntityError extends Error {
+  constructor (message) {
+    super(message);
+    this.name = 'InvalidEntityError';
+  }
+}
+
 exports.NotFoundError = NotFoundError;
 exports.StateError = StateError;
 exports.DBError = DBError;
+exports.InvalidEntityError = InvalidEntityError;

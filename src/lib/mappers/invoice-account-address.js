@@ -15,6 +15,7 @@ const crmToModel = invoiceAccountAddress => {
   const model = new InvoiceAccountAddress(invoiceAccountAddress.invoiceAccountAddressId);
   model.fromHash({
     dateRange: new DateRange(invoiceAccountAddress.startDate, invoiceAccountAddress.endDate),
+    invoiceAccountId: invoiceAccountAddress.invoiceAccountId,
     address: address.crmToModel(invoiceAccountAddress.address),
     agentCompany: company.crmToModel(invoiceAccountAddress.agentCompany),
     contact: contact.crmToModel(invoiceAccountAddress.contact)

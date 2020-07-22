@@ -1,16 +1,31 @@
 'use strict';
+const Model = require('./model');
 const CompanyAddress = require('./company-address');
 const CompanyContact = require('./company-contact');
 
-const TYPE_PERSON = 'person';
-const TYPE_ORGANISATION = 'organisation';
-const COMPANY_TYPES = [TYPE_PERSON, TYPE_ORGANISATION];
-
-const ORGANISATION_TYPES = ['individual', 'limitedCompany', 'partnership', 'limitedLiabilityPartnership'];
-
 const validators = require('./validators');
+const Joi = require('@hapi/joi');
 
-const Model = require('./model');
+const COMPANY_TYPES = {
+  person: 'person',
+  organisation: 'organisation'
+};
+
+const ORGANISATION_TYPES = {
+  individual: 'individual',
+  limitedCompany: 'limitedCompany',
+  partnership: 'partnership',
+  limitedLiabilityPartnership: 'limitedLiabilityPartnership'
+};
+
+const newCompanySchema = Joi.object({
+  type: Joi.string().valid(Object.values(COMPANY_TYPES)).required(),
+  organisationType: Joi.string().valid(Object.values(ORGANISATION_TYPES)).required(),
+  name: Joi.string().required(),
+  companyNumber: Joi.string().length(8).optional(),
+  companyAddresses: Joi.array().optional(),
+  companyContacts: Joi.array().optional()
+});
 
 class Company extends Model {
   constructor (id) {
@@ -23,7 +38,7 @@ class Company extends Model {
    * @param {String} type - Company type person|organisation
    */
   set type (type) {
-    validators.assertEnum(type, COMPANY_TYPES);
+    validators.assertEnum(type, Object.values(COMPANY_TYPES));
     this._type = type;
   }
 
@@ -47,12 +62,24 @@ class Company extends Model {
  * @param {String} type - Company type person|organisation
  */
   set organisationType (organisationType) {
-    validators.assertNullableEnum(organisationType, ORGANISATION_TYPES);
+    validators.assertNullableEnum(organisationType, Object.values(ORGANISATION_TYPES));
     this._organisationType = organisationType;
   }
 
   get organisationType () {
     return this._organisationType;
+  }
+
+  /**
+   * @param {String} companyNumber - Company's house number of company
+   */
+  set companyNumber (companyNumber) {
+    validators.assertNullableString(companyNumber);
+    this._companyNumber = companyNumber;
+  }
+
+  get companyNumber () {
+    return this._companyNumber;
   }
 
   /**
@@ -78,9 +105,12 @@ class Company extends Model {
   get companyContacts () {
     return this._companyContacts;
   }
+
+  isValid () {
+    return Joi.validate(this.toJSON(), newCompanySchema, { abortEarly: false });
+  }
 }
 
 module.exports = Company;
-module.exports.TYPE_ORGANISATION = TYPE_ORGANISATION;
-module.exports.TYPE_PERSON = TYPE_PERSON;
+module.exports.COMPANY_TYPES = COMPANY_TYPES;
 module.exports.ORGANISATION_TYPES = ORGANISATION_TYPES;

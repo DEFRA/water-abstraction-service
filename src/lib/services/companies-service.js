@@ -1,6 +1,6 @@
 const companiesConnector = require('../connectors/crm-v2/companies');
 const mappers = require('../mappers');
-const { NotFoundError } = require('../errors');
+const { NotFoundError, InvalidEntityError } = require('../errors');
 
 const getCompany = async companyId => {
   const company = await companiesConnector.getCompany(companyId);
@@ -13,8 +13,8 @@ const getCompanyAddresses = async companyId => {
   return companyAddresses.map(mappers.companyAddress.crmToModel);
 };
 
-const createCompany = async companyData => {
-  const company = await companiesConnector.createCompany(mappers.company.serviceToCrm(companyData));
+const createCompany = async companyModel => {
+  const company = await companiesConnector.createCompany(mappers.company.modelToCrm(companyModel));
   return mappers.company.crmToModel(company);
 };
 
@@ -28,8 +28,27 @@ const createCompanyContact = async (companyId, companyContactData) => {
   return mappers.companyContact.crmToModel(companyContact);
 };
 
+const getCompanyModel = companyData => {
+  const companyModel = mappers.company.uiToModel(companyData);
+  if (!companyModel.id && !!companyModel) {
+    const { error } = companyModel.isValid();
+    if (error) throw new InvalidEntityError('Invalid company', error);
+  };
+  return companyModel;
+};
+
+const deleteCompany = company => companiesConnector.deleteCompany(company.id);
+
+const deleteCompanyAddress = companyAddress => companiesConnector.deleteCompanyAddress(companyAddress.companyId, companyAddress.id);
+
+const deleteCompanyContact = companyContact => companiesConnector.deleteCompanyContact(companyContact.companyId, companyContact.id);
+
 exports.getCompany = getCompany;
 exports.getCompanyAddresses = getCompanyAddresses;
 exports.createCompany = createCompany;
 exports.createCompanyAddress = createCompanyAddress;
 exports.createCompanyContact = createCompanyContact;
+exports.getCompanyModel = getCompanyModel;
+exports.deleteCompany = deleteCompany;
+exports.deleteCompanyAddress = deleteCompanyAddress;
+exports.deleteCompanyContact = deleteCompanyContact;
