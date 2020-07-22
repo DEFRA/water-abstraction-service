@@ -19,7 +19,7 @@ const options = {
  */
 const createMessage = (eventId, chargeVersionYear, batch) => {
   return batchJob.createMessage(JOB_NAME, batch, { eventId, chargeVersionYear }, {
-    singletonKey: chargeVersionYear.billing_batch_charge_version_year_id
+    singletonKey: chargeVersionYear.billingBatchChargeVersionYearId
   });
 };
 
@@ -36,7 +36,7 @@ const handleProcessChargeVersion = async job => {
     await batchService.saveInvoicesToDB(batch);
 
     // Update status in water.billing_batch_charge_version_year
-    await chargeVersionYearService.setReadyStatus(chargeVersionYear.billing_batch_charge_version_year_id);
+    await chargeVersionYearService.setReadyStatus(chargeVersionYear.billingBatchChargeVersionYearId);
 
     return {
       chargeVersionYear,
@@ -46,7 +46,7 @@ const handleProcessChargeVersion = async job => {
     batchJob.logHandlingError(job, err);
 
     // Mark as error
-    await chargeVersionYearService.setErrorStatus(chargeVersionYear.billing_batch_charge_version_year_id);
+    await chargeVersionYearService.setErrorStatus(chargeVersionYear.billingBatchChargeVersionYearId);
     throw err;
   }
 };

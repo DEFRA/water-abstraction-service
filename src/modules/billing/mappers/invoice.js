@@ -43,7 +43,7 @@ const modelToDb = (batch, invoice) => ({
   financialYearEnding: invoice.financialYear.endYear
 });
 
-const crmToModel = row => {
+const crmToModel = (row, financialYearEnding) => {
   const invoice = new Invoice();
 
   // Create invoice account model

@@ -1,5 +1,3 @@
-'use strict';
-
 const {
   experiment,
   test,
@@ -32,6 +30,17 @@ const addressData = {
   postcode: 'AB12 3CD',
   country: 'country'
 };
+
+const createEAAddressFacadeAddress = () => ({
+  uprn: 12345,
+  organisation: 'Big Co',
+  premises: 'Big farm',
+  street_address: 'Windy road',
+  locality: 'Hilly place',
+  city: 'Testington',
+  postcode: 'TT1 1TT',
+  country: 'United Kingdom'
+});
 
 experiment('modules/billing/mappers/address', () => {
   experiment('.crmToModel', () => {
@@ -168,6 +177,28 @@ experiment('modules/billing/mappers/address', () => {
       expect(result.county).to.equal(address.county);
       expect(result.postcode).to.equal(address.postcode);
       expect(result.country).to.equal(address.country);
+    });
+  });
+
+  experiment('.eaAddressFacadeToModel', () => {
+    let eaAddress, address;
+
+    beforeEach(async () => {
+      eaAddress = createEAAddressFacadeAddress();
+      address = addressMapper.eaAddressFacadeToModel(eaAddress);
+    });
+
+    test('address is mapped correctly', async () => {
+      expect(address instanceof Address).to.be.true();
+      expect(address.id).to.be.undefined();
+      expect(address.addressLine1).to.equal(eaAddress.organisation);
+      expect(address.addressLine2).to.equal(eaAddress.premises);
+      expect(address.addressLine3).to.equal(eaAddress.street_address);
+      expect(address.addressLine4).to.equal(eaAddress.locality);
+      expect(address.town).to.equal(eaAddress.city);
+      expect(address.county).to.be.undefined();
+      expect(address.country).to.equal(eaAddress.country);
+      expect(address.source).to.equal('ea-address-facade');
     });
   });
 });

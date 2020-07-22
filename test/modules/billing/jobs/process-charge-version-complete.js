@@ -79,7 +79,7 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
           },
           response: {
             chargeVersionYear: {
-              billing_batch_id: batchId
+              billingBatchId: batchId
             }
           }
         }
@@ -118,10 +118,10 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
           },
           response: {
             chargeVersionYear: {
-              billing_batch_id: batchId
+              billingBatchId: batchId
             },
             batch: {
-              billing_batch_id: batchId
+              billingBatchId: batchId
             }
           }
         }
@@ -158,10 +158,10 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
           },
           response: {
             chargeVersionYear: {
-              billing_batch_id: batchId
+              billingBatchId: batchId
             },
             batch: {
-              billing_batch_id: batchId
+              id: batchId
             }
           }
         }
@@ -201,7 +201,7 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
           },
           response: {
             chargeVersionYear: {
-              billing_batch_id: batchId
+              billingBatchId: batchId
             },
             batch: {
               id: batchId

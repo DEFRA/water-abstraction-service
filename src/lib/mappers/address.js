@@ -19,7 +19,7 @@ const crmToModel = data => {
     addressLine2: data.address2 || null,
     addressLine3: data.address3 || null,
     addressLine4: data.address4 || null,
-    ...pick(data, ['town', 'county', 'postcode', 'country'])
+    ...pick(data, ['town', 'county', 'postcode', 'country', 'uprn'])
   });
   return address;
 };
@@ -53,6 +53,27 @@ const modelToCrm = address => {
   };
 };
 
+/**
+ * Maps an address record from the EA address facade to a service model
+ * @param {Object} data - EA address facade address
+ * @return {Address}
+ */
+const eaAddressFacadeToModel = data => {
+  const address = new Address();
+  return address.fromHash({
+    uprn: data.uprn,
+    addressLine1: data.organisation,
+    addressLine2: data.premises,
+    addressLine3: data.street_address,
+    addressLine4: data.locality,
+    town: data.city,
+    postcode: data.postcode,
+    country: data.country,
+    source: Address.ADDRESS_SOURCE.eaAddressFacade
+  });
+};
+
 exports.crmToModel = crmToModel;
 exports.uiToModel = uiToModel;
 exports.modelToCrm = modelToCrm;
+exports.eaAddressFacadeToModel = eaAddressFacadeToModel;

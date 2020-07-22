@@ -198,5 +198,13 @@ module.exports = {
     password: process.env.COGNITO_PASSWORD
   },
 
-  proxy: process.env.PROXY
+  proxy: process.env.PROXY,
+
+  companiesHouse: {
+    apiKey: process.env.COMPANIES_HOUSE_API_KEY
+  },
+
+  eaAddressFacade: {
+    uri: process.env.EA_ADDRESS_FACADE_URI || 'http://localhost:9002'
+  }
 };

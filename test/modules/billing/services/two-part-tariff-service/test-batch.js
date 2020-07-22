@@ -54,7 +54,8 @@ invoiceLicence.transactions = [transaction];
 const invoice = new Invoice();
 invoice.fromHash({
   invoiceLicences: [invoiceLicence],
-  invoiceAccount
+  invoiceAccount,
+  financialYear: new FinancialYear(2019)
 });
 
 const batch = new Batch();

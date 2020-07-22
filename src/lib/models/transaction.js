@@ -44,7 +44,7 @@ class Transaction extends Model {
     const transaction = new Transaction();
     transaction.pickFrom(this, [
       'value', 'authorisedDays', 'billableDays', 'agreements', 'chargePeriod',
-      'isCompensationCharge', 'description', 'chargeElement', 'volume'
+      'isCompensationCharge', 'description', 'chargeElement', 'volume', 'isTwoPartTariffSupplementary'
     ]);
     transaction.fromHash({
       isCredit: true,

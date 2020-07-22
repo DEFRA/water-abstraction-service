@@ -21,6 +21,8 @@ experiment('basic example scenario', () => {
   let chargeModuleTransactions;
 
   before(async () => {
+    await services.tearDown.tearDown();
+
     batch = await services.scenarios.runScenario({
       licence: 'l1',
       chargeVersions: [{
@@ -99,13 +101,10 @@ experiment('basic example scenario', () => {
         });
 
         test('has the correct licence name', async () => {
-          expect(omit(licence.licenceHolderName, 'id')).to.equal({
-            initials: 'J',
-            lastName: 'Testerson',
-            firstName: 'John',
-            salutation: 'Mr',
-            fullName: 'Mr J Testerson'
-          });
+          expect(licence.licenceHolderName.fullName).to.equal('Mr John Testerson');
+          expect(licence.licenceHolderName.lastName).to.equal('Testerson');
+          expect(licence.licenceHolderName.firstName).to.equal('John');
+          expect(licence.licenceHolderName.salutation).to.equal('Mr');
         });
 
         test('has the correct licence holder address', async () => {

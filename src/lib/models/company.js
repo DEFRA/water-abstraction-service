@@ -12,10 +12,9 @@ const COMPANY_TYPES = {
 };
 
 const ORGANISATION_TYPES = {
-  individual: 'individual',
   limitedCompany: 'limitedCompany',
-  partnership: 'partnership',
-  limitedLiabilityPartnership: 'limitedLiabilityPartnership'
+  limitedLiabilityPartnership: 'limitedLiabilityPartnership',
+  publicLimitedCompany: 'publicLimitedCompany'
 };
 
 const newCompanySchema = Joi.object({
@@ -59,8 +58,9 @@ class Company extends Model {
   }
 
   /**
- * @param {String} type - Company type person|organisation
- */
+   * Organisation type
+   * @param {String} organisationType - Organisation type
+   */
   set organisationType (organisationType) {
     validators.assertNullableEnum(organisationType, Object.values(ORGANISATION_TYPES));
     this._organisationType = organisationType;
@@ -71,7 +71,8 @@ class Company extends Model {
   }
 
   /**
-   * @param {String} companyNumber - Company's house number of company
+   * Company number
+   * @param {String} companyNumber
    */
   set companyNumber (companyNumber) {
     validators.assertNullableString(companyNumber);

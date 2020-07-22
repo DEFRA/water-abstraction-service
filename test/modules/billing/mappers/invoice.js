@@ -114,7 +114,8 @@ experiment('modules/billing/mappers/invoice', () => {
             town: 'Testington',
             county: 'Testingshire',
             postcode: 'TT1 1TT',
-            country: 'UK'
+            country: 'UK',
+            dataSource: 'nald'
           },
           agentCompany: {
             companyId: uuid(),
