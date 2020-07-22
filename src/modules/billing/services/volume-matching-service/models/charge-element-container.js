@@ -3,8 +3,8 @@
 const ChargeElement = require('../../../../../lib/models/charge-element');
 const DateRange = require('../../../../../lib/models/date-range');
 const ReturnLine = require('../../../../../lib/models/return-line');
-
 const BillingVolume = require('../../../../../lib/models/billing-volume');
+
 const { CHARGE_SEASON } = require('../../../../../lib/models/constants');
 
 const validators = require('../../../../../lib/models/validators');
@@ -126,10 +126,7 @@ class ChargeElementContainer {
       abstractionPeriod.isDateWithinAbstractionPeriod(endDate)
     ].includes(true);
 
-    const isDateRangeMatch = [
-      this._dateRange.includes(startDate),
-      this._dateRange.includes(endDate)
-    ].includes(true);
+    const isDateRangeMatch = returnLine.dateRange.toMomentRange().overlaps(this._dateRange);
 
     return isAbsPeriodMatch && isDateRangeMatch;
   }
@@ -148,6 +145,35 @@ class ChargeElementContainer {
    */
   get isSummer () {
     return this._billingVolume.isSummer;
+  }
+
+  /**
+   * Sets the two part tariff error status code
+   * @param {Number} twoPartTariffStatus
+   */
+  setTwoPartTariffStatus (twoPartTariffStatus) {
+    const { volume } = this.chargeElement;
+    this.billingVolume.setTwoPartTariffStatus(twoPartTariffStatus, volume);
+  }
+
+  /**
+   * Gets volume available for matching
+   * @return {Number}
+   */
+  getAvailableVolume () {
+    return this.chargeElement.volume - (this.billingVolume.calculatedVolume || 0);
+  }
+
+  /**
+   * Checks whether over-abstracted
+   * @return {Boolean}
+   */
+  flagOverAbstraction () {
+    const volume = this.billingVolume.calculatedVolume || 0;
+    const isOverAbstraction = volume > this.chargeElement.volume;
+    if (isOverAbstraction) {
+      this.billingVolume.setTwoPartTariffStatus(BillingVolume.twoPartTariffStatuses.ERROR_OVER_ABSTRACTION);
+    }
   }
 }
 

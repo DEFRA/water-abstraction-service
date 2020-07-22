@@ -1,9 +1,11 @@
 'use strict';
 
+const hoek = require('@hapi/hoek');
+
 const Model = require('./model');
 const FinancialYear = require('./financial-year');
 const User = require('./user');
-const { isNull } = require('lodash');
+const { isNull, isFinite } = require('lodash');
 
 const validators = require('./validators');
 
@@ -17,6 +19,21 @@ const twoPartTariffStatuses = {
   ERROR_NO_RETURNS_FOR_MATCHING: 70,
   ERROR_NOT_DUE_FOR_BILLING: 80
 };
+
+const assignBillableStatuses = [
+  twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED,
+  twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE,
+  twoPartTariffStatuses.ERROR_LATE_RETURNS
+];
+
+const setErrorFlagStatuses = [
+  twoPartTariffStatuses.ERROR_UNDER_QUERY,
+  twoPartTariffStatuses.ERROR_RECEIVED,
+  twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE,
+  twoPartTariffStatuses.ERROR_OVER_ABSTRACTION
+];
+
+const toFixedPrecision = number => parseFloat(number.toFixed(3));
 
 class BillingVolume extends Model {
   get chargeElementId () {
@@ -86,6 +103,22 @@ class BillingVolume extends Model {
   }
 
   /**
+   * Sets the two part tariff status and billable volume
+   * @param {Number} twoPartTariffStatus
+   * @param {Number} billableVolume
+   */
+  setTwoPartTariffStatus (twoPartTariffStatus, billableVolume) {
+    this.twoPartTariffStatus = twoPartTariffStatus;
+    if (assignBillableStatuses.includes(twoPartTariffStatus)) {
+      this.volume = billableVolume;
+      this.calculatedVolume = billableVolume;
+    }
+    if (setErrorFlagStatuses.includes(twoPartTariffStatuses)) {
+      this.twoPartTariffError = true;
+    }
+  }
+
+  /**
   * The User who has reviewed the two part tariff error
   * @return {User}
   */
@@ -130,8 +163,33 @@ class BillingVolume extends Model {
    * @param {Number} ML
    */
   allocate (volume) {
-    validators.assertPositiveOrZeroInteger(volume);
-    this._volume = isNull(this._volume) ? volume : this._volume + volume;
+    this.calculatedVolume = isFinite(this.calculatedVolume) ? this.calculatedVolume + volume : volume;
+    this.volume = this._calculatedVolume;
+  }
+
+  /**
+   * De-allocate billing volume
+   * @param {Number} ML
+   */
+  deallocate (volume) {
+    hoek.assert(!isNull(this.calculatedVolume), `Can't deallocate ${volume} when calculated volume is null`);
+    hoek.assert(this.calculatedVolume === this.volume, `Can't deallocate ${volume} when volume and calculated volume differ`);
+    validators.assertQuantityWithMaximum(volume, this.calculatedVolume);
+    this.calculatedVolume -= volume;
+    this.volume -= volume;
+  }
+
+  /**
+   * Converts volumes to a fixed precision of 3 DP
+   */
+  toFixed () {
+    if (isFinite(this.volume)) {
+      this.volume = toFixedPrecision(this.volume);
+    }
+    if (isFinite(this.calculatedVolume)) {
+      this.calculatedVolume = toFixedPrecision(this.calculatedVolume);
+    }
+    return this;
   }
 }
 

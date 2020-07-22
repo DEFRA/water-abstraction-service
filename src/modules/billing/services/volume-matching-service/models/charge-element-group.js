@@ -1,6 +1,6 @@
 'use strict';
 
-const { groupBy, sortBy } = require('lodash');
+const { groupBy, sortBy, negate } = require('lodash');
 
 const validators = require('../../../../../lib/models/validators');
 const Return = require('../../../../../lib/models/return');
@@ -47,13 +47,63 @@ const getElementSortScore = chargeElementContainer => {
   return score;
 };
 
+/**
+ * Gets a key for re-allocating quantities to base elements
+ * Re-allocation occurs for elements with the same:
+ * - Source factor
+ * - Season factor
+ * - Purpose use
+ * @param {ChargeElementContainer} chargeElementContainer
+ * @return {String}
+ */
+const getReallocationKey = chargeElementContainer => {
+  const { source, season, purposeUse: { id } } = chargeElementContainer.chargeElement;
+  return [source, season, id].join(':');
+};
+
+const isTimeLimited = chargeElementContainer => !!chargeElementContainer.chargeElement.timeLimitedPeriod;
+const isNotTimeLimited = negate(isTimeLimited);
+
+/**
+ * Re-allocates as much volume as possible from the source element to the target element
+ * @param {ChargeElementContainer} sourceElementContainer
+ * @param {ChargeElementContainer} targetElementContainer
+ */
+const reallocateElement = (sourceElementContainer, targetElementContainer) => {
+  const volumeToReallocate = Math.max(targetElementContainer.getAvailableVolume(), sourceElementContainer.billingVolume.volume);
+  if (volumeToReallocate > 0) {
+    sourceElementContainer.billingVolume.deallocate(volumeToReallocate);
+    targetElementContainer.billingVolume.allocate(volumeToReallocate);
+  }
+};
+
+/**
+ * Re-allocates volume within a group of ChargeElementContainers which have
+ * already been grouped with matching source, season factor and purpose
+ * @param {Array} chargeElementContainers
+ */
+const reallocateGroup = chargeElementContainers => {
+  const base = chargeElementContainers.filter(isNotTimeLimited);
+  const sub = chargeElementContainers.filter(isTimeLimited);
+  base.forEach(baseElement => {
+    sub.forEach(subElement => {
+      if (sub.chargeElement.abstractionPeriod.isWithinAbstractionPeriod(base.chargeElement.abstractionPeriod)) {
+        reallocateElement(sub, base);
+      }
+    });
+  });
+};
+
 class ChargeElementGroup {
   /**
    * @constructor
    * @param {Array<ChargeElementContainer>} [chargeElementContainers]
    */
   constructor (chargeElementContainers) {
-    this.chargeElementContainers = chargeElementContainers || [];
+    this._chargeElementContainers = [];
+    if (chargeElementContainers) {
+      this.chargeElementContainers = chargeElementContainers;
+    }
   }
 
   /**
@@ -63,6 +113,10 @@ class ChargeElementGroup {
   set chargeElementContainers (chargeElementContainers) {
     validators.assertIsArrayOfType(chargeElementContainers, ChargeElementContainer);
     this._chargeElementContainers = chargeElementContainers;
+  }
+
+  get chargeElementContainers () {
+    return this._chargeElementContainers;
   }
 
   /**
@@ -99,7 +153,7 @@ class ChargeElementGroup {
    * @return {Boolean}
    */
   isPurposeUseMatch (purposeUse) {
-    validators.assertIsArrayOfType(purposeUse, PurposeUse);
+    validators.assertIsInstanceOf(purposeUse, PurposeUse);
     return this._chargeElementContainers.some(chargeElementContainer =>
       chargeElementContainer.chargeElement.purposeUse.id === purposeUse.id
     );
@@ -137,7 +191,7 @@ class ChargeElementGroup {
    * @return {ChargeElementGroup}
    */
   createForReturn (ret) {
-    validators.assertIsArrayOfType(ret, Return);
+    validators.assertIsInstanceOf(ret, Return);
 
     // Get only elements with purpose uses matching the return purpose
     const elements = this._chargeElementContainers
@@ -169,6 +223,59 @@ class ChargeElementGroup {
     // Return as array of element groups
     return Object.values(groups).map(
       chargeElementContainers => new ChargeElementGroup(chargeElementContainers)
+    );
+  }
+
+  /**
+   * Sets the two part tariff error status code
+   * @param {Number} twoPartTariffStatus
+   */
+  setTwoPartTariffStatus (twoPartTariffStatus) {
+    this._chargeElementContainers.forEach(chargeElementContainer =>
+      chargeElementContainer.setTwoPartTariffStatus(twoPartTariffStatus)
+    );
+  }
+
+  /**
+   * Allocate a billable volume to the group
+   * @param {Number}
+   */
+  allocate (volume) {
+    this._chargeElementContainers.reduce((acc, chargeElementContainer, i) => {
+      const isLast = i === this._chargeElementContainers.length - 1;
+      const qtyToAllocate = Math.min(
+        chargeElementContainer.getAvailableVolume(),
+        acc
+      );
+      chargeElementContainer.billingVolume.allocate(isLast ? acc : qtyToAllocate);
+    }, volume);
+  }
+
+  /**
+   * Re-balance quantities from time-limited elements to base
+   * elements when they have matching source, season and purpose
+   */
+  reallocate () {
+    const groups = groupBy(this._chargeElementContainers, getReallocationKey);
+    Object.values(groups).forEach(reallocateGroup);
+  }
+
+  /**
+   * Flags over-abstraction in containers
+   */
+  flagOverAbstraction () {
+    this._chargeElementContainers.forEach(
+      chargeElementContainer => chargeElementContainer.flagOverAbstraction()
+    );
+  }
+
+  /**
+   * Gets an array of billing volumes
+   * @return {Array<BillingVolume>}
+   */
+  toBillingVolumes () {
+    return this._chargeElementContainers.map(
+      chargeElementContainer => chargeElementContainer.billingVolume.toFixed()
     );
   }
 };

@@ -14,7 +14,7 @@ class ReturnLine extends Model {
    */
   set volume (volume) {
     validators.assertNullableQuantity(volume);
-    this._volume = volume;
+    this._volume = parseFloat(volume);
   }
 
   get volume () {

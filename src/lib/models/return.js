@@ -137,10 +137,11 @@ class Return extends Model {
 
   /**
    * Checks whether this return is due for billing
+   * i.e. the dueDateForBilling is in the past
    * @param {String} [referenceDate] - optional reference date (defaults to now)
    */
   isDueForBilling (referenceDate) {
-    return moment(referenceDate, 'YYYY-MM-DD').isAfter(this.dueDateForBilling, 'day');
+    return moment(this.dueDateForBilling).isSameOrBefore(moment(referenceDate), 'day');
   }
 
   /**

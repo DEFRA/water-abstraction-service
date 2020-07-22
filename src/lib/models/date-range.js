@@ -63,7 +63,33 @@ class DateRange {
   includes (date) {
     const range = this.toMomentRange();
     const m = moment(date, DATE_FORMAT);
-    return range.includes(m);
+    return range.contains(m);
+  }
+
+  /**
+   * Checks whether this date range overlaps another
+   * @param {DateRange}
+   * @return {Boolean}
+   */
+  overlaps (dateRange) {
+    validators.assertIsInstanceOf(dateRange, DateRange);
+    const rangeA = this.toMomentRange();
+    const rangeB = dateRange.toMomentRange();
+    return rangeA.overlaps(rangeB);
+  }
+
+  /**
+   * Number of days in date range
+   * @return {Number}
+   */
+  get days () {
+    // If open-ended range, not possible to get days in range
+    if (this.endDate === null) {
+      return null;
+    }
+    const startMoment = moment(this.startDate);
+    const endMoment = moment(this.endDate);
+    return endMoment.diff(startMoment, 'days');
   }
 
   /**

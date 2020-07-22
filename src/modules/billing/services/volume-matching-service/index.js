@@ -2,13 +2,12 @@
 
 require('../../../../lib/connectors/db');
 
-// const returnGroupService = require('./return-group-service');
-// const chargeVersionService = require('./data-service');
 const dataService = require('./data-service');
 const matchingService = require('./matching-service');
 
 const validators = require('../../../../lib/models/validators');
 const FinancialYear = require('../../../../lib/models/financial-year');
+const { RETURN_SEASONS } = require('../../../../lib/models/constants');
 
 /**
  * Returns matching to water.billing_volumes
@@ -17,37 +16,20 @@ const FinancialYear = require('../../../../lib/models/financial-year');
  * @param {Boolean} matchSummer
  * @param {Boolean} matchWinter
  */
-const matchVolumes = async (chargeVersionId, financialYear, matchSummer, matchWinter) => {
+const matchVolumes = async (chargeVersionId, financialYear, isSummer) => {
   validators.assertId(chargeVersionId);
   validators.assertIsInstanceOf(financialYear, FinancialYear);
-  validators.assertIsBoolean(matchSummer);
-  validators.assertIsBoolean(matchWinter);
+  validators.assertIsBoolean(isSummer);
 
   const data = await dataService.getData(chargeVersionId, financialYear);
 
-  console.log(JSON.stringify(data, null, 2));
-  /*
-  const context = await chargeVersionService.getChargeVersion(chargeVersionId, financialYear);
+  const { chargePeriod } = data;
 
-  const { chargeVersion, chargeElementGroups } = context;
+  const seasonKey = isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
 
-  const returnGroups = await returnGroupService.getReturnGroups(chargeVersion.licence.licenceNumber, financialYear, chargeElementGroups);
+  const { chargeElementGroup, returnGroup } = data.seasons[seasonKey];
 
-  console.log(context);
-  console.log(returnGroups);
-
-  matchingService.match(context, returnGroups, true);
-  */
+  return matchingService.match(chargePeriod, chargeElementGroup, returnGroup);
 };
-
-const func = async () => {
-  try {
-    await matchVolumes('02940bef-d098-4439-971c-2f61813f48a1', new FinancialYear(2020), true, true);
-  } catch (err) {
-    console.error(err);
-  }
-};
-
-func();
 
 exports.matchVolumes = matchVolumes;

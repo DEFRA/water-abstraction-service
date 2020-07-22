@@ -19,8 +19,17 @@ const createRange = (abstractionPeriod, startYear) => {
   const isCrossYear = (startMonth > endMonth || (startMonth === endMonth && startDay > endDay));
   const endYear = isCrossYear ? startYear + 1 : startYear;
 
-  const mStart = moment().year(startYear).month(startMonth - 1).date(startDay);
-  const mEnd = moment().year(endYear).month(endMonth - 1).date(endDay);
+  const mStart = moment({
+    year: startYear,
+    month: startMonth - 1,
+    date: startDay
+  });
+
+  const mEnd = moment({
+    year: endYear,
+    month: endMonth - 1,
+    date: endDay
+  });
 
   return moment.range(mStart, mEnd);
 };
@@ -108,7 +117,7 @@ class AbstractionPeriod extends Model {
   /**
    * Checks if the passed AbstractionPeriod contains this instance. In order
    * for this to return true, this instance must fit inside the passed
-   * AbstractionPeriod, but not matching the bounaries.
+   * AbstractionPeriod, including the boundaries.
    *
    * @param {AbstractionPeriod} period The abstraction period to check if this instance fits within
    */

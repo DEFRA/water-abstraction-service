@@ -37,11 +37,13 @@ const createChargeElementGroups = (chargeVersion, chargePeriod) => {
  * Gets the return season, taking into account the return isSummer flag,
  * and whether there are any summer charge elements with a matching purpose
  * @param {Return} ret
- * @param {ChargeElementGroup} chargeElementGroup
+ * @param {ChargeElementGroup} summerChargeElementGroup
  * @return {String} return season
  */
-const getReturnSeason = (ret, chargeElementGroup) => {
-  const isSummerMatch = ret.isSummer && ret.purposeUses.some(chargeElementGroup.isPurposeMatch);
+const getReturnSeason = (ret, summerChargeElementGroup) => {
+  const isSummerMatch = ret.isSummer && ret.purposeUses.some(purposeUse => {
+    return summerChargeElementGroup.isPurposeUseMatch(purposeUse);
+  });
   return isSummerMatch ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
 };
 
@@ -54,8 +56,8 @@ const createReturnGroups = (returns, chargeElementGroups) => {
   // Group by season
   const returnGroups = groupBy(returns, ret => getReturnSeason(ret, chargeElementGroups[RETURN_SEASONS.summer]));
   return {
-    [RETURN_SEASONS.summer]: new ReturnGroup(returnGroups[RETURN_SEASONS.summer]),
-    [RETURN_SEASONS.winterAllYear]: new ReturnGroup(returnGroups[RETURN_SEASONS.winterAllYear])
+    [RETURN_SEASONS.summer]: new ReturnGroup(returnGroups[RETURN_SEASONS.summer]).createForTwoPartTariff(),
+    [RETURN_SEASONS.winterAllYear]: new ReturnGroup(returnGroups[RETURN_SEASONS.winterAllYear]).createForTwoPartTariff()
   };
 };
 

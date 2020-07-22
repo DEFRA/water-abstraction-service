@@ -31,6 +31,7 @@ class ReturnGroup {
    * @param {Array<Return>} returns
    */
   constructor (returns) {
+    this._returns = [];
     if (returns) {
       this.returns = returns;
     }
@@ -54,11 +55,21 @@ class ReturnGroup {
   }
 
   /**
+   * Creates a new return group containing only returns
+   * for a two-part tariff purpose
+   * @return {ReturnGroup}
+   */
+  createForTwoPartTariff () {
+    const returns = this.returns.filter(ret => ret.purposeUses.some(purposeUse => purposeUse.isTwoPartTariff));
+    return new ReturnGroup(returns);
+  }
+
+  /**
    * Checks the returns group for errors
    * Returns a numeric code
    * @return {Number}
    */
-  errorCode () {
+  get errorCode () {
     const errors = [
       this._returns.length === 0 ? ERROR_NO_RETURNS_FOR_MATCHING : null,
       getErrorIfEvery(this._returns, isDueStatus, ERROR_NO_RETURNS_SUBMITTED),
