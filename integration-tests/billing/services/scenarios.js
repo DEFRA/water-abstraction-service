@@ -11,7 +11,6 @@ const chargeVersions = require('./charge-versions');
 const purposePrimary = require('./purpose-primary');
 const purposeSecondary = require('./purpose-secondary');
 const purposeUses = require('./purpose-uses');
-const tearDown = require('./tear-down');
 const crm = require('./crm');
 
 const schema = {
@@ -36,6 +35,7 @@ const createCRMChargeVersionData = async chargeVersion => {
   const invoiceAccount = await crm.createInvoiceAccount(
     chargeVersion.invoiceAccount
   );
+
   return { company, invoiceAccount };
 };
 
@@ -61,13 +61,14 @@ const createChargeElement = async (chargeVersion, key) => {
  */
 const createScenario = async scenario => {
   Joi.assert(scenario, schema);
-  await tearDown.tearDown();
+
   const region = await regions.createTestRegion();
   const licence = await licences.create(region, scenario.licence);
   await crm.createDocuments(scenario.licence);
   for (const row of scenario.chargeVersions) {
     const crmData = await createCRMChargeVersionData(row);
     const chargeVersion = await chargeVersions.create(region, licence, row.chargeVersion, crmData);
+
     const tasks = row.chargeElements.map(key => createChargeElement(chargeVersion, key));
     await Promise.all(tasks);
   }
@@ -106,6 +107,7 @@ const runScenario = async (scenario, batchType, financialYearEnding = 2020, isSu
   });
 
   const batchId = JSON.parse(response.payload).data.batch.id;
+
   return getBatchWhenProcessed(batchId);
 };
 

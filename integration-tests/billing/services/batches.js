@@ -19,6 +19,12 @@ const getBatchById = billingBatchId =>
       ]
     });
 
+const updateStatus = (batch, status) => {
+  return BillingBatch
+    .forge({ billingBatchId: batch.billingBatchId })
+    .save({ status });
+};
+
 const tearDown = async () => {
   await bookshelf.knex.raw(queries.deleteBillingTransactions);
   await bookshelf.knex.raw(queries.deleteBillingInvoiceLicences);
@@ -30,3 +36,4 @@ const tearDown = async () => {
 
 exports.getBatchById = getBatchById;
 exports.tearDown = tearDown;
+exports.updateStatus = updateStatus;

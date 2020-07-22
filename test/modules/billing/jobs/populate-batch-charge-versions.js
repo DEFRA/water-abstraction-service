@@ -17,6 +17,7 @@ const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const chargeVersionService = require('../../../../src/modules/billing/services/charge-version-service');
+const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
 
 const Batch = require('../../../../src/lib/models/batch');
 const Region = require('../../../../src/lib/models/region');
@@ -29,21 +30,23 @@ const createBatch = () => {
   return batch;
 };
 
-const createBillingBatchChargeVersions = batch => [
+const createBillingBatchChargeVersionYears = batch => [
   {
-    billingBatchChargeVersionId: uuid(),
+    billingBatchChargeVersionYearId: uuid(),
     billingBatchId: batch.id,
-    chargeVersionId: uuid()
+    chargeVersionId: uuid(),
+    financialYearEnding: 2021
   },
   {
-    billingBatchChargeVersionId: uuid(),
+    billingBatchChargeVersionYearId: uuid(),
     billingBatchId: batch.id,
-    chargeVersionId: uuid()
+    chargeVersionId: uuid(),
+    financialYearEnding: 2021
   }
 ];
 
 experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
-  let batch, billingBatchChargeVersions;
+  let batch, billingBatchChargeVersionYears;
 
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
@@ -51,10 +54,11 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
     sandbox.stub(messageQueue, 'publish').resolves();
 
     batch = createBatch();
-    billingBatchChargeVersions = createBillingBatchChargeVersions(batch);
+    billingBatchChargeVersionYears = createBillingBatchChargeVersionYears(batch);
 
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
-    sandbox.stub(chargeVersionService, 'createForBatch').resolves(billingBatchChargeVersions);
+    sandbox.stub(chargeVersionService, 'createForBatch').resolves();
+    sandbox.stub(chargeVersionYearService, 'createForBatch').resolves(billingBatchChargeVersionYears);
   });
 
   afterEach(async () => {
@@ -108,12 +112,18 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
       )).to.be.true();
     });
 
-    test('includes the batch in the job response', async () => {
-      expect(result.batch).to.equal(job.data.batch);
+    test('creates billingBatchChargeVersionYears using the batch', async () => {
+      expect(chargeVersionYearService.createForBatch.calledWith(
+        batch
+      )).to.be.true();
     });
 
-    test('includes the billingBatchChargeVersions in the job response', async () => {
-      expect(result.billingBatchChargeVersions).to.equal(billingBatchChargeVersions);
+    test('includes the batch in the job response', async () => {
+      expect(result.batch).to.equal(batch);
+    });
+
+    test('includes the billingBatchChargeVersionYears in the job response', async () => {
+      expect(result.billingBatchChargeVersionYears).to.equal(billingBatchChargeVersionYears);
     });
   });
 });
