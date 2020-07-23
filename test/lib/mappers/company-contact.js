@@ -35,7 +35,7 @@ experiment('modules/billing/mappers/company-contact', () => {
           contactId: 'f9d3b35c-b55b-4af8-98a2-beb3c1323ee9',
           salutation: 'test-salutation',
           firstName: 'test-first-name',
-          middleNames: 'test-middle-names',
+          middleInitials: 'A B C',
           lastName: 'test-last-name',
           externalId: '1:123',
           dateCreated: '2020-05-06T14:20:56.424Z',
@@ -92,6 +92,11 @@ experiment('modules/billing/mappers/company-contact', () => {
     test('has the mapped contact', async () => {
       expect(mapped.contact).to.be.instanceOf(Contact);
       expect(mapped.contact.id).to.equal(row.contact.contactId);
+      expect(mapped.contact.title).to.equal(row.contact.salutation);
+      expect(mapped.contact.firstName).to.equal(row.contact.firstName);
+      expect(mapped.contact.middleInitials).to.equal(row.contact.middleInitials);
+      expect(mapped.contact.initials).to.equal(row.contact.initials);
+      expect(mapped.contact.lastName).to.equal(row.contact.lastName);
     });
 
     test('has the mapped role', async () => {

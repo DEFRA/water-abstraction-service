@@ -103,6 +103,11 @@ experiment('modules/billing/mappers/contact', () => {
       expect(result.lastName).to.equal(contactData.lastName);
       expect(result.dataSource).to.equal(contactData.dataSource);
     });
+
+    test('handles a null contact', async () => {
+      result = contactMapper.uiToModel(null);
+      expect(result).to.be.null();
+    });
   });
 
   experiment('.modelToCrm', () => {

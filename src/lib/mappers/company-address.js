@@ -13,8 +13,11 @@ const crmToModel = row => {
   });
 
   if (row.role) companyAddress.roleName = row.role.name;
-  if (row.address) companyAddress.address = addressMapper.crmToModel(row.address);
-  if (row.addressId) companyAddress.address = new Address(row.addressId);
+  if (row.address) {
+    companyAddress.address = addressMapper.crmToModel(row.address);
+  } else if (row.addressId) {
+    companyAddress.address = new Address(row.addressId);
+  }
 
   return companyAddress;
 };

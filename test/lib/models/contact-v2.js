@@ -381,6 +381,7 @@ experiment('lib/models/contact-v2 model', () => {
           contact = new Contact();
           contact.type = Contact.CONTACT_TYPES.department;
           contact.department = 'Hydrology Dept';
+          contact.dataSource = Contact.DATA_SOURCE_TYPES.wrls;
         });
 
         experiment('department', () => {
@@ -399,9 +400,11 @@ experiment('lib/models/contact-v2 model', () => {
         });
 
         experiment('dataSource', () => {
-          test('is optional', async () => {
+          test('is required', async () => {
+            delete contact._dataSource;
+
             const { error } = contact.isValid();
-            expect(error).to.be.null();
+            expect(error).to.not.be.null();
           });
 
           test('is valid when set to nald', async () => {

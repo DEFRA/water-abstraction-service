@@ -123,7 +123,7 @@ const createEntityAndDecorateInvoiceAccount = async (invoiceAccount, newModels, 
 };
 
 const createInvoiceAccount = async (regionId, companyId, startDate, invoiceAccount, newModels) => {
-  const regionCode = await regionsService.getRegionCode(regionId);
+  const { code: regionCode } = await regionsService.getRegion(regionId);
   const invoiceAccountEntity = await invoiceAccountsConnector.createInvoiceAccount({
     companyId,
     regionCode,
@@ -155,7 +155,10 @@ const persist = async (regionId, startDate, invoiceAccount) => {
 
     await createInvoiceAccount(regionId, invoiceAccount.company.id, formattedStartDate, invoiceAccount, newModels);
 
-    await invoiceAccountAddressesService.createInvoiceAccountAddress(invoiceAccount, formattedStartDate);
+    const invoiceAccountAddress = await invoiceAccountAddressesService.createInvoiceAccountAddress(invoiceAccount, invoiceAccount.invoiceAccountAddresses[0], formattedStartDate);
+    return invoiceAccount.fromHash({
+      invoiceAccountAddresses: [invoiceAccountAddress]
+    });
   } catch (err) {
     await crmService.deleteEntities(newModels);
     throw err;

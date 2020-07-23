@@ -300,5 +300,10 @@ experiment('modules/billing/services/companies-service', () => {
         }
       });
     });
+
+    test('handles null company', async () => {
+      response = await companiesService.getCompanyModel(null);
+      expect(response).to.be.null();
+    });
   });
 });

@@ -126,9 +126,11 @@ experiment('modules/billing/services/contacts-service', () => {
   experiment('.getContactModel', () => {
     let contactData, contactModel, response;
     const contactId = uuid();
+
     beforeEach(async () => {
       sandbox.stub(contactsMapper, 'uiToModel').resolves();
     });
+
     experiment('when only an contact id is provided', () => {
       beforeEach(async () => {
         contactData = {
@@ -153,7 +155,8 @@ experiment('modules/billing/services/contacts-service', () => {
         contactData = {
           type: 'person',
           firstName: 'Tommy',
-          lastName: 'Testington'
+          lastName: 'Testington',
+          dataSource: Contact.DATA_SOURCE_TYPES.wrls
         };
         contactModel = new Contact();
         contactModel.fromHash(contactData);
@@ -186,6 +189,11 @@ experiment('modules/billing/services/contacts-service', () => {
           expect(err.message).to.equal('Invalid contact');
         }
       });
+    });
+
+    test('handles null company', async () => {
+      response = await contactsService.getContactModel(null);
+      expect(response).to.be.null();
     });
   });
 });

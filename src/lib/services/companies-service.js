@@ -29,6 +29,7 @@ const createCompanyContact = async (companyId, companyContactData) => {
 };
 
 const getCompanyModel = companyData => {
+  if (!companyData) return null;
   const companyModel = mappers.company.uiToModel(companyData);
   if (!companyModel.id && !!companyModel) {
     const { error } = companyModel.isValid();

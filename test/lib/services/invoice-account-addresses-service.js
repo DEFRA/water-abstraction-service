@@ -64,21 +64,30 @@ experiment('modules/billing/services/invoice-account-addreses-service', () => {
   });
 
   experiment('.createInvoiceAccountAddress', () => {
-    let invoiceAccountModel, invoiceAccountAddressModel, invoiceAccountId, invoiceAccountAddressId;
+    let invoiceAccountModel, invoiceAccountAddressModel, invoiceAccountId, invoiceAccountAddressId, result;
     beforeEach(async () => {
+      const addressId = uuid();
+      const contactId = uuid();
       invoiceAccountId = uuid();
       invoiceAccountModel = new InvoiceAccount(invoiceAccountId);
+      const invoiceAccountAddressData = {
+        address: { addressId },
+        agentCompanyId: null,
+        contact: { contactId },
+        invoiceAccountId
+      };
       invoiceAccountAddressModel = new InvoiceAccountAddress();
       invoiceAccountAddressModel.fromHash({
-        address: new Address(uuid()),
+        invoiceAccountId,
+        address: new Address(addressId),
         agentCompany: null,
-        contact: new Contact(uuid())
+        contact: new Contact(contactId)
       });
       invoiceAccountModel.invoiceAccountAddresses.push(invoiceAccountAddressModel);
       invoiceAccountAddressId = uuid();
-      invoiceAccountsConnector.createInvoiceAccountAddress.resolves({ invoiceAccountAddressId });
+      invoiceAccountsConnector.createInvoiceAccountAddress.resolves({ ...invoiceAccountAddressData, invoiceAccountAddressId });
 
-      await invoiceAccountAddressesService.createInvoiceAccountAddress(invoiceAccountModel, '2020-04-01');
+      result = await invoiceAccountAddressesService.createInvoiceAccountAddress(invoiceAccountModel, invoiceAccountAddressModel, '2020-04-01');
     });
 
     test('persists the invoice account address', () => {
@@ -92,8 +101,9 @@ experiment('modules/billing/services/invoice-account-addreses-service', () => {
       });
     });
 
-    test('updates invoice account with invoice account address id', () => {
-      expect(invoiceAccountModel.invoiceAccountAddresses[0].id).to.equal(invoiceAccountAddressId);
+    test('returns the invoice account address', () => {
+      expect(result).to.be.instanceOf(InvoiceAccountAddress);
+      expect(result.id).to.equal(invoiceAccountAddressId);
     });
   });
 

@@ -1,5 +1,6 @@
 const InvoiceAccountAddress = require('../models/invoice-account-address');
 const invoiceAccountsConnector = require('../connectors/crm-v2/invoice-accounts');
+const mappers = require('../mappers');
 const DateRange = require('../models/date-range');
 
 const getInvoiceAccountAddressModel = (startDate, addressModel, agentCompanyModel, contactModel) => {
@@ -12,8 +13,8 @@ const getInvoiceAccountAddressModel = (startDate, addressModel, agentCompanyMode
   });
 };
 
-const createInvoiceAccountAddress = async (invoiceAccount, startDate) => {
-  const { address, agentCompany, contact } = invoiceAccount.invoiceAccountAddresses[0];
+const createInvoiceAccountAddress = async (invoiceAccount, invoiceAccountAddress, startDate) => {
+  const { address, agentCompany, contact } = invoiceAccountAddress;
   const data = {
     addressId: address.id,
     startDate,
@@ -21,8 +22,8 @@ const createInvoiceAccountAddress = async (invoiceAccount, startDate) => {
     contactId: contact ? contact.id : null
   };
 
-  const invoiceAccountAddress = await invoiceAccountsConnector.createInvoiceAccountAddress(invoiceAccount.id, data);
-  invoiceAccount.invoiceAccountAddresses[0].id = invoiceAccountAddress.invoiceAccountAddressId;
+  const newInvoiceAccountAddress = await invoiceAccountsConnector.createInvoiceAccountAddress(invoiceAccount.id, data);
+  return mappers.invoiceAccountAddress.crmToModel(newInvoiceAccountAddress);
 };
 
 const deleteInvoiceAccountAddress = async invoiceAccountAddress =>

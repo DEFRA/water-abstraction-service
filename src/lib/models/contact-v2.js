@@ -19,12 +19,12 @@ const contactPersonSchema = Joi.object({
   lastName: Joi.string().required(),
   suffix: Joi.string().allow(null).optional(),
   department: Joi.string().allow(null).replace(/\./g, '').optional(),
-  dataSource: Joi.string().valid(Object.values(DATA_SOURCE_TYPES)).allow(null).optional()
+  dataSource: Joi.string().valid(Object.values(DATA_SOURCE_TYPES)).required()
 });
 
 const contactDepartmentSchema = Joi.object({
   department: Joi.string().required(),
-  dataSource: Joi.string().valid(Object.values(DATA_SOURCE_TYPES)).allow(null).optional()
+  dataSource: Joi.string().valid(Object.values(DATA_SOURCE_TYPES)).required()
 });
 
 class Contact extends Model {

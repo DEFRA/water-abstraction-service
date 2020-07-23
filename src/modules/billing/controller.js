@@ -18,10 +18,8 @@ const transactionsService = require('./services/transactions-service');
 const billingVolumesService = require('./services/billing-volumes-service');
 const eventService = require('../../lib/services/events');
 
+const mapErrorResponse = require('../../lib/map-error-response');
 const mappers = require('./mappers');
-
-const { NotFoundError } = require('../../lib/errors');
-const { BatchStatusError, TransactionStatusError } = require('./lib/errors');
 
 const createBatchEvent = (options) => {
   const batchEvent = new Event();
@@ -200,20 +198,6 @@ const getInvoiceLicenceWithTransactions = async (request, h) => {
   const { invoiceLicenceId } = request.params;
   const invoiceLicence = await invoiceLicenceService.getInvoiceLicenceWithTransactions(invoiceLicenceId);
   return invoiceLicence || Boom.notFound(`Invoice licence ${invoiceLicenceId} not found`);
-};
-
-const mapErrorResponse = error => {
-  if (error instanceof NotFoundError) {
-    return Boom.notFound(error.message);
-  }
-  if (error instanceof BatchStatusError) {
-    return Boom.forbidden(error.message);
-  }
-  if (error instanceof TransactionStatusError) {
-    return Boom.forbidden(error.message);
-  }
-  // Unexpected error
-  throw error;
 };
 
 /**

@@ -249,15 +249,15 @@ experiment('modules/billing/services/invoice-accounts-service', () => {
       sandbox.stub(companiesService, 'createCompanyAddress').resolves();
       sandbox.stub(companiesService, 'createCompanyContact').resolves();
       sandbox.stub(invoiceAccountsConnector, 'createInvoiceAccount').resolves(invoiceAccountData);
-      sandbox.stub(regionsService, 'getRegionCode').resolves('N');
-      sandbox.stub(invoiceAccountAddressesService, 'createInvoiceAccountAddress').resolves();
+      sandbox.stub(regionsService, 'getRegion').resolves({ code: 'N' });
+      sandbox.stub(invoiceAccountAddressesService, 'createInvoiceAccountAddress').resolves(invoiceAccountAddressModel);
       sandbox.stub(crmService, 'deleteEntities').resolves();
 
       await invoiceAccountsService.persist(regionId, '2020-04-01', invoiceAccountModel);
     });
 
     test('calls the regions service to get the region code', async () => {
-      expect(regionsService.getRegionCode.calledWith(
+      expect(regionsService.getRegion.calledWith(
         regionId
       )).to.be.true();
     });
@@ -278,6 +278,7 @@ experiment('modules/billing/services/invoice-accounts-service', () => {
     test('calls the invoice account addresses connector with the expected data', async () => {
       expect(invoiceAccountAddressesService.createInvoiceAccountAddress.calledWith(
         invoiceAccountModel,
+        invoiceAccountAddressModel,
         '2020-04-01'
       )).to.be.true();
     });

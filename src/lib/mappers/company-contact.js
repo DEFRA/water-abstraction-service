@@ -23,9 +23,7 @@ const crmToModel = entity => {
 
   if (entity.contact) {
     companyContact.contact = contactMapper.crmToModel(entity.contact);
-  }
-
-  if (entity.contactId) {
+  } else if (entity.contactId) {
     companyContact.contact = contactMapper.crmToModel({ contactId: entity.contactId });
   }
 

@@ -8,24 +8,9 @@ const documentsHelper = require('./lib/documents');
 const returnsHelper = require('./lib/returns');
 const companiesService = require('../../lib/services/companies-service');
 const invoiceAccountsService = require('../../lib/services/invoice-accounts-service');
-const Boom = require('@hapi/boom');
-const { NotFoundError, InvalidEntityError } = require('../../lib/errors');
+
+const mapErrorResponse = require('../../lib/map-error-response');
 const { envelope } = require('../../lib/response');
-
-// caters for error triggered in this service and 404s returned from the CRM
-const isNotFoundError = err => err instanceof NotFoundError || err.statusCode === 404;
-
-const mapErrorResponse = error => {
-  if (isNotFoundError(error)) {
-    return Boom.notFound(error.message);
-  }
-
-  if (error instanceof InvalidEntityError) {
-    return Boom.badData(error.message);
-  }
-  // Unexpected error
-  throw error;
-};
 
 const rowMapper = ret => {
   const { purposes = [] } = ret.metadata;
@@ -98,7 +83,7 @@ const createCompanyInvoiceAccount = async (request, h) => {
   try {
     const invoiceAccount = invoiceAccountsService.getInvoiceAccount(companyId, startDate, address, agent, contact);
     await invoiceAccountsService.persist(regionId, startDate, invoiceAccount);
-    return h.response().code(201);
+    return h.response(invoiceAccount.toJSON()).code(201);
   } catch (err) {
     return mapErrorResponse(err);
   }

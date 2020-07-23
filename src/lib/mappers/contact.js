@@ -25,6 +25,7 @@ const crmToModel = contact => {
  * @return {Contact}
  */
 const uiToModel = contactData => {
+  if (!contactData) return null;
   if (contactData.contactId) {
     return new Contact(contactData.contactId);
   }

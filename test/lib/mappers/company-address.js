@@ -80,6 +80,14 @@ experiment('modules/billing/mappers/company-address', () => {
         const { address } = companyAddressMapper.crmToModel({ ...dbRow, address: addressData });
         expect(address instanceof Address).to.be.true();
         expect(address.id).to.equal(addressData.addressId);
+        expect(address.addressLine1).to.equal(addressData.address1);
+        expect(address.addressLine2).to.equal(addressData.address2);
+        expect(address.addressLine3).to.equal(addressData.address3);
+        expect(address.addressLine4).to.equal(addressData.address4);
+        expect(address.town).to.equal(addressData.town);
+        expect(address.county).to.equal(addressData.county);
+        expect(address.postcode).to.equal(addressData.postcode);
+        expect(address.country).to.equal(addressData.country);
       });
     });
 

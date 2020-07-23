@@ -22,6 +22,7 @@ const createContact = async contactModel => {
 const deleteContact = async contact => contactsConnector.deleteContact(contact.id);
 
 const getContactModel = contactData => {
+  if (!contactData) return null;
   const contactModel = mappers.contact.uiToModel(contactData);
   if (!contactModel.id && !!contactModel) {
     const { error } = contactModel.isValid();
