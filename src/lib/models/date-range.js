@@ -1,5 +1,7 @@
 'use strict';
 
+const { isNull } = require('lodash');
+
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(require('moment'));
 
@@ -68,14 +70,14 @@ class DateRange {
 
   /**
    * Checks whether this date range overlaps another
-   * @param {DateRange}
+   * @param {DateRange} dateRange
    * @return {Boolean}
    */
   overlaps (dateRange) {
     validators.assertIsInstanceOf(dateRange, DateRange);
     const rangeA = this.toMomentRange();
     const rangeB = dateRange.toMomentRange();
-    return rangeA.overlaps(rangeB);
+    return rangeA.overlaps(rangeB, { adjacent: true });
   }
 
   /**
@@ -84,9 +86,10 @@ class DateRange {
    */
   get days () {
     // If open-ended range, not possible to get days in range
-    if (this.endDate === null) {
-      return null;
+    if (isNull(this.endDate)) {
+      return undefined;
     }
+
     const startMoment = moment(this.startDate);
     const endMoment = moment(this.endDate);
     return endMoment.diff(startMoment, 'days') + 1;

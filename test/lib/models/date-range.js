@@ -5,6 +5,9 @@ const { expect } = require('@hapi/code');
 
 const DateRange = require('../../../src/lib/models/date-range');
 
+const MomentRange = require('moment-range');
+const moment = MomentRange.extendMoment(require('moment'));
+
 const TEST_START_DATE = '2019-06-01';
 const TEST_END_DATE = '2019-12-25';
 
@@ -94,6 +97,113 @@ experiment('lib/models/date-range', () => {
         startDate: TEST_START_DATE,
         endDate: TEST_END_DATE
       });
+    });
+  });
+
+  experiment('.toMomentRange', () => {
+    test('converts the DateRange to a moment range instance', async () => {
+      const dateRange = new DateRange(TEST_START_DATE, TEST_END_DATE);
+      const momentRange = dateRange.toMomentRange();
+      expect(momentRange.start.format('YYYY-MM-DD')).to.equal(TEST_START_DATE);
+      expect(momentRange.end.format('YYYY-MM-DD')).to.equal(TEST_END_DATE);
+    });
+  });
+
+  experiment('.fromMomentRange', () => {
+    test('converts the moment range to a DateRange instance', async () => {
+      const momentRange = moment.range(TEST_START_DATE, TEST_END_DATE);
+      const dateRange = DateRange.fromMomentRange(momentRange);
+      expect(dateRange.startDate).to.equal(TEST_START_DATE);
+      expect(dateRange.endDate).to.equal(TEST_END_DATE);
+    });
+  });
+
+  experiment('.includes', () => {
+    let dateRange;
+
+    beforeEach(async () => {
+      dateRange = new DateRange(TEST_START_DATE, TEST_END_DATE);
+    });
+
+    test('return false for a date before the start date', async () => {
+      expect(dateRange.includes('2019-05-31')).to.be.false();
+    });
+
+    test('return true for the start date', async () => {
+      expect(dateRange.includes(TEST_START_DATE)).to.be.true();
+    });
+
+    test('return true for a date within the range', async () => {
+      expect(dateRange.includes('2019-08-05')).to.be.true();
+    });
+
+    test('return true for the end date', async () => {
+      expect(dateRange.includes(TEST_END_DATE)).to.be.true();
+    });
+
+    test('return false for a date after the end date', async () => {
+      expect(dateRange.includes('2019-12-26')).to.be.false();
+    });
+  });
+
+  experiment('.overlaps', () => {
+    const testPair = (...dates) => {
+      const rangeA = new DateRange(dates[0], dates[1]);
+      const rangeB = new DateRange(dates[2], dates[3]);
+      return rangeA.overlaps(rangeB);
+    };
+
+    test('returns false when no overlap', async () => {
+      const isOverlap = testPair(
+        '2019-01-01', '2019-05-01',
+        '2019-05-02', '2019-12-31'
+      );
+      expect(isOverlap).to.be.false();
+    });
+
+    test('returns true when end date of earlier range is start date of later range', async () => {
+      const isOverlap = testPair(
+        '2019-01-01', '2019-05-01',
+        '2019-05-01', '2019-12-31'
+      );
+      expect(isOverlap).to.be.true();
+    });
+
+    test('returns true when there is an overlap', async () => {
+      const isOverlap = testPair(
+        '2019-01-01', '2019-05-01',
+        '2019-04-01', '2019-12-31'
+      );
+      expect(isOverlap).to.be.true();
+    });
+    test('returns true when the ranges are the same', async () => {
+      const isOverlap = testPair(
+        '2019-01-01', '2019-05-01',
+        '2019-01-01', '2019-05-01'
+      );
+      expect(isOverlap).to.be.true();
+    });
+  });
+
+  experiment('.days', () => {
+    test('returns 1 for a single day', async () => {
+      const days = new DateRange('2019-01-01', '2019-01-01').days;
+      expect(days).to.equal(1);
+    });
+
+    test('returns 7 for a week', async () => {
+      const days = new DateRange('2019-01-01', '2019-01-07').days;
+      expect(days).to.equal(7);
+    });
+
+    test('returns 31 for a month', async () => {
+      const days = new DateRange('2019-01-01', '2019-01-31').days;
+      expect(days).to.equal(31);
+    });
+
+    test('returns undefined if no end date', async () => {
+      const days = new DateRange('2019-01-01', null).days;
+      expect(days).to.be.undefined();
     });
   });
 });
