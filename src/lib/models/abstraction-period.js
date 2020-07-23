@@ -166,6 +166,7 @@ class AbstractionPeriod extends Model {
 
   /**
    * Gets the number of abstraction days for the supplied DateRange
+   * The date range must fall within a single financial year
    * @param {DateRange} dateRange
    * @return {Number}
    */

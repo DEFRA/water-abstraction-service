@@ -42,4 +42,23 @@ experiment('modules/billing/mappers/abstraction-period', () => {
       expect(result.endMonth).to.equal(4);
     });
   });
+
+  experiment('.modelToHelpers', () => {
+    test('maps to a plain object', async () => {
+      const absPeriod = new AbstractionPeriod();
+      absPeriod.fromHash({
+        startDay: 1,
+        startMonth: 4,
+        endDay: 31,
+        endMonth: 10
+      });
+
+      expect(abstractionPeriodMapper.modelToHelpers(absPeriod)).to.equal({
+        startDay: 1,
+        startMonth: 4,
+        endDay: 31,
+        endMonth: 10
+      });
+    });
+  });
 });

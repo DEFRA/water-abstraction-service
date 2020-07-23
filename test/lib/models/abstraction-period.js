@@ -2,6 +2,8 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 const { expect } = require('@hapi/code');
 
 const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
+const DateRange = require('../../../src/lib/models/date-range');
+
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
 experiment('lib/models/abstraction-period', () => {
@@ -329,6 +331,61 @@ experiment('lib/models/abstraction-period', () => {
 
         expect(xmasHols.getChargeSeason()).to.equal(CHARGE_SEASON.winter);
       });
+    });
+  });
+
+  experiment('.isDateWithinAbstractionPeriod', () => {
+    let absPeriod;
+    beforeEach(async () => {
+      absPeriod = new AbstractionPeriod();
+      absPeriod.fromHash({
+        startDay: 1,
+        startMonth: 10,
+        endDay: 31,
+        endMonth: 3
+      });
+    });
+
+    test('returns false when the date is before the abstraction period starts', async () => {
+      expect(absPeriod.isDateWithinAbstractionPeriod('2020-09-30')).to.be.false();
+    });
+
+    test('returns true when the date is within the abstraction period', async () => {
+      expect(absPeriod.isDateWithinAbstractionPeriod('2020-10-01')).to.be.true();
+      expect(absPeriod.isDateWithinAbstractionPeriod('2021-03-31')).to.be.true();
+    });
+
+    test('returns false when the date is after the abstraction period ends', async () => {
+      expect(absPeriod.isDateWithinAbstractionPeriod('2020-04-01')).to.be.false();
+    });
+
+    test('throws an error if the argument is not a date', async () => {
+      const func = () => { absPeriod.isDateWithinAbstractionPeriod('not-a-data'); };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.getDays', () => {
+    let absPeriod, dateRange;
+    beforeEach(async () => {
+      absPeriod = new AbstractionPeriod();
+      absPeriod.fromHash({
+        startDay: 1,
+        startMonth: 10,
+        endDay: 31,
+        endMonth: 3
+      });
+      dateRange = new DateRange('2020-01-01', '2020-03-31');
+    });
+
+    test('returns the number of abstraction days within the supplied date range', async () => {
+      const days = absPeriod.getDays(dateRange);
+      expect(days).to.equal(91);
+    });
+
+    test('throws an error if a DateRange is not supplied', async () => {
+      const func = () => absPeriod.getDays('not-a-date-range');
+      expect(func).to.throw();
     });
   });
 });

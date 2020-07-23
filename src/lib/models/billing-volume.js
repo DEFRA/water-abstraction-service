@@ -32,7 +32,9 @@ const setErrorFlagStatuses = [
   twoPartTariffStatuses.ERROR_RECEIVED,
   twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE,
   twoPartTariffStatuses.ERROR_OVER_ABSTRACTION,
-  twoPartTariffStatuses.ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD
+  twoPartTariffStatuses.ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD,
+  twoPartTariffStatuses.ERROR_NO_RETURNS_FOR_MATCHING,
+  twoPartTariffStatuses.ERROR_NOT_DUE_FOR_BILLING
 ];
 
 const toFixedPrecision = number => parseFloat(number.toFixed(3));
@@ -102,6 +104,9 @@ class BillingVolume extends Model {
   set twoPartTariffStatus (twoPartTariffStatus) {
     validators.assertNullableEnum(twoPartTariffStatus, Object.values(twoPartTariffStatuses));
     this._twoPartTariffStatus = twoPartTariffStatus;
+    if (setErrorFlagStatuses.includes(twoPartTariffStatus)) {
+      this.twoPartTariffError = true;
+    }
   }
 
   /**
@@ -114,9 +119,6 @@ class BillingVolume extends Model {
     if (assignBillableStatuses.includes(twoPartTariffStatus)) {
       this.volume = billableVolume;
       this.calculatedVolume = billableVolume;
-    }
-    if (setErrorFlagStatuses.includes(twoPartTariffStatuses)) {
-      this.twoPartTariffError = true;
     }
   }
 
@@ -165,6 +167,8 @@ class BillingVolume extends Model {
    * @param {Number} ML
    */
   allocate (volume) {
+    validators.assertQuantity(volume);
+    hoek.assert(this.calculatedVolume === this.volume, `Can't allocate ${volume} when volume and calculated volume differ`);
     this.calculatedVolume = isFinite(this.calculatedVolume) ? this.calculatedVolume + volume : volume;
     this.volume = this._calculatedVolume;
   }
@@ -174,11 +178,11 @@ class BillingVolume extends Model {
    * @param {Number} ML
    */
   deallocate (volume) {
-    hoek.assert(!isNull(this.calculatedVolume), `Can't deallocate ${volume} when calculated volume is null`);
+    hoek.assert(isFinite(this.calculatedVolume), `Can't deallocate ${volume} when calculated volume is not finite`);
     hoek.assert(this.calculatedVolume === this.volume, `Can't deallocate ${volume} when volume and calculated volume differ`);
     validators.assertQuantityWithMaximum(volume, this.calculatedVolume);
     this.calculatedVolume -= volume;
-    this.volume -= volume;
+    this.volume = this._calculatedVolume;
   }
 
   /**
