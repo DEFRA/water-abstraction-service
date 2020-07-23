@@ -45,11 +45,12 @@ const createTwoPartTariff = params =>
 /**
  * Deletes all billing batch charge versions for given batch
  * @param {String} batchId - guid
+ * @param {String} isDeletionRequired - boolean
  */
-const deleteByBatchId = async batchId => BillingBatchChargeVersion
+const deleteByBatchId = async (batchId, isDeletionRequired = true) => BillingBatchChargeVersion
   .forge()
   .where({ billing_batch_id: batchId })
-  .destroy();
+  .destroy({ require: isDeletionRequired });
 
 exports.createAnnual = createAnnual;
 exports.createSupplementary = createSupplementary;
