@@ -63,7 +63,7 @@ class ReturnVersion extends Model {
   getReturnLinesForBilling (chargePeriod, abstractionPeriod) {
     return this._returnLines
       .filter(returnLine => isFinite(returnLine.volume) && returnLine.volume > 0)
-      .filter(returnLine => abstractionPeriod.isOverlappingDateRange(returnLine.dateRange))
+      .filter(returnLine => abstractionPeriod.isDateRangeOverlapping(returnLine.dateRange))
       .filter(returnLine => returnLine.dateRange.overlaps(chargePeriod));
   }
 }
