@@ -170,7 +170,7 @@ class BillingVolume extends Model {
     validators.assertQuantity(volume);
     hoek.assert(this.calculatedVolume === this.volume, `Can't allocate ${volume} when volume and calculated volume differ`);
     this.calculatedVolume = isFinite(this.calculatedVolume) ? this.calculatedVolume + volume : volume;
-    this.volume = this._calculatedVolume;
+    this.volume = this.calculatedVolume;
   }
 
   /**
@@ -182,7 +182,7 @@ class BillingVolume extends Model {
     hoek.assert(this.calculatedVolume === this.volume, `Can't deallocate ${volume} when volume and calculated volume differ`);
     validators.assertQuantityWithMaximum(volume, this.calculatedVolume);
     this.calculatedVolume -= volume;
-    this.volume = this._calculatedVolume;
+    this.volume = this.calculatedVolume;
   }
 
   /**

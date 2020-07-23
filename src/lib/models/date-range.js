@@ -89,7 +89,7 @@ class DateRange {
     }
     const startMoment = moment(this.startDate);
     const endMoment = moment(this.endDate);
-    return endMoment.diff(startMoment, 'days');
+    return endMoment.diff(startMoment, 'days') + 1;
   }
 
   /**
