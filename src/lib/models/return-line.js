@@ -57,8 +57,7 @@ class ReturnLine extends Model {
    */
   isWithinDateRange (dateRange) {
     validators.assertIsInstanceOf(dateRange, DateRange);
-    const range = dateRange.toMomentRange();
-    return range.contains(this.dateRange.startDate) && range.contains(dateRange.endDate);
+    return dateRange.includes(this.dateRange.startDate) && dateRange.includes(this.dateRange.endDate);
   }
 }
 
