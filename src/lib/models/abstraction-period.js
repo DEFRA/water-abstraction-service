@@ -180,6 +180,20 @@ class AbstractionPeriod extends Model {
     };
     return helpers.charging.getBillableDays(absPeriod, dateRange.startDate, dateRange.endDate);
   }
+
+  /**
+   * Returns true if the date range falls in, or overlaps with
+   * this abstraction period
+   * @param {DateRange} dateRange
+   * @return {Boolean}
+   */
+  isDateRangeOverlapping (dateRange) {
+    validators.assertIsInstanceOf(dateRange, DateRange);
+    return [
+      this.isDateWithinAbstractionPeriod(dateRange.startDate),
+      this.isDateWithinAbstractionPeriod(dateRange.endDate)
+    ].includes(true);
+  }
 }
 
 module.exports = AbstractionPeriod;

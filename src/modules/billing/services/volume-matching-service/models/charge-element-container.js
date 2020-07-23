@@ -10,20 +10,20 @@ const { CHARGE_SEASON } = require('../../../../../lib/models/constants');
 const validators = require('../../../../../lib/models/validators');
 
 /**
- * Gets a moment range for the charge element, taking into account
+ * Gets a DateRange range for the charge element, taking into account
  * - the charge period (limited by charge version start/end, licence start/end, financial year)
  * - time-limited dates of charge element
  * @param {ChargeElement} chargeElement
  * @param {DateRange} chargePeriod
- * @return {MomentRange}
+ * @return {DateRange}
  */
 const getChargeElementRange = (chargeElement, chargePeriod) => {
   if (chargeElement.timeLimitedPeriod) {
     const rangeA = chargeElement.timeLimitedPeriod.toMomentRange();
     const rangeB = chargePeriod.toMomentRange();
-    return rangeA.intersect(rangeB);
+    return DateRange.fromMomentRange(rangeA.intersect(rangeB));
   }
-  return chargePeriod.toMomentRange();
+  return chargePeriod;
 };
 
 /**
@@ -40,6 +40,11 @@ const createBillingVolume = chargeElement => {
   });
 };
 
+/**
+ * Allows a ChargeElement to be grouped together with
+ * its related BillingVolume during the TPT matching process
+ * @class
+ */
 class ChargeElementContainer {
   /**
    * @constructor
@@ -58,10 +63,10 @@ class ChargeElementContainer {
   /**
    * Refreshes charge element date range and abstraction days
    */
-  refresh () {
+  _refresh () {
     if (this._chargeElement && this._chargePeriod) {
       this._dateRange = getChargeElementRange(this._chargeElement, this._chargePeriod);
-      this._abstractionDays = this._chargeElement.abstractionPeriod.getDays(DateRange.fromMomentRange(this._dateRange));
+      this._abstractionDays = this._chargeElement.abstractionPeriod.getDays(this._dateRange);
     }
   }
 
@@ -73,7 +78,7 @@ class ChargeElementContainer {
     validators.assertIsInstanceOf(chargeElement, ChargeElement);
     this._chargeElement = chargeElement;
     this._billingVolume = createBillingVolume(chargeElement);
-    this.refresh();
+    this._refresh();
   }
 
   /**
@@ -91,7 +96,7 @@ class ChargeElementContainer {
   set chargePeriod (chargePeriod) {
     validators.assertIsInstanceOf(chargePeriod, DateRange);
     this._chargePeriod = chargePeriod;
-    this.refresh();
+    this._refresh();
   }
 
   /**
@@ -113,20 +118,16 @@ class ChargeElementContainer {
   /**
    * Checks the abs period and time-limited dates
    * match the return line specified
+   * Note: it only compares dates, it does not check the purpose or
+   * season compatibility - this is handled elsewhere
    * @param {ReturnLine} returnLine
    * @return {Boolean}
    */
   isReturnLineMatch (returnLine) {
     validators.assertIsInstanceOf(returnLine, ReturnLine);
-    const { abstractionPeriod } = this._chargeElement;
-    const { startDate, endDate } = returnLine.dateRange;
 
-    const isAbsPeriodMatch = [
-      abstractionPeriod.isDateWithinAbstractionPeriod(startDate),
-      abstractionPeriod.isDateWithinAbstractionPeriod(endDate)
-    ].includes(true);
-
-    const isDateRangeMatch = returnLine.dateRange.toMomentRange().overlaps(this._dateRange);
+    const isAbsPeriodMatch = this.chargeElement.abstractionPeriod.isDateRangeOverlapping(returnLine.dateRange);
+    const isDateRangeMatch = this._dateRange.overlaps(returnLine.dateRange);
 
     return isAbsPeriodMatch && isDateRangeMatch;
   }
@@ -161,7 +162,8 @@ class ChargeElementContainer {
    * @return {Number}
    */
   getAvailableVolume () {
-    return this.chargeElement.volume - (this.billingVolume.calculatedVolume || 0);
+    const volume = this.chargeElement.volume - (this.billingVolume.calculatedVolume || 0);
+    return volume > 0 ? volume : 0;
   }
 
   /**

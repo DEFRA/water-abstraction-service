@@ -388,4 +388,32 @@ experiment('lib/models/abstraction-period', () => {
       expect(func).to.throw();
     });
   });
+
+  experiment('.isDateRangeOverlapping', () => {
+    let absPeriod, dateRange;
+    beforeEach(async () => {
+      absPeriod = new AbstractionPeriod();
+      absPeriod.fromHash({
+        startDay: 1,
+        startMonth: 10,
+        endDay: 31,
+        endMonth: 3
+      });
+    });
+
+    test('returns true when the date range is in the abstraction period', async () => {
+      dateRange = new DateRange('2020-11-01', '2020-11-30');
+      expect(absPeriod.isDateRangeOverlapping(dateRange)).to.be.true();
+    });
+
+    test('returns true when the date range overlaps the abstraction period', async () => {
+      dateRange = new DateRange('2020-09-01', '2020-11-15');
+      expect(absPeriod.isDateRangeOverlapping(dateRange)).to.be.true();
+    });
+
+    test('returns false when the date range does not overlap the abstraction period', async () => {
+      dateRange = new DateRange('2020-09-01', '2020-09-30');
+      expect(absPeriod.isDateRangeOverlapping(dateRange)).to.be.false();
+    });
+  });
 });
