@@ -7,12 +7,6 @@ const ReturnLine = require('./return-line');
 
 const validators = require('./validators');
 
-const dateRangeIsInAbstractionPeriod = (abstractionPeriod, dateRange) => {
-  const isStartDateInAbstractionPeriod = abstractionPeriod.isDateWithinAbstractionPeriod(dateRange.startDate);
-  const isEndDateInAbstractionPeriod = abstractionPeriod.isDateWithinAbstractionPeriod(dateRange.endDate);
-  return isStartDateInAbstractionPeriod || isEndDateInAbstractionPeriod;
-};
-
 class ReturnVersion extends Model {
   constructor (id) {
     super(id);
@@ -69,7 +63,7 @@ class ReturnVersion extends Model {
   getReturnLinesForBilling (chargePeriod, abstractionPeriod) {
     return this._returnLines
       .filter(returnLine => isFinite(returnLine.volume) && returnLine.volume > 0)
-      .filter(returnLine => dateRangeIsInAbstractionPeriod(abstractionPeriod, returnLine.dateRange))
+      .filter(returnLine => abstractionPeriod.isOverlappingDateRange(returnLine.dateRange))
       .filter(returnLine => returnLine.dateRange.overlaps(chargePeriod));
   }
 }
