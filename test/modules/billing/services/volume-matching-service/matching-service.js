@@ -3,102 +3,28 @@
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const uuid = require('uuid/v4');
-const moment = require('moment');
-
 // Services
 const matchingService = require('../../../../../src/modules/billing/services/volume-matching-service/matching-service');
 
 // Models
-const ChargeElementContainer = require('../../../../../src/modules/billing/services/volume-matching-service/models/charge-element-container');
 const ChargeElementGroup = require('../../../../../src/modules/billing/services/volume-matching-service/models/charge-element-group');
 const ReturnGroup = require('../../../../../src/modules/billing/services/volume-matching-service/models/return-group');
-const PurposeUse = require('../../../../../src/lib/models/purpose-use');
 const AbstractionPeriod = require('../../../../../src/lib/models/abstraction-period');
 
-const ChargeElement = require('../../../../../src/lib/models/charge-element');
 const Return = require('../../../../../src/lib/models/return');
-const ReturnVersion = require('../../../../../src/lib/models/return-version');
-const ReturnLine = require('../../../../../src/lib/models/return-line');
 
-const DateRange = require('../../../../../src/lib/models/date-range');
 const { twoPartTariffStatuses } = require('../../../../../src/lib/models/billing-volume');
 
-const chargePeriod = new DateRange('2019-04-01', '2020-03-31');
-const DATE_FORMAT = 'YYYY-MM-DD';
-
-const createPurposeUse = (name, isTwoPartTariff) => {
-  const purposeUse = new PurposeUse(uuid());
-  return purposeUse.fromHash({
-    name,
-    isTwoPartTariff
-  });
-};
+const {
+  chargePeriod,
+  createReturn,
+  createChargeElementContainer,
+  createPurposeUse
+} = require('./data');
 
 const purposeUses = {
   sprayIrrigation: createPurposeUse('sprayIrrigation', true),
   trickleIrrigation: createPurposeUse('trickleIrrigation', true)
-};
-
-/**
- * Create an array of return lines for testing
- * @return {Array<ReturnLine>}
- */
-const createReturnLines = () => Array.from({ length: 12 }).reduce((acc, value, i) => {
-  const returnLine = new ReturnLine();
-  const startDate = moment('2019-04-01').add(i, 'month');
-  return [
-    ...acc,
-    returnLine.fromHash({
-      dateRange: new DateRange(startDate.format(DATE_FORMAT), moment(startDate).endOf('month').format(DATE_FORMAT)),
-      volume: 1000
-    })
-  ];
-}, []);
-
-/**
- * Create a return for testing
- * @param {AbstractionPeriod} abstractionPeriod
- * @param {Array<PurposeUse>} purposeUses
- */
-const createReturn = (abstractionPeriod, purposeUses, isSummer = false, options = {}) => {
-  const returnVersion = new ReturnVersion();
-  returnVersion.fromHash({
-    isCurrentVersion: true,
-    returnLines: createReturnLines()
-  });
-
-  const ret = new Return();
-  return ret.fromHash({
-    dateRange: chargePeriod,
-    abstractionPeriod,
-    purposeUses,
-    status: options.status || Return.RETURN_STATUS.completed,
-    dueDate: '2020-04-28',
-    receivedDate: '2020-04-15',
-    returnVersions: [returnVersion],
-    isSummer
-  });
-};
-
-/**
- * Create a charge element container for testing
- * @param {String} description
- * @param {*} options
- */
-const createChargeElementContainer = (description, abstractionPeriod, purposeUse, options = {}) => {
-  const ele = new ChargeElement(uuid());
-  ele.fromHash({
-    id: uuid(),
-    abstractionPeriod,
-    purposeUse,
-    description,
-    authorisedAnnualQuantity: options.volume || 12
-  });
-  if (options.isTimeLimited) {
-    ele.timeLimitedPeriod = new DateRange('2019-04-01', '2019-09-30');
-  }
-  return new ChargeElementContainer(ele, chargePeriod);
 };
 
 experiment('modules/billing/services/volume-matching-service/matching-service', () => {
