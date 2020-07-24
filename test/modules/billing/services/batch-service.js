@@ -30,7 +30,7 @@ const newRepos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
-const invoiceAccountsService = require('../../../../src/modules/billing/services/invoice-accounts-service');
+const invoiceAccountsService = require('../../../../src/lib/services/invoice-accounts-service');
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
 const transactionsService = require('../../../../src/modules/billing/services/transactions-service');

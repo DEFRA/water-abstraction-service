@@ -18,6 +18,23 @@ experiment('lib/models/invoice-account', () => {
     invoiceAccount = new InvoiceAccount();
   });
 
+  experiment('construction', () => {
+    test('can include an id', async () => {
+      const company = new InvoiceAccount(TEST_GUID);
+      expect(company.id).to.equal(TEST_GUID);
+    });
+
+    test('can omit the id', async () => {
+      const company = new InvoiceAccount();
+      expect(company.id).to.be.undefined();
+    });
+
+    test('sets invoice account addresses to an empty array ', async () => {
+      const company = new InvoiceAccount();
+      expect(company.invoiceAccountAddresses).to.equal([]);
+    });
+  });
+
   experiment('.id', () => {
     test('can be set to a guid string', async () => {
       invoiceAccount.id = TEST_GUID;
@@ -76,7 +93,8 @@ experiment('lib/models/invoice-account', () => {
 
       expect(invoiceAccount.toJSON()).to.equal({
         id: TEST_GUID,
-        accountNumber: TEST_ACCOUNT_NUMBER
+        accountNumber: TEST_ACCOUNT_NUMBER,
+        invoiceAccountAddresses: []
       });
     });
   });

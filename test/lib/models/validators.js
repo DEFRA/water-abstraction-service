@@ -283,7 +283,33 @@ experiment('lib/models/validators', () => {
 
     test('rejects an invalid email address', async () => {
       expect(() => {
-        validators.assertNullableEnum('test@example');
+        validators.assertEmailAddress('not.an.email@');
+      }).to.throw();
+    });
+
+    test('throws for null', async () => {
+      expect(() => {
+        validators.assertEmailAddress(null);
+      }).to.throw();
+    });
+  });
+
+  experiment('.assertNullableEmailAddress', () => {
+    test('allows a valid email address', async () => {
+      expect(() => {
+        validators.assertNullableEmailAddress('test@example.com');
+      }).not.to.throw();
+    });
+
+    test('allows null', async () => {
+      expect(() => {
+        validators.assertNullableEmailAddress(null);
+      }).not.to.throw();
+    });
+
+    test('rejects an invalid email address', async () => {
+      expect(() => {
+        validators.assertNullableEmailAddress('not.an.email@');
       }).to.throw();
     });
   });

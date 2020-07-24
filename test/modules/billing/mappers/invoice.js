@@ -93,8 +93,9 @@ experiment('modules/billing/mappers/invoice', () => {
   experiment('.crmToModel', () => {
     let result;
 
+    const invoiceAccountId = uuid();
     const crmData = {
-      invoiceAccountId: uuid(),
+      invoiceAccountId,
       invoiceAccountNumber: 'A12345678A',
       company: {
         companyId: uuid(),
@@ -102,6 +103,7 @@ experiment('modules/billing/mappers/invoice', () => {
       },
       invoiceAccountAddresses: [
         {
+          invoiceAccountId,
           startDate: '2015-01-01',
           address: {
             addressId: uuid(),

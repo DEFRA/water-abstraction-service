@@ -22,6 +22,14 @@ const createCompany = async company => {
   return serviceRequest.post(uri, { body: company });
 };
 
+const deleteCompany = async companyId => serviceRequest.delete(getUri(companyId));
+
+/**
+ * Get addresses for the specififed company
+ * @param {String} companyId The uuid of the company to retrieve
+ */
+const getCompanyAddresses = companyId => serviceRequest.get(getUri(companyId, 'addresses'));
+
 /**
  * Creates a company addresses entity in the CRM
  *
@@ -32,6 +40,9 @@ const createCompanyAddress = async (companyId, companyAddress) => {
   const uri = getUri(companyId, 'addresses');
   return serviceRequest.post(uri, { body: companyAddress });
 };
+
+const deleteCompanyAddress = async (companyId, companyAddressId) =>
+  serviceRequest.delete(getUri(companyId, 'addresses', companyAddressId));
 
 /**
  * Creates a company contacts entity in the CRM
@@ -44,6 +55,9 @@ const createCompanyContact = async (companyId, companyContact) => {
   return serviceRequest.post(uri, { body: companyContact });
 };
 
+const deleteCompanyContact = async (companyId, companyContactId) =>
+  serviceRequest.delete(getUri(companyId, 'contacts', companyContactId));
+
 /**
  * Get the CompanyContacts for a given company id
  *
@@ -54,7 +68,11 @@ const getCompanyContacts = companyId => {
 };
 
 exports.createCompany = createCompany;
-exports.createCompanyAddress = createCompanyAddress;
-exports.createCompanyContact = createCompanyContact;
 exports.getCompany = getCompany;
+exports.deleteCompany = deleteCompany;
+exports.getCompanyAddresses = getCompanyAddresses;
+exports.createCompanyAddress = createCompanyAddress;
+exports.deleteCompanyAddress = deleteCompanyAddress;
+exports.createCompanyContact = createCompanyContact;
+exports.deleteCompanyContact = deleteCompanyContact;
 exports.getCompanyContacts = getCompanyContacts;

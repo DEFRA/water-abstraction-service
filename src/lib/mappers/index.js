@@ -1,1 +1,14 @@
+exports.abstractionPeriod = require('./abstraction-period');
+exports.address = require('./address');
+exports.company = require('./company');
+exports.companyAddress = require('./company-address');
+exports.companyContact = require('./company-contact');
+exports.contact = require('./contact');
+exports.invoiceAccount = require('./invoice-account');
+exports.invoiceAccountAddress = require('./invoice-account-address');
 exports.licence = require('./licence');
+exports.licenceAgreement = require('./licence-agreement');
+exports.licenceVersion = require('./licence-version');
+exports.licenceVersionPurpose = require('./licence-version-purpose');
+exports.purposeUse = require('./purpose-use');
+exports.region = require('./region');

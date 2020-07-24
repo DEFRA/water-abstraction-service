@@ -45,7 +45,7 @@ const mapCompany = item => {
   const organisationType = mapCompanyType(item.company_type);
   return company.fromHash({
     name: item.title,
-    type: Company.TYPE_ORGANISATION,
+    type: Company.COMPANY_TYPES.organisation,
     companyNumber: item.company_number,
     ...organisationType && { organisationType }
   });

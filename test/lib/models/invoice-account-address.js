@@ -32,6 +32,20 @@ experiment('lib/models/invoice-account-address', () => {
     });
   });
 
+  experiment('.invoiceAccountId', () => {
+    test('can be set to a guid string', async () => {
+      invoiceAccountAddress.invoiceAccountId = TEST_GUID;
+      expect(invoiceAccountAddress.invoiceAccountId).to.equal(TEST_GUID);
+    });
+
+    test('throws an error if set to a non-guid string', async () => {
+      const func = () => {
+        invoiceAccountAddress.invoiceAccountId = 'hey';
+      };
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.address', () => {
     test('can be set to a valid Address', async () => {
       const address = new Address();

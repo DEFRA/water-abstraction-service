@@ -6,9 +6,11 @@ const companyContactsService = require('../../lib/services/company-contacts');
 
 const documentsHelper = require('./lib/documents');
 const returnsHelper = require('./lib/returns');
+const companiesService = require('../../lib/services/companies-service');
+const invoiceAccountsService = require('../../lib/services/invoice-accounts-service');
 
+const mapErrorResponse = require('../../lib/map-error-response');
 const { envelope } = require('../../lib/response');
-const Boom = require('@hapi/boom');
 
 const rowMapper = ret => {
   const { purposes = [] } = ret.metadata;
@@ -50,6 +52,43 @@ const getReturns = async (request, h) => {
   return returns.map(rowMapper);
 };
 
+/**
+ * Gets a company for the specified ID
+ */
+const getCompany = async (request, h) => {
+  try {
+    return companiesService.getCompany(request.params.companyId);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
+/**
+ * Gets all addresses for a company
+ */
+const getCompanyAddresses = async (request, h) => {
+  try {
+    return companiesService.getCompanyAddresses(request.params.companyId);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+/**
+ * Creates new agent company, address, and/or contact, as required
+ * Creates new invoice account and links relevant roles to it
+ */
+const createCompanyInvoiceAccount = async (request, h) => {
+  const { startDate, regionId, address, agent, contact } = request.payload;
+  const { companyId } = request.params;
+  try {
+    const invoiceAccount = invoiceAccountsService.getInvoiceAccount(companyId, startDate, address, agent, contact);
+    await invoiceAccountsService.persist(regionId, startDate, invoiceAccount);
+    return h.response(invoiceAccount.toJSON()).code(201);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
 const getCompanyContacts = async (request) => {
   const { companyId } = request.params;
 
@@ -57,11 +96,12 @@ const getCompanyContacts = async (request) => {
     const companyContacts = await companyContactsService.getCompanyContacts(companyId);
     return envelope(companyContacts);
   } catch (err) {
-    return (err.statusCode === 404)
-      ? Boom.notFound(err.error.message)
-      : err;
+    return mapErrorResponse(err);
   }
 };
 
 exports.getReturns = getReturns;
+exports.getCompany = getCompany;
+exports.getCompanyAddresses = getCompanyAddresses;
+exports.createCompanyInvoiceAccount = createCompanyInvoiceAccount;
 exports.getCompanyContacts = getCompanyContacts;
