@@ -11,7 +11,7 @@ const {
   ERROR_SOME_RETURNS_DUE,
   ERROR_LATE_RETURNS,
   ERROR_UNDER_QUERY,
-  ERROR_RECEIVED_NO_DATA,
+  ERROR_RECEIVED,
   ERROR_NOT_DUE_FOR_BILLING
 } = require('../../../../../lib/models/billing-volume').twoPartTariffStatuses;
 
@@ -83,7 +83,7 @@ class ReturnGroup {
       getErrorIfSome(this._returns, isDueStatus, ERROR_SOME_RETURNS_DUE),
       getErrorIfSome(this._returns, isLateForBilling, ERROR_LATE_RETURNS),
       getErrorIfSome(this._returns, isUnderQuery, ERROR_UNDER_QUERY),
-      getErrorIfSome(this._returns, isReceivedStatus, ERROR_RECEIVED_NO_DATA),
+      getErrorIfSome(this._returns, isReceivedStatus, ERROR_RECEIVED),
       getErrorIfSome(this._returns, isNotDueForBilling, ERROR_NOT_DUE_FOR_BILLING)
     ];
     return errors.filter(identity).shift();
