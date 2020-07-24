@@ -38,6 +38,9 @@ const createContact = async contact => {
   );
 };
 
+const deleteContact = async contactId => serviceRequest.delete(getUri(contactId));
+
 exports.createContact = createContact;
 exports.getContact = getContact;
 exports.getContacts = getContacts;
+exports.deleteContact = deleteContact;

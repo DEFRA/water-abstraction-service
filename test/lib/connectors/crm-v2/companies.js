@@ -20,6 +20,7 @@ experiment('lib/connectors/crm-v2/companies', () => {
     sandbox.stub(config.services, 'crm_v2').value('http://test.defra');
     sandbox.stub(serviceRequest, 'get');
     sandbox.stub(serviceRequest, 'post');
+    sandbox.stub(serviceRequest, 'delete');
   });
 
   afterEach(async () => {
@@ -77,6 +78,42 @@ experiment('lib/connectors/crm-v2/companies', () => {
     });
   });
 
+  experiment('.deleteCompany', () => {
+    beforeEach(async () => {
+      serviceRequest.delete.resolves();
+
+      await companyConnector.deleteCompany('test-company-id');
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url] = serviceRequest.delete.lastCall.args;
+      expect(url).to.equal('http://test.defra/companies/test-company-id');
+    });
+  });
+
+  experiment('.getCompanyAddresses', () => {
+    let response;
+
+    beforeEach(async () => {
+      serviceRequest.get.resolves([{
+        companyAddressId: 'test-company-address-id'
+      }]);
+
+      response = await companyConnector.getCompanyAddresses('test-company-id');
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url] = serviceRequest.get.lastCall.args;
+      expect(url).to.equal('http://test.defra/companies/test-company-id/addresses');
+    });
+
+    test('returns the result from the crm', async () => {
+      expect(response).to.equal([{
+        companyAddressId: 'test-company-address-id'
+      }]);
+    });
+  });
+
   experiment('.createCompanyAddress', () => {
     let companyAddress;
     let companyAddressId;
@@ -112,6 +149,19 @@ experiment('lib/connectors/crm-v2/companies', () => {
     });
   });
 
+  experiment('.deleteCompanyAddress', () => {
+    beforeEach(async () => {
+      serviceRequest.delete.resolves();
+
+      await companyConnector.deleteCompanyAddress('test-company-id', 'test-company-address-id');
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url] = serviceRequest.delete.lastCall.args;
+      expect(url).to.equal('http://test.defra/companies/test-company-id/addresses/test-company-address-id');
+    });
+  });
+
   experiment('.createCompanyContact', () => {
     let companyContact;
     let companyContactId;
@@ -144,6 +194,19 @@ experiment('lib/connectors/crm-v2/companies', () => {
         companyContactId,
         ...companyContact
       });
+    });
+  });
+
+  experiment('.deleteCompanyContact', () => {
+    beforeEach(async () => {
+      serviceRequest.delete.resolves();
+
+      await companyConnector.deleteCompanyContact('test-company-id', 'test-company-contact-id');
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url] = serviceRequest.delete.lastCall.args;
+      expect(url).to.equal('http://test.defra/companies/test-company-id/contacts/test-company-contact-id');
     });
   });
 

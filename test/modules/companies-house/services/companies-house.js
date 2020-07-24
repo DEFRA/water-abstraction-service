@@ -94,7 +94,7 @@ experiment('modules/companies-house/services/companies-house-service', () => {
         const { company } = result.data[0];
         expect(company instanceof Company).to.be.true();
         expect(company.name).to.equal('BIG CO LIMITED');
-        expect(company.type).to.equal(Company.TYPE_ORGANISATION);
+        expect(company.type).to.equal(Company.COMPANY_TYPES.organisation);
         expect(company.organisationType).to.equal(Company.ORGANISATION_TYPES.limitedCompany);
         expect(company.companyNumber).to.equal('012345');
       });

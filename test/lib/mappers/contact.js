@@ -5,50 +5,129 @@ const {
   test,
   beforeEach
 } = exports.lab = require('@hapi/lab').script();
-
 const { expect } = require('@hapi/code');
-const mapper = require('../../../src/lib/mappers/contact');
+
+const Contact = require('../../../src/lib/models/contact-v2');
+const contactMapper = require('../../../src/lib/mappers/contact');
+
+const dbRow = {
+  contactId: '00000000-0000-0000-0000-000000000000',
+  salutation: 'Admiral',
+  firstName: 'John',
+  initials: 'J A',
+  middleInitials: 'A',
+  lastName: 'Testington',
+  suffix: 'OBE',
+  deparment: 'Department',
+  type: 'person',
+  dataSource: 'wrls'
+};
+
+const contactData = {
+  title: 'Admiral',
+  firstName: 'John',
+  middleInitials: 'A',
+  lastName: 'Testington',
+  dataSource: 'wrls'
+};
 
 experiment('modules/billing/mappers/contact', () => {
   experiment('.crmToModel', () => {
-    let mapped;
-    let row;
+    let result;
 
     beforeEach(async () => {
-      row = {
-        contactId: 'f9d3b35c-b55b-4af8-98a2-beb3c1323ee9',
-        salutation: 'test-salutation',
-        firstName: 'test-first-name',
-        middleNames: 'test-middle',
-        lastName: 'test-last-name',
-        externalId: '1:123',
-        dateCreated: '2020-05-06T14:20:56.424Z',
-        dateUpdated: '2020-05-31T06:34:33.762Z',
-        initials: 'test-initials',
-        isTest: false
-      };
-
-      mapped = mapper.crmToModel(row);
+      result = contactMapper.crmToModel(dbRow);
     });
 
-    test('has the mapped id', async () => {
-      expect(mapped.id).to.equal(row.contactId);
+    test('returns null when data is empty', async () => {
+      const result = contactMapper.crmToModel(null);
+      expect(result).to.equal(null);
     });
 
-    test('has the mapped salutation', async () => {
-      expect(mapped.salutation).to.equal(row.salutation);
+    test('returns an Contact instance', async () => {
+      expect(result instanceof Contact).to.be.true();
     });
 
-    test('has the mapped initials', async () => {
-      expect(mapped.initials).to.equal(row.initials);
+    test('has the expected id value', async () => {
+      expect(result.id).to.equal(dbRow.contactId);
     });
 
-    test('has the mapped firstName', async () => {
-      expect(mapped.firstName).to.equal(row.firstName);
+    test('has the expected title value', async () => {
+      expect(result.title).to.equal(dbRow.salutation);
     });
 
-    test('has the mapped lastName', async () => {
-      expect(mapped.lastName).to.equal(row.lastName);
+    test('has the expected first name value', async () => {
+      expect(result.firstName).to.equal(dbRow.firstName);
+    });
+
+    test('has the expected initials value', async () => {
+      expect(result.initials).to.equal(dbRow.initials);
+    });
+
+    test('has the expected middleInitials value', async () => {
+      expect(result.middleInitials).to.equal(dbRow.middleInitials);
+    });
+
+    test('has the expected last name value', async () => {
+      expect(result.lastName).to.equal(dbRow.lastName);
+    });
+
+    test('has the expected suffix value', async () => {
+      expect(result.suffix).to.equal(dbRow.suffix);
+    });
+
+    test('has the expected department value', async () => {
+      expect(result.department).to.equal(dbRow.department);
+    });
+
+    test('has the expected type value', async () => {
+      expect(result.type).to.equal(dbRow.type);
+    });
+  });
+
+  experiment('.uiToModel', () => {
+    let result;
+
+    beforeEach(async () => {
+      result = contactMapper.uiToModel(contactData);
+    });
+
+    test('returns an Contact instance', async () => {
+      expect(result instanceof Contact).to.be.true();
+    });
+
+    test('maps data properly', async () => {
+      expect(result.title).to.equal(contactData.title);
+      expect(result.firstName).to.equal(contactData.firstName);
+      expect(result.middleInitials).to.equal(contactData.middleInitials);
+      expect(result.lastName).to.equal(contactData.lastName);
+      expect(result.dataSource).to.equal(contactData.dataSource);
+    });
+
+    test('handles a null contact', async () => {
+      result = contactMapper.uiToModel(null);
+      expect(result).to.be.null();
+    });
+  });
+
+  experiment('.modelToCrm', () => {
+    let result, contact;
+
+    beforeEach(async () => {
+      contact = new Contact();
+      contact.fromHash(contactData);
+      result = contactMapper.modelToCrm(contact);
+    });
+
+    test('maps title to salutation', async () => {
+      expect(result.salutation).to.equal(contact.title);
+    });
+
+    test('maps data properly', async () => {
+      expect(result.firstName).to.equal(contact.firstName);
+      expect(result.middleInitials).to.equal(contact.middleInitials);
+      expect(result.lastName).to.equal(contact.lastName);
+      expect(result.dataSource).to.equal(contact.dataSource);
     });
   });
 });

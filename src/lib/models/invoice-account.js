@@ -9,6 +9,11 @@ const Company = require('./company');
 const InvoiceAccountAddress = require('./invoice-account-address');
 
 class InvoiceAccount extends Model {
+  constructor (id) {
+    super(id);
+    this._invoiceAccountAddresses = [];
+  }
+
   /**
    * Sets the invoice account number
    * Must be in the form [region letter]01234567A

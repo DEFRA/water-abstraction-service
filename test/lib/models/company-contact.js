@@ -12,6 +12,7 @@ const moment = require('moment');
 const CompanyContact = require('../../../src/lib/models/company-contact');
 const ContactRole = require('../../../src/lib/models/contact-role');
 const Contact = require('../../../src/lib/models/contact-v2');
+const DateRange = require('../../../src/lib/models/date-range');
 
 experiment('lib/models/company-contact', () => {
   let companyContact;
@@ -48,20 +49,6 @@ experiment('lib/models/company-contact', () => {
     });
   });
 
-  experiment('.contactId', () => {
-    test('can be set to a valid UUID', async () => {
-      const contactId = uuid();
-      companyContact.contactId = contactId;
-      expect(companyContact.contactId).to.equal(contactId);
-    });
-
-    test('throws an error if attempting to set non-guid ID', async () => {
-      expect(() => {
-        companyContact.contactId = 'potatoes';
-      }).to.throw();
-    });
-  });
-
   experiment('.roleId', () => {
     test('can be set to a valid UUID', async () => {
       const roleId = uuid();
@@ -89,76 +76,24 @@ experiment('lib/models/company-contact', () => {
     });
   });
 
-  experiment('.startDate', () => {
-    test('converts an ISO date string to a moment internally', async () => {
-      const dateString = '2020-01-20T14:51:42.024Z';
-      companyContact.startDate = dateString;
+  experiment('.dateRange', () => {
+    let dateRange;
 
-      expect(companyContact.startDate).to.equal(moment(dateString));
+    beforeEach(async () => {
+      dateRange = new DateRange('2019-04-01', '2020-03-31');
     });
 
-    test('converts a JS Date to a moment internally', async () => {
-      const date = new Date();
-      companyContact.startDate = date;
-
-      expect(companyContact.startDate).to.equal(moment(date));
+    test('can be set to a DateRange object', async () => {
+      companyContact.dateRange = dateRange;
+      expect(companyContact.dateRange).to.equal(dateRange);
     });
 
-    test('can be set using a moment', async () => {
-      const now = moment();
-      companyContact.startDate = now;
+    test('throws an error if set to any other type', async () => {
+      const func = () => {
+        companyContact.dateRange = new Contact();
+      };
 
-      expect(companyContact.startDate).to.equal(now);
-    });
-
-    test('throws for an invalid string', async () => {
-      const dateString = 'not a date';
-      expect(() => { companyContact.startDate = dateString; }).to.throw();
-    });
-
-    test('throws for a boolean value', async () => {
-      expect(() => { companyContact.startDate = true; }).to.throw();
-    });
-
-    test('throws for null', async () => {
-      expect(() => { companyContact.startDate = null; }).to.throw();
-    });
-  });
-
-  experiment('.endDate', () => {
-    test('converts an ISO date string to a moment internally', async () => {
-      const dateString = '2020-01-20T14:51:42.024Z';
-      companyContact.endDate = dateString;
-
-      expect(companyContact.endDate).to.equal(moment(dateString));
-    });
-
-    test('converts a JS Date to a moment internally', async () => {
-      const date = new Date();
-      companyContact.endDate = date;
-
-      expect(companyContact.endDate).to.equal(moment(date));
-    });
-
-    test('can be set using a moment', async () => {
-      const now = moment();
-      companyContact.endDate = now;
-
-      expect(companyContact.endDate).to.equal(now);
-    });
-
-    test('throws for an invalid string', async () => {
-      const dateString = 'not a date';
-      expect(() => { companyContact.endDate = dateString; }).to.throw();
-    });
-
-    test('throws for a boolean value', async () => {
-      expect(() => { companyContact.endDate = true; }).to.throw();
-    });
-
-    test('allows null', async () => {
-      companyContact.endDate = null;
-      expect(companyContact.endDate).to.be.null();
+      expect(func).to.throw();
     });
   });
 
