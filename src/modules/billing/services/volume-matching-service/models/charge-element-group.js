@@ -104,7 +104,10 @@ const isNotTimeLimited = negate(isTimeLimited);
  * @param {ChargeElementContainer} targetElementContainer
  */
 const reallocateElement = (sourceElementContainer, targetElementContainer) => {
-  const volumeToReallocate = Math.max(targetElementContainer.getAvailableVolume(), sourceElementContainer.billingVolume.volume);
+  const volumeToReallocate = Math.min(
+    targetElementContainer.getAvailableVolume(),
+    sourceElementContainer.billingVolume.calculatedVolume
+  );
   if (volumeToReallocate > 0) {
     sourceElementContainer.billingVolume.deallocate(volumeToReallocate);
     targetElementContainer.billingVolume.allocate(volumeToReallocate);
@@ -119,10 +122,11 @@ const reallocateElement = (sourceElementContainer, targetElementContainer) => {
 const reallocateGroup = chargeElementContainers => {
   const base = chargeElementContainers.filter(isNotTimeLimited);
   const sub = chargeElementContainers.filter(isTimeLimited);
+
   base.forEach(baseElement => {
     sub.forEach(subElement => {
-      if (sub.chargeElement.abstractionPeriod.isWithinAbstractionPeriod(base.chargeElement.abstractionPeriod)) {
-        reallocateElement(sub, base);
+      if (subElement.chargeElement.abstractionPeriod.isWithinAbstractionPeriod(baseElement.chargeElement.abstractionPeriod)) {
+        reallocateElement(subElement, baseElement);
       }
     });
   });
@@ -290,11 +294,12 @@ class ChargeElementGroup {
   allocate (volume) {
     this._chargeElementContainers.reduce((acc, chargeElementContainer, i) => {
       const isLast = i === this._chargeElementContainers.length - 1;
-      const qtyToAllocate = Math.min(
+      const qtyToAllocate = isLast ? acc : Math.min(
         chargeElementContainer.getAvailableVolume(),
         acc
       );
-      chargeElementContainer.billingVolume.allocate(isLast ? acc : qtyToAllocate);
+      chargeElementContainer.billingVolume.allocate(qtyToAllocate);
+      return acc - qtyToAllocate;
     }, volume);
   }
 

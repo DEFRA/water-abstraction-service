@@ -4,7 +4,7 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 const { expect } = require('@hapi/code');
 
 const uuid = require('uuid/v4');
-const { pullAt } = require('lodash');
+const { pullAt, flatMap } = require('lodash');
 
 const ChargeElementContainer = require('../../../../../../src/modules/billing/services/volume-matching-service/models/charge-element-container');
 const ChargeElementGroup = require('../../../../../../src/modules/billing/services/volume-matching-service/models/charge-element-group');
@@ -16,6 +16,12 @@ const PurposeUse = require('../../../../../../src/lib/models/purpose-use');
 const ReturnLine = require('../../../../../../src/lib/models/return-line');
 const { RETURN_SEASONS } = require('../../../../../../src/lib/models/constants');
 const Return = require('../../../../../../src/lib/models/return');
+const BillingVolume = require('../../../../../../src/lib/models/billing-volume');
+
+const {
+  ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD,
+  ERROR_OVER_ABSTRACTION
+} = require('../../../../../../src/lib/models/billing-volume').twoPartTariffStatuses;
 
 const createPurposeUse = (name, options = {}) => {
   const purposeUse = new PurposeUse();
@@ -45,6 +51,21 @@ const createChargeElement = (description, options = {}) => {
 const getDescriptions = chargeElementGroup => {
   return chargeElementGroup.chargeElementContainers.map(chargeElementContainer =>
     chargeElementContainer.chargeElement.description
+  );
+};
+
+const getGroupTwoPartTariffStatuses = chargeElementGroups => {
+  const codes = chargeElementGroups.map(chargeElementGroup =>
+    chargeElementGroup.chargeElementContainers.map(chargeElementContainer =>
+      chargeElementContainer.billingVolume.twoPartTariffStatus
+    )
+  );
+  return flatMap(codes);
+};
+
+const getGroupAllocatedVolumes = chargeElementGroup => {
+  return chargeElementGroup.chargeElementContainers.map(chargeElementContainer =>
+    chargeElementContainer.billingVolume.calculatedVolume
   );
 };
 
@@ -187,6 +208,161 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       const err = expect(func).to.throw();
       expect(err.name).to.equal('ChargeElementMatchingError');
       expect(err.message).to.equal('No charge elements to match for return line 00000000-0000-0000-0000-000000000000');
+    });
+
+    test('does not flag an error if a return line straddles a charge period on financial year boundary', async () => {
+      const returnLine = new ReturnLine('00000000-0000-0000-0000-000000000000');
+      returnLine.dateRange = new DateRange('2019-03-29', '2019-04-04');
+      const groups = chargeElementGroup.createForReturnLine(returnLine, chargePeriod);
+      const twoPartTariffStatuses = getGroupTwoPartTariffStatuses(groups);
+      expect(twoPartTariffStatuses).to.equal([undefined, undefined, undefined]);
+    });
+
+    test('flags an error if a return line straddles charge period not on financial year boundary', async () => {
+      chargePeriod.startDate = '2019-04-02';
+      const returnLine = new ReturnLine('00000000-0000-0000-0000-000000000000');
+      returnLine.dateRange = new DateRange('2019-03-29', '2019-04-04');
+      const groups = chargeElementGroup.createForReturnLine(returnLine, chargePeriod);
+      const twoPartTariffStatuses = getGroupTwoPartTariffStatuses(groups);
+      expect(twoPartTariffStatuses).to.equal([ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD, ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD, ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD]);
+    });
+  });
+
+  experiment('.setTwoPartTariffStatus', () => {
+    test('sets two part tariff status for all elements in group', async () => {
+      chargeElementGroup.setTwoPartTariffStatus(ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD);
+      const twoPartTariffStatuses = getGroupTwoPartTariffStatuses([chargeElementGroup]);
+      expect(twoPartTariffStatuses).to.have.length(chargeElementGroup.chargeElementContainers.length);
+      expect(twoPartTariffStatuses).to.only.include(ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD);
+    });
+  });
+
+  experiment('.allocate', () => {
+    beforeEach(async () => {
+      chargeElementGroup = chargeElementGroup
+        .createForSeason(RETURN_SEASONS.summer)
+        .createForReturn(ret);
+    });
+
+    test('allocates water starting with first element in group', async () => {
+      chargeElementGroup.allocate(5);
+      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([5, 0, 0]);
+    });
+
+    test('allocates water moving on to second element in group', async () => {
+      chargeElementGroup.allocate(15);
+      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 5, 0]);
+    });
+
+    test('allocates water moving on to last element in group', async () => {
+      chargeElementGroup.allocate(25);
+      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 10, 5]);
+    });
+
+    test('can allocate full billable volume to all elements', async () => {
+      chargeElementGroup.allocate(30);
+      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 10, 10]);
+    });
+
+    test('when there is an over-abstraction, the volume is allocated to the last element in the group', async () => {
+      chargeElementGroup.allocate(40);
+      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 10, 20]);
+    });
+  });
+
+  experiment('.reallocate', () => {
+    beforeEach(async () => {
+      chargeElements = [
+        createChargeElement('timeLimitedSummerTrickle', { isSummer: true, purposeUse: purposeUses.trickleIrrigation, isTimeLimited: true }),
+        createChargeElement('summerTrickle', { isSummer: true, purposeUse: purposeUses.trickleIrrigation }),
+        createChargeElement('summerVegetableWashing', { isSummer: true, purposeUse: purposeUses.vegetableWashing })
+      ];
+
+      chargeElementGroup.chargeElementContainers = chargeElements.map(chargeElement => new ChargeElementContainer(chargeElement, chargePeriod));
+
+      [10, 6, 5].forEach((volume, i) => {
+        chargeElementGroup.chargeElementContainers[i].billingVolume.allocate(volume);
+      });
+    });
+
+    experiment('when the time-limited elements abs period is contained by the base element abs period', () => {
+      test('before re-allocation, the base element is not full', async () => {
+        expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 6, 5]);
+      });
+
+      test('aftert re-allocation, the volume is re-allocated to base element with matching source, season and purpose', async () => {
+        chargeElementGroup.reallocate();
+        expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([6, 10, 5]);
+      });
+    });
+
+    experiment('when the time-limited elements abs period is not contained by the base element abs period', () => {
+      beforeEach(async () => {
+        chargeElements[0].abstractionPeriod.setDates(1, 1, 31, 12);
+      });
+
+      test('before re-allocation, the base element is not full', async () => {
+        expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 6, 5]);
+      });
+
+      test('no re-allocation takes place', async () => {
+        chargeElementGroup.reallocate();
+        expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 6, 5]);
+      });
+    });
+  });
+
+  experiment('.flagOverAbstraction', () => {
+    beforeEach(async () => {
+      chargeElements = [
+        createChargeElement('timeLimitedSummerTrickle', { isSummer: true, purposeUse: purposeUses.trickleIrrigation, isTimeLimited: true }),
+        createChargeElement('summerTrickle', { isSummer: true, purposeUse: purposeUses.trickleIrrigation })
+      ];
+
+      chargeElementGroup.chargeElementContainers = chargeElements.map(chargeElement => new ChargeElementContainer(chargeElement, chargePeriod));
+
+      [5, 15].forEach((volume, i) => {
+        chargeElementGroup.chargeElementContainers[i].billingVolume.allocate(volume);
+      });
+
+      chargeElementGroup.flagOverAbstraction();
+    });
+
+    test('only elements with over-abstraction are flagged', async () => {
+      const twoPartTariffStatuses = getGroupTwoPartTariffStatuses([chargeElementGroup]);
+      expect(twoPartTariffStatuses).to.equal([undefined, ERROR_OVER_ABSTRACTION]);
+    });
+  });
+
+  experiment('.toBillingVolumes', () => {
+    let billingVolumes;
+
+    beforeEach(async () => {
+      chargeElements = [
+        createChargeElement('timeLimitedSummerTrickle', { isSummer: true, purposeUse: purposeUses.trickleIrrigation, isTimeLimited: true }),
+        createChargeElement('summerTrickle', { isSummer: true, purposeUse: purposeUses.trickleIrrigation })
+      ];
+
+      chargeElementGroup.chargeElementContainers = chargeElements.map(chargeElement => new ChargeElementContainer(chargeElement, chargePeriod));
+
+      [5, 1 / 3].forEach((volume, i) => {
+        chargeElementGroup.chargeElementContainers[i].billingVolume.allocate(volume);
+      });
+
+      billingVolumes = chargeElementGroup.toBillingVolumes();
+    });
+
+    test('returns an array of BillingVolume models', async () => {
+      expect(billingVolumes).to.be.an.array().length(2);
+      expect(billingVolumes[0] instanceof BillingVolume).to.be.true();
+      expect(billingVolumes[1] instanceof BillingVolume).to.be.true();
+    });
+
+    test('billing volumes have been rounded to 3 dp', async () => {
+      expect(billingVolumes[0].calculatedVolume).to.equal(5);
+      expect(billingVolumes[0].volume).to.equal(5);
+      expect(billingVolumes[1].calculatedVolume).to.equal(0.333);
+      expect(billingVolumes[1].volume).to.equal(0.333);
     });
   });
 });
