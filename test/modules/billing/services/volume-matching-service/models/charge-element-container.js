@@ -147,4 +147,24 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       expect(chargeElementContainer.getAvailableVolume()).to.equal(0);
     });
   });
+
+  experiment('.flagOverAbstraction', () => {
+    test('does not set the error code when the calculated billing volume is less than the charge element volume', async () => {
+      chargeElementContainer.billingVolume.calculatedVolume = 10;
+      chargeElementContainer.flagOverAbstraction();
+      expect(chargeElementContainer.billingVolume.twoPartTariffStatus).to.be.undefined();
+    });
+
+    test('does not set the error code when the calculated billing volume is equal to the charge element volume', async () => {
+      chargeElementContainer.billingVolume.calculatedVolume = 14.2;
+      chargeElementContainer.flagOverAbstraction();
+      expect(chargeElementContainer.billingVolume.twoPartTariffStatus).to.be.undefined();
+    });
+
+    test('sets the error code when the calculated billing volume is greater than the charge element volume', async () => {
+      chargeElementContainer.billingVolume.calculatedVolume = 20;
+      chargeElementContainer.flagOverAbstraction();
+      expect(chargeElementContainer.billingVolume.twoPartTariffStatus).to.equal(BillingVolume.twoPartTariffStatuses.ERROR_OVER_ABSTRACTION);
+    });
+  });
 });

@@ -7,4 +7,4 @@ class ChargeElementMatchingError extends Error {
   }
 }
 
-exports.NoChargeElementForMatchingError = ChargeElementMatchingError;
+exports.ChargeElementMatchingError = ChargeElementMatchingError;

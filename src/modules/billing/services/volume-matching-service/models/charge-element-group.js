@@ -20,15 +20,19 @@ const {
 } = require('../../../../../lib/models/billing-volume').twoPartTariffStatuses;
 
 /**
- * Checks whether the charge element purpose matches one of the purposes
- * on the return
- * @param {Return} ret
+ * Checks whether the charge element purpose matches the supplied purpose use
+ * @param {PurposeUse} purposeUse to check
  * @param {ChargeElementContainer} chargeElementContainer
  * @return {Boolean}
  */
-const isPurposeUseMatch = (ret, chargeElementContainer) => {
-  const purposeUseIds = ret.purposeUses.map(purposeUse => purposeUse.id);
-  return purposeUseIds.includes(chargeElementContainer.chargeElement.purposeUse.id);
+const isPurposeUseMatch = (purposeUse, chargeElementContainer) => {
+  return chargeElementContainer.chargeElement.purposeUse.id === purposeUse.id;
+};
+
+const isReturnPurposeUseMatch = (ret, chargeElementContainer) => {
+  return ret.purposeUses.some(purposeUse =>
+    isPurposeUseMatch(purposeUse, chargeElementContainer)
+  );
 };
 
 /**
@@ -156,7 +160,7 @@ class ChargeElementGroup {
    */
   get volume () {
     return this._chargeElementContainers.reduce((acc, chargeElementContainer) =>
-      chargeElementContainer.chargeElement.volume
+      acc + chargeElementContainer.chargeElement.volume
     , 0);
   }
 
@@ -184,8 +188,8 @@ class ChargeElementGroup {
    */
   isPurposeUseMatch (purposeUse) {
     validators.assertIsInstanceOf(purposeUse, PurposeUse);
-    return this._chargeElementContainers.some(chargeElementContainer =>
-      chargeElementContainer.chargeElement.purposeUse.id === purposeUse.id
+    return this._chargeElementContainers.some(
+      chargeElementContainer => isPurposeUseMatch(purposeUse, chargeElementContainer)
     );
   }
 
@@ -216,7 +220,7 @@ class ChargeElementGroup {
 
   /**
    * Creates a new ChargeElementGroup containing only elements that are
-   * candidates for matching the supplied return
+   * candidates for matching the supplied return based on the purpose uses
    * @param {Return} ret
    * @return {ChargeElementGroup}
    */
@@ -225,14 +229,14 @@ class ChargeElementGroup {
 
     // Get only elements with purpose uses matching the return purpose
     const elements = this._chargeElementContainers
-      .filter(chargeElementContainer => isPurposeUseMatch(ret, chargeElementContainer));
+      .filter(chargeElementContainer => isReturnPurposeUseMatch(ret, chargeElementContainer));
 
     return new ChargeElementGroup(elements);
   }
 
   /**
    * Creates new ChargeElementGroups for each purpose that match the supplied
-   * return line
+   * return line based on the charge period and abs period
    * @param {ReturnLine} returnLine
    * @param {DateRange} chargePeriod
    * @return {Array<ChargeElementGroup>}
