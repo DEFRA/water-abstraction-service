@@ -9,14 +9,13 @@ const { getChargePeriod } = require('../../lib/charge-period');
 
 // Services
 const returnsService = require('../../../../lib/services/returns');
+const chargeVersionService = require('../charge-version-service');
 
 // Models
 const FinancialYear = require('../../../../lib/models/financial-year');
 const ChargeElementContainer = require('./models/charge-element-container');
 const ChargeElementGroup = require('./models/charge-element-group');
 const ReturnGroup = require('./models/return-group');
-
-const chargeVersionService = require('../charge-version-service');
 const { RETURN_SEASONS } = require('../../../../lib/models/constants');
 
 const createChargeElementGroup = (chargeVersion, chargePeriod) => {
@@ -35,7 +34,7 @@ const createChargeElementGroups = (chargeVersion, chargePeriod) => {
 
 /**
  * Gets the return season, taking into account the return isSummer flag,
- * and whether there are any summer charge elements with a matching purpose
+ * and whether there are any summer charge elements with a matching purpose for matching
  * @param {Return} ret
  * @param {ChargeElementGroup} summerChargeElementGroup
  * @return {String} return season
@@ -62,9 +61,11 @@ const createReturnGroups = (returns, chargeElementGroups) => {
 };
 
 /**
- * Gets all the data needed to perform the matching
+ * Collects all the data needed to perform TPT matching for a particular
+ * charge version, financial year and season combination
  * @param {String} chargeVersionId
  * @param {FinancialYear} financialYear
+ * @return {Promise<Object>}
  */
 const getData = async (chargeVersionId, financialYear) => {
   validators.assertId(chargeVersionId);

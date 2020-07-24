@@ -13,8 +13,8 @@ const { RETURN_SEASONS } = require('../../../../lib/models/constants');
  * Returns matching to water.billing_volumes
  * @param {String} chargeVersionId
  * @param {FinancialYear} financialYear
- * @param {Boolean} matchSummer
- * @param {Boolean} matchWinter
+ * @param {Boolean} isSummer - flag to indicate summer or winter/all-year TPT matching
+ * @return {Promise<Array>} resolves with an array of BillingVolume instances
  */
 const matchVolumes = async (chargeVersionId, financialYear, isSummer) => {
   validators.assertId(chargeVersionId);

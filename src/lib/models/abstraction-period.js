@@ -47,6 +47,12 @@ class AbstractionPeriod extends Model {
     return winter;
   }
 
+  static getAllYear () {
+    const allYear = new AbstractionPeriod();
+    allYear.setDates(1, 1, 31, 12);
+    return allYear;
+  }
+
   /**
    * Start day for the abstraction period 1-31
    * @return {Number}

@@ -32,6 +32,14 @@ const allocateReturnLine = (lineChargeElementGroups, returnLine) => {
   });
 };
 
+/**
+ * Performs TPT matching process, returning an array of BillingVolume instances
+ * ready for persisting to water.billing_volumes table
+ * @param {DateRange} chargePeriod
+ * @param {ChargeElementGroup} chargeElementGroup
+ * @param {ReturnGroup} returnGroup
+ * @return {Array<BillingVolume>}
+ */
 const match = (chargePeriod, chargeElementGroup, returnGroup) => {
   validators.assertIsInstanceOf(chargePeriod, DateRange);
   validators.assertIsInstanceOf(chargeElementGroup, ChargeElementGroup);
@@ -53,7 +61,7 @@ const match = (chargePeriod, chargeElementGroup, returnGroup) => {
     const returnLines = ret.currentReturnVersion.getReturnLinesForBilling(chargePeriod, ret.abstractionPeriod);
 
     returnLines.forEach(returnLine => {
-      // Create matching groups
+      // Create matching groups array (1 array element per purpose)
       const lineChargeElementGroups = returnChargeElementGroup.createForReturnLine(returnLine, chargePeriod);
 
       // Allocate return line volume to matching elements
