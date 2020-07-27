@@ -27,7 +27,7 @@ const purposeUses = {
 };
 
 experiment('modules/billing/services/volume-matching-service/return-group-service', () => {
-  let returns, result, summerChargeElementGroup;
+  let returns, result, summerChargeElementGroup, financialYear;
 
   beforeEach(async () => {
     returns = [
@@ -36,6 +36,7 @@ experiment('modules/billing/services/volume-matching-service/return-group-servic
     ];
     sandbox.stub(returnsService, 'getReturnsForLicenceInFinancialYear').resolves(returns);
     summerChargeElementGroup = new ChargeElementGroup();
+    financialYear = new FinancialYear(2020);
   });
 
   afterEach(async () => {
@@ -45,7 +46,13 @@ experiment('modules/billing/services/volume-matching-service/return-group-servic
   experiment('.getReturnGroups', () => {
     experiment('when there are no summer charge elements with matching purpose', async () => {
       beforeEach(async () => {
-        result = await returnGroupService.getReturnGroups('01/123', new FinancialYear(2020), summerChargeElementGroup);
+        result = await returnGroupService.getReturnGroups('01/123', financialYear, summerChargeElementGroup);
+      });
+
+      test('calls the return service with expected arguments', async () => {
+        const [licenceNumber, finYear] = returnsService.getReturnsForLicenceInFinancialYear.lastCall.args;
+        expect(licenceNumber).to.equal('01/123');
+        expect(finYear).to.equal(financialYear);
       });
 
       test('all returns are placed in the winter/all year billing cycle', async () => {

@@ -4,11 +4,13 @@ const moment = require('moment');
 const uuid = require('uuid/v4');
 
 // Models
+const Licence = require('../../../../../src/lib/models/licence');
 const PurposeUse = require('../../../../../src/lib/models/purpose-use');
 const Return = require('../../../../../src/lib/models/return');
 const ReturnVersion = require('../../../../../src/lib/models/return-version');
 const ReturnLine = require('../../../../../src/lib/models/return-line');
 const DateRange = require('../../../../../src/lib/models/date-range');
+const ChargeVersion = require('../../../../../src/lib/models/charge-version');
 const ChargeElement = require('../../../../../src/lib/models/charge-element');
 const ChargeElementContainer = require('../../../../../src/modules/billing/services/volume-matching-service/models/charge-element-container');
 
@@ -64,12 +66,7 @@ const createPurposeUse = (name, isTwoPartTariff) => {
   });
 };
 
-/**
- * Create a charge element container for testing
- * @param {String} description
- * @param {*} options
- */
-const createChargeElementContainer = (description, abstractionPeriod, purposeUse, options = {}) => {
+const createChargeElement = (description, abstractionPeriod, purposeUse, options = {}) => {
   const ele = new ChargeElement(uuid());
   ele.fromHash({
     id: uuid(),
@@ -81,10 +78,39 @@ const createChargeElementContainer = (description, abstractionPeriod, purposeUse
   if (options.isTimeLimited) {
     ele.timeLimitedPeriod = new DateRange('2019-04-01', '2019-09-30');
   }
+  return ele;
+};
+
+/**
+ * Create a charge element container for testing
+ * @param {String} description
+ * @param {*} options
+ */
+const createChargeElementContainer = (description, abstractionPeriod, purposeUse, options = {}) => {
+  const ele = createChargeElement(description, abstractionPeriod, purposeUse, options);
   return new ChargeElementContainer(ele, chargePeriod);
+};
+
+const createChargeVersion = (licence, chargeElements) => {
+  const chargeVersion = new ChargeVersion();
+  return chargeVersion.fromHash({
+    dateRange: new DateRange('2000-01-01'.null),
+    chargeElements,
+    licence
+  });
+};
+
+const createLicence = licenceNumber => {
+  const licence = new Licence();
+  return licence.fromHash({
+    licenceNumber
+  });
 };
 
 exports.createReturn = createReturn;
 exports.chargePeriod = chargePeriod;
 exports.createPurposeUse = createPurposeUse;
+exports.createChargeElement = createChargeElement;
 exports.createChargeElementContainer = createChargeElementContainer;
+exports.createChargeVersion = createChargeVersion;
+exports.createLicence = createLicence;

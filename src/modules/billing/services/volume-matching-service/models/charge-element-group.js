@@ -306,19 +306,23 @@ class ChargeElementGroup {
   /**
    * Re-balance quantities from time-limited elements to base
    * elements when they have matching source, season and purpose
+   * @return {this}
    */
   reallocate () {
     const groups = groupBy(this._chargeElementContainers, getReallocationKey);
     Object.values(groups).forEach(reallocateGroup);
+    return this;
   }
 
   /**
    * Flags over-abstraction in containers
+   * @return {this}
    */
   flagOverAbstraction () {
     this._chargeElementContainers.forEach(
       chargeElementContainer => chargeElementContainer.flagOverAbstraction()
     );
+    return this;
   }
 
   /**

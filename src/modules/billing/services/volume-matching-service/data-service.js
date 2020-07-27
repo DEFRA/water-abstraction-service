@@ -20,6 +20,14 @@ const createChargeElementGroup = (chargeVersion, chargePeriod) => {
   return new ChargeElementGroup(chargeElementContainers);
 };
 
+/**
+ * Creates a ChargeElementGroup for all the elements that are
+ * suitable for two-part tariff billing, then splits them
+ * in two groups for summer or winter/all-year
+ * @param {ChargeVersion} chargeVersion
+ * @param {DateRange0} chargePeriod
+ * @return {Object}
+ */
 const createChargeElementGroups = (chargeVersion, chargePeriod) => {
   const tptChargeElementGroup = createChargeElementGroup(chargeVersion, chargePeriod)
     .createForTwoPartTariff();
@@ -27,6 +35,20 @@ const createChargeElementGroups = (chargeVersion, chargePeriod) => {
     [RETURN_SEASONS.summer]: tptChargeElementGroup.createForSeason(RETURN_SEASONS.summer),
     [RETURN_SEASONS.winterAllYear]: tptChargeElementGroup.createForSeason(RETURN_SEASONS.winterAllYear)
   };
+};
+
+/**
+ * Loads the specified charge version and returns as service model.
+ * Throws error if not found
+ * @param {String} chargeVersionId
+ * @return {ChargeVersion}
+ */
+const getChargeVersion = async chargeVersionId => {
+  const chargeVersion = await chargeVersionService.getByChargeVersionId(chargeVersionId);
+  if (chargeVersion) {
+    return chargeVersion;
+  }
+  throw new errors.NotFoundError(`Charge version ${chargeVersionId} not found`);
 };
 
 /**
@@ -41,10 +63,7 @@ const getData = async (chargeVersionId, financialYear) => {
   validators.assertIsInstanceOf(financialYear, FinancialYear);
 
   // Get charge version
-  const chargeVersion = await chargeVersionService.getByChargeVersionId(chargeVersionId);
-  if (!chargeVersion) {
-    throw new errors.NotFoundError(`Charge version ${chargeVersionId} not found`);
-  }
+  const chargeVersion = await getChargeVersion(chargeVersionId);
 
   // Get charge period
   const chargePeriod = getChargePeriod(financialYear, chargeVersion);

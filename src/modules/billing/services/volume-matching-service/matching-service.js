@@ -69,11 +69,11 @@ const match = (chargePeriod, chargeElementGroup, returnGroup) => {
     });
   });
 
-  // Perform re-allocation
-  chargeElementGroup.reallocate();
-  chargeElementGroup.flagOverAbstraction();
-
-  return chargeElementGroup.toBillingVolumes();
+  // Perform final steps
+  return chargeElementGroup
+    .reallocate()
+    .flagOverAbstraction()
+    .toBillingVolumes();
 };
 
 exports.match = match;
