@@ -553,6 +553,14 @@ experiment('lib/models/transaction', () => {
         const description = transaction.createDescription();
         expect(description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
       });
+
+      test('if the charge element has no description, the purpose use is used', async () => {
+        transaction.isCompensationCharge = false;
+        transaction.chargeElement.description = null;
+
+        const description = transaction.createDescription();
+        expect(description).to.equal(transaction.chargeElement.purposeUse.name);
+      });
     });
 
     experiment('when the transaction has a two-part tariff agreement', () => {
@@ -562,6 +570,15 @@ experiment('lib/models/transaction', () => {
         const description = transaction.createDescription();
         expect(description).to.equal('First Part Test Purpose Charge at Test Description');
         expect(transaction.description).to.equal(description);
+      });
+
+      test('the standard charge description excludes the charge element description if null', async () => {
+        transaction.isCompensationCharge = false;
+        transaction.isTwoPartTariffSupplementary = false;
+        transaction.chargeElement.description = null;
+
+        const description = transaction.createDescription();
+        expect(description).to.equal('First Part Test Purpose Charge');
       });
 
       test('the compensation charge text is preset', async () => {
