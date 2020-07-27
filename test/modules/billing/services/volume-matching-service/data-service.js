@@ -11,7 +11,6 @@ const returnGroupService = require('../../../../../src/modules/billing/services/
 const chargeVersionService = require('../../../../../src/modules/billing/services/charge-version-service');
 
 // Models
-
 const ChargeElementGroup = require('../../../../../src/modules/billing/services/volume-matching-service/models/charge-element-group');
 const ReturnGroup = require('../../../../../src/modules/billing/services/volume-matching-service/models/return-group');
 const AbstractionPeriod = require('../../../../../src/lib/models/abstraction-period');

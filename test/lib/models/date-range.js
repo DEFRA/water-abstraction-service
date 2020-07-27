@@ -206,4 +206,21 @@ experiment('lib/models/date-range', () => {
       expect(days).to.be.undefined();
     });
   });
+
+  experiment('.isFinancialYear', () => {
+    test('returns false if not a match', async () => {
+      const dateRange = new DateRange('2019-01-01', '2019-12-31');
+      expect(dateRange.isFinancialYear).to.be.false();
+    });
+
+    test('returns false if not a match', async () => {
+      const dateRange = new DateRange('2019-04-01', '2021-03-31');
+      expect(dateRange.isFinancialYear).to.be.false();
+    });
+
+    test('returns true if a match', async () => {
+      const dateRange = new DateRange('2019-04-01', '2020-03-31');
+      expect(dateRange.isFinancialYear).to.be.true();
+    });
+  });
 });

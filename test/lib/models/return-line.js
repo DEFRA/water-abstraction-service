@@ -171,4 +171,21 @@ experiment('lib/models/return-line', () => {
       });
     });
   });
+
+  experiment('.isDaily', () => {
+    test('returns false if a weekly line', async () => {
+      line.timePeriod = TIME_PERIODS.week;
+      expect(line.isDaily).to.be.false();
+    });
+
+    test('returns false if a monthly line', async () => {
+      line.timePeriod = TIME_PERIODS.month;
+      expect(line.isDaily).to.be.false();
+    });
+
+    test('returns true if a daily line', async () => {
+      line.timePeriod = TIME_PERIODS.day;
+      expect(line.isDaily).to.be.true();
+    });
+  });
 });

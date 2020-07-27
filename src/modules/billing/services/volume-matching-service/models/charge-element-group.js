@@ -2,7 +2,6 @@
 
 const { groupBy, sortBy, negate } = require('lodash');
 
-const { TIME_PERIODS } = require('../../../../../lib/models/constants');
 const validators = require('../../../../../lib/models/validators');
 const Return = require('../../../../../lib/models/return');
 const ReturnLine = require('../../../../../lib/models/return-line');
@@ -62,18 +61,17 @@ const getElementSortScore = chargeElementContainer => {
 
 /**
  * Checks if the return line is within the supplied charge period
+ * No need to consider:
+ * - Daily lines - they will always fall perfectly within a charge period
+ * - When the charge period is the full financial year.  In this
+ *   case we wish to include all the return lines and don't need to flag
+ *
  * @param {DateRange} chargePeriod
  * @param {ReturnLine} returnLine
  * @return {Boolean}
  */
 const isReturnLineStraddlingChargePeriodError = (returnLine, chargePeriod) => {
-  // No need to consider daily lines - they will fall perfectly within a charge period
-  if (returnLine.timePeriod === TIME_PERIODS.day) {
-    return false;
-  }
-  // No need to consider if the charge period is the full financial year.  In this
-  // case we wish to include all the return lines and don't need to flag
-  if (chargePeriod.startDate.endsWith('-04-01') && chargePeriod.endDate.endsWith('-03-31')) {
+  if (returnLine.isDaily || chargePeriod.isFinancialYear) {
     return false;
   }
 

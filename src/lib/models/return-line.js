@@ -59,6 +59,14 @@ class ReturnLine extends Model {
     validators.assertIsInstanceOf(dateRange, DateRange);
     return dateRange.includes(this.dateRange.startDate) && dateRange.includes(this.dateRange.endDate);
   }
+
+  /**
+   * True if a daily return line
+   * @return {Boolean}
+   */
+  get isDaily () {
+    return this.timePeriod === TIME_PERIODS.day;
+  }
 }
 
 module.exports = ReturnLine;

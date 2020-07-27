@@ -112,6 +112,17 @@ class DateRange {
       endDate: this._endDate
     };
   }
+
+  /**
+   * Checks whether this date range is a financial year
+   * @return {Boolean}
+   */
+  get isFinancialYear () {
+    const startYear = moment(this.startDate).year();
+
+    return (this.startDate === `${startYear}-04-01`) &&
+     (this.endDate === `${startYear + 1}-03-31`);
+  }
 }
 
 module.exports = DateRange;
