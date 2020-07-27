@@ -149,6 +149,17 @@ class ChargeElementContainer {
   }
 
   /**
+   * Gets score for sorting elements
+   * @return {Number}
+   */
+  get score () {
+    // If charge element is a supported source, we give these preference
+    // abstractionDays is a max of 366
+    const isSupported = this.chargeElement.source === ChargeElement.sources.supported;
+    return isSupported ? this.abstractionDays : this.abstractionDays + 1000;
+  }
+
+  /**
    * Sets the two part tariff error status code
    * @param {Number} twoPartTariffStatus
    */

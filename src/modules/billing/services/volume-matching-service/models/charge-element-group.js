@@ -8,7 +8,6 @@ const ReturnLine = require('../../../../../lib/models/return-line');
 const PurposeUse = require('../../../../../lib/models/purpose-use');
 const DateRange = require('../../../../../lib/models/date-range');
 
-const ChargeElement = require('../../../../../lib/models/charge-element');
 const ChargeElementContainer = require('./charge-element-container');
 
 const { ChargeElementMatchingError } = require('../errors');
@@ -40,24 +39,6 @@ const isReturnPurposeUseMatch = (ret, chargeElementContainer) => {
  * @return {Boolean}
  */
 const isSummerChargeElementContainer = chargeElementContainer => chargeElementContainer.billingVolume.isSummer;
-
-/**
- * Gets a score for sorting charge elements
- * @param {ChargeElementContainer} chargeElementContainer
- * @return {Number}
- */
-const getElementSortScore = chargeElementContainer => {
-  // Initial score is based on abstraction days.  We try to fill up
-  // elements with fewer days first
-  let score = chargeElementContainer.abstractionDays;
-
-  // If charge element is a supported source, we give these preference
-  const isSupported = chargeElementContainer.chargeElement.source === ChargeElement.sources.supported;
-  if (isSupported) {
-    score -= 1000;
-  }
-  return score;
-};
 
 /**
  * Checks if the return line is within the supplied charge period
@@ -257,7 +238,7 @@ class ChargeElementGroup {
     }
 
     // Sort elements
-    const sortedElements = sortBy(elements, getElementSortScore);
+    const sortedElements = sortBy(elements, chargeElementContainer => chargeElementContainer.score);
 
     // Check return line falls in charge period
     if (isReturnLineStraddlingChargePeriodError(returnLine, chargePeriod)) {

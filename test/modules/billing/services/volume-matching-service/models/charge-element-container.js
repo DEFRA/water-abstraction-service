@@ -167,4 +167,16 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       expect(chargeElementContainer.billingVolume.twoPartTariffStatus).to.equal(BillingVolume.twoPartTariffStatuses.ERROR_OVER_ABSTRACTION);
     });
   });
+
+  experiment('.score', () => {
+    test('when the source is supported, the score is the number of abstraction days', async () => {
+      chargeElementContainer.chargeElement.source = ChargeElement.sources.supported;
+      expect(chargeElementContainer.score).to.equal(153);
+    });
+
+    test('when the source is unsupported, the score is the number of abstraction days + 1000', async () => {
+      chargeElementContainer.chargeElement.source = ChargeElement.sources.unsupported;
+      expect(chargeElementContainer.score).to.equal(1153);
+    });
+  });
 });
