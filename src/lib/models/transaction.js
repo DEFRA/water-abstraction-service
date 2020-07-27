@@ -19,6 +19,10 @@ const statuses = {
   error: 'error'
 };
 
+const getDescriptionFromChargeElement = chargeElement => {
+  return chargeElement.description || chargeElement.purposeUse.name;
+};
+
 const getTwoPartTariffTransactionDescription = (transaction) => {
   const prefix = transaction.isTwoPartTariffSupplementary ? 'Second' : 'First';
   const { purposeUse: { name: purpose }, description } = transaction.chargeElement;
@@ -273,21 +277,22 @@ class Transaction extends Model {
   }
 
   /**
-   * Creates and returns the transaction description
+   * Creates, sets and returns the transaction description
    * @return {String}
    */
   createDescription () {
-    const isTwoPartTariff = !!this.getAgreementByCode('S127');
     if (this.isCompensationCharge) {
-      this._description = 'Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element';
-    } else {
-      const description = isTwoPartTariff
-        ? getTwoPartTariffTransactionDescription(this)
-        : this.chargeElement.description;
-
-      this._description = titleCase(description || '');
+      this.description = 'Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element';
+      return this.description;
     }
-    return this._description;
+
+    const isTwoPartTariff = !!this.getAgreementByCode('S127');
+    const description = isTwoPartTariff
+      ? getTwoPartTariffTransactionDescription(this)
+      : getDescriptionFromChargeElement(this.chargeElement);
+
+    this.description = titleCase(description);
+    return this.description;
   }
 }
 
