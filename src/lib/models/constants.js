@@ -24,3 +24,8 @@ exports.TIME_PERIODS = {
   week: 'week',
   month: 'month'
 };
+
+exports.RETURN_SEASONS = {
+  summer: 'summer',
+  winterAllYear: 'winterAllYear'
+};

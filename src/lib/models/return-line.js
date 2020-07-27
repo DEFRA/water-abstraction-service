@@ -1,5 +1,7 @@
 'use strict';
 
+const { isNull } = require('lodash');
+
 const Model = require('./model');
 const DateRange = require('./date-range');
 
@@ -14,7 +16,7 @@ class ReturnLine extends Model {
    */
   set volume (volume) {
     validators.assertNullableQuantity(volume);
-    this._volume = volume;
+    this._volume = isNull(volume) ? null : parseFloat(volume);
   }
 
   get volume () {
@@ -45,6 +47,25 @@ class ReturnLine extends Model {
 
   get timePeriod () {
     return this._timePeriod;
+  }
+
+  /**
+   * Checks whether this return line date range falls entirely
+   * within the provided date range
+   * @param {DateRange}
+   * @return {Boolean}
+   */
+  isWithinDateRange (dateRange) {
+    validators.assertIsInstanceOf(dateRange, DateRange);
+    return dateRange.includes(this.dateRange.startDate) && dateRange.includes(this.dateRange.endDate);
+  }
+
+  /**
+   * True if a daily return line
+   * @return {Boolean}
+   */
+  get isDaily () {
+    return this.timePeriod === TIME_PERIODS.day;
   }
 }
 

@@ -1,6 +1,9 @@
 'use strict';
 
 const { flatMap, uniq } = require('lodash');
+
+const returnsDateHelpers = require('@envage/water-abstraction-helpers').returns.date;
+
 const apiConnector = require('./api-connector');
 const repos = require('../../connectors/repos');
 const purposeUseMapper = require('../../mappers/purpose-use');
@@ -10,7 +13,10 @@ const returnVersionMapper = require('../../mappers/return-version');
 // Models
 const { RETURN_STATUS } = require('../../models/return');
 
-const DATE_FORMAT = 'YYYY-MM-DD';
+const getFinancialYear = returnCycle => {
+  const endYear = parseInt(returnCycle.endDate.substr(0, 4));
+  return returnCycle.isSummer ? endYear + 1 : endYear;
+};
 
 /**
  * Gets all non-void returns for the given licence number
@@ -19,10 +25,16 @@ const DATE_FORMAT = 'YYYY-MM-DD';
  * @param {FinancialYear} financialYear
  * @return {Promise<Array>}
  */
-const fetchReturns = (licenceNumber, financialYear) => {
-  const startDate = financialYear.start.format(DATE_FORMAT);
-  const endDate = financialYear.end.format(DATE_FORMAT);
-  return apiConnector.getReturnsForLicence(licenceNumber, startDate, endDate);
+const fetchReturns = async (licenceNumber, financialYear) => {
+  const cycles = returnsDateHelpers.createReturnCycles()
+    .filter(cycle => getFinancialYear(cycle) === financialYear.endYear);
+
+  // Make API call to get returns for each cycle
+  const tasks = cycles.map(cycle => apiConnector.getReturnsForLicenceInCycle(licenceNumber, cycle));
+  const data = await Promise.all(tasks);
+
+  // Return as single flat array
+  return flatMap(data);
 };
 
 /**

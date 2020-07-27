@@ -1,6 +1,6 @@
 'use strict';
 
-const { isNull, flatMap, groupBy } = require('lodash');
+const { flatMap, groupBy } = require('lodash');
 
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(require('moment'));
@@ -15,38 +15,13 @@ const FinancialYear = require('../../../../lib/models/financial-year');
 const DateRange = require('../../../../lib/models/date-range');
 const Transaction = require('../../../../lib/models/transaction');
 
-const dateHelpers = require('./lib/date-helpers');
+const { getChargePeriod } = require('../../lib/charge-period');
+
 const validators = require('../../../../lib/models/validators');
 
 const agreements = require('./lib/agreements');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
-
-const dateToString = date => isNull(date) ? null : moment(date).format('YYYY-MM-DD');
-
-/**
- * Gets the base charge period
- * Normally this will be the financial year, but could be constrained
- * by licence or charge version start/end dates
- *
- * @param {FinancialYear} financialYear
- * @param {ChargeVersion} chargeVersion
- * @return {DateRange}
- */
-const getChargePeriod = (financialYear, chargeVersion) => {
-  const startDate = dateHelpers.getMaxDate([
-    chargeVersion.licence.startDate,
-    financialYear.start,
-    chargeVersion.dateRange.startDate
-  ]);
-
-  const endDate = dateHelpers.getMinDate([
-    chargeVersion.licence.endDate,
-    financialYear.end,
-    chargeVersion.dateRange.endDate
-  ]);
-  return new DateRange(dateToString(startDate), dateToString(endDate));
-};
 
 /**
  * Predicate to check whether an agreement should be applied to the transaction

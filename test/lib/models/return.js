@@ -189,6 +189,18 @@ experiment('lib/models/return', () => {
     });
   });
 
+  experiment('.isDueForBilling', () => {
+    test('returns false if the date is before the due date + 3 week grace period', async () => {
+      ret.dueDate = '2019-11-28';
+      expect(ret.isDueForBilling('2019-12-18')).to.be.false();
+    });
+
+    test('returns true if the date is after the due date + 3 week grace period', async () => {
+      ret.dueDate = '2019-11-28';
+      expect(ret.isDueForBilling('2019-12-19')).to.be.true();
+    });
+  });
+
   experiment('.status', () => {
     const returnStatuses = ['due', 'received', 'completed', 'void'];
 
@@ -248,7 +260,7 @@ experiment('lib/models/return', () => {
     });
 
     test('gets the current return version when present', async () => {
-      ret.returnVersions[1].isCurrent = true;
+      ret.returnVersions[1].isCurrentVersion = true;
       expect(ret.currentReturnVersion).to.equal(ret.returnVersions[1]);
     });
 
