@@ -19,6 +19,7 @@ const billingVolumeService = require('../../../../../src/modules/billing/service
 const data = require('./data');
 
 const companyId = uuid();
+const invoiceAccountId = uuid();
 
 const crmData = {
   documents: [{
@@ -62,9 +63,10 @@ const crmData = {
     ]
   },
   invoiceAccount: {
-    invoiceAccountId: uuid(),
+    invoiceAccountId,
     invoiceAccountNumber: 'A12345678A',
     invoiceAccountAddresses: [{
+      invoiceAccountId,
       startDate: '2016-01-01',
       endDate: '2018-01-01',
       address: {
@@ -83,6 +85,7 @@ const crmData = {
       agentCompany: null,
       contact: null
     }, {
+      invoiceAccountId,
       startDate: '2019-01-01',
       endDate: null,
       address: {
@@ -102,11 +105,17 @@ const crmData = {
       contact: null
     }],
     company: {
-      companyId
+      companyId,
+      name: 'company name',
+      type: 'organisation',
+      organisationType: null
     }
   },
   company: {
-    companyId
+    companyId,
+    name: 'company name',
+    type: 'organisation',
+    organisationType: null
   }
 };
 

@@ -4,18 +4,13 @@ const validators = require('./validators');
 const Model = require('./model');
 const Contact = require('./contact-v2');
 const ContactRole = require('./contact-role');
+const DateRange = require('./date-range');
 
 class CompanyContact extends Model {
   get companyId () { return this._companyId; }
   set companyId (companyId) {
     validators.assertId(companyId);
     this._companyId = companyId;
-  }
-
-  get contactId () { return this._contactId; }
-  set contactId (contactId) {
-    validators.assertId(contactId);
-    this._contactId = contactId;
   }
 
   get roleId () { return this._roleId; }
@@ -30,14 +25,10 @@ class CompanyContact extends Model {
     this._isDefault = isDefault;
   }
 
-  get startDate () { return this._startDate; }
-  set startDate (startDate) {
-    this._startDate = this.getDateOrThrow(startDate);
-  }
-
-  get endDate () { return this._endDate; }
-  set endDate (endDate) {
-    this._endDate = this.getDateTimeFromValue(endDate);
+  get dateRange () { return this._dateRange; }
+  set dateRange (dateRange) {
+    validators.assertIsInstanceOf(dateRange, DateRange);
+    this._dateRange = dateRange;
   }
 
   get dateCreated () { return this._dateCreated; }

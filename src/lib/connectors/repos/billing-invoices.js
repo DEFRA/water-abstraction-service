@@ -50,11 +50,12 @@ const deleteRecord = billingInvoiceId => BillingInvoice
 /**
 * Deletes all billing invoice licences for given batch
 * @param {String} batchId - guid
+* @param {String} isDeletionRequired - boolean
 */
-const deleteByBatchId = async batchId => BillingInvoice
+const deleteByBatchId = async (batchId, isDeletionRequired = true) => BillingInvoice
   .forge()
   .where({ billing_batch_id: batchId })
-  .destroy();
+  .destroy({ require: isDeletionRequired });
 
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;

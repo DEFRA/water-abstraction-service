@@ -20,6 +20,7 @@ experiment('lib/connectors/crm-v2/invoice-accounts', () => {
     sandbox.stub(config.services, 'crm_v2').value('http://test.defra');
     sandbox.stub(serviceRequest, 'get').resolves();
     sandbox.stub(serviceRequest, 'post');
+    sandbox.stub(serviceRequest, 'delete');
   });
 
   afterEach(async () => {
@@ -116,6 +117,19 @@ experiment('lib/connectors/crm-v2/invoice-accounts', () => {
     });
   });
 
+  experiment('.deleteInvoiceAccount', () => {
+    beforeEach(async () => {
+      serviceRequest.delete.resolves();
+
+      await invoiceAccountConnector.deleteInvoiceAccount('test-invoice-account-id');
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url] = serviceRequest.delete.lastCall.args;
+      expect(url).to.equal('http://test.defra/invoice-accounts/test-invoice-account-id');
+    });
+  });
+
   experiment('.createInvoiceAccountAddress', () => {
     let invoiceAccountId;
     let invoiceAccountAddress;
@@ -150,6 +164,19 @@ experiment('lib/connectors/crm-v2/invoice-accounts', () => {
 
     test('returns the created entity', async () => {
       expect(result).to.equal(createdInvoiceAccountAddress);
+    });
+  });
+
+  experiment('.deleteInvoiceAccountAddress', () => {
+    beforeEach(async () => {
+      serviceRequest.delete.resolves();
+
+      await invoiceAccountConnector.deleteInvoiceAccountAddress('test-invoice-account-id', 'test-invoice-account-address-id');
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url] = serviceRequest.delete.lastCall.args;
+      expect(url).to.equal('http://test.defra/invoice-accounts/test-invoice-account-id/addresses/test-invoice-account-address-id');
     });
   });
 });

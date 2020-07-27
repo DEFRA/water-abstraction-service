@@ -41,6 +41,9 @@ const createInvoiceAccount = invoiceAccount => {
   return serviceRequest.post(getUri(), { body: invoiceAccount });
 };
 
+const deleteInvoiceAccount = async invoiceAccountId =>
+  serviceRequest.delete(getUri(invoiceAccountId));
+
 /**
  * Creates an invoice account address association to the invoice
  * account with the given invoice account id
@@ -53,7 +56,12 @@ const createInvoiceAccountAddress = (invoiceAccountId, invoiceAccountAddress) =>
   return serviceRequest.post(url, { body: invoiceAccountAddress });
 };
 
+const deleteInvoiceAccountAddress = async (invoiceAccountId, invoiceAccountAddressId) =>
+  serviceRequest.delete(getUri(invoiceAccountId, 'addresses', invoiceAccountAddressId));
+
 exports.createInvoiceAccount = createInvoiceAccount;
+exports.deleteInvoiceAccount = deleteInvoiceAccount;
 exports.createInvoiceAccountAddress = createInvoiceAccountAddress;
+exports.deleteInvoiceAccountAddress = deleteInvoiceAccountAddress;
 exports.getInvoiceAccountById = getInvoiceAccountById;
 exports.getInvoiceAccountsByIds = getInvoiceAccountsByIds;

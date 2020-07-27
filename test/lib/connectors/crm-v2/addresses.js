@@ -20,6 +20,7 @@ experiment('lib/connectors/crm-v2/addresses', () => {
     sandbox.stub(config.services, 'crm_v2').value('http://test.defra');
     sandbox.stub(serviceRequest, 'get');
     sandbox.stub(serviceRequest, 'post');
+    sandbox.stub(serviceRequest, 'delete');
   });
 
   afterEach(async () => {
@@ -74,6 +75,19 @@ experiment('lib/connectors/crm-v2/addresses', () => {
 
     test('returns the entity from the CRM', async () => {
       expect(result).to.equal(address);
+    });
+  });
+
+  experiment('.deleteAddress', () => {
+    beforeEach(async () => {
+      serviceRequest.delete.resolves();
+
+      await addressConnector.deleteAddress('test-address-id');
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url] = serviceRequest.delete.lastCall.args;
+      expect(url).to.equal('http://test.defra/addresses/test-address-id');
     });
   });
 });

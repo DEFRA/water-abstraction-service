@@ -56,10 +56,11 @@ const update = (batchId, changes) => BillingBatch
  * Deletes the billing_batch record with the given id
  *
  * @param {String} batchId UUID of the batch to delete
+ * @param {String} isDeletionRequired - boolean
  */
-const deleteById = batchId => BillingBatch
+const deleteById = (batchId, isDeletionRequired = true) => BillingBatch
   .forge({ billingBatchId: batchId })
-  .destroy();
+  .destroy({ require: isDeletionRequired });
 
 const findOneWithInvoices = async (id) => {
   const model = await BillingBatch

@@ -6,7 +6,7 @@ const Invoice = require('../../../lib/models/invoice');
 const InvoiceAccount = require('../../../lib/models/invoice-account');
 const FinancialYear = require('../../../lib/models/financial-year');
 
-const invoiceAccount = require('./invoice-account');
+const invoiceAccount = require('../../../lib/mappers/invoice-account');
 const invoiceLicence = require('./invoice-licence');
 
 /**
@@ -38,7 +38,7 @@ const dbToModel = row => {
 const modelToDb = (batch, invoice) => ({
   invoiceAccountId: invoice.invoiceAccount.id,
   invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
-  address: omit(invoice.address.toObject(), 'id'),
+  address: omit(invoice.address.toJSON(), 'id'),
   billingBatchId: batch.id,
   financialYearEnding: invoice.financialYear.endYear
 });
