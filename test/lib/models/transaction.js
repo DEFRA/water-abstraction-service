@@ -572,6 +572,15 @@ experiment('lib/models/transaction', () => {
         expect(transaction.description).to.equal(description);
       });
 
+      test('the standard charge description excludes the charge element description if null', async () => {
+        transaction.isCompensationCharge = false;
+        transaction.isTwoPartTariffSupplementary = false;
+        transaction.chargeElement.description = null;
+
+        const description = transaction.createDescription();
+        expect(description).to.equal('First Part Test Purpose Charge');
+      });
+
       test('the compensation charge text is preset', async () => {
         transaction.isCompensationCharge = true;
         transaction.isTwoPartTariffSupplementary = false;

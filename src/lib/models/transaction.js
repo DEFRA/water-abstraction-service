@@ -27,7 +27,9 @@ const getTwoPartTariffTransactionDescription = (transaction) => {
   const prefix = transaction.isTwoPartTariffSupplementary ? 'Second' : 'First';
   const { purposeUse: { name: purpose }, description } = transaction.chargeElement;
 
-  return `${prefix} part ${purpose} charge at ${description}`;
+  const txDescription = `${prefix} part ${purpose} charge`;
+
+  return description ? `${txDescription} at ${description}` : txDescription;
 };
 
 class Transaction extends Model {
