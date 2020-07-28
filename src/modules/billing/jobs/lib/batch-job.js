@@ -3,6 +3,7 @@
 const { get } = require('lodash');
 
 const batchService = require('../../services/batch-service');
+const licencesService = require('../../../../lib/services/licences');
 const { logger } = require('../../../../logger');
 
 const getRequestName = job => job.data.request.name;
@@ -43,6 +44,7 @@ const failBatch = (job, messageQueue, errorCode) => {
 
   return Promise.all([
     batchService.setErrorStatus(batchId, errorCode),
+    licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId),
     messageQueue.deleteQueue(name)
   ]);
 };
