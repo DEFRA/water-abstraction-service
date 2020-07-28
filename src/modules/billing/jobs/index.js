@@ -8,6 +8,11 @@ exports.populateBatchChargeVersions = {
   onCompleteHandler: require('./populate-batch-charge-versions-complete')
 };
 
+exports.twoPartTariffMatching = {
+  job: require('./two-part-tariff-matching'),
+  onCompleteHandler: require('./two-part-tariff-matching-complete')
+};
+
 exports.processChargeVersion = {
   job: require('./process-charge-version'),
   onCompleteHandler: require('./process-charge-version-complete')

@@ -1,5 +1,7 @@
 'use strict';
 
+const { partialRight } = require('lodash');
+
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
@@ -337,6 +339,7 @@ exports.refreshTotals = refreshTotals;
 exports.saveInvoicesToDB = saveInvoicesToDB;
 exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
+exports.setStatusToReview = partialRight(setStatus, Batch.BATCH_STATUS.review);
 exports.setStatusToEmptyWhenNoTransactions = setStatusToEmptyWhenNoTransactions;
 exports.cleanup = cleanup;
 exports.create = create;

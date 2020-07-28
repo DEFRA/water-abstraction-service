@@ -61,6 +61,10 @@ class ReturnGroup {
     return this._returns;
   }
 
+  getReturnsWithCurrentVersion () {
+    return this._returns.filter(ret => !!ret.currentVersion);
+  }
+
   /**
    * Creates a new return group containing only returns
    * for a two-part tariff purpose

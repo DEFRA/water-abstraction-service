@@ -49,6 +49,15 @@ class BillingVolume extends Model {
     this._chargeElementId = chargeElementId;
   }
 
+  get billingBatchId () {
+    return this._billingBatchId;
+  }
+
+  set billingBatchId (billingBatchId) {
+    validators.assertId(billingBatchId);
+    this._billingBatchId = billingBatchId;
+  }
+
   get financialYear () {
     return this._financialYear;
   }

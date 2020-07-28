@@ -9,5 +9,6 @@ module.exports = {
     await server.createSubscription(jobs.prepareTransactions);
     await server.createSubscription(jobs.createCharge);
     await server.createSubscription(jobs.refreshTotals);
+    await server.createSubscription(jobs.twoPartTariffMatching);
   }
 };

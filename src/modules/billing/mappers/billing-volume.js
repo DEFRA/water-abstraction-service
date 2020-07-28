@@ -32,5 +32,16 @@ const matchingResultsToDb = (matchingResults, financialYear, isSummer, billingBa
   });
 };
 
+const modelToDB = billingVolume => {
+  const twoPartTariffReview = billingVolume.twoPartTariffReview ? billingVolume.twoPartTariffReview.toJSON() : null;
+  return {
+    billingVolumeId: billingVolume.id,
+    ...billingVolume.pick(['billingBatchId', 'chargeElementId', 'isSummer', 'calculatedVolume', 'twoPartTariffError', 'twoPartTariffStatus', 'isApproved', 'volume']),
+    financialYear: billingVolume.financialYear.endYear,
+    twoPartTariffReview
+  };
+};
+
 exports.dbToModel = dbToModel;
 exports.matchingResultsToDb = matchingResultsToDb;
+exports.modelToDB = modelToDB;

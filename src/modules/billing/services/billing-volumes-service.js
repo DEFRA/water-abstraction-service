@@ -128,6 +128,16 @@ const approveVolumesForBatch = async batch => {
   }
 };
 
+/**
+ * Persists a single BillingVolume instance
+ * @param {BillingVolume} billingVolume
+ */
+const persist = async billingVolume => {
+  const dbRow = mappers.billingVolume.modelToDB(billingVolume);
+  const data = await billingVolumesRepo.create(dbRow);
+  return mappers.billingVolume.dbToModel(data);
+};
+
 exports.getVolumes = getVolumes;
 exports.updateBillingVolume = updateBillingVolume;
 exports.isSummerChargeElement = isSummerChargeElement;
@@ -135,3 +145,4 @@ exports.getUnapprovedVolumesForBatchCount = getUnapprovedVolumesForBatchCount;
 exports.getVolumesForBatch = getVolumesForBatch;
 exports.getVolumesWithTwoPartError = getVolumesWithTwoPartError;
 exports.approveVolumesForBatch = approveVolumesForBatch;
+exports.persist = persist;

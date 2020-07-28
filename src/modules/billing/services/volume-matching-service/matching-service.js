@@ -7,6 +7,7 @@ const { logger } = require('../../../../logger');
 const DateRange = require('../../../../lib/models/date-range');
 const ChargeElementGroup = require('./models/charge-element-group');
 const ReturnGroup = require('./models/return-group');
+const FinancialYear = require('../../../../lib/models/financial-year');
 
 /**
  * Allocates the return line volume
@@ -51,7 +52,7 @@ const match = (chargePeriod, chargeElementGroup, returnGroup) => {
     return chargeElementGroup.toBillingVolumes();
   }
 
-  returnGroup.returns.forEach(ret => {
+  returnGroup.getReturnsWithCurrentVersion().forEach(ret => {
     logger.info(`Matching return ${ret.id}`);
 
     // Create list of charge elements for return

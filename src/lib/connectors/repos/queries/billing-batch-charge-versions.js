@@ -38,7 +38,7 @@ exports.createAnnual = `
 
 exports.createTwoPartTariff = `
     insert into water.billing_batch_charge_versions (billing_batch_id, charge_version_id)
-    select :billingBatchId, cv.charge_version_id
+    select distinct :billingBatchId::uuid, cv.charge_version_id
     from water.licences l
       join water.charge_versions cv on l.licence_ref = cv.licence_ref
       join water.licence_agreements la on l.licence_ref = la.licence_ref

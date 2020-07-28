@@ -28,9 +28,12 @@ const createChargeElementGroup = (chargeVersion, chargePeriod) => {
  * @param {DateRange0} chargePeriod
  * @return {Object}
  */
-const createChargeElementGroups = (chargeVersion, chargePeriod) => {
+const createChargeElementGroups = (chargeVersion, chargePeriod, financialYear) => {
   const tptChargeElementGroup = createChargeElementGroup(chargeVersion, chargePeriod)
-    .createForTwoPartTariff();
+    .createForChargePeriod()
+    .createForTwoPartTariff()
+    .setFinancialYear(financialYear);
+
   return {
     [RETURN_SEASONS.summer]: tptChargeElementGroup.createForSeason(RETURN_SEASONS.summer),
     [RETURN_SEASONS.winterAllYear]: tptChargeElementGroup.createForSeason(RETURN_SEASONS.winterAllYear)
@@ -69,7 +72,7 @@ const getData = async (chargeVersionId, financialYear) => {
   const chargePeriod = getChargePeriod(financialYear, chargeVersion);
 
   // Get charge element groups
-  const chargeElementGroups = createChargeElementGroups(chargeVersion, chargePeriod);
+  const chargeElementGroups = createChargeElementGroups(chargeVersion, chargePeriod, financialYear);
 
   // Get all returns and group by season
   const returnGroups = await returnGroupService.getReturnGroups(

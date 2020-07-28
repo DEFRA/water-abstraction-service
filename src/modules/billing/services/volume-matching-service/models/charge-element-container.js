@@ -8,6 +8,7 @@ const BillingVolume = require('../../../../../lib/models/billing-volume');
 const { CHARGE_SEASON } = require('../../../../../lib/models/constants');
 
 const validators = require('../../../../../lib/models/validators');
+const FinancialYear = require('../../../../../lib/models/financial-year');
 
 /**
  * Gets a DateRange range for the charge element, taking into account
@@ -21,7 +22,8 @@ const getChargeElementRange = (chargeElement, chargePeriod) => {
   if (chargeElement.timeLimitedPeriod) {
     const rangeA = chargeElement.timeLimitedPeriod.toMomentRange();
     const rangeB = chargePeriod.toMomentRange();
-    return DateRange.fromMomentRange(rangeA.intersect(rangeB));
+    const intersection = rangeA.intersect(rangeB);
+    return intersection ? DateRange.fromMomentRange(intersection) : null;
   }
   return chargePeriod;
 };
@@ -66,7 +68,7 @@ class ChargeElementContainer {
   _refresh () {
     if (this._chargeElement && this._chargePeriod) {
       this._dateRange = getChargeElementRange(this._chargeElement, this._chargePeriod);
-      this._abstractionDays = this._chargeElement.abstractionPeriod.getDays(this._dateRange);
+      this._abstractionDays = this._dateRange ? this._chargeElement.abstractionPeriod.getDays(this._dateRange) : 0;
     }
   }
 
@@ -127,7 +129,7 @@ class ChargeElementContainer {
     validators.assertIsInstanceOf(returnLine, ReturnLine);
 
     const isAbsPeriodMatch = this.chargeElement.abstractionPeriod.isDateRangeOverlapping(returnLine.dateRange);
-    const isDateRangeMatch = this._dateRange.overlaps(returnLine.dateRange);
+    const isDateRangeMatch = this._dateRange && this._dateRange.overlaps(returnLine.dateRange);
 
     return isAbsPeriodMatch && isDateRangeMatch;
   }
@@ -139,6 +141,16 @@ class ChargeElementContainer {
   get isTwoPartTariffPurpose () {
     return this._chargeElement.purposeUse.isTwoPartTariff;
   }
+
+  /**
+   * Checks whether this charge element applies based on 
+   * the date ranges (e.g. the date range of this element overlaps the charge period)
+   * @return {Boolean}
+   */
+  get isValidForChargePeriod () {
+    return !!this._dateRange;
+  }
+
 
   /**
    * Checks if summer billing volume
@@ -187,6 +199,15 @@ class ChargeElementContainer {
     if (isOverAbstraction) {
       this.billingVolume.setTwoPartTariffStatus(BillingVolume.twoPartTariffStatuses.ERROR_OVER_ABSTRACTION);
     }
+  }
+
+  /**
+   * Sets financial year of BillingVolume model
+   * @param {FinancialYear} financialYear
+   */
+  setFinancialYear (financialYear) {
+    validators.assertIsInstanceOf(financialYear, FinancialYear);
+    this.billingVolume.financialYear = financialYear;
   }
 }
 

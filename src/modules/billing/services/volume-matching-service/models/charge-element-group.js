@@ -7,6 +7,7 @@ const Return = require('../../../../../lib/models/return');
 const ReturnLine = require('../../../../../lib/models/return-line');
 const PurposeUse = require('../../../../../lib/models/purpose-use');
 const DateRange = require('../../../../../lib/models/date-range');
+const FinancialYear = require('../../../../../lib/models/financial-year');
 
 const ChargeElementContainer = require('./charge-element-container');
 
@@ -177,7 +178,19 @@ class ChargeElementGroup {
   }
 
   /**
-   * Creates a new ChargeElementGroup with only two-part tariff purposes included
+   * Creates a new ChargeElementGroup with only:
+   * - a date range which overlaps the charge period
+   * @return {ChargeElementGroup}
+   */
+  createForChargePeriod () {
+    const chargeElementContainers = this._chargeElementContainers
+      .filter(chargeElementContainer => chargeElementContainer.isValidForChargePeriod);
+    return new ChargeElementGroup(chargeElementContainers);
+  }
+
+  /**
+   * Creates a new ChargeElementGroup with only:
+   * - two-part tariff purposes
    * @return {ChargeElementGroup}
    */
   createForTwoPartTariff () {
@@ -300,6 +313,18 @@ class ChargeElementGroup {
   flagOverAbstraction () {
     this._chargeElementContainers.forEach(
       chargeElementContainer => chargeElementContainer.flagOverAbstraction()
+    );
+    return this;
+  }
+
+  /**
+   * Sets financial year in BillingVolume models
+   * @return {this}
+   */
+  setFinancialYear (financialYear) {
+    validators.assertIsInstanceOf(financialYear, FinancialYear);
+    this._chargeElementContainers.forEach(
+      chargeElementContainer => chargeElementContainer.setFinancialYear(financialYear)
     );
     return this;
   }
