@@ -4,14 +4,18 @@ const dataService = require('./services/data-service');
 
 const mappers = require('./lib/mappers');
 
+const getReturnCycles = async () => {
+// get the last 2 returns cycles parameters
+  return helpers.returns.date.createReturnCycles().slice(-2);
+};
+
 /**
  * This method requests all the KPI data sets maps them and returns the data for the KPI UI
  * @param {*} request
  * @returns {Object} an object containing all the data sets required for the KPI UI
  */
 const getKPIData = async (request) => {
-  // get the last 2 returns cycles parameters
-  const returnCycles = await helpers.returns.date.createReturnCycles().slice(-2);
+  const returnCycles = await getReturnCycles();
   const [registrationsData, delegatedAccessData, returnsDataMonthly, returnsDataCycle1, returnsDataCycle2, licenceNamesData] = await Promise.all([
     // Registrations data from IDM
     dataService.getIDMRegistrationsData(),
