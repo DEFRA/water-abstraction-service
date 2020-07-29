@@ -2,8 +2,6 @@
 
 const Boom = require('@hapi/boom');
 const Event = require('../../lib/models/event');
-const Batch = require('../../lib/models/batch');
-const BATCH_STATUS = Batch.BATCH_STATUS;
 
 const { get } = require('lodash');
 const { envelope } = require('../../lib/response');
@@ -160,20 +158,6 @@ const postApproveBatch = async (request, h) => {
   }
 };
 
-const getBatchLicences = async (request, h) => {
-  const { batch } = request.pre;
-
-  if (batch.statusIsOneOf(BATCH_STATUS.processing, BATCH_STATUS.error)) {
-    return h.response('Cannot get licences for processing or errored batch').code(403);
-  }
-
-  if (batch.status === BATCH_STATUS.empty) {
-    return [];
-  }
-
-  return invoiceLicenceService.getLicencesWithTransactionStatusesForBatch(batch.id);
-};
-
 const patchTransactionBillingVolume = async (request, h) => {
   const { transactionId } = request.params;
   const { volume } = request.payload;
@@ -248,7 +232,6 @@ exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
-exports.getBatchLicences = getBatchLicences;
 exports.getInvoiceLicenceWithTransactions = getInvoiceLicenceWithTransactions;
 exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteBatch = deleteBatch;

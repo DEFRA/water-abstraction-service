@@ -1,6 +1,8 @@
 'use strict';
 
 const { Licence } = require('../bookshelf');
+const raw = require('./lib/raw');
+const queries = require('./queries/licences');
 
 /**
  * Gets a list of licence agreements of the given types for the specified
@@ -21,4 +23,14 @@ const findOne = async licenceId => {
   return model ? model.toJSON() : null;
 };
 
+/**
+ * Gets a list of licences in the supplied billing batch, which have a
+ * billing volume for TPT review
+ * @param {String} billingBatchId
+ * @return {Promise<Array>}
+ */
+const findByBatchIdForTwoPartTariffReview = billingBatchId =>
+  raw.multiRow(queries.findByBatchIdForTwoPartTariffReview, { billingBatchId });
+
 exports.findOne = findOne;
+exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview;

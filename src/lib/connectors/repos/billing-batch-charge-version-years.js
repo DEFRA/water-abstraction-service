@@ -65,6 +65,14 @@ const findTwoPartTariffByBatchId = billingBatchId => bookshelf
   .knex
   .raw(queries.findTwoPartTariffByBatchId, { billingBatchId });
 
+/**
+ * Deletes charge versiom years in a batch for a particular licence ID
+ * @param {String} billingBatchId
+ * @param {String} licenceId
+ */
+const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
+  bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId });
+
 exports.update = update;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
 exports.deleteByBatchId = deleteByBatchId;
@@ -72,3 +80,4 @@ exports.deleteByInvoiceId = deleteByInvoiceId;
 exports.createForBatch = createForBatch;
 exports.findByBatchId = findByBatchId;
 exports.findTwoPartTariffByBatchId = findTwoPartTariffByBatchId;
+exports.deleteByBatchIdAndLicenceId = deleteByBatchIdAndLicenceId;

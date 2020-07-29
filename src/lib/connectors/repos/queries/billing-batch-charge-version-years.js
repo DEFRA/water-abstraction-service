@@ -55,3 +55,12 @@ where y.billing_batch_id=:billingBatchId
   and (a.start_date <= make_date(y.financial_year_ending, 3, 31))
   and t.id='S127'
 `;
+
+exports.deleteByBatchIdAndLicenceId = `
+delete from water.billing_batch_charge_version_years y
+using water.charge_versions cv, water.licences l
+where y.billing_batch_id=:billingBatchId
+  and y.charge_version_id=cv.charge_version_id
+  and cv.licence_ref=l.licence_ref
+  and l.licence_id=:licenceId
+  `;

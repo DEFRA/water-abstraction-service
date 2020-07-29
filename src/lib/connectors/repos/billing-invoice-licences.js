@@ -38,14 +38,6 @@ const deleteEmptyByBatchId = batchId =>
   bookshelf.knex.raw(queries.deleteEmptyByBatchId, { batchId });
 
 /**
- * Finds all the licences in a batch and aggregates the two part tariff
- * error codes for a licence's underlying transactions.
- * @param {String} batchId
- */
-const findLicencesWithTransactionStatusesForBatch = batchId =>
-  raw.multiRow(queries.findLicencesWithTransactionStatusesForBatch, { batchId });
-
-/**
  * Find One licence in a batch with related transactions
  * @param {String} id
  */
@@ -91,7 +83,6 @@ const deleteByInvoiceId = billingInvoiceId => BillingInvoiceLicence
 
 exports.findOne = findOne;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
-exports.findLicencesWithTransactionStatusesForBatch = findLicencesWithTransactionStatusesForBatch;
 exports.findOneInvoiceLicenceWithTransactions = findOneInvoiceLicenceWithTransactions;
 exports.upsert = upsert;
 exports.delete = deleteRecord;

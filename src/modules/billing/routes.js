@@ -159,22 +159,6 @@ const postApproveBatch = {
   }
 };
 
-const getBatchLicences = {
-  method: 'GET',
-  path: '/water/1.0/billing/batches/{batchId}/licences',
-  handler: controller.getBatchLicences,
-  config: {
-    validate: {
-      params: {
-        batchId: Joi.string().uuid().required()
-      }
-    },
-    pre: [
-      { method: preHandlers.loadBatch, assign: 'batch' }
-    ]
-  }
-};
-
 const patchTransactionBillingVolume = {
   method: 'PATCH',
   path: '/water/1.0/billing/transactions/{transactionId}/volume',
@@ -244,7 +228,6 @@ exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
-exports.getBatchLicences = getBatchLicences;
 exports.getInvoiceLicence = getInvoiceLicence;
 exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteBatch = deleteBatch;
@@ -255,3 +238,11 @@ exports.postApproveReviewBatch = postApproveReviewBatch;
 
 exports.patchTransactionBillingVolume = patchTransactionBillingVolume;
 exports.deleteInvoiceLicence = deleteInvoiceLicence;
+
+const tptRoutes = require('./routes/two-part-tariff-review');
+exports.getBatchLicences = tptRoutes.getBatchLicences;
+exports.getBatchLicenceVolumes = tptRoutes.getBatchLicenceVolumes;
+exports.deleteBatchLicence = tptRoutes.deleteBatchLicence;
+exports.getBillingVolume = tptRoutes.getBillingVolume;
+exports.patchBillingVolume = tptRoutes.patchBillingVolume;
+exports.postApproveReviewBatch = tptRoutes.postApproveReviewBatch;

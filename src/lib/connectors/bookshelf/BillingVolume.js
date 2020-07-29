@@ -13,5 +13,9 @@ module.exports = bookshelf.model('BillingVolume', {
 
   billingBatch () {
     return this.belongsTo('BillingBatch', 'billing_batch_id', 'billing_batch_id');
+  },
+
+  chargeElement () {
+    return this.belongsTo('ChargeElement', 'charge_element_id', 'charge_element_id');
   }
 });

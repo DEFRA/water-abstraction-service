@@ -1,5 +1,8 @@
+'use strict';
+
 const { BillingVolume, bookshelf } = require('../bookshelf');
 const queries = require('./queries/billing-volumes');
+const raw = require('./lib/raw');
 
 /**
  * Create a new billing volume
@@ -15,12 +18,16 @@ const create = async data => {
 /**
  * Gets billing volumes for charge elements and financial year
  * @param {Array<String>} ids - guids
+ * @param {FinancialYear} financialYear
  */
-const findByChargeElementIdsAndFinancialYear = async (ids, financialYear) => {
+const findApprovedByChargeElementIdsAndFinancialYear = async (ids, financialYear) => {
   const result = await BillingVolume
     .forge()
     .query('whereIn', 'charge_element_id', ids)
-    .where({ financial_year: financialYear })
+    .where({
+      financial_year: financialYear.endYear,
+      is_approved: true
+    })
     .fetchAll();
 
   return result.toJSON();
@@ -54,7 +61,6 @@ const findByBatchId = async batchId => {
     .forge()
     .where({ billing_batch_id: batchId })
     .fetchAll();
-
   return result.toJSON();
 };
 
@@ -84,11 +90,57 @@ const deleteByInvoiceLicenceAndBatchId = async (invoiceLicenceId, batchId) =>
 const deleteByBatchAndInvoiceId = async (batchId, billingInvoiceId) =>
   bookshelf.knex.raw(queries.deleteByBatchAndInvoiceId, { batchId, billingInvoiceId });
 
+/**
+ * Finds billing volumes relating to the supplied billing batch ID and licence ID
+ * @param {String} billingBatchId
+ * @param {String} licenceId
+ */
+const findByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
+  raw.multiRow(queries.findByBatchIdAndLicenceId, { billingBatchId, licenceId });
+
+/**
+ * Finds billing volumes by supplied IDs
+ * @param {Array<String>} billingVolumeIds
+ * @return {Promise<Array>}
+ */
+const findByIds = async billingVolumeIds => {
+  const result = await BillingVolume
+    .where('billing_volume_id', 'in', billingVolumeIds)
+    .fetchAll({
+      withRelated: 'chargeElement'
+    });
+  return result.toJSON();
+};
+
+/**
+ * Deletes billing volumes in a batch for a particular licence ID
+ * @param {String} billingBatchId
+ * @param {String} licenceId
+ */
+const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
+  bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId });
+
+/**
+ * Updates all records by batch ID
+ * @param {String} billingBatchId
+ * @param {Object} changes
+ */
+const updateByBatchId = async (billingVolumeId, changes) => {
+  const result = await BillingVolume
+    .where('billing_volume_id', billingVolumeId)
+    .save(changes);
+  return result.toJSON();
+};
+
 exports.create = create;
-exports.findByChargeElementIdsAndFinancialYear = findByChargeElementIdsAndFinancialYear;
+exports.findApprovedByChargeElementIdsAndFinancialYear = findApprovedByChargeElementIdsAndFinancialYear;
 exports.update = update;
 exports.getUnapprovedVolumesForBatch = getUnapprovedVolumesForBatch;
 exports.findByBatchId = findByBatchId;
 exports.deleteByBatchId = deleteByBatchId;
 exports.deleteByInvoiceLicenceAndBatchId = deleteByInvoiceLicenceAndBatchId;
 exports.deleteByBatchAndInvoiceId = deleteByBatchAndInvoiceId;
+exports.findByBatchIdAndLicenceId = findByBatchIdAndLicenceId;
+exports.findByIds = findByIds;
+exports.deleteByBatchIdAndLicenceId = deleteByBatchIdAndLicenceId;
+exports.updateByBatchId = updateByBatchId;

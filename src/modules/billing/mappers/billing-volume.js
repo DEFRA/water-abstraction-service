@@ -2,16 +2,21 @@ const { pick } = require('lodash');
 const BillingVolume = require('../../../lib/models/billing-volume');
 const FinancialYear = require('../../../lib/models/financial-year');
 const userMapper = require('./user');
+const chargeElementMapper = require('./charge-element');
 
 const dbToModel = row => {
   const billingVolume = new BillingVolume();
-  return billingVolume.fromHash({
+  billingVolume.fromHash({
     id: row.billingVolumeId,
     ...pick(row, ['chargeElementId', 'isSummer', 'calculatedVolume', 'twoPartTariffError',
       'twoPartTariffStatus', 'isApproved', 'volume']),
     financialYear: new FinancialYear(row.financialYear),
     twoPartTariffReview: userMapper.mapToModel(row.twoPartTariffReview)
   });
+  if (row.chargeElement) {
+    billingVolume.chargeElement = chargeElementMapper.dbToModel(row.chargeElement);
+  }
+  return billingVolume;
 };
 
 const matchingResultsToDb = (matchingResults, financialYear, isSummer, billingBatchId) => {

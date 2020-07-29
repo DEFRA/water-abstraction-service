@@ -13,6 +13,11 @@ exports.twoPartTariffMatching = {
   onCompleteHandler: require('./two-part-tariff-matching-complete')
 };
 
+exports.processChargeVersions = {
+  job: require('./process-charge-versions'),
+  onCompleteHandler: require('./process-charge-versions-complete')
+};
+
 exports.processChargeVersion = {
   job: require('./process-charge-version'),
   onCompleteHandler: require('./process-charge-version-complete')

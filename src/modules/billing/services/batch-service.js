@@ -8,7 +8,7 @@ const { BATCH_STATUS } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
 const Event = require('../../../lib/models/event');
 const eventService = require('../../../lib/services/events');
-const { BatchStatusError, BillingVolumeStatusError } = require('../lib/errors');
+const { BatchStatusError } = require('../lib/errors');
 const { NotFoundError } = require('../../../lib/errors');
 
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
@@ -255,13 +255,6 @@ const createChargeModuleBillRun = async batchId => {
   return batch.pickFrom(row, ['externalId', 'billRunNumber']);
 };
 
-const assertNoBillingVolumesWithTwoPartError = async batch => {
-  const billingVolumesWithTwoPartError = await billingVolumesService.getVolumesWithTwoPartError(batch);
-  if (billingVolumesWithTwoPartError.length > 0) {
-    throw new BillingVolumeStatusError('Cannot approve review. There are outstanding two part tariff errors to resolve');
-  }
-};
-
 const assertBatchStatusIsReview = batch => {
   if (batch.status !== BATCH_STATUS.review) {
     throw new BatchStatusError('Cannot approve review. Batch status must be "review"');
@@ -280,8 +273,8 @@ const assertBatchStatusIsReview = batch => {
  * @return {Promise<Batch>} resolves with Batch service model
  */
 const approveTptBatchReview = async batch => {
-  await assertNoBillingVolumesWithTwoPartError(batch);
   assertBatchStatusIsReview(batch);
+  await billingVolumesService.approveVolumesForBatch(batch);
   await setStatus(batch.id, BATCH_STATUS.processing);
   return getBatchById(batch.id);
 };

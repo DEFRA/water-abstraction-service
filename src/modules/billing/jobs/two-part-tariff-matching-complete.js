@@ -1,9 +1,8 @@
 'use strict';
 
-const { processChargeVersionYears } = require('./lib/process-charge-version-years');
-
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const batchJob = require('./lib/batch-job');
+const processChargeVersionsJob = require('./process-charge-versions');
 
 /**
  * Handles the response from populating the billing batch with charge versions and decides
@@ -23,7 +22,9 @@ const handlePopulateBatchChargeVersionsComplete = async (job, messageQueue) => {
 
   // If no review needed, proceed to process the charge version years
   if (!job.data.response.isReviewNeeded) {
-    return processChargeVersionYears(job, messageQueue);
+    const { eventId, batch } = job.data.request.data;
+    const message = processChargeVersionsJob.createMessage(eventId, batch);
+    await messageQueue.publish(message);
   }
 };
 
