@@ -43,7 +43,7 @@ const mapLicenceNamesData = (data) => {
       acc.monthly.push(
         {
           ...row,
-          month: months[row.month],
+          month: months[row.month - 1],
           year: year,
           namedChange: index < (data.length - 1) ? percentChange(data, index, 'named') : 0,
           renamedChange: index < (data.length - 1) ? percentChange(data, index, 'renamed') : 0
