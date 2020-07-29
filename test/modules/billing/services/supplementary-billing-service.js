@@ -10,6 +10,11 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
 const { Batch } = require('../../../../src/lib/models');
+const Invoice = require('../../../../src/lib/models/invoice');
+const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
+const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
+const Licence = require('../../../../src/lib/models/licence');
+
 const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 
@@ -17,15 +22,20 @@ const crmV2Connector = require('../../../../src/lib/connectors/crm-v2');
 const newRepos = require('../../../../src/lib/connectors/repos');
 
 const supplementaryBillingService = require('../../../../src/modules/billing/services/supplementary-billing-service');
+const FinancialYear = require('../../../../src/lib/models/financial-year');
 
 const batchId = '398b6f31-ff01-4621-b939-e720f1a77deb';
 const invoiceAccountId = '398b6f31-ff01-4621-b939-e720f1a77deb';
+const invoiceAccountNumber = 'A12345678A';
+const licenceNumber = '01/123/ABC';
 
 const createTransactionRow = (index, transactionKey, isCredit = false) => ({
   billingTransactionId: `00000000-0000-0000-0000-00000000000${index}`,
   isCredit,
   transactionKey,
-  billingVolume: []
+  billingVolume: [],
+  isTwoPartTariffSupplementary: false,
+  startDate: '2019-04-01'
 });
 
 const createFullTransaction = (...args) => ({
@@ -41,12 +51,15 @@ const createFullTransaction = (...args) => ({
   },
   billingInvoiceLicence: {
     billingInvoiceId: '6046df4e-c5fa-462c-8afb-dee31c88d62d',
+    financialYearEnding: 2020,
+    licenceRef: '01/123/ABC',
     billingInvoice: {
-      invoiceAccountId
+      invoiceAccountId,
+      invoiceAccountNumber
     },
     licence: {
       licenceId: '4b4f2427-984e-48f6-8b20-f17380b870a8',
-      licenceRef: '01/123/ABC',
+      licenceRef: licenceNumber,
       regions: { historicalAreaCode: 'ARCA', regionalChargeArea: 'Anglian' },
       startDate: '2019-02-01',
       expiredDate: null,
@@ -96,16 +109,43 @@ const data = {
         address4: null,
         town: 'Testington',
         county: 'Testingshire',
-        postcode: 'TT1 1TT'
+        postcode: 'TT1 1TT',
+        dataSource: 'nald'
       }
     }]
-  }],
-  models: {
-    batch: new Batch(batchId)
-  }
+  }]
+};
+
+const createBatch = () => new Batch(batchId);
+
+const createInvoice = invoiceAccountNumber => {
+  // Create invoice account
+  const invoiceAccount = new InvoiceAccount();
+  invoiceAccount.accountNumber = invoiceAccountNumber;
+
+  // Create invoice
+  const invoice = new Invoice();
+  return invoice.fromHash({
+    invoiceAccount,
+    financialYear: new FinancialYear(2020)
+  });
+};
+
+const createInvoiceLicence = licenceNumber => {
+  // Create licence
+  const licence = new Licence();
+  licence.licenceNumber = licenceNumber;
+
+  // Create invoice licence
+  const invoiceLicence = new InvoiceLicence();
+  return invoiceLicence.fromHash({
+    licence
+  });
 };
 
 experiment('modules/billing/services/supplementary-billing-service', () => {
+  let batch;
+
   beforeEach(async () => {
     sandbox.stub(crmV2Connector.invoiceAccounts, 'getInvoiceAccountsByIds');
     sandbox.stub(batchService, 'getBatchById');
@@ -124,85 +164,110 @@ experiment('modules/billing/services/supplementary-billing-service', () => {
 
   experiment('.processBatch', () => {
     beforeEach(async () => {
+      batch = createBatch();
       newRepos.billingTransactions.findByBatchId.resolves(data.batchTransactions);
       newRepos.billingTransactions.findHistoryByBatchId.resolves(data.historicalTransactions);
       newRepos.billingTransactions.find.resolves(data.creditTransactions);
       crmV2Connector.invoiceAccounts.getInvoiceAccountsByIds.resolves(data.crmResponse);
-      batchService.getBatchById.resolves(
-        data.models.batch
-      );
-      await supplementaryBillingService.processBatch(data.batchId);
+      batchService.getBatchById.resolves(batch);
     });
 
-    test('calls billingTransactions.findByBatchId with correct batch ID', async () => {
-      expect(newRepos.billingTransactions.findByBatchId.calledWith(
-        data.batchId
-      )).to.be.true();
-    });
+    experiment('for an empty batch', () => {
+      beforeEach(async () => {
+        await supplementaryBillingService.processBatch(data.batchId);
+      });
 
-    test('calls billingTransactions.findHistoryByBatchId with correct batch ID', async () => {
-      expect(newRepos.billingTransactions.findHistoryByBatchId.calledWith(
-        data.batchId
-      )).to.be.true();
-    });
-
-    test('current batch transactions which have already been charged are deleted', async () => {
-      expect(newRepos.billingTransactions.delete.calledWith(
-        ['00000000-0000-0000-0000-000000000001']
-      )).to.be.true();
-    });
-
-    experiment('historical charges which have no charge in the current batch', () => {
-      test('are fetched from the repo', async () => {
-        expect(newRepos.billingTransactions.find.calledWith(
-          ['00000000-0000-0000-0000-000000000005']
+      test('calls billingTransactions.findByBatchId with correct batch ID', async () => {
+        expect(newRepos.billingTransactions.findByBatchId.calledWith(
+          data.batchId
         )).to.be.true();
       });
 
-      test('have their invoice account fetched from the CRM', async () => {
-        expect(crmV2Connector.invoiceAccounts.getInvoiceAccountsByIds.calledWith(
-          [data.creditTransactions[0].billingInvoiceLicence.billingInvoice.invoiceAccountId]
+      test('calls billingTransactions.findHistoryByBatchId with correct batch ID', async () => {
+        expect(newRepos.billingTransactions.findHistoryByBatchId.calledWith(
+          data.batchId
         )).to.be.true();
       });
 
-      experiment('persist the batch', () => {
-        let batch;
+      test('current batch transactions which have already been charged are deleted', async () => {
+        expect(newRepos.billingTransactions.delete.calledWith(
+          ['00000000-0000-0000-0000-000000000001']
+        )).to.be.true();
+      });
 
-        beforeEach(async () => {
-          batch = batchService.saveInvoicesToDB.lastCall.args[0];
+      experiment('historical charges which have no charge in the current batch', () => {
+        test('are fetched from the repo', async () => {
+          expect(newRepos.billingTransactions.find.calledWith(
+            ['00000000-0000-0000-0000-000000000005']
+          )).to.be.true();
         });
 
-        test('to the correct batch', async () => {
-          expect(batch.id).to.equal(batchId);
+        test('have their invoice account fetched from the CRM', async () => {
+          expect(crmV2Connector.invoiceAccounts.getInvoiceAccountsByIds.calledWith(
+            [data.creditTransactions[0].billingInvoiceLicence.billingInvoice.invoiceAccountId]
+          )).to.be.true();
         });
 
-        test('only the correct number of transactions are credited', async () => {
-          expect(batch.invoices).to.have.length(1);
-          expect(batch.invoices[0].invoiceLicences).to.have.length(1);
-          expect(batch.invoices[0].invoiceLicences[0].transactions).to.have.length(1);
-        });
+        experiment('persist the batch', () => {
+          let batch;
 
-        test('the invoice details are correctly loaded from the CRM', async () => {
-          expect(batch.invoices[0].invoiceAccount.id).to.equal(data.crmResponse[0].invoiceAccountId);
-          expect(batch.invoices[0].invoiceAccount.accountNumber).to.equal(data.crmResponse[0].invoiceAccountNumber);
-          expect(batch.invoices[0].invoiceAccount.company.id).to.equal(data.crmResponse[0].company.companyId);
-          expect(batch.invoices[0].address.id).to.equal(data.crmResponse[0].invoiceAccountAddresses[0].address.addressId);
-        });
+          beforeEach(async () => {
+            batch = batchService.saveInvoicesToDB.lastCall.args[0];
+          });
 
-        test('the licence details are taken from the historical transaction', async () => {
-          const [invoiceAccountLicence] = batch.invoices[0].invoiceLicences;
-          expect(invoiceAccountLicence.licence.id).to.equal(data.creditTransactions[0].billingInvoiceLicence.licence.licenceId);
-          expect(invoiceAccountLicence.licence.licenceNumber).to.equal(data.creditTransactions[0].billingInvoiceLicence.licence.licenceRef);
-        });
+          test('to be the correct batch', async () => {
+            expect(batch.id).to.equal(batchId);
+          });
 
-        test('the new credit transaction has the correct details', async () => {
-          const [transaction] = batch.invoices[0].invoiceLicences[0].transactions;
-          expect(transaction.id).to.be.undefined();
-          expect(transaction.isCredit).to.be.true();
-          expect(transaction.status).to.equal('candidate');
-          expect(transaction.description).to.equal(data.creditTransactions[0].description);
-          expect(transaction.chargeElement.id).to.equal(data.creditTransactions[0].chargeElement.chargeElementId);
+          test('only the correct number of transactions are credited', async () => {
+            expect(batch.invoices).to.have.length(1);
+            expect(batch.invoices[0].invoiceLicences).to.have.length(1);
+            expect(batch.invoices[0].invoiceLicences[0].transactions).to.have.length(1);
+          });
+
+          test('the invoice details are correctly loaded from the CRM', async () => {
+            expect(batch.invoices[0].invoiceAccount.id).to.equal(data.crmResponse[0].invoiceAccountId);
+            expect(batch.invoices[0].invoiceAccount.accountNumber).to.equal(data.crmResponse[0].invoiceAccountNumber);
+            expect(batch.invoices[0].invoiceAccount.company.id).to.equal(data.crmResponse[0].company.companyId);
+            expect(batch.invoices[0].address.id).to.equal(data.crmResponse[0].invoiceAccountAddresses[0].address.addressId);
+          });
+
+          test('the licence details are taken from the historical transaction', async () => {
+            const [invoiceAccountLicence] = batch.invoices[0].invoiceLicences;
+            expect(invoiceAccountLicence.licence.id).to.equal(data.creditTransactions[0].billingInvoiceLicence.licence.licenceId);
+            expect(invoiceAccountLicence.licence.licenceNumber).to.equal(data.creditTransactions[0].billingInvoiceLicence.licence.licenceRef);
+          });
+
+          test('the new credit transaction has the correct details', async () => {
+            const [transaction] = batch.invoices[0].invoiceLicences[0].transactions;
+            expect(transaction.id).to.be.undefined();
+            expect(transaction.isCredit).to.be.true();
+            expect(transaction.status).to.equal('candidate');
+            expect(transaction.description).to.equal(data.creditTransactions[0].description);
+            expect(transaction.chargeElement.id).to.equal(data.creditTransactions[0].chargeElement.chargeElementId);
+          });
         });
+      });
+    });
+
+    experiment('when transactions are added to existing invoices/invoice licences', async () => {
+      beforeEach(async () => {
+        // Create existing invoice/invoice licence
+        batch = createBatch();
+        const invoice = createInvoice(invoiceAccountNumber);
+        invoice.invoiceLicences = [
+          createInvoiceLicence(licenceNumber)
+        ];
+        batch.invoices = [invoice];
+        batchService.getBatchById.resolves(batch);
+
+        await supplementaryBillingService.processBatch(data.batchId);
+      });
+
+      test('transactions are attached to the existing invoice', async () => {
+        expect(batch.invoices).to.be.an.array().length(1);
+        expect(batch.invoices[0].invoiceLicences).to.be.an.array().length(1);
+        expect(batch.invoices[0].invoiceLicences[0].transactions).to.be.an.array().length(1);
       });
     });
   });

@@ -35,16 +35,15 @@ const createChargeElement = (opts = {}) => {
     totalDays: options.totalDays,
     // Number of days this charge element is billable for, taking into
     // account the abstraction period and the date range of the element
-    billableDays: options.billableDays
-  };
-
-  if (options.purposeUseCode) {
-    chargeElement.purposeUse = {
+    billableDays: options.billableDays,
+    purposeUse: {
       type: 'use',
       code: options.purposeUseCode,
-      name: 'Spray Irrigation - Direct'
-    };
-  }
+      name: 'Spray Irrigation - Direct',
+      isTwoPartTariff: options.isTwoPartTariff
+    }
+  };
+
   if (options.timeLimitedStartDate || options.timeLimitedEndDate) {
     chargeElement.timeLimitedPeriod = {
       startDate: options.timeLimitedStartDate,

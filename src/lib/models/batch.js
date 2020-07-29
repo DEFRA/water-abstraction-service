@@ -1,5 +1,6 @@
 'use strict';
 
+const Model = require('./model');
 const Invoice = require('./invoice');
 const FinancialYear = require('./financial-year');
 const Region = require('./region');
@@ -33,8 +34,6 @@ const BATCH_ERROR_CODE = {
   failedToCreateBillRun: 50,
   failedToDeleteInvoice: 60
 };
-
-const Model = require('./model');
 
 const BATCH_TYPE = {
   annual: 'annual',
@@ -181,7 +180,7 @@ class Batch extends Model {
     // Validate type
     assert(invoice instanceof Invoice, 'Instance of Invoice expected');
     // Each customer ref can only appear once in batch
-    if (this.getInvoiceByAccountNumber(invoice.invoiceAccount.accountNumber)) {
+    if (this.getInvoiceByAccountNumberAndFinancialYear(invoice.invoiceAccount.accountNumber, invoice.financialYear)) {
       throw new Error(`An invoice with account number ${invoice.invoiceAccountNumber} is already in the batch`);
     }
     this._invoices.push(invoice);
@@ -198,13 +197,19 @@ class Batch extends Model {
   }
 
   /**
-   * Gets an invoice in the batch by invoice account number
+   * Gets an invoice in the batch by invoice account number and financial year
    * @param {String} accountNumber
+   * @param {FinancialYear} financialYear
+   * @return {Invoice|undefined}
    */
-  getInvoiceByAccountNumber (accountNumber) {
-    return this._invoices.find(
-      invoice => invoice.invoiceAccount.accountNumber === accountNumber
-    );
+  getInvoiceByAccountNumberAndFinancialYear (accountNumber, financialYear) {
+    validators.assertString(accountNumber);
+    validators.assertIsInstanceOf(financialYear, FinancialYear);
+    return this._invoices.find(invoice => {
+      const isAccountNumberMatch = invoice.invoiceAccount.accountNumber === accountNumber;
+      const isFinancialYearMatch = invoice.financialYear.isEqualTo(financialYear);
+      return isAccountNumberMatch && isFinancialYearMatch;
+    });
   }
 
   /**

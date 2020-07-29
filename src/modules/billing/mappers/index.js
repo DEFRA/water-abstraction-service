@@ -1,4 +1,4 @@
-exports.address = require('./address');
+exports.address = require('../../../lib/mappers/address');
 exports.api = require('./api');
 exports.batch = require('./batch');
 exports.billingVolume = require('./billing-volume');
@@ -7,7 +7,6 @@ exports.chargeVersion = require('./charge-version');
 exports.company = require('./company');
 exports.totals = require('./totals');
 exports.company = require('./company');
-exports.contact = require('./contact');
 exports.invoice = require('./invoice');
 exports.invoiceAccount = require('./invoice-account');
 exports.invoiceAccountAddress = require('./invoice-account-address');
