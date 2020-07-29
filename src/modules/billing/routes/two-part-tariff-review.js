@@ -85,7 +85,7 @@ const getBillingVolume = {
 const patchBillingVolume = {
   method: 'PATCH',
   path: '/water/1.0/billing/volumes/{billingVolumeId}',
-  handler: controller.getBillingVolume,
+  handler: controller.patchBillingVolume,
   config: {
     description: 'Updates billing volume',
     validate: {

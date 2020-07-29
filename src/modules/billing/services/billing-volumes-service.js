@@ -75,7 +75,8 @@ const updateBillingVolume = async (billingVolumeId, volume, user) => {
     twoPartTariffError: false,
     twoPartTariffReview: { id: user.id, email: user.email }
   };
-  const updatedBillingVolume = await billingVolumesRepo.update(billingVolume.billingVolumeId, changes);
+
+  const updatedBillingVolume = await billingVolumesRepo.update(billingVolume.id, changes);
   return mappers.billingVolume.dbToModel(updatedBillingVolume);
 };
 

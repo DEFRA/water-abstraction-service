@@ -143,14 +143,13 @@ class ChargeElementContainer {
   }
 
   /**
-   * Checks whether this charge element applies based on 
+   * Checks whether this charge element applies based on
    * the date ranges (e.g. the date range of this element overlaps the charge period)
    * @return {Boolean}
    */
   get isValidForChargePeriod () {
     return !!this._dateRange;
   }
-
 
   /**
    * Checks if summer billing volume

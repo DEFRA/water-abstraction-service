@@ -62,7 +62,7 @@ class ReturnGroup {
   }
 
   getReturnsWithCurrentVersion () {
-    return this._returns.filter(ret => !!ret.currentVersion);
+    return this._returns.filter(ret => !!ret.currentReturnVersion);
   }
 
   /**

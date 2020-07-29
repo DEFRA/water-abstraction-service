@@ -159,25 +159,6 @@ const postApproveBatch = {
   }
 };
 
-const patchTransactionBillingVolume = {
-  method: 'PATCH',
-  path: '/water/1.0/billing/transactions/{transactionId}/volume',
-  handler: controller.patchTransactionBillingVolume,
-  config: {
-    validate: {
-      params: {
-        transactionId: Joi.string().uuid().required()
-      },
-      payload: {
-        volume: Joi.number().positive().allow(0).required()
-      },
-      headers: async values => {
-        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
-      }
-    }
-  }
-};
-
 const getInvoiceLicence = {
   method: 'GET',
   path: '/water/1.0/billing/invoice-licences/{invoiceLicenceId}',
@@ -236,7 +217,6 @@ exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 exports.postApproveReviewBatch = postApproveReviewBatch;
 
-exports.patchTransactionBillingVolume = patchTransactionBillingVolume;
 exports.deleteInvoiceLicence = deleteInvoiceLicence;
 
 const tptRoutes = require('./routes/two-part-tariff-review');

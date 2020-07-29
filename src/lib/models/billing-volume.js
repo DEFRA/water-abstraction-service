@@ -127,7 +127,6 @@ class BillingVolume extends Model {
     this.twoPartTariffStatus = twoPartTariffStatus;
     if (assignBillableStatuses.includes(twoPartTariffStatus)) {
       this.volume = billableVolume;
-      this.calculatedVolume = billableVolume;
     }
   }
 

@@ -107,7 +107,10 @@ const findByIds = async billingVolumeIds => {
   const result = await BillingVolume
     .where('billing_volume_id', 'in', billingVolumeIds)
     .fetchAll({
-      withRelated: 'chargeElement'
+      withRelated: [
+        'chargeElement',
+        'chargeElement.purposeUse'
+      ]
     });
   return result.toJSON();
 };
