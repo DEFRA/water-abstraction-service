@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "1.47.0",
+  "version": "1.48.0",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "repository": {
