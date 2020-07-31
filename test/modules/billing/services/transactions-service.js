@@ -104,19 +104,6 @@ experiment('modules/billing/services/transactions-service', () => {
       });
     });
 
-    experiment('when there is a zero charge response', () => {
-      beforeEach(async () => {
-        await transactionsService.updateWithChargeModuleResponse(transactionId, {
-          status: 'Zero value charge calculated'
-        });
-      });
-
-      test('the transaction is deleted', async () => {
-        const [id] = repos.billingTransactions.delete.lastCall.args;
-        expect(id).to.equal(transactionId);
-      });
-    });
-
     experiment('when there is an unrecognised response', () => {
       const response = {
         message: 'Something strange'

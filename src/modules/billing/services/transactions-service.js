@@ -64,9 +64,7 @@ const updateTransactionWithChargeModuleResponse = (transactionId, response) => {
       externalId
     });
   }
-  if (get(response, 'status') === 'Zero value charge calculated') {
-    return newRepos.billingTransactions.delete(transactionId);
-  }
+
   const err = new Error('Charge module error');
   logger.error('Unexpected create transaction response from charge module', err, { transactionId, response });
   throw err;
