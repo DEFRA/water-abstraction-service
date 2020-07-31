@@ -6,6 +6,7 @@ const Model = require('./model');
 const FinancialYear = require('./financial-year');
 const User = require('./user');
 const { isNull, isFinite } = require('lodash');
+const toFixedPrecision = require('../to-fixed');
 
 const validators = require('./validators');
 
@@ -36,8 +37,6 @@ const setErrorFlagStatuses = [
   twoPartTariffStatuses.ERROR_NO_RETURNS_FOR_MATCHING,
   twoPartTariffStatuses.ERROR_NOT_DUE_FOR_BILLING
 ];
-
-const toFixedPrecision = number => parseFloat(number.toFixed(3));
 
 class BillingVolume extends Model {
   get chargeElementId () {

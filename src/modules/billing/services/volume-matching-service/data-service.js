@@ -14,7 +14,6 @@ const billingVolumesService = require('../billing-volumes-service');
 const FinancialYear = require('../../../../lib/models/financial-year');
 const ChargeElementContainer = require('./models/charge-element-container');
 const ChargeElementGroup = require('./models/charge-element-group');
-const { billingVolume } = require('../../mappers');
 
 const createChargeElementGroup = (chargeVersion, chargePeriod) => {
   const chargeElementContainers = chargeVersion.chargeElements.map(chargeElement => new ChargeElementContainer(chargeElement, chargePeriod));

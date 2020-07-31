@@ -56,16 +56,20 @@ const getDescriptions = chargeElementGroup => {
 
 const getGroupTwoPartTariffStatuses = chargeElementGroups => {
   const codes = chargeElementGroups.map(chargeElementGroup =>
-    chargeElementGroup.chargeElementContainers.map(chargeElementContainer =>
-      chargeElementContainer.billingVolume.twoPartTariffStatus
-    )
+    chargeElementGroup.chargeElementContainers.map(chargeElementContainer => {
+      const isSummer = chargeElementGroup.returnSeason === RETURN_SEASONS.summer;
+      const billingVolume = chargeElementContainer.billingVolumes.find(
+        billingVolume => billingVolume.isSummer === isSummer
+      );
+      return billingVolume.twoPartTariffStatus;
+    })
   );
   return flatMap(codes);
 };
 
 const getGroupAllocatedVolumes = chargeElementGroup => {
   return chargeElementGroup.chargeElementContainers.map(chargeElementContainer =>
-    chargeElementContainer.billingVolume.calculatedVolume
+    chargeElementContainer.totalVolume
   );
 };
 
@@ -89,7 +93,7 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       createChargeElement('summerSpray', { isSummer: true, purposeUse: purposeUses.sprayIrrigation })
     ];
     chargeElementContainers = chargeElements.map(chargeElement => new ChargeElementContainer(chargeElement, chargePeriod));
-    chargeElementGroup = new ChargeElementGroup(chargeElementContainers);
+    chargeElementGroup = new ChargeElementGroup(chargeElementContainers, RETURN_SEASONS.summer);
     ret = new Return();
     ret.fromHash({
       purposeUses: [purposeUses.trickleIrrigation, purposeUses.sprayIrrigation],
@@ -106,17 +110,6 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
   experiment('.volume', () => {
     test('gets the billable volume of all elements in the group', async () => {
       expect(chargeElementGroup.volume).to.equal(60);
-    });
-  });
-
-  experiment('.isSummerElements', () => {
-    test('returns true when there are charge elements with a summer abs period in the group', async () => {
-      expect(chargeElementGroup.isSummerElements()).to.be.true();
-    });
-
-    test('returns false when there are charge elements with a summer abs period in the group', async () => {
-      pullAt(chargeElementGroup.chargeElementContainers, [0, 2, 3, 5]);
-      expect(chargeElementGroup.isSummerElements()).to.be.false();
     });
   });
 
@@ -150,29 +143,23 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
     });
   });
 
-  experiment('.createForSeason', () => {
-    test('returns a new ChargeElementGroup containing only summer elements when "summer" is passed in', async () => {
-      const newGroup = chargeElementGroup.createForSeason(RETURN_SEASONS.summer);
-      expect(getDescriptions(newGroup)).to.equal(['summerTrickle', 'timeLimitedSummerTrickle', 'summerVegetableWashing', 'summerSpray']);
-    });
-
-    test('returns a new ChargeElementGroup containing only winter/all-year elements when "winterAllYear" is passed in', async () => {
-      const newGroup = chargeElementGroup.createForSeason(RETURN_SEASONS.winterAllYear);
-      expect(getDescriptions(newGroup)).to.equal(['winterTrickle', 'winterVegetableWashing']);
-    });
-  });
-
   experiment('.createForReturn', () => {
     test('returns a new ChargeElementGroup containing only elements with purposes uses matching the return', async () => {
       const newGroup = chargeElementGroup.createForReturn(ret);
       expect(getDescriptions(newGroup)).to.equal(['summerTrickle', 'winterTrickle', 'timeLimitedSummerTrickle', 'summerSpray']);
+      expect(newGroup.returnSeason).to.equal(RETURN_SEASONS.summer);
+    });
+
+    test('the chargeElementGroup returnSeason is winterAllYear if the return.isSummer is false', async () => {
+      ret.isSummer = false;
+      const newGroup = chargeElementGroup.createForReturn(ret);
+      expect(newGroup.returnSeason).to.equal(RETURN_SEASONS.winterAllYear);
     });
   });
 
   experiment('.createForReturnLine', () => {
     beforeEach(async () => {
       chargeElementGroup = chargeElementGroup
-        .createForSeason(RETURN_SEASONS.summer)
         .createForReturn(ret);
     });
 
@@ -215,7 +202,7 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       returnLine.dateRange = new DateRange('2019-03-29', '2019-04-04');
       const groups = chargeElementGroup.createForReturnLine(returnLine, chargePeriod);
       const twoPartTariffStatuses = getGroupTwoPartTariffStatuses(groups);
-      expect(twoPartTariffStatuses).to.equal([undefined, undefined, undefined]);
+      expect(twoPartTariffStatuses).to.only.include(undefined);
     });
 
     test('flags an error if a return line straddles charge period not on financial year boundary', async () => {
@@ -223,8 +210,9 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       const returnLine = new ReturnLine('00000000-0000-0000-0000-000000000000');
       returnLine.dateRange = new DateRange('2019-03-29', '2019-04-04');
       const groups = chargeElementGroup.createForReturnLine(returnLine, chargePeriod);
+
       const twoPartTariffStatuses = getGroupTwoPartTariffStatuses(groups);
-      expect(twoPartTariffStatuses).to.equal([ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD, ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD, ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD]);
+      expect(twoPartTariffStatuses).to.only.include(ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD);
     });
   });
 
@@ -240,33 +228,32 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
   experiment('.allocate', () => {
     beforeEach(async () => {
       chargeElementGroup = chargeElementGroup
-        .createForSeason(RETURN_SEASONS.summer)
         .createForReturn(ret);
     });
 
     test('allocates water starting with first element in group', async () => {
       chargeElementGroup.allocate(5);
-      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([5, 0, 0]);
+      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([5, 0, 0, 0]);
     });
 
     test('allocates water moving on to second element in group', async () => {
       chargeElementGroup.allocate(15);
-      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 5, 0]);
+      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 5, 0, 0]);
     });
 
     test('allocates water moving on to last element in group', async () => {
       chargeElementGroup.allocate(25);
-      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 10, 5]);
+      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 10, 5, 0]);
     });
 
     test('can allocate full billable volume to all elements', async () => {
-      chargeElementGroup.allocate(30);
-      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 10, 10]);
+      chargeElementGroup.allocate(40);
+      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 10, 10, 10]);
     });
 
     test('when there is an over-abstraction, the volume is allocated to the last element in the group', async () => {
-      chargeElementGroup.allocate(40);
-      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 10, 20]);
+      chargeElementGroup.allocate(50);
+      expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 10, 10, 20]);
     });
   });
 
@@ -281,11 +268,11 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       chargeElementGroup.chargeElementContainers = chargeElements.map(chargeElement => new ChargeElementContainer(chargeElement, chargePeriod));
 
       [10, 6, 5].forEach((volume, i) => {
-        chargeElementGroup.chargeElementContainers[i].billingVolume.allocate(volume);
+        chargeElementGroup.chargeElementContainers[i].allocate(chargeElementGroup.returnSeason, volume);
       });
     });
 
-    experiment('when the time-limited elements abs period is contained by the base element abs period', () => {
+    experiment('when the time-limited elements abs period is contained by the base element abs period:', () => {
       test('before re-allocation, the base element is not full', async () => {
         expect(getGroupAllocatedVolumes(chargeElementGroup)).to.equal([10, 6, 5]);
       });
@@ -296,7 +283,7 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       });
     });
 
-    experiment('when the time-limited elements abs period is not contained by the base element abs period', () => {
+    experiment('when the time-limited elements abs period is not contained by the base element abs period:', () => {
       beforeEach(async () => {
         chargeElements[0].abstractionPeriod.setDates(1, 1, 31, 12);
       });
@@ -322,7 +309,7 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       chargeElementGroup.chargeElementContainers = chargeElements.map(chargeElement => new ChargeElementContainer(chargeElement, chargePeriod));
 
       [5, 15].forEach((volume, i) => {
-        chargeElementGroup.chargeElementContainers[i].billingVolume.allocate(volume);
+        chargeElementGroup.chargeElementContainers[i].allocate(chargeElementGroup.returnSeason, volume);
       });
 
       chargeElementGroup.flagOverAbstraction();
@@ -346,7 +333,7 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       chargeElementGroup.chargeElementContainers = chargeElements.map(chargeElement => new ChargeElementContainer(chargeElement, chargePeriod));
 
       [5, 1 / 3].forEach((volume, i) => {
-        chargeElementGroup.chargeElementContainers[i].billingVolume.allocate(volume);
+        chargeElementGroup.chargeElementContainers[i].allocate(chargeElementGroup.returnSeason, volume);
       });
 
       billingVolumes = chargeElementGroup.toBillingVolumes();

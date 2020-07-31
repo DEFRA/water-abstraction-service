@@ -14,7 +14,6 @@ const ChargeElementContainer = require('./charge-element-container');
 const { ChargeElementMatchingError } = require('../errors');
 
 const { RETURN_SEASONS } = require('../../../../../lib/models/constants');
-const { chargeElement } = require('../../../mappers');
 const {
   ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD
 } = require('../../../../../lib/models/billing-volume').twoPartTariffStatuses;
@@ -80,7 +79,7 @@ const isNotTimeLimited = negate(isTimeLimited);
 const reallocateElement = (returnSeason, sourceElementContainer, targetElementContainer) => {
   const volumeToReallocate = Math.min(
     targetElementContainer.getAvailableVolume(),
-    sourceElementContainer.billingVolume.calculatedVolume
+    sourceElementContainer.getBillingVolume(returnSeason).volume
   );
   if (volumeToReallocate > 0) {
     sourceElementContainer.deallocate(returnSeason, volumeToReallocate);

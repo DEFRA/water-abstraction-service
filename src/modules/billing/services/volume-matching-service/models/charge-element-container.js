@@ -1,14 +1,16 @@
 'use strict';
 
+// Models
 const ChargeElement = require('../../../../../lib/models/charge-element');
 const DateRange = require('../../../../../lib/models/date-range');
 const ReturnLine = require('../../../../../lib/models/return-line');
 const BillingVolume = require('../../../../../lib/models/billing-volume');
-
-const { CHARGE_SEASON, RETURN_SEASONS } = require('../../../../../lib/models/constants');
-
-const validators = require('../../../../../lib/models/validators');
 const FinancialYear = require('../../../../../lib/models/financial-year');
+
+const { RETURN_SEASONS, CHARGE_SEASON } = require('../../../../../lib/models/constants');
+
+const toFixedPrecision = require('../../../../../lib/to-fixed');
+const validators = require('../../../../../lib/models/validators');
 
 /**
  * Gets a DateRange range for the charge element, taking into account
@@ -127,6 +129,15 @@ class ChargeElementContainer {
   }
 
   /**
+   * Get the billingVolume for the supplied return season
+   * @param {String} returnSeason
+   */
+  getBillingVolume (returnSeason) {
+    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
+    return this._billingVolumes[returnSeason];
+  }
+
+  /**
    * Get the number of abstraction days
    * @return {Number}
    */
@@ -182,13 +193,12 @@ class ChargeElementContainer {
    * @return {Number}
    */
   getScore (returnSeason) {
-    console.log('season', returnSeason);
     validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
 
     let score = 0;
 
-    // Give summer elements precedence for summer returns
-    if (returnSeason === RETURN_SEASONS.summer && this.isSummer) {
+    // Give summer elements precedence if matching summer returns
+    if (this.isSummer && (returnSeason === RETURN_SEASONS.summer)) {
       score -= 1000;
     }
 
@@ -220,7 +230,7 @@ class ChargeElementContainer {
    */
   getAvailableVolume () {
     const volume = this.chargeElement.volume - this.totalVolume;
-    return volume > 0 ? volume : 0;
+    return volume > 0 ? toFixedPrecision(volume) : 0;
   }
 
   /**
