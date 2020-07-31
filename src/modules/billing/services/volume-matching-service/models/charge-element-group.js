@@ -246,6 +246,8 @@ class ChargeElementGroup {
       chargeElementContainer => chargeElementContainer.isReturnLineMatch(returnLine)
     );
 
+    // @TODO this will be re-instated once algorithm is updated to have
+    // separate billingVolume records for summer|winter/all-year
     if (elements.length === 0) {
       throw new ChargeElementMatchingError(`No charge elements to match for return line ${returnLine.id}`);
     }

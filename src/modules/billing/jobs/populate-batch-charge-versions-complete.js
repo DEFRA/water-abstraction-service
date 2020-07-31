@@ -39,7 +39,12 @@ const handlePopulateBatchChargeVersionsComplete = async (job, messageQueue) => {
     ? processChargeVersionsJob.createMessage(eventId, batch)
     : twoPartTariffMatchingJob.createMessage(eventId, batch);
 
-  return messageQueue.publish(message);
+  try {
+    return messageQueue.publish(message);
+  } catch (err) {
+    batchJob.logOnCompleteError(job, err);
+    throw err;
+  }
 };
 
 module.exports = handlePopulateBatchChargeVersionsComplete;

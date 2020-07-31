@@ -264,9 +264,12 @@ experiment('lib/models/billingVolume', () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED, 20);
       });
 
-      test('the volume and calculated volume are set', async () => {
+      test('the volume is set', async () => {
         expect(billingVolume.volume).to.be.equal(20);
-        expect(billingVolume.calculatedVolume).to.equal(20);
+      });
+
+      test('the calculatedVolume is undefined', async () => {
+        expect(billingVolume.calculatedVolume).to.be.undefined();
       });
 
       test('the error flag is not set', async () => {
@@ -321,9 +324,12 @@ experiment('lib/models/billingVolume', () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE, 20);
       });
 
-      test('the volume and calculated volume are set', async () => {
+      test('the volume is set', async () => {
         expect(billingVolume.volume).to.be.equal(20);
-        expect(billingVolume.calculatedVolume).to.equal(20);
+      });
+
+      test('the calculatedVolume is undefined', async () => {
+        expect(billingVolume.calculatedVolume).to.be.undefined();
       });
 
       test('the error flag is set', async () => {
@@ -340,9 +346,12 @@ experiment('lib/models/billingVolume', () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_LATE_RETURNS, 20);
       });
 
-      test('the volume and calculated volume are set', async () => {
+      test('the volume is set', async () => {
         expect(billingVolume.volume).to.be.equal(20);
-        expect(billingVolume.calculatedVolume).to.equal(20);
+      });
+
+      test('the calculatedVolume is undefined', async () => {
+        expect(billingVolume.calculatedVolume).to.be.undefined();
       });
 
       test('the error flag is not set', async () => {

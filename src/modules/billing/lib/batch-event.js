@@ -4,6 +4,7 @@ const Event = require('../../../lib/models/event');
 const eventService = require('../../../lib/services/events');
 
 const EVENT_TYPES = {
+  create: 'billing-batch',
   approveReview: 'billing-batch:approve-review'
 };
 
@@ -13,7 +14,7 @@ const EVENT_TYPES = {
  */
 const createBatchEvent = (options) => {
   const batchEvent = new Event();
-  batchEvent.type = options.type || 'billing-batch';
+  batchEvent.type = options.type || EVENT_TYPES.create;
   batchEvent.subtype = options.subtype || null;
   batchEvent.issuer = options.issuer;
   batchEvent.metadata = { batch: options.batch };

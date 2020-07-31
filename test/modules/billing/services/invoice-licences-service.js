@@ -25,7 +25,7 @@ const { BatchStatusError } = require('../../../../src/modules/billing/lib/errors
 experiment('modules/billing/services/invoice-licences-service', () => {
   beforeEach(async () => {
     sandbox.stub(newRepos.billingInvoiceLicences, 'findOne');
-    sandbox.stub(newRepos.billingInvoiceLicences, 'findLicencesWithTransactionStatusesForBatch');
+    // sandbox.stub(newRepos.billingInvoiceLicences, 'findLicencesWithTransactionStatusesForBatch');
     sandbox.stub(newRepos.billingInvoiceLicences, 'upsert');
     sandbox.stub(newRepos.billingInvoiceLicences, 'findOneInvoiceLicenceWithTransactions');
     sandbox.stub(newRepos.billingInvoiceLicences, 'delete');
@@ -62,111 +62,6 @@ experiment('modules/billing/services/invoice-licences-service', () => {
       const [data] = newRepos.billingInvoiceLicences.upsert.lastCall.args;
       expect(data).to.equal({
         licenceRef: '01/123'
-      });
-    });
-  });
-
-  experiment('.getLicencesWithTransactionStatusesForBatch', () => {
-    experiment('when there is data returned it contains', () => {
-      let result;
-
-      beforeEach(async () => {
-        newRepos.billingInvoiceLicences.findLicencesWithTransactionStatusesForBatch.resolves([
-          {
-            billingInvoiceId: 'billing-invoice-id-1',
-            billingInvoiceLicenceId: 'billing-invoice-licence-id-1',
-            licenceRef: 'licence-1',
-            licenceId: 'licence-id-1',
-            licenceHolderName: {
-              id: 'licence-holder-1',
-              name: 'licence-holder-1-name'
-            },
-            twoPartTariffErrors: [
-              false,
-              false
-            ],
-            twoPartTariffStatuses: [
-              null,
-              null
-            ]
-          },
-          {
-            billingInvoiceId: 'billing-invoice-id-2',
-            billingInvoiceLicenceId: 'billing-invoice-licence-id-2',
-            licenceRef: 'licence-2',
-            licenceId: 'licence-id-2',
-            licenceHolderName: {
-              id: 'licence-holder-2',
-              initials: 'A B',
-              lastName: 'Last',
-              firstName: 'First',
-              salutation: null
-            },
-            twoPartTariffErrors: [
-              false,
-              true
-            ],
-            twoPartTariffStatuses: [
-              100,
-              null,
-              200,
-              200
-            ]
-          }
-        ]);
-
-        result = await invoiceLicencesService.getLicencesWithTransactionStatusesForBatch('batch-id');
-      });
-
-      test('the billing invoice id', async () => {
-        expect(result[0].billingInvoiceId).to.equal('billing-invoice-id-1');
-        expect(result[1].billingInvoiceId).to.equal('billing-invoice-id-2');
-      });
-
-      test('the billing invoice licence id', async () => {
-        expect(result[0].billingInvoiceLicenceId).to.equal('billing-invoice-licence-id-1');
-        expect(result[1].billingInvoiceLicenceId).to.equal('billing-invoice-licence-id-2');
-      });
-
-      test('the licence ref', async () => {
-        expect(result[0].licenceRef).to.equal('licence-1');
-        expect(result[1].licenceRef).to.equal('licence-2');
-      });
-
-      test('the licence id', async () => {
-        expect(result[0].licenceId).to.equal('licence-id-1');
-        expect(result[1].licenceId).to.equal('licence-id-2');
-      });
-
-      test('the licence holder object', async () => {
-        expect(result[0].licenceHolder).to.equal({
-          id: 'licence-holder-1',
-          name: 'licence-holder-1-name'
-        });
-
-        expect(result[1].licenceHolder).to.equal({
-          id: 'licence-holder-2',
-          initials: 'A B',
-          lastName: 'Last',
-          firstName: 'First',
-          salutation: null
-        });
-      });
-
-      test('a false error flag when the none of the values are true', async () => {
-        expect(result[0].twoPartTariffError).to.be.false();
-      });
-
-      test('a true error flag when one or more of the values are true', async () => {
-        expect(result[1].twoPartTariffError).to.be.true();
-      });
-
-      test('an empty array status codes when the values are all null', async () => {
-        expect(result[0].twoPartTariffStatuses).to.equal([]);
-      });
-
-      test('an array of unique status codes when the values are not all null', async () => {
-        expect(result[1].twoPartTariffStatuses).to.equal([100, 200]);
       });
     });
   });

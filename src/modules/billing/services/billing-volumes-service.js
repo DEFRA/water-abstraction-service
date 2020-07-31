@@ -2,11 +2,8 @@
 
 const billingVolumesRepo = require('../../../lib/connectors/repos/billing-volumes');
 const mappers = require('../mappers');
-const twoPartTariffMatching = require('./two-part-tariff-service');
 const { NotFoundError } = require('../../../lib/errors');
 const { BillingVolumeStatusError } = require('../lib/errors');
-
-const isSummerChargeElement = chargeElement => chargeElement.season === 'summer';
 
 /**
  * Filter charge elements for matching season
@@ -18,42 +15,10 @@ const getVolumesForChargeElements = async (chargeElements, financialYear) => {
   return data.map(mappers.billingVolume.dbToModel);
 };
 
-/**
- * Calls two part tariff matching algorithm
- * @return {Object} matching results mapped to db
- */
-const calculateVolumesForChargeElements = async (chargeElements, licenceNumber, financialYear, isSummer, batch) => {
-  const matchingResults = await twoPartTariffMatching.calculateVolumes(chargeElements, licenceNumber, financialYear, isSummer);
-  return mappers.billingVolume.matchingResultsToDb(matchingResults, financialYear, isSummer, batch.id);
-};
-
-/**
- * Create a new record for calculated billing volume
- * @return {BillingVolume}
- */
-const persistBillingVolumesData = async (data) => Promise.all(
-  data.map(async row => {
-    const result = await billingVolumesRepo.create(row);
-    return mappers.billingVolume.dbToModel(result);
-  }));
-
-/**
- * Get billing volumes from the DB or by calling the returns matching algorithm
- * @param {ChargeVersion} chargeVersion containing licence and chargeElements
- * @param {Integer} financialYear
- * @param {Boolean} isSummer
- */
-const getVolumes = async (chargeElements, licenceNumber, financialYear, isSummer, batch) => {
-  const volumes = await getVolumesForChargeElements(chargeElements, financialYear);
-  if (volumes) return volumes;
-
-  const billingVolumesData = await calculateVolumesForChargeElements(chargeElements, licenceNumber, financialYear, isSummer, batch);
-  return persistBillingVolumesData(billingVolumesData);
-};
-
 const assertBillingVolumeIsNotApproved = billingVolume => {
   if (billingVolume.isApproved) throw new BillingVolumeStatusError('Approved billing volumes cannot be edited');
 };
+
 /**
  * Validates that the billingVolume has not been approved yet and
  * updates billingVolume with volume, updated twoPartTariffError to false
@@ -92,18 +57,16 @@ const getUnapprovedVolumesForBatchCount = async batch => {
 
 const getVolumesForBatch = async batch => billingVolumesRepo.findByBatchId(batch.id);
 
-const getVolumesWithTwoPartError = async batch => {
-  const billingVolumes = await getVolumesForBatch(batch);
-  return billingVolumes.filter(billingVolume => billingVolume.twoPartTariffError);
-};
-
 /**
  * Throws error if there are billing volumes in the batch with two-part tariff error
  * @param {Batch} batch
  */
 const assertNoBillingVolumesWithTwoPartError = async batch => {
-  const billingVolumesWithTwoPartError = await getVolumesWithTwoPartError(batch);
-  if (billingVolumesWithTwoPartError.length > 0) {
+  const billingVolumes = await getVolumesForBatch(batch);
+  const isError = billingVolumes.some(
+    billingVolume => billingVolume.twoPartTariffError
+  );
+  if (isError) {
     throw new BillingVolumeStatusError('Cannot approve review. There are outstanding two part tariff errors to resolve');
   }
 };
@@ -161,9 +124,7 @@ const getBillingVolumeById = async (billingVolumeId) => {
   return mappers.billingVolume.dbToModel(data);
 };
 
-exports.getVolumes = getVolumes;
 exports.updateBillingVolume = updateBillingVolume;
-exports.isSummerChargeElement = isSummerChargeElement;
 exports.getUnapprovedVolumesForBatchCount = getUnapprovedVolumesForBatchCount;
 exports.getVolumesForBatch = getVolumesForBatch;
 exports.approveVolumesForBatch = approveVolumesForBatch;
