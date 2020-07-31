@@ -27,14 +27,16 @@ const getReturnSeason = (ret, summerChargeElementGroup) => {
   return isSummerMatch ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
 };
 
+const getReturnGroupKey = ret => ret.isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
+
 /**
  * Places returns into groups for summer and winter/all-year
  * @param {Array<Return>} returns
  * @param {Object} chargeElementGroups
  */
-const createReturnGroups = (returns, summerChargeElementGroup) => {
+const createReturnGroups = (returns) => {
   // Group by season
-  const returnGroups = groupBy(returns, ret => getReturnSeason(ret, summerChargeElementGroup));
+  const returnGroups = groupBy(returns, getReturnGroupKey);
   return {
     [RETURN_SEASONS.summer]: new ReturnGroup(returnGroups[RETURN_SEASONS.summer]).createForTwoPartTariff(),
     [RETURN_SEASONS.winterAllYear]: new ReturnGroup(returnGroups[RETURN_SEASONS.winterAllYear]).createForTwoPartTariff()
@@ -48,14 +50,13 @@ const createReturnGroups = (returns, summerChargeElementGroup) => {
  * @param {ChargeElementGroup} summerChargeElementGroup
  * @return {Promise<Object>} ReturnGroup intances for summer, winterAllYear
  */
-const getReturnGroups = async (licenceNumber, financialYear, summerChargeElementGroup) => {
+const getReturnGroups = async (licenceNumber, financialYear) => {
   validators.assertLicenceNumber(licenceNumber);
   validators.assertIsInstanceOf(financialYear, FinancialYear);
-  validators.assertIsInstanceOf(summerChargeElementGroup, ChargeElementGroup);
 
   // Get all returns and group by season
   const returns = await returnsService.getReturnsForLicenceInFinancialYear(licenceNumber, financialYear);
-  return createReturnGroups(returns, summerChargeElementGroup);
+  return createReturnGroups(returns);
 };
 
 exports.getReturnGroups = getReturnGroups;

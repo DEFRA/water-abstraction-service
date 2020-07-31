@@ -7,6 +7,7 @@ const { logger } = require('../../../../logger');
 const DateRange = require('../../../../lib/models/date-range');
 const ChargeElementGroup = require('./models/charge-element-group');
 const ReturnGroup = require('./models/return-group');
+const { RETURN_SEASONS } = require('../../../../lib/models/constants');
 
 /**
  * Allocates the return line volume
@@ -40,10 +41,14 @@ const allocateReturnLine = (lineChargeElementGroups, returnLine) => {
  * @param {ReturnGroup} returnGroup
  * @return {Array<BillingVolume>}
  */
-const match = (chargePeriod, chargeElementGroup, returnGroup) => {
+const match = (chargePeriod, chargeElementGroup, returnGroup, isSummer) => {
   validators.assertIsInstanceOf(chargePeriod, DateRange);
   validators.assertIsInstanceOf(chargeElementGroup, ChargeElementGroup);
   validators.assertIsInstanceOf(returnGroup, ReturnGroup);
+  validators.assertIsBoolean(isSummer);
+
+  // Set charge element group return season
+  chargeElementGroup.returnSeason = isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
 
   // Returns have errors - assign error and full billable/null to billing volumes
   if (returnGroup.errorCode) {
