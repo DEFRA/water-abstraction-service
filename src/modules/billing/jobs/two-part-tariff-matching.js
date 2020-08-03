@@ -20,10 +20,11 @@ const createMessage = (eventId, batch) => {
 const handleTwoPartTariffMatching = async job => {
   batchJob.logHandling(job);
 
-  const batchId = get(job, 'data.batch.id');
-  const batch = await batchService.getBatchById(batchId);
-
   try {
+    // Get batch
+    const batchId = get(job, 'data.batch.id');
+    const batch = await batchService.getBatchById(batchId);
+
     // Check batch in "processing" status
     batchStatus.assertBatchIsProcessing(batch);
 
