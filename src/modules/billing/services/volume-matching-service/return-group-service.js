@@ -8,24 +8,9 @@ const validators = require('../../../../lib/models/validators');
 const returnsService = require('../../../../lib/services/returns');
 
 // Models
-const ChargeElementGroup = require('./models/charge-element-group');
 const FinancialYear = require('../../../../lib/models/financial-year');
 const ReturnGroup = require('./models/return-group');
 const { RETURN_SEASONS } = require('../../../../lib/models/constants');
-
-/**
- * Gets the return season, taking into account the return isSummer flag,
- * and whether there are any summer charge elements with a matching purpose for matching
- * @param {Return} ret
- * @param {ChargeElementGroup} summerChargeElementGroup
- * @return {String} return season
- */
-const getReturnSeason = (ret, summerChargeElementGroup) => {
-  const isSummerMatch = ret.isSummer && ret.purposeUses.some(purposeUse => {
-    return summerChargeElementGroup.isPurposeUseMatch(purposeUse);
-  });
-  return isSummerMatch ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
-};
 
 const getReturnGroupKey = ret => ret.isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
 

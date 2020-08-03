@@ -4,7 +4,7 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 const { expect } = require('@hapi/code');
 
 const uuid = require('uuid/v4');
-const { pullAt, flatMap } = require('lodash');
+const { flatMap } = require('lodash');
 
 const ChargeElementContainer = require('../../../../../../src/modules/billing/services/volume-matching-service/models/charge-element-container');
 const ChargeElementGroup = require('../../../../../../src/modules/billing/services/volume-matching-service/models/charge-element-group');

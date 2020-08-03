@@ -19,7 +19,7 @@ const createMessage = (eventId, batch) => {
   });
 };
 
-const handleProcessChargeVersion = async job => {
+const handleProcessChargeVersions = async job => {
   batchJob.logHandling(job);
 
   try {
@@ -43,5 +43,5 @@ const handleProcessChargeVersion = async job => {
 };
 
 exports.createMessage = createMessage;
-exports.handler = handleProcessChargeVersion;
+exports.handler = handleProcessChargeVersions;
 exports.jobName = JOB_NAME;

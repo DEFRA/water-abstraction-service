@@ -13,7 +13,7 @@ const BillingVolume = require('../../../../../../src/lib/models/billing-volume')
 const DateRange = require('../../../../../../src/lib/models/date-range');
 const PurposeUse = require('../../../../../../src/lib/models/purpose-use');
 const ReturnLine = require('../../../../../../src/lib/models/return-line');
-const { RETURN_SEASONS, CHARGE_SEASON } = require('../../../../../../src/lib/models/constants');
+const { RETURN_SEASONS } = require('../../../../../../src/lib/models/constants');
 const { ERROR_OVER_ABSTRACTION } = BillingVolume.twoPartTariffStatuses;
 
 const createReturnLine = (startDate, endDate) => {
