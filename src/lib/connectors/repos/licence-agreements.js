@@ -10,13 +10,34 @@ const { LicenceAgreement } = require('../bookshelf');
  * @return {Promise<Array>}
  */
 const findByLicenceRef = async (licenceRef, agreementTypes = []) => {
-  const licenceAgreements = await LicenceAgreement
+  let licenceAgreements = LicenceAgreement
     .forge()
-    .query('where', 'licence_ref', licenceRef)
-    .query('whereIn', 'financial_agreement_type_id', agreementTypes)
+    .query('where', 'licence_ref', licenceRef);
+
+  if (agreementTypes.length) {
+    licenceAgreements = licenceAgreements
+      .query('whereIn', 'financial_agreement_type_id', agreementTypes);
+  }
+
+  licenceAgreements = await licenceAgreements
     .orderBy('start_date', 'asc')
     .fetchAll();
+
   return licenceAgreements.toJSON();
 };
 
+/**
+ * Gets a licence agreement by id
+ *
+ * @param {String} licenceAgreementId
+ */
+const findOne = async licenceAgreementId => {
+  const licenceAgreement = await LicenceAgreement
+    .forge({ licenceAgreementId })
+    .fetch({ require: false });
+
+  return licenceAgreement && licenceAgreement.toJSON();
+};
+
 exports.findByLicenceRef = findByLicenceRef;
+exports.findOne = findOne;

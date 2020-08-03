@@ -1,6 +1,7 @@
 'use strict';
 
 const repos = require('../connectors/repos');
+const licenceAgreementMapper = require('../mappers/licence-agreement');
 const licenceMapper = require('../mappers/licence');
 const licenceVersionMapper = require('../mappers/licence-version');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../models/constants');
@@ -75,6 +76,18 @@ const updateIncludeInSupplementaryBillingStatusForSentBatch = async batchId => {
   return updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId);
 };
 
+const getLicenceAgreementsByLicenceRef = async licenceRef => {
+  const agreements = await repos.licenceAgreements.findByLicenceRef(licenceRef);
+  return agreements.map(licenceAgreementMapper.dbToModel);
+};
+
+const getLicenceAgreementById = async licenceAgreementId => {
+  const licenceAgreement = await repos.licenceAgreements.findOne(licenceAgreementId);
+  return licenceAgreement && licenceAgreementMapper.dbToModel(licenceAgreement);
+};
+
+exports.getLicenceAgreementById = getLicenceAgreementById;
+exports.getLicenceAgreementsByLicenceRef = getLicenceAgreementsByLicenceRef;
 exports.getLicenceById = getLicenceById;
 exports.getLicenceVersionById = getLicenceVersionById;
 exports.getLicenceVersions = getLicenceVersions;
