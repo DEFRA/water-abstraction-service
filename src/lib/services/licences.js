@@ -1,30 +1,48 @@
 'use strict';
 
 const repos = require('../connectors/repos');
+const licenceAgreementMapper = require('../mappers/licence-agreement');
 const licenceMapper = require('../mappers/licence');
 const licenceVersionMapper = require('../mappers/licence-version');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../models/constants');
+
+const service = require('./service');
 
 /**
  * Gets a licence model by ID
  * @param {String} licenceId
  * @return {Promise<Licence>}
  */
-const getLicenceById = async licenceId => {
-  const data = await repos.licences.findOne(licenceId);
-  return data && licenceMapper.dbToModel(data);
-};
+const getLicenceById = async licenceId =>
+  service.findOne(licenceId, repos.licences.findOne, licenceMapper);
 
-const getLicenceVersions = async licenceId => {
-  const versions = await repos.licenceVersions.findByLicenceId(licenceId);
-  return versions.map(licenceVersionMapper.dbToModel);
-};
+const getLicenceVersions = async licenceId =>
+  service.findMany(
+    licenceId,
+    repos.licenceVersions.findByLicenceId,
+    licenceVersionMapper
+  );
 
-const getLicenceVersionById = async licenceVersionId => {
-  const licenceVersion = await repos.licenceVersions.findOne(licenceVersionId);
+const getLicenceVersionById = async licenceVersionId =>
+  service.findOne(
+    licenceVersionId,
+    repos.licenceVersions.findOne,
+    licenceVersionMapper
+  );
 
-  return licenceVersion && licenceVersionMapper.dbToModel(licenceVersion);
-};
+const getLicenceAgreementsByLicenceRef = async licenceRef =>
+  service.findMany(
+    licenceRef,
+    repos.licenceAgreements.findByLicenceRef,
+    licenceAgreementMapper
+  );
+
+const getLicenceAgreementById = async licenceAgreementId =>
+  service.findOne(
+    licenceAgreementId,
+    repos.licenceAgreements.findOne,
+    licenceAgreementMapper
+  );
 
 /**
  * Updates the includeInSupplementaryBilling value for the given licence ids
@@ -75,6 +93,8 @@ const updateIncludeInSupplementaryBillingStatusForSentBatch = async batchId => {
   return updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId);
 };
 
+exports.getLicenceAgreementById = getLicenceAgreementById;
+exports.getLicenceAgreementsByLicenceRef = getLicenceAgreementsByLicenceRef;
 exports.getLicenceById = getLicenceById;
 exports.getLicenceVersionById = getLicenceVersionById;
 exports.getLicenceVersions = getLicenceVersions;
