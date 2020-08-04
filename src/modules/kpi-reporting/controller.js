@@ -1,4 +1,5 @@
 'use-strict';
+
 const helpers = require('@envage/water-abstraction-helpers');
 const dataService = require('./services/data-service');
 
@@ -9,14 +10,9 @@ const getReturnCycles = async () => {
   return helpers.returns.date.createReturnCycles().slice(-2);
 };
 
-/**
- * This method requests all the KPI data sets maps them and returns the data for the KPI UI
- * @param {*} request
- * @returns {Object} an object containing all the data sets required for the KPI UI
- */
-const getKPIData = async (request) => {
+const collectKpiData = async () => {
   const returnCycles = await getReturnCycles();
-  const [registrationsData, delegatedAccessData, returnsDataMonthly, returnsDataCycle1, returnsDataCycle2, licenceNamesData] = await Promise.all([
+  const [registrations, delegatedAccess, returnsMonthly, returnsCycle1, returnsCycle2, licenceNames] = await Promise.allSettled([
     // Registrations data from IDM
     dataService.getIDMRegistrationsData(),
     // Delegated access - CRM 1.0
@@ -27,17 +23,45 @@ const getKPIData = async (request) => {
     dataService.getReturnsDataByCycle(returnCycles[1].startDate, returnCycles[1].endDate, returnCycles[1].isSummer),
     dataService.getReturnsDataByCycle(returnCycles[0].startDate, returnCycles[0].endDate, returnCycles[0].isSummer),
     dataService.getLicenceNamesData()
-  ]);
+  ]).then(responses => {
+    return responses.map(response => response.status === 'fulfilled' ? response.value : null);
+  });
 
-  // Map and return the data
-  const emptyResponse = { totals: { allTime: 0, ytd: 0 }, monthly: [] };
-  const returnsMonthly = returnsDataMonthly ? mappers.mapReturnsDataMonthly(returnsDataMonthly) : emptyResponse;
-  const returnsCycle1 = returnsDataCycle1 ? mappers.mapReturnsDataByCycle(returnsDataCycle1, returnCycles[1]) : {};
-  const returnsCycle2 = returnsDataCycle2 ? mappers.mapReturnsDataByCycle(returnsDataCycle2, returnCycles[0]) : {};
-  const licenceNames = licenceNamesData ? mappers.mapLicenceNamesData(licenceNamesData) : emptyResponse;
-  const registrations = registrationsData || emptyResponse;
-  const delegatedAccess = delegatedAccessData || emptyResponse;
-  return { data: { registrations, delegatedAccess, returnsMonthly, returnsCycle1, returnsCycle2, licenceNames } };
+  return { returnCycles, registrations, delegatedAccess, returnsMonthly, returnsCycle1, returnsCycle2, licenceNames };
 };
 
-module.exports.getKPIData = getKPIData;
+/**
+ * This method requests all the KPI data sets, maps them and returns the data for the KPI UI
+ * @param {*} request
+ * @returns {Object} an object containing all the data sets required for the KPI UI
+ */
+const getKpiData = async (request) => {
+  const kpiData = await collectKpiData();
+
+  return {
+    data: {
+      registrations: dataOrEmpty(kpiData.registrations),
+      delegatedAccess: dataOrEmpty(kpiData.delegatedAccess),
+      returnsMonthly: dataOrEmpty(kpiData.returnsMonthly, mappers.mapReturnsDataMonthly),
+      returnsCycle1: getReturnsCycleData(kpiData.returnsCycle1, kpiData.returnCycles[1], {}),
+      returnsCycle2: getReturnsCycleData(kpiData.returnsCycle2, kpiData.returnCycles[0], {}),
+      licenceNames: dataOrEmpty(kpiData.licenceNames, mappers.mapLicenceNamesData)
+    }
+  };
+};
+
+const getReturnsCycleData = (data, returnCycle) => {
+  return data
+    ? mappers.mapReturnsDataByCycle(data, returnCycle)
+    : {};
+};
+
+const getEmptyResponse = () => ({ totals: { allTime: 0, ytd: 0 }, monthly: [] });
+
+const dataOrEmpty = (data, mapper, empty = getEmptyResponse()) => {
+  return data
+    ? mapper ? mapper(data) : data
+    : empty;
+};
+
+module.exports.getKpiData = getKpiData;

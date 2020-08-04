@@ -67,7 +67,7 @@ experiment('./modules/kpi-reporting/controller', () => {
           licenceNames: emptyResponse
         }
       };
-      const response = await controller.getKPIData({});
+      const response = await controller.getKpiData({});
       expect(response).to.be.equal(emptyDataRespomse);
     });
   });
@@ -82,7 +82,7 @@ experiment('./modules/kpi-reporting/controller', () => {
     });
 
     test('Licence Named data from events is returned in the right shape', async () => {
-      const { data: { licenceNames } } = await controller.getKPIData();
+      const { data: { licenceNames } } = await controller.getKpiData();
       expect(licenceNames.totals).to.be.equal({ allTime: 630, ytd: 330 });
       expect(licenceNames.monthly[0].currentYear).to.be.true();
       expect(licenceNames.monthly[0].named).to.equal(220);
@@ -93,7 +93,7 @@ experiment('./modules/kpi-reporting/controller', () => {
     });
 
     test('registrations data from events is returned in the right shape', async () => {
-      const { data: { registrations } } = await controller.getKPIData();
+      const { data: { registrations } } = await controller.getKpiData();
       expect(registrations.totals).to.be.equal({ allTime: 20, ytd: 18 });
       expect(registrations.monthly[0].month).to.equal('June');
       expect(registrations.monthly[0].internal).to.equal(2);
@@ -102,7 +102,7 @@ experiment('./modules/kpi-reporting/controller', () => {
     });
 
     test('Returns monthly data from events is returned in the right shape', async () => {
-      const { data: { returnsMonthly } } = await controller.getKPIData();
+      const { data: { returnsMonthly } } = await controller.getKpiData();
       expect(returnsMonthly.totals).to.be.equal({ allTime: 1, ytd: 1 });
       expect(returnsMonthly.monthly[0].month).to.equal('January');
       expect(returnsMonthly.monthly[0].request).to.equal(0);
@@ -110,7 +110,7 @@ experiment('./modules/kpi-reporting/controller', () => {
       expect(returnsMonthly.monthly[0].currentYear).to.equal(2020);
     });
     test('Delegated access data from CRM is returned in the right shape', async () => {
-      const { data: { delegatedAccess } } = await controller.getKPIData();
+      const { data: { delegatedAccess } } = await controller.getKpiData();
       expect(delegatedAccess.totals).to.be.equal({ allTime: 17, ytd: 14 });
       expect(delegatedAccess.monthly[0].month).to.equal('June');
       expect(delegatedAccess.monthly[0].total).to.equal(10);
@@ -118,7 +118,7 @@ experiment('./modules/kpi-reporting/controller', () => {
       expect(delegatedAccess.monthly[0].year).to.equal(2020);
     });
     test('Returns cycle 1 data from returns is returned in the right shape', async () => {
-      const { data: { returnsCycle1 } } = await controller.getKPIData();
+      const { data: { returnsCycle1 } } = await controller.getKpiData();
       expect(returnsCycle1.startDate).to.be.equal('2018-04-01');
       expect(returnsCycle1.endDate).to.equal('2019-03-31');
       expect(returnsCycle1.isSummer).to.be.false();
@@ -129,8 +129,8 @@ experiment('./modules/kpi-reporting/controller', () => {
       expect(returnsCycle1.externalLate).to.equal(1);
       expect(returnsCycle1.total).to.equal(4);
     });
-    test('Returns cycle 1 data from returns is returned in the right shape', async () => {
-      const { data: { returnsCycle2 } } = await controller.getKPIData();
+    test('Returns cycle 2 data from returns is returned in the right shape', async () => {
+      const { data: { returnsCycle2 } } = await controller.getKpiData();
       expect(returnsCycle2.startDate).to.be.equal('2017-11-01');
       expect(returnsCycle2.endDate).to.equal('2018-10-31');
       expect(returnsCycle2.isSummer).to.be.true();

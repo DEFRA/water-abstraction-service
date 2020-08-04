@@ -9,7 +9,10 @@ const getDataFromResponseEnvelope = async connectorFunc => {
     const { data } = await connectorFunc();
     return data;
   } catch (err) {
-    return err.statusCode === 404 ? null : err;
+    if (err.statusCode === 404) {
+      return null;
+    }
+    throw err;
   }
 };
 
