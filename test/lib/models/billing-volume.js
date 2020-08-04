@@ -50,6 +50,22 @@ experiment('lib/models/billingVolume', () => {
     });
   });
 
+  experiment('.billingBatchId', () => {
+    const billingBatchId = uuid();
+
+    test('can be set to a guid string', async () => {
+      billingVolume.billingBatchId = billingBatchId;
+      expect(billingVolume.billingBatchId).to.equal(billingBatchId);
+    });
+
+    test('throws an error if set to a non-guid string', async () => {
+      const func = () => {
+        billingVolume.billingBatchId = '1234';
+      };
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.financialYear', () => {
     test('can be set to a FinancialYear instance', async () => {
       const financialYear = new FinancialYear(2019);

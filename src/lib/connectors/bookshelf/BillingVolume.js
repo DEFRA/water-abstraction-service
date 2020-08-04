@@ -7,10 +7,6 @@ module.exports = bookshelf.model('BillingVolume', {
 
   idAttribute: 'billing_volume_id',
 
-  billingTransaction () {
-    return this.belongsTo('BillingTransaction', 'charge_element_id', 'charge_element_id');
-  },
-
   billingBatch () {
     return this.belongsTo('BillingBatch', 'billing_batch_id', 'billing_batch_id');
   },
