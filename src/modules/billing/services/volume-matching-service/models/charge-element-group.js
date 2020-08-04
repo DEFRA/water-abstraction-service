@@ -276,6 +276,7 @@ class ChargeElementGroup {
     this._chargeElementContainers.forEach(chargeElementContainer =>
       chargeElementContainer.setTwoPartTariffStatus(returnSeason, twoPartTariffStatus)
     );
+    return this;
   }
 
   /**

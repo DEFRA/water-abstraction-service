@@ -19,7 +19,8 @@ const twoPartTariffStatuses = {
   ERROR_OVER_ABSTRACTION: 60,
   ERROR_NO_RETURNS_FOR_MATCHING: 70,
   ERROR_NOT_DUE_FOR_BILLING: 80,
-  ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD: 90
+  ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD: 90,
+  ERROR_NO_MATCHING_CHARGE_ELEMENT: 100
 };
 
 const assignBillableStatuses = [
@@ -35,7 +36,9 @@ const setErrorFlagStatuses = [
   twoPartTariffStatuses.ERROR_OVER_ABSTRACTION,
   twoPartTariffStatuses.ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD,
   twoPartTariffStatuses.ERROR_NO_RETURNS_FOR_MATCHING,
-  twoPartTariffStatuses.ERROR_NOT_DUE_FOR_BILLING
+  twoPartTariffStatuses.ERROR_NOT_DUE_FOR_BILLING,
+  twoPartTariffStatuses.ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD,
+  twoPartTariffStatuses.ERROR_NO_MATCHING_CHARGE_ELEMENT
 ];
 
 class BillingVolume extends Model {

@@ -9,6 +9,10 @@ const ChargeElementGroup = require('./models/charge-element-group');
 const ReturnGroup = require('./models/return-group');
 const { RETURN_SEASONS } = require('../../../../lib/models/constants');
 
+// Errors
+const { ChargeElementMatchingError } = require('./errors');
+const { ERROR_NO_MATCHING_CHARGE_ELEMENT } = require('../../../../lib/models/billing-volume').twoPartTariffStatuses;
+
 /**
  * Allocates the return line volume
  * - If there are several groups of matching charge elements
@@ -52,27 +56,37 @@ const match = (chargePeriod, chargeElementGroup, returnGroup, isSummer) => {
 
   // Returns have errors - assign error and full billable/null to billing volumes
   if (returnGroup.errorCode) {
-    chargeElementGroup.setTwoPartTariffStatus(returnGroup.errorCode);
-    return chargeElementGroup.toBillingVolumes();
+    return chargeElementGroup
+      .setTwoPartTariffStatus(returnGroup.errorCode)
+      .toBillingVolumes();
   }
 
-  returnGroup.getReturnsWithCurrentVersion().forEach(ret => {
-    logger.info(`Matching return ${ret.id}`);
+  try {
+    returnGroup.getReturnsWithCurrentVersion().forEach(ret => {
+      logger.info(`Matching return ${ret.id}`);
 
-    // Create list of charge elements for return
-    const returnChargeElementGroup = chargeElementGroup.createForReturn(ret);
+      // Create list of charge elements for return
+      const returnChargeElementGroup = chargeElementGroup.createForReturn(ret);
 
-    // Get list of return lines
-    const returnLines = ret.currentReturnVersion.getReturnLinesForBilling(chargePeriod, ret.abstractionPeriod);
+      // Get list of return lines
+      const returnLines = ret.currentReturnVersion.getReturnLinesForBilling(chargePeriod, ret.abstractionPeriod);
 
-    returnLines.forEach(returnLine => {
-      // Create matching groups array (1 array element per purpose)
-      const lineChargeElementGroups = returnChargeElementGroup.createForReturnLine(returnLine, chargePeriod);
+      returnLines.forEach(returnLine => {
+        // Create matching groups array (1 array element per purpose)
+        const lineChargeElementGroups = returnChargeElementGroup.createForReturnLine(returnLine, chargePeriod);
 
-      // Allocate return line volume to matching elements
-      allocateReturnLine(lineChargeElementGroups, returnLine);
+        // Allocate return line volume to matching elements
+        allocateReturnLine(lineChargeElementGroups, returnLine);
+      });
     });
-  });
+  } catch (err) {
+    if (err instanceof ChargeElementMatchingError) {
+      return chargeElementGroup
+        .setTwoPartTariffStatus(ERROR_NO_MATCHING_CHARGE_ELEMENT)
+        .toBillingVolumes();
+    }
+    throw err;
+  }
 
   // Perform final steps
   return chargeElementGroup
