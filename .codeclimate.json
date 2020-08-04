@@ -10,7 +10,8 @@
     "integration-tests",
     "src/modules/acceptance-tests",
     "src/modules/**/routes.js",
-    "src/lib/connectors/bookshelf"
+    "src/lib/connectors/bookshelf",
+    "src/modules/licences/routes"
   ],
   "checks": {
     "method-count": {

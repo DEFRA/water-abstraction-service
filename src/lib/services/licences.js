@@ -6,26 +6,43 @@ const licenceMapper = require('../mappers/licence');
 const licenceVersionMapper = require('../mappers/licence-version');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../models/constants');
 
+const service = require('./service');
+
 /**
  * Gets a licence model by ID
  * @param {String} licenceId
  * @return {Promise<Licence>}
  */
-const getLicenceById = async licenceId => {
-  const data = await repos.licences.findOne(licenceId);
-  return data && licenceMapper.dbToModel(data);
-};
+const getLicenceById = async licenceId =>
+  service.findOne(licenceId, repos.licences.findOne, licenceMapper);
 
-const getLicenceVersions = async licenceId => {
-  const versions = await repos.licenceVersions.findByLicenceId(licenceId);
-  return versions.map(licenceVersionMapper.dbToModel);
-};
+const getLicenceVersions = async licenceId =>
+  service.findMany(
+    licenceId,
+    repos.licenceVersions.findByLicenceId,
+    licenceVersionMapper
+  );
 
-const getLicenceVersionById = async licenceVersionId => {
-  const licenceVersion = await repos.licenceVersions.findOne(licenceVersionId);
+const getLicenceVersionById = async licenceVersionId =>
+  service.findOne(
+    licenceVersionId,
+    repos.licenceVersions.findOne,
+    licenceVersionMapper
+  );
 
-  return licenceVersion && licenceVersionMapper.dbToModel(licenceVersion);
-};
+const getLicenceAgreementsByLicenceRef = async licenceRef =>
+  service.findMany(
+    licenceRef,
+    repos.licenceAgreements.findByLicenceRef,
+    licenceAgreementMapper
+  );
+
+const getLicenceAgreementById = async licenceAgreementId =>
+  service.findOne(
+    licenceAgreementId,
+    repos.licenceAgreements.findOne,
+    licenceAgreementMapper
+  );
 
 /**
  * Updates the includeInSupplementaryBilling value for the given licence ids
@@ -74,16 +91,6 @@ const updateIncludeInSupplementaryBillingStatusForSentBatch = async batchId => {
   // use the unsent function to save writing the same logic twice, even though
   // the function name is a little misleading here.
   return updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId);
-};
-
-const getLicenceAgreementsByLicenceRef = async licenceRef => {
-  const agreements = await repos.licenceAgreements.findByLicenceRef(licenceRef);
-  return agreements.map(licenceAgreementMapper.dbToModel);
-};
-
-const getLicenceAgreementById = async licenceAgreementId => {
-  const licenceAgreement = await repos.licenceAgreements.findOne(licenceAgreementId);
-  return licenceAgreement && licenceAgreementMapper.dbToModel(licenceAgreement);
 };
 
 exports.getLicenceAgreementById = getLicenceAgreementById;

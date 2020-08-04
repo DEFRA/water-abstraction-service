@@ -3,12 +3,10 @@
 const Boom = require('@hapi/boom');
 
 const licencesService = require('../../../lib/services/licences');
+const controller = require('../../../lib/controller');
 
-const getAgreement = async request => {
-  const { agreementId } = request.params;
-  const agreement = await licencesService.getLicenceAgreementById(agreementId);
-  return agreement || Boom.notFound(`Agreement ${agreementId} not found`, { agreementId });
-};
+const getAgreement = async request =>
+  controller.getEntity(request.params.agreementId, licencesService.getLicenceAgreementById);
 
 const getLicenceAgreements = async request => {
   const { licenceId } = request.params;
