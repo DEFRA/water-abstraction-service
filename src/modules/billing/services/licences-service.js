@@ -2,7 +2,7 @@
 
 const repos = require('../../../lib/connectors/repos');
 const Batch = require('../../../lib/models/batch');
-const { StateError } = require('../../../lib/errors');
+const { BatchStatusError } = require('../lib/errors');
 
 const mapItem = item => ({
   licenceId: item.licenceId,
@@ -40,7 +40,7 @@ const getByBatchIdForTwoPartTariffReview = async batchId => {
 const deleteBatchLicence = async (batch, licenceId) => {
   // Check batch is in review status
   if (!batch.statusIsOneOf(Batch.BATCH_STATUS.review)) {
-    throw new StateError('Cannot delete licence unless batch is in "review" status');
+    throw new BatchStatusError('Cannot delete licence unless batch is in "review" status');
   }
   await repos.billingVolumes.deleteByBatchIdAndLicenceId(batch.id, licenceId);
   await repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId(batch.id, licenceId);

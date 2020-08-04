@@ -1,263 +1,272 @@
 'use strict';
 
-/*
-experiment('.patchTransactionBillingVolume', () => {
-    let request, result;
-    const createRequest = volume => ({
-      defra: {
-        internalCallingUser: {
-          id: 1234,
-          email: 'test@example.com'
-        }
-      },
-      params: { transactionId: 'test-transaction-id' },
-      payload: { volume }
-    });
+const {
+  experiment,
+  test,
+  beforeEach,
+  afterEach
+} = exports.lab = require('@hapi/lab').script();
 
-    beforeEach(async () => {
-      request = createRequest(20);
-      result = await controller.patchTransactionBillingVolume(request, h);
-    });
+const { expect } = require('@hapi/code');
+const sandbox = require('sinon').createSandbox();
+const uuid = require('uuid/v4');
 
-    test('the transactions service is called to get the transaction with related data', async () => {
-      expect(
-        transactionsService.getById.calledWith(request.params.transactionId)
-      ).to.be.true();
-    });
+const Batch = require('../../../../src/lib/models/batch');
+const Event = require('../../../../src/lib/models/event');
 
-    experiment('when the transaction data is found', async () => {
-      test('the billing volumes service is called to update the billing volume', async () => {
-        const [chargeElementId, batch, volume, user] = billingVolumesService.updateBillingVolume.lastCall.args;
+const controller = require('../../../../src/modules/billing/controllers/two-part-tariff-review');
+const licencesService = require('../../../../src/modules/billing/services/licences-service');
+const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
+const eventService = require('../../../../src/lib/services/events');
 
-        expect(chargeElementId).to.equal(transaction.chargeElement.id);
-        expect(batch).to.equal(tptBatch);
-        expect(volume).to.equal(request.payload.volume);
-        expect(user).to.equal(request.defra.internalCallingUser);
-      });
+const { NotFoundError } = require('../../../../src/lib/errors.js');
+const { BatchStatusError, TransactionStatusError } = require('../../../../src/modules/billing/lib/errors.js');
 
-      test('the transaction is returned', async () => {
-        const relevantTransaction = get(tptBatch, 'invoices[0].invoiceLicences[0].transactions[0]');
-        const { transaction } = result;
-        expect(transaction).to.equal(relevantTransaction);
-      });
-
-      test('the updated billing volume is returned', async () => {
-        const { updatedBillingVolume } = result;
-        expect(updatedBillingVolume).to.equal(billingVolume);
-      });
-
-      test('a Boom bad request error is thrown if an error occurs', async () => {
-        const errMsg = 'oh no, something went wrong';
-        billingVolumesService.updateBillingVolume.rejects(new Error(errMsg));
-        try {
-          await controller.patchTransactionBillingVolume(request, h);
-        } catch (err) {
-          expect(err.isBoom).to.be.true();
-          expect(err.message).to.equal(errMsg);
-          expect(err.output.statusCode).to.equal(400);
-        }
-      });
-    });
-    experiment('when the transaction data is not found', async () => {
-      test('throws Boom not found error', async () => {
-        transactionsService.getById.resolves();
-        try {
-          await controller.patchTransactionBillingVolume(request, h);
-        } catch (err) {
-          expect(err.isBoom).to.be.true();
-          expect(err.output.statusCode).to.equal(404);
-          expect(err.message).to.equal('No transaction (00112233-4455-6677-8899-aabbccddeeff) found');
-        }
-      });
-    });
-  });
-  */
-
-/*
-
-experiment('.postApproveReviewBatch', () => {
-  let request, batch, internalCallingUser, response;
+experiment('modules/billing/controllers/two-part-tariff-review', () => {
+  let h, request, result, batch, user, event;
 
   beforeEach(async () => {
-    internalCallingUser = {
+    user = {
       email: 'test@example.com',
       id: 1234
     };
 
-    batch = new Batch('33333333-3333-3333-3333-333333333333');
+    h = {
+      response: sandbox.stub().returnsThis(),
+      code: sandbox.stub()
+    };
+
+    batch = new Batch(uuid());
 
     request = {
-      defra: { internalCallingUser },
-      pre: { batch },
+      pre: {
+        batch
+      },
       messageQueue: {
-        publish: sandbox.stub().resolves()
+        publish: sandbox.stub()
+      },
+      params: {
+        licenceId: uuid(),
+        billingVolumeId: uuid()
+      },
+      payload: {
+        volume: 15
+      },
+      defra: {
+        internalCallingUser: user
       }
     };
+
+    sandbox.stub(licencesService, 'getByBatchIdForTwoPartTariffReview').resolves([{
+      licenceId: 'test-licence-1'
+    }, {
+      licenceId: 'test-licence-2'
+    }]);
+    sandbox.stub(licencesService, 'deleteBatchLicence');
+
+    sandbox.stub(billingVolumesService, 'getLicenceBillingVolumes');
+    sandbox.stub(billingVolumesService, 'getBillingVolumeById');
+    sandbox.stub(billingVolumesService, 'updateBillingVolume');
+
+    sandbox.stub(batchService, 'approveTptBatchReview').resolves(batch);
+
+    event = new Event(uuid());
+    sandbox.stub(eventService, 'create').resolves(event);
   });
 
-  experiment('review is approved succesfully', () => {
-    beforeEach(async () => {
-      response = await controller.postApproveReviewBatch(request, h);
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  experiment('.getBatchLicences', () => {
+    test('returns an empty array when the batch is empty', async () => {
+      request.pre.batch.status = Batch.BATCH_STATUS.empty;
+      const result = await controller.getBatchLicences(request, h);
+      expect(result).to.equal([]);
     });
 
-    test('calls the batchService to approve review', async () => {
-      expect(
-        batchService.approveTptBatchReview.calledWith(batch)
-      ).to.be.true();
+    test('returns a 403 if the batch status is not "review"', async () => {
+      request.pre.batch.status = Batch.BATCH_STATUS.processing;
+      await controller.getBatchLicences(request, h);
+      expect(h.code.calledWith(403)).to.be.true();
     });
 
-    test('calls the billingVolumeService to approve volumes', async () => {
-      expect(
-        billingVolumesService.approveVolumesForBatch.calledWith(batch)
-      ).to.be.true();
-    });
-
-    test('calls the event service to create new event', async () => {
-      const [savedEvent] = eventService.create.lastCall.args;
-      expect(savedEvent).to.be.an.instanceOf(Event);
-      expect(savedEvent.type).to.equal('billing-batch:approve-review');
-      expect(savedEvent.subtype).to.be.null();
-      expect(savedEvent.issuer).to.equal(internalCallingUser.email);
-      expect(savedEvent.metadata).to.equal({ batch: processingBatch });
-      expect(savedEvent.status).to.equal('processing');
-    });
-
-    test('publishes a new job to the message queue with the event id', async () => {
-      const [message] = request.messageQueue.publish.lastCall.args;
-      expect(message.data.eventId).to.equal('11111111-1111-1111-1111-111111111111');
-      expect(message.data.batch).to.equal(processingBatch);
-    });
-
-    test('the response contains the event and batch', async () => {
-      const { data } = response;
-      expect(data.event.id).to.equal('11111111-1111-1111-1111-111111111111');
-      expect(data.batch).to.equal(processingBatch);
-    });
-
-    test('the response contains a URL to the event', async () => {
-      const { data } = response;
-      expect(data.url).to.equal('/water/1.0/event/11111111-1111-1111-1111-111111111111');
+    test('gets the licences for the batch if the status is "review', async () => {
+      request.pre.batch.status = Batch.BATCH_STATUS.review;
+      result = await controller.getBatchLicences(request, h);
+      expect(licencesService.getByBatchIdForTwoPartTariffReview.calledWith(batch.id)).to.be.true();
+      expect(result).to.be.an.array().length(2);
     });
   });
 
-  experiment('when the batchService throws a TransactionStatusError', () => {
-    let response;
-    beforeEach(async () => {
-      const error = new TransactionStatusError('uh-oh');
-      batchService.approveTptBatchReview.rejects(error);
-      response = await controller.postApproveReviewBatch(request, h);
-    });
-
-    test('no event is created', async () => {
-      expect(eventService.create.called).to.be.false();
-    });
-
-    test('no job is published', async () => {
-      expect(request.messageQueue.publish.called).to.be.false();
-    });
-
-    test('a Boom badRequest error is returned containing the error message', async () => {
-      expect(response.isBoom).to.be.true();
-      expect(response.output.statusCode).to.equal(403);
-      expect(response.message).to.equal('uh-oh');
+  experiment('.getBatchLicenceVolumes', () => {
+    test('gets the billing volumes for the specified licence ID', async () => {
+      await controller.getBatchLicenceVolumes(request, h);
+      expect(billingVolumesService.getLicenceBillingVolumes.calledWith(
+        batch, request.params.licenceId
+      )).to.be.true();
     });
   });
 
-  experiment('when there is an unexpected error', () => {
-    beforeEach(async () => {
-      eventService.create.rejects(new Error('event error'));
+  experiment('.deleteBatchLicence', () => {
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        await controller.deleteBatchLicence(request, h);
+      });
+
+      test('deletes the specified licence ID from the batch', async () => {
+        expect(licencesService.deleteBatchLicence.calledWith(
+          batch, request.params.licenceId
+        )).to.be.true();
+      });
+
+      test('returns a 204 status code', async () => {
+        expect(h.code.calledWith(204)).to.be.true();
+      });
     });
 
-    test('the error is rethrown', async () => {
-      const func = () => controller.postApproveReviewBatch(request, h);
-      expect(func()).to.reject();
+    experiment('when there is an error deleting the licence', () => {
+      beforeEach(async () => {
+        licencesService.deleteBatchLicence.rejects(new BatchStatusError('Cannot delete licence unless batch is in "review" status'));
+        result = await controller.deleteBatchLicence(request, h);
+      });
+
+      test('maps the error to a Boom error and returns', async () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(403);
+      });
+    });
+  });
+
+  experiment('.getBillingVolume', () => {
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        await controller.getBillingVolume(request, h);
+      });
+
+      test('gets the specified billing volume by ID', async () => {
+        expect(billingVolumesService.getBillingVolumeById.calledWith(
+          request.params.billingVolumeId
+        )).to.be.true();
+      });
+    });
+
+    experiment('when the billing volume is not found', () => {
+      beforeEach(async () => {
+        billingVolumesService.getBillingVolumeById.rejects(
+          new NotFoundError('Billing volume not found')
+        );
+        result = await controller.getBillingVolume(request, h);
+      });
+
+      test('maps the error to a Boom error and returns', async () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(404);
+      });
+    });
+  });
+
+  experiment('.patchBillingVolume', () => {
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        await controller.patchBillingVolume(request, h);
+      });
+
+      test('updates the specified billing volume by ID', async () => {
+        expect(billingVolumesService.updateBillingVolume.calledWith(
+          request.params.billingVolumeId, request.payload.volume, request.defra.internalCallingUser
+        )).to.be.true();
+      });
+    });
+
+    experiment('when the billing volume is not found', () => {
+      beforeEach(async () => {
+        billingVolumesService.updateBillingVolume.rejects(
+          new NotFoundError('Billing volume not found')
+        );
+        result = await controller.patchBillingVolume(request, h);
+      });
+
+      test('maps the error to a Boom error and returns', async () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(404);
+      });
+    });
+  });
+
+  experiment('.postApproveReviewBatch', () => {
+    experiment('review is approved succesfully', () => {
+      beforeEach(async () => {
+        result = await controller.postApproveReviewBatch(request, h);
+      });
+
+      test('calls the batchService to approve review', async () => {
+        expect(
+          batchService.approveTptBatchReview.calledWith(batch)
+        ).to.be.true();
+      });
+
+      test('calls the event service to create new event', async () => {
+        const [savedEvent] = eventService.create.lastCall.args;
+        expect(savedEvent).to.be.an.instanceOf(Event);
+        expect(savedEvent.type).to.equal('billing-batch:approve-review');
+        expect(savedEvent.subtype).to.be.null();
+        expect(savedEvent.issuer).to.equal(user.email);
+        expect(savedEvent.metadata).to.equal({ batch });
+        expect(savedEvent.status).to.equal('processing');
+      });
+
+      test('publishes a new job to the message queue with the event id', async () => {
+        const [message] = request.messageQueue.publish.lastCall.args;
+        expect(message.data.eventId).to.equal(event.id);
+        expect(message.data.batch).to.equal(batch);
+      });
+
+      test('the response contains the event and batch', async () => {
+        const { data } = result;
+        expect(data.event.id).to.equal(event.id);
+        expect(data.batch).to.equal(batch);
+      });
+
+      test('the response contains a URL to the event', async () => {
+        const { data } = result;
+        expect(data.url).to.equal(`/water/1.0/event/${event.id}`);
+      });
+    });
+
+    experiment('when the batchService throws a TransactionStatusError', () => {
+      let response;
+      beforeEach(async () => {
+        const error = new TransactionStatusError('uh-oh');
+        batchService.approveTptBatchReview.rejects(error);
+        response = await controller.postApproveReviewBatch(request, h);
+      });
+
+      test('no event is created', async () => {
+        expect(eventService.create.called).to.be.false();
+      });
+
+      test('no job is published', async () => {
+        expect(request.messageQueue.publish.called).to.be.false();
+      });
+
+      test('a Boom badRequest error is returned containing the error message', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(403);
+        expect(response.message).to.equal('uh-oh');
+      });
+    });
+
+    experiment('when there is an unexpected error', () => {
+      beforeEach(async () => {
+        eventService.create.rejects(new Error('event error'));
+      });
+
+      test('the error is rethrown', async () => {
+        const func = () => controller.postApproveReviewBatch(request, h);
+        expect(func()).to.reject();
+      });
     });
   });
 });
-*/
-
-/*
-  experiment('.getBatchLicences', () => {
-    const createBatchStatusRequest = batchStatus => ({
-      pre: {
-        batch: new Batch().fromHash({
-          status: batchStatus
-        })
-      }
-    });
-
-    experiment('when a batch has a processing state', () => {
-      let request;
-
-      beforeEach(async () => {
-        request = createBatchStatusRequest(BATCH_STATUS.processing);
-        await controller.getBatchLicences(request, h);
-      });
-
-      test('a 403 is returned', async () => {
-        const [code] = hapiResponseStub.code.lastCall.args;
-        expect(code).to.equal(403);
-      });
-
-      test('no attempt is made to get the underlying data', async () => {
-        expect(invoiceLicenceService.getLicencesWithTransactionStatusesForBatch.called).to.be.false();
-      });
-    });
-
-    experiment('when a batch has an error state', () => {
-      let request;
-
-      beforeEach(async () => {
-        request = createBatchStatusRequest(BATCH_STATUS.error);
-        await controller.getBatchLicences(request, h);
-      });
-
-      test('a 403 is returned', async () => {
-        const [code] = hapiResponseStub.code.lastCall.args;
-        expect(code).to.equal(403);
-      });
-
-      test('no attempt is made to get the underlying data', async () => {
-        expect(invoiceLicenceService.getLicencesWithTransactionStatusesForBatch.called).to.be.false();
-      });
-    });
-
-    experiment('when a batch has an empty state', () => {
-      let request;
-      let response;
-
-      beforeEach(async () => {
-        request = createBatchStatusRequest(BATCH_STATUS.empty);
-        response = await controller.getBatchLicences(request, h);
-      });
-
-      test('an empty array is returned', async () => {
-        expect(response).to.equal([]);
-      });
-
-      test('no attempt is made to get the underlying data', async () => {
-        expect(invoiceLicenceService.getLicencesWithTransactionStatusesForBatch.called).to.be.false();
-      });
-    });
-
-    experiment('when a batch is in a state to return data', () => {
-      const validStatuses = [
-        BATCH_STATUS.sent,
-        BATCH_STATUS.ready,
-        BATCH_STATUS.review
-      ];
-
-      validStatuses.forEach(status => {
-        test(`the expected data is returned for a ${status} batch`, async () => {
-          const fakeResponse = [{ id: 1 }, { id: 2 }];
-          invoiceLicenceService.getLicencesWithTransactionStatusesForBatch.resolves(fakeResponse);
-
-          const request = createBatchStatusRequest(status);
-          const response = await controller.getBatchLicences(request, h);
-
-          expect(response).to.equal(fakeResponse);
-        });
-      });
-    });
-  });
-  */

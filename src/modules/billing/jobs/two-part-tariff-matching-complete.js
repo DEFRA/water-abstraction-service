@@ -5,15 +5,13 @@ const batchJob = require('./lib/batch-job');
 const processChargeVersionsJob = require('./process-charge-versions');
 
 /**
- * Handles the response from populating the billing batch with charge versions and decides
- * whether or not to publish a new job to continue with the batch flow.
+ * Handles the response from the two part tariff matching and
+ * proceeds to process the charge versions if no TPT review is
+ * needed
  *
- * If batch charge versions were created, then create the batch charge version year
- * entries and publish
- *
- * @param {Object} job PG Boss job (including response from populateBatchChargeVersions handler)
+ * @param {Object} job PG Boss job (including response from twoPartTariffMatching handler)
  */
-const handlePopulateBatchChargeVersionsComplete = async (job, messageQueue) => {
+const handleTwoPartTariffMatchingComplete = async (job, messageQueue) => {
   batchJob.logOnComplete(job);
 
   if (batchJob.hasJobFailed(job)) {
@@ -28,4 +26,4 @@ const handlePopulateBatchChargeVersionsComplete = async (job, messageQueue) => {
   }
 };
 
-module.exports = handlePopulateBatchChargeVersionsComplete;
+module.exports = handleTwoPartTariffMatchingComplete;

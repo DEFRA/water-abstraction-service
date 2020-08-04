@@ -17,15 +17,15 @@ const processChargeVersionsJob = require('../jobs/process-charge-versions');
 const getBatchLicences = async (request, h) => {
   const { batch } = request.pre;
 
-  if (batch.statusIsOneOf(BATCH_STATUS.processing, BATCH_STATUS.error)) {
-    return h.response('Cannot get licences for processing or errored batch').code(403);
+  if (batch.statusIsOneOf(BATCH_STATUS.review)) {
+    return licencesService.getByBatchIdForTwoPartTariffReview(batch.id);
   }
 
-  if (batch.status === BATCH_STATUS.empty) {
+  if (batch.statusIsOneOf(BATCH_STATUS.empty)) {
     return [];
   }
 
-  return licencesService.getByBatchIdForTwoPartTariffReview(batch.id);
+  return h.response('Cannot get licences for processing or errored batch').code(403);
 };
 
 /**
