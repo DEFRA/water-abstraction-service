@@ -12,6 +12,7 @@ const sandbox = require('sinon').createSandbox();
 
 const batchJob = require('../../../../../src/modules/billing/jobs/lib/batch-job');
 const batchService = require('../../../../../src/modules/billing/services/batch-service');
+const licenceService = require('../../../../../src/lib/services/licences');
 const { logger } = require('../../../../../src/logger');
 
 experiment('modules/billing/jobs/lib/batch-job', () => {
@@ -22,6 +23,11 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     sandbox.stub(logger, 'info');
     sandbox.stub(logger, 'error');
+
+    sandbox.stub(
+      licenceService,
+      'updateIncludeInSupplementaryBillingStatusForUnsentBatch'
+    ).resolves();
 
     messageQueue = {
       deleteQueue: sandbox.spy()
@@ -60,6 +66,11 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
       const [id, code] = batchService.setErrorStatus.lastCall.args;
       expect(id).to.equal(batchId);
       expect(code).to.equal(10);
+    });
+
+    test('updates the supplementary billing status of any licences', async () => {
+      const [id] = licenceService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.lastCall.args;
+      expect(id).to.equal(batchId);
     });
 
     test('deletes the queue', async () => {

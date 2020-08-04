@@ -38,6 +38,8 @@ experiment('modules/billing/services/invoice-licences-service', () => {
       licenceRef: '01/123'
     });
 
+    sandbox.stub(newRepos.licences, 'updateIncludeLicenceInSupplementaryBilling');
+
     sandbox.stub(batchService, 'setStatusToEmptyWhenNoTransactions').resolves();
   });
 
@@ -239,8 +241,11 @@ experiment('modules/billing/services/invoice-licences-service', () => {
     });
 
     experiment('when the invoice licence is found, and the batch status is "review"', () => {
+      let licenceId;
+
       beforeEach(async () => {
         newRepos.billingInvoiceLicences.findOne.resolves({
+          licenceId: licenceId = uuid(),
           billingInvoice: {
             billingBatch: {
               billingBatchId,
@@ -273,6 +278,13 @@ experiment('modules/billing/services/invoice-licences-service', () => {
       test('the batch status is set to empty if no transactions remain', async () => {
         const [batch] = batchService.setStatusToEmptyWhenNoTransactions.lastCall.args;
         expect(batch.id).to.equal(billingBatchId);
+      });
+
+      test('the licence includeInSupplementary billing status is updated', async () => {
+        const [id, statusFrom, statusTo] = newRepos.licences.updateIncludeLicenceInSupplementaryBilling.lastCall.args;
+        expect(id).to.equal(licenceId);
+        expect(statusFrom).to.equal('yes');
+        expect(statusTo).to.equal('reprocess');
       });
     });
   });

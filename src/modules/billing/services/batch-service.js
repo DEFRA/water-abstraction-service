@@ -8,7 +8,7 @@ const Event = require('../../../lib/models/event');
 const eventService = require('../../../lib/services/events');
 const { BatchStatusError, BillingVolumeStatusError } = require('../lib/errors');
 const { NotFoundError } = require('../../../lib/errors');
-
+const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/constants');
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
 const Batch = require('../../../lib/models/batch');
@@ -17,6 +17,7 @@ const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
 const billingVolumesService = require('./billing-volumes-service');
 const invoiceService = require('./invoice-service');
+const licencesService = require('../../../lib/services/licences');
 const config = require('../../../../config');
 
 /**
@@ -61,6 +62,7 @@ const saveEvent = (type, status, user, batch) => {
 
 const deleteBatch = async (batch, internalCallingUser) => {
   try {
+    await licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batch.id);
     await chargeModuleBillRunConnector.delete(batch.externalId);
 
     await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batch.id);
@@ -90,8 +92,7 @@ const approveBatch = async (batch, internalCallingUser) => {
 
     await saveEvent('billing-batch:approve', 'sent', internalCallingUser, batch);
 
-    // @TODO for supplementary billing, reset water.licence.include_in_supplementary_billing
-    // flags
+    await licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch(batch.id);
 
     return setStatus(batch.id, BATCH_STATUS.sent);
   } catch (err) {
@@ -288,6 +289,20 @@ const getSentTPTBatchesForFinancialYearAndRegion = async (financialYear, region)
   newRepos.billingBatches.findSentTPTBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id);
 
 /**
+   * Updates each licence in the invoice so that the includeInSupplementaryBilling
+   * value is 'reprocess' where it is current 'yes'
+   *
+   * @param {Object<Invoice>} invoice The invoice containing the licences to update
+   */
+const updateInvoiceLicencesForSupplementaryReprocessing = invoice => {
+  return licencesService.updateIncludeInSupplementaryBillingStatus(
+    INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
+    INCLUDE_IN_SUPPLEMENTARY_BILLING.reprocess,
+    invoice.getLicenceIds()
+  );
+};
+
+/**
  * Deletes an individual invoice from the batch.  Also deletes CM transactions
  * @param {Batch} batch
  * @param {String} invoiceId
@@ -317,6 +332,11 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
     await newRepos.billingTransactions.deleteByInvoiceId(invoiceId);
     await newRepos.billingInvoiceLicences.deleteByInvoiceId(invoiceId);
     await newRepos.billingInvoices.delete(invoiceId);
+
+    // update the include in supplementary billing status
+    const invoiceModel = mappers.invoice.dbToModel(invoice);
+    await updateInvoiceLicencesForSupplementaryReprocessing(invoiceModel);
+
     return setStatusToEmptyWhenNoTransactions(batch);
   } catch (err) {
     await setErrorStatus(batch.id, Batch.BATCH_ERROR_CODE.failedToDeleteInvoice);
