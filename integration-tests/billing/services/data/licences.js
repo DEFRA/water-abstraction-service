@@ -1,6 +1,6 @@
 exports.l1 = {
   licenceRef : 'L1',
-  includeInSupplementaryBilling : false,
+  includeInSupplementaryBilling : 'no',
   isWaterUndertaker : false,
   regions : {
     historicalAreaCode: 'ARCA',
@@ -27,4 +27,4 @@ exports.l1 = {
   }]
 };
 
-exports.l2 = Object.assign({}, exports.l1, { includeInSupplementaryBilling: true })
+exports.l2 = Object.assign({}, exports.l1, { includeInSupplementaryBilling: 'yes' })

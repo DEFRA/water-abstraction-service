@@ -17,6 +17,7 @@ const repos = require('../../../src/lib/connectors/repos');
 // Models
 const Licence = require('../../../src/lib/models/licence');
 const LicenceVersion = require('../../../src/lib/models/licence-version');
+const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../src/lib/models/constants');
 
 const data = {
   dbRow: {
@@ -48,6 +49,8 @@ const data = {
 experiment('src/lib/services/licences', () => {
   beforeEach(async () => {
     sandbox.stub(repos.licences, 'findOne');
+    sandbox.stub(repos.licences, 'updateIncludeLicenceInSupplementaryBilling');
+    sandbox.stub(repos.licences, 'updateIncludeInSupplementaryBillingStatusForBatch');
     sandbox.stub(repos.licenceVersions, 'findByLicenceId');
     sandbox.stub(repos.licenceVersions, 'findOne');
   });
@@ -186,6 +189,64 @@ experiment('src/lib/services/licences', () => {
         expect(licenceVersion).to.be.an.instanceOf(LicenceVersion);
         expect(licenceVersion.id).to.equal(licenceVersionId);
       });
+    });
+  });
+
+  experiment('.updateIncludeInSupplementaryBillingStatus', () => {
+    test('passes the data to the repo', async () => {
+      const licenceIds = ['one', 'two'];
+      const from = INCLUDE_IN_SUPPLEMENTARY_BILLING.yes;
+      const to = INCLUDE_IN_SUPPLEMENTARY_BILLING.no;
+
+      await licencesService.updateIncludeInSupplementaryBillingStatus(from, to, ...licenceIds);
+
+      const [firstLicenceId, firstFrom, firstTo] = repos.licences.updateIncludeLicenceInSupplementaryBilling.firstCall.args;
+      const [secondLicenceId, secondFrom, secondTo] = repos.licences.updateIncludeLicenceInSupplementaryBilling.lastCall.args;
+
+      expect(firstFrom).to.equal(from);
+      expect(firstTo).to.equal(to);
+      expect(firstLicenceId).to.equal(licenceIds[0]);
+
+      expect(secondFrom).to.equal(from);
+      expect(secondTo).to.equal(to);
+      expect(secondLicenceId).to.equal(licenceIds[1]);
+    });
+  });
+
+  experiment('.updateIncludeInSupplementaryBillingStatusForUnsentBatch', () => {
+    beforeEach(async () => {
+      await licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch('test-batch-id');
+    });
+
+    test('passes the correct batch id to the repo', async () => {
+      const [batchId] = repos.licences.updateIncludeInSupplementaryBillingStatusForBatch.lastCall.args;
+      expect(batchId).to.equal('test-batch-id');
+    });
+
+    test('updates the status from reprocess to yes', async () => {
+      const [, from, to] = repos.licences.updateIncludeInSupplementaryBillingStatusForBatch.lastCall.args;
+      expect(from).to.equal(INCLUDE_IN_SUPPLEMENTARY_BILLING.reprocess);
+      expect(to).to.equal(INCLUDE_IN_SUPPLEMENTARY_BILLING.yes);
+    });
+  });
+
+  experiment('.updateIncludeInSupplementaryBillingStatusForSentBatch', () => {
+    beforeEach(async () => {
+      await licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch('test-batch-id');
+    });
+
+    test('initially updates the status from yes to no', async () => {
+      const [batchId, from, to] = repos.licences.updateIncludeInSupplementaryBillingStatusForBatch.firstCall.args;
+      expect(batchId).to.equal('test-batch-id');
+      expect(from).to.equal(INCLUDE_IN_SUPPLEMENTARY_BILLING.yes);
+      expect(to).to.equal(INCLUDE_IN_SUPPLEMENTARY_BILLING.no);
+    });
+
+    test('then updates the status from reprocess to yes', async () => {
+      const [batchId, from, to] = repos.licences.updateIncludeInSupplementaryBillingStatusForBatch.lastCall.args;
+      expect(batchId).to.equal('test-batch-id');
+      expect(from).to.equal(INCLUDE_IN_SUPPLEMENTARY_BILLING.reprocess);
+      expect(to).to.equal(INCLUDE_IN_SUPPLEMENTARY_BILLING.yes);
     });
   });
 });
