@@ -29,3 +29,9 @@ exports.RETURN_SEASONS = {
   summer: 'summer',
   winterAllYear: 'winterAllYear'
 };
+
+exports.INCLUDE_IN_SUPPLEMENTARY_BILLING = {
+  yes: 'yes',
+  no: 'no',
+  reprocess: 'reprocess'
+};

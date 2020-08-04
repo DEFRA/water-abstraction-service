@@ -4,6 +4,7 @@ const newRepos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
 const { NotFoundError } = require('../../../lib/errors');
+const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/constants');
 const { BatchStatusError } = require('../lib/errors');
 const Batch = require('../../../lib/models/batch');
 const batchService = require('./batch-service');
@@ -54,6 +55,15 @@ const deleteInvoiceLicence = async invoiceLicenceId => {
 
   // Delete invoice licence
   await newRepos.billingInvoiceLicences.delete(invoiceLicenceId);
+
+  // If the licence was marked for supplmenetary billing then
+  // change the status to 'reprocess' to be left for supplementary
+  // billing in the future.
+  await newRepos.licences.updateIncludeLicenceInSupplementaryBilling(
+    invoiceLicence.licenceId,
+    INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
+    INCLUDE_IN_SUPPLEMENTARY_BILLING.reprocess
+  );
 
   // Set batch to empty if required
   return batchService.setStatusToEmptyWhenNoTransactions(batch);

@@ -5,7 +5,7 @@ select :billingBatchId, cv.charge_version_id
 from water.licences l
   join water.charge_versions cv on l.licence_ref = cv.licence_ref
 where
-  l.include_in_supplementary_billing = true
+  l.include_in_supplementary_billing = 'yes'::water.include_in_supplementary_billing
   and l.region_id = :regionId::uuid
   and cv.status='current'
   and (cv.end_date is null or cv.end_date > :fromDate)

@@ -11,8 +11,6 @@ const ChargeElementGroup = require('../../../../../src/modules/billing/services/
 const ReturnGroup = require('../../../../../src/modules/billing/services/volume-matching-service/models/return-group');
 const AbstractionPeriod = require('../../../../../src/lib/models/abstraction-period');
 
-const errors = require('../../../../../src/modules/billing/services/volume-matching-service/errors');
-
 const Return = require('../../../../../src/lib/models/return');
 
 const { twoPartTariffStatuses } = require('../../../../../src/lib/models/billing-volume');
@@ -381,10 +379,9 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
           ]);
         });
 
-        test('an error is thrown because there are no charge elements matching the return lines', async () => {
-          const func = () => matchingService.match(chargePeriod, chargeElementGroup, returnGroup, false);
-          const err = await expect(func).to.throw();
-          expect(err).to.be.instanceof(errors.ChargeElementMatchingError);
+        test('an error code is flagged because there are no charge elements matching the return lines', async () => {
+          const result = matchingService.match(chargePeriod, chargeElementGroup, returnGroup, false);
+          expect(result[0].twoPartTariffStatus).to.equal(twoPartTariffStatuses.ERROR_NO_MATCHING_CHARGE_ELEMENT);
         });
       });
 
@@ -475,10 +472,9 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
           ]);
         });
 
-        test('an error is thrown because there are no charge elements matching the return lines', async () => {
-          const func = () => matchingService.match(chargePeriod, chargeElementGroup, returnGroup, false);
-          const err = await expect(func).to.throw();
-          expect(err).to.be.instanceof(errors.ChargeElementMatchingError);
+        test('an error code is flagged because there are no charge elements matching the return lines', async () => {
+          const result = matchingService.match(chargePeriod, chargeElementGroup, returnGroup, false);
+          expect(result[0].twoPartTariffStatus).to.equal(twoPartTariffStatuses.ERROR_NO_MATCHING_CHARGE_ELEMENT);
         });
       });
 

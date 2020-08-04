@@ -1,3 +1,5 @@
+'use strict';
+
 const { expect } = require('@hapi/code');
 const {
   beforeEach,
@@ -69,7 +71,7 @@ experiment('getCommunication', () => {
   beforeEach(async () => {
     sandbox.stub(notificationsController.repository, 'find').resolves(notificationResult);
     sandbox.stub(eventsController.repository, 'find').resolves(eventResult);
-    sandbox.stub(crmDocumentConnector, 'findMany').resolves(crmResponses.singleResponse());
+    sandbox.stub(crmDocumentConnector, 'getDocumentsByLicenceNumbers').resolves(crmResponses.singleResponse().data);
 
     request = {
       params: {
@@ -115,7 +117,7 @@ experiment('getCommunication', () => {
   });
 
   test('returns a 404 if the licence document is not found', async () => {
-    crmDocumentConnector.findMany.resolves(crmResponses.notFound());
+    crmDocumentConnector.getDocumentsByLicenceNumbers.resolves(crmResponses.notFound());
 
     const response = await controller.getCommunication(request);
 
