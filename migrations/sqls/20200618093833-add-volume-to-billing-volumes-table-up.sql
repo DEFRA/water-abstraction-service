@@ -1,2 +1,2 @@
 alter table water.billing_volumes
-  add column volume numeric;
+  add column if not exists volume numeric;

@@ -1101,10 +1101,10 @@ experiment('modules/billing/services/batch-service', () => {
         });
 
         test('updates the include in supplementary billing status to reprocess where currently yes', async () => {
-          const [from, to, licenceIds] = licencesService.updateIncludeInSupplementaryBillingStatus.lastCall.args;
+          const [from, to, licenceId] = licencesService.updateIncludeInSupplementaryBillingStatus.lastCall.args;
           expect(from).to.equal('yes');
           expect(to).to.equal('reprocess');
-          expect(licenceIds).to.equal([licenceId]);
+          expect(licenceId).to.equal(licenceId);
         });
 
         test('sets status of batch to empty when there are no transactions', () => {
