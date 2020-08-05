@@ -298,7 +298,7 @@ const updateInvoiceLicencesForSupplementaryReprocessing = invoice => {
   return licencesService.updateIncludeInSupplementaryBillingStatus(
     INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
     INCLUDE_IN_SUPPLEMENTARY_BILLING.reprocess,
-    invoice.getLicenceIds()
+    ...invoice.getLicenceIds()
   );
 };
 
