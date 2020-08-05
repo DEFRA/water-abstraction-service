@@ -1,3 +1,5 @@
+'use strict';
+
 const { pick } = require('lodash');
 const BillingVolume = require('../../../lib/models/billing-volume');
 const FinancialYear = require('../../../lib/models/financial-year');
