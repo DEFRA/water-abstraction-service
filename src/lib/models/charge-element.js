@@ -157,7 +157,8 @@ class ChargeElement extends Model {
   toJSON () {
     return {
       ...super.toJSON(),
-      eiucSource: this.eiucSource
+      eiucSource: this.eiucSource,
+      maxAnnualQuantity: this.maxAnnualQuantity
     };
   }
 }
