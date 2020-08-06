@@ -38,6 +38,32 @@ const allocateReturnLine = (lineChargeElementGroups, returnLine) => {
 };
 
 /**
+ * Matches a group of returns against a group of charge elements
+ * @param {DateRange} chargePeriod
+ * @param {ChargeElementGroup} chargeElementGroup
+ * @param {ReturnGroup} returnGroup
+ */
+const matchReturnGroup = (chargePeriod, chargeElementGroup, returnGroup) => {
+  returnGroup.getReturnsWithCurrentVersion().forEach(ret => {
+    logger.info(`Matching return ${ret.id}`);
+
+    // Create list of charge elements for return
+    const returnChargeElementGroup = chargeElementGroup.createForReturn(ret);
+
+    // Get list of return lines
+    const returnLines = ret.currentReturnVersion.getReturnLinesForBilling(chargePeriod, ret.abstractionPeriod);
+
+    returnLines.forEach(returnLine => {
+      // Create matching groups array (1 array element per purpose)
+      const lineChargeElementGroups = returnChargeElementGroup.createForReturnLine(returnLine, chargePeriod);
+
+      // Allocate return line volume to matching elements
+      allocateReturnLine(lineChargeElementGroups, returnLine);
+    });
+  });
+};
+
+/**
  * Performs TPT matching process, returning an array of BillingVolume instances
  * ready for persisting to water.billing_volumes table
  * @param {DateRange} chargePeriod
@@ -62,23 +88,13 @@ const match = (chargePeriod, chargeElementGroup, returnGroup, isSummer) => {
   }
 
   try {
-    returnGroup.getReturnsWithCurrentVersion().forEach(ret => {
-      logger.info(`Matching return ${ret.id}`);
+    matchReturnGroup(chargePeriod, chargeElementGroup, returnGroup);
 
-      // Create list of charge elements for return
-      const returnChargeElementGroup = chargeElementGroup.createForReturn(ret);
-
-      // Get list of return lines
-      const returnLines = ret.currentReturnVersion.getReturnLinesForBilling(chargePeriod, ret.abstractionPeriod);
-
-      returnLines.forEach(returnLine => {
-        // Create matching groups array (1 array element per purpose)
-        const lineChargeElementGroups = returnChargeElementGroup.createForReturnLine(returnLine, chargePeriod);
-
-        // Allocate return line volume to matching elements
-        allocateReturnLine(lineChargeElementGroups, returnLine);
-      });
-    });
+    // Perform final steps
+    return chargeElementGroup
+      .reallocate()
+      .flagOverAbstraction()
+      .toBillingVolumes();
   } catch (err) {
     if (err instanceof ChargeElementMatchingError) {
       return chargeElementGroup
@@ -87,12 +103,6 @@ const match = (chargePeriod, chargeElementGroup, returnGroup, isSummer) => {
     }
     throw err;
   }
-
-  // Perform final steps
-  return chargeElementGroup
-    .reallocate()
-    .flagOverAbstraction()
-    .toBillingVolumes();
 };
 
 exports.match = match;

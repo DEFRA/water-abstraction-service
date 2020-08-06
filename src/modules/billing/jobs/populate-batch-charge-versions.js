@@ -18,12 +18,11 @@ const createMessage = (eventId, batch) => {
 const handlePopulateBatch = async job => {
   batchJob.logHandling(job);
 
-  const batchId = get(job, 'data.batch.id');
-
-  const batch = await batchService.getBatchById(batchId);
-
   try {
-  // Populate water.billing_batch_charge_versions
+    const batchId = get(job, 'data.batch.id');
+    const batch = await batchService.getBatchById(batchId);
+
+    // Populate water.billing_batch_charge_versions
     await chargeVersionService.createForBatch(batch);
 
     // Populate water.billing_batch_charge_version_years
@@ -31,7 +30,6 @@ const handlePopulateBatch = async job => {
 
     return { billingBatchChargeVersionYears, batch };
   } catch (err) {
-    console.error(err);
     batchJob.logHandlingError(job, err);
     throw err;
   }

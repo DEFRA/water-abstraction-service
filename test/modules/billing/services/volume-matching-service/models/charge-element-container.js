@@ -77,6 +77,17 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
     test('contains the number of abstraction days', async () => {
       expect(chargeElementContainer.abstractionDays).to.equal(153);
     });
+
+    experiment('when the charge period does not overlap the time-limited period', () => {
+      beforeEach(async () => {
+        chargeElement.timeLimitedPeriod = new DateRange('2018-01-01', '2018-12-31');
+        chargeElementContainer.chargeElement = chargeElement;
+      });
+
+      test('the number of abstraction days is 0', async () => {
+        expect(chargeElementContainer.abstractionDays).to.equal(0);
+      });
+    });
   });
 
   experiment('.isReturnLineMatch', () => {
@@ -285,6 +296,36 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
         chargeElementContainer.chargeElement.source = ChargeElement.sources.supported;
         chargeElementContainer.chargeElement.abstractionPeriod = AbstractionPeriod.getSummer();
         expect(chargeElementContainer.getScore(RETURN_SEASONS.winterAllYear)).to.equal(-847);
+      });
+    });
+  });
+
+  experiment('.setBillingVolume', async () => {
+    experiment('for a summer billing volume', async () => {
+      const billingVolume = new BillingVolume(uuid());
+      billingVolume.isSummer = true;
+
+      beforeEach(async () => {
+        chargeElementContainer.setBillingVolume(billingVolume);
+      });
+
+      test('the summer billing volume is set', async () => {
+        expect(chargeElementContainer.getBillingVolume(RETURN_SEASONS.summer)).to.equal(billingVolume);
+        expect(chargeElementContainer.getBillingVolume(RETURN_SEASONS.winterAllYear)).to.not.equal(billingVolume);
+      });
+    });
+
+    experiment('for a winter/all year billing volume', async () => {
+      const billingVolume = new BillingVolume(uuid());
+      billingVolume.isSummer = false;
+
+      beforeEach(async () => {
+        chargeElementContainer.setBillingVolume(billingVolume);
+      });
+
+      test('the summer billing volume is set', async () => {
+        expect(chargeElementContainer.getBillingVolume(RETURN_SEASONS.summer)).to.not.equal(billingVolume);
+        expect(chargeElementContainer.getBillingVolume(RETURN_SEASONS.winterAllYear)).to.equal(billingVolume);
       });
     });
   });
