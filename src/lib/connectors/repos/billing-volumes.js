@@ -18,14 +18,14 @@ const create = async data => {
 /**
  * Gets billing volumes for charge elements and financial year
  * @param {Array<String>} ids - guids
- * @param {FinancialYear} financialYear
+ * @param {Number} financialYear
  */
 const findApprovedByChargeElementIdsAndFinancialYear = async (ids, financialYear) => {
   const result = await BillingVolume
     .forge()
     .query('whereIn', 'charge_element_id', ids)
     .where({
-      financial_year: financialYear.endYear,
+      financial_year: financialYear,
       is_approved: true
     })
     .fetchAll();
@@ -128,9 +128,9 @@ const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
  * @param {String} billingBatchId
  * @param {Object} changes
  */
-const updateByBatchId = async (billingVolumeId, changes) => {
+const updateByBatchId = async (billingBatchId, changes) => {
   const result = await BillingVolume
-    .where('billing_volume_id', billingVolumeId)
+    .where('billing_batch_id', billingBatchId)
     .save(changes);
   return result.toJSON();
 };

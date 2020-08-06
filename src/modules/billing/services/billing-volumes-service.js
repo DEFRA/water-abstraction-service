@@ -11,7 +11,7 @@ const { BillingVolumeStatusError } = require('../lib/errors');
  */
 const getVolumesForChargeElements = async (chargeElements, financialYear) => {
   const chargeElementIds = chargeElements.map(chargeElement => chargeElement.id);
-  const data = await billingVolumesRepo.findApprovedByChargeElementIdsAndFinancialYear(chargeElementIds, financialYear);
+  const data = await billingVolumesRepo.findApprovedByChargeElementIdsAndFinancialYear(chargeElementIds, financialYear.endYear);
   return data.map(mappers.billingVolume.dbToModel);
 };
 
