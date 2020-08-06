@@ -2,9 +2,14 @@ const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
+const uuid = require('uuid/v4');
+
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
 
 const BillingVolume = require('../../../../src/lib/models/billing-volume');
+const FinancialYear = require('../../../../src/lib/models/financial-year');
+const Batch = require('../../../../src/lib/models/batch');
+
 const billingVolumesRepo = require('../../../../src/lib/connectors/repos/billing-volumes');
 const { NotFoundError } = require('../../../../src/lib/errors');
 const { BillingVolumeStatusError } = require('../../../../src/modules/billing/lib/errors');
@@ -27,8 +32,9 @@ experiment('modules/billing/services/billing-volumes-service', () => {
     sandbox.stub(billingVolumesRepo, 'findByBatchId');
     sandbox.stub(billingVolumesRepo, 'create');
     sandbox.stub(billingVolumesRepo, 'update');
+    sandbox.stub(billingVolumesRepo, 'updateByBatchId');
     sandbox.stub(billingVolumesRepo, 'findByIds').resolves([]);
-    sandbox.stub(billingVolumesRepo, 'updateByBatchId').resolves();
+    sandbox.stub(billingVolumesRepo, 'findByBatchIdAndLicenceId').resolves();
 
     sandbox.stub(twoPartTariffMatching, 'calculateVolumes');
   });
@@ -155,14 +161,6 @@ experiment('modules/billing/services/billing-volumes-service', () => {
 
     beforeEach(async () => {
       batch = createBatch({ id: batchId });
-
-      /*
-      billingVolumesRepo.getUnapprovedVolumesForBatch.resolves([
-        { billingVolumeId: 'billing-volume-1' },
-        { billingVolumeId: 'billing-volume-2' }
-      ]);
-      await billingVolumesService.approveVolumesForBatch(batch);
-      */
     });
 
     experiment('when there are unapproved volumes', () => {
@@ -210,6 +208,78 @@ experiment('modules/billing/services/billing-volumes-service', () => {
           batch.id, { isApproved: true }
         )).to.be.true();
       });
+    });
+  });
+
+  experiment('.persist', () => {
+    let result;
+    const billingVolume = new BillingVolume();
+
+    const data = {
+      chargeElementId: uuid(),
+      billingBatchId: uuid(),
+      calculatedVolume: 5.5,
+      volume: 5.5,
+      twoPartTariffError: true,
+      twoPartTariffStatus: 10,
+      financialYear: 2020,
+      isSummer: true,
+      twoPartTariffReview: null,
+      isApproved: false
+    };
+
+    billingVolume.fromHash({
+      ...data,
+      financialYear: new FinancialYear(data.financialYear)
+    });
+
+    beforeEach(async () => {
+      billingVolumesRepo.create.resolves({
+        billingVolumeId: uuid(),
+        ...data
+      });
+
+      result = await billingVolumesService.persist(billingVolume);
+    });
+
+    test('the repo .create() method is called with the correct arguments', async () => {
+      expect(billingVolumesRepo.create.calledWith({
+        billingVolumeId: undefined,
+        ...data
+      })).to.be.true();
+    });
+
+    test('the result is the saved billingVolume', async () => {
+      expect(result).to.be.instanceOf(BillingVolume);
+      expect(result.id).to.have.length(36);
+    });
+  });
+
+  experiment('.getLicenceBillingVolumes', () => {
+    const batch = new Batch(uuid());
+    const licenceId = uuid();
+
+    beforeEach(async () => {
+      billingVolumesRepo.findByBatchIdAndLicenceId.resolves([
+        {
+          billingVolumeId: 'test-id-1'
+        }, {
+          billingVolumeId: 'test-id-2'
+        }
+      ]);
+      await billingVolumesService.getLicenceBillingVolumes(batch, licenceId);
+    });
+
+    test('the billing volumes for this batch and licence are found', async () => {
+      expect(billingVolumesRepo.findByBatchIdAndLicenceId.calledWith(
+        batch.id, licenceId
+      )).to.be.true();
+    });
+
+    test('the full billing volume data structure is loaded from the repo', async () => {
+      expect(billingVolumesRepo.findByIds.calledWith([
+        'test-id-1', 'test-id-2'
+      ])).to.be.true();
     });
   });
 });

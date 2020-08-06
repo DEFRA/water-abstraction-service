@@ -3,11 +3,6 @@
 const newRepos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
-const { NotFoundError } = require('../../../lib/errors');
-const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/constants');
-const { BatchStatusError } = require('../lib/errors');
-const Batch = require('../../../lib/models/batch');
-const batchService = require('./batch-service');
 
 /**
  * Saves an Invoice model to water.billing_invoices
@@ -28,47 +23,5 @@ const getInvoiceLicenceWithTransactions = async invoiceLicenceId => {
   return invoiceLicence;
 };
 
-/**
- * Deletes an InvoiceLicence by ID
- * The batch must be in 'review' status to be deleted
- * @param {String} invoiceLicenceId
- * @return {Promise}
- */
-const deleteInvoiceLicence = async invoiceLicenceId => {
-  // Load data from DB
-  const invoiceLicence = await newRepos.billingInvoiceLicences.findOne(invoiceLicenceId);
-  if (!invoiceLicence) {
-    throw new NotFoundError(`Invoice licence ${invoiceLicenceId} not found`);
-  }
-
-  // Create batch service model from retrieved data
-  const batch = mappers.batch.dbToModel(invoiceLicence.billingInvoice.billingBatch);
-  if (!batch.statusIsOneOf(Batch.BATCH_STATUS.review)) {
-    throw new BatchStatusError(`Batch ${batch.id} status '${Batch.BATCH_STATUS.review}' expected`);
-  }
-
-  // Delete billing volumes for invoice licence
-  await newRepos.billingVolumes.deleteByInvoiceLicenceAndBatchId(invoiceLicenceId, batch.id);
-
-  // Delete transactions for invoice licence
-  await newRepos.billingTransactions.deleteByInvoiceLicenceId(invoiceLicenceId);
-
-  // Delete invoice licence
-  await newRepos.billingInvoiceLicences.delete(invoiceLicenceId);
-
-  // If the licence was marked for supplmenetary billing then
-  // change the status to 'reprocess' to be left for supplementary
-  // billing in the future.
-  await newRepos.licences.updateIncludeLicenceInSupplementaryBilling(
-    invoiceLicence.licenceId,
-    INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
-    INCLUDE_IN_SUPPLEMENTARY_BILLING.reprocess
-  );
-
-  // Set batch to empty if required
-  return batchService.setStatusToEmptyWhenNoTransactions(batch);
-};
-
 exports.saveInvoiceLicenceToDB = saveInvoiceLicenceToDB;
 exports.getInvoiceLicenceWithTransactions = getInvoiceLicenceWithTransactions;
-exports.delete = deleteInvoiceLicence;

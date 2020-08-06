@@ -172,19 +172,6 @@ const getInvoiceLicence = {
   }
 };
 
-const deleteInvoiceLicence = {
-  method: 'DELETE',
-  path: '/water/1.0/billing/invoice-licences/{invoiceLicenceId}',
-  handler: controller.deleteInvoiceLicence,
-  config: {
-    validate: {
-      params: {
-        invoiceLicenceId: Joi.string().uuid().required()
-      }
-    }
-  }
-};
-
 const postApproveReviewBatch = {
   method: 'POST',
   path: '/water/1.0/billing/batches/{batchId}/approve-review',
@@ -216,8 +203,6 @@ exports.deleteBatch = deleteBatch;
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 exports.postApproveReviewBatch = postApproveReviewBatch;
-
-exports.deleteInvoiceLicence = deleteInvoiceLicence;
 
 const tptRoutes = require('./routes/two-part-tariff-review');
 exports.getBatchLicences = tptRoutes.getBatchLicences;
