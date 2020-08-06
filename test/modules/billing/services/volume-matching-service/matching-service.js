@@ -44,7 +44,7 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
     test('the matching is aborted early and error codes assigned', async () => {
       expect(result).to.be.an.array().length(1);
       expect(result[0].volume).to.equal(chargeElementGroup.chargeElementContainers[0].chargeElement.volume);
-      expect(result[0].calculatedVolume).to.be.undefined();
+      expect(result[0].calculatedVolume).to.equal(null);
       expect(result[0].twoPartTariffStatus).to.equal(twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED);
     });
   });
@@ -213,7 +213,7 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
         });
 
         test('matches nothing to the winter element because only in-season abstraction is matched', async () => {
-          expect(result[1].calculatedVolume).to.be.undefined();
+          expect(result[1].calculatedVolume).to.equal(0);
         });
 
         test('there is no over-abstraction', async () => {
@@ -418,7 +418,7 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
         });
 
         test('matches nothing to the summer element because only in-season abstraction is matched', async () => {
-          expect(result[0].calculatedVolume).to.be.undefined();
+          expect(result[0].calculatedVolume).to.equal(0);
         });
 
         test('matches 5ML to the winter element because only in-season abstraction is matched', async () => {

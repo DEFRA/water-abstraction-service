@@ -115,9 +115,6 @@ class BillingVolume extends Model {
   set twoPartTariffStatus (twoPartTariffStatus) {
     validators.assertNullableEnum(twoPartTariffStatus, Object.values(twoPartTariffStatuses));
     this._twoPartTariffStatus = twoPartTariffStatus;
-    if (setErrorFlagStatuses.includes(twoPartTariffStatus)) {
-      this.twoPartTariffError = true;
-    }
   }
 
   /**
@@ -128,7 +125,11 @@ class BillingVolume extends Model {
   setTwoPartTariffStatus (twoPartTariffStatus, billableVolume) {
     this.twoPartTariffStatus = twoPartTariffStatus;
     if (assignBillableStatuses.includes(twoPartTariffStatus)) {
+      this.calculatedVolume = null;
       this.volume = billableVolume;
+    }
+    if (setErrorFlagStatuses.includes(twoPartTariffStatus)) {
+      this.twoPartTariffError = true;
     }
   }
 

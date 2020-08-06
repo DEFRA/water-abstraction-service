@@ -40,7 +40,9 @@ const createBillingVolume = (chargeElement, isSummer) => {
   const billingVolume = new BillingVolume();
   return billingVolume.fromHash({
     chargeElementId: chargeElement.id,
-    isSummer
+    isSummer,
+    volume: 0,
+    calculatedVolume: 0
   });
 };
 

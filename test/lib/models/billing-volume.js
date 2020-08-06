@@ -284,8 +284,8 @@ experiment('lib/models/billingVolume', () => {
         expect(billingVolume.volume).to.be.equal(20);
       });
 
-      test('the calculatedVolume is undefined', async () => {
-        expect(billingVolume.calculatedVolume).to.be.undefined();
+      test('the calculatedVolume is null', async () => {
+        expect(billingVolume.calculatedVolume).to.be.null();
       });
 
       test('the error flag is not set', async () => {
@@ -344,8 +344,8 @@ experiment('lib/models/billingVolume', () => {
         expect(billingVolume.volume).to.be.equal(20);
       });
 
-      test('the calculatedVolume is undefined', async () => {
-        expect(billingVolume.calculatedVolume).to.be.undefined();
+      test('the calculatedVolume is null', async () => {
+        expect(billingVolume.calculatedVolume).to.be.null();
       });
 
       test('the error flag is set', async () => {
@@ -366,8 +366,8 @@ experiment('lib/models/billingVolume', () => {
         expect(billingVolume.volume).to.be.equal(20);
       });
 
-      test('the calculatedVolume is undefined', async () => {
-        expect(billingVolume.calculatedVolume).to.be.undefined();
+      test('the calculatedVolume is null', async () => {
+        expect(billingVolume.calculatedVolume).to.be.null();
       });
 
       test('the error flag is not set', async () => {
