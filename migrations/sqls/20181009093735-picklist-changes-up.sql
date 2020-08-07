@@ -1,4 +1,5 @@
 /* Replace with your SQL commands */
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
 ALTER TABLE "water"."picklist_items" ADD COLUMN IF NOT EXISTS hidden BOOLEAN DEFAULT false;
 
