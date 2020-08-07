@@ -7,6 +7,11 @@ const billingVolumeService = require('../services/billing-volumes-service');
 
 const chargeVersionYearService = require('../services/charge-version-year');
 
+const options = {
+  teamSize: 50,
+  teamConcurrency: 2
+};
+
 const handleProcessChargeVersionComplete = async (job, messageQueue) => {
   batchJob.logOnComplete(job);
 
@@ -40,3 +45,4 @@ const handleProcessChargeVersionComplete = async (job, messageQueue) => {
 };
 
 module.exports = handleProcessChargeVersionComplete;
+module.exports.options = options;
