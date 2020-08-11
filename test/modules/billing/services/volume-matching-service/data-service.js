@@ -76,23 +76,18 @@ experiment('modules/billing/services/volume-matching-service/data-service', () =
       });
 
       test('gets the correct return groups', async () => {
-        const [licenceNumber, finYear, summerChargeElementGroup] = returnGroupService.getReturnGroups.lastCall.args;
+        const [licenceNumber, finYear] = returnGroupService.getReturnGroups.lastCall.args;
         expect(licenceNumber).to.equal(licence.licenceNumber);
         expect(finYear).to.equal(financialYear);
-        expect(summerChargeElementGroup instanceof ChargeElementGroup).to.be.true();
-        expect(summerChargeElementGroup.chargeElementContainers).to.be.an.array().length(1);
-        expect(summerChargeElementGroup.chargeElementContainers[0].chargeElement.description).to.equal('summerSpray');
       });
 
       test('resolves with data in the expected shape', async () => {
         expect(result.chargeVersion instanceof ChargeVersion).to.be.true();
         expect(result.chargePeriod instanceof DateRange).to.be.true();
 
-        expect(result.seasons[RETURN_SEASONS.summer].chargeElementGroup instanceof ChargeElementGroup).to.be.true();
-        expect(result.seasons[RETURN_SEASONS.summer].returnGroup instanceof ReturnGroup).to.be.true();
-
-        expect(result.seasons[RETURN_SEASONS.winterAllYear].chargeElementGroup instanceof ChargeElementGroup).to.be.true();
-        expect(result.seasons[RETURN_SEASONS.winterAllYear].returnGroup instanceof ReturnGroup).to.be.true();
+        expect(result.chargeElementGroup).instanceOf(ChargeElementGroup);
+        expect(result.returnGroups[RETURN_SEASONS.summer]).instanceOf(ReturnGroup);
+        expect(result.returnGroups[RETURN_SEASONS.winterAllYear]).instanceOf(ReturnGroup);
       });
     });
 

@@ -21,15 +21,11 @@ const matchVolumes = async (chargeVersionId, financialYear, isSummer) => {
   validators.assertIsInstanceOf(financialYear, FinancialYear);
   validators.assertIsBoolean(isSummer);
 
-  const data = await dataService.getData(chargeVersionId, financialYear);
-
-  const { chargePeriod } = data;
+  const { chargeElementGroup, returnGroups, chargePeriod } = await dataService.getData(chargeVersionId, financialYear);
 
   const seasonKey = isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
 
-  const { chargeElementGroup, returnGroup } = data.seasons[seasonKey];
-
-  return matchingService.match(chargePeriod, chargeElementGroup, returnGroup);
+  return matchingService.match(chargePeriod, chargeElementGroup, returnGroups[seasonKey], isSummer);
 };
 
 exports.matchVolumes = matchVolumes;

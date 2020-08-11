@@ -13,7 +13,7 @@ const sandbox = sinon.createSandbox();
 
 const billingBatchChargeVersions = require('../../../../src/lib/connectors/repos/billing-batch-charge-versions');
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-batch-charge-versions');
-const { BillingBatchChargeVersion } = require('../../../../src/lib/connectors/bookshelf');
+const { BillingBatchChargeVersion, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 
@@ -40,6 +40,7 @@ experiment('lib/connectors/repos/billing-batch-charge-versions', () => {
       where: sandbox.stub().returnsThis()
     };
     sandbox.stub(BillingBatchChargeVersion, 'forge').returns(stub);
+    sandbox.stub(bookshelf.knex, 'raw');
   });
 
   afterEach(async () => {
@@ -149,6 +150,21 @@ experiment('lib/connectors/repos/billing-batch-charge-versions', () => {
       await billingBatchChargeVersions.deleteByBatchId(batchId, false);
       const [params] = stub.destroy.lastCall.args;
       expect(params).to.equal({ require: false });
+    });
+  });
+
+  experiment('.deleteByBatchIdAndLicenceId', () => {
+    const billingBatchId = 'test-batch-id';
+    const licenceId = 'test-licence-id';
+
+    beforeEach(async () => {
+      await billingBatchChargeVersions.deleteByBatchIdAndLicenceId(billingBatchId, licenceId);
+    });
+
+    test('calls knex raw method with correct query', async () => {
+      expect(bookshelf.knex.raw.calledWith(
+        queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId }
+      )).to.be.true();
     });
   });
 });

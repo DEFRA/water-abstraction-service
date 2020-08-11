@@ -2,15 +2,19 @@ const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
+const uuid = require('uuid/v4');
+
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
 
 const BillingVolume = require('../../../../src/lib/models/billing-volume');
+const FinancialYear = require('../../../../src/lib/models/financial-year');
+const Batch = require('../../../../src/lib/models/batch');
+
 const billingVolumesRepo = require('../../../../src/lib/connectors/repos/billing-volumes');
 const { NotFoundError } = require('../../../../src/lib/errors');
 const { BillingVolumeStatusError } = require('../../../../src/modules/billing/lib/errors');
-const mappers = require('../../../../src/modules/billing/mappers');
 const twoPartTariffMatching = require('../../../../src/modules/billing/services/two-part-tariff-service');
-const { createBillingVolume, createUser, createBatch, createFinancialYear } = require('../test-data/test-billing-data');
+const { createUser, createBatch, createFinancialYear } = require('../test-data/test-billing-data');
 
 const batchId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 
@@ -26,221 +30,22 @@ experiment('modules/billing/services/billing-volumes-service', () => {
   beforeEach(async () => {
     sandbox.stub(billingVolumesRepo, 'getUnapprovedVolumesForBatch');
     sandbox.stub(billingVolumesRepo, 'findByBatchId');
-    sandbox.stub(billingVolumesRepo, 'findByChargeElementIdsAndFinancialYear');
     sandbox.stub(billingVolumesRepo, 'create');
     sandbox.stub(billingVolumesRepo, 'update');
-    sandbox.stub(mappers.billingVolume, 'dbToModel');
+    sandbox.stub(billingVolumesRepo, 'updateByBatchId');
+    sandbox.stub(billingVolumesRepo, 'findByIds').resolves([]);
+    sandbox.stub(billingVolumesRepo, 'findByBatchIdAndLicenceId').resolves();
+
     sandbox.stub(twoPartTariffMatching, 'calculateVolumes');
   });
 
   afterEach(async () => sandbox.restore());
-
-  experiment('.getVolumes', () => {
-    experiment('when calculated volumes exist', () => {
-      let billingVolumesData, result, batch;
-
-      beforeEach(async () => {
-        billingVolumesData = [
-          createBillingVolumeData(1, 2019, true),
-          createBillingVolumeData(2, 2019, true)
-        ];
-        const chargeElements = [
-          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
-          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' }];
-        batch = createBatch({ id: batchId });
-
-        billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves(billingVolumesData);
-
-        mappers.billingVolume.dbToModel
-          .onFirstCall().returns(createBillingVolume(billingVolumesData[0]))
-          .onSecondCall().returns(createBillingVolume(billingVolumesData[1]));
-
-        result = await billingVolumesService.getVolumes(chargeElements, '12/34/567', 2019, true, batch);
-      });
-
-      test('calls repo.findByChargeElementIdsAndFinancialYear() with charge element ids', async () => {
-        const [chargeElementIds, financialYear] = billingVolumesRepo.findByChargeElementIdsAndFinancialYear.lastCall.args;
-        expect(chargeElementIds).to.equal(['bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2']);
-        expect(financialYear).to.equal(2019);
-      });
-
-      test('calls mapper with billing volumes to be returned', async () => {
-        expect(mappers.billingVolume.dbToModel.calledWith(
-          billingVolumesData[0]
-        )).to.be.true();
-      });
-
-      test('only returns volumes relevant to financial year and season', async () => {
-        expect(result[0]).to.be.instanceOf(BillingVolume);
-        expect(result[0].chargeElementId).to.equal('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1');
-        expect(result[0].financialYear.yearEnding).to.equal(2019);
-        expect(result[0].isSummer).to.be.true();
-
-        expect(result[1]).to.be.instanceOf(BillingVolume);
-        expect(result[1].chargeElementId).to.equal('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2');
-        expect(result[1].financialYear.yearEnding).to.equal(2019);
-        expect(result[1].isSummer).to.be.true();
-      });
-    });
-
-    experiment('when no billing volumes are found in db', () => {
-      let chargeElements, result, batch;
-
-      const matchingResults = {
-        error: null,
-        data: [{
-          error: null,
-          data: {
-            chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1',
-            actualReturnQuantity: 25
-          }
-        }, {
-          error: 30,
-          data: {
-            chargeElementId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2',
-            actualReturnQuantity: 60
-          }
-        }]
-      };
-
-      const billingVolumesData = [
-        createBillingVolumeData(1, 2019, true, {
-          calculatedVolume: 25,
-          twoPartTariffStatus: null,
-          twoPartTariffError: false,
-          isApproved: false
-        }),
-        createBillingVolumeData(2, 2019, true, {
-          calculatedVolume: 60,
-          twoPartTariffStatus: 30,
-          twoPartTariffError: true,
-          isApproved: false
-        })
-      ];
-
-      beforeEach(async () => {
-        chargeElements = [
-          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
-          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' }];
-
-        batch = createBatch({ id: batchId });
-
-        billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves([]);
-
-        twoPartTariffMatching.calculateVolumes.resolves(matchingResults);
-        billingVolumesRepo.create
-          .onFirstCall().resolves(billingVolumesData[0])
-          .onSecondCall().resolves(billingVolumesData[1]);
-
-        mappers.billingVolume.dbToModel
-          .onFirstCall().returns(createBillingVolume(billingVolumesData[0]))
-          .onSecondCall().returns(createBillingVolume(billingVolumesData[1]));
-
-        result = await billingVolumesService.getVolumes(chargeElements, '12/34/567', 2019, true, batch);
-      });
-
-      test('calls repo.findByChargeElementIdsAndFinancialYear() with correct params', async () => {
-        const [chargeElementIds, financialYear] = billingVolumesRepo.findByChargeElementIdsAndFinancialYear.lastCall.args;
-        expect(chargeElementIds).to.equal(['bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2']);
-        expect(financialYear).to.equal(2019);
-      });
-
-      test('calls two part tariff matching algorithm with correct params', async () => {
-        expect(twoPartTariffMatching.calculateVolumes.calledWith(
-          chargeElements,
-          '12/34/567',
-          2019,
-          true
-        )).to.be.true();
-      });
-
-      test('calls repo.create() to persist each volume', async () => {
-        expect(billingVolumesRepo.create.callCount).to.equal(2);
-      });
-
-      experiment('calls repo.create() with correct data', () => {
-        test('first call', async () => {
-          const [firstCall] = billingVolumesRepo.create.firstCall.args;
-          expect(firstCall.chargeElementId).to.equal('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1');
-          expect(firstCall.financialYear).to.equal(2019);
-          expect(firstCall.isSummer).to.equal(true);
-          expect(firstCall.calculatedVolume).to.equal(25);
-          expect(firstCall.twoPartTariffStatus).to.equal(null);
-          expect(firstCall.twoPartTariffError).to.equal(false);
-          expect(firstCall.isApproved).to.equal(false);
-        });
-
-        test('second call', async () => {
-          const [secondCall] = billingVolumesRepo.create.secondCall.args;
-          expect(secondCall.chargeElementId).to.equal('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2');
-          expect(secondCall.financialYear).to.equal(2019);
-          expect(secondCall.isSummer).to.equal(true);
-          expect(secondCall.calculatedVolume).to.equal(60);
-          expect(secondCall.twoPartTariffStatus).to.equal(30);
-          expect(secondCall.twoPartTariffError).to.equal(true);
-          expect(secondCall.isApproved).to.equal(false);
-        });
-      });
-
-      test('calls mapper for each billing volume to be returned', async () => {
-        const [{ chargeElementId: firstChargeElementId }] = mappers.billingVolume.dbToModel.firstCall.args;
-        const [{ chargeElementId: secondChargeElementId }] = mappers.billingVolume.dbToModel.secondCall.args;
-        expect(mappers.billingVolume.dbToModel.callCount).to.equal(2);
-        expect(firstChargeElementId).to.equal(billingVolumesData[0].chargeElementId);
-        expect(secondChargeElementId).to.equal(billingVolumesData[1].chargeElementId);
-      });
-
-      test('returns BillingVolume models', async () => {
-        expect(result[0]).to.be.instanceOf(BillingVolume);
-        expect(result[0].chargeElementId).to.equal(billingVolumesData[0].chargeElementId);
-        expect(result[1]).to.be.instanceOf(BillingVolume);
-        expect(result[1].chargeElementId).to.equal(billingVolumesData[1].chargeElementId);
-      });
-    });
-
-    experiment('when some billing volumes are missing', () => {
-      let chargeElements, batch;
-
-      beforeEach(async () => {
-        const billingVolumes = [
-          createBillingVolumeData(1, 2019, true)
-        ];
-        chargeElements = [
-          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', season: 'summer' },
-          { id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', season: 'summer' }];
-
-        batch = createBatch({ id: batchId });
-
-        billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves(billingVolumes);
-
-        try {
-          await billingVolumesService.getVolumes(chargeElements, '12/34/567', 2019, true, batch);
-        } catch (err) {}
-      });
-
-      test('calls repo.findByChargeElementIdsAndFinancialYear() with correct params', async () => {
-        const [chargeElementIds, financialYear] = billingVolumesRepo.findByChargeElementIdsAndFinancialYear.lastCall.args;
-        expect(chargeElementIds).to.equal(['bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2']);
-        expect(financialYear).to.equal(2019);
-      });
-
-      test('an error is thrown ', async () => {
-        try {
-          await billingVolumesService.getVolumes(chargeElements, '12/34/567', 2019, true, batch);
-        } catch (err) {
-          expect(err).to.be.instanceOf(NotFoundError);
-          expect(err.message).to.equal('Billing volumes missing for charge elements bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1,bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2');
-        }
-      });
-    });
-  });
 
   experiment('.updateBillingVolume', () => {
     let batch, billingVolumeData;
     beforeEach(async () => {
       batch = createBatch({ id: batchId, isSummer: true, endYear: createFinancialYear(2019) });
       billingVolumeData = createBillingVolumeData(1, 2019, true);
-      billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves([billingVolumeData]);
     });
 
     experiment('when the billing volume exists', () => {
@@ -255,28 +60,32 @@ experiment('modules/billing/services/billing-volumes-service', () => {
             email: user.email
           }
         };
+        billingVolumesRepo.findByIds.resolves([billingVolumeData]);
         billingVolumesRepo.update.resolves({ ...billingVolumeData, ...billingVolumeChanges });
       });
 
       experiment('and the volume is approved', () => {
         test('throws a BillingVolumeStatusError', async () => {
-          billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves([{ ...billingVolumeData, isApproved: true }]);
-          try {
-            await billingVolumesService.updateBillingVolume(billingVolumeData.chargeElementId, batch, 43.7, user);
-          } catch (err) {
-            expect(err).to.be.instanceOf(BillingVolumeStatusError);
-            expect(err.message).to.equal('Approved billing volumes cannot be edited');
-          }
+          billingVolumesRepo.findByIds.resolves([{ ...billingVolumeData, isApproved: true }]);
+
+          const func = () => billingVolumesService.updateBillingVolume(billingVolumeData.chargeElementId, batch, 43.7, user);
+          const err = await expect(func()).to.reject();
+
+          expect(err).to.be.instanceOf(BillingVolumeStatusError);
+          expect(err.message).to.equal('Approved billing volumes cannot be edited');
         });
       });
 
       experiment('and the volume is not approved', () => {
+        let result;
+
         beforeEach(async () => {
-          await billingVolumesService.updateBillingVolume(billingVolumeData.chargeElementId, batch, 43.7, user);
+          billingVolumesRepo.findByIds.resolves([{ ...billingVolumeData, isApproved: false }]);
+          result = await billingVolumesService.updateBillingVolume(billingVolumeData.billingVolumeId, 43.7, user);
         });
         test('calls billingVolumesRepo to get relevant record', async () => {
-          expect(billingVolumesRepo.findByChargeElementIdsAndFinancialYear.calledWith(
-            [billingVolumeData.chargeElementId], 2019
+          expect(billingVolumesRepo.findByIds.calledWith(
+            [billingVolumeData.billingVolumeId]
           )).to.be.true();
         });
 
@@ -291,29 +100,21 @@ experiment('modules/billing/services/billing-volumes-service', () => {
         });
 
         test('returns the billingVolume mapped to model', () => {
-          expect(mappers.billingVolume.dbToModel.calledWith({
-            ...billingVolumeData, ...billingVolumeChanges
-          })).to.be.true();
+          expect(result instanceof BillingVolume).to.be.true();
         });
       });
     });
 
     experiment('when the billing volume does not exists', async () => {
       beforeEach(async () => {
-        billingVolumesRepo.findByChargeElementIdsAndFinancialYear.resolves([]);
+        billingVolumesRepo.findByIds.resolves([]);
       });
       test('does not call the billingVolumesRepo and throws a NotFoundError', async () => {
-        try {
-          const batch = createBatch({ id: batchId, isSummer: true, endYear: createFinancialYear(2019) });
-          const user = createUser({ id: '1234', email: 'user@example.com' });
-          await billingVolumesService.updateBillingVolume('test-charge-element-id', batch, 43.7, user);
-        } catch (err) {
-          expect(billingVolumesRepo.update.called).to.be.false();
-
-          const errMsg = 'Billing volume not found for chargeElementId test-charge-element-id, financialYear 2019 and isSummer true';
-          expect(err).to.be.instanceOf(NotFoundError);
-          expect(err.message).to.equal(errMsg);
-        }
+        const user = createUser({ id: '1234', email: 'user@example.com' });
+        const func = () => billingVolumesService.updateBillingVolume('test-billing-volume-id', 43.7, user);
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.instanceOf(NotFoundError);
+        expect(err.message).to.equal('Billing volume test-billing-volume-id not found');
       });
     });
   });
@@ -355,51 +156,130 @@ experiment('modules/billing/services/billing-volumes-service', () => {
     });
   });
 
-  experiment('.getVolumesWithTwoPartError', () => {
-    let batch, volumesForBatch, result;
+  experiment('.approveVolumesForBatch', () => {
+    let batch, err;
+
     beforeEach(async () => {
       batch = createBatch({ id: batchId });
-      volumesForBatch = [
-        { billingVolumeId: 'test-billing-volume-1', twoPartTariffError: false },
-        { billingVolumeId: 'test-billing-volume-2', twoPartTariffError: true }];
-      billingVolumesRepo.findByBatchId.resolves(volumesForBatch);
-      result = await billingVolumesService.getVolumesWithTwoPartError(batch);
     });
 
-    test('calls billingVolumesRepo with batch id', async () => {
-      expect(billingVolumesRepo.findByBatchId.calledWith(
-        batchId
-      )).to.be.true();
+    experiment('when there are unapproved volumes', () => {
+      beforeEach(async () => {
+        billingVolumesRepo.findByBatchId.resolves([
+          { billingVolumeId: 'billing-volume-1', twoPartTariffError: true },
+          { billingVolumeId: 'billing-volume-2' }
+        ]);
+        const func = () => billingVolumesService.approveVolumesForBatch(batch);
+        err = await expect(func()).to.reject();
+      });
+
+      test('gets billing volumes using the batch ID', async () => {
+        expect(billingVolumesRepo.findByBatchId.calledWith(
+          batchId
+        )).to.be.true();
+      });
+
+      test('throws an error', async () => {
+        expect(err).to.be.instanceOf(BillingVolumeStatusError);
+      });
+
+      test('does not update the billing volumes in the batc', async () => {
+        expect(billingVolumesRepo.updateByBatchId.called).to.be.false();
+      });
     });
 
-    test('returns the only the results of the DB call with have a TPT error', async () => {
-      expect(result).to.equal([volumesForBatch[1]]);
+    experiment('when there are no unapproved volumes', () => {
+      beforeEach(async () => {
+        billingVolumesRepo.findByBatchId.resolves([
+          { billingVolumeId: 'billing-volume-1' },
+          { billingVolumeId: 'billing-volume-2' }
+        ]);
+        await billingVolumesService.approveVolumesForBatch(batch);
+      });
+
+      test('gets billing volumes using the batch ID', async () => {
+        expect(billingVolumesRepo.findByBatchId.calledWith(
+          batchId
+        )).to.be.true();
+      });
+
+      test('updates the billing volumes in the batch', async () => {
+        expect(billingVolumesRepo.updateByBatchId.calledWith(
+          batch.id, { isApproved: true }
+        )).to.be.true();
+      });
     });
   });
 
-  experiment('.approveVolumesForBatch', () => {
-    let batch;
-    beforeEach(async () => {
-      batch = createBatch({ id: batchId });
-      billingVolumesRepo.getUnapprovedVolumesForBatch.resolves([
-        { billingVolumeId: 'billing-volume-1' },
-        { billingVolumeId: 'billing-volume-2' }
-      ]);
-      await billingVolumesService.approveVolumesForBatch(batch);
+  experiment('.persist', () => {
+    let result;
+    const billingVolume = new BillingVolume();
+
+    const data = {
+      chargeElementId: uuid(),
+      billingBatchId: uuid(),
+      calculatedVolume: 5.5,
+      volume: 5.5,
+      twoPartTariffError: true,
+      twoPartTariffStatus: 10,
+      financialYear: 2020,
+      isSummer: true,
+      twoPartTariffReview: null,
+      isApproved: false
+    };
+
+    billingVolume.fromHash({
+      ...data,
+      financialYear: new FinancialYear(data.financialYear)
     });
-    test('calls billingVolumesRepo with batch id', async () => {
-      expect(billingVolumesRepo.getUnapprovedVolumesForBatch.calledWith(
-        batchId
+
+    beforeEach(async () => {
+      billingVolumesRepo.create.resolves({
+        billingVolumeId: uuid(),
+        ...data
+      });
+
+      result = await billingVolumesService.persist(billingVolume);
+    });
+
+    test('the repo .create() method is called with the correct arguments', async () => {
+      expect(billingVolumesRepo.create.calledWith({
+        billingVolumeId: undefined,
+        ...data
+      })).to.be.true();
+    });
+
+    test('the result is the saved billingVolume', async () => {
+      expect(result).to.be.instanceOf(BillingVolume);
+      expect(result.id).to.have.length(36);
+    });
+  });
+
+  experiment('.getLicenceBillingVolumes', () => {
+    const batch = new Batch(uuid());
+    const licenceId = uuid();
+
+    beforeEach(async () => {
+      billingVolumesRepo.findByBatchIdAndLicenceId.resolves([
+        {
+          billingVolumeId: 'test-id-1'
+        }, {
+          billingVolumeId: 'test-id-2'
+        }
+      ]);
+      await billingVolumesService.getLicenceBillingVolumes(batch, licenceId);
+    });
+
+    test('the billing volumes for this batch and licence are found', async () => {
+      expect(billingVolumesRepo.findByBatchIdAndLicenceId.calledWith(
+        batch.id, licenceId
       )).to.be.true();
     });
 
-    test('calls repo.update for each row', async () => {
-      const firstCallArgs = billingVolumesRepo.update.firstCall.args;
-      const secondCallArgs = billingVolumesRepo.update.secondCall.args;
-      expect(firstCallArgs[0]).to.equal('billing-volume-1');
-      expect(firstCallArgs[1]).to.equal({ isApproved: true });
-      expect(secondCallArgs[0]).to.equal('billing-volume-2');
-      expect(secondCallArgs[1]).to.equal({ isApproved: true });
+    test('the full billing volume data structure is loaded from the repo', async () => {
+      expect(billingVolumesRepo.findByIds.calledWith([
+        'test-id-1', 'test-id-2'
+      ])).to.be.true();
     });
   });
 });

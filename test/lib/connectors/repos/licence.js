@@ -13,6 +13,7 @@ const sandbox = sinon.createSandbox();
 const licenceQueries = require('../../../../src/lib/connectors/repos/queries/licences');
 const licencesRepo = require('../../../../src/lib/connectors/repos/licences');
 const { Licence, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
+const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 
 experiment('lib/connectors/repos/licences', () => {
   let model, stub;
@@ -28,6 +29,7 @@ experiment('lib/connectors/repos/licences', () => {
     };
     sandbox.stub(Licence, 'forge').returns(stub);
     sandbox.stub(bookshelf.knex, 'raw');
+    sandbox.stub(raw, 'multiRow');
   });
 
   afterEach(async () => {
@@ -147,6 +149,18 @@ experiment('lib/connectors/repos/licences', () => {
         from: 'from-value',
         to: 'to-value'
       });
+    });
+  });
+
+  experiment('.findByBatchIdForTwoPartTariffReview', () => {
+    beforeEach(async () => {
+      await licencesRepo.findByBatchIdForTwoPartTariffReview('batch-id');
+    });
+
+    test('calls raw.multiRow with correct query and params', async () => {
+      expect(raw.multiRow.calledWith(
+        licenceQueries.findByBatchIdForTwoPartTariffReview, { billingBatchId: 'batch-id' }
+      )).to.be.true();
     });
   });
 });
