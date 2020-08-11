@@ -8,12 +8,12 @@ const { getChargePeriod } = require('../../lib/charge-period');
 // Services
 const chargeVersionService = require('../charge-version-service');
 const returnGroupService = require('./return-group-service');
+const billingVolumesService = require('../billing-volumes-service');
 
 // Models
 const FinancialYear = require('../../../../lib/models/financial-year');
 const ChargeElementContainer = require('./models/charge-element-container');
 const ChargeElementGroup = require('./models/charge-element-group');
-const { RETURN_SEASONS } = require('../../../../lib/models/constants');
 
 const createChargeElementGroup = (chargeVersion, chargePeriod) => {
   const chargeElementContainers = chargeVersion.chargeElements.map(chargeElement => new ChargeElementContainer(chargeElement, chargePeriod));
@@ -28,13 +28,12 @@ const createChargeElementGroup = (chargeVersion, chargePeriod) => {
  * @param {DateRange0} chargePeriod
  * @return {Object}
  */
-const createChargeElementGroups = (chargeVersion, chargePeriod) => {
-  const tptChargeElementGroup = createChargeElementGroup(chargeVersion, chargePeriod)
-    .createForTwoPartTariff();
-  return {
-    [RETURN_SEASONS.summer]: tptChargeElementGroup.createForSeason(RETURN_SEASONS.summer),
-    [RETURN_SEASONS.winterAllYear]: tptChargeElementGroup.createForSeason(RETURN_SEASONS.winterAllYear)
-  };
+const createTPTChargeElementGroup = (chargeVersion, chargePeriod, financialYear, billingVolumes) => {
+  return createChargeElementGroup(chargeVersion, chargePeriod)
+    .createForChargePeriod()
+    .createForTwoPartTariff()
+    .setFinancialYear(financialYear)
+    .setBillingVolumes(billingVolumes);
 };
 
 /**
@@ -68,29 +67,23 @@ const getData = async (chargeVersionId, financialYear) => {
   // Get charge period
   const chargePeriod = getChargePeriod(financialYear, chargeVersion);
 
-  // Get charge element groups
-  const chargeElementGroups = createChargeElementGroups(chargeVersion, chargePeriod);
+  // Load billing volumes and returns grouped by season
+  const [billingVolumes, returnGroups] = await Promise.all([
+    billingVolumesService.getVolumesForChargeElements(chargeVersion.chargeElements, financialYear),
+    returnGroupService.getReturnGroups(
+      chargeVersion.licence.licenceNumber,
+      financialYear
+    )
+  ]);
 
-  // Get all returns and group by season
-  const returnGroups = await returnGroupService.getReturnGroups(
-    chargeVersion.licence.licenceNumber,
-    financialYear,
-    chargeElementGroups[RETURN_SEASONS.summer]
-  );
+  // Get charge element group
+  const chargeElementGroup = createTPTChargeElementGroup(chargeVersion, chargePeriod, financialYear, billingVolumes);
 
   return {
     chargeVersion,
     chargePeriod,
-    seasons: {
-      [RETURN_SEASONS.summer]: {
-        chargeElementGroup: chargeElementGroups[RETURN_SEASONS.summer],
-        returnGroup: returnGroups[RETURN_SEASONS.summer]
-      },
-      [RETURN_SEASONS.winterAllYear]: {
-        chargeElementGroup: chargeElementGroups[RETURN_SEASONS.winterAllYear],
-        returnGroup: returnGroups[RETURN_SEASONS.winterAllYear]
-      }
-    }
+    chargeElementGroup,
+    returnGroups
   };
 };
 

@@ -20,7 +20,7 @@ const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../src/lib/models/licence');
 const Totals = require('../../../../src/lib/models/totals');
 const Transaction = require('../../../../src/lib/models/transaction');
-const { BatchStatusError, BillingVolumeStatusError } = require('../../../../src/modules/billing/lib/errors');
+const { BatchStatusError } = require('../../../../src/modules/billing/lib/errors');
 const { NotFoundError } = require('../../../../src/lib/errors');
 
 const eventService = require('../../../../src/lib/services/events');
@@ -99,8 +99,6 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(transactionsService, 'saveTransactionToDB');
     sandbox.stub(transactionsService, 'persistDeMinimis').resolves();
 
-    sandbox.stub(billingVolumesService, 'getVolumesWithTwoPartError').resolves([]);
-
     sandbox.stub(invoiceLicencesService, 'saveInvoiceLicenceToDB');
 
     sandbox.stub(invoiceService, 'saveInvoiceToDB');
@@ -125,6 +123,8 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingTransactions, 'deleteByInvoiceId');
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByInvoiceId');
     sandbox.stub(newRepos.billingInvoices, 'delete');
+
+    sandbox.stub(billingVolumesService, 'approveVolumesForBatch');
   });
 
   afterEach(async () => {
@@ -290,14 +290,26 @@ experiment('modules/billing/services/batch-service', () => {
     let internalCallingUser;
 
     beforeEach(async () => {
-      batch = {
-        externalId: uuid()
-      };
+      batch = new Batch(uuid());
+      batch.fromHash({
+        externalId: uuid(),
+        status: Batch.BATCH_STATUS.ready
+      });
 
       internalCallingUser = {
         email: 'test@example.com',
         id: 1234
       };
+    });
+
+    experiment('when the batch is in "sent" status', () => {
+      test('an error is thrown as the batch cannot be deleted', async () => {
+        batch.status = Batch.BATCH_STATUS.sent;
+        const func = () => batchService.deleteBatch(batch, internalCallingUser);
+        const err = await expect(func()).to.reject();
+        expect(err instanceof BatchStatusError);
+        expect(err.message).to.equal(`Sent batch ${batch.id} cannot be deleted`);
+      });
     });
 
     experiment('when all deletions succeed', () => {
@@ -336,7 +348,7 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('deletes the invoices', async () => {
-        expect(newRepos.billingInvoices.deleteByBatchId.calledWith(batch.id)).to.be.true();
+        expect(newRepos.billingInvoices.deleteByBatchId.calledWith(batch.id, false)).to.be.true();
       });
 
       test('deletes the batch', async () => {
@@ -1009,13 +1021,8 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('there are outstanding twoPartTariffErrors to resolve', async () => {
-        billingVolumesService.getVolumesWithTwoPartError.resolves([{ billingVolumeId: 'test-billing-volume-id' }]);
-        try {
-          await batchService.approveTptBatchReview(batch);
-        } catch (err) {
-          expect(err).to.be.an.instanceOf(BillingVolumeStatusError);
-          expect(err.message).to.equal('Cannot approve review. There are outstanding two part tariff errors to resolve');
-        }
+        billingVolumesService.approveVolumesForBatch.rejects();
+        expect(batchService.approveTptBatchReview(batch)).to.reject();
       });
     });
   });

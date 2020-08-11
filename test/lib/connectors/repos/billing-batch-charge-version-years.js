@@ -25,9 +25,11 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
     stub = {
       save: sandbox.stub().resolves(model),
       destroy: sandbox.stub().resolves(),
+      fetch: sandbox.stub().resolves(model),
       where: sandbox.stub().returnsThis()
     };
     sandbox.stub(BillingBatchChargeVersionYear, 'forge').returns(stub);
+    sandbox.stub(BillingBatchChargeVersionYear, 'collection').returns(stub);
     sandbox.stub(raw, 'multiRow');
     sandbox.stub(bookshelf.knex, 'raw');
   });
@@ -123,6 +125,56 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
       const [query, params] = raw.multiRow.lastCall.args;
       expect(query).to.equal(queries.createForBatch);
       expect(params).to.equal({ billingBatchId });
+    });
+  });
+
+  experiment('.findByBatchId', () => {
+    const billingBatchId = 'test-batch-id';
+
+    beforeEach(async () => {
+      await repos.billingBatchChargeVersionYears.findByBatchId(billingBatchId);
+    });
+
+    test('calls Bookshelf methods in correct order', async () => {
+      sinon.assert.callOrder(
+        BillingBatchChargeVersionYear.collection,
+        stub.where,
+        stub.fetch,
+        model.toJSON
+      );
+    });
+
+    test('finds records with correct batch ID', async () => {
+      expect(stub.where.calledWith('billing_batch_id', billingBatchId));
+    });
+  });
+
+  experiment('.findTwoPartTariffByBatchId', () => {
+    const billingBatchId = 'test-batch-id';
+
+    beforeEach(async () => {
+      await repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(billingBatchId);
+    });
+
+    test('calls knex raw method with correct query', async () => {
+      expect(bookshelf.knex.raw.calledWith(
+        queries.findTwoPartTariffByBatchId, { billingBatchId }
+      )).to.be.true();
+    });
+  });
+
+  experiment('.deleteByBatchIdAndLicenceId', () => {
+    const billingBatchId = 'test-batch-id';
+    const licenceId = 'test-licence-id';
+
+    beforeEach(async () => {
+      await repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId(billingBatchId, licenceId);
+    });
+
+    test('calls knex raw method with correct query', async () => {
+      expect(bookshelf.knex.raw.calledWith(
+        queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId }
+      )).to.be.true();
     });
   });
 });

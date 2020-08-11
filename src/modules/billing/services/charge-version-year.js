@@ -53,8 +53,29 @@ const processChargeVersionYear = async dbRow => {
 const createForBatch = batch =>
   repos.billingBatchChargeVersionYears.createForBatch(batch.id);
 
+/**
+ * Gets all charge version year records for given batch
+ * @param {String} batchId
+ * @return {Promise<Array>}
+ */
+const getForBatch = batchId => {
+  return repos.billingBatchChargeVersionYears.findByBatchId(batchId);
+};
+
+/**
+ * Gets all charge version year records for given batch where there
+ * is a two-part tariff agreement in place
+ * @param {String} batchId
+ * @return {Promise<Array>}
+ */
+const getTwoPartTariffForBatch = batchId => {
+  return repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(batchId);
+};
+
 exports.setReadyStatus = setReadyStatus;
 exports.setErrorStatus = setErrorStatus;
 exports.getStatusCounts = getStatusCounts;
 exports.processChargeVersionYear = processChargeVersionYear;
 exports.createForBatch = createForBatch;
+exports.getForBatch = getForBatch;
+exports.getTwoPartTariffForBatch = getTwoPartTariffForBatch;

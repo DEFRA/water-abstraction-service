@@ -1,12 +1,13 @@
 'use strict';
 
-const { groupBy, sortBy, negate } = require('lodash');
+const { groupBy, sortBy, negate, flatMap } = require('lodash');
 
 const validators = require('../../../../../lib/models/validators');
 const Return = require('../../../../../lib/models/return');
 const ReturnLine = require('../../../../../lib/models/return-line');
 const PurposeUse = require('../../../../../lib/models/purpose-use');
 const DateRange = require('../../../../../lib/models/date-range');
+const FinancialYear = require('../../../../../lib/models/financial-year');
 
 const ChargeElementContainer = require('./charge-element-container');
 
@@ -32,13 +33,6 @@ const isReturnPurposeUseMatch = (ret, chargeElementContainer) => {
     isPurposeUseMatch(purposeUse, chargeElementContainer)
   );
 };
-
-/**
- * Checks whether the ChargeElementContainer supplied is for a summer element
- * @param {ChargeElementContainer} chargeElementContainer
- * @return {Boolean}
- */
-const isSummerChargeElementContainer = chargeElementContainer => chargeElementContainer.billingVolume.isSummer;
 
 /**
  * Checks if the return line is within the supplied charge period
@@ -82,14 +76,14 @@ const isNotTimeLimited = negate(isTimeLimited);
  * @param {ChargeElementContainer} sourceElementContainer
  * @param {ChargeElementContainer} targetElementContainer
  */
-const reallocateElement = (sourceElementContainer, targetElementContainer) => {
+const reallocateElement = (returnSeason, sourceElementContainer, targetElementContainer) => {
   const volumeToReallocate = Math.min(
     targetElementContainer.getAvailableVolume(),
-    sourceElementContainer.billingVolume.calculatedVolume
+    sourceElementContainer.getBillingVolume(returnSeason).volume
   );
   if (volumeToReallocate > 0) {
-    sourceElementContainer.billingVolume.deallocate(volumeToReallocate);
-    targetElementContainer.billingVolume.allocate(volumeToReallocate);
+    sourceElementContainer.deallocate(returnSeason, volumeToReallocate);
+    targetElementContainer.allocate(returnSeason, volumeToReallocate);
   }
 };
 
@@ -98,14 +92,14 @@ const reallocateElement = (sourceElementContainer, targetElementContainer) => {
  * already been grouped with matching source, season factor and purpose
  * @param {Array} chargeElementContainers
  */
-const reallocateGroup = chargeElementContainers => {
+const reallocateGroup = (returnSeason, chargeElementContainers) => {
   const base = chargeElementContainers.filter(isNotTimeLimited);
   const sub = chargeElementContainers.filter(isTimeLimited);
 
   base.forEach(baseElement => {
     sub.forEach(subElement => {
       if (subElement.chargeElement.abstractionPeriod.isWithinAbstractionPeriod(baseElement.chargeElement.abstractionPeriod)) {
-        reallocateElement(subElement, baseElement);
+        reallocateElement(returnSeason, subElement, baseElement);
       }
     });
   });
@@ -116,11 +110,35 @@ class ChargeElementGroup {
    * @constructor
    * @param {Array<ChargeElementContainer>} [chargeElementContainers]
    */
-  constructor (chargeElementContainers) {
+  constructor (chargeElementContainers, returnSeason) {
     this._chargeElementContainers = [];
     if (chargeElementContainers) {
       this.chargeElementContainers = chargeElementContainers;
     }
+    if (returnSeason) {
+      this.returnSeason = returnSeason;
+    }
+  }
+
+  /**
+   * Creates a new ChargeElementGroup with the return season set
+   * @param {String} returnSeason
+   */
+  createForReturnSeason (returnSeason) {
+    return new ChargeElementGroup(this._chargeElementContainers, returnSeason);
+  }
+
+  /**
+   * Sets the return season for the charge element group
+   * @param {String}
+   */
+  set returnSeason (returnSeason) {
+    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
+    this._returnSeason = returnSeason;
+  }
+
+  get returnSeason () {
+    return this._returnSeason;
   }
 
   /**
@@ -148,14 +166,6 @@ class ChargeElementGroup {
   }
 
   /**
-   * Checks whether the charge element group contains summer elements
-   * @return {Boolean}
-   */
-  isSummerElements () {
-    return this._chargeElementContainers.some(isSummerChargeElementContainer);
-  }
-
-  /**
    * Checks whether there are any charge element containers in this group
    * @return {Boolean}
    */
@@ -177,28 +187,25 @@ class ChargeElementGroup {
   }
 
   /**
-   * Creates a new ChargeElementGroup with only two-part tariff purposes included
+   * Creates a new ChargeElementGroup with only:
+   * - a date range which overlaps the charge period
+   * @return {ChargeElementGroup}
+   */
+  createForChargePeriod () {
+    const chargeElementContainers = this._chargeElementContainers
+      .filter(chargeElementContainer => chargeElementContainer.isValidForChargePeriod);
+    return new ChargeElementGroup(chargeElementContainers);
+  }
+
+  /**
+   * Creates a new ChargeElementGroup with only:
+   * - two-part tariff purposes
    * @return {ChargeElementGroup}
    */
   createForTwoPartTariff () {
     const chargeElementContainers = this._chargeElementContainers
       .filter(chargeElementContainer => chargeElementContainer.isTwoPartTariffPurpose);
     return new ChargeElementGroup(chargeElementContainers);
-  }
-
-  /**
-   * Creates a new ChargeElementGroup for the supplied season
-   * @param {String} season
-   * @return {ChargeElementGroup}
-   */
-  createForSeason (season) {
-    validators.assertEnum(season, Object.values(RETURN_SEASONS));
-    // Filter elements that match the supplied season
-    const isSummer = season === RETURN_SEASONS.summer;
-    const elements = this._chargeElementContainers.filter(chargeElementContainer =>
-      chargeElementContainer.isSummer === isSummer
-    );
-    return new ChargeElementGroup(elements);
   }
 
   /**
@@ -210,11 +217,13 @@ class ChargeElementGroup {
   createForReturn (ret) {
     validators.assertIsInstanceOf(ret, Return);
 
+    const returnSeason = ret.isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
+
     // Get only elements with purpose uses matching the return purpose
     const elements = this._chargeElementContainers
       .filter(chargeElementContainer => isReturnPurposeUseMatch(ret, chargeElementContainer));
 
-    return new ChargeElementGroup(elements);
+    return new ChargeElementGroup(elements, returnSeason);
   }
 
   /**
@@ -233,12 +242,14 @@ class ChargeElementGroup {
       chargeElementContainer => chargeElementContainer.isReturnLineMatch(returnLine)
     );
 
+    // Throw error if no element matches supplied return line
     if (elements.length === 0) {
       throw new ChargeElementMatchingError(`No charge elements to match for return line ${returnLine.id}`);
     }
 
-    // Sort elements
-    const sortedElements = sortBy(elements, chargeElementContainer => chargeElementContainer.score);
+    // Rank elements by score
+    const { returnSeason } = this;
+    const sortedElements = sortBy(elements, chargeElementContainer => chargeElementContainer.getScore(returnSeason));
 
     // Check return line falls in charge period
     if (isReturnLineStraddlingChargePeriodError(returnLine, chargePeriod)) {
@@ -252,7 +263,7 @@ class ChargeElementGroup {
 
     // Return as array of element groups
     return Object.values(groups).map(
-      chargeElementContainers => new ChargeElementGroup(chargeElementContainers)
+      chargeElementContainers => new ChargeElementGroup(chargeElementContainers, this.returnSeason)
     );
   }
 
@@ -261,9 +272,11 @@ class ChargeElementGroup {
    * @param {Number} twoPartTariffStatus
    */
   setTwoPartTariffStatus (twoPartTariffStatus) {
+    const { returnSeason } = this;
     this._chargeElementContainers.forEach(chargeElementContainer =>
-      chargeElementContainer.setTwoPartTariffStatus(twoPartTariffStatus)
+      chargeElementContainer.setTwoPartTariffStatus(returnSeason, twoPartTariffStatus)
     );
+    return this;
   }
 
   /**
@@ -271,13 +284,14 @@ class ChargeElementGroup {
    * @param {Number}
    */
   allocate (volume) {
+    const { returnSeason } = this;
     this._chargeElementContainers.reduce((acc, chargeElementContainer, i) => {
       const isLast = i === this._chargeElementContainers.length - 1;
       const qtyToAllocate = isLast ? acc : Math.min(
         chargeElementContainer.getAvailableVolume(),
         acc
       );
-      chargeElementContainer.billingVolume.allocate(qtyToAllocate);
+      chargeElementContainer.allocate(returnSeason, qtyToAllocate);
       return acc - qtyToAllocate;
     }, volume);
   }
@@ -288,8 +302,9 @@ class ChargeElementGroup {
    * @return {this}
    */
   reallocate () {
+    const { returnSeason } = this;
     const groups = groupBy(this._chargeElementContainers, getReallocationKey);
-    Object.values(groups).forEach(reallocateGroup);
+    Object.values(groups).forEach(group => reallocateGroup(returnSeason, group));
     return this;
   }
 
@@ -298,8 +313,21 @@ class ChargeElementGroup {
    * @return {this}
    */
   flagOverAbstraction () {
+    const { returnSeason } = this;
     this._chargeElementContainers.forEach(
-      chargeElementContainer => chargeElementContainer.flagOverAbstraction()
+      chargeElementContainer => chargeElementContainer.flagOverAbstraction(returnSeason)
+    );
+    return this;
+  }
+
+  /**
+   * Sets financial year in BillingVolume models
+   * @return {this}
+   */
+  setFinancialYear (financialYear) {
+    validators.assertIsInstanceOf(financialYear, FinancialYear);
+    this._chargeElementContainers.forEach(
+      chargeElementContainer => chargeElementContainer.setFinancialYear(financialYear)
     );
     return this;
   }
@@ -309,9 +337,26 @@ class ChargeElementGroup {
    * @return {Array<BillingVolume>}
    */
   toBillingVolumes () {
-    return this._chargeElementContainers.map(
-      chargeElementContainer => chargeElementContainer.billingVolume.toFixed()
-    );
+    const isSummer = this.returnSeason === RETURN_SEASONS.summer;
+    const billingVolumes = flatMap(this._chargeElementContainers.map(
+      chargeElementContainer => chargeElementContainer.billingVolumes
+    ));
+    return billingVolumes
+      .filter(billingVolume => billingVolume.isSummer === isSummer)
+      .map(billingVolume => billingVolume.toFixed());
+  }
+
+  /**
+   * Sets any existing billing volumes on the charge element groups,
+   * e.g. from summer cycle when processing winter/all year
+   * @param {Array<BillingVolume>} billingVolumes
+   */
+  setBillingVolumes (billingVolumes) {
+    for (const billingVolume in billingVolumes) {
+      const chargeElementContainer = this._chargeElementContainers.find(c => c.chargeElement.id === billingVolume.chargeElementId);
+      chargeElementContainer.setBillingVolume(billingVolume);
+    }
+    return this;
   }
 };
 

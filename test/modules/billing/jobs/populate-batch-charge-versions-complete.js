@@ -99,47 +99,39 @@ experiment('modules/billing/jobs/populate-batch-charge-versions-complete', () =>
     });
   });
 
-  experiment('when there are chargeVersion years', () => {
+  experiment('when there are chargeVersion years, and the batch is annual', async () => {
     beforeEach(async () => {
+      job.data.response.batch.type = 'annual';
       await handlePopulateBatchChargeVersionsComplete(job, messageQueue);
     });
 
-    test('queues a new job for the first valid charge version year', async () => {
-      expect(
-        messageQueue.publish.calledWith(
-          sinon.match({
-            name: 'billing.process-charge-version.test-batch-id',
-            data: {
-              eventId: 'test-event-id',
-              chargeVersionYear: {
-                billingBatchChargeVersionYearId: 'valid-1'
-              },
-              batch: {
-                id: 'test-batch-id'
-              }
-            }
-          })
-        )
-      ).to.be.true();
+    test('the processChargeVersions job is published', async () => {
+      const [message] = messageQueue.publish.lastCall.args;
+      expect(message.name).to.equal('billing.process-charge-versions.test-batch-id');
+    });
+  });
+
+  experiment('when there are chargeVersion years, and the batch is two-part tariff', async () => {
+    beforeEach(async () => {
+      job.data.response.batch.type = 'two_part_tariff';
+      await handlePopulateBatchChargeVersionsComplete(job, messageQueue);
     });
 
-    test('queues a new job for the second valid charge version year', async () => {
-      expect(
-        messageQueue.publish.calledWith(
-          sinon.match({
-            name: 'billing.process-charge-version.test-batch-id',
-            data: {
-              eventId: 'test-event-id',
-              chargeVersionYear: {
-                billingBatchChargeVersionYearId: 'valid-2'
-              },
-              batch: {
-                id: 'test-batch-id'
-              }
-            }
-          })
-        )
-      ).to.be.true();
+    test('the twoPartTariffMatching job is published', async () => {
+      const [message] = messageQueue.publish.lastCall.args;
+      expect(message.name).to.equal('billing.two-part-tariff-matching.test-batch-id');
+    });
+  });
+
+  experiment('when there are chargeVersion years, and the batch is supplementary', async () => {
+    beforeEach(async () => {
+      job.data.response.batch.type = 'supplementary';
+      await handlePopulateBatchChargeVersionsComplete(job, messageQueue);
+    });
+
+    test('the twoPartTariffMatching job is published', async () => {
+      const [message] = messageQueue.publish.lastCall.args;
+      expect(message.name).to.equal('billing.two-part-tariff-matching.test-batch-id');
     });
   });
 

@@ -1,4 +1,4 @@
-const { BillingBatchChargeVersion } = require('../bookshelf');
+const { BillingBatchChargeVersion, bookshelf } = require('../bookshelf');
 const { getFinancialYearDate } = require('@envage/water-abstraction-helpers').charging;
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-batch-charge-versions');
@@ -52,7 +52,16 @@ const deleteByBatchId = async (batchId, isDeletionRequired = true) => BillingBat
   .where({ billing_batch_id: batchId })
   .destroy({ require: isDeletionRequired });
 
+/**
+ * Deletes charge versiom years in a batch for a particular licence ID
+ * @param {String} billingBatchId
+ * @param {String} licenceId
+ */
+const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
+  bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId });
+
 exports.createAnnual = createAnnual;
 exports.createSupplementary = createSupplementary;
 exports.createTwoPartTariff = createTwoPartTariff;
 exports.deleteByBatchId = deleteByBatchId;
+exports.deleteByBatchIdAndLicenceId = deleteByBatchIdAndLicenceId;
