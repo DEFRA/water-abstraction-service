@@ -42,6 +42,8 @@ experiment('lib/connectors/repos/billing-transactions', () => {
     };
     sandbox.stub(BillingTransaction, 'forge').returns(stub);
     sandbox.stub(BillingTransaction, 'collection').returns(stub);
+    sandbox.stub(BillingTransaction, 'where').returns(stub);
+
     sandbox.stub(raw, 'multiRow');
   });
 
@@ -213,22 +215,50 @@ experiment('lib/connectors/repos/billing-transactions', () => {
   });
 
   experiment('.update', () => {
-    const transactionId = 'test-transaction-id';
-    const changes = {
-      status: 'error'
-    };
+    experiment('for a scalar ID', () => {
+      const transactionId = 'test-transaction-id';
+      const changes = {
+        status: 'error'
+      };
 
-    beforeEach(async () => {
-      await billingTransactions.update(transactionId, changes);
+      beforeEach(async () => {
+        await billingTransactions.update(transactionId, changes);
+      });
+
+      test('calls model.where with correct data', async () => {
+        const [field, operator, value] = BillingTransaction.where.lastCall.args;
+        expect(field).to.equal('billing_transaction_id');
+        expect(operator).to.equal('in');
+        expect(value).to.equal([transactionId]);
+      });
+
+      test('calls .save() on the model using patch mode', async () => {
+        expect(stub.save.calledWith(changes, { patch: true })).to.be.true();
+      });
     });
 
-    test('calls model.forge with correct data', async () => {
-      const [params] = BillingTransaction.forge.lastCall.args;
-      expect(params).to.equal({ billingTransactionId: transactionId });
-    });
+    experiment('for an array of IDs', () => {
+      const transactionId1 = 'test-transaction-id-1';
+      const transactionId2 = 'test-transaction-id-1';
 
-    test('calls .save() on the model using patch mode', async () => {
-      expect(stub.save.calledWith(changes, { patch: true })).to.be.true();
+      const changes = {
+        status: 'error'
+      };
+
+      beforeEach(async () => {
+        await billingTransactions.update([transactionId1, transactionId2], changes);
+      });
+
+      test('calls model.where with correct data', async () => {
+        const [field, operator, value] = BillingTransaction.where.lastCall.args;
+        expect(field).to.equal('billing_transaction_id');
+        expect(operator).to.equal('in');
+        expect(value).to.equal([transactionId1, transactionId2]);
+      });
+
+      test('calls .save() on the model using patch mode', async () => {
+        expect(stub.save.calledWith(changes, { patch: true })).to.be.true();
+      });
     });
   });
 

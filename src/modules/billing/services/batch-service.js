@@ -1,7 +1,5 @@
 'use strict';
 
-const { flatMap } = require('lodash');
-
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
@@ -153,7 +151,7 @@ const saveInvoicesToDB = async batch => {
 const decorateBatchWithTotals = async batch => {
   try {
     const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
-    return chargeModuleDecorators.decorateBatch(cmResponse);
+    return chargeModuleDecorators.decorateBatch(batch, cmResponse);
   } catch (err) {
     logger.info('Failed to decorate batch with totals. Waiting for CM API', err);
   }
