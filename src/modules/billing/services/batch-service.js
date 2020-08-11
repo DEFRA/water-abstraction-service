@@ -1,12 +1,14 @@
 'use strict';
 
+const { partialRight } = require('lodash');
+
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
 const Event = require('../../../lib/models/event');
 const eventService = require('../../../lib/services/events');
-const { BatchStatusError, BillingVolumeStatusError } = require('../lib/errors');
+const { BatchStatusError } = require('../lib/errors');
 const { NotFoundError } = require('../../../lib/errors');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/constants');
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
@@ -61,16 +63,24 @@ const saveEvent = (type, status, user, batch) => {
 };
 
 const deleteBatch = async (batch, internalCallingUser) => {
+  if (batch.statusIsOneOf(Batch.BATCH_STATUS.sent)) {
+    throw new BatchStatusError(`Sent batch ${batch.id} cannot be deleted`);
+  }
+
   try {
     await licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batch.id);
     await chargeModuleBillRunConnector.delete(batch.externalId);
 
+    // These are populated at every stage in the bill run
     await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batch.id);
     await newRepos.billingBatchChargeVersions.deleteByBatchId(batch.id);
-    await newRepos.billingTransactions.deleteByBatchId(batch.id);
     await newRepos.billingVolumes.deleteByBatchId(batch.id);
+
+    // These tables are not yet populated at review stage in TPT
+    await newRepos.billingTransactions.deleteByBatchId(batch.id);
     await newRepos.billingInvoiceLicences.deleteByBatchId(batch.id);
-    await newRepos.billingInvoices.deleteByBatchId(batch.id);
+    await newRepos.billingInvoices.deleteByBatchId(batch.id, false);
+
     await newRepos.billingBatches.delete(batch.id);
 
     await saveEvent('billing-batch:cancel', 'delete', internalCallingUser, batch);
@@ -254,13 +264,6 @@ const createChargeModuleBillRun = async batchId => {
   return batch.pickFrom(row, ['externalId', 'billRunNumber']);
 };
 
-const assertNoBillingVolumesWithTwoPartError = async batch => {
-  const billingVolumesWithTwoPartError = await billingVolumesService.getVolumesWithTwoPartError(batch);
-  if (billingVolumesWithTwoPartError.length > 0) {
-    throw new BillingVolumeStatusError('Cannot approve review. There are outstanding two part tariff errors to resolve');
-  }
-};
-
 const assertBatchStatusIsReview = batch => {
   if (batch.status !== BATCH_STATUS.review) {
     throw new BatchStatusError('Cannot approve review. Batch status must be "review"');
@@ -279,8 +282,8 @@ const assertBatchStatusIsReview = batch => {
  * @return {Promise<Batch>} resolves with Batch service model
  */
 const approveTptBatchReview = async batch => {
-  await assertNoBillingVolumesWithTwoPartError(batch);
   assertBatchStatusIsReview(batch);
+  await billingVolumesService.approveVolumesForBatch(batch);
   await setStatus(batch.id, BATCH_STATUS.processing);
   return getBatchById(batch.id);
 };
@@ -357,6 +360,7 @@ exports.refreshTotals = refreshTotals;
 exports.saveInvoicesToDB = saveInvoicesToDB;
 exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
+exports.setStatusToReview = partialRight(setStatus, Batch.BATCH_STATUS.review);
 exports.setStatusToEmptyWhenNoTransactions = setStatusToEmptyWhenNoTransactions;
 exports.cleanup = cleanup;
 exports.create = create;

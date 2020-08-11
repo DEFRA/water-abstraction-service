@@ -23,15 +23,10 @@ const financialYear = new FinancialYear(2020);
 
 const createMatchingData = () => ({
   chargePeriod: new DateRange('2019-04-01', '2020-03-31'),
-  seasons: {
-    [RETURN_SEASONS.summer]: {
-      returnGroup: new ReturnGroup(),
-      chargeElementGroup: new ChargeElementGroup()
-    },
-    [RETURN_SEASONS.winterAllYear]: {
-      returnGroup: new ReturnGroup(),
-      chargeElementGroup: new ChargeElementGroup()
-    }
+  chargeElementGroup: new ChargeElementGroup(),
+  returnGroups: {
+    [RETURN_SEASONS.summer]: new ReturnGroup(),
+    [RETURN_SEASONS.winterAllYear]: new ReturnGroup()
   }
 });
 
@@ -57,8 +52,8 @@ experiment('modules/billing/services/volume-matching-service/index.js', () => {
       test('calls the matching service with the correct params', async () => {
         expect(matchingService.match.calledWith(
           matchingData.chargePeriod,
-          matchingData.seasons[RETURN_SEASONS.summer].chargeElementGroup,
-          matchingData.seasons[RETURN_SEASONS.summer].returnGroup
+          matchingData.chargeElementGroup,
+          matchingData.returnGroups[RETURN_SEASONS.summer]
         )).to.be.true();
       });
     });
@@ -71,8 +66,8 @@ experiment('modules/billing/services/volume-matching-service/index.js', () => {
       test('calls the matching service with the correct params', async () => {
         expect(matchingService.match.calledWith(
           matchingData.chargePeriod,
-          matchingData.seasons[RETURN_SEASONS.winterAllYear].chargeElementGroup,
-          matchingData.seasons[RETURN_SEASONS.winterAllYear].returnGroup
+          matchingData.chargeElementGroup,
+          matchingData.returnGroups[RETURN_SEASONS.winterAllYear]
         )).to.be.true();
       });
     });

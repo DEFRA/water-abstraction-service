@@ -6,12 +6,14 @@ const {
   beforeEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
+const uuid = require('uuid/v4');
 
 const billingVolumeMapper = require('../../../../src/modules/billing/mappers/billing-volume');
 
 const BillingVolume = require('../../../../src/lib/models/billing-volume');
 const User = require('../../../../src/lib/models/user');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
+const ChargeElement = require('../../../../src/lib/models/charge-element');
 
 experiment('modules/billing/mappers/billing-volume', () => {
   experiment('.dbToModel', () => {
@@ -47,6 +49,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
       expect(result.twoPartTariffStatus).to.equal(dbRow.twoPartTariffStatus);
       expect(result.isApproved).to.equal(dbRow.isApproved);
       expect(result.volume).to.equal(dbRow.volume);
+      expect(result.chargeElement).to.be.undefined();
     });
 
     test('sets the financialYear to a FinancialYear instance', async () => {
@@ -66,6 +69,29 @@ experiment('modules/billing/mappers/billing-volume', () => {
         twoPartTariffReview: null
       });
       expect(result.twoPartTariffReview).to.be.null();
+    });
+
+    experiment('when charge element info is specified', () => {
+      beforeEach(async () => {
+        dbRow.chargeElement = {
+          chargeElementId: uuid(),
+          source: 'supported',
+          season: 'summer',
+          loss: 'high',
+          abstractionPeriodStartDay: 1,
+          abstractionPeriodStartMonth: 1,
+          abstractionPeriodEndDay: 31,
+          abstractionPeriodEndMonth: 12,
+          description: 'Test element',
+          authorisedAnnualQuantity: 3.5,
+          billableAnnualQuantity: 2.5
+        };
+        result = billingVolumeMapper.dbToModel(dbRow);
+      });
+
+      test('the result includes a ChargeElement model', async () => {
+        expect(result.chargeElement).to.be.instanceOf(ChargeElement);
+      });
     });
   });
 
@@ -255,6 +281,63 @@ experiment('modules/billing/mappers/billing-volume', () => {
         test('sets isApproved flag to false', async () => {
           expect(result[0].isApproved).to.be.false();
         });
+      });
+    });
+  });
+
+  experiment('.modelToDB', () => {
+    let billingVolume, result;
+
+    beforeEach(async () => {
+      const financialYear = new FinancialYear(2020);
+      billingVolume = new BillingVolume(uuid());
+      billingVolume.fromHash({
+        billingBatchId: uuid(),
+        chargeElementId: uuid(),
+        chargeElement: new ChargeElement(),
+        isSummer: true,
+        calculatedVolume: 12.5,
+        twoPartTariffError: true,
+        twoPartTariffStatus: 10,
+        isApproved: false,
+        volume: 10.2,
+        financialYear
+      });
+
+      result = billingVolumeMapper.modelToDB(billingVolume);
+    });
+
+    test('the data should be mapped to the DB fields', async () => {
+      const { billingVolumeId, billingBatchId, chargeElementId, ...rest } = result;
+      expect(billingVolumeId).to.equal(billingVolume.id);
+      expect(chargeElementId).to.equal(billingVolume.chargeElementId);
+      expect(billingBatchId).to.equal(billingVolume.billingBatchId);
+      expect(rest).to.equal({
+        isSummer: true,
+        calculatedVolume: 12.5,
+        twoPartTariffError: true,
+        twoPartTariffStatus: 10,
+        isApproved: false,
+        volume: 10.2,
+        financialYear: 2020,
+        twoPartTariffReview: null
+      });
+    });
+
+    experiment('when there is a two-part tariff reviewer', () => {
+      beforeEach(async () => {
+        const user = new User();
+        user.fromHash({
+          id: 123,
+          email: 'nobody@example.com'
+        });
+        billingVolume.twoPartTariffReview = user;
+        result = billingVolumeMapper.modelToDB(billingVolume);
+      });
+
+      test('the twoPartTariffReview property contains the reviewer user details', async () => {
+        expect(result.twoPartTariffReview.id).to.equal(123);
+        expect(result.twoPartTariffReview.email).to.equal('nobody@example.com');
       });
     });
   });

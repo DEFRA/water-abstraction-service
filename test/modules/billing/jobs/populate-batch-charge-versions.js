@@ -50,7 +50,10 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
 
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
+
     sandbox.stub(batchJob, 'logHandling');
+    sandbox.stub(batchJob, 'logHandlingError');
+
     sandbox.stub(messageQueue, 'publish').resolves();
 
     batch = createBatch();
@@ -97,33 +100,55 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
         },
         done: sandbox.spy()
       };
-      result = await populateBatchChargeVersionsJob.handler(job);
     });
 
-    test('fetches the correct batch from the batch service', async () => {
-      expect(batchService.getBatchById.calledWith(
-        batch.id
-      )).to.be.true();
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        result = await populateBatchChargeVersionsJob.handler(job);
+      });
+
+      test('fetches the correct batch from the batch service', async () => {
+        expect(batchService.getBatchById.calledWith(
+          batch.id
+        )).to.be.true();
+      });
+
+      test('creates billingBatchChargeVersions using the batch', async () => {
+        expect(chargeVersionService.createForBatch.calledWith(
+          batch
+        )).to.be.true();
+      });
+
+      test('creates billingBatchChargeVersionYears using the batch', async () => {
+        expect(chargeVersionYearService.createForBatch.calledWith(
+          batch
+        )).to.be.true();
+      });
+
+      test('includes the batch in the job response', async () => {
+        expect(result.batch).to.equal(batch);
+      });
+
+      test('includes the billingBatchChargeVersionYears in the job response', async () => {
+        expect(result.billingBatchChargeVersionYears).to.equal(billingBatchChargeVersionYears);
+      });
     });
 
-    test('creates billingBatchChargeVersions using the batch', async () => {
-      expect(chargeVersionService.createForBatch.calledWith(
-        batch
-      )).to.be.true();
-    });
+    experiment('when there is an error', async () => {
+      const error = new Error('oops!');
 
-    test('creates billingBatchChargeVersionYears using the batch', async () => {
-      expect(chargeVersionYearService.createForBatch.calledWith(
-        batch
-      )).to.be.true();
-    });
+      beforeEach(async () => {
+        batchService.getBatchById.rejects(error);
+      });
 
-    test('includes the batch in the job response', async () => {
-      expect(result.batch).to.equal(batch);
-    });
-
-    test('includes the billingBatchChargeVersionYears in the job response', async () => {
-      expect(result.billingBatchChargeVersionYears).to.equal(billingBatchChargeVersionYears);
+      test('the error is logged and rethrown', async () => {
+        const func = () => populateBatchChargeVersionsJob.handler(job);
+        const err = await expect(func()).to.reject();
+        expect(batchJob.logHandlingError.calledWith(
+          job, error
+        )).to.be.true();
+        expect(err).to.equal(error);
+      });
     });
   });
 });

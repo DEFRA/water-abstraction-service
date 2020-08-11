@@ -1,5 +1,6 @@
 'use strict';
 
+const raw = require('./lib/raw');
 const { Licence, bookshelf } = require('../bookshelf');
 const queries = require('./queries/licences');
 
@@ -21,6 +22,15 @@ const findOne = async licenceId => {
 
   return model ? model.toJSON() : null;
 };
+
+/**
+ * Gets a list of licences in the supplied billing batch, which have a
+ * billing volume for TPT review
+ * @param {String} billingBatchId
+ * @return {Promise<Array>}
+ */
+const findByBatchIdForTwoPartTariffReview = billingBatchId =>
+  raw.multiRow(queries.findByBatchIdForTwoPartTariffReview, { billingBatchId });
 
 /**
  * Updates a water.licences record for the given id
@@ -60,6 +70,7 @@ const updateIncludeInSupplementaryBillingStatusForBatch = (batchId, from, to) =>
     .raw(queries.updateIncludeInSupplementaryBillingStatusForBatch, params);
 };
 
+exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview;
 exports.findOne = findOne;
 exports.update = update;
 exports.updateIncludeLicenceInSupplementaryBilling = updateIncludeLicenceInSupplementaryBilling;

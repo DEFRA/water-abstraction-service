@@ -13,6 +13,8 @@ const BillingVolume = require('../../../../../../src/lib/models/billing-volume')
 const DateRange = require('../../../../../../src/lib/models/date-range');
 const PurposeUse = require('../../../../../../src/lib/models/purpose-use');
 const ReturnLine = require('../../../../../../src/lib/models/return-line');
+const { RETURN_SEASONS } = require('../../../../../../src/lib/models/constants');
+const { ERROR_OVER_ABSTRACTION } = BillingVolume.twoPartTariffStatuses;
 
 const createReturnLine = (startDate, endDate) => {
   const line = new ReturnLine();
@@ -20,8 +22,11 @@ const createReturnLine = (startDate, endDate) => {
   return line;
 };
 
+const getBillingVolume = (chargeElementContainer, isSummer) =>
+  chargeElementContainer.billingVolumes.find(billingVolume => billingVolume.isSummer === isSummer);
+
 experiment('modules/billing/services/volume-matching-service/models/charge-element-container', () => {
-  let chargeElementContainer, chargeElement, chargePeriod;
+  let chargeElementContainer, chargeElement, chargePeriod, summerBillingVolume, winterBillingVolume;
 
   beforeEach(async () => {
     chargePeriod = new DateRange('2019-04-01', '2020-03-31');
@@ -41,12 +46,24 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
     chargeElement.purposeUse = new PurposeUse();
     chargeElement.purposeUse.isTwoPartTariff = true;
     chargeElementContainer = new ChargeElementContainer(chargeElement, chargePeriod);
+
+    summerBillingVolume = getBillingVolume(chargeElementContainer, true);
+    winterBillingVolume = getBillingVolume(chargeElementContainer, false);
   });
 
-  experiment('.billingVolume', () => {
-    test('model contains a BillingVolume', async () => {
-      expect(chargeElementContainer.billingVolume.chargeElementId).to.equal(chargeElement.id);
-      expect(chargeElementContainer.billingVolume.isSummer).to.be.true();
+  experiment('.billingVolumes', () => {
+    test('model contains a pair of BillingVolumes - 1 for each return season', async () => {
+      const arr = chargeElementContainer.billingVolumes;
+
+      expect(arr).to.be.an.array().length(2);
+
+      expect(arr[0]).to.be.instanceOf(BillingVolume);
+      expect(arr[0].chargeElementId).to.equal(chargeElement.id);
+      expect(arr[0].isSummer).to.be.true();
+
+      expect(arr[1]).to.be.instanceOf(BillingVolume);
+      expect(arr[1].chargeElementId).to.equal(chargeElement.id);
+      expect(arr[1].isSummer).to.be.false();
     });
   });
 
@@ -59,6 +76,17 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
   experiment('.abstractionDays', () => {
     test('contains the number of abstraction days', async () => {
       expect(chargeElementContainer.abstractionDays).to.equal(153);
+    });
+
+    experiment('when the charge period does not overlap the time-limited period', () => {
+      beforeEach(async () => {
+        chargeElement.timeLimitedPeriod = new DateRange('2018-01-01', '2018-12-31');
+        chargeElementContainer.chargeElement = chargeElement;
+      });
+
+      test('the number of abstraction days is 0', async () => {
+        expect(chargeElementContainer.abstractionDays).to.equal(0);
+      });
     });
   });
 
@@ -107,23 +135,20 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
     });
   });
 
-  experiment('.isSummer', () => {
-    test('returns true if the billing volume is for summer', async () => {
-      expect(chargeElementContainer.isSummer).to.be.true();
-    });
-
-    test('returns false if the billing volume is for winter/all-year', async () => {
-      chargeElementContainer.billingVolume.isSummer = false;
-      expect(chargeElementContainer.isSummer).to.be.false();
-    });
-  });
-
   experiment('.setTwoPartTariffStatus', () => {
-    test('sets the BillingVolume status and billable volume from the charge element', async () => {
+    beforeEach(async () => {
       const { ERROR_NO_RETURNS_SUBMITTED } = BillingVolume.twoPartTariffStatuses;
-      chargeElementContainer.setTwoPartTariffStatus(ERROR_NO_RETURNS_SUBMITTED);
-      expect(chargeElementContainer.billingVolume.twoPartTariffStatus).to.equal(ERROR_NO_RETURNS_SUBMITTED);
-      expect(chargeElementContainer.billingVolume.volume).to.equal(chargeElement.volume);
+      chargeElementContainer.setTwoPartTariffStatus(RETURN_SEASONS.summer, ERROR_NO_RETURNS_SUBMITTED);
+    });
+
+    test('sets the BillingVolume status and billable volume from the charge element for the specified season', async () => {
+      const { ERROR_NO_RETURNS_SUBMITTED } = BillingVolume.twoPartTariffStatuses;
+      expect(summerBillingVolume.twoPartTariffStatus).to.equal(ERROR_NO_RETURNS_SUBMITTED);
+      expect(summerBillingVolume.volume).to.equal(chargeElement.volume);
+    });
+
+    test('does not alter the BillingVolume status and billable volume for the other season', async () => {
+      expect(winterBillingVolume.twoPartTariffStatus).to.be.undefined();
     });
   });
 
@@ -132,51 +157,176 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       expect(chargeElementContainer.getAvailableVolume()).to.equal(14.2);
     });
 
-    test('returns charge element volume - billable volume when the billing volume is set', async () => {
-      chargeElementContainer.billingVolume.calculatedVolume = 3;
+    test('returns charge element volume - billable volume when the summer billing volume is set', async () => {
+      summerBillingVolume.volume = 3;
       expect(chargeElementContainer.getAvailableVolume()).to.equal(11.2);
     });
 
+    test('returns charge element volume - billable volume when the winter billing volume is set', async () => {
+      winterBillingVolume.volume = 4;
+      expect(chargeElementContainer.getAvailableVolume()).to.equal(10.2);
+    });
+
+    test('returns charge element volume - billable volume when both summer and winter billing volume is set', async () => {
+      winterBillingVolume.volume = 4;
+      summerBillingVolume.volume = 3;
+
+      expect(chargeElementContainer.getAvailableVolume()).to.equal(7.2);
+    });
+
     test('returns 0 if full volume is already allocated', async () => {
-      chargeElementContainer.billingVolume.calculatedVolume = 14.2;
+      winterBillingVolume.volume = 4.1;
+      summerBillingVolume.volume = 10.1;
       expect(chargeElementContainer.getAvailableVolume()).to.equal(0);
     });
 
     test('returns 0 if > full volume is already allocated', async () => {
-      chargeElementContainer.billingVolume.calculatedVolume = 25;
+      winterBillingVolume.volume = 25;
       expect(chargeElementContainer.getAvailableVolume()).to.equal(0);
     });
   });
 
   experiment('.flagOverAbstraction', () => {
-    test('does not set the error code when the calculated billing volume is less than the charge element volume', async () => {
-      chargeElementContainer.billingVolume.calculatedVolume = 10;
-      chargeElementContainer.flagOverAbstraction();
-      expect(chargeElementContainer.billingVolume.twoPartTariffStatus).to.be.undefined();
-    });
+    experiment('in the summer cycle', () => {
+      experiment('if the summer billing volume is not overabstracted', () => {
+        beforeEach(async () => {
+          summerBillingVolume.volume = 10;
+          winterBillingVolume.volume = 20;
+          chargeElementContainer.flagOverAbstraction(RETURN_SEASONS.summer);
+        });
 
-    test('does not set the error code when the calculated billing volume is equal to the charge element volume', async () => {
-      chargeElementContainer.billingVolume.calculatedVolume = 14.2;
-      chargeElementContainer.flagOverAbstraction();
-      expect(chargeElementContainer.billingVolume.twoPartTariffStatus).to.be.undefined();
-    });
+        test('the summer billing volume is not flagged as over-abstracted', async () => {
+          expect(summerBillingVolume.twoPartTariffStatus).to.be.undefined();
+        });
 
-    test('sets the error code when the calculated billing volume is greater than the charge element volume', async () => {
-      chargeElementContainer.billingVolume.calculatedVolume = 20;
-      chargeElementContainer.flagOverAbstraction();
-      expect(chargeElementContainer.billingVolume.twoPartTariffStatus).to.equal(BillingVolume.twoPartTariffStatuses.ERROR_OVER_ABSTRACTION);
+        test('the winter billing volume is not flagged as over-abstracted', async () => {
+          expect(winterBillingVolume.twoPartTariffStatus).to.be.undefined();
+        });
+      });
+
+      experiment('if the summer billing volume is overabstracted', () => {
+        beforeEach(async () => {
+          summerBillingVolume.volume = 14.3;
+          winterBillingVolume.volume = 20;
+          chargeElementContainer.flagOverAbstraction(RETURN_SEASONS.summer);
+        });
+
+        test('the summer billing volume is flagged as over-abstracted', async () => {
+          expect(summerBillingVolume.twoPartTariffStatus).to.equal(ERROR_OVER_ABSTRACTION);
+        });
+
+        test('the winter billing volume is not flagged as over-abstracted', async () => {
+          expect(winterBillingVolume.twoPartTariffStatus).to.be.undefined();
+        });
+      });
+
+      experiment('in the winter/all year cycle', () => {
+        experiment('if the summer billing volume is not overabstracted and there is no overall over-abstraction', () => {
+          beforeEach(async () => {
+            summerBillingVolume.volume = 5;
+            winterBillingVolume.volume = 5;
+            chargeElementContainer.flagOverAbstraction(RETURN_SEASONS.winterAllYear);
+          });
+
+          test('the summer billing volume is not flagged as over-abstracted', async () => {
+            expect(summerBillingVolume.twoPartTariffStatus).to.be.undefined();
+          });
+
+          test('the winter billing volume is not flagged as over-abstracted', async () => {
+            expect(winterBillingVolume.twoPartTariffStatus).to.be.undefined();
+          });
+        });
+
+        experiment('if there is overall over-abstraction', () => {
+          beforeEach(async () => {
+            summerBillingVolume.volume = 5;
+            winterBillingVolume.volume = 10;
+            chargeElementContainer.flagOverAbstraction(RETURN_SEASONS.winterAllYear);
+          });
+
+          test('the summer billing volume is not flagged as over-abstracted', async () => {
+            expect(summerBillingVolume.twoPartTariffStatus).to.be.undefined();
+          });
+
+          test('the winter billing volume is not flagged as over-abstracted', async () => {
+            expect(winterBillingVolume.twoPartTariffStatus).to.equal(ERROR_OVER_ABSTRACTION);
+          });
+        });
+      });
     });
   });
 
   experiment('.score', () => {
-    test('when the source is supported, the score is the number of abstraction days', async () => {
-      chargeElementContainer.chargeElement.source = ChargeElement.sources.supported;
-      expect(chargeElementContainer.score).to.equal(153);
+    experiment('when the return season is summer,', () => {
+      test('and the source is unsupported, the season is not summer, the score is the number of abstraction days', async () => {
+        chargeElementContainer.chargeElement.source = ChargeElement.sources.unsupported;
+        chargeElementContainer.chargeElement.abstractionPeriod = AbstractionPeriod.getWinter();
+
+        expect(chargeElementContainer.getScore(RETURN_SEASONS.summer)).to.equal(153);
+      });
+
+      test('and the source is supported, the season is not summer, the score is the number of abstraction days - 1000', async () => {
+        chargeElementContainer.chargeElement.source = ChargeElement.sources.supported;
+        chargeElementContainer.chargeElement.abstractionPeriod = AbstractionPeriod.getWinter();
+        expect(chargeElementContainer.getScore(RETURN_SEASONS.summer)).to.equal(-847);
+      });
+
+      test('and the source is supported, the season is summer, the score is the number of abstraction days - 2000', async () => {
+        chargeElementContainer.chargeElement.source = ChargeElement.sources.supported;
+        chargeElementContainer.chargeElement.abstractionPeriod = AbstractionPeriod.getSummer();
+        expect(chargeElementContainer.getScore(RETURN_SEASONS.summer)).to.equal(-1847);
+      });
     });
 
-    test('when the source is unsupported, the score is the number of abstraction days + 1000', async () => {
-      chargeElementContainer.chargeElement.source = ChargeElement.sources.unsupported;
-      expect(chargeElementContainer.score).to.equal(1153);
+    experiment('when the return season is winter/all year,', () => {
+      test('and the source is unsupported, the season is not summer, the score is the number of abstraction days', async () => {
+        chargeElementContainer.chargeElement.source = ChargeElement.sources.unsupported;
+        chargeElementContainer.chargeElement.abstractionPeriod = AbstractionPeriod.getWinter();
+
+        expect(chargeElementContainer.getScore(RETURN_SEASONS.winterAllYear)).to.equal(153);
+      });
+
+      test('and the source is supported, the season is not summer, the score is the number of abstraction days - 1000', async () => {
+        chargeElementContainer.chargeElement.source = ChargeElement.sources.supported;
+        chargeElementContainer.chargeElement.abstractionPeriod = AbstractionPeriod.getWinter();
+        expect(chargeElementContainer.getScore(RETURN_SEASONS.winterAllYear)).to.equal(-847);
+      });
+
+      test('and the source is supported, the season is summer, the score is the number of abstraction days - 1000', async () => {
+        chargeElementContainer.chargeElement.source = ChargeElement.sources.supported;
+        chargeElementContainer.chargeElement.abstractionPeriod = AbstractionPeriod.getSummer();
+        expect(chargeElementContainer.getScore(RETURN_SEASONS.winterAllYear)).to.equal(-847);
+      });
+    });
+  });
+
+  experiment('.setBillingVolume', async () => {
+    experiment('for a summer billing volume', async () => {
+      const billingVolume = new BillingVolume(uuid());
+      billingVolume.isSummer = true;
+
+      beforeEach(async () => {
+        chargeElementContainer.setBillingVolume(billingVolume);
+      });
+
+      test('the summer billing volume is set', async () => {
+        expect(chargeElementContainer.getBillingVolume(RETURN_SEASONS.summer)).to.equal(billingVolume);
+        expect(chargeElementContainer.getBillingVolume(RETURN_SEASONS.winterAllYear)).to.not.equal(billingVolume);
+      });
+    });
+
+    experiment('for a winter/all year billing volume', async () => {
+      const billingVolume = new BillingVolume(uuid());
+      billingVolume.isSummer = false;
+
+      beforeEach(async () => {
+        chargeElementContainer.setBillingVolume(billingVolume);
+      });
+
+      test('the summer billing volume is set', async () => {
+        expect(chargeElementContainer.getBillingVolume(RETURN_SEASONS.summer)).to.not.equal(billingVolume);
+        expect(chargeElementContainer.getBillingVolume(RETURN_SEASONS.winterAllYear)).to.equal(billingVolume);
+      });
     });
   });
 });
