@@ -15,7 +15,6 @@ const ChargeVersion = require('../../../../lib/models/charge-version');
 const FinancialYear = require('../../../../lib/models/financial-year');
 const DateRange = require('../../../../lib/models/date-range');
 const Transaction = require('../../../../lib/models/transaction');
-const { RETURN_SEASONS } = require('../../../../lib/models/constants');
 
 const { getChargePeriod } = require('../../lib/charge-period');
 
