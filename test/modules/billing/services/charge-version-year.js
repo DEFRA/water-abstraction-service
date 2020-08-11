@@ -25,6 +25,8 @@ experiment('modules/billing/services/charge-version-year', () => {
     sandbox.stub(repos.billingBatchChargeVersionYears, 'update').resolves();
     sandbox.stub(repos.billingBatchChargeVersionYears, 'findStatusCountsByBatchId');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'createForBatch');
+    sandbox.stub(repos.billingBatchChargeVersionYears, 'findByBatchId');
+    sandbox.stub(repos.billingBatchChargeVersionYears, 'findTwoPartTariffByBatchId');
 
     sandbox.stub(batchService, 'getBatchById').resolves(new Batch());
     sandbox.stub(chargeProcessorService, 'processChargeVersionYear').resolves(new Invoice());
@@ -146,6 +148,26 @@ experiment('modules/billing/services/charge-version-year', () => {
       expect(repos.billingBatchChargeVersionYears.createForBatch.calledWith(
         batch.id
       )).to.be.true();
+    });
+  });
+
+  experiment('.getForBatch', () => {
+    beforeEach(async () => {
+      await chargeVersionYearService.getForBatch('test-id');
+    });
+
+    test('calls the underlying repo method', async () => {
+      expect(repos.billingBatchChargeVersionYears.findByBatchId.calledWith('test-id')).to.be.true();
+    });
+  });
+
+  experiment('.getTwoPartTariffForBatch', () => {
+    beforeEach(async () => {
+      await chargeVersionYearService.getTwoPartTariffForBatch('test-id');
+    });
+
+    test('calls the underlying repo method', async () => {
+      expect(repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId.calledWith('test-id')).to.be.true();
     });
   });
 });

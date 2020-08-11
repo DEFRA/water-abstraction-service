@@ -32,7 +32,8 @@ const BATCH_ERROR_CODE = {
   failedToPrepareTransactions: 30,
   failedToCreateCharge: 40,
   failedToCreateBillRun: 50,
-  failedToDeleteInvoice: 60
+  failedToDeleteInvoice: 60,
+  failedToProcessTwoPartTariff: 70
 };
 
 const BATCH_TYPE = {

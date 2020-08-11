@@ -7,6 +7,11 @@ const { logger } = require('../../../../logger');
 const DateRange = require('../../../../lib/models/date-range');
 const ChargeElementGroup = require('./models/charge-element-group');
 const ReturnGroup = require('./models/return-group');
+const { RETURN_SEASONS } = require('../../../../lib/models/constants');
+
+// Errors
+const { ChargeElementMatchingError } = require('./errors');
+const { ERROR_NO_MATCHING_CHARGE_ELEMENT } = require('../../../../lib/models/billing-volume').twoPartTariffStatuses;
 
 /**
  * Allocates the return line volume
@@ -33,25 +38,13 @@ const allocateReturnLine = (lineChargeElementGroups, returnLine) => {
 };
 
 /**
- * Performs TPT matching process, returning an array of BillingVolume instances
- * ready for persisting to water.billing_volumes table
+ * Matches a group of returns against a group of charge elements
  * @param {DateRange} chargePeriod
  * @param {ChargeElementGroup} chargeElementGroup
  * @param {ReturnGroup} returnGroup
- * @return {Array<BillingVolume>}
  */
-const match = (chargePeriod, chargeElementGroup, returnGroup) => {
-  validators.assertIsInstanceOf(chargePeriod, DateRange);
-  validators.assertIsInstanceOf(chargeElementGroup, ChargeElementGroup);
-  validators.assertIsInstanceOf(returnGroup, ReturnGroup);
-
-  // Returns have errors - assign error and full billable/null to billing volumes
-  if (returnGroup.errorCode) {
-    chargeElementGroup.setTwoPartTariffStatus(returnGroup.errorCode);
-    return chargeElementGroup.toBillingVolumes();
-  }
-
-  returnGroup.returns.forEach(ret => {
+const matchReturnGroup = (chargePeriod, chargeElementGroup, returnGroup) => {
+  returnGroup.getReturnsWithCurrentVersion().forEach(ret => {
     logger.info(`Matching return ${ret.id}`);
 
     // Create list of charge elements for return
@@ -68,12 +61,48 @@ const match = (chargePeriod, chargeElementGroup, returnGroup) => {
       allocateReturnLine(lineChargeElementGroups, returnLine);
     });
   });
+};
 
-  // Perform final steps
-  return chargeElementGroup
-    .reallocate()
-    .flagOverAbstraction()
-    .toBillingVolumes();
+/**
+ * Performs TPT matching process, returning an array of BillingVolume instances
+ * ready for persisting to water.billing_volumes table
+ * @param {DateRange} chargePeriod
+ * @param {ChargeElementGroup} chargeElementGroup
+ * @param {ReturnGroup} returnGroup
+ * @return {Array<BillingVolume>}
+ */
+const match = (chargePeriod, chargeElementGroup, returnGroup, isSummer) => {
+  validators.assertIsInstanceOf(chargePeriod, DateRange);
+  validators.assertIsInstanceOf(chargeElementGroup, ChargeElementGroup);
+  validators.assertIsInstanceOf(returnGroup, ReturnGroup);
+  validators.assertIsBoolean(isSummer);
+
+  // Set charge element group return season
+  chargeElementGroup.returnSeason = isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
+
+  // Returns have errors - assign error and full billable/null to billing volumes
+  if (returnGroup.errorCode) {
+    return chargeElementGroup
+      .setTwoPartTariffStatus(returnGroup.errorCode)
+      .toBillingVolumes();
+  }
+
+  try {
+    matchReturnGroup(chargePeriod, chargeElementGroup, returnGroup);
+
+    // Perform final steps
+    return chargeElementGroup
+      .reallocate()
+      .flagOverAbstraction()
+      .toBillingVolumes();
+  } catch (err) {
+    if (err instanceof ChargeElementMatchingError) {
+      return chargeElementGroup
+        .setTwoPartTariffStatus(ERROR_NO_MATCHING_CHARGE_ELEMENT)
+        .toBillingVolumes();
+    }
+    throw err;
+  }
 };
 
 exports.match = match;

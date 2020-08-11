@@ -4,6 +4,7 @@ const uuid = require('uuid/v4');
 const Agreement = require('../../../../../src/lib/models/agreement');
 const AbstractionPeriod = require('../../../../../src/lib/models/abstraction-period');
 const Batch = require('../../../../../src/lib/models/batch');
+const BillingVolume = require('../../../../../src/lib/models/billing-volume');
 const Company = require('../../../../../src/lib/models/company');
 const ChargeElement = require('../../../../../src/lib/models/charge-element');
 const ChargeVersion = require('../../../../../src/lib/models/charge-version');
@@ -148,6 +149,15 @@ const createSentTPTBatches = () => {
   ];
 };
 
+const createBillingVolume = chargeElement => {
+  const billingVolume = new BillingVolume(uuid());
+  return billingVolume.fromHash({
+    chargeElement,
+    chargeElementId: chargeElement.id,
+    volume: 10
+  });
+};
+
 exports.createLicence = createLicence;
 exports.createChargeVersion = createChargeVersion;
 exports.createChargeElement = createChargeElement;
@@ -157,3 +167,4 @@ exports.createLicenceAgreement = createLicenceAgreement;
 exports.createChargeVersionWithTwoPartTariff = createChargeVersionWithTwoPartTariff;
 exports.createTransaction = createTransaction;
 exports.createSentTPTBatches = createSentTPTBatches;
+exports.createBillingVolume = createBillingVolume;

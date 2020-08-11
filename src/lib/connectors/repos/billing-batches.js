@@ -131,6 +131,19 @@ const findSentTPTBatchesForFinancialYearAndRegion = async (financialYear, region
   return batches.toJSON();
 };
 
+const findSentTPTBatchesForRegion = async regionId => {
+  const filters = {
+    status: BATCH_STATUS.sent,
+    batch_type: BATCH_TYPE.twoPartTariff,
+    region_id: regionId
+  };
+  const batches = await BillingBatch
+    .forge()
+    .where(filters)
+    .fetchAll();
+  return batches.toJSON();
+};
+
 exports.delete = deleteById;
 exports.findByStatuses = findByStatuses;
 exports.findOne = findOne;
@@ -140,3 +153,4 @@ exports.findOneWithInvoices = findOneWithInvoices;
 exports.findOneWithInvoicesWithTransactions = findOneWithInvoicesWithTransactions;
 exports.create = create;
 exports.findSentTPTBatchesForFinancialYearAndRegion = findSentTPTBatchesForFinancialYearAndRegion;
+exports.findSentTPTBatchesForRegion = findSentTPTBatchesForRegion;
