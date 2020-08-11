@@ -21,7 +21,7 @@ const invoiceService = require('./invoice-service');
 const licencesService = require('../../../lib/services/licences');
 const config = require('../../../../config');
 
-const chargeModuleDecorators = require('../decorators/charge-module-decorators');
+const chargeModuleDecorators = require('../mappers/charge-module-decorators');
 
 /**
  * Loads a Batch instance by ID

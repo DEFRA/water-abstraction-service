@@ -12,7 +12,7 @@ const repos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const { logger } = require('../../../logger');
 
-const chargeModuleDecorators = require('../decorators/charge-module-decorators');
+const chargeModuleDecorators = require('../mappers/charge-module-decorators');
 
 // Models
 const Batch = require('../../../lib/models/batch');
