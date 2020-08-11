@@ -19,13 +19,13 @@ const chargeModuleBillRunToBatchModel = data => {
 /**
  * Sums all transaction summaries for the supplied invoice account
  * number and returns as a Totals instance
- * @param {Object} billRun - response from Charge Module bill run call
+ * @param {Object} cmResponse - response from Charge Module bill run call
  * @param {String} invoiceAccountNumber
  * @param {Number} financialYearEnding
  * @return {Totals} - totals for the supplied invoice account
  */
-const chargeModuleBillRunToInvoiceModel = (billRun, invoiceAccountNumber, financialYearEnding) => {
-  const customer = find(billRun.customers, { customerReference: invoiceAccountNumber });
+const chargeModuleBillRunToInvoiceModel = (cmResponse, invoiceAccountNumber, financialYearEnding) => {
+  const customer = find(cmResponse.billRun.customers, { customerReference: invoiceAccountNumber });
   if (!customer) {
     return null;
   }

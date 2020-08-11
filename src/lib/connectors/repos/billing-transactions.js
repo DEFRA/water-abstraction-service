@@ -88,7 +88,7 @@ const findStatusCountsByBatchId = batchId => raw.multiRow(queries.findStatusCoun
  * @param {Object} changes Key values pairs of the changes to make
  */
 const update = (billingTransactionId, changes) => BillingTransaction
-  .forge({ billingTransactionId })
+  .where('billing_transaction_id', 'in', makeArray(billingTransactionId))
   .save(changes, { patch: true });
 
 /**

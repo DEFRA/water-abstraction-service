@@ -1,5 +1,7 @@
 'use strict';
 
+const { flatMap } = require('lodash');
+
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
@@ -12,6 +14,7 @@ const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/consta
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
 const Batch = require('../../../lib/models/batch');
+const validators = require('../../../lib/models/validators');
 
 const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
@@ -19,6 +22,8 @@ const billingVolumesService = require('./billing-volumes-service');
 const invoiceService = require('./invoice-service');
 const licencesService = require('../../../lib/services/licences');
 const config = require('../../../../config');
+
+const chargeModuleDecorators = require('../decorators/charge-module-decorators');
 
 /**
  * Loads a Batch instance by ID
@@ -140,10 +145,15 @@ const saveInvoicesToDB = async batch => {
   }
 };
 
+/**
+ * Decorates the supplied batch with data retrieved from the charge module
+ * @param {Batch} batch
+ * @return {Promise<Batch>}
+ */
 const decorateBatchWithTotals = async batch => {
   try {
-    const { billRun: { summary } } = await chargeModuleBillRunConnector.get(batch.externalId);
-    batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(summary);
+    const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
+    return chargeModuleDecorators.decorateBatch(cmResponse);
   } catch (err) {
     logger.info('Failed to decorate batch with totals. Waiting for CM API', err);
   }
@@ -151,17 +161,40 @@ const decorateBatchWithTotals = async batch => {
 };
 
 /**
- * Updates water.billing_batches with summary info from the charge module
+ * Persists the batch totals to water.billing_batches
  * @param {Batch} batch
  * @return {Promise}
  */
-const refreshTotals = async batch => {
-  const { billRun: { summary } } = await chargeModuleBillRunConnector.get(batch.externalId);
-  return newRepos.billingBatches.update(batch.id, {
-    invoiceCount: summary.invoiceCount,
-    creditNoteCount: summary.creditNoteCount,
-    netTotal: summary.netTotal
-  });
+const persistTotals = batch => {
+  const changes = batch.totals.pick([
+    'invoiceCount',
+    'creditNoteCount',
+    'netTotal'
+  ]);
+  return newRepos.billingBatches.update(batch.id, changes);
+};
+
+/**
+ * Updates water.billing_batches with summary info from the charge module
+ * and updates the is_deminimis flag for water.billing_transactions
+ * @param {Batch} batch
+ * @return {Promise}
+ */
+const refreshTotals = async batchId => {
+  validators.assertId(batchId);
+
+  // Load batch and map to service models
+  const data = await newRepos.billingBatches.findOneWithInvoicesWithTransactions(batchId);
+  const batch = mappers.batch.dbToModel(data);
+
+  // Load CM data and decorate service models
+  const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
+  chargeModuleDecorators.decorateBatch(batch, cmResponse);
+
+  return Promise.all([
+    transactionsService.persistDeMinimis(batch),
+    persistTotals(batch)
+  ]);
 };
 
 /**

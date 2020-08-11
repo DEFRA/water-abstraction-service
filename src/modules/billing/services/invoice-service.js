@@ -1,6 +1,6 @@
 'use strict';
 
-const { find, flatMap, partialRight, isEmpty } = require('lodash');
+const { find, partialRight, isEmpty } = require('lodash');
 const pWaterfall = require('p-waterfall');
 
 // Connectors
@@ -11,6 +11,8 @@ const repos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
 const { logger } = require('../../../logger');
+
+const chargeModuleDecorators = require('../decorators/charge-module-decorators');
 
 // Models
 const Batch = require('../../../lib/models/batch');
@@ -31,33 +33,6 @@ const saveInvoiceToDB = async (batch, invoice) => {
   const data = mappers.invoice.modelToDb(batch, invoice);
   return repos.billingInvoices.upsert(data);
 };
-
-/**
- * Returns key/value pairs where key is Charge Module transaction ID
- * and value is transaction value
- * @param {Object} chargeModuleBillRun
- * @param {String} customerReference
- */
-const indexChargeModuleTransactions = (chargeModuleBillRun, customerReference) => {
-  // Find customer in bill run
-  const customer = find(chargeModuleBillRun.customers, { customerReference });
-  // Generate flat array of transactions for customer
-  const transactions = flatMap(customer.summaryByFinancialYear.map(row => row.transactions));
-
-  // Return key/value pairs
-  return transactions.reduce(
-    (map, row) => map.set(row.id, row.chargeValue),
-    new Map()
-  );
-};
-
-/**
- * Get all transactions in invoice as flat list
- * @param {Invoice} invoice
- * @return {Array<Transaction>}
- */
-const getInvoiceTransactions = invoice =>
-  flatMap(invoice.invoiceLicences.map(invoiceLicence => invoiceLicence.transactions));
 
 /**
  * Loads CRM invoice account data into context
@@ -81,8 +56,8 @@ const getChargeModuleCustomer = async context => {
   const { batch, invoiceId } = context;
   if (isBatchReadyOrSent(batch)) {
     const billingInvoice = find(context.billingInvoices, { billingInvoiceId: invoiceId });
-    const { billRun } = await chargeModuleBillRunConnector.getCustomer(batch.externalId, billingInvoice.invoiceAccountNumber);
-    context.cmBillRun = billRun;
+    const cmResponse = await chargeModuleBillRunConnector.getCustomer(batch.externalId, billingInvoice.invoiceAccountNumber);
+    context.cmResponse = cmResponse;
   }
   return context;
 };
@@ -96,8 +71,8 @@ const getChargeModuleBillRun = async context => {
   const { batch } = context;
   try {
     // Load Charge Module summary data
-    const { billRun } = await chargeModuleBillRunConnector.get(batch.externalId);
-    context.cmBillRun = billRun;
+    const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
+    context.cmResponse = cmResponse;
   } catch (err) {
     logger.error('CM error', err);
   }
@@ -146,18 +121,11 @@ const getInvoice = async context => {
  * @return {Invoice}
  */
 const decorateInvoiceWithCMData = (invoice, context) => {
-  const { cmBillRun } = context;
+  const { cmResponse } = context;
   const { accountNumber } = invoice.invoiceAccount;
 
-  if (cmBillRun && accountNumber && !isEmpty(cmBillRun.customers)) {
-    // Map transaction values from CM to Transaction models
-    const map = indexChargeModuleTransactions(cmBillRun, accountNumber);
-    getInvoiceTransactions(invoice).forEach(transaction => {
-      transaction.value = map.get(transaction.externalId);
-    });
-
-    // Add invoice totals
-    invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(cmBillRun, accountNumber, invoice.financialYear.yearEnding);
+  if (cmResponse && accountNumber && !isEmpty(cmResponse.billRun.customers)) {
+    return chargeModuleDecorators.decorateInvoice(invoice, cmResponse);
   }
 };
 

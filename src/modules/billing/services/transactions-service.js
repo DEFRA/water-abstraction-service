@@ -6,7 +6,7 @@ const newRepos = require('../../../lib/connectors/repos');
 const billingVolumesService = require('./billing-volumes-service');
 const { NotFoundError } = require('../../../lib/errors');
 const mappers = require('../mappers');
-const { get } = require('lodash');
+const { get, partialRight, flatMap } = require('lodash');
 
 /**
  * Saves a row to water.billing_transactions for the given Transaction
@@ -90,8 +90,57 @@ const updateTransactionVolumes = async batch => {
   }
 };
 
+const updateDeMinimis = (ids, isDeMinimis) =>
+  newRepos.billingTransactions.update(ids, { isDeMinimis });
+
+/**
+ * Clears the de-minimis flags by transaction IDs
+ * @param {Array<String>} externalIds
+ * @return {Promise}
+ */
+const clearDeMinimisByTransactionIds = partialRight(updateDeMinimis, false);
+
+/**
+ * Sets the de-minimis flags by transaction IDs
+ * @param {Array<String>} externalIds
+ * @return {Promise}
+ */
+const setDeMinimisByTransactionIds = partialRight(updateDeMinimis, true);
+
+const getInvoiceTransactions = invoice =>
+  flatMap(
+    invoice.invoiceLicences.map(
+      invoiceLicence => invoiceLicence.transactions
+    )
+  );
+
+const getBatchTransactions = batch => flatMap(batch.invoices.map(getInvoiceTransactions));
+
+const getTransactionId = transaction => transaction.id;
+
+/**
+ * Persists the state of the transaction isDeMinimis flag to
+ * water.billing_transactions
+ * @param {Batch} batch
+ * @return {Promise}
+ */
+const persistDeMinimis = batch => {
+  const transactions = getBatchTransactions(batch);
+  const groups = {
+    set: transactions.filter(row => row.isDeMinimis).map(getTransactionId),
+    clear: transactions.filter(row => !row.isDeMinimis).map(getTransactionId)
+  };
+  return Promise.all([
+    updateDeMinimis(groups.set, true),
+    updateDeMinimis(groups.clear, false)
+  ]);
+};
+
 exports.saveTransactionToDB = saveTransactionToDB;
 exports.getById = getById;
 exports.updateWithChargeModuleResponse = updateTransactionWithChargeModuleResponse;
 exports.setErrorStatus = setErrorStatus;
 exports.updateTransactionVolumes = updateTransactionVolumes;
+exports.clearDeMinimisByTransactionIds = clearDeMinimisByTransactionIds;
+exports.setDeMinimisByTransactionIds = setDeMinimisByTransactionIds;
+exports.persistDeMinimis = persistDeMinimis;
