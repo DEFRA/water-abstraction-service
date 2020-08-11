@@ -106,6 +106,16 @@ class DateRange {
     return new DateRange(startDate, endDate);
   }
 
+  /**
+   * Takes an input and turns it into a string representation of a date
+   * in the format YYYY-MM-DD
+   *
+   * @param {*} input A date, moment, string or null to format
+   */
+  static formatDate (input) {
+    return input ? moment(input).format(DATE_FORMAT) : null;
+  }
+
   toJSON () {
     return {
       startDate: this._startDate,
