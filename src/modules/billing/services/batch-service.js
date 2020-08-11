@@ -63,16 +63,24 @@ const saveEvent = (type, status, user, batch) => {
 };
 
 const deleteBatch = async (batch, internalCallingUser) => {
+  if (batch.statusIsOneOf(Batch.BATCH_STATUS.sent)) {
+    throw new BatchStatusError(`Sent batch ${batch.id} cannot be deleted`);
+  }
+
   try {
     await licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batch.id);
     await chargeModuleBillRunConnector.delete(batch.externalId);
 
+    // These are populated at every stage in the bill run
     await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batch.id);
     await newRepos.billingBatchChargeVersions.deleteByBatchId(batch.id);
-    await newRepos.billingTransactions.deleteByBatchId(batch.id);
     await newRepos.billingVolumes.deleteByBatchId(batch.id);
+
+    // These tables are not yet populated at review stage in TPT
+    await newRepos.billingTransactions.deleteByBatchId(batch.id);
     await newRepos.billingInvoiceLicences.deleteByBatchId(batch.id);
-    await newRepos.billingInvoices.deleteByBatchId(batch.id);
+    await newRepos.billingInvoices.deleteByBatchId(batch.id, false);
+
     await newRepos.billingBatches.delete(batch.id);
 
     await saveEvent('billing-batch:cancel', 'delete', internalCallingUser, batch);

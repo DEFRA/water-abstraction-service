@@ -15,6 +15,7 @@ const ChargeVersion = require('../../../../lib/models/charge-version');
 const FinancialYear = require('../../../../lib/models/financial-year');
 const DateRange = require('../../../../lib/models/date-range');
 const Transaction = require('../../../../lib/models/transaction');
+const { RETURN_SEASONS } = require('../../../../lib/models/constants');
 
 const { getChargePeriod } = require('../../lib/charge-period');
 
@@ -78,14 +79,15 @@ const isAnnualChargesNeeded = batch => batch.isAnnual() || batch.isSupplementary
  * @param {Batch} batch
  * @param {Object} period
  * @param {ChargeElement} chargeElement
- * @param {Array<BillingVolume>} billingVolumes
+ * @param {BillingVolume} billingVolume
  * @return {Boolean}
  */
-const isTwoPartTariffSupplementaryChargesNeeded = (batch, period, chargeElement, billingVolume) => {
+const isTwoPartTariffSupplementaryChargeNeeded = (batch, period, chargeElement, billingVolume) => {
   const isCorrectBatchType = batch.isTwoPartTariff() || batch.isSupplementary();
+  const isCorrectSeason = batch.isSupplementary() || (batch.isSummer === billingVolume.isSummer);
   const isAgreementInEffect = period.agreements.some(agreement => agreement.code === 'S127');
   const isValidPurpose = chargeElement.purposeUse.isTwoPartTariff;
-  return isCorrectBatchType && isAgreementInEffect && isValidPurpose && !!billingVolume;
+  return isCorrectBatchType && isAgreementInEffect && isValidPurpose && isCorrectSeason;
 };
 
 /**
@@ -129,8 +131,14 @@ const getElementChargePeriod = (period, chargeElement) => {
   return new DateRange(startDate, endDate);
 };
 
-const getBillingVolumeForChargeElement = (chargeElement, billingVolumes) =>
-  billingVolumes.find(billingVolume => billingVolume.chargeElementId === chargeElement.id);
+/**
+ * Gets the summer and winter/all year billing volume
+ * @param {ChargeElement} chargeElement
+ * @param {Array<BillingVolume>} billingVolumes
+ */
+const getBillingVolumesForChargeElement = (chargeElement, billingVolumes) => billingVolumes.filter(
+  billingVolume => billingVolume.chargeElementId === chargeElement.id
+);
 
 /**
  * Gets an array of Transaction models for the supplied charge version/batch
@@ -156,14 +164,27 @@ const createTransactionsForPeriod = (batch, period, chargeVersion, financialYear
     if (isCompensationChargesNeeded(batch, chargeVersion)) {
       acc.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true }));
     }
-    const billingVolume = getBillingVolumeForChargeElement(chargeElement, billingVolumes);
-    if (isTwoPartTariffSupplementaryChargesNeeded(batch, period, chargeElement, billingVolume)) {
-      acc.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isTwoPartTariffSupplementary: true }, billingVolume));
-    }
+
+    // Two-part tariff transactions:
+    const elementBillingVolumes = getBillingVolumesForChargeElement(chargeElement, billingVolumes);
+    elementBillingVolumes.forEach(billingVolume => {
+      if (isTwoPartTariffSupplementaryChargeNeeded(batch, period, chargeElement, billingVolume)) {
+        acc.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isTwoPartTariffSupplementary: true }, billingVolume));
+      }
+    });
+
     return acc;
   }, []);
 };
 
+/**
+ * Create transactions
+ * @param {Batch} batch
+ * @param {FinancialYear} financialYear
+ * @param {ChargeVersion} chargeVersion
+ * @param {Array<BillingVolume>} billingVolumes - all billing volumes in DB matching charge element IDs
+ * @return {Array<Transaction>}
+ */
 const createTransactions = (batch, financialYear, chargeVersion, billingVolumes) => {
   // Validation
   validators.assertIsInstanceOf(batch, Batch);

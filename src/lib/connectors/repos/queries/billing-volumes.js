@@ -19,15 +19,13 @@ exports.deleteByBatchAndInvoiceId = `
     `;
 
 exports.findByBatchIdAndLicenceId = `
-select v.* from
-water.billing_batches b 
-join water.billing_volumes v on b.billing_batch_id=v.billing_batch_id
-join water.charge_elements ce on v.charge_element_id=ce.charge_element_id
-join water.charge_versions cv on ce.charge_version_id=cv.charge_version_id
-join water.licences l on cv.licence_ref=l.licence_ref
-
-where b.billing_batch_id=:billingBatchId
-and l.licence_id=:licenceId
+select v.* 
+  from water.billing_volumes v
+  join water.charge_elements ce on v.charge_element_id=ce.charge_element_id
+  join water.charge_versions cv on ce.charge_version_id=cv.charge_version_id
+  join water.licences l on cv.licence_ref=l.licence_ref
+  where v.billing_batch_id=:billingBatchId
+  and l.licence_id=:licenceId
 `;
 
 exports.deleteByBatchIdAndLicenceId = `

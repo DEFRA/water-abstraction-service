@@ -288,14 +288,26 @@ experiment('modules/billing/services/batch-service', () => {
     let internalCallingUser;
 
     beforeEach(async () => {
-      batch = {
-        externalId: uuid()
-      };
+      batch = new Batch(uuid());
+      batch.fromHash({
+        externalId: uuid(),
+        status: Batch.BATCH_STATUS.ready
+      });
 
       internalCallingUser = {
         email: 'test@example.com',
         id: 1234
       };
+    });
+
+    experiment('when the batch is in "sent" status', () => {
+      test('an error is thrown as the batch cannot be deleted', async () => {
+        batch.status = Batch.BATCH_STATUS.sent;
+        const func = () => batchService.deleteBatch(batch, internalCallingUser);
+        const err = await expect(func()).to.reject();
+        expect(err instanceof BatchStatusError);
+        expect(err.message).to.equal(`Sent batch ${batch.id} cannot be deleted`);
+      });
     });
 
     experiment('when all deletions succeed', () => {
@@ -334,7 +346,7 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('deletes the invoices', async () => {
-        expect(newRepos.billingInvoices.deleteByBatchId.calledWith(batch.id)).to.be.true();
+        expect(newRepos.billingInvoices.deleteByBatchId.calledWith(batch.id, false)).to.be.true();
       });
 
       test('deletes the batch', async () => {

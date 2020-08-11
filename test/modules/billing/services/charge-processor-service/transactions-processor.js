@@ -107,11 +107,13 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
       });
     });
 
-    experiment('for a two-part tariff batch', () => {
+    experiment('for a two-part tariff summer batch', () => {
       beforeEach(async () => {
         batch = data.createBatch('two_part_tariff', { isSummer: true });
         chargeVersion = data.createChargeVersionWithTwoPartTariff();
-        const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
+        const billingVolumes = chargeVersion.chargeElements
+          .map(data.createBillingVolume)
+          .map(billingVolume => billingVolume.fromHash({ isSummer: true }));
         transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
       });
 
