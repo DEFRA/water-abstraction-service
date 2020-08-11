@@ -58,5 +58,28 @@ module.exports = {
         }
       }
     }
+  },
+
+  postChargeVersion: {
+    method: 'POST',
+    path: '/water/1.0/charge-versions',
+    handler: controller.postChargeVersion,
+    options: {
+      validate: {
+        payload: {
+          licenceNumber: Joi.string().required(),
+          versionNumber: Joi.number().integer().positive().required(),
+          startDate: Joi.string().isoDate().required(),
+          endDate: Joi.string().isoDate().allow(null).optional(),
+          status: Joi.string().required(),
+          apportionment: Joi.boolean().default(null).optional(),
+          billedUpToDate: Joi.string().isoDate().allow(null).default(null).optional(),
+          regionCode: Joi.number().integer().positive().required(),
+          companyId: VALID_GUID,
+          invoiceAccountId: VALID_GUID,
+          scheme: Joi.string().required()
+        }
+      }
+    }
   }
 };

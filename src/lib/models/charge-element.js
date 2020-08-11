@@ -1,10 +1,12 @@
 'use strict';
 
 const { isNull, max } = require('lodash');
+
 const Model = require('./model');
 const AbstractionPeriod = require('./abstraction-period');
-const PurposeUse = require('./purpose-use');
+const ChargeAgreement = require('./charge-agreement');
 const DateRange = require('./date-range');
+const PurposeUse = require('./purpose-use');
 const { CHARGE_SEASON, LOSSES } = require('./constants');
 
 const validators = require('./validators');
@@ -152,6 +154,12 @@ class ChargeElement extends Model {
   set description (description) {
     validators.assertNullableString(description);
     this._description = description;
+  }
+
+  get agreements () { return this._agreements; }
+  set agreements (agreements) {
+    validators.assertIsArrayOfType(agreements, ChargeAgreement);
+    this._agreements = agreements;
   }
 
   toJSON () {

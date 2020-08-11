@@ -50,6 +50,7 @@ experiment('lib/connectors/repos/charge-versions', () => {
           'chargeElements.purposePrimary',
           'chargeElements.purposeSecondary',
           'chargeElements.purposeUse',
+          'chargeElements.agreements',
           'licence',
           'licence.region',
           'licence.licenceAgreements'

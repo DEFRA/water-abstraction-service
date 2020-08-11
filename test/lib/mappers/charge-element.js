@@ -9,12 +9,13 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const ChargeElement = require('../../../../src/lib/models/charge-element');
-const DateRange = require('../../../../src/lib/models/date-range');
-const PurposeUse = require('../../../../src/lib/models/purpose-use');
-const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
+const ChargeElement = require('../../../src/lib/models/charge-element');
+const ChargeAgreement = require('../../../src/lib/models/charge-agreement');
+const DateRange = require('../../../src/lib/models/date-range');
+const PurposeUse = require('../../../src/lib/models/purpose-use');
+const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
-const chargeElementsMapper = require('../../../../src/modules/billing/mappers/charge-element');
+const chargeElementsMapper = require('../../../src/lib/mappers/charge-element');
 
 const data = {
   chargeElement: {
@@ -47,12 +48,32 @@ const data = {
       purpose_use_id: uuid(),
       description: 'Trickling parsnips',
       lossFactor: 'high',
-      isTwoPartTariff: false
+      isTwoPartTariff: false,
+      dateCreated: '2000-01-01',
+      dateUpdated: '2000-01-01'
     }
+  },
+  dbRowWithAgreements: {
+    charge_element_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
+    source: 'supported',
+    season: CHARGE_SEASON.summer,
+    loss: 'high',
+    agreements: [{
+      chargeAgreementId: '2467e7d6-2d9e-42c9-843e-e670011d3a76',
+      chargeElementId: '01a5e49b-015f-40c8-aa8e-bbe86fed380e',
+      agreementCode: 'S126',
+      startDate: '2001-04-01',
+      endDate: null,
+      signedDate: null,
+      fileReference: 'SummerRecord',
+      description: null,
+      dateCreated: '2020-05-06T14:00:18.802Z',
+      dateUpdated: '2020-05-16T14:00:15.484Z'
+    }]
   }
 };
 
-experiment('modules/billing/mappers/charge-element', () => {
+experiment('lib/mappers/charge-element', () => {
   let result;
 
   experiment('.dbToModel', () => {
@@ -105,6 +126,17 @@ experiment('modules/billing/mappers/charge-element', () => {
         expect(result.timeLimitedPeriod instanceof DateRange).to.be.true();
         expect(result.timeLimitedPeriod.startDate).to.equal(data.timeLimitedChargeElement.timeLimitedStartDate);
         expect(result.timeLimitedPeriod.endDate).to.equal(data.timeLimitedChargeElement.timeLimitedEndDate);
+      });
+    });
+
+    experiment('when the database row contains charge agreements', () => {
+      beforeEach(async () => {
+        result = chargeElementsMapper.dbToModel(data.dbRowWithAgreements);
+      });
+
+      test('the agreements property is set', async () => {
+        expect(result.agreements[0] instanceof ChargeAgreement).to.be.true();
+        expect(result.agreements[0].code).to.equal('S126');
       });
     });
   });

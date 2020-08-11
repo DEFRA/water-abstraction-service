@@ -1,15 +1,22 @@
 'use strict';
 
 const Boom = require('@hapi/boom');
-const repository = require('../../lib/connectors/repository');
-const mappers = require('./lib/mappers');
+
 const documentsConnector = require('../../lib/connectors/crm/documents');
 const licencesService = require('../../lib/services/licences');
 const chargeElementsService = require('../../lib/services/charge-elements');
+const chargeVersionsService = require('../../lib/services/charge-versions');
+
+const ChargeVersion = require('../../lib/models/charge-version');
+const Licence = require('../../lib/models/licence');
+const Region = require('../../lib/models/region');
+const DateRange = require('../../lib/models/date-range');
+const Company = require('../../lib/models/company');
+const InvoiceAccount = require('../../lib/models/invoice-account');
 
 const getChargeVersionsByLicenceRef = async licenceRef => {
-  const rows = await repository.chargeVersions.findByLicenceRef(licenceRef);
-  return { data: mappers.mapRows(rows) };
+  const chargeVersions = await chargeVersionsService.getByLicenceRef(licenceRef);
+  return { data: chargeVersions };
 };
 
 /**
@@ -17,8 +24,7 @@ const getChargeVersionsByLicenceRef = async licenceRef => {
  * @param  {String}  request.query.licenceRef - the licence number
  */
 const getChargeVersions = async request => {
-  const { licenceRef } = request.query;
-  return getChargeVersionsByLicenceRef(licenceRef);
+  return getChargeVersionsByLicenceRef(request.query.licenceRef);
 };
 
 /**
@@ -28,26 +34,16 @@ const getChargeVersions = async request => {
 const getChargeVersion = async request => {
   const { versionId } = request.params;
 
-  // Load version, elements, agreements
-  const tasks = [
-    repository.chargeVersions.findOneById(versionId),
-    repository.chargeElements.findByChargeVersionId(versionId),
-    repository.chargeAgreements.findByChargeVersionId(versionId)
-  ];
+  const chargeVersion = await chargeVersionsService.getByChargeVersionId(versionId);
 
-  const data = await Promise.all(tasks);
-
-  if (!data[0]) {
-    return Boom.notFound(`Charge agreement ${versionId} not found`);
-  }
-
-  return mappers.mapChargeVersion(...data);
+  return chargeVersion || Boom.notFound(`Charge agreement ${versionId} not found`);
 };
 
 const getChargeVersionsByDocumentId = async request => {
   const { documentId } = request.params;
 
   const { data: document } = await documentsConnector.getDocument(documentId, true);
+
   return getChargeVersionsByLicenceRef(document.system_external_id);
 };
 
@@ -61,7 +57,36 @@ const getDefaultChargesForLicenceVersion = async request => {
     : chargeElementsService.getChargeElementsFromLicenceVersion(licenceVersion);
 };
 
+const postChargeVersion = async (request, h) => {
+  const { payload } = request;
+  let chargeVersion;
+
+  try {
+    chargeVersion = new ChargeVersion().fromHash({
+      licence: new Licence().fromHash({ licenceNumber: payload.licenceNumber }),
+      versionNumber: payload.versionNumber,
+      dateRange: new DateRange(
+        DateRange.formatDate(payload.startDate),
+        DateRange.formatDate(payload.endDate)
+      ),
+      status: payload.status,
+      apportionment: payload.apportionment,
+      billedUpToDate: payload.billedUpToDate,
+      region: new Region().fromHash({ numericCode: payload.regionCode }),
+      company: new Company(payload.companyId),
+      invoiceAccount: new InvoiceAccount(payload.invoiceAccountId),
+      scheme: payload.scheme
+    });
+  } catch (err) {
+    return Boom.badRequest('Failed to create ChargeVersion from payload', err);
+  }
+
+  const createdChargeVersion = await chargeVersionsService.createChargeVersion(chargeVersion);
+  return h.response(createdChargeVersion).created(`/water/1.0/charge-versions/${createdChargeVersion.id}`);
+};
+
 exports.getChargeVersions = getChargeVersions;
 exports.getChargeVersion = getChargeVersion;
 exports.getChargeVersionsByDocumentId = getChargeVersionsByDocumentId;
 exports.getDefaultChargesForLicenceVersion = getDefaultChargesForLicenceVersion;
+exports.postChargeVersion = postChargeVersion;

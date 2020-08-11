@@ -23,7 +23,7 @@ const dbRow = {
   isTwoPartTariff: true
 };
 
-experiment('modules/billing/mappers/purpose-use', () => {
+experiment('lib/mappers/purpose-use', () => {
   experiment('.dbToModel', () => {
     let result;
 
