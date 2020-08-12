@@ -95,8 +95,24 @@ const deleteBatch = async (batch, internalCallingUser) => {
   }
 };
 
+/**
+ * Sets the batch status
+ * @param {String} batchId
+ * @param {BATCH_STATUS} status
+ * @param {BATCH_ERROR_CODE} [errorCode]
+ */
 const setStatus = (batchId, status) =>
   newRepos.billingBatches.update(batchId, { status });
+
+/**
+ * Sets the specified batch to 'error' status
+ *
+ * @param {String} batchId
+ * @param {BATCH_ERROR_CODE} errorCode The origin of the failure
+ * @return {Promise}
+ */
+const setErrorStatus = (batchId, errorCode) =>
+  newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error, errorCode });
 
 const approveBatch = async (batch, internalCallingUser) => {
   try {
@@ -113,20 +129,6 @@ const approveBatch = async (batch, internalCallingUser) => {
     await saveEvent('billing-batch:approve', 'error', internalCallingUser, batch);
     throw err;
   }
-};
-
-/**
- * Sets the specified batch to 'error' status
- *
- * @param {String} batchId
- * @param {BATCH_ERROR_CODE} errorCode The origin of the failure
- * @return {Promise}
- */
-const setErrorStatus = (batchId, errorCode) => {
-  return newRepos.billingBatches.update(batchId, {
-    status: Batch.BATCH_STATUS.error,
-    errorCode
-  });
 };
 
 const saveInvoiceLicenceTransactions = async (batch, invoice, invoiceLicence) => {
@@ -226,12 +228,8 @@ const getTransactionStatusCounts = async batchId => {
  * @returns {Batch} The updated batch if no transactions
  */
 const setStatusToEmptyWhenNoTransactions = async batch => {
-  const remainingTransactions = await newRepos.billingTransactions.findByBatchId(batch.id);
-
-  if (remainingTransactions.length === 0) {
-    return setStatus(batch.id, BATCH_STATUS.empty);
-  }
-  return batch;
+  const count = await newRepos.billingTransactions.countByBatchId(batch.id);
+  return count === 0 ? setStatus(batch.id, BATCH_STATUS.empty) : batch;
 };
 
 /**
@@ -295,12 +293,6 @@ const createChargeModuleBillRun = async batchId => {
   return batch.pickFrom(row, ['externalId', 'billRunNumber']);
 };
 
-const assertBatchStatusIsReview = batch => {
-  if (batch.status !== BATCH_STATUS.review) {
-    throw new BatchStatusError('Cannot approve review. Batch status must be "review"');
-  }
-};
-
 /**
  * Validates batch & transactions, then updates batch status to "processing"
  *
@@ -313,7 +305,9 @@ const assertBatchStatusIsReview = batch => {
  * @return {Promise<Batch>} resolves with Batch service model
  */
 const approveTptBatchReview = async batch => {
-  assertBatchStatusIsReview(batch);
+  if (!batch.canApproveReview()) {
+    throw new BatchStatusError('Cannot approve review. Batch status must be "review"');
+  }
   await billingVolumesService.approveVolumesForBatch(batch);
   await setStatus(batch.id, BATCH_STATUS.processing);
   return getBatchById(batch.id);

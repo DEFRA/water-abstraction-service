@@ -1,6 +1,6 @@
 'use strict';
 
-const { find, partialRight, isEmpty } = require('lodash');
+const { find, partialRight } = require('lodash');
 const pWaterfall = require('p-waterfall');
 
 // Connectors

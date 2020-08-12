@@ -116,6 +116,16 @@ const deleteByInvoiceId = billingInvoiceId => bookshelf
   .knex
   .raw(queries.deleteByInvoiceId, { billingInvoiceId });
 
+/**
+ * Get number of transactions in batch
+ * @param {String} billingBatchId
+ * @return {Promise<Number>}
+ */
+const countByBatchId = async billingBatchId => {
+  const { count } = await raw.singleRow(queries.countByBatchId, { billingBatchId });
+  return parseInt(count);
+};
+
 exports.findOne = findOne;
 exports.find = find;
 exports.findHistoryByBatchId = findHistoryByBatchId;
@@ -127,3 +137,4 @@ exports.update = update;
 exports.deleteByInvoiceLicenceId = deleteByInvoiceLicenceId;
 exports.deleteByBatchId = deleteByBatchId;
 exports.deleteByInvoiceId = deleteByInvoiceId;
+exports.countByBatchId = countByBatchId;
