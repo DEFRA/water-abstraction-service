@@ -3,8 +3,6 @@
 const Transaction = require('../../../lib/models/transaction');
 const { logger } = require('../../../logger');
 const newRepos = require('../../../lib/connectors/repos');
-const billingVolumesService = require('./billing-volumes-service');
-const { NotFoundError } = require('../../../lib/errors');
 const mappers = require('../mappers');
 const { get, partialRight, flatMap } = require('lodash');
 
@@ -79,17 +77,6 @@ const setErrorStatus = transactionId =>
     status: Transaction.statuses.error
   });
 
-const updateTransactionVolumes = async batch => {
-  const transactions = await newRepos.billingTransactions.findByBatchId(batch.id);
-  const billingVolumes = await billingVolumesService.getVolumesForBatch(batch);
-  for (const billingVolume of billingVolumes) {
-    const transaction = transactions.find(trans =>
-      trans.chargeElementId === billingVolume.chargeElementId);
-    if (!transaction) throw new NotFoundError(`No transaction found for billing volume ${billingVolume.billingVolumeId}`);
-    await newRepos.billingTransactions.update(transaction.billingTransactionId, { volume: billingVolume.volume });
-  }
-};
-
 const updateDeMinimis = (ids, isDeMinimis) =>
   newRepos.billingTransactions.update(ids, { isDeMinimis });
 
@@ -140,7 +127,6 @@ exports.saveTransactionToDB = saveTransactionToDB;
 exports.getById = getById;
 exports.updateWithChargeModuleResponse = updateTransactionWithChargeModuleResponse;
 exports.setErrorStatus = setErrorStatus;
-exports.updateTransactionVolumes = updateTransactionVolumes;
 exports.clearDeMinimisByTransactionIds = clearDeMinimisByTransactionIds;
 exports.setDeMinimisByTransactionIds = setDeMinimisByTransactionIds;
 exports.persistDeMinimis = persistDeMinimis;
