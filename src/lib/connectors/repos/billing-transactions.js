@@ -86,10 +86,11 @@ const findStatusCountsByBatchId = batchId => raw.multiRow(queries.findStatusCoun
  *
  * @param {String} transactionId UUID of the transaction to update
  * @param {Object} changes Key values pairs of the changes to make
+ * @param {Boolean} [isUpdateRequired] Whether to throw an error if no rows updated
  */
-const update = (billingTransactionId, changes) => BillingTransaction
+const update = (billingTransactionId, changes, isUpdateRequired = true) => BillingTransaction
   .where('billing_transaction_id', 'in', makeArray(billingTransactionId))
-  .save(changes, { patch: true });
+  .save(changes, { patch: true, require: isUpdateRequired });
 
 /**
  * Deletes all transactions by invoice licence ID

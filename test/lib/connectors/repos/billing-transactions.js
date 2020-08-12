@@ -234,7 +234,22 @@ experiment('lib/connectors/repos/billing-transactions', () => {
       });
 
       test('calls .save() on the model using patch mode', async () => {
-        expect(stub.save.calledWith(changes, { patch: true })).to.be.true();
+        expect(stub.save.calledWith(changes, { patch: true, require: true })).to.be.true();
+      });
+    });
+
+    experiment('when a third boolean argument is supplied for isUpdateRequired', () => {
+      const transactionId = 'test-transaction-id';
+      const changes = {
+        status: 'error'
+      };
+
+      beforeEach(async () => {
+        await billingTransactions.update(transactionId, changes, false);
+      });
+
+      test('passes the argument through to the require bookshelf option', async () => {
+        expect(stub.save.calledWith(changes, { patch: true, require: false })).to.be.true();
       });
     });
 
@@ -258,7 +273,7 @@ experiment('lib/connectors/repos/billing-transactions', () => {
       });
 
       test('calls .save() on the model using patch mode', async () => {
-        expect(stub.save.calledWith(changes, { patch: true })).to.be.true();
+        expect(stub.save.calledWith(changes, { patch: true, require: true })).to.be.true();
       });
     });
   });

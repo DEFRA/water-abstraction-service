@@ -78,7 +78,7 @@ const setErrorStatus = transactionId =>
   });
 
 const updateDeMinimis = (ids, isDeMinimis) =>
-  newRepos.billingTransactions.update(ids, { isDeMinimis });
+  newRepos.billingTransactions.update(ids, { isDeMinimis }, false);
 
 /**
  * Clears the de-minimis flags by transaction IDs
