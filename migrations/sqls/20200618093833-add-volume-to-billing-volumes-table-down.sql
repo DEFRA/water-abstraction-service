@@ -1,2 +1,2 @@
 alter table water.billing_volumes
-  drop column volume;
+  drop column if exists volume;

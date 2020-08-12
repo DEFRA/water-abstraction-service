@@ -41,11 +41,7 @@ const formatEvent = evt => {
 };
 
 const getLicenceDocuments = async licenceNumbers => {
-  const documents = await crmDocumentConnector.findAll({
-    system_external_id: {
-      $in: licenceNumbers
-    }
-  });
+  const documents = await crmDocumentConnector.getDocumentsByLicenceNumbers(licenceNumbers);
 
   if (!documents.length) {
     throw Boom.notFound(`No document found for ${licenceNumbers.join()}`);

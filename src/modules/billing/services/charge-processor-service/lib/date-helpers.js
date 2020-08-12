@@ -2,26 +2,8 @@
 
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(require('moment'));
-const { first, last, identity, sortBy } = require('lodash');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
-
-/**
- * Given an array of dates which can be parsed by Moment,
- * filters out falsey values and returns a list of moment objects
- * sorted in ascending date order
- * @param {Array<String>} arr
- * @return {Array<Object>}
- */
-const getSortedDates = arr => sortBy(
-  arr
-    .filter(identity)
-    .map(value => moment(value)),
-  m => m.unix()
-);
-
-const getMinDate = arr => first(getSortedDates(arr));
-const getMaxDate = arr => last(getSortedDates(arr));
 
 /**
  * The date range splitter function from water-abstraction-helpers
@@ -50,7 +32,4 @@ const findByDate = (arr, date) => {
 };
 
 exports.applyEffectiveDates = applyEffectiveDates;
-exports.getSortedDates = getSortedDates;
-exports.getMinDate = getMinDate;
-exports.getMaxDate = getMaxDate;
 exports.findByDate = findByDate;

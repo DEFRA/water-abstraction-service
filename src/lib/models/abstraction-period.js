@@ -1,10 +1,12 @@
 'use strict';
 
 const moment = require('moment-range').extendMoment(require('moment'));
+const helpers = require('@envage/water-abstraction-helpers');
 
 const { CHARGE_SEASON } = require('./constants');
 const Model = require('./model');
-const { assertDay, assertMonth } = require('./validators');
+const DateRange = require('./date-range');
+const validators = require('./validators');
 
 /**
  * Creates a moment range from the supplied abs period in the specified year
@@ -16,10 +18,20 @@ const createRange = (abstractionPeriod, startYear) => {
   const { startDay, endDay, startMonth, endMonth } = abstractionPeriod;
   const isCrossYear = (startMonth > endMonth || (startMonth === endMonth && startDay > endDay));
   const endYear = isCrossYear ? startYear + 1 : startYear;
-  return moment.range(
-    `${startYear}-${startMonth}-${startDay}`,
-    `${endYear}-${endMonth}-${endDay}`
-  );
+
+  const mStart = moment({
+    year: startYear,
+    month: startMonth - 1,
+    date: startDay
+  });
+
+  const mEnd = moment({
+    year: endYear,
+    month: endMonth - 1,
+    date: endDay
+  });
+
+  return moment.range(mStart, mEnd);
 };
 
 class AbstractionPeriod extends Model {
@@ -35,6 +47,12 @@ class AbstractionPeriod extends Model {
     return winter;
   }
 
+  static getAllYear () {
+    const allYear = new AbstractionPeriod();
+    allYear.setDates(1, 1, 31, 12);
+    return allYear;
+  }
+
   /**
    * Start day for the abstraction period 1-31
    * @return {Number}
@@ -44,8 +62,8 @@ class AbstractionPeriod extends Model {
   }
 
   set startDay (day) {
-    assertDay(day);
-    this._startDay = day;
+    validators.assertDay(day);
+    this._startDay = parseInt(day);
   }
 
   /**
@@ -57,8 +75,8 @@ class AbstractionPeriod extends Model {
   }
 
   set startMonth (month) {
-    assertMonth(month);
-    this._startMonth = month;
+    validators.assertMonth(month);
+    this._startMonth = parseInt(month);
   }
 
   /**
@@ -70,8 +88,8 @@ class AbstractionPeriod extends Model {
   }
 
   set endDay (day) {
-    assertDay(day);
-    this._endDay = day;
+    validators.assertDay(day);
+    this._endDay = parseInt(day);
   }
 
   /**
@@ -83,8 +101,8 @@ class AbstractionPeriod extends Model {
   }
 
   set endMonth (month) {
-    assertMonth(month);
-    this._endMonth = month;
+    validators.assertMonth(month);
+    this._endMonth = parseInt(month);
   }
 
   /**
@@ -105,7 +123,7 @@ class AbstractionPeriod extends Model {
   /**
    * Checks if the passed AbstractionPeriod contains this instance. In order
    * for this to return true, this instance must fit inside the passed
-   * AbstractionPeriod, but not matching the bounaries.
+   * AbstractionPeriod, including the boundaries.
    *
    * @param {AbstractionPeriod} period The abstraction period to check if this instance fits within
    */
@@ -135,6 +153,52 @@ class AbstractionPeriod extends Model {
     }
 
     return CHARGE_SEASON.allYear;
+  }
+
+  /**
+   * Checks whether the supplied date falls inside this abstraction period
+   * @param {String} date
+   * @return {Boolean}
+   */
+  isDateWithinAbstractionPeriod (date) {
+    const m = this.getDateOrThrow(date);
+    return helpers.returns.date.isDateWithinAbstractionPeriod(m.format('YYYY-MM-DD'), {
+      periodStartDay: this._startDay,
+      periodStartMonth: this._startMonth,
+      periodEndDay: this._endDay,
+      periodEndMonth: this._endMonth
+    });
+  }
+
+  /**
+   * Gets the number of abstraction days for the supplied DateRange
+   * The date range must fall within a single financial year
+   * @param {DateRange} dateRange
+   * @return {Number}
+   */
+  getDays (dateRange) {
+    validators.assertIsInstanceOf(dateRange, DateRange);
+    const absPeriod = {
+      startMonth: this._startMonth,
+      startDay: this._startDay,
+      endMonth: this._endMonth,
+      endDay: this._endDay
+    };
+    return helpers.charging.getBillableDays(absPeriod, dateRange.startDate, dateRange.endDate);
+  }
+
+  /**
+   * Returns true if the date range falls in, or overlaps with
+   * this abstraction period
+   * @param {DateRange} dateRange
+   * @return {Boolean}
+   */
+  isDateRangeOverlapping (dateRange) {
+    validators.assertIsInstanceOf(dateRange, DateRange);
+    return [
+      this.isDateWithinAbstractionPeriod(dateRange.startDate),
+      this.isDateWithinAbstractionPeriod(dateRange.endDate)
+    ].includes(true);
   }
 }
 

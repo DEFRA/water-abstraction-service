@@ -30,11 +30,12 @@ const newRepos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
-const invoiceAccountsService = require('../../../../src/modules/billing/services/invoice-accounts-service');
-const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
-const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
-const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
+const invoiceAccountsService = require('../../../../src/lib/services/invoice-accounts-service');
+const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
+const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
+const licencesService = require('../../../../src/lib/services/licences');
+const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
 const { createBatch } = require('../test-data/test-billing-data');
 const config = require('../../../../config');
 
@@ -102,6 +103,10 @@ experiment('modules/billing/services/batch-service', () => {
 
     sandbox.stub(invoiceService, 'saveInvoiceToDB');
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId');
+
+    sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatus').resolves();
+    sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForSentBatch').resolves();
+    sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatusForUnsentBatch').resolves();
 
     sandbox.stub(chargeModuleBillRunConnector, 'create').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'get').resolves();
@@ -298,6 +303,11 @@ experiment('modules/billing/services/batch-service', () => {
         await batchService.deleteBatch(batch, internalCallingUser);
       });
 
+      test('update the include in supplementary bill run status for all the licences', async () => {
+        const [batchId] = licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.lastCall.args;
+        expect(batchId).to.equal(batch.id);
+      });
+
       test('delete the batch at the charge module', async () => {
         const [externalId] = chargeModuleBillRunConnector.delete.lastCall.args;
         expect(externalId).to.equal(batch.externalId);
@@ -403,6 +413,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     beforeEach(async () => {
       batch = {
+        id: uuid(),
         externalId: uuid()
       };
 
@@ -434,6 +445,11 @@ experiment('modules/billing/services/batch-service', () => {
         expect(savedEvent.status).to.equal('sent');
         expect(savedEvent.metadata.user).to.equal(internalCallingUser);
         expect(savedEvent.metadata.batch).to.equal(batch);
+      });
+
+      test('updates the include in supplementary billing status for the batch licences', async () => {
+        const [batchId] = licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch.lastCall.args;
+        expect(batchId).to.equal(batch.id);
       });
 
       test('sets the status of the batch to sent', async () => {
@@ -1015,13 +1031,45 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       experiment('when the invoice is found and there are no errors', () => {
+        let licenceId;
+        let billingInvoiceId;
+
         beforeEach(async () => {
+          billingInvoiceId = uuid();
+          licenceId = uuid();
+
           newRepos.billingInvoices.findOne.resolves({
+            billingInvoiceId,
             invoiceAccountNumber: 'A12345678A',
             financialYearEnding: 2020,
             billingBatch: {
               externalId: batch.externalId
-            }
+            },
+            billingInvoiceLicences: [
+              {
+                billingInvoiceId,
+                billingInvoiceLicenceId: uuid(),
+                licenceId,
+                licence: {
+                  licenceRef: '123/321',
+                  licenceId,
+                  region: {
+                    regionId: uuid(),
+                    name: 'test',
+                    chargeRegionId: 'T',
+                    displayName: 'test'
+                  },
+                  regions: {
+                    historicalAreaCode: 'ABCD',
+                    regionalChargeArea: 'The Moon'
+                  },
+                  startDate: '2000-01-01',
+                  expiredDate: null,
+                  lapsedDate: null,
+                  revokedDate: null
+                }
+              }
+            ]
           });
           newRepos.billingTransactions.findByBatchId.resolves([]);
           await batchService.deleteBatchInvoice(batch, invoiceId);
@@ -1055,6 +1103,13 @@ experiment('modules/billing/services/batch-service', () => {
 
         test('deletes invoice from batch', async () => {
           expect(newRepos.billingInvoices.delete.calledWith(invoiceId)).to.be.true();
+        });
+
+        test('updates the include in supplementary billing status to reprocess where currently yes', async () => {
+          const [from, to, licenceId] = licencesService.updateIncludeInSupplementaryBillingStatus.lastCall.args;
+          expect(from).to.equal('yes');
+          expect(to).to.equal('reprocess');
+          expect(licenceId).to.equal(licenceId);
         });
 
         test('sets status of batch to empty when there are no transactions', () => {

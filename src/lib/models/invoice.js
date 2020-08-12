@@ -1,6 +1,6 @@
 'use strict';
 
-const { get, flatMap } = require('lodash');
+const { uniq, get, flatMap } = require('lodash');
 
 const { assertIsInstanceOf, assertIsArrayOfType, assertIsNullableInstanceOf } = require('./validators');
 const Model = require('./model');
@@ -131,6 +131,17 @@ class Invoice extends Model {
     return flatMap(this.invoiceLicences, invoiceLicence => {
       return get(invoiceLicence, 'licence.licenceNumber');
     });
+  }
+
+  /**
+   * Get the licence ids for this invoice by inspecting
+   * the Licence objects associated with each InvoiceLicence
+   * object associated with this invoice
+   */
+  getLicenceIds () {
+    return uniq(flatMap(this.invoiceLicences, invoiceLicence => {
+      return get(invoiceLicence, 'licence.id');
+    }));
   }
 
   /**

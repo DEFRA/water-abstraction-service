@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "1.48.0",
+  "version": "1.49.0",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "repository": {
@@ -29,7 +29,7 @@
     "@hapi/code": "^5.2.4",
     "@hapi/lab": "^19.1.0",
     "auto-changelog": "^1.16.4",
-    "codecov": "^3.7.0",
+    "codecov": "^3.7.2",
     "csv-stringify": "^2.0.4",
     "db-migrate": "^0.11.11",
     "db-migrate-pg": "^1.2.2",
@@ -69,7 +69,7 @@
     "hapi-auth-jwt2": "^8.8.1",
     "knex": "^0.20.15",
     "libxmljs": "^0.19.7",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.19",
     "moment": "^2.27.0",
     "moment-range": "^4.0.2",
     "node-cron": "^1.2.1",

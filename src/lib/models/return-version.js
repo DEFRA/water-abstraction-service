@@ -1,5 +1,7 @@
 'use strict';
 
+const { isFinite } = require('lodash');
+
 const Model = require('./model');
 const ReturnLine = require('./return-line');
 
@@ -48,6 +50,21 @@ class ReturnVersion extends Model {
 
   get isCurrentVersion () {
     return this._isCurrentVersion;
+  }
+
+  /**
+   * Returns only return lines that
+   * - overlap the charge period
+   * - are in the return abstraction period
+   * - have a non-zero/null value
+   * @param {DateRange} chargePeriod
+   * @param {DateRange} abstractionPeriod
+   */
+  getReturnLinesForBilling (chargePeriod, abstractionPeriod) {
+    return this._returnLines
+      .filter(returnLine => isFinite(returnLine.volume) && returnLine.volume > 0)
+      .filter(returnLine => abstractionPeriod.isDateRangeOverlapping(returnLine.dateRange))
+      .filter(returnLine => returnLine.dateRange.overlaps(chargePeriod));
   }
 }
 

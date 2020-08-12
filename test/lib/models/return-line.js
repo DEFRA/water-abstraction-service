@@ -102,4 +102,90 @@ experiment('lib/models/return-line', () => {
       expect(func).to.throw();
     });
   });
+
+  experiment('.isWithinDateRange', () => {
+    experiment('for a daily line', () => {
+      beforeEach(async () => {
+        line.dateRange = new DateRange('2020-07-23', '2020-07-23');
+      });
+
+      test('returns true if line within date range', async () => {
+        const dateRange = new DateRange('2020-07-01', '2020-07-31');
+        expect(line.isWithinDateRange(dateRange)).to.be.true();
+      });
+
+      test('returns true if line identical to date range', async () => {
+        const dateRange = new DateRange('2020-07-23', '2020-07-23');
+        expect(line.isWithinDateRange(dateRange)).to.be.true();
+      });
+
+      test('returns true if line is date range end date', async () => {
+        const dateRange = new DateRange('2020-07-01', '2020-07-23');
+        expect(line.isWithinDateRange(dateRange)).to.be.true();
+      });
+
+      test('returns true if line is date range start date', async () => {
+        const dateRange = new DateRange('2020-07-23', '2020-12-25');
+        expect(line.isWithinDateRange(dateRange)).to.be.true();
+      });
+
+      test('returns false if line is not in range', async () => {
+        const dateRange = new DateRange('2020-07-01', '2020-07-22');
+        expect(line.isWithinDateRange(dateRange)).to.be.false();
+      });
+    });
+
+    experiment('for a monthly line', () => {
+      beforeEach(async () => {
+        line.dateRange = new DateRange('2020-07-01', '2020-07-31');
+      });
+
+      test('returns true if line within date range', async () => {
+        const dateRange = new DateRange('2020-04-01', '2021-03-31');
+        expect(line.isWithinDateRange(dateRange)).to.be.true();
+      });
+
+      test('returns true if line identical to date range', async () => {
+        const dateRange = new DateRange('2020-07-01', '2020-07-31');
+        expect(line.isWithinDateRange(dateRange)).to.be.true();
+      });
+
+      test('returns false if there is an overlap but the line is not contained', async () => {
+        const dateRange = new DateRange('2020-04-01', '2020-07-30');
+        expect(line.isWithinDateRange(dateRange)).to.be.false();
+      });
+
+      test('returns true if the line is contained and end dates are the same', async () => {
+        const dateRange = new DateRange('2020-04-01', '2020-07-31');
+        expect(line.isWithinDateRange(dateRange)).to.be.true();
+      });
+
+      test('returns true if the line is contained and the start dates are the same', async () => {
+        const dateRange = new DateRange('2020-07-01', '2021-03-31');
+        expect(line.isWithinDateRange(dateRange)).to.be.true();
+      });
+
+      test('returns false if line is not in range', async () => {
+        const dateRange = new DateRange('2021-04-01', '2022-03-31');
+        expect(line.isWithinDateRange(dateRange)).to.be.false();
+      });
+    });
+  });
+
+  experiment('.isDaily', () => {
+    test('returns false if a weekly line', async () => {
+      line.timePeriod = TIME_PERIODS.week;
+      expect(line.isDaily).to.be.false();
+    });
+
+    test('returns false if a monthly line', async () => {
+      line.timePeriod = TIME_PERIODS.month;
+      expect(line.isDaily).to.be.false();
+    });
+
+    test('returns true if a daily line', async () => {
+      line.timePeriod = TIME_PERIODS.day;
+      expect(line.isDaily).to.be.true();
+    });
+  });
 });

@@ -6,9 +6,9 @@ const Batch = require('../../../../lib/models/batch');
 const FinancialYear = require('../../../../lib/models/financial-year');
 const InvoiceLicence = require('../../../../lib/models/invoice-licence');
 
-const dateHelpers = require('./lib/date-helpers');
+const { getChargePeriod } = require('../../lib/charge-period');
 const crmHelpers = require('./lib/crm-helpers');
-const helpers = require('@envage/water-abstraction-helpers');
+// const helpers = require('@envage/water-abstraction-helpers');
 const transactionsProcessor = require('./transactions-processor');
 
 const mappers = require('../../mappers');
@@ -18,28 +18,6 @@ const contactMapper = require('../../../../lib/mappers/contact');
 const chargeVersionService = require('../../services/charge-version-service');
 const batchService = require('../../services/batch-service');
 const billingVolumeService = require('../../services/billing-volumes-service');
-
-/**
- * Gets dates for charge period start and end date functions
- * @param {FinancialYear} financialYear
- * @param {ChargeVersion} chargeVersion
- * @param {Boolean} isStartDate
- */
-const getDates = (financialYear, chargeVersion, isStartDate = true) => {
-  const dateType = isStartDate ? 'start' : 'end';
-  const dateRef = `${dateType}Date`;
-  return [
-    chargeVersion.licence[dateRef],
-    financialYear[dateType],
-    chargeVersion.dateRange[dateRef]
-  ];
-};
-
-const getChargePeriodStartDate = (financialYear, chargeVersion) => dateHelpers.getMaxDate(
-  getDates(financialYear, chargeVersion)).format('YYYY-MM-DD');
-
-const getChargePeriodEndDate = (financialYear, chargeVersion) => dateHelpers.getMinDate(
-  getDates(financialYear, chargeVersion, false)).format('YYYY-MM-DD');
 
 /**
  * Given CRM company data and the charge version being processed,
@@ -78,18 +56,17 @@ const hasTptSupplementaryTransactions = invoiceLicence => {
  * @param {Moment} chargePeriodStartDate
  * @return {Object}
  */
-const getChargeElementsForMatching = (transactions, financialYear, chargeVersion, chargePeriodStartDate) => {
-  const chargePeriodEndDate = getChargePeriodEndDate(financialYear, chargeVersion);
+const getChargeElementsForMatching = (transactions, financialYear, chargeVersion, chargePeriod) => {
   const chargeElements = chargeVersion.chargeElements.map(chargeElement => {
     const transaction = transactions.find(transaction => transaction.chargeElement.id === chargeElement.id);
     if (transaction) {
       return {
         ...chargeElement.toJSON(),
-        startDate: chargePeriodStartDate,
-        endDate: chargePeriodEndDate,
+        startDate: chargePeriod.startDate,
+        endDate: chargePeriod.endDate,
         billableDays: transaction.billableDays,
         authorisedDays: transaction.authorisedDays,
-        totalDays: helpers.charging.getTotalDays(chargePeriodStartDate, chargePeriodEndDate)
+        totalDays: chargePeriod.days
       };
     }
   });
@@ -116,11 +93,11 @@ const processChargeVersionYear = async (batch, financialYear, chargeVersionId) =
     throw new NotFoundError(`Charge version ${chargeVersionId} not found`);
   }
 
-  // Get charge period start date
-  const chargePeriodStartDate = getChargePeriodStartDate(financialYear, chargeVersion);
+  // Get charge period
+  const chargePeriod = getChargePeriod(financialYear, chargeVersion);
 
   // Load company/invoice account/licence holder data from CRM
-  const [company, invoiceAccount, licenceHolderRole] = await crmHelpers.getCRMData(chargeVersion, chargePeriodStartDate);
+  const [company, invoiceAccount, licenceHolderRole] = await crmHelpers.getCRMData(chargeVersion, chargePeriod.startDate);
 
   const sentTPTBatches = await batchService.getSentTPTBatchesForFinancialYearAndRegion(financialYear, batch.region);
 
@@ -133,7 +110,7 @@ const processChargeVersionYear = async (batch, financialYear, chargeVersionId) =
 
   // Generate billing volumes if transactions are TPT supplementary
   if (hasTptSupplementaryTransactions(invoiceLicence)) {
-    const chargeElements = getChargeElementsForMatching(invoiceLicence.transactions, financialYear, chargeVersion, chargePeriodStartDate);
+    const chargeElements = getChargeElementsForMatching(invoiceLicence.transactions, financialYear, chargeVersion, chargePeriod);
     const chargeElementsBySeason = groupBy(chargeElements, getChargeElementGroup);
 
     const tasks = mapValues(chargeElementsBySeason, (chargeElements, season) => {

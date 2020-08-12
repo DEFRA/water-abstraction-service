@@ -13,67 +13,66 @@ const sandbox = require('sinon').createSandbox();
 
 const returnsConnector = require('../../../src/lib/connectors/returns');
 const documentsConnector = require('../../../src/lib/connectors/crm/documents');
+const companiesService = require('../../../src/lib/services/companies-service');
 const companiesContactsService = require('../../../src/lib/services/company-contacts');
 
+const InvoiceAccount = require('../../../src/lib/models/invoice-account');
+
+const invoiceAccountsService = require('../../../src/lib/services/invoice-accounts-service');
+
+const { NotFoundError } = require('../../../src/lib/errors');
 const controller = require('../../../src/modules/companies/controller');
 
-let documents;
-let returns;
-let request;
+const documents = [
+  { system_external_id: 'licence_1' },
+  { system_external_id: 'licence_2' }
+];
+const returns = [{
+  return_id: 'return_1',
+  licence_ref: 'licence_1',
+  start_date: '2018-04-01',
+  end_date: '2019-03-31',
+  return_requirement: 'requirement_1',
+  returns_frequency: 'day',
+  status: 'due',
+  metadata: {
+    description: 'Site description',
+    purposes: [
+      {
+        alias: 'Purpose alias 1',
+        primary: { code: 'P', description: 'Primary Desc 1' },
+        secondary: { code: 'S', description: 'Secondary Desc 1' },
+        tertiary: { code: 'T', description: 'Tertiary Desc 1' }
+      },
+      {
+        alias: 'Purpose alias 2',
+        primary: { code: 'P', description: 'Primary Desc 2' },
+        secondary: { code: 'S', description: 'Secondary Desc 2' },
+        tertiary: { code: 'T', description: 'Tertiary Desc 2' }
+      },
+      {
+        primary: { code: 'P', description: 'Primary Desc 3' },
+        secondary: { code: 'S', description: 'Secondary Desc 3' },
+        tertiary: { code: 'T', description: 'Tertiary Desc 3' }
+      }
+    ]
+  }
+}];
 
 experiment('modules/companies/controller', () => {
+  let h, responseStub;
   beforeEach(async () => {
-    documents = [
-      { system_external_id: 'licence_1' },
-      { system_external_id: 'licence_2' }
-    ];
-
-    returns = [{
-      return_id: 'return_1',
-      licence_ref: 'licence_1',
-      start_date: '2018-04-01',
-      end_date: '2019-03-31',
-      return_requirement: 'requirement_1',
-      returns_frequency: 'day',
-      status: 'due',
-      metadata: {
-        description: 'Site description',
-        purposes: [
-          {
-            alias: 'Purpose alias 1',
-            primary: { code: 'P', description: 'Primary Desc 1' },
-            secondary: { code: 'S', description: 'Secondary Desc 1' },
-            tertiary: { code: 'T', description: 'Tertiary Desc 1' }
-          },
-          {
-            alias: 'Purpose alias 2',
-            primary: { code: 'P', description: 'Primary Desc 2' },
-            secondary: { code: 'S', description: 'Secondary Desc 2' },
-            tertiary: { code: 'T', description: 'Tertiary Desc 2' }
-          },
-          {
-            primary: { code: 'P', description: 'Primary Desc 3' },
-            secondary: { code: 'S', description: 'Secondary Desc 3' },
-            tertiary: { code: 'T', description: 'Tertiary Desc 3' }
-          }
-        ]
-      }
-    }];
-
-    request = {
-      params: {
-        entityId: 'company_1'
-      },
-      query: {
-        startDate: '2018-04-01',
-        endDate: '2019-03-31',
-        isSummer: false,
-        status: 'due'
-      }
-    };
+    responseStub = { code: sandbox.stub() };
+    h = { response: sandbox.stub().returns(responseStub) };
 
     sandbox.stub(documentsConnector, 'findAll').resolves(documents);
     sandbox.stub(returnsConnector.returns, 'findAll').resolves(returns);
+
+    sandbox.stub(companiesService, 'getCompany').resolves({ companyId: 'test-company-id' });
+    sandbox.stub(companiesService, 'getCompanyAddresses').resolves([{ companyAddressId: 'test-company-address-id' }]);
+
+    sandbox.stub(invoiceAccountsService, 'getInvoiceAccount');
+    sandbox.stub(invoiceAccountsService, 'persist');
     sandbox.stub(companiesContactsService, 'getCompanyContacts');
   });
 
@@ -82,15 +81,29 @@ experiment('modules/companies/controller', () => {
   });
 
   experiment('.getReturns', () => {
+    let request, response;
+    beforeEach(async () => {
+      request = {
+        params: {
+          entityId: 'company_1'
+        },
+        query: {
+          startDate: '2018-04-01',
+          endDate: '2019-03-31',
+          isSummer: false,
+          status: 'due'
+        }
+      };
+
+      response = await controller.getReturns(request);
+    });
     test('finds documents in CRM for specified company', async () => {
-      await controller.getReturns(request);
       expect(documentsConnector.findAll.calledWith({
         company_entity_id: 'company_1'
       })).to.equal(true);
     });
 
     test('requests the expected columns', async () => {
-      await controller.getReturns(request);
       const [, , columns] = returnsConnector.returns.findAll.lastCall.args;
 
       expect(columns).to.contain('return_id');
@@ -105,7 +118,6 @@ experiment('modules/companies/controller', () => {
     });
 
     test('finds returns matching documents', async () => {
-      await controller.getReturns(request);
       expect(returnsConnector.returns.findAll.calledWith({
         licence_ref: {
           $in: ['licence_1', 'licence_2']
@@ -126,7 +138,6 @@ experiment('modules/companies/controller', () => {
       let returnValue;
 
       beforeEach(async () => {
-        const response = await controller.getReturns(request);
         returnValue = response[0];
       });
 
@@ -172,11 +183,140 @@ experiment('modules/companies/controller', () => {
 
       test('tolerates the absence of purposes', async () => {
         delete returns[0].metadata.purposes;
-
         const response = await controller.getReturns(request);
-
         expect(response[0].purposes).to.equal([]);
       });
+    });
+  });
+
+  experiment('getCompany', () => {
+    let request, result;
+    beforeEach(async () => {
+      request = {
+        params: {
+          companyId: 'test-company-id'
+        }
+      };
+
+      result = await controller.getCompany(request);
+    });
+
+    test('calls the company connector with company id', () => {
+      expect(companiesService.getCompany.calledWith(
+        request.params.companyId
+      )).to.be.true();
+    });
+
+    test('returns the output of the crm call', () => {
+      expect(result).to.equal({ companyId: 'test-company-id' });
+    });
+
+    test('returns a Boom not found error if error is thrown', async () => {
+      companiesService.getCompany.throws(new NotFoundError('oops!'));
+      const err = await controller.getCompany(request);
+      expect(err.isBoom).to.be.true();
+      expect(err.output.statusCode).to.equal(404);
+      expect(err.message).to.equal('oops!');
+    });
+
+    test('throws error if unexpected error is thrown', async () => {
+      companiesService.getCompany.throws(new Error('oh no!'));
+      try {
+        await controller.getCompany(request);
+      } catch (err) {
+        expect(err.isBoom).to.be.undefined();
+        expect(err.message).to.equal('oh no!');
+      }
+    });
+  });
+
+  experiment('getCompanyAddresses', () => {
+    let request, result;
+    beforeEach(async () => {
+      request = {
+        params: {
+          companyId: 'test-company-id'
+        }
+      };
+
+      result = await controller.getCompanyAddresses(request);
+    });
+
+    test('calls the company connector with company id', () => {
+      expect(companiesService.getCompanyAddresses.calledWith(
+        request.params.companyId
+      )).to.be.true();
+    });
+
+    test('returns the output of the crm call', () => {
+      expect(result).to.equal([{ companyAddressId: 'test-company-address-id' }]);
+    });
+
+    test('if no addresses are found, returns the output of the crm call', async () => {
+      companiesService.getCompanyAddresses.resolves([]);
+      result = await controller.getCompanyAddresses(request);
+      expect(result).to.equal([]);
+    });
+
+    test('returns a Boom not found if error is thrown', async () => {
+      companiesService.getCompanyAddresses.throws(new NotFoundError('oops!'));
+      const err = await controller.getCompanyAddresses(request);
+      expect(err.isBoom).to.be.true();
+      expect(err.output.statusCode).to.equal(404);
+      expect(err.message).to.equal('oops!');
+    });
+  });
+
+  experiment('createCompanyInvoiceAccount', () => {
+    let request, invoiceAccount;
+    beforeEach(async () => {
+      invoiceAccount = new InvoiceAccount();
+      invoiceAccountsService.getInvoiceAccount.returns(invoiceAccount);
+
+      request = {
+        params: {
+          companyId: 'test-company-id'
+        },
+        payload: {
+          regionId: 'test-region-id',
+          startDate: '2020-04-01',
+          address: { addressId: 'test-address-id' },
+          contact: { contactId: 'test-contact-id' }
+        }
+      };
+      await controller.createCompanyInvoiceAccount(request, h);
+    });
+
+    test('calls the getInvoiceAccount helper function with correct params', () => {
+      const { startDate, address, agent, contact } = request.payload;
+      expect(invoiceAccountsService.getInvoiceAccount.calledWith(
+        request.params.companyId,
+        startDate,
+        address,
+        agent,
+        contact
+      )).to.be.true();
+    });
+
+    test('calls the invoice account service to persist the data', () => {
+      const { regionId, startDate } = request.payload;
+      expect(invoiceAccountsService.persist.calledWith(
+        regionId,
+        startDate,
+        invoiceAccount
+      )).to.be.true();
+    });
+
+    test('returns a 201 response', () => {
+      expect(responseStub.code.calledWith(201)).to.be.true();
+    });
+
+    test('returns a Boom not found error if error is thrown', async () => {
+      invoiceAccountsService.getInvoiceAccount.throws(new NotFoundError('oops!'));
+      const err = await controller.createCompanyInvoiceAccount(request);
+      expect(err.isBoom).to.be.true();
+      expect(err.output.statusCode).to.equal(404);
+      expect(err.message).to.equal('oops!');
     });
   });
 
@@ -189,9 +329,7 @@ experiment('modules/companies/controller', () => {
         companyId = uuid();
         companiesContactsService.getCompanyContacts.rejects({
           statusCode: 404,
-          error: {
-            message: 'Nope'
-          }
+          message: 'Nope'
         });
 
         const request = {
