@@ -176,9 +176,6 @@ const decorateBatchWithTotals = async batch => {
  * @return {Promise}
  */
 const persistTotals = batch => {
-  if (!batch.totals) {
-    return;
-  }
   const changes = batch.totals.pick([
     'invoiceCount',
     'creditNoteCount',
