@@ -115,21 +115,6 @@ const getInvoice = async context => {
 };
 
 /**
- * Decorates an Invoice instance with charge data found in context
- * @param {Invoice} invoice
- * @param {Object} context
- * @return {Invoice}
- */
-const decorateInvoiceWithCMData = (invoice, context) => {
-  const { cmResponse } = context;
-  const { accountNumber } = invoice.invoiceAccount;
-
-  if (cmResponse && accountNumber && !isEmpty(cmResponse.billRun.customers)) {
-    return chargeModuleDecorators.decorateInvoice(invoice, cmResponse);
-  }
-};
-
-/**
  * Decorates Invoice model with CRM invoice account data found in context
  * @param {Invoice} invoice
  * @param {Object} context
@@ -149,7 +134,7 @@ const decorateInvoiceWithCRMData = (invoice, context) => {
 const mapInvoice = (billingInvoice, context) => {
   const invoice = mappers.invoice.dbToModel(billingInvoice);
   decorateInvoiceWithCRMData(invoice, context);
-  decorateInvoiceWithCMData(invoice, context);
+  chargeModuleDecorators.decorateInvoice(invoice, context.cmResponse);
   return invoice;
 };
 

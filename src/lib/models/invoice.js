@@ -187,12 +187,6 @@ class Invoice extends Model {
   get isDeMinimis () {
     return this._isDeMinimis;
   }
-
-  toJSON () {
-    return {
-      ...super.toJSON()
-    };
-  }
 }
 
 module.exports = Invoice;
