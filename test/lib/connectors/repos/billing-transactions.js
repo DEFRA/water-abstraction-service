@@ -45,6 +45,7 @@ experiment('lib/connectors/repos/billing-transactions', () => {
     sandbox.stub(BillingTransaction, 'where').returns(stub);
 
     sandbox.stub(raw, 'multiRow');
+    sandbox.stub(raw, 'singleRow');
   });
 
   afterEach(async () => {
@@ -312,6 +313,27 @@ experiment('lib/connectors/repos/billing-transactions', () => {
       expect(params).to.equal({
         billingInvoiceId: 'test-invoice-id'
       });
+    });
+  });
+
+  experiment('.countByBatchId', () => {
+    let result;
+
+    beforeEach(async () => {
+      raw.singleRow.resolves({ count: '5' });
+      result = await billingTransactions.countByBatchId('test-batch-id');
+    });
+
+    test('calls raw.singleRow with the correct query and params', async () => {
+      const [query, params] = raw.singleRow.lastCall.args;
+      expect(query).to.equal(queries.countByBatchId);
+      expect(params).to.equal({
+        billingBatchId: 'test-batch-id'
+      });
+    });
+
+    test('resolves with the count converted to an integer', async () => {
+      expect(result).to.equal(5);
     });
   });
 });
