@@ -3,6 +3,7 @@
 const Model = require('./model');
 const validators = require('./validators');
 const Joi = require('@hapi/joi');
+const { identity } = require('lodash');
 
 const mandatoryPostcodeCountries = [
   'united kingdom',
@@ -40,6 +41,32 @@ const ADDRESS_SOURCE = {
   nald: 'nald',
   wrls: 'wrls',
   eaAddressFacade: 'ea-address-facade'
+};
+
+/**
+ * Zero pads integers within an address line for sorting
+ * @param {String} addressLine
+ * @return {String} address line with numeric components zero-padded
+ */
+const zeroPad = addressLine =>
+  addressLine.replace(/[0-9]+/, match => match.padStart(7, '0'));
+
+const getSortKey = address => {
+  return [
+    ...[
+      address.addressLine1,
+      address.addressLine2,
+      address.addressLine3,
+      address.addressLine4
+    ].filter(identity).map(zeroPad),
+    address.town,
+    address.county,
+    address.postcode,
+    address.country
+  ].reverse()
+    .filter(identity)
+    .map(str => str.toUpperCase().replace(/ /, '_'))
+    .join('_');
 };
 
 class Address extends Model {
@@ -161,6 +188,10 @@ class Address extends Model {
 
   isValid () {
     return Joi.validate(this.toJSON(), newAddressSchema, { abortEarly: false });
+  }
+
+  get sortKey () {
+    return getSortKey(this);
   }
 }
 
