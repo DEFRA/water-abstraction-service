@@ -5,6 +5,9 @@ const testMode = parseInt(process.env.TEST_MODE) === 1;
 const isAcceptanceTestTarget = ['local', 'dev', 'development', 'test', 'preprod'].includes(process.env.NODE_ENV);
 const isProduction = ['production'].includes(process.env.NODE_ENV);
 const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0';
+const isLocal = process.env.NODE_ENV === 'local';
+const isTravis = process.env.TRAVIS;
+const isTest = process.env.NODE_ENV === 'test';
 
 module.exports = {
 
@@ -206,5 +209,13 @@ module.exports = {
 
   eaAddressFacade: {
     uri: process.env.EA_ADDRESS_FACADE_URI || 'http://localhost:9002'
+  },
+
+  redis: {
+    host: process.env.REDIS_HOST || '127.0.0.1',
+    port: process.env.REDIS_PORT || 6379,
+    password: process.env.REDIS_PASSWORD || '',
+    ...!(isLocal || isTravis || isTest) && { tls: {} },
+    db: 2
   }
 };
