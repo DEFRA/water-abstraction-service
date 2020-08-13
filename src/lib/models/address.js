@@ -45,12 +45,21 @@ const ADDRESS_SOURCE = {
 
 /**
  * Zero pads integers within an address line for sorting
+ *
  * @param {String} addressLine
  * @return {String} address line with numeric components zero-padded
  */
 const zeroPad = addressLine =>
   addressLine.replace(/[0-9]+/, match => match.padStart(7, '0'));
 
+/**
+ * Gets a string which can be used for sorting addresses
+ * The address is reversed, normalized, and numeric parts in the
+ * first 4 address lines are zero padded for consistent sorting
+ *
+ * @param {Address} address
+ * @return {String}
+ */
 const getSortKey = address => {
   return [
     ...[
