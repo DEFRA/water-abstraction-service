@@ -1,5 +1,7 @@
 'use strict';
 
+const { sortBy } = require('lodash');
+
 const eaAddressFacadeApi = require('../../../lib/connectors/ea-address-facade');
 const addressMapper = require('../../../lib/mappers/address');
 
@@ -12,8 +14,10 @@ const addressMapper = require('../../../lib/mappers/address');
 const getAddresses = async query => {
   const data = await eaAddressFacadeApi.matchAddresses(query);
 
+  const addresses = data.results.map(addressMapper.eaAddressFacadeToModel);
+
   return {
-    data: data.results.map(addressMapper.eaAddressFacadeToModel)
+    data: sortBy(addresses, address => address.sortKey)
   };
 };
 
