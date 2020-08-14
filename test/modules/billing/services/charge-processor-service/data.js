@@ -18,6 +18,7 @@ const FinancialYear = require('../../../../../src/lib/models/financial-year');
 const Region = require('../../../../../src/lib/models/region');
 const Transaction = require('../../../../../src/lib/models/transaction');
 const PurposeUse = require('../../../../../src/lib/models/purpose-use');
+const ChangeReason = require('../../../../../src/lib/models/change-reason');
 
 const createLicence = (overrides = {}) => {
   const licence = new Licence();
@@ -36,6 +37,9 @@ const createChargeVersion = (overrides = {}) => {
   const chargeVersion = new ChargeVersion(uuid());
   chargeVersion.company = new Company(uuid());
   chargeVersion.invoiceAccount = new InvoiceAccount(uuid());
+  chargeVersion.changeReason = new ChangeReason(uuid());
+  chargeVersion.changeReason.triggersMinimumCharge = overrides.triggersMinimumCharge || false;
+  chargeVersion.licence = createLicence();
   return chargeVersion.fromHash({
     dateRange: new DateRange(overrides.startDate || '2000-01-01', overrides.endDate || null),
     ...overrides

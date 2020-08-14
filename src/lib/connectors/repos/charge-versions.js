@@ -11,7 +11,8 @@ const findOne = async (id) => {
         'chargeElements.purposeUse',
         'licence',
         'licence.region',
-        'licence.licenceAgreements'
+        'licence.licenceAgreements',
+        'changeReason'
       ]
     });
 

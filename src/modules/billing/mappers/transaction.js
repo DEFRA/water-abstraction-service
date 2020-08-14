@@ -66,7 +66,7 @@ const dbToModel = row => {
   return transaction.fromHash({
     id: row.billingTransactionId,
     ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
-      'externalId', 'isTwoPartTariffSupplementary']),
+      'externalId', 'isTwoPartTariffSupplementary', 'isMinimumCharge']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
@@ -120,7 +120,8 @@ const modelToDb = (invoiceLicence, transaction) => ({
   volume: transaction.volume,
   ...mapAgreementsToDB(transaction.agreements),
   transactionKey: transaction.transactionKey,
-  isTwoPartTariffSupplementary: transaction.isTwoPartTariffSupplementary
+  isTwoPartTariffSupplementary: transaction.isTwoPartTariffSupplementary,
+  isMinimumCharge: transaction.isMinimumCharge
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -208,7 +209,8 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     chargePeriod: `${periodStart} - ${periodEnd}`,
     batchNumber: batch.id,
     ...mapChargeElementToChargeModuleTransaction(transaction.chargeElement),
-    ...mapLicenceToChargeElementTransaction(invoiceLicence.licence)
+    ...mapLicenceToChargeElementTransaction(invoiceLicence.licence),
+    newLicence: transaction.isMinimumCharge
   };
 };
 

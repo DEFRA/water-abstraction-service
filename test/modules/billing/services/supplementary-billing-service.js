@@ -35,6 +35,7 @@ const createTransactionRow = (index, transactionKey, isCredit = false) => ({
   transactionKey,
   billingVolume: [],
   isTwoPartTariffSupplementary: false,
+  isMinimumCharge: false,
   startDate: '2019-04-01'
 });
 

@@ -56,7 +56,8 @@ experiment('modules/billing/mappers/api/invoice', () => {
         name: 'Test Co Ltd.',
         netTotal: 3634654,
         licenceNumbers: ['01/123/ABC'],
-        isWaterUndertaker: false
+        isWaterUndertaker: false,
+        minimumChargeApplies: false
       });
     });
   });

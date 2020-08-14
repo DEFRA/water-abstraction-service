@@ -54,7 +54,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
       });
     });
 
-    experiment('for a supplementaty batch', () => {
+    experiment('for a supplementary batch', () => {
       beforeEach(async () => {
         batch = data.createBatch('supplementary');
         chargeVersion = data.createChargeVersionWithTwoPartTariff();
@@ -541,6 +541,30 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           expect(transactions[3].agreements).length(1);
           expect(transactions[3].agreements[0].code).to.equal('S130U');
         });
+      });
+    });
+
+    experiment('minimum charge flag', () => {
+      beforeEach(async () => {
+        batch = data.createBatch('annual');
+      });
+
+      test('is false when charge version start date is different from licence start date', async () => {
+        chargeVersion = data.createChargeVersion({ triggersMinimumCharge: true });
+        chargeVersion.chargeElements = [data.createChargeElement()];
+        const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
+        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+
+        expect(transactions[0].isMinimumCharge).to.equal(false);
+      });
+
+      test('is true when charge version start date is the same as licence start date', async () => {
+        chargeVersion = data.createChargeVersion({ startDate: '2019-04-01', triggersMinimumCharge: true });
+        chargeVersion.chargeElements = [data.createChargeElement()];
+        const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
+        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+
+        expect(transactions[0].isMinimumCharge).to.equal(true);
       });
     });
   });

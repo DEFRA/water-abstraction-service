@@ -352,8 +352,9 @@ experiment('modules/billing/controller', () => {
       });
 
       test('the batch id is passed to the invoice service', async () => {
-        const [batch] = invoiceService.getInvoicesForBatch.lastCall.args;
+        const [batch, includeTransactions] = invoiceService.getInvoicesForBatch.lastCall.args;
         expect(batch).to.equal(request.pre.batch);
+        expect(includeTransactions).to.equal(true);
       });
 
       test('the response is mapped using the appropriate mapper', async () => {

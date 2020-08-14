@@ -5,7 +5,7 @@ const InvoiceAccount = require('../../../lib/models/invoice-account');
 const Region = require('../../../lib/models/region');
 
 const chargeElementMapper = require('./charge-element');
-const licenceMapper = require('../../../lib/mappers/licence');
+const mappers = require('../../../lib/mappers');
 
 const createRegion = regionCode => {
   const region = new Region();
@@ -19,7 +19,7 @@ const dbToModel = row => {
   const chargeVersion = new ChargeVersion();
   return chargeVersion.fromHash({
     id: row.chargeVersionId,
-    licence: licenceMapper.dbToModel(row.licence),
+    licence: mappers.licence.dbToModel(row.licence),
     scheme: row.scheme,
     versionNumber: row.versionNumber,
     dateRange: new DateRange(row.startDate, row.endDate),
@@ -28,7 +28,8 @@ const dbToModel = row => {
     source: row.source,
     company: new Company(row.companyId),
     invoiceAccount: new InvoiceAccount(row.invoiceAccountId),
-    chargeElements: row.chargeElements.map(chargeElementMapper.dbToModel)
+    chargeElements: row.chargeElements.map(chargeElementMapper.dbToModel),
+    changeReason: mappers.changeReason.dbToModel(row.changeReason)
   });
 };
 

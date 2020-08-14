@@ -1,6 +1,6 @@
 'use strict';
 
-const { flatMap } = require('lodash');
+const { flatMap, isNull } = require('lodash');
 
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(require('moment'));
@@ -45,6 +45,7 @@ const agreementAppliesToTransaction = (agreement, purpose) => {
  * @param {Object} flags
  * @param {Boolean} flags.isCompensationCharge
  * @param {Boolean} flags.isTwoPartTariffSupplementary
+ * @param {Boolean} flags.isMinimumCharge
  * @return {Transaction}
  */
 const createTransaction = (chargePeriod, chargeElement, agreements, financialYear, flags = {}, billingVolume) => {
@@ -60,7 +61,8 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
     billableDays: helpers.charging.getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate),
     volume: billingVolume ? billingVolume.volume : chargeElement.volume,
     isTwoPartTariffSupplementary: flags.isTwoPartTariffSupplementary || false,
-    isCompensationCharge: flags.isCompensationCharge || false
+    isCompensationCharge: flags.isCompensationCharge || false,
+    isMinimumCharge: flags.isMinimumCharge || false
   });
   transaction.createDescription();
   return transaction;
@@ -97,6 +99,20 @@ const isTwoPartTariffSupplementaryChargeNeeded = (batch, period, chargeElement, 
  */
 const isCompensationChargesNeeded = (batch, chargeVersion) => {
   return isAnnualChargesNeeded(batch) && !chargeVersion.licence.isWaterUndertaker;
+};
+
+/**
+ * Predicate to check whether the minimum charge applies
+ * @param {DateRange} chargePeriod of the charge element
+ * @param {ChargeVersion} chargeVersion
+ * @return {Boolean}
+ */
+const doesMinimumChargeApply = (chargePeriod, chargeVersion) => {
+  const { dateRange, changeReason } = chargeVersion;
+  const chargeVersionStartDate = moment(dateRange.startDate);
+  const isSharedStartDate = moment(chargePeriod.startDate).isSame(chargeVersionStartDate);
+  if (isNull(changeReason)) return false;
+  return isSharedStartDate && changeReason.triggersMinimumCharge;
 };
 
 /**
@@ -156,12 +172,13 @@ const createTransactionsForPeriod = (batch, period, chargeVersion, financialYear
     if (!elementChargePeriod) {
       return acc;
     }
+    const isMinimumCharge = doesMinimumChargeApply(elementChargePeriod, chargeVersion);
 
     if (isAnnualChargesNeeded(batch)) {
-      acc.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear));
+      acc.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isMinimumCharge }));
     }
     if (isCompensationChargesNeeded(batch, chargeVersion)) {
-      acc.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true }));
+      acc.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true, isMinimumCharge }));
     }
 
     // Two-part tariff transactions:

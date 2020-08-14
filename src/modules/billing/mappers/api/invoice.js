@@ -1,4 +1,5 @@
 const objectMapper = require('object-mapper');
+const { flatMap } = require('lodash');
 
 const getIsWaterUndertaker = invoiceLicence =>
   invoiceLicence.licence.isWaterUndertaker;
@@ -9,6 +10,11 @@ const containsWaterUndertaker = invoiceLicences => {
     .includes(true);
 };
 
+const doesMinimumChargeApply = invoiceLicences => {
+  const transactions = flatMap(invoiceLicences.map(invoiceLicence => invoiceLicence.transactions));
+  return transactions.some(trans => trans.isMinimumCharge);
+};
+
 const map = {
   id: 'id',
   'invoiceAccount.accountNumber': 'accountNumber',
@@ -16,10 +22,14 @@ const map = {
   'totals.netTotal': 'netTotal',
   'invoiceLicences[].licence.licenceNumber': 'licenceNumbers[]',
   'financialYear.yearEnding': 'financialYearEnding',
-  invoiceLicences: {
+  invoiceLicences: [{
     key: 'isWaterUndertaker',
     transform: containsWaterUndertaker
+  }, {
+    key: 'minimumChargeApplies',
+    transform: doesMinimumChargeApply
   }
+  ]
 };
 
 /**
