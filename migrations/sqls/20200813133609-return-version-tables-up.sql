@@ -15,7 +15,7 @@ create table water.return_versions (
 );
 
 /* Create return requirements table - these show the need to do an individual return each year */
-create type returns_frequency as enum('day', 'week', 'month', 'quarter', 'year');
+create type returns_frequency as enum('day', 'week', 'fortnight', 'month', 'quarter', 'year');
 
 create table water.return_requirements (
   return_requirement_id uuid primary key default public.gen_random_uuid(),
@@ -23,10 +23,11 @@ create table water.return_requirements (
   returns_frequency returns_frequency not null,
   is_summer boolean not null,
   is_upload boolean not null,
-  abstraction_period_start_day smallint not null,
-  abstraction_period_start_month smallint not null,
-  abstraction_period_end_day smallint not null,
-  abstraction_period_end_month smallint not null,
+  abstraction_period_start_day smallint,
+  abstraction_period_start_month smallint,
+  abstraction_period_end_day smallint,
+  abstraction_period_end_month smallint,
+  site_description varchar,
   description varchar,
   legacy_id integer,
   date_created timestamp not null,
