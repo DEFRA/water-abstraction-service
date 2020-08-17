@@ -17,7 +17,7 @@ const dbToModel = (row) => {
   });
 
   if (row.returnRequirementPurposes) {
-    model.purposeUses = row.returnRequirementPurposes.map(returnRequirementPurposeMapper.dbToModel);
+    model.returnRequirementPurposes = row.returnRequirementPurposes.map(returnRequirementPurposeMapper.dbToModel);
   }
 
   return model;

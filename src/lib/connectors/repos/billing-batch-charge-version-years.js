@@ -36,14 +36,6 @@ const deleteByInvoiceId = billingInvoiceId => bookshelf
   .raw(queries.deleteByInvoiceId, { billingInvoiceId });
 
 /**
- * Creates water.billing_batchcharge_version_year records for given batch ID
- * This assumes water.billing_batch_charge_versions is already populated
- * @param {String} billingBatchId
- */
-const createForBatch = billingBatchId =>
-  raw.multiRow(queries.createForBatch, { billingBatchId });
-
-/**
  * Finds all charge version years for the supplied batch ID
  * @param {String} billingBatchId
  */
@@ -73,11 +65,30 @@ const findTwoPartTariffByBatchId = billingBatchId => bookshelf
 const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
   bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId });
 
+/**
+ * Creates a new record in water.billing_batch_charge_version_years
+ * @param {String} billingBatchId
+ * @param {String} chargeVersionId
+ * @param {Number} financialYearEnding
+ * @param {String} status
+ */
+const create = (billingBatchId, chargeVersionId, financialYearEnding, status) => {
+  const model = BillingBatchChargeVersionYear
+    .forge({
+      billingBatchId,
+      chargeVersionId,
+      financialYearEnding,
+      status
+    })
+    .save();
+  return model.toJSON();
+};
+
 exports.update = update;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
 exports.deleteByBatchId = deleteByBatchId;
 exports.deleteByInvoiceId = deleteByInvoiceId;
-exports.createForBatch = createForBatch;
 exports.findByBatchId = findByBatchId;
 exports.findTwoPartTariffByBatchId = findTwoPartTariffByBatchId;
 exports.deleteByBatchIdAndLicenceId = deleteByBatchIdAndLicenceId;
+exports.create = create;

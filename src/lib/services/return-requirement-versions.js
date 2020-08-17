@@ -10,7 +10,6 @@ const returnVersionMapper = require('../mappers/return-requirement-version');
  */
 const getByLicenceId = async licenceId => {
   const data = await repos.returnVersions.findByLicenceId(licenceId);
-  console.log(data);
   return data.map(returnVersionMapper.dbToModel);
 };
 

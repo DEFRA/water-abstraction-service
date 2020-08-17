@@ -45,6 +45,16 @@ class ReturnRequirement extends Model {
   get returnRequirementPurposes () {
     return this._returnRequirementPurposes;
   }
+
+  /**
+   * True if any of the purposes on this return are two-part tariff applicable
+   * @return {Boolean}
+   */
+  get isTwoPartTariffPurposeUse () {
+    return this.returnRequirementPurposes.some(
+      returnRequirementPurpose => returnRequirementPurpose.purposeUse.isTwoPartTariff
+    );
+  }
 }
 
 module.exports = ReturnRequirement;
