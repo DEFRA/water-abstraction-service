@@ -181,7 +181,7 @@ const persistTotals = batch => {
     'creditNoteCount',
     'netTotal'
   ]);
-  return newRepos.billingBatches.update(batch.id, changes, false);
+  return newRepos.billingBatches.update(batch.id, changes);
 };
 
 /**

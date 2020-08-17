@@ -4,7 +4,7 @@ const Transaction = require('../../../lib/models/transaction');
 const { logger } = require('../../../logger');
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
-const { get, partialRight, flatMap } = require('lodash');
+const { get, flatMap } = require('lodash');
 
 /**
  * Saves a row to water.billing_transactions for the given Transaction
@@ -80,20 +80,6 @@ const setErrorStatus = transactionId =>
 const updateDeMinimis = (ids, isDeMinimis) =>
   newRepos.billingTransactions.update(ids, { isDeMinimis }, false);
 
-/**
- * Clears the de-minimis flags by transaction IDs
- * @param {Array<String>} externalIds
- * @return {Promise}
- */
-const clearDeMinimisByTransactionIds = partialRight(updateDeMinimis, false);
-
-/**
- * Sets the de-minimis flags by transaction IDs
- * @param {Array<String>} externalIds
- * @return {Promise}
- */
-const setDeMinimisByTransactionIds = partialRight(updateDeMinimis, true);
-
 const getInvoiceTransactions = invoice =>
   flatMap(
     invoice.invoiceLicences.map(
@@ -127,6 +113,4 @@ exports.saveTransactionToDB = saveTransactionToDB;
 exports.getById = getById;
 exports.updateWithChargeModuleResponse = updateTransactionWithChargeModuleResponse;
 exports.setErrorStatus = setErrorStatus;
-exports.clearDeMinimisByTransactionIds = clearDeMinimisByTransactionIds;
-exports.setDeMinimisByTransactionIds = setDeMinimisByTransactionIds;
 exports.persistDeMinimis = persistDeMinimis;
