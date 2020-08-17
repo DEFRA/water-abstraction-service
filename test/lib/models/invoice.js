@@ -175,4 +175,23 @@ experiment('lib/models/invoice', () => {
       expect(invoice.getInvoiceLicenceByLicenceNumber('01/999')).to.be.undefined();
     });
   });
+
+  experiment('.isDeMinimis', () => {
+    test('can be set to a boolean true', async () => {
+      invoice.isDeMinimis = true;
+      expect(invoice.isDeMinimis).to.equal(true);
+    });
+
+    test('can be set to a boolean false', async () => {
+      invoice.isDeMinimis = false;
+      expect(invoice.isDeMinimis).to.equal(false);
+    });
+
+    test('throws an error if set to a non-boolean', async () => {
+      const func = () => {
+        invoice.isDeMinimis = 'hey';
+      };
+      expect(func).to.throw();
+    });
+  });
 });

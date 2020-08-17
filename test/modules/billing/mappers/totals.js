@@ -89,7 +89,7 @@ experiment('modules/billing/mappers/totals', () => {
 
     experiment('when the customer is present in the bill run summary', () => {
       beforeEach(async () => {
-        result = totalsMapper.chargeModuleBillRunToInvoiceModel(data.billRun, INVOICE_ACCOUNT_NUMBER, 2021);
+        result = totalsMapper.chargeModuleBillRunToInvoiceModel(data, INVOICE_ACCOUNT_NUMBER, 2021);
       });
 
       test('the result is a Totals instance', async () => {
@@ -107,7 +107,7 @@ experiment('modules/billing/mappers/totals', () => {
 
     experiment('when the customer is not present in the bill run summary', () => {
       beforeEach(async () => {
-        result = totalsMapper.chargeModuleBillRunToInvoiceModel(data.billRun, 'not-a-customer');
+        result = totalsMapper.chargeModuleBillRunToInvoiceModel(data, 'not-a-customer');
       });
 
       test('the result is null', async () => {
@@ -117,7 +117,7 @@ experiment('modules/billing/mappers/totals', () => {
 
     experiment('when the financial year is not present in the bill run summary', () => {
       beforeEach(async () => {
-        result = totalsMapper.chargeModuleBillRunToInvoiceModel(data.billRun, INVOICE_ACCOUNT_NUMBER, 2001);
+        result = totalsMapper.chargeModuleBillRunToInvoiceModel(data, INVOICE_ACCOUNT_NUMBER, 2001);
       });
 
       test('the result is null', async () => {

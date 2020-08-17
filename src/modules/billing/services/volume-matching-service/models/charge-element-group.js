@@ -352,7 +352,7 @@ class ChargeElementGroup {
    * @param {Array<BillingVolume>} billingVolumes
    */
   setBillingVolumes (billingVolumes) {
-    for (const billingVolume in billingVolumes) {
+    for (const billingVolume of billingVolumes) {
       const chargeElementContainer = this._chargeElementContainers.find(c => c.chargeElement.id === billingVolume.chargeElementId);
       chargeElementContainer.setBillingVolume(billingVolume);
     }

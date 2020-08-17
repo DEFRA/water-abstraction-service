@@ -53,9 +53,8 @@ const findByBatchId = async billingBatchId => {
  * @param {String} billingBatchId
  * @return {Promise<Array>}
  */
-const findTwoPartTariffByBatchId = billingBatchId => bookshelf
-  .knex
-  .raw(queries.findTwoPartTariffByBatchId, { billingBatchId });
+const findTwoPartTariffByBatchId = billingBatchId =>
+  raw.multiRow(queries.findTwoPartTariffByBatchId, { billingBatchId });
 
 /**
  * Deletes charge versiom years in a batch for a particular licence ID

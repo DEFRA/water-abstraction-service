@@ -14,15 +14,11 @@ const sandbox = require('sinon').createSandbox();
 const refreshTotals = require('../../../../src/modules/billing/jobs/refresh-totals');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
-const Batch = require('../../../../src/lib/models/batch');
 
 const BATCH_ID = uuid();
 
 experiment('modules/billing/jobs/refresh-totals', () => {
-  let batch;
-
   beforeEach(async () => {
-    batch = new Batch();
     sandbox.stub(batchService, 'getBatchById');
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingError');
@@ -84,12 +80,8 @@ experiment('modules/billing/jobs/refresh-totals', () => {
         expect(batchJob.logHandling.calledWith(job)).to.be.true();
       });
 
-      test('gets the batch by ID', async () => {
-        expect(batchService.getBatchById.calledWith(BATCH_ID)).to.be.true();
-      });
-
-      test('passes the returned batch to the .refreshTotals() method', async () => {
-        expect(batchService.refreshTotals.calledWith(batch));
+      test('refreshes the totals from the charge module using the batch ID', async () => {
+        expect(batchService.refreshTotals.calledWith(BATCH_ID));
       });
 
       test('no error is logged', async () => {
@@ -106,7 +98,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
 
       beforeEach(async () => {
         error = new Error('refresh error');
-        batchService.getBatchById.rejects(error);
+        batchService.refreshTotals.rejects(error);
         await expect(refreshTotals.handler(job)).to.reject();
       });
 
