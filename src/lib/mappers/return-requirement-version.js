@@ -14,7 +14,7 @@ const dbToModel = (row) => {
 
   model.fromHash({
     id: row.returnVersionId,
-    dateRange: new DateRange(row.start_date, row.end_date),
+    dateRange: new DateRange(row.startDate, row.endDate),
     status: row.status
   });
 

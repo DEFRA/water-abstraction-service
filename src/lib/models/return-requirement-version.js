@@ -3,6 +3,7 @@
 const Model = require('./model');
 const DateRange = require('./date-range');
 const ReturnRequirement = require('./return-requirement');
+const { RETURN_SEASONS } = require('./constants');
 
 const validators = require('./validators');
 
@@ -57,6 +58,14 @@ class ReturnRequirementVersion extends Model {
     return this._status;
   }
 
+  /**
+   * Checks if this return version is not draft - i.e. either current or superseded
+   * @return {Boolean}
+   */
+  get isNotDraft () {
+    return this.status !== RETURN_REQUIREMENT_VERSION_STATUSES.draft;
+  }
+
   set returnRequirements (returnRequirements) {
     validators.assertIsArrayOfType(returnRequirements, ReturnRequirement);
     this._returnRequirements = returnRequirements;
@@ -64,6 +73,22 @@ class ReturnRequirementVersion extends Model {
 
   get returnRequirements () {
     return this._returnRequirements;
+  }
+
+  /**
+   * Checks whether this return version has any formats with a two-part tariff purpose
+   * in the supplied season
+   * Note: this doesn't necessarily mean the licence has two-part tariff agreement
+   * @param {String} returnSeason
+   * @return {Boolean}
+   */
+  hasTwoPartTariffPurposeReturnsInSeason (returnSeason) {
+    validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
+    const isSummer = returnSeason === RETURN_SEASONS.summer;
+
+    return this.returnRequirements
+      .filter(returnRequirement => returnRequirement.isSummer === isSummer)
+      .some(returnRequirement => returnRequirement.isTwoPartTariffPurposeUse);
   }
 }
 

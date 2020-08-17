@@ -88,3 +88,12 @@ delete from water.billing_batch_charge_versions bcv
     and cv.licence_ref=l.licence_ref
     and l.licence_id=:licenceId
 `;
+
+exports.create = `
+insert into water.billing_batch_charge_versions 
+  (billing_batch_id, charge_version_id, date_created, date_updated)
+  values (:billingBatchId, :chargeVersionId, NOW(), NOW())
+  on conflict (billing_batch_id, charge_version_id)
+    do nothing
+  returning *
+`;

@@ -1,5 +1,9 @@
 const camelCaseKeys = require('../../../lib/camel-case-keys');
 const FinancialYear = require('../../../lib/models/financial-year');
+const validators = require('../../../lib/models/validators');
+const Batch = require('../../../lib/models/batch');
+const { BATCH_STATUS } = require('../../../lib/models/batch');
+
 const batchService = require('./batch-service');
 const chargeProcessorService = require('./charge-processor-service');
 
@@ -72,6 +76,15 @@ const getTwoPartTariffForBatch = batchId => {
   return repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(batchId);
 };
 
+const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear) => {
+  validators.assertIsInstanceOf(batch, Batch);
+  validators.assertId(chargeVersionId);
+  validators.assertIsInstanceOf(financialYear, FinancialYear);
+  return repos.billingBatchChargeVersionYears.create(
+    batch.id, chargeVersionId, financialYear.endYear, BATCH_STATUS.processing
+  );
+};
+
 exports.setReadyStatus = setReadyStatus;
 exports.setErrorStatus = setErrorStatus;
 exports.getStatusCounts = getStatusCounts;
@@ -79,3 +92,4 @@ exports.processChargeVersionYear = processChargeVersionYear;
 exports.createForBatch = createForBatch;
 exports.getForBatch = getForBatch;
 exports.getTwoPartTariffForBatch = getTwoPartTariffForBatch;
+exports.createBatchChargeVersionYear = createBatchChargeVersionYear;

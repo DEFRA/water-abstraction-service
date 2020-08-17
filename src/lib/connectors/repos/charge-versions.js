@@ -1,4 +1,8 @@
+'use strict';
+
 const { ChargeVersion } = require('../bookshelf');
+const raw = require('./lib/raw');
+const queries = require('./queries/charge-versions');
 
 const sharedRelations = [
   'chargeElements',
