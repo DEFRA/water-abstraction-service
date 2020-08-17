@@ -79,6 +79,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingBatches, 'findPage').resolves();
     sandbox.stub(newRepos.billingBatches, 'update').resolves();
     sandbox.stub(newRepos.billingBatches, 'create').resolves();
+    sandbox.stub(newRepos.billingBatches, 'findOneWithInvoicesWithTransactions').resolves();
 
     sandbox.stub(newRepos.billingInvoices, 'deleteEmptyByBatchId').resolves();
     sandbox.stub(newRepos.billingInvoices, 'deleteByBatchId').resolves();
@@ -89,6 +90,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingTransactions, 'findStatusCountsByBatchId').resolves();
     sandbox.stub(newRepos.billingTransactions, 'findByBatchId').resolves();
     sandbox.stub(newRepos.billingTransactions, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingTransactions, 'countByBatchId').resolves();
 
     sandbox.stub(newRepos.billingVolumes, 'deleteByBatchId').resolves();
 
@@ -96,6 +98,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
 
     sandbox.stub(transactionsService, 'saveTransactionToDB');
+    sandbox.stub(transactionsService, 'persistDeMinimis').resolves();
 
     sandbox.stub(invoiceLicencesService, 'saveInvoiceLicenceToDB');
 
@@ -662,7 +665,10 @@ experiment('modules/billing/services/batch-service', () => {
         }
       });
       batch = new Batch(uuid());
-      batch.externalId = uuid();
+      batch.fromHash({
+        externalId: uuid(),
+        status: Batch.BATCH_STATUS.ready
+      });
       await batchService.decorateBatchWithTotals(batch);
     });
 
@@ -681,11 +687,16 @@ experiment('modules/billing/services/batch-service', () => {
   });
 
   experiment('.refreshTotals', () => {
-    let batch;
+    const batchId = uuid();
+    const externalId = uuid();
 
     beforeEach(async () => {
-      batch = new Batch(BATCH_ID);
-      batch.externalId = uuid();
+      newRepos.billingBatches.findOneWithInvoicesWithTransactions.resolves({
+        billingBatchId: batchId,
+        externalId,
+        status: Batch.BATCH_STATUS.ready,
+        batchType: Batch.BATCH_TYPE.supplementary
+      });
       chargeModuleBillRunConnector.get.resolves({
         billRun: {
           summary: {
@@ -696,21 +707,33 @@ experiment('modules/billing/services/batch-service', () => {
           }
         }
       });
-      await batchService.refreshTotals(batch);
+      await batchService.refreshTotals(batchId);
+    });
+
+    test('fetches the batch and associated invoices from DB', async () => {
+      expect(newRepos.billingBatches.findOneWithInvoicesWithTransactions.calledWith(
+        batchId
+      )).to.be.true();
     });
 
     test('gets the bill run summary from the charge module', async () => {
       expect(
-        chargeModuleBillRunConnector.get.calledWith(batch.externalId)
+        chargeModuleBillRunConnector.get.calledWith(externalId)
       ).to.be.true();
     });
 
     test('updates the billing batch with the totals', async () => {
       const [id, updates] = newRepos.billingBatches.update.lastCall.args;
-      expect(id).to.equal(BATCH_ID);
+      expect(id).to.equal(batchId);
       expect(updates.invoiceCount).to.equal(3);
       expect(updates.creditNoteCount).to.equal(5);
       expect(updates.netTotal).to.equal(343553);
+    });
+
+    test('persists the transactions de-minimis status flag', async () => {
+      const [batch] = transactionsService.persistDeMinimis.lastCall.args;
+      expect(batch instanceof Batch).to.be.true();
+      expect(batch.id).to.equal(batchId);
     });
   });
 
@@ -749,9 +772,7 @@ experiment('modules/billing/services/batch-service', () => {
         const batch = new Batch(uuid());
         batch.status = Batch.BATCH_STATUS.ready;
 
-        newRepos.billingTransactions.findByBatchId.resolves([
-          { id: 1 }, { id: 2 }
-        ]);
+        newRepos.billingTransactions.countByBatchId.resolves(5);
 
         const result = await batchService.setStatusToEmptyWhenNoTransactions(batch);
 
@@ -766,7 +787,7 @@ experiment('modules/billing/services/batch-service', () => {
         const batch = new Batch(uuid());
         batch.status = Batch.BATCH_STATUS.ready;
 
-        newRepos.billingTransactions.findByBatchId.resolves([]);
+        newRepos.billingTransactions.countByBatchId.resolves(0);
 
         newRepos.billingBatches.update.resolves({
           id: batch.id,
@@ -1078,7 +1099,7 @@ experiment('modules/billing/services/batch-service', () => {
               }
             ]
           });
-          newRepos.billingTransactions.findByBatchId.resolves([]);
+          newRepos.billingTransactions.countByBatchId.resolves(0);
           await batchService.deleteBatchInvoice(batch, invoiceId);
         });
 

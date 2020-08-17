@@ -352,4 +352,56 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       expect(billingVolumes[1].volume).to.equal(0.333);
     });
   });
+
+  experiment('.setBillingVolumes', () => {
+    let billingVolumes;
+
+    const createBillingVolume = (chargeElementId, isSummer) => {
+      const billingVolume = new BillingVolume(uuid());
+      return billingVolume.fromHash({
+        chargeElementId,
+        isSummer
+      });
+    };
+
+    beforeEach(async () => {
+      chargeElements = [
+        createChargeElement('timeLimitedSummerTrickle', { isSummer: true, purposeUse: purposeUses.trickleIrrigation, isTimeLimited: true }),
+        createChargeElement('summerTrickle', { isSummer: true, purposeUse: purposeUses.trickleIrrigation })
+      ];
+      chargeElementGroup.chargeElementContainers = chargeElements.map(chargeElement => new ChargeElementContainer(chargeElement, chargePeriod));
+
+      billingVolumes = [
+        createBillingVolume(chargeElements[0].id, true),
+        createBillingVolume(chargeElements[0].id, false),
+        createBillingVolume(chargeElements[1].id, true),
+        createBillingVolume(chargeElements[1].id, false)
+      ];
+      chargeElementGroup.setBillingVolumes(billingVolumes);
+    });
+
+    test('the first charge element has the correct volumes', async () => {
+      const [chargeElementContainer] = chargeElementGroup.chargeElementContainers;
+
+      expect(chargeElementContainer.getBillingVolume(RETURN_SEASONS.summer).id).to.equal(
+        billingVolumes[0].id
+      );
+
+      expect(chargeElementContainer.getBillingVolume(RETURN_SEASONS.winterAllYear).id).to.equal(
+        billingVolumes[1].id
+      );
+    });
+
+    test('the second charge element has the correct volumes', async () => {
+      const [, chargeElementContainer] = chargeElementGroup.chargeElementContainers;
+
+      expect(chargeElementContainer.getBillingVolume(RETURN_SEASONS.summer).id).to.equal(
+        billingVolumes[2].id
+      );
+
+      expect(chargeElementContainer.getBillingVolume(RETURN_SEASONS.winterAllYear).id).to.equal(
+        billingVolumes[3].id
+      );
+    });
+  });
 });

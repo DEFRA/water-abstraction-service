@@ -55,3 +55,11 @@ delete from water.billing_transactions t
     t.billing_invoice_licence_id=l.billing_invoice_licence_id 
     and l.billing_invoice_id=:billingInvoiceId
 `;
+
+exports.countByBatchId = `
+  select count(t.billing_transaction_id) 
+    from water.billing_transactions t
+    join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
+    join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
+    where i.billing_batch_id=:billingBatchId
+`;

@@ -9,6 +9,10 @@ where
   and l.region_id = :regionId::uuid
   and cv.status='current'
   and (cv.end_date is null or cv.end_date > :fromDate)
+  and l.suspend_from_billing is false
+  and (l.expired_date is null or l.expired_date > :fromDate)
+  and (l.lapsed_date is null or l.lapsed_date > :fromDate)
+  and (l.revoked_date is null or l.revoked_date > :fromDate)
 returning *;`;
 
 exports.createAnnual = `

@@ -157,7 +157,7 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
     });
 
     test('calls knex raw method with correct query', async () => {
-      expect(bookshelf.knex.raw.calledWith(
+      expect(raw.multiRow.calledWith(
         queries.findTwoPartTariffByBatchId, { billingBatchId }
       )).to.be.true();
     });

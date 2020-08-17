@@ -55,6 +55,7 @@ const getTestDataForHashing = () => {
   transaction.volume = 3;
   transaction.isCompensationCharge = true;
   transaction.isTwoPartTariffSupplementary = true;
+  transaction.isDeMinimis = false;
 
   transaction.agreements = [
     new Agreement().fromHash({ code: 'S130T' }),
