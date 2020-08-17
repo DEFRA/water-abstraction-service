@@ -24,7 +24,6 @@ experiment('modules/billing/services/charge-version-year', () => {
   beforeEach(async () => {
     sandbox.stub(repos.billingBatchChargeVersionYears, 'update').resolves();
     sandbox.stub(repos.billingBatchChargeVersionYears, 'findStatusCountsByBatchId');
-    sandbox.stub(repos.billingBatchChargeVersionYears, 'createForBatch');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'findByBatchId');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'findTwoPartTariffByBatchId');
 
@@ -133,21 +132,6 @@ experiment('modules/billing/services/charge-version-year', () => {
 
     test('the batch is decorated with the invoice', async () => {
       expect(result.invoices[0] instanceof Invoice).to.be.true();
-    });
-  });
-
-  experiment('.createForBatch', () => {
-    let batch;
-
-    beforeEach(async () => {
-      batch = new Batch(uuid());
-      await chargeVersionYearService.createForBatch(batch);
-    });
-
-    test('the .createForBatch method is called on the repo', async () => {
-      expect(repos.billingBatchChargeVersionYears.createForBatch.calledWith(
-        batch.id
-      )).to.be.true();
     });
   });
 

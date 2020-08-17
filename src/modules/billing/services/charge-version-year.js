@@ -1,3 +1,5 @@
+'use strict';
+
 const camelCaseKeys = require('../../../lib/camel-case-keys');
 const FinancialYear = require('../../../lib/models/financial-year');
 const validators = require('../../../lib/models/validators');
@@ -54,9 +56,6 @@ const processChargeVersionYear = async dbRow => {
   return batch;
 };
 
-const createForBatch = batch =>
-  repos.billingBatchChargeVersionYears.createForBatch(batch.id);
-
 /**
  * Gets all charge version year records for given batch
  * @param {String} batchId
@@ -89,7 +88,6 @@ exports.setReadyStatus = setReadyStatus;
 exports.setErrorStatus = setErrorStatus;
 exports.getStatusCounts = getStatusCounts;
 exports.processChargeVersionYear = processChargeVersionYear;
-exports.createForBatch = createForBatch;
 exports.getForBatch = getForBatch;
 exports.getTwoPartTariffForBatch = getTwoPartTariffForBatch;
 exports.createBatchChargeVersionYear = createBatchChargeVersionYear;
