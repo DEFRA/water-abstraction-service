@@ -118,22 +118,6 @@ experiment('lib/models/date-range', () => {
     });
   });
 
-  experiment('formatDate', () => {
-    test('handles null', async () => {
-      expect(DateRange.formatDate(null)).to.equal(null);
-    });
-
-    test('handles a moment', async () => {
-      const date = moment('2000-01-01');
-      expect(DateRange.formatDate(date)).to.equal('2000-01-01');
-    });
-
-    test('handles a string', async () => {
-      const date = '2000-01-02';
-      expect(DateRange.formatDate(date)).to.equal('2000-01-02');
-    });
-  });
-
   experiment('.includes', () => {
     let dateRange;
 
