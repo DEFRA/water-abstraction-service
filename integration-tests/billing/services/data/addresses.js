@@ -5,5 +5,7 @@ exports.ad1 = {
   town : 'Testington',
   county : 'Testingshire',
   postcode : 'TT1 1TT',
-  country : 'UK'
+  country : 'UK',
+  dataSource: 'nald',
+  uprn: null
 }
