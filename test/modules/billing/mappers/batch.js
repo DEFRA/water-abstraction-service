@@ -114,6 +114,24 @@ experiment('modules/billing/mappers/batch', () => {
         expect(batch.totals instanceof Totals).to.be.true();
       });
     });
+
+    experiment('when there are billing invoices', () => {
+      beforeEach(async () => {
+        const withInvoices = {
+          ...data.batch,
+          billingInvoices: [{
+            billingInvoiceId: uuid(),
+            invoiceAccountNumber: 'A12345678A'
+          }]
+        };
+
+        batch = batchMapper.dbToModel(withInvoices);
+      });
+
+      test('the invoices are mapped', async () => {
+        expect(batch.invoices[0]).to.be.instanceof(Invoice);
+      });
+    });
   });
 
   experiment('.modelToChargeModule', () => {

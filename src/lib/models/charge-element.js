@@ -1,10 +1,11 @@
 'use strict';
 
 const { isNull, max } = require('lodash');
+
 const Model = require('./model');
 const AbstractionPeriod = require('./abstraction-period');
-const PurposeUse = require('./purpose-use');
 const DateRange = require('./date-range');
+const PurposeUse = require('./purpose-use');
 const { CHARGE_SEASON, LOSSES } = require('./constants');
 
 const validators = require('./validators');

@@ -51,7 +51,7 @@ class Transaction extends Model {
     transaction.pickFrom(this, [
       'value', 'authorisedDays', 'billableDays', 'agreements', 'chargePeriod',
       'isCompensationCharge', 'description', 'chargeElement', 'volume',
-      'isTwoPartTariffSupplementary', 'isMinimumCharge'
+      'isTwoPartTariffSupplementary', 'isDeMinimis', 'isMinimumCharge'
     ]);
     transaction.fromHash({
       isCredit: true,
@@ -310,6 +310,20 @@ class Transaction extends Model {
 
     this.description = titleCase(description);
     return this.description;
+  }
+
+  /**
+   * Whether de-minimis rules is applied
+   * This occurs when invoice/credit note value < £5
+   * @param {Boolean}
+   */
+  set isDeMinimis (isDeMinimis) {
+    validators.assertIsBoolean(isDeMinimis);
+    this._isDeMinimis = isDeMinimis;
+  }
+
+  get isDeMinimis () {
+    return this._isDeMinimis;
   }
 }
 

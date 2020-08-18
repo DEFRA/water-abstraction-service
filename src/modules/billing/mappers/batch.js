@@ -7,6 +7,7 @@ const FinancialYear = require('../../../lib/models/financial-year');
 const regionMapper = require('../../../lib/mappers/region');
 const transactionMapper = require('./transaction');
 const totalsMapper = require('./totals');
+const invoiceMapper = require('./invoice');
 
 /**
  * @param {Object} row - DB row, camel cased
@@ -27,6 +28,9 @@ const dbToModel = row => {
       billRunNumber: row.billRunNumber
     }, identity)
   });
+  if (row.billingInvoices) {
+    batch.invoices = row.billingInvoices.map(invoiceMapper.dbToModel);
+  }
   return batch;
 };
 

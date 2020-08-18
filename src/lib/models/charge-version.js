@@ -170,9 +170,51 @@ class ChargeVersion extends Model {
   get changeReason () {
     return this._changeReason;
   }
+
+  /*
+   * Set the apportionment
+   * @param {Boolean} apportionment
+   */
+  set apportionment (apportionment) {
+    validators.assertIsNullableBoolean(apportionment);
+    this._apportionment = apportionment;
+  }
+
+  get apportionment () { return this._apportionment; }
+
+  /**
+   * Set the error flag
+   * @param {Boolean} error
+   */
+  set error (error) {
+    validators.assertIsNullableBoolean(error);
+    this._error = error;
+  }
+
+  get error () { return this._error; }
+
+  /**
+   * Set the billed up to date
+   * @param {String} billedUpToDate
+   */
+  set billedUpToDate (billedUpToDate) {
+    this._billedUpToDate = this.getDateTimeFromValue(billedUpToDate);
+  }
+
+  get billedUpToDate () { return this._billedUpToDate; }
+
+  get dateCreated () { return this._dateCreated; }
+  set dateCreated (value) {
+    this._dateCreated = this.getDateTimeFromValue(value);
+  }
+
+  get dateUpdated () { return this._dateUpdated; }
+  set dateUpdated (value) {
+    this._dateUpdated = this.getDateTimeFromValue(value);
+  }
 }
 
 module.exports = ChargeVersion;
 module.exports.SCHEME = SCHEME;
-module.exports.STATUS = STATUS;
 module.exports.SOURCE = SOURCE;
+module.exports.STATUS = STATUS;

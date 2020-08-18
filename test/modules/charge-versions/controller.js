@@ -5,111 +5,55 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
-const repository = require('../../../src/lib/connectors/repository');
 const controller = require('../../../src/modules/charge-versions/controller');
 const documentConnector = require('../../../src/lib/connectors/crm/documents');
 const licencesService = require('../../../src/lib/services/licences');
 const chargeElementsService = require('../../../src/lib/services/charge-elements');
+const chargeVersionsService = require('../../../src/lib/services/charge-versions');
 
-const chargeVersion = {
-  charge_version_id: 'b58fd6d2-40b9-4ab8-a860-82eeb218ecdd'
-};
-
-const chargeElements = [{
-  charge_element_id: '156e4ef4-c975-4ccb-8286-3c2f82a6c9dc'
-}, {
-  charge_element_id: 'c24a65cc-1a66-45bd-b55e-a2d7d0473988'
-}];
-
-const chargeAgreements = [{
-  charge_agreement_id: '57e52307-e0a2-4df2-9640-aa4c73d1103a',
-  charge_element_id: 'c24a65cc-1a66-45bd-b55e-a2d7d0473988'
-}];
+const ChargeVersion = require('../../../src/lib/models/charge-version');
 
 experiment('modules/charge-versions/controller', () => {
+  let chargeVersions;
+
   beforeEach(async () => {
-    sandbox.stub(repository.chargeVersions, 'findByLicenceRef')
-      .resolves([chargeVersion]);
+    chargeVersions = [
+      new ChargeVersion(uuid()),
+      new ChargeVersion(uuid())
+    ];
 
-    sandbox.stub(repository.chargeVersions, 'findOneById')
-      .resolves(chargeVersion);
-
-    sandbox.stub(repository.chargeElements, 'findByChargeVersionId')
-      .resolves(chargeElements);
-
-    sandbox.stub(repository.chargeAgreements, 'findByChargeVersionId')
-      .resolves(chargeAgreements);
-
-    sandbox.stub(documentConnector, 'getDocument');
-
-    sandbox.stub(licencesService, 'getLicenceVersionById');
+    sandbox.stub(chargeVersionsService, 'getByLicenceRef').resolves(chargeVersions);
     sandbox.stub(chargeElementsService, 'getChargeElementsFromLicenceVersion');
+    sandbox.stub(chargeVersionsService, 'getByChargeVersionId').resolves(chargeVersions[0]);
+    sandbox.stub(documentConnector, 'getDocument');
+    sandbox.stub(licencesService, 'getLicenceVersionById');
   });
 
   afterEach(async () => {
     sandbox.restore();
   });
 
-  experiment('getChargeVersions', () => {
-    let request, response;
-
-    beforeEach(async () => {
-      request = {
-        query: {
-          licenceRef: '01/123'
-        }
-      };
-      response = await controller.getChargeVersions(request);
-    });
-
-    test('calls charge versions repo with licence number from query param', async () => {
-      expect(repository.chargeVersions.findByLicenceRef.calledWith(
-        request.query.licenceRef
-      )).to.be.true();
-    });
-
-    test('responds with the mapped charge version data', async () => {
-      expect(response).to.equal({
-        data: [{
-          chargeVersionId: chargeVersion.charge_version_id
-        }]
-      });
-    });
-  });
-
   experiment('getChargeVersion', () => {
-    let request, response;
+    let request;
+    let response;
 
     experiment('when the charge version is found', () => {
       beforeEach(async () => {
         request = {
           params: {
-            versionId: chargeVersion.charge_version_id
+            versionId: chargeVersions[0].id
           }
         };
         response = await controller.getChargeVersion(request);
       });
 
-      test('gets data from charge version repository', async () => {
-        expect(repository.chargeVersions.findOneById.calledWith(
-          request.params.versionId
-        )).to.be.true();
+      test('gets data from charge version service', async () => {
+        const [id] = chargeVersionsService.getByChargeVersionId.lastCall.args;
+        expect(id).to.equal(chargeVersions[0].id);
       });
 
-      test('gets data from charge elements repository', async () => {
-        expect(repository.chargeElements.findByChargeVersionId.calledWith(
-          request.params.versionId
-        )).to.be.true();
-      });
-
-      test('gets data from charge agreements repository', async () => {
-        expect(repository.chargeAgreements.findByChargeVersionId.calledWith(
-          request.params.versionId
-        )).to.be.true();
-      });
-
-      test('responds with data mapped to single object', async () => {
-        expect(response).to.be.an.object();
+      test('responds with the expected data', async () => {
+        expect(response).to.equal(chargeVersions[0]);
       });
     });
 
@@ -117,10 +61,10 @@ experiment('modules/charge-versions/controller', () => {
       beforeEach(async () => {
         request = {
           params: {
-            versionId: chargeVersion.charge_version_id
+            versionId: chargeVersions[0].id
           }
         };
-        repository.chargeVersions.findOneById.resolves();
+        chargeVersionsService.getByChargeVersionId.resolves(null);
         response = await controller.getChargeVersion(request);
       });
 
@@ -132,7 +76,8 @@ experiment('modules/charge-versions/controller', () => {
   });
 
   experiment('getChargeVersionsByDocumentId', () => {
-    let request, response;
+    let request;
+    let response;
 
     beforeEach(async () => {
       documentConnector.getDocument.resolves({
@@ -154,21 +99,17 @@ experiment('modules/charge-versions/controller', () => {
       expect(docId).to.equal(request.params.documentId);
     });
 
-    test('calls charge versions repo with licence number from the found document', async () => {
-      expect(repository.chargeVersions.findByLicenceRef.calledWith(
-        'test-licence-ref'
-      )).to.be.true();
+    test('calls charge versions service with licence number from the found document', async () => {
+      const [licenceRef] = await chargeVersionsService.getByLicenceRef.lastCall.args;
+      expect(licenceRef).to.equal('test-licence-ref');
     });
 
-    test('responds with the mapped charge version data', async () => {
+    test('responds with the charge version data', async () => {
       expect(response).to.equal({
-        data: [{
-          chargeVersionId: chargeVersion.charge_version_id
-        }]
+        data: chargeVersions
       });
     });
   });
-
   experiment('getDefaultChargesForLicenceVersion', () => {
     experiment('when the licence version is not found', () => {
       let response;

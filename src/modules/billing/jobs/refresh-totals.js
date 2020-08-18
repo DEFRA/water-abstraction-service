@@ -32,10 +32,8 @@ const handleRefreshTotals = async job => {
   const batchId = get(job, 'data.batchId');
 
   try {
-    const batch = await batchService.getBatchById(batchId);
-
     // Update batch with totals/bill run ID from charge module
-    await batchService.refreshTotals(batch);
+    await batchService.refreshTotals(batchId);
   } catch (err) {
     batchJob.logHandlingError(job, err);
     throw err;

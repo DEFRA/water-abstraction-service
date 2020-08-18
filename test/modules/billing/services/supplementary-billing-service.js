@@ -7,6 +7,7 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
+const { flatMap } = require('lodash');
 const sandbox = require('sinon').createSandbox();
 
 const { Batch } = require('../../../../src/lib/models');
@@ -29,14 +30,15 @@ const invoiceAccountId = '398b6f31-ff01-4621-b939-e720f1a77deb';
 const invoiceAccountNumber = 'A12345678A';
 const licenceNumber = '01/123/ABC';
 
-const createTransactionRow = (index, transactionKey, isCredit = false) => ({
+const createTransactionRow = (index, transactionKey, isCredit = false, isDeMinimis = false) => ({
   billingTransactionId: `00000000-0000-0000-0000-00000000000${index}`,
   isCredit,
   transactionKey,
   billingVolume: [],
   isTwoPartTariffSupplementary: false,
   isMinimumCharge: false,
-  startDate: '2019-04-01'
+  startDate: '2019-04-01',
+  isDeMinimis
 });
 
 const createFullTransaction = (...args) => ({
@@ -88,7 +90,8 @@ const data = {
     createTransactionRow(3, '0000000000000000000000000000000B'),
     createTransactionRow(4, '0000000000000000000000000000000C', true),
     createTransactionRow(5, '0000000000000000000000000000000D'),
-    createTransactionRow(6, '0000000000000000000000000000000E', true)
+    createTransactionRow(6, '0000000000000000000000000000000E', true),
+    createTransactionRow(5, '0000000000000000000000000000000F', false, true)
   ],
   creditTransactions: [
     createFullTransaction(5, '0000000000000000000000000000000D')
@@ -144,6 +147,12 @@ const createInvoiceLicence = licenceNumber => {
     licence
   });
 };
+
+const getInvoiceTransactions = invoice =>
+  flatMap(invoice.invoiceLicences.map(invoiceLicence => invoiceLicence.transactions));
+
+const getBatchTransactions = batch =>
+  flatMap(batch.invoices.map(getInvoiceTransactions));
 
 experiment('modules/billing/services/supplementary-billing-service', () => {
   let batch;
@@ -247,6 +256,13 @@ experiment('modules/billing/services/supplementary-billing-service', () => {
             expect(transaction.status).to.equal('candidate');
             expect(transaction.description).to.equal(data.creditTransactions[0].description);
             expect(transaction.chargeElement.id).to.equal(data.creditTransactions[0].chargeElement.chargeElementId);
+          });
+
+          test('credits of de-minimis charges are never credited', async () => {
+            const creditTransactions = getBatchTransactions(batch)
+              .filter(transaction => transaction.isCredit);
+            const isDeMinimis = creditTransactions.map(transaction => transaction.isDeMinimis);
+            expect(isDeMinimis).to.only.include(false);
           });
         });
       });

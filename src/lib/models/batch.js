@@ -304,6 +304,14 @@ class Batch extends Model {
   }
 
   /**
+   * Does this batch have a status that means it can have a
+   * two-part tariff approval?
+   */
+  canApproveReview () {
+    return this.statusIsOneOf(BATCH_STATUS.review);
+  }
+
+  /**
    * The bill run number is an integer ID for the bill run sent to SSCL
    * Only unique within a region
    * @param {Number} integer
