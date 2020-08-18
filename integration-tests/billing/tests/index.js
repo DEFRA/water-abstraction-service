@@ -85,7 +85,9 @@ experiment('basic example scenario', () => {
           addressLine1: 'Big Farm',
           addressLine2: 'Windy road',
           addressLine3: 'Buttercup meadow',
-          addressLine4: null
+          addressLine4: null,
+          source: 'nald',
+          uprn: null
         });
       });
 
@@ -101,7 +103,6 @@ experiment('basic example scenario', () => {
         });
 
         test('has the correct licence name', async () => {
-          expect(licence.licenceHolderName.fullName).to.equal('Mr John Testerson');
           expect(licence.licenceHolderName.lastName).to.equal('Testerson');
           expect(licence.licenceHolderName.firstName).to.equal('John');
           expect(licence.licenceHolderName.salutation).to.equal('Mr');
@@ -116,7 +117,9 @@ experiment('basic example scenario', () => {
             addressLine1: 'Big Farm',
             addressLine2: 'Windy road',
             addressLine3: 'Buttercup meadow',
-            addressLine4: null
+            addressLine4: null,
+            source: 'nald',
+            uprn: null
           });
         });
 

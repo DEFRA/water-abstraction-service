@@ -38,13 +38,12 @@ const createCompany = async scenarioKey => {
     for (const companyAddress of addresses) {
       const address = await createAddress(companyAddress.address);
 
-      const roleId = await getRoleIdFromName(companyAddress.role);
       await crmConnector.createCompanyAddress(
         company.companyId,
         address.addressId,
         companyAddress.startDate,
         companyAddress.endDate,
-        roleId
+        companyAddress.roleName
       );
     }
   }
