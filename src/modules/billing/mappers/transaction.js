@@ -9,7 +9,7 @@ const DateRange = require('../../../lib/models/date-range');
 const Transaction = require('../../../lib/models/transaction');
 const Agreement = require('../../../lib/models/agreement');
 
-const chargeElementMapper = require('./charge-element');
+const chargeElementMapper = require('../../../lib/mappers/charge-element');
 const billingVolumeMapper = require('./billing-volume');
 
 /**

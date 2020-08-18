@@ -4,7 +4,7 @@ const { pick } = require('lodash');
 const BillingVolume = require('../../../lib/models/billing-volume');
 const FinancialYear = require('../../../lib/models/financial-year');
 const userMapper = require('./user');
-const chargeElementMapper = require('./charge-element');
+const chargeElementMapper = require('../../../lib/mappers/charge-element');
 
 const dbToModel = row => {
   const billingVolume = new BillingVolume();

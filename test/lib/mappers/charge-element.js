@@ -9,12 +9,12 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const ChargeElement = require('../../../../src/lib/models/charge-element');
-const DateRange = require('../../../../src/lib/models/date-range');
-const PurposeUse = require('../../../../src/lib/models/purpose-use');
-const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
+const ChargeElement = require('../../../src/lib/models/charge-element');
+const DateRange = require('../../../src/lib/models/date-range');
+const PurposeUse = require('../../../src/lib/models/purpose-use');
+const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
-const chargeElementsMapper = require('../../../../src/modules/billing/mappers/charge-element');
+const chargeElementsMapper = require('../../../src/lib/mappers/charge-element');
 
 const data = {
   chargeElement: {
@@ -47,12 +47,14 @@ const data = {
       purpose_use_id: uuid(),
       description: 'Trickling parsnips',
       lossFactor: 'high',
-      isTwoPartTariff: false
+      isTwoPartTariff: false,
+      dateCreated: '2000-01-01',
+      dateUpdated: '2000-01-01'
     }
   }
 };
 
-experiment('modules/billing/mappers/charge-element', () => {
+experiment('lib/mappers/charge-element', () => {
   let result;
 
   experiment('.dbToModel', () => {

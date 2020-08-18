@@ -2,6 +2,7 @@
 
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
+const moment = require('moment');
 
 const ChargeVersion = require('../../../src/lib/models/charge-version');
 const ChargeElement = require('../../../src/lib/models/charge-element');
@@ -192,6 +193,87 @@ experiment('lib/models/charge-version', () => {
         chargeVersion.invoiceAccount = new TestModel();
       };
       expect(func).to.throw();
+    });
+  });
+
+  experiment('.apportionment', () => {
+    test('can be set to true', async () => {
+      chargeVersion.apportionment = true;
+      expect(chargeVersion.apportionment).to.equal(true);
+    });
+
+    test('can be set to false', async () => {
+      chargeVersion.apportionment = false;
+      expect(chargeVersion.apportionment).to.equal(false);
+    });
+
+    test('cannot be set to an invalid value', async () => {
+      const func = () => {
+        chargeVersion.apportionment = 123;
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.error', () => {
+    test('can be set to true', async () => {
+      chargeVersion.error = true;
+      expect(chargeVersion.error).to.equal(true);
+    });
+
+    test('can be set to false', async () => {
+      chargeVersion.error = false;
+      expect(chargeVersion.error).to.equal(false);
+    });
+
+    test('cannot be set to an invalid value', async () => {
+      const func = () => {
+        chargeVersion.error = 123;
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.billedUpToDate', () => {
+    test('converts an ISO date string to a moment internally', async () => {
+      const dateString = (new Date()).toISOString();
+      chargeVersion.billedUpToDate = dateString;
+
+      expect(chargeVersion.billedUpToDate).to.equal(moment(dateString));
+    });
+
+    test('converts a JS Date to a moment internally', async () => {
+      const date = new Date();
+      chargeVersion.billedUpToDate = date;
+
+      expect(chargeVersion.billedUpToDate).to.equal(moment(date));
+    });
+
+    test('can be set using a moment', async () => {
+      const now = moment();
+
+      chargeVersion.billedUpToDate = now;
+
+      expect(chargeVersion.billedUpToDate).to.equal(now);
+    });
+
+    test('throws for an invalid string', async () => {
+      const dateString = 'not a date';
+
+      expect(() => {
+        chargeVersion.billedUpToDate = dateString;
+      }).to.throw();
+    });
+
+    test('throws for a boolean value', async () => {
+      expect(() => {
+        chargeVersion.billedUpToDate = true;
+      }).to.throw();
+    });
+
+    test('allows null', async () => {
+      chargeVersion.billedUpToDate = null;
+      expect(chargeVersion.billedUpToDate).to.be.null();
     });
   });
 
