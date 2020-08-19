@@ -75,6 +75,13 @@ const getTwoPartTariffForBatch = batchId => {
   return repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(batchId);
 };
 
+/**
+ * Creates a new row in water.billing_batch_charge_version_years
+ * @param {Batch} batch
+ * @param {String} chargeVersionId
+ * @param {FinancialYear} financialYear
+ * @return {Promise}
+ */
 const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear) => {
   validators.assertIsInstanceOf(batch, Batch);
   validators.assertId(chargeVersionId);
