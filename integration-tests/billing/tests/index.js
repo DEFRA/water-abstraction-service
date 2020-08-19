@@ -77,7 +77,7 @@ experiment('basic example scenario', () => {
       });
 
       test('has the correct invoice address', async () => {
-        expect(invoice.address).to.equal({
+        expect(omit(invoice.address, 'uprn')).to.equal({
           town: 'Testington',
           county: 'Testingshire',
           country: 'UK',
@@ -86,8 +86,7 @@ experiment('basic example scenario', () => {
           addressLine2: 'Windy road',
           addressLine3: 'Buttercup meadow',
           addressLine4: null,
-          source: 'nald',
-          uprn: null
+          source: 'nald'
         });
       });
 
@@ -105,7 +104,7 @@ experiment('basic example scenario', () => {
         test('has the correct licence name', async () => {
           expect(licence.licenceHolderName.lastName).to.equal('Testerson');
           expect(licence.licenceHolderName.firstName).to.equal('John');
-          expect(licence.licenceHolderName.salutation).to.equal('Mr');
+          expect(licence.licenceHolderName.title).to.equal('Mr');
         });
 
         test('has the correct licence holder address', async () => {
@@ -117,9 +116,7 @@ experiment('basic example scenario', () => {
             addressLine1: 'Big Farm',
             addressLine2: 'Windy road',
             addressLine3: 'Buttercup meadow',
-            addressLine4: null,
-            source: 'nald',
-            uprn: null
+            addressLine4: null
           });
         });
 

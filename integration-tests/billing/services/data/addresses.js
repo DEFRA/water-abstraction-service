@@ -6,6 +6,5 @@ exports.ad1 = {
   county : 'Testingshire',
   postcode : 'TT1 1TT',
   country : 'UK',
-  dataSource: 'nald',
-  uprn: null
+  dataSource: 'nald'
 }
