@@ -4,21 +4,40 @@ const { ChargeVersion } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/charge-versions');
 
-const findOne = async (id) => {
+const sharedRelations = [
+  'chargeElements',
+  'chargeElements.purposePrimary',
+  'chargeElements.purposeSecondary',
+  'chargeElements.purposeUse',
+  'licence',
+  'licence.region',
+  'licence.licenceAgreements'
+];
+
+const findOne = async chargeVersionId => {
   const model = await ChargeVersion
-    .forge({ chargeVersionId: id })
+    .forge({ chargeVersionId })
     .fetch({
-      withRelated: [
-        'chargeElements',
-        'chargeElements.purposePrimary',
-        'chargeElements.purposeSecondary',
-        'chargeElements.purposeUse',
-        'licence',
-        'licence.region',
-        'licence.licenceAgreements'
-      ]
+      withRelated: sharedRelations
     });
 
+  return model.toJSON();
+};
+
+const findByLicenceRef = async licenceRef => {
+  const models = await ChargeVersion
+    .forge()
+    .where('licence_ref', licenceRef)
+    .orderBy('start_date')
+    .fetchAll({
+      withRelated: sharedRelations
+    });
+
+  return models.toJSON();
+};
+
+const create = async data => {
+  const model = await ChargeVersion.forge(data).save();
   return model.toJSON();
 };
 
@@ -38,5 +57,7 @@ const findValidInRegionAndFinancialYear = (regionId, financialYearEnding) => {
   return raw.multiRow(queries.findValidInRegionAndFinancialYear, params);
 };
 
+exports.create = create;
 exports.findOne = findOne;
+exports.findByLicenceRef = findByLicenceRef;
 exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear;

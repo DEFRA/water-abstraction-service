@@ -8,7 +8,7 @@ const sandbox = require('sinon').createSandbox();
 // Services
 const dataService = require('../../../../../src/modules/billing/services/volume-matching-service/data-service');
 const returnGroupService = require('../../../../../src/modules/billing/services/volume-matching-service/return-group-service');
-const chargeVersionService = require('../../../../../src/modules/billing/services/charge-version-service');
+const chargeVersionService = require('../../../../../src/lib/services/charge-versions');
 
 // Models
 const ChargeElementGroup = require('../../../../../src/modules/billing/services/volume-matching-service/models/charge-element-group');

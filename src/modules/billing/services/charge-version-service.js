@@ -5,7 +5,6 @@ const bluebird = require('bluebird');
 
 const repos = require('../../../lib/connectors/repos');
 const returnRequirementVersionService = require('../../../lib/services/return-requirement-versions');
-const mappers = require('../mappers');
 const { RETURN_SEASONS } = require('../../../lib/models/constants');
 const { BATCH_TYPE } = require('../../../lib/models/batch');
 const DateRange = require('../../../lib/models/date-range');
@@ -174,16 +173,4 @@ const createForBatch = batch => {
   return actions[batch.type](batch);
 };
 
-/**
- * Gets charge version by ID
- * @param {String} chargeVersionId
- * @return {Promise<ChargeVersion>}
- */
-const getByChargeVersionId = async chargeVersionId => {
-  // Fetch DB data
-  const data = await repos.chargeVersions.findOne(chargeVersionId);
-  return mappers.chargeVersion.dbToModel(data);
-};
-
 exports.createForBatch = createForBatch;
-exports.getByChargeVersionId = getByChargeVersionId;

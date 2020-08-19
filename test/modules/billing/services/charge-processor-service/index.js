@@ -11,7 +11,7 @@ const Transaction = require('../../../../../src/lib/models/transaction');
 
 const crmV2 = require('../../../../../src/lib/connectors/crm-v2');
 const chargeProcessorService = require('../../../../../src/modules/billing/services/charge-processor-service');
-const chargeVersionService = require('../../../../../src/modules/billing/services/charge-version-service');
+const chargeVersionService = require('../../../../../src/lib/services/charge-versions');
 const batchService = require('../../../../../src/modules/billing/services/batch-service');
 const billingVolumeService = require('../../../../../src/modules/billing/services/billing-volumes-service');
 
