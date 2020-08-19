@@ -42,7 +42,7 @@ const isTwoPartTariffBillingNeeded = async (row, financialYear) => {
   const returnVersions = await returnRequirementVersionService.getByLicenceId(row.licenceId);
 
   // Filter only return versions that overlap this charge period
-  const chargePeriod = new DateRange(row.startDate, row.endDate || financialYear.end.format('YYYY-MM-DD'));
+  const chargePeriod = new DateRange(row.startDate, row.endDate);
   const returnVersionsInChargePeriod = returnVersions.filter(
     returnVersion => returnVersion.dateRange.overlaps(chargePeriod) && returnVersion.isNotDraft
   );

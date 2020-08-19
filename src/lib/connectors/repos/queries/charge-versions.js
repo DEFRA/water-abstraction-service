@@ -10,8 +10,8 @@ select distinct cv.*,
   la.financial_agreement_type_id is not null as is_two_part_tariff
 from (
   select cv.charge_version_id,
-  greatest(l.start_date, cv.start_date) as start_date,
-  least(l.expired_date, l.lapsed_date, l.revoked_date, cv.end_date) as end_date,
+  greatest(:startDate, l.start_date, cv.start_date) as start_date,
+  least(:endDate, l.expired_date, l.lapsed_date, l.revoked_date, cv.end_date) as end_date,
   l.licence_ref, 
   l.licence_id,
   l.include_in_supplementary_billing='yes' as include_in_supplementary_billing
