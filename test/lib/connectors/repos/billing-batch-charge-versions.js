@@ -23,10 +23,12 @@ const response = [{
 }];
 
 experiment('lib/connectors/repos/billing-batch-charge-versions', () => {
-  let stub;
+  let stub, result;
 
   beforeEach(async () => {
     sandbox.stub(raw, 'multiRow').resolves(response);
+    sandbox.stub(raw, 'singleRow').resolves(response[0]);
+
     stub = {
       destroy: sandbox.stub().resolves(),
       where: sandbox.stub().returnsThis()
@@ -79,6 +81,28 @@ experiment('lib/connectors/repos/billing-batch-charge-versions', () => {
       expect(bookshelf.knex.raw.calledWith(
         queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId }
       )).to.be.true();
+    });
+  });
+
+  experiment('.create', () => {
+    const billingBatchId = 'test-batch-id';
+    const chargeVersionId = 'test-charge-version-id';
+
+    beforeEach(async () => {
+      result = await billingBatchChargeVersions.create(billingBatchId, chargeVersionId);
+    });
+
+    test('calls raw.singleRow with correct query and params', async () => {
+      const [query, params] = raw.singleRow.lastCall.args;
+      expect(query).to.equal(queries.create);
+      expect(params).to.equal({
+        billingBatchId,
+        chargeVersionId
+      });
+    });
+
+    test('resolves with the saved row', async () => {
+      expect(result).to.equal(response[0]);
     });
   });
 });

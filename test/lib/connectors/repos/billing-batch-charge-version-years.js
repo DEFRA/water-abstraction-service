@@ -163,4 +163,39 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
       )).to.be.true();
     });
   });
+
+  experiment('.create', () => {
+    const billingBatchId = 'test-batch-id';
+    const chargeVersionId = 'test-charge-version-id';
+    const financialYearEnding = 2020;
+    const status = 'processing';
+
+    beforeEach(async () => {
+      await repos.billingBatchChargeVersionYears.create(
+        billingBatchId, chargeVersionId, financialYearEnding, status
+      );
+    });
+
+    test('calls model.forge with correct params', async () => {
+      expect(BillingBatchChargeVersionYear.forge.calledWith({
+        billingBatchId, chargeVersionId, financialYearEnding, status
+      })).to.be.true();
+    });
+
+    test('calls .save on the model', async () => {
+      expect(stub.save.called).to.be.true();
+    });
+
+    test('calls .toJSON on the model', async () => {
+      expect(model.toJSON.called).to.be.true();
+    });
+
+    test('calls the methods in the correct order', async () => {
+      sinon.assert.callOrder(
+        BillingBatchChargeVersionYear.forge,
+        stub.save,
+        model.toJSON
+      );
+    });
+  });
 });
