@@ -71,8 +71,8 @@ const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
  * @param {Number} financialYearEnding
  * @param {String} status
  */
-const create = (billingBatchId, chargeVersionId, financialYearEnding, status) => {
-  const model = BillingBatchChargeVersionYear
+const create = async (billingBatchId, chargeVersionId, financialYearEnding, status) => {
+  const model = await BillingBatchChargeVersionYear
     .forge({
       billingBatchId,
       chargeVersionId,
