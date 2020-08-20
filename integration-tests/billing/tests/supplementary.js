@@ -122,7 +122,7 @@ experiment('basic supplementary scenario', () => {
           licence = invoice.billingInvoiceLicences[0];
         });
 
-        test('has the correct licence name', async () => {;
+        test('has the correct licence name', async () => {
           expect(licence.licenceHolderName.lastName).to.equal('Testerson');
           expect(licence.licenceHolderName.firstName).to.equal('John');
           expect(licence.licenceHolderName.title).to.equal('Mr');

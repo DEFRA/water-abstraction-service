@@ -16,13 +16,6 @@ const entityCache = {
   roles: {}
 };
 
-const getRoleIdFromName = async name => {
-  if (!entityCache.roles[name]) {
-    entityCache.roles[name] = await crmConnector.getRole(name);
-  }
-  return entityCache.roles[name].roleId;
-};
-
 /**
  * Gets a company in the CRM or retrieves from entity cache
  * @param {String} scenarioKey
