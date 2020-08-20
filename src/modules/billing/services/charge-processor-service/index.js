@@ -15,7 +15,7 @@ const mappers = require('../../mappers');
 const contactMapper = require('../../../../lib/mappers/contact');
 
 // Services
-const chargeVersionService = require('../../services/charge-version-service');
+const chargeVersionService = require('../../../../lib/services/charge-versions');
 const billingVolumesService = require('../../services/billing-volumes-service');
 
 /**

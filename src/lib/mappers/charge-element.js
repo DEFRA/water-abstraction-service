@@ -1,12 +1,11 @@
 'use strict';
 
-const ChargeElement = require('../../../lib/models/charge-element');
-const DateRange = require('../../../lib/models/date-range');
-const camelCaseKeys = require('../../../lib/camel-case-keys');
+const ChargeElement = require('../models/charge-element');
+const DateRange = require('../models/date-range');
+const camelCaseKeys = require('../camel-case-keys');
 
-const purpose = require('./purpose-use');
-
-const abstractionPeriodMapper = require('../../../lib/mappers/abstraction-period');
+const purposeUseMapper = require('./purpose-use');
+const abstractionPeriodMapper = require('./abstraction-period');
 
 /**
  * Creates a ChargeElement instance given a row of charge element data
@@ -31,13 +30,14 @@ const dbToModel = row => {
   }
 
   if (chargeElementRow.purposeUse) {
-    element.purposeUse = purpose.dbToModel(chargeElementRow.purposeUse);
+    element.purposeUse = purposeUseMapper.dbToModel(chargeElementRow.purposeUse);
   }
 
   if (chargeElementRow.timeLimitedStartDate && chargeElementRow.timeLimitedEndDate) {
     element.timeLimitedPeriod = new DateRange(
       chargeElementRow.timeLimitedStartDate, chargeElementRow.timeLimitedEndDate);
   }
+
   return element;
 };
 
