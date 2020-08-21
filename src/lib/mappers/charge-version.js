@@ -53,5 +53,23 @@ const modelToDb = model => {
   };
 };
 
+/**
+ * Converts a plain object representation of a ChargeVersion to a ChargeVersion model
+ * @param {Object} pojo
+ * @return ChargeVersion
+ */
+const pojoToModel = pojo => {
+  const { chargeElements, ...rest } = pojo;
+  const model = new ChargeVersion();
+  model.fromHash(rest);
+
+  if (chargeElements) {
+    model.chargeElements = chargeElements.map(chargeElementMapper.pojoToModel);
+  }
+
+  return model;
+};
+
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
+exports.pojoToModel = pojoToModel;

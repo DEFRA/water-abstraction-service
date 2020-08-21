@@ -10,6 +10,7 @@ exports.BillingVolume = require('./BillingVolume');
 exports.ChargeElement = require('./ChargeElement');
 exports.ChangeReason = require('./ChangeReason');
 exports.ChargeVersion = require('./ChargeVersion');
+exports.ChargeVersionWorkflow = require('./ChargeVersionWorkflow');
 exports.Event = require('./Event');
 exports.Licence = require('./Licence');
 exports.LicenceAgreement = require('./LicenceAgreement');
