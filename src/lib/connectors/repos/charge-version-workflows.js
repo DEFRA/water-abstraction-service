@@ -1,7 +1,7 @@
 'use strict';
 
 const { ChargeVersionWorkflow } = require('../bookshelf');
-const helpers = require('./helpers');
+const helpers = require('./lib/helpers');
 
 const relatedModels = [
   'licence'

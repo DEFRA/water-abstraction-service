@@ -9,7 +9,7 @@ const service = require('../../../lib/services/service');
 const documentsService = require('../../../lib/services/documents-service');
 
 // Repos
-const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-information-workflows');
+const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-version-workflows');
 
 // Mappers
 const chargeVersionWorkflowMapper = require('../../../lib/mappers/charge-version-workflow');
