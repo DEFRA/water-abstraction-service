@@ -4,6 +4,7 @@
  * @module services for interacting with CRM v2 documents
  */
 const documentConnector = require('../connectors/crm-v2/documents');
+const Document = require('../../lib/models/document');
 const errors = require('../errors');
 const documentMapper = require('../mappers/document');
 
@@ -30,6 +31,8 @@ const getDocument = async documentId => {
   return documentMapper.crmToModel(data);
 };
 
+const isNotDraft = doc => doc.status !== Document.DOCUMENT_STATUS.draft;
+
 /**
  * Gets a current or superseded document for the given licence
  * and date
@@ -38,7 +41,7 @@ const getDocument = async documentId => {
  */
 const getValidDocumentOnDate = async (licenceNumber, date) => {
   const docs = await getDocuments(licenceNumber);
-  const [doc] = docs.filter(doc => doc.dateRange.includes(date) && doc.isNotDraft);
+  const [doc] = docs.filter(doc => doc.dateRange.includes(date) && isNotDraft(doc));
   if (!doc) {
     throw new errors.NotFoundError(`Current or superseded document not found for ${licenceNumber} on ${date}`);
   }

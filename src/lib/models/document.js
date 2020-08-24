@@ -47,14 +47,6 @@ class Document extends Model {
   }
 
   /**
-   * Whether this is not a draft document
-   * @return {Boolean}
-   */
-  get isNotDraft () {
-    return this.status !== DOCUMENT_STATUS.draft;
-  }
-
-  /**
    * Version number
    * @param {Number}
    */
@@ -96,3 +88,4 @@ class Document extends Model {
 }
 
 module.exports = Document;
+module.exports.DOCUMENT_STATUS = DOCUMENT_STATUS;
