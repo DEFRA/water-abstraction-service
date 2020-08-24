@@ -9,12 +9,12 @@ const {
 const uuid = require('uuid/v4');
 const { expect } = require('@hapi/code');
 
-const routes = require('../../../src/modules/charge-versions/routes');
-const testHelpers = require('../../test-helpers');
+const routes = require('../../../../src/modules/charge-versions/routes/charge-versions');
+const testHelpers = require('../../../test-helpers');
 
 const makeGet = url => ({ method: 'GET', url });
 
-experiment('modules/charge-versions/routes', () => {
+experiment('modules/charge-versions/routes/charge-versions', () => {
   let server;
   let id;
 
