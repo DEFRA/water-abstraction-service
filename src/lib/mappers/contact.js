@@ -2,21 +2,25 @@
 
 const { isEmpty, omit } = require('lodash');
 const Contact = require('../models/contact-v2');
+const { has } = require('lodash');
 
 /**
  * Maps a row of CRM v2 contact data to a Contact instance
  * @param {Object} contactData
  * @return {Contact}
  */
-const crmToModel = contact => {
-  if (isEmpty(contact)) {
+const crmToModel = contactData => {
+  if (isEmpty(contactData)) {
     return null;
   }
-  const contactModel = new Contact(contact.contactId);
-  contactModel.pickFrom(contact,
-    ['firstName', 'initials', 'middleInitials', 'lastName', 'suffix', 'department', 'type', 'dataSource']);
-  contactModel.title = contact.salutation || null;
-  return contactModel;
+
+  if (has(contactData, 'contactId')) {
+    const contactModel = new Contact(contactData.contactId);
+    contactModel.pickFrom(contactData,
+      ['firstName', 'initials', 'middleInitials', 'lastName', 'suffix', 'department', 'type', 'dataSource']);
+    contactModel.title = contactData.salutation || null;
+    return contactModel;
+  } else { return new Contact(); }
 };
 
 /**
