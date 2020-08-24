@@ -1,6 +1,7 @@
 exports.abstractionPeriod = require('./abstraction-period');
 exports.address = require('./address');
 exports.changeReason = require('./change-reason');
+exports.chargeElement = require('./charge-element');
 exports.company = require('./company');
 exports.companyAddress = require('./company-address');
 exports.companyContact = require('./company-contact');

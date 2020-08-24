@@ -62,12 +62,16 @@ const createChargeModuleData = () => ({
             deminimis: false,
             transactions: [{
               id: IDS.transactions[0],
+              licenceNumber: '01/123/ABC',
               chargeValue: 2345,
-              deminimis: false
+              deminimis: false,
+              minimumChargeAdjustment: false
             }, {
               id: IDS.transactions[1],
+              licenceNumber: '01/123/ABC',
               chargeValue: 10000,
-              deminimis: false
+              deminimis: false,
+              minimumChargeAdjustment: false
             }]
           },
           // Year ending 2020
@@ -81,12 +85,16 @@ const createChargeModuleData = () => ({
             deminimis: false,
             transactions: [{
               id: IDS.transactions[4],
+              licenceNumber: '01/123/ABC',
               chargeValue: 100,
-              deminimis: false
+              deminimis: false,
+              minimumChargeAdjustment: false
             }, {
               id: IDS.transactions[5],
+              licenceNumber: '01/123/ABC',
               chargeValue: -200,
-              deminimis: false
+              deminimis: false,
+              minimumChargeAdjustment: false
             }]
           }
         ]
@@ -105,12 +113,16 @@ const createChargeModuleData = () => ({
             deminimis: false,
             transactions: [{
               id: IDS.transactions[2],
+              licenceNumber: '01/123/ABC',
               chargeValue: 400,
-              deminimis: false
+              deminimis: false,
+              minimumChargeAdjustment: false
             }, {
               id: IDS.transactions[3],
+              licenceNumber: '01/123/ABC',
               chargeValue: 123,
-              deminimis: false
+              deminimis: false,
+              minimumChargeAdjustment: false
             }]
           }
         ]

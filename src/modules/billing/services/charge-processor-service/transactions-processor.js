@@ -1,6 +1,6 @@
 'use strict';
 
-const { flatMap, isNull } = require('lodash');
+const { flatMap, get } = require('lodash');
 
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(require('moment'));
@@ -110,9 +110,8 @@ const isCompensationChargesNeeded = (batch, chargeVersion) => {
 const doesMinimumChargeApply = (chargePeriod, chargeVersion) => {
   const { dateRange, changeReason } = chargeVersion;
   const chargeVersionStartDate = moment(dateRange.startDate);
-  const isSharedStartDate = moment(chargePeriod.startDate).isSame(chargeVersionStartDate);
-  if (isNull(changeReason)) return false;
-  return isSharedStartDate && changeReason.triggersMinimumCharge;
+  const isSharedStartDate = moment(chargePeriod.startDate).isSame(chargeVersionStartDate, 'day');
+  return isSharedStartDate && get(changeReason, 'triggersMinimumCharge', false);
 };
 
 /**

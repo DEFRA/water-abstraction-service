@@ -51,7 +51,7 @@ class Transaction extends Model {
     transaction.pickFrom(this, [
       'value', 'authorisedDays', 'billableDays', 'agreements', 'chargePeriod',
       'isCompensationCharge', 'description', 'chargeElement', 'volume',
-      'isTwoPartTariffSupplementary', 'isDeMinimis', 'isMinimumCharge'
+      'isTwoPartTariffSupplementary', 'isDeMinimis', 'isNewLicence'
     ]);
     transaction.fromHash({
       isCredit: true,
@@ -219,7 +219,23 @@ class Transaction extends Model {
   }
 
   /**
-  * Whether a minimum charge should apply to this transaction
+ * Whether it is part of the first set of transactions
+ * on a new licence, determined from change reason
+ * @return {Boolean}
+ */
+  get isNewLicence () {
+    return this._isNewLicence;
+  }
+
+  set isNewLicence (isNewLicence) {
+    validators.assertIsBoolean(isNewLicence);
+    this._isNewLicence = isNewLicence;
+  }
+
+  /**
+  * Whether this is a minimum charge transaction
+  * i.e. the amount to bring the total to the minimum charge
+  * Received from Charging Module
   * @return {Boolean}
   */
   get isMinimumCharge () {
@@ -244,7 +260,7 @@ class Transaction extends Model {
       periodStart: this.chargePeriod.startDate,
       periodEnd: this.chargePeriod.endDate,
       ...this.pick('billableDays', 'authorisedDays', 'volume', 'description',
-        'isCompensationCharge', 'isMinimumCharge'),
+        'isCompensationCharge', 'isNewLicence'),
       agreements: this.agreements.map(ag => ag.code).sort().join('-'),
       accountNumber: invoiceAccount.accountNumber,
       ...this.chargeElement.pick('source', 'season', 'loss'),

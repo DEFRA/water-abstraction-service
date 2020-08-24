@@ -12,4 +12,4 @@ where description in (
 );
 
 alter table water.billing_transactions
-  add column is_minimum_charge boolean not null default false;
+  add column is_new_licence boolean not null default false;

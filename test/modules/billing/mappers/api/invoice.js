@@ -16,6 +16,7 @@ const Licence = require('../../../../../src/lib/models/licence');
 const Totals = require('../../../../../src/lib/models/totals');
 
 const apiInvoiceMapper = require('../../../../../src/modules/billing/mappers/api/invoice');
+const Transaction = require('../../../../../src/lib/models/transaction');
 
 const INVOICE_ID = uuid();
 
@@ -57,7 +58,7 @@ experiment('modules/billing/mappers/api/invoice', () => {
         netTotal: 3634654,
         licenceNumbers: ['01/123/ABC'],
         isWaterUndertaker: false,
-        minimumChargeApplies: false
+        isMinimumChargeApplied: false
       });
     });
   });
@@ -70,6 +71,23 @@ experiment('modules/billing/mappers/api/invoice', () => {
 
     test('the isWaterUndertaker flag is true', async () => {
       expect(result.isWaterUndertaker).to.be.true();
+    });
+  });
+
+  experiment('when minimum charge is applied', () => {
+    beforeEach(async () => {
+      invoice = createInvoice();
+      const transaction = new Transaction(uuid());
+      invoice.invoiceLicences[0].transactions.push(
+        transaction.fromHash({
+          isMinimumCharge: true
+        })
+      );
+      result = apiInvoiceMapper.modelToBatchInvoices(invoice);
+    });
+
+    test('the isMinimumChargeApplied flag is true', () => {
+      expect(result.isMinimumChargeApplied).to.be.true();
     });
   });
 });

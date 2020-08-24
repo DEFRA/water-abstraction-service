@@ -15,6 +15,7 @@ const DateRange = require('../../../src/lib/models/date-range');
 const Region = require('../../../src/lib/models/region');
 const Company = require('../../../src/lib/models/company');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
+const ChangeReason = require('../../../src/lib/models/change-reason');
 const mapper = require('../../../src/lib/mappers/charge-version');
 
 experiment('lib/mappers/charge-version', () => {
@@ -42,6 +43,7 @@ experiment('lib/mappers/charge-version', () => {
       model.company = new Company(uuid());
       model.invoiceAccount = new InvoiceAccount(uuid());
       model.scheme = 'alcs';
+      model.changeReason = new ChangeReason(uuid());
 
       db = mapper.modelToDb(model);
     });

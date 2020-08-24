@@ -36,7 +36,7 @@ const createTransactionRow = (index, transactionKey, isCredit = false, isDeMinim
   transactionKey,
   billingVolume: [],
   isTwoPartTariffSupplementary: false,
-  isMinimumCharge: false,
+  isNewLicence: false,
   startDate: '2019-04-01',
   isDeMinimis
 });

@@ -4,6 +4,7 @@ const DateRange = require('../models/date-range');
 const InvoiceAccount = require('../models/invoice-account');
 const Region = require('../models/region');
 
+const changeReasonMapper = require('./change-reason');
 const chargeElementMapper = require('./charge-element');
 const licenceMapper = require('./licence');
 
@@ -28,7 +29,8 @@ const dbToModel = row => {
     source: row.source,
     company: new Company(row.companyId),
     invoiceAccount: new InvoiceAccount(row.invoiceAccountId),
-    chargeElements: row.chargeElements.map(chargeElementMapper.dbToModel)
+    chargeElements: row.chargeElements.map(chargeElementMapper.dbToModel),
+    changeReason: row.changeReason(changeReasonMapper.dbToModel)
   });
 };
 
@@ -49,7 +51,8 @@ const modelToDb = model => {
     scheme: model.scheme,
     regionCode: model.region.numericCode,
     companyId: model.company.id,
-    invoiceAccountId: model.invoiceAccount.id
+    invoiceAccountId: model.invoiceAccount.id,
+    changeReasonId: model.changeReason.id
   };
 };
 

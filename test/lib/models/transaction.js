@@ -55,7 +55,7 @@ const getTestDataForHashing = () => {
   transaction.volume = 3;
   transaction.isCompensationCharge = true;
   transaction.isTwoPartTariffSupplementary = true;
-  transaction.isMinimumCharge = false;
+  transaction.isNewLicence = false;
   transaction.isDeMinimis = false;
 
   transaction.agreements = [
@@ -423,11 +423,41 @@ experiment('lib/models/transaction', () => {
     });
   });
 
+  experiment('.isNewLicence', () => {
+    test('can be set to boolean true', async () => {
+      const transaction = new Transaction();
+      transaction.isNewLicence = true;
+      expect(transaction.isNewLicence).to.equal(true);
+    });
+
+    test('can be set to boolean false', async () => {
+      const transaction = new Transaction();
+      transaction.isNewLicence = false;
+      expect(transaction.isNewLicence).to.equal(false);
+    });
+
+    test('throws an error if set to any other type', async () => {
+      const transaction = new Transaction();
+
+      const func = () => {
+        transaction.isNewLicence = null;
+      };
+
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.isMinimumCharge', () => {
-    test('can be set to boolean', async () => {
+    test('can be set to boolean true', async () => {
       const transaction = new Transaction();
       transaction.isMinimumCharge = true;
       expect(transaction.isMinimumCharge).to.equal(true);
+    });
+
+    test('can be set to boolean false', async () => {
+      const transaction = new Transaction();
+      transaction.isMinimumCharge = false;
+      expect(transaction.isMinimumCharge).to.equal(false);
     });
 
     test('throws an error if set to any other type', async () => {
@@ -488,14 +518,14 @@ experiment('lib/models/transaction', () => {
       const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
       transaction.createTransactionKey(invoiceAccount, licence, batch);
 
-      expect(transaction.transactionKey).to.equal('0218b3e845d23c82f63f471731682998');
+      expect(transaction.transactionKey).to.equal('d66d068052a800647c287ae471e7310b');
     });
 
     test('returns the transactionKey', () => {
       const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
       const transactionKey = transaction.createTransactionKey(invoiceAccount, licence, batch);
 
-      expect(transactionKey).to.equal('0218b3e845d23c82f63f471731682998');
+      expect(transactionKey).to.equal('d66d068052a800647c287ae471e7310b');
     });
 
     test('sets the value to the result of calling createMd5Hash', async () => {
@@ -519,7 +549,7 @@ experiment('lib/models/transaction', () => {
         'billableDays:1',
         'description:description',
         'isCompensationCharge:true',
-        'isMinimumCharge:false',
+        'isNewLicence:false',
         'isTwoPartTariff:true',
         'licenceNumber:ABCCBA',
         'loss:low',

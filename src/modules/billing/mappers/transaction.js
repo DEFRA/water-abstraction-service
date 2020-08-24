@@ -66,11 +66,7 @@ const dbToModel = row => {
   return transaction.fromHash({
     id: row.billingTransactionId,
     ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
-<<<<<<< HEAD
-      'externalId', 'isTwoPartTariffSupplementary', 'isDeMinimis', 'isMinimumCharge']),
-=======
-      'externalId', 'isTwoPartTariffSupplementary', 'isDeMinimis']),
->>>>>>> develop
+      'externalId', 'isTwoPartTariffSupplementary', 'isDeMinimis', 'isNewLicence']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
@@ -125,7 +121,7 @@ const modelToDb = (invoiceLicence, transaction) => ({
   ...mapAgreementsToDB(transaction.agreements),
   transactionKey: transaction.transactionKey,
   isTwoPartTariffSupplementary: transaction.isTwoPartTariffSupplementary,
-  isMinimumCharge: transaction.isMinimumCharge
+  isNewLicence: transaction.isNewLicence
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -214,10 +210,21 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     batchNumber: batch.id,
     ...mapChargeElementToChargeModuleTransaction(transaction.chargeElement),
     ...mapLicenceToChargeElementTransaction(invoiceLicence.licence),
-    newLicence: transaction.isMinimumCharge
+    newLicence: transaction.isNewLicence
   };
+};
+
+const cmToModel = data => {
+  const model = new Transaction();
+  return model.fromHash({
+    externalId: data.id,
+    value: data.chargeValue,
+    isMinimumCharge: data.minimumChargeAdjustment,
+    isDeMinimis: data.deminimis
+  });
 };
 
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
 exports.modelToChargeModule = modelToChargeModule;
+exports.cmToModel = cmToModel;

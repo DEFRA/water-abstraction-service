@@ -1,5 +1,4 @@
 const objectMapper = require('object-mapper');
-const { flatMap } = require('lodash');
 
 const getIsWaterUndertaker = invoiceLicence =>
   invoiceLicence.licence.isWaterUndertaker;
@@ -8,11 +7,6 @@ const containsWaterUndertaker = invoiceLicences => {
   return invoiceLicences
     .map(getIsWaterUndertaker)
     .includes(true);
-};
-
-const doesMinimumChargeApply = invoiceLicences => {
-  const transactions = flatMap(invoiceLicences.map(invoiceLicence => invoiceLicence.transactions));
-  return transactions.some(trans => trans.isMinimumCharge);
 };
 
 const map = {
@@ -25,11 +19,7 @@ const map = {
   invoiceLicences: [{
     key: 'isWaterUndertaker',
     transform: containsWaterUndertaker
-  }, {
-    key: 'minimumChargeApplies',
-    transform: doesMinimumChargeApply
-  }
-  ]
+  }]
 };
 
 /**
@@ -38,7 +28,9 @@ const map = {
  * @return {Object}
  */
 const modelToBatchInvoice = invoice => {
-  return objectMapper(invoice, map);
+  const mappedInvoice = objectMapper(invoice, map);
+  objectMapper.setKeyValue(mappedInvoice, 'isMinimumChargeApplied', invoice.isMinimumChargeApplied());
+  return mappedInvoice;
 };
 
 exports.modelToBatchInvoices = modelToBatchInvoice;
