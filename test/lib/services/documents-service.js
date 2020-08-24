@@ -27,6 +27,43 @@ experiment('modules/billing/services/documents-service', () => {
     sandbox.restore();
   });
 
+  experiment('.getDocument', async () => {
+    let result;
+
+    experiment('when the document is found', () => {
+      beforeEach(async () => {
+        documentsConnector.getDocument.resolves({
+          documentId: uuid(),
+          status: 'current',
+          startDate: '2020-01-01',
+          endDate: null
+        });
+        result = await documentsService.getDocument('test-id');
+      });
+
+      test('calls the connector with the correct id', async () => {
+        expect(documentsConnector.getDocument.calledWith('test-id')).to.be.true();
+      });
+
+      test('resolves with a document', async () => {
+        expect(result).to.be.an.instanceof(Document);
+      });
+    });
+
+    experiment('when the document is not found', () => {
+      beforeEach(async () => {
+        documentsConnector.getDocument.resolves();
+      });
+
+      test('throws a not found error', async () => {
+        const func = () => documentsService.getDocument('test-id');
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.instanceof(NotFoundError);
+        expect(err.message).to.equal('Document test-id not found');
+      });
+    });
+  });
+
   experiment('.getValidDocumentOnDate', () => {
     experiment('when no documents are found', async () => {
       let err;

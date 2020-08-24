@@ -48,4 +48,5 @@ const getValidDocumentOnDate = async (licenceNumber, date) => {
   return getDocument(doc.id);
 };
 
+exports.getDocument = getDocument;
 exports.getValidDocumentOnDate = getValidDocumentOnDate;
