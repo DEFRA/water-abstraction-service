@@ -9,7 +9,7 @@ const objectMapper = require('object-mapper');
 const apiListMap = {
   'chargeVersionWorkflow.id': 'id',
   'chargeVersionWorkflow.licence.licenceNumber': 'licenceNumber',
-  'chargeVersionWorkflow.chargeVersion.startDate': 'startDate',
+  'chargeVersionWorkflow.chargeVersion.dateRange.startDate': 'startDate',
   'chargeVersionWorkflow.createdBy': 'createdBy',
   'chargeVersionWorkflow.status': 'status',
   'chargeVersionWorkflow.approverComments': 'approverComments',
