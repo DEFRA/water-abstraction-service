@@ -59,9 +59,12 @@ const modelToDb = model => {
  * @return ChargeVersion
  */
 const pojoToModel = pojo => {
-  const { chargeElements, ...rest } = pojo;
+  const { chargeElements, dateRange, ...rest } = pojo;
   const model = new ChargeVersion();
-  model.fromHash(rest);
+  model.fromHash({
+    dateRange: new DateRange(dateRange.startDate, dateRange.endDate),
+    ...rest
+  });
 
   if (chargeElements) {
     model.chargeElements = chargeElements.map(chargeElementMapper.pojoToModel);

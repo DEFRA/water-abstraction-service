@@ -11,9 +11,16 @@ const userMapper = require('../../../lib/mappers/user');
 
 const { rowToAPIList } = require('../mappers/api-mapper');
 
+/**
+ * Get all charge version workflows in DB
+ */
 const getChargeVersionWorkflows = () =>
   controller.getEntities(null, chargeVersionsWorkflowService.getAllWithLicenceHolder, rowToAPIList);
 
+/**
+ * Get a specific charge version workflow by ID
+ * @param {String} request.params.chargeVersionWorkflowId
+ */
 const getChargeVersionWorkflow = request =>
   controller.getEntity(request.params.chargeVersionWorkflowId, chargeVersionsWorkflowService.getByIdWithLicenceHolder);
 
@@ -23,7 +30,7 @@ const getChargeVersionWorkflow = request =>
  * @param {String} request.payload.licenceId - the licence for the new charge version
  * @param {Object} request.payload.chargeVersion - the charge version data
  */
-const postChargeVersionWorkflow = async (request, h) => {
+const postChargeVersionWorkflow = async request => {
   const { internalCallingUser } = request.defra;
   const { licenceId, chargeVersion } = request.payload;
 

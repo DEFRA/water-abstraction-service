@@ -34,7 +34,9 @@ experiment('lib/mappers/charge-version-workflow', () => {
         dateUpdated: '2020-08-24T08:47:16.913Z',
         data: {
           chargeVersion: {
-            startDate: '2019-01-01',
+            dateRange: {
+              startDate: '2019-01-01'
+            },
             chargeElements: [
               {
                 loss: 'high',
