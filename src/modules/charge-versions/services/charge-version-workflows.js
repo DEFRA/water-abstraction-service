@@ -1,14 +1,18 @@
 'use strict';
 
-const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-information-workflows');
-const chargeVersionWorkflowMapper = require('../../../lib/mappers/charge-version-workflow');
-const service = require('../../../lib/services/service');
 const errors = require('../../../lib/errors');
-// const chargeVersionMapper = require('../../../lib/mappers/charge-version');
-// const userMapper = require('../../../lib/mappers/user');
 const { logger } = require('../../../logger');
+const bluebird = require('bluebird');
 
 // Services
+const service = require('../../../lib/services/service');
+const documentsService = require('../../../lib/services/documents-service');
+
+// Repos
+const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-information-workflows');
+
+// Mappers
+const chargeVersionWorkflowMapper = require('../../../lib/mappers/charge-version-workflow');
 
 // Models
 const validators = require('../../../lib/models/validators');
@@ -17,6 +21,7 @@ const { CHARGE_VERSION_WORKFLOW_STATUS } = require('../../../lib/models/charge-v
 const ChargeVersion = require('../../../lib/models/charge-version');
 const User = require('../../../lib/models/user');
 const Licence = require('../../../lib/models/licence');
+const Role = require('../../../lib/models/role');
 
 /**
  * Gets all charge version workflows from the DB
@@ -25,10 +30,49 @@ const Licence = require('../../../lib/models/licence');
 const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeVersionWorkflowMapper);
 
 /**
+ * Gets the licence-holder role for the supplied ChargeVersionWorkflow model
+ * This is based on the licence number, and the start date of the charge
+ * version
+ * @param {ChargeVersionWorkflow} chargeVersionWorkflow
+ * @return {Promise<Role>}
+ */
+const getLicenceHolderRole = async chargeVersionWorkflow => {
+  const { licenceNumber } = chargeVersionWorkflow.licence;
+  const { startDate } = chargeVersionWorkflow.chargeVersion;
+  const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate);
+  return {
+    chargeVersionWorkflow,
+    licenceHolderRole: doc.getRoleOnDate(Role.ROLE_NAMES.licenceHolder, startDate)
+  };
+};
+
+/**
+ * Gets all charge version workflows from the DB, including the
+ * licence holder role
+ * @return {Promise<Array>}
+ */
+const getAllWithLicenceHolder = async () => {
+  const chargeVersionWorkflows = await getAll();
+  return bluebird.map(chargeVersionWorkflows, getLicenceHolderRole);
+};
+
+/**
+ * Gets a single charge version workflow by ID
+ * @param {String} id
+ */
+const getById = id => service.findOne(id, chargeVersionWorkflowsRepo.findOne, chargeVersionWorkflowMapper);
+
+const getByIdWithLicenceHolder = async id => {
+  const chargeVersionWorkflow = await getById(id);
+  return getLicenceHolderRole(chargeVersionWorkflow);
+};
+
+/**
  * Create a new charge version workflow record
- * @param {String} licenceId - guid
- * @param {*} chargeVersion
- * @param {*} user
+ * @param {Licence} licence
+ * @param {ChargeVersion} chargeVersion
+ * @param {User} user
+ * @return {Promise<ChargeVersionWorkflow>}
  */
 const create = async (licence, chargeVersion, user) => {
   validators.assertIsInstanceOf(licence, Licence);
@@ -40,7 +84,7 @@ const create = async (licence, chargeVersion, user) => {
   try {
     chargeVersionWorkflow.fromHash({
       createdBy: user,
-      licenceId: licence.id,
+      licence: licence,
       chargeVersion,
       status: CHARGE_VERSION_WORKFLOW_STATUS.draft
     });
@@ -54,5 +98,8 @@ const create = async (licence, chargeVersion, user) => {
   return chargeVersionWorkflowMapper.dbToModel(updated);
 };
 
-exports.getAll = getAll;
+exports.getAllWithLicenceHolder = getAllWithLicenceHolder;
+exports.getById = getById;
+exports.getByIdWithLicenceHolder = getByIdWithLicenceHolder;
 exports.create = create;
+exports.getLicenceHolderRole = getLicenceHolderRole;

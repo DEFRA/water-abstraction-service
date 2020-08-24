@@ -4,6 +4,7 @@ const Model = require('./model');
 const validators = require('./validators');
 const User = require('./user');
 const ChargeVersion = require('./charge-version');
+const Licence = require('./licence');
 
 const CHARGE_VERSION_WORKFLOW_STATUS = {
   draft: 'draft',
@@ -15,16 +16,16 @@ const CHARGE_VERSION_WORKFLOW_STATUS = {
  */
 class ChargeVersionWorkflow extends Model {
   /**
-   * The licence this charge version will relate to
-   * @param {String} licenceId - guid
+   * The licence the new charge version will relate to
+   * @param {Licence}
    */
-  set licenceId (licenceId) {
-    validators.assertId(licenceId);
-    this._licenceId = licenceId;
+  set licence (licence) {
+    validators.assertIsInstanceOf(licence, Licence);
+    this._licence = licence;
   }
 
-  get licenceId () {
-    return this._licenceId;
+  get licence () {
+    return this._licence;
   }
 
   /**

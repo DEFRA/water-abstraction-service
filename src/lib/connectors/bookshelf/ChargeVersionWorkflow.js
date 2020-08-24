@@ -9,6 +9,9 @@ module.exports = bookshelf.model('ChargeVersionWorkflow', {
 
   hasTimestamps: ['date_created', 'date_updated'],
 
-  requireFetch: false
+  requireFetch: false,
 
+  licence () {
+    return this.hasOne('Licence', 'licence_id', 'licence_id');
+  }
 });

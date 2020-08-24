@@ -2,8 +2,6 @@
 
 const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowApprover } } = require('../../../lib/roles');
 
-const { CHARGE_VERSION_WORKFLOW_STATUS } = require('../../../lib/models/charge-version-workflow');
-
 const controller = require('../controllers/charge-version-workflow');
 const Joi = require('joi');
 
@@ -21,6 +19,26 @@ module.exports = {
       validate: {
         headers: async values => {
           Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+        }
+      }
+    }
+  },
+
+  getChargeVersionWorkflow: {
+    method: 'GET',
+    path: '/water/1.0/charge-version-workflows/{chargeVersionWorkflowId}',
+    handler: controller.getChargeVersionWorkflow,
+    options: {
+      description: 'Gets a single charge version workflow record',
+      auth: {
+        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowApprover]
+      },
+      validate: {
+        headers: async values => {
+          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+        },
+        params: {
+          chargeVersionWorkflowId: Joi.string().guid().required()
         }
       }
     }

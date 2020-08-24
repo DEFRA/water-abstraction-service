@@ -30,7 +30,6 @@ const dbToModel = row => {
     id: row.licenceId,
     licenceNumber: row.licenceRef,
     isWaterUndertaker: row.isWaterUndertaker,
-    region: regionMapper.dbToModel(row.region),
     historicalArea: dbToHistoricalArea(row.regions),
     regionalChargeArea: dbToRegionalChargeArea(row.regions),
     startDate: row.startDate,
@@ -38,6 +37,9 @@ const dbToModel = row => {
     lapsedDate: row.lapsedDate,
     revokedDate: row.revokedDate
   });
+  if (row.region) {
+    licence.region = regionMapper.dbToModel(row.region);
+  }
   if (row.licenceAgreements) {
     licence.licenceAgreements = row.licenceAgreements.map(licenceAgreementMapper.dbToModel);
   }

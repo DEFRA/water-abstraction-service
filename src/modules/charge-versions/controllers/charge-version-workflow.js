@@ -9,13 +9,13 @@ const chargeVersionMapper = require('../../../lib/mappers/charge-version');
 const controller = require('../../../lib/controller');
 const userMapper = require('../../../lib/mappers/user');
 
-/**
- * Gets a list of charge version workflows
- * These are objects being worked on that will be used to generate
- * charge versions when approved
- */
+const { rowToAPIList } = require('../mappers/api-mapper');
+
 const getChargeVersionWorkflows = () =>
-  controller.getEntities(null, chargeVersionsWorkflowService.getAll);
+  controller.getEntities(null, chargeVersionsWorkflowService.getAllWithLicenceHolder, rowToAPIList);
+
+const getChargeVersionWorkflow = request =>
+  controller.getEntity(request.params.chargeVersionWorkflowId, chargeVersionsWorkflowService.getByIdWithLicenceHolder);
 
 /**
  * Creates a new charge version workflow record
@@ -53,4 +53,5 @@ const postChargeVersionWorkflow = async (request, h) => {
 };
 
 exports.getChargeVersionWorkflows = getChargeVersionWorkflows;
+exports.getChargeVersionWorkflow = getChargeVersionWorkflow;
 exports.postChargeVersionWorkflow = postChargeVersionWorkflow;

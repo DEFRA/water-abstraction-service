@@ -11,11 +11,11 @@ exports.findOne = async (bookshelfModel, idKey, id, withRelated = []) => {
   return result && result.toJSON();
 };
 
-exports.findMany = async (bookshelfModel, conditions = {}) => {
+exports.findMany = async (bookshelfModel, conditions = {}, withRelated = []) => {
   const result = await bookshelfModel
     .forge()
     .where(conditions)
-    .fetchAll({ require: false });
+    .fetchAll({ require: false, withRelated });
 
   return result.toJSON();
 };
