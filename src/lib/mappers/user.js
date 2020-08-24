@@ -9,11 +9,8 @@ const User = require('../models/user');
  */
 const dbToModel = data => {
   if (!data) return null;
-  const user = new User();
-  return user.fromHash({
-    id: data.id,
-    email: data.email
-  });
+  const { id, email } = data;
+  return new User(id, email);
 };
 
 const pojoToModel = dbToModel;

@@ -30,7 +30,7 @@ class ChargeVersionWorkflow extends Model {
 
   /**
    * The User who has created the charge version
-   * @return {User}
+   * @param {User}
    */
   set createdBy (createdBy) {
     validators.assertIsNullableInstanceOf(createdBy, User);
