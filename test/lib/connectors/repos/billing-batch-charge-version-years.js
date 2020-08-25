@@ -25,9 +25,11 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
     stub = {
       save: sandbox.stub().resolves(model),
       destroy: sandbox.stub().resolves(),
+      fetch: sandbox.stub().resolves(model),
       where: sandbox.stub().returnsThis()
     };
     sandbox.stub(BillingBatchChargeVersionYear, 'forge').returns(stub);
+    sandbox.stub(BillingBatchChargeVersionYear, 'collection').returns(stub);
     sandbox.stub(raw, 'multiRow');
     sandbox.stub(bookshelf.knex, 'raw');
   });
@@ -112,17 +114,88 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
     });
   });
 
-  experiment('.createForBatch', () => {
-    const billingBatchId = 'test-invoice-id';
+  experiment('.findByBatchId', () => {
+    const billingBatchId = 'test-batch-id';
 
     beforeEach(async () => {
-      await repos.billingBatchChargeVersionYears.createForBatch(billingBatchId);
+      await repos.billingBatchChargeVersionYears.findByBatchId(billingBatchId);
     });
 
-    test('calls knex.raw with correct query and params', async () => {
-      const [query, params] = raw.multiRow.lastCall.args;
-      expect(query).to.equal(queries.createForBatch);
-      expect(params).to.equal({ billingBatchId });
+    test('calls Bookshelf methods in correct order', async () => {
+      sinon.assert.callOrder(
+        BillingBatchChargeVersionYear.collection,
+        stub.where,
+        stub.fetch,
+        model.toJSON
+      );
+    });
+
+    test('finds records with correct batch ID', async () => {
+      expect(stub.where.calledWith('billing_batch_id', billingBatchId));
+    });
+  });
+
+  experiment('.findTwoPartTariffByBatchId', () => {
+    const billingBatchId = 'test-batch-id';
+
+    beforeEach(async () => {
+      await repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(billingBatchId);
+    });
+
+    test('calls knex raw method with correct query', async () => {
+      expect(raw.multiRow.calledWith(
+        queries.findTwoPartTariffByBatchId, { billingBatchId }
+      )).to.be.true();
+    });
+  });
+
+  experiment('.deleteByBatchIdAndLicenceId', () => {
+    const billingBatchId = 'test-batch-id';
+    const licenceId = 'test-licence-id';
+
+    beforeEach(async () => {
+      await repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId(billingBatchId, licenceId);
+    });
+
+    test('calls knex raw method with correct query', async () => {
+      expect(bookshelf.knex.raw.calledWith(
+        queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId }
+      )).to.be.true();
+    });
+  });
+
+  experiment('.create', () => {
+    const billingBatchId = 'test-batch-id';
+    const chargeVersionId = 'test-charge-version-id';
+    const financialYearEnding = 2020;
+    const status = 'processing';
+
+    beforeEach(async () => {
+      await repos.billingBatchChargeVersionYears.create(
+        billingBatchId, chargeVersionId, financialYearEnding, status
+      );
+    });
+
+    test('calls model.forge with correct params', async () => {
+      expect(BillingBatchChargeVersionYear.forge.calledWith({
+        billingBatchId, chargeVersionId, financialYearEnding, status
+      })).to.be.true();
+    });
+
+    test('calls .save on the model', async () => {
+      expect(stub.save.called).to.be.true();
+    });
+
+    test('calls .toJSON on the model', async () => {
+      expect(model.toJSON.called).to.be.true();
+    });
+
+    test('calls the methods in the correct order', async () => {
+      sinon.assert.callOrder(
+        BillingBatchChargeVersionYear.forge,
+        stub.save,
+        model.toJSON
+      );
     });
   });
 });

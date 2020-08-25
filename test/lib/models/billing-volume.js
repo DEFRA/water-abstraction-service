@@ -50,6 +50,22 @@ experiment('lib/models/billingVolume', () => {
     });
   });
 
+  experiment('.billingBatchId', () => {
+    const billingBatchId = uuid();
+
+    test('can be set to a guid string', async () => {
+      billingVolume.billingBatchId = billingBatchId;
+      expect(billingVolume.billingBatchId).to.equal(billingBatchId);
+    });
+
+    test('throws an error if set to a non-guid string', async () => {
+      const func = () => {
+        billingVolume.billingBatchId = '1234';
+      };
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.financialYear', () => {
     test('can be set to a FinancialYear instance', async () => {
       const financialYear = new FinancialYear(2019);
@@ -264,9 +280,12 @@ experiment('lib/models/billingVolume', () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED, 20);
       });
 
-      test('the volume and calculated volume are set', async () => {
+      test('the volume is set', async () => {
         expect(billingVolume.volume).to.be.equal(20);
-        expect(billingVolume.calculatedVolume).to.equal(20);
+      });
+
+      test('the calculatedVolume is null', async () => {
+        expect(billingVolume.calculatedVolume).to.be.null();
       });
 
       test('the error flag is not set', async () => {
@@ -321,9 +340,12 @@ experiment('lib/models/billingVolume', () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE, 20);
       });
 
-      test('the volume and calculated volume are set', async () => {
+      test('the volume is set', async () => {
         expect(billingVolume.volume).to.be.equal(20);
-        expect(billingVolume.calculatedVolume).to.equal(20);
+      });
+
+      test('the calculatedVolume is null', async () => {
+        expect(billingVolume.calculatedVolume).to.be.null();
       });
 
       test('the error flag is set', async () => {
@@ -340,9 +362,12 @@ experiment('lib/models/billingVolume', () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_LATE_RETURNS, 20);
       });
 
-      test('the volume and calculated volume are set', async () => {
+      test('the volume is set', async () => {
         expect(billingVolume.volume).to.be.equal(20);
-        expect(billingVolume.calculatedVolume).to.equal(20);
+      });
+
+      test('the calculatedVolume is null', async () => {
+        expect(billingVolume.calculatedVolume).to.be.null();
       });
 
       test('the error flag is not set', async () => {

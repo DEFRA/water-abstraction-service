@@ -2,7 +2,10 @@
 
 const { uniq, get, flatMap } = require('lodash');
 
-const { assertIsInstanceOf, assertIsArrayOfType, assertIsNullableInstanceOf } = require('./validators');
+const {
+  assertIsInstanceOf, assertIsArrayOfType,
+  assertIsNullableInstanceOf, assertIsBoolean
+} = require('./validators');
 const Model = require('./model');
 const Address = require('./address');
 const InvoiceAccount = require('./invoice-account');
@@ -171,10 +174,18 @@ class Invoice extends Model {
     return this._financialYear;
   }
 
-  toJSON () {
-    return {
-      ...super.toJSON()
-    };
+  /**
+   * Whether de-minimis rules is applied
+   * This occurs when invoice/credit note value < £5
+   * @param {Boolean}
+   */
+  set isDeMinimis (isDeMinimis) {
+    assertIsBoolean(isDeMinimis);
+    this._isDeMinimis = isDeMinimis;
+  }
+
+  get isDeMinimis () {
+    return this._isDeMinimis;
   }
 }
 

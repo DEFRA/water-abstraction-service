@@ -6,6 +6,7 @@ const Model = require('./model');
 const FinancialYear = require('./financial-year');
 const User = require('./user');
 const { isNull, isFinite } = require('lodash');
+const toFixedPrecision = require('../to-fixed');
 
 const validators = require('./validators');
 
@@ -18,7 +19,8 @@ const twoPartTariffStatuses = {
   ERROR_OVER_ABSTRACTION: 60,
   ERROR_NO_RETURNS_FOR_MATCHING: 70,
   ERROR_NOT_DUE_FOR_BILLING: 80,
-  ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD: 90
+  ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD: 90,
+  ERROR_NO_MATCHING_CHARGE_ELEMENT: 100
 };
 
 const assignBillableStatuses = [
@@ -32,12 +34,11 @@ const setErrorFlagStatuses = [
   twoPartTariffStatuses.ERROR_RECEIVED,
   twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE,
   twoPartTariffStatuses.ERROR_OVER_ABSTRACTION,
-  twoPartTariffStatuses.ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD,
   twoPartTariffStatuses.ERROR_NO_RETURNS_FOR_MATCHING,
-  twoPartTariffStatuses.ERROR_NOT_DUE_FOR_BILLING
+  twoPartTariffStatuses.ERROR_NOT_DUE_FOR_BILLING,
+  twoPartTariffStatuses.ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD,
+  twoPartTariffStatuses.ERROR_NO_MATCHING_CHARGE_ELEMENT
 ];
-
-const toFixedPrecision = number => parseFloat(number.toFixed(3));
 
 class BillingVolume extends Model {
   get chargeElementId () {
@@ -47,6 +48,15 @@ class BillingVolume extends Model {
   set chargeElementId (chargeElementId) {
     validators.assertId(chargeElementId);
     this._chargeElementId = chargeElementId;
+  }
+
+  get billingBatchId () {
+    return this._billingBatchId;
+  }
+
+  set billingBatchId (billingBatchId) {
+    validators.assertId(billingBatchId);
+    this._billingBatchId = billingBatchId;
   }
 
   get financialYear () {
@@ -104,9 +114,6 @@ class BillingVolume extends Model {
   set twoPartTariffStatus (twoPartTariffStatus) {
     validators.assertNullableEnum(twoPartTariffStatus, Object.values(twoPartTariffStatuses));
     this._twoPartTariffStatus = twoPartTariffStatus;
-    if (setErrorFlagStatuses.includes(twoPartTariffStatus)) {
-      this.twoPartTariffError = true;
-    }
   }
 
   /**
@@ -117,8 +124,11 @@ class BillingVolume extends Model {
   setTwoPartTariffStatus (twoPartTariffStatus, billableVolume) {
     this.twoPartTariffStatus = twoPartTariffStatus;
     if (assignBillableStatuses.includes(twoPartTariffStatus)) {
+      this.calculatedVolume = null;
       this.volume = billableVolume;
-      this.calculatedVolume = billableVolume;
+    }
+    if (setErrorFlagStatuses.includes(twoPartTariffStatus)) {
+      this.twoPartTariffError = true;
     }
   }
 
