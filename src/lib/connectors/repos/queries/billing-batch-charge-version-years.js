@@ -20,6 +20,27 @@ delete from water.billing_batch_charge_version_years y
     and y.financial_year_ending=i.financial_year_ending
 `;
 
+exports.createForBatch = `
+insert into water.billing_batch_charge_version_years
+  (billing_batch_id, charge_version_id, financial_year_ending, status)
+
+  select bcv.billing_batch_id, bcv.charge_version_id, fy.financial_year_ending, 'processing' as status
+    from water.billing_batch_charge_versions bcv
+    join water.charge_versions cv on bcv.charge_version_id=cv.charge_version_id
+    join
+  (
+    select 
+      generate_series(from_financial_year_ending, to_financial_year_ending) as financial_year_ending,
+      make_date(generate_series(from_financial_year_ending-1, to_financial_year_ending-1), 4,1) as min_date,
+      make_date(generate_series(from_financial_year_ending, to_financial_year_ending), 3,31 ) as max_date
+      from water.billing_batches b where b.billing_batch_id=:billingBatchId
+  ) fy on cv.start_date<=fy.max_date and (cv.end_date is null or cv.end_date>=fy.min_date)
+
+  where bcv.billing_batch_id=:billingBatchId
+
+  returning *
+`;
+
 /**
  * @TODO if water.financial_agreement_types is updated to have a GUID ID column, this will
  *       need updating to use the legacy code rather than the ID

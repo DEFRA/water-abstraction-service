@@ -9,11 +9,18 @@ const repos = require('../../../lib/connectors/repos');
  */
 const createForBatch = batch => {
   const actions = {
-    [BATCH_TYPE.annual]: createAnnual,
-    [BATCH_TYPE.supplementary]: createSupplementary,
-    [BATCH_TYPE.twoPartTariff]: createTwoPartTariff
+    annual: repos.billingBatchChargeVersions.createAnnual,
+    supplementary: repos.billingBatchChargeVersions.createSupplementary,
+    two_part_tariff: repos.billingBatchChargeVersions.createTwoPartTariff
   };
-  return actions[batch.type](batch);
+  const params = {
+    billingBatchId: batch.id,
+    regionId: batch.region.id,
+    fromFinancialYearEnding: batch.startYear.endYear,
+    toFinancialYearEnding: batch.endYear.endYear,
+    isSummer: batch.isSummer
+  };
+  return actions[batch.type](params);
 };
 
 exports.createForBatch = createForBatch;
