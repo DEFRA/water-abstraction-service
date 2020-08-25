@@ -5,6 +5,10 @@ const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowApprover } } 
 const controller = require('../controllers/charge-version-workflow');
 const Joi = require('joi');
 
+const headers = async values => {
+  Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+};
+
 module.exports = {
 
   getChargeVersionWorkflows: {
@@ -17,9 +21,7 @@ module.exports = {
         scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowApprover]
       },
       validate: {
-        headers: async values => {
-          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
-        }
+        headers
       }
     }
   },
@@ -34,9 +36,7 @@ module.exports = {
         scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowApprover]
       },
       validate: {
-        headers: async values => {
-          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
-        },
+        headers,
         params: {
           chargeVersionWorkflowId: Joi.string().guid().required()
         }
@@ -54,9 +54,7 @@ module.exports = {
         scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowApprover]
       },
       validate: {
-        headers: async values => {
-          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
-        },
+        headers,
         payload: {
           licenceId: Joi.string().guid().required(),
           chargeVersion: Joi.object().required()

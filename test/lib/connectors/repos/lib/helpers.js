@@ -132,6 +132,28 @@ experiment('lib/connectors/repos/lib/helpers', () => {
     });
   });
 
+  experiment('.deleteOne', () => {
+    let model;
+
+    beforeEach(async () => {
+      model = {
+        forge: sandbox.stub().returnsThis(),
+        destroy: sandbox.stub().resolves()
+      };
+
+      await helpers.deleteOne(model, 'test-id', 'test-value');
+    });
+
+    test('calls forge on the model', async () => {
+      expect(model.forge.called).to.equal(true);
+      expect(model.forge.calledWith({ 'test-id': 'test-value' })).to.be.true();
+    });
+
+    test('deletes the data', async () => {
+      expect(model.destroy.called).to.be.true();
+    });
+  });
+
   experiment('.deleteTestData', () => {
     let model;
 
