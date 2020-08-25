@@ -14,5 +14,6 @@ exports.events = require('./events');
 exports.licenceAgreements = require('./licence-agreements');
 exports.licenceVersions = require('./licence-versions');
 exports.licences = require('./licences');
-exports.regions = require('./regions');
 exports.purposeUses = require('./purpose-uses');
+exports.regions = require('./regions');
+exports.returnVersions = require('./return-versions');

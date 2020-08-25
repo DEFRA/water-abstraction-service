@@ -7,7 +7,6 @@ const isProduction = ['production'].includes(process.env.NODE_ENV);
 const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0';
 const isLocal = process.env.NODE_ENV === 'local';
 const isTravis = process.env.TRAVIS;
-const isTest = process.env.NODE_ENV === 'test';
 
 module.exports = {
 
@@ -215,7 +214,7 @@ module.exports = {
     host: process.env.REDIS_HOST || '127.0.0.1',
     port: process.env.REDIS_PORT || 6379,
     password: process.env.REDIS_PASSWORD || '',
-    ...!(isLocal || isTravis || isTest) && { tls: {} },
+    ...!(isLocal || isTravis) && { tls: {} },
     db: 2
   }
 };

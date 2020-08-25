@@ -147,5 +147,40 @@ experiment('modules/billing/mappers/invoice-account-address', () => {
         expect(agentCompany.organisationType).to.equal(agentCompanyData.organisationType);
       });
     });
+    experiment('when only the agent company ID is provided,', () => {
+      const agentCompanyId = '11111111-1111-1111-1111-111111111111';
+      beforeEach(() => {
+        result = invoiceAccountAddressMapper.crmToModel({ ...dbRow, agentCompanyId });
+      });
+
+      test('it is a Company instance', () => {
+        expect(result.agentCompany instanceof Company).to.be.true();
+      });
+
+      test('it has the expected values', () => {
+        const { agentCompany } = result;
+        expect(agentCompany.id).to.equal(agentCompanyId);
+        expect(agentCompany.name).to.equal(undefined);
+        expect(agentCompany.type).to.equal(undefined);
+        expect(agentCompany.organisationType).to.equal(undefined);
+      });
+    });
+    experiment('when the agent company is null,', () => {
+      beforeEach(() => {
+        result = invoiceAccountAddressMapper.crmToModel({ ...dbRow, agentCompany: null });
+      });
+
+      test('it is a Company instance', () => {
+        expect(result.agentCompany instanceof Company).to.be.true();
+      });
+
+      test('it is an empty Company instance', () => {
+        const { agentCompany } = result;
+        expect(agentCompany.id).to.equal(undefined);
+        expect(agentCompany.name).to.equal(undefined);
+        expect(agentCompany.type).to.equal(undefined);
+        expect(agentCompany.organisationType).to.equal(undefined);
+      });
+    });
   });
 });
