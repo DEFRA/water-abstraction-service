@@ -136,27 +136,40 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
   });
 
   experiment('.getByIdWithLicenceHolder', () => {
-    beforeEach(async () => {
-      result = await chargeVersionWorkflowService.getByIdWithLicenceHolder('test-id');
+    experiment('when the charge version workflow is found', () => {
+      beforeEach(async () => {
+        result = await chargeVersionWorkflowService.getByIdWithLicenceHolder('test-id');
+      });
+
+      test('delegates to service.findOne', async () => {
+        const [id, fetchDataFunc, mapper] = service.findOne.lastCall.args;
+        expect(id).to.equal('test-id');
+        expect(fetchDataFunc).to.equal(chargeVersionWorkflowRepo.findOne);
+        expect(mapper).to.equal(chargeVersionWorkflowMapper);
+      });
+
+      test('finds document with licence number and date', async () => {
+        expect(documentsService.getValidDocumentOnDate.calledWith(
+          '01/123/ABC', '2019-01-01'
+        )).to.be.true();
+      });
+
+      test('resolves with an object with a chargeVersionWorkflow and licenceHolderRole', async () => {
+        expect(result).to.be.an.object();
+        expect(result.chargeVersionWorkflow).to.equal(chargeVersionWorkflow);
+        expect(result.licenceHolderRole.id).to.equal(roleId);
+      });
     });
 
-    test('delegates to service.findOne', async () => {
-      const [id, fetchDataFunc, mapper] = service.findOne.lastCall.args;
-      expect(id).to.equal('test-id');
-      expect(fetchDataFunc).to.equal(chargeVersionWorkflowRepo.findOne);
-      expect(mapper).to.equal(chargeVersionWorkflowMapper);
-    });
+    experiment('when the charge version workflow is not found', () => {
+      beforeEach(async () => {
+        service.findOne.resolves(undefined);
+        result = await chargeVersionWorkflowService.getByIdWithLicenceHolder('test-id');
+      });
 
-    test('finds document with licence number and date', async () => {
-      expect(documentsService.getValidDocumentOnDate.calledWith(
-        '01/123/ABC', '2019-01-01'
-      )).to.be.true();
-    });
-
-    test('resolves with an object with a chargeVersionWorkflow and licenceHolderRole', async () => {
-      expect(result).to.be.an.object();
-      expect(result.chargeVersionWorkflow).to.equal(chargeVersionWorkflow);
-      expect(result.licenceHolderRole.id).to.equal(roleId);
+      test('resolves with undefined', async () => {
+        expect(result).to.be.undefined();
+      });
     });
   });
 
