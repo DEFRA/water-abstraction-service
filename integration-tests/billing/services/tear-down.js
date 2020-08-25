@@ -11,7 +11,7 @@ const server = require('../../../index');
 
 const deleteBatchJobs = batch => server.messageQueue.deleteQueue(`billing.refreshTotals.${batch.billingBatchId}`);
 
-const deleteCMBatch = batch => cmConnector.delete(batch.externalId);
+const deleteCMBatch = batch => batch.externalId && cmConnector.delete(batch.externalId);
 
 const deleteJobsAndCMData = batch => Promise.all([
   deleteBatchJobs(batch),
