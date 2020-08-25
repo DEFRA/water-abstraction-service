@@ -1,7 +1,5 @@
 'use strict';
 
-const errors = require('../../../lib/errors');
-const { logger } = require('../../../logger');
 const bluebird = require('bluebird');
 
 // Services
@@ -38,7 +36,7 @@ const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeV
  */
 const getLicenceHolderRole = async chargeVersionWorkflow => {
   const { licenceNumber } = chargeVersionWorkflow.licence;
-  const { startDate } = chargeVersionWorkflow.chargeVersion;
+  const { startDate } = chargeVersionWorkflow.chargeVersion.dateRange;
   const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate);
   return {
     chargeVersionWorkflow,
@@ -62,6 +60,11 @@ const getAllWithLicenceHolder = async () => {
  */
 const getById = id => service.findOne(id, chargeVersionWorkflowsRepo.findOne, chargeVersionWorkflowMapper);
 
+/**
+ * Gets a single charge version workflow by ID
+ * with the licence holder
+ * @param {String} id
+ */
 const getByIdWithLicenceHolder = async id => {
   const chargeVersionWorkflow = await getById(id);
   return getLicenceHolderRole(chargeVersionWorkflow);
@@ -81,23 +84,20 @@ const create = async (licence, chargeVersion, user) => {
 
   // Map all data to ChargeVersionWorkflow model
   const chargeVersionWorkflow = new ChargeVersionWorkflow();
-  try {
-    chargeVersionWorkflow.fromHash({
-      createdBy: user,
-      licence: licence,
-      chargeVersion,
-      status: CHARGE_VERSION_WORKFLOW_STATUS.draft
-    });
-  } catch (err) {
-    logger.error('Invalid charge version workflow', err);
-    throw new errors.InvalidEntityError('Invalid charge version workflow');
-  }
+
+  chargeVersionWorkflow.fromHash({
+    createdBy: user,
+    licence: licence,
+    chargeVersion,
+    status: CHARGE_VERSION_WORKFLOW_STATUS.draft
+  });
 
   const dbRow = chargeVersionWorkflowMapper.modelToDb(chargeVersionWorkflow);
   const updated = await chargeVersionWorkflowsRepo.create(dbRow);
   return chargeVersionWorkflowMapper.dbToModel(updated);
 };
 
+exports.getAll = getAll;
 exports.getAllWithLicenceHolder = getAllWithLicenceHolder;
 exports.getById = getById;
 exports.getByIdWithLicenceHolder = getByIdWithLicenceHolder;
