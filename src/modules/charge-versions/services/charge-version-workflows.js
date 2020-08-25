@@ -67,7 +67,7 @@ const getById = id => service.findOne(id, chargeVersionWorkflowsRepo.findOne, ch
  */
 const getByIdWithLicenceHolder = async id => {
   const chargeVersionWorkflow = await getById(id);
-  return getLicenceHolderRole(chargeVersionWorkflow);
+  return chargeVersionWorkflow && getLicenceHolderRole(chargeVersionWorkflow);
 };
 
 /**
