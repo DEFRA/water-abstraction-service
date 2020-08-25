@@ -21,7 +21,7 @@ experiment('modules/charge-versions/routes/charge-versions', () => {
   experiment('.getDefaultChargesForLicenceVersion', () => {
     beforeEach(async () => {
       id = uuid();
-      server = testHelpers.createServerForRoute(routes.getDefaultChargesForLicenceVersion);
+      server = await testHelpers.createServerForRoute(routes.getDefaultChargesForLicenceVersion);
     });
 
     test('accepts a uuid for the licence version id', async () => {
@@ -41,7 +41,7 @@ experiment('modules/charge-versions/routes/charge-versions', () => {
   experiment('.getChargeVersion', () => {
     beforeEach(async () => {
       id = uuid();
-      server = testHelpers.createServerForRoute(routes.getChargeVersion);
+      server = await testHelpers.createServerForRoute(routes.getChargeVersion);
     });
 
     test('accepts a uuid for the charge version id', async () => {
