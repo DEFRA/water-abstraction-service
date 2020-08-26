@@ -3,5 +3,6 @@ exports.c1 = {
   firstName : 'John',
   lastName : 'Testerson',
   middleInitials : 'J',
-  contactType: 'person'
+  type: 'person', //I think this should be 'type'
+  dataSource: 'nald'
 }
