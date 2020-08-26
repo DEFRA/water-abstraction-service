@@ -7,6 +7,16 @@ const licences = require('./licences');
 const licenceAgreements = require('./licence-agreements');
 const crm = require('./crm');
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs');
+const server = require('../../../index');
+
+const deleteBatchJobs = batch => server.messageQueue.deleteQueue(`billing.refreshTotals.${batch.billingBatchId}`);
+
+const deleteCMBatch = batch => batch.externalId && cmConnector.delete(batch.externalId);
+
+const deleteJobsAndCMData = batch => Promise.all([
+  deleteBatchJobs(batch),
+  deleteCMBatch(batch)
+]);
 
 /**
  * Removes all created test data
@@ -22,14 +32,8 @@ const tearDown = async (...batchesToDelete) => {
   await regions.tearDown();
   await crm.tearDown();
 
-  // Delete batch in charge module
-  const idsToDelete = (batchesToDelete || [])
-    .map(batch => batch.externalId)
-    .filter(i => i);
-
-  for (const externalId of idsToDelete) {
-    await cmConnector.delete(externalId);
-  }
+  const tasks = (batchesToDelete || []).map(deleteJobsAndCMData);
+  await Promise.all(tasks);
 };
 
 exports.tearDown = tearDown;
