@@ -6,7 +6,7 @@ const errors = require('../../../../lib/errors');
 const { getChargePeriod } = require('../../lib/charge-period');
 
 // Services
-const chargeVersionService = require('../charge-version-service');
+const chargeVersionService = require('../../../../lib/services/charge-versions');
 const returnGroupService = require('./return-group-service');
 const billingVolumesService = require('../billing-volumes-service');
 

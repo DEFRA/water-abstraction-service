@@ -14,6 +14,7 @@ const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/consta
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
 const Batch = require('../../../lib/models/batch');
+const validators = require('../../../lib/models/validators');
 
 const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
@@ -21,6 +22,8 @@ const billingVolumesService = require('./billing-volumes-service');
 const invoiceService = require('./invoice-service');
 const licencesService = require('../../../lib/services/licences');
 const config = require('../../../../config');
+
+const chargeModuleDecorators = require('../mappers/charge-module-decorators');
 
 /**
  * Loads a Batch instance by ID
@@ -92,8 +95,24 @@ const deleteBatch = async (batch, internalCallingUser) => {
   }
 };
 
+/**
+ * Sets the batch status
+ * @param {String} batchId
+ * @param {BATCH_STATUS} status
+ * @param {BATCH_ERROR_CODE} [errorCode]
+ */
 const setStatus = (batchId, status) =>
   newRepos.billingBatches.update(batchId, { status });
+
+/**
+ * Sets the specified batch to 'error' status
+ *
+ * @param {String} batchId
+ * @param {BATCH_ERROR_CODE} errorCode The origin of the failure
+ * @return {Promise}
+ */
+const setErrorStatus = (batchId, errorCode) =>
+  newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error, errorCode });
 
 const approveBatch = async (batch, internalCallingUser) => {
   try {
@@ -110,20 +129,6 @@ const approveBatch = async (batch, internalCallingUser) => {
     await saveEvent('billing-batch:approve', 'error', internalCallingUser, batch);
     throw err;
   }
-};
-
-/**
- * Sets the specified batch to 'error' status
- *
- * @param {String} batchId
- * @param {BATCH_ERROR_CODE} errorCode The origin of the failure
- * @return {Promise}
- */
-const setErrorStatus = (batchId, errorCode) => {
-  return newRepos.billingBatches.update(batchId, {
-    status: Batch.BATCH_STATUS.error,
-    errorCode
-  });
 };
 
 const saveInvoiceLicenceTransactions = async (batch, invoice, invoiceLicence) => {
@@ -150,10 +155,15 @@ const saveInvoicesToDB = async batch => {
   }
 };
 
+/**
+ * Decorates the supplied batch with data retrieved from the charge module
+ * @param {Batch} batch
+ * @return {Promise<Batch>}
+ */
 const decorateBatchWithTotals = async batch => {
   try {
-    const { billRun: { summary } } = await chargeModuleBillRunConnector.get(batch.externalId);
-    batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(summary);
+    const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
+    return chargeModuleDecorators.decorateBatch(batch, cmResponse);
   } catch (err) {
     logger.info('Failed to decorate batch with totals. Waiting for CM API', err);
   }
@@ -161,17 +171,40 @@ const decorateBatchWithTotals = async batch => {
 };
 
 /**
- * Updates water.billing_batches with summary info from the charge module
+ * Persists the batch totals to water.billing_batches
  * @param {Batch} batch
  * @return {Promise}
  */
-const refreshTotals = async batch => {
-  const { billRun: { summary } } = await chargeModuleBillRunConnector.get(batch.externalId);
-  return newRepos.billingBatches.update(batch.id, {
-    invoiceCount: summary.invoiceCount,
-    creditNoteCount: summary.creditNoteCount,
-    netTotal: summary.netTotal
-  });
+const persistTotals = batch => {
+  const changes = batch.totals.pick([
+    'invoiceCount',
+    'creditNoteCount',
+    'netTotal'
+  ]);
+  return newRepos.billingBatches.update(batch.id, changes);
+};
+
+/**
+ * Updates water.billing_batches with summary info from the charge module
+ * and updates the is_deminimis flag for water.billing_transactions
+ * @param {Batch} batch
+ * @return {Promise}
+ */
+const refreshTotals = async batchId => {
+  validators.assertId(batchId);
+
+  // Load batch and map to service models
+  const data = await newRepos.billingBatches.findOneWithInvoicesWithTransactions(batchId);
+  const batch = mappers.batch.dbToModel(data);
+
+  // Load CM data and decorate service models
+  const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
+  chargeModuleDecorators.decorateBatch(batch, cmResponse);
+
+  return Promise.all([
+    transactionsService.persistDeMinimis(batch),
+    persistTotals(batch)
+  ]);
 };
 
 /**
@@ -195,12 +228,8 @@ const getTransactionStatusCounts = async batchId => {
  * @returns {Batch} The updated batch if no transactions
  */
 const setStatusToEmptyWhenNoTransactions = async batch => {
-  const remainingTransactions = await newRepos.billingTransactions.findByBatchId(batch.id);
-
-  if (remainingTransactions.length === 0) {
-    return setStatus(batch.id, BATCH_STATUS.empty);
-  }
-  return batch;
+  const count = await newRepos.billingTransactions.countByBatchId(batch.id);
+  return count === 0 ? setStatus(batch.id, BATCH_STATUS.empty) : batch;
 };
 
 /**
@@ -264,12 +293,6 @@ const createChargeModuleBillRun = async batchId => {
   return batch.pickFrom(row, ['externalId', 'billRunNumber']);
 };
 
-const assertBatchStatusIsReview = batch => {
-  if (batch.status !== BATCH_STATUS.review) {
-    throw new BatchStatusError('Cannot approve review. Batch status must be "review"');
-  }
-};
-
 /**
  * Validates batch & transactions, then updates batch status to "processing"
  *
@@ -282,7 +305,9 @@ const assertBatchStatusIsReview = batch => {
  * @return {Promise<Batch>} resolves with Batch service model
  */
 const approveTptBatchReview = async batch => {
-  assertBatchStatusIsReview(batch);
+  if (!batch.canApproveReview()) {
+    throw new BatchStatusError('Cannot approve review. Batch status must be "review"');
+  }
   await billingVolumesService.approveVolumesForBatch(batch);
   await setStatus(batch.id, BATCH_STATUS.processing);
   return getBatchById(batch.id);

@@ -86,10 +86,11 @@ const findStatusCountsByBatchId = batchId => raw.multiRow(queries.findStatusCoun
  *
  * @param {String} transactionId UUID of the transaction to update
  * @param {Object} changes Key values pairs of the changes to make
+ * @param {Boolean} [isUpdateRequired] Whether to throw an error if no rows updated
  */
-const update = (billingTransactionId, changes) => BillingTransaction
-  .forge({ billingTransactionId })
-  .save(changes, { patch: true });
+const update = (billingTransactionId, changes, isUpdateRequired = true) => BillingTransaction
+  .where('billing_transaction_id', 'in', makeArray(billingTransactionId))
+  .save(changes, { patch: true, require: isUpdateRequired });
 
 /**
  * Deletes all transactions by invoice licence ID
@@ -116,6 +117,16 @@ const deleteByInvoiceId = billingInvoiceId => bookshelf
   .knex
   .raw(queries.deleteByInvoiceId, { billingInvoiceId });
 
+/**
+ * Get number of transactions in batch
+ * @param {String} billingBatchId
+ * @return {Promise<Number>}
+ */
+const countByBatchId = async billingBatchId => {
+  const { count } = await raw.singleRow(queries.countByBatchId, { billingBatchId });
+  return parseInt(count);
+};
+
 exports.findOne = findOne;
 exports.find = find;
 exports.findHistoryByBatchId = findHistoryByBatchId;
@@ -127,3 +138,4 @@ exports.update = update;
 exports.deleteByInvoiceLicenceId = deleteByInvoiceLicenceId;
 exports.deleteByBatchId = deleteByBatchId;
 exports.deleteByInvoiceId = deleteByInvoiceId;
+exports.countByBatchId = countByBatchId;

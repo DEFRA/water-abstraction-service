@@ -1,4 +1,7 @@
 'use strict';
+
+const { isEmpty } = require('lodash');
+
 const InvoiceAccount = require('../models/invoice-account');
 
 const invoiceAccountsConnector = require('../connectors/crm-v2/invoice-accounts');
@@ -9,9 +12,7 @@ const contactsService = require('./contacts-service');
 const regionsService = require('./regions-service');
 const crmService = require('./crm-service');
 const mappers = require('../mappers');
-
-const moment = require('moment');
-const { isEmpty } = require('lodash');
+const dates = require('../../lib/dates');
 
 /**
  * Gets invoice accounts with specified IDs from CRM and
@@ -53,8 +54,6 @@ const deleteInvoiceAccount = async invoiceAccount =>
 const getCompanyIdForEntity = (companyId, agentCompany) =>
   agentCompany ? agentCompany.id : companyId;
 
-const formatDate = date => moment(date).format('YYYY-MM-DD');
-
 const getData = (agent, startDate) => ({
   roleName: agent ? 'billing' : 'licenceHolder',
   isDefault: true,
@@ -87,7 +86,7 @@ const getInvoiceAccountModel = (companyId, startDate, addressModel, agentCompany
   const invoiceAccountModel = new InvoiceAccount();
   invoiceAccountModel.company = mappers.company.uiToModel({ companyId });
   invoiceAccountModel.invoiceAccountAddresses.push(
-    invoiceAccountAddressesService.getInvoiceAccountAddressModel(formatDate(startDate), addressModel, agentCompanyModel, contactModel));
+    invoiceAccountAddressesService.getInvoiceAccountAddressModel(dates.formatDate(startDate), addressModel, agentCompanyModel, contactModel));
   return invoiceAccountModel;
 };
 
@@ -144,7 +143,7 @@ const createInvoiceAccount = async (regionId, companyId, startDate, invoiceAccou
  */
 const persist = async (regionId, startDate, invoiceAccount) => {
   const { address, agentCompany, contact } = invoiceAccount.invoiceAccountAddresses[0];
-  const formattedStartDate = formatDate(startDate);
+  const formattedStartDate = dates.formatDate(startDate);
   const newModels = [];
   try {
     await createEntityAndDecorateInvoiceAccount(invoiceAccount, newModels, address, 'address');

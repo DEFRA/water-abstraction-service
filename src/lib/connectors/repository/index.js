@@ -1,5 +1,7 @@
+'use strict';
+
 const { pool } = require('../db');
-const ChargeVersionRepository = require('./ChargeVersionRepository');
+
 const ChargeElementRepository = require('./ChargeElementRepository');
 const ChargeAgreementRepository = require('./ChargeAgreementRepository');
 const BillingInvoiceRepository = require('./BillingInvoiceRepository');
@@ -9,12 +11,6 @@ const BillingBatchChargeVersionYearsRepository = require('./BillingBatchChargeVe
 const BillingBatchChargeVersionsRepository = require('./BillingBatchChargeVersionsRepository');
 const LicenceRepository = require('./LicenceRepository');
 const LicenceAgreementRepository = require('./LicenceAgreementRepository');
-
-const chargeVersions = new ChargeVersionRepository({
-  connection: pool,
-  table: 'water.charge_versions',
-  primaryKey: 'charge_version_id'
-});
 
 const chargeElements = new ChargeElementRepository({
   connection: pool,
@@ -28,7 +24,6 @@ const chargeAgreements = new ChargeAgreementRepository({
   primaryKey: 'charge_agreement_id'
 });
 
-exports.chargeVersions = chargeVersions;
 exports.chargeElements = chargeElements;
 exports.chargeAgreements = chargeAgreements;
 exports.billingInvoices = new BillingInvoiceRepository();

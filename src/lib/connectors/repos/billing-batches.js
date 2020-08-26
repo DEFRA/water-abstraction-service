@@ -48,9 +48,12 @@ const findByStatuses = async statuses => {
  * @param {String} batchId UUID of the batch to update
  * @param {Object} changes Key values pairs of the changes to make
  */
-const update = (batchId, changes) => BillingBatch
-  .forge({ billingBatchId: batchId })
-  .save(changes);
+const update = async (batchId, changes) => {
+  const result = await BillingBatch
+    .forge({ billingBatchId: batchId })
+    .save(changes, { method: 'update' });
+  return mapModel(result);
+};
 
 /**
  * Deletes the billing_batch record with the given id
