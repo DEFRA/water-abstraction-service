@@ -4,12 +4,12 @@ const Boom = require('@hapi/boom');
 
 const chargeVersionsWorkflowService = require('../services/charge-version-workflows');
 const licencesService = require('../../../lib/services/licences');
-const chargeVersionMapper = require('../../../lib/mappers/charge-version');
 
 const controller = require('../../../lib/controller');
-const userMapper = require('../../../lib/mappers/user');
 
 const { rowToAPIList } = require('../mappers/api-mapper');
+
+const mapErrorResponse = require('../../../lib/map-error-response');
 
 /**
  * Get all charge version workflows in DB
@@ -26,39 +26,58 @@ const getChargeVersionWorkflow = request =>
 
 /**
  * Creates a new charge version workflow record
- * @param {Object} request.defra.internalCallingUser - the user creating the record
  * @param {String} request.payload.licenceId - the licence for the new charge version
- * @param {Object} request.payload.chargeVersion - the charge version data
+ * @param {ChargeVersion} request.pre.chargeVersion
+ * @param {User} request.pre.user
  */
 const postChargeVersionWorkflow = async request => {
-  const { internalCallingUser } = request.defra;
-  const { licenceId, chargeVersion } = request.payload;
-
-  const entities = {};
+  const { licenceId } = request.payload;
+  const { chargeVersion, user } = request.pre;
 
   // Find licence or 404
-  entities.licence = await licencesService.getLicenceById(licenceId);
-  if (!entities.licence) {
+  const licence = await licencesService.getLicenceById(licenceId);
+  if (!licence) {
     return Boom.notFound(`Licence ${licenceId} not found`);
   }
 
-  // Map user or 422
-  try {
-    entities.user = userMapper.pojoToModel(internalCallingUser);
-  } catch (err) {
-    return Boom.badData('Invalid user data');
-  }
+  return chargeVersionsWorkflowService.create(licence, chargeVersion, user);
+};
 
-  // Map charge version or 422
-  try {
-    entities.chargeVersion = chargeVersionMapper.pojoToModel(chargeVersion);
-  } catch (err) {
-    return Boom.badData('Invalid charge version data');
-  }
+/**
+ * Updates a charge version workflow record
+ * @param {String} [request.payload.status]
+ * @param {String} [request.payload.approverComments]
+ * @param {Object} [request.payload.chargeVersion]
+ */
+const patchChargeVersionWorkflow = async (request, h) => {
+  const { chargeVersionWorkflowId } = request.params;
+  const { chargeVersion } = request.pre;
 
-  return chargeVersionsWorkflowService.create(entities.licence, entities.chargeVersion, entities.user);
+  const changes = {
+    ...request.payload,
+    ...chargeVersion && { chargeVersion }
+  };
+
+  try {
+    const chargeVersionWorkflow = await chargeVersionsWorkflowService.update(chargeVersionWorkflowId, changes);
+    return chargeVersionWorkflow;
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
+const deleteChargeVersionWorkflow = async (request, h) => {
+  const { chargeVersionWorkflowId } = request.params;
+  try {
+    await chargeVersionsWorkflowService.delete(chargeVersionWorkflowId);
+    return h.response().code(204);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
 };
 
 exports.getChargeVersionWorkflows = getChargeVersionWorkflows;
 exports.getChargeVersionWorkflow = getChargeVersionWorkflow;
 exports.postChargeVersionWorkflow = postChargeVersionWorkflow;
+exports.patchChargeVersionWorkflow = patchChargeVersionWorkflow;
+exports.deleteChargeVersionWorkflow = deleteChargeVersionWorkflow;
