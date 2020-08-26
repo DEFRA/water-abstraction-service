@@ -220,13 +220,9 @@ experiment('lib/connectors/repos/lib/helpers', () => {
   });
 
   experiment('.deleteOne', () => {
-    let result;
     let model;
 
     beforeEach(async () => {
-      result = {
-        toJSON: sandbox.spy()
-      };
       model = {
         forge: sandbox.stub().returnsThis(),
         destroy: sandbox.stub()
