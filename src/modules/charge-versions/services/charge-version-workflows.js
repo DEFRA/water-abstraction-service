@@ -22,7 +22,6 @@ const Licence = require('../../../lib/models/licence');
 const Role = require('../../../lib/models/role');
 const { NotFoundError, InvalidEntityError } = require('../../../lib/errors');
 const { logger } = require('../../../logger');
-const chargeVersionWorkflows = require('../routes/charge-version-workflows');
 
 /**
  * Gets all charge version workflows from the DB

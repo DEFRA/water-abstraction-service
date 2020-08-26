@@ -111,7 +111,11 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
       request = makePost('/water/1.0/charge-version-workflows');
       request.payload = {
         licenceId: uuid(),
-        chargeVersion: {}
+        chargeVersion: {
+          dateRange: {
+            startDate: '2019-01-01'
+          }
+        }
       };
     });
 

@@ -84,6 +84,10 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
               startDate: '2020-09-01'
             }
           }
+        },
+        pre: {
+          chargeVersion: new ChargeVersion(uuid()),
+          user: new User(123, 'mail@example.com')
         }
       };
 
@@ -103,32 +107,6 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
       });
     });
 
-    experiment('when the interal user cannot be mapped', () => {
-      beforeEach(async () => {
-        request.defra.internalCallingUser.email = 'NotAnEmailAddress';
-        result = await cvWorkflowsController.postChargeVersionWorkflow(request);
-      });
-
-      test('a 422 response is generated', async () => {
-        expect(result.isBoom).to.be.true();
-        expect(result.output.statusCode).to.equal(422);
-        expect(result.message).to.equal('Invalid user data');
-      });
-    });
-
-    experiment('when the charge version cannot be mapped', () => {
-      beforeEach(async () => {
-        request.payload.chargeVersion.dateRange.startDate = 'not-a-valid-date';
-        result = await cvWorkflowsController.postChargeVersionWorkflow(request);
-      });
-
-      test('a 422 response is generated', async () => {
-        expect(result.isBoom).to.be.true();
-        expect(result.output.statusCode).to.equal(422);
-        expect(result.message).to.equal('Invalid charge version data');
-      });
-    });
-
     experiment('when all submitted data is valid', async () => {
       beforeEach(async () => {
         await cvWorkflowsController.postChargeVersionWorkflow(request);
@@ -137,8 +115,8 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
       test('the charge version workflow service creates the record', async () => {
         const [licence, chargeVersion, user] = chargeVersionWorkflowService.create.lastCall.args;
         expect(licence).to.be.an.instanceof(Licence);
-        expect(chargeVersion).to.be.an.instanceof(ChargeVersion);
-        expect(user).to.be.an.instanceof(User);
+        expect(chargeVersion).to.equal(request.pre.chargeVersion);
+        expect(user).to.be.equal(request.pre.user);
       });
     });
   });

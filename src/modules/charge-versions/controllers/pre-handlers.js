@@ -1,5 +1,7 @@
 'use strict';
 
+const { get } = require('lodash');
+
 const chargeVersionMapper = require('../../../lib/mappers/charge-version');
 const userMapper = require('../../../lib/mappers/user');
 
@@ -38,7 +40,7 @@ const mapChargeVersion = (request, h) => {
  * @return {User} - if mapped
  */
 const mapInternalCallingUser = (request, h) => {
-  const { internalCallingUser } = request.defra;
+  const internalCallingUser = get(request, 'defra.internalCallingUser', null);
   try {
     return userMapper.pojoToModel(internalCallingUser);
   } catch (err) {
