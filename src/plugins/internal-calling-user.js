@@ -19,26 +19,33 @@ const setUserOnRequest = (request, user) => {
   });
 };
 
+const setUserScope = (request, user) => {
+  set(request, 'auth.credentials.scope', user.roles);
+};
+
+const onCredentials = async (request, h) => {
+  const userId = get(request, 'headers.defra-internal-user-id');
+
+  if (userId) {
+    try {
+      const user = await idmConnector.usersClient.findOneById(userId);
+
+      validateUserIsInternal(user);
+      setUserOnRequest(request, user);
+      setUserScope(request, user);
+    } catch (e) {
+      logger.error('Attempted to call resource with invalid defra-internal-user-id header', e);
+      return Boom.forbidden('User not acceptable', { userId });
+    }
+  }
+  return h.continue;
+};
+
 module.exports = {
   register: (server, options) => {
     server.ext({
-      type: 'onPreHandler',
-      method: async (request, h) => {
-        const userId = get(request, 'headers.defra-internal-user-id');
-
-        if (userId) {
-          try {
-            const user = await idmConnector.usersClient.findOneById(userId);
-
-            validateUserIsInternal(user);
-            setUserOnRequest(request, user);
-          } catch (e) {
-            logger.error('Attempted to call resource with invalid defra-internal-user-id header', e);
-            return Boom.forbidden('User not acceptable', { userId });
-          }
-        }
-        return h.continue;
-      }
+      type: 'onCredentials',
+      method: onCredentials
     });
   },
 

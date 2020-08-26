@@ -195,6 +195,9 @@ const refreshTotals = async batchId => {
 
   // Load batch and map to service models
   const data = await newRepos.billingBatches.findOneWithInvoicesWithTransactions(batchId);
+  if (!data) {
+    throw new NotFoundError(`Batch ${batchId} not found`);
+  }
   const batch = mappers.batch.dbToModel(data);
 
   // Load CM data and decorate service models

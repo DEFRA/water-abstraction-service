@@ -7,14 +7,14 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const User = require('../../../../src/lib/models/user');
-const userMapper = require('../../../../src/modules/billing/mappers/user');
+const User = require('../../../src/lib/models/user');
+const userMapper = require('../../../src/lib/mappers/user');
 
-experiment('modules/billing/mappers/user .mapToModel', () => {
+experiment('modules/billing/mappers/user .dbToModel', () => {
   let user, result;
   beforeEach(() => {
     user = { id: 1234, email: 'test@example.com' };
-    result = userMapper.mapToModel(user);
+    result = userMapper.dbToModel(user);
   });
 
   test('result is a User model', () => {
@@ -28,7 +28,7 @@ experiment('modules/billing/mappers/user .mapToModel', () => {
 
   experiment('when data passed in is null', () => {
     beforeEach(() => {
-      result = userMapper.mapToModel(null);
+      result = userMapper.dbToModel(null);
     });
 
     test('returns null', () => {

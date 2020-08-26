@@ -13,4 +13,4 @@ exports.invoiceAccountAddress = require('../../../lib/mappers/invoice-account-ad
 exports.invoiceLicence = require('./invoice-licence');
 exports.licence = require('../../../lib/mappers/licence');
 exports.transaction = require('./transaction');
-exports.user = require('./user');
+exports.user = require('../../../lib/mappers/user');

@@ -16,13 +16,6 @@ const entityCache = {
   roles: {}
 };
 
-const getRoleIdFromName = async name => {
-  if (!entityCache.roles[name]) {
-    entityCache.roles[name] = await crmConnector.getRole(name);
-  }
-  return entityCache.roles[name].roleId;
-};
-
 /**
  * Gets a company in the CRM or retrieves from entity cache
  * @param {String} scenarioKey
@@ -38,13 +31,12 @@ const createCompany = async scenarioKey => {
     for (const companyAddress of addresses) {
       const address = await createAddress(companyAddress.address);
 
-      const roleId = await getRoleIdFromName(companyAddress.role);
       await crmConnector.createCompanyAddress(
         company.companyId,
         address.addressId,
         companyAddress.startDate,
         companyAddress.endDate,
-        roleId
+        companyAddress.roleName
       );
     }
   }
