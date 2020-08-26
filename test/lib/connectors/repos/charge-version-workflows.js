@@ -20,6 +20,8 @@ experiment('lib/connectors/repos/charge-version-workflows', () => {
     sandbox.stub(helpers, 'findOne');
     sandbox.stub(helpers, 'findMany');
     sandbox.stub(helpers, 'create');
+    sandbox.stub(helpers, 'update');
+    sandbox.stub(helpers, 'deleteOne');
   });
 
   afterEach(async () => {
@@ -68,6 +70,32 @@ experiment('lib/connectors/repos/charge-version-workflows', () => {
       const [model, data] = helpers.create.lastCall.args;
       expect(model).to.equal(ChargeVersionWorkflow);
       expect(data).to.equal({ foo: 'bar' });
+    });
+  });
+
+  experiment('.update', () => {
+    beforeEach(async () => {
+      await chargeVersionWorkflowsRepo.update('test-id', {
+        foo: 'bar'
+      });
+    });
+
+    test('delegates to the update helper', async () => {
+      expect(helpers.update.calledWith(
+        ChargeVersionWorkflow, 'chargeVersionWorkflowId', 'test-id', { foo: 'bar' }
+      )).to.be.true();
+    });
+  });
+
+  experiment('.deleteOne', () => {
+    beforeEach(async () => {
+      await chargeVersionWorkflowsRepo.deleteOne('test-id');
+    });
+
+    test('delegates to the delete helper', async () => {
+      expect(helpers.deleteOne.calledWith(
+        ChargeVersionWorkflow, 'chargeVersionWorkflowId', 'test-id'
+      )).to.be.true();
     });
   });
 });

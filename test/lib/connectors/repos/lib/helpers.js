@@ -181,4 +181,69 @@ experiment('lib/connectors/repos/lib/helpers', () => {
       expect(destroy).to.equal({ require: false });
     });
   });
+
+  experiment('.update', () => {
+    let result;
+    let model;
+
+    beforeEach(async () => {
+      result = {
+        toJSON: sandbox.spy()
+      };
+      model = {
+        forge: sandbox.stub().returnsThis(),
+        save: sandbox.stub().resolves(result)
+      };
+
+      await helpers.update(model, 'id', 'test-id', {
+        day: 'Friday'
+      });
+    });
+
+    test('calls forge on the model with the correct id', async () => {
+      const [data] = model.forge.lastCall.args;
+      expect(data).to.equal({
+        id: 'test-id'
+      });
+    });
+
+    test('calls save on the model with the correct data', async () => {
+      const [data] = model.save.lastCall.args;
+      expect(data).to.equal({
+        day: 'Friday'
+      });
+    });
+
+    test('returns the entity as JSON', async () => {
+      expect(result.toJSON.called).to.equal(true);
+    });
+  });
+
+  experiment('.deleteOne', () => {
+    let result;
+    let model;
+
+    beforeEach(async () => {
+      result = {
+        toJSON: sandbox.spy()
+      };
+      model = {
+        forge: sandbox.stub().returnsThis(),
+        destroy: sandbox.stub()
+      };
+
+      await helpers.deleteOne(model, 'id', 'test-id');
+    });
+
+    test('calls forge on the model with the correct id', async () => {
+      const [data] = model.forge.lastCall.args;
+      expect(data).to.equal({
+        id: 'test-id'
+      });
+    });
+
+    test('calls destroy on the model', async () => {
+      expect(model.destroy.called).to.be.true();
+    });
+  });
 });
