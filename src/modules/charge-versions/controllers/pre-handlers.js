@@ -8,6 +8,15 @@ const userMapper = require('../../../lib/mappers/user');
 const Boom = require('@hapi/boom');
 const { logger } = require('../../../logger');
 
+const mapOrThrowBoom = (entityName, data, mapper) => {
+  try {
+    return mapper.pojoToModel(data);
+  } catch (err) {
+    logger.error(`Error mapping ${entityName}`, err);
+    return Boom.badData('Invalid charge version data');
+  }
+};
+
 /**
  * Maps a pojo representation of a charge version in the request payload
  * to a ChargeVersion service model
@@ -19,16 +28,9 @@ const { logger } = require('../../../logger');
 const mapChargeVersion = (request, h) => {
   const { chargeVersion } = request.payload;
 
-  if (chargeVersion) {
-    try {
-      return chargeVersionMapper.pojoToModel(chargeVersion);
-    } catch (err) {
-      logger.error('Error mapping charge version', err);
-      return Boom.badData('Invalid charge version data');
-    }
-  }
-
-  return h.continue;
+  return chargeVersion
+    ? mapOrThrowBoom('charge version', chargeVersion, chargeVersionMapper)
+    : h.continue;
 };
 
 /**
@@ -41,12 +43,7 @@ const mapChargeVersion = (request, h) => {
  */
 const mapInternalCallingUser = (request, h) => {
   const internalCallingUser = get(request, 'defra.internalCallingUser', null);
-  try {
-    return userMapper.pojoToModel(internalCallingUser);
-  } catch (err) {
-    logger.error('Error mapping user', err);
-    return Boom.badData('Invalid user data');
-  };
+  return mapOrThrowBoom('user', internalCallingUser, userMapper);
 };
 
 exports.mapChargeVersion = mapChargeVersion;
