@@ -2,11 +2,11 @@
 
 const Boom = require('@hapi/boom');
 
-const controller = require('../../lib/controller');
-const documentsConnector = require('../../lib/connectors/crm/documents');
-const licencesService = require('../../lib/services/licences');
-const chargeElementsService = require('../../lib/services/charge-elements');
-const chargeVersionsService = require('../../lib/services/charge-versions');
+const controller = require('../../../lib/controller');
+const documentsConnector = require('../../../lib/connectors/crm/documents');
+const licencesService = require('../../../lib/services/licences');
+const chargeElementsService = require('../../../lib/services/charge-elements');
+const chargeVersionsService = require('../../../lib/services/charge-versions');
 
 /**
  * Gets a charge version complete with its elements and agreements
