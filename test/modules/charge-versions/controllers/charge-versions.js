@@ -5,15 +5,15 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
-const controller = require('../../../src/modules/charge-versions/controller');
-const documentConnector = require('../../../src/lib/connectors/crm/documents');
-const licencesService = require('../../../src/lib/services/licences');
-const chargeElementsService = require('../../../src/lib/services/charge-elements');
-const chargeVersionsService = require('../../../src/lib/services/charge-versions');
+const controller = require('../../../../src/modules/charge-versions/controllers/charge-versions');
+const documentConnector = require('../../../../src/lib/connectors/crm/documents');
+const licencesService = require('../../../../src/lib/services/licences');
+const chargeElementsService = require('../../../../src/lib/services/charge-elements');
+const chargeVersionsService = require('../../../../src/lib/services/charge-versions');
 
-const ChargeVersion = require('../../../src/lib/models/charge-version');
+const ChargeVersion = require('../../../../src/lib/models/charge-version');
 
-experiment('modules/charge-versions/controller', () => {
+experiment('modules/charge-versions/controllers/charge-versions', () => {
   let chargeVersions;
 
   beforeEach(async () => {

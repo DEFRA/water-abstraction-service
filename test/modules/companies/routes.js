@@ -287,7 +287,7 @@ experiment('modules/companies/routes', () => {
     let server;
 
     beforeEach(async () => {
-      server = testHelpers.createServerForRoute(routes.getCompanyContacts);
+      server = await testHelpers.createServerForRoute(routes.getCompanyContacts);
     });
 
     test('returns a 400 response if the company id is not a uuid', async () => {

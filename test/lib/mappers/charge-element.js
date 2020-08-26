@@ -15,6 +15,7 @@ const PurposeUse = require('../../../src/lib/models/purpose-use');
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
 const chargeElementsMapper = require('../../../src/lib/mappers/charge-element');
+const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
 
 const data = {
   chargeElement: {
@@ -108,6 +109,65 @@ experiment('lib/mappers/charge-element', () => {
         expect(result.timeLimitedPeriod.startDate).to.equal(data.timeLimitedChargeElement.timeLimitedStartDate);
         expect(result.timeLimitedPeriod.endDate).to.equal(data.timeLimitedChargeElement.timeLimitedEndDate);
       });
+    });
+  });
+
+  experiment('.pojoToModel', () => {
+    let data, model;
+    beforeEach(async () => {
+      data = {
+        id: uuid(),
+        source: 'supported',
+        loss: 'low',
+        season: 'summer',
+        eiucSource: 'other',
+        abstractionPeriod: {
+          startDay: 1,
+          startMonth: 1,
+          endDay: 31,
+          endMonth: 12
+        },
+        purposeUse: {
+          id: uuid()
+        }
+      };
+      model = chargeElementsMapper.pojoToModel(data);
+    });
+
+    test('returns a ChargeElement model', async () => {
+      expect(model).to.be.an.instanceof(ChargeElement);
+    });
+
+    test('maps charge element properties', async () => {
+      expect(model.id).to.equal(data.id);
+      expect(model.source).to.equal(data.source);
+      expect(model.season).to.equal(data.season);
+      expect(model.loss).to.equal(data.loss);
+    });
+
+    test('maps the abstraction period', async () => {
+      expect(model.abstractionPeriod).to.be.an.instanceof(AbstractionPeriod);
+      expect(model.abstractionPeriod.startDay).to.equal(1);
+      expect(model.abstractionPeriod.startMonth).to.equal(1);
+      expect(model.abstractionPeriod.endDay).to.equal(31);
+      expect(model.abstractionPeriod.endMonth).to.equal(12);
+    });
+
+    test('maps the purpose use', async () => {
+      expect(model.purposeUse).to.be.an.instanceof(PurposeUse);
+      expect(model.purposeUse.id).to.equal(data.purposeUse.id);
+    });
+
+    test('the abstraction period is undefined if not specified in the data', async () => {
+      delete data.abstractionPeriod;
+      model = chargeElementsMapper.pojoToModel(data);
+      expect(model.abstractionPeriod).to.be.undefined();
+    });
+
+    test('the purpose use is undefined if not specified in the data', async () => {
+      delete data.purposeUse;
+      model = chargeElementsMapper.pojoToModel(data);
+      expect(model.purposeUse).to.be.undefined();
     });
   });
 });
