@@ -9,6 +9,10 @@ where
   and l.region_id = :regionId::uuid
   and cv.status='current'
   and (cv.end_date is null or cv.end_date > :fromDate)
+  and l.suspend_from_billing is false
+  and (l.expired_date is null or l.expired_date > :fromDate)
+  and (l.lapsed_date is null or l.lapsed_date > :fromDate)
+  and (l.revoked_date is null or l.revoked_date > :fromDate)
 returning *;`;
 
 exports.createAnnual = `
@@ -38,7 +42,7 @@ exports.createAnnual = `
 
 exports.createTwoPartTariff = `
     insert into water.billing_batch_charge_versions (billing_batch_id, charge_version_id)
-    select :billingBatchId, cv.charge_version_id
+    select distinct :billingBatchId::uuid, cv.charge_version_id
     from water.licences l
       join water.charge_versions cv on l.licence_ref = cv.licence_ref
       join water.licence_agreements la on l.licence_ref = la.licence_ref
@@ -75,3 +79,12 @@ exports.createTwoPartTariff = `
           and y.financial_year_ending=:toFinancialYearEnding
       )
     returning *;`;
+
+exports.deleteByBatchIdAndLicenceId = `
+delete from water.billing_batch_charge_versions bcv
+  using water.charge_versions cv, water.licences l
+  where bcv.billing_batch_id=:billingBatchId
+    and bcv.charge_version_id=cv.charge_version_id
+    and cv.licence_ref=l.licence_ref
+    and l.licence_id=:licenceId
+`;

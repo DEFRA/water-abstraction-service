@@ -1,10 +1,13 @@
 'use strict';
 
-const processChargeVersion = require('./process-charge-version');
+const Batch = require('../../../lib/models/batch');
 
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const jobService = require('../services/job-service');
 const batchJob = require('./lib/batch-job');
+
+const twoPartTariffMatchingJob = require('./two-part-tariff-matching');
+const processChargeVersionsJob = require('./process-charge-versions');
 
 /**
  * Handles the response from populating the billing batch with charge versions and decides
@@ -30,12 +33,14 @@ const handlePopulateBatchChargeVersionsComplete = async (job, messageQueue) => {
     return jobService.setEmptyBatch(eventId, batch.id);
   }
 
+  // For annual, go straight to processing charge versions
+  // for other bill runs, go to TPT matching
+  const message = batch.type === Batch.BATCH_TYPE.annual
+    ? processChargeVersionsJob.createMessage(eventId, batch)
+    : twoPartTariffMatchingJob.createMessage(eventId, batch);
+
   try {
-    // Otherwise publish a job to process each
-    for (const billingBatchChargeVersionYear of billingBatchChargeVersionYears) {
-      const message = processChargeVersion.createMessage(eventId, billingBatchChargeVersionYear, batch);
-      await messageQueue.publish(message);
-    }
+    return messageQueue.publish(message);
   } catch (err) {
     batchJob.logOnCompleteError(job, err);
     throw err;

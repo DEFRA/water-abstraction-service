@@ -15,8 +15,6 @@ const repos = require('../../../../src/lib/connectors/repository');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const supplementaryBillingService = require('../../../../src/modules/billing/services/supplementary-billing-service');
-const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
-const transactionService = require('../../../../src/modules/billing/services/transactions-service');
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 
 const Batch = require('../../../../src/lib/models/batch');
@@ -31,7 +29,7 @@ const data = {
   }
 };
 
-experiment('modules/billing/jobs/process-charge-version', () => {
+experiment('modules/billing/jobs/prepare-transactions', () => {
   let batch;
 
   beforeEach(async () => {
@@ -45,9 +43,6 @@ experiment('modules/billing/jobs/process-charge-version', () => {
     sandbox.stub(repos.billingTransactions, 'getByBatchId').resolves(data.transactions);
     sandbox.stub(supplementaryBillingService, 'processBatch');
     sandbox.stub(batch, 'isSupplementary');
-
-    sandbox.stub(billingVolumesService, 'getVolumesForBatch').resolves([]);
-    sandbox.stub(transactionService, 'updateTransactionVolumes');
   });
 
   afterEach(async () => {
@@ -105,48 +100,6 @@ experiment('modules/billing/jobs/process-charge-version', () => {
         const errorArgs = batchJob.logHandlingError.lastCall.args;
         expect(errorArgs[0]).to.equal(job);
         expect(errorArgs[1]).to.equal(error);
-      });
-    });
-
-    experiment('for a batch with billing volumes', () => {
-      beforeEach(async () => {
-        job = {
-          data: {
-            batch: data.batch
-          },
-          name: 'billing.prepare-transactions.00000000-0000-0000-0000-000000000002'
-        };
-        billingVolumesService.getVolumesForBatch.resolves([{ billingVolumeId: 'test-billing-volume' }]);
-        await prepareTransactions.handler(job);
-      });
-
-      test('calls billingVolumesService.getVolumesForBatch with batch', async () => {
-        const [batchParam] = billingVolumesService.getVolumesForBatch.lastCall.args;
-        expect(batchParam).to.equal(batch);
-      });
-
-      test('calls transactionService.updateTransactionVolumes with batch', async () => {
-        const [batchParam] = transactionService.updateTransactionVolumes.lastCall.args;
-        expect(batchParam).to.equal(batch);
-      });
-    });
-
-    experiment('for a batch without billing volumes', () => {
-      beforeEach(async () => {
-        job = {
-          data: {
-            batch: data.batch
-          },
-          name: 'billing.prepare-transactions.00000000-0000-0000-0000-000000000002'
-        };
-
-        await prepareTransactions.handler(job);
-      });
-
-      test('the transaction service is not called', async () => {
-        expect(
-          transactionService.updateTransactionVolumes.callCount
-        ).to.equal(0);
       });
     });
 

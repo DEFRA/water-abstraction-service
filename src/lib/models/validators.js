@@ -29,6 +29,7 @@ const VALID_TRANSACTION_KEY = Joi.string().hex().length(32).allow(null);
 const VALID_NEGATIVE_INTEGER = VALID_INTEGER.negative();
 const VALID_EMAIL_ADDRESS = Joi.string().email();
 const VALID_RETURN_ID = Joi.string().regex(returnIDRegex);
+const VALID_OBJECT = Joi.object();
 
 const assertIsArrayOfType = (values, Type) => {
   hoek.assert(isArray(values), 'Array expected');
@@ -85,6 +86,7 @@ const assertNullableEmailAddress = value => assert(value, VALID_EMAIL_ADDRESS.al
 const assertIsNullableBoolean = value => assert(value, Joi.boolean().required().allow(null));
 const assertNullableQuantityWithMaximum = (value, max) => assert(value, VALID_NULLABLE_QUANTITY.max(max));
 const assertReturnId = value => assert(value, VALID_RETURN_ID);
+const assertObject = value => assert(value, VALID_OBJECT);
 
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
@@ -121,3 +123,4 @@ exports.assertNullableEmailAddress = assertNullableEmailAddress;
 exports.assertIsNullableBoolean = assertIsNullableBoolean;
 exports.assertNullableQuantityWithMaximum = assertNullableQuantityWithMaximum;
 exports.assertReturnId = assertReturnId;
+exports.assertObject = assertObject;

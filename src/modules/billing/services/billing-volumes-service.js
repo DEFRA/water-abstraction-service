@@ -1,12 +1,9 @@
+'use strict';
+
 const billingVolumesRepo = require('../../../lib/connectors/repos/billing-volumes');
 const mappers = require('../mappers');
-const twoPartTariffMatching = require('./two-part-tariff-service');
 const { NotFoundError } = require('../../../lib/errors');
 const { BillingVolumeStatusError } = require('../lib/errors');
-
-const isSummerChargeElement = chargeElement => chargeElement.season === 'summer';
-
-const volumesToModels = volumes => volumes.map(mappers.billingVolume.dbToModel);
 
 /**
  * Filter charge elements for matching season
@@ -14,69 +11,14 @@ const volumesToModels = volumes => volumes.map(mappers.billingVolume.dbToModel);
  */
 const getVolumesForChargeElements = async (chargeElements, financialYear) => {
   const chargeElementIds = chargeElements.map(chargeElement => chargeElement.id);
-  const billingVolumes = await billingVolumesRepo.findByChargeElementIdsAndFinancialYear(chargeElementIds, financialYear);
-
-  // The matching process has never run - no billing volumes have been persisted
-  if (billingVolumes.length === 0) {
-    return null;
-  }
-  // There is an exact match - billing volumes already calculated and persisted
-  if (chargeElements.length === billingVolumes.length) {
-    return volumesToModels(billingVolumes);
-  }
-  // There is a mismatch - something has gone wrong
-  throw new NotFoundError(`Billing volumes missing for charge elements ${chargeElementIds}`);
-};
-
-/**
- * Calls two part tariff matching algorithm
- * @return {Object} matching results mapped to db
- */
-const calculateVolumesForChargeElements = async (chargeElements, licenceNumber, financialYear, isSummer, batch) => {
-  const matchingResults = await twoPartTariffMatching.calculateVolumes(chargeElements, licenceNumber, financialYear, isSummer);
-  return mappers.billingVolume.matchingResultsToDb(matchingResults, financialYear, isSummer, batch.id);
-};
-
-/**
- * Create a new record for calculated billing volume
- * @return {BillingVolume}
- */
-const persistBillingVolumesData = async (data) => Promise.all(
-  data.map(async row => {
-    const result = await billingVolumesRepo.create(row);
-    return mappers.billingVolume.dbToModel(result);
-  }));
-
-/**
- * Get billing volumes from the DB or by calling the returns matching algorithm
- * @param {ChargeVersion} chargeVersion containing licence and chargeElements
- * @param {Integer} financialYear
- * @param {Boolean} isSummer
- */
-const getVolumes = async (chargeElements, licenceNumber, financialYear, isSummer, batch) => {
-  const volumes = await getVolumesForChargeElements(chargeElements, financialYear);
-  if (volumes) return volumes;
-
-  const billingVolumesData = await calculateVolumesForChargeElements(chargeElements, licenceNumber, financialYear, isSummer, batch);
-  return persistBillingVolumesData(billingVolumesData);
-};
-
-/**
- * Find billing volume for given chargeElementId, financialYear and isSummer flag
- *
- * throws error if billingVolume is not found
- * @param {String} chargeElementId
- * @param {Integer} financialYear
- * @param {Boolean} isSummer
- */
-const getVolumeForChargeElement = async (chargeElementId, financialYear, isSummer) => {
-  const result = await billingVolumesRepo.findByChargeElementIdsAndFinancialYear([chargeElementId], financialYear);
-  return result.find(volume => volume.isSummer === isSummer);
+  const data = await billingVolumesRepo.findApprovedByChargeElementIdsAndFinancialYear(chargeElementIds, financialYear.endYear);
+  return data.map(mappers.billingVolume.dbToModel);
 };
 
 const assertBillingVolumeIsNotApproved = billingVolume => {
   if (billingVolume.isApproved) throw new BillingVolumeStatusError('Approved billing volumes cannot be edited');
 };
+
 /**
  * Validates that the billingVolume has not been approved yet and
  * updates billingVolume with volume, updated twoPartTariffError to false
@@ -87,10 +29,8 @@ const assertBillingVolumeIsNotApproved = billingVolume => {
  * @param {Number} volume
  * @param {Object} user containing id and email
  */
-const updateBillingVolume = async (chargeElementId, batch, volume, user) => {
-  const { endYear: { yearEnding }, isSummer } = batch;
-  const billingVolume = await getVolumeForChargeElement(chargeElementId, yearEnding, isSummer);
-  if (!billingVolume) throw new NotFoundError(`Billing volume not found for chargeElementId ${chargeElementId}, financialYear ${yearEnding} and isSummer ${isSummer}`);
+const updateBillingVolume = async (billingVolumeId, volume, user) => {
+  const billingVolume = await getBillingVolumeById(billingVolumeId);
 
   // validate that transaction is allowed to be altered
   assertBillingVolumeIsNotApproved(billingVolume);
@@ -100,7 +40,8 @@ const updateBillingVolume = async (chargeElementId, batch, volume, user) => {
     twoPartTariffError: false,
     twoPartTariffReview: { id: user.id, email: user.email }
   };
-  const updatedBillingVolume = await billingVolumesRepo.update(billingVolume.billingVolumeId, changes);
+
+  const updatedBillingVolume = await billingVolumesRepo.update(billingVolume.id, changes);
   return mappers.billingVolume.dbToModel(updatedBillingVolume);
 };
 
@@ -116,22 +57,78 @@ const getUnapprovedVolumesForBatchCount = async batch => {
 
 const getVolumesForBatch = async batch => billingVolumesRepo.findByBatchId(batch.id);
 
-const getVolumesWithTwoPartError = async batch => {
+/**
+ * Throws error if there are billing volumes in the batch with two-part tariff error
+ * @param {Batch} batch
+ */
+const assertNoBillingVolumesWithTwoPartError = async batch => {
   const billingVolumes = await getVolumesForBatch(batch);
-  return billingVolumes.filter(billingVolume => billingVolume.twoPartTariffError);
-};
-
-const approveVolumesForBatch = async batch => {
-  const billingVolumes = await billingVolumesRepo.getUnapprovedVolumesForBatch(batch.id);
-  for (const row of billingVolumes) {
-    await billingVolumesRepo.update(row.billingVolumeId, { isApproved: true });
+  const isError = billingVolumes.some(
+    billingVolume => billingVolume.twoPartTariffError
+  );
+  if (isError) {
+    throw new BillingVolumeStatusError('Cannot approve review. There are outstanding two part tariff errors to resolve');
   }
 };
 
-exports.getVolumes = getVolumes;
+/**
+ * Updates all billing volumes in batch to be approved.
+ * If any are billing volumes in the batch still containing a two-part tariff
+ * error, then an error is thrown
+ * @param {Batch} batch
+ * @return {Promise}
+ */
+const approveVolumesForBatch = async batch => {
+  await assertNoBillingVolumesWithTwoPartError(batch);
+  return billingVolumesRepo.updateByBatchId(batch.id, { isApproved: true });
+};
+
+/**
+ * Persists a single BillingVolume instance
+ * @param {BillingVolume} billingVolume
+ */
+const persist = async billingVolume => {
+  const dbRow = mappers.billingVolume.modelToDB(billingVolume);
+  const data = await billingVolumesRepo.create(dbRow);
+  return mappers.billingVolume.dbToModel(data);
+};
+
+/**
+ * Gets a list of billing volumes for the specified batch and licence ID
+ * @param {Batch} batch
+ * @param {String} licenceId
+ * @return {Promise<Array>}
+ */
+const getLicenceBillingVolumes = async (batch, licenceId) => {
+  // First find billing volumes relating to licence
+  const billingVolumes = await billingVolumesRepo.findByBatchIdAndLicenceId(batch.id, licenceId);
+  const billingVolumeIds = billingVolumes.map(billingVolume => billingVolume.billingVolumeId);
+
+  // Next, get full data structure for each billing volume from above
+  // and map to service model shape
+  const data = await billingVolumesRepo.findByIds(billingVolumeIds);
+  return data.map(mappers.billingVolume.dbToModel);
+};
+
+/**
+ * Gets a single billing volume by ID
+ * If not found, an error is thrown
+ * @param {String} billingVolumeId
+ * @return {Promise<BillingVolume>}
+ */
+const getBillingVolumeById = async (billingVolumeId) => {
+  const [data] = await billingVolumesRepo.findByIds([billingVolumeId]);
+  if (!data) {
+    throw new NotFoundError(`Billing volume ${billingVolumeId} not found`);
+  }
+  return mappers.billingVolume.dbToModel(data);
+};
+
 exports.updateBillingVolume = updateBillingVolume;
-exports.isSummerChargeElement = isSummerChargeElement;
 exports.getUnapprovedVolumesForBatchCount = getUnapprovedVolumesForBatchCount;
 exports.getVolumesForBatch = getVolumesForBatch;
-exports.getVolumesWithTwoPartError = getVolumesWithTwoPartError;
 exports.approveVolumesForBatch = approveVolumesForBatch;
+exports.persist = persist;
+exports.getLicenceBillingVolumes = getLicenceBillingVolumes;
+exports.getBillingVolumeById = getBillingVolumeById;
+exports.getVolumesForChargeElements = getVolumesForChargeElements;

@@ -18,17 +18,21 @@ const createMessage = (eventId, batch) => {
 const handlePopulateBatch = async job => {
   batchJob.logHandling(job);
 
-  const batchId = get(job, 'data.batch.id');
+  try {
+    const batchId = get(job, 'data.batch.id');
+    const batch = await batchService.getBatchById(batchId);
 
-  const batch = await batchService.getBatchById(batchId);
+    // Populate water.billing_batch_charge_versions
+    await chargeVersionService.createForBatch(batch);
 
-  // Populate water.billing_batch_charge_versions
-  await chargeVersionService.createForBatch(batch);
+    // Populate water.billing_batch_charge_version_years
+    const billingBatchChargeVersionYears = await chargeVersionYearService.createForBatch(batch);
 
-  // Populate water.billing_batch_charge_version_years
-  const billingBatchChargeVersionYears = await chargeVersionYearService.createForBatch(batch);
-
-  return { billingBatchChargeVersionYears, batch };
+    return { billingBatchChargeVersionYears, batch };
+  } catch (err) {
+    batchJob.logHandlingError(job, err);
+    throw err;
+  }
 };
 
 exports.createMessage = createMessage;

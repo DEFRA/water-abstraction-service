@@ -32,7 +32,8 @@ const BATCH_ERROR_CODE = {
   failedToPrepareTransactions: 30,
   failedToCreateCharge: 40,
   failedToCreateBillRun: 50,
-  failedToDeleteInvoice: 60
+  failedToDeleteInvoice: 60,
+  failedToProcessTwoPartTariff: 70
 };
 
 const BATCH_TYPE = {
@@ -300,6 +301,14 @@ class Batch extends Model {
    */
   canDeleteInvoices () {
     return this.statusIsOneOf(BATCH_STATUS.ready);
+  }
+
+  /**
+   * Does this batch have a status that means it can have a
+   * two-part tariff approval?
+   */
+  canApproveReview () {
+    return this.statusIsOneOf(BATCH_STATUS.review);
   }
 
   /**

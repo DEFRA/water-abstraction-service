@@ -52,11 +52,12 @@ const getSupplementaryActions = indexes => {
   return uniq(allKeys).reduce((acc, key) => {
     const existsInNewBatch = key in indexes.batch;
     const isExistingCharge = (key in indexes.historical) && (indexes.historical[key].isCredit === false);
+    const isExistingDeMinimisCharge = (key in indexes.historicalDeMinimis);
 
     if (isExistingCharge && existsInNewBatch) {
       acc.delete.push(indexes.batch[key].billingTransactionId);
     }
-    if (isExistingCharge && !existsInNewBatch) {
+    if (isExistingCharge && !existsInNewBatch && !isExistingDeMinimisCharge) {
       acc.credit.push(indexes.historical[key].billingTransactionId);
     }
     return acc;
@@ -177,6 +178,8 @@ const addCreditsToBatch = async (batchId, transactionIds) => {
   return batchService.saveInvoicesToDB(batch);
 };
 
+const isDeMinimis = transaction => transaction.isDeMinimis;
+
 /**
  * Processes the supplementary billing batch specified by
  * deleting some transactions in the batch and crediting others
@@ -196,7 +199,8 @@ const processBatch = async batchId => {
   // Create indexes on the unique transaction keys
   const indexes = {
     batch: indexByTransactionKey(batchTransactions),
-    historical: indexByTransactionKey(historicalTransactions)
+    historical: indexByTransactionKey(historicalTransactions),
+    historicalDeMinimis: indexByTransactionKey(historicalTransactions.filter(isDeMinimis))
   };
 
   // Create a list of delete/credit actions required

@@ -15,8 +15,7 @@ const billingVolumesService = require('../../../../src/modules/billing/services/
 const repos = require('../../../../src/lib/connectors/repos');
 const { logger } = require('../../../../src/logger');
 
-const { createTransaction, createInvoiceLicence, createTransactionDBRow, createBillingVolumeDBRow } = require('../test-data/test-billing-data');
-const { NotFoundError } = require('../../../../src/lib/errors');
+const { createTransaction, createInvoiceLicence, createTransactionDBRow, createBatch, createInvoice } = require('../test-data/test-billing-data');
 
 const chargeElementDBData = {
   chargeElementId: 'ae7197b3-a00b-4a49-be36-af63df6f8583',
@@ -149,73 +148,34 @@ experiment('modules/billing/services/transactions-service', () => {
     });
   });
 
-  experiment('.updateTransactionVolumes', () => {
-    let transactions, billingVolumes;
-    const chargeElementId1 = uuid();
-    const chargeElementId2 = uuid();
-    const batch = { id: uuid() };
+  experiment('.persistDeMinimis', () => {
+    let batch;
+
     beforeEach(async () => {
-      transactions = [
-        createTransactionDBRow({ id: uuid(), chargeElementId: chargeElementId1 }),
-        createTransactionDBRow({ id: uuid(), chargeElementId: chargeElementId2 }),
-        createTransactionDBRow({ id: uuid() })
+      batch = createBatch();
+      batch.invoices = [
+        createInvoice()
       ];
-      billingVolumes = [
-        createBillingVolumeDBRow({ billingVolumeId: uuid(), chargeElementId: chargeElementId1, volume: 5.325 }),
-        createBillingVolumeDBRow({ billingVolumeId: uuid(), chargeElementId: chargeElementId2, volume: 32.7 })
+      batch.invoices[0].invoiceLicences[0].transactions = [
+        createTransaction({ id: '00000000-0000-0000-0000-000000000000', isDeMinimis: false }),
+        createTransaction({ id: '00000000-0000-0000-0000-000000000001', isDeMinimis: true }),
+        createTransaction({ id: '00000000-0000-0000-0000-000000000002', isDeMinimis: false }),
+        createTransaction({ id: '00000000-0000-0000-0000-000000000003', isDeMinimis: true })
       ];
-      repos.billingTransactions.findByBatchId.resolves(transactions);
-      billingVolumesService.getVolumesForBatch.resolves(billingVolumes);
+
+      await transactionsService.persistDeMinimis(batch);
     });
 
-    experiment('when all billing volumes have corresponding transactions', () => {
-      beforeEach(async () => {
-        await transactionsService.updateTransactionVolumes(batch);
-      });
-      test('calls transactions repo.findByBatchId', async () => {
-        expect(repos.billingTransactions.findByBatchId.calledWith(
-          batch.id
-        )).to.be.true();
-      });
-
-      test('calls billingVolumesService to get the volumes for the batch', async () => {
-        expect(billingVolumesService.getVolumesForBatch.calledWith(
-          batch
-        )).to.be.true();
-      });
-
-      test('matches the first billingVolume to relevant transaction', async () => {
-        const [transactionId, changes] = repos.billingTransactions.update.firstCall.args;
-        expect(transactionId).to.equal(transactions[0].billingTransactionId);
-        expect(changes).to.equal({ volume: billingVolumes[0].volume });
-      });
-
-      test('matches the second billingVolume to relevant transaction', async () => {
-        const [transactionId, changes] = repos.billingTransactions.update.secondCall.args;
-        expect(transactionId).to.equal(transactions[1].billingTransactionId);
-        expect(changes).to.equal({ volume: billingVolumes[1].volume });
-      });
-
-      test('does not update transaction without a matching billing volume', async () => {
-        expect(repos.billingTransactions.update.thirdCall).to.be.null();
-      });
+    test('clears flag for all transactions where isDeMinimis is false', async () => {
+      expect(repos.billingTransactions.update.calledWith(
+        ['00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000002'], { isDeMinimis: false }
+      )).to.be.true();
     });
 
-    experiment('when these is a missing transaction', () => {
-      test('a NotFoundError is thrown', async () => {
-        const unmatcheBillingVolume = createBillingVolumeDBRow({ billingVolumeId: uuid(), volume: 16.5 });
-
-        try {
-          billingVolumesService.getVolumesForBatch.resolves([
-            ...billingVolumes,
-            unmatcheBillingVolume
-          ]);
-          await transactionsService.updateTransactionVolumes(batch);
-        } catch (err) {
-          expect(err).to.be.instanceOf(NotFoundError);
-          expect(err.message).to.equal(`No transaction found for billing volume ${unmatcheBillingVolume.billingVolumeId}`);
-        }
-      });
+    test('sets flag for all transactions where isDeMinimis is true', async () => {
+      expect(repos.billingTransactions.update.calledWith(
+        ['00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000003'], { isDeMinimis: true }
+      )).to.be.true();
     });
   });
 });
