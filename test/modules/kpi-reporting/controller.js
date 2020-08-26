@@ -57,7 +57,7 @@ experiment('./modules/kpi-reporting/controller', () => {
     });
     test('Boom not found error is returned', async () => {
       const emptyResponse = { totals: { allTime: 0, ytd: 0 }, monthly: [] };
-      const emptyDataRespomse = {
+      const emptyDataResponse = {
         data: {
           registrations: emptyResponse,
           delegatedAccess: emptyResponse,
@@ -68,7 +68,7 @@ experiment('./modules/kpi-reporting/controller', () => {
         }
       };
       const response = await controller.getKpiData({});
-      expect(response).to.be.equal(emptyDataRespomse);
+      expect(response).to.be.equal(emptyDataResponse);
     });
   });
 
