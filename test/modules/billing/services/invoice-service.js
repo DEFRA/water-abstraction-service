@@ -59,12 +59,15 @@ const createChargeModuleData = () => ({
             debitLineCount: 2,
             debitLineValue: 12345,
             netTotal: 12345,
+            deminimis: false,
             transactions: [{
               id: IDS.transactions[0],
-              chargeValue: 2345
+              chargeValue: 2345,
+              deminimis: false
             }, {
               id: IDS.transactions[1],
-              chargeValue: 10000
+              chargeValue: 10000,
+              deminimis: false
             }]
           },
           // Year ending 2020
@@ -75,12 +78,15 @@ const createChargeModuleData = () => ({
             debitLineCount: 1,
             debitLineValue: 100,
             netTotal: -100,
+            deminimis: false,
             transactions: [{
               id: IDS.transactions[4],
-              chargeValue: 100
+              chargeValue: 100,
+              deminimis: false
             }, {
               id: IDS.transactions[5],
-              chargeValue: -200
+              chargeValue: -200,
+              deminimis: false
             }]
           }
         ]
@@ -96,12 +102,15 @@ const createChargeModuleData = () => ({
             debitLineCount: 2,
             debitLineValue: 523,
             netTotal: 523,
+            deminimis: false,
             transactions: [{
               id: IDS.transactions[2],
-              chargeValue: 400
+              chargeValue: 400,
+              deminimis: false
             }, {
               id: IDS.transactions[3],
-              chargeValue: 123
+              chargeValue: 123,
+              deminimis: false
             }]
           }
         ]
@@ -132,7 +141,8 @@ const createTransaction = externalId => ({
     authorisedAnnualQuantity: 12
   },
   billingVolume: [],
-  externalId
+  externalId,
+  isDeMinimis: false
 });
 
 const createLicence = licenceRef => ({
@@ -397,8 +407,8 @@ experiment('modules/billing/services/invoiceService', () => {
 
       test('has the correct CRM company, agent and contact', async () => {
         expect(invoice.invoiceAccount.company.id).to.equal(IDS.companies[2]);
-        expect(invoice.agentCompany).to.be.null();
-        expect(invoice.contact).to.be.null();
+        expect(invoice.agentCompany).to.equal({ _companyAddresses: [], _companyContacts: [] });
+        expect(invoice.contact).to.equal({});
       });
 
       test('has a correct financial summary', async () => {
@@ -532,8 +542,8 @@ experiment('modules/billing/services/invoiceService', () => {
 
       test('has the correct CRM company, agent and contact', async () => {
         expect(invoice.invoiceAccount.company.id).to.equal(IDS.companies[2]);
-        expect(invoice.agentCompany).to.be.null();
-        expect(invoice.contact).to.be.null();
+        expect(invoice.agentCompany).to.equal({ _companyAddresses: [], _companyContacts: [] });
+        expect(invoice.contact).to.equal({});
       });
 
       test('has 2 transactions', async () => {

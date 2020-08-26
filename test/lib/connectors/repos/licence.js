@@ -10,8 +10,10 @@ const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const licencesRespo = require('../../../../src/lib/connectors/repos/licences');
-const { Licence } = require('../../../../src/lib/connectors/bookshelf');
+const licenceQueries = require('../../../../src/lib/connectors/repos/queries/licences');
+const licencesRepo = require('../../../../src/lib/connectors/repos/licences');
+const { Licence, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
+const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 
 experiment('lib/connectors/repos/licences', () => {
   let model, stub;
@@ -22,9 +24,12 @@ experiment('lib/connectors/repos/licences', () => {
     };
 
     stub = {
-      fetch: sandbox.stub().resolves(model)
+      fetch: sandbox.stub().resolves(model),
+      save: sandbox.stub().resolves(model)
     };
     sandbox.stub(Licence, 'forge').returns(stub);
+    sandbox.stub(bookshelf.knex, 'raw');
+    sandbox.stub(raw, 'multiRow');
   });
 
   afterEach(async () => {
@@ -36,7 +41,7 @@ experiment('lib/connectors/repos/licences', () => {
 
     experiment('when a record is found', () => {
       beforeEach(async () => {
-        result = await licencesRespo.findOne('test-id');
+        result = await licencesRepo.findOne('test-id');
       });
 
       test('calls model.forge with correct id', async () => {
@@ -61,12 +66,101 @@ experiment('lib/connectors/repos/licences', () => {
     experiment('when a record is not found', () => {
       beforeEach(async () => {
         stub.fetch.resolves(null);
-        result = await licencesRespo.findOne('test-id');
+        result = await licencesRepo.findOne('test-id');
       });
 
       test('resolves with null', async () => {
         expect(result).to.equal(null);
       });
+    });
+  });
+
+  experiment('.update', () => {
+    const licenceId = 'test-licence-id';
+    const changes = {
+      testing: true
+    };
+
+    beforeEach(async () => {
+      await licencesRepo.update(licenceId, changes);
+    });
+
+    test('calls model.forge with correct data', async () => {
+      const [params] = Licence.forge.lastCall.args;
+      expect(params).to.equal({ licenceId });
+    });
+
+    test('calls .save() on the model using patch mode', async () => {
+      expect(stub.save.calledWith(changes, { patch: true })).to.be.true();
+    });
+  });
+
+  experiment('.updateIncludeLicenceInSupplementaryBilling', () => {
+    const licenceId = 'test-licence-id';
+    const from = 'from';
+    const to = 'to';
+
+    beforeEach(async () => {
+      await licencesRepo.updateIncludeLicenceInSupplementaryBilling(licenceId, from, to);
+    });
+
+    test('calls model.forge with correct data', async () => {
+      const [params] = Licence.forge.lastCall.args;
+      expect(params).to.equal({
+        licenceId,
+        includeInSupplementaryBilling: from
+      });
+    });
+
+    test('passes the expected patch to the save function', async () => {
+      const [changes] = stub.save.lastCall.args;
+      expect(changes).to.equal({ includeInSupplementaryBilling: to });
+    });
+
+    test('calls .save() on the model using patch mode', async () => {
+      const [, options] = stub.save.lastCall.args;
+      expect(options.patch).to.equal(true);
+    });
+
+    test('calls .save() on the model wihtout requiring any updated rows', async () => {
+      const [, options] = stub.save.lastCall.args;
+      expect(options.require).to.equal(false);
+    });
+  });
+
+  experiment('.updateIncludeInSupplementaryBillingStatusForBatch', () => {
+    beforeEach(async () => {
+      await licencesRepo.updateIncludeInSupplementaryBillingStatusForBatch(
+        'test-batch-id',
+        'from-value',
+        'to-value'
+      );
+    });
+
+    test('uses the expected SQL query', async () => {
+      const [query] = bookshelf.knex.raw.lastCall.args;
+      expect(query).to.equal(licenceQueries.updateIncludeInSupplementaryBillingStatusForBatch);
+    });
+
+    test('passes the expected params to the query', async () => {
+      const [, params] = bookshelf.knex.raw.lastCall.args;
+      expect(params).to.equal({
+        batchId: 'test-batch-id',
+        from: 'from-value',
+        to: 'to-value'
+      });
+    });
+  });
+
+  experiment('.findByBatchIdForTwoPartTariffReview', () => {
+    beforeEach(async () => {
+      await licencesRepo.findByBatchIdForTwoPartTariffReview('batch-id');
+    });
+
+    test('calls raw.multiRow with correct query and params', async () => {
+      expect(raw.multiRow.calledWith(
+        licenceQueries.findByBatchIdForTwoPartTariffReview, { billingBatchId: 'batch-id' }
+      )).to.be.true();
     });
   });
 });

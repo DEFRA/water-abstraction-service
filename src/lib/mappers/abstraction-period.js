@@ -12,4 +12,11 @@ const dbToModel = dbRow => {
   });
 };
 
+/**
+ * Creates a plain object which can be used in the getBillableDays helper
+ * @param {AbstractionPeriod} absPeriod
+ */
+const modelToHelpers = absPeriod => absPeriod.pick(['startDay', 'startMonth', 'endDay', 'endMonth']);
+
 exports.dbToModel = dbToModel;
+exports.modelToHelpers = modelToHelpers;

@@ -10,6 +10,7 @@ const sandbox = require('sinon').createSandbox();
 const billingVolumes = require('../../../../src/lib/connectors/repos/billing-volumes');
 const { BillingVolume, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-volumes');
+const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 
 experiment('lib/connectors/repos/billing-volumes', () => {
   let stub, model;
@@ -29,7 +30,10 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     };
 
     sandbox.stub(BillingVolume, 'forge').returns(stub);
+    sandbox.stub(BillingVolume, 'where').returns(stub);
+
     sandbox.stub(bookshelf.knex, 'raw');
+    sandbox.stub(raw, 'multiRow');
   });
 
   afterEach(async () => sandbox.restore());
@@ -65,36 +69,35 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     });
   });
 
-  experiment('.findByChargeElementIdsAndFinancialYear', () => {
+  experiment('.findApprovedByChargeElementIdsAndFinancialYear', () => {
     let result;
-    const ids = ['charge-element-id-1', 'charge-element-id-2'];
-
     beforeEach(async () => {
-      result = await billingVolumes.findByChargeElementIdsAndFinancialYear(ids, 2019);
+      result = await billingVolumes.findApprovedByChargeElementIdsAndFinancialYear(['test-id-1', 'test-id-2'], 2020);
     });
 
-    test('calls model.forge', () => {
-      expect(BillingVolume.forge.called).to.be.true();
+    test('calls model.forge', async () => {
+      expect(BillingVolume.forge.calledWith()).to.be.true();
     });
 
-    test('queries for matching ID(s)', async () => {
-      const [operator, field, values] = stub.query.lastCall.args;
-      expect(operator).to.equal('whereIn');
-      expect(field).to.equal('charge_element_id');
-      expect(values).to.equal(['charge-element-id-1', 'charge-element-id-2']);
+    test('finds rows with matching charge element IDs', async () => {
+      expect(stub.query.calledWith(
+        'whereIn', 'charge_element_id', ['test-id-1', 'test-id-2']
+      )).to.be.true();
     });
 
-    test('queries for matching financial year', async () => {
-      const [filter] = stub.where.lastCall.args;
-      expect(filter).to.equal({ financial_year: 2019 });
+    test('finds only approved rows with the supplied financial year ending', async () => {
+      expect(stub.where.calledWith({
+        financial_year: 2020,
+        is_approved: true
+      })).to.be.true();
     });
 
-    test('calls fetchAll', () => {
+    test('calls .fetchAll() to run the query', async () => {
       expect(stub.fetchAll.called).to.be.true();
     });
 
-    test('calls toJSON() on returned models', async () => {
-      expect(model.toJSON.callCount).to.equal(1);
+    test('calls .toJSON() on the resulting collection', async () => {
+      expect(model.toJSON.called).to.be.true();
     });
 
     test('returns the result of the toJSON() call', async () => {
@@ -230,6 +233,88 @@ experiment('lib/connectors/repos/billing-volumes', () => {
       const [query, params] = bookshelf.knex.raw.lastCall.args;
       expect(query).to.equal(queries.deleteByBatchAndInvoiceId);
       expect(params).to.equal({ batchId, billingInvoiceId });
+    });
+  });
+
+  experiment('.findByBatchIdAndLicenceId', () => {
+    const billingBatchId = 'test-batch-id';
+    const licenceId = 'test-invoice-account-id';
+
+    beforeEach(async () => {
+      await billingVolumes.findByBatchIdAndLicenceId(billingBatchId, licenceId);
+    });
+
+    test('calls raw.multiRow() with correct argumements', async () => {
+      const [query, params] = raw.multiRow.lastCall.args;
+      expect(query).to.equal(queries.findByBatchIdAndLicenceId);
+      expect(params).to.equal({ billingBatchId, licenceId });
+    });
+  });
+
+  experiment('.findByIds', () => {
+    beforeEach(async () => {
+      billingVolumes.findByIds(['id-1', 'id-2']);
+    });
+
+    test('calls .where to find only the rows with the supplied IDs', async () => {
+      expect(BillingVolume.where.calledWith(
+        'billing_volume_id', 'in', ['id-1', 'id-2']
+      )).to.be.true();
+    });
+
+    test('fetched related models', async () => {
+      expect(stub.fetchAll.calledWith(
+        {
+          withRelated: [
+            'chargeElement',
+            'chargeElement.purposeUse'
+          ]
+        }
+      )).to.be.true();
+    });
+
+    test('calls .toJSON on the collection', async () => {
+      expect(model.toJSON.called).to.be.true();
+    });
+  });
+
+  experiment('.deleteByBatchIdAndLicenceId', () => {
+    const billingBatchId = 'test-batch-id';
+    const licenceId = 'test-invoice-account-id';
+
+    beforeEach(async () => {
+      await billingVolumes.deleteByBatchIdAndLicenceId(billingBatchId, licenceId);
+    });
+
+    test('calls knex.raw with correct query and params', async () => {
+      const [query, params] = bookshelf.knex.raw.lastCall.args;
+      expect(query).to.equal(queries.deleteByBatchIdAndLicenceId);
+      expect(params).to.equal({ billingBatchId, licenceId });
+    });
+  });
+
+  experiment('.updateByBatchId', () => {
+    const changes = {
+      twoPartTariffStatus: 20,
+      twoPartTariffError: true
+    };
+
+    beforeEach(async () => {
+      await billingVolumes.updateByBatchId('test-batch-id', changes);
+    });
+
+    test('calls .where to find only the rows in the relevant batch', async () => {
+      expect(BillingVolume.where.calledWith(
+        'billing_batch_id', 'test-batch-id'
+      )).to.be.true();
+    });
+
+    test('saves the changes', async () => {
+      expect(stub.save.calledWith(changes)).to.be.true();
+    });
+
+    test('calls .toJSON on the collection', async () => {
+      expect(model.toJSON.called).to.be.true();
     });
   });
 });

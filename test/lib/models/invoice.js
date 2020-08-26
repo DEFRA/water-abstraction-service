@@ -2,6 +2,7 @@
 
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
+const uuid = require('uuid/v4');
 
 const Invoice = require('../../../src/lib/models/invoice');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
@@ -116,6 +117,39 @@ experiment('lib/models/invoice', () => {
     });
   });
 
+  experiment('.getLicenceIds', () => {
+    experiment('when there are licences', () => {
+      test('returns an array of the unique ids', async () => {
+        const id1 = uuid();
+        const id2 = uuid();
+
+        const licence1 = new Licence(id1);
+        const licence2 = new Licence(id2);
+        const licence3 = new Licence(id1);
+
+        const invoiceLicence1 = new InvoiceLicence().fromHash({ licence: licence1 });
+        const invoiceLicence2 = new InvoiceLicence().fromHash({ licence: licence2 });
+        const invoiceLicence3 = new InvoiceLicence().fromHash({ licence: licence3 });
+
+        const invoice = new Invoice();
+        invoice.invoiceLicences = [invoiceLicence1, invoiceLicence2, invoiceLicence3];
+
+        const licenceIds = invoice.getLicenceIds();
+
+        expect(licenceIds.length).to.equal(2);
+        expect(licenceIds).to.contain(id1);
+        expect(licenceIds).to.contain(id2);
+      });
+    });
+
+    experiment('when there are no licences', () => {
+      test('returns an empty array', async () => {
+        const invoice = new Invoice();
+        expect(invoice.getLicenceIds()).to.equal([]);
+      });
+    });
+  });
+
   experiment('.getInvoiceLicenceByLicenceNumber', () => {
     let invoiceLicenceA, invoiceLicenceB, invoice;
 
@@ -139,6 +173,25 @@ experiment('lib/models/invoice', () => {
 
     test('returns undefined if not found', async () => {
       expect(invoice.getInvoiceLicenceByLicenceNumber('01/999')).to.be.undefined();
+    });
+  });
+
+  experiment('.isDeMinimis', () => {
+    test('can be set to a boolean true', async () => {
+      invoice.isDeMinimis = true;
+      expect(invoice.isDeMinimis).to.equal(true);
+    });
+
+    test('can be set to a boolean false', async () => {
+      invoice.isDeMinimis = false;
+      expect(invoice.isDeMinimis).to.equal(false);
+    });
+
+    test('throws an error if set to a non-boolean', async () => {
+      const func = () => {
+        invoice.isDeMinimis = 'hey';
+      };
+      expect(func).to.throw();
     });
   });
 });

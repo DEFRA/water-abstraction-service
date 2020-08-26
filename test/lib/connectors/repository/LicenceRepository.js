@@ -18,7 +18,7 @@ const data = {
     licence_id: 'f5d78402-8dc4-490a-8326-b1be90e12729',
     region_id: '11131a93-0f5c-477a-a68a-91f55f4c48f9',
     licence_ref: '01/123/ABC',
-    include_in_supplementary_billing: false
+    include_in_supplementary_billing: 'no'
   }]
 };
 

@@ -219,6 +219,13 @@ experiment('lib/models/charge-element', () => {
       const result = chargeElement.toJSON();
       expect(result.eiucSource).to.equal('tidal');
     });
+
+    test('the maxAnnualQuantity property is included', async () => {
+      chargeElement.billableAnnualQuantity = 1;
+      chargeElement.authorisedAnnualQuantity = 2;
+      const result = chargeElement.toJSON();
+      expect(result.maxAnnualQuantity).to.equal(2);
+    });
   });
 
   experiment('description', () => {

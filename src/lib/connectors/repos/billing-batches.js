@@ -48,9 +48,12 @@ const findByStatuses = async statuses => {
  * @param {String} batchId UUID of the batch to update
  * @param {Object} changes Key values pairs of the changes to make
  */
-const update = (batchId, changes) => BillingBatch
-  .forge({ billingBatchId: batchId })
-  .save(changes);
+const update = async (batchId, changes) => {
+  const result = await BillingBatch
+    .forge({ billingBatchId: batchId })
+    .save(changes, { method: 'update' });
+  return mapModel(result);
+};
 
 /**
  * Deletes the billing_batch record with the given id
@@ -131,6 +134,19 @@ const findSentTPTBatchesForFinancialYearAndRegion = async (financialYear, region
   return batches.toJSON();
 };
 
+const findSentTPTBatchesForRegion = async regionId => {
+  const filters = {
+    status: BATCH_STATUS.sent,
+    batch_type: BATCH_TYPE.twoPartTariff,
+    region_id: regionId
+  };
+  const batches = await BillingBatch
+    .forge()
+    .where(filters)
+    .fetchAll();
+  return batches.toJSON();
+};
+
 exports.delete = deleteById;
 exports.findByStatuses = findByStatuses;
 exports.findOne = findOne;
@@ -140,3 +156,4 @@ exports.findOneWithInvoices = findOneWithInvoices;
 exports.findOneWithInvoicesWithTransactions = findOneWithInvoicesWithTransactions;
 exports.create = create;
 exports.findSentTPTBatchesForFinancialYearAndRegion = findSentTPTBatchesForFinancialYearAndRegion;
+exports.findSentTPTBatchesForRegion = findSentTPTBatchesForRegion;

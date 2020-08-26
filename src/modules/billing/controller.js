@@ -1,36 +1,18 @@
 'use strict';
 
 const Boom = require('@hapi/boom');
-const Event = require('../../lib/models/event');
-const Batch = require('../../lib/models/batch');
-const BATCH_STATUS = Batch.BATCH_STATUS;
 
-const { get } = require('lodash');
 const { envelope } = require('../../lib/response');
 const createBillRunJob = require('./jobs/create-bill-run');
-const prepareTransactionsJob = require('./jobs/prepare-transactions');
 const refreshTotalsJob = require('./jobs/refresh-totals');
 const { jobStatus } = require('./lib/event');
 const invoiceService = require('./services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
 const batchService = require('./services/batch-service');
-const transactionsService = require('./services/transactions-service');
-const billingVolumesService = require('./services/billing-volumes-service');
-const eventService = require('../../lib/services/events');
+const { createBatchEvent } = require('./lib/batch-event');
 
 const mapErrorResponse = require('../../lib/map-error-response');
 const mappers = require('./mappers');
-
-const createBatchEvent = (options) => {
-  const batchEvent = new Event();
-  batchEvent.type = options.type || 'billing-batch';
-  batchEvent.subtype = options.subtype || null;
-  batchEvent.issuer = options.issuer;
-  batchEvent.metadata = { batch: options.batch };
-  batchEvent.status = options.status;
-
-  return eventService.create(batchEvent);
-};
 
 /**
  * Resource that will create a new batch skeleton which will
@@ -160,40 +142,6 @@ const postApproveBatch = async (request, h) => {
   }
 };
 
-const getBatchLicences = async (request, h) => {
-  const { batch } = request.pre;
-
-  if (batch.statusIsOneOf(BATCH_STATUS.processing, BATCH_STATUS.error)) {
-    return h.response('Cannot get licences for processing or errored batch').code(403);
-  }
-
-  if (batch.status === BATCH_STATUS.empty) {
-    return [];
-  }
-
-  return invoiceLicenceService.getLicencesWithTransactionStatusesForBatch(batch.id);
-};
-
-const patchTransactionBillingVolume = async (request, h) => {
-  const { transactionId } = request.params;
-  const { volume } = request.payload;
-  const { internalCallingUser: user } = request.defra;
-
-  const batch = await transactionsService.getById(transactionId);
-  if (!batch) return Boom.notFound(`No transaction (${transactionId}) found`);
-
-  try {
-    const transaction = get(batch, 'invoices[0].invoiceLicences[0].transactions[0]');
-    const updatedBillingVolume = await billingVolumesService.updateBillingVolume(transaction.chargeElement.id, batch, volume, user);
-    return {
-      transaction,
-      updatedBillingVolume
-    };
-  } catch (err) {
-    return Boom.badRequest(err.message);
-  }
-};
-
 const getInvoiceLicenceWithTransactions = async (request, h) => {
   const { invoiceLicenceId } = request.params;
   const invoiceLicence = await invoiceLicenceService.getInvoiceLicenceWithTransactions(invoiceLicenceId);
@@ -214,48 +162,16 @@ const deleteInvoiceLicence = async (request, h) => {
   }
 };
 
-const postApproveReviewBatch = async (request, h) => {
-  const { batch } = request.pre;
-  const { internalCallingUser } = request.defra;
-
-  try {
-    const updatedBatch = await batchService.approveTptBatchReview(batch);
-
-    await billingVolumesService.approveVolumesForBatch(batch);
-
-    const batchEvent = await createBatchEvent({
-      type: 'billing-batch:approve-review',
-      status: jobStatus.processing,
-      issuer: internalCallingUser.email,
-      batch: updatedBatch
-    });
-
-    const message = prepareTransactionsJob.createMessage(batchEvent.id, updatedBatch);
-    await request.messageQueue.publish(message);
-
-    return envelope({
-      event: batchEvent,
-      batch: updatedBatch,
-      url: `/water/1.0/event/${batchEvent.id}`
-    });
-  } catch (err) {
-    return mapErrorResponse(err);
-  }
-};
-
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.getBatchInvoicesDetails = getBatchInvoicesDetails;
-exports.getBatchLicences = getBatchLicences;
 exports.getInvoiceLicenceWithTransactions = getInvoiceLicenceWithTransactions;
 exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteBatch = deleteBatch;
 
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
-exports.postApproveReviewBatch = postApproveReviewBatch;
 
-exports.patchTransactionBillingVolume = patchTransactionBillingVolume;
 exports.deleteInvoiceLicence = deleteInvoiceLicence;

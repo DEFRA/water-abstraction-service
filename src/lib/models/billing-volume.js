@@ -1,9 +1,12 @@
 'use strict';
 
+const hoek = require('@hapi/hoek');
+
 const Model = require('./model');
 const FinancialYear = require('./financial-year');
 const User = require('./user');
-const { isNull } = require('lodash');
+const { isNull, isFinite } = require('lodash');
+const toFixedPrecision = require('../to-fixed');
 
 const validators = require('./validators');
 
@@ -14,8 +17,28 @@ const twoPartTariffStatuses = {
   ERROR_SOME_RETURNS_DUE: 40,
   ERROR_LATE_RETURNS: 50,
   ERROR_OVER_ABSTRACTION: 60,
-  ERROR_NO_RETURNS_FOR_MATCHING: 70
+  ERROR_NO_RETURNS_FOR_MATCHING: 70,
+  ERROR_NOT_DUE_FOR_BILLING: 80,
+  ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD: 90,
+  ERROR_NO_MATCHING_CHARGE_ELEMENT: 100
 };
+
+const assignBillableStatuses = [
+  twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED,
+  twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE,
+  twoPartTariffStatuses.ERROR_LATE_RETURNS
+];
+
+const setErrorFlagStatuses = [
+  twoPartTariffStatuses.ERROR_UNDER_QUERY,
+  twoPartTariffStatuses.ERROR_RECEIVED,
+  twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE,
+  twoPartTariffStatuses.ERROR_OVER_ABSTRACTION,
+  twoPartTariffStatuses.ERROR_NO_RETURNS_FOR_MATCHING,
+  twoPartTariffStatuses.ERROR_NOT_DUE_FOR_BILLING,
+  twoPartTariffStatuses.ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD,
+  twoPartTariffStatuses.ERROR_NO_MATCHING_CHARGE_ELEMENT
+];
 
 class BillingVolume extends Model {
   get chargeElementId () {
@@ -25,6 +48,15 @@ class BillingVolume extends Model {
   set chargeElementId (chargeElementId) {
     validators.assertId(chargeElementId);
     this._chargeElementId = chargeElementId;
+  }
+
+  get billingBatchId () {
+    return this._billingBatchId;
+  }
+
+  set billingBatchId (billingBatchId) {
+    validators.assertId(billingBatchId);
+    this._billingBatchId = billingBatchId;
   }
 
   get financialYear () {
@@ -85,6 +117,22 @@ class BillingVolume extends Model {
   }
 
   /**
+   * Sets the two part tariff status and billable volume
+   * @param {Number} twoPartTariffStatus
+   * @param {Number} billableVolume
+   */
+  setTwoPartTariffStatus (twoPartTariffStatus, billableVolume) {
+    this.twoPartTariffStatus = twoPartTariffStatus;
+    if (assignBillableStatuses.includes(twoPartTariffStatus)) {
+      this.calculatedVolume = null;
+      this.volume = billableVolume;
+    }
+    if (setErrorFlagStatuses.includes(twoPartTariffStatus)) {
+      this.twoPartTariffError = true;
+    }
+  }
+
+  /**
   * The User who has reviewed the two part tariff error
   * @return {User}
   */
@@ -122,6 +170,42 @@ class BillingVolume extends Model {
   set volume (volume) {
     validators.assertNullableQuantity(volume);
     this._volume = isNull(volume) ? null : parseFloat(volume);
+  }
+
+  /**
+   * Allocates billing volume
+   * @param {Number} ML
+   */
+  allocate (volume) {
+    validators.assertQuantity(volume);
+    hoek.assert(this.calculatedVolume === this.volume, `Can't allocate ${volume} when volume and calculated volume differ`);
+    this.calculatedVolume = isFinite(this.calculatedVolume) ? this.calculatedVolume + volume : volume;
+    this.volume = this.calculatedVolume;
+  }
+
+  /**
+   * De-allocate billing volume
+   * @param {Number} ML
+   */
+  deallocate (volume) {
+    hoek.assert(isFinite(this.calculatedVolume), `Can't deallocate ${volume} when calculated volume is not finite`);
+    hoek.assert(this.calculatedVolume === this.volume, `Can't deallocate ${volume} when volume and calculated volume differ`);
+    validators.assertQuantityWithMaximum(volume, this.calculatedVolume);
+    this.calculatedVolume -= volume;
+    this.volume = this.calculatedVolume;
+  }
+
+  /**
+   * Converts volumes to a fixed precision of 3 DP
+   */
+  toFixed () {
+    if (isFinite(this.volume)) {
+      this.volume = toFixedPrecision(this.volume);
+    }
+    if (isFinite(this.calculatedVolume)) {
+      this.calculatedVolume = toFixedPrecision(this.calculatedVolume);
+    }
+    return this;
   }
 }
 

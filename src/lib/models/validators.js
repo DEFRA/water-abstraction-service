@@ -29,6 +29,7 @@ const VALID_TRANSACTION_KEY = Joi.string().hex().length(32).allow(null);
 const VALID_NEGATIVE_INTEGER = VALID_INTEGER.negative();
 const VALID_EMAIL_ADDRESS = Joi.string().email();
 const VALID_RETURN_ID = Joi.string().regex(returnIDRegex);
+const VALID_OBJECT = Joi.object();
 
 const assertIsArrayOfType = (values, Type) => {
   hoek.assert(isArray(values), 'Array expected');
@@ -71,6 +72,7 @@ const assertAgreementCode = value => assert(value, VALID_AGREEMENT_CODE);
 const assertDay = value => assert(value, VALID_DAY);
 const assertMonth = value => assert(value, VALID_MONTH);
 const assertQuantity = value => assert(value, VALID_QUANTITY);
+const assertQuantityWithMaximum = (value, max) => assert(value, VALID_QUANTITY.max(max));
 const assertNullableQuantity = value => assert(value, VALID_NULLABLE_QUANTITY);
 const assertIsoString = value => assert(value, VALID_ISO_DATE_STRING);
 const assertFactor = value => assert(value, VALID_FACTOR);
@@ -84,6 +86,7 @@ const assertNullableEmailAddress = value => assert(value, VALID_EMAIL_ADDRESS.al
 const assertIsNullableBoolean = value => assert(value, Joi.boolean().required().allow(null));
 const assertNullableQuantityWithMaximum = (value, max) => assert(value, VALID_NULLABLE_QUANTITY.max(max));
 const assertReturnId = value => assert(value, VALID_RETURN_ID);
+const assertObject = value => assert(value, VALID_OBJECT);
 
 exports.assertIsBoolean = assertIsBoolean;
 exports.assertIsInstanceOf = assertIsInstanceOf;
@@ -106,6 +109,7 @@ exports.assertAgreementCode = assertAgreementCode;
 exports.assertDay = assertDay;
 exports.assertMonth = assertMonth;
 exports.assertQuantity = assertQuantity;
+exports.assertQuantityWithMaximum = assertQuantityWithMaximum;
 exports.assertNullableQuantity = assertNullableQuantity;
 exports.assertIsoString = assertIsoString;
 exports.assertFactor = assertFactor;
@@ -119,3 +123,4 @@ exports.assertNullableEmailAddress = assertNullableEmailAddress;
 exports.assertIsNullableBoolean = assertIsNullableBoolean;
 exports.assertNullableQuantityWithMaximum = assertNullableQuantityWithMaximum;
 exports.assertReturnId = assertReturnId;
+exports.assertObject = assertObject;

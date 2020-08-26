@@ -3,10 +3,8 @@
 const Transaction = require('../../../lib/models/transaction');
 const { logger } = require('../../../logger');
 const newRepos = require('../../../lib/connectors/repos');
-const billingVolumesService = require('./billing-volumes-service');
-const { NotFoundError } = require('../../../lib/errors');
 const mappers = require('../mappers');
-const { get } = require('lodash');
+const { get, flatMap } = require('lodash');
 
 /**
  * Saves a row to water.billing_transactions for the given Transaction
@@ -79,19 +77,40 @@ const setErrorStatus = transactionId =>
     status: Transaction.statuses.error
   });
 
-const updateTransactionVolumes = async batch => {
-  const transactions = await newRepos.billingTransactions.findByBatchId(batch.id);
-  const billingVolumes = await billingVolumesService.getVolumesForBatch(batch);
-  for (const billingVolume of billingVolumes) {
-    const transaction = transactions.find(trans =>
-      trans.chargeElementId === billingVolume.chargeElementId);
-    if (!transaction) throw new NotFoundError(`No transaction found for billing volume ${billingVolume.billingVolumeId}`);
-    await newRepos.billingTransactions.update(transaction.billingTransactionId, { volume: billingVolume.volume });
-  }
+const updateDeMinimis = (ids, isDeMinimis) =>
+  newRepos.billingTransactions.update(ids, { isDeMinimis }, false);
+
+const getInvoiceTransactions = invoice =>
+  flatMap(
+    invoice.invoiceLicences.map(
+      invoiceLicence => invoiceLicence.transactions
+    )
+  );
+
+const getBatchTransactions = batch => flatMap(batch.invoices.map(getInvoiceTransactions));
+
+const getTransactionId = transaction => transaction.id;
+
+/**
+ * Persists the state of the transaction isDeMinimis flag to
+ * water.billing_transactions
+ * @param {Batch} batch
+ * @return {Promise}
+ */
+const persistDeMinimis = batch => {
+  const transactions = getBatchTransactions(batch);
+  const groups = {
+    set: transactions.filter(row => row.isDeMinimis).map(getTransactionId),
+    clear: transactions.filter(row => !row.isDeMinimis).map(getTransactionId)
+  };
+  return Promise.all([
+    updateDeMinimis(groups.set, true),
+    updateDeMinimis(groups.clear, false)
+  ]);
 };
 
 exports.saveTransactionToDB = saveTransactionToDB;
 exports.getById = getById;
 exports.updateWithChargeModuleResponse = updateTransactionWithChargeModuleResponse;
 exports.setErrorStatus = setErrorStatus;
-exports.updateTransactionVolumes = updateTransactionVolumes;
+exports.persistDeMinimis = persistDeMinimis;

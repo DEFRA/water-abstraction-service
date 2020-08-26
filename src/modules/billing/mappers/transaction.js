@@ -9,7 +9,7 @@ const DateRange = require('../../../lib/models/date-range');
 const Transaction = require('../../../lib/models/transaction');
 const Agreement = require('../../../lib/models/agreement');
 
-const chargeElementMapper = require('./charge-element');
+const chargeElementMapper = require('../../../lib/mappers/charge-element');
 const billingVolumeMapper = require('./billing-volume');
 
 /**
@@ -66,7 +66,7 @@ const dbToModel = row => {
   return transaction.fromHash({
     id: row.billingTransactionId,
     ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
-      'externalId', 'isTwoPartTariffSupplementary']),
+      'externalId', 'isTwoPartTariffSupplementary', 'isDeMinimis']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),

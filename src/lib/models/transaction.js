@@ -19,11 +19,17 @@ const statuses = {
   error: 'error'
 };
 
+const getDescriptionFromChargeElement = chargeElement => {
+  return chargeElement.description || chargeElement.purposeUse.name;
+};
+
 const getTwoPartTariffTransactionDescription = (transaction) => {
   const prefix = transaction.isTwoPartTariffSupplementary ? 'Second' : 'First';
   const { purposeUse: { name: purpose }, description } = transaction.chargeElement;
 
-  return `${prefix} part ${purpose} charge at ${description}`;
+  const txDescription = `${prefix} part ${purpose} charge`;
+
+  return description ? `${txDescription} at ${description}` : txDescription;
 };
 
 class Transaction extends Model {
@@ -44,7 +50,8 @@ class Transaction extends Model {
     const transaction = new Transaction();
     transaction.pickFrom(this, [
       'value', 'authorisedDays', 'billableDays', 'agreements', 'chargePeriod',
-      'isCompensationCharge', 'description', 'chargeElement', 'volume', 'isTwoPartTariffSupplementary'
+      'isCompensationCharge', 'description', 'chargeElement', 'volume', 'isTwoPartTariffSupplementary',
+      'isDeMinimis'
     ]);
     transaction.fromHash({
       isCredit: true,
@@ -273,21 +280,36 @@ class Transaction extends Model {
   }
 
   /**
-   * Creates and returns the transaction description
+   * Creates, sets and returns the transaction description
    * @return {String}
    */
   createDescription () {
-    const isTwoPartTariff = !!this.getAgreementByCode('S127');
     if (this.isCompensationCharge) {
-      this._description = 'Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element';
-    } else {
-      const description = isTwoPartTariff
-        ? getTwoPartTariffTransactionDescription(this)
-        : this.chargeElement.description;
-
-      this._description = titleCase(description || '');
+      this.description = 'Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element';
+      return this.description;
     }
-    return this._description;
+
+    const isTwoPartTariff = !!this.getAgreementByCode('S127');
+    const description = isTwoPartTariff
+      ? getTwoPartTariffTransactionDescription(this)
+      : getDescriptionFromChargeElement(this.chargeElement);
+
+    this.description = titleCase(description);
+    return this.description;
+  }
+
+  /**
+   * Whether de-minimis rules is applied
+   * This occurs when invoice/credit note value < £5
+   * @param {Boolean}
+   */
+  set isDeMinimis (isDeMinimis) {
+    validators.assertIsBoolean(isDeMinimis);
+    this._isDeMinimis = isDeMinimis;
+  }
+
+  get isDeMinimis () {
+    return this._isDeMinimis;
   }
 }
 

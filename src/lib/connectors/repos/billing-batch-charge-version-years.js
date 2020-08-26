@@ -36,15 +36,58 @@ const deleteByInvoiceId = billingInvoiceId => bookshelf
   .raw(queries.deleteByInvoiceId, { billingInvoiceId });
 
 /**
- * Creates water.billing_batchcharge_version_year records for given batch ID
- * This assumes water.billing_batch_charge_versions is already populated
+ * Finds all charge version years for the supplied batch ID
  * @param {String} billingBatchId
  */
-const createForBatch = billingBatchId =>
-  raw.multiRow(queries.createForBatch, { billingBatchId });
+const findByBatchId = async billingBatchId => {
+  const collection = await BillingBatchChargeVersionYear
+    .collection()
+    .where('billing_batch_id', billingBatchId)
+    .fetch();
+  return collection.toJSON();
+};
+
+/**
+ * Finds water.billing_batch_charge_version_years records in batch where
+ * a two-part tariff agreement applies
+ * @param {String} billingBatchId
+ * @return {Promise<Array>}
+ */
+const findTwoPartTariffByBatchId = billingBatchId =>
+  raw.multiRow(queries.findTwoPartTariffByBatchId, { billingBatchId });
+
+/**
+ * Deletes charge versiom years in a batch for a particular licence ID
+ * @param {String} billingBatchId
+ * @param {String} licenceId
+ */
+const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
+  bookshelf.knex.raw(queries.deleteByBatchIdAndLicenceId, { billingBatchId, licenceId });
+
+/**
+ * Creates a new record in water.billing_batch_charge_version_years
+ * @param {String} billingBatchId
+ * @param {String} chargeVersionId
+ * @param {Number} financialYearEnding
+ * @param {String} status
+ */
+const create = async (billingBatchId, chargeVersionId, financialYearEnding, status) => {
+  const model = await BillingBatchChargeVersionYear
+    .forge({
+      billingBatchId,
+      chargeVersionId,
+      financialYearEnding,
+      status
+    })
+    .save();
+  return model.toJSON();
+};
 
 exports.update = update;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
 exports.deleteByBatchId = deleteByBatchId;
 exports.deleteByInvoiceId = deleteByInvoiceId;
-exports.createForBatch = createForBatch;
+exports.findByBatchId = findByBatchId;
+exports.findTwoPartTariffByBatchId = findTwoPartTariffByBatchId;
+exports.deleteByBatchIdAndLicenceId = deleteByBatchIdAndLicenceId;
+exports.create = create;

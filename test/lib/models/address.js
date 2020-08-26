@@ -295,4 +295,20 @@ experiment('lib/models/address', () => {
       });
     });
   });
+
+  experiment('.sortKey', () => {
+    beforeEach(async () => {
+      address.addressLine1 = '52 Oak Road';
+      address.addressLine2 = 'Acorn Park';
+      address.addressLine3 = 'Leafy Place';
+      address.town = 'Testington';
+      address.county = 'Testingshire';
+      address.postcode = 'TT1 1TT';
+      address.country = 'UK';
+    });
+
+    test('generates a key which can be used for sorting addresses', async () => {
+      expect(address.sortKey).to.equal('UK_TT1_1TT_TESTINGSHIRE_TESTINGTON_LEAFY_PLACE_ACORN_PARK_0000052_OAK ROAD');
+    });
+  });
 });

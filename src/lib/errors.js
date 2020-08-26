@@ -1,3 +1,4 @@
+'use strict';
 
 /**
  * Expected data has not been found in DB or API call

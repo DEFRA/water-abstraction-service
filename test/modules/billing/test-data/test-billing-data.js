@@ -58,7 +58,8 @@ const createTransaction = (options = {}, chargeElement) => {
     isCompensationCharge: !!options.isCompensationCharge,
     authorisedDays: 366,
     billableDays: 366,
-    description: 'Tiny pond'
+    description: 'Tiny pond',
+    isDeMinimis: options.isDeMinimis || false
   });
 };
 

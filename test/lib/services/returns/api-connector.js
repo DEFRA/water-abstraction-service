@@ -13,6 +13,9 @@ const apiConnector = require('../../../../src/lib/services/returns/api-connector
 
 experiment('lib/services/returns/api-connector', () => {
   beforeEach(async () => {
+    sandbox.stub(returnsApiConnector.returns, 'findAll').resolves([{
+      version_id: 'test-version-id'
+    }]);
     sandbox.stub(returnsApiConnector.versions, 'findAll').resolves([{
       version_id: 'test-version-id'
     }]);
@@ -23,6 +26,44 @@ experiment('lib/services/returns/api-connector', () => {
 
   afterEach(async () => {
     sandbox.restore();
+  });
+
+  experiment('.getReturnsForLicenceInCycle', () => {
+    let result, cycle;
+
+    experiment('when the cycle is summer', () => {
+      beforeEach(async () => {
+        cycle = {
+          startDate: '2019-11-01',
+          endDate: '2020-10-31',
+          isSummer: true
+        };
+        result = await apiConnector.getReturnsForLicenceInCycle('01/123', cycle);
+      });
+
+      test('the correct filter is used', async () => {
+        const [filter] = returnsApiConnector.returns.findAll.lastCall.args;
+        expect(filter).to.equal({
+          licence_ref: '01/123',
+          status: { $ne: 'void' },
+          start_date: { $gte: '2019-11-01' },
+          end_date: { $lte: '2020-10-31' },
+          'metadata->>isSummer': 'true'
+        });
+      });
+
+      test('the results are sorted by end date then return ID', async () => {
+        const [, sort] = returnsApiConnector.returns.findAll.lastCall.args;
+        expect(sort).to.equal({
+          end_date: +1,
+          return_id: +1
+        });
+      });
+
+      test('resolves with an array', async () => {
+        expect(result).to.be.an.array().length(1);
+      });
+    });
   });
 
   experiment('.getCurrentVersion', () => {

@@ -1,6 +1,12 @@
 'use strict';
 
+const { isNull } = require('lodash');
+
+const MomentRange = require('moment-range');
+const moment = MomentRange.extendMoment(require('moment'));
+
 const validators = require('./validators');
+const DATE_FORMAT = 'YYYY-MM-DD';
 
 class DateRange {
   /**
@@ -43,11 +49,79 @@ class DateRange {
     this._endDate = date;
   }
 
+  /**
+   * Gets a moment range for this date range
+   * @return {MomentRange}
+   */
+  toMomentRange () {
+    return moment.range(this._startDate, this._endDate);
+  }
+
+  /**
+   * Checks whether this date range includes the specified date
+   * @param {String} date
+   * @return {Boolean}
+   */
+  includes (date) {
+    const range = this.toMomentRange();
+    const m = moment(date, DATE_FORMAT);
+    return range.contains(m);
+  }
+
+  /**
+   * Checks whether this date range overlaps another
+   * @param {DateRange} dateRange
+   * @return {Boolean}
+   */
+  overlaps (dateRange) {
+    validators.assertIsInstanceOf(dateRange, DateRange);
+    const rangeA = this.toMomentRange();
+    const rangeB = dateRange.toMomentRange();
+    return rangeA.overlaps(rangeB, { adjacent: true });
+  }
+
+  /**
+   * Number of days in date range
+   * @return {Number}
+   */
+  get days () {
+    // If open-ended range, not possible to get days in range
+    if (isNull(this.endDate)) {
+      return undefined;
+    }
+
+    const startMoment = moment(this.startDate);
+    const endMoment = moment(this.endDate);
+    return endMoment.diff(startMoment, 'days') + 1;
+  }
+
+  /**
+   * Create a DateRange from a moment range
+   * @param {MomentRange} momentRange
+   * @return {DateRange}
+   */
+  static fromMomentRange (momentRange) {
+    const startDate = momentRange.start.format(DATE_FORMAT);
+    const endDate = momentRange.end.format(DATE_FORMAT);
+    return new DateRange(startDate, endDate);
+  }
+
   toJSON () {
     return {
       startDate: this._startDate,
       endDate: this._endDate
     };
+  }
+
+  /**
+   * Checks whether this date range is a financial year
+   * @return {Boolean}
+   */
+  get isFinancialYear () {
+    const startYear = moment(this.startDate).year();
+
+    return (this.startDate === `${startYear}-04-01`) &&
+     (this.endDate === `${startYear + 1}-03-31`);
   }
 }
 

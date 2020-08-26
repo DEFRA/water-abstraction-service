@@ -10,7 +10,7 @@ const rp = require('request-promise-native').defaults({
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
 const urlJoin = require('url-join');
-const { isArray } = require('lodash');
+const { isArray, flatMap, chunk } = require('lodash');
 
 // Create API client
 const client = new APIClient(rp, {
@@ -151,6 +151,29 @@ client.setLicenceName = async (documentId, name) => {
   return client.updateOne(documentId, {
     document_name: name
   });
+};
+
+/**
+ * Gets documents from the CRM using the licence number
+ *
+ * @param {Array<String>} licenceNumbers One or many licence numbers to use to find documents for
+ */
+client.getDocumentsByLicenceNumbers = async licenceNumbers => {
+  // run in batches of 20 so not to exceed the permitted request
+  // query string size
+  const batches = chunk(licenceNumbers, 20);
+
+  const documentBatches = await Promise.all(
+    batches.map(ids => {
+      return client.findAll({
+        system_external_id: {
+          $in: ids
+        }
+      });
+    })
+  );
+
+  return flatMap(documentBatches);
 };
 
 module.exports = client;

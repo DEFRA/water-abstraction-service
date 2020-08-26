@@ -1,8 +1,11 @@
 'use strict';
 
-const { get, flatMap } = require('lodash');
+const { uniq, get, flatMap } = require('lodash');
 
-const { assertIsInstanceOf, assertIsArrayOfType, assertIsNullableInstanceOf } = require('./validators');
+const {
+  assertIsInstanceOf, assertIsArrayOfType,
+  assertIsNullableInstanceOf, assertIsBoolean
+} = require('./validators');
 const Model = require('./model');
 const Address = require('./address');
 const InvoiceAccount = require('./invoice-account');
@@ -134,6 +137,17 @@ class Invoice extends Model {
   }
 
   /**
+   * Get the licence ids for this invoice by inspecting
+   * the Licence objects associated with each InvoiceLicence
+   * object associated with this invoice
+   */
+  getLicenceIds () {
+    return uniq(flatMap(this.invoiceLicences, invoiceLicence => {
+      return get(invoiceLicence, 'licence.id');
+    }));
+  }
+
+  /**
    * The charge module summary contains data on
    * invoice/credit count, invoice/credit totals, net total
    * @param {Totals} totals
@@ -160,10 +174,18 @@ class Invoice extends Model {
     return this._financialYear;
   }
 
-  toJSON () {
-    return {
-      ...super.toJSON()
-    };
+  /**
+   * Whether de-minimis rules is applied
+   * This occurs when invoice/credit note value < £5
+   * @param {Boolean}
+   */
+  set isDeMinimis (isDeMinimis) {
+    assertIsBoolean(isDeMinimis);
+    this._isDeMinimis = isDeMinimis;
+  }
+
+  get isDeMinimis () {
+    return this._isDeMinimis;
   }
 }
 

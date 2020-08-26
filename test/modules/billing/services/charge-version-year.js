@@ -24,7 +24,9 @@ experiment('modules/billing/services/charge-version-year', () => {
   beforeEach(async () => {
     sandbox.stub(repos.billingBatchChargeVersionYears, 'update').resolves();
     sandbox.stub(repos.billingBatchChargeVersionYears, 'findStatusCountsByBatchId');
-    sandbox.stub(repos.billingBatchChargeVersionYears, 'createForBatch');
+    sandbox.stub(repos.billingBatchChargeVersionYears, 'findByBatchId');
+    sandbox.stub(repos.billingBatchChargeVersionYears, 'findTwoPartTariffByBatchId');
+    sandbox.stub(repos.billingBatchChargeVersionYears, 'create');
 
     sandbox.stub(batchService, 'getBatchById').resolves(new Batch());
     sandbox.stub(chargeProcessorService, 'processChargeVersionYear').resolves(new Invoice());
@@ -134,18 +136,42 @@ experiment('modules/billing/services/charge-version-year', () => {
     });
   });
 
-  experiment('.createForBatch', () => {
-    let batch;
+  experiment('.getForBatch', () => {
+    beforeEach(async () => {
+      await chargeVersionYearService.getForBatch('test-id');
+    });
+
+    test('calls the underlying repo method', async () => {
+      expect(repos.billingBatchChargeVersionYears.findByBatchId.calledWith('test-id')).to.be.true();
+    });
+  });
+
+  experiment('.getTwoPartTariffForBatch', () => {
+    beforeEach(async () => {
+      await chargeVersionYearService.getTwoPartTariffForBatch('test-id');
+    });
+
+    test('calls the underlying repo method', async () => {
+      expect(repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId.calledWith('test-id')).to.be.true();
+    });
+  });
+
+  experiment('.createBatchChargeVersionYear', () => {
+    let batch, financialYear;
+    const chargeVersionId = uuid();
 
     beforeEach(async () => {
       batch = new Batch(uuid());
-      await chargeVersionYearService.createForBatch(batch);
+      financialYear = new FinancialYear(2020);
+      await chargeVersionYearService.createBatchChargeVersionYear(batch, chargeVersionId, financialYear);
     });
 
-    test('the .createForBatch method is called on the repo', async () => {
-      expect(repos.billingBatchChargeVersionYears.createForBatch.calledWith(
-        batch.id
-      )).to.be.true();
+    test('calls the repo method to create the record', async () => {
+      const [batchId, id, endYear, status] = repos.billingBatchChargeVersionYears.create.lastCall.args;
+      expect(batchId).to.equal(batch.id);
+      expect(id).to.equal(chargeVersionId);
+      expect(endYear).to.equal(2020);
+      expect(status).to.equal(Batch.BATCH_STATUS.processing);
     });
   });
 });
