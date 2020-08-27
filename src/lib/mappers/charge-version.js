@@ -1,3 +1,8 @@
+'use strict';
+
+const { isEmpty, negate } = require('lodash');
+const isNotEmpty = negate(isEmpty);
+
 const ChargeVersion = require('../models/charge-version');
 const Company = require('../models/company');
 const DateRange = require('../models/date-range');
@@ -16,10 +21,10 @@ const createRegion = regionCode => {
 };
 
 const dbToModel = row => {
-  const chargeVersion = new ChargeVersion();
-  return chargeVersion.fromHash({
+  const model = new ChargeVersion();
+
+  model.fromHash({
     id: row.chargeVersionId,
-    licence: licenceMapper.dbToModel(row.licence),
     scheme: row.scheme,
     versionNumber: row.versionNumber,
     dateRange: new DateRange(row.startDate, row.endDate),
@@ -30,6 +35,12 @@ const dbToModel = row => {
     invoiceAccount: new InvoiceAccount(row.invoiceAccountId),
     chargeElements: row.chargeElements.map(chargeElementMapper.dbToModel)
   });
+
+  if (isNotEmpty(row.licence)) {
+    model.licence = licenceMapper.dbToModel(row.licence);
+  }
+
+  return model;
 };
 
 const modelToDb = model => {
@@ -53,5 +64,26 @@ const modelToDb = model => {
   };
 };
 
+/**
+ * Converts a plain object representation of a ChargeVersion to a ChargeVersion model
+ * @param {Object} pojo
+ * @return ChargeVersion
+ */
+const pojoToModel = pojo => {
+  const { chargeElements, dateRange, ...rest } = pojo;
+  const model = new ChargeVersion();
+  model.fromHash({
+    dateRange: new DateRange(dateRange.startDate, dateRange.endDate),
+    ...rest
+  });
+
+  if (chargeElements) {
+    model.chargeElements = chargeElements.map(chargeElementMapper.pojoToModel);
+  }
+
+  return model;
+};
+
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
+exports.pojoToModel = pojoToModel;
