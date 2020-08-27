@@ -135,6 +135,11 @@ const update = async (chargeVersionWorkflowId, changes) => {
   return chargeVersionWorkflowMapper.dbToModel(data);
 };
 
+/**
+ * Deletes a charge version workflow record by ID
+ * @param {String} chargeVersionWorkflowId
+ * @return {Promise}
+ */
 const deleteById = async chargeVersionWorkflowId => {
   try {
     await chargeVersionWorkflowsRepo.deleteOne(chargeVersionWorkflowId);
