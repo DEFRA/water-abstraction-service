@@ -191,6 +191,15 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
       expect(response.statusCode).to.equal(200);
     });
 
+    test('http 422 unprocessable entity when the payload cannot be mapped', async () => {
+      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.payload.chargeVersion = {
+        status: 'not-a-valid-status'
+      };
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(422);
+    });
+
     test('http 400 bad request when the defra-internal-user-id is invalid', async () => {
       request.auth.credentials.scope = [chargeVersionWorkflowApprover];
       request.headers['defra-internal-user-id'] = 'invalid';

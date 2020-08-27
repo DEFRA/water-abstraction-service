@@ -83,7 +83,7 @@ const setOrThrowInvalidEntityError = (chargeVersionWorkflow, changes) => {
     return chargeVersionWorkflow.fromHash(changes);
   } catch (err) {
     logger.error(err);
-    throw new InvalidEntityError('Invalid data for charge version worklow');
+    throw new InvalidEntityError(`Invalid data for charge version worklow ${chargeVersionWorkflow.id}`);
   }
 };
 
