@@ -1,5 +1,11 @@
+'use strict';
+
 const { expect } = require('@hapi/code');
 const { afterEach, beforeEach, experiment, test } = exports.lab = require('@hapi/lab').script();
+
+const { cloneDeep } = require('lodash');
+const sinon = require('sinon');
+const sandbox = sinon.createSandbox();
 
 const controller = require('../../../../src/modules/licences/controllers/documents');
 const queries = require('../../../../src/modules/licences/lib/queries');
@@ -9,10 +15,7 @@ const crmEntities = require('../../../../src/lib/connectors/crm/entities');
 const idmConnector = require('../../../../src/lib/connectors/idm');
 const { logger } = require('../../../../src/logger');
 const eventHelper = require('../../../../src/modules/licences/lib/event-helper');
-
-const { cloneDeep } = require('lodash');
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const licencesService = require('../../../../src/lib/services/licences');
 
 const { licences } = require('../../../responses/permits/licence');
 
@@ -292,6 +295,12 @@ experiment('getLicenceSummaryByDocumentId', () => {
     sandbox.stub(permitClient.licences, 'findMany');
     sandbox.stub(documentsClient, 'findMany');
     sandbox.stub(logger, 'error');
+    sandbox.stub(licencesService, 'getLicenceByLicenceRef').resolves({
+      id: 'test-licence-id'
+    });
+
+    documentsClient.findMany.resolves(documentResponse);
+    permitClient.licences.findMany.resolves(licences());
   });
 
   afterEach(async () => {
@@ -305,8 +314,6 @@ experiment('getLicenceSummaryByDocumentId', () => {
   });
 
   test('transforms permit repo data into a form expected by UI', async () => {
-    documentsClient.findMany.resolves(documentResponse);
-    permitClient.licences.findMany.resolves(licences());
     const response = await controller.getLicenceSummaryByDocumentId(testRequest);
 
     expect(response).to.be.an.object();
@@ -328,6 +335,17 @@ experiment('getLicenceSummaryByDocumentId', () => {
       'uniquePurposeNames',
       'documentName'
     ]);
+  });
+
+  test('adds the licence model to the waterService property', async () => {
+    const response = await controller.getLicenceSummaryByDocumentId(testRequest);
+
+    const [licenceNumber, regionCode] = licencesService.getLicenceByLicenceRef.lastCall.args;
+
+    expect(licenceNumber).to.equal('12/34/56/78');
+    expect(regionCode).to.equal('1');
+
+    expect(response.data.waterLicence.id).to.equal('test-licence-id');
   });
 
   test('provides error details in the event of a major error', async () => {

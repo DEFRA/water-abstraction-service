@@ -33,6 +33,12 @@ class LicenceAgreement extends Model {
     validators.assertIsInstanceOf(agreement, Agreement);
     this._agreement = agreement;
   }
+
+  get dateSigned () { return this._dateSigned; }
+  set dateSigned (dateSigned) {
+    const date = this.getDateTimeFromValue(dateSigned);
+    this._dateSigned = date;
+  }
 }
 
 module.exports = LicenceAgreement;

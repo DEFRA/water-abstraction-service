@@ -1,3 +1,5 @@
+'use strict';
+
 const moment = require('moment');
 const Boom = require('@hapi/boom');
 const { get, isObject } = require('lodash');
@@ -15,6 +17,8 @@ const queries = require('../lib/queries');
 const { createContacts } = require('../../../lib/models/factory/contact-list');
 const eventHelper = require('../lib/event-helper');
 const { isEmpty } = require('lodash');
+
+const licencesService = require('../../../lib/services/licences');
 
 const getDocumentHeader = async (documentId, includeExpired = false) => {
   const documentResponse = await documentsClient.findMany({
@@ -236,6 +240,12 @@ const getLicenceSummaryByDocumentId = async (request, h) => {
 
     if (licence) {
       const data = await mapSummary(documentHeader, licence);
+
+      // add the service layer model to the data object to allow the shift
+      // towards using the licence model for viewing licences over the use
+      // of the document entity from the CRM.
+      data.waterLicence = await licencesService.getLicenceByLicenceRef(data.licenceNumber, data.regionCode);
+
       data.gaugingStations = (await getGaugingStations(licence)).map(mapGaugingStation);
       data.contacts = mapContacts(licence);
       return { error: null, data };

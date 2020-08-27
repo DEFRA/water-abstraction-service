@@ -31,6 +31,7 @@ class NALDTransformer extends BaseTransformer {
 
     this.data = {
       licenceNumber: data.LIC_NO,
+      regionCode: data.FGAC_REGION_CODE,
       licenceHolderTitle: licenceHolderParty.SALUTATION,
       licenceHolderInitials: licenceHolderParty.INITIALS,
       licenceHolderName: licenceHolderParty.NAME,

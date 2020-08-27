@@ -16,6 +16,21 @@ const service = require('./service');
 const getLicenceById = async licenceId =>
   service.findOne(licenceId, repos.licences.findOne, licenceMapper);
 
+/**
+ * Finds a licence using the licence ref/number. Takes the region code
+ * as well incase a licence has the same licence ref/number across
+ * legacy regions
+ *
+ * @param {String} licenceRef
+ * @param {Number} regionCode
+ */
+const getLicenceByLicenceRef = async (licenceRef, regionCode) => {
+  const licences = await repos.licences.findByLicenceRef(licenceRef);
+  const licence = licences.find(licence => licence.region.naldRegionId === +regionCode);
+
+  return licence ? licenceMapper.dbToModel(licence) : null;
+};
+
 const getLicenceVersions = async licenceId =>
   service.findMany(
     licenceId,
@@ -98,6 +113,7 @@ exports.getLicenceAgreementsByLicenceRef = getLicenceAgreementsByLicenceRef;
 exports.getLicenceById = getLicenceById;
 exports.getLicenceVersionById = getLicenceVersionById;
 exports.getLicenceVersions = getLicenceVersions;
+exports.getLicenceByLicenceRef = getLicenceByLicenceRef;
 
 exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementaryBillingStatus;
 exports.updateIncludeInSupplementaryBillingStatusForUnsentBatch = updateIncludeInSupplementaryBillingStatusForUnsentBatch;
