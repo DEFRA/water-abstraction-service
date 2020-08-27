@@ -26,5 +26,18 @@ const findMany = async (id, fetchDataFunc, mapper) => {
   return data.map(mapper.dbToModel);
 };
 
+/**
+ * Helper function to abstract the process of retrieving all items
+ * via a repository and mapping the results to models.
+ *
+ * @param {Function} fetchDataFunc The function that is used to get the data
+ * @param {Object} mapper The object containing the dbToModel mapping function
+ */
+const findAll = async (fetchDataFunc, mapper) => {
+  const data = await fetchDataFunc();
+  return data.map(mapper.dbToModel);
+};
+
 exports.findOne = findOne;
 exports.findMany = findMany;
+exports.findAll = findAll;

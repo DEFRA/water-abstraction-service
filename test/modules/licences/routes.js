@@ -17,7 +17,7 @@ experiment('modules/licences/routes', () => {
     let server;
 
     beforeEach(async () => {
-      server = testHelpers.createServerForRoute(routes.getLicenceByDocumentId);
+      server = await testHelpers.createServerForRoute(routes.getLicenceByDocumentId);
     });
 
     test('validates the documentId must be a GUID', async () => {
@@ -37,7 +37,7 @@ experiment('modules/licences/routes', () => {
     let server;
 
     beforeEach(async () => {
-      server = testHelpers.createServerForRoute(routes.getLicenceConditionsByDocumentId);
+      server = await testHelpers.createServerForRoute(routes.getLicenceConditionsByDocumentId);
     });
 
     test('validates the documentId must be a GUID', async () => {
@@ -57,7 +57,7 @@ experiment('modules/licences/routes', () => {
     let server;
 
     beforeEach(async () => {
-      server = testHelpers.createServerForRoute(routes.getLicencePointsByDocumentId);
+      server = await testHelpers.createServerForRoute(routes.getLicencePointsByDocumentId);
     });
 
     test('validates the documentId must be a GUID', async () => {
@@ -77,7 +77,7 @@ experiment('modules/licences/routes', () => {
     let server;
 
     beforeEach(async () => {
-      server = testHelpers.createServerForRoute(routes.getLicenceUsersByDocumentId);
+      server = await testHelpers.createServerForRoute(routes.getLicenceUsersByDocumentId);
     });
 
     test('validates the documentId must be a GUID', async () => {
@@ -97,7 +97,7 @@ experiment('modules/licences/routes', () => {
     let server;
 
     beforeEach(async () => {
-      server = testHelpers.createServerForRoute(routes.postLicenceName);
+      server = await testHelpers.createServerForRoute(routes.postLicenceName);
     });
 
     test('validates the documentId must be a GUID', async () => {
@@ -184,7 +184,7 @@ experiment('modules/licences/routes', () => {
   experiment('/licences{licenceId}/versions', () => {
     let server;
     beforeEach(async () => {
-      server = testHelpers.createServerForRoute(routes.getLicenceVersions);
+      server = await testHelpers.createServerForRoute(routes.getLicenceVersions);
     });
 
     test('returns a 400 if the licence id is not a uuid', async () => {

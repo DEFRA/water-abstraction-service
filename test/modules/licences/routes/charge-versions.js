@@ -17,7 +17,7 @@ experiment('modules/licences/routes/charge-versions', () => {
     let server;
 
     beforeEach(async () => {
-      server = testHelpers.createServerForRoute(routes.getChargeVersionsByLicence);
+      server = await testHelpers.createServerForRoute(routes.getChargeVersionsByLicence);
     });
 
     test('validates the licence id must be a uuid', async () => {

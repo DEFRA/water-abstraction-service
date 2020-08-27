@@ -2,6 +2,7 @@
 
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
+const moment = require('moment');
 
 const LicenceAgreement = require('../../../src/lib/models/licence-agreement');
 const DateRange = require('../../../src/lib/models/date-range');
@@ -58,6 +59,43 @@ experiment('lib/models/licence-agreement', () => {
         licenceAgreement.agreement = new TestModel();
       };
       expect(func).to.throw();
+    });
+  });
+
+  experiment('.dateSigned', () => {
+    test('converts an ISO date string to a moment internally', async () => {
+      const dateString = '2020-01-20T14:51:42.024Z';
+      licenceAgreement.dateSigned = dateString;
+
+      expect(licenceAgreement.dateSigned).to.equal(moment(dateString));
+    });
+
+    test('converts a JS Date to a moment internally', async () => {
+      const date = new Date();
+      licenceAgreement.dateSigned = date;
+
+      expect(licenceAgreement.dateSigned).to.equal(moment(date));
+    });
+
+    test('can be set using a moment', async () => {
+      const now = moment();
+      licenceAgreement.dateSigned = now;
+
+      expect(licenceAgreement.dateSigned).to.equal(now);
+    });
+
+    test('throws for an invalid string', async () => {
+      const dateString = 'not a date';
+      expect(() => { licenceAgreement.dateSigned = dateString; }).to.throw();
+    });
+
+    test('throws for a boolean value', async () => {
+      expect(() => { licenceAgreement.dateSigned = true; }).to.throw();
+    });
+
+    test('allows null', async () => {
+      licenceAgreement.dateSigned = null;
+      expect(licenceAgreement.dateSigned).to.be.null();
     });
   });
 });
