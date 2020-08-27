@@ -16,6 +16,7 @@ const Region = require('../../../src/lib/models/region');
 const Company = require('../../../src/lib/models/company');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 const mapper = require('../../../src/lib/mappers/charge-version');
+const ChargeElement = require('../../../src/lib/models/charge-element');
 
 experiment('lib/mappers/charge-version', () => {
   experiment('modelToDb', () => {
@@ -108,6 +109,124 @@ experiment('lib/mappers/charge-version', () => {
 
     test('maps the invoice account id', async () => {
       expect(db.invoiceAccountId).to.equal(model.invoiceAccount.id);
+    });
+  });
+
+  experiment('.dbToModel', () => {
+    let dbRow, model;
+
+    beforeEach(async () => {
+      dbRow = {
+        chargeVersionId: uuid(),
+        scheme: 'alcs',
+        versionNumber: 1,
+        startDate: '2019-01-01',
+        endDate: '2020-12-31',
+        status: 'draft',
+        regionCode: 1,
+        source: 'nald',
+        companyId: uuid(),
+        invoiceAccountId: uuid(),
+        chargeElements: [{
+          chargeElementId: uuid(),
+          source: 'supported',
+          season: 'summer',
+          loss: 'high',
+          abstractionPeriodStartDay: 1,
+          abstractionPeriodStartMonth: 3,
+          abstractionPeriodEndDay: 1,
+          abstractionPeriodEndMonth: 6
+        }],
+        licence: {
+          licenceId: uuid(),
+          startDate: '2019-01-01',
+          expiredDate: null,
+          lapsedDate: null,
+          revokedDate: null,
+          regions: { historicalAreaCode: 'ARNA', regionalChargeArea: 'Anglian' },
+          licenceRef: '01/234/ABC',
+          region: {
+            regionId: uuid(),
+            chargeRegionId: 'A',
+            naldRegionId: 1,
+            name: 'Anglian',
+            displayName: 'Anglian'
+          }
+        }
+      };
+    });
+
+    experiment('when the licence property is populated', async () => {
+      beforeEach(async () => {
+        model = mapper.dbToModel(dbRow);
+      });
+
+      test('returns a ChargeVersion model', async () => {
+        expect(model).to.be.an.instanceof(ChargeVersion);
+      });
+
+      test('the .id property is correctly mapped', async () => {
+        expect(model.id).to.equal(dbRow.chargeVersionId);
+      });
+
+      test('the .scheme property is correctly mapped', async () => {
+        expect(model.scheme).to.equal(dbRow.scheme);
+      });
+
+      test('the .versionNumber property is correctly mapped', async () => {
+        expect(model.versionNumber).to.equal(dbRow.versionNumber);
+      });
+
+      test('the .dateRange property is correctly mapped', async () => {
+        expect(model.dateRange).to.be.an.instanceof(DateRange);
+        expect(model.dateRange.startDate).to.equal(dbRow.startDate);
+        expect(model.dateRange.endDate).to.equal(dbRow.endDate);
+      });
+
+      test('the .status property is correctly mapped', async () => {
+        expect(model.status).to.equal(dbRow.status);
+      });
+
+      test('the .region property is correctly mapped', async () => {
+        expect(model.region).to.be.an.instanceof(Region);
+        expect(model.region.numericCode).to.equal(dbRow.regionCode);
+        expect(model.region.type).to.equal(Region.types.region);
+      });
+
+      test('the .source property is correctly mapped', async () => {
+        expect(model.source).to.equal(dbRow.source);
+      });
+
+      test('the .company property is correctly mapped', async () => {
+        expect(model.company).to.be.an.instanceof(Company);
+        expect(model.company.id).to.equal(dbRow.companyId);
+      });
+
+      test('the .invoiceAccount property is correctly mapped', async () => {
+        expect(model.invoiceAccount).to.be.an.instanceof(InvoiceAccount);
+        expect(model.invoiceAccount.id).to.equal(dbRow.invoiceAccountId);
+      });
+
+      test('the .chargeElements property is correctly mapped', async () => {
+        expect(model.chargeElements).to.be.an.array().length(1);
+        const [chargeElement] = model.chargeElements;
+        expect(chargeElement).to.be.an.instanceof(ChargeElement);
+      });
+
+      test('the .licence property is correctly mapped', async () => {
+        expect(model.licence).to.be.an.instanceof(Licence);
+      });
+    });
+
+    experiment('when the licence property is an empty object', async () => {
+      beforeEach(async () => {
+        dbRow.licence = {};
+        model = mapper.dbToModel(dbRow);
+      });
+
+      test('the licence property is undefined', async () => {
+        expect(model.licence).to.be.undefined();
+      });
     });
   });
 });
