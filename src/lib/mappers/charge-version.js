@@ -30,7 +30,7 @@ const dbToModel = row => {
     company: new Company(row.companyId),
     invoiceAccount: new InvoiceAccount(row.invoiceAccountId),
     chargeElements: row.chargeElements.map(chargeElementMapper.dbToModel),
-    changeReason: row.changeReason(changeReasonMapper.dbToModel)
+    changeReason: changeReasonMapper.dbToModel(row.changeReason)
   });
 };
 
