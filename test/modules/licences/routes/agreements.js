@@ -17,7 +17,7 @@ experiment('modules/licences/routes/agreements', () => {
     let server;
 
     beforeEach(async () => {
-      server = testHelpers.createServerForRoute(routes.getAgreement);
+      server = await testHelpers.createServerForRoute(routes.getAgreement);
     });
 
     test('validates the agreementId must be a uuid', async () => {
@@ -37,7 +37,7 @@ experiment('modules/licences/routes/agreements', () => {
     let server;
 
     beforeEach(async () => {
-      server = testHelpers.createServerForRoute(routes.getAgreementsForLicence);
+      server = await testHelpers.createServerForRoute(routes.getAgreementsForLicence);
     });
 
     test('validates the licence id must be a uuid', async () => {

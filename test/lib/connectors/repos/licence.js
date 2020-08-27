@@ -25,6 +25,13 @@ experiment('lib/connectors/repos/licences', () => {
 
     stub = {
       fetch: sandbox.stub().resolves(model),
+      where: sandbox.stub().returnsThis(),
+      fetchAll: sandbox.stub().resolves({
+        toJSON: () => ([
+          { foo: 'bar' },
+          { foo: 'baz' }
+        ])
+      }),
       save: sandbox.stub().resolves(model)
     };
     sandbox.stub(Licence, 'forge').returns(stub);
@@ -72,6 +79,31 @@ experiment('lib/connectors/repos/licences', () => {
       test('resolves with null', async () => {
         expect(result).to.equal(null);
       });
+    });
+  });
+
+  experiment('.findByLicenceRef', () => {
+    let result;
+
+    beforeEach(async () => {
+      result = await licencesRepo.findByLicenceRef('test-ref');
+    });
+
+    test('calls where with correct id', async () => {
+      const [params] = stub.where.lastCall.args;
+      expect(params).to.equal({ licence_ref: 'test-ref' });
+    });
+
+    test('calls fetchAll() with related models', async () => {
+      const [params] = stub.fetchAll.lastCall.args;
+      expect(params.withRelated).to.equal(['region']);
+    });
+
+    test('returns the result of the toJSON() call', async () => {
+      expect(result).to.equal([
+        { foo: 'bar' },
+        { foo: 'baz' }
+      ]);
     });
   });
 

@@ -43,4 +43,14 @@ const permissionsMap = {
 
 const getRolesForPermissionKey = key => permissionsMap[key];
 
+/**
+ * IDM roles
+ * @type {Object}
+ */
+const ROLES = {
+  chargeVersionWorkflowEditor: 'charge_version_workflow_editor',
+  chargeVersionWorkflowApprover: 'charge_version_workflow_approver'
+};
+
 exports.getRolesForPermissionKey = getRolesForPermissionKey;
+exports.ROLES = ROLES;

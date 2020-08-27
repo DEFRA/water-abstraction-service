@@ -6,6 +6,7 @@ const camelCaseKeys = require('../camel-case-keys');
 
 const purposeUseMapper = require('./purpose-use');
 const abstractionPeriodMapper = require('./abstraction-period');
+const { omit } = require('lodash');
 
 /**
  * Creates a ChargeElement instance given a row of charge element data
@@ -41,4 +42,24 @@ const dbToModel = row => {
   return element;
 };
 
+/**
+ * Converts a plain object representation of a ChargeElement to a ChargeElement model
+ * @param {Object} pojo
+ * @return ChargeElement
+ */
+const pojoToModel = pojo => {
+  const { abstractionPeriod, purposeUse, ...rest } = pojo;
+  const model = new ChargeElement();
+  model.fromHash(omit(rest, 'eiucSource'));
+
+  if (abstractionPeriod) {
+    model.abstractionPeriod = abstractionPeriodMapper.pojoToModel(abstractionPeriod);
+  }
+  if (purposeUse) {
+    model.purposeUse = purposeUseMapper.pojoToModel(purposeUse);
+  }
+  return model;
+};
+
 exports.dbToModel = dbToModel;
+exports.pojoToModel = pojoToModel;

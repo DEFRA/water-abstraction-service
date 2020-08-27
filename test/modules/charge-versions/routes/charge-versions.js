@@ -9,19 +9,19 @@ const {
 const uuid = require('uuid/v4');
 const { expect } = require('@hapi/code');
 
-const routes = require('../../../src/modules/charge-versions/routes');
-const testHelpers = require('../../test-helpers');
+const routes = require('../../../../src/modules/charge-versions/routes/charge-versions');
+const testHelpers = require('../../../test-helpers');
 
 const makeGet = url => ({ method: 'GET', url });
 
-experiment('modules/charge-versions/routes', () => {
+experiment('modules/charge-versions/routes/charge-versions', () => {
   let server;
   let id;
 
   experiment('.getDefaultChargesForLicenceVersion', () => {
     beforeEach(async () => {
       id = uuid();
-      server = testHelpers.createServerForRoute(routes.getDefaultChargesForLicenceVersion);
+      server = await testHelpers.createServerForRoute(routes.getDefaultChargesForLicenceVersion);
     });
 
     test('accepts a uuid for the licence version id', async () => {
@@ -41,7 +41,7 @@ experiment('modules/charge-versions/routes', () => {
   experiment('.getChargeVersion', () => {
     beforeEach(async () => {
       id = uuid();
-      server = testHelpers.createServerForRoute(routes.getChargeVersion);
+      server = await testHelpers.createServerForRoute(routes.getChargeVersion);
     });
 
     test('accepts a uuid for the charge version id', async () => {
