@@ -169,6 +169,30 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
       });
     });
 
+    experiment('when there are no errors, and no charge version in payload', () => {
+      beforeEach(async () => {
+        delete request.pre.chargeVersion;
+        chargeVersionWorkflowService.update.resolves(
+          new ChargeVersionWorkflow()
+        );
+        response = await cvWorkflowsController.patchChargeVersionWorkflow(request);
+      });
+
+      test('the service update() method is called with the correct ID and params', async () => {
+        expect(chargeVersionWorkflowService.update.calledWith(
+          request.params.chargeVersionWorkflowId,
+          {
+            status: 'draft',
+            approverComments: 'Pull your socks up'
+          }
+        )).to.be.true();
+      });
+
+      test('resolves with the ChargeVersionWorkflow model', async () => {
+        expect(response).to.be.an.instanceof(ChargeVersionWorkflow);
+      });
+    });
+
     experiment('when the record is not found', () => {
       beforeEach(async () => {
         chargeVersionWorkflowService.update.rejects(
