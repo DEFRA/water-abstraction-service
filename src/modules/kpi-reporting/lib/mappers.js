@@ -16,7 +16,7 @@ const mapReturnsDataMonthly = (data) => {
   return data.reduce((acc, row) => {
     acc.totals.allTime = acc.totals.allTime + row.return;
     acc.totals.ytd = acc.totals.ytd + (row.currentYear ? row.return : 0);
-    if (row.currentYear) {
+    if (row.currentYear) { // row.month - 1 to mamtch the string array of months starting with index of 0
       acc.monthly.push({ ...row, month: months[(row.month - 1)], currentYear: year });
     }
     return acc;
@@ -43,7 +43,7 @@ const mapLicenceNamesData = (data) => {
       acc.monthly.push(
         {
           ...row,
-          month: months[row.month],
+          month: months[row.month - 1],
           year: year,
           namedChange: index < (data.length - 1) ? percentChange(data, index, 'named') : 0,
           renamedChange: index < (data.length - 1) ? percentChange(data, index, 'renamed') : 0

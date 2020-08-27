@@ -22,10 +22,11 @@ const getEntity = async (id, serviceFunc) => {
  *
  * @param {*} id
  * @param {Function} serviceFunc The service layer function that will retrieve the array of entities
+ * @param {Function} [rowMapper] optional mapper for each data row
  */
-const getEntities = async (id, serviceFunc) => {
+const getEntities = async (id, serviceFunc, rowMapper) => {
   const entities = await serviceFunc(id);
-  return { data: entities };
+  return { data: rowMapper ? entities.map(rowMapper) : entities };
 };
 
 exports.getEntities = getEntities;

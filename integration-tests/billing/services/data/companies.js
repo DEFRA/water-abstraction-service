@@ -6,6 +6,6 @@ exports.co1 = {
     address: 'ad1',
     startDate: '2008-04-01',
     endDate: null,
-    role: 'licenceHolder'
+    roleName: 'licenceHolder'
   }]
 };

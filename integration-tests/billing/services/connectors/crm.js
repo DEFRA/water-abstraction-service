@@ -3,6 +3,7 @@
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
 const urlJoin = require('url-join');
+const { logger } = require('../../../../src/logger');
 
 const createCrmUrl = (...parts) => {
   return urlJoin(config.services.crm_v2, ...parts);
@@ -20,23 +21,22 @@ const createCompany = data => {
       isTest: true
     }
   };
-  return serviceRequest.post(createCrmUrl('companies'), options);
+  return serviceRequest.post(createCrmUrl('companies'), options).catch(err => logger.error(err));
 };
 
-const createCompanyAddress = (companyId, addressId, startDate, endDate, roleId) => {
+const createCompanyAddress = (companyId, addressId, startDate, endDate, roleName) => {
   const url = createCrmUrl('companies', companyId, 'addresses');
   const options = {
     body: {
       addressId,
-      roleId,
+      roleName,
       isDefault: true,
       startDate,
       endDate,
       isTest: true
     }
   };
-
-  return serviceRequest.post(url, options);
+  return serviceRequest.post(url, options).catch(err => logger.error(err));
 };
 
 /**
@@ -68,7 +68,7 @@ const createAddress = data => {
       isTest: true
     }
   };
-  return serviceRequest.post(createCrmUrl('addresses'), options);
+  return serviceRequest.post(createCrmUrl('addresses'), options).catch(err => logger.error(err));
 };
 
 /**
@@ -92,7 +92,7 @@ const createInvoiceAccountAddress = (invoiceAccountId, addressId, startDate, end
     }
   };
 
-  return serviceRequest.post(url, options);
+  return serviceRequest.post(url, options).catch(err => logger.error(err));
 };
 
 /**
@@ -110,7 +110,7 @@ const createDocument = data => {
       isTest: true
     }
   };
-  return serviceRequest.post(url, options);
+  return serviceRequest.post(url, options).catch(err => logger.error(err));
 };
 
 /**
@@ -147,7 +147,7 @@ const createContact = data => {
 
 const getRole = roleName => {
   const url = createCrmUrl('roles', roleName);
-  return serviceRequest.get(url);
+  return serviceRequest.get(url).catch(err => logger.error(err));
 };
 
 /**
@@ -155,7 +155,7 @@ const getRole = roleName => {
  * @return {Promise}
  */
 const tearDown = () => {
-  return serviceRequest.delete(createCrmUrl('test-data'));
+  return serviceRequest.delete(createCrmUrl('test-data')).catch(err => logger.error(err));
 };
 
 exports.createAddress = createAddress;

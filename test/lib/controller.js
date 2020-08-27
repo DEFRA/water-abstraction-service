@@ -67,23 +67,46 @@ experiment('lib/controller', () => {
     let id;
     let serviceFunc;
     let testEntities;
+    let mapper;
 
     beforeEach(async () => {
       testEntities = [{ id: 'test-id' }];
       id = 'test-id';
       serviceFunc = sandbox.stub().resolves(testEntities);
-
-      result = await controller.getEntities(id, serviceFunc);
     });
 
-    test('the service func is called with the id', async () => {
-      const [passedId] = serviceFunc.lastCall.args;
-      expect(passedId).to.equal(id);
+    experiment('when a mapper is not used', () => {
+      beforeEach(async () => {
+        result = await controller.getEntities(id, serviceFunc);
+      });
+
+      test('the service func is called with the id', async () => {
+        const [passedId] = serviceFunc.lastCall.args;
+        expect(passedId).to.equal(id);
+      });
+
+      test('it is returned', async () => {
+        expect(result).to.equal({
+          data: testEntities
+        });
+      });
     });
 
-    test('it is returned', async () => {
-      expect(result).to.equal({
-        data: testEntities
+    experiment('when a mapper is used', () => {
+      beforeEach(async () => {
+        mapper = row => ({ id: row.id + '-mapped' });
+        result = await controller.getEntities(id, serviceFunc, mapper);
+      });
+
+      test('the service func is called with the id', async () => {
+        const [passedId] = serviceFunc.lastCall.args;
+        expect(passedId).to.equal(id);
+      });
+
+      test('the results are mapped', async () => {
+        expect(result).to.equal({
+          data: [{ id: 'test-id-mapped' }]
+        });
       });
     });
   });

@@ -18,5 +18,17 @@ const dbToModel = dbRow => {
  */
 const modelToHelpers = absPeriod => absPeriod.pick(['startDay', 'startMonth', 'endDay', 'endMonth']);
 
+/**
+ * Converts plain JS object representation of abstraction period to
+ * AbstractionPeriod model
+ * @param {Object} pojo
+ * @return {AbstractionPeriod}
+ */
+const pojoToModel = pojo => {
+  const abstractionPeriod = new AbstractionPeriod();
+  return abstractionPeriod.fromHash(pojo);
+};
+
 exports.dbToModel = dbToModel;
 exports.modelToHelpers = modelToHelpers;
+exports.pojoToModel = pojoToModel;
