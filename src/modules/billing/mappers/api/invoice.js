@@ -16,10 +16,10 @@ const map = {
   'totals.netTotal': 'netTotal',
   'invoiceLicences[].licence.licenceNumber': 'licenceNumbers[]',
   'financialYear.yearEnding': 'financialYearEnding',
-  invoiceLicences: [{
+  invoiceLicences: {
     key: 'isWaterUndertaker',
     transform: containsWaterUndertaker
-  }]
+  }
 };
 
 /**
@@ -28,9 +28,7 @@ const map = {
  * @return {Object}
  */
 const modelToBatchInvoice = invoice => {
-  const mappedInvoice = objectMapper(invoice, map);
-  objectMapper.setKeyValue(mappedInvoice, 'isMinimumChargeApplied', invoice.isMinimumChargeApplied());
-  return mappedInvoice;
+  return objectMapper(invoice, map);
 };
 
 exports.modelToBatchInvoices = modelToBatchInvoice;

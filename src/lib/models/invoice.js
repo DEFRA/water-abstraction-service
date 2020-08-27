@@ -148,15 +148,6 @@ class Invoice extends Model {
   }
 
   /**
-   * Checks if any of the transactions for this invoice have
-   * the isMinimumCharge set to true
-   */
-  isMinimumChargeApplied () {
-    const transactions = flatMap(this.invoiceLicences.map(invoiceLicence => invoiceLicence.transactions));
-    return transactions.some(trans => trans.isMinimumCharge);
-  }
-
-  /**
    * The charge module summary contains data on
    * invoice/credit count, invoice/credit totals, net total
    * @param {Totals} totals
@@ -195,12 +186,6 @@ class Invoice extends Model {
 
   get isDeMinimis () {
     return this._isDeMinimis;
-  }
-
-  toJSON () {
-    return {
-      ...super.toJSON()
-    };
   }
 }
 

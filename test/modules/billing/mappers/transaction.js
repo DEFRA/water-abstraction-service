@@ -547,8 +547,11 @@ experiment('modules/billing/mappers/transaction', () => {
       minimumChargeAdjustment: true,
       deminimis: false
     };
+
+    const chargePeriod = new DateRange('2020-04-01', '2021-03-31');
+
     beforeEach(async () => {
-      result = transactionMapper.cmToModel(cmData);
+      result = transactionMapper.cmToModel(cmData, chargePeriod);
     });
 
     test('should return a Transaction model', async () => {
@@ -560,6 +563,7 @@ experiment('modules/billing/mappers/transaction', () => {
       expect(result.value).to.equal(cmData.chargeValue);
       expect(result.isMinimumCharge).to.equal(cmData.minimumChargeAdjustment);
       expect(result.isDeMinimis).to.equal(cmData.deminimis);
+      expect(result.chargePeriod).to.equal(chargePeriod);
     });
   });
 });

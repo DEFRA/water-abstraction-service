@@ -214,13 +214,20 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
   };
 };
 
-const cmToModel = data => {
+/**
+ * Creates a Transaction model for Minimum Charge transaction
+ * returned from the Charge Module
+ * @param {Object} data CM transaction
+ * @param {ChargePeriod} chargePeriod for transaction
+ */
+const cmToModel = (data, chargePeriod) => {
   const model = new Transaction();
   return model.fromHash({
     externalId: data.id,
     value: data.chargeValue,
     isMinimumCharge: data.minimumChargeAdjustment,
-    isDeMinimis: data.deminimis
+    isDeMinimis: data.deminimis,
+    chargePeriod
   });
 };
 

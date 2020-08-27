@@ -17,9 +17,11 @@ const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const Licence = require('../../../../src/lib/models/licence');
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Transaction = require('../../../../src/lib/models/transaction');
+const DateRange = require('../../../../src/lib/models/date-range');
 const Totals = require('../../../../src/lib/models/totals');
 
 const chargeModuleDecorators = require('../../../../src/modules/billing/mappers/charge-module-decorators');
+const { TransactionStatusError } = require('../../../../src/modules/billing/lib/errors');
 
 const createInvoiceLicence = (transactions) => {
   const licence = new Licence();
@@ -36,7 +38,8 @@ const createInvoiceLicence = (transactions) => {
 const createTransaction = financialYearEnding => {
   const transaction = new Transaction();
   return transaction.fromHash({
-    externalId: `00000000-0000-0000-0000-00000000${financialYearEnding}`
+    externalId: `00000000-0000-0000-0000-00000000${financialYearEnding}`,
+    chargePeriod: new DateRange('2020-04-01', '2021-03-31')
   });
 };
 
@@ -211,6 +214,24 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
       expect(minChargeTxn.value).to.equal(minimumChargeTransaction.chargeValue);
       expect(minChargeTxn.isDeMinimis).to.be.false();
       expect(minChargeTxn.isMinimumCharge).to.be.true();
+    });
+
+    test('throws an error if an unexpected transaction is returned from the CM', () => {
+      const unexpectedTransaction = {
+        id: '00000000-0000-0000-0000-00000min2020',
+        licenceNumber: '01/123/ABC',
+        chargeValue: 270,
+        deminimis: false,
+        minimumChargeAdjustment: false
+      };
+      cmResponse.billRun.customers[0].summaryByFinancialYear[1].transactions.push(unexpectedTransaction);
+
+      try {
+        chargeModuleDecorators.decorateBatch(batch, cmResponse);
+      } catch (err) {
+        expect(err).to.be.instanceof(TransactionStatusError);
+        expect(err.message).to.equal(`Unexpected Charge Module transaction externalId: ${unexpectedTransaction.id}`);
+      }
     });
   });
 });
