@@ -5,6 +5,5 @@ exports.companies = require('./companies');
 exports.contacts = require('./contacts');
 exports.invoiceAccounts = require('./invoice-accounts');
 exports.licences = require('./licences');
-exports.licenceAgreements = require('./licence-agreements');
 exports.purposeUses = require('./purpose-uses');
 exports.regions = require('./regions');
