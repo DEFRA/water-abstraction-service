@@ -25,6 +25,13 @@ exports.create = async (bookShelfModel, data) => {
   return model.toJSON();
 };
 
+exports.update = async (bookshelfModel, idKey, id, changes) => {
+  const result = await bookshelfModel
+    .forge({ [idKey]: id })
+    .save(changes);
+  return result.toJSON();
+};
+
 exports.deleteOne = async (bookShelfModel, idKey, id) => {
   return bookShelfModel
     .forge({ [idKey]: id })

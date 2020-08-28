@@ -12,6 +12,9 @@ const { expect } = require('@hapi/code');
 
 const sandbox = require('sinon').createSandbox();
 
+const { NotFoundError, InvalidEntityError } = require('../../../../src/lib/errors');
+const { logger } = require('../../../../src/logger');
+
 // Repos
 const chargeVersionWorkflowRepo = require('../../../../src/lib/connectors/repos/charge-version-workflows');
 
@@ -71,6 +74,10 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     sandbox.stub(service, 'findOne').resolves(chargeVersionWorkflow);
 
     sandbox.stub(chargeVersionWorkflowRepo, 'create');
+    sandbox.stub(chargeVersionWorkflowRepo, 'update');
+    sandbox.stub(chargeVersionWorkflowRepo, 'deleteOne');
+
+    sandbox.stub(logger, 'error');
   });
 
   afterEach(async () => {
@@ -231,6 +238,88 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         expect(func()).to.reject();
         expect(chargeVersionWorkflowRepo.create.called).to.be.false();
       });
+    });
+  });
+
+  experiment('.update', () => {
+    const id = uuid();
+
+    beforeEach(async () => {
+      const model = new ChargeVersionWorkflow(id);
+      model.licence = new Licence(uuid());
+      model.createdBy = new User(123, 'mail@example.com');
+      model.chargeVersion = new ChargeVersion();
+
+      service.findOne.resolves(model);
+
+      chargeVersionWorkflowRepo.update.resolves({
+        chargeVersionWorkflowId: id,
+        status: 'draft',
+        data: {
+          chargeVersion: {
+            dateRange: {
+              startDate: '2019-01-01',
+              endDate: null
+            }
+          }
+        }
+      });
+    });
+
+    experiment('if the charge version workflow is not found', () => {
+      beforeEach(async () => {
+        service.findOne.resolves(null);
+      });
+
+      test('a NotFoundError is thrown', async () => {
+        const func = () => chargeVersionWorkflowService.update(id, { status: 'draft' });
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.an.instanceof(NotFoundError);
+        expect(err.message).to.equal(`Charge version workflow ${id} not found`);
+      });
+    });
+
+    experiment('if the supplied changes are invalid', () => {
+      test('an InvalidEntityError is thrown', async () => {
+        const func = () => chargeVersionWorkflowService.update(id, { status: 'invalid-status' });
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.an.instanceof(InvalidEntityError);
+        expect(err.message).to.equal(`Invalid data for charge version worklow ${id}`);
+      });
+    });
+
+    experiment('if the supplied changes are valid', () => {
+      beforeEach(async () => {
+        result = await chargeVersionWorkflowService.update(id, { status: 'draft' });
+      });
+
+      test('the charge version workflow is loaded by id', async () => {
+        expect(service.findOne.calledWith(id)).to.be.true();
+      });
+
+      test('the model is mapped to a plain object for persisting', async () => {
+        const [updatedId, dbRow] = chargeVersionWorkflowRepo.update.lastCall.args;
+        expect(updatedId).to.equal(id);
+        expect(dbRow).to.be.an.object();
+        expect(dbRow.chargeVersionWorkflowId).to.equal(id);
+        expect(dbRow.status).to.equal('draft');
+      });
+    });
+  });
+
+  experiment('.delete', () => {
+    const id = uuid();
+
+    test('calls the repo .deleteOne method', async () => {
+      await chargeVersionWorkflowService.delete(id);
+      expect(chargeVersionWorkflowRepo.deleteOne.calledWith(id)).to.be.true();
+    });
+
+    test('if there is an error, catches and rethrows a NotFoundError', async () => {
+      chargeVersionWorkflowRepo.deleteOne.throws(new Error('oh no!'));
+      const func = () => chargeVersionWorkflowService.delete(id);
+      const err = await expect(func()).to.reject();
+      expect(err).to.be.an.instanceof(NotFoundError);
     });
   });
 });

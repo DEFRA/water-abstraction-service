@@ -20,6 +20,8 @@ const ChargeVersion = require('../../../lib/models/charge-version');
 const User = require('../../../lib/models/user');
 const Licence = require('../../../lib/models/licence');
 const Role = require('../../../lib/models/role');
+const { NotFoundError, InvalidEntityError } = require('../../../lib/errors');
+const { logger } = require('../../../logger');
 
 /**
  * Gets all charge version workflows from the DB
@@ -71,6 +73,21 @@ const getByIdWithLicenceHolder = async id => {
 };
 
 /**
+ * Updates the properties on the model - if any errors,
+ * an InvalidEntityError is thrown
+ * @param {ChargeVersionWorkflow} chargeVersionWorkflow
+ * @param {Object} changes - a hash of properties to update
+ */
+const setOrThrowInvalidEntityError = (chargeVersionWorkflow, changes) => {
+  try {
+    return chargeVersionWorkflow.fromHash(changes);
+  } catch (err) {
+    logger.error(err);
+    throw new InvalidEntityError(`Invalid data for charge version worklow ${chargeVersionWorkflow.id}`);
+  }
+};
+
+/**
  * Create a new charge version workflow record
  * @param {Licence} licence
  * @param {ChargeVersion} chargeVersion
@@ -85,7 +102,7 @@ const create = async (licence, chargeVersion, user) => {
   // Map all data to ChargeVersionWorkflow model
   const chargeVersionWorkflow = new ChargeVersionWorkflow();
 
-  chargeVersionWorkflow.fromHash({
+  setOrThrowInvalidEntityError(chargeVersionWorkflow, {
     createdBy: user,
     licence: licence,
     chargeVersion,
@@ -97,9 +114,45 @@ const create = async (licence, chargeVersion, user) => {
   return chargeVersionWorkflowMapper.dbToModel(updated);
 };
 
+/**
+ * Updates a ChargeVersionWorkflow model
+ * @param {String} chargeVersionWorkflowId
+ * @param {Object} changes
+ * @return {Promise<ChargeVersionWorkflow} - updated service model
+ */
+const update = async (chargeVersionWorkflowId, changes) => {
+  // Load existing model
+  const model = await getById(chargeVersionWorkflowId);
+  if (!model) {
+    throw new NotFoundError(`Charge version workflow ${chargeVersionWorkflowId} not found`);
+  }
+
+  setOrThrowInvalidEntityError(model, changes);
+
+  // Persist
+  const dbRow = chargeVersionWorkflowMapper.modelToDb(model);
+  const data = await chargeVersionWorkflowsRepo.update(chargeVersionWorkflowId, dbRow);
+  return chargeVersionWorkflowMapper.dbToModel(data);
+};
+
+/**
+ * Deletes a charge version workflow record by ID
+ * @param {String} chargeVersionWorkflowId
+ * @return {Promise}
+ */
+const deleteById = async chargeVersionWorkflowId => {
+  try {
+    await chargeVersionWorkflowsRepo.deleteOne(chargeVersionWorkflowId);
+  } catch (err) {
+    throw new NotFoundError(`Charge version workflow ${chargeVersionWorkflowId} not found`);
+  }
+};
+
 exports.getAll = getAll;
 exports.getAllWithLicenceHolder = getAllWithLicenceHolder;
 exports.getById = getById;
 exports.getByIdWithLicenceHolder = getByIdWithLicenceHolder;
 exports.create = create;
 exports.getLicenceHolderRole = getLicenceHolderRole;
+exports.update = update;
+exports.delete = deleteById;

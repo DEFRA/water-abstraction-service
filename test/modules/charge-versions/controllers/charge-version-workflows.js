@@ -13,6 +13,7 @@ const chargeVersionWorkflowService = require('../../../../src/modules/charge-ver
 const ChargeVersion = require('../../../../src/lib/models/charge-version');
 const Licence = require('../../../../src/lib/models/licence');
 const User = require('../../../../src/lib/models/user');
+const ChargeVersionWorkflow = require('../../../../src/lib/models/charge-version-workflow');
 
 // Controllers
 const controller = require('../../../../src/lib/controller');
@@ -20,6 +21,9 @@ const cvWorkflowsController = require('../../../../src/modules/charge-versions/c
 
 // Mappers
 const apiMapper = require('../../../../src/modules/charge-versions/mappers/api-mapper');
+
+// Errors
+const { NotFoundError, InvalidEntityError } = require('../../../../src/lib/errors');
 
 experiment('modules/charge-versions/controllers/charge-version-workflows', () => {
   beforeEach(async () => {
@@ -29,6 +33,8 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
     sandbox.stub(licencesService, 'getLicenceById');
 
     sandbox.stub(chargeVersionWorkflowService, 'create');
+    sandbox.stub(chargeVersionWorkflowService, 'update');
+    sandbox.stub(chargeVersionWorkflowService, 'delete');
   });
 
   afterEach(async () => {
@@ -84,6 +90,10 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
               startDate: '2020-09-01'
             }
           }
+        },
+        pre: {
+          chargeVersion: new ChargeVersion(uuid()),
+          user: new User(123, 'mail@example.com')
         }
       };
 
@@ -103,32 +113,6 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
       });
     });
 
-    experiment('when the interal user cannot be mapped', () => {
-      beforeEach(async () => {
-        request.defra.internalCallingUser.email = 'NotAnEmailAddress';
-        result = await cvWorkflowsController.postChargeVersionWorkflow(request);
-      });
-
-      test('a 422 response is generated', async () => {
-        expect(result.isBoom).to.be.true();
-        expect(result.output.statusCode).to.equal(422);
-        expect(result.message).to.equal('Invalid user data');
-      });
-    });
-
-    experiment('when the charge version cannot be mapped', () => {
-      beforeEach(async () => {
-        request.payload.chargeVersion.dateRange.startDate = 'not-a-valid-date';
-        result = await cvWorkflowsController.postChargeVersionWorkflow(request);
-      });
-
-      test('a 422 response is generated', async () => {
-        expect(result.isBoom).to.be.true();
-        expect(result.output.statusCode).to.equal(422);
-        expect(result.message).to.equal('Invalid charge version data');
-      });
-    });
-
     experiment('when all submitted data is valid', async () => {
       beforeEach(async () => {
         await cvWorkflowsController.postChargeVersionWorkflow(request);
@@ -137,8 +121,150 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
       test('the charge version workflow service creates the record', async () => {
         const [licence, chargeVersion, user] = chargeVersionWorkflowService.create.lastCall.args;
         expect(licence).to.be.an.instanceof(Licence);
-        expect(chargeVersion).to.be.an.instanceof(ChargeVersion);
-        expect(user).to.be.an.instanceof(User);
+        expect(chargeVersion).to.equal(request.pre.chargeVersion);
+        expect(user).to.be.equal(request.pre.user);
+      });
+    });
+  });
+
+  experiment('.patchChargeVersionWorkflow', () => {
+    let request, response;
+
+    beforeEach(async () => {
+      request = {
+        params: {
+          chargeVersionWorkflowId: uuid()
+        },
+        pre: {
+          chargeVersion: new ChargeVersion(uuid())
+        },
+        payload: {
+          status: 'draft',
+          approverComments: 'Pull your socks up'
+        }
+      };
+    });
+
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        chargeVersionWorkflowService.update.resolves(
+          new ChargeVersionWorkflow()
+        );
+        response = await cvWorkflowsController.patchChargeVersionWorkflow(request);
+      });
+
+      test('the service update() method is called with the correct ID and params', async () => {
+        expect(chargeVersionWorkflowService.update.calledWith(
+          request.params.chargeVersionWorkflowId,
+          {
+            status: 'draft',
+            approverComments: 'Pull your socks up',
+            chargeVersion: request.pre.chargeVersion
+          }
+        )).to.be.true();
+      });
+
+      test('resolves with the ChargeVersionWorkflow model', async () => {
+        expect(response).to.be.an.instanceof(ChargeVersionWorkflow);
+      });
+    });
+
+    experiment('when there are no errors, and no charge version in payload', () => {
+      beforeEach(async () => {
+        delete request.pre.chargeVersion;
+        chargeVersionWorkflowService.update.resolves(
+          new ChargeVersionWorkflow()
+        );
+        response = await cvWorkflowsController.patchChargeVersionWorkflow(request);
+      });
+
+      test('the service update() method is called with the correct ID and params', async () => {
+        expect(chargeVersionWorkflowService.update.calledWith(
+          request.params.chargeVersionWorkflowId,
+          {
+            status: 'draft',
+            approverComments: 'Pull your socks up'
+          }
+        )).to.be.true();
+      });
+
+      test('resolves with the ChargeVersionWorkflow model', async () => {
+        expect(response).to.be.an.instanceof(ChargeVersionWorkflow);
+      });
+    });
+
+    experiment('when the record is not found', () => {
+      beforeEach(async () => {
+        chargeVersionWorkflowService.update.rejects(
+          new NotFoundError()
+        );
+        response = await cvWorkflowsController.patchChargeVersionWorkflow(request);
+      });
+
+      test('the error is mapped to a suitable Boom error', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when there is a mapping error', () => {
+      beforeEach(async () => {
+        chargeVersionWorkflowService.update.rejects(
+          new InvalidEntityError()
+        );
+        response = await cvWorkflowsController.patchChargeVersionWorkflow(request);
+      });
+
+      test('the error is mapped to a suitable Boom error', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(422);
+      });
+    });
+  });
+
+  experiment('.deleteChargeVersionWorkflow', () => {
+    let request, response, h;
+
+    beforeEach(async () => {
+      request = {
+        params: {
+          chargeVersionWorkflowId: uuid()
+        }
+      };
+      h = {
+        code: sandbox.stub(),
+        response: sandbox.stub().returnsThis()
+      };
+    });
+
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        chargeVersionWorkflowService.delete.resolves();
+        response = await cvWorkflowsController.deleteChargeVersionWorkflow(request, h);
+      });
+
+      test('the service delete() method is called with the correct ID', async () => {
+        expect(chargeVersionWorkflowService.delete.calledWith(
+          request.params.chargeVersionWorkflowId
+        )).to.be.true();
+      });
+
+      test('responds with a 204 HTTP code', async () => {
+        expect(h.code.calledWith(204)).to.be.true();
+      });
+    });
+
+    experiment('when the record is not found', () => {
+      beforeEach(async () => {
+        chargeVersionWorkflowService.delete.rejects(
+          new NotFoundError()
+        );
+        response = await cvWorkflowsController.deleteChargeVersionWorkflow(request);
+      });
+
+      test('the error is mapped to a suitable Boom error', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(404);
       });
     });
   });
