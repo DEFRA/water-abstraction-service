@@ -11,7 +11,8 @@ const sharedRelations = [
   'chargeElements.purposeUse',
   'licence',
   'licence.region',
-  'licence.licenceAgreements'
+  'licence.licenceAgreements',
+  'changeReason'
 ];
 
 const findOne = async chargeVersionId => {

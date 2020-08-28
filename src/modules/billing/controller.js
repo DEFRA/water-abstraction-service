@@ -77,7 +77,7 @@ const getBatches = async request => {
 const getBatchInvoices = async request => {
   const { batch } = request.pre;
   try {
-    const invoices = await invoiceService.getInvoicesForBatch(batch);
+    const invoices = await invoiceService.getInvoicesForBatch(batch, true);
     return invoices.map(mappers.api.invoice.modelToBatchInvoices);
   } catch (err) {
     return mapErrorResponse(err);

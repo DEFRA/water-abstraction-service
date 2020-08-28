@@ -15,5 +15,9 @@ module.exports = bookshelf.model('ChargeVersion', {
 
   licence () {
     return this.belongsTo('Licence', 'licence_ref', 'licence_ref');
+  },
+
+  changeReason () {
+    return this.hasOne('ChangeReason', 'change_reason_id', 'change_reason_id');
   }
 });

@@ -50,8 +50,8 @@ class Transaction extends Model {
     const transaction = new Transaction();
     transaction.pickFrom(this, [
       'value', 'authorisedDays', 'billableDays', 'agreements', 'chargePeriod',
-      'isCompensationCharge', 'description', 'chargeElement', 'volume', 'isTwoPartTariffSupplementary',
-      'isDeMinimis'
+      'isCompensationCharge', 'description', 'chargeElement', 'volume',
+      'isTwoPartTariffSupplementary', 'isDeMinimis', 'isNewLicence'
     ]);
     transaction.fromHash({
       isCredit: true,
@@ -206,8 +206,8 @@ class Transaction extends Model {
   }
 
   /**
- * Gets the charge element instance that created this transaction
- * @return {ChargeElement}
+ * Gets the billing volume instance that is linked to this
+ * @return {BillingVolume}
  */
   get billingVolume () {
     return this._billingVolume;
@@ -216,6 +216,35 @@ class Transaction extends Model {
   set billingVolume (billingVolume) {
     validators.assertIsNullableInstanceOf(billingVolume, BillingVolume);
     this._billingVolume = billingVolume;
+  }
+
+  /**
+ * Whether it is part of the first set of transactions
+ * on a new licence, determined from change reason
+ * @return {Boolean}
+ */
+  get isNewLicence () {
+    return this._isNewLicence;
+  }
+
+  set isNewLicence (isNewLicence) {
+    validators.assertIsBoolean(isNewLicence);
+    this._isNewLicence = isNewLicence;
+  }
+
+  /**
+  * Whether this is a minimum charge transaction
+  * i.e. the amount to bring the total to the minimum charge
+  * Received from Charging Module
+  * @return {Boolean}
+  */
+  get isMinimumCharge () {
+    return this._isMinimumCharge;
+  }
+
+  set isMinimumCharge (isMinimumCharge) {
+    validators.assertIsBoolean(isMinimumCharge);
+    this._isMinimumCharge = isMinimumCharge;
   }
 
   /**
@@ -230,7 +259,8 @@ class Transaction extends Model {
     return {
       periodStart: this.chargePeriod.startDate,
       periodEnd: this.chargePeriod.endDate,
-      ...this.pick('billableDays', 'authorisedDays', 'volume', 'description', 'isCompensationCharge'),
+      ...this.pick('billableDays', 'authorisedDays', 'volume', 'description',
+        'isCompensationCharge', 'isNewLicence'),
       agreements: this.agreements.map(ag => ag.code).sort().join('-'),
       accountNumber: invoiceAccount.accountNumber,
       ...this.chargeElement.pick('source', 'season', 'loss'),

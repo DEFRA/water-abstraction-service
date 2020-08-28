@@ -55,7 +55,8 @@ experiment('lib/connectors/repos/charge-versions', () => {
           'chargeElements.purposeUse',
           'licence',
           'licence.region',
-          'licence.licenceAgreements'
+          'licence.licenceAgreements',
+          'changeReason'
         ]
       })).to.be.true();
     });

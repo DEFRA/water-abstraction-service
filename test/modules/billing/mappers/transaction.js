@@ -59,7 +59,8 @@ const createTransaction = (options = {}) => {
     description: 'Tiny pond',
     volume: 5.64,
     transactionKey: '0123456789ABCDEF0123456789ABCDEF',
-    isTwoPartTariffSupplementary: !!options.isTwoPartTariffSupplementary
+    isTwoPartTariffSupplementary: !!options.isTwoPartTariffSupplementary,
+    isNewLicence: !!options.isNewLicence
   });
   return transaction;
 };
@@ -186,7 +187,8 @@ experiment('modules/billing/mappers/transaction', () => {
           section127Agreement: false,
           section130Agreement: null,
           transactionKey: '0123456789ABCDEF0123456789ABCDEF',
-          isTwoPartTariffSupplementary: false
+          isTwoPartTariffSupplementary: false,
+          isNewLicence: false
         });
       });
     });
@@ -462,7 +464,8 @@ experiment('modules/billing/mappers/transaction', () => {
             regionalChargingArea: 'Anglian',
             licenceNumber: '01/123/ABC',
             region: 'A',
-            areaCode: 'ARCA'
+            areaCode: 'ARCA',
+            newLicence: false
           });
         });
 
@@ -532,6 +535,35 @@ experiment('modules/billing/mappers/transaction', () => {
       test('the section 130 flag is set', async () => {
         expect(result.section130Agreement).to.be.true();
       });
+    });
+  });
+
+  experiment('.cmToModel', () => {
+    let result;
+
+    const cmData = {
+      id: '7d2c249d-0f56-40fa-90f0-fb2b7f8f698a',
+      chargeValue: 1176,
+      minimumChargeAdjustment: true,
+      deminimis: false
+    };
+
+    const chargePeriod = new DateRange('2020-04-01', '2021-03-31');
+
+    beforeEach(async () => {
+      result = transactionMapper.cmToModel(cmData, chargePeriod);
+    });
+
+    test('should return a Transaction model', async () => {
+      expect(result instanceof Transaction).to.be.true();
+    });
+
+    test('should have data mapped correctly', async () => {
+      expect(result.externalId).to.equal(cmData.id);
+      expect(result.value).to.equal(cmData.chargeValue);
+      expect(result.isMinimumCharge).to.equal(cmData.minimumChargeAdjustment);
+      expect(result.isDeMinimis).to.equal(cmData.deminimis);
+      expect(result.chargePeriod).to.equal(chargePeriod);
     });
   });
 });

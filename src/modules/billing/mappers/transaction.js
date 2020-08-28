@@ -66,7 +66,7 @@ const dbToModel = row => {
   return transaction.fromHash({
     id: row.billingTransactionId,
     ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
-      'externalId', 'isTwoPartTariffSupplementary', 'isDeMinimis']),
+      'externalId', 'isTwoPartTariffSupplementary', 'isDeMinimis', 'isNewLicence']),
     chargePeriod: new DateRange(row.startDate, row.endDate),
     isCompensationCharge: row.chargeType === 'compensation',
     chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
@@ -120,7 +120,8 @@ const modelToDb = (invoiceLicence, transaction) => ({
   volume: transaction.volume,
   ...mapAgreementsToDB(transaction.agreements),
   transactionKey: transaction.transactionKey,
-  isTwoPartTariffSupplementary: transaction.isTwoPartTariffSupplementary
+  isTwoPartTariffSupplementary: transaction.isTwoPartTariffSupplementary,
+  isNewLicence: transaction.isNewLicence
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -208,10 +209,29 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     chargePeriod: `${periodStart} - ${periodEnd}`,
     batchNumber: batch.id,
     ...mapChargeElementToChargeModuleTransaction(transaction.chargeElement),
-    ...mapLicenceToChargeElementTransaction(invoiceLicence.licence)
+    ...mapLicenceToChargeElementTransaction(invoiceLicence.licence),
+    newLicence: transaction.isNewLicence
   };
+};
+
+/**
+ * Creates a Transaction model for Minimum Charge transaction
+ * returned from the Charge Module
+ * @param {Object} data CM transaction
+ * @param {ChargePeriod} chargePeriod for transaction
+ */
+const cmToModel = (data, chargePeriod) => {
+  const model = new Transaction();
+  return model.fromHash({
+    externalId: data.id,
+    value: data.chargeValue,
+    isMinimumCharge: data.minimumChargeAdjustment,
+    isDeMinimis: data.deminimis,
+    chargePeriod
+  });
 };
 
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
 exports.modelToChargeModule = modelToChargeModule;
+exports.cmToModel = cmToModel;
