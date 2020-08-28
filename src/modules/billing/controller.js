@@ -11,6 +11,7 @@ const invoiceLicenceService = require('./services/invoice-licences-service');
 const batchService = require('./services/batch-service');
 const { createBatchEvent } = require('./lib/batch-event');
 
+const controller = require('../../lib/controller');
 const mapErrorResponse = require('../../lib/map-error-response');
 const mappers = require('./mappers');
 
@@ -118,6 +119,14 @@ const deleteBatchInvoice = async (request, h) => {
   }
 };
 
+const deleteBatch = (request, h) => controller.deleteEntity(
+  batchService.deleteBatch,
+  h,
+  request.pre.batch,
+  request.defra.internalCallingUser
+);
+
+/*
 const deleteBatch = async (request, h) => {
   const { batch } = request.pre;
   const { internalCallingUser } = request.defra;
@@ -129,6 +138,7 @@ const deleteBatch = async (request, h) => {
   await batchService.deleteBatch(batch, internalCallingUser);
   return h.response().code(204);
 };
+*/
 
 const postApproveBatch = async (request, h) => {
   const { batch } = request.pre;

@@ -4,6 +4,7 @@ const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowApprover } } 
 
 const controller = require('../controllers/charge-version-workflow');
 const Joi = require('joi');
+const preHandlers = require('../controllers/pre-handlers');
 
 const headers = async values => {
   Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
@@ -59,6 +60,48 @@ module.exports = {
           licenceId: Joi.string().guid().required(),
           chargeVersion: Joi.object().required()
         }
+      },
+      pre: [
+        { method: preHandlers.mapChargeVersion, assign: 'chargeVersion' },
+        { method: preHandlers.mapInternalCallingUser, assign: 'user' }
+      ]
+    }
+  },
+
+  patchChargeVersionWorkflow: {
+    method: 'PATCH',
+    path: '/water/1.0/charge-version-workflows/{chargeVersionWorkflowId}',
+    handler: controller.patchChargeVersionWorkflow,
+    options: {
+      description: 'Updates an existing charge version workflow record',
+      auth: {
+        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowApprover]
+      },
+      validate: {
+        headers,
+        payload: {
+          status: Joi.string(),
+          chargeVersion: Joi.object(),
+          approverComments: Joi.string()
+        }
+      },
+      pre: [
+        { method: preHandlers.mapChargeVersion, assign: 'chargeVersion' }
+      ]
+    }
+  },
+
+  deleteChargeVersionWorkflow: {
+    method: 'DELETE',
+    path: '/water/1.0/charge-version-workflows/{chargeVersionWorkflowId}',
+    handler: controller.deleteChargeVersionWorkflow,
+    options: {
+      description: 'Deletes an existing charge version workflow record',
+      auth: {
+        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowApprover]
+      },
+      validate: {
+        headers
       }
     }
   }
