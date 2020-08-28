@@ -2,12 +2,17 @@
 
 const urlJoin = require('url-join');
 const Joi = require('joi');
+const moment = require('moment');
 
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
 
 const VALID_LICENCE_NUMBER = Joi.string().required().example('01/123/R01');
 const VALID_GUID = Joi.string().guid().required();
+
+const getDocumentUrl = (...tail) => {
+  return urlJoin(config.services.crm_v2, 'document', ...tail);
+};
 
 const getDocumentsUrl = (...tail) => {
   return urlJoin(config.services.crm_v2, 'documents', ...tail);
@@ -48,6 +53,14 @@ const createDocumentRole = async (documentId, documentRole) => {
   return serviceRequest.post(url, { body: documentRole });
 };
 
+const getDocumentByRefAndDate = async (regime, documentType, documentRef, date) => {
+  return serviceRequest.get(getDocumentUrl('search'), {
+    qs: {
+      regime, documentType, documentRef, date: moment(date).format('YYYY-MM-DD')
+    }
+  });
+};
+
 /**
  * Get a single document role for the requested ID
  * @param {String} licenceNumber
@@ -61,3 +74,4 @@ exports.createDocumentRole = createDocumentRole;
 exports.getDocument = getDocument;
 exports.getDocumentRole = getDocumentRole;
 exports.getDocuments = getDocuments;
+exports.getDocumentByRefAndDate = getDocumentByRefAndDate;

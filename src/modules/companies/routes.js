@@ -86,6 +86,20 @@ module.exports = {
     }
   },
 
+  getCompanyInvoiceAccounts: {
+    path: '/water/1.0/companies/{companyId}/invoice-accounts',
+    method: 'GET',
+    handler: controller.getCompanyInvoiceAccounts,
+    config: {
+      description: 'Gets the invoice accounts for the specified company',
+      validate: {
+        params: {
+          companyId: Joi.string().guid().required()
+        }
+      }
+    }
+  },
+
   createCompanyInvoiceAccount: {
     path: '/water/1.0/companies/{companyId}/invoice-accounts',
     method: 'POST',

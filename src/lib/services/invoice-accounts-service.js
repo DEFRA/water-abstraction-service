@@ -176,9 +176,14 @@ const isNewEntity = entity => {
   return values.length > 0 && values.some(value => !isEmpty(value));
 };
 
+const getCompanyInvoiceAccounts = async companyId => {
+  return companiesService.getInvoiceAccountsByCompanyId(companyId);
+};
+
 exports.getByInvoiceAccountIds = getByInvoiceAccountIds;
 exports.getByInvoiceAccountId = getByInvoiceAccountId;
 exports.deleteInvoiceAccount = deleteInvoiceAccount;
 exports.getInvoiceAccount = getInvoiceAccount;
 exports.persist = persist;
 exports._isNewEntity = isNewEntity;
+exports.getCompanyInvoiceAccounts = getCompanyInvoiceAccounts;

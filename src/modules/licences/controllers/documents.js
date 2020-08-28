@@ -1,5 +1,4 @@
 'use strict';
-
 const moment = require('moment');
 const Boom = require('@hapi/boom');
 const { get, isObject } = require('lodash');
@@ -17,8 +16,8 @@ const queries = require('../lib/queries');
 const { createContacts } = require('../../../lib/models/factory/contact-list');
 const eventHelper = require('../lib/event-helper');
 const { isEmpty } = require('lodash');
-
 const licencesService = require('../../../lib/services/licences');
+const { getDocumentByRefAndDate } = require('../../../lib/connectors/crm-v2/documents');
 
 const getDocumentHeader = async (documentId, includeExpired = false) => {
   const documentResponse = await documentsClient.findMany({
@@ -224,6 +223,27 @@ const mapContacts = data => {
 };
 
 /**
+ * Gets licence document from a given document Ref and date. The purpose of this endpoint is to identify the responsible company for a licence at a given point in time.
+ * @param  {String}  regime
+ * @param  {String}  documentType
+ * @param  {String}  documentRef
+ * @param  {String}  date
+ * @return {Promise} resolves with JSON data
+ */
+const getLicenceDocumentByDocRefAndDate = async (request, h) => {
+  const { regime, documentType, documentRef, date } = request.query;
+  try {
+    const document = await getDocumentByRefAndDate(regime, documentType, documentRef, date);
+    if (document) {
+      return { error: null, document };
+    }
+    return Boom.notFound();
+  } catch (error) {
+    return handleUnexpectedError(error, documentRef);
+  }
+};
+
+/**
  * Gets licence summary for consumption by licence summary page in UI
  * @param  {Object}  request - HAPI request
  * @param {String} request.params.documentId - CRM document ID
@@ -324,3 +344,4 @@ exports.getLicenceSummaryByDocumentId = getLicenceSummaryByDocumentId;
 exports.getLicenceCommunicationsByDocumentId = getLicenceCommunicationsByDocumentId;
 exports.getLicenceCompanyByDocumentId = getLicenceCompanyByDocumentId;
 exports.postLicenceName = postLicenceName;
+exports.getLicenceDocumentByDocRefAndDate = getLicenceDocumentByDocRefAndDate;

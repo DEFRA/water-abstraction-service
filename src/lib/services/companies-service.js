@@ -13,6 +13,10 @@ const getCompanyAddresses = async companyId => {
   return companyAddresses.map(mappers.companyAddress.crmToModel);
 };
 
+const getInvoiceAccountsByCompanyId = async companyId => {
+  return companiesConnector.getCompanyInvoiceAccountsByCompanyId(companyId);
+};
+
 const createCompany = async companyModel => {
   const company = await companiesConnector.createCompany(mappers.company.modelToCrm(companyModel));
   return mappers.company.crmToModel(company);
@@ -53,3 +57,4 @@ exports.getCompanyModel = getCompanyModel;
 exports.deleteCompany = deleteCompany;
 exports.deleteCompanyAddress = deleteCompanyAddress;
 exports.deleteCompanyContact = deleteCompanyContact;
+exports.getInvoiceAccountsByCompanyId = getInvoiceAccountsByCompanyId;

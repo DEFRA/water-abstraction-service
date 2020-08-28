@@ -91,10 +91,19 @@ const createCompanyInvoiceAccount = async (request, h) => {
 
 const getCompanyContacts = async (request) => {
   const { companyId } = request.params;
-
   try {
     const companyContacts = await companyContactsService.getCompanyContacts(companyId);
     return envelope(companyContacts);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
+const getCompanyInvoiceAccounts = async (request, h) => {
+  const companyId = request.params.companyId;
+  try {
+    const invoiceAccounts = await invoiceAccountsService.getCompanyInvoiceAccounts(companyId);
+    return h.response(invoiceAccounts).code(201);
   } catch (err) {
     return mapErrorResponse(err);
   }
@@ -105,3 +114,4 @@ exports.getCompany = getCompany;
 exports.getCompanyAddresses = getCompanyAddresses;
 exports.createCompanyInvoiceAccount = createCompanyInvoiceAccount;
 exports.getCompanyContacts = getCompanyContacts;
+exports.getCompanyInvoiceAccounts = getCompanyInvoiceAccounts;

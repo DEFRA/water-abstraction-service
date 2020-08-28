@@ -1,7 +1,7 @@
 const Joi = require('@hapi/joi');
 const controller = require('../controllers/documents');
 const { version } = require('../../../../config');
-
+const singularPrefix = `/water/${version}/document/`;
 const pathPrefix = `/water/${version}/documents/`;
 
 module.exports = {
@@ -123,6 +123,23 @@ module.exports = {
       validate: {
         params: {
           documentId: Joi.string().guid().required()
+        }
+      }
+    }
+  },
+
+  getLicenceDocumentByDocRefAndDate: {
+    method: 'GET',
+    path: `${singularPrefix}search`,
+    handler: controller.getLicenceDocumentByDocRefAndDate,
+    config: {
+      description: 'Returns the document for a given document ref and a specified date, including a company identifier',
+      validate: {
+        query: {
+          regime: Joi.string().default('water'),
+          documentType: Joi.string().default('abstraction_licence'),
+          documentRef: Joi.string().required(),
+          date: Joi.date()
         }
       }
     }
