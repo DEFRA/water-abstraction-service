@@ -9,8 +9,8 @@ const getLicence = async request =>
 const getLicenceVersions = async request =>
   licencesService.getLicenceVersions(request.params.licenceId);
 
-const getLicenceAccountsByRefAndDate = async request => 
-  licencesService.getLicenceAccountsByRefAndDate(request.query.documentRef, request.query.date)
+const getLicenceAccountsByRefAndDate = async request =>
+  licencesService.getLicenceAccountsByRefAndDate(request.query.documentRef, request.query.date);
 
 exports.getLicence = getLicence;
 exports.getLicenceVersions = getLicenceVersions;

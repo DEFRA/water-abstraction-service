@@ -65,16 +65,16 @@ const getDocumentRole = documentRoleId => {
 /**
  * Fetch a document by documentRef and date, to identify the responsible company
  *  @param {String} documentRef
- *  @param {String} date 
+ *  @param {String} date
  */
 const getDocumentByRefAndDate = async (documentRef, date) => {
-  return serviceRequest.get(getDocumentUrl("search"), {
+  return serviceRequest.get(getDocumentUrl('search'), {
     qs: {
       date: moment(date).format('YYYY-MM-DD'),
       documentRef
     }
   });
-}
+};
 
 exports.createDocumentRole = createDocumentRole;
 exports.getDocument = getDocument;

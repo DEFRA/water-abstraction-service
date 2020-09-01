@@ -113,18 +113,18 @@ const updateIncludeInSupplementaryBillingStatusForSentBatch = async batchId => {
 /**
  * Fetches the invoice accounts associated with a licence using the licence ref and date as input.
  *  @param {String} documentRef
- *  @param {String} date 
+ *  @param {String} date
  */
 const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
-  //First, fetch the company ID from the CRM
+  //  First, fetch the company ID from the CRM
   const { companyId } = await crmDocsConnector.getDocumentByRefAndDate(documentRef, date);
-  
-  //Secondly, take the company ID and fetch the invoice accounts for that company from the CRM
+
+  //  Secondly, take the company ID and fetch the invoice accounts for that company from the CRM
   const invoiceAccounts = await crmCompaniesConnector.getInvoiceAccountsByCompanyId(companyId);
 
-  //Return the invoice accounts
-  return invoiceAccounts
-}
+  //  Return the invoice accounts
+  return invoiceAccounts;
+};
 
 exports.getLicenceAgreementById = getLicenceAgreementById;
 exports.getLicenceAgreementsByLicenceRef = getLicenceAgreementsByLicenceRef;
