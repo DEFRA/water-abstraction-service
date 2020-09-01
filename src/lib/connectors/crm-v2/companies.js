@@ -67,6 +67,14 @@ const getCompanyContacts = companyId => {
   return serviceRequest.get(getUri(companyId, 'contacts'));
 };
 
+
+/**
+ * Returns the invoice accounts associated with a company by its GUID
+ * @param {String} companyId
+ */
+
+const getInvoiceAccountsByCompanyId = async companyId => serviceRequest.get(getUri(`${companyId}/invoice-accounts`))
+
 exports.createCompany = createCompany;
 exports.getCompany = getCompany;
 exports.deleteCompany = deleteCompany;
@@ -76,3 +84,4 @@ exports.deleteCompanyAddress = deleteCompanyAddress;
 exports.createCompanyContact = createCompanyContact;
 exports.deleteCompanyContact = deleteCompanyContact;
 exports.getCompanyContacts = getCompanyContacts;
+exports.getInvoiceAccountsByCompanyId = getInvoiceAccountsByCompanyId;
