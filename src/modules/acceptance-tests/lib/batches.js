@@ -31,7 +31,7 @@ const getTestRegionBatchIds = async () => {
     and e.metadata->'batch'->'region'->>'name' = 'Test Region';
   `);
 
-  return rows.map(batch => batch.billing_batch_id); 
+  return rows.map(batch => batch.billing_batch_id);
 };
 
 const getAcceptanceTestUserBatchIds = async () => {
