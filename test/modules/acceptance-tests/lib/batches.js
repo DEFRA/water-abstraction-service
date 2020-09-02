@@ -81,4 +81,33 @@ experiment('modules/acceptance-tests/batches', () => {
       expect(newRepos.billingBatches.delete.calledWith('11111111-1111-1111-1111-111111111111', false)).to.be.true();
     });
   });
+  experiment('.getTestRegionBatchIds', async () => {
+    beforeEach(async () => {
+      pool.query.onFirstCall().resolves({
+        rows: [
+          { billing_batch_id: null },
+          { billing_batch_id: '00000000-0000-0000-0000-000000000000' }
+        ]
+      });
+
+      pool.query.onSecondCall().resolves({
+        rows: [
+          { billing_batch_id: '00000000-0000-0000-0000-000000000000' },
+          { billing_batch_id: '11111111-1111-1111-1111-111111111111' }
+        ]
+      });
+
+      pool.query.resolves();
+    });
+    test('calls the events repo to get the batch ids', async () => {
+      await batches.getTestRegionBatchIds();
+      const args = pool.query.lastCall.args;
+      expect(args[0]).to.equal('\n' +
+      "    select e.metadata->'batch'->>'id' as billing_batch_id\n" +
+      '    from water.events e\n' +
+      "    where strpos(e.type, 'billing-batch') = 1\n" +
+      "    and e.metadata->'batch'->'region'->>'name' = 'Test Region';\n" +
+      '  ');
+    });
+  });
 });

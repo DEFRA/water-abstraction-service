@@ -142,11 +142,6 @@ const createAgents = async (company) => {
   return { agent, agentWithReturns };
 };
 
-const createChargeData = async (scenario) => {
-  const response = chargeTestDataSetUp.createScenario(scenario);
-  return response;
-};
-
 const postSetup = async (request, h) => {
   await postTearDown();
   const includeAgents = get(request, 'payload.includeAgents', false);
@@ -169,8 +164,8 @@ const postSetup = async (request, h) => {
     }
 
     if (includeCharging) {
-      const tasks = scenarios.map(scenario => createChargeData(scenario));
-      await Promise.all(tasks);
+      const tasks = scenarios.map(scenario => chargeTestDataSetUp.createScenario(scenario));
+      responseData.charging = await Promise.all(tasks);
     }
 
     return responseData;
