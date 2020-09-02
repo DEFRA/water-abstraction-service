@@ -23,9 +23,20 @@ const deleteBatch = async batchId => {
   await newRepos.billingBatches.delete(batchId, false);
 };
 
+const getTestRegionBatchIds = async () => {
+  const { rows } = await pool.query(`
+    select e.metadata->'batch'->>'id' as billing_batch_id
+    from water.events e
+    where strpos(e.type, 'billing-batch') = 1
+    and e.metadata->'batch'->'region'->>'name' = 'Test Region';
+  `);
+
+  return rows.map(batch => batch.billing_batch_id); 
+};
+
 const getAcceptanceTestUserBatchIds = async () => {
   const { rows } = await pool.query(`
-    select e.metadata->'batch'->>'billing_batch_id' as billing_batch_id
+    select e.metadata->'batch'->>'id' as billing_batch_id
     from water.events e
     where strpos(e.type, 'billing-batch') = 1
     and strpos(e.issuer, 'acceptance-test') = 1;
@@ -70,3 +81,4 @@ const deleteBatches = async () => {
 };
 
 exports.delete = deleteBatches;
+exports.getTestRegionBatchIds = getTestRegionBatchIds;
