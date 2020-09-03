@@ -91,6 +91,32 @@ experiment('lib/connectors/crm-v2/companies', () => {
     });
   });
 
+  experiment('.searchCompaniesByName', () => {
+    let response;
+    let expectedOutput = [
+      {
+        "companyId": "8bec1b99-255a-4238-b538-9c2d5e7a7aab",
+        "name": "Joe Water",
+        "type": "person"
+      }
+    ];
+
+    beforeEach(async () => {
+      serviceRequest.get.resolves(expectedOutput);
+
+      response = await companyConnector.searchCompaniesByName('Joe Water');
+    });
+
+    test('makes a request to the expected URL', async () => {
+      const [url] = serviceRequest.get.lastCall.args;
+      expect(url).to.equal('http://test.defra/companies/search');
+    });
+
+    test('returns the result from the crm', async () => {
+      expect(response).to.equal(expectedOutput);
+    });
+  });
+
   experiment('.getCompanyAddresses', () => {
     let response;
 
