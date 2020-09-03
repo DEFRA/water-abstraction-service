@@ -8,6 +8,11 @@ const getCompany = async companyId => {
   throw new NotFoundError(`Company ${companyId} not found`);
 };
 
+const searchCompaniesByName = async (name, soft) => {
+  const companies = await companiesConnector.searchCompaniesByName(name, soft);
+  return companies;
+}
+
 const getCompanyAddresses = async companyId => {
   const companyAddresses = await companiesConnector.getCompanyAddresses(companyId);
   return companyAddresses.map(mappers.companyAddress.crmToModel);
@@ -53,3 +58,4 @@ exports.getCompanyModel = getCompanyModel;
 exports.deleteCompany = deleteCompany;
 exports.deleteCompanyAddress = deleteCompanyAddress;
 exports.deleteCompanyContact = deleteCompanyContact;
+exports.searchCompaniesByName = searchCompaniesByName;

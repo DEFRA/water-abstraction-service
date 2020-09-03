@@ -72,6 +72,21 @@ module.exports = {
     }
   },
 
+  searchCompaniesByName: {
+    path: '/water/1.0/companies/search',
+    method: 'GET',
+    handler: controller.searchCompaniesByName,
+    config: {
+      description: 'Soft-search companies by name',
+      validate: {
+        query: {
+          name: Joi.string().required().min(2),
+          soft: Joi.boolean().optional().default(true)
+        }
+      }
+    }
+  },
+
   getCompanyAddresses: {
     path: '/water/1.0/companies/{companyId}/addresses',
     method: 'GET',
