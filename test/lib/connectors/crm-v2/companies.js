@@ -93,11 +93,11 @@ experiment('lib/connectors/crm-v2/companies', () => {
 
   experiment('.searchCompaniesByName', () => {
     let response;
-    let expectedOutput = [
+    const expectedOutput = [
       {
-        "companyId": "8bec1b99-255a-4238-b538-9c2d5e7a7aab",
-        "name": "Joe Water",
-        "type": "person"
+        companyId: '8bec1b99-255a-4238-b538-9c2d5e7a7aab',
+        name: 'Joe Water',
+        type: 'person'
       }
     ];
 

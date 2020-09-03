@@ -10,8 +10,8 @@ const getCompany = async companyId => {
 
 const searchCompaniesByName = async (name, soft) => {
   const companies = await companiesConnector.searchCompaniesByName(name, soft);
-  return companies;
-}
+  return companies.map(mappers.company.crmToModel);
+};
 
 const getCompanyAddresses = async companyId => {
   const companyAddresses = await companiesConnector.getCompanyAddresses(companyId);

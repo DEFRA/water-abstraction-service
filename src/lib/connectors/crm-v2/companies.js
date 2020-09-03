@@ -12,7 +12,6 @@ const getUri = (...tail) => urlJoin(config.services.crm_v2, 'companies', ...tail
  */
 const getCompany = companyId => serviceRequest.get(getUri(companyId));
 
-
 /**
  * Gets an array of companies that match by name
  * @param {String} name

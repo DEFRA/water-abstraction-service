@@ -65,16 +65,16 @@ const getCompany = async (request, h) => {
 
 /**
  * Gets an array of companies by name, with a soft search option
- * @param {String} name 
- * @param {boolean} soft 
+ * @param {String} name
+ * @param {boolean} soft
  * */
 const searchCompaniesByName = async (request, h) => {
   try {
     return companiesService.searchCompaniesByName(request.query.name, request.query.soft);
   } catch (err) {
     return mapErrorResponse(err);
-  }
-}
+  };
+};
 
 /**
  * Gets all addresses for a company
