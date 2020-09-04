@@ -3,6 +3,7 @@
 const repos = require('../connectors/repos');
 const licenceAgreementMapper = require('../mappers/licence-agreement');
 const licenceMapper = require('../mappers/licence');
+const invoiceAccountsMapper = require('../mappers/invoice-account');
 const licenceVersionMapper = require('../mappers/licence-version');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../models/constants');
 
@@ -123,7 +124,8 @@ const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
   const invoiceAccounts = await crmCompaniesConnector.getInvoiceAccountsByCompanyId(companyId);
 
   //  Return the invoice accounts
-  return invoiceAccounts;
+  return invoiceAccounts.length < 1 ? invoiceAccountsMapper.crmToModel(invoiceAccounts) : [];
+  //return invoiceAccounts;
 };
 
 exports.getLicenceAgreementById = getLicenceAgreementById;

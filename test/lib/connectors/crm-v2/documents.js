@@ -124,4 +124,35 @@ experiment('lib/connectors/crm-2/documents', () => {
       expect(result).to.equal(documentRole);
     });
   });
+
+  experiment('.getDocumentByRefAndDate', () => {
+    let documentRef;
+    let date;
+    let result;
+
+    beforeEach(async () => {
+      documentId = uuid();
+      documentRef = 'xxyyzz';
+      date = '2020-10-10';
+
+      expectedResponse = {
+        documentId,
+        documentRef,
+        regime: 'water',
+        documentType: 'abstraction_licence'
+      };
+
+      serviceRequest.get.resolves(expectedResponse);
+      result = await documentsConnector.getDocumentByRefAndDate(documentRef, date);
+    });
+
+    test('makes a get request to the expected URL', async () => {
+      const [url] = serviceRequest.get.lastCall.args;
+      expect(url).to.equal(`${config.services.crm_v2}/documents/search`);
+    });
+
+    test('returns the received data from the CRM', async () => {
+      expect(result.documentId).to.equal(documentId);
+    });
+  });
 });

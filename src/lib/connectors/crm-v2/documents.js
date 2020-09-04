@@ -10,10 +10,6 @@ const config = require('../../../../config');
 const VALID_LICENCE_NUMBER = Joi.string().required().example('01/123/R01');
 const VALID_GUID = Joi.string().guid().required();
 
-const getDocumentUrl = (...tail) => {
-  return urlJoin(config.services.crm_v2, 'document', ...tail);
-};
-
 const getDocumentsUrl = (...tail) => {
   return urlJoin(config.services.crm_v2, 'documents', ...tail);
 };
@@ -68,7 +64,7 @@ const getDocumentRole = documentRoleId => {
  *  @param {String} date
  */
 const getDocumentByRefAndDate = async (documentRef, date) => {
-  return serviceRequest.get(getDocumentUrl('search'), {
+  return serviceRequest.get(getDocumentsUrl('search'), {
     qs: {
       date: moment(date).format('YYYY-MM-DD'),
       documentRef
