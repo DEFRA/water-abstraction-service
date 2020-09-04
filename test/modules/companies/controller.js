@@ -259,7 +259,7 @@ experiment('modules/companies/controller', () => {
       )).to.be.true();
     });
 
-    test('returns the output of the crm call', () => {
+    test('returns the expected output', () => {
       expect(result).to.equal([{
         company_id: tempUuid,
         name: 'Test Limited'
@@ -284,9 +284,6 @@ experiment('modules/companies/controller', () => {
       }
     });
   });
-
-
-
 
   experiment('getCompanyAddresses', () => {
     let request, result;
