@@ -126,9 +126,7 @@ experiment('lib/connectors/crm-2/documents', () => {
   });
 
   experiment('.getDocumentByRefAndDate', () => {
-    let documentRef;
-    let date;
-    let result;
+    let documentRef, documentId, date, result, expectedResponse;
 
     beforeEach(async () => {
       documentId = uuid();

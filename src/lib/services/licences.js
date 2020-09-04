@@ -124,8 +124,7 @@ const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
   const invoiceAccounts = await crmCompaniesConnector.getInvoiceAccountsByCompanyId(companyId);
 
   //  Return the invoice accounts
-  return invoiceAccounts.length < 1 ? invoiceAccountsMapper.crmToModel(invoiceAccounts) : [];
-  //return invoiceAccounts;
+  return invoiceAccounts ? invoiceAccounts.map(invoiceAccount => invoiceAccountsMapper.crmToModel(invoiceAccount)) : [];
 };
 
 exports.getLicenceAgreementById = getLicenceAgreementById;
