@@ -230,8 +230,6 @@ experiment('modules/companies/controller', () => {
     });
   });
 
-
-
   experiment('searchCompaniesByName', () => {
     let request, result, tempUuid;
 
