@@ -1,7 +1,6 @@
 'use strict';
 
-const { isEmpty, negate } = require('lodash');
-const isNotEmpty = negate(isEmpty);
+const objectMapper = require('object-mapper');
 
 const ChargeVersion = require('../models/charge-version');
 const Company = require('../models/company');
@@ -23,74 +22,86 @@ const createRegion = regionCode => {
   });
 };
 
+const dbToModelMap = {
+  chargeVersionId: 'id',
+  scheme: 'scheme',
+  versionNumber: 'versionNumber',
+  status: 'status',
+  regionCode: {
+    key: 'region',
+    transform: createRegion
+  },
+  startDate: {
+    key: 'dateRange',
+    transform: (startDate, source) => new DateRange(startDate, source.endDate)
+  },
+  source: 'source',
+  companyId: {
+    key: 'company',
+    transform: id => new Company(id)
+  },
+  invoiceAccountId: {
+    key: 'invoiceAccount',
+    transform: id => new InvoiceAccount(id)
+  },
+  changeReason: {
+    key: 'changeReason',
+    transform: changeReasonMapper.dbToModel
+  },
+  chargeElements: {
+    key: 'chargeElements',
+    transform: chargeElements => chargeElements.map(chargeElementMapper.dbToModel)
+  },
+  licence: {
+    key: 'licence',
+    transform: licenceMapper.dbToModel
+  },
+  createdBy: {
+    key: 'createdBy',
+    transform: userMapper.pojoToModel
+  },
+  approvedBy: {
+    key: 'approvedBy',
+    transform: userMapper.pojoToModel
+  }
+};
+
 const dbToModel = row => {
   const model = new ChargeVersion();
-
-  model.fromHash({
-    id: row.chargeVersionId,
-    scheme: row.scheme,
-    versionNumber: row.versionNumber,
-    dateRange: new DateRange(row.startDate, row.endDate),
-    status: row.status,
-    region: createRegion(row.regionCode),
-    source: row.source,
-    company: new Company(row.companyId),
-    invoiceAccount: new InvoiceAccount(row.invoiceAccountId),
-    changeReason: changeReasonMapper.dbToModel(row.changeReason)
-  });
-
-  if (row.chargeElements) {
-    model.chargeElements = row.chargeElements.map(chargeElementMapper.dbToModel);
-  }
-
-  if (isNotEmpty(row.licence)) {
-    model.licence = licenceMapper.dbToModel(row.licence);
-  }
-
-  if (row.createdBy) {
-    model.createdBy = userMapper.dbToModel(row.createdBy);
-  }
-  if (row.approvedBy) {
-    model.approvedBy = userMapper.dbToModel(row.approvedBy);
-  }
-
-  return model;
+  return model.fromHash(
+    objectMapper(row, dbToModelMap)
+  );
 };
 
-const modelToDb = model => {
-  const dbRow = {
-    chargeVersionId: model.id,
-    licenceRef: model.licence.licenceNumber,
-    versionNumber: model.versionNumber,
-    startDate: model.dateRange.startDate,
-    endDate: model.dateRange.endDate,
-    status: model.status,
-    apportionment: model.apportionment,
-    error: model.error,
-    billedUptoDate: model.billedUpToDate,
-    dateCreated: model.dateCreated,
-    dateUpdated: model.dateUpdated,
-    source: model.source,
-    scheme: model.scheme,
-    regionCode: model.region.numericCode,
-    // @todo remove companyId from charge version
-    companyId: model.invoiceAccount.company.id,
-    invoiceAccountId: model.invoiceAccount.id
-  };
-
-  if (model.changeReason) {
-    dbRow.changeReasonId = model.changeReason.id;
+const modelToDbMap = {
+  id: 'chargeVersionId',
+  'licence.licenceNumber': 'licenceRef',
+  versionNumber: 'versionNumber',
+  'dateRange.startDate': 'startDate',
+  'dateRange.endDate': 'endDate',
+  status: 'status',
+  apportionment: 'apportionment',
+  error: 'error',
+  billedUpToDate: 'billedUptoDate',
+  dateCreated: 'dateCreated',
+  dateUpdated: 'dateUpdated',
+  source: 'source',
+  scheme: 'scheme',
+  'region.numericCode': 'regionCode',
+  'invoiceAccount.company.id': 'companyId',
+  'invoiceAccount.id': 'invoiceAccountId',
+  'changeReason.id': 'changeReasonId',
+  createdBy: {
+    key: 'createdBy',
+    transform: user => user && user.toJSON()
+  },
+  approvedBy: {
+    key: 'approvedBy',
+    transform: user => user && user.toJSON()
   }
-
-  if (model.createdBy) {
-    dbRow.createdBy = model.createdBy.toJSON();
-  }
-  if (model.approvedBy) {
-    dbRow.approvedBy = model.approvedBy.toJSON();
-  }
-
-  return dbRow;
 };
+
+const modelToDb = model => objectMapper(model, modelToDbMap);
 
 /**
  * Converts a plain object representation of a ChargeVersion to a ChargeVersion model
