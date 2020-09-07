@@ -13,6 +13,18 @@ const getUri = (...tail) => urlJoin(config.services.crm_v2, 'companies', ...tail
 const getCompany = companyId => serviceRequest.get(getUri(companyId));
 
 /**
+ * Gets an array of companies that match by name
+ * @param {String} name
+ * @param {Boolean} soft
+ */
+const searchCompaniesByName = (name, soft) => serviceRequest.get(getUri('search'), {
+  qs: {
+    name: name,
+    soft: soft
+  }
+});
+
+/**
  * Creates a company entity in the CRM
  *
  * @param {Object} company The company data to save in the CRM
@@ -76,3 +88,4 @@ exports.deleteCompanyAddress = deleteCompanyAddress;
 exports.createCompanyContact = createCompanyContact;
 exports.deleteCompanyContact = deleteCompanyContact;
 exports.getCompanyContacts = getCompanyContacts;
+exports.searchCompaniesByName = searchCompaniesByName;

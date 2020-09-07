@@ -142,3 +142,4 @@ const getBatchWhenProcessed = batchId => promisePoller({
 });
 
 exports.runScenario = runScenario;
+exports.createScenario = createScenario;

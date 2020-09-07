@@ -230,6 +230,59 @@ experiment('modules/companies/controller', () => {
     });
   });
 
+  experiment('searchCompaniesByName', () => {
+    let request, result, tempUuid;
+
+    beforeEach(async () => {
+      request = {
+        query: {
+          name: 'test',
+          soft: true
+        }
+      };
+
+      tempUuid = uuid();
+
+      sandbox.stub(companiesService, 'searchCompaniesByName').resolves([{
+        company_id: tempUuid,
+        name: 'Test Limited'
+      }]);
+
+      result = await controller.searchCompaniesByName(request);
+    });
+
+    test('calls the company connector with search term', () => {
+      expect(companiesService.searchCompaniesByName.calledWith(
+        request.query.name
+      )).to.be.true();
+    });
+
+    test('returns the expected output', () => {
+      expect(result).to.equal([{
+        company_id: tempUuid,
+        name: 'Test Limited'
+      }]);
+    });
+
+    test('returns a Boom not found error if error is thrown', async () => {
+      companiesService.searchCompaniesByName.throws(new NotFoundError('oops!'));
+      const err = await controller.searchCompaniesByName(request);
+      expect(err.isBoom).to.be.true();
+      expect(err.output.statusCode).to.equal(404);
+      expect(err.message).to.equal('oops!');
+    });
+
+    test('throws error if unexpected error is thrown', async () => {
+      companiesService.searchCompaniesByName.throws(new Error('oh no!'));
+      try {
+        await controller.searchCompaniesByName(request);
+      } catch (err) {
+        expect(err.isBoom).to.be.undefined();
+        expect(err.message).to.equal('oh no!');
+      }
+    });
+  });
+
   experiment('getCompanyAddresses', () => {
     let request, result;
     beforeEach(async () => {
