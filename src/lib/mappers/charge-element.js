@@ -59,7 +59,11 @@ const pojoToModel = pojo => {
   const model = new ChargeElement();
 
   model.pickFrom(pojo, [
-    'externalId', 'authorisedAnnualQuantity', 'billableAnnualQuantity', 'season', 'source', 'loss', 'description'
+    'id',
+    'externalId',
+    'authorisedAnnualQuantity', 'billableAnnualQuantity',
+    'season', 'source', 'loss',
+    'description'
   ]);
 
   if (pojo.abstractionPeriod) {

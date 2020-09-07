@@ -71,27 +71,6 @@ experiment('lib/models/charge-version-workflow', () => {
     });
   });
 
-  experiment('.approvedBy', () => {
-    const user = new User();
-
-    test('can be set to a User instance', async () => {
-      chargeVersionWorkflow.approvedBy = user;
-      expect(chargeVersionWorkflow.approvedBy).to.equal(user);
-    });
-
-    test('can be set to null', async () => {
-      chargeVersionWorkflow.approvedBy = null;
-      expect(chargeVersionWorkflow.approvedBy).to.be.null();
-    });
-
-    test('throws an error if set to any other type', async () => {
-      const func = () => {
-        chargeVersionWorkflow.approvedBy = new TestModel();
-      };
-      expect(func).to.throw();
-    });
-  });
-
   experiment('.approverComments', () => {
     test('can be set to null', async () => {
       chargeVersionWorkflow.approverComments = null;

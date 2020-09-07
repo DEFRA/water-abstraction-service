@@ -42,8 +42,8 @@ experiment('lib/mappers/charge-version', () => {
       model.dateCreated = '2000-01-01';
       model.dateUpdated = '2000-01-02';
       model.source = 'wrls';
-      model.company = new Company(uuid());
       model.invoiceAccount = new InvoiceAccount(uuid());
+      model.invoiceAccount.company = new Company(uuid());
       model.scheme = 'alcs';
       model.changeReason = new ChangeReason(uuid());
 
@@ -107,7 +107,7 @@ experiment('lib/mappers/charge-version', () => {
     });
 
     test('maps the company id', async () => {
-      expect(db.companyId).to.equal(model.company.id);
+      expect(db.companyId).to.equal(model.invoiceAccount.company.id);
     });
 
     test('maps the invoice account id', async () => {

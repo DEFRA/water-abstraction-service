@@ -17,6 +17,7 @@ const ChargeElement = require('../../../src/lib/models/charge-element');
 const LicenceVersion = require('../../../src/lib/models/licence-version');
 const LicenceVersionPurpose = require('../../../src/lib/models/licence-version-purpose');
 const PurposeUse = require('../../../src/lib/models/purpose-use');
+const Purpose = require('../../../src/lib/models/purpose');
 
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
@@ -56,6 +57,8 @@ experiment('lib/services/charge-elements', () => {
 
       licenceVersionPurpose.fromHash({
         annualQuantity: 100,
+        purposePrimary: new Purpose(uuid()),
+        purposeSecondary: new Purpose(uuid()),
         purposeUse
       });
 
