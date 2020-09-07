@@ -20,6 +20,9 @@ const sessions = require('../../../src/modules/acceptance-tests/lib/sessions');
 
 const controller = require('../../../src/modules/acceptance-tests/controller');
 
+const chargeTestDataSetUp = require('../../../integration-tests/billing/services/scenarios');
+const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
+
 experiment('modules/acceptance-tests/controller', () => {
   beforeEach(async () => {
     sandbox.stub(entities, 'createCompany').resolves({
@@ -53,6 +56,7 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(returns, 'createDueReturn').resolves({});
 
     sandbox.stub(batches, 'delete').resolves();
+    sandbox.stub(batches, 'getTestRegionBatchIds').resolves([]);
     sandbox.stub(returns, 'delete').resolves();
     sandbox.stub(events, 'delete').resolves();
     sandbox.stub(permits, 'delete').resolves();
@@ -60,6 +64,8 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(entities, 'delete').resolves();
     sandbox.stub(users, 'delete').resolves();
     sandbox.stub(sessions, 'delete').resolves();
+    sandbox.stub(chargeTestDataTearDown, 'tearDown').resolves();
+    sandbox.stub(chargeTestDataSetUp, 'createScenario').resolves('test-region-id');
   });
 
   afterEach(async () => {
@@ -210,6 +216,24 @@ experiment('modules/acceptance-tests/controller', () => {
     });
   });
 
+  experiment('when charging data is requested', async () => {
+    let response;
+
+    beforeEach(async () => {
+      const request = {
+        payload: {
+          includeCharging: true
+        }
+      };
+      response = await controller.postSetup(request);
+    });
+
+    test('a super user is created', async () => {
+      const charging = response.charging[0];
+      expect(charging).to.equal('test-region-id');
+    });
+  });
+
   experiment('postTearDown', () => {
     test('deletes the test data that has been created', async () => {
       await controller.postTearDown();
@@ -221,6 +245,7 @@ experiment('modules/acceptance-tests/controller', () => {
       expect(entities.delete.called).to.be.true();
       expect(users.delete.called).to.be.true();
       expect(sessions.delete.called).to.be.true();
+      expect(batches.getTestRegionBatchIds.called).to.be.true();
     });
   });
 });
