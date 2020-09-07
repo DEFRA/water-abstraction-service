@@ -1,9 +1,16 @@
 'use strict';
 
 const ChargeElement = require('../models/charge-element');
+const ChargeVersion = require('../models/charge-version');
+
+const validators = require('../models/validators');
+
 const { CHARGE_SEASON } = require('../models/constants');
 const AbstractionPeriod = require('../models/abstraction-period');
 const SPRAY_ANTI_FROST = '380';
+
+const chargeElementMapper = require('../mappers/charge-element');
+const chargeElementRepo = require('../connectors/repos/charge-elements');
 
 const calculateSeason = licenceVersionPurpose => {
   const { code } = licenceVersionPurpose.purposeUse;
@@ -36,6 +43,8 @@ const getChargeElementsFromLicenceVersion = licenceVersion => {
     chargeElement.abstractionPeriod = licenceVersionPurpose.abstractionPeriod;
     chargeElement.authorisedAnnualQuantity = licenceVersionPurpose.annualQuantity;
     chargeElement.billableAnnualQuantity = null;
+    chargeElement.purposePrimary = licenceVersionPurpose.purposePrimary;
+    chargeElement.purposeSecondary = licenceVersionPurpose.purposeSecondary;
     chargeElement.purposeUse = licenceVersionPurpose.purposeUse;
     chargeElement.description = licenceVersionPurpose.purposeUse.name;
     chargeElement.season = calculateSeason(licenceVersionPurpose);
@@ -48,4 +57,18 @@ const getChargeElementsFromLicenceVersion = licenceVersion => {
   });
 };
 
+/**
+ * Creates a new charge element
+ * @param {ChargeElement} chargeElement
+ * @return {Promise<ChargeElement>} persisted charge element
+ */
+const create = async (chargeVersion, chargeElement) => {
+  validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
+  validators.assertIsInstanceOf(chargeElement, ChargeElement);
+  const dbRow = chargeElementMapper.modelToDb(chargeElement, chargeVersion);
+  const result = await chargeElementRepo.create(dbRow);
+  return chargeElementMapper.dbToModel(result);
+};
+
 exports.getChargeElementsFromLicenceVersion = getChargeElementsFromLicenceVersion;
+exports.create = create;

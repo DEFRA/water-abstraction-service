@@ -4,6 +4,7 @@ const validators = require('./validators');
 const AbstractionPeriod = require('./abstraction-period');
 const DateRange = require('./date-range');
 const PurposeUse = require('./purpose-use');
+const Purpose = require('./purpose');
 
 const Model = require('./model');
 
@@ -54,6 +55,18 @@ class LicenceVersionPurpose extends Model {
   set notes (notes) {
     validators.assertNullableString(notes);
     this._notes = notes;
+  }
+
+  get purposePrimary () { return this._purposePrimary; }
+  set purposePrimary (purposePrimary) {
+    validators.assertIsInstanceOf(purposePrimary, Purpose);
+    this._purposePrimary = purposePrimary;
+  }
+
+  get purposeSecondary () { return this._purposeSecondary; }
+  set purposeSecondary (purposeSecondary) {
+    validators.assertIsInstanceOf(purposeSecondary, Purpose);
+    this._purposeSecondary = purposeSecondary;
   }
 
   get purposeUse () { return this._purposeUse; }

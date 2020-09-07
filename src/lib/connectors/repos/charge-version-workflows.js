@@ -4,7 +4,8 @@ const { ChargeVersionWorkflow } = require('../bookshelf');
 const helpers = require('./lib/helpers');
 
 const relatedModels = [
-  'licence'
+  'licence',
+  'licence.region'
 ];
 
 const findOne = id =>

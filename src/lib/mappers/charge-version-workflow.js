@@ -22,7 +22,10 @@ const dbToModel = row => {
   });
 
   if (row.licence) {
-    model.licence = licenceMapper.dbToModel(row.licence);
+    const licence = licenceMapper.dbToModel(row.licence);
+    model.licence = licence;
+    model.chargeVersion.licence = licence;
+    model.chargeVersion.region = licence.region;
   }
 
   return model;

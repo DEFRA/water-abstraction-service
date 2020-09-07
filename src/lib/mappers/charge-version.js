@@ -12,6 +12,7 @@ const Region = require('../models/region');
 const changeReasonMapper = require('./change-reason');
 const chargeElementMapper = require('./charge-element');
 const licenceMapper = require('./licence');
+const invoiceAccountMapper = require('./invoice-account');
 
 const createRegion = regionCode => {
   const region = new Region();
@@ -34,9 +35,12 @@ const dbToModel = row => {
     source: row.source,
     company: new Company(row.companyId),
     invoiceAccount: new InvoiceAccount(row.invoiceAccountId),
-    chargeElements: row.chargeElements.map(chargeElementMapper.dbToModel),
     changeReason: changeReasonMapper.dbToModel(row.changeReason)
   });
+
+  if (row.chargeElements) {
+    model.chargeElements = row.chargeElements.map(chargeElementMapper.dbToModel);
+  }
 
   if (isNotEmpty(row.licence)) {
     model.licence = licenceMapper.dbToModel(row.licence);
@@ -61,7 +65,8 @@ const modelToDb = model => {
     source: model.source,
     scheme: model.scheme,
     regionCode: model.region.numericCode,
-    companyId: model.company.id,
+    // @todo remove companyId from charge version
+    companyId: model.invoiceAccount.company.id,
     invoiceAccountId: model.invoiceAccount.id,
     changeReasonId: model.changeReason.id
   };
@@ -73,15 +78,18 @@ const modelToDb = model => {
  * @return ChargeVersion
  */
 const pojoToModel = pojo => {
-  const { chargeElements, dateRange, ...rest } = pojo;
   const model = new ChargeVersion();
-  model.fromHash({
-    dateRange: new DateRange(dateRange.startDate, dateRange.endDate),
-    ...rest
-  });
 
-  if (chargeElements) {
-    model.chargeElements = chargeElements.map(chargeElementMapper.pojoToModel);
+  model.pickFrom(pojo, ['id', 'licenceRef', 'scheme', 'externalId', 'versionNumber', 'status']);
+
+  if (pojo.dateRange) {
+    model.dateRange = new DateRange(pojo.dateRange.startDate, pojo.dateRange.endDate);
+  }
+  if (pojo.chargeElements) {
+    model.chargeElements = pojo.chargeElements.map(chargeElementMapper.pojoToModel);
+  }
+  if (pojo.invoiceAccount) {
+    model.invoiceAccount = invoiceAccountMapper.pojoToModel(pojo.invoiceAccount);
   }
 
   return model;

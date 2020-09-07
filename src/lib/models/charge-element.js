@@ -5,6 +5,7 @@ const { isNull, max } = require('lodash');
 const Model = require('./model');
 const AbstractionPeriod = require('./abstraction-period');
 const DateRange = require('./date-range');
+const Purpose = require('./purpose');
 const PurposeUse = require('./purpose-use');
 const { CHARGE_SEASON, LOSSES } = require('./constants');
 
@@ -120,6 +121,32 @@ class ChargeElement extends Model {
    */
   get volume () {
     return this._billableAnnualQuantity || this._authorisedAnnualQuantity;
+  }
+
+  /**
+   * Primary purpose
+   * @param {Purpose}
+   */
+  set purposePrimary (purposePrimary) {
+    validators.assertIsInstanceOf(purposePrimary, Purpose);
+    this._purposePrimary = purposePrimary;
+  }
+
+  get purposePrimary () {
+    return this._purposePrimary;
+  }
+
+  /**
+   * Secondary purpose
+   * @param {Purpose}
+   */
+  set purposeSecondary (purposeSecondary) {
+    validators.assertIsInstanceOf(purposeSecondary, Purpose);
+    this._purposeSecondary = purposeSecondary;
+  }
+
+  get purposeSecondary () {
+    return this._purposeSecondary;
   }
 
   /**

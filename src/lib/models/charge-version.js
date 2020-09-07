@@ -59,7 +59,7 @@ class ChargeVersion extends Model {
    * @param {Number}
    */
   set versionNumber (versionNumber) {
-    validators.assertPositiveInteger(versionNumber);
+    validators.assertNullablePositiveInteger(versionNumber);
     this._versionNumber = versionNumber;
   }
 
