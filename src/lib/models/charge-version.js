@@ -10,6 +10,7 @@ const Licence = require('./licence');
 const Model = require('./model');
 const Region = require('./region');
 const ChangeReason = require('./change-reason');
+const User = require('./user');
 
 const SCHEME = {
   alcs: 'alcs',
@@ -211,6 +212,32 @@ class ChargeVersion extends Model {
   get dateUpdated () { return this._dateUpdated; }
   set dateUpdated (value) {
     this._dateUpdated = this.getDateTimeFromValue(value);
+  }
+
+  /**
+   * The User who has created the charge version
+   * @param {User}
+   */
+  set createdBy (createdBy) {
+    validators.assertIsNullableInstanceOf(createdBy, User);
+    this._createdBy = createdBy;
+  }
+
+  get createdBy () {
+    return this._createdBy;
+  }
+
+  /**
+   * The User who has approved the charge version
+   * @return {User}
+   */
+  set approvedBy (approvedBy) {
+    validators.assertIsNullableInstanceOf(approvedBy, User);
+    this._approvedBy = approvedBy;
+  }
+
+  get approvedBy () {
+    return this._approvedBy;
   }
 }
 

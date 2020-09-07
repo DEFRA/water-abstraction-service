@@ -3,25 +3,26 @@
 const bluebird = require('bluebird');
 
 // Services
-const service = require('../../../lib/services/service');
-const documentsService = require('../../../lib/services/documents-service');
+const service = require('./service');
+const documentsService = require('./documents-service');
+const chargeVersionService = require('./charge-versions');
 
 // Repos
-const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-version-workflows');
+const chargeVersionWorkflowsRepo = require('../connectors/repos/charge-version-workflows');
 
 // Mappers
-const chargeVersionWorkflowMapper = require('../../../lib/mappers/charge-version-workflow');
+const chargeVersionWorkflowMapper = require('../mappers/charge-version-workflow');
 
 // Models
-const validators = require('../../../lib/models/validators');
-const ChargeVersionWorkflow = require('../../../lib/models/charge-version-workflow');
-const { CHARGE_VERSION_WORKFLOW_STATUS } = require('../../../lib/models/charge-version-workflow');
-const ChargeVersion = require('../../../lib/models/charge-version');
-const User = require('../../../lib/models/user');
-const Licence = require('../../../lib/models/licence');
-const Role = require('../../../lib/models/role');
-const { NotFoundError, InvalidEntityError } = require('../../../lib/errors');
-const { logger } = require('../../../logger');
+const validators = require('../models/validators');
+const ChargeVersionWorkflow = require('../models/charge-version-workflow');
+const { CHARGE_VERSION_WORKFLOW_STATUS } = require('../models/charge-version-workflow');
+const ChargeVersion = require('../models/charge-version');
+const User = require('../models/user');
+const Licence = require('../models/licence');
+const Role = require('../models/role');
+const { NotFoundError, InvalidEntityError } = require('../errors');
+const { logger } = require('../../logger');
 
 /**
  * Gets all charge version workflows from the DB
@@ -148,6 +149,32 @@ const deleteById = async chargeVersionWorkflowId => {
   }
 };
 
+/**
+ * Creates a charge version from the supplied charge version workflow
+ * @param {ChargeVersionWorkflow} chargeVersionWorkflow
+ * @return {Promise<ChargeVersion>}
+ */
+const approve = async (chargeVersionWorkflow, approvedBy) => {
+  validators.assertIsInstanceOf(chargeVersionWorkflow, ChargeVersionWorkflow);
+  validators.assertIsInstanceOf(approvedBy, User);
+
+  const { chargeVersion } = chargeVersionWorkflow;
+
+  // Store users who created/approved
+  chargeVersion.fromHash({
+    createdBy: chargeVersionWorkflow.createdBy,
+    approvedBy
+  });
+
+  // Persist the new charge version
+  const persistedChargeVersion = await chargeVersionService.create(chargeVersion);
+
+  // Delete the charge version workflow record as it is no longer needed
+  await deleteById(chargeVersionWorkflow.id);
+
+  return persistedChargeVersion;
+};
+
 exports.getAll = getAll;
 exports.getAllWithLicenceHolder = getAllWithLicenceHolder;
 exports.getById = getById;
@@ -156,3 +183,4 @@ exports.create = create;
 exports.getLicenceHolderRole = getLicenceHolderRole;
 exports.update = update;
 exports.delete = deleteById;
+exports.approve = approve;

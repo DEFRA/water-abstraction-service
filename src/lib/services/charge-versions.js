@@ -13,8 +13,8 @@ const licencesService = require('./licences');
 const chargeElementsService = require('./charge-elements');
 
 // Models
-const ChargeVersionWorkflow = require('../models/charge-version-workflow');
 const ChargeVersion = require('../models/charge-version');
+
 const validators = require('../models/validators');
 
 /**
@@ -47,15 +47,25 @@ const getByLicenceId = async licenceId => {
 };
 
 /**
- * Creates a new charge version in the DB
+ * Persists a new charge version in the DB
  * @param {ChargeVersion} chargeVersion
  * @return {Promise<ChargeVersion>} persisted charge version
  */
-const create = async chargeVersion => {
+const persist = async chargeVersion => {
   validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
+
+  // Persist charge version
   const dbRow = chargeVersionMapper.modelToDb(chargeVersion);
   const result = await chargeVersionRepo.create(dbRow);
-  return chargeVersionMapper.dbToModel(result);
+  const persistedChargeVersion = chargeVersionMapper.dbToModel(result);
+
+  // Persist charge elements
+  const tasks = chargeVersion.chargeElements.map(chargeElement =>
+    chargeElementsService.create(persistedChargeVersion, chargeElement)
+  );
+  persistedChargeVersion.chargeElements = await Promise.all(tasks);
+
+  return persistedChargeVersion;
 };
 
 const isCurrentChargeVersion = chargeVersion => chargeVersion.status === ChargeVersion.STATUS.current;
@@ -101,57 +111,59 @@ const getNextVersionNumber = existingChargeVersions => existingChargeVersions.re
 , 1);
 
 /**
- * Creates a charge version from the supplied charge version workflow
- * @param {ChargeVersionWorkflow} chargeVersionWorkflow
+ * Updates an array of charge versions with the current status/end date
+ * @param {Array<ChargeVersion>} existingChargeVersions
+ */
+const updateExistingChargeVersions = existingChargeVersions => {
+  const tasks = existingChargeVersions.map(chargeVersion => {
+    const changes = {
+      status: chargeVersion.status,
+      endDate: chargeVersion.dateRange.endDate
+    };
+    return chargeVersionRepo.update(chargeVersion.id, changes);
+  });
+  return Promise.all(tasks);
+};
+
+/**
+ * Persists a new charge version from the model supplied
+ * @param {ChargeVersion} chargeVersion
  * @return {Promise<ChargeVersion>}
  */
-const createFromWorkflow = async chargeVersionWorkflow => {
-  validators.assertIsInstanceOf(chargeVersionWorkflow, ChargeVersionWorkflow);
-
-  const { licence } = chargeVersionWorkflow.chargeVersion;
+const create = async chargeVersion => {
+  validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
+  const { licence } = chargeVersion;
 
   // Get existing charge versions for licence
   const existingChargeVersions = await getByLicenceRef(licence.licenceNumber);
 
-  chargeVersionWorkflow.chargeVersion.fromHash({
+  // Set additional data on new charge version
+  chargeVersion.fromHash({
     source: ChargeVersion.SOURCE.wrls,
     status: ChargeVersion.STATUS.current,
     versionNumber: getNextVersionNumber(existingChargeVersions)
   });
 
-  refreshStatus(chargeVersionWorkflow.chargeVersion, existingChargeVersions);
-  refreshEndDates([chargeVersionWorkflow.chargeVersion, ...existingChargeVersions]);
+  // Refresh statuses and end dates
+  refreshStatus(chargeVersion, existingChargeVersions);
+  refreshEndDates([chargeVersion, ...existingChargeVersions]);
 
-  // Persist new charge version
-  const chargeVersion = await create(chargeVersionWorkflow.chargeVersion);
+  const [{ id }] = await Promise.all([
 
-  // Persist new charge elements
-  const createElementTasks = chargeVersionWorkflow.chargeVersion.chargeElements.map(chargeElement =>
-    chargeElementsService.create(chargeVersion, chargeElement)
-  );
+    // Persist new charge version
+    persist(chargeVersion),
 
-  // Update existing charge versions
-  const updateExistingChargeVersionTasks = existingChargeVersions.map(chargeVersion => {
-    const changes = {
-      status: chargeVersion.status,
-      endDate: chargeVersion.dateRange.endDate
-    };
-    console.log(chargeVersion.id, changes);
-    return chargeVersionRepo.update(chargeVersion.id, changes);
-  });
+    // Update end date/status on existing charge versions for licence
+    updateExistingChargeVersions(existingChargeVersions),
 
-  await Promise.all([
-    ...createElementTasks,
-    ...updateExistingChargeVersionTasks,
+    // Flag licence for supplementary billing
     licencesService.flagForSupplementaryBilling(licence.id)
   ]);
 
-  // @TODO delete workflow
-
-  return getByChargeVersionId(chargeVersion.id);
+  return getByChargeVersionId(id);
 };
 
 exports.getByChargeVersionId = getByChargeVersionId;
 exports.getByLicenceId = getByLicenceId;
 exports.getByLicenceRef = getByLicenceRef;
-exports.createFromWorkflow = createFromWorkflow;
+exports.create = create;

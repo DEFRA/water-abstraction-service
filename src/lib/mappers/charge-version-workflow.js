@@ -16,7 +16,6 @@ const dbToModel = row => {
   model.fromHash({
     id: row.chargeVersionWorkflowId,
     createdBy: userMapper.dbToModel(row.createdBy),
-    approvedBy: userMapper.dbToModel(row.approvedBy),
     ...pick(row, 'approverComments', 'status', 'dateCreated', 'dateUpdated'),
     chargeVersion: chargeVersionMapper.pojoToModel(row.data.chargeVersion)
   });

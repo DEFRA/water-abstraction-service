@@ -13,6 +13,7 @@ const changeReasonMapper = require('./change-reason');
 const chargeElementMapper = require('./charge-element');
 const licenceMapper = require('./licence');
 const invoiceAccountMapper = require('./invoice-account');
+const userMapper = require('./user');
 
 const createRegion = regionCode => {
   const region = new Region();
@@ -46,6 +47,13 @@ const dbToModel = row => {
     model.licence = licenceMapper.dbToModel(row.licence);
   }
 
+  if (row.createdBy) {
+    model.createdBy = userMapper.dbToModel(row.createdBy);
+  }
+  if (row.approvedBy) {
+    model.approvedBy = userMapper.dbToModel(row.approvedBy);
+  }
+
   return model;
 };
 
@@ -73,6 +81,14 @@ const modelToDb = model => {
   if (model.changeReason) {
     dbRow.changeReasonId = model.changeReason.id;
   }
+
+  if (model.createdBy) {
+    dbRow.createdBy = model.createdBy.toJSON();
+  }
+  if (model.approvedBy) {
+    dbRow.approvedBy = model.approvedBy.toJSON();
+  }
+
   return dbRow;
 };
 
@@ -94,6 +110,12 @@ const pojoToModel = pojo => {
   }
   if (pojo.invoiceAccount) {
     model.invoiceAccount = invoiceAccountMapper.pojoToModel(pojo.invoiceAccount);
+  }
+  if (pojo.createdBy) {
+    model.createdBy = userMapper.pojoToModel(pojo.createdBy);
+  }
+  if (pojo.approvedBy) {
+    model.approvedBy = userMapper.pojoToModel(pojo.approvedBy);
   }
 
   return model;
