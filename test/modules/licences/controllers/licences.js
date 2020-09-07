@@ -6,6 +6,7 @@ const { afterEach, beforeEach, experiment, test } = exports.lab = require('@hapi
 const controller = require('../../../../src/modules/licences/controllers/licences');
 const licencesService = require('../../../../src/lib/services/licences');
 const Licence = require('../../../../src/lib/models/licence');
+const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 
 const sandbox = require('sinon').createSandbox();
 
@@ -13,6 +14,7 @@ experiment('modules/licences/controllers/licences.js', () => {
   beforeEach(async () => {
     sandbox.stub(licencesService, 'getLicenceById');
     sandbox.stub(licencesService, 'getLicenceVersions');
+    sandbox.stub(licencesService, 'getLicenceAccountsByRefAndDate');
   });
 
   afterEach(async () => {
@@ -87,6 +89,36 @@ experiment('modules/licences/controllers/licences.js', () => {
 
     test('returns the licence versions', async () => {
       expect(result).to.equal(licenceVersions);
+    });
+  });
+
+  experiment('.getLicenceAccountsByRefAndDate', () => {
+    let result;
+    let request;
+    let exampleLicenceAccount;
+
+    beforeEach(async () => {
+      exampleLicenceAccount = new InvoiceAccount();
+
+      licencesService.getLicenceAccountsByRefAndDate.resolves([exampleLicenceAccount]);
+
+      request = {
+        query: {
+          documentRef: 'test-doc-id',
+          date: '2020-10-10'
+        }
+      };
+
+      result = await controller.getLicenceAccountsByRefAndDate(request);
+    });
+
+    test('passes the document ref to the service layer', async () => {
+      const [documentRef] = licencesService.getLicenceAccountsByRefAndDate.lastCall.args;
+      expect(documentRef).to.equal(request.query.documentRef);
+    });
+
+    test('returns an array', async () => {
+      expect(result).to.equal([exampleLicenceAccount]);
     });
   });
 });
