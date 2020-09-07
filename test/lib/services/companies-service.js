@@ -69,6 +69,32 @@ experiment('modules/billing/services/companies-service', () => {
     });
   });
 
+  experiment('.searchCompaniesByName', () => {
+    let inputString, companyData, response;
+    beforeEach(async () => {
+      inputString = 'Test';
+      companyData = {
+        id: uuid(),
+        name: 'Test Limited',
+        type: Company.COMPANY_TYPES.organisation
+      };
+
+      sandbox.stub(companiesConnector, 'searchCompaniesByName').resolves([companyData]);
+
+      response = await companiesService.searchCompaniesByName(inputString);
+    });
+
+    test('calls the companies connector with a search string', () => {
+      expect(companiesConnector.searchCompaniesByName.calledWith(
+        inputString
+      )).to.be.true();
+    });
+
+    test('returns an array of results', () => {
+      expect(Array.isArray(response)).to.equal(true);
+    });
+  });
+
   experiment('.getCompanyAddresses', () => {
     let companyId, companyAddressData, companyAddressModel, response;
     beforeEach(async () => {
