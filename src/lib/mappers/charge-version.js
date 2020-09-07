@@ -50,7 +50,7 @@ const dbToModel = row => {
 };
 
 const modelToDb = model => {
-  return {
+  const dbRow = {
     chargeVersionId: model.id,
     licenceRef: model.licence.licenceNumber,
     versionNumber: model.versionNumber,
@@ -67,9 +67,13 @@ const modelToDb = model => {
     regionCode: model.region.numericCode,
     // @todo remove companyId from charge version
     companyId: model.invoiceAccount.company.id,
-    invoiceAccountId: model.invoiceAccount.id,
-    changeReasonId: model.changeReason.id
+    invoiceAccountId: model.invoiceAccount.id
   };
+
+  if (model.changeReason) {
+    dbRow.changeReasonId = model.changeReason.id;
+  }
+  return dbRow;
 };
 
 /**
