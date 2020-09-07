@@ -57,6 +57,29 @@ experiment('modules/companies/routes', () => {
     });
   });
 
+  experiment('searchCompaniesByName', () => {
+    let server, request;
+    const inputName = 'test';
+    beforeEach(async () => {
+      server = getServer(routes.searchCompaniesByName);
+      request = {
+        method: 'GET',
+        url: `/water/1.0/companies/search?name=${inputName}`
+      };
+    });
+
+    test('returns the 200 for a valid payload', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
+
+    test('returns a 400 if the search string is less than two characters long', async () => {
+      request.url = '/water/1.0/companies/search?name=a';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+  });
+
   experiment('getCompanyAddresses', () => {
     const companyId = uuid();
     let request;
