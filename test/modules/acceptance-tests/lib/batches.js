@@ -100,14 +100,15 @@ experiment('modules/acceptance-tests/batches', () => {
       pool.query.resolves();
     });
     test('calls the events repo to get the batch ids', async () => {
+      const sql = `
+      select e.metadata->'batch'->>'id' as billing_batch_id
+      from water.events e
+      where strpos(e.type, 'billing-batch') = 1
+      and e.metadata->'batch'->'region'->>'name' = 'Test Region';
+      `;
       await batches.getTestRegionBatchIds();
       const args = pool.query.lastCall.args;
-      expect(args[0]).to.equal('\n' +
-      "    select e.metadata->'batch'->>'id' as billing_batch_id\n" +
-      '    from water.events e\n' +
-      "    where strpos(e.type, 'billing-batch') = 1\n" +
-      "    and e.metadata->'batch'->'region'->>'name' = 'Test Region';\n" +
-      '  ');
+      expect(args[0].replace(/ /g, '')).to.equal(sql.replace(/ /g, ''));
     });
   });
 });
