@@ -30,6 +30,15 @@ const SOURCE = {
 
 class ChargeVersion extends Model {
   /**
+   * @constructor
+   * @param {String} id - the id from water.charge_versions.charge_version_id
+   */
+  constructor (id) {
+    super(id);
+    this._chargeElements = [];
+  }
+
+  /**
    * Licence
    * @param {Licence}
    */

@@ -219,6 +219,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
           email: 'mail@example.com'
         });
         expect(data.data.chargeVersion).to.equal({
+          chargeElements: [],
           dateRange: {
             startDate: '2019-01-01',
             endDate: null
