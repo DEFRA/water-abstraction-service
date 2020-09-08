@@ -48,6 +48,16 @@ class Purpose extends Model {
     assertString(code);
     this._code = code;
   }
+
+  get dateCreated () { return this._dateCreated; }
+  set dateCreated (dateCreated) {
+    this._dateCreated = this.getDateOrThrow(dateCreated, 'Date created');
+  }
+
+  get dateUpdated () { return this._dateUpdated; }
+  set dateUpdated (dateUpdated) {
+    this._dateUpdated = this.getDateOrThrow(dateUpdated, 'Date updated');
+  }
 }
 
 module.exports = Purpose;

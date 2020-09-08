@@ -73,6 +73,8 @@ const dbToModel = row => {
   );
 };
 
+const transformUser = user => user && user.toJSON();
+
 const modelToDbMap = {
   id: 'chargeVersionId',
   'licence.licenceNumber': 'licenceRef',
@@ -93,11 +95,11 @@ const modelToDbMap = {
   'changeReason.id': 'changeReasonId',
   createdBy: {
     key: 'createdBy',
-    transform: user => user && user.toJSON()
+    transform: transformUser
   },
   approvedBy: {
     key: 'approvedBy',
-    transform: user => user && user.toJSON()
+    transform: transformUser
   }
 };
 
