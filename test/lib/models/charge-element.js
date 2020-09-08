@@ -202,6 +202,11 @@ experiment('lib/models/charge-element', () => {
       expect(chargeElement.timeLimitedPeriod).to.equal(timeLimitedPeriod);
     });
 
+    test('can be set to null', async () => {
+      chargeElement.timeLimitedPeriod = null;
+      expect(chargeElement.timeLimitedPeriod).to.be.null();
+    });
+
     test('throws an error if setting to an instance of another model', async () => {
       const period = new AbstractionPeriod();
       const func = () => { chargeElement.timeLimitedPeriod = period; };

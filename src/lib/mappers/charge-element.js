@@ -42,7 +42,7 @@ const dbToModel = row => {
   mapIfNotEmpty(model, 'purposeSecondary', chargeElementRow.purposeSecondary, purposeSecondaryMapper.dbToModel);
   mapIfNotEmpty(model, 'purposeUse', chargeElementRow.purposeUse, purposeUseMapper.dbToModel);
 
-  if (chargeElementRow.timeLimitedStartDate && chargeElementRow.timeLimitedEndDate) {
+  if (chargeElementRow.timeLimitedStartDate) {
     model.timeLimitedPeriod = new DateRange(
       chargeElementRow.timeLimitedStartDate, chargeElementRow.timeLimitedEndDate);
   }

@@ -168,7 +168,7 @@ class ChargeElement extends Model {
   * @param {dateRange}
   */
   set timeLimitedPeriod (dateRange) {
-    validators.assertIsInstanceOf(dateRange, DateRange);
+    validators.assertIsNullableInstanceOf(dateRange, DateRange);
     this._timeLimitedPeriod = dateRange;
   }
 

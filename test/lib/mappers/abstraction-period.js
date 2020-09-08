@@ -61,4 +61,40 @@ experiment('modules/billing/mappers/abstraction-period', () => {
       });
     });
   });
+
+  experiment('.pojoToModel', () => {
+    test('maps a plain object to an AbstractionPeriod model', async () => {
+      const obj = {
+        startDay: 1,
+        startMonth: 4,
+        endDay: 31,
+        endMonth: 10
+      };
+      const model = abstractionPeriodMapper.pojoToModel(obj);
+      expect(model).to.be.an.instanceof(AbstractionPeriod);
+      expect(model.startDay).to.equal(obj.startDay);
+      expect(model.startMonth).to.equal(obj.startMonth);
+      expect(model.endDay).to.equal(obj.endDay);
+      expect(model.endMonth).to.equal(obj.endMonth);
+    });
+  });
+
+  experiment('.modelToDb', () => {
+    test('maps an AbstractionPeriod model to a plain object for DB persistence', async () => {
+      const model = new AbstractionPeriod();
+      model.fromHash({
+        startDay: 1,
+        startMonth: 4,
+        endDay: 31,
+        endMonth: 10
+      });
+      const obj = abstractionPeriodMapper.modelToDb(model);
+      expect(obj).to.equal({
+        abstractionPeriodStartDay: 1,
+        abstractionPeriodStartMonth: 4,
+        abstractionPeriodEndDay: 31,
+        abstractionPeriodEndMonth: 10
+      });
+    });
+  });
 });
