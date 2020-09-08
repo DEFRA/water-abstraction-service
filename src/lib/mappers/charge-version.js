@@ -1,6 +1,7 @@
 'use strict';
 
 const objectMapper = require('object-mapper');
+const createMapper = require('map-factory');
 
 const ChargeVersion = require('../models/charge-version');
 const Company = require('../models/company');
@@ -22,54 +23,26 @@ const createRegion = regionCode => {
   });
 };
 
-const dbToModelMap = {
-  chargeVersionId: 'id',
-  scheme: 'scheme',
-  versionNumber: 'versionNumber',
-  status: 'status',
-  regionCode: {
-    key: 'region',
-    transform: createRegion
-  },
-  startDate: {
-    key: 'dateRange',
-    transform: (startDate, source) => new DateRange(startDate, source.endDate)
-  },
-  source: 'source',
-  companyId: {
-    key: 'company',
-    transform: id => new Company(id)
-  },
-  invoiceAccountId: {
-    key: 'invoiceAccount',
-    transform: id => new InvoiceAccount(id)
-  },
-  changeReason: {
-    key: 'changeReason',
-    transform: changeReasonMapper.dbToModel
-  },
-  chargeElements: {
-    key: 'chargeElements',
-    transform: chargeElements => chargeElements.map(chargeElementMapper.dbToModel)
-  },
-  licence: {
-    key: 'licence',
-    transform: licenceMapper.dbToModel
-  },
-  createdBy: {
-    key: 'createdBy',
-    transform: userMapper.pojoToModel
-  },
-  approvedBy: {
-    key: 'approvedBy',
-    transform: userMapper.pojoToModel
-  }
-};
+const dbToModelMapper = createMapper()
+  .map('chargeVersionId').to('id')
+  .map('scheme').to('scheme')
+  .map('versionNumber').to('versionNumber')
+  .map('status').to('status')
+  .map('regionCode').to('region', createRegion)
+  .map(['startDate', 'endDate']).to('dateRange', (startDate, endDate) => new DateRange(startDate, endDate))
+  .map('source').to('source')
+  .map('companyId').to('company', companyId => new Company(companyId))
+  .map('invoiceAccountId').to('invoiceAccount', invoiceAccountId => new InvoiceAccount(invoiceAccountId))
+  .map('changeReason').to('changeReason', changeReasonMapper.dbToModel)
+  .map('chargeElements').to('chargeElements', chargeElements => chargeElements.map(chargeElementMapper.dbToModel))
+  .map('licence').to('licence', licenceMapper.dbToModel)
+  .map('createdBy').to('createdBy', userMapper.pojoToModel)
+  .map('approvedBy').to('approvedBy', userMapper.pojoToModel);
 
 const dbToModel = row => {
   const model = new ChargeVersion();
   return model.fromHash(
-    objectMapper(row, dbToModelMap)
+    dbToModelMapper.execute(row)
   );
 };
 
