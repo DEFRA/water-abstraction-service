@@ -2,7 +2,7 @@
 
 const InvoiceAccountAddress = require('../models/invoice-account-address');
 
-const { address, company, contact, invoiceAccountAddress } = require('../mappers');
+const { address, company, contact } = require('../mappers');
 const DateRange = require('../models/date-range');
 const Address = require('../models/address');
 const Company = require('../models/company');
