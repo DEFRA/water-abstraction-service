@@ -6,6 +6,7 @@ const {
   beforeEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
+const { omit } = require('lodash');
 
 const InvoiceAccountAddress = require('../../../src/lib/models/invoice-account-address');
 const Address = require('../../../src/lib/models/address');
@@ -98,6 +99,30 @@ experiment('modules/billing/mappers/invoice-account-address', () => {
       });
     });
 
+    experiment('when only an addressId is provided', () => {
+      beforeEach(() => {
+        result = invoiceAccountAddressMapper.crmToModel({ ...omit(dbRow, 'address'), addressId: dbRow.address.addressId });
+      });
+
+      test('it is a Address instance', () => {
+        expect(result.address instanceof Address).to.be.true();
+      });
+
+      test('the id is set', () => {
+        expect(result.address.id).to.equal(dbRow.address.addressId);
+      });
+    });
+
+    experiment('when an address is not provided', () => {
+      beforeEach(() => {
+        result = invoiceAccountAddressMapper.crmToModel(omit(dbRow, 'address'));
+      });
+
+      test('it is not set', () => {
+        expect(result.contact).to.be.undefined();
+      });
+    });
+
     experiment('when contact is provided,', () => {
       let contactData;
       beforeEach(() => {
@@ -120,6 +145,31 @@ experiment('modules/billing/mappers/invoice-account-address', () => {
         expect(contact.firstName).to.equal(contactData.firstName);
         expect(contact.lastName).to.equal(contactData.lastName);
         expect(contact.type).to.equal(contactData.type);
+      });
+    });
+
+    experiment('when only a contactId is provided', () => {
+      const contactId = '00000000-1111-1111-1111-111111111111';
+      beforeEach(() => {
+        result = invoiceAccountAddressMapper.crmToModel({ ...dbRow, contactId });
+      });
+
+      test('it is a Contact instance', () => {
+        expect(result.contact instanceof Contact).to.be.true();
+      });
+
+      test('the id is set', () => {
+        expect(result.contact.id).to.equal(contactId);
+      });
+    });
+
+    experiment('when a contact is null,', () => {
+      beforeEach(() => {
+        result = invoiceAccountAddressMapper.crmToModel({ ...dbRow, contact: null });
+      });
+
+      test('it is not set', () => {
+        expect(result.contact).to.be.undefined();
       });
     });
 
@@ -147,6 +197,7 @@ experiment('modules/billing/mappers/invoice-account-address', () => {
         expect(agentCompany.organisationType).to.equal(agentCompanyData.organisationType);
       });
     });
+
     experiment('when only the agent company ID is provided,', () => {
       const agentCompanyId = '11111111-1111-1111-1111-111111111111';
       beforeEach(() => {
@@ -157,29 +208,19 @@ experiment('modules/billing/mappers/invoice-account-address', () => {
         expect(result.agentCompany instanceof Company).to.be.true();
       });
 
-      test('it has the expected values', () => {
+      test('the id is set', () => {
         const { agentCompany } = result;
         expect(agentCompany.id).to.equal(agentCompanyId);
-        expect(agentCompany.name).to.equal(undefined);
-        expect(agentCompany.type).to.equal(undefined);
-        expect(agentCompany.organisationType).to.equal(undefined);
       });
     });
+
     experiment('when the agent company is null,', () => {
       beforeEach(() => {
         result = invoiceAccountAddressMapper.crmToModel({ ...dbRow, agentCompany: null });
       });
 
-      test('it is a Company instance', () => {
-        expect(result.agentCompany instanceof Company).to.be.true();
-      });
-
-      test('it is an empty Company instance', () => {
-        const { agentCompany } = result;
-        expect(agentCompany.id).to.equal(undefined);
-        expect(agentCompany.name).to.equal(undefined);
-        expect(agentCompany.type).to.equal(undefined);
-        expect(agentCompany.organisationType).to.equal(undefined);
+      test('it is not set', () => {
+        expect(result.agentCompany).to.be.undefined();
       });
     });
   });
