@@ -6,7 +6,7 @@ const { address, company, contact } = require('../mappers');
 const DateRange = require('../models/date-range');
 const Address = require('../models/address');
 const Company = require('../models/company');
-const Contact = require('../models/contact');
+const Contact = require('../models/contact-v2');
 
 /**
  * Maps CRM invoice account and (optionally) company data to a water service model
