@@ -4,8 +4,9 @@ const InvoiceAccountAddress = require('../models/invoice-account-address');
 
 const { address, company, contact } = require('../mappers');
 const DateRange = require('../models/date-range');
+const Address = require('../models/address');
 const Company = require('../models/company');
-const { has } = require('lodash');
+const Contact = require('../models/contact');
 
 /**
  * Maps CRM invoice account and (optionally) company data to a water service model
@@ -17,14 +18,24 @@ const crmToModel = invoiceAccountAddress => {
 
   model.dateRange = new DateRange(invoiceAccountAddress.startDate, invoiceAccountAddress.endDate);
   model.invoiceAccountId = invoiceAccountAddress.invoiceAccountId;
-  model.address = address.crmToModel(has(invoiceAccountAddress, 'address') ? invoiceAccountAddress.address : invoiceAccountAddress);
-  model.contact = contact.crmToModel(has(invoiceAccountAddress, 'contact') ? invoiceAccountAddress.contact : invoiceAccountAddress);
+
+  if (invoiceAccountAddress.address) {
+    model.address = address.crmToModel(invoiceAccountAddress.address);
+  } else if (invoiceAccountAddress.addressId) {
+    model.address = new Address(invoiceAccountAddress.addressId);
+  }
+
+  if (invoiceAccountAddress.contact) {
+    model.contact = contact.crmToModel(invoiceAccountAddress.contact);
+  } else if (invoiceAccountAddress.contactId) {
+    model.contact = new Contact(invoiceAccountAddress.contactId);
+  }
 
   if (invoiceAccountAddress.agentCompany) {
     model.agentCompany = company.crmToModel(invoiceAccountAddress.agentCompany);
   } else if (invoiceAccountAddress.agentCompanyId) {
     model.agentCompany = new Company(invoiceAccountAddress.agentCompanyId);
-  } else { model.agentCompany = new Company(); }
+  }
 
   return model;
 };
