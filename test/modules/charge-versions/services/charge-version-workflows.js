@@ -19,7 +19,7 @@ const { logger } = require('../../../../src/logger');
 const chargeVersionWorkflowRepo = require('../../../../src/lib/connectors/repos/charge-version-workflows');
 
 // Services
-const chargeVersionWorkflowService = require('../../../../src/lib/services/charge-version-workflows');
+const chargeVersionWorkflowService = require('../../../../src/modules/charge-versions/services/charge-version-workflows');
 const documentsService = require('../../../../src/lib/services/documents-service');
 const service = require('../../../../src/lib/services/service');
 

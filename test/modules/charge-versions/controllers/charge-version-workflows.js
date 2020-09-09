@@ -7,7 +7,7 @@ const uuid = require('uuid/v4');
 
 // Services
 const licencesService = require('../../../../src/lib/services/licences');
-const chargeVersionWorkflowService = require('../../../../src/lib/services/charge-version-workflows');
+const chargeVersionWorkflowService = require('../../../../src/modules/charge-versions/services/charge-version-workflows');
 
 // Models
 const ChargeVersion = require('../../../../src/lib/models/charge-version');

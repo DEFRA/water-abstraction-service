@@ -3,26 +3,26 @@
 const bluebird = require('bluebird');
 
 // Services
-const service = require('./service');
-const documentsService = require('./documents-service');
-const chargeVersionService = require('./charge-versions');
+const service = require('../../../lib/services/service');
+const documentsService = require('../../../lib/services/documents-service');
+const chargeVersionService = require('../../../lib/services/charge-versions');
 
 // Repos
-const chargeVersionWorkflowsRepo = require('../connectors/repos/charge-version-workflows');
+const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-version-workflows');
 
 // Mappers
-const chargeVersionWorkflowMapper = require('../mappers/charge-version-workflow');
+const chargeVersionWorkflowMapper = require('../../../lib/mappers/charge-version-workflow');
 
 // Models
-const validators = require('../models/validators');
-const ChargeVersionWorkflow = require('../models/charge-version-workflow');
-const { CHARGE_VERSION_WORKFLOW_STATUS } = require('../models/charge-version-workflow');
-const ChargeVersion = require('../models/charge-version');
-const User = require('../models/user');
-const Licence = require('../models/licence');
-const Role = require('../models/role');
-const { NotFoundError, InvalidEntityError } = require('../errors');
-const { logger } = require('../../logger');
+const validators = require('../../../lib/models/validators');
+const ChargeVersionWorkflow = require('../../../lib/models/charge-version-workflow');
+const { CHARGE_VERSION_WORKFLOW_STATUS } = require('../../../lib/models/charge-version-workflow');
+const ChargeVersion = require('../../../lib/models/charge-version');
+const User = require('../../../lib/models/user');
+const Licence = require('../../../lib/models/licence');
+const Role = require('../../../lib/models/role');
+const { NotFoundError, InvalidEntityError } = require('../../../lib/errors');
+const { logger } = require('../../../logger');
 
 /**
  * Gets all charge version workflows from the DB

@@ -7,7 +7,7 @@ const documentsConnector = require('../../../lib/connectors/crm/documents');
 const licencesService = require('../../../lib/services/licences');
 const chargeElementsService = require('../../../lib/services/charge-elements');
 const chargeVersionsService = require('../../../lib/services/charge-versions');
-const chargeVersionWorkflowService = require('../../../lib/services/charge-version-workflows');
+const chargeVersionWorkflowService = require('../services/charge-version-workflows');
 const mapErrorResponse = require('../../../lib/map-error-response');
 
 const userMapper = require('../../../lib/mappers/user');
@@ -52,7 +52,7 @@ const getDefaultChargesForLicenceVersion = async request => {
  * Create a charge version from the specified workflow
  * @param {String} request.params.chargeVersionWorkflowId
  */
-const postCreateFromWorkflow = async (request, h) => {
+const postCreateFromWorkflow = async request => {
   const { chargeVersionWorkflowId } = request.params;
   try {
     const chargeVersionWorkflow = await chargeVersionWorkflowService.getById(chargeVersionWorkflowId);

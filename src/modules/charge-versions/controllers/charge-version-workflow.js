@@ -2,7 +2,7 @@
 
 const Boom = require('@hapi/boom');
 
-const chargeVersionsWorkflowService = require('../../../lib/services/charge-version-workflows');
+const chargeVersionsWorkflowService = require('../services/charge-version-workflows');
 const licencesService = require('../../../lib/services/licences');
 
 const controller = require('../../../lib/controller');
