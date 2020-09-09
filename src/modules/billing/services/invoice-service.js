@@ -138,9 +138,8 @@ const mapInvoice = (billingInvoice, context) => {
   return invoice;
 };
 
-const mapToInvoices = context => {
-  return context.billingInvoices.map(billingInvoice => mapInvoice(billingInvoice, context));
-};
+const mapToInvoices = context =>
+  context.billingInvoices.map(billingInvoice => mapInvoice(billingInvoice, context));
 
 /**
  * Loads a single invoice by ID in the specified batch

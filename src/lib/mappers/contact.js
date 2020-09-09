@@ -20,7 +20,7 @@ const crmToModel = contactData => {
       ['firstName', 'initials', 'middleInitials', 'lastName', 'suffix', 'department', 'type', 'dataSource']);
     contactModel.title = contactData.salutation || null;
     return contactModel;
-  } else { return new Contact(); }
+  }
 };
 
 /**
