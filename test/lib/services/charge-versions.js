@@ -180,5 +180,107 @@ experiment('lib/services/charge-versions', () => {
         expect(service.findOne.calledWith(chargeVersionId)).to.be.true();
       });
     });
+
+    experiment('when the new charge version is after an existing one', () => {
+      let existingChargeVersion;
+      beforeEach(async () => {
+        existingChargeVersion = new ChargeVersion();
+        existingChargeVersion.fromHash({
+          id: uuid(),
+          dateRange: new DateRange('2019-01-01', null),
+          status: 'current',
+          versionNumber: 3
+        });
+        service.findMany.resolves([
+          existingChargeVersion
+        ]);
+        await chargeVersionService.create(chargeVersion);
+      });
+
+      test('the new charge version has the next version number', async () => {
+        const [data] = chargeVersionRepo.create.lastCall.args;
+        expect(data.versionNumber).to.equal(4);
+      });
+
+      test('the end date of the new charge version is unchanged', async () => {
+        const [data] = chargeVersionRepo.create.lastCall.args;
+        expect(data.endDate).to.be.undefined();
+      });
+
+      test('the existing charge version is updated', async () => {
+        expect(chargeVersionRepo.update.callCount).to.equal(1);
+        expect(chargeVersionRepo.update.calledWith(
+          existingChargeVersion.id, { endDate: '2019-12-31', status: 'current' }
+        ));
+      });
+    });
+
+    experiment('when the new charge version is before an existing one', () => {
+      let existingChargeVersion;
+      beforeEach(async () => {
+        existingChargeVersion = new ChargeVersion();
+        existingChargeVersion.fromHash({
+          id: uuid(),
+          dateRange: new DateRange('2021-01-01', null),
+          status: 'current',
+          versionNumber: 3
+        });
+        service.findMany.resolves([
+          existingChargeVersion
+        ]);
+        await chargeVersionService.create(chargeVersion);
+      });
+
+      test('the new charge version has the next version number', async () => {
+        const [data] = chargeVersionRepo.create.lastCall.args;
+        expect(data.versionNumber).to.equal(4);
+      });
+
+      test('the end date of the new charge version is the day before the existing one starts', async () => {
+        const [data] = chargeVersionRepo.create.lastCall.args;
+        expect(data.endDate).to.equal('2020-12-31');
+      });
+
+      test('the existing charge version is updated', async () => {
+        expect(chargeVersionRepo.update.callCount).to.equal(1);
+        expect(chargeVersionRepo.update.calledWith(
+          existingChargeVersion.id, { endDate: '2019-12-31', status: 'current' }
+        ));
+      });
+    });
+
+    experiment('when the new charge version starts on the same day as an existing one', () => {
+      let existingChargeVersion;
+      beforeEach(async () => {
+        existingChargeVersion = new ChargeVersion();
+        existingChargeVersion.fromHash({
+          id: uuid(),
+          dateRange: new DateRange('2020-01-01', null),
+          status: 'current',
+          versionNumber: 3
+        });
+        service.findMany.resolves([
+          existingChargeVersion
+        ]);
+        await chargeVersionService.create(chargeVersion);
+      });
+
+      test('the new charge version has the next version number', async () => {
+        const [data] = chargeVersionRepo.create.lastCall.args;
+        expect(data.versionNumber).to.equal(4);
+      });
+
+      test('the end date of the new charge version is unchanged', async () => {
+        const [data] = chargeVersionRepo.create.lastCall.args;
+        expect(data.endDate).to.be.undefined();
+      });
+
+      test('the existing charge version is updated to "superseded"', async () => {
+        expect(chargeVersionRepo.update.callCount).to.equal(1);
+        expect(chargeVersionRepo.update.calledWith(
+          existingChargeVersion.id, { endDate: null, status: 'superseded' }
+        ));
+      });
+    });
   });
 });
