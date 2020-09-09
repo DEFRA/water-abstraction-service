@@ -9,7 +9,8 @@ const dbToModel = row => {
     code: row.legacyId,
     name: row.description,
     dateUpdated: row.dateUpdated,
-    dateCreated: row.dateCreated
+    dateCreated: row.dateCreated,
+    type: Purpose.PURPOSE_TYPES.secondary
   });
 };
 

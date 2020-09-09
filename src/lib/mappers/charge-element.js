@@ -19,7 +19,7 @@ const mapIfNotEmpty = (model, targetKey, data, mapper) => {
 };
 
 const timeLimitedDateMapper = (startDate, endDate) =>
-  startDate ? new DateRange(startDate, endDate) : null;
+  new DateRange(startDate, endDate);
 
 const dbToModelMapper = createMapper()
   .map('chargeElementId').to('id')
