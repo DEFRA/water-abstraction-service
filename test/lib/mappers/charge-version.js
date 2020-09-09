@@ -252,7 +252,7 @@ experiment('lib/mappers/charge-version', () => {
 
       expect(chargeElement.abstractionPeriod).to.be.instanceOf(AbstractionPeriod);
       expect(chargeElement.authorisedAnnualQuantity).to.equal(dbRow.chargeElements[0].authorisedAnnualQuantity);
-      expect(chargeElement.billableAnnualQuantity).to.equal(dbRow.chargeElements[0].billableAnnualQuantity);
+      expect(chargeElement.billableAnnualQuantity).to.be.undefined();
     });
 
     test('maps the change reason', async () => {

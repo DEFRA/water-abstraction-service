@@ -8,6 +8,8 @@ const purposeSecondaryMapper = require('./purpose-secondary');
 const purposeUseMapper = require('./purpose-use');
 const abstractionPeriodMapper = require('./abstraction-period');
 const { isEmpty } = require('lodash');
+const createMapper = require('map-factory');
+const helpers = require('./lib/helpers');
 
 const mapIfNotEmpty = (model, targetKey, data, mapper) => {
   if (!isEmpty(data)) {
@@ -16,39 +18,30 @@ const mapIfNotEmpty = (model, targetKey, data, mapper) => {
   return model;
 };
 
+const timeLimitedDateMapper = (startDate, endDate) =>
+  startDate ? new DateRange(startDate, endDate) : null;
+
+const dbToModelMapper = createMapper()
+  .map('chargeElementId').to('id')
+  .map('source').to('source')
+  .map('season').to('season')
+  .map('loss').to('loss')
+  .map().to('abstractionPeriod', abstractionPeriodMapper.dbToModel)
+  .map('authorisedAnnualQuantity').to('authorisedAnnualQuantity')
+  .map('billableAnnualQuantity').to('billableAnnualQuantity')
+  .map('description').to('description')
+  .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.dbToModel)
+  .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.dbToModel)
+  .map('purposeUse').to('purposeUse', purposeUseMapper.dbToModel)
+  .map(['timeLimitedStartDate', 'timeLimitedEndDate']).to('timeLimitedPeriod', timeLimitedDateMapper);
+
 /**
  * Creates a ChargeElement instance given a row of charge element data
  * @param {Object} chargeElementRow - charge element row from the charge processor
  * @return {ChargeElement}
  */
-const dbToModel = row => {
-  const chargeElementRow = camelCaseKeys(row);
-  const model = new ChargeElement();
-  model.fromHash({
-    id: chargeElementRow.chargeElementId,
-    source: chargeElementRow.source,
-    season: chargeElementRow.season,
-    loss: chargeElementRow.loss,
-    abstractionPeriod: abstractionPeriodMapper.dbToModel(chargeElementRow),
-    authorisedAnnualQuantity: chargeElementRow.authorisedAnnualQuantity,
-    billableAnnualQuantity: chargeElementRow.billableAnnualQuantity
-  });
-
-  if (chargeElementRow.description) {
-    model.description = chargeElementRow.description;
-  }
-
-  mapIfNotEmpty(model, 'purposePrimary', chargeElementRow.purposePrimary, purposePrimaryMapper.dbToModel);
-  mapIfNotEmpty(model, 'purposeSecondary', chargeElementRow.purposeSecondary, purposeSecondaryMapper.dbToModel);
-  mapIfNotEmpty(model, 'purposeUse', chargeElementRow.purposeUse, purposeUseMapper.dbToModel);
-
-  if (chargeElementRow.timeLimitedStartDate) {
-    model.timeLimitedPeriod = new DateRange(
-      chargeElementRow.timeLimitedStartDate, chargeElementRow.timeLimitedEndDate);
-  }
-
-  return model;
-};
+const dbToModel = row =>
+  helpers.createModel(ChargeElement, camelCaseKeys(row), dbToModelMapper);
 
 /**
  * Converts a plain object representation of a ChargeElement to a ChargeElement model

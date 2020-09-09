@@ -58,7 +58,8 @@ const getChargeElementsFromLicenceVersion = licenceVersion => {
 };
 
 /**
- * Creates a new charge element
+ * Creates a new charge element in the specified charge version
+ * @param {ChargeVersion} chargeVersion
  * @param {ChargeElement} chargeElement
  * @return {Promise<ChargeElement>} persisted charge element
  */
