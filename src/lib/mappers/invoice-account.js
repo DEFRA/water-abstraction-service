@@ -11,7 +11,7 @@ const invoiceAccountAddress = require('./invoice-account-address');
  * @param {Object} company - CRM company data
  * @return {InvoiceAccount}
  */
-const crmToModel = (invoiceAccount) => {
+const crmToModel = invoiceAccount => {
   const invoiceAccountModel = new InvoiceAccount(invoiceAccount.invoiceAccountId);
   invoiceAccountModel.fromHash({
     accountNumber: invoiceAccount.invoiceAccountNumber,
