@@ -1,5 +1,11 @@
+'use strict';
+
 const camelCaseKeys = require('../../../lib/camel-case-keys');
 const FinancialYear = require('../../../lib/models/financial-year');
+const validators = require('../../../lib/models/validators');
+const Batch = require('../../../lib/models/batch');
+const { BATCH_STATUS } = require('../../../lib/models/batch');
+
 const batchService = require('./batch-service');
 const chargeProcessorService = require('./charge-processor-service');
 
@@ -50,9 +56,6 @@ const processChargeVersionYear = async dbRow => {
   return batch;
 };
 
-const createForBatch = batch =>
-  repos.billingBatchChargeVersionYears.createForBatch(batch.id);
-
 /**
  * Gets all charge version year records for given batch
  * @param {String} batchId
@@ -72,10 +75,26 @@ const getTwoPartTariffForBatch = batchId => {
   return repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(batchId);
 };
 
+/**
+ * Creates a new row in water.billing_batch_charge_version_years
+ * @param {Batch} batch
+ * @param {String} chargeVersionId
+ * @param {FinancialYear} financialYear
+ * @return {Promise}
+ */
+const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear) => {
+  validators.assertIsInstanceOf(batch, Batch);
+  validators.assertId(chargeVersionId);
+  validators.assertIsInstanceOf(financialYear, FinancialYear);
+  return repos.billingBatchChargeVersionYears.create(
+    batch.id, chargeVersionId, financialYear.endYear, BATCH_STATUS.processing
+  );
+};
+
 exports.setReadyStatus = setReadyStatus;
 exports.setErrorStatus = setErrorStatus;
 exports.getStatusCounts = getStatusCounts;
 exports.processChargeVersionYear = processChargeVersionYear;
-exports.createForBatch = createForBatch;
 exports.getForBatch = getForBatch;
 exports.getTwoPartTariffForBatch = getTwoPartTariffForBatch;
+exports.createBatchChargeVersionYear = createBatchChargeVersionYear;

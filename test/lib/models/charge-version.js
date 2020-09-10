@@ -12,6 +12,7 @@ const Licence = require('../../../src/lib/models/licence');
 const Region = require('../../../src/lib/models/region');
 const Company = require('../../../src/lib/models/company');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
+const ChangeReason = require('../../../src/lib/models/change-reason');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
 
@@ -282,6 +283,27 @@ experiment('lib/models/charge-version', () => {
       const chargeElements = [new ChargeElement()];
       chargeVersion.chargeElements = chargeElements;
       expect(chargeVersion.chargeElements).to.equal(chargeElements);
+    });
+
+    test('throws an error if set to a different model type', async () => {
+      const func = () => {
+        const notChargeElements = [new TestModel()];
+        chargeVersion.chargeElements = notChargeElements;
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.changeReason', () => {
+    test('can be set to a ChangeReason instance', async () => {
+      const changeReason = new ChangeReason();
+      chargeVersion.changeReason = changeReason;
+      expect(chargeVersion.changeReason).to.equal(changeReason);
+    });
+
+    test('can be set to null', async () => {
+      chargeVersion.changeReason = null;
+      expect(chargeVersion.changeReason).to.be.null();
     });
 
     test('throws an error if set to a different model type', async () => {

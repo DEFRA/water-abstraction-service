@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "1.50.1",
+  "version": "1.51.0",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "repository": {
@@ -26,6 +26,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@hapi/basic": "^6.0.0",
     "@hapi/code": "^5.2.4",
     "@hapi/lab": "^19.1.0",
     "auto-changelog": "^1.16.4",
@@ -45,7 +46,7 @@
   },
   "dependencies": {
     "@envage/hapi-pg-rest-api": "^5.0.0",
-    "@envage/water-abstraction-helpers": "^4.3.1",
+    "@envage/water-abstraction-helpers": "^4.3.2",
     "@hapi/boom": "^7.4.11",
     "@hapi/catbox-redis": "^6.0.1",
     "@hapi/good": "^8.2.4",
@@ -71,7 +72,7 @@
     "hapi-auth-jwt2": "^8.8.1",
     "knex": "^0.20.15",
     "libxmljs": "^0.19.7",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.20",
     "moment": "^2.27.0",
     "moment-range": "^4.0.2",
     "node-cron": "^1.2.1",

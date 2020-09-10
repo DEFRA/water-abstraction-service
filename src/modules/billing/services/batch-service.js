@@ -66,8 +66,8 @@ const saveEvent = (type, status, user, batch) => {
 };
 
 const deleteBatch = async (batch, internalCallingUser) => {
-  if (batch.statusIsOneOf(Batch.BATCH_STATUS.sent)) {
-    throw new BatchStatusError(`Sent batch ${batch.id} cannot be deleted`);
+  if (!batch.canBeDeleted()) {
+    throw new BatchStatusError(`Batch ${batch.id} cannot be deleted - status is ${batch.status}`);
   }
 
   try {
@@ -195,6 +195,9 @@ const refreshTotals = async batchId => {
 
   // Load batch and map to service models
   const data = await newRepos.billingBatches.findOneWithInvoicesWithTransactions(batchId);
+  if (!data) {
+    throw new NotFoundError(`Batch ${batchId} not found`);
+  }
   const batch = mappers.batch.dbToModel(data);
 
   // Load CM data and decorate service models

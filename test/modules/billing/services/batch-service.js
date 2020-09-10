@@ -309,7 +309,7 @@ experiment('modules/billing/services/batch-service', () => {
         const func = () => batchService.deleteBatch(batch, internalCallingUser);
         const err = await expect(func()).to.reject();
         expect(err instanceof BatchStatusError);
-        expect(err.message).to.equal(`Sent batch ${batch.id} cannot be deleted`);
+        expect(err.message).to.equal(`Batch ${batch.id} cannot be deleted - status is sent`);
       });
     });
 
@@ -690,50 +690,65 @@ experiment('modules/billing/services/batch-service', () => {
     const batchId = uuid();
     const externalId = uuid();
 
-    beforeEach(async () => {
-      newRepos.billingBatches.findOneWithInvoicesWithTransactions.resolves({
-        billingBatchId: batchId,
-        externalId,
-        status: Batch.BATCH_STATUS.ready,
-        batchType: Batch.BATCH_TYPE.supplementary
-      });
-      chargeModuleBillRunConnector.get.resolves({
-        billRun: {
-          summary: {
-            invoiceCount: 3,
-            creditNoteCount: 5,
-            netTotal: 343553,
-            externalId: 335
+    experiment('when the batch is found', () => {
+      beforeEach(async () => {
+        newRepos.billingBatches.findOneWithInvoicesWithTransactions.resolves({
+          billingBatchId: batchId,
+          externalId,
+          status: Batch.BATCH_STATUS.ready,
+          batchType: Batch.BATCH_TYPE.supplementary
+        });
+        chargeModuleBillRunConnector.get.resolves({
+          billRun: {
+            summary: {
+              invoiceCount: 3,
+              creditNoteCount: 5,
+              netTotal: 343553,
+              externalId: 335
+            }
           }
-        }
+        });
+        await batchService.refreshTotals(batchId);
       });
-      await batchService.refreshTotals(batchId);
+
+      test('fetches the batch and associated invoices from DB', async () => {
+        expect(newRepos.billingBatches.findOneWithInvoicesWithTransactions.calledWith(
+          batchId
+        )).to.be.true();
+      });
+
+      test('gets the bill run summary from the charge module', async () => {
+        expect(
+          chargeModuleBillRunConnector.get.calledWith(externalId)
+        ).to.be.true();
+      });
+
+      test('updates the billing batch with the totals', async () => {
+        const [id, updates] = newRepos.billingBatches.update.lastCall.args;
+        expect(id).to.equal(batchId);
+        expect(updates.invoiceCount).to.equal(3);
+        expect(updates.creditNoteCount).to.equal(5);
+        expect(updates.netTotal).to.equal(343553);
+      });
+
+      test('persists the transactions de-minimis status flag', async () => {
+        const [batch] = transactionsService.persistDeMinimis.lastCall.args;
+        expect(batch instanceof Batch).to.be.true();
+        expect(batch.id).to.equal(batchId);
+      });
     });
 
-    test('fetches the batch and associated invoices from DB', async () => {
-      expect(newRepos.billingBatches.findOneWithInvoicesWithTransactions.calledWith(
-        batchId
-      )).to.be.true();
-    });
+    experiment('when the batch is not found', () => {
+      beforeEach(async () => {
+        newRepos.billingBatches.findOneWithInvoicesWithTransactions.resolves(null);
+      });
 
-    test('gets the bill run summary from the charge module', async () => {
-      expect(
-        chargeModuleBillRunConnector.get.calledWith(externalId)
-      ).to.be.true();
-    });
-
-    test('updates the billing batch with the totals', async () => {
-      const [id, updates] = newRepos.billingBatches.update.lastCall.args;
-      expect(id).to.equal(batchId);
-      expect(updates.invoiceCount).to.equal(3);
-      expect(updates.creditNoteCount).to.equal(5);
-      expect(updates.netTotal).to.equal(343553);
-    });
-
-    test('persists the transactions de-minimis status flag', async () => {
-      const [batch] = transactionsService.persistDeMinimis.lastCall.args;
-      expect(batch instanceof Batch).to.be.true();
-      expect(batch.id).to.equal(batchId);
+      test('a not found error is thrown', async () => {
+        const func = () => batchService.refreshTotals(batchId);
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.an.instanceOf(NotFoundError);
+        expect(err.message).to.equal(`Batch ${batchId} not found`);
+      });
     });
   });
 

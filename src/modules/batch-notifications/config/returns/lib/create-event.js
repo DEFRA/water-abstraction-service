@@ -1,9 +1,10 @@
+'use strict';
+
 const moment = require('moment');
 const { last } = require('lodash');
 const helpers = require('@envage/water-abstraction-helpers');
 
 const eventHelpers = require('../../../lib/event-helpers');
-const DATE_FORMAT = 'YYYY-MM-DD';
 
 /**
  * Creates and persists a notification event, decorated with info
@@ -22,16 +23,9 @@ const createEvent = async (...args) => {
 
   // Create return cycles
   const cycles = helpers.returns.date.createReturnCycles(undefined, refDate);
-  const { startDate, endDate, isSummer } = last(cycles);
-  const dueDate = moment(endDate).add(28, 'day').format(DATE_FORMAT);
 
   // Decorate event with return cycle info
-  evt.metadata.returnCycle = {
-    startDate,
-    endDate,
-    isSummer,
-    dueDate
-  };
+  evt.metadata.returnCycle = last(cycles);
 
   return evt;
 };

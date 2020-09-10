@@ -6,8 +6,11 @@
 const Batch = require('../../../lib/models/batch');
 const Invoice = require('../../../lib/models/invoice');
 const validators = require('../../../lib/models/validators');
+const { TransactionStatusError } = require('../lib/errors');
 
-const totalsMapper = require('../mappers/totals');
+const mappers = require('../mappers');
+
+const { isEmpty, uniq } = require('lodash');
 
 const isBatchReadyOrSent = batch =>
   batch.statusIsOneOf(Batch.BATCH_STATUS.ready, Batch.BATCH_STATUS.sent);
@@ -19,20 +22,49 @@ const findCustomerFinancialYearSummary = (cmResponse, customerReference, financi
   findCustomer(cmResponse, customerReference).summaryByFinancialYear.find(summary => summary.financialYear === financialYearEnding - 1);
 
 /**
- * Returns a map of transactions indexed by the Charge Module transaction ID
+ * Returns a map of transactions indexed by the licence number
  * @param {Array<Object>} transactions
  * @return {Map}
  */
-const indexChargeModuleTransactions = transactions => transactions.reduce(
-  (map, transaction) => map.set(transaction.id, transaction),
-  new Map()
-);
+const indexTransactionsByLicenceNumber = transactions => {
+  const licenceNumbers = uniq(transactions.map(trans => trans.licenceNumber));
+  return licenceNumbers.reduce(
+    (map, licenceNumber) =>
+      map.set(licenceNumber, transactions.filter(trans => trans.licenceNumber === licenceNumber)),
+    new Map()
+  );
+};
 
-const decorateTransaction = (transaction, transactionMap) => {
-  const cmTransaction = transactionMap.get(transaction.externalId);
-  return transaction.fromHash({
+/**
+ * Decorates transactions with data from the charge module response
+ * @param {Transaction} serviceTransaction to be decorated
+ * @param {Object} cmTransaction
+ */
+const decorateTransaction = (serviceTransaction, cmTransaction) =>
+  serviceTransaction.fromHash({
     value: cmTransaction.chargeValue,
-    isDeMinimis: cmTransaction.deminimis
+    isDeMinimis: cmTransaction.deminimis,
+    isMinimumCharge: cmTransaction.minimumChargeAdjustment
+  });
+
+/**
+ * Maps all CM transaction data to the invoice licence
+ * @param {InvoiceLicence} invoiceLicence containing service transactions
+ * @param {Array} cmTransactions for that given licence
+ */
+const decorateTransactions = (invoiceLicence, cmTransactions) => {
+  if (isEmpty(invoiceLicence.transactions)) return invoiceLicence;
+
+  cmTransactions.map(cmTransaction => {
+    const serviceTransaction = invoiceLicence.transactions.find(trans => trans.externalId === cmTransaction.id);
+    if (serviceTransaction) {
+      return decorateTransaction(serviceTransaction, cmTransaction);
+    }
+    if (!cmTransaction.minimumChargeAdjustment) {
+      throw new TransactionStatusError(`Unexpected Charge Module transaction externalId: ${cmTransaction.id}`);
+    }
+    // charge period needs to be provided separately - it is the same for all transactions within an invoice licence
+    return invoiceLicence.transactions.push(mappers.transaction.cmToModel(cmTransaction, invoiceLicence.transactions[0].chargePeriod));
   });
 };
 
@@ -47,17 +79,20 @@ const decorateInvoice = (invoice, cmResponse) => {
   validators.assertObject(cmResponse);
 
   // Set invoice totals
-  invoice.totals = totalsMapper.chargeModuleBillRunToInvoiceModel(cmResponse, invoice.invoiceAccount.accountNumber, invoice.financialYear.yearEnding);
+  invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(cmResponse, invoice.invoiceAccount.accountNumber, invoice.financialYear.yearEnding);
 
   // Set de-minimis flag
   const customerFinYearSummary = findCustomerFinancialYearSummary(cmResponse, invoice.invoiceAccount.accountNumber, invoice.financialYear.endYear);
   invoice.isDeMinimis = customerFinYearSummary.deminimis;
 
-  // Decorate each invoice transaction
-  const transactionMap = indexChargeModuleTransactions(customerFinYearSummary.transactions);
-  invoice.invoiceLicences.map(invoiceLicence => {
-    invoiceLicence.transactions.map(transaction => decorateTransaction(transaction, transactionMap));
-  });
+  const cmTransactionsByLicence = indexTransactionsByLicenceNumber(customerFinYearSummary.transactions);
+
+  // Decorate each invoiceLicence transaction
+  // and add any minimum charge transactions from CM
+  for (const [licenceNumber, transactions] of cmTransactionsByLicence) {
+    const invoiceLicence = invoice.getInvoiceLicenceByLicenceNumber(licenceNumber);
+    decorateTransactions(invoiceLicence, transactions);
+  }
 
   return invoice;
 };
@@ -78,7 +113,7 @@ const decorateBatch = (batch, cmResponse) => {
   }
 
   // Set batch totals
-  batch.totals = totalsMapper.chargeModuleBillRunToBatchModel(cmResponse.billRun.summary);
+  batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(cmResponse.billRun.summary);
 
   // Decorate each invoice
   batch.invoices.map(invoice => decorateInvoice(invoice, cmResponse));

@@ -23,6 +23,17 @@ const findOne = async licenceId => {
   return model ? model.toJSON() : null;
 };
 
+const findByLicenceRef = async licenceRef => {
+  const model = await Licence
+    .forge()
+    .where({ licence_ref: licenceRef })
+    .fetchAll({
+      withRelated: ['region']
+    });
+
+  return model.toJSON();
+};
+
 /**
  * Gets a list of licences in the supplied billing batch, which have a
  * billing volume for TPT review
@@ -71,7 +82,9 @@ const updateIncludeInSupplementaryBillingStatusForBatch = (batchId, from, to) =>
 };
 
 exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview;
+exports.findByLicenceRef = findByLicenceRef;
 exports.findOne = findOne;
+
 exports.update = update;
 exports.updateIncludeLicenceInSupplementaryBilling = updateIncludeLicenceInSupplementaryBilling;
 exports.updateIncludeInSupplementaryBillingStatusForBatch = updateIncludeInSupplementaryBillingStatusForBatch;

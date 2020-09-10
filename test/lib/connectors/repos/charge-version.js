@@ -13,6 +13,8 @@ const sandbox = sinon.createSandbox();
 
 const { ChargeVersion } = require('../../../../src/lib/connectors/bookshelf');
 const chargeVersions = require('../../../../src/lib/connectors/repos/charge-versions');
+const queries = require('../../../../src/lib/connectors/repos/queries/charge-versions');
+const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 
 experiment('lib/connectors/repos/charge-versions', () => {
   let model, stub, result;
@@ -26,6 +28,7 @@ experiment('lib/connectors/repos/charge-versions', () => {
       fetch: sandbox.stub().resolves(model)
     };
     sandbox.stub(ChargeVersion, 'forge').returns(stub);
+    sandbox.stub(raw, 'multiRow');
   });
 
   afterEach(async () => {
@@ -52,7 +55,8 @@ experiment('lib/connectors/repos/charge-versions', () => {
           'chargeElements.purposeUse',
           'licence',
           'licence.region',
-          'licence.licenceAgreements'
+          'licence.licenceAgreements',
+          'changeReason'
         ]
       })).to.be.true();
     });
@@ -64,6 +68,25 @@ experiment('lib/connectors/repos/charge-versions', () => {
     test('returns result of model.toJSON()', async () => {
       expect(result).to.equal({
         chargeElementId: 'test-id'
+      });
+    });
+  });
+
+  experiment('.findValidInRegionAndFinancialYear', () => {
+    const regionId = 'test-region-id';
+    const financialYearEnding = 2020;
+
+    beforeEach(async () => {
+      await chargeVersions.findValidInRegionAndFinancialYear(regionId, financialYearEnding);
+    });
+
+    test('calls raw.multiRow with the expected query and params', async () => {
+      const [query, params] = raw.multiRow.lastCall.args;
+      expect(query).to.equal(queries.findValidInRegionAndFinancialYear);
+      expect(params).to.equal({
+        regionId,
+        startDate: '2019-04-01',
+        endDate: '2020-03-31'
       });
     });
   });

@@ -15,4 +15,15 @@ const dbToModel = row => {
   });
 };
 
+/**
+ * Converts a plain object representation of a PurposeUse to a PurposeUse model
+ * @param {Object} pojo
+ * @return PurposeUse
+ */
+const pojoToModel = pojo => {
+  const model = new PurposeUse();
+  return model.fromHash(pojo);
+};
+
 exports.dbToModel = dbToModel;
+exports.pojoToModel = pojoToModel;

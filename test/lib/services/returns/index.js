@@ -101,10 +101,10 @@ experiment('lib/services/returns/index', () => {
 
       test('returns are fetched from the API with the financial year date range', async () => {
         expect(apiConnector.getReturnsForLicenceInCycle.calledWith(
-          licenceNumber, { startDate: '2019-04-01', endDate: '2020-03-31', isSummer: false }
+          licenceNumber, { startDate: '2019-04-01', endDate: '2020-03-31', isSummer: false, dueDate: '2020-10-16' }
         )).to.be.true();
         expect(apiConnector.getReturnsForLicenceInCycle.calledWith(
-          licenceNumber, { startDate: '2018-11-01', endDate: '2019-10-31', isSummer: true }
+          licenceNumber, { startDate: '2018-11-01', endDate: '2019-10-31', isSummer: true, dueDate: '2019-11-28' }
         )).to.be.true();
       });
 

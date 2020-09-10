@@ -3,6 +3,7 @@ module.exports = {
   Batch: require('./batch'),
   Totals: require('./totals'),
   Company: require('./company'),
+  ChangeReason: require('./change-reason'),
   ChargeVersion: require('./charge-version'),
   Contact: require('./contact'),
   FinancialYear: require('./financial-year'),

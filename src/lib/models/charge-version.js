@@ -9,6 +9,7 @@ const InvoiceAccount = require('./invoice-account');
 const Licence = require('./licence');
 const Model = require('./model');
 const Region = require('./region');
+const ChangeReason = require('./change-reason');
 
 const SCHEME = {
   alcs: 'alcs',
@@ -158,6 +159,19 @@ class ChargeVersion extends Model {
   }
 
   /**
+ * Change Reason
+ * @param {ChangeReason}
+ */
+  set changeReason (changeReason) {
+    validators.assertIsNullableInstanceOf(changeReason, ChangeReason);
+    this._changeReason = changeReason;
+  }
+
+  get changeReason () {
+    return this._changeReason;
+  }
+
+  /*
    * Set the apportionment
    * @param {Boolean} apportionment
    */
