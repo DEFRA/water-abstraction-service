@@ -22,6 +22,7 @@ const chargeVersionWorkflowRepo = require('../../../../src/lib/connectors/repos/
 const chargeVersionWorkflowService = require('../../../../src/modules/charge-versions/services/charge-version-workflows');
 const documentsService = require('../../../../src/lib/services/documents-service');
 const service = require('../../../../src/lib/services/service');
+const chargeVersionService = require('../../../../src/lib/services/charge-versions');
 
 // Models
 const ChargeVersionWorkflow = require('../../../../src/lib/models/charge-version-workflow');
@@ -76,6 +77,8 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     sandbox.stub(chargeVersionWorkflowRepo, 'create');
     sandbox.stub(chargeVersionWorkflowRepo, 'update');
     sandbox.stub(chargeVersionWorkflowRepo, 'deleteOne');
+
+    sandbox.stub(chargeVersionService, 'create');
 
     sandbox.stub(logger, 'error');
   });
@@ -321,6 +324,36 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       const func = () => chargeVersionWorkflowService.delete(id);
       const err = await expect(func()).to.reject();
       expect(err).to.be.an.instanceof(NotFoundError);
+    });
+  });
+
+  experiment('.approve', () => {
+    let approvingUser, chargeVersionWorkflow;
+
+    beforeEach(async () => {
+      approvingUser = new User(123, 'mail@example.com');
+      chargeVersionWorkflow = new ChargeVersionWorkflow(uuid());
+      chargeVersionWorkflow.fromHash({
+        chargeVersion: new ChargeVersion(uuid()),
+        createdBy: new User(456, 'someone-else@example.com')
+      });
+      chargeVersionWorkflow.chargeVersion = new ChargeVersion(uuid());
+      await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser);
+    });
+
+    test('the new charge version is persisted', async () => {
+      expect(chargeVersionService.create.calledWith(
+        chargeVersionWorkflow.chargeVersion
+      )).to.be.true();
+    });
+
+    test('the approver of the new charge version is set', async () => {
+      const [chargeVersion] = chargeVersionService.create.lastCall.args;
+      expect(chargeVersion.approvedBy).to.equal(approvingUser);
+    });
+
+    test('the workflow record is deleted', async () => {
+      expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
     });
   });
 });
