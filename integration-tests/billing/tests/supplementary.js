@@ -214,7 +214,7 @@ experiment('basic supplementary scenario', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('8117abf683490ad2d496cc156bd15e23');
+            expect(transaction.transactionKey).to.equal('c28a05b5c689aca2046f41e905ceab8e');
           });
         });
 
@@ -228,6 +228,8 @@ experiment('basic supplementary scenario', () => {
             expect(transaction.chargeType).to.equal('standard');
             expect(transaction.isCredit).to.equal(true);
             expect(transaction.isTwoPartTariffSupplementary).to.equal(false);
+            expect(transaction.isDeMinimis).to.be.false();
+            expect(transaction.isNewLicence).to.be.false();
           });
 
           test('has the correct charge period', async () => {
@@ -277,7 +279,7 @@ experiment('basic supplementary scenario', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('f9baea29940ee18a32f16c705cf65739');
+            expect(transaction.transactionKey).to.equal('4442d68737c556c7b11c7fb1a58a6129');
           });
         });
       });

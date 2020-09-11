@@ -9,13 +9,13 @@ const {
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
-const CompanyAddress = require('../../../../src/lib/connectors/bookshelf/BillingVolume');
+const BillingVolume = require('../../../../src/lib/connectors/bookshelf/BillingVolume');
 
-experiment('lib/connectors/bookshelf/BillingVolume.js', () => {
+experiment('lib/connectors/bookshelf/BillingVolume', () => {
   let instance;
 
   beforeEach(async () => {
-    instance = CompanyAddress.forge();
+    instance = BillingVolume.forge();
     sandbox.stub(instance, 'belongsTo');
   });
 
