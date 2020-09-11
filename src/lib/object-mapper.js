@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * @module an object mapper with a similar, more basic API to map-factory NPM module
+ * @module an object mapper with fluent interface based on map-factory NPM module
  *         however the handling of nulls is different:
  *         by default nulls are mapped, with an option of ignoring them
  */
@@ -17,42 +17,39 @@ const getSourceKeys = value => {
   return [value];
 };
 
-/**
- * Note: when data coming from DB, there may be nulls
- * For scalar values, these likely need mapping as nulls (e.g. DateRange endDate)
- * For related data, these likely don't need mapping
- */
-const createMapper = (options = {}) => ({
-  _map: [],
+class Mapper {
+  constructor (options) {
+    this._map = [];
+    this._options = Object.assign({}, { mapNull: true }, options);
+  }
 
-  _options: Object.assign({}, { mapNull: true }, options),
+  /**
+   * Selects the supplied key or keys for mapping
+   * @param {String|Array} [keys] - if not supplied, selects the entire data object
+   */
+  map (keys) {
+    this._sourceKeys = getSourceKeys(keys);
+    return this;
+  }
 
-  map: function () {
-    const _this = this;
+  to (targetKey, ...args) {
+    const mapper = isFunction(args[0]) ? args[0] : identity;
+    const options = isObject(last(args)) ? last(args) : {};
 
-    const sourceKeys = getSourceKeys(arguments[0]);
+    if (this._sourceKeys.length > 1 && !mapper) {
+      throw new Error(`error setting ${targetKey}: when >1 source key, a mapper is required`);
+    }
 
-    return {
-      to: (targetKey, ...args) => {
-        const mapper = isFunction(args[0]) ? args[0] : identity;
-        const options = isObject(last(args)) ? last(args) : {};
+    this._map.push({
+      sourceKeys: this._sourceKeys,
+      targetKey,
+      mapper,
+      options: Object.assign({}, this._options, options)
+    });
+    return this;
+  }
 
-        if (sourceKeys.length > 1 && !mapper) {
-          throw new Error(`error setting ${targetKey}: when >1 source key, a mapper is required`);
-        }
-
-        _this._map.push({
-          sourceKeys,
-          targetKey,
-          mapper,
-          options: Object.assign({}, this._options, options)
-        });
-        return _this;
-      }
-    };
-  },
-
-  execute: function (data) {
+  execute (data) {
     return this._map.reduce((acc, row) => {
       // If the source key is omitted, supply the entire object
       const values = row.sourceKeys.length === 0
@@ -72,6 +69,8 @@ const createMapper = (options = {}) => ({
       return set(acc, row.targetKey, row.mapper(...values));
     }, {});
   }
-});
+}
+
+const createMapper = options => new Mapper(options);
 
 exports.createMapper = createMapper;
