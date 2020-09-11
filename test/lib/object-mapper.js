@@ -100,13 +100,15 @@ experiment('lib/object-mapper', () => {
     beforeEach(async () => {
       mapper = createMapper({ mapNull: false })
         .map('foo').to('foo')
-        .map('bar').to('bar', { mapNull: true });
+        .map('bar').to('bar', { mapNull: true })
+        .map('baz').to('baz', { mapNull: false });
     });
 
     test('maps a string to the output', async () => {
       const data = {
         foo: null,
-        bar: null
+        bar: null,
+        baz: null
       };
       expect(mapper.execute(data)).to.equal({ bar: null });
     });
@@ -124,6 +126,12 @@ experiment('lib/object-mapper', () => {
         b: 5
       };
       expect(mapper.execute(data)).to.equal({ c: 8 });
+    });
+
+    test('throws an error if a mapper not provided', async () => {
+      const func = () => createMapper().map(['a', 'b']).to('c');
+      const err = expect(func).to.throw();
+      expect(err.message).to.equal('error mapping to .c: when >1 source key, a mapper is required');
     });
   });
 

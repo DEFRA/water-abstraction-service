@@ -25,30 +25,42 @@ class Mapper {
 
   /**
    * Selects the supplied key or keys for mapping
-   * @param {String|Array} [keys] - if not supplied, selects the entire data object
+   * @param {String|Array} [keys] - if not supplied, selects the entire data object.  Can use dot notation, e.g 'foo.bar.baz'
    */
   map (keys) {
     this._sourceKeys = getSourceKeys(keys);
     return this;
   }
 
+  /**
+   * Determines how the data should be mapped
+   * @param {String} targetKey the property name in the target object, can use dot notation, e.g 'foo.bar.baz'
+   * @param {Function} [mapper] the argument(s) are passed to this mapping function if supplied
+   * @param {Object} [options]
+   * @param {Boolean} [options.mapNull]  can control if null is mapped per property
+   */
   to (targetKey, ...args) {
-    const mapper = isFunction(args[0]) ? args[0] : identity;
+    const mapper = isFunction(args[0]) ? args[0] : null;
     const options = isObject(last(args)) ? last(args) : {};
 
     if (this._sourceKeys.length > 1 && !mapper) {
-      throw new Error(`error setting ${targetKey}: when >1 source key, a mapper is required`);
+      throw new Error(`error mapping to .${targetKey}: when >1 source key, a mapper is required`);
     }
 
     this._map.push({
       sourceKeys: this._sourceKeys,
       targetKey,
-      mapper,
+      mapper: mapper || identity,
       options: Object.assign({}, this._options, options)
     });
     return this;
   }
 
+  /**
+   * Maps the supplied data
+   * @param {Object} data - source data object
+   * @return {Object} target data object
+   */
   execute (data) {
     return this._map.reduce((acc, row) => {
       // If the source key is omitted, supply the entire object
