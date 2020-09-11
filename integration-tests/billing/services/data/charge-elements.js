@@ -25,3 +25,22 @@ exports.ce1 = {
   description : 'CE1',
   factorsOverridden : false
 };
+
+exports.ce2 = {
+  abstractionPeriodStartDay: 1,
+  abstractionPeriodStartMonth: 4,
+  abstractionPeriodEndDay: 31,
+  abstractionPeriodEndMonth: 10,
+  authorisedAnnualQuantity: 200,
+  season: 'summer',
+  seasonDerived: 'summer',
+  source: 'unsupported',
+  loss: 'high',
+  purposePrimary: 'A',
+  purposeSecondary: 'AGR',
+  purposeUse: 400,
+  billableAnnualQuantity: null,
+  description: 'CE2',
+  factorsOverridden: false
+};
+
