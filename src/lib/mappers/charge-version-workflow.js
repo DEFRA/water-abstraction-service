@@ -6,7 +6,7 @@ const licenceMapper = require('./licence');
 const regionMapper = require('./region');
 const ChargeVersionWorkflow = require('../models/charge-version-workflow');
 
-const createMapper = require('map-factory');
+const { createMapper } = require('../object-mapper');
 const helpers = require('./lib/helpers');
 
 const dbToModelMapper = createMapper()

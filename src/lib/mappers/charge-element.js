@@ -1,5 +1,7 @@
 'use strict';
 
+const { createMapper } = require('../object-mapper');
+
 const ChargeElement = require('../models/charge-element');
 const DateRange = require('../models/date-range');
 const camelCaseKeys = require('../camel-case-keys');
@@ -8,7 +10,6 @@ const purposeSecondaryMapper = require('./purpose-secondary');
 const purposeUseMapper = require('./purpose-use');
 const abstractionPeriodMapper = require('./abstraction-period');
 const { isEmpty } = require('lodash');
-const createMapper = require('map-factory');
 const helpers = require('./lib/helpers');
 
 const mapIfNotEmpty = (model, targetKey, data, mapper) => {

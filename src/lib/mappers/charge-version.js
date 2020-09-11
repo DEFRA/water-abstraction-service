@@ -1,6 +1,6 @@
 'use strict';
 
-const createMapper = require('map-factory');
+const { createMapper } = require('../object-mapper');
 
 const ChargeVersion = require('../models/charge-version');
 const Company = require('../models/company');

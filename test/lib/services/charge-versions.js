@@ -204,7 +204,7 @@ experiment('lib/services/charge-versions', () => {
 
       test('the end date of the new charge version is unchanged', async () => {
         const [data] = chargeVersionRepo.create.lastCall.args;
-        expect(data.endDate).to.be.undefined();
+        expect(data.endDate).to.be.null();
       });
 
       test('the existing charge version is updated', async () => {
@@ -272,7 +272,7 @@ experiment('lib/services/charge-versions', () => {
 
       test('the end date of the new charge version is unchanged', async () => {
         const [data] = chargeVersionRepo.create.lastCall.args;
-        expect(data.endDate).to.be.undefined();
+        expect(data.endDate).to.be.null();
       });
 
       test('the existing charge version is updated to "superseded"', async () => {
