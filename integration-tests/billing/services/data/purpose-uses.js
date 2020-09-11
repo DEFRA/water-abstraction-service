@@ -6,5 +6,11 @@ module.exports = {
     description: 'General Farming & Domestic',
     lossFactor: 'medium',
     isTwoPartTariff: false
+  }, 
+  [400]: {
+    legacy_id: 400,
+    description: 'Spray Irrigation - Direct',
+    lossFactor: 'high',
+    isTwoPartTariff: true
   }
 };
