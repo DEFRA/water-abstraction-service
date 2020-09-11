@@ -148,4 +148,20 @@ experiment('lib/object-mapper', () => {
       expect(mapper.execute(data)).to.equal({ baz: { foo: 'bar' } });
     });
   });
+
+  experiment('can copy multiple properties', () => {
+    beforeEach(async () => {
+      mapper = createMapper()
+        .copy('foo', 'bar');
+    });
+
+    test('the entire object is supplied to the mapper', async () => {
+      const data = {
+        foo: 'a',
+        bar: 'b',
+        baz: 'c'
+      };
+      expect(mapper.execute(data)).to.equal({ foo: 'a', bar: 'b' });
+    });
+  });
 });

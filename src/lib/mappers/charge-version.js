@@ -27,12 +27,14 @@ const createRegion = regionCode => {
 
 const dbToModelMapper = createMapper()
   .map('chargeVersionId').to('id')
-  .map('scheme').to('scheme')
-  .map('versionNumber').to('versionNumber')
-  .map('status').to('status')
+  .copy(
+    'scheme',
+    'versionNumber',
+    'status',
+    'source'
+  )
   .map('regionCode').to('region', createRegion)
   .map(['startDate', 'endDate']).to('dateRange', (startDate, endDate) => new DateRange(startDate, endDate))
-  .map('source').to('source')
   .map('companyId').to('company', companyId => new Company(companyId))
   .map('invoiceAccountId').to('invoiceAccount', invoiceAccountId => new InvoiceAccount(invoiceAccountId))
   .map('changeReason').to('changeReason', changeReasonMapper.dbToModel)
@@ -45,18 +47,20 @@ const dbToModel = row => createModel(ChargeVersion, row, dbToModelMapper);
 
 const modelToDbMapper = createMapper()
   .map('id').to('chargeVersionId')
+  .copy(
+    'scheme',
+    'versionNumber',
+    'status',
+    'source',
+    'error',
+    'apportionment',
+    'dateCreated',
+    'dateUpdated'
+  )
   .map('licence.licenceNumber').to('licenceRef')
-  .map('versionNumber').to('versionNumber')
+  .map('billedUpToDate').to('billedUptoDate')
   .map('dateRange.startDate').to('startDate')
   .map('dateRange.endDate').to('endDate')
-  .map('status').to('status')
-  .map('apportionment').to('apportionment')
-  .map('error').to('error')
-  .map('billedUpToDate').to('billedUptoDate')
-  .map('dateCreated').to('dateCreated')
-  .map('dateUpdated').to('dateUpdated')
-  .map('source').to('source')
-  .map('scheme').to('scheme')
   .map('region.numericCode').to('regionCode')
   .map('invoiceAccount.company.id').to('companyId')
   .map('invoiceAccount.id').to('invoiceAccountId')
@@ -67,12 +71,14 @@ const modelToDbMapper = createMapper()
 const modelToDb = model => modelToDbMapper.execute(model);
 
 const pojoToModelMapper = createMapper()
-  .map('id').to('id')
-  .map('licenceRef').to('licenceRef')
-  .map('scheme').to('scheme')
-  .map('externalId').to('externalId')
-  .map('versionNumber').to('versionNumber')
-  .map('status').to('status')
+  .copy(
+    'id',
+    'licenceRef',
+    'scheme',
+    'externalId',
+    'versionNumber',
+    'status'
+  )
   .map('dateRange').to('dateRange', dateRangeMapper.pojoToModel)
   .map('chargeElements').to('chargeElements', chargeElements => chargeElements.map(chargeElementMapper.pojoToModel))
   .map('invoiceAccount').to('invoiceAccount', invoiceAccountMapper.pojoToModel)

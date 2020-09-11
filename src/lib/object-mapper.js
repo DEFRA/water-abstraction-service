@@ -57,6 +57,17 @@ class Mapper {
   }
 
   /**
+   * Convenience method to copy multiple properties
+   * @param {Array<String>} sourceKeys
+   */
+  copy (...sourceKeys) {
+    for (const key of sourceKeys) {
+      this.map(key).to(key);
+    }
+    return this;
+  }
+
+  /**
    * Maps the supplied data
    * @param {Object} data - source data object
    * @return {Object} target data object
