@@ -3,10 +3,13 @@
 const repos = require('../connectors/repos');
 const licenceAgreementMapper = require('../mappers/licence-agreement');
 const licenceMapper = require('../mappers/licence');
+const invoiceAccountsMapper = require('../mappers/invoice-account');
 const licenceVersionMapper = require('../mappers/licence-version');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../models/constants');
 
 const service = require('./service');
+const crmDocsConnector = require('../connectors/crm-v2/documents');
+const crmCompaniesConnector = require('../connectors/crm-v2/companies');
 
 /**
  * Gets a licence model by ID
@@ -108,13 +111,29 @@ const updateIncludeInSupplementaryBillingStatusForSentBatch = async batchId => {
   return updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId);
 };
 
+/**
+ * Fetches the invoice accounts associated with a licence using the licence ref and date as input.
+ *  @param {String} documentRef
+ *  @param {String} date
+ */
+const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
+  //  First, fetch the company ID from the CRM
+  const { companyId } = await crmDocsConnector.getDocumentByRefAndDate(documentRef, date);
+
+  //  Secondly, take the company ID and fetch the invoice accounts for that company from the CRM
+  const invoiceAccounts = await crmCompaniesConnector.getInvoiceAccountsByCompanyId(companyId);
+
+  //  Return the invoice accounts
+  return invoiceAccounts ? invoiceAccounts.map(invoiceAccount => invoiceAccountsMapper.crmToModel(invoiceAccount)) : [];
+};
+
 exports.getLicenceAgreementById = getLicenceAgreementById;
 exports.getLicenceAgreementsByLicenceRef = getLicenceAgreementsByLicenceRef;
 exports.getLicenceById = getLicenceById;
 exports.getLicenceVersionById = getLicenceVersionById;
 exports.getLicenceVersions = getLicenceVersions;
 exports.getLicenceByLicenceRef = getLicenceByLicenceRef;
-
+exports.getLicenceAccountsByRefAndDate = getLicenceAccountsByRefAndDate;
 exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementaryBillingStatus;
 exports.updateIncludeInSupplementaryBillingStatusForUnsentBatch = updateIncludeInSupplementaryBillingStatusForUnsentBatch;
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch;
