@@ -8,6 +8,7 @@ const batchStatus = require('./lib/batch-status');
 const batchService = require('../services/batch-service');
 const billingVolumeService = require('../services/billing-volumes-service');
 const twoPartTariffService = require('../services/two-part-tariff');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 
 const JOB_NAME = 'billing.two-part-tariff-matching.*';
 
@@ -20,9 +21,10 @@ const createMessage = (eventId, batch) => {
 const handleTwoPartTariffMatching = async job => {
   batchJob.logHandling(job);
 
+  const batchId = get(job, 'data.batch.id');
+
   try {
     // Get batch
-    const batchId = get(job, 'data.batch.id');
     const batch = await batchService.getBatchById(batchId);
 
     // Check batch in "processing" status
@@ -41,6 +43,7 @@ const handleTwoPartTariffMatching = async job => {
     return { isReviewNeeded };
   } catch (err) {
     batchJob.logHandlingError(job, err);
+    await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToProcessTwoPartTariff);
     throw err;
   }
 };

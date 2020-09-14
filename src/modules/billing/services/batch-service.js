@@ -111,8 +111,13 @@ const setStatus = (batchId, status) =>
  * @param {BATCH_ERROR_CODE} errorCode The origin of the failure
  * @return {Promise}
  */
-const setErrorStatus = (batchId, errorCode) =>
-  newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error, errorCode });
+const setErrorStatus = async (batchId, errorCode) => {
+  logger.error(`Batch ${batchId} failed with error code ${errorCode}`);
+  return Promise.all([
+    newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error, errorCode }),
+    licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId)
+  ]);
+};
 
 const approveBatch = async (batch, internalCallingUser) => {
   try {
@@ -161,12 +166,17 @@ const saveInvoicesToDB = async batch => {
  * @return {Promise<Batch>}
  */
 const decorateBatchWithTotals = async batch => {
+  if (!batch.statusIsOneOf(BATCH_STATUS.ready, BATCH_STATUS.review)) {
+    logger.info(`Can't load totals for ${batch.status} batch ${batch.id}`);
+    return batch;
+  }
   try {
     const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
     return chargeModuleDecorators.decorateBatch(batch, cmResponse);
   } catch (err) {
     logger.info('Failed to decorate batch with totals. Waiting for CM API', err);
   }
+
   return batch;
 };
 

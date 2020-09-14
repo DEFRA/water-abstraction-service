@@ -1,19 +1,16 @@
 'use strict';
+
 const batchJob = require('./lib/batch-job');
-const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+const { BATCH_STATUS } = require('../../../lib/models/batch');
 const populateBatchChargeVersionsJob = require('./populate-batch-charge-versions');
 
-const handleCreateBillRunComplete = async (job, messageQueue) => {
-  batchJob.logOnComplete(job);
+const { partialRight } = require('lodash');
+const { createOnCompleteHandler } = require('./lib/on-complete');
 
-  if (batchJob.hasJobFailed(job)) {
-    return batchJob.failBatch(job, messageQueue, BATCH_ERROR_CODE.failedToCreateBillRun);
-  }
-
-  const { eventId, batch } = job.data.response;
-
+const handleCreateBillRunComplete = async (job, messageQueue, batch) => {
   try {
     // Publish next job in process
+    const { eventId } = job.data.response;
     const message = populateBatchChargeVersionsJob.createMessage(eventId, batch);
     await messageQueue.publish(message);
   } catch (err) {
@@ -22,4 +19,4 @@ const handleCreateBillRunComplete = async (job, messageQueue) => {
   }
 };
 
-module.exports = handleCreateBillRunComplete;
+module.exports = partialRight(createOnCompleteHandler, handleCreateBillRunComplete, BATCH_STATUS.processing);

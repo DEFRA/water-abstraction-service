@@ -1,7 +1,11 @@
 'use strict';
+
+const { get } = require('lodash');
 const chargeVersionYearService = require('../services/charge-version-year');
 const batchJob = require('./lib/batch-job');
 const batchService = require('../services/batch-service');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+
 const JOB_NAME = 'billing.process-charge-version.*';
 
 const options = {
@@ -26,6 +30,7 @@ const createMessage = (eventId, chargeVersionYear, batch) => {
 const handleProcessChargeVersion = async job => {
   batchJob.logHandling(job);
 
+  const batchId = get(job, 'data.batch.id');
   const { chargeVersionYear } = job.data;
 
   // Process charge version year
@@ -46,7 +51,9 @@ const handleProcessChargeVersion = async job => {
     batchJob.logHandlingError(job, err);
 
     // Mark as error
+    await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToProcessChargeVersions);
     await chargeVersionYearService.setErrorStatus(chargeVersionYear.billingBatchChargeVersionYearId);
+
     throw err;
   }
 };

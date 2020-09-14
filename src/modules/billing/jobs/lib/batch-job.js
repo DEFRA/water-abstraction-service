@@ -27,26 +27,14 @@ const logHandlingError = (job, error) => {
 /**
  * In the event that a job fails when processing a batch,
  * this function tidies up so that no further processing
- * happens.
- *
- * The batch record is put in an error state
- * and the queue is deleted to prevent further work.
+ * happens in the job queue.
  *
  * @param {Object<PgBoss.Job>} job The job that has failed
  * @param {Object<PgBoss>} messageQueue The PgBoss message queue
- * @param {number|BATCH_ERROR_CODE} errorCode Why has the batch failed?
  */
-const failBatch = (job, messageQueue, errorCode) => {
+const deleteHandlerQueue = (job, messageQueue) => {
   const name = getRequestName(job);
-  const {
-    batch: { id: batchId }
-  } = job.data.request.data;
-
-  return Promise.all([
-    batchService.setErrorStatus(batchId, errorCode),
-    licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId),
-    messageQueue.deleteQueue(name)
-  ]);
+  return messageQueue.deleteQueue(name);
 };
 
 /**
@@ -87,7 +75,7 @@ const deleteOnCompleteQueue = (job, messageQueue) => {
 };
 
 exports.createMessage = createMessage;
-exports.failBatch = failBatch;
+exports.deleteHandlerQueue = deleteHandlerQueue;
 exports.hasJobFailed = hasJobFailed;
 exports.logHandling = logHandling;
 exports.logHandlingError = logHandlingError;

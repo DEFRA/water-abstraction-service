@@ -2,9 +2,12 @@
 
 const { get } = require('lodash');
 const transactionsService = require('../services/transactions-service');
+const batchService = require('../services/batch-service');
+
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 const mappers = require('../mappers');
 const batchJob = require('./lib/batch-job');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 
 const JOB_NAME = 'billing.create-charge.*';
 
@@ -30,6 +33,7 @@ const handleCreateCharge = async job => {
   batchJob.logHandling(job);
 
   const transactionId = get(job, 'data.transaction.billing_transaction_id');
+  const batchId = get(job, 'data.batch.id');
 
   try {
     // Create batch model from loaded data
@@ -48,6 +52,8 @@ const handleCreateCharge = async job => {
 
     // Mark transaction as error in DB
     transactionsService.setErrorStatus(transactionId);
+    batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToCreateCharge);
+
     throw err;
   }
 
