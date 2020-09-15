@@ -14,10 +14,12 @@ const { omit } = require('lodash');
 
 const moment = require('moment');
 
-const services = require('../services');
-const chargeModuleTransactionsService = require('../services/charge-module-transactions');
-const transactionTests = require('./transaction-tests');
+const services = require('../../services');
+const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
+const transactionTests = require('../transaction-tests');
 
+// Scenario: Annual Batch 2
+// Single Licence with a single charge version effective for whole year with 2 Part Tariff agreements
 experiment('annual batch ref: AB2', () => {
   let batch;
   let chargeModuleTransactions;

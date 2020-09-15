@@ -26,6 +26,7 @@ exports.ce1 = {
   factorsOverridden : false
 };
 
+// Spray Irrigation charge element
 exports.ce2 = {
   abstractionPeriodStartDay: 1,
   abstractionPeriodStartMonth: 4,
@@ -43,4 +44,6 @@ exports.ce2 = {
   description: 'CE2',
   factorsOverridden: false
 };
+
+exports.ce3 = Object.assign({}, exports.ce1, { authorisedAnnualQuantity: 300, description: 'CE3' })
 

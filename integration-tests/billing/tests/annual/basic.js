@@ -12,9 +12,9 @@ const {
 
 const { omit } = require('lodash');
 
-const services = require('../services');
-const chargeModuleTransactionsService = require('../services/charge-module-transactions');
-const transactionTests = require('./transaction-tests');
+const services = require('../../services');
+const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
+const transactionTests = require('../transaction-tests');
 
 experiment('basic example scenario', () => {
   let batch;

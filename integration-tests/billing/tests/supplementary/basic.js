@@ -11,9 +11,9 @@ const {
   after
 } = exports.lab = require('@hapi/lab').script();
 
-const services = require('../services');
-const chargeModuleTransactionsService = require('../services/charge-module-transactions');
-const transactionTests = require('./transaction-tests');
+const services = require('../../services');
+const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
+const transactionTests = require('../transaction-tests');
 
 experiment('basic supplementary scenario', () => {
   let annualBatch;
@@ -41,7 +41,7 @@ experiment('basic supplementary scenario', () => {
 
     // mark the existing charge version as superseded so the new
     // charge version is the current one.
-    await services.chargeVersions.updateStatus('superseded');
+    await services.chargeVersions.update({ status: 'superseded' });
 
     console.log('creating supplementary batch');
     supplementaryBatch = await services.scenarios.runScenario({
@@ -214,7 +214,7 @@ experiment('basic supplementary scenario', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('c28a05b5c689aca2046f41e905ceab8e');
+            expect(transaction.transactionKey).to.equal('2cdf97c3924985346d9433648db47303');
           });
         });
 
@@ -279,7 +279,7 @@ experiment('basic supplementary scenario', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('4442d68737c556c7b11c7fb1a58a6129');
+            expect(transaction.transactionKey).to.equal('95b35a7fcb7bc505f6ad2b62f034dade');
           });
         });
       });

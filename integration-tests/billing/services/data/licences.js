@@ -27,4 +27,4 @@ exports.l1 = {
   }]
 };
 
-exports.l2 = Object.assign({}, exports.l1, { includeInSupplementaryBilling: 'yes' })
+exports.l2 = Object.assign({}, exports.l1, { includeInSupplementaryBilling: 'yes', licenceRef: 'L2' })
