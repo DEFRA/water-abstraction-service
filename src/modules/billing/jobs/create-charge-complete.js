@@ -3,7 +3,7 @@
 const refreshTotalsJob = require('./refresh-totals');
 const jobService = require('../services/job-service');
 
-const { BATCH_ERROR_CODE, BATCH_STATUS } = require('../../../lib/models/batch');
+const { BATCH_STATUS } = require('../../../lib/models/batch');
 const batchService = require('../services/batch-service');
 const batchJob = require('./lib/batch-job');
 const Transaction = require('../../../lib/models/transaction');

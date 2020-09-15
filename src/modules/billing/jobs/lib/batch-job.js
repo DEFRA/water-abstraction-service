@@ -2,8 +2,6 @@
 
 const { get } = require('lodash');
 
-const batchService = require('../../services/batch-service');
-const licencesService = require('../../../../lib/services/licences');
 const { logger } = require('../../../../logger');
 
 const getRequestName = job => job.data.request.name;
@@ -34,6 +32,7 @@ const logHandlingError = (job, error) => {
  */
 const deleteHandlerQueue = (job, messageQueue) => {
   const name = getRequestName(job);
+  logger.info(`Deleting queue ${name}`);
   return messageQueue.deleteQueue(name);
 };
 

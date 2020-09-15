@@ -12,16 +12,19 @@ const billingVolumeService = require('../services/billing-volumes-service');
 
 const chargeVersionYearService = require('../services/charge-version-year');
 
+const options = {
+  teamSize: 50,
+  teamConcurrency: 2
+};
+
 const handleProcessChargeVersionComplete = async (job, messageQueue, batch) => {
   try {
     const { eventId } = job.data.request.data;
-    const { chargeVersionYear, batch: batchFromJobData } = job.data.response;
-    const batchId = chargeVersionYear.billingBatchId;
 
-    const { processing } = await chargeVersionYearService.getStatusCounts(batchId);
+    const { processing } = await chargeVersionYearService.getStatusCounts(batch.id);
 
     if (processing === 0) {
-      logger.info(`No more charge version year entries to process for batch: ${batchId}`);
+      logger.info(`No more charge version year entries to process for batch: ${batch.id}`);
 
       await batchJob.deleteOnCompleteQueue(job, messageQueue);
 
@@ -32,11 +35,11 @@ const handleProcessChargeVersionComplete = async (job, messageQueue, batch) => {
       }
 
       // Otherwise proceed with preparing transactions
-      const message = prepareTransactionsJob.createMessage(eventId, batchFromJobData);
+      const message = prepareTransactionsJob.createMessage(eventId, batch);
       return messageQueue.publish(message);
     }
 
-    logger.info(`${processing} items yet to be processed for batch ${batchId}`);
+    logger.info(`${processing} items yet to be processed for batch ${batch.id}`);
   } catch (err) {
     batchJob.logOnCompleteError(job, err);
     throw err;
@@ -44,3 +47,4 @@ const handleProcessChargeVersionComplete = async (job, messageQueue, batch) => {
 };
 
 module.exports = partialRight(createOnCompleteHandler, handleProcessChargeVersionComplete, BATCH_STATUS.processing);
+module.exports.options = options;

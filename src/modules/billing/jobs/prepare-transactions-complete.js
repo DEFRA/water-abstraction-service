@@ -26,11 +26,13 @@ const handlePrepareTransactionsComplete = async (job, messageQueue, batch) => {
 
     logger.info(`${transactions.length} transactions produced for batch ${batchId}, creating charges...`);
 
-    await Promise.all(transactions.map(transaction => {
+    // Note: publish jobs in series to avoid overwhelming message queue
+    for (const transaction of transactions) {
       const message = createChargeJob.createMessage(eventId, batch, transaction);
-      return messageQueue.publish(message);
-    }));
+      await messageQueue.publish(message);
+    }
   } catch (err) {
+    console.error(err);
     batchJob.logOnCompleteError(job, err);
     throw err;
   }
