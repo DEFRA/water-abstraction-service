@@ -58,35 +58,50 @@ experiment('modules/billing/mappers/invoice', () => {
   });
 
   experiment('.modelToDB', () => {
-    let result;
-
-    const batch = new Batch(uuid());
-    const invoice = new Invoice();
-    invoice.invoiceAccount = new InvoiceAccount(uuid());
-    invoice.invoiceAccount.accountNumber = 'A12345678A';
-    invoice.address = new Address();
-    invoice.address.fromHash({
-      addressLine1: 'Test farm',
-      addressLine2: 'Test lane',
-      addressLine3: 'Test meadow',
-      addressLine4: 'Test hill',
-      town: 'Testington',
-      county: 'Testingshire',
-      postcode: 'TT1 1TT',
-      country: 'UK'
-    });
-    invoice.financialYear = new FinancialYear(2020);
+    let result, batch, invoice;
 
     beforeEach(async () => {
-      result = invoiceMapper.modelToDb(batch, invoice);
+      batch = new Batch(uuid());
+      invoice = new Invoice();
+      invoice.invoiceAccount = new InvoiceAccount(uuid());
+      invoice.invoiceAccount.accountNumber = 'A12345678A';
+
+      invoice.financialYear = new FinancialYear(2020);
     });
 
-    test('maps to expected shape for the DB row', async () => {
-      expect(result.invoiceAccountId).to.equal(invoice.invoiceAccount.id);
-      expect(result.invoiceAccountNumber).to.equal(invoice.invoiceAccount.accountNumber);
-      expect(result.address).to.equal(invoice.address.toJSON());
-      expect(result.billingBatchId).to.equal(batch.id);
-      expect(result.financialYearEnding).to.equal(invoice.financialYear.yearEnding);
+    experiment('when the address is populated', () => {
+      beforeEach(async () => {
+        invoice.address = new Address();
+        invoice.address.fromHash({
+          addressLine1: 'Test farm',
+          addressLine2: 'Test lane',
+          addressLine3: 'Test meadow',
+          addressLine4: 'Test hill',
+          town: 'Testington',
+          county: 'Testingshire',
+          postcode: 'TT1 1TT',
+          country: 'UK'
+        });
+        result = invoiceMapper.modelToDb(batch, invoice);
+      });
+
+      test('maps to expected shape for the DB row', async () => {
+        expect(result.invoiceAccountId).to.equal(invoice.invoiceAccount.id);
+        expect(result.invoiceAccountNumber).to.equal(invoice.invoiceAccount.accountNumber);
+        expect(result.address).to.equal(invoice.address.toJSON());
+        expect(result.billingBatchId).to.equal(batch.id);
+        expect(result.financialYearEnding).to.equal(invoice.financialYear.yearEnding);
+      });
+    });
+
+    experiment('when the address is not populated', () => {
+      beforeEach(async () => {
+        result = invoiceMapper.modelToDb(batch, invoice);
+      });
+
+      test('the address property is an empty object', async () => {
+        expect(result.address).to.equal({});
+      });
     });
   });
 

@@ -21,7 +21,8 @@ const handlePrepareTransactionsComplete = async (job, messageQueue, batch) => {
       // no transactions created for this batch, update the
       // batch status to empty
       logger.info(`No transactions produced for batch ${batchId}, finalising batch run`);
-      return jobService.setEmptyBatch(eventId, batchId);
+      await jobService.setEmptyBatch(eventId, batchId);
+      return;
     }
 
     logger.info(`${transactions.length} transactions produced for batch ${batchId}, creating charges...`);
@@ -32,7 +33,6 @@ const handlePrepareTransactionsComplete = async (job, messageQueue, batch) => {
       await messageQueue.publish(message);
     }
   } catch (err) {
-    console.error(err);
     batchJob.logOnCompleteError(job, err);
     throw err;
   }

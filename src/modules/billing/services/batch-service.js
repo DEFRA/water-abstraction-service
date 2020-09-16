@@ -166,7 +166,7 @@ const saveInvoicesToDB = async batch => {
  * @return {Promise<Batch>}
  */
 const decorateBatchWithTotals = async batch => {
-  if (!batch.statusIsOneOf(BATCH_STATUS.ready, BATCH_STATUS.review)) {
+  if (!batch.statusIsOneOf(BATCH_STATUS.ready, BATCH_STATUS.sent)) {
     logger.info(`Can't load totals for ${batch.status} batch ${batch.id}`);
     return batch;
   }

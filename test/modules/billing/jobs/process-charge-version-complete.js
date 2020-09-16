@@ -46,7 +46,7 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
     job = createJob();
 
     messageQueue = {
-      publish: sandbox.spy(),
+      publish: sandbox.stub(),
       deleteQueue: sandbox.spy()
     };
 
@@ -60,6 +60,7 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
 
     sandbox.stub(chargeVersionYearService, 'getStatusCounts');
     sandbox.stub(batchJob, 'logOnComplete');
+    sandbox.stub(batchJob, 'logOnCompleteError');
     sandbox.stub(batchJob, 'deleteOnCompleteQueue');
     sandbox.stub(logger, 'info');
   });
@@ -187,6 +188,27 @@ experiment('modules/billing/jobs/process-charge-version-complete', () => {
           job, messageQueue
         )).to.be.true();
       });
+    });
+  });
+
+  experiment('when there is an unexpected error', () => {
+    const err = new Error('oh no!');
+    let result;
+
+    beforeEach(async () => {
+      chargeVersionYearService.getStatusCounts.resolves({
+        processing: 0
+      });
+      batchJob.deleteOnCompleteQueue.rejects(err);
+      const func = () => processChargeVersionComplete(job, messageQueue);
+      result = await expect(func()).to.reject();
+    });
+
+    test('the error is logged and rethrown', async () => {
+      expect(batchJob.logOnCompleteError.calledWith(
+        job, err
+      )).to.be.true();
+      expect(result).to.equal(err);
     });
   });
 });

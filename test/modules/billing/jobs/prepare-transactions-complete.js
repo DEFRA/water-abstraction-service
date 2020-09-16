@@ -48,7 +48,7 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
     job = createJob();
 
     sandbox.stub(logger, 'info');
-    sandbox.stub(batchJob, 'logOnComplete');
+    sandbox.stub(batchJob, 'logOnCompleteError');
     sandbox.stub(jobService, 'setReadyJob');
     sandbox.stub(jobService, 'setEmptyBatch');
 
@@ -130,6 +130,24 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
         billing_transaction_id: 'test-transaction-id-2'
       });
       expect(message2.options).to.equal({ singletonKey: 'test-transaction-id-2' });
+    });
+  });
+
+  experiment('when there is an unexpected error', () => {
+    const err = new Error('oh no!');
+    let result;
+
+    beforeEach(async () => {
+      jobService.setEmptyBatch.rejects(err);
+      const func = () => handlePrepareTransactionsComplete(job, messageQueue);
+      result = await expect(func()).to.reject();
+    });
+
+    test('the error is logged and rethrown', async () => {
+      expect(batchJob.logOnCompleteError.calledWith(
+        job, err
+      )).to.be.true();
+      expect(result).to.equal(err);
     });
   });
 });

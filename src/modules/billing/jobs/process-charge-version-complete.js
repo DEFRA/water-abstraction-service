@@ -31,12 +31,14 @@ const handleProcessChargeVersionComplete = async (job, messageQueue, batch) => {
       // Check if batch requires TPT review
       const numberOfUnapprovedBillingVolumes = await billingVolumeService.getUnapprovedVolumesForBatchCount(batch);
       if (numberOfUnapprovedBillingVolumes > 0) {
-        return batchService.setStatus(batch.id, BATCH_STATUS.review);
+        await batchService.setStatus(batch.id, BATCH_STATUS.review);
+        return;
       }
 
       // Otherwise proceed with preparing transactions
       const message = prepareTransactionsJob.createMessage(eventId, batch);
-      return messageQueue.publish(message);
+      await messageQueue.publish(message);
+      return;
     }
 
     logger.info(`${processing} items yet to be processed for batch ${batch.id}`);

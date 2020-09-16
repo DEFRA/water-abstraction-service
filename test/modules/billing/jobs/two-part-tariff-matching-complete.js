@@ -56,6 +56,7 @@ experiment('modules/billing/jobs/two-part-tariff-matching-complete', () => {
     batch.status = BATCH_STATUS.processing;
 
     sandbox.stub(batchJob, 'logOnComplete');
+    sandbox.stub(batchJob, 'logOnCompleteError');
 
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
     sandbox.stub(batchService, 'setErrorStatus');
@@ -107,6 +108,25 @@ experiment('modules/billing/jobs/two-part-tariff-matching-complete', () => {
         expect(job.data.eventId).to.equal(eventId);
         expect(job.options).to.equal({ singletonKey: batchId });
       });
+    });
+  });
+
+  experiment('when there is an unexpected error', () => {
+    const err = new Error('oh no!');
+    let result;
+
+    beforeEach(async () => {
+      job.data.response.isReviewNeeded = false;
+      messageQueue.publish.rejects(err);
+      const func = () => twoPartTariffMatchingComplete(job, messageQueue);
+      result = await expect(func()).to.reject();
+    });
+
+    test('the error is logged and rethrown', async () => {
+      expect(batchJob.logOnCompleteError.calledWith(
+        job, err
+      )).to.be.true();
+      expect(result).to.equal(err);
     });
   });
 });

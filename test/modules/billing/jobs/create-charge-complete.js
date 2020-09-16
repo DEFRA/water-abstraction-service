@@ -107,6 +107,32 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
     });
   });
 
+  experiment('when there are errored transactions in the batch', () => {
+    beforeEach(async () => {
+      batchService.getTransactionStatusCounts.resolves({
+        candidate: 3,
+        error: 1
+      });
+      await createChargeComplete(job, messageQueue);
+    });
+
+    test('no further jobs are published', async () => {
+      expect(messageQueue.publish.called).to.be.false();
+    });
+
+    test('the job is not marked as ready', async () => {
+      expect(jobService.setReadyJob.called).to.be.false();
+    });
+
+    test('the batch cleanup is not called', async () => {
+      expect(batchService.cleanup.called).to.be.false();
+    });
+
+    test('remaining onComplete jobs are not deleted', async () => {
+      expect(batchJob.deleteOnCompleteQueue.called).to.be.false();
+    });
+  });
+
   experiment('when a non-empty batch is processed', () => {
     beforeEach(async () => {
       batchService.getTransactionStatusCounts.resolves({
