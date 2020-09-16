@@ -13,6 +13,7 @@ const Region = require('../../../src/lib/models/region');
 const Company = require('../../../src/lib/models/company');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 const ChangeReason = require('../../../src/lib/models/change-reason');
+const User = require('../../../src/lib/models/user');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
 
@@ -310,6 +311,48 @@ experiment('lib/models/charge-version', () => {
       const func = () => {
         const notChargeElements = [new TestModel()];
         chargeVersion.chargeElements = notChargeElements;
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.createdBy', () => {
+    const user = new User();
+
+    test('can be set to a User instance', async () => {
+      chargeVersion.createdBy = user;
+      expect(chargeVersion.createdBy).to.equal(user);
+    });
+
+    test('can be set to null', async () => {
+      chargeVersion.createdBy = null;
+      expect(chargeVersion.createdBy).to.be.null();
+    });
+
+    test('throws an error if set to any other type', async () => {
+      const func = () => {
+        chargeVersion.createdBy = new TestModel();
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.approvedBy', () => {
+    const user = new User();
+
+    test('can be set to a User instance', async () => {
+      chargeVersion.approvedBy = user;
+      expect(chargeVersion.approvedBy).to.equal(user);
+    });
+
+    test('can be set to null', async () => {
+      chargeVersion.approvedBy = null;
+      expect(chargeVersion.approvedBy).to.be.null();
+    });
+
+    test('throws an error if set to any other type', async () => {
+      const func = () => {
+        chargeVersion.approvedBy = new TestModel();
       };
       expect(func).to.throw();
     });

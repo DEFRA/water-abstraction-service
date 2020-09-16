@@ -68,6 +68,7 @@ const assertNullableEnum = (str, values) => assert(str, VALID_NULLABLE_STRING.va
 const assertAuthorisedDays = value => assert(value, VALID_POSITIVE_INTEGER.max(366));
 const assertBillableDays = value => assert(value, VALID_INTEGER.min(0).max(366));
 const assertPositiveInteger = value => assert(value, VALID_POSITIVE_INTEGER);
+const assertNullablePositiveInteger = value => assert(value, VALID_POSITIVE_INTEGER.allow(null));
 const assertAgreementCode = value => assert(value, VALID_AGREEMENT_CODE);
 const assertDay = value => assert(value, VALID_DAY);
 const assertMonth = value => assert(value, VALID_MONTH);
@@ -105,6 +106,7 @@ exports.assertNullableEnum = assertNullableEnum;
 exports.assertAuthorisedDays = assertAuthorisedDays;
 exports.assertBillableDays = assertBillableDays;
 exports.assertPositiveInteger = assertPositiveInteger;
+exports.assertNullablePositiveInteger = assertNullablePositiveInteger;
 exports.assertAgreementCode = assertAgreementCode;
 exports.assertDay = assertDay;
 exports.assertMonth = assertMonth;

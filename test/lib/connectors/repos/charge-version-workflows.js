@@ -39,7 +39,8 @@ experiment('lib/connectors/repos/charge-version-workflows', () => {
       expect(idKey).to.equal('chargeVersionWorkflowId');
       expect(idValue).to.equal('test-id');
       expect(relatedModels).to.equal([
-        'licence'
+        'licence',
+        'licence.region'
       ]);
     });
   });
@@ -54,7 +55,8 @@ experiment('lib/connectors/repos/charge-version-workflows', () => {
       expect(model).to.equal(ChargeVersionWorkflow);
       expect(conditions).to.equal({});
       expect(relatedModels).to.equal([
-        'licence'
+        'licence',
+        'licence.region'
       ]);
     });
   });

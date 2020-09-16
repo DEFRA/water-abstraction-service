@@ -34,7 +34,7 @@ experiment('modules/billing/mappers/licence-version-purpose', () => {
   experiment('.dbToModel', () => {
     let result;
 
-    experiment('if the data does not contain a purpose use', () => {
+    experiment('if the data does not contain any purposes', () => {
       beforeEach(async () => {
         result = licenceVersionPurposeMapper.dbToModel(dbRow);
       });
@@ -83,6 +83,54 @@ experiment('modules/billing/mappers/licence-version-purpose', () => {
 
       test('has the annualQuantity', async () => {
         expect(result.annualQuantity).to.equal(dbRow.annualQuantity);
+      });
+
+      test('the .purposeUse property is undefined', async () => {
+        expect(result.purposeUse).to.be.undefined();
+      });
+
+      test('the .purposePrimary property is undefined', async () => {
+        expect(result.purposePrimary).to.be.undefined();
+      });
+
+      test('the .purposeSecondary property is undefined', async () => {
+        expect(result.purposeSecondary).to.be.undefined();
+      });
+    });
+
+    experiment('if the data contains a primary purpose', () => {
+      beforeEach(async () => {
+        dbRow.purposePrimary = {
+          legacyId: '456',
+          description: 'Spray Irrigation - Direct',
+          dateCreated: '2020-01-01T00:00:00.000Z',
+          dateUpdated: '2020-01-01T00:00:00.000Z',
+          purposePrimaryId: uuid()
+        };
+
+        result = licenceVersionPurposeMapper.dbToModel(dbRow);
+      });
+
+      test('the primary purpose is added to the licence version purpose model', async () => {
+        expect(result.purposePrimary.code).to.equal('456');
+      });
+    });
+
+    experiment('if the data contains a secondary purpose', () => {
+      beforeEach(async () => {
+        dbRow.purposeSecondary = {
+          legacyId: '789',
+          description: 'Spray Irrigation - Direct',
+          dateCreated: '2020-01-01T00:00:00.000Z',
+          dateUpdated: '2020-01-01T00:00:00.000Z',
+          purposeSecondaryId: uuid()
+        };
+
+        result = licenceVersionPurposeMapper.dbToModel(dbRow);
+      });
+
+      test('the secondary purpose is added to the licence version purpose model', async () => {
+        expect(result.purposeSecondary.code).to.equal('789');
       });
     });
 

@@ -19,6 +19,7 @@ const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 const ChangeReason = require('../../../src/lib/models/change-reason');
 const mapper = require('../../../src/lib/mappers/charge-version');
 const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
+const User = require('../../../src/lib/models/user');
 
 experiment('lib/mappers/charge-version', () => {
   experiment('modelToDb', () => {
@@ -42,8 +43,8 @@ experiment('lib/mappers/charge-version', () => {
       model.dateCreated = '2000-01-01';
       model.dateUpdated = '2000-01-02';
       model.source = 'wrls';
-      model.company = new Company(uuid());
       model.invoiceAccount = new InvoiceAccount(uuid());
+      model.invoiceAccount.company = new Company(uuid());
       model.scheme = 'alcs';
       model.changeReason = new ChangeReason(uuid());
 
@@ -107,7 +108,7 @@ experiment('lib/mappers/charge-version', () => {
     });
 
     test('maps the company id', async () => {
-      expect(db.companyId).to.equal(model.company.id);
+      expect(db.companyId).to.equal(model.invoiceAccount.company.id);
     });
 
     test('maps the invoice account id', async () => {
@@ -259,6 +260,161 @@ experiment('lib/mappers/charge-version', () => {
       expect(model.changeReason.id).to.equal(dbRow.changeReason.changeReasonId);
       expect(model.changeReason.triggersMinimumCharge).to.equal(dbRow.changeReason.triggersMinimumCharge);
       expect(model.changeReason.reason).to.equal(dbRow.changeReason.description);
+    });
+  });
+
+  experiment('.pojoToModel', () => {
+    let result, obj;
+
+    beforeEach(async () => {
+      obj = {
+        id: uuid(),
+        licenceRef: '01/123',
+        scheme: 'alcs',
+        externalId: '1:123',
+        versionNumber: 4,
+        status: 'current',
+        dateRange: {
+          startDate: '2019-01-01',
+          endDate: null
+        },
+        chargeElements: [{
+          id: uuid(),
+          source: 'supported',
+          season: 'summer',
+          loss: 'high',
+          abstractionPeriod: {
+            startDay: 1,
+            startMonth: 3,
+            endDay: 31,
+            endMonth: 10
+          }
+        }],
+        invoiceAccount: {
+          id: uuid(),
+          accountNumber: 'A00000000A'
+        },
+        createdBy: {
+          id: 123,
+          email: 'bob@example.com'
+        },
+        approvedBy: {
+          id: 456,
+          email: 'brenda@example.com'
+        }
+      };
+    });
+
+    experiment('when all fields are populated', () => {
+      beforeEach(async () => {
+        result = mapper.pojoToModel(obj);
+      });
+
+      test('returns a ChargeVersion model', async () => {
+        expect(result).to.be.an.instanceOf(ChargeVersion);
+      });
+
+      test('maps the .id property', async () => {
+        expect(result.id).to.equal(obj.id);
+      });
+
+      test('maps the .licenceRef property', async () => {
+        expect(result.licenceRef).to.equal(obj.licenceRef);
+      });
+
+      test('maps the .scheme property', async () => {
+        expect(result.scheme).to.equal(obj.scheme);
+      });
+
+      test('maps the .externalId property', async () => {
+        expect(result.externalId).to.equal(obj.externalId);
+      });
+
+      test('maps the .versionNumber property', async () => {
+        expect(result.versionNumber).to.equal(obj.versionNumber);
+      });
+
+      test('maps the .status property', async () => {
+        expect(result.status).to.equal(obj.status);
+      });
+
+      test('maps the .dateRange property', async () => {
+        expect(result.dateRange).to.be.an.instanceOf(DateRange);
+        expect(result.dateRange.startDate).to.equal(obj.dateRange.startDate);
+        expect(result.dateRange.endDate).to.equal(obj.dateRange.endDate);
+      });
+
+      test('maps the .chargeElements property', async () => {
+        expect(result.chargeElements).to.be.an.array().length(1);
+        expect(result.chargeElements[0]).to.be.an.instanceOf(ChargeElement);
+      });
+
+      test('maps the .invoiceAccount property', async () => {
+        expect(result.invoiceAccount).to.be.an.instanceOf(InvoiceAccount);
+      });
+
+      test('maps the .createdBy property', async () => {
+        expect(result.createdBy).to.be.an.instanceOf(User);
+      });
+
+      test('maps the .approvedBy property', async () => {
+        expect(result.approvedBy).to.be.an.instanceOf(User);
+      });
+    });
+
+    experiment('when the .dateRange property is undefined in the source object', () => {
+      beforeEach(async () => {
+        delete obj.dateRange;
+        result = mapper.pojoToModel(obj);
+      });
+
+      test('the model .dateRange property is undefined', async () => {
+        expect(result.dateRange).to.be.undefined();
+      });
+    });
+
+    experiment('when the .chargeElements property is undefined in the source object', () => {
+      beforeEach(async () => {
+        delete obj.chargeElements;
+        result = mapper.pojoToModel(obj);
+      });
+
+      test('the model .chargeElements property is an empty array', async () => {
+        expect(result.chargeElements).to.be.an.array().length(0);
+      });
+    });
+
+    experiment('when the .invoiceAccount property is undefined in the source object', () => {
+      beforeEach(async () => {
+        delete obj.invoiceAccount;
+        result = mapper.pojoToModel(obj);
+      });
+
+      test('the model .invoiceAccount property is undefined', async () => {
+        expect(result.invoiceAccount).to.be.undefined();
+      });
+    });
+
+    experiment('when the .createdBy property is undefined in the source object', () => {
+      beforeEach(async () => {
+        delete obj.createdBy;
+        result = mapper.pojoToModel(obj);
+      });
+
+      test('the model .createdBy property is undefined', async () => {
+        expect(result.createdBy).to.be.undefined();
+      });
+    });
+
+    experiment('when the .approvedBy property is undefined in the source object', () => {
+      beforeEach(async () => {
+        delete obj.approvedBy;
+        result = mapper.pojoToModel(obj);
+      });
+
+      test('the model .approvedBy property is undefined', async () => {
+        expect(result.approvedBy).to.be.undefined();
+      });
     });
   });
 });
