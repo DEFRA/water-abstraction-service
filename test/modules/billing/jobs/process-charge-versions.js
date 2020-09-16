@@ -31,8 +31,10 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
 
   beforeEach(async () => {
     batch = new Batch(batchId);
+    batch.status = Batch.BATCH_STATUS.processing;
 
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
+    sandbox.stub(batchService, 'setErrorStatus');
 
     sandbox.stub(chargeVersionYearService, 'getForBatch').resolves(billingBatchChargeVersionYears);
 

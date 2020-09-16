@@ -4,8 +4,7 @@ const {
   experiment,
   test,
   beforeEach,
-  afterEach,
-  fail
+  afterEach
 } = exports.lab = require('@hapi/lab').script();
 
 const { expect } = require('@hapi/code');
@@ -21,6 +20,7 @@ const mappers = require('../../../../src/modules/billing/mappers');
 
 // Services
 const transactionService = require('../../../../src/modules/billing/services/transactions-service');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 // Models
 const Batch = require('../../../../src/lib/models/batch');
@@ -97,6 +97,8 @@ experiment('modules/billing/jobs/create-charge', () => {
     sandbox.stub(transactionService, 'getById').resolves(batch);
     sandbox.stub(transactionService, 'updateWithChargeModuleResponse').resolves();
     sandbox.stub(transactionService, 'setErrorStatus').resolves();
+
+    sandbox.stub(batchService, 'setErrorStatus').resolves();
 
     sandbox.stub(chargeModuleBillRunConnector, 'addTransaction').resolves(data.chargeModuleResponse);
     sandbox.stub(mappers.batch, 'modelToChargeModule').returns([data.chargeModuleTransaction]);
@@ -181,40 +183,34 @@ experiment('modules/billing/jobs/create-charge', () => {
 
     experiment('when there is an error', () => {
       const err = new Error('Test error');
+      let error;
 
       beforeEach(async () => {
         chargeModuleBillRunConnector.addTransaction.rejects(err);
+        const func = () => createChargeJob.handler(job);
+        error = await expect(func()).to.reject();
       });
 
       test('logs an error', async () => {
-        try {
-          result = await createChargeJob.handler(job);
-          fail();
-        } catch (error) {
-          const { args } = batchJob.logHandlingError.lastCall;
+        const { args } = batchJob.logHandlingError.lastCall;
 
-          expect(args[0]).to.equal(job);
-          expect(args[1]).to.equal(err);
-        }
+        expect(args[0]).to.equal(job);
+        expect(args[1]).to.equal(err);
       });
 
       test('sets the transaction status to error', async () => {
-        try {
-          result = await createChargeJob.handler(job);
-          fail();
-        } catch (error) {
-          const [id] = transactionService.setErrorStatus.lastCall.args;
-          expect(id).to.equal(data.transaction.billing_transaction_id);
-        }
+        const [id] = transactionService.setErrorStatus.lastCall.args;
+        expect(id).to.equal(data.transaction.billing_transaction_id);
+      });
+
+      test('the batch is marked as error', async () => {
+        expect(batchService.setErrorStatus.calledWith(
+          batchId, Batch.BATCH_ERROR_CODE.failedToCreateCharge
+        )).to.be.true();
       });
 
       test('re-throws the error', async () => {
-        try {
-          result = await createChargeJob.handler(job);
-          fail();
-        } catch (error) {
-          expect(error).to.equal(err);
-        }
+        expect(error).to.equal(err);
       });
     });
   });

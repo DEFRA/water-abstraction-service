@@ -9,26 +9,54 @@ const {
 
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
+const uuid = require('uuid/v4');
 
 const { logger } = require('../../../../src/logger');
 const jobService = require('../../../../src/modules/billing/services/job-service');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
+
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
-const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch');
+const Batch = require('../../../../src/lib/models/batch');
 
 const handlePrepareTransactionsComplete = require('../../../../src/modules/billing/jobs/prepare-transactions-complete');
 
+const BATCH_ID = uuid();
+
+const createJob = () => ({
+  data: {
+    response: {
+      transactions: [],
+      batch: {
+        id: 'test-batch-id'
+      }
+    },
+    request: {
+      data: {
+        eventId: 'test-event-id'
+      }
+    }
+  }
+});
+
 experiment('modules/billing/jobs/prepare-transactions-complete', () => {
-  let messageQueue;
+  let messageQueue, job, batch;
 
   beforeEach(async () => {
+    batch = new Batch(BATCH_ID);
+    batch.status = Batch.BATCH_STATUS.processing;
+
+    job = createJob();
+
     sandbox.stub(logger, 'info');
     sandbox.stub(batchJob, 'logOnComplete');
-    sandbox.stub(batchJob, 'failBatch');
     sandbox.stub(jobService, 'setReadyJob');
     sandbox.stub(jobService, 'setEmptyBatch');
 
+    sandbox.stub(batchService, 'getBatchById').resolves(batch);
+
     messageQueue = {
-      publish: sandbox.spy()
+      publish: sandbox.spy(),
+      deleteQueue: sandbox.stub()
     };
   });
 
@@ -36,46 +64,31 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
     sandbox.restore();
   });
 
-  experiment('when the job has failed', () => {
-    test('the batch is set to error and cancelled ', async () => {
-      const job = {
-        name: 'testing',
-        data: {
-          failed: true
-        }
-      };
+  experiment('when the job fails', () => {
+    test('the other jobs in the queue are deleted', async () => {
+      job.data.failed = true;
       await handlePrepareTransactionsComplete(job, messageQueue);
+      expect(messageQueue.deleteQueue.calledWith(job.data.request.name)).to.be.true();
+    });
+  });
 
-      const failArgs = batchJob.failBatch.lastCall.args;
-      expect(failArgs[0]).to.equal(job);
-      expect(failArgs[1]).to.equal(messageQueue);
-      expect(failArgs[2]).to.equal(BATCH_ERROR_CODE.failedToPrepareTransactions);
+  experiment('when the batch is not in "processing" status', () => {
+    test('no further jobs are scheduled', async () => {
+      batch.status = Batch.BATCH_STATUS.error;
+      await handlePrepareTransactionsComplete(job, messageQueue);
+      expect(messageQueue.publish.called).to.be.false();
     });
   });
 
   experiment('when there are no transactions to create', () => {
     beforeEach(async () => {
-      await handlePrepareTransactionsComplete({
-        data: {
-          response: {
-            transactions: [],
-            batch: {
-              id: 'test-batch-id'
-            }
-          },
-          request: {
-            data: {
-              eventId: 'test-event-id'
-            }
-          }
-        }
-      }, messageQueue);
+      await handlePrepareTransactionsComplete(job, messageQueue);
     });
 
     test('the batch is set as empty', async () => {
       const [eventId, batchId] = jobService.setEmptyBatch.lastCall.args;
       expect(eventId).to.equal('test-event-id');
-      expect(batchId).to.equal('test-batch-id');
+      expect(batchId).to.equal(BATCH_ID);
 
       expect(jobService.setReadyJob.called).to.equal(false);
     });
@@ -87,24 +100,11 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
 
   experiment('when there are transactions to create charges for', () => {
     beforeEach(async () => {
-      await handlePrepareTransactionsComplete({
-        data: {
-          response: {
-            transactions: [
-              { billing_transaction_id: 'test-transaction-id-1' },
-              { billing_transaction_id: 'test-transaction-id-2' }
-            ],
-            batch: {
-              id: 'test-batch-id'
-            }
-          },
-          request: {
-            data: {
-              eventId: 'test-event-id'
-            }
-          }
-        }
-      }, messageQueue);
+      job.data.response.transactions = [
+        { billing_transaction_id: 'test-transaction-id-1' },
+        { billing_transaction_id: 'test-transaction-id-2' }
+      ];
+      await handlePrepareTransactionsComplete(job, messageQueue);
     });
 
     test('the batch is not completed', async () => {
@@ -115,37 +115,21 @@ experiment('modules/billing/jobs/prepare-transactions-complete', () => {
       const [message1] = messageQueue.publish.firstCall.args;
       const [message2] = messageQueue.publish.secondCall.args;
 
-      expect(message1).to.equal({
-        name: 'billing.create-charge.test-batch-id',
-        data: {
-          eventId: 'test-event-id',
-          batch: {
-            id: 'test-batch-id'
-          },
-          transaction: {
-            billing_transaction_id: 'test-transaction-id-1'
-          }
-        },
-        options: {
-          singletonKey: 'test-transaction-id-1'
-        }
+      expect(message1.name).to.equal(`billing.create-charge.${BATCH_ID}`);
+      expect(message1.data.eventId).to.equal('test-event-id');
+      expect(message1.data.batch.id).to.equal(BATCH_ID);
+      expect(message1.data.transaction).to.equal({
+        billing_transaction_id: 'test-transaction-id-1'
       });
+      expect(message1.options).to.equal({ singletonKey: 'test-transaction-id-1' });
 
-      expect(message2).to.equal({
-        name: 'billing.create-charge.test-batch-id',
-        data: {
-          eventId: 'test-event-id',
-          batch: {
-            id: 'test-batch-id'
-          },
-          transaction: {
-            billing_transaction_id: 'test-transaction-id-2'
-          }
-        },
-        options: {
-          singletonKey: 'test-transaction-id-2'
-        }
+      expect(message2.name).to.equal(`billing.create-charge.${BATCH_ID}`);
+      expect(message2.data.eventId).to.equal('test-event-id');
+      expect(message2.data.batch.id).to.equal(BATCH_ID);
+      expect(message2.data.transaction).to.equal({
+        billing_transaction_id: 'test-transaction-id-2'
       });
+      expect(message2.options).to.equal({ singletonKey: 'test-transaction-id-2' });
     });
   });
 });

@@ -519,6 +519,14 @@ experiment('modules/billing/services/batch-service', () => {
       expect(id).to.equal('batch-id');
       expect(data).to.equal({ status: 'error', errorCode: 10 });
     });
+
+    test('calls licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch() with the batch ID', async () => {
+      expect(
+        licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.calledWith(
+          'batch-id'
+        )
+      ).to.be.true();
+    });
   });
 
   experiment('.saveInvoicesToDB', () => {

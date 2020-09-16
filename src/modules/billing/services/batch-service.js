@@ -99,13 +99,13 @@ const deleteBatch = async (batch, internalCallingUser) => {
  * Sets the batch status
  * @param {String} batchId
  * @param {BATCH_STATUS} status
- * @param {BATCH_ERROR_CODE} [errorCode]
  */
 const setStatus = (batchId, status) =>
   newRepos.billingBatches.update(batchId, { status });
 
 /**
  * Sets the specified batch to 'error' status
+ * Also updates the supplementary statuses for licences in the batch
  *
  * @param {String} batchId
  * @param {BATCH_ERROR_CODE} errorCode The origin of the failure

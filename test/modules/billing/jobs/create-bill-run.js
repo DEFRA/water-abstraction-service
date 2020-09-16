@@ -40,6 +40,7 @@ experiment('modules/billing/jobs/create-bill-run', () => {
     batch.fromHash(data.batch);
 
     sandbox.stub(batchService, 'createChargeModuleBillRun').resolves(batch);
+    sandbox.stub(batchService, 'setErrorStatus').resolves(batch);
   });
 
   afterEach(async () => {
@@ -105,11 +106,17 @@ experiment('modules/billing/jobs/create-bill-run', () => {
           }
         };
         batchService.createChargeModuleBillRun.rejects();
+        const func = () => createBillRunJob.handler(job);
+        await expect(func()).to.reject();
+      });
+
+      test('the batch is marked as error', async () => {
+        expect(batchService.setErrorStatus.calledWith(
+          batchId, Batch.BATCH_ERROR_CODE.failedToCreateBillRun
+        )).to.be.true();
       });
 
       test('the error is logged and rethrown', async () => {
-        const func = () => createBillRunJob.handler(job);
-        await expect(func()).to.reject();
         const { args } = batchJob.logHandlingError.lastCall;
         expect(args[0]).to.equal(job);
         expect(args[1] instanceof Error).to.be.true();

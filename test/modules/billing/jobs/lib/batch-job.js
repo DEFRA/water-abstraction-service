@@ -38,7 +38,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
     sandbox.restore();
   });
 
-  experiment('.failBatch', () => {
+  experiment('.deleteHandlerQueue', () => {
     let job;
     let batchId;
     let eventId;
@@ -59,18 +59,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
           }
         }
       };
-      await batchJob.failBatch(job, messageQueue, 10);
-    });
-
-    test('sets the batch to error', async () => {
-      const [id, code] = batchService.setErrorStatus.lastCall.args;
-      expect(id).to.equal(batchId);
-      expect(code).to.equal(10);
-    });
-
-    test('updates the supplementary billing status of any licences', async () => {
-      const [id] = licenceService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.lastCall.args;
-      expect(id).to.equal(batchId);
+      await batchJob.deleteHandlerQueue(job, messageQueue);
     });
 
     test('deletes the queue', async () => {

@@ -59,6 +59,8 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
     billingBatchChargeVersionYears = createBillingBatchChargeVersionYears(batch);
 
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
+    sandbox.stub(batchService, 'setErrorStatus');
+
     sandbox.stub(chargeVersionService, 'createForBatch').resolves(billingBatchChargeVersionYears);
   });
 
@@ -117,12 +119,6 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
         )).to.be.true();
       });
 
-      // test('creates billingBatchChargeVersionYears using the batch', async () => {
-      //   expect(chargeVersionYearService.createForBatch.calledWith(
-      //     batch
-      //   )).to.be.true();
-      // });
-
       test('includes the batch in the job response', async () => {
         expect(result.batch).to.equal(batch);
       });
@@ -134,14 +130,21 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
 
     experiment('when there is an error', async () => {
       const error = new Error('oops!');
+      let err;
 
       beforeEach(async () => {
         batchService.getBatchById.rejects(error);
+        const func = () => populateBatchChargeVersionsJob.handler(job);
+        err = await expect(func()).to.reject();
+      });
+
+      test('the batch is marked as error', async () => {
+        expect(batchService.setErrorStatus.calledWith(
+          batch.id, Batch.BATCH_ERROR_CODE.failedToPopulateChargeVersions
+        )).to.be.true();
       });
 
       test('the error is logged and rethrown', async () => {
-        const func = () => populateBatchChargeVersionsJob.handler(job);
-        const err = await expect(func()).to.reject();
         expect(batchJob.logHandlingError.calledWith(
           job, error
         )).to.be.true();

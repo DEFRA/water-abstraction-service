@@ -5,6 +5,8 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script();
 
+const uuid = require('uuid/v4');
+
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
@@ -19,13 +21,15 @@ const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 
 const Batch = require('../../../../src/lib/models/batch');
 
+const BATCH_ID = uuid();
+
 const data = {
   eventId: 'test-event-id',
   transactions: [{
     billing_transaction_id: '00000000-0000-0000-0000-000000000001'
   }],
   batch: {
-    id: '00000000-0000-0000-0000-000000000002'
+    id: BATCH_ID
   }
 };
 
@@ -37,7 +41,7 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingError');
 
-    batch = new Batch(data.batch.billing_batch_id);
+    batch = new Batch(BATCH_ID);
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
     sandbox.stub(batchService, 'setErrorStatus').resolves();
     sandbox.stub(repos.billingTransactions, 'getByBatchId').resolves(data.transactions);
@@ -61,7 +65,7 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
     });
 
     test('using the expected job name', async () => {
-      expect(message.name).to.equal('billing.prepare-transactions.00000000-0000-0000-0000-000000000002');
+      expect(message.name).to.equal(`billing.prepare-transactions.${BATCH_ID}`);
     });
 
     test('includes a data object with the event id', async () => {
@@ -73,7 +77,7 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
     });
 
     test('includes a singleton key for the batch', async () => {
-      expect(message.options.singletonKey).to.equal('00000000-0000-0000-0000-000000000002');
+      expect(message.options.singletonKey).to.equal(BATCH_ID);
     });
   });
 
@@ -85,21 +89,29 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
         data: {
           batch: data.batch
         },
-        name: 'billing.prepare-transactions.00000000-0000-0000-0000-000000000002'
+        name: `billing.prepare-transactions.${BATCH_ID}`
       };
     });
 
     experiment('if there is an error', () => {
-      test('the error details are logged', async () => {
-        const error = new Error('oops');
-        batchService.getBatchById.rejects(error);
+      const error = new Error('oops');
 
+      beforeEach(async () => {
+        batchService.getBatchById.rejects(error);
         await expect(prepareTransactions.handler(job))
           .to.reject();
+      });
 
+      test('the error details are logged', async () => {
         const errorArgs = batchJob.logHandlingError.lastCall.args;
         expect(errorArgs[0]).to.equal(job);
         expect(errorArgs[1]).to.equal(error);
+      });
+
+      test('the batch is marked as error', async () => {
+        expect(batchService.setErrorStatus.calledWith(
+          BATCH_ID, Batch.BATCH_ERROR_CODE.failedToPrepareTransactions
+        )).to.be.true();
       });
     });
 
@@ -116,13 +128,13 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
 
       test('the supplementary batch service is called', async () => {
         expect(
-          supplementaryBillingService.processBatch.calledWith(data.batch.billing_batch_id)
+          supplementaryBillingService.processBatch.calledWith(BATCH_ID)
         ).to.be.true();
       });
 
       test('calls repos.billingTransactions.getByBatchId with batch ID', async () => {
         const [batchId] = repos.billingTransactions.getByBatchId.lastCall.args;
-        expect(batchId).to.equal(data.batch.billing_batch_id);
+        expect(batchId).to.equal(BATCH_ID);
       });
 
       test('resolves with batch and transactions', async () => {

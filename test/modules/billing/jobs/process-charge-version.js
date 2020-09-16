@@ -2,12 +2,12 @@ const {
   experiment,
   test,
   beforeEach,
-  afterEach,
-  fail
+  afterEach
 } = exports.lab = require('@hapi/lab').script();
 
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
+const uuid = require('uuid/v4');
 
 const processChargeVersion = require('../../../../src/modules/billing/jobs/process-charge-version');
 const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
@@ -18,6 +18,7 @@ const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const { Batch } = require('../../../../src/lib/models');
 
 const eventId = '00000000-0000-0000-0000-000000000000';
+const BATCH_ID = uuid();
 
 experiment('modules/billing/jobs/process-charge-version', () => {
   let batch;
@@ -26,9 +27,10 @@ experiment('modules/billing/jobs/process-charge-version', () => {
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingError');
 
-    batch = new Batch();
+    batch = new Batch(BATCH_ID);
 
     sandbox.stub(batchService, 'saveInvoicesToDB');
+    sandbox.stub(batchService, 'setErrorStatus');
 
     sandbox.stub(chargeVersionYearService, 'processChargeVersionYear').resolves(batch);
     sandbox.stub(chargeVersionYearService, 'setErrorStatus').resolves();
@@ -50,12 +52,12 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
     beforeEach(async () => {
       chargeVersionYear = { billing_batch_charge_version_year_id: 1 };
-      batch = { id: 'test-batch-id' };
+      batch = { id: BATCH_ID };
       message = processChargeVersion.createMessage('test-event-id', chargeVersionYear, batch);
     });
 
     test('using the expected job name', async () => {
-      expect(message.name).to.equal('billing.process-charge-version.test-batch-id');
+      expect(message.name).to.equal(`billing.process-charge-version.${BATCH_ID}`);
     });
 
     test('includes a data object with the batch', async () => {
@@ -79,14 +81,14 @@ experiment('modules/billing/jobs/process-charge-version', () => {
         billingBatchChargeVersionYearId: 'test-id',
         chargeVersionId: 'charge_verion_id',
         financialYearEnding: 2020,
-        billingBatchId: 'billing_batch_id'
+        billingBatchId: BATCH_ID
       };
 
       job = {
         data: {
           eventId,
           chargeVersionYear,
-          batch: { id: 'test-batch-id' }
+          batch: { id: BATCH_ID }
         }
       };
 
@@ -103,7 +105,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
     });
 
     test('resolves including the batch details', async () => {
-      expect(result.batch.id).to.equal('test-batch-id');
+      expect(result.batch.id).to.equal(BATCH_ID);
     });
 
     experiment('when there are no errors', () => {
@@ -135,18 +137,20 @@ experiment('modules/billing/jobs/process-charge-version', () => {
       beforeEach(async () => {
         error = new Error('oops');
         chargeVersionYearService.setReadyStatus.rejects(error);
-        try {
-          await processChargeVersion.handler(job);
-          fail();
-        } catch (err) {
-
-        }
+        const func = () => processChargeVersion.handler(job);
+        await expect(func()).to.reject();
       });
 
       test('a message is logged', async () => {
         const errorArgs = batchJob.logHandlingError.lastCall.args;
         expect(errorArgs[0]).to.equal(job);
         expect(errorArgs[1]).to.equal(error);
+      });
+
+      test('the batch is marked as error', async () => {
+        expect(batchService.setErrorStatus.calledWith(
+          BATCH_ID, Batch.BATCH_ERROR_CODE.failedToProcessChargeVersions
+        )).to.be.true();
       });
 
       test('the billing batch charge version year status is updated to "error"', async () => {
