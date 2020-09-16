@@ -1,5 +1,8 @@
 'use strict';
 
+const { createMapper } = require('../object-mapper');
+const helpers = require('./lib/helpers');
+
 const Licence = require('../models/licence');
 const Region = require('../models/region');
 
@@ -24,26 +27,26 @@ const dbToRegionalChargeArea = licenceRegions => {
   return region;
 };
 
-const dbToModel = row => {
-  const licence = new Licence();
-  licence.fromHash({
-    id: row.licenceId,
-    licenceNumber: row.licenceRef,
-    isWaterUndertaker: row.isWaterUndertaker,
-    historicalArea: dbToHistoricalArea(row.regions),
-    regionalChargeArea: dbToRegionalChargeArea(row.regions),
-    startDate: row.startDate,
-    expiredDate: row.expiredDate,
-    lapsedDate: row.lapsedDate,
-    revokedDate: row.revokedDate
-  });
-  if (row.region) {
-    licence.region = regionMapper.dbToModel(row.region);
-  }
-  if (row.licenceAgreements) {
-    licence.licenceAgreements = row.licenceAgreements.map(licenceAgreementMapper.dbToModel);
-  }
-  return licence;
-};
+const dbToModelMapper = createMapper()
+  .map('licenceId').to('id')
+  .map('licenceRef').to('licenceNumber')
+  .copy(
+    'isWaterUndertaker',
+    'startDate',
+    'expiredDate',
+    'lapsedDate',
+    'revokedDate'
+  )
+  .map('regions').to('historicalArea', dbToHistoricalArea)
+  .map('regions').to('regionalChargeArea', dbToRegionalChargeArea)
+  .map('region').to('region', regionMapper.dbToModel)
+  .map('licenceAgreements').to('licenceAgreements', licenceAgreements => licenceAgreements.map(licenceAgreementMapper.dbToModel));
+
+/**
+ * Maps database licence to Licence service model
+ * @param {Object} row
+ * @return {Licence} service model
+ */
+const dbToModel = row => helpers.createModel(Licence, row, dbToModelMapper);
 
 exports.dbToModel = dbToModel;

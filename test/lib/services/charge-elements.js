@@ -3,24 +3,37 @@
 const {
   experiment,
   test,
-  beforeEach
+  beforeEach,
+  afterEach
 } = exports.lab = require('@hapi/lab').script();
 
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
+const sandbox = require('sinon').createSandbox();
 
 const chargeElementsService = require('../../../src/lib/services/charge-elements');
 
 const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
 const DateRange = require('../../../src/lib/models/date-range');
 const ChargeElement = require('../../../src/lib/models/charge-element');
+const ChargeVersion = require('../../../src/lib/models/charge-version');
 const LicenceVersion = require('../../../src/lib/models/licence-version');
 const LicenceVersionPurpose = require('../../../src/lib/models/licence-version-purpose');
 const PurposeUse = require('../../../src/lib/models/purpose-use');
+const Purpose = require('../../../src/lib/models/purpose');
 
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
+const chargeElementRepo = require('../../../src/lib/connectors/repos/charge-elements');
 
 experiment('lib/services/charge-elements', () => {
+  beforeEach(async () => {
+    sandbox.stub(chargeElementRepo, 'create');
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
   experiment('.getChargeElementsFromLicenceVersion', () => {
     let licenceVersionPurpose;
     let licenceVersion;
@@ -56,6 +69,8 @@ experiment('lib/services/charge-elements', () => {
 
       licenceVersionPurpose.fromHash({
         annualQuantity: 100,
+        purposePrimary: new Purpose(uuid()),
+        purposeSecondary: new Purpose(uuid()),
         purposeUse
       });
 
@@ -259,6 +274,45 @@ experiment('lib/services/charge-elements', () => {
           });
         });
       });
+    });
+  });
+
+  experiment('.create', () => {
+    let result;
+    const chargeVersion = new ChargeVersion(uuid());
+    const chargeElement = new ChargeElement();
+    chargeElement.fromHash({
+      description: 'test element',
+      source: 'supported',
+      loss: 'high',
+      season: 'summer',
+      abstractionPeriod: new AbstractionPeriod(),
+      purposePrimary: new Purpose(uuid()),
+      purposeSecondary: new Purpose(uuid()),
+      purposeUse: new PurposeUse(uuid())
+    });
+
+    beforeEach(async () => {
+      chargeElementRepo.create.resolves({
+        chargeElementId: uuid()
+      });
+      result = await chargeElementsService.create(chargeVersion, chargeElement);
+    });
+
+    test('the .create() method is called on the repo', async () => {
+      const [data] = chargeElementRepo.create.lastCall.args;
+      expect(data.source).to.equal(chargeElement.source);
+      expect(data.season).to.equal(chargeElement.season);
+      expect(data.loss).to.equal(chargeElement.loss);
+      expect(data.description).to.equal(chargeElement.description);
+      expect(data.purposePrimaryId).to.equal(chargeElement.purposePrimary.id);
+      expect(data.purposeSecondaryId).to.equal(chargeElement.purposeSecondary.id);
+      expect(data.purposeUseId).to.equal(chargeElement.purposeUse.id);
+      expect(data.chargeVersionId).to.equal(chargeVersion.id);
+    });
+
+    test('resoles with the new charge element', async () => {
+      expect(result).to.be.an.instanceOf(ChargeElement);
     });
   });
 });

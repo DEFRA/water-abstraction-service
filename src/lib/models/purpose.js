@@ -9,8 +9,7 @@ const {
 
 const PURPOSE_TYPES = {
   primary: 'primary',
-  secondary: 'secondary',
-  use: 'use'
+  secondary: 'secondary'
 };
 
 class Purpose extends Model {
@@ -47,6 +46,16 @@ class Purpose extends Model {
   set code (code) {
     assertString(code);
     this._code = code;
+  }
+
+  get dateCreated () { return this._dateCreated; }
+  set dateCreated (dateCreated) {
+    this._dateCreated = this.getDateOrThrow(dateCreated, 'Date created');
+  }
+
+  get dateUpdated () { return this._dateUpdated; }
+  set dateUpdated (dateUpdated) {
+    this._dateUpdated = this.getDateTimeFromValue(dateUpdated);
   }
 }
 

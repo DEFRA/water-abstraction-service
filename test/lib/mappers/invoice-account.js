@@ -6,6 +6,7 @@ const {
   beforeEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
+const uuid = require('uuid/v4');
 
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 const InvoiceAccountAddress = require('../../../src/lib/models/invoice-account-address');
@@ -86,6 +87,52 @@ experiment('modules/billing/mappers/invoice-account', () => {
         expect(invoiceAccountAddress.id).to.equal(invoiceAccountAddressData.invoiceAccountAddressId);
         expect(invoiceAccountAddress.dateRange.startDate).to.equal(invoiceAccountAddressData.startDate);
         expect(invoiceAccountAddress.dateRange.endDate).to.equal(invoiceAccountAddressData.endDate);
+      });
+    });
+  });
+
+  experiment('.pojoToModel', () => {
+    let result;
+
+    const obj = {
+      id: uuid(),
+      accountNumber: 'A11111111A'
+    };
+
+    experiment('when no company is specified', async () => {
+      beforeEach(async () => {
+        result = invoiceAccountMapper.pojoToModel(obj);
+      });
+
+      test('an InvoiceAccount model is returned', async () => {
+        expect(result).to.be.an.instanceof(InvoiceAccount);
+      });
+
+      test('the .id property is mapped', async () => {
+        expect(result.id).to.equal(obj.id);
+      });
+
+      test('the .accountNumber property is mapped', async () => {
+        expect(result.accountNumber).to.equal(obj.accountNumber);
+      });
+
+      test('the .company property is undefined', async () => {
+        expect(result.company).to.be.undefined();
+      });
+    });
+
+    experiment('when a company is specified', async () => {
+      beforeEach(async () => {
+        obj.company = {
+          id: uuid(),
+          name: 'Big Co Ltd'
+        };
+        result = invoiceAccountMapper.pojoToModel(obj);
+      });
+
+      test('the .company property is mapped', async () => {
+        expect(result.company).to.be.an.instanceof(Company);
+        expect(result.company.id).to.equal(obj.company.id);
       });
     });
   });

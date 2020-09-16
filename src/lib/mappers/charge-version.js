@@ -1,7 +1,6 @@
 'use strict';
 
-const { isEmpty, negate } = require('lodash');
-const isNotEmpty = negate(isEmpty);
+const { createMapper } = require('../object-mapper');
 
 const ChargeVersion = require('../models/charge-version');
 const Company = require('../models/company');
@@ -12,6 +11,11 @@ const Region = require('../models/region');
 const changeReasonMapper = require('./change-reason');
 const chargeElementMapper = require('./charge-element');
 const licenceMapper = require('./licence');
+const invoiceAccountMapper = require('./invoice-account');
+const userMapper = require('./user');
+const dateRangeMapper = require('./date-range');
+
+const { createModel } = require('./lib/helpers');
 
 const createRegion = regionCode => {
   const region = new Region();
@@ -21,71 +25,72 @@ const createRegion = regionCode => {
   });
 };
 
-const dbToModel = row => {
-  const model = new ChargeVersion();
+const dbToModelMapper = createMapper()
+  .map('chargeVersionId').to('id')
+  .copy(
+    'scheme',
+    'versionNumber',
+    'status',
+    'source'
+  )
+  .map('regionCode').to('region', createRegion)
+  .map(['startDate', 'endDate']).to('dateRange', (startDate, endDate) => new DateRange(startDate, endDate))
+  .map('companyId').to('company', companyId => new Company(companyId))
+  .map('invoiceAccountId').to('invoiceAccount', invoiceAccountId => new InvoiceAccount(invoiceAccountId))
+  .map('changeReason').to('changeReason', changeReasonMapper.dbToModel)
+  .map('chargeElements').to('chargeElements', chargeElements => chargeElements.map(chargeElementMapper.dbToModel))
+  .map('licence').to('licence', licenceMapper.dbToModel)
+  .map('createdBy').to('createdBy', userMapper.pojoToModel)
+  .map('approvedBy').to('approvedBy', userMapper.pojoToModel);
 
-  model.fromHash({
-    id: row.chargeVersionId,
-    scheme: row.scheme,
-    versionNumber: row.versionNumber,
-    dateRange: new DateRange(row.startDate, row.endDate),
-    status: row.status,
-    region: createRegion(row.regionCode),
-    source: row.source,
-    company: new Company(row.companyId),
-    invoiceAccount: new InvoiceAccount(row.invoiceAccountId),
-    chargeElements: row.chargeElements.map(chargeElementMapper.dbToModel),
-    changeReason: changeReasonMapper.dbToModel(row.changeReason)
-  });
+const dbToModel = row => createModel(ChargeVersion, row, dbToModelMapper);
 
-  if (isNotEmpty(row.licence)) {
-    model.licence = licenceMapper.dbToModel(row.licence);
-  }
+const modelToDbMapper = createMapper()
+  .map('id').to('chargeVersionId')
+  .copy(
+    'scheme',
+    'versionNumber',
+    'status',
+    'source',
+    'error',
+    'apportionment',
+    'dateCreated',
+    'dateUpdated'
+  )
+  .map('licence.licenceNumber').to('licenceRef')
+  .map('billedUpToDate').to('billedUptoDate')
+  .map('dateRange.startDate').to('startDate')
+  .map('dateRange.endDate').to('endDate')
+  .map('region.numericCode').to('regionCode')
+  .map('invoiceAccount.company.id').to('companyId')
+  .map('invoiceAccount.id').to('invoiceAccountId')
+  .map('changeReason.id').to('changeReasonId')
+  .map('createdBy').to('createdBy', userMapper.modelToDb)
+  .map('approvedBy').to('approvedBy', userMapper.modelToDb);
 
-  return model;
-};
+const modelToDb = model => modelToDbMapper.execute(model);
 
-const modelToDb = model => {
-  return {
-    chargeVersionId: model.id,
-    licenceRef: model.licence.licenceNumber,
-    versionNumber: model.versionNumber,
-    startDate: model.dateRange.startDate,
-    endDate: model.dateRange.endDate,
-    status: model.status,
-    apportionment: model.apportionment,
-    error: model.error,
-    billedUptoDate: model.billedUpToDate,
-    dateCreated: model.dateCreated,
-    dateUpdated: model.dateUpdated,
-    source: model.source,
-    scheme: model.scheme,
-    regionCode: model.region.numericCode,
-    companyId: model.company.id,
-    invoiceAccountId: model.invoiceAccount.id,
-    changeReasonId: model.changeReason.id
-  };
-};
+const pojoToModelMapper = createMapper()
+  .copy(
+    'id',
+    'licenceRef',
+    'scheme',
+    'externalId',
+    'versionNumber',
+    'status'
+  )
+  .map('dateRange').to('dateRange', dateRangeMapper.pojoToModel)
+  .map('chargeElements').to('chargeElements', chargeElements => chargeElements.map(chargeElementMapper.pojoToModel))
+  .map('invoiceAccount').to('invoiceAccount', invoiceAccountMapper.pojoToModel)
+  .map('createdBy').to('createdBy', userMapper.pojoToModel)
+  .map('approvedBy').to('approvedBy', userMapper.pojoToModel);
 
 /**
  * Converts a plain object representation of a ChargeVersion to a ChargeVersion model
  * @param {Object} pojo
  * @return ChargeVersion
  */
-const pojoToModel = pojo => {
-  const { chargeElements, dateRange, ...rest } = pojo;
-  const model = new ChargeVersion();
-  model.fromHash({
-    dateRange: new DateRange(dateRange.startDate, dateRange.endDate),
-    ...rest
-  });
-
-  if (chargeElements) {
-    model.chargeElements = chargeElements.map(chargeElementMapper.pojoToModel);
-  }
-
-  return model;
-};
+const pojoToModel = pojo => createModel(ChargeVersion, pojo, pojoToModelMapper);
 
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;
