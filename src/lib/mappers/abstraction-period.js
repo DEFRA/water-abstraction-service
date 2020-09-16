@@ -29,19 +29,6 @@ const pojoToModel = pojo => {
   return abstractionPeriod.fromHash(pojo);
 };
 
-/**
- * Converts a model to database camel-cased fields
- * @param {AbstractionPeriod} model
- * @return {Object}
- */
-const modelToDb = model => ({
-  abstractionPeriodStartDay: model.startDay,
-  abstractionPeriodStartMonth: model.startMonth,
-  abstractionPeriodEndDay: model.endDay,
-  abstractionPeriodEndMonth: model.endMonth
-});
-
 exports.dbToModel = dbToModel;
 exports.modelToHelpers = modelToHelpers;
 exports.pojoToModel = pojoToModel;
-exports.modelToDb = modelToDb;

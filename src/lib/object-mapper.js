@@ -19,7 +19,7 @@ const getSourceKeys = value => {
 
 class Mapper {
   constructor (options) {
-    this._map = [];
+    this._rules = [];
     this._options = Object.assign({}, { mapNull: true }, options);
   }
 
@@ -47,7 +47,7 @@ class Mapper {
       throw new Error(`error mapping to .${targetKey}: when >1 source key, a mapper is required`);
     }
 
-    this._map.push({
+    this._rules.push({
       sourceKeys: this._sourceKeys,
       targetKey,
       mapper: mapper || identity,
@@ -73,7 +73,7 @@ class Mapper {
    * @return {Object} target data object
    */
   execute (data) {
-    return this._map.reduce((acc, row) => {
+    return this._rules.reduce((acc, row) => {
       // If the source key is omitted, supply the entire object
       const values = row.sourceKeys.length === 0
         ? [data]

@@ -78,23 +78,4 @@ experiment('modules/billing/mappers/abstraction-period', () => {
       expect(model.endMonth).to.equal(obj.endMonth);
     });
   });
-
-  experiment('.modelToDb', () => {
-    test('maps an AbstractionPeriod model to a plain object for DB persistence', async () => {
-      const model = new AbstractionPeriod();
-      model.fromHash({
-        startDay: 1,
-        startMonth: 4,
-        endDay: 31,
-        endMonth: 10
-      });
-      const obj = abstractionPeriodMapper.modelToDb(model);
-      expect(obj).to.equal({
-        abstractionPeriodStartDay: 1,
-        abstractionPeriodStartMonth: 4,
-        abstractionPeriodEndDay: 31,
-        abstractionPeriodEndMonth: 10
-      });
-    });
-  });
 });
