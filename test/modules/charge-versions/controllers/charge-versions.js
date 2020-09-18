@@ -7,11 +7,18 @@ const uuid = require('uuid/v4');
 
 const controller = require('../../../../src/modules/charge-versions/controllers/charge-versions');
 const documentConnector = require('../../../../src/lib/connectors/crm/documents');
+const { logger } = require('../../../../src/logger');
+
+// Services
 const licencesService = require('../../../../src/lib/services/licences');
 const chargeElementsService = require('../../../../src/lib/services/charge-elements');
 const chargeVersionsService = require('../../../../src/lib/services/charge-versions');
+const chargeVersionWorkflowService = require('../../../../src/modules/charge-versions/services/charge-version-workflows.js');
 
+// Models
 const ChargeVersion = require('../../../../src/lib/models/charge-version');
+const ChargeVersionWorkflow = require('../../../../src/lib/models/charge-version-workflow');
+const User = require('../../../../src/lib/models/user');
 
 experiment('modules/charge-versions/controllers/charge-versions', () => {
   let chargeVersions;
@@ -27,6 +34,9 @@ experiment('modules/charge-versions/controllers/charge-versions', () => {
     sandbox.stub(chargeVersionsService, 'getByChargeVersionId').resolves(chargeVersions[0]);
     sandbox.stub(documentConnector, 'getDocument');
     sandbox.stub(licencesService, 'getLicenceVersionById');
+    sandbox.stub(chargeVersionWorkflowService, 'getById');
+    sandbox.stub(chargeVersionWorkflowService, 'approve');
+    sandbox.stub(logger, 'error');
   });
 
   afterEach(async () => {
@@ -174,6 +184,69 @@ experiment('modules/charge-versions/controllers/charge-versions', () => {
           { season: 'winter' },
           { season: 'all year' }
         ]);
+      });
+    });
+  });
+
+  experiment('.postCreateFromWorkflow', () => {
+    let request, result;
+
+    const chargeVersionWorkflowId = uuid();
+
+    beforeEach(async () => {
+      request = {
+        params: {
+          chargeVersionWorkflowId
+        },
+        defra: {
+          internalCallingUser: {
+            id: 123,
+            email: 'mail@example.com'
+          }
+        }
+      };
+    });
+
+    experiment('when the charge version workflow is not found', () => {
+      beforeEach(async () => {
+        chargeVersionWorkflowService.getById.resolves(null);
+        result = await controller.postCreateFromWorkflow(request);
+      });
+
+      test('responds with a 404 not found error', async () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when the charge version workflow is found', () => {
+      beforeEach(async () => {
+        chargeVersionWorkflowService.getById.resolves(
+          new ChargeVersionWorkflow(chargeVersionWorkflowId)
+        );
+        result = await controller.postCreateFromWorkflow(request);
+      });
+
+      test('the charge version workflow is approved', async () => {
+        const [chargeVersionWorkflow, user] = chargeVersionWorkflowService.approve.lastCall.args;
+        expect(chargeVersionWorkflow).to.be.an.instanceof(ChargeVersionWorkflow);
+        expect(chargeVersionWorkflow.id).to.equal(chargeVersionWorkflowId);
+        expect(user).to.be.an.instanceof(User);
+        expect(user.id).to.equal(123);
+        expect(user.email).to.equal('mail@example.com');
+      });
+    });
+
+    experiment('if an unexpected error occurs', () => {
+      beforeEach(async () => {
+        chargeVersionWorkflowService.getById.rejects(new Error('oh no!'));
+      });
+
+      test('the error is logged and rethrown', async () => {
+        const func = () => controller.postCreateFromWorkflow(request);
+        const err = await expect(func()).to.reject();
+        expect(logger.error.called).to.be.true();
+        expect(err.message).to.equal('oh no!');
       });
     });
   });

@@ -2,7 +2,7 @@
 
 const InvoiceAccount = require('../models/invoice-account');
 
-const company = require('./company');
+const companyMapper = require('./company');
 const invoiceAccountAddress = require('./invoice-account-address');
 
 /**
@@ -15,7 +15,7 @@ const crmToModel = invoiceAccount => {
   const invoiceAccountModel = new InvoiceAccount(invoiceAccount.invoiceAccountId);
   invoiceAccountModel.fromHash({
     accountNumber: invoiceAccount.invoiceAccountNumber,
-    company: company.crmToModel(invoiceAccount.company)
+    company: companyMapper.crmToModel(invoiceAccount.company)
   });
 
   if (invoiceAccount.invoiceAccountAddresses) {
@@ -25,4 +25,14 @@ const crmToModel = invoiceAccount => {
   return invoiceAccountModel;
 };
 
+const pojoToModel = object => {
+  const model = new InvoiceAccount();
+  model.pickFrom(object, ['id', 'accountNumber']);
+  if (object.company) {
+    model.company = companyMapper.pojoToModel(object.company);
+  }
+  return model;
+};
+
 exports.crmToModel = crmToModel;
+exports.pojoToModel = pojoToModel;

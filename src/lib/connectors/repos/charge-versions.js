@@ -3,6 +3,7 @@
 const { ChargeVersion } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/charge-versions');
+const helpers = require('./lib/helpers');
 
 const sharedRelations = [
   'chargeElements',
@@ -58,7 +59,17 @@ const findValidInRegionAndFinancialYear = (regionId, financialYearEnding) => {
   return raw.multiRow(queries.findValidInRegionAndFinancialYear, params);
 };
 
+/**
+ * Updates the specified charge version with the supplied changes
+ *
+ * @param {String} id
+ * @param {Object} changes
+ */
+const update = (id, changes) =>
+  helpers.update(ChargeVersion, 'chargeVersionId', id, changes);
+
 exports.create = create;
 exports.findOne = findOne;
 exports.findByLicenceRef = findByLicenceRef;
 exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear;
+exports.update = update;

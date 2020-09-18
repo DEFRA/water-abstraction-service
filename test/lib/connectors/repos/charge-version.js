@@ -15,6 +15,7 @@ const { ChargeVersion } = require('../../../../src/lib/connectors/bookshelf');
 const chargeVersions = require('../../../../src/lib/connectors/repos/charge-versions');
 const queries = require('../../../../src/lib/connectors/repos/queries/charge-versions');
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
+const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
 
 experiment('lib/connectors/repos/charge-versions', () => {
   let model, stub, result;
@@ -29,6 +30,7 @@ experiment('lib/connectors/repos/charge-versions', () => {
     };
     sandbox.stub(ChargeVersion, 'forge').returns(stub);
     sandbox.stub(raw, 'multiRow');
+    sandbox.stub(helpers, 'update');
   });
 
   afterEach(async () => {
@@ -88,6 +90,21 @@ experiment('lib/connectors/repos/charge-versions', () => {
         startDate: '2019-04-01',
         endDate: '2020-03-31'
       });
+    });
+  });
+
+  experiment('.update', () => {
+    const id = 'test-id';
+    const changes = { status: 'current' };
+
+    test('delegates to helpers.update', async () => {
+      await chargeVersions.update(id, changes);
+      expect(helpers.update.calledWith(
+        ChargeVersion,
+        'chargeVersionId',
+        id,
+        changes
+      ));
     });
   });
 });

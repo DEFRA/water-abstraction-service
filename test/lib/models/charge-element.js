@@ -7,6 +7,7 @@ const ChargeElement = require('../../../src/lib/models/charge-element');
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 const AbstractionPeriod = require('../../../src/lib/models/abstraction-period');
 const PurposeUse = require('../../../src/lib/models/purpose-use');
+const Purpose = require('../../../src/lib/models/purpose');
 const DateRange = require('../../../src/lib/models/date-range');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
@@ -201,6 +202,11 @@ experiment('lib/models/charge-element', () => {
       expect(chargeElement.timeLimitedPeriod).to.equal(timeLimitedPeriod);
     });
 
+    test('can be set to null', async () => {
+      chargeElement.timeLimitedPeriod = null;
+      expect(chargeElement.timeLimitedPeriod).to.be.null();
+    });
+
     test('throws an error if setting to an instance of another model', async () => {
       const period = new AbstractionPeriod();
       const func = () => { chargeElement.timeLimitedPeriod = period; };
@@ -241,6 +247,34 @@ experiment('lib/models/charge-element', () => {
 
     test('throws an error if set to a number', async () => {
       const func = () => { chargeElement.description = 123; };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.purposePrimary', () => {
+    test('can be set to a Purpose instance', async () => {
+      const purpose = new Purpose();
+      chargeElement.purposePrimary = purpose;
+      expect(chargeElement.purposePrimary).to.equal(purpose);
+    });
+
+    test('throws an error if setting to an instance of another model', async () => {
+      const period = new AbstractionPeriod();
+      const func = () => { chargeElement.purposePrimary = period; };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.purposeSecondary', () => {
+    test('can be set to a Purpose instance', async () => {
+      const purpose = new Purpose();
+      chargeElement.purposeSecondary = purpose;
+      expect(chargeElement.purposeSecondary).to.equal(purpose);
+    });
+
+    test('throws an error if setting to an instance of another model', async () => {
+      const period = new AbstractionPeriod();
+      const func = () => { chargeElement.purposeSecondary = period; };
       expect(func).to.throw();
     });
   });
