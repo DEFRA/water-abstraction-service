@@ -1,3 +1,7 @@
+/* drop constraint */
+alter table water.licence_agreements
+  drop constraint uniq_licence_ref_start_date_financial_agreement_type_id;
+
 /* remove financial_agreement_id column and go back to using code */
 alter table water.licence_agreements
   add column financial_agreement_code varchar;
