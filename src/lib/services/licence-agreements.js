@@ -115,10 +115,12 @@ const createLicenceAgreement = async (licence, data, issuer) => {
   });
 
   try {
-  // Persist new row in water.licence_agreements
-    const dbRow = await licenceAgreementRepo.create(
+    // Persist new row in water.licence_agreements
+    const { licenceAgreementId } = await licenceAgreementRepo.create(
       licenceAgreementMapper.modelToDb(licenceAgreement)
     );
+
+    licenceAgreement.id = licenceAgreementId;
 
     // Log event and flag licence for supplementary billing
     await Promise.all([
@@ -127,7 +129,7 @@ const createLicenceAgreement = async (licence, data, issuer) => {
     ]);
 
     // Return the updated model
-    return licenceAgreementMapper.dbToModel(dbRow);
+    return licenceAgreement;
   } catch (err) {
     if (err.code === '23505') {
       throw new ConflictingDataError(`A ${code} agreement starting on ${data.startDate} already exists for licence ${licence.licenceNumber}`);
