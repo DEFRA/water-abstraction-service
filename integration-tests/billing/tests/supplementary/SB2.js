@@ -32,8 +32,8 @@ experiment('supplementary ref: SB2', () => {
       chargeVersions: [{
         company: 'co1',
         invoiceAccount: 'ia1',
-        chargeVersion: 'cv1',
-        chargeElements: ['ce1']
+        chargeVersion: 'cv3',
+        chargeElements: ['ce3']
       }]
     }, 'annual');
 
@@ -43,7 +43,7 @@ experiment('supplementary ref: SB2', () => {
 
     // set the end date on the current charge version before
     // the start of the new one, so that both are used in batch
-    await services.chargeVersions.update({ endDate: '2019-09-30' });
+    await services.chargeVersions.update({ endDate: '2019-07-31' });
 
     console.log('creating supplementary batch');
     supplementaryBatch = await services.scenarios.runScenario({
@@ -51,8 +51,8 @@ experiment('supplementary ref: SB2', () => {
       chargeVersions: [{
         company: 'co1',
         invoiceAccount: 'ia1',
-        chargeVersion: 'cv3',
-        chargeElements: ['ce3']
+        chargeVersion: 'cv4',
+        chargeElements: ['ce4']
       }]
     }, 'supplementary');
 
@@ -160,71 +160,6 @@ experiment('supplementary ref: SB2', () => {
         experiment('the first debit transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions.find(tx => tx.isCredit === false && tx.description === 'CE1');
-          });
-
-          test('is a standard charge', async () => {
-            expect(transaction.chargeType).to.equal('standard');
-            expect(transaction.isCredit).to.be.false();
-            expect(transaction.isTwoPartTariffSupplementary).to.be.false();
-            expect(transaction.isDeMinimis).to.be.false();
-            expect(transaction.isNewLicence).to.be.false();
-          });
-
-          test('has the correct charge period', async () => {
-            expect(transaction.startDate).to.equal('2019-04-01');
-            expect(transaction.endDate).to.equal('2019-09-30');
-          });
-
-          test('has the correct abstraction period', async () => {
-            expect(transaction.abstractionPeriod).to.equal({
-              endDay: 31,
-              endMonth: 12,
-              startDay: 1,
-              startMonth: 1
-            });
-          });
-
-          test('has the correct factors', async () => {
-            expect(transaction.source).to.equal('unsupported');
-            expect(transaction.season).to.equal('all year');
-            expect(transaction.loss).to.equal('medium');
-          });
-
-          test('has the correct quantities', async () => {
-            expect(transaction.authorisedQuantity).to.equal('200');
-            expect(transaction.billableQuantity).to.equal(null);
-            expect(transaction.volume).to.equal('200');
-          });
-
-          test('has the correct authorised/billable days', async () => {
-            expect(transaction.authorisedDays).to.equal(366);
-            expect(transaction.billableDays).to.equal(183);
-          });
-
-          test('has been sent to the charge module', async () => {
-            expect(transaction.externalId).to.have.length(36);
-            expect(transaction.status).to.equal('charge_created');
-          });
-
-          test('has the correct description', async () => {
-            expect(transaction.description).to.equal('CE1');
-          });
-
-          test('has the correct agreements', async () => {
-            expect(transaction.section126Factor).to.equal(null);
-            expect(transaction.section127Agreement).to.equal(false);
-            expect(transaction.section130Agreement).to.equal(null);
-          });
-
-          test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('7e9282747c5e9493f6f3c2e7a63e4adf');
-          });
-        });
-
-        experiment('the second debit transaction', () => {
-          let transaction;
-          beforeEach(async () => {
             transaction = licence.billingTransactions.find(tx => tx.isCredit === false && tx.description === 'CE3');
           });
 
@@ -237,34 +172,34 @@ experiment('supplementary ref: SB2', () => {
           });
 
           test('has the correct charge period', async () => {
-            expect(transaction.startDate).to.equal('2019-10-01');
-            expect(transaction.endDate).to.equal('2020-03-31');
+            expect(transaction.startDate).to.equal('2019-04-01');
+            expect(transaction.endDate).to.equal('2019-07-31');
           });
 
           test('has the correct abstraction period', async () => {
             expect(transaction.abstractionPeriod).to.equal({
               endDay: 31,
-              endMonth: 12,
+              endMonth: 3,
               startDay: 1,
-              startMonth: 1
+              startMonth: 4
             });
           });
 
           test('has the correct factors', async () => {
             expect(transaction.source).to.equal('unsupported');
             expect(transaction.season).to.equal('all year');
-            expect(transaction.loss).to.equal('medium');
+            expect(transaction.loss).to.equal('low');
           });
 
           test('has the correct quantities', async () => {
-            expect(transaction.authorisedQuantity).to.equal('300');
-            expect(transaction.billableQuantity).to.equal(null);
-            expect(transaction.volume).to.equal('300');
+            expect(transaction.authorisedQuantity).to.equal('50');
+            expect(transaction.billableQuantity).to.equal('25');
+            expect(transaction.volume).to.equal('25');
           });
 
           test('has the correct authorised/billable days', async () => {
             expect(transaction.authorisedDays).to.equal(366);
-            expect(transaction.billableDays).to.equal(183);
+            expect(transaction.billableDays).to.equal(122);
           });
 
           test('has been sent to the charge module', async () => {
@@ -283,7 +218,72 @@ experiment('supplementary ref: SB2', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('e91a7c4dd9913a40e1e19dcc76434b62');
+            expect(transaction.transactionKey).to.equal('f7d8838d18fcce381ba691146e242a5e');
+          });
+        });
+
+        experiment('the second debit transaction', () => {
+          let transaction;
+          beforeEach(async () => {
+            transaction = licence.billingTransactions.find(tx => tx.isCredit === false && tx.description === 'CE4');
+          });
+
+          test('is a standard charge', async () => {
+            expect(transaction.chargeType).to.equal('standard');
+            expect(transaction.isCredit).to.be.false();
+            expect(transaction.isTwoPartTariffSupplementary).to.be.false();
+            expect(transaction.isDeMinimis).to.be.false();
+            expect(transaction.isNewLicence).to.be.false();
+          });
+
+          test('has the correct charge period', async () => {
+            expect(transaction.startDate).to.equal('2019-08-01');
+            expect(transaction.endDate).to.equal('2020-03-31');
+          });
+
+          test('has the correct abstraction period', async () => {
+            expect(transaction.abstractionPeriod).to.equal({
+              endDay: 31,
+              endMonth: 3,
+              startDay: 1,
+              startMonth: 4
+            });
+          });
+
+          test('has the correct factors', async () => {
+            expect(transaction.source).to.equal('unsupported');
+            expect(transaction.season).to.equal('all year');
+            expect(transaction.loss).to.equal('low');
+          });
+
+          test('has the correct quantities', async () => {
+            expect(transaction.authorisedQuantity).to.equal('50');
+            expect(transaction.billableQuantity).to.equal('50');
+            expect(transaction.volume).to.equal('50');
+          });
+
+          test('has the correct authorised/billable days', async () => {
+            expect(transaction.authorisedDays).to.equal(366);
+            expect(transaction.billableDays).to.equal(244);
+          });
+
+          test('has been sent to the charge module', async () => {
+            expect(transaction.externalId).to.have.length(36);
+            expect(transaction.status).to.equal('charge_created');
+          });
+
+          test('has the correct description', async () => {
+            expect(transaction.description).to.equal('CE4');
+          });
+
+          test('has the correct agreements', async () => {
+            expect(transaction.section126Factor).to.equal(null);
+            expect(transaction.section127Agreement).to.equal(false);
+            expect(transaction.section130Agreement).to.equal(null);
+          });
+
+          test('has a stable transaction key', async () => {
+            expect(transaction.transactionKey).to.equal('7ec309eb8554a029b86b3ca72a92f58a');
           });
         });
 
@@ -309,22 +309,22 @@ experiment('supplementary ref: SB2', () => {
           test('has the correct abstraction period', async () => {
             expect(transaction.abstractionPeriod).to.equal({
               endDay: 31,
-              endMonth: 12,
+              endMonth: 3,
               startDay: 1,
-              startMonth: 1
+              startMonth: 4
             });
           });
 
           test('has the correct factors', async () => {
             expect(transaction.source).to.equal('unsupported');
             expect(transaction.season).to.equal('all year');
-            expect(transaction.loss).to.equal('medium');
+            expect(transaction.loss).to.equal('low');
           });
 
           test('has the correct quantities', async () => {
-            expect(transaction.authorisedQuantity).to.equal('200');
-            expect(transaction.billableQuantity).to.equal(null);
-            expect(transaction.volume).to.equal('200');
+            expect(transaction.authorisedQuantity).to.equal('50');
+            expect(transaction.billableQuantity).to.equal('25');
+            expect(transaction.volume).to.equal('25');
           });
 
           test('has the correct authorised/billable days', async () => {
@@ -338,7 +338,7 @@ experiment('supplementary ref: SB2', () => {
           });
 
           test('has the correct description', async () => {
-            expect(transaction.description).to.equal('CE1');
+            expect(transaction.description).to.equal('CE3');
           });
 
           test('has the correct agreements', async () => {
@@ -348,7 +348,7 @@ experiment('supplementary ref: SB2', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('95b35a7fcb7bc505f6ad2b62f034dade');
+            expect(transaction.transactionKey).to.equal('7ecfd38f6d77faf3350ac2fb1736d3ee');
           });
         });
       });

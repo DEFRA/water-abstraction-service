@@ -174,9 +174,9 @@ experiment('annual batch ref: AB2', () => {
           });
 
           test('has the correct quantities', async () => {
-            expect(transaction.authorisedQuantity).to.equal('200');
-            expect(transaction.billableQuantity).to.equal(null);
-            expect(transaction.volume).to.equal('200');
+            expect(transaction.authorisedQuantity).to.equal('25');
+            expect(transaction.billableQuantity).to.equal('25');
+            expect(transaction.volume).to.equal('25');
           });
 
           test('has the correct authorised/billable days', async () => {
@@ -200,7 +200,7 @@ experiment('annual batch ref: AB2', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('c42b9c7fb68fb645b2fd6386dc90fb19');
+            expect(transaction.transactionKey).to.equal('88a477ac6bb3664a0c23060de0829582');
           });
         });
       });

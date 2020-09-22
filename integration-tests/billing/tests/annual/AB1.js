@@ -146,22 +146,22 @@ experiment('basic example scenario', () => {
           test('has the correct abstraction period', async () => {
             expect(transaction.abstractionPeriod).to.equal({
               endDay: 31,
-              endMonth: 12,
+              endMonth: 3,
               startDay: 1,
-              startMonth: 1
+              startMonth: 4
             });
           });
 
           test('has the correct factors', async () => {
             expect(transaction.source).to.equal('unsupported');
-            expect(transaction.season).to.equal('all year');
-            expect(transaction.loss).to.equal('medium');
+            expect(transaction.season).to.equal('summer');
+            expect(transaction.loss).to.equal('low');
           });
 
           test('has the correct quantities', async () => {
-            expect(transaction.authorisedQuantity).to.equal('200');
-            expect(transaction.billableQuantity).to.equal(null);
-            expect(transaction.volume).to.equal('200');
+            expect(transaction.authorisedQuantity).to.equal('50');
+            expect(transaction.billableQuantity).to.equal('50');
+            expect(transaction.volume).to.equal('50');
           });
 
           test('has the correct authorised/billable days', async () => {
@@ -185,7 +185,7 @@ experiment('basic example scenario', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('8236fcec7f76380826140c6a1a926fb0');
+            expect(transaction.transactionKey).to.equal('2c75a82bf4c0fc9e185b89dd70213ad7');
           });
         });
       });
