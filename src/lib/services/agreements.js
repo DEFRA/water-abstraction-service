@@ -1,6 +1,6 @@
 'use strict';
 const service = require('./service');
-const financialAgreementTypeRepo = require('../../lib/connectors/repos/financial-agreement-type');
+const financialAgreementTypesRepo = require('../../lib/connectors/repos/financial-agreement-types');
 const agreementMapper = require('../mappers/agreement');
 
 /**
@@ -9,6 +9,6 @@ const agreementMapper = require('../mappers/agreement');
  * @return {Promise<Agreement>}
  */
 const getAgreementByCode = code =>
-  service.findOne(code, financialAgreementTypeRepo.findOneByFinancialAgreementCode, agreementMapper);
+  service.findOne(code, financialAgreementTypesRepo.findOneByFinancialAgreementCode, agreementMapper);
 
 exports.getAgreementByCode = getAgreementByCode;

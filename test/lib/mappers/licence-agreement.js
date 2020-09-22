@@ -56,4 +56,35 @@ experiment('modules/billing/mappers/licence-agreement', () => {
       expect(result.dateSigned).to.equal('2020-05-07');
     });
   });
+
+  experiment('.modelToDb', () => {
+    let result, model;
+
+    beforeEach(async () => {
+      model = new LicenceAgreement();
+      model.fromHash({
+        dateRange: new DateRange('2020-01-01', '2020-06-01'),
+        dateSigned: '2019-12-28',
+        agreement: new Agreement(uuid())
+      });
+      result = licenceAgreementMapper.modelToDb(model, '01/123/ABC');
+    });
+
+    test('includes the licence number passed in', async () => {
+      expect(result.licenceRef).to.equal('01/123/ABC');
+    });
+
+    test('maps the .dateRange property', async () => {
+      expect(result.startDate).to.equal('2020-01-01');
+      expect(result.endDate).to.equal('2020-06-01');
+    });
+
+    test('maps the .dateSigned property', async () => {
+      expect(result.dateSigned).to.equal('2019-12-28');
+    });
+
+    test('maps the agreement id', async () => {
+      expect(result.financialAgreementTypeId).to.equal(model.agreement.id);
+    });
+  });
 });
