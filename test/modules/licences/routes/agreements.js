@@ -52,4 +52,42 @@ experiment('modules/licences/routes/agreements', () => {
       expect(output.statusCode).to.equal(200);
     });
   });
+
+  experiment('.deleteAgreement', () => {
+    let server, request;
+
+    beforeEach(async () => {
+      request = {
+        method: 'DELETE',
+        url: `/water/1.0/agreements/${uuid()}`,
+        headers: {
+          'defra-internal-user-id': 1234
+        }
+      };
+      server = await testHelpers.createServerForRoute(routes.deleteAgreement);
+    });
+
+    test('validates the agreement id must be a uuid', async () => {
+      request.url = '/water/1.0/agreements/not-a-valid-id';
+      const output = await server.inject(request);
+      expect(output.statusCode).to.equal(400);
+    });
+
+    test('allows a valid uuid for the agreement id', async () => {
+      const output = await server.inject(request);
+      expect(output.statusCode).to.equal(200);
+    });
+
+    test('validates the calling user id is supplied', async () => {
+      request.headers = {};
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('validates the calling user id is a number', async () => {
+      request.headers['defra-internal-user-id'] = 'a string';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+  });
 });

@@ -62,6 +62,9 @@ const getLicenceAgreementById = async licenceAgreementId =>
     licenceAgreementMapper
   );
 
+const deleteLicenceAgreementById = async licenceAgreementId =>
+  repos.licenceAgreements.deleteOne(licenceAgreementId);
+
 /**
  * Updates the includeInSupplementaryBilling value for the given licence ids
  *
@@ -77,7 +80,7 @@ const updateIncludeInSupplementaryBillingStatus = async (from, to, ...licenceIds
 
 /**
  * Sets the water.licences.include_in_supplementary_billing value
- * from reprocess to yes for situtations where the batch has not got
+ * from reprocess to yes for situations where the batch has not got
  * through the the sent phase. This allows the licences to be picked up
  * in a future supplementary bill run.
  *
@@ -93,7 +96,7 @@ const updateIncludeInSupplementaryBillingStatusForUnsentBatch = batchId => {
 
 /**
  * Sets the water.licences.include_in_supplementary_billing value
- * from yes to no, then reprocess to yes for situtations where the batch has
+ * from yes to no, then reprocess to yes for situations where the batch has
  * been sent and therefore the licences don't need to be includes in
  * a future supplementary bill run.
  *
@@ -129,6 +132,7 @@ const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
 
 exports.getLicenceAgreementById = getLicenceAgreementById;
 exports.getLicenceAgreementsByLicenceRef = getLicenceAgreementsByLicenceRef;
+exports.deleteLicenceAgreementById = deleteLicenceAgreementById;
 exports.getLicenceById = getLicenceById;
 exports.getLicenceVersionById = getLicenceVersionById;
 exports.getLicenceVersions = getLicenceVersions;
