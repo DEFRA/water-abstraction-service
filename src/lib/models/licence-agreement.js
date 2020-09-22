@@ -10,6 +10,15 @@ const Model = require('./model');
 const DATE_FORMAT = 'YYYY-MM-DD';
 
 class LicenceAgreement extends Model {
+  set licenceNumber (licenceNumber) {
+    validators.assertLicenceNumber(licenceNumber);
+    this._licenceNumber = licenceNumber;
+  }
+
+  get licenceNumber () {
+    return this._licenceNumber;
+  }
+
   /**
    * Valid date range
    * @return {DateRange}

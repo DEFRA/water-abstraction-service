@@ -3,13 +3,14 @@
 const eventHelper = require('../lib/event-helper');
 const mapErrorResponse = require('../../../lib/map-error-response');
 const Boom = require('@hapi/boom');
+const { pick } = require('lodash');
 
-const licencesService = require('../../../lib/services/licences');
+// const licencesService = require('../../../lib/services/licences');
 const licenceAgreementsService = require('../../../lib/services/licence-agreements');
 const controller = require('../../../lib/controller');
 
 const getAgreement = async request =>
-  controller.getEntity(request.params.agreementId, licencesService.getLicenceAgreementById);
+  controller.getEntity(request.params.agreementId, licenceAgreementsService.getLicenceAgreementById);
 
 /**
  * Get all licence agreements for the specified licence
@@ -17,7 +18,7 @@ const getAgreement = async request =>
  */
 const getLicenceAgreements = async request => {
   const { licence } = request.pre;
-  return licencesService.getLicenceAgreementsByLicenceRef(licence.licenceNumber);
+  return licenceAgreementsService.getLicenceAgreementsByLicenceRef(licence.licenceNumber);
 };
 
 /**
@@ -25,10 +26,11 @@ const getLicenceAgreements = async request => {
  */
 const postLicenceAgreement = async (request, h) => {
   const { licence } = request.pre;
-  const { code, startDate, dateSigned } = request.payload;
+  const { internalCallingUserModel: issuer } = request.defra;
+  const data = pick(request.payload, ['code', 'startDate', 'dateSigned']);
 
   try {
-    const model = await licenceAgreementsService.createLicenceAgreement(licence, code, startDate, dateSigned);
+    const model = await licenceAgreementsService.createLicenceAgreement(licence, data, issuer);
     return model;
   } catch (err) {
     return mapErrorResponse(err);
@@ -37,27 +39,10 @@ const postLicenceAgreement = async (request, h) => {
 
 const deleteAgreement = async (request, h) => {
   const { agreementId } = request.params;
-  const { email: issuer } = request.defra.internalCallingUser;
+  const { internalCallingUserModel: issuer } = request.defra;
   try {
-    // Get licence agreement to save in event metadata
-    const licenceAgreement = await licencesService.getLicenceAgreementById(agreementId);
-
-    if (!licenceAgreement) {
-      return Boom.notFound(`Agreement ${agreementId} not found`);
-    }
-
     // Delete the licence agreement
-    await licencesService.deleteLicenceAgreementById(agreementId);
-
-    // log deletion in event log
-    await eventHelper.saveEvent(
-      'licence-agreement:delete',
-      null,
-      [],
-      'delete',
-      issuer,
-      { licenceAgreement }
-    );
+    await licenceAgreementsService.deleteLicenceAgreementById(agreementId, issuer);
 
     return h.response().code(204);
   } catch (err) {

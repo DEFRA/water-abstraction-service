@@ -5,6 +5,7 @@ const { get, set } = require('lodash');
 
 const { logger } = require('../logger');
 const idmConnector = require('../lib/connectors/idm');
+const User = require('../lib/models/user');
 
 const validateUserIsInternal = user => {
   if (user.application !== 'water_admin') {
@@ -17,6 +18,7 @@ const setUserOnRequest = (request, user) => {
     id: user.user_id,
     email: user.user_name
   });
+  set(request, 'defra.internalCallingUserModel', new User(user.user_id, user.user_name));
 };
 
 const setUserScope = (request, user) => {

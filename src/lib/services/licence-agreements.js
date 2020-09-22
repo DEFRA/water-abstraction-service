@@ -13,51 +13,131 @@ const DateRange = require('../models/date-range');
 const Licence = require('../models/licence');
 const LicenceAgreement = require('../models/licence-agreement');
 const validators = require('../models/validators');
+const Event = require('../models/event');
+const User = require('../models/user');
 
 // Services
 const agreementsService = require('./agreements');
 const licencesService = require('./licences');
+const service = require('./service');
+const eventService = require('./events');
+
+const EVENT_TYPES = {
+  create: {
+    type: 'licence-agreement:create',
+    status: 'created'
+  },
+  delete: {
+    type: 'licence-agreement:delete',
+    status: 'deleted'
+  }
+};
+
+const getLicenceAgreementsByLicenceRef = async licenceRef =>
+  service.findMany(
+    licenceRef,
+    licenceAgreementRepo.findByLicenceRef,
+    licenceAgreementMapper
+  );
+
+const getLicenceAgreementById = async licenceAgreementId =>
+  service.findOne(
+    licenceAgreementId,
+    licenceAgreementRepo.findOne,
+    licenceAgreementMapper
+  );
+
+const createEvent = (eventType, licenceAgreement, issuer) => {
+  const event = new Event().fromHash({
+    issuer: issuer.email,
+    ...eventType,
+    licences: [licenceAgreement.licenceNumber],
+    metadata: licenceAgreement.toJSON()
+  });
+  return eventService.create(event);
+};
+
+const deleteLicenceAgreementById = async (licenceAgreementId, issuer) => {
+  // Get the licence agreement
+  const licenceAgreement = await getLicenceAgreementById(licenceAgreementId);
+  if (!licenceAgreement) {
+    throw new NotFoundError(`Licence agreement ${licenceAgreementId} not found`);
+  }
+
+  // Delete
+  await licenceAgreementRepo.deleteOne(licenceAgreementId);
+
+  // Get licence
+  const licence = await licencesService.getLicenceByLicenceRef(licenceAgreement.licenceNumber);
+
+  // Log event and flag licence for supplementary billing
+  return Promise.all([
+    createEvent(EVENT_TYPES.delete, licenceAgreement, issuer),
+    licencesService.flagForSupplementaryBilling(licence.id)
+  ]);
+};
 
 /**
- * Adds a new financial agreement to the specified licece
- * @param {Licence} licence
+ * Gets the Agreement model by code
+ * If not found, a NotFoundError is thrown
  * @param {String} code
- * @param {String} startDate
- * @param {String} signedDate
+ * @return {Promise<Agreement>}
  */
-const createLicenceAgreement = async (licence, code, startDate, dateSigned) => {
-  validators.assertIsInstanceOf(licence, Licence);
-
-  // Get financial agreement by code
+const fetchAgreement = async code => {
   const agreement = await agreementsService.getAgreementByCode(code);
   if (!agreement) {
     throw new NotFoundError(`Financial agreement ${code} not found`);
   }
+  return agreement;
+};
+
+/**
+ * Adds a new financial agreement to the specified licece
+ * @param {Licence} licence
+ * @param {Object} data - data for the licence agreement
+ * @param {String} data.code - the financial agreement code
+ * @param {String} data.startDate - effective start date of agreement
+ * @param {String} data.dateSigned - date signed by customer
+ * @param {User} issuer
+ */
+const createLicenceAgreement = async (licence, data, issuer) => {
+  validators.assertIsInstanceOf(licence, Licence);
+  const { code } = data;
+
+  // Get financial agreement by code
+  const agreement = await fetchAgreement(code);
 
   // Construct licence agreement model
-  const licenceAgreement = new LicenceAgreement();
-  licenceAgreement.fromHash({
-    dateRange: new DateRange(startDate),
-    dateSigned,
+  const licenceAgreement = new LicenceAgreement().fromHash({
+    licenceNumber: licence.licenceNumber,
+    dateRange: new DateRange(data.startDate),
+    dateSigned: data.dateSigned,
     agreement
   });
 
-  // Persist new row in water.licence_agreements
   try {
+  // Persist new row in water.licence_agreements
     const dbRow = await licenceAgreementRepo.create(
-      licenceAgreementMapper.modelToDb(licenceAgreement, licence.licenceNumber)
+      licenceAgreementMapper.modelToDb(licenceAgreement)
     );
 
-    await licencesService.flagForSupplementaryBilling(licence.id);
+    // Log event and flag licence for supplementary billing
+    await Promise.all([
+      createEvent(EVENT_TYPES.create, licenceAgreement, issuer),
+      licencesService.flagForSupplementaryBilling(licence.id)
+    ]);
 
     // Return the updated model
     return licenceAgreementMapper.dbToModel(dbRow);
   } catch (err) {
     if (err.code === '23505') {
-      throw new ConflictingDataError(`A ${code} agreement starting on ${startDate} already exists for licence ${licence.licenceNumber}`);
+      throw new ConflictingDataError(`A ${code} agreement starting on ${data.startDate} already exists for licence ${licence.licenceNumber}`);
     }
     throw err;
   }
 };
 
+exports.getLicenceAgreementById = getLicenceAgreementById;
+exports.getLicenceAgreementsByLicenceRef = getLicenceAgreementsByLicenceRef;
+exports.deleteLicenceAgreementById = deleteLicenceAgreementById;
 exports.createLicenceAgreement = createLicenceAgreement;

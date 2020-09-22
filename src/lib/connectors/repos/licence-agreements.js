@@ -35,7 +35,7 @@ const findByLicenceRef = async (licenceRef, agreementTypes = []) => {
  * @param {String} licenceAgreementId
  */
 const findOne = async licenceAgreementId =>
-  helpers.findOne(LicenceAgreement, 'licenceAgreementId', licenceAgreementId);
+  helpers.findOne(LicenceAgreement, 'licenceAgreementId', licenceAgreementId, ['financialAgreementType']);
 
 /**
  * Deletes a licence agreement by
