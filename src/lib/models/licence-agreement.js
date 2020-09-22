@@ -7,6 +7,8 @@ const validators = require('./validators');
 
 const Model = require('./model');
 
+const DATE_FORMAT = 'YYYY-MM-DD';
+
 class LicenceAgreement extends Model {
   /**
    * Valid date range
@@ -34,10 +36,12 @@ class LicenceAgreement extends Model {
     this._agreement = agreement;
   }
 
-  get dateSigned () { return this._dateSigned; }
+  get dateSigned () {
+    return this._dateSigned ? this._dateSigned.format(DATE_FORMAT) : this._dateSigned;
+  }
+
   set dateSigned (dateSigned) {
-    const date = this.getDateTimeFromValue(dateSigned);
-    this._dateSigned = date;
+    this._dateSigned = this.getDateTimeFromValue(dateSigned);
   }
 }
 

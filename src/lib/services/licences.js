@@ -131,6 +131,10 @@ const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
   return invoiceAccounts ? invoiceAccounts.map(invoiceAccount => invoiceAccountsMapper.crmToModel(invoiceAccount)) : [];
 };
 
+/**
+ * Ensures the specified licence is included in the next supplementary bill run
+ * @param {String} licenceId
+ */
 const flagForSupplementaryBilling = licenceId =>
   repos.licences.update(licenceId, { includeInSupplementaryBilling: INCLUDE_IN_SUPPLEMENTARY_BILLING.yes });
 

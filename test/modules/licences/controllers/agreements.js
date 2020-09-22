@@ -77,29 +77,6 @@ experiment('modules/licences/controllers/licences.js', () => {
     let request;
     let result;
 
-    experiment('when no licence exists for the id', () => {
-      beforeEach(async () => {
-        request = {
-          params: {
-            licenceId: uuid()
-          }
-        };
-
-        licencesService.getLicenceById.resolves(null);
-
-        result = await controller.getLicenceAgreements(request);
-      });
-
-      test('no call is made to get the agreements', async () => {
-        expect(licencesService.getLicenceAgreementsByLicenceRef.called).to.equal(false);
-      });
-
-      test('resolves with a Boom 404', async () => {
-        expect(result.isBoom).to.be.true();
-        expect(result.output.statusCode).to.equal(404);
-      });
-    });
-
     experiment('when there is a licence for the id', () => {
       let licenceAgreementId;
 
@@ -107,6 +84,11 @@ experiment('modules/licences/controllers/licences.js', () => {
         request = {
           params: {
             licenceId: uuid()
+          },
+          pre: {
+            licence: {
+              licenceNumber: '123/123'
+            }
           }
         };
 

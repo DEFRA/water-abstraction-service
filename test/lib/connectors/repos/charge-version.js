@@ -58,6 +58,7 @@ experiment('lib/connectors/repos/charge-versions', () => {
           'licence',
           'licence.region',
           'licence.licenceAgreements',
+          'licence.licenceAgreements.financialAgreementType',
           'changeReason'
         ]
       })).to.be.true();

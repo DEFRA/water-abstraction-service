@@ -5,14 +5,27 @@ const uuid = require('uuid/v4');
 
 const {
   beforeEach,
+  afterEach,
   experiment,
   test
 } = exports.lab = require('@hapi/lab').script();
 
+const sandbox = require('sinon').createSandbox();
+
 const testHelpers = require('../../../test-helpers');
 const routes = require('../../../../src/modules/licences/routes/agreements');
+const licencesService = require('../../../../src/lib/services/licences');
+const Licence = require('../../../../src/lib/models/licence');
 
 experiment('modules/licences/routes/agreements', () => {
+  beforeEach(async () => {
+    sandbox.stub(licencesService, 'getLicenceById');
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
   experiment('.getAgreement', () => {
     let server;
 
@@ -40,16 +53,34 @@ experiment('modules/licences/routes/agreements', () => {
       server = await testHelpers.createServerForRoute(routes.getAgreementsForLicence);
     });
 
-    test('validates the licence id must be a uuid', async () => {
-      const url = '/water/1.0/licences/not-a-valid-id/agreements';
-      const output = await server.inject(url);
-      expect(output.statusCode).to.equal(400);
+    experiment('when the licence is found', () => {
+      beforeEach(async () => {
+        licencesService.getLicenceById.resolves(new Licence(uuid()));
+      });
+
+      test('validates the licence id must be a uuid', async () => {
+        const url = '/water/1.0/licences/not-a-valid-id/agreements';
+        const output = await server.inject(url);
+        expect(output.statusCode).to.equal(400);
+      });
+
+      test('allows a valid uuid for the licence id', async () => {
+        const url = `/water/1.0/licences/${uuid()}/agreements`;
+        const output = await server.inject(url);
+        expect(output.statusCode).to.equal(200);
+      });
     });
 
-    test('allows a valid uuid for the licence id', async () => {
-      const url = `/water/1.0/licences/${uuid()}/agreements`;
-      const output = await server.inject(url);
-      expect(output.statusCode).to.equal(200);
+    experiment('when the licence is not found', () => {
+      beforeEach(async () => {
+        licencesService.getLicenceById.resolves(null);
+      });
+
+      test('resolves with a 404 status', async () => {
+        const url = `/water/1.0/licences/${uuid()}/agreements`;
+        const output = await server.inject(url);
+        expect(output.statusCode).to.equal(404);
+      });
     });
   });
 

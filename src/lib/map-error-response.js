@@ -1,5 +1,5 @@
 const Boom = require('@hapi/boom');
-const { NotFoundError, InvalidEntityError } = require('./errors');
+const { NotFoundError, InvalidEntityError, ConflictingDataError } = require('./errors');
 const { BatchStatusError, TransactionStatusError } = require('../modules/billing/lib/errors');
 
 // caters for error triggered in this service and 404s returned from the CRM
@@ -17,6 +17,9 @@ module.exports = error => {
   }
   if (error instanceof InvalidEntityError) {
     return Boom.badData(error.message);
+  }
+  if (error instanceof ConflictingDataError) {
+    return Boom.conflict(error.message);
   }
   // Unexpected error
   throw error;

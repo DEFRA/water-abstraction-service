@@ -5,20 +5,34 @@ const mapErrorResponse = require('../../../lib/map-error-response');
 const Boom = require('@hapi/boom');
 
 const licencesService = require('../../../lib/services/licences');
+const licenceAgreementsService = require('../../../lib/services/licence-agreements');
 const controller = require('../../../lib/controller');
 
 const getAgreement = async request =>
   controller.getEntity(request.params.agreementId, licencesService.getLicenceAgreementById);
 
+/**
+ * Get all licence agreements for the specified licence
+ * @param {Licence} request.pre.licence
+ */
 const getLicenceAgreements = async request => {
-  const { licenceId } = request.params;
-  const licence = await licencesService.getLicenceById(licenceId);
-
-  if (!licence) {
-    return Boom.notFound(`Licence ${licenceId} not found`, { licenceId });
-  }
-
+  const { licence } = request.pre;
   return licencesService.getLicenceAgreementsByLicenceRef(licence.licenceNumber);
+};
+
+/**
+ * Adds a new licence agreement to an existing licence
+ */
+const postLicenceAgreement = async (request, h) => {
+  const { licence } = request.pre;
+  const { code, startDate, dateSigned } = request.payload;
+
+  try {
+    const model = await licenceAgreementsService.createLicenceAgreement(licence, code, startDate, dateSigned);
+    return model;
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
 };
 
 const deleteAgreement = async (request, h) => {
@@ -54,3 +68,4 @@ const deleteAgreement = async (request, h) => {
 exports.getAgreement = getAgreement;
 exports.getLicenceAgreements = getLicenceAgreements;
 exports.deleteAgreement = deleteAgreement;
+exports.postLicenceAgreement = postLicenceAgreement;

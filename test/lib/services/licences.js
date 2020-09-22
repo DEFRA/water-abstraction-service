@@ -328,7 +328,9 @@ experiment('src/lib/services/licences', () => {
           {
             licenceAgreementId: '00000000-0000-0000-0000-000000000001',
             licenceRef: licenceNumber,
-            financialAgreementTypeId: 'S127',
+            financialAgreementType: {
+              financialAgreementCode: 'S127'
+            },
             startDate: '2000-01-01',
             endDate: null,
             dateSigned: null
@@ -336,7 +338,9 @@ experiment('src/lib/services/licences', () => {
           {
             licenceAgreementId: '00000000-0000-0000-0000-000000000002',
             licenceRef: licenceNumber,
-            financialAgreementTypeId: 'S130U',
+            financialAgreementType: {
+              financialAgreementCode: 'S130U'
+            },
             startDate: '2001-01-01',
             endDate: '2002-01-01',
             dateSigned: null

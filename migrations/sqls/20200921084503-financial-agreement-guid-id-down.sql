@@ -32,3 +32,7 @@ alter table water.licence_agreements
   add constraint licence_agreements_financial_agreement_type_id_fkey 
     foreign key (financial_agreement_type_id) 
     references water.financial_agreement_types(id);
+
+/* restore signed date timestamp */
+alter table water.licence_agreements
+  alter column date_signed type timestamp without time zone;

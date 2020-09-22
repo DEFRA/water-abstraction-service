@@ -3,6 +3,7 @@
 const Joi = require('@hapi/joi');
 
 const controller = require('../controllers/agreements');
+const preHandlers = require('../lib/pre-handlers');
 
 module.exports = {
   getAgreement: {
@@ -23,6 +24,9 @@ module.exports = {
     path: '/water/1.0/licences/{licenceId}/agreements',
     handler: controller.getLicenceAgreements,
     config: {
+      pre: [
+        { method: preHandlers.getLicence, assign: 'licence' }
+      ],
       validate: {
         params: {
           licenceId: Joi.string().uuid().required()
@@ -43,6 +47,27 @@ module.exports = {
         },
         headers: async values => {
           Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+        }
+      }
+    }
+  },
+
+  createAgreement: {
+    method: 'POST',
+    path: '/water/1.0/licences/{licenceId}/agreements',
+    handler: controller.postLicenceAgreement,
+    config: {
+      pre: [
+        { method: preHandlers.getLicence, assign: 'licence' }
+      ],
+      validate: {
+        params: {
+          licenceId: Joi.string().uuid().required()
+        },
+        payload: {
+          code: Joi.string().required(),
+          startDate: Joi.string().isoDate().required(),
+          dateSigned: Joi.string().isoDate().allow(null).default(null)
         }
       }
     }

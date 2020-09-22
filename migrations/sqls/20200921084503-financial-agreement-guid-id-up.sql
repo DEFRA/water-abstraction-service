@@ -38,3 +38,8 @@ alter table water.licence_agreements
 
 alter table water.licence_agreements
   add constraint uniq_licence_ref_start_date_financial_agreement_type_id unique("licence_ref", "start_date", "financial_agreement_type_id");
+
+
+/* signed date is a date field and does not need to be a timestamp */
+alter table water.licence_agreements
+  alter column date_signed type date;
