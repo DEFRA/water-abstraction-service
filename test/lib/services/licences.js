@@ -58,6 +58,7 @@ experiment('src/lib/services/licences', () => {
     sandbox.stub(repos.licenceVersions, 'findOne');
     sandbox.stub(repos.licenceAgreements, 'findOne');
     sandbox.stub(repos.licenceAgreements, 'findByLicenceRef');
+    sandbox.stub(repos.licenceAgreements, 'deleteOne');
   });
 
   afterEach(async () => {
@@ -404,6 +405,19 @@ experiment('src/lib/services/licences', () => {
         expect(licenceAgreement).to.be.an.instanceOf(LicenceAgreement);
         expect(licenceAgreement.id).to.equal(licenceAgreementId);
       });
+    });
+  });
+
+  experiment('.deleteLicenceAgreementById', () => {
+    let licenceAgreementId;
+    beforeEach(async () => {
+      licenceAgreementId = uuid();
+      await licencesService.deleteLicenceAgreementById(licenceAgreementId);
+    });
+
+    test('the expected call to the repository layer is made', async () => {
+      const [id] = repos.licenceAgreements.deleteOne.lastCall.args;
+      expect(id).to.equal(licenceAgreementId);
     });
   });
 

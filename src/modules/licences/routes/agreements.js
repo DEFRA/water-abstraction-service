@@ -29,5 +29,22 @@ module.exports = {
         }
       }
     }
+  },
+
+  deleteAgreement: {
+    method: 'DELETE',
+    path: '/water/1.0/agreements/{agreementId}',
+    handler: controller.deleteAgreement,
+    config: {
+      description: 'Deletes the agreement with the specified id',
+      validate: {
+        params: {
+          agreementId: Joi.string().uuid().required()
+        },
+        headers: async values => {
+          Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
+        }
+      }
+    }
   }
 };
