@@ -42,6 +42,12 @@ const uiToModel = companyData => {
  */
 const modelToCrm = company => omit(company.toJSON(), 'companyAddresses', 'companyContacts');
 
+const pojoToModel = object => {
+  const company = new Company();
+  return company.pickFrom(object, ['id', 'type', 'organisationType', 'name', 'companyNumber']);
+};
+
 exports.crmToModel = crmToModel;
 exports.uiToModel = uiToModel;
 exports.modelToCrm = modelToCrm;
+exports.pojoToModel = pojoToModel;

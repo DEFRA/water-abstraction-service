@@ -116,8 +116,9 @@ const updateIncludeInSupplementaryBillingStatusForSentBatch = async batchId => {
 
 /**
  * Fetches the invoice accounts associated with a licence using the licence ref and date as input.
- *  @param {String} documentRef
- *  @param {String} date
+ * @todo move to invoice accounts service
+ * @param {String} documentRef
+ * @param {String} date
  */
 const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
   //  First, fetch the company ID from the CRM
@@ -130,6 +131,9 @@ const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
   return invoiceAccounts ? invoiceAccounts.map(invoiceAccount => invoiceAccountsMapper.crmToModel(invoiceAccount)) : [];
 };
 
+const flagForSupplementaryBilling = licenceId =>
+  repos.licences.update(licenceId, { includeInSupplementaryBilling: INCLUDE_IN_SUPPLEMENTARY_BILLING.yes });
+
 exports.getLicenceAgreementById = getLicenceAgreementById;
 exports.getLicenceAgreementsByLicenceRef = getLicenceAgreementsByLicenceRef;
 exports.deleteLicenceAgreementById = deleteLicenceAgreementById;
@@ -141,3 +145,4 @@ exports.getLicenceAccountsByRefAndDate = getLicenceAccountsByRefAndDate;
 exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementaryBillingStatus;
 exports.updateIncludeInSupplementaryBillingStatusForUnsentBatch = updateIncludeInSupplementaryBillingStatusForUnsentBatch;
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch;
+exports.flagForSupplementaryBilling = flagForSupplementaryBilling;

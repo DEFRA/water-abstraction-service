@@ -13,6 +13,8 @@ const findOne = async licenceVersionId => {
     .forge({ licenceVersionId })
     .fetch({
       withRelated: [
+        'licenceVersionPurposes.purposePrimary',
+        'licenceVersionPurposes.purposeSecondary',
         'licenceVersionPurposes.purposeUse'
       ],
       require: false

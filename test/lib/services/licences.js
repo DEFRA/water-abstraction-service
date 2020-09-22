@@ -53,6 +53,7 @@ experiment('src/lib/services/licences', () => {
     sandbox.stub(repos.licences, 'findByLicenceRef');
     sandbox.stub(repos.licences, 'updateIncludeLicenceInSupplementaryBilling');
     sandbox.stub(repos.licences, 'updateIncludeInSupplementaryBillingStatusForBatch');
+    sandbox.stub(repos.licences, 'update');
     sandbox.stub(repos.licenceVersions, 'findByLicenceId');
     sandbox.stub(repos.licenceVersions, 'findOne');
     sandbox.stub(repos.licenceAgreements, 'findOne');
@@ -417,6 +418,21 @@ experiment('src/lib/services/licences', () => {
     test('the expected call to the repository layer is made', async () => {
       const [id] = repos.licenceAgreements.deleteOne.lastCall.args;
       expect(id).to.equal(licenceAgreementId);
+    });
+  });
+
+  experiment('.flagForSupplementaryBilling', () => {
+    const licenceId = 'test-id';
+
+    beforeEach(async () => {
+      await licencesService.flagForSupplementaryBilling(licenceId);
+    });
+
+    test('calls the .update method on the repo', async () => {
+      expect(repos.licences.update.calledWith(
+        licenceId,
+        { includeInSupplementaryBilling: 'yes' }
+      )).to.be.true();
     });
   });
 });

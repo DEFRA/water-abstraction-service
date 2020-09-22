@@ -27,7 +27,6 @@ experiment('lib/mappers/charge-version-workflow', () => {
           email: 'creator@example.com',
           id: 123
         },
-        approvedBy: null,
         approverComments: 'Nice job!',
         status: 'draft',
         dateCreated: '2020-08-24T08:47:16.913Z',
@@ -74,7 +73,13 @@ experiment('lib/mappers/charge-version-workflow', () => {
           expiredDate: null,
           lapsedDate: null,
           revokedDate: null,
-          endDate: null
+          endDate: null,
+          region: {
+            regionId: uuid(),
+            chargeRegionId: 'A',
+            name: 'Test region',
+            displayName: 'Test region'
+          }
         }
       };
 
@@ -93,10 +98,6 @@ experiment('lib/mappers/charge-version-workflow', () => {
       expect(model.createdBy).to.be.an.instanceof(User);
       expect(model.createdBy.id).to.equal(123);
       expect(model.createdBy.email).to.equal('creator@example.com');
-    });
-
-    test('maps the approved by user', async () => {
-      expect(model.approvedBy).to.be.null();
     });
 
     test('maps the approver comments', async () => {
@@ -172,16 +173,6 @@ experiment('lib/mappers/charge-version-workflow', () => {
     test('the .chargeVersion property is mapped to the data jsonb column', async () => {
       expect(row.data.chargeVersion).to.be.an.object();
       expect(row.data.chargeVersion.id).to.equal(model.chargeVersion.id);
-    });
-
-    test('when the approvedBy property is set it is mapped to a plain object', async () => {
-      model.approvedBy = new User(456, 'approver@example.com');
-      row = mapper.modelToDb(model);
-      expect(row.approvedBy).to.be.an.object();
-      expect(row.approvedBy).to.equal({
-        id: 456,
-        email: 'approver@example.com'
-      });
     });
   });
 });
