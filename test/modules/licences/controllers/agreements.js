@@ -3,7 +3,6 @@
 const { expect } = require('@hapi/code');
 const { afterEach, beforeEach, experiment, test } = exports.lab = require('@hapi/lab').script();
 const uuid = require('uuid/v4');
-const Boom = require('@hapi/boom');
 
 const controller = require('../../../../src/modules/licences/controllers/agreements');
 const eventsService = require('../../../../src/lib/services/events');
