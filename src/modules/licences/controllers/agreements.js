@@ -1,11 +1,8 @@
 'use strict';
 
-const eventHelper = require('../lib/event-helper');
 const mapErrorResponse = require('../../../lib/map-error-response');
-const Boom = require('@hapi/boom');
 const { pick } = require('lodash');
 
-// const licencesService = require('../../../lib/services/licences');
 const licenceAgreementsService = require('../../../lib/services/licence-agreements');
 const controller = require('../../../lib/controller');
 
@@ -21,6 +18,19 @@ const getLicenceAgreements = async request => {
   return licenceAgreementsService.getLicenceAgreementsByLicenceRef(licence.licenceNumber);
 };
 
+const deleteAgreement = async (request, h) => {
+  const { agreementId } = request.params;
+  const { internalCallingUserModel: issuer } = request.defra;
+  try {
+    // Delete the licence agreement
+    await licenceAgreementsService.deleteLicenceAgreementById(agreementId, issuer);
+
+    return h.response().code(204);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
 /**
  * Adds a new licence agreement to an existing licence
  */
@@ -32,19 +42,6 @@ const postLicenceAgreement = async (request, h) => {
   try {
     const model = await licenceAgreementsService.createLicenceAgreement(licence, data, issuer);
     return model;
-  } catch (err) {
-    return mapErrorResponse(err);
-  }
-};
-
-const deleteAgreement = async (request, h) => {
-  const { agreementId } = request.params;
-  const { internalCallingUserModel: issuer } = request.defra;
-  try {
-    // Delete the licence agreement
-    await licenceAgreementsService.deleteLicenceAgreementById(agreementId, issuer);
-
-    return h.response().code(204);
   } catch (err) {
     return mapErrorResponse(err);
   }

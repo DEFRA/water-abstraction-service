@@ -14,7 +14,6 @@ const Licence = require('../models/licence');
 const LicenceAgreement = require('../models/licence-agreement');
 const validators = require('../models/validators');
 const Event = require('../models/event');
-const User = require('../models/user');
 
 // Services
 const agreementsService = require('./agreements');

@@ -18,7 +18,6 @@ const repos = require('../../../src/lib/connectors/repos');
 const Licence = require('../../../src/lib/models/licence');
 const LicenceVersion = require('../../../src/lib/models/licence-version');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../src/lib/models/constants');
-const LicenceAgreement = require('../../../src/lib/models/licence-agreement');
 
 const data = {
   dbRow: {
@@ -56,9 +55,6 @@ experiment('src/lib/services/licences', () => {
     sandbox.stub(repos.licences, 'update');
     sandbox.stub(repos.licenceVersions, 'findByLicenceId');
     sandbox.stub(repos.licenceVersions, 'findOne');
-    sandbox.stub(repos.licenceAgreements, 'findOne');
-    sandbox.stub(repos.licenceAgreements, 'findByLicenceRef');
-    sandbox.stub(repos.licenceAgreements, 'deleteOne');
   });
 
   afterEach(async () => {
@@ -307,121 +303,6 @@ experiment('src/lib/services/licences', () => {
       expect(batchId).to.equal('test-batch-id');
       expect(from).to.equal(INCLUDE_IN_SUPPLEMENTARY_BILLING.reprocess);
       expect(to).to.equal(INCLUDE_IN_SUPPLEMENTARY_BILLING.yes);
-    });
-  });
-
-  experiment('.getLicenceAgreementsByLicenceRef', () => {
-    experiment('when there are no agreements returned from the repository', () => {
-      test('an empty array is returned by the service', async () => {
-        repos.licenceAgreements.findByLicenceRef.resolves([]);
-        const result = await licencesService.getLicenceAgreementsByLicenceRef('123/123');
-
-        expect(result).to.equal([]);
-      });
-    });
-
-    experiment('when agreements are returned from the repository', () => {
-      test('the results are mapped to LicenceAgreement models', async () => {
-        const licenceNumber = '123/123';
-
-        repos.licenceAgreements.findByLicenceRef.resolves([
-          {
-            licenceAgreementId: '00000000-0000-0000-0000-000000000001',
-            licenceRef: licenceNumber,
-            financialAgreementType: {
-              financialAgreementCode: 'S127'
-            },
-            startDate: '2000-01-01',
-            endDate: null,
-            dateSigned: null
-          },
-          {
-            licenceAgreementId: '00000000-0000-0000-0000-000000000002',
-            licenceRef: licenceNumber,
-            financialAgreementType: {
-              financialAgreementCode: 'S130U'
-            },
-            startDate: '2001-01-01',
-            endDate: '2002-01-01',
-            dateSigned: null
-          }
-        ]);
-        const result = await licencesService.getLicenceAgreementsByLicenceRef(licenceNumber);
-
-        expect(result.length).to.equal(2);
-
-        expect(result[0]).to.be.an.instanceOf(LicenceAgreement);
-        expect(result[0].id).to.equal('00000000-0000-0000-0000-000000000001');
-        expect(result[0].dateRange.startDate).to.equal('2000-01-01');
-        expect(result[0].dateRange.endDate).to.equal(null);
-        expect(result[0].agreement.code).to.equal('S127');
-
-        expect(result[1]).to.be.an.instanceOf(LicenceAgreement);
-        expect(result[1].id).to.equal('00000000-0000-0000-0000-000000000002');
-        expect(result[1].dateRange.startDate).to.equal('2001-01-01');
-        expect(result[1].dateRange.endDate).to.equal('2002-01-01');
-        expect(result[1].agreement.code).to.equal('S130U');
-      });
-    });
-  });
-
-  experiment('.getLicenceAgreementById', () => {
-    let licenceAgreement;
-    let licenceAgreementId;
-
-    experiment('when no licence agreement is found for the id', () => {
-      beforeEach(async () => {
-        licenceAgreementId = uuid();
-        repos.licenceAgreements.findOne.resolves(null);
-        licenceAgreement = await licencesService.getLicenceAgreementById(licenceAgreementId);
-      });
-
-      test('null is returned', async () => {
-        expect(licenceAgreement).to.equal(null);
-      });
-
-      test('the expected call to the repository layer is made', async () => {
-        const [id] = repos.licenceAgreements.findOne.lastCall.args;
-        expect(id).to.equal(licenceAgreementId);
-      });
-    });
-
-    experiment('when a licence agreement is found for the id', () => {
-      beforeEach(async () => {
-        licenceAgreementId = uuid();
-        repos.licenceAgreements.findOne.resolves({
-          licenceAgreementId,
-          licenceRef: '123/123',
-          financialAgreementTypeId: 'S127',
-          startDate: '2000-01-01',
-          endDate: null,
-          dateSigned: null
-        });
-        licenceAgreement = await licencesService.getLicenceAgreementById(licenceAgreementId);
-      });
-
-      test('the expected call to the repository layer is made', async () => {
-        const [id] = repos.licenceAgreements.findOne.lastCall.args;
-        expect(id).to.equal(licenceAgreementId);
-      });
-
-      test('the licence version is returned in a model instance', async () => {
-        expect(licenceAgreement).to.be.an.instanceOf(LicenceAgreement);
-        expect(licenceAgreement.id).to.equal(licenceAgreementId);
-      });
-    });
-  });
-
-  experiment('.deleteLicenceAgreementById', () => {
-    let licenceAgreementId;
-    beforeEach(async () => {
-      licenceAgreementId = uuid();
-      await licencesService.deleteLicenceAgreementById(licenceAgreementId);
-    });
-
-    test('the expected call to the repository layer is made', async () => {
-      const [id] = repos.licenceAgreements.deleteOne.lastCall.args;
-      expect(id).to.equal(licenceAgreementId);
     });
   });
 

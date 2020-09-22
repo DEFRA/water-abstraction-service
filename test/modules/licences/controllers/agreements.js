@@ -6,7 +6,10 @@ const uuid = require('uuid/v4');
 
 const controller = require('../../../../src/modules/licences/controllers/agreements');
 const eventsService = require('../../../../src/lib/services/events');
-const licencesService = require('../../../../src/lib/services/licences');
+const licenceAgreementsService = require('../../../../src/lib/services/licence-agreements');
+
+const User = require('../../../../src/lib/models/user');
+const { NotFoundError } = require('../../../../src/lib/errors');
 
 const sandbox = require('sinon').createSandbox();
 
@@ -20,10 +23,9 @@ const h = {
 
 experiment('modules/licences/controllers/licences.js', () => {
   beforeEach(async () => {
-    sandbox.stub(licencesService, 'getLicenceAgreementById');
-    sandbox.stub(licencesService, 'getLicenceById');
-    sandbox.stub(licencesService, 'getLicenceAgreementsByLicenceRef');
-    sandbox.stub(licencesService, 'deleteLicenceAgreementById');
+    sandbox.stub(licenceAgreementsService, 'getLicenceAgreementById');
+    sandbox.stub(licenceAgreementsService, 'getLicenceAgreementsByLicenceRef');
+    sandbox.stub(licenceAgreementsService, 'deleteLicenceAgreementById');
     sandbox.stub(eventsService, 'create');
   });
 
@@ -47,12 +49,12 @@ experiment('modules/licences/controllers/licences.js', () => {
 
     experiment('when the agreement exists', () => {
       beforeEach(async () => {
-        licencesService.getLicenceAgreementById.resolves({ agreementId });
+        licenceAgreementsService.getLicenceAgreementById.resolves({ agreementId });
         result = await controller.getAgreement(request);
       });
 
       test('the agreement ID is passed to the service', async () => {
-        expect(licencesService.getLicenceAgreementById.calledWith(agreementId)).to.be.true();
+        expect(licenceAgreementsService.getLicenceAgreementById.calledWith(agreementId)).to.be.true();
       });
 
       test('resolves with the expected data', async () => {
@@ -62,7 +64,7 @@ experiment('modules/licences/controllers/licences.js', () => {
 
     experiment('when the licence does not exist', () => {
       beforeEach(async () => {
-        licencesService.getLicenceAgreementById.resolves(null);
+        licenceAgreementsService.getLicenceAgreementById.resolves(null);
         result = await controller.getAgreement(request);
       });
 
@@ -92,11 +94,7 @@ experiment('modules/licences/controllers/licences.js', () => {
           }
         };
 
-        licencesService.getLicenceById.resolves({
-          licenceNumber: '123/123'
-        });
-
-        licencesService.getLicenceAgreementsByLicenceRef.resolves([
+        licenceAgreementsService.getLicenceAgreementsByLicenceRef.resolves([
           { licenceAgreementId: licenceAgreementId = uuid() }
         ]);
 
@@ -122,7 +120,8 @@ experiment('modules/licences/controllers/licences.js', () => {
         defra: {
           internalCallingUser: {
             email: 'test@example.com'
-          }
+          },
+          internalCallingUserModel: new User(123, 'mail@example.com')
         }
       };
     });
@@ -130,72 +129,33 @@ experiment('modules/licences/controllers/licences.js', () => {
     experiment('when the agreement is not found', () => {
       let result;
       beforeEach(async () => {
-        licencesService.getLicenceAgreementById.resolves(null);
+        licenceAgreementsService.deleteLicenceAgreementById.rejects(new NotFoundError('Not found'));
         result = await controller.deleteAgreement(request, h);
       });
 
-      test('the service is not called to delete the agreement', () => {
-        expect(licencesService.deleteLicenceAgreementById.called).to.be.false();
+      test('calls the service method with the correct id and issuer', async () => {
+        expect(licenceAgreementsService.deleteLicenceAgreementById.calledWith(
+          request.params.agreementId,
+          request.defra.internalCallingUserModel
+        ));
       });
 
-      test('no event is logged', () => {
-        expect(eventsService.create.called).to.be.false();
-      });
-
-      test('no event is logged', () => {
-        expect(eventsService.create.called).to.be.false();
-      });
-
-      test('the error is returned', () => {
+      test('returns a Boom 404 error', async () => {
         expect(result.isBoom).to.be.true();
-        expect(result.message).to.equal(`Agreement ${agreementId} not found`);
-        expect(result.output.payload.error).to.equal('Not Found');
+        expect(result.output.statusCode).to.equal(404);
       });
     });
 
-    experiment('when the agreement exists', () => {
+    experiment('when the agreement is deleted successfully', () => {
       beforeEach(async () => {
-        licencesService.getLicenceAgreementById.resolves({ agreementId });
         await controller.deleteAgreement(request, h);
       });
 
-      test('gets the agreement', async () => {
-        expect(licencesService.getLicenceAgreementById.calledWith(agreementId)).to.be.true();
-      });
-
-      test('deletes the agreement', async () => {
-        expect(licencesService.deleteLicenceAgreementById.calledWith(agreementId)).to.be.true();
-      });
-
-      experiment('the logged event contains', () => {
-        let event;
-        beforeEach(() => {
-          event = eventsService.create.lastCall.args[0];
-        });
-
-        test('the correct type', async () => {
-          expect(event.type).to.equal('licence-agreement:delete');
-        });
-
-        test('null subtype', async () => {
-          expect(event.subtype).to.be.null();
-        });
-
-        test('no licences', async () => {
-          expect(event.licences).to.equal([]);
-        });
-
-        test('the correct status', async () => {
-          expect(event.status).to.equal('delete');
-        });
-
-        test('the correct issuer', async () => {
-          expect(event.issuer).to.equal('test@example.com');
-        });
-
-        test('the correct metadata', async () => {
-          expect(event.metadata).to.equal({ licenceAgreement: { agreementId } });
-        });
+      test('calls the service method with the correct id', async () => {
+        expect(licenceAgreementsService.deleteLicenceAgreementById.calledWith(
+          request.params.agreementId,
+          request.defra.internalCallingUserModel
+        ));
       });
 
       test('responds with a 204', async () => {

@@ -63,14 +63,15 @@ experiment('modules/billing/mappers/licence-agreement', () => {
     beforeEach(async () => {
       model = new LicenceAgreement();
       model.fromHash({
+        licenceNumber: '01/123/ABC',
         dateRange: new DateRange('2020-01-01', '2020-06-01'),
         dateSigned: '2019-12-28',
         agreement: new Agreement(uuid())
       });
-      result = licenceAgreementMapper.modelToDb(model, '01/123/ABC');
+      result = licenceAgreementMapper.modelToDb(model);
     });
 
-    test('includes the licence number passed in', async () => {
+    test('maps the .licenceNumber property', async () => {
       expect(result.licenceRef).to.equal('01/123/ABC');
     });
 
