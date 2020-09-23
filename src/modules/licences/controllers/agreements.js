@@ -41,7 +41,8 @@ const postLicenceAgreement = async (request, h) => {
 
   try {
     const model = await licenceAgreementsService.createLicenceAgreement(licence, data, issuer);
-    return model;
+
+    return h.response(model).code(201);
   } catch (err) {
     return mapErrorResponse(err);
   }

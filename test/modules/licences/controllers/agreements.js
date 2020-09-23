@@ -9,6 +9,9 @@ const eventsService = require('../../../../src/lib/services/events');
 const licenceAgreementsService = require('../../../../src/lib/services/licence-agreements');
 
 const User = require('../../../../src/lib/models/user');
+const Licence = require('../../../../src/lib/models/licence');
+const LicenceAgreement = require('../../../../src/lib/models/licence-agreement');
+
 const { NotFoundError } = require('../../../../src/lib/errors');
 
 const sandbox = require('sinon').createSandbox();
@@ -26,6 +29,8 @@ experiment('modules/licences/controllers/licences.js', () => {
     sandbox.stub(licenceAgreementsService, 'getLicenceAgreementById');
     sandbox.stub(licenceAgreementsService, 'getLicenceAgreementsByLicenceRef');
     sandbox.stub(licenceAgreementsService, 'deleteLicenceAgreementById');
+    sandbox.stub(licenceAgreementsService, 'createLicenceAgreement');
+
     sandbox.stub(eventsService, 'create');
   });
 
@@ -160,6 +165,71 @@ experiment('modules/licences/controllers/licences.js', () => {
 
       test('responds with a 204', async () => {
         expect(responseStub.code.calledWith(204)).to.be.true();
+      });
+    });
+  });
+
+  experiment('.postLicenceAgreement', () => {
+    let request, agreementId, result;
+
+    beforeEach(() => {
+      agreementId = uuid();
+      request = {
+        params: {
+          agreementId
+        },
+        payload: {
+          code: 'S127',
+          startDate: '2019-04-01',
+          dateSigned: '2019-05-04'
+        },
+        defra: {
+          internalCallingUser: {
+            email: 'test@example.com'
+          },
+          internalCallingUserModel: new User(123, 'mail@example.com')
+        },
+        pre: {
+          licence: new Licence(uuid())
+        }
+      };
+    });
+
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        licenceAgreementsService.createLicenceAgreement.resolves(
+          new LicenceAgreement(uuid())
+        );
+        result = await controller.postLicenceAgreement(request, h);
+      });
+
+      test('calls the service method with the correct parameters', async () => {
+        const [licence, data, issuer] = licenceAgreementsService.createLicenceAgreement.lastCall.args;
+        expect(licence).to.equal(request.pre.licence);
+        expect(data.code).to.equal(request.payload.code);
+        expect(data.startDate).to.equal(request.payload.startDate);
+        expect(data.dateSigned).to.equal(request.payload.dateSigned);
+        expect(issuer).to.equal(request.defra.internalCallingUserModel);
+      });
+
+      test('responds with the new licence agreement model', async () => {
+        expect(h.response.lastCall.args[0]).to.be.an.instanceof(LicenceAgreement);
+      });
+
+      test('uses a 201 http code', async () => {
+        expect(responseStub.code.calledWith(201)).to.be.true();
+      });
+    });
+
+    experiment('when there is an error', async () => {
+      beforeEach(async () => {
+        licenceAgreementsService.createLicenceAgreement.rejects(new NotFoundError());
+        result = await controller.postLicenceAgreement(request, h);
+      });
+
+      test('the error is mapped to a suitable Boom error', async () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(404);
       });
     });
   });
