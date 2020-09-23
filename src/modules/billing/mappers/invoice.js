@@ -1,6 +1,6 @@
 'use strict';
 
-const { omit, pick } = require('lodash');
+const { omit } = require('lodash');
 
 const Invoice = require('../../../lib/models/invoice');
 const InvoiceAccount = require('../../../lib/models/invoice-account');
@@ -43,7 +43,7 @@ const modelToDb = (batch, invoice) => ({
   financialYearEnding: invoice.financialYear.endYear
 });
 
-const crmToModel = (row, financialYearEnding) => {
+const crmToModel = row => {
   const invoice = new Invoice();
 
   // Create invoice account model
@@ -52,7 +52,12 @@ const crmToModel = (row, financialYearEnding) => {
   // Get last address from invoice account
   const { lastInvoiceAccountAddress } = invoice.invoiceAccount;
   if (lastInvoiceAccountAddress) {
-    invoice.fromHash(pick(lastInvoiceAccountAddress, ['address', 'agentCompany', 'contact']));
+    const { address, agentCompany, contact } = lastInvoiceAccountAddress;
+    invoice.fromHash({
+      address,
+      agentCompany: agentCompany || null,
+      contact: contact || null
+    });
   }
 
   return invoice;

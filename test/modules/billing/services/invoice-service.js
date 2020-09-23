@@ -419,8 +419,8 @@ experiment('modules/billing/services/invoiceService', () => {
 
       test('has the correct CRM company, agent and contact', async () => {
         expect(invoice.invoiceAccount.company.id).to.equal(IDS.companies[2]);
-        expect(invoice.agentCompany).to.equal({ _companyAddresses: [], _companyContacts: [] });
-        expect(invoice.contact).to.equal({});
+        expect(invoice.agentCompany).to.equal(null);
+        expect(invoice.contact).to.equal(null);
       });
 
       test('has a correct financial summary', async () => {
@@ -554,8 +554,8 @@ experiment('modules/billing/services/invoiceService', () => {
 
       test('has the correct CRM company, agent and contact', async () => {
         expect(invoice.invoiceAccount.company.id).to.equal(IDS.companies[2]);
-        expect(invoice.agentCompany).to.equal({ _companyAddresses: [], _companyContacts: [] });
-        expect(invoice.contact).to.equal({});
+        expect(invoice.agentCompany).to.equal(null);
+        expect(invoice.contact).to.equal(null);
       });
 
       test('has 2 transactions', async () => {

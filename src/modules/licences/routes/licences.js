@@ -34,5 +34,20 @@ module.exports = {
         }
       }
     }
+  },
+
+  getLicenceAccountsByRefAndDate: {
+    method: 'GET',
+    path: `${pathPrefix}licence-accounts`,
+    handler: controller.getLicenceAccountsByRefAndDate,
+    config: {
+      description: 'Gets the licence accounts by licence ref and a date',
+      validate: {
+        query: {
+          documentRef: Joi.string().required(),
+          date: Joi.string().required()
+        }
+      }
+    }
   }
 };

@@ -10,6 +10,10 @@ const users = require('./lib/users');
 const documents = require('./lib/documents');
 const events = require('./lib/events');
 const sessions = require('./lib/sessions');
+const { scenarios } = require('./lib/scenarios');
+const chargeTestDataSetUp = require('../../../integration-tests/billing/services/scenarios');
+const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
+
 const {
   TEST_EXTERNAL_USER_EMAIL,
   TEST_EXTERNAL_AGENT_EMAIL,
@@ -142,6 +146,7 @@ const postSetup = async (request, h) => {
   await postTearDown();
   const includeAgents = get(request, 'payload.includeAgents', false);
   const includeInternalUsers = get(request, 'payload.includeInternalUsers', false);
+  const includeCharging = get(request, 'payload.includeCharging', false);
 
   try {
     const company = await entities.createCompany();
@@ -158,6 +163,11 @@ const postSetup = async (request, h) => {
       responseData.agents = await createAgents(company);
     }
 
+    if (includeCharging) {
+      const tasks = scenarios.map(scenario => chargeTestDataSetUp.createScenario(scenario));
+      responseData.charging = await Promise.all(tasks);
+    }
+
     return responseData;
   } catch (err) {
     return err;
@@ -165,7 +175,7 @@ const postSetup = async (request, h) => {
 };
 
 const postTearDown = async () => {
-  await batches.delete();
+  await batches.delete(); // deletes batches created by the acceptance test user
   await returns.delete();
   await events.delete();
   await permits.delete();
@@ -173,6 +183,10 @@ const postTearDown = async () => {
   await entities.delete();
   await users.delete();
   await sessions.delete();
+
+  // calling the integration tests tear down process
+  const chargeBatches = await batches.getTestRegionBatchIds();
+  await chargeTestDataTearDown.tearDown(...chargeBatches);
 
   return 'tear down complete';
 };

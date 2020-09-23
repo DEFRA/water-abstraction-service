@@ -5,6 +5,7 @@ const server = require('../../../index');
 
 const batches = require('./batches');
 const licences = require('./licences');
+const licenceAgreements = require('./licence-agreements');
 const regions = require('./regions');
 const chargeElements = require('./charge-elements');
 const chargeVersions = require('./charge-versions');
@@ -15,6 +16,7 @@ const crm = require('./crm');
 
 const schema = {
   licence: Joi.string().required(),
+  licenceAgreement: Joi.string().optional(),
   chargeVersions: Joi.array().items({
     company: Joi.string().required(),
     invoiceAccount: Joi.string().required(),
@@ -64,6 +66,9 @@ const createScenario = async scenario => {
 
   const region = await regions.createTestRegion();
   const licence = await licences.create(region, scenario.licence);
+  if (scenario.licenceAgreement) {
+    await licenceAgreements.create(licence, scenario.licenceAgreement);
+  }
   await crm.createDocuments(scenario.licence);
   for (const row of scenario.chargeVersions) {
     const crmData = await createCRMChargeVersionData(row);
@@ -137,3 +142,4 @@ const getBatchWhenProcessed = batchId => promisePoller({
 });
 
 exports.runScenario = runScenario;
+exports.createScenario = createScenario;

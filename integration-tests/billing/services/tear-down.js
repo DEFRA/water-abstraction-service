@@ -5,6 +5,7 @@ const chargeVersions = require('./charge-versions');
 const regions = require('./regions');
 const licences = require('./licences');
 const licenceAgreements = require('./licence-agreements');
+const agreements = require('./agreements');
 const crm = require('./crm');
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs');
 const server = require('../../../index');
@@ -28,6 +29,7 @@ const tearDown = async (...batchesToDelete) => {
   await batches.tearDown();
   await chargeVersions.tearDown();
   await licenceAgreements.tearDown();
+  await agreements.tearDown();
   await licences.tearDown();
   await regions.tearDown();
   await crm.tearDown();

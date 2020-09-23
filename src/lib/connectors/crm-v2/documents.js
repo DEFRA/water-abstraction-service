@@ -2,6 +2,7 @@
 
 const urlJoin = require('url-join');
 const Joi = require('joi');
+const moment = require('moment');
 
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
@@ -57,7 +58,22 @@ const getDocumentRole = documentRoleId => {
   return serviceRequest.get(getDocumentRolesUrl(documentRoleId));
 };
 
+/**
+ * Fetch a document by documentRef and date, to identify the responsible company
+ *  @param {String} documentRef
+ *  @param {String} date
+ */
+const getDocumentByRefAndDate = async (documentRef, date) => {
+  return serviceRequest.get(getDocumentsUrl('search'), {
+    qs: {
+      date: moment(date).format('YYYY-MM-DD'),
+      documentRef
+    }
+  });
+};
+
 exports.createDocumentRole = createDocumentRole;
 exports.getDocument = getDocument;
 exports.getDocumentRole = getDocumentRole;
 exports.getDocuments = getDocuments;
+exports.getDocumentByRefAndDate = getDocumentByRefAndDate;
