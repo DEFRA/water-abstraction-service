@@ -1,38 +1,10 @@
 'use strict';
 
-const moment = require('moment-range').extendMoment(require('moment'));
 const helpers = require('@envage/water-abstraction-helpers');
 
-const { CHARGE_SEASON } = require('./constants');
 const Model = require('./model');
 const DateRange = require('./date-range');
 const validators = require('./validators');
-
-/**
- * Creates a moment range from the supplied abs period in the specified year
- * @param {AbstractionPeriod} abstractionPeriod
- * @param {Number} startYear
- * @return {MomentRange}
- */
-const createRange = (abstractionPeriod, startYear) => {
-  const { startDay, endDay, startMonth, endMonth } = abstractionPeriod;
-  const isCrossYear = (startMonth > endMonth || (startMonth === endMonth && startDay > endDay));
-  const endYear = isCrossYear ? startYear + 1 : startYear;
-
-  const mStart = moment({
-    year: startYear,
-    month: startMonth - 1,
-    date: startDay
-  });
-
-  const mEnd = moment({
-    year: endYear,
-    month: endMonth - 1,
-    date: endDay
-  });
-
-  return moment.range(mStart, mEnd);
-};
 
 class AbstractionPeriod extends Model {
   static getSummer () {
@@ -106,6 +78,19 @@ class AbstractionPeriod extends Model {
   }
 
   /**
+   * returns the dates for the current instance
+   * @returns {Object} containing the dates for this instance
+   */
+  getDates () {
+    return {
+      startMonth: this._startMonth,
+      startDay: this._startDay,
+      endMonth: this._endMonth,
+      endDay: this._endDay
+    };
+  }
+
+  /**
    * Sets the abstraction period
    *
    * @param {Number} startDay
@@ -128,9 +113,14 @@ class AbstractionPeriod extends Model {
    * @param {AbstractionPeriod} period The abstraction period to check if this instance fits within
    */
   isWithinAbstractionPeriod (period) {
-    const thisRange = createRange(this, 2018);
-    const testRanges = [createRange(period, 2017), createRange(period, 2018)];
-    return testRanges.some(range => range.contains(thisRange));
+    const testPeriod = {
+      startMonth: period.startMonth,
+      startDay: period.startDay,
+      endMonth: period.endMonth,
+      endDay: period.endDay
+    };
+    const absPeriod = this.getDates();
+    return helpers.returns.date.isWithinAbstractionPeriod(absPeriod, testPeriod);
   }
 
   /**
@@ -140,19 +130,7 @@ class AbstractionPeriod extends Model {
    * will need to be overlayed.
    */
   getChargeSeason () {
-    // For the season to be summer, this abstraction period must
-    // sit within the summer period (01/04 - 31/10)
-    if (this.isWithinAbstractionPeriod(AbstractionPeriod.getSummer())) {
-      return CHARGE_SEASON.summer;
-    }
-
-    // For the season to be winter, this abstraction period must
-    // sit within the winter period (01/11 - 31/03)
-    if (this.isWithinAbstractionPeriod(AbstractionPeriod.getWinter())) {
-      return CHARGE_SEASON.winter;
-    }
-
-    return CHARGE_SEASON.allYear;
+    return helpers.returns.date.getAbstractionPeriodSeason(this.getDates());
   }
 
   /**
@@ -178,13 +156,7 @@ class AbstractionPeriod extends Model {
    */
   getDays (dateRange) {
     validators.assertIsInstanceOf(dateRange, DateRange);
-    const absPeriod = {
-      startMonth: this._startMonth,
-      startDay: this._startDay,
-      endMonth: this._endMonth,
-      endDay: this._endDay
-    };
-    return helpers.charging.getBillableDays(absPeriod, dateRange.startDate, dateRange.endDate);
+    return helpers.charging.getBillableDays(this.getDates(), dateRange.startDate, dateRange.endDate);
   }
 
   /**
