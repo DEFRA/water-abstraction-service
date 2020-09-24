@@ -17,6 +17,8 @@ const routes = require('../../../../src/modules/licences/routes/agreements');
 const licencesService = require('../../../../src/lib/services/licences');
 const Licence = require('../../../../src/lib/models/licence');
 
+const { ROLES } = require('../../../../src/lib/roles');
+
 experiment('modules/licences/routes/agreements', () => {
   beforeEach(async () => {
     sandbox.stub(licencesService, 'getLicenceById');
@@ -27,30 +29,55 @@ experiment('modules/licences/routes/agreements', () => {
   });
 
   experiment('.getAgreement', () => {
-    let server;
+    let server, request;
 
     beforeEach(async () => {
-      server = await testHelpers.createServerForRoute(routes.getAgreement);
+      request = {
+        method: 'GET',
+        url: `/water/1.0/agreements/${uuid()}`,
+        auth: {
+          strategy: 'simple',
+          credentials: {
+            scope: [ROLES.manageAgreements]
+          }
+        }
+      };
+      server = await testHelpers.createServerForRoute(routes.getAgreement, true);
     });
 
     test('validates the agreementId must be a uuid', async () => {
-      const url = '/water/1.0/agreements/not-a-valid-id';
-      const output = await server.inject(url);
+      request.url = '/water/1.0/agreements/not-a-valid-id';
+      const output = await server.inject(request);
       expect(output.statusCode).to.equal(400);
     });
 
     test('allows a valid uuid for the agreement id', async () => {
-      const url = `/water/1.0/agreements/${uuid()}`;
-      const output = await server.inject(url);
+      const output = await server.inject(request);
       expect(output.statusCode).to.equal(200);
+    });
+
+    test('rejects with 403 if unsufficient scope', async () => {
+      request.auth.credentials.scope = ['invalid-scope'];
+      const output = await server.inject(request);
+      expect(output.statusCode).to.equal(403);
     });
   });
 
   experiment('.getAgreementsForLicence', () => {
-    let server;
+    let server, request;
 
     beforeEach(async () => {
-      server = await testHelpers.createServerForRoute(routes.getAgreementsForLicence);
+      request = {
+        method: 'GET',
+        url: `/water/1.0/licences/${uuid()}/agreements`,
+        auth: {
+          strategy: 'simple',
+          credentials: {
+            scope: [ROLES.manageAgreements]
+          }
+        }
+      };
+      server = await testHelpers.createServerForRoute(routes.getAgreementsForLicence, true);
     });
 
     experiment('when the licence is found', () => {
@@ -59,15 +86,20 @@ experiment('modules/licences/routes/agreements', () => {
       });
 
       test('validates the licence id must be a uuid', async () => {
-        const url = '/water/1.0/licences/not-a-valid-id/agreements';
-        const output = await server.inject(url);
+        request.url = '/water/1.0/licences/not-a-valid-id/agreements';
+        const output = await server.inject(request);
         expect(output.statusCode).to.equal(400);
       });
 
       test('allows a valid uuid for the licence id', async () => {
-        const url = `/water/1.0/licences/${uuid()}/agreements`;
-        const output = await server.inject(url);
+        const output = await server.inject(request);
         expect(output.statusCode).to.equal(200);
+      });
+
+      test('rejects with 403 if unsufficient scope', async () => {
+        request.auth.credentials.scope = ['invalid-scope'];
+        const output = await server.inject(request);
+        expect(output.statusCode).to.equal(403);
       });
     });
 
@@ -77,8 +109,7 @@ experiment('modules/licences/routes/agreements', () => {
       });
 
       test('resolves with a 404 status', async () => {
-        const url = `/water/1.0/licences/${uuid()}/agreements`;
-        const output = await server.inject(url);
+        const output = await server.inject(request);
         expect(output.statusCode).to.equal(404);
       });
     });
@@ -91,11 +122,17 @@ experiment('modules/licences/routes/agreements', () => {
       request = {
         method: 'DELETE',
         url: `/water/1.0/agreements/${uuid()}`,
+        auth: {
+          strategy: 'simple',
+          credentials: {
+            scope: [ROLES.deleteAgreements]
+          }
+        },
         headers: {
           'defra-internal-user-id': 1234
         }
       };
-      server = await testHelpers.createServerForRoute(routes.deleteAgreement);
+      server = await testHelpers.createServerForRoute(routes.deleteAgreement, true);
     });
 
     test('validates the agreement id must be a uuid', async () => {
@@ -120,6 +157,12 @@ experiment('modules/licences/routes/agreements', () => {
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
+
+    test('rejects with 403 if unsufficient scope', async () => {
+      request.auth.credentials.scope = ['invalid-scope'];
+      const output = await server.inject(request);
+      expect(output.statusCode).to.equal(403);
+    });
   });
 
   experiment('.postCreateAgreement', () => {
@@ -132,13 +175,19 @@ experiment('modules/licences/routes/agreements', () => {
         headers: {
           'defra-internal-user-id': 1234
         },
+        auth: {
+          strategy: 'simple',
+          credentials: {
+            scope: [ROLES.manageAgreements]
+          }
+        },
         payload: {
           code: 'S127',
           startDate: '2019-04-01',
           dateSigned: '2019-05-02'
         }
       };
-      server = await testHelpers.createServerForRoute(routes.postCreateAgreement);
+      server = await testHelpers.createServerForRoute(routes.postCreateAgreement, true);
     });
 
     test('validates the calling user id is supplied', async () => {
@@ -169,6 +218,12 @@ experiment('modules/licences/routes/agreements', () => {
       delete request.payload.startDate;
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
+    });
+
+    test('rejects with 403 if unsufficient scope', async () => {
+      request.auth.credentials.scope = ['invalid-scope'];
+      const output = await server.inject(request);
+      expect(output.statusCode).to.equal(403);
     });
 
     experiment('when the licence is found', () => {
