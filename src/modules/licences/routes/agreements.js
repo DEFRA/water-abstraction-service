@@ -5,6 +5,8 @@ const Joi = require('@hapi/joi');
 const controller = require('../controllers/agreements');
 const preHandlers = require('../lib/pre-handlers');
 
+const { ROLES } = require('../../../lib/roles');
+
 const validateHeaders = async values => {
   Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
 };
@@ -15,6 +17,9 @@ module.exports = {
     path: '/water/1.0/agreements/{agreementId}',
     handler: controller.getAgreement,
     config: {
+      auth: {
+        scope: [ROLES.manageAgreements]
+      },
       validate: {
         params: {
           agreementId: Joi.string().uuid().required()
@@ -28,6 +33,9 @@ module.exports = {
     path: '/water/1.0/licences/{licenceId}/agreements',
     handler: controller.getLicenceAgreements,
     config: {
+      auth: {
+        scope: [ROLES.manageAgreements]
+      },
       pre: [
         { method: preHandlers.getLicence, assign: 'licence' }
       ],
@@ -44,6 +52,9 @@ module.exports = {
     path: '/water/1.0/agreements/{agreementId}',
     handler: controller.deleteAgreement,
     config: {
+      auth: {
+        scope: [ROLES.deleteAgreements]
+      },
       description: 'Deletes the agreement with the specified id',
       validate: {
         params: {
@@ -59,6 +70,9 @@ module.exports = {
     path: '/water/1.0/licences/{licenceId}/agreements',
     handler: controller.postLicenceAgreement,
     config: {
+      auth: {
+        scope: [ROLES.manageAgreements]
+      },
       pre: [
         { method: preHandlers.getLicence, assign: 'licence' }
       ],
