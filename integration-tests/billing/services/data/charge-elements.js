@@ -10,28 +10,30 @@
 
 exports.ce1 = {
   abstractionPeriodStartDay : 1,
-  abstractionPeriodStartMonth : 1,
+  abstractionPeriodStartMonth : 4,
   abstractionPeriodEndDay : 31,
-  abstractionPeriodEndMonth : 12,
-  authorisedAnnualQuantity : 200,
-  season : 'all year',
-  seasonDerived: 'all year',
+  abstractionPeriodEndMonth : 3,
+  authorisedAnnualQuantity : 50,
+  billableAnnualQuantity : 50,
+  season : 'summer',
+  seasonDerived: 'summer',
   source : 'unsupported',
-  loss : 'medium',
+  loss : 'low',
   purposePrimary : 'A',
   purposeSecondary : 'AGR',
   purposeUse : 140,
-  billableAnnualQuantity : null,
   description : 'CE1',
   factorsOverridden : false
 };
 
+// Spray Irrigation charge element
 exports.ce2 = {
   abstractionPeriodStartDay: 1,
   abstractionPeriodStartMonth: 4,
   abstractionPeriodEndDay: 31,
   abstractionPeriodEndMonth: 10,
-  authorisedAnnualQuantity: 200,
+  authorisedAnnualQuantity: 25,
+  billableAnnualQuantity: 25,
   season: 'summer',
   seasonDerived: 'summer',
   source: 'unsupported',
@@ -39,8 +41,27 @@ exports.ce2 = {
   purposePrimary: 'A',
   purposeSecondary: 'AGR',
   purposeUse: 400,
-  billableAnnualQuantity: null,
   description: 'CE2',
   factorsOverridden: false
 };
+
+exports.ce3 = {
+  abstractionPeriodStartDay : 1,
+  abstractionPeriodStartMonth : 4,
+  abstractionPeriodEndDay : 31,
+  abstractionPeriodEndMonth : 3,
+  authorisedAnnualQuantity : 50,
+  billableAnnualQuantity : 25,
+  season : 'all year',
+  seasonDerived: 'all year',
+  source : 'unsupported',
+  loss : 'low',
+  purposePrimary : 'A',
+  purposeSecondary : 'AGR',
+  purposeUse : 140,
+  description : 'CE3',
+  factorsOverridden : false
+};
+
+exports.ce4 = Object.assign({}, exports.ce3, { billableAnnualQuantity: 50, description: 'CE4' })
 
