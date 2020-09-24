@@ -23,12 +23,11 @@ const create = async (region, licence, scenarioKey, crmData) => ChargeVersion
   })
   .save();
 
-const updateStatus = status => {
-  return ChargeVersion
+const update = changes =>
+  ChargeVersion
     .forge()
     .query(qb => qb.where('is_test', true))
-    .save({ status }, { method: 'update' });
-};
+    .save(changes, { method: 'update' });
 
 const tearDown = () =>
   bookshelf.knex('water.charge_versions')
@@ -37,4 +36,4 @@ const tearDown = () =>
 
 exports.create = create;
 exports.tearDown = tearDown;
-exports.updateStatus = updateStatus;
+exports.update = update;

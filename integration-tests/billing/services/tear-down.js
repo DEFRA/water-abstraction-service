@@ -8,9 +8,10 @@ const licenceAgreements = require('./licence-agreements');
 const agreements = require('./agreements');
 const crm = require('./crm');
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs');
-const server = require('../../../index');
+const messageQueue = require('../../../src/lib/message-queue');
 
-const deleteBatchJobs = batch => server.messageQueue.deleteQueue(`billing.refreshTotals.${batch.billingBatchId}`);
+const deleteBatchJobs = batch =>
+  messageQueue.deleteQueue(`billing.refreshTotals.${batch.billingBatchId}`);
 
 const deleteCMBatch = batch => batch.externalId && cmConnector.delete(batch.externalId);
 
