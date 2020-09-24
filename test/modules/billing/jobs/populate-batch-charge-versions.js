@@ -51,7 +51,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
     sandbox.stub(logger, 'info');
 
     sandbox.stub(batchJob, 'logHandling');
-    sandbox.stub(batchJob, 'logHandlingError');
+    sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
 
     sandbox.stub(messageQueue, 'publish').resolves();
 
@@ -138,17 +138,15 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
         err = await expect(func()).to.reject();
       });
 
-      test('the batch is marked as error', async () => {
-        expect(batchService.setErrorStatus.calledWith(
-          batch.id, Batch.BATCH_ERROR_CODE.failedToPopulateChargeVersions
-        )).to.be.true();
+      test('the error is logged and batch marked as error status', async () => {
+        const { args } = batchJob.logHandlingErrorAndSetBatchStatus.lastCall;
+        expect(args[0]).to.equal(job);
+        expect(args[1] instanceof Error).to.be.true();
+        expect(args[2]).to.equal(Batch.BATCH_ERROR_CODE.failedToPopulateChargeVersions);
       });
 
-      test('the error is logged and rethrown', async () => {
-        expect(batchJob.logHandlingError.calledWith(
-          job, error
-        )).to.be.true();
-        expect(err).to.equal(error);
+      test('re-throws the error', async () => {
+        expect(error).to.equal(err);
       });
     });
   });

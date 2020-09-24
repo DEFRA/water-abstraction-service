@@ -39,7 +39,7 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
     sandbox.stub(batchJob, 'logHandling');
-    sandbox.stub(batchJob, 'logHandlingError');
+    sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
 
     batch = new Batch(BATCH_ID);
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
@@ -94,24 +94,24 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
     });
 
     experiment('if there is an error', () => {
-      const error = new Error('oops');
+      const err = new Error('oops');
+      let error;
 
       beforeEach(async () => {
-        batchService.getBatchById.rejects(error);
-        await expect(prepareTransactions.handler(job))
+        batchService.getBatchById.rejects(err);
+        error = await expect(prepareTransactions.handler(job))
           .to.reject();
       });
 
-      test('the error details are logged', async () => {
-        const errorArgs = batchJob.logHandlingError.lastCall.args;
-        expect(errorArgs[0]).to.equal(job);
-        expect(errorArgs[1]).to.equal(error);
+      test('the error is logged and batch marked as error status', async () => {
+        const { args } = batchJob.logHandlingErrorAndSetBatchStatus.lastCall;
+        expect(args[0]).to.equal(job);
+        expect(args[1] instanceof Error).to.be.true();
+        expect(args[2]).to.equal(Batch.BATCH_ERROR_CODE.failedToPrepareTransactions);
       });
 
-      test('the batch is marked as error', async () => {
-        expect(batchService.setErrorStatus.calledWith(
-          BATCH_ID, Batch.BATCH_ERROR_CODE.failedToPrepareTransactions
-        )).to.be.true();
+      test('re-throws the error', async () => {
+        expect(error).to.equal(err);
       });
     });
 

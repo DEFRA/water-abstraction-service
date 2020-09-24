@@ -25,7 +25,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
   beforeEach(async () => {
     sandbox.stub(batchJob, 'logHandling');
-    sandbox.stub(batchJob, 'logHandlingError');
+    sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
 
     batch = new Batch(BATCH_ID);
 
@@ -133,30 +133,29 @@ experiment('modules/billing/jobs/process-charge-version', () => {
     });
 
     experiment('when there is an error', () => {
+      const err = new Error('oops');
       let error;
       beforeEach(async () => {
-        error = new Error('oops');
-        chargeVersionYearService.setReadyStatus.rejects(error);
+        chargeVersionYearService.setReadyStatus.rejects(err);
         const func = () => processChargeVersion.handler(job);
-        await expect(func()).to.reject();
-      });
-
-      test('a message is logged', async () => {
-        const errorArgs = batchJob.logHandlingError.lastCall.args;
-        expect(errorArgs[0]).to.equal(job);
-        expect(errorArgs[1]).to.equal(error);
-      });
-
-      test('the batch is marked as error', async () => {
-        expect(batchService.setErrorStatus.calledWith(
-          BATCH_ID, Batch.BATCH_ERROR_CODE.failedToProcessChargeVersions
-        )).to.be.true();
+        error = await expect(func()).to.reject();
       });
 
       test('the billing batch charge version year status is updated to "error"', async () => {
         expect(chargeVersionYearService.setErrorStatus.calledWith(
           chargeVersionYear.billingBatchChargeVersionYearId
         )).to.be.true();
+      });
+
+      test('the error is logged and batch marked as error status', async () => {
+        const { args } = batchJob.logHandlingErrorAndSetBatchStatus.lastCall;
+        expect(args[0]).to.equal(job);
+        expect(args[1] instanceof Error).to.be.true();
+        expect(args[2]).to.equal(Batch.BATCH_ERROR_CODE.failedToProcessChargeVersions);
+      });
+
+      test('re-throws the error', async () => {
+        expect(error).to.equal(err);
       });
     });
   });

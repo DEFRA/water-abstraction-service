@@ -31,8 +31,7 @@ const handleCreateBillRun = async job => {
 
     return { batch, eventId };
   } catch (err) {
-    batchJob.logHandlingError(job, err);
-    batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToCreateBillRun);
+    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToCreateBillRun);
     throw err;
   }
 };

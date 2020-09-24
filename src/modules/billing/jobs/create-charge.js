@@ -48,12 +48,11 @@ const handleCreateCharge = async job => {
     // Update/remove our local transaction in water.billing_transactions
     await transactionsService.updateWithChargeModuleResponse(transactionId, response);
   } catch (err) {
-    batchJob.logHandlingError(job, err);
-
     // Mark transaction as error in DB
     transactionsService.setErrorStatus(transactionId);
     batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToCreateCharge);
 
+    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToCreateCharge);
     throw err;
   }
 

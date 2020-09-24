@@ -310,4 +310,42 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
       expect(name).to.equal('__state__completed__test-name');
     });
   });
+
+  experiment('logHandlingErrorAndSetBatchStatus', () => {
+    let job, error;
+    const err = new Error('oops');
+
+    beforeEach(async () => {
+      job = {
+        name: 'test-name',
+        data: {
+          batch: {
+            id: 'test-id'
+          }
+        }
+      };
+      error = await batchJob.logHandlingErrorAndSetBatchStatus(job, err, 123);
+    });
+
+    test('creates the expected message', async () => {
+      const [message] = logger.error.lastCall.args;
+      expect(message).to.equal('Error: test-name');
+    });
+
+    test('passes the error', async () => {
+      const [, err] = logger.error.lastCall.args;
+      expect(err).to.equal(error);
+    });
+
+    test('logs the data', async () => {
+      const [, , context] = logger.error.lastCall.args;
+      expect(context).to.equal(job.data);
+    });
+
+    test('marks the batch as "error" status', async () => {
+      expect(batchService.setErrorStatus.calledWith(
+        'test-id', 123
+      )).to.be.true();
+    });
+  });
 });

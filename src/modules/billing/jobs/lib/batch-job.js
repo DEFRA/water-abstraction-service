@@ -3,6 +3,7 @@
 const { get } = require('lodash');
 
 const { logger } = require('../../../../logger');
+const batchService = require('../../services/batch-service');
 
 const getRequestName = job => job.data.request.name;
 
@@ -73,6 +74,27 @@ const deleteOnCompleteQueue = (job, messageQueue) => {
   return messageQueue.deleteQueue(name);
 };
 
+/**
+ * When an error has occurred in the PG boss handler,
+ * we need to:
+ * - Log the message
+ * - Mark the batch is in error status
+ * @param {Object} job - PG boss message
+ * @param {Error} err - the error thrown in the handler
+ * @param {Number} errorCode - batch error code
+ * @return {Error} returns the modified error
+ */
+const logHandlingErrorAndSetBatchStatus = async (job, err, errorCode) => {
+  // Decorate error with error code and log
+  err.errorCode = errorCode;
+  logHandlingError(job, err);
+
+  // Mark batch as in error status
+  const batchId = get(job, 'data.batch.id');
+  await batchService.setErrorStatus(batchId, errorCode);
+  return err;
+};
+
 exports.createMessage = createMessage;
 exports.deleteHandlerQueue = deleteHandlerQueue;
 exports.hasJobFailed = hasJobFailed;
@@ -81,3 +103,4 @@ exports.logHandlingError = logHandlingError;
 exports.logOnComplete = logOnComplete;
 exports.logOnCompleteError = logOnCompleteError;
 exports.deleteOnCompleteQueue = deleteOnCompleteQueue;
+exports.logHandlingErrorAndSetBatchStatus = logHandlingErrorAndSetBatchStatus;

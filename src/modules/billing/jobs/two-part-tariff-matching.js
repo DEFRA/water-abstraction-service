@@ -42,8 +42,7 @@ const handleTwoPartTariffMatching = async job => {
     }
     return { isReviewNeeded };
   } catch (err) {
-    batchJob.logHandlingError(job, err);
-    await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToProcessTwoPartTariff);
+    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToProcessTwoPartTariff);
     throw err;
   }
 };

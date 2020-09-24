@@ -27,8 +27,7 @@ const handlePopulateBatch = async job => {
 
     return { billingBatchChargeVersionYears, batch };
   } catch (err) {
-    batchJob.logHandlingError(job, err);
-    batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToPopulateChargeVersions);
+    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToPopulateChargeVersions);
     throw err;
   }
 };

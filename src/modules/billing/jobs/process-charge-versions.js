@@ -42,9 +42,7 @@ const handleProcessChargeVersions = async job => {
       billingBatchChargeVersionYears
     };
   } catch (err) {
-    batchJob.logHandlingError(job, err);
-    await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToProcessChargeVersions);
-
+    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToProcessChargeVersions);
     throw err;
   }
 };

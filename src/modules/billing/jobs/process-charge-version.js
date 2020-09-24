@@ -1,6 +1,5 @@
 'use strict';
 
-const { get } = require('lodash');
 const chargeVersionYearService = require('../services/charge-version-year');
 const batchJob = require('./lib/batch-job');
 const batchService = require('../services/batch-service');
@@ -30,7 +29,6 @@ const createMessage = (eventId, chargeVersionYear, batch) => {
 const handleProcessChargeVersion = async job => {
   batchJob.logHandling(job);
 
-  const batchId = get(job, 'data.batch.id');
   const { chargeVersionYear } = job.data;
 
   // Process charge version year
@@ -48,12 +46,8 @@ const handleProcessChargeVersion = async job => {
       batch: job.data.batch
     };
   } catch (err) {
-    batchJob.logHandlingError(job, err);
-
-    // Mark as error
-    await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToProcessChargeVersions);
     await chargeVersionYearService.setErrorStatus(chargeVersionYear.billingBatchChargeVersionYearId);
-
+    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToProcessChargeVersions);
     throw err;
   }
 };

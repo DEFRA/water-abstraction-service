@@ -39,9 +39,7 @@ const handlePrepareTransactions = async job => {
       transactions
     };
   } catch (err) {
-    batchJob.logHandlingError(job, err);
-    batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToPrepareTransactions);
-
+    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToPrepareTransactions);
     throw err;
   }
 };
