@@ -31,13 +31,15 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
 
   beforeEach(async () => {
     batch = new Batch(batchId);
+    batch.status = Batch.BATCH_STATUS.processing;
 
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
+    sandbox.stub(batchService, 'setErrorStatus');
 
     sandbox.stub(chargeVersionYearService, 'getForBatch').resolves(billingBatchChargeVersionYears);
 
     sandbox.stub(batchJob, 'logHandling');
-    sandbox.stub(batchJob, 'logHandlingError');
+    sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
   });
 
   afterEach(async () => {
@@ -104,27 +106,29 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
         const func = () => processChargeVersionsJob.handler(message);
         const err = await expect(func()).to.reject();
         expect(err.message).to.equal('Expected processing batch status');
-        expect(batchJob.logHandlingError.calledWith(message, err)).to.be.true();
+        expect(batchJob.logHandlingErrorAndSetBatchStatus.calledWith(message, err, Batch.BATCH_ERROR_CODE.failedToProcessChargeVersions)).to.be.true();
       });
     });
 
-    experiment('when there is an unexpected error', () => {
+    experiment('when there is an error', () => {
+      const err = new Error('oops');
+      let error;
+
       beforeEach(async () => {
-        batch.status = Batch.BATCH_STATUS.processing;
-        message = {
-          data: {
-            eventId,
-            batch
-          }
-        };
-        batchService.getBatchById.rejects(new Error('oops!'));
+        batchService.getBatchById.rejects(err);
+        const func = () => processChargeVersionsJob.handler(message);
+        error = await expect(func()).to.reject();
       });
 
-      test('an error is logged and rethrown', async () => {
-        const func = () => processChargeVersionsJob.handler(message);
-        const err = await expect(func()).to.reject();
-        expect(err.message).to.equal('oops!');
-        expect(batchJob.logHandlingError.calledWith(message, err)).to.be.true();
+      test('the error is logged and batch marked as error status', async () => {
+        const { args } = batchJob.logHandlingErrorAndSetBatchStatus.lastCall;
+        expect(args[0]).to.equal(message);
+        expect(args[1] instanceof Error).to.be.true();
+        expect(args[2]).to.equal(Batch.BATCH_ERROR_CODE.failedToProcessChargeVersions);
+      });
+
+      test('re-throws the error', async () => {
+        expect(error).to.equal(err);
       });
     });
   });

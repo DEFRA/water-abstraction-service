@@ -3,6 +3,7 @@
 const { get } = require('lodash');
 const batchService = require('../services/batch-service');
 const batchJob = require('./lib/batch-job');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 
 const JOB_NAME = 'billing.create-bill-run.*';
 
@@ -30,7 +31,7 @@ const handleCreateBillRun = async job => {
 
     return { batch, eventId };
   } catch (err) {
-    batchJob.logHandlingError(job, err);
+    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToCreateBillRun);
     throw err;
   }
 };

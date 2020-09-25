@@ -38,7 +38,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
     sandbox.restore();
   });
 
-  experiment('.failBatch', () => {
+  experiment('.deleteHandlerQueue', () => {
     let job;
     let batchId;
     let eventId;
@@ -59,18 +59,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
           }
         }
       };
-      await batchJob.failBatch(job, messageQueue, 10);
-    });
-
-    test('sets the batch to error', async () => {
-      const [id, code] = batchService.setErrorStatus.lastCall.args;
-      expect(id).to.equal(batchId);
-      expect(code).to.equal(10);
-    });
-
-    test('updates the supplementary billing status of any licences', async () => {
-      const [id] = licenceService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.lastCall.args;
-      expect(id).to.equal(batchId);
+      await batchJob.deleteHandlerQueue(job, messageQueue);
     });
 
     test('deletes the queue', async () => {
@@ -319,6 +308,44 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
     test('deletes onComplete queue related to current job', async () => {
       const [name] = messageQueue.deleteQueue.lastCall.args;
       expect(name).to.equal('__state__completed__test-name');
+    });
+  });
+
+  experiment('logHandlingErrorAndSetBatchStatus', () => {
+    let job, error;
+    const err = new Error('oops');
+
+    beforeEach(async () => {
+      job = {
+        name: 'test-name',
+        data: {
+          batch: {
+            id: 'test-id'
+          }
+        }
+      };
+      error = await batchJob.logHandlingErrorAndSetBatchStatus(job, err, 123);
+    });
+
+    test('creates the expected message', async () => {
+      const [message] = logger.error.lastCall.args;
+      expect(message).to.equal('Error: test-name');
+    });
+
+    test('passes the error', async () => {
+      const [, err] = logger.error.lastCall.args;
+      expect(err).to.equal(error);
+    });
+
+    test('logs the data', async () => {
+      const [, , context] = logger.error.lastCall.args;
+      expect(context).to.equal(job.data);
+    });
+
+    test('marks the batch as "error" status', async () => {
+      expect(batchService.setErrorStatus.calledWith(
+        'test-id', 123
+      )).to.be.true();
     });
   });
 });

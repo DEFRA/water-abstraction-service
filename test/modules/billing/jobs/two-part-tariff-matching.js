@@ -13,7 +13,7 @@ const uuid = require('uuid/v4');
 const twoPartTariffMatchingJob = require('../../../../src/modules/billing/jobs/two-part-tariff-matching');
 
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
-const { BATCH_TYPE } = require('../../../../src/lib/models/batch');
+const { BATCH_TYPE, BATCH_STATUS } = require('../../../../src/lib/models/batch');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const twoPartTariffService = require('../../../../src/modules/billing/services/two-part-tariff');
@@ -30,12 +30,14 @@ experiment('modules/billing/jobs/two-part-tariff-matching', () => {
   beforeEach(async () => {
     batch = new Batch(batchId);
     batch.type = BATCH_TYPE.twoPartTariff;
+    batch.status = BATCH_STATUS.processing;
 
     sandbox.stub(batchJob, 'logHandling');
-    sandbox.stub(batchJob, 'logHandlingError');
+    sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
 
     sandbox.stub(batchService, 'getBatchById');
     sandbox.stub(batchService, 'setStatusToReview');
+    sandbox.stub(batchService, 'setErrorStatus');
 
     sandbox.stub(twoPartTariffService, 'processBatch');
 
@@ -85,7 +87,11 @@ experiment('modules/billing/jobs/two-part-tariff-matching', () => {
       test('an error is logged an rethrown', async () => {
         const func = () => twoPartTariffMatchingJob.handler(job);
         const err = await expect(func()).to.reject();
-        expect(batchJob.logHandlingError.calledWith(job, err)).to.be.true();
+        expect(batchJob.logHandlingErrorAndSetBatchStatus.calledWith(
+          job,
+          err,
+          Batch.BATCH_ERROR_CODE.failedToProcessTwoPartTariff
+        )).to.be.true();
         expect(err.message).to.equal('Expected processing batch status');
       });
     });

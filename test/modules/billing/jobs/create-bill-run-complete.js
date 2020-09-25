@@ -15,14 +15,18 @@ const uuid = require('uuid/v4');
 const createBillRunComplete = require('../../../../src/modules/billing/jobs/create-bill-run-complete');
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const Batch = require('../../../../src/lib/models/batch');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 const BATCH_ID = uuid();
 const EVENT_ID = uuid();
 
 experiment('modules/billing/jobs/create-bill-run-complete', () => {
-  let messageQueue, job;
+  let messageQueue, job, batch;
 
   beforeEach(async () => {
+    batch = new Batch(BATCH_ID);
+    batch.status = Batch.BATCH_STATUS.processing;
+
     job = {
       data: {
         request: {
@@ -43,12 +47,13 @@ experiment('modules/billing/jobs/create-bill-run-complete', () => {
       }
     };
 
-    sandbox.stub(batchJob, 'failBatch').resolves();
     sandbox.stub(batchJob, 'logOnComplete').resolves();
     sandbox.stub(batchJob, 'logOnCompleteError').resolves();
+    sandbox.stub(batchService, 'getBatchById').resolves(batch);
 
     messageQueue = {
-      publish: sandbox.stub().resolves()
+      publish: sandbox.stub().resolves(),
+      deleteQueue: sandbox.stub()
     };
   });
 
@@ -57,14 +62,18 @@ experiment('modules/billing/jobs/create-bill-run-complete', () => {
   });
 
   experiment('when the job fails', () => {
-    test('the batch is set to error and cancelled ', async () => {
+    test('the other jobs in the queue are deleted', async () => {
       job.data.failed = true;
       await createBillRunComplete(job, messageQueue);
+      expect(messageQueue.deleteQueue.calledWith(job.data.request.name)).to.be.true();
+    });
+  });
 
-      const failArgs = batchJob.failBatch.lastCall.args;
-      expect(failArgs[0]).to.equal(job);
-      expect(failArgs[1]).to.equal(messageQueue);
-      expect(failArgs[2]).to.equal(Batch.BATCH_ERROR_CODE.failedToCreateBillRun);
+  experiment('when the batch is not in "processing" status', () => {
+    test('no further jobs are scheduled', async () => {
+      batch.status = Batch.BATCH_STATUS.error;
+      await createBillRunComplete(job, messageQueue);
+      expect(messageQueue.publish.called).to.be.false();
     });
   });
 

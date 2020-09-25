@@ -1,7 +1,10 @@
 'use strict';
+
 const chargeVersionYearService = require('../services/charge-version-year');
 const batchJob = require('./lib/batch-job');
 const batchService = require('../services/batch-service');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+
 const JOB_NAME = 'billing.process-charge-version.*';
 
 const options = {
@@ -43,10 +46,8 @@ const handleProcessChargeVersion = async job => {
       batch: job.data.batch
     };
   } catch (err) {
-    batchJob.logHandlingError(job, err);
-
-    // Mark as error
     await chargeVersionYearService.setErrorStatus(chargeVersionYear.billingBatchChargeVersionYearId);
+    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToProcessChargeVersions);
     throw err;
   }
 };

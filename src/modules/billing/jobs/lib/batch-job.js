@@ -2,9 +2,8 @@
 
 const { get } = require('lodash');
 
-const batchService = require('../../services/batch-service');
-const licencesService = require('../../../../lib/services/licences');
 const { logger } = require('../../../../logger');
+const batchService = require('../../services/batch-service');
 
 const getRequestName = job => job.data.request.name;
 
@@ -27,26 +26,15 @@ const logHandlingError = (job, error) => {
 /**
  * In the event that a job fails when processing a batch,
  * this function tidies up so that no further processing
- * happens.
- *
- * The batch record is put in an error state
- * and the queue is deleted to prevent further work.
+ * happens in the job queue.
  *
  * @param {Object<PgBoss.Job>} job The job that has failed
  * @param {Object<PgBoss>} messageQueue The PgBoss message queue
- * @param {number|BATCH_ERROR_CODE} errorCode Why has the batch failed?
  */
-const failBatch = (job, messageQueue, errorCode) => {
+const deleteHandlerQueue = (job, messageQueue) => {
   const name = getRequestName(job);
-  const {
-    batch: { id: batchId }
-  } = job.data.request.data;
-
-  return Promise.all([
-    batchService.setErrorStatus(batchId, errorCode),
-    licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId),
-    messageQueue.deleteQueue(name)
-  ]);
+  logger.info(`Deleting queue ${name}`);
+  return messageQueue.deleteQueue(name);
 };
 
 /**
@@ -86,11 +74,33 @@ const deleteOnCompleteQueue = (job, messageQueue) => {
   return messageQueue.deleteQueue(name);
 };
 
+/**
+ * When an error has occurred in the PG boss handler,
+ * we need to:
+ * - Log the message
+ * - Mark the batch is in error status
+ * @param {Object} job - PG boss message
+ * @param {Error} err - the error thrown in the handler
+ * @param {Number} errorCode - batch error code
+ * @return {Error} returns the modified error
+ */
+const logHandlingErrorAndSetBatchStatus = async (job, err, errorCode) => {
+  // Decorate error with error code and log
+  err.errorCode = errorCode;
+  logHandlingError(job, err);
+
+  // Mark batch as in error status
+  const batchId = get(job, 'data.batch.id');
+  await batchService.setErrorStatus(batchId, errorCode);
+  return err;
+};
+
 exports.createMessage = createMessage;
-exports.failBatch = failBatch;
+exports.deleteHandlerQueue = deleteHandlerQueue;
 exports.hasJobFailed = hasJobFailed;
 exports.logHandling = logHandling;
 exports.logHandlingError = logHandlingError;
 exports.logOnComplete = logOnComplete;
 exports.logOnCompleteError = logOnCompleteError;
 exports.deleteOnCompleteQueue = deleteOnCompleteQueue;
+exports.logHandlingErrorAndSetBatchStatus = logHandlingErrorAndSetBatchStatus;
