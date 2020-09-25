@@ -12,6 +12,7 @@ exports.ChangeReason = require('./ChangeReason');
 exports.ChargeVersion = require('./ChargeVersion');
 exports.ChargeVersionWorkflow = require('./ChargeVersionWorkflow');
 exports.Event = require('./Event');
+exports.FinancialAgreementType = require('./FinancialAgreementType');
 exports.Licence = require('./Licence');
 exports.LicenceAgreement = require('./LicenceAgreement');
 exports.LicenceVersion = require('./LicenceVersion');

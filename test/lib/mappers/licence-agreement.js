@@ -6,7 +6,6 @@ const {
   beforeEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
-const moment = require('moment');
 
 const uuid = require('uuid/v4');
 
@@ -18,7 +17,10 @@ const licenceAgreementMapper = require('../../../src/lib/mappers/licence-agreeme
 
 const dbRow = {
   licenceAgreementId: uuid(),
-  financialAgreementTypeId: 'S127',
+  financialAgreementType: {
+    financialAgreementTypeId: uuid(),
+    financialAgreementCode: 'S127'
+  },
   startDate: '2019-01-01',
   endDate: '2020-02-03',
   dateSigned: '2020-05-07 08:20:03.272591'
@@ -47,11 +49,43 @@ experiment('modules/billing/mappers/licence-agreement', () => {
     test('has an agreement property', async () => {
       const { agreement } = result;
       expect(agreement instanceof Agreement).to.be.true();
-      expect(agreement.code).to.equal(dbRow.financialAgreementTypeId);
+      expect(agreement.code).to.equal(dbRow.financialAgreementType.financialAgreementCode);
     });
 
     test('maps the date signed', async () => {
-      expect(result.dateSigned).to.equal(moment(dbRow.dateSigned));
+      expect(result.dateSigned).to.equal('2020-05-07');
+    });
+  });
+
+  experiment('.modelToDb', () => {
+    let result, model;
+
+    beforeEach(async () => {
+      model = new LicenceAgreement();
+      model.fromHash({
+        licenceNumber: '01/123/ABC',
+        dateRange: new DateRange('2020-01-01', '2020-06-01'),
+        dateSigned: '2019-12-28',
+        agreement: new Agreement(uuid())
+      });
+      result = licenceAgreementMapper.modelToDb(model);
+    });
+
+    test('maps the .licenceNumber property', async () => {
+      expect(result.licenceRef).to.equal('01/123/ABC');
+    });
+
+    test('maps the .dateRange property', async () => {
+      expect(result.startDate).to.equal('2020-01-01');
+      expect(result.endDate).to.equal('2020-06-01');
+    });
+
+    test('maps the .dateSigned property', async () => {
+      expect(result.dateSigned).to.equal('2019-12-28');
+    });
+
+    test('maps the agreement id', async () => {
+      expect(result.financialAgreementTypeId).to.equal(model.agreement.id);
     });
   });
 });

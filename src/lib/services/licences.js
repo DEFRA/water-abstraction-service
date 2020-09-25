@@ -1,7 +1,6 @@
 'use strict';
 
 const repos = require('../connectors/repos');
-const licenceAgreementMapper = require('../mappers/licence-agreement');
 const licenceMapper = require('../mappers/licence');
 const invoiceAccountsMapper = require('../mappers/invoice-account');
 const licenceVersionMapper = require('../mappers/licence-version');
@@ -47,23 +46,6 @@ const getLicenceVersionById = async licenceVersionId =>
     repos.licenceVersions.findOne,
     licenceVersionMapper
   );
-
-const getLicenceAgreementsByLicenceRef = async licenceRef =>
-  service.findMany(
-    licenceRef,
-    repos.licenceAgreements.findByLicenceRef,
-    licenceAgreementMapper
-  );
-
-const getLicenceAgreementById = async licenceAgreementId =>
-  service.findOne(
-    licenceAgreementId,
-    repos.licenceAgreements.findOne,
-    licenceAgreementMapper
-  );
-
-const deleteLicenceAgreementById = async licenceAgreementId =>
-  repos.licenceAgreements.deleteOne(licenceAgreementId);
 
 /**
  * Updates the includeInSupplementaryBilling value for the given licence ids
@@ -131,12 +113,13 @@ const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
   return invoiceAccounts ? invoiceAccounts.map(invoiceAccount => invoiceAccountsMapper.crmToModel(invoiceAccount)) : [];
 };
 
+/**
+ * Ensures the specified licence is included in the next supplementary bill run
+ * @param {String} licenceId
+ */
 const flagForSupplementaryBilling = licenceId =>
   repos.licences.update(licenceId, { includeInSupplementaryBilling: INCLUDE_IN_SUPPLEMENTARY_BILLING.yes });
 
-exports.getLicenceAgreementById = getLicenceAgreementById;
-exports.getLicenceAgreementsByLicenceRef = getLicenceAgreementsByLicenceRef;
-exports.deleteLicenceAgreementById = deleteLicenceAgreementById;
 exports.getLicenceById = getLicenceById;
 exports.getLicenceVersionById = getLicenceVersionById;
 exports.getLicenceVersions = getLicenceVersions;

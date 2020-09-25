@@ -22,7 +22,9 @@ const findByLicenceRef = async (licenceRef, agreementTypes = []) => {
 
   licenceAgreements = await licenceAgreements
     .orderBy('start_date', 'asc')
-    .fetchAll();
+    .fetchAll({
+      withRelated: ['financialAgreementType']
+    });
 
   return licenceAgreements.toJSON();
 };
@@ -33,7 +35,7 @@ const findByLicenceRef = async (licenceRef, agreementTypes = []) => {
  * @param {String} licenceAgreementId
  */
 const findOne = async licenceAgreementId =>
-  helpers.findOne(LicenceAgreement, 'licenceAgreementId', licenceAgreementId);
+  helpers.findOne(LicenceAgreement, 'licenceAgreementId', licenceAgreementId, ['financialAgreementType']);
 
 /**
  * Deletes a licence agreement by
@@ -42,6 +44,14 @@ const findOne = async licenceAgreementId =>
 const deleteOne = async licenceAgreementId =>
   helpers.deleteOne(LicenceAgreement, 'licenceAgreementId', licenceAgreementId);
 
+/**
+ * Create new licence agreement
+ * @param {Object} licence agreement data
+ * @return {Promise<Object>}
+ */
+const create = data => helpers.create(LicenceAgreement, data);
+
 exports.findByLicenceRef = findByLicenceRef;
 exports.findOne = findOne;
 exports.deleteOne = deleteOne;
+exports.create = create;

@@ -63,25 +63,24 @@ experiment('lib/models/licence-agreement', () => {
   });
 
   experiment('.dateSigned', () => {
-    test('converts an ISO date string to a moment internally', async () => {
+    test('can be set with an ISO date string', async () => {
       const dateString = '2020-01-20T14:51:42.024Z';
       licenceAgreement.dateSigned = dateString;
-
-      expect(licenceAgreement.dateSigned).to.equal(moment(dateString));
+      expect(licenceAgreement.dateSigned).to.equal('2020-01-20');
     });
 
-    test('converts a JS Date to a moment internally', async () => {
+    test('can be set with a JS date', async () => {
       const date = new Date();
+      date.setDate(4);
+      date.setMonth(3);
+      date.setFullYear(2020);
       licenceAgreement.dateSigned = date;
-
-      expect(licenceAgreement.dateSigned).to.equal(moment(date));
+      expect(licenceAgreement.dateSigned).to.equal('2020-04-04');
     });
 
-    test('can be set using a moment', async () => {
-      const now = moment();
-      licenceAgreement.dateSigned = now;
-
-      expect(licenceAgreement.dateSigned).to.equal(now);
+    test('can be set with a moment', async () => {
+      licenceAgreement.dateSigned = moment('2020-02-01');
+      expect(licenceAgreement.dateSigned).to.equal('2020-02-01');
     });
 
     test('throws for an invalid string', async () => {

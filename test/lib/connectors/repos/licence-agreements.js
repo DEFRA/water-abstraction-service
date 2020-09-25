@@ -30,6 +30,7 @@ experiment('lib/connectors/repos/licence-agreements', () => {
     sandbox.stub(LicenceAgreement, 'forge').returns(stub);
     sandbox.stub(helpers, 'findOne').returns();
     sandbox.stub(helpers, 'deleteOne').returns();
+    sandbox.stub(helpers, 'create');
   });
 
   afterEach(async () => {
@@ -138,6 +139,17 @@ experiment('lib/connectors/repos/licence-agreements', () => {
       expect(model).to.equal(LicenceAgreement);
       expect(key).to.equal('licenceAgreementId');
       expect(id).to.equal('test-id');
+    });
+  });
+
+  experiment('.create', () => {
+    test('delegates to the .create() helper function', async () => {
+      const data = { startDate: '2020-01-01' };
+      await repos.licenceAgreements.create(data);
+
+      expect(helpers.create.calledWith(
+        LicenceAgreement, data
+      )).to.be.true();
     });
   });
 });
