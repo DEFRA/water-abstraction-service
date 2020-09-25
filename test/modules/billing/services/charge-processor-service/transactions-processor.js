@@ -546,7 +546,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
 
     experiment('minimum charge flag', () => {
       beforeEach(async () => {
-        batch = data.createBatch('annual');
+        batch = data.createBatch('supplementary');
       });
 
       test('is false when charge version start date is different from licence start date', async () => {
@@ -555,7 +555,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
         transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
 
-        expect(transactions[0].isMinimumCharge).to.equal(false);
+        expect(transactions[0].isNewLicence).to.equal(false);
       });
 
       test('is true when charge version start date is the same as licence start date', async () => {
@@ -564,7 +564,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
         transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
 
-        expect(transactions[0].isMinimumCharge).to.equal(true);
+        expect(transactions[0].isNewLicence).to.equal(true);
       });
     });
   });
