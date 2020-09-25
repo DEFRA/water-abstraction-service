@@ -29,6 +29,9 @@ const dbToModel = row => {
   return invoice;
 };
 
+const mapAddress = invoice =>
+  invoice.address ? omit(invoice.address.toJSON(), 'id') : {};
+
 /**
  * Maps data from an Invoice model to the correct shape for water.billing_invoices
  * @param {Batch} batch
@@ -38,7 +41,7 @@ const dbToModel = row => {
 const modelToDb = (batch, invoice) => ({
   invoiceAccountId: invoice.invoiceAccount.id,
   invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
-  address: omit(invoice.address.toJSON(), 'id'),
+  address: mapAddress(invoice),
   billingBatchId: batch.id,
   financialYearEnding: invoice.financialYear.endYear
 });

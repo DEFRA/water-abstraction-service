@@ -72,6 +72,7 @@ experiment('modules/billing/services/batch-service', () => {
 
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
+    sandbox.stub(logger, 'info');
 
     sandbox.stub(newRepos.billingBatches, 'delete').resolves();
     sandbox.stub(newRepos.billingBatches, 'findByStatuses');
@@ -519,6 +520,14 @@ experiment('modules/billing/services/batch-service', () => {
       expect(id).to.equal('batch-id');
       expect(data).to.equal({ status: 'error', errorCode: 10 });
     });
+
+    test('calls licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch() with the batch ID', async () => {
+      expect(
+        licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.calledWith(
+          'batch-id'
+        )
+      ).to.be.true();
+    });
   });
 
   experiment('.saveInvoicesToDB', () => {
@@ -658,32 +667,54 @@ experiment('modules/billing/services/batch-service', () => {
       netTotal: 15022872
     };
 
-    beforeEach(async () => {
-      chargeModuleBillRunConnector.get.resolves({
-        billRun: {
-          summary
-        }
+    experiment('when the batch is in ready/sent status', () => {
+      beforeEach(async () => {
+        chargeModuleBillRunConnector.get.resolves({
+          billRun: {
+            summary
+          }
+        });
+        batch = new Batch(uuid());
+        batch.fromHash({
+          externalId: uuid(),
+          status: Batch.BATCH_STATUS.ready
+        });
+        await batchService.decorateBatchWithTotals(batch);
       });
-      batch = new Batch(uuid());
-      batch.fromHash({
-        externalId: uuid(),
-        status: Batch.BATCH_STATUS.ready
+
+      test('calls charge module batch API with correct params', async () => {
+        const [externalId] = chargeModuleBillRunConnector.get.lastCall.args;
+        expect(externalId).to.equal(batch.externalId);
       });
-      await batchService.decorateBatchWithTotals(batch);
+
+      test('adds a Totals instance to the batch', async () => {
+        expect(batch.totals instanceof Totals).to.be.true();
+      });
+
+      test('copies totals correctly', async () => {
+        expect(batch.totals.toJSON()).to.equal(summary);
+      });
     });
 
-    test('calls charge module batch API with correct params', async () => {
-      const [externalId] = chargeModuleBillRunConnector.get.lastCall.args;
-      expect(externalId).to.equal(batch.externalId);
-    });
+    const statuses = [
+      Batch.BATCH_STATUS.processing,
+      Batch.BATCH_STATUS.review,
+      Batch.BATCH_STATUS.error,
+      Batch.BATCH_STATUS.empty
+    ];
 
-    test('adds a Totals instance to the batch', async () => {
-      expect(batch.totals instanceof Totals).to.be.true();
-    });
+    for (const status of statuses) {
+      experiment(`when the batch is in ${status} status`, () => {
+        beforeEach(async () => {
+          batch.status = status;
+          await batchService.decorateBatchWithTotals(batch);
+        });
 
-    test('copies totals correctly', async () => {
-      expect(batch.totals.toJSON()).to.equal(summary);
-    });
+        test('the charge module API is not called', async () => {
+          expect(chargeModuleBillRunConnector.get.called).to.be.false();
+        });
+      });
+    }
   });
 
   experiment('.refreshTotals', () => {
