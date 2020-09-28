@@ -35,7 +35,19 @@ const findByLicenceRef = async (licenceRef, agreementTypes = []) => {
  * @param {String} licenceAgreementId
  */
 const findOne = async licenceAgreementId =>
-  helpers.findOne(LicenceAgreement, 'licenceAgreementId', licenceAgreementId, ['financialAgreementType']);
+  helpers.findOne(LicenceAgreement, 'licenceAgreementId', licenceAgreementId, ['financialAgreementType', 'licence']);
+
+/**
+ * 
+ * @param {String} id 
+ * @param {Object} changes
+ */
+const update = async (id, changes) => {
+  const result = await LicenceAgreement.forge({ licence_agreement_id: id }).save(changes);
+  const response = await findOne(id)
+  return response;
+};
+
 
 /**
  * Deletes a licence agreement by
@@ -53,5 +65,6 @@ const create = data => helpers.create(LicenceAgreement, data);
 
 exports.findByLicenceRef = findByLicenceRef;
 exports.findOne = findOne;
+exports.update = update;
 exports.deleteOne = deleteOne;
 exports.create = create;

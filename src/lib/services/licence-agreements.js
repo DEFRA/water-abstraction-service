@@ -26,6 +26,10 @@ const EVENT_TYPES = {
     type: 'licence-agreement:create',
     status: 'created'
   },
+  update: {
+    type: 'licence-agreement:update',
+    status: 'updated'
+  },
   delete: {
     type: 'licence-agreement:delete',
     status: 'deleted'
@@ -91,7 +95,7 @@ const fetchAgreement = async code => {
 };
 
 /**
- * Adds a new financial agreement to the specified licece
+ * Adds a new financial agreement to the specified licence
  * @param {Licence} licence
  * @param {Object} data - data for the licence agreement
  * @param {String} data.code - the financial agreement code
@@ -138,7 +142,31 @@ const createLicenceAgreement = async (licence, data, issuer) => {
   }
 };
 
+
+/**
+ * Patch an existing licence agreement
+ * @param {String} agreemntId
+ * @param {Object} data - data for the licence agreement
+ * @param {String} data.endDate - the agreement end date
+ * @param {User} issuer
+ */
+const patchLicenceAgreement = async (licenceAgreementId, data, issuer) => {
+  const licenceAgreement = await getLicenceAgreementById(licenceAgreementId);
+  if (!licenceAgreement) {
+    throw new NotFoundError(`Licence agreement ${licenceAgreementId} not found`);
+  }
+  // Patch
+  const response = await licenceAgreementRepo.update(licenceAgreementId, data);
+
+  // Log event and flag licence for supplementary billing
+  return Promise.all([
+    createEvent(EVENT_TYPES.update, licenceAgreement, issuer),
+    licencesService.flagForSupplementaryBilling(response.licence.licenceId)
+  ]);
+};
+
 exports.getLicenceAgreementById = getLicenceAgreementById;
 exports.getLicenceAgreementsByLicenceRef = getLicenceAgreementsByLicenceRef;
 exports.deleteLicenceAgreementById = deleteLicenceAgreementById;
 exports.createLicenceAgreement = createLicenceAgreement;
+exports.patchLicenceAgreement = patchLicenceAgreement;
