@@ -9,7 +9,7 @@ const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 
 const sandbox = require('sinon').createSandbox();
 
-experiment('modules/licences/controllers/licences.js', () => {
+experiment('modules/invoice-accounts/controller', () => {
   beforeEach(async () => {
     sandbox.stub(invoiceAccountService, 'getByInvoiceAccountId');
   });
@@ -18,7 +18,7 @@ experiment('modules/licences/controllers/licences.js', () => {
     sandbox.restore();
   });
 
-  experiment('.getLicence', () => {
+  experiment('.getInvoiceAccount', () => {
     let request, result;
 
     beforeEach(async () => {
@@ -28,22 +28,22 @@ experiment('modules/licences/controllers/licences.js', () => {
         }
       };
     });
-    experiment('when the licence exists', () => {
+    experiment('when the invoice account exists', () => {
       beforeEach(async () => {
         invoiceAccountService.getByInvoiceAccountId.resolves(new InvoiceAccount());
         result = await controller.getInvoiceAccount(request);
       });
 
-      test('the licence ID is passed to the service', async () => {
+      test('the invoice account ID is passed to the service', async () => {
         expect(invoiceAccountService.getByInvoiceAccountId.calledWith('test-id')).to.be.true();
       });
 
-      test('resolves with a licence model', async () => {
+      test('resolves with an invoice account model', async () => {
         expect(result instanceof InvoiceAccount).to.be.true();
       });
     });
 
-    experiment('when the licence does not exist', () => {
+    experiment('when the invoice account does not exist', () => {
       beforeEach(async () => {
         invoiceAccountService.getByInvoiceAccountId.resolves(null);
         result = await controller.getInvoiceAccount(request);
