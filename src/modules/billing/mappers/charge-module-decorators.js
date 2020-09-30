@@ -10,7 +10,7 @@ const { TransactionStatusError } = require('../lib/errors');
 
 const mappers = require('../mappers');
 
-const { isEmpty, uniq } = require('lodash');
+const { isEmpty, uniq, get } = require('lodash');
 
 const isBatchReadyOrSent = batch =>
   batch.statusIsOneOf(Batch.BATCH_STATUS.ready, Batch.BATCH_STATUS.sent);
@@ -106,11 +106,6 @@ const decorateInvoice = (invoice, cmResponse) => {
 const decorateBatch = (batch, cmResponse) => {
   validators.assertIsInstanceOf(batch, Batch);
   validators.assertObject(cmResponse);
-
-  // Don't do any mapping unless batch is ready/sent
-  if (!isBatchReadyOrSent(batch)) {
-    return batch;
-  }
 
   // Set batch totals
   batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(cmResponse.billRun.summary);

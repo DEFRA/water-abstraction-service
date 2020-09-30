@@ -12,6 +12,7 @@ const { BatchStatusError } = require('../lib/errors');
 const { NotFoundError } = require('../../../lib/errors');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/constants');
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
+const chargeModuleBillRunWithRetryConnector = require('../../../lib/connectors/charge-module/bill-runs-with-retry');
 
 const Batch = require('../../../lib/models/batch');
 const validators = require('../../../lib/models/validators');
@@ -210,14 +211,18 @@ const refreshTotals = async batchId => {
   }
   const batch = mappers.batch.dbToModel(data);
 
-  // Load CM data and decorate service models
-  const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
+  // Load CM data
+  const cmResponse = await chargeModuleBillRunWithRetryConnector.get(batch.externalId);
+
+  // Decorate batch and persist totals
   chargeModuleDecorators.decorateBatch(batch, cmResponse);
 
-  return Promise.all([
+  await Promise.all([
     transactionsService.persistDeMinimis(batch),
     persistTotals(batch)
   ]);
+
+  return setStatus(batchId, Batch.BATCH_STATUS.ready);
 };
 
 /**
@@ -355,6 +360,9 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
     throw new BatchStatusError(`Cannot delete invoice from batch when status is ${batch.status}`);
   }
 
+  // Set batch status back to 'processing'
+  await setStatus(batch.id, Batch.BATCH_STATUS.processing);
+
   // Load invoice
   const invoice = await newRepos.billingInvoices.findOne(invoiceId);
   if (!invoice) {
@@ -378,6 +386,7 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
     const invoiceModel = mappers.invoice.dbToModel(invoice);
     await updateInvoiceLicencesForSupplementaryReprocessing(invoiceModel);
 
+    // Mark batch as 'empty' if needed
     return setStatusToEmptyWhenNoTransactions(batch);
   } catch (err) {
     await setErrorStatus(batch.id, Batch.BATCH_ERROR_CODE.failedToDeleteInvoice);
