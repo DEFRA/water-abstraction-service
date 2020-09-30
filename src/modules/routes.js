@@ -23,5 +23,6 @@ module.exports = [
   ...Object.values(require('./change-reasons/routes')),
   ...Object.values(require('./companies-house/routes')),
   ...Object.values(require('./kpi-reporting/routes')),
-  ...Object.values(require('./address-search/routes'))
+  ...Object.values(require('./address-search/routes')),
+  ...Object.values(require('./invoice-accounts/routes'))
 ];
