@@ -8,6 +8,12 @@ const billRunsApi = require('./bill-runs');
 
 const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating_summary';
 
+const options = {
+  retries: 10,
+  factor: 2,
+  minTimeout: 5 * 1000
+};
+
 /**
  * Gets data from the CM API, throwing an error if summary generation still in progress
  * @param {String} method - charge module bill run connector method
@@ -28,12 +34,6 @@ const getOrThrowIfGeneratingSummary = async (method, ...args) => {
  * @param  {...any} args - additional arguments
  */
 const retry = (method, ...args) => {
-  const options = {
-    retries: 10,
-    factor: 2,
-    minTimeout: 5 * 1000
-  };
-
   const func = (retry, number) => {
     logger.log('info', `Calling ${method} ${args.join(', ')} attempt ${number}`);
     return getOrThrowIfGeneratingSummary(method, ...args)
@@ -45,3 +45,4 @@ const retry = (method, ...args) => {
 
 exports.get = partial(retry, 'get');
 exports.getCustomer = partial(retry, 'getCustomer');
+exports.options = options;

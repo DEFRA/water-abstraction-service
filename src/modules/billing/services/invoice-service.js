@@ -1,6 +1,6 @@
 'use strict';
 
-const { find, partialRight, pickBy, pick } = require('lodash');
+const { find, partialRight } = require('lodash');
 const pWaterfall = require('p-waterfall');
 
 // Connectors
@@ -121,10 +121,15 @@ const getInvoice = async context => {
  */
 const decorateInvoiceWithCRMData = (invoice, context) => {
   const crmInvoiceAccount = find(context.crmInvoiceAccounts, { invoiceAccountId: invoice.invoiceAccount.id });
-  const tempInvoice = mappers.invoice.crmToModel(crmInvoiceAccount);
-
-  const properties = pick(tempInvoice, ['invoiceAccount', 'address', 'agentCompany', 'contact']);
-  return Object.assign(invoice, pickBy(properties));
+  const { invoiceAccount, address, agentCompany, contact } = mappers.invoice.crmToModel(crmInvoiceAccount);
+  if (address) {
+    invoice.address = address;
+  }
+  return invoice.fromHash({
+    invoiceAccount,
+    agentCompany,
+    contact
+  });
 };
 
 /**

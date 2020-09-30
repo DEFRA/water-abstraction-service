@@ -183,15 +183,19 @@ const decorateBatchWithTotals = async batch => {
 
 /**
  * Persists the batch totals to water.billing_batches
+ * Also sets batch status to 'ready'
  * @param {Batch} batch
  * @return {Promise}
  */
 const persistTotals = batch => {
-  const changes = batch.totals.pick([
-    'invoiceCount',
-    'creditNoteCount',
-    'netTotal'
-  ]);
+  const changes = {
+    status: Batch.BATCH_STATUS.ready,
+    ...batch.totals.pick([
+      'invoiceCount',
+      'creditNoteCount',
+      'netTotal'
+    ])
+  };
   return newRepos.billingBatches.update(batch.id, changes);
 };
 
@@ -221,8 +225,6 @@ const refreshTotals = async batchId => {
     transactionsService.persistDeMinimis(batch),
     persistTotals(batch)
   ]);
-
-  return setStatus(batchId, Batch.BATCH_STATUS.ready);
 };
 
 /**

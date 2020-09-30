@@ -10,10 +10,7 @@ const { TransactionStatusError } = require('../lib/errors');
 
 const mappers = require('../mappers');
 
-const { isEmpty, uniq, get } = require('lodash');
-
-const isBatchReadyOrSent = batch =>
-  batch.statusIsOneOf(Batch.BATCH_STATUS.ready, Batch.BATCH_STATUS.sent);
+const { isEmpty, uniq } = require('lodash');
 
 const findCustomer = (cmResponse, customerReference) =>
   cmResponse.billRun.customers.find(customer => customer.customerReference === customerReference);

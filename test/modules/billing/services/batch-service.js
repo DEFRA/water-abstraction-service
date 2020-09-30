@@ -28,6 +28,7 @@ const { logger } = require('../../../../src/logger');
 
 const newRepos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
+const chargeModuleBillRunConnectorWithRetry = require('../../../../src/lib/connectors/charge-module/bill-runs-with-retry');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
@@ -116,6 +117,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(chargeModuleBillRunConnector, 'approve').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'send').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'removeCustomerInFinancialYear').resolves();
+    sandbox.stub(chargeModuleBillRunConnectorWithRetry, 'get').resolves();
 
     sandbox.stub(eventService, 'create').resolves();
 
@@ -729,7 +731,7 @@ experiment('modules/billing/services/batch-service', () => {
           status: Batch.BATCH_STATUS.ready,
           batchType: Batch.BATCH_TYPE.supplementary
         });
-        chargeModuleBillRunConnector.get.resolves({
+        chargeModuleBillRunConnectorWithRetry.get.resolves({
           billRun: {
             summary: {
               invoiceCount: 3,
@@ -750,16 +752,17 @@ experiment('modules/billing/services/batch-service', () => {
 
       test('gets the bill run summary from the charge module', async () => {
         expect(
-          chargeModuleBillRunConnector.get.calledWith(externalId)
+          chargeModuleBillRunConnectorWithRetry.get.calledWith(externalId)
         ).to.be.true();
       });
 
-      test('updates the billing batch with the totals', async () => {
+      test('updates the billing batch with the totals and sets status to "ready"', async () => {
         const [id, updates] = newRepos.billingBatches.update.lastCall.args;
         expect(id).to.equal(batchId);
         expect(updates.invoiceCount).to.equal(3);
         expect(updates.creditNoteCount).to.equal(5);
         expect(updates.netTotal).to.equal(343553);
+        expect(updates.status).to.equal(Batch.BATCH_STATUS.ready);
       });
 
       test('persists the transactions de-minimis status flag', async () => {
