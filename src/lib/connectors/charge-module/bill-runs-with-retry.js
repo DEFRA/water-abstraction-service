@@ -29,7 +29,8 @@ const getOrThrowIfGeneratingSummary = async (method, ...args) => {
 };
 
 /**
- *
+ * Wraps a charge module API method so that it retries a number
+ * of times, awaiting a status other than 'generating_summary'
  * @param {String} method - charge module bill run connector method
  * @param  {...any} args - additional arguments
  */
