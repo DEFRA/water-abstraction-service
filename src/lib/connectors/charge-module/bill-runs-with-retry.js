@@ -3,16 +3,11 @@
 const { get, partial } = require('lodash');
 const promiseRetry = require('promise-retry');
 const { logger } = require('../../../logger');
+const config = require('../../../../config');
 
 const billRunsApi = require('./bill-runs');
 
 const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating_summary';
-
-const options = {
-  retries: 10,
-  factor: 2,
-  minTimeout: 5 * 1000
-};
 
 /**
  * Gets data from the CM API, throwing an error if summary generation still in progress
@@ -41,9 +36,8 @@ const retry = (method, ...args) => {
       .catch(retry);
   };
 
-  return promiseRetry(func, options);
+  return promiseRetry(func, config.chargeModuleConnector);
 };
 
 exports.get = partial(retry, 'get');
 exports.getCustomer = partial(retry, 'getCustomer');
-exports.options = options;

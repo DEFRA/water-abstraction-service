@@ -13,11 +13,13 @@ const sandbox = sinon.createSandbox();
 const request = require('../../../../src/lib/connectors/charge-module/request');
 const billRunsApiConnectorWithRetry = require('../../../../src/lib/connectors/charge-module/bill-runs-with-retry');
 
+const config = require('../../../../config');
+
 experiment('lib/connectors/charge-module/bill-runs-with-retry', () => {
   let result;
 
   beforeEach(async () => {
-    sandbox.stub(billRunsApiConnectorWithRetry.options, 'minTimeout').value(100);
+    sandbox.stub(config.chargeModuleConnector, 'minTimeout').value(100);
     sandbox.stub(request, 'get').resolves({
       billRun: {
         status: 'generating_summary'
