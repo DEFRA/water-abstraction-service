@@ -83,16 +83,15 @@ const finaliseEmptyBatch = async (job, messageQueue) => {
 
 /**
  * If batch is ready, clean up any unwanted invoices/invoice licences,
- * publish the refresh totals job, and set batch ready status
+ * publish the refresh totals job
  * @param {Object} job
  * @param {Object} messageQueue - PG boss instance
  * @return {Promise}
  */
 const finaliseReadyBatch = async (job, messageQueue) => {
-  const { eventId, batchId } = parseJob(job);
+  const { batchId } = parseJob(job);
   await batchService.cleanup(batchId);
   await messageQueue.publish(refreshTotalsJob.createMessage(batchId));
-  await jobService.setReadyJob(eventId, batchId);
   await batchJob.deleteOnCompleteQueue(job, messageQueue);
 };
 
