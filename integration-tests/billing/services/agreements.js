@@ -4,13 +4,10 @@ const agreementDescriptions = {
   S127: 'Section 127 (Two Part Tariff)'
 };
 
-const createAgreementIfDoesNotExist = `
-insert into water.financial_agreement_types
+const createAgreementIfDoesNotExist = `insert into water.financial_agreement_types
   (id, description, disabled, date_created, date_updated, is_test)
 values
-  (:agreementId, :description, false, NOW(), NOW(), true)
-on conflict (id) do nothing
-returning *`;
+  (:agreementId, :description, false, NOW(), NOW(), true) on conflict (id) do nothing returning *;`;
 
 /**
  * Create the test licence agreement for the licence specified
