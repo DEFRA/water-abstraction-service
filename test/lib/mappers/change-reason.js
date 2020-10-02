@@ -11,7 +11,8 @@ const changeReasonMapper = require('../../../src/lib/mappers/change-reason');
 const dbRow = {
   changeReasonId: '00000000-0000-0000-0000-000000000000',
   description: 'test description',
-  triggersMinimumCharge: true
+  triggersMinimumCharge: true,
+  type: 'new_chargeable_charge_reason'
 };
 
 experiment('modules/billing/mappers/change-reason', () => {
@@ -41,6 +42,10 @@ experiment('modules/billing/mappers/change-reason', () => {
 
     test('has the expected triggersMinimumCharge value', async () => {
       expect(result.triggersMinimumCharge).to.equal(dbRow.triggersMinimumCharge);
+    });
+
+    test('has the expected type', async () => {
+      expect(result.type).to.equal(dbRow.type);
     });
   });
 });
