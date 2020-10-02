@@ -7,6 +7,7 @@ const moment = MomentRange.extendMoment(require('moment'));
 
 const validators = require('./validators');
 const DATE_FORMAT = 'YYYY-MM-DD';
+const { getDateTimeFromValue } = require('../dates');
 
 class DateRange {
   /**
@@ -28,12 +29,15 @@ class DateRange {
    * @return {String} format YYYY-MM-DD
    */
   get startDate () {
-    return this._startDate;
+    return this._startDate ? this._startDate.format(DATE_FORMAT) : this._startDate;
   }
 
   set startDate (date) {
-    validators.assertDate(date);
-    this._startDate = date;
+    const m = getDateTimeFromValue(date);
+    if (m === null) {
+      throw new Error('startDate cannot be null');
+    }
+    this._startDate = m;
   }
 
   /**
@@ -41,12 +45,11 @@ class DateRange {
    * @return {String} format YYYY-MM-DD
    */
   get endDate () {
-    return this._endDate;
+    return this._endDate ? this._endDate.format(DATE_FORMAT) : this._endDate;
   }
 
   set endDate (date) {
-    validators.assertNullableDate(date);
-    this._endDate = date;
+    this._endDate = getDateTimeFromValue(date);
   }
 
   /**
@@ -90,9 +93,7 @@ class DateRange {
       return undefined;
     }
 
-    const startMoment = moment(this.startDate);
-    const endMoment = moment(this.endDate);
-    return endMoment.diff(startMoment, 'days') + 1;
+    return this._endDate.diff(this._startDate, 'days') + 1;
   }
 
   /**
@@ -101,15 +102,13 @@ class DateRange {
    * @return {DateRange}
    */
   static fromMomentRange (momentRange) {
-    const startDate = momentRange.start.format(DATE_FORMAT);
-    const endDate = momentRange.end.format(DATE_FORMAT);
-    return new DateRange(startDate, endDate);
+    return new DateRange(momentRange.start, momentRange.end);
   }
 
   toJSON () {
     return {
-      startDate: this._startDate,
-      endDate: this._endDate
+      startDate: this.startDate,
+      endDate: this.endDate
     };
   }
 
@@ -118,7 +117,7 @@ class DateRange {
    * @return {Boolean}
    */
   get isFinancialYear () {
-    const startYear = moment(this.startDate).year();
+    const startYear = this._startDate.year();
 
     return (this.startDate === `${startYear}-04-01`) &&
      (this.endDate === `${startYear + 1}-03-31`);

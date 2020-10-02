@@ -28,6 +28,7 @@ const { logger } = require('../../../../src/logger');
 
 const newRepos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
+const chargeModuleBillRunConnectorWithRetry = require('../../../../src/lib/connectors/charge-module/bill-runs-with-retry');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
@@ -72,6 +73,7 @@ experiment('modules/billing/services/batch-service', () => {
 
   beforeEach(async () => {
     sandbox.stub(logger, 'error');
+    sandbox.stub(logger, 'info');
 
     sandbox.stub(newRepos.billingBatches, 'delete').resolves();
     sandbox.stub(newRepos.billingBatches, 'findByStatuses');
@@ -115,6 +117,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(chargeModuleBillRunConnector, 'approve').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'send').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'removeCustomerInFinancialYear').resolves();
+    sandbox.stub(chargeModuleBillRunConnectorWithRetry, 'get').resolves();
 
     sandbox.stub(eventService, 'create').resolves();
 
@@ -519,6 +522,14 @@ experiment('modules/billing/services/batch-service', () => {
       expect(id).to.equal('batch-id');
       expect(data).to.equal({ status: 'error', errorCode: 10 });
     });
+
+    test('calls licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch() with the batch ID', async () => {
+      expect(
+        licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch.calledWith(
+          'batch-id'
+        )
+      ).to.be.true();
+    });
   });
 
   experiment('.saveInvoicesToDB', () => {
@@ -658,32 +669,54 @@ experiment('modules/billing/services/batch-service', () => {
       netTotal: 15022872
     };
 
-    beforeEach(async () => {
-      chargeModuleBillRunConnector.get.resolves({
-        billRun: {
-          summary
-        }
+    experiment('when the batch is in ready/sent status', () => {
+      beforeEach(async () => {
+        chargeModuleBillRunConnector.get.resolves({
+          billRun: {
+            summary
+          }
+        });
+        batch = new Batch(uuid());
+        batch.fromHash({
+          externalId: uuid(),
+          status: Batch.BATCH_STATUS.ready
+        });
+        await batchService.decorateBatchWithTotals(batch);
       });
-      batch = new Batch(uuid());
-      batch.fromHash({
-        externalId: uuid(),
-        status: Batch.BATCH_STATUS.ready
+
+      test('calls charge module batch API with correct params', async () => {
+        const [externalId] = chargeModuleBillRunConnector.get.lastCall.args;
+        expect(externalId).to.equal(batch.externalId);
       });
-      await batchService.decorateBatchWithTotals(batch);
+
+      test('adds a Totals instance to the batch', async () => {
+        expect(batch.totals instanceof Totals).to.be.true();
+      });
+
+      test('copies totals correctly', async () => {
+        expect(batch.totals.toJSON()).to.equal(summary);
+      });
     });
 
-    test('calls charge module batch API with correct params', async () => {
-      const [externalId] = chargeModuleBillRunConnector.get.lastCall.args;
-      expect(externalId).to.equal(batch.externalId);
-    });
+    const statuses = [
+      Batch.BATCH_STATUS.processing,
+      Batch.BATCH_STATUS.review,
+      Batch.BATCH_STATUS.error,
+      Batch.BATCH_STATUS.empty
+    ];
 
-    test('adds a Totals instance to the batch', async () => {
-      expect(batch.totals instanceof Totals).to.be.true();
-    });
+    for (const status of statuses) {
+      experiment(`when the batch is in ${status} status`, () => {
+        beforeEach(async () => {
+          batch.status = status;
+          await batchService.decorateBatchWithTotals(batch);
+        });
 
-    test('copies totals correctly', async () => {
-      expect(batch.totals.toJSON()).to.equal(summary);
-    });
+        test('the charge module API is not called', async () => {
+          expect(chargeModuleBillRunConnector.get.called).to.be.false();
+        });
+      });
+    }
   });
 
   experiment('.refreshTotals', () => {
@@ -698,7 +731,7 @@ experiment('modules/billing/services/batch-service', () => {
           status: Batch.BATCH_STATUS.ready,
           batchType: Batch.BATCH_TYPE.supplementary
         });
-        chargeModuleBillRunConnector.get.resolves({
+        chargeModuleBillRunConnectorWithRetry.get.resolves({
           billRun: {
             summary: {
               invoiceCount: 3,
@@ -719,16 +752,17 @@ experiment('modules/billing/services/batch-service', () => {
 
       test('gets the bill run summary from the charge module', async () => {
         expect(
-          chargeModuleBillRunConnector.get.calledWith(externalId)
+          chargeModuleBillRunConnectorWithRetry.get.calledWith(externalId)
         ).to.be.true();
       });
 
-      test('updates the billing batch with the totals', async () => {
+      test('updates the billing batch with the totals and sets status to "ready"', async () => {
         const [id, updates] = newRepos.billingBatches.update.lastCall.args;
         expect(id).to.equal(batchId);
         expect(updates.invoiceCount).to.equal(3);
         expect(updates.creditNoteCount).to.equal(5);
         expect(updates.netTotal).to.equal(343553);
+        expect(updates.status).to.equal(Batch.BATCH_STATUS.ready);
       });
 
       test('persists the transactions de-minimis status flag', async () => {

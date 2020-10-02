@@ -1,9 +1,9 @@
 'use strict';
 
-const { pick: _pick, isString, isObject } = require('lodash');
-const moment = require('moment');
+const { pick: _pick, isObject } = require('lodash');
 
-const { assertId, assertIsoString } = require('./validators');
+const { assertId } = require('./validators');
+const { getDateTimeFromValue } = require('../dates');
 
 class Model {
   constructor (id) {
@@ -44,8 +44,9 @@ class Model {
 
   toJSON () {
     return Object.keys(this).reduce((acc, key) => {
-      const value = this[key];
-      acc[key.replace('_', '')] = isObject(value) && value.toJSON ? value.toJSON() : value;
+      const externalKey = key.replace('_', '');
+      const value = this[externalKey];
+      acc[externalKey] = isObject(value) && value.toJSON ? value.toJSON() : value;
       return acc;
     }, {});
   }
@@ -60,20 +61,7 @@ class Model {
    * @param {null|String|Date|moment} value The value to validate and return as a moment
    */
   getDateTimeFromValue (value) {
-    if (value === null || moment.isMoment(value)) {
-      return value;
-    }
-
-    if (isString(value)) {
-      assertIsoString(value);
-      return moment(value);
-    }
-
-    if (moment.isDate(value)) {
-      return moment(value);
-    }
-
-    throw new Error('Unexpected type for date input. Requires null, ISO string, date or moment');
+    return getDateTimeFromValue(value);
   };
 
   getDateOrThrow (date, friendlyName) {

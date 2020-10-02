@@ -12,13 +12,11 @@ const {
 
 const { omit } = require('lodash');
 
-const moment = require('moment');
+const services = require('../../services');
+const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
+const transactionTests = require('../transaction-tests');
 
-const services = require('../services');
-const chargeModuleTransactionsService = require('../services/charge-module-transactions');
-const transactionTests = require('./transaction-tests');
-
-experiment('annual batch ref: AB2', () => {
+experiment('basic example scenario', () => {
   let batch;
   let chargeModuleTransactions;
 
@@ -27,12 +25,11 @@ experiment('annual batch ref: AB2', () => {
 
     batch = await services.scenarios.runScenario({
       licence: 'l1',
-      licenceAgreement: 's127',
       chargeVersions: [{
         company: 'co1',
         invoiceAccount: 'ia1',
         chargeVersion: 'cv1',
-        chargeElements: ['ce2']
+        chargeElements: ['ce1']
       }]
     }, 'annual');
 
@@ -80,7 +77,7 @@ experiment('annual batch ref: AB2', () => {
       });
 
       test('has the correct invoice address', async () => {
-        expect(invoice.address).to.equal({
+        expect(omit(invoice.address, 'uprn')).to.equal({
           town: 'Testington',
           county: 'Testingshire',
           country: 'UK',
@@ -89,7 +86,6 @@ experiment('annual batch ref: AB2', () => {
           addressLine2: 'Windy road',
           addressLine3: 'Buttercup meadow',
           addressLine4: null,
-          uprn: null,
           source: 'nald'
         });
       });
@@ -124,15 +120,6 @@ experiment('annual batch ref: AB2', () => {
           });
         });
 
-        test('has the correct licence agreement', async () => {
-          const licenceAgreement = licence.licence.licenceAgreements[0];
-          expect(licenceAgreement.licenceRef).to.equal('L1');
-          expect(licenceAgreement.startDate).to.equal('2008-04-01');
-          expect(licenceAgreement.endDate).to.equal(null);
-          expect(licenceAgreement.financialAgreementTypeId).to.equal('S127');
-          expect(moment(licenceAgreement.dateSigned).format('YYYY-MM-DD')).to.equal('2008-05-05');
-        });
-
         test('has 1 transaction', async () => {
           expect(licence.billingTransactions).to.have.length(1);
         });
@@ -159,7 +146,7 @@ experiment('annual batch ref: AB2', () => {
           test('has the correct abstraction period', async () => {
             expect(transaction.abstractionPeriod).to.equal({
               endDay: 31,
-              endMonth: 10,
+              endMonth: 3,
               startDay: 1,
               startMonth: 4
             });
@@ -168,18 +155,18 @@ experiment('annual batch ref: AB2', () => {
           test('has the correct factors', async () => {
             expect(transaction.source).to.equal('unsupported');
             expect(transaction.season).to.equal('summer');
-            expect(transaction.loss).to.equal('high');
+            expect(transaction.loss).to.equal('low');
           });
 
           test('has the correct quantities', async () => {
-            expect(transaction.authorisedQuantity).to.equal('200');
-            expect(transaction.billableQuantity).to.equal(null);
-            expect(transaction.volume).to.equal('200');
+            expect(transaction.authorisedQuantity).to.equal('50');
+            expect(transaction.billableQuantity).to.equal('50');
+            expect(transaction.volume).to.equal('50');
           });
 
           test('has the correct authorised/billable days', async () => {
-            expect(transaction.authorisedDays).to.equal(214);
-            expect(transaction.billableDays).to.equal(214);
+            expect(transaction.authorisedDays).to.equal(366);
+            expect(transaction.billableDays).to.equal(366);
           });
 
           test('has been sent to the charge module', async () => {
@@ -188,17 +175,17 @@ experiment('annual batch ref: AB2', () => {
           });
 
           test('has the correct description', async () => {
-            expect(transaction.description).to.equal('First Part Spray Irrigation - Direct Charge at CE2');
+            expect(transaction.description).to.equal('CE1');
           });
 
           test('has the correct agreements', async () => {
             expect(transaction.section126Factor).to.equal(null);
-            expect(transaction.section127Agreement).to.equal(true);
+            expect(transaction.section127Agreement).to.equal(false);
             expect(transaction.section130Agreement).to.equal(null);
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('c42b9c7fb68fb645b2fd6386dc90fb19');
+            expect(transaction.transactionKey).to.equal('2c75a82bf4c0fc9e185b89dd70213ad7');
           });
         });
       });

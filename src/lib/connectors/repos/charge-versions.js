@@ -13,6 +13,7 @@ const sharedRelations = [
   'licence',
   'licence.region',
   'licence.licenceAgreements',
+  'licence.licenceAgreements.financialAgreementType',
   'changeReason'
 ];
 

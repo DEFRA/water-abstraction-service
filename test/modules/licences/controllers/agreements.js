@@ -5,15 +5,33 @@ const { afterEach, beforeEach, experiment, test } = exports.lab = require('@hapi
 const uuid = require('uuid/v4');
 
 const controller = require('../../../../src/modules/licences/controllers/agreements');
-const licencesService = require('../../../../src/lib/services/licences');
+const eventsService = require('../../../../src/lib/services/events');
+const licenceAgreementsService = require('../../../../src/lib/services/licence-agreements');
+
+const User = require('../../../../src/lib/models/user');
+const Licence = require('../../../../src/lib/models/licence');
+const LicenceAgreement = require('../../../../src/lib/models/licence-agreement');
+
+const { NotFoundError } = require('../../../../src/lib/errors');
 
 const sandbox = require('sinon').createSandbox();
 
+const responseStub = {
+  code: sandbox.stub()
+};
+
+const h = {
+  response: sandbox.stub().returns(responseStub)
+};
+
 experiment('modules/licences/controllers/licences.js', () => {
   beforeEach(async () => {
-    sandbox.stub(licencesService, 'getLicenceAgreementById');
-    sandbox.stub(licencesService, 'getLicenceById');
-    sandbox.stub(licencesService, 'getLicenceAgreementsByLicenceRef');
+    sandbox.stub(licenceAgreementsService, 'getLicenceAgreementById');
+    sandbox.stub(licenceAgreementsService, 'getLicenceAgreementsByLicenceRef');
+    sandbox.stub(licenceAgreementsService, 'deleteLicenceAgreementById');
+    sandbox.stub(licenceAgreementsService, 'createLicenceAgreement');
+
+    sandbox.stub(eventsService, 'create');
   });
 
   afterEach(async () => {
@@ -36,12 +54,12 @@ experiment('modules/licences/controllers/licences.js', () => {
 
     experiment('when the agreement exists', () => {
       beforeEach(async () => {
-        licencesService.getLicenceAgreementById.resolves({ agreementId });
+        licenceAgreementsService.getLicenceAgreementById.resolves({ agreementId });
         result = await controller.getAgreement(request);
       });
 
       test('the agreement ID is passed to the service', async () => {
-        expect(licencesService.getLicenceAgreementById.calledWith(agreementId)).to.be.true();
+        expect(licenceAgreementsService.getLicenceAgreementById.calledWith(agreementId)).to.be.true();
       });
 
       test('resolves with the expected data', async () => {
@@ -51,7 +69,7 @@ experiment('modules/licences/controllers/licences.js', () => {
 
     experiment('when the licence does not exist', () => {
       beforeEach(async () => {
-        licencesService.getLicenceAgreementById.resolves(null);
+        licenceAgreementsService.getLicenceAgreementById.resolves(null);
         result = await controller.getAgreement(request);
       });
 
@@ -66,29 +84,6 @@ experiment('modules/licences/controllers/licences.js', () => {
     let request;
     let result;
 
-    experiment('when no licence exists for the id', () => {
-      beforeEach(async () => {
-        request = {
-          params: {
-            licenceId: uuid()
-          }
-        };
-
-        licencesService.getLicenceById.resolves(null);
-
-        result = await controller.getLicenceAgreements(request);
-      });
-
-      test('no call is made to get the agreements', async () => {
-        expect(licencesService.getLicenceAgreementsByLicenceRef.called).to.equal(false);
-      });
-
-      test('resolves with a Boom 404', async () => {
-        expect(result.isBoom).to.be.true();
-        expect(result.output.statusCode).to.equal(404);
-      });
-    });
-
     experiment('when there is a licence for the id', () => {
       let licenceAgreementId;
 
@@ -96,14 +91,15 @@ experiment('modules/licences/controllers/licences.js', () => {
         request = {
           params: {
             licenceId: uuid()
+          },
+          pre: {
+            licence: {
+              licenceNumber: '123/123'
+            }
           }
         };
 
-        licencesService.getLicenceById.resolves({
-          licenceNumber: '123/123'
-        });
-
-        licencesService.getLicenceAgreementsByLicenceRef.resolves([
+        licenceAgreementsService.getLicenceAgreementsByLicenceRef.resolves([
           { licenceAgreementId: licenceAgreementId = uuid() }
         ]);
 
@@ -114,6 +110,126 @@ experiment('modules/licences/controllers/licences.js', () => {
         expect(result).equal([
           { licenceAgreementId }
         ]);
+      });
+    });
+  });
+
+  experiment('.deleteAgreement', () => {
+    let request, agreementId;
+    beforeEach(() => {
+      agreementId = uuid();
+      request = {
+        params: {
+          agreementId
+        },
+        defra: {
+          internalCallingUser: {
+            email: 'test@example.com'
+          },
+          internalCallingUserModel: new User(123, 'mail@example.com')
+        }
+      };
+    });
+
+    experiment('when the agreement is not found', () => {
+      let result;
+      beforeEach(async () => {
+        licenceAgreementsService.deleteLicenceAgreementById.rejects(new NotFoundError('Not found'));
+        result = await controller.deleteAgreement(request, h);
+      });
+
+      test('calls the service method with the correct id and issuer', async () => {
+        expect(licenceAgreementsService.deleteLicenceAgreementById.calledWith(
+          request.params.agreementId,
+          request.defra.internalCallingUserModel
+        ));
+      });
+
+      test('returns a Boom 404 error', async () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when the agreement is deleted successfully', () => {
+      beforeEach(async () => {
+        await controller.deleteAgreement(request, h);
+      });
+
+      test('calls the service method with the correct id', async () => {
+        expect(licenceAgreementsService.deleteLicenceAgreementById.calledWith(
+          request.params.agreementId,
+          request.defra.internalCallingUserModel
+        ));
+      });
+
+      test('responds with a 204', async () => {
+        expect(responseStub.code.calledWith(204)).to.be.true();
+      });
+    });
+  });
+
+  experiment('.postLicenceAgreement', () => {
+    let request, agreementId, result;
+
+    beforeEach(() => {
+      agreementId = uuid();
+      request = {
+        params: {
+          agreementId
+        },
+        payload: {
+          code: 'S127',
+          startDate: '2019-04-01',
+          dateSigned: '2019-05-04'
+        },
+        defra: {
+          internalCallingUser: {
+            email: 'test@example.com'
+          },
+          internalCallingUserModel: new User(123, 'mail@example.com')
+        },
+        pre: {
+          licence: new Licence(uuid())
+        }
+      };
+    });
+
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        licenceAgreementsService.createLicenceAgreement.resolves(
+          new LicenceAgreement(uuid())
+        );
+        result = await controller.postLicenceAgreement(request, h);
+      });
+
+      test('calls the service method with the correct parameters', async () => {
+        const [licence, data, issuer] = licenceAgreementsService.createLicenceAgreement.lastCall.args;
+        expect(licence).to.equal(request.pre.licence);
+        expect(data.code).to.equal(request.payload.code);
+        expect(data.startDate).to.equal(request.payload.startDate);
+        expect(data.dateSigned).to.equal(request.payload.dateSigned);
+        expect(issuer).to.equal(request.defra.internalCallingUserModel);
+      });
+
+      test('responds with the new licence agreement model', async () => {
+        expect(h.response.lastCall.args[0]).to.be.an.instanceof(LicenceAgreement);
+      });
+
+      test('uses a 201 http code', async () => {
+        expect(responseStub.code.calledWith(201)).to.be.true();
+      });
+    });
+
+    experiment('when there is an error', async () => {
+      beforeEach(async () => {
+        licenceAgreementsService.createLicenceAgreement.rejects(new NotFoundError());
+        result = await controller.postLicenceAgreement(request, h);
+      });
+
+      test('the error is mapped to a suitable Boom error', async () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(404);
       });
     });
   });

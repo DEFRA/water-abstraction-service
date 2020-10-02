@@ -23,10 +23,12 @@ const BATCH_ID = uuid();
 const EVENT_ID = uuid();
 
 experiment('modules/billing/jobs/create-charge-complete', () => {
-  let messageQueue, job;
-  const batch = new Batch(BATCH_ID);
+  let messageQueue, job, batch;
 
   beforeEach(async () => {
+    batch = new Batch(BATCH_ID);
+    batch.status = Batch.BATCH_STATUS.processing;
+
     job = {
       data: {
         request: {
@@ -50,13 +52,13 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
     sandbox.stub(batchService, 'setErrorStatus').resolves();
     sandbox.stub(batchService, 'cleanup').resolves();
 
-    sandbox.stub(batchJob, 'failBatch').resolves();
     sandbox.stub(batchJob, 'logOnComplete').resolves();
     sandbox.stub(batchJob, 'logOnCompleteError').resolves();
     sandbox.stub(batchJob, 'deleteOnCompleteQueue').resolves();
 
     messageQueue = {
-      publish: sandbox.stub().resolves()
+      publish: sandbox.stub().resolves(),
+      deleteQueue: sandbox.stub()
     };
   });
 
@@ -65,19 +67,18 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
   });
 
   experiment('when the job fails', () => {
-    test('the batch is set to error and cancelled ', async () => {
-      const job = {
-        name: 'testing',
-        data: {
-          failed: true
-        }
-      };
+    test('the other jobs in the queue are deleted', async () => {
+      job.data.failed = true;
       await createChargeComplete(job, messageQueue);
+      expect(messageQueue.deleteQueue.calledWith(job.data.request.name)).to.be.true();
+    });
+  });
 
-      const failArgs = batchJob.failBatch.lastCall.args;
-      expect(failArgs[0]).to.equal(job);
-      expect(failArgs[1]).to.equal(messageQueue);
-      expect(failArgs[2]).to.equal(Batch.BATCH_ERROR_CODE.failedToCreateCharge);
+  experiment('when the batch is not in "processing" status', () => {
+    test('no further jobs are scheduled', async () => {
+      batch.status = Batch.BATCH_STATUS.error;
+      await createChargeComplete(job, messageQueue);
+      expect(messageQueue.publish.called).to.be.false();
     });
   });
 
@@ -85,6 +86,32 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
     beforeEach(async () => {
       batchService.getTransactionStatusCounts.resolves({
         candidate: 3
+      });
+      await createChargeComplete(job, messageQueue);
+    });
+
+    test('no further jobs are published', async () => {
+      expect(messageQueue.publish.called).to.be.false();
+    });
+
+    test('the job is not marked as ready', async () => {
+      expect(jobService.setReadyJob.called).to.be.false();
+    });
+
+    test('the batch cleanup is not called', async () => {
+      expect(batchService.cleanup.called).to.be.false();
+    });
+
+    test('remaining onComplete jobs are not deleted', async () => {
+      expect(batchJob.deleteOnCompleteQueue.called).to.be.false();
+    });
+  });
+
+  experiment('when there are errored transactions in the batch', () => {
+    beforeEach(async () => {
+      batchService.getTransactionStatusCounts.resolves({
+        candidate: 3,
+        error: 1
       });
       await createChargeComplete(job, messageQueue);
     });
@@ -122,12 +149,6 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
     test('a job is published to get Charge Module totals', async () => {
       const { data } = messageQueue.publish.lastCall.args[0];
       expect(data.batchId).to.equal(BATCH_ID);
-    });
-
-    test('the job is marked as ready', async () => {
-      expect(jobService.setReadyJob.calledWith(
-        EVENT_ID, BATCH_ID
-      )).to.be.true();
     });
 
     test('remaining onComplete jobs are deleted', async () => {
@@ -182,12 +203,6 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
     test('a message is logged', async () => {
       const args = batchJob.logOnCompleteError.lastCall.args;
       expect(args[0]).to.equal(job);
-    });
-
-    test('the batch is set to error status', async () => {
-      const [batchId, errorCode] = batchService.setErrorStatus.lastCall.args;
-      expect(batchId).to.equal(BATCH_ID);
-      expect(errorCode).to.equal(Batch.BATCH_ERROR_CODE.failedToCreateCharge);
     });
   });
 });

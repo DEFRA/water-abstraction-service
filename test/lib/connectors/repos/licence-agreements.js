@@ -10,6 +10,7 @@ const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
+const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
 const repos = require('../../../../src/lib/connectors/repos');
 const { LicenceAgreement } = require('../../../../src/lib/connectors/bookshelf');
 
@@ -27,6 +28,9 @@ experiment('lib/connectors/repos/licence-agreements', () => {
       orderBy: sandbox.stub().returnsThis()
     };
     sandbox.stub(LicenceAgreement, 'forge').returns(stub);
+    sandbox.stub(helpers, 'findOne').returns();
+    sandbox.stub(helpers, 'deleteOne').returns();
+    sandbox.stub(helpers, 'create');
   });
 
   afterEach(async () => {
@@ -114,42 +118,38 @@ experiment('lib/connectors/repos/licence-agreements', () => {
   });
 
   experiment('.findOne', () => {
-    let result;
+    beforeEach(async () => {
+      result = await repos.licenceAgreements.findOne('test-id');
+    });
+    test('calls the findOne helper function with expected arguments', () => {
+      const [model, key, id] = helpers.findOne.lastCall.args;
+      expect(model).to.equal(LicenceAgreement);
+      expect(key).to.equal('licenceAgreementId');
+      expect(id).to.equal('test-id');
+    });
+  });
 
-    experiment('when a record is found', () => {
-      beforeEach(async () => {
-        model.toJSON.resolves({ foo: 'bar' });
-        result = await repos.licenceAgreements.findOne('test-id');
-      });
-
-      test('calls model.forge with correct id', async () => {
-        const [params] = LicenceAgreement.forge.lastCall.args;
-        expect(params).to.equal({ licenceAgreementId: 'test-id' });
-      });
-
-      test('calls fetch() without requiring matching record', async () => {
-        const [params] = stub.fetch.lastCall.args;
-        expect(params.require).to.equal(false);
-      });
-
-      test('calls toJSON() on returned models', async () => {
-        expect(model.toJSON.callCount).to.equal(1);
-      });
-
-      test('returns the result of the toJSON() call', async () => {
-        expect(result).to.equal({ foo: 'bar' });
-      });
+  experiment('.deleteOne', () => {
+    beforeEach(async () => {
+      result = await repos.licenceAgreements.deleteOne('test-id');
     });
 
-    experiment('when a record is not found', () => {
-      beforeEach(async () => {
-        stub.fetch.resolves(null);
-        result = await repos.licenceAgreements.findOne('test-id');
-      });
+    test('calls the deleteOne helper function with expected arguments', () => {
+      const [model, key, id] = helpers.deleteOne.lastCall.args;
+      expect(model).to.equal(LicenceAgreement);
+      expect(key).to.equal('licenceAgreementId');
+      expect(id).to.equal('test-id');
+    });
+  });
 
-      test('resolves with null', async () => {
-        expect(result).to.equal(null);
-      });
+  experiment('.create', () => {
+    test('delegates to the .create() helper function', async () => {
+      const data = { startDate: '2020-01-01' };
+      await repos.licenceAgreements.create(data);
+
+      expect(helpers.create.calledWith(
+        LicenceAgreement, data
+      )).to.be.true();
     });
   });
 });

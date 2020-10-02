@@ -26,15 +26,15 @@ from (
     and (cv.change_reason_id is null or cr.type = 'new_chargeable_charge_version')
 ) cv
   left join (
-    select *
-    from water.licence_agreements la
+    select la.* from water.licence_agreements la 
+      join water.financial_agreement_types a on la.financial_agreement_type_id=a.financial_agreement_type_id
     where (la.end_date is null or la.end_date > :startDate)
       and la.start_date <= :endDate
-      and la.financial_agreement_type_id='S127'
+      and a.financial_agreement_code='S127'
   ) la on cv.licence_ref=la.licence_ref
 
 where cv.start_date<:endDate
-and (cv.end_date is null or cv.end_date>:startDate)
+and (cv.end_date is null or cv.end_date>:startDate);
 `;
 
 exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear;

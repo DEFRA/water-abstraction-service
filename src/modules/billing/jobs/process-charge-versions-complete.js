@@ -1,18 +1,15 @@
 'use strict';
 
-const batchJob = require('./lib/batch-job');
-const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+const { partialRight } = require('lodash');
+
+const { BATCH_STATUS } = require('../../../lib/models/batch');
 const processChargeVersionJob = require('./process-charge-version');
+const { createOnCompleteHandler } = require('./lib/on-complete');
+const batchJob = require('./lib/batch-job');
 
-const handleProcessChargeVersionsComplete = async (job, messageQueue) => {
-  batchJob.logOnComplete(job);
-
-  if (batchJob.hasJobFailed(job)) {
-    return batchJob.failBatch(job, messageQueue, BATCH_ERROR_CODE.failedToProcessChargeVersions);
-  }
-
+const handleProcessChargeVersionsComplete = async (job, messageQueue, batch) => {
   try {
-    const { eventId, batch } = job.data.request.data;
+    const { eventId } = job.data.request.data;
     const { billingBatchChargeVersionYears } = job.data.response;
 
     // Publish a job to process each charge version year
@@ -26,4 +23,4 @@ const handleProcessChargeVersionsComplete = async (job, messageQueue) => {
   }
 };
 
-module.exports = handleProcessChargeVersionsComplete;
+module.exports = partialRight(createOnCompleteHandler, handleProcessChargeVersionsComplete, BATCH_STATUS.processing);

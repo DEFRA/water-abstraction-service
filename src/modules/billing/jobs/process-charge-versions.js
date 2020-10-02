@@ -1,10 +1,13 @@
 'use strict';
 
+const { get } = require('lodash');
+
 const chargeVersionYearService = require('../services/charge-version-year');
 const batchJob = require('./lib/batch-job');
 const batchService = require('../services/batch-service');
 const JOB_NAME = 'billing.process-charge-versions.*';
 const batchStatus = require('./lib/batch-status');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 
 /**
  * Creates the request object for publishing a new job for processing
@@ -22,9 +25,11 @@ const createMessage = (eventId, batch) => {
 const handleProcessChargeVersions = async job => {
   batchJob.logHandling(job);
 
+  const batchId = get(job, 'data.batch.id');
+
   try {
     // Load batch
-    const batch = await batchService.getBatchById(job.data.batch.id);
+    const batch = await batchService.getBatchById(batchId);
 
     // Check batch in "processing" status
     batchStatus.assertBatchIsProcessing(batch);
@@ -37,7 +42,7 @@ const handleProcessChargeVersions = async job => {
       billingBatchChargeVersionYears
     };
   } catch (err) {
-    batchJob.logHandlingError(job, err);
+    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToProcessChargeVersions);
     throw err;
   }
 };
