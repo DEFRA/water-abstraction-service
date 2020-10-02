@@ -8,7 +8,8 @@ const PurposeSecondary = require('../../../src/lib/connectors/bookshelf/PurposeS
 
 const insertQuery = `
   insert into water.purposes_secondary (legacy_id, description, date_created)
-  values (:legacy_id, :description, now()) on conflict (legacy_id) do nothing;
+  values (:legacy_id, :description, now())
+  on conflict (legacy_id) do nothing;
 `;
 
 /**

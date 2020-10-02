@@ -6,8 +6,11 @@ const purposePrimaryData = require('./data/purpose-primary');
 const { bookshelf } = require('../../../src/lib/connectors/bookshelf');
 const PurposePrimary = require('../../../src/lib/connectors/bookshelf/PurposePrimary');
 
-const insertQuery = `insert into water.purposes_primary (legacy_id, description, date_created)
-  values (:legacy_id, :description, now()) on conflict (legacy_id) do nothing;`;
+const insertQuery = `
+  insert into water.purposes_primary (legacy_id, description, date_created)
+  values (:legacy_id, :description, now())
+  on conflict (legacy_id) do nothing;
+`;
 
 /**
  * Creates a purpose use if it does not exist
