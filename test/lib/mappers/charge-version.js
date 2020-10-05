@@ -259,7 +259,7 @@ experiment('lib/mappers/charge-version', () => {
       expect(model.changeReason).to.be.instanceOf(ChangeReason);
       expect(model.changeReason.id).to.equal(dbRow.changeReason.changeReasonId);
       expect(model.changeReason.triggersMinimumCharge).to.equal(dbRow.changeReason.triggersMinimumCharge);
-      expect(model.changeReason.reason).to.equal(dbRow.changeReason.description);
+      expect(model.changeReason.description).to.equal(dbRow.changeReason.description);
     });
   });
 
@@ -277,6 +277,11 @@ experiment('lib/mappers/charge-version', () => {
         dateRange: {
           startDate: '2019-01-01',
           endDate: null
+        },
+        changeReason: {
+          changeReasonId: uuid(),
+          triggersMinimumCharge: false,
+          description: 'change reason description'
         },
         chargeElements: [{
           id: uuid(),
@@ -342,6 +347,13 @@ experiment('lib/mappers/charge-version', () => {
         expect(result.dateRange).to.be.an.instanceOf(DateRange);
         expect(result.dateRange.startDate).to.equal(obj.dateRange.startDate);
         expect(result.dateRange.endDate).to.equal(obj.dateRange.endDate);
+      });
+
+      test('maps the .changeReason property', async () => {
+        expect(result.changeReason).to.be.an.instanceOf(ChangeReason);
+        expect(result.changeReason.id).to.equal(obj.changeReason.changeReasonId);
+        expect(result.changeReason.triggersMinimumCharge).to.equal(obj.changeReason.triggersMinimumCharge);
+        expect(result.changeReason.description).to.equal(obj.changeReason.description);
       });
 
       test('maps the .chargeElements property', async () => {

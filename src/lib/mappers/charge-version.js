@@ -80,6 +80,7 @@ const pojoToModelMapper = createMapper()
     'status'
   )
   .map('dateRange').to('dateRange', dateRangeMapper.pojoToModel)
+  .map('changeReason').to('changeReason', changeReasonMapper.pojoToModel)
   .map('chargeElements').to('chargeElements', chargeElements => chargeElements.map(chargeElementMapper.pojoToModel))
   .map('invoiceAccount').to('invoiceAccount', invoiceAccountMapper.pojoToModel)
   .map('createdBy').to('createdBy', userMapper.pojoToModel)
