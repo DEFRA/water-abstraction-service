@@ -24,7 +24,8 @@ const pojoToModelMapper = createMapper()
   .map('changeReasonId').to('id')
   .copy(
     'description',
-    'triggersMinimumCharge'
+    'triggersMinimumCharge',
+    'type'
   );
 
 /**
