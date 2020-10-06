@@ -9,16 +9,20 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 
 const uuid = require('uuid/v4');
+const moment = require('moment');
 
 const apiConnector = require('../../../../src/lib/services/returns/api-connector');
 const returnsService = require('../../../../src/lib/services/returns');
 const returnsRequirementsService = require('../../../../src/lib/services/return-requirements');
+const documentsService = require('../../../../src/lib/services/documents-service');
 
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const Return = require('../../../../src/lib/models/return');
 const ReturnVersion = require('../../../../src/lib/models/return-version');
 const ReturnLine = require('../../../../src/lib/models/return-line');
 const ReturnRequirement = require('../../../../src/lib/models/return-requirement');
+const Document = require('../../../../src/lib/models/document');
+const DateRange = require('../../../../src/lib/models/date-range');
 
 const returnId = 'v1:1:01/123/456:1234567:2019-04-01:2020-03-31';
 const versionId = uuid();
@@ -28,8 +32,8 @@ const financialYear = new FinancialYear(2020);
 const createReturns = (overrides = {}) => (
   [{
     return_id: returnId,
-    start_date: '2019-04-01',
-    end_date: '2020-03-31',
+    start_date: overrides.startDate || '2019-04-01',
+    end_date: overrides.endDate || '2020-03-31',
     due_date: '2020-04-28',
     received_date: '2020-04-21',
     current: true,
@@ -77,13 +81,24 @@ const createReturnRequirement = () => {
   });
 };
 
+const createDocument = (startDate, endDate) => {
+  const doc = new Document();
+  return doc.fromHash({
+    id: uuid(),
+    dateRange: new DateRange(startDate, endDate)
+  });
+};
+
 experiment('lib/services/returns/index', () => {
   beforeEach(async () => {
     sandbox.stub(apiConnector, 'getReturnsForLicenceInCycle').resolves([]);
+    sandbox.stub(apiConnector, 'getLicenceReturnsByStatusAndEndDate').resolves([]);
     apiConnector.getReturnsForLicenceInCycle.onCall(0).resolves(createReturns());
     sandbox.stub(apiConnector, 'getCurrentVersion').resolves(createVersion());
     sandbox.stub(apiConnector, 'getLines').resolves(createLines());
     sandbox.stub(returnsRequirementsService, 'getReturnRequirementByExternalId').resolves(createReturnRequirement());
+    sandbox.stub(documentsService, 'getDocuments');
+    sandbox.stub(documentsService, 'getDocument');
   });
 
   afterEach(async () => {
@@ -197,6 +212,71 @@ experiment('lib/services/returns/index', () => {
         const { returnLines } = result[0].returnVersions[0];
         expect(returnLines).to.be.an.array().length(0);
       });
+    });
+  });
+
+  experiment('.getReturnsWithContactsForLicence', () => {
+    const licenceNumber = '01/123/ABC';
+    let result;
+
+    const documents = {
+      a: createDocument('2015-01-01', '2017-12-31'),
+      b: createDocument('2018-01-01', null)
+    };
+
+    beforeEach(async () => {
+      documentsService.getDocuments.resolves([{
+        id: documents.a.id
+      }, {
+        id: documents.b.id
+      }]);
+
+      documentsService.getDocument.withArgs(documents.a.id).resolves(documents.a);
+      documentsService.getDocument.withArgs(documents.b.id).resolves(documents.b);
+
+      apiConnector.getLicenceReturnsByStatusAndEndDate.onCall(0).resolves(
+        createReturns({ startDate: '2015-04-01', endDate: '2016-03-31', status: 'due' })
+      );
+      apiConnector.getLicenceReturnsByStatusAndEndDate.onCall(1).resolves(
+        createReturns({ startDate: '2018-04-01', endDate: '2019-03-31', status: 'received' })
+      );
+
+      result = await returnsService.getReturnsWithContactsForLicence(licenceNumber);
+    });
+
+    test('all documents are fetched for the licence number provided', async () => {
+      expect(documentsService.getDocuments.calledWith(
+        licenceNumber
+      )).to.be.true();
+    });
+
+    test('the full detail of each document is loaded', async () => {
+      expect(documentsService.getDocument.callCount).to.equal(2);
+      expect(documentsService.getDocument.calledWith(documents.a.id)).to.be.true();
+      expect(documentsService.getDocument.calledWith(documents.b.id)).to.be.true();
+    });
+
+    test('returns for the first document date range are fetched', async () => {
+      expect(apiConnector.getLicenceReturnsByStatusAndEndDate.calledWith(
+        licenceNumber, ['due', 'received'], '2015-01-01', '2017-12-31'
+      )).to.be.true();
+    });
+
+    test('returns for the second document date range are fetched', async () => {
+      const today = moment().format('YYYY-MM-DD');
+      expect(apiConnector.getLicenceReturnsByStatusAndEndDate.calledWith(
+        licenceNumber, ['due', 'received'], '2018-01-01', today
+      )).to.be.true();
+    });
+
+    test('the result has the expected shape', async () => {
+      expect(result).to.be.an.array().length(2);
+      expect(result[0].returns).to.be.an.array().length(1);
+      expect(result[0].returns[0]).to.be.an.instanceof(Return);
+      expect(result[0].document).to.be.an.instanceof(Document);
+      expect(result[1].returns).to.be.an.array().length(1);
+      expect(result[1].returns[0]).to.be.an.instanceof(Return);
+      expect(result[1].document).to.be.an.instanceof(Document);
     });
   });
 });

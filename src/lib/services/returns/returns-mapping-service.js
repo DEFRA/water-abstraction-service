@@ -11,7 +11,7 @@ const returnMapper = require('../../mappers/return');
 
 const { uniq, find } = require('lodash');
 
-const getReturnRequirementExternalId = returnsData => `${returnsData.metadata.nald.regionCode}:${returnsData.metadata.nald.formatId}`;
+const getReturnRequirementExternalId = returnData => `${returnData.metadata.nald.regionCode}:${returnData.metadata.nald.formatId}`;
 
 /**
  * Given a list of returns loaded from the returns service, fetches the

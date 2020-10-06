@@ -163,13 +163,13 @@ const getFilterEndDate = document => first(
  * @return {Array<Object>}
  */
 const getDocumentReturns = async (licenceNumber, documentId) => {
-  // Get full document
+  // Get full document from CRM
   const document = await documentsService.getDocument(documentId);
 
   // Filter document roles to only include relevant current roles for returns
   document.roles = filterDocumentRoles(document);
 
-  // Get returns
+  // Get returns with "due" or "received" status with end date during the document date range
   const returnsData = await apiConnector.getLicenceReturnsByStatusAndEndDate(licenceNumber, [
     RETURN_STATUS.due,
     RETURN_STATUS.received
@@ -191,7 +191,7 @@ const getDocumentReturns = async (licenceNumber, documentId) => {
  * @param {Array<String>} returns statuses to fetch
  * @return {Array<Object>} each object contains { document, returns : [] }
  */
-const getReturnsWithContactsForLicence = async (licenceNumber, statuses) => {
+const getReturnsWithContactsForLicence = async (licenceNumber) => {
   // Find documents for licence
   const documents = await documentsService.getDocuments(licenceNumber);
 
