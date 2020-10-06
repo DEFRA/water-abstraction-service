@@ -115,9 +115,8 @@ experiment('modules/licences/controllers/licences.js', () => {
     });
   });
 
-
   experiment('.patchAgreement', () => {
-    let request, result, licenceAgreementId;
+    let request;
     beforeEach(async () => {
       request = {
         params: {
@@ -139,12 +138,12 @@ experiment('modules/licences/controllers/licences.js', () => {
     experiment('when the request is valid', () => {
       beforeEach(async () => {
         licenceAgreementsService.patchLicenceAgreement.resolves();
-        result = await controller.patchAgreement(request, h);
+        await controller.patchAgreement(request, h);
       });
       test('calls the service method', async () => {
         expect(licenceAgreementsService.patchLicenceAgreement.called).to.be.true();
       });
-    })
+    });
   });
 
   experiment('.deleteAgreement', () => {

@@ -4,9 +4,7 @@ const {
   experiment,
   test,
   beforeEach,
-  afterEach,
-  before,
-  after
+  afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
@@ -33,8 +31,6 @@ const User = require('../../../src/lib/models/user');
 const Licence = require('../../../src/lib/models/licence');
 const LicenceAgreement = require('../../../src/lib/models/licence-agreement');
 const Agreement = require('../../../src/lib/models/agreement');
-const { licenceAgreement } = require('../../../src/lib/mappers');
-
 const licenceAgreementId = uuid();
 const createTestUser = () => new User(123, 'joan.doe@example.com');
 const createTestLicence = () => new Licence(uuid()).fromHash({
@@ -93,12 +89,11 @@ experiment('src/lib/services/licence-agreements', () => {
   });
 
   experiment('.patchLicenceAgreement', () => {
-
     experiment('when the licence agreement is not found', () => {
       const tempLicenceId = uuid();
       beforeEach(async () => {
         service.findOne.resolves(null);
-        licenceAgreementRepo.update.returns({ licence: { licenceId: tempLicenceId } })
+        licenceAgreementRepo.update.returns({ licence: { licenceId: tempLicenceId } });
       });
       test('a NotFoundError is thrown', async () => {
         const func = () => licenceAgreementsService.patchLicenceAgreement(licenceAgreementId);
@@ -106,7 +101,7 @@ experiment('src/lib/services/licence-agreements', () => {
         expect(err).to.be.an.instanceof(errors.NotFoundError);
         expect(err.message).to.equal(`Licence agreement ${licenceAgreementId} not found`);
       });
-    })
+    });
 
     experiment('when the licence agreement is found', () => {
       const tempLicenceId = uuid();
@@ -115,13 +110,10 @@ experiment('src/lib/services/licence-agreements', () => {
       beforeEach(async () => {
         licenceAgreement = createTestLicenceAgreement();
         service.findOne.resolves(licenceAgreement);
-        licenceAgreementRepo.update.returns({ licence: { licenceId: tempLicenceId } })
-
+        licenceAgreementRepo.update.returns({ licence: { licenceId: tempLicenceId } });
         user = createTestUser();
-
         licence = createTestLicence();
         licenceService.getLicenceByLicenceRef.resolves(licence);
-
         await licenceAgreementsService.patchLicenceAgreement(licenceAgreementId, { endDate: '2020-01-01' }, user);
       });
 
