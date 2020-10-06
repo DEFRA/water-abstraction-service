@@ -126,20 +126,6 @@ const deleteBatch = (request, h) => controller.deleteEntity(
   request.defra.internalCallingUser
 );
 
-/*
-const deleteBatch = async (request, h) => {
-  const { batch } = request.pre;
-  const { internalCallingUser } = request.defra;
-
-  if (!batch.canBeDeleted()) {
-    return h.response(`Cannot delete batch when status is ${batch.status}`).code(422);
-  }
-
-  await batchService.deleteBatch(batch, internalCallingUser);
-  return h.response().code(204);
-};
-*/
-
 const postApproveBatch = async (request, h) => {
   const { batch } = request.pre;
   const { internalCallingUser } = request.defra;

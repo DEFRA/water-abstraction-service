@@ -130,15 +130,6 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
     cmResponse = createCMResponse();
   });
 
-  const { BATCH_STATUS } = Batch;
-  [BATCH_STATUS.processing, BATCH_STATUS.empty, BATCH_STATUS.error, BATCH_STATUS.review].forEach(status => {
-    test(`when batch has "${status}" status, no mapping takes place`, async () => {
-      batch.status = status;
-      const decoratedBatch = chargeModuleDecorators.decorateBatch(batch, cmResponse);
-      expect(decoratedBatch.totals).to.be.undefined();
-    });
-  });
-
   experiment('when batch status is ready/sent', () => {
     let updatedBatch;
 

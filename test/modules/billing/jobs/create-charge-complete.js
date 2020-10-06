@@ -151,12 +151,6 @@ experiment('modules/billing/jobs/create-charge-complete', () => {
       expect(data.batchId).to.equal(BATCH_ID);
     });
 
-    test('the job is marked as ready', async () => {
-      expect(jobService.setReadyJob.calledWith(
-        EVENT_ID, BATCH_ID
-      )).to.be.true();
-    });
-
     test('remaining onComplete jobs are deleted', async () => {
       expect(batchJob.deleteOnCompleteQueue.calledWith(
         job, messageQueue

@@ -216,5 +216,11 @@ module.exports = {
     password: process.env.REDIS_PASSWORD || '',
     ...!(isLocal || isTravis) && { tls: {} },
     db: 2
+  },
+
+  chargeModuleConnector: {
+    retries: 10,
+    factor: 2,
+    minTimeout: 5 * 1000
   }
 };
