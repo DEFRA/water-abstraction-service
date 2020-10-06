@@ -15,7 +15,7 @@ const licencesRepo = require('../../../../src/lib/connectors/repos/licences');
 const { Licence, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 
-experiment('lib/connectors/repos/licences', () => {
+experiment('lib/connectors/repos/licences.js', () => {
   let model, stub;
 
   beforeEach(async () => {
@@ -82,11 +82,11 @@ experiment('lib/connectors/repos/licences', () => {
     });
   });
 
-  experiment('.findByLicenceRef', () => {
+  experiment('.findOneByLicenceRef', () => {
     let result;
 
     beforeEach(async () => {
-      result = await licencesRepo.findByLicenceRef('test-ref');
+      result = await licencesRepo.findOneByLicenceRef('test-ref');
     });
 
     test('calls where with correct id', async () => {

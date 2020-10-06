@@ -10,14 +10,15 @@ const {
 
 const uuid = require('uuid/v4');
 
-const repos = require('../../../../src/lib/connectors/repos');
 const apiConnector = require('../../../../src/lib/services/returns/api-connector');
 const returnsService = require('../../../../src/lib/services/returns');
+const returnsRequirementsService = require('../../../../src/lib/services/return-requirements');
 
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const Return = require('../../../../src/lib/models/return');
 const ReturnVersion = require('../../../../src/lib/models/return-version');
 const ReturnLine = require('../../../../src/lib/models/return-line');
+const ReturnRequirement = require('../../../../src/lib/models/return-requirement');
 
 const returnId = 'v1:1:01/123/456:1234567:2019-04-01:2020-03-31';
 const versionId = uuid();
@@ -43,6 +44,8 @@ const createReturns = (overrides = {}) => (
         }
       }],
       nald: {
+        regionCode: 1,
+        formatId: 123,
         periodStartDay: 1,
         periodStartMonth: 5,
         periodEndDay: 31,
@@ -68,23 +71,19 @@ const createLines = () => ([{
   time_period: 'month'
 }]);
 
-const createPurposeUses = () => ([{
-  purposeUseId: uuid(),
-  legacyId: '400',
-  description: 'Spray Irrigation - Direct',
-  dateCreated: '2008-01-01',
-  dateUpdated: '2008-01-01',
-  lossFactor: 'high',
-  isTwoPartTariff: true
-}]);
+const createReturnRequirement = () => {
+  return new ReturnRequirement().fromHash({
+    externalId: '1:123'
+  });
+};
 
 experiment('lib/services/returns/index', () => {
   beforeEach(async () => {
-    sandbox.stub(repos.purposeUses, 'findByCodes').resolves(createPurposeUses());
     sandbox.stub(apiConnector, 'getReturnsForLicenceInCycle').resolves([]);
     apiConnector.getReturnsForLicenceInCycle.onCall(0).resolves(createReturns());
     sandbox.stub(apiConnector, 'getCurrentVersion').resolves(createVersion());
     sandbox.stub(apiConnector, 'getLines').resolves(createLines());
+    sandbox.stub(returnsRequirementsService, 'getReturnRequirementByExternalId').resolves(createReturnRequirement());
   });
 
   afterEach(async () => {
@@ -120,9 +119,9 @@ experiment('lib/services/returns/index', () => {
         )).to.be.true();
       });
 
-      test('the purpose uses are fetched from water.purpose_uses using the codes in the return metadata', async () => {
-        expect(repos.purposeUses.findByCodes.calledWith(
-          ['400']
+      test('the return requirements are fetched using an external ID using the NALD region code and format ID', async () => {
+        expect(returnsRequirementsService.getReturnRequirementByExternalId.calledWith(
+          '1:123'
         )).to.be.true();
       });
 

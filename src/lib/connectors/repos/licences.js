@@ -3,7 +3,6 @@
 const raw = require('./lib/raw');
 const { Licence, bookshelf } = require('../bookshelf');
 const queries = require('./queries/licences');
-const helpers = require('./lib/helpers');
 
 /**
  * Gets a list of licence agreements of the given types for the specified

@@ -5,11 +5,8 @@ const moment = require('moment');
 const AbstractionPeriod = require('./model');
 const Model = require('./model');
 const DateRange = require('./date-range');
-const PurposeUse = require('./purpose-use');
 const ReturnVersion = require('./return-version');
 const ReturnRequirement = require('./return-requirement');
-
-const { logger } = require('../../logger');
 
 const validators = require('./validators');
 const { get } = require('lodash');
