@@ -1,15 +1,16 @@
+'use strict';
+
 const { expect } = require('@hapi/code');
 const {
   experiment, test, beforeEach, afterEach
 } = exports.lab = require('@hapi/lab').script();
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
 
 const notifyConnector =
   require('../../../../src/modules/batch-notifications/lib/notify-connector');
 
 const s3Connector = require('../../../../src/lib/services/s3');
-const pdfCreator = require('../../../../src/lib/notify/pdf');
+const pdfCreator = require('../../../../src/lib/services/pdf-generation/pdf');
 
 experiment('batch notifications notify connector', () => {
   let client, sendLetter, sendPrecompiledLetter, sendEmail;
@@ -34,7 +35,7 @@ experiment('batch notifications notify connector', () => {
 
   beforeEach(async () => {
     sandbox.stub(s3Connector, 'upload').resolves();
-    sandbox.stub(pdfCreator, 'createPdf').resolves(testPdf);
+    sandbox.stub(pdfCreator, 'createPdfFromScheduledNotification').resolves(testPdf);
     sendPrecompiledLetter = sandbox.stub().resolves(notifyResponse);
     sendLetter = sandbox.stub().resolves(notifyResponse);
     sendEmail = sandbox.stub().resolves(notifyResponse);
@@ -86,18 +87,18 @@ experiment('batch notifications notify connector', () => {
   });
 
   experiment('sendPDF', () => {
-    const message = {
+    const scheduledNotification = {
       id: 'message_1'
     };
 
     test('calls createPdf with the message ID', async () => {
-      await notifyConnector._sendPDF(client, message);
-      const [id] = pdfCreator.createPdf.lastCall.args;
-      expect(id).to.equal(message.id);
+      await notifyConnector._sendPDF(client, scheduledNotification);
+      const [notification] = pdfCreator.createPdfFromScheduledNotification.lastCall.args;
+      expect(notification).to.equal(scheduledNotification);
     });
 
     test('uploads PDF to S3', async () => {
-      await notifyConnector._sendPDF(client, message);
+      await notifyConnector._sendPDF(client, scheduledNotification);
       const [fileName, pdf] = s3Connector.upload.lastCall.args;
       expect(fileName).to.equal('pdf-letters/message_1.pdf');
       expect(pdf).to.equal(testPdf);
@@ -112,7 +113,7 @@ experiment('batch notifications notify connector', () => {
     });
 
     test('resolves with Notify response', async () => {
-      const result = await notifyConnector._sendPDF(client, message);
+      const result = await notifyConnector._sendPDF(client, scheduledNotification);
       expect(result).to.equal(notifyResponse);
     });
   });
