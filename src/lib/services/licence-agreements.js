@@ -142,7 +142,6 @@ const createLicenceAgreement = async (licence, data, issuer) => {
   }
 };
 
-
 /**
  * Patch an existing licence agreement
  * @param {String} agreemntId

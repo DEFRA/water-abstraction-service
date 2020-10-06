@@ -17,7 +17,7 @@ const patchAgreement = async request => {
   } catch (err) {
     return mapErrorResponse(err);
   }
-}
+};
 
 /**
  * Get all licence agreements for the specified licence
