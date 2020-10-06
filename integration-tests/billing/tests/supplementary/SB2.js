@@ -11,11 +11,13 @@ const {
   after
 } = exports.lab = require('@hapi/lab').script();
 
-const services = require('../services');
-const chargeModuleTransactionsService = require('../services/charge-module-transactions');
-const transactionTests = require('./transaction-tests');
+const services = require('../../services');
+const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
+const transactionTests = require('../transaction-tests');
 
-experiment('basic supplementary scenario', () => {
+// Scenario: Supplementary Batch 2
+// Increase to Authorised Quantity in current financial year
+experiment('supplementary ref: SB2', () => {
   let annualBatch;
   let supplementaryBatch;
   let supplementaryChargeModuleTransactions;
@@ -30,8 +32,8 @@ experiment('basic supplementary scenario', () => {
       chargeVersions: [{
         company: 'co1',
         invoiceAccount: 'ia1',
-        chargeVersion: 'cv1',
-        chargeElements: ['ce1']
+        chargeVersion: 'cv3',
+        chargeElements: ['ce3']
       }]
     }, 'annual');
 
@@ -39,9 +41,9 @@ experiment('basic supplementary scenario', () => {
     // region can be created
     await services.batches.updateStatus(annualBatch, 'sent');
 
-    // mark the existing charge version as superseded so the new
-    // charge version is the current one.
-    await services.chargeVersions.updateStatus('superseded');
+    // set the end date on the current charge version before
+    // the start of the new one, so that both are used in batch
+    await services.chargeVersions.update({ endDate: '2019-07-31' });
 
     console.log('creating supplementary batch');
     supplementaryBatch = await services.scenarios.runScenario({
@@ -49,8 +51,8 @@ experiment('basic supplementary scenario', () => {
       chargeVersions: [{
         company: 'co1',
         invoiceAccount: 'ia1',
-        chargeVersion: 'cv2',
-        chargeElements: ['ce1']
+        chargeVersion: 'cv4',
+        chargeElements: ['ce4']
       }]
     }, 'supplementary');
 
@@ -141,13 +143,13 @@ experiment('basic supplementary scenario', () => {
           });
         });
 
-        test('has 2 transactions', async () => {
-          expect(licence.billingTransactions.length).to.equal(2);
+        test('has 3 transactions', async () => {
+          expect(licence.billingTransactions.length).to.equal(3);
         });
 
-        test('there is a debit', async () => {
-          const transaction = licence.billingTransactions.find(tx => tx.isCredit === false);
-          expect(transaction).to.exist();
+        test('there are 2 debit', async () => {
+          const transactions = licence.billingTransactions.filter(tx => tx.isCredit === false);
+          expect(transactions).to.have.length(2);
         });
 
         test('there is a credit', async () => {
@@ -155,47 +157,49 @@ experiment('basic supplementary scenario', () => {
           expect(transaction).to.exist();
         });
 
-        experiment('the debit transaction', () => {
+        experiment('the first debit transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions.find(tx => tx.isCredit === false);
+            transaction = licence.billingTransactions.find(tx => tx.isCredit === false && tx.description === 'CE3');
           });
 
           test('is a standard charge', async () => {
             expect(transaction.chargeType).to.equal('standard');
             expect(transaction.isCredit).to.be.false();
             expect(transaction.isTwoPartTariffSupplementary).to.be.false();
+            expect(transaction.isDeMinimis).to.be.false();
+            expect(transaction.isNewLicence).to.be.false();
           });
 
           test('has the correct charge period', async () => {
             expect(transaction.startDate).to.equal('2019-04-01');
-            expect(transaction.endDate).to.equal('2020-01-01');
+            expect(transaction.endDate).to.equal('2019-07-31');
           });
 
           test('has the correct abstraction period', async () => {
             expect(transaction.abstractionPeriod).to.equal({
               endDay: 31,
-              endMonth: 12,
+              endMonth: 3,
               startDay: 1,
-              startMonth: 1
+              startMonth: 4
             });
           });
 
           test('has the correct factors', async () => {
             expect(transaction.source).to.equal('unsupported');
             expect(transaction.season).to.equal('all year');
-            expect(transaction.loss).to.equal('medium');
+            expect(transaction.loss).to.equal('low');
           });
 
           test('has the correct quantities', async () => {
-            expect(transaction.authorisedQuantity).to.equal('200');
-            expect(transaction.billableQuantity).to.equal(null);
-            expect(transaction.volume).to.equal('200');
+            expect(transaction.authorisedQuantity).to.equal('50');
+            expect(transaction.billableQuantity).to.equal('25');
+            expect(transaction.volume).to.equal('25');
           });
 
           test('has the correct authorised/billable days', async () => {
             expect(transaction.authorisedDays).to.equal(366);
-            expect(transaction.billableDays).to.equal(275);
+            expect(transaction.billableDays).to.equal(122);
           });
 
           test('has been sent to the charge module', async () => {
@@ -204,7 +208,7 @@ experiment('basic supplementary scenario', () => {
           });
 
           test('has the correct description', async () => {
-            expect(transaction.description).to.equal('CE1');
+            expect(transaction.description).to.equal('CE3');
           });
 
           test('has the correct agreements', async () => {
@@ -214,7 +218,72 @@ experiment('basic supplementary scenario', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('c28a05b5c689aca2046f41e905ceab8e');
+            expect(transaction.transactionKey).to.equal('f7d8838d18fcce381ba691146e242a5e');
+          });
+        });
+
+        experiment('the second debit transaction', () => {
+          let transaction;
+          beforeEach(async () => {
+            transaction = licence.billingTransactions.find(tx => tx.isCredit === false && tx.description === 'CE4');
+          });
+
+          test('is a standard charge', async () => {
+            expect(transaction.chargeType).to.equal('standard');
+            expect(transaction.isCredit).to.be.false();
+            expect(transaction.isTwoPartTariffSupplementary).to.be.false();
+            expect(transaction.isDeMinimis).to.be.false();
+            expect(transaction.isNewLicence).to.be.false();
+          });
+
+          test('has the correct charge period', async () => {
+            expect(transaction.startDate).to.equal('2019-08-01');
+            expect(transaction.endDate).to.equal('2020-03-31');
+          });
+
+          test('has the correct abstraction period', async () => {
+            expect(transaction.abstractionPeriod).to.equal({
+              endDay: 31,
+              endMonth: 3,
+              startDay: 1,
+              startMonth: 4
+            });
+          });
+
+          test('has the correct factors', async () => {
+            expect(transaction.source).to.equal('unsupported');
+            expect(transaction.season).to.equal('all year');
+            expect(transaction.loss).to.equal('low');
+          });
+
+          test('has the correct quantities', async () => {
+            expect(transaction.authorisedQuantity).to.equal('50');
+            expect(transaction.billableQuantity).to.equal('50');
+            expect(transaction.volume).to.equal('50');
+          });
+
+          test('has the correct authorised/billable days', async () => {
+            expect(transaction.authorisedDays).to.equal(366);
+            expect(transaction.billableDays).to.equal(244);
+          });
+
+          test('has been sent to the charge module', async () => {
+            expect(transaction.externalId).to.have.length(36);
+            expect(transaction.status).to.equal('charge_created');
+          });
+
+          test('has the correct description', async () => {
+            expect(transaction.description).to.equal('CE4');
+          });
+
+          test('has the correct agreements', async () => {
+            expect(transaction.section126Factor).to.equal(null);
+            expect(transaction.section127Agreement).to.equal(false);
+            expect(transaction.section130Agreement).to.equal(null);
+          });
+
+          test('has a stable transaction key', async () => {
+            expect(transaction.transactionKey).to.equal('7ec309eb8554a029b86b3ca72a92f58a');
           });
         });
 
@@ -240,22 +309,22 @@ experiment('basic supplementary scenario', () => {
           test('has the correct abstraction period', async () => {
             expect(transaction.abstractionPeriod).to.equal({
               endDay: 31,
-              endMonth: 12,
+              endMonth: 3,
               startDay: 1,
-              startMonth: 1
+              startMonth: 4
             });
           });
 
           test('has the correct factors', async () => {
             expect(transaction.source).to.equal('unsupported');
             expect(transaction.season).to.equal('all year');
-            expect(transaction.loss).to.equal('medium');
+            expect(transaction.loss).to.equal('low');
           });
 
           test('has the correct quantities', async () => {
-            expect(transaction.authorisedQuantity).to.equal('200');
-            expect(transaction.billableQuantity).to.equal(null);
-            expect(transaction.volume).to.equal('200');
+            expect(transaction.authorisedQuantity).to.equal('50');
+            expect(transaction.billableQuantity).to.equal('25');
+            expect(transaction.volume).to.equal('25');
           });
 
           test('has the correct authorised/billable days', async () => {
@@ -269,7 +338,7 @@ experiment('basic supplementary scenario', () => {
           });
 
           test('has the correct description', async () => {
-            expect(transaction.description).to.equal('CE1');
+            expect(transaction.description).to.equal('CE3');
           });
 
           test('has the correct agreements', async () => {
@@ -279,7 +348,7 @@ experiment('basic supplementary scenario', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('4442d68737c556c7b11c7fb1a58a6129');
+            expect(transaction.transactionKey).to.equal('7ecfd38f6d77faf3350ac2fb1736d3ee');
           });
         });
       });

@@ -42,19 +42,6 @@ class ChargeVersionWorkflow extends Model {
   }
 
   /**
-   * The User who has approved the charge version
-   * @return {User}
-   */
-  set approvedBy (approvedBy) {
-    validators.assertIsNullableInstanceOf(approvedBy, User);
-    this._approvedBy = approvedBy;
-  }
-
-  get approvedBy () {
-    return this._approvedBy;
-  }
-
-  /**
    * Comments from the user who is reviewing the new charge version
    * @param {String}
    */

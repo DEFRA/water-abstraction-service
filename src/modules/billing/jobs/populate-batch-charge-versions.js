@@ -5,6 +5,7 @@ const { get } = require('lodash');
 const batchJob = require('./lib/batch-job');
 const batchService = require('../services/batch-service');
 const chargeVersionService = require('../services/charge-version-service');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 
 const JOB_NAME = 'billing.populate-batch-charge-versions.*';
 
@@ -16,9 +17,9 @@ const createMessage = (eventId, batch) => {
 
 const handlePopulateBatch = async job => {
   batchJob.logHandling(job);
+  const batchId = get(job, 'data.batch.id');
 
   try {
-    const batchId = get(job, 'data.batch.id');
     const batch = await batchService.getBatchById(batchId);
 
     // Populate water.billing_batch_charge_versions
@@ -26,7 +27,7 @@ const handlePopulateBatch = async job => {
 
     return { billingBatchChargeVersionYears, batch };
   } catch (err) {
-    batchJob.logHandlingError(job, err);
+    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToPopulateChargeVersions);
     throw err;
   }
 };

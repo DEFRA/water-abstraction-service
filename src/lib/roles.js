@@ -49,7 +49,9 @@ const getRolesForPermissionKey = key => permissionsMap[key];
  */
 const ROLES = {
   chargeVersionWorkflowEditor: 'charge_version_workflow_editor',
-  chargeVersionWorkflowApprover: 'charge_version_workflow_approver'
+  chargeVersionWorkflowApprover: 'charge_version_workflow_approver',
+  manageAgreements: 'manage_agreements',
+  deleteAgreements: 'delete_agreements'
 };
 
 exports.getRolesForPermissionKey = getRolesForPermissionKey;

@@ -3,9 +3,8 @@
 const PurposeUse = require('../models/purpose-use');
 
 const dbToModel = row => {
-  const licenceVersion = new PurposeUse(row.purposeUseId);
-
-  return licenceVersion.fromHash({
+  const model = new PurposeUse(row.purposeUseId);
+  return model.fromHash({
     code: row.legacyId,
     name: row.description,
     dateUpdated: row.dateUpdated,

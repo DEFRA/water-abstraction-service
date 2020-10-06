@@ -5,6 +5,7 @@ const bluebird = require('bluebird');
 // Services
 const service = require('../../../lib/services/service');
 const documentsService = require('../../../lib/services/documents-service');
+const chargeVersionService = require('../../../lib/services/charge-versions');
 
 // Repos
 const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-version-workflows');
@@ -148,6 +149,32 @@ const deleteById = async chargeVersionWorkflowId => {
   }
 };
 
+/**
+ * Creates a charge version from the supplied charge version workflow
+ * @param {ChargeVersionWorkflow} chargeVersionWorkflow
+ * @return {Promise<ChargeVersion>}
+ */
+const approve = async (chargeVersionWorkflow, approvedBy) => {
+  validators.assertIsInstanceOf(chargeVersionWorkflow, ChargeVersionWorkflow);
+  validators.assertIsInstanceOf(approvedBy, User);
+
+  const { chargeVersion } = chargeVersionWorkflow;
+
+  // Store users who created/approved
+  chargeVersion.fromHash({
+    createdBy: chargeVersionWorkflow.createdBy,
+    approvedBy
+  });
+
+  // Persist the new charge version
+  const persistedChargeVersion = await chargeVersionService.create(chargeVersion);
+
+  // Delete the charge version workflow record as it is no longer needed
+  await deleteById(chargeVersionWorkflow.id);
+
+  return persistedChargeVersion;
+};
+
 exports.getAll = getAll;
 exports.getAllWithLicenceHolder = getAllWithLicenceHolder;
 exports.getById = getById;
@@ -156,3 +183,4 @@ exports.create = create;
 exports.getLicenceHolderRole = getLicenceHolderRole;
 exports.update = update;
 exports.delete = deleteById;
+exports.approve = approve;

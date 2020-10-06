@@ -62,7 +62,7 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
     volume: billingVolume ? billingVolume.volume : chargeElement.volume,
     isTwoPartTariffSupplementary: flags.isTwoPartTariffSupplementary || false,
     isCompensationCharge: flags.isCompensationCharge || false,
-    isMinimumCharge: flags.isMinimumCharge || false
+    isNewLicence: flags.isMinimumCharge || false
   });
   transaction.createDescription();
   return transaction;

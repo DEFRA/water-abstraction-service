@@ -44,5 +44,18 @@ module.exports = {
         }
       }
     }
+  },
+
+  postCreateFromWorkflow: {
+    method: 'POST',
+    path: '/water/1.0/charge-versions/create-from-workflow/{chargeVersionWorkflowId}',
+    handler: controller.postCreateFromWorkflow,
+    options: {
+      validate: {
+        params: {
+          chargeVersionWorkflowId: VALID_GUID
+        }
+      }
+    }
   }
 };

@@ -1,7 +1,6 @@
 'use strict';
 
 const repos = require('../connectors/repos');
-const licenceAgreementMapper = require('../mappers/licence-agreement');
 const licenceMapper = require('../mappers/licence');
 const invoiceAccountsMapper = require('../mappers/invoice-account');
 const licenceVersionMapper = require('../mappers/licence-version');
@@ -48,20 +47,6 @@ const getLicenceVersionById = async licenceVersionId =>
     licenceVersionMapper
   );
 
-const getLicenceAgreementsByLicenceRef = async licenceRef =>
-  service.findMany(
-    licenceRef,
-    repos.licenceAgreements.findByLicenceRef,
-    licenceAgreementMapper
-  );
-
-const getLicenceAgreementById = async licenceAgreementId =>
-  service.findOne(
-    licenceAgreementId,
-    repos.licenceAgreements.findOne,
-    licenceAgreementMapper
-  );
-
 /**
  * Updates the includeInSupplementaryBilling value for the given licence ids
  *
@@ -77,7 +62,7 @@ const updateIncludeInSupplementaryBillingStatus = async (from, to, ...licenceIds
 
 /**
  * Sets the water.licences.include_in_supplementary_billing value
- * from reprocess to yes for situtations where the batch has not got
+ * from reprocess to yes for situations where the batch has not got
  * through the the sent phase. This allows the licences to be picked up
  * in a future supplementary bill run.
  *
@@ -93,7 +78,7 @@ const updateIncludeInSupplementaryBillingStatusForUnsentBatch = batchId => {
 
 /**
  * Sets the water.licences.include_in_supplementary_billing value
- * from yes to no, then reprocess to yes for situtations where the batch has
+ * from yes to no, then reprocess to yes for situations where the batch has
  * been sent and therefore the licences don't need to be includes in
  * a future supplementary bill run.
  *
@@ -113,8 +98,9 @@ const updateIncludeInSupplementaryBillingStatusForSentBatch = async batchId => {
 
 /**
  * Fetches the invoice accounts associated with a licence using the licence ref and date as input.
- *  @param {String} documentRef
- *  @param {String} date
+ * @todo move to invoice accounts service
+ * @param {String} documentRef
+ * @param {String} date
  */
 const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
   //  First, fetch the company ID from the CRM
@@ -127,8 +113,13 @@ const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
   return invoiceAccounts ? invoiceAccounts.map(invoiceAccount => invoiceAccountsMapper.crmToModel(invoiceAccount)) : [];
 };
 
-exports.getLicenceAgreementById = getLicenceAgreementById;
-exports.getLicenceAgreementsByLicenceRef = getLicenceAgreementsByLicenceRef;
+/**
+ * Ensures the specified licence is included in the next supplementary bill run
+ * @param {String} licenceId
+ */
+const flagForSupplementaryBilling = licenceId =>
+  repos.licences.update(licenceId, { includeInSupplementaryBilling: INCLUDE_IN_SUPPLEMENTARY_BILLING.yes });
+
 exports.getLicenceById = getLicenceById;
 exports.getLicenceVersionById = getLicenceVersionById;
 exports.getLicenceVersions = getLicenceVersions;
@@ -137,3 +128,4 @@ exports.getLicenceAccountsByRefAndDate = getLicenceAccountsByRefAndDate;
 exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementaryBillingStatus;
 exports.updateIncludeInSupplementaryBillingStatusForUnsentBatch = updateIncludeInSupplementaryBillingStatusForUnsentBatch;
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch;
+exports.flagForSupplementaryBilling = flagForSupplementaryBilling;

@@ -10,7 +10,10 @@ const {
 const { expect } = require('@hapi/code');
 
 const ChargeElement = require('../../../src/lib/models/charge-element');
+const ChargeVersion = require('../../../src/lib/models/charge-version');
+
 const DateRange = require('../../../src/lib/models/date-range');
+const Purpose = require('../../../src/lib/models/purpose');
 const PurposeUse = require('../../../src/lib/models/purpose-use');
 const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
@@ -168,6 +171,111 @@ experiment('lib/mappers/charge-element', () => {
       delete data.purposeUse;
       model = chargeElementsMapper.pojoToModel(data);
       expect(model.purposeUse).to.be.undefined();
+    });
+  });
+
+  experiment('.modelToDb', () => {
+    let model, result, chargeVersion;
+
+    beforeEach(async () => {
+      chargeVersion = new ChargeVersion(uuid());
+
+      const abstractionPeriod = new AbstractionPeriod();
+      abstractionPeriod.fromHash({
+        startDay: 1,
+        startMonth: 3,
+        endDay: 31,
+        endMonth: 10
+      });
+
+      model = new ChargeElement();
+      model.fromHash({
+        id: uuid(),
+        source: 'supported',
+        season: 'summer',
+        loss: 'high',
+        description: 'test element',
+        authorisedAnnualQuantity: 34,
+        billableAnnualQuantity: 26.4,
+        abstractionPeriod,
+        purposePrimary: new Purpose(uuid()),
+        purposeSecondary: new Purpose(uuid()),
+        purposeUse: new PurposeUse(uuid()),
+        timeLimitedPeriod: new DateRange('2019-01-01', '2020-12-31')
+      });
+    });
+
+    experiment('when there are time-limited dates', () => {
+      beforeEach(async () => {
+        result = chargeElementsMapper.modelToDb(model, chargeVersion);
+      });
+
+      test('the properties are mapped correctly to the database fields', async () => {
+        expect(result).to.equal(
+          {
+            chargeElementId: model.id,
+            source: 'supported',
+            season: 'summer',
+            loss: 'high',
+            description: 'test element',
+            authorisedAnnualQuantity: 34,
+            billableAnnualQuantity: 26.4,
+            abstractionPeriodStartDay: 1,
+            abstractionPeriodStartMonth: 3,
+            abstractionPeriodEndDay: 31,
+            abstractionPeriodEndMonth: 10,
+            purposePrimaryId: model.purposePrimary.id,
+            purposeSecondaryId: model.purposeSecondary.id,
+            purposeUseId: model.purposeUse.id,
+            timeLimitedStartDate: '2019-01-01',
+            timeLimitedEndDate: '2020-12-31',
+            seasonDerived: 'all year',
+            chargeVersionId: chargeVersion.id
+          }
+        );
+      });
+    });
+
+    experiment('when there is no charge version supplied', () => {
+      beforeEach(async () => {
+        result = chargeElementsMapper.modelToDb(model);
+      });
+
+      test('the .chargeVersionId property is not set', async () => {
+        expect(Object.keys(result)).to.not.include('chargeVersionId');
+      });
+    });
+
+    experiment('when there are no time-limited dates', () => {
+      beforeEach(async () => {
+        model.timeLimitedPeriod = null;
+        result = chargeElementsMapper.modelToDb(model, chargeVersion);
+      });
+
+      test('the properties are mapped correctly to the database fields', async () => {
+        expect(result).to.equal(
+          {
+            chargeElementId: model.id,
+            source: 'supported',
+            season: 'summer',
+            loss: 'high',
+            description: 'test element',
+            authorisedAnnualQuantity: 34,
+            billableAnnualQuantity: 26.4,
+            abstractionPeriodStartDay: 1,
+            abstractionPeriodStartMonth: 3,
+            abstractionPeriodEndDay: 31,
+            abstractionPeriodEndMonth: 10,
+            purposePrimaryId: model.purposePrimary.id,
+            purposeSecondaryId: model.purposeSecondary.id,
+            purposeUseId: model.purposeUse.id,
+            timeLimitedStartDate: null,
+            timeLimitedEndDate: null,
+            seasonDerived: 'all year',
+            chargeVersionId: chargeVersion.id
+          }
+        );
+      });
     });
   });
 });

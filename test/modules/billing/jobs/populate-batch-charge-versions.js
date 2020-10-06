@@ -51,7 +51,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
     sandbox.stub(logger, 'info');
 
     sandbox.stub(batchJob, 'logHandling');
-    sandbox.stub(batchJob, 'logHandlingError');
+    sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
 
     sandbox.stub(messageQueue, 'publish').resolves();
 
@@ -59,6 +59,8 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
     billingBatchChargeVersionYears = createBillingBatchChargeVersionYears(batch);
 
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
+    sandbox.stub(batchService, 'setErrorStatus');
+
     sandbox.stub(chargeVersionService, 'createForBatch').resolves(billingBatchChargeVersionYears);
   });
 
@@ -117,12 +119,6 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
         )).to.be.true();
       });
 
-      // test('creates billingBatchChargeVersionYears using the batch', async () => {
-      //   expect(chargeVersionYearService.createForBatch.calledWith(
-      //     batch
-      //   )).to.be.true();
-      // });
-
       test('includes the batch in the job response', async () => {
         expect(result.batch).to.equal(batch);
       });
@@ -134,18 +130,23 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
 
     experiment('when there is an error', async () => {
       const error = new Error('oops!');
+      let err;
 
       beforeEach(async () => {
         batchService.getBatchById.rejects(error);
+        const func = () => populateBatchChargeVersionsJob.handler(job);
+        err = await expect(func()).to.reject();
       });
 
-      test('the error is logged and rethrown', async () => {
-        const func = () => populateBatchChargeVersionsJob.handler(job);
-        const err = await expect(func()).to.reject();
-        expect(batchJob.logHandlingError.calledWith(
-          job, error
-        )).to.be.true();
-        expect(err).to.equal(error);
+      test('the error is logged and batch marked as error status', async () => {
+        const { args } = batchJob.logHandlingErrorAndSetBatchStatus.lastCall;
+        expect(args[0]).to.equal(job);
+        expect(args[1] instanceof Error).to.be.true();
+        expect(args[2]).to.equal(Batch.BATCH_ERROR_CODE.failedToPopulateChargeVersions);
+      });
+
+      test('re-throws the error', async () => {
+        expect(error).to.equal(err);
       });
     });
   });

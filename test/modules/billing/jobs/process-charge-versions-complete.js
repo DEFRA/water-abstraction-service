@@ -8,82 +8,87 @@ const {
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const uuid = require('uuid/v4');
 
 const { logger } = require('../../../../src/logger');
 const processChargeVersionsComplete = require('../../../../src/modules/billing/jobs/process-charge-versions-complete');
 
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
-const { BATCH_ERROR_CODE, BATCH_TYPE } = require('../../../../src/lib/models/batch');
+const { BATCH_TYPE, BATCH_STATUS } = require('../../../../src/lib/models/batch');
 const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 const Batch = require('../../../../src/lib/models/batch');
 
-const batchId = 'test-batch-id';
+const batchId = uuid();
 const eventId = 'test-event-id';
 
+const createJob = () => ({
+  name: 'test-name',
+  data: {
+    failed: false,
+    request: {
+      data: {
+        batch: {
+          id: batchId
+        },
+        eventId
+      }
+    },
+    response: {
+      billingBatchChargeVersionYears: [{
+        billingBatchChargeVersionYearId: 'test-id-1'
+      }, {
+        billingBatchChargeVersionYearId: 'test-id-2'
+      }]
+    }
+  }
+});
+
 experiment('modules/billing/jobs/process-charge-versions-complete', () => {
-  let messageQueue, batch;
+  let messageQueue, batch, job;
 
   beforeEach(async () => {
+    job = createJob();
+
     messageQueue = {
-      publish: sandbox.stub()
+      publish: sandbox.stub(),
+      deleteQueue: sandbox.stub()
     };
 
-    batch = new Batch('0310af58-bb31-45ec-9a8a-f4a8f8da8ee7');
+    batch = new Batch(batchId);
     batch.type = BATCH_TYPE.twoPartTariff;
+    batch.status = BATCH_STATUS.processing;
 
     sandbox.stub(chargeVersionYearService, 'getStatusCounts');
     sandbox.stub(batchJob, 'logOnCompleteError');
     sandbox.stub(batchJob, 'logOnComplete');
-    sandbox.stub(batchJob, 'failBatch');
     sandbox.stub(batchJob, 'deleteOnCompleteQueue');
     sandbox.stub(logger, 'info');
+    sandbox.stub(batchService, 'getBatchById').resolves(batch);
   });
 
   afterEach(async () => {
     sandbox.restore();
   });
 
-  experiment('when the job has failed', () => {
-    test('the batch is set to error and cancelled ', async () => {
-      const job = {
-        name: 'testing',
-        data: {
-          failed: true
-        }
-      };
+  experiment('when the job fails', () => {
+    test('the other jobs in the queue are deleted', async () => {
+      job.data.failed = true;
       await processChargeVersionsComplete(job, messageQueue);
+      expect(messageQueue.deleteQueue.calledWith(job.data.request.name)).to.be.true();
+    });
+  });
 
-      const failArgs = batchJob.failBatch.lastCall.args;
-      expect(failArgs[0]).to.equal(job);
-      expect(failArgs[1]).to.equal(messageQueue);
-      expect(failArgs[2]).to.equal(BATCH_ERROR_CODE.failedToProcessChargeVersions);
+  experiment('when the batch is not in "processing" status', () => {
+    test('no further jobs are scheduled', async () => {
+      batch.status = Batch.BATCH_STATUS.error;
+      await processChargeVersionsComplete(job, messageQueue);
+      expect(messageQueue.publish.called).to.be.false();
     });
   });
 
   experiment('when the job did not fail', () => {
-    const job = {
-      name: 'testing',
-      data: {
-        failed: false,
-        request: {
-          data: {
-            batch: {
-              id: batchId
-            },
-            eventId
-          }
-        },
-        response: {
-          billingBatchChargeVersionYears: [{
-            billingBatchChargeVersionYearId: 'test-id-1'
-          }, {
-            billingBatchChargeVersionYearId: 'test-id-2'
-          }]
-        }
-      }
-    };
-
     experiment('when there are no errors publishing a message', async () => {
       beforeEach(async () => {
         await processChargeVersionsComplete(job, messageQueue);

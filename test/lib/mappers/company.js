@@ -6,6 +6,7 @@ const {
   beforeEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
+const uuid = require('uuid/v4');
 
 const Company = require('../../../src/lib/models/company');
 const companyMapper = require('../../../src/lib/mappers/company');
@@ -137,6 +138,45 @@ experiment('modules/billing/mappers/company', () => {
 
     test('has the expected organisationType value', async () => {
       expect(result.organisationType).to.equal(company.organisationType);
+    });
+  });
+
+  experiment('.pojoToModel', () => {
+    let result;
+    const obj = {
+      id: uuid(),
+      type: 'organisation',
+      organisationType: 'limitedCompany',
+      name: 'Big Co Ltd',
+      companyNumber: '000000'
+    };
+
+    beforeEach(async () => {
+      result = companyMapper.pojoToModel(obj);
+    });
+
+    test('a Company model is returned', async () => {
+      expect(result).to.be.an.instanceof(Company);
+    });
+
+    test('the .id property is mapped', async () => {
+      expect(result.id).to.equal(obj.id);
+    });
+
+    test('the .type property is mapped', async () => {
+      expect(result.type).to.equal(obj.type);
+    });
+
+    test('the .organisationType property is mapped', async () => {
+      expect(result.organisationType).to.equal(obj.organisationType);
+    });
+
+    test('the .name property is mapped', async () => {
+      expect(result.name).to.equal(obj.name);
+    });
+
+    test('the .companyNumber property is mapped', async () => {
+      expect(result.companyNumber).to.equal(obj.companyNumber);
     });
   });
 });

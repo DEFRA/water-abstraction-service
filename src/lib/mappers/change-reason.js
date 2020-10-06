@@ -14,7 +14,8 @@ const dbToModel = row => {
   return model.fromHash({
     ...pick(row, ['triggersMinimumCharge']),
     id: row.changeReasonId,
-    reason: row.description
+    reason: row.description,
+    type: row.type
   });
 };
 

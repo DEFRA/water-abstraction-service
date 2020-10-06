@@ -40,7 +40,18 @@ class InvalidEntityError extends Error {
   }
 }
 
+/**
+ * An entity conflicts with existing data
+ */
+class ConflictingDataError extends Error {
+  constructor (message) {
+    super(message);
+    this.name = 'ConflictingDataError';
+  }
+}
+
 exports.NotFoundError = NotFoundError;
 exports.StateError = StateError;
 exports.DBError = DBError;
 exports.InvalidEntityError = InvalidEntityError;
+exports.ConflictingDataError = ConflictingDataError;
