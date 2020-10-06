@@ -13,7 +13,8 @@ const dbToModel = row => {
 
   return model.fromHash({
     id: row.returnRequirementPurposeId,
-    purposeUse: purposeUseMapper.dbToModel(row.purposeUse)
+    purposeUse: purposeUseMapper.dbToModel(row.purposeUse),
+    purposeAlias: row.purposeAlias
   });
 };
 

@@ -13,7 +13,8 @@ const dbToModel = (row) => {
 
   model.fromHash({
     id: row.returnRequirementId,
-    isSummer: row.isSummer
+    isSummer: row.isSummer,
+    externalId: row.externalId
   });
 
   if (row.returnRequirementPurposes) {

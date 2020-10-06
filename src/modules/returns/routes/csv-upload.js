@@ -1,9 +1,9 @@
+'use strict';
+
 const Joi = require('@hapi/joi');
-const controller = require('./controller');
+const controller = require('../controllers/csv-upload');
 const { set } = require('lodash');
-const { failAction } = require('./lib/route-helpers');
-const { returnSchema, headerSchema } = require('./schema');
-const pre = require('./pre-handlers');
+const pre = require('../pre-handlers');
 
 const getSubmitConfig = (isSingleReturn) => {
   const submitConfig = {
@@ -31,48 +31,6 @@ const getSubmitConfig = (isSingleReturn) => {
 };
 
 module.exports = {
-
-  getReturn: {
-    path: '/water/1.0/returns',
-    method: 'GET',
-    handler: controller.getReturn,
-    config: {
-      description: 'Gets a single view of a return for presentation to UI layer',
-      validate: {
-        query: {
-          returnId: Joi.string().required(),
-          versionNumber: Joi.number().optional().min(1)
-        }
-      }
-    }
-
-  },
-
-  postReturn: {
-    path: '/water/1.0/returns',
-    method: 'POST',
-    handler: controller.postReturn,
-    config: {
-      description: 'Accepts posted return data from UI layer',
-      validate: {
-        failAction,
-        payload: returnSchema
-      }
-    }
-  },
-
-  patchReturnHeader: {
-    path: '/water/1.0/returns/header',
-    method: 'PATCH',
-    handler: controller.patchReturnHeader,
-    config: {
-      description: 'Updates return row data, e.g. received date, under query',
-      validate: {
-        failAction,
-        payload: headerSchema
-      }
-    }
-  },
 
   postUploadReturns: {
     path: '/water/1.0/returns/upload/{type}',

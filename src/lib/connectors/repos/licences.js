@@ -3,6 +3,7 @@
 const raw = require('./lib/raw');
 const { Licence, bookshelf } = require('../bookshelf');
 const queries = require('./queries/licences');
+const helpers = require('./lib/helpers');
 
 /**
  * Gets a list of licence agreements of the given types for the specified
@@ -23,7 +24,7 @@ const findOne = async licenceId => {
   return model ? model.toJSON() : null;
 };
 
-const findByLicenceRef = async licenceRef => {
+const findOneByLicenceRef = async licenceRef => {
   const model = await Licence
     .forge()
     .where({ licence_ref: licenceRef })
@@ -32,6 +33,20 @@ const findByLicenceRef = async licenceRef => {
     });
 
   return model.toJSON();
+};
+
+/**
+ * Finds many licences by licence ref array
+ * @param {Array<String>} licenceNumbers
+ */
+const findByLicenceRef = async licenceNumbers => {
+  const collection = await Licence
+    .forge()
+    .where('licence_ref', 'in', licenceNumbers)
+    .fetchAll({
+      withRelated: ['region']
+    });
+  return collection.toJSON();
 };
 
 /**
@@ -82,8 +97,9 @@ const updateIncludeInSupplementaryBillingStatusForBatch = (batchId, from, to) =>
 };
 
 exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview;
-exports.findByLicenceRef = findByLicenceRef;
+exports.findOneByLicenceRef = findOneByLicenceRef;
 exports.findOne = findOne;
+exports.findByLicenceRef = findByLicenceRef;
 
 exports.update = update;
 exports.updateIncludeLicenceInSupplementaryBilling = updateIncludeLicenceInSupplementaryBilling;
