@@ -9,7 +9,7 @@ const {
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
-
+const uuid = require('uuid');
 const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
 const repos = require('../../../../src/lib/connectors/repos');
 const { LicenceAgreement } = require('../../../../src/lib/connectors/bookshelf');
@@ -24,11 +24,13 @@ experiment('lib/connectors/repos/licence-agreements', () => {
     stub = {
       fetchAll: sandbox.stub().resolves(model),
       fetch: sandbox.stub().resolves(model),
+      save: sandbox.stub().resolves(model),
       query: sandbox.stub().returnsThis(),
       orderBy: sandbox.stub().returnsThis()
     };
     sandbox.stub(LicenceAgreement, 'forge').returns(stub);
     sandbox.stub(helpers, 'findOne').returns();
+    sandbox.stub(helpers, 'update').returns();
     sandbox.stub(helpers, 'deleteOne').returns();
     sandbox.stub(helpers, 'create');
   });
@@ -126,6 +128,26 @@ experiment('lib/connectors/repos/licence-agreements', () => {
       expect(model).to.equal(LicenceAgreement);
       expect(key).to.equal('licenceAgreementId');
       expect(id).to.equal('test-id');
+    });
+  });
+
+  experiment('.update', () => {
+    const tempLicenceAgreementId = uuid();
+    const changes = {
+      endDate: '2020-01-01'
+    };
+
+    beforeEach(async () => {
+      await repos.licenceAgreements.update(tempLicenceAgreementId, changes);
+    });
+
+    test('calls model.forge with correct data', async () => {
+      const [params] = LicenceAgreement.forge.lastCall.args;
+      expect(params).to.equal({ licence_agreement_id: tempLicenceAgreementId });
+    });
+
+    test('calls .save() on the model', async () => {
+      expect(stub.save.calledWith(changes)).to.be.true();
     });
   });
 

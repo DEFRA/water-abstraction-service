@@ -28,6 +28,7 @@ experiment('modules/licences/controllers/licences.js', () => {
   beforeEach(async () => {
     sandbox.stub(licenceAgreementsService, 'getLicenceAgreementById');
     sandbox.stub(licenceAgreementsService, 'getLicenceAgreementsByLicenceRef');
+    sandbox.stub(licenceAgreementsService, 'patchLicenceAgreement');
     sandbox.stub(licenceAgreementsService, 'deleteLicenceAgreementById');
     sandbox.stub(licenceAgreementsService, 'createLicenceAgreement');
 
@@ -110,6 +111,37 @@ experiment('modules/licences/controllers/licences.js', () => {
         expect(result).equal([
           { licenceAgreementId }
         ]);
+      });
+    });
+  });
+
+  experiment('.patchAgreement', () => {
+    let request;
+    beforeEach(async () => {
+      request = {
+        params: {
+          agreementId: uuid()
+        },
+        payload: {
+          endDate: '2030-10-10'
+        },
+        pre: {
+          licence: {
+            licenceNumber: '123/123'
+          }
+        },
+        defra: {
+          internalCallingUserModel: new User(123, 'mail@example.com')
+        }
+      };
+    });
+    experiment('when the request is valid', () => {
+      beforeEach(async () => {
+        licenceAgreementsService.patchLicenceAgreement.resolves();
+        await controller.patchAgreement(request, h);
+      });
+      test('calls the service method', async () => {
+        expect(licenceAgreementsService.patchLicenceAgreement.called).to.be.true();
       });
     });
   });
