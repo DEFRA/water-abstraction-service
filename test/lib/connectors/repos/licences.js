@@ -107,6 +107,32 @@ experiment('lib/connectors/repos/licences.js', () => {
     });
   });
 
+  experiment('.findByLicenceRef', () => {
+    let result;
+
+    beforeEach(async () => {
+      result = await licencesRepo.findByLicenceRef(['test-ref-1', 'test-ref-2']);
+    });
+
+    test('calls where with correct ids', async () => {
+      expect(stub.where.calledWith(
+        'licence_ref', 'in', ['test-ref-1', 'test-ref-2']
+      )).to.be.true();
+    });
+
+    test('calls fetchAll() with related models', async () => {
+      const [params] = stub.fetchAll.lastCall.args;
+      expect(params.withRelated).to.equal(['region']);
+    });
+
+    test('returns the result of the toJSON() call', async () => {
+      expect(result).to.equal([
+        { foo: 'bar' },
+        { foo: 'baz' }
+      ]);
+    });
+  });
+
   experiment('.update', () => {
     const licenceId = 'test-licence-id';
     const changes = {
