@@ -4,13 +4,13 @@ const Model = require('./model');
 const validators = require('./validators');
 
 class ChangeReason extends Model {
-  get reason () {
-    return this._reason;
+  get description () {
+    return this._description;
   }
 
-  set reason (reason) {
-    validators.assertString(reason);
-    this._reason = reason;
+  set description (description) {
+    validators.assertString(description);
+    this._description = description;
   }
 
   get triggersMinimumCharge () {

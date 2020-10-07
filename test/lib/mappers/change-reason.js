@@ -11,7 +11,8 @@ const changeReasonMapper = require('../../../src/lib/mappers/change-reason');
 const dbRow = {
   changeReasonId: '00000000-0000-0000-0000-000000000000',
   description: 'test description',
-  triggersMinimumCharge: true
+  triggersMinimumCharge: true,
+  type: 'new_chargeable_charge_reason'
 };
 
 experiment('modules/billing/mappers/change-reason', () => {
@@ -36,11 +37,44 @@ experiment('modules/billing/mappers/change-reason', () => {
     });
 
     test('has the expected name value', async () => {
-      expect(result.reason).to.equal(dbRow.description);
+      expect(result.description).to.equal(dbRow.description);
     });
 
     test('has the expected triggersMinimumCharge value', async () => {
       expect(result.triggersMinimumCharge).to.equal(dbRow.triggersMinimumCharge);
+    });
+  });
+
+  experiment('.pojoToModel', () => {
+    let result;
+
+    beforeEach(async () => {
+      result = changeReasonMapper.pojoToModel(dbRow);
+    });
+
+    test('returns null when data is empty', async () => {
+      const result = changeReasonMapper.dbToModel(null);
+      expect(result).to.equal(null);
+    });
+
+    test('returns an ChangeReason instance', async () => {
+      expect(result instanceof ChangeReason).to.be.true();
+    });
+
+    test('has the expected id value', async () => {
+      expect(result.id).to.equal(dbRow.changeReasonId);
+    });
+
+    test('has the expected name value', async () => {
+      expect(result.description).to.equal(dbRow.description);
+    });
+
+    test('has the expected triggersMinimumCharge value', async () => {
+      expect(result.triggersMinimumCharge).to.equal(dbRow.triggersMinimumCharge);
+    });
+
+    test('has the expected type', async () => {
+      expect(result.type).to.equal(dbRow.type);
     });
   });
 });
