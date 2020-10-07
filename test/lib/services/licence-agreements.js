@@ -24,14 +24,13 @@ const service = require('../../../src/lib/services/service');
 const licenceAgreementMapper = require('../../../src/lib/mappers/licence-agreement');
 
 // Repos
-const licenceAgreementsRepo = require('../../../src/lib/connectors/repos/licence-agreements');
+const licenceAgreementRepo = require('../../../src/lib/connectors/repos/licence-agreements');
 
 // Models
 const User = require('../../../src/lib/models/user');
 const Licence = require('../../../src/lib/models/licence');
 const LicenceAgreement = require('../../../src/lib/models/licence-agreement');
 const Agreement = require('../../../src/lib/models/agreement');
-
 const licenceAgreementId = uuid();
 const createTestUser = () => new User(123, 'joan.doe@example.com');
 const createTestLicence = () => new Licence(uuid()).fromHash({
@@ -56,8 +55,9 @@ experiment('src/lib/services/licence-agreements', () => {
     sandbox.stub(service, 'findOne');
     sandbox.stub(service, 'findMany');
 
-    sandbox.stub(licenceAgreementsRepo, 'deleteOne');
-    sandbox.stub(licenceAgreementsRepo, 'create');
+    sandbox.stub(licenceAgreementRepo, 'deleteOne');
+    sandbox.stub(licenceAgreementRepo, 'create');
+    sandbox.stub(licenceAgreementRepo, 'update');
   });
 
   afterEach(async () => {
@@ -69,7 +69,7 @@ experiment('src/lib/services/licence-agreements', () => {
       await licenceAgreementsService.getLicenceAgreementsByLicenceRef('123/123');
       expect(service.findMany.calledWith(
         '123/123',
-        licenceAgreementsRepo.findByLicenceRef,
+        licenceAgreementRepo.findByLicenceRef,
         licenceAgreementMapper
       )).to.be.true();
     });
@@ -82,9 +82,64 @@ experiment('src/lib/services/licence-agreements', () => {
       await licenceAgreementsService.getLicenceAgreementById(licenceAgreementId);
       expect(service.findOne.calledWith(
         licenceAgreementId,
-        licenceAgreementsRepo.findOne,
+        licenceAgreementRepo.findOne,
         licenceAgreementMapper
       )).to.be.true();
+    });
+  });
+
+  experiment('.patchLicenceAgreement', () => {
+    experiment('when the licence agreement is not found', () => {
+      const tempLicenceId = uuid();
+      beforeEach(async () => {
+        service.findOne.resolves(null);
+        licenceAgreementRepo.update.returns({ licence: { licenceId: tempLicenceId } });
+      });
+      test('a NotFoundError is thrown', async () => {
+        const func = () => licenceAgreementsService.patchLicenceAgreement(licenceAgreementId);
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.an.instanceof(errors.NotFoundError);
+        expect(err.message).to.equal(`Licence agreement ${licenceAgreementId} not found`);
+      });
+    });
+
+    experiment('when the licence agreement is found', () => {
+      const tempLicenceId = uuid();
+      let licenceAgreement, user, licence;
+
+      beforeEach(async () => {
+        licenceAgreement = createTestLicenceAgreement();
+        service.findOne.resolves(licenceAgreement);
+        licenceAgreementRepo.update.returns({ licence: { licenceId: tempLicenceId } });
+        user = createTestUser();
+        licence = createTestLicence();
+        licenceService.getLicenceByLicenceRef.resolves(licence);
+        await licenceAgreementsService.patchLicenceAgreement(licenceAgreementId, { endDate: '2020-01-01' }, user);
+      });
+
+      test('the record is updated', async () => {
+        expect(licenceAgreementRepo.update.calledWith(
+          licenceAgreementId,
+          {
+            endDate: '2020-01-01'
+          }
+        )).to.be.true();
+      });
+
+      test('an event is persisted', async () => {
+        const [event] = eventsService.create.lastCall.args;
+        expect(event.licences).to.equal([licence.licenceNumber]);
+        expect(event.issuer).to.equal(user.email);
+        expect(event.type).to.equal('licence-agreement:update');
+        expect(event.status).to.equal('updated');
+        expect(event.metadata.id).to.equal(licenceAgreementId);
+      });
+
+      test('the licence is flagged for supplementary billing', async () => {
+        expect(licenceService.flagForSupplementaryBilling.calledWith(
+          tempLicenceId
+        )).to.be.true();
+      });
     });
   });
 
@@ -118,7 +173,7 @@ experiment('src/lib/services/licence-agreements', () => {
       });
 
       test('the record is deleted', async () => {
-        expect(licenceAgreementsRepo.deleteOne.calledWith(
+        expect(licenceAgreementRepo.deleteOne.calledWith(
           licenceAgreementId
         )).to.be.true();
       });
@@ -150,7 +205,7 @@ experiment('src/lib/services/licence-agreements', () => {
 
       agreementsService.getAgreementByCode.resolves(agreement);
 
-      licenceAgreementsRepo.create.resolves({
+      licenceAgreementRepo.create.resolves({
         licenceAgreementId
       });
     });
@@ -175,7 +230,7 @@ experiment('src/lib/services/licence-agreements', () => {
       });
 
       test('persists the data', async () => {
-        const [data] = licenceAgreementsRepo.create.lastCall.args;
+        const [data] = licenceAgreementRepo.create.lastCall.args;
 
         expect(data.licenceRef).to.equal(licence.licenceNumber);
         expect(data.startDate).to.equal('2019-04-01');
@@ -233,7 +288,7 @@ experiment('src/lib/services/licence-agreements', () => {
       beforeEach(async () => {
         const err = new Error('DB error');
         err.code = '23505';
-        licenceAgreementsRepo.create.rejects(err);
+        licenceAgreementRepo.create.rejects(err);
       });
 
       test('rejects with a ConflictingDataError', async () => {
@@ -257,7 +312,7 @@ experiment('src/lib/services/licence-agreements', () => {
 
       beforeEach(async () => {
         error = new Error('DB error');
-        licenceAgreementsRepo.create.rejects(error);
+        licenceAgreementRepo.create.rejects(error);
       });
 
       test('the error is rethrown', async () => {
