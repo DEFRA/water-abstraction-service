@@ -1,10 +1,12 @@
-const { getRenderNotification: render } = require('./index.js');
+'use strict';
 
-const getRenderNotification = async (request, h) => {
+const service = require('../../lib/services/scheduled-notifications');
+const htmlGeneration = require('../../lib/services/pdf-generation/html');
+
+const getRenderNotification = async request => {
   const { notificationId } = request.params;
-  return render(notificationId);
+  const notification = await service.getScheduledNotificationById(notificationId);
+  return htmlGeneration.createHtmlFromScheduledNotification(notification);
 };
 
-module.exports = {
-  getRenderNotification
-};
+exports.getRenderNotification = getRenderNotification;

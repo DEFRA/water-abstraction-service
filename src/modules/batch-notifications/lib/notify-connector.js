@@ -1,6 +1,6 @@
 const notifyConnector = require('../../../lib/connectors/notify');
 const { get } = require('lodash');
-const pdfCreator = require('../../../lib/notify/pdf');
+const pdfCreator = require('../../../lib/services/pdf-generation/pdf');
 const config = require('../../../../config');
 const s3Connector = require('../../../lib/services/s3');
 
@@ -45,7 +45,7 @@ const uploadPDFtoS3 = (scheduledNotification, pdf) => {
  * @return {Promise}                        resolves when message sent
  */
 const sendPDF = async (client, scheduledNotification) => {
-  const pdf = await pdfCreator.createPdf(scheduledNotification.id);
+  const pdf = await pdfCreator.createPdfFromScheduledNotification(scheduledNotification);
   const notifyReference = createNotifyReference(scheduledNotification);
 
   const tasks = [

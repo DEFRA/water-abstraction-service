@@ -1,6 +1,9 @@
+'use strict';
+
 const { MessageTypeError } = require('./errors');
-const { createPdf } = require('./pdf');
 const notifyConnector = require('../connectors/notify');
+const scheduledNotificationService = require('../services/scheduled-notifications');
+const pdfGenerator = require('../services/pdf-generation/pdf');
 
 /**
  * A function to get the notify key
@@ -101,12 +104,14 @@ const getPdfNotifyKey = (env) => {
  * @param {String} notifyId - an ID sent to notify to identify the message
  * @return {Promise} resolves with Notify response
  */
-async function sendPdf (notificationId, notifyId) {
-  const pdf = await createPdf(notificationId);
+const sendPdf = async (notificationId, notifyId) => {
+  const notification = await scheduledNotificationService.getScheduledNotificationById(notificationId);
+  const pdf = await pdfGenerator.createPdfFromScheduledNotification(notification);
+
   return notifyConnector
     .getClient(notifyConnector.messageTypes.letter)
     .sendPrecompiledLetter(notifyId, pdf);
-}
+};
 
 exports.getNotifyKey = getNotifyKey;
 exports.getStatus = getStatus;
