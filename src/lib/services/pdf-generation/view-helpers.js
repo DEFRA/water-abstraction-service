@@ -1,8 +1,11 @@
+'use strict';
+
 const moment = require('moment');
 const { chunk } = require('lodash');
+const naldDates = require('@envage/water-abstraction-helpers').nald.dates;
+
 const naldRegions = require('./data/nald-regions');
 const naldAreas = require('./data/nald-areas');
-const naldDates = require('@envage/water-abstraction-helpers').nald.dates;
 
 /**
  * Outputs the region name given the NALD region code
@@ -90,14 +93,10 @@ const paginateReturnLines = (personalisation) => {
   return paginators[returnsFrequency](startDate, endDate);
 };
 
-const stringify = (obj) => {
-  return JSON.stringify(obj, null, 2);
-};
+const stringify = obj => JSON.stringify(obj, null, 2);
 
-module.exports = {
-  naldRegion,
-  naldArea,
-  dateFormat,
-  paginateReturnLines,
-  stringify
-};
+exports.naldRegion = naldRegion;
+exports.naldArea = naldArea;
+exports.dateFormat = dateFormat;
+exports.paginateReturnLines = paginateReturnLines;
+exports.stringify = stringify;
