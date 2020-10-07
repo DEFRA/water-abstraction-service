@@ -7,9 +7,9 @@ const Boom = require('@hapi/boom');
 const { uniq, xor } = require('lodash');
 const bluebird = require('bluebird');
 
-const { persistReturnData, patchReturnData } = require('../lib/api-connector');
+const apiConnector = require('../lib/api-connector');
 const { mapReturnToModel } = require('../lib/model-returns-mapper');
-const { getReturnData } = require('../lib/facade');
+const returnsFacade = require('../lib/facade');
 const eventFactory = require('../lib/event-factory');
 const eventsService = require('../../../lib/services/events');
 const licencesService = require('../../../lib/services/licences');
@@ -19,10 +19,10 @@ const returnsService = require('../../../lib/services/returns');
  * A controller method to get a unified view of a return, to avoid handling
  * in UI layer
  */
-const getReturn = async (request, h) => {
+const getReturn = async (request) => {
   const { returnId, versionNumber } = request.query;
 
-  const { return: ret, version, lines, versions } = await getReturnData(returnId, versionNumber);
+  const { return: ret, version, lines, versions } = await returnsFacade.getReturnData(returnId, versionNumber);
 
   return mapReturnToModel(ret, version, lines, versions);
 };
@@ -30,11 +30,11 @@ const getReturn = async (request, h) => {
 /**
  * Accepts posted return data from UI layer and submits back to returns service
  */
-const postReturn = async (request, h) => {
+const postReturn = async (request) => {
   const ret = request.payload;
 
   // Persist data to return service
-  const returnServiceData = await persistReturnData(ret);
+  const returnServiceData = await apiConnector.persistReturnData(ret);
 
   // Log event in water service event log
   const event = eventFactory.createSubmissionEvent(ret, returnServiceData.version);
@@ -53,8 +53,8 @@ const postReturn = async (request, h) => {
  * @param {String} [request.payload.isUnderQuery] - is the return under query
  * @return {Promise} resolves with JSON payload
  */
-const patchReturnHeader = async (request, h) => {
-  const data = await patchReturnData(request.payload);
+const patchReturnHeader = async (request) => {
+  const data = await apiConnector.patchReturnData(request.payload);
 
   // Log event in water service event log
   const eventData = {
