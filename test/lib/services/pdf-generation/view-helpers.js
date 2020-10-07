@@ -1,6 +1,8 @@
+'use strict';
+
 const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
-const viewHelpers = require('../../../src/modules/pdf-notifications/view-helpers');
+const viewHelpers = require('../../../../src/lib/services/pdf-generation/view-helpers');
 
 experiment('paginateReturnLines (weekly)', async () => {
   test('the first week uses the week ending date (saturday)', async () => {
