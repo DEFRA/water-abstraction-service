@@ -49,5 +49,19 @@ module.exports = {
         }
       }
     }
+  },
+
+  getLicenceDocument: {
+    method: 'GET',
+    path: `${pathPrefix}{licenceId}/document`,
+    handler: controller.getLicenceDocument,
+    config: {
+      description: 'Gets the CRM v1 document for the licence with the given ID',
+      validate: {
+        params: {
+          licenceId: Joi.string().guid().required()
+        }
+      }
+    }
   }
 };
