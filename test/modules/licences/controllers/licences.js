@@ -5,8 +5,12 @@ const { afterEach, beforeEach, experiment, test } = exports.lab = require('@hapi
 
 const controller = require('../../../../src/modules/licences/controllers/licences');
 const licencesService = require('../../../../src/lib/services/licences');
+
+// Models
 const Licence = require('../../../../src/lib/models/licence');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
+
+const crmDocumentsConnector = require('../../../../src/lib/connectors/crm/documents');
 
 const sandbox = require('sinon').createSandbox();
 
@@ -15,6 +19,8 @@ experiment('modules/licences/controllers/licences.js', () => {
     sandbox.stub(licencesService, 'getLicenceById');
     sandbox.stub(licencesService, 'getLicenceVersions');
     sandbox.stub(licencesService, 'getLicenceAccountsByRefAndDate');
+
+    sandbox.stub(crmDocumentsConnector, 'getDocumentsByLicenceNumbers');
   });
 
   afterEach(async () => {
@@ -119,6 +125,62 @@ experiment('modules/licences/controllers/licences.js', () => {
 
     test('returns an array', async () => {
       expect(result).to.equal([exampleLicenceAccount]);
+    });
+  });
+
+  experiment('.getLicenceDocument', () => {
+    let result, request;
+
+    beforeEach(async () => {
+      request = {
+        params: {
+          licenceId: 'test-licence-id'
+        }
+      };
+    });
+
+    experiment('when the licence is not found', () => {
+      beforeEach(async () => {
+        licencesService.getLicenceById.resolves(null);
+        result = await controller.getLicenceDocument(request);
+      });
+
+      test('resolves with a Boom 404', async () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when the licence is found', () => {
+      beforeEach(async () => {
+        const licence = new Licence().fromHash({ licenceNumber: '01/123/ABC' });
+        licencesService.getLicenceById.resolves(licence);
+      });
+
+      experiment('when the CRM document is not found', () => {
+        beforeEach(async () => {
+          crmDocumentsConnector.getDocumentsByLicenceNumbers.resolves([]);
+          result = await controller.getLicenceDocument(request);
+        });
+
+        test('resolves with a Boom 404', async () => {
+          expect(result.isBoom).to.be.true();
+          expect(result.output.statusCode).to.equal(404);
+        });
+      });
+
+      experiment('when the CRM document is found', () => {
+        beforeEach(async () => {
+          crmDocumentsConnector.getDocumentsByLicenceNumbers.resolves([{
+            document_id: 'test-document-id'
+          }]);
+          result = await controller.getLicenceDocument(request);
+        });
+
+        test('resolves with the document', async () => {
+          expect(result.document_id).to.equal('test-document-id');
+        });
+      });
     });
   });
 });
