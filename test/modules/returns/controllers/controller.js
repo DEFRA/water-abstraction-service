@@ -42,6 +42,7 @@ experiment('modules/returns/controllers/controller', async () => {
   beforeEach(async () => {
     sandbox.stub(returnsFacade, 'getReturnData').resolves(returnData);
     sandbox.stub(apiConnector, 'persistReturnData');
+    sandbox.stub(apiConnector, 'patchReturnData');
     sandbox.stub(eventsService, 'update');
   });
 
@@ -157,6 +158,59 @@ experiment('modules/returns/controllers/controller', async () => {
 
     test('the response is the expected shape', async () => {
       expect(response).to.equal({ error: null });
+    });
+  });
+
+  experiment('.patchReturnHeader', () => {
+    beforeEach(async () => {
+      apiConnector.patchReturnData.resolves({
+        licence_ref: '01/123',
+        return_id: returnId,
+        status: 'received',
+        received_date: '2020-10-01',
+        under_query: false
+      });
+
+      request = {
+        payload: {
+          returnId,
+          status: 'received',
+          receivedDate: '2020-10-01',
+          underQuery: false,
+          user: {
+            type: 'internal',
+            email: 'mail@example.com',
+            entityId: uuid()
+          }
+        }
+      };
+      response = await controller.patchReturnHeader(request);
+    });
+
+    test('the returns header is updated using the api connector', async () => {
+      expect(apiConnector.patchReturnData.calledWith(request.payload)).to.be.true();
+    });
+
+    test('a submission event is recorded', async () => {
+      const [evt] = eventsService.update.lastCall.args;
+      expect(evt.licences).to.equal(['01/123']);
+      expect(evt.type).to.equal('return.status');
+      expect(evt.subtype).to.equal('internal');
+      expect(evt.issuer).to.equal('mail@example.com');
+      expect(evt.entities).to.equal([request.payload.user.entityId]);
+      expect(evt.metadata.returnId).to.equal(returnId);
+      expect(evt.metadata.receivedDate).to.equal(request.payload.receivedDate);
+      expect(evt.metadata.underQuery).to.equal(request.payload.underQuery);
+      expect(evt.status).to.equal(request.payload.status);
+    });
+
+    test('the response is the expected shape', async () => {
+      expect(response).to.equal({
+        returnId,
+        status: 'received',
+        receivedDate: '2020-10-01',
+        isUnderQuery: false
+      });
     });
   });
 });
