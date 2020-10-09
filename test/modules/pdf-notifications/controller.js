@@ -1,57 +1,54 @@
-const Lab = require('@hapi/lab');
-const lab = Lab.script();
-const Code = require('@hapi/code');
+'use strict';
 
-const controller = require('../../../src/modules/pdf-notifications/controller.js');
-const scheduledNotification = require('../../../src/controllers/notifications').repository;
+const {
+  experiment,
+  test,
+  beforeEach,
+  afterEach
+} = exports.lab = require('@hapi/lab').script();
 
+const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
-lab.experiment('Test getRenderNotification', () => {
-  const request = {
-    params: {
-      notificationId: 'test'
-    }
-  };
+const controller = require('../../../src/modules/pdf-notifications/controller');
+const scheduledNotificationService = require('../../../src/lib/services/scheduled-notifications');
+const htmlGeneration = require('../../../src/lib/services/pdf-generation/html');
 
-  const h = {
-    view: sandbox.spy()
-  };
+experiment('src/modules/pdf-notifications/controller', () => {
+  experiment('getRenderNotification', () => {
+    let request;
+    let notification;
 
-  const notification = {
-    id: 123,
-    message_ref: 'pdf.test'
-  };
+    beforeEach(async () => {
+      request = {
+        params: {
+          notificationId: 'test'
+        }
+      };
 
-  lab.beforeEach(async () => {
-    sandbox.stub(scheduledNotification, 'find');
-  });
+      notification = {
+        id: 123,
+        messageRef: 'pdf.test'
+      };
 
-  lab.afterEach(async () => {
-    sandbox.restore();
-  });
+      sandbox.stub(htmlGeneration, 'createHtmlFromScheduledNotification');
+      sandbox.stub(scheduledNotificationService, 'getScheduledNotificationById').resolves(notification);
 
-  lab.test('The handler should throw an error if notification not found', async () => {
-    scheduledNotification.find.resolves({
-      error: null,
-      rows: []
+      await controller.getRenderNotification(request);
     });
 
-    Code.expect(controller.getRenderNotification(request, h)).to.reject();
-  });
-
-  lab.test('The handler should render a message if PDF notification found', async () => {
-    scheduledNotification.find.resolves({
-      error: null,
-      rows: [notification]
+    afterEach(async () => {
+      sandbox.restore();
     });
 
-    const html = await controller.getRenderNotification(request, h);
+    test('gets the notification using the ids from the request', async () => {
+      const [id] = scheduledNotificationService.getScheduledNotificationById.lastCall.args;
+      expect(id).to.equal(request.params.notificationId);
+    });
 
-    Code.expect(html).to.equal('OK');
-
-    scheduledNotification.find.restore();
+    test('the found notification model is used to generate the HTML', async () => {
+      const [model] = htmlGeneration.createHtmlFromScheduledNotification.lastCall.args;
+      expect(model).to.equal(notification);
+    });
   });
 });
-
-exports.lab = lab;
