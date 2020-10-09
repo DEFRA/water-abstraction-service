@@ -94,7 +94,7 @@ const getLicenceDocumentReturns = async licence => {
  * Retrieves a list of paper forms that need sending to licence holders
  * for due returns
  */
-const getIncompleteReturns = async (request, h) => {
+const getIncompleteReturns = async request => {
   // Get unique list of upper-cased licence number strings
   const licenceNumbers = uniq(request.query.licenceNumbers).map(toUpperCase);
 

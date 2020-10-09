@@ -11,10 +11,14 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
+const Licence = require('../../../../src/lib/models/licence');
+
 const controller = require('../../../../src/modules/returns/controllers/controller');
 const returnsFacade = require('../../../../src/modules/returns/lib/facade');
 const apiConnector = require('../../../../src/modules/returns/lib/api-connector');
 const eventsService = require('../../../../src/lib/services/events');
+const licencesService = require('../../../../src/lib/services/licences');
+const returnsService = require('../../../../src/lib/services/returns');
 
 const returnId = 'v1:1:01/123:1234:2020-04-01:2020:05:31';
 const versionId = uuid();
@@ -44,6 +48,8 @@ experiment('modules/returns/controllers/controller', async () => {
     sandbox.stub(apiConnector, 'persistReturnData');
     sandbox.stub(apiConnector, 'patchReturnData');
     sandbox.stub(eventsService, 'update');
+    sandbox.stub(licencesService, 'getLicencesByLicenceRefs');
+    sandbox.stub(returnsService, 'getReturnsWithContactsForLicence');
   });
 
   afterEach(async () => {
@@ -210,6 +216,67 @@ experiment('modules/returns/controllers/controller', async () => {
         status: 'received',
         receivedDate: '2020-10-01',
         isUnderQuery: false
+      });
+    });
+  });
+
+  experiment('.getIncompleteReturns', () => {
+    beforeEach(async () => {
+      request = {
+        query: {
+          licenceNumbers: ['01/123/abc', '01/456/ABC', '01/123/ABC']
+        }
+      };
+    });
+
+    experiment('when not all the licences are found', () => {
+      beforeEach(async () => {
+        licencesService.getLicencesByLicenceRefs.resolves([
+          new Licence().fromHash({ licenceNumber: '01/123/ABC' })
+        ]);
+        response = await controller.getIncompleteReturns(request);
+      });
+
+      test('the unique upper-cased licences are fetched from the licences service', async () => {
+        const [licenceNumbers] = licencesService.getLicencesByLicenceRefs.lastCall.args;
+        expect(licenceNumbers).to.only.include(['01/123/ABC', '01/456/ABC']);
+      });
+
+      test('the returns service is not called', async () => {
+        expect(returnsService.getReturnsWithContactsForLicence.callCount).to.equal(0);
+      });
+
+      test('resolves with a Boom 404 error, including the licence numbers not found', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.statusCode).to.equal(404);
+        expect(response.output.payload.validationDetails).to.equal({
+          licenceNumbers: ['01/456/ABC']
+        });
+      });
+    });
+
+    experiment('when all the licences are found', () => {
+      beforeEach(async () => {
+        licencesService.getLicencesByLicenceRefs.resolves([
+          new Licence().fromHash({ licenceNumber: '01/123/ABC' }),
+          new Licence().fromHash({ licenceNumber: '01/456/ABC' })
+        ]);
+        response = await controller.getIncompleteReturns(request);
+      });
+
+      test('the unique upper-cased licences are fetched from the licences service', async () => {
+        const [licenceNumbers] = licencesService.getLicencesByLicenceRefs.lastCall.args;
+        expect(licenceNumbers).to.only.include(['01/123/ABC', '01/456/ABC']);
+      });
+
+      test('the returns service is called to get due returns for each licence', async () => {
+        expect(returnsService.getReturnsWithContactsForLicence.callCount).to.equal(2);
+        expect(returnsService.getReturnsWithContactsForLicence.calledWith(
+          '01/123/ABC'
+        )).to.be.true();
+        expect(returnsService.getReturnsWithContactsForLicence.calledWith(
+          '01/456/ABC'
+        )).to.be.true();
       });
     });
   });
