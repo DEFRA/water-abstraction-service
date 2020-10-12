@@ -59,4 +59,21 @@ experiment('lib/models/return-requirement-purpose', () => {
       expect(func).to.throw();
     });
   });
+
+  experiment('.purposeAlias', () => {
+    test('can be set to null', async () => {
+      returnRequirementPurpose.purposeAlias = null;
+      expect(returnRequirementPurpose.purposeAlias).to.equal(null);
+    });
+
+    test('can be set to a string value', async () => {
+      returnRequirementPurpose.purposeAlias = 'test';
+      expect(returnRequirementPurpose.purposeAlias).to.equal('test');
+    });
+
+    test('throws an error if set to a number', async () => {
+      const func = () => { returnRequirementPurpose.purposeAlias = 123; };
+      expect(func).to.throw();
+    });
+  });
 });

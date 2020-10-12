@@ -53,7 +53,31 @@ const getLines = async versionId => {
   return apiConnector.lines.findAll(filter, sort);
 };
 
+/**
+ * Get returns for the specified licence number with one of the supplied statuses
+ * The end date of the return must be within the spefified date range
+ * @param {String} licenceNumber
+ * @param {Array<String>} statuses
+ * @param {String} minEndDate
+ * @param {String} maxEndDate
+ */
+const getLicenceReturnsByStatusAndEndDate = (licenceNumber, statuses, minEndDate, maxEndDate) => {
+  const filter = {
+    licence_ref: licenceNumber,
+    status: {
+      $in: statuses
+    },
+    end_date: { $gte: minEndDate, $lte: maxEndDate }
+  };
+  const sort = {
+    end_date: +1,
+    return_id: +1
+  };
+  return apiConnector.returns.findAll(filter, sort);
+};
+
 exports.getReturnsForLicenceInCycle = getReturnsForLicenceInCycle;
 exports.getCurrentVersion = getCurrentVersion;
 exports.getLines = getLines;
 exports.getReturnsForLicence = apiConnector.getReturnsForLicence;
+exports.getLicenceReturnsByStatusAndEndDate = getLicenceReturnsByStatusAndEndDate;

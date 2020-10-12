@@ -27,11 +27,19 @@ const getLicenceById = async licenceId =>
  * @param {Number} regionCode
  */
 const getLicenceByLicenceRef = async (licenceRef, regionCode) => {
-  const licences = await repos.licences.findByLicenceRef(licenceRef);
+  const licences = await repos.licences.findOneByLicenceRef(licenceRef);
   const licence = licences.find(licence => licence.region.naldRegionId === +regionCode);
 
   return licence ? licenceMapper.dbToModel(licence) : null;
 };
+
+/**
+ * Gets an array of licences by IDs
+ * @param {Array<String>} licenceRefs
+ * @return {Promise<Array>} array of Licence service models
+ */
+const getLicencesByLicenceRefs = licenceRefs =>
+  service.findMany(licenceRefs, repos.licences.findByLicenceRef, licenceMapper);
 
 const getLicenceVersions = async licenceId =>
   service.findMany(
@@ -121,6 +129,7 @@ const flagForSupplementaryBilling = licenceId =>
   repos.licences.update(licenceId, { includeInSupplementaryBilling: INCLUDE_IN_SUPPLEMENTARY_BILLING.yes });
 
 exports.getLicenceById = getLicenceById;
+exports.getLicencesByLicenceRefs = getLicencesByLicenceRefs;
 exports.getLicenceVersionById = getLicenceVersionById;
 exports.getLicenceVersions = getLicenceVersions;
 exports.getLicenceByLicenceRef = getLicenceByLicenceRef;

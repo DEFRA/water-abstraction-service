@@ -57,10 +57,11 @@ experiment('lib/models/return', () => {
   });
 
   experiment('.purposeUses', () => {
-    test('can be set to an array of purpose uses', async () => {
-      const purposeUses = [new PurposeUse()];
-      ret.purposeUses = purposeUses;
-      expect(ret.purposeUses).to.equal(purposeUses);
+    test('throws an error if set', async () => {
+      const func = () => {
+        ret.purposeUses = [new PurposeUse()];
+      };
+      expect(func).to.throw();
     });
 
     test('throws an error if not an array', async () => {

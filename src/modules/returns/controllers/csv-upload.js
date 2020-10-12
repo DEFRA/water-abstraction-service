@@ -1,78 +1,23 @@
+'use strict';
+
+/**
+ * @module controller to handle the CSV bulk returns upload process
+ */
+
 const Boom = require('@hapi/boom');
 const { find, first, set } = require('lodash');
 const { throwIfError } = require('@envage/hapi-pg-rest-api');
 
-const { persistReturnData, patchReturnData } = require('./lib/api-connector');
-const { mapReturnToModel } = require('./lib/model-returns-mapper');
-const { getReturnData } = require('./lib/facade');
-const eventFactory = require('./lib/event-factory');
-const eventsService = require('../../lib/services/events');
-const s3 = require('../../lib/services/s3');
-const { uploadStatus, getUploadFilename } = require('./lib/returns-upload');
-const { logger } = require('../../logger');
-const startUploadJob = require('./lib/jobs/start-upload');
-const persistReturnsJob = require('./lib/jobs/persist-returns');
-const uploadValidator = require('./lib/returns-upload-validator');
-const { mapSingleReturn } = require('./lib/upload-preview-mapper');
-const returnsConnector = require('../../lib/connectors/returns');
-
-/**
- * A controller method to get a unified view of a return, to avoid handling
- * in UI layer
- */
-const getReturn = async (request, h) => {
-  const { returnId, versionNumber } = request.query;
-
-  const { return: ret, version, lines, versions } = await getReturnData(returnId, versionNumber);
-
-  return mapReturnToModel(ret, version, lines, versions);
-};
-
-/**
- * Accepts posted return data from UI layer and submits back to returns service
- */
-const postReturn = async (request, h) => {
-  const ret = request.payload;
-
-  // Persist data to return service
-  const returnServiceData = await persistReturnData(ret);
-
-  // Log event in water service event log
-  const event = eventFactory.createSubmissionEvent(ret, returnServiceData.version);
-  await eventsService.update(event);
-
-  return {
-    error: null
-  };
-};
-
-/**
- * Allows the patching of return header data
- * @param {String} request.payload.returnId - the return_id in the returns.returns table
- * @param {String} [request.payload.status] - return status
- * @param {String} [request.payload.receivedDate] - date received, ISO 8601 YYYY-MM-DD
- * @param {String} [request.payload.isUnderQuery] - is the return under query
- * @return {Promise} resolves with JSON payload
- */
-const patchReturnHeader = async (request, h) => {
-  const data = await patchReturnData(request.payload);
-
-  // Log event in water service event log
-  const eventData = {
-    ...request.payload,
-    licenceNumber: data.licence_ref
-  };
-
-  const event = eventFactory.createSubmissionEvent(eventData, null, 'return.status');
-  await eventsService.update(event);
-
-  return {
-    returnId: data.return_id,
-    status: data.status,
-    receivedDate: data.received_date,
-    isUnderQuery: data.under_query
-  };
-};
+const eventFactory = require('../lib/event-factory');
+const eventsService = require('../../../lib/services/events');
+const s3 = require('../../../lib/services/s3');
+const { uploadStatus, getUploadFilename } = require('../lib/returns-upload');
+const { logger } = require('../../../logger');
+const startUploadJob = require('../lib/jobs/start-upload');
+const persistReturnsJob = require('../lib/jobs/persist-returns');
+const uploadValidator = require('../lib/returns-upload-validator');
+const { mapSingleReturn } = require('../lib/upload-preview-mapper');
+const returnsConnector = require('../../../lib/connectors/returns');
 
 const getEventStatusLink = eventId => `/water/1.0/event/${eventId}`;
 
@@ -230,9 +175,6 @@ const postUploadSubmit = async (request, h) => {
   }
 };
 
-exports.getReturn = getReturn;
-exports.postReturn = postReturn;
-exports.patchReturnHeader = patchReturnHeader;
 exports.postUpload = postUpload;
 exports.getUploadPreviewReturn = getUploadPreviewReturn;
 exports.postUploadSubmit = postUploadSubmit;

@@ -22,6 +22,19 @@ class ReturnRequirementPurpose extends Model {
   get purposeUse () {
     return this._purposeUse;
   }
+
+  /**
+   * The purpose alias is a description of the purpose for the customer
+   * @param {Array<PurposeUse>}
+   */
+  set purposeAlias (purposeAlias) {
+    validators.assertNullableString(purposeAlias);
+    this._purposeAlias = purposeAlias;
+  }
+
+  get purposeAlias () {
+    return this._purposeAlias;
+  }
 }
 
 module.exports = ReturnRequirementPurpose;
