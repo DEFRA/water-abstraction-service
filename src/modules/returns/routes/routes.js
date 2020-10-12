@@ -56,7 +56,9 @@ module.exports = {
       description: 'Gets a list of incomplete returns by licence number - supports paper forms flow',
       validate: {
         query: Joi.object({
-          licenceNumbers: Joi.array().single().min(1).items(Joi.string().required()).required()
+          licenceNumbers: Joi.array().single().min(1).required().items(
+            Joi.string().required()
+          )
         }).rename('licenceNumbers[]', 'licenceNumbers', { ignoreUndefined: true })
       }
     }
