@@ -8,4 +8,7 @@ const ScheduledNotification = require('../bookshelf/ScheduledNotification');
  */
 const findOne = id => helpers.findOne(ScheduledNotification, 'id', id);
 
+const create = data => helpers.create(ScheduledNotification, data);
+
+exports.create = create;
 exports.findOne = findOne;

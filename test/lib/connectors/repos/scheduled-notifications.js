@@ -15,11 +15,22 @@ const ScheduledNotification = require('../../../../src/lib/connectors/bookshelf/
 
 experiment('lib/connectors/repos/scheduled-notifications', () => {
   beforeEach(async () => {
+    sandbox.stub(repoHelpers, 'create');
     sandbox.stub(repoHelpers, 'findOne');
   });
 
   afterEach(async () => {
     sandbox.restore();
+  });
+
+  experiment('.create', () => {
+    test('calls through to the helpers create function', async () => {
+      await repo.create({ one: 1 });
+
+      const [model, data] = repoHelpers.create.lastCall.args;
+      expect(model).to.equal(ScheduledNotification);
+      expect(data).to.equal({ one: 1 });
+    });
   });
 
   experiment('.findOne', () => {

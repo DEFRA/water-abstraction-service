@@ -76,6 +76,12 @@ const getLicenceReturnsByStatusAndEndDate = (licenceNumber, statuses, minEndDate
   return apiConnector.returns.findAll(filter, sort);
 };
 
+const getReturnById = async returnId => {
+  const { data } = await apiConnector.returns.findOne(returnId);
+  return data;
+};
+
+exports.getReturnById = getReturnById;
 exports.getReturnsForLicenceInCycle = getReturnsForLicenceInCycle;
 exports.getCurrentVersion = getCurrentVersion;
 exports.getLines = getLines;
