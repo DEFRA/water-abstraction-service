@@ -148,6 +148,33 @@ experiment('lib/models/validators', () => {
     });
   });
 
+  experiment('assertNullableId', () => {
+    test('does not throw for a valid uuid', async () => {
+      const func = () => validators.assertNullableId(uuid());
+      expect(func).not.to.throw();
+    });
+
+    test('does not throw for null', async () => {
+      const func = () => validators.assertNullableId(null);
+      expect(func).not.to.throw();
+    });
+
+    test('throws for an invalid id', async () => {
+      const func = () => validators.assertNullableId('potatoes');
+      expect(func).to.throw();
+    });
+
+    test('throws for an integer', async () => {
+      const func = () => validators.assertNullableId(1);
+      expect(func).to.throw();
+    });
+
+    test('throws for undefined', async () => {
+      const func = () => validators.assertNullableId();
+      expect(func).to.throw();
+    });
+  });
+
   experiment('assertNullableString', () => {
     test('does not throw for null', async () => {
       const func = () => validators.assertNullableString(null);

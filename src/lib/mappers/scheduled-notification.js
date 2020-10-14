@@ -8,8 +8,21 @@ const dbToModel = dbRow => {
     'recipient',
     'messageType',
     'messageRef',
-    'personalisation'
+    'personalisation',
+    'eventId'
+  ]);
+};
+
+const modelToDb = scheduledNotification => {
+  return scheduledNotification.pick([
+    'id',
+    'recipient',
+    'messageRef',
+    'messageType',
+    'personalisation',
+    'eventId'
   ]);
 };
 
 exports.dbToModel = dbToModel;
+exports.modelToDb = modelToDb;
