@@ -1,15 +1,21 @@
-const Lab = require('@hapi/lab');
+'use strict';
 
-const lab = Lab.script();
-const Code = require('@hapi/code');
+const {
+  experiment,
+  test,
+  before
+} = exports.lab = require('@hapi/lab').script();
+
+const { expect } = require('@hapi/code');
+
 const server = require('../../index.js');
 
-lab.experiment('Test sending a email notification', () => {
-  lab.before(async () => {
+experiment('Test sending a email notification', () => {
+  before(async () => {
     await server._start();
   });
 
-  lab.test('The API should throw an error when personalisation is not supplied', async () => {
+  test('The API should throw an error when personalisation is not supplied', async () => {
     const request = {
       method: 'POST',
       url: '/water/1.0/notify/unit_test_email',
@@ -21,11 +27,11 @@ lab.experiment('Test sending a email notification', () => {
       }
     };
     const res = await server.inject(request);
-    Code.expect(res.statusCode).to.equal(400);
+    expect(res.statusCode).to.equal(400);
   });
 
   // Send email notification
-  lab.test('The API should throw an error when an invalid template id is supplied', async () => {
+  test('The API should throw an error when an invalid template id is supplied', async () => {
     const request = {
       method: 'POST',
       url: '/water/1.0/notify/template_doesnt_exist',
@@ -41,11 +47,11 @@ lab.experiment('Test sending a email notification', () => {
     };
 
     const res = await server.inject(request);
-    Code.expect(res.statusCode).to.equal(400);
+    expect(res.statusCode).to.equal(400);
   });
 
   // Send email notification
-  lab.test('The API should throw an error when a template id that is missing in notify is supplied', async () => {
+  test('The API should throw an error when a template id that is missing in notify is supplied', async () => {
     const request = {
       method: 'POST',
       url: '/water/1.0/notify/unit_test_missing_in_notify',
@@ -61,11 +67,11 @@ lab.experiment('Test sending a email notification', () => {
     };
 
     const res = await server.inject(request);
-    Code.expect(res.statusCode).to.equal(400);
+    expect(res.statusCode).to.equal(400);
   });
 
   // Send email notification
-  lab.test('The API should throw an error when personalisation params are missing', async () => {
+  test('The API should throw an error when personalisation params are missing', async () => {
     const request = {
       method: 'POST',
       url: '/water/1.0/notify/unit_test_email',
@@ -79,11 +85,11 @@ lab.experiment('Test sending a email notification', () => {
 
     const res = await server.inject(request);
 
-    Code.expect(res.statusCode).to.equal(400);
+    expect(res.statusCode).to.equal(400);
   });
 
   // Send email notification
-  lab.test('The API should not throw an error when valid email address specified for message of type email', async () => {
+  test('The API should not throw an error when valid email address specified for message of type email', async () => {
     const request = {
       method: 'POST',
       url: '/water/1.0/notify/unit_test_email',
@@ -100,12 +106,12 @@ lab.experiment('Test sending a email notification', () => {
 
     const res = await server.inject(request);
 
-    Code.expect(res.statusCode).to.equal(200);
+    expect(res.statusCode).to.equal(200);
   });
 });
-lab.experiment('Test sending a SMS notification', () => {
+experiment('Test sending a SMS notification', () => {
   // Send email notification
-  lab.test('The API should not throw an error when valid number specified for message of type sms', async () => {
+  test('The API should not throw an error when valid number specified for message of type sms', async () => {
     const request = {
       method: 'POST',
       url: '/water/1.0/notify/unit_test_sms',
@@ -121,13 +127,13 @@ lab.experiment('Test sending a SMS notification', () => {
     };
 
     const res = await server.inject(request);
-    Code.expect(res.statusCode).to.equal(200);
+    expect(res.statusCode).to.equal(200);
   });
 });
 
-lab.experiment('Test sending a Postal notification', () => {
+experiment('Test sending a Postal notification', () => {
   // Send letter notification
-  lab.test('The API should not throw an error when valid address specified for message of type letter', async () => {
+  test('The API should not throw an error when valid address specified for message of type letter', async () => {
     const request = {
       method: 'POST',
       url: '/water/1.0/notify/unit_test_letter',
@@ -148,19 +154,19 @@ lab.experiment('Test sending a Postal notification', () => {
 
     const res = await server.inject(request);
 
-    Code.expect(res.statusCode).to.equal(200);
+    expect(res.statusCode).to.equal(200);
   });
 });
 
 // futureSend
-lab.experiment('Scheduled notifications', () => {
+experiment('Scheduled notifications', () => {
   // Send email notification
-  lab.test('The API should not throw an error when scheduling a message', async () => {
+  test('The API should not throw an error when scheduling a message', async () => {
     const request = {
       method: 'POST',
       url: '/water/1.0/notifyLater/unit_test_email',
       payload: {
-        id: 'unit-test-notification',
+        id: '11111111-1111-1111-1111-111111111111',
         recipient: 'test@test.com',
         personalisation: {
           test_value: '00/00/00/00'
@@ -174,15 +180,15 @@ lab.experiment('Scheduled notifications', () => {
 
     const res = await server.inject(request);
 
-    Code.expect(res.statusCode).to.equal(200);
+    expect(res.statusCode).to.equal(200);
   });
 
-  lab.test('The API should throw an error when invalid date is supplied when scheduling a message', async () => {
+  test('The API should throw an error when invalid date is supplied when scheduling a message', async () => {
     const request = {
       method: 'POST',
       url: '/water/1.0/notifyLater/unit_test_email',
       payload: {
-        id: 'unit-test-notification',
+        id: '11111111-1111-1111-1111-111111111111',
         personalisation: {
           test_value: '00/00/00/00'
         },
@@ -195,10 +201,10 @@ lab.experiment('Scheduled notifications', () => {
 
     const res = await server.inject(request);
 
-    Code.expect(res.statusCode).to.equal(400);
+    expect(res.statusCode).to.equal(400);
   });
 
-  lab.test('The API should throw an error when database throws an error', async () => {
+  test('The API should throw an error when database throws an error', async () => {
     const request = {
       method: 'POST',
       url: '/water/1.0/notifyLater/unit_test_email',
@@ -215,7 +221,6 @@ lab.experiment('Scheduled notifications', () => {
       }
     };
     const res = await server.inject(request);
-    Code.expect(res.statusCode).to.equal(400);
+    expect(res.statusCode).to.equal(400);
   });
 });
-exports.lab = lab;

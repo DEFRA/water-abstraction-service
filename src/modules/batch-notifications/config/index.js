@@ -1,3 +1,4 @@
 module.exports = [
-  ...require('./returns')
+  ...require('./returns'),
+  ...require('./paper-returns')
 ];

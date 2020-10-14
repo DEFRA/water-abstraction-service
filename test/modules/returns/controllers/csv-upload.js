@@ -10,16 +10,16 @@ const {
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const controller = require('../../../src/modules/returns/controller');
+const controller = require('../../../../src/modules/returns/controllers/csv-upload');
 
-const eventsService = require('../../../src/lib/services/events');
-const Event = require('../../../src/lib/models/event');
+const eventsService = require('../../../../src/lib/services/events');
+const Event = require('../../../../src/lib/models/event');
 
-const s3 = require('../../../src/lib/services/s3');
-const uploadValidator = require('../../../src/modules/returns/lib/returns-upload-validator');
-const { logger } = require('../../../src/logger');
-const returnsConnector = require('../../../src/lib/connectors/returns');
-const { uploadStatus } = require('../../../src/modules/returns/lib/returns-upload');
+const s3 = require('../../../../src/lib/services/s3');
+const uploadValidator = require('../../../../src/modules/returns/lib/returns-upload-validator');
+const { logger } = require('../../../../src/logger');
+const returnsConnector = require('../../../../src/lib/connectors/returns');
+const { uploadStatus } = require('../../../../src/modules/returns/lib/returns-upload');
 
 const UUIDV4_REGEX = new RegExp(/^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i);
 
@@ -52,7 +52,7 @@ const requestFactory = (returnId) => {
   };
 };
 
-experiment('modules/returns/controller', async () => {
+experiment('modules/returns/controllers/csv-upload', async () => {
   experiment('.postUpload', () => {
     let request;
     let h;

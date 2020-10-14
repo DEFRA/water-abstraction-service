@@ -27,6 +27,12 @@ class ScheduledNotification extends Model {
   set personalisation (value) {
     this._personalisation = value;
   }
+
+  get eventId () { return this._eventId; }
+  set eventId (value) {
+    validators.assertNullableId(value);
+    this._eventId = value;
+  }
 }
 
 module.exports = ScheduledNotification;

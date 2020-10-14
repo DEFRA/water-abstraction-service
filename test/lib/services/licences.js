@@ -49,6 +49,7 @@ const data = {
 experiment('src/lib/services/licences', () => {
   beforeEach(async () => {
     sandbox.stub(repos.licences, 'findOne');
+    sandbox.stub(repos.licences, 'findOneByLicenceRef');
     sandbox.stub(repos.licences, 'findByLicenceRef');
     sandbox.stub(repos.licences, 'updateIncludeLicenceInSupplementaryBilling');
     sandbox.stub(repos.licences, 'updateIncludeInSupplementaryBillingStatusForBatch');
@@ -97,7 +98,7 @@ experiment('src/lib/services/licences', () => {
 
     experiment('when the licence is found', () => {
       beforeEach(async () => {
-        repos.licences.findByLicenceRef.resolves([data.dbRow]);
+        repos.licences.findOneByLicenceRef.resolves([data.dbRow]);
 
         result = await licencesService.getLicenceByLicenceRef(
           data.dbRow.licenceRef,
@@ -105,8 +106,8 @@ experiment('src/lib/services/licences', () => {
         );
       });
 
-      test('calls repos.licences.findByLicenceRef() with supplied licence ref', async () => {
-        const [licenceRef] = repos.licences.findByLicenceRef.lastCall.args;
+      test('calls repos.licences.findOneByLicenceRef() with supplied licence ref', async () => {
+        const [licenceRef] = repos.licences.findOneByLicenceRef.lastCall.args;
         expect(licenceRef).to.equal(data.dbRow.licenceRef);
       });
 
@@ -117,7 +118,7 @@ experiment('src/lib/services/licences', () => {
 
     experiment('when the licence is not found', () => {
       beforeEach(async () => {
-        repos.licences.findByLicenceRef.resolves([]);
+        repos.licences.findOneByLicenceRef.resolves([]);
 
         result = await licencesService.getLicenceByLicenceRef(
           data.dbRow.licenceRef,
@@ -132,7 +133,7 @@ experiment('src/lib/services/licences', () => {
 
     experiment('when the licence is not found for the region', () => {
       beforeEach(async () => {
-        repos.licences.findByLicenceRef.resolves([data.dbRow]);
+        repos.licences.findOneByLicenceRef.resolves([data.dbRow]);
 
         result = await licencesService.getLicenceByLicenceRef(
           data.dbRow.licenceRef,

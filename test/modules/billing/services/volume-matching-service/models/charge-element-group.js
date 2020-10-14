@@ -17,6 +17,8 @@ const ReturnLine = require('../../../../../../src/lib/models/return-line');
 const { RETURN_SEASONS } = require('../../../../../../src/lib/models/constants');
 const Return = require('../../../../../../src/lib/models/return');
 const BillingVolume = require('../../../../../../src/lib/models/billing-volume');
+const ReturnRequirement = require('../../../../../../src/lib/models/return-requirement');
+const ReturnRequirementPurpose = require('../../../../../../src/lib/models/return-requirement-purpose');
 
 const {
   ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD,
@@ -73,6 +75,16 @@ const getGroupAllocatedVolumes = chargeElementGroup => {
   );
 };
 
+const createReturnRequirement = purposeUses => {
+  const returnRequirement = new ReturnRequirement();
+  returnRequirement.returnRequirementPurposes = purposeUses.map(purposeUse => {
+    const returnRequirementPurpose = new ReturnRequirementPurpose();
+    returnRequirementPurpose.purposeUse = purposeUse;
+    return returnRequirementPurpose;
+  });
+  return returnRequirement;
+};
+
 experiment('modules/billing/services/volume-matching-service/models/charge-element-group', () => {
   let chargePeriod, purposeUses, chargeElements, chargeElementContainers, chargeElementGroup, ret;
 
@@ -96,7 +108,7 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
     chargeElementGroup = new ChargeElementGroup(chargeElementContainers, RETURN_SEASONS.summer);
     ret = new Return();
     ret.fromHash({
-      purposeUses: [purposeUses.trickleIrrigation, purposeUses.sprayIrrigation],
+      returnRequirement: createReturnRequirement([purposeUses.trickleIrrigation, purposeUses.sprayIrrigation]),
       isSummer: true
     });
   });

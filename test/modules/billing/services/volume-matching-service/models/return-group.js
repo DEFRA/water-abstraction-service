@@ -10,6 +10,9 @@ const ReturnGroup = require('../../../../../../src/modules/billing/services/volu
 const PurposeUse = require('../../../../../../src/lib/models/purpose-use');
 const Return = require('../../../../../../src/lib/models/return');
 const DateRange = require('../../../../../../src/lib/models/date-range');
+const ReturnRequirement = require('../../../../../../src/lib/models/return-requirement');
+const ReturnRequirementPurpose = require('../../../../../../src/lib/models/return-requirement-purpose');
+
 const { twoPartTariffStatuses } = require('../../../../../../src/lib/models/billing-volume');
 
 const createPurposeUse = (name, options = {}) => {
@@ -21,10 +24,26 @@ const createPurposeUse = (name, options = {}) => {
   });
 };
 
+const createReturnRequirementPurpose = (name, options) => {
+  return new ReturnRequirementPurpose()
+    .fromHash({
+      purposeUse: createPurposeUse(name, options)
+    });
+};
+
+const createReturnRequirement = (name, options) => {
+  const returnRequirement = new ReturnRequirement();
+  return returnRequirement.fromHash({
+    returnRequirementPurposes: [
+      createReturnRequirementPurpose(name, options)
+    ]
+  });
+};
+
 const createReturn = (name, options) => {
   const ret = new Return();
   return ret.fromHash({
-    purposeUses: [createPurposeUse(name, options)],
+    returnRequirement: createReturnRequirement(name, options),
     dateRange: new DateRange('2019-04-01', '2020-03-01'),
     dueDate: '2020-04-28',
     status: 'completed',

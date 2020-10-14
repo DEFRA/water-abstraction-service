@@ -6,12 +6,8 @@ const AbstractionPeriod = require('../models/abstraction-period');
 const Return = require('../models/return');
 const DateRange = require('../models/date-range');
 
-const returnsServiceToModel = (ret, allPurposeUses) => {
+const returnsServiceToModel = (ret, returnRequirement) => {
   const { nald } = ret.metadata;
-
-  // Find matching purpose uses
-  const codes = get(ret, 'metadata.purposes', []).map(purpose => purpose.tertiary.code);
-  const purposeUses = allPurposeUses.filter(purposeUse => codes.includes(purposeUse.code));
 
   // Create abs period
   const abstractionPeriod = new AbstractionPeriod();
@@ -30,8 +26,8 @@ const returnsServiceToModel = (ret, allPurposeUses) => {
     dueDate: ret.due_date,
     receivedDate: ret.received_date,
     status: ret.status,
-    purposeUses,
-    abstractionPeriod
+    abstractionPeriod,
+    returnRequirement
   });
 };
 
