@@ -35,6 +35,7 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
     sandbox.stub(chargeVersionWorkflowService, 'create');
     sandbox.stub(chargeVersionWorkflowService, 'update');
     sandbox.stub(chargeVersionWorkflowService, 'delete');
+    sandbox.stub(chargeVersionWorkflowService, 'getManyByLicenceId');
   });
 
   afterEach(async () => {
@@ -42,15 +43,38 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
   });
 
   experiment('.getChargeVersionWorkflows', () => {
-    beforeEach(async () => {
-      await cvWorkflowsController.getChargeVersionWorkflows();
+    experiment('when licence id is not present', () => {
+      const request = {
+        query: {}
+      };
+
+      beforeEach(async () => {
+        await cvWorkflowsController.getChargeVersionWorkflows(request);
+      });
+
+      test('delegates to controller.getEntities', async () => {
+        const [id, serviceFunc, mapper] = controller.getEntities.lastCall.args;
+        expect(id).to.be.null();
+        expect(serviceFunc).to.equal(chargeVersionWorkflowService.getAllWithLicenceHolder);
+        expect(mapper).to.equal(apiMapper.rowToAPIList);
+      });
     });
 
-    test('delegates to controller.getEntities', async () => {
-      const [id, serviceFunc, mapper] = controller.getEntities.lastCall.args;
-      expect(id).to.be.null();
-      expect(serviceFunc).to.equal(chargeVersionWorkflowService.getAllWithLicenceHolder);
-      expect(mapper).to.equal(apiMapper.rowToAPIList);
+    experiment('when licence id is present', () => {
+      const request = {
+        query: {
+          licenceId: 'test-licence-id'
+        }
+      };
+
+      beforeEach(async () => {
+        await cvWorkflowsController.getChargeVersionWorkflows(request);
+      });
+
+      test('calls workflow service to get many for the licence id', async () => {
+        const [licenceId] = chargeVersionWorkflowService.getManyByLicenceId.lastCall.args;
+        expect(licenceId).to.equal(request.query.licenceId);
+      });
     });
   });
 

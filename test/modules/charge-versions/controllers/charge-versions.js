@@ -32,6 +32,7 @@ experiment('modules/charge-versions/controllers/charge-versions', () => {
     sandbox.stub(chargeVersionsService, 'getByLicenceRef').resolves(chargeVersions);
     sandbox.stub(chargeElementsService, 'getChargeElementsFromLicenceVersion');
     sandbox.stub(chargeVersionsService, 'getByChargeVersionId').resolves(chargeVersions[0]);
+    sandbox.stub(chargeVersionsService, 'getByIdWithInvoiceAccount').resolves(chargeVersions[0]);
     sandbox.stub(documentConnector, 'getDocument');
     sandbox.stub(licencesService, 'getLicenceVersionById');
     sandbox.stub(chargeVersionWorkflowService, 'getById');
@@ -58,7 +59,7 @@ experiment('modules/charge-versions/controllers/charge-versions', () => {
       });
 
       test('gets data from charge version service', async () => {
-        const [id] = chargeVersionsService.getByChargeVersionId.lastCall.args;
+        const [id] = chargeVersionsService.getByIdWithInvoiceAccount.lastCall.args;
         expect(id).to.equal(chargeVersions[0].id);
       });
 
@@ -74,7 +75,7 @@ experiment('modules/charge-versions/controllers/charge-versions', () => {
             versionId: chargeVersions[0].id
           }
         };
-        chargeVersionsService.getByChargeVersionId.resolves(null);
+        chargeVersionsService.getByIdWithInvoiceAccount.resolves(null);
         response = await controller.getChargeVersion(request);
       });
 

@@ -21,7 +21,7 @@ const { logger } = require('../../../logger');
 const getChargeVersion = async request =>
   controller.getEntity(
     request.params.versionId,
-    chargeVersionsService.getByChargeVersionId
+    chargeVersionsService.getByIdWithInvoiceAccount
   );
 
 const getChargeVersionsByDocumentId = async request => {

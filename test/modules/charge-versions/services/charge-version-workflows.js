@@ -73,6 +73,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
     sandbox.stub(service, 'findAll').resolves([chargeVersionWorkflow]);
     sandbox.stub(service, 'findOne').resolves(chargeVersionWorkflow);
+    sandbox.stub(service, 'findMany').resolves([chargeVersionWorkflow]);
 
     sandbox.stub(chargeVersionWorkflowRepo, 'create');
     sandbox.stub(chargeVersionWorkflowRepo, 'update');
@@ -183,6 +184,23 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     });
   });
 
+  experiment('.getManyByLicenceId', () => {
+    beforeEach(async () => {
+      result = await chargeVersionWorkflowService.getManyByLicenceId('test-id');
+    });
+
+    test('delegates to service.findMany', async () => {
+      const [id, fetchDataFunc, mapper] = service.findMany.lastCall.args;
+      expect(id).to.equal('test-id');
+      expect(fetchDataFunc).to.equal(chargeVersionWorkflowRepo.findManyForLicence);
+      expect(mapper).to.equal(chargeVersionWorkflowMapper);
+    });
+
+    test('resolves with an array of ChargeVersionWorkflow models', async () => {
+      expect(result).to.equal([chargeVersionWorkflow]);
+    });
+  });
+
   experiment('.create', () => {
     let licence, chargeVersion, user;
     const chargeVersionWorkflowId = uuid();
@@ -288,7 +306,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         const func = () => chargeVersionWorkflowService.update(id, { status: 'invalid-status' });
         const err = await expect(func()).to.reject();
         expect(err).to.be.an.instanceof(InvalidEntityError);
-        expect(err.message).to.equal(`Invalid data for charge version worklow ${id}`);
+        expect(err.message).to.equal(`Invalid data for charge version workflow ${id}`);
       });
     });
 

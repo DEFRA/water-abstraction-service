@@ -3,6 +3,11 @@
 const Model = require('./model');
 const validators = require('./validators');
 
+const changeReasonTypes = [
+  'new_chargeable_charge_version',
+  'new_non_chargeable_charge_reason'
+];
+
 class ChangeReason extends Model {
   get description () {
     return this._description;
@@ -21,6 +26,16 @@ class ChangeReason extends Model {
     validators.assertIsBoolean(triggersMinimumCharge);
     this._triggersMinimumCharge = triggersMinimumCharge;
   }
+
+  get type () {
+    return this._type;
+  }
+
+  set type (type) {
+    validators.assertEnum(type, changeReasonTypes);
+    this._type = type;
+  }
 }
 
 module.exports = ChangeReason;
+module.exports.changeReasonTypes = changeReasonTypes;

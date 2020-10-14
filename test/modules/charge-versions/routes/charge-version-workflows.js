@@ -68,6 +68,20 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
+
+    test('http 400 bad request when the licence id is invalid', async () => {
+      request.auth.credentials.scope = [chargeVersionWorkflowEditor];
+      request.url = '/water/1.0/charge-version-workflows?licenceId=not-a-guid';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('http 200 OK when the licence id is valid', async () => {
+      request.auth.credentials.scope = [chargeVersionWorkflowEditor];
+      request.url = `/water/1.0/charge-version-workflows?licenceId=${uuid()}`;
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
+    });
   });
 
   experiment('.getChargeVersionWorkflow', () => {

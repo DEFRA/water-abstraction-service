@@ -60,4 +60,20 @@ experiment('lib/models/change-reason', () => {
       expect(func).throw();
     });
   });
+
+  experiment('.type', () => {
+    ChangeReason.changeReasonTypes.forEach(type => {
+      test(`can be set to ${type}`, async () => {
+        changeReason.type = type;
+        expect(changeReason.type).to.equal(type);
+      });
+    });
+
+    test('setting type to invalid value throws an error', async () => {
+      const func = () => {
+        changeReason.type = 'invalid_type';
+      };
+      expect(func).throw();
+    });
+  });
 });

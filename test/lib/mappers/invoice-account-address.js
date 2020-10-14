@@ -32,6 +32,24 @@ const dbRow = {
   }
 };
 
+const pojo = {
+  id: '00000000-0000-0000-0000-000000000000',
+  invoiceAccountId: '11111111-0000-0000-0000-000000000000',
+  dateRange: {
+    startDate: '2020-04-01',
+    endDate: null
+  },
+  address: {
+    addressId: '11111111-1111-1111-1111-111111111111',
+    addressLine1: 'First Floor',
+    addressLine2: 'Test HQ',
+    addressLine3: '123',
+    addressLine4: 'Test Street',
+    postcode: 'TT1 1TT',
+    country: 'UK'
+  }
+};
+
 experiment('modules/billing/mappers/invoice-account-address', () => {
   experiment('.crmToModel', () => {
     let result;
@@ -221,6 +239,54 @@ experiment('modules/billing/mappers/invoice-account-address', () => {
 
       test('it is not set', () => {
         expect(result.agentCompany).to.be.undefined();
+      });
+    });
+  });
+
+  experiment('.pojoToModel', () => {
+    let result;
+
+    beforeEach(async () => {
+      result = invoiceAccountAddressMapper.pojoToModel(pojo);
+    });
+
+    test('returns an InvoiceAccountAddress instance', async () => {
+      expect(result instanceof InvoiceAccountAddress).to.be.true();
+    });
+
+    test('has the expected id value', async () => {
+      expect(result.id).to.equal(pojo.id);
+    });
+
+    test('has the expected invoice account id value', async () => {
+      expect(result.invoiceAccountId).to.equal(pojo.invoiceAccountId);
+    });
+
+    experiment('date range', () => {
+      test('is an instance of DateRange', async () => {
+        expect(result.dateRange instanceof DateRange).to.be.true();
+      });
+
+      test('has the expected values', () => {
+        const { dateRange } = result;
+        expect(dateRange.startDate).to.equal(pojo.dateRange.startDate);
+        expect(dateRange.endDate).to.equal(pojo.dateRange.endDate);
+      });
+    });
+
+    experiment('address', () => {
+      test('is an instance of Address', async () => {
+        expect(result.address instanceof Address).to.be.true();
+      });
+
+      test('has the expected values', () => {
+        const { address } = result;
+        expect(address.addressLine1).to.equal(pojo.address.addressLine1);
+        expect(address.addressLine2).to.equal(pojo.address.addressLine2);
+        expect(address.addressLine3).to.equal(pojo.address.addressLine3);
+        expect(address.addressLine4).to.equal(pojo.address.addressLine4);
+        expect(address.postcode).to.equal(pojo.address.postcode);
+        expect(address.country).to.equal(pojo.address.country);
       });
     });
   });

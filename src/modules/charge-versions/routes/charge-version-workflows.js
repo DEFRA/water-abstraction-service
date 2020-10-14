@@ -22,7 +22,10 @@ module.exports = {
         scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowApprover]
       },
       validate: {
-        headers
+        headers,
+        query: {
+          licenceId: Joi.string().guid().optional()
+        }
       }
     }
   },

@@ -1,5 +1,5 @@
 const ChangeReason = require('../models/change-reason');
-const { isEmpty, pick } = require('lodash');
+const { isEmpty } = require('lodash');
 const { createMapper } = require('../object-mapper');
 const { createModel } = require('./lib/helpers');
 
@@ -13,16 +13,16 @@ const dbToModel = row => {
     return null;
   }
   const model = new ChangeReason(row.changeReasonId);
-  return model.fromHash({
-    ...pick(row, ['description', 'triggersMinimumCharge']),
-    id: row.changeReasonId,
-    type: row.type
-  });
+  return model.pickFrom(row, [
+    'description',
+    'triggersMinimumCharge',
+    'type'
+  ]);
 };
 
 const pojoToModelMapper = createMapper()
-  .map('changeReasonId').to('id')
   .copy(
+    'id',
     'description',
     'triggersMinimumCharge',
     'type'

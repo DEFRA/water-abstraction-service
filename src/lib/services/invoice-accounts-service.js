@@ -166,7 +166,7 @@ const persist = async (regionId, startDate, invoiceAccount) => {
 
 /**
  * Checks whether the entity has data in the model other than the id
- * NB: Exisiting entities only have the id key populated
+ * NB: Existing entities only have the id key populated
  */
 const isNewEntity = entity => {
   if (!entity) return false;
@@ -176,8 +176,21 @@ const isNewEntity = entity => {
   return values.length > 0 && values.some(value => !isEmpty(value));
 };
 
+/**
+ * Gets the related invoice account for the supplied ChargeVersion model
+ * @param {ChargeVersion} chargeVersion
+ * @return {chargeVersion} decorated with invoice account
+ */
+const decorateWithInvoiceAccount = async model => {
+  const { id } = model.invoiceAccount;
+  const invoiceAccount = await getByInvoiceAccountId(id);
+  model.invoiceAccount = invoiceAccount;
+  return model;
+};
+
 exports.getByInvoiceAccountIds = getByInvoiceAccountIds;
 exports.getByInvoiceAccountId = getByInvoiceAccountId;
+exports.decorateWithInvoiceAccount = decorateWithInvoiceAccount;
 exports.deleteInvoiceAccount = deleteInvoiceAccount;
 exports.getInvoiceAccount = getInvoiceAccount;
 exports.persist = persist;

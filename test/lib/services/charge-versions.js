@@ -16,6 +16,7 @@ const service = require('../../../src/lib/services/service');
 const licencesService = require('../../../src/lib/services/licences');
 const chargeVersionService = require('../../../src/lib/services/charge-versions');
 const chargeElementService = require('../../../src/lib/services/charge-elements');
+const invoiceAccountsService = require('../../../src/lib/services/invoice-accounts-service');
 
 // Models
 const ChargeVersion = require('../../../src/lib/models/charge-version');
@@ -38,13 +39,17 @@ experiment('lib/services/charge-versions', () => {
     sandbox.stub(licencesService, 'getLicenceById').resolves({});
     sandbox.stub(licencesService, 'flagForSupplementaryBilling');
     sandbox.stub(chargeElementService, 'create');
+    sandbox.stub(invoiceAccountsService, 'decorateWithInvoiceAccount').resolves({
+      id: 'test-charge-version-id',
+      invoiceAccount: { id: 'test-invoice-account-id' }
+    });
   });
 
   afterEach(async () => {
     sandbox.restore();
   });
 
-  experiment('.getChargeVersionById', () => {
+  experiment('.getByChargeVersionId', () => {
     test('delegates to the service.findOne function', async () => {
       const id = uuid();
       const result = await chargeVersionService.getByChargeVersionId(id);
@@ -96,6 +101,33 @@ experiment('lib/services/charge-versions', () => {
       expect(licenceRef).to.equal('123/123');
       expect(fetch).to.equal(chargeVersionRepo.findByLicenceRef);
       expect(mapper).to.equal(chargeVersionMapper);
+    });
+  });
+
+  experiment('.getByIdWithInvoiceAccount', () => {
+    let id, result;
+    beforeEach(async () => {
+      id = uuid();
+      service.findOne.resolves({ id: 'test-charge-version-id' });
+
+      result = await chargeVersionService.getByIdWithInvoiceAccount(id);
+    });
+
+    test('delegates to the service.findOne function', async () => {
+      const [chargeVersionId, fetch, mapper] = service.findOne.lastCall.args;
+      expect(chargeVersionId).to.equal(id);
+      expect(fetch).to.equal(chargeVersionRepo.findOne);
+      expect(mapper).to.equal(chargeVersionMapper);
+    });
+
+    test('calls the invoice account service with charge version', async () => {
+      const [chargeVersion] = invoiceAccountsService.decorateWithInvoiceAccount.lastCall.args;
+      expect(chargeVersion).to.equal({ id: 'test-charge-version-id' });
+    });
+
+    test('returns the decorated charge version', async () => {
+      expect(result.id).to.equal('test-charge-version-id');
+      expect(result.invoiceAccount).to.equal({ id: 'test-invoice-account-id' });
     });
   });
 

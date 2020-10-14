@@ -460,4 +460,34 @@ experiment('modules/billing/services/invoice-accounts-service', () => {
       expect(result).to.be.true();
     });
   });
+
+  experiment('.decorateWithInvoiceAccount', () => {
+    let model, result;
+    beforeEach(async () => {
+      model = {
+        id: 'test-model-id',
+        foo: 'bar',
+        invoiceAccount: {
+          id: 'test-invoice-account-id'
+        }
+      };
+      result = await invoiceAccountsService.decorateWithInvoiceAccount(model);
+    });
+
+    test('gets invoice account by invoice account id from model', () => {
+      const [id] = invoiceAccountsConnector.getInvoiceAccountById.lastCall.args;
+      expect(id).to.equal('test-invoice-account-id');
+    });
+
+    test('decorates the model with the mapped invoice account', () => {
+      expect(result.invoiceAccount).to.be.instanceOf(InvoiceAccount);
+      expect(result.invoiceAccount.id).to.equal(connectorResponse[0].invoiceAccountId);
+      expect(result.invoiceAccount.accountNumber).to.equal(connectorResponse[0].invoiceAccountNumber);
+    });
+
+    test('the rest of the model remains unchanged', () => {
+      expect(result.id).to.equal(model.id);
+      expect(result.foo).to.equal(model.foo);
+    });
+  });
 });

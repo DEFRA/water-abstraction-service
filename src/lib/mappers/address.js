@@ -3,6 +3,9 @@
 const { pick, isEmpty, omit } = require('lodash');
 const Address = require('../models/address');
 
+const { createMapper } = require('../object-mapper');
+const { createModel } = require('./lib/helpers');
+
 /**
  * Maps address data from CRM to water service Address model
  * @param {Object} data - address data from CRM
@@ -74,7 +77,30 @@ const eaAddressFacadeToModel = data => {
   });
 };
 
+const pojoToModelMapper = createMapper()
+  .copy(
+    'id',
+    'addressLine1',
+    'addressLine2',
+    'addressLine3',
+    'addressLine4',
+    'town',
+    'county',
+    'postcode',
+    'country',
+    'uprn',
+    'source'
+  );
+
+/**
+ * Converts a plain object representation of a Address to a Address model
+ * @param {Object} pojo
+ * @return Address
+ */
+const pojoToModel = pojo => createModel(Address, pojo, pojoToModelMapper);
+
 exports.crmToModel = crmToModel;
 exports.uiToModel = uiToModel;
 exports.modelToCrm = modelToCrm;
 exports.eaAddressFacadeToModel = eaAddressFacadeToModel;
+exports.pojoToModel = pojoToModel;
