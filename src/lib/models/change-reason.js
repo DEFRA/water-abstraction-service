@@ -5,7 +5,7 @@ const validators = require('./validators');
 
 const changeReasonTypes = [
   'new_chargeable_charge_version',
-  'new_non_chargeable_charge_reason'
+  'new_non_chargeable_charge_version'
 ];
 
 class ChangeReason extends Model {
