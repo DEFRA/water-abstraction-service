@@ -1,9 +1,11 @@
 'use strict';
 
 const InvoiceAccount = require('../models/invoice-account');
+const DateRange = require('../models/date-range');
 
 const companyMapper = require('./company');
 const invoiceAccountAddressMapper = require('./invoice-account-address');
+const dateRangeMapper = require('./date-range');
 const { createMapper } = require('../object-mapper');
 const { createModel } = require('./lib/helpers');
 /**
@@ -15,6 +17,7 @@ const { createModel } = require('./lib/helpers');
 const crmToModel = invoiceAccount => {
   const invoiceAccountModel = new InvoiceAccount(invoiceAccount.invoiceAccountId);
   invoiceAccountModel.fromHash({
+    dateRange: new DateRange(invoiceAccount.startDate, invoiceAccount.endDate),
     accountNumber: invoiceAccount.invoiceAccountNumber,
     company: companyMapper.crmToModel(invoiceAccount.company)
   });
@@ -31,7 +34,10 @@ const pojoToModelMapper = createMapper()
     'id',
     'accountNumber'
   )
-  .map('company').to('company', companyMapper.pojoToModel);
+  .map('company').to('company', companyMapper.pojoToModel)
+  .map('dateRange').to('dateRange', dateRangeMapper.pojoToModel)
+  .map('invoiceAccountAddresses').to('invoiceAccountAddresses',
+    invoiceAccountAddresses => invoiceAccountAddresses.map(invoiceAccountAddressMapper.pojoToModel));
 
 /**
  * Converts a plain object representation of a InvoiceAccount to a InvoiceAccount model

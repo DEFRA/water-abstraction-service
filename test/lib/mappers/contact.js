@@ -39,9 +39,10 @@ experiment('modules/billing/mappers/contact', () => {
       result = contactMapper.crmToModel(dbRow);
     });
 
-    test('returns null when data is empty', async () => {
+    test('returns empty Contact instance when data is empty', async () => {
       const result = contactMapper.crmToModel(null);
-      expect(result).to.equal(null);
+      expect(result instanceof Contact).to.be.true();
+      expect(result).to.equal({});
     });
 
     test('returns an Contact instance', async () => {

@@ -1,27 +1,31 @@
 'use strict';
 
-const { isEmpty, omit } = require('lodash');
+const { omit } = require('lodash');
 const Contact = require('../models/contact-v2');
-const { has } = require('lodash');
+
+const { createMapper } = require('../object-mapper');
+const { createModel } = require('./lib/helpers');
 
 /**
  * Maps a row of CRM v2 contact data to a Contact instance
  * @param {Object} contactData
  * @return {Contact}
  */
-const crmToModel = contactData => {
-  if (isEmpty(contactData)) {
-    return null;
-  }
+const crmToModelMapper = createMapper()
+  .copy(
+    'firstName',
+    'initials',
+    'middleInitials',
+    'lastName',
+    'suffix',
+    'department',
+    'type',
+    'dataSource'
+  )
+  .map('contactId').to('id')
+  .map('salutation').to('title');
 
-  if (has(contactData, 'contactId')) {
-    const contactModel = new Contact(contactData.contactId);
-    contactModel.pickFrom(contactData,
-      ['firstName', 'initials', 'middleInitials', 'lastName', 'suffix', 'department', 'type', 'dataSource']);
-    contactModel.title = contactData.salutation || null;
-    return contactModel;
-  }
-};
+const crmToModel = row => createModel(Contact, row, crmToModelMapper);
 
 /**
  * Maps only an id or new contact data from the UI

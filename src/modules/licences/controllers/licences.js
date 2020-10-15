@@ -3,6 +3,7 @@
 const Boom = require('@hapi/boom');
 const controller = require('../../../lib/controller');
 const licencesService = require('../../../lib/services/licences');
+const documentsService = require('../../../lib/services/documents-service');
 const crmDocumentsConnector = require('../../../lib/connectors/crm/documents');
 
 const getLicence = async request =>
@@ -28,7 +29,17 @@ const getLicenceDocument = async request => {
   return doc || Boom.notFound(`Document not found for licence ${licenceId}`);
 };
 
+const getValidLicenceDocumentByDate = async request => {
+  const { licenceId, date } = request.params;
+  const licence = await licencesService.getLicenceById(licenceId);
+  if (!licence) {
+    return Boom.notFound(`Licence ${licenceId} not found`);
+  }
+  return documentsService.getValidDocumentOnDate(licence.licenceNumber, date);
+};
+
 exports.getLicence = getLicence;
 exports.getLicenceVersions = getLicenceVersions;
 exports.getLicenceAccountsByRefAndDate = getLicenceAccountsByRefAndDate;
 exports.getLicenceDocument = getLicenceDocument;
+exports.getValidLicenceDocumentByDate = getValidLicenceDocumentByDate;

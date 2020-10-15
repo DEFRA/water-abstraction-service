@@ -14,6 +14,9 @@ const findOne = id =>
 const findAll = () =>
   helpers.findMany(ChargeVersionWorkflow, {}, relatedModels);
 
+const findManyForLicence = licenceId =>
+  helpers.findMany(ChargeVersionWorkflow, { licence_id: licenceId }, relatedModels);
+
 const create = data =>
   helpers.create(ChargeVersionWorkflow, data);
 
@@ -25,6 +28,7 @@ const deleteOne = id =>
 
 exports.findOne = findOne;
 exports.findAll = findAll;
+exports.findManyForLicence = findManyForLicence;
 exports.create = create;
 exports.update = update;
 exports.deleteOne = deleteOne;

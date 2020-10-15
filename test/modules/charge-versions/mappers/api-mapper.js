@@ -27,7 +27,7 @@ experiment('modules/charge-versions/mappers/api-mapper', () => {
       const chargeVersionWorkflow = new ChargeVersionWorkflow(uuid());
       chargeVersionWorkflow.fromHash({
         createdBy: new User(123, 'mail@example.com'),
-        status: 'draft',
+        status: 'review',
         approverComments: 'Pat on the back'
       });
       chargeVersionWorkflow.licence = new Licence();
@@ -52,7 +52,7 @@ experiment('modules/charge-versions/mappers/api-mapper', () => {
         licenceNumber: '01/123',
         startDate: '2019-01-01',
         createdBy: obj.chargeVersionWorkflow.createdBy,
-        status: 'draft',
+        status: 'review',
         approverComments: 'Pat on the back',
         licenceHolder: 'Test company'
       });

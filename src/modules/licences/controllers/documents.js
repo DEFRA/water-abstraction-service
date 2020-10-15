@@ -137,9 +137,14 @@ const getLicenceByDocumentId = async (request, h) => {
   const { includeExpired, companyId } = request.query;
 
   try {
-    const licence = await getLicence(documentId, includeExpired, companyId);
+    const permitLicence = await getLicence(documentId, includeExpired, companyId);
 
-    if (licence) {
+    if (permitLicence) {
+      const waterLicence = await licencesService.getLicenceByLicenceRef(permitLicence.licence_ref, permitLicence.licence_data_value.FGAC_REGION_CODE);
+      const licence = {
+        ...permitLicence,
+        id: waterLicence.id
+      };
       return wrapData(addEarliestEndDate(licence));
     }
     return Boom.notFound();

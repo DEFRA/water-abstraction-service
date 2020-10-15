@@ -61,6 +61,22 @@ experiment('lib/connectors/repos/charge-version-workflows', () => {
     });
   });
 
+  experiment('.findManyForLicence', () => {
+    beforeEach(async () => {
+      await chargeVersionWorkflowsRepo.findManyForLicence('test-licence-id');
+    });
+
+    test('delegates to the findMany helper', async () => {
+      const [model, conditions, relatedModels] = helpers.findMany.lastCall.args;
+      expect(model).to.equal(ChargeVersionWorkflow);
+      expect(conditions).to.equal({ licence_id: 'test-licence-id' });
+      expect(relatedModels).to.equal([
+        'licence',
+        'licence.region'
+      ]);
+    });
+  });
+
   experiment('.create', () => {
     beforeEach(async () => {
       await chargeVersionWorkflowsRepo.create({

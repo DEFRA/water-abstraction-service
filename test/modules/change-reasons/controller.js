@@ -5,6 +5,7 @@ const { experiment, test, beforeEach, afterEach } = exports.lab = Lab.script();
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const repos = require('../../../src/lib/connectors/repos');
+const ChangeReason = require('../../../src/lib/models/change-reason');
 
 const changeReasons = [{
   changeReasonId: '156e4ef4-c975-4ccb-8286-3c2f82a6c9dc',
@@ -33,8 +34,10 @@ experiment('./src/modules/change-reasons/controller.js', () => {
       expect(repos.changeReasons.find.called).to.be.true();
     });
 
-    test('returns change reasons array in { data } envelope', async () => {
-      expect(response.data).to.equal(changeReasons);
+    test('returns change reasons array mapped to model', async () => {
+      expect(response[0]).to.be.instanceOf(ChangeReason);
+      expect(response[0].id).to.equal(changeReasons[0].changeReasonId);
+      expect(response[0].description).to.equal(changeReasons[0].description);
     });
   });
 });

@@ -63,5 +63,20 @@ module.exports = {
         }
       }
     }
+  },
+
+  getValidLicenceDocumentByDate: {
+    method: 'GET',
+    path: `${pathPrefix}{licenceId}/valid-documents/{date}`,
+    handler: controller.getValidLicenceDocumentByDate,
+    config: {
+      description: 'Gets the CRM document for the given licence ID and start date',
+      validate: {
+        params: {
+          licenceId: Joi.string().guid().required(),
+          date: Joi.date().iso().required()
+        }
+      }
+    }
   }
 };

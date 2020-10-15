@@ -89,7 +89,7 @@ experiment('lib/models/charge-version-workflow', () => {
   });
 
   experiment('.status', () => {
-    ['draft', 'changes_requested'].forEach(status => {
+    ['review', 'changes_requested'].forEach(status => {
       test(`can be set to "${status}"`, async () => {
         chargeVersionWorkflow.status = status;
         expect(chargeVersionWorkflow.status).to.equal(status);

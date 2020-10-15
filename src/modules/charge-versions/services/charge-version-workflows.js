@@ -74,6 +74,14 @@ const getByIdWithLicenceHolder = async id => {
 };
 
 /**
+ * Gets all charge version workflow for the
+ * given licence id
+ * @param {String} licenceId
+ */
+const getManyByLicenceId = async licenceId =>
+  service.findMany(licenceId, chargeVersionWorkflowsRepo.findManyForLicence, chargeVersionWorkflowMapper);
+
+/**
  * Updates the properties on the model - if any errors,
  * an InvalidEntityError is thrown
  * @param {ChargeVersionWorkflow} chargeVersionWorkflow
@@ -84,7 +92,7 @@ const setOrThrowInvalidEntityError = (chargeVersionWorkflow, changes) => {
     return chargeVersionWorkflow.fromHash(changes);
   } catch (err) {
     logger.error(err);
-    throw new InvalidEntityError(`Invalid data for charge version worklow ${chargeVersionWorkflow.id}`);
+    throw new InvalidEntityError(`Invalid data for charge version workflow ${chargeVersionWorkflow.id}`);
   }
 };
 
@@ -107,7 +115,7 @@ const create = async (licence, chargeVersion, user) => {
     createdBy: user,
     licence: licence,
     chargeVersion,
-    status: CHARGE_VERSION_WORKFLOW_STATUS.draft
+    status: CHARGE_VERSION_WORKFLOW_STATUS.review
   });
 
   const dbRow = chargeVersionWorkflowMapper.modelToDb(chargeVersionWorkflow);
@@ -181,6 +189,7 @@ exports.getById = getById;
 exports.getByIdWithLicenceHolder = getByIdWithLicenceHolder;
 exports.create = create;
 exports.getLicenceHolderRole = getLicenceHolderRole;
+exports.getManyByLicenceId = getManyByLicenceId;
 exports.update = update;
 exports.delete = deleteById;
 exports.approve = approve;
