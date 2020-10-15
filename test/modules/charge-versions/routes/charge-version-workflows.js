@@ -183,7 +183,7 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
       id = uuid();
       request = makePatch(`/water/1.0/charge-version-workflows/${id}`);
       request.payload = {
-        status: 'draft',
+        status: 'review',
         approverComments: 'Good work'
       };
     });

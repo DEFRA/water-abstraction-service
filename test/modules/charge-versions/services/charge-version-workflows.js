@@ -234,7 +234,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         const [data] = chargeVersionWorkflowRepo.create.lastCall.args;
 
         expect(data.licenceId).to.equal(licence.id);
-        expect(data.status).to.equal('draft');
+        expect(data.status).to.equal('review');
         expect(data.createdBy).to.equal({
           id: 123,
           email: 'mail@example.com'
@@ -276,7 +276,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
       chargeVersionWorkflowRepo.update.resolves({
         chargeVersionWorkflowId: id,
-        status: 'draft',
+        status: 'review',
         data: {
           chargeVersion: {
             dateRange: {
@@ -294,7 +294,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       });
 
       test('a NotFoundError is thrown', async () => {
-        const func = () => chargeVersionWorkflowService.update(id, { status: 'draft' });
+        const func = () => chargeVersionWorkflowService.update(id, { status: 'review' });
         const err = await expect(func()).to.reject();
         expect(err).to.be.an.instanceof(NotFoundError);
         expect(err.message).to.equal(`Charge version workflow ${id} not found`);
@@ -312,7 +312,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
     experiment('if the supplied changes are valid', () => {
       beforeEach(async () => {
-        result = await chargeVersionWorkflowService.update(id, { status: 'draft' });
+        result = await chargeVersionWorkflowService.update(id, { status: 'review' });
       });
 
       test('the charge version workflow is loaded by id', async () => {
@@ -324,7 +324,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         expect(updatedId).to.equal(id);
         expect(dbRow).to.be.an.object();
         expect(dbRow.chargeVersionWorkflowId).to.equal(id);
-        expect(dbRow.status).to.equal('draft');
+        expect(dbRow.status).to.equal('review');
       });
     });
   });

@@ -163,7 +163,7 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
           chargeVersion: new ChargeVersion(uuid())
         },
         payload: {
-          status: 'draft',
+          status: 'review',
           approverComments: 'Pull your socks up'
         }
       };
@@ -181,7 +181,7 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
         expect(chargeVersionWorkflowService.update.calledWith(
           request.params.chargeVersionWorkflowId,
           {
-            status: 'draft',
+            status: 'review',
             approverComments: 'Pull your socks up',
             chargeVersion: request.pre.chargeVersion
           }
@@ -206,7 +206,7 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
         expect(chargeVersionWorkflowService.update.calledWith(
           request.params.chargeVersionWorkflowId,
           {
-            status: 'draft',
+            status: 'review',
             approverComments: 'Pull your socks up'
           }
         )).to.be.true();
