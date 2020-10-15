@@ -222,5 +222,9 @@ module.exports = {
     retries: 10,
     factor: 2,
     minTimeout: 5 * 1000
+  },
+
+  licences: {
+    withChargeVersionsStartDate: '1990-01-01'
   }
 };

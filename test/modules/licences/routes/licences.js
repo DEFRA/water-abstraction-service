@@ -124,4 +124,21 @@ experiment('modules/licences/routes/licences', () => {
       expect(output.statusCode).to.equal(200);
     });
   });
+
+  experiment('.getLicencesWithoutChargeVersions', () => {
+    let server, request;
+
+    beforeEach(async () => {
+      request = {
+        method: 'GET',
+        url: '/water/1.0/licences/without-charge-versions'
+      };
+      server = await testHelpers.createServerForRoute(routes.getLicencesWithoutChargeVersions, false);
+    });
+
+    test('responds to the get request', async () => {
+      const output = await server.inject(request);
+      expect(output.statusCode).to.equal(200);
+    });
+  });
 });
