@@ -9,7 +9,8 @@
  * @param {Object} mapper
  * @return {Object}
  */
-const createModel = (ModelClass, data, mapper) => {
+const createModel = (ModelClass, data, mapper, mapNull = false) => {
+  if (!data && mapNull) return null;
   const model = new ModelClass();
   return model.fromHash(
     mapper.execute(data)

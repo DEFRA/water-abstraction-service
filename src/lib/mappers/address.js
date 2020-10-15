@@ -1,6 +1,6 @@
 'use strict';
 
-const { pick, isEmpty, omit } = require('lodash');
+const { omit } = require('lodash');
 const Address = require('../models/address');
 
 const { createMapper } = require('../object-mapper');
@@ -11,22 +11,22 @@ const { createModel } = require('./lib/helpers');
  * @param {Object} data - address data from CRM
  * @return {Address}
  */
-const crmToModel = data => {
-  if (isEmpty(data)) {
-    return null;
-  }
-  const address = new Address();
-  address.fromHash({
-    id: data.addressId,
-    addressLine1: data.address1 || null,
-    addressLine2: data.address2 || null,
-    addressLine3: data.address3 || null,
-    addressLine4: data.address4 || null,
-    ...pick(data, ['town', 'county', 'postcode', 'country', 'uprn']),
-    source: data.dataSource || 'nald'
-  });
-  return address;
-};
+const crmToModelMapper = createMapper()
+  .copy(
+    'town',
+    'county',
+    'postcode',
+    'country',
+    'uprn'
+  )
+  .map('addressId').to('id')
+  .map('address1').to('addressLine1')
+  .map('address2').to('addressLine2')
+  .map('address3').to('addressLine3')
+  .map('address4').to('addressLine4')
+  .map('dataSource').to('source', dataSource => dataSource || 'nald');
+
+const crmToModel = row => createModel(Address, row, crmToModelMapper, true);
 
 /**
  * Maps address data from ui to water service Address model
