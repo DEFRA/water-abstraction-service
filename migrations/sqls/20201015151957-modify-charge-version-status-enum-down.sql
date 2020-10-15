@@ -6,7 +6,7 @@ create type water.charge_version_workflow_status as enum (
   'changes_requested'
 );
 
-alter table water.charge_version_workflow
+alter table water.charge_version_workflows
   alter column status type water.charge_version_workflow_status using status::text::water.charge_version_workflow_status;
 
-drop type water._charge_version_workflow_status_old;
+drop type water._charge_version_workflow_status;
