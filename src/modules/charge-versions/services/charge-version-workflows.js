@@ -115,7 +115,7 @@ const create = async (licence, chargeVersion, user) => {
     createdBy: user,
     licence: licence,
     chargeVersion,
-    status: CHARGE_VERSION_WORKFLOW_STATUS.draft
+    status: CHARGE_VERSION_WORKFLOW_STATUS.review
   });
 
   const dbRow = chargeVersionWorkflowMapper.modelToDb(chargeVersionWorkflow);
