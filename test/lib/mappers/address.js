@@ -50,9 +50,10 @@ experiment('modules/billing/mappers/address', () => {
       result = addressMapper.crmToModel(dbRow);
     });
 
-    test('returns null when data is empty', async () => {
+    test('returns empty Address instance when data is empty', async () => {
       const result = addressMapper.crmToModel(null);
-      expect(result).to.equal(null);
+      expect(result instanceof Address).to.be.true();
+      expect(result).to.equal({});
     });
 
     test('returns an Address instance', async () => {

@@ -20,7 +20,7 @@ const crmToModelMapper = createMapper()
   )
   .map('companyId').to('id');
 
-const crmToModel = row => createModel(Company, row, crmToModelMapper, true);
+const crmToModel = row => createModel(Company, row, crmToModelMapper);
 
 /**
  * Maps only an id or new company data from the UI

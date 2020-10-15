@@ -26,7 +26,7 @@ const crmToModelMapper = createMapper()
   .map('address4').to('addressLine4')
   .map('dataSource').to('source', dataSource => dataSource || 'nald');
 
-const crmToModel = row => createModel(Address, row, crmToModelMapper, true);
+const crmToModel = row => createModel(Address, row, crmToModelMapper);
 
 /**
  * Maps address data from ui to water service Address model
