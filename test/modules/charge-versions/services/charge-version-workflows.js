@@ -382,7 +382,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       });
 
       test('a not found error is thrown', async () => {
-        const result = await expect(chargeVersionWorkflowService.getLicenceHolderRole({
+        result = await expect(chargeVersionWorkflowService.getLicenceHolderRole({
           licence: {
             licenceNumber: '123'
           },
