@@ -374,4 +374,29 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
     });
   });
+
+  experiment('getLicenceHolderRole', () => {
+    experiment('when no document is found for the licence and start date', () => {
+      beforeEach(async () => {
+        documentsService.getValidDocumentOnDate.resolves(null);
+      });
+
+      test('a not found error is thrown', async () => {
+        const result = await expect(chargeVersionWorkflowService.getLicenceHolderRole({
+          licence: {
+            licenceNumber: '123'
+          },
+          chargeVersion: {
+            dateRange: {
+              startDate: '2000-01-01'
+            }
+          }
+        })
+        ).to.reject();
+
+        expect(result.name).to.equal('NotFoundError');
+        expect(result.message).to.equal('Current or superseded document not found for 123 on 2000-01-01');
+      });
+    });
+  });
 });

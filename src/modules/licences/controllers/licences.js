@@ -43,9 +43,11 @@ const getLicencesWithoutChargeVersions = async () => {
 
   const promises = licences.map(licence => {
     return documentsService.getValidDocumentOnDate(licence.licenceNumber, licence.startDate)
-      .then(document => document.roles.find(role => {
-        return role.isRoleName('licenceHolder');
-      }))
+      .then(document => {
+        return document
+          ? document.roles.find(role => role.isRoleName('licenceHolder'))
+          : null;
+      })
       .then(role => ({ licence, role }));
   });
 
