@@ -18,9 +18,7 @@ const entitiesConfig = {
 
 const deleteEntities = async entities => {
   for (const entity of reverse(entities)) {
-    if (isFunction(entity.constructor.name)) {
-      await entitiesConfig[entity.constructor.name](entity);
-    }
+    await entitiesConfig[entity.constructor.name](entity);
   }
 };
 
