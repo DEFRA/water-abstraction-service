@@ -126,4 +126,23 @@ experiment('lib/models/return-requirement', () => {
       expect(returnRequirement.isTwoPartTariffPurposeUse).to.be.false();
     });
   });
+
+  experiment('.legacyId', () => {
+    test('can be set to a number', async () => {
+      returnRequirement.legacyId = 1234;
+      expect(returnRequirement.legacyId).to.equal(1234);
+    });
+
+    test('can be set to null', async () => {
+      returnRequirement.legacyId = null;
+      expect(returnRequirement.legacyId).to.equal(null);
+    });
+
+    test('throws an error if set to a non-numeric/null value', async () => {
+      const func = () => {
+        returnRequirement.legacyId = 'not-a-number';
+      };
+      expect(func).to.throw();
+    });
+  });
 });

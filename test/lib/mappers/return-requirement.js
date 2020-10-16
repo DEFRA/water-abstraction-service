@@ -19,6 +19,7 @@ const createDBRow = () => ({
   returnRequirementId: uuid(),
   isSummer: true,
   externalId: '1:123',
+  legacyId: 123,
   returnRequirementPurposes: [
     {
       returnRequirementPurposeId: uuid(),
@@ -65,6 +66,10 @@ experiment('modules/billing/mappers/return-requirement', () => {
 
       test('has an empty array of returnRequirementPurposes', async () => {
         expect(result.returnRequirementPurposes).to.equal([]);
+      });
+
+      test('has the .legacyId property', async () => {
+        expect(result.legacyId).to.equal(dbRow.legacyId);
       });
     });
 
