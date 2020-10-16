@@ -10,7 +10,7 @@ const mapReturnRequirementPurposes = rows => rows.map(returnRequirementPurposeMa
 
 const dbToModelMapper = createMapper()
   .map('returnRequirementId').to('id')
-  .copy('isSummer', 'externalId')
+  .copy('isSummer', 'externalId', 'legacyId')
   .map('returnRequirementPurposes').to('returnRequirementPurposes', mapReturnRequirementPurposes);
 
 /**
