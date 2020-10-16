@@ -4,7 +4,7 @@ const contactsService = require('./contacts-service');
 const invoiceAccountsService = require('./invoice-accounts-service');
 const invoiceAccountAddressesService = require('./invoice-account-addresses-service');
 
-const { reverse, isFunction } = require('lodash');
+const { reverse } = require('lodash');
 
 const entitiesConfig = {
   Address: addressService.deleteAddress,
