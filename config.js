@@ -225,6 +225,6 @@ module.exports = {
   },
 
   licences: {
-    withChargeVersionsStartDate: '1990-01-01'
+    withChargeVersionsStartDate: '2020-01-01'
   }
 };
