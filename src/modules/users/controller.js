@@ -109,7 +109,7 @@ const createInternalUserEvent = (type, callingUser, newUser) => {
 
 const createNewUserEvent = partial(createInternalUserEvent, 'new-user');
 const deleteUserEvent = partial(createInternalUserEvent, 'delete-user');
-const reinstateUserEvent = partial(createInternalUserEvent, 'reinstate-user')
+const reinstateUserEvent = partial(createInternalUserEvent, 'reinstate-user');
 const updateUserRolesEvent = partial(createInternalUserEvent, 'update-user-roles');
 
 const createIdmUser = (email, crmEntityId) => {
