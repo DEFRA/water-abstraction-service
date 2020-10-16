@@ -35,3 +35,9 @@ exports.INCLUDE_IN_SUPPLEMENTARY_BILLING = {
   no: 'no',
   reprocess: 'reprocess'
 };
+
+exports.ROLE_NAMES = {
+  licenceHolder: 'licenceHolder',
+  billing: 'billing',
+  returnsTo: 'returnsTo'
+};
