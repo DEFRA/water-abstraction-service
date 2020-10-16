@@ -914,4 +914,109 @@ experiment('modules/users/controller', () => {
       });
     });
   });
+
+  experiment('.reinstateUserInternal', () => {
+    let request;
+
+    let userId;
+    let userEmail;
+    let callingUserId;
+    let callingUserEmail;
+
+    beforeEach(async () => {
+      userId = 1;
+      callingUserId = 123;
+      callingUserEmail = 'admin@example.govuk';
+      userEmail = 'bob@gov.uk';
+      request = {
+        params: {
+          userId
+        },
+        payload: {
+          callingUserId
+        }
+      };
+    });
+
+    experiment('when the calling user has permission to manage roles', () => {
+      beforeEach(async () => {
+        // set up to confirm the calling user has the correct role
+        idmConnector.usersClient.findOne.withArgs(callingUserId).resolves({
+          data: {
+            user_id: callingUserId,
+            user_name: callingUserEmail,
+            roles: ['manage_accounts']
+          }
+        });
+
+        idmConnector.usersClient.enableUser.resolves({
+          user_id: userId,
+          user_name: userEmail
+        });
+
+        await controller.reinstateUserInternal(request);
+      });
+
+      test('calls the IDM to get the calling user', async () => {
+        expect(idmConnector.usersClient.findOne.firstCall.calledWith(
+          callingUserId
+        )).to.be.true();
+      });
+
+      test('calls the IDM to reinstate the user account', async () => {
+        expect(idmConnector.usersClient.enableUser.firstCall.calledWith(
+          userId, config.idm.application.internalUser
+        )).to.be.true();
+      });
+
+      test('writes an event for audit purposes', async () => {
+        const [savedEvent] = event.save.lastCall.args;
+        expect(savedEvent.type).to.equal('reinstate-user');
+        expect(savedEvent.subtype).to.equal('internal');
+        expect(savedEvent.issuer).to.equal(callingUserEmail);
+        expect(savedEvent.metadata.userId).to.equal(userId);
+        expect(savedEvent.metadata.user).to.equal(userEmail);
+      });
+    });
+
+    experiment('when the reinstate user call does not find a user', () => {
+      beforeEach(async () => {
+        idmConnector.usersClient.enableUser.resolves();
+
+        // set up to confirm the calling user has the correct role
+        idmConnector.usersClient.findOne.withArgs(callingUserId).resolves({
+          data: {
+            user_id: callingUserId,
+            user_name: callingUserEmail,
+            roles: ['manage_accounts']
+          }
+        });
+      });
+
+      test('a 404 not found error is returned', async () => {
+        const err = await controller.reinstateUserInternal(request);
+        expect(err.isBoom).to.be.true();
+        expect(err.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when the calling user does not have permission to manage roles', () => {
+      beforeEach(async () => {
+        // set up to confirm the calling user has the correct role
+        idmConnector.usersClient.findOne.withArgs(callingUserId).resolves({
+          data: {
+            user_id: callingUserId,
+            user_name: callingUserEmail,
+            roles: []
+          }
+        });
+      });
+
+      test('a 403 forbidden error is returned', async () => {
+        const err = await controller.reinstateUserInternal(request);
+        expect(err.isBoom).to.be.true();
+        expect(err.output.statusCode).to.equal(403);
+      });
+    });
+  });
 });

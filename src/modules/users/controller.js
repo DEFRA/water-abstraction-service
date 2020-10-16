@@ -109,6 +109,7 @@ const createInternalUserEvent = (type, callingUser, newUser) => {
 
 const createNewUserEvent = partial(createInternalUserEvent, 'new-user');
 const deleteUserEvent = partial(createInternalUserEvent, 'delete-user');
+const reinstateUserEvent = partial(createInternalUserEvent, 'reinstate-user')
 const updateUserRolesEvent = partial(createInternalUserEvent, 'update-user-roles');
 
 const createIdmUser = (email, crmEntityId) => {
@@ -291,7 +292,40 @@ const deleteUserInternal = async (request, h) => {
   }
 };
 
+/**
+ * Reinstates an internal user by setting their IDM enabled flag to true.
+ * Also logs an event for audit purposes
+ * @param  {Number}  request.params.id - IDM user ID
+ * @param  {Number}  request.payload.callingUserId - the user performing the deletion
+ */
+const reinstateUserInternal = async (request, h) => {
+  const { userId } = request.params;
+  const { callingUserId } = request.payload;
+
+  try {
+    const callingUser = await getCallingUser(callingUserId);
+
+    // Enable the user
+    const user = await idmConnector.usersClient.enableUser(userId,
+      config.idm.application.internalUser);
+
+    if (!user) {
+      throw Boom.notFound(`User ${userId} could not be found`);
+    }
+
+    await reinstateUserEvent(callingUser, user);
+
+    // Respond with the reenabled user
+    return user;
+  } catch (err) {
+    return errorHandler(err, 'Failed to reinstate internal user', {
+      callingUserId, userId
+    });
+  }
+};
+
 exports.getStatus = getStatus;
 exports.postUserInternal = postUserInternal;
 exports.patchUserInternal = patchUserInternal;
 exports.deleteUserInternal = deleteUserInternal;
+exports.reinstateUserInternal = reinstateUserInternal;

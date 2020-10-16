@@ -81,5 +81,21 @@ module.exports = {
         }
       }
     }
+  },
+
+  reinstateUserInternal: {
+    method: 'POST',
+    path: '/water/1.0/user/internal/{userId}/reinstate',
+    handler: controller.reinstateUserInternal,
+    options: {
+      validate: {
+        params: {
+          userId: VALID_USER_ID
+        },
+        payload: {
+          callingUserId: VALID_USER_ID
+        }
+      }
+    }
   }
 };
