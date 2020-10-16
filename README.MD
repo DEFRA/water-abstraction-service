@@ -3,6 +3,7 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/9ee43d8d24011c130e15/maintainability)](https://codeclimate.com/github/DEFRA/water-abstraction-service/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/9ee43d8d24011c130e15/test_coverage)](https://codeclimate.com/github/DEFRA/water-abstraction-service/test_coverage)
 [![Build Status](https://travis-ci.org/DEFRA/water-abstraction-service.svg?branch=master)](https://travis-ci.org/DEFRA/water-abstraction-service)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_water-abstraction-service&metric=alert_status)](https://sonarcloud.io/dashboard?id=DEFRA_water-abstraction-service)
 
 The water abstraction service is a layer which contains the business logic that is required for the water abstraction service to function, without such logic making its way into the underlying and potentially reusable IDM, CRM or Permit projects.
 
