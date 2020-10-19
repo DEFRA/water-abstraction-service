@@ -38,8 +38,26 @@ const getValidLicenceDocumentByDate = async request => {
   return documentsService.getValidDocumentOnDate(licence.licenceNumber, date);
 };
 
+const getLicencesWithoutChargeVersions = async () => {
+  const licences = await licencesService.getLicencesWithoutChargeVersions();
+
+  const promises = licences.map(licence => {
+    return documentsService.getValidDocumentOnDate(licence.licenceNumber, licence.startDate)
+      .then(document => {
+        return document
+          ? document.roles.find(role => role.isRoleName('licenceHolder'))
+          : null;
+      })
+      .then(role => ({ licence, role }));
+  });
+
+  const licencesWithLicenceHolderRole = await Promise.all(promises);
+  return { data: licencesWithLicenceHolderRole };
+};
+
 exports.getLicence = getLicence;
 exports.getLicenceVersions = getLicenceVersions;
 exports.getLicenceAccountsByRefAndDate = getLicenceAccountsByRefAndDate;
 exports.getLicenceDocument = getLicenceDocument;
 exports.getValidLicenceDocumentByDate = getValidLicenceDocumentByDate;
+exports.getLicencesWithoutChargeVersions = getLicencesWithoutChargeVersions;
