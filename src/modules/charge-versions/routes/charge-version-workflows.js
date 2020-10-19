@@ -1,6 +1,6 @@
 'use strict';
 
-const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowApprover } } = require('../../../lib/roles');
+const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer } } = require('../../../lib/roles');
 
 const controller = require('../controllers/charge-version-workflow');
 const Joi = require('joi');
@@ -19,7 +19,7 @@ module.exports = {
     options: {
       description: 'Lists all charge version workflows in progress',
       auth: {
-        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowApprover]
+        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
       },
       validate: {
         headers
@@ -34,7 +34,7 @@ module.exports = {
     options: {
       description: 'Gets a single charge version workflow record',
       auth: {
-        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowApprover]
+        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
       },
       validate: {
         headers,
@@ -52,7 +52,7 @@ module.exports = {
     options: {
       description: 'Creates a new charge version workflow record',
       auth: {
-        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowApprover]
+        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
       },
       validate: {
         headers,
@@ -75,7 +75,7 @@ module.exports = {
     options: {
       description: 'Updates an existing charge version workflow record',
       auth: {
-        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowApprover]
+        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
       },
       validate: {
         headers,
@@ -98,7 +98,7 @@ module.exports = {
     options: {
       description: 'Deletes an existing charge version workflow record',
       auth: {
-        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowApprover]
+        scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
       },
       validate: {
         headers
