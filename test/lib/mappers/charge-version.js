@@ -351,7 +351,7 @@ experiment('lib/mappers/charge-version', () => {
 
       test('maps the .changeReason property', async () => {
         expect(result.changeReason).to.be.an.instanceOf(ChangeReason);
-        expect(result.changeReason.id).to.equal(obj.changeReason.changeReasonId);
+        expect(result.changeReason.id).to.equal(obj.changeReason.id);
         expect(result.changeReason.triggersMinimumCharge).to.equal(obj.changeReason.triggersMinimumCharge);
         expect(result.changeReason.description).to.equal(obj.changeReason.description);
       });

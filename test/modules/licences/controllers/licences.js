@@ -1,12 +1,16 @@
 'use strict';
 
+const uuid = require('uuid/v4');
 const { expect } = require('@hapi/code');
 const { afterEach, beforeEach, experiment, test } = exports.lab = require('@hapi/lab').script();
 
 const controller = require('../../../../src/modules/licences/controllers/licences');
 const licencesService = require('../../../../src/lib/services/licences');
+const documentsService = require('../../../../src/lib/services/documents-service');
 
 // Models
+const Document = require('../../../../src/lib/models/document');
+const Role = require('../../../../src/lib/models/role');
 const Licence = require('../../../../src/lib/models/licence');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 
@@ -19,6 +23,9 @@ experiment('modules/licences/controllers/licences.js', () => {
     sandbox.stub(licencesService, 'getLicenceById');
     sandbox.stub(licencesService, 'getLicenceVersions');
     sandbox.stub(licencesService, 'getLicenceAccountsByRefAndDate');
+    sandbox.stub(licencesService, 'getLicencesWithoutChargeVersions');
+
+    sandbox.stub(documentsService, 'getValidDocumentOnDate');
 
     sandbox.stub(crmDocumentsConnector, 'getDocumentsByLicenceNumbers');
   });
@@ -180,6 +187,112 @@ experiment('modules/licences/controllers/licences.js', () => {
         test('resolves with the document', async () => {
           expect(result.document_id).to.equal('test-document-id');
         });
+      });
+    });
+  });
+
+  experiment('.getValidLicenceDocumentByDate', () => {
+    let result, request;
+
+    beforeEach(async () => {
+      request = {
+        params: {
+          licenceId: 'test-licence-id'
+        }
+      };
+    });
+
+    experiment('when the licence is not found', () => {
+      beforeEach(async () => {
+        licencesService.getLicenceById.resolves(null);
+        result = await controller.getValidLicenceDocumentByDate(request);
+      });
+
+      test('resolves with a Boom 404', async () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when the licence is found', () => {
+      beforeEach(async () => {
+        const licence = new Licence().fromHash({ licenceNumber: '01/123/ABC' });
+        licencesService.getLicenceById.resolves(licence);
+      });
+
+      beforeEach(async () => {
+        documentsService.getValidDocumentOnDate.resolves({
+          document_id: 'test-document-id'
+        });
+        result = await controller.getValidLicenceDocumentByDate(request);
+      });
+
+      test('resolves with the document', async () => {
+        expect(result.document_id).to.equal('test-document-id');
+      });
+    });
+  });
+
+  experiment('getLicencesWithoutChargeVersions', () => {
+    let result;
+    let billingRole;
+    let licenceHolderRole;
+
+    experiment('when a licence is found and a matching document is found', () => {
+      beforeEach(async () => {
+        licencesService.getLicencesWithoutChargeVersions.resolves([
+          { licenceNumber: '123/123', startDate: '2000-01-01' }
+        ]);
+
+        licenceHolderRole = new Role(uuid());
+        licenceHolderRole.roleName = 'licenceHolder';
+
+        billingRole = new Role(uuid());
+        billingRole.roleName = 'billing';
+
+        const document = new Document();
+        document.roles = [licenceHolderRole, billingRole];
+
+        documentsService.getValidDocumentOnDate.resolves(document);
+
+        result = await controller.getLicencesWithoutChargeVersions();
+      });
+
+      test('return contains one item', async () => {
+        expect(result.data.length).to.equal(1);
+      });
+
+      test('the results contain a licence value', async () => {
+        expect(result.data[0].licence.licenceNumber).to.equal('123/123');
+      });
+
+      test('the result contains the licence holder role', async () => {
+        expect(result.data[0].role.roleName).to.equal('licenceHolder');
+        expect(result.data[0].role.id).to.equal(licenceHolderRole.id);
+      });
+    });
+
+    experiment('when a licence is found but nomatching document is found', () => {
+      beforeEach(async () => {
+        licencesService.getLicencesWithoutChargeVersions.resolves([
+          { licenceNumber: '123/123', startDate: '2000-01-01' }
+        ]);
+
+        documentsService.getValidDocumentOnDate.resolves(null);
+
+        result = await controller.getLicencesWithoutChargeVersions();
+      });
+
+      test('return contains one item', async () => {
+        expect(result.data.length).to.equal(1);
+      });
+
+      test('the results contain a licence value', async () => {
+        expect(result.data[0].licence.licenceNumber).to.equal('123/123');
+      });
+
+      test('the result contains null for the licence holder role', async () => {
+        expect(result.data[0].role).to.equal(null);
       });
     });
   });

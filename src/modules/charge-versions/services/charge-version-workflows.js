@@ -6,6 +6,7 @@ const bluebird = require('bluebird');
 const service = require('../../../lib/services/service');
 const documentsService = require('../../../lib/services/documents-service');
 const chargeVersionService = require('../../../lib/services/charge-versions');
+const errors = require('../../../lib/errors');
 
 // Repos
 const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-version-workflows');
@@ -41,6 +42,11 @@ const getLicenceHolderRole = async chargeVersionWorkflow => {
   const { licenceNumber } = chargeVersionWorkflow.licence;
   const { startDate } = chargeVersionWorkflow.chargeVersion.dateRange;
   const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate);
+
+  if (!doc) {
+    throw new errors.NotFoundError(`Current or superseded document not found for ${licenceNumber} on ${startDate}`);
+  }
+
   return {
     chargeVersionWorkflow,
     licenceHolderRole: doc.getRoleOnDate(Role.ROLE_NAMES.licenceHolder, startDate)
@@ -74,6 +80,14 @@ const getByIdWithLicenceHolder = async id => {
 };
 
 /**
+ * Gets all charge version workflow for the
+ * given licence id
+ * @param {String} licenceId
+ */
+const getManyByLicenceId = async licenceId =>
+  service.findMany(licenceId, chargeVersionWorkflowsRepo.findManyForLicence, chargeVersionWorkflowMapper);
+
+/**
  * Updates the properties on the model - if any errors,
  * an InvalidEntityError is thrown
  * @param {ChargeVersionWorkflow} chargeVersionWorkflow
@@ -84,7 +98,7 @@ const setOrThrowInvalidEntityError = (chargeVersionWorkflow, changes) => {
     return chargeVersionWorkflow.fromHash(changes);
   } catch (err) {
     logger.error(err);
-    throw new InvalidEntityError(`Invalid data for charge version worklow ${chargeVersionWorkflow.id}`);
+    throw new InvalidEntityError(`Invalid data for charge version workflow ${chargeVersionWorkflow.id}`);
   }
 };
 
@@ -107,7 +121,7 @@ const create = async (licence, chargeVersion, user) => {
     createdBy: user,
     licence: licence,
     chargeVersion,
-    status: CHARGE_VERSION_WORKFLOW_STATUS.draft
+    status: CHARGE_VERSION_WORKFLOW_STATUS.review
   });
 
   const dbRow = chargeVersionWorkflowMapper.modelToDb(chargeVersionWorkflow);
@@ -181,6 +195,7 @@ exports.getById = getById;
 exports.getByIdWithLicenceHolder = getByIdWithLicenceHolder;
 exports.create = create;
 exports.getLicenceHolderRole = getLicenceHolderRole;
+exports.getManyByLicenceId = getManyByLicenceId;
 exports.update = update;
 exports.delete = deleteById;
 exports.approve = approve;

@@ -12,10 +12,17 @@ const { rowToAPIList } = require('../mappers/api-mapper');
 const mapErrorResponse = require('../../../lib/map-error-response');
 
 /**
- * Get all charge version workflows in DB
+ * Gets all charge version workflow or
+ * those for the given licence id
+ * @param {String} request.query.licenceId
  */
-const getChargeVersionWorkflows = () =>
-  controller.getEntities(null, chargeVersionsWorkflowService.getAllWithLicenceHolder, rowToAPIList);
+const getChargeVersionWorkflows = async request => {
+  const { licenceId } = request.query;
+  if (licenceId) {
+    return chargeVersionsWorkflowService.getManyByLicenceId(licenceId);
+  }
+  return controller.getEntities(null, chargeVersionsWorkflowService.getAllWithLicenceHolder, rowToAPIList);
+};
 
 /**
  * Get a specific charge version workflow by ID

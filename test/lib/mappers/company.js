@@ -32,9 +32,13 @@ experiment('modules/billing/mappers/company', () => {
       result = companyMapper.crmToModel(dbRow);
     });
 
-    test('returns null when data is empty', async () => {
+    test('returns empty Company instance when data is empty', async () => {
       const result = companyMapper.crmToModel(null);
-      expect(result).to.equal(null);
+      expect(result instanceof Company).to.be.true();
+      expect(result).to.equal({
+        _companyAddresses: [],
+        _companyContacts: []
+      });
     });
 
     test('returns an Company instance', async () => {

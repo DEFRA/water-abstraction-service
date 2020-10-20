@@ -1,21 +1,26 @@
 'use strict';
 
-const { isEmpty, omit } = require('lodash');
+const { omit } = require('lodash');
 const Company = require('../models/company');
 const { ORGANISATION_TYPES, COMPANY_TYPES } = Company;
+
+const { createMapper } = require('../object-mapper');
+const { createModel } = require('./lib/helpers');
 
 /**
  * Maps a row of CRM v2 contact data to a Company instance
  * @param {Object} companyData
  * @return {Company}
  */
-const crmToModel = companyData => {
-  if (isEmpty(companyData)) {
-    return null;
-  }
-  const company = new Company(companyData.companyId);
-  return company.pickFrom(companyData, ['name', 'type', 'organisationType']);
-};
+const crmToModelMapper = createMapper()
+  .copy(
+    'name',
+    'type',
+    'organisationType'
+  )
+  .map('companyId').to('id');
+
+const crmToModel = row => createModel(Company, row, crmToModelMapper);
 
 /**
  * Maps only an id or new company data from the UI

@@ -42,10 +42,8 @@ const isNotDraft = doc => doc.status !== Document.DOCUMENT_STATUS.draft;
 const getValidDocumentOnDate = async (licenceNumber, date) => {
   const docs = await getDocuments(licenceNumber);
   const [doc] = docs.filter(doc => doc.dateRange.includes(date) && isNotDraft(doc));
-  if (!doc) {
-    throw new errors.NotFoundError(`Current or superseded document not found for ${licenceNumber} on ${date}`);
-  }
-  return getDocument(doc.id);
+
+  return doc ? getDocument(doc.id) : null;
 };
 
 exports.getDocuments = getDocuments;

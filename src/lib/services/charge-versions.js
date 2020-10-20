@@ -11,6 +11,7 @@ const chargeVersionMapper = require('../mappers/charge-version');
 const service = require('./service');
 const licencesService = require('./licences');
 const chargeElementsService = require('./charge-elements');
+const invoiceAccountsService = require('./invoice-accounts-service');
 
 // Models
 const ChargeVersion = require('../models/charge-version');
@@ -28,6 +29,16 @@ const getByChargeVersionId = async chargeVersionId =>
     chargeVersionRepo.findOne,
     chargeVersionMapper
   );
+
+/**
+ * Gets a charge version from the DB including the related
+ * invoice account
+ * @param {String} chargeVersionId
+ */
+const getByIdWithInvoiceAccount = async chargeVersionId => {
+  const chargeVersion = await getByChargeVersionId(chargeVersionId);
+  return chargeVersion && invoiceAccountsService.decorateWithInvoiceAccount(chargeVersion);
+};
 
 /**
  * Gets all the charge versions for the given licence ref
@@ -164,6 +175,7 @@ const create = async chargeVersion => {
 };
 
 exports.getByChargeVersionId = getByChargeVersionId;
+exports.getByIdWithInvoiceAccount = getByIdWithInvoiceAccount;
 exports.getByLicenceId = getByLicenceId;
 exports.getByLicenceRef = getByLicenceRef;
 exports.create = create;

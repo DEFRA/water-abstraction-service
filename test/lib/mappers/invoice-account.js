@@ -11,12 +11,15 @@ const uuid = require('uuid/v4');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 const InvoiceAccountAddress = require('../../../src/lib/models/invoice-account-address');
 const Company = require('../../../src/lib/models/company');
+const DateRange = require('../../../src/lib/models/date-range');
 
 const invoiceAccountMapper = require('../../../src/lib/mappers/invoice-account');
 
 const dbRow = {
   invoiceAccountId: '00000000-0000-0000-0000-000000000000',
   invoiceAccountNumber: 'A12345678A',
+  startDate: '2010-10-05',
+  endDate: null,
   company: {
     companyId: '11111111-1111-1111-1111-111111111111',
     name: 'company name',
@@ -41,20 +44,34 @@ experiment('modules/billing/mappers/invoice-account', () => {
       expect(result.id).to.equal(dbRow.invoiceAccountId);
     });
 
+    experiment('dateRange', () => {
+      test('is a DateRange instance', () => {
+        expect(result.dateRange instanceof DateRange).to.be.true();
+      });
+
+      test('has the expected values', () => {
+        const { dateRange } = result;
+        expect(dateRange.startDate).to.equal(dbRow.startDate);
+        expect(dateRange.endDate).to.equal(dbRow.endDate);
+      });
+    });
+
     test('has the expected account number value', async () => {
       expect(result.accountNumber).to.equal(dbRow.invoiceAccountNumber);
     });
 
-    test('company is a Company instance', () => {
-      expect(result.company instanceof Company).to.be.true();
-    });
+    experiment('company', () => {
+      test('s a Company instance', () => {
+        expect(result.company instanceof Company).to.be.true();
+      });
 
-    test('it has the expected values', () => {
-      const { company } = result;
-      expect(company.id).to.equal(dbRow.company.companyId);
-      expect(company.name).to.equal(dbRow.company.name);
-      expect(company.type).to.equal(dbRow.company.type);
-      expect(company.organisationType).to.equal(dbRow.company.organisationType);
+      test('has the expected values', () => {
+        const { company } = result;
+        expect(company.id).to.equal(dbRow.company.companyId);
+        expect(company.name).to.equal(dbRow.company.name);
+        expect(company.type).to.equal(dbRow.company.type);
+        expect(company.organisationType).to.equal(dbRow.company.organisationType);
+      });
     });
 
     experiment('when invoice address is provided,', () => {
@@ -96,44 +113,57 @@ experiment('modules/billing/mappers/invoice-account', () => {
 
     const obj = {
       id: uuid(),
-      accountNumber: 'A11111111A'
+      accountNumber: 'A11111111A',
+      dateRange: { startDate: '2012-01-01' },
+      company: {
+        id: uuid(),
+        name: 'Big Co Ltd'
+      },
+      invoiceAccountAddresses: [{
+        id: uuid(),
+        invoiceAccountId: uuid(),
+        address: {
+          addressLine2: '123',
+          addressLine3: 'Test Lane',
+          postcode: 'TT1 1TT'
+        }
+      }]
     };
 
-    experiment('when no company is specified', async () => {
-      beforeEach(async () => {
-        result = invoiceAccountMapper.pojoToModel(obj);
-      });
-
-      test('an InvoiceAccount model is returned', async () => {
-        expect(result).to.be.an.instanceof(InvoiceAccount);
-      });
-
-      test('the .id property is mapped', async () => {
-        expect(result.id).to.equal(obj.id);
-      });
-
-      test('the .accountNumber property is mapped', async () => {
-        expect(result.accountNumber).to.equal(obj.accountNumber);
-      });
-
-      test('the .company property is undefined', async () => {
-        expect(result.company).to.be.undefined();
-      });
+    beforeEach(async () => {
+      result = invoiceAccountMapper.pojoToModel(obj);
     });
 
-    experiment('when a company is specified', async () => {
-      beforeEach(async () => {
-        obj.company = {
-          id: uuid(),
-          name: 'Big Co Ltd'
-        };
-        result = invoiceAccountMapper.pojoToModel(obj);
-      });
+    test('an InvoiceAccount model is returned', async () => {
+      expect(result).to.be.an.instanceof(InvoiceAccount);
+    });
 
-      test('the .company property is mapped', async () => {
-        expect(result.company).to.be.an.instanceof(Company);
-        expect(result.company.id).to.equal(obj.company.id);
-      });
+    test('the .id property is mapped', async () => {
+      expect(result.id).to.equal(obj.id);
+    });
+
+    test('the .accountNumber property is mapped', async () => {
+      expect(result.accountNumber).to.equal(obj.accountNumber);
+    });
+
+    test('the .dateRange property is mapped', async () => {
+      expect(result.dateRange).to.be.an.instanceof(DateRange);
+      expect(result.dateRange.startDate).to.equal(obj.dateRange.startDate);
+    });
+
+    test('the .company property is mapped', async () => {
+      expect(result.company).to.be.an.instanceof(Company);
+      expect(result.company.id).to.equal(obj.company.id);
+    });
+
+    test('the .invoiceAccountAddresses property is mapped', async () => {
+      const invoiceAccountAddress = result.invoiceAccountAddresses[0];
+      expect(result.invoiceAccountAddresses[0]).to.be.an.instanceof(InvoiceAccountAddress);
+      expect(invoiceAccountAddress.id).to.equal(obj.invoiceAccountAddresses[0].id);
+      expect(invoiceAccountAddress.invoiceAccountId).to.equal(obj.invoiceAccountAddresses[0].invoiceAccountId);
+      expect(invoiceAccountAddress.address.addressLine2).to.equal(obj.invoiceAccountAddresses[0].address.addressLine2);
+      expect(invoiceAccountAddress.address.addressLine3).to.equal(obj.invoiceAccountAddresses[0].address.addressLine3);
+      expect(invoiceAccountAddress.address.postcode).to.equal(obj.invoiceAccountAddresses[0].address.postcode);
     });
   });
 });

@@ -1,16 +1,22 @@
 'use strict';
 
 const InvoiceAccountAddress = require('../models/invoice-account-address');
-
-const { address, company, contact } = require('../mappers');
 const DateRange = require('../models/date-range');
 const Address = require('../models/address');
 const Company = require('../models/company');
 const Contact = require('../models/contact-v2');
 
+const dateRangeMapper = require('./date-range');
+const addressMapper = require('./address');
+const companyMapper = require('./company');
+const contactMapper = require('./contact');
+
+const { createMapper } = require('../object-mapper');
+const { createModel } = require('./lib/helpers');
+
 const setModelAddress = (model, invoiceAccountAddress) => {
   if (invoiceAccountAddress.address) {
-    model.address = address.crmToModel(invoiceAccountAddress.address);
+    model.address = addressMapper.crmToModel(invoiceAccountAddress.address);
   } else if (invoiceAccountAddress.addressId) {
     model.address = new Address(invoiceAccountAddress.addressId);
   }
@@ -18,7 +24,7 @@ const setModelAddress = (model, invoiceAccountAddress) => {
 
 const setModelContact = (model, invoiceAccountAddress) => {
   if (invoiceAccountAddress.contact) {
-    model.contact = contact.crmToModel(invoiceAccountAddress.contact);
+    model.contact = contactMapper.crmToModel(invoiceAccountAddress.contact);
   } else if (invoiceAccountAddress.contactId) {
     model.contact = new Contact(invoiceAccountAddress.contactId);
   }
@@ -26,7 +32,7 @@ const setModelContact = (model, invoiceAccountAddress) => {
 
 const setModelAgentCompany = (model, invoiceAccountAddress) => {
   if (invoiceAccountAddress.agentCompany) {
-    model.agentCompany = company.crmToModel(invoiceAccountAddress.agentCompany);
+    model.agentCompany = companyMapper.crmToModel(invoiceAccountAddress.agentCompany);
   } else if (invoiceAccountAddress.agentCompanyId) {
     model.agentCompany = new Company(invoiceAccountAddress.agentCompanyId);
   }
@@ -50,4 +56,20 @@ const crmToModel = invoiceAccountAddress => {
   return model;
 };
 
+const pojoToModelMapper = createMapper()
+  .copy(
+    'id',
+    'invoiceAccountId'
+  )
+  .map('dateRange').to('dateRange', dateRangeMapper.pojoToModel)
+  .map('address').to('address', addressMapper.pojoToModel);
+
+/**
+ * Converts a plain object representation of a InvoiceAccountAddress to a InvoiceAccountAddress model
+ * @param {Object} pojo
+ * @return InvoiceAccountAddress
+ */
+const pojoToModel = pojo => createModel(InvoiceAccountAddress, pojo, pojoToModelMapper);
+
 exports.crmToModel = crmToModel;
+exports.pojoToModel = pojoToModel;

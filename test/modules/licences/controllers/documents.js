@@ -72,6 +72,7 @@ experiment('getLicenceByDocumentId', () => {
     sandbox.stub(permitClient.licences, 'findMany');
     sandbox.stub(documentsClient, 'findMany');
     sandbox.stub(documentsClient, 'findOne');
+    sandbox.stub(licencesService, 'getLicenceByLicenceRef').resolves({ id: 'test-licence-id' });
     sandbox.stub(logger, 'error');
   });
 
@@ -136,6 +137,13 @@ experiment('getLicenceByDocumentId', () => {
     permitClient.licences.findMany.resolves(licenceResponse);
     const response = await controller.getLicenceByDocumentId(testRequest);
     expect(response.data.document.name).to.equal('test-doc-name');
+  });
+
+  test('augments the licence with the licence id from the water service', async () => {
+    documentsClient.findMany.resolves(documentResponse);
+    permitClient.licences.findMany.resolves(licenceResponse);
+    const response = await controller.getLicenceByDocumentId(testRequest);
+    expect(response.data.id).to.equal('test-licence-id');
   });
 });
 

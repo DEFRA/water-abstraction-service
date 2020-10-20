@@ -7,7 +7,7 @@ const ChargeVersion = require('./charge-version');
 const Licence = require('./licence');
 
 const CHARGE_VERSION_WORKFLOW_STATUS = {
-  draft: 'draft',
+  review: 'review',
   changesRequested: 'changes_requested'
 };
 
@@ -56,7 +56,7 @@ class ChargeVersionWorkflow extends Model {
 
   /**
    * The status of this charge information workflow model
-   * @param {String} status - draft|changes_requested
+   * @param {String} status - review|changes_requested
    */
   set status (status) {
     validators.assertEnum(status, Object.values(CHARGE_VERSION_WORKFLOW_STATUS));
