@@ -78,5 +78,14 @@ module.exports = {
         }
       }
     }
+  },
+
+  getLicencesWithoutChargeVersions: {
+    method: 'GET',
+    path: `${pathPrefix}without-charge-versions`,
+    handler: controller.getLicencesWithoutChargeVersions,
+    config: {
+      description: 'Gets the licences and roles for licences without charge versions'
+    }
   }
 };

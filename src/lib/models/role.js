@@ -14,11 +14,7 @@ const {
   assertIsNullableInstanceOf
 } = require('./validators');
 
-const ROLE_NAMES = {
-  licenceHolder: 'licenceHolder',
-  billing: 'billing',
-  returnsTo: 'returnsTo'
-};
+const ROLE_NAMES = require('./constants').ROLE_NAMES;
 
 class Role extends Model {
   set startDate (startDate) {

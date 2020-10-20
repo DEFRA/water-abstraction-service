@@ -7,7 +7,7 @@ const validators = require('./validators');
 
 const Model = require('./model');
 
-const ROLE_NAMES = ['licenceHolder', 'billing'];
+const ROLE_NAMES = require('./constants').ROLE_NAMES;
 
 class CompanyAddress extends Model {
   /**
@@ -50,7 +50,7 @@ class CompanyAddress extends Model {
   }
 
   set roleName (roleName) {
-    validators.assertEnum(roleName, ROLE_NAMES);
+    validators.assertEnum(roleName, Object.values(ROLE_NAMES));
     this._roleName = roleName;
   }
 
@@ -69,4 +69,4 @@ class CompanyAddress extends Model {
 }
 
 module.exports = CompanyAddress;
-module.exports.ROLE_NAMES = ROLE_NAMES;
+module.exports.ROLE_NAMES = Object.values(ROLE_NAMES);

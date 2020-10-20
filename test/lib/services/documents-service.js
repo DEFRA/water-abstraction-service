@@ -66,20 +66,19 @@ experiment('modules/billing/services/documents-service', () => {
 
   experiment('.getValidDocumentOnDate', () => {
     experiment('when no documents are found', async () => {
-      let err;
+      let result;
 
       beforeEach(async () => {
         documentsConnector.getDocuments.resolves([]);
-        const func = () => documentsService.getValidDocumentOnDate(licenceNumber, date);
-        err = await expect(func()).to.reject();
+        result = await documentsService.getValidDocumentOnDate(licenceNumber, date);
       });
 
       test('gets documents for the supplied licence number', async () => {
         expect(documentsConnector.getDocuments.calledWith(licenceNumber)).to.be.true();
       });
 
-      test('throws a not found error', async () => {
-        expect(err).to.be.an.instanceof(NotFoundError);
+      test('returns null', async () => {
+        expect(result).to.equal(null);
       });
     });
 
@@ -153,10 +152,9 @@ experiment('modules/billing/services/documents-service', () => {
         }]);
       });
 
-      test('rejects with a NotFound error', async () => {
-        const func = () => documentsService.getValidDocumentOnDate(licenceNumber, date);
-        const err = await expect(func()).to.reject();
-        expect(err).to.be.an.instanceof(NotFoundError);
+      test('returns null', async () => {
+        const result = await documentsService.getValidDocumentOnDate(licenceNumber, date);
+        expect(result).to.equal(null);
       });
     });
   });
