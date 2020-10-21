@@ -137,4 +137,27 @@ experiment('lib/models/document', () => {
       expect(role).to.equal(document.roles[2]);
     });
   });
+
+  experiment('.licenceNumber', () => {
+    const LICENCE_NUMBER = '01/234/567/89';
+
+    test('can be set to a valid licence number', async () => {
+      document.licenceNumber = LICENCE_NUMBER;
+      expect(document.licenceNumber).to.equal(LICENCE_NUMBER);
+    });
+
+    test('throws an error if set to null', async () => {
+      const func = () => {
+        document.licenceNumber = null;
+      };
+      expect(func).to.throw();
+    });
+
+    test('throws an error if set to an invalid licence number', async () => {
+      const func = () => {
+        document.licenceNumber = '01/123/£$';
+      };
+      expect(func).to.throw();
+    });
+  });
 });
