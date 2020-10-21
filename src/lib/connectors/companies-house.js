@@ -1,7 +1,5 @@
 'use strict';
-const requestPromise = require('request-promise').defaults({
-  strictSSL: false
-});
+const requestPromise = require('./external-http');
 const config = require('../../../config');
 
 /**
@@ -26,7 +24,7 @@ const searchCompanies = async (q, startIndex = 0, perPage = 20) => {
     },
     json: true
   };
-  return requestPromise(options);
+  return requestPromise.externalHttp(options);
 };
 
 exports.searchCompanies = searchCompanies;
