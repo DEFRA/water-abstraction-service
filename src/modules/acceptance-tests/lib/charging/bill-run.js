@@ -7,7 +7,6 @@ const createBillRunJob = require('../../../billing/jobs/create-bill-run');
 const { createBatchEvent } = require('../../../billing/lib/batch-event');
 
 const createBatchAndExecuteBillRun = async (request, regionId, type = 'annual', financialYearEnding = 2020, isSummer = false) => {
-// const response = await billingBatchController.postCreateBatch(request, h);
   // create a new entry in the batch table
   const batch = await batchService.create(regionId, type, financialYearEnding, isSummer);
 
@@ -24,7 +23,7 @@ const createBatchAndExecuteBillRun = async (request, regionId, type = 'annual', 
   await request.messageQueue.publish(message);
 
   const annualBatch = await getBatchWhenProcessed(batch.id);
-  if (annualBatch.status === 'error') { return new Error('Batch still errored'); }
+  if (annualBatch.status === 'error') { return annualBatch; }
 
   // mark the annual batch as sent so a new batch for the same
   // region can be created
@@ -33,6 +32,8 @@ const createBatchAndExecuteBillRun = async (request, regionId, type = 'annual', 
 
   // Update the status to sent
   await batches.updateStatus(annualBatch.billingBatchId, 'sent');
+
+  return annualBatch;
 };
 
 /**

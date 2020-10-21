@@ -39,7 +39,7 @@ experiment('modules/acceptance-tests/lib/charging/scenarios', () => {
     const request = { test: 'test-request' };
     beforeEach(async () => {
       sandbox.stub(chargeTestDataSetUp, 'createScenario').resolves('test-region-id');
-      sandbox.stub(billRun, 'createBatchAndExecuteBillRun').resolves();
+      sandbox.stub(billRun, 'createBatchAndExecuteBillRun').resolves({ status: 'ready' });
       sandbox.stub(chargeVersions, 'update').resolves();
       response = await chargeScenarios.supplementaryBillRun(request);
     });
