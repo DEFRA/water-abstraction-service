@@ -95,10 +95,16 @@ const updateIncludeInSupplementaryBillingStatusForBatch = (batchId, from, to) =>
     .raw(queries.updateIncludeInSupplementaryBillingStatusForBatch, params);
 };
 
+const findWithoutChargeVersions = startDate =>
+  raw.multiRow(queries.getLicencesWithoutChargeVersions, {
+    startDate
+  });
+
 exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview;
 exports.findOneByLicenceRef = findOneByLicenceRef;
 exports.findOne = findOne;
 exports.findByLicenceRef = findByLicenceRef;
+exports.findWithoutChargeVersions = findWithoutChargeVersions;
 
 exports.update = update;
 exports.updateIncludeLicenceInSupplementaryBilling = updateIncludeLicenceInSupplementaryBilling;
