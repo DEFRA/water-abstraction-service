@@ -85,6 +85,19 @@ class Document extends Model {
     );
     return role;
   }
+
+  /**
+   * Licence number
+   * @param {Number}
+   */
+  set licenceNumber (licenceNumber) {
+    validators.assertLicenceNumber(licenceNumber);
+    this._licenceNumber = licenceNumber;
+  }
+
+  get licenceNumber () {
+    return this._licenceNumber;
+  }
 }
 
 module.exports = Document;
