@@ -22,7 +22,7 @@ const searchCompanies = async (q, startIndex = 0, perPage = 20) => {
       items_per_page: perPage
     },
     headers: {
-      'Authorization': `Basic ${apiKeyBase64Encoded}`
+      Authorization: `Basic ${apiKeyBase64Encoded}`
     },
     json: true
   };
