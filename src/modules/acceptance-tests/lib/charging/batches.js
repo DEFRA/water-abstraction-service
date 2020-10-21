@@ -1,7 +1,7 @@
 'use strict';
 
-const { pool } = require('../../../lib/connectors/db');
-const newRepos = require('../../../lib/connectors/repos');
+const { pool } = require('../../../../lib/connectors/db');
+const newRepos = require('../../../../lib/connectors/repos');
 
 const deleteBatchJobs = batchId => {
   const query = `
@@ -11,6 +11,15 @@ const deleteBatchJobs = batchId => {
   `;
 
   return pool.query(query, [batchId]);
+};
+
+const getBatchById = async billingBatchId => {
+  const batch = await newRepos.billingBatches.findOne(billingBatchId);
+  return batch;
+};
+
+const updateStatus = async (batchId, status) => {
+  newRepos.billingBatches.update(batchId, { status });
 };
 
 const deleteBatch = async batchId => {
@@ -80,5 +89,7 @@ const deleteBatches = async () => {
   await deleteUniqueBatches(toDelete);
 };
 
+exports.getBatchById = getBatchById;
 exports.delete = deleteBatches;
+exports.updateStatus = updateStatus;
 exports.getTestRegionBatchIds = getTestRegionBatchIds;
