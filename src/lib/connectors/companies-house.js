@@ -1,5 +1,5 @@
 'use strict';
-const rp = require('request-promise-native').defaults({
+const requestPromise = require('request-promise').defaults({
   strictSSL: false
 });
 const config = require('../../../config');
@@ -11,7 +11,7 @@ const config = require('../../../config');
  * @param {Number} perPage - the number of results to retrieve per page
  * @return {Promise}
  */
-const searchCompanies = (q, startIndex = 0, perPage = 20) => {
+const searchCompanies = async (q, startIndex = 0, perPage = 20) => {
   const apiKeyBase64Encoded = Buffer.from(config.companiesHouse.apiKey).toString('base64');
   const options = {
     method: 'GET',
@@ -26,8 +26,7 @@ const searchCompanies = (q, startIndex = 0, perPage = 20) => {
     },
     json: true
   };
-
-  return rp(options);
+  return requestPromise(options);
 };
 
 exports.searchCompanies = searchCompanies;
