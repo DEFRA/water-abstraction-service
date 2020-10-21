@@ -1,19 +1,6 @@
 'use strict';
-
-const { http } = require('@envage/water-abstraction-helpers');
+const requestPromise = require('./external-http');
 const config = require('../../../config');
-const { set, cloneDeep } = require('lodash');
-
-/**
- * Get an options object for use with request-promise
- * decorated with the auth header
- * @param {Object} options
- * @return {import('lodash').Object}
- */
-const createOptionsWithAuthentication = (options = {}) => {
-  const apiKeyBase64Encoded = Buffer.from(config.companiesHouse.apiKey).toString('base64');
-  return set(cloneDeep(options), 'headers.Authorization', `Basic ${apiKeyBase64Encoded}`);
-};
 
 /**
  * Search companies house companies with the supplied query string
@@ -22,8 +9,9 @@ const createOptionsWithAuthentication = (options = {}) => {
  * @param {Number} perPage - the number of results to retrieve per page
  * @return {Promise}
  */
-const searchCompanies = (q, startIndex = 0, perPage = 20) => {
-  const options = createOptionsWithAuthentication({
+const searchCompanies = async (q, startIndex = 0, perPage = 20) => {
+  const apiKeyBase64Encoded = Buffer.from(config.companiesHouse.apiKey).toString('base64');
+  const options = {
     method: 'GET',
     uri: 'https://api.companieshouse.gov.uk/search/companies',
     qs: {
@@ -31,9 +19,12 @@ const searchCompanies = (q, startIndex = 0, perPage = 20) => {
       start_index: startIndex,
       items_per_page: perPage
     },
+    headers: {
+      Authorization: `Basic ${apiKeyBase64Encoded}`
+    },
     json: true
-  });
-  return http.request(options);
+  };
+  return requestPromise.externalHttp(options);
 };
 
 exports.searchCompanies = searchCompanies;
