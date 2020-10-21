@@ -35,9 +35,9 @@ experiment('./src/modules/change-reasons/controller.js', () => {
     });
 
     test('returns change reasons array mapped to model', async () => {
-      expect(response[0]).to.be.instanceOf(ChangeReason);
-      expect(response[0].id).to.equal(changeReasons[0].changeReasonId);
-      expect(response[0].description).to.equal(changeReasons[0].description);
+      expect(response.data[0]).to.be.instanceOf(ChangeReason);
+      expect(response.data[0].id).to.equal(changeReasons[0].changeReasonId);
+      expect(response.data[0].description).to.equal(changeReasons[0].description);
     });
   });
 });

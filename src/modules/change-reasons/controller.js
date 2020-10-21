@@ -8,7 +8,7 @@ const mapper = require('../../lib/mappers/change-reason');
  */
 const getChangeReasons = async (request, h) => {
   const changeReasons = await repos.changeReasons.find();
-  return changeReasons.map(mapper.dbToModel);
+  return { data: changeReasons.map(mapper.dbToModel) };
 };
 
 exports.getChangeReasons = getChangeReasons;
