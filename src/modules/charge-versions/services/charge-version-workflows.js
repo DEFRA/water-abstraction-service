@@ -43,14 +43,11 @@ const getLicenceHolderRole = async chargeVersionWorkflow => {
   const { startDate } = chargeVersionWorkflow.chargeVersion.dateRange;
   const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate);
 
-  if (!doc) {
-    throw new errors.NotFoundError(`Current or superseded document not found for ${licenceNumber} on ${startDate}`);
+  const response = { chargeVersionWorkflow };
+  if (doc) {
+    response.licenceHolderRole = doc.getRoleOnDate(Role.ROLE_NAMES.licenceHolder, startDate);
   }
-
-  return {
-    chargeVersionWorkflow,
-    licenceHolderRole: doc.getRoleOnDate(Role.ROLE_NAMES.licenceHolder, startDate)
-  };
+  return response;
 };
 
 /**
