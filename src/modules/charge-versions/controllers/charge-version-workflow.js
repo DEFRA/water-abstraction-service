@@ -58,6 +58,7 @@ const postChargeVersionWorkflow = async request => {
  */
 const patchChargeVersionWorkflow = async (request, h) => {
   const { chargeVersionWorkflowId } = request.params;
+  const { approverComments } = request.payload;
   const { chargeVersion } = request.pre;
 
   const changes = {
@@ -66,8 +67,13 @@ const patchChargeVersionWorkflow = async (request, h) => {
   };
 
   try {
-    const chargeVersionWorkflow = await chargeVersionsWorkflowService.update(chargeVersionWorkflowId, changes);
-    return chargeVersionWorkflow;
+    if (approverComments) {
+      const chargeVersionWorkflow = await chargeVersionsWorkflowService.update(chargeVersionWorkflowId, { approverComments, status: 'changes_requested' });
+      return chargeVersionWorkflow;
+    } else {
+      const chargeVersionWorkflow = await chargeVersionsWorkflowService.update(chargeVersionWorkflowId, changes);
+      return chargeVersionWorkflow;
+    }
   } catch (err) {
     return mapErrorResponse(err);
   }
