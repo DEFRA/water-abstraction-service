@@ -19,9 +19,10 @@ const mapErrorResponse = require('../../../lib/map-error-response');
 const getChargeVersionWorkflows = async request => {
   const { licenceId } = request.query;
   if (licenceId) {
-    return chargeVersionsWorkflowService.getManyByLicenceId(licenceId);
+    return { data: await chargeVersionsWorkflowService.getManyByLicenceId(licenceId) };
+  } else {
+    return { data: await controller.getEntities(null, chargeVersionsWorkflowService.getAllWithLicenceHolder, rowToAPIList) };
   }
-  return controller.getEntities(null, chargeVersionsWorkflowService.getAllWithLicenceHolder, rowToAPIList);
 };
 
 /**
