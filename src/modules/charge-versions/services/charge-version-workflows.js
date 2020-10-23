@@ -39,7 +39,7 @@ const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeV
  */
 const getLicenceHolderRole = async chargeVersionWorkflow => {
   const { licenceNumber } = chargeVersionWorkflow.licence;
-  const { startDate } = chargeVersionWorkflow.chargeVersion.dateRange;
+  const { startDate } = { ...chargeVersionWorkflow.chargeVersion.dateRange };
   const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate);
 
   const response = { chargeVersionWorkflow };
