@@ -381,21 +381,25 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         documentsService.getValidDocumentOnDate.resolves(null);
       });
 
-      test('a not found error is thrown', async () => {
-        result = await expect(chargeVersionWorkflowService.getLicenceHolderRole({
-          licence: {
-            licenceNumber: '123'
-          },
-          chargeVersion: {
-            dateRange: {
-              startDate: '2000-01-01'
-            }
-          }
-        })
-        ).to.reject();
+      test('a response is returned with a blank role object', async () => {
+        const licenceObject = {
+          licenceNumber: '123'
+        };
 
-        expect(result.name).to.equal('NotFoundError');
-        expect(result.message).to.equal('Current or superseded document not found for 123 on 2000-01-01');
+        const chargeVersionObject = {
+          dateRange: {
+            startDate: '2000-01-01'
+          }
+        };
+
+        result = await chargeVersionWorkflowService.getLicenceHolderRole({
+          licence: licenceObject,
+          chargeVersion: chargeVersionObject
+        });
+
+        expect(result.chargeVersionWorkflow.licence).to.equal(licenceObject);
+        expect(result.chargeVersionWorkflow.chargeVersion).to.equal(chargeVersionObject);
+        expect(result.licenceHolderRole).to.equal({});
       });
     });
   });
