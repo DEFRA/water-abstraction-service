@@ -21,7 +21,7 @@ const getChargeVersionWorkflows = async request => {
   if (licenceId) {
     return { data: await chargeVersionsWorkflowService.getManyByLicenceId(licenceId) };
   } else {
-    return { data: await controller.getEntities(null, chargeVersionsWorkflowService.getAllWithLicenceHolder, rowToAPIList) };
+    return await controller.getEntities(null, chargeVersionsWorkflowService.getAllWithLicenceHolder, rowToAPIList);
   }
 };
 
