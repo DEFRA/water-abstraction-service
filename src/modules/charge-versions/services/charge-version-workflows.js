@@ -1,7 +1,7 @@
 'use strict';
 
 const bluebird = require('bluebird');
-
+const { get } = require('lodash');
 // Services
 const service = require('../../../lib/services/service');
 const documentsService = require('../../../lib/services/documents-service');
@@ -40,7 +40,7 @@ const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeV
  */
 const getLicenceHolderRole = async chargeVersionWorkflow => {
   const { licenceNumber } = chargeVersionWorkflow.licence;
-  const { startDate } = chargeVersionWorkflow.chargeVersion.dateRange;
+  const startDate = get(chargeVersionWorkflow, 'chargeVersion.dateRange.startDate', null);
   const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate);
 
   if (!doc) {
