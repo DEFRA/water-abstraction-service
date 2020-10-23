@@ -374,4 +374,32 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
     });
   });
+  experiment('getLicenceHolderRole', () => {
+    experiment('when no document is found for the licence and start date', () => {
+      beforeEach(async () => {
+        documentsService.getValidDocumentOnDate.resolves(null);
+      });
+
+      test('a response is returned with a blank role object', async () => {
+        const licenceObject = {
+          licenceNumber: '123'
+        };
+
+        const chargeVersionObject = {
+          dateRange: {
+            startDate: '2000-01-01'
+          }
+        };
+
+        result = await chargeVersionWorkflowService.getLicenceHolderRole({
+          licence: licenceObject,
+          chargeVersion: chargeVersionObject
+        });
+
+        expect(result.chargeVersionWorkflow.licence).to.equal(licenceObject);
+        expect(result.chargeVersionWorkflow.chargeVersion).to.equal(chargeVersionObject);
+        expect(result.licenceHolderRole).to.equal({});
+      });
+    });
+  });
 });
