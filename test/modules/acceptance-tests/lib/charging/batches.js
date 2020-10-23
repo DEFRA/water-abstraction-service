@@ -9,11 +9,11 @@ const {
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
-const batches = require('../../../../src/modules/acceptance-tests/lib/batches');
-const { pool } = require('../../../../src/lib/connectors/db');
-const newRepos = require('../../../../src/lib/connectors/repos');
+const batches = require('../../../../../src/modules/acceptance-tests/lib/charging/batches');
+const { pool } = require('../../../../../src/lib/connectors/db');
+const newRepos = require('../../../../../src/lib/connectors/repos');
 
-experiment('modules/acceptance-tests/batches', () => {
+experiment('modules/acceptance-tests/lib/charging/batches', () => {
   beforeEach(async () => {
     sandbox.stub(pool, 'query');
 
@@ -24,6 +24,8 @@ experiment('modules/acceptance-tests/batches', () => {
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchId').resolves();
     sandbox.stub(newRepos.billingInvoices, 'deleteByBatchId').resolves();
     sandbox.stub(newRepos.billingBatches, 'delete').resolves();
+    sandbox.stub(newRepos.billingBatches, 'findOne').resolves();
+    sandbox.stub(newRepos.billingBatches, 'update').resolves();
   });
 
   afterEach(async () => {
@@ -109,6 +111,20 @@ experiment('modules/acceptance-tests/batches', () => {
       await batches.getTestRegionBatchIds();
       const args = pool.query.lastCall.args;
       expect(args[0].replace(/ /g, '')).to.equal(sql.replace(/ /g, ''));
+    });
+  });
+
+  experiment('.getBatchById', async () => {
+    test('calls the newRepos.billingBatches.findOne with the correct id', async () => {
+      await batches.getBatchById('test-batch-id');
+      expect(newRepos.billingBatches.findOne.calledWith('test-batch-id')).to.be.true();
+    });
+  });
+
+  experiment('.updateStatus', async () => {
+    test('calls the newRepos.billingBatches.update with the correct id and status', async () => {
+      await batches.updateStatus('test-batch-id', 'sent');
+      expect(newRepos.billingBatches.update.calledWith('test-batch-id', { status: 'sent' })).to.be.true();
     });
   });
 });
