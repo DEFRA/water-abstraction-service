@@ -6,7 +6,6 @@ const bluebird = require('bluebird');
 const service = require('../../../lib/services/service');
 const documentsService = require('../../../lib/services/documents-service');
 const chargeVersionService = require('../../../lib/services/charge-versions');
-const errors = require('../../../lib/errors');
 
 // Repos
 const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-version-workflows');
@@ -43,14 +42,11 @@ const getLicenceHolderRole = async chargeVersionWorkflow => {
   const { startDate } = chargeVersionWorkflow.chargeVersion.dateRange;
   const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate);
 
-  if (!doc) {
-    throw new errors.NotFoundError(`Current or superseded document not found for ${licenceNumber} on ${startDate}`);
+  const response = { chargeVersionWorkflow };
+  if (doc) {
+    response.licenceHolderRole = doc.getRoleOnDate(Role.ROLE_NAMES.licenceHolder, startDate);
   }
-
-  return {
-    chargeVersionWorkflow,
-    licenceHolderRole: doc.getRoleOnDate(Role.ROLE_NAMES.licenceHolder, startDate)
-  };
+  return response;
 };
 
 /**
