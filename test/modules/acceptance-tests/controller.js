@@ -9,7 +9,8 @@ const {
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
-const batches = require('../../../src/modules/acceptance-tests/lib/batches');
+const batches = require('../../../src/modules/acceptance-tests/lib/charging/batches');
+const chargingScenarios = require('../../../src/modules/acceptance-tests/lib/charging/charging-scenarios');
 const users = require('../../../src/modules/acceptance-tests/lib/users');
 const entities = require('../../../src/modules/acceptance-tests/lib/entities');
 const permits = require('../../../src/modules/acceptance-tests/lib/permits');
@@ -19,8 +20,6 @@ const events = require('../../../src/modules/acceptance-tests/lib/events');
 const sessions = require('../../../src/modules/acceptance-tests/lib/sessions');
 
 const controller = require('../../../src/modules/acceptance-tests/controller');
-
-const chargeTestDataSetUp = require('../../../integration-tests/billing/services/scenarios');
 const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
 
 experiment('modules/acceptance-tests/controller', () => {
@@ -65,7 +64,8 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(users, 'delete').resolves();
     sandbox.stub(sessions, 'delete').resolves();
     sandbox.stub(chargeTestDataTearDown, 'tearDown').resolves();
-    sandbox.stub(chargeTestDataSetUp, 'createScenario').resolves('test-region-id');
+    sandbox.stub(chargingScenarios, 'annualBillRun').resolves({ regionId: 'test-annual-bill-run-region-id' });
+    sandbox.stub(chargingScenarios, 'supplementaryBillRun').resolves({ regionId: 'test-supplementary-bill-run-region-id' });
   });
 
   afterEach(async () => {
@@ -216,21 +216,39 @@ experiment('modules/acceptance-tests/controller', () => {
     });
   });
 
-  experiment('when charging data is requested', async () => {
+  experiment('when annual bill data is requested', async () => {
     let response;
 
     beforeEach(async () => {
       const request = {
         payload: {
-          includeCharging: true
+          includeAnnualBillRun: true
         }
       };
       response = await controller.postSetup(request);
     });
 
-    test('a super user is created', async () => {
-      const charging = response.charging[0];
-      expect(charging).to.equal('test-region-id');
+    test('annual bill run data is created', async () => {
+      const charging = response.charging;
+      expect(charging).to.equal({ regionId: 'test-annual-bill-run-region-id' });
+    });
+  });
+
+  experiment('when annual bill data is requested', async () => {
+    let response;
+
+    beforeEach(async () => {
+      const request = {
+        payload: {
+          includeSupplementaryBillRun: true
+        }
+      };
+      response = await controller.postSetup(request);
+    });
+
+    test('supplementary bill run data is created', async () => {
+      const charging = response.charging;
+      expect(charging).to.equal({ regionId: 'test-supplementary-bill-run-region-id' });
     });
   });
 
