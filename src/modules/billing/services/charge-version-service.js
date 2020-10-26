@@ -143,7 +143,7 @@ const createTwoPartTariff = batch => createFinancialYearChargeVersionYears(batch
  */
 const getSentTptBatchesInRegionAndFinancialYear = async (financialYears, region) => {
   const tasks = financialYears.map(
-    financialYear => batchService.getSentTptBatchesForFinancialYearAndRegion(financialYear, region)
+    financialYear => batchService.getSentTptBatchesForFinancialYearAndRegion({ yearEnding: financialYear }, region)
   );
 
   const sentTptBatches = await Promise.all(tasks);

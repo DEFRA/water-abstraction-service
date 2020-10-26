@@ -44,7 +44,6 @@ const deleteBatchLicence = async (batch, licenceId) => {
   }
   await repos.billingVolumes.deleteByBatchIdAndLicenceId(batch.id, licenceId);
   await repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId(batch.id, licenceId);
-  await repos.billingBatchChargeVersions.deleteByBatchIdAndLicenceId(batch.id, licenceId);
 };
 
 exports.getByBatchIdForTwoPartTariffReview = getByBatchIdForTwoPartTariffReview;

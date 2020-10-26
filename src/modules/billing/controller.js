@@ -17,7 +17,7 @@ const mappers = require('./mappers');
 
 /**
  * Resource that will create a new batch skeleton which will
- * then be asyncronously populated with charge versions by a
+ * then be asynchronously populated with charge versions by a
  * job that is added to the queue.
  *
  * @param {Object} request HAPI request object
@@ -144,20 +144,6 @@ const getInvoiceLicenceWithTransactions = async (request, h) => {
   return invoiceLicence || Boom.notFound(`Invoice licence ${invoiceLicenceId} not found`);
 };
 
-/**
- * Deletes an InvoiceLicence by ID
- * @param {String} request.params.invoiceLicenceId
- */
-const deleteInvoiceLicence = async (request, h) => {
-  const { invoiceLicenceId } = request.params;
-  try {
-    await invoiceLicenceService.delete(invoiceLicenceId);
-    return h.response().code(204);
-  } catch (error) {
-    return mapErrorResponse(error);
-  }
-};
-
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
@@ -169,5 +155,3 @@ exports.deleteBatch = deleteBatch;
 
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
-
-exports.deleteInvoiceLicence = deleteInvoiceLicence;

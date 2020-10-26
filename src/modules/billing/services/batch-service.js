@@ -77,7 +77,6 @@ const deleteBatch = async (batch, internalCallingUser) => {
 
     // These are populated at every stage in the bill run
     await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batch.id);
-    await newRepos.billingBatchChargeVersions.deleteByBatchId(batch.id);
     await newRepos.billingVolumes.deleteByBatchId(batch.id);
 
     // These tables are not yet populated at review stage in TPT
@@ -333,8 +332,10 @@ const approveTptBatchReview = async batch => {
   return getBatchById(batch.id);
 };
 
-const getSentTptBatchesForFinancialYearAndRegion = async (financialYear, region) =>
-  newRepos.billingBatches.findSentTptBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id);
+const getSentTptBatchesForFinancialYearAndRegion = async (financialYear, region) => {
+  const result = await newRepos.billingBatches.findSentTptBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id);
+  return result.map(mappers.batch.dbToModel);
+};
 
 /**
    * Updates each licence in the invoice so that the includeInSupplementaryBilling
