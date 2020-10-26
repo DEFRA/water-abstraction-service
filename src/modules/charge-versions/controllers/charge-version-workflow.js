@@ -64,7 +64,7 @@ const postChargeVersionWorkflow = async request => {
  */
 const patchChargeVersionWorkflow = async (request, h) => {
   const { chargeVersionWorkflowId } = request.params;
-  const { approverComments, reviewOutcome } = request.payload;
+  const { approverComments, status } = request.payload;
   const { chargeVersion } = request.pre;
 
   const changes = {
@@ -73,8 +73,8 @@ const patchChargeVersionWorkflow = async (request, h) => {
   };
 
   try {
-    if (reviewOutcome === 'changes_requested') {
-      const chargeVersionWorkflow = await chargeVersionsWorkflowService.update(chargeVersionWorkflowId, { approverComments, status: 'changes_requested' });
+    if (status === 'changes_requested') {
+      const chargeVersionWorkflow = await chargeVersionsWorkflowService.update(chargeVersionWorkflowId, {approverComments, status});
       return chargeVersionWorkflow;
     } else {
       const chargeVersionWorkflow = await chargeVersionsWorkflowService.update(chargeVersionWorkflowId, changes);
