@@ -333,8 +333,8 @@ const approveTptBatchReview = async batch => {
   return getBatchById(batch.id);
 };
 
-const getSentTPTBatchesForFinancialYearAndRegion = async (financialYear, region) =>
-  newRepos.billingBatches.findSentTPTBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id);
+const getSentTptBatchesForFinancialYearAndRegion = async (financialYear, region) =>
+  newRepos.billingBatches.findSentTptBatchesForFinancialYearAndRegion(financialYear.yearEnding, region.id);
 
 /**
    * Updates each licence in the invoice so that the includeInSupplementaryBilling
@@ -415,5 +415,5 @@ exports.cleanup = cleanup;
 exports.create = create;
 exports.createChargeModuleBillRun = createChargeModuleBillRun;
 exports.approveTptBatchReview = approveTptBatchReview;
-exports.getSentTPTBatchesForFinancialYearAndRegion = getSentTPTBatchesForFinancialYearAndRegion;
+exports.getSentTptBatchesForFinancialYearAndRegion = getSentTptBatchesForFinancialYearAndRegion;
 exports.deleteBatchInvoice = deleteBatchInvoice;

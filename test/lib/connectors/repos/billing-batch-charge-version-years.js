@@ -169,16 +169,18 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
     const chargeVersionId = 'test-charge-version-id';
     const financialYearEnding = 2020;
     const status = 'processing';
+    const transactionType = 'annual';
+    const isSummer = false;
 
     beforeEach(async () => {
       await repos.billingBatchChargeVersionYears.create(
-        billingBatchId, chargeVersionId, financialYearEnding, status
+        billingBatchId, chargeVersionId, financialYearEnding, status, transactionType, isSummer
       );
     });
 
     test('calls model.forge with correct params', async () => {
       expect(BillingBatchChargeVersionYear.forge.calledWith({
-        billingBatchId, chargeVersionId, financialYearEnding, status
+        billingBatchId, chargeVersionId, financialYearEnding, status, transactionType, isSummer
       })).to.be.true();
     });
 

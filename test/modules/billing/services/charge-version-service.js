@@ -15,12 +15,14 @@ const repos = require('../../../../src/lib/connectors/repos');
 const returnRequirementVersionService = require('../../../../src/lib/services/return-requirement-versions');
 const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
 const chargeVersionService = require('../../../../src/modules/billing/services/charge-version-service');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 const Batch = require('../../../../src/lib/models/batch');
 const DateRange = require('../../../../src/lib/models/date-range');
 const ReturnRequirementVersion = require('../../../../src/lib/models/return-requirement-version');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const Region = require('../../../../src/lib/models/region');
+const { TRANSACTION_TYPE } = require('../../../../src/lib/models/charge-version-year');
 
 const chargeVersions = [
   {
@@ -81,6 +83,7 @@ experiment('modules/billing/services/charge-version-service', () => {
     sandbox.stub(chargeVersionYearService, 'createBatchChargeVersionYear');
 
     sandbox.stub(returnRequirementVersionService, 'getByLicenceId');
+    sandbox.stub(batchService, 'getSentTptBatchesForFinancialYearAndRegion').resolves([]);
   });
 
   afterEach(async () => {
@@ -114,32 +117,31 @@ experiment('modules/billing/services/charge-version-service', () => {
       test('creates expected charge version years', async () => {
         expect(chargeVersionYearService.createBatchChargeVersionYear.callCount).to.equal(5);
         expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
-          batch, 'charge-version-id-1', batch.endYear
+          batch, 'charge-version-id-1', batch.endYear, TRANSACTION_TYPE.annual, false
         )).to.be.true();
         expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
-          batch, 'charge-version-id-2', batch.endYear
+          batch, 'charge-version-id-2', batch.endYear, TRANSACTION_TYPE.annual, false
         )).to.be.true();
         expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
-          batch, 'charge-version-id-3', batch.endYear
+          batch, 'charge-version-id-3', batch.endYear, TRANSACTION_TYPE.annual, false
         )).to.be.true();
         expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
-          batch, 'charge-version-id-4', batch.endYear
+          batch, 'charge-version-id-4', batch.endYear, TRANSACTION_TYPE.annual, false
         )).to.be.true();
         expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
-          batch, 'charge-version-id-5', batch.endYear
+          batch, 'charge-version-id-5', batch.endYear, TRANSACTION_TYPE.annual, false
         )).to.be.true();
       });
     });
 
-    experiment('for a two-part tariff summer batch', () => {
+    experiment('for a supplementary batch', () => {
       beforeEach(async () => {
         batch = new Batch();
         batch.fromHash({
           startYear: new FinancialYear(2019),
           endYear: new FinancialYear(2021),
           type: Batch.BATCH_TYPE.supplementary,
-          region: new Region(uuid()),
-          isSummer: true
+          region: new Region(uuid())
         });
         await chargeVersionService.createForBatch(batch);
       });
@@ -157,17 +159,45 @@ experiment('modules/billing/services/charge-version-service', () => {
         )).to.be.true();
       });
 
-      test('creates expected charge version years', async () => {
-        expect(chargeVersionYearService.createBatchChargeVersionYear.callCount).to.equal(3);
-        expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
-          batch, 'charge-version-id-2', new FinancialYear(2019)
-        )).to.be.true();
-        expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
-          batch, 'charge-version-id-2', new FinancialYear(2020)
-        )).to.be.true();
-        expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
-          batch, 'charge-version-id-2', new FinancialYear(2021)
-        )).to.be.true();
+      experiment('when no sent TPT batches for region and financial years', () => {
+        test('creates expected charge version years', async () => {
+          expect(chargeVersionYearService.createBatchChargeVersionYear.callCount).to.equal(3);
+          expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
+            batch, 'charge-version-id-2', new FinancialYear(2019), TRANSACTION_TYPE.annual, false
+          )).to.be.true();
+          expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
+            batch, 'charge-version-id-2', new FinancialYear(2020), TRANSACTION_TYPE.annual, false
+          )).to.be.true();
+          expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
+            batch, 'charge-version-id-2', new FinancialYear(2021), TRANSACTION_TYPE.annual, false
+          )).to.be.true();
+        });
+      });
+
+      experiment('when sent TPT batches for region and financial years exist', () => {
+        beforeEach(async () => {
+          batchService.getSentTptBatchesForFinancialYearAndRegion.resolves([{
+            endYear: { endYear: 2019 },
+            isSummer: true
+          }, {
+            endYear: { endYear: 2019 },
+            isSummer: false
+          }]);
+          batch.endYear = new FinancialYear(2019);
+          await chargeVersionService.createForBatch(batch);
+        });
+
+        test('creates expected charge version years', async () => {
+          expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
+            batch, 'charge-version-id-2', new FinancialYear(2019), TRANSACTION_TYPE.annual, false
+          )).to.be.true();
+          expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
+            batch, 'charge-version-id-2', new FinancialYear(2019), TRANSACTION_TYPE.twoPartTariff, true
+          )).to.be.true();
+          expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
+            batch, 'charge-version-id-2', new FinancialYear(2019), TRANSACTION_TYPE.twoPartTariff, false
+          )).to.be.true();
+        });
       });
     });
 
@@ -185,7 +215,8 @@ experiment('modules/billing/services/charge-version-service', () => {
         batch.fromHash({
           endYear: new FinancialYear(2021),
           type: Batch.BATCH_TYPE.twoPartTariff,
-          region: new Region(uuid())
+          region: new Region(uuid()),
+          isSummer: true
         });
         await chargeVersionService.createForBatch(batch);
       });
@@ -200,10 +231,10 @@ experiment('modules/billing/services/charge-version-service', () => {
       test('creates expected charge version years', async () => {
         expect(chargeVersionYearService.createBatchChargeVersionYear.callCount).to.equal(2);
         expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
-          batch, 'charge-version-id-3', batch.endYear
+          batch, 'charge-version-id-3', batch.endYear, TRANSACTION_TYPE.twoPartTariff, true
         )).to.be.true();
         expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
-          batch, 'charge-version-id-5', batch.endYear
+          batch, 'charge-version-id-5', batch.endYear, TRANSACTION_TYPE.twoPartTariff, true
         )).to.be.true();
       });
     });

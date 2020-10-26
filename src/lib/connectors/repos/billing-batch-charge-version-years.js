@@ -57,7 +57,7 @@ const findTwoPartTariffByBatchId = billingBatchId =>
   raw.multiRow(queries.findTwoPartTariffByBatchId, { billingBatchId });
 
 /**
- * Deletes charge versiom years in a batch for a particular licence ID
+ * Deletes charge version years in a batch for a particular licence ID
  * @param {String} billingBatchId
  * @param {String} licenceId
  */
@@ -71,13 +71,15 @@ const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
  * @param {Number} financialYearEnding
  * @param {String} status
  */
-const create = async (billingBatchId, chargeVersionId, financialYearEnding, status) => {
+const create = async (billingBatchId, chargeVersionId, financialYearEnding, status, transactionType, isSummer) => {
   const model = await BillingBatchChargeVersionYear
     .forge({
       billingBatchId,
       chargeVersionId,
       financialYearEnding,
-      status
+      status,
+      transactionType,
+      isSummer
     })
     .save();
   return model.toJSON();

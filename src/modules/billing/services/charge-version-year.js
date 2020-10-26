@@ -10,7 +10,7 @@ const batchService = require('./batch-service');
 const chargeProcessorService = require('./charge-processor-service');
 
 const repos = require('../../../lib/connectors/repos');
-const { CHARGE_VERSION_YEAR_STATUS } = require('../../../lib/models/charge-version-year.js');
+const { CHARGE_VERSION_YEAR_STATUS, TRANSACTION_TYPE } = require('../../../lib/models/charge-version-year.js');
 
 /**
  * Sets water.billing_batch_charge_version_years to "ready"
@@ -82,12 +82,14 @@ const getTwoPartTariffForBatch = batchId => {
  * @param {FinancialYear} financialYear
  * @return {Promise}
  */
-const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear) => {
+const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear, transactionType, isSummer) => {
   validators.assertIsInstanceOf(batch, Batch);
   validators.assertId(chargeVersionId);
   validators.assertIsInstanceOf(financialYear, FinancialYear);
+  validators.assertEnum(transactionType, Object.values(TRANSACTION_TYPE));
+  validators.assertIsBoolean(isSummer);
   return repos.billingBatchChargeVersionYears.create(
-    batch.id, chargeVersionId, financialYear.endYear, BATCH_STATUS.processing
+    batch.id, chargeVersionId, financialYear.endYear, BATCH_STATUS.processing, transactionType, isSummer
   );
 };
 

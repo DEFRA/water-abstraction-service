@@ -272,9 +272,9 @@ experiment('lib/connectors/repos/billing-batches', () => {
     });
   });
 
-  experiment('.findSentTPTBatchesForFinancialYearAndRegion', () => {
+  experiment('.findSentTptBatchesForFinancialYearAndRegion', () => {
     beforeEach(async () => {
-      await billingBatches.findSentTPTBatchesForFinancialYearAndRegion(2020, '00000000-0000-0000-0000-000000000000');
+      await billingBatches.findSentTptBatchesForFinancialYearAndRegion(2020, '00000000-0000-0000-0000-000000000000');
     });
 
     test('forges a model', async () => {
@@ -296,9 +296,9 @@ experiment('lib/connectors/repos/billing-batches', () => {
     });
   });
 
-  experiment('.findSentTPTBatchesForRegion', () => {
+  experiment('.findSentTptBatchesForRegion', () => {
     beforeEach(async () => {
-      await billingBatches.findSentTPTBatchesForRegion('region-id');
+      await billingBatches.findSentTptBatchesForRegion('region-id');
     });
 
     test('forges a model', async () => {

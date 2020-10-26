@@ -126,7 +126,7 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
     sandbox.stub(crmV2.invoiceAccounts, 'getInvoiceAccountById').resolves(crmData.invoiceAccount);
 
     sandbox.stub(chargeVersionService, 'getByChargeVersionId');
-    sandbox.stub(batchService, 'getSentTPTBatchesForFinancialYearAndRegion');
+    sandbox.stub(batchService, 'getSentTptBatchesForFinancialYearAndRegion');
     sandbox.stub(billingVolumeService, 'getVolumesForChargeElements').resolves([]);
   });
 

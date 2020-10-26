@@ -22,10 +22,10 @@ const updateIncludeInSupplementaryBillingStatusForBatch = `
   set include_in_supplementary_billing = :to
   from
     water.billing_batches b
-      join water.billing_batch_charge_versions bcv
-        on b.billing_batch_id = bcv.billing_batch_id
+      join water.billing_batch_charge_version_years bcvy
+        on b.billing_batch_id = bcvy.billing_batch_id
       join water.charge_versions cv
-        on bcv.charge_version_id = cv.charge_version_id
+        on bcvy.charge_version_id = cv.charge_version_id
   where l.licence_ref = cv.licence_ref
   and b.billing_batch_id = :batchId
   and b.batch_type = 'supplementary'

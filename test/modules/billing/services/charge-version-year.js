@@ -15,6 +15,7 @@ const chargeVersionYearService = require('../../../../src/modules/billing/servic
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const chargeProcessorService = require('../../../../src/modules/billing/services/charge-processor-service');
 const Batch = require('../../../../src/lib/models/batch');
+const { TRANSACTION_TYPE } = require('../../../../src/lib/models/charge-version-year');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const Invoice = require('../../../../src/lib/models/invoice');
 
@@ -157,21 +158,25 @@ experiment('modules/billing/services/charge-version-year', () => {
   });
 
   experiment('.createBatchChargeVersionYear', () => {
-    let batch, financialYear;
+    let batch, financialYear, transactionType, isSummer;
     const chargeVersionId = uuid();
 
     beforeEach(async () => {
       batch = new Batch(uuid());
       financialYear = new FinancialYear(2020);
-      await chargeVersionYearService.createBatchChargeVersionYear(batch, chargeVersionId, financialYear);
+      transactionType = 'annual';
+      isSummer = false;
+      await chargeVersionYearService.createBatchChargeVersionYear(batch, chargeVersionId, financialYear, transactionType, isSummer);
     });
 
     test('calls the repo method to create the record', async () => {
-      const [batchId, id, endYear, status] = repos.billingBatchChargeVersionYears.create.lastCall.args;
+      const [batchId, id, endYear, status, txnType, isSummer] = repos.billingBatchChargeVersionYears.create.lastCall.args;
       expect(batchId).to.equal(batch.id);
       expect(id).to.equal(chargeVersionId);
       expect(endYear).to.equal(2020);
       expect(status).to.equal(Batch.BATCH_STATUS.processing);
+      expect(txnType).to.equal(TRANSACTION_TYPE.annual);
+      expect(isSummer).to.be.false();
     });
   });
 });

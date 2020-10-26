@@ -80,7 +80,7 @@ const getChargeVersionYearSeasons = (billingBatchChargeVersionYears, previousTPT
 const processSupplementaryBatch = async batch => {
   const tasks = [
     chargeVersionYearService.getTwoPartTariffForBatch(batch.id),
-    repos.billingBatches.findSentTPTBatchesForRegion(batch.region.id)
+    repos.billingBatches.findSentTptBatchesForRegion(batch.region.id)
   ];
 
   const [

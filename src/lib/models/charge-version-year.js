@@ -10,9 +10,15 @@
  * be run at a time.
  */
 const CHARGE_VERSION_YEAR_STATUS = {
-  processing: 'processing', // processing trasactions
+  processing: 'processing', // processing transactions
   ready: 'ready', // processing completed - awaiting approval
   error: 'error'
 };
 
+const TRANSACTION_TYPE = {
+  annual: 'annual',
+  twoPartTariff: 'two_part_tariff'
+};
+
 module.exports.CHARGE_VERSION_YEAR_STATUS = CHARGE_VERSION_YEAR_STATUS;
+module.exports.TRANSACTION_TYPE = TRANSACTION_TYPE;

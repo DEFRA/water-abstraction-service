@@ -113,7 +113,7 @@ const create = async data => {
   return model.toJSON();
 };
 
-const findSentTPTBatchesForFinancialYearAndRegion = async (financialYear, regionId) => {
+const findSentTptBatchesForFinancialYearAndRegion = async (financialYear, regionId) => {
   const filters = {
     status: BATCH_STATUS.sent,
     batch_type: BATCH_TYPE.twoPartTariff,
@@ -134,7 +134,7 @@ const findSentTPTBatchesForFinancialYearAndRegion = async (financialYear, region
   return batches.toJSON();
 };
 
-const findSentTPTBatchesForRegion = async regionId => {
+const findSentTptBatchesForRegion = async regionId => {
   const filters = {
     status: BATCH_STATUS.sent,
     batch_type: BATCH_TYPE.twoPartTariff,
@@ -155,5 +155,5 @@ exports.update = update;
 exports.findOneWithInvoices = findOneWithInvoices;
 exports.findOneWithInvoicesWithTransactions = findOneWithInvoicesWithTransactions;
 exports.create = create;
-exports.findSentTPTBatchesForFinancialYearAndRegion = findSentTPTBatchesForFinancialYearAndRegion;
-exports.findSentTPTBatchesForRegion = findSentTPTBatchesForRegion;
+exports.findSentTptBatchesForFinancialYearAndRegion = findSentTptBatchesForFinancialYearAndRegion;
+exports.findSentTptBatchesForRegion = findSentTptBatchesForRegion;

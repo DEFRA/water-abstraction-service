@@ -34,7 +34,7 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
     sandbox.stub(chargeVersionYearService, 'getForBatch');
     sandbox.stub(chargeVersionYearService, 'getTwoPartTariffForBatch');
 
-    sandbox.stub(repos.billingBatches, 'findSentTPTBatchesForRegion');
+    sandbox.stub(repos.billingBatches, 'findSentTptBatchesForRegion');
 
     sandbox.stub(volumeMatchingService, 'matchVolumes');
 
@@ -135,7 +135,7 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
       ];
 
       beforeEach(async () => {
-        repos.billingBatches.findSentTPTBatchesForRegion.resolves([{
+        repos.billingBatches.findSentTptBatchesForRegion.resolves([{
           toFinancialYearEnding: 2019,
           isSummer: true
         }, {
@@ -157,7 +157,7 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
       });
 
       test('previous two-part tariff batches in region are fetched', async () => {
-        expect(repos.billingBatches.findSentTPTBatchesForRegion.calledWith(
+        expect(repos.billingBatches.findSentTptBatchesForRegion.calledWith(
           batch.region.id
         )).to.be.true();
       });
