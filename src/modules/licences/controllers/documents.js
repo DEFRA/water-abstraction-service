@@ -46,11 +46,9 @@ const throwIfUnauthorised = (documentHeader, companyId) => {
   if (typeof companyId === 'undefined') {
     return;
   }
+
   if (documentHeader.company_entity_id !== companyId) {
-    throw Boom.unauthorized('Unauthorised to view licence data', {
-      companyId,
-      documentId: documentHeader.document_id
-    });
+    throw Boom.unauthorized('Unauthorised to view licence data');
   }
 };
 
