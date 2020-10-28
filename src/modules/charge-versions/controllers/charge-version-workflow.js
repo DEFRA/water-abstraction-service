@@ -42,10 +42,7 @@ const postChargeVersionWorkflow = async request => {
   const { licenceId } = request.payload;
   const { chargeVersion, user } = request.pre;
 
-  //  Create a tweaked version of the charge version object
-  //  This is because the 'status' at this point would not validate against the charge version model
-  const parsedCV = chargeVersion;
-  parsedCV.status = 'draft';
+  chargeVersion.status = 'draft';
 
   // Find licence or 404
   const licence = await licencesService.getLicenceById(licenceId);
@@ -53,7 +50,7 @@ const postChargeVersionWorkflow = async request => {
     return Boom.notFound(`Licence ${licenceId} not found`);
   }
 
-  return chargeVersionsWorkflowService.create(licence, parsedCV, user);
+  return chargeVersionsWorkflowService.create(licence, chargeVersion, user);
 };
 
 /**
