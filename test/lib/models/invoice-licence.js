@@ -71,22 +71,6 @@ experiment('lib/models/invoice-licence', () => {
     });
   });
 
-  experiment('.uniqueId', () => {
-    beforeEach(async () => {
-      invoiceLicence.licence = data.licence;
-    });
-
-    test('returns a string', async () => {
-      expect(invoiceLicence.uniqueId).to.be.a.string();
-    });
-
-    test('string is equal to licence ref', async () => {
-      expect(invoiceLicence.uniqueId).to.equal(
-        '01/123'
-      );
-    });
-  });
-
   experiment('.set transactions', () => {
     test('throws for an array containing items other than Transaction objects', async () => {
       const func = () => (invoiceLicence.transactions = ['one', 'two']);

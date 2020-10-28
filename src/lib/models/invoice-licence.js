@@ -60,17 +60,6 @@ class InvoiceLicence extends Model {
   }
 
   /**
-   * Gets a unique ID for this invoice licence which can be used
-   * for unique comparisons
-   * @return {String}
-   */
-  get uniqueId () {
-    return [
-      get(this, '_licence.licenceNumber')
-    ].join('.');
-  }
-
-  /**
    * Parent invoice ID
    * @param {String} invoiceId - GUID
    */
