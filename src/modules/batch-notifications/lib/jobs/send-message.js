@@ -3,6 +3,7 @@ const { logger } = require('../../../../logger');
 const messageHelpers = require('../message-helpers');
 const { createJobPublisher } = require('../batch-notifications');
 const notify = require('../notify-connector');
+const scheduledNotificationService = require('../../../../lib/services/scheduled-notifications');
 
 /**
  * The name of this event in the PG Boss
@@ -26,10 +27,9 @@ const handleSendMessage = async job => {
   const messageId = get(job, 'data.messageId');
 
   try {
-    // load scheduled notification data from table
-    const message = await messageHelpers.getMessageById(messageId);
-    const notifyResponse = await notify.send(message);
-    await messageHelpers.markMessageAsSent(messageId, notifyResponse);
+    const scheduledNotification = await scheduledNotificationService.getScheduledNotificationById(messageId);
+    const notifyResponse = await notify.send(scheduledNotification);
+    await scheduledNotificationService.updateScheduledNotificationWithNotifyResponse(messageId, notifyResponse);
   } catch (err) {
     logger.error('Error sending batch message', err, { messageId });
     await messageHelpers.markMessageAsErrored(messageId, err);

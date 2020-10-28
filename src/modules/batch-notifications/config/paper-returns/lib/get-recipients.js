@@ -4,6 +4,8 @@ const returnsService = require('../../../../../lib/services/returns/api-connecto
 const ScheduledNotification = require('../../../../../lib/models/scheduled-notification');
 const scheduledNotificationService = require('../../../../../lib/services/scheduled-notifications');
 const { COMPANY_TYPES } = require('../../../../../lib/models/company');
+const eventHelpers = require('../../../lib/event-helpers');
+const sendBatch = require('../../../lib/send-batch');
 
 const getContactPersonalisation = (company, contact) => {
   if (company.type === COMPANY_TYPES.organisation) {
@@ -94,6 +96,9 @@ const getRecipients = async (eventData) => {
   const event = eventData.ev;
   const { forms } = event.metadata.options;
 
+  let recipientCount = 0;
+  const licenceNumbers = [];
+
   for (const form of forms) {
     const personalisations = await getPersonalisationsForForm(form);
 
@@ -103,10 +108,20 @@ const getRecipients = async (eventData) => {
       notification.messageRef = 'pdf.return_form';
       notification.messageType = 'letter';
       notification.eventId = event.id;
+      notification.licences = [personalisation.licence_ref];
 
       await scheduledNotificationService.createScheduledNotification(notification);
+
+      recipientCount++;
+      licenceNumbers.push(personalisation.licence_ref);
     }
   }
+
+  // Update event status to 'processed'
+  await eventHelpers.markAsProcessed(event.id, licenceNumbers, recipientCount);
+
+  // Send immediately without user confirmation
+  await sendBatch.send(event.id, event.issuer);
 };
 
 exports.getRecipients = getRecipients;

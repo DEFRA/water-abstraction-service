@@ -4,7 +4,25 @@ const Model = require('./model');
 
 const validators = require('./validators');
 
+const MESSAGE_STATUSES = {
+  draft: 'draft',
+  sending: 'sending',
+  sent: 'sent',
+  error: 'error'
+};
+
+const MESSAGE_TYPES = {
+  letter: 'letter',
+  email: 'email',
+  sms: 'sms'
+};
+
 class ScheduledNotification extends Model {
+  constructor (...args) {
+    super(...args);
+    this._licences = [];
+  }
+
   get recipient () { return this._recipient; }
   set recipient (value) {
     validators.assertNullableString(value);
@@ -13,7 +31,7 @@ class ScheduledNotification extends Model {
 
   get messageType () { return this._messageType; }
   set messageType (value) {
-    validators.assertNullableString(value);
+    validators.assertEnum(value, Object.values(MESSAGE_TYPES));
     this._messageType = value;
   }
 
@@ -33,6 +51,26 @@ class ScheduledNotification extends Model {
     validators.assertNullableId(value);
     this._eventId = value;
   }
+
+  get licences () { return this._licences; }
+  set licences (licenceNumbers) {
+    validators.assertIsArrayOfLicenceNumbers(licenceNumbers);
+    this._licences = licenceNumbers;
+  }
+
+  get status () { return this._status; }
+  set status (value) {
+    validators.assertNullableEnum(value, Object.values(MESSAGE_STATUSES));
+    this._status = value;
+  }
+
+  get notifyStatus () { return this._notifyStatus; }
+  set notifyStatus (value) {
+    validators.assertNullableString(value);
+    this._notifyStatus = value;
+  }
 }
 
 module.exports = ScheduledNotification;
+module.exports.MESSAGE_STATUSES = MESSAGE_STATUSES;
+module.exports.MESSAGE_TYPES = MESSAGE_TYPES;
