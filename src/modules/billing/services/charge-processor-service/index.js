@@ -12,7 +12,6 @@ const crmHelpers = require('./lib/crm-helpers');
 const transactionsProcessor = require('./transactions-processor');
 
 const mappers = require('../../mappers');
-const contactMapper = require('../../../../lib/mappers/contact');
 
 // Services
 const chargeVersionService = require('../../../../lib/services/charge-versions');
@@ -24,13 +23,10 @@ const billingVolumesService = require('../../services/billing-volumes-service');
  * @param {Object} company - data from CRM
  * @param {ChargeVersion} chargeVersion
  */
-const createInvoiceLicence = (company, chargeVersion, licenceHolderRole) => {
+const createInvoiceLicence = (chargeVersion) => {
   const invoiceLicence = new InvoiceLicence();
   return invoiceLicence.fromHash({
-    licence: chargeVersion.licence,
-    company: mappers.company.crmToModel(company),
-    contact: contactMapper.crmToModel(licenceHolderRole.contact),
-    address: mappers.address.crmToModel(licenceHolderRole.address)
+    licence: chargeVersion.licence
   });
 };
 
@@ -61,12 +57,12 @@ const processChargeVersionYear = async (batch, financialYear, chargeVersionId) =
   const chargePeriod = getChargePeriod(financialYear, chargeVersion);
 
   // Load company/invoice account/licence holder data from CRM
-  const [company, invoiceAccount, licenceHolderRole] = await crmHelpers.getCRMData(chargeVersion, chargePeriod.startDate);
+  const [invoiceAccount] = await crmHelpers.getCRMData(chargeVersion, chargePeriod.startDate);
 
   // Generate Invoice data structure
   const invoice = mappers.invoice.crmToModel(invoiceAccount);
   invoice.financialYear = financialYear;
-  const invoiceLicence = createInvoiceLicence(company, chargeVersion, licenceHolderRole);
+  const invoiceLicence = createInvoiceLicence(chargeVersion);
   invoiceLicence.transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
   invoice.invoiceLicences = [invoiceLicence];
 
