@@ -66,10 +66,7 @@ class InvoiceLicence extends Model {
    */
   get uniqueId () {
     return [
-      get(this, '_licence.licenceNumber'),
-      get(this, '_company.id'),
-      get(this, '_address.id'),
-      get(this, '_contact.id')
+      get(this, '_licence.licenceNumber')
     ].join('.');
   }
 
