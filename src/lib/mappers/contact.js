@@ -1,6 +1,6 @@
 'use strict';
 
-const { omit } = require('lodash');
+const { omit, isObject } = require('lodash');
 const Contact = require('../models/contact-v2');
 
 const { createMapper } = require('../object-mapper');
@@ -55,6 +55,25 @@ const modelToCrm = contact => {
   };
 };
 
+const pojoToModel = object => {
+  if (!isObject(object)) {
+    return null;
+  }
+  const model = new Contact();
+  return model.pickFrom(object, [
+    'firstName',
+    'initials',
+    'middleInitials',
+    'lastName',
+    'suffix',
+    'department',
+    'type',
+    'dataSource',
+    'title'
+  ]);
+};
+
 exports.crmToModel = crmToModel;
 exports.uiToModel = uiToModel;
 exports.modelToCrm = modelToCrm;
+exports.pojoToModel = pojoToModel;
