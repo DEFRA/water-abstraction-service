@@ -42,16 +42,13 @@ const preLoadJson = async (request, h) => {
 const preCheckIssuer = async (request, h) => {
   const issuer = get(request, 'query.userName');
   const originalIssuer = get(request, 'event.issuer');
-  const eventId = get(request, 'event.id');
 
   if (issuer !== originalIssuer) {
-    throw Boom.unauthorized('Return upload permission denied', { eventId, issuer, originalIssuer });
+    throw Boom.unauthorized('Return upload permission denied');
   }
   return h.continue;
 };
 
-module.exports = {
-  preLoadEvent,
-  preLoadJson,
-  preCheckIssuer
-};
+exports.preLoadEvent = preLoadEvent;
+exports.preLoadJson = preLoadJson;
+exports.preCheckIssuer = preCheckIssuer;
