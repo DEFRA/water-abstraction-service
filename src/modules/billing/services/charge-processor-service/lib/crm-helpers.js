@@ -1,49 +1,6 @@
 const { get, partialRight } = require('lodash');
 const { NotFoundError } = require('../../../../../lib/errors');
 const crmV2 = require('../../../../../lib/connectors/crm-v2');
-const dateHelpers = require('./date-helpers');
-
-const getDocumentByDate = async (chargeVersion, chargePeriodStartDate) => {
-  const { licenceNumber } = chargeVersion.licence;
-
-  // Load all CRM documents for licence
-  const result = await crmV2.documents.getDocuments(licenceNumber);
-  const documents = result || [];
-
-  const document = dateHelpers.findByDate(documents, chargePeriodStartDate);
-
-  if (!document) {
-    throw new NotFoundError(`Document not found in CRM for ${licenceNumber} on ${chargePeriodStartDate}`); ;
-  }
-  return document;
-};
-
-/**
- * Gets CRM licence holder role for charge version or throws NotFoundError
- * @param {ChargeVersion} chargeVersion
- * @param {String} chargePeriodStartDate - YYYY-MM-DD
- * @return {Promise<Object>} CRM role data
- */
-const getLicenceHolderRole = async (chargeVersion, chargePeriodStartDate) => {
-  const { documentId } = await getDocumentByDate(chargeVersion, chargePeriodStartDate);
-
-  // Load document roles for relevant document, and filter to find
-  // the licence holder role at the start of the charge period
-  const document = await crmV2.documents.getDocument(documentId);
-
-  if (!document) {
-    throw new NotFoundError(`Document ${documentId} not found in CRM`); ;
-  }
-
-  const role = dateHelpers.findByDate(
-    document.documentRoles.filter(role => role.roleName === 'licenceHolder'),
-    chargePeriodStartDate
-  );
-  if (!role) {
-    throw new NotFoundError(`Licence holder role not found in CRM for document ${documentId} on ${chargePeriodStartDate}`);
-  }
-  return role;
-};
 
 /**
  * Makes CRM API call and throws error if not found
@@ -77,13 +34,6 @@ const config = {
 };
 
 /**
- * Get CRM company or throw not found error
- * @param {ChargeVersion}
- * @return {Promise<Object>}
- */
-const getCompany = partialRight(makeCRMAPICall, config.getCompany);
-
-/**
  * Get CRM invoice account or throw not found error
  * @param {ChargeVersion}
  * @return {Promise<Object>}
@@ -97,9 +47,7 @@ const getInvoiceAccount = partialRight(makeCRMAPICall, config.getInvoiceAccount)
  * @return {Promise<Array>}
  */
 const getCRMData = (chargeVersion, chargePeriodStartDate) => Promise.all([
-  getCompany(chargeVersion),
-  getInvoiceAccount(chargeVersion),
-  getLicenceHolderRole(chargeVersion, chargePeriodStartDate)
+  getInvoiceAccount(chargeVersion)
 ]);
 
 exports.getCRMData = getCRMData;

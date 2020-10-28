@@ -37,7 +37,6 @@ const modelToDb = (invoice, invoiceLicence) => {
   return {
     billingInvoiceId: invoice.id,
     licenceRef: invoiceLicence.licence.licenceNumber,
-    licenceHolderAddress: invoiceLicence.address.toObject(),
     licenceId: invoiceLicence.licence.id
   };
 };
