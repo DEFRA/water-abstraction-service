@@ -1,8 +1,6 @@
 exports.upsert = `insert into water.billing_invoice_licences (
-  billing_invoice_id, company_id, contact_id, address_id, licence_ref, licence_holder_name,
-  licence_holder_address, date_created, date_updated, licence_id
-) values (:billingInvoiceId, :companyId, :contactId, :addressId, :licenceRef, :licenceHolderName,
-  :licenceHolderAddress, NOW(), NOW(), :licenceId) on conflict (billing_invoice_id, company_id, address_id, licence_id) do update set date_updated = NOW() returning *;`;
+  billing_invoice_id, licence_ref, date_created, date_updated, licence_id
+) values (:billingInvoiceId, :licenceRef, NOW(), NOW(), :licenceId) on conflict (billing_invoice_id, licence_id) do update set date_updated = NOW() returning *;`;
 
 exports.deleteEmptyByBatchId = `delete from water.billing_invoice_licences l
   where l.billing_invoice_licence_id in (
