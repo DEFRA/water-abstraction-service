@@ -58,6 +58,7 @@ const modelToDbMapper = createMapper()
     'dateUpdated'
   )
   .map('licence.licenceNumber').to('licenceRef')
+  .map('licence.id').to('licenceId')
   .map('billedUpToDate').to('billedUptoDate')
   .map('dateRange.startDate').to('startDate')
   .map('dateRange.endDate').to('endDate')

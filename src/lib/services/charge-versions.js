@@ -52,10 +52,16 @@ const getByLicenceRef = async licenceRef =>
     chargeVersionMapper
   );
 
-const getByLicenceId = async licenceId => {
-  const licence = await licencesService.getLicenceById(licenceId);
-  return getByLicenceRef(licence.licenceNumber);
-};
+/**
+ * Gets all the charge versions for the given licence ref
+ *
+ * @param {String} licenceId The licence id
+ */
+const getByLicenceId = async licenceId => service.findMany(
+  licenceId,
+  chargeVersionRepo.findByLicenceId,
+  chargeVersionMapper
+);
 
 /**
  * Persists a new charge version in the DB

@@ -33,6 +33,12 @@ const getChargeVersionsByDocumentId = async request => {
   return { data: chargeVersions };
 };
 
+const getChargeVersionsByLicenceId = async request => {
+  const { licenceId } = request.params;
+  const chargeVersions = await chargeVersionsService.getByLicenceId(licenceId);
+  return { data: chargeVersions };
+};
+
 /**
  * Gets the default expected charge elements based on abstraction data
  * for the specified licence version
@@ -74,3 +80,4 @@ exports.getChargeVersion = getChargeVersion;
 exports.getChargeVersionsByDocumentId = getChargeVersionsByDocumentId;
 exports.getDefaultChargesForLicenceVersion = getDefaultChargesForLicenceVersion;
 exports.postCreateFromWorkflow = postCreateFromWorkflow;
+exports.getChargeVersionsByLicenceId = getChargeVersionsByLicenceId;
