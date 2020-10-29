@@ -148,10 +148,6 @@ experiment('preCheckIssuer', () => {
       fail();
     } catch (err) {
       expect(Boom.unauthorized.callCount).to.equal(1);
-      const [, params] = Boom.unauthorized.firstCall.args;
-      expect(params.eventId).to.equal(eventId);
-      expect(params.issuer).to.equal(request.query.userName);
-      expect(params.originalIssuer).to.equal(request.event.issuer);
     }
   });
 });
