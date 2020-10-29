@@ -85,7 +85,7 @@ module.exports = {
         payload: {
           status: Joi.string(),
           chargeVersion: Joi.object(),
-          approverComments: Joi.string()
+          approverComments: Joi.string().allow(null)
         }
       },
       pre: [
