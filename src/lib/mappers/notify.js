@@ -10,14 +10,14 @@ const { DATA_SOURCE_TYPES } = require('../models/contact-v2');
 const minimum = (num, min) =>
   num < min ? min : num;
 
-const combineAddressLines = arr => {
-  const over = minimum(arr.length - 7, 0);
+const combineAddressLines = lines => {
+  const over = minimum(lines.length - 7, 0);
 
-  const groupedLines = chunk(arr, 2).map(arr => arr.join(', '));
+  const groupedLines = chunk(lines, 2).map(arr => arr.join(', '));
 
   return [
     ...groupedLines.slice(0, over),
-    ...arr.slice(over * 2)
+    ...lines.slice(over * 2)
   ];
 };
 
@@ -32,7 +32,7 @@ const getAddressObject = arr => arr.reduce((acc, line, index) => ({
  * @param {Object} service models, { address, contact, company }
  * @return {Object} personalisation object for Notify letter
  */
-const mapModelsToNotifyAddress = (models) => {
+const mapModelsToNotifyAddress = models => {
   const { address, company, contact } = models;
   const lines = [];
   if (contact && (contact.dataSource !== DATA_SOURCE_TYPES.nald)) {

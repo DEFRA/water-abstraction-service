@@ -49,7 +49,7 @@ const mapServiceModels = form => {
   } catch (err) {
     logger.error('Failed to map return form contact to service models', form);
     throw err;
-  };
+  }
 };
 
 const getPersonalisationsForForm = async form => {
