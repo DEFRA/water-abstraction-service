@@ -285,7 +285,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
     });
   });
 
-  experiment('.modelToDB', () => {
+  experiment('.modelToDb', () => {
     let billingVolume, result;
 
     beforeEach(async () => {
@@ -304,7 +304,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
         financialYear
       });
 
-      result = billingVolumeMapper.modelToDB(billingVolume);
+      result = billingVolumeMapper.modelToDb(billingVolume);
     });
 
     test('the data should be mapped to the DB fields', async () => {
@@ -319,8 +319,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
         twoPartTariffStatus: 10,
         isApproved: false,
         volume: 10.2,
-        financialYear: 2020,
-        twoPartTariffReview: null
+        financialYear: 2020
       });
     });
 
@@ -332,7 +331,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
           email: 'nobody@example.com'
         });
         billingVolume.twoPartTariffReview = user;
-        result = billingVolumeMapper.modelToDB(billingVolume);
+        result = billingVolumeMapper.modelToDb(billingVolume);
       });
 
       test('the twoPartTariffReview property contains the reviewer user details', async () => {

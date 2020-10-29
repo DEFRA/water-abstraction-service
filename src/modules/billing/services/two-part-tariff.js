@@ -1,9 +1,5 @@
 'use strict';
 
-const { flatMap } = require('lodash');
-
-const repos = require('../../../lib/connectors/repos');
-
 const Batch = require('../../../lib/models/batch');
 const FinancialYear = require('../../../lib/models/financial-year');
 
@@ -15,27 +11,27 @@ const volumeMatchingService = require('./volume-matching-service');
 
 /**
  * Decorates each BillingVolume in the supplied array with the
- * supplied billingBatchId property
+ * supplied billingBatchId property if it doesn't already have one
  * @param {Array<BillingVolume>} billingVolumes
  * @param {String} billingBatchId
  */
 const decorateBillingVolumesWithBatchId = (billingVolumes, billingBatchId) => {
   billingVolumes.forEach(billingVolume => {
-    billingVolume.billingBatchId = billingBatchId;
+    if (!billingVolume.billingBatchId) billingVolume.billingBatchId = billingBatchId;
   });
 };
 
 /**
  * Processes the supplied charge version year and season flag and persists
  * the billing volumes to the DB via the billing volumes service
- * @param {Object} chargeVersionYearSeason
- * @param {String} chargeVersionYearSeason.chargeVersionId
- * @param {Number} chargeVersionYearSeason.financialYearEnding
- * @param {Boolean} chargeVersionYearSeason.isSummer
+ * @param {Object} chargeVersionYear
+ * @param {String} chargeVersionYear.chargeVersionId
+ * @param {Number} chargeVersionYear.financialYearEnding
+ * @param {Boolean} chargeVersionYear.isSummer
  * @return {Promise<Array>}
  */
-const processChargeVersionYearSeason = async chargeVersionYearSeason => {
-  const { chargeVersionId, financialYearEnding, isSummer, billingBatchId } = chargeVersionYearSeason;
+const processChargeVersionYear = async chargeVersionYear => {
+  const { chargeVersionId, financialYearEnding, isSummer, billingBatchId } = chargeVersionYear;
   const billingVolumes = await volumeMatchingService.matchVolumes(chargeVersionId, new FinancialYear(financialYearEnding), isSummer);
   decorateBillingVolumesWithBatchId(billingVolumes, billingBatchId);
   const tasks = billingVolumes.map(billingVolumesService.persist);
@@ -43,33 +39,14 @@ const processChargeVersionYearSeason = async chargeVersionYearSeason => {
 };
 
 /**
- * Processes an array of charge version year season combinations
- * @param {Array<Object>} chargeVersionYearSeasons
+ * Processes an array of charge version years
+ * @param {Array<Object>} chargeVersionYears
  * @return {Promise<Array>}
  */
-const processChargeVersionYearSeasons = chargeVersionYearSeasons =>
-  Promise.all(chargeVersionYearSeasons.map(
-    processChargeVersionYearSeason
+const processChargeVersionYears = chargeVersionYears =>
+  Promise.all(chargeVersionYears.map(
+    processChargeVersionYear
   ));
-
-/**
- * Creates a charge version year season
- * This describes that a charge version needs processing for TPT in a particular financial year and season
- * @param {Object} billingBatchChargeVersionYear
- * @param {Batch} batch
- * @return {Object}
- */
-const createChargeVersionYearSeason = (billingBatchChargeVersionYear, batch) => ({
-  ...billingBatchChargeVersionYear,
-  isSummer: batch.isSummer
-});
-
-const getChargeVersionYearSeasons = (billingBatchChargeVersionYears, previousTPTBatches) => {
-  const data = previousTPTBatches.map(batch => billingBatchChargeVersionYears
-    .filter(billingBatchChargeVersionYear => billingBatchChargeVersionYear.financialYearEnding === batch.toFinancialYearEnding)
-    .map(billingBatchChargeVersionYear => createChargeVersionYearSeason(billingBatchChargeVersionYear, batch)));
-  return flatMap(data);
-};
 
 /**
  * For a supplementary batch, we check which TPT bill runs have previously been sent in the
@@ -78,18 +55,8 @@ const getChargeVersionYearSeasons = (billingBatchChargeVersionYears, previousTPT
  * @return {Promise}
  */
 const processSupplementaryBatch = async batch => {
-  const tasks = [
-    chargeVersionYearService.getTwoPartTariffForBatch(batch.id),
-    repos.billingBatches.findSentTptBatchesForRegion(batch.region.id)
-  ];
-
-  const [
-    tptBillingBatchChargeVersionYears,
-    previousTPTBatches
-  ] = await Promise.all(tasks);
-
-  const chargeVersionYearSeasons = getChargeVersionYearSeasons(tptBillingBatchChargeVersionYears, previousTPTBatches);
-  return processChargeVersionYearSeasons(chargeVersionYearSeasons);
+  const tptBillingBatchChargeVersionYears = await chargeVersionYearService.getTwoPartTariffForBatch(batch.id);
+  return processChargeVersionYears(tptBillingBatchChargeVersionYears);
 };
 
 /**
@@ -100,12 +67,7 @@ const processSupplementaryBatch = async batch => {
  */
 const processTwoPartTariffBatch = async batch => {
   const tptBillingBatchChargeVersionYears = await chargeVersionYearService.getForBatch(batch.id);
-
-  const chargeVersionYearSeasons = tptBillingBatchChargeVersionYears.map(
-    billingBatchChargeVersionYear => createChargeVersionYearSeason(billingBatchChargeVersionYear, batch)
-  );
-
-  return processChargeVersionYearSeasons(chargeVersionYearSeasons);
+  return processChargeVersionYears(tptBillingBatchChargeVersionYears);
 };
 
 const processors = {

@@ -14,6 +14,7 @@ const repos = require('../../../../src/lib/connectors/repos');
 const { BillingBatchChargeVersionYear, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-batch-charge-version-years');
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
+const { TRANSACTION_TYPE } = require('../../../../src/lib/models/charge-version-year');
 
 experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
   let model, stub;
@@ -142,10 +143,20 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
       await repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(billingBatchId);
     });
 
-    test('calls knex raw method with correct query', async () => {
-      expect(raw.multiRow.calledWith(
-        queries.findTwoPartTariffByBatchId, { billingBatchId }
-      )).to.be.true();
+    test('calls Bookshelf methods in correct order', async () => {
+      sinon.assert.callOrder(
+        BillingBatchChargeVersionYear.collection,
+        stub.where,
+        stub.fetch,
+        model.toJSON
+      );
+    });
+
+    test('finds records with correct batch ID', async () => {
+      expect(stub.where.calledWith({
+        billing_batch_id: billingBatchId,
+        transaction_type: TRANSACTION_TYPE.twoPartTariff
+      }));
     });
   });
 

@@ -295,29 +295,4 @@ experiment('lib/connectors/repos/billing-batches', () => {
       expect(stub.fetchAll.lastCall.args[0].withRelated[2]).to.equal('billingInvoices.billingInvoiceLicences.licence');
     });
   });
-
-  experiment('.findSentTptBatchesForRegion', () => {
-    beforeEach(async () => {
-      await billingBatches.findSentTptBatchesForRegion('region-id');
-    });
-
-    test('forges a model', async () => {
-      expect(BillingBatch.forge.called).to.be.true();
-    });
-
-    test('calls where with correct parameters', async () => {
-      const [filters] = stub.where.lastCall.args;
-      expect(filters.status).to.equal(BATCH_STATUS.sent);
-      expect(filters.batch_type).to.equal(BATCH_TYPE.twoPartTariff);
-      expect(filters.region_id).to.equal('region-id');
-    });
-
-    test('calls fetchAll with correct parameters', async () => {
-      expect(stub.fetchAll.called).to.be.true();
-    });
-
-    test('calls .toJSON() on the result', async () => {
-      expect(model.toJSON.called).to.be.true();
-    });
-  });
 });

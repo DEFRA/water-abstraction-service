@@ -3,6 +3,7 @@
 const { BillingBatchChargeVersionYear, bookshelf } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-batch-charge-version-years');
+const { TRANSACTION_TYPE } = require('../../models/charge-version-year');
 
 const update = (id, data) =>
   BillingBatchChargeVersionYear
@@ -53,8 +54,16 @@ const findByBatchId = async billingBatchId => {
  * @param {String} billingBatchId
  * @return {Promise<Array>}
  */
-const findTwoPartTariffByBatchId = billingBatchId =>
-  raw.multiRow(queries.findTwoPartTariffByBatchId, { billingBatchId });
+const findTwoPartTariffByBatchId = async billingBatchId => {
+  const collection = await BillingBatchChargeVersionYear
+    .collection()
+    .where({
+      billing_batch_id: billingBatchId,
+      transaction_type: TRANSACTION_TYPE.twoPartTariff
+    })
+    .fetch();
+  return collection.toJSON();
+};
 
 /**
  * Deletes charge version years in a batch for a particular licence ID

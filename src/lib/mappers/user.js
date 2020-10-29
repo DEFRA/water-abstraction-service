@@ -15,7 +15,10 @@ const dbToModel = data => {
 
 const pojoToModel = dbToModel;
 
-const modelToDb = model => model.toJSON();
+const modelToDb = model =>
+  model === null
+    ? null
+    : model.toJSON();
 
 exports.dbToModel = dbToModel;
 exports.pojoToModel = pojoToModel;

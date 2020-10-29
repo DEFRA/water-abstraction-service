@@ -1,6 +1,7 @@
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
+const { omit } = require('lodash');
 
 const uuid = require('uuid/v4');
 
@@ -244,8 +245,7 @@ experiment('modules/billing/services/billing-volumes-service', () => {
 
     test('the repo .create() method is called with the correct arguments', async () => {
       expect(billingVolumesRepo.create.calledWith({
-        billingVolumeId: undefined,
-        ...data
+        ...omit(data, 'billingVolumeId')
       })).to.be.true();
     });
 
