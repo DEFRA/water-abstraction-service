@@ -3,6 +3,8 @@
 const repos = require('../../../lib/connectors/repos');
 const Batch = require('../../../lib/models/batch');
 const { BatchStatusError } = require('../lib/errors');
+const licencesService = require('../../../lib/services/licences');
+const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/constants');
 
 const mapItem = item => ({
   licenceId: item.licenceId,
@@ -44,6 +46,12 @@ const deleteBatchLicence = async (batch, licenceId) => {
   }
   await repos.billingVolumes.deleteByBatchIdAndLicenceId(batch.id, licenceId);
   await repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId(batch.id, licenceId);
+  // flag for supplementary billing
+  await licencesService.updateIncludeInSupplementaryBillingStatus(
+    INCLUDE_IN_SUPPLEMENTARY_BILLING.no,
+    INCLUDE_IN_SUPPLEMENTARY_BILLING.reprocess,
+    licenceId
+  );
 };
 
 exports.getByBatchIdForTwoPartTariffReview = getByBatchIdForTwoPartTariffReview;
