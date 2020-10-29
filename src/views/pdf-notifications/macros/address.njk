@@ -1,52 +1,24 @@
+{% macro addressLine(value) %}
+  {% if value %}
+    {{ value }}<br>
+  {% endif %}
+{% endmacro %}
+
 {% macro address(personalisation) %}
-<div id="address-container">
-  <div class="address-block">
+  <div id="address-container">
+    <div class="address-block">
 
-    {{ personalisation.salutation + ' ' if personalisation.salutation }}
-    {% if personalisation.initials %}
-      {{ personalisation.initials + ' ' }}
-    {% else %}
-      {{ personalisation.forename + ' ' if personalisation.forename }}
-    {% endif %}
-    {{ personalisation.name }}
-    <br>
+      {{ addressLine(personalisation.address_line_1) }}
+      {{ addressLine(personalisation.address_line_2) }}
+      {{ addressLine(personalisation.address_line_3) }}
+      {{ addressLine(personalisation.address_line_4) }}
+      {{ addressLine(personalisation.address_line_5) }}
+      {{ addressLine(personalisation.address_line_6) }}
+      {{ addressLine(personalisation.address_line_7) }}
 
-    {% if personalisation.address_line_1 %}
-      {{ personalisation.address_line_1 }}<br>
-    {% endif %}
-
-    {% if personalisation.address_line_2 %}
-      {{ personalisation.address_line_2 }}<br>
-    {% endif %}
-
-    {% if personalisation.address_line_3 %}
-      {{ personalisation.address_line_3 }}<br>
-    {% endif %}
-
-    {% if personalisation.address_line_4 %}
-      {{ personalisation.address_line_4 }}<br>
-    {% endif %}
-
-    {% if personalisation.town %}
-      {{ personalisation.town }}<br>
-    {% endif %}
-
-    {% if personalisation.county %}
-      {{ personalisation.county }}<br>
-    {% endif %}
-
-    {% if personalisation.postcode %}
-      {{ personalisation.postcode }}<br>
-    {% endif %}
-
-    {% if personalisation.country %}
-      {{ personalisation.country }}<br>
-    {% endif %}
-
+    </div>
   </div>
-</div>
 
-
-<div class="address-spacer"></div>
+  <div class="address-spacer"></div>
 
 {% endmacro %}

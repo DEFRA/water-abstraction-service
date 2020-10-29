@@ -32,7 +32,7 @@ experiment('lib/models/scheduled-notification', () => {
   });
 
   experiment('.messageType', () => {
-    test('can be set to a string', async () => {
+    test('can be set to a "letter"', async () => {
       const messageType = 'letter';
 
       const notification = new ScheduledNotification();
@@ -41,11 +41,36 @@ experiment('lib/models/scheduled-notification', () => {
       expect(notification.messageType).to.equal(messageType);
     });
 
-    test('can be set to null', async () => {
-      const notification = new ScheduledNotification();
-      notification.messageType = null;
+    test('can be set to a "email"', async () => {
+      const messageType = 'email';
 
-      expect(notification.messageType).to.equal(null);
+      const notification = new ScheduledNotification();
+      notification.messageType = messageType;
+
+      expect(notification.messageType).to.equal(messageType);
+    });
+
+    test('can be set to a "sms"', async () => {
+      const messageType = 'sms';
+
+      const notification = new ScheduledNotification();
+      notification.messageType = messageType;
+
+      expect(notification.messageType).to.equal(messageType);
+    });
+
+    test('throws an error if set to an unexpected string', async () => {
+      expect(() => {
+        const notification = new ScheduledNotification();
+        notification.messageType = 'invalid-type';
+      }).to.throw();
+    });
+
+    test('throws an error if set to null', async () => {
+      expect(() => {
+        const notification = new ScheduledNotification();
+        notification.messageType = null;
+      }).to.throw();
     });
 
     test('throws an error if set to a number', async () => {
@@ -106,21 +131,141 @@ experiment('lib/models/scheduled-notification', () => {
     });
   });
 
-  experiment('.personalisation', () => {
-    test('can be set to an object', async () => {
-      const personalisation = 'test_template';
+  experiment('.eventId', () => {
+    test('can be set to a uuid', async () => {
+      const eventId = uuid();
 
       const notification = new ScheduledNotification();
-      notification.personalisation = personalisation;
+      notification.eventId = eventId;
 
-      expect(notification.personalisation).to.equal(personalisation);
+      expect(notification.eventId).to.equal(eventId);
     });
 
     test('can be set to null', async () => {
       const notification = new ScheduledNotification();
-      notification.personalisation = null;
+      notification.eventId = null;
 
-      expect(notification.personalisation).to.equal(null);
+      expect(notification.eventId).to.equal(null);
+    });
+
+    test('throws an error if set to a non-uuid string', async () => {
+      expect(() => {
+        const notification = new ScheduledNotification();
+        notification.eventId = 'not-a-uuid';
+      }).to.throw();
+    });
+  });
+
+  experiment('.licences', () => {
+    test('can be set to null', async () => {
+      const notification = new ScheduledNotification();
+      notification.licences = null;
+
+      expect(notification.licences).to.equal(null);
+    });
+
+    test('can be set to an empty array', async () => {
+      const licences = [];
+
+      const notification = new ScheduledNotification();
+      notification.licences = licences;
+
+      expect(notification.licences).to.equal(licences);
+    });
+
+    test('can be set to an array of licence numbers', async () => {
+      const licences = ['01/123/*S/456', '04/567/*G/S/R01'];
+
+      const notification = new ScheduledNotification();
+      notification.licences = licences;
+
+      expect(notification.licences).to.equal(licences);
+    });
+
+    test('throws an error if array contains an invalid licence number', async () => {
+      expect(() => {
+        const licences = ['1234_5678'];
+
+        const notification = new ScheduledNotification();
+        notification.licences = licences;
+      }).to.throw();
+    });
+  });
+
+  experiment('.status', () => {
+    test('can be set to a "draft"', async () => {
+      const status = 'draft';
+
+      const notification = new ScheduledNotification();
+      notification.status = status;
+
+      expect(notification.status).to.equal(status);
+    });
+
+    test('can be set to a "sending"', async () => {
+      const status = 'sending';
+
+      const notification = new ScheduledNotification();
+      notification.status = status;
+
+      expect(notification.status).to.equal(status);
+    });
+
+    test('can be set to a "sent"', async () => {
+      const status = 'sent';
+
+      const notification = new ScheduledNotification();
+      notification.status = status;
+
+      expect(notification.status).to.equal(status);
+    });
+
+    test('can be set to a "error"', async () => {
+      const status = 'error';
+
+      const notification = new ScheduledNotification();
+      notification.status = status;
+
+      expect(notification.status).to.equal(status);
+    });
+
+    test('throws an error if the status is invalid', async () => {
+      expect(() => {
+        const notification = new ScheduledNotification();
+        notification.status = 'the-dog-ate-it';
+      }).to.throw();
+    });
+
+    test('can be set to null', async () => {
+      const notification = new ScheduledNotification();
+      notification.status = null;
+
+      expect(notification.status).to.equal(null);
+    });
+  });
+
+  experiment('.notifyStatus', () => {
+    test('can be set to a string', async () => {
+      const notifyStatus = 'delivered';
+
+      const notification = new ScheduledNotification();
+      notification.notifyStatus = notifyStatus;
+
+      expect(notification.notifyStatus).to.equal(notifyStatus);
+    });
+
+    test('can be set to null', async () => {
+      const notification = new ScheduledNotification();
+      notification.notifyStatus = null;
+
+      expect(notification.notifyStatus).to.equal(null);
+    });
+
+    test('throws an error if set to a number', async () => {
+      expect(() => {
+        const notification = new ScheduledNotification();
+        notification.notifyStatus = 123;
+      }).to.throw();
     });
   });
 });
