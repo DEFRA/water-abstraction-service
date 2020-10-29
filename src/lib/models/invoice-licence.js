@@ -1,10 +1,4 @@
 'use strict';
-
-const { get } = require('lodash');
-
-const Address = require('./address');
-const Company = require('./company');
-const Contact = require('./contact-v2');
 const Licence = require('./licence');
 const Transaction = require('./transaction');
 const Role = require('./role');
@@ -12,8 +6,7 @@ const Role = require('./role');
 const {
   assertIsArrayOfType,
   assertIsInstanceOf,
-  assertId,
-  assertIsNullableInstanceOf
+  assertId
 } = require('./validators');
 
 const Model = require('./model');

@@ -14,9 +14,6 @@ const invoiceLicenceMapper = require('../../../../src/modules/billing/mappers/in
 const transactionMapper = require('../../../../src/modules/billing/mappers/transaction');
 
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
-const Address = require('../../../../src/lib/models/address');
-const Company = require('../../../../src/lib/models/company');
-const Contact = require('../../../../src/lib/models/contact-v2');
 const Licence = require('../../../../src/lib/models/licence');
 const Transaction = require('../../../../src/lib/models/transaction');
 
