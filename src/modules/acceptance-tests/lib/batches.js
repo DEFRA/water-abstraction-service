@@ -15,7 +15,6 @@ const deleteBatchJobs = batchId => {
 
 const deleteBatch = async batchId => {
   await newRepos.billingBatchChargeVersionYears.deleteByBatchId(batchId, false);
-  await newRepos.billingBatchChargeVersions.deleteByBatchId(batchId, false);
   await newRepos.billingVolumes.deleteByBatchId(batchId);
   await newRepos.billingTransactions.deleteByBatchId(batchId);
   await newRepos.billingInvoiceLicences.deleteByBatchId(batchId);

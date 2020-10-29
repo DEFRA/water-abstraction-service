@@ -79,7 +79,6 @@ const createReturnVersion = (startDate, endDate, hasTwoPartTariffPurposeReturnsI
 experiment('modules/billing/services/charge-version-service', () => {
   beforeEach(async () => {
     sandbox.stub(repos.chargeVersions, 'findValidInRegionAndFinancialYear').resolves(chargeVersions);
-    sandbox.stub(repos.billingBatchChargeVersions, 'create');
     sandbox.stub(chargeVersionYearService, 'createBatchChargeVersionYear');
 
     sandbox.stub(returnRequirementVersionService, 'getByLicenceId');
