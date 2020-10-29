@@ -50,8 +50,19 @@ class ConflictingDataError extends Error {
   }
 }
 
+/**
+ * The requester is not permitted to perform the requested action
+ */
+class UnauthorizedError extends Error {
+  constructor (message) {
+    super(message);
+    this.name = 'UnauthorizedError';
+  }
+}
+
 exports.NotFoundError = NotFoundError;
 exports.StateError = StateError;
 exports.DBError = DBError;
 exports.InvalidEntityError = InvalidEntityError;
 exports.ConflictingDataError = ConflictingDataError;
+exports.UnauthorizedError = UnauthorizedError;
