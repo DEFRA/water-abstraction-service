@@ -14,7 +14,15 @@ const { getRecipients } = require('../../../../../../src/modules/batch-notificat
 const returnsService = require('../../../../../../src/lib/services/returns/api-connector');
 const scheduledNotificationService = require('../../../../../../src/lib/services/scheduled-notifications');
 
+const eventHelpers = require('../../../../../../src/modules/batch-notifications/lib/event-helpers');
+const sendBatch = require('../../../../../../src/modules/batch-notifications/lib/send-batch');
+
 experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients', () => {
+  beforeEach(async () => {
+    sandbox.stub(eventHelpers, 'markAsProcessed');
+    sandbox.stub(sendBatch, 'send');
+  });
+
   afterEach(async () => {
     sandbox.restore();
   });
@@ -88,6 +96,7 @@ experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients'
         eventData = {
           ev: {
             id: '11111111-1111-1111-1111-111111111111',
+            issuer: 'mail@example.com',
             metadata: {
               options: {
                 forms: [
@@ -103,7 +112,7 @@ experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients'
                       addressLine4: 'add-line-4',
                       town: 'test-town',
                       county: 'test-county',
-                      country: 'test-country',
+                      country: 'united kingdom',
                       postcode: 'test-post-code'
                     },
                     contact: {
@@ -183,31 +192,35 @@ experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients'
           });
 
           test('address_line_1', async () => {
-            expect(personalisation.address_line_1).to.equal('add-line-1');
+            expect(personalisation.address_line_1).to.equal('FAO test-contact-title test-contact-first-name test-contact-last-name, test-company-name');
           });
 
           test('address_line_2', async () => {
-            expect(personalisation.address_line_2).to.equal('add-line-2');
+            expect(personalisation.address_line_2).to.equal('add-line-1, add-line-2');
           });
 
           test('address_line_3', async () => {
-            expect(personalisation.address_line_3).to.equal('add-line-3');
+            expect(personalisation.address_line_3).to.equal('add-line-3, add-line-4');
           });
 
           test('address_line_4', async () => {
-            expect(personalisation.address_line_4).to.equal('add-line-4');
+            expect(personalisation.address_line_4).to.equal('test-town');
+          });
+
+          test('address_line_5', async () => {
+            expect(personalisation.address_line_5).to.equal('test-county');
+          });
+
+          test('address_line_6', async () => {
+            expect(personalisation.address_line_6).to.equal('test-post-code');
+          });
+
+          test('address_line_7', async () => {
+            expect(personalisation.address_line_7).to.equal('test-country');
           });
 
           test('area_code', async () => {
             expect(personalisation.area_code).to.equal('test-area-code');
-          });
-
-          test('county', async () => {
-            expect(personalisation.county).to.equal('test-county');
-          });
-
-          test('country', async () => {
-            expect(personalisation.country).to.equal('test-country');
           });
 
           test('due_date', async () => {
@@ -218,16 +231,8 @@ experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients'
             expect(personalisation.end_date).to.equal('2100-01-01');
           });
 
-          test('forename', async () => {
-            expect(personalisation.forename).to.equal('test-contact-first-name');
-          });
-
           test('format_id', async () => {
             expect(personalisation.format_id).to.equal(12345678);
-          });
-
-          test('initials', async () => {
-            expect(personalisation.initials).to.equal('test-contact-initials');
           });
 
           test('is_two_part_tariff', async () => {
@@ -236,10 +241,6 @@ experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients'
 
           test('licence_ref', async () => {
             expect(personalisation.licence_ref).to.equal('123/123');
-          });
-
-          test('postcode', async () => {
-            expect(personalisation.postcode).to.equal('test-post-code');
           });
 
           test('purpose', async () => {
@@ -258,10 +259,6 @@ experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients'
             expect(personalisation.returns_frequency).to.equal('day');
           });
 
-          test('salutation', async () => {
-            expect(personalisation.salutation).to.equal('test-contact-title');
-          });
-
           test('site_description', async () => {
             expect(personalisation.site_description).to.equal('test-desc');
           });
@@ -269,37 +266,22 @@ experiment('modules/batch-notifications/config/paper-returns/lib/get-recipients'
           test('start_date', async () => {
             expect(personalisation.start_date).to.equal('2000-01-01');
           });
-
-          test('town', async () => {
-            expect(personalisation.town).to.equal('test-town');
-          });
         });
       });
 
-      experiment('when the company is an organisation', () => {
-        test('the company name is used in the personalisation', async () => {
-          eventData.ev.metadata.options.forms[0].company.type = 'organisation';
-          eventData.ev.metadata.options.forms[1].company.type = 'organisation';
-          await getRecipients(eventData);
-
-          const [notification] = scheduledNotificationService.createScheduledNotification.lastCall.args;
-
-          expect(notification.personalisation.name).to.equal('test-company-name');
-          expect(notification.personalisation.forename).to.equal(undefined);
-          expect(notification.personalisation.initials).to.equal(undefined);
-          expect(notification.personalisation.salutation).to.equal(undefined);
-        });
+      test('the event is updated with the affected licence numbers and recipient count', async () => {
+        expect(eventHelpers.markAsProcessed.calledWith(
+          '11111111-1111-1111-1111-111111111111',
+          ['123/123', '123/123', '123/123'],
+          3
+        )).to.be.true();
       });
 
-      experiment('when the company is a person', () => {
-        test('the contact details are used in the personalisation', async () => {
-          const [notification] = scheduledNotificationService.createScheduledNotification.lastCall.args;
-
-          expect(notification.personalisation.name).to.equal('test-contact-last-name');
-          expect(notification.personalisation.forename).to.equal('test-contact-first-name');
-          expect(notification.personalisation.initials).to.equal('test-contact-initials');
-          expect(notification.personalisation.salutation).to.equal('test-contact-title');
-        });
+      test('the batch is sent', async () => {
+        expect(sendBatch.send.calledWith(
+          '11111111-1111-1111-1111-111111111111',
+          'mail@example.com'
+        )).to.be.true();
       });
     });
   });
