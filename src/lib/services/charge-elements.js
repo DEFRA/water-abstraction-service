@@ -41,7 +41,7 @@ const getChargeElementsFromLicenceVersion = licenceVersion => {
     chargeElement.source = 'unsupported';
     chargeElement.loss = licenceVersionPurpose.purposeUse.lossFactor;
     chargeElement.abstractionPeriod = licenceVersionPurpose.abstractionPeriod;
-    chargeElement.authorisedAnnualQuantity = licenceVersionPurpose.annualQuantity;
+    chargeElement.authorisedAnnualQuantity = licenceVersionPurpose.annualQuantity | null;
     chargeElement.billableAnnualQuantity = null;
     chargeElement.purposePrimary = licenceVersionPurpose.purposePrimary;
     chargeElement.purposeSecondary = licenceVersionPurpose.purposeSecondary;

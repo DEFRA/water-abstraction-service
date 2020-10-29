@@ -19,9 +19,10 @@ const mapErrorResponse = require('../../../lib/map-error-response');
 const getChargeVersionWorkflows = async request => {
   const { licenceId } = request.query;
   if (licenceId) {
-    return chargeVersionsWorkflowService.getManyByLicenceId(licenceId);
+    return { data: await chargeVersionsWorkflowService.getManyByLicenceId(licenceId) };
+  } else {
+    return await controller.getEntities(null, chargeVersionsWorkflowService.getAllWithLicenceHolder, rowToAPIList);
   }
-  return controller.getEntities(null, chargeVersionsWorkflowService.getAllWithLicenceHolder, rowToAPIList);
 };
 
 /**
@@ -41,6 +42,8 @@ const postChargeVersionWorkflow = async request => {
   const { licenceId } = request.payload;
   const { chargeVersion, user } = request.pre;
 
+  chargeVersion.status = 'draft';
+
   // Find licence or 404
   const licence = await licencesService.getLicenceById(licenceId);
   if (!licence) {
@@ -58,6 +61,7 @@ const postChargeVersionWorkflow = async request => {
  */
 const patchChargeVersionWorkflow = async (request, h) => {
   const { chargeVersionWorkflowId } = request.params;
+  const { approverComments, status } = request.payload;
   const { chargeVersion } = request.pre;
 
   const changes = {
@@ -66,8 +70,13 @@ const patchChargeVersionWorkflow = async (request, h) => {
   };
 
   try {
-    const chargeVersionWorkflow = await chargeVersionsWorkflowService.update(chargeVersionWorkflowId, changes);
-    return chargeVersionWorkflow;
+    if (status === 'changes_requested') {
+      const chargeVersionWorkflow = await chargeVersionsWorkflowService.update(chargeVersionWorkflowId, { approverComments, status });
+      return chargeVersionWorkflow;
+    } else {
+      const chargeVersionWorkflow = await chargeVersionsWorkflowService.update(chargeVersionWorkflowId, changes);
+      return chargeVersionWorkflow;
+    }
   } catch (err) {
     return mapErrorResponse(err);
   }
