@@ -9,6 +9,7 @@ const {
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const uuid = require('uuid/v4');
 
 const batchNotifications = require('../../../../../src/modules/batch-notifications/lib/batch-notifications');
 const messageQueue = require('../../../../../src/lib/message-queue');
@@ -16,11 +17,14 @@ const sendMessage = require('../../../../../src/modules/batch-notifications/lib/
 const eventHelpers = require('../../../../../src/modules/batch-notifications/lib/event-helpers');
 const messageHelpers = require('../../../../../src/modules/batch-notifications/lib/message-helpers');
 const notifyConnector = require('../../../../../src/modules/batch-notifications/lib/notify-connector');
+const scheduledNotificationService = require('../../../../../src/lib/services/scheduled-notifications');
+const ScheduledNotification = require('../../../../../src/lib/models/scheduled-notification');
 
 const { logger } = require('../../../../../src/logger');
 
 experiment('refreshEvent job', () => {
-  const messageId = 'message_1';
+  const messageId = uuid();
+  let scheduledNotification;
 
   beforeEach(async () => {
     sandbox.stub(messageQueue, 'publish').resolves();
@@ -44,6 +48,13 @@ experiment('refreshEvent job', () => {
       }
     });
     sandbox.stub(logger, 'error');
+
+    scheduledNotification = new ScheduledNotification(messageId);
+
+    sandbox.stub(scheduledNotificationService, 'getScheduledNotificationById').resolves(
+      scheduledNotification
+    );
+    sandbox.stub(scheduledNotificationService, 'updateScheduledNotificationWithNotifyResponse');
   });
 
   afterEach(async () => {
@@ -78,7 +89,7 @@ experiment('refreshEvent job', () => {
 
       beforeEach(async () => {
         const jobData = { data: { messageId } };
-        messageHelpers.getMessageById.rejects(err);
+        scheduledNotificationService.getScheduledNotificationById.rejects(err);
         await sendMessage.handler(jobData);
       });
 
@@ -104,18 +115,20 @@ experiment('refreshEvent job', () => {
     });
 
     test('loads the scheduled_notification with the message ID from the job data', async () => {
-      const { args } = messageHelpers.getMessageById.lastCall;
-      expect(args).to.equal([messageId]);
+      expect(scheduledNotificationService.getScheduledNotificationById.calledWith(
+        messageId
+      )).to.be.true();
     });
 
     test('sends the message', async () => {
       expect(notifyConnector.send.callCount).to.equal(1);
-      const [message] = notifyConnector.send.lastCall.args;
-      expect(message.id).to.equal(messageId);
+      expect(notifyConnector.send.calledWith(
+        scheduledNotification
+      )).to.be.true();
     });
 
     test('marks message as sent', async () => {
-      const [id, notifyResponse] = messageHelpers.markMessageAsSent.lastCall.args;
+      const [id, notifyResponse] = scheduledNotificationService.updateScheduledNotificationWithNotifyResponse.lastCall.args;
       expect(id).to.equal(messageId);
       expect(notifyResponse).to.be.an.object();
     });

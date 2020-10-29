@@ -59,7 +59,7 @@ const postPrepare = async (request, h) => {
  * - Updating all related messages to 'sending'
  * They are then picked up for further processing by the relevant cron jobs
  */
-const postSend = async (request, h) => {
+const postSend = async request => {
   const { eventId } = request.params;
   const { issuer } = request.payload;
 

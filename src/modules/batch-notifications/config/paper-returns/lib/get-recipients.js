@@ -63,7 +63,6 @@ const getPersonalisationsForForm = async form => {
   for (const returnId of returnIds) {
     const fullReturn = await returnsService.getReturnById(returnId);
     const personalisation = getPersonalisationsForReturn(company, address, contact, fullReturn);
-
     personalisations.push(personalisation);
   }
 

@@ -1,3 +1,5 @@
+'use strict';
+
 const { get } = require('lodash');
 const { logger } = require('../../../../logger');
 const messageHelpers = require('../message-helpers');

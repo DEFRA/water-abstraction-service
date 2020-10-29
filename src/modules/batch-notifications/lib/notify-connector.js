@@ -15,8 +15,7 @@ const s3Connector = require('../../../lib/services/s3');
 const createNotifyReference = (scheduledNotification) => {
   const { id } = scheduledNotification;
   const addressLine1 = get(scheduledNotification, 'personalisation.address_line_1');
-  const postcode = get(scheduledNotification, 'personalisation.postcode');
-  return `${addressLine1} ${postcode} ${id}`;
+  return `${addressLine1} ${id}`;
 };
 
 /**

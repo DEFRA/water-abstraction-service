@@ -54,7 +54,7 @@ class ScheduledNotification extends Model {
 
   get licences () { return this._licences; }
   set licences (licenceNumbers) {
-    validators.assertIsArrayOfLicenceNumbers(licenceNumbers);
+    validators.assertIsNullableArrayOfLicenceNumbers(licenceNumbers);
     this._licences = licenceNumbers;
   }
 
