@@ -84,9 +84,9 @@ const createChargeVersionYears = (batch, chargeVersions, financialYear, transact
 };
 
 const isTwoPartNeeded = async (chargeVersion, isSummer) => {
-  const isTwoPartNeeded = await isTwoPartTariffBillingNeeded(chargeVersion);
+  const isTwoPartNeededBySeason = await isTwoPartTariffBillingNeeded(chargeVersion);
   const key = isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
-  return isTwoPartNeeded[key];
+  return isTwoPartNeededBySeason[key];
 };
 
 /**

@@ -17,7 +17,9 @@ const volumeMatchingService = require('./volume-matching-service');
  */
 const decorateBillingVolumesWithBatchId = (billingVolumes, billingBatchId) => {
   billingVolumes.forEach(billingVolume => {
-    if (!billingVolume.billingBatchId) billingVolume.billingBatchId = billingBatchId;
+    if (!billingVolume.billingBatchId) {
+      billingVolume.billingBatchId = billingBatchId;
+    }
   });
 };
 
