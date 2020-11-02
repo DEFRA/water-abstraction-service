@@ -83,8 +83,8 @@ const createChargeVersionYears = (batch, chargeVersions, financialYear, transact
   return Promise.all(tasks);
 };
 
-const isTwoPartNeeded = async (chargeVersion, financialYear, isSummer) => {
-  const isTwoPartNeeded = await isTwoPartTariffBillingNeeded(chargeVersion, financialYear);
+const isTwoPartNeeded = async (chargeVersion, isSummer) => {
+  const isTwoPartNeeded = await isTwoPartTariffBillingNeeded(chargeVersion);
   const key = isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
   return isTwoPartNeeded[key];
 };
@@ -96,21 +96,21 @@ const isTwoPartNeeded = async (chargeVersion, financialYear, isSummer) => {
  * @return {Promise<Boolean>}
  */
 const isRequiredInTwoPartTariffBillRun = async context => {
-  const { chargeVersion, batch, financialYear } = context;
-  return isTwoPartNeeded(chargeVersion, financialYear, batch.isSummer);
+  const { chargeVersion, batch } = context;
+  return isTwoPartNeeded(chargeVersion, batch.isSummer);
 };
 
-const isRequiredInTwoPartTariffSupplementary = async (chargeVersion, financialYear, isSummer) =>
+const isRequiredInTwoPartTariffSupplementary = async (chargeVersion, isSummer) =>
   (!chargeVersion.isTwoPartTariff)
     ? false
-    : isTwoPartNeeded(chargeVersion, financialYear, isSummer);
+    : isTwoPartNeeded(chargeVersion, isSummer);
 
 const isRequiredInSupplementaryBillRun = async context => {
-  const { chargeVersion, transactionType, financialYear, isSummer } = context;
+  const { chargeVersion, transactionType, isSummer } = context;
   if (chargeVersion.includeInSupplementaryBilling) {
     // recreating a TPT run?
     if (transactionType === TRANSACTION_TYPE.twoPartTariff) {
-      return isRequiredInTwoPartTariffSupplementary(chargeVersion, financialYear, isSummer);
+      return isRequiredInTwoPartTariffSupplementary(chargeVersion, isSummer);
     }
     return true;
   }
@@ -138,7 +138,7 @@ const createFinancialYearChargeVersionYears = async (batch, financialYear, trans
   );
 
   // Filter depending on bill run type
-  const chargeVersionsWithContext = chargeVersions.map(chargeVersion => ({ chargeVersion, batch, financialYear, transactionType, isSummer }));
+  const chargeVersionsWithContext = chargeVersions.map(chargeVersion => ({ chargeVersion, batch, transactionType, isSummer }));
 
   const filteredChargeVersionYears = (await bluebird.filter(
     chargeVersionsWithContext,
