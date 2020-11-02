@@ -192,8 +192,11 @@ class Return extends Model {
     return this._abstractionPeriod;
   }
 
+  /**
+   * @todo should we allow a null abs period to be defined in the service as in NALD?
+   */
   set abstractionPeriod (abstractionPeriod) {
-    validators.assertIsInstanceOf(abstractionPeriod, AbstractionPeriod);
+    validators.assertIsNullableInstanceOf(abstractionPeriod, AbstractionPeriod);
     this._abstractionPeriod = abstractionPeriod;
   }
 

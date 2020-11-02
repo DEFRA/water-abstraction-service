@@ -5,18 +5,28 @@ const { get } = require('lodash');
 const AbstractionPeriod = require('../models/abstraction-period');
 const Return = require('../models/return');
 const DateRange = require('../models/date-range');
+const { transformNull } = require('@envage/water-abstraction-helpers').nald;
+
+/**
+ *
+ * @param {Object} nald data from the "nald" property of returns.returns.metadata
+ * @return {AbstractionPeriod|null}
+ */
+const mapAbsPeriod = ({ periodStartDay, periodStartMonth, periodEndDay, periodEndMonth }) => {
+  const values = [periodStartDay, periodStartMonth, periodEndDay, periodEndMonth];
+  if (values.includes(null)) {
+    return null;
+  }
+  return new AbstractionPeriod().fromHash({
+    startDay: periodStartDay,
+    startMonth: periodStartMonth,
+    endDay: periodEndDay,
+    endMonth: periodEndMonth
+  });
+};
 
 const returnsServiceToModel = (ret, returnRequirement) => {
-  const { nald } = ret.metadata;
-
-  // Create abs period
-  const abstractionPeriod = new AbstractionPeriod();
-  abstractionPeriod.fromHash({
-    startDay: nald.periodStartDay,
-    startMonth: nald.periodStartMonth,
-    endDay: nald.periodEndDay,
-    endMonth: nald.periodEndMonth
-  });
+  const nald = transformNull(ret.metadata.nald);
 
   const r = new Return(ret.return_id);
   return r.fromHash({
@@ -26,7 +36,7 @@ const returnsServiceToModel = (ret, returnRequirement) => {
     dueDate: ret.due_date,
     receivedDate: ret.received_date,
     status: ret.status,
-    abstractionPeriod,
+    abstractionPeriod: mapAbsPeriod(nald),
     returnRequirement
   });
 };
