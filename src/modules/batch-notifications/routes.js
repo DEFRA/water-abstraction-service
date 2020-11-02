@@ -16,7 +16,7 @@ module.exports = {
       description: 'Prepares a batch message for sending by getting recipients',
       validate: {
         params: {
-          messageType: Joi.string().allow(messageTypes)
+          messageType: Joi.string().valid(messageTypes)
         },
         payload: {
           issuer: Joi.string().email().required(),

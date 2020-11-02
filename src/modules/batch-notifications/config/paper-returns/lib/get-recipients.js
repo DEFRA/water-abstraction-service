@@ -1,33 +1,16 @@
 'use strict';
 
+const { logger } = require('../../../../../logger');
 const returnsService = require('../../../../../lib/services/returns/api-connector');
 const ScheduledNotification = require('../../../../../lib/models/scheduled-notification');
 const scheduledNotificationService = require('../../../../../lib/services/scheduled-notifications');
-const { COMPANY_TYPES } = require('../../../../../lib/models/company');
+const eventHelpers = require('../../../lib/event-helpers');
+const sendBatch = require('../../../lib/send-batch');
 
-const getContactPersonalisation = (company, contact) => {
-  if (company.type === COMPANY_TYPES.organisation) {
-    return { name: company.name };
-  }
-
-  return {
-    salutation: contact.title,
-    forename: contact.firstName,
-    initials: contact.initials,
-    name: contact.lastName
-  };
-};
-
-const getAddressPersonalisation = address => ({
-  address_line_1: address.addressLine1,
-  address_line_2: address.addressLine2,
-  address_line_3: address.addressLine3,
-  address_line_4: address.addressLine4,
-  county: address.county,
-  country: address.country,
-  postcode: address.postcode,
-  town: address.town
-});
+const addressMapper = require('../../../../../lib/mappers/address');
+const contactMapper = require('../../../../../lib/mappers/contact');
+const companyMapper = require('../../../../../lib/mappers/company');
+const notifyMapper = require('../../../../../lib/mappers/notify');
 
 const getReturnPersonalisation = ret => {
   const metadata = ret.metadata || {};
@@ -51,21 +34,35 @@ const getReturnPersonalisation = ret => {
 
 const getPersonalisationsForReturn = (company, address, contact, ret) => {
   return {
-    ...getContactPersonalisation(company, contact),
-    ...getAddressPersonalisation(address),
+    ...notifyMapper.mapModelsToNotifyAddress({ address, company, contact }),
     ...getReturnPersonalisation(ret)
   };
 };
 
+const mapServiceModels = form => {
+  try {
+    return {
+      company: companyMapper.pojoToModel(form.company),
+      address: addressMapper.pojoToModel(form.address),
+      contact: contactMapper.pojoToModel(form.contact)
+    };
+  } catch (err) {
+    logger.error('Failed to map return form contact to service models', form);
+    throw err;
+  }
+};
+
 const getPersonalisationsForForm = async form => {
   const personalisations = [];
-  const { company, address, contact, returns } = form;
+  const { returns } = form;
+
+  const { company, address, contact } = mapServiceModels(form);
+
   const returnIds = returns.map(ret => ret.returnId);
 
   for (const returnId of returnIds) {
     const fullReturn = await returnsService.getReturnById(returnId);
     const personalisation = getPersonalisationsForReturn(company, address, contact, fullReturn);
-
     personalisations.push(personalisation);
   }
 
@@ -94,6 +91,9 @@ const getRecipients = async (eventData) => {
   const event = eventData.ev;
   const { forms } = event.metadata.options;
 
+  let recipientCount = 0;
+  const licenceNumbers = [];
+
   for (const form of forms) {
     const personalisations = await getPersonalisationsForForm(form);
 
@@ -103,10 +103,20 @@ const getRecipients = async (eventData) => {
       notification.messageRef = 'pdf.return_form';
       notification.messageType = 'letter';
       notification.eventId = event.id;
+      notification.licences = [personalisation.licence_ref];
 
       await scheduledNotificationService.createScheduledNotification(notification);
+
+      recipientCount++;
+      licenceNumbers.push(personalisation.licence_ref);
     }
   }
+
+  // Update event status to 'processed'
+  await eventHelpers.markAsProcessed(event.id, licenceNumbers, recipientCount);
+
+  // Send immediately without user confirmation
+  await sendBatch.send(event.id, event.issuer);
 };
 
 exports.getRecipients = getRecipients;

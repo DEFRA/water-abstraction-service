@@ -34,7 +34,7 @@ const schema = Joi.object({
       department: OPTIONAL_NULLABLE_STRING,
       type: OPTIONAL_NULLABLE_STRING,
       dataSource: OPTIONAL_NULLABLE_STRING
-    }).unknown().required(),
+    }).unknown().allow(null).required(),
     returns: Joi.array().items(Joi.object({
       returnId: Joi.string().regex(returnIDRegex).required()
     }).unknown()).required()
