@@ -100,13 +100,17 @@ const isRequiredInTwoPartTariffBillRun = async context => {
   return isTwoPartNeeded(chargeVersion, financialYear, batch.isSummer);
 };
 
+const isRequiredInTwoPartTariffSupplementary = async (chargeVersion, financialYear, isSummer) =>
+  (!chargeVersion.isTwoPartTariff)
+    ? false
+    : isTwoPartNeeded(chargeVersion, financialYear, isSummer);
+
 const isRequiredInSupplementaryBillRun = async context => {
   const { chargeVersion, transactionType, financialYear, isSummer } = context;
   if (chargeVersion.includeInSupplementaryBilling) {
     // recreating a TPT run?
     if (transactionType === TRANSACTION_TYPE.twoPartTariff) {
-      if (!chargeVersion.isTwoPartTariff) return false;
-      return isTwoPartNeeded(chargeVersion, financialYear, isSummer);
+      return isRequiredInTwoPartTariffSupplementary(chargeVersion, financialYear, isSummer);
     }
     return true;
   }
