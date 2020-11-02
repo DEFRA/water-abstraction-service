@@ -13,8 +13,23 @@ create table water.billing_batch_charge_versions (
 alter table water.billing_batch_charge_versions
   add constraint uniq_batch_charge_version unique(billing_batch_id, charge_version_id);
 
+alter table water.billing_batch_charge_version_years drop constraint uniq_batch_charge_version_year_transaction_type_season;
+
 alter table water.billing_batch_charge_version_years
-  drop column transaction_type,
-  drop column is_summer;
+  drop column if exists transaction_type,
+  drop column if exists is_summer;
+
+/* Remove duplicate records after dropping transaction_type and is_summer columns */
+delete from water.billing_batch_charge_version_years
+where billing_batch_charge_version_year_id in
+    (select billing_batch_charge_version_year_id
+    from 
+        (select billing_batch_charge_version_year_id,
+         ROW_NUMBER() over(partition by billing_batch_id, charge_version_id, financial_year_ending) AS row_num
+        from water.billing_batch_charge_version_years ) y
+        where y.row_num > 1);
+
+alter table water.billing_batch_charge_version_years
+  add constraint uniq_batch_charge_version_year unique(billing_batch_id, charge_version_id, financial_year_ending);
 
 drop type if exists water.charge_version_years_transaction_type;
