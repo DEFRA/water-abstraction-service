@@ -193,7 +193,9 @@ class Return extends Model {
   }
 
   /**
-   * @todo should we allow a null abs period to be defined in the service as in NALD?
+   * A null is permitted here as the abs period start/end day/month properties
+   * can be either all set or all null in NALD
+   * @param {AbstractionPeriod|null}
    */
   set abstractionPeriod (abstractionPeriod) {
     validators.assertIsNullableInstanceOf(abstractionPeriod, AbstractionPeriod);

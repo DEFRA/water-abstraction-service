@@ -8,7 +8,8 @@ const DateRange = require('../models/date-range');
 const { transformNull } = require('@envage/water-abstraction-helpers').nald;
 
 /**
- *
+ * Maps data from the `nald` property of the returns metadata to either an
+ * AbstractionPeriod service model or null
  * @param {Object} nald data from the "nald" property of returns.returns.metadata
  * @return {AbstractionPeriod|null}
  */
