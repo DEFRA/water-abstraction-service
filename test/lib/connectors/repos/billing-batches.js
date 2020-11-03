@@ -320,4 +320,67 @@ experiment('lib/connectors/repos/billing-batches', () => {
       expect(model.toJSON.called).to.be.true();
     });
   });
+
+  experiment('.findSentBatchesForRegion', () => {
+    experiment('when no filters or related models are passed in', () => {
+      beforeEach(async () => {
+        await billingBatches.findSentBatchesForRegion('region-id');
+      });
+
+      test('forges a model', async () => {
+        expect(BillingBatch.forge.called).to.be.true();
+      });
+
+      test('calls where with correct parameters', async () => {
+        const [filters] = stub.where.lastCall.args;
+        expect(filters.status).to.equal(BATCH_STATUS.sent);
+        expect(filters.region_id).to.equal('region-id');
+      });
+
+      test('calls fetchAll with correct parameters', async () => {
+        const [params] = stub.fetchAll.lastCall.args;
+        expect(params.withRelated).to.equal(['region']);
+      });
+
+      test('calls .toJSON() on the result', async () => {
+        expect(model.toJSON.called).to.be.true();
+      });
+    });
+
+    experiment('when optional filters are passed in', () => {
+      beforeEach(async () => {
+        await billingBatches.findSentBatchesForRegion(
+          'region-id',
+          { batch_type: 'annual', to_financial_year_ending: 2020 }
+        );
+      });
+
+      test('calls where with expected parameters', async () => {
+        const [filters] = stub.where.lastCall.args;
+        expect(filters.status).to.equal(BATCH_STATUS.sent);
+        expect(filters.region_id).to.equal('region-id');
+        expect(filters.batch_type).to.equal('annual');
+        expect(filters.to_financial_year_ending).to.equal(2020);
+      });
+    });
+
+    experiment('when related models are provided', () => {
+      beforeEach(async () => {
+        await billingBatches.findSentBatchesForRegion('region-id', {}, [
+          'billingInvoices',
+          'billingInvoices.billingInvoiceLicences',
+          'billingInvoices.billingInvoiceLicences.licence'
+        ]);
+      });
+
+      test('calls fetchAll with expected parameters', async () => {
+        const [params] = stub.fetchAll.lastCall.args;
+        expect(params.withRelated).to.equal([
+          'billingInvoices',
+          'billingInvoices.billingInvoiceLicences',
+          'billingInvoices.billingInvoiceLicences.licence'
+        ]);
+      });
+    });
+  });
 });

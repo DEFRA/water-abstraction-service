@@ -113,39 +113,37 @@ const create = async data => {
   return model.toJSON();
 };
 
+const findSentBatchesForRegion = async (regionId, optionalFilters = {}, withRelated = ['region']) => {
+  const filters = {
+    status: BATCH_STATUS.sent,
+    region_id: regionId,
+    ...optionalFilters
+  };
+
+  const batches = await BillingBatch
+    .forge()
+    .where(filters)
+    .fetchAll({ withRelated });
+
+  return batches.toJSON();
+};
+
 const findSentTPTBatchesForFinancialYearAndRegion = async (financialYear, regionId) => {
   const filters = {
-    status: BATCH_STATUS.sent,
     batch_type: BATCH_TYPE.twoPartTariff,
-    to_financial_year_ending: financialYear,
-    region_id: regionId
+    to_financial_year_ending: financialYear
   };
-  const batches = await BillingBatch
-    .forge()
-    .where(filters)
-    .fetchAll({
-      withRelated: [
-        'billingInvoices',
-        'billingInvoices.billingInvoiceLicences',
-        'billingInvoices.billingInvoiceLicences.licence'
-      ]
-    });
+  const withRelated = [
+    'billingInvoices',
+    'billingInvoices.billingInvoiceLicences',
+    'billingInvoices.billingInvoiceLicences.licence'
+  ];
 
-  return batches.toJSON();
+  return findSentBatchesForRegion(regionId, filters, withRelated);
 };
 
-const findSentTPTBatchesForRegion = async regionId => {
-  const filters = {
-    status: BATCH_STATUS.sent,
-    batch_type: BATCH_TYPE.twoPartTariff,
-    region_id: regionId
-  };
-  const batches = await BillingBatch
-    .forge()
-    .where(filters)
-    .fetchAll();
-  return batches.toJSON();
-};
+const findSentTPTBatchesForRegion = async regionId =>
+  findSentBatchesForRegion(regionId, { batch_type: BATCH_TYPE.twoPartTariff });
 
 exports.delete = deleteById;
 exports.findByStatuses = findByStatuses;
@@ -157,3 +155,4 @@ exports.findOneWithInvoicesWithTransactions = findOneWithInvoicesWithTransaction
 exports.create = create;
 exports.findSentTPTBatchesForFinancialYearAndRegion = findSentTPTBatchesForFinancialYearAndRegion;
 exports.findSentTPTBatchesForRegion = findSentTPTBatchesForRegion;
+exports.findSentBatchesForRegion = findSentBatchesForRegion;

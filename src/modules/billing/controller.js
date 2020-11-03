@@ -17,7 +17,7 @@ const mappers = require('./mappers');
 
 /**
  * Resource that will create a new batch skeleton which will
- * then be asyncronously populated with charge versions by a
+ * then be asynchronously populated with charge versions by a
  * job that is added to the queue.
  *
  * @param {Object} request HAPI request object

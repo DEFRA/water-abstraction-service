@@ -76,12 +76,13 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(logger, 'info');
 
     sandbox.stub(newRepos.billingBatches, 'delete').resolves();
-    sandbox.stub(newRepos.billingBatches, 'findByStatuses');
+    sandbox.stub(newRepos.billingBatches, 'findByStatuses').resolves([]);
     sandbox.stub(newRepos.billingBatches, 'findOne').resolves(data.batch);
     sandbox.stub(newRepos.billingBatches, 'findPage').resolves();
     sandbox.stub(newRepos.billingBatches, 'update').resolves();
     sandbox.stub(newRepos.billingBatches, 'create').resolves();
     sandbox.stub(newRepos.billingBatches, 'findOneWithInvoicesWithTransactions').resolves();
+    sandbox.stub(newRepos.billingBatches, 'findSentBatchesForRegion').resolves([]);
 
     sandbox.stub(newRepos.billingInvoices, 'deleteEmptyByBatchId').resolves();
     sandbox.stub(newRepos.billingInvoices, 'deleteByBatchId').resolves();
@@ -654,6 +655,62 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
+  experiment('.getDuplicateSentBatch', () => {
+    let result;
+    let regionId;
+
+    beforeEach(async () => {
+      regionId = '44444444-0000-0000-0000-000000000000';
+      newRepos.billingBatches.findSentBatchesForRegion.resolves([
+        {
+          billingBatchId: '11111111-0000-0000-0000-000000000000',
+          regionId,
+          batchType: 'annual',
+          toFinancialYearEnding: 2020,
+          isSummer: false,
+          status: 'sent',
+          region: {
+            regionId,
+            chargeRegionId: 'A',
+            naldRegionId: 1,
+            name: 'Anglian',
+            displayName: 'Anglian'
+          }
+        },
+        {
+          billingBatchId: '33333333-0000-0000-0000-000000000000',
+          regionId,
+          batchType: 'two_part_tariff',
+          toFinancialYearEnding: 2020,
+          isSummer: false,
+          status: 'sent',
+          region: {
+            regionId,
+            chargeRegionId: 'A',
+            naldRegionId: 1,
+            name: 'Anglian',
+            displayName: 'Anglian'
+          }
+        }
+      ]);
+
+      result = await batchService.getDuplicateSentBatch(regionId, 'annual', 2020, false);
+    });
+
+    test('gets sent batches for region', async () => {
+      const [id] = newRepos.billingBatches.findSentBatchesForRegion.lastCall.args;
+      expect(id).to.equal(regionId);
+    });
+
+    test('returns the expected batch', async () => {
+      expect(result.id).to.equal('11111111-0000-0000-0000-000000000000');
+    });
+
+    test('returns a service layer model', async () => {
+      expect(result).to.be.instanceOf(Batch);
+    });
+  });
+
   experiment('.decorateBatchWithTotals', () => {
     let batch;
 
@@ -891,17 +948,59 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('the function rejects', async () => {
-        const func = () => batchService.create(regionId, 'supplementary', 2019, 'all-year');
+        const func = () => batchService.create(regionId, 'supplementary', 2019, false);
         expect(func()).to.reject();
       });
 
-      test('the error includes a message and the existing batch', async () => {
+      test('a Boom Conflict error is thrown with expected message and batch', async () => {
         try {
-          await batchService.create(regionId, 'supplementary', 2019, 'all-year');
+          await batchService.create(regionId, 'supplementary', 2019, false);
           fail();
         } catch (err) {
+          expect(err.isBoom).to.be.true();
+          expect(err.output.statusCode).to.equal(409);
           expect(err.message).to.equal(`Batch already live for region ${regionId}`);
-          expect(err.existingBatch.id).to.equal(existingBatchId);
+          expect(err.output.payload.batch.id).to.equal(existingBatchId);
+        }
+      });
+    });
+
+    experiment('when there is a duplicate sent batch', async () => {
+      const existingBatchId = uuid();
+      const regionId = uuid();
+
+      beforeEach(async () => {
+        newRepos.billingBatches.findSentBatchesForRegion.resolves([{
+          billingBatchId: existingBatchId,
+          batchType: 'annual',
+          toFinancialYearEnding: 2019,
+          isSummer: false,
+          status: 'sent',
+          regionId,
+          region: {
+            regionId,
+            chargeRegionId: 'A',
+            naldRegionId: 1,
+            name: 'Anglian',
+            displayName: 'Anglian'
+          }
+        }]);
+      });
+
+      test('the function rejects', async () => {
+        const func = () => batchService.create(regionId, 'annual', 2019, false);
+        expect(func()).to.reject();
+      });
+
+      test('a Boom Conflict error is thrown with expected message and batch', async () => {
+        try {
+          await batchService.create(regionId, 'annual', 2019, false);
+          fail();
+        } catch (err) {
+          expect(err.isBoom).to.be.true();
+          expect(err.output.statusCode).to.equal(409);
+          expect(err.message).to.equal(`Annual batch already sent for: region ${regionId}, financial year 2019, isSummer false`);
+          expect(err.output.payload.batch.id).to.equal(existingBatchId);
         }
       });
     });
@@ -1075,7 +1174,7 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.deleteBatchinvoice', () => {
+  experiment('.deleteBatchInvoice', () => {
     let batch, invoiceId;
 
     experiment('when the batch is not in "ready" status', () => {
