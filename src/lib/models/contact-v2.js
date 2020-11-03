@@ -114,6 +114,10 @@ class Contact extends Model {
    * @return {String}
    */
   get fullName () {
+    if (this.type === CONTACT_TYPES.department) {
+      return this.department;
+    }
+
     const initials = this._dataSource === DATA_SOURCE_TYPES.nald ? this._initials : getInitials(this._firstName, this._middleInitials);
 
     const parts = [this._title, initials || this._firstName, this._lastName, this._suffix];

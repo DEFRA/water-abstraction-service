@@ -9,4 +9,7 @@ module.exports = bookshelf.model('ScheduledNotification', {
   hasTimestamps: ['date_created'],
 
   idAttribute: 'id'
+
+}, {
+  jsonColumns: ['licences']
 });

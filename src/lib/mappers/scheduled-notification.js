@@ -9,7 +9,10 @@ const dbToModel = dbRow => {
     'messageType',
     'messageRef',
     'personalisation',
-    'eventId'
+    'eventId',
+    'licences',
+    'status',
+    'notifyStatus'
   ]);
 };
 
@@ -20,7 +23,10 @@ const modelToDb = scheduledNotification => {
     'messageRef',
     'messageType',
     'personalisation',
-    'eventId'
+    'eventId',
+    'licences',
+    'status',
+    'notifyStatus'
   ]);
 };
 
