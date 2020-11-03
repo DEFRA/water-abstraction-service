@@ -15,6 +15,8 @@ const chargeVersionService = require('../../../../../src/lib/services/charge-ver
 const batchService = require('../../../../../src/modules/billing/services/batch-service');
 const billingVolumeService = require('../../../../../src/modules/billing/services/billing-volumes-service');
 
+const invoiceAccountsConnector = require('../../../../../src/lib/connectors/crm-v2/invoice-accounts');
+
 const data = require('./data');
 
 const companyId = uuid();
@@ -123,8 +125,7 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
     sandbox.stub(crmV2.documents, 'getDocuments').resolves(crmData.documents);
     sandbox.stub(crmV2.documents, 'getDocument').resolves(crmData.document);
     sandbox.stub(crmV2.companies, 'getCompany').resolves(crmData.company);
-    sandbox.stub(crmV2.invoiceAccounts, 'getInvoiceAccountById').resolves(crmData.invoiceAccount);
-
+    sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountById').resolves(crmData.invoiceAccount);
     sandbox.stub(chargeVersionService, 'getByChargeVersionId');
     sandbox.stub(batchService, 'getSentTPTBatchesForFinancialYearAndRegion');
     sandbox.stub(billingVolumeService, 'getVolumesForChargeElements').resolves([]);
@@ -168,7 +169,7 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
       });
 
       test('the invoice account for the charge version is loaded', async () => {
-        expect(crmV2.invoiceAccounts.getInvoiceAccountById.calledWith(
+        expect(invoiceAccountsConnector.getInvoiceAccountById.calledWith(
           chargeVersion.invoiceAccount.id
         )).to.be.true();
       });
