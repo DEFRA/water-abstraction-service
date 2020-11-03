@@ -341,6 +341,14 @@ class Transaction extends Model {
   get isDeMinimis () {
     return this._isDeMinimis;
   }
+
+  /**
+   * Checks if the transaction is in error status
+   * @return {Boolean}
+   */
+  get isErrorStatus () {
+    return this.status === statuses.error;
+  }
 }
 
 module.exports = Transaction;
