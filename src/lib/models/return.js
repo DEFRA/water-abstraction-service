@@ -192,8 +192,13 @@ class Return extends Model {
     return this._abstractionPeriod;
   }
 
+  /**
+   * A null is permitted here as the abs period start/end day/month properties
+   * can be either all set or all null in NALD
+   * @param {AbstractionPeriod|null}
+   */
   set abstractionPeriod (abstractionPeriod) {
-    validators.assertIsInstanceOf(abstractionPeriod, AbstractionPeriod);
+    validators.assertIsNullableInstanceOf(abstractionPeriod, AbstractionPeriod);
     this._abstractionPeriod = abstractionPeriod;
   }
 
