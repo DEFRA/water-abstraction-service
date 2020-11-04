@@ -64,6 +64,18 @@ class InvoiceLicence extends Model {
   get invoiceId () {
     return this._invoiceId;
   }
+
+  get hasTransactionErrors () {
+    return this.transactions.some(transaction => transaction.isErrorStatus);
+  }
+
+  toJSON () {
+    const { hasTransactionErrors } = this;
+    return {
+      hasTransactionErrors,
+      ...super.toJSON()
+    };
+  }
 }
 
 module.exports = InvoiceLicence;

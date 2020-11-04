@@ -90,6 +90,7 @@ experiment('modules/billing/jobs/create-charge', () => {
   beforeEach(async () => {
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
+    sandbox.stub(batchJob, 'logHandlingError');
 
     batch = new Batch();
     batch.fromHash(data.batch);
@@ -181,8 +182,34 @@ experiment('modules/billing/jobs/create-charge', () => {
       });
     });
 
-    experiment('when there is an error', () => {
+    experiment('when there is 4xx error in the charge module', () => {
       const err = new Error('Test error');
+      err.statusCode = 422;
+
+      beforeEach(async () => {
+        chargeModuleBillRunConnector.addTransaction.rejects(err);
+        await createChargeJob.handler(job);
+      });
+
+      test('sets the transaction status to error', async () => {
+        const [id] = transactionService.setErrorStatus.lastCall.args;
+        expect(id).to.equal(data.transaction.billing_transaction_id);
+      });
+
+      test('the error is logged', async () => {
+        expect(batchJob.logHandlingError.calledWith(
+          job, err
+        )).to.be.true();
+      });
+
+      test('the batch status is not set to "error"', async () => {
+        expect(batchService.setErrorStatus.called).to.be.false();
+      });
+    });
+
+    experiment('when there is a 5xx error', () => {
+      const err = new Error('Test error');
+      err.statusCode = 500;
       let error;
 
       beforeEach(async () => {
@@ -196,11 +223,16 @@ experiment('modules/billing/jobs/create-charge', () => {
         expect(id).to.equal(data.transaction.billing_transaction_id);
       });
 
-      test('the error is logged and batch marked as error status', async () => {
-        const { args } = batchJob.logHandlingErrorAndSetBatchStatus.lastCall;
-        expect(args[0]).to.equal(job);
-        expect(args[1] instanceof Error).to.be.true();
-        expect(args[2]).to.equal(Batch.BATCH_ERROR_CODE.failedToCreateCharge);
+      test('the error is logged', async () => {
+        expect(batchJob.logHandlingError.calledWith(
+          job, err
+        )).to.be.true();
+      });
+
+      test('the batch status is set to "error"', async () => {
+        expect(batchService.setErrorStatus.calledWith(
+          batchId, Batch.BATCH_ERROR_CODE.failedToCreateCharge
+        )).to.be.true();
       });
 
       test('re-throws the error', async () => {

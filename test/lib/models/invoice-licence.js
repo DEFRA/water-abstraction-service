@@ -153,4 +153,35 @@ experiment('lib/models/invoice-licence', () => {
       expect(func).to.throw();
     });
   });
+
+  experiment('.hasTransactionErrors', () => {
+    test('is false when no underlying transactions have errors', async () => {
+      const invoiceLicence = new InvoiceLicence().fromHash({
+        transactions: [
+          new Transaction(),
+          new Transaction()
+        ]
+      });
+      expect(invoiceLicence.hasTransactionErrors).to.be.false();
+    });
+
+    test('is true when underlying transactions have errors', async () => {
+      const invoiceLicence = new InvoiceLicence().fromHash({
+        transactions: [
+          new Transaction(),
+          new Transaction().fromHash({ status: Transaction.statuses.error })
+        ]
+      });
+      expect(invoiceLicence.hasTransactionErrors).to.be.true();
+    });
+  });
+
+  experiment('.toJSON', () => {
+    test('includes the "hasTransactionErrors" property', async () => {
+      invoiceLicence = new InvoiceLicence();
+      expect(
+        Object.keys(invoiceLicence.toJSON())
+      ).to.include('hasTransactionErrors');
+    });
+  });
 });
