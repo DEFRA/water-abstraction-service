@@ -29,6 +29,11 @@ where billing_batch_charge_version_year_id in
         from water.billing_batch_charge_version_years ) y
         where y.row_num > 1);
 
+/* Populate water.billing_charge_versions from water.billing_charge_version_years */
+insert into water.billing_batch_charge_versions (billing_batch_id, charge_version_id) 
+select distinct billing_batch_id, charge_version_id
+from water.billing_batch_charge_version_years;
+
 alter table water.billing_batch_charge_version_years
   add constraint uniq_batch_charge_version_year unique(billing_batch_id, charge_version_id, financial_year_ending);
 
