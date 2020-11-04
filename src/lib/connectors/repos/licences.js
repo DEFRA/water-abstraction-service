@@ -23,7 +23,7 @@ const findOne = async licenceId => {
   return model ? model.toJSON() : null;
 };
 
-const findByLicenceRef = async licenceRef => {
+const findOneByLicenceRef = async licenceRef => {
   const model = await Licence
     .forge()
     .where({ licence_ref: licenceRef })
@@ -32,6 +32,20 @@ const findByLicenceRef = async licenceRef => {
     });
 
   return model.toJSON();
+};
+
+/**
+ * Finds many licences by licence ref array
+ * @param {Array<String>} licenceNumbers
+ */
+const findByLicenceRef = async licenceNumbers => {
+  const collection = await Licence
+    .forge()
+    .where('licence_ref', 'in', licenceNumbers)
+    .fetchAll({
+      withRelated: ['region']
+    });
+  return collection.toJSON();
 };
 
 /**
@@ -81,9 +95,16 @@ const updateIncludeInSupplementaryBillingStatusForBatch = (batchId, from, to) =>
     .raw(queries.updateIncludeInSupplementaryBillingStatusForBatch, params);
 };
 
+const findWithoutChargeVersions = startDate =>
+  raw.multiRow(queries.getLicencesWithoutChargeVersions, {
+    startDate
+  });
+
 exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview;
-exports.findByLicenceRef = findByLicenceRef;
+exports.findOneByLicenceRef = findOneByLicenceRef;
 exports.findOne = findOne;
+exports.findByLicenceRef = findByLicenceRef;
+exports.findWithoutChargeVersions = findWithoutChargeVersions;
 
 exports.update = update;
 exports.updateIncludeLicenceInSupplementaryBilling = updateIncludeLicenceInSupplementaryBilling;

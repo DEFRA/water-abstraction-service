@@ -1,10 +1,13 @@
 'use strict';
 
 const InvoiceAccount = require('../models/invoice-account');
+const DateRange = require('../models/date-range');
 
 const companyMapper = require('./company');
-const invoiceAccountAddress = require('./invoice-account-address');
-
+const invoiceAccountAddressMapper = require('./invoice-account-address');
+const dateRangeMapper = require('./date-range');
+const { createMapper } = require('../object-mapper');
+const { createModel } = require('./lib/helpers');
 /**
  * Maps CRM invoice account and (optionally) company data to a water service model
  * @param {Object} invoiceAccount - CRM invoice account data
@@ -14,25 +17,34 @@ const invoiceAccountAddress = require('./invoice-account-address');
 const crmToModel = invoiceAccount => {
   const invoiceAccountModel = new InvoiceAccount(invoiceAccount.invoiceAccountId);
   invoiceAccountModel.fromHash({
+    dateRange: new DateRange(invoiceAccount.startDate, invoiceAccount.endDate),
     accountNumber: invoiceAccount.invoiceAccountNumber,
     company: companyMapper.crmToModel(invoiceAccount.company)
   });
 
   if (invoiceAccount.invoiceAccountAddresses) {
-    invoiceAccountModel.invoiceAccountAddresses = invoiceAccount.invoiceAccountAddresses.map(invoiceAccountAddress.crmToModel);
+    invoiceAccountModel.invoiceAccountAddresses = invoiceAccount.invoiceAccountAddresses.map(invoiceAccountAddressMapper.crmToModel);
   }
 
   return invoiceAccountModel;
 };
 
-const pojoToModel = object => {
-  const model = new InvoiceAccount();
-  model.pickFrom(object, ['id', 'accountNumber']);
-  if (object.company) {
-    model.company = companyMapper.pojoToModel(object.company);
-  }
-  return model;
-};
+const pojoToModelMapper = createMapper()
+  .copy(
+    'id',
+    'accountNumber'
+  )
+  .map('company').to('company', companyMapper.pojoToModel)
+  .map('dateRange').to('dateRange', dateRangeMapper.pojoToModel)
+  .map('invoiceAccountAddresses').to('invoiceAccountAddresses',
+    invoiceAccountAddresses => invoiceAccountAddresses.map(invoiceAccountAddressMapper.pojoToModel));
+
+/**
+ * Converts a plain object representation of a InvoiceAccount to a InvoiceAccount model
+ * @param {Object} pojo
+ * @return InvoiceAccount
+ */
+const pojoToModel = pojo => createModel(InvoiceAccount, pojo, pojoToModelMapper);
 
 exports.crmToModel = crmToModel;
 exports.pojoToModel = pojoToModel;

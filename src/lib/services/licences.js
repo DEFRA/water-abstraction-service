@@ -1,5 +1,6 @@
 'use strict';
 
+const config = require('../../../config');
 const repos = require('../connectors/repos');
 const licenceMapper = require('../mappers/licence');
 const invoiceAccountsMapper = require('../mappers/invoice-account');
@@ -27,11 +28,19 @@ const getLicenceById = async licenceId =>
  * @param {Number} regionCode
  */
 const getLicenceByLicenceRef = async (licenceRef, regionCode) => {
-  const licences = await repos.licences.findByLicenceRef(licenceRef);
+  const licences = await repos.licences.findOneByLicenceRef(licenceRef);
   const licence = licences.find(licence => licence.region.naldRegionId === +regionCode);
 
   return licence ? licenceMapper.dbToModel(licence) : null;
 };
+
+/**
+ * Gets an array of licences by IDs
+ * @param {Array<String>} licenceRefs
+ * @return {Promise<Array>} array of Licence service models
+ */
+const getLicencesByLicenceRefs = licenceRefs =>
+  service.findMany(licenceRefs, repos.licences.findByLicenceRef, licenceMapper);
 
 const getLicenceVersions = async licenceId =>
   service.findMany(
@@ -120,11 +129,18 @@ const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
 const flagForSupplementaryBilling = licenceId =>
   repos.licences.update(licenceId, { includeInSupplementaryBilling: INCLUDE_IN_SUPPLEMENTARY_BILLING.yes });
 
+const getLicencesWithoutChargeVersions = async () => {
+  const licences = await repos.licences.findWithoutChargeVersions(config.licences.withChargeVersionsStartDate);
+  return licences.map(licenceMapper.dbToModel);
+};
+
 exports.getLicenceById = getLicenceById;
+exports.getLicencesByLicenceRefs = getLicencesByLicenceRefs;
 exports.getLicenceVersionById = getLicenceVersionById;
 exports.getLicenceVersions = getLicenceVersions;
 exports.getLicenceByLicenceRef = getLicenceByLicenceRef;
 exports.getLicenceAccountsByRefAndDate = getLicenceAccountsByRefAndDate;
+exports.getLicencesWithoutChargeVersions = getLicencesWithoutChargeVersions;
 exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementaryBillingStatus;
 exports.updateIncludeInSupplementaryBillingStatusForUnsentBatch = updateIncludeInSupplementaryBillingStatusForUnsentBatch;
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch;

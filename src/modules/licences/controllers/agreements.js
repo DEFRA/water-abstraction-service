@@ -9,6 +9,16 @@ const controller = require('../../../lib/controller');
 const getAgreement = async request =>
   controller.getEntity(request.params.agreementId, licenceAgreementsService.getLicenceAgreementById);
 
+const patchAgreement = async request => {
+  const { agreementId } = request.params;
+  const { internalCallingUserModel: issuer } = request.defra;
+  try {
+    return licenceAgreementsService.patchLicenceAgreement(agreementId, request.payload, issuer);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
 /**
  * Get all licence agreements for the specified licence
  * @param {Licence} request.pre.licence
@@ -49,6 +59,7 @@ const postLicenceAgreement = async (request, h) => {
 };
 
 exports.getAgreement = getAgreement;
+exports.patchAgreement = patchAgreement;
 exports.getLicenceAgreements = getLicenceAgreements;
 exports.deleteAgreement = deleteAgreement;
 exports.postLicenceAgreement = postLicenceAgreement;

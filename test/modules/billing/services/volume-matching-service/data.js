@@ -9,6 +9,8 @@ const PurposeUse = require('../../../../../src/lib/models/purpose-use');
 const Return = require('../../../../../src/lib/models/return');
 const ReturnVersion = require('../../../../../src/lib/models/return-version');
 const ReturnLine = require('../../../../../src/lib/models/return-line');
+const ReturnRequirement = require('../../../../../src/lib/models/return-requirement');
+const ReturnRequirementPurpose = require('../../../../../src/lib/models/return-requirement-purpose');
 const DateRange = require('../../../../../src/lib/models/date-range');
 const ChargeVersion = require('../../../../../src/lib/models/charge-version');
 const ChargeElement = require('../../../../../src/lib/models/charge-element');
@@ -45,11 +47,23 @@ const createReturn = (abstractionPeriod, purposeUses, isSummer = false, options 
     returnLines: createReturnLines()
   });
 
+  const returnRequirementPurposes = purposeUses.map(purposeUse => {
+    const returnRequirementPurpose = new ReturnRequirementPurpose();
+    return returnRequirementPurpose.fromHash({
+      purposeUse
+    });
+  });
+
+  const returnRequirement = new ReturnRequirement();
+  returnRequirement.fromHash({
+    returnRequirementPurposes
+  });
+
   const ret = new Return();
   return ret.fromHash({
     dateRange: chargePeriod,
     abstractionPeriod,
-    purposeUses,
+    returnRequirement,
     status: options.status || Return.RETURN_STATUS.completed,
     dueDate: '2020-04-28',
     receivedDate: '2020-04-15',

@@ -12,7 +12,7 @@ const { expect } = require('@hapi/code');
 const routes = require('../../../../src/modules/charge-versions/routes/charge-version-workflows');
 const testHelpers = require('../../../test-helpers');
 
-const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowApprover } } = require('../../../../src/lib/roles');
+const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer } } = require('../../../../src/lib/roles');
 
 const makeRequest = (method, url) => ({
   method,
@@ -57,16 +57,30 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
     });
 
     test('http 200 OK when user has workflow approver scope', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(200);
     });
 
     test('http 400 bad request when the defra-internal-user-id is invalid', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       request.headers['defra-internal-user-id'] = 'invalid';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
+    });
+
+    test('http 400 bad request when the licence id is invalid', async () => {
+      request.auth.credentials.scope = [chargeVersionWorkflowEditor];
+      request.url = '/water/1.0/charge-version-workflows?licenceId=not-a-guid';
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
+    test('http 200 OK when the licence id is valid', async () => {
+      request.auth.credentials.scope = [chargeVersionWorkflowEditor];
+      request.url = `/water/1.0/charge-version-workflows?licenceId=${uuid()}`;
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
     });
   });
 
@@ -91,13 +105,13 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
     });
 
     test('http 200 OK when user has workflow approver scope', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(200);
     });
 
     test('http 400 bad request when the defra-internal-user-id is invalid', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       request.headers['defra-internal-user-id'] = 'invalid';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
@@ -133,27 +147,27 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
     });
 
     test('http 200 OK when user has workflow approver scope', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(200);
     });
 
     test('http 400 bad request when the defra-internal-user-id is invalid', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       request.headers['defra-internal-user-id'] = 'invalid';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     test('http 400 bad request when the licence ID is invalid', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       request.payload.licenceId = 'not-a-guid';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     test('http 400 bad request when the charge version data is not an object', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       request.payload.chargeVersion = 'not-an-object';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
@@ -169,7 +183,7 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
       id = uuid();
       request = makePatch(`/water/1.0/charge-version-workflows/${id}`);
       request.payload = {
-        status: 'draft',
+        status: 'review',
         approverComments: 'Good work'
       };
     });
@@ -186,13 +200,13 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
     });
 
     test('http 200 OK when user has workflow approver scope', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(200);
     });
 
     test('http 422 unprocessable entity when the payload cannot be mapped', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       request.payload.chargeVersion = {
         status: 'not-a-valid-status'
       };
@@ -201,21 +215,21 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
     });
 
     test('http 400 bad request when the defra-internal-user-id is invalid', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       request.headers['defra-internal-user-id'] = 'invalid';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     test('http 400 bad request when the licence ID is invalid', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       request.payload.licenceId = 'not-a-guid';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
 
     test('http 400 bad request when the charge version data is not an object', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       request.payload.chargeVersion = 'not-an-object';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
@@ -244,13 +258,13 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
     });
 
     test('http 200 OK when user has workflow approver scope', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(200);
     });
 
     test('http 400 bad request when the defra-internal-user-id is invalid', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowApprover];
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       request.headers['defra-internal-user-id'] = 'invalid';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);

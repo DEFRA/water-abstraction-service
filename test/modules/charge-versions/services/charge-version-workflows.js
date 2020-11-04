@@ -73,6 +73,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
     sandbox.stub(service, 'findAll').resolves([chargeVersionWorkflow]);
     sandbox.stub(service, 'findOne').resolves(chargeVersionWorkflow);
+    sandbox.stub(service, 'findMany').resolves([chargeVersionWorkflow]);
 
     sandbox.stub(chargeVersionWorkflowRepo, 'create');
     sandbox.stub(chargeVersionWorkflowRepo, 'update');
@@ -183,6 +184,23 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     });
   });
 
+  experiment('.getManyByLicenceId', () => {
+    beforeEach(async () => {
+      result = await chargeVersionWorkflowService.getManyByLicenceId('test-id');
+    });
+
+    test('delegates to service.findMany', async () => {
+      const [id, fetchDataFunc, mapper] = service.findMany.lastCall.args;
+      expect(id).to.equal('test-id');
+      expect(fetchDataFunc).to.equal(chargeVersionWorkflowRepo.findManyForLicence);
+      expect(mapper).to.equal(chargeVersionWorkflowMapper);
+    });
+
+    test('resolves with an array of ChargeVersionWorkflow models', async () => {
+      expect(result).to.equal([chargeVersionWorkflow]);
+    });
+  });
+
   experiment('.create', () => {
     let licence, chargeVersion, user;
     const chargeVersionWorkflowId = uuid();
@@ -216,7 +234,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         const [data] = chargeVersionWorkflowRepo.create.lastCall.args;
 
         expect(data.licenceId).to.equal(licence.id);
-        expect(data.status).to.equal('draft');
+        expect(data.status).to.equal('review');
         expect(data.createdBy).to.equal({
           id: 123,
           email: 'mail@example.com'
@@ -258,7 +276,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
       chargeVersionWorkflowRepo.update.resolves({
         chargeVersionWorkflowId: id,
-        status: 'draft',
+        status: 'review',
         data: {
           chargeVersion: {
             dateRange: {
@@ -276,7 +294,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       });
 
       test('a NotFoundError is thrown', async () => {
-        const func = () => chargeVersionWorkflowService.update(id, { status: 'draft' });
+        const func = () => chargeVersionWorkflowService.update(id, { status: 'review' });
         const err = await expect(func()).to.reject();
         expect(err).to.be.an.instanceof(NotFoundError);
         expect(err.message).to.equal(`Charge version workflow ${id} not found`);
@@ -288,13 +306,13 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         const func = () => chargeVersionWorkflowService.update(id, { status: 'invalid-status' });
         const err = await expect(func()).to.reject();
         expect(err).to.be.an.instanceof(InvalidEntityError);
-        expect(err.message).to.equal(`Invalid data for charge version worklow ${id}`);
+        expect(err.message).to.equal(`Invalid data for charge version workflow ${id}`);
       });
     });
 
     experiment('if the supplied changes are valid', () => {
       beforeEach(async () => {
-        result = await chargeVersionWorkflowService.update(id, { status: 'draft' });
+        result = await chargeVersionWorkflowService.update(id, { status: 'review' });
       });
 
       test('the charge version workflow is loaded by id', async () => {
@@ -306,7 +324,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         expect(updatedId).to.equal(id);
         expect(dbRow).to.be.an.object();
         expect(dbRow.chargeVersionWorkflowId).to.equal(id);
-        expect(dbRow.status).to.equal('draft');
+        expect(dbRow.status).to.equal('review');
       });
     });
   });
@@ -354,6 +372,34 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
     test('the workflow record is deleted', async () => {
       expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
+    });
+  });
+  experiment('getLicenceHolderRole', () => {
+    experiment('when no document is found for the licence and start date', () => {
+      beforeEach(async () => {
+        documentsService.getValidDocumentOnDate.resolves(null);
+      });
+
+      test('a response is returned with a blank role object', async () => {
+        const licenceObject = {
+          licenceNumber: '123'
+        };
+
+        const chargeVersionObject = {
+          dateRange: {
+            startDate: '2000-01-01'
+          }
+        };
+
+        result = await chargeVersionWorkflowService.getLicenceHolderRole({
+          licence: licenceObject,
+          chargeVersion: chargeVersionObject
+        });
+
+        expect(result.chargeVersionWorkflow.licence).to.equal(licenceObject);
+        expect(result.chargeVersionWorkflow.chargeVersion).to.equal(chargeVersionObject);
+        expect(result.licenceHolderRole).to.equal({});
+      });
     });
   });
 });

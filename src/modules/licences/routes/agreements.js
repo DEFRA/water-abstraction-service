@@ -28,6 +28,26 @@ module.exports = {
     }
   },
 
+  patchAgreement: {
+    method: 'PATCH',
+    path: '/water/1.0/agreements/{agreementId}',
+    handler: controller.patchAgreement,
+    config: {
+      auth: {
+        scope: [ROLES.manageAgreements]
+      },
+      validate: {
+        params: {
+          agreementId: Joi.string().uuid().required()
+        },
+        headers: validateHeaders, // Ensure only DEFRA internal users can patch agreements
+        payload: {
+          endDate: Joi.date().required()
+        }
+      }
+    }
+  },
+
   getAgreementsForLicence: {
     method: 'GET',
     path: '/water/1.0/licences/{licenceId}/agreements',

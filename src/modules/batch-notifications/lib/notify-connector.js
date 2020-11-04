@@ -1,6 +1,8 @@
+'use strict';
+
 const notifyConnector = require('../../../lib/connectors/notify');
 const { get } = require('lodash');
-const pdfCreator = require('../../../lib/notify/pdf');
+const pdfCreator = require('../../../lib/services/pdf-generation/pdf');
 const config = require('../../../../config');
 const s3Connector = require('../../../lib/services/s3');
 
@@ -11,10 +13,9 @@ const s3Connector = require('../../../lib/services/s3');
  * @return {String}           notification reference
  */
 const createNotifyReference = (scheduledNotification) => {
-  const id = get(scheduledNotification, 'id');
+  const { id } = scheduledNotification;
   const addressLine1 = get(scheduledNotification, 'personalisation.address_line_1');
-  const postcode = get(scheduledNotification, 'personalisation.postcode');
-  return `${addressLine1} ${postcode} ${id}`;
+  return `${addressLine1} ${id}`;
 };
 
 /**
@@ -23,8 +24,8 @@ const createNotifyReference = (scheduledNotification) => {
  * @return {String}                       - Notify template ID
  */
 const getNotifyTemplate = scheduledNotification => {
-  const messageType = get(scheduledNotification, 'message_ref');
-  return get(config, `notify.templates.${messageType}`);
+  const { messageRef } = scheduledNotification;
+  return get(config, `notify.templates.${messageRef}`);
 };
 
 /**
@@ -45,7 +46,7 @@ const uploadPDFtoS3 = (scheduledNotification, pdf) => {
  * @return {Promise}                        resolves when message sent
  */
 const sendPDF = async (client, scheduledNotification) => {
-  const pdf = await pdfCreator.createPdf(scheduledNotification.id);
+  const pdf = await pdfCreator.createPdfFromScheduledNotification(scheduledNotification);
   const notifyReference = createNotifyReference(scheduledNotification);
 
   const tasks = [
@@ -88,9 +89,9 @@ const sendEmail = async (client, scheduledNotification) => {
  * @return {String}                         the action key
  */
 const getAction = scheduledNotification => {
-  const { message_type: type, message_ref: ref } = scheduledNotification;
-  const isPdf = ref.startsWith('pdf.');
-  return isPdf ? 'pdf' : type;
+  const { messageType, messageRef } = scheduledNotification;
+  const isPdf = messageRef.startsWith('pdf.');
+  return isPdf ? 'pdf' : messageType;
 };
 
 const actions = {
@@ -106,7 +107,7 @@ const actions = {
  */
 const send = async scheduledNotification => {
   const client = notifyConnector
-    .getClient(scheduledNotification.message_type);
+    .getClient(scheduledNotification.messageType);
 
   // Get action
   const action = getAction(scheduledNotification);

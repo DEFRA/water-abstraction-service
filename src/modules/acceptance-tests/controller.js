@@ -2,7 +2,7 @@
 
 const { get } = require('lodash');
 
-const batches = require('./lib/batches');
+const batches = require('./lib/charging/batches');
 const returns = require('./lib/returns');
 const permits = require('./lib/permits');
 const entities = require('./lib/entities');
@@ -10,8 +10,7 @@ const users = require('./lib/users');
 const documents = require('./lib/documents');
 const events = require('./lib/events');
 const sessions = require('./lib/sessions');
-const { scenarios } = require('./lib/scenarios');
-const chargeTestDataSetUp = require('../../../integration-tests/billing/services/scenarios');
+const chargingScenarios = require('./lib/charging/charging-scenarios');
 const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
 
 const {
@@ -146,8 +145,8 @@ const postSetup = async (request, h) => {
   await postTearDown();
   const includeAgents = get(request, 'payload.includeAgents', false);
   const includeInternalUsers = get(request, 'payload.includeInternalUsers', false);
-  const includeCharging = get(request, 'payload.includeCharging', false);
-
+  const includeAnnualBillRun = get(request, 'payload.includeAnnualBillRun', false);
+  const includeSupplementaryBillRun = get(request, 'payload.includeSupplementaryBillRun', false);
   try {
     const company = await entities.createCompany();
     const externalPrimaryUser = await createExternalPrimaryUser(company);
@@ -163,9 +162,11 @@ const postSetup = async (request, h) => {
       responseData.agents = await createAgents(company);
     }
 
-    if (includeCharging) {
-      const tasks = scenarios.map(scenario => chargeTestDataSetUp.createScenario(scenario));
-      responseData.charging = await Promise.all(tasks);
+    if (includeAnnualBillRun) {
+      responseData.charging = await chargingScenarios.annualBillRun();
+    }
+    if (includeSupplementaryBillRun) {
+      responseData.charging = await chargingScenarios.supplementaryBillRun(request);
     }
 
     return responseData;

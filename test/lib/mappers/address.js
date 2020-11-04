@@ -50,9 +50,10 @@ experiment('modules/billing/mappers/address', () => {
       result = addressMapper.crmToModel(dbRow);
     });
 
-    test('returns null when data is empty', async () => {
+    test('returns empty Address instance when data is empty', async () => {
       const result = addressMapper.crmToModel(null);
-      expect(result).to.equal(null);
+      expect(result instanceof Address).to.be.true();
+      expect(result).to.equal({});
     });
 
     test('returns an Address instance', async () => {
@@ -199,6 +200,57 @@ experiment('modules/billing/mappers/address', () => {
       expect(address.county).to.be.undefined();
       expect(address.country).to.equal(eaAddress.country);
       expect(address.source).to.equal('ea-address-facade');
+    });
+  });
+
+  experiment('.pojoToModel', () => {
+    let result;
+
+    beforeEach(async () => {
+      result = addressMapper.pojoToModel({
+        id: '00000000-0000-0000-0000-000000000000',
+        ...addressData
+      });
+    });
+
+    test('returns an Address instance', async () => {
+      expect(result instanceof Address).to.be.true();
+    });
+
+    test('has the expected id value', async () => {
+      expect(result.id).to.equal('00000000-0000-0000-0000-000000000000');
+    });
+
+    test('has the expected address line 1 value', async () => {
+      expect(result.addressLine1).to.equal(addressData.addressLine1);
+    });
+
+    test('has the expected address line 2 value', async () => {
+      expect(result.addressLine2).to.equal(addressData.addressLine2);
+    });
+
+    test('has the expected address line 3 value', async () => {
+      expect(result.addressLine3).to.equal(addressData.addressLine3);
+    });
+
+    test('has the expected address line 4 value', async () => {
+      expect(result.addressLine4).to.equal(addressData.addressLine4);
+    });
+
+    test('has the expected town value', async () => {
+      expect(result.town).to.equal(addressData.town);
+    });
+
+    test('has the expected county value', async () => {
+      expect(result.county).to.equal(addressData.county);
+    });
+
+    test('has the expected postcode value', async () => {
+      expect(result.postcode).to.equal(addressData.postcode);
+    });
+
+    test('has the expected country value', async () => {
+      expect(result.country).to.equal(addressData.country);
     });
   });
 });

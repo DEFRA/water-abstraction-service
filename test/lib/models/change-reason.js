@@ -28,15 +28,15 @@ experiment('lib/models/change-reason', () => {
     });
   });
 
-  experiment('.reason', () => {
-    test('can set reason to a string', async () => {
-      changeReason.reason = 'New licence';
-      expect(changeReason.reason).to.equal('New licence');
+  experiment('.description', () => {
+    test('can set description to a string', async () => {
+      changeReason.description = 'New licence';
+      expect(changeReason.description).to.equal('New licence');
     });
 
-    test('setting reason to invalid value throws an error', async () => {
+    test('setting description to invalid value throws an error', async () => {
       const func = () => {
-        changeReason.reason = 123;
+        changeReason.description = 123;
       };
       expect(func).throw();
     });
@@ -56,6 +56,22 @@ experiment('lib/models/change-reason', () => {
     test('setting triggersMinimumCharge to invalid value throws an error', async () => {
       const func = () => {
         changeReason.triggersMinimumCharge = 'yes';
+      };
+      expect(func).throw();
+    });
+  });
+
+  experiment('.type', () => {
+    ChangeReason.changeReasonTypes.forEach(type => {
+      test(`can be set to ${type}`, async () => {
+        changeReason.type = type;
+        expect(changeReason.type).to.equal(type);
+      });
+    });
+
+    test('setting type to invalid value throws an error', async () => {
+      const func = () => {
+        changeReason.type = 'invalid_type';
       };
       expect(func).throw();
     });

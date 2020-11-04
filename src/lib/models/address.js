@@ -5,7 +5,7 @@ const validators = require('./validators');
 const Joi = require('@hapi/joi');
 const { identity } = require('lodash');
 
-const mandatoryPostcodeCountries = [
+const ukCountries = [
   'united kingdom',
   'england',
   'wales',
@@ -26,7 +26,7 @@ const newAddressSchema = Joi.object({
   county: Joi.string().optional(),
   country: Joi.string().required(),
   postcode: Joi.string().trim().empty('').default(null).optional().when('country', {
-    is: Joi.string().lowercase().replace(/\./g, '').valid(mandatoryPostcodeCountries),
+    is: Joi.string().lowercase().replace(/\./g, '').valid(ukCountries),
     then: Joi.string().required()
       // uppercase and remove any spaces (BS1 1SB -> BS11SB)
       .uppercase().replace(/ /g, '')
@@ -201,6 +201,19 @@ class Address extends Model {
 
   get sortKey () {
     return getSortKey(this);
+  }
+
+  /**
+   * Checks if an international address
+   * @return {Boolean}
+   */
+  get isUKAddress () {
+    // Some NALD addresses have a null country - treat as UK
+    if (this.source === ADDRESS_SOURCE.nald && this.country === null) {
+      return true;
+    }
+    // Otherwise use list of UK countries
+    return ukCountries.includes(this.country.trim().toLowerCase());
   }
 }
 

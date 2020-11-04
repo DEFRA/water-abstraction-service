@@ -14,8 +14,9 @@ const eventsService = require('../../../src/lib/services/events');
 const Event = require('../../../src/lib/models/event');
 const messageHelpers = require('../../../src/modules/batch-notifications/lib/message-helpers');
 const getRecipients = require('../../../src/modules/batch-notifications/lib/jobs/get-recipients');
-const { EVENT_STATUS_SENDING, EVENT_STATUS_PROCESSED } = require('../../../src/modules/batch-notifications/lib/event-statuses');
-const { MESSAGE_STATUS_SENDING } = require('../../../src/modules/batch-notifications/lib/message-statuses');
+const { EVENT_STATUS_PROCESSED } = require('../../../src/modules/batch-notifications/lib/event-statuses');
+const sendBatch = require('../../../src/modules/batch-notifications/lib/send-batch');
+const { logger } = require('../../../src/logger');
 
 const eventId = uuid();
 
@@ -59,6 +60,9 @@ experiment('batch notifications controller', () => {
     sandbox.stub(getRecipients, 'publish').resolves();
 
     sandbox.stub(messageHelpers, 'updateMessageStatuses').resolves();
+
+    sandbox.stub(sendBatch, 'send').resolves({});
+    sandbox.stub(logger, 'error');
   });
 
   afterEach(async () => sandbox.restore());
@@ -137,62 +141,46 @@ experiment('batch notifications controller', () => {
       };
     });
 
-    test('throws 404 error if event not found', async () => {
-      eventsService.findOne.resolves(null);
-      await controller.postSend(request, h);
-      expectErrorResponse(404);
+    experiment('when there is no error', () => {
+      let result;
+
+      beforeEach(async () => {
+        result = await controller.postSend(request);
+      });
+
+      test('the batch is sent', async () => {
+        expect(sendBatch.send.calledWith(
+          request.params.eventId, request.payload.issuer
+        )).to.be.true();
+      });
+
+      test('resolves with data in the expected shape', async () => {
+        expect(result.error).to.be.null();
+        expect(result.data).to.be.an.object();
+      });
     });
 
-    test('throws 400 error if event not a "notification"', async () => {
-      eventsService.findOne.resolves(
-        createEvent().fromHash({
-          type: 'not-a-notification'
-        })
-      );
-      await controller.postSend(request, h);
-      expectErrorResponse(400);
-    });
+    experiment('when there is an error', () => {
+      let result, err;
 
-    test('throws 400 error if event not in "processed" status', async () => {
-      eventsService.findOne.resolves(
-        createEvent().fromHash({
-          status: EVENT_STATUS_SENDING
-        })
-      );
-      await controller.postSend(request, h);
-      expectErrorResponse(400);
-    });
+      beforeEach(async () => {
+        err = new Error('oops!');
+        sendBatch.send.rejects(err);
+        const func = () => controller.postSend(request);
+        result = await expect(func()).to.reject();
+      });
 
-    test('throws 401 error if issuer does not match', async () => {
-      eventsService.findOne.resolves(
-        createEvent().fromHash({
-          issuer: 'unknown@example.com'
-        })
-      );
-      await controller.postSend(request, h);
-      expectErrorResponse(401);
-    });
+      test('the error is logged', async () => {
+        expect(logger.error.calledWith(
+          'Batch notification send error',
+          err,
+          { eventId: request.params.eventId }
+        )).to.be.true();
+      });
 
-    test('updates event and message statuses', async () => {
-      await controller.postSend(request, h);
-      const { args: messageArgs } = messageHelpers.updateMessageStatuses.lastCall;
-      expect(messageArgs[0]).to.equal(eventId);
-      expect(messageArgs[1]).to.equal(MESSAGE_STATUS_SENDING);
-      const { args: eventArgs } = eventsService.updateStatus.lastCall;
-      expect(eventArgs[0]).to.equal(eventId);
-      expect(eventArgs[1]).to.equal(EVENT_STATUS_SENDING);
-    });
-
-    test('responds with updated event data', async () => {
-      const response = await controller.postSend(request, h);
-      expect(response.error).to.be.null();
-      expect(response.data.id).to.equal(eventId);
-    });
-
-    test('responds with 500 error if an error is thrown', async () => {
-      eventsService.updateStatus.rejects();
-      await controller.postSend(request, h);
-      expectErrorResponse(500);
+      test('the error is rethrown', async () => {
+        expect(result).to.equal(err);
+      });
     });
   });
 });

@@ -28,7 +28,7 @@ experiment('lib/mappers/charge-version-workflow', () => {
           id: 123
         },
         approverComments: 'Nice job!',
-        status: 'draft',
+        status: 'review',
         dateCreated: '2020-08-24T08:47:16.913Z',
         dateUpdated: '2020-08-24T08:47:16.913Z',
         data: {
@@ -105,7 +105,7 @@ experiment('lib/mappers/charge-version-workflow', () => {
     });
 
     test('maps the status', async () => {
-      expect(model.status).to.equal('draft');
+      expect(model.status).to.equal('review');
     });
 
     test('maps the charge version', async () => {
@@ -138,7 +138,7 @@ experiment('lib/mappers/charge-version-workflow', () => {
         id: uuid(),
         licence,
         approverComments: 'Great work!',
-        status: 'draft',
+        status: 'review',
         createdBy: creator,
         chargeVersion
       });
@@ -159,7 +159,7 @@ experiment('lib/mappers/charge-version-workflow', () => {
     });
 
     test('the .status property is mapped', async () => {
-      expect(row.status).to.equal('draft');
+      expect(row.status).to.equal('review');
     });
 
     test('the .createdBy property is mapped', async () => {

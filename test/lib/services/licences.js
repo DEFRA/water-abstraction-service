@@ -11,6 +11,7 @@ const uuid = require('uuid/v4');
 
 const sandbox = require('sinon').createSandbox();
 
+const applicationConfig = require('../../../config');
 const licencesService = require('../../../src/lib/services/licences');
 const repos = require('../../../src/lib/connectors/repos');
 
@@ -49,7 +50,9 @@ const data = {
 experiment('src/lib/services/licences', () => {
   beforeEach(async () => {
     sandbox.stub(repos.licences, 'findOne');
+    sandbox.stub(repos.licences, 'findOneByLicenceRef');
     sandbox.stub(repos.licences, 'findByLicenceRef');
+    sandbox.stub(repos.licences, 'findWithoutChargeVersions');
     sandbox.stub(repos.licences, 'updateIncludeLicenceInSupplementaryBilling');
     sandbox.stub(repos.licences, 'updateIncludeInSupplementaryBillingStatusForBatch');
     sandbox.stub(repos.licences, 'update');
@@ -97,7 +100,7 @@ experiment('src/lib/services/licences', () => {
 
     experiment('when the licence is found', () => {
       beforeEach(async () => {
-        repos.licences.findByLicenceRef.resolves([data.dbRow]);
+        repos.licences.findOneByLicenceRef.resolves([data.dbRow]);
 
         result = await licencesService.getLicenceByLicenceRef(
           data.dbRow.licenceRef,
@@ -105,8 +108,8 @@ experiment('src/lib/services/licences', () => {
         );
       });
 
-      test('calls repos.licences.findByLicenceRef() with supplied licence ref', async () => {
-        const [licenceRef] = repos.licences.findByLicenceRef.lastCall.args;
+      test('calls repos.licences.findOneByLicenceRef() with supplied licence ref', async () => {
+        const [licenceRef] = repos.licences.findOneByLicenceRef.lastCall.args;
         expect(licenceRef).to.equal(data.dbRow.licenceRef);
       });
 
@@ -117,7 +120,7 @@ experiment('src/lib/services/licences', () => {
 
     experiment('when the licence is not found', () => {
       beforeEach(async () => {
-        repos.licences.findByLicenceRef.resolves([]);
+        repos.licences.findOneByLicenceRef.resolves([]);
 
         result = await licencesService.getLicenceByLicenceRef(
           data.dbRow.licenceRef,
@@ -132,7 +135,7 @@ experiment('src/lib/services/licences', () => {
 
     experiment('when the licence is not found for the region', () => {
       beforeEach(async () => {
-        repos.licences.findByLicenceRef.resolves([data.dbRow]);
+        repos.licences.findOneByLicenceRef.resolves([data.dbRow]);
 
         result = await licencesService.getLicenceByLicenceRef(
           data.dbRow.licenceRef,
@@ -318,6 +321,26 @@ experiment('src/lib/services/licences', () => {
         licenceId,
         { includeInSupplementaryBilling: 'yes' }
       )).to.be.true();
+    });
+  });
+
+  experiment('.getLicencesWithoutChargeVersions', () => {
+    let results;
+
+    beforeEach(async () => {
+      repos.licences.findWithoutChargeVersions.resolves([data.dbRow]);
+      results = await licencesService.getLicencesWithoutChargeVersions();
+    });
+
+    test('uses passes the configurable start date to the repo', async () => {
+      const [startDate] = repos.licences.findWithoutChargeVersions.lastCall.args;
+      expect(startDate).to.equal(applicationConfig.licences.withChargeVersionsStartDate);
+    });
+
+    test('returns the results as Licence models', async () => {
+      expect(results.length).to.equal(1);
+      expect(results[0] instanceof Licence).to.equal(true);
+      expect(results[0].id).to.equal(data.dbRow.licenceId);
     });
   });
 });

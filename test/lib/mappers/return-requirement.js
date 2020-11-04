@@ -18,6 +18,8 @@ const returnRequirementMapper = require('../../../src/lib/mappers/return-require
 const createDBRow = () => ({
   returnRequirementId: uuid(),
   isSummer: true,
+  externalId: '1:123',
+  legacyId: 123,
   returnRequirementPurposes: [
     {
       returnRequirementPurposeId: uuid(),
@@ -58,8 +60,16 @@ experiment('modules/billing/mappers/return-requirement', () => {
         expect(result.isSummer).to.equal(dbRow.isSummer);
       });
 
+      test('has the .externalId property', async () => {
+        expect(result.externalId).to.equal(dbRow.externalId);
+      });
+
       test('has an empty array of returnRequirementPurposes', async () => {
         expect(result.returnRequirementPurposes).to.equal([]);
+      });
+
+      test('has the .legacyId property', async () => {
+        expect(result.legacyId).to.equal(dbRow.legacyId);
       });
     });
 

@@ -1,3 +1,5 @@
+'use strict';
+
 const { find } = require('lodash');
 const configs = require('../config');
 const messageQueue = require('../../../lib/message-queue');

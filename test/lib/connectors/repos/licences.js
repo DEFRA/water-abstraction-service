@@ -15,7 +15,7 @@ const licencesRepo = require('../../../../src/lib/connectors/repos/licences');
 const { Licence, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 
-experiment('lib/connectors/repos/licences', () => {
+experiment('lib/connectors/repos/licences.js', () => {
   let model, stub;
 
   beforeEach(async () => {
@@ -82,16 +82,42 @@ experiment('lib/connectors/repos/licences', () => {
     });
   });
 
-  experiment('.findByLicenceRef', () => {
+  experiment('.findOneByLicenceRef', () => {
     let result;
 
     beforeEach(async () => {
-      result = await licencesRepo.findByLicenceRef('test-ref');
+      result = await licencesRepo.findOneByLicenceRef('test-ref');
     });
 
     test('calls where with correct id', async () => {
       const [params] = stub.where.lastCall.args;
       expect(params).to.equal({ licence_ref: 'test-ref' });
+    });
+
+    test('calls fetchAll() with related models', async () => {
+      const [params] = stub.fetchAll.lastCall.args;
+      expect(params.withRelated).to.equal(['region']);
+    });
+
+    test('returns the result of the toJSON() call', async () => {
+      expect(result).to.equal([
+        { foo: 'bar' },
+        { foo: 'baz' }
+      ]);
+    });
+  });
+
+  experiment('.findByLicenceRef', () => {
+    let result;
+
+    beforeEach(async () => {
+      result = await licencesRepo.findByLicenceRef(['test-ref-1', 'test-ref-2']);
+    });
+
+    test('calls where with correct ids', async () => {
+      expect(stub.where.calledWith(
+        'licence_ref', 'in', ['test-ref-1', 'test-ref-2']
+      )).to.be.true();
     });
 
     test('calls fetchAll() with related models', async () => {
@@ -193,6 +219,18 @@ experiment('lib/connectors/repos/licences', () => {
       expect(raw.multiRow.calledWith(
         licenceQueries.findByBatchIdForTwoPartTariffReview, { billingBatchId: 'batch-id' }
       )).to.be.true();
+    });
+  });
+
+  experiment('.findWithoutChargeVersions', () => {
+    beforeEach(async () => {
+      await licencesRepo.findWithoutChargeVersions('2000-01-01');
+    });
+
+    test('calls raw.multiRow with correct query and params', async () => {
+      const [query, params] = raw.multiRow.lastCall.args;
+      expect(query).to.equal(licenceQueries.getLicencesWithoutChargeVersions);
+      expect(params).to.equal({ startDate: '2000-01-01' });
     });
   });
 });

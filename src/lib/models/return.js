@@ -5,10 +5,11 @@ const moment = require('moment');
 const AbstractionPeriod = require('./model');
 const Model = require('./model');
 const DateRange = require('./date-range');
-const PurposeUse = require('./purpose-use');
 const ReturnVersion = require('./return-version');
+const ReturnRequirement = require('./return-requirement');
 
 const validators = require('./validators');
+const { get } = require('lodash');
 
 const RETURN_STATUS = {
   completed: 'completed',
@@ -47,15 +48,16 @@ class Return extends Model {
 
   /**
    * Purpose uses
+   * @todo - deprecate as this should be discovered via the returnRequirement property
    * @param {Array} purposeUses
    */
-  set purposeUses (purposeUses) {
-    validators.assertIsArrayOfType(purposeUses, PurposeUse);
-    this._purposesUses = purposeUses;
+  set purposeUses (purposeUse) {
+    throw new Error('Attempt to set deprecated property Return.purposeUses');
   }
 
   get purposeUses () {
-    return this._purposesUses;
+    return get(this, 'returnRequirement.returnRequirementPurposes', [])
+      .map(returnRequirementPurpose => returnRequirementPurpose.purposeUse);
   }
 
   /**
@@ -190,9 +192,27 @@ class Return extends Model {
     return this._abstractionPeriod;
   }
 
+  /**
+   * A null is permitted here as the abs period start/end day/month properties
+   * can be either all set or all null in NALD
+   * @param {AbstractionPeriod|null}
+   */
   set abstractionPeriod (abstractionPeriod) {
-    validators.assertIsInstanceOf(abstractionPeriod, AbstractionPeriod);
+    validators.assertIsNullableInstanceOf(abstractionPeriod, AbstractionPeriod);
     this._abstractionPeriod = abstractionPeriod;
+  }
+
+  /**
+   * The return requirement relating to this return
+   * @param {ReturnRequirement}
+   */
+  set returnRequirement (returnRequirement) {
+    validators.assertIsInstanceOf(returnRequirement, ReturnRequirement);
+    this._returnRequirement = returnRequirement;
+  }
+
+  get returnRequirement () {
+    return this._returnRequirement;
   }
 }
 

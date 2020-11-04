@@ -29,8 +29,8 @@ experiment('src/lib/mappers/document', () => {
             companyId: uuid(),
             name: 'Test company'
           }
-        }]
-
+        }],
+        documentRef: '0/123/456'
       };
       model = documentMapper.crmToModel(data);
     });
@@ -47,6 +47,7 @@ experiment('src/lib/mappers/document', () => {
 
       expect(model.roles).to.be.an.array().length(1);
       expect(model.roles[0]).to.be.an.instanceof(Role);
+      expect(model.licenceNumber).to.equal(data.documentRef);
     });
 
     test('the roles are an empty array if not present in the data', async () => {

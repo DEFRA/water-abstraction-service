@@ -24,3 +24,4 @@ exports.ReturnRequirementPurpose = require('./ReturnRequirementPurpose');
 exports.PurposePrimary = require('./PurposePrimary');
 exports.PurposeSecondary = require('./PurposeSecondary');
 exports.PurposeUse = require('./PurposeUse');
+exports.ScheduledNotification = require('./ScheduledNotification');

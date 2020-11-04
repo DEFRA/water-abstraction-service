@@ -55,6 +55,32 @@ class ReturnRequirement extends Model {
       returnRequirementPurpose => returnRequirementPurpose.purposeUse.isTwoPartTariff
     );
   }
+
+  /**
+   * External ID format naldRegionCode:naldReturnFormatId
+   * @param {String|Null} externalId
+   */
+  set externalId (externalId) {
+    validators.assertNullableString(externalId);
+    this._externalId = externalId;
+  }
+
+  get externalId () {
+    return this._externalId;
+  }
+
+  /**
+   * Legacy ID (NALD return reference)
+   * @param {Number}
+   */
+  set legacyId (legacyId) {
+    validators.assertNullablePositiveInteger(legacyId);
+    this._legacyId = legacyId;
+  }
+
+  get legacyId () {
+    return this._legacyId;
+  }
 }
 
 module.exports = ReturnRequirement;

@@ -111,4 +111,34 @@ experiment('lib/services/returns/api-connector', () => {
       expect(result[0].line_id).to.equal('test-line-id');
     });
   });
+
+  experiment('.getLicenceReturnsByStatusAndEndDate', () => {
+    beforeEach(async () => {
+      await apiConnector.getLicenceReturnsByStatusAndEndDate(
+        '01/123/ABC',
+        ['due', 'received'],
+        '2018-04-01',
+        '2019-03-31'
+      );
+    });
+
+    test('the returns api is called with the correct filter', async () => {
+      const [filter] = returnsApiConnector.returns.findAll.lastCall.args;
+      expect(filter).to.equal({
+        licence_ref: '01/123/ABC',
+        status: {
+          $in: ['due', 'received']
+        },
+        end_date: { $gte: '2018-04-01', $lte: '2019-03-31' }
+      });
+    });
+
+    test('sorts by end date then return ID', async () => {
+      const [, sort] = returnsApiConnector.returns.findAll.lastCall.args;
+      expect(sort).to.equal({
+        end_date: +1,
+        return_id: +1
+      });
+    });
+  });
 });

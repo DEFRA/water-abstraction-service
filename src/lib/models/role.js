@@ -10,13 +10,11 @@ const {
   assertDate,
   assertNullableDate,
   assertEnum,
-  assertIsInstanceOf
+  assertIsInstanceOf,
+  assertIsNullableInstanceOf
 } = require('./validators');
 
-const ROLE_NAMES = {
-  licenceHolder: 'licenceHolder',
-  billing: 'billing'
-};
+const ROLE_NAMES = require('./constants').ROLE_NAMES;
 
 class Role extends Model {
   set startDate (startDate) {
@@ -46,6 +44,15 @@ class Role extends Model {
     return this._roleName;
   }
 
+  /**
+   * Checks whether the role name is one of the supplied role names
+   * @param  {...any} args
+   * @return {Boolean}
+   */
+  isRoleName (...args) {
+    return args.includes(this.roleName);
+  }
+
   set company (company) {
     assertIsInstanceOf(company, Company);
     this._company = company;
@@ -56,7 +63,7 @@ class Role extends Model {
   }
 
   set contact (contact) {
-    assertIsInstanceOf(contact, Contact);
+    assertIsNullableInstanceOf(contact, Contact);
     this._contact = contact;
   }
 

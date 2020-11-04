@@ -1,18 +1,38 @@
+'use strict';
+
 const { expect } = require('@hapi/code');
 const {
   experiment, test, beforeEach, afterEach
 } = exports.lab = require('@hapi/lab').script();
-const sinon = require('sinon');
-const sandbox = sinon.createSandbox();
+const sandbox = require('sinon').createSandbox();
+
+const uuid = require('uuid/v4');
 
 const notifyConnector =
   require('../../../../src/modules/batch-notifications/lib/notify-connector');
 
 const s3Connector = require('../../../../src/lib/services/s3');
-const pdfCreator = require('../../../../src/lib/notify/pdf');
+const pdfCreator = require('../../../../src/lib/services/pdf-generation/pdf');
+
+const ScheduledNotification = require('../../../../src/lib/models/scheduled-notification');
+
+const messageId = uuid();
+
+const createScheduledNotification = (overrides = {}) => {
+  return new ScheduledNotification().fromHash({
+    id: messageId,
+    messageType: 'letter',
+    recipient: 'mail@example.com',
+    messageRef: 'returns_invitation_letter',
+    personalisation: {
+      address_line_1: 'address',
+      address_line_5: 'postcode'
+    }
+  });
+};
 
 experiment('batch notifications notify connector', () => {
-  let client, sendLetter, sendPrecompiledLetter, sendEmail;
+  let client, sendLetter, sendPrecompiledLetter, sendEmail, message;
 
   const testPdf = Buffer.from('test-pdf', 'utf-8');
   const notifyResponse = {
@@ -21,20 +41,11 @@ experiment('batch notifications notify connector', () => {
     }
   };
 
-  const message = {
-    id: 'message-id',
-    message_type: 'letter',
-    recipient: 'mail@example.com',
-    message_ref: 'returns_invitation_letter',
-    personalisation: {
-      address_line_1: 'address',
-      postcode: 'postcode'
-    }
-  };
-
   beforeEach(async () => {
+    message = createScheduledNotification();
+
     sandbox.stub(s3Connector, 'upload').resolves();
-    sandbox.stub(pdfCreator, 'createPdf').resolves(testPdf);
+    sandbox.stub(pdfCreator, 'createPdfFromScheduledNotification').resolves(testPdf);
     sendPrecompiledLetter = sandbox.stub().resolves(notifyResponse);
     sendLetter = sandbox.stub().resolves(notifyResponse);
     sendEmail = sandbox.stub().resolves(notifyResponse);
@@ -53,29 +64,22 @@ experiment('batch notifications notify connector', () => {
   experiment('createNotifyReference', () => {
     test('creates a reference to identify PDF messages in Notify', async () => {
       const result = notifyConnector._createNotifyReference(message);
-      expect(result).to.equal('address postcode message-id');
+      expect(result).to.equal(`address ${messageId}`);
     });
   });
 
   experiment('getNotifyTemplate', () => {
     test('gets the notify template to use for returns invitation', async () => {
-      const message = {
-        message_ref: 'returns_invitation_letter'
-      };
       const result = notifyConnector._getNotifyTemplate(message);
       expect(result).to.equal('d31d05d3-66fe-4203-8626-22e63f9bccd6');
     });
   });
 
   experiment('uploadPDFtoS3', () => {
-    const message = {
-      id: 'message-1'
-    };
-
     test('generates a filename for the S3 bucket', async () => {
       await notifyConnector._uploadPDFToS3(message);
       const [filename] = s3Connector.upload.lastCall.args;
-      expect(filename).to.equal('pdf-letters/message-1.pdf');
+      expect(filename).to.equal(`pdf-letters/${message.id}.pdf`);
     });
 
     test('provides the PDF data to the S3 uploader', async () => {
@@ -86,20 +90,16 @@ experiment('batch notifications notify connector', () => {
   });
 
   experiment('sendPDF', () => {
-    const message = {
-      id: 'message_1'
-    };
-
     test('calls createPdf with the message ID', async () => {
       await notifyConnector._sendPDF(client, message);
-      const [id] = pdfCreator.createPdf.lastCall.args;
-      expect(id).to.equal(message.id);
+      const [notification] = pdfCreator.createPdfFromScheduledNotification.lastCall.args;
+      expect(notification).to.equal(message);
     });
 
     test('uploads PDF to S3', async () => {
       await notifyConnector._sendPDF(client, message);
       const [fileName, pdf] = s3Connector.upload.lastCall.args;
-      expect(fileName).to.equal('pdf-letters/message_1.pdf');
+      expect(fileName).to.equal(`pdf-letters/${message.id}.pdf`);
       expect(pdf).to.equal(testPdf);
     });
 
@@ -154,17 +154,20 @@ experiment('batch notifications notify connector', () => {
 
   experiment('getAction', () => {
     test('for PDF message reference, send a PDF', async () => {
-      const message = { message_type: 'letter', message_ref: 'pdf.test' };
+      message.messageType = 'letter';
+      message.messageRef = 'pdf.test';
       const result = notifyConnector._getAction(message);
       expect(result).to.equal('pdf');
     });
     test('for letter without a PDF message reference, send a letter', async () => {
-      const message = { message_type: 'letter', message_ref: 'test' };
+      message.messageType = 'letter';
+      message.messageRef = 'test';
       const result = notifyConnector._getAction(message);
       expect(result).to.equal('letter');
     });
     test('for email message, send an email', async () => {
-      const message = { message_type: 'email', message_ref: 'test' };
+      message.messageType = 'email';
+      message.messageRef = 'test';
       const result = notifyConnector._getAction(message);
       expect(result).to.equal('email');
     });

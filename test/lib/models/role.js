@@ -100,6 +100,18 @@ experiment('lib/models/licence', () => {
     });
   });
 
+  experiment('.isRoleName', () => {
+    test('returns true when the role name matches one of the arguments', async () => {
+      role.roleName = Role.ROLE_NAMES.licenceHolder;
+      expect(role.isRoleName(Role.ROLE_NAMES.licenceHolder, Role.ROLE_NAMES.returnsTo)).to.be.true();
+    });
+
+    test('returns false when the role name does not match any of the arguments', async () => {
+      role.roleName = Role.ROLE_NAMES.billing;
+      expect(role.isRoleName(Role.ROLE_NAMES.licenceHolder, Role.ROLE_NAMES.returnsTo)).to.be.false();
+    });
+  });
+
   experiment('.company', () => {
     test('can be set to a Company instance', async () => {
       role.company = data.company;
