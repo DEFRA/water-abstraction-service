@@ -76,7 +76,15 @@ const decorateInvoice = (invoice, cmResponse) => {
   validators.assertObject(cmResponse);
 
   // Set invoice totals
-  invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(cmResponse, invoice.invoiceAccount.accountNumber, invoice.financialYear.yearEnding);
+  // Note: the customer/financial year summary is not guaranteed to be present in the CM
+  // because creation of transactions for this customer/financial year could have failed to create in the CM
+  const totals = mappers.totals.chargeModuleBillRunToInvoiceModel(cmResponse, invoice.invoiceAccount.accountNumber, invoice.financialYear.yearEnding);
+  if (!totals) {
+    return invoice;
+  }
+  invoice.totals = totals;
+
+  mappers.totals.chargeModuleBillRunToInvoiceModel(cmResponse, invoice.invoiceAccount.accountNumber, invoice.financialYear.yearEnding);
 
   // Set de-minimis flag
   const customerFinYearSummary = findCustomerFinancialYearSummary(cmResponse, invoice.invoiceAccount.accountNumber, invoice.financialYear.endYear);
@@ -108,7 +116,7 @@ const decorateBatch = (batch, cmResponse) => {
   batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(cmResponse.billRun.summary);
 
   // Decorate each invoice
-  batch.invoices.map(invoice => decorateInvoice(invoice, cmResponse));
+  batch.invoices.forEach(invoice => decorateInvoice(invoice, cmResponse));
 
   return batch;
 };
