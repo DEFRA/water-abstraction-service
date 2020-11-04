@@ -71,67 +71,6 @@ experiment('lib/models/invoice-licence', () => {
     });
   });
 
-  experiment('.company', () => {
-    test('can be set to a Company instance', async () => {
-      invoiceLicence.company = data.company;
-      expect(invoiceLicence.company).to.equal(data.company);
-    });
-
-    test('throws an error if set to an invalid type', async () => {
-      const func = () => {
-        invoiceLicence.company = data.licence;
-      };
-      expect(func).to.throw();
-    });
-  });
-
-  experiment('.contact', () => {
-    test('can be set to a Contact instance', async () => {
-      invoiceLicence.contact = data.contact;
-      expect(invoiceLicence.contact).to.equal(data.contact);
-    });
-
-    test('throws an error if set to an invalid type', async () => {
-      const func = () => {
-        invoiceLicence.contact = data.company;
-      };
-      expect(func).to.throw();
-    });
-  });
-
-  experiment('.address', () => {
-    test('can be set to a Address instance', async () => {
-      invoiceLicence.address = data.address;
-      expect(invoiceLicence.address).to.equal(data.address);
-    });
-
-    test('throws an error if set to an invalid type', async () => {
-      const func = () => {
-        invoiceLicence.address = data.company;
-      };
-      expect(func).to.throw();
-    });
-  });
-
-  experiment('.uniqueId', () => {
-    beforeEach(async () => {
-      invoiceLicence.licence = data.licence;
-      invoiceLicence.company = data.company;
-      invoiceLicence.address = data.address;
-      invoiceLicence.contact = data.contact;
-    });
-
-    test('returns a string', async () => {
-      expect(invoiceLicence.uniqueId).to.be.a.string();
-    });
-
-    test('string is a composite of licence number, company ID, address ID and contact ID', async () => {
-      expect(invoiceLicence.uniqueId).to.equal(
-        '01/123.8e1052db-08e0-4b21-bce0-c3497892a890.11c0fdc8-0645-45a1-86e3-5413d4a203ba.276fc2f4-bfe0-45a9-8fdb-6bf0d481b7ea'
-      );
-    });
-  });
-
   experiment('.set transactions', () => {
     test('throws for an array containing items other than Transaction objects', async () => {
       const func = () => (invoiceLicence.transactions = ['one', 'two']);
