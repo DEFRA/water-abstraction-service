@@ -19,7 +19,8 @@ const map = {
   invoiceLicences: {
     key: 'isWaterUndertaker',
     transform: containsWaterUndertaker
-  }
+  },
+  hasTransactionErrors: 'hasTransactionErrors'
 };
 
 /**

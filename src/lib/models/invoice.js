@@ -187,6 +187,18 @@ class Invoice extends Model {
   get isDeMinimis () {
     return this._isDeMinimis;
   }
+
+  get hasTransactionErrors () {
+    return this.invoiceLicences.some(invoiceLicence => invoiceLicence.hasTransactionErrors);
+  }
+
+  toJSON () {
+    const { hasTransactionErrors } = this;
+    return {
+      hasTransactionErrors,
+      ...super.toJSON()
+    };
+  }
 }
 
 module.exports = Invoice;
