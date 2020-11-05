@@ -13,7 +13,7 @@ create table water.billing_batch_charge_versions (
 alter table water.billing_batch_charge_versions
   add constraint uniq_batch_charge_version unique(billing_batch_id, charge_version_id);
 
-alter table water.billing_batch_charge_version_years drop constraint uniq_batch_charge_version_year_transaction_type_season;
+alter table water.billing_batch_charge_version_years drop constraint if exists uniq_batch_charge_version_year_transaction_type_season;
 
 alter table water.billing_batch_charge_version_years
   drop column if exists transaction_type,

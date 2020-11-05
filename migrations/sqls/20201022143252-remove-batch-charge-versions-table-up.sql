@@ -7,7 +7,7 @@ alter table water.billing_batch_charge_version_years
   add column is_summer boolean;
 
 /* Update constraint to include transaction_type and is_summer */
-alter table water.billing_batch_charge_version_years drop constraint uniq_batch_charge_version_year;
+alter table water.billing_batch_charge_version_years drop constraint if exists uniq_batch_charge_version_year;
 
 /* Update transaction_type and is_summer for annual and TPT batches */
 update water.billing_batch_charge_version_years as y 
@@ -27,14 +27,14 @@ case
     then date_part('year', t.end_date)+1
    else date_part('year', t.end_date)
   end as financial_year_ending,
-'ready' as status
+'ready'::water.batch_status as status
 from water.billing_transactions t
 join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
 join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
 join water.billing_batches b on i.billing_batch_id=b.billing_batch_id
 join water.charge_elements ce on t.charge_element_id=ce.charge_element_id
 where b.batch_type='supplementary'
-and t.is_two_part_tariff_supplementary=true
+and t.is_two_part_tariff_supplementary=true;
 
 
 /* Finally, update all rows where transaction_type is null to 'annual' */
