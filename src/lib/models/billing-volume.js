@@ -196,14 +196,14 @@ class BillingVolume extends Model {
   }
 
   /**
-   * Converts volumes to a fixed precision of 3 DP
+   * Converts volumes to a fixed precision of 6 DP
    */
   toFixed () {
     if (isFinite(this.volume)) {
-      this.volume = toFixedPrecision(this.volume);
+      this.volume = toFixedPrecision(this.volume, 6);
     }
     if (isFinite(this.calculatedVolume)) {
-      this.calculatedVolume = toFixedPrecision(this.calculatedVolume);
+      this.calculatedVolume = toFixedPrecision(this.calculatedVolume, 6);
     }
     return this;
   }

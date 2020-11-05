@@ -357,11 +357,11 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       expect(billingVolumes[1] instanceof BillingVolume).to.be.true();
     });
 
-    test('billing volumes have been rounded to 3 dp', async () => {
+    test('billing volumes have been rounded to 6 dp', async () => {
       expect(billingVolumes[0].calculatedVolume).to.equal(5);
       expect(billingVolumes[0].volume).to.equal(5);
-      expect(billingVolumes[1].calculatedVolume).to.equal(0.333);
-      expect(billingVolumes[1].volume).to.equal(0.333);
+      expect(billingVolumes[1].calculatedVolume).to.equal(0.333333);
+      expect(billingVolumes[1].volume).to.equal(0.333333);
     });
   });
 

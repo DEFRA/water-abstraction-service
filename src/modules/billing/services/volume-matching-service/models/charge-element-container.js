@@ -232,7 +232,7 @@ class ChargeElementContainer {
    */
   getAvailableVolume () {
     const volume = this.chargeElement.volume - this.totalVolume;
-    return volume > 0 ? toFixedPrecision(volume) : 0;
+    return volume > 0 ? toFixedPrecision(volume, 6) : 0;
   }
 
   /**

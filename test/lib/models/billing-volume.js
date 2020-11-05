@@ -522,12 +522,12 @@ experiment('lib/models/billingVolume', () => {
   });
 
   experiment('.toFixed', async () => {
-    test('rounds the volumes to 3DP precision', async () => {
+    test('rounds the volumes to 6DP precision', async () => {
       billingVolume.volume = 1 / 3;
       billingVolume.calculatedVolume = 2 / 3;
       billingVolume.toFixed();
-      expect(billingVolume.volume).to.equal(0.333);
-      expect(billingVolume.calculatedVolume).to.equal(0.667);
+      expect(billingVolume.volume).to.equal(0.333333);
+      expect(billingVolume.calculatedVolume).to.equal(0.666667);
     });
 
     test('does nothing if volumes are null', async () => {
