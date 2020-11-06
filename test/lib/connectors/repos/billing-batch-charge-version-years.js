@@ -222,7 +222,7 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
 
     beforeEach(async () => {
       await repos.billingBatchChargeVersionYears.create(
-        billingBatchId, chargeVersionId, financialYearEnding, { status, transactionType, isSummer }
+        { billingBatchId, chargeVersionId, financialYearEnding, status, transactionType, isSummer }
       );
     });
 

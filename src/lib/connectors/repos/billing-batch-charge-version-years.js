@@ -2,6 +2,7 @@
 
 const { BillingBatchChargeVersionYear, bookshelf } = require('../bookshelf');
 const raw = require('./lib/raw');
+const helpers = require('./lib/helpers');
 const queries = require('./queries/billing-batch-charge-version-years');
 const { TRANSACTION_TYPE } = require('../../models/charge-version-year');
 
@@ -107,17 +108,7 @@ const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
  * @param {String} data.transactionType annual | two_part_tariff
  * @param {Boolean} data.isSummer
  */
-const create = async (billingBatchId, chargeVersionId, financialYearEnding, data = {}) => {
-  const model = await BillingBatchChargeVersionYear
-    .forge({
-      billingBatchId,
-      chargeVersionId,
-      financialYearEnding,
-      ...data
-    })
-    .save();
-  return model.toJSON();
-};
+const create = async data => helpers.create(BillingBatchChargeVersionYear, data);
 
 exports.findOne = findOne;
 exports.update = update;
