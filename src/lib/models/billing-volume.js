@@ -6,7 +6,7 @@ const Decimal = require('decimal.js-light');
 const Model = require('./model');
 const FinancialYear = require('./financial-year');
 const User = require('./user');
-const { isNull, isNumber } = require('lodash');
+const { isNull } = require('lodash');
 const is = require('@sindresorhus/is');
 
 const validators = require('./validators');
@@ -89,14 +89,12 @@ class BillingVolume extends Model {
   set calculatedVolume (calculatedVolume) {
     if (isNull(calculatedVolume)) {
       this._calculatedVolume = null;
-    } else if (isNumber(calculatedVolume) || is.directInstanceOf(calculatedVolume, Decimal)) {
+    } else {
       const value = new Decimal(calculatedVolume);
       if (value.isNegative()) {
         throw new Error(`Expected zero or positive number or decimal, got ${value.toNumber()}`);
       }
       this._calculatedVolume = value;
-    } else {
-      throw new Error(`Expected null, finite number or Decimal instance, got ${calculatedVolume} ${typeof calculatedVolume}`);
     }
   }
 
