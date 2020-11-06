@@ -13,7 +13,7 @@ const min = (...decimals) => decimals.reduce((acc, decimal) => {
 });
 
 /**
- * Analogous to Math.min, returns the smallest Decimal value
+ * Analogous to Math.max, returns the greatest Decimal value
  * @param  {...Decimal} decimals
  * @return {Decimal} the largest provided decimal
  */
