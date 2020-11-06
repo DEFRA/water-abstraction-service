@@ -13,7 +13,7 @@ const FinancialYear = require('../../../../../lib/models/financial-year');
 const ChargeElementContainer = require('./charge-element-container');
 
 const { ChargeElementMatchingError } = require('../errors');
-const decimalHelpers = require('../lib/decimal-helpers');
+const decimalHelpers = require('../../../../../lib/decimal-helpers');
 
 const { RETURN_SEASONS } = require('../../../../../lib/models/constants');
 const {

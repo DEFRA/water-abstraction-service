@@ -6,8 +6,8 @@ const Decimal = require('decimal.js-light');
 const Model = require('./model');
 const FinancialYear = require('./financial-year');
 const User = require('./user');
-const { isNull, isFinite, isNumber, isObject } = require('lodash');
-const toFixedPrecision = require('../to-fixed');
+const { isNull, isNumber } = require('lodash');
+const is = require('@sindresorhus/is');
 
 const validators = require('./validators');
 
@@ -83,16 +83,18 @@ class BillingVolume extends Model {
   * @return {Decimal|Null}
   */
   get calculatedVolume () {
-    return this._calculatedVolume;
+    return this._calculatedVolume || null;
   }
 
   set calculatedVolume (calculatedVolume) {
     if (isNull(calculatedVolume)) {
       this._calculatedVolume = null;
-    } else if (isNumber(calculatedVolume)) {
-      this._calculatedVolume = new Decimal(calculatedVolume);
-    } else if (isObject(calculatedVolume)) {
-      this._calculatedVolume = calculatedVolume;
+    } else if (isNumber(calculatedVolume) || is.directInstanceOf(calculatedVolume, Decimal)) {
+      const value = new Decimal(calculatedVolume);
+      if (value.isNegative()) {
+        throw new Error(`Expected zero or positive number or decimal, got ${value.toNumber()}`);
+      }
+      this._calculatedVolume = value;
     } else {
       throw new Error(`Expected null, finite number or Decimal instance, got ${calculatedVolume} ${typeof calculatedVolume}`);
     }
@@ -212,11 +214,13 @@ class BillingVolume extends Model {
    * Sets the volume property from the calculatedVolume decimal
    */
   setVolumeFromCalculatedVolume () {
+    const { calculatedVolume } = this;
+
     this.assertIsNotApproved();
     if (!assignBillableStatuses.includes(this.twoPartTariffStatus)) {
-      this.volume = isNull(this.calculatedVolume)
-        ? null
-        : this.calculatedVolume.toDecimalPlaces(6).toNumber();
+      this.volume = is.object(calculatedVolume) && is.directInstanceOf(calculatedVolume, Decimal)
+        ? this.calculatedVolume.toDecimalPlaces(6).toNumber()
+        : this.calculatedVolume;
     }
     return this;
   }
@@ -231,6 +235,13 @@ class BillingVolume extends Model {
       return isNull(this.volume) ? null : new Decimal(this.volume);
     }
     return this.calculatedVolume;
+  }
+
+  toJSON () {
+    return {
+      ...super.toJSON(),
+      calculatedVolume: isNull(this.calculatedVolume) ? null : this.calculatedVolume.toDecimalPlaces(6).toNumber()
+    };
   }
 }
 

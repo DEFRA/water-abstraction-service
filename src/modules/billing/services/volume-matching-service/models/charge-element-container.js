@@ -12,7 +12,7 @@ const FinancialYear = require('../../../../../lib/models/financial-year');
 const { RETURN_SEASONS, CHARGE_SEASON } = require('../../../../../lib/models/constants');
 
 const validators = require('../../../../../lib/models/validators');
-const decimalHelpers = require('../lib/decimal-helpers');
+const decimalHelpers = require('../../../../../lib/decimal-helpers');
 
 /**
  * Gets a DateRange range for the charge element, taking into account
