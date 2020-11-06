@@ -96,7 +96,7 @@ const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear, tra
   validators.assertEnum(transactionType, Object.values(TRANSACTION_TYPE));
   validators.assertIsBoolean(isSummer);
   return repos.billingBatchChargeVersionYears.create(
-    batch.id, chargeVersionId, financialYear.endYear, BATCH_STATUS.processing, transactionType, isSummer
+    batch.id, chargeVersionId, financialYear.endYear, { status: BATCH_STATUS.processing, transactionType, isSummer }
   );
 };
 

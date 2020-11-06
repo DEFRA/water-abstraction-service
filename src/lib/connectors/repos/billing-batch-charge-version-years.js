@@ -103,17 +103,17 @@ const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
  * @param {String} billingBatchId
  * @param {String} chargeVersionId
  * @param {Number} financialYearEnding
- * @param {String} status
+ * @param {String} data.status
+ * @param {String} data.transactionType annual | two_part_tariff
+ * @param {Boolean} data.isSummer
  */
-const create = async (billingBatchId, chargeVersionId, financialYearEnding, status, transactionType, isSummer) => {
+const create = async (billingBatchId, chargeVersionId, financialYearEnding, data = {}) => {
   const model = await BillingBatchChargeVersionYear
     .forge({
       billingBatchId,
       chargeVersionId,
       financialYearEnding,
-      status,
-      transactionType,
-      isSummer
+      ...data
     })
     .save();
   return model.toJSON();

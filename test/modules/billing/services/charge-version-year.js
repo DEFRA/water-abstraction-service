@@ -191,13 +191,13 @@ experiment('modules/billing/services/charge-version-year', () => {
     });
 
     test('calls the repo method to create the record', async () => {
-      const [batchId, id, endYear, status, txnType, isSummer] = repos.billingBatchChargeVersionYears.create.lastCall.args;
+      const [batchId, id, endYear, data] = repos.billingBatchChargeVersionYears.create.lastCall.args;
       expect(batchId).to.equal(batch.id);
       expect(id).to.equal(chargeVersionId);
       expect(endYear).to.equal(2020);
-      expect(status).to.equal(Batch.BATCH_STATUS.processing);
-      expect(txnType).to.equal(TRANSACTION_TYPE.annual);
-      expect(isSummer).to.be.false();
+      expect(data.status).to.equal(Batch.BATCH_STATUS.processing);
+      expect(data.transactionType).to.equal(TRANSACTION_TYPE.annual);
+      expect(data.isSummer).to.be.false();
     });
   });
 });
