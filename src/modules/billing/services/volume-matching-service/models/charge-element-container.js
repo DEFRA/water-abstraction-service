@@ -1,5 +1,7 @@
 'use strict';
 
+const Decimal = require('decimal.js-light');
+
 // Models
 const ChargeElement = require('../../../../../lib/models/charge-element');
 const DateRange = require('../../../../../lib/models/date-range');
@@ -9,8 +11,8 @@ const FinancialYear = require('../../../../../lib/models/financial-year');
 
 const { RETURN_SEASONS, CHARGE_SEASON } = require('../../../../../lib/models/constants');
 
-const toFixedPrecision = require('../../../../../lib/to-fixed');
 const validators = require('../../../../../lib/models/validators');
+const decimalHelpers = require('../lib/decimal-helpers');
 
 /**
  * Gets a DateRange range for the charge element, taking into account
@@ -228,35 +230,39 @@ class ChargeElementContainer {
 
   /**
    * Gets volume available for matching
-   * @return {Number}
+   * @return {Decimal}
    */
   getAvailableVolume () {
-    const volume = this.chargeElement.volume - this.totalVolume;
-    return volume > 0 ? toFixedPrecision(volume, 6) : 0;
+    const available = new Decimal(this.chargeElement.volume)
+      .minus(this.totalVolume);
+
+    return decimalHelpers.max(new Decimal(0), available);
   }
 
   /**
    * Gets the billing volume for summer
-   * @return {Number}
+   * @return {Decimal|Number}
    */
   get summerVolume () {
-    return this._billingVolumes[RETURN_SEASONS.summer].volume || 0;
+    return this._billingVolumes[RETURN_SEASONS.summer].approvedOrCalculatedVolume || new Decimal(0);
   }
 
   /**
    * Gets the billing volume for winter/all year
-   * @return {Number}
+   * @return {Decimal|Number}
    */
   get winterAllYearVolume () {
-    return this._billingVolumes[RETURN_SEASONS.winterAllYear].volume || 0;
+    return this._billingVolumes[RETURN_SEASONS.winterAllYear].approvedOrCalculatedVolume || new Decimal(0);
   }
 
   /**
    * Gets the total billing volume for both seasons
-   * @return {Number}
+   * @return {Decimal}
    */
   get totalVolume () {
-    return this.summerVolume + this.winterAllYearVolume;
+    const a = new Decimal(this.summerVolume);
+    const b = new Decimal(this.winterAllYearVolume);
+    return a.plus(b);
   }
 
   /**
@@ -267,8 +273,10 @@ class ChargeElementContainer {
   flagOverAbstraction (returnSeason) {
     validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
 
+    // Summer happens first, so we are either considering summer or summer+winter
     const volume = returnSeason === RETURN_SEASONS.summer ? this.summerVolume : this.totalVolume;
-    const isOverAbstraction = volume > this.chargeElement.volume;
+
+    const isOverAbstraction = volume.greaterThan(new Decimal(this.chargeElement.volume));
 
     if (isOverAbstraction) {
       this._billingVolumes[returnSeason].setTwoPartTariffStatus(BillingVolume.twoPartTariffStatuses.ERROR_OVER_ABSTRACTION);

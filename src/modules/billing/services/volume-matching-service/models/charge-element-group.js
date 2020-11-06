@@ -1,5 +1,6 @@
 'use strict';
 
+const Decimal = require('decimal.js-light');
 const { groupBy, sortBy, negate, flatMap } = require('lodash');
 
 const validators = require('../../../../../lib/models/validators');
@@ -12,6 +13,7 @@ const FinancialYear = require('../../../../../lib/models/financial-year');
 const ChargeElementContainer = require('./charge-element-container');
 
 const { ChargeElementMatchingError } = require('../errors');
+const decimalHelpers = require('../lib/decimal-helpers');
 
 const { RETURN_SEASONS } = require('../../../../../lib/models/constants');
 const {
@@ -77,11 +79,11 @@ const isNotTimeLimited = negate(isTimeLimited);
  * @param {ChargeElementContainer} targetElementContainer
  */
 const reallocateElement = (returnSeason, sourceElementContainer, targetElementContainer) => {
-  const volumeToReallocate = Math.min(
+  const volumeToReallocate = decimalHelpers.min(
     targetElementContainer.getAvailableVolume(),
-    sourceElementContainer.getBillingVolume(returnSeason).volume
+    sourceElementContainer.getBillingVolume(returnSeason).approvedOrCalculatedVolume
   );
-  if (volumeToReallocate > 0) {
+  if (volumeToReallocate.isPositive()) {
     sourceElementContainer.deallocate(returnSeason, volumeToReallocate);
     targetElementContainer.allocate(returnSeason, volumeToReallocate);
   }
@@ -157,12 +159,12 @@ class ChargeElementGroup {
   /**
    * Gets the sum of billable/authorised for all charge
    * elements in the group.  This is needed when pro-rating volumes by purpose
-   * @return {Number}
+   * @return {Decimal}
    */
   get volume () {
     return this._chargeElementContainers.reduce((acc, chargeElementContainer) =>
-      acc + chargeElementContainer.chargeElement.volume
-    , 0);
+      acc.plus(new Decimal(chargeElementContainer.chargeElement.volume))
+    , new Decimal(0));
   }
 
   /**
@@ -281,19 +283,19 @@ class ChargeElementGroup {
 
   /**
    * Allocate a billable volume to the group
-   * @param {Number}
+   * @param {Decimal}
    */
   allocate (volume) {
     const { returnSeason } = this;
     this._chargeElementContainers.reduce((acc, chargeElementContainer, i) => {
       const isLast = i === this._chargeElementContainers.length - 1;
-      const qtyToAllocate = isLast ? acc : Math.min(
+      const qtyToAllocate = isLast ? acc : decimalHelpers.min(
         chargeElementContainer.getAvailableVolume(),
         acc
       );
       chargeElementContainer.allocate(returnSeason, qtyToAllocate);
-      return acc - qtyToAllocate;
-    }, volume);
+      return acc.minus(qtyToAllocate);
+    }, new Decimal(volume));
   }
 
   /**
@@ -343,7 +345,7 @@ class ChargeElementGroup {
     ));
     return billingVolumes
       .filter(billingVolume => billingVolume.isSummer === isSummer)
-      .map(billingVolume => billingVolume.toFixed());
+      .map(billingVolume => billingVolume.setVolumeFromCalculatedVolume());
   }
 
   /**

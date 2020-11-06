@@ -71,7 +71,7 @@ const getGroupTwoPartTariffStatuses = chargeElementGroups => {
 
 const getGroupAllocatedVolumes = chargeElementGroup => {
   return chargeElementGroup.chargeElementContainers.map(chargeElementContainer =>
-    chargeElementContainer.totalVolume
+    chargeElementContainer.totalVolume.toNumber()
   );
 };
 
@@ -121,7 +121,7 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
 
   experiment('.volume', () => {
     test('gets the billable volume of all elements in the group', async () => {
-      expect(chargeElementGroup.volume).to.equal(60);
+      expect(chargeElementGroup.volume.toNumber()).to.equal(60);
     });
   });
 
@@ -358,9 +358,9 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
     });
 
     test('billing volumes have been rounded to 6 dp', async () => {
-      expect(billingVolumes[0].calculatedVolume).to.equal(5);
+      expect(billingVolumes[0].calculatedVolume.toNumber()).to.equal(5);
       expect(billingVolumes[0].volume).to.equal(5);
-      expect(billingVolumes[1].calculatedVolume).to.equal(0.333333);
+      expect(billingVolumes[1].calculatedVolume.toNumber()).to.equal(0.3333333333333333);
       expect(billingVolumes[1].volume).to.equal(0.333333);
     });
   });
