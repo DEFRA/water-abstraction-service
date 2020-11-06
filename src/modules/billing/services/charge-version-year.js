@@ -1,16 +1,25 @@
 'use strict';
 
-const camelCaseKeys = require('../../../lib/camel-case-keys');
 const FinancialYear = require('../../../lib/models/financial-year');
 const validators = require('../../../lib/models/validators');
+const mappers = require('../mappers');
 const Batch = require('../../../lib/models/batch');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 
-const batchService = require('./batch-service');
 const chargeProcessorService = require('./charge-processor-service');
 
 const repos = require('../../../lib/connectors/repos');
 const { CHARGE_VERSION_YEAR_STATUS, TRANSACTION_TYPE } = require('../../../lib/models/charge-version-year.js');
+
+/**
+ * Gets charge version year for given id
+ * @param {String} id
+ * @return {Promise}
+ */
+const getChargeVersionYearById = async id => {
+  const row = await repos.billingBatchChargeVersionYears.findOne(id);
+  return row ? mappers.chargeVersionYear.dbToModel(row) : null;
+};
 
 /**
  * Sets water.billing_batch_charge_version_years to "ready"
@@ -47,11 +56,9 @@ const getStatusCounts = async batchId => {
  * @param {Object} chargeVersionYear
  * @return {Batch}
  */
-const processChargeVersionYear = async dbRow => {
-  const chargeVersionYear = camelCaseKeys(dbRow);
-  const batch = await batchService.getBatchById(chargeVersionYear.billingBatchId);
-  const financialYear = new FinancialYear(chargeVersionYear.financialYearEnding);
-  const invoice = await chargeProcessorService.processChargeVersionYear(batch, financialYear, chargeVersionYear.chargeVersionId);
+const processChargeVersionYear = async chargeVersionYear => {
+  const { batch } = chargeVersionYear;
+  const invoice = await chargeProcessorService.processChargeVersionYear(chargeVersionYear);
   batch.invoices = [invoice];
   return batch;
 };
@@ -93,6 +100,7 @@ const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear, tra
   );
 };
 
+exports.getChargeVersionYearById = getChargeVersionYearById;
 exports.setReadyStatus = setReadyStatus;
 exports.setErrorStatus = setErrorStatus;
 exports.getStatusCounts = getStatusCounts;

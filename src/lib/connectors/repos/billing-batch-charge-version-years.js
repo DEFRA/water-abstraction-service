@@ -5,6 +5,31 @@ const raw = require('./lib/raw');
 const queries = require('./queries/billing-batch-charge-version-years');
 const { TRANSACTION_TYPE } = require('../../models/charge-version-year');
 
+/**
+ * Finds a charge version year with related model data by ID
+ * @param {String} id
+ */
+const findOne = async id => {
+  const model = await BillingBatchChargeVersionYear
+    .forge({ billingBatchChargeVersionYearId: id })
+    .fetch({
+      withRelated: [
+        'billingBatch',
+        'billingBatch.region',
+        'chargeVersion',
+        'chargeVersion.chargeElements',
+        'chargeVersion.chargeElements.purposePrimary',
+        'chargeVersion.chargeElements.purposeSecondary',
+        'chargeVersion.chargeElements.purposeUse',
+        'chargeVersion.licence',
+        'chargeVersion.licence.licenceAgreements',
+        'chargeVersion.licence.licenceAgreements.financialAgreementType'
+      ]
+    });
+
+  return model.toJSON();
+};
+
 const update = (id, data) =>
   BillingBatchChargeVersionYear
     .forge({ billingBatchChargeVersionYearId: id })
@@ -94,6 +119,7 @@ const create = async (billingBatchId, chargeVersionId, financialYearEnding, stat
   return model.toJSON();
 };
 
+exports.findOne = findOne;
 exports.update = update;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
 exports.deleteByBatchId = deleteByBatchId;

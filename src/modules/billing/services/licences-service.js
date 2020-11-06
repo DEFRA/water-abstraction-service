@@ -49,7 +49,7 @@ const deleteBatchLicence = async (batch, licenceId) => {
   // flag for supplementary billing
   await licencesService.updateIncludeInSupplementaryBillingStatus(
     INCLUDE_IN_SUPPLEMENTARY_BILLING.no,
-    INCLUDE_IN_SUPPLEMENTARY_BILLING.reprocess,
+    INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
     licenceId
   );
 };

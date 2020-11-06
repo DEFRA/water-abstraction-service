@@ -100,7 +100,7 @@ experiment('modules/billing/services/licences-service', () => {
       test('licence is flagged for supplementary billing', async () => {
         expect(generalLicencesService.updateIncludeInSupplementaryBillingStatus.calledWith(
           INCLUDE_IN_SUPPLEMENTARY_BILLING.no,
-          INCLUDE_IN_SUPPLEMENTARY_BILLING.reprocess,
+          INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
           licenceId
         )).to.be.true();
       });

@@ -4,8 +4,6 @@ const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi
 const uuid = require('uuid/v4');
 const sandbox = require('sinon').createSandbox();
 
-const { NotFoundError } = require('../../../../../src/lib/errors');
-
 const Invoice = require('../../../../../src/lib/models/invoice');
 const Transaction = require('../../../../../src/lib/models/transaction');
 
@@ -136,7 +134,7 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
   });
 
   experiment('.processChargeVersionYear', () => {
-    let invoice, batch, financialYear, chargeVersion;
+    let invoice, batch, financialYear, chargeVersion, chargeVersionYear;
 
     beforeEach(async () => {
       // Create batch and charge version data
@@ -147,19 +145,12 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
     experiment('when all charge version/CRM data is found', () => {
       beforeEach(async () => {
         chargeVersion = data.createChargeVersionWithTwoPartTariff();
-        chargeVersionService.getByChargeVersionId.resolves(chargeVersion);
-
+        chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
         const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
         billingVolumeService.getVolumesForChargeElements.resolves(billingVolumes);
 
         // Run charge processor
-        invoice = await chargeProcessorService.processChargeVersionYear(batch, financialYear, chargeVersion.id);
-      });
-
-      test('the charge version is loaded with the correct ID', async () => {
-        expect(chargeVersionService.getByChargeVersionId.calledWith(
-          chargeVersion.id
-        )).to.be.true();
+        invoice = await chargeProcessorService.processChargeVersionYear(chargeVersionYear);
       });
 
       test('the billing volumes related to the charge elements in the charge version are fetched', async () => {
@@ -203,21 +194,6 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
         invoice.invoiceLicences[0].transactions.forEach(transaction => {
           expect(transaction instanceof Transaction).to.be.true();
         });
-      });
-    });
-
-    experiment('if the charge version is not found', () => {
-      beforeEach(async () => {
-        chargeVersionService.getByChargeVersionId.resolves(null);
-      });
-
-      test('a NotFoundError is thrown', async () => {
-        const func = () => chargeProcessorService.processChargeVersionYear(batch, financialYear, chargeVersion.id);
-
-        const err = await expect(func()).to.reject();
-
-        expect(err instanceof NotFoundError).to.be.true();
-        expect(err.message).to.equal(`Charge version ${chargeVersion.id} not found`);
       });
     });
   });

@@ -9,21 +9,18 @@ const moment = MomentRange.extendMoment(require('moment'));
 const helpers = require('@envage/water-abstraction-helpers');
 
 // Service models
-const Batch = require('../../../../lib/models/batch');
-const BillingVolume = require('../../../../lib/models/billing-volume');
-const ChargeVersion = require('../../../../lib/models/charge-version');
-const FinancialYear = require('../../../../lib/models/financial-year');
 const DateRange = require('../../../../lib/models/date-range');
 const Transaction = require('../../../../lib/models/transaction');
 
+const { TRANSACTION_TYPE } = require('../../../../lib/models/charge-version-year');
 const { getChargePeriod } = require('../../lib/charge-period');
-
-const validators = require('../../../../lib/models/validators');
 
 const agreements = require('./lib/agreements');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
+const isTwoPartTariffApplied = (agreement, purpose) =>
+  agreement.isTwoPartTariff() && purpose.isTwoPartTariff;
 /**
  * Predicate to check whether an agreement should be applied to the transaction
  * @param {Agreement} agreement
@@ -32,8 +29,7 @@ const DATE_FORMAT = 'YYYY-MM-DD';
  */
 const agreementAppliesToTransaction = (agreement, purpose) => {
   const isCanalApplied = agreement.isCanalAndRiversTrust();
-  const isTwoPartTariffApplied = agreement.isTwoPartTariff() && purpose.isTwoPartTariff;
-  return isCanalApplied || isTwoPartTariffApplied;
+  return isCanalApplied || isTwoPartTariffApplied(agreement, purpose);
 };
 
 /**
@@ -69,37 +65,11 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
 };
 
 /**
- * Predicate to check whether annual transactions are needed
- * @param {Batch} batch
- * @return {Boolean}
- */
-const isAnnualChargesNeeded = batch => batch.isAnnual() || batch.isSupplementary();
-
-/**
- * Predicate to check whether two-part supplementary transactions are needed
- * @param {Batch} batch
- * @param {Object} period
- * @param {ChargeElement} chargeElement
- * @param {BillingVolume} billingVolume
- * @return {Boolean}
- */
-const isTwoPartTariffSupplementaryChargeNeeded = (batch, period, chargeElement, billingVolume) => {
-  const isCorrectBatchType = batch.isTwoPartTariff() || batch.isSupplementary();
-  const isCorrectSeason = batch.isSupplementary() || (batch.isSummer === billingVolume.isSummer);
-  const isAgreementInEffect = period.agreements.some(agreement => agreement.code === 'S127');
-  const isValidPurpose = chargeElement.purposeUse.isTwoPartTariff;
-  return isCorrectBatchType && isAgreementInEffect && isValidPurpose && isCorrectSeason;
-};
-
-/**
  * Predicate to check whether compensation charges are needed
- * @param {Batch} batch
  * @param {ChargeVersion} chargeVersion
  * @return {Boolean}
  */
-const isCompensationChargesNeeded = (batch, chargeVersion) => {
-  return isAnnualChargesNeeded(batch) && !chargeVersion.licence.isWaterUndertaker;
-};
+const isCompensationChargesNeeded = chargeVersion => !chargeVersion.licence.isWaterUndertaker;
 
 /**
  * Predicate to check whether the minimum charge applies
@@ -154,16 +124,62 @@ const getBillingVolumesForChargeElement = (chargeElement, billingVolumes) => bil
   billingVolume => billingVolume.chargeElementId === chargeElement.id
 );
 
+const hasTwoPartTariffAgreement = (agreements, purposeUse) => {
+  const agreementsAreTwoPartTariff = agreements.map(agreement =>
+    isTwoPartTariffApplied(agreement, purposeUse));
+  return agreementsAreTwoPartTariff.includes(true);
+};
+
 /**
- * Gets an array of Transaction models for the supplied charge version/batch
- * @param {Batch} batch
- * @param {Object} period - an object containing a date range and array of applicable Agreements
- * @param {ChargeVersion} chargeVersion
+ * Create two part tariff transactions
+ * @param {Object} elementChargePeriod
+ * @param {ChargeElement} chargeElement
+ * @param {Array} agreements
  * @param {FinancialYear} financialYear
- * @param {Array<BillingVolume>} billing volumes
+ * @param {Array<BillingVolume>} additionalData.billingVolumes volumes
  * @return {Array<Transaction>}
  */
-const createTransactionsForPeriod = (batch, period, chargeVersion, financialYear, billingVolumes) => {
+const createTwoPartTariffTransactions = (elementChargePeriod, chargeElement, agreements, financialYear, additionalData) => {
+  const { billingVolumes } = additionalData;
+  const transactions = [];
+  const elementBillingVolumes = getBillingVolumesForChargeElement(chargeElement, billingVolumes);
+  elementBillingVolumes.forEach(billingVolume => {
+    if (hasTwoPartTariffAgreement(agreements, chargeElement.purposeUse)) {
+      transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isTwoPartTariffSupplementary: true }, billingVolume));
+    }
+  });
+
+  return transactions;
+};
+
+/**
+ * Create annual transactions
+ * @param {Object} elementChargePeriod
+ * @param {ChargeElement} chargeElement
+ * @param {Array} agreements
+ * @param {FinancialYear} financialYear
+ * @param {ChargeVersion} additionalData.chargeVersion volumes
+ * @return {Array<Transaction>}
+ */
+const createAnnualAndCompensationTransactions = (elementChargePeriod, chargeElement, agreements, financialYear, additionalData) => {
+  const { chargeVersion } = additionalData;
+  const isMinimumCharge = doesMinimumChargeApply(elementChargePeriod, chargeVersion);
+
+  const transactions = [createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isMinimumCharge })];
+
+  if (isCompensationChargesNeeded(chargeVersion)) {
+    transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true, isMinimumCharge }));
+  }
+  return transactions;
+};
+
+const actions = {
+  [TRANSACTION_TYPE.annual]: createAnnualAndCompensationTransactions,
+  [TRANSACTION_TYPE.twoPartTariff]: createTwoPartTariffTransactions
+};
+
+const createTransactionsForPeriod = (chargeVersionYear, period, billingVolumes) => {
+  const { chargeVersion, financialYear, transactionType } = chargeVersionYear;
   const { agreements, dateRange } = period;
 
   return chargeVersion.chargeElements.reduce((acc, chargeElement) => {
@@ -171,42 +187,20 @@ const createTransactionsForPeriod = (batch, period, chargeVersion, financialYear
     if (!elementChargePeriod) {
       return acc;
     }
-    const isMinimumCharge = doesMinimumChargeApply(elementChargePeriod, chargeVersion);
-
-    if (isAnnualChargesNeeded(batch)) {
-      acc.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isMinimumCharge }));
-    }
-    if (isCompensationChargesNeeded(batch, chargeVersion)) {
-      acc.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true, isMinimumCharge }));
-    }
-
-    // Two-part tariff transactions:
-    const elementBillingVolumes = getBillingVolumesForChargeElement(chargeElement, billingVolumes);
-    elementBillingVolumes.forEach(billingVolume => {
-      if (isTwoPartTariffSupplementaryChargeNeeded(batch, period, chargeElement, billingVolume)) {
-        acc.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isTwoPartTariffSupplementary: true }, billingVolume));
-      }
-    });
-
+    const additionalData = { chargeVersion, billingVolumes };
+    acc.push(...actions[transactionType](elementChargePeriod, chargeElement, agreements, financialYear, additionalData));
     return acc;
   }, []);
 };
 
 /**
- * Create transactions
- * @param {Batch} batch
- * @param {FinancialYear} financialYear
- * @param {ChargeVersion} chargeVersion
+ * Create two part tariff transactions
+ * @param {ChargeVersionYear} chargeVersionYear
  * @param {Array<BillingVolume>} billingVolumes - all billing volumes in DB matching charge element IDs
  * @return {Array<Transaction>}
  */
-const createTransactions = (batch, financialYear, chargeVersion, billingVolumes) => {
-  // Validation
-  validators.assertIsInstanceOf(batch, Batch);
-  validators.assertIsInstanceOf(financialYear, FinancialYear);
-  validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
-  validators.assertIsArrayOfType(billingVolumes, BillingVolume);
-
+const createTransactions = (chargeVersionYear, billingVolumes) => {
+  const { chargeVersion, financialYear } = chargeVersionYear;
   const chargePeriod = getChargePeriod(financialYear, chargeVersion);
 
   // Create a history for the financial year, taking into account agreements
@@ -214,7 +208,7 @@ const createTransactions = (batch, financialYear, chargeVersion, billingVolumes)
 
   // Create transactions for each period in the history
   const transactions = history.map(period =>
-    createTransactionsForPeriod(batch, period, chargeVersion, financialYear, billingVolumes));
+    createTransactionsForPeriod(chargeVersionYear, period, billingVolumes));
 
   return flatMap(transactions);
 };

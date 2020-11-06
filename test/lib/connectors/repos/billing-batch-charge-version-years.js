@@ -39,6 +39,43 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
     sandbox.restore();
   });
 
+  experiment('.findOne', () => {
+    let result;
+
+    beforeEach(async () => {
+      result = await repos.billingBatchChargeVersionYears.findOne('test-id');
+    });
+
+    test('calls model.forge with correct id', async () => {
+      const [params] = BillingBatchChargeVersionYear.forge.lastCall.args;
+      expect(params).to.equal({ billingBatchChargeVersionYearId: 'test-id' });
+    });
+
+    test('calls fetch() with related models', async () => {
+      const [params] = stub.fetch.lastCall.args;
+      expect(params.withRelated).to.equal([
+        'billingBatch',
+        'billingBatch.region',
+        'chargeVersion',
+        'chargeVersion.chargeElements',
+        'chargeVersion.chargeElements.purposePrimary',
+        'chargeVersion.chargeElements.purposeSecondary',
+        'chargeVersion.chargeElements.purposeUse',
+        'chargeVersion.licence',
+        'chargeVersion.licence.licenceAgreements',
+        'chargeVersion.licence.licenceAgreements.financialAgreementType'
+      ]);
+    });
+
+    test('calls toJSON() on returned models', async () => {
+      expect(model.toJSON.callCount).to.equal(1);
+    });
+
+    test('returns the result of the toJSON() call', async () => {
+      expect(result).to.equal({ foo: 'bar' });
+    });
+  });
+
   experiment('.update', () => {
     const data = {
       status: 'complete'
