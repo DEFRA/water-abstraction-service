@@ -92,7 +92,7 @@ class BillingVolume extends Model {
     } else {
       const value = new Decimal(calculatedVolume);
       if (value.isNegative()) {
-        throw new Error(`Expected zero or positive number or decimal, got ${value.toNumber()}`);
+        throw new Error(`Expected zero or positive number or Decimal instance, got ${value.toNumber()}`);
       }
       this._calculatedVolume = value;
     }
