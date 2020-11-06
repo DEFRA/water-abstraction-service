@@ -8,18 +8,18 @@ const Decimal = require('decimal.js-light');
  * @param  {...Decimal} decimals
  * @return {Decimal} the smallest provided decimal
  */
-const min = (...decimals) => decimals.reduce((acc, decimal) => {
-  return decimal.lessThan(acc) ? decimal : acc;
-});
+const min = (...decimals) => decimals.reduce(
+  (acc, decimal) => decimal.lessThan(acc) ? decimal : acc
+);
 
 /**
  * Analogous to Math.max, returns the greatest Decimal value
  * @param  {...Decimal} decimals
  * @return {Decimal} the largest provided decimal
  */
-const max = (...decimals) => decimals.reduce((acc, decimal) => {
-  return decimal.greaterThan(acc) ? decimal : acc;
-});
+const max = (...decimals) => decimals.reduce(
+  (acc, decimal) => decimal.greaterThan(acc) ? decimal : acc
+);
 
 /**
  * Checks whether the supplied value is a Decimal
