@@ -1,12 +1,13 @@
 'use strict';
 
 const hoek = require('@hapi/hoek');
+const Decimal = require('decimal.js-light');
 
 const Model = require('./model');
 const FinancialYear = require('./financial-year');
 const User = require('./user');
-const { isNull, isFinite } = require('lodash');
-const toFixedPrecision = require('../to-fixed');
+const { isNull } = require('lodash');
+const is = require('@sindresorhus/is');
 
 const validators = require('./validators');
 
@@ -79,15 +80,22 @@ class BillingVolume extends Model {
 
   /**
   * The volume determined by returns algorithm
-  * @return {Number}
+  * @return {Decimal|Null}
   */
   get calculatedVolume () {
-    return this._calculatedVolume;
+    return this._calculatedVolume || null;
   }
 
   set calculatedVolume (calculatedVolume) {
-    validators.assertNullableQuantity(calculatedVolume);
-    this._calculatedVolume = isNull(calculatedVolume) ? null : parseFloat(calculatedVolume);
+    if (isNull(calculatedVolume)) {
+      this._calculatedVolume = null;
+    } else {
+      const value = new Decimal(calculatedVolume);
+      if (value.isNegative()) {
+        throw new Error(`Expected zero or positive number or Decimal instance, got ${value.toNumber()}`);
+      }
+      this._calculatedVolume = value;
+    }
   }
 
   /**
@@ -172,15 +180,19 @@ class BillingVolume extends Model {
     this._volume = isNull(volume) ? null : parseFloat(volume);
   }
 
+  assertIsNotApproved () {
+    hoek.assert(!this.isApproved, 'Cannot allocate/de-allocate on an approved BillingVolume');
+  }
+
   /**
    * Allocates billing volume
    * @param {Number} ML
    */
   allocate (volume) {
-    validators.assertQuantity(volume);
-    hoek.assert(this.calculatedVolume === this.volume, `Can't allocate ${volume} when volume and calculated volume differ`);
-    this.calculatedVolume = isFinite(this.calculatedVolume) ? this.calculatedVolume + volume : volume;
-    this.volume = this.calculatedVolume;
+    this.assertIsNotApproved();
+    const currentVolume = this.calculatedVolume || new Decimal(0);
+    this.calculatedVolume = currentVolume.add(volume);
+    return this;
   }
 
   /**
@@ -188,24 +200,46 @@ class BillingVolume extends Model {
    * @param {Number} ML
    */
   deallocate (volume) {
-    hoek.assert(isFinite(this.calculatedVolume), `Can't deallocate ${volume} when calculated volume is not finite`);
-    hoek.assert(this.calculatedVolume === this.volume, `Can't deallocate ${volume} when volume and calculated volume differ`);
-    validators.assertQuantityWithMaximum(volume, this.calculatedVolume);
-    this.calculatedVolume -= volume;
-    this.volume = this.calculatedVolume;
+    this.assertIsNotApproved();
+    const currentVolume = this.calculatedVolume || new Decimal(0);
+    const isVolumeAvailable = currentVolume.greaterThanOrEqualTo(volume);
+    hoek.assert(isVolumeAvailable, `Volume ${volume} cannot be de-allocated, ${currentVolume.toString()} available`);
+    this.calculatedVolume = currentVolume.minus(volume);
+    return this;
   }
 
   /**
-   * Converts volumes to a fixed precision of 3 DP
+   * Sets the volume property from the calculatedVolume decimal
    */
-  toFixed () {
-    if (isFinite(this.volume)) {
-      this.volume = toFixedPrecision(this.volume);
-    }
-    if (isFinite(this.calculatedVolume)) {
-      this.calculatedVolume = toFixedPrecision(this.calculatedVolume);
+  setVolumeFromCalculatedVolume () {
+    const { calculatedVolume } = this;
+
+    this.assertIsNotApproved();
+    if (!assignBillableStatuses.includes(this.twoPartTariffStatus)) {
+      this.volume = is.object(calculatedVolume) && is.directInstanceOf(calculatedVolume, Decimal)
+        ? this.calculatedVolume.toDecimalPlaces(6).toNumber()
+        : this.calculatedVolume;
     }
     return this;
+  }
+
+  /**
+   * Gets either the approved volume, or the calculated volume if the billing
+   * volume is not yet approved, as a decimal
+   * @return {Decimal}
+   */
+  get approvedOrCalculatedVolume () {
+    if (this.isApproved) {
+      return isNull(this.volume) ? null : new Decimal(this.volume);
+    }
+    return this.calculatedVolume;
+  }
+
+  toJSON () {
+    return {
+      ...super.toJSON(),
+      calculatedVolume: isNull(this.calculatedVolume) ? null : this.calculatedVolume.toDecimalPlaces(6).toNumber()
+    };
   }
 }
 

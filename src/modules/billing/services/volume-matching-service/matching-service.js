@@ -2,6 +2,7 @@
 
 const validators = require('../../../../lib/models/validators');
 const { logger } = require('../../../../logger');
+const Decimal = require('decimal.js-light');
 
 // Models
 const DateRange = require('../../../../lib/models/date-range');
@@ -23,16 +24,17 @@ const { ERROR_NO_MATCHING_CHARGE_ELEMENT } = require('../../../../lib/models/bil
  */
 const allocateReturnLine = (lineChargeElementGroups, returnLine) => {
   const totalVolume = lineChargeElementGroups.reduce((acc, chargeElementGroup) =>
-    acc + chargeElementGroup.volume
-  , 0);
+    acc.plus(chargeElementGroup.volume)
+  , new Decimal(0));
   // Allocate volumes
   lineChargeElementGroups.forEach(chargeElementGroup => {
     // Get ratio of purposes for allocation
     // This ensures where a return has multiple purposes, the volume is allocated
     // according to the ratio of billable volumes in matching elements
-    const purposeRatio = chargeElementGroup.volume / totalVolume;
+    const purposeRatio = chargeElementGroup.volume.dividedBy(totalVolume);
     // Convert to ML
-    const qty = purposeRatio * (returnLine.volume / 1000);
+    const returnLineVolumeInML = new Decimal(returnLine.volume).dividedBy(1000);
+    const qty = purposeRatio.times(returnLineVolumeInML);
     return chargeElementGroup.allocate(qty);
   });
 };

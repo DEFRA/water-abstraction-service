@@ -1,6 +1,6 @@
 {
   "name": "water-abstraction-service",
-  "version": "1.54.0",
+  "version": "1.55.0",
   "description": "Web app for Water Abstraction Permit service",
   "main": "index.js",
   "repository": {
@@ -53,6 +53,7 @@
     "@hapi/hapi": "^18.4.1",
     "@hapi/joi": "^15.1.1",
     "@hapi/vision": "^5.5.4",
+    "@sindresorhus/is": "^4.0.0",
     "acorn": "^6.4.1",
     "async-waterfall": "^0.1.5",
     "aws-sdk": "^2.728.0",
