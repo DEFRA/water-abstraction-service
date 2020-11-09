@@ -1,7 +1,6 @@
 const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
-const { omit } = require('lodash');
 
 const uuid = require('uuid/v4');
 
