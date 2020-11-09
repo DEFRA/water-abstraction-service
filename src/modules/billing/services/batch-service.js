@@ -81,7 +81,7 @@ const getExistingOrDuplicateSentBatch = async (regionId, batchType, toFinancialY
   if (batchType === BATCH_TYPE.supplementary) return existingBatch;
 
   const duplicateSentBatch = await getDuplicateSentBatch(regionId, batchType, toFinancialYearEnding, isSummer);
-  return existingBatch || duplicateSentBatch;
+  return duplicateSentBatch || existingBatch;
 };
 
 const saveEvent = (type, status, user, batch) => {
