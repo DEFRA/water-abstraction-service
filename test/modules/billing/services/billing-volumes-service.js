@@ -244,9 +244,8 @@ experiment('modules/billing/services/billing-volumes-service', () => {
     });
 
     test('the repo .create() method is called with the correct arguments', async () => {
-      expect(billingVolumesRepo.create.calledWith({
-        ...omit(data, 'billingVolumeId')
-      })).to.be.true();
+      const [arg] = billingVolumesRepo.create.lastCall.args;
+      expect(arg).to.equal(data);
     });
 
     test('the result is the saved billingVolume', async () => {

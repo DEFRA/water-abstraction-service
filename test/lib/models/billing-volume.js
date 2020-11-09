@@ -3,6 +3,7 @@
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
+const Decimal = require('decimal.js-light');
 
 const BillingVolume = require('../../../src/lib/models/billing-volume');
 const FinancialYear = require('../../../src/lib/models/financial-year');
@@ -110,9 +111,14 @@ experiment('lib/models/billingVolume', () => {
   });
 
   experiment('.calculatedVolume', () => {
-    test('can be set to a positive number', async () => {
+    test('can be set to a positive number - converted to Decimal', async () => {
       billingVolume.calculatedVolume = 4.465;
-      expect(billingVolume.calculatedVolume).to.equal(4.465);
+      expect(billingVolume.calculatedVolume.toNumber()).to.equal(4.465);
+    });
+
+    test('can be set to a Decimal instance', async () => {
+      billingVolume.calculatedVolume = new Decimal(1.23456);
+      expect(billingVolume.calculatedVolume.toNumber()).to.equal(1.23456);
     });
 
     test('can be set to null', async () => {
@@ -269,12 +275,17 @@ experiment('lib/models/billingVolume', () => {
       expect(billingVolume.toJSON()).to.equal({
         id: billingVolume.id,
         chargeElementId: billingVolume.chargeElementId,
-        calculatedVolume: billingVolume.calculatedVolume
+        calculatedVolume: 25
       });
     });
   });
 
   experiment('.setTwoPartTariffStatus', () => {
+    beforeEach(async () => {
+      billingVolume.calculatedVolume = 25;
+      billingVolume.volume = 15;
+    });
+
     experiment('when no returns are submitted', () => {
       beforeEach(async () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED, 20);
@@ -302,9 +313,9 @@ experiment('lib/models/billingVolume', () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_UNDER_QUERY, 20);
       });
 
-      test('the volume and calculated volume are not set', async () => {
-        expect(billingVolume.volume).to.be.undefined();
-        expect(billingVolume.calculatedVolume).to.be.undefined();
+      test('the volume and calculated volume are not changed', async () => {
+        expect(billingVolume.volume).to.equal(15);
+        expect(billingVolume.calculatedVolume.toNumber()).to.equal(25);
       });
 
       test('the error flag is set', async () => {
@@ -321,9 +332,9 @@ experiment('lib/models/billingVolume', () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_RECEIVED, 20);
       });
 
-      test('the volume and calculated volume are not set', async () => {
-        expect(billingVolume.volume).to.be.undefined();
-        expect(billingVolume.calculatedVolume).to.be.undefined();
+      test('the volume and calculated volume are not changed', async () => {
+        expect(billingVolume.volume).to.equal(15);
+        expect(billingVolume.calculatedVolume.toNumber()).to.equal(25);
       });
 
       test('the error flag is set', async () => {
@@ -384,9 +395,9 @@ experiment('lib/models/billingVolume', () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_OVER_ABSTRACTION, 20);
       });
 
-      test('the volume and calculated volume are not set', async () => {
-        expect(billingVolume.volume).to.be.undefined();
-        expect(billingVolume.calculatedVolume).to.be.undefined();
+      test('the volume and calculated volume are not changed', async () => {
+        expect(billingVolume.volume).to.equal(15);
+        expect(billingVolume.calculatedVolume.toNumber()).to.equal(25);
       });
 
       test('the error flag is set', async () => {
@@ -403,9 +414,9 @@ experiment('lib/models/billingVolume', () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_NO_RETURNS_FOR_MATCHING, 20);
       });
 
-      test('the volume and calculated volume are not set', async () => {
-        expect(billingVolume.volume).to.be.undefined();
-        expect(billingVolume.calculatedVolume).to.be.undefined();
+      test('the volume and calculated volume are not changed', async () => {
+        expect(billingVolume.volume).to.equal(15);
+        expect(billingVolume.calculatedVolume.toNumber()).to.equal(25);
       });
 
       test('the error flag is set', async () => {
@@ -422,9 +433,9 @@ experiment('lib/models/billingVolume', () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_NOT_DUE_FOR_BILLING, 20);
       });
 
-      test('the volume and calculated volume are not set', async () => {
-        expect(billingVolume.volume).to.be.undefined();
-        expect(billingVolume.calculatedVolume).to.be.undefined();
+      test('the volume and calculated volume are not changed', async () => {
+        expect(billingVolume.volume).to.equal(15);
+        expect(billingVolume.calculatedVolume.toNumber()).to.equal(25);
       });
 
       test('the error flag is set', async () => {
@@ -441,9 +452,9 @@ experiment('lib/models/billingVolume', () => {
         billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD, 20);
       });
 
-      test('the volume and calculated volume are not set', async () => {
-        expect(billingVolume.volume).to.be.undefined();
-        expect(billingVolume.calculatedVolume).to.be.undefined();
+      test('the volume and calculated volume are not changed', async () => {
+        expect(billingVolume.volume).to.equal(15);
+        expect(billingVolume.calculatedVolume.toNumber()).to.equal(25);
       });
 
       test('the error flag is set', async () => {
@@ -457,18 +468,15 @@ experiment('lib/models/billingVolume', () => {
   });
 
   experiment('.allocate', () => {
-    test('sets the volume and calculated volume if they are not yet set', async () => {
+    test('sets the calculated volume if not yet set', async () => {
       billingVolume.allocate(5);
-      expect(billingVolume.calculatedVolume).to.equal(5);
-      expect(billingVolume.volume).to.equal(5);
+      expect(billingVolume.calculatedVolume.toNumber()).to.equal(5);
     });
 
-    test('adds the volume and calculated volume if they are aleady set', async () => {
-      billingVolume.volume = 2.5;
+    test('adds to the calculated volume if aleady set', async () => {
       billingVolume.calculatedVolume = 2.5;
       billingVolume.allocate(5);
-      expect(billingVolume.calculatedVolume).to.equal(7.5);
-      expect(billingVolume.volume).to.equal(7.5);
+      expect(billingVolume.calculatedVolume.toNumber()).to.equal(7.5);
     });
 
     test('throws an error if the argument is not a number', async () => {
@@ -476,8 +484,8 @@ experiment('lib/models/billingVolume', () => {
       expect(func).to.throw();
     });
 
-    test('throws an error if the  volume and calculated volume are different', async () => {
-      billingVolume.volume = 1.2;
+    test('throws an error if the billing volume is approved', async () => {
+      billingVolume.isApproved = true;
       billingVolume.calculatedVolume = 3;
       const func = () => { billingVolume.allocate(4.5); };
       expect(func).to.throw();
@@ -486,19 +494,15 @@ experiment('lib/models/billingVolume', () => {
 
   experiment('.deallocate', () => {
     test('subtracts from the volume and calculated volume', async () => {
-      billingVolume.volume = 2.5;
       billingVolume.calculatedVolume = 2.5;
       billingVolume.deallocate(1.2);
-      expect(billingVolume.calculatedVolume).to.equal(1.3);
-      expect(billingVolume.volume).to.equal(1.3);
+      expect(billingVolume.calculatedVolume.toNumber()).to.equal(1.3);
     });
 
     test('can deallocate the full volume', async () => {
-      billingVolume.volume = 2.5;
       billingVolume.calculatedVolume = 2.5;
       billingVolume.deallocate(2.5);
-      expect(billingVolume.calculatedVolume).to.equal(0);
-      expect(billingVolume.volume).to.equal(0);
+      expect(billingVolume.calculatedVolume.toNumber()).to.equal(0);
     });
 
     test('throws an error if the argument is not a number', async () => {
@@ -506,40 +510,35 @@ experiment('lib/models/billingVolume', () => {
       expect(func).to.throw();
     });
 
-    test('throws an error if the volume and calculated volume are different', async () => {
-      billingVolume.volume = 1.2;
+    test('throws an error if the billing volume is approved', async () => {
+      billingVolume.isApproved = true;
       billingVolume.calculatedVolume = 3;
       const func = () => { billingVolume.deallocate(1); };
       expect(func).to.throw();
     });
 
     test('throws an error if the deallocation volume exceeds the calculated volume', async () => {
-      billingVolume.volume = 5;
       billingVolume.calculatedVolume = 5;
       const func = () => { billingVolume.deallocate(10); };
       expect(func).to.throw();
     });
   });
 
-  experiment('.toFixed', async () => {
-    test('rounds the volumes to 3DP precision', async () => {
-      billingVolume.volume = 1 / 3;
+  experiment('.setVolumeFromCalculatedVolume', async () => {
+    test('sets the .volume property to the calculatedVolume rounded to 6DP', async () => {
       billingVolume.calculatedVolume = 2 / 3;
-      billingVolume.toFixed();
-      expect(billingVolume.volume).to.equal(0.333);
-      expect(billingVolume.calculatedVolume).to.equal(0.667);
+      billingVolume.setVolumeFromCalculatedVolume();
+      expect(billingVolume.volume).to.equal(0.666667);
     });
 
-    test('does nothing if volumes are null', async () => {
-      billingVolume.volume = null;
+    test('sets the .volume property to null if the calculatedVolume is null', async () => {
       billingVolume.calculatedVolume = null;
-      billingVolume.toFixed();
+      billingVolume.setVolumeFromCalculatedVolume();
       expect(billingVolume.volume).to.be.null();
-      expect(billingVolume.calculatedVolume).to.be.null();
     });
 
     test('returns itself', async () => {
-      expect(billingVolume.toFixed()).to.equal(billingVolume);
+      expect(billingVolume.setVolumeFromCalculatedVolume()).to.equal(billingVolume);
     });
   });
 });
