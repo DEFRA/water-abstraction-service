@@ -4,6 +4,8 @@ const Joi = require('@hapi/joi');
 
 const preHandlers = require('./pre-handlers');
 const controller = require('./controller');
+const config = require('../../../config');
+const { ROLES: { billing } } = require('../../lib/roles');
 
 const getBatches = {
   method: 'GET',
@@ -190,6 +192,22 @@ const postApproveReviewBatch = {
     ]
   }
 };
+
+if (config.featureToggles.deleteAllBillingData) {
+  const deleteAllBillingData = {
+    method: 'DELETE',
+    path: '/water/1.0/billing/batches',
+    handler: controller.deleteAllBillingData,
+    config: {
+      description: 'Deletes all billing and charge version data (!)',
+      auth: {
+        scope: [billing]
+      }
+    }
+  };
+
+  exports.deleteAllBillingData = deleteAllBillingData;
+}
 
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;

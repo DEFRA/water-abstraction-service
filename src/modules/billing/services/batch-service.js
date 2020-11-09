@@ -442,6 +442,26 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
   }
 };
 
+/**
+ * Deletes all billing data in service (!)
+ * @return {Promise}
+ */
+const deleteAllBillingData = async () => {
+  // Delete batches in CM
+  const batches = await newRepos.billingBatches.find();
+  const batchesWithExternalId = batches.filter(row => !!row.externalId);
+  for (const { externalId } in batchesWithExternalId) {
+    try {
+      logger.info(`Deleting Charge Module batch ${externalId}`);
+      await chargeModuleBillRunConnector.delete(externalId);
+    } catch (err) {
+      logger.error(`Unable to delete Charge Module batch ${externalId}`, err);
+    }
+  }
+  // Delete all data in water.billing_* tables
+  return newRepos.billingBatches.deleteAllBillingData();
+};
+
 exports.approveBatch = approveBatch;
 exports.decorateBatchWithTotals = decorateBatchWithTotals;
 exports.deleteBatch = deleteBatch;
@@ -464,3 +484,4 @@ exports.createChargeModuleBillRun = createChargeModuleBillRun;
 exports.approveTptBatchReview = approveTptBatchReview;
 exports.getSentTptBatchesForFinancialYearAndRegion = getSentTptBatchesForFinancialYearAndRegion;
 exports.deleteBatchInvoice = deleteBatchInvoice;
+exports.deleteAllBillingData = deleteAllBillingData;

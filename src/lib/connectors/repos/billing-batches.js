@@ -4,6 +4,8 @@ const { BillingBatch } = require('../bookshelf');
 const { BATCH_STATUS, BATCH_TYPE } = require('../../models/batch');
 const { paginatedEnvelope } = require('./lib/envelope');
 const helpers = require('./lib/helpers');
+const queries = require('./queries/billing-batches');
+const { bookshelf } = require('../bookshelf/bookshelf');
 
 const mapModel = model => model ? model.toJSON() : null;
 
@@ -132,6 +134,18 @@ const findSentTptBatchesForFinancialYearAndRegion = async (financialYear, region
   return helpers.findMany(BillingBatch, conditions, withRelated);
 };
 
+/**
+ * Find all records
+ * @return {Promise<Object>}
+ */
+const find = () => helpers.findMany(BillingBatch, {});
+
+/**
+ * Truncates all tables in water.billing_
+ * @return {Promise}
+ */
+const deleteAllBillingData = () => bookshelf.knex.raw(queries.deleteAllBillingData);
+
 exports.delete = deleteById;
 exports.findByStatuses = findByStatuses;
 exports.findOne = findOne;
@@ -142,3 +156,5 @@ exports.findOneWithInvoicesWithTransactions = findOneWithInvoicesWithTransaction
 exports.create = create;
 exports.findByRegionId = findByRegionId;
 exports.findSentTptBatchesForFinancialYearAndRegion = findSentTptBatchesForFinancialYearAndRegion;
+exports.find = find;
+exports.deleteAllBillingData = deleteAllBillingData;
