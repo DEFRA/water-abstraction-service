@@ -45,24 +45,34 @@ const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
   };
 };
 
-const getMostRecentLiveBatchByRegion = async regionId => {
-  const batches = await newRepos.billingBatches.findByStatuses([
+const mapBatch = batch => batch ? mappers.batch.dbToModel(batch) : null;
+
+const getExistingBatch = batches => {
+  const liveStatuses = [
     BATCH_STATUS.processing,
     BATCH_STATUS.ready,
     BATCH_STATUS.review
-  ]);
-  const batch = batches.find(b => b.regionId === regionId);
+  ];
 
-  return batch ? mappers.batch.dbToModel(batch) : null;
+  const existingBatch = batches.find(b => liveStatuses.includes(b.status));
+  return mapBatch(existingBatch);
 };
 
-const getDuplicateSentBatch = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
-  const batches = await newRepos.billingBatches.findSentBatchesForRegion(regionId);
-  const batch = batches.find(b => b.batchType === batchType &&
+const getDuplicateSentBatch = (batches, batchType, toFinancialYearEnding, isSummer) => {
+  const duplicateSentBatch = batches.find(b =>
+    b.status === BATCH_STATUS.sent &&
+      b.batchType === batchType &&
       b.toFinancialYearEnding === toFinancialYearEnding &&
       b.isSummer === isSummer);
+  return mapBatch(duplicateSentBatch);
+};
 
-  return batch ? mappers.batch.dbToModel(batch) : null;
+const getExistingAndDuplicateBatchesForRegion = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
+  const batches = await newRepos.billingBatches.findByRegionId(regionId);
+  return {
+    existingBatch: getExistingBatch(batches),
+    duplicateSentBatch: getDuplicateSentBatch(batches, batchType, toFinancialYearEnding, isSummer)
+  };
 };
 
 /**
@@ -76,11 +86,11 @@ const getDuplicateSentBatch = async (regionId, batchType, toFinancialYearEnding,
  * @return {Batch|null} if batch exists
  */
 const getExistingOrDuplicateSentBatch = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
-  const existingBatch = await getMostRecentLiveBatchByRegion(regionId);
+  const { existingBatch, duplicateSentBatch } = await getExistingAndDuplicateBatchesForRegion(regionId, batchType, toFinancialYearEnding, isSummer);
+
   // supplementary batches can be run multiple times for the same region, year and season
   if (batchType === BATCH_TYPE.supplementary) return existingBatch;
 
-  const duplicateSentBatch = await getDuplicateSentBatch(regionId, batchType, toFinancialYearEnding, isSummer);
   return duplicateSentBatch || existingBatch;
 };
 
@@ -295,7 +305,7 @@ const cleanup = async batchId => {
 
 const getErrMsgForBatchErr = (batch, regionId) =>
   batch.status === BATCH_STATUS.sent
-    ? `${startCase(batch.type)} batch already sent for: region ${regionId}, financial year ${batch.endYear.endYear}, isSummer ${batch.isSummer}`
+    ? `${startCase(batch.type)} batch already sent for: region ${regionId}, financial year ${batch.endYear.yearEnding}, isSummer ${batch.isSummer}`
     : `Batch already live for region ${regionId}`;
 
 /**
@@ -437,9 +447,9 @@ exports.deleteBatch = deleteBatch;
 
 exports.getBatchById = getBatchById;
 exports.getBatches = getBatches;
-exports.getMostRecentLiveBatchByRegion = getMostRecentLiveBatchByRegion;
 exports.getTransactionStatusCounts = getTransactionStatusCounts;
-exports.getDuplicateSentBatch = getDuplicateSentBatch;
+exports.getExistingAndDuplicateBatchesForRegion = getExistingAndDuplicateBatchesForRegion;
+exports.getExistingOrDuplicateSentBatch = getExistingOrDuplicateSentBatch;
 
 exports.refreshTotals = refreshTotals;
 exports.saveInvoicesToDB = saveInvoicesToDB;
