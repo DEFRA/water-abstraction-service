@@ -153,46 +153,56 @@ experiment('modules/billing/services/charge-processor-service/index.js', async (
         invoice = await chargeProcessorService.processChargeVersionYear(chargeVersionYear);
       });
 
-      test('the billing volumes related to the charge elements in the charge version are fetched', async () => {
-        expect(billingVolumeService.getVolumesForChargeElements.calledWith(
-          chargeVersion.chargeElements, financialYear
-        )).to.be.true();
+      experiment('when creating annual transactions', () => {
+        test('the invoice account for the charge version is loaded', async () => {
+          expect(invoiceAccountsConnector.getInvoiceAccountById.calledWith(
+            chargeVersion.invoiceAccount.id
+          )).to.be.true();
+        });
+
+        test('the billing volumes are not fetched', async () => {
+          expect(billingVolumeService.getVolumesForChargeElements.called).to.be.false();
+        });
+
+        test('an Invoice model is returned', async () => {
+          expect(invoice instanceof Invoice).to.be.true();
+        });
+
+        test('the Invoice returned has correct invoice account details from CRM', async () => {
+          const { invoiceAccount } = invoice;
+          expect(invoiceAccount.id).to.equal(crmData.invoiceAccount.invoiceAccountId);
+          expect(invoiceAccount.accountNumber).to.equal(crmData.invoiceAccount.invoiceAccountNumber);
+        });
+
+        test('the Invoice has the most recent address on the invoice account', async () => {
+          const { address } = invoice;
+          const { address: crmAddress } = crmData.invoiceAccount.invoiceAccountAddresses[1];
+          expect(address.id).to.equal(crmAddress.addressId);
+          expect(address.addressLine1).to.equal(crmAddress.address1);
+          expect(address.addressLine2).to.equal(crmAddress.address2);
+          expect(address.addressLine3).to.equal(crmAddress.address3);
+          expect(address.addressLine4).to.equal(crmAddress.address4);
+          expect(address.town).to.equal(crmAddress.town);
+          expect(address.county).to.equal(crmAddress.county);
+          expect(address.postcode).to.equal(crmAddress.postcode);
+          expect(address.country).to.equal(crmAddress.country);
+        });
+
+        test('the Invoice model returned has an array of transactions', async () => {
+          expect(invoice.invoiceLicences[0].transactions).to.be.an.array().length(4);
+          invoice.invoiceLicences[0].transactions.forEach(transaction => {
+            expect(transaction instanceof Transaction).to.be.true();
+          });
+        });
       });
 
-      test('the invoice account for the charge version is loaded', async () => {
-        expect(invoiceAccountsConnector.getInvoiceAccountById.calledWith(
-          chargeVersion.invoiceAccount.id
-        )).to.be.true();
-      });
-
-      test('an Invoice model is returned', async () => {
-        expect(invoice instanceof Invoice).to.be.true();
-      });
-
-      test('the Invoice returned has correct invoice account details from CRM', async () => {
-        const { invoiceAccount } = invoice;
-        expect(invoiceAccount.id).to.equal(crmData.invoiceAccount.invoiceAccountId);
-        expect(invoiceAccount.accountNumber).to.equal(crmData.invoiceAccount.invoiceAccountNumber);
-      });
-
-      test('the Invoice has the most recent address on the invoice account', async () => {
-        const { address } = invoice;
-        const { address: crmAddress } = crmData.invoiceAccount.invoiceAccountAddresses[1];
-        expect(address.id).to.equal(crmAddress.addressId);
-        expect(address.addressLine1).to.equal(crmAddress.address1);
-        expect(address.addressLine2).to.equal(crmAddress.address2);
-        expect(address.addressLine3).to.equal(crmAddress.address3);
-        expect(address.addressLine4).to.equal(crmAddress.address4);
-        expect(address.town).to.equal(crmAddress.town);
-        expect(address.county).to.equal(crmAddress.county);
-        expect(address.postcode).to.equal(crmAddress.postcode);
-        expect(address.country).to.equal(crmAddress.country);
-      });
-
-      test('the Invoice model returned has an array of transactions', async () => {
-        expect(invoice.invoiceLicences[0].transactions).to.be.an.array().length(4);
-        invoice.invoiceLicences[0].transactions.forEach(transaction => {
-          expect(transaction instanceof Transaction).to.be.true();
+      experiment('when creating two part tariff transactions', () => {
+        test('the billing volumes are fetched', async () => {
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear, { transactionType: 'two_part_tariff' });
+          await chargeProcessorService.processChargeVersionYear(chargeVersionYear);
+          expect(billingVolumeService.getVolumesForChargeElements.calledWith(
+            chargeVersion.chargeElements, financialYear
+          )).to.be.true();
         });
       });
     });

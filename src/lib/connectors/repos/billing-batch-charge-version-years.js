@@ -11,24 +11,20 @@ const { TRANSACTION_TYPE } = require('../../models/charge-version-year');
  * @param {String} id
  */
 const findOne = async id => {
-  const model = await BillingBatchChargeVersionYear
-    .forge({ billingBatchChargeVersionYearId: id })
-    .fetch({
-      withRelated: [
-        'billingBatch',
-        'billingBatch.region',
-        'chargeVersion',
-        'chargeVersion.chargeElements',
-        'chargeVersion.chargeElements.purposePrimary',
-        'chargeVersion.chargeElements.purposeSecondary',
-        'chargeVersion.chargeElements.purposeUse',
-        'chargeVersion.licence',
-        'chargeVersion.licence.licenceAgreements',
-        'chargeVersion.licence.licenceAgreements.financialAgreementType'
-      ]
-    });
+  const withRelated = [
+    'billingBatch',
+    'billingBatch.region',
+    'chargeVersion',
+    'chargeVersion.chargeElements',
+    'chargeVersion.chargeElements.purposePrimary',
+    'chargeVersion.chargeElements.purposeSecondary',
+    'chargeVersion.chargeElements.purposeUse',
+    'chargeVersion.licence',
+    'chargeVersion.licence.licenceAgreements',
+    'chargeVersion.licence.licenceAgreements.financialAgreementType'
+  ];
 
-  return model.toJSON();
+  return helpers.findOne(BillingBatchChargeVersionYear, 'billingBatchChargeVersionYearId', id, withRelated);
 };
 
 const update = (id, data) =>
@@ -67,11 +63,11 @@ const deleteByInvoiceId = billingInvoiceId => bookshelf
  * @param {String} billingBatchId
  */
 const findByBatchId = async billingBatchId => {
-  const collection = await BillingBatchChargeVersionYear
-    .collection()
-    .where('billing_batch_id', billingBatchId)
-    .fetch();
-  return collection.toJSON();
+  const conditions = {
+    billing_batch_id: billingBatchId
+  };
+
+  return helpers.findMany(BillingBatchChargeVersionYear, conditions);
 };
 
 /**
@@ -81,14 +77,12 @@ const findByBatchId = async billingBatchId => {
  * @return {Promise<Array>}
  */
 const findTwoPartTariffByBatchId = async billingBatchId => {
-  const collection = await BillingBatchChargeVersionYear
-    .collection()
-    .where({
-      billing_batch_id: billingBatchId,
-      transaction_type: TRANSACTION_TYPE.twoPartTariff
-    })
-    .fetch();
-  return collection.toJSON();
+  const conditions = {
+    billing_batch_id: billingBatchId,
+    transaction_type: TRANSACTION_TYPE.twoPartTariff
+  };
+
+  return helpers.findMany(BillingBatchChargeVersionYear, conditions);
 };
 
 /**
