@@ -175,15 +175,8 @@ const create = async chargeVersion => {
   return getByChargeVersionId(id);
 };
 
-/**
- * Deletes all billing data in service (!)
- * @return {Promise}
- */
-const deleteAllChargeVersionData = () => chargeVersionRepo.deleteAllChargeVersionData();
-
 exports.getByChargeVersionId = getByChargeVersionId;
 exports.getByIdWithInvoiceAccount = getByIdWithInvoiceAccount;
 exports.getByLicenceId = getByLicenceId;
 exports.getByLicenceRef = getByLicenceRef;
 exports.create = create;
-exports.deleteAllChargeVersionData = deleteAllChargeVersionData;

@@ -2,7 +2,6 @@
 
 const deleteAllBillingData = `
 truncate 
-water.billing_batch_charge_versions, 
 water.billing_batch_charge_version_years, 
 water.billing_batches, 
 water.billing_invoice_licences,
