@@ -67,7 +67,7 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
 
         test('the result is a single billing volume of 7ML because only in-season abstraction is matched', async () => {
           expect(result).to.have.length(1);
-          expect(result[0].calculatedVolume).to.equal(7);
+          expect(result[0].calculatedVolume.toNumber()).to.equal(7);
         });
 
         test('there is no over-abstraction', async () => {
@@ -89,7 +89,7 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
 
         test('the result is a single billing volume of 7ML because only in-season abstraction is matched', async () => {
           expect(result).to.have.length(1);
-          expect(result[0].calculatedVolume).to.equal(7);
+          expect(result[0].calculatedVolume.toNumber()).to.equal(7);
         });
 
         test('there is no over-abstraction', async () => {
@@ -112,7 +112,7 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
 
         test('the result is a single billing volume of 16ML because only in-season abstraction is matched', async () => {
           expect(result).to.have.length(1);
-          expect(result[0].calculatedVolume).to.equal(16);
+          expect(result[0].calculatedVolume.toNumber()).to.equal(16);
         });
 
         test('over-abstraction is flagged', async () => {
@@ -135,11 +135,11 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
         });
 
         test('the base element is fully abstracted receiving 12ML', async () => {
-          expect(result[0].calculatedVolume).to.equal(12);
+          expect(result[0].calculatedVolume.toNumber()).to.equal(12);
         });
 
         test('the time-limited element is not fully abstracted receiving 4ML', async () => {
-          expect(result[1].calculatedVolume).to.equal(4);
+          expect(result[1].calculatedVolume.toNumber()).to.equal(4);
         });
 
         test('there is no over-abstraction', async () => {
@@ -165,11 +165,11 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
         });
 
         test('the base element is over abstracted receiving 14ML', async () => {
-          expect(result[0].calculatedVolume).to.equal(14);
+          expect(result[0].calculatedVolume.toNumber()).to.equal(14);
         });
 
         test('the time-limited element is fully abstracted receiving 12ML', async () => {
-          expect(result[1].calculatedVolume).to.equal(12);
+          expect(result[1].calculatedVolume.toNumber()).to.equal(12);
         });
 
         test('the over-abstraction is recorded on the base element', async () => {
@@ -209,11 +209,11 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
         });
 
         test('matches 7ML to the summer element because only in-season abstraction is matched', async () => {
-          expect(result[0].calculatedVolume).to.equal(7);
+          expect(result[0].calculatedVolume.toNumber()).to.equal(7);
         });
 
         test('matches nothing to the winter element because only in-season abstraction is matched', async () => {
-          expect(result[1].calculatedVolume).to.equal(0);
+          expect(result[1].calculatedVolume.toNumber()).to.equal(0);
         });
 
         test('there is no over-abstraction', async () => {
@@ -240,11 +240,11 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
           });
 
           test('matches 7ML to the summer element because summer elements are prioritised for summer returns', async () => {
-            expect(result[0].calculatedVolume).to.equal(7);
+            expect(result[0].calculatedVolume.toNumber()).to.equal(7);
           });
 
           test('matches 0ML to the all-year element', async () => {
-            expect(result[1].calculatedVolume).to.equal(0);
+            expect(result[1].calculatedVolume.toNumber()).to.equal(0);
           });
 
           test('there is no over-abstraction', async () => {
@@ -264,11 +264,11 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
           });
 
           test('matches 12ML to the summer element because summer elements are prioritised for summer returns', async () => {
-            expect(result[0].calculatedVolume).to.equal(12);
+            expect(result[0].calculatedVolume.toNumber()).to.equal(12);
           });
 
           test('matches 4ML to the all-year element because the summer elemennt was full', async () => {
-            expect(result[1].calculatedVolume).to.equal(4);
+            expect(result[1].calculatedVolume.toNumber()).to.equal(4);
           });
 
           test('there is no over-abstraction', async () => {
@@ -288,11 +288,11 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
           });
 
           test('matches 12ML to the summer element because summer elements are prioritised for summer returns', async () => {
-            expect(result[0].calculatedVolume).to.equal(12);
+            expect(result[0].calculatedVolume.toNumber()).to.equal(12);
           });
 
           test('matches 14ML to the all-year element because the lowest priority element for matching receives the over-abstraction', async () => {
-            expect(result[1].calculatedVolume).to.equal(14);
+            expect(result[1].calculatedVolume.toNumber()).to.equal(14);
           });
 
           test('there is over-abstraction on the lowest priority element', async () => {
@@ -327,8 +327,8 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
 
       test('the result is 2x billing volumes of 7ML because only in-season abstraction is matched across the matching purposes', async () => {
         expect(result).to.have.length(2);
-        expect(result[0].calculatedVolume).to.equal(3.5);
-        expect(result[1].calculatedVolume).to.equal(3.5);
+        expect(result[0].calculatedVolume.toNumber()).to.equal(3.5);
+        expect(result[1].calculatedVolume.toNumber()).to.equal(3.5);
       });
 
       test('there is no over-abstraction', async () => {
@@ -360,7 +360,7 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
 
         test('the result is a single billing volume of 5ML because only in-season abstraction is matched', async () => {
           expect(result).to.have.length(1);
-          expect(result[0].calculatedVolume).to.equal(5);
+          expect(result[0].calculatedVolume.toNumber()).to.equal(5);
         });
 
         test('there is no over-abstraction', async () => {
@@ -396,7 +396,7 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
 
         test('the result is a single billing volume of 14ML because only in-season abstraction is matched', async () => {
           expect(result).to.have.length(1);
-          expect(result[0].calculatedVolume).to.equal(14);
+          expect(result[0].calculatedVolume.toNumber()).to.equal(14);
         });
 
         test('over-abstraction is flagged', async () => {
@@ -418,11 +418,11 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
         });
 
         test('matches nothing to the summer element because only in-season abstraction is matched', async () => {
-          expect(result[0].calculatedVolume).to.equal(0);
+          expect(result[0].calculatedVolume.toNumber()).to.equal(0);
         });
 
         test('matches 5ML to the winter element because only in-season abstraction is matched', async () => {
-          expect(result[1].calculatedVolume).to.equal(5);
+          expect(result[1].calculatedVolume.toNumber()).to.equal(5);
         });
 
         test('there is no over-abstraction', async () => {
@@ -453,7 +453,7 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
 
         test('the result is a single billing volume of 12ML', async () => {
           expect(result).to.have.length(1);
-          expect(result[0].calculatedVolume).to.equal(12);
+          expect(result[0].calculatedVolume.toNumber()).to.equal(12);
         });
 
         test('there is no over-abstraction', async () => {
@@ -488,11 +488,11 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
         });
 
         test('matches 7ML to the summer element because only in-season abstraction is matched', async () => {
-          expect(result[0].calculatedVolume).to.equal(7);
+          expect(result[0].calculatedVolume.toNumber()).to.equal(7);
         });
 
         test('matches 5ML to the winter element because only in-season abstraction is matched', async () => {
-          expect(result[1].calculatedVolume).to.equal(5);
+          expect(result[1].calculatedVolume.toNumber()).to.equal(5);
         });
 
         test('there is no over-abstraction', async () => {

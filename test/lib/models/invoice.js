@@ -9,6 +9,7 @@ const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 const Address = require('../../../src/lib/models/address');
 const InvoiceLicence = require('../../../src/lib/models/invoice-licence');
 const Licence = require('../../../src/lib/models/licence');
+const Transaction = require('../../../src/lib/models/transaction');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
 
@@ -192,6 +193,47 @@ experiment('lib/models/invoice', () => {
         invoice.isDeMinimis = 'hey';
       };
       expect(func).to.throw();
+    });
+  });
+
+  experiment('.hasTransactionErrors', () => {
+    test('is false when no underlying transactions have errors', async () => {
+      const invoice = new Invoice().fromHash({
+        invoiceLicences: [
+          new InvoiceLicence().fromHash({
+            transactions: [
+              new Transaction(),
+              new Transaction()
+            ]
+          })
+        ]
+      });
+      expect(invoice.hasTransactionErrors).to.be.false();
+    });
+
+    test('is true when no underlying transactions have errors', async () => {
+      const invoice = new Invoice().fromHash({
+        invoiceLicences: [
+          new InvoiceLicence().fromHash({
+            transactions: [
+              new Transaction(),
+              new Transaction().fromHash({
+                status: Transaction.statuses.error
+              })
+            ]
+          })
+        ]
+      });
+      expect(invoice.hasTransactionErrors).to.be.true();
+    });
+  });
+
+  experiment('.toJSON', () => {
+    test('includes the "hasTransactionErrors" property', async () => {
+      invoice = new Invoice();
+      expect(
+        Object.keys(invoice.toJSON())
+      ).to.include('hasTransactionErrors');
     });
   });
 });
