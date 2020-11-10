@@ -17,6 +17,7 @@ experiment('connectors/import', () => {
     sandbox.stub(serviceRequest, 'get').resolves({
       version: '0.0.1'
     });
+    sandbox.stub(serviceRequest, 'post');
   });
 
   afterEach(async () => {
@@ -28,6 +29,14 @@ experiment('connectors/import', () => {
       await importConnector.getServiceVersion();
       const [url] = serviceRequest.get.lastCall.args;
       expect(url).to.endWith('/status');
+    });
+  });
+
+  experiment('.postImportChargeVersions', () => {
+    test('calls the expected URL', async () => {
+      await importConnector.postImportChargeVersions();
+      const [url] = serviceRequest.post.lastCall.args;
+      expect(url).to.endWith('/import/1.0/charging');
     });
   });
 });

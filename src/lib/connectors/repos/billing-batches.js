@@ -138,7 +138,7 @@ const findSentTptBatchesForFinancialYearAndRegion = async (financialYear, region
  * Find all records
  * @return {Promise<Object>}
  */
-const find = () => helpers.findMany(BillingBatch, {});
+const find = () => helpers.findMany(BillingBatch);
 
 /**
  * Truncates all tables in water.billing_

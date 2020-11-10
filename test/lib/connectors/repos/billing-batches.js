@@ -11,9 +11,10 @@ const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
 const billingBatches = require('../../../../src/lib/connectors/repos/billing-batches');
-const { BillingBatch } = require('../../../../src/lib/connectors/bookshelf/');
+const { BillingBatch, bookshelf } = require('../../../../src/lib/connectors/bookshelf/');
 const { BATCH_STATUS, BATCH_TYPE } = require('../../../../src/lib/models/batch');
 const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
+const queries = require('../../../../src/lib/connectors/repos/queries/billing-batches');
 
 experiment('lib/connectors/repos/billing-batches', () => {
   let model, stub;
@@ -42,6 +43,7 @@ experiment('lib/connectors/repos/billing-batches', () => {
     };
     sandbox.stub(BillingBatch, 'forge').returns(stub);
     sandbox.stub(helpers, 'findMany').resolves({ foo: 'bar' });
+    sandbox.stub(bookshelf.knex, 'raw');
   });
 
   afterEach(async () => {
@@ -304,6 +306,28 @@ experiment('lib/connectors/repos/billing-batches', () => {
       expect(model).to.equal(BillingBatch);
       expect(conditions).to.equal({ region_id: 'region-id' });
       expect(withRelated).to.equal(['region']);
+    });
+  });
+
+  experiment('.find', () => {
+    beforeEach(async () => {
+      await billingBatches.find();
+    });
+
+    test('delegates to helpers.findMany', async () => {
+      expect(helpers.findMany.calledWith(BillingBatch)).to.be.true();
+    });
+  });
+
+  experiment('.deleteAllBillingData', () => {
+    beforeEach(async () => {
+      await billingBatches.deleteAllBillingData();
+    });
+
+    test('calls knex.raw() with the correct query', async () => {
+      expect(
+        bookshelf.knex.raw.calledWith(queries.deleteAllBillingData)
+      ).to.be.true();
     });
   });
 });

@@ -14,7 +14,6 @@ const { logger } = require('../../logger');
 const invoiceService = require('./services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
 const batchService = require('./services/batch-service');
-const chargeVersionService = require('../../lib/services/charge-versions');
 const importConnector = require('../../lib/connectors/import');
 
 // PG boss jobs

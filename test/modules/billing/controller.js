@@ -23,8 +23,11 @@ const invoiceLicenceService = require('../../../src/modules/billing/services/inv
 const batchService = require('../../../src/modules/billing/services/batch-service');
 const transactionsService = require('../../../src/modules/billing/services/transactions-service');
 const billingVolumesService = require('../../../src/modules/billing/services/billing-volumes-service');
+const importConnector = require('../../../src/lib/connectors/import');
+
 const controller = require('../../../src/modules/billing/controller');
 const mappers = require('../../../src/modules/billing/mappers');
+const { logger } = require('../../../src/logger');
 const { createBatch, createTransaction, createInvoice, createInvoiceLicence, createFinancialYear, createBillingVolume } = require('./test-data/test-billing-data');
 
 const { NotFoundError } = require('../../../src/lib/errors');
@@ -71,6 +74,7 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(batchService, 'getExistingOrDuplicateSentBatch').resolves();
     sandbox.stub(batchService, 'approveTptBatchReview').resolves(processingBatch);
     sandbox.stub(batchService, 'deleteBatchInvoice').resolves();
+    sandbox.stub(batchService, 'deleteAllBillingData').resolves();
 
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
@@ -87,6 +91,10 @@ experiment('modules/billing/controller', () => {
     });
 
     sandbox.stub(mappers.api.invoice, 'modelToBatchInvoices');
+
+    sandbox.stub(importConnector, 'postImportChargeVersions').resolves();
+
+    sandbox.stub(logger, 'error').resolves();
   });
 
   afterEach(async () => {
@@ -662,6 +670,44 @@ experiment('modules/billing/controller', () => {
         const func = () => controller.deleteBatchInvoice(request, h);
         const error = await expect(func()).to.reject();
         expect(error).to.equal(err);
+      });
+    });
+  });
+
+  experiment('.deleteAllBillingData', () => {
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        await controller.deleteAllBillingData({}, h);
+      });
+
+      test('the batch service is called to delete all billing/charge version data', async () => {
+        expect(batchService.deleteAllBillingData.called).to.be.true();
+      });
+
+      test('the import service is called to re-import charge versions', async () => {
+        expect(importConnector.postImportChargeVersions.called).to.be.true();
+      });
+
+      test('returns a 204 http status code', async () => {
+        expect(h.response.called).to.be.true();
+        expect(hapiResponseStub.code.calledWith(204)).to.be.true();
+      });
+    });
+
+    experiment('when there is an error', () => {
+      const err = new Error('oops');
+
+      beforeEach(async () => {
+        batchService.deleteAllBillingData.rejects(err);
+      });
+
+      test('an error is logged and re-thrown', async () => {
+        const func = () => controller.deleteAllBillingData();
+        const result = await expect(func()).to.reject();
+        expect(logger.error.calledWith(
+          'Error deleting all billing data', err
+        )).to.be.true();
+        expect(result).to.equal(err);
       });
     });
   });

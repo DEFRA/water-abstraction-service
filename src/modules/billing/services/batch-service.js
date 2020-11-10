@@ -450,7 +450,7 @@ const deleteAllBillingData = async () => {
   // Delete batches in CM
   const batches = await newRepos.billingBatches.find();
   const batchesWithExternalId = batches.filter(row => !!row.externalId);
-  for (const { externalId } in batchesWithExternalId) {
+  for (const { externalId } of batchesWithExternalId) {
     try {
       logger.info(`Deleting Charge Module batch ${externalId}`);
       await chargeModuleBillRunConnector.delete(externalId);
