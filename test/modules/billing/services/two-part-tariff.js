@@ -11,14 +11,12 @@ const uuid = require('uuid/v4');
 
 const Batch = require('../../../../src/lib/models/batch');
 const BillingVolume = require('../../../../src/lib/models/billing-volume');
-const Region = require('../../../../src/lib/models/region');
+const { TRANSACTION_TYPE } = require('../../../../src/lib/models/charge-version-year');
 
 const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
 const volumeMatchingService = require('../../../../src/modules/billing/services/volume-matching-service');
 const twoPartTariffService = require('../../../../src/modules/billing/services/two-part-tariff.js');
-
-const repos = require('../../../../src/lib/connectors/repos');
 
 const billingVolumes = [
   new BillingVolume(uuid()),
@@ -33,8 +31,6 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
   beforeEach(async () => {
     sandbox.stub(chargeVersionYearService, 'getForBatch');
     sandbox.stub(chargeVersionYearService, 'getTwoPartTariffForBatch');
-
-    sandbox.stub(repos.billingBatches, 'findSentTPTBatchesForRegion');
 
     sandbox.stub(volumeMatchingService, 'matchVolumes');
 
@@ -58,17 +54,20 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
       const chargeVersionYears = [{
         chargeVersionId: 'test-id-1',
         financialYearEnding: 2020,
-        billingBatchId: batch.id
+        billingBatchId: batch.id,
+        transactionType: TRANSACTION_TYPE.twoPartTariff,
+        isSummer: false
       },
       {
         chargeVersionId: 'test-id-2',
         financialYearEnding: 2020,
-        billingBatchId: batch.id
+        billingBatchId: batch.id,
+        transactionType: TRANSACTION_TYPE.twoPartTariff,
+        isSummer: false
       }];
 
       beforeEach(async () => {
         batch.type = Batch.BATCH_TYPE.twoPartTariff;
-        batch.isSummer = false;
         chargeVersionYearService.getForBatch.resolves(chargeVersionYears);
         await twoPartTariffService.processBatch(batch);
       });
@@ -115,51 +114,55 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
         {
           chargeVersionId: 'test-id-1',
           financialYearEnding: 2019,
-          billingBatchId: batch.id
+          billingBatchId: batch.id,
+          transactionType: TRANSACTION_TYPE.twoPartTariff,
+          isSummer: true
         },
         {
           chargeVersionId: 'test-id-2',
           financialYearEnding: 2019,
-          billingBatchId: batch.id
+          billingBatchId: batch.id,
+          transactionType: TRANSACTION_TYPE.twoPartTariff,
+          isSummer: true
+        },
+        {
+          chargeVersionId: 'test-id-1',
+          financialYearEnding: 2019,
+          billingBatchId: batch.id,
+          transactionType: TRANSACTION_TYPE.twoPartTariff,
+          isSummer: false
+        },
+        {
+          chargeVersionId: 'test-id-2',
+          financialYearEnding: 2019,
+          billingBatchId: batch.id,
+          transactionType: TRANSACTION_TYPE.twoPartTariff,
+          isSummer: false
         },
         {
           chargeVersionId: 'test-id-1',
           financialYearEnding: 2020,
-          billingBatchId: batch.id
+          billingBatchId: batch.id,
+          transactionType: TRANSACTION_TYPE.twoPartTariff,
+          isSummer: true
         },
         {
           chargeVersionId: 'test-id-2',
           financialYearEnding: 2020,
-          billingBatchId: batch.id
+          billingBatchId: batch.id,
+          transactionType: TRANSACTION_TYPE.twoPartTariff,
+          isSummer: true
         }
       ];
 
       beforeEach(async () => {
-        repos.billingBatches.findSentTPTBatchesForRegion.resolves([{
-          toFinancialYearEnding: 2019,
-          isSummer: true
-        }, {
-          toFinancialYearEnding: 2019,
-          isSummer: false
-        }, {
-          toFinancialYearEnding: 2020,
-          isSummer: true
-        }]);
-
         batch.type = Batch.BATCH_TYPE.supplementary;
-        batch.region = new Region(uuid());
         chargeVersionYearService.getTwoPartTariffForBatch.resolves(chargeVersionYears);
         await twoPartTariffService.processBatch(batch);
       });
 
       test('all charge version years are loaded for the batch', async () => {
         expect(chargeVersionYearService.getTwoPartTariffForBatch.calledWith(batch.id)).to.be.true();
-      });
-
-      test('previous two-part tariff batches in region are fetched', async () => {
-        expect(repos.billingBatches.findSentTPTBatchesForRegion.calledWith(
-          batch.region.id
-        )).to.be.true();
       });
 
       test('matching occurs for each charge version year where a two-part tariff run has already been run', async () => {

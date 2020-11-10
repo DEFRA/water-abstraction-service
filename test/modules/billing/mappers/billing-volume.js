@@ -95,7 +95,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
     });
   });
 
-  experiment('.modelToDB', () => {
+  experiment('.modelToDb', () => {
     let billingVolume, result;
 
     beforeEach(async () => {
@@ -114,7 +114,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
         financialYear
       });
 
-      result = billingVolumeMapper.modelToDB(billingVolume);
+      result = billingVolumeMapper.modelToDb(billingVolume);
     });
 
     test('the data should be mapped to the DB fields', async () => {
@@ -141,7 +141,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
           email: 'nobody@example.com'
         });
         billingVolume.twoPartTariffReview = user;
-        result = billingVolumeMapper.modelToDB(billingVolume);
+        result = billingVolumeMapper.modelToDb(billingVolume);
       });
 
       test('the twoPartTariffReview property contains the reviewer user details', async () => {

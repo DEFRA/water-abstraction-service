@@ -7,10 +7,12 @@ const repos = require('../../../lib/connectors/repos');
 const returnRequirementVersionService = require('../../../lib/services/return-requirement-versions');
 const { RETURN_SEASONS } = require('../../../lib/models/constants');
 const { BATCH_TYPE } = require('../../../lib/models/batch');
+const { TRANSACTION_TYPE } = require('../../../lib/models/charge-version-year');
 const DateRange = require('../../../lib/models/date-range');
 const FinancialYear = require('../../../lib/models/financial-year');
 
 const chargeVersionYearService = require('./charge-version-year');
+const batchService = require('./batch-service');
 
 /**
  * Creates an object which describes whether 2-part tariff billing is needed in
@@ -28,10 +30,9 @@ const createTwoPartTariffBatches = (isSummer = false, isWinterAllYear = false) =
  * Checks whether two-part tariff billing is needed for the supplied licence
  * and financial year
  * @param {Object} row - includes charge version/licence info
- * @param {FinancialYear} financialYear
  * @return {Promise<Object>} includes flags for each return season
  */
-const isTwoPartTariffBillingNeeded = async (row, financialYear) => {
+const isTwoPartTariffBillingNeeded = async row => {
   if (!row.isTwoPartTariff) {
     return createTwoPartTariffBatches();
   }
@@ -62,26 +63,30 @@ const isTwoPartTariffBillingNeeded = async (row, financialYear) => {
  * @param {Batch} batch
  * @param {String} chargeVersionId
  * @param {FinancialYear} financialYear
+ * @param {String} transactionType
+ * @param {Boolean} isSummer
  */
-const createChargeVersionYear = async (batch, chargeVersionId, financialYear) => {
-  const tasks = [
-    repos.billingBatchChargeVersions.create(batch.id, chargeVersionId),
-    chargeVersionYearService.createBatchChargeVersionYear(batch, chargeVersionId, financialYear)
-  ];
-  const [, billingBatchChargeVersionYear] = await Promise.all(tasks);
-  return billingBatchChargeVersionYear;
-};
+const createChargeVersionYear = async (batch, chargeVersionId, financialYear, transactionType, isSummer) =>
+  chargeVersionYearService.createBatchChargeVersionYear(batch, chargeVersionId, financialYear, transactionType, isSummer);
 
 /**
  * Persists multiple charge version year records for processing in the batch
  * @param {Batch} batch
  * @param {Array<Object>} chargeVersions
  * @param {FinancialYear} financialYear
+ * @param {String} transactionType
+ * @param {Boolean} isSummer
  * @return {Array<Object>} billing_batch_charge_version_years
  */
-const createChargeVersionYears = (batch, chargeVersions, financialYear) => {
-  const tasks = chargeVersions.map(chargeVersion => createChargeVersionYear(batch, chargeVersion.chargeVersionId, financialYear));
+const createChargeVersionYears = (batch, chargeVersions, financialYear, transactionType, isSummer) => {
+  const tasks = chargeVersions.map(chargeVersion => createChargeVersionYear(batch, chargeVersion.chargeVersionId, financialYear, transactionType, isSummer));
   return Promise.all(tasks);
+};
+
+const isTwoPartNeeded = async (chargeVersion, isSummer) => {
+  const isTwoPartNeededBySeason = await isTwoPartTariffBillingNeeded(chargeVersion);
+  const key = isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
+  return isTwoPartNeededBySeason[key];
 };
 
 /**
@@ -91,15 +96,30 @@ const createChargeVersionYears = (batch, chargeVersions, financialYear) => {
  * @return {Promise<Boolean>}
  */
 const isRequiredInTwoPartTariffBillRun = async context => {
-  const { chargeVersion, batch, financialYear } = context;
-  const isTwoPartNeeded = await isTwoPartTariffBillingNeeded(chargeVersion, financialYear);
-  const key = batch.isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
-  return isTwoPartNeeded[key];
+  const { chargeVersion, batch } = context;
+  return isTwoPartNeeded(chargeVersion, batch.isSummer);
+};
+
+const isRequiredInTwoPartTariffSupplementary = async (chargeVersion, isSummer) =>
+  (!chargeVersion.isTwoPartTariff)
+    ? false
+    : isTwoPartNeeded(chargeVersion, isSummer);
+
+const isRequiredInSupplementaryBillRun = async context => {
+  const { chargeVersion, transactionType, isSummer } = context;
+  if (chargeVersion.includeInSupplementaryBilling) {
+    // recreating a TPT run?
+    if (transactionType === TRANSACTION_TYPE.twoPartTariff) {
+      return isRequiredInTwoPartTariffSupplementary(chargeVersion, isSummer);
+    }
+    return true;
+  }
+  return false;
 };
 
 const chargeVersionFilters = {
   [BATCH_TYPE.annual]: () => true,
-  [BATCH_TYPE.supplementary]: context => context.chargeVersion.includeInSupplementaryBilling,
+  [BATCH_TYPE.supplementary]: isRequiredInSupplementaryBillRun,
   [BATCH_TYPE.twoPartTariff]: isRequiredInTwoPartTariffBillRun
 };
 
@@ -107,16 +127,18 @@ const chargeVersionFilters = {
  * Creates charge version years for the supplied batch and financial year
  * @param {Batch} batch
  * @param {FinancialYear} financialYear
+ * @param {String} transactionType annual or two_part_tariff
+ * @param {Boolean} isSummer
  * @return {Promise<Array>} resolves with array of water.billing_batch_charge_version_years
  */
-const createFinancialYearChargeVersionYears = async (batch, financialYear) => {
+const createFinancialYearChargeVersionYears = async (batch, financialYear, transactionType, isSummer) => {
   // Get all charge versions and other flags for any bill run type
   const chargeVersions = await repos.chargeVersions.findValidInRegionAndFinancialYear(
     batch.region.id, financialYear.endYear
   );
 
   // Filter depending on bill run type
-  const chargeVersionsWithContext = chargeVersions.map(chargeVersion => ({ chargeVersion, batch, financialYear }));
+  const chargeVersionsWithContext = chargeVersions.map(chargeVersion => ({ chargeVersion, batch, transactionType, isSummer }));
 
   const filteredChargeVersionYears = (await bluebird.filter(
     chargeVersionsWithContext,
@@ -124,7 +146,7 @@ const createFinancialYearChargeVersionYears = async (batch, financialYear) => {
   )).map(row => row.chargeVersion);
 
   // Persist the charge version years
-  return createChargeVersionYears(batch, filteredChargeVersionYears, financialYear);
+  return createChargeVersionYears(batch, filteredChargeVersionYears, financialYear, transactionType, isSummer);
 };
 
 /**
@@ -132,14 +154,54 @@ const createFinancialYearChargeVersionYears = async (batch, financialYear) => {
  * @param {Batch} batch
  * @return {Promise<Array>}
  */
-const createAnnual = batch => createFinancialYearChargeVersionYears(batch, batch.endYear);
+const createAnnual = batch => createFinancialYearChargeVersionYears(batch, batch.endYear, TRANSACTION_TYPE.annual, false);
 
 /**
  * Creates the charge version years for a two-part tariff batch
  * @param {Batch} batch
  * @return {Promise<Array>}
  */
-const createTwoPartTariff = batch => createFinancialYearChargeVersionYears(batch, batch.endYear);
+const createTwoPartTariff = batch => createFinancialYearChargeVersionYears(batch, batch.endYear, TRANSACTION_TYPE.twoPartTariff, batch.isSummer);
+
+/**
+ * Get TPT batches for the same region and financial years
+ * @param {Batch} batch supplementary batch
+ */
+const getSentTptBatchesInRegionAndFinancialYear = async (financialYears, region) => {
+  const tasks = financialYears.map(
+    financialYear => batchService.getSentTptBatchesForFinancialYearAndRegion({ yearEnding: financialYear }, region)
+  );
+
+  const sentTptBatches = await Promise.all(tasks);
+  return flatMap(sentTptBatches);
+};
+
+const chargeVersionYearsDataFromSentTptBatch = (finYearEnding, sentTptBatches) =>
+  sentTptBatches.filter(batch => batch.endYear.endYear === finYearEnding)
+    .map(batch => ({
+      financialYear: new FinancialYear(finYearEnding),
+      transactionType: TRANSACTION_TYPE.twoPartTariff,
+      isSummer: batch.isSummer
+    }));
+
+const annualChargeVersionYearData = finYearEnding => ({
+  financialYear: new FinancialYear(finYearEnding),
+  transactionType: TRANSACTION_TYPE.annual,
+  isSummer: false
+});
+
+const getChargeVersionYearsData = (financialYears, sentTptBatches) =>
+  financialYears.reduce((chargeVersionYearsData, finYearEnding) => {
+    chargeVersionYearsData.push(annualChargeVersionYearData(finYearEnding));
+    chargeVersionYearsData.push(...chargeVersionYearsDataFromSentTptBatch(finYearEnding, sentTptBatches));
+    return chargeVersionYearsData;
+  }, []);
+
+const getFinancialYearsWithTransactionTypeAndSeason = async batch => {
+  const financialYears = range(batch.startYear.endYear, batch.endYear.endYear + 1);
+  const batches = await getSentTptBatchesInRegionAndFinancialYear(financialYears, batch.region);
+  return getChargeVersionYearsData(financialYears, batches);
+};
 
 /**
  * Creates the charge version years for a supplementary
@@ -147,11 +209,13 @@ const createTwoPartTariff = batch => createFinancialYearChargeVersionYears(batch
  * @return {Promise<Array>}
  */
 const createSupplementary = async batch => {
-  const financialYears = range(batch.startYear.endYear, batch.endYear.endYear + 1)
-    .map(finYearEnding => new FinancialYear(finYearEnding));
-
+  const financialYears = await getFinancialYearsWithTransactionTypeAndSeason(batch);
   const tasks = financialYears.map(
-    financialYear => createFinancialYearChargeVersionYears(batch, financialYear)
+    financialYear => createFinancialYearChargeVersionYears(
+      batch,
+      financialYear.financialYear,
+      financialYear.transactionType,
+      financialYear.isSummer)
   );
 
   const financialYearChargeVersionYears = await Promise.all(tasks);

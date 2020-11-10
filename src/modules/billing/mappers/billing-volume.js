@@ -49,7 +49,7 @@ const modelToDbMapper = createMapper()
   .map('financialYear').to('financialYear', financialYear => financialYear.endYear)
   .map('twoPartTariffReview').to('twoPartTariffReview', userMapper.modelToDb);
 
-const modelToDB = model => modelToDbMapper.execute(model);
+const modelToDb = model => modelToDbMapper.execute(model);
 
 exports.dbToModel = dbToModel;
-exports.modelToDB = modelToDB;
+exports.modelToDb = modelToDb;
