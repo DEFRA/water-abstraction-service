@@ -13,6 +13,7 @@ const sandbox = sinon.createSandbox();
 const billingBatches = require('../../../../src/lib/connectors/repos/billing-batches');
 const { BillingBatch } = require('../../../../src/lib/connectors/bookshelf/');
 const { BATCH_STATUS, BATCH_TYPE } = require('../../../../src/lib/models/batch');
+const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
 
 experiment('lib/connectors/repos/billing-batches', () => {
   let model, stub;
@@ -40,6 +41,7 @@ experiment('lib/connectors/repos/billing-batches', () => {
       destroy: sandbox.spy()
     };
     sandbox.stub(BillingBatch, 'forge').returns(stub);
+    sandbox.stub(helpers, 'findMany').resolves({ foo: 'bar' });
   });
 
   afterEach(async () => {
@@ -277,22 +279,31 @@ experiment('lib/connectors/repos/billing-batches', () => {
       await billingBatches.findSentTptBatchesForFinancialYearAndRegion(2020, '00000000-0000-0000-0000-000000000000');
     });
 
-    test('forges a model', async () => {
-      expect(BillingBatch.forge.called).to.be.true();
+    test('calls helpers .findMany() with the correct params', async () => {
+      const [model, conditions, withRelated] = helpers.findMany.lastCall.args;
+      expect(model).to.equal(BillingBatch);
+      expect(conditions.batch_type).to.equal(BATCH_TYPE.twoPartTariff);
+      expect(conditions.to_financial_year_ending).to.equal(2020);
+      expect(conditions.status).to.equal(BATCH_STATUS.sent);
+      expect(conditions.region_id).to.equal('00000000-0000-0000-0000-000000000000');
+      expect(withRelated).to.equal([
+        'billingInvoices',
+        'billingInvoices.billingInvoiceLicences',
+        'billingInvoices.billingInvoiceLicences.licence'
+      ]);
+    });
+  });
+
+  experiment('.findByRegionId', () => {
+    beforeEach(async () => {
+      await billingBatches.findByRegionId('region-id');
     });
 
-    test('calls where with correct parameters', async () => {
-      const [filters] = stub.where.lastCall.args;
-      expect(filters.status).to.equal(BATCH_STATUS.sent);
-      expect(filters.batch_type).to.equal(BATCH_TYPE.twoPartTariff);
-      expect(filters.to_financial_year_ending).to.equal(2020);
-      expect(filters.region_id).to.equal('00000000-0000-0000-0000-000000000000');
-    });
-
-    test('calls fetchAll with correct parameters', async () => {
-      expect(stub.fetchAll.lastCall.args[0].withRelated[0]).to.equal('billingInvoices');
-      expect(stub.fetchAll.lastCall.args[0].withRelated[1]).to.equal('billingInvoices.billingInvoiceLicences');
-      expect(stub.fetchAll.lastCall.args[0].withRelated[2]).to.equal('billingInvoices.billingInvoiceLicences.licence');
+    test('calls helpers .findMany() with the correct params', async () => {
+      const [model, conditions, withRelated] = helpers.findMany.lastCall.args;
+      expect(model).to.equal(BillingBatch);
+      expect(conditions).to.equal({ region_id: 'region-id' });
+      expect(withRelated).to.equal(['region']);
     });
   });
 });

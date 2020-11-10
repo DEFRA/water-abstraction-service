@@ -1,10 +1,11 @@
 'use strict';
 
-const { partialRight } = require('lodash');
+const { partialRight, startCase } = require('lodash');
+const Boom = require('@hapi/boom');
 
 const newRepos = require('../../../lib/connectors/repos');
 const mappers = require('../mappers');
-const { BATCH_STATUS } = require('../../../lib/models/batch');
+const { BATCH_STATUS, BATCH_TYPE } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
 const Event = require('../../../lib/models/event');
 const eventService = require('../../../lib/services/events');
@@ -44,15 +45,53 @@ const getBatches = async (page = 1, perPage = Number.MAX_SAFE_INTEGER) => {
   };
 };
 
-const getMostRecentLiveBatchByRegion = async regionId => {
-  const batches = await newRepos.billingBatches.findByStatuses([
+const mapBatch = batch => batch ? mappers.batch.dbToModel(batch) : null;
+
+const getExistingBatch = batches => {
+  const liveStatuses = [
     BATCH_STATUS.processing,
     BATCH_STATUS.ready,
     BATCH_STATUS.review
-  ]);
-  const batch = batches.find(b => b.regionId === regionId);
+  ];
 
-  return batch ? mappers.batch.dbToModel(batch) : null;
+  const existingBatch = batches.find(b => liveStatuses.includes(b.status));
+  return mapBatch(existingBatch);
+};
+
+const getDuplicateSentBatch = (batches, batchType, toFinancialYearEnding, isSummer) => {
+  const duplicateSentBatch = batches.find(b =>
+    b.status === BATCH_STATUS.sent &&
+      b.batchType === batchType &&
+      b.toFinancialYearEnding === toFinancialYearEnding &&
+      b.isSummer === isSummer);
+  return mapBatch(duplicateSentBatch);
+};
+
+const getExistingAndDuplicateBatchesForRegion = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
+  const batches = await newRepos.billingBatches.findByRegionId(regionId);
+  return {
+    existingBatch: getExistingBatch(batches),
+    duplicateSentBatch: getDuplicateSentBatch(batches, batchType, toFinancialYearEnding, isSummer)
+  };
+};
+
+/**
+ * Checks if there is:
+ *  - an existing batch in flight for the region
+ *  - a given batch for the same type, region, year and season (excluding supplementary)
+ * @param {String} regionId
+ * @param {String} batchType
+ * @param {Number} toFinancialYearEnding
+ * @param {Boolean} isSummer
+ * @return {Batch|null} if batch exists
+ */
+const getExistingOrDuplicateSentBatch = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
+  const { existingBatch, duplicateSentBatch } = await getExistingAndDuplicateBatchesForRegion(regionId, batchType, toFinancialYearEnding, isSummer);
+
+  // supplementary batches can be run multiple times for the same region, year and season
+  if (batchType === BATCH_TYPE.supplementary) return existingBatch;
+
+  return duplicateSentBatch || existingBatch;
 };
 
 const saveEvent = (type, status, user, batch) => {
@@ -263,6 +302,11 @@ const cleanup = async batchId => {
   await newRepos.billingInvoices.deleteEmptyByBatchId(batchId);
 };
 
+const getErrMsgForBatchErr = (batch, regionId) =>
+  batch.status === BATCH_STATUS.sent
+    ? `${startCase(batch.type)} batch already sent for: region ${regionId}, financial year ${batch.endYear.yearEnding}, isSummer ${batch.isSummer}`
+    : `Batch already live for region ${regionId}`;
+
 /**
  * Creates batch locally and on CM, responds with Batch service model
  * @param {String} regionId - guid from water.regions.region_id
@@ -272,11 +316,12 @@ const cleanup = async batchId => {
  * @return {Promise<Batch>} resolves with Batch service model
  */
 const create = async (regionId, batchType, toFinancialYearEnding, isSummer) => {
-  const existingBatch = await getMostRecentLiveBatchByRegion(regionId);
+  const batch = await getExistingOrDuplicateSentBatch(regionId, batchType, toFinancialYearEnding, isSummer);
 
-  if (existingBatch) {
-    const err = new Error(`Batch already live for region ${regionId}`);
-    err.existingBatch = existingBatch;
+  if (batch) {
+    const err = Boom.conflict(getErrMsgForBatchErr(batch, regionId));
+    err.reformat();
+    err.output.payload.batch = batch;
     throw err;
   }
 
@@ -403,8 +448,9 @@ exports.deleteBatch = deleteBatch;
 
 exports.getBatchById = getBatchById;
 exports.getBatches = getBatches;
-exports.getMostRecentLiveBatchByRegion = getMostRecentLiveBatchByRegion;
 exports.getTransactionStatusCounts = getTransactionStatusCounts;
+exports.getExistingAndDuplicateBatchesForRegion = getExistingAndDuplicateBatchesForRegion;
+exports.getExistingOrDuplicateSentBatch = getExistingOrDuplicateSentBatch;
 
 exports.refreshTotals = refreshTotals;
 exports.saveInvoicesToDB = saveInvoicesToDB;
