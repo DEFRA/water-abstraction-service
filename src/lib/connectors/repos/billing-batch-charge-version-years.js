@@ -2,7 +2,30 @@
 
 const { BillingBatchChargeVersionYear, bookshelf } = require('../bookshelf');
 const raw = require('./lib/raw');
+const helpers = require('./lib/helpers');
 const queries = require('./queries/billing-batch-charge-version-years');
+const { TRANSACTION_TYPE } = require('../../models/charge-version-year');
+
+/**
+ * Finds a charge version year with related model data by ID
+ * @param {String} id
+ */
+const findOne = async id => {
+  const withRelated = [
+    'billingBatch',
+    'billingBatch.region',
+    'chargeVersion',
+    'chargeVersion.chargeElements',
+    'chargeVersion.chargeElements.purposePrimary',
+    'chargeVersion.chargeElements.purposeSecondary',
+    'chargeVersion.chargeElements.purposeUse',
+    'chargeVersion.licence',
+    'chargeVersion.licence.licenceAgreements',
+    'chargeVersion.licence.licenceAgreements.financialAgreementType'
+  ];
+
+  return helpers.findOne(BillingBatchChargeVersionYear, 'billingBatchChargeVersionYearId', id, withRelated);
+};
 
 const update = (id, data) =>
   BillingBatchChargeVersionYear
@@ -40,11 +63,11 @@ const deleteByInvoiceId = billingInvoiceId => bookshelf
  * @param {String} billingBatchId
  */
 const findByBatchId = async billingBatchId => {
-  const collection = await BillingBatchChargeVersionYear
-    .collection()
-    .where('billing_batch_id', billingBatchId)
-    .fetch();
-  return collection.toJSON();
+  const conditions = {
+    billing_batch_id: billingBatchId
+  };
+
+  return helpers.findMany(BillingBatchChargeVersionYear, conditions);
 };
 
 /**
@@ -53,11 +76,17 @@ const findByBatchId = async billingBatchId => {
  * @param {String} billingBatchId
  * @return {Promise<Array>}
  */
-const findTwoPartTariffByBatchId = billingBatchId =>
-  raw.multiRow(queries.findTwoPartTariffByBatchId, { billingBatchId });
+const findTwoPartTariffByBatchId = async billingBatchId => {
+  const conditions = {
+    billing_batch_id: billingBatchId,
+    transaction_type: TRANSACTION_TYPE.twoPartTariff
+  };
+
+  return helpers.findMany(BillingBatchChargeVersionYear, conditions);
+};
 
 /**
- * Deletes charge versiom years in a batch for a particular licence ID
+ * Deletes charge version years in a batch for a particular licence ID
  * @param {String} billingBatchId
  * @param {String} licenceId
  */
@@ -69,20 +98,13 @@ const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
  * @param {String} billingBatchId
  * @param {String} chargeVersionId
  * @param {Number} financialYearEnding
- * @param {String} status
+ * @param {String} data.status
+ * @param {String} data.transactionType annual | two_part_tariff
+ * @param {Boolean} data.isSummer
  */
-const create = async (billingBatchId, chargeVersionId, financialYearEnding, status) => {
-  const model = await BillingBatchChargeVersionYear
-    .forge({
-      billingBatchId,
-      chargeVersionId,
-      financialYearEnding,
-      status
-    })
-    .save();
-  return model.toJSON();
-};
+const create = async data => helpers.create(BillingBatchChargeVersionYear, data);
 
+exports.findOne = findOne;
 exports.update = update;
 exports.findStatusCountsByBatchId = findStatusCountsByBatchId;
 exports.deleteByBatchId = deleteByBatchId;

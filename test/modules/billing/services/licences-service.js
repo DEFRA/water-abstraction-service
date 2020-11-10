@@ -16,6 +16,8 @@ const Batch = require('../../../../src/lib/models/batch');
 const repos = require('../../../../src/lib/connectors/repos');
 
 const licencesService = require('../../../../src/modules/billing/services/licences-service');
+const generalLicencesService = require('../../../../src/lib/services/licences');
+const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../../src/lib/models/constants');
 
 const { BatchStatusError } = require('../../../../src/modules/billing/lib/errors');
 
@@ -26,10 +28,10 @@ experiment('modules/billing/services/licences-service', () => {
     batch = new Batch();
 
     sandbox.stub(repos.licences, 'findByBatchIdForTwoPartTariffReview');
+    sandbox.stub(generalLicencesService, 'updateIncludeInSupplementaryBillingStatus');
 
     sandbox.stub(repos.billingVolumes, 'deleteByBatchIdAndLicenceId');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchIdAndLicenceId');
-    sandbox.stub(repos.billingBatchChargeVersions, 'deleteByBatchIdAndLicenceId');
   });
 
   afterEach(async () => {
@@ -93,16 +95,21 @@ experiment('modules/billing/services/licences-service', () => {
         expect(repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId.calledWith(
           batch.id, licenceId
         )).to.be.true();
-        expect(repos.billingBatchChargeVersions.deleteByBatchIdAndLicenceId.calledWith(
-          batch.id, licenceId
+      });
+
+      test('licence is flagged for supplementary billing', async () => {
+        expect(generalLicencesService.updateIncludeInSupplementaryBillingStatus.calledWith(
+          INCLUDE_IN_SUPPLEMENTARY_BILLING.no,
+          INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
+          licenceId
         )).to.be.true();
       });
 
-      test('the repo methods are called in the correct order', async () => {
+      test('the methods are called in the correct order', async () => {
         sinon.assert.callOrder(
           repos.billingVolumes.deleteByBatchIdAndLicenceId,
           repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId,
-          repos.billingBatchChargeVersions.deleteByBatchIdAndLicenceId
+          generalLicencesService.updateIncludeInSupplementaryBillingStatus
         );
       });
     });

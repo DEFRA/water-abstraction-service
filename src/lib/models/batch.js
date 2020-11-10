@@ -16,7 +16,7 @@ const validators = require('./validators');
  * be run at a time.
  */
 const BATCH_STATUS = {
-  processing: 'processing', // processing trasactions
+  processing: 'processing', // processing transactions
   review: 'review', // two-part tariff only - reviewing results of returns matching
   ready: 'ready', // processing completed - awaiting approval
   sent: 'sent', // approved & sent to Charge Module
@@ -246,7 +246,7 @@ class Batch extends Model {
    * @param {Totals} totals
    */
   set totals (totals) {
-    validators.assertIsInstanceOf(totals, Totals);
+    validators.assertIsNullableInstanceOf(totals, Totals);
     this._totals = totals;
   }
 

@@ -18,7 +18,6 @@ experiment('modules/acceptance-tests/lib/charging/batches', () => {
     sandbox.stub(pool, 'query');
 
     sandbox.stub(newRepos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
-    sandbox.stub(newRepos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
     sandbox.stub(newRepos.billingVolumes, 'deleteByBatchId').resolves();
     sandbox.stub(newRepos.billingTransactions, 'deleteByBatchId').resolves();
     sandbox.stub(newRepos.billingInvoiceLicences, 'deleteByBatchId').resolves();
@@ -57,10 +56,6 @@ experiment('modules/acceptance-tests/lib/charging/batches', () => {
       expect(newRepos.billingBatchChargeVersionYears.deleteByBatchId.callCount).to.equal(2);
       expect(newRepos.billingBatchChargeVersionYears.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000', false)).to.be.true();
       expect(newRepos.billingBatchChargeVersionYears.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111', false)).to.be.true();
-
-      expect(newRepos.billingBatchChargeVersions.deleteByBatchId.callCount).to.equal(2);
-      expect(newRepos.billingBatchChargeVersions.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000', false)).to.be.true();
-      expect(newRepos.billingBatchChargeVersions.deleteByBatchId.calledWith('11111111-1111-1111-1111-111111111111', false)).to.be.true();
 
       expect(newRepos.billingVolumes.deleteByBatchId.callCount).to.equal(2);
       expect(newRepos.billingVolumes.deleteByBatchId.calledWith('00000000-0000-0000-0000-000000000000')).to.be.true();

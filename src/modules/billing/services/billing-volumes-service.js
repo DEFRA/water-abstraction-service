@@ -88,7 +88,7 @@ const approveVolumesForBatch = async batch => {
  * @param {BillingVolume} billingVolume
  */
 const persist = async billingVolume => {
-  const dbRow = mappers.billingVolume.modelToDB(billingVolume);
+  const dbRow = mappers.billingVolume.modelToDb(billingVolume);
   const data = await billingVolumesRepo.create(dbRow);
   return mappers.billingVolume.dbToModel(data);
 };

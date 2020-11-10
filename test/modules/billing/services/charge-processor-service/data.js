@@ -19,6 +19,7 @@ const Region = require('../../../../../src/lib/models/region');
 const Transaction = require('../../../../../src/lib/models/transaction');
 const PurposeUse = require('../../../../../src/lib/models/purpose-use');
 const ChangeReason = require('../../../../../src/lib/models/change-reason');
+const ChargeVersionYear = require('../../../../../src/lib/models/charge-version-year');
 
 const createLicence = (overrides = {}) => {
   const licence = new Licence();
@@ -162,6 +163,17 @@ const createBillingVolume = chargeElement => {
   });
 };
 
+const createChargeVersionYear = (batch, chargeVersion, financialYear, options = {}) => {
+  const chargeVersionYear = new ChargeVersionYear(uuid());
+  return chargeVersionYear.fromHash({
+    batch,
+    chargeVersion,
+    financialYear,
+    transactionType: options.transactionType || 'annual',
+    isSummer: options.isSummer || false
+  });
+};
+
 exports.createLicence = createLicence;
 exports.createChargeVersion = createChargeVersion;
 exports.createChargeElement = createChargeElement;
@@ -172,3 +184,4 @@ exports.createChargeVersionWithTwoPartTariff = createChargeVersionWithTwoPartTar
 exports.createTransaction = createTransaction;
 exports.createSentTPTBatches = createSentTPTBatches;
 exports.createBillingVolume = createBillingVolume;
+exports.createChargeVersionYear = createChargeVersionYear;
