@@ -276,11 +276,9 @@ experiment('lib/models/return', () => {
       expect(ret.abstractionPeriod instanceof AbstractionPeriod).to.be.true();
     });
 
-    test('throws an error if set to null', async () => {
-      const func = () => {
-        ret.abstractionPeriod = null;
-      };
-      expect(func).to.throw();
+    test('can be set to null', async () => {
+      ret.abstractionPeriod = null;
+      expect(ret.abstractionPeriod).to.be.null();
     });
 
     test('throws an error if set to a different model', async () => {

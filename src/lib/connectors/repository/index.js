@@ -8,7 +8,6 @@ const BillingInvoiceRepository = require('./BillingInvoiceRepository');
 const BillingInvoiceLicenceRepository = require('./BillingInvoiceLicenceRepository');
 const BillingTransactionRepository = require('./BillingTransactionRepository');
 const BillingBatchChargeVersionYearsRepository = require('./BillingBatchChargeVersionYearsRepository');
-const BillingBatchChargeVersionsRepository = require('./BillingBatchChargeVersionsRepository');
 const LicenceRepository = require('./LicenceRepository');
 const LicenceAgreementRepository = require('./LicenceAgreementRepository');
 
@@ -30,6 +29,5 @@ exports.billingInvoices = new BillingInvoiceRepository();
 exports.billingInvoiceLicences = new BillingInvoiceLicenceRepository();
 exports.billingTransactions = new BillingTransactionRepository();
 exports.billingBatchChargeVersionYears = new BillingBatchChargeVersionYearsRepository();
-exports.billingBatchChargeVersions = new BillingBatchChargeVersionsRepository();
 exports.licences = new LicenceRepository();
 exports.licenceAgreements = new LicenceAgreementRepository();

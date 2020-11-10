@@ -17,6 +17,16 @@ const options = {
 };
 
 /**
+ * Checks if the error is an HTTP client error (in range 400 - 499)
+ * @param {Error} err
+ * @return {Boolean}
+ */
+const isClientError = err => {
+  const statusCode = get(err, 'statusCode', 0);
+  return (statusCode >= 400) && (statusCode < 500);
+};
+
+/**
  * Creates an object ready to publish on the message queue
  *
  * @param {String} eventId The UUID of the event
@@ -48,12 +58,15 @@ const handleCreateCharge = async job => {
     // Update/remove our local transaction in water.billing_transactions
     await transactionsService.updateWithChargeModuleResponse(transactionId, response);
   } catch (err) {
-    // Mark transaction as error in DB
+    // Always log and mark transaction as errored in DB
     transactionsService.setErrorStatus(transactionId);
-    batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToCreateCharge);
+    batchJob.logHandlingError(job, err);
 
-    await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToCreateCharge);
-    throw err;
+    // If not a client error, error the batch
+    if (!isClientError(err)) {
+      await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToCreateCharge);
+      throw err;
+    }
   }
 
   return {
