@@ -117,7 +117,7 @@ const create = async data => {
 const findByRegionId = async regionId =>
   helpers.findMany(BillingBatch, { region_id: regionId }, ['region']);
 
-const findSentTPTBatchesForFinancialYearAndRegion = async (financialYear, regionId) => {
+const findSentTptBatchesForFinancialYearAndRegion = async (financialYear, regionId) => {
   const conditions = {
     batch_type: BATCH_TYPE.twoPartTariff,
     to_financial_year_ending: financialYear,
@@ -132,16 +132,6 @@ const findSentTPTBatchesForFinancialYearAndRegion = async (financialYear, region
   return helpers.findMany(BillingBatch, conditions, withRelated);
 };
 
-const findSentTPTBatchesForRegion = async regionId => {
-  const conditions = {
-    batch_type: BATCH_TYPE.twoPartTariff,
-    status: BATCH_STATUS.sent,
-    region_id: regionId
-  };
-
-  return helpers.findMany(BillingBatch, conditions);
-};
-
 exports.delete = deleteById;
 exports.findByStatuses = findByStatuses;
 exports.findOne = findOne;
@@ -151,5 +141,4 @@ exports.findOneWithInvoices = findOneWithInvoices;
 exports.findOneWithInvoicesWithTransactions = findOneWithInvoicesWithTransactions;
 exports.create = create;
 exports.findByRegionId = findByRegionId;
-exports.findSentTPTBatchesForFinancialYearAndRegion = findSentTPTBatchesForFinancialYearAndRegion;
-exports.findSentTPTBatchesForRegion = findSentTPTBatchesForRegion;
+exports.findSentTptBatchesForFinancialYearAndRegion = findSentTptBatchesForFinancialYearAndRegion;

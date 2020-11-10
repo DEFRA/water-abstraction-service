@@ -96,7 +96,6 @@ experiment('modules/billing/services/batch-service', () => {
 
     sandbox.stub(newRepos.billingVolumes, 'deleteByBatchId').resolves();
 
-    sandbox.stub(newRepos.billingBatchChargeVersions, 'deleteByBatchId').resolves();
     sandbox.stub(newRepos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
 
     sandbox.stub(transactionsService, 'saveTransactionToDB');
@@ -333,10 +332,6 @@ experiment('modules/billing/services/batch-service', () => {
 
       test('deletes the charge version years', async () => {
         expect(newRepos.billingBatchChargeVersionYears.deleteByBatchId.calledWith(batch.id)).to.be.true();
-      });
-
-      test('deletes the charge versions', async () => {
-        expect(newRepos.billingBatchChargeVersions.deleteByBatchId.calledWith(batch.id)).to.be.true();
       });
 
       test('deletes the billing volumes', async () => {

@@ -400,8 +400,14 @@ experiment('lib/models/batch', () => {
     test('can be set to a totals instance', async () => {
       const batch = new Batch();
       const totals = new Totals();
-      batch.totals = new Totals();
+      batch.totals = totals;
       expect(batch.totals).to.equal(totals);
+    });
+
+    test('can be set to null', async () => {
+      const batch = new Batch();
+      batch.totals = null;
+      expect(batch.totals).to.equal(null);
     });
 
     test('throws an error if set to a different type', async () => {

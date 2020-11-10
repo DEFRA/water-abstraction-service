@@ -113,12 +113,6 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
         )).to.be.true();
       });
 
-      test('creates billingBatchChargeVersions using the batch', async () => {
-        expect(chargeVersionService.createForBatch.calledWith(
-          batch
-        )).to.be.true();
-      });
-
       test('includes the batch in the job response', async () => {
         expect(result.batch).to.equal(batch);
       });

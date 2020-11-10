@@ -7,14 +7,15 @@ const data = require('./data');
 experiment('modules/billing/services/charge-processor-service/transactions-processor', async () => {
   experiment('.createTransactions', async () => {
     const financialYear = data.createFinancialYear();
-    let chargeVersion, batch, transactions;
+    let chargeVersionYear, chargeVersion, batch, transactions;
 
-    experiment('for an annual batch', () => {
+    experiment('for an annual transaction type', () => {
       beforeEach(async () => {
         batch = data.createBatch('annual');
         chargeVersion = data.createChargeVersionWithTwoPartTariff();
+        chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
         const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+        transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
       });
 
       test('4 transactions are created', async () => {
@@ -54,67 +55,19 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
       });
     });
 
-    experiment('for a supplementary batch', () => {
-      beforeEach(async () => {
-        batch = data.createBatch('supplementary');
-        chargeVersion = data.createChargeVersionWithTwoPartTariff();
-        const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
-      });
-
-      test('5 transactions are created', async () => {
-        expect(transactions.length).to.equal(5);
-      });
-
-      test('a standard charge transaction is created for the first element', async () => {
-        expect(transactions[0].chargeElement.purposeUse.code).to.equal('300');
-        expect(transactions[0].isCompensationCharge).to.equal(false);
-        expect(transactions[0].agreements).to.equal([]);
-        expect(transactions[0].isTwoPartTariffSupplementary).to.equal(false);
-        expect(transactions[0].description).to.equal('Test Description');
-      });
-
-      test('a compensation charge transaction is created for the first element', async () => {
-        expect(transactions[0].chargeElement.purposeUse.code).to.equal('300');
-        expect(transactions[1].isCompensationCharge).to.equal(true);
-        expect(transactions[1].agreements).to.equal([]);
-        expect(transactions[1].isTwoPartTariffSupplementary).to.equal(false);
-        expect(transactions[1].description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
-      });
-
-      test('a first-part two-part tariff charge is created for the second element', async () => {
-        expect(transactions[2].chargeElement.purposeUse.code).to.equal('400');
-        expect(transactions[2].isCompensationCharge).to.equal(false);
-        expect(transactions[2].agreements[0].code).to.equal('S127');
-        expect(transactions[2].isTwoPartTariffSupplementary).to.equal(false);
-        expect(transactions[2].description).to.equal('First Part Spray Irrigation Direct Charge at Test Description');
-      });
-
-      test('a first-part two-part tariff compensation charge is created for the second element', async () => {
-        expect(transactions[3].chargeElement.purposeUse.code).to.equal('400');
-        expect(transactions[3].isCompensationCharge).to.equal(true);
-        expect(transactions[3].agreements[0].code).to.equal('S127');
-        expect(transactions[3].isTwoPartTariffSupplementary).to.equal(false);
-        expect(transactions[3].description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
-      });
-
-      test('a second-part two-part tariff charge is created for the second element', async () => {
-        expect(transactions[4].chargeElement.purposeUse.code).to.equal('400');
-        expect(transactions[4].isCompensationCharge).to.equal(false);
-        expect(transactions[4].agreements[0].code).to.equal('S127');
-        expect(transactions[4].isTwoPartTariffSupplementary).to.equal(true);
-        expect(transactions[4].description).to.equal('Second Part Spray Irrigation Direct Charge at Test Description');
-      });
-    });
-
-    experiment('for a two-part tariff summer batch', () => {
+    experiment('for a two-part tariff transaction type', () => {
       beforeEach(async () => {
         batch = data.createBatch('two_part_tariff', { isSummer: true });
         chargeVersion = data.createChargeVersionWithTwoPartTariff();
+        const chargeVersionYearOptions = {
+          transactionType: 'two_part_tariff',
+          isSummer: true
+        };
+        chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear, chargeVersionYearOptions);
         const billingVolumes = chargeVersion.chargeElements
           .map(data.createBillingVolume)
           .map(billingVolume => billingVolume.fromHash({ isSummer: true }));
-        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+        transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
       });
 
       test('1 transaction is created', async () => {
@@ -139,8 +92,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('the transaction charge period is the full financial year', async () => {
@@ -169,8 +123,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
               }
             })
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('the transaction charge period is the full financial year', async () => {
@@ -200,8 +155,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
               }
             })
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('the transaction charge period is the full financial year', async () => {
@@ -224,8 +180,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('the transaction charge period starts on the licence start date', async () => {
@@ -250,8 +207,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('the transaction charge period ends on the earliest of expiry, lapsed and revoked dates', async () => {
@@ -272,8 +230,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('the transaction charge period starts when the charge version starts', async () => {
@@ -294,8 +253,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('the transaction charge period ends when the charge period ends', async () => {
@@ -316,8 +276,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement({ timeLimitedStartDate: '2015-01-01', timeLimitedEndDate: '2016-01-01' })
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('no transactions are created', async () => {
@@ -332,8 +293,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement({ timeLimitedStartDate: '2015-01-01', timeLimitedEndDate: '2025-01-01' })
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('the transaction charge period is the full financial year', async () => {
@@ -354,8 +316,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement({ timeLimitedStartDate: '2019-05-01', timeLimitedEndDate: '2025-01-01' })
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('the transaction charge period starts on the time-limited start date', async () => {
@@ -376,8 +339,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement({ timeLimitedStartDate: '2016-01-01', timeLimitedEndDate: '2019-06-01' })
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('the transaction charge period ends on the time-limited end date', async () => {
@@ -398,8 +362,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement({ timeLimitedStartDate: '2019-05-01', timeLimitedEndDate: '2019-06-01' })
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('the transaction charge period starts and ends on the time-limited dates', async () => {
@@ -424,8 +389,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('generate 2 charges', async () => {
@@ -448,8 +414,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('generate 1 charge', async () => {
@@ -472,8 +439,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('transactions have no agreements', async () => {
@@ -492,8 +460,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('transactions have the agreements applied', async () => {
@@ -514,8 +483,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.chargeElements = [
             data.createChargeElement()
           ];
+          chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-          transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+          transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
         });
 
         test('4 transactions are created', async () => {
@@ -552,8 +522,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
       test('is false when charge version start date is different from licence start date', async () => {
         chargeVersion = data.createChargeVersion({ triggersMinimumCharge: true });
         chargeVersion.chargeElements = [data.createChargeElement()];
+        chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
         const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+        transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
 
         expect(transactions[0].isNewLicence).to.equal(false);
       });
@@ -561,8 +532,9 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
       test('is true when charge version start date is the same as licence start date', async () => {
         chargeVersion = data.createChargeVersion({ startDate: '2019-04-01', triggersMinimumCharge: true });
         chargeVersion.chargeElements = [data.createChargeElement()];
+        chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
         const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
-        transactions = transactionsProcessor.createTransactions(batch, financialYear, chargeVersion, billingVolumes);
+        transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
 
         expect(transactions[0].isNewLicence).to.equal(true);
       });

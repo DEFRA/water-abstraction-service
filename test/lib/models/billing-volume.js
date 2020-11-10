@@ -90,21 +90,21 @@ experiment('lib/models/billingVolume', () => {
 
     test('throws an error if set to null', async () => {
       const func = () => {
-        billingVolume.twoPartTariffError = null;
+        billingVolume.isSummer = null;
       };
       expect(func).to.throw();
     });
 
     test('throws an error if set to undefined', async () => {
       const func = () => {
-        billingVolume.twoPartTariffError = undefined;
+        billingVolume.isSummer = undefined;
       };
       expect(func).to.throw();
     });
 
     test('throws an error if set to any other type', async () => {
       const func = () => {
-        billingVolume.twoPartTariffError = 'not-a-boolean';
+        billingVolume.isSummer = 'not-a-boolean';
       };
       expect(func).to.throw();
     });

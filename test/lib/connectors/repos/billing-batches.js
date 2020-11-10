@@ -274,9 +274,9 @@ experiment('lib/connectors/repos/billing-batches', () => {
     });
   });
 
-  experiment('.findSentTPTBatchesForFinancialYearAndRegion', () => {
+  experiment('.findSentTptBatchesForFinancialYearAndRegion', () => {
     beforeEach(async () => {
-      await billingBatches.findSentTPTBatchesForFinancialYearAndRegion(2020, '00000000-0000-0000-0000-000000000000');
+      await billingBatches.findSentTptBatchesForFinancialYearAndRegion(2020, '00000000-0000-0000-0000-000000000000');
     });
 
     test('calls helpers .findMany() with the correct params', async () => {
@@ -291,20 +291,6 @@ experiment('lib/connectors/repos/billing-batches', () => {
         'billingInvoices.billingInvoiceLicences',
         'billingInvoices.billingInvoiceLicences.licence'
       ]);
-    });
-  });
-
-  experiment('.findSentTPTBatchesForRegion', () => {
-    beforeEach(async () => {
-      await billingBatches.findSentTPTBatchesForRegion('region-id');
-    });
-
-    test('calls helpers .findMany() with the correct params', async () => {
-      const [model, conditions] = helpers.findMany.lastCall.args;
-      expect(model).to.equal(BillingBatch);
-      expect(conditions.batch_type).to.equal(BATCH_TYPE.twoPartTariff);
-      expect(conditions.status).to.equal(BATCH_STATUS.sent);
-      expect(conditions.region_id).to.equal('region-id');
     });
   });
 

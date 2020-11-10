@@ -77,5 +77,10 @@ experiment('modules/billing/mappers/user .dbToModel', () => {
       expect(result.id).to.equal(1234);
       expect(result.email).to.equal('test@example.com');
     });
+
+    test('handles null values', () => {
+      result = userMapper.modelToDb(null);
+      expect(result).to.be.null();
+    });
   });
 });

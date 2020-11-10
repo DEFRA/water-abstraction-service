@@ -20,21 +20,6 @@ delete from water.billing_batch_charge_version_years y
     and y.financial_year_ending=i.financial_year_ending
 `;
 
-/**
- * @TODO if water.financial_agreement_types is updated to have a GUID ID column, this will
- *       need updating to use the legacy code rather than the ID
- */
-exports.findTwoPartTariffByBatchId = `
-select y.* from water.billing_batch_charge_version_years y 
-join water.charge_versions cv on y.charge_version_id=cv.charge_version_id
-join water.licence_agreements a on a.licence_ref=cv.licence_ref
-join water.financial_agreement_types t on a.financial_agreement_type_id=t.financial_agreement_type_id
-where y.billing_batch_id=:billingBatchId
-  and (a.end_date is null or a.end_date >= make_date(y.financial_year_ending-1, 4, 1))
-  and (a.start_date <= make_date(y.financial_year_ending, 3, 31))
-  and t.financial_agreement_code='S127'
-`;
-
 exports.deleteByBatchIdAndLicenceId = `
 delete from water.billing_batch_charge_version_years y
 using water.charge_versions cv, water.licences l

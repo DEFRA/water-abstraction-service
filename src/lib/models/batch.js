@@ -246,7 +246,7 @@ class Batch extends Model {
    * @param {Totals} totals
    */
   set totals (totals) {
-    validators.assertIsInstanceOf(totals, Totals);
+    validators.assertIsNullableInstanceOf(totals, Totals);
     this._totals = totals;
   }
 
