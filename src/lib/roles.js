@@ -51,7 +51,8 @@ const ROLES = {
   chargeVersionWorkflowEditor: 'charge_version_workflow_editor',
   chargeVersionWorkflowReviewer: 'charge_version_workflow_reviewer',
   manageAgreements: 'manage_agreements',
-  deleteAgreements: 'delete_agreements'
+  deleteAgreements: 'delete_agreements',
+  billing: 'billing'
 };
 
 exports.getRolesForPermissionKey = getRolesForPermissionKey;
