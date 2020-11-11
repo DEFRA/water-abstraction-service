@@ -20,14 +20,30 @@ const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
 experiment('lib/connectors/repos/charge-versions', () => {
   let model, stub, result;
 
+  const sharedRelations = [
+    'chargeElements',
+    'chargeElements.purposePrimary',
+    'chargeElements.purposeSecondary',
+    'chargeElements.purposeUse',
+    'licence',
+    'licence.region',
+    'licence.licenceAgreements',
+    'licence.licenceAgreements.financialAgreementType',
+    'changeReason'
+  ];
+
   beforeEach(async () => {
     model = {
       toJSON: sandbox.stub().returns({ chargeElementId: 'test-id' })
     };
 
     stub = {
-      fetch: sandbox.stub().resolves(model)
+      fetch: sandbox.stub().resolves(model),
+      orderBy: sandbox.stub().returnsThis(),
+      where: sandbox.stub().returnsThis(),
+      fetchAll: sandbox.stub().resolves(model)
     };
+
     sandbox.stub(ChargeVersion, 'forge').returns(stub);
     sandbox.stub(raw, 'multiRow');
     sandbox.stub(helpers, 'update');
@@ -50,17 +66,7 @@ experiment('lib/connectors/repos/charge-versions', () => {
 
     test('.fetch() is called with related models', async () => {
       expect(stub.fetch.calledWith({
-        withRelated: [
-          'chargeElements',
-          'chargeElements.purposePrimary',
-          'chargeElements.purposeSecondary',
-          'chargeElements.purposeUse',
-          'licence',
-          'licence.region',
-          'licence.licenceAgreements',
-          'licence.licenceAgreements.financialAgreementType',
-          'changeReason'
-        ]
+        withRelated: sharedRelations
       })).to.be.true();
     });
 
@@ -106,6 +112,61 @@ experiment('lib/connectors/repos/charge-versions', () => {
         id,
         changes
       ));
+    });
+  });
+
+  experiment('.findByLicenceRef', () => {
+    beforeEach(async () => {
+      result = await chargeVersions.findByLicenceRef('test-licence-ref');
+    });
+
+    test('.where() is called with correct licence ref', async () => {
+      const args = stub.where.lastCall.args;
+      expect(args[0]).to.equal('licence_ref');
+      expect(args[1]).to.equal('test-licence-ref');
+    });
+
+    test('.fetch() is called with related models', async () => {
+      expect(stub.fetchAll.calledWith({
+        withRelated: sharedRelations
+      })).to.be.true();
+    });
+
+    test('calls model.toJSON()', async () => {
+      expect(model.toJSON.called).to.be.true();
+    });
+
+    test('returns result of model.toJSON()', async () => {
+      expect(result).to.equal({
+        chargeElementId: 'test-id'
+      });
+    });
+  });
+  experiment('.findByLicenceId', () => {
+    beforeEach(async () => {
+      result = await chargeVersions.findByLicenceId('test-licence-id');
+    });
+
+    test('.where() is called with correct licence ref', async () => {
+      const args = stub.where.lastCall.args;
+      expect(args[0]).to.equal('licence_id');
+      expect(args[1]).to.equal('test-licence-id');
+    });
+
+    test('.fetch() is called with related models', async () => {
+      expect(stub.fetchAll.calledWith({
+        withRelated: sharedRelations
+      })).to.be.true();
+    });
+
+    test('calls model.toJSON()', async () => {
+      expect(model.toJSON.called).to.be.true();
+    });
+
+    test('returns result of model.toJSON()', async () => {
+      expect(result).to.equal({
+        chargeElementId: 'test-id'
+      });
     });
   });
 });
