@@ -32,9 +32,11 @@ jobs:
         image: postgres:10-alpine
         # Provide the password for postgres
         env:
-          POSTGRES_USER: water
-          POSTGRES_DB: water
-          POSTGRES_PASSWORD: water
+          PGUSER: water
+          PGHOST: localhost
+          PGPASSWORD: water
+          PGPORT: 5432
+          PGDATABASE: water
         # Maps tcp port 5432 on service container to the host
         ports:
           - 5432:5432
