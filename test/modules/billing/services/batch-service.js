@@ -82,6 +82,8 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingBatches, 'create').resolves();
     sandbox.stub(newRepos.billingBatches, 'findOneWithInvoicesWithTransactions').resolves();
     sandbox.stub(newRepos.billingBatches, 'findByRegionId').resolves([]);
+    sandbox.stub(newRepos.billingBatches, 'find').resolves();
+    sandbox.stub(newRepos.billingBatches, 'deleteAllBillingData').resolves();
 
     sandbox.stub(newRepos.billingInvoices, 'deleteEmptyByBatchId').resolves();
     sandbox.stub(newRepos.billingInvoices, 'deleteByBatchId').resolves();
@@ -1306,6 +1308,92 @@ experiment('modules/billing/services/batch-service', () => {
           const err = await expect(func()).to.reject();
           expect(err.message).to.equal('oh no!');
         });
+      });
+    });
+  });
+
+  experiment('.deleteAllBillingData', () => {
+    beforeEach(async () => {
+      newRepos.billingBatches.find.resolves([{
+        externalId: null
+      }, {
+        externalId: 'test-external-id-1'
+      }, {
+        externalId: 'test-external-id-2'
+      }]);
+    });
+
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        await batchService.deleteAllBillingData();
+      });
+
+      test('no error messages are logged', async () => {
+        expect(logger.error.called).to.be.false();
+      });
+
+      test('info messages are logged', async () => {
+        expect(logger.info.callCount).to.equal(2);
+        expect(logger.info.calledWith(
+          'Deleting Charge Module batch test-external-id-1'
+        )).to.be.true();
+        expect(logger.info.calledWith(
+          'Deleting Charge Module batch test-external-id-2'
+        )).to.be.true();
+      });
+
+      test('each charge module batch is deleted', async () => {
+        expect(chargeModuleBillRunConnector.delete.callCount).to.equal(2);
+        expect(chargeModuleBillRunConnector.delete.calledWith(
+          'test-external-id-1'
+        )).to.be.true();
+        expect(chargeModuleBillRunConnector.delete.calledWith(
+          'test-external-id-2'
+        )).to.be.true();
+      });
+
+      test('the billing / charge version data is deleted from water service tables', async () => {
+        expect(newRepos.billingBatches.deleteAllBillingData.called).to.be.true();
+      });
+    });
+
+    experiment('when there is a charge module API error', () => {
+      const err = new Error('oops!');
+
+      beforeEach(async () => {
+        chargeModuleBillRunConnector.delete.onCall(1).rejects(err);
+        await batchService.deleteAllBillingData();
+      });
+
+      test('info messages are logged', async () => {
+        expect(logger.info.callCount).to.equal(2);
+        expect(logger.info.calledWith(
+          'Deleting Charge Module batch test-external-id-1'
+        )).to.be.true();
+        expect(logger.info.calledWith(
+          'Deleting Charge Module batch test-external-id-2'
+        )).to.be.true();
+      });
+
+      test('an error is logged for the failed call', async () => {
+        expect(logger.error.callCount).to.equal(1);
+        expect(logger.error.calledWith(
+          'Unable to delete Charge Module batch test-external-id-2', err
+        )).to.be.true();
+      });
+
+      test('each charge module batch is deleted', async () => {
+        expect(chargeModuleBillRunConnector.delete.callCount).to.equal(2);
+        expect(chargeModuleBillRunConnector.delete.calledWith(
+          'test-external-id-1'
+        )).to.be.true();
+        expect(chargeModuleBillRunConnector.delete.calledWith(
+          'test-external-id-2'
+        )).to.be.true();
+      });
+
+      test('the billing / charge version data is deleted from water service tables', async () => {
+        expect(newRepos.billingBatches.deleteAllBillingData.called).to.be.true();
       });
     });
   });

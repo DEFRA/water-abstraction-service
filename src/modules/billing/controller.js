@@ -3,17 +3,22 @@
 const Boom = require('@hapi/boom');
 
 const { envelope } = require('../../lib/response');
-const createBillRunJob = require('./jobs/create-bill-run');
-const refreshTotalsJob = require('./jobs/refresh-totals');
 const { jobStatus } = require('./lib/event');
-const invoiceService = require('./services/invoice-service');
-const invoiceLicenceService = require('./services/invoice-licences-service');
-const batchService = require('./services/batch-service');
 const { createBatchEvent } = require('./lib/batch-event');
-
 const controller = require('../../lib/controller');
 const mapErrorResponse = require('../../lib/map-error-response');
 const mappers = require('./mappers');
+const { logger } = require('../../logger');
+
+// Services
+const invoiceService = require('./services/invoice-service');
+const invoiceLicenceService = require('./services/invoice-licences-service');
+const batchService = require('./services/batch-service');
+const importConnector = require('../../lib/connectors/import');
+
+// PG boss jobs
+const createBillRunJob = require('./jobs/create-bill-run');
+const refreshTotalsJob = require('./jobs/refresh-totals');
 
 /**
  * Resource that will create a new batch skeleton which will
@@ -144,6 +149,24 @@ const getInvoiceLicenceWithTransactions = async (request, h) => {
   return invoiceLicence || Boom.notFound(`Invoice licence ${invoiceLicenceId} not found`);
 };
 
+/**
+ * Deletes all billing data (!)
+ * - Deletes water.billing_* tables
+ * - Deletes water.charge_versions/water.charge_elements
+ * - Re-imports charge version data from import module
+ * @return {Promise}
+ */
+const deleteAllBillingData = async (request, h) => {
+  try {
+    await batchService.deleteAllBillingData();
+    await importConnector.postImportChargeVersions();
+    return h.response().code(204);
+  } catch (err) {
+    logger.error('Error deleting all billing data', err);
+    return mapErrorResponse(err);
+  }
+};
+
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
 exports.getBatchInvoices = getBatchInvoices;
@@ -155,3 +178,5 @@ exports.deleteBatch = deleteBatch;
 
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
+
+exports.deleteAllBillingData = deleteAllBillingData;
