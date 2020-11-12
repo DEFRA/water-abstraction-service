@@ -147,7 +147,7 @@ experiment('lib/connectors/repos/charge-versions', () => {
       result = await chargeVersions.findByLicenceId('test-licence-id');
     });
 
-    test('.where() is called with correct licence ref', async () => {
+    test('.where() is called with correct licence id', async () => {
       const args = stub.where.lastCall.args;
       expect(args[0]).to.equal('licence_id');
       expect(args[1]).to.equal('test-licence-id');
