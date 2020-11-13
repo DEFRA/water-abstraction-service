@@ -29,6 +29,12 @@ jobs:
       TEST_MODE: 1
       NODE_ENV: test
       CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
+      WATER_URI: http://127.0.0.1:8001/water/1.0
+      WATER_URI_INTERNAL: http://127.0.0.1:8001/water/1.0
+      PERMIT_URI: http://127.0.0.1:8004/API/1.0/
+      ADMIN_URI: http://127.0.0.1:8005/API/1.0/
+      CRM_URI: http://127.0.0.1:8002/crm/1.0
+      RETURNS_URI: http://127.0.0.1:8006/returns/1.0
 
     # Service containers to run with `runner-job`
     services:
