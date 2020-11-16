@@ -55,8 +55,17 @@ experiment('modules/charge-versions/controllers/pre-handlers', () => {
     });
 
     experiment('when the charge version workflow is found', () => {
+      let result;
+      beforeEach(async () => {
+        result = await preHandlers.loadChargeVersionWorkflow(request);
+      });
+
+      test('calls the charge version workflow service with the id', async () => {
+        const [id] = chargeVersionWorkflowService.getById.lastCall.args;
+        expect(id).to.equal(request.params.chargeVersionWorkflowId);
+      });
+
       test('it is returned from the function', async () => {
-        const result = await preHandlers.loadChargeVersionWorkflow(request);
         expect(result).to.equal(chargeVersionWorkflow);
       });
     });
