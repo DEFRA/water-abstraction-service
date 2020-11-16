@@ -13,7 +13,8 @@ const regionsService = require('./regions-service');
 const crmService = require('./crm-service');
 const mappers = require('../mappers');
 const dates = require('../../lib/dates');
-
+const { updateCustomer } = require('../../modules/invoice-accounts/jobs');
+const messageQueue = require('../../lib/message-queue');
 /**
  * Gets invoice accounts with specified IDs from CRM and
  * returns as an array of InvoiceAccount models
@@ -118,7 +119,8 @@ const createEntityAndDecorateInvoiceAccount = async (invoiceAccount, newModels, 
     const newEntity = await persistMethods[entityType](entity);
     invoiceAccount.invoiceAccountAddresses[0][entityType] = newEntity;
     newModels.push(newEntity);
-  };
+  }
+  ;
 };
 
 const createInvoiceAccount = async (regionId, companyId, startDate, invoiceAccount, newModels) => {
@@ -155,10 +157,19 @@ const persist = async (regionId, startDate, invoiceAccount) => {
     await createInvoiceAccount(regionId, invoiceAccount.company.id, formattedStartDate, invoiceAccount, newModels);
 
     const invoiceAccountAddress = await invoiceAccountAddressesService.createInvoiceAccountAddress(invoiceAccount, invoiceAccount.invoiceAccountAddresses[0], formattedStartDate);
-    return invoiceAccount.fromHash({
+
+    const data = invoiceAccount.fromHash({
       invoiceAccountAddresses: [invoiceAccountAddress]
     });
+
+    // Create PGBoss message to update the invoice account in CM
+    const message = await updateCustomer.job.createMessage(invoiceAccount.id);
+    await messageQueue.publish(message);
+
+    // Return the invoice account
+    return data;
   } catch (err) {
+    console.log(err);
     await crmService.deleteEntities(newModels);
     throw err;
   }
