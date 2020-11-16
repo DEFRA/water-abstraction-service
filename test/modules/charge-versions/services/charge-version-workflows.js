@@ -23,6 +23,7 @@ const chargeVersionWorkflowService = require('../../../../src/modules/charge-ver
 const documentsService = require('../../../../src/lib/services/documents-service');
 const service = require('../../../../src/lib/services/service');
 const chargeVersionService = require('../../../../src/lib/services/charge-versions');
+const licencesService = require('../../../../src/lib/services/licences');
 
 // Models
 const ChargeVersionWorkflow = require('../../../../src/lib/models/charge-version-workflow');
@@ -31,7 +32,6 @@ const DateRange = require('../../../../src/lib/models/date-range');
 const Role = require('../../../../src/lib/models/role');
 const Licence = require('../../../../src/lib/models/licence');
 const ChargeVersion = require('../../../../src/lib/models/charge-version');
-const ChargeVersionWorflow = require('../../../../src/lib/models/charge-version-workflow');
 const User = require('../../../../src/lib/models/user');
 
 // Mappers
@@ -77,9 +77,11 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
     sandbox.stub(chargeVersionWorkflowRepo, 'create');
     sandbox.stub(chargeVersionWorkflowRepo, 'update');
-    sandbox.stub(chargeVersionWorkflowRepo, 'deleteOne');
+    sandbox.stub(chargeVersionWorkflowRepo, 'deleteOne').resolves();
 
     sandbox.stub(chargeVersionService, 'create');
+
+    sandbox.stub(licencesService, 'flagForSupplementaryBilling').resolves();
 
     sandbox.stub(logger, 'error');
   });
@@ -249,7 +251,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       });
 
       test('resolves with a ChargeVersionWorkflow model', async () => {
-        expect(result).to.be.an.instanceof(ChargeVersionWorflow);
+        expect(result).to.be.an.instanceof(ChargeVersionWorkflow);
         expect(result.id).to.equal(chargeVersionWorkflowId);
       });
     });
@@ -330,16 +332,26 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
   });
 
   experiment('.delete', () => {
-    const id = uuid();
+    let chargeVersionWorkflow;
+    beforeEach(async () => {
+      chargeVersionWorkflow = new ChargeVersionWorkflow(uuid());
+      chargeVersionWorkflow.licence = new Licence(uuid());
+      await chargeVersionWorkflowService.delete(chargeVersionWorkflow);
+    });
 
     test('calls the repo .deleteOne method', async () => {
-      await chargeVersionWorkflowService.delete(id);
-      expect(chargeVersionWorkflowRepo.deleteOne.calledWith(id)).to.be.true();
+      expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
+    });
+
+    test('the licence is flagged for supplementary billing', async () => {
+      expect(licencesService.flagForSupplementaryBilling.calledWith(
+        chargeVersionWorkflow.licence.id
+      )).to.be.true();
     });
 
     test('if there is an error, catches and rethrows a NotFoundError', async () => {
       chargeVersionWorkflowRepo.deleteOne.throws(new Error('oh no!'));
-      const func = () => chargeVersionWorkflowService.delete(id);
+      const func = () => chargeVersionWorkflowService.delete(chargeVersionWorkflow);
       const err = await expect(func()).to.reject();
       expect(err).to.be.an.instanceof(NotFoundError);
     });
@@ -355,6 +367,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
         chargeVersion: new ChargeVersion(uuid()),
         createdBy: new User(456, 'someone-else@example.com')
       });
+      chargeVersionWorkflow.licence = new Licence(uuid());
       chargeVersionWorkflow.chargeVersion = new ChargeVersion(uuid());
       await chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvingUser);
     });

@@ -202,12 +202,6 @@ experiment('lib/services/charge-versions', () => {
         expect(chargeVersionRepo.update.callCount).to.equal(0);
       });
 
-      test('the licence is flagged for supplementary billing', async () => {
-        expect(licencesService.flagForSupplementaryBilling.calledWith(
-          licence.id
-        )).to.be.true();
-      });
-
       test('the charge version is loaded by ID and returned', async () => {
         expect(service.findOne.calledWith(chargeVersionId)).to.be.true();
       });

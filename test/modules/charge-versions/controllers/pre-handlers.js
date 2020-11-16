@@ -43,10 +43,10 @@ experiment('modules/charge-versions/controllers/pre-handlers', () => {
     });
 
     experiment('when the charge version workflow is not found', () => {
-      test('a not found error is thrown', async () => {
+      test('a not found error is returned', async () => {
         chargeVersionWorkflowService.getById.resolves(null);
 
-        const result = await expect(preHandlers.loadChargeVersionWorkflow(request)).to.reject();
+        const result = await preHandlers.loadChargeVersionWorkflow(request);
         const { statusCode, message } = result.output.payload;
 
         expect(statusCode).to.equal(404);

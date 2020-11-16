@@ -52,7 +52,7 @@ const loadChargeVersionWorkflow = async request => {
   const chargeVersionWorkflow = await chargeVersionWorkflowService.getById(chargeVersionWorkflowId);
 
   if (!chargeVersionWorkflow) {
-    throw Boom.notFound(`No charge version workflow found with id: ${chargeVersionWorkflowId}`);
+    return Boom.notFound(`No charge version workflow found with id: ${chargeVersionWorkflowId}`);
   }
 
   return chargeVersionWorkflow;

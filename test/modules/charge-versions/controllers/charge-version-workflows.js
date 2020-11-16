@@ -273,15 +273,9 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
         response = await cvWorkflowsController.deleteChargeVersionWorkflow(request, h);
       });
 
-      test('the service delete() method is called with the correct ID', async () => {
+      test('the service delete() method is called with the charge version workflow', async () => {
         expect(chargeVersionWorkflowService.delete.calledWith(
-          request.pre.chargeVersionWorkflow.id
-        )).to.be.true();
-      });
-
-      test('the licence is flagged for supplementary billing', async () => {
-        expect(licencesService.flagForSupplementaryBilling.calledWith(
-          request.pre.chargeVersionWorkflow.licence.id
+          request.pre.chargeVersionWorkflow
         )).to.be.true();
       });
 
