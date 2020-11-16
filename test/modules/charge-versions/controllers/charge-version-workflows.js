@@ -31,6 +31,7 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
     sandbox.stub(controller, 'getEntity');
 
     sandbox.stub(licencesService, 'getLicenceById');
+    sandbox.stub(licencesService, 'flagForSupplementaryBilling').resolves();
 
     sandbox.stub(chargeVersionWorkflowService, 'create');
     sandbox.stub(chargeVersionWorkflowService, 'update');
@@ -251,8 +252,13 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
 
     beforeEach(async () => {
       request = {
-        params: {
-          chargeVersionWorkflowId: uuid()
+        pre: {
+          chargeVersionWorkflow: {
+            id: uuid(),
+            licence: {
+              id: uuid()
+            }
+          }
         }
       };
       h = {
@@ -269,7 +275,13 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
 
       test('the service delete() method is called with the correct ID', async () => {
         expect(chargeVersionWorkflowService.delete.calledWith(
-          request.params.chargeVersionWorkflowId
+          request.pre.chargeVersionWorkflow.id
+        )).to.be.true();
+      });
+
+      test('the licence is flagged for supplementary billing', async () => {
+        expect(licencesService.flagForSupplementaryBilling.calledWith(
+          request.pre.chargeVersionWorkflow.licence.id
         )).to.be.true();
       });
 

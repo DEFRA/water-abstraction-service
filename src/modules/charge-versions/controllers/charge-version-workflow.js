@@ -82,8 +82,16 @@ const patchChargeVersionWorkflow = async (request, h) => {
   }
 };
 
-const deleteChargeVersionWorkflow = (request, h) =>
-  controller.deleteEntity(chargeVersionsWorkflowService.delete, h, request.params.chargeVersionWorkflowId);
+const deleteChargeVersionWorkflow = async (request, h) => {
+  const { chargeVersionWorkflow } = request.pre;
+  try {
+    await chargeVersionsWorkflowService.delete(chargeVersionWorkflow.id);
+    await licencesService.flagForSupplementaryBilling(chargeVersionWorkflow.licence.id);
+    return h.response().code(204);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
 
 exports.getChargeVersionWorkflows = getChargeVersionWorkflows;
 exports.getChargeVersionWorkflow = getChargeVersionWorkflow;
