@@ -12,14 +12,16 @@ const dbRow = {
   changeReasonId: '00000000-0000-0000-0000-000000000000',
   description: 'test description',
   triggersMinimumCharge: true,
-  type: 'new_chargeable_charge_version'
+  type: 'new_chargeable_charge_version',
+  isEnabledForNewChargeVersions: true
 };
 
 const pojo = {
   id: '00000000-0000-0000-0000-000000000000',
   description: 'test description',
   triggersMinimumCharge: true,
-  type: 'new_chargeable_charge_version'
+  type: 'new_chargeable_charge_version',
+  isEnabledForNewChargeVersions: true
 };
 
 experiment('modules/billing/mappers/change-reason', () => {
@@ -50,6 +52,10 @@ experiment('modules/billing/mappers/change-reason', () => {
     test('has the expected triggersMinimumCharge value', async () => {
       expect(result.triggersMinimumCharge).to.equal(dbRow.triggersMinimumCharge);
     });
+
+    test('has the expected isEnabledForNewChargeVersions value', async () => {
+      expect(result.isEnabledForNewChargeVersions).to.be.true();
+    });
   });
 
   experiment('.pojoToModel', () => {
@@ -77,6 +83,10 @@ experiment('modules/billing/mappers/change-reason', () => {
 
     test('has the expected type', async () => {
       expect(result.type).to.equal(pojo.type);
+    });
+
+    test('has the expected isEnabledForNewChargeVersions', async () => {
+      expect(result.isEnabledForNewChargeVersions).to.be.true();
     });
   });
 });

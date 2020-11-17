@@ -76,4 +76,23 @@ experiment('lib/models/change-reason', () => {
       expect(func).throw();
     });
   });
+
+  experiment('.isEnabledForNewChargeVersions', () => {
+    test('can set isEnabledForNewChargeVersions to a true', async () => {
+      changeReason.isEnabledForNewChargeVersions = true;
+      expect(changeReason.isEnabledForNewChargeVersions).to.equal(true);
+    });
+
+    test('can set isEnabledForNewChargeVersions to a false', async () => {
+      changeReason.isEnabledForNewChargeVersions = false;
+      expect(changeReason.isEnabledForNewChargeVersions).to.equal(false);
+    });
+
+    test('setting isEnabledForNewChargeVersions to null value throws an error', async () => {
+      const func = () => {
+        changeReason.isEnabledForNewChargeVersions = null;
+      };
+      expect(func).throw();
+    });
+  });
 });

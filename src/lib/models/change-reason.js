@@ -35,6 +35,15 @@ class ChangeReason extends Model {
     validators.assertEnum(type, changeReasonTypes);
     this._type = type;
   }
+
+  get isEnabledForNewChargeVersions () {
+    return this._isEnabledForNewChargeVersions;
+  }
+
+  set isEnabledForNewChargeVersions (value) {
+    validators.assertIsBoolean(value);
+    this._isEnabledForNewChargeVersions = value;
+  }
 }
 
 module.exports = ChangeReason;
