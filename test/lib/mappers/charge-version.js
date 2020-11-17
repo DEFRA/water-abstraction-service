@@ -242,6 +242,14 @@ experiment('lib/mappers/charge-version', () => {
       expect(model.invoiceAccount.id).to.equal(dbRow.invoiceAccountId);
     });
 
+    test('maps the invoice account id when it is null', async () => {
+      const model = mapper.dbToModel({
+        ...dbRow,
+        invoiceAccountId: null
+      });
+      expect(model.invoiceAccount).to.be.null();
+    });
+
     test('maps the charge elements', async () => {
       const chargeElement = model.chargeElements[0];
       expect(chargeElement).to.be.instanceOf(ChargeElement);

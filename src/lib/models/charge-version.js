@@ -147,7 +147,7 @@ class ChargeVersion extends Model {
    * @param {String}
    */
   set invoiceAccount (invoiceAccount) {
-    validators.assertIsInstanceOf(invoiceAccount, InvoiceAccount);
+    validators.assertIsNullableInstanceOf(invoiceAccount, InvoiceAccount);
     this._invoiceAccount = invoiceAccount;
   }
 
