@@ -2,6 +2,9 @@
 UPDATE water.charge_versions cv
 SET licence_id = l.licence_id FROM water.licences l where l.licence_ref = cv.licence_ref;
 
+/* Delete any where licence id is still null */
+DELETE FROM water.charge_versions WHERE licence_id IS NULL;
+
 /* set not null constraint on licence id */
 ALTER TABLE water.charge_versions
 ALTER COLUMN licence_id SET NOT NULL;
