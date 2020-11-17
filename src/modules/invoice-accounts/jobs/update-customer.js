@@ -4,12 +4,16 @@ const { updateCustomer } = require('../../../lib/connectors/charge-module/custom
 const JOB_NAME = 'customer.updateAccount.*';
 
 const createMessage = async (invoiceAccountId) => {
-  // const data = await getInvoiceAccountData(invoiceAccountId);
-
   return {
     name: JOB_NAME.replace('*', invoiceAccountId),
     data: {
       invoiceAccountId
+    },
+    options: {
+      singletonKey: invoiceAccountId,
+      retryLimit: 3,
+      retryDelay: 30,
+      retryBackoff: true
     }
   };
 };
