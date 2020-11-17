@@ -3,6 +3,7 @@
 const { BillingBatch } = require('../bookshelf');
 const { BATCH_STATUS, BATCH_TYPE } = require('../../models/batch');
 const { paginatedEnvelope } = require('./lib/envelope');
+const helpers = require('./lib/helpers');
 
 const mapModel = model => model ? model.toJSON() : null;
 
@@ -113,38 +114,22 @@ const create = async data => {
   return model.toJSON();
 };
 
-const findSentTPTBatchesForFinancialYearAndRegion = async (financialYear, regionId) => {
-  const filters = {
-    status: BATCH_STATUS.sent,
+const findByRegionId = async regionId =>
+  helpers.findMany(BillingBatch, { region_id: regionId }, ['region']);
+
+const findSentTptBatchesForFinancialYearAndRegion = async (financialYear, regionId) => {
+  const conditions = {
     batch_type: BATCH_TYPE.twoPartTariff,
     to_financial_year_ending: financialYear,
-    region_id: regionId
-  };
-  const batches = await BillingBatch
-    .forge()
-    .where(filters)
-    .fetchAll({
-      withRelated: [
-        'billingInvoices',
-        'billingInvoices.billingInvoiceLicences',
-        'billingInvoices.billingInvoiceLicences.licence'
-      ]
-    });
-
-  return batches.toJSON();
-};
-
-const findSentTPTBatchesForRegion = async regionId => {
-  const filters = {
     status: BATCH_STATUS.sent,
-    batch_type: BATCH_TYPE.twoPartTariff,
     region_id: regionId
   };
-  const batches = await BillingBatch
-    .forge()
-    .where(filters)
-    .fetchAll();
-  return batches.toJSON();
+  const withRelated = [
+    'billingInvoices',
+    'billingInvoices.billingInvoiceLicences',
+    'billingInvoices.billingInvoiceLicences.licence'
+  ];
+  return helpers.findMany(BillingBatch, conditions, withRelated);
 };
 
 exports.delete = deleteById;
@@ -155,5 +140,5 @@ exports.update = update;
 exports.findOneWithInvoices = findOneWithInvoices;
 exports.findOneWithInvoicesWithTransactions = findOneWithInvoicesWithTransactions;
 exports.create = create;
-exports.findSentTPTBatchesForFinancialYearAndRegion = findSentTPTBatchesForFinancialYearAndRegion;
-exports.findSentTPTBatchesForRegion = findSentTPTBatchesForRegion;
+exports.findByRegionId = findByRegionId;
+exports.findSentTptBatchesForFinancialYearAndRegion = findSentTptBatchesForFinancialYearAndRegion;

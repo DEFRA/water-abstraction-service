@@ -44,7 +44,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
       expect(result.id).to.equal(dbRow.billingVolumeId);
       expect(result.chargeElementId).to.equal(dbRow.chargeElementId);
       expect(result.isSummer).to.equal(dbRow.isSummer);
-      expect(result.calculatedVolume).to.equal(dbRow.calculatedVolume);
+      expect(result.calculatedVolume.toNumber()).to.equal(dbRow.calculatedVolume);
       expect(result.twoPartTariffError).to.equal(dbRow.twoPartTariffError);
       expect(result.twoPartTariffStatus).to.equal(dbRow.twoPartTariffStatus);
       expect(result.isApproved).to.equal(dbRow.isApproved);
@@ -95,197 +95,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
     });
   });
 
-  experiment('.matchingResultsToDb', () => {
-    const chargeElementId = '29328315-9b24-473b-bde7-02c60e881501';
-    let matchingResults, result;
-    experiment('when there are no errors', async () => {
-      beforeEach(() => {
-        matchingResults = {
-          error: null,
-          data: [{
-            error: null,
-            data: {
-              chargeElementId,
-              actualReturnQuantity: 42.35
-            }
-          }]
-        };
-
-        result = billingVolumeMapper.matchingResultsToDb(matchingResults, 2019, true);
-      });
-
-      test('includes charge element id', async () => {
-        expect(result[0].chargeElementId).to.equal(matchingResults.data[0].data.chargeElementId);
-      });
-
-      test('maps actual return quantity to calculated volume', async () => {
-        expect(result[0].calculatedVolume).to.equal(matchingResults.data[0].data.actualReturnQuantity);
-      });
-
-      test('maps actual return quantity to volume', async () => {
-        expect(result[0].volume).to.equal(matchingResults.data[0].data.actualReturnQuantity);
-      });
-
-      test('sets two part tariff status to null', async () => {
-        expect(result[0].twoPartTariffStatus).to.be.null();
-      });
-
-      test('sets two part tariff error to false', async () => {
-        expect(result[0].twoPartTariffError).to.be.false();
-      });
-
-      test('includes financial year', async () => {
-        expect(result[0].financialYear).to.equal(2019);
-      });
-
-      test('includes isSumer flag', async () => {
-        expect(result[0].isSummer).to.be.true();
-      });
-
-      test('sets isApproved flag to false', async () => {
-        expect(result[0].isApproved).to.be.false();
-      });
-    });
-
-    experiment('when there is a charge element specific error', async () => {
-      beforeEach(() => {
-        matchingResults = {
-          error: null,
-          data: [{
-            error: 30,
-            data: {
-              chargeElementId,
-              actualReturnQuantity: 65.7
-            }
-          }]
-        };
-
-        result = billingVolumeMapper.matchingResultsToDb(matchingResults, 2019, false);
-      });
-
-      test('includes charge element id', async () => {
-        expect(result[0].chargeElementId).to.equal(matchingResults.data[0].data.chargeElementId);
-      });
-
-      test('maps actual return quantity to calculated volume', async () => {
-        expect(result[0].calculatedVolume).to.equal(matchingResults.data[0].data.actualReturnQuantity);
-      });
-
-      test('sets two part tariff status to error code', async () => {
-        expect(result[0].twoPartTariffStatus).to.equal(30);
-      });
-
-      test('sets two part tariff error to true', async () => {
-        expect(result[0].twoPartTariffError).to.be.true();
-      });
-
-      test('includes financial year', async () => {
-        expect(result[0].financialYear).to.equal(2019);
-      });
-
-      test('includes isSumer flag', async () => {
-        expect(result[0].isSummer).to.be.false();
-      });
-
-      test('sets isApproved flag to false', async () => {
-        expect(result[0].isApproved).to.be.false();
-      });
-    });
-
-    experiment('when there is an overall error', async () => {
-      experiment('and data is null', () => {
-        beforeEach(() => {
-          matchingResults = {
-            error: 70,
-            data: [{
-              error: null,
-              data: {
-                chargeElementId,
-                actualReturnQuantity: null
-              }
-            }]
-          };
-
-          result = billingVolumeMapper.matchingResultsToDb(matchingResults, 2019, true);
-        });
-
-        test('includes charge element id', async () => {
-          expect(result[0].chargeElementId).to.equal(matchingResults.data[0].data.chargeElementId);
-        });
-
-        test('maps actual return quantity to calculated volume', async () => {
-          expect(result[0].calculatedVolume).to.equal(matchingResults.data[0].data.actualReturnQuantity);
-        });
-
-        test('sets two part tariff status to error code', async () => {
-          expect(result[0].twoPartTariffStatus).to.equal(70);
-        });
-
-        test('sets two part tariff error to true', async () => {
-          expect(result[0].twoPartTariffError).to.be.true();
-        });
-
-        test('includes financial year', async () => {
-          expect(result[0].financialYear).to.equal(2019);
-        });
-
-        test('includes isSumer flag', async () => {
-          expect(result[0].isSummer).to.be.true();
-        });
-
-        test('sets isApproved flag to false', async () => {
-          expect(result[0].isApproved).to.be.false();
-        });
-      });
-
-      experiment('and there is a charge element specific error', () => {
-        beforeEach(() => {
-          matchingResults = {
-            error: 70,
-            data: [{
-              error: 30,
-              data: {
-                chargeElementId,
-                actualReturnQuantity: 65.7
-              }
-            }]
-          };
-
-          result = billingVolumeMapper.matchingResultsToDb(matchingResults, 2019, true);
-        });
-
-        test('includes charge element id', async () => {
-          expect(result[0].chargeElementId).to.equal(matchingResults.data[0].data.chargeElementId);
-        });
-
-        test('maps actual return quantity to calculated volume', async () => {
-          expect(result[0].calculatedVolume).to.equal(matchingResults.data[0].data.actualReturnQuantity);
-        });
-
-        test('sets two part tariff status to overall error code', async () => {
-          expect(result[0].twoPartTariffStatus).to.equal(70);
-        });
-
-        test('sets two part tariff error to true', async () => {
-          expect(result[0].twoPartTariffError).to.be.true();
-        });
-
-        test('includes financial year', async () => {
-          expect(result[0].financialYear).to.equal(2019);
-        });
-
-        test('includes isSumer flag', async () => {
-          expect(result[0].isSummer).to.be.true();
-        });
-
-        test('sets isApproved flag to false', async () => {
-          expect(result[0].isApproved).to.be.false();
-        });
-      });
-    });
-  });
-
-  experiment('.modelToDB', () => {
+  experiment('.modelToDb', () => {
     let billingVolume, result;
 
     beforeEach(async () => {
@@ -304,7 +114,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
         financialYear
       });
 
-      result = billingVolumeMapper.modelToDB(billingVolume);
+      result = billingVolumeMapper.modelToDb(billingVolume);
     });
 
     test('the data should be mapped to the DB fields', async () => {
@@ -319,8 +129,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
         twoPartTariffStatus: 10,
         isApproved: false,
         volume: 10.2,
-        financialYear: 2020,
-        twoPartTariffReview: null
+        financialYear: 2020
       });
     });
 
@@ -332,7 +141,7 @@ experiment('modules/billing/mappers/billing-volume', () => {
           email: 'nobody@example.com'
         });
         billingVolume.twoPartTariffReview = user;
-        result = billingVolumeMapper.modelToDB(billingVolume);
+        result = billingVolumeMapper.modelToDb(billingVolume);
       });
 
       test('the twoPartTariffReview property contains the reviewer user details', async () => {

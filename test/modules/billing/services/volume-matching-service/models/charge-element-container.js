@@ -154,35 +154,49 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
 
   experiment('.getAvailableVolume', () => {
     test('returns charge element volume when the billing volume is not yet set', async () => {
-      expect(chargeElementContainer.getAvailableVolume()).to.equal(14.2);
+      expect(chargeElementContainer.getAvailableVolume().toNumber()).to.equal(14.2);
     });
 
-    test('returns charge element volume - billable volume when the summer billing volume is set', async () => {
+    test('returns charge element volume - billable volume when the summer billing volume is set and approved', async () => {
       summerBillingVolume.volume = 3;
-      expect(chargeElementContainer.getAvailableVolume()).to.equal(11.2);
+      summerBillingVolume.isApproved = true;
+      expect(chargeElementContainer.getAvailableVolume().toNumber()).to.equal(11.2);
     });
 
-    test('returns charge element volume - billable volume when the winter billing volume is set', async () => {
+    test('returns charge element volume - billable calculatedVolume when the summer billing calculatedVolume is set and not approved', async () => {
+      summerBillingVolume.allocate(3);
+      expect(chargeElementContainer.getAvailableVolume().toNumber()).to.equal(11.2);
+    });
+
+    test('returns charge element volume - billable volume when the winter billing volume is set and approved', async () => {
       winterBillingVolume.volume = 4;
-      expect(chargeElementContainer.getAvailableVolume()).to.equal(10.2);
+      winterBillingVolume.isApproved = true;
+      expect(chargeElementContainer.getAvailableVolume().toNumber()).to.equal(10.2);
+    });
+
+    test('returns charge element volume - billable calculatedVolume when the winter billing volume is set and not approved', async () => {
+      winterBillingVolume.allocate(4);
+      expect(chargeElementContainer.getAvailableVolume().toNumber()).to.equal(10.2);
     });
 
     test('returns charge element volume - billable volume when both summer and winter billing volume is set', async () => {
       winterBillingVolume.volume = 4;
+      winterBillingVolume.isApproved = true;
       summerBillingVolume.volume = 3;
+      summerBillingVolume.isApproved = true;
 
-      expect(chargeElementContainer.getAvailableVolume()).to.equal(7.2);
+      expect(chargeElementContainer.getAvailableVolume().toNumber()).to.equal(7.2);
     });
 
     test('returns 0 if full volume is already allocated', async () => {
-      winterBillingVolume.volume = 4.1;
-      summerBillingVolume.volume = 10.1;
-      expect(chargeElementContainer.getAvailableVolume()).to.equal(0);
+      winterBillingVolume.allocate(4.1);
+      summerBillingVolume.allocate(10.1);
+      expect(chargeElementContainer.getAvailableVolume().toNumber()).to.equal(0);
     });
 
     test('returns 0 if > full volume is already allocated', async () => {
-      winterBillingVolume.volume = 25;
-      expect(chargeElementContainer.getAvailableVolume()).to.equal(0);
+      winterBillingVolume.allocate(25);
+      expect(chargeElementContainer.getAvailableVolume().toNumber()).to.equal(0);
     });
   });
 
@@ -206,8 +220,8 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
 
       experiment('if the summer billing volume is overabstracted', () => {
         beforeEach(async () => {
-          summerBillingVolume.volume = 14.3;
-          winterBillingVolume.volume = 20;
+          summerBillingVolume.allocate(14.3);
+          winterBillingVolume.allocate(20);
           chargeElementContainer.flagOverAbstraction(RETURN_SEASONS.summer);
         });
 
@@ -223,8 +237,8 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       experiment('in the winter/all year cycle', () => {
         experiment('if the summer billing volume is not overabstracted and there is no overall over-abstraction', () => {
           beforeEach(async () => {
-            summerBillingVolume.volume = 5;
-            winterBillingVolume.volume = 5;
+            summerBillingVolume.allocate(5);
+            winterBillingVolume.allocate(5);
             chargeElementContainer.flagOverAbstraction(RETURN_SEASONS.winterAllYear);
           });
 
@@ -239,8 +253,8 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
 
         experiment('if there is overall over-abstraction', () => {
           beforeEach(async () => {
-            summerBillingVolume.volume = 5;
-            winterBillingVolume.volume = 10;
+            summerBillingVolume.allocate(5);
+            winterBillingVolume.allocate(10);
             chargeElementContainer.flagOverAbstraction(RETURN_SEASONS.winterAllYear);
           });
 

@@ -14,6 +14,8 @@ const repos = require('../../../../src/lib/connectors/repos');
 const { BillingBatchChargeVersionYear, bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-batch-charge-version-years');
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
+const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
+const { TRANSACTION_TYPE } = require('../../../../src/lib/models/charge-version-year');
 
 experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
   let model, stub;
@@ -31,11 +33,48 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
     sandbox.stub(BillingBatchChargeVersionYear, 'forge').returns(stub);
     sandbox.stub(BillingBatchChargeVersionYear, 'collection').returns(stub);
     sandbox.stub(raw, 'multiRow');
+    sandbox.stub(helpers, 'findOne').resolves({ foo: 'bar' });
+    sandbox.stub(helpers, 'findMany').resolves({ bar: 'baz' });
     sandbox.stub(bookshelf.knex, 'raw');
   });
 
   afterEach(async () => {
     sandbox.restore();
+  });
+
+  experiment('.findOne', () => {
+    let result;
+
+    beforeEach(async () => {
+      result = await repos.billingBatchChargeVersionYears.findOne('test-id');
+    });
+
+    test('calls helpers .findOne() with the model and id params', async () => {
+      const [model, idKey, id] = helpers.findOne.lastCall.args;
+      expect(model).to.equal(BillingBatchChargeVersionYear);
+      expect(idKey).to.equal('billingBatchChargeVersionYearId');
+      expect(id).to.equal('test-id');
+    });
+
+    test('passes the correct related models', async () => {
+      const withRelated = helpers.findOne.lastCall.args[3];
+      expect(withRelated).to.equal([
+        'billingBatch',
+        'billingBatch.region',
+        'chargeVersion',
+        'chargeVersion.chargeElements',
+        'chargeVersion.chargeElements.purposePrimary',
+        'chargeVersion.chargeElements.purposeSecondary',
+        'chargeVersion.chargeElements.purposeUse',
+        'chargeVersion.licence',
+        'chargeVersion.licence.licenceAgreements',
+        'chargeVersion.licence.licenceAgreements.financialAgreementType'
+      ]);
+    });
+
+    test('returns the result of the helpers function', async () => {
+      expect(result).to.equal({ foo: 'bar' });
+    });
   });
 
   experiment('.update', () => {
@@ -115,37 +154,51 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
   });
 
   experiment('.findByBatchId', () => {
+    let result;
     const billingBatchId = 'test-batch-id';
 
     beforeEach(async () => {
-      await repos.billingBatchChargeVersionYears.findByBatchId(billingBatchId);
+      result = await repos.billingBatchChargeVersionYears.findByBatchId(billingBatchId);
     });
 
-    test('calls Bookshelf methods in correct order', async () => {
-      sinon.assert.callOrder(
-        BillingBatchChargeVersionYear.collection,
-        stub.where,
-        stub.fetch,
-        model.toJSON
-      );
+    test('calls helpers .findMany() with the model', async () => {
+      const [model] = helpers.findMany.lastCall.args;
+      expect(model).to.equal(BillingBatchChargeVersionYear);
     });
 
-    test('finds records with correct batch ID', async () => {
-      expect(stub.where.calledWith('billing_batch_id', billingBatchId));
+    test('passes the correct filter conditions', async () => {
+      const [, conditions] = helpers.findMany.lastCall.args;
+      expect(conditions).to.equal({ billing_batch_id: billingBatchId });
+    });
+
+    test('returns the result of the helpers function', async () => {
+      expect(result).to.equal({ bar: 'baz' });
     });
   });
 
   experiment('.findTwoPartTariffByBatchId', () => {
+    let result;
     const billingBatchId = 'test-batch-id';
 
     beforeEach(async () => {
-      await repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(billingBatchId);
+      result = await repos.billingBatchChargeVersionYears.findTwoPartTariffByBatchId(billingBatchId);
     });
 
-    test('calls knex raw method with correct query', async () => {
-      expect(raw.multiRow.calledWith(
-        queries.findTwoPartTariffByBatchId, { billingBatchId }
-      )).to.be.true();
+    test('calls helpers .findMany() with the model', async () => {
+      const [model] = helpers.findMany.lastCall.args;
+      expect(model).to.equal(BillingBatchChargeVersionYear);
+    });
+
+    test('passes the correct filter conditions', async () => {
+      const [, conditions] = helpers.findMany.lastCall.args;
+      expect(conditions).to.equal({
+        billing_batch_id: billingBatchId,
+        transaction_type: TRANSACTION_TYPE.twoPartTariff
+      });
+    });
+
+    test('returns the result of the helpers function', async () => {
+      expect(result).to.equal({ bar: 'baz' });
     });
   });
 
@@ -169,16 +222,18 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
     const chargeVersionId = 'test-charge-version-id';
     const financialYearEnding = 2020;
     const status = 'processing';
+    const transactionType = 'annual';
+    const isSummer = false;
 
     beforeEach(async () => {
       await repos.billingBatchChargeVersionYears.create(
-        billingBatchId, chargeVersionId, financialYearEnding, status
+        { billingBatchId, chargeVersionId, financialYearEnding, status, transactionType, isSummer }
       );
     });
 
     test('calls model.forge with correct params', async () => {
       expect(BillingBatchChargeVersionYear.forge.calledWith({
-        billingBatchId, chargeVersionId, financialYearEnding, status
+        billingBatchId, chargeVersionId, financialYearEnding, status, transactionType, isSummer
       })).to.be.true();
     });
 

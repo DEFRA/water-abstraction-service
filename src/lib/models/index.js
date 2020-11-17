@@ -5,6 +5,7 @@ module.exports = {
   Company: require('./company'),
   ChangeReason: require('./change-reason'),
   ChargeVersion: require('./charge-version'),
+  ChargeVersionYear: require('./charge-version-year'),
   Contact: require('./contact'),
   FinancialYear: require('./financial-year'),
   Invoice: require('./invoice'),

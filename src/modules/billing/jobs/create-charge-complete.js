@@ -25,8 +25,7 @@ const options = {
 const batchStatuses = {
   processing: 'status.processing',
   empty: 'status.empty',
-  ready: 'status.ready',
-  error: 'status.error'
+  ready: 'status.ready'
 };
 
 /**
@@ -41,9 +40,6 @@ const getBatchProgressStatus = async batchId => {
   }
   if (get(statuses, Transaction.statuses.chargeCreated, 0) === 0) {
     return batchStatuses.empty;
-  }
-  if (get(statuses, Transaction.statuses.error, 0) > 0) {
-    return batchStatuses.error;
   }
   return batchStatuses.ready;
 };
@@ -97,7 +93,6 @@ const finaliseReadyBatch = async (job, messageQueue) => {
 
 const actions = {
   [batchStatuses.processing]: doNothing,
-  [batchStatuses.error]: doNothing,
   [batchStatuses.empty]: finaliseEmptyBatch,
   [batchStatuses.ready]: finaliseReadyBatch
 };

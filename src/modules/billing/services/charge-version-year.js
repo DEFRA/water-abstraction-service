@@ -1,16 +1,25 @@
 'use strict';
 
-const camelCaseKeys = require('../../../lib/camel-case-keys');
 const FinancialYear = require('../../../lib/models/financial-year');
 const validators = require('../../../lib/models/validators');
+const mappers = require('../mappers');
 const Batch = require('../../../lib/models/batch');
 const { BATCH_STATUS } = require('../../../lib/models/batch');
 
-const batchService = require('./batch-service');
 const chargeProcessorService = require('./charge-processor-service');
 
 const repos = require('../../../lib/connectors/repos');
-const { CHARGE_VERSION_YEAR_STATUS } = require('../../../lib/models/charge-version-year.js');
+const { CHARGE_VERSION_YEAR_STATUS, TRANSACTION_TYPE } = require('../../../lib/models/charge-version-year.js');
+
+/**
+ * Gets charge version year for given id
+ * @param {String} id
+ * @return {Promise}
+ */
+const getChargeVersionYearById = async id => {
+  const row = await repos.billingBatchChargeVersionYears.findOne(id);
+  return row ? mappers.chargeVersionYear.dbToModel(row) : null;
+};
 
 /**
  * Sets water.billing_batch_charge_version_years to "ready"
@@ -47,11 +56,9 @@ const getStatusCounts = async batchId => {
  * @param {Object} chargeVersionYear
  * @return {Batch}
  */
-const processChargeVersionYear = async dbRow => {
-  const chargeVersionYear = camelCaseKeys(dbRow);
-  const batch = await batchService.getBatchById(chargeVersionYear.billingBatchId);
-  const financialYear = new FinancialYear(chargeVersionYear.financialYearEnding);
-  const invoice = await chargeProcessorService.processChargeVersionYear(batch, financialYear, chargeVersionYear.chargeVersionId);
+const processChargeVersionYear = async chargeVersionYear => {
+  const { batch } = chargeVersionYear;
+  const invoice = await chargeProcessorService.processChargeVersionYear(chargeVersionYear);
   batch.invoices = [invoice];
   return batch;
 };
@@ -82,15 +89,23 @@ const getTwoPartTariffForBatch = batchId => {
  * @param {FinancialYear} financialYear
  * @return {Promise}
  */
-const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear) => {
+const createBatchChargeVersionYear = (batch, chargeVersionId, financialYear, transactionType, isSummer) => {
   validators.assertIsInstanceOf(batch, Batch);
   validators.assertId(chargeVersionId);
   validators.assertIsInstanceOf(financialYear, FinancialYear);
-  return repos.billingBatchChargeVersionYears.create(
-    batch.id, chargeVersionId, financialYear.endYear, BATCH_STATUS.processing
-  );
+  validators.assertEnum(transactionType, Object.values(TRANSACTION_TYPE));
+  validators.assertIsBoolean(isSummer);
+  return repos.billingBatchChargeVersionYears.create({
+    billingBatchId: batch.id,
+    chargeVersionId: chargeVersionId,
+    financialYearEnding: financialYear.endYear,
+    status: BATCH_STATUS.processing,
+    transactionType,
+    isSummer
+  });
 };
 
+exports.getChargeVersionYearById = getChargeVersionYearById;
 exports.setReadyStatus = setReadyStatus;
 exports.setErrorStatus = setErrorStatus;
 exports.getStatusCounts = getStatusCounts;

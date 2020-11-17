@@ -12,28 +12,54 @@ const uuid = require('uuid/v4');
 
 const repos = require('../../../../src/lib/connectors/repos');
 const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
-const batchService = require('../../../../src/modules/billing/services/batch-service');
 const chargeProcessorService = require('../../../../src/modules/billing/services/charge-processor-service');
 const Batch = require('../../../../src/lib/models/batch');
+const { TRANSACTION_TYPE } = require('../../../../src/lib/models/charge-version-year');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const Invoice = require('../../../../src/lib/models/invoice');
+const ChargeVersionYear = require('../../../../src/lib/models/charge-version-year');
 
 const TEST_ID = uuid();
 
 experiment('modules/billing/services/charge-version-year', () => {
   beforeEach(async () => {
+    sandbox.stub(repos.billingBatchChargeVersionYears, 'findOne').resolves();
     sandbox.stub(repos.billingBatchChargeVersionYears, 'update').resolves();
     sandbox.stub(repos.billingBatchChargeVersionYears, 'findStatusCountsByBatchId');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'findByBatchId');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'findTwoPartTariffByBatchId');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'create');
 
-    sandbox.stub(batchService, 'getBatchById').resolves(new Batch());
     sandbox.stub(chargeProcessorService, 'processChargeVersionYear').resolves(new Invoice());
   });
 
   afterEach(async () => {
     sandbox.restore();
+  });
+
+  experiment('.getChargeVersionYearById', () => {
+    let result;
+    beforeEach(async () => {
+      result = await chargeVersionYearService.getChargeVersionYearById(TEST_ID);
+    });
+
+    test('calls repo findOne() method with correct arguments', async () => {
+      const [id] = repos.billingBatchChargeVersionYears.findOne.lastCall.args;
+      expect(id).to.equal(TEST_ID);
+    });
+
+    test('returns null when no charge version year found', async () => {
+      expect(result).to.equal(null);
+    });
+
+    test('returns a ChargeVersionYear instance when record found', async () => {
+      repos.billingBatchChargeVersionYears.findOne.resolves({
+        billingBatchChargeVersionYearId: TEST_ID
+      });
+      result = await chargeVersionYearService.getChargeVersionYearById(TEST_ID);
+      expect(result).to.be.instanceOf(ChargeVersionYear);
+      expect(result.id).to.equal(TEST_ID);
+    });
   });
 
   experiment('.setReadyStatus', () => {
@@ -109,26 +135,22 @@ experiment('modules/billing/services/charge-version-year', () => {
   });
 
   experiment('.processChargeVersionYear', () => {
-    let result;
+    let result, chargeVersionYear, batch;
 
     beforeEach(async () => {
-      result = await chargeVersionYearService.processChargeVersionYear({
-        billing_batch_id: 'test-batch-id',
-        charge_version_id: 'test-charge-version-id',
-        financial_year_ending: 2020
-      });
-    });
-
-    test('the batch is loaded', async () => {
-      expect(batchService.getBatchById.calledWith('test-batch-id')).to.be.true();
+      chargeVersionYear = new ChargeVersionYear();
+      batch = new Batch();
+      chargeVersionYear.batch = batch;
+      result = await chargeVersionYearService.processChargeVersionYear(chargeVersionYear);
     });
 
     test('the charge processor is invoked', async () => {
-      const [batch, financialYear, chargeVersionId] = chargeProcessorService.processChargeVersionYear.lastCall.args;
-      expect(batch instanceof Batch).to.be.true();
-      expect(financialYear instanceof FinancialYear).to.be.true();
-      expect(financialYear.yearEnding).to.equal(2020);
-      expect(chargeVersionId).to.equal('test-charge-version-id');
+      const [cvYear] = chargeProcessorService.processChargeVersionYear.lastCall.args;
+      expect(cvYear).to.equal(chargeVersionYear);
+    });
+
+    test('the charge version year batch is returned', async () => {
+      expect(result).to.equal(batch);
     });
 
     test('the batch is decorated with the invoice', async () => {
@@ -158,20 +180,22 @@ experiment('modules/billing/services/charge-version-year', () => {
 
   experiment('.createBatchChargeVersionYear', () => {
     let batch, financialYear;
-    const chargeVersionId = uuid();
+    const testChargeVersionId = uuid();
 
     beforeEach(async () => {
       batch = new Batch(uuid());
       financialYear = new FinancialYear(2020);
-      await chargeVersionYearService.createBatchChargeVersionYear(batch, chargeVersionId, financialYear);
+      await chargeVersionYearService.createBatchChargeVersionYear(batch, testChargeVersionId, financialYear, 'annual', false);
     });
 
     test('calls the repo method to create the record', async () => {
-      const [batchId, id, endYear, status] = repos.billingBatchChargeVersionYears.create.lastCall.args;
-      expect(batchId).to.equal(batch.id);
-      expect(id).to.equal(chargeVersionId);
-      expect(endYear).to.equal(2020);
+      const { billingBatchId, chargeVersionId, financialYearEnding, status, transactionType, isSummer } = repos.billingBatchChargeVersionYears.create.lastCall.args[0];
+      expect(billingBatchId).to.equal(batch.id);
+      expect(chargeVersionId).to.equal(testChargeVersionId);
+      expect(financialYearEnding).to.equal(2020);
       expect(status).to.equal(Batch.BATCH_STATUS.processing);
+      expect(transactionType).to.equal(TRANSACTION_TYPE.annual);
+      expect(isSummer).to.be.false();
     });
   });
 });

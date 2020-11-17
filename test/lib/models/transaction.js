@@ -648,4 +648,22 @@ experiment('lib/models/transaction', () => {
       });
     });
   });
+
+  experiment('.isErrorStatus', () => {
+    const { candidate, chargeCreated, approved, error } = Transaction.statuses;
+
+    test('returns true when the status is "error"', async () => {
+      const transaction = new Transaction();
+      transaction.status = error;
+      expect(transaction.isErrorStatus).to.be.true();
+    });
+
+    [candidate, chargeCreated, approved].forEach(status => {
+      test(`returns false when the status is "${status}"`, async () => {
+        const transaction = new Transaction();
+        transaction.status = status;
+        expect(transaction.isErrorStatus).to.be.false();
+      });
+    });
+  });
 });

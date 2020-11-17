@@ -22,7 +22,7 @@ const handlePopulateBatch = async job => {
   try {
     const batch = await batchService.getBatchById(batchId);
 
-    // Populate water.billing_batch_charge_versions
+    // Populate water.billing_batch_charge_version_years
     const billingBatchChargeVersionYears = await chargeVersionService.createForBatch(batch);
 
     return { billingBatchChargeVersionYears, batch };

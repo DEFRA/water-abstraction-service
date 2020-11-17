@@ -94,7 +94,7 @@ experiment('modules/billing/mappers/batch', () => {
       });
 
       test('totals are not set', async () => {
-        expect(batch.totals).to.be.undefined();
+        expect(batch.totals).to.be.null();
       });
 
       test('sets the errorCode property', async () => {

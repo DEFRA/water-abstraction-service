@@ -68,7 +68,7 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(batchService, 'deleteBatch').resolves();
     sandbox.stub(batchService, 'approveBatch').resolves();
     sandbox.stub(batchService, 'decorateBatchWithTotals').resolves();
-    sandbox.stub(batchService, 'getMostRecentLiveBatchByRegion').resolves();
+    sandbox.stub(batchService, 'getExistingOrDuplicateSentBatch').resolves();
     sandbox.stub(batchService, 'approveTptBatchReview').resolves(processingBatch);
     sandbox.stub(batchService, 'deleteBatchInvoice').resolves();
 
