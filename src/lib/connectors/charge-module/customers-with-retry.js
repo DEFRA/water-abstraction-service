@@ -15,7 +15,6 @@ const customersApi = require('./customers');
  */
 const retry = (method, ...args) => {
   const func = async (retry, number) => {
-    console.log(args);
     try {
       logger.log('info', `Calling ${method} ${args.join(', ')} attempt ${number}`);
       const response = await customersApi[method](...args);

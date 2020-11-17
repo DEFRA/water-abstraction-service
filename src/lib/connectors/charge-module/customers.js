@@ -17,15 +17,15 @@ const getInvoiceAccountData = async (invoiceAccountId) => {
   const { address } = lastInvoiceAccountAddress;
 
   const response = {
-    region: 'tbc',
+    region: data.invoiceAccountNumber.charAt(0), // Region code is always assumed to be the first letter of the account number,
     customerReference: data.invoiceAccountNumber,
     customerName: data.company.name,
     addressLine1: address.addressLine1,
     addressLine2: address.addressLine2,
     addressLine3: address.addressLine3,
     addressLine4: address.addressLine4,
-    addressLine5: address.town,
-    addressLine6: address.county,
+    addressLine5: address.town, // Map town to address line 5 in CM
+    addressLine6: address.county, // Map county to address line 5 in CM
     postcode: address.postcode
   };
 

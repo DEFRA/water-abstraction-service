@@ -163,6 +163,7 @@ const persist = async (regionId, startDate, invoiceAccount) => {
     });
 
     // Create PGBoss message to update the invoice account in CM
+
     const message = await updateCustomer.job.createMessage(invoiceAccount.id);
     await messageQueue.publish(message);
 
