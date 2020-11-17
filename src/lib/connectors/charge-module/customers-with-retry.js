@@ -1,6 +1,6 @@
 'use strict';
 
-const { partial } = require('lodash');
+const { partial, get } = require('lodash');
 const promiseRetry = require('promise-retry');
 const { logger } = require('../../../logger');
 const config = require('../../../../config');
@@ -20,8 +20,14 @@ const retry = (method, ...args) => {
       const response = await customersApi[method](...args);
       return response;
     } catch (err) {
-      logger.log('error', `Something went wrong when calling ${method} ${args.join(', ')} attempt ${number}`);
-      retry();
+      const errorCode = get(err, 'error.statusCode');
+      if (errorCode === 422) {
+        // If the error code returned is 422, the issue is in the payload, so do not re-try.
+        logger.log('error', `Invalid parameters when calling ${method} ${args.join(', ')} attempt ${number}`);
+      } else {
+        logger.log('error', `Something went wrong when calling ${method} ${args.join(', ')} attempt ${number}`);
+        retry();
+      }
     }
   };
 
