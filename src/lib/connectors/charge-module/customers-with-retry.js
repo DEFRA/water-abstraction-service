@@ -1,6 +1,6 @@
 'use strict';
 
-const { partial, get } = require('lodash');
+const { partial } = require('lodash');
 const promiseRetry = require('promise-retry');
 const { logger } = require('../../../logger');
 const config = require('../../../../config');

@@ -14,15 +14,10 @@ const request = require('../../../../src/lib/connectors/charge-module/request');
 const customersApiConnectorWithRetry = require('../../../../src/lib/connectors/charge-module/customers-with-retry');
 
 const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts');
-const customerApiConnector = require('../../../../src/lib/connectors/charge-module/customers');
 
 const chargeModuleMappers = require('../../../../src/lib/mappers/charge-module');
 
-const config = require('../../../../config');
-
 experiment('lib/connectors/charge-module/customers-with-retry', async () => {
-  let result;
-
   const tempInvoiceAccountId = await uuid();
   const resolutionObject = {
     accountNumber: 'A12345678A'
@@ -43,7 +38,7 @@ experiment('lib/connectors/charge-module/customers-with-retry', async () => {
 
   experiment('.updateCustomer', () => {
     beforeEach(async () => {
-      result = await customersApiConnectorWithRetry.updateCustomer(tempInvoiceAccountId);
+      await customersApiConnectorWithRetry.updateCustomer(tempInvoiceAccountId);
     });
 
     test('the method is POST', async () => {

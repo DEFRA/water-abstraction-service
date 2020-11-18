@@ -11,7 +11,6 @@ const {
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const mapper = require('../../../src/lib/mappers/charge-module');
-const invoiceAccountMapper = require('../../../src/lib/mappers/invoice-account');
 
 const invoiceAccountId = uuid();
 const companyId = uuid();
@@ -189,6 +188,9 @@ experiment('lib/mappers/charge-module', () => {
         let result;
         beforeEach(async () => {
           result = await mapper.extractCustomerName(coreCompanyObject);
+        });
+        test('Responds with the name of the company contact and the company name', () => {
+          expect(result).to.equal(coreCompanyObject.name);
         });
       });
     });
