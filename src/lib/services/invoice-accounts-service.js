@@ -193,6 +193,9 @@ const isNewEntity = entity => {
  * @return {chargeVersion} decorated with invoice account
  */
 const decorateWithInvoiceAccount = async model => {
+  if (!model.invoiceAccount) {
+    return model;
+  }
   const { id } = model.invoiceAccount;
   const invoiceAccount = await getByInvoiceAccountId(id);
   model.invoiceAccount = invoiceAccount;

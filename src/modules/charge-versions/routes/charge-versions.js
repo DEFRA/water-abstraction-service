@@ -19,7 +19,18 @@ module.exports = {
       }
     }
   },
-
+  getLicenceChargeVersion: {
+    method: 'GET',
+    path: '/water/1.0/charge-versions/licence/{licenceId}',
+    handler: controller.getChargeVersionsByLicenceId,
+    options: {
+      validate: {
+        params: {
+          licenceId: VALID_GUID
+        }
+      }
+    }
+  },
   getDocumentChargeVersions: {
     method: 'GET',
     path: '/water/1.0/charge-versions/document/{documentId}',
