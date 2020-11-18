@@ -2,16 +2,19 @@
 
 const { get } = require('lodash');
 
-const { ioredis: connection } = require('../../../lib/connectors/io-redis');
+const ioRedis = require('../../../lib/connectors/io-redis');
+const connection = ioRedis.createConnection();
 
 // Bull queue setup
-const { Queue, Worker } = require('bullmq');
+const { Queue, Worker, QueueScheduler } = require('bullmq');
 const JOB_NAME = 'billing.refresh-totals';
 const queue = new Queue(JOB_NAME, { connection });
 
 const batchService = require('../services/batch-service');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
+
+const { StateError } = require('../../../lib/errors');
 
 const createMessage = batchId => ([
   JOB_NAME,
@@ -35,7 +38,11 @@ const handler = async job => {
 
   try {
     // Update batch with totals/bill run ID from charge module
-    await batchService.refreshTotals(batchId);
+    const isSuccess = await batchService.refreshTotals(batchId);
+
+    if (!isSuccess) {
+      throw new StateError(`Bill run summary not ready for batch ${batchId}`);
+    }
   } catch (err) {
     batchJob.logHandlingError(job, err);
     throw err;
@@ -46,9 +53,14 @@ const handler = async job => {
   };
 };
 
+const scheduler = new QueueScheduler(JOB_NAME, {
+  connection: ioRedis.createConnection()
+});
+
 const worker = new Worker(JOB_NAME, handler, { connection });
 worker.on('error', helpers.onErrorHandler);
 
 exports.createMessage = createMessage;
 exports.queue = queue;
 exports.worker = worker;
+exports.scheduler = scheduler;

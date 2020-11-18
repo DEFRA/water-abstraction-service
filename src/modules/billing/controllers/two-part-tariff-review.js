@@ -8,7 +8,8 @@ const mapErrorResponse = require('../../../lib/map-error-response');
 const { jobStatus } = require('../lib/event');
 const { createBatchEvent, EVENT_TYPES } = require('../lib/batch-event');
 const { envelope } = require('../../../lib/response');
-const processChargeVersionsJob = require('../jobs/process-charge-versions');
+
+const processChargeVersionsJob = require('../bull-jobs/process-charge-versions');
 
 /**
  * Gets a list of licences in the batch for two-part tariff review
@@ -113,8 +114,9 @@ const postApproveReviewBatch = async (request, h) => {
     });
 
     // Kick off next stage of processing
-    const message = processChargeVersionsJob.createMessage(batchEvent.id, updatedBatch);
-    await request.messageQueue.publish(message);
+    await processChargeVersionsJob.queue.add(
+      ...processChargeVersionsJob.createMessage(batch)
+    );
 
     return envelope({
       event: batchEvent,

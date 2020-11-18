@@ -2,7 +2,8 @@
 
 const { get, partial } = require('lodash');
 
-const { ioredis: connection } = require('../../../lib/connectors/io-redis');
+const ioRedis = require('../../../lib/connectors/io-redis');
+const connection = ioRedis.createConnection();
 
 // Bull queue setup
 const { Queue, Worker } = require('bullmq');

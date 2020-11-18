@@ -2,7 +2,8 @@
 
 const { get } = require('lodash');
 
-const { ioredis: connection } = require('../../../lib/connectors/io-redis');
+const ioRedis = require('../../../lib/connectors/io-redis');
+const connection = ioRedis.createConnection();
 
 // Bull queue setup
 const { Queue, Worker } = require('bullmq');
@@ -40,38 +41,34 @@ const isClientError = err => {
   return (statusCode >= 400) && (statusCode < 500);
 };
 
-/**
- * Gets the next batch status based on the current transaction status counts
- * @param {String} batchId
- * @return {String} status string
- */
-const getNextBatchStatus = async batchId => {
-  const statuses = await batchService.getTransactionStatusCounts(batchId);
-  if (get(statuses, Transaction.statuses.candidate, 0) > 0) {
-    return BATCH_STATUS.processing;
-  }
-  if (get(statuses, Transaction.statuses.chargeCreated, 0) === 0) {
-    return BATCH_STATUS.empty;
-  }
-  return BATCH_STATUS.ready;
-};
-
 const updateBatchState = async batch => {
-  const nextStatus = await getNextBatchStatus(batch.id);
-  if (nextStatus !== BATCH_STATUS.processing) {
-    await batchService.cleanup(batch.id);
-    await batchService.setStatus(batch.id, nextStatus);
+  const statuses = await batchService.getTransactionStatusCounts(batch.id);
+  const flags = {
+    isReady: get(statuses, Transaction.statuses.candidate, 0) === 0,
+    isEmptyBatch: get(statuses, Transaction.statuses.chargeCreated, 0) === 0
+  };
+
+  // If still processing transactions, not ready to proceed to next job
+  if (!flags.isReady) {
+    return flags;
   }
-  return batch.fromHash({
-    status: nextStatus
-  });
+
+  // Clean up batch
+  await batchService.cleanup(batch.id);
+
+  // Set batch status to empty for empty batch
+  if (flags.isEmptyBatch) {
+    await batchService.setStatus(batch.id, BATCH_STATUS.empty);
+  }
+
+  return flags;
 };
 
 const handler = async job => {
   batchJob.logHandling(job);
 
   const transactionId = get(job, 'data.billingBatchTransactionId');
-  const batchId = get(job, 'data.batch.id');
+  const batchId = get(job, 'data.batchId');
 
   try {
     // Create batch model from loaded data
@@ -86,9 +83,8 @@ const handler = async job => {
     // Update/remove our local transaction in water.billing_transactions
     await transactionsService.updateWithChargeModuleResponse(transactionId, response);
 
-    const updatedBatch = await updateBatchState(batch);
-
-    return { batch: updatedBatch };
+    const flags = await updateBatchState(batch);
+    return flags;
   } catch (err) {
     // Always log and mark transaction as errored in DB
     transactionsService.setErrorStatus(transactionId);
@@ -110,10 +106,12 @@ const onComplete = async job => {
   batchJob.logOnComplete(job);
 
   try {
-    const { batch } = job.returnvalue;
-    if (batch.status === BATCH_STATUS.ready) {
+    const { batchId } = job.data;
+    const { isReady, isEmptyBatch } = job.returnvalue;
+
+    if (isReady && !isEmptyBatch) {
       await refreshTotalsJob.queue.add(
-        ...refreshTotalsJob.createMessage(batch.id)
+        ...refreshTotalsJob.createMessage(batchId)
       );
     }
   } catch (err) {

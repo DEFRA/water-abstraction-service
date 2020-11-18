@@ -2,7 +2,8 @@
 
 const { partial, get } = require('lodash');
 
-const { ioredis: connection } = require('../../../lib/connectors/io-redis');
+const ioRedis = require('../../../lib/connectors/io-redis');
+const connection = ioRedis.createConnection();
 
 // Bull queue setup
 const { Queue, Worker } = require('bullmq');
@@ -15,7 +16,9 @@ const chargeVersionService = require('../services/charge-version-service');
 const { BATCH_ERROR_CODE, BATCH_STATUS, BATCH_TYPE } = require('../../../lib/models/batch');
 const helpers = require('./lib/helpers');
 const batchJob = require('./lib/batch-job');
+
 const processChargeVersionsJob = require('./process-charge-versions');
+const twoPartTariffMatchingJob = require('./two-part-tariff-matching');
 
 const createMessage = partial(helpers.createMessage, JOB_NAME);
 
@@ -54,11 +57,14 @@ const onComplete = async job => {
     }
 
     if (batch.type === BATCH_TYPE.annual) {
-      processChargeVersionsJob.queue.add(
+      await processChargeVersionsJob.queue.add(
         ...processChargeVersionsJob.createMessage(batch)
       );
     } else {
-      // @TODO process two-part tariff matching
+      // Two-part tariff matching for TPT/supplementary run
+      await twoPartTariffMatchingJob.queue.add(
+        ...twoPartTariffMatchingJob.createMessage(batch)
+      );
     }
   } catch (err) {
     batchJob.logOnCompleteError(job);
