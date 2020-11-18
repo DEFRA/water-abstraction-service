@@ -1,0 +1,248 @@
+'use strict';
+
+const uuid = require('uuid/v4');
+
+const {
+  experiment,
+  test,
+  afterEach,
+  beforeEach
+} = exports.lab = require('@hapi/lab').script();
+const { expect } = require('@hapi/code');
+const sandbox = require('sinon').createSandbox();
+const mapper = require('../../../src/lib/mappers/charge-module');
+const invoiceAccountMapper = require('../../../src/lib/mappers/invoice-account');
+
+const invoiceAccountId = uuid();
+const companyId = uuid();
+const agentCompanyId = uuid();
+const addressId = uuid();
+const invoiceAccountNumber = 'Y12345678A';
+const invoiceAccountAddressId = uuid();
+
+const mockedAddress = {
+  addressId,
+  address1: '7',
+  address2: 'Chuckle Road',
+  address3: 'Ripple Town',
+  address4: null,
+  town: 'Portstewart',
+  county: 'Snatchington',
+  postcode: 'BT55 7PP',
+  country: 'uk'
+};
+
+const giveMeALongString = length => [...Array(length)].map(() => Math.random().toString(36)[2]).join('');
+
+const mockedSillyLongPostMapperAddress = {
+  addressId,
+  addressLine1: giveMeALongString(400),
+  addressLine2: giveMeALongString(300),
+  addressLine3: giveMeALongString(300),
+  addressLine4: giveMeALongString(300),
+  town: giveMeALongString(100),
+  county: giveMeALongString(100),
+  postcode: giveMeALongString(100),
+  country: giveMeALongString(100)
+};
+
+const mockedPostMapperAddress = {
+  addressId,
+  addressLine1: '7',
+  addressLine2: 'Chuckle Road',
+  addressLine3: 'Ripple Town',
+  addressLine4: '',
+  town: 'Portstewart',
+  county: 'Snatchington',
+  postcode: 'BT55 7PP',
+  country: 'uk'
+};
+
+const mockedInvoiceAccount = {
+  invoiceAccountId,
+  companyId,
+  invoiceAccountNumber,
+  startDate: '2020-01-01',
+  endDate: null,
+  company: {
+    companyId,
+    name: 'Company Ltd.',
+    type: 'organisation'
+  },
+  invoiceAccountAddresses: [
+    {
+      invoiceAccountAddressId,
+      invoiceAccountId,
+      addressId,
+      startDate: '2020-01-01',
+      endDate: null,
+      agentCompanyId,
+      contactId: null,
+      address: mockedAddress,
+      agentCompany: {
+        companyId: agentCompanyId,
+        name: 'Eagle Punch',
+        type: 'person'
+      }
+    }
+  ]
+};
+
+experiment('lib/mappers/charge-module', () => {
+  afterEach(async () => {
+    sandbox.restore();
+  });
+
+  experiment('.mapInvoiceAccountToChargeModuleCustomer', () => {
+    let result;
+    beforeEach(async () => {
+      result = await mapper.mapInvoiceAccountToChargeModuleCustomer(mockedInvoiceAccount);
+    });
+
+    test('returns the correct region derived from the invoice account number', () => {
+      expect(result.region).to.equal(invoiceAccountNumber.charAt(0));
+    });
+    test('returns the correct customer reference', () => {
+      expect(result.customerReference).to.equal(invoiceAccountNumber);
+    });
+  });
+
+  experiment('.extractAddress', () => {
+    experiment('when the address is valid', () => {
+      let result;
+      beforeEach(async () => {
+        result = await mapper.extractAddress(mockedPostMapperAddress);
+      });
+      test('returns the first line as it is', () => {
+        expect(result.addressLine1).to.equal(mockedPostMapperAddress.addressLine1);
+      });
+      test('returns the second line as it is', () => {
+        expect(result.addressLine2).to.equal(mockedPostMapperAddress.addressLine2);
+      });
+      test('returns the third line as it is', () => {
+        expect(result.addressLine3).to.equal(mockedPostMapperAddress.addressLine3);
+      });
+      test('returns the fourth line as it is', () => {
+        expect(result.addressLine4).to.equal(mockedPostMapperAddress.addressLine4);
+      });
+      test('returns the fifth line as the town', () => {
+        expect(result.addressLine5).to.equal(mockedPostMapperAddress.town);
+      });
+      test('returns the sixth line as a concatenation of the county and country', () => {
+        expect(result.addressLine6).to.equal(mockedPostMapperAddress.county + ', ' + mockedPostMapperAddress.country);
+      });
+      test('returns the postcode as it is', () => {
+        expect(result.postcode).to.equal(mockedPostMapperAddress.postcode);
+      });
+    });
+
+    experiment('when the address is silly long', () => {
+      let result;
+      beforeEach(async () => {
+        result = await mapper.extractAddress(mockedSillyLongPostMapperAddress);
+      });
+      test('returns the first line truncated to 360 chars', () => {
+        expect(result.addressLine1).to.equal(mockedSillyLongPostMapperAddress.addressLine1.substring(0, 360 - 3) + '...');
+      });
+      test('returns the second line truncated to 240 chars', () => {
+        expect(result.addressLine2).to.equal(mockedSillyLongPostMapperAddress.addressLine2.substring(0, 240 - 3) + '...');
+      });
+      test('returns the third line truncated to 240 chars', () => {
+        expect(result.addressLine3).to.equal(mockedSillyLongPostMapperAddress.addressLine3.substring(0, 240 - 3) + '...');
+      });
+      test('returns the fourth line truncated to 250 chars', () => {
+        expect(result.addressLine4).to.equal(mockedSillyLongPostMapperAddress.addressLine4.substring(0, 240 - 3) + '...');
+      });
+      test('returns the fifth line as the town truncated to 60 chars', () => {
+        expect(result.addressLine5).to.equal(mockedSillyLongPostMapperAddress.town.substring(0, 60 - 3) + '...');
+      });
+      test('returns the sixth line as a concatenation of the county and country truncated to 60 chars', () => {
+        expect(result.addressLine6).to.equal((mockedSillyLongPostMapperAddress.county + ', ' + mockedSillyLongPostMapperAddress.country).substring(0, 60 - 3) + '...');
+      });
+      test('returns the postcode truncated to 60 chars', () => {
+        expect(result.postcode).to.equal(mockedSillyLongPostMapperAddress.postcode.substring(0, 60 - 3) + '...');
+      });
+    });
+  });
+
+  const companyContacts = [{ name: 'Jane Doe' }];
+  const agentCompanyContacts = [{ name: 'John Bloggs' }];
+  const agentCompanyObject = {
+    name: 'Agent Ltd.'
+  };
+  const coreCompanyObject = {
+    name: 'Company Inc.'
+  };
+
+  experiment('.extractCustomerName', () => {
+    experiment('When there is no agent', () => {
+      experiment('When there is an FAO', () => {
+        let result;
+        beforeEach(async () => {
+          result = await mapper.extractCustomerName({ ...coreCompanyObject, companyContacts });
+        });
+        test('Responds with the name of the company contact and the company name', () => {
+          expect(result).to.equal(`FAO ${companyContacts[0].name}, ${coreCompanyObject.name}`);
+        });
+      });
+      experiment('Responds with the name of the company', () => {
+        let result;
+        beforeEach(async () => {
+          result = await mapper.extractCustomerName(coreCompanyObject);
+        });
+      });
+    });
+    experiment('When there is an agent', () => {
+      experiment('When there is an FAO', () => {
+        let result;
+        beforeEach(async () => {
+          result = await mapper.extractCustomerName({
+            ...coreCompanyObject,
+            companyContacts
+          }, { ...agentCompanyObject, companyContacts: agentCompanyContacts });
+        });
+        test('Responds with the name of the agent contact, and the name of the agent company', () => {
+          expect(result).to.equal(`FAO ${agentCompanyContacts[0].name}, ${agentCompanyObject.name}`);
+        });
+      });
+      experiment('When there is no FAO', () => {
+        let result;
+        beforeEach(async () => {
+          result = await mapper.extractCustomerName({ ...coreCompanyObject }, { ...agentCompanyObject });
+        });
+        test('Responds with the name of the agent company', () => {
+          expect(result).to.equal(agentCompanyObject.name);
+        });
+      });
+    });
+  });
+  experiment('.extractFAO', () => {
+    experiment('when there is a contact', () => {
+      let result;
+      beforeEach(async () => {
+        result = await mapper.extractFAO({ ...coreCompanyObject, companyContacts });
+      });
+      test('responds with the name of the only contact', () => {
+        expect(result).to.equal(companyContacts[0].name);
+      });
+    });
+    experiment('when there are multiple contacts', () => {
+      let result;
+      beforeEach(async () => {
+        result = await mapper.extractFAO({ ...coreCompanyObject, companyContacts: [...companyContacts, { name: 'Someone else!' }] });
+      });
+      test('responds with the name of the first contact', () => {
+        expect(result).to.equal(companyContacts[0].name);
+      });
+    });
+    experiment('when there are no contacts', () => {
+      let result;
+      beforeEach(async () => {
+        result = await mapper.extractFAO(coreCompanyObject);
+      });
+      test('responds with null', () => {
+        expect(result).to.equal(null);
+      });
+    });
+  });
+});
