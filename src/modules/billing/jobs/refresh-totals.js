@@ -1,39 +1,51 @@
 'use strict';
 
 const { get } = require('lodash');
+const uuid = require('uuid/v4');
+
+const ioRedis = require('../../../lib/connectors/io-redis');
+const connection = ioRedis.createConnection();
+
+// Bull queue setup
+const { Queue, Worker, QueueScheduler } = require('bullmq');
+const JOB_NAME = 'billing.refresh-totals';
+const queue = new Queue(JOB_NAME, { connection });
 
 const batchService = require('../services/batch-service');
 const batchJob = require('./lib/batch-job');
+const helpers = require('./lib/helpers');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+const { logger } = require('../../../logger');
 
-const JOB_NAME = 'billing.refreshTotals.*';
+const { StateError } = require('../../../lib/errors');
 
-/**
- * Calls the CM to refresh the totals in water.billing_batches table
- *
- * @param {String} eventId The UUID of the event
- * @param {Object} batch The object from the batch database table
- */
-const createMessage = batchId => ({
-  name: JOB_NAME.replace('*', batchId),
-  data: {
+const createMessage = batchId => ([
+  JOB_NAME,
+  {
     batchId
   },
-  options: {
-    singletonKey: batchId,
-    retryLimit: 5,
-    retryDelay: 120,
-    retryBackoff: true
+  {
+    jobId: `${JOB_NAME}.${batchId}.${uuid()}`,
+    attempts: 10,
+    backoff: {
+      type: 'exponential',
+      delay: 5000
+    }
   }
-});
+]);
 
-const handleRefreshTotals = async job => {
+const handler = async job => {
   batchJob.logHandling(job);
 
   const batchId = get(job, 'data.batchId');
 
   try {
     // Update batch with totals/bill run ID from charge module
-    await batchService.refreshTotals(batchId);
+    const isSuccess = await batchService.refreshTotals(batchId);
+
+    if (!isSuccess) {
+      throw new StateError(`Bill run summary not ready for batch ${batchId}`);
+    }
   } catch (err) {
     batchJob.logHandlingError(job, err);
     throw err;
@@ -44,6 +56,28 @@ const handleRefreshTotals = async job => {
   };
 };
 
-exports.jobName = JOB_NAME;
+const scheduler = new QueueScheduler(JOB_NAME, {
+  connection: ioRedis.createConnection()
+});
+
+const worker = new Worker(JOB_NAME, handler, { connection });
+
+worker.on('failed', async (job, err) => {
+  const { batchId } = job.data;
+
+  if (helpers.isFinalAttempt(job)) {
+    try {
+      await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary);
+    } catch (err) {
+      logger.error(`Unable to set batch status ${batchId}`);
+    }
+  }
+
+  // Do normal logging
+  helpers.onFailedHandler(job, err);
+});
+
 exports.createMessage = createMessage;
-exports.handler = handleRefreshTotals;
+exports.queue = queue;
+exports.worker = worker;
+exports.scheduler = scheduler;

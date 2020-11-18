@@ -1,31 +1,29 @@
 'use strict';
 
-const { get } = require('lodash');
+const { get, partial } = require('lodash');
 
-const chargeVersionYearService = require('../services/charge-version-year');
-const batchJob = require('./lib/batch-job');
+const ioRedis = require('../../../lib/connectors/io-redis');
+const connection = ioRedis.createConnection();
+
+// Bull queue setup
+const { Queue, Worker } = require('bullmq');
+const JOB_NAME = 'billing.process-charge-versions';
+const queue = new Queue(JOB_NAME, { connection });
+
 const batchService = require('../services/batch-service');
-const JOB_NAME = 'billing.process-charge-versions.*';
-const batchStatus = require('./lib/batch-status');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+const batchJob = require('./lib/batch-job');
+const helpers = require('./lib/helpers');
+const processChargeVersionYearJob = require('./process-charge-version-year');
+const batchStatus = require('./lib/batch-status');
+const chargeVersionYearService = require('../services/charge-version-year');
 
-/**
- * Creates the request object for publishing a new job for processing
- * all charge version years
- *
- * @param {String} eventId The uuid of the event
- * @param {Object} batch The batch object
- */
-const createMessage = (eventId, batch) => {
-  return batchJob.createMessage(JOB_NAME, batch, { eventId }, {
-    singletonKey: batch.id
-  });
-};
+const createMessage = partial(helpers.createMessage, JOB_NAME);
 
-const handleProcessChargeVersions = async job => {
+const handler = async job => {
   batchJob.logHandling(job);
 
-  const batchId = get(job, 'data.batch.id');
+  const batchId = get(job, 'data.batchId');
 
   try {
     // Load batch
@@ -47,6 +45,27 @@ const handleProcessChargeVersions = async job => {
   }
 };
 
+const onComplete = async job => {
+  batchJob.logOnComplete(job);
+
+  try {
+    const { batch, billingBatchChargeVersionYears } = job.returnvalue;
+
+    // Publish a job to process each charge version year
+    for (const billingBatchChargeVersionYear of billingBatchChargeVersionYears) {
+      await processChargeVersionYearJob.queue.add(
+        ...processChargeVersionYearJob.createMessage(batch, billingBatchChargeVersionYear)
+      );
+    }
+  } catch (err) {
+    batchJob.logOnCompleteError(job, err);
+    throw err;
+  }
+};
+
+const worker = new Worker(JOB_NAME, handler, { connection });
+worker.on('completed', onComplete);
+worker.on('failed', helpers.onFailedHandler);
+
 exports.createMessage = createMessage;
-exports.handler = handleProcessChargeVersions;
-exports.jobName = JOB_NAME;
+exports.queue = queue;

@@ -8,11 +8,11 @@ const batchService = require('../../services/batch-service');
 const getRequestName = job => job.data.request.name;
 
 const logHandling = job => {
-  logger.info(`Handling: ${job.name}`);
+  logger.info(`Handling: ${job.id}`);
 };
 
 const logOnComplete = job => {
-  logger.info(`onComplete: ${getRequestName(job)} - ${job.failed ? 'Error' : 'Success'}`);
+  logger.info(`onComplete: ${job.id}`);
 };
 
 const logOnCompleteError = (job, error) => {

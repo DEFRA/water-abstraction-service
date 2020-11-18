@@ -16,12 +16,9 @@ const invoiceLicenceService = require('./services/invoice-licences-service');
 const batchService = require('./services/batch-service');
 const importConnector = require('../../lib/connectors/import');
 
-// PG boss jobs
-// const createBillRunJob = require('./jobs/create-bill-run');
-const refreshTotalsJob = require('./jobs/refresh-totals');
-
 // Bull jobs
-const createBillRunJob = require('./bull-jobs/create-bill-run');
+const createBillRunJob = require('./jobs/create-bill-run');
+const refreshTotalsJob = require('./jobs/refresh-totals');
 
 /**
  * Resource that will create a new batch skeleton which will
@@ -50,10 +47,6 @@ const postCreateBatch = async (request, h) => {
     await createBillRunJob.queue.add(
       ...createBillRunJob.createMessage(batch)
     );
-    // const message = createBatchEvent
-
-    // const message = createBillRunJob.createMessage(batchEvent.id, batch);
-    // await request.messageQueue.publish(message);
 
     return h.response(envelope({
       batch,
@@ -124,7 +117,9 @@ const deleteBatchInvoice = async (request, h) => {
     await batchService.deleteBatchInvoice(batch, invoiceId);
 
     // Refresh batch net total / counts
-    await request.messageQueue.publish(refreshTotalsJob.createMessage(batch.id));
+    await refreshTotalsJob.queue.add(
+      ...refreshTotalsJob.createMessage(batch.id)
+    );
 
     return h.response().code(204);
   } catch (err) {

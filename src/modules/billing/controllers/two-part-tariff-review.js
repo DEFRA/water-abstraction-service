@@ -9,7 +9,7 @@ const { jobStatus } = require('../lib/event');
 const { createBatchEvent, EVENT_TYPES } = require('../lib/batch-event');
 const { envelope } = require('../../../lib/response');
 
-const processChargeVersionsJob = require('../bull-jobs/process-charge-versions');
+const processChargeVersionsJob = require('../jobs/process-charge-versions');
 
 /**
  * Gets a list of licences in the batch for two-part tariff review

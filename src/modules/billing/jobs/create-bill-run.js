@@ -1,41 +1,53 @@
 'use strict';
 
-const { get } = require('lodash');
+const { get, partial } = require('lodash');
+
+const ioRedis = require('../../../lib/connectors/io-redis');
+const connection = ioRedis.createConnection();
+
+// Bull queue setup
+const { Queue, Worker } = require('bullmq');
+const JOB_NAME = 'billing.create-bill-run';
+const queue = new Queue(JOB_NAME, { connection });
+
 const batchService = require('../services/batch-service');
-const batchJob = require('./lib/batch-job');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+const batchJob = require('./lib/batch-job');
+const helpers = require('./lib/helpers');
+const populateBatchChargeVersionJob = require('./populate-batch-charge-versions');
 
-const JOB_NAME = 'billing.create-bill-run.*';
+const createMessage = partial(helpers.createMessage, JOB_NAME);
 
-/**
- * Creates an object ready to publish on the message queue
- *
- * @param {String} eventId The UUID of the event
- * @param {Object} batch The object from the batch database table
- * @param {Object} transaction The transaction to create
- */
-const createMessage = (eventId, batch) => {
-  return batchJob.createMessage(JOB_NAME, batch, { eventId }, {
-    singletonKey: batch.id
-  });
-};
-
-const handleCreateBillRun = async job => {
+const handler = async job => {
   batchJob.logHandling(job);
-
-  const eventId = get(job, 'data.eventId');
-  const batchId = get(job, 'data.batch.id');
+  const batchId = get(job, 'data.batchId');
 
   try {
     const batch = await batchService.createChargeModuleBillRun(batchId);
 
-    return { batch, eventId };
+    return { batchId: batch.id };
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToCreateBillRun);
     throw err;
   }
 };
 
-exports.jobName = JOB_NAME;
+const onComplete = async job => {
+  batchJob.logOnComplete(job);
+  try {
+    // Publish next job in process
+    const batchId = get(job, 'data.batchId');
+    await populateBatchChargeVersionJob.queue.add(
+      ...populateBatchChargeVersionJob.createMessage(batchId)
+    );
+  } catch (err) {
+    batchJob.logOnCompleteError(job);
+  }
+};
+
+const worker = new Worker(JOB_NAME, handler, { connection });
+worker.on('completed', onComplete);
+worker.on('failed', helpers.onFailedHandler);
+
 exports.createMessage = createMessage;
-exports.handler = handleCreateBillRun;
+exports.queue = queue;

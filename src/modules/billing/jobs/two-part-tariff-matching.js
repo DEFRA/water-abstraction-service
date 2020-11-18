@@ -1,27 +1,30 @@
 'use strict';
 
-const { get } = require('lodash');
+const { get, partial } = require('lodash');
 
-const batchJob = require('./lib/batch-job');
-const batchStatus = require('./lib/batch-status');
+const ioRedis = require('../../../lib/connectors/io-redis');
+const connection = ioRedis.createConnection();
+
+// Bull queue setup
+const { Queue, Worker } = require('bullmq');
+const JOB_NAME = 'billing.two-part-tariff-matching';
+const queue = new Queue(JOB_NAME, { connection });
 
 const batchService = require('../services/batch-service');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+const batchJob = require('./lib/batch-job');
+const helpers = require('./lib/helpers');
+const batchStatus = require('./lib/batch-status');
 const billingVolumeService = require('../services/billing-volumes-service');
 const twoPartTariffService = require('../services/two-part-tariff');
-const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+const processChargeVersionsJob = require('./process-charge-versions');
 
-const JOB_NAME = 'billing.two-part-tariff-matching.*';
+const createMessage = partial(helpers.createMessage, JOB_NAME);
 
-const createMessage = (eventId, batch) => {
-  return batchJob.createMessage(JOB_NAME, batch, { eventId }, {
-    singletonKey: batch.id
-  });
-};
-
-const handleTwoPartTariffMatching = async job => {
+const handler = async job => {
   batchJob.logHandling(job);
 
-  const batchId = get(job, 'data.batch.id');
+  const batchId = get(job, 'data.batchId');
 
   try {
     // Get batch
@@ -47,6 +50,28 @@ const handleTwoPartTariffMatching = async job => {
   }
 };
 
+const onComplete = async job => {
+  batchJob.logOnComplete(job);
+
+  try {
+    const { batchId } = job.data;
+    const { isReviewNeeded } = job.returnvalue;
+
+    // If no review needed, proceed to process the charge version years
+    if (!isReviewNeeded) {
+      await processChargeVersionsJob.queue.add(
+        ...processChargeVersionsJob.createMessage(batchId)
+      );
+    }
+  } catch (err) {
+    batchJob.logOnCompleteError(job, err);
+    throw err;
+  }
+};
+
+const worker = new Worker(JOB_NAME, handler, { connection });
+worker.on('completed', onComplete);
+worker.on('failed', helpers.onFailedHandler);
+
 exports.createMessage = createMessage;
-exports.handler = handleTwoPartTariffMatching;
-exports.jobName = JOB_NAME;
+exports.queue = queue;
