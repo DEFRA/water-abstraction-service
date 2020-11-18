@@ -122,7 +122,7 @@ const onComplete = async job => {
 
 const worker = new Worker(JOB_NAME, handler, { connection, concurrency: 16 });
 worker.on('completed', onComplete);
-worker.on('error', helpers.onErrorHandler);
+worker.on('failed', helpers.onFailedHandler);
 
 exports.createMessage = createMessage;
 exports.queue = queue;

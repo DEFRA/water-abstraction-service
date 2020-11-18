@@ -14,9 +14,12 @@ const createMessage = (jobName, batch) => {
   ];
 };
 
-const onErrorHandler = (job, err) => {
-  logger.error(`Job ${job.name} ${job.id} errored`, err);
+const onFailedHandler = (job, err) => {
+  logger.error(`Job ${job.name} ${job.id} failed`, err);
 };
 
+const isFinalAttempt = job => job.attemptsMade >= job.opts.attempts;
+
 exports.createMessage = createMessage;
-exports.onErrorHandler = onErrorHandler;
+exports.onFailedHandler = onFailedHandler;
+exports.isFinalAttempt = isFinalAttempt;

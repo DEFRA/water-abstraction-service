@@ -13,6 +13,7 @@ const queue = new Queue(JOB_NAME, { connection });
 const batchService = require('../services/batch-service');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 
 const { StateError } = require('../../../lib/errors');
 
@@ -58,7 +59,17 @@ const scheduler = new QueueScheduler(JOB_NAME, {
 });
 
 const worker = new Worker(JOB_NAME, handler, { connection });
-worker.on('error', helpers.onErrorHandler);
+
+worker.on('failed', async (job, err) => {
+  const { batchId } = job.data;
+
+  if (helpers.isFinalAttempt(job)) {
+    await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary);
+  }
+
+  // Do normal logging
+  helpers.onFailedHandler(job, err);
+});
 
 exports.createMessage = createMessage;
 exports.queue = queue;
