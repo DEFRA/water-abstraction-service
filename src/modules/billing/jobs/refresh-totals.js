@@ -3,13 +3,7 @@
 const { get } = require('lodash');
 const uuid = require('uuid/v4');
 
-const ioRedis = require('../../../lib/connectors/io-redis');
-const connection = ioRedis.createConnection();
-
-// Bull queue setup
-const { Queue, Worker, QueueScheduler } = require('bullmq');
 const JOB_NAME = 'billing.refresh-totals';
-const queue = new Queue(JOB_NAME, { connection });
 
 const batchService = require('../services/batch-service');
 const batchJob = require('./lib/batch-job');
@@ -56,13 +50,7 @@ const handler = async job => {
   };
 };
 
-const scheduler = new QueueScheduler(JOB_NAME, {
-  connection: ioRedis.createConnection()
-});
-
-const worker = new Worker(JOB_NAME, handler, { connection });
-
-worker.on('failed', async (job, err) => {
+const onFailedHandler = async (job, err) => {
   const { batchId } = job.data;
 
   if (helpers.isFinalAttempt(job)) {
@@ -75,9 +63,10 @@ worker.on('failed', async (job, err) => {
 
   // Do normal logging
   helpers.onFailedHandler(job, err);
-});
+};
 
+exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
-exports.queue = queue;
-exports.worker = worker;
-exports.scheduler = scheduler;
+exports.handler = handler;
+exports.hasScheduler = true;
+exports.onFailed = onFailedHandler;

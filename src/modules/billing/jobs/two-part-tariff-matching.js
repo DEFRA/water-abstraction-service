@@ -2,13 +2,7 @@
 
 const { get, partial } = require('lodash');
 
-const ioRedis = require('../../../lib/connectors/io-redis');
-const connection = ioRedis.createConnection();
-
-// Bull queue setup
-const { Queue, Worker } = require('bullmq');
 const JOB_NAME = 'billing.two-part-tariff-matching';
-const queue = new Queue(JOB_NAME, { connection });
 
 const batchService = require('../services/batch-service');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
@@ -17,7 +11,7 @@ const helpers = require('./lib/helpers');
 const batchStatus = require('./lib/batch-status');
 const billingVolumeService = require('../services/billing-volumes-service');
 const twoPartTariffService = require('../services/two-part-tariff');
-const processChargeVersionsJob = require('./process-charge-versions');
+const { jobName: processChargeVersionsJobName } = require('./process-charge-versions');
 
 const createMessage = partial(helpers.createMessage, JOB_NAME);
 
@@ -50,7 +44,7 @@ const handler = async job => {
   }
 };
 
-const onComplete = async job => {
+const onComplete = async (job, queueManager) => {
   batchJob.logOnComplete(job);
 
   try {
@@ -59,9 +53,7 @@ const onComplete = async job => {
 
     // If no review needed, proceed to process the charge version years
     if (!isReviewNeeded) {
-      await processChargeVersionsJob.queue.add(
-        ...processChargeVersionsJob.createMessage(batchId)
-      );
+      await queueManager.add(processChargeVersionsJobName, batchId);
     }
   } catch (err) {
     batchJob.logOnCompleteError(job, err);
@@ -69,9 +61,8 @@ const onComplete = async job => {
   }
 };
 
-const worker = new Worker(JOB_NAME, handler, { connection });
-worker.on('completed', onComplete);
-worker.on('failed', helpers.onFailedHandler);
-
+exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
-exports.queue = queue;
+exports.handler = handler;
+exports.onComplete = onComplete;
+exports.onFailed = helpers.onFailedHandler;

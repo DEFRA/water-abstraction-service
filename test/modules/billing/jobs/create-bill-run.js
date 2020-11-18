@@ -13,6 +13,7 @@ const uuid = require('uuid/v4');
 
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const createBillRunJob = require('../../../../src/modules/billing/jobs/create-bill-run');
+const ioRedis = require('../../../../src/lib/connectors/io-redis');
 
 // Services
 const batchService = require('../../../../src/modules/billing/services/batch-service');
@@ -48,7 +49,7 @@ experiment('modules/billing/jobs/create-bill-run', () => {
   });
 
   test('exports the expected job name', async () => {
-    expect(createBillRunJob.jobName).to.equal('billing.create-bill-run.*');
+    expect(createBillRunJob.jobName).to.equal('billing.create-bill-run');
   });
 
   experiment('.createMessage', () => {

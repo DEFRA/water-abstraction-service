@@ -2,19 +2,13 @@
 
 const { get, partial } = require('lodash');
 
-const ioRedis = require('../../../lib/connectors/io-redis');
-const connection = ioRedis.createConnection();
-
-// Bull queue setup
-const { Queue, Worker } = require('bullmq');
 const JOB_NAME = 'billing.prepare-transactions';
-const queue = new Queue(JOB_NAME, { connection });
 
 const batchService = require('../services/batch-service');
 const { BATCH_ERROR_CODE, BATCH_STATUS } = require('../../../lib/models/batch');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
-const createChargeJob = require('./create-charge');
+const { jobName: createChargeJobName } = require('./create-charge');
 const { logger } = require('../../../logger');
 const supplementaryBillingService = require('../services/supplementary-billing-service');
 
@@ -57,7 +51,7 @@ const handler = async job => {
   }
 };
 
-const onComplete = async job => {
+const onComplete = async (job, queueManager) => {
   try {
     const { transactions, batch } = job.returnvalue;
     const batchId = batch.id;
@@ -66,9 +60,7 @@ const onComplete = async job => {
 
     // Note: publish jobs in series to avoid overwhelming message queue
     for (const transaction of transactions) {
-      await createChargeJob.queue.add(
-        ...createChargeJob.createMessage(batchId, transaction.billing_transaction_id)
-      );
+      await queueManager.add(createChargeJobName, batchId, transaction.billing_transaction_id);
     }
   } catch (err) {
     batchJob.logOnCompleteError(job, err);
@@ -76,9 +68,8 @@ const onComplete = async job => {
   }
 };
 
-const worker = new Worker(JOB_NAME, handler, { connection });
-worker.on('completed', onComplete);
-worker.on('failed', helpers.onFailedHandler);
-
+exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
-exports.queue = queue;
+exports.handler = handler;
+exports.onComplete = onComplete;
+exports.onFailed = helpers.onFailedHandler;

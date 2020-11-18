@@ -2,20 +2,14 @@
 
 const { get } = require('lodash');
 
-const ioRedis = require('../../../lib/connectors/io-redis');
-const connection = ioRedis.createConnection();
-
-// Bull queue setup
-const { Queue, Worker } = require('bullmq');
 const JOB_NAME = 'billing.process-charge-version-year';
-const queue = new Queue(JOB_NAME, { connection });
 
 const batchService = require('../services/batch-service');
 const { BATCH_ERROR_CODE, BATCH_STATUS } = require('../../../lib/models/batch');
 const batchJob = require('./lib/batch-job');
 const chargeVersionYearService = require('../services/charge-version-year');
 const billingVolumeService = require('../services/billing-volumes-service');
-const prepareTransactionsJob = require('./prepare-transactions');
+const { jobName: prepareTransactionsJobName } = require('./prepare-transactions');
 const helpers = require('./lib/helpers');
 
 const createMessage = (batch, billingBatchChargeVersionYear) => ([
@@ -68,19 +62,15 @@ const handler = async job => {
   }
 };
 
-const onComplete = async job => {
+const onComplete = async (job, queueManager) => {
   batchJob.logOnComplete(job);
 
   try {
     const { batch, processing } = job.returnvalue;
 
-    console.log(processing);
-
     // When all charge version years are processed, publish next job
     if (processing === 0 && (batch.status === BATCH_STATUS.processing)) {
-      await prepareTransactionsJob.queue.add(
-        ...prepareTransactionsJob.createMessage(batch)
-      );
+      await queueManager.add(prepareTransactionsJobName, batch);
     }
   } catch (err) {
     batchJob.logOnCompleteError(job, err);
@@ -88,9 +78,8 @@ const onComplete = async job => {
   }
 };
 
-const worker = new Worker(JOB_NAME, handler, { connection });
-worker.on('completed', onComplete);
-worker.on('failed', helpers.onFailedHandler);
-
+exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
-exports.queue = queue;
+exports.handler = handler;
+exports.onFailed = helpers.onFailedHandler;
+exports.onComplete = onComplete;

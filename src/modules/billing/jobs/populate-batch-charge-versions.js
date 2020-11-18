@@ -2,13 +2,7 @@
 
 const { partial, get } = require('lodash');
 
-const ioRedis = require('../../../lib/connectors/io-redis');
-const connection = ioRedis.createConnection();
-
-// Bull queue setup
-const { Queue, Worker } = require('bullmq');
 const JOB_NAME = 'billing.populate-batch-charge-versions';
-const queue = new Queue(JOB_NAME, { connection });
 
 const batchService = require('../services/batch-service');
 const chargeVersionService = require('../services/charge-version-service');
@@ -17,8 +11,8 @@ const { BATCH_ERROR_CODE, BATCH_STATUS, BATCH_TYPE } = require('../../../lib/mod
 const helpers = require('./lib/helpers');
 const batchJob = require('./lib/batch-job');
 
-const processChargeVersionsJob = require('./process-charge-versions');
-const twoPartTariffMatchingJob = require('./two-part-tariff-matching');
+const { jobName: processChargeVersionsJobName } = require('./process-charge-versions');
+const { jobName: twoPartTariffMatchingJobName } = require('./two-part-tariff-matching');
 
 const createMessage = partial(helpers.createMessage, JOB_NAME);
 
@@ -45,7 +39,7 @@ const handler = async job => {
   }
 };
 
-const onComplete = async job => {
+const onComplete = async (job, queueManager) => {
   batchJob.logOnComplete(job);
 
   try {
@@ -57,23 +51,18 @@ const onComplete = async job => {
     }
 
     if (batch.type === BATCH_TYPE.annual) {
-      await processChargeVersionsJob.queue.add(
-        ...processChargeVersionsJob.createMessage(batch)
-      );
+      await queueManager.add(processChargeVersionsJobName, batch);
     } else {
       // Two-part tariff matching for TPT/supplementary run
-      await twoPartTariffMatchingJob.queue.add(
-        ...twoPartTariffMatchingJob.createMessage(batch)
-      );
+      await queueManager.add(twoPartTariffMatchingJobName, batch);
     }
   } catch (err) {
     batchJob.logOnCompleteError(job);
   }
 };
 
-const worker = new Worker(JOB_NAME, handler, { connection });
-worker.on('completed', onComplete);
-worker.on('failed', helpers.onFailedHandler);
-
+exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
-exports.queue = queue;
+exports.handler = handler;
+exports.onComplete = onComplete;
+exports.onFailed = helpers.onFailedHandler;

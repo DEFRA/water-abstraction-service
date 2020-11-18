@@ -16,9 +16,10 @@ const invoiceLicenceService = require('./services/invoice-licences-service');
 const batchService = require('./services/batch-service');
 const importConnector = require('../../lib/connectors/import');
 
-// Bull jobs
-const createBillRunJob = require('./jobs/create-bill-run');
-const refreshTotalsJob = require('./jobs/refresh-totals');
+// Bull job queue manager
+const { jobName: createBillRunJobName } = require('./jobs/create-bill-run');
+const { jobName: refreshTotalsJobName } = require('./jobs/refresh-totals');
+const { queueManager } = require('./jobs');
 
 /**
  * Resource that will create a new batch skeleton which will
@@ -44,9 +45,7 @@ const postCreateBatch = async (request, h) => {
     });
 
     // add a new job to the queue so that the batch can be created in the CM
-    await createBillRunJob.queue.add(
-      ...createBillRunJob.createMessage(batch)
-    );
+    await queueManager.add(createBillRunJobName, batch);
 
     return h.response(envelope({
       batch,
@@ -117,9 +116,7 @@ const deleteBatchInvoice = async (request, h) => {
     await batchService.deleteBatchInvoice(batch, invoiceId);
 
     // Refresh batch net total / counts
-    await refreshTotalsJob.queue.add(
-      ...refreshTotalsJob.createMessage(batch.id)
-    );
+    await queueManager.add(refreshTotalsJobName, batch.id);
 
     return h.response().code(204);
   } catch (err) {
