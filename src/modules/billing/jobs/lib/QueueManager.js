@@ -1,28 +1,40 @@
 'use strict';
 
-// Bull queue setup
 const { Queue, Worker, QueueScheduler } = require('bullmq');
 const ioRedis = require('../../../../lib/connectors/io-redis');
 
 const STATUS_COMPLETED = 'completed';
 const STATUS_FAILED = 'failed';
 
+/**
+ * @class provides a container for the Bull MQ job queues
+ */
 class QueueManager {
   constructor () {
     this._queues = {};
   }
 
+  /**
+   * Adds a job to the queue with the requested name
+   * @param {String} jobName
+   * @param  {...any} args
+   */
   add (jobName, ...args) {
-    console.log({
-      jobName,
-      args
-    });
     const { createMessage } = this._queues[jobName].jobContainer;
     return this._queues[jobName].queue.add(
       ...createMessage(...args)
     );
   }
 
+  /**
+   * Registers a job container
+   * @param {Object} jobContainer
+   * @param {String} jobContainer.jobName - the job/queue name
+   * @param {Function} jobContainer.handler - the handler for the job
+   * @param {Boolean} jobContainer.hasScheduler - whether a scheduler is needed - for jobs with retry etc
+   * @param {Function} jobContainer.onComplete - on complete handler, called with (job, queueManager)
+   * @param {Function} jobContainer.onFailed - on failed handler
+   */
   register (jobContainer) {
     // Create connection for queue
     const connection = ioRedis.createConnection();

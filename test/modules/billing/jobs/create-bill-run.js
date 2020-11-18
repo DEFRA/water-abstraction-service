@@ -13,7 +13,6 @@ const uuid = require('uuid/v4');
 
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const createBillRunJob = require('../../../../src/modules/billing/jobs/create-bill-run');
-const ioRedis = require('../../../../src/lib/connectors/io-redis');
 
 // Services
 const batchService = require('../../../../src/modules/billing/services/batch-service');
@@ -31,17 +30,23 @@ const data = {
 };
 
 experiment('modules/billing/jobs/create-bill-run', () => {
-  let batch;
+  let batch, queueManager;
 
   beforeEach(async () => {
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
+    sandbox.stub(batchJob, 'logOnCompleteError');
+    sandbox.stub(batchJob, 'logOnComplete');
 
     batch = new Batch();
     batch.fromHash(data.batch);
 
     sandbox.stub(batchService, 'createChargeModuleBillRun').resolves(batch);
     sandbox.stub(batchService, 'setErrorStatus').resolves(batch);
+
+    queueManager = {
+      add: sandbox.stub()
+    };
   });
 
   afterEach(async () => {
@@ -55,20 +60,18 @@ experiment('modules/billing/jobs/create-bill-run', () => {
   experiment('.createMessage', () => {
     test('creates the expected message object', async () => {
       const message = createBillRunJob.createMessage(
-        data.eventId,
         data.batch
       );
 
-      expect(message).to.equal({
-        name: `billing.create-bill-run.${batchId}`,
-        data: {
-          eventId: data.eventId,
-          batch: data.batch
+      expect(message).to.equal([
+        'billing.create-bill-run',
+        {
+          batchId
         },
-        options: {
-          singletonKey: batchId
+        {
+          jobId: `billing.create-bill-run.${batchId}`
         }
-      });
+      ]);
     });
   });
 
@@ -79,8 +82,7 @@ experiment('modules/billing/jobs/create-bill-run', () => {
       beforeEach(async () => {
         job = {
           data: {
-            batch: data.batch,
-            eventId: data.eventId
+            batchId: batchId
           }
         };
         result = await createBillRunJob.handler(job);
@@ -92,9 +94,8 @@ experiment('modules/billing/jobs/create-bill-run', () => {
         )).to.be.true();
       });
 
-      test('resolves with eventId and updated batch', async () => {
-        expect(result.eventId).to.equal(data.eventId);
-        expect(result.batch instanceof Batch).to.be.true();
+      test('resolves with batch ID', async () => {
+        expect(result.batchId).to.equal(batchId);
       });
     });
 
@@ -123,6 +124,35 @@ experiment('modules/billing/jobs/create-bill-run', () => {
 
       test('re-throws the error', async () => {
         expect(error).to.equal(err);
+      });
+    });
+  });
+
+  experiment('.onComplete', () => {
+    const job = {
+      data: {
+        batchId
+      }
+    };
+
+    experiment('when publishing the next job succeeds', () => {
+      test('the next job is published', async () => {
+        await createBillRunJob.onComplete(job, queueManager);
+        expect(queueManager.add.calledWith(
+          'billing.populate-batch-charge-versions',
+          batchId
+        )).to.be.true();
+      });
+    });
+
+    experiment('when publishing the next job fails', () => {
+      beforeEach(async () => {
+        queueManager.add.rejects();
+      });
+
+      test('a message is logged', async () => {
+        await createBillRunJob.onComplete(job, queueManager);
+        expect(batchJob.logOnCompleteError.calledWith(job)).to.be.true();
       });
     });
   });
