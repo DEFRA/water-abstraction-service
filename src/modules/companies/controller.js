@@ -95,8 +95,10 @@ const createCompanyInvoiceAccount = async (request, h) => {
   const { companyId } = request.params;
   try {
     const invoiceAccount = invoiceAccountsService.getInvoiceAccount(companyId, startDate, address, agent, contact);
-    await invoiceAccountsService.persist(regionId, startDate, invoiceAccount);
-    return h.response(invoiceAccount.toJSON()).code(201);
+
+    const persistedAccount = await invoiceAccountsService.persist(regionId, startDate, invoiceAccount);
+
+    return h.response(persistedAccount.toJSON()).code(201);
   } catch (err) {
     return mapErrorResponse(err);
   }

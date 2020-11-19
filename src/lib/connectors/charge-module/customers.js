@@ -11,7 +11,9 @@ const getInvoiceAccountData = async (invoiceAccountId) => {
 
 const updateCustomer = async invoiceAccountId => {
   const data = await getInvoiceAccountData(invoiceAccountId);
-  return request.post('v1/wrls/customer_changes', data);
+  const response = await request.post('v1/wrls/customer_changes', data);
+  console.log(response);
+  return response;
 };
 
 exports.updateCustomer = updateCustomer;

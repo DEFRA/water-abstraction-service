@@ -130,11 +130,10 @@ const createInvoiceAccount = async (regionId, companyId, startDate, invoiceAccou
     regionCode,
     startDate
   });
-
   invoiceAccount.id = invoiceAccountEntity.invoiceAccountId;
   invoiceAccount.accountNumber = invoiceAccountEntity.invoiceAccountNumber;
-
   newModels.push(invoiceAccount);
+  return newModels;
 };
 
 /**
@@ -155,7 +154,6 @@ const persist = async (regionId, startDate, invoiceAccount) => {
     await createCompanyAddressAndContact(invoiceAccount.company.id, formattedStartDate, invoiceAccount, newModels);
 
     await createInvoiceAccount(regionId, invoiceAccount.company.id, formattedStartDate, invoiceAccount, newModels);
-
     const invoiceAccountAddress = await invoiceAccountAddressesService.createInvoiceAccountAddress(invoiceAccount, invoiceAccount.invoiceAccountAddresses[0], formattedStartDate);
 
     const data = invoiceAccount.fromHash({
@@ -165,7 +163,6 @@ const persist = async (regionId, startDate, invoiceAccount) => {
     // Create PGBoss message to update the invoice account in CM
     const message = await updateCustomer.job.createMessage(invoiceAccount.id);
     await messageQueue.publish(message);
-
     // Return the invoice account
     return data;
   } catch (err) {
