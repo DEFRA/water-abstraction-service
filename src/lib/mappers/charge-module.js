@@ -13,20 +13,30 @@ const invoiceAccountMapper = require('../../lib/mappers/invoice-account');
  * @return {Object} mapped customer object
  */
 const mapInvoiceAccountToChargeModuleCustomer = async invoiceAccount => {
+  // let fao;
   const mappedInvoiceAccount = await invoiceAccountMapper.crmToModel(invoiceAccount);
+
   const { lastInvoiceAccountAddress, company } = mappedInvoiceAccount;
+
   const { address, agentCompany } = lastInvoiceAccountAddress;
-  const parsedAddress = extractAddress(address);
+  const customerName = extractCustomerName(company, agentCompany);
+
+  // console.log(lastInvoiceAccountAddress);
+  const fao = extractFAO(lastInvoiceAccountAddress);
+
+  const parsedAddress = extractAddress(address, fao);
+
   const response = {
     region: mappedInvoiceAccount.accountNumber.charAt(0), // Region code is always assumed to be the first letter of the account number,
     customerReference: mappedInvoiceAccount.accountNumber,
-    customerName: extractCustomerName(company, agentCompany),
+    customerName: customerName,
     ...parsedAddress
   };
+
   return response;
 };
 
-const extractAddress = address => {
+const extractAddress = (address, fao = null) => {
   /**
    * Below is the CM expected schema, for reference
    *   region: regionValidator.required(),
@@ -40,8 +50,9 @@ const extractAddress = address => {
    *   addressLine6: stringValidator.max(60).allow('', null),
    *   postcode: stringValidator.max(60).allow('', null)
    */
+
   return {
-    addressLine1: truncate(address.addressLine1, { length: 360 }),
+    addressLine1: truncate(`${fao ? 'FAO ' + fao + ', ' + address.addressLine1 : address.addressLine1}`, { length: 360 }),
     addressLine2: truncate(address.addressLine2, { length: 240 }),
     addressLine3: truncate(address.addressLine3, { length: 240 }),
     addressLine4: truncate(address.addressLine4, { length: 240 }),
@@ -54,23 +65,15 @@ const extractAddress = address => {
 };
 
 const extractCustomerName = (company = {}, agentCompany = {}) => {
-  let fao;
-  const companyName = agentCompany.name ? agentCompany.name : company.name;
-
-  if (companyName === agentCompany.name) {
-    fao = extractFAO(agentCompany);
-  } else if (companyName === company.name) {
-    fao = extractFAO(company);
-  }
-
-  return fao ? `FAO ${fao}, ${companyName}` : companyName;
+  return agentCompany.name ? agentCompany.name : company.name;
 };
 
-const extractFAO = company => {
-  if (company.companyContacts && company.companyContacts.length > 0) {
-    return company.companyContacts.find(contact => contact.name).name;
+const extractFAO = invoiceAccount => {
+  if (invoiceAccount.contact && invoiceAccount.contact.department) {
+    return invoiceAccount.contact.department;
+  } else if (invoiceAccount.contact && (invoiceAccount.contact.firstName || invoiceAccount.contact.lastName)) {
+    return [invoiceAccount.contact.firstName, invoiceAccount.contact.lastName].join(' ');
   }
-  return null;
 };
 
 exports.mapInvoiceAccountToChargeModuleCustomer = mapInvoiceAccountToChargeModuleCustomer;
