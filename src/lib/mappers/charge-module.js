@@ -13,15 +13,12 @@ const invoiceAccountMapper = require('../../lib/mappers/invoice-account');
  * @return {Object} mapped customer object
  */
 const mapInvoiceAccountToChargeModuleCustomer = async invoiceAccount => {
-  // let fao;
   const mappedInvoiceAccount = await invoiceAccountMapper.crmToModel(invoiceAccount);
 
   const { lastInvoiceAccountAddress, company } = mappedInvoiceAccount;
 
   const { address, agentCompany } = lastInvoiceAccountAddress;
   const customerName = extractCustomerName(company, agentCompany);
-
-  // console.log(lastInvoiceAccountAddress);
   const fao = extractFAO(lastInvoiceAccountAddress);
 
   const parsedAddress = extractAddress(address, fao);
