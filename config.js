@@ -216,7 +216,8 @@ module.exports = {
     port: process.env.REDIS_PORT || 6379,
     password: process.env.REDIS_PASSWORD || '',
     ...!(isLocal || isTravis) && { tls: {} },
-    db: 2
+    db: 2,
+    lazyConnect: true
   },
 
   chargeModuleConnector: {

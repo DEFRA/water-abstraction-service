@@ -1,6 +1,6 @@
 'use strict';
 
-const { Queue, Worker, QueueScheduler } = require('bullmq');
+const bull = require('bullmq');
 const ioRedis = require('../../../../lib/connectors/io-redis');
 
 const STATUS_COMPLETED = 'completed';
@@ -40,14 +40,14 @@ class QueueManager {
     const connection = ioRedis.createConnection();
 
     // Create queue
-    const queue = new Queue(jobContainer.jobName, { connection });
+    const queue = new bull.Queue(jobContainer.jobName, { connection });
 
     // Register worker
-    const worker = new Worker(jobContainer.jobName, jobContainer.handler, { connection });
+    const worker = new bull.Worker(jobContainer.jobName, jobContainer.handler, { connection });
 
     // Create scheduler
     const scheduler = jobContainer.hasScheduler
-      ? new QueueScheduler(jobContainer.jobName, { connection: ioRedis.createConnection() })
+      ? new bull.QueueScheduler(jobContainer.jobName, { connection: ioRedis.createConnection() })
       : null;
 
     // Register handlers
