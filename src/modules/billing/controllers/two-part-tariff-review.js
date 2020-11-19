@@ -9,7 +9,6 @@ const { jobStatus } = require('../lib/event');
 const { createBatchEvent, EVENT_TYPES } = require('../lib/batch-event');
 const { envelope } = require('../../../lib/response');
 
-const { queueManager } = require('../jobs');
 const { jobName: processChargeVersionsJobName } = require('../jobs/process-charge-versions');
 
 /**
@@ -115,7 +114,7 @@ const postApproveReviewBatch = async (request, h) => {
     });
 
     // Kick off next stage of processing
-    await queueManager.add(processChargeVersionsJobName, batch);
+    await request.queueManager.add(processChargeVersionsJobName, batch);
 
     return envelope({
       event: batchEvent,

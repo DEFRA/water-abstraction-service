@@ -43,8 +43,8 @@ experiment('modules/billing/controllers/two-part-tariff-review', () => {
       pre: {
         batch
       },
-      messageQueue: {
-        publish: sandbox.stub()
+      queueManager: {
+        add: sandbox.stub()
       },
       params: {
         licenceId: uuid(),
@@ -218,9 +218,9 @@ experiment('modules/billing/controllers/two-part-tariff-review', () => {
       });
 
       test('publishes a new job to the message queue with the event id', async () => {
-        const [message] = request.messageQueue.publish.lastCall.args;
-        expect(message.data.eventId).to.equal(event.id);
-        expect(message.data.batch).to.equal(batch);
+        const [jobName, batchId] = request.queueManager.add.lastCall.args;
+        expect(jobName).to.equal('billing.process-charge-versions');
+        expect(batchId).to.equal(batch);
       });
 
       test('the response contains the event and batch', async () => {
@@ -248,7 +248,7 @@ experiment('modules/billing/controllers/two-part-tariff-review', () => {
       });
 
       test('no job is published', async () => {
-        expect(request.messageQueue.publish.called).to.be.false();
+        expect(request.queueManager.add.called).to.be.false();
       });
 
       test('a Boom badRequest error is returned containing the error message', async () => {

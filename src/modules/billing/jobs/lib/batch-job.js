@@ -18,7 +18,7 @@ const logOnCompleteError = (job, error) => {
 };
 
 const logHandlingError = (job, error) => {
-  logger.error(`Error: ${job.name}`, error, job.data);
+  logger.error(`Error handling: ${job.id}`, error, job.data);
 };
 
 /**
@@ -37,7 +37,7 @@ const logHandlingErrorAndSetBatchStatus = async (job, err, errorCode) => {
   logHandlingError(job, err);
 
   // Mark batch as in error status
-  const batchId = get(job, 'data.batch.batchId');
+  const batchId = get(job, 'data.batchId');
   await batchService.setErrorStatus(batchId, errorCode);
   return err;
 };

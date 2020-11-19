@@ -791,44 +791,68 @@ experiment('modules/billing/services/batch-service', () => {
           status: Batch.BATCH_STATUS.ready,
           batchType: Batch.BATCH_TYPE.supplementary
         });
-        chargeModuleBillRunConnectorWithRetry.get.resolves({
-          billRun: {
-            summary: {
-              invoiceCount: 3,
-              creditNoteCount: 5,
-              netTotal: 343553,
-              externalId: 335
+      });
+
+      experiment('when the charge module is not ready', () => {
+        beforeEach(async () => {
+          chargeModuleBillRunConnector.get.resolves({
+            billRun: {
+              status: 'generating_summary'
             }
-          }
+          });
+          result = await batchService.refreshTotals(batchId);
         });
-        await batchService.refreshTotals(batchId);
+
+        test('the result is false', async () => {
+          expect(result).to.be.false();
+        });
       });
 
-      test('fetches the batch and associated invoices from DB', async () => {
-        expect(newRepos.billingBatches.findOneWithInvoicesWithTransactions.calledWith(
-          batchId
-        )).to.be.true();
-      });
+      experiment('when the charge module is ready', () => {
+        beforeEach(async () => {
+          chargeModuleBillRunConnector.get.resolves({
+            billRun: {
+              summary: {
+                invoiceCount: 3,
+                creditNoteCount: 5,
+                netTotal: 343553,
+                externalId: 335
+              }
+            }
+          });
+          result = await batchService.refreshTotals(batchId);
+        });
 
-      test('gets the bill run summary from the charge module', async () => {
-        expect(
-          chargeModuleBillRunConnectorWithRetry.get.calledWith(externalId)
-        ).to.be.true();
-      });
+        test('fetches the batch and associated invoices from DB', async () => {
+          expect(newRepos.billingBatches.findOneWithInvoicesWithTransactions.calledWith(
+            batchId
+          )).to.be.true();
+        });
 
-      test('updates the billing batch with the totals and sets status to "ready"', async () => {
-        const [id, updates] = newRepos.billingBatches.update.lastCall.args;
-        expect(id).to.equal(batchId);
-        expect(updates.invoiceCount).to.equal(3);
-        expect(updates.creditNoteCount).to.equal(5);
-        expect(updates.netTotal).to.equal(343553);
-        expect(updates.status).to.equal(Batch.BATCH_STATUS.ready);
-      });
+        test('gets the bill run summary from the charge module', async () => {
+          expect(
+            chargeModuleBillRunConnector.get.calledWith(externalId)
+          ).to.be.true();
+        });
 
-      test('persists the transactions de-minimis status flag', async () => {
-        const [batch] = transactionsService.persistDeMinimis.lastCall.args;
-        expect(batch instanceof Batch).to.be.true();
-        expect(batch.id).to.equal(batchId);
+        test('updates the billing batch with the totals and sets status to "ready"', async () => {
+          const [id, updates] = newRepos.billingBatches.update.lastCall.args;
+          expect(id).to.equal(batchId);
+          expect(updates.invoiceCount).to.equal(3);
+          expect(updates.creditNoteCount).to.equal(5);
+          expect(updates.netTotal).to.equal(343553);
+          expect(updates.status).to.equal(Batch.BATCH_STATUS.ready);
+        });
+
+        test('persists the transactions de-minimis status flag', async () => {
+          const [batch] = transactionsService.persistDeMinimis.lastCall.args;
+          expect(batch instanceof Batch).to.be.true();
+          expect(batch.id).to.equal(batchId);
+        });
+
+        test('resolves with true', async () => {
+          expect(result).to.be.true();
+        });
       });
     });
 

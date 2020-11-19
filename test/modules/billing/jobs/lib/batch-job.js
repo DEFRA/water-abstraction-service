@@ -38,42 +38,12 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
     sandbox.restore();
   });
 
-  experiment('.deleteHandlerQueue', () => {
-    let job;
-    let batchId;
-    let eventId;
-
-    beforeEach(async () => {
-      batchId = '00000000-0000-0000-0000-000000000000';
-      eventId = '11111111-1111-1111-1111-111111111111';
-      job = {
-        data: {
-          request: {
-            name: `failed-job.${batchId}`,
-            data: {
-              eventId,
-              batch: {
-                id: batchId
-              }
-            }
-          }
-        }
-      };
-      await batchJob.deleteHandlerQueue(job, messageQueue);
-    });
-
-    test('deletes the queue', async () => {
-      const [name] = messageQueue.deleteQueue.lastCall.args;
-      expect(name).to.equal(`failed-job.${batchId}`);
-    });
-  });
-
   experiment('.logHandling', () => {
     let job;
 
     beforeEach(async () => {
       job = {
-        name: 'test-name'
+        id: 'test-job-id'
       };
     });
 
@@ -81,7 +51,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
       batchJob.logHandling(job);
 
       const [message] = logger.info.lastCall.args;
-      expect(message).to.equal('Handling: test-name');
+      expect(message).to.equal('Handling: test-job-id');
     });
   });
 
@@ -91,12 +61,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     beforeEach(async () => {
       job = {
-        name: 'test-name',
-        data: {
-          batch: {
-            id: 'test-batch-id'
-          }
-        }
+        id: 'test-job-id'
       };
 
       error = new Error('oops');
@@ -105,7 +70,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     test('creates the expected message', async () => {
       const [message] = logger.error.lastCall.args;
-      expect(message).to.equal('Error: test-name');
+      expect(message).to.equal('Error handling: test-job-id');
     });
 
     test('passes the error', async () => {
@@ -124,12 +89,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     beforeEach(async () => {
       job = {
-        data: {
-          request: {
-            name: 'test-name'
-          }
-        },
-        failed: false
+        id: 'test-job-id'
       };
     });
 
@@ -137,15 +97,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
       batchJob.logOnComplete(job);
 
       const [message] = logger.info.lastCall.args;
-      expect(message).to.equal('onComplete: test-name - Success');
-    });
-
-    test('create the expected message for a failure', async () => {
-      job.failed = true;
-      batchJob.logOnComplete(job);
-
-      const [message] = logger.info.lastCall.args;
-      expect(message).to.equal('onComplete: test-name - Error');
+      expect(message).to.equal('onComplete: test-job-id');
     });
   });
 
@@ -155,17 +107,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     beforeEach(async () => {
       job = {
-        data: {
-          request: {
-            name: 'test-name',
-            data: {
-              batch: {
-                id: 'test-batch-id'
-              }
-            }
-          }
-        },
-        failed: false
+        id: 'test-job-id'
       };
 
       error = new Error('oops');
@@ -175,7 +117,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     test('create the expected message', async () => {
       const [message] = logger.error.lastCall.args;
-      expect(message).to.equal('Error handling onComplete: test-name');
+      expect(message).to.equal('Error handling onComplete: test-job-id');
     });
 
     test('passes the error', async () => {
@@ -185,129 +127,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     test('passes the request data', async () => {
       const [, , context] = logger.error.lastCall.args;
-      expect(context).to.equal(job.data.request.data);
-    });
-  });
-
-  experiment('.createMessage', () => {
-    let batch;
-
-    beforeEach(async () => {
-      batch = {
-        id: 'test-batch-id'
-      };
-    });
-
-    test('creates a basic message', async () => {
-      const template = 'hello.*';
-      const message = batchJob.createMessage(template, batch);
-
-      expect(message).to.equal({
-        name: 'hello.test-batch-id',
-        data: {
-          batch: {
-            id: 'test-batch-id'
-          }
-        }
-      });
-    });
-
-    test('can include additional data', async () => {
-      const template = 'more-data.*';
-      const data = {
-        licence: {
-          id: 'test-licence-id'
-        },
-        chargeVersion: {
-          id: 'test-charge-version-id'
-        }
-      };
-      const message = batchJob.createMessage(template, batch, data);
-
-      expect(message).to.equal({
-        name: 'more-data.test-batch-id',
-        data: {
-          licence: {
-            id: 'test-licence-id'
-          },
-          chargeVersion: {
-            id: 'test-charge-version-id'
-          },
-          batch: {
-            id: 'test-batch-id'
-          }
-        }
-      });
-    });
-
-    test('can include additional options', async () => {
-      const template = 'with-options.*';
-      const data = {
-        licence: {
-          id: 'test-licence-id'
-        }
-      };
-
-      const options = {
-        singletonKey: 'key'
-      };
-
-      const message = batchJob.createMessage(template, batch, data, options);
-
-      expect(message).to.equal({
-        name: 'with-options.test-batch-id',
-        data: {
-          licence: {
-            id: 'test-licence-id'
-          },
-          batch: {
-            id: 'test-batch-id'
-          }
-        },
-        options: {
-          singletonKey: 'key'
-        }
-      });
-    });
-  });
-
-  experiment('.hasJobFailed', () => {
-    test('returns true if the job has failed', async () => {
-      const job = {
-        data: {
-          failed: true
-        }
-      };
-      expect(batchJob.hasJobFailed(job)).to.equal(true);
-    });
-
-    test('returns true if the job is OK', async () => {
-      const job = {
-        data: {
-          failed: false
-        }
-      };
-      expect(batchJob.hasJobFailed(job)).to.equal(false);
-    });
-  });
-
-  experiment('.deleteOnCompleteQueue', () => {
-    let job;
-
-    beforeEach(async () => {
-      job = {
-        data: {
-          request: {
-            name: 'test-name'
-          }
-        }
-      };
-      await batchJob.deleteOnCompleteQueue(job, messageQueue);
-    });
-
-    test('deletes onComplete queue related to current job', async () => {
-      const [name] = messageQueue.deleteQueue.lastCall.args;
-      expect(name).to.equal('__state__completed__test-name');
+      expect(context).to.equal(job.data);
     });
   });
 
@@ -317,11 +137,9 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     beforeEach(async () => {
       job = {
-        name: 'test-name',
+        id: 'test-job-id',
         data: {
-          batch: {
-            id: 'test-id'
-          }
+          batchId: 'test-batch-id'
         }
       };
       error = await batchJob.logHandlingErrorAndSetBatchStatus(job, err, 123);
@@ -329,7 +147,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     test('creates the expected message', async () => {
       const [message] = logger.error.lastCall.args;
-      expect(message).to.equal('Error: test-name');
+      expect(message).to.equal('Error handling: test-job-id');
     });
 
     test('passes the error', async () => {
@@ -344,7 +162,7 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
 
     test('marks the batch as "error" status', async () => {
       expect(batchService.setErrorStatus.calledWith(
-        'test-id', 123
+        'test-batch-id', 123
       )).to.be.true();
     });
   });
