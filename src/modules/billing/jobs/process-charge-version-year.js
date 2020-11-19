@@ -74,7 +74,6 @@ const onComplete = async (job, queueManager) => {
     }
   } catch (err) {
     batchJob.logOnCompleteError(job, err);
-    throw err;
   }
 };
 
