@@ -57,7 +57,7 @@ const onComplete = async (job, queueManager) => {
       await queueManager.add(twoPartTariffMatchingJobName, batch);
     }
   } catch (err) {
-    batchJob.logOnCompleteError(job);
+    batchJob.logOnCompleteError(job, err);
   }
 };
 

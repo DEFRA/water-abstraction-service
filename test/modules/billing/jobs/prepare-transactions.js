@@ -27,6 +27,8 @@ const data = {
   eventId: 'test-event-id',
   transactions: [{
     billing_transaction_id: '00000000-0000-0000-0000-000000000001'
+  }, {
+    billing_transaction_id: '00000000-0000-0000-0000-000000000002'
   }],
   batch: {
     id: BATCH_ID
@@ -34,12 +36,13 @@ const data = {
 };
 
 experiment('modules/billing/jobs/prepare-transactions', () => {
-  let batch;
+  let batch, queueManager;
 
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
+    sandbox.stub(batchJob, 'logOnCompleteError');
 
     batch = new Batch(BATCH_ID);
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
@@ -47,6 +50,10 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
     sandbox.stub(repos.billingTransactions, 'getByBatchId').resolves(data.transactions);
     sandbox.stub(supplementaryBillingService, 'processBatch');
     sandbox.stub(batch, 'isSupplementary');
+
+    queueManager = {
+      add: sandbox.stub()
+    };
   });
 
   afterEach(async () => {
@@ -54,30 +61,26 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
   });
 
   test('exports the expected job name', async () => {
-    expect(prepareTransactions.jobName).to.equal('billing.prepare-transactions.*');
+    expect(prepareTransactions.jobName).to.equal('billing.prepare-transactions');
   });
 
   experiment('.createMessage', () => {
     let message;
 
     beforeEach(async () => {
-      message = prepareTransactions.createMessage(data.eventId, data.batch);
+      message = prepareTransactions.createMessage(BATCH_ID);
     });
 
-    test('using the expected job name', async () => {
-      expect(message.name).to.equal(`billing.prepare-transactions.${BATCH_ID}`);
-    });
-
-    test('includes a data object with the event id', async () => {
-      expect(message.data.eventId).to.equal(data.eventId);
-    });
-
-    test('includes a data object with the batch', async () => {
-      expect(message.data.batch).to.equal(data.batch);
-    });
-
-    test('includes a singleton key for the batch', async () => {
-      expect(message.options.singletonKey).to.equal(BATCH_ID);
+    test('creates the expected message array', async () => {
+      expect(message).to.equal([
+        'billing.prepare-transactions',
+        {
+          batchId: BATCH_ID
+        },
+        {
+          jobId: `billing.prepare-transactions.${BATCH_ID}`
+        }
+      ]);
     });
   });
 
@@ -138,7 +141,8 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
       });
 
       test('resolves with batch and transactions', async () => {
-        expect(result.batch).to.equal(data.batch);
+        expect(result.batch).to.be.an.instanceof(Batch);
+        expect(result.batch.id).to.equal(BATCH_ID);
         expect(result.transactions).to.equal(data.transactions);
       });
     });
@@ -153,6 +157,49 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
         expect(
           supplementaryBillingService.processBatch.callCount
         ).to.equal(0);
+      });
+    });
+  });
+
+  experiment('onComplete', () => {
+    let job;
+
+    beforeEach(async () => {
+      job = {
+        returnvalue: {
+          batch: data.batch,
+          transactions: data.transactions
+        }
+      };
+    });
+
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        await prepareTransactions.onComplete(job, queueManager);
+      });
+
+      test('adds a message to the queue for every transaction', async () => {
+        expect(queueManager.add.callCount).to.equal(2);
+        expect(queueManager.add.firstCall.calledWith(
+          'billing.create-charge', BATCH_ID, data.transactions[0].billing_transaction_id
+        )).to.be.true();
+        expect(queueManager.add.secondCall.calledWith(
+          'billing.create-charge', BATCH_ID, data.transactions[1].billing_transaction_id
+        )).to.be.true();
+      });
+    });
+
+    experiment('when there is an error', () => {
+      let err;
+
+      beforeEach(async () => {
+        err = new Error('oops');
+        queueManager.add.rejects(err);
+        await prepareTransactions.onComplete(job, queueManager);
+      });
+
+      test('a message is logged', async () => {
+        expect(batchJob.logOnCompleteError.calledWith(job, err)).to.be.true();
       });
     });
   });

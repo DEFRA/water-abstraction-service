@@ -58,7 +58,7 @@ experiment('modules/billing/jobs/create-bill-run', () => {
   });
 
   experiment('.createMessage', () => {
-    test('creates the expected message object', async () => {
+    test('creates the expected message array', async () => {
       const message = createBillRunJob.createMessage(
         data.batch
       );

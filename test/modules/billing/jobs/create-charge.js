@@ -126,7 +126,7 @@ experiment('modules/billing/jobs/create-charge', () => {
   });
 
   experiment('.createMessage', () => {
-    test('creates the expected message object', async () => {
+    test('creates the expected message array', async () => {
       const message = createChargeJob.createMessage(
         batchId,
         transactionId
