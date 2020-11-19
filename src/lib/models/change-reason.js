@@ -9,6 +9,11 @@ const changeReasonTypes = [
 ];
 
 class ChangeReason extends Model {
+  constructor (...args) {
+    super(...args);
+    this.isEnabledForNewChargeVersions = true;
+  }
+
   get description () {
     return this._description;
   }

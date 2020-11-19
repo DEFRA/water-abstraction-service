@@ -78,6 +78,10 @@ experiment('lib/models/change-reason', () => {
   });
 
   experiment('.isEnabledForNewChargeVersions', () => {
+    test('has a default value of true', async () => {
+      expect(changeReason.isEnabledForNewChargeVersions).to.equal(true);
+    });
+
     test('can set isEnabledForNewChargeVersions to a true', async () => {
       changeReason.isEnabledForNewChargeVersions = true;
       expect(changeReason.isEnabledForNewChargeVersions).to.equal(true);
