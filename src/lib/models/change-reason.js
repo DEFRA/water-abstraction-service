@@ -9,6 +9,11 @@ const changeReasonTypes = [
 ];
 
 class ChangeReason extends Model {
+  constructor (...args) {
+    super(...args);
+    this.isEnabledForNewChargeVersions = true;
+  }
+
   get description () {
     return this._description;
   }
@@ -34,6 +39,15 @@ class ChangeReason extends Model {
   set type (type) {
     validators.assertEnum(type, changeReasonTypes);
     this._type = type;
+  }
+
+  get isEnabledForNewChargeVersions () {
+    return this._isEnabledForNewChargeVersions;
+  }
+
+  set isEnabledForNewChargeVersions (value) {
+    validators.assertIsBoolean(value);
+    this._isEnabledForNewChargeVersions = value;
   }
 }
 
