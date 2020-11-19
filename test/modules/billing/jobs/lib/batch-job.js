@@ -16,8 +16,6 @@ const licenceService = require('../../../../../src/lib/services/licences');
 const { logger } = require('../../../../../src/logger');
 
 experiment('modules/billing/jobs/lib/batch-job', () => {
-  let messageQueue;
-
   beforeEach(async () => {
     sandbox.stub(batchService, 'setErrorStatus').resolves();
 
@@ -28,10 +26,6 @@ experiment('modules/billing/jobs/lib/batch-job', () => {
       licenceService,
       'updateIncludeInSupplementaryBillingStatusForUnsentBatch'
     ).resolves();
-
-    messageQueue = {
-      deleteQueue: sandbox.spy()
-    };
   });
 
   afterEach(async () => {
