@@ -170,7 +170,6 @@ experiment('lib/mappers/charge-module', () => {
     });
   });
 
-  const companyContacts = [{ name: 'Jane Doe' }];
   const agentCompanyObject = {
     name: 'Agent Ltd.'
   };
