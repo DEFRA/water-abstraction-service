@@ -73,6 +73,8 @@ const extractFAO = invoiceAccount => {
     return invoiceAccount.contact.department;
   } else if (invoiceAccount.contact && (invoiceAccount.contact.firstName || invoiceAccount.contact.lastName)) {
     return [invoiceAccount.contact.firstName, invoiceAccount.contact.lastName].join(' ');
+  } else {
+    return null;
   }
 };
 

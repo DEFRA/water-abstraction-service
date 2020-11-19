@@ -325,6 +325,7 @@ experiment('modules/companies/controller', () => {
     beforeEach(async () => {
       invoiceAccount = new InvoiceAccount();
       invoiceAccountsService.getInvoiceAccount.returns(invoiceAccount);
+      invoiceAccountsService.persist.returns({ toJSON: () => {} });
 
       request = {
         params: {

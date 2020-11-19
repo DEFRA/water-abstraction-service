@@ -1,6 +1,7 @@
 'use strict';
 
 const uuid = require('uuid/v4');
+const { set } = require('lodash');
 
 const {
   experiment,
@@ -84,7 +85,12 @@ const mockedInvoiceAccount = {
         type: 'person'
       }
     }
-  ]
+  ],
+  contact: {
+    type: 'person',
+    firstName: 'Jane',
+    lastName: 'Doe'
+  }
 };
 
 experiment('lib/mappers/charge-module', () => {
@@ -165,7 +171,6 @@ experiment('lib/mappers/charge-module', () => {
   });
 
   const companyContacts = [{ name: 'Jane Doe' }];
-  const agentCompanyContacts = [{ name: 'John Bloggs' }];
   const agentCompanyObject = {
     name: 'Agent Ltd.'
   };
@@ -175,46 +180,21 @@ experiment('lib/mappers/charge-module', () => {
 
   experiment('.extractCustomerName', () => {
     experiment('When there is no agent', () => {
-      experiment('When there is an FAO', () => {
-        let result;
-        beforeEach(async () => {
-          result = await mapper.extractCustomerName({ ...coreCompanyObject, companyContacts });
-        });
-        test('Responds with the name of the company contact and the company name', () => {
-          expect(result).to.equal(`FAO ${companyContacts[0].name}, ${coreCompanyObject.name}`);
-        });
+      let result;
+      beforeEach(async () => {
+        result = await mapper.extractCustomerName(coreCompanyObject);
       });
-      experiment('Responds with the name of the company', () => {
-        let result;
-        beforeEach(async () => {
-          result = await mapper.extractCustomerName(coreCompanyObject);
-        });
-        test('Responds with the name of the company contact and the company name', () => {
-          expect(result).to.equal(coreCompanyObject.name);
-        });
+      test('Responds with the name of the company', () => {
+        expect(result).to.equal(coreCompanyObject.name);
       });
     });
     experiment('When there is an agent', () => {
-      experiment('When there is an FAO', () => {
-        let result;
-        beforeEach(async () => {
-          result = await mapper.extractCustomerName({
-            ...coreCompanyObject,
-            companyContacts
-          }, { ...agentCompanyObject, companyContacts: agentCompanyContacts });
-        });
-        test('Responds with the name of the agent contact, and the name of the agent company', () => {
-          expect(result).to.equal(`FAO ${agentCompanyContacts[0].name}, ${agentCompanyObject.name}`);
-        });
+      let result;
+      beforeEach(async () => {
+        result = await mapper.extractCustomerName({ ...coreCompanyObject }, { ...agentCompanyObject });
       });
-      experiment('When there is no FAO', () => {
-        let result;
-        beforeEach(async () => {
-          result = await mapper.extractCustomerName({ ...coreCompanyObject }, { ...agentCompanyObject });
-        });
-        test('Responds with the name of the agent company', () => {
-          expect(result).to.equal(agentCompanyObject.name);
-        });
+      test('Responds with the name of the agent company', () => {
+        expect(result).to.equal(agentCompanyObject.name);
       });
     });
   });
@@ -222,25 +202,16 @@ experiment('lib/mappers/charge-module', () => {
     experiment('when there is a contact', () => {
       let result;
       beforeEach(async () => {
-        result = await mapper.extractFAO({ ...coreCompanyObject, companyContacts });
+        result = await mapper.extractFAO(mockedInvoiceAccount);
       });
       test('responds with the name of the only contact', () => {
-        expect(result).to.equal(companyContacts[0].name);
-      });
-    });
-    experiment('when there are multiple contacts', () => {
-      let result;
-      beforeEach(async () => {
-        result = await mapper.extractFAO({ ...coreCompanyObject, companyContacts: [...companyContacts, { name: 'Someone else!' }] });
-      });
-      test('responds with the name of the first contact', () => {
-        expect(result).to.equal(companyContacts[0].name);
+        expect(result).to.equal(mockedInvoiceAccount.contact.firstName + ' ' + mockedInvoiceAccount.contact.lastName);
       });
     });
     experiment('when there are no contacts', () => {
       let result;
       beforeEach(async () => {
-        result = await mapper.extractFAO(coreCompanyObject);
+        result = await mapper.extractFAO(set(mockedInvoiceAccount, 'contact', null));
       });
       test('responds with null', () => {
         expect(result).to.equal(null);
