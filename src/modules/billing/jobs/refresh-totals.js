@@ -47,6 +47,7 @@ const onFailedHandler = async (job, err) => {
   // On final attempt, error the batch and log
   if (helpers.isFinalAttempt(job)) {
     try {
+      logger.error(`CM bill run summary not generated after ${job.attemptsMade} attempts, marking batch as errored ${batchId}`);
       await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary);
     } catch (error) {
       logger.error(`Unable to set batch status ${batchId}`, error);
