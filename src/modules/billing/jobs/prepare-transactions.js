@@ -11,9 +11,7 @@ const helpers = require('./lib/helpers');
 const { jobName: createChargeJobName } = require('./create-charge');
 const { logger } = require('../../../logger');
 const supplementaryBillingService = require('../services/supplementary-billing-service');
-
-// @todo replace deprecated repository method
-const repos = require('../../../lib/connectors/repository');
+const billingTransactionsRepo = require('../../../lib/connectors/repos/billing-transactions');
 
 const createMessage = partial(helpers.createMessage, JOB_NAME);
 
@@ -32,7 +30,7 @@ const handler = async job => {
     }
 
     // Get all transactions now in batch
-    const transactions = await repos.billingTransactions.getByBatchId(batch.id);
+    const transactions = await billingTransactionsRepo.findByBatchId(batch.id);
 
     // Set empty batch
     if (transactions.length === 0) {
@@ -60,7 +58,7 @@ const onComplete = async (job, queueManager) => {
 
     // Note: publish jobs in series to avoid overwhelming message queue
     for (const transaction of transactions) {
-      await queueManager.add(createChargeJobName, batchId, transaction.billing_transaction_id);
+      await queueManager.add(createChargeJobName, batchId, transaction.billingTransactionId);
     }
   } catch (err) {
     batchJob.logOnCompleteError(job, err);

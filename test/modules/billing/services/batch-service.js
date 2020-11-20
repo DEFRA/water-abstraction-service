@@ -28,7 +28,6 @@ const { logger } = require('../../../../src/logger');
 
 const newRepos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
-const chargeModuleBillRunConnectorWithRetry = require('../../../../src/lib/connectors/charge-module/bill-runs-with-retry');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
@@ -118,7 +117,6 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(chargeModuleBillRunConnector, 'approve').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'send').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'removeCustomerInFinancialYear').resolves();
-    sandbox.stub(chargeModuleBillRunConnectorWithRetry, 'get').resolves();
 
     sandbox.stub(eventService, 'create').resolves();
 

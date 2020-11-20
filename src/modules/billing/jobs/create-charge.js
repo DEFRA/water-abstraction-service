@@ -13,6 +13,11 @@ const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-mod
 const batchMapper = require('../mappers/batch');
 const Transaction = require('../../../lib/models/transaction');
 const { jobName: refreshTotalsJobName } = require('./refresh-totals');
+const config = require('../../../../config');
+
+const workerOptions = {
+  concurrency: config.billing.createChargeJobConcurrency
+};
 
 const createMessage = (batchId, billingBatchTransactionId) => ([
   JOB_NAME,
@@ -42,17 +47,14 @@ const updateBatchState = async batch => {
     isEmptyBatch: get(statuses, Transaction.statuses.chargeCreated, 0) === 0
   };
 
-  // If still processing transactions, not ready to proceed to next job
-  if (!flags.isReady) {
-    return flags;
-  }
+  if (flags.isReady) {
+    // Clean up batch
+    await batchService.cleanup(batch.id);
 
-  // Clean up batch
-  await batchService.cleanup(batch.id);
-
-  // Set batch status to empty for empty batch
-  if (flags.isEmptyBatch) {
-    await batchService.setStatus(batch.id, BATCH_STATUS.empty);
+    // Set batch status to empty for empty batch
+    if (flags.isEmptyBatch) {
+      await batchService.setStatus(batch.id, BATCH_STATUS.empty);
+    }
   }
 
   return flags;
@@ -116,3 +118,4 @@ exports.onComplete = onComplete;
 exports.onFailed = helpers.onFailedHandler;
 exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
+exports.workerOptions = workerOptions;

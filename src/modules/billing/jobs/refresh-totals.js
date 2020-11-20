@@ -33,21 +33,12 @@ const handler = async job => {
 
   const batchId = get(job, 'data.batchId');
 
-  try {
-    // Update batch with totals/bill run ID from charge module
-    const isSuccess = await batchService.refreshTotals(batchId);
+  // Update batch with totals/bill run ID from charge module
+  const isSuccess = await batchService.refreshTotals(batchId);
 
-    if (!isSuccess) {
-      throw new StateError(`Bill run summary not ready for batch ${batchId}`);
-    }
-  } catch (err) {
-    batchJob.logHandlingError(job, err);
-    throw err;
+  if (!isSuccess) {
+    throw new StateError(`CM bill run summary not ready for batch ${batchId}`);
   }
-
-  return {
-    batch: job.data.batch
-  };
 };
 
 const onFailedHandler = async (job, err) => {
@@ -56,9 +47,11 @@ const onFailedHandler = async (job, err) => {
   if (helpers.isFinalAttempt(job)) {
     try {
       await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary);
-    } catch (err) {
-      logger.error(`Unable to set batch status ${batchId}`);
+    } catch (error) {
+      logger.error(`Unable to set batch status ${batchId}`, error);
     }
+  } else if (err.name === 'StateError') {
+    return logger.info(err.message);
   }
 
   // Do normal logging

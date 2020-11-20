@@ -34,6 +34,7 @@ class QueueManager {
    * @param {Boolean} jobContainer.hasScheduler - whether a scheduler is needed - for jobs with retry etc
    * @param {Function} jobContainer.onComplete - on complete handler, called with (job, queueManager)
    * @param {Function} jobContainer.onFailed - on failed handler
+   * @param {Object} [jobContainer.workerOptions] - options to pass to the worker constructor
    */
   register (jobContainer) {
     // Create connection for queue
@@ -43,7 +44,11 @@ class QueueManager {
     const queue = new bull.Queue(jobContainer.jobName, { connection });
 
     // Register worker
-    const worker = new bull.Worker(jobContainer.jobName, jobContainer.handler, { connection });
+    const workerOpts = {
+      ...(jobContainer.workerOptions || {}),
+      connection
+    };
+    const worker = new bull.Worker(jobContainer.jobName, jobContainer.handler, workerOpts);
 
     // Create scheduler
     const scheduler = jobContainer.hasScheduler

@@ -74,11 +74,9 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     });
 
     experiment('when there are no errors', () => {
-      let result;
-
       beforeEach(async () => {
         batchService.refreshTotals.resolves(true);
-        result = await refreshTotals.handler(job);
+        await refreshTotals.handler(job);
       });
 
       test('logs an info message', async () => {
@@ -92,10 +90,6 @@ experiment('modules/billing/jobs/refresh-totals', () => {
       test('no error is logged', async () => {
         expect(batchJob.logHandlingError.called).to.be.false();
       });
-
-      test('the batch is returned', async () => {
-        expect(result).to.equal({ batch: job.data.batch });
-      });
     });
 
     experiment('when there are errors', () => {
@@ -107,10 +101,8 @@ experiment('modules/billing/jobs/refresh-totals', () => {
         await expect(refreshTotals.handler(job)).to.reject();
       });
 
-      test('a message is logged', async () => {
-        const errorArgs = batchJob.logHandlingError.lastCall.args;
-        expect(errorArgs[0]).to.equal(job);
-        expect(errorArgs[1]).to.equal(error);
+      test('the error is not logged because logging is left to the onFailed handler', async () => {
+        expect(batchJob.logHandlingError.called).to.be.false();
       });
     });
   });

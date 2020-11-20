@@ -13,7 +13,7 @@ const sandbox = sinon.createSandbox();
 
 const { logger } = require('../../../../src/logger');
 const prepareTransactions = require('../../../../src/modules/billing/jobs/prepare-transactions');
-const repos = require('../../../../src/lib/connectors/repository');
+const billingTransactionsRepo = require('../../../../src/lib/connectors/repos/billing-transactions');
 
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const supplementaryBillingService = require('../../../../src/modules/billing/services/supplementary-billing-service');
@@ -26,9 +26,9 @@ const BATCH_ID = uuid();
 const data = {
   eventId: 'test-event-id',
   transactions: [{
-    billing_transaction_id: '00000000-0000-0000-0000-000000000001'
+    billingTransactionId: '00000000-0000-0000-0000-000000000001'
   }, {
-    billing_transaction_id: '00000000-0000-0000-0000-000000000002'
+    billingTransactionId: '00000000-0000-0000-0000-000000000002'
   }],
   batch: {
     id: BATCH_ID
@@ -47,9 +47,10 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
     batch = new Batch(BATCH_ID);
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
     sandbox.stub(batchService, 'setErrorStatus').resolves();
-    sandbox.stub(repos.billingTransactions, 'getByBatchId').resolves(data.transactions);
     sandbox.stub(supplementaryBillingService, 'processBatch');
     sandbox.stub(batch, 'isSupplementary');
+
+    sandbox.stub(billingTransactionsRepo, 'findByBatchId').resolves(data.transactions);
 
     queueManager = {
       add: sandbox.stub()
@@ -136,7 +137,7 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
       });
 
       test('calls repos.billingTransactions.getByBatchId with batch ID', async () => {
-        const [batchId] = repos.billingTransactions.getByBatchId.lastCall.args;
+        const [batchId] = billingTransactionsRepo.findByBatchId.lastCall.args;
         expect(batchId).to.equal(BATCH_ID);
       });
 
@@ -181,10 +182,10 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
       test('adds a message to the queue for every transaction', async () => {
         expect(queueManager.add.callCount).to.equal(2);
         expect(queueManager.add.firstCall.calledWith(
-          'billing.create-charge', BATCH_ID, data.transactions[0].billing_transaction_id
+          'billing.create-charge', BATCH_ID, data.transactions[0].billingTransactionId
         )).to.be.true();
         expect(queueManager.add.secondCall.calledWith(
-          'billing.create-charge', BATCH_ID, data.transactions[1].billing_transaction_id
+          'billing.create-charge', BATCH_ID, data.transactions[1].billingTransactionId
         )).to.be.true();
       });
     });
