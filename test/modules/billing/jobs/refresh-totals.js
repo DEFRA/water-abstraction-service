@@ -14,20 +14,28 @@ const sandbox = require('sinon').createSandbox();
 const refreshTotals = require('../../../../src/modules/billing/jobs/refresh-totals');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
+const Batch = require('../../../../src/lib/models/batch');
 const { logger } = require('../../../../src/logger');
 const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch');
 
 const BATCH_ID = uuid();
 
 experiment('modules/billing/jobs/refresh-totals', () => {
+  let batch;
+
   beforeEach(async () => {
-    sandbox.stub(batchService, 'getBatchById');
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingError');
     sandbox.stub(batchJob, 'logOnCompleteError');
 
     sandbox.stub(batchService, 'refreshTotals');
     sandbox.stub(batchService, 'setErrorStatus');
+
+    batch = new Batch().fromHash({
+      id: BATCH_ID,
+      status: Batch.BATCH_STATUS.processing
+    });
+    sandbox.stub(batchService, 'getBatchById').resolves(batch);
 
     sandbox.stub(logger, 'error');
   });
@@ -88,6 +96,17 @@ experiment('modules/billing/jobs/refresh-totals', () => {
       });
 
       test('no error is logged', async () => {
+        expect(batchJob.logHandlingError.called).to.be.false();
+      });
+    });
+
+    experiment('when the batch is not "processing"', () => {
+      beforeEach(async () => {
+        batch.status = Batch.BATCH_STATUS.error;
+        await expect(refreshTotals.handler(job)).to.reject();
+      });
+
+      test('the error is not logged because logging is left to the onFailed handler', async () => {
         expect(batchJob.logHandlingError.called).to.be.false();
       });
     });

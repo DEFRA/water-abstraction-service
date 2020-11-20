@@ -6,6 +6,7 @@ const uuid = require('uuid/v4');
 const JOB_NAME = 'billing.refresh-totals';
 
 const batchService = require('../services/batch-service');
+const batchStatus = require('./lib/batch-status');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
@@ -32,6 +33,12 @@ const handler = async job => {
   batchJob.logHandling(job);
 
   const batchId = get(job, 'data.batchId');
+
+  // Load batch
+  const batch = await batchService.getBatchById(batchId);
+
+  // Check batch in "processing" status
+  batchStatus.assertBatchIsProcessing(batch);
 
   // Update batch with totals/bill run ID from charge module
   const isSuccess = await batchService.refreshTotals(batchId);
