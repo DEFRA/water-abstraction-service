@@ -79,8 +79,8 @@ const handler = async job => {
     // Update/remove our local transaction in water.billing_transactions
     await transactionsService.updateWithChargeModuleResponse(transactionId, response);
 
-    const flags = await updateBatchState(batch);
-    return flags;
+    // Note: the await is needed to ensure any error is handled here
+    return await updateBatchState(batch);
   } catch (err) {
     // Always log and mark transaction as errored in DB
     transactionsService.setErrorStatus(transactionId);
