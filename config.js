@@ -65,9 +65,7 @@ module.exports = {
   //
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: 24,
-    idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 5000
+    max: 24
   },
 
   pgBoss: {
