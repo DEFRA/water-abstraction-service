@@ -1,16 +1,31 @@
-require('dotenv').config();
-const pg = require('pg');
-const moment = require('moment');
-const helpers = require('@envage/water-abstraction-helpers');
+'use strict';
 
-const config = require('../../../config.js');
-const { logger } = require('../../logger');
+const knex = require('./knex');
 
-const DATE_FORMAT = 'YYYY-MM-DD';
-const dateMapper = str => moment(str).format(DATE_FORMAT);
+/**
+ * Allows a query to be run with same arguments
+ * as pg.pool.query(query, params)
+ * The query and params are altered to make them
+ * compatible with knex.raw
+ *
+ * @param {String} query - bound params are specified as $1, $2 etc.
+ * @param {Array} [params] - array params
+ * @return {Promise<Object>} query result
+ */
+const query = (query, params = []) => {
+  if (params.length === 0) {
+    return knex.knex.raw(query);
+  }
 
-// Set dates to format YYYY-MM-DD rather than full date/time string with timezone
-pg.types.setTypeParser(pg.types.builtins.DATE, dateMapper);
+  const data = params.reduce((acc, param, i) => {
+    acc.params[`param_${i}`] = param;
+    acc.query = acc.query.replace(`$${i + 1}`, `:param_${i}`);
+    return acc;
+  }, { query, params: {} });
 
-exports.pool = helpers.db.createPool(config.pg, logger);
-exports._dateMapper = dateMapper;
+  return knex.knex.raw(data.query, data.params);
+};
+
+exports.pool = {
+  query
+};
