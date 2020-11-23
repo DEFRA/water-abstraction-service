@@ -4,7 +4,7 @@ const { bookshelf } = require('./bookshelf.js');
 
 module.exports = bookshelf.model('ReturnRequirementPurpose', {
 
-  tableName: 'return_requirement_purposes',
+  tableName: 'water.return_requirement_purposes',
 
   idAttribute: 'return_requirement_purpose_id',
 

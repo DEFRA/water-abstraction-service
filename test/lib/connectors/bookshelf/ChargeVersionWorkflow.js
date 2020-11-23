@@ -23,8 +23,8 @@ experiment('lib/connectors/bookshelf/ChargeVersionWorkflow.js', () => {
     sandbox.restore();
   });
 
-  test('uses the charge_version_workflows table', async () => {
-    expect(instance.tableName).to.equal('charge_version_workflows');
+  test('uses the water.charge_version_workflows table', async () => {
+    expect(instance.tableName).to.equal('water.charge_version_workflows');
   });
 
   test('uses the correct ID attribute', async () => {

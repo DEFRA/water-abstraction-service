@@ -23,8 +23,8 @@ experiment('lib/connectors/bookshelf/BillingVolume', () => {
     sandbox.restore();
   });
 
-  test('uses the billing_volumes table', async () => {
-    expect(instance.tableName).to.equal('billing_volumes');
+  test('uses the water.billing_volumes table', async () => {
+    expect(instance.tableName).to.equal('water.billing_volumes');
   });
 
   test('uses the correct ID attribute', async () => {
