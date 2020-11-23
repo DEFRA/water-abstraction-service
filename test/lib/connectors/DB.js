@@ -25,11 +25,11 @@ experiment('src/lib/connectors/db', () => {
     });
 
     test('when there are bound params', async () => {
-      const QUERY = 'select * from some_table where column_a=$1 and column_b=$2';
+      const QUERY = 'select * from some_table where column_a=$1 and column_b=$2 order by column_a=$1';
       const PARAMS = ['foo', 'bar'];
       await db.pool.query(QUERY, PARAMS);
       expect(knex.knex.raw.calledWith(
-        'select * from some_table where column_a=:param_0 and column_b=:param_1',
+        'select * from some_table where column_a=:param_0 and column_b=:param_1 order by column_a=:param_0',
         {
           param_0: PARAMS[0],
           param_1: PARAMS[1]

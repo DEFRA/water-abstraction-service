@@ -19,7 +19,8 @@ const query = (query, params = []) => {
 
   const data = params.reduce((acc, param, i) => {
     acc.params[`param_${i}`] = param;
-    acc.query = acc.query.replace(`$${i + 1}`, `:param_${i}`);
+    const r = new RegExp(`\\$${(i + 1)}(?![0-9])`, 'g');
+    acc.query = acc.query.replace(r, `:param_${i}`);
     return acc;
   }, { query, params: {} });
 
