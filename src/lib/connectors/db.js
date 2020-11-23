@@ -8,23 +8,23 @@ const knex = require('./knex');
  * The query and params are altered to make them
  * compatible with knex.raw
  *
- * @param {String} query - bound params are specified as $1, $2 etc.
+ * @param {String} sqlQuery - bound params are specified as $1, $2 etc.
  * @param {Array} [params] - array params
  * @return {Promise<Object>} query result
  */
-const query = (query, params = []) => {
+const query = (sqlQuery, params = []) => {
   if (params.length === 0) {
-    return knex.knex.raw(query);
+    return knex.knex.raw(sqlQuery);
   }
 
   const data = params.reduce((acc, param, i) => {
     acc.params[`param_${i}`] = param;
     const r = new RegExp(`\\$${(i + 1)}(?![0-9])`, 'g');
-    acc.query = acc.query.replace(r, `:param_${i}`);
+    acc.sqlQuery = acc.sqlQuery.replace(r, `:param_${i}`);
     return acc;
-  }, { query, params: {} });
+  }, { sqlQuery, params: {} });
 
-  return knex.knex.raw(data.query, data.params);
+  return knex.knex.raw(data.sqlQuery, data.params);
 };
 
 exports.pool = {
