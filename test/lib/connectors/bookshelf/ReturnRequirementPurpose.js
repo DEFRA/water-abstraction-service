@@ -23,8 +23,8 @@ experiment('lib/connectors/bookshelf/ReturnRequirementPurpose.js', () => {
     sandbox.restore();
   });
 
-  test('uses the return_requirement_purposes table', async () => {
-    expect(instance.tableName).to.equal('return_requirement_purposes');
+  test('uses the water.return_requirement_purposes table', async () => {
+    expect(instance.tableName).to.equal('water.return_requirement_purposes');
   });
 
   test('uses the correct ID attribute', async () => {

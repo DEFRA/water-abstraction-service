@@ -55,8 +55,7 @@ module.exports = {
   // | water-abstraction-import            |       1 |         20 |         2 | (20)    10 |
   // | water-abstraction-permit-repository |       1 |         16 |         4 | (16)     4 |
   // | water-abstraction-returns           |       1 |         20 |         4 | (20)     5 |
-  // | water-abstraction-service           |       1 |         50 |         4 | (92)    23 |
-  // | water-abstraction-service(knex)     |         |          1 |           |  (4)     1 |
+  // | water-abstraction-service(knex)     |         |          1 |           | (96)    24 |
   // | water-abstraction-tactical-crm      |       1 |         20 |         4 | (20)     5 |
   // | water-abstraction-tactical-crm(knex)|         |          1 |           |  (4)     1 |
   // | water-abstraction-tactical-idm      |       1 |         20 |         4 | (20)     5 |
@@ -66,9 +65,7 @@ module.exports = {
   //
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: process.env.NODE_ENV === 'local' ? 50 : 23,
-    idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 5000
+    max: 24
   },
 
   pgBoss: {

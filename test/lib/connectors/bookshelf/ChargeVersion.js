@@ -25,8 +25,8 @@ experiment('lib/connectors/bookshelf/ChargeVersion', () => {
     sandbox.restore();
   });
 
-  test('uses the charge_versions table', async () => {
-    expect(instance.tableName).to.equal('charge_versions');
+  test('uses the water.charge_versions table', async () => {
+    expect(instance.tableName).to.equal('water.charge_versions');
   });
 
   test('has the expected timestamp fields', async () => {
