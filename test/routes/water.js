@@ -1,10 +1,14 @@
 const server = require('../../index');
 
-const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
+const { experiment, test, beforeEach, before } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
 experiment('/status', () => {
   let response;
+
+  before(async () => {
+    await server._start();
+  });
 
   beforeEach(async () => {
     const request = { method: 'get', url: '/status' };

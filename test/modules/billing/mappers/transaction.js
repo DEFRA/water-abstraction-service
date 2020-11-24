@@ -3,14 +3,11 @@
 const {
   experiment,
   test,
-  beforeEach,
-  afterEach
+  beforeEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
-const sandbox = require('sinon').createSandbox();
 
 const transactionMapper = require('../../../../src/modules/billing/mappers/transaction');
-const repos = require('../../../../src/lib/connectors/repository');
 
 // Models
 const Agreement = require('../../../../src/lib/models/agreement');
@@ -142,14 +139,6 @@ const createAgreement = (code, factor) => {
 };
 
 experiment('modules/billing/mappers/transaction', () => {
-  beforeEach(async () => {
-    sandbox.stub(repos.billingTransactions, 'create');
-  });
-
-  afterEach(async () => {
-    sandbox.restore();
-  });
-
   experiment('.modelToDb', () => {
     let invoiceLicence, result;
 

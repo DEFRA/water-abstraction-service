@@ -4,7 +4,7 @@ const { bookshelf } = require('./bookshelf.js');
 
 module.exports = bookshelf.model('BillingBatchChargeVersionYear', {
   idAttribute: 'billing_batch_charge_version_year_id',
-  tableName: 'billing_batch_charge_version_years',
+  tableName: 'water.billing_batch_charge_version_years',
   hasTimestamps: ['date_created', 'date_updated'],
 
   billingBatch () {

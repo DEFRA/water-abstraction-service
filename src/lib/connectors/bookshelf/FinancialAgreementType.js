@@ -3,7 +3,7 @@
 const { bookshelf } = require('./bookshelf.js');
 
 module.exports = bookshelf.model('FinancialAgreementType', {
-  tableName: 'financial_agreement_types',
+  tableName: 'water.financial_agreement_types',
 
   idAttribute: 'financial_agreement_type_id',
 

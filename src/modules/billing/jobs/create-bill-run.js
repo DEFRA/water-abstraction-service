@@ -1,41 +1,45 @@
 'use strict';
 
-const { get } = require('lodash');
+const { get, partial } = require('lodash');
+
+const JOB_NAME = 'billing.create-bill-run';
+
 const batchService = require('../services/batch-service');
-const batchJob = require('./lib/batch-job');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+const batchJob = require('./lib/batch-job');
+const helpers = require('./lib/helpers');
 
-const JOB_NAME = 'billing.create-bill-run.*';
+const { jobName: populateBatchChargeVersionJobName } = require('./populate-batch-charge-versions');
 
-/**
- * Creates an object ready to publish on the message queue
- *
- * @param {String} eventId The UUID of the event
- * @param {Object} batch The object from the batch database table
- * @param {Object} transaction The transaction to create
- */
-const createMessage = (eventId, batch) => {
-  return batchJob.createMessage(JOB_NAME, batch, { eventId }, {
-    singletonKey: batch.id
-  });
-};
+const createMessage = partial(helpers.createMessage, JOB_NAME);
 
-const handleCreateBillRun = async job => {
+const handler = async job => {
   batchJob.logHandling(job);
-
-  const eventId = get(job, 'data.eventId');
-  const batchId = get(job, 'data.batch.id');
+  const batchId = get(job, 'data.batchId');
 
   try {
     const batch = await batchService.createChargeModuleBillRun(batchId);
 
-    return { batch, eventId };
+    return { batchId: batch.id };
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToCreateBillRun);
     throw err;
   }
 };
 
+const onComplete = async (job, queueManager) => {
+  batchJob.logOnComplete(job);
+  try {
+    // Publish next job in process
+    const batchId = get(job, 'data.batchId');
+    await queueManager.add(populateBatchChargeVersionJobName, batchId);
+  } catch (err) {
+    batchJob.logOnCompleteError(job);
+  }
+};
+
+exports.handler = handler;
+exports.onComplete = onComplete;
+exports.onFailed = helpers.onFailedHandler;
 exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
-exports.handler = handleCreateBillRun;

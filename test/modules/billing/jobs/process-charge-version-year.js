@@ -9,7 +9,7 @@ const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
-const processChargeVersion = require('../../../../src/modules/billing/jobs/process-charge-version');
+const processChargeVersionYear = require('../../../../src/modules/billing/jobs/process-charge-version-year');
 const chargeVersionYearService = require('../../../../src/modules/billing/services/charge-version-year');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
 
@@ -17,16 +17,25 @@ const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 
 const { Batch, ChargeVersionYear } = require('../../../../src/lib/models');
 
-const eventId = '00000000-0000-0000-0000-000000000000';
 const CHARGE_VERSION_YEAR_ID = uuid();
 const BATCH_ID = uuid();
 
+const data = {
+  batch: {
+    id: BATCH_ID
+  },
+  billingBatchChargeVersionYear: {
+    billingBatchChargeVersionYearId: CHARGE_VERSION_YEAR_ID
+  }
+};
+
 experiment('modules/billing/jobs/process-charge-version', () => {
-  let chargeVersionYear, batch;
+  let chargeVersionYear, batch, queueManager;
 
   beforeEach(async () => {
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
+    sandbox.stub(batchJob, 'logOnCompleteError');
 
     chargeVersionYear = new ChargeVersionYear(CHARGE_VERSION_YEAR_ID);
     batch = new Batch(BATCH_ID);
@@ -38,6 +47,13 @@ experiment('modules/billing/jobs/process-charge-version', () => {
     sandbox.stub(chargeVersionYearService, 'processChargeVersionYear').resolves(batch);
     sandbox.stub(chargeVersionYearService, 'setErrorStatus').resolves();
     sandbox.stub(chargeVersionYearService, 'setReadyStatus').resolves();
+    sandbox.stub(chargeVersionYearService, 'getStatusCounts').resolves({
+      processing: 3
+    });
+
+    queueManager = {
+      add: sandbox.stub()
+    };
   });
 
   afterEach(async () => {
@@ -45,32 +61,27 @@ experiment('modules/billing/jobs/process-charge-version', () => {
   });
 
   test('exports the expected job name', async () => {
-    expect(processChargeVersion.jobName).to.equal('billing.process-charge-version.*');
+    expect(processChargeVersionYear.jobName).to.equal('billing.process-charge-version-year');
   });
 
   experiment('.createMessage', () => {
     let message;
 
     beforeEach(async () => {
-      chargeVersionYear = { billing_batch_charge_version_year_id: 1 };
-      batch = { id: BATCH_ID };
-      message = processChargeVersion.createMessage('test-event-id', chargeVersionYear, batch);
+      message = processChargeVersionYear.createMessage(data.batch, data.billingBatchChargeVersionYear);
     });
 
-    test('using the expected job name', async () => {
-      expect(message.name).to.equal(`billing.process-charge-version.${BATCH_ID}`);
-    });
-
-    test('includes a data object with the batch', async () => {
-      expect(message.data.batch).to.equal(batch);
-    });
-
-    test('includes a data object with the event id', async () => {
-      expect(message.data.eventId).to.equal('test-event-id');
-    });
-
-    test('includes a data object with the charge version year data', async () => {
-      expect(message.data.chargeVersionYear.billing_batch_charge_version_year_id).to.equal(1);
+    test('creates the expected message array', async () => {
+      expect(message).to.equal([
+        'billing.process-charge-version-year',
+        {
+          batch: data.batch,
+          billingBatchChargeVersionYear: data.billingBatchChargeVersionYear
+        },
+        {
+          jobId: `billing.process-charge-version-year.${BATCH_ID}.${CHARGE_VERSION_YEAR_ID}`
+        }
+      ]);
     });
   });
 
@@ -80,15 +91,12 @@ experiment('modules/billing/jobs/process-charge-version', () => {
     beforeEach(async () => {
       job = {
         data: {
-          eventId,
-          chargeVersionYear: {
-            billingBatchChargeVersionYearId: 'test-id'
-          },
-          batch: { id: BATCH_ID }
+          batch: data.batch,
+          billingBatchChargeVersionYear: data.billingBatchChargeVersionYear
         }
       };
 
-      result = await processChargeVersion.handler(job);
+      result = await processChargeVersionYear.handler(job);
     });
 
     test('a message is logged', async () => {
@@ -96,8 +104,8 @@ experiment('modules/billing/jobs/process-charge-version', () => {
       expect(errorArgs[0]).to.equal(job);
     });
 
-    test('resolves including the chargeVersionYear', async () => {
-      expect(result.chargeVersionYear.id).to.equal(CHARGE_VERSION_YEAR_ID);
+    test('resolves including the number of processing records remaining', async () => {
+      expect(result.processing).to.equal(3);
     });
 
     test('resolves including the batch details', async () => {
@@ -106,12 +114,12 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
     experiment('when there are no errors', () => {
       beforeEach(async () => {
-        await processChargeVersion.handler(job);
+        await processChargeVersionYear.handler(job);
       });
 
       test('the charge version year is retrieve by id', async () => {
         expect(chargeVersionYearService.getChargeVersionYearById.calledWith(
-          job.data.chargeVersionYear.billingBatchChargeVersionYearId
+          job.data.billingBatchChargeVersionYear.billingBatchChargeVersionYearId
         )).to.be.true();
       });
 
@@ -129,7 +137,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
       test('the billing batch charge version year status is updated to "ready"', async () => {
         expect(chargeVersionYearService.setReadyStatus.calledWith(
-          job.data.chargeVersionYear.billingBatchChargeVersionYearId
+          job.data.billingBatchChargeVersionYear.billingBatchChargeVersionYearId
         )).to.be.true();
       });
     });
@@ -139,13 +147,13 @@ experiment('modules/billing/jobs/process-charge-version', () => {
       let error;
       beforeEach(async () => {
         chargeVersionYearService.setReadyStatus.rejects(err);
-        const func = () => processChargeVersion.handler(job);
+        const func = () => processChargeVersionYear.handler(job);
         error = await expect(func()).to.reject();
       });
 
       test('the billing batch charge version year status is updated to "error"', async () => {
         expect(chargeVersionYearService.setErrorStatus.calledWith(
-          job.data.chargeVersionYear.billingBatchChargeVersionYearId
+          job.data.billingBatchChargeVersionYear.billingBatchChargeVersionYearId
         )).to.be.true();
       });
 
@@ -158,6 +166,81 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
       test('re-throws the error', async () => {
         expect(error).to.equal(err);
+      });
+    });
+  });
+
+  experiment('onComplete', () => {
+    let job;
+
+    experiment('when there are still charge version years to process', () => {
+      beforeEach(async () => {
+        job = {
+          returnvalue: {
+            batch: {
+              status: Batch.BATCH_STATUS.processing
+            },
+            processing: 4
+          }
+        };
+        await processChargeVersionYear.onComplete(job, queueManager);
+      });
+
+      test('no further jobs are scheduled', async () => {
+        expect(queueManager.add.called).to.be.false();
+      });
+    });
+
+    experiment('when the batch is empty', () => {
+      beforeEach(async () => {
+        job = {
+          returnvalue: {
+            batch: {
+              status: Batch.BATCH_STATUS.empty
+            },
+            processing: 0
+          }
+        };
+        await processChargeVersionYear.onComplete(job, queueManager);
+      });
+
+      test('no further jobs are scheduled', async () => {
+        expect(queueManager.add.called).to.be.false();
+      });
+    });
+
+    experiment('when there all charge version years are processed', () => {
+      beforeEach(async () => {
+        job = {
+          returnvalue: {
+            batch: {
+              status: Batch.BATCH_STATUS.processing
+            },
+            processing: 0
+          }
+        };
+        await processChargeVersionYear.onComplete(job, queueManager);
+      });
+
+      test('the prepare transactions job is scheduled', async () => {
+        expect(queueManager.add.callCount).to.equal(1);
+        expect(queueManager.add.calledWith(
+          'billing.prepare-transactions', job.returnvalue.batch
+        )).to.be.true();
+      });
+    });
+
+    experiment('when there is an error', () => {
+      let err;
+
+      beforeEach(async () => {
+        err = new Error('oops');
+        queueManager.add.rejects(err);
+        await processChargeVersionYear.onComplete(job, queueManager);
+      });
+
+      test('a message is logged', async () => {
+        expect(batchJob.logOnCompleteError.calledWith(job, err)).to.be.true();
       });
     });
   });
