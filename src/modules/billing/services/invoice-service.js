@@ -138,15 +138,21 @@ const decorateInvoiceWithCRMData = (invoice, context) => {
  * @param {Object} context
  * @return {Invoice}
  */
-const mapInvoice = (billingInvoice, context) => {
+const mapInvoice = async (billingInvoice, context) => {
   const invoice = mappers.invoice.dbToModel(billingInvoice);
   decorateInvoiceWithCRMData(invoice, context);
-  chargeModuleDecorators.decorateInvoice(invoice, context.cmResponse);
+  await chargeModuleDecorators.decorateInvoice(invoice, context.cmResponse);
   return invoice;
 };
 
-const mapToInvoices = context =>
-  context.billingInvoices.map(billingInvoice => mapInvoice(billingInvoice, context));
+const mapToInvoices = async context => {
+  const invoices = [];
+  for (const billingInvoice of context.billingInvoices) {
+    const mappedInvoice = await mapInvoice(billingInvoice, context);
+    invoices.push(mappedInvoice);
+  };
+  return invoices;
+};
 
 /**
  * Loads a single invoice by ID in the specified batch

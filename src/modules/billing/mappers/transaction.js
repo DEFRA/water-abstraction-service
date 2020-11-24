@@ -220,14 +220,20 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
  * @param {Object} data CM transaction
  * @param {ChargePeriod} chargePeriod for transaction
  */
-const cmToModel = (data, chargePeriod) => {
+const cmToModel = data => {
   const model = new Transaction();
   return model.fromHash({
+    startDate: data.periodStart,
+    endDate: data.periodEnd,
     externalId: data.id,
     value: data.chargeValue,
+    isCredit: data.credit,
+    description: data.lineDescription,
+    isCompensationCharge: data.compensationCharge,
     isMinimumCharge: data.minimumChargeAdjustment,
     isDeMinimis: data.deminimis,
-    chargePeriod
+    isNewLicence: data.newLicence,
+    chargePeriod: new DateRange(data.periodStart, data.periodEnd)
   });
 };
 

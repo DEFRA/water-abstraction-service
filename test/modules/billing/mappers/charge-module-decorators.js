@@ -3,11 +3,13 @@
 const {
   experiment,
   test,
-  beforeEach
+  beforeEach,
+  afterEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
 const sinon = require('sinon');
+const sandbox = sinon.createSandbox();
 
 const Batch = require('../../../../src/lib/models/batch');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
@@ -21,6 +23,7 @@ const DateRange = require('../../../../src/lib/models/date-range');
 const Totals = require('../../../../src/lib/models/totals');
 
 const chargeModuleDecorators = require('../../../../src/modules/billing/mappers/charge-module-decorators');
+const chargeModuleTransactionConnector = require('../../../../src/lib/connectors/charge-module/transactions');
 const { TransactionStatusError } = require('../../../../src/modules/billing/lib/errors');
 
 const createInvoiceLicence = (transactions) => {
@@ -122,19 +125,41 @@ const createCMResponse = () => ({
   }
 });
 
+const cmMinimumChargeTransaction = {
+  id: '00000000-0000-0000-0000-00000min2020',
+  licenceNumber: '01/123/ABC',
+  chargeValue: 270,
+  deminimis: false,
+  minimumChargeAdjustment: true
+};
+
 experiment('modules/billing/mappers/charge-module-decorators', () => {
   let batch, cmResponse;
 
   beforeEach(async () => {
+    sandbox.stub(chargeModuleTransactionConnector, 'get').resolves({
+      transaction: {
+        ...cmMinimumChargeTransaction,
+        periodStart: '2020-04-01',
+        periodEnd: '2021-03-31',
+        lineDescription: 'minimum charge transaction',
+        credit: false,
+        compensationCharge: false,
+        newLicence: true
+      }
+    });
+
     batch = createBatch();
     cmResponse = createCMResponse();
   });
+
+  afterEach(() => sandbox.restore());
 
   experiment('when batch status is ready/sent', () => {
     let updatedBatch;
 
     beforeEach(async () => {
-      updatedBatch = chargeModuleDecorators.decorateBatch(batch, cmResponse);
+      updatedBatch = await chargeModuleDecorators.decorateBatch(batch, cmResponse);
     });
 
     test('the batch has totals', async () => {
@@ -190,24 +215,17 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
 
     // Minimum charge transactions are created in the CM and do not exist
     // in the service. They are returned from the CM as "extra" transactions
-    test('minimum charge transactions are mapped correctly', () => {
-      const minimumChargeTransaction = {
-        id: '00000000-0000-0000-0000-00000min2020',
-        licenceNumber: '01/123/ABC',
-        chargeValue: 270,
-        deminimis: false,
-        minimumChargeAdjustment: true
-      };
-      cmResponse.billRun.customers[0].summaryByFinancialYear[1].transactions.push(minimumChargeTransaction);
-      updatedBatch = chargeModuleDecorators.decorateBatch(batch, cmResponse);
+    test('minimum charge transactions are mapped correctly', async () => {
+      cmResponse.billRun.customers[0].summaryByFinancialYear[1].transactions.push(cmMinimumChargeTransaction);
+      updatedBatch = await chargeModuleDecorators.decorateBatch(batch, cmResponse);
 
       const [, minChargeTxn] = updatedBatch.invoices[1].invoiceLicences[0].transactions;
-      expect(minChargeTxn.value).to.equal(minimumChargeTransaction.chargeValue);
+      expect(minChargeTxn.value).to.equal(cmMinimumChargeTransaction.chargeValue);
       expect(minChargeTxn.isDeMinimis).to.be.false();
       expect(minChargeTxn.isMinimumCharge).to.be.true();
     });
 
-    test('throws an error if an unexpected transaction is returned from the CM', () => {
+    test('throws an error if an unexpected transaction is returned from the CM', async () => {
       const unexpectedTransaction = {
         id: '00000000-0000-0000-0000-00000min2020',
         licenceNumber: '01/123/ABC',
@@ -218,7 +236,7 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
       cmResponse.billRun.customers[0].summaryByFinancialYear[1].transactions.push(unexpectedTransaction);
 
       try {
-        chargeModuleDecorators.decorateBatch(batch, cmResponse);
+        await chargeModuleDecorators.decorateBatch(batch, cmResponse);
       } catch (err) {
         expect(err).to.be.instanceof(TransactionStatusError);
         expect(err.message).to.equal(`Unexpected Charge Module transaction externalId: ${unexpectedTransaction.id}`);
