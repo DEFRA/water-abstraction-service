@@ -23,8 +23,8 @@ experiment('lib/connectors/bookshelf/ReturnVersion.js', () => {
     sandbox.restore();
   });
 
-  test('uses the return_versions table', async () => {
-    expect(instance.tableName).to.equal('return_versions');
+  test('uses the water.return_versions table', async () => {
+    expect(instance.tableName).to.equal('water.return_versions');
   });
 
   test('uses the correct ID attribute', async () => {
