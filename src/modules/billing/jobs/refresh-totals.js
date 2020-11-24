@@ -1,49 +1,76 @@
 'use strict';
 
 const { get } = require('lodash');
+const uuid = require('uuid/v4');
+
+const JOB_NAME = 'billing.refresh-totals';
 
 const batchService = require('../services/batch-service');
+const batchStatus = require('./lib/batch-status');
 const batchJob = require('./lib/batch-job');
+const helpers = require('./lib/helpers');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
+const { logger } = require('../../../logger');
 
-const JOB_NAME = 'billing.refreshTotals.*';
+const { StateError } = require('../../../lib/errors');
 
-/**
- * Calls the CM to refresh the totals in water.billing_batches table
- *
- * @param {String} eventId The UUID of the event
- * @param {Object} batch The object from the batch database table
- */
-const createMessage = batchId => ({
-  name: JOB_NAME.replace('*', batchId),
-  data: {
+const createMessage = batchId => ([
+  JOB_NAME,
+  {
     batchId
   },
-  options: {
-    singletonKey: batchId,
-    retryLimit: 5,
-    retryDelay: 120,
-    retryBackoff: true
+  {
+    jobId: `${JOB_NAME}.${batchId}.${uuid()}`,
+    attempts: 10,
+    backoff: {
+      type: 'exponential',
+      delay: 5000
+    }
   }
-});
+]);
 
-const handleRefreshTotals = async job => {
+const handler = async job => {
   batchJob.logHandling(job);
 
   const batchId = get(job, 'data.batchId');
 
-  try {
-    // Update batch with totals/bill run ID from charge module
-    await batchService.refreshTotals(batchId);
-  } catch (err) {
-    batchJob.logHandlingError(job, err);
-    throw err;
-  }
+  // Load batch
+  const batch = await batchService.getBatchById(batchId);
 
-  return {
-    batch: job.data.batch
-  };
+  // Check batch in "processing" status
+  batchStatus.assertBatchIsProcessing(batch);
+
+  // Update batch with totals/bill run ID from charge module
+  const isSuccess = await batchService.refreshTotals(batchId);
+
+  if (!isSuccess) {
+    throw new StateError(`CM bill run summary not ready for batch ${batchId}`);
+  }
+};
+
+const onFailedHandler = async (job, err) => {
+  const { batchId } = job.data;
+
+  // On final attempt, error the batch and log
+  if (helpers.isFinalAttempt(job)) {
+    try {
+      logger.error(`CM bill run summary not generated after ${job.attemptsMade} attempts, marking batch as errored ${batchId}`);
+      await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToGetChargeModuleBillRunSummary);
+    } catch (error) {
+      logger.error(`Unable to set batch status ${batchId}`, error);
+    }
+  } else if (err.name === 'StateError') {
+    // Only logger an info message if we the CM has not generated bill run summary - this is expected
+    // behaviour
+    logger.info(err.message);
+  } else {
+    // Do normal error logging
+    helpers.onFailedHandler(job, err);
+  }
 };
 
 exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
-exports.handler = handleRefreshTotals;
+exports.handler = handler;
+exports.hasScheduler = true;
+exports.onFailed = onFailedHandler;
