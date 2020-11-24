@@ -166,7 +166,6 @@ const persist = async (regionId, startDate, invoiceAccount) => {
     // Return the invoice account
     return data;
   } catch (err) {
-    console.log(err);
     await crmService.deleteEntities(newModels);
     throw err;
   }
