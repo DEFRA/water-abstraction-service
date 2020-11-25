@@ -3,7 +3,6 @@
 const { isEmpty } = require('lodash');
 
 const InvoiceAccount = require('../models/invoice-account');
-
 const invoiceAccountsConnector = require('../connectors/crm-v2/invoice-accounts');
 const invoiceAccountAddressesService = require('./invoice-account-addresses-service');
 const companiesService = require('./companies-service');
@@ -13,8 +12,7 @@ const regionsService = require('./regions-service');
 const crmService = require('./crm-service');
 const mappers = require('../mappers');
 const dates = require('../../lib/dates');
-const { updateCustomer } = require('../../modules/invoice-accounts/jobs');
-const messageQueue = require('../../lib/message-queue');
+
 /**
  * Gets invoice accounts with specified IDs from CRM and
  * returns as an array of InvoiceAccount models
@@ -160,12 +158,10 @@ const persist = async (regionId, startDate, invoiceAccount) => {
       invoiceAccountAddresses: [invoiceAccountAddress]
     });
 
-    // Create PGBoss message to update the invoice account in CM
-    const message = await updateCustomer.job.createMessage(invoiceAccount.id);
-    await messageQueue.publish(message);
     // Return the invoice account
     return data;
   } catch (err) {
+    console.log(err);
     await crmService.deleteEntities(newModels);
     throw err;
   }

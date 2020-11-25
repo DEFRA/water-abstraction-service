@@ -127,8 +127,8 @@ experiment('lib/mappers/charge-module', () => {
       test('returns the third line as it is', () => {
         expect(result.addressLine3).to.equal(mockedPostMapperAddress.addressLine3);
       });
-      test('returns the fourth line as it is', () => {
-        expect(result.addressLine4).to.equal(mockedPostMapperAddress.addressLine4);
+      test('omits the fourth line since it was an empty string', () => {
+        expect(result.addressLine4).to.equal(undefined);
       });
       test('returns the fifth line as the town', () => {
         expect(result.addressLine5).to.equal(mockedPostMapperAddress.town);
@@ -146,8 +146,8 @@ experiment('lib/mappers/charge-module', () => {
       beforeEach(async () => {
         result = await mapper.extractAddress(mockedSillyLongPostMapperAddress);
       });
-      test('returns the first line truncated to 360 chars', () => {
-        expect(result.addressLine1).to.equal(mockedSillyLongPostMapperAddress.addressLine1.substring(0, 360 - 3) + '...');
+      test('returns the first line truncated to 240 chars', () => {
+        expect(result.addressLine1).to.equal(mockedSillyLongPostMapperAddress.addressLine1.substring(0, 240 - 3) + '...');
       });
       test('returns the second line truncated to 240 chars', () => {
         expect(result.addressLine2).to.equal(mockedSillyLongPostMapperAddress.addressLine2.substring(0, 240 - 3) + '...');
@@ -204,7 +204,7 @@ experiment('lib/mappers/charge-module', () => {
         result = await mapper.extractFAO(mockedInvoiceAccount);
       });
       test('responds with the name of the only contact', () => {
-        expect(result).to.equal(mockedInvoiceAccount.contact.firstName + ' ' + mockedInvoiceAccount.contact.lastName);
+        expect(result).to.equal(mockedInvoiceAccount.contact.fullName);
       });
     });
     experiment('when there are no contacts', () => {

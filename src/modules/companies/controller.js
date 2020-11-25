@@ -98,7 +98,12 @@ const createCompanyInvoiceAccount = async (request, h) => {
 
     const persistedAccount = await invoiceAccountsService.persist(regionId, startDate, invoiceAccount);
 
-    return h.response(persistedAccount.toJSON()).code(201);
+    // Create BullMQ message to update the invoice account in CM
+    const { jobName: updateCustomerDetailsInCMJobName } = require('../../modules/billing/jobs/update-customer');
+    await request.queueManager.add(updateCustomerDetailsInCMJobName, persistedAccount.id);
+    const generatedAccount = await invoiceAccountsService.getByInvoiceAccountId(persistedAccount.id);
+
+    return h.response(generatedAccount.toJSON()).code(201);
   } catch (err) {
     return mapErrorResponse(err);
   }

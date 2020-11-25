@@ -1,6 +1,7 @@
 'use strict';
-const { truncate } = require('lodash');
+const { truncate, identity, pick } = require('lodash');
 const invoiceAccountMapper = require('../../lib/mappers/invoice-account');
+const { combineAddressLines, getAddressObjectFromArray } = require('./lib/helpers');
 
 /**
  * @module maps service models to charge module expected schema
@@ -12,8 +13,8 @@ const invoiceAccountMapper = require('../../lib/mappers/invoice-account');
  * @param {Object} invoiceAccount modelled object
  * @return {Object} mapped customer object
  */
-const mapInvoiceAccountToChargeModuleCustomer = async invoiceAccount => {
-  const mappedInvoiceAccount = await invoiceAccountMapper.crmToModel(invoiceAccount);
+const mapInvoiceAccountToChargeModuleCustomer = invoiceAccount => {
+  const mappedInvoiceAccount = invoiceAccountMapper.crmToModel(invoiceAccount);
 
   const { lastInvoiceAccountAddress, company } = mappedInvoiceAccount;
 
@@ -48,17 +49,37 @@ const extractAddress = (address, fao = null) => {
    *   postcode: stringValidator.max(60).allow('', null)
    */
 
-  return {
-    addressLine1: truncate(`${fao ? 'FAO ' + fao + ', ' + address.addressLine1 : address.addressLine1}`, { length: 360 }),
-    addressLine2: truncate(address.addressLine2, { length: 240 }),
-    addressLine3: truncate(address.addressLine3, { length: 240 }),
-    addressLine4: truncate(address.addressLine4, { length: 240 }),
-    addressLine5: truncate(address.town, { length: 60 }),
-    addressLine6: truncate(
-      address.county ? `${address.county}, ${address.country}` : address.country
-      , { length: 60 }),
-    postcode: truncate(address.postcode, { length: 60 })
-  };
+  /* In order to determine whether the FAO line should be on address line 1
+  *  on its own, or if it should be merged into an existing address line and
+  *  concatenated with a comma, the FAO and the address lines are smoshed into
+  */
+
+  const lines = [];
+  if (fao) {
+    lines.push(`FAO ${fao}`);
+  }
+  const addressLines = Object.values(
+    pick(address, 'addressLine1', 'addressLine2', 'addressLine3', 'addressLine4')
+  ).filter(identity);
+
+  lines.push(...addressLines);
+
+  const arr = combineAddressLines(lines, 4);
+
+  const parsedAddress = getAddressObjectFromArray(arr, 'addressLine');
+
+  const response = {};
+
+  for (const [key, value] of Object.entries(parsedAddress)) {
+    response[key] = truncate(value, { length: 240 });
+  }
+  response.addressLine5 = truncate(address.town, { length: 60 });
+  response.addressLine6 = truncate(
+    address.county ? `${address.county}, ${address.country}` : address.country
+    , { length: 60 });
+  response.postcode = truncate(address.postcode, { length: 60 });
+
+  return response;
 };
 
 const extractCustomerName = (company = {}, agentCompany = {}) => {
@@ -66,10 +87,8 @@ const extractCustomerName = (company = {}, agentCompany = {}) => {
 };
 
 const extractFAO = invoiceAccount => {
-  if (invoiceAccount.contact && invoiceAccount.contact.department) {
-    return invoiceAccount.contact.department;
-  } else if (invoiceAccount.contact && (invoiceAccount.contact.firstName || invoiceAccount.contact.lastName)) {
-    return [invoiceAccount.contact.firstName, invoiceAccount.contact.lastName].join(' ');
+  if (invoiceAccount.contact) {
+    return invoiceAccount.contact.fullName;
   } else {
     return null;
   }

@@ -19,16 +19,14 @@ const chargeModuleMappers = require('../../../../src/lib/mappers/charge-module')
 
 experiment('lib/connectors/charge-module/customers', async () => {
   const tempInvoiceAccountId = await uuid();
-  const resolutionObject = {
-    accountNumber: 'A12345678A'
-  };
+
   beforeEach(async () => {
     sandbox.stub(request, 'get').resolves();
     sandbox.stub(request, 'post').resolves();
     sandbox.stub(request, 'patch').resolves();
     sandbox.stub(request, 'delete').resolves();
     sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountById').resolves();
-    sandbox.stub(chargeModuleMappers, 'mapInvoiceAccountToChargeModuleCustomer').resolves(resolutionObject);
+    sandbox.stub(chargeModuleMappers, 'mapInvoiceAccountToChargeModuleCustomer').resolves(tempInvoiceAccountId);
   });
   afterEach(async () => {
     sandbox.restore();
@@ -45,7 +43,7 @@ experiment('lib/connectors/charge-module/customers', async () => {
 
     test('the payload is equal to the resolved object from the mapInvoiceAccountToChargeModuleCustomer function', async () => {
       const [, payload] = request.post.lastCall.args;
-      expect(payload).to.equal(resolutionObject);
+      expect(payload).to.equal(tempInvoiceAccountId);
     });
   });
 });

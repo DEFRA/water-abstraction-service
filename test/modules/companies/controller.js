@@ -73,6 +73,8 @@ experiment('modules/companies/controller', () => {
 
     sandbox.stub(invoiceAccountsService, 'getInvoiceAccount');
     sandbox.stub(invoiceAccountsService, 'persist');
+    sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId');
+
     sandbox.stub(companiesContactsService, 'getCompanyContacts');
   });
 
@@ -322,10 +324,19 @@ experiment('modules/companies/controller', () => {
 
   experiment('createCompanyInvoiceAccount', () => {
     let request, invoiceAccount;
+    const tempId = uuid();
     beforeEach(async () => {
       invoiceAccount = new InvoiceAccount();
       invoiceAccountsService.getInvoiceAccount.returns(invoiceAccount);
-      invoiceAccountsService.persist.returns({ toJSON: () => {} });
+      invoiceAccountsService.persist.returns({ id: tempId });
+      invoiceAccountsService.getByInvoiceAccountId.returns({
+        id: tempId,
+        toJSON: () => {
+          return {
+            id: tempId
+          };
+        }
+      });
 
       request = {
         params: {
@@ -336,6 +347,9 @@ experiment('modules/companies/controller', () => {
           startDate: '2020-04-01',
           address: { addressId: 'test-address-id' },
           contact: { contactId: 'test-contact-id' }
+        },
+        queueManager: {
+          add: sandbox.stub().resolves()
         }
       };
       await controller.createCompanyInvoiceAccount(request, h);
@@ -359,6 +373,10 @@ experiment('modules/companies/controller', () => {
         startDate,
         invoiceAccount
       )).to.be.true();
+    });
+
+    test('creates a BullMQ Message to update Customer Details in CM', async () => {
+      expect(request.queueManager.add.calledWith('billing.update-customer-account', tempId)).to.be.true();
     });
 
     test('returns a 201 response', () => {
