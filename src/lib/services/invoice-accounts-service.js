@@ -154,12 +154,9 @@ const persist = async (regionId, startDate, invoiceAccount) => {
     await createInvoiceAccount(regionId, invoiceAccount.company.id, formattedStartDate, invoiceAccount, newModels);
     const invoiceAccountAddress = await invoiceAccountAddressesService.createInvoiceAccountAddress(invoiceAccount, invoiceAccount.invoiceAccountAddresses[0], formattedStartDate);
 
-    const data = invoiceAccount.fromHash({
+    return invoiceAccount.fromHash({
       invoiceAccountAddresses: [invoiceAccountAddress]
     });
-
-    // Return the invoice account
-    return data;
   } catch (err) {
     console.log(err);
     await crmService.deleteEntities(newModels);

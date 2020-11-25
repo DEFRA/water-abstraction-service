@@ -29,7 +29,7 @@ const handler = async job => {
   return updateCustomer(invoiceAccountMappedData);
 };
 
-const onComplete = async (job, queueManager) => {
+const onComplete = async (job) => {
   logger.info(`onComplete: ${job.id}`);
 };
 

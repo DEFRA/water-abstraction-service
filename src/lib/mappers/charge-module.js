@@ -24,35 +24,33 @@ const mapInvoiceAccountToChargeModuleCustomer = invoiceAccount => {
 
   const parsedAddress = extractAddress(address, fao);
 
-  const response = {
+  return {
     region: mappedInvoiceAccount.accountNumber.charAt(0), // Region code is always assumed to be the first letter of the account number,
     customerReference: mappedInvoiceAccount.accountNumber,
     customerName: customerName,
     ...parsedAddress
   };
-
-  return response;
 };
 
 const extractAddress = (address, fao = null) => {
   /**
-   * Below is the CM expected schema, for reference
-   *   region: regionValidator.required(),
-   *   customerReference: customerReferenceValidator.required(),
-   *   customerName: stringValidator.max(360).required(),
-   *   addressLine1: stringValidator.max(240).required(),
-   *   addressLine2: stringValidator.max(240).allow('', null),
-   *   addressLine3: stringValidator.max(240).allow('', null),
-   *   addressLine4: stringValidator.max(240).allow('', null),
-   *   addressLine5: stringValidator.max(60).allow('', null),
-   *   addressLine6: stringValidator.max(60).allow('', null),
-   *   postcode: stringValidator.max(60).allow('', null)
-   */
+     * Below is the CM expected schema, for reference
+     *   region: regionValidator.required(),
+     *   customerReference: customerReferenceValidator.required(),
+     *   customerName: stringValidator.max(360).required(),
+     *   addressLine1: stringValidator.max(240).required(),
+     *   addressLine2: stringValidator.max(240).allow('', null),
+     *   addressLine3: stringValidator.max(240).allow('', null),
+     *   addressLine4: stringValidator.max(240).allow('', null),
+     *   addressLine5: stringValidator.max(60).allow('', null),
+     *   addressLine6: stringValidator.max(60).allow('', null),
+     *   postcode: stringValidator.max(60).allow('', null)
+     */
 
   /* In order to determine whether the FAO line should be on address line 1
-  *  on its own, or if it should be merged into an existing address line and
-  *  concatenated with a comma, the FAO and the address lines are smoshed into
-  */
+    *  on its own, or if it should be merged into an existing address line and
+    *  concatenated with a comma, the FAO and the address lines are smoshed into
+    */
 
   const lines = [];
   if (fao) {
@@ -82,9 +80,7 @@ const extractAddress = (address, fao = null) => {
   return response;
 };
 
-const extractCustomerName = (company = {}, agentCompany = {}) => {
-  return agentCompany.name ? agentCompany.name : company.name;
-};
+const extractCustomerName = (company = {}, agentCompany = {}) => agentCompany.name ? agentCompany.name : company.name;
 
 const extractFAO = invoiceAccount => {
   if (invoiceAccount.contact) {
