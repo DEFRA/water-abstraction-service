@@ -31,8 +31,6 @@ const companiesConnector = require('../../../src/lib/connectors/crm-v2/companies
 const contactsConnector = require('../../../src/lib/connectors/crm-v2/contacts');
 const DateRange = require('../../../src/lib/models/date-range');
 
-const invoiceAccountJobs = require('../../../src/modules/billing/jobs/update-customer');
-
 const companyId = uuid();
 const addressId = uuid();
 const agentCompanyId = uuid();
