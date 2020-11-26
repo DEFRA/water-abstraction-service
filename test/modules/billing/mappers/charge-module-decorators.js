@@ -126,7 +126,7 @@ const createCMResponse = () => ({
 });
 
 const cmMinimumChargeTransaction = {
-  id: '00000000-0000-0000-0000-00000min2020',
+  id: '00000000-0000-0000-1111-000000002020',
   licenceNumber: '01/123/ABC',
   chargeValue: 270,
   deminimis: false,

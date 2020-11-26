@@ -532,15 +532,10 @@ experiment('modules/billing/mappers/transaction', () => {
 
     const cmData = {
       id: '7d2c249d-0f56-40fa-90f0-fb2b7f8f698a',
-      periodStart: '2020-04-01',
-      periodEnd: '2021-03-31',
       chargeValue: 1176,
       credit: false,
-      billableDays: 182,
-      authorisedDays: 182,
       volume: 35.7,
       lineDescription: 'test transaction description',
-      twoPartTariff: false,
       compensationCharge: false,
       minimumChargeAdjustment: true,
       deminimis: false,
@@ -557,8 +552,6 @@ experiment('modules/billing/mappers/transaction', () => {
 
     test('should have data mapped correctly', async () => {
       expect(result.externalId).to.equal(cmData.id);
-      expect(result.startDate).to.equal(cmData.periodStart);
-      expect(result.endDate).to.equal(cmData.periodEnd);
       expect(result.value).to.equal(cmData.chargeValue);
       expect(result.isCredit).to.equal(cmData.credit);
       expect(result.description).to.equal(cmData.lineDescription);
@@ -566,12 +559,6 @@ experiment('modules/billing/mappers/transaction', () => {
       expect(result.isMinimumCharge).to.equal(cmData.minimumChargeAdjustment);
       expect(result.isDeMinimis).to.equal(cmData.deminimis);
       expect(result.isNewLicence).to.equal(cmData.newLicence);
-    });
-
-    test('charge period is mapped correctly', async () => {
-      expect(result.chargePeriod instanceof DateRange).to.be.true();
-      expect(result.chargePeriod.startDate).to.equal(cmData.periodStart);
-      expect(result.chargePeriod.endDate).to.equal(cmData.periodEnd);
     });
   });
 });
