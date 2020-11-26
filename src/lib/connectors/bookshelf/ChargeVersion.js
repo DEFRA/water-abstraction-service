@@ -3,7 +3,7 @@
 const { bookshelf } = require('./bookshelf.js');
 
 module.exports = bookshelf.model('ChargeVersion', {
-  tableName: 'charge_versions',
+  tableName: 'water.charge_versions',
 
   hasTimestamps: ['date_created', 'date_updated'],
 

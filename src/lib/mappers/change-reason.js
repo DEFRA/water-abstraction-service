@@ -16,7 +16,8 @@ const dbToModel = row => {
   return model.pickFrom(row, [
     'description',
     'triggersMinimumCharge',
-    'type'
+    'type',
+    'isEnabledForNewChargeVersions'
   ]);
 };
 
@@ -25,7 +26,8 @@ const pojoToModelMapper = createMapper()
     'id',
     'description',
     'triggersMinimumCharge',
-    'type'
+    'type',
+    'isEnabledForNewChargeVersions'
   );
 
 /**

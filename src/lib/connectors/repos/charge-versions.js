@@ -39,6 +39,17 @@ const findByLicenceRef = async licenceRef => {
   return models.toJSON();
 };
 
+const findByLicenceId = async licenceId => {
+  const models = await ChargeVersion
+    .forge()
+    .where('licence_id', licenceId)
+    .orderBy('start_date')
+    .fetchAll({
+      withRelated: sharedRelations
+    });
+  return models.toJSON();
+};
+
 const create = async data => {
   const model = await ChargeVersion.forge(data).save();
   return model.toJSON();
@@ -74,3 +85,4 @@ exports.findOne = findOne;
 exports.findByLicenceRef = findByLicenceRef;
 exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear;
 exports.update = update;
+exports.findByLicenceId = findByLicenceId;

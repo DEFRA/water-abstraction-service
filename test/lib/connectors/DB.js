@@ -3,34 +3,38 @@
 require('dotenv').config();
 
 const { expect } = require('@hapi/code');
-const { experiment, test } = exports.lab = require('@hapi/lab').script();
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
+const sandbox = require('sinon').createSandbox();
 
-const { pool, _dateMapper } = require('../../../src/lib/connectors/db.js');
+const knex = require('../../../src/lib/connectors/knex.js');
+const db = require('../../../src/lib/connectors/db.js');
 
 experiment('src/lib/connectors/db', () => {
-  experiment('pool.query', () => {
-    test('has data when no error', async () => {
-      const res = await pool.query('select 1 as test_one');
-      expect(res.rows).to.equal([
-        { test_one: 1 }
-      ]);
-    });
-
-    test('has error details when an error occurs', async () => {
-      const query = `
-        select 1
-        from non_existent_schema.non_existent_table;`;
-
-      const func = () => pool.query(query);
-
-      expect(func()).to.reject();
-    });
+  beforeEach(async () => {
+    sandbox.stub(knex.knex, 'raw');
   });
 
-  experiment('._dateMapper', () => {
-    test('maps dates to ISO 8601 format', async () => {
-      const result = _dateMapper('2020-03-05');
-      expect(result).to.equal('2020-03-05');
+  afterEach(async () => {
+    sandbox.restore();
+  });
+  experiment('.query', () => {
+    test('when there are no params', async () => {
+      const QUERY = 'select some_column from some_table';
+      await db.pool.query(QUERY);
+      expect(knex.knex.raw.calledWith(QUERY)).to.be.true();
+    });
+
+    test('when there are bound params', async () => {
+      const QUERY = 'select * from some_table where column_a=$1 and column_b=$2 order by column_a=$1';
+      const PARAMS = ['foo', 'bar'];
+      await db.pool.query(QUERY, PARAMS);
+      expect(knex.knex.raw.calledWith(
+        'select * from some_table where column_a=:param_0 and column_b=:param_1 order by column_a=:param_0',
+        {
+          param_0: PARAMS[0],
+          param_1: PARAMS[1]
+        }
+      )).to.be.true();
     });
   });
 });
