@@ -59,14 +59,21 @@ const decorateTransactions = async (invoiceLicence, cmTransactions) => {
   if (isEmpty(invoiceLicence.transactions)) return invoiceLicence;
   for (const cmTransaction of cmTransactions) {
     const serviceTransaction = invoiceLicence.transactions.find(trans => trans.externalId === cmTransaction.id);
+
+    // CM transactions should have corresponding transactions in the service,
+    // decorate these with data from CM
     if (serviceTransaction) {
       decorateTransaction(serviceTransaction, cmTransaction);
-    } else if (!cmTransaction.minimumChargeAdjustment) {
-      // the only transactions which do not exist in the service should be minimum charge
-      throw new TransactionStatusError(`Unexpected Charge Module transaction externalId: ${cmTransaction.id}`);
-    } else {
+
+    // minimum charge transactions don't exist in the service,
+    // so need to be mapped and added to the invoice licence
+    } else if (cmTransaction.minimumChargeAdjustment) {
       const minChargeTransaction = await decorateMinimumChargeTransaction(cmTransaction);
       invoiceLicence.transactions.push(minChargeTransaction);
+
+    // if neither of the above scenarios apply, throw error
+    } else {
+      throw new TransactionStatusError(`Unexpected Charge Module transaction externalId: ${cmTransaction.id}`);
     }
   };
 };
