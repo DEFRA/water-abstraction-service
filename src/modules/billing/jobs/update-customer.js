@@ -1,6 +1,6 @@
 'use strict';
 const { get, partial } = require('lodash');
-const { updateCustomer } = require('../../../lib/connectors/charge-module/customers');
+const chargeModuleCustomersConnector = require('../../../lib/connectors/charge-module/customers');
 const JOB_NAME = 'billing.update-customer-account';
 const invoiceAccountsConnector = require('../../../lib/connectors/crm-v2/invoice-accounts');
 const chargeModuleMappers = require('../../../lib/mappers/charge-module');
@@ -26,10 +26,10 @@ const handler = async job => {
   const invoiceAccountId = get(job, 'data.invoiceAccountId');
   const invoiceAccountData = await invoiceAccountsConnector.getInvoiceAccountById(invoiceAccountId);
   const invoiceAccountMappedData = await chargeModuleMappers.mapInvoiceAccountToChargeModuleCustomer(invoiceAccountData);
-  return updateCustomer(invoiceAccountMappedData);
+  return chargeModuleCustomersConnector.updateCustomer(invoiceAccountMappedData);
 };
 
-const onComplete = async (job) => {
+const onComplete = job => {
   logger.info(`onComplete: ${job.id}`);
 };
 
