@@ -1,30 +1,12 @@
 'use strict';
 
+const { getAddressObjectFromArray, combineAddressLines } = require('./lib/helpers');
 /**
  * @module maps service models to Notify address lines
  */
 
-const { chunk, identity, pick } = require('lodash');
+const { identity, pick } = require('lodash');
 const { DATA_SOURCE_TYPES } = require('../models/contact-v2');
-
-const minimum = (num, min) =>
-  num < min ? min : num;
-
-const combineAddressLines = lines => {
-  const over = minimum(lines.length - 7, 0);
-
-  const groupedLines = chunk(lines, 2).map(arr => arr.join(', '));
-
-  return [
-    ...groupedLines.slice(0, over),
-    ...lines.slice(over * 2)
-  ];
-};
-
-const getAddressObject = arr => arr.reduce((acc, line, index) => ({
-  ...acc,
-  [`address_line_${index + 1}`]: line
-}), {});
 
 /**
  * Maps service models to a Notify address personalisation object
@@ -53,9 +35,9 @@ const mapModelsToNotifyAddress = models => {
     lines.push(address.country);
   }
 
-  const arr = combineAddressLines(lines);
+  const arr = combineAddressLines(lines, 7);
 
-  return getAddressObject(arr);
+  return getAddressObjectFromArray(arr);
 };
 
 exports.mapModelsToNotifyAddress = mapModelsToNotifyAddress;
