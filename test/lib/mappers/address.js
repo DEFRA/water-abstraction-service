@@ -50,10 +50,9 @@ experiment('modules/billing/mappers/address', () => {
       result = addressMapper.crmToModel(dbRow);
     });
 
-    test('returns empty Address instance when data is empty', async () => {
+    test('returns empty Address instance when data is null', async () => {
       const result = addressMapper.crmToModel(null);
       expect(result instanceof Address).to.be.true();
-      expect(result).to.equal({});
     });
 
     test('returns an Address instance', async () => {
@@ -197,7 +196,7 @@ experiment('modules/billing/mappers/address', () => {
       expect(address.addressLine3).to.equal(eaAddress.street_address);
       expect(address.addressLine4).to.equal(eaAddress.locality);
       expect(address.town).to.equal(eaAddress.city);
-      expect(address.county).to.be.undefined();
+      expect(address.county).to.be.null();
       expect(address.country).to.equal(eaAddress.country);
       expect(address.source).to.equal('ea-address-facade');
     });

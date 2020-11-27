@@ -73,6 +73,19 @@ const mapToValidator = address => ({
 });
 
 class Address extends Model {
+  constructor (...args) {
+    super(...args);
+    this.addressLine1 = null;
+    this.addressLine2 = null;
+    this.addressLine3 = null;
+    this.addressLine4 = null;
+    this.town = null;
+    this.county = null;
+    this.postcode = null;
+    this.country = null;
+    this.uprn = null;
+  }
+
   set addressLine1 (addressLine1) {
     validators.assertNullableString(addressLine1);
     this._addressLine1 = addressLine1;
@@ -197,7 +210,9 @@ class Address extends Model {
     const schema = this.source === ADDRESS_SOURCE.nald
       ? Joi.object()
       : VALID_ADDRESS;
-    return Joi.validate(mapToValidator(this), schema, { abortEarly: false });
+
+    const mappedAddress = mapToValidator(this);
+    return Joi.validate(mappedAddress, schema, { abortEarly: false });
   }
 
   get sortKey () {

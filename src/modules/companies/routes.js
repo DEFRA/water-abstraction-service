@@ -5,17 +5,20 @@ const { statuses } = require('../returns/schema');
 const { CONTACT_TYPES } = require('../../lib/models/contact-v2');
 const { ORGANISATION_TYPES } = require('../../lib/models/company');
 
+const OPTIONAL_NULLABLE_STRING = Joi.string().trim().optional().allow(null);
+
 const addressSchema = Joi.object({
   addressId: Joi.string().guid().optional(),
-  addressLine1: Joi.string().trim().optional(),
-  addressLine2: Joi.string().trim().optional(),
-  addressLine3: Joi.string().trim().optional(),
-  addressLine4: Joi.string().trim().optional(),
-  town: Joi.string().trim().optional(),
-  county: Joi.string().trim().optional(),
+  addressLine1: OPTIONAL_NULLABLE_STRING,
+  addressLine2: OPTIONAL_NULLABLE_STRING,
+  addressLine3: OPTIONAL_NULLABLE_STRING,
+  addressLine4: OPTIONAL_NULLABLE_STRING,
+  town: OPTIONAL_NULLABLE_STRING,
+  county: OPTIONAL_NULLABLE_STRING,
   country: Joi.string().trim().replace(/\./g, '').optional(),
-  postcode: Joi.string().trim().optional(),
-  uprn: Joi.number().optional()
+  postcode: OPTIONAL_NULLABLE_STRING,
+  uprn: Joi.number().optional().allow(null),
+  source: OPTIONAL_NULLABLE_STRING
 }).required();
 
 const agentSchema = Joi.object({

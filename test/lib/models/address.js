@@ -141,7 +141,8 @@ experiment('lib/models/address', () => {
         town: 'Testington',
         county: 'Testinshire',
         postcode: 'TT1 1TT',
-        country: 'UK'
+        country: 'UK',
+        uprn: null
       });
     });
   });
