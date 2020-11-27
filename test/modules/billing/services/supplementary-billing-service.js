@@ -38,7 +38,8 @@ const createTransactionRow = (index, transactionKey, isCredit = false, isDeMinim
   isTwoPartTariffSupplementary: false,
   isNewLicence: false,
   startDate: '2019-04-01',
-  isDeMinimis
+  isDeMinimis,
+  chargeType: 'standard'
 });
 
 const createFullTransaction = (...args) => ({

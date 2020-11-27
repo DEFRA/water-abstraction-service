@@ -471,6 +471,21 @@ experiment('lib/models/transaction', () => {
     });
   });
 
+  experiment('.externalId', () => {
+    test('validates that the id should be a uuid', async () => {
+      const transaction = new Transaction();
+      const func = () => (transaction.id = 'nope');
+      expect(func).to.throw();
+    });
+
+    test('can be set if id value is valid', async () => {
+      const id = uuid();
+      const transaction = new Transaction();
+      transaction.id = id;
+      expect(transaction.id).to.equal(id);
+    });
+  });
+
   experiment('.transactionKey', () => {
     test('can set the transaction key to a valid 32 char string', async () => {
       const transaction = new Transaction();
