@@ -252,7 +252,7 @@ class Transaction extends Model {
   }
 
   set externalId (externalId) {
-    validators.assertId(externalId);
+    validators.assertNullableId(externalId);
     this._externalId = externalId;
   }
 

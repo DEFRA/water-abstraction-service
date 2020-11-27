@@ -3,7 +3,6 @@
 const { isEmpty } = require('lodash');
 
 const InvoiceAccount = require('../models/invoice-account');
-
 const invoiceAccountsConnector = require('../connectors/crm-v2/invoice-accounts');
 const invoiceAccountAddressesService = require('./invoice-account-addresses-service');
 const companiesService = require('./companies-service');
@@ -13,6 +12,7 @@ const regionsService = require('./regions-service');
 const crmService = require('./crm-service');
 const mappers = require('../mappers');
 const dates = require('../../lib/dates');
+const { logger } = require('../../logger');
 
 /**
  * Gets invoice accounts with specified IDs from CRM and
@@ -118,7 +118,8 @@ const createEntityAndDecorateInvoiceAccount = async (invoiceAccount, newModels, 
     const newEntity = await persistMethods[entityType](entity);
     invoiceAccount.invoiceAccountAddresses[0][entityType] = newEntity;
     newModels.push(newEntity);
-  };
+  }
+  ;
 };
 
 const createInvoiceAccount = async (regionId, companyId, startDate, invoiceAccount, newModels) => {
@@ -128,11 +129,10 @@ const createInvoiceAccount = async (regionId, companyId, startDate, invoiceAccou
     regionCode,
     startDate
   });
-
   invoiceAccount.id = invoiceAccountEntity.invoiceAccountId;
   invoiceAccount.accountNumber = invoiceAccountEntity.invoiceAccountNumber;
-
   newModels.push(invoiceAccount);
+  return newModels;
 };
 
 /**
@@ -153,12 +153,13 @@ const persist = async (regionId, startDate, invoiceAccount) => {
     await createCompanyAddressAndContact(invoiceAccount.company.id, formattedStartDate, invoiceAccount, newModels);
 
     await createInvoiceAccount(regionId, invoiceAccount.company.id, formattedStartDate, invoiceAccount, newModels);
-
     const invoiceAccountAddress = await invoiceAccountAddressesService.createInvoiceAccountAddress(invoiceAccount, invoiceAccount.invoiceAccountAddresses[0], formattedStartDate);
+
     return invoiceAccount.fromHash({
       invoiceAccountAddresses: [invoiceAccountAddress]
     });
   } catch (err) {
+    logger.error(err);
     await crmService.deleteEntities(newModels);
     throw err;
   }
