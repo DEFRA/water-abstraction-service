@@ -165,9 +165,19 @@ experiment('lib/models/licence-version-purpose', () => {
   });
 
   experiment('annualQuantity', () => {
-    test('can be set to an interger', () => {
+    test('can be set to an integer', () => {
       licenceVersionPurpose.annualQuantity = 123;
       expect(licenceVersionPurpose.annualQuantity).to.equal(123);
+    });
+
+    test('can be set to an decimal number', () => {
+      licenceVersionPurpose.annualQuantity = 0.635;
+      expect(licenceVersionPurpose.annualQuantity).to.equal(0.635);
+    });
+
+    test('can be set to an number that is a string', () => {
+      licenceVersionPurpose.annualQuantity = '0.635';
+      expect(licenceVersionPurpose.annualQuantity).to.equal('0.635');
     });
 
     test('throws for a string value', async () => {

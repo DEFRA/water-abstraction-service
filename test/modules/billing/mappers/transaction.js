@@ -533,14 +533,17 @@ experiment('modules/billing/mappers/transaction', () => {
     const cmData = {
       id: '7d2c249d-0f56-40fa-90f0-fb2b7f8f698a',
       chargeValue: 1176,
+      credit: false,
+      volume: 35.7,
+      lineDescription: 'test transaction description',
+      compensationCharge: false,
       minimumChargeAdjustment: true,
-      deminimis: false
+      deminimis: false,
+      newLicence: false
     };
 
-    const chargePeriod = new DateRange('2020-04-01', '2021-03-31');
-
     beforeEach(async () => {
-      result = transactionMapper.cmToModel(cmData, chargePeriod);
+      result = transactionMapper.cmToModel(cmData);
     });
 
     test('should return a Transaction model', async () => {
@@ -550,9 +553,12 @@ experiment('modules/billing/mappers/transaction', () => {
     test('should have data mapped correctly', async () => {
       expect(result.externalId).to.equal(cmData.id);
       expect(result.value).to.equal(cmData.chargeValue);
+      expect(result.isCredit).to.equal(cmData.credit);
+      expect(result.description).to.equal(cmData.lineDescription);
+      expect(result.isCompensationCharge).to.equal(cmData.compensationCharge);
       expect(result.isMinimumCharge).to.equal(cmData.minimumChargeAdjustment);
       expect(result.isDeMinimis).to.equal(cmData.deminimis);
-      expect(result.chargePeriod).to.equal(chargePeriod);
+      expect(result.isNewLicence).to.equal(cmData.newLicence);
     });
   });
 });

@@ -2,7 +2,7 @@
 
 const moment = require('moment');
 const { titleCase } = require('title-case');
-const { pick, identity } = require('lodash');
+const { identity } = require('lodash');
 const helpers = require('@envage/water-abstraction-helpers').charging;
 
 const DateRange = require('../../../lib/models/date-range');
@@ -11,6 +11,9 @@ const Agreement = require('../../../lib/models/agreement');
 
 const chargeElementMapper = require('../../../lib/mappers/charge-element');
 const billingVolumeMapper = require('./billing-volume');
+
+const { createMapper } = require('../../../lib/object-mapper');
+const { createModel } = require('../../../lib/mappers/lib/helpers');
 
 /**
  * Create agreement model with supplied code
@@ -61,20 +64,36 @@ const getBillingVolumeForTransaction = row => {
  * Maps a row from water.billing_transactions to a Transaction model
  * @param {Object} row - from water.billing_transactions, camel cased
  */
-const dbToModel = row => {
-  const transaction = new Transaction();
-  return transaction.fromHash({
-    id: row.billingTransactionId,
-    ...pick(row, ['status', 'isCredit', 'authorisedDays', 'billableDays', 'description', 'transactionKey',
-      'externalId', 'isTwoPartTariffSupplementary', 'isDeMinimis', 'isNewLicence']),
-    chargePeriod: new DateRange(row.startDate, row.endDate),
-    isCompensationCharge: row.chargeType === 'compensation',
-    chargeElement: chargeElementMapper.dbToModel(row.chargeElement),
-    volume: row.volume ? parseFloat(row.volume) : null,
-    agreements: mapDBToAgreements(row),
-    billingVolume: row.billingVolume ? getBillingVolumeForTransaction(row) : null
-  });
-};
+const dbToModelMapper = createMapper()
+  .copy(
+    'status',
+    'isCredit',
+    'authorisedDays',
+    'billableDays',
+    'description',
+    'transactionKey',
+    'externalId',
+    'isTwoPartTariffSupplementary',
+    'isDeMinimis',
+    'isNewLicence'
+  )
+  .map('billingTransactionId').to('id')
+  .map('batchType').to('type')
+  .map(['startDate', 'endDate']).to('chargePeriod', (startDate, endDate) => new DateRange(startDate, endDate))
+  .map('chargeType').to('isCompensationCharge', chargeType => chargeType === 'compensation')
+  .map('chargeElement').to('chargeElement', chargeElementMapper.dbToModel)
+  .map('volume').to('volume', volume => volume ? parseFloat(volume) : null)
+  .map().to('agreements', mapDBToAgreements)
+  .map(['billingVolume', 'endDate', 'season']).to('billingVolume',
+    (billingVolume, endDate, season) => billingVolume ? getBillingVolumeForTransaction({ billingVolume, endDate, season }) : null);
+
+/**
+ * Converts DB representation to a Transaction service model
+ * @param {Object} row
+ * @return {Transaction}
+ */
+const dbToModel = row =>
+  createModel(Transaction, row, dbToModelMapper);
 
 /**
  * Maps agreements array to fields in water.billing_transactions table
@@ -218,18 +237,25 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
  * Creates a Transaction model for Minimum Charge transaction
  * returned from the Charge Module
  * @param {Object} data CM transaction
- * @param {ChargePeriod} chargePeriod for transaction
  */
-const cmToModel = (data, chargePeriod) => {
-  const model = new Transaction();
-  return model.fromHash({
-    externalId: data.id,
-    value: data.chargeValue,
-    isMinimumCharge: data.minimumChargeAdjustment,
-    isDeMinimis: data.deminimis,
-    chargePeriod
-  });
-};
+const cmToModelMapper = createMapper()
+  .map('id').to('externalId')
+  .map('chargeValue').to('value')
+  .map('credit').to('isCredit')
+  .map('lineDescription').to('description')
+  .map('compensationCharge').to('isCompensationCharge')
+  .map('minimumChargeAdjustment').to('isMinimumCharge')
+  .map('deminimis').to('isDeMinimis')
+  .map('newLicence').to('isNewLicence');
+
+/**
+ * Converts Minimum Charge transaction returned from the CM
+ * to a Transaction service model
+ * @param {Object} data
+ * @return {Transaction}
+ */
+const cmToModel = data =>
+  createModel(Transaction, data, cmToModelMapper);
 
 exports.dbToModel = dbToModel;
 exports.modelToDb = modelToDb;

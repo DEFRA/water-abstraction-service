@@ -7,6 +7,7 @@ const Batch = require('../../../lib/models/batch');
 const Invoice = require('../../../lib/models/invoice');
 const validators = require('../../../lib/models/validators');
 const { TransactionStatusError } = require('../lib/errors');
+const chargeModuleTransactionConnector = require('../../../lib/connectors/charge-module/transactions');
 
 const mappers = require('../mappers');
 
@@ -44,25 +45,37 @@ const decorateTransaction = (serviceTransaction, cmTransaction) =>
     isMinimumCharge: cmTransaction.minimumChargeAdjustment
   });
 
+const decorateMinimumChargeTransaction = async cmTransaction => {
+  const { transaction } = await chargeModuleTransactionConnector.get(cmTransaction.id);
+  return mappers.transaction.cmToModel(transaction);
+};
+
 /**
  * Maps all CM transaction data to the invoice licence
  * @param {InvoiceLicence} invoiceLicence containing service transactions
  * @param {Array} cmTransactions for that given licence
  */
-const decorateTransactions = (invoiceLicence, cmTransactions) => {
+const decorateTransactions = async (invoiceLicence, cmTransactions) => {
   if (isEmpty(invoiceLicence.transactions)) return invoiceLicence;
-
-  cmTransactions.map(cmTransaction => {
+  for (const cmTransaction of cmTransactions) {
     const serviceTransaction = invoiceLicence.transactions.find(trans => trans.externalId === cmTransaction.id);
+
+    // CM transactions should have corresponding transactions in the service,
+    // decorate these with data from CM
     if (serviceTransaction) {
-      return decorateTransaction(serviceTransaction, cmTransaction);
-    }
-    if (!cmTransaction.minimumChargeAdjustment) {
+      decorateTransaction(serviceTransaction, cmTransaction);
+
+    // minimum charge transactions don't exist in the service,
+    // so need to be mapped and added to the invoice licence
+    } else if (cmTransaction.minimumChargeAdjustment) {
+      const minChargeTransaction = await decorateMinimumChargeTransaction(cmTransaction);
+      invoiceLicence.transactions.push(minChargeTransaction);
+
+    // if neither of the above scenarios apply, throw error
+    } else {
       throw new TransactionStatusError(`Unexpected Charge Module transaction externalId: ${cmTransaction.id}`);
     }
-    // charge period needs to be provided separately - it is the same for all transactions within an invoice licence
-    return invoiceLicence.transactions.push(mappers.transaction.cmToModel(cmTransaction, invoiceLicence.transactions[0].chargePeriod));
-  });
+  };
 };
 
 /**
@@ -71,10 +84,9 @@ const decorateTransactions = (invoiceLicence, cmTransactions) => {
  * @param {Object} cmResponse
  * @return {Batch}
  */
-const decorateInvoice = (invoice, cmResponse) => {
+const decorateInvoice = async (invoice, cmResponse) => {
   validators.assertIsInstanceOf(invoice, Invoice);
   validators.assertObject(cmResponse);
-
   // Set invoice totals
   // Note: the customer/financial year summary is not guaranteed to be present in the CM
   // because creation of transactions for this customer/financial year could have failed to create in the CM
@@ -96,7 +108,7 @@ const decorateInvoice = (invoice, cmResponse) => {
   // and add any minimum charge transactions from CM
   for (const [licenceNumber, transactions] of cmTransactionsByLicence) {
     const invoiceLicence = invoice.getInvoiceLicenceByLicenceNumber(licenceNumber);
-    decorateTransactions(invoiceLicence, transactions);
+    await decorateTransactions(invoiceLicence, transactions);
   }
 
   return invoice;
@@ -108,7 +120,7 @@ const decorateInvoice = (invoice, cmResponse) => {
  * @param {Object} cmResponse
  * @return {Batch}
  */
-const decorateBatch = (batch, cmResponse) => {
+const decorateBatch = async (batch, cmResponse) => {
   validators.assertIsInstanceOf(batch, Batch);
   validators.assertObject(cmResponse);
 
@@ -116,7 +128,9 @@ const decorateBatch = (batch, cmResponse) => {
   batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(cmResponse.billRun.summary);
 
   // Decorate each invoice
-  batch.invoices.forEach(invoice => decorateInvoice(invoice, cmResponse));
+  for (const invoice of batch.invoices) {
+    await decorateInvoice(invoice, cmResponse);
+  }
 
   return batch;
 };
