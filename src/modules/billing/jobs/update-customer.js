@@ -2,7 +2,7 @@
 const { get, partial } = require('lodash');
 const chargeModuleCustomersConnector = require('../../../lib/connectors/charge-module/customers');
 const JOB_NAME = 'billing.update-customer-account';
-const invoiceAccountsConnector = require('../../../lib/connectors/crm-v2/invoice-accounts');
+const invoiceAccountsService = require('../../../lib/services/invoice-accounts-service');
 const chargeModuleMappers = require('../../../lib/mappers/charge-module');
 const { logger } = require('../../../logger');
 const uuid = require('uuid/v4');
@@ -24,7 +24,7 @@ const createMessage = partial(messageInitialiser, JOB_NAME);
 
 const handler = async job => {
   const invoiceAccountId = get(job, 'data.invoiceAccountId');
-  const invoiceAccountData = await invoiceAccountsConnector.getInvoiceAccountById(invoiceAccountId);
+  const invoiceAccountData = await invoiceAccountsService.getByInvoiceAccountId(invoiceAccountId);
   const invoiceAccountMappedData = await chargeModuleMappers.mapInvoiceAccountToChargeModuleCustomer(invoiceAccountData);
   return chargeModuleCustomersConnector.updateCustomer(invoiceAccountMappedData);
 };

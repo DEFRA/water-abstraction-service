@@ -1,6 +1,5 @@
 'use strict';
 const { truncate, identity, pick } = require('lodash');
-const invoiceAccountMapper = require('../../lib/mappers/invoice-account');
 const { combineAddressLines, getAddressObjectFromArray } = require('./lib/helpers');
 
 /**
@@ -14,9 +13,7 @@ const { combineAddressLines, getAddressObjectFromArray } = require('./lib/helper
  * @return {Object} mapped customer object
  */
 const mapInvoiceAccountToChargeModuleCustomer = invoiceAccount => {
-  const mappedInvoiceAccount = invoiceAccountMapper.crmToModel(invoiceAccount);
-
-  const { lastInvoiceAccountAddress, company } = mappedInvoiceAccount;
+  const { lastInvoiceAccountAddress, company } = invoiceAccount;
 
   const { address, agentCompany } = lastInvoiceAccountAddress;
   const customerName = extractCustomerName(company, agentCompany);
@@ -25,8 +22,8 @@ const mapInvoiceAccountToChargeModuleCustomer = invoiceAccount => {
   const parsedAddress = extractAddress(address, fao);
 
   return {
-    region: mappedInvoiceAccount.accountNumber.charAt(0), // Region code is always assumed to be the first letter of the account number,
-    customerReference: mappedInvoiceAccount.accountNumber,
+    region: invoiceAccount.accountNumber.charAt(0), // Region code is always assumed to be the first letter of the account number,
+    customerReference: invoiceAccount.accountNumber,
     customerName: customerName,
     ...parsedAddress
   };

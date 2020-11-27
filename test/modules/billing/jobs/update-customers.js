@@ -15,7 +15,7 @@ const updateCustomerJob = require('../../../../src/modules/billing/jobs/update-c
 
 // Connectors
 const chargeModuleCustomersConnector = require('../../../../src/lib/connectors/charge-module/customers');
-const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts');
+const invoiceAccountsService = require('../../../../src/lib/services/invoice-accounts-service');
 
 // Mappers
 const chargeModuleMappers = require('../../../../src/lib/mappers/charge-module');
@@ -29,7 +29,7 @@ experiment('modules/billing/jobs/update-customers', () => {
   const tempJobId = uuid();
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
-    sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountById').resolves(invoiceAccountObject);
+    sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId').resolves(invoiceAccountObject);
     sandbox.stub(chargeModuleMappers, 'mapInvoiceAccountToChargeModuleCustomer').resolves();
     sandbox.stub(chargeModuleCustomersConnector, 'updateCustomer').resolves();
   });
@@ -65,10 +65,6 @@ experiment('modules/billing/jobs/update-customers', () => {
   experiment('.handler', () => {
     beforeEach(async () => {
       await updateCustomerJob.handler(job);
-    });
-
-    test('the invoice account is fetched', async () => {
-      expect(invoiceAccountsConnector.getInvoiceAccountById.calledWith(tempInvoiceAccountId)).to.be.true();
     });
 
     test('The invoice account is mapped against the CM expected schema', async () => {

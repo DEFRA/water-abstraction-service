@@ -12,21 +12,13 @@ const sandbox = sinon.createSandbox();
 const uuid = require('uuid/v4');
 
 const request = require('../../../../src/lib/connectors/charge-module/request');
-const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts');
 const customerApiConnector = require('../../../../src/lib/connectors/charge-module/customers');
-
-const chargeModuleMappers = require('../../../../src/lib/mappers/charge-module');
 
 experiment('lib/connectors/charge-module/customers', async () => {
   const tempInvoiceAccountId = await uuid();
 
   beforeEach(async () => {
-    sandbox.stub(request, 'get').resolves();
     sandbox.stub(request, 'post').resolves();
-    sandbox.stub(request, 'patch').resolves();
-    sandbox.stub(request, 'delete').resolves();
-    sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountById').resolves();
-    sandbox.stub(chargeModuleMappers, 'mapInvoiceAccountToChargeModuleCustomer').resolves(tempInvoiceAccountId);
   });
   afterEach(async () => {
     sandbox.restore();

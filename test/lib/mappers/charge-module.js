@@ -61,13 +61,21 @@ const mockedPostMapperAddress = {
 const mockedInvoiceAccount = {
   invoiceAccountId,
   companyId,
-  invoiceAccountNumber,
+  accountNumber: invoiceAccountNumber,
   startDate: '2020-01-01',
   endDate: null,
   company: {
     companyId,
     name: 'Company Ltd.',
     type: 'organisation'
+  },
+  lastInvoiceAccountAddress: {
+    address: mockedAddress,
+    agentCompany: {
+      companyId: agentCompanyId,
+      name: 'Eagle Punch',
+      type: 'person'
+    }
   },
   invoiceAccountAddresses: [
     {

@@ -12,6 +12,7 @@ const regionsService = require('./regions-service');
 const crmService = require('./crm-service');
 const mappers = require('../mappers');
 const dates = require('../../lib/dates');
+const { logger } = require('../../logger');
 
 /**
  * Gets invoice accounts with specified IDs from CRM and
@@ -158,7 +159,7 @@ const persist = async (regionId, startDate, invoiceAccount) => {
       invoiceAccountAddresses: [invoiceAccountAddress]
     });
   } catch (err) {
-    console.log(err);
+    logger.error(err);
     await crmService.deleteEntities(newModels);
     throw err;
   }
