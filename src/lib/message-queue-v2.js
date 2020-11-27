@@ -1,7 +1,11 @@
 'use strict';
 
+/**
+ * Create message queue powered by BullMQ
+ * @see {@link https://docs.bullmq.io/guide/introduction}
+ */
 const bull = require('bullmq');
-const ioRedis = require('../../../../lib/connectors/io-redis');
+const ioRedis = require('../lib/connectors/io-redis');
 
 const STATUS_COMPLETED = 'completed';
 const STATUS_FAILED = 'failed';
@@ -29,6 +33,7 @@ class QueueManager {
   add (jobName, ...args) {
     const queueContainer = this._queues.get(jobName);
     const { createMessage } = queueContainer.jobContainer;
+
     return queueContainer.queue.add(
       ...createMessage(...args)
     );
@@ -83,4 +88,14 @@ class QueueManager {
   }
 }
 
-module.exports = QueueManager;
+const queueManager = new QueueManager();
+
+module.exports.queueManager = queueManager;
+
+module.exports.plugin = {
+  name: 'hapiBull',
+  register: async server => {
+    server.decorate('server', 'queueManager', queueManager);
+    server.decorate('request', 'queueManager', queueManager);
+  }
+};
