@@ -1,6 +1,5 @@
 'use strict';
 
-const { omit } = require('lodash');
 const Address = require('../models/address');
 
 const { createMapper } = require('../object-mapper');
@@ -46,16 +45,22 @@ const uiToModel = addressData => {
  * @param {Address} address service model
  * @return {Object}
  */
-const modelToCrm = address => {
-  const data = address.toJSON();
-  return {
-    address1: data.addressLine1,
-    address2: data.addressLine2,
-    address3: data.addressLine3,
-    address4: data.addressLine4,
-    ...omit(data, 'addressLine1', 'addressLine2', 'addressLine3', 'addressLine4')
-  };
-};
+const modelToCrmMapper = createMapper()
+  .copy(
+    'town',
+    'county',
+    'postcode',
+    'country',
+    'uprn'
+  )
+  .map('id').to('addressId')
+  .map('addressLine1').to('address1')
+  .map('addressLine2').to('address2')
+  .map('addressLine3').to('address3')
+  .map('addressLine4').to('address4')
+  .map('dataSource').to('source');
+
+const modelToCrm = model => modelToCrmMapper.execute(model);
 
 /**
  * Maps an address record from the EA address facade to a service model

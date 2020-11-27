@@ -7,6 +7,10 @@ const { ORGANISATION_TYPES } = require('../../lib/models/company');
 
 const OPTIONAL_NULLABLE_STRING = Joi.string().trim().optional().allow(null);
 
+/**
+ * @todo this should use e.g. `id` not `addressId` for consistency with the water service model shape
+ */
+
 const addressSchema = Joi.object({
   addressId: Joi.string().guid().optional(),
   addressLine1: OPTIONAL_NULLABLE_STRING,
