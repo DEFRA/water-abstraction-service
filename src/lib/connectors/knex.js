@@ -13,6 +13,7 @@ pg.types.setTypeParser(pg.types.builtins.DATE, dateMapper);
 // Setting up the database connection
 const knex = require('knex')({
   client: 'pg',
+  searchPath: 'water',
   connection: config.pg.connectionString,
   pool: { min: 0, max: config.pg.max }
 });
