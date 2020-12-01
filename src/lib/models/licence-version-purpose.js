@@ -47,7 +47,7 @@ class LicenceVersionPurpose extends Model {
 
   get annualQuantity () { return this._annualQuantity; }
   set annualQuantity (annualQuantity) {
-    validators.assertQuantity(annualQuantity);
+    validators.assertNullableQuantity(annualQuantity);
     this._annualQuantity = annualQuantity;
   }
 
