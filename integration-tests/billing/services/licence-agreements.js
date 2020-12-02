@@ -1,5 +1,5 @@
 const data = require('./data');
-const agreements = require('./agreements');
+const agreementTypes = require('./financial-agreement-types');
 const { LicenceAgreement, bookshelf } = require('../../../src/lib/connectors/bookshelf');
 
 const cache = {};
@@ -12,8 +12,9 @@ const cache = {};
 const create = async (licence, scenarioKey) => {
   if (!cache[scenarioKey]) {
     const licenceAgreementData = data.licenceAgreements[scenarioKey];
-    await agreements.create(licenceAgreementData.financialAgreementTypeId);
-
+    await agreementTypes.create(licenceAgreementData.financialAgreementTypeId);
+    const agreementType = await agreementTypes.findOneByFinancialAgreementCode(licenceAgreementData.financialAgreementTypeId);
+    licenceAgreementData.financialAgreementTypeId = agreementType.financialAgreementTypeId;
     const licenceAgreement = await LicenceAgreement
       .forge({
         isTest: true,

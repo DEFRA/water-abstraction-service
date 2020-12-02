@@ -13,6 +13,8 @@ const purposePrimary = require('./purpose-primary');
 const purposeSecondary = require('./purpose-secondary');
 const purposeUses = require('./purpose-uses');
 const crm = require('./crm');
+const returns = require('./returns');
+const returnRequirements = require('./return-requirements');
 
 const schema = {
   licence: Joi.string().required(),
@@ -24,7 +26,14 @@ const schema = {
     chargeElements: Joi.array().items(
       Joi.string()
     ).required()
-  }).required()
+  }).required(),
+  returns: Joi.array().items({
+    return: Joi.string().required(),
+    version: Joi.string().required(),
+    lines: Joi.array().items(
+      Joi.string().required()
+    ).required()
+  }).optional()
 };
 
 /**
@@ -77,6 +86,10 @@ const createScenario = async scenario => {
     const tasks = row.chargeElements.map(key => createChargeElement(chargeVersion, key));
     await Promise.all(tasks);
   }
+  if (scenario.returns) {
+    await returnRequirements.create(licence.get('licenceId'));
+    await returns.create(scenario.returns, licence.get('licenceRef'));
+  }
   return region.get('regionId');
 };
 
@@ -117,6 +130,29 @@ const runScenario = async (scenario, batchType, financialYearEnding = 2020, isSu
 };
 
 /**
+   * Approves the review stage of a two part tariff batch, the water
+   * service will then kick off the next job to continue processing
+   * the batch
+   *
+   * @param {String} batchId UUID of the batch to approve review on
+   */
+const approveTwoPartTariffBatch = async (batchId) => {
+  await server.inject({
+    auth: {
+      strategy: 'jwt',
+      credentials: {
+      }
+    },
+    method: 'POST',
+    url: `/water/1.0/billing/batches/${batchId}/approve-review`,
+    headers: { 'defra-internal-user-id': 19 }
+
+  });
+
+  return getBatchWhenProcessed(batchId);
+};
+
+/**
  * Gets batch by ID.
  * If batch is not processed, an error is thrown
  * @param {String} batchId
@@ -141,5 +177,6 @@ const getBatchWhenProcessed = batchId => promisePoller({
   retries: 30
 });
 
+exports.approveTwoPartTariffBatch = approveTwoPartTariffBatch;
 exports.runScenario = runScenario;
 exports.createScenario = createScenario;

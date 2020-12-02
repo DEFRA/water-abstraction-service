@@ -346,6 +346,7 @@ const createChargeModuleBillRun = async batchId => {
 
   // Create CM batch
   const { billRun: cmBillRun } = await chargeModuleBillRunConnector.create(batch.region.code);
+  //const cmBillRun = { id: '82703794-6415-433c-9173-017af2cdc84c', billRunNumber: 11564 };
 
   // Update DB row
   const row = await newRepos.billingBatches.update(batch.id, {

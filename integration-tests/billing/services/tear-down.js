@@ -5,10 +5,12 @@ const chargeVersions = require('./charge-versions');
 const regions = require('./regions');
 const licences = require('./licences');
 const licenceAgreements = require('./licence-agreements');
-const agreements = require('./agreements');
+const agreements = require('./financial-agreement-types');
 const crm = require('./crm');
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs');
 const messageQueue = require('../../../src/lib/message-queue');
+const returns = require('../services/returns');
+const returnRequirements = require('../services/return-requirements');
 
 const deleteBatchJobs = batch =>
   messageQueue.deleteQueue(`billing.refreshTotals.${batch.billingBatchId}`);
@@ -31,9 +33,11 @@ const tearDown = async (...batchesToDelete) => {
   await chargeVersions.tearDown();
   await licenceAgreements.tearDown();
   await agreements.tearDown();
+  await returnRequirements.tearDown();
   await licences.tearDown();
   await regions.tearDown();
   await crm.tearDown();
+  await returns.tearDown();
 
   const tasks = (batchesToDelete || []).map(deleteJobsAndCMData);
   await Promise.all(tasks);

@@ -16,7 +16,7 @@ const insertQuery = `insert into water.purposes_primary (legacy_id, description,
  */
 const create = code => bookshelf.knex.raw(insertQuery, purposePrimaryData[code]);
 
-const getByLegacyId = id => PurposePrimary.forge({ legacy_id: id }).fetch();
+const getByLegacyId = async id => PurposePrimary.forge({ legacy_id: id }).fetch();
 
 /**
  * Creates a purpose for the charge element specified
@@ -25,7 +25,9 @@ const getByLegacyId = id => PurposePrimary.forge({ legacy_id: id }).fetch();
 const createForChargeElement = async key => {
   const code = chargeElementsData[key].purposePrimary;
   await create(code);
-  return getByLegacyId(code);
+  const data = await getByLegacyId(code);
+  return data;
 };
 
+exports.getByLegacyId = getByLegacyId;
 exports.createForChargeElement = createForChargeElement;
