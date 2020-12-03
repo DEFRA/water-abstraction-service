@@ -16,6 +16,7 @@ const crmToModelMapper = createMapper()
     'county',
     'postcode',
     'country',
+    'isTest',
     'uprn'
   )
   .map('addressId').to('id')
