@@ -21,7 +21,7 @@ set schema 'water';
 -- Table structure for config
 -- ----------------------------
 DROP TABLE IF EXISTS "config";
-CREATE TABLE water."config" (
+CREATE TABLE "config" (
   "config_item" varchar COLLATE "pg_catalog"."default" NOT NULL,
   "config_value" varchar COLLATE "pg_catalog"."default"
 )
@@ -31,4 +31,4 @@ CREATE TABLE water."config" (
 -- ----------------------------
 -- Primary Key structure for table config
 -- ----------------------------
-ALTER TABLE water."config" ADD CONSTRAINT "config_pkey" PRIMARY KEY ("config_item");
+ALTER TABLE "config" ADD CONSTRAINT "config_pkey" PRIMARY KEY ("config_item");
