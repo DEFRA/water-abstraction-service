@@ -180,6 +180,11 @@ experiment('lib/models/licence-version-purpose', () => {
       expect(licenceVersionPurpose.annualQuantity).to.equal('0.635');
     });
 
+    test('can be null', () => {
+      licenceVersionPurpose.annualQuantity = null;
+      expect(licenceVersionPurpose.annualQuantity).to.equal(null);
+    });
+
     test('throws for a string value', async () => {
       expect(() => { licenceVersionPurpose.annualQuantity = 'hello'; }).to.throw();
     });
