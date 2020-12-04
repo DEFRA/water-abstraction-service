@@ -24,8 +24,8 @@ experiment('lib/connectors/bookshelf/BillingVolume', () => {
     sandbox.restore();
   });
 
-  test('uses the billing_batch_charge_version_years table', async () => {
-    expect(instance.tableName).to.equal('billing_batch_charge_version_years');
+  test('uses the water.billing_batch_charge_version_years table', async () => {
+    expect(instance.tableName).to.equal('water.billing_batch_charge_version_years');
   });
 
   test('uses the correct ID attribute', async () => {

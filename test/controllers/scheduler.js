@@ -8,6 +8,10 @@ let taskId;
 const endpoint = '/water/1.0/scheduler';
 
 lab.experiment('Test POST session creation', () => {
+  lab.before(async () => {
+    await server._start();
+  });
+
   // Create session
   lab.test('The API should create a new scheduler with POST', async () => {
     const request = {

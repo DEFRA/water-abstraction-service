@@ -3,7 +3,7 @@
 const { bookshelf } = require('./bookshelf.js');
 
 module.exports = bookshelf.model('LicenceAgreement', {
-  tableName: 'licence_agreements',
+  tableName: 'water.licence_agreements',
 
   idAttribute: 'licence_agreement_id',
 

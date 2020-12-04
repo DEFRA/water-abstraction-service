@@ -113,8 +113,8 @@ experiment('modules/billing/controller', () => {
           financialYearEnding: 2019,
           isSummer: true
         },
-        messageQueue: {
-          publish: sandbox.stub().resolves()
+        queueManager: {
+          add: sandbox.stub().resolves()
         }
       };
     });
@@ -141,7 +141,7 @@ experiment('modules/billing/controller', () => {
       });
 
       test('no job is published', async () => {
-        expect(request.messageQueue.publish.called).to.be.false();
+        expect(request.queueManager.add.called).to.be.false();
       });
 
       test('the response contains an error message', async () => {
@@ -194,9 +194,10 @@ experiment('modules/billing/controller', () => {
         expect(savedEvent.status).to.equal('start');
       });
 
-      test('publishes a new job to the message queue with the event id', async () => {
-        const [message] = request.messageQueue.publish.lastCall.args;
-        expect(message.data.eventId).to.equal('11111111-1111-1111-1111-111111111111');
+      test('publishes a new job to the message queue with the batch ID', async () => {
+        const [jobName, batchId] = request.queueManager.add.lastCall.args;
+        expect(jobName).to.equal('billing.create-bill-run');
+        expect(batchId).to.equal(batch);
       });
 
       test('the response contains the event', async () => {
@@ -237,8 +238,8 @@ experiment('modules/billing/controller', () => {
           financialYearEnding: 2019,
           isSummer: true
         },
-        messageQueue: {
-          publish: sandbox.stub().resolves()
+        queueManager: {
+          add: sandbox.stub().resolves()
         }
       };
 
@@ -610,8 +611,8 @@ experiment('modules/billing/controller', () => {
         params: {
           invoiceId: uuid()
         },
-        messageQueue: {
-          publish: sandbox.stub()
+        queueManager: {
+          add: sandbox.stub()
         }
       };
     });

@@ -24,8 +24,8 @@ experiment('lib/connectors/bookshelf/LicenceAgreement', () => {
     sandbox.restore();
   });
 
-  test('uses the licence_agreements table', async () => {
-    expect(instance.tableName).to.equal('licence_agreements');
+  test('uses the water.licence_agreements table', async () => {
+    expect(instance.tableName).to.equal('water.licence_agreements');
   });
 
   test('uses the correct ID attribute', async () => {

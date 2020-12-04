@@ -1,6 +1,6 @@
 'use strict';
 
-const { partialRight, startCase } = require('lodash');
+const { partialRight, startCase, get } = require('lodash');
 const Boom = require('@hapi/boom');
 
 const newRepos = require('../../../lib/connectors/repos');
@@ -13,7 +13,6 @@ const { BatchStatusError } = require('../lib/errors');
 const { NotFoundError } = require('../../../lib/errors');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/constants');
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
-const chargeModuleBillRunWithRetryConnector = require('../../../lib/connectors/charge-module/bill-runs-with-retry');
 
 const Batch = require('../../../lib/models/batch');
 const validators = require('../../../lib/models/validators');
@@ -237,11 +236,13 @@ const persistTotals = batch => {
   return newRepos.billingBatches.update(batch.id, changes);
 };
 
+const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating_summary';
+
 /**
  * Updates water.billing_batches with summary info from the charge module
  * and updates the is_deminimis flag for water.billing_transactions
  * @param {Batch} batch
- * @return {Promise}
+ * @return {Promise<Boolean>} resolves with boolean to indicate success
  */
 const refreshTotals = async batchId => {
   validators.assertId(batchId);
@@ -254,7 +255,12 @@ const refreshTotals = async batchId => {
   const batch = mappers.batch.dbToModel(data);
 
   // Load CM data
-  const cmResponse = await chargeModuleBillRunWithRetryConnector.get(batch.externalId);
+  const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
+
+  // Summary is still generating at CM
+  if (isCMGeneratingSummary(cmResponse)) {
+    return false;
+  }
 
   // Decorate batch and persist totals
   chargeModuleDecorators.decorateBatch(batch, cmResponse);
@@ -263,6 +269,8 @@ const refreshTotals = async batchId => {
     transactionsService.persistDeMinimis(batch),
     persistTotals(batch)
   ]);
+
+  return true;
 };
 
 /**

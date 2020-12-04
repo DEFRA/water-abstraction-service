@@ -1,7 +1,7 @@
 const { bookshelf } = require('./bookshelf.js');
 
 module.exports = bookshelf.model('Event', {
-  tableName: 'events',
+  tableName: 'water.events',
   idAttribute: 'event_id',
   hasTimestamps: ['created', 'modified']
 },

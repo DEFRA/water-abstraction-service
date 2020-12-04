@@ -8,6 +8,7 @@ const isProductionLike = ['production', 'preprod'].includes(process.env.NODE_ENV
 const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0';
 const isLocal = process.env.NODE_ENV === 'local';
 const isTravis = process.env.TRAVIS;
+const isLab = !!process.env.IS_LAB;
 
 module.exports = {
 
@@ -21,7 +22,9 @@ module.exports = {
   },
 
   billing: {
-    supplementaryYears: 1
+    supplementaryYears: 1,
+    // There are 4 processes on the environments but only 1 locally
+    createChargeJobConcurrency: isLocal ? 16 : 4
   },
 
   blipp: {
@@ -55,8 +58,7 @@ module.exports = {
   // | water-abstraction-import            |       1 |         20 |         2 | (20)    10 |
   // | water-abstraction-permit-repository |       1 |         16 |         4 | (16)     4 |
   // | water-abstraction-returns           |       1 |         20 |         4 | (20)     5 |
-  // | water-abstraction-service           |       1 |         50 |         4 | (92)    23 |
-  // | water-abstraction-service(knex)     |         |          1 |           |  (4)     1 |
+  // | water-abstraction-service(knex)     |         |          1 |           | (96)    24 |
   // | water-abstraction-tactical-crm      |       1 |         20 |         4 | (20)     5 |
   // | water-abstraction-tactical-crm(knex)|         |          1 |           |  (4)     1 |
   // | water-abstraction-tactical-idm      |       1 |         20 |         4 | (20)     5 |
@@ -66,9 +68,7 @@ module.exports = {
   //
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: process.env.NODE_ENV === 'local' ? 50 : 23,
-    idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 5000
+    max: 24
   },
 
   pgBoss: {
@@ -216,13 +216,8 @@ module.exports = {
     port: process.env.REDIS_PORT || 6379,
     password: process.env.REDIS_PASSWORD || '',
     ...!(isLocal || isTravis) && { tls: {} },
-    db: 2
-  },
-
-  chargeModuleConnector: {
-    retries: 10,
-    factor: 2,
-    minTimeout: 5 * 1000
+    db: 2,
+    lazyConnect: isLab
   },
 
   licences: {

@@ -23,8 +23,10 @@ const Region = require('../../../../src/lib/models/region');
 
 const uuid = require('uuid/v4');
 
+const batchId = uuid();
+
 const createBatch = () => {
-  const batch = new Batch(uuid());
+  const batch = new Batch(batchId);
   batch.region = new Region(uuid());
   return batch;
 };
@@ -45,13 +47,14 @@ const createBillingBatchChargeVersionYears = batch => [
 ];
 
 experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
-  let batch, billingBatchChargeVersionYears;
+  let batch, billingBatchChargeVersionYears, queueManager;
 
   beforeEach(async () => {
     sandbox.stub(logger, 'info');
 
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
+    sandbox.stub(batchJob, 'logOnCompleteError');
 
     sandbox.stub(messageQueue, 'publish').resolves();
 
@@ -62,6 +65,10 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
     sandbox.stub(batchService, 'setErrorStatus');
 
     sandbox.stub(chargeVersionService, 'createForBatch').resolves(billingBatchChargeVersionYears);
+
+    queueManager = {
+      add: sandbox.stub()
+    };
   });
 
   afterEach(async () => {
@@ -69,20 +76,21 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
   });
 
   test('exports the expected job name', async () => {
-    expect(populateBatchChargeVersionsJob.jobName).to.equal('billing.populate-batch-charge-versions.*');
+    expect(populateBatchChargeVersionsJob.jobName).to.equal('billing.populate-batch-charge-versions');
   });
 
   experiment('.createMessage', () => {
-    test('creates the expected request object', async () => {
-      const batch = { id: 'test-batch' };
-      const message = populateBatchChargeVersionsJob.createMessage('test-event-id', batch);
-      expect(message.name).to.equal('billing.populate-batch-charge-versions.test-batch');
-      expect(message.data).to.equal({
-        eventId: 'test-event-id',
-        batch: {
-          id: 'test-batch'
+    test('creates the expected message array', async () => {
+      const message = populateBatchChargeVersionsJob.createMessage(batchId);
+      expect(message).to.equal([
+        'billing.populate-batch-charge-versions',
+        {
+          batchId
+        },
+        {
+          jobId: `billing.populate-batch-charge-versions.${batchId}`
         }
-      });
+      ]);
     });
   });
 
@@ -92,13 +100,8 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
     beforeEach(async () => {
       job = {
         data: {
-          eventId: '22222222-2222-2222-2222-222222222222',
-          batch: {
-            type: 'supplementary',
-            id: batch.id
-          }
-        },
-        done: sandbox.spy()
+          batchId
+        }
       };
     });
 
@@ -117,8 +120,8 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
         expect(result.batch).to.equal(batch);
       });
 
-      test('includes the billingBatchChargeVersionYears in the job response', async () => {
-        expect(result.billingBatchChargeVersionYears).to.equal(billingBatchChargeVersionYears);
+      test('includes the updated batch in the job response', async () => {
+        expect(result.batch).to.be.an.object();
       });
     });
 
@@ -141,6 +144,116 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
 
       test('re-throws the error', async () => {
         expect(error).to.equal(err);
+      });
+    });
+  });
+
+  experiment('.onComplete', () => {
+    experiment('when the batch is empty', () => {
+      beforeEach(async () => {
+        const job = {
+          returnvalue: {
+            batch: {
+              status: Batch.BATCH_STATUS.empty
+            }
+          }
+        };
+        await populateBatchChargeVersionsJob.onComplete(job, queueManager);
+      });
+
+      test('no further jobs are scheduled', async () => {
+        expect(queueManager.add.called).to.be.false();
+      });
+    });
+
+    experiment('when the batch is a processing "annual" batch', () => {
+      let job;
+
+      beforeEach(async () => {
+        job = {
+          returnvalue: {
+            batch: {
+              status: Batch.BATCH_STATUS.processing,
+              type: Batch.BATCH_TYPE.annual
+            }
+          }
+        };
+        await populateBatchChargeVersionsJob.onComplete(job, queueManager);
+      });
+
+      test('the process charge versions job is added to the queue', async () => {
+        expect(queueManager.add.callCount).to.equal(1);
+        expect(queueManager.add.calledWith(
+          'billing.process-charge-versions', job.returnvalue.batch
+        )).to.be.true();
+      });
+    });
+
+    experiment('when the batch is a processing "two-part tariff" batch', () => {
+      let job;
+
+      beforeEach(async () => {
+        job = {
+          returnvalue: {
+            batch: {
+              status: Batch.BATCH_STATUS.processing,
+              type: Batch.BATCH_TYPE.twoPartTariff
+            }
+          }
+        };
+        await populateBatchChargeVersionsJob.onComplete(job, queueManager);
+      });
+
+      test('the two-part tariff matching job is added to the queue', async () => {
+        expect(queueManager.add.callCount).to.equal(1);
+        expect(queueManager.add.calledWith(
+          'billing.two-part-tariff-matching', job.returnvalue.batch
+        )).to.be.true();
+      });
+    });
+
+    experiment('when the batch is a processing "supplementary" batch', () => {
+      let job;
+
+      beforeEach(async () => {
+        job = {
+          returnvalue: {
+            batch: {
+              status: Batch.BATCH_STATUS.processing,
+              type: Batch.BATCH_TYPE.supplementary
+            }
+          }
+        };
+        await populateBatchChargeVersionsJob.onComplete(job, queueManager);
+      });
+
+      test('the two-part tariff matching job is added to the queue', async () => {
+        expect(queueManager.add.callCount).to.equal(1);
+        expect(queueManager.add.calledWith(
+          'billing.two-part-tariff-matching', job.returnvalue.batch
+        )).to.be.true();
+      });
+    });
+
+    experiment('when there is an error', () => {
+      let job, err;
+
+      beforeEach(async () => {
+        err = new Error('oops');
+        queueManager.add.rejects(err);
+        job = {
+          returnvalue: {
+            batch: {
+              status: Batch.BATCH_STATUS.processing,
+              type: Batch.BATCH_TYPE.twoPartTariff
+            }
+          }
+        };
+        await populateBatchChargeVersionsJob.onComplete(job, queueManager);
+      });
+
+      test('a message is logged', async () => {
+        expect(batchJob.logOnCompleteError.calledWith(job, err)).to.be.true();
       });
     });
   });
