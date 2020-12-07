@@ -13,7 +13,6 @@ const Batch = require('../../../../src/lib/models/batch');
 const billingVolumesRepo = require('../../../../src/lib/connectors/repos/billing-volumes');
 const { NotFoundError } = require('../../../../src/lib/errors');
 const { BillingVolumeStatusError } = require('../../../../src/modules/billing/lib/errors');
-const twoPartTariffMatching = require('../../../../src/modules/billing/services/two-part-tariff-service');
 const { createUser, createBatch, createFinancialYear } = require('../test-data/test-billing-data');
 
 const batchId = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
@@ -35,8 +34,6 @@ experiment('modules/billing/services/billing-volumes-service', () => {
     sandbox.stub(billingVolumesRepo, 'updateByBatchId');
     sandbox.stub(billingVolumesRepo, 'findByIds').resolves([]);
     sandbox.stub(billingVolumesRepo, 'findByBatchIdAndLicenceId').resolves();
-
-    sandbox.stub(twoPartTariffMatching, 'calculateVolumes');
   });
 
   afterEach(async () => sandbox.restore());
