@@ -1,6 +1,5 @@
 'use strict';
 
-const chargeElementsData = require('./data/charge-elements');
 const purposeSecondaryData = require('./data/purpose-secondary');
 
 const { bookshelf } = require('../../../src/lib/connectors/bookshelf');

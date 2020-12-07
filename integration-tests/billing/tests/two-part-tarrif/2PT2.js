@@ -210,7 +210,7 @@ experiment('two part tariff ref: 2PT2', () => {
     });
   });
 
-  // after(async () => {
-  //   await services.tearDown.tearDown(batch);
-  // });
+  after(async () => {
+    await services.tearDown.tearDown(batch);
+  });
 });
