@@ -141,157 +141,67 @@ experiment('lib/models/address', () => {
         town: 'Testington',
         county: 'Testinshire',
         postcode: 'TT1 1TT',
-        country: 'UK'
+        country: 'UK',
+        uprn: null
       });
     });
   });
 
-  experiment('.isValid', () => {
-    beforeEach(async () => {
-      delete address.id;
-      address.addressLine1 = 'Daisy cottage';
-      address.addressLine2 = 'Buttercup lane';
-      address.addressLine3 = 'Babbling brook';
-      address.addressLine4 = 'Stony hill';
-      address.town = 'Testington';
-      address.county = 'Testinshire';
-      address.postcode = 'TT1 1TT';
-      address.country = 'UK';
-      address.uprn = 12345678;
-    });
+  experiment('.validate', () => {
+    experiment('when the source is not "nald"', () => {
+      beforeEach(async () => {
+        address.source = Address.ADDRESS_SOURCE.wrls;
+      });
 
-    experiment('addressLine1, addressLine2, addressLine3, addressLine4, town, county', () => {
-      const keys = ['addressLine1', 'addressLine2', 'addressLine3', 'addressLine4', 'town', 'county'];
+      test('for a valid address', async () => {
+        address.addressLine1 = 'Daisy cottage';
+        address.addressLine2 = 'Buttercup lane';
+        address.addressLine3 = 'Babbling brook';
+        address.addressLine4 = 'Stony hill';
+        address.town = 'Testington';
+        address.county = 'Testinshire';
+        address.postcode = 'TT1 1TT';
+        address.country = 'United Kingdom';
+        address.uprn = 12345678;
 
-      keys.forEach(key => {
-        test(`${key}: is optional`, async () => {
-          delete address[key];
+        const { error } = address.validate();
+        expect(error).to.be.null();
+      });
 
-          const { error } = address.isValid();
-          expect(error).to.equal(null);
-        });
+      test('for an invalid address', async () => {
+        address.addressLine1 = 'Daisy cottage';
+        address.addressLine2 = 'Buttercup lane';
+        address.addressLine3 = 'Babbling brook';
+        address.addressLine4 = 'Stony hill';
+        address.town = 'Testington';
+        address.county = 'Testinshire';
+        address.postcode = 'XXX XXX';
+        address.country = 'United Kingdom';
+        address.uprn = 12345678;
 
-        test(`${key}: is valid when present`, async () => {
-          const { error, value } = address.isValid();
-          expect(error).to.equal(null);
-          expect(value[key]).to.equal(address[key]);
-        });
+        const { error } = address.validate();
+        expect(error).to.not.be.null();
       });
     });
 
-    test('at least 1 of addressLine2 and addressLine3 are required', async () => {
-      address.addressLine2 = null;
-      address.addressLine3 = null;
-      const { error } = address.isValid();
-      expect(error.details[0].message).to.equal('"addressLine2" must be a string');
-    });
-
-    test('at least 1 of addressLine4 and town are required', async () => {
-      address.addressLine4 = null;
-      address.town = null;
-      const { error } = address.isValid();
-      expect(error.details[0].message).to.equal('"addressLine4" must be a string');
-    });
-
-    experiment('country', () => {
-      test('is required', async () => {
-        address.country = null;
-        const { error } = address.isValid();
-        expect(error).to.not.equal(null);
+    experiment('when the source is "nald"', () => {
+      beforeEach(async () => {
+        address.source = Address.ADDRESS_SOURCE.nald;
       });
 
-      test('is valid when present', async () => {
-        const { error, value } = address.isValid();
-        expect(error).to.equal(null);
-        expect(value.country).to.equal(address.country);
-      });
-    });
+      test('validation rules are skipped', async () => {
+        address.addressLine1 = 'Daisy cottage';
+        address.addressLine2 = 'Buttercup lane';
+        address.addressLine3 = 'Babbling brook';
+        address.addressLine4 = 'Stony hill';
+        address.town = 'Testington';
+        address.county = 'Testinshire';
+        address.postcode = 'XXX XXX';
+        address.country = 'United Kingdom';
+        address.uprn = 12345678;
 
-    experiment('uprn', () => {
-      test('is optional', async () => {
-        address.uprn = null;
-
-        const { error } = address.isValid();
-        expect(error).to.equal(null);
-      });
-
-      test('is valid when present', async () => {
-        const { error, value } = address.isValid();
-        expect(error).to.equal(null);
-        expect(value.uprn).to.equal(address.uprn);
-      });
-    });
-
-    experiment('postcode', () => {
-      experiment('when the country is not part of the UK', () => {
-        beforeEach(async () => {
-          address.country = 'France';
-        });
-
-        test('the postcode can be omitted', async () => {
-          address.postcode = null;
-          const { error, value } = address.isValid();
-          expect(error).to.equal(null);
-          expect(value.postcode).to.equal(null);
-        });
-
-        test('a postcode can be supplied', async () => {
-          address.postcode = 'TEST';
-          const { error, value } = address.isValid();
-          expect(error).to.equal(null);
-          expect(value.postcode).to.equal('TEST');
-        });
-      });
-
-      const countries = [
-        'United Kingdom',
-        'ENGLAND',
-        'wales',
-        'Scotland',
-        'Northern IRELAND',
-        'UK',
-        'U.K',
-        'u.k.'
-      ];
-
-      countries.forEach(country => {
-        experiment(`when the country is ${country}`, async () => {
-          beforeEach(async () => {
-            address.country = country;
-          });
-          test('the postcode is mandatory', async () => {
-            address.postcode = null;
-            const { error } = address.isValid(address);
-            expect(error).to.not.equal(null);
-          });
-
-          test('an invalid postcode is rejected', async () => {
-            address.postcode = 'nope';
-            const { error } = address.isValid(address);
-            expect(error).to.not.equal(null);
-          });
-
-          test('a valid postcode is trimmed', async () => {
-            address.postcode = 'BS98 1TL';
-            const { error, value } = address.isValid(address);
-            expect(error).to.equal(null);
-            expect(value.postcode).to.equal('BS98 1TL');
-          });
-
-          test('a postcode can be without spaces', async () => {
-            address.postcode = 'BS981TL';
-            const { error, value } = address.isValid(address);
-            expect(error).to.equal(null);
-            expect(value.postcode).to.equal('BS98 1TL');
-          });
-
-          test('a postcode will be uppercased', async () => {
-            address.postcode = 'bs98 1TL';
-            const { error, value } = address.isValid(address);
-            expect(error).to.equal(null);
-            expect(value.postcode).to.equal('BS98 1TL');
-          });
-        });
+        const { error } = address.validate();
+        expect(error).to.be.null();
       });
     });
   });

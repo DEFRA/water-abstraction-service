@@ -1,7 +1,5 @@
 'use strict';
 
-const QueueManager = require('./jobs/lib/QueueManager');
-
 const createBillRun = require('./jobs/create-bill-run');
 const createCharge = require('./jobs/create-charge');
 const populateBatchChargeVersions = require('./jobs/populate-batch-charge-versions');
@@ -10,12 +8,13 @@ const processChargeVersionYear = require('./jobs/process-charge-version-year');
 const processChargeVersions = require('./jobs/process-charge-versions');
 const refreshTotals = require('./jobs/refresh-totals');
 const twoPartTariffMatching = require('./jobs/two-part-tariff-matching');
+const updateCustomer = require('./jobs/update-customer');
 
 module.exports = {
-  name: 'queueManager',
+  name: 'billing-jobs',
+  dependencies: ['hapiBull'],
   register: async server => {
-    const queueManager = new QueueManager();
-    queueManager
+    server.queueManager
       .register(createBillRun)
       .register(createCharge)
       .register(populateBatchChargeVersions)
@@ -23,8 +22,7 @@ module.exports = {
       .register(processChargeVersionYear)
       .register(processChargeVersions)
       .register(refreshTotals)
-      .register(twoPartTariffMatching);
-
-    server.decorate('request', 'queueManager', queueManager);
+      .register(twoPartTariffMatching)
+      .register(updateCustomer);
   }
 };

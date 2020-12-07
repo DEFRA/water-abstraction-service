@@ -3,9 +3,16 @@
 const Model = require('./model');
 const validators = require('./validators');
 const Joi = require('@hapi/joi');
-const { identity } = require('lodash');
+const { identity, pick } = require('lodash');
+const { VALID_ADDRESS } = require('@envage/water-abstraction-helpers').validators;
 
-const ukCountries = [
+const ADDRESS_SOURCE = {
+  nald: 'nald',
+  wrls: 'wrls',
+  eaAddressFacade: 'ea-address-facade'
+};
+
+const UK_COUNTRIES = [
   'united kingdom',
   'england',
   'wales',
@@ -13,35 +20,6 @@ const ukCountries = [
   'northern ireland',
   'uk'
 ];
-
-// https://en.wikipedia.org/wiki/Postcodes_in_the_United_Kingdom#Validation
-const postcodeRegex = /^(([A-Z]{1,2}[0-9][A-Z0-9]?|ASCN|STHL|TDCU|BBND|[BFS]IQQ|PCRN|TKCA) ?[0-9][A-Z]{2}|BFPO ?[0-9]{1,4}|(KY[0-9]|MSR|VG|AI)[ -]?[0-9]{4}|[A-Z]{2} ?[0-9]{2}|GE ?CX|GIR ?0A{2}|SAN ?TA1)$/;
-
-const newAddressSchema = Joi.object({
-  addressLine1: Joi.string().optional(),
-  addressLine2: Joi.string().optional(),
-  addressLine3: Joi.when('addressLine2', { is: null, then: Joi.string().required(), otherwise: Joi.string().optional() }),
-  addressLine4: Joi.string().optional(),
-  town: Joi.when('addressLine4', { is: null, then: Joi.string().required(), otherwise: Joi.string().optional() }),
-  county: Joi.string().optional(),
-  country: Joi.string().required(),
-  postcode: Joi.string().trim().empty('').default(null).optional().when('country', {
-    is: Joi.string().lowercase().replace(/\./g, '').valid(ukCountries),
-    then: Joi.string().required()
-      // uppercase and remove any spaces (BS1 1SB -> BS11SB)
-      .uppercase().replace(/ /g, '')
-      // then ensure the space is before the inward code (BS11SB -> BS1 1SB)
-      .replace(/(.{3})$/, ' $1').regex(postcodeRegex),
-    otherwise: Joi.string().optional().allow(null)
-  }),
-  uprn: Joi.number().integer().min(0).default(null).allow(null)
-}).or('addressLine2', 'addressLine3').or('addressLine4', 'town');
-
-const ADDRESS_SOURCE = {
-  nald: 'nald',
-  wrls: 'wrls',
-  eaAddressFacade: 'ea-address-facade'
-};
 
 /**
  * Zero pads integers within an address line for sorting
@@ -78,7 +56,36 @@ const getSortKey = address => {
     .join('_');
 };
 
+const mapToValidator = address => ({
+  ...pick(address,
+    [
+      'addressLine1',
+      'addressLine2',
+      'addressLine3',
+      'addressLine4',
+      'town',
+      'county',
+      'postcode',
+      'country',
+      'uprn'
+    ]),
+  dataSource: address.source
+});
+
 class Address extends Model {
+  constructor (...args) {
+    super(...args);
+    this.addressLine1 = null;
+    this.addressLine2 = null;
+    this.addressLine3 = null;
+    this.addressLine4 = null;
+    this.town = null;
+    this.county = null;
+    this.postcode = null;
+    this.country = null;
+    this.uprn = null;
+  }
+
   set addressLine1 (addressLine1) {
     validators.assertNullableString(addressLine1);
     this._addressLine1 = addressLine1;
@@ -195,8 +202,17 @@ class Address extends Model {
     };
   }
 
-  isValid () {
-    return Joi.validate(this.toJSON(), newAddressSchema, { abortEarly: false });
+  /**
+   * Validate the address
+   * @return { error, value }
+   */
+  validate () {
+    const schema = this.source === ADDRESS_SOURCE.nald
+      ? Joi.object()
+      : VALID_ADDRESS;
+
+    const mappedAddress = mapToValidator(this);
+    return Joi.validate(mappedAddress, schema, { abortEarly: false });
   }
 
   get sortKey () {
@@ -213,7 +229,7 @@ class Address extends Model {
       return true;
     }
     // Otherwise use list of UK countries
-    return ukCountries.includes(this.country.trim().toLowerCase());
+    return UK_COUNTRIES.includes(this.country.trim().toLowerCase());
   }
 }
 
