@@ -33,13 +33,13 @@ experiment('two part tariff ref: 2PT2', () => {
       }],
       returns: [
         {
-          return: 'r1',
+          return: 'r2',
           version: 'rv1',
-          lines: ['rl1'],
-          returnRequirement: 'rq1'
+          lines: ['rl2'],
+          returnRequirement: 'rq2'
         }
       ]
-    }, 'two_part_tariff', 2020, true);
+    }, 'two_part_tariff', 2020, false);
   });
 
   experiment('has expected batch details', () => {
@@ -74,18 +74,18 @@ experiment('two part tariff ref: 2PT2', () => {
 
     experiment('has expected invoice details', () => {
       test('the batch is in "review" status', async () => {
-        expect(batch.status).to.equal('review');
+        expect(twoPartTariffBatch.status).to.equal('ready');
       });
 
       test('1 invoice is generated', async () => {
-        expect(batch.billingInvoices).to.have.length(1);
+        expect(twoPartTariffBatch.billingInvoices).to.have.length(1);
       });
 
       experiment('the first invoice', () => {
         let invoice;
 
         beforeEach(async () => {
-          invoice = batch.billingInvoices[0];
+          invoice = twoPartTariffBatch.billingInvoices[0];
         });
 
         test('has the correct invoice account', async () => {
@@ -123,33 +123,20 @@ experiment('two part tariff ref: 2PT2', () => {
           //   expect(licence.licenceHolderName.title).to.equal('Mr');
           // });
 
-          // test('has the correct licence holder address', async () => {
-          //   expect(omit(licence.licenceHolderAddress, 'id')).to.equal({
-          //     town: 'Testington',
-          //     county: 'Testingshire',
-          //     country: 'UK',
-          //     postcode: 'TT1 1TT',
-          //     addressLine1: 'Big Farm',
-          //     addressLine2: 'Windy road',
-          //     addressLine3: 'Buttercup meadow',
-          //     addressLine4: null
-          //   });
-          // });
-
           test('has 1 transaction', async () => {
-            expect(licence.billingTransactions).to.have.length(2);
+            expect(licence.billingTransactions).to.have.length(1);
           });
 
           experiment('the first transaction', () => {
             let transaction;
             beforeEach(async () => {
-              transaction = licence.billingTransactions[1];
+              transaction = licence.billingTransactions[0];
             });
 
             test('is a standard charge', async () => {
               expect(transaction.chargeType).to.equal('standard');
               expect(transaction.isCredit).to.be.false();
-              expect(transaction.isTwoPartTariffSupplementary).to.be.false();
+              expect(transaction.isTwoPartTariffSupplementary).to.be.true();
               expect(transaction.isDeMinimis).to.be.false();
               expect(transaction.isNewLicence).to.be.false();
             });
@@ -164,25 +151,25 @@ experiment('two part tariff ref: 2PT2', () => {
                 endDay: 31,
                 endMonth: 3,
                 startDay: 1,
-                startMonth: 4
+                startMonth: 11
               });
             });
 
             test('has the correct factors', async () => {
               expect(transaction.source).to.equal('unsupported');
-              expect(transaction.season).to.equal('summer');
-              expect(transaction.loss).to.equal('low');
+              expect(transaction.season).to.equal('winter');
+              expect(transaction.loss).to.equal('high');
             });
 
             test('has the correct quantities', async () => {
               expect(transaction.authorisedQuantity).to.equal('50');
               expect(transaction.billableQuantity).to.equal('50');
-              expect(transaction.volume).to.equal('50');
+              expect(transaction.volume).to.equal('10');
             });
 
             test('has the correct authorised/billable days', async () => {
-              expect(transaction.authorisedDays).to.equal(366);
-              expect(transaction.billableDays).to.equal(366);
+              expect(transaction.authorisedDays).to.equal(152);
+              expect(transaction.billableDays).to.equal(152);
             });
 
             test('has been sent to the charge module', async () => {
@@ -191,17 +178,17 @@ experiment('two part tariff ref: 2PT2', () => {
             });
 
             test('has the correct description', async () => {
-              expect(transaction.description).to.equal('CE1');
+              expect(transaction.description).to.equal('Second Part Spray Irrigation - Direct Charge at CE5');
             });
 
             test('has the correct agreements', async () => {
               expect(transaction.section126Factor).to.equal(null);
-              expect(transaction.section127Agreement).to.equal(false);
+              expect(transaction.section127Agreement).to.equal(true);
               expect(transaction.section130Agreement).to.equal(null);
             });
 
             test('has a stable transaction key', async () => {
-              expect(transaction.transactionKey).to.equal('dc1467401acc8ff1124ac55ef6033a15');
+              expect(transaction.transactionKey).to.equal('1dfa68dc877afb9f0463f1cb33702b09');
             });
           });
         });
@@ -210,20 +197,20 @@ experiment('two part tariff ref: 2PT2', () => {
 
     experiment('transactions', () => {
       test('the batch and charge module have the same number of transactions', async () => {
-        transactionTests.assertNumberOfTransactions(batch, chargeModuleTransactions);
+        transactionTests.assertNumberOfTransactions(twoPartTariffBatch, chargeModuleTransactions);
       });
 
       test('the batch and charge module contain the same transactions', async () => {
-        transactionTests.assertTransactionsAreInEachSet(batch, chargeModuleTransactions);
+        transactionTests.assertTransactionsAreInEachSet(twoPartTariffBatch, chargeModuleTransactions);
       });
 
       test('the charge module transaction contain the expected data', async () => {
-        transactionTests.assertBatchTransactionDataExistsInChargeModule(batch, chargeModuleTransactions);
+        transactionTests.assertBatchTransactionDataExistsInChargeModule(twoPartTariffBatch, chargeModuleTransactions);
       });
     });
   });
 
-  after(async () => {
-    await services.tearDown.tearDown(batch);
-  });
+  // after(async () => {
+  //   await services.tearDown.tearDown(batch);
+  // });
 });

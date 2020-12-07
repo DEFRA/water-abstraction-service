@@ -6,6 +6,14 @@ exports.rl1 = {
   metadata: 'metadata'
 }
 
+exports.rl2 = {
+  quantity: 10000,
+  startDate: '2019-12-01',
+  endDate:	'2020-03-31',
+  timePeriod: 'month',
+  metadata: 'metadata'
+}
+// I don't believe we need the meta data for the return line to produce the invoice??
 // const metadata = {
 //         substance:	'water',
 //         quantity:	109,
