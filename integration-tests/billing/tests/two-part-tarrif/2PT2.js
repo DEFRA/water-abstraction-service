@@ -14,7 +14,7 @@ const { omit } = require('lodash');
 const services = require('../../services');
 const transactionTests = require('../transaction-tests');
 
-experiment('two part tariff ref: 2PT1', () => {
+experiment('two part tariff ref: 2PT2', () => {
   let batch;
   let chargeModuleTransactions;
   let twoPartTariffBatch;
@@ -29,7 +29,7 @@ experiment('two part tariff ref: 2PT1', () => {
         company: 'co1',
         invoiceAccount: 'ia1',
         chargeVersion: 'cv1',
-        chargeElements: ['ce2']
+        chargeElements: ['ce5']
       }],
       returns: [
         {
@@ -66,7 +66,7 @@ experiment('two part tariff ref: 2PT1', () => {
     });
   });
 
-  experiment('has approved 2PT batch', () => {
+  experiment('approve the 2PT batch and continue processing', () => {
     before(async () => {
       twoPartTariffBatch = await services.scenarios.approveTwoPartTariffBatch(batch.billingBatchId);
       chargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(twoPartTariffBatch);
@@ -74,18 +74,18 @@ experiment('two part tariff ref: 2PT1', () => {
 
     experiment('has expected invoice details', () => {
       test('the batch is in "review" status', async () => {
-        expect(twoPartTariffBatch.status).to.equal('ready');
+        expect(batch.status).to.equal('review');
       });
 
       test('1 invoice is generated', async () => {
-        expect(twoPartTariffBatch.billingInvoices).to.have.length(1);
+        expect(batch.billingInvoices).to.have.length(1);
       });
 
       experiment('the first invoice', () => {
         let invoice;
 
         beforeEach(async () => {
-          invoice = twoPartTariffBatch.billingInvoices[0];
+          invoice = batch.billingInvoices[0];
         });
 
         test('has the correct invoice account', async () => {
@@ -117,27 +117,39 @@ experiment('two part tariff ref: 2PT1', () => {
             licence = invoice.billingInvoiceLicences[0];
           });
 
-          test('has the correct licence name', async () => {
-            expect(licence.licenceHolderName.lastName).to.equal('Testerson');
-            expect(licence.licenceHolderName.firstName).to.equal('John');
-            expect(licence.licenceHolderName.title).to.equal('Mr');
-          });
+          // test('has the correct licence name', async () => {
+          //   expect(licence.licenceHolderName.lastName).to.equal('Testerson');
+          //   expect(licence.licenceHolderName.firstName).to.equal('John');
+          //   expect(licence.licenceHolderName.title).to.equal('Mr');
+          // });
+
+          // test('has the correct licence holder address', async () => {
+          //   expect(omit(licence.licenceHolderAddress, 'id')).to.equal({
+          //     town: 'Testington',
+          //     county: 'Testingshire',
+          //     country: 'UK',
+          //     postcode: 'TT1 1TT',
+          //     addressLine1: 'Big Farm',
+          //     addressLine2: 'Windy road',
+          //     addressLine3: 'Buttercup meadow',
+          //     addressLine4: null
+          //   });
+          // });
 
           test('has 1 transaction', async () => {
-            expect(licence.billingTransactions).to.have.length(1);
+            expect(licence.billingTransactions).to.have.length(2);
           });
 
           experiment('the first transaction', () => {
             let transaction;
             beforeEach(async () => {
-              transaction = licence.billingTransactions[0];
+              transaction = licence.billingTransactions[1];
             });
 
             test('is a standard charge', async () => {
               expect(transaction.chargeType).to.equal('standard');
               expect(transaction.isCredit).to.be.false();
-              //TODO not sure if this is correct
-              expect(transaction.isTwoPartTariffSupplementary).to.be.true();
+              expect(transaction.isTwoPartTariffSupplementary).to.be.false();
               expect(transaction.isDeMinimis).to.be.false();
               expect(transaction.isNewLicence).to.be.false();
             });
@@ -150,7 +162,7 @@ experiment('two part tariff ref: 2PT1', () => {
             test('has the correct abstraction period', async () => {
               expect(transaction.abstractionPeriod).to.equal({
                 endDay: 31,
-                endMonth: 10,
+                endMonth: 3,
                 startDay: 1,
                 startMonth: 4
               });
@@ -159,18 +171,18 @@ experiment('two part tariff ref: 2PT1', () => {
             test('has the correct factors', async () => {
               expect(transaction.source).to.equal('unsupported');
               expect(transaction.season).to.equal('summer');
-              expect(transaction.loss).to.equal('high');
+              expect(transaction.loss).to.equal('low');
             });
 
             test('has the correct quantities', async () => {
-              expect(transaction.authorisedQuantity).to.equal('25');
-              expect(transaction.billableQuantity).to.equal('25');
-              expect(transaction.volume).to.equal('10');
+              expect(transaction.authorisedQuantity).to.equal('50');
+              expect(transaction.billableQuantity).to.equal('50');
+              expect(transaction.volume).to.equal('50');
             });
 
             test('has the correct authorised/billable days', async () => {
-              expect(transaction.authorisedDays).to.equal(214);
-              expect(transaction.billableDays).to.equal(214);
+              expect(transaction.authorisedDays).to.equal(366);
+              expect(transaction.billableDays).to.equal(366);
             });
 
             test('has been sent to the charge module', async () => {
@@ -179,17 +191,17 @@ experiment('two part tariff ref: 2PT1', () => {
             });
 
             test('has the correct description', async () => {
-              expect(transaction.description).to.equal('Second Part Spray Irrigation - Direct Charge at CE2');
+              expect(transaction.description).to.equal('CE1');
             });
 
             test('has the correct agreements', async () => {
               expect(transaction.section126Factor).to.equal(null);
-              expect(transaction.section127Agreement).to.equal(true);
+              expect(transaction.section127Agreement).to.equal(false);
               expect(transaction.section130Agreement).to.equal(null);
             });
 
             test('has a stable transaction key', async () => {
-              expect(transaction.transactionKey).to.equal('63569871e91035bbc0dc1537f304eb1e');
+              expect(transaction.transactionKey).to.equal('dc1467401acc8ff1124ac55ef6033a15');
             });
           });
         });
@@ -198,15 +210,15 @@ experiment('two part tariff ref: 2PT1', () => {
 
     experiment('transactions', () => {
       test('the batch and charge module have the same number of transactions', async () => {
-        transactionTests.assertNumberOfTransactions(twoPartTariffBatch, chargeModuleTransactions);
+        transactionTests.assertNumberOfTransactions(batch, chargeModuleTransactions);
       });
 
       test('the batch and charge module contain the same transactions', async () => {
-        transactionTests.assertTransactionsAreInEachSet(twoPartTariffBatch, chargeModuleTransactions);
+        transactionTests.assertTransactionsAreInEachSet(batch, chargeModuleTransactions);
       });
 
       test('the charge module transaction contain the expected data', async () => {
-        transactionTests.assertBatchTransactionDataExistsInChargeModule(twoPartTariffBatch, chargeModuleTransactions);
+        transactionTests.assertBatchTransactionDataExistsInChargeModule(batch, chargeModuleTransactions);
       });
     });
   });

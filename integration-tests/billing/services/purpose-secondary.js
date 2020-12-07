@@ -18,16 +18,11 @@ const create = code => bookshelf.knex.raw(insertQuery, purposeSecondaryData[code
 
 const getByLegacyId = async id => PurposeSecondary.forge({ legacy_id: id }).fetch();
 
-/**
- * Creates a purpose for the charge element specified
- * @param {String} key - charge element key
- */
-const createForChargeElement = async key => {
-  const code = chargeElementsData[key].purposeSecondary;
+const createAndGetId = async code => {
   await create(code);
   const data = await getByLegacyId(code);
   return data;
 };
 
-exports.createForChargeElement = createForChargeElement;
+exports.createAndGetId = createAndGetId;
 exports.getByLegacyId = getByLegacyId;

@@ -1,8 +1,8 @@
 const { ReturnVersion, ReturnRequirement, ReturnRequirementPurpose, bookshelf } = require('../../../src/lib/connectors/bookshelf');
-const returnsData = require('./data/returns');
-const purposePrimaryServ = require('./purpose-primary');
-const purposeSecondaryServ = require('./purpose-secondary');
-const purposeUsesServ = require('./purpose-uses');
+const returnReqsData = require('./data/return-requirements');
+const purposePrimaryService = require('./purpose-primary');
+const purposeSecondaryService = require('./purpose-secondary');
+const purposeUsesService = require('./purpose-uses');
 const queries = require('./queries/return-requirements');
 
 /**
@@ -10,14 +10,10 @@ const queries = require('./queries/return-requirements');
  * @param {Object} region
  * @param {String} scenarioKey
  */
-const createReturnVersion = async (licenceId) => {
+const createReturnVersion = async (data) => {
   const returnsVersion = await ReturnVersion
-    .forge({
-      licenceId: licenceId,
-      ...returnsData.r2
-    })
+    .forge(data)
     .save();
-
   return returnsVersion;
 };
 
@@ -26,14 +22,10 @@ const createReturnVersion = async (licenceId) => {
  * @param {Object} region
  * @param {String} scenarioKey
  */
-const createReturnRequirement = async (returnVersionId) => {
+const createReturnRequirement = async (data) => {
   const returnsVersion = await ReturnRequirement
-    .forge({
-      returnVersionId,
-      ...returnsData.r3
-    })
+    .forge(data)
     .save();
-
   return returnsVersion;
 };
 
@@ -42,23 +34,10 @@ const createReturnRequirement = async (returnVersionId) => {
  * @param {Object} region
  * @param {String} scenarioKey
  */
-const createReturnRequirementPurpose = async (returnRequirementId) => {
-  const purposePrimary = await purposePrimaryServ.getByLegacyId('A');
-  const purposeSecondary = await purposeSecondaryServ.getByLegacyId('AGR');
-  const purposeUse = await purposeUsesServ.getByLegacyId('400');
-
-  const dataa = returnsData.r4;
-  dataa.purposePrimaryId = purposePrimary.get('purposePrimaryId');
-  dataa.purposeSecondaryId = purposeSecondary.get('purposeSecondaryId');
-  dataa.purposeUseId = purposeUse.get('purposeUseId');
-
+const createReturnRequirementPurpose = async (data) => {
   const returnRequirementPurpose = await ReturnRequirementPurpose
-    .forge({
-      returnRequirementId,
-      ...dataa
-    })
+    .forge(data)
     .save();
-
   return returnRequirementPurpose;
 };
 
@@ -68,11 +47,29 @@ const tearDown = async () => {
   await bookshelf.knex.raw(queries.deleteReturnVersions);
 };
 
-const createReturnRequirementsData = async licenceId => {
-  const version = await createReturnVersion(licenceId);
-  const requirement = await createReturnRequirement(version.get('returnVersionId'));
-  const purpose = await createReturnRequirementPurpose(requirement.get('returnRequirementId'));
-  return { version, requirement, purpose };
+const createReturnRequirementsData = async (returnsRequirements, licenceId) => {
+  for (const row of returnsRequirements) {
+    const { version, requirement, purpose } = returnReqsData[row.returnRequirement];
+
+    // create return requirement version
+    const ver = await createReturnVersion({ ...version, licenceId });
+
+    // create return requirement
+    const req = await createReturnRequirement({ ...requirement, returnVersionId: ver.get('returnVersionId') });
+
+    // create return requirement purpose
+    const [primary, secondary, use] = await Promise.all([
+      purposePrimaryService.createAndGetId(purpose.purposePrimaryId),
+      purposeSecondaryService.createAndGetId(purpose.purposeSecondaryId),
+      purposeUsesService.createAndGetId(purpose.purposeUseId)
+    ]);
+
+    purpose.purposePrimaryId = primary.get('purposePrimaryId');
+    purpose.purposeSecondaryId = secondary.get('purposeSecondaryId');
+    purpose.purposeUseId = use.get('purposeUseId');
+    purpose.returnRequirementId = req.get('returnRequirementId');
+    await createReturnRequirementPurpose(purpose);
+  };
 };
 
 exports.create = createReturnRequirementsData;

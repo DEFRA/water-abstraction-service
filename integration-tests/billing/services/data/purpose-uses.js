@@ -12,5 +12,11 @@ module.exports = {
     description: 'Spray Irrigation - Direct',
     lossFactor: 'high',
     isTwoPartTariff: true
+  }, 
+  [420]: {
+    legacy_id: 420,
+    description: 'Spray Irrigation - Direct',
+    lossFactor: 'high',
+    isTwoPartTariff: true
   }
 };
