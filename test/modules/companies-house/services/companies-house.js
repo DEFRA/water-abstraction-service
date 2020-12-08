@@ -17,7 +17,12 @@ const Pagination = require('../../../../src/lib/models/pagination');
 const Company = require('../../../../src/lib/models/company');
 const Address = require('../../../../src/lib/models/address');
 
-const createCompaniesHouseResponse = () => ({
+const { logger } = require('../../../../src/logger');
+
+const COMPANY_NUMBER = '012345';
+const COMPANY_NAME = 'BIG CO LIMITED';
+
+const createCompaniesHouseSearchResponse = () => ({
   page_number: 2,
   start_index: 40,
   items: [
@@ -29,7 +34,7 @@ const createCompaniesHouseResponse = () => ({
       description: '012345 - Incorporated on 1  May 2007',
       snippet: '',
       company_status: 'active',
-      title: 'BIG CO LIMITED',
+      title: COMPANY_NAME,
       matches: {
         title: [
           1,
@@ -48,7 +53,7 @@ const createCompaniesHouseResponse = () => ({
       links: {
         self: '/company/012345'
       },
-      company_number: '012345',
+      company_number: COMPANY_NUMBER,
       address_snippet: '14 Big Farm Road, Testington, TT1 1TT'
     }
   ],
@@ -57,7 +62,26 @@ const createCompaniesHouseResponse = () => ({
   kind: 'search#companies'
 });
 
+const createCompaniesHouseGetCompanyResponse = () => ({
+  company_number: COMPANY_NUMBER,
+  company_name: COMPANY_NAME,
+  type: 'ltd',
+  registered_office_address: {
+    address_line_1: 'Big Farm Road',
+    premises: '14',
+    locality: 'Testington',
+    postal_code: 'TT1 1TT'
+  },
+  company_status: 'active'
+});
+
 experiment('modules/companies-house/services/companies-house-service', () => {
+  beforeEach(async () => {
+    sandbox.stub(companiesHouseApiConnector, 'searchCompanies');
+    sandbox.stub(companiesHouseApiConnector, 'getCompany');
+    sandbox.stub(logger, 'error');
+  });
+
   afterEach(async () => {
     sandbox.restore();
   });
@@ -67,7 +91,7 @@ experiment('modules/companies-house/services/companies-house-service', () => {
 
     experiment('when the company type is supported and there is no "care of"', () => {
       beforeEach(async () => {
-        sandbox.stub(companiesHouseApiConnector, 'searchCompanies').resolves(createCompaniesHouseResponse());
+        companiesHouseApiConnector.searchCompanies.resolves(createCompaniesHouseSearchResponse());
         result = await companiesHouseService.searchCompanies('Test search', 3);
       });
 
@@ -93,7 +117,7 @@ experiment('modules/companies-house/services/companies-house-service', () => {
       test('maps the company correctly', async () => {
         const { company } = result.data[0];
         expect(company instanceof Company).to.be.true();
-        expect(company.name).to.equal('BIG CO LIMITED');
+        expect(company.name).to.equal(COMPANY_NAME);
         expect(company.type).to.equal(Company.COMPANY_TYPES.organisation);
         expect(company.organisationType).to.equal(Company.ORGANISATION_TYPES.limitedCompany);
         expect(company.companyNumber).to.equal('012345');
@@ -111,15 +135,75 @@ experiment('modules/companies-house/services/companies-house-service', () => {
 
     experiment('when the company type is not supported', () => {
       beforeEach(async () => {
-        const apiResponse = createCompaniesHouseResponse();
+        const apiResponse = createCompaniesHouseSearchResponse();
         apiResponse.items[0].company_type = 'old-public-company';
-        sandbox.stub(companiesHouseApiConnector, 'searchCompanies').resolves(apiResponse);
+        companiesHouseApiConnector.searchCompanies.resolves(apiResponse);
         result = await companiesHouseService.searchCompanies('Test search', 3);
       });
 
       test('the company organisation type is not set', async () => {
         const { company } = result.data[0];
         expect(company.organisationType).to.be.undefined();
+      });
+    });
+  });
+
+  experiment('.getCompany', () => {
+    let result;
+
+    experiment('when the Companies House API call succeeds', () => {
+      beforeEach(async () => {
+        companiesHouseApiConnector.getCompany.resolves(createCompaniesHouseGetCompanyResponse());
+        result = await companiesHouseService.getCompany(COMPANY_NUMBER);
+      });
+
+      test('calls companies house API', async () => {
+        expect(companiesHouseApiConnector.getCompany.calledWith(
+          COMPANY_NUMBER
+        )).to.be.true();
+      });
+
+      test('maps the company correctly', async () => {
+        const { company } = result;
+        expect(company instanceof Company).to.be.true();
+        expect(company.name).to.equal(COMPANY_NAME);
+        expect(company.type).to.equal(Company.COMPANY_TYPES.organisation);
+        expect(company.organisationType).to.equal(Company.ORGANISATION_TYPES.limitedCompany);
+        expect(company.companyNumber).to.equal('012345');
+      });
+
+      test('maps the address correctly', async () => {
+        const { address } = result;
+        expect(address instanceof Address).to.be.true();
+        expect(address.addressLine2).to.equal('14');
+        expect(address.addressLine3).to.equal('Big Farm Road');
+        expect(address.town).to.equal('Testington');
+        expect(address.postcode).to.equal('TT1 1TT');
+      });
+
+      test('no error is logged', async () => {
+        expect(logger.error.called).to.be.false();
+      });
+    });
+
+    experiment('when the Companies House API call fails', () => {
+      beforeEach(async () => {
+        companiesHouseApiConnector.getCompany.rejects(new Error('oops!'));
+        result = await companiesHouseService.getCompany(COMPANY_NUMBER);
+      });
+
+      test('calls companies house API', async () => {
+        expect(companiesHouseApiConnector.getCompany.calledWith(
+          COMPANY_NUMBER
+        )).to.be.true();
+      });
+
+      test('resolves with null', async () => {
+        expect(result).to.be.null();
+      });
+
+      test('logs an error', async () => {
+        expect(logger.error.called).to.be.true();
       });
     });
   });

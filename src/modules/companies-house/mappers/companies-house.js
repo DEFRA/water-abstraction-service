@@ -43,7 +43,7 @@ const mapAddress = data => {
  */
 const mapCompany = item => {
   const company = new Company();
-  const organisationType = mapCompanyType(item.company_type);
+  const organisationType = mapCompanyType(item.company_type || item.type);
   return company.fromHash({
     name: item.title || item.company_name,
     type: Company.COMPANY_TYPES.organisation,

@@ -66,4 +66,36 @@ experiment('lib/connectors/companies-house', () => {
       expect(result).to.equal(apiResponse);
     });
   });
+
+  experiment('.getCompany', () => {
+    let result;
+
+    beforeEach(async () => {
+      result = await companiesHouseApi.getCompany(123456);
+    });
+
+    test('is a GET call', async () => {
+      const [{ method }] = requestPromise.externalHttp.lastCall.args;
+      expect(method).to.equal('GET');
+    });
+
+    test('calls the correct endpoint', async () => {
+      const [{ uri }] = requestPromise.externalHttp.lastCall.args;
+      expect(uri).to.equal('https://api.companieshouse.gov.uk/company/123456');
+    });
+
+    test('expects a JSON response', async () => {
+      const [{ json }] = requestPromise.externalHttp.lastCall.args;
+      expect(json).to.be.true();
+    });
+
+    test('sets a base 64 encoded auth header', async () => {
+      const [{ headers }] = requestPromise.externalHttp.lastCall.args;
+      expect(headers.Authorization).to.equal('Basic bXlfYXBpX2tleQ==');
+    });
+
+    test('resolves with the API response', async () => {
+      expect(result).to.equal(apiResponse);
+    });
+  });
 });

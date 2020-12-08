@@ -3,6 +3,7 @@
 const companiesHouseApiConnector = require('../../../lib/connectors/companies-house');
 const companiesHouseMapper = require('../mappers/companies-house');
 const Pagination = require('../../../lib/models/pagination');
+const { logger } = require('../../../logger');
 
 /**
  * Searches companies house companies by the supplied query string
@@ -42,7 +43,8 @@ const getCompany = async companyNumber => {
       address: companiesHouseMapper.mapAddress(data.registered_office_address)
     };
   } catch (err) {
-    console.log(err);
+    logger.error('Companies house API error', err);
+    return null;
   }
 };
 
