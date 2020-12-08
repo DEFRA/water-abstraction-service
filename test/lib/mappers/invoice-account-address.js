@@ -148,7 +148,7 @@ experiment('modules/billing/mappers/invoice-account-address', () => {
           contactId: '11111111-1111-1111-1111-111111111111',
           firstName: 'John',
           lastName: 'Testington',
-          type: 'person'
+          contactType: 'person'
         };
         result = invoiceAccountAddressMapper.crmToModel({ ...dbRow, contact: contactData });
       });
@@ -162,7 +162,7 @@ experiment('modules/billing/mappers/invoice-account-address', () => {
         expect(contact.id).to.equal(contactData.contactId);
         expect(contact.firstName).to.equal(contactData.firstName);
         expect(contact.lastName).to.equal(contactData.lastName);
-        expect(contact.type).to.equal(contactData.type);
+        expect(contact.type).to.equal(contactData.contactType);
       });
     });
 
