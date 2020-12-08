@@ -9,7 +9,8 @@ const { VALID_ADDRESS } = require('@envage/water-abstraction-helpers').validator
 const ADDRESS_SOURCE = {
   nald: 'nald',
   wrls: 'wrls',
-  eaAddressFacade: 'ea-address-facade'
+  eaAddressFacade: 'ea-address-facade',
+  companiesHouse: 'companies-house'
 };
 
 const UK_COUNTRIES = [

@@ -17,5 +17,14 @@ module.exports = {
         }
       }
     }
+  },
+
+  getCompaniesHouseCompany: {
+    path: '/water/1.0/companies-house/companies/{companyNumber}',
+    method: 'GET',
+    handler: controller.getCompaniesHouseCompany,
+    config: {
+      description: 'Gets a Companies House company'
+    }
   }
 };

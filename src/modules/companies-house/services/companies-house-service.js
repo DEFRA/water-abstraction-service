@@ -28,4 +28,23 @@ const searchCompanies = async (q, page) => {
   };
 };
 
+/**
+ * Gets a single company from Companies House
+ * Maps to service model shape
+ * @param {Number} q - companyNumber
+ */
+const getCompany = async companyNumber => {
+  try {
+    const data = await companiesHouseApiConnector.getCompany(companyNumber);
+
+    return {
+      company: companiesHouseMapper.mapCompany(data),
+      address: companiesHouseMapper.mapAddress(data.registered_office_address)
+    };
+  } catch (err) {
+    console.log(err);
+  }
+};
+
 exports.searchCompanies = searchCompanies;
+exports.getCompany = getCompany;
