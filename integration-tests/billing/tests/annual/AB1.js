@@ -101,25 +101,6 @@ experiment('basic example scenario', () => {
           licence = invoice.billingInvoiceLicences[0];
         });
 
-        // test('has the correct licence name', async () => {
-        //   expect(licence.licenceHolderName.lastName).to.equal('Testerson');
-        //   expect(licence.licenceHolderName.firstName).to.equal('John');
-        //   expect(licence.licenceHolderName.title).to.equal('Mr');
-        // });
-
-        // test('has the correct licence holder address', async () => {
-        //   expect(omit(licence.licenceHolderAddress, 'id')).to.equal({
-        //     town: 'Testington',
-        //     county: 'Testingshire',
-        //     country: 'UK',
-        //     postcode: 'TT1 1TT',
-        //     addressLine1: 'Big Farm',
-        //     addressLine2: 'Windy road',
-        //     addressLine3: 'Buttercup meadow',
-        //     addressLine4: null
-        //   });
-        // });
-
         test('has 1 transaction', async () => {
           expect(licence.billingTransactions).to.have.length(2);
         });
