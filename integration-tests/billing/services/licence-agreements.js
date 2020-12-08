@@ -13,7 +13,8 @@ const create = async (licence, scenarioKey) => {
   if (!cache[scenarioKey]) {
     const licenceAgreementData = data.licenceAgreements[scenarioKey];
     await agreements.create(licenceAgreementData.financialAgreementTypeId);
-
+    const agreementType = await agreements.findOneByCode(licenceAgreementData.financialAgreementTypeId);
+    licenceAgreementData.financialAgreementTypeId = agreementType.financialAgreementTypeId;
     const licenceAgreement = await LicenceAgreement
       .forge({
         isTest: true,

@@ -1,6 +1,5 @@
 'use strict';
 
-const chargeElementsData = require('./data/charge-elements');
 const purposePrimaryData = require('./data/purpose-primary');
 
 const { bookshelf } = require('../../../src/lib/connectors/bookshelf');
@@ -18,14 +17,11 @@ const create = code => bookshelf.knex.raw(insertQuery, purposePrimaryData[code])
 
 const getByLegacyId = id => PurposePrimary.forge({ legacy_id: id }).fetch();
 
-/**
- * Creates a purpose for the charge element specified
- * @param {String} key - charge element key
- */
-const createForChargeElement = async key => {
-  const code = chargeElementsData[key].purposePrimary;
+const createAndGetId = async code => {
   await create(code);
-  return getByLegacyId(code);
+  const data = await getByLegacyId(code);
+  return data;
 };
 
-exports.createForChargeElement = createForChargeElement;
+exports.createAndGetId = createAndGetId;
+exports.getByLegacyId = getByLegacyId;

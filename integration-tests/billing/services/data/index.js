@@ -8,3 +8,5 @@ exports.licences = require('./licences');
 exports.licenceAgreements = require('./licence-agreements');
 exports.purposeUses = require('./purpose-uses');
 exports.regions = require('./regions');
+exports.returns = require('./returns'); 
+exports.returnRequirements = require('./return-requirements');

@@ -40,18 +40,18 @@ exports.deleteBillingBatchChargeVersionYears = `delete from water.billing_batch_
     and b.region_id=r.region_id 
     and r.is_test=true`;
 
-exports.deleteBillingBatchChargeVersions = `delete from water.billing_batch_charge_versions cv
-  using 
-    water.billing_batches b,
-    water.regions r
-  where
-    cv.billing_batch_id=b.billing_batch_id
-    and b.region_id=r.region_id 
-    and r.is_test=true`;
-
 exports.deleteBillingBatches = `delete from water.billing_batches b 
   using 
     water.regions r
   where
     b.region_id=r.region_id 
     and r.is_test=true`;
+
+exports.deleteBillingVolumes = `delete from water.billing_volumes v
+using 
+    water.billing_batches b,
+    water.regions r
+  where
+    v.billing_batch_id=b.billing_batch_id
+    and b.region_id=r.region_id 
+    and r.is_test=true;`;
