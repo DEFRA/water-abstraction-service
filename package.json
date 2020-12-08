@@ -72,6 +72,7 @@
     "dotenv": "^4.0.0",
     "es6-error": "^4.1.1",
     "good-winston": "^4.0.0",
+    "handlebars": "^4.7.6",
     "hapi-auth-jwt2": "^8.8.1",
     "hapi-swagger": "^10.3.0",
     "knex": "^0.21.1",
