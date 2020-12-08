@@ -5,6 +5,7 @@ const urlJoin = require('url-join');
 const moment = require('moment');
 const { set, cloneDeep } = require('lodash');
 const config = require('../../../../config.js');
+const jwt = require('jsonwebtoken');
 const { logger } = require('../../../logger');
 
 /**
@@ -14,6 +15,12 @@ const { logger } = require('../../../logger');
  * @return {Promise<Object>}
  */
 const makeTokenRequest = async () => {
+  if (config.services.chargeModule.includes('localhost')) {
+    const token = await jwt.sign({ client_id: config.cognito.username }, '1');
+    return {
+      access_token: token
+    };
+  }
   logger.info('getting cognito token');
   const buff = Buffer.from(config.cognito.username + ':' + config.cognito.password);
   const options = {
