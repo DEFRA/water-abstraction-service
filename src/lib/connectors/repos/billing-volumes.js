@@ -135,6 +135,19 @@ const updateByBatchId = async (billingBatchId, changes) => {
   return result.toJSON();
 };
 
+/**
+ * Marks all records as errored by batch ID
+ * @param {String} billingBatchId
+ */
+const markVolumesAsErrored = async (billingBatchId) => {
+  const result = await BillingVolume
+    .where('billing_batch_id', billingBatchId)
+    .save({
+      errored_on: new Date()
+    }, { method: 'update' });
+  return result.toJSON();
+};
+
 exports.create = create;
 exports.findApprovedByChargeElementIdsAndFinancialYear = findApprovedByChargeElementIdsAndFinancialYear;
 exports.update = update;
@@ -147,3 +160,4 @@ exports.findByBatchIdAndLicenceId = findByBatchIdAndLicenceId;
 exports.findByIds = findByIds;
 exports.deleteByBatchIdAndLicenceId = deleteByBatchIdAndLicenceId;
 exports.updateByBatchId = updateByBatchId;
+exports.markVolumesAsErrored = markVolumesAsErrored;
