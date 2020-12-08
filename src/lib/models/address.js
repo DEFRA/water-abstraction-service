@@ -208,7 +208,8 @@ class Address extends Model {
    * @return { error, value }
    */
   validate () {
-    const schema = this.source === ADDRESS_SOURCE.nald
+    // Skip validation for NALD/companies house addresses
+    const schema = [ADDRESS_SOURCE.nald, ADDRESS_SOURCE.companiesHouse].includes(this.source)
       ? Joi.object()
       : VALID_ADDRESS;
 
