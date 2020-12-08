@@ -17,6 +17,7 @@ const create = async (region, licence, scenarioKey, crmData) => ChargeVersion
     isTest: true,
     regionCode: region.get('naldRegionId'),
     licenceRef: licence.get('licenceRef'),
+    licenceId: licence.get('licenceId'),
     ...data.chargeVersions[scenarioKey],
     companyId: crmData.company.companyId,
     invoiceAccountId: crmData.invoiceAccount.invoiceAccountId

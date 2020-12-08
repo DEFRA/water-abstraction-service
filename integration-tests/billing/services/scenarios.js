@@ -13,6 +13,9 @@ const purposePrimary = require('./purpose-primary');
 const purposeSecondary = require('./purpose-secondary');
 const purposeUses = require('./purpose-uses');
 const crm = require('./crm');
+const data = require('./data');
+const returns = require('./returns');
+const returnRequirements = require('./return-requirements');
 
 const schema = {
   licence: Joi.string().required(),
@@ -24,7 +27,15 @@ const schema = {
     chargeElements: Joi.array().items(
       Joi.string()
     ).required()
-  }).required()
+  }).required(),
+  returns: Joi.array().items({
+    return: Joi.string().required(),
+    version: Joi.string().required(),
+    lines: Joi.array().items(
+      Joi.string().required()
+    ).required(),
+    returnRequirement: Joi.string().required()
+  }).optional()
 };
 
 /**
@@ -44,9 +55,9 @@ const createCRMChargeVersionData = async chargeVersion => {
 const createChargeElement = async (chargeVersion, key) => {
   // Create purposes
   const [primary, secondary, use] = await Promise.all([
-    purposePrimary.createForChargeElement(key),
-    purposeSecondary.createForChargeElement(key),
-    purposeUses.createForChargeElement(key)
+    purposePrimary.createAndGetId(data.chargeElements[key].purposePrimary),
+    purposeSecondary.createAndGetId(data.chargeElements[key].purposeSecondary),
+    purposeUses.createAndGetId(data.chargeElements[key].purposeUse)
   ]);
 
   chargeVersion.set('purposePrimaryId', primary.get('purposePrimaryId'));
@@ -76,6 +87,10 @@ const createScenario = async scenario => {
 
     const tasks = row.chargeElements.map(key => createChargeElement(chargeVersion, key));
     await Promise.all(tasks);
+  }
+  if (scenario.returns) {
+    await returnRequirements.create(scenario.returns, licence.get('licenceId'));
+    await returns.create(scenario.returns, licence.get('licenceRef'));
   }
   return region.get('regionId');
 };
@@ -141,5 +156,29 @@ const getBatchWhenProcessed = batchId => promisePoller({
   retries: 30
 });
 
+/**
+   * Approves the review stage of a two part tariff batch, the water
+   * service will then kick off the next job to continue processing
+   * the batch
+   *
+   * @param {String} batchId UUID of the batch to approve review on
+   */
+const approveTwoPartTariffBatch = async (batchId) => {
+  await server.inject({
+    auth: {
+      strategy: 'jwt',
+      credentials: {
+      }
+    },
+    method: 'POST',
+    url: `/water/1.0/billing/batches/${batchId}/approve-review`,
+    headers: { 'defra-internal-user-id': 19 }
+
+  });
+
+  return getBatchWhenProcessed(batchId);
+};
+
+exports.approveTwoPartTariffBatch = approveTwoPartTariffBatch;
 exports.runScenario = runScenario;
 exports.createScenario = createScenario;
