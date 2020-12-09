@@ -23,7 +23,7 @@ module.exports = {
           country: Joi.string().required(),
           postcode: OPTIONAL_STRING,
           isTest: Joi.boolean().optional().default(false),
-          dataSource: Joi.string().valid('wrls', 'nald').default('wrls'),
+          dataSource: Joi.string().valid('wrls', 'nald', 'ea-address-facade', 'companies-house').default('wrls'),
           uprn: Joi.number().integer().min(0).default(null).allow(null)
         },
         headers: async values => {
