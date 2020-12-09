@@ -9,11 +9,15 @@ SELECT * FROM water.scheduled_notification
 
 exports.getKPIReturnsMonthlyData = `
 SELECT date_part('month', created)::integer AS month, 
-SUM(CASE WHEN subtype = 'pdf.return_form' THEN 1 ELSE 0 END)::integer AS request,
-SUM(CASE WHEN subtype = 'pdf.return_form' THEN 0 ELSE 1 END)::integer AS return, 
+SUM(CASE 
+  WHEN subtype = 'pdf.return_form' THEN 1
+  WHEN subtype = 'paperReturnForms' THEN jsonb_array_length(licences)
+  ELSE 0
+END)::integer AS request,
+SUM(CASE WHEN "type" = 'return' and subtype <> 'pdf.return_form' THEN 1 ELSE 0 END)::integer AS return, 
 CASE WHEN date_part('year', created)::integer = date_part('year', CURRENT_DATE) THEN true ELSE false END AS current_year
 FROM water.events 
-WHERE "type" = 'return' OR subtype = 'pdf.return_form'      
+WHERE "type" = 'return' OR subtype IN ('pdf.return_form', 'paperReturnForms')      
 AND date_part('year', created) = date_part('year', CURRENT_DATE)  
 GROUP BY  current_year, month
 ORDER BY current_year asc, month desc;`;
