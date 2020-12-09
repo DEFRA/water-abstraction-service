@@ -9,7 +9,6 @@ const chargeVersionMapper = require('../mappers/charge-version');
 
 // Services
 const service = require('./service');
-const licencesService = require('./licences');
 const chargeElementsService = require('./charge-elements');
 const invoiceAccountsService = require('./invoice-accounts-service');
 
