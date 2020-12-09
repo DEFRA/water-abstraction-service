@@ -17,7 +17,9 @@ const dbRow = {
   town: 'town',
   county: 'county',
   postcode: 'AB12 3CD',
-  country: 'country'
+  country: 'country',
+  isTest: false,
+  uprn: 123456
 };
 
 const addressData = {
@@ -50,10 +52,9 @@ experiment('modules/billing/mappers/address', () => {
       result = addressMapper.crmToModel(dbRow);
     });
 
-    test('returns empty Address instance when data is empty', async () => {
+    test('returns empty Address instance when data is null', async () => {
       const result = addressMapper.crmToModel(null);
       expect(result instanceof Address).to.be.true();
-      expect(result).to.equal({});
     });
 
     test('returns an Address instance', async () => {
@@ -94,6 +95,14 @@ experiment('modules/billing/mappers/address', () => {
 
     test('has the expected country value', async () => {
       expect(result.country).to.equal(dbRow.country);
+    });
+
+    test('has the expected isTest value', async () => {
+      expect(result.isTest).to.equal(dbRow.isTest);
+    });
+
+    test('has the expected uprn value', async () => {
+      expect(result.uprn).to.equal(dbRow.uprn);
     });
   });
 
@@ -197,7 +206,7 @@ experiment('modules/billing/mappers/address', () => {
       expect(address.addressLine3).to.equal(eaAddress.street_address);
       expect(address.addressLine4).to.equal(eaAddress.locality);
       expect(address.town).to.equal(eaAddress.city);
-      expect(address.county).to.be.undefined();
+      expect(address.county).to.be.null();
       expect(address.country).to.equal(eaAddress.country);
       expect(address.source).to.equal('ea-address-facade');
     });

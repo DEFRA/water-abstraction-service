@@ -19,10 +19,11 @@ const crmToModelMapper = createMapper()
     'lastName',
     'suffix',
     'department',
-    'type',
-    'dataSource'
+    'dataSource',
+    'isTest'
   )
   .map('contactId').to('id')
+  .map('contactType').to('type')
   .map('salutation').to('title');
 
 const crmToModel = row => createModel(Contact, row, crmToModelMapper);

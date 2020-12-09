@@ -5,7 +5,7 @@ const { InvalidEntityError } = require('../errors');
 const getAddressModel = address => {
   const addressModel = mappers.address.uiToModel(address);
   if (!addressModel.id) {
-    const { error } = addressModel.isValid();
+    const { error } = addressModel.validate();
     if (error) throw new InvalidEntityError('Invalid address', error);
   };
   return addressModel;

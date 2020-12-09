@@ -19,8 +19,9 @@ const dbRow = {
   lastName: 'Testington',
   suffix: 'OBE',
   deparment: 'Department',
-  type: 'person',
-  dataSource: 'wrls'
+  contactType: 'person',
+  dataSource: 'wrls',
+  isTest: true
 };
 
 const contactData = {
@@ -82,7 +83,11 @@ experiment('modules/billing/mappers/contact', () => {
     });
 
     test('has the expected type value', async () => {
-      expect(result.type).to.equal(dbRow.type);
+      expect(result.type).to.equal(dbRow.contactType);
+    });
+
+    test('has the expected isTest value', async () => {
+      expect(result.isTest).to.equal(dbRow.isTest);
     });
   });
 

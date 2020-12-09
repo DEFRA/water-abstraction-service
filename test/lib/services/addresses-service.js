@@ -49,9 +49,13 @@ experiment('modules/billing/services/addresses-service', () => {
     experiment('when new address data is provided', () => {
       beforeEach(async () => {
         addressData = {
+          addressLine1: null,
           addressLine2: '742',
           addressLine3: 'Evergreen Terrace',
+          addressLine4: null,
           town: 'Springfield',
+          county: null,
+          postcode: '12345',
           country: 'USA'
         };
         addressModel = new Address();

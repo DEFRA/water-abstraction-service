@@ -62,6 +62,7 @@ experiment('lib/connectors/repos/billing-batch-charge-version-year', () => {
         'billingBatch',
         'billingBatch.region',
         'chargeVersion',
+        'chargeVersion.changeReason',
         'chargeVersion.chargeElements',
         'chargeVersion.chargeElements.purposePrimary',
         'chargeVersion.chargeElements.purposeSecondary',
