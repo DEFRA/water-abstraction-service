@@ -31,6 +31,7 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
     sandbox.stub(controller, 'getEntity');
 
     sandbox.stub(licencesService, 'getLicenceById');
+    sandbox.stub(licencesService, 'flagForSupplementaryBilling').resolves();
 
     sandbox.stub(chargeVersionWorkflowService, 'create');
     sandbox.stub(chargeVersionWorkflowService, 'update');
@@ -251,8 +252,13 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
 
     beforeEach(async () => {
       request = {
-        params: {
-          chargeVersionWorkflowId: uuid()
+        pre: {
+          chargeVersionWorkflow: {
+            id: uuid(),
+            licence: {
+              id: uuid()
+            }
+          }
         }
       };
       h = {
@@ -267,9 +273,9 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
         response = await cvWorkflowsController.deleteChargeVersionWorkflow(request, h);
       });
 
-      test('the service delete() method is called with the correct ID', async () => {
+      test('the service delete() method is called with the charge version workflow', async () => {
         expect(chargeVersionWorkflowService.delete.calledWith(
-          request.params.chargeVersionWorkflowId
+          request.pre.chargeVersionWorkflow
         )).to.be.true();
       });
 
