@@ -4,6 +4,7 @@ const { get } = require('lodash');
 
 const chargeVersionMapper = require('../../../lib/mappers/charge-version');
 const userMapper = require('../../../lib/mappers/user');
+const chargeVersionWorkflowService = require('../services/charge-version-workflows');
 
 const Boom = require('@hapi/boom');
 const { logger } = require('../../../logger');
@@ -46,5 +47,17 @@ const mapInternalCallingUser = (request, h) => {
   return mapOrThrowBoom('user', internalCallingUser, userMapper);
 };
 
+const loadChargeVersionWorkflow = async request => {
+  const { chargeVersionWorkflowId } = request.params;
+  const chargeVersionWorkflow = await chargeVersionWorkflowService.getById(chargeVersionWorkflowId);
+
+  if (!chargeVersionWorkflow) {
+    return Boom.notFound(`No charge version workflow found with id: ${chargeVersionWorkflowId}`);
+  }
+
+  return chargeVersionWorkflow;
+};
+
 exports.mapChargeVersion = mapChargeVersion;
 exports.mapInternalCallingUser = mapInternalCallingUser;
+exports.loadChargeVersionWorkflow = loadChargeVersionWorkflow;

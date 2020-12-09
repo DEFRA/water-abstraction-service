@@ -25,6 +25,9 @@ const createServerForRoute = async (route, isAuth = false) => {
 
   const testRoute = cloneDeep(route);
   testRoute.handler = async () => 'ok';
+  if (testRoute.options) {
+    testRoute.options.pre = [];
+  }
 
   server.route(testRoute);
 
