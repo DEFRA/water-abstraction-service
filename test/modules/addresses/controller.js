@@ -5,7 +5,8 @@ const { experiment, test, beforeEach, afterEach } = exports.lab = Lab.script();
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
-const addressService = require('../../../src/modules/addresses/services/address-service');
+const addressService = require('../../../src/lib/services/addresses-service');
+const addressMapper = require('../../../src/lib/mappers/address');
 const helpers = require('../../../src/modules/addresses/lib/helpers');
 const Address = require('../../../src/lib/models/address');
 
@@ -49,7 +50,9 @@ experiment('./src/modules/change-reasons/controller.js', () => {
       addressLine4: address.address4,
       source: address.dataSource
     });
-    sandbox.stub(addressService, 'create');
+    sandbox.stub(addressService, 'createAddress');
+    sandbox.stub(addressMapper, 'uiToModel').returns(addressModel);
+    sandbox.stub(addressMapper, 'crmToModel').returns(addressModel);
     sandbox.stub(helpers, 'createAddressEvent').resolves();
   });
 
@@ -62,15 +65,15 @@ experiment('./src/modules/change-reasons/controller.js', () => {
 
     experiment('when the address is created without issue', () => {
       beforeEach(async () => {
-        addressService.create.resolves(addressModel);
+        addressService.createAddress.resolves(addressModel);
 
         request = createRequest();
         response = await controller.postAddress(request);
       });
 
       test('creates a new address record', async () => {
-        expect(addressService.create.calledWith(
-          request.payload
+        expect(addressService.createAddress.calledWith(
+          addressModel
         )).to.be.true();
       });
 
@@ -109,13 +112,13 @@ experiment('./src/modules/change-reasons/controller.js', () => {
             ...address
           }
         };
-        addressService.create.throws(err);
+        addressService.createAddress.throws(err);
         response = await controller.postAddress(createRequest());
       });
 
       test('tries to create a new address record', async () => {
-        expect(addressService.create.calledWith(
-          request.payload
+        expect(addressService.createAddress.calledWith(
+          addressModel
         )).to.be.true();
       });
 
@@ -144,7 +147,7 @@ experiment('./src/modules/change-reasons/controller.js', () => {
       let err;
       beforeEach(async () => {
         err = new Error('oh no! This is most unexpected');
-        addressService.create.throws(err);
+        addressService.createAddress.throws(err);
       });
 
       test('throws the error', async () => {
