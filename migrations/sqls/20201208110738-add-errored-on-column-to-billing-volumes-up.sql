@@ -1,8 +1,13 @@
+/* Add the column */
 alter table water.billing_volumes
-  add column errored_on timestamp DEFAULT null;
+  add column if not exists errored_on timestamp DEFAULT null;
 
+/* Drop the existing constraint */
 alter table water.billing_volumes
   drop constraint uniq_charge_element_id_financial_year_season;
 
-alter table water.billing_volumes
-  add constraint uniq_charge_element_id_financial_year_season unique (charge_element_id, financial_year, is_summer, errored_on);
+/* Mark the volumes that currently belong to a failed batch */
+UPDATE water.billing_volumes set errored_on = now() WHERE billing_batch_id IN (SELECT bb.billing_batch_id FROM water.billing_batches bb WHERE status='error');
+
+/* Create a partial index instead */
+create unique index uniq_charge_element_id_financial_year_season_err on water.billing_volumes(charge_element_id, financial_year, is_summer) where errored_on is null;

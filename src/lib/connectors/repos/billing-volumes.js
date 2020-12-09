@@ -26,7 +26,8 @@ const findApprovedByChargeElementIdsAndFinancialYear = async (ids, financialYear
     .query('whereIn', 'charge_element_id', ids)
     .where({
       financial_year: financialYear,
-      is_approved: true
+      is_approved: true,
+      errored_on: null
     })
     .fetchAll();
 
@@ -50,7 +51,7 @@ const update = async (billingVolumeId, changes) => {
 const getUnapprovedVolumesForBatch = async batchId => {
   const result = await BillingVolume
     .forge()
-    .where({ billing_batch_id: batchId, is_approved: false })
+    .where({ billing_batch_id: batchId, is_approved: false, errored_on: null })
     .fetchAll();
 
   return result.toJSON();
@@ -59,7 +60,9 @@ const getUnapprovedVolumesForBatch = async batchId => {
 const findByBatchId = async batchId => {
   const result = await BillingVolume
     .forge()
-    .where({ billing_batch_id: batchId })
+    .where({
+      billing_batch_id: batchId
+    })
     .fetchAll();
   return result.toJSON();
 };
