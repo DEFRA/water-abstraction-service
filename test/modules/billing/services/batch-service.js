@@ -96,6 +96,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(newRepos.billingTransactions, 'countByBatchId').resolves();
 
     sandbox.stub(newRepos.billingVolumes, 'deleteByBatchId').resolves();
+    sandbox.stub(newRepos.billingVolumes, 'markVolumesAsErrored').resolves();
 
     sandbox.stub(newRepos.billingBatchChargeVersionYears, 'deleteByBatchId').resolves();
 
