@@ -88,7 +88,8 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     test('finds only approved rows with the supplied financial year ending', async () => {
       expect(stub.where.calledWith({
         financial_year: 2020,
-        is_approved: true
+        is_approved: true,
+        errored_on: null
       })).to.be.true();
     });
 
@@ -148,7 +149,7 @@ experiment('lib/connectors/repos/billing-volumes', () => {
 
     test('queries for unapproved volumes with matching batch id', async () => {
       const [filter] = stub.where.lastCall.args;
-      expect(filter).to.equal({ billing_batch_id: 'test-id', is_approved: false });
+      expect(filter).to.equal({ billing_batch_id: 'test-id', is_approved: false, errored_on: null });
     });
 
     test('calls fetchAll', () => {
@@ -311,6 +312,27 @@ experiment('lib/connectors/repos/billing-volumes', () => {
 
     test('saves the changes', async () => {
       expect(stub.save.calledWith(changes)).to.be.true();
+    });
+
+    test('calls .toJSON on the collection', async () => {
+      expect(model.toJSON.called).to.be.true();
+    });
+  });
+
+  experiment('.markVolumesAsErrored', () => {
+    beforeEach(async () => {
+      await billingVolumes.markVolumesAsErrored('test-batch-id');
+    });
+
+    test('calls .where to find only the rows in the relevant batch', async () => {
+      expect(BillingVolume.where.calledWith(
+        'billing_batch_id',
+        'test-batch-id'
+      )).to.be.true();
+    });
+
+    test('saves the changes', async () => {
+      expect(stub.save.calledWith({ errored_on: new Date() })).to.be.true();
     });
 
     test('calls .toJSON on the collection', async () => {
