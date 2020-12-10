@@ -152,6 +152,7 @@ const setStatus = (batchId, status) =>
 const setErrorStatus = async (batchId, errorCode) => {
   logger.error(`Batch ${batchId} failed with error code ${errorCode}`);
   return Promise.all([
+    newRepos.billingVolumes.markVolumesAsErrored(batchId),
     newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error, errorCode }),
     licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId)
   ]);
@@ -250,6 +251,7 @@ const refreshTotals = async batchId => {
   // Load batch and map to service models
   const data = await newRepos.billingBatches.findOneWithInvoicesWithTransactions(batchId);
   if (!data) {
+    await newRepos.billingVolumes.markVolumesAsErrored(batchId);
     throw new NotFoundError(`Batch ${batchId} not found`);
   }
   const batch = mappers.batch.dbToModel(data);

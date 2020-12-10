@@ -26,7 +26,8 @@ const findApprovedByChargeElementIdsAndFinancialYear = async (ids, financialYear
     .query('whereIn', 'charge_element_id', ids)
     .where({
       financial_year: financialYear,
-      is_approved: true
+      is_approved: true,
+      errored_on: null
     })
     .fetchAll();
 
@@ -50,7 +51,7 @@ const update = async (billingVolumeId, changes) => {
 const getUnapprovedVolumesForBatch = async batchId => {
   const result = await BillingVolume
     .forge()
-    .where({ billing_batch_id: batchId, is_approved: false })
+    .where({ billing_batch_id: batchId, is_approved: false, errored_on: null })
     .fetchAll();
 
   return result.toJSON();
@@ -59,7 +60,9 @@ const getUnapprovedVolumesForBatch = async batchId => {
 const findByBatchId = async batchId => {
   const result = await BillingVolume
     .forge()
-    .where({ billing_batch_id: batchId })
+    .where({
+      billing_batch_id: batchId
+    })
     .fetchAll();
   return result.toJSON();
 };
@@ -135,6 +138,19 @@ const updateByBatchId = async (billingBatchId, changes) => {
   return result.toJSON();
 };
 
+/**
+ * Marks all records as errored by batch ID
+ * @param {String} billingBatchId
+ */
+const markVolumesAsErrored = async (billingBatchId) => {
+  const result = await BillingVolume
+    .where('billing_batch_id', billingBatchId)
+    .save({
+      errored_on: new Date()
+    }, { method: 'update' });
+  return result.toJSON();
+};
+
 exports.create = create;
 exports.findApprovedByChargeElementIdsAndFinancialYear = findApprovedByChargeElementIdsAndFinancialYear;
 exports.update = update;
@@ -147,3 +163,4 @@ exports.findByBatchIdAndLicenceId = findByBatchIdAndLicenceId;
 exports.findByIds = findByIds;
 exports.deleteByBatchIdAndLicenceId = deleteByBatchIdAndLicenceId;
 exports.updateByBatchId = updateByBatchId;
+exports.markVolumesAsErrored = markVolumesAsErrored;

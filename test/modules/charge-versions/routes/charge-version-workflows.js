@@ -11,6 +11,7 @@ const { expect } = require('@hapi/code');
 
 const routes = require('../../../../src/modules/charge-versions/routes/charge-version-workflows');
 const testHelpers = require('../../../test-helpers');
+const preHandlers = require('../../../../src/modules/charge-versions/controllers/pre-handlers');
 
 const { ROLES: { chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer } } = require('../../../../src/lib/roles');
 
@@ -172,6 +173,18 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
+
+    test('contains a pre handler to map the charge version', async () => {
+      const { pre } = routes.postChargeVersionWorkflow.options;
+      expect(pre[0].method).to.equal(preHandlers.mapChargeVersion);
+      expect(pre[0].assign).to.equal('chargeVersion');
+    });
+
+    test('contains a pre handler to map the internal calling user', async () => {
+      const { pre } = routes.postChargeVersionWorkflow.options;
+      expect(pre[1].method).to.equal(preHandlers.mapInternalCallingUser);
+      expect(pre[1].assign).to.equal('user');
+    });
   });
 
   experiment('.patchChargeVersionWorkflow', () => {
@@ -205,15 +218,6 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
       expect(response.statusCode).to.equal(200);
     });
 
-    test('http 422 unprocessable entity when the payload cannot be mapped', async () => {
-      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
-      request.payload.chargeVersion = {
-        status: 'not-a-valid-status'
-      };
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(422);
-    });
-
     test('http 400 bad request when the defra-internal-user-id is invalid', async () => {
       request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
       request.headers['defra-internal-user-id'] = 'invalid';
@@ -234,6 +238,13 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
     });
+
+    test('contains a pre handler to map the charge version', async () => {
+      const { pre } = routes.patchChargeVersionWorkflow.options;
+      expect(pre).to.have.length(1);
+      expect(pre[0].method).to.equal(preHandlers.mapChargeVersion);
+      expect(pre[0].assign).to.equal('chargeVersion');
+    });
   });
 
   experiment('.deleteChargeVersionWorkflow', () => {
@@ -244,6 +255,13 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
 
       id = uuid();
       request = makeDelete(`/water/1.0/charge-version-workflows/${id}`);
+    });
+
+    test('http 400 bad request when the charge version workflow ID is invalid', async () => {
+      request = makeDelete('/water/1.0/charge-version-workflows/not-a-guid');
+      request.auth.credentials.scope = [chargeVersionWorkflowReviewer];
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
     });
 
     test('http 403 error when user has insufficient scope', async () => {
@@ -268,6 +286,13 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
       request.headers['defra-internal-user-id'] = 'invalid';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(400);
+    });
+
+    test('contains a pre handler to load the charge version workflow', async () => {
+      const { pre } = routes.deleteChargeVersionWorkflow.options;
+      expect(pre).to.have.length(1);
+      expect(pre[0].method).to.equal(preHandlers.loadChargeVersionWorkflow);
+      expect(pre[0].assign).to.equal('chargeVersionWorkflow');
     });
   });
 });

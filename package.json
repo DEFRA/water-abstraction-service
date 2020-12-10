@@ -75,6 +75,7 @@
     "handlebars": "^4.7.6",
     "hapi-auth-jwt2": "^8.8.1",
     "hapi-swagger": "^10.3.0",
+    "jsonwebtoken": "^8.5.1",
     "knex": "^0.21.1",
     "libxmljs": "^0.19.7",
     "lodash": "^4.17.20",

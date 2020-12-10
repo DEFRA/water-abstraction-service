@@ -188,7 +188,7 @@ module.exports = {
     permits: process.env.PERMIT_URI || 'http://127.0.0.1:8004/API/1.0/',
     returns: process.env.RETURNS_URI || 'http://127.0.0.1:8006/returns/1.0',
     import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0',
-    chargeModule: process.env.CHARGE_MODULE_ORIGIN,
+    chargeModule: process.env.CHARGE_MODULE_ORIGIN || 'https://charging.defra.com',
     cognito: process.env.COGNITO_HOST
   },
 
