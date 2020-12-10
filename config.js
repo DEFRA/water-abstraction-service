@@ -225,6 +225,7 @@ module.exports = {
   },
 
   featureToggles: {
-    deleteAllBillingData: !isProductionLike
+    deleteAllBillingData: !isProductionLike,
+    swagger: !isProductionLike
   }
 };

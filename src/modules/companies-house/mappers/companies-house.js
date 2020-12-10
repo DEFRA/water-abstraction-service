@@ -29,7 +29,8 @@ const mapAddress = data => {
     town: data.locality,
     county: data.region,
     postcode: data.postal_code,
-    country: data.country
+    country: data.country || 'United Kingdom',
+    source: Address.ADDRESS_SOURCE.companiesHouse
   };
 
   return address.fromHash(omitBy(obj, isEmpty));
@@ -42,9 +43,9 @@ const mapAddress = data => {
  */
 const mapCompany = item => {
   const company = new Company();
-  const organisationType = mapCompanyType(item.company_type);
+  const organisationType = mapCompanyType(item.company_type || item.type);
   return company.fromHash({
-    name: item.title,
+    name: item.title || item.company_name,
     type: Company.COMPANY_TYPES.organisation,
     companyNumber: item.company_number,
     ...organisationType && { organisationType }
@@ -79,3 +80,5 @@ const mapItem = item => {
 
 exports.mapPagination = mapPagination;
 exports.mapItem = mapItem;
+exports.mapCompany = mapCompany;
+exports.mapAddress = mapAddress;
