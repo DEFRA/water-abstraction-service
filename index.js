@@ -75,6 +75,27 @@ const registerServerPlugins = async (server) => {
   await server.register(HapiAuthJwt2);
 
   await server.register(Vision);
+
+  // Add Hapi-swagger in test environments
+  if (config.featureToggles.swagger) {
+    await server.register([
+      {
+        plugin: require('@hapi/vision')
+      },
+      {
+        plugin: require('@hapi/inert')
+      },
+      {
+        plugin: require('hapi-swagger'),
+        options: {
+          info: {
+            title: 'Test API Documentation',
+            version: require('./package.json').version
+          }
+        }
+      }
+    ]);
+  }
 };
 
 const configureServerAuthStrategy = (server) => {
