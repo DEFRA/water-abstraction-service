@@ -117,12 +117,6 @@ experiment('two part tariff ref: 2PT1', () => {
             licence = invoice.billingInvoiceLicences[0];
           });
 
-          // test('has the correct licence name', async () => {
-          //   expect(licence.licenceHolderName.lastName).to.equal('Testerson');
-          //   expect(licence.licenceHolderName.firstName).to.equal('John');
-          //   expect(licence.licenceHolderName.title).to.equal('Mr');
-          // });
-
           test('has 1 transaction', async () => {
             expect(licence.billingTransactions).to.have.length(1);
           });
