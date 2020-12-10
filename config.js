@@ -51,7 +51,7 @@ module.exports = {
   pgBoss: {
     schema: 'water',
     application_name: process.env.SERVICE_NAME,
-    newJobCheckIntervalSeconds: 5
+    newJobCheckIntervalSeconds: 10
   },
 
   s3: {
