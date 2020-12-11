@@ -44,6 +44,22 @@ const getDocument = documentId => {
   return serviceRequest.get(getDocumentsUrl(documentId));
 };
 
+const createDocument = (documentRef, documentStatus = 'current', startDate = new Date().toJSON().slice(0, 10), endDate = null, isTest = false) => {
+  const url = getDocumentsUrl();
+  return serviceRequest.post(url, {
+    body: {
+      regime: 'water',
+      documentType: 'abstraction_licence',
+      versionNumber: '100',
+      documentRef: documentRef,
+      status: documentStatus,
+      startDate: startDate,
+      endDate: endDate,
+      isTest: isTest
+    }
+  });
+};
+
 const createDocumentRole = async (documentId, documentRole) => {
   const url = getDocumentsUrl(documentId, 'roles');
   return serviceRequest.post(url, { body: documentRole });
@@ -72,6 +88,7 @@ const getDocumentByRefAndDate = async (documentRef, date) => {
   });
 };
 
+exports.createDocument = createDocument;
 exports.createDocumentRole = createDocumentRole;
 exports.getDocument = getDocument;
 exports.getDocumentRole = getDocumentRole;

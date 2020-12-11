@@ -1,6 +1,7 @@
 'use strict';
 
 const { get } = require('lodash');
+const moment = require('moment');
 
 const batches = require('./lib/charging/batches');
 const returns = require('./lib/returns');
@@ -60,6 +61,14 @@ const createDocuments = (company, dailyPermit, weeklyPermit, monthlyPermit) => {
   ]);
 };
 
+const createV2Documents = (company, dailyPermit, weeklyPermit, monthlyPermit) => {
+  return Promise.all([
+    documents.createV2(company.entity_id, dailyPermit.licence_id, LICENCE_REF_CURRENT_DAILY),
+    documents.createV2(company.entity_id, weeklyPermit.licence_id, LICENCE_REF_CURRENT_WEEKLY),
+    documents.createV2(company.entity_id, monthlyPermit.licence_id, LICENCE_REF_CURRENT_MONTHLY)
+  ]);
+};
+
 const createReturns = () => Promise.all([
   returns.createDueReturn(LICENCE_REF_CURRENT_DAILY, 'day'),
   returns.createDueReturn(LICENCE_REF_CURRENT_WEEKLY, 'week'),
@@ -75,6 +84,12 @@ const createCurrentLicencesWithReturns = async (company, externalPrimaryUser) =>
     monthlyDocument
   ] = await createDocuments(company, dailyPermit, weeklyPermit, monthlyPermit);
 
+  const [
+    dailyDocumentV2,
+    weeklyDocumentV2,
+    monthlyDocumentV2
+  ] = await createV2Documents(company, dailyPermit, weeklyPermit, monthlyPermit);
+
   const [dailyReturn, weeklyReturn, monthlyReturn] = await createReturns();
 
   return {
@@ -89,6 +104,11 @@ const createCurrentLicencesWithReturns = async (company, externalPrimaryUser) =>
       daily: dailyDocument,
       weekly: weeklyDocument,
       monthly: monthlyDocument
+    },
+    documentV2: {
+      daily: dailyDocumentV2,
+      weekly: weeklyDocumentV2,
+      monthly: monthlyDocumentV2
     },
     returns: {
       daily: dailyReturn,
@@ -148,9 +168,20 @@ const postSetup = async (request, h) => {
   const includeAnnualBillRun = get(request, 'payload.includeAnnualBillRun', false);
   const includeSupplementaryBillRun = get(request, 'payload.includeSupplementaryBillRun', false);
   try {
-    const company = await entities.createCompany();
+    const company = await entities.createV1Company();
+    const crmV2Company = await entities.createV2Company();
+    const crmV2Address = await entities.createV2Address();
     const externalPrimaryUser = await createExternalPrimaryUser(company);
     const currentLicencesWithReturns = await createCurrentLicencesWithReturns(company, externalPrimaryUser);
+    console.log(currentLicencesWithReturns);
+    const crmV2CompanyRole = {
+      role: 'licenceHolder',
+      startDate: moment().format('YYYY-MM-DD'),
+      companyId: crmV2Company.companyId,
+      addressId: crmV2Address.addressId,
+      isTest: true
+    };
+    await entities.createV2CompanyRole(currentLicencesWithReturns.documentV2.daily.document_id, crmV2CompanyRole);
 
     const responseData = { currentLicencesWithReturns };
 

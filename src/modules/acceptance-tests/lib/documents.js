@@ -1,5 +1,9 @@
 const { TEST_COMPANY_NAME, ACCEPTANCE_TEST_SOURCE } = require('./constants');
-const documentConnector = require('../../../lib/connectors/crm/documents');
+const documentV1Connector = require('../../../lib/connectors/crm/documents');
+const documentV2Connector = require('../../../lib/connectors/crm-v2/documents');
+const licencesConnector = require('../../../lib/connectors/repos/licences');
+const regionsConnector = require('../../../lib/connectors/repos/regions');
+const { sample } = require('lodash');
 const config = require('../../../../config');
 
 const create = async (companyId, licenceId, licenceRef) => {
@@ -37,9 +41,16 @@ const create = async (companyId, licenceId, licenceRef) => {
     })
   };
 
-  const { data } = await documentConnector.create(document);
+  const { data } = await documentV1Connector.create(document);
+  await documentV2Connector.createDocument(licenceRef, 'current', new Date().toJSON().slice(0, 10), null, true);
   return data;
 };
 
+const createV2 = async (companyId, licenceId, licenceRef) => {
+  const regions = await regionsConnector.find();
+  return licencesConnector.create(licenceRef, sample(regions).regionId, new Date().toJSON().slice(0, 10), null, {}, true, true);
+};
+
 exports.create = create;
-exports.delete = () => documentConnector.deleteAcceptanceTestData();
+exports.createV2 = createV2;
+exports.delete = async () => await documentV1Connector.deleteAcceptanceTestData();
