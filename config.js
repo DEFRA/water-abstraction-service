@@ -45,7 +45,7 @@ module.exports = {
 
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: 30
+    max: 36
   },
 
   pgBoss: {
