@@ -214,6 +214,7 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
   const periodEnd = mapChargeModuleDate(transaction.chargePeriod.endDate);
 
   return {
+    clientId: transaction.id,
     periodStart,
     periodEnd,
     credit: transaction.isCredit,
