@@ -5,14 +5,6 @@ const { Licence, bookshelf } = require('../bookshelf');
 const queries = require('./queries/licences');
 
 const create = async (licenceRef, regionId, startDate = new Date().toJSON().slice(0, 10), expiredDate = null, regions = {}, is_water_undertaker = true, isTest = false) => {
-  console.log(licenceRef);
-  console.log(regionId);
-  console.log(regionId);
-  console.log(startDate);
-  console.log(expiredDate);
-  console.log(regions);
-  console.log(is_water_undertaker);
-  console.log(isTest);
   const model = await Licence
     .forge({ licenceRef, regionId, is_water_undertaker, regions: regions, startDate, expiredDate, is_test: isTest })
     .save();
