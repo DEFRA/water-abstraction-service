@@ -1,7 +1,6 @@
 const urlJoin = require('url-join');
 const { get, partialRight } = require('lodash');
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
-const licencesConnector = require('../../../lib/connectors/repos/licences');
 const config = require('../../../../config');
 const helpers = require('@envage/water-abstraction-helpers');
 
@@ -133,11 +132,7 @@ if (config.isAcceptanceTestTarget) {
   exports.deleteAcceptanceTestData = async () => {
     const CRMV1URL = urlJoin(config.services.crm, 'acceptance-tests/entities');
     const CRMV2URL = urlJoin(config.services.crm_v2, 'acceptance-tests/companies');
-    const thingy = await licencesConnector.deleteTest();
-    console.log(thingy);
-    return Promise.all([
-      serviceRequest.delete(CRMV1URL),
-      serviceRequest.delete(CRMV2URL)
-    ]);
+    await serviceRequest.delete(CRMV2URL);
+    return serviceRequest.delete(CRMV1URL);
   };
 }

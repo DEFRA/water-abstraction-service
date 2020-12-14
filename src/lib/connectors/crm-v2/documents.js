@@ -10,9 +10,7 @@ const config = require('../../../../config');
 const VALID_LICENCE_NUMBER = Joi.string().required().example('01/123/R01');
 const VALID_GUID = Joi.string().guid().required();
 
-const getDocumentsUrl = (...tail) => {
-  return urlJoin(config.services.crm_v2, 'documents', ...tail);
-};
+const getDocumentsUrl = (...tail) => urlJoin(config.services.crm_v2, 'documents', ...tail);
 
 const getDocumentRolesUrl = (...tail) => {
   return urlJoin(config.services.crm_v2, 'document-roles', ...tail);

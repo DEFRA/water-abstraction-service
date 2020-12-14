@@ -1,7 +1,6 @@
 'use strict';
 
 const { get } = require('lodash');
-const moment = require('moment');
 
 const batches = require('./lib/charging/batches');
 const returns = require('./lib/returns');
@@ -136,14 +135,13 @@ const createInternalUsers = async () => {
     { group: 'billing_and_data' },
     { group: 'psc' }
   ];
-
   const createdUsers = await Promise.all(
-    toCreate.map(user => {
+    toCreate.map(async user => {
       const email = `acceptance-test.internal.${user.id || user.group}@defra.gov.uk`;
-      return users.createInternalUser(email, user.group, user.roles);
+      const response = await users.createInternalUser(email, user.group, user.roles);
+      return response;
     })
   );
-
   return createdUsers
     .reduce((users, user) => {
       const id = user.user_name.replace(emailRegex, '$1');
@@ -173,16 +171,8 @@ const postSetup = async (request, h) => {
     const crmV2Address = await entities.createV2Address();
     const externalPrimaryUser = await createExternalPrimaryUser(company);
     const currentLicencesWithReturns = await createCurrentLicencesWithReturns(company, externalPrimaryUser);
-    console.log(currentLicencesWithReturns);
-    const crmV2CompanyRole = {
-      role: 'licenceHolder',
-      startDate: moment().format('YYYY-MM-DD'),
-      companyId: crmV2Company.companyId,
-      addressId: crmV2Address.addressId,
-      isTest: true
-    };
-    await entities.createV2CompanyRole(currentLicencesWithReturns.documentV2.daily.document_id, crmV2CompanyRole);
 
+    // Todo create invoice account that connects the company to the doc
     const responseData = { currentLicencesWithReturns };
 
     if (includeInternalUsers) {
@@ -207,13 +197,20 @@ const postSetup = async (request, h) => {
 };
 
 const postTearDown = async () => {
-  await batches.delete(); // deletes batches created by the acceptance test user
+  await batches.delete();
+  console.log('Tearing down acceptance test returns');
   await returns.delete();
+  console.log('Tearing down acceptance test events');
   await events.delete();
+  console.log('Tearing down acceptance test permits');
   await permits.delete();
+  console.log('Tearing down acceptance test documents');
   await documents.delete();
+  console.log('Tearing down acceptance test entities');
   await entities.delete();
+  console.log('Tearing down acceptance test users');
   await users.delete();
+  console.log('Tearing down acceptance test sessions');
   await sessions.delete();
 
   // calling the integration tests tear down process

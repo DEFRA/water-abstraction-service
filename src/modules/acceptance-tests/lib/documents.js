@@ -3,7 +3,6 @@ const documentV1Connector = require('../../../lib/connectors/crm/documents');
 const documentV2Connector = require('../../../lib/connectors/crm-v2/documents');
 const licencesConnector = require('../../../lib/connectors/repos/licences');
 const regionsConnector = require('../../../lib/connectors/repos/regions');
-const { sample } = require('lodash');
 const config = require('../../../../config');
 
 const create = async (companyId, licenceId, licenceRef) => {
@@ -48,7 +47,7 @@ const create = async (companyId, licenceId, licenceRef) => {
 
 const createV2 = async (companyId, licenceId, licenceRef) => {
   const regions = await regionsConnector.find();
-  return licencesConnector.create(licenceRef, sample(regions).regionId, new Date().toJSON().slice(0, 10), null, {}, true, true);
+  return licencesConnector.create(licenceRef, regions.find(x => x.naldRegionId === 6).regionId, new Date().toJSON().slice(0, 10), null, { historicalAreaCode: 'SAAR', regionalChargeArea: 'Southern' }, true, true);
 };
 
 exports.create = create;

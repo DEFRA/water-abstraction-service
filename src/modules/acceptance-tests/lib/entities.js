@@ -25,10 +25,6 @@ const createV2Address = () => addressConnector.createAddress({
   dataSource: 'wrls'
 });
 
-const createV2CompanyRole = (documentId, roleObject) => {
-  documentsConnector.createDocumentRole(documentId, roleObject);
-};
-
 const createEntity = (name, type) => entityConnector.createEntity(
   name,
   type,
@@ -42,7 +38,6 @@ const createEntityRole = (entityId, companyId, role = 'primary_user') => {
 exports.createIndividual = createIndividual;
 exports.createV1Company = createV1Company;
 exports.createV2Company = createV2Company;
-exports.createV2CompanyRole = createV2CompanyRole;
 exports.createV2Address = createV2Address;
 exports.createEntityRole = createEntityRole;
 exports.delete = () => entityConnector.deleteAcceptanceTestData();
