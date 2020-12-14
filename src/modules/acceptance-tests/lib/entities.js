@@ -1,6 +1,5 @@
 const entityConnector = require('../../../lib/connectors/crm/entities');
 const companiesConnector = require('../../../lib/connectors/crm-v2/companies');
-const documentsConnector = require('../../../lib/connectors/crm-v2/documents');
 const addressConnector = require('../../../lib/connectors/crm-v2/addresses');
 const { ACCEPTANCE_TEST_SOURCE, TEST_COMPANY_NAME } = require('./constants');
 

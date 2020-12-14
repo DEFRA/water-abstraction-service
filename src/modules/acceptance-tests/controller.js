@@ -167,8 +167,8 @@ const postSetup = async (request, h) => {
   const includeSupplementaryBillRun = get(request, 'payload.includeSupplementaryBillRun', false);
   try {
     const company = await entities.createV1Company();
-    const crmV2Company = await entities.createV2Company();
-    const crmV2Address = await entities.createV2Address();
+    await entities.createV2Company();
+    await entities.createV2Address();
     const externalPrimaryUser = await createExternalPrimaryUser(company);
     const currentLicencesWithReturns = await createCurrentLicencesWithReturns(company, externalPrimaryUser);
 
