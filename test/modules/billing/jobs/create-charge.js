@@ -141,7 +141,7 @@ experiment('modules/billing/jobs/create-charge', () => {
           billingBatchTransactionId: transactionId
         },
         {
-          attempts: 10,
+          attempts: 6,
           backoff: {
             type: 'exponential',
             delay: 5000
@@ -308,11 +308,11 @@ experiment('modules/billing/jobs/create-charge', () => {
       test('the error is not logged because this is done by the failed handler', async () => {
         expect(batchJob.logHandlingError.calledWith(
           job, err
-        )).to.be.false();
+        )).to.be.true();
       });
 
       test('throws an error to go to the retry handler', async () => {
-        expect(error.message).to.equal(`Charge not created in CM for transaction ${transactionId} in batch ${batchId}`);
+        expect(error.message).to.equal('Test error');
       });
     });
   });

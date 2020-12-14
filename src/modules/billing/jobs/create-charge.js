@@ -15,7 +15,6 @@ const Transaction = require('../../../lib/models/transaction');
 const { jobName: refreshTotalsJobName } = require('./refresh-totals');
 const config = require('../../../../config');
 const { logger } = require('../../../logger');
-const { StateError } = require('../../../lib/errors');
 
 const workerOptions = {
   concurrency: config.billing.createChargeJobConcurrency
@@ -29,7 +28,7 @@ const createMessage = (batchId, billingBatchTransactionId) => ([
   },
   {
     jobId: `${JOB_NAME}.${batchId}.${billingBatchTransactionId}`,
-    attempts: 10,
+    attempts: 6,
     backoff: {
       type: 'exponential',
       delay: 5000
@@ -70,7 +69,6 @@ const updateBatchState = async batch => {
 const handler = async job => {
   batchJob.logHandling(job);
   const transactionId = get(job, 'data.billingBatchTransactionId');
-  const batchId = get(job, 'data.batchId');
 
   // Create batch model from loaded data
   const batch = await transactionsService.getById(transactionId);
@@ -89,23 +87,22 @@ const handler = async job => {
     return await updateBatchState(batch);
   } catch (err) {
     const statusCode = get(err, 'statusCode');
+    batchJob.logHandlingError(job, err);
 
     // if the charge was created in the CM
     if (statusCode === 409) {
-      batchJob.logHandlingError(job, err);
       await transactionsService.updateWithChargeModuleResponse(transactionId, err.response.body);
       return await updateBatchState(batch);
     }
     // if error code >= 400 and < 500 set transacti on status to error and continue
     if (isClientError(err)) {
-      batchJob.logHandlingError(job, err);
       transactionsService.setErrorStatus(transactionId);
       return {
         batch: job.data.batch
       };
     }
     // throw error to retry
-    throw new StateError(`Charge not created in CM for transaction ${transactionId} in batch ${batchId}`);
+    throw err;
   }
 };
 
@@ -136,10 +133,6 @@ const onFailedHandler = async (job, err) => {
     } catch (error) {
       logger.error(`Unable to set batch status ${batchId}`, error);
     }
-  } else if (err.name === 'StateError') {
-    // Only logger an info message if we the CM has not created a charge - this is expected
-    // behaviour
-    logger.info(err.message);
   } else {
     // Do normal error logging
     helpers.onFailedHandler(job, err);
