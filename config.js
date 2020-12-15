@@ -43,38 +43,15 @@ module.exports = {
     airbrakeLevel: 'error'
   },
 
-  // Database has 198 available connections
-  //
-  // Outside of development each process runs on 2 instances on 2 cores.
-  // So there will be 4 connection pools per service but just 1 locally
-  //
-  // Allocations:
-  //
-  // | ----------------------------------- | ------- | ---------- | --------- | ---------- |
-  // | Service                             | Local   | Local      | Non local | Non local  |
-  // |                                     | process | connection | process   | connection |
-  // |                                     | count   | count      | count     | count      |
-  // | ----------------------------------- | ------- | ---------- | --------- | ---------- |
-  // | water-abstraction-import            |       1 |         20 |         2 | (20)    10 |
-  // | water-abstraction-permit-repository |       1 |         16 |         4 | (16)     4 |
-  // | water-abstraction-returns           |       1 |         20 |         4 | (20)     5 |
-  // | water-abstraction-service(knex)     |         |          1 |           | (96)    24 |
-  // | water-abstraction-tactical-crm      |       1 |         20 |         4 | (20)     5 |
-  // | water-abstraction-tactical-crm(knex)|         |          1 |           |  (4)     1 |
-  // | water-abstraction-tactical-idm      |       1 |         20 |         4 | (20)     5 |
-  // | ----------------------------------- | ------- | ---------- | --------- | ---------- |
-  // | TOTAL                               |       6 |        148 |        22 |        196 |
-  // | ----------------------------------- | ------- | ---------- | --------- | ---------- |
-  //
   pg: {
     connectionString: process.env.DATABASE_URL,
-    max: 24
+    max: 36
   },
 
   pgBoss: {
     schema: 'water',
     application_name: process.env.SERVICE_NAME,
-    newJobCheckIntervalSeconds: 5
+    newJobCheckIntervalSeconds: 10
   },
 
   s3: {
