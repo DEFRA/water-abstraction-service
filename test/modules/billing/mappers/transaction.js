@@ -47,6 +47,7 @@ const createChargeElement = () => {
 const createTransaction = (options = {}) => {
   const transaction = new Transaction();
   transaction.fromHash({
+    id: '29328315-9b24-473b-bde7-02c60e881511',
     chargeElement: createChargeElement(),
     chargePeriod: new DateRange('2019-04-01', '2020-03-31'),
     isCredit: false,
@@ -429,6 +430,7 @@ experiment('modules/billing/mappers/transaction', () => {
 
         test('the data is mapped correctly', async () => {
           expect(result).to.equal({
+            clientId: transaction.id,
             periodStart: '01-APR-2019',
             periodEnd: '31-MAR-2020',
             credit: false,

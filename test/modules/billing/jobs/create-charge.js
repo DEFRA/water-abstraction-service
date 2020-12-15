@@ -33,6 +33,8 @@ const transactionId = uuid();
 const batchId = uuid();
 const chargeModuleBillRunId = uuid();
 
+const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch');
+
 const data = {
   eventId: 'test-event-id',
   batch: {
@@ -139,6 +141,11 @@ experiment('modules/billing/jobs/create-charge', () => {
           billingBatchTransactionId: transactionId
         },
         {
+          attempts: 6,
+          backoff: {
+            type: 'exponential',
+            delay: 5000
+          },
           jobId: `billing.create-charge.${batchId}.${transactionId}`
         }
       ]);
@@ -255,6 +262,38 @@ experiment('modules/billing/jobs/create-charge', () => {
       });
     });
 
+    experiment('when there is 409 error in the charge module', () => {
+      const err = new Error('Test error');
+      err.statusCode = 409;
+      err.response = {
+        body: {
+          id: '7205bd26-8064-4bf3-beb7-b4c4df7e29d4',
+          clientId: '548f5338-3dcf-4235-a3ba-4a3024a3710f'
+        }
+      };
+
+      beforeEach(async () => {
+        chargeModuleBillRunConnector.addTransaction.rejects(err);
+        await createChargeJob.handler(job);
+      });
+
+      test('the error is logged', async () => {
+        expect(batchJob.logHandlingError.calledWith(
+          job, err
+        )).to.be.true();
+      });
+
+      test('the transaction is updated with the charge module response', async () => {
+        const [id, response] = transactionService.updateWithChargeModuleResponse.lastCall.args;
+        expect(id).to.equal(transactionId);
+        expect(response).to.equal(err.response.body);
+      });
+
+      test('the batch status is not set to "error"', async () => {
+        expect(batchService.setErrorStatus.called).to.be.false();
+      });
+    });
+
     experiment('when there is a 5xx error', () => {
       const err = new Error('Test error');
       err.statusCode = 500;
@@ -266,25 +305,14 @@ experiment('modules/billing/jobs/create-charge', () => {
         error = await expect(func()).to.reject();
       });
 
-      test('sets the transaction status to error', async () => {
-        const [id] = transactionService.setErrorStatus.lastCall.args;
-        expect(id).to.equal(data.transaction.billing_transaction_id);
-      });
-
-      test('the error is logged', async () => {
+      test('the error is not logged because this is done by the failed handler', async () => {
         expect(batchJob.logHandlingError.calledWith(
           job, err
         )).to.be.true();
       });
 
-      test('the batch status is set to "error"', async () => {
-        expect(batchService.setErrorStatus.calledWith(
-          batchId, Batch.BATCH_ERROR_CODE.failedToCreateCharge
-        )).to.be.true();
-      });
-
-      test('re-throws the error', async () => {
-        expect(error).to.equal(err);
+      test('throws an error to go to the retry handler', async () => {
+        expect(error.message).to.equal('Test error');
       });
     });
   });
@@ -376,6 +404,51 @@ experiment('modules/billing/jobs/create-charge', () => {
 
       test('an error is logged', async () => {
         expect(batchJob.logOnCompleteError.calledWith(job, err)).to.be.true();
+      });
+    });
+  });
+
+  experiment('.onFailedHandler', () => {
+    let job;
+    const err = new Error('oops');
+
+    experiment('when the attempt to create the charge in the CM failed but is not the final one', () => {
+      beforeEach(async () => {
+        job = {
+          data: {
+            batchId
+          },
+          attemptsMade: 5,
+          opts: {
+            attempts: 10
+          }
+        };
+        await createChargeJob.onFailed(job, err);
+      });
+
+      test('the batch is not updated', async () => {
+        expect(batchService.setErrorStatus.called).to.be.false();
+      });
+    });
+
+    experiment('on the final attempt to create the charge in the CM', () => {
+      beforeEach(async () => {
+        job = {
+          data: {
+            batchId
+          },
+          attemptsMade: 10,
+          opts: {
+            attempts: 10
+          }
+        };
+        await createChargeJob.onFailed(job, err);
+      });
+
+      test('the batch is not updated', async () => {
+        expect(batchService.setErrorStatus.calledWith(
+          job.data.batchId, BATCH_ERROR_CODE.failedToPrepareTransactions
+        )).to.be.true();
       });
     });
   });
