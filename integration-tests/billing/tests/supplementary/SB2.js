@@ -100,7 +100,7 @@ experiment('supplementary ref: SB2', () => {
       });
 
       test('has the correct invoice address', async () => {
-        expect(omit(invoice.address, 'uprn')).to.equal({
+        expect(omit(invoice.address, ['uprn', 'isTest'])).to.equal({
           town: 'Testington',
           county: 'Testingshire',
           country: 'UK',
@@ -124,43 +124,24 @@ experiment('supplementary ref: SB2', () => {
           licence = invoice.billingInvoiceLicences[0];
         });
 
-        test('has the correct licence name', async () => {
-          expect(licence.licenceHolderName.lastName).to.equal('Testerson');
-          expect(licence.licenceHolderName.firstName).to.equal('John');
-          expect(licence.licenceHolderName.title).to.equal('Mr');
-        });
-
-        test('has the correct licence holder address', async () => {
-          expect(omit(licence.licenceHolderAddress, 'id')).to.equal({
-            town: 'Testington',
-            county: 'Testingshire',
-            country: 'UK',
-            postcode: 'TT1 1TT',
-            addressLine1: 'Big Farm',
-            addressLine2: 'Windy road',
-            addressLine3: 'Buttercup meadow',
-            addressLine4: null
-          });
-        });
-
-        test('has 3 transactions', async () => {
-          expect(licence.billingTransactions.length).to.equal(3);
+        test('has 6 transactions', async () => {
+          expect(licence.billingTransactions.length).to.equal(6);
         });
 
         test('there are 2 debit', async () => {
-          const transactions = licence.billingTransactions.filter(tx => tx.isCredit === false);
+          const transactions = licence.billingTransactions.filter(tx => tx.isCredit === false && tx.chargeType === 'standard');
           expect(transactions).to.have.length(2);
         });
 
         test('there is a credit', async () => {
-          const transaction = licence.billingTransactions.find(tx => tx.isCredit === true);
+          const transaction = licence.billingTransactions.find(tx => tx.isCredit === true && tx.chargeType === 'standard');
           expect(transaction).to.exist();
         });
 
         experiment('the first debit transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions.find(tx => tx.isCredit === false && tx.description === 'CE3');
+            transaction = licence.billingTransactions.find(tx => tx.transactionKey === '1e1fee0c4146c314e12f5f9067b25b24');
           });
 
           test('is a standard charge', async () => {
@@ -218,14 +199,14 @@ experiment('supplementary ref: SB2', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('f7d8838d18fcce381ba691146e242a5e');
+            expect(transaction.transactionKey).to.equal('1e1fee0c4146c314e12f5f9067b25b24');
           });
         });
 
         experiment('the second debit transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions.find(tx => tx.isCredit === false && tx.description === 'CE4');
+            transaction = licence.billingTransactions.find(tx => tx.transactionKey === '59ad88fa7bac9581d4b18c72e51c00b6');
           });
 
           test('is a standard charge', async () => {
@@ -283,7 +264,7 @@ experiment('supplementary ref: SB2', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('7ec309eb8554a029b86b3ca72a92f58a');
+            expect(transaction.transactionKey).to.equal('59ad88fa7bac9581d4b18c72e51c00b6');
           });
         });
 

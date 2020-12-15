@@ -77,7 +77,7 @@ experiment('basic example scenario', () => {
       });
 
       test('has the correct invoice address', async () => {
-        expect(omit(invoice.address, 'uprn')).to.equal({
+        expect(omit(invoice.address, ['uprn', 'isTest'])).to.equal({
           town: 'Testington',
           county: 'Testingshire',
           country: 'UK',
@@ -101,14 +101,14 @@ experiment('basic example scenario', () => {
           licence = invoice.billingInvoiceLicences[0];
         });
 
-        test('has 1 transaction', async () => {
+        test('has 2 transactions', async () => {
           expect(licence.billingTransactions).to.have.length(2);
         });
 
-        experiment('the first transaction', () => {
+        experiment('the standard charge transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions[1];
+            transaction = licence.billingTransactions.find((tx) => tx.chargeType === 'standard');
           });
 
           test('is a standard charge', async () => {
