@@ -1,8 +1,7 @@
 const { TEST_COMPANY_NAME, ACCEPTANCE_TEST_SOURCE } = require('./constants');
 const documentV1Connector = require('../../../lib/connectors/crm/documents');
 const documentV2Connector = require('../../../lib/connectors/crm-v2/documents');
-const licencesConnector = require('../../../lib/connectors/repos/licences');
-const regionsConnector = require('../../../lib/connectors/repos/regions');
+
 const config = require('../../../../config');
 
 const create = async (companyId, licenceId, licenceRef) => {
@@ -45,11 +44,5 @@ const create = async (companyId, licenceId, licenceRef) => {
   return data;
 };
 
-const createV2 = async (companyId, licenceId, licenceRef) => {
-  const regions = await regionsConnector.find();
-  return licencesConnector.create(licenceRef, regions.find(x => x.naldRegionId === 6).regionId, new Date().toJSON().slice(0, 10), null, { historicalAreaCode: 'SAAR', regionalChargeArea: 'Southern' }, true, true);
-};
-
 exports.create = create;
-exports.createV2 = createV2;
 exports.delete = async () => await documentV1Connector.deleteAcceptanceTestData();

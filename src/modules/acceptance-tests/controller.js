@@ -6,6 +6,7 @@ const batches = require('./lib/charging/batches');
 const returns = require('./lib/returns');
 const permits = require('./lib/permits');
 const entities = require('./lib/entities');
+const licences = require('./lib/licences');
 const users = require('./lib/users');
 const documents = require('./lib/documents');
 const events = require('./lib/events');
@@ -60,11 +61,11 @@ const createDocuments = (company, dailyPermit, weeklyPermit, monthlyPermit) => {
   ]);
 };
 
-const createV2Documents = (company, dailyPermit, weeklyPermit, monthlyPermit) => {
+const createLicences = (company, dailyPermit, weeklyPermit, monthlyPermit) => {
   return Promise.all([
-    documents.createV2(company.entity_id, dailyPermit.licence_id, LICENCE_REF_CURRENT_DAILY),
-    documents.createV2(company.entity_id, weeklyPermit.licence_id, LICENCE_REF_CURRENT_WEEKLY),
-    documents.createV2(company.entity_id, monthlyPermit.licence_id, LICENCE_REF_CURRENT_MONTHLY)
+    licences.create(company.entity_id, dailyPermit.licence_id, LICENCE_REF_CURRENT_DAILY),
+    licences.create(company.entity_id, weeklyPermit.licence_id, LICENCE_REF_CURRENT_WEEKLY),
+    licences.create(company.entity_id, monthlyPermit.licence_id, LICENCE_REF_CURRENT_MONTHLY)
   ]);
 };
 
@@ -87,7 +88,7 @@ const createCurrentLicencesWithReturns = async (company, externalPrimaryUser) =>
     dailyDocumentV2,
     weeklyDocumentV2,
     monthlyDocumentV2
-  ] = await createV2Documents(company, dailyPermit, weeklyPermit, monthlyPermit);
+  ] = await createLicences(company, dailyPermit, weeklyPermit, monthlyPermit);
 
   const [dailyReturn, weeklyReturn, monthlyReturn] = await createReturns();
 
@@ -212,6 +213,8 @@ const postTearDown = async () => {
   await users.delete();
   console.log('Tearing down acceptance test sessions');
   await sessions.delete();
+  console.log('Tearing down acceptance test licences');
+  await licences.delete();
 
   // calling the integration tests tear down process
   const chargeBatches = await batches.getTestRegionBatchIds();
