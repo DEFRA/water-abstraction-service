@@ -6,6 +6,7 @@ const batches = require('./lib/charging/batches');
 const returns = require('./lib/returns');
 const permits = require('./lib/permits');
 const entities = require('./lib/entities');
+const licences = require('./lib/licences');
 const users = require('./lib/users');
 const documents = require('./lib/documents');
 const events = require('./lib/events');
@@ -60,6 +61,14 @@ const createDocuments = (company, dailyPermit, weeklyPermit, monthlyPermit) => {
   ]);
 };
 
+const createLicences = (company, dailyPermit, weeklyPermit, monthlyPermit) => {
+  return Promise.all([
+    licences.create(company.entity_id, dailyPermit.licence_id, LICENCE_REF_CURRENT_DAILY),
+    licences.create(company.entity_id, weeklyPermit.licence_id, LICENCE_REF_CURRENT_WEEKLY),
+    licences.create(company.entity_id, monthlyPermit.licence_id, LICENCE_REF_CURRENT_MONTHLY)
+  ]);
+};
+
 const createReturns = () => Promise.all([
   returns.createDueReturn(LICENCE_REF_CURRENT_DAILY, 'day'),
   returns.createDueReturn(LICENCE_REF_CURRENT_WEEKLY, 'week'),
@@ -75,6 +84,12 @@ const createCurrentLicencesWithReturns = async (company, externalPrimaryUser) =>
     monthlyDocument
   ] = await createDocuments(company, dailyPermit, weeklyPermit, monthlyPermit);
 
+  const [
+    dailyDocumentV2,
+    weeklyDocumentV2,
+    monthlyDocumentV2
+  ] = await createLicences(company, dailyPermit, weeklyPermit, monthlyPermit);
+
   const [dailyReturn, weeklyReturn, monthlyReturn] = await createReturns();
 
   return {
@@ -89,6 +104,11 @@ const createCurrentLicencesWithReturns = async (company, externalPrimaryUser) =>
       daily: dailyDocument,
       weekly: weeklyDocument,
       monthly: monthlyDocument
+    },
+    documentV2: {
+      daily: dailyDocumentV2,
+      weekly: weeklyDocumentV2,
+      monthly: monthlyDocumentV2
     },
     returns: {
       daily: dailyReturn,
@@ -116,14 +136,13 @@ const createInternalUsers = async () => {
     { group: 'billing_and_data' },
     { group: 'psc' }
   ];
-
   const createdUsers = await Promise.all(
-    toCreate.map(user => {
+    toCreate.map(async user => {
       const email = `acceptance-test.internal.${user.id || user.group}@defra.gov.uk`;
-      return users.createInternalUser(email, user.group, user.roles);
+      const response = await users.createInternalUser(email, user.group, user.roles);
+      return response;
     })
   );
-
   return createdUsers
     .reduce((users, user) => {
       const id = user.user_name.replace(emailRegex, '$1');
@@ -148,10 +167,13 @@ const postSetup = async (request, h) => {
   const includeAnnualBillRun = get(request, 'payload.includeAnnualBillRun', false);
   const includeSupplementaryBillRun = get(request, 'payload.includeSupplementaryBillRun', false);
   try {
-    const company = await entities.createCompany();
+    const company = await entities.createV1Company();
+    await entities.createV2Company();
+    await entities.createV2Address();
     const externalPrimaryUser = await createExternalPrimaryUser(company);
     const currentLicencesWithReturns = await createCurrentLicencesWithReturns(company, externalPrimaryUser);
 
+    // Todo create invoice account that connects the company to the doc
     const responseData = { currentLicencesWithReturns };
 
     if (includeInternalUsers) {
@@ -176,14 +198,23 @@ const postSetup = async (request, h) => {
 };
 
 const postTearDown = async () => {
-  await batches.delete(); // deletes batches created by the acceptance test user
+  await batches.delete();
+  console.log('Tearing down acceptance test returns');
   await returns.delete();
+  console.log('Tearing down acceptance test events');
   await events.delete();
+  console.log('Tearing down acceptance test permits');
   await permits.delete();
+  console.log('Tearing down acceptance test documents');
   await documents.delete();
+  console.log('Tearing down acceptance test entities');
   await entities.delete();
+  console.log('Tearing down acceptance test users');
   await users.delete();
+  console.log('Tearing down acceptance test sessions');
   await sessions.delete();
+  console.log('Tearing down acceptance test licences');
+  await licences.delete();
 
   // calling the integration tests tear down process
   const chargeBatches = await batches.getTestRegionBatchIds();

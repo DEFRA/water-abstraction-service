@@ -18,14 +18,21 @@ const documents = require('../../../src/modules/acceptance-tests/lib/documents')
 const returns = require('../../../src/modules/acceptance-tests/lib/returns');
 const events = require('../../../src/modules/acceptance-tests/lib/events');
 const sessions = require('../../../src/modules/acceptance-tests/lib/sessions');
+const licences = require('../../../src/modules/acceptance-tests/lib/licences');
 
 const controller = require('../../../src/modules/acceptance-tests/controller');
 const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
 
 experiment('modules/acceptance-tests/controller', () => {
   beforeEach(async () => {
-    sandbox.stub(entities, 'createCompany').resolves({
+    sandbox.stub(entities, 'createV1Company').resolves({
       entity_id: 'test-company'
+    });
+
+    sandbox.stub(entities, 'createV2Company').resolves({
+    });
+
+    sandbox.stub(entities, 'createV2Address').resolves({
     });
 
     sandbox.stub(entities, 'createIndividual').callsFake(email => {
@@ -52,6 +59,7 @@ experiment('modules/acceptance-tests/controller', () => {
 
     sandbox.stub(permits, 'createCurrentLicence').resolves({});
     sandbox.stub(documents, 'create').resolves({});
+    sandbox.stub(licences, 'create').resolves({});
     sandbox.stub(returns, 'createDueReturn').resolves({});
 
     sandbox.stub(batches, 'delete').resolves();
@@ -63,6 +71,7 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(entities, 'delete').resolves();
     sandbox.stub(users, 'delete').resolves();
     sandbox.stub(sessions, 'delete').resolves();
+    sandbox.stub(licences, 'delete').resolves();
     sandbox.stub(chargeTestDataTearDown, 'tearDown').resolves();
     sandbox.stub(chargingScenarios, 'annualBillRun').resolves({ regionId: 'test-annual-bill-run-region-id' });
     sandbox.stub(chargingScenarios, 'supplementaryBillRun').resolves({ regionId: 'test-supplementary-bill-run-region-id' });
@@ -89,6 +98,7 @@ experiment('modules/acceptance-tests/controller', () => {
         expect(entities.delete.called).to.be.true();
         expect(users.delete.called).to.be.true();
         expect(sessions.delete.called).to.be.true();
+        expect(licences.delete.called).to.be.true();
       });
 
       test('the expected current licence response is created', async () => {
