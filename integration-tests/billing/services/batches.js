@@ -16,7 +16,7 @@ const getBatchById = billingBatchId =>
         'billingInvoices.billingInvoiceLicences.licence',
         'billingInvoices.billingInvoiceLicences.licence.region',
         'billingInvoices.billingInvoiceLicences.licence.licenceAgreements',
-        'billingInvoices.billingInvoiceLicences.licence..licenceAgreements.licenceAgreement_types',
+        'billingInvoices.billingInvoiceLicences.licence.licenceAgreements.financialAgreementType',
         'billingInvoices.billingInvoiceLicences.billingTransactions'
       ]
     });

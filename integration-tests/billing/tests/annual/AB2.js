@@ -11,7 +11,7 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 
 const moment = require('moment');
-
+const { omit } = require('lodash');
 const services = require('../../services');
 const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
 const transactionTests = require('../transaction-tests');
@@ -80,7 +80,7 @@ experiment('annual batch ref: AB2', () => {
       });
 
       test('has the correct invoice address', async () => {
-        expect(invoice.address).to.equal({
+        expect(omit(invoice.address, ['uprn', 'isTest'])).to.equal({
           town: 'Testington',
           county: 'Testingshire',
           country: 'UK',
@@ -89,7 +89,6 @@ experiment('annual batch ref: AB2', () => {
           addressLine2: 'Windy road',
           addressLine3: 'Buttercup meadow',
           addressLine4: null,
-          uprn: null,
           source: 'nald'
         });
       });
@@ -114,14 +113,14 @@ experiment('annual batch ref: AB2', () => {
           expect(moment(licenceAgreement.dateSigned).format('YYYY-MM-DD')).to.equal('2008-05-05');
         });
 
-        test('has 1 transaction', async () => {
+        test('has 2 transaction', async () => {
           expect(licence.billingTransactions).to.have.length(2);
         });
 
-        experiment('the first transaction', () => {
+        experiment('the standard charge transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions[1];
+            transaction = licence.billingTransactions.find((tx) => tx.chargeType === 'standard');
           });
 
           test('is a standard charge', async () => {

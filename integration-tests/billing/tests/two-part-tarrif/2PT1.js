@@ -93,7 +93,7 @@ experiment('two part tariff ref: 2PT1', () => {
         });
 
         test('has the correct invoice address', async () => {
-          expect(omit(invoice.address, 'uprn')).to.equal({
+          expect(omit(invoice.address, ['uprn', 'isTest'])).to.equal({
             town: 'Testington',
             county: 'Testingshire',
             country: 'UK',
@@ -130,7 +130,6 @@ experiment('two part tariff ref: 2PT1', () => {
             test('is a standard charge', async () => {
               expect(transaction.chargeType).to.equal('standard');
               expect(transaction.isCredit).to.be.false();
-              // TODO not sure if this is correct
               expect(transaction.isTwoPartTariffSupplementary).to.be.true();
               expect(transaction.isDeMinimis).to.be.false();
               expect(transaction.isNewLicence).to.be.false();

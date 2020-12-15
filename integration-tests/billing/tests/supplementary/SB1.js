@@ -98,7 +98,7 @@ experiment('supplementary ref: SB1', () => {
       });
 
       test('has the correct invoice address', async () => {
-        expect(omit(invoice.address, 'uprn')).to.equal({
+        expect(omit(invoice.address, ['uprn', 'isTest'])).to.equal({
           town: 'Testington',
           county: 'Testingshire',
           country: 'UK',
@@ -122,27 +122,8 @@ experiment('supplementary ref: SB1', () => {
           licence = invoice.billingInvoiceLicences[0];
         });
 
-        test('has the correct licence name', async () => {
-          expect(licence.licenceHolderName.lastName).to.equal('Testerson');
-          expect(licence.licenceHolderName.firstName).to.equal('John');
-          expect(licence.licenceHolderName.title).to.equal('Mr');
-        });
-
-        test('has the correct licence holder address', async () => {
-          expect(omit(licence.licenceHolderAddress, 'id')).to.equal({
-            town: 'Testington',
-            county: 'Testingshire',
-            country: 'UK',
-            postcode: 'TT1 1TT',
-            addressLine1: 'Big Farm',
-            addressLine2: 'Windy road',
-            addressLine3: 'Buttercup meadow',
-            addressLine4: null
-          });
-        });
-
         test('has 2 transactions', async () => {
-          expect(licence.billingTransactions.length).to.equal(2);
+          expect(licence.billingTransactions.length).to.equal(4);
         });
 
         test('there is a debit', async () => {
@@ -158,7 +139,7 @@ experiment('supplementary ref: SB1', () => {
         experiment('the debit transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions.find(tx => tx.isCredit === false);
+            transaction = licence.billingTransactions.find((tx) => tx.chargeType === 'standard' && tx.isCredit === false);
           });
 
           test('is a standard charge', async () => {
@@ -214,14 +195,14 @@ experiment('supplementary ref: SB1', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('bbc351b5b2cc1088aafa9bec321f0d99');
+            expect(transaction.transactionKey).to.equal('a0731f87b71f6e46ca4a17795bf4edf4');
           });
         });
 
         experiment('the credit transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions.find(tx => tx.isCredit === true);
+            transaction = licence.billingTransactions.find(tx => tx.isCredit === true && tx.chargeType === 'standard');
           });
 
           test('is a standard charge', async () => {
