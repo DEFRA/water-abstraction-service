@@ -15,16 +15,19 @@ const getInitials = (firstName, middleInitials) => middleInitials
 const contactPersonSchema = Joi.object({
   title: Joi.string().allow(null).optional(),
   firstName: Joi.string().required(),
+  initials: Joi.string().allow(null).optional(),
   middleInitials: Joi.string().allow(null).optional(),
   lastName: Joi.string().required(),
   suffix: Joi.string().allow(null).optional(),
   department: Joi.string().allow(null).replace(/\./g, '').optional(),
-  dataSource: Joi.string().valid(Object.values(DATA_SOURCE_TYPES)).required()
+  dataSource: Joi.string().valid(Object.values(DATA_SOURCE_TYPES)).required(),
+  isTest: Joi.boolean().optional().default(false)
 });
 
 const contactDepartmentSchema = Joi.object({
   department: Joi.string().required(),
-  dataSource: Joi.string().valid(Object.values(DATA_SOURCE_TYPES)).required()
+  dataSource: Joi.string().valid(Object.values(DATA_SOURCE_TYPES)).required(),
+  isTest: Joi.boolean().optional().default(false)
 });
 
 class Contact extends Model {
