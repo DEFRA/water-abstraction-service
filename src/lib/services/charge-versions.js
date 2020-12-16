@@ -9,7 +9,6 @@ const chargeVersionMapper = require('../mappers/charge-version');
 
 // Services
 const service = require('./service');
-const licencesService = require('./licences');
 const chargeElementsService = require('./charge-elements');
 const invoiceAccountsService = require('./invoice-accounts-service');
 
@@ -144,6 +143,8 @@ const updateExistingChargeVersions = existingChargeVersions => {
 
 /**
  * Persists a new charge version from the model supplied
+ * NB: licence is flagged for supplementary billing
+ *     when the charge version workflow is deleted
  * @param {ChargeVersion} chargeVersion
  * @return {Promise<ChargeVersion>}
  */
@@ -172,10 +173,7 @@ const create = async chargeVersion => {
     persist(chargeVersion),
 
     // Update end date/status on existing charge versions for licence
-    updateExistingChargeVersions(existingChargeVersions),
-
-    // Flag licence for supplementary billing
-    licencesService.flagForSupplementaryBilling(licence.id)
+    updateExistingChargeVersions(existingChargeVersions)
   ]);
 
   return getByChargeVersionId(id);

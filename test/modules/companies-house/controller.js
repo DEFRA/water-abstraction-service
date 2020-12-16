@@ -16,6 +16,7 @@ const controller = require('../../../src/modules/companies-house/controller');
 experiment('modules/companies-house/controller', () => {
   beforeEach(async () => {
     sandbox.stub(companiesHouseService, 'searchCompanies').resolves();
+    sandbox.stub(companiesHouseService, 'getCompany').resolves();
   });
 
   afterEach(async () => {
@@ -38,6 +39,24 @@ experiment('modules/companies-house/controller', () => {
       const [q, page] = companiesHouseService.searchCompanies.lastCall.args;
       expect(q).to.equal(request.query.q);
       expect(page).to.equal(request.query.page);
+    });
+  });
+
+  experiment('.getCompaniesHouseCompany', () => {
+    const request = {
+      params: {
+        companyNumber: 1234
+      }
+    };
+
+    beforeEach(async () => {
+      await controller.getCompaniesHouseCompany(request);
+    });
+
+    test('calls companies house service with the company number', async () => {
+      expect(
+        companiesHouseService.getCompany.calledWith(request.params.companyNumber)
+      ).to.be.true();
     });
   });
 });

@@ -17,7 +17,9 @@ const dbRow = {
   town: 'town',
   county: 'county',
   postcode: 'AB12 3CD',
-  country: 'country'
+  country: 'country',
+  isTest: false,
+  uprn: 123456
 };
 
 const addressData = {
@@ -93,6 +95,14 @@ experiment('modules/billing/mappers/address', () => {
 
     test('has the expected country value', async () => {
       expect(result.country).to.equal(dbRow.country);
+    });
+
+    test('has the expected isTest value', async () => {
+      expect(result.isTest).to.equal(dbRow.isTest);
+    });
+
+    test('has the expected uprn value', async () => {
+      expect(result.uprn).to.equal(dbRow.uprn);
     });
   });
 

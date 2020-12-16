@@ -43,9 +43,9 @@ experiment('modules/acceptance-tests/lib/entities', () => {
     });
   });
 
-  experiment('.createCompany', () => {
+  experiment('.createV1Company', () => {
     beforeEach(async () => {
-      await entities.createCompany();
+      await entities.createV1Company();
     });
 
     test('uses the test compnay name to create the entity', async () => {

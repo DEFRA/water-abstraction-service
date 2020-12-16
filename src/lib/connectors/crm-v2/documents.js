@@ -10,9 +10,7 @@ const config = require('../../../../config');
 const VALID_LICENCE_NUMBER = Joi.string().required().example('01/123/R01');
 const VALID_GUID = Joi.string().guid().required();
 
-const getDocumentsUrl = (...tail) => {
-  return urlJoin(config.services.crm_v2, 'documents', ...tail);
-};
+const getDocumentsUrl = (...tail) => urlJoin(config.services.crm_v2, 'documents', ...tail);
 
 const getDocumentRolesUrl = (...tail) => {
   return urlJoin(config.services.crm_v2, 'document-roles', ...tail);
@@ -44,6 +42,22 @@ const getDocument = documentId => {
   return serviceRequest.get(getDocumentsUrl(documentId));
 };
 
+const createDocument = (documentRef, documentStatus = 'current', startDate = new Date().toJSON().slice(0, 10), endDate = null, isTest = false) => {
+  const url = getDocumentsUrl();
+  return serviceRequest.post(url, {
+    body: {
+      regime: 'water',
+      documentType: 'abstraction_licence',
+      versionNumber: '100',
+      documentRef: documentRef,
+      status: documentStatus,
+      startDate: startDate,
+      endDate: endDate,
+      isTest: isTest
+    }
+  });
+};
+
 const createDocumentRole = async (documentId, documentRole) => {
   const url = getDocumentsUrl(documentId, 'roles');
   return serviceRequest.post(url, { body: documentRole });
@@ -72,6 +86,7 @@ const getDocumentByRefAndDate = async (documentRef, date) => {
   });
 };
 
+exports.createDocument = createDocument;
 exports.createDocumentRole = createDocumentRole;
 exports.getDocument = getDocument;
 exports.getDocumentRole = getDocumentRole;
