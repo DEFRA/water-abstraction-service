@@ -39,8 +39,8 @@ const uiToModel = contactData => {
     return new Contact(contactData.contactId);
   }
   const contact = new Contact();
-  contact.dataSource = Contact.DATA_SOURCE_TYPES.wrls;
-  return contact.fromHash(contactData);
+  contact.dataSource = contactData.source || Contact.DATA_SOURCE_TYPES.wrls;
+  return contact.fromHash(omit(contactData, 'source'));
 };
 
 /**

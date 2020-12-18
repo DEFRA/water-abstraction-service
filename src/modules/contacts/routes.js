@@ -20,7 +20,7 @@ module.exports = {
           department: OPTIONAL_STRING,
           suffix: OPTIONAL_STRING,
           isTest: Joi.boolean().optional().default(false),
-          dataSource: Joi.string().valid('wrls', 'nald').default('wrls')
+          source: Joi.string().valid('wrls', 'nald').default('wrls')
         },
         headers: async values => {
           Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
