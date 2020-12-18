@@ -44,7 +44,7 @@ const createRequest = () => ({
     department: 'Test Department',
     suffix: 'MBE',
     isTest: true,
-    dataSource: 'nald'
+    source: 'nald'
   }
 });
 
@@ -127,12 +127,12 @@ experiment('modules/contacts/routes', () => {
       expect(response.request.payload.isTest).to.equal(false);
     });
 
-    test('dataSource is optional (but will default to "wrls")', async () => {
-      delete request.payload.dataSource;
+    test('source is optional (but will default to "wrls")', async () => {
+      delete request.payload.source;
       const response = await server.inject(request);
 
       expect(response.statusCode).to.equal(200);
-      expect(response.request.payload.dataSource).to.equal('wrls');
+      expect(response.request.payload.source).to.equal('wrls');
     });
 
     test('returns a 400 if the calling user id is not supplied', async () => {

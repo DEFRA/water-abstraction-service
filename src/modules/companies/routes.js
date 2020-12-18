@@ -35,12 +35,15 @@ const agentSchema = Joi.object({
 const contactSchema = Joi.object({
   contactId: Joi.string().guid().optional(),
   type: Joi.string().valid(Object.values(CONTACT_TYPES)).optional(),
-  title: Joi.string().trim().optional(),
-  firstName: Joi.string().trim().optional(),
-  middleInitials: Joi.string().trim().optional(),
-  lastName: Joi.string().trim().optional(),
-  suffix: Joi.string().trim().optional(),
-  department: Joi.string().trim().replace(/\./g, '').optional()
+  title: OPTIONAL_NULLABLE_STRING,
+  firstName: OPTIONAL_NULLABLE_STRING,
+  initials: OPTIONAL_NULLABLE_STRING,
+  middleInitials: OPTIONAL_NULLABLE_STRING,
+  lastName: OPTIONAL_NULLABLE_STRING,
+  suffix: OPTIONAL_NULLABLE_STRING,
+  department: Joi.string().trim().replace(/\./g, '').optional(),
+  source: OPTIONAL_NULLABLE_STRING,
+  isTest: Joi.boolean().optional().default(false)
 }).allow(null).optional();
 
 module.exports = {
