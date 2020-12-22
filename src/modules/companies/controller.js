@@ -120,9 +120,22 @@ const getCompanyContacts = async (request) => {
   }
 };
 
+const getCompanyInvoiceAccounts = async request => {
+  const { companyId } = request.params;
+  const { regionId } = request.query;
+
+  try {
+    const invoiceAccounts = await companiesService.getCompanyInvoiceAccounts(companyId, regionId);
+    return envelope(invoiceAccounts);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
 exports.getReturns = getReturns;
 exports.getCompany = getCompany;
 exports.searchCompaniesByName = searchCompaniesByName;
 exports.getCompanyAddresses = getCompanyAddresses;
 exports.createCompanyInvoiceAccount = createCompanyInvoiceAccount;
 exports.getCompanyContacts = getCompanyContacts;
+exports.getCompanyInvoiceAccounts = getCompanyInvoiceAccounts;

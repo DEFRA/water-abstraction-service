@@ -144,5 +144,22 @@ module.exports = {
         }
       }
     }
+  },
+
+  getCompanyInvoiceAccounts: {
+    path: '/water/1.0/companies/{companyId}/invoice-accounts',
+    method: 'GET',
+    handler: controller.getCompanyInvoiceAccounts,
+    config: {
+      description: 'Creates an invoice account for the specified company',
+      validate: {
+        params: {
+          companyId: Joi.string().guid().required()
+        },
+        query: {
+          regionId: Joi.string().guid().optional()
+        }
+      }
+    }
   }
 };
