@@ -6,6 +6,7 @@ const { CONTACT_TYPES } = require('../../lib/models/contact-v2');
 const { ORGANISATION_TYPES } = require('../../lib/models/company');
 
 const OPTIONAL_NULLABLE_STRING = Joi.string().trim().optional().allow(null);
+const EXAMPLE_GUID = '00000000-0000-0000-0000-000000000000';
 
 /**
  * @todo this should use e.g. `id` not `addressId` for consistency with the water service model shape
@@ -151,13 +152,14 @@ module.exports = {
     method: 'GET',
     handler: controller.getCompanyInvoiceAccounts,
     config: {
-      description: 'Creates an invoice account for the specified company',
+      description: 'Gets all invoice accounts for company, optionally filtered by region',
+      tags: ['api'],
       validate: {
         params: {
-          companyId: Joi.string().guid().required()
+          companyId: Joi.string().guid().required().example(EXAMPLE_GUID)
         },
         query: {
-          regionId: Joi.string().guid().optional()
+          regionId: Joi.string().guid().optional().example(EXAMPLE_GUID)
         }
       }
     }
