@@ -472,6 +472,16 @@ const deleteAllBillingData = async () => {
   return newRepos.billingBatches.deleteAllBillingData();
 };
 
+/**
+ * Updates batch invoices with invoice numbers and totals
+ * @return {Promise} ??
+ */
+const persistInvoiceNumbersAndTotals = batch => {
+  // call CM to get summary and transactions
+  // call CM decorators with summary, transactions and batch
+  // persist result from CM decorators
+};
+
 exports.approveBatch = approveBatch;
 exports.decorateBatchWithTotals = decorateBatchWithTotals;
 exports.deleteBatch = deleteBatch;
@@ -495,3 +505,4 @@ exports.approveTptBatchReview = approveTptBatchReview;
 exports.getSentTptBatchesForFinancialYearAndRegion = getSentTptBatchesForFinancialYearAndRegion;
 exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteAllBillingData = deleteAllBillingData;
+exports.persistInvoiceNumbersAndTotals = persistInvoiceNumbersAndTotals;
