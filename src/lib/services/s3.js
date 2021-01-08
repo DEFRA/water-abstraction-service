@@ -61,7 +61,22 @@ const download = async (key, destination) => {
  */
 const getHead = key => callS3MethodWithKey('headObject', key);
 
+/**
+ * Gets a signed URL for a particular file
+ * @param {String} filepath
+ * @param {String} operation
+ */
+const getSignedUrl = (filepath, operation = 'getObject', expiry = 60) => {
+  const options = getOptions(filepath, { Expires: expiry });
+
+  return s3Connector.getS3().getSignedUrl(
+    operation,
+    options
+  );
+};
+
 exports.upload = upload;
 exports.getObject = getObject;
 exports.download = download;
 exports.getHead = getHead;
+exports.getSignedUrl = getSignedUrl;

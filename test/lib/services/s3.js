@@ -16,6 +16,7 @@ const s3Connector = require('../../../src/lib/connectors/s3');
 const s3Service = require('../../../src/lib/services/s3');
 
 const BUCKET = 'test-bucket';
+const RESOURCE_KEY = 'test/key.txt';
 
 experiment('lib/services/s3', () => {
   let stub, read, write;
@@ -34,6 +35,7 @@ experiment('lib/services/s3', () => {
       headObject: sandbox.stub().returnsThis(),
       upload: sandbox.stub().returnsThis(),
       getObject: sandbox.stub().returnsThis(),
+      getSignedUrl: sandbox.stub().returnsThis(),
       createReadStream: sandbox.stub().returns(read),
       promise: sandbox.stub().resolves()
     };
@@ -50,12 +52,12 @@ experiment('lib/services/s3', () => {
 
     beforeEach(async () => {
       buffer = Buffer.from('test-contents');
-      await s3Service.upload('test/key.txt', buffer);
+      await s3Service.upload(RESOURCE_KEY, buffer);
     });
 
     test('calls upload on connector with correct options', async () => {
       expect(stub.upload.calledWith({
-        Key: 'test/key.txt',
+        Key: RESOURCE_KEY,
         Bucket: BUCKET,
         Body: buffer
       })).to.be.true();
@@ -75,12 +77,12 @@ experiment('lib/services/s3', () => {
 
   experiment('.getObject', () => {
     beforeEach(async () => {
-      await s3Service.getObject('test/key.txt');
+      await s3Service.getObject(RESOURCE_KEY);
     });
 
     test('calls upload on connector with correct options', async () => {
       expect(stub.getObject.calledWith({
-        Key: 'test/key.txt',
+        Key: RESOURCE_KEY,
         Bucket: BUCKET
       })).to.be.true();
     });
@@ -101,7 +103,7 @@ experiment('lib/services/s3', () => {
     experiment('when there is no read error', () => {
       beforeEach(async () => {
         await Promise.all([
-          s3Service.download('test/key.txt', 'test-destination/'),
+          s3Service.download(RESOURCE_KEY, 'test-destination/'),
           write.emit('close')
         ]);
       });
@@ -112,7 +114,7 @@ experiment('lib/services/s3', () => {
 
       test('calls getObject on connector with correct options', async () => {
         expect(stub.getObject.calledWith({
-          Key: 'test/key.txt',
+          Key: RESOURCE_KEY,
           Bucket: BUCKET
         })).to.be.true();
       });
@@ -128,7 +130,7 @@ experiment('lib/services/s3', () => {
 
     test('when there is a read error, rejects', async () => {
       const func = () => Promise.all([
-        s3Service.download('test/key.txt', 'test-destination/'),
+        s3Service.download(RESOURCE_KEY, 'test-destination/'),
         read.emit('error', new Error())
       ]);
       expect(func()).to.reject();
@@ -137,12 +139,12 @@ experiment('lib/services/s3', () => {
 
   experiment('.getHead', () => {
     beforeEach(async () => {
-      await s3Service.getHead('test/key.txt');
+      await s3Service.getHead(RESOURCE_KEY);
     });
 
     test('calls headObject on connector with correct options', async () => {
       expect(stub.headObject.calledWith({
-        Key: 'test/key.txt',
+        Key: RESOURCE_KEY,
         Bucket: BUCKET
       })).to.be.true();
     });
@@ -156,6 +158,20 @@ experiment('lib/services/s3', () => {
         stub.headObject,
         stub.promise
       );
+    });
+  });
+
+  experiment('.getSignedUrl', () => {
+    beforeEach(async () => {
+      await s3Service.getSignedUrl(RESOURCE_KEY);
+    });
+
+    test('calls getSignedUrl on connector with correct options', async () => {
+      expect(stub.getSignedUrl.lastCall.lastArg).to.equal({
+        Key: RESOURCE_KEY,
+        Bucket: BUCKET,
+        Expires: 60
+      });
     });
   });
 });

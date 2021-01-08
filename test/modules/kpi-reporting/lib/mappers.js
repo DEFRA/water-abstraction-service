@@ -20,7 +20,7 @@ experiment('./modules/kpi-reporting/lib/mappers', () => {
       expect(mappedData.monthly[0].currentYear).to.be.true();
       expect(mappedData.monthly[0].named).to.equal(220);
       expect(mappedData.monthly[0].renamed).to.equal(110);
-      expect(mappedData.monthly[0].year).to.equal(2020);
+      expect(mappedData.monthly[0].year).to.equal(2021);
       expect(mappedData.monthly[0].namedChange).to.equal(10);
       expect(mappedData.monthly[0].renamedChange).to.equal(10);
     });
@@ -58,11 +58,11 @@ experiment('./modules/kpi-reporting/lib/mappers', () => {
       expect(mappedData.monthly[0].month).to.equal('February');
       expect(mappedData.monthly[0].request).to.equal(2);
       expect(mappedData.monthly[0].return).to.equal(2);
-      expect(mappedData.monthly[0].currentYear).to.equal(2020);
+      expect(mappedData.monthly[0].currentYear).to.equal(2021);
       expect(mappedData.monthly[1].month).to.equal('January');
       expect(mappedData.monthly[1].request).to.equal(3);
       expect(mappedData.monthly[1].return).to.equal(3);
-      expect(mappedData.monthly[1].currentYear).to.equal(2020);
+      expect(mappedData.monthly[1].currentYear).to.equal(2021);
     });
   });
 });
