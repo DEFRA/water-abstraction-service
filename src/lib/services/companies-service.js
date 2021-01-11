@@ -22,8 +22,25 @@ const getCompanyAddresses = async companyId => {
   return companyAddresses.map(mappers.companyAddress.crmToModel);
 };
 
+/**
+ * Attempts to create a company
+ * If the company already exists (e.g. conflicting companies house number)
+ * then the existing model is returned
+ *
+ * @param {Company}
+ * @return {Promise<Company>}
+ */
 const createCompany = async companyModel => {
-  const company = await companiesConnector.createCompany(mappers.company.modelToCrm(companyModel));
+  let company;
+  try {
+    company = await companiesConnector.createCompany(mappers.company.modelToCrm(companyModel));
+  } catch (err) {
+    if (err.statusCode === 409 && err.error.existingEntity) {
+      company = err.error.existingEntity;
+    } else {
+      throw err;
+    }
+  }
   return mappers.company.crmToModel(company);
 };
 

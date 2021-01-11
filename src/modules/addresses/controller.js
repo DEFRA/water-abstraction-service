@@ -14,6 +14,7 @@ const postAddress = async request => {
 
     return address;
   } catch (err) {
+    // @todo this is redundant as it has error handling moved to service layer
     if (err.statusCode === 409 && err.error.existingEntity) {
       return addressMapper.crmToModel(err.error.existingEntity);
     }

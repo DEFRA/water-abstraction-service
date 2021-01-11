@@ -32,12 +32,7 @@ const uiToModel = companyData => {
   if (companyData.companyId) {
     return new Company(companyData.companyId);
   }
-  const company = new Company();
-  return company.fromHash({
-    ...companyData,
-    type: companyData.type === ORGANISATION_TYPES.individual ? COMPANY_TYPES.person : COMPANY_TYPES.organisation,
-    organisationType: companyData.type
-  });
+  return new Company().fromHash(companyData);
 };
 
 /**

@@ -11,8 +11,27 @@ const getAddressModel = address => {
   return addressModel;
 };
 
+/**
+ * Creates an address
+ * If there is a 409 error because the address already exists, this is handled
+ * and the existing address is returned
+ * @param {Address} address
+ * @return {Promise<Address>} the water service representation of the CRM persisted model
+ */
 const createAddress = async addressModel => {
-  const address = await addressesConnector.createAddress(mappers.address.modelToCrm(addressModel));
+  let address;
+  try {
+    address = await addressesConnector.createAddress(mappers.address.modelToCrm(addressModel));
+  } catch (err) {
+    console.log(err.statusCode);
+    if (err.statusCode === 409 && err.error.existingEntity) {
+      address = err.error.existingEntity;
+    } else {
+      throw err;
+    }
+  }
+  console.log(addressModel);
+  console.log(address);
   return mappers.address.crmToModel(address);
 };
 

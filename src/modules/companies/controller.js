@@ -8,6 +8,7 @@ const documentsHelper = require('./lib/documents');
 const returnsHelper = require('./lib/returns');
 const companiesService = require('../../lib/services/companies-service');
 const invoiceAccountsService = require('../../lib/services/invoice-accounts-service');
+const { logger } = require('../../logger');
 
 const mapErrorResponse = require('../../lib/map-error-response');
 const { envelope } = require('../../lib/response');
@@ -105,6 +106,7 @@ const createCompanyInvoiceAccount = async (request, h) => {
 
     return h.response(generatedAccount.toJSON()).code(201);
   } catch (err) {
+    logger.error('Error saving invoice account', err);
     return mapErrorResponse(err);
   }
 };
