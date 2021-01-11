@@ -4,7 +4,8 @@ const { uniq, get, flatMap } = require('lodash');
 
 const {
   assertIsInstanceOf, assertIsArrayOfType,
-  assertIsNullableInstanceOf, assertIsBoolean
+  assertIsNullableInstanceOf, assertIsBoolean,
+  assertNullableString
 } = require('./validators');
 const Model = require('./model');
 const Address = require('./address');
@@ -177,7 +178,7 @@ class Invoice extends Model {
   /**
    * Whether de-minimis rules is applied
    * This occurs when invoice/credit note value < £5
-   * @param {Boolean}
+   * @param {Boolean} isDeMinimis
    */
   set isDeMinimis (isDeMinimis) {
     assertIsBoolean(isDeMinimis);
@@ -186,6 +187,19 @@ class Invoice extends Model {
 
   get isDeMinimis () {
     return this._isDeMinimis;
+  }
+
+  /**
+   * Sets the invoice number
+   * @param {String} invoiceNumber
+   */
+  set invoiceNumber (invoiceNumber) {
+    assertNullableString(invoiceNumber);
+    this._invoiceNumber = invoiceNumber;
+  }
+
+  get invoiceNumber () {
+    return this._invoiceNumber;
   }
 
   get hasTransactionErrors () {
