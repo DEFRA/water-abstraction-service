@@ -24,17 +24,9 @@ const chargeModuleBillRunToBatchModel = data => {
  * @param {Number} financialYearEnding
  * @return {Totals} - totals for the supplied invoice account
  */
-const chargeModuleBillRunToInvoiceModel = (cmResponse, invoiceAccountNumber, financialYearEnding) => {
-  const customer = find(cmResponse.billRun.customers, { customerReference: invoiceAccountNumber });
-  if (!customer) {
-    return null;
-  }
-  const finYear = find(customer.summaryByFinancialYear, { financialYear: financialYearEnding - 1 });
-  if (!finYear) {
-    return null;
-  }
+const chargeModuleBillRunToInvoiceModel = (finYearSummary) => {
   const totals = new Totals();
-  return totals.pickFrom(finYear, [
+  return totals.pickFrom(finYearSummary, [
     'creditLineCount',
     'creditLineValue',
     'debitLineCount',

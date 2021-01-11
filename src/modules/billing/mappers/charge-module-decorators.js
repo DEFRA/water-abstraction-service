@@ -7,18 +7,66 @@ const Batch = require('../../../lib/models/batch');
 const Invoice = require('../../../lib/models/invoice');
 const validators = require('../../../lib/models/validators');
 const { TransactionStatusError } = require('../lib/errors');
-const chargeModuleTransactionConnector = require('../../../lib/connectors/charge-module/transactions');
+const { getFinancialYear } = require('@envage/water-abstraction-helpers').charging;
 
 const mappers = require('../mappers');
 
-const { isEmpty, uniq } = require('lodash');
+const { isEmpty, uniq, groupBy, find, merge, mapValues } = require('lodash');
 
-const findCustomer = (cmResponse, customerReference) =>
-  cmResponse.billRun.customers.find(customer => customer.customerReference === customerReference);
+const findCustomer = (cmResponseCustomers, customerReference) =>
+  cmResponseCustomers.find(customer => customer.customerReference === customerReference);
 
-const findCustomerFinancialYearSummary = (cmResponse, customerReference, financialYearEnding) =>
-  findCustomer(cmResponse, customerReference).summaryByFinancialYear.find(summary => summary.financialYear === financialYearEnding - 1);
+const findCustomerFinancialYearSummary = (cmResponse, invoiceAccountNumber, financialYearEnding) => {
+  const customer = findCustomer(cmResponse, invoiceAccountNumber);
+  if (!customer) {
+    return null;
+  }
+  const finYear = find(customer.summaryByFinancialYear, { financialYear: financialYearEnding - 1 });
+  if (!finYear) {
+    return null;
+  }
+  return finYear;
+};
 
+const getCmFinancialYearForTransaction = transaction => getFinancialYear(transaction.periodStart) - 1;
+
+const groupTransactionsByFinancialYear = transactions =>
+  groupBy(transactions, getCmFinancialYearForTransaction);
+
+const groupTransactionsByCustomerAndFinancialYear = (cmTransactions) => {
+  const groupedByCustomer = groupBy(cmTransactions, 'customerReference');
+  return mapValues(groupedByCustomer, groupTransactionsByFinancialYear);
+};
+
+const mergeTransactionData = (finYearSummary, transactionsForFinYear) =>
+  finYearSummary.transactions.forEach(summaryTransaction =>
+    merge(summaryTransaction, find(transactionsForFinYear, { id: summaryTransaction.id }))
+  );
+
+const mapCmTransactionsToCustomers = (customers, groupedTransactions) => {
+  customers.forEach(customer => customer.summaryByFinancialYear.forEach(summary => {
+    const customerTransactions = groupedTransactions[customer.customerReference][summary.financialYear];
+    return mergeTransactionData(summary, customerTransactions);
+  }));
+  return customers;
+};
+
+const mapCmTransactionsToSummary = (cmResponse, cmTransactions) => {
+  if (isEmpty(cmTransactions)) return cmResponse.billRun.customers;
+
+  const transactionsByCustomerAndFinYear = groupTransactionsByCustomerAndFinancialYear(cmTransactions.data.transactions);
+  return mapCmTransactionsToCustomers(cmResponse.billRun.customers, transactionsByCustomerAndFinYear); ;
+};
+
+/**
+ * Find invoice number, or return null if none present
+ */
+const findInvoiceNumber = (customerFinYearSummary) => {
+  const transactionWithInvoiceNumber = customerFinYearSummary.transactions.find(transaction => !!transaction.transactionReference);
+  return transactionWithInvoiceNumber
+    ? transactionWithInvoiceNumber.transactionReference
+    : null;
+};
 /**
  * Returns a map of transactions indexed by the licence number
  * @param {Array<Object>} transactions
@@ -45,17 +93,12 @@ const decorateTransaction = (serviceTransaction, cmTransaction) =>
     isMinimumCharge: cmTransaction.minimumChargeAdjustment
   });
 
-const decorateMinimumChargeTransaction = async cmTransaction => {
-  const { transaction } = await chargeModuleTransactionConnector.get(cmTransaction.id);
-  return mappers.transaction.cmToModel(transaction);
-};
-
 /**
  * Maps all CM transaction data to the invoice licence
  * @param {InvoiceLicence} invoiceLicence containing service transactions
  * @param {Array} cmTransactions for that given licence
  */
-const decorateTransactions = async (invoiceLicence, cmTransactions) => {
+const decorateTransactions = (invoiceLicence, cmTransactions) => {
   if (isEmpty(invoiceLicence.transactions)) return invoiceLicence;
   for (const cmTransaction of cmTransactions) {
     const serviceTransaction = invoiceLicence.transactions.find(trans => trans.externalId === cmTransaction.id);
@@ -66,10 +109,9 @@ const decorateTransactions = async (invoiceLicence, cmTransactions) => {
       decorateTransaction(serviceTransaction, cmTransaction);
 
     // minimum charge transactions don't exist in the service,
-    // so need to be mapped and added to the invoice licence
+    // so need to be added to the invoice licence
     } else if (cmTransaction.minimumChargeAdjustment) {
-      const minChargeTransaction = await decorateMinimumChargeTransaction(cmTransaction);
-      invoiceLicence.transactions.push(minChargeTransaction);
+      invoiceLicence.transactions.push(mappers.transaction.cmToModel(cmTransaction));
 
     // if neither of the above scenarios apply, throw error
     } else {
@@ -84,23 +126,24 @@ const decorateTransactions = async (invoiceLicence, cmTransactions) => {
  * @param {Object} cmResponse
  * @return {Batch}
  */
-const decorateInvoice = async (invoice, cmResponse) => {
+const decorateInvoice = (invoice, cmResponseCustomers) => {
   validators.assertIsInstanceOf(invoice, Invoice);
-  validators.assertObject(cmResponse);
+  validators.assertArray(cmResponseCustomers);
   // Set invoice totals
   // Note: the customer/financial year summary is not guaranteed to be present in the CM
   // because creation of transactions for this customer/financial year could have failed to create in the CM
-  const totals = mappers.totals.chargeModuleBillRunToInvoiceModel(cmResponse, invoice.invoiceAccount.accountNumber, invoice.financialYear.yearEnding);
-  if (!totals) {
+  const customerFinYearSummary = findCustomerFinancialYearSummary(cmResponseCustomers, invoice.invoiceAccount.accountNumber, invoice.financialYear.endYear);
+  if (!customerFinYearSummary) {
     return invoice;
   }
-  invoice.totals = totals;
-
-  mappers.totals.chargeModuleBillRunToInvoiceModel(cmResponse, invoice.invoiceAccount.accountNumber, invoice.financialYear.yearEnding);
+  // Set total related data
+  invoice.totals = mappers.totals.chargeModuleBillRunToInvoiceModel(customerFinYearSummary);
 
   // Set de-minimis flag
-  const customerFinYearSummary = findCustomerFinancialYearSummary(cmResponse, invoice.invoiceAccount.accountNumber, invoice.financialYear.endYear);
   invoice.isDeMinimis = customerFinYearSummary.deminimis;
+
+  // Set invoice number if present
+  invoice.invoiceNumber = findInvoiceNumber(customerFinYearSummary);
 
   const cmTransactionsByLicence = indexTransactionsByLicenceNumber(customerFinYearSummary.transactions);
 
@@ -108,9 +151,9 @@ const decorateInvoice = async (invoice, cmResponse) => {
   // and add any minimum charge transactions from CM
   for (const [licenceNumber, transactions] of cmTransactionsByLicence) {
     const invoiceLicence = invoice.getInvoiceLicenceByLicenceNumber(licenceNumber);
-    await decorateTransactions(invoiceLicence, transactions);
+    decorateTransactions(invoiceLicence, transactions);
   }
-
+  console.log({ invoiceTransactions: invoice });
   return invoice;
 };
 
@@ -118,18 +161,22 @@ const decorateInvoice = async (invoice, cmResponse) => {
  * Decorates batch with data from the charge module response
  * @param {Batch} batch
  * @param {Object} cmResponse
+ * @param {Object} cmTransactions
  * @return {Batch}
  */
-const decorateBatch = async (batch, cmResponse) => {
+const decorateBatch = (batch, cmResponse, cmTransactions = {}) => {
   validators.assertIsInstanceOf(batch, Batch);
   validators.assertObject(cmResponse);
+  validators.assertObject(cmTransactions);
 
   // Set batch totals
   batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(cmResponse.billRun.summary);
 
+  const cmResponseCustomers = mapCmTransactionsToSummary(cmResponse, cmTransactions);
+
   // Decorate each invoice
   for (const invoice of batch.invoices) {
-    await decorateInvoice(invoice, cmResponse);
+    decorateInvoice(invoice, cmResponseCustomers);
   }
 
   return batch;
