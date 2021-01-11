@@ -32,7 +32,7 @@ const chargeModuleDecorators = require('../mappers/charge-module-decorators');
  * @return {Promise<Batch>}
  */
 const getBatchById = async id => {
-  const row = await newRepos.billingBatches.findOne(id);
+  const row = await newRepos.billingBatches.findOneWithInvoices(id);
   return row ? mappers.batch.dbToModel(row) : null;
 };
 
@@ -476,10 +476,23 @@ const deleteAllBillingData = async () => {
  * Updates batch invoices with invoice numbers and totals
  * @return {Promise} ??
  */
-const persistInvoiceNumbersAndTotals = batch => {
-  // call CM to get summary and transactions
+const persistInvoiceNumbersAndTotals = async batch => {
+  console.log('------PERSIST INVOICE NUMBERS AND TOTALS------');
+  const { externalId } = batch;
+
+  const [billRunSummary, billRunTransactions] = await Promise.all([
+    chargeModuleBillRunConnector.get(externalId),
+    chargeModuleBillRunConnector.getTransactions(externalId)
+  ]);
+  console.log('------calling decorators');
   // call CM decorators with summary, transactions and batch
+  const updatedBatch = chargeModuleDecorators.decorateBatch(batch, billRunSummary, billRunTransactions);
+
+  console.log('------about to persist');
   // persist result from CM decorators
+  const tasks = updatedBatch.invoices.map(invoiceService.saveInvoiceNumbersAndTotals);
+  console.log({ tasks });
+  return Promise.all(tasks);
 };
 
 exports.approveBatch = approveBatch;

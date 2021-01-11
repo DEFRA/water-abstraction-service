@@ -57,11 +57,13 @@ const deleteByBatchId = async (batchId, isDeletionRequired = true) => BillingInv
   .where({ billing_batch_id: batchId })
   .destroy({ require: isDeletionRequired });
 
-exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
-exports.findOne = findOne;
+const update = async (billingInvoiceId, changes) => BillingInvoice
+  .forge({ billingInvoiceId })
+  .save(changes);
+
 exports.upsert = upsert;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;
-exports.upsert = upsert;
 exports.delete = deleteRecord;
 exports.deleteByBatchId = deleteByBatchId;
+exports.update = update;
