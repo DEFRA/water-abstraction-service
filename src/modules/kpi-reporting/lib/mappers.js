@@ -11,8 +11,8 @@ const mapReturnsDataByCycle = (data, returnCycle) => {
   };
 };
 
-const mapReturnsDataMonthly = (data) => {
-  const year = new Date().getFullYear();
+const mapReturnsDataMonthly = (data, date = new Date()) => {
+  const year = date.getFullYear();
   return data.reduce((acc, row) => {
     acc.totals.allTime = acc.totals.allTime + row.return;
     acc.totals.ytd = acc.totals.ytd + (row.currentYear ? row.return : 0);
@@ -34,8 +34,8 @@ const percentChange = (data, index, key) => {
             (data[(index + 1)][key] < 1 ? 1 : data[(index + 1)][key]) * 100 : 0;
 };
 
-const mapLicenceNamesData = (data) => {
-  const year = new Date().getFullYear();
+const mapLicenceNamesData = (data, date = new Date()) => {
+  const year = date.getFullYear();
   return data.reduce((acc, row, index) => {
     acc.totals.allTime = acc.totals.allTime + row.named + row.renamed;
     acc.totals.ytd = acc.totals.ytd + (row.currentYear ? row.named + row.renamed : 0);
