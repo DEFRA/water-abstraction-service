@@ -76,6 +76,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     sandbox.stub(newRepos.billingBatches, 'delete').resolves();
     sandbox.stub(newRepos.billingBatches, 'findOne').resolves(data.batch);
+    sandbox.stub(newRepos.billingBatches, 'findOneWithInvoices').resolves();
     sandbox.stub(newRepos.billingBatches, 'findPage').resolves();
     sandbox.stub(newRepos.billingBatches, 'update').resolves();
     sandbox.stub(newRepos.billingBatches, 'create').resolves();
@@ -140,8 +141,14 @@ experiment('modules/billing/services/batch-service', () => {
       result = await batchService.getBatchById(BATCH_ID);
     });
 
-    test('calls repos.billingBatches.getById with correct ID', async () => {
+    test('calls repos.billingBatches.findOne with correct ID', async () => {
       const { args } = newRepos.billingBatches.findOne.lastCall;
+      expect(args).to.equal([BATCH_ID]);
+    });
+
+    test('calls repos.billingBatches.findOneWithInvoices with correct ID if includeInvoices is true', async () => {
+      await batchService.getBatchById(BATCH_ID, true);
+      const { args } = newRepos.billingBatches.findOneWithInvoices.lastCall;
       expect(args).to.equal([BATCH_ID]);
     });
 
@@ -1217,15 +1224,16 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       experiment('when the invoice is found and there are no errors', () => {
-        let licenceId;
-        let billingInvoiceId;
+        let billingInvoiceId, invoiceAccountId, licenceId;
 
         beforeEach(async () => {
           billingInvoiceId = uuid();
+          invoiceAccountId = uuid();
           licenceId = uuid();
 
           newRepos.billingInvoices.findOne.resolves({
             billingInvoiceId,
+            invoiceAccountId,
             invoiceAccountNumber: 'A12345678A',
             financialYearEnding: 2020,
             billingBatch: {

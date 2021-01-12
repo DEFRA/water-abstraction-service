@@ -153,7 +153,7 @@ const decorateInvoice = (invoice, cmResponseCustomers) => {
     const invoiceLicence = invoice.getInvoiceLicenceByLicenceNumber(licenceNumber);
     decorateTransactions(invoiceLicence, transactions);
   }
-  console.log({ invoiceTransactions: invoice });
+
   return invoice;
 };
 
@@ -184,3 +184,4 @@ const decorateBatch = (batch, cmResponse, cmTransactions = {}) => {
 
 exports.decorateInvoice = decorateInvoice;
 exports.decorateBatch = decorateBatch;
+exports._mapCmTransactionsToSummary = mapCmTransactionsToSummary;

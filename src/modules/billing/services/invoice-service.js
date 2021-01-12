@@ -40,7 +40,6 @@ const saveInvoiceNumbersAndTotals = async invoice => {
     netAmount: invoice.totals.netTotal,
     isCredit: invoice.totals.netTotal < 0
   };
-  console.log({ invoiceId: invoice.id, invoiceUpdates: changes });
   return repos.billingInvoices.update(invoice.id, changes);
 };
 

@@ -48,7 +48,7 @@ const modelToDb = (batch, invoice) => {
     address: mapAddress(invoice),
     billingBatchId: batch.id,
     financialYearEnding: invoice.financialYear.endYear,
-    invoiceNumber: invoice.invoiceNumber,
+    invoiceNumber: invoice.invoiceNumber || null,
     netAmount: totals ? totals.netTotal : null,
     isCredit: totals ? totals.netTotal < 0 : null
   };
