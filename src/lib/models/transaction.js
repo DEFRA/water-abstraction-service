@@ -247,6 +247,15 @@ class Transaction extends Model {
     this._isMinimumCharge = isMinimumCharge;
   }
 
+  get externalId () {
+    return this._externalId;
+  }
+
+  set externalId (externalId) {
+    validators.assertNullableId(externalId);
+    this._externalId = externalId;
+  }
+
   /**
    * Creates a POJO containing a single layer of data that will be
    * used to create a unique hash for this transaction

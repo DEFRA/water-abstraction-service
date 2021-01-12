@@ -30,9 +30,9 @@ const dbToModelMapper = createMapper({ mapNull: false })
     (creditNoteCount, invoiceCount, netTotal) => totalsMapper.dbToModel({ creditNoteCount, invoiceCount, netTotal }));
 
 /**
- * Converts DB representation to a ChargeVersionWorkflow service model
+ * Converts DB representation to a Batch service model
  * @param {Object} row
- * @return {ChargeVersionWorkflow}
+ * @return {Batch}
  */
 const dbToModel = row =>
   helpers.createModel(Batch, row, dbToModelMapper);

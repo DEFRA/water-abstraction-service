@@ -25,6 +25,9 @@ const createRegion = regionCode => {
   });
 };
 
+const mapInvoiceAccountId = id =>
+  id ? new InvoiceAccount(id) : null;
+
 const dbToModelMapper = createMapper()
   .map('chargeVersionId').to('id')
   .copy(
@@ -36,7 +39,7 @@ const dbToModelMapper = createMapper()
   .map('regionCode').to('region', createRegion)
   .map(['startDate', 'endDate']).to('dateRange', (startDate, endDate) => new DateRange(startDate, endDate))
   .map('companyId').to('company', companyId => new Company(companyId))
-  .map('invoiceAccountId').to('invoiceAccount', invoiceAccountId => new InvoiceAccount(invoiceAccountId))
+  .map('invoiceAccountId').to('invoiceAccount', mapInvoiceAccountId)
   .map('changeReason').to('changeReason', changeReasonMapper.dbToModel)
   .map('chargeElements').to('chargeElements', chargeElements => chargeElements.map(chargeElementMapper.dbToModel))
   .map('licence').to('licence', licenceMapper.dbToModel)
@@ -58,6 +61,7 @@ const modelToDbMapper = createMapper()
     'dateUpdated'
   )
   .map('licence.licenceNumber').to('licenceRef')
+  .map('licence.id').to('licenceId')
   .map('billedUpToDate').to('billedUptoDate')
   .map('dateRange.startDate').to('startDate')
   .map('dateRange.endDate').to('endDate')

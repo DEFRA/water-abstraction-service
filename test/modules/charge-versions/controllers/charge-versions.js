@@ -30,6 +30,7 @@ experiment('modules/charge-versions/controllers/charge-versions', () => {
     ];
 
     sandbox.stub(chargeVersionsService, 'getByLicenceRef').resolves(chargeVersions);
+    sandbox.stub(chargeVersionsService, 'getByLicenceId');
     sandbox.stub(chargeElementsService, 'getChargeElementsFromLicenceVersion');
     sandbox.stub(chargeVersionsService, 'getByChargeVersionId').resolves(chargeVersions[0]);
     sandbox.stub(chargeVersionsService, 'getByIdWithInvoiceAccount').resolves(chargeVersions[0]);
@@ -121,6 +122,34 @@ experiment('modules/charge-versions/controllers/charge-versions', () => {
       });
     });
   });
+
+  experiment('getChargeVersionsByLicenceId', () => {
+    let request;
+    let response;
+
+    beforeEach(async () => {
+      chargeVersionsService.getByLicenceId.resolves({ charge_version_id: 'test-charge-version-id' });
+
+      request = {
+        params: {
+          licenceId: '00000000-0000-0000-0000-000000000000'
+        }
+      };
+      response = await controller.getChargeVersionsByLicenceId(request);
+    });
+
+    test('calls charge versions service with licence id', async () => {
+      const [licenceId] = await chargeVersionsService.getByLicenceId.lastCall.args;
+      expect(licenceId).to.equal(request.params.licenceId);
+    });
+
+    test('responds with the charge version data', async () => {
+      expect(response).to.equal({
+        data: { charge_version_id: 'test-charge-version-id' }
+      });
+    });
+  });
+
   experiment('getDefaultChargesForLicenceVersion', () => {
     experiment('when the licence version is not found', () => {
       let response;

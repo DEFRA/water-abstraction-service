@@ -104,8 +104,14 @@ module.exports = {
         scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
       },
       validate: {
-        headers
-      }
+        headers,
+        params: {
+          chargeVersionWorkflowId: Joi.string().guid().required()
+        }
+      },
+      pre: [
+        { method: preHandlers.loadChargeVersionWorkflow, assign: 'chargeVersionWorkflow' }
+      ]
     }
   }
 };

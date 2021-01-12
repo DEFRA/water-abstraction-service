@@ -4,10 +4,13 @@ const Joi = require('@hapi/joi');
 
 const preHandlers = require('./pre-handlers');
 const controller = require('./controller');
+const config = require('../../../config');
+const { ROLES: { billing } } = require('../../lib/roles');
+const BASE_PATH = '/water/1.0/billing/batches';
 
 const getBatches = {
   method: 'GET',
-  path: '/water/1.0/billing/batches',
+  path: BASE_PATH,
   handler: controller.getBatches,
   config: {
     validate: {
@@ -21,7 +24,7 @@ const getBatches = {
 
 const postCreateBatch = {
   method: 'POST',
-  path: '/water/1.0/billing/batches',
+  path: BASE_PATH,
   handler: controller.postCreateBatch,
   config: {
     validate: {
@@ -38,7 +41,7 @@ const postCreateBatch = {
 
 const getBatch = {
   method: 'GET',
-  path: '/water/1.0/billing/batches/{batchId}',
+  path: `${BASE_PATH}/{batchId}`,
   handler: controller.getBatch,
   config: {
     validate: {
@@ -57,7 +60,7 @@ const getBatch = {
 
 const getBatchInvoices = {
   method: 'GET',
-  path: '/water/1.0/billing/batches/{batchId}/invoices',
+  path: `${BASE_PATH}/{batchId}/invoices`,
   handler: controller.getBatchInvoices,
   config: {
     validate: {
@@ -73,7 +76,7 @@ const getBatchInvoices = {
 
 const getBatchInvoicesDetails = {
   method: 'GET',
-  path: '/water/1.0/billing/batches/{batchId}/invoices/details',
+  path: `${BASE_PATH}/{batchId}/invoices/details`,
   handler: controller.getBatchInvoicesDetails,
   config: {
     validate: {
@@ -89,7 +92,7 @@ const getBatchInvoicesDetails = {
 
 const getBatchInvoiceDetail = {
   method: 'GET',
-  path: '/water/1.0/billing/batches/{batchId}/invoices/{invoiceId}',
+  path: `${BASE_PATH}/{batchId}/invoices/{invoiceId}`,
   handler: controller.getBatchInvoiceDetail,
   config: {
     validate: {
@@ -106,7 +109,7 @@ const getBatchInvoiceDetail = {
 
 const deleteBatchInvoice = {
   method: 'DELETE',
-  path: '/water/1.0/billing/batches/{batchId}/invoices/{invoiceId}',
+  path: `${BASE_PATH}/{batchId}/invoices/{invoiceId}`,
   handler: controller.deleteBatchInvoice,
   config: {
     validate: {
@@ -123,7 +126,7 @@ const deleteBatchInvoice = {
 
 const deleteBatch = {
   method: 'DELETE',
-  path: '/water/1.0/billing/batches/{batchId}',
+  path: `${BASE_PATH}/{batchId}`,
   handler: controller.deleteBatch,
   config: {
     validate: {
@@ -142,7 +145,7 @@ const deleteBatch = {
 
 const postApproveBatch = {
   method: 'POST',
-  path: '/water/1.0/billing/batches/{batchId}/approve',
+  path: `${BASE_PATH}/{batchId}/approve`,
   handler: controller.postApproveBatch,
   config: {
     validate: {
@@ -174,7 +177,7 @@ const getInvoiceLicence = {
 
 const postApproveReviewBatch = {
   method: 'POST',
-  path: '/water/1.0/billing/batches/{batchId}/approve-review',
+  path: `${BASE_PATH}/{batchId}/approve-review`,
   handler: controller.postApproveReviewBatch,
   config: {
     validate: {
@@ -190,6 +193,22 @@ const postApproveReviewBatch = {
     ]
   }
 };
+
+if (config.featureToggles.deleteAllBillingData) {
+  const deleteAllBillingData = {
+    method: 'DELETE',
+    path: BASE_PATH,
+    handler: controller.deleteAllBillingData,
+    config: {
+      description: 'Deletes all billing and charge version data (!)',
+      auth: {
+        scope: [billing]
+      }
+    }
+  };
+
+  exports.deleteAllBillingData = deleteAllBillingData;
+}
 
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;

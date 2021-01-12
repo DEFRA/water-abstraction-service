@@ -27,7 +27,7 @@ const billingBatchChargeVersionYears = [{
 }];
 
 experiment('modules/billing/jobs/process-charge-versions', () => {
-  let batch;
+  let batch, queueManager;
 
   beforeEach(async () => {
     batch = new Batch(batchId);
@@ -40,6 +40,11 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
 
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
+    sandbox.stub(batchJob, 'logOnCompleteError');
+
+    queueManager = {
+      add: sandbox.stub()
+    };
   });
 
   afterEach(async () => {
@@ -48,15 +53,21 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
 
   experiment('.createMessage', () => {
     let message;
+
     beforeEach(async () => {
-      message = processChargeVersionsJob.createMessage(eventId, batch);
+      message = processChargeVersionsJob.createMessage(batchId);
     });
 
-    test('creates the PG boss message', async () => {
-      expect(message.data.batch).to.equal(batch);
-      expect(message.data.eventId).to.equal(eventId);
-      expect(message.name).to.equal(`billing.process-charge-versions.${batchId}`);
-      expect(message.options.singletonKey).to.equal(batchId);
+    test('creates the expected message array', async () => {
+      expect(message).to.equal([
+        'billing.process-charge-versions',
+        {
+          batchId
+        },
+        {
+          jobId: `billing.process-charge-versions.${batchId}`
+        }
+      ]);
     });
   });
 
@@ -68,8 +79,7 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
         batch.status = Batch.BATCH_STATUS.processing;
         message = {
           data: {
-            eventId,
-            batch
+            batchId
           }
         };
         result = await processChargeVersionsJob.handler(message);
@@ -129,6 +139,57 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
 
       test('re-throws the error', async () => {
         expect(error).to.equal(err);
+      });
+    });
+  });
+
+  experiment('.onComplete', () => {
+    let job;
+    beforeEach(async () => {
+      job = {
+        returnvalue: {
+          batch: {
+            id: batchId
+          },
+          billingBatchChargeVersionYears: [
+            {
+              billing_batch_charge_version_year_id: 'test-id-1'
+            },
+            {
+              billing_batch_charge_version_year_id: 'test-id-2'
+            }
+          ]
+        }
+      };
+    });
+
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        processChargeVersionsJob.onComplete(job, queueManager);
+      });
+
+      test('a job is published for each charge version year', async () => {
+        expect(queueManager.add.callCount).to.equal(2);
+        expect(queueManager.add.calledWith(
+          'billing.process-charge-version-year', job.returnvalue.batch, job.returnvalue.billingBatchChargeVersionYears[0]
+        )).to.be.true();
+        expect(queueManager.add.calledWith(
+          'billing.process-charge-version-year', job.returnvalue.batch, job.returnvalue.billingBatchChargeVersionYears[1]
+        )).to.be.true();
+      });
+    });
+
+    experiment('when there is an error', () => {
+      let err;
+
+      beforeEach(async () => {
+        err = new Error('oops');
+        queueManager.add.rejects(err);
+        await processChargeVersionsJob.onComplete(job, queueManager);
+      });
+
+      test('a message is logged', async () => {
+        expect(batchJob.logOnCompleteError.calledWith(job, err)).to.be.true();
       });
     });
   });

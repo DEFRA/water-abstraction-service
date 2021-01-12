@@ -190,6 +190,11 @@ experiment('lib/models/charge-version', () => {
       expect(chargeVersion.invoiceAccount).to.equal(invoiceAccount);
     });
 
+    test('can be set to null', async () => {
+      chargeVersion.invoiceAccount = null;
+      expect(chargeVersion.invoiceAccount).to.equal(null);
+    });
+
     test('throws an error if set to a different model type', async () => {
       const func = () => {
         chargeVersion.invoiceAccount = new TestModel();

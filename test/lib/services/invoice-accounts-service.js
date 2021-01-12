@@ -17,6 +17,7 @@ const contactsService = require('../../../src/lib/services/contacts-service');
 const invoiceAccountAddressesService = require('../../../src/lib/services/invoice-account-addresses-service');
 const regionsService = require('../../../src/lib/services/regions-service');
 const crmService = require('../../../src/lib/services/crm-service');
+const messageQueue = require('../../../src/lib/message-queue');
 
 const Company = require('../../../src/lib/models/company');
 const Contact = require('../../../src/lib/models/contact-v2');
@@ -34,6 +35,7 @@ const companyId = uuid();
 const addressId = uuid();
 const agentCompanyId = uuid();
 const contactId = uuid();
+const invoiceAccountId = uuid();
 
 experiment('modules/billing/services/invoice-accounts-service', () => {
   let connectorResponse;
@@ -145,7 +147,8 @@ experiment('modules/billing/services/invoice-accounts-service', () => {
   });
 
   experiment('.getInvoiceAccount', () => {
-    let result, address, agentCompany, contact, addressModel, agentCompanyModel, contactModel, invoiceAccountModel, invoiceAccountAddressModel;
+    let result, address, agentCompany, contact, addressModel, agentCompanyModel, contactModel, invoiceAccountModel,
+      invoiceAccountAddressModel;
     beforeEach(async () => {
       address = {
         addressId
@@ -222,11 +225,12 @@ experiment('modules/billing/services/invoice-accounts-service', () => {
   });
 
   experiment('.persist', () => {
-    let regionId, invoiceAccountData, addressModel, agentCompanyModel, contactModel, invoiceAccountModel, invoiceAccountAddressModel;
+    let regionId, invoiceAccountData, addressModel, agentCompanyModel, contactModel, invoiceAccountModel,
+      invoiceAccountAddressModel;
     beforeEach(async () => {
       regionId = uuid();
       invoiceAccountData = {
-        invoiceAccountId: uuid(),
+        invoiceAccountId: invoiceAccountId,
         invoiceAccountNumber: 'N12345678A'
       };
 
@@ -252,7 +256,7 @@ experiment('modules/billing/services/invoice-accounts-service', () => {
       sandbox.stub(regionsService, 'getRegion').resolves({ code: 'N' });
       sandbox.stub(invoiceAccountAddressesService, 'createInvoiceAccountAddress').resolves(invoiceAccountAddressModel);
       sandbox.stub(crmService, 'deleteEntities').resolves();
-
+      sandbox.stub(messageQueue, 'publish').resolves();
       await invoiceAccountsService.persist(regionId, '2020-04-01', invoiceAccountModel);
     });
 
@@ -463,6 +467,7 @@ experiment('modules/billing/services/invoice-accounts-service', () => {
 
   experiment('.decorateWithInvoiceAccount', () => {
     let model, result;
+
     beforeEach(async () => {
       model = {
         id: 'test-model-id',
@@ -471,23 +476,48 @@ experiment('modules/billing/services/invoice-accounts-service', () => {
           id: 'test-invoice-account-id'
         }
       };
-      result = await invoiceAccountsService.decorateWithInvoiceAccount(model);
     });
 
-    test('gets invoice account by invoice account id from model', () => {
-      const [id] = invoiceAccountsConnector.getInvoiceAccountById.lastCall.args;
-      expect(id).to.equal('test-invoice-account-id');
+    experiment('when the invoice account is not null', () => {
+      beforeEach(async () => {
+        result = await invoiceAccountsService.decorateWithInvoiceAccount(model);
+      });
+
+      test('gets invoice account by invoice account id from model', () => {
+        const [id] = invoiceAccountsConnector.getInvoiceAccountById.lastCall.args;
+        expect(id).to.equal('test-invoice-account-id');
+      });
+
+      test('decorates the model with the mapped invoice account', () => {
+        expect(result.invoiceAccount).to.be.instanceOf(InvoiceAccount);
+        expect(result.invoiceAccount.id).to.equal(connectorResponse[0].invoiceAccountId);
+        expect(result.invoiceAccount.accountNumber).to.equal(connectorResponse[0].invoiceAccountNumber);
+      });
+
+      test('the rest of the model remains unchanged', () => {
+        expect(result.id).to.equal(model.id);
+        expect(result.foo).to.equal(model.foo);
+      });
     });
 
-    test('decorates the model with the mapped invoice account', () => {
-      expect(result.invoiceAccount).to.be.instanceOf(InvoiceAccount);
-      expect(result.invoiceAccount.id).to.equal(connectorResponse[0].invoiceAccountId);
-      expect(result.invoiceAccount.accountNumber).to.equal(connectorResponse[0].invoiceAccountNumber);
-    });
+    experiment('when the invoice account is null', () => {
+      beforeEach(async () => {
+        model.invoiceAccount = null;
+        result = await invoiceAccountsService.decorateWithInvoiceAccount(model);
+      });
 
-    test('the rest of the model remains unchanged', () => {
-      expect(result.id).to.equal(model.id);
-      expect(result.foo).to.equal(model.foo);
+      test('does not call the invoice accounts connector', () => {
+        expect(invoiceAccountsConnector.getInvoiceAccountById.called).to.be.false();
+      });
+
+      test('the model invoiceAccount property is null', () => {
+        expect(result.invoiceAccount).to.be.null();
+      });
+
+      test('the rest of the model remains unchanged', () => {
+        expect(result.id).to.equal(model.id);
+        expect(result.foo).to.equal(model.foo);
+      });
     });
   });
 });

@@ -23,8 +23,8 @@ experiment('lib/connectors/bookshelf/Agreement', () => {
     sandbox.restore();
   });
 
-  test('uses the financial_agreement_types table', async () => {
-    expect(instance.tableName).to.equal('financial_agreement_types');
+  test('uses the water.financial_agreement_types table', async () => {
+    expect(instance.tableName).to.equal('water.financial_agreement_types');
   });
 
   test('uses the correct ID attribute', async () => {

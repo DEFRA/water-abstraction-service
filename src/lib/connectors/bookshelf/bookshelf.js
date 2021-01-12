@@ -1,13 +1,8 @@
-const bookshelf = require('bookshelf');
-const config = require('../../../../config.js');
+'use strict';
 
-// Setting up the database connection
-const knex = require('knex')({
-  client: 'pg',
-  connection: config.pg.connectionString,
-  searchPath: ['water'],
-  pool: { min: 0, max: 1 }
-});
+const bookshelf = require('bookshelf');
+
+const { knex } = require('../knex');
 
 // Create instance and register camel case converter
 const bookshelfInstance = bookshelf(knex);

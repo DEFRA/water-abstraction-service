@@ -7,8 +7,8 @@ const {
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
-
 const documentConnector = require('../../../../src/lib/connectors/crm/documents');
+const documentV2Connector = require('../../../../src/lib/connectors/crm-v2/documents');
 const documents = require('../../../../src/modules/acceptance-tests/lib/documents');
 
 experiment('modules/acceptance-tests/lib/documents', () => {
@@ -16,6 +16,8 @@ experiment('modules/acceptance-tests/lib/documents', () => {
     sandbox.stub(documentConnector, 'create').callsFake(document => {
       return Promise.resolve({ data: document });
     });
+
+    sandbox.stub(documentV2Connector, 'createDocument').resolves({});
 
     sandbox.stub(documentConnector, 'deleteAcceptanceTestData').resolves();
   });

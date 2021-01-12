@@ -6,6 +6,7 @@ const { get } = require('lodash');
 const service = require('../../../lib/services/service');
 const documentsService = require('../../../lib/services/documents-service');
 const chargeVersionService = require('../../../lib/services/charge-versions');
+const licencesService = require('../../../lib/services/licences');
 
 // Repos
 const chargeVersionWorkflowsRepo = require('../../../lib/connectors/repos/charge-version-workflows');
@@ -149,14 +150,15 @@ const update = async (chargeVersionWorkflowId, changes) => {
 
 /**
  * Deletes a charge version workflow record by ID
- * @param {String} chargeVersionWorkflowId
+ * @param {ChargeVersionWorkflow} chargeVersionWorkflow
  * @return {Promise}
  */
-const deleteById = async chargeVersionWorkflowId => {
+const deleteOne = async chargeVersionWorkflow => {
   try {
-    await chargeVersionWorkflowsRepo.deleteOne(chargeVersionWorkflowId);
+    await chargeVersionWorkflowsRepo.deleteOne(chargeVersionWorkflow.id);
+    await licencesService.flagForSupplementaryBilling(chargeVersionWorkflow.licence.id);
   } catch (err) {
-    throw new NotFoundError(`Charge version workflow ${chargeVersionWorkflowId} not found`);
+    throw new NotFoundError(`Charge version workflow ${chargeVersionWorkflow.id} not found`);
   }
 };
 
@@ -181,7 +183,8 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
   const persistedChargeVersion = await chargeVersionService.create(chargeVersion);
 
   // Delete the charge version workflow record as it is no longer needed
-  await deleteById(chargeVersionWorkflow.id);
+  // and flag for supplementary billing
+  await deleteOne(chargeVersionWorkflow);
 
   return persistedChargeVersion;
 };
@@ -194,5 +197,5 @@ exports.create = create;
 exports.getLicenceHolderRole = getLicenceHolderRole;
 exports.getManyByLicenceId = getManyByLicenceId;
 exports.update = update;
-exports.delete = deleteById;
+exports.delete = deleteOne;
 exports.approve = approve;

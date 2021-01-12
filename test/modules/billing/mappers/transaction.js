@@ -3,14 +3,11 @@
 const {
   experiment,
   test,
-  beforeEach,
-  afterEach
+  beforeEach
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
-const sandbox = require('sinon').createSandbox();
 
 const transactionMapper = require('../../../../src/modules/billing/mappers/transaction');
-const repos = require('../../../../src/lib/connectors/repository');
 
 // Models
 const Agreement = require('../../../../src/lib/models/agreement');
@@ -50,6 +47,7 @@ const createChargeElement = () => {
 const createTransaction = (options = {}) => {
   const transaction = new Transaction();
   transaction.fromHash({
+    id: '29328315-9b24-473b-bde7-02c60e881511',
     chargeElement: createChargeElement(),
     chargePeriod: new DateRange('2019-04-01', '2020-03-31'),
     isCredit: false,
@@ -142,14 +140,6 @@ const createAgreement = (code, factor) => {
 };
 
 experiment('modules/billing/mappers/transaction', () => {
-  beforeEach(async () => {
-    sandbox.stub(repos.billingTransactions, 'create');
-  });
-
-  afterEach(async () => {
-    sandbox.restore();
-  });
-
   experiment('.modelToDb', () => {
     let invoiceLicence, result;
 
@@ -440,6 +430,7 @@ experiment('modules/billing/mappers/transaction', () => {
 
         test('the data is mapped correctly', async () => {
           expect(result).to.equal({
+            clientId: transaction.id,
             periodStart: '01-APR-2019',
             periodEnd: '31-MAR-2020',
             credit: false,
@@ -544,14 +535,17 @@ experiment('modules/billing/mappers/transaction', () => {
     const cmData = {
       id: '7d2c249d-0f56-40fa-90f0-fb2b7f8f698a',
       chargeValue: 1176,
+      credit: false,
+      volume: 35.7,
+      lineDescription: 'test transaction description',
+      compensationCharge: false,
       minimumChargeAdjustment: true,
-      deminimis: false
+      deminimis: false,
+      newLicence: false
     };
 
-    const chargePeriod = new DateRange('2020-04-01', '2021-03-31');
-
     beforeEach(async () => {
-      result = transactionMapper.cmToModel(cmData, chargePeriod);
+      result = transactionMapper.cmToModel(cmData);
     });
 
     test('should return a Transaction model', async () => {
@@ -561,9 +555,12 @@ experiment('modules/billing/mappers/transaction', () => {
     test('should have data mapped correctly', async () => {
       expect(result.externalId).to.equal(cmData.id);
       expect(result.value).to.equal(cmData.chargeValue);
+      expect(result.isCredit).to.equal(cmData.credit);
+      expect(result.description).to.equal(cmData.lineDescription);
+      expect(result.isCompensationCharge).to.equal(cmData.compensationCharge);
       expect(result.isMinimumCharge).to.equal(cmData.minimumChargeAdjustment);
       expect(result.isDeMinimis).to.equal(cmData.deminimis);
-      expect(result.chargePeriod).to.equal(chargePeriod);
+      expect(result.isNewLicence).to.equal(cmData.newLicence);
     });
   });
 });

@@ -64,29 +64,14 @@ experiment('lib/services/charge-versions', () => {
   });
 
   experiment('.getByLicenceId', () => {
-    let result;
-    let licenceId;
+    test('delegates to the service.findMany function', async () => {
+      const result = await chargeVersionService.getByLicenceId('test-guid');
 
-    beforeEach(async () => {
-      licencesService.getLicenceById.resolves({
-        licenceNumber: '123/123'
-      });
-
-      licenceId = uuid();
-      result = await chargeVersionService.getByLicenceId(licenceId);
-    });
-
-    test('looks up the licence ref', async () => {
-      const [id] = licencesService.getLicenceById.lastCall.args;
-      expect(id).to.equal(licenceId);
-    });
-
-    test('delegates to the service.findMany function using the found licence ref', async () => {
       expect(result).to.equal('test');
 
       const [licenceRef, fetch, mapper] = service.findMany.lastCall.args;
-      expect(licenceRef).to.equal('123/123');
-      expect(fetch).to.equal(chargeVersionRepo.findByLicenceRef);
+      expect(licenceRef).to.equal('test-guid');
+      expect(fetch).to.equal(chargeVersionRepo.findByLicenceId);
       expect(mapper).to.equal(chargeVersionMapper);
     });
   });
@@ -200,12 +185,6 @@ experiment('lib/services/charge-versions', () => {
 
       test('no other charge versions are updated', async () => {
         expect(chargeVersionRepo.update.callCount).to.equal(0);
-      });
-
-      test('the licence is flagged for supplementary billing', async () => {
-        expect(licencesService.flagForSupplementaryBilling.calledWith(
-          licence.id
-        )).to.be.true();
       });
 
       test('the charge version is loaded by ID and returned', async () => {

@@ -17,7 +17,6 @@ const repos = require('../../../../src/lib/connectors/repos');
 
 const licencesService = require('../../../../src/modules/billing/services/licences-service');
 const generalLicencesService = require('../../../../src/lib/services/licences');
-const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../../src/lib/models/constants');
 
 const { BatchStatusError } = require('../../../../src/modules/billing/lib/errors');
 
@@ -28,7 +27,7 @@ experiment('modules/billing/services/licences-service', () => {
     batch = new Batch();
 
     sandbox.stub(repos.licences, 'findByBatchIdForTwoPartTariffReview');
-    sandbox.stub(generalLicencesService, 'updateIncludeInSupplementaryBillingStatus');
+    sandbox.stub(generalLicencesService, 'flagForSupplementaryBilling');
 
     sandbox.stub(repos.billingVolumes, 'deleteByBatchIdAndLicenceId');
     sandbox.stub(repos.billingBatchChargeVersionYears, 'deleteByBatchIdAndLicenceId');
@@ -98,9 +97,7 @@ experiment('modules/billing/services/licences-service', () => {
       });
 
       test('licence is flagged for supplementary billing', async () => {
-        expect(generalLicencesService.updateIncludeInSupplementaryBillingStatus.calledWith(
-          INCLUDE_IN_SUPPLEMENTARY_BILLING.no,
-          INCLUDE_IN_SUPPLEMENTARY_BILLING.yes,
+        expect(generalLicencesService.flagForSupplementaryBilling.calledWith(
           licenceId
         )).to.be.true();
       });
@@ -109,7 +106,7 @@ experiment('modules/billing/services/licences-service', () => {
         sinon.assert.callOrder(
           repos.billingVolumes.deleteByBatchIdAndLicenceId,
           repos.billingBatchChargeVersionYears.deleteByBatchIdAndLicenceId,
-          generalLicencesService.updateIncludeInSupplementaryBillingStatus
+          generalLicencesService.flagForSupplementaryBilling
         );
       });
     });

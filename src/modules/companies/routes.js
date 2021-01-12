@@ -5,17 +5,24 @@ const { statuses } = require('../returns/schema');
 const { CONTACT_TYPES } = require('../../lib/models/contact-v2');
 const { ORGANISATION_TYPES } = require('../../lib/models/company');
 
+const OPTIONAL_NULLABLE_STRING = Joi.string().trim().optional().allow(null);
+
+/**
+ * @todo this should use e.g. `id` not `addressId` for consistency with the water service model shape
+ */
+
 const addressSchema = Joi.object({
   addressId: Joi.string().guid().optional(),
-  addressLine1: Joi.string().trim().optional(),
-  addressLine2: Joi.string().trim().optional(),
-  addressLine3: Joi.string().trim().optional(),
-  addressLine4: Joi.string().trim().optional(),
-  town: Joi.string().trim().optional(),
-  county: Joi.string().trim().optional(),
+  addressLine1: OPTIONAL_NULLABLE_STRING,
+  addressLine2: OPTIONAL_NULLABLE_STRING,
+  addressLine3: OPTIONAL_NULLABLE_STRING,
+  addressLine4: OPTIONAL_NULLABLE_STRING,
+  town: OPTIONAL_NULLABLE_STRING,
+  county: OPTIONAL_NULLABLE_STRING,
   country: Joi.string().trim().replace(/\./g, '').optional(),
-  postcode: Joi.string().trim().optional(),
-  uprn: Joi.number().optional()
+  postcode: OPTIONAL_NULLABLE_STRING,
+  uprn: Joi.number().optional().allow(null),
+  source: OPTIONAL_NULLABLE_STRING
 }).required();
 
 const agentSchema = Joi.object({
@@ -28,12 +35,15 @@ const agentSchema = Joi.object({
 const contactSchema = Joi.object({
   contactId: Joi.string().guid().optional(),
   type: Joi.string().valid(Object.values(CONTACT_TYPES)).optional(),
-  title: Joi.string().trim().optional(),
-  firstName: Joi.string().trim().optional(),
-  middleInitials: Joi.string().trim().optional(),
-  lastName: Joi.string().trim().optional(),
-  suffix: Joi.string().trim().optional(),
-  department: Joi.string().trim().replace(/\./g, '').optional()
+  title: OPTIONAL_NULLABLE_STRING,
+  firstName: OPTIONAL_NULLABLE_STRING,
+  initials: OPTIONAL_NULLABLE_STRING,
+  middleInitials: OPTIONAL_NULLABLE_STRING,
+  lastName: OPTIONAL_NULLABLE_STRING,
+  suffix: OPTIONAL_NULLABLE_STRING,
+  department: Joi.string().trim().replace(/\./g, '').optional(),
+  source: OPTIONAL_NULLABLE_STRING,
+  isTest: Joi.boolean().optional().default(false)
 }).allow(null).optional();
 
 module.exports = {

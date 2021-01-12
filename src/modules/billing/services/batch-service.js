@@ -1,6 +1,6 @@
 'use strict';
 
-const { partialRight, startCase } = require('lodash');
+const { partialRight, startCase, get } = require('lodash');
 const Boom = require('@hapi/boom');
 
 const newRepos = require('../../../lib/connectors/repos');
@@ -13,7 +13,6 @@ const { BatchStatusError } = require('../lib/errors');
 const { NotFoundError } = require('../../../lib/errors');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../../../lib/models/constants');
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
-const chargeModuleBillRunWithRetryConnector = require('../../../lib/connectors/charge-module/bill-runs-with-retry');
 
 const Batch = require('../../../lib/models/batch');
 const validators = require('../../../lib/models/validators');
@@ -153,6 +152,7 @@ const setStatus = (batchId, status) =>
 const setErrorStatus = async (batchId, errorCode) => {
   logger.error(`Batch ${batchId} failed with error code ${errorCode}`);
   return Promise.all([
+    newRepos.billingVolumes.markVolumesAsErrored(batchId),
     newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error, errorCode }),
     licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId)
   ]);
@@ -237,11 +237,13 @@ const persistTotals = batch => {
   return newRepos.billingBatches.update(batch.id, changes);
 };
 
+const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating_summary';
+
 /**
  * Updates water.billing_batches with summary info from the charge module
  * and updates the is_deminimis flag for water.billing_transactions
  * @param {Batch} batch
- * @return {Promise}
+ * @return {Promise<Boolean>} resolves with boolean to indicate success
  */
 const refreshTotals = async batchId => {
   validators.assertId(batchId);
@@ -249,12 +251,18 @@ const refreshTotals = async batchId => {
   // Load batch and map to service models
   const data = await newRepos.billingBatches.findOneWithInvoicesWithTransactions(batchId);
   if (!data) {
+    await newRepos.billingVolumes.markVolumesAsErrored(batchId);
     throw new NotFoundError(`Batch ${batchId} not found`);
   }
   const batch = mappers.batch.dbToModel(data);
 
   // Load CM data
-  const cmResponse = await chargeModuleBillRunWithRetryConnector.get(batch.externalId);
+  const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
+
+  // Summary is still generating at CM
+  if (isCMGeneratingSummary(cmResponse)) {
+    return false;
+  }
 
   // Decorate batch and persist totals
   chargeModuleDecorators.decorateBatch(batch, cmResponse);
@@ -263,6 +271,8 @@ const refreshTotals = async batchId => {
     transactionsService.persistDeMinimis(batch),
     persistTotals(batch)
   ]);
+
+  return true;
 };
 
 /**
@@ -442,6 +452,26 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
   }
 };
 
+/**
+ * Deletes all billing data in service (!)
+ * @return {Promise}
+ */
+const deleteAllBillingData = async () => {
+  // Delete batches in CM
+  const batches = await newRepos.billingBatches.find();
+  const batchesWithExternalId = batches.filter(row => !!row.externalId);
+  for (const { externalId } of batchesWithExternalId) {
+    try {
+      logger.info(`Deleting Charge Module batch ${externalId}`);
+      await chargeModuleBillRunConnector.delete(externalId);
+    } catch (err) {
+      logger.error(`Unable to delete Charge Module batch ${externalId}`, err);
+    }
+  }
+  // Delete all data in water.billing_* tables
+  return newRepos.billingBatches.deleteAllBillingData();
+};
+
 exports.approveBatch = approveBatch;
 exports.decorateBatchWithTotals = decorateBatchWithTotals;
 exports.deleteBatch = deleteBatch;
@@ -464,3 +494,4 @@ exports.createChargeModuleBillRun = createChargeModuleBillRun;
 exports.approveTptBatchReview = approveTptBatchReview;
 exports.getSentTptBatchesForFinancialYearAndRegion = getSentTptBatchesForFinancialYearAndRegion;
 exports.deleteBatchInvoice = deleteBatchInvoice;
+exports.deleteAllBillingData = deleteAllBillingData;

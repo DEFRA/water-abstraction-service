@@ -4,7 +4,8 @@ const {
   experiment,
   test,
   beforeEach,
-  afterEach
+  afterEach,
+  before
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const server = require('../../index.js');
@@ -27,6 +28,10 @@ const deleteSession = async sessionId => {
 experiment('controllers/sessions', () => {
   let response;
   let sessionId;
+
+  before(async () => {
+    await server._start();
+  });
 
   beforeEach(async () => {
     sessionId = uuid();

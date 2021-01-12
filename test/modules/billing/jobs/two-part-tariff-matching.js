@@ -25,7 +25,7 @@ const batchId = uuid();
 const eventId = 'test-event-id';
 
 experiment('modules/billing/jobs/two-part-tariff-matching', () => {
-  let batch;
+  let batch, queueManager;
 
   beforeEach(async () => {
     batch = new Batch(batchId);
@@ -34,6 +34,7 @@ experiment('modules/billing/jobs/two-part-tariff-matching', () => {
 
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
+    sandbox.stub(batchJob, 'logOnCompleteError');
 
     sandbox.stub(batchService, 'getBatchById');
     sandbox.stub(batchService, 'setStatusToReview');
@@ -42,6 +43,10 @@ experiment('modules/billing/jobs/two-part-tariff-matching', () => {
     sandbox.stub(twoPartTariffService, 'processBatch');
 
     sandbox.stub(billingVolumeService, 'getUnapprovedVolumesForBatchCount');
+
+    queueManager = {
+      add: sandbox.stub()
+    };
   });
 
   afterEach(async () => {
@@ -49,20 +54,26 @@ experiment('modules/billing/jobs/two-part-tariff-matching', () => {
   });
 
   test('.jobName', async () => {
-    expect(twoPartTariffMatchingJob.jobName).to.equal('billing.two-part-tariff-matching.*');
+    expect(twoPartTariffMatchingJob.jobName).to.equal('billing.two-part-tariff-matching');
   });
 
   experiment('.createMessage', () => {
     let message;
+
     beforeEach(async () => {
-      message = twoPartTariffMatchingJob.createMessage(eventId, batch);
+      message = twoPartTariffMatchingJob.createMessage(batchId);
     });
 
-    test('creates the PG boss message', async () => {
-      expect(message.data.batch).to.equal(batch);
-      expect(message.data.eventId).to.equal(eventId);
-      expect(message.name).to.equal(`billing.two-part-tariff-matching.${batchId}`);
-      expect(message.options.singletonKey).to.equal(batchId);
+    test('creates the expected message array', async () => {
+      expect(message).to.equal([
+        'billing.two-part-tariff-matching',
+        {
+          batchId
+        },
+        {
+          jobId: `billing.two-part-tariff-matching.${batchId}`
+        }
+      ]);
     });
   });
 
@@ -135,6 +146,71 @@ experiment('modules/billing/jobs/two-part-tariff-matching', () => {
 
       test('a review is not needed', async () => {
         expect(result.isReviewNeeded).to.be.false();
+      });
+    });
+  });
+
+  experiment('.onComplete', async () => {
+    let job;
+
+    experiment('when review is needed', () => {
+      beforeEach(async () => {
+        job = {
+          data: {
+            batchId
+          },
+          returnvalue: {
+            isReviewNeeded: true
+          }
+        };
+        await twoPartTariffMatchingJob.onComplete(job, queueManager);
+      });
+
+      test('no jobs are added to the queue', async () => {
+        expect(queueManager.add.called).to.be.false();
+      });
+    });
+
+    experiment('when no review is needed', () => {
+      beforeEach(async () => {
+        job = {
+          data: {
+            batchId
+          },
+          returnvalue: {
+            isReviewNeeded: false
+          }
+        };
+        await twoPartTariffMatchingJob.onComplete(job, queueManager);
+      });
+
+      test('the process charge versions job is added to the queue', async () => {
+        expect(queueManager.add.calledWith(
+          'billing.process-charge-versions', batchId
+        )).to.be.true();
+      });
+    });
+
+    experiment('when there is an error', () => {
+      const err = new Error('oops!');
+
+      beforeEach(async () => {
+        job = {
+          data: {
+            batchId
+          },
+          returnvalue: {
+            isReviewNeeded: false
+          }
+        };
+        queueManager.add.rejects(err);
+        await twoPartTariffMatchingJob.onComplete(job, queueManager);
+      });
+
+      test('the error is logged', async () => {
+        expect(batchJob.logOnCompleteError.calledWith(
+          job, err
+        )).to.be.true();
       });
     });
   });

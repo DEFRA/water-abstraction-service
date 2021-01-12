@@ -19,10 +19,11 @@ const crmToModelMapper = createMapper()
     'lastName',
     'suffix',
     'department',
-    'type',
-    'dataSource'
+    'dataSource',
+    'isTest'
   )
   .map('contactId').to('id')
+  .map('contactType').to('type')
   .map('salutation').to('title');
 
 const crmToModel = row => createModel(Contact, row, crmToModelMapper);
@@ -38,8 +39,8 @@ const uiToModel = contactData => {
     return new Contact(contactData.contactId);
   }
   const contact = new Contact();
-  contact.dataSource = Contact.DATA_SOURCE_TYPES.wrls;
-  return contact.fromHash(contactData);
+  contact.dataSource = contactData.source || Contact.DATA_SOURCE_TYPES.wrls;
+  return contact.fromHash(omit(contactData, 'source'));
 };
 
 /**

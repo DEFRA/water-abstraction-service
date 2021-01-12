@@ -33,6 +33,8 @@ const transactionId = uuid();
 const batchId = uuid();
 const chargeModuleBillRunId = uuid();
 
+const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch');
+
 const data = {
   eventId: 'test-event-id',
   batch: {
@@ -85,12 +87,18 @@ const data = {
 };
 
 experiment('modules/billing/jobs/create-charge', () => {
-  let batch;
+  let batch, queueManager;
 
   beforeEach(async () => {
     sandbox.stub(batchJob, 'logHandling');
     sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
     sandbox.stub(batchJob, 'logHandlingError');
+    sandbox.stub(batchJob, 'logOnComplete');
+    sandbox.stub(batchJob, 'logOnCompleteError');
+
+    queueManager = {
+      add: sandbox.stub()
+    };
 
     batch = new Batch();
     batch.fromHash(data.batch);
@@ -100,6 +108,12 @@ experiment('modules/billing/jobs/create-charge', () => {
     sandbox.stub(transactionService, 'setErrorStatus').resolves();
 
     sandbox.stub(batchService, 'setErrorStatus').resolves();
+    sandbox.stub(batchService, 'setStatus');
+    sandbox.stub(batchService, 'getTransactionStatusCounts').resolves({
+      candidate: 0,
+      charge_created: 4
+    });
+    sandbox.stub(batchService, 'cleanup');
 
     sandbox.stub(chargeModuleBillRunConnector, 'addTransaction').resolves(data.chargeModuleResponse);
     sandbox.stub(mappers.batch, 'modelToChargeModule').returns([data.chargeModuleTransaction]);
@@ -110,28 +124,31 @@ experiment('modules/billing/jobs/create-charge', () => {
   });
 
   test('exports the expected job name', async () => {
-    expect(createChargeJob.jobName).to.equal('billing.create-charge.*');
+    expect(createChargeJob.jobName).to.equal('billing.create-charge');
   });
 
   experiment('.createMessage', () => {
-    test('creates the expected message object', async () => {
+    test('creates the expected message array', async () => {
       const message = createChargeJob.createMessage(
-        data.eventId,
-        data.batch,
-        data.transaction
+        batchId,
+        transactionId
       );
 
-      expect(message).to.equal({
-        name: `billing.create-charge.${batchId}`,
-        data: {
-          eventId: data.eventId,
-          batch: data.batch,
-          transaction: data.transaction
+      expect(message).to.equal([
+        'billing.create-charge',
+        {
+          batchId,
+          billingBatchTransactionId: transactionId
         },
-        options: {
-          singletonKey: transactionId
+        {
+          attempts: 6,
+          backoff: {
+            type: 'exponential',
+            delay: 5000
+          },
+          jobId: `billing.create-charge.${batchId}.${transactionId}`
         }
-      });
+      ]);
     });
   });
 
@@ -141,10 +158,9 @@ experiment('modules/billing/jobs/create-charge', () => {
     beforeEach(async () => {
       job = {
         data: {
-          batch: data.batch,
-          transaction: data.transaction
-        },
-        name: 'billing.create-charge.test-batch-id'
+          batchId,
+          billingBatchTransactionId: transactionId
+        }
       };
     });
 
@@ -154,8 +170,7 @@ experiment('modules/billing/jobs/create-charge', () => {
       });
 
       test('the transaction is loaded within the context of its batch', async () => {
-        const [id] = transactionService.getById.lastCall.args;
-        expect(id).to.equal(job.data.transaction.billing_transaction_id);
+        expect(transactionService.getById.calledWith(transactionId)).to.be.true();
       });
 
       test('the batch is mapped to charge module transactions', async () => {
@@ -175,9 +190,49 @@ experiment('modules/billing/jobs/create-charge', () => {
         expect(response).to.equal(data.chargeModuleResponse);
       });
 
-      test('returns the batch', async () => {
+      test('the batchService.cleanup method is called', async () => {
+        expect(batchService.cleanup.calledWith(
+          batchId
+        )).to.be.true();
+      });
+
+      test('the batch status is not changed', async () => {
+        expect(batchService.setStatus.called).to.be.false();
+      });
+
+      test('resolves with flags to indicate status', async () => {
         expect(result).to.equal({
-          batch: job.data.batch
+          isEmptyBatch: false,
+          isReady: true
+        });
+      });
+    });
+
+    experiment('when there is an empty batch', () => {
+      beforeEach(async () => {
+        batchService.getTransactionStatusCounts.resolves({
+          charge_created: 0,
+          candidate: 0
+        });
+        result = await createChargeJob.handler(job);
+      });
+
+      test('the batchService.cleanup method is called', async () => {
+        expect(batchService.cleanup.calledWith(
+          batchId
+        )).to.be.true();
+      });
+
+      test('the batch status is set to "empty"', async () => {
+        expect(batchService.setStatus.calledWith(
+          batchId, Batch.BATCH_STATUS.empty
+        )).to.be.true();
+      });
+
+      test('resolves with flags to indicate status', async () => {
+        expect(result).to.equal({
+          isEmptyBatch: true,
+          isReady: true
         });
       });
     });
@@ -207,6 +262,38 @@ experiment('modules/billing/jobs/create-charge', () => {
       });
     });
 
+    experiment('when there is 409 error in the charge module', () => {
+      const err = new Error('Test error');
+      err.statusCode = 409;
+      err.response = {
+        body: {
+          id: '7205bd26-8064-4bf3-beb7-b4c4df7e29d4',
+          clientId: '548f5338-3dcf-4235-a3ba-4a3024a3710f'
+        }
+      };
+
+      beforeEach(async () => {
+        chargeModuleBillRunConnector.addTransaction.rejects(err);
+        await createChargeJob.handler(job);
+      });
+
+      test('the error is logged', async () => {
+        expect(batchJob.logHandlingError.calledWith(
+          job, err
+        )).to.be.true();
+      });
+
+      test('the transaction is updated with the charge module response', async () => {
+        const [id, response] = transactionService.updateWithChargeModuleResponse.lastCall.args;
+        expect(id).to.equal(transactionId);
+        expect(response).to.equal(err.response.body);
+      });
+
+      test('the batch status is not set to "error"', async () => {
+        expect(batchService.setErrorStatus.called).to.be.false();
+      });
+    });
+
     experiment('when there is a 5xx error', () => {
       const err = new Error('Test error');
       err.statusCode = 500;
@@ -218,25 +305,150 @@ experiment('modules/billing/jobs/create-charge', () => {
         error = await expect(func()).to.reject();
       });
 
-      test('sets the transaction status to error', async () => {
-        const [id] = transactionService.setErrorStatus.lastCall.args;
-        expect(id).to.equal(data.transaction.billing_transaction_id);
-      });
-
-      test('the error is logged', async () => {
+      test('the error is not logged because this is done by the failed handler', async () => {
         expect(batchJob.logHandlingError.calledWith(
           job, err
         )).to.be.true();
       });
 
-      test('the batch status is set to "error"', async () => {
-        expect(batchService.setErrorStatus.calledWith(
-          batchId, Batch.BATCH_ERROR_CODE.failedToCreateCharge
-        )).to.be.true();
+      test('throws an error to go to the retry handler', async () => {
+        expect(error.message).to.equal('Test error');
+      });
+    });
+  });
+
+  experiment('.onComplete', () => {
+    experiment('when a batch is not ready', () => {
+      beforeEach(async () => {
+        const job = {
+          data: {
+            batchId
+          },
+          returnvalue: {
+            isReady: false
+          }
+        };
+        await createChargeJob.onComplete(job, queueManager);
       });
 
-      test('re-throws the error', async () => {
-        expect(error).to.equal(err);
+      test('an info message is logged', async () => {
+        expect(batchJob.logOnComplete.called).to.be.true();
+      });
+
+      test('no further jobs are published', async () => {
+        expect(queueManager.add.called).to.be.false();
+      });
+
+      test('no error is logged', async () => {
+        expect(batchJob.logOnCompleteError.called).to.be.false();
+      });
+    });
+
+    experiment('when a batch is ready but empty', () => {
+      beforeEach(async () => {
+        const job = {
+          data: {
+            batchId
+          },
+          returnvalue: {
+            isReady: true,
+            isEmptyBatch: true
+          }
+        };
+        await createChargeJob.onComplete(job, queueManager);
+      });
+
+      test('no further jobs are published', async () => {
+        expect(queueManager.add.called).to.be.false();
+      });
+    });
+
+    experiment('when a batch is ready and not empty', () => {
+      beforeEach(async () => {
+        const job = {
+          data: {
+            batchId
+          },
+          returnvalue: {
+            isReady: true,
+            isEmptyBatch: false
+          }
+        };
+        await createChargeJob.onComplete(job, queueManager);
+      });
+
+      test('the next job is published', async () => {
+        expect(queueManager.add.calledWith(
+          'billing.refresh-totals', batchId
+        )).to.be.true();
+      });
+    });
+
+    experiment('when there is an error', () => {
+      const job = {
+        data: {
+          batchId
+        },
+        returnvalue: {
+          isReady: true,
+          isEmptyBatch: false
+        }
+      };
+
+      const err = new Error('Test error');
+
+      beforeEach(async () => {
+        queueManager.add.rejects(err);
+        await createChargeJob.onComplete(job, queueManager);
+      });
+
+      test('an error is logged', async () => {
+        expect(batchJob.logOnCompleteError.calledWith(job, err)).to.be.true();
+      });
+    });
+  });
+
+  experiment('.onFailedHandler', () => {
+    let job;
+    const err = new Error('oops');
+
+    experiment('when the attempt to create the charge in the CM failed but is not the final one', () => {
+      beforeEach(async () => {
+        job = {
+          data: {
+            batchId
+          },
+          attemptsMade: 5,
+          opts: {
+            attempts: 10
+          }
+        };
+        await createChargeJob.onFailed(job, err);
+      });
+
+      test('the batch is not updated', async () => {
+        expect(batchService.setErrorStatus.called).to.be.false();
+      });
+    });
+
+    experiment('on the final attempt to create the charge in the CM', () => {
+      beforeEach(async () => {
+        job = {
+          data: {
+            batchId
+          },
+          attemptsMade: 10,
+          opts: {
+            attempts: 10
+          }
+        };
+        await createChargeJob.onFailed(job, err);
+      });
+
+      test('the batch is not updated', async () => {
+        expect(batchService.setErrorStatus.calledWith(
+          job.data.batchId, BATCH_ERROR_CODE.failedToPrepareTransactions
+        )).to.be.true();
       });
     });
   });
