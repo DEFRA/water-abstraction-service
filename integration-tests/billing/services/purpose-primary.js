@@ -19,8 +19,7 @@ const getByLegacyId = id => PurposePrimary.forge({ legacy_id: id }).fetch();
 
 const createAndGetId = async code => {
   await create(code);
-  const data = await getByLegacyId(code);
-  return data;
+  return getByLegacyId(code);
 };
 
 exports.createAndGetId = createAndGetId;

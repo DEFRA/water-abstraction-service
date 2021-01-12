@@ -41,36 +41,46 @@ const createReturnRequirementPurpose = async (data) => {
   return returnRequirementPurpose;
 };
 
-const tearDown = async () => {
-  await bookshelf.knex.raw(queries.deleteReturnRequirementPurposes);
-  await bookshelf.knex.raw(queries.deleteReturnRequirements);
-  await bookshelf.knex.raw(queries.deleteReturnVersions);
+const tearDown1 = async () => {
+  return bookshelf.knex.raw(queries.deleteReturnRequirementPurposes);
+};
+const tearDown2 = async () => {
+  return bookshelf.knex.raw(queries.deleteReturnRequirements);
+};
+const tearDown3 = async () => {
+  return bookshelf.knex.raw(queries.deleteReturnVersions);
 };
 
-const createReturnRequirementsData = async (returnsRequirements, licenceId) => {
-  for (const row of returnsRequirements) {
-    const { version, requirement, purpose } = returnReqsData[row.returnRequirement];
+const createReturnRequirementsData = async (returnsData, licenceId) => {
+  console.log('©©©©©©©©©©©©©©©©©©©©©©©©©©© Creating returns data #2 ©©©©©©©©©©©©©©©©©©©©©©©©©©©©©');
+  console.log(returnsData);
+  const { version, requirement, purpose } = returnReqsData[returnsData.returnRequirement];
 
-    // create return requirement version
-    const ver = await createReturnVersion({ ...version, licenceId });
+  // create return requirement version
+  const ver = await createReturnVersion({ ...version, licenceId });
 
-    // create return requirement
-    const req = await createReturnRequirement({ ...requirement, returnVersionId: ver.get('returnVersionId') });
+  // create return requirement
+  const req = await createReturnRequirement({ ...requirement, returnVersionId: ver.get('returnVersionId') });
 
-    // create return requirement purpose
-    const [primary, secondary, use] = await Promise.all([
-      purposePrimaryService.createAndGetId(purpose.purposePrimaryId),
-      purposeSecondaryService.createAndGetId(purpose.purposeSecondaryId),
-      purposeUsesService.createAndGetId(purpose.purposeUseId)
-    ]);
+  // create return requirement purpose
+  // const [primary, secondary, use] = await Promise.all([
+  const primary = await purposePrimaryService.createAndGetId(purpose.purposePrimaryId);
+  const secondary = await purposeSecondaryService.createAndGetId(purpose.purposeSecondaryId);
+  const use = await purposeUsesService.createAndGetId(purpose.purposeUseId);
+  console.log(primary);
+  console.log(secondary);
+  console.log(use);
 
-    purpose.purposePrimaryId = primary.get('purposePrimaryId');
-    purpose.purposeSecondaryId = secondary.get('purposeSecondaryId');
-    purpose.purposeUseId = use.get('purposeUseId');
-    purpose.returnRequirementId = req.get('returnRequirementId');
-    await createReturnRequirementPurpose(purpose);
-  };
+  purpose.purposePrimaryId = primary.get('purposePrimaryId');
+  purpose.purposeSecondaryId = secondary.get('purposeSecondaryId');
+  purpose.purposeUseId = use.get('purposeUseId');
+  purpose.returnRequirementId = req.get('returnRequirementId');
+
+  const returnReqPurpose = await createReturnRequirementPurpose(purpose);
+  return { returnReqPurpose, purpose };
 };
 
 exports.create = createReturnRequirementsData;
-exports.tearDown = tearDown;
+exports.tearDown1 = tearDown1;
+exports.tearDown2 = tearDown2;
+exports.tearDown3 = tearDown3;

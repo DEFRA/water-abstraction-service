@@ -2,7 +2,7 @@
 const returnsConnector = require('../services/connectors/returns');
 const uuidv4 = require('uuid/v4');
 const returnsData = require('./data/returns');
-const returnLines = require('./data/return-lines');
+const returnLinesData = require('./data/return-lines');
 const returnVersions = require('./data/return-versions');
 
 /**
@@ -78,13 +78,17 @@ const mapReturn = (ret, licenceRef) => {
  * @param {Object} ret - return model
  * @return {Promise} resolves when saved successfully
  */
-const createReturnsData = async (returns, licenceRef) => {
-  for (const row of returns) {
-    const { data: retdata } = await returnsConnector.createReturn(mapReturn(returnsData[row.return], licenceRef));
-    const { data: version } = await returnsConnector.createVersions(mapVersion(returnVersions[row.version], retdata.return_id));
-    const tasks = row.lines.map(key => returnsConnector.createLines(mapLine(returnLines[key], version.version_id)));
-    await Promise.all(tasks);
+const createReturnsData = async (returnRow, licenceRef) => {
+  console.log('const createReturnsData = async (returnRow, licenceRef) => {');
+  const { data: retdata } = await returnsConnector.createReturn(mapReturn(returnsData[returnRow.return], licenceRef));
+  const { data: version } = await returnsConnector.createVersions(mapVersion(returnVersions[returnRow.version], retdata.return_id));
+  const returnLines = [];
+  for (const key of returnRow.lines) {
+    const { data: returnLine } = await returnsConnector.createLines(mapLine(returnLinesData[key], version.version_id));
+    console.log(returnLine);
+    returnLines.push(returnLine);
   }
+  return { retdata, version, returnLines };
 };
 /**
  * Tears down data in Returns
