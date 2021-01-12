@@ -52,7 +52,7 @@ const mapCmTransactionsToCustomers = (customers, groupedTransactions) => {
 };
 
 const mapCmTransactionsToSummary = (cmResponse, cmTransactions) => {
-  if (isEmpty(cmTransactions)) return cmResponse.billRun.customers;
+  if (isEmpty(cmTransactions)) { return cmResponse.billRun.customers; }
 
   const transactionsByCustomerAndFinYear = groupTransactionsByCustomerAndFinancialYear(cmTransactions.data.transactions);
   return mapCmTransactionsToCustomers(cmResponse.billRun.customers, transactionsByCustomerAndFinYear); ;
@@ -99,7 +99,7 @@ const decorateTransaction = (serviceTransaction, cmTransaction) =>
  * @param {Array} cmTransactions for that given licence
  */
 const decorateTransactions = (invoiceLicence, cmTransactions) => {
-  if (isEmpty(invoiceLicence.transactions)) return invoiceLicence;
+  if (isEmpty(invoiceLicence.transactions)) { return; }
   for (const cmTransaction of cmTransactions) {
     const serviceTransaction = invoiceLicence.transactions.find(trans => trans.externalId === cmTransaction.id);
 
