@@ -12,7 +12,7 @@ const { ChargeVersion, bookshelf } = require('../../../src/lib/connectors/booksh
  * @param {Object} crmData.invoiceAccount - the CRM invoice account who receives the bill
  * @return {Promise}
  */
-const create = async (region, licence, scenarioKey, crmData) => ChargeVersion
+const create = (region, licence, scenarioKey, crmData) => ChargeVersion
   .forge({
     isTest: true,
     regionCode: region.get('naldRegionId'),

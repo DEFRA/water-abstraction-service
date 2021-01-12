@@ -7,7 +7,7 @@ const createUrl = urlTail => urlJoin(config.services.returns, urlTail);
 
 const createEntity = url => body => serviceRequest.post(url, { body }).catch(err => logger.error(err));
 
-const tearDown = url => () => serviceRequest.delete(url);
+const tearDown = url => () => serviceRequest.delete(url).catch(err => logger.error(err));
 
 exports.createReturn = createEntity(createUrl('returns'));
 exports.createVersions = createEntity(createUrl('versions'));

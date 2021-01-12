@@ -89,8 +89,14 @@ const createScenario = async scenario => {
     await Promise.all(tasks);
   }
   if (scenario.returns) {
-    await returnRequirements.create(scenario.returns, licence.get('licenceId'));
-    await returns.create(scenario.returns, licence.get('licenceRef'));
+    console.log('©©©©©©©©©©©©©©©©©©©©©©©©©©© Creating returns data ©©©©©©©©©©©©©©©©©©©©©©©©©©©©©');
+    for (const row of scenario.returns) {
+      // create return
+      const returnData = await returns.create(row, licence.get('licenceRef'));
+      console.log(returnData);
+      const returnReqData = await returnRequirements.create(row, licence.get('licenceId'));
+      console.log(returnReqData);
+    }
   }
   return region.get('regionId');
 };
@@ -108,7 +114,7 @@ const runScenario = async (scenario, batchType, financialYearEnding = 2020, isSu
 
   // Set up test data in database
   const regionId = await createScenario(scenario);
-
+  
   const response = await server.inject({
     auth: {
       strategy: 'jwt',
@@ -140,6 +146,7 @@ const runScenario = async (scenario, batchType, financialYearEnding = 2020, isSu
 const getProcessedBatch = async batchId => {
   console.log(`Test: polling batch ${batchId}`);
   const batch = await batches.getBatchById(batchId);
+  console.log(batch.get('status'));
   if (batch.get('status') === 'processing') {
     throw new Error('Batch still processing');
   }
@@ -152,7 +159,7 @@ const getProcessedBatch = async batchId => {
  */
 const getBatchWhenProcessed = batchId => promisePoller({
   taskFn: () => getProcessedBatch(batchId),
-  interval: 5000,
+  interval: 10000,
   retries: 30
 });
 

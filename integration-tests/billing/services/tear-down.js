@@ -32,7 +32,9 @@ const tearDown = async (...batchesToDelete) => {
   await batches.tearDown();
   await chargeVersions.tearDown();
   await licenceAgreements.tearDown();
-  await returnRequirements.tearDown();
+  await returnRequirements.tearDown1();
+  await returnRequirements.tearDown2();
+  await returnRequirements.tearDown3();
   await agreements.tearDown();
   await licences.tearDown();
   await regions.tearDown();
