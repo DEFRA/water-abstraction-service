@@ -112,7 +112,7 @@ exports.r2 = {
         description: 'Its all about the description',
         isTwoPartTariff: true
     },
-    receivedDate: '2020-04-02',
+    receivedDate: '2020-03-31',
     returnRequirement: '12345678',
     underQuery: false,
     isTest: true

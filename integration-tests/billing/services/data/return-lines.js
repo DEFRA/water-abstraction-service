@@ -9,7 +9,7 @@ exports.rl1 = {
 exports.rl2 = {
   quantity: 10000,
   startDate: '2019-11-01',
-  endDate:	'2020-12-31',
+  endDate:	'2020-03-31',
   timePeriod: 'month',
   metadata: 'metadata'
 }

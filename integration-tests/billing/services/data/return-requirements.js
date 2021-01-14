@@ -42,7 +42,7 @@ exports.rq2 = {
         isSummer: false,
         isUpload: false,
         abstractionPeriodStartDay: 1,
-        abstractionPeriodStartMonth: 11,
+        abstractionPeriodStartMonth: 12,
         abstractionPeriodEndDay: 31,
         abstractionPeriodEndMonth: 3,
         siteDescription: 'WELL POINTS AT MARS',

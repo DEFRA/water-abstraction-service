@@ -28,13 +28,13 @@ experiment('two part tariff ref: 2PT2', () => {
       chargeVersions: [{
         company: 'co1',
         invoiceAccount: 'ia1',
-        chargeVersion: 'cv2',
+        chargeVersion: 'cv1',
         chargeElements: ['ce5']
       }],
       returns: [
         {
           return: 'r2',
-          version: 'rv1',
+          version: 'rv2',
           lines: ['rl2'],
           returnRequirement: 'rq2'
         }

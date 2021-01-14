@@ -83,12 +83,19 @@ class ReturnRequirementVersion extends Model {
    * @return {Boolean}
    */
   hasTwoPartTariffPurposeReturnsInSeason (returnSeason) {
+    console.log('CALCULATING FOR RETURN SEASON ');
+    console.log(returnSeason);
     validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
     const isSummer = returnSeason === RETURN_SEASONS.summer;
+    console.log('IS SUMMER....');
+    console.log(isSummer);
 
-    return this.returnRequirements
+    console.log('RETURN REQUIREMENTS AS FILTERED');
+    const returner = this.returnRequirements
       .filter(returnRequirement => returnRequirement.isSummer === isSummer)
       .some(returnRequirement => returnRequirement.isTwoPartTariffPurposeUse);
+    console.log(returner);
+    return returner;
   }
 }
 

@@ -75,10 +75,10 @@ exports.ce5 = {
   season : 'winter',
   seasonDerived: 'winter',
   source : 'unsupported',
-  loss : 'low',
+  loss : 'high',
   purposePrimary : 'A',
   purposeSecondary : 'AGR',
-  purposeUse : 400,
+  purposeUse : 420,
   description : 'CE5',
   factorsOverridden : false
 };
