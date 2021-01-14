@@ -382,6 +382,7 @@ const createChargeModuleBillRun = async batchId => {
  * @return {Promise<Batch>} resolves with Batch service model
  */
 const approveTptBatchReview = async batch => {
+  console.log('ATTEMPTING TO APPROVE TPT');
   if (!batch.canApproveReview()) {
     throw new BatchStatusError('Cannot approve review. Batch status must be "review"');
   }

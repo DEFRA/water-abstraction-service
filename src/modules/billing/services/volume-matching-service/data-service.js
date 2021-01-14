@@ -75,6 +75,8 @@ const getData = async (chargeVersionId, financialYear) => {
       financialYear
     )
   ]);
+  console.log('--=======================');
+  console.log(returnGroups);
 
   // Get charge element group
   const chargeElementGroup = createTPTChargeElementGroup(chargeVersion, chargePeriod, financialYear, billingVolumes);

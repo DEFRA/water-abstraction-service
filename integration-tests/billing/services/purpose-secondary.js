@@ -22,5 +22,8 @@ const createAndGetId = async code => {
   return getByLegacyId(code);
 };
 
+const tearDown = () => bookshelf.knex.raw('delete from water.purposes_secondary');
+
 exports.createAndGetId = createAndGetId;
 exports.getByLegacyId = getByLegacyId;
+exports.tearDown = tearDown;

@@ -66,19 +66,19 @@ exports.ce3 = {
 exports.ce4 = Object.assign({}, exports.ce3, { billableAnnualQuantity: 50, description: 'CE4' })
 
 exports.ce5 = {
-  abstractionPeriodStartDay : 1,
-  abstractionPeriodStartMonth : 11,
-  abstractionPeriodEndDay : 31,
-  abstractionPeriodEndMonth : 3,
+  abstractionPeriodStartDay: 1,
+  abstractionPeriodStartMonth: 11,
+  abstractionPeriodEndDay: 31,
+  abstractionPeriodEndMonth: 3,
   authorisedAnnualQuantity : 50,
   billableAnnualQuantity : 50,
   season : 'winter',
-  seasonDerived: 'all year',
+  seasonDerived: 'winter',
   source : 'unsupported',
-  loss : 'high',
+  loss : 'low',
   purposePrimary : 'A',
   purposeSecondary : 'AGR',
-  purposeUse : 420,
+  purposeUse : 400,
   description : 'CE5',
   factorsOverridden : false
 };

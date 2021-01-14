@@ -20,16 +20,20 @@ const STATUS_FAILED = 'failed';
  * can pass itself as an argument - this allows the onComplete handlers
  * to add jobs on another queue
  */
+
+// Create connection for queue
+const connection = ioRedis.createConnection();
+
 class QueueManager {
   constructor () {
     this._queues = new Map();
   }
 
   /**
-   * Adds a job to the queue with the requested name
-   * @param {String} jobName
-   * @param  {...any} args
-   */
+     * Adds a job to the queue with the requested name
+     * @param {String} jobName
+     * @param  {...any} args
+     */
   add (jobName, ...args) {
     const queueContainer = this._queues.get(jobName);
     const { createMessage } = queueContainer.jobContainer;
@@ -40,19 +44,16 @@ class QueueManager {
   }
 
   /**
-   * Registers a job container
-   * @param {Object} jobContainer
-   * @param {String} jobContainer.jobName - the job/queue name
-   * @param {Function} jobContainer.handler - the handler for the job
-   * @param {Boolean} jobContainer.hasScheduler - whether a scheduler is needed - for jobs with retry etc
-   * @param {Function} jobContainer.onComplete - on complete handler, called with (job, queueManager)
-   * @param {Function} jobContainer.onFailed - on failed handler
-   * @param {Object} [jobContainer.workerOptions] - options to pass to the worker constructor
-   */
+     * Registers a job container
+     * @param {Object} jobContainer
+     * @param {String} jobContainer.jobName - the job/queue name
+     * @param {Function} jobContainer.handler - the handler for the job
+     * @param {Boolean} jobContainer.hasScheduler - whether a scheduler is needed - for jobs with retry etc
+     * @param {Function} jobContainer.onComplete - on complete handler, called with (job, queueManager)
+     * @param {Function} jobContainer.onFailed - on failed handler
+     * @param {Object} [jobContainer.workerOptions] - options to pass to the worker constructor
+     */
   register (jobContainer) {
-    // Create connection for queue
-    const connection = ioRedis.createConnection();
-
     // Create queue
     const queue = new bull.Queue(jobContainer.jobName, { connection });
 
@@ -66,7 +67,7 @@ class QueueManager {
     // Create scheduler - this is only set up if the hasScheduler flag is set.
     // This is needed if the job makes use of Bull features such as retry/cron
     const scheduler = jobContainer.hasScheduler
-      ? new bull.QueueScheduler(jobContainer.jobName, { connection: ioRedis.createConnection() })
+      ? new bull.QueueScheduler(jobContainer.jobName, { connection })
       : null;
 
     // Register onComplete handler if defined
@@ -90,8 +91,31 @@ class QueueManager {
 
 const queueManager = new QueueManager();
 
-module.exports.queueManager = queueManager;
+const deleteKeysByPattern = (pattern) => {
+  return new Promise((resolve, reject) => {
+    const stream = connection.scanStream({
+      match: pattern
+    });
+    stream.on('data', (keys) => {
+      if (keys.length) {
+        const pipeline = connection.pipeline();
+        keys.forEach((key) => {
+          pipeline.del(key);
+        });
+        pipeline.exec();
+      }
+    });
+    stream.on('end', () => {
+      resolve();
+    });
+    stream.on('error', (e) => {
+      reject(e);
+    });
+  });
+};
 
+module.exports.queueManager = queueManager;
+module.exports.deleteKeysByPattern = deleteKeysByPattern;
 module.exports.plugin = {
   name: 'hapiBull',
   register: async server => {

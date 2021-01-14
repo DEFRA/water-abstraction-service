@@ -53,9 +53,12 @@ const tearDown3 = async () => {
 
 const createReturnRequirementsData = async (returnsData, licenceId) => {
   console.log('©©©©©©©©©©©©©©©©©©©©©©©©©©© Creating returns data #2 ©©©©©©©©©©©©©©©©©©©©©©©©©©©©©');
-  console.log(returnsData);
-  const { version, requirement, purpose } = returnReqsData[returnsData.returnRequirement];
-
+  console.log(returnReqsData);
+  const tempBody = { ...returnReqsData };
+  const { version, requirement, purpose } = tempBody[returnsData.returnRequirement];
+  console.log('C3C3C3');
+  console.log(purpose);
+  console.log(returnReqsData[returnsData.returnRequirement]);
   // create return requirement version
   const ver = await createReturnVersion({ ...version, licenceId });
 
@@ -64,6 +67,8 @@ const createReturnRequirementsData = async (returnsData, licenceId) => {
 
   // create return requirement purpose
   // const [primary, secondary, use] = await Promise.all([
+  console.log('A1A1');
+  console.log(purpose.purposePrimaryId);
   const primary = await purposePrimaryService.createAndGetId(purpose.purposePrimaryId);
   const secondary = await purposeSecondaryService.createAndGetId(purpose.purposeSecondaryId);
   const use = await purposeUsesService.createAndGetId(purpose.purposeUseId);

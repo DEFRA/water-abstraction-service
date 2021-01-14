@@ -54,10 +54,11 @@ const createCRMChargeVersionData = async chargeVersion => {
 
 const createChargeElement = async (chargeVersion, key) => {
   // Create purposes
+  const notData = { ...data };
   const [primary, secondary, use] = await Promise.all([
-    purposePrimary.createAndGetId(data.chargeElements[key].purposePrimary),
-    purposeSecondary.createAndGetId(data.chargeElements[key].purposeSecondary),
-    purposeUses.createAndGetId(data.chargeElements[key].purposeUse)
+    purposePrimary.createAndGetId(notData.chargeElements[key].purposePrimary),
+    purposeSecondary.createAndGetId(notData.chargeElements[key].purposeSecondary),
+    purposeUses.createAndGetId(notData.chargeElements[key].purposeUse)
   ]);
 
   chargeVersion.set('purposePrimaryId', primary.get('purposePrimaryId'));
@@ -73,32 +74,40 @@ const createChargeElement = async (chargeVersion, key) => {
  * @return {String} test region ID
  */
 const createScenario = async scenario => {
-  Joi.assert(scenario, schema);
+  try {
+    Joi.assert(scenario, schema);
 
-  const region = await regions.createTestRegion();
-  const licence = await licences.create(region, scenario.licence);
-  if (scenario.licenceAgreement) {
-    await licenceAgreements.create(licence, scenario.licenceAgreement);
-  }
-  await crm.createDocuments(scenario.licence);
-  for (const row of scenario.chargeVersions) {
-    const crmData = await createCRMChargeVersionData(row);
-    const chargeVersion = await chargeVersions.create(region, licence, row.chargeVersion, crmData);
-
-    const tasks = row.chargeElements.map(key => createChargeElement(chargeVersion, key));
-    await Promise.all(tasks);
-  }
-  if (scenario.returns) {
-    console.log('©©©©©©©©©©©©©©©©©©©©©©©©©©© Creating returns data ©©©©©©©©©©©©©©©©©©©©©©©©©©©©©');
-    for (const row of scenario.returns) {
-      // create return
-      const returnData = await returns.create(row, licence.get('licenceRef'));
-      console.log(returnData);
-      const returnReqData = await returnRequirements.create(row, licence.get('licenceId'));
-      console.log(returnReqData);
+    const region = await regions.createTestRegion();
+    const licence = await licences.create(region, scenario.licence);
+    if (scenario.licenceAgreement) {
+      await licenceAgreements.create(licence, scenario.licenceAgreement);
     }
+    await crm.createDocuments(scenario.licence);
+    for (const row of scenario.chargeVersions) {
+      const crmData = await createCRMChargeVersionData(row);
+      const chargeVersion = await chargeVersions.create(region, licence, row.chargeVersion, crmData);
+
+      const tasks = row.chargeElements.map(key => createChargeElement(chargeVersion, key));
+      await Promise.all(tasks);
+    }
+    if (scenario.returns) {
+      for (const row of scenario.returns) {
+      // create return
+        const tempRow = { ...row };
+        const temp2 = await returnRequirements.create(tempRow, licence.get('licenceId'));
+        const temp1 = await returns.create(tempRow, licence.get('licenceRef'));
+        console.log('TEMP TEMP TEMP');
+        console.log(temp1);
+
+        console.log('TEMP2)');
+        console.log(temp2);
+      }
+    }
+    return region.get('regionId');
+  } catch (e) {
+    console.log('ERROR HERE A1');
+    console.log(e);
   }
-  return region.get('regionId');
 };
 
 /**
@@ -111,10 +120,11 @@ const createScenario = async scenario => {
  */
 const runScenario = async (scenario, batchType, financialYearEnding = 2020, isSummer = false) => {
   await server._start();
-
+  console.log('PARAMAA');
+  console.log(isSummer);
   // Set up test data in database
   const regionId = await createScenario(scenario);
-  
+
   const response = await server.inject({
     auth: {
       strategy: 'jwt',
@@ -131,7 +141,6 @@ const runScenario = async (scenario, batchType, financialYearEnding = 2020, isSu
       isSummer
     }
   });
-
   const batchId = JSON.parse(response.payload).data.batch.id;
 
   return getBatchWhenProcessed(batchId);
@@ -146,7 +155,6 @@ const runScenario = async (scenario, batchType, financialYearEnding = 2020, isSu
 const getProcessedBatch = async batchId => {
   console.log(`Test: polling batch ${batchId}`);
   const batch = await batches.getBatchById(batchId);
-  console.log(batch.get('status'));
   if (batch.get('status') === 'processing') {
     throw new Error('Batch still processing');
   }
@@ -179,7 +187,7 @@ const approveTwoPartTariffBatch = async (batchId) => {
     },
     method: 'POST',
     url: `/water/1.0/billing/batches/${batchId}/approve-review`,
-    headers: { 'defra-internal-user-id': 19 }
+    headers: { 'defra-internal-user-id': 100000 }
 
   });
 

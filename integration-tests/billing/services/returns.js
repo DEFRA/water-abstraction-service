@@ -95,7 +95,11 @@ const createReturnsData = async (returnRow, licenceRef) => {
  * @return {Promise}
  */
 const tearDown = async () => {
-  return returnsConnector.tearDown();
+  console.log('tearing down returns');
+  const torn = await returnsConnector.tearDown();
+  console.log(torn);
+  console.log('returns torn');
+  return torn;
 };
 
 exports.create = createReturnsData;

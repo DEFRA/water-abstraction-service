@@ -12,7 +12,9 @@ const insertQuery = `insert into water.purposes_uses (legacy_id, description, lo
  * @param {String} code - purpose ID
  * @return {Promise}
  */
-const create = code => bookshelf.knex.raw(insertQuery, data.purposeUses[code]);
+const create = code => {
+  return bookshelf.knex.raw(insertQuery, data.purposeUses[code]);
+};
 
 const getByLegacyId = id => PurposeUse.forge({ legacy_id: id }).fetch();
 
@@ -21,5 +23,8 @@ const createAndGetId = async code => {
   return getByLegacyId(code);
 };
 
+const tearDown = () => bookshelf.knex.raw('delete from water.purposes_uses');
+
 exports.createAndGetId = createAndGetId;
 exports.getByLegacyId = getByLegacyId;
+exports.tearDown = tearDown;

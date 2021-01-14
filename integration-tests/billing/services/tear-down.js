@@ -6,19 +6,22 @@ const regions = require('./regions');
 const licences = require('./licences');
 const licenceAgreements = require('./licence-agreements');
 const agreements = require('./agreements');
+const purposeUses = require('./purpose-uses');
+const purposesPrimary = require('./purpose-primary');
+const purposesSecondary = require('./purpose-secondary');
 const crm = require('./crm');
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs');
-const messageQueue = require('../../../src/lib/message-queue');
+const messageQueueV2 = require('../../../src/lib/message-queue-v2');
 const returns = require('../services/returns');
 const returnRequirements = require('../services/return-requirements');
+const server = require('../../../index');
 
-const deleteBatchJobs = batch =>
-  messageQueue.deleteQueue(`billing.refreshTotals.${batch.billingBatchId}`);
+const deleteFromMessageQueue = () => messageQueueV2.deleteKeysByPattern('bull:*');
 
 const deleteCMBatch = batch => batch.externalId && cmConnector.delete(batch.externalId);
 
 const deleteJobsAndCMData = batch => Promise.all([
-  deleteBatchJobs(batch),
+  // deleteFromMessageQueue(),
   deleteCMBatch(batch)
 ]);
 
@@ -40,9 +43,13 @@ const tearDown = async (...batchesToDelete) => {
   await regions.tearDown();
   await crm.tearDown();
   await returns.tearDown();
+  await purposeUses.tearDown();
+  await purposesPrimary.tearDown();
+  await purposesSecondary.tearDown();
 
   const tasks = (batchesToDelete || []).map(deleteJobsAndCMData);
   await Promise.all(tasks);
+  await server._stop;
 };
 
 exports.tearDown = tearDown;

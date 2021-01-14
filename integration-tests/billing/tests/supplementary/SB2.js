@@ -271,7 +271,7 @@ experiment('supplementary ref: SB2', () => {
         experiment('the credit transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions.find(tx => tx.isCredit === true);
+            transaction = licence.billingTransactions.find(tx => tx.isCredit === true && tx.chargeType === 'standard');
           });
 
           test('is a standard charge', async () => {
