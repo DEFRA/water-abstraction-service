@@ -36,22 +36,15 @@ const isTwoPartTariffBillingNeeded = async row => {
   if (!row.isTwoPartTariff) {
     return createTwoPartTariffBatches();
   }
-  console.log('Row: ');
-  console.log(row);
   // There is a two-part tariff agreement - we need to look at the returns required
   // to work out which seasons
   const returnVersions = await returnRequirementVersionService.getByLicenceId(row.licenceId);
-  console.log('Date range of return version: ');
-  console.log(returnVersions[0].dateRange);
   // Filter only return versions that overlap this charge period
   const chargePeriod = new DateRange(row.startDate, row.endDate);
-  console.log('Date range of charge version');
-  console.log(chargePeriod);
+
   const returnVersionsInChargePeriod = returnVersions.filter(
     returnVersion => returnVersion.dateRange.overlaps(chargePeriod) && returnVersion.isNotDraft
   );
-  console.log('returns in charge period...');
-  console.log(returnVersionsInChargePeriod);
 
   // Whether summer or winter/all year returns are due for two-part tariff applicable purposes
   const isSummer = returnVersionsInChargePeriod.some(
@@ -61,10 +54,7 @@ const isTwoPartTariffBillingNeeded = async row => {
   const isWinterAllYear = returnVersionsInChargePeriod.some(
     returnVersion => returnVersion.hasTwoPartTariffPurposeReturnsInSeason(RETURN_SEASONS.winterAllYear)
   );
-  console.log('Summer...');
-  console.log(isSummer);
-  console.log('Winter....');
-  console.log(isWinterAllYear);
+
   return createTwoPartTariffBatches(isSummer, isWinterAllYear);
 };
 
@@ -95,8 +85,6 @@ const createChargeVersionYears = (batch, chargeVersions, financialYear, transact
 
 const isTwoPartNeeded = async (chargeVersion, isSummer) => {
   const isTwoPartNeededBySeason = await isTwoPartTariffBillingNeeded(chargeVersion);
-  console.log('IS TWO PART NEEDED');
-  console.log(isTwoPartNeededBySeason);
   const key = isSummer ? RETURN_SEASONS.summer : RETURN_SEASONS.winterAllYear;
   return isTwoPartNeededBySeason[key];
 };
@@ -108,14 +96,9 @@ const isTwoPartNeeded = async (chargeVersion, isSummer) => {
  * @return {Promise<Boolean>}
  */
 const isRequiredInTwoPartTariffBillRun = async context => {
-  console.log('Is this a problem?');
-
   const { chargeVersion, batch } = context;
-  console.log(chargeVersion);
-  console.log(batch);
-  console.log('Is two part needed?');
+
   const isTwoPartNeededVal = await isTwoPartNeeded(chargeVersion, batch.isSummer);
-  console.log(isTwoPartNeededVal);
   return isTwoPartNeededVal;
 };
 
@@ -152,20 +135,19 @@ const chargeVersionFilters = {
  */
 const createFinancialYearChargeVersionYears = async (batch, financialYear, transactionType, isSummer) => {
   // Get all charge versions and other flags for any bill run type
-  console.log('ATTEMPTING TO CREAT FIN YEAR');
+
   const chargeVersions = await repos.chargeVersions.findValidInRegionAndFinancialYear(
     batch.region.id, financialYear.endYear
   );
 
   // Filter depending on bill run type
   const chargeVersionsWithContext = chargeVersions.map(chargeVersion => ({ chargeVersion, batch, transactionType, isSummer }));
-  console.log('Here is where it goes wrong');
+
   const filteredChargeVersionYears = (await bluebird.filter(
     chargeVersionsWithContext,
     chargeVersionFilters[batch.type]
   )).map(row => row.chargeVersion);
-  console.log('Filtered Charge Version Years: ');
-  console.log(filteredChargeVersionYears);
+
   // Persist the charge version years
   return createChargeVersionYears(batch, filteredChargeVersionYears, financialYear, transactionType, isSummer);
 };

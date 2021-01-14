@@ -73,7 +73,7 @@ exports.ce5 = {
   authorisedAnnualQuantity : 50,
   billableAnnualQuantity : 50,
   season : 'winter',
-  seasonDerived: 'winter',
+  seasonDerived: 'all year',
   source : 'unsupported',
   loss : 'high',
   purposePrimary : 'A',

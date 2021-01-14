@@ -59,24 +59,24 @@ exports.r1 = {
 };
 
 exports.r2 = {
-    returnId: 'v1:1:L1:12345678:2019-11-01:2020-03-31',
+    returnId: 'v1:1:L1:12345679:2019-11-01:2020-03-31',
     regime: 'water',
     licenceType: 'abstraction',
-    startDate: '2019-11-01',
+    startDate: '2019-04-01',
     endDate: '2020-03-31',
-    dueDate: '2020-04-28',
+    dueDate:	'2020-04-28',
     returnsFrequency: 'month',
     status: 'completed',
     source: 'NALD',
     metadata: {
         nald: {
             areaCode: 'AREA',
-            formatId: 12345678,
+            formatId: 12345679,
             regionCode: 1,
             periodEndDay: '31',
             periodEndMonth: '3',
             periodStartDay: '1',
-            periodStartMonth: '11'
+            periodStartMonth: '4'
         },
         points: [
             {
@@ -93,7 +93,7 @@ exports.r2 = {
         isUpload: false,
         purposes: [
             {
-                alias: 'SPRAY IRRIGATION DIRECT',
+                alias: 'SPRAY IRRIGATION STORAGE',
                 primary: {
                     code: 'A',
                     description: 'Agriculture'
@@ -103,8 +103,8 @@ exports.r2 = {
                     description: 'General Agriculture'
                 },
                 tertiary: {
-                    code: '400',
-                    description: 'Spray Irrigation - Direct'
+                    code: '420',
+                    description: 'Spray Irrigation - Storage'
                 }
             }
         ],
@@ -112,8 +112,8 @@ exports.r2 = {
         description: 'Its all about the description',
         isTwoPartTariff: true
     },
-    receivedDate: '2020-03-31',
-    returnRequirement: '12345678',
+    receivedDate: '2020-04-02',
+    returnRequirement: '12345679',
     underQuery: false,
     isTest: true
 };

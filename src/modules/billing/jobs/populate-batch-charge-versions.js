@@ -21,26 +21,17 @@ const handler = async job => {
   const batchId = get(job, 'data.batchId');
 
   try {
-    console.log('ATTEMPTING  whatever this is');
     const batch = await batchService.getBatchById(batchId);
 
     // Populate water.billing_batch_charge_version_years
-    console.log(batch);
     const billingBatchChargeVersionYears = await chargeVersionService.createForBatch(batch);
-    console.log(billingBatchChargeVersionYears);
-    console.log('So far so good 1');
     // If there is nothing to process, mark empty batch
     if (billingBatchChargeVersionYears.length === 0) {
-      console.log('So far NOT so good 2');
       const updatedBatch = await batchService.setStatus(batchId, BATCH_STATUS.empty);
       return { batch: updatedBatch };
     }
-
-    console.log('So far so good 3');
     return { batch };
   } catch (err) {
-    console.log('pants 2');
-    console.log(err);
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToPopulateChargeVersions);
     throw err;
   }

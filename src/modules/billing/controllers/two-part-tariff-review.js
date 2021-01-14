@@ -100,8 +100,6 @@ const patchBillingVolume = async (request, h) => {
  * @param {Object} request.defra.internalCallingUser - user approving the batch
  */
 const postApproveReviewBatch = async (request, h) => {
-  console.log('NOW IN THE CONTROLLER');
-
   const { batch } = request.pre;
   const { internalCallingUser } = request.defra;
 
@@ -124,8 +122,6 @@ const postApproveReviewBatch = async (request, h) => {
       url: `/water/1.0/event/${batchEvent.id}`
     });
   } catch (err) {
-    console.log('ERRORRRRRRR');
-    console.log(err);
     return mapErrorResponse(err);
   }
 };

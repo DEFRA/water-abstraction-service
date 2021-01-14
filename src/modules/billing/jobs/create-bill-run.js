@@ -18,13 +18,9 @@ const handler = async job => {
   const batchId = get(job, 'data.batchId');
 
   try {
-    console.log('ATTEMPTING TO QUEUE JOB');
     const batch = await batchService.createChargeModuleBillRun(batchId);
-
     return { batchId: batch.id };
   } catch (err) {
-    console.log('Pants');
-    console.log(err);
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToCreateBillRun);
     throw err;
   }

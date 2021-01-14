@@ -22,9 +22,7 @@ experiment('supplementary ref: SB1', () => {
 
   before(async () => {
     await services.tearDown.tearDown();
-    console.log('tear down complete');
 
-    console.log('creating annual batch');
     annualBatch = await services.scenarios.runScenario({
       licence: 'l2',
       chargeVersions: [{
@@ -34,16 +32,15 @@ experiment('supplementary ref: SB1', () => {
         chargeElements: ['ce3']
       }]
     }, 'annual');
-    console.log('Annual batch created.');
+
     // mark the annual batch as sent so a new batch for the same
     // region can be created
     await services.batches.updateStatus(annualBatch, 'sent');
-    console.log('Annual Batch status Updated');
+
     // mark the existing charge version as superseded so the new
     // charge version is the current one.
     await services.chargeVersions.update({ status: 'superseded' });
 
-    console.log('creating supplementary batch');
     supplementaryBatch = await services.scenarios.runScenario({
       licence: 'l2',
       chargeVersions: [{

@@ -21,7 +21,7 @@ const deleteFromMessageQueue = () => messageQueueV2.deleteKeysByPattern('bull:*'
 const deleteCMBatch = batch => batch.externalId && cmConnector.delete(batch.externalId);
 
 const deleteJobsAndCMData = batch => Promise.all([
-  // deleteFromMessageQueue(),
+  deleteFromMessageQueue(),
   deleteCMBatch(batch)
 ]);
 

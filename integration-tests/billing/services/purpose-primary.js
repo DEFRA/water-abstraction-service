@@ -13,13 +13,7 @@ const insertQuery = `insert into water.purposes_primary (legacy_id, description,
  * @param {String} code - purpose ID
  * @return {Promise}
  */
-const create = code => {
-  console.log('[][][]');
-  console.log(code);
-  console.log(purposePrimaryData[code]);
-
-  return bookshelf.knex.raw(insertQuery, purposePrimaryData[code]);
-};
+const create = code => bookshelf.knex.raw(insertQuery, purposePrimaryData[code]);
 
 const getByLegacyId = id => PurposePrimary.forge({ legacy_id: id }).fetch();
 

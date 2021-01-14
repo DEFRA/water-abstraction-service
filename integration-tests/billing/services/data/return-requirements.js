@@ -35,7 +35,7 @@ exports.rq2 = {
         startDate: '2008-04-01',
         endDate:  null,
         status: 'current',
-        externalId: '1:12345678'
+        externalId: '1:12345679'
     },
     requirement: {
         returnsFrequency: 'month',
@@ -48,14 +48,14 @@ exports.rq2 = {
         siteDescription: 'WELL POINTS AT MARS',
         description: '2 Jigga Watts 2000 CMD',
         legacyId: 12345678,
-        externalId: '1:12345678'
+        externalId: '1:12345679'
     },
     purpose: {
         purposePrimaryId: 'A',
         purposeSecondaryId: 'AGR',
-        purposeUseId: '400',
-        purposeAlias: 'SPRAY IRRIGATION DIRECT',
-        externalId: '1:12345678:A:AGR:420'
+        purposeUseId: '420',
+        purposeAlias: 'SPRAY IRRIGATION STORAGE',
+        externalId: '1:12345679:A:AGR:420'
     }
 };
 

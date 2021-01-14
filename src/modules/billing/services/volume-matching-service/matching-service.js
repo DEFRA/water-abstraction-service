@@ -98,12 +98,6 @@ const match = (chargePeriod, chargeElementGroup, returnGroup, isSummer) => {
       .flagOverAbstraction()
       .toBillingVolumes();
   } catch (err) {
-    console.log('nnnnnmmmmkkkkkkkkkkOPOPOP');
-
-    console.log(returnGroup);
-    console.log(chargeElementGroup);
-    console.log(chargePeriod);
-    console.log(err);
     if (err instanceof ChargeElementMatchingError) {
       return chargeElementGroup
         .setTwoPartTariffStatus(ERROR_NO_MATCHING_CHARGE_ELEMENT)

@@ -79,13 +79,11 @@ const mapReturn = (ret, licenceRef) => {
  * @return {Promise} resolves when saved successfully
  */
 const createReturnsData = async (returnRow, licenceRef) => {
-  console.log('const createReturnsData = async (returnRow, licenceRef) => {');
   const { data: retdata } = await returnsConnector.createReturn(mapReturn(returnsData[returnRow.return], licenceRef));
   const { data: version } = await returnsConnector.createVersions(mapVersion(returnVersions[returnRow.version], retdata.return_id));
   const returnLines = [];
   for (const key of returnRow.lines) {
     const { data: returnLine } = await returnsConnector.createLines(mapLine(returnLinesData[key], version.version_id));
-    console.log(returnLine);
     returnLines.push(returnLine);
   }
   return { retdata, version, returnLines };
@@ -95,10 +93,7 @@ const createReturnsData = async (returnRow, licenceRef) => {
  * @return {Promise}
  */
 const tearDown = async () => {
-  console.log('tearing down returns');
   const torn = await returnsConnector.tearDown();
-  console.log(torn);
-  console.log('returns torn');
   return torn;
 };
 

@@ -30,13 +30,11 @@ const { jobName: persistInvoiceNumbersAndTotalsJobName } = require('./jobs/persi
  * @param {Object} h HAPI response toolkit
  */
 const postCreateBatch = async (request, h) => {
-  console.log('HANDLING BATCH CREATION');
   const { userEmail, regionId, batchType, financialYearEnding, isSummer } = request.payload;
 
   try {
     // create a new entry in the batch table
     const batch = await batchService.create(regionId, batchType, financialYearEnding, isSummer);
-    console.log('Batch table entry created');
     // add these details to the event log
     const batchEvent = await createBatchEvent({
       issuer: userEmail,
@@ -45,17 +43,15 @@ const postCreateBatch = async (request, h) => {
       status: jobStatus.start
     });
 
-    console.log('Batch event logged');
     // add a new job to the queue so that the batch can be created in the CM
     await request.queueManager.add(createBillRunJobName, batch);
-    console.log('Queue job added');
+
     return h.response(envelope({
       batch,
       event: batchEvent,
       url: `/water/1.0/event/${batchEvent.id}`
     })).code(202);
   } catch (err) {
-    console.log('Oh Dear. An error was caught.');
     if (err.existingBatch) {
       return h.response({
         message: err.message,

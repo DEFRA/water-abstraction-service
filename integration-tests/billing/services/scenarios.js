@@ -74,40 +74,30 @@ const createChargeElement = async (chargeVersion, key) => {
  * @return {String} test region ID
  */
 const createScenario = async scenario => {
-  try {
-    Joi.assert(scenario, schema);
+  Joi.assert(scenario, schema);
 
-    const region = await regions.createTestRegion();
-    const licence = await licences.create(region, scenario.licence);
-    if (scenario.licenceAgreement) {
-      await licenceAgreements.create(licence, scenario.licenceAgreement);
-    }
-    await crm.createDocuments(scenario.licence);
-    for (const row of scenario.chargeVersions) {
-      const crmData = await createCRMChargeVersionData(row);
-      const chargeVersion = await chargeVersions.create(region, licence, row.chargeVersion, crmData);
-
-      const tasks = row.chargeElements.map(key => createChargeElement(chargeVersion, key));
-      await Promise.all(tasks);
-    }
-    if (scenario.returns) {
-      for (const row of scenario.returns) {
-      // create return
-        const tempRow = { ...row };
-        const temp2 = await returnRequirements.create(tempRow, licence.get('licenceId'));
-        const temp1 = await returns.create(tempRow, licence.get('licenceRef'));
-        console.log('TEMP TEMP TEMP');
-        console.log(temp1);
-
-        console.log('TEMP2)');
-        console.log(temp2);
-      }
-    }
-    return region.get('regionId');
-  } catch (e) {
-    console.log('ERROR HERE A1');
-    console.log(e);
+  const region = await regions.createTestRegion();
+  const licence = await licences.create(region, scenario.licence);
+  if (scenario.licenceAgreement) {
+    await licenceAgreements.create(licence, scenario.licenceAgreement);
   }
+  await crm.createDocuments(scenario.licence);
+  for (const row of scenario.chargeVersions) {
+    const crmData = await createCRMChargeVersionData(row);
+    const chargeVersion = await chargeVersions.create(region, licence, row.chargeVersion, crmData);
+
+    const tasks = row.chargeElements.map(key => createChargeElement(chargeVersion, key));
+    await Promise.all(tasks);
+  }
+  if (scenario.returns) {
+    for (const row of scenario.returns) {
+      // create return
+      const tempRow = { ...row };
+      await returnRequirements.create(tempRow, licence.get('licenceId'));
+      await returns.create(tempRow, licence.get('licenceRef'));
+    }
+  }
+  return region.get('regionId');
 };
 
 /**
@@ -120,8 +110,6 @@ const createScenario = async scenario => {
  */
 const runScenario = async (scenario, batchType, financialYearEnding = 2020, isSummer = false) => {
   await server._start();
-  console.log('PARAMAA');
-  console.log(isSummer);
   // Set up test data in database
   const regionId = await createScenario(scenario);
 

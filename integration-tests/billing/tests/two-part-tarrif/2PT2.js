@@ -34,7 +34,7 @@ experiment('two part tariff ref: 2PT2', () => {
       returns: [
         {
           return: 'r2',
-          version: 'rv2',
+          version: 'rv1',
           lines: ['rl2'],
           returnRequirement: 'rq2'
         }
@@ -45,8 +45,6 @@ experiment('two part tariff ref: 2PT2', () => {
   experiment('approve the 2PT batch and continue processing', () => {
     before(async () => {
       twoPartTariffBatch = await services.scenarios.approveTwoPartTariffBatch(batch.billingBatchId);
-      console.log('-------');
-      console.log(twoPartTariffBatch);
       chargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(twoPartTariffBatch);
     });
 
@@ -126,8 +124,6 @@ experiment('two part tariff ref: 2PT2', () => {
           experiment('the first transaction', () => {
             let transaction;
             beforeEach(async () => {
-              console.log('OOOOOOOOOO');
-              console.log(licence.billingTransactions);
               transaction = licence.billingTransactions[0];
             });
 
@@ -156,7 +152,7 @@ experiment('two part tariff ref: 2PT2', () => {
             test('has the correct factors', async () => {
               expect(transaction.source).to.equal('unsupported');
               expect(transaction.season).to.equal('winter');
-              expect(transaction.loss).to.equal('low');
+              expect(transaction.loss).to.equal('high');
             });
 
             test('has the correct quantities', async () => {
@@ -176,7 +172,7 @@ experiment('two part tariff ref: 2PT2', () => {
             });
 
             test('has the correct description', async () => {
-              expect(transaction.description).to.equal('Second Part Spray Irrigation - Direct Charge at CE5');
+              expect(transaction.description).to.equal('Second Part Spray Irrigation - Storage Charge at CE5');
             });
 
             test('has the correct agreements', async () => {
@@ -186,7 +182,7 @@ experiment('two part tariff ref: 2PT2', () => {
             });
 
             test('has a stable transaction key', async () => {
-              expect(transaction.transactionKey).to.equal('0bb3452042a776eca0a83c956c2baf02');
+              expect(transaction.transactionKey).to.equal('84ed1bd4142dac23243ca7c229af7f02');
             });
           });
         });

@@ -6,7 +6,6 @@ const { logger } = require('../../../../logger');
 const batchService = require('../../services/batch-service');
 
 const logHandling = job => {
-  console.log(job.data);
   logger.info(`Handling: ${job.id}`);
 };
 
