@@ -2,7 +2,6 @@
 
 const { omit } = require('lodash');
 const Company = require('../models/company');
-const { ORGANISATION_TYPES, COMPANY_TYPES } = Company;
 
 const { createMapper } = require('../object-mapper');
 const { createModel } = require('./lib/helpers');
