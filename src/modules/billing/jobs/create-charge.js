@@ -145,3 +145,4 @@ exports.onFailed = onFailedHandler;
 exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
 exports.workerOptions = workerOptions;
+exports.hasScheduler = true;
