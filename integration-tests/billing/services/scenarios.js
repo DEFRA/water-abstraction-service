@@ -155,7 +155,7 @@ const getProcessedBatch = async batchId => {
  */
 const getBatchWhenProcessed = batchId => promisePoller({
   taskFn: () => getProcessedBatch(batchId),
-  interval: 10000,
+  interval: 5000,
   retries: 30
 });
 
@@ -175,7 +175,7 @@ const approveTwoPartTariffBatch = async (batchId) => {
     },
     method: 'POST',
     url: `/water/1.0/billing/batches/${batchId}/approve-review`,
-    headers: { 'defra-internal-user-id': 50000 }
+    headers: { 'defra-internal-user-id': 19 }
 
   });
 

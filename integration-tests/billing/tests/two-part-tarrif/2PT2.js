@@ -42,34 +42,34 @@ experiment('two part tariff ref: 2PT2', () => {
     }, 'two_part_tariff', 2020, false);
   });
 
+  experiment('has expected batch details', () => {
+    test('the batch is "two-part-tariff"', async () => {
+      expect(batch.batchType).to.equal('two_part_tariff');
+    });
+
+    test('the batch has the correct financial year range', async () => {
+      expect(batch.fromFinancialYearEnding).to.equal(2020);
+      expect(batch.toFinancialYearEnding).to.equal(2020);
+    });
+
+    test('the batch is in "review" status', async () => {
+      expect(batch.status).to.equal('review');
+    });
+
+    test('the batch has been created in the charge module', async () => {
+      expect(batch.billRunNumber).to.be.a.number();
+      expect(batch.externalId).to.be.a.string().length(36);
+    });
+
+    test('no error codes are generated', async () => {
+      expect(batch.errorCode).to.equal(null);
+    });
+  });
+
   experiment('approve the 2PT batch and continue processing', () => {
     before(async () => {
       twoPartTariffBatch = await services.scenarios.approveTwoPartTariffBatch(batch.billingBatchId);
       chargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(twoPartTariffBatch);
-    });
-
-    experiment('has expected batch details', () => {
-      test('the batch is "two-part-tariff"', async () => {
-        expect(batch.batchType).to.equal('two_part_tariff');
-      });
-
-      test('the batch has the correct financial year range', async () => {
-        expect(batch.fromFinancialYearEnding).to.equal(2020);
-        expect(batch.toFinancialYearEnding).to.equal(2020);
-      });
-
-      test('the batch is in "review" status', async () => {
-        expect(batch.status).to.equal('review');
-      });
-
-      test('the batch has been created in the charge module', async () => {
-        expect(batch.billRunNumber).to.be.a.number();
-        expect(batch.externalId).to.be.a.string().length(36);
-      });
-
-      test('no error codes are generated', async () => {
-        expect(batch.errorCode).to.equal(null);
-      });
     });
 
     experiment('has expected invoice details', () => {
@@ -84,7 +84,7 @@ experiment('two part tariff ref: 2PT2', () => {
       experiment('the first invoice', () => {
         let invoice;
 
-        before(async () => {
+        beforeEach(async () => {
           invoice = twoPartTariffBatch.billingInvoices[0];
         });
 
@@ -131,7 +131,7 @@ experiment('two part tariff ref: 2PT2', () => {
               expect(transaction.chargeType).to.equal('standard');
               expect(transaction.isCredit).to.be.false();
               expect(transaction.isTwoPartTariffSupplementary).to.be.true();
-              // expect(transaction.isDeMinimis).to.be.false();
+              expect(transaction.isDeMinimis).to.be.false();
               expect(transaction.isNewLicence).to.be.false();
             });
 
@@ -187,19 +187,19 @@ experiment('two part tariff ref: 2PT2', () => {
           });
         });
       });
+    });
 
-      experiment('transactions', () => {
-        test('the batch and charge module have the same number of transactions', async () => {
-          await transactionTests.assertNumberOfTransactions(twoPartTariffBatch, chargeModuleTransactions);
-        });
+    experiment('transactions', () => {
+      test('the batch and charge module have the same number of transactions', async () => {
+        transactionTests.assertNumberOfTransactions(twoPartTariffBatch, chargeModuleTransactions);
+      });
 
-        test('the batch and charge module contain the same transactions', async () => {
-          await transactionTests.assertTransactionsAreInEachSet(twoPartTariffBatch, chargeModuleTransactions);
-        });
+      test('the batch and charge module contain the same transactions', async () => {
+        transactionTests.assertTransactionsAreInEachSet(twoPartTariffBatch, chargeModuleTransactions);
+      });
 
-        test('the charge module transaction contain the expected data', async () => {
-          await transactionTests.assertBatchTransactionDataExistsInChargeModule(twoPartTariffBatch, chargeModuleTransactions);
-        });
+      test('the charge module transaction contain the expected data', async () => {
+        transactionTests.assertBatchTransactionDataExistsInChargeModule(twoPartTariffBatch, chargeModuleTransactions);
       });
     });
   });
