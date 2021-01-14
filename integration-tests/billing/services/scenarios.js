@@ -175,7 +175,7 @@ const approveTwoPartTariffBatch = async (batchId) => {
     },
     method: 'POST',
     url: `/water/1.0/billing/batches/${batchId}/approve-review`,
-    headers: { 'defra-internal-user-id': 100000 }
+    headers: { 'defra-internal-user-id': 50000 }
 
   });
 

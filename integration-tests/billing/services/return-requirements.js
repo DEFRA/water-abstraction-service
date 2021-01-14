@@ -41,16 +41,6 @@ const createReturnRequirementPurpose = async (data) => {
   return returnRequirementPurpose;
 };
 
-const tearDown1 = async () => {
-  return bookshelf.knex.raw(queries.deleteReturnRequirementPurposes);
-};
-const tearDown2 = async () => {
-  return bookshelf.knex.raw(queries.deleteReturnRequirements);
-};
-const tearDown3 = async () => {
-  return bookshelf.knex.raw(queries.deleteReturnVersions);
-};
-
 const createReturnRequirementsData = async (returnsData, licenceId) => {
   const tempBody = { ...returnReqsData };
   const { version, requirement, purpose } = tempBody[returnsData.returnRequirement];
@@ -75,7 +65,17 @@ const createReturnRequirementsData = async (returnsData, licenceId) => {
   return { returnReqPurpose, purpose };
 };
 
+const tearDownReturnPurposes = async () => {
+  return bookshelf.knex.raw(queries.deleteReturnRequirementPurposes);
+};
+const tearDownReturnRequirements = async () => {
+  return bookshelf.knex.raw(queries.deleteReturnRequirements);
+};
+const tearDownReturnVersions = async () => {
+  return bookshelf.knex.raw(queries.deleteReturnVersions);
+};
+
 exports.create = createReturnRequirementsData;
-exports.tearDown1 = tearDown1;
-exports.tearDown2 = tearDown2;
-exports.tearDown3 = tearDown3;
+exports.tearDownReturnPurposes = tearDownReturnPurposes;
+exports.tearDownReturnRequirements = tearDownReturnRequirements;
+exports.tearDownReturnVersions = tearDownReturnVersions;
