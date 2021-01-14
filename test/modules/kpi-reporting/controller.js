@@ -87,7 +87,7 @@ experiment('./modules/kpi-reporting/controller', () => {
       expect(licenceNames.monthly[0].currentYear).to.be.true();
       expect(licenceNames.monthly[0].named).to.equal(220);
       expect(licenceNames.monthly[0].renamed).to.equal(110);
-      expect(licenceNames.monthly[0].year).to.equal(2020);
+      expect(licenceNames.monthly[0].year).to.equal(2021);
       expect(licenceNames.monthly[0].namedChange).to.equal(10);
       expect(licenceNames.monthly[0].renamedChange).to.equal(10);
     });
@@ -107,7 +107,7 @@ experiment('./modules/kpi-reporting/controller', () => {
       expect(returnsMonthly.monthly[0].month).to.equal('January');
       expect(returnsMonthly.monthly[0].request).to.equal(0);
       expect(returnsMonthly.monthly[0].return).to.equal(1);
-      expect(returnsMonthly.monthly[0].currentYear).to.equal(2020);
+      expect(returnsMonthly.monthly[0].currentYear).to.equal(2021);
     });
     test('Delegated access data from CRM is returned in the right shape', async () => {
       const { data: { delegatedAccess } } = await controller.getKpiData();
