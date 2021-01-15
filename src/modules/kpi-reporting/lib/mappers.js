@@ -11,13 +11,12 @@ const mapReturnsDataByCycle = (data, returnCycle) => {
   };
 };
 
-const mapReturnsDataMonthly = (data) => {
-  const year = new Date().getFullYear();
+const mapReturnsDataMonthly = data => {
   return data.reduce((acc, row) => {
     acc.totals.allTime = acc.totals.allTime + row.return;
     acc.totals.ytd = acc.totals.ytd + (row.currentYear ? row.return : 0);
     if (row.currentYear) { // row.month - 1 to mamtch the string array of months starting with index of 0
-      acc.monthly.push({ ...row, month: months[(row.month - 1)], currentYear: year });
+      acc.monthly.push({ ...row, month: months[(row.month - 1)], currentYear: row.year });
     }
     return acc;
   }, { totals: { allTime: 0, ytd: 0 }, monthly: [] });
@@ -34,8 +33,7 @@ const percentChange = (data, index, key) => {
             (data[(index + 1)][key] < 1 ? 1 : data[(index + 1)][key]) * 100 : 0;
 };
 
-const mapLicenceNamesData = (data) => {
-  const year = new Date().getFullYear();
+const mapLicenceNamesData = data => {
   return data.reduce((acc, row, index) => {
     acc.totals.allTime = acc.totals.allTime + row.named + row.renamed;
     acc.totals.ytd = acc.totals.ytd + (row.currentYear ? row.named + row.renamed : 0);
@@ -44,7 +42,7 @@ const mapLicenceNamesData = (data) => {
         {
           ...row,
           month: months[row.month - 1],
-          year: year,
+          year: row.year,
           namedChange: index < (data.length - 1) ? percentChange(data, index, 'named') : 0,
           renamedChange: index < (data.length - 1) ? percentChange(data, index, 'renamed') : 0
         }
