@@ -24,7 +24,7 @@ const DateRange = require('../../../../src/lib/models/date-range');
 const Totals = require('../../../../src/lib/models/totals');
 
 const chargeModuleDecorators = require('../../../../src/modules/billing/mappers/charge-module-decorators');
-const { TransactionStatusError } = require('../../../../src/modules/billing/lib/errors');
+const { TransactionStatusError, InvoiceNumberError } = require('../../../../src/modules/billing/lib/errors');
 
 const createInvoiceLicence = (transactions) => {
   const licence = new Licence();
@@ -165,7 +165,8 @@ const cmMinimumChargeTransaction = {
   licenceNumber: '01/123/ABC',
   chargeValue: 270,
   deminimis: false,
-  minimumChargeAdjustment: true
+  minimumChargeAdjustment: true,
+  transactionReference: null
 };
 
 experiment('modules/billing/mappers/charge-module-decorators', () => {
@@ -256,6 +257,28 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
     test('invoice numbers are mapped when available', () => {
       expect(updatedBatch.invoices[0].invoiceNumber).to.equal('AAI1000001');
       expect(updatedBatch.invoices[1].invoiceNumber).to.equal('AAI1000002');
+    });
+
+    experiment('when there are multiple invoice numbers for a given financial year', () => {
+      beforeEach(() => {
+        cmResponse.billRun.customers[0].summaryByFinancialYear[1].transactions.push(cmMinimumChargeTransaction);
+        cmTransactions.data.transactions.push({
+          ...cmMinimumChargeTransaction,
+          customerReference: 'A12345678A',
+          periodStart: '01-APR-2019',
+          periodEnd: '31-MAR-2020',
+          transactionReference: 'AAI1000003'
+        });
+      });
+
+      test('throws InvoiceNumberError', async () => {
+        try {
+          await chargeModuleDecorators.decorateBatch(batch, cmResponse, cmTransactions);
+        } catch (err) {
+          expect(err).to.be.instanceof(InvoiceNumberError);
+          expect(err.message).to.equal('Invoice account A12345678A has multiple invoice numbers for financial year: 2019');
+        }
+      });
     });
 
     // Minimum charge transactions are created in the CM and do not exist

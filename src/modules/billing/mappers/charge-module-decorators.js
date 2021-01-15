@@ -6,12 +6,12 @@
 const Batch = require('../../../lib/models/batch');
 const Invoice = require('../../../lib/models/invoice');
 const validators = require('../../../lib/models/validators');
-const { TransactionStatusError } = require('../lib/errors');
+const { TransactionStatusError, InvoiceNumberError } = require('../lib/errors');
 const { getFinancialYear } = require('@envage/water-abstraction-helpers').charging;
 
 const mappers = require('../mappers');
 
-const { isEmpty, uniq, groupBy, find, merge, mapValues } = require('lodash');
+const { isEmpty, uniq, groupBy, find, merge, identity } = require('lodash');
 
 const findCustomer = (cmResponseCustomers, customerReference) =>
   cmResponseCustomers.find(customer => customer.customerReference === customerReference);
@@ -66,12 +66,15 @@ const mapCmTransactionsToSummary = (cmResponse, cmTransactions) => {
 /**
  * Find invoice number, or return null if none present
  */
-const findInvoiceNumber = customerFinYearSummary => {
-  const transactionWithInvoiceNumber = customerFinYearSummary.transactions.find(transaction => !!transaction.transactionReference);
-  return transactionWithInvoiceNumber
-    ? transactionWithInvoiceNumber.transactionReference
-    : null;
+const findInvoiceNumber = (customerFinYearSummary, invoiceAccountNumber) => {
+  const invoiceNumbers = uniq(customerFinYearSummary.transactions.map(trans => trans.transactionReference)).filter(identity);
+  if (invoiceNumbers.length > 1) {
+    const { financialYear } = customerFinYearSummary;
+    throw new InvoiceNumberError(`Invoice account ${invoiceAccountNumber} has multiple invoice numbers for financial year: ${financialYear}`);
+  }
+  return invoiceNumbers[0] || null;
 };
+
 /**
  * Returns a map of transactions indexed by the licence number
  * @param {Array<Object>} transactions
@@ -150,7 +153,7 @@ const decorateInvoice = (invoice, cmResponseCustomers) => {
   invoice.isDeMinimis = customerFinYearSummary.deminimis;
 
   // Set invoice number if present
-  invoice.invoiceNumber = findInvoiceNumber(customerFinYearSummary);
+  invoice.invoiceNumber = findInvoiceNumber(customerFinYearSummary, invoice.invoiceAccount.accountNumber);
 
   const cmTransactionsByLicence = indexTransactionsByLicenceNumber(customerFinYearSummary.transactions);
 
