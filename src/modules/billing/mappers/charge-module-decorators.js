@@ -41,7 +41,7 @@ const mergeTransactionData = (customerSummary, transactionsForFinYear) =>
 
 const getSummaryByKey = (customers, key) => {
   const [customerRef, finYear] = key.split('_');
-  const customer = customers.find(customer => customer.customerReference === customerRef);
+  const customer = customers.find(c => c.customerReference === customerRef);
   return customer.summaryByFinancialYear.find(summary => summary.financialYear === parseInt(finYear));
 };
 
