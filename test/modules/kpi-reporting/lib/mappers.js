@@ -46,9 +46,9 @@ experiment('./modules/kpi-reporting/lib/mappers', () => {
 
   experiment('.mapReturnsDataMonthly', () => {
     const returnsDataMonthly = [
-      { currentYear: true, month: 2, request: 2, return: 2 },
-      { currentYear: true, month: 1, request: 3, return: 3 },
-      { currentYear: false, month: 12, request: 1, return: 1 }
+      { currentYear: true, month: 2, request: 2, return: 2, year: 2020 },
+      { currentYear: true, month: 1, request: 3, return: 3, year: 2020 },
+      { currentYear: false, month: 12, request: 1, return: 1, year: 2020 }
     ];
 
     test('the returns data by cycle is mapped correctly', async () => {
