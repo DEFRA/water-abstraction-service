@@ -1,6 +1,7 @@
 const { bookshelf, BillingInvoice } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoices');
+const helpers = require('./lib/helpers');
 
 /**
  * Upserts a water.billing_invoices record
@@ -57,9 +58,8 @@ const deleteByBatchId = async (batchId, isDeletionRequired = true) => BillingInv
   .where({ billing_batch_id: batchId })
   .destroy({ require: isDeletionRequired });
 
-const update = async (billingInvoiceId, changes) => BillingInvoice
-  .forge({ billingInvoiceId })
-  .save(changes);
+const update = async (billingInvoiceId, changes) =>
+  helpers.update(BillingInvoice, 'billingInvoiceId', billingInvoiceId, changes);
 
 exports.upsert = upsert;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
