@@ -86,11 +86,9 @@ class ReturnRequirementVersion extends Model {
     validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
     const isSummer = returnSeason === RETURN_SEASONS.summer;
 
-    const returner = this.returnRequirements
+    return this.returnRequirements
       .filter(returnRequirement => returnRequirement.isSummer === isSummer)
       .some(returnRequirement => returnRequirement.isTwoPartTariffPurposeUse);
-
-    return returner;
   }
 }
 

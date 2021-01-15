@@ -91,15 +91,15 @@ class QueueManager {
 
 const queueManager = new QueueManager();
 
-const deleteKeysByPattern = (pattern) => {
+const deleteKeysByPattern = pattern => {
   return new Promise((resolve, reject) => {
     const stream = connection.scanStream({
       match: pattern
     });
-    stream.on('data', (keys) => {
+    stream.on('data', keys => {
       if (keys.length) {
         const pipeline = connection.pipeline();
-        keys.forEach((key) => {
+        keys.forEach(key => {
           pipeline.del(key);
         });
         pipeline.exec();
@@ -108,7 +108,7 @@ const deleteKeysByPattern = (pattern) => {
     stream.on('end', () => {
       resolve();
     });
-    stream.on('error', (e) => {
+    stream.on('error', e => {
       reject(e);
     });
   });

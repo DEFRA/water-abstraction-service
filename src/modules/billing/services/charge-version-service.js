@@ -97,9 +97,7 @@ const isTwoPartNeeded = async (chargeVersion, isSummer) => {
  */
 const isRequiredInTwoPartTariffBillRun = async context => {
   const { chargeVersion, batch } = context;
-
-  const isTwoPartNeededVal = await isTwoPartNeeded(chargeVersion, batch.isSummer);
-  return isTwoPartNeededVal;
+  return isTwoPartNeeded(chargeVersion, batch.isSummer);
 };
 
 const isRequiredInTwoPartTariffSupplementary = async (chargeVersion, isSummer) =>
