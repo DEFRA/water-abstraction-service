@@ -30,24 +30,27 @@ const findCustomerFinancialYearSummary = (cmResponse, invoiceAccountNumber, fina
 
 const getCmFinancialYearForTransaction = transaction => getFinancialYear(transaction.periodStart) - 1;
 
-const groupTransactionsByFinancialYear = transactions =>
-  groupBy(transactions, getCmFinancialYearForTransaction);
+const getKey = transaction => `${transaction.customerReference}_${getCmFinancialYearForTransaction(transaction)}`;
 
-const groupTransactionsByCustomerAndFinancialYear = cmTransactions => {
-  const groupedByCustomer = groupBy(cmTransactions, 'customerReference');
-  return mapValues(groupedByCustomer, groupTransactionsByFinancialYear);
-};
+const groupTransactionsByCustomerAndFinancialYear = cmTransactions => groupBy(cmTransactions, getKey);
 
-const mergeTransactionData = (finYearSummary, transactionsForFinYear) =>
-  finYearSummary.transactions.forEach(summaryTransaction =>
+const mergeTransactionData = (customerSummary, transactionsForFinYear) =>
+  customerSummary.transactions.forEach(summaryTransaction =>
     merge(summaryTransaction, find(transactionsForFinYear, { id: summaryTransaction.id }))
   );
 
+const getSummaryByKey = (customers, key) => {
+  const [customerRef, finYear] = key.split('_');
+  const customer = customers.find(customer => customer.customerReference === customerRef);
+  return customer.summaryByFinancialYear.find(summary => summary.financialYear === parseInt(finYear));
+};
+
 const mapCmTransactionsToCustomers = (customers, groupedTransactions) => {
-  customers.forEach(customer => customer.summaryByFinancialYear.forEach(summary => {
-    const customerTransactions = groupedTransactions[customer.customerReference][summary.financialYear];
-    return mergeTransactionData(summary, customerTransactions);
-  }));
+  Object.keys(groupedTransactions).forEach(key => {
+    const customerSummary = getSummaryByKey(customers, key);
+    return mergeTransactionData(customerSummary, groupedTransactions[key]);
+  });
+
   return customers;
 };
 
