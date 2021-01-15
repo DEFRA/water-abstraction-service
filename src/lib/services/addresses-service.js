@@ -1,6 +1,8 @@
 const addressesConnector = require('../connectors/crm-v2/addresses');
 const mappers = require('../mappers');
 const { InvalidEntityError } = require('../errors');
+const eventService = require('./events');
+const Event = require('../models/event');
 
 const getAddressModel = address => {
   const addressModel = mappers.address.uiToModel(address);
@@ -12,26 +14,43 @@ const getAddressModel = address => {
 };
 
 /**
+ * Creates an event when an address is stored
+ * @param {Object} address - CRM address data
+ * @param {String} issuer - email address
+ * @return {Promise}
+ */
+const createAddressEvent = (address, issuer) => {
+  const event = new Event().fromHash({
+    type: 'address:create',
+    issuer,
+    metadata: { address },
+    status: 'created'
+  });
+  return eventService.create(event);
+};
+
+/**
  * Creates an address
  * If there is a 409 error because the address already exists, this is handled
  * and the existing address is returned
  * @param {Address} address
+ * @param {String} [issuer]
  * @return {Promise<Address>} the water service representation of the CRM persisted model
  */
-const createAddress = async addressModel => {
+const createAddress = async (addressModel, issuer) => {
   let address;
   try {
     address = await addressesConnector.createAddress(mappers.address.modelToCrm(addressModel));
+    if (issuer) {
+      await createAddressEvent(address, issuer);
+    }
   } catch (err) {
-    console.log(err.statusCode);
     if (err.statusCode === 409 && err.error.existingEntity) {
       address = err.error.existingEntity;
     } else {
       throw err;
     }
   }
-  console.log(addressModel);
-  console.log(address);
   return mappers.address.crmToModel(address);
 };
 
