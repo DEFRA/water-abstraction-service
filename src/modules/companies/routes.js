@@ -1,6 +1,7 @@
 const Joi = require('@hapi/joi');
 const controller = require('./controller');
 const { statuses } = require('../returns/schema');
+const { logger } = require('../../logger');
 
 const { CONTACT_TYPES } = require('../../lib/models/contact-v2');
 const { COMPANY_TYPES, ORGANISATION_TYPES } = require('../../lib/models/company');
@@ -43,7 +44,7 @@ const contactSchema = Joi.object({
   middleInitials: OPTIONAL_NULLABLE_STRING,
   lastName: OPTIONAL_NULLABLE_STRING,
   suffix: OPTIONAL_NULLABLE_STRING,
-  department: Joi.string().trim().replace(/\./g, '').optional(),
+  department: OPTIONAL_NULLABLE_STRING,
   source: OPTIONAL_NULLABLE_STRING,
   isTest: Joi.boolean().optional().default(false)
 }).allow(null).optional();
@@ -129,6 +130,10 @@ module.exports = {
           address: addressSchema,
           agent: agentSchema,
           contact: contactSchema
+        },
+        failAction: (request, h, err) => {
+          logger.error(err.message, request.payload);
+          throw err;
         }
       }
     }

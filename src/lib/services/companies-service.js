@@ -42,7 +42,12 @@ const createCompany = async companyModel => {
 };
 
 const createCompanyAddress = async (companyId, companyAddressData) => {
-  const companyAddress = await companiesConnector.createCompanyAddress(companyId, companyAddressData);
+  let companyAddress;
+  try {
+    companyAddress = await companiesConnector.createCompanyAddress(companyId, companyAddressData);
+  } catch (err) {
+    companyAddress = getExistingEntity(err);
+  }
   return mappers.companyAddress.crmToModel(companyAddress);
 };
 
