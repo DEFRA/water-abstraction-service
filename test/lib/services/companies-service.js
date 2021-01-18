@@ -11,9 +11,13 @@ const sandbox = sinon.createSandbox();
 const uuid = require('uuid/v4');
 
 const Company = require('../../../src/lib/models/company');
+const Region = require('../../../src/lib/models/region');
+
 const CompanyAddress = require('../../../src/lib/models/company-address');
 const CompanyContact = require('../../../src/lib/models/company-contact');
 const companiesService = require('../../../src/lib/services/companies-service');
+const regionsService = require('../../../src/lib/services/regions-service');
+
 const companiesConnector = require('../../../src/lib/connectors/crm-v2/companies');
 const mappers = require('../../../src/lib/mappers');
 const { NotFoundError, InvalidEntityError } = require('../../../src/lib/errors');
@@ -21,6 +25,28 @@ const { NotFoundError, InvalidEntityError } = require('../../../src/lib/errors')
 const TEST_GUID = uuid();
 
 experiment('modules/billing/services/companies-service', () => {
+  beforeEach(async () => {
+    sandbox.stub(companiesConnector, 'getInvoiceAccountsByCompanyId');
+    sandbox.stub(companiesConnector, 'getCompany');
+    sandbox.stub(companiesConnector, 'searchCompaniesByName');
+    sandbox.stub(companiesConnector, 'createCompany');
+    sandbox.stub(companiesConnector, 'createCompanyContact');
+    sandbox.stub(companiesConnector, 'getCompanyAddresses');
+    sandbox.stub(companiesConnector, 'createCompanyAddress');
+
+    sandbox.stub(mappers.company, 'crmToModel');
+    sandbox.stub(mappers.company, 'modelToCrm');
+    sandbox.stub(mappers.company, 'uiToModel');
+
+    sandbox.stub(mappers.companyAddress, 'crmToModel');
+
+    sandbox.stub(mappers.companyContact, 'crmToModel');
+
+    sandbox.stub(regionsService, 'getRegion');
+
+    sandbox.stub(mappers.invoiceAccount, 'crmToModel');
+  });
+
   afterEach(async () => {
     sandbox.restore();
   });
@@ -36,8 +62,8 @@ experiment('modules/billing/services/companies-service', () => {
       };
       companyModel = new Company(TEST_GUID);
 
-      sandbox.stub(companiesConnector, 'getCompany').resolves(companyData);
-      sandbox.stub(mappers.company, 'crmToModel').returns(companyModel);
+      companiesConnector.getCompany.resolves(companyData);
+      mappers.company.crmToModel.returns(companyModel);
 
       response = await companiesService.getCompany(companyId);
     });
@@ -79,7 +105,7 @@ experiment('modules/billing/services/companies-service', () => {
         type: Company.COMPANY_TYPES.organisation
       };
 
-      sandbox.stub(companiesConnector, 'searchCompaniesByName').resolves([companyData]);
+      companiesConnector.searchCompaniesByName.resolves([companyData]);
 
       response = await companiesService.searchCompaniesByName(inputString);
     });
@@ -106,8 +132,8 @@ experiment('modules/billing/services/companies-service', () => {
       }];
       companyAddressModel = new CompanyAddress(TEST_GUID);
 
-      sandbox.stub(companiesConnector, 'getCompanyAddresses').resolves(companyAddressData);
-      sandbox.stub(mappers.companyAddress, 'crmToModel').returns(companyAddressModel);
+      companiesConnector.getCompanyAddresses.resolves(companyAddressData);
+      mappers.companyAddress.crmToModel.returns(companyAddressModel);
 
       response = await companiesService.getCompanyAddresses(companyId);
     });
@@ -149,9 +175,9 @@ experiment('modules/billing/services/companies-service', () => {
       };
       companyModel = new Company(TEST_GUID);
 
-      sandbox.stub(companiesConnector, 'createCompany').resolves(newCompany);
-      sandbox.stub(mappers.company, 'modelToCrm').returns(mappedData);
-      sandbox.stub(mappers.company, 'crmToModel').returns(companyModel);
+      companiesConnector.createCompany.resolves(newCompany);
+      mappers.company.modelToCrm.returns(mappedData);
+      mappers.company.crmToModel.returns(companyModel);
 
       response = await companiesService.createCompany(companyData);
     });
@@ -189,8 +215,8 @@ experiment('modules/billing/services/companies-service', () => {
       };
       companyAddressModel = new CompanyAddress(TEST_GUID);
 
-      sandbox.stub(companiesConnector, 'createCompanyAddress').resolves(newCompanyAddress);
-      sandbox.stub(mappers.companyAddress, 'crmToModel').returns(companyAddressModel);
+      companiesConnector.createCompanyAddress.resolves(newCompanyAddress);
+      mappers.companyAddress.crmToModel.returns(companyAddressModel);
 
       response = await companiesService.createCompanyAddress(companyId, companyAddressData);
     });
@@ -228,8 +254,8 @@ experiment('modules/billing/services/companies-service', () => {
       };
       companyContactModel = new CompanyContact(TEST_GUID);
 
-      sandbox.stub(companiesConnector, 'createCompanyContact').resolves(newCompanyContact);
-      sandbox.stub(mappers.companyContact, 'crmToModel').returns(companyContactModel);
+      companiesConnector.createCompanyContact.resolves(newCompanyContact);
+      mappers.companyContact.crmToModel.returns(companyContactModel);
 
       response = await companiesService.createCompanyContact(companyId, companyContactData);
     });
@@ -259,7 +285,7 @@ experiment('modules/billing/services/companies-service', () => {
       };
       companyModel = new Company(TEST_GUID);
 
-      sandbox.stub(mappers.company, 'uiToModel').returns(companyModel);
+      mappers.company.uiToModel.returns(companyModel);
 
       response = await companiesService.getCompanyModel(companyData);
     });
@@ -330,6 +356,79 @@ experiment('modules/billing/services/companies-service', () => {
     test('handles null company', async () => {
       response = await companiesService.getCompanyModel(null);
       expect(response).to.be.null();
+    });
+  });
+
+  experiment('.getCompanyInvoiceAccounts', () => {
+    const COMPANY_ID = uuid();
+    const REGION_ID = uuid();
+
+    const INVOICE_ACCOUNTS = [{
+      invoiceAccountNumber: 'A12345678A'
+    }, {
+      invoiceAccountNumber: 'B23456789B'
+    }, {
+      invoiceAccountNumber: 'A34567890A'
+    }];
+
+    beforeEach(async () => {
+      const region = new Region().fromHash({
+        code: 'A'
+      });
+
+      companiesConnector.getInvoiceAccountsByCompanyId.resolves(INVOICE_ACCOUNTS);
+      regionsService.getRegion.resolves(region);
+    });
+
+    experiment('when a region ID is supplied', () => {
+      beforeEach(async () => {
+        await companiesService.getCompanyInvoiceAccounts(COMPANY_ID, REGION_ID);
+      });
+
+      test('the companies connector is called with the company ID', async () => {
+        expect(companiesConnector.getInvoiceAccountsByCompanyId.calledWith(COMPANY_ID));
+      });
+
+      test('the region is fetched with the region ID', async () => {
+        expect(regionsService.getRegion.calledWith(REGION_ID)).to.be.true();
+      });
+
+      test('only invoice accounts starting with the matching region code letter are returned', async () => {
+        expect(mappers.invoiceAccount.crmToModel.callCount).to.equal(2);
+        expect(mappers.invoiceAccount.crmToModel.calledWith(
+          INVOICE_ACCOUNTS[0]
+        )).to.be.true();
+        expect(mappers.invoiceAccount.crmToModel.calledWith(
+          INVOICE_ACCOUNTS[2]
+        )).to.be.true();
+      });
+    });
+
+    experiment('when a region ID is not supplied', () => {
+      beforeEach(async () => {
+        await companiesService.getCompanyInvoiceAccounts(COMPANY_ID);
+      });
+
+      test('the companies connector is called with the company ID', async () => {
+        expect(companiesConnector.getInvoiceAccountsByCompanyId.calledWith(COMPANY_ID));
+      });
+
+      test('the region is not fetched', async () => {
+        expect(regionsService.getRegion.called).to.be.false();
+      });
+
+      test('all invoice accounts are returned', async () => {
+        expect(mappers.invoiceAccount.crmToModel.callCount).to.equal(3);
+        expect(mappers.invoiceAccount.crmToModel.calledWith(
+          INVOICE_ACCOUNTS[0]
+        )).to.be.true();
+        expect(mappers.invoiceAccount.crmToModel.calledWith(
+          INVOICE_ACCOUNTS[1]
+        )).to.be.true();
+        expect(mappers.invoiceAccount.crmToModel.calledWith(
+          INVOICE_ACCOUNTS[2]
+        )).to.be.true();
+      });
     });
   });
 });

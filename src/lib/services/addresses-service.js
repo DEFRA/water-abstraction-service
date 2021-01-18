@@ -3,6 +3,7 @@ const mappers = require('../mappers');
 const { InvalidEntityError } = require('../errors');
 const eventService = require('./events');
 const Event = require('../models/event');
+const { getExistingEntity } = require('../crm-response');
 
 const getAddressModel = address => {
   const addressModel = mappers.address.uiToModel(address);
@@ -21,8 +22,8 @@ const getAddressModel = address => {
  */
 const createAddressEvent = (address, issuer) => {
   const event = new Event().fromHash({
-    type: 'address:create',
     issuer,
+    type: 'address:create',
     metadata: { address },
     status: 'created'
   });
@@ -45,11 +46,7 @@ const createAddress = async (addressModel, issuer) => {
       await createAddressEvent(address, issuer);
     }
   } catch (err) {
-    if (err.statusCode === 409 && err.error.existingEntity) {
-      address = err.error.existingEntity;
-    } else {
-      throw err;
-    }
+    address = getExistingEntity(err);
   }
   return mappers.address.crmToModel(address);
 };

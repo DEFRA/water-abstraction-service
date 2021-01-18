@@ -5,6 +5,7 @@ const regionsService = require('./regions-service');
 const mappers = require('../mappers');
 const invoiceAccountMapper = require('../mappers/invoice-account');
 const { NotFoundError, InvalidEntityError } = require('../errors');
+const { getExistingEntity } = require('../crm-response');
 
 const getCompany = async companyId => {
   const company = await companiesConnector.getCompany(companyId);
@@ -35,11 +36,7 @@ const createCompany = async companyModel => {
   try {
     company = await companiesConnector.createCompany(mappers.company.modelToCrm(companyModel));
   } catch (err) {
-    if (err.statusCode === 409 && err.error.existingEntity) {
-      company = err.error.existingEntity;
-    } else {
-      throw err;
-    }
+    company = getExistingEntity(err);
   }
   return mappers.company.crmToModel(company);
 };
