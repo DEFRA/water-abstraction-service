@@ -70,6 +70,7 @@ experiment('modules/companies/controller', () => {
 
     sandbox.stub(companiesService, 'getCompany').resolves({ companyId: 'test-company-id' });
     sandbox.stub(companiesService, 'getCompanyAddresses').resolves([{ companyAddressId: 'test-company-address-id' }]);
+    sandbox.stub(companiesService, 'getCompanyInvoiceAccounts');
 
     sandbox.stub(invoiceAccountsService, 'getInvoiceAccount');
     sandbox.stub(invoiceAccountsService, 'persist');
@@ -448,6 +449,55 @@ experiment('modules/companies/controller', () => {
       test('the array of items is wrapped in the data envelope', async () => {
         expect(response.data.length).to.equal(1);
         expect(response.data[0].companyContactId).to.equal('test-company-contact-id');
+      });
+    });
+  });
+
+  experiment('.getCompanyInvoiceAccounts', () => {
+    const COMPANY_ID = uuid();
+    const REGION_ID = uuid();
+    const invoiceAccounts = [{
+      id: uuid()
+    }];
+    const request = {
+      params: {
+        companyId: COMPANY_ID
+      },
+      query: {
+        regionId: REGION_ID
+      }
+    };
+    let response;
+
+    experiment('when there is no error', () => {
+      beforeEach(async () => {
+        companiesService.getCompanyInvoiceAccounts.resolves(invoiceAccounts);
+        response = await controller.getCompanyInvoiceAccounts(request);
+      });
+
+      test('the invoice accounts are fetched by company and region ID', async () => {
+        expect(companiesService.getCompanyInvoiceAccounts.calledWith(
+          COMPANY_ID, REGION_ID
+        )).to.be.true();
+      });
+
+      test('the response is wrapped in a { data : [] } envelope', async () => {
+        expect(response).to.equal({ data: invoiceAccounts, error: null });
+      });
+    });
+
+    experiment('when there is an error', () => {
+      const ERROR = new Error('oops');
+
+      beforeEach(async () => {
+        companiesService.getCompanyInvoiceAccounts.rejects(ERROR);
+      });
+
+      test('the error is mapped/rethrown', async () => {
+        const func = () => controller.getCompanyInvoiceAccounts(request);
+
+        const err = await expect(func()).to.reject();
+        expect(err).to.equal(ERROR);
       });
     });
   });
