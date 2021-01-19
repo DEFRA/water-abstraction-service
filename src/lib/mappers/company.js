@@ -2,7 +2,6 @@
 
 const { omit } = require('lodash');
 const Company = require('../models/company');
-const { ORGANISATION_TYPES, COMPANY_TYPES } = Company;
 
 const { createMapper } = require('../object-mapper');
 const { createModel } = require('./lib/helpers');
@@ -32,12 +31,7 @@ const uiToModel = companyData => {
   if (companyData.companyId) {
     return new Company(companyData.companyId);
   }
-  const company = new Company();
-  return company.fromHash({
-    ...companyData,
-    type: companyData.type === ORGANISATION_TYPES.individual ? COMPANY_TYPES.person : COMPANY_TYPES.organisation,
-    organisationType: companyData.type
-  });
+  return new Company().fromHash(companyData);
 };
 
 /**
