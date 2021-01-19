@@ -332,7 +332,9 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     });
 
     test('saves the changes', async () => {
-      expect(stub.save.calledWith({ errored_on: new Date() })).to.be.true();
+      const [updates] = stub.save.lastCall.args;
+      expect(Object.keys(updates)).to.only.include('errored_on');
+      expect(updates.errored_on instanceof Date).to.be.true();
     });
 
     test('calls .toJSON on the collection', async () => {

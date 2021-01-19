@@ -10,23 +10,35 @@ const sandbox = sinon.createSandbox();
 
 const uuid = require('uuid/v4');
 const addressesService = require('../../../src/lib/services/addresses-service');
+const eventsService = require('../../../src/lib/services/events');
 const addressesConnector = require('../../../src/lib/connectors/crm-v2/addresses');
 const addressMapper = require('../../../src/lib/mappers/address');
 const Address = require('../../../src/lib/models/address');
+const Event = require('../../../src/lib/models/event');
+
 const { InvalidEntityError } = require('../../../src/lib/errors');
 
 const addressId = uuid();
 
 experiment('modules/billing/services/addresses-service', () => {
+  beforeEach(async () => {
+    sandbox.stub(addressMapper, 'modelToCrm');
+    sandbox.stub(addressMapper, 'crmToModel');
+    sandbox.stub(addressMapper, 'uiToModel');
+
+    sandbox.stub(addressesConnector, 'deleteAddress');
+    sandbox.stub(addressesConnector, 'createAddress');
+
+    sandbox.stub(eventsService, 'create');
+  });
+
   afterEach(async () => {
     sandbox.restore();
   });
 
   experiment('.getAddressModel', () => {
     let addressData, addressModel, response;
-    beforeEach(() => {
-      sandbox.stub(addressMapper, 'uiToModel');
-    });
+
     experiment('when only an address id is provided', () => {
       beforeEach(async () => {
         addressData = {
@@ -116,36 +128,109 @@ experiment('modules/billing/services/addresses-service', () => {
         country: 'Simpsons Land'
       };
       addressModel = new Address(addressId);
-      sandbox.stub(addressMapper, 'modelToCrm').returns(mappedData);
-      sandbox.stub(addressMapper, 'crmToModel').resolves(addressModel);
 
-      sandbox.stub(addressesConnector, 'createAddress').resolves(newAddress);
-
-      response = await addressesService.createAddress(addressData);
-    });
-    test('calls the address mapper to map data for the DB call', async () => {
-      const [passedData] = addressMapper.modelToCrm.lastCall.args;
-      expect(passedData).to.equal(addressData);
+      addressMapper.modelToCrm.returns(mappedData);
+      addressMapper.crmToModel.returns(addressModel);
     });
 
-    test('calls the address connector with the mapped data', async () => {
-      const [addressData] = addressesConnector.createAddress.lastCall.args;
-      expect(addressData).to.equal(mappedData);
+    experiment('when there is no error', () => {
+      beforeEach(async () => {
+        addressesConnector.createAddress.resolves(newAddress);
+        response = await addressesService.createAddress(addressData);
+      });
+
+      test('calls the address mapper to map data for the DB call', async () => {
+        const [passedData] = addressMapper.modelToCrm.lastCall.args;
+        expect(passedData).to.equal(addressData);
+      });
+
+      test('calls the address connector with the mapped data', async () => {
+        const [addressData] = addressesConnector.createAddress.lastCall.args;
+        expect(addressData).to.equal(mappedData);
+      });
+
+      test('calls the crm to model mapper with the output of the crm call', async () => {
+        const [addressData] = addressMapper.crmToModel.lastCall.args;
+        expect(addressData).to.equal(newAddress);
+      });
+
+      test('returns the output from the mapper', async () => {
+        expect(response).to.equal(addressModel);
+      });
+
+      test('does not save an event', async () => {
+        expect(eventsService.create.called).to.be.false();
+      });
     });
 
-    test('calls the crm to model mapper with the output of the crm call', async () => {
-      const [addressData] = addressMapper.crmToModel.lastCall.args;
-      expect(addressData).to.equal(newAddress);
+    experiment('when an issuer email address is supplied', () => {
+      const EMAIL = 'mail@example.com';
+
+      beforeEach(async () => {
+        addressesConnector.createAddress.resolves(newAddress);
+        response = await addressesService.createAddress(addressData, EMAIL);
+      });
+
+      test('saves an event', async () => {
+        const [ev] = eventsService.create.lastCall.args;
+        expect(ev instanceof Event).to.be.true();
+        expect(ev.type).to.equal('address:create');
+        expect(ev.issuer).to.equal(EMAIL);
+        expect(ev.metadata).to.equal({ address: newAddress });
+        expect(ev.status).to.equal('created');
+      });
     });
 
-    test('returns the output from the mapper', async () => {
-      expect(response).to.equal(addressModel);
+    experiment('when there is a 409 conflict', () => {
+      beforeEach(async () => {
+        const ERROR = new Error();
+        ERROR.statusCode = 409;
+        ERROR.error = {
+          existingEntity: newAddress
+        };
+
+        addressesConnector.createAddress.rejects(ERROR);
+        response = await addressesService.createAddress(addressData);
+      });
+
+      test('calls the address mapper to map data for the DB call', async () => {
+        const [passedData] = addressMapper.modelToCrm.lastCall.args;
+        expect(passedData).to.equal(addressData);
+      });
+
+      test('calls the address connector with the mapped data', async () => {
+        const [addressData] = addressesConnector.createAddress.lastCall.args;
+        expect(addressData).to.equal(mappedData);
+      });
+
+      test('calls the crm to model mapper with the output of the crm call', async () => {
+        const [addressData] = addressMapper.crmToModel.lastCall.args;
+        expect(addressData).to.equal(newAddress);
+      });
+
+      test('returns the output from the mapper', async () => {
+        expect(response).to.equal(addressModel);
+      });
+    });
+
+    experiment('when there is an unexpected error', () => {
+      const ERROR = new Error('oops');
+
+      beforeEach(async () => {
+        addressesConnector.createAddress.rejects(ERROR);
+      });
+
+      test('the error is rethrown', async () => {
+        const func = () => addressesService.createAddress(addressData);
+        const err = await expect(func()).to.reject();
+        expect(err).to.equal(ERROR);
+      });
     });
   });
 
   experiment('.deleteAddress', () => {
     beforeEach(async () => {
-      sandbox.stub(addressesConnector, 'deleteAddress').resolves();
+      addressesConnector.deleteAddress.resolves();
 
       await addressesService.deleteAddress({ id: 'test-address-id' });
     });

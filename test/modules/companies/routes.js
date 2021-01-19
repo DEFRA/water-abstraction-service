@@ -10,7 +10,7 @@ const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').scri
 const routes = require('../../../src/modules/companies/routes');
 const testHelpers = require('../../test-helpers');
 const { CONTACT_TYPES } = require('../../../src/lib/models/contact-v2');
-const { ORGANISATION_TYPES } = require('../../../src/lib/models/company');
+const { COMPANY_TYPES, ORGANISATION_TYPES } = require('../../../src/lib/models/company');
 
 /**
  * Creates a test Hapi server that has no other plugins loaded,
@@ -220,14 +220,17 @@ experiment('modules/companies/routes', () => {
         expect(response.statusCode).to.equal(400);
       });
 
-      Object.values(ORGANISATION_TYPES).forEach(type => {
-        test(`returns a 200 when type is ${type}`, async () => {
-          request.payload.agent = {
-            type,
-            name: 'Agent company'
-          };
-          const response = await server.inject(request);
-          expect(response.statusCode).to.equal(200);
+      Object.values(COMPANY_TYPES).forEach(type => {
+        Object.values(ORGANISATION_TYPES).forEach(organisationType => {
+          test(`returns a 200 when type is ${type}`, async () => {
+            request.payload.agent = {
+              type,
+              organisationType,
+              name: 'Agent company'
+            };
+            const response = await server.inject(request);
+            expect(response.statusCode).to.equal(200);
+          });
         });
       });
 
@@ -241,7 +244,8 @@ experiment('modules/companies/routes', () => {
 
       test('returns a 200 if the company number is omitted', async () => {
         request.payload.agent = {
-          type: 'limitedCompany',
+          type: COMPANY_TYPES.organisation,
+          organisationType: ORGANISATION_TYPES.limitedCompany,
           name: 'Agent company'
         };
         const response = await server.inject(request);

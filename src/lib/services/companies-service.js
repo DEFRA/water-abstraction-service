@@ -1,6 +1,11 @@
+'use strict';
+
 const companiesConnector = require('../connectors/crm-v2/companies');
+const regionsService = require('./regions-service');
 const mappers = require('../mappers');
+const invoiceAccountMapper = require('../mappers/invoice-account');
 const { NotFoundError, InvalidEntityError } = require('../errors');
+const { getExistingEntity } = require('../crm-response');
 
 const getCompany = async companyId => {
   const company = await companiesConnector.getCompany(companyId);
@@ -18,13 +23,31 @@ const getCompanyAddresses = async companyId => {
   return companyAddresses.map(mappers.companyAddress.crmToModel);
 };
 
+/**
+ * Attempts to create a company
+ * If the company already exists (e.g. conflicting companies house number)
+ * then the existing model is returned
+ *
+ * @param {Company}
+ * @return {Promise<Company>}
+ */
 const createCompany = async companyModel => {
-  const company = await companiesConnector.createCompany(mappers.company.modelToCrm(companyModel));
+  let company;
+  try {
+    company = await companiesConnector.createCompany(mappers.company.modelToCrm(companyModel));
+  } catch (err) {
+    company = getExistingEntity(err);
+  }
   return mappers.company.crmToModel(company);
 };
 
 const createCompanyAddress = async (companyId, companyAddressData) => {
-  const companyAddress = await companiesConnector.createCompanyAddress(companyId, companyAddressData);
+  let companyAddress;
+  try {
+    companyAddress = await companiesConnector.createCompanyAddress(companyId, companyAddressData);
+  } catch (err) {
+    companyAddress = getExistingEntity(err);
+  }
   return mappers.companyAddress.crmToModel(companyAddress);
 };
 
@@ -49,6 +72,26 @@ const deleteCompanyAddress = companyAddress => companiesConnector.deleteCompanyA
 
 const deleteCompanyContact = companyContact => companiesConnector.deleteCompanyContact(companyContact.companyId, companyContact.id);
 
+/**
+ * Gets company invoice accounts
+ * @param {String} companyId
+ * @param {String} [regionId]
+ * @return {Promise<Array>}
+ */
+const getCompanyInvoiceAccounts = async (companyId, regionId) => {
+  let data = await companiesConnector.getInvoiceAccountsByCompanyId(companyId);
+
+  // Filter by region if specified
+  if (regionId) {
+    const region = await regionsService.getRegion(regionId);
+    data = data.filter(row =>
+      row.invoiceAccountNumber.startsWith(region.code)
+    );
+  }
+
+  return data.map(invoiceAccountMapper.crmToModel);
+};
+
 exports.getCompany = getCompany;
 exports.getCompanyAddresses = getCompanyAddresses;
 exports.createCompany = createCompany;
@@ -59,3 +102,4 @@ exports.deleteCompany = deleteCompany;
 exports.deleteCompanyAddress = deleteCompanyAddress;
 exports.deleteCompanyContact = deleteCompanyContact;
 exports.searchCompaniesByName = searchCompaniesByName;
+exports.getCompanyInvoiceAccounts = getCompanyInvoiceAccounts;
