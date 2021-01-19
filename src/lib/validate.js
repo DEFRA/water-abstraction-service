@@ -63,7 +63,7 @@ const validate = async (decoded, request) => {
       return createResponse(false, {
         errorMessage: `User ${userId} not internal`
       });
-    };
+    }
 
     credentials = {
       id: user.user_id,
