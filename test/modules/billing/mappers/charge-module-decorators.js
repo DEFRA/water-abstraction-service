@@ -3,6 +3,7 @@
 const {
   experiment,
   test,
+  before,
   beforeEach,
   afterEach
 } = exports.lab = require('@hapi/lab').script();
@@ -23,8 +24,7 @@ const DateRange = require('../../../../src/lib/models/date-range');
 const Totals = require('../../../../src/lib/models/totals');
 
 const chargeModuleDecorators = require('../../../../src/modules/billing/mappers/charge-module-decorators');
-const chargeModuleTransactionConnector = require('../../../../src/lib/connectors/charge-module/transactions');
-const { TransactionStatusError } = require('../../../../src/modules/billing/lib/errors');
+const { TransactionStatusError, InvoiceNumberError } = require('../../../../src/modules/billing/lib/errors');
 
 const createInvoiceLicence = (transactions) => {
   const licence = new Licence();
@@ -125,32 +125,73 @@ const createCMResponse = () => ({
   }
 });
 
+const secondCustomer = {
+  customerReference: 'B12345678A',
+  summaryByFinancialYear: [{
+    financialYear: 2018,
+    creditLineCount: 1,
+    creditLineValue: 789,
+    debitLineCount: 0,
+    debitLineValue: 789,
+    netTotal: -789,
+    deminimis: true,
+    transactions: [{
+      id: '00000000-2222-0000-0000-000000002019',
+      licenceNumber: '02/345/ABC',
+      chargeValue: -789,
+      deminimis: true,
+      minimumChargeAdjustment: false
+    }]
+  }, {
+    financialYear: 2019,
+    creditLineCount: 0,
+    creditLineValue: 0,
+    debitLineCount: 1,
+    debitLineValue: 1230,
+    netTotal: 1230,
+    deminimis: false,
+    transactions: [{
+      id: '00000000-2222-0000-0000-000000002020',
+      licenceNumber: '02/345/ABC',
+      chargeValue: 1230,
+      deminimis: false,
+      minimumChargeAdjustment: false
+    }]
+  }]
+};
+
 const cmMinimumChargeTransaction = {
   id: '00000000-0000-0000-1111-000000002020',
   licenceNumber: '01/123/ABC',
   chargeValue: 270,
   deminimis: false,
-  minimumChargeAdjustment: true
+  minimumChargeAdjustment: true,
+  transactionReference: null
 };
 
 experiment('modules/billing/mappers/charge-module-decorators', () => {
-  let batch, cmResponse;
+  let batch, cmResponse, cmTransactions;
 
   beforeEach(async () => {
-    sandbox.stub(chargeModuleTransactionConnector, 'get').resolves({
-      transaction: {
-        ...cmMinimumChargeTransaction,
-        periodStart: '2020-04-01',
-        periodEnd: '2021-03-31',
-        lineDescription: 'minimum charge transaction',
-        credit: false,
-        compensationCharge: false,
-        newLicence: true
-      }
-    });
-
     batch = createBatch();
     cmResponse = createCMResponse();
+    cmTransactions = {
+      data: {
+        transactions: [{
+          id: '00000000-0000-0000-0000-000000002019',
+          customerReference: 'A12345678A',
+          periodStart: '01-APR-2018',
+          periodEnd: '31-MAR-2019',
+          transactionReference: 'AAI1000001'
+        }, {
+          id: '00000000-0000-0000-0000-000000002020',
+          customerReference: 'A12345678A',
+          periodStart: '01-MAY-2019',
+          periodEnd: '31-MAR-2020',
+          transactionReference: 'AAI1000002'
+        }]
+      }
+    };
   });
 
   afterEach(() => sandbox.restore());
@@ -159,7 +200,7 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
     let updatedBatch;
 
     beforeEach(async () => {
-      updatedBatch = await chargeModuleDecorators.decorateBatch(batch, cmResponse);
+      updatedBatch = await chargeModuleDecorators.decorateBatch(batch, cmResponse, cmTransactions);
     });
 
     test('the batch has totals', async () => {
@@ -213,11 +254,38 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
       expect(transaction.isMinimumCharge).to.be.false();
     });
 
+    test('invoice numbers are mapped when available', () => {
+      expect(updatedBatch.invoices[0].invoiceNumber).to.equal('AAI1000001');
+      expect(updatedBatch.invoices[1].invoiceNumber).to.equal('AAI1000002');
+    });
+
+    experiment('when there are multiple invoice numbers for a given financial year', () => {
+      beforeEach(() => {
+        cmResponse.billRun.customers[0].summaryByFinancialYear[1].transactions.push(cmMinimumChargeTransaction);
+        cmTransactions.data.transactions.push({
+          ...cmMinimumChargeTransaction,
+          customerReference: 'A12345678A',
+          periodStart: '01-APR-2019',
+          periodEnd: '31-MAR-2020',
+          transactionReference: 'AAI1000003'
+        });
+      });
+
+      test('throws InvoiceNumberError', async () => {
+        try {
+          await chargeModuleDecorators.decorateBatch(batch, cmResponse, cmTransactions);
+        } catch (err) {
+          expect(err).to.be.instanceof(InvoiceNumberError);
+          expect(err.message).to.equal('Invoice account A12345678A has multiple invoice numbers for financial year: 2019');
+        }
+      });
+    });
+
     // Minimum charge transactions are created in the CM and do not exist
     // in the service. They are returned from the CM as "extra" transactions
-    test('minimum charge transactions are mapped correctly', async () => {
+    test('minimum charge transactions are mapped correctly', () => {
       cmResponse.billRun.customers[0].summaryByFinancialYear[1].transactions.push(cmMinimumChargeTransaction);
-      updatedBatch = await chargeModuleDecorators.decorateBatch(batch, cmResponse);
+      updatedBatch = chargeModuleDecorators.decorateBatch(batch, cmResponse);
 
       const [, minChargeTxn] = updatedBatch.invoices[1].invoiceLicences[0].transactions;
       expect(minChargeTxn.value).to.equal(cmMinimumChargeTransaction.chargeValue);
@@ -241,6 +309,162 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
         expect(err).to.be.instanceof(TransactionStatusError);
         expect(err.message).to.equal(`Unexpected Charge Module transaction externalId: ${unexpectedTransaction.id}`);
       }
+    });
+  });
+
+  experiment('._mapCmTransactionsToSummary', () => {
+    let cmResponse, cmTransactions;
+    beforeEach(() => {
+      cmResponse = createCMResponse();
+      cmResponse.billRun.customers.push(secondCustomer);
+      // add min charge transaction to 2019 summary for first customer
+      cmResponse.billRun.customers[0].summaryByFinancialYear[1].transactions.push(cmMinimumChargeTransaction);
+      cmTransactions = {
+        data: {
+          transactions: [{
+            id: '00000000-0000-0000-0000-000000002020',
+            customerReference: 'A12345678A',
+            periodStart: '01-MAY-2019',
+            periodEnd: '31-MAR-2020',
+            transactionReference: 'AAI1000001'
+          }, {
+            id: '00000000-0000-0000-0000-000000002019',
+            customerReference: 'A12345678A',
+            periodStart: '01-APR-2018',
+            periodEnd: '31-MAR-2019',
+            transactionReference: 'AAI1000002'
+          }, {
+            ...cmMinimumChargeTransaction,
+            customerReference: 'A12345678A',
+            periodStart: '01-APR-2019',
+            periodEnd: '31-MAR-2020',
+            transactionReference: null
+          }, {
+            id: '00000000-2222-0000-0000-000000002020',
+            customerReference: 'B12345678A',
+            periodStart: '01-JUN-2019',
+            periodEnd: '31-MAR-2020',
+            transactionReference: 'BAI1000001'
+          }, {
+            id: '00000000-2222-0000-0000-000000002019',
+            customerReference: 'B12345678A',
+            periodStart: '01-JUL-2018',
+            periodEnd: '31-MAR-2019',
+            transactionReference: 'BAI1000002'
+          }]
+        }
+      };
+    });
+
+    experiment('when cmTransactions is an empty object', () => {
+      test('returns customers array from cmResponse object', () => {
+        const result = chargeModuleDecorators._mapCmTransactionsToSummary(cmResponse, {});
+        expect(result).to.equal(cmResponse.billRun.customers);
+      });
+    });
+
+    experiment('maps cmTransactions into cm response customers', () => {
+      let result;
+      beforeEach(() => {
+        result = chargeModuleDecorators._mapCmTransactionsToSummary(cmResponse, cmTransactions);
+      });
+
+      test('result has 2 customers', () => {
+        expect(result).to.have.length(2);
+      });
+
+      experiment('first customer - A12345678A', () => {
+        let customer;
+        before(() => {
+          customer = result.find(customer => customer.customerReference === 'A12345678A');
+        });
+
+        experiment('2019 financial summary', () => {
+          let finYear;
+          before(() => {
+            finYear = customer.summaryByFinancialYear.find(finYear => finYear.financialYear === 2019);
+          });
+
+          test('has 2 transactions', () => {
+            expect(finYear.transactions).to.have.length(2);
+          });
+
+          test('first transaction has expected data', () => {
+            const transaction = finYear.transactions.find(txn => txn.id === '00000000-0000-0000-0000-000000002020');
+            expect(transaction.periodStart).to.equal('01-MAY-2019');
+            expect(transaction.periodEnd).to.equal('31-MAR-2020');
+            expect(transaction.transactionReference).to.equal('AAI1000001');
+          });
+
+          test('second transaction is min charge has expected data', () => {
+            const transaction = finYear.transactions.find(txn => txn.id === '00000000-0000-0000-1111-000000002020');
+            expect(transaction.periodStart).to.equal('01-APR-2019');
+            expect(transaction.periodEnd).to.equal('31-MAR-2020');
+            expect(transaction.transactionReference).to.equal(null);
+          });
+        });
+
+        experiment('2018 financial summary', () => {
+          let finYear;
+          before(() => {
+            finYear = customer.summaryByFinancialYear.find(finYear => finYear.financialYear === 2018);
+          });
+
+          test('has 1 transaction', () => {
+            expect(finYear.transactions).to.have.length(1);
+          });
+
+          test('transaction has expected data', () => {
+            const transaction = finYear.transactions.find(txn => txn.id === '00000000-0000-0000-0000-000000002019');
+            expect(transaction.periodStart).to.equal('01-APR-2018');
+            expect(transaction.periodEnd).to.equal('31-MAR-2019');
+            expect(transaction.transactionReference).to.equal('AAI1000002');
+          });
+        });
+      });
+
+      experiment('second customer - B12345678A', () => {
+        let customer;
+        before(() => {
+          customer = result.find(customer => customer.customerReference === 'B12345678A');
+        });
+
+        experiment('2019 financial summary', () => {
+          let finYear;
+          before(() => {
+            finYear = customer.summaryByFinancialYear.find(finYear => finYear.financialYear === 2019);
+          });
+
+          test('has 1 transaction', () => {
+            expect(finYear.transactions).to.have.length(1);
+          });
+
+          test('transaction has expected data', () => {
+            const transaction = finYear.transactions.find(txn => txn.id === '00000000-2222-0000-0000-000000002020');
+            expect(transaction.periodStart).to.equal('01-JUN-2019');
+            expect(transaction.periodEnd).to.equal('31-MAR-2020');
+            expect(transaction.transactionReference).to.equal('BAI1000001');
+          });
+        });
+
+        experiment('2018 financial summary', () => {
+          let finYear;
+          before(() => {
+            finYear = customer.summaryByFinancialYear.find(finYear => finYear.financialYear === 2018);
+          });
+
+          test('has 1 transaction', () => {
+            expect(finYear.transactions).to.have.length(1);
+          });
+
+          test('transaction has expected data', () => {
+            const transaction = finYear.transactions.find(txn => txn.id === '00000000-2222-0000-0000-000000002019');
+            expect(transaction.periodStart).to.equal('01-JUL-2018');
+            expect(transaction.periodEnd).to.equal('31-MAR-2019');
+            expect(transaction.transactionReference).to.equal('BAI1000002');
+          });
+        });
+      });
     });
   });
 });

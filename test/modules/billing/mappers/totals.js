@@ -89,39 +89,19 @@ experiment('modules/billing/mappers/totals', () => {
 
     experiment('when the customer is present in the bill run summary', () => {
       beforeEach(async () => {
-        result = totalsMapper.chargeModuleBillRunToInvoiceModel(data, INVOICE_ACCOUNT_NUMBER, 2021);
+        result = totalsMapper.chargeModuleBillRunToInvoiceModel(data.billRun.customers[0].summaryByFinancialYear[1]);
       });
 
       test('the result is a Totals instance', async () => {
         expect(result instanceof Totals).to.be.true();
       });
 
-      test('the totals are selected for the correct financial year - the CM financial year is year starting', async () => {
+      test('the totals are mapped correctly', async () => {
         expect(result.creditLineCount).to.equal(2);
         expect(result.creditLineValue).to.equal(-10);
         expect(result.debitLineCount).to.equal(4);
         expect(result.debitLineValue).to.equal(75);
         expect(result.netTotal).to.equal(65);
-      });
-    });
-
-    experiment('when the customer is not present in the bill run summary', () => {
-      beforeEach(async () => {
-        result = totalsMapper.chargeModuleBillRunToInvoiceModel(data, 'not-a-customer');
-      });
-
-      test('the result is null', async () => {
-        expect(result).to.be.null();
-      });
-    });
-
-    experiment('when the financial year is not present in the bill run summary', () => {
-      beforeEach(async () => {
-        result = totalsMapper.chargeModuleBillRunToInvoiceModel(data, INVOICE_ACCOUNT_NUMBER, 2001);
-      });
-
-      test('the result is null', async () => {
-        expect(result).to.be.null();
       });
     });
   });
