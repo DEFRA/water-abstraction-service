@@ -22,6 +22,7 @@ const returnsNotifications = require('./src/modules/returns-notifications');
 const batchNotifications = require('./src/modules/batch-notifications/lib/jobs/init-batch-notifications');
 const db = require('./src/lib/connectors/db');
 const CatboxRedis = require('@hapi/catbox-redis');
+const { validate } = require('./src/lib/validate');
 
 // Notification cron jobs
 require('./src/modules/batch-notifications/cron').scheduleJobs();
@@ -47,7 +48,6 @@ const plugins = [
   require('./src/lib/message-queue').plugin,
   require('./src/lib/message-queue-v2').plugin,
   require('./src/modules/returns/register-subscribers'),
-  require('./src/plugins/internal-calling-user'),
   require('./src/modules/address-search/plugin'),
   require('./src/modules/billing/register-subscribers')
 ];
@@ -101,7 +101,7 @@ const registerServerPlugins = async (server) => {
 const configureServerAuthStrategy = (server) => {
   server.auth.strategy('jwt', 'jwt', {
     ...config.jwt,
-    validate: async (decoded) => ({ isValid: !!decoded.id })
+    validate
   });
   server.auth.default('jwt');
 };
