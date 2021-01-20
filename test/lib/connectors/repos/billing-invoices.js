@@ -166,4 +166,23 @@ experiment('lib/connectors/repos/billing-invoices', () => {
       expect(stub.destroy.called).to.be.true();
     });
   });
+
+  experiment('.update', async () => {
+    const billingInvoiceId = uuid();
+    const changes = { foo: 'bar' };
+
+    beforeEach(async () => {
+      await billingInvoices.update(billingInvoiceId, changes);
+    });
+
+    test('the model is forged with correct params', async () => {
+      expect(BillingInvoice.forge.calledWith({
+        billingInvoiceId
+      })).to.be.true();
+    });
+
+    test('the model is destroyed', async () => {
+      expect(stub.save.calledWith(changes)).to.be.true();
+    });
+  });
 });

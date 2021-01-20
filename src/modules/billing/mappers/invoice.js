@@ -9,25 +9,26 @@ const FinancialYear = require('../../../lib/models/financial-year');
 const invoiceAccount = require('../../../lib/mappers/invoice-account');
 const invoiceLicence = require('./invoice-licence');
 
+const { createMapper } = require('../../../lib/object-mapper');
+const { createModel } = require('../../../lib/mappers/lib/helpers');
+
+const dbToModelMapper = createMapper()
+  .copy(
+    'dateCreated'
+  )
+  .map('billingInvoiceId').to('id')
+  .map('invoiceAccountId').to('invoiceAccount', invoiceAccountId => new InvoiceAccount(invoiceAccountId))
+  .map('invoiceAccountNumber').to('invoiceAccount.accountNumber')
+  .map('billingInvoiceLicences').to('invoiceLicences', billingInvoiceLicences => billingInvoiceLicences.map(invoiceLicence.dbToModel))
+  .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding));
+
 /**
- * @param {Object} row - camel cased
+ * Converts DB representation to a Invoice service model
+ * @param {Object} row
  * @return {Invoice}
  */
-const dbToModel = row => {
-  const invoice = new Invoice(row.billingInvoiceId);
-  invoice.dateCreated = row.dateCreated;
-
-  invoice.invoiceAccount = new InvoiceAccount(row.invoiceAccountId);
-  invoice.invoiceAccount.accountNumber = row.invoiceAccountNumber;
-
-  if (row.billingInvoiceLicences) {
-    invoice.invoiceLicences = row.billingInvoiceLicences.map(invoiceLicence.dbToModel);
-  }
-
-  invoice.financialYear = new FinancialYear(row.financialYearEnding);
-
-  return invoice;
-};
+const dbToModel = row =>
+  createModel(Invoice, row, dbToModelMapper);
 
 const mapAddress = invoice =>
   invoice.address ? omit(invoice.address.toJSON(), 'id') : {};
@@ -38,13 +39,20 @@ const mapAddress = invoice =>
  * @param {Invoice} invoice
  * @return {Object}
  */
-const modelToDb = (batch, invoice) => ({
-  invoiceAccountId: invoice.invoiceAccount.id,
-  invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
-  address: mapAddress(invoice),
-  billingBatchId: batch.id,
-  financialYearEnding: invoice.financialYear.endYear
-});
+const modelToDb = (batch, invoice) => {
+  const { totals } = invoice;
+
+  return {
+    invoiceAccountId: invoice.invoiceAccount.id,
+    invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
+    address: mapAddress(invoice),
+    billingBatchId: batch.id,
+    financialYearEnding: invoice.financialYear.endYear,
+    invoiceNumber: invoice.invoiceNumber || null,
+    netAmount: totals ? totals.netTotal : null,
+    isCredit: totals ? totals.netTotal < 0 : null
+  };
+};
 
 const crmToModel = row => {
   const invoice = new Invoice();

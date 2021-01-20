@@ -31,8 +31,11 @@ const chargeModuleDecorators = require('../mappers/charge-module-decorators');
  * @param {String} id - batch ID GUID
  * @return {Promise<Batch>}
  */
-const getBatchById = async id => {
-  const row = await newRepos.billingBatches.findOne(id);
+const getBatchById = async (id, includeInvoices = false) => {
+  const method = includeInvoices
+    ? newRepos.billingBatches.findOneWithInvoices
+    : newRepos.billingBatches.findOne;
+  const row = await method(id);
   return row ? mappers.batch.dbToModel(row) : null;
 };
 
@@ -472,6 +475,26 @@ const deleteAllBillingData = async () => {
   return newRepos.billingBatches.deleteAllBillingData();
 };
 
+/**
+ * Updates batch invoices with invoice numbers and totals
+ * @return {Promise} ??
+ */
+const persistInvoiceNumbersAndTotals = async batch => {
+  const { externalId } = batch;
+
+  const [billRunSummary, billRunTransactions] = await Promise.all([
+    chargeModuleBillRunConnector.get(externalId),
+    chargeModuleBillRunConnector.getTransactions(externalId)
+  ]);
+
+  // call CM decorators with summary, transactions and batch
+  const updatedBatch = chargeModuleDecorators.decorateBatch(batch, billRunSummary, billRunTransactions);
+
+  // persist result from CM decorators
+  const tasks = updatedBatch.invoices.map(invoiceService.saveInvoiceNumbersAndTotals);
+  return Promise.all(tasks);
+};
+
 exports.approveBatch = approveBatch;
 exports.decorateBatchWithTotals = decorateBatchWithTotals;
 exports.deleteBatch = deleteBatch;
@@ -495,3 +518,4 @@ exports.approveTptBatchReview = approveTptBatchReview;
 exports.getSentTptBatchesForFinancialYearAndRegion = getSentTptBatchesForFinancialYearAndRegion;
 exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteAllBillingData = deleteAllBillingData;
+exports.persistInvoiceNumbersAndTotals = persistInvoiceNumbersAndTotals;

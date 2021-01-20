@@ -1,9 +1,13 @@
-const { find } = require('lodash');
+'use strict';
+
 const Totals = require('../../../lib/models/totals');
 
-const chargeModuleBillRunToBatchModel = data => {
-  const totals = new Totals();
-  return totals.pickFrom(data, [
+const { createMapper } = require('../../../lib/object-mapper');
+const { createModel } = require('../../../lib/mappers/lib/helpers');
+const { partial } = require('lodash');
+
+const cmBillRunToBatchMapper = createMapper()
+  .copy(
     'creditNoteCount',
     'creditNoteValue',
     'invoiceCount',
@@ -13,35 +17,22 @@ const chargeModuleBillRunToBatchModel = data => {
     'debitLineCount',
     'debitLineValue',
     'netTotal'
-  ]);
-};
+  );
 
 /**
- * Sums all transaction summaries for the supplied invoice account
- * number and returns as a Totals instance
- * @param {Object} cmResponse - response from Charge Module bill run call
- * @param {String} invoiceAccountNumber
- * @param {Number} financialYearEnding
- * @return {Totals} - totals for the supplied invoice account
- */
-const chargeModuleBillRunToInvoiceModel = (cmResponse, invoiceAccountNumber, financialYearEnding) => {
-  const customer = find(cmResponse.billRun.customers, { customerReference: invoiceAccountNumber });
-  if (!customer) {
-    return null;
-  }
-  const finYear = find(customer.summaryByFinancialYear, { financialYear: financialYearEnding - 1 });
-  if (!finYear) {
-    return null;
-  }
-  const totals = new Totals();
-  return totals.pickFrom(finYear, [
+   * Sums all transaction summaries for the supplied invoice account
+   * number and returns as a Totals instance
+   */
+const cmBillRunToInvoiceMapper = createMapper()
+  .copy(
     'creditLineCount',
     'creditLineValue',
     'debitLineCount',
     'debitLineValue',
     'netTotal'
-  ]);
-};
+  );
+
+const cmBillRunToTotals = (mapper, data) => createModel(Totals, data, mapper);
 
 /**
  * Maps a partial set of fields in water.billing_batches table to a Totals model
@@ -57,6 +48,6 @@ const dbToModel = row => {
   return totals;
 };
 
-exports.chargeModuleBillRunToBatchModel = chargeModuleBillRunToBatchModel;
-exports.chargeModuleBillRunToInvoiceModel = chargeModuleBillRunToInvoiceModel;
+exports.chargeModuleBillRunToBatchModel = partial(cmBillRunToTotals, cmBillRunToBatchMapper);
+exports.chargeModuleBillRunToInvoiceModel = partial(cmBillRunToTotals, cmBillRunToInvoiceMapper);
 exports.dbToModel = dbToModel;

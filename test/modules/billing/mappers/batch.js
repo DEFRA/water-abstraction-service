@@ -121,6 +121,7 @@ experiment('modules/billing/mappers/batch', () => {
           ...data.batch,
           billingInvoices: [{
             billingInvoiceId: uuid(),
+            invoiceAccountId: uuid(),
             invoiceAccountNumber: 'A12345678A'
           }]
         };

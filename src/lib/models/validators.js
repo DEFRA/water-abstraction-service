@@ -31,6 +31,7 @@ const VALID_NEGATIVE_INTEGER = VALID_INTEGER.negative();
 const VALID_EMAIL_ADDRESS = Joi.string().email();
 const VALID_RETURN_ID = Joi.string().regex(returnIDRegex);
 const VALID_OBJECT = Joi.object();
+const VALID_ARRAY = Joi.array();
 
 const assertIsArrayOfType = (values, Type) => {
   hoek.assert(isArray(values), 'Array expected');
@@ -90,6 +91,7 @@ const assertIsNullableBoolean = value => assert(value, Joi.boolean().required().
 const assertNullableQuantityWithMaximum = (value, max) => assert(value, VALID_NULLABLE_QUANTITY.max(max));
 const assertReturnId = value => assert(value, VALID_RETURN_ID);
 const assertObject = value => assert(value, VALID_OBJECT);
+const assertArray = value => assert(value, VALID_ARRAY);
 const assertIsNullableArrayOfLicenceNumbers = value => assert(value, Joi.array().allow(null).items(VALID_LICENCE_NUMBER.optional()));
 
 exports.assertIsBoolean = assertIsBoolean;
@@ -130,4 +132,5 @@ exports.assertIsNullableBoolean = assertIsNullableBoolean;
 exports.assertNullableQuantityWithMaximum = assertNullableQuantityWithMaximum;
 exports.assertReturnId = assertReturnId;
 exports.assertObject = assertObject;
+exports.assertArray = assertArray;
 exports.assertIsNullableArrayOfLicenceNumbers = assertIsNullableArrayOfLicenceNumbers;

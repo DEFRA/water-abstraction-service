@@ -196,6 +196,25 @@ experiment('lib/models/invoice', () => {
     });
   });
 
+  experiment('.invoiceNumber', () => {
+    test('can be set to a string', async () => {
+      invoice.invoiceNumber = 'ABC123';
+      expect(invoice.invoiceNumber).to.equal('ABC123');
+    });
+
+    test('can be set to null', async () => {
+      invoice.invoiceNumber = null;
+      expect(invoice.invoiceNumber).to.equal(null);
+    });
+
+    test('throws an error if set to a non-string', async () => {
+      const func = () => {
+        invoice.invoiceNumber = 1234;
+      };
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.hasTransactionErrors', () => {
     test('is false when no underlying transactions have errors', async () => {
       const invoice = new Invoice().fromHash({

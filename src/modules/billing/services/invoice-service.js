@@ -34,6 +34,15 @@ const saveInvoiceToDB = async (batch, invoice) => {
   return repos.billingInvoices.upsert(data);
 };
 
+const saveInvoiceNumbersAndTotals = async invoice => {
+  const changes = {
+    invoiceNumber: invoice.invoiceNumber,
+    netAmount: invoice.totals.netTotal,
+    isCredit: invoice.totals.netTotal < 0
+  };
+  return repos.billingInvoices.update(invoice.id, changes);
+};
+
 /**
  * Loads CRM invoice account data into context
  * @param {Object} context
@@ -141,7 +150,7 @@ const decorateInvoiceWithCRMData = (invoice, context) => {
 const mapInvoice = async (billingInvoice, context) => {
   const invoice = mappers.invoice.dbToModel(billingInvoice);
   decorateInvoiceWithCRMData(invoice, context);
-  await chargeModuleDecorators.decorateInvoice(invoice, context.cmResponse);
+  chargeModuleDecorators.decorateInvoice(invoice, context.cmResponse.billRun.customers);
   return invoice;
 };
 
@@ -196,3 +205,4 @@ exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;
+exports.saveInvoiceNumbersAndTotals = saveInvoiceNumbersAndTotals;
