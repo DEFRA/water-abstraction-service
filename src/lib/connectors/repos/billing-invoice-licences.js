@@ -3,6 +3,7 @@
 const { bookshelf, BillingInvoiceLicence } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoice-licences');
+const { paginatedEnvelope } = require('./lib/envelope');
 
 const withRelated = [
   'billingInvoice',
@@ -22,6 +23,29 @@ const findOne = async id => {
       withRelated
     });
   return model ? model.toJSON() : null;
+};
+
+/**
+ * Gets BillingInvoiceLicence and related models for a licence by licenceId
+ * where the bill number is not null
+ * @param {String} licenceId
+ * @param {number} page
+ * @param {number} perPage
+ * @return {Promise<Object>}
+ */
+const findAll = async (licenceId, page = 1, perPage = 10) => {
+  const result = await BillingInvoiceLicence
+    .collection()
+    .where({
+      licence_id: licenceId
+    })
+    .orderBy('date_created', 'DESC')
+    .fetchPage({
+      pageSize: perPage,
+      page: page,
+      withRelated
+    });
+  return paginatedEnvelope(result);
 };
 
 /**
@@ -67,9 +91,9 @@ const deleteRecord = billingInvoiceLicenceId => BillingInvoiceLicence
   .destroy();
 
 /**
-* Deletes all billing invoice licences for given batch
-* @param {String} batchId - guid
-*/
+ * Deletes all billing invoice licences for given batch
+ * @param {String} batchId - guid
+ */
 const deleteByBatchId = async batchId => bookshelf.knex.raw(queries.deleteByBatchId, { batchId });
 
 /*
@@ -82,6 +106,7 @@ const deleteByInvoiceId = billingInvoiceId => BillingInvoiceLicence
   .destroy();
 
 exports.findOne = findOne;
+exports.findAll = findAll;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOneInvoiceLicenceWithTransactions = findOneInvoiceLicenceWithTransactions;
 exports.upsert = upsert;

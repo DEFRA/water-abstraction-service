@@ -134,6 +134,16 @@ const getLicencesWithoutChargeVersions = async () => {
   return licences.map(licenceMapper.dbToModel);
 };
 
+/**
+ * Retrieves the invoices associated with a licence
+ * Used in the UI bills tab
+ * @param {String} licenceId
+ * @param {number} page
+ * @param {number} perPage
+ * @return {Promise<Licence>}
+ */
+const getLicenceInvoices = (licenceId, page = 1, perPage = 10) => repos.billingInvoiceLicences.findAll(licenceId, page, perPage);
+
 exports.getLicenceById = getLicenceById;
 exports.getLicencesByLicenceRefs = getLicencesByLicenceRefs;
 exports.getLicenceVersionById = getLicenceVersionById;
@@ -145,3 +155,4 @@ exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementary
 exports.updateIncludeInSupplementaryBillingStatusForUnsentBatch = updateIncludeInSupplementaryBillingStatusForUnsentBatch;
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch;
 exports.flagForSupplementaryBilling = flagForSupplementaryBilling;
+exports.getLicenceInvoices = getLicenceInvoices;

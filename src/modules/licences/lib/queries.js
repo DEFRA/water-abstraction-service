@@ -22,6 +22,27 @@ const getNotificationsForLicence = async (licenceNumber) => {
   return rows;
 };
 
+/**
+ * Gets invoices associated to a licence
+ * Used to display the Bills tab in the UI
+ * @param  {String} licenceId
+ * @param  {Int} startingPosition
+ * @param  {Int} limit
+ * @return {Promise}
+ */
+const getInvoicesForLicence = async (licenceId, startingPosition = 0, limit = 10) => {
+  const query = `
+  SELECT * from water.billing_invoices bi join 
+  water.billing_invoice_licences bil on bil.billing_invoice_id = bi.billing_invoice_id 
+  limit $3;
+  `;
+
+  const { rows } = await pool.query(query, [licenceId]);
+
+  return rows;
+};
+
 module.exports = {
-  getNotificationsForLicence
+  getNotificationsForLicence,
+  getInvoicesForLicence
 };
