@@ -65,11 +65,12 @@ experiment('modules/licences/routes/agreements', () => {
 
   experiment('.getAgreementsForLicence', () => {
     let server, request;
+    const validId = uuid();
 
     beforeEach(async () => {
       request = {
         method: 'GET',
-        url: `/water/1.0/licences/${uuid()}/agreements`,
+        url: `/water/1.0/licences/${validId}/agreements`,
         auth: {
           strategy: 'simple',
           credentials: {
@@ -80,38 +81,21 @@ experiment('modules/licences/routes/agreements', () => {
       server = await testHelpers.createServerForRoute(routes.getAgreementsForLicence, true);
     });
 
-    experiment('when the licence is found', () => {
-      beforeEach(async () => {
-        licencesService.getLicenceById.resolves(new Licence(uuid()));
-      });
-
-      test('validates the licence id must be a uuid', async () => {
-        request.url = '/water/1.0/licences/not-a-valid-id/agreements';
-        const output = await server.inject(request);
-        expect(output.statusCode).to.equal(400);
-      });
-
-      test('allows a valid uuid for the licence id', async () => {
-        const output = await server.inject(request);
-        expect(output.statusCode).to.equal(200);
-      });
-
-      test('rejects with 403 if unsufficient scope', async () => {
-        request.auth.credentials.scope = ['invalid-scope'];
-        const output = await server.inject(request);
-        expect(output.statusCode).to.equal(403);
-      });
+    test('responds with a 200 status code when the request is valid', async () => {
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(200);
     });
 
-    experiment('when the licence is not found', () => {
-      beforeEach(async () => {
-        licencesService.getLicenceById.resolves(null);
-      });
+    test('responds with a 403 when the request has insufficient scope', async () => {
+      request.auth.credentials.scope = [];
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(403);
+    });
 
-      test('resolves with a 404 status', async () => {
-        const output = await server.inject(request);
-        expect(output.statusCode).to.equal(404);
-      });
+    test('responds with a 400 when the id is not a valid guid', async () => {
+      request.url = request.url.replace(validId, 'not-a-guid');
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
     });
   });
 
@@ -235,18 +219,6 @@ experiment('modules/licences/routes/agreements', () => {
         delete request.payload.dateSigned;
         const response = await server.inject(request);
         expect(response.statusCode).to.equal(200);
-      });
-    });
-
-    experiment('when the licence is not found', () => {
-      beforeEach(async () => {
-        licencesService.getLicenceById.resolves();
-      });
-
-      test('the respons is 404', async () => {
-        delete request.payload.dateSigned;
-        const response = await server.inject(request);
-        expect(response.statusCode).to.equal(404);
       });
     });
   });
