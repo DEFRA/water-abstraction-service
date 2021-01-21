@@ -224,13 +224,12 @@ experiment('lib/connectors/repos/licences.js', () => {
 
   experiment('.findWithoutChargeVersions', () => {
     beforeEach(async () => {
-      await licencesRepo.findWithoutChargeVersions('2000-01-01');
+      await licencesRepo.findWithoutChargeVersions();
     });
 
-    test('calls raw.multiRow with correct query and params', async () => {
-      const [query, params] = raw.multiRow.lastCall.args;
+    test('calls raw.multiRow with correct query', async () => {
+      const [query] = raw.multiRow.lastCall.args;
       expect(query).to.equal(licenceQueries.getLicencesWithoutChargeVersions);
-      expect(params).to.equal({ startDate: '2000-01-01' });
     });
   });
 });
