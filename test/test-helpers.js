@@ -23,12 +23,17 @@ const createServerForRoute = async (route, isAuth = false) => {
     server.auth.default('simple');
   }
 
+  // Clone test route and attach dummy handler
   const testRoute = cloneDeep(route);
   testRoute.handler = async () => 'ok';
-  if (testRoute.options) {
-    testRoute.options.pre = [];
+
+  // Strip pre-handlers
+  const optionsKey = 'options' in testRoute ? 'options' : 'config';
+  if (testRoute[optionsKey]) {
+    testRoute[optionsKey].pre = [];
   }
 
+  // Register route
   server.route(testRoute);
 
   return server;
