@@ -1,6 +1,8 @@
 const Joi = require('@hapi/joi');
 const promisePoller = require('promise-poller').default;
 
+const { ROLES } = require('../../../src/lib/roles');
+
 const server = require('../../../index');
 
 const batches = require('./batches');
@@ -44,6 +46,7 @@ const schema = {
  * @return {Promise<Object>}
  */
 const createCRMChargeVersionData = async chargeVersion => {
+  console.log('Create charge version', chargeVersion);
   const company = await crm.createCompany(chargeVersion.company);
   const invoiceAccount = await crm.createInvoiceAccount(
     chargeVersion.invoiceAccount
@@ -117,6 +120,7 @@ const runScenario = async (scenario, batchType, financialYearEnding = 2020, isSu
     auth: {
       strategy: 'jwt',
       credentials: {
+        scope: [ROLES.billing]
       }
     },
     method: 'POST',
@@ -171,12 +175,13 @@ const approveTwoPartTariffBatch = async (batchId) => {
     auth: {
       strategy: 'jwt',
       credentials: {
+        scope: [ROLES.billing],
+        id: 0,
+        email: 'mail@example.com'
       }
     },
     method: 'POST',
-    url: `/water/1.0/billing/batches/${batchId}/approve-review`,
-    headers: { 'defra-internal-user-id': 19 }
-
+    url: `/water/1.0/billing/batches/${batchId}/approve-review`
   });
 
   return getBatchWhenProcessed(batchId);
