@@ -5,7 +5,7 @@ const Joi = require('@hapi/joi');
 const controller = require('../controllers/invoices');
 
 module.exports = {
-  getChargeVersionsByLicence: {
+  getLicenceInvoices: {
     method: 'GET',
     path: '/water/1.0/licences/{licenceId}/invoices',
     handler: controller.getLicenceInvoices,

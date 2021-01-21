@@ -3,7 +3,7 @@
 const { bookshelf, BillingInvoiceLicence } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoice-licences');
-const { paginatedEnvelope } = require('./lib/envelope');
+const paginationHelper = require('./lib/envelope');
 
 const withRelated = [
   'billingInvoice',
@@ -45,7 +45,7 @@ const findAll = async (licenceId, page = 1, perPage = 10) => {
       page: page,
       withRelated
     });
-  return paginatedEnvelope(result);
+  return paginationHelper.paginatedEnvelope(result);
 };
 
 /**
