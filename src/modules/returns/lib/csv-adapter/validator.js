@@ -169,7 +169,7 @@ const validateReturnReference = licence => {
 
 const isValidBooleanOrEmpty = (licence, licenceKey, errorKey = licenceKey) => {
   const { value, line } = licence[licenceKey];
-  const isValid = ['y', 'n', ''].includes(value.toLowerCase());
+  const isValid = ['y', 'n', 'yes', 'no', ''].includes(value.toLowerCase().trim());
 
   if (!isValid) {
     return createError(errorMessages[errorKey], line);

@@ -11,7 +11,6 @@ const uuid = require('uuid/v4');
 
 const sandbox = require('sinon').createSandbox();
 
-const applicationConfig = require('../../../config');
 const licencesService = require('../../../src/lib/services/licences');
 const repos = require('../../../src/lib/connectors/repos');
 
@@ -330,11 +329,6 @@ experiment('src/lib/services/licences', () => {
     beforeEach(async () => {
       repos.licences.findWithoutChargeVersions.resolves([data.dbRow]);
       results = await licencesService.getLicencesWithoutChargeVersions();
-    });
-
-    test('uses passes the configurable start date to the repo', async () => {
-      const [startDate] = repos.licences.findWithoutChargeVersions.lastCall.args;
-      expect(startDate).to.equal(applicationConfig.licences.withChargeVersionsStartDate);
     });
 
     test('returns the results as Licence models', async () => {
