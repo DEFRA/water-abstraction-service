@@ -7,9 +7,7 @@ const getLicenceInvoices = async request => {
   const { licenceId } = request.params;
   const { page, perPage } = request.query;
   try {
-    const licenceInvoices = await licencesService.getLicenceInvoices(licenceId, page, perPage);
-
-    return licenceInvoices;
+    return licencesService.getLicenceInvoices(licenceId, page, perPage);
   } catch (error) {
     logger.error('Failed to get bills for licence', error, { licenceId });
     return Boom.boomify(error);
