@@ -41,11 +41,13 @@ experiment('modules/licences/controllers/invoices', () => {
 
     experiment('when request is valid', () => {
       beforeEach(async () => {
-        licenceService.getLicenceInvoices.resolves([]);
+        await licenceService.getLicenceInvoices.resolves([]);
 
         result = await invoicesController.getLicenceInvoices(request);
       });
-
+      afterEach(() => {
+        sandbox.restore();
+      });
       test('calls the licences service with the correct params', async () => {
         const [id] = licenceService.getLicenceInvoices.lastCall.args;
         expect(id).to.equal(licenceId);
@@ -54,9 +56,12 @@ experiment('modules/licences/controllers/invoices', () => {
 
     experiment('when request is not valid', () => {
       beforeEach(async () => {
-        licenceService.getLicenceInvoices.rejects('some error');
+        await licenceService.getLicenceInvoices.throws('some error');
 
         result = await invoicesController.getLicenceInvoices(request);
+      });
+      afterEach(() => {
+        sandbox.restore();
       });
       test('calls the logger', () => {
         expect(logger.error.called).to.be.true();
