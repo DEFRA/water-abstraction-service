@@ -197,10 +197,6 @@ module.exports = {
     lazyConnect: isLab
   },
 
-  licences: {
-    withChargeVersionsStartDate: '2020-01-01'
-  },
-
   featureToggles: {
     deleteAllBillingData: !isProductionLike,
     swagger: !isProductionLike
