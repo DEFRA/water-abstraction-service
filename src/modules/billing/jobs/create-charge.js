@@ -129,7 +129,7 @@ const onFailedHandler = async (job, err) => {
   if (helpers.isFinalAttempt(job)) {
     try {
       logger.error(`Transaction with id ${transactionId} not generated in CM after ${job.attemptsMade} attempts, marking batch as errored ${batchId}`);
-      await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToPrepareTransactions);
+      await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToCreateCharge);
     } catch (error) {
       logger.error(`Unable to set batch status ${batchId}`, error);
     }
