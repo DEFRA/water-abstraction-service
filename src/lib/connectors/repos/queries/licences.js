@@ -49,8 +49,7 @@ const getLicencesWithoutChargeVersions = `
       on l.licence_ref = cv.licence_ref
     left join water.charge_version_workflows cvwf
       on l.licence_id = cvwf.licence_id
-  where l.start_date >= :startDate
-  and cv.licence_ref is null
+  where cv.licence_ref is null
   and cvwf.charge_version_workflow_id is null
   and lv.status in ('superseded', 'current');
 `;

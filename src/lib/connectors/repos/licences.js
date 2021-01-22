@@ -110,10 +110,8 @@ const updateIncludeInSupplementaryBillingStatusForBatch = (batchId, from, to) =>
     .raw(queries.updateIncludeInSupplementaryBillingStatusForBatch, params);
 };
 
-const findWithoutChargeVersions = startDate =>
-  raw.multiRow(queries.getLicencesWithoutChargeVersions, {
-    startDate
-  });
+const findWithoutChargeVersions = () =>
+  raw.multiRow(queries.getLicencesWithoutChargeVersions);
 
 exports.create = create;
 exports.deleteTest = deleteTest;

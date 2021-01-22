@@ -18,6 +18,9 @@ const getBatches = {
         page: Joi.number().integer().optional(),
         perPage: Joi.number().integer().optional()
       }
+    },
+    auth: {
+      scope: [billing]
     }
   }
 };
@@ -35,6 +38,9 @@ const postCreateBatch = {
         financialYearEnding: Joi.number().required(),
         isSummer: Joi.boolean().default(false)
       }
+    },
+    auth: {
+      scope: [billing]
     }
   }
 };
@@ -52,6 +58,9 @@ const getBatch = {
         totals: Joi.boolean().truthy('1').falsy('0').default(false)
       }
     },
+    auth: {
+      scope: [billing]
+    },
     pre: [
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
@@ -68,6 +77,9 @@ const getBatchInvoices = {
         batchId: Joi.string().uuid().required()
       }
     },
+    auth: {
+      scope: [billing]
+    },
     pre: [
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
@@ -83,6 +95,9 @@ const getBatchInvoicesDetails = {
       params: {
         batchId: Joi.string().uuid().required()
       }
+    },
+    auth: {
+      scope: [billing]
     },
     pre: [
       { method: preHandlers.loadBatch, assign: 'batch' }
@@ -101,6 +116,9 @@ const getBatchInvoiceDetail = {
         invoiceId: Joi.string().uuid().required()
       }
     },
+    auth: {
+      scope: [billing]
+    },
     pre: [
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
@@ -118,6 +136,9 @@ const deleteBatchInvoice = {
         invoiceId: Joi.string().uuid().required()
       }
     },
+    auth: {
+      scope: [billing]
+    },
     pre: [
       { method: preHandlers.loadBatch, assign: 'batch' }
     ]
@@ -132,10 +153,10 @@ const deleteBatch = {
     validate: {
       params: {
         batchId: Joi.string().uuid().required()
-      },
-      headers: async values => {
-        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
       }
+    },
+    auth: {
+      scope: [billing]
     },
     pre: [
       { method: preHandlers.loadBatch, assign: 'batch' }
@@ -151,10 +172,10 @@ const postApproveBatch = {
     validate: {
       params: {
         batchId: Joi.string().uuid().required()
-      },
-      headers: async values => {
-        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
       }
+    },
+    auth: {
+      scope: [billing]
     },
     pre: [
       { method: preHandlers.loadBatch, assign: 'batch' }
@@ -171,6 +192,9 @@ const getInvoiceLicence = {
       params: {
         invoiceLicenceId: Joi.string().uuid().required()
       }
+    },
+    auth: {
+      scope: [billing]
     }
   }
 };
@@ -183,10 +207,10 @@ const postApproveReviewBatch = {
     validate: {
       params: {
         batchId: Joi.string().uuid().required()
-      },
-      headers: async values => {
-        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
       }
+    },
+    auth: {
+      scope: [billing]
     },
     pre: [
       { method: preHandlers.loadBatch, assign: 'batch' }

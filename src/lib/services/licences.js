@@ -1,6 +1,5 @@
 'use strict';
 
-const config = require('../../../config');
 const repos = require('../connectors/repos');
 const licenceMapper = require('../mappers/licence');
 const invoiceAccountsMapper = require('../mappers/invoice-account');
@@ -130,7 +129,7 @@ const flagForSupplementaryBilling = licenceId =>
   repos.licences.update(licenceId, { includeInSupplementaryBilling: INCLUDE_IN_SUPPLEMENTARY_BILLING.yes });
 
 const getLicencesWithoutChargeVersions = async () => {
-  const licences = await repos.licences.findWithoutChargeVersions(config.licences.withChargeVersionsStartDate);
+  const licences = await repos.licences.findWithoutChargeVersions();
   return licences.map(licenceMapper.dbToModel);
 };
 
