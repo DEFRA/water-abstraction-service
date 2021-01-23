@@ -1,0 +1,43 @@
+- ref: $region
+  model: Region
+  fields:
+    chargeRegionId: A
+    naldRegionId: 1
+    name: Test Region
+    displayName: Test Region 
+    isTest: true
+
+- ref: $twoPartTariffAgreement
+  model: FinancialAgreementType
+  fields: 
+    financialAgreementCode: S127
+    description: Section 127 (Two Part Tariff)
+    disabled: false
+    isTest: true
+  constraints:
+    uniq_financial_agreement_code:
+      - financialAgreementCode
+
+- ref: $licence
+  model: Licence
+  fields:
+    licenceRef : L1
+    includeInSupplementaryBilling : no
+    isWaterUndertaker : false
+    regions : '{ "historicalAreaCode": "ARCA", "regionalChargeArea": "Anglian" }'
+    startDate : '2008-04-01'
+    expiredDate : null
+    lapsedDate : null
+    revokedDate : null
+    suspendFromBilling : false
+    isTest: true
+    regionId: $region.regionId
+
+- model: LicenceAgreement
+  fields:
+    licenceRef: L1
+    startDate: '2008-04-01'
+    endDate: null
+    dateSigned: '2008-05-05'
+    isTest: true
+    financialAgreementTypeId: $twoPartTariffAgreement.financialAgreementTypeId
