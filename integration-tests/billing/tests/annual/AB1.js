@@ -16,6 +16,9 @@ const services = require('../../services');
 const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
 const transactionTests = require('../transaction-tests');
 
+const bookshelfLoader = require('../../services/bookshelf-loader')();
+const crmLoader = require('../../services/crm-loader')();
+
 experiment('basic example scenario', () => {
   let batch;
   let chargeModuleTransactions;
@@ -23,15 +26,15 @@ experiment('basic example scenario', () => {
   before(async () => {
     await services.tearDown.tearDown();
 
-    batch = await services.scenarios.runScenario({
-      licence: 'l1',
-      chargeVersions: [{
-        company: 'co1',
-        invoiceAccount: 'ia1',
-        chargeVersion: 'cv1',
-        chargeElements: ['ce1']
-      }]
-    }, 'annual');
+    // Load CRM fixtures
+    await crmLoader.load('crm.yaml');
+
+    // Load Bookshelf fixtures
+    bookshelfLoader.setRef('$invoiceAccount', crmLoader.getRef('$invoiceAccount'));
+    await bookshelfLoader.load('AB1.yaml');
+    const region = bookshelfLoader.getRef('$region');
+
+    batch = await services.scenarios.runScenario(region.regionId, 'annual');
 
     chargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(batch);
   });

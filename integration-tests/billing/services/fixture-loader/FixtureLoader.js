@@ -20,11 +20,14 @@ const mapValue = (value, refs) => {
   if (!isString(value)) {
     return value;
   }
+
   // Check for ref match
   const match = value.toString().match(refRegex);
   if (!match) {
+    console.log(value, 'no match');
     return value;
   }
+  console.log(value, match);
   return refs.get(match[1])[match[2]];
 };
 
@@ -53,8 +56,18 @@ class FixtureLoader {
    * @param {String} refName - the reference name, e.g. $someModel
    * @param {Object} obj - key/value pairs
    */
-  addRef (refName, obj) {
+  setRef (refName, obj) {
+    console.log('set ref', refName, obj);
     return this._refs.set(refName, obj);
+  }
+
+  /**
+   * Get ref
+   * @param {String} refName - e.g. '$company'
+   * @return {Object}
+   */
+  getRef (refName) {
+    return this._refs.get(refName);
   }
 
   /**
@@ -77,8 +90,7 @@ class FixtureLoader {
 
       // Store in refs
       if (config.ref) {
-        console.log('>>>', config.ref, model);
-        this.addRef(config.ref, model);
+        this.setRef(config.ref, model);
       }
 
       this._models.push(model);
