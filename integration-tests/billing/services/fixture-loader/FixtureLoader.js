@@ -27,7 +27,6 @@ const mapValue = (value, refs) => {
     console.log(value, 'no match');
     return value;
   }
-  console.log(value, match);
   return refs.get(match[1])[match[2]];
 };
 
@@ -57,7 +56,6 @@ class FixtureLoader {
    * @param {Object} obj - key/value pairs
    */
   setRef (refName, obj) {
-    console.log('set ref', refName, obj);
     return this._refs.set(refName, obj);
   }
 
@@ -87,6 +85,8 @@ class FixtureLoader {
 
       // Create new model using adapter
       const model = await this._adapter.create(config, data);
+
+      console.log(model);
 
       // Store in refs
       if (config.ref) {

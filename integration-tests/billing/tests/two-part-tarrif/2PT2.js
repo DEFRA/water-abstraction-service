@@ -14,6 +14,10 @@ const { omit } = require('lodash');
 const services = require('../../services');
 const transactionTests = require('../transaction-tests');
 
+const bookshelfLoader = require('../../services/bookshelf-loader')();
+const crmLoader = require('../../services/crm-loader')();
+const returnsLoader = require('../../services/returns-loader')();
+
 experiment('two part tariff ref: 2PT2', () => {
   let batch;
   let chargeModuleTransactions;
@@ -22,24 +26,14 @@ experiment('two part tariff ref: 2PT2', () => {
   before(async () => {
     await services.tearDown.tearDown();
 
-    batch = await services.scenarios.runScenario({
-      licence: 'l1',
-      licenceAgreement: 's127',
-      chargeVersions: [{
-        company: 'co1',
-        invoiceAccount: 'ia1',
-        chargeVersion: 'cv1',
-        chargeElements: ['ce5']
-      }],
-      returns: [
-        {
-          return: 'r2',
-          version: 'rv1',
-          lines: ['rl2'],
-          returnRequirement: 'rq2'
-        }
-      ]
-    }, 'two_part_tariff', 2020, false);
+    // Load fixtures
+    await crmLoader.load('crm.yaml');
+    bookshelfLoader.setRef('$invoiceAccount', crmLoader.getRef('$invoiceAccount'));
+    await bookshelfLoader.load('2PT2.yaml');
+    await returnsLoader.load('2PT2-returns.yaml');
+    const region = bookshelfLoader.getRef('$region');
+
+    batch = await services.scenarios.runScenario(region.regionId, 'two_part_tariff', 2020, false);
   });
 
   experiment('has expected batch details', () => {
