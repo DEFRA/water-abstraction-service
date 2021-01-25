@@ -63,6 +63,7 @@
   fields:
     legacyId : A
     description: Agriculture
+    isTest: true
   constraints:
     purposes_primary_unq_legacy_id:
       - legacyId
@@ -72,6 +73,7 @@
   fields:
     legacyId : AGR
     description: General Agriculture
+    isTest: true
   constraints:
     purposes_secondary_unq_legacy_id:
       - legacyId
@@ -83,6 +85,7 @@
     description: Spray Irrigation - Storage
     lossFactor: high
     isTwoPartTariff: true
+    isTest: true
   constraints:
     purposes_uses_unq_legacy_id:
       - legacyId

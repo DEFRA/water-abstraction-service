@@ -11,6 +11,10 @@ const tearDownReturnVersions = async () => {
   return bookshelf.knex.raw(queries.deleteReturnVersions);
 };
 
-exports.tearDownReturnPurposes = tearDownReturnPurposes;
-exports.tearDownReturnRequirements = tearDownReturnRequirements;
-exports.tearDownReturnVersions = tearDownReturnVersions;
+const tearDown = async () => {
+  await tearDownReturnPurposes();
+  await tearDownReturnRequirements();
+  await tearDownReturnVersions();
+};
+
+exports.tearDown = tearDown;
