@@ -48,8 +48,6 @@ const tearDown = async (...batchesToDelete) => {
   await tearDownTable('water.purposes_secondary');
   await tearDownTable('water.purposes_uses');
 
-  await returnRequirements.tearDown();
-
   const tasks = (batchesToDelete || []).map(deleteJobsAndCMData);
   await Promise.all(tasks);
   await server._stop;
