@@ -1,18 +1,18 @@
 'use strict';
 
+const crmConnector = require('./connectors/crm');
 const batches = require('./batches');
 const chargeVersions = require('./charge-versions');
 const regions = require('./regions');
 const licences = require('./licences');
 const licenceAgreements = require('./licence-agreements');
-const agreements = require('./agreements');
+const financialAgreementTypes = require('./financial-agreement-types');
 const purposeUses = require('./purpose-uses');
 const purposesPrimary = require('./purpose-primary');
 const purposesSecondary = require('./purpose-secondary');
-const crm = require('./crm');
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs');
+const returnsConnector = require('../services/connectors/returns');
 const messageQueueV2 = require('../../../src/lib/message-queue-v2');
-const returns = require('../services/returns');
 const returnRequirements = require('../services/return-requirements');
 const server = require('../../../index');
 
@@ -38,11 +38,11 @@ const tearDown = async (...batchesToDelete) => {
   await returnRequirements.tearDownReturnPurposes();
   await returnRequirements.tearDownReturnRequirements();
   await returnRequirements.tearDownReturnVersions();
-  await agreements.tearDown();
+  await financialAgreementTypes.tearDown();
   await licences.tearDown();
   await regions.tearDown();
-  await crm.tearDown();
-  await returns.tearDown();
+  await crmConnector.tearDown();
+  await returnsConnector.tearDown();
   await purposeUses.tearDown();
   await purposesPrimary.tearDown();
   await purposesSecondary.tearDown();
