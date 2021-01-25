@@ -37,13 +37,11 @@ experiment('modules/licences/controllers/invoices', () => {
       }
     };
 
-    let result;
-
     experiment('when request is valid', () => {
       beforeEach(async () => {
         await licenceService.getLicenceInvoices.resolves([]);
 
-        result = await invoicesController.getLicenceInvoices(request);
+        await invoicesController.getLicenceInvoices(request);
       });
       afterEach(() => {
         sandbox.restore();
@@ -56,19 +54,18 @@ experiment('modules/licences/controllers/invoices', () => {
 
     experiment('when request is not valid', () => {
       beforeEach(async () => {
-        await licenceService.getLicenceInvoices.throws('some error');
-
-        result = await invoicesController.getLicenceInvoices(request);
+        await licenceService.getLicenceInvoices.throws({
+          statusCode: 404,
+          name: 'some name',
+          message: 'not found'
+        });
+        await invoicesController.getLicenceInvoices(request);
       });
       afterEach(() => {
         sandbox.restore();
       });
-      test('calls the logger', () => {
+      test('calls the logger', async () => {
         expect(logger.error.called).to.be.true();
-      });
-      test('returns boom error', () => {
-        expect(result.isBoom).to.be.true();
-        expect(result.output.statusCode).to.equal(500);
       });
     });
   });

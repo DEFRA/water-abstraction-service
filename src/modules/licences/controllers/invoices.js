@@ -1,7 +1,7 @@
 'use strict';
-const Boom = require('@hapi/boom');
 const licencesService = require('../../../lib/services/licences');
 const { logger } = require('../../../logger');
+const mapErrorResponse = require('../../../lib/map-error-response');
 
 const getLicenceInvoices = async request => {
   const { licenceId } = request.params;
@@ -10,7 +10,7 @@ const getLicenceInvoices = async request => {
     return licencesService.getLicenceInvoices(licenceId, page, perPage);
   } catch (error) {
     logger.error('Failed to get bills for licence', error, { licenceId });
-    return Boom.boomify(error);
+    return mapErrorResponse(error);
   }
 };
 
