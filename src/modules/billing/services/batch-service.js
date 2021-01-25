@@ -155,7 +155,7 @@ const setStatus = (batchId, status) =>
 const setErrorStatus = async (batchId, errorCode) => {
   logger.error(`Batch ${batchId} failed with error code ${errorCode}`);
   return Promise.all([
-    newRepos.billingVolumes.markVolumesAsErrored(batchId),
+    newRepos.billingVolumes.markVolumesAsErrored(batchId, { require: false }),
     newRepos.billingBatches.update(batchId, { status: Batch.BATCH_STATUS.error, errorCode }),
     licencesService.updateIncludeInSupplementaryBillingStatusForUnsentBatch(batchId)
   ]);

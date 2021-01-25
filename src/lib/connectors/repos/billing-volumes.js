@@ -142,12 +142,12 @@ const updateByBatchId = async (billingBatchId, changes) => {
  * Marks all records as errored by batch ID
  * @param {String} billingBatchId
  */
-const markVolumesAsErrored = async (billingBatchId) => {
+const markVolumesAsErrored = async (billingBatchId, options = {}) => {
   const result = await BillingVolume
     .where('billing_batch_id', billingBatchId)
     .save({
       errored_on: new Date()
-    }, { method: 'update' });
+    }, { method: 'update', ...options });
   return result.toJSON();
 };
 
