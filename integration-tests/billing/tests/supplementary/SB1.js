@@ -15,6 +15,9 @@ const services = require('../../services');
 const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
 const transactionTests = require('../transaction-tests');
 
+const bookshelfLoader = require('../../services/bookshelf-loader')();
+const crmLoader = require('../../services/crm-loader')();
+
 experiment('supplementary ref: SB1', () => {
   let annualBatch;
   let supplementaryBatch;
@@ -23,15 +26,16 @@ experiment('supplementary ref: SB1', () => {
   before(async () => {
     await services.tearDown.tearDown();
 
-    annualBatch = await services.scenarios.runScenario({
-      licence: 'l2',
-      chargeVersions: [{
-        company: 'co1',
-        invoiceAccount: 'ia1',
-        chargeVersion: 'cv1',
-        chargeElements: ['ce3']
-      }]
-    }, 'annual');
+    // Load CRM fixtures
+    await crmLoader.load('crm.yaml');
+
+    // Load Bookshelf fixtures for the annual batch
+    bookshelfLoader.setRef('$invoiceAccount', crmLoader.getRef('$invoiceAccount'));
+    await bookshelfLoader.load('SB1-1.yaml');
+    const region = bookshelfLoader.getRef('$region');
+
+    // Run annual batch
+    annualBatch = await services.scenarios.runScenario(region.regionId, 'annual');
 
     // mark the annual batch as sent so a new batch for the same
     // region can be created
@@ -41,16 +45,11 @@ experiment('supplementary ref: SB1', () => {
     // charge version is the current one.
     await services.chargeVersions.update({ status: 'superseded' });
 
-    supplementaryBatch = await services.scenarios.runScenario({
-      licence: 'l2',
-      chargeVersions: [{
-        company: 'co1',
-        invoiceAccount: 'ia1',
-        chargeVersion: 'cv2',
-        chargeElements: ['ce3']
-      }]
-    }, 'supplementary');
+    // Load Bookshelf fixtures for supplementary batch
+    await bookshelfLoader.load('SB1-2.yaml');
 
+    // Run supplementary batch
+    supplementaryBatch = await services.scenarios.runScenario(region.regionId, 'supplementary');
     supplementaryChargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(supplementaryBatch);
   });
 
