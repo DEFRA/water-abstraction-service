@@ -16,6 +16,9 @@ const services = require('../../services');
 const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
 const transactionTests = require('../transaction-tests');
 
+const bookshelfLoader = require('../../services/bookshelf-loader')();
+const crmLoader = require('../../services/crm-loader')();
+
 // Scenario: Annual Batch 2
 // Single Licence with a single charge version effective for whole year with 2 Part Tariff agreements
 experiment('annual batch ref: AB2', () => {
@@ -25,16 +28,15 @@ experiment('annual batch ref: AB2', () => {
   before(async () => {
     await services.tearDown.tearDown();
 
-    batch = await services.scenarios.runScenario({
-      licence: 'l1',
-      licenceAgreement: 's127',
-      chargeVersions: [{
-        company: 'co1',
-        invoiceAccount: 'ia1',
-        chargeVersion: 'cv1',
-        chargeElements: ['ce2']
-      }]
-    }, 'annual');
+    // Load CRM fixtures
+    await crmLoader.load('crm.yaml');
+
+    // Load Bookshelf fixtures
+    bookshelfLoader.setRef('$invoiceAccount', crmLoader.getRef('$invoiceAccount'));
+    await bookshelfLoader.load('AB2.yaml');
+    const region = bookshelfLoader.getRef('$region');
+
+    batch = await services.scenarios.runScenario(region.regionId, 'annual');
 
     chargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(batch);
   });
