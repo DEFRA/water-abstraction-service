@@ -520,6 +520,12 @@ experiment('modules/billing/services/batch-service', () => {
       await batchService.setErrorStatus('batch-id', 10);
     });
 
+    test('calls billingVolumes.markVolumesAsErrored() with correct params', async () => {
+      const [id, data] = newRepos.billingVolumes.markVolumesAsErrored.lastCall.args;
+      expect(id).to.equal('batch-id');
+      expect(data).to.equal({ require: false });
+    });
+
     test('calls billingBatches.update() with correct params', async () => {
       const [id, data] = newRepos.billingBatches.update.lastCall.args;
       expect(id).to.equal('batch-id');
