@@ -15,6 +15,9 @@ const services = require('../../services');
 const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
 const transactionTests = require('../transaction-tests');
 
+const bookshelfLoader = require('../../services/bookshelf-loader')();
+const crmLoader = require('../../services/crm-loader')();
+
 // Scenario: Supplementary Batch 2
 // Increase to Authorised Quantity in current financial year
 experiment('supplementary ref: SB2', () => {
@@ -24,18 +27,17 @@ experiment('supplementary ref: SB2', () => {
 
   before(async () => {
     await services.tearDown.tearDown();
-    console.log('tear down complete');
 
-    console.log('creating annual batch');
-    annualBatch = await services.scenarios.runScenario({
-      licence: 'l2',
-      chargeVersions: [{
-        company: 'co1',
-        invoiceAccount: 'ia1',
-        chargeVersion: 'cv3',
-        chargeElements: ['ce3']
-      }]
-    }, 'annual');
+    // Load CRM fixtures
+    await crmLoader.load('crm.yaml');
+
+    // Load Bookshelf fixtures for the annual batch
+    bookshelfLoader.setRef('$invoiceAccount', crmLoader.getRef('$invoiceAccount'));
+    await bookshelfLoader.load('SB2-1.yaml');
+    const region = bookshelfLoader.getRef('$region');
+
+    // Run annual batch
+    annualBatch = await services.scenarios.runScenario(region.regionId, 'annual');
 
     // mark the annual batch as sent so a new batch for the same
     // region can be created
@@ -45,17 +47,11 @@ experiment('supplementary ref: SB2', () => {
     // the start of the new one, so that both are used in batch
     await services.chargeVersions.update({ endDate: '2019-07-31' });
 
-    console.log('creating supplementary batch');
-    supplementaryBatch = await services.scenarios.runScenario({
-      licence: 'l2',
-      chargeVersions: [{
-        company: 'co1',
-        invoiceAccount: 'ia1',
-        chargeVersion: 'cv4',
-        chargeElements: ['ce4']
-      }]
-    }, 'supplementary');
+    // Load Bookshelf fixtures for supplementary batch
+    await bookshelfLoader.load('SB2-2.yaml');
 
+    // Run supplementary batch
+    supplementaryBatch = await services.scenarios.runScenario(region.regionId, 'supplementary');
     supplementaryChargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(supplementaryBatch);
   });
 
