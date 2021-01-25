@@ -2,7 +2,6 @@
 
 const { get } = require('lodash');
 
-const batches = require('./lib/charging/batches');
 const returns = require('./lib/returns');
 const permits = require('./lib/permits');
 const entities = require('./lib/entities');
@@ -11,8 +10,6 @@ const users = require('./lib/users');
 const documents = require('./lib/documents');
 const events = require('./lib/events');
 const sessions = require('./lib/sessions');
-const chargingScenarios = require('./lib/charging/charging-scenarios');
-const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
 
 const {
   TEST_EXTERNAL_USER_EMAIL,
@@ -164,8 +161,6 @@ const postSetup = async (request, h) => {
   await postTearDown();
   const includeAgents = get(request, 'payload.includeAgents', false);
   const includeInternalUsers = get(request, 'payload.includeInternalUsers', false);
-  const includeAnnualBillRun = get(request, 'payload.includeAnnualBillRun', false);
-  const includeSupplementaryBillRun = get(request, 'payload.includeSupplementaryBillRun', false);
   try {
     const company = await entities.createV1Company();
     await entities.createV2Company();
@@ -184,13 +179,6 @@ const postSetup = async (request, h) => {
       responseData.agents = await createAgents(company);
     }
 
-    if (includeAnnualBillRun) {
-      responseData.charging = await chargingScenarios.annualBillRun();
-    }
-    if (includeSupplementaryBillRun) {
-      responseData.charging = await chargingScenarios.supplementaryBillRun(request);
-    }
-
     return responseData;
   } catch (err) {
     return err;
@@ -198,7 +186,6 @@ const postSetup = async (request, h) => {
 };
 
 const postTearDown = async () => {
-  await batches.delete();
   console.log('Tearing down acceptance test returns');
   await returns.delete();
   console.log('Tearing down acceptance test events');
@@ -215,10 +202,6 @@ const postTearDown = async () => {
   await sessions.delete();
   console.log('Tearing down acceptance test licences');
   await licences.delete();
-
-  // calling the integration tests tear down process
-  const chargeBatches = await batches.getTestRegionBatchIds();
-  await chargeTestDataTearDown.tearDown(...chargeBatches);
 
   return 'tear down complete';
 };
