@@ -13,8 +13,8 @@ const getInvoiceAccountAddressModel = (startDate, addressModel, agentCompanyMode
   });
 };
 
-const createInvoiceAccountAddress = async (invoiceAccount, invoiceAccountAddress, startDate) => {
-  const { address, agentCompany, contact } = invoiceAccountAddress;
+const createInvoiceAccountAddress = async (invoiceAccount, invoiceAccountAddress) => {
+  const { address, agentCompany, contact, dateRange: { startDate } } = invoiceAccountAddress;
   const data = {
     addressId: address.id,
     startDate,

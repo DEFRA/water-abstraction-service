@@ -126,14 +126,13 @@ module.exports = {
         },
         payload: {
           startDate: Joi.string().isoDate().required(),
-          regionId: Joi.string().guid().required(),
+          regionId: Joi.string().guid().required()
+
+          /*
           address: addressSchema,
           agent: agentSchema,
           contact: contactSchema
-        },
-        failAction: (request, h, err) => {
-          logger.error(err.message, request.payload);
-          throw err;
+          */
         }
       }
     }

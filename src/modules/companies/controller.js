@@ -10,6 +10,11 @@ const companiesService = require('../../lib/services/companies-service');
 const invoiceAccountsService = require('../../lib/services/invoice-accounts-service');
 const { logger } = require('../../logger');
 
+const invoiceAccountMapper = require('../../lib/mappers/invoice-account');
+// const Company = require('../../lib/models/company');
+// const InvoiceAccount = require('../../lib/models/invoice-account');
+// const DateRange = require('../../lib/models/date-range');
+
 const mapErrorResponse = require('../../lib/map-error-response');
 const { envelope } = require('../../lib/response');
 
@@ -88,23 +93,25 @@ const getCompanyAddresses = async (request, h) => {
   }
 };
 /**
- * Creates new agent company, address, and/or contact, as required
- * Creates new invoice account and links relevant roles to it
+ * Creates new invoice account
  */
 const createCompanyInvoiceAccount = async (request, h) => {
-  const { startDate, regionId, address, agent, contact } = request.payload;
+  const { startDate, regionId } = request.payload;
   const { companyId } = request.params;
   try {
-    const invoiceAccount = invoiceAccountsService.getInvoiceAccount(companyId, startDate, address, agent, contact);
+    const invoiceAccount = invoiceAccountMapper.pojoToModel({
+      company: {
+        id: companyId
+      },
+      dateRange: {
+        startDate,
+        endDate: null
+      }
+    });
 
-    const persistedAccount = await invoiceAccountsService.persist(regionId, startDate, invoiceAccount);
+    const created = await invoiceAccountsService.createInvoiceAccount(regionId, invoiceAccount);
 
-    // Create BullMQ message to update the invoice account in CM
-    const { jobName: updateCustomerDetailsInCMJobName } = require('../../modules/billing/jobs/update-customer');
-    await request.queueManager.add(updateCustomerDetailsInCMJobName, persistedAccount.id);
-    const generatedAccount = await invoiceAccountsService.getByInvoiceAccountId(persistedAccount.id);
-
-    return h.response(generatedAccount.toJSON()).code(201);
+    return h.response(created).code(201);
   } catch (err) {
     logger.error('Error saving invoice account', err);
     return mapErrorResponse(err);

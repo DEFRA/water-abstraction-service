@@ -13,7 +13,7 @@ const messageInitialiser = (jobName, invoiceAccountId) => ([
     invoiceAccountId
   },
   {
-    singletonKey: `${JOB_NAME}.${invoiceAccountId}.${uuid()}`,
+    jobId: `${JOB_NAME}.${invoiceAccountId}.${uuid()}`,
     retryLimit: 3,
     retryDelay: 30,
     retryBackoff: true
