@@ -1,31 +1,13 @@
 'use strict';
 
-/**
- * Create message queue powered by BullMQ
- * @see {@link https://docs.bullmq.io/guide/introduction}
- */
 const bull = require('bullmq');
-const ioRedis = require('../lib/connectors/io-redis');
 
 const STATUS_COMPLETED = 'completed';
 const STATUS_FAILED = 'failed';
 
-/**
- * @class provides a container for the Bull MQ job queues
- * This is to extract the dependency on Bull out of the job code to make them
- * more testable.
- * This class contains a map of queues, where the keys are the job names.
- * Each item contains a Bull Queue instance and necessary workers.
- * The onComplete handlers are wrapped so that the QueueManager instance
- * can pass itself as an argument - this allows the onComplete handlers
- * to add jobs on another queue
- */
-
-// Create connection for queue
-const connection = ioRedis.createConnection();
-
 class QueueManager {
-  constructor () {
+  constructor (connection) {
+    this._connection = connection;
     this._queues = new Map();
   }
 
@@ -54,6 +36,8 @@ class QueueManager {
      * @param {Object} [jobContainer.workerOptions] - options to pass to the worker constructor
      */
   register (jobContainer) {
+    const { _connection: connection } = this;
+
     // Create queue
     const queue = new bull.Queue(jobContainer.jobName, { connection });
 
@@ -87,39 +71,33 @@ class QueueManager {
 
     return this;
   }
+
+  deleteKeysByPattern (pattern) {
+    const { _connection: connection } = this;
+
+    return new Promise((resolve, reject) => {
+      const stream = connection.scanStream({
+        match: pattern
+      });
+      stream.on('data', keys => {
+        if (keys.length) {
+          const pipeline = connection.pipeline();
+          keys.forEach(key => {
+            pipeline.del(key);
+          });
+          pipeline.exec();
+        }
+      });
+      stream.on('end', () => {
+        resolve();
+      });
+      stream.on('error', e => {
+        reject(e);
+      });
+    });
+  }
 }
 
-const queueManager = new QueueManager();
-
-const deleteKeysByPattern = pattern => {
-  return new Promise((resolve, reject) => {
-    const stream = connection.scanStream({
-      match: pattern
-    });
-    stream.on('data', keys => {
-      if (keys.length) {
-        const pipeline = connection.pipeline();
-        keys.forEach(key => {
-          pipeline.del(key);
-        });
-        pipeline.exec();
-      }
-    });
-    stream.on('end', () => {
-      resolve();
-    });
-    stream.on('error', e => {
-      reject(e);
-    });
-  });
-};
-
-module.exports.queueManager = queueManager;
-module.exports.deleteKeysByPattern = deleteKeysByPattern;
-module.exports.plugin = {
-  name: 'hapiBull',
-  register: async server => {
-    server.decorate('server', 'queueManager', queueManager);
-    server.decorate('request', 'queueManager', queueManager);
-  }
-};
+module.exports = QueueManager;
+module.exports.STATUS_COMPLETED = STATUS_COMPLETED;
+module.exports.STATUS_FAILED = STATUS_FAILED;

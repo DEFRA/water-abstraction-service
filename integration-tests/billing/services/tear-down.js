@@ -5,16 +5,13 @@ const crmConnector = require('./connectors/crm');
 const batches = require('./batches');
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs');
 const returnsConnector = require('../services/connectors/returns');
-const messageQueueV2 = require('../../../src/lib/message-queue-v2');
 const returnRequirements = require('../services/return-requirements');
 const server = require('../../../index');
 
-const deleteFromMessageQueue = () => messageQueueV2.deleteKeysByPattern('bull:*');
-
 const deleteCMBatch = batch => batch.externalId && cmConnector.delete(batch.externalId);
 
-const deleteJobsAndCMData = batch => Promise.all([
-  deleteFromMessageQueue(),
+const deleteJobsAndCMData = (server, batch) => Promise.all([
+  server.queueManager.deleteKeysByPattern('bull:*'),
   deleteCMBatch(batch)
 ]);
 
@@ -48,7 +45,7 @@ const tearDown = async (...batchesToDelete) => {
   await tearDownTable('water.purposes_secondary');
   await tearDownTable('water.purposes_uses');
 
-  const tasks = (batchesToDelete || []).map(deleteJobsAndCMData);
+  const tasks = (batchesToDelete || []).map(batch => deleteJobsAndCMData(server, batch));
   await Promise.all(tasks);
   await server._stop;
 };
