@@ -6,9 +6,10 @@ const { expect } = require('@hapi/code');
 const QueueManager = require('../../../src/lib/message-queue-v2/QueueManager');
 const bull = require('bullmq');
 const sandbox = require('sinon').createSandbox();
+const EventEmitter = require('events');
 
 experiment('lib/message-queue-v2/QueueManager', () => {
-  let queueManager, connection, jobContainer, workerStub, queueStub;
+  let queueManager, connection, jobContainer, workerStub, queueStub, pipelineStub;
 
   beforeEach(async () => {
     workerStub = {
@@ -17,7 +18,14 @@ experiment('lib/message-queue-v2/QueueManager', () => {
     queueStub = {
       add: sandbox.stub()
     };
-    connection = sandbox.stub();
+    pipelineStub = {
+      del: sandbox.stub(),
+      exec: sandbox.stub()
+    };
+    connection = {
+      scanStream: sandbox.stub(),
+      pipeline: () => pipelineStub
+    };
     queueManager = new QueueManager(connection);
     sandbox.stub(bull, 'Queue').returns(queueStub);
     sandbox.stub(bull, 'Worker').returns(workerStub);
@@ -90,6 +98,61 @@ experiment('lib/message-queue-v2/QueueManager', () => {
       expect(workerStub.on.calledWith(
         QueueManager.STATUS_COMPLETED
       )).to.be.true();
+    });
+  });
+
+  experiment('.deleteKeysByPattern', () => {
+    let ev, result;
+    const pattern = 'foo*';
+    const keys = ['foo-bar', 'foo-baz'];
+
+    beforeEach(async () => {
+      ev = new EventEmitter();
+      sandbox.spy(ev, 'on');
+
+      connection.scanStream.returns(ev);
+    });
+
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        const func = () => Promise.all([
+          queueManager.deleteKeysByPattern(pattern),
+          ev.emit('data', keys),
+          ev.emit('end')
+        ]);
+
+        result = await func();
+      });
+
+      test('connection.scanStream is called with the pattern', async () => {
+        expect(connection.scanStream.calledWith({
+          match: pattern
+        })).to.be.true();
+      });
+
+      test('each key is deleted', async () => {
+        expect(pipelineStub.del.callCount).to.equal(2);
+        expect(pipelineStub.del.calledWith(keys[0])).to.be.true();
+        expect(pipelineStub.del.calledWith(keys[1])).to.be.true();
+      });
+
+      test('exec is called', async () => {
+        expect(pipelineStub.exec.callCount).to.equal(1);
+      });
+    });
+
+    experiment('when there is an error', () => {
+      const err = new Error('oops!');
+
+      test('the method rejects', async () => {
+        const func = () => Promise.all([
+          queueManager.deleteKeysByPattern(pattern),
+          ev.emit('error', err)
+        ]);
+
+        result = await expect(func()).to.reject();
+        expect(result).to.equal(err);
+      });
     });
   });
 });
