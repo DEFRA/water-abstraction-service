@@ -44,14 +44,14 @@ const mapAddress = invoice =>
  * @param {Invoice} invoice
  * @return {Object}
  */
-const modelToDb = (batch, invoice) => {
+const modelToDb = (batchRow, invoice) => {
   const { totals } = invoice;
 
   return {
     invoiceAccountId: invoice.invoiceAccount.id,
     invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
     address: mapAddress(invoice),
-    billingBatchId: batch.id,
+    billingBatchId: batchRow.id,
     financialYearEnding: invoice.financialYear.endYear,
     invoiceNumber: invoice.invoiceNumber || null,
     netAmount: totals ? totals.netTotal : null,

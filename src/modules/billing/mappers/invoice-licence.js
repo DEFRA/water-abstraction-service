@@ -34,11 +34,11 @@ const dbToModel = row => {
  * @param {Invoice} invoice
  * @return {Object}
  */
-const modelToDb = (invoice, invoiceLicence) => {
+const modelToDb = (invoiceRow, invoiceLicence) => {
   // Map data to new row in water.billing_invoice_licences
 
   return {
-    billingInvoiceId: invoice.id,
+    billingInvoiceId: invoiceRow.id,
     licenceRef: invoiceLicence.licence.licenceNumber,
     licenceId: invoiceLicence.licence.id
   };
