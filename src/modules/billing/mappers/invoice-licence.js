@@ -4,6 +4,8 @@ const InvoiceLicence = require('../../../lib/models/invoice-licence');
 
 // Mappers
 const transaction = require('./transaction');
+const invoice = require('./invoice');
+const batch = require('./batch');
 const licence = require('../../../lib/mappers/licence');
 
 /**
@@ -14,9 +16,11 @@ const licence = require('../../../lib/mappers/licence');
  */
 const dbToModel = row => {
   const invoiceLicence = new InvoiceLicence(row.billingInvoiceLicenceId);
-
   if (row.billingTransactions) {
     invoiceLicence.transactions = row.billingTransactions.map(transaction.dbToModel);
+  }
+  if (row.billingInvoice) {
+    invoiceLicence.billingInvoice = invoice.dbToModel(row.billingInvoice);
   }
   if (row.licence) {
     invoiceLicence.licence = licence.dbToModel(row.licence);

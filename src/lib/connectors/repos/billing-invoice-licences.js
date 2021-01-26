@@ -43,7 +43,7 @@ const findAll = async (licenceId, page = 1, perPage = 10) => {
     .fetchPage({
       pageSize: perPage,
       page: page,
-      withRelated
+      withRelated: [...withRelated, 'licence']
     });
   return paginationHelper.paginatedEnvelope(result);
 };

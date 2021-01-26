@@ -2,6 +2,7 @@
 
 const repos = require('../connectors/repos');
 const licenceMapper = require('../mappers/licence');
+const invoiceLicenceMapper = require('../../modules/billing/mappers/invoice-licence');
 const invoiceAccountsMapper = require('../mappers/invoice-account');
 const licenceVersionMapper = require('../mappers/licence-version');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../models/constants');
@@ -141,7 +142,11 @@ const getLicencesWithoutChargeVersions = async () => {
  * @param {number} perPage
  * @return {Promise<Licence>}
  */
-const getLicenceInvoices = (licenceId, page = 1, perPage = 10) => repos.billingInvoiceLicences.findAll(licenceId, page, perPage);
+const getLicenceInvoices = async (licenceId, page = 1, perPage = 10) => {
+  const invoices = await repos.billingInvoiceLicences.findAll(licenceId, page, perPage);
+  const mappedInvoices = invoices.data.map(inv => (invoiceLicenceMapper.dbToModel(inv)));
+  return { data: mappedInvoices, pagination: invoices.pagination };
+};
 
 exports.getLicenceById = getLicenceById;
 exports.getLicencesByLicenceRefs = getLicencesByLicenceRefs;
