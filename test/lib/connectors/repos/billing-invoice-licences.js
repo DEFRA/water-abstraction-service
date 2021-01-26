@@ -180,8 +180,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       expect(options.withRelated).to.equal([
         'billingInvoice',
         'billingInvoice.billingBatch',
-        'billingInvoice.billingBatch.region',
-        'licence'
+        'billingInvoice.billingBatch.region'
       ]);
     });
   });
