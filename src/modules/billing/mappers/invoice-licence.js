@@ -5,7 +5,6 @@ const InvoiceLicence = require('../../../lib/models/invoice-licence');
 // Mappers
 const transaction = require('./transaction');
 const invoice = require('./invoice');
-const batch = require('./batch');
 const licence = require('../../../lib/mappers/licence');
 
 /**
