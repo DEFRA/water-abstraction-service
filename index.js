@@ -156,6 +156,13 @@ const start = async function () {
   }
 };
 
+const stop = () => {
+  server.stop({ timeout: 5000 }).then(function (err) {
+    console.log('hapi server stopped');
+    process.exit((err) ? 1 : 0);
+  });
+};
+
 const processError = message => err => {
   logger.error(message, err);
   process.exit(1);
@@ -188,3 +195,4 @@ if (!module.parent) {
 
 module.exports = server;
 module.exports._start = start;
+module.exports._stop = stop;

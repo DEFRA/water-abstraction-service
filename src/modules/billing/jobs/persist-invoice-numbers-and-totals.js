@@ -16,7 +16,7 @@ const handler = async job => {
 
   try {
     const batch = await batchService.getBatchById(batchId, true);
-    return batchService.persistInvoiceNumbersAndTotals(batch);
+    await batchService.persistInvoiceNumbersAndTotals(batch);
   } catch (err) {
     await batchJob.logHandlingError(job, err);
     throw err;

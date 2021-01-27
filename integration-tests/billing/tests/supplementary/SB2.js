@@ -15,6 +15,9 @@ const services = require('../../services');
 const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
 const transactionTests = require('../transaction-tests');
 
+const bookshelfLoader = require('../../services/bookshelf-loader')();
+const crmLoader = require('../../services/crm-loader')();
+
 // Scenario: Supplementary Batch 2
 // Increase to Authorised Quantity in current financial year
 experiment('supplementary ref: SB2', () => {
@@ -24,18 +27,17 @@ experiment('supplementary ref: SB2', () => {
 
   before(async () => {
     await services.tearDown.tearDown();
-    console.log('tear down complete');
 
-    console.log('creating annual batch');
-    annualBatch = await services.scenarios.runScenario({
-      licence: 'l2',
-      chargeVersions: [{
-        company: 'co1',
-        invoiceAccount: 'ia1',
-        chargeVersion: 'cv3',
-        chargeElements: ['ce3']
-      }]
-    }, 'annual');
+    // Load CRM fixtures
+    await crmLoader.load('crm.yaml');
+
+    // Load Bookshelf fixtures for the annual batch
+    bookshelfLoader.setRef('$invoiceAccount', crmLoader.getRef('$invoiceAccount'));
+    await bookshelfLoader.load('SB2-1.yaml');
+    const region = bookshelfLoader.getRef('$region');
+
+    // Run annual batch
+    annualBatch = await services.scenarios.runScenario(region.regionId, 'annual');
 
     // mark the annual batch as sent so a new batch for the same
     // region can be created
@@ -45,17 +47,11 @@ experiment('supplementary ref: SB2', () => {
     // the start of the new one, so that both are used in batch
     await services.chargeVersions.update({ endDate: '2019-07-31' });
 
-    console.log('creating supplementary batch');
-    supplementaryBatch = await services.scenarios.runScenario({
-      licence: 'l2',
-      chargeVersions: [{
-        company: 'co1',
-        invoiceAccount: 'ia1',
-        chargeVersion: 'cv4',
-        chargeElements: ['ce4']
-      }]
-    }, 'supplementary');
+    // Load Bookshelf fixtures for supplementary batch
+    await bookshelfLoader.load('SB2-2.yaml');
 
+    // Run supplementary batch
+    supplementaryBatch = await services.scenarios.runScenario(region.regionId, 'supplementary');
     supplementaryChargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(supplementaryBatch);
   });
 
@@ -100,7 +96,7 @@ experiment('supplementary ref: SB2', () => {
       });
 
       test('has the correct invoice address', async () => {
-        expect(omit(invoice.address, 'uprn')).to.equal({
+        expect(omit(invoice.address, ['uprn', 'isTest'])).to.equal({
           town: 'Testington',
           county: 'Testingshire',
           country: 'UK',
@@ -124,36 +120,17 @@ experiment('supplementary ref: SB2', () => {
           licence = invoice.billingInvoiceLicences[0];
         });
 
-        test('has the correct licence name', async () => {
-          expect(licence.licenceHolderName.lastName).to.equal('Testerson');
-          expect(licence.licenceHolderName.firstName).to.equal('John');
-          expect(licence.licenceHolderName.title).to.equal('Mr');
-        });
-
-        test('has the correct licence holder address', async () => {
-          expect(omit(licence.licenceHolderAddress, 'id')).to.equal({
-            town: 'Testington',
-            county: 'Testingshire',
-            country: 'UK',
-            postcode: 'TT1 1TT',
-            addressLine1: 'Big Farm',
-            addressLine2: 'Windy road',
-            addressLine3: 'Buttercup meadow',
-            addressLine4: null
-          });
-        });
-
-        test('has 3 transactions', async () => {
-          expect(licence.billingTransactions.length).to.equal(3);
+        test('has 6 transactions', async () => {
+          expect(licence.billingTransactions.length).to.equal(6);
         });
 
         test('there are 2 debit', async () => {
-          const transactions = licence.billingTransactions.filter(tx => tx.isCredit === false);
+          const transactions = licence.billingTransactions.filter(tx => tx.isCredit === false && tx.chargeType === 'standard');
           expect(transactions).to.have.length(2);
         });
 
         test('there is a credit', async () => {
-          const transaction = licence.billingTransactions.find(tx => tx.isCredit === true);
+          const transaction = licence.billingTransactions.find(tx => tx.isCredit === true && tx.chargeType === 'standard');
           expect(transaction).to.exist();
         });
 
@@ -218,14 +195,14 @@ experiment('supplementary ref: SB2', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('f7d8838d18fcce381ba691146e242a5e');
+            expect(transaction.transactionKey).to.equal('1e1fee0c4146c314e12f5f9067b25b24');
           });
         });
 
         experiment('the second debit transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions.find(tx => tx.isCredit === false && tx.description === 'CE4');
+            transaction = licence.billingTransactions.find(tx => tx.transactionKey === '59ad88fa7bac9581d4b18c72e51c00b6');
           });
 
           test('is a standard charge', async () => {
@@ -283,14 +260,14 @@ experiment('supplementary ref: SB2', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('7ec309eb8554a029b86b3ca72a92f58a');
+            expect(transaction.transactionKey).to.equal('59ad88fa7bac9581d4b18c72e51c00b6');
           });
         });
 
         experiment('the credit transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions.find(tx => tx.isCredit === true);
+            transaction = licence.billingTransactions.find(tx => tx.isCredit === true && tx.chargeType === 'standard');
           });
 
           test('is a standard charge', async () => {
