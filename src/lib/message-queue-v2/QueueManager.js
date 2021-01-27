@@ -5,6 +5,11 @@ const bull = require('bullmq');
 const STATUS_COMPLETED = 'completed';
 const STATUS_FAILED = 'failed';
 
+const jobDefaults = {
+  removeOnComplete: true,
+  removeOnFail: 500
+};
+
 class QueueManager {
   constructor (connection) {
     this._connection = connection;
@@ -19,10 +24,12 @@ class QueueManager {
   add (jobName, ...args) {
     const queueContainer = this._queues.get(jobName);
     const { createMessage } = queueContainer.jobContainer;
+    const [name, data, options] = createMessage(...args);
 
-    return queueContainer.queue.add(
-      ...createMessage(...args)
-    );
+    return queueContainer.queue.add(name, data, {
+      ...jobDefaults,
+      ...options
+    });
   }
 
   /**

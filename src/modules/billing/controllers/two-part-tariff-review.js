@@ -114,7 +114,7 @@ const postApproveReviewBatch = async (request, h) => {
     });
 
     // Kick off next stage of processing
-    await request.queueManager.add(processChargeVersionsJobName, batch);
+    await request.queueManager.add(processChargeVersionsJobName, batch.id);
 
     return envelope({
       event: batchEvent,

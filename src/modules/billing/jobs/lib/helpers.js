@@ -1,15 +1,13 @@
 'use strict';
 
-const { isObject } = require('lodash');
 const { logger } = require('../../../../logger');
 
-const createMessage = (jobName, batch) => {
-  const id = isObject(batch) ? batch.id : batch;
+const createMessage = (jobName, batchId) => {
   return [
     jobName,
-    { batchId: id },
+    { batchId },
     {
-      jobId: `${jobName}.${id}`
+      jobId: `${jobName}.${batchId}`
     }
   ];
 };

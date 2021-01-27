@@ -49,10 +49,10 @@ const onComplete = async (job, queueManager) => {
     }
 
     if (batch.type === BATCH_TYPE.annual) {
-      await queueManager.add(processChargeVersionsJobName, batch);
+      await queueManager.add(processChargeVersionsJobName, batch.id);
     } else {
       // Two-part tariff matching for TPT/supplementary run
-      await queueManager.add(twoPartTariffMatchingJobName, batch);
+      await queueManager.add(twoPartTariffMatchingJobName, batch.id);
     }
   } catch (err) {
     batchJob.logOnCompleteError(job, err);
