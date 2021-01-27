@@ -201,8 +201,30 @@ experiment('returns CSV to JSON mapper', () => {
       });
     });
 
+    test('maps reading type to "measured" when cell marked as "Yes"', async () => {
+      const column = ['', '', '', '', '', 'Yes'];
+      const result = csvMapper._mapReading(column);
+      expect(result).to.equal({
+        type: 'measured',
+        method: 'abstractionVolumes',
+        units: 'm³',
+        totalFlag: false
+      });
+    });
+
     test('maps reading type to "estimated" when cell marked as "N"', async () => {
       const column = ['', '', '', '', '', 'N'];
+      const result = csvMapper._mapReading(column);
+      expect(result).to.equal({
+        type: 'estimated',
+        method: 'abstractionVolumes',
+        units: 'm³',
+        totalFlag: false
+      });
+    });
+
+    test('maps reading type to "estimated" when cell marked as "NO"', async () => {
+      const column = ['', '', '', '', '', 'NO'];
       const result = csvMapper._mapReading(column);
       expect(result).to.equal({
         type: 'estimated',

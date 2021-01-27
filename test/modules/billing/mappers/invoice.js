@@ -16,6 +16,7 @@ const Invoice = require('../../../../src/lib/models/invoice');
 const Address = require('../../../../src/lib/models/address');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
+const Totals = require('../../../../src/lib/models/totals');
 
 const invoiceMapper = require('../../../../src/modules/billing/mappers/invoice');
 
@@ -91,6 +92,9 @@ experiment('modules/billing/mappers/invoice', () => {
         expect(result.address).to.equal(invoice.address.toJSON());
         expect(result.billingBatchId).to.equal(batch.id);
         expect(result.financialYearEnding).to.equal(invoice.financialYear.yearEnding);
+        expect(result.invoiceNumber).to.be.null();
+        expect(result.netAmount).to.be.null();
+        expect(result.isCredit).to.be.null();
       });
     });
 
@@ -101,6 +105,32 @@ experiment('modules/billing/mappers/invoice', () => {
 
       test('the address property is an empty object', async () => {
         expect(result.address).to.equal({});
+      });
+    });
+
+    experiment('when the invoice number is populated', () => {
+      test('it is mapped', () => {
+        invoice.invoiceNumber = 'AAI1000000';
+        const { invoiceNumber } = invoiceMapper.modelToDb(batch, invoice);
+        expect(invoiceNumber).to.equal('AAI1000000');
+      });
+    });
+
+    experiment('when the totals are present', () => {
+      beforeEach(() => {
+        invoice.totals = new Totals();
+        invoice.totals.fromHash({
+          netTotal: 123456
+        });
+        result = invoiceMapper.modelToDb(batch, invoice);
+      });
+
+      test('net amount is mapped correctly', () => {
+        expect(result.netAmount).to.equal(123456);
+      });
+
+      test('isCredit flag is mapped correctly', () => {
+        expect(result.isCredit).to.be.false();
       });
     });
   });

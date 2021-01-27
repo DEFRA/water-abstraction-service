@@ -8,6 +8,7 @@ const documentsHelper = require('./lib/documents');
 const returnsHelper = require('./lib/returns');
 const companiesService = require('../../lib/services/companies-service');
 const invoiceAccountsService = require('../../lib/services/invoice-accounts-service');
+const { logger } = require('../../logger');
 
 const mapErrorResponse = require('../../lib/map-error-response');
 const { envelope } = require('../../lib/response');
@@ -105,6 +106,7 @@ const createCompanyInvoiceAccount = async (request, h) => {
 
     return h.response(generatedAccount.toJSON()).code(201);
   } catch (err) {
+    logger.error('Error saving invoice account', err);
     return mapErrorResponse(err);
   }
 };
@@ -120,9 +122,22 @@ const getCompanyContacts = async (request) => {
   }
 };
 
+const getCompanyInvoiceAccounts = async request => {
+  const { companyId } = request.params;
+  const { regionId } = request.query;
+
+  try {
+    const invoiceAccounts = await companiesService.getCompanyInvoiceAccounts(companyId, regionId);
+    return envelope(invoiceAccounts);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
 exports.getReturns = getReturns;
 exports.getCompany = getCompany;
 exports.searchCompaniesByName = searchCompaniesByName;
 exports.getCompanyAddresses = getCompanyAddresses;
 exports.createCompanyInvoiceAccount = createCompanyInvoiceAccount;
 exports.getCompanyContacts = getCompanyContacts;
+exports.getCompanyInvoiceAccounts = getCompanyInvoiceAccounts;

@@ -544,7 +544,7 @@ experiment('modules/billing/controller', () => {
       };
 
       batch = {
-        billingBatchId: 'test-batch-id'
+        id: 'test-batch-id'
       };
 
       request = {
@@ -553,6 +553,9 @@ experiment('modules/billing/controller', () => {
         },
         pre: {
           batch
+        },
+        queueManager: {
+          add: sandbox.stub().resolves()
         }
       };
 
@@ -563,9 +566,15 @@ experiment('modules/billing/controller', () => {
       expect(batchService.approveBatch.calledWith(batch, internalCallingUser)).to.be.true();
     });
 
+    test('publishes a new job to the message queue with the batch ID', async () => {
+      const [jobName, batchId] = request.queueManager.add.lastCall.args;
+      expect(jobName).to.equal('billing.persist-invoice-numbers-and-totals');
+      expect(batchId).to.equal(batch.id);
+    });
+
     test('returns the approved batch', async () => {
       const approvedBatch = {
-        billingBatchId: 'test-batch-id',
+        id: 'test-batch-id',
         status: 'sent'
       };
       batchService.approveBatch.resolves(approvedBatch);

@@ -7,7 +7,6 @@ const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 const addressService = require('../../../src/lib/services/addresses-service');
 const addressMapper = require('../../../src/lib/mappers/address');
-const helpers = require('../../../src/modules/addresses/lib/helpers');
 const Address = require('../../../src/lib/models/address');
 
 const controller = require('../../../src/modules/addresses/controller');
@@ -53,7 +52,6 @@ experiment('./src/modules/change-reasons/controller.js', () => {
     sandbox.stub(addressService, 'createAddress');
     sandbox.stub(addressMapper, 'uiToModel').returns(addressModel);
     sandbox.stub(addressMapper, 'crmToModel').returns(addressModel);
-    sandbox.stub(helpers, 'createAddressEvent').resolves();
   });
 
   afterEach(async () => {
@@ -77,56 +75,7 @@ experiment('./src/modules/change-reasons/controller.js', () => {
         )).to.be.true();
       });
 
-      test('creates an event', async () => {
-        expect(helpers.createAddressEvent.calledWith({
-          issuer: request.defra.internalCallingUser.email,
-          address: addressModel
-        })).to.be.true();
-      });
-
       test('returns address mapped to model', async () => {
-        expect(response).to.be.instanceOf(Address);
-        expect(response.id).to.equal(addressId);
-        expect(response.addressLine1).to.equal(address.address1);
-        expect(response.addressLine2).to.equal(address.address2);
-        expect(response.addressLine3).to.equal(address.address3);
-        expect(response.addressLine4).to.equal(address.address4);
-        expect(response.town).to.equal(address.town);
-        expect(response.county).to.equal(address.county);
-        expect(response.country).to.equal(address.country);
-        expect(response.postcode).to.equal(address.postcode);
-        expect(response.isTest).to.equal(address.isTest);
-        expect(response.source).to.equal(address.dataSource);
-        expect(response.uprn).to.equal(address.uprn);
-      });
-    });
-
-    experiment('when a 409 conflict error is returned from the CRM', () => {
-      let err;
-      beforeEach(async () => {
-        err = new Error('oh no!');
-        err.statusCode = 409;
-        err.error = {
-          existingEntity: {
-            addressId,
-            ...address
-          }
-        };
-        addressService.createAddress.throws(err);
-        response = await controller.postAddress(createRequest());
-      });
-
-      test('tries to create a new address record', async () => {
-        expect(addressService.createAddress.calledWith(
-          addressModel
-        )).to.be.true();
-      });
-
-      test('does not create an event', async () => {
-        expect(helpers.createAddressEvent.called).to.be.false();
-      });
-
-      test('returns existing address mapped to model', async () => {
         expect(response).to.be.instanceOf(Address);
         expect(response.id).to.equal(addressId);
         expect(response.addressLine1).to.equal(address.address1);

@@ -28,6 +28,13 @@ const { parseReturnId } = waterHelpers.returns;
 const normalize = value => value.trim().toLowerCase();
 
 /**
+ * Checks whether value is an acceptable 'yes' value
+ * @param {String} value
+ * @return {Boolean}
+ */
+const isYesValue = value => ['y', 'yes'].includes(normalize(value));
+
+/**
  * Creates a skeleton return line object
  * @param  {String} dateLabel - the date label in the CSV
  * @param {Number} numberOfDataLines - how many lines of data for this return?
@@ -81,15 +88,12 @@ const mapLines = (headers, column, readingType) => {
  * @param  {Array} column  - column of return data from CSV
  * @return {Object}        - return reading object
  */
-const mapReading = column => {
-  const value = column[ROW_INDEX.meterUsed];
-  return {
-    type: normalize(value) === 'y' ? 'measured' : 'estimated',
-    method: 'abstractionVolumes',
-    units: 'm³',
-    totalFlag: false
-  };
-};
+const mapReading = column => ({
+  type: isYesValue(column[ROW_INDEX.meterUsed]) ? 'measured' : 'estimated',
+  method: 'abstractionVolumes',
+  units: 'm³',
+  totalFlag: false
+});
 
 /**
  * Maps CSV column data and reading type to a meters array for the return
@@ -122,7 +126,7 @@ const mapMeters = (column, readingType) => {
  * @return {Object}         a single return object
  */
 const mapReturn = (column, context) => {
-  const isNil = normalize(column[ROW_INDEX.nilReturn]) === 'y';
+  const isNil = isYesValue(column[ROW_INDEX.nilReturn]);
   const returnId = column.slice(-1)[0];
   const { startDate, endDate, licenceNumber } = parseReturnId(returnId);
 

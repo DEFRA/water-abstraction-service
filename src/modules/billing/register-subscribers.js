@@ -2,6 +2,7 @@
 
 const createBillRun = require('./jobs/create-bill-run');
 const createCharge = require('./jobs/create-charge');
+const persistInvoiceNumbersAndTotals = require('./jobs/persist-invoice-numbers-and-totals');
 const populateBatchChargeVersions = require('./jobs/populate-batch-charge-versions');
 const prepareTransactions = require('./jobs/prepare-transactions');
 const processChargeVersionYear = require('./jobs/process-charge-version-year');
@@ -17,6 +18,7 @@ module.exports = {
     server.queueManager
       .register(createBillRun)
       .register(createCharge)
+      .register(persistInvoiceNumbersAndTotals)
       .register(populateBatchChargeVersions)
       .register(prepareTransactions)
       .register(processChargeVersionYear)

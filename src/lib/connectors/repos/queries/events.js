@@ -9,6 +9,7 @@ SELECT * FROM water.scheduled_notification
 
 exports.getKPIReturnsMonthlyData = `
 SELECT date_part('month', created)::integer AS month, 
+date_part('year', created)::integer AS year,
 SUM(CASE 
   WHEN subtype = 'pdf.return_form' THEN 1
   WHEN subtype = 'paperReturnForms' THEN jsonb_array_length(licences)

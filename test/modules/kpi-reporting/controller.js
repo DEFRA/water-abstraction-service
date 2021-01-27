@@ -23,7 +23,7 @@ experiment('./modules/kpi-reporting/controller', () => {
     monthly: [{ month: 'June', internal: 2, external: 1, year: 2020 }]
   };
   const returnsDataCycle = { due: 1551, internalOnTime: 1, internalLate: 1, externalOnTime: 1, externalLate: 1 };
-  const returnsDataMonthly = [{ currentYear: true, month: 1, request: 0, return: 1 }];
+  const returnsDataMonthly = [{ currentYear: true, month: 1, request: 0, return: 1, year: 2020 }];
   const licenceNamesData = [
     { currentYear: true, month: 1, named: 220, renamed: 110, year: 2020 },
     { currentYear: false, month: 12, named: 200, renamed: 100, year: 2019 }
