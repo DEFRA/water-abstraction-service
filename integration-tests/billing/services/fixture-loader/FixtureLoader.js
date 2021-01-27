@@ -24,7 +24,6 @@ const mapValue = (value, refs) => {
   // Check for ref match
   const match = value.toString().match(refRegex);
   if (!match) {
-    console.log(value, 'no match');
     return value;
   }
   return refs.get(match[1])[match[2]];
@@ -85,8 +84,6 @@ class FixtureLoader {
 
       // Create new model using adapter
       const model = await this._adapter.create(config, data);
-
-      console.log(model);
 
       // Store in refs
       if (config.ref) {

@@ -137,7 +137,7 @@ experiment('supplementary ref: SB2', () => {
         experiment('the first debit transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions.find(tx => tx.transactionKey === '1e1fee0c4146c314e12f5f9067b25b24');
+            transaction = licence.billingTransactions.find(tx => tx.isCredit === false && tx.description === 'CE3');
           });
 
           test('is a standard charge', async () => {

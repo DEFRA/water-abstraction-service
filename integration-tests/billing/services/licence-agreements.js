@@ -6,5 +6,4 @@ const tearDown = () =>
     .where('is_test', true)
     .del();
 
-// exports.create = create;
 exports.tearDown = tearDown;
