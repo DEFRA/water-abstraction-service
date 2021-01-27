@@ -142,9 +142,10 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
       });
 
       test('resolves with batch and transactions', async () => {
-        expect(result.batch).to.be.an.instanceof(Batch);
-        expect(result.batch.id).to.equal(BATCH_ID);
-        expect(result.transactions).to.equal(data.transactions);
+        expect(result.billingTransactionIds).to.equal([
+          data.transactions[0].billingTransactionId,
+          data.transactions[1].billingTransactionId
+        ]);
       });
     });
 
@@ -167,9 +168,14 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
 
     beforeEach(async () => {
       job = {
+        data: {
+          batchId: BATCH_ID
+        },
         returnvalue: {
-          batch: data.batch,
-          transactions: data.transactions
+          billingTransactionIds: [
+            data.transactions[0].billingTransactionId,
+            data.transactions[1].billingTransactionId
+          ]
         }
       };
     });
@@ -181,6 +187,7 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
 
       test('adds a message to the queue for every transaction', async () => {
         expect(queueManager.add.callCount).to.equal(2);
+        console.log(queueManager.add.firstCall.args);
         expect(queueManager.add.firstCall.calledWith(
           'billing.create-charge', BATCH_ID, data.transactions[0].billingTransactionId
         )).to.be.true();

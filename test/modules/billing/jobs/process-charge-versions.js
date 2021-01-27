@@ -21,9 +21,9 @@ const batchId = uuid();
 const eventId = 'test-event-id';
 
 const billingBatchChargeVersionYears = [{
-  chargeVersionYearId: 'test-charge-version-year-1'
+  billingBatchChargeVersionYearId: 'test-charge-version-year-1'
 }, {
-  chargeVersionYearId: 'test-charge-version-year-2'
+  billingBatchChargeVersionYearId: 'test-charge-version-year-2'
 }];
 
 experiment('modules/billing/jobs/process-charge-versions', () => {
@@ -95,9 +95,11 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
         )).to.be.true();
       });
 
-      test('the handler returns the batch and billingBatchChargeVersionYears', async () => {
-        expect(result.batch).to.equal(batch);
-        expect(result.billingBatchChargeVersionYears).to.equal(billingBatchChargeVersionYears);
+      test('the handler returns the billingBatchChargeVersionYear IDs', async () => {
+        expect(result.billingBatchChargeVersionYearIds).to.equal([
+          billingBatchChargeVersionYears[0].billingBatchChargeVersionYearId,
+          billingBatchChargeVersionYears[1].billingBatchChargeVersionYearId
+        ]);
       });
     });
 
@@ -147,18 +149,11 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
     let job;
     beforeEach(async () => {
       job = {
+        data: {
+          batchId
+        },
         returnvalue: {
-          batch: {
-            id: batchId
-          },
-          billingBatchChargeVersionYears: [
-            {
-              billing_batch_charge_version_year_id: 'test-id-1'
-            },
-            {
-              billing_batch_charge_version_year_id: 'test-id-2'
-            }
-          ]
+          billingBatchChargeVersionYearIds: ['test-id-1', 'test-id-2']
         }
       };
     });
@@ -171,10 +166,10 @@ experiment('modules/billing/jobs/process-charge-versions', () => {
       test('a job is published for each charge version year', async () => {
         expect(queueManager.add.callCount).to.equal(2);
         expect(queueManager.add.calledWith(
-          'billing.process-charge-version-year', job.returnvalue.batch, job.returnvalue.billingBatchChargeVersionYears[0]
+          'billing.process-charge-version-year', batchId, job.returnvalue.billingBatchChargeVersionYearIds[0]
         )).to.be.true();
         expect(queueManager.add.calledWith(
-          'billing.process-charge-version-year', job.returnvalue.batch, job.returnvalue.billingBatchChargeVersionYears[1]
+          'billing.process-charge-version-year', batchId, job.returnvalue.billingBatchChargeVersionYearIds[1]
         )).to.be.true();
       });
     });

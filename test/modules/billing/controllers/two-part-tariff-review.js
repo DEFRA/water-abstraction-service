@@ -223,7 +223,7 @@ experiment('modules/billing/controllers/two-part-tariff-review', () => {
       test('publishes a new job to the message queue with the event id', async () => {
         const [jobName, batchId] = request.queueManager.add.lastCall.args;
         expect(jobName).to.equal('billing.process-charge-versions');
-        expect(batchId).to.equal(batch);
+        expect(batchId).to.equal(batch.id);
       });
 
       test('the response contains the event and batch', async () => {

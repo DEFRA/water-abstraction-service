@@ -20,15 +20,6 @@ const { Batch, ChargeVersionYear } = require('../../../../src/lib/models');
 const CHARGE_VERSION_YEAR_ID = uuid();
 const BATCH_ID = uuid();
 
-const data = {
-  batch: {
-    id: BATCH_ID
-  },
-  billingBatchChargeVersionYear: {
-    billingBatchChargeVersionYearId: CHARGE_VERSION_YEAR_ID
-  }
-};
-
 experiment('modules/billing/jobs/process-charge-version', () => {
   let chargeVersionYear, batch, queueManager;
 
@@ -68,15 +59,15 @@ experiment('modules/billing/jobs/process-charge-version', () => {
     let message;
 
     beforeEach(async () => {
-      message = processChargeVersionYear.createMessage(data.batch, data.billingBatchChargeVersionYear);
+      message = processChargeVersionYear.createMessage(BATCH_ID, CHARGE_VERSION_YEAR_ID);
     });
 
     test('creates the expected message array', async () => {
       expect(message).to.equal([
         'billing.process-charge-version-year',
         {
-          batch: data.batch,
-          billingBatchChargeVersionYear: data.billingBatchChargeVersionYear
+          batchId: BATCH_ID,
+          billingBatchChargeVersionYearId: CHARGE_VERSION_YEAR_ID
         },
         {
           jobId: `billing.process-charge-version-year.${BATCH_ID}.${CHARGE_VERSION_YEAR_ID}`
@@ -91,8 +82,8 @@ experiment('modules/billing/jobs/process-charge-version', () => {
     beforeEach(async () => {
       job = {
         data: {
-          batch: data.batch,
-          billingBatchChargeVersionYear: data.billingBatchChargeVersionYear
+          batchId: BATCH_ID,
+          billingBatchChargeVersionYearId: CHARGE_VERSION_YEAR_ID
         }
       };
 
@@ -119,7 +110,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
       test('the charge version year is retrieve by id', async () => {
         expect(chargeVersionYearService.getChargeVersionYearById.calledWith(
-          job.data.billingBatchChargeVersionYear.billingBatchChargeVersionYearId
+          job.data.billingBatchChargeVersionYearId
         )).to.be.true();
       });
 
@@ -137,7 +128,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
       test('the billing batch charge version year status is updated to "ready"', async () => {
         expect(chargeVersionYearService.setReadyStatus.calledWith(
-          job.data.billingBatchChargeVersionYear.billingBatchChargeVersionYearId
+          job.data.billingBatchChargeVersionYearId
         )).to.be.true();
       });
     });
@@ -153,7 +144,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
 
       test('the billing batch charge version year status is updated to "error"', async () => {
         expect(chargeVersionYearService.setErrorStatus.calledWith(
-          job.data.billingBatchChargeVersionYear.billingBatchChargeVersionYearId
+          job.data.billingBatchChargeVersionYearId
         )).to.be.true();
       });
 
@@ -214,6 +205,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
         job = {
           returnvalue: {
             batch: {
+              id: BATCH_ID,
               status: Batch.BATCH_STATUS.processing
             },
             processing: 0
@@ -225,7 +217,7 @@ experiment('modules/billing/jobs/process-charge-version', () => {
       test('the prepare transactions job is scheduled', async () => {
         expect(queueManager.add.callCount).to.equal(1);
         expect(queueManager.add.calledWith(
-          'billing.prepare-transactions', job.returnvalue.batch
+          'billing.prepare-transactions', BATCH_ID
         )).to.be.true();
       });
     });

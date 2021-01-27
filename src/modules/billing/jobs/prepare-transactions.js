@@ -38,8 +38,8 @@ const handler = async job => {
     // Set empty batch
     if (transactions.length === 0) {
       logger.info(`No transactions produced for batch ${batchId}, finalising batch run`);
-      const updatedBatch = await batchService.setStatus(batchId, BATCH_STATUS.empty);
-      return { batch: updatedBatch, billingTransactionIds };
+      await batchService.setStatus(batchId, BATCH_STATUS.empty);
+      return { billingTransactionIds };
     }
 
     return {
