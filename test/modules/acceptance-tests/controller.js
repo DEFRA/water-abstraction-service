@@ -9,8 +9,6 @@ const {
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
-const batches = require('../../../src/modules/acceptance-tests/lib/charging/batches');
-const chargingScenarios = require('../../../src/modules/acceptance-tests/lib/charging/charging-scenarios');
 const users = require('../../../src/modules/acceptance-tests/lib/users');
 const entities = require('../../../src/modules/acceptance-tests/lib/entities');
 const permits = require('../../../src/modules/acceptance-tests/lib/permits');
@@ -62,8 +60,6 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(licences, 'create').resolves({});
     sandbox.stub(returns, 'createDueReturn').resolves({});
 
-    sandbox.stub(batches, 'delete').resolves();
-    sandbox.stub(batches, 'getTestRegionBatchIds').resolves([]);
     sandbox.stub(returns, 'delete').resolves();
     sandbox.stub(events, 'delete').resolves();
     sandbox.stub(permits, 'delete').resolves();
@@ -73,8 +69,6 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(sessions, 'delete').resolves();
     sandbox.stub(licences, 'delete').resolves();
     sandbox.stub(chargeTestDataTearDown, 'tearDown').resolves();
-    sandbox.stub(chargingScenarios, 'annualBillRun').resolves({ regionId: 'test-annual-bill-run-region-id' });
-    sandbox.stub(chargingScenarios, 'supplementaryBillRun').resolves({ regionId: 'test-supplementary-bill-run-region-id' });
   });
 
   afterEach(async () => {
@@ -90,7 +84,6 @@ experiment('modules/acceptance-tests/controller', () => {
       });
 
       test('the existing data is torn down', async () => {
-        expect(batches.delete.called).to.be.true();
         expect(returns.delete.called).to.be.true();
         expect(events.delete.called).to.be.true();
         expect(permits.delete.called).to.be.true();
@@ -226,46 +219,9 @@ experiment('modules/acceptance-tests/controller', () => {
     });
   });
 
-  experiment('when annual bill data is requested', async () => {
-    let response;
-
-    beforeEach(async () => {
-      const request = {
-        payload: {
-          includeAnnualBillRun: true
-        }
-      };
-      response = await controller.postSetup(request);
-    });
-
-    test('annual bill run data is created', async () => {
-      const charging = response.charging;
-      expect(charging).to.equal({ regionId: 'test-annual-bill-run-region-id' });
-    });
-  });
-
-  experiment('when annual bill data is requested', async () => {
-    let response;
-
-    beforeEach(async () => {
-      const request = {
-        payload: {
-          includeSupplementaryBillRun: true
-        }
-      };
-      response = await controller.postSetup(request);
-    });
-
-    test('supplementary bill run data is created', async () => {
-      const charging = response.charging;
-      expect(charging).to.equal({ regionId: 'test-supplementary-bill-run-region-id' });
-    });
-  });
-
   experiment('postTearDown', () => {
     test('deletes the test data that has been created', async () => {
       await controller.postTearDown();
-      expect(batches.delete.called).to.be.true();
       expect(returns.delete.called).to.be.true();
       expect(events.delete.called).to.be.true();
       expect(permits.delete.called).to.be.true();
@@ -273,7 +229,6 @@ experiment('modules/acceptance-tests/controller', () => {
       expect(entities.delete.called).to.be.true();
       expect(users.delete.called).to.be.true();
       expect(sessions.delete.called).to.be.true();
-      expect(batches.getTestRegionBatchIds.called).to.be.true();
     });
   });
 });

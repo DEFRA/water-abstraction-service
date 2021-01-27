@@ -10,13 +10,14 @@ const {
   beforeEach
 } = exports.lab = require('@hapi/lab').script();
 
-const { omit } = require('lodash');
-
 const moment = require('moment');
-
+const { omit } = require('lodash');
 const services = require('../../services');
 const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
 const transactionTests = require('../transaction-tests');
+
+const bookshelfLoader = require('../../services/bookshelf-loader')();
+const crmLoader = require('../../services/crm-loader')();
 
 // Scenario: Annual Batch 2
 // Single Licence with a single charge version effective for whole year with 2 Part Tariff agreements
@@ -27,16 +28,15 @@ experiment('annual batch ref: AB2', () => {
   before(async () => {
     await services.tearDown.tearDown();
 
-    batch = await services.scenarios.runScenario({
-      licence: 'l1',
-      licenceAgreement: 's127',
-      chargeVersions: [{
-        company: 'co1',
-        invoiceAccount: 'ia1',
-        chargeVersion: 'cv1',
-        chargeElements: ['ce2']
-      }]
-    }, 'annual');
+    // Load CRM fixtures
+    await crmLoader.load('crm.yaml');
+
+    // Load Bookshelf fixtures
+    bookshelfLoader.setRef('$invoiceAccount', crmLoader.getRef('$invoiceAccount'));
+    await bookshelfLoader.load('AB2.yaml');
+    const region = bookshelfLoader.getRef('$region');
+
+    batch = await services.scenarios.runScenario(region.regionId, 'annual');
 
     chargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(batch);
   });
@@ -82,7 +82,7 @@ experiment('annual batch ref: AB2', () => {
       });
 
       test('has the correct invoice address', async () => {
-        expect(invoice.address).to.equal({
+        expect(omit(invoice.address, ['uprn', 'isTest'])).to.equal({
           town: 'Testington',
           county: 'Testingshire',
           country: 'UK',
@@ -91,7 +91,6 @@ experiment('annual batch ref: AB2', () => {
           addressLine2: 'Windy road',
           addressLine3: 'Buttercup meadow',
           addressLine4: null,
-          uprn: null,
           source: 'nald'
         });
       });
@@ -107,42 +106,23 @@ experiment('annual batch ref: AB2', () => {
           licence = invoice.billingInvoiceLicences[0];
         });
 
-        test('has the correct licence name', async () => {
-          expect(licence.licenceHolderName.lastName).to.equal('Testerson');
-          expect(licence.licenceHolderName.firstName).to.equal('John');
-          expect(licence.licenceHolderName.title).to.equal('Mr');
-        });
-
-        test('has the correct licence holder address', async () => {
-          expect(omit(licence.licenceHolderAddress, 'id')).to.equal({
-            town: 'Testington',
-            county: 'Testingshire',
-            country: 'UK',
-            postcode: 'TT1 1TT',
-            addressLine1: 'Big Farm',
-            addressLine2: 'Windy road',
-            addressLine3: 'Buttercup meadow',
-            addressLine4: null
-          });
-        });
-
         test('has the correct licence agreement', async () => {
           const licenceAgreement = licence.licence.licenceAgreements[0];
           expect(licenceAgreement.licenceRef).to.equal('L1');
           expect(licenceAgreement.startDate).to.equal('2008-04-01');
           expect(licenceAgreement.endDate).to.equal(null);
-          expect(licenceAgreement.financialAgreementTypeId).to.equal('S127');
+          expect(licenceAgreement.financialAgreementType.financialAgreementCode).to.equal('S127');
           expect(moment(licenceAgreement.dateSigned).format('YYYY-MM-DD')).to.equal('2008-05-05');
         });
 
-        test('has 1 transaction', async () => {
-          expect(licence.billingTransactions).to.have.length(1);
+        test('has 2 transaction', async () => {
+          expect(licence.billingTransactions).to.have.length(2);
         });
 
-        experiment('the first transaction', () => {
+        experiment('the standard charge transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions[0];
+            transaction = licence.billingTransactions.find((tx) => tx.chargeType === 'standard');
           });
 
           test('is a standard charge', async () => {
@@ -200,7 +180,7 @@ experiment('annual batch ref: AB2', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('88a477ac6bb3664a0c23060de0829582');
+            expect(transaction.transactionKey).to.equal('d870c80b337e12b45e83c3d41c61aa22');
           });
         });
       });

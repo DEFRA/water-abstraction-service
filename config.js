@@ -7,8 +7,9 @@ const isProduction = ['production'].includes(process.env.NODE_ENV);
 const isProductionLike = ['production', 'preprod'].includes(process.env.NODE_ENV);
 const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0';
 const isLocal = process.env.NODE_ENV === 'local';
-const isTravis = process.env.TRAVIS;
-const isLab = !!process.env.IS_LAB;
+const isTlsConnection = !(process.env.TRAVIS || process.env.TEST_MODE || isLocal);
+const isRedisLazy = !!process.env.LAZY_REDIS;
+const isPermitsTestDatabase = process.env.DATABASE_URL.includes('permits-test');
 
 module.exports = {
 
@@ -192,9 +193,9 @@ module.exports = {
     host: process.env.REDIS_HOST || '127.0.0.1',
     port: process.env.REDIS_PORT || 6379,
     password: process.env.REDIS_PASSWORD || '',
-    ...!(isLocal || isTravis) && { tls: {} },
-    db: 2,
-    lazyConnect: isLab
+    ...(isTlsConnection) && { tls: {} },
+    db: isPermitsTestDatabase ? 4 : 2,
+    lazyConnect: isRedisLazy
   },
 
   featureToggles: {

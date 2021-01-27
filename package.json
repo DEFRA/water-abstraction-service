@@ -8,9 +8,10 @@
     "url": "https://github.com/DEFRA/water-abstraction-service"
   },
   "scripts": {
-    "test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test IS_LAB=1 lab",
-    "test:bail": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test IS_LAB=1 lab --bail",
-    "test:travis": "IS_LAB=1 lab -t 55 -m 0 --coverage-path ./src/ -r lcov -o coverage/lcov.info -r console -o stdout",
+    "test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test LAZY_REDIS=1 lab",
+    "test:bail": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test LAZY_REDIS=1 lab --bail",
+    "test:travis": "LAZY_REDIS=1 lab -t 55 -m 0 --coverage-path ./src/ -r lcov -o coverage/lcov.info -r console -o stdout",
+    "test:integration": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test lab integration-tests/ --silence --bail",
     "codecov": "codecov",
     "migrate": "node scripts/create-schema && db-migrate up --verbose && node scripts/migrate-task-config",
     "migrate:local-test": "DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test node scripts/create-schema && DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test db-migrate up --verbose && DATABASE_URL=postgres://postgres:postgres@localhost:5432/permits-test node scripts/migrate-task-config",
@@ -102,6 +103,7 @@
     "snakecase-keys": "^1.1.1",
     "title-case": "^3.0.2",
     "url-join": "^4.0.1",
-    "uuid": "^3.4.0"
+    "uuid": "^3.4.0",
+    "yamljs": "^0.3.0"
   }
 }

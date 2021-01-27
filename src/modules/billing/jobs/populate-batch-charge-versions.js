@@ -25,13 +25,11 @@ const handler = async job => {
 
     // Populate water.billing_batch_charge_version_years
     const billingBatchChargeVersionYears = await chargeVersionService.createForBatch(batch);
-
     // If there is nothing to process, mark empty batch
     if (billingBatchChargeVersionYears.length === 0) {
       const updatedBatch = await batchService.setStatus(batchId, BATCH_STATUS.empty);
       return { batch: updatedBatch };
     }
-
     return { batch };
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToPopulateChargeVersions);

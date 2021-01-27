@@ -55,6 +55,9 @@ experiment('modules/billing/controllers/two-part-tariff-review', () => {
       },
       defra: {
         internalCallingUser: user
+      },
+      auth: {
+        credentials: user
       }
     };
 

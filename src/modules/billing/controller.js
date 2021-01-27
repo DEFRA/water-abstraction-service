@@ -35,7 +35,6 @@ const postCreateBatch = async (request, h) => {
   try {
     // create a new entry in the batch table
     const batch = await batchService.create(regionId, batchType, financialYearEnding, isSummer);
-
     // add these details to the event log
     const batchEvent = await createBatchEvent({
       issuer: userEmail,
