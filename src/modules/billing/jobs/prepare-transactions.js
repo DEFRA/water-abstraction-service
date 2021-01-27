@@ -15,6 +15,8 @@ const billingTransactionsRepo = require('../../../lib/connectors/repos/billing-t
 
 const createMessage = partial(helpers.createMessage, JOB_NAME);
 
+const getTransactionId = transaction => transaction.billingTransactionId;
+
 const handler = async job => {
   batchJob.logHandling(job);
 
@@ -31,17 +33,17 @@ const handler = async job => {
 
     // Get all transactions now in batch
     const transactions = await billingTransactionsRepo.findByBatchId(batch.id);
+    const billingTransactionIds = transactions.map(getTransactionId);
 
     // Set empty batch
     if (transactions.length === 0) {
       logger.info(`No transactions produced for batch ${batchId}, finalising batch run`);
       const updatedBatch = await batchService.setStatus(batchId, BATCH_STATUS.empty);
-      return { batch: updatedBatch, transactions };
+      return { batch: updatedBatch, billingTransactionIds };
     }
 
     return {
-      batch,
-      transactions
+      billingTransactionIds
     };
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToPrepareTransactions);
@@ -51,14 +53,14 @@ const handler = async job => {
 
 const onComplete = async (job, queueManager) => {
   try {
-    const { transactions, batch } = job.returnvalue;
-    const batchId = batch.id;
+    const batchId = get(job, 'data.batchId');
+    const { billingTransactionIds } = job.returnvalue;
 
-    logger.info(`${transactions.length} transactions produced for batch ${batchId}, creating charges...`);
+    logger.info(`${billingTransactionIds.length} transactions produced for batch ${batchId}, creating charges...`);
 
     // Note: publish jobs in series to avoid overwhelming message queue
-    for (const transaction of transactions) {
-      await queueManager.add(createChargeJobName, batchId, transaction.billingTransactionId);
+    for (const billingTransactionId of billingTransactionIds) {
+      await queueManager.add(createChargeJobName, batchId, billingTransactionId);
     }
   } catch (err) {
     batchJob.logOnCompleteError(job, err);

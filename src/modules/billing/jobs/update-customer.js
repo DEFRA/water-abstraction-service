@@ -26,7 +26,7 @@ const handler = async job => {
   const invoiceAccountId = get(job, 'data.invoiceAccountId');
   const invoiceAccountData = await invoiceAccountsService.getByInvoiceAccountId(invoiceAccountId);
   const invoiceAccountMappedData = await chargeModuleMappers.mapInvoiceAccountToChargeModuleCustomer(invoiceAccountData);
-  return chargeModuleCustomersConnector.updateCustomer(invoiceAccountMappedData);
+  await chargeModuleCustomersConnector.updateCustomer(invoiceAccountMappedData);
 };
 
 const onComplete = job => {

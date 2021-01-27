@@ -44,7 +44,7 @@ const postCreateBatch = async (request, h) => {
     });
 
     // add a new job to the queue so that the batch can be created in the CM
-    await request.queueManager.add(createBillRunJobName, batch);
+    await request.queueManager.add(createBillRunJobName, batch.id);
 
     return h.response(envelope({
       batch,
