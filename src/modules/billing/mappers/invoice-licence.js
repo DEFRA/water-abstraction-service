@@ -14,7 +14,6 @@ const licence = require('../../../lib/mappers/licence');
  */
 const dbToModel = row => {
   const invoiceLicence = new InvoiceLicence(row.billingInvoiceLicenceId);
-
   if (row.billingTransactions) {
     invoiceLicence.transactions = row.billingTransactions.map(transaction.dbToModel);
   }

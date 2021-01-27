@@ -12,6 +12,7 @@ const uuid = require('uuid/v4');
 const billingInvoiceLicences = require('../../../../src/lib/connectors/repos/billing-invoice-licences');
 const { bookshelf } = require('../../../../src/lib/connectors/bookshelf');
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
+const paginationHelper = require('../../../../src/lib/connectors/repos/lib/envelope');
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-invoice-licences');
 const billingInvoiceLicence = require('../../../../src/lib/connectors/bookshelf/BillingInvoiceLicence');
 
@@ -22,16 +23,21 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     sandbox.stub(bookshelf.knex, 'raw');
     sandbox.stub(raw, 'singleRow');
     sandbox.stub(raw, 'multiRow');
+    sandbox.stub(paginationHelper, 'paginatedEnvelope');
 
     model = {
       toJSON: sandbox.stub()
     };
+
     bookshelfStub = {
       where: sandbox.stub().returnsThis(),
+      orderBy: sandbox.stub().returnsThis(),
       fetch: sandbox.stub().resolves(model),
+      fetchPage: sandbox.stub().resolves(model),
       destroy: sandbox.stub()
     };
     sandbox.stub(billingInvoiceLicence, 'forge').returns(bookshelfStub);
+    sandbox.stub(billingInvoiceLicence, 'collection').returns(bookshelfStub);
   });
 
   afterEach(async () => {
@@ -140,6 +146,42 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       test('resolves with the result of the toJSON() call', async () => {
         expect(result).to.equal({ billingInvoiceLicenceId });
       });
+    });
+  });
+
+  experiment('.findAll', async () => {
+    const billingInvoiceLicenceId = uuid();
+
+    beforeEach(async () => {
+      await paginationHelper.paginatedEnvelope.resolves({});
+      await billingInvoiceLicences.findAll(billingInvoiceLicenceId, 1, 10);
+    });
+
+    test('collection() is called on the model', () => {
+      expect(billingInvoiceLicence.collection.called).to.be.true();
+    });
+
+    test('where() is called to narrow down results to the relevant licence', () => {
+      expect(bookshelfStub.where.calledWith({
+        licence_id: billingInvoiceLicenceId
+      })).to.be.true();
+    });
+
+    test('calls orderBy to sort by date created descending', () => {
+      const [field, direction] = bookshelfStub.orderBy.lastCall.args;
+      expect(field).to.equal('date_created');
+      expect(direction).to.equal('DESC');
+    });
+
+    test('calls fetchPage() with the expected params', () => {
+      const [options] = bookshelfStub.fetchPage.lastCall.args;
+      expect(options.page).to.equal(1);
+      expect(options.pageSize).to.equal(10);
+      expect(options.withRelated).to.equal([
+        'billingInvoice',
+        'billingInvoice.billingBatch',
+        'billingInvoice.billingBatch.region'
+      ]);
     });
   });
 
