@@ -7,7 +7,7 @@ const STATUS_FAILED = 'failed';
 
 const jobDefaults = {
   removeOnComplete: true,
-  removeOnFail: 100
+  removeOnFail: 500
 };
 
 class QueueManager {

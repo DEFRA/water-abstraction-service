@@ -97,12 +97,12 @@ const handler = async job => {
     // if the charge was created in the CM
     if (isConflictError(err)) {
       await transactionsService.updateWithChargeModuleResponse(transactionId, err.response.body);
-      return await updateBatchState(batch);
+      return updateBatchState(batch);
     }
     // if error code >= 400 and < 500 set transacti on status to error and continue
     if (isClientError(err)) {
       await transactionsService.setErrorStatus(transactionId);
-      return await updateBatchState(batch);
+      return updateBatchState(batch);
     }
     // throw error to retry
     throw err;
