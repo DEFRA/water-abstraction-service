@@ -41,17 +41,16 @@ const updateIncludeInSupplementaryBillingStatusForBatch = `
  * have no charge version workflows started
  */
 const getLicencesWithoutChargeVersions = `
-  select l.*
-  from water.licences l
-    inner join water.licence_versions lv
-      on l.licence_id = lv.licence_id
-    left join water.charge_versions cv
-      on l.licence_ref = cv.licence_ref
-    left join water.charge_version_workflows cvwf
-      on l.licence_id = cvwf.licence_id
-  where cv.licence_ref is null
-  and cvwf.charge_version_workflow_id is null
-  and lv.status in ('superseded', 'current');
+select l.*
+from water.licences l
+  inner join water.licence_versions lv
+    on l.licence_id = lv.licence_id and lv.status in ('superseded', 'current')
+  left join water.charge_versions cv
+    on l.licence_ref = cv.licence_ref
+where cv.licence_ref is null
+and l.licence_id not in (
+  select licence_id from water.charge_version_workflows
+)
 `;
 
 exports.getLicencesWithoutChargeVersions = getLicencesWithoutChargeVersions;
