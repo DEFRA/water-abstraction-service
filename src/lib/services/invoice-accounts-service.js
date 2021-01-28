@@ -1,5 +1,6 @@
 'use strict';
 
+const moment = require('moment');
 const { isEmpty } = require('lodash');
 const promiseWaterfall = require('p-waterfall');
 
@@ -14,6 +15,7 @@ const mappers = require('../mappers');
 const validators = require('../models/validators');
 const { CONTACT_ROLES } = require('../models/constants');
 const { logger } = require('../../logger');
+const DATE_FORMAT = 'YYYY-MM-DD';
 
 /**
  * Gets invoice accounts with specified IDs from CRM and
@@ -63,6 +65,13 @@ const createInvoiceAccount = async (regionId, invoiceAccount) => {
   return mappers.invoiceAccount.crmToModel(invoiceAccountEntity);
 };
 
+/**
+ * If an agent company is present in the invoice account address,
+ * persist it to CRM if it has no ID
+ *
+ * @param {Object} context
+ * @return {Promise<Object>} context
+ */
 const persistAgentCompany = async context => {
   const { agentCompany } = context.invoiceAccountAddress;
   if (agentCompany && !agentCompany.id) {
@@ -73,6 +82,13 @@ const persistAgentCompany = async context => {
 
 const getInvoiceAccountAddressCompany = context => context.invoiceAccountAddress.agentCompany || context.invoiceAccount.company;
 
+/**
+ * Persist the address to the CRM if it has no ID
+ * Also add it to either the licence holder or agent company as appropriate
+ *
+ * @param {Object} context
+ * @return {Promise<Object>} context
+ */
 const persistAddress = async context => {
   const { address, dateRange: { startDate } } = context.invoiceAccountAddress;
 
@@ -91,6 +107,13 @@ const persistAddress = async context => {
   return context;
 };
 
+/**
+ * Persist the contact to the CRM if it has no ID
+ * Also add it to either the licence holder or agent company as appropriate
+ *
+ * @param {Object} context
+ * @return {Promise<Object>} context
+ */
 const persistContact = async context => {
   const { contact, dateRange: { startDate } } = context.invoiceAccountAddress;
 
@@ -106,6 +129,32 @@ const persistContact = async context => {
       startDate,
       roleName: CONTACT_ROLES.billing
     });
+  }
+
+  return context;
+};
+
+/**
+ * If there is an existing invoice account address...
+ *
+ * - With null end date, set the end date
+ * - With end date after new start date, set end date
+ * - Same start date as new start date, delete it
+ *
+ * @param {Object} context
+ * @return {Promise<Object>} context
+ */
+const updateExistingInvoiceAccountAddresses = async context => {
+  const { invoiceAccount: { invoiceAccountAddresses }, invoiceAccountAddress } = context;
+  for (const existingInvoiceAccountAddress of invoiceAccountAddresses) {
+    // Same start date - delete existing record
+    if (existingInvoiceAccountAddress.dateRange.isStartDate(invoiceAccountAddress.dateRange.startDate)) {
+      await invoiceAccountAddressesService.deleteInvoiceAccountAddress(existingInvoiceAccountAddress.id);
+    } else if (existingInvoiceAccountAddress.dateRange.includes(invoiceAccountAddress.dateRange.startDate)) {
+      // Patch end date to day before new date
+      const previousDay = moment(invoiceAccountAddress.dateRange.startDate).subtract(1, 'day').format(DATE_FORMAT);
+      await invoiceAccountAddressesService.setEndDate(existingInvoiceAccountAddress.id, previousDay);
+    }
   }
 
   return context;
@@ -129,6 +178,7 @@ const createInvoiceAccountAddress = async (invoiceAccountId, invoiceAccountAddre
     persistAgentCompany,
     persistAddress,
     persistContact,
+    updateExistingInvoiceAccountAddresses,
     persistInvoiceAccountAddress
   ];
 

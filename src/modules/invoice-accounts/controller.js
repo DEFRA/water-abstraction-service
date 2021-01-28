@@ -1,10 +1,12 @@
 'use strict';
 
+const moment = require('moment');
 const controller = require('../../lib/controller');
 const invoiceAccountService = require('../../lib/services/invoice-accounts-service');
 const invoiceAccountAddressMapper = require('../../lib/mappers/invoice-account-address');
 const mapErrorResponse = require('../../lib/map-error-response');
 const { jobName: updateCustomerDetailsInCMJobName } = require('../../modules/billing/jobs/update-customer');
+const DATE_FORMAT = 'YYYY-MM-DD';
 
 /**
  * Gets an invoice account for the specified ID
@@ -16,7 +18,10 @@ const getInvoiceAccount = async request =>
 const postInvoiceAccountAddress = async (request, h) => {
   try {
     const { invoiceAccountId } = request.params;
-    const { startDate, address, agentCompany, contact } = request.payload;
+    const { address, agentCompany, contact } = request.payload;
+
+    // Change of date is always current date
+    const startDate = moment().format(DATE_FORMAT);
 
     // Map supplied data to InvoiceAccountAddress service model
     const invoiceAccountAddress = invoiceAccountAddressMapper.pojoToModel({

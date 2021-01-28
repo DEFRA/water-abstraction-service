@@ -49,7 +49,6 @@ const createCompanyAddress = async (companyId, addressId, options = {}) => {
   };
   const companyAddressData = Object.assign({}, defaults, options, { addressId });
   let companyAddress;
-  console.log(companyId, companyAddressData);
   try {
     companyAddress = await companiesConnector.createCompanyAddress(companyId, companyAddressData);
   } catch (err) {

@@ -75,14 +75,9 @@ module.exports = {
           invoiceAccountId: Joi.string().guid().required()
         },
         payload: {
-          startDate: Joi.string().isoDate().required(),
           address: addressSchema,
           agentCompany: companySchema,
           contact: contactSchema
-        },
-        failAction: (req, h, err) => {
-          console.error(err);
-          throw err;
         }
       }
     }
