@@ -3,6 +3,7 @@
 const moment = require('moment');
 const controller = require('../../lib/controller');
 const invoiceAccountService = require('../../lib/services/invoice-accounts-service');
+const licencesService = require('../../lib/services/licences');
 const invoiceAccountAddressMapper = require('../../lib/mappers/invoice-account-address');
 const mapErrorResponse = require('../../lib/map-error-response');
 const { jobName: updateCustomerDetailsInCMJobName } = require('../../modules/billing/jobs/update-customer');
@@ -43,9 +44,21 @@ const postInvoiceAccountAddress = async (request, h) => {
   } catch (err) {
     return mapErrorResponse(err);
   }
+};
 
-  // postInvoiceAccountAddress
+/**
+ * Gets licences with a "current" charge version linked to the supplied
+ * invoice account
+ */
+const getLicences = async (request, h) => {
+  try {
+    const { invoiceAccountId } = request.params;
+    return licencesService.getLicencesByInvoiceAccountId(invoiceAccountId);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
 };
 
 exports.getInvoiceAccount = getInvoiceAccount;
 exports.postInvoiceAccountAddress = postInvoiceAccountAddress;
+exports.getLicences = getLicences;

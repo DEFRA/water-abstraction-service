@@ -53,6 +53,14 @@ and l.licence_id not in (
 )
 `;
 
+const getLicencesByInvoiceAccount = `
+select distinct l.* from water.charge_versions cv
+join water.licences l on cv.licence_id=l.licence_id
+where cv.invoice_account_id=:invoiceAccountId
+and status='current'
+`;
+
 exports.getLicencesWithoutChargeVersions = getLicencesWithoutChargeVersions;
 exports.updateIncludeInSupplementaryBillingStatusForBatch = updateIncludeInSupplementaryBillingStatusForBatch;
 exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview;
+exports.getLicencesByInvoiceAccount = getLicencesByInvoiceAccount;
