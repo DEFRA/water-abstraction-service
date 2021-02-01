@@ -44,7 +44,7 @@ const postInvoiceAccountAddress = async (request, h) => {
     // @todo move to service layer
     await request.queueManager.add(updateCustomerDetailsInCMJobName, invoiceAccountId);
 
-    return result;
+    return h.response(result).code(201);
   } catch (err) {
     return mapErrorResponse(err);
   }
@@ -54,7 +54,7 @@ const postInvoiceAccountAddress = async (request, h) => {
  * Gets licences with a "current" charge version linked to the supplied
  * invoice account
  */
-const getLicences = async (request, h) => {
+const getLicences = async request => {
   try {
     const { invoiceAccountId } = request.params;
     return licencesService.getLicencesByInvoiceAccountId(invoiceAccountId);

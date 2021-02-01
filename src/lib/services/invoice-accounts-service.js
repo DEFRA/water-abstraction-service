@@ -56,8 +56,8 @@ const deleteInvoiceAccount = async invoiceAccount =>
 const createInvoiceAccount = async (regionId, invoiceAccount) => {
   const { code: regionCode } = await regionsService.getRegion(regionId);
   const invoiceAccountEntity = await invoiceAccountsConnector.createInvoiceAccount({
-    companyId: invoiceAccount.company.id,
     regionCode,
+    companyId: invoiceAccount.company.id,
     startDate: invoiceAccount.dateRange.startDate
   });
 
