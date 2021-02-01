@@ -80,7 +80,11 @@ module.exports = {
           address: addressSchema,
           agentCompany: companySchema,
           contact: contactSchema
-        })
+        }),
+        failAction: (request, h, err) => {
+          console.error(err);
+          throw err;
+        }
       }
     }
   },

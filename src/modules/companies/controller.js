@@ -11,9 +11,6 @@ const invoiceAccountsService = require('../../lib/services/invoice-accounts-serv
 const { logger } = require('../../logger');
 
 const invoiceAccountMapper = require('../../lib/mappers/invoice-account');
-// const Company = require('../../lib/models/company');
-// const InvoiceAccount = require('../../lib/models/invoice-account');
-// const DateRange = require('../../lib/models/date-range');
 
 const mapErrorResponse = require('../../lib/map-error-response');
 const { envelope } = require('../../lib/response');

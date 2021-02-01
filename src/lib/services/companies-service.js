@@ -63,7 +63,12 @@ const createCompanyContact = async (companyId, contactId, options = {}) => {
     isDefault: true
   };
   const companyContactData = Object.assign({}, defaults, options, { contactId });
-  const companyContact = await companiesConnector.createCompanyContact(companyId, companyContactData);
+  let companyContact;
+  try {
+    companyContact = await companiesConnector.createCompanyContact(companyId, companyContactData);
+  } catch (err) {
+    companyContact = getExistingEntity(err);
+  }
   return mappers.companyContact.crmToModel(companyContact);
 };
 

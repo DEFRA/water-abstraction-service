@@ -15,52 +15,21 @@ const invoiceAccountAddressesService = require('../../../src/lib/services/invoic
 const DateRange = require('../../../src/lib/models/date-range');
 const Contact = require('../../../src/lib/models/contact-v2');
 const Address = require('../../../src/lib/models/address');
-const Company = require('../../../src/lib/models/company');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 const InvoiceAccountAddress = require('../../../src/lib/models/invoice-account-address');
 
 const invoiceAccountsConnector = require('../../../src/lib/connectors/crm-v2/invoice-accounts');
+const invoiceAccountAddressesConnector = require('../../../src/lib/connectors/crm-v2/invoice-account-addresses');
 
 experiment('modules/billing/services/invoice-account-addreses-service', () => {
   beforeEach(async () => {
     sandbox.stub(invoiceAccountsConnector, 'createInvoiceAccountAddress');
-    sandbox.stub(invoiceAccountsConnector, 'deleteInvoiceAccountAddress').resolves();
+    sandbox.stub(invoiceAccountAddressesConnector, 'deleteInvoiceAccountAddress').resolves();
+    sandbox.stub(invoiceAccountAddressesConnector, 'patchInvoiceAccountAddress').resolves();
   });
 
   afterEach(async () => {
     sandbox.restore();
-  });
-
-  experiment('.getInvoiceAccountAddressModel', () => {
-    let response, addressModel, agentCompanyModel, contactModel;
-    beforeEach(() => {
-      addressModel = new Address(uuid());
-      agentCompanyModel = new Company(uuid());
-      contactModel = new Contact(uuid());
-
-      response = invoiceAccountAddressesService.getInvoiceAccountAddressModel('2020-04-01', addressModel, agentCompanyModel, contactModel);
-    });
-
-    test('returns an InvoiceAccountAddress instance', () => {
-      expect(response).to.be.instanceOf(InvoiceAccountAddress);
-    });
-
-    test('maps the date range properly', () => {
-      expect(response.dateRange).to.be.instanceOf(DateRange);
-      expect(response.dateRange.startDate).to.equal('2020-04-01');
-    });
-
-    test('maps the address properly', () => {
-      expect(response.address).to.equal(addressModel);
-    });
-
-    test('maps the agent company properly', () => {
-      expect(response.agentCompany).to.equal(agentCompanyModel);
-    });
-
-    test('maps the contact properly', () => {
-      expect(response.contact).to.equal(contactModel);
-    });
   });
 
   experiment('.createInvoiceAccountAddress', () => {
@@ -81,13 +50,14 @@ experiment('modules/billing/services/invoice-account-addreses-service', () => {
         invoiceAccountId,
         address: new Address(addressId),
         agentCompany: null,
-        contact: new Contact(contactId)
+        contact: new Contact(contactId),
+        dateRange: new DateRange('2020-04-01', null)
       });
       invoiceAccountModel.invoiceAccountAddresses.push(invoiceAccountAddressModel);
       invoiceAccountAddressId = uuid();
       invoiceAccountsConnector.createInvoiceAccountAddress.resolves({ ...invoiceAccountAddressData, invoiceAccountAddressId });
 
-      result = await invoiceAccountAddressesService.createInvoiceAccountAddress(invoiceAccountModel, invoiceAccountAddressModel, '2020-04-01');
+      result = await invoiceAccountAddressesService.createInvoiceAccountAddress(invoiceAccountModel, invoiceAccountAddressModel);
     });
 
     test('persists the invoice account address', () => {
@@ -107,25 +77,35 @@ experiment('modules/billing/services/invoice-account-addreses-service', () => {
     });
   });
 
-  experiment('.deleteInvoiceAccount', () => {
-    let invoiceAccountAddressModel, invoiceAccountId, invoiceAccountAddressId;
+  experiment('.deleteInvoiceAccountAddress', () => {
+    const invoiceAccountAddressId = uuid();
+
     beforeEach(async () => {
-      invoiceAccountId = uuid();
-      invoiceAccountAddressId = uuid();
-      invoiceAccountAddressModel = new InvoiceAccountAddress(invoiceAccountAddressId);
-      invoiceAccountAddressModel.fromHash({
-        address: new Address(uuid()),
-        agentCompany: null,
-        contact: new Contact(uuid()),
-        invoiceAccountId
-      });
-      await invoiceAccountAddressesService.deleteInvoiceAccountAddress(invoiceAccountAddressModel);
+      await invoiceAccountAddressesService.deleteInvoiceAccountAddress(invoiceAccountAddressId);
     });
 
-    test('the invoice account and invoice account address ids are passed to the connector', () => {
-      const [invoiceId, addressId] = invoiceAccountsConnector.deleteInvoiceAccountAddress.lastCall.args;
-      expect(invoiceId).to.equal(invoiceAccountId);
-      expect(addressId).to.equal(invoiceAccountAddressId);
+    test('calls the connector method', () => {
+      expect(invoiceAccountAddressesConnector.deleteInvoiceAccountAddress.calledWith(
+        invoiceAccountAddressId
+      )).to.be.true();
+    });
+  });
+
+  experiment('.setEndDate', () => {
+    const invoiceAccountAddressId = uuid();
+    const endDate = '2010-01-01';
+
+    beforeEach(async () => {
+      await invoiceAccountAddressesService.setEndDate(invoiceAccountAddressId, endDate);
+    });
+
+    test('calls the connector method', () => {
+      expect(invoiceAccountAddressesConnector.patchInvoiceAccountAddress.calledWith(
+        invoiceAccountAddressId,
+        {
+          endDate
+        }
+      )).to.be.true();
     });
   });
 });

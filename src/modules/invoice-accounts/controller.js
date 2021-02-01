@@ -35,9 +35,13 @@ const postInvoiceAccountAddress = async (request, h) => {
       contact
     });
 
+    console.log(request.payload);
+    console.log(invoiceAccountAddress);
+
     const result = await invoiceAccountService.createInvoiceAccountAddress(invoiceAccountId, invoiceAccountAddress);
 
     // Create BullMQ message to update the invoice account in CM
+    // @todo move to service layer
     await request.queueManager.add(updateCustomerDetailsInCMJobName, invoiceAccountId);
 
     return result;

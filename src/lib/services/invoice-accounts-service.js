@@ -1,7 +1,6 @@
 'use strict';
 
 const moment = require('moment');
-const { isEmpty } = require('lodash');
 const promiseWaterfall = require('p-waterfall');
 
 const InvoiceAccountAddress = require('../models/invoice-account-address');
@@ -191,18 +190,6 @@ const createInvoiceAccountAddress = async (invoiceAccountId, invoiceAccountAddre
 };
 
 /**
- * Checks whether the entity has data in the model other than the id
- * NB: Existing entities only have the id key populated
- */
-const isNewEntity = entity => {
-  if (!entity) return false;
-  const values = Object.values(entity);
-  // remove the id if present
-  if (entity.id) values.shift();
-  return values.length > 0 && values.some(value => !isEmpty(value));
-};
-
-/**
  * Gets the related invoice account for the supplied ChargeVersion model
  * @param {ChargeVersion} chargeVersion
  * @return {chargeVersion} decorated with invoice account
@@ -222,5 +209,4 @@ exports.getByInvoiceAccountId = getByInvoiceAccountId;
 exports.decorateWithInvoiceAccount = decorateWithInvoiceAccount;
 exports.deleteInvoiceAccount = deleteInvoiceAccount;
 exports.createInvoiceAccount = createInvoiceAccount;
-exports._isNewEntity = isNewEntity;
 exports.createInvoiceAccountAddress = createInvoiceAccountAddress;

@@ -166,17 +166,4 @@ experiment('lib/connectors/crm-v2/invoice-accounts', () => {
       expect(result).to.equal(createdInvoiceAccountAddress);
     });
   });
-
-  experiment('.deleteInvoiceAccountAddress', () => {
-    beforeEach(async () => {
-      serviceRequest.delete.resolves();
-
-      await invoiceAccountConnector.deleteInvoiceAccountAddress('test-invoice-account-id', 'test-invoice-account-address-id');
-    });
-
-    test('makes a request to the expected URL', async () => {
-      const [url] = serviceRequest.delete.lastCall.args;
-      expect(url).to.equal('http://test.defra/invoice-accounts/test-invoice-account-id/addresses/test-invoice-account-address-id');
-    });
-  });
 });
