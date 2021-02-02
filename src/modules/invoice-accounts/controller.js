@@ -6,7 +6,6 @@ const invoiceAccountService = require('../../lib/services/invoice-accounts-servi
 const licencesService = require('../../lib/services/licences');
 const invoiceAccountAddressMapper = require('../../lib/mappers/invoice-account-address');
 const mapErrorResponse = require('../../lib/map-error-response');
-const { jobName: updateCustomerDetailsInCMJobName } = require('../../modules/billing/jobs/update-customer');
 const DATE_FORMAT = 'YYYY-MM-DD';
 
 /**
@@ -16,13 +15,13 @@ const DATE_FORMAT = 'YYYY-MM-DD';
 const getInvoiceAccount = async request =>
   controller.getEntity(request.params.invoiceAccountId, invoiceAccountService.getByInvoiceAccountId);
 
-const postInvoiceAccountAddress = async (request, h) => {
+const postInvoiceAccountAddress = async (request, h, refDate) => {
   try {
     const { invoiceAccountId } = request.params;
     const { address, agentCompany, contact } = request.payload;
 
     // Change of date is always current date
-    const startDate = moment().format(DATE_FORMAT);
+    const startDate = moment(refDate).format(DATE_FORMAT);
 
     // Map supplied data to InvoiceAccountAddress service model
     const invoiceAccountAddress = invoiceAccountAddressMapper.pojoToModel({
@@ -35,14 +34,7 @@ const postInvoiceAccountAddress = async (request, h) => {
       contact
     });
 
-    console.log(request.payload);
-    console.log(invoiceAccountAddress);
-
     const result = await invoiceAccountService.createInvoiceAccountAddress(invoiceAccountId, invoiceAccountAddress);
-
-    // Create BullMQ message to update the invoice account in CM
-    // @todo move to service layer
-    await request.queueManager.add(updateCustomerDetailsInCMJobName, invoiceAccountId);
 
     return h.response(result).code(201);
   } catch (err) {

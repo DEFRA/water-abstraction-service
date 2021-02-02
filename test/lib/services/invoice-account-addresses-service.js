@@ -21,11 +21,20 @@ const InvoiceAccountAddress = require('../../../src/lib/models/invoice-account-a
 const invoiceAccountsConnector = require('../../../src/lib/connectors/crm-v2/invoice-accounts');
 const invoiceAccountAddressesConnector = require('../../../src/lib/connectors/crm-v2/invoice-account-addresses');
 
+const messageQueue = require('../../../src/lib/message-queue-v2');
+const { jobNames } = require('../../../src/lib/constants');
+
 experiment('modules/billing/services/invoice-account-addreses-service', () => {
+  let messageQueueStub;
+
   beforeEach(async () => {
+    messageQueueStub = {
+      add: sandbox.stub()
+    };
     sandbox.stub(invoiceAccountsConnector, 'createInvoiceAccountAddress');
     sandbox.stub(invoiceAccountAddressesConnector, 'deleteInvoiceAccountAddress').resolves();
     sandbox.stub(invoiceAccountAddressesConnector, 'patchInvoiceAccountAddress').resolves();
+    sandbox.stub(messageQueue, 'getQueueManager').returns(messageQueueStub);
   });
 
   afterEach(async () => {
@@ -74,6 +83,12 @@ experiment('modules/billing/services/invoice-account-addreses-service', () => {
     test('returns the invoice account address', () => {
       expect(result).to.be.instanceOf(InvoiceAccountAddress);
       expect(result.id).to.equal(invoiceAccountAddressId);
+    });
+
+    test('publishes a job to update the address in the CM', async () => {
+      expect(messageQueueStub.add.calledWith(
+        jobNames.updateCustomerAccount, invoiceAccountId
+      )).to.be.true();
     });
   });
 

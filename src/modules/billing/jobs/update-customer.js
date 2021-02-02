@@ -1,7 +1,8 @@
 'use strict';
 const { get, partial } = require('lodash');
 const chargeModuleCustomersConnector = require('../../../lib/connectors/charge-module/customers');
-const JOB_NAME = 'billing.update-customer-account';
+const { jobNames } = require('../../../lib/constants');
+const JOB_NAME = jobNames.updateCustomerAccount;
 const invoiceAccountsService = require('../../../lib/services/invoice-accounts-service');
 const chargeModuleMappers = require('../../../lib/mappers/charge-module');
 const { logger } = require('../../../logger');
