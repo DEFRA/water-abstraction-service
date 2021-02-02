@@ -8,6 +8,7 @@ const pathPrefix = `/water/${version}/invoice-accounts/`;
 const controller = require('./controller');
 const { CONTACT_TYPES } = require('../../lib/models/contact-v2');
 const { COMPANY_TYPES, ORGANISATION_TYPES } = require('../../lib/models/company');
+const { ROLES: { billing } } = require('../../lib/roles');
 
 const OPTIONAL_NULLABLE_STRING = Joi.string().trim().optional().allow(null);
 const EXAMPLE_GUID = '00000000-0000-0000-0000-000000000000';
@@ -80,11 +81,10 @@ module.exports = {
           address: addressSchema,
           agentCompany: companySchema,
           contact: contactSchema
-        }),
-        failAction: (request, h, err) => {
-          console.error(err);
-          throw err;
-        }
+        })
+      },
+      auth: {
+        scope: [billing]
       }
     }
   },

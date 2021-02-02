@@ -1,6 +1,7 @@
 const Joi = require('@hapi/joi');
 const controller = require('./controller');
 const { statuses } = require('../returns/schema');
+const { ROLES: { billing } } = require('../../lib/roles');
 
 const EXAMPLE_GUID = '00000000-0000-0000-0000-000000000000';
 
@@ -84,6 +85,9 @@ module.exports = {
           startDate: Joi.string().isoDate().required().example('2021-01-01'),
           regionId: Joi.string().guid().required().example(EXAMPLE_GUID)
         })
+      },
+      auth: {
+        scope: [billing]
       }
     }
   },
