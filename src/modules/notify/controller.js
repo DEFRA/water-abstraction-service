@@ -1,7 +1,8 @@
 const Boom = require('@hapi/boom');
 const moment = require('moment');
 const messageQueue = require('../../lib/message-queue');
-
+const scheduledNotificationsService = require('../../lib/services/scheduled-notifications');
+const { logger } = require('../../logger');
 const { enqueue } = require('./index.js')(messageQueue);
 
 /**
@@ -47,6 +48,23 @@ async function send (request, reply) {
   }
 }
 
+const callback = async (request, h) => {
+  const { status, reference: id } = request.payload;
+
+  const notification = await scheduledNotificationsService.getScheduledNotificationById(id);
+
+  if (notification === null) {
+    logger.error(`Notify callback: Failed to set status (${status}) on a notification (${id}) as the notification could not be found.`);
+    return Boom.notFound('Notification not found');
+  } else {
+    await scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback(id, status);
+    logger.info(`Notify callback: Successfully set status (${status}) on notification (${id})`);
+
+    return h.response(null).code(204);
+  }
+};
+
 module.exports = {
-  send
+  send,
+  callback
 };

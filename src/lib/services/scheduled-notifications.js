@@ -32,6 +32,9 @@ const updateScheduledNotificationWithNotifyResponse = (messageId, notifyResponse
   return repo.update(messageId, changes);
 };
 
+const updateScheduledNotificationWithNotifyCallback = (messageId, status) => repo.update(messageId, { notifyStatus: status });
+
 exports.createScheduledNotification = createScheduledNotification;
 exports.getScheduledNotificationById = getScheduledNotificationById;
 exports.updateScheduledNotificationWithNotifyResponse = updateScheduledNotificationWithNotifyResponse;
+exports.updateScheduledNotificationWithNotifyCallback = updateScheduledNotificationWithNotifyCallback;
