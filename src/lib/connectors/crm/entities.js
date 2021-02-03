@@ -131,7 +131,7 @@ exports.updateEntityEmail = updateEntityEmail;
 if (config.isAcceptanceTestTarget) {
   exports.deleteAcceptanceTestData = async () => {
     const CRMV1URL = urlJoin(config.services.crm, 'acceptance-tests/entities');
-    const CRMV2URL = urlJoin(config.services.crm_v2, 'acceptance-tests/companies');
+    const CRMV2URL = urlJoin(config.services.crm_v2, 'test-data');
     await serviceRequest.delete(CRMV2URL);
     return serviceRequest.delete(CRMV1URL);
   };
