@@ -17,6 +17,9 @@ const returns = require('../../../src/modules/acceptance-tests/lib/returns');
 const events = require('../../../src/modules/acceptance-tests/lib/events');
 const sessions = require('../../../src/modules/acceptance-tests/lib/sessions');
 const licences = require('../../../src/modules/acceptance-tests/lib/licences');
+const returnRequirements = require('../../../src/modules/acceptance-tests/lib/return-requirements');
+const returnRequirementPurposes = require('../../../src/modules/acceptance-tests/lib/return-requirements-purposes');
+const returnVersions = require('../../../src/modules/acceptance-tests/lib/return-versions');
 
 const controller = require('../../../src/modules/acceptance-tests/controller');
 const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
@@ -59,6 +62,9 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(documents, 'create').resolves({});
     sandbox.stub(licences, 'create').resolves({});
     sandbox.stub(returns, 'createDueReturn').resolves({});
+    sandbox.stub(returnVersions, 'create').resolves({});
+    sandbox.stub(returnRequirements, 'create').resolves({});
+    sandbox.stub(returnRequirementPurposes, 'create').resolves({});
 
     sandbox.stub(returns, 'delete').resolves();
     sandbox.stub(events, 'delete').resolves();
