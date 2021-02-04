@@ -57,7 +57,7 @@ const getLicencesByInvoiceAccount = `
 select distinct l.* from water.charge_versions cv
 join water.licences l on cv.licence_id=l.licence_id
 where cv.invoice_account_id=:invoiceAccountId
-and status='current'
+and cv.status='current'
 `;
 
 exports.getLicencesWithoutChargeVersions = getLicencesWithoutChargeVersions;
