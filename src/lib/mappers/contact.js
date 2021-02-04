@@ -62,6 +62,7 @@ const pojoToModel = object => {
   }
   const model = new Contact();
   return model.pickFrom(object, [
+    'id',
     'firstName',
     'initials',
     'middleInitials',

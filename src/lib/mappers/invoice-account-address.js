@@ -62,7 +62,9 @@ const pojoToModelMapper = createMapper()
     'invoiceAccountId'
   )
   .map('dateRange').to('dateRange', dateRangeMapper.pojoToModel)
-  .map('address').to('address', addressMapper.pojoToModel);
+  .map('address').to('address', addressMapper.pojoToModel)
+  .map('contact').to('contact', contactMapper.pojoToModel)
+  .map('agentCompany').to('agentCompany', companyMapper.pojoToModel);
 
 /**
  * Converts a plain object representation of a InvoiceAccountAddress to a InvoiceAccountAddress model
