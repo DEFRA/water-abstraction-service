@@ -92,11 +92,11 @@ const createReturnRequirements = (dailyReturnVer, weeklyReturnVer, monthlyReturn
   returnRequirements.create(monthlyReturnVer2, 'month', '9999994')
 ]);
 
-const createReturnRequirementPurposes = (dailyReturnReq, weeklyReturnReq, monthlyReturnReq1, monthlyReturnReq2, purposes) => Promise.all([
-  returnRequirementPurposes.create(dailyReturnReq.returnRequirementId, '9999991', purposes),
-  returnRequirementPurposes.create(weeklyReturnReq.returnRequirementId, '9999992', purposes),
-  returnRequirementPurposes.create(monthlyReturnReq1.returnRequirementId, '9999993', purposes),
-  returnRequirementPurposes.create(monthlyReturnReq2.returnRequirementId, '9999994', purposes)
+const createReturnRequirementPurposes = (dailyReturnReq, weeklyReturnReq, monthlyReturnReq1, monthlyReturnReq2, purpose) => Promise.all([
+  returnRequirementPurposes.create(dailyReturnReq.returnRequirementId, '9999991', purpose),
+  returnRequirementPurposes.create(weeklyReturnReq.returnRequirementId, '9999992', purpose),
+  returnRequirementPurposes.create(monthlyReturnReq1.returnRequirementId, '9999993', purpose),
+  returnRequirementPurposes.create(monthlyReturnReq2.returnRequirementId, '9999994', purpose)
 ]);
 
 const createCurrentLicencesWithReturns = async (company, externalPrimaryUser, companyV2Id, addressId, purpose) => {
