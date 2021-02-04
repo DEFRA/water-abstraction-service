@@ -99,7 +99,7 @@ const createReturnRequirementPurposes = (dailyReturnReq, weeklyReturnReq, monthl
   returnRequirementPurposes.create(monthlyReturnReq2.returnRequirementId, '9999994', purposes)
 ]);
 
-const createCurrentLicencesWithReturns = async (company, externalPrimaryUser, companyV2Id, addressId, purposes) => {
+const createCurrentLicencesWithReturns = async (company, externalPrimaryUser, companyV2Id, addressId, purpose) => {
   const [dailyPermit, weeklyPermit, monthlyPermit] = await createPermits();
 
   const [
@@ -135,7 +135,7 @@ const createCurrentLicencesWithReturns = async (company, externalPrimaryUser, co
     weeklyReturnReqPurpose,
     monthlyReturnReqPurpose1,
     monthlyReturnReqPurpose2
-  ] = await createReturnRequirementPurposes(dailyReturnRequirement, weeklyReturnRequirement, monthlyReturnRequirement1, monthlyReturnRequirement2, purposes);
+  ] = await createReturnRequirementPurposes(dailyReturnRequirement, weeklyReturnRequirement, monthlyReturnRequirement1, monthlyReturnRequirement2, purpose);
   return {
     company,
     externalPrimaryUser,
