@@ -7,6 +7,7 @@ const { assertAccountNumber, assertIsInstanceOf, assertIsArrayOfType } = require
 const Model = require('./model');
 const Company = require('./company');
 const InvoiceAccountAddress = require('./invoice-account-address');
+const DateRange = require('./date-range');
 
 class InvoiceAccount extends Model {
   constructor (id) {
@@ -68,6 +69,15 @@ class InvoiceAccount extends Model {
       return moment(row.startDate).unix();
     });
     return last(sorted);
+  }
+
+  set dateRange (dateRange) {
+    assertIsInstanceOf(dateRange, DateRange);
+    this._dateRange = dateRange;
+  }
+
+  get dateRange () {
+    return this._dateRange;
   }
 }
 
