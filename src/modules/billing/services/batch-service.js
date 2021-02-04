@@ -476,16 +476,39 @@ const deleteAllBillingData = async () => {
 };
 
 /**
+ * Calls CM transactions endpoint multiple times and
+ * collates all paginated results
+ * @param {Batch} batch
+ * @return {Array<Object>} CM transaction details
+ */
+const getAllCmTransactionsForBatch = async batch => {
+  const { externalId } = batch;
+
+  try {
+    const { data, pagination: { pageCount } } = await chargeModuleBillRunConnector.getTransactions(externalId);
+
+    const result = data.transactions;
+
+    for (let page = 2; page <= pageCount; page++) {
+      const { data } = await chargeModuleBillRunConnector.getTransactions(externalId, page);
+      result.push(...data.transactions);
+    }
+    return result;
+  } catch (error) {
+    logger.error(`Unable to retrieve transactions for CM batch ${externalId}`);
+    throw error;
+  }
+};
+
+/**
  * Updates batch invoices with invoice numbers and totals
- * @return {Promise} ??
  */
 const persistInvoiceNumbersAndTotals = async batch => {
   const { externalId } = batch;
 
-  const [billRunSummary, billRunTransactions] = await Promise.all([
-    chargeModuleBillRunConnector.get(externalId),
-    chargeModuleBillRunConnector.getTransactions(externalId)
-  ]);
+  const billRunSummary = await chargeModuleBillRunConnector.get(externalId);
+
+  const billRunTransactions = await getAllCmTransactionsForBatch(batch);
 
   // call CM decorators with summary, transactions and batch
   const updatedBatch = chargeModuleDecorators.decorateBatch(batch, billRunSummary, billRunTransactions);
@@ -504,6 +527,7 @@ exports.getBatches = getBatches;
 exports.getTransactionStatusCounts = getTransactionStatusCounts;
 exports.getExistingAndDuplicateBatchesForRegion = getExistingAndDuplicateBatchesForRegion;
 exports.getExistingOrDuplicateSentBatch = getExistingOrDuplicateSentBatch;
+exports.getAllCmTransactionsForBatch = getAllCmTransactionsForBatch;
 
 exports.refreshTotals = refreshTotals;
 exports.saveInvoicesToDB = saveInvoicesToDB;

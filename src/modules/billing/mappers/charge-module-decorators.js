@@ -59,7 +59,7 @@ const mapCmTransactionsToSummary = (cmResponse, cmTransactions) => {
     return cmResponse.billRun.customers;
   }
 
-  const transactionsByCustomerAndFinYear = groupTransactionsByCustomerAndFinancialYear(cmTransactions.data.transactions);
+  const transactionsByCustomerAndFinYear = groupTransactionsByCustomerAndFinancialYear(cmTransactions);
   return mapCmTransactionsToCustomers(cmResponse.billRun.customers, transactionsByCustomerAndFinYear);
 };
 
@@ -174,10 +174,10 @@ const decorateInvoice = (invoice, cmResponseCustomers) => {
  * @param {Object} cmTransactions
  * @return {Batch}
  */
-const decorateBatch = (batch, cmResponse, cmTransactions = {}) => {
+const decorateBatch = (batch, cmResponse, cmTransactions = []) => {
   validators.assertIsInstanceOf(batch, Batch);
   validators.assertObject(cmResponse);
-  validators.assertObject(cmTransactions);
+  validators.assertArray(cmTransactions);
 
   // Set batch totals
   batch.totals = mappers.totals.chargeModuleBillRunToBatchModel(cmResponse.billRun.summary);
@@ -194,4 +194,4 @@ const decorateBatch = (batch, cmResponse, cmTransactions = {}) => {
 
 exports.decorateInvoice = decorateInvoice;
 exports.decorateBatch = decorateBatch;
-exports._mapCmTransactionsToSummary = mapCmTransactionsToSummary;
+exports.mapCmTransactionsToSummary = mapCmTransactionsToSummary;

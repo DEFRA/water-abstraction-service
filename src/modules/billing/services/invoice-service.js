@@ -7,6 +7,8 @@ const pWaterfall = require('p-waterfall');
 const invoiceAccountsConnector = require('../../../lib/connectors/crm-v2/invoice-accounts');
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 
+const batchService = require('./batch-service');
+
 const repos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
@@ -32,6 +34,12 @@ const isBatchReadyOrSent = batch =>
 const saveInvoiceToDB = async (batch, invoice) => {
   const data = mappers.invoice.modelToDb(batch, invoice);
   return repos.billingInvoices.upsert(data);
+};
+
+const updateCmCustomersWithTransactionDetails = async (batch, cmResponse) => {
+  const cmTransactions = await batchService.getAllCmTransactionsForBatch(batch);
+  cmResponse.billRun.customers = chargeModuleDecorators.mapCmTransactionsToSummary(cmResponse, cmTransactions);
+  return cmResponse;
 };
 
 const saveInvoiceNumbersAndTotals = async invoice => {
@@ -81,7 +89,8 @@ const getChargeModuleBillRun = async context => {
   try {
     // Load Charge Module summary data
     const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
-    context.cmResponse = cmResponse;
+    const updated = await updateCmCustomersWithTransactionDetails(batch, cmResponse);
+    context.cmResponse = updated;
   } catch (err) {
     logger.error('CM error', err);
   }
