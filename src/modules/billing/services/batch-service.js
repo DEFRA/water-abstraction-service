@@ -490,8 +490,8 @@ const getAllCmTransactionsForBatch = async batch => {
     const result = data.transactions;
 
     for (let page = 2; page <= pageCount; page++) {
-      const { data } = await chargeModuleBillRunConnector.getTransactions(externalId, page);
-      result.push(...data.transactions);
+      const { data: { transactions } } = await chargeModuleBillRunConnector.getTransactions(externalId, page);
+      result.push(...transactions);
     }
     return result;
   } catch (error) {
