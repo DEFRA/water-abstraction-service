@@ -1458,6 +1458,10 @@ experiment('modules/billing/services/batch-service', () => {
       result = await batchService.getAllCmTransactionsForBatch({ externalId: 'test-cm-batch-id' });
     });
 
+    test('calls the CM transactions endpoint the expected number of times', () => {
+      expect(chargeModuleBillRunConnector.getTransactions.callCount).to.equal(3);
+    });
+
     test('first call: calls the CM with the expected params', () => {
       const [id, page] = chargeModuleBillRunConnector.getTransactions.firstCall.args;
       expect(id).to.equal('test-cm-batch-id');
