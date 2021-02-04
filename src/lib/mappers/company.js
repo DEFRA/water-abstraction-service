@@ -1,6 +1,6 @@
 'use strict';
 
-const { omit } = require('lodash');
+const { omit, isObject } = require('lodash');
 const Company = require('../models/company');
 
 const { createMapper } = require('../object-mapper');
@@ -42,6 +42,9 @@ const uiToModel = companyData => {
 const modelToCrm = company => omit(company.toJSON(), 'companyAddresses', 'companyContacts');
 
 const pojoToModel = object => {
+  if (!isObject(object)) {
+    return null;
+  }
   const company = new Company();
   return company.pickFrom(object, ['id', 'type', 'organisationType', 'name', 'companyNumber']);
 };
