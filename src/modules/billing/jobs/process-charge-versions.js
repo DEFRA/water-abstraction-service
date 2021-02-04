@@ -14,6 +14,8 @@ const chargeVersionYearService = require('../services/charge-version-year');
 
 const createMessage = partial(helpers.createMessage, JOB_NAME);
 
+const getChargeVersionYearId = billingBatchChargeVersionYear => billingBatchChargeVersionYear.billingBatchChargeVersionYearId;
+
 const handler = async job => {
   batchJob.logHandling(job);
 
@@ -28,10 +30,10 @@ const handler = async job => {
 
     // Get all charge version years for processing
     const billingBatchChargeVersionYears = await chargeVersionYearService.getForBatch(batch.id);
+    const billingBatchChargeVersionYearIds = billingBatchChargeVersionYears.map(getChargeVersionYearId);
 
     return {
-      batch,
-      billingBatchChargeVersionYears
+      billingBatchChargeVersionYearIds
     };
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToProcessChargeVersions);
@@ -43,11 +45,12 @@ const onComplete = async (job, queueManager) => {
   batchJob.logOnComplete(job);
 
   try {
-    const { batch, billingBatchChargeVersionYears } = job.returnvalue;
+    const batchId = get(job, 'data.batchId');
+    const { billingBatchChargeVersionYearIds } = job.returnvalue;
 
     // Publish a job to process each charge version year
-    for (const billingBatchChargeVersionYear of billingBatchChargeVersionYears) {
-      await queueManager.add(processChargeVersionYearJobName, batch, billingBatchChargeVersionYear);
+    for (const billingBatchChargeVersionYearId of billingBatchChargeVersionYearIds) {
+      await queueManager.add(processChargeVersionYearJobName, batchId, billingBatchChargeVersionYearId);
     }
   } catch (err) {
     batchJob.logOnCompleteError(job, err);

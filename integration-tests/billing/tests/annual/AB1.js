@@ -16,6 +16,9 @@ const services = require('../../services');
 const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
 const transactionTests = require('../transaction-tests');
 
+const bookshelfLoader = require('../../services/bookshelf-loader')();
+const crmLoader = require('../../services/crm-loader')();
+
 experiment('basic example scenario', () => {
   let batch;
   let chargeModuleTransactions;
@@ -23,15 +26,15 @@ experiment('basic example scenario', () => {
   before(async () => {
     await services.tearDown.tearDown();
 
-    batch = await services.scenarios.runScenario({
-      licence: 'l1',
-      chargeVersions: [{
-        company: 'co1',
-        invoiceAccount: 'ia1',
-        chargeVersion: 'cv1',
-        chargeElements: ['ce1']
-      }]
-    }, 'annual');
+    // Load CRM fixtures
+    await crmLoader.load('crm.yaml');
+
+    // Load Bookshelf fixtures
+    bookshelfLoader.setRef('$invoiceAccount', crmLoader.getRef('$invoiceAccount'));
+    await bookshelfLoader.load('AB1.yaml');
+    const region = bookshelfLoader.getRef('$region');
+
+    batch = await services.scenarios.runScenario(region.regionId, 'annual');
 
     chargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(batch);
   });
@@ -77,7 +80,7 @@ experiment('basic example scenario', () => {
       });
 
       test('has the correct invoice address', async () => {
-        expect(omit(invoice.address, 'uprn')).to.equal({
+        expect(omit(invoice.address, ['uprn', 'isTest'])).to.equal({
           town: 'Testington',
           county: 'Testingshire',
           country: 'UK',
@@ -101,33 +104,14 @@ experiment('basic example scenario', () => {
           licence = invoice.billingInvoiceLicences[0];
         });
 
-        test('has the correct licence name', async () => {
-          expect(licence.licenceHolderName.lastName).to.equal('Testerson');
-          expect(licence.licenceHolderName.firstName).to.equal('John');
-          expect(licence.licenceHolderName.title).to.equal('Mr');
+        test('has 2 transactions', async () => {
+          expect(licence.billingTransactions).to.have.length(2);
         });
 
-        test('has the correct licence holder address', async () => {
-          expect(omit(licence.licenceHolderAddress, 'id')).to.equal({
-            town: 'Testington',
-            county: 'Testingshire',
-            country: 'UK',
-            postcode: 'TT1 1TT',
-            addressLine1: 'Big Farm',
-            addressLine2: 'Windy road',
-            addressLine3: 'Buttercup meadow',
-            addressLine4: null
-          });
-        });
-
-        test('has 1 transaction', async () => {
-          expect(licence.billingTransactions).to.have.length(1);
-        });
-
-        experiment('the first transaction', () => {
+        experiment('the standard charge transaction', () => {
           let transaction;
           beforeEach(async () => {
-            transaction = licence.billingTransactions[0];
+            transaction = licence.billingTransactions.find((tx) => tx.chargeType === 'standard');
           });
 
           test('is a standard charge', async () => {
@@ -185,7 +169,7 @@ experiment('basic example scenario', () => {
           });
 
           test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('2c75a82bf4c0fc9e185b89dd70213ad7');
+            expect(transaction.transactionKey).to.equal('dc1467401acc8ff1124ac55ef6033a15');
           });
         });
       });

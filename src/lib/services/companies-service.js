@@ -6,6 +6,7 @@ const mappers = require('../mappers');
 const invoiceAccountMapper = require('../mappers/invoice-account');
 const { NotFoundError, InvalidEntityError } = require('../errors');
 const { getExistingEntity } = require('../crm-response');
+const { CONTACT_ROLES } = require('../models/constants');
 
 const getCompany = async companyId => {
   const company = await companiesConnector.getCompany(companyId);
@@ -41,7 +42,12 @@ const createCompany = async companyModel => {
   return mappers.company.crmToModel(company);
 };
 
-const createCompanyAddress = async (companyId, companyAddressData) => {
+const createCompanyAddress = async (companyId, addressId, options = {}) => {
+  const defaults = {
+    roleName: CONTACT_ROLES.licenceHolder,
+    isDefault: true
+  };
+  const companyAddressData = Object.assign({}, defaults, options, { addressId });
   let companyAddress;
   try {
     companyAddress = await companiesConnector.createCompanyAddress(companyId, companyAddressData);
@@ -51,8 +57,18 @@ const createCompanyAddress = async (companyId, companyAddressData) => {
   return mappers.companyAddress.crmToModel(companyAddress);
 };
 
-const createCompanyContact = async (companyId, companyContactData) => {
-  const companyContact = await companiesConnector.createCompanyContact(companyId, companyContactData);
+const createCompanyContact = async (companyId, contactId, options = {}) => {
+  const defaults = {
+    roleName: CONTACT_ROLES.licenceHolder,
+    isDefault: true
+  };
+  const companyContactData = Object.assign({}, defaults, options, { contactId });
+  let companyContact;
+  try {
+    companyContact = await companiesConnector.createCompanyContact(companyId, companyContactData);
+  } catch (err) {
+    companyContact = getExistingEntity(err);
+  }
   return mappers.companyContact.crmToModel(companyContact);
 };
 

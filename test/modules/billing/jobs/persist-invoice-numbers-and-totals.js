@@ -110,8 +110,8 @@ experiment('modules/billing/jobs/persist-invoice-numbers-and-totals', () => {
         await expect(persistInvoiceNumbersAndTotals.handler(job)).to.reject();
       });
 
-      test('the error is not logged because logging is left to the onFailed handler', async () => {
-        expect(batchJob.logHandlingError.called).to.be.false();
+      test('the error is logged', async () => {
+        expect(batchJob.logHandlingError.called).to.be.true();
       });
     });
   });

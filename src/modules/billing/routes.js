@@ -7,6 +7,7 @@ const controller = require('./controller');
 const config = require('../../../config');
 const { ROLES: { billing } } = require('../../lib/roles');
 const BASE_PATH = '/water/1.0/billing/batches';
+const { postApproveReviewBatch: postApproveReviewBatchController } = require('./controllers/two-part-tariff-review');
 
 const getBatches = {
   method: 'GET',
@@ -202,7 +203,7 @@ const getInvoiceLicence = {
 const postApproveReviewBatch = {
   method: 'POST',
   path: `${BASE_PATH}/{batchId}/approve-review`,
-  handler: controller.postApproveReviewBatch,
+  handler: postApproveReviewBatchController,
   config: {
     validate: {
       params: {

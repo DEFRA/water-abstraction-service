@@ -12,21 +12,21 @@ const billingVolumeService = require('../services/billing-volumes-service');
 const { jobName: prepareTransactionsJobName } = require('./prepare-transactions');
 const helpers = require('./lib/helpers');
 
-const createMessage = (batch, billingBatchChargeVersionYear) => ([
+const createMessage = (batchId, billingBatchChargeVersionYearId) => ([
   JOB_NAME,
   {
-    batch,
-    billingBatchChargeVersionYear
+    batchId,
+    billingBatchChargeVersionYearId
   },
   {
-    jobId: `${JOB_NAME}.${batch.id}.${billingBatchChargeVersionYear.billingBatchChargeVersionYearId}`
+    jobId: `${JOB_NAME}.${batchId}.${billingBatchChargeVersionYearId}`
   }
 ]);
 
 const handler = async job => {
   batchJob.logHandling(job);
 
-  const chargeVersionYearId = get(job, 'data.billingBatchChargeVersionYear.billingBatchChargeVersionYearId');
+  const chargeVersionYearId = get(job, 'data.billingBatchChargeVersionYearId');
 
   try {
     // Load charge version year
@@ -70,7 +70,7 @@ const onComplete = async (job, queueManager) => {
 
     // When all charge version years are processed, publish next job
     if (processing === 0 && (batch.status === BATCH_STATUS.processing)) {
-      await queueManager.add(prepareTransactionsJobName, batch);
+      await queueManager.add(prepareTransactionsJobName, batch.id);
     }
   } catch (err) {
     batchJob.logOnCompleteError(job, err);

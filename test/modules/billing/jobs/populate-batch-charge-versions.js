@@ -184,7 +184,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
       test('the process charge versions job is added to the queue', async () => {
         expect(queueManager.add.callCount).to.equal(1);
         expect(queueManager.add.calledWith(
-          'billing.process-charge-versions', job.returnvalue.batch
+          'billing.process-charge-versions', job.returnvalue.batch.id
         )).to.be.true();
       });
     });
@@ -207,7 +207,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
       test('the two-part tariff matching job is added to the queue', async () => {
         expect(queueManager.add.callCount).to.equal(1);
         expect(queueManager.add.calledWith(
-          'billing.two-part-tariff-matching', job.returnvalue.batch
+          'billing.two-part-tariff-matching', job.returnvalue.batch.id
         )).to.be.true();
       });
     });
@@ -230,7 +230,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
       test('the two-part tariff matching job is added to the queue', async () => {
         expect(queueManager.add.callCount).to.equal(1);
         expect(queueManager.add.calledWith(
-          'billing.two-part-tariff-matching', job.returnvalue.batch
+          'billing.two-part-tariff-matching', job.returnvalue.batch.id
         )).to.be.true();
       });
     });

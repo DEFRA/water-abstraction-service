@@ -122,6 +122,17 @@ class DateRange {
     return (this.startDate === `${startYear}-04-01`) &&
      (this.endDate === `${startYear + 1}-03-31`);
   }
+
+  /**
+   * Checks if the start date matches the supplied date
+   *
+   * @param {String|Moment|Date} date
+   * @return {Boolean}
+   */
+  isStartDate (date) {
+    const m = getDateTimeFromValue(date);
+    return this._startDate.isSame(m, 'day');
+  }
 }
 
 module.exports = DateRange;

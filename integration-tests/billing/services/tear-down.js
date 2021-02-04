@@ -1,24 +1,23 @@
 'use strict';
 
+const { bookshelf } = require('../../../src/lib/connectors/bookshelf');
+const crmConnector = require('./connectors/crm');
 const batches = require('./batches');
-const chargeVersions = require('./charge-versions');
-const regions = require('./regions');
-const licences = require('./licences');
-const licenceAgreements = require('./licence-agreements');
-const agreements = require('./agreements');
-const crm = require('./crm');
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs');
-const messageQueue = require('../../../src/lib/message-queue');
-
-const deleteBatchJobs = batch =>
-  messageQueue.deleteQueue(`billing.refreshTotals.${batch.billingBatchId}`);
+const returnsConnector = require('../services/connectors/returns');
+const returnRequirements = require('../services/return-requirements');
+const server = require('../../../index');
 
 const deleteCMBatch = batch => batch.externalId && cmConnector.delete(batch.externalId);
 
-const deleteJobsAndCMData = batch => Promise.all([
-  deleteBatchJobs(batch),
+const deleteJobsAndCMData = (server, batch) => Promise.all([
+  server.queueManager.deleteKeysByPattern('bull:*'),
   deleteCMBatch(batch)
 ]);
+
+const tearDownTable = tableName => bookshelf.knex(tableName)
+  .where('is_test', true)
+  .del();
 
 /**
  * Removes all created test data
@@ -28,15 +27,27 @@ const deleteJobsAndCMData = batch => Promise.all([
  */
 const tearDown = async (...batchesToDelete) => {
   await batches.tearDown();
-  await chargeVersions.tearDown();
-  await licenceAgreements.tearDown();
-  await agreements.tearDown();
-  await licences.tearDown();
-  await regions.tearDown();
-  await crm.tearDown();
 
-  const tasks = (batchesToDelete || []).map(deleteJobsAndCMData);
+  await tearDownTable('water.charge_elements');
+  await tearDownTable('water.charge_versions');
+  await tearDownTable('water.licence_agreements');
+
+  await returnRequirements.tearDown();
+
+  await tearDownTable('water.financial_agreement_types');
+  await tearDownTable('water.licences');
+  await tearDownTable('water.regions');
+
+  await crmConnector.tearDown();
+  await returnsConnector.tearDown();
+
+  await tearDownTable('water.purposes_primary');
+  await tearDownTable('water.purposes_secondary');
+  await tearDownTable('water.purposes_uses');
+
+  const tasks = (batchesToDelete || []).map(batch => deleteJobsAndCMData(server, batch));
   await Promise.all(tasks);
+  await server._stop;
 };
 
 exports.tearDown = tearDown;
