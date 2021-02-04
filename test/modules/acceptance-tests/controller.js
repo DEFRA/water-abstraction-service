@@ -102,7 +102,6 @@ experiment('modules/acceptance-tests/controller', () => {
 
       test('the expected current licence response is created', async () => {
         const data = response.currentLicencesWithReturns;
-
         expect(data.company.entity_id).to.equal('test-company');
         expect(data.externalPrimaryUser.user.user_name).to.equal('acceptance-test.external@example.com');
         expect(data.externalPrimaryUser.entity.entity_nm).to.equal('acceptance-test.external@example.com');
@@ -115,6 +114,12 @@ experiment('modules/acceptance-tests/controller', () => {
         expect(data.returns.daily).to.exist();
         expect(data.returns.weekly).to.exist();
         expect(data.returns.monthly).to.exist();
+      });
+      test('the expected response includes current licences with no returns', async () => {
+        const data = response.currentLicenceNoReturns;
+        expect(data.monthlyDocument).to.exist();
+        expect(data.monthlyDocumentV2).to.exist();
+        expect(data.returns).to.not.exist();
       });
 
       test('there are no agents', async () => {
