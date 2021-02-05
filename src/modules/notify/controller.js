@@ -49,16 +49,16 @@ async function send (request, reply) {
 }
 
 const callback = async (request, h) => {
-  const { status, reference: id } = request.payload;
+  const { status, id } = request.payload;
 
-  const notification = await scheduledNotificationsService.getScheduledNotificationById(id);
+  const notification = await scheduledNotificationsService.getScheduledNotificationByNotifyId(id);
 
   if (notification === null) {
-    logger.error(`Notify callback: Failed to set status (${status}) on a notification (${id}) as the notification could not be found.`);
+    logger.error(`Notify callback: Failed to set status (${status}) on a notification (NOTIFY ID ${id}) as the notification could not be found.`);
     return Boom.notFound('Notification not found');
   } else {
-    await scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback(id, status);
-    logger.info(`Notify callback: Successfully set status (${status}) on notification (${id})`);
+    await scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback(notification.id, status);
+    logger.info(`Notify callback: Successfully set status (${status}) on notification (NOTIFY ID ${id})`);
 
     return h.response(null).code(204);
   }

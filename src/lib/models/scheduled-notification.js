@@ -64,6 +64,12 @@ class ScheduledNotification extends Model {
     this._status = value;
   }
 
+  get notifyId () { return this._notifyId; }
+  set notifyId (value) {
+    validators.assertNullableId(value);
+    this._notifyId = value;
+  }
+
   get notifyStatus () { return this._notifyStatus; }
   set notifyStatus (value) {
     validators.assertNullableString(value);
