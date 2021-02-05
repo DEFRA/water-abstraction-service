@@ -172,12 +172,18 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
   experiment('.getTransactions', () => {
     beforeEach(async () => {
-      await billRunsApiConnector.getTransactions('test-id');
+      await billRunsApiConnector.getTransactions('test-id', 3);
     });
 
     test('the correct endpoint is called', async () => {
       const [path] = request.get.lastCall.args;
       expect(path).to.equal('v1/wrls/billruns/test-id/transactions');
+    });
+
+    test('the correct pagination params are specified', async () => {
+      const [, { page, perPage }] = request.get.lastCall.args;
+      expect(page).to.equal(3);
+      expect(perPage).to.equal(100);
     });
   });
 });

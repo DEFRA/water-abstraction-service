@@ -1,7 +1,8 @@
 'use strict';
 const { get, partial } = require('lodash');
 const chargeModuleCustomersConnector = require('../../../lib/connectors/charge-module/customers');
-const JOB_NAME = 'billing.update-customer-account';
+const { jobNames } = require('../../../lib/constants');
+const JOB_NAME = jobNames.updateCustomerAccount;
 const invoiceAccountsService = require('../../../lib/services/invoice-accounts-service');
 const chargeModuleMappers = require('../../../lib/mappers/charge-module');
 const { logger } = require('../../../logger');
@@ -13,7 +14,7 @@ const messageInitialiser = (jobName, invoiceAccountId) => ([
     invoiceAccountId
   },
   {
-    singletonKey: `${JOB_NAME}.${invoiceAccountId}.${uuid()}`,
+    jobId: `${JOB_NAME}.${invoiceAccountId}.${uuid()}`,
     retryLimit: 3,
     retryDelay: 30,
     retryBackoff: true

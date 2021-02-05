@@ -16,8 +16,6 @@ const addressesService = require('../../../src/lib/services/addresses-service');
 const contactsService = require('../../../src/lib/services/contacts-service');
 const invoiceAccountAddressesService = require('../../../src/lib/services/invoice-account-addresses-service');
 const regionsService = require('../../../src/lib/services/regions-service');
-const crmService = require('../../../src/lib/services/crm-service');
-const messageQueue = require('../../../src/lib/message-queue');
 
 const Company = require('../../../src/lib/models/company');
 const Contact = require('../../../src/lib/models/contact-v2');
@@ -26,10 +24,9 @@ const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 const InvoiceAccountAddress = require('../../../src/lib/models/invoice-account-address');
 
 const invoiceAccountsConnector = require('../../../src/lib/connectors/crm-v2/invoice-accounts');
-const addressesConnector = require('../../../src/lib/connectors/crm-v2/addresses');
-const companiesConnector = require('../../../src/lib/connectors/crm-v2/companies');
-const contactsConnector = require('../../../src/lib/connectors/crm-v2/contacts');
 const DateRange = require('../../../src/lib/models/date-range');
+
+const { CONTACT_ROLES } = require('../../../src/lib/models/constants');
 
 const companyId = uuid();
 const addressId = uuid();
@@ -74,6 +71,21 @@ experiment('modules/billing/services/invoice-accounts-service', () => {
     ];
     sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountsByIds').resolves(connectorResponse);
     sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountById').resolves(connectorResponse[0]);
+    sandbox.stub(invoiceAccountsConnector, 'createInvoiceAccount');
+
+    sandbox.stub(invoiceAccountAddressesService, 'deleteInvoiceAccountAddress');
+    sandbox.stub(invoiceAccountAddressesService, 'setEndDate');
+    sandbox.stub(invoiceAccountAddressesService, 'createInvoiceAccountAddress');
+
+    sandbox.stub(regionsService, 'getRegion');
+
+    sandbox.stub(companiesService, 'createCompany');
+    sandbox.stub(companiesService, 'createCompanyContact');
+    sandbox.stub(companiesService, 'createCompanyAddress');
+
+    sandbox.stub(addressesService, 'createAddress');
+
+    sandbox.stub(contactsService, 'createContact');
   });
 
   afterEach(async () => {
@@ -146,322 +158,356 @@ experiment('modules/billing/services/invoice-accounts-service', () => {
     });
   });
 
-  experiment('.getInvoiceAccount', () => {
-    let result, address, agentCompany, contact, addressModel, agentCompanyModel, contactModel, invoiceAccountModel,
-      invoiceAccountAddressModel;
+  experiment('.createInvoiceAccount', () => {
+    const regionId = uuid();
+    const regionCode = 'A';
+    const invoiceAccountId = uuid();
+    const companyId = uuid();
+    const startDate = '2021-01-01';
+    const accountNumber = 'A12345678A';
+    let invoiceAccount, result;
+
     beforeEach(async () => {
-      address = {
-        addressId
-      };
-      agentCompany = {
-        companyId: agentCompanyId
-      };
-      contact = {
-        contactId
-      };
-
-      addressModel = new Address(addressId);
-      agentCompanyModel = new Company(agentCompanyId);
-      contactModel = new Contact(contactId);
-      invoiceAccountAddressModel = new InvoiceAccountAddress();
-      invoiceAccountAddressModel.dateRange = new DateRange('2020-04-01');
-      invoiceAccountAddressModel.address = addressModel;
-      invoiceAccountAddressModel.agentCompany = agentCompanyModel;
-      invoiceAccountAddressModel.contact = contactModel;
-
-      invoiceAccountModel = new InvoiceAccount();
-      invoiceAccountModel.company = new Company(companyId);
-      invoiceAccountModel.invoiceAccountAddresses.push(invoiceAccountAddressModel);
-
-      sandbox.stub(addressesService, 'getAddressModel').returns(addressModel);
-      sandbox.stub(companiesService, 'getCompanyModel').returns(agentCompanyModel);
-      sandbox.stub(contactsService, 'getContactModel').returns(contactModel);
-      sandbox.stub(invoiceAccountAddressesService, 'getInvoiceAccountAddressModel').returns(invoiceAccountAddressModel);
-
-      result = await invoiceAccountsService.getInvoiceAccount(companyId, '2020-04-01', address, agentCompany, contact);
-    });
-
-    test('gets the address model', () => {
-      expect(addressesService.getAddressModel.calledWith(
-        address
-      )).to.be.true();
-    });
-
-    test('gets the agent company model', () => {
-      expect(companiesService.getCompanyModel.calledWith(
-        agentCompany
-      )).to.be.true();
-    });
-
-    test('gets the contact model', () => {
-      expect(contactsService.getContactModel.calledWith(
-        contact
-      )).to.be.true();
-    });
-
-    test('gets the invoice account address model', () => {
-      expect(invoiceAccountAddressesService.getInvoiceAccountAddressModel.calledWith(
-        '2020-04-01',
-        addressModel,
-        agentCompanyModel,
-        contactModel
-      )).to.be.true();
-    });
-
-    test('returns an invoice account model containing the expected models', () => {
-      expect(result).to.be.instanceOf(InvoiceAccount);
-
-      expect(result.company).to.be.instanceOf(Company);
-      expect(result.company.id).to.equal(companyId);
-      expect(result.invoiceAccountAddresses[0]).to.be.instanceOf(InvoiceAccountAddress);
-      expect(result.invoiceAccountAddresses[0]).to.equal(invoiceAccountAddressModel);
-      expect(result.invoiceAccountAddresses[0].address).to.be.instanceOf(Address);
-      expect(result.invoiceAccountAddresses[0].address).to.equal(addressModel);
-      expect(result.invoiceAccountAddresses[0].agentCompany).to.be.instanceOf(Company);
-      expect(result.invoiceAccountAddresses[0].agentCompany).to.equal(agentCompanyModel);
-      expect(result.invoiceAccountAddresses[0].contact).to.be.instanceOf(Contact);
-      expect(result.invoiceAccountAddresses[0].contact).to.equal(contactModel);
-    });
-  });
-
-  experiment('.persist', () => {
-    let regionId, invoiceAccountData, addressModel, agentCompanyModel, contactModel, invoiceAccountModel,
-      invoiceAccountAddressModel;
-    beforeEach(async () => {
-      regionId = uuid();
-      invoiceAccountData = {
+      regionsService.getRegion.resolves({
+        code: regionCode
+      });
+      invoiceAccountsConnector.createInvoiceAccount.resolves({
         invoiceAccountId: invoiceAccountId,
-        invoiceAccountNumber: 'N12345678A'
-      };
-
-      addressModel = new Address(addressId);
-      agentCompanyModel = new Company(agentCompanyId);
-      contactModel = new Contact(contactId);
-      invoiceAccountAddressModel = new InvoiceAccountAddress();
-      invoiceAccountAddressModel.dateRange = new DateRange('2020-04-01');
-      invoiceAccountAddressModel.address = addressModel;
-      invoiceAccountAddressModel.agentCompany = agentCompanyModel;
-      invoiceAccountAddressModel.contact = contactModel;
-
-      invoiceAccountModel = new InvoiceAccount();
-      invoiceAccountModel.company = new Company(companyId);
-      invoiceAccountModel.invoiceAccountAddresses.push(invoiceAccountAddressModel);
-
-      sandbox.stub(addressesConnector, 'createAddress').resolves();
-      sandbox.stub(companiesConnector, 'createCompany').resolves();
-      sandbox.stub(contactsConnector, 'createContact').resolves();
-      sandbox.stub(companiesService, 'createCompanyAddress').resolves();
-      sandbox.stub(companiesService, 'createCompanyContact').resolves();
-      sandbox.stub(invoiceAccountsConnector, 'createInvoiceAccount').resolves(invoiceAccountData);
-      sandbox.stub(regionsService, 'getRegion').resolves({ code: 'N' });
-      sandbox.stub(invoiceAccountAddressesService, 'createInvoiceAccountAddress').resolves(invoiceAccountAddressModel);
-      sandbox.stub(crmService, 'deleteEntities').resolves();
-      sandbox.stub(messageQueue, 'publish').resolves();
-      await invoiceAccountsService.persist(regionId, '2020-04-01', invoiceAccountModel);
+        invoiceAccountNumber: accountNumber,
+        startDate,
+        endDate: null
+      });
+      invoiceAccount = new InvoiceAccount(invoiceAccountId).fromHash({
+        dateRange: new DateRange(startDate, null),
+        company: new Company(companyId)
+      });
+      result = await invoiceAccountsService.createInvoiceAccount(regionId, invoiceAccount);
     });
 
-    test('calls the regions service to get the region code', async () => {
+    test('fetches the region', async () => {
       expect(regionsService.getRegion.calledWith(
         regionId
       )).to.be.true();
     });
 
-    test('calls the invoice accounts connector with the expected data', async () => {
+    test('calls the invoice accounts connector', async () => {
       expect(invoiceAccountsConnector.createInvoiceAccount.calledWith({
         companyId,
-        regionCode: 'N',
-        startDate: '2020-04-01'
+        regionCode,
+        startDate
       })).to.be.true();
     });
 
-    test('updates the invoice account model', async () => {
-      expect(invoiceAccountModel.id).to.equal(invoiceAccountData.invoiceAccountId);
-      expect(invoiceAccountModel.accountNumber).to.equal(invoiceAccountData.invoiceAccountNumber);
-    });
-
-    test('calls the invoice account addresses connector with the expected data', async () => {
-      expect(invoiceAccountAddressesService.createInvoiceAccountAddress.calledWith(
-        invoiceAccountModel,
-        invoiceAccountAddressModel,
-        '2020-04-01'
-      )).to.be.true();
-    });
-
-    experiment('when the address already exists', () => {
-      test('does not call the address service', () => {
-        expect(addressesConnector.createAddress.called).to.be.false();
-      });
-
-      test('does not create a company address', () => {
-        expect(companiesService.createCompanyAddress.called).to.be.false();
-      });
-    });
-
-    experiment('when the new address data is provided', () => {
-      beforeEach(async () => {
-        const addressData = {
-          addressLine2: '123',
-          addressLine3: 'Test Terrace',
-          town: 'Testington',
-          county: 'Testingshire',
-          country: 'England',
-          postCode: 'TT11TT'
-        };
-        addressModel = new Address();
-        addressModel.fromHash(addressData);
-
-        invoiceAccountModel.invoiceAccountAddresses[0].address = addressModel;
-        addressesConnector.createAddress.resolves({ ...addressData, addressId });
-
-        await invoiceAccountsService.persist(regionId, '2020-04-01', invoiceAccountModel);
-      });
-
-      test('calls the address service', () => {
-        expect(addressesConnector.createAddress.called).to.be.true();
-      });
-
-      test('decorates the invoice account with the new address model', () => {
-        expect(invoiceAccountModel.invoiceAccountAddresses[0].address.id).to.equal(addressId);
-      });
-
-      test('creates a company address', () => {
-        const [compId, data] = companiesService.createCompanyAddress.lastCall.args;
-        expect(compId).to.equal(invoiceAccountModel.invoiceAccountAddresses[0].agentCompany.id);
-        expect(data).to.equal({
-          roleName: 'billing',
-          isDefault: true,
-          startDate: '2020-04-01',
-          addressId
-        });
-      });
-
-      test('links to the company if agent does not exist', async () => {
-        invoiceAccountModel.invoiceAccountAddresses[0].agentCompany = null;
-        await invoiceAccountsService.persist(regionId, '2020-04-01', invoiceAccountModel);
-
-        const [compId, data] = companiesService.createCompanyAddress.lastCall.args;
-
-        expect(compId).to.equal(invoiceAccountModel.company.id);
-        expect(data).to.equal({
-          roleName: 'licenceHolder',
-          isDefault: true,
-          startDate: '2020-04-01',
-          addressId
-        });
-      });
-    });
-
-    experiment('when the agent company already exists', () => {
-      test('does not call the company service ', () => {
-        expect(companiesConnector.createCompany.called).to.be.false();
-      });
-    });
-
-    experiment('when the new agent company data is provided', () => {
-      beforeEach(async () => {
-        const agentData = {
-          type: Company.COMPANY_TYPES.organisation,
-          name: 'Test Company Ltd',
-          organisationType: Company.ORGANISATION_TYPES.limitedCompany
-        };
-        agentCompanyModel = new Company();
-        agentCompanyModel.fromHash(agentData);
-
-        invoiceAccountModel.invoiceAccountAddresses[0].agentCompany = agentCompanyModel;
-        companiesConnector.createCompany.resolves({ ...agentData, companyId: agentCompanyId });
-
-        await invoiceAccountsService.persist(regionId, '2020-04-01', invoiceAccountModel);
-      });
-
-      test('calls the companies service', () => {
-        expect(companiesConnector.createCompany.called).to.be.true();
-      });
-
-      test('decorates the invoice account with the new agent company model', () => {
-        expect(invoiceAccountModel.invoiceAccountAddresses[0].agentCompany.id).to.equal(agentCompanyId);
-      });
-    });
-
-    experiment('when the contact already exists', () => {
-      test('does not call the contact service', () => {
-        expect(contactsConnector.createContact.called).to.be.false();
-      });
-
-      test('does not create a company contact', () => {
-        expect(companiesService.createCompanyContact.called).to.be.false();
-      });
-    });
-
-    experiment('when the new contact data is provided', () => {
-      beforeEach(async () => {
-        const contactData = {
-          type: Contact.CONTACT_TYPES.person,
-          firstName: 'Tommy',
-          lastName: 'Test'
-        };
-        contactModel = new Contact();
-        contactModel.fromHash(contactData);
-
-        invoiceAccountModel.invoiceAccountAddresses[0].contact = contactModel;
-        contactsConnector.createContact.resolves({ ...contactData, contactId });
-
-        await invoiceAccountsService.persist(regionId, '2020-04-01', invoiceAccountModel);
-      });
-
-      test('calls the contact service', () => {
-        expect(contactsConnector.createContact.called).to.be.true();
-      });
-
-      test('decorates the invoice account with the new contact model', () => {
-        expect(invoiceAccountModel.invoiceAccountAddresses[0].contact.id).to.equal(contactId);
-      });
-
-      test('creates a company contact', () => {
-        const [compId, data] = companiesService.createCompanyContact.lastCall.args;
-        expect(compId).to.equal(invoiceAccountModel.invoiceAccountAddresses[0].agentCompany.id);
-        expect(data).to.equal({
-          roleName: 'billing',
-          isDefault: true,
-          startDate: '2020-04-01',
-          contactId
-        });
-      });
-    });
-
-    test('deletes already created entities when there is an error and re-throws', async () => {
-      invoiceAccountAddressesService.createInvoiceAccountAddress.throws(new Error('oopsies!'));
-      try {
-        await invoiceAccountsService.persist(regionId, '2020-04-01', invoiceAccountModel);
-      } catch (err) {
-        const newModels = [invoiceAccountModel];
-        expect(crmService.deleteEntities.calledWith(
-          newModels
-        )).to.be.true();
-        expect(err.message).to.equal('oopsies!');
-      }
+    test('resolves with an InvoiceAccount model', async () => {
+      expect(result).to.be.an.instanceOf(InvoiceAccount);
+      expect(result.id).to.equal(invoiceAccountId);
     });
   });
 
-  experiment('._isNewEntity', () => {
-    test('returns false when entity only contains id field', () => {
-      const result = invoiceAccountsService._isNewEntity(new Address(uuid()));
-      expect(result).to.be.false();
-    });
+  experiment('.createInvoiceAccountAddress', () => {
+    let address, contact, agentCompany, dateRange, invoiceAccountAddress;
+    const startDate = '2021-01-01';
+    const accountNumber = 'A12345678A';
 
-    test('returns false when entity contains id field and empty arrays', () => {
-      const result = invoiceAccountsService._isNewEntity(new Company(uuid()));
-      expect(result).to.be.false();
-    });
-
-    test('returns true when entity contains multiple pieces of data', () => {
-      const contact = new Contact();
-      contact.fromHash({
-        type: Contact.CONTACT_TYPES.person,
-        firsName: 'Tommy',
-        lastName: 'Test'
+    beforeEach(async () => {
+      // Create test models
+      address = new Address().fromHash({
+        addressLine2: '123',
+        addressLine3: 'Test Terrace',
+        town: 'Testington',
+        county: 'Testingshire',
+        country: 'England',
+        postCode: 'TT1 1TT'
       });
-      const result = invoiceAccountsService._isNewEntity(contact);
-      expect(result).to.be.true();
+
+      contact = new Contact().fromHash({
+        firstName: 'Toby',
+        lastName: 'Tested'
+      });
+
+      agentCompany = new Company().fromHash({
+        name: 'Bottled Water Co'
+      });
+
+      dateRange = new DateRange(startDate, null);
+
+      invoiceAccountAddress = new InvoiceAccountAddress().fromHash({
+        dateRange,
+        address,
+        agentCompany: null,
+        contact: null
+      });
+
+      // Stubs
+      invoiceAccountsConnector.getInvoiceAccountById.resolves({
+        invoiceAccountId,
+        company: {
+          companyId
+        },
+        invoiceAccountNumber: accountNumber
+      });
+
+      invoiceAccountAddressesService.createInvoiceAccountAddress.resolves(invoiceAccountAddress);
+
+      addressesService.createAddress.resolves(new Address(addressId));
+      contactsService.createContact.resolves(new Contact(contactId));
+      companiesService.createCompany.resolves(new Company(agentCompanyId));
+    });
+
+    experiment('when the address has no id', () => {
+      beforeEach(async () => {
+        await invoiceAccountsService.createInvoiceAccountAddress(invoiceAccountId, invoiceAccountAddress);
+      });
+
+      test('the invoice account is fetched', async () => {
+        expect(invoiceAccountsConnector.getInvoiceAccountById.calledWith(
+          invoiceAccountId
+        )).to.be.true();
+      });
+
+      test('the agent company is not persisted', async () => {
+        expect(companiesService.createCompany.called).to.be.false();
+      });
+
+      test('the contact is not persisted', async () => {
+        expect(contactsService.createContact.called).to.be.false();
+      });
+
+      test('the contact is not added to the company', async () => {
+        expect(companiesService.createCompanyContact.called).to.be.false();
+      });
+
+      test('the address is persisted', async () => {
+        expect(addressesService.createAddress.calledWith(
+          address
+        )).to.be.true();
+      });
+
+      test('the address is added to the invoice account company', async () => {
+        expect(companiesService.createCompanyAddress.calledWith(
+          companyId, addressId, {
+            startDate,
+            roleName: CONTACT_ROLES.billing
+          }
+        )).to.be.true();
+      });
+
+      test('no existing invoice account addresses are deleted', async () => {
+        expect(invoiceAccountAddressesService.deleteInvoiceAccountAddress.called).to.be.false();
+      });
+
+      test('no existing invoice account addresses are modified', async () => {
+        expect(invoiceAccountAddressesService.setEndDate.called).to.be.false();
+      });
+
+      test('the invoice account address is persisted', async () => {
+        const { args } = invoiceAccountAddressesService.createInvoiceAccountAddress.lastCall;
+        expect(args[0]).to.be.an.instanceOf(InvoiceAccount);
+        expect(args[1]).to.be.an.instanceOf(InvoiceAccountAddress);
+      });
+    });
+
+    experiment('when the address has an existing id', () => {
+      beforeEach(async () => {
+        address.id = addressId;
+        await invoiceAccountsService.createInvoiceAccountAddress(invoiceAccountId, invoiceAccountAddress);
+      });
+
+      test('the address is not persisted', async () => {
+        expect(addressesService.createAddress.called).to.be.false();
+      });
+
+      test('the address is added to the invoice account company', async () => {
+        expect(companiesService.createCompanyAddress.calledWith(
+          companyId, addressId, {
+            startDate,
+            roleName: CONTACT_ROLES.billing
+          }
+        )).to.be.true();
+      });
+    });
+
+    experiment('when there is an agent with no ID', () => {
+      beforeEach(async () => {
+        invoiceAccountAddress.agentCompany = agentCompany;
+        invoiceAccountAddress.contact = contact;
+        await invoiceAccountsService.createInvoiceAccountAddress(invoiceAccountId, invoiceAccountAddress);
+      });
+
+      test('the agent company is persisted', async () => {
+        expect(companiesService.createCompany.calledWith(agentCompany)).to.be.true();
+      });
+
+      test('the address is added to the agent company', async () => {
+        expect(companiesService.createCompanyAddress.calledWith(
+          agentCompanyId, addressId, {
+            startDate,
+            roleName: CONTACT_ROLES.billing
+          }
+        )).to.be.true();
+      });
+
+      test('the contact is added to the agent company', async () => {
+        expect(companiesService.createCompanyContact.calledWith(
+          agentCompanyId, contactId, {
+            startDate,
+            roleName: CONTACT_ROLES.billing
+          }
+        )).to.be.true();
+      });
+    });
+
+    experiment('when there is an agent with an existing ID', () => {
+      beforeEach(async () => {
+        agentCompany.id = agentCompanyId;
+        invoiceAccountAddress.agentCompany = agentCompany;
+        invoiceAccountAddress.contact = contact;
+        await invoiceAccountsService.createInvoiceAccountAddress(invoiceAccountId, invoiceAccountAddress);
+      });
+
+      test('the agent company is not persisted', async () => {
+        expect(companiesService.createCompany.called).to.be.false();
+      });
+
+      test('the address is added to the agent company', async () => {
+        expect(companiesService.createCompanyAddress.calledWith(
+          agentCompanyId, addressId, {
+            startDate,
+            roleName: CONTACT_ROLES.billing
+          }
+        )).to.be.true();
+      });
+
+      test('the contact is added to the agent company', async () => {
+        expect(companiesService.createCompanyContact.calledWith(
+          agentCompanyId, contactId, {
+            startDate,
+            roleName: CONTACT_ROLES.billing
+          }
+        )).to.be.true();
+      });
+
+      experiment('when there is an existing open-ended invoice account address record on a previous date', () => {
+        const invoiceAccountAddressId = uuid();
+
+        beforeEach(async () => {
+          invoiceAccountsConnector.getInvoiceAccountById.resolves({
+            invoiceAccountId,
+            company: {
+              companyId
+            },
+            invoiceAccountNumber: accountNumber,
+            invoiceAccountAddresses: [{
+              invoiceAccountId,
+              invoiceAccountAddressId,
+              startDate: '2020-01-01',
+              endDate: null
+            }]
+          });
+          await invoiceAccountsService.createInvoiceAccountAddress(invoiceAccountId, invoiceAccountAddress);
+        });
+
+        test('no existing invoice account addresses are deleted', async () => {
+          expect(invoiceAccountAddressesService.deleteInvoiceAccountAddress.called).to.be.false();
+        });
+
+        test('the end date is modified to one day before the new invoice account address starts', async () => {
+          expect(invoiceAccountAddressesService.setEndDate.calledWith(
+            invoiceAccountAddressId, '2020-12-31'
+          )).to.be.true();
+        });
+      });
+
+      experiment('when there is an existing overlapping closed-ended invoice account address record on a previous date', () => {
+        const invoiceAccountAddressId = uuid();
+
+        beforeEach(async () => {
+          invoiceAccountsConnector.getInvoiceAccountById.resolves({
+            invoiceAccountId,
+            company: {
+              companyId
+            },
+            invoiceAccountNumber: accountNumber,
+            invoiceAccountAddresses: [{
+              invoiceAccountId,
+              invoiceAccountAddressId,
+              startDate: '2020-01-01',
+              endDate: '2021-02-01'
+            }]
+          });
+          await invoiceAccountsService.createInvoiceAccountAddress(invoiceAccountId, invoiceAccountAddress);
+        });
+
+        test('no existing invoice account addresses are deleted', async () => {
+          expect(invoiceAccountAddressesService.deleteInvoiceAccountAddress.called).to.be.false();
+        });
+
+        test('the end date is modified to one day before the new invoice account address starts', async () => {
+          expect(invoiceAccountAddressesService.setEndDate.calledWith(
+            invoiceAccountAddressId, '2020-12-31'
+          )).to.be.true();
+        });
+      });
+
+      experiment('when there is an existing non-overlapping closed-ended invoice account address record on a previous date', () => {
+        const invoiceAccountAddressId = uuid();
+
+        beforeEach(async () => {
+          invoiceAccountsConnector.getInvoiceAccountById.resolves({
+            invoiceAccountId,
+            company: {
+              companyId
+            },
+            invoiceAccountNumber: accountNumber,
+            invoiceAccountAddresses: [{
+              invoiceAccountId,
+              invoiceAccountAddressId,
+              startDate: '2020-01-01',
+              endDate: '2020-12-31'
+            }]
+          });
+          await invoiceAccountsService.createInvoiceAccountAddress(invoiceAccountId, invoiceAccountAddress);
+        });
+
+        test('no existing invoice account addresses are deleted', async () => {
+          expect(invoiceAccountAddressesService.deleteInvoiceAccountAddress.called).to.be.false();
+        });
+
+        test('no existing invoice account addresses are modified', async () => {
+          expect(invoiceAccountAddressesService.setEndDate.called).to.be.false();
+        });
+      });
+
+      experiment('when there is an existing invoice account address record starting on the same date', () => {
+        const invoiceAccountAddressId = uuid();
+
+        beforeEach(async () => {
+          invoiceAccountsConnector.getInvoiceAccountById.resolves({
+            invoiceAccountId,
+            company: {
+              companyId
+            },
+            invoiceAccountNumber: accountNumber,
+            invoiceAccountAddresses: [{
+              invoiceAccountId,
+              invoiceAccountAddressId,
+              startDate: '2021-01-01',
+              endDate: null
+            }]
+          });
+          await invoiceAccountsService.createInvoiceAccountAddress(invoiceAccountId, invoiceAccountAddress);
+        });
+
+        test('the existing invoice account addresses is deleted', async () => {
+          expect(invoiceAccountAddressesService.deleteInvoiceAccountAddress.calledWith(
+            invoiceAccountAddressId
+          )).to.be.true();
+        });
+
+        test('no existing invoice account addresses are modified', async () => {
+          expect(invoiceAccountAddressesService.setEndDate.called).to.be.false();
+        });
+      });
     });
   });
 

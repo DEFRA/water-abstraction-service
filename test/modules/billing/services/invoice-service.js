@@ -20,6 +20,7 @@ const mappers = require('../../../../src/modules/billing/mappers');
 const repos = require('../../../../src/lib/connectors/repos');
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
 const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 
@@ -316,6 +317,8 @@ experiment('modules/billing/services/invoiceService', () => {
 
     sandbox.stub(chargeModuleBillRunConnector, 'get').resolves(chargeModuleData);
     sandbox.stub(chargeModuleBillRunConnector, 'getCustomer').resolves(chargeModuleData);
+
+    sandbox.stub(batchService, 'getAllCmTransactionsForBatch').resolves();
 
     sandbox.stub(repos.billingInvoices, 'findOne').resolves();
     sandbox.stub(repos.billingInvoices, 'upsert').resolves();
