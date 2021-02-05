@@ -14,7 +14,7 @@ const controller = require('../../../src/modules/notify/controller');
 
 experiment('modules/notify/controller', () => {
   beforeEach(async () => {
-    sandbox.stub(scheduledNotificationsService, 'getScheduledNotificationById');
+    sandbox.stub(scheduledNotificationsService, 'getScheduledNotificationByNotifyId');
     sandbox.stub(scheduledNotificationsService, 'updateScheduledNotificationWithNotifyCallback');
   });
 
@@ -38,7 +38,7 @@ experiment('modules/notify/controller', () => {
     };
     experiment('when no matching notification is found', () => {
       beforeEach(async () => {
-        await scheduledNotificationsService.getScheduledNotificationById.returns(null);
+        await scheduledNotificationsService.getScheduledNotificationByNotifyId.returns(null);
         await scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback.resolves();
         response = await controller.callback(request, h);
       });
@@ -47,17 +47,21 @@ experiment('modules/notify/controller', () => {
         expect(response.isBoom).to.equal(true);
         expect(response.output.statusCode).to.equal(404);
       });
+
+      test('does not call the update function', () => {
+        expect(scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback.called).to.be.false();
+      });
     });
 
     experiment('when a matching notification is found', () => {
       beforeEach(async () => {
-        await scheduledNotificationsService.getScheduledNotificationById.returns(1);
+        await scheduledNotificationsService.getScheduledNotificationByNotifyId.returns(1);
         await scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback.resolves();
         response = await controller.callback(request, h);
       });
 
       test('calls the update function', () => {
-        expect(scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback.calledWith(tempId)).to.be.true();
+        expect(scheduledNotificationsService.updateScheduledNotificationWithNotifyCallback.called).to.be.true();
       });
     });
   });
