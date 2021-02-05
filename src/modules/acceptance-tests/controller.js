@@ -11,7 +11,6 @@ const notifications = require('./lib/notifications');
 const documents = require('./lib/documents');
 const events = require('./lib/events');
 const sessions = require('./lib/sessions');
-const uuid = require('uuid/v4');
 
 const {
   TEST_EXTERNAL_USER_EMAIL,
@@ -19,8 +18,7 @@ const {
   TEST_EXTERNAL_RETURNS_AGENT_EMAIL,
   LICENCE_REF_CURRENT_DAILY,
   LICENCE_REF_CURRENT_WEEKLY,
-  LICENCE_REF_CURRENT_MONTHLY,
-  TEST_NOTIFY_ID
+  LICENCE_REF_CURRENT_MONTHLY
 } = require('./lib/constants');
 
 const createExternalPrimaryUser = async company => {
