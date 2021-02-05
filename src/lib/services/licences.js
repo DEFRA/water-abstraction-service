@@ -157,6 +157,19 @@ const getLicenceInvoices = async (licenceId, page = 1, perPage = 10) => {
   return { data: mappedInvoices, pagination: invoices.pagination };
 };
 
+/**
+ * Gets licences which have a current charge version linked to the
+ * specified invoice account ID
+ *
+ * @param {String} invoiceAccountId
+ */
+const getLicencesByInvoiceAccountId = async invoiceAccountId => {
+  const licences = await repos.licences.findByInvoiceAccountId(invoiceAccountId);
+  return {
+    data: licences.map(licenceMapper.dbToModel)
+  };
+};
+
 exports.getLicenceById = getLicenceById;
 exports.getLicencesByLicenceRefs = getLicencesByLicenceRefs;
 exports.getLicenceVersionById = getLicenceVersionById;
@@ -169,3 +182,4 @@ exports.updateIncludeInSupplementaryBillingStatusForUnsentBatch = updateIncludeI
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch;
 exports.flagForSupplementaryBilling = flagForSupplementaryBilling;
 exports.getLicenceInvoices = getLicenceInvoices;
+exports.getLicencesByInvoiceAccountId = getLicencesByInvoiceAccountId;

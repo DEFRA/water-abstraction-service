@@ -55,15 +55,16 @@ experiment('modules/billing/jobs/persist-invoice-numbers-and-totals', () => {
     });
 
     test('creates the expected message array', async () => {
-      expect(message).to.equal([
-        'billing.persist-invoice-numbers-and-totals',
-        {
-          batchId: BATCH_ID
-        },
-        {
-          jobId: `billing.persist-invoice-numbers-and-totals.${BATCH_ID}`
-        }
-      ]);
+      const [name, data, options] = message;
+      expect(name).to.equal('billing.persist-invoice-numbers-and-totals');
+      expect(data).to.equal({ batchId: BATCH_ID });
+
+      expect(options.jobId).to.startWith(`billing.persist-invoice-numbers-and-totals.${BATCH_ID}.`);
+      expect(options.attempts).to.equal(10);
+      expect(options.backoff).to.equal({
+        type: 'exponential',
+        delay: 5000
+      });
     });
   });
 
@@ -116,23 +117,46 @@ experiment('modules/billing/jobs/persist-invoice-numbers-and-totals', () => {
   });
 
   experiment('.onFailed', () => {
-    let job;
-    const err = new Error('oops');
+    let job, err;
 
-    beforeEach(async () => {
+    beforeEach(() => {
       job = {
-        name: 'billing.persist-invoice-numbers-and-totals',
-        id: 'test-job-id'
+        name: 'test-job',
+        id: 'test-job-id',
+        data: {
+          batchId: BATCH_ID
+        },
+        attemptsMade: 5,
+        opts: {
+          attempts: 10
+        }
       };
-
-      await persistInvoiceNumbersAndTotals.onFailed(job, err);
+      err = new Error('oops');
     });
 
-    test('error is logged', () => {
-      expect(logger.error.calledWith(
-        'Job billing.persist-invoice-numbers-and-totals test-job-id failed',
-        err
-      )).to.be.true();
+    experiment('when the attempt to persist invoice numbers and totals failed but is not the final one', () => {
+      beforeEach(async () => {
+        await persistInvoiceNumbersAndTotals.onFailed(job, err);
+      });
+
+      test('a normal error is logged', async () => {
+        const [errMsg, error] = logger.error.lastCall.args;
+        expect(errMsg).to.equal('Job test-job test-job-id failed');
+        expect(error).to.equal(err);
+      });
+    });
+
+    experiment('on the final attempt to persist invoice numbers and totals', () => {
+      beforeEach(async () => {
+        job.attemptsMade = 10;
+        await persistInvoiceNumbersAndTotals.onFailed(job, err);
+      });
+
+      test('the expected error is logged', async () => {
+        const [errMsg, error] = logger.error.lastCall.args;
+        expect(errMsg).to.equal(`CM transactions for batch ${BATCH_ID} not retrieved after ${job.attemptsMade} attempts`);
+        expect(error).to.equal(err);
+      });
     });
   });
 

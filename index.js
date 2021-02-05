@@ -91,7 +91,8 @@ const registerServerPlugins = async (server) => {
           info: {
             title: 'Test API Documentation',
             version: require('./package.json').version
-          }
+          },
+          pathPrefixSize: 3
         }
       }
     ]);

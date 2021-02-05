@@ -64,8 +64,8 @@ const get = billRunId =>
 const getCustomer = (billRunId, customerReference) =>
   request.get(`v1/wrls/billruns/${billRunId}`, { customerReference });
 
-const getTransactions = billRunId =>
-  request.get(`v1/wrls/billruns/${billRunId}/transactions`);
+const getTransactions = (billRunId, page = 1, perPage = 100) =>
+  request.get(`v1/wrls/billruns/${billRunId}/transactions`, { page, perPage });
 
 exports.addTransaction = addTransaction;
 exports.approve = approve;
