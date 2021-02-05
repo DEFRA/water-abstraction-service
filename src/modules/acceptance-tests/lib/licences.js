@@ -8,7 +8,8 @@ const deleteLicences = () => {
     delete from
     water.licences
     where licence_ref IN (SELECT system_external_id FROM crm.document_header
-    where metadata->>'dataType' = '${ACCEPTANCE_TEST_SOURCE}');
+    where metadata->>'dataType' = '${ACCEPTANCE_TEST_SOURCE}')
+    OR is_test = true;
     `);
 };
 

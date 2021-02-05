@@ -7,9 +7,11 @@ const permits = require('./lib/permits');
 const entities = require('./lib/entities');
 const licences = require('./lib/licences');
 const users = require('./lib/users');
+const notifications = require('./lib/notifications');
 const documents = require('./lib/documents');
 const events = require('./lib/events');
 const sessions = require('./lib/sessions');
+const uuid = require('uuid/v4');
 
 const {
   TEST_EXTERNAL_USER_EMAIL,
@@ -17,7 +19,8 @@ const {
   TEST_EXTERNAL_RETURNS_AGENT_EMAIL,
   LICENCE_REF_CURRENT_DAILY,
   LICENCE_REF_CURRENT_WEEKLY,
-  LICENCE_REF_CURRENT_MONTHLY
+  LICENCE_REF_CURRENT_MONTHLY,
+  TEST_NOTIFY_ID
 } = require('./lib/constants');
 
 const createExternalPrimaryUser = async company => {
@@ -165,6 +168,7 @@ const postSetup = async (request, h) => {
     const company = await entities.createV1Company();
     await entities.createV2Company();
     await entities.createV2Address();
+    await notifications.create();
     const externalPrimaryUser = await createExternalPrimaryUser(company);
     const currentLicencesWithReturns = await createCurrentLicencesWithReturns(company, externalPrimaryUser);
 
@@ -202,6 +206,8 @@ const postTearDown = async () => {
   await sessions.delete();
   console.log('Tearing down acceptance test licences');
   await licences.delete();
+  console.log('Tearing down acceptance test notifications');
+  await notifications.delete();
 
   return 'tear down complete';
 };
