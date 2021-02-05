@@ -175,23 +175,20 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
   beforeEach(async () => {
     batch = createBatch();
     cmResponse = createCMResponse();
-    cmTransactions = {
-      data: {
-        transactions: [{
-          id: '00000000-0000-0000-0000-000000002019',
-          customerReference: 'A12345678A',
-          periodStart: '01-APR-2018',
-          periodEnd: '31-MAR-2019',
-          transactionReference: 'AAI1000001'
-        }, {
-          id: '00000000-0000-0000-0000-000000002020',
-          customerReference: 'A12345678A',
-          periodStart: '01-MAY-2019',
-          periodEnd: '31-MAR-2020',
-          transactionReference: 'AAI1000002'
-        }]
-      }
-    };
+    cmTransactions =
+       [{
+         id: '00000000-0000-0000-0000-000000002019',
+         customerReference: 'A12345678A',
+         periodStart: '01-APR-2018',
+         periodEnd: '31-MAR-2019',
+         transactionReference: 'AAI1000001'
+       }, {
+         id: '00000000-0000-0000-0000-000000002020',
+         customerReference: 'A12345678A',
+         periodStart: '01-MAY-2019',
+         periodEnd: '31-MAR-2020',
+         transactionReference: 'AAI1000002'
+       }];
   });
 
   afterEach(() => sandbox.restore());
@@ -262,7 +259,7 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
     experiment('when there are multiple invoice numbers for a given financial year', () => {
       beforeEach(() => {
         cmResponse.billRun.customers[0].summaryByFinancialYear[1].transactions.push(cmMinimumChargeTransaction);
-        cmTransactions.data.transactions.push({
+        cmTransactions.push({
           ...cmMinimumChargeTransaction,
           customerReference: 'A12345678A',
           periodStart: '01-APR-2019',
@@ -312,53 +309,49 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
     });
   });
 
-  experiment('._mapCmTransactionsToSummary', () => {
+  experiment('.mapCmTransactionsToSummary', () => {
     let cmResponse, cmTransactions;
     beforeEach(() => {
       cmResponse = createCMResponse();
       cmResponse.billRun.customers.push(secondCustomer);
       // add min charge transaction to 2019 summary for first customer
       cmResponse.billRun.customers[0].summaryByFinancialYear[1].transactions.push(cmMinimumChargeTransaction);
-      cmTransactions = {
-        data: {
-          transactions: [{
-            id: '00000000-0000-0000-0000-000000002020',
-            customerReference: 'A12345678A',
-            periodStart: '01-MAY-2019',
-            periodEnd: '31-MAR-2020',
-            transactionReference: 'AAI1000001'
-          }, {
-            id: '00000000-0000-0000-0000-000000002019',
-            customerReference: 'A12345678A',
-            periodStart: '01-APR-2018',
-            periodEnd: '31-MAR-2019',
-            transactionReference: 'AAI1000002'
-          }, {
-            ...cmMinimumChargeTransaction,
-            customerReference: 'A12345678A',
-            periodStart: '01-APR-2019',
-            periodEnd: '31-MAR-2020',
-            transactionReference: null
-          }, {
-            id: '00000000-2222-0000-0000-000000002020',
-            customerReference: 'B12345678A',
-            periodStart: '01-JUN-2019',
-            periodEnd: '31-MAR-2020',
-            transactionReference: 'BAI1000001'
-          }, {
-            id: '00000000-2222-0000-0000-000000002019',
-            customerReference: 'B12345678A',
-            periodStart: '01-JUL-2018',
-            periodEnd: '31-MAR-2019',
-            transactionReference: 'BAI1000002'
-          }]
-        }
-      };
+      cmTransactions = [{
+        id: '00000000-0000-0000-0000-000000002020',
+        customerReference: 'A12345678A',
+        periodStart: '01-MAY-2019',
+        periodEnd: '31-MAR-2020',
+        transactionReference: 'AAI1000001'
+      }, {
+        id: '00000000-0000-0000-0000-000000002019',
+        customerReference: 'A12345678A',
+        periodStart: '01-APR-2018',
+        periodEnd: '31-MAR-2019',
+        transactionReference: 'AAI1000002'
+      }, {
+        ...cmMinimumChargeTransaction,
+        customerReference: 'A12345678A',
+        periodStart: '01-APR-2019',
+        periodEnd: '31-MAR-2020',
+        transactionReference: null
+      }, {
+        id: '00000000-2222-0000-0000-000000002020',
+        customerReference: 'B12345678A',
+        periodStart: '01-JUN-2019',
+        periodEnd: '31-MAR-2020',
+        transactionReference: 'BAI1000001'
+      }, {
+        id: '00000000-2222-0000-0000-000000002019',
+        customerReference: 'B12345678A',
+        periodStart: '01-JUL-2018',
+        periodEnd: '31-MAR-2019',
+        transactionReference: 'BAI1000002'
+      }];
     });
 
     experiment('when cmTransactions is an empty object', () => {
       test('returns customers array from cmResponse object', () => {
-        const result = chargeModuleDecorators._mapCmTransactionsToSummary(cmResponse, {});
+        const result = chargeModuleDecorators.mapCmTransactionsToSummary(cmResponse, []);
         expect(result).to.equal(cmResponse.billRun.customers);
       });
     });
@@ -366,7 +359,7 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
     experiment('maps cmTransactions into cm response customers', () => {
       let result;
       beforeEach(() => {
-        result = chargeModuleDecorators._mapCmTransactionsToSummary(cmResponse, cmTransactions);
+        result = chargeModuleDecorators.mapCmTransactionsToSummary(cmResponse, cmTransactions);
       });
 
       test('result has 2 customers', () => {
