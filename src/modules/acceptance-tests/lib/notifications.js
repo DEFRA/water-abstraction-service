@@ -13,7 +13,6 @@ const create = async () => {
   notification.plaintext = 'Test';
   notification.dateCreated = new Date();
   notification.personalisation = { one: 1 };
-  console.log(notification);
   return notificationsService.createScheduledNotification(notification);
 };
 
