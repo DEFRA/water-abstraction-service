@@ -39,6 +39,5 @@ const updateScheduledNotificationWithNotifyCallback = (messageId, status) => rep
 exports.getScheduledNotificationById = getScheduledNotificationById;
 exports.getScheduledNotificationByNotifyId = getScheduledNotificationByNotifyId;
 exports.createScheduledNotification = createScheduledNotification;
-exports.getScheduledNotificationById = getScheduledNotificationById;
 exports.updateScheduledNotificationWithNotifyResponse = updateScheduledNotificationWithNotifyResponse;
 exports.updateScheduledNotificationWithNotifyCallback = updateScheduledNotificationWithNotifyCallback;
