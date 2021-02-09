@@ -35,7 +35,6 @@ const postCreateBatch = async (request, h) => {
   try {
     // create a new entry in the batch table
     const batch = await batchService.create(regionId, batchType, financialYearEnding, isSummer);
-
     // add these details to the event log
     const batchEvent = await createBatchEvent({
       issuer: userEmail,
@@ -45,7 +44,7 @@ const postCreateBatch = async (request, h) => {
     });
 
     // add a new job to the queue so that the batch can be created in the CM
-    await request.queueManager.add(createBillRunJobName, batch);
+    await request.queueManager.add(createBillRunJobName, batch.id);
 
     return h.response(envelope({
       batch,

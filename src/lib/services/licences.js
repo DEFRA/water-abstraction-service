@@ -1,8 +1,10 @@
 'use strict';
 
-const config = require('../../../config');
 const repos = require('../connectors/repos');
 const licenceMapper = require('../mappers/licence');
+const invoiceLicenceMapper = require('../../modules/billing/mappers/invoice-licence');
+const invoiceMapper = require('../../modules/billing/mappers/invoice');
+const batchMapper = require('../../modules/billing/mappers/batch');
 const invoiceAccountsMapper = require('../mappers/invoice-account');
 const licenceVersionMapper = require('../mappers/licence-version');
 const { INCLUDE_IN_SUPPLEMENTARY_BILLING } = require('../models/constants');
@@ -130,8 +132,42 @@ const flagForSupplementaryBilling = licenceId =>
   repos.licences.update(licenceId, { includeInSupplementaryBilling: INCLUDE_IN_SUPPLEMENTARY_BILLING.yes });
 
 const getLicencesWithoutChargeVersions = async () => {
-  const licences = await repos.licences.findWithoutChargeVersions(config.licences.withChargeVersionsStartDate);
+  const licences = await repos.licences.findWithoutChargeVersions();
   return licences.map(licenceMapper.dbToModel);
+};
+
+/**
+ * Retrieves the invoices associated with a licence
+ * Used in the UI bills tab
+ * @param {String} licenceId
+ * @param {number} page
+ * @param {number} perPage
+ * @return {Promise<Licence>}
+ */
+const getLicenceInvoices = async (licenceId, page = 1, perPage = 10) => {
+  const invoices = await repos.billingInvoiceLicences.findAll(licenceId, page, perPage);
+
+  const mappedInvoices = invoices.data.map(row => {
+    const temp = invoiceLicenceMapper.dbToModel(row);
+    temp.invoice = invoiceMapper.dbToModel(row.billingInvoice);
+    temp.batch = batchMapper.dbToModel(row.billingInvoice.billingBatch);
+
+    return temp;
+  });
+  return { data: mappedInvoices, pagination: invoices.pagination };
+};
+
+/**
+ * Gets licences which have a current charge version linked to the
+ * specified invoice account ID
+ *
+ * @param {String} invoiceAccountId
+ */
+const getLicencesByInvoiceAccountId = async invoiceAccountId => {
+  const licences = await repos.licences.findByInvoiceAccountId(invoiceAccountId);
+  return {
+    data: licences.map(licenceMapper.dbToModel)
+  };
 };
 
 exports.getLicenceById = getLicenceById;
@@ -145,3 +181,5 @@ exports.updateIncludeInSupplementaryBillingStatus = updateIncludeInSupplementary
 exports.updateIncludeInSupplementaryBillingStatusForUnsentBatch = updateIncludeInSupplementaryBillingStatusForUnsentBatch;
 exports.updateIncludeInSupplementaryBillingStatusForSentBatch = updateIncludeInSupplementaryBillingStatusForSentBatch;
 exports.flagForSupplementaryBilling = flagForSupplementaryBilling;
+exports.getLicenceInvoices = getLicenceInvoices;
+exports.getLicencesByInvoiceAccountId = getLicencesByInvoiceAccountId;

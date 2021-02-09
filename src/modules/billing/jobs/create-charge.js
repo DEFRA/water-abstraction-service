@@ -1,6 +1,6 @@
 'use strict';
 
-const { get } = require('lodash');
+const { get, inRange } = require('lodash');
 
 const JOB_NAME = 'billing.create-charge';
 
@@ -36,15 +36,21 @@ const createMessage = (batchId, billingBatchTransactionId) => ([
   }
 ]);
 
+const getStatus = err => get(err, 'statusCode', 0);
+
 /**
  * Checks if the error is an HTTP client error (in range 400 - 499)
  * @param {Error} err
  * @return {Boolean}
  */
-const isClientError = err => {
-  const statusCode = get(err, 'statusCode', 0);
-  return (statusCode >= 400) && (statusCode < 500);
-};
+const isClientError = err => inRange(getStatus(err), 400, 500);
+
+/**
+ * Checks if error is HTTP 409 - conflict
+ * @param {Error} err
+ * @return {Boolean}
+ */
+const isConflictError = err => getStatus(err) === 409;
 
 const updateBatchState = async batch => {
   const statuses = await batchService.getTransactionStatusCounts(batch.id);
@@ -86,20 +92,17 @@ const handler = async job => {
     // Note: the await is needed to ensure any error is handled here
     return await updateBatchState(batch);
   } catch (err) {
-    const statusCode = get(err, 'statusCode');
     batchJob.logHandlingError(job, err);
 
     // if the charge was created in the CM
-    if (statusCode === 409) {
+    if (isConflictError(err)) {
       await transactionsService.updateWithChargeModuleResponse(transactionId, err.response.body);
-      return await updateBatchState(batch);
+      return updateBatchState(batch);
     }
     // if error code >= 400 and < 500 set transacti on status to error and continue
     if (isClientError(err)) {
-      transactionsService.setErrorStatus(transactionId);
-      return {
-        batch: job.data.batch
-      };
+      await transactionsService.setErrorStatus(transactionId);
+      return updateBatchState(batch);
     }
     // throw error to retry
     throw err;
@@ -129,7 +132,7 @@ const onFailedHandler = async (job, err) => {
   if (helpers.isFinalAttempt(job)) {
     try {
       logger.error(`Transaction with id ${transactionId} not generated in CM after ${job.attemptsMade} attempts, marking batch as errored ${batchId}`);
-      await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToPrepareTransactions);
+      await batchService.setErrorStatus(batchId, BATCH_ERROR_CODE.failedToCreateCharge);
     } catch (error) {
       logger.error(`Unable to set batch status ${batchId}`, error);
     }

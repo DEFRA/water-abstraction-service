@@ -1,12 +1,12 @@
 'use strict';
-const Hapi = require('@hapi/hapi');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
-const { cloneDeep } = require('lodash');
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
+const testHelpers = require('../../../test-helpers');
 
 const routes = require('../../../../src/modules/billing/routes/two-part-tariff-review');
 const preHandlers = require('../../../../src/modules/billing/pre-handlers');
+const { ROLES } = require('../../../../src/lib/roles');
 
 /**
  * Creates a test Hapi server that has no other plugins loaded,
@@ -17,22 +17,26 @@ const preHandlers = require('../../../../src/modules/billing/pre-handlers');
  *
  * @param {Object} route The route to test
  */
-const getServer = route => {
-  const server = Hapi.server({ port: 80 });
-
-  const testRoute = cloneDeep(route);
-  testRoute.handler = (req, h) => h.response('Test handler').code(200);
-  testRoute.config.pre = [];
-  server.route(testRoute);
-  return server;
-};
+const getServer = route =>
+  testHelpers.createServerForRoute(route, true);
 
 experiment('modules/billing/routes/two-part-tariff-review', () => {
+  let auth;
+
+  beforeEach(async () => {
+    auth = {
+      strategy: 'basic',
+      credentials: {
+        scope: [ROLES.billing]
+      }
+    };
+  });
+
   experiment('patchBillingVolume', () => {
     let request, server, billingVolumeId;
 
     beforeEach(async () => {
-      server = getServer(routes.patchBillingVolume);
+      server = await getServer(routes.patchBillingVolume);
       billingVolumeId = '054517f2-be00-4505-a3cc-df65a89cd8e1';
 
       request = {
@@ -41,9 +45,8 @@ experiment('modules/billing/routes/two-part-tariff-review', () => {
         payload: {
           volume: 5
         },
-        headers: {
-          'defra-internal-user-id': 1234
-        }
+        headers: {},
+        auth
       };
     });
 
@@ -64,16 +67,10 @@ experiment('modules/billing/routes/two-part-tariff-review', () => {
       expect(response.statusCode).to.equal(400);
     });
 
-    test('returns a 400 if the calling user id is not supplied', async () => {
-      request.headers = {};
+    test('returns a 403 if the request has insufficient scope', async () => {
+      request.auth.credentials.scope = [];
       const response = await server.inject(request);
-      expect(response.statusCode).to.equal(400);
-    });
-
-    test('returns a 400 if the calling user id is not a number', async () => {
-      request.headers['defra-internal-user-id'] = 'a string';
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(400);
+      expect(response.statusCode).to.equal(403);
     });
 
     test('returns a 200 if the volume is 0', async () => {
@@ -99,15 +96,14 @@ experiment('modules/billing/routes/two-part-tariff-review', () => {
     let validBatchId;
 
     beforeEach(async () => {
-      server = getServer(routes.getBatchLicences);
+      server = await getServer(routes.getBatchLicences);
       validBatchId = uuid();
 
       request = {
         method: 'GET',
         url: `/water/1.0/billing/batches/${validBatchId}/licences`,
-        headers: {
-          'defra-internal-user-id': 1234
-        }
+        headers: {},
+        auth
       };
     });
 

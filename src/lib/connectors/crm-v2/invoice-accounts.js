@@ -56,12 +56,8 @@ const createInvoiceAccountAddress = (invoiceAccountId, invoiceAccountAddress) =>
   return serviceRequest.post(url, { body: invoiceAccountAddress });
 };
 
-const deleteInvoiceAccountAddress = async (invoiceAccountId, invoiceAccountAddressId) =>
-  serviceRequest.delete(getUri(invoiceAccountId, 'addresses', invoiceAccountAddressId));
-
 exports.createInvoiceAccount = createInvoiceAccount;
 exports.deleteInvoiceAccount = deleteInvoiceAccount;
 exports.createInvoiceAccountAddress = createInvoiceAccountAddress;
-exports.deleteInvoiceAccountAddress = deleteInvoiceAccountAddress;
 exports.getInvoiceAccountById = getInvoiceAccountById;
 exports.getInvoiceAccountsByIds = getInvoiceAccountsByIds;

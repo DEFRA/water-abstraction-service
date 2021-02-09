@@ -101,20 +101,20 @@ const patchBillingVolume = async (request, h) => {
  */
 const postApproveReviewBatch = async (request, h) => {
   const { batch } = request.pre;
-  const { internalCallingUser } = request.defra;
+  const { email: issuer } = request.auth.credentials;
 
   try {
     const updatedBatch = await batchService.approveTptBatchReview(batch);
 
     const batchEvent = await createBatchEvent({
+      issuer,
       type: EVENT_TYPES.approveReview,
       status: jobStatus.processing,
-      issuer: internalCallingUser.email,
       batch: updatedBatch
     });
 
     // Kick off next stage of processing
-    await request.queueManager.add(processChargeVersionsJobName, batch);
+    await request.queueManager.add(processChargeVersionsJobName, batch.id);
 
     return envelope({
       event: batchEvent,

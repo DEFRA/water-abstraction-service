@@ -15,7 +15,7 @@ const { logger } = require('../../../logger');
  * @return {Promise<Object>}
  */
 const makeTokenRequest = async () => {
-  if (config.services.chargeModule.includes('localhost') && !config.testMode) {
+  if (config.services.chargeModule.includes('localhost')) {
     const token = await jwt.sign({ client_id: config.cognito.username }, '1');
     return {
       access_token: token

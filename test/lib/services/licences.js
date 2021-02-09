@@ -11,7 +11,6 @@ const uuid = require('uuid/v4');
 
 const sandbox = require('sinon').createSandbox();
 
-const applicationConfig = require('../../../config');
 const licencesService = require('../../../src/lib/services/licences');
 const repos = require('../../../src/lib/connectors/repos');
 
@@ -58,6 +57,7 @@ experiment('src/lib/services/licences', () => {
     sandbox.stub(repos.licences, 'update');
     sandbox.stub(repos.licenceVersions, 'findByLicenceId');
     sandbox.stub(repos.licenceVersions, 'findOne');
+    sandbox.stub(repos.billingInvoiceLicences, 'findAll');
   });
 
   afterEach(async () => {
@@ -332,15 +332,26 @@ experiment('src/lib/services/licences', () => {
       results = await licencesService.getLicencesWithoutChargeVersions();
     });
 
-    test('uses passes the configurable start date to the repo', async () => {
-      const [startDate] = repos.licences.findWithoutChargeVersions.lastCall.args;
-      expect(startDate).to.equal(applicationConfig.licences.withChargeVersionsStartDate);
-    });
-
     test('returns the results as Licence models', async () => {
       expect(results.length).to.equal(1);
       expect(results[0] instanceof Licence).to.equal(true);
       expect(results[0].id).to.equal(data.dbRow.licenceId);
+    });
+  });
+
+  experiment('.getLicenceInvoices', () => {
+    const tempLicenceId = uuid();
+    beforeEach(async () => {
+      await repos.billingInvoiceLicences.findAll.resolves({ data: [] });
+      await licencesService.getLicenceInvoices(tempLicenceId);
+    });
+
+    test('calls billingInvoiceLicences.findAll()', () => {
+      expect(repos.billingInvoiceLicences.findAll.called).to.be.true();
+    });
+
+    test('calls billingInvoiceLicences.findAll() with the right parameters', () => {
+      expect(repos.billingInvoiceLicences.findAll.calledWith(tempLicenceId, 1, 10)).to.be.true();
     });
   });
 });

@@ -1,14 +1,13 @@
 'use strict';
-
-const Hapi = require('@hapi/hapi');
 const uuid = require('uuid/v4');
-const { cloneDeep } = require('lodash');
 
 const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 
 const routes = require('../../../src/modules/billing/routes');
 const preHandlers = require('../../../src/modules/billing/pre-handlers');
+const testHelpers = require('../../test-helpers');
+const { ROLES } = require('../../../src/lib/roles');
 
 /**
  * Creates a test Hapi server that has no other plugins loaded,
@@ -19,23 +18,27 @@ const preHandlers = require('../../../src/modules/billing/pre-handlers');
  *
  * @param {Object} route The route to test
  */
-const getServer = route => {
-  const server = Hapi.server({ port: 80 });
-
-  const testRoute = cloneDeep(route);
-  testRoute.handler = (req, h) => h.response('Test handler').code(200);
-  testRoute.config.pre = [];
-  server.route(testRoute);
-  return server;
-};
+const getServer = route =>
+  testHelpers.createServerForRoute(route, true);
 
 experiment('modules/billing/routes', () => {
+  let auth;
+
+  beforeEach(async () => {
+    auth = {
+      strategy: 'basic',
+      credentials: {
+        scope: [ROLES.billing]
+      }
+    };
+  });
+
   experiment('postCreateBatch', () => {
     let request;
     let server;
 
     beforeEach(async () => {
-      server = getServer(routes.postCreateBatch);
+      server = await getServer(routes.postCreateBatch);
 
       request = {
         method: 'POST',
@@ -46,7 +49,8 @@ experiment('modules/billing/routes', () => {
           batchType: 'annual',
           financialYearEnding: 2019,
           isSummer: true
-        }
+        },
+        auth
       };
     });
 
@@ -125,11 +129,12 @@ experiment('modules/billing/routes', () => {
     let validId;
 
     beforeEach(async () => {
-      server = getServer(routes.getBatch);
+      server = await getServer(routes.getBatch, true);
       validId = '00000000-0000-0000-0000-000000000000';
       request = {
         method: 'GET',
-        url: `/water/1.0/billing/batches/${validId}`
+        url: `/water/1.0/billing/batches/${validId}`,
+        auth
       };
     });
 
@@ -157,11 +162,12 @@ experiment('modules/billing/routes', () => {
     let server;
 
     beforeEach(async () => {
-      server = getServer(routes.getBatches);
+      server = await getServer(routes.getBatches);
 
       request = {
         method: 'GET',
-        url: '/water/1.0/billing/batches'
+        url: '/water/1.0/billing/batches',
+        auth
       };
     });
 
@@ -198,11 +204,12 @@ experiment('modules/billing/routes', () => {
     let validId;
 
     beforeEach(async () => {
-      server = getServer(routes.getBatchInvoices);
+      server = await getServer(routes.getBatchInvoices);
       validId = '00000000-0000-0000-0000-000000000000';
       request = {
         method: 'GET',
-        url: `/water/1.0/billing/batches/${validId}/invoices`
+        url: `/water/1.0/billing/batches/${validId}/invoices`,
+        auth
       };
     });
 
@@ -225,13 +232,14 @@ experiment('modules/billing/routes', () => {
     let validBatchId;
 
     beforeEach(async () => {
-      server = getServer(routes.getBatchInvoiceDetail);
+      server = await getServer(routes.getBatchInvoiceDetail);
       validInvoiceId = uuid();
       validBatchId = uuid();
 
       request = {
         method: 'GET',
-        url: `/water/1.0/billing/batches/${validBatchId}/invoices/${validInvoiceId}`
+        url: `/water/1.0/billing/batches/${validBatchId}/invoices/${validInvoiceId}`,
+        auth
       };
     });
 
@@ -259,12 +267,13 @@ experiment('modules/billing/routes', () => {
     let validBatchId;
 
     beforeEach(async () => {
-      server = getServer(routes.getBatchInvoicesDetails);
+      server = await getServer(routes.getBatchInvoicesDetails);
       validBatchId = uuid();
 
       request = {
         method: 'GET',
-        url: `/water/1.0/billing/batches/${validBatchId}/invoices/details`
+        url: `/water/1.0/billing/batches/${validBatchId}/invoices/details`,
+        auth
       };
     });
 
@@ -287,13 +296,14 @@ experiment('modules/billing/routes', () => {
     let validInvoiceId;
 
     beforeEach(async () => {
-      server = getServer(routes.deleteBatchInvoice);
+      server = await getServer(routes.deleteBatchInvoice);
       validBatchId = uuid();
       validInvoiceId = uuid();
 
       request = {
         method: 'DELETE',
-        url: `/water/1.0/billing/batches/${validBatchId}/invoices/${validInvoiceId}`
+        url: `/water/1.0/billing/batches/${validBatchId}/invoices/${validInvoiceId}`,
+        auth
       };
     });
 
@@ -328,15 +338,14 @@ experiment('modules/billing/routes', () => {
     let validBatchId;
 
     beforeEach(async () => {
-      server = getServer(routes.deleteBatch);
+      server = await getServer(routes.deleteBatch);
       validBatchId = uuid();
 
       request = {
         method: 'DELETE',
         url: `/water/1.0/billing/batches/${validBatchId}`,
-        headers: {
-          'defra-internal-user-id': 1234
-        }
+        auth,
+        headers: {}
       };
     });
 
@@ -357,16 +366,10 @@ experiment('modules/billing/routes', () => {
       expect(response.statusCode).to.equal(400);
     });
 
-    test('returns a 400 if the calling user id is not supplied', async () => {
-      request.headers = {};
+    test('returns a 403 if the calling user has insufficent scope', async () => {
+      request.auth.credentials.scope = [];
       const response = await server.inject(request);
-      expect(response.statusCode).to.equal(400);
-    });
-
-    test('returns a 400 if the calling user id is not a number', async () => {
-      request.headers['defra-internal-user-id'] = 'a string';
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(400);
+      expect(response.statusCode).to.equal(403);
     });
 
     test('contains a pre handler to load the batch', async () => {
@@ -383,15 +386,14 @@ experiment('modules/billing/routes', () => {
     let validBatchId;
 
     beforeEach(async () => {
-      server = getServer(routes.postApproveBatch);
+      server = await getServer(routes.postApproveBatch);
       validBatchId = uuid();
 
       request = {
         method: 'POST',
         url: `/water/1.0/billing/batches/${validBatchId}/approve`,
-        headers: {
-          'defra-internal-user-id': 1234
-        }
+        auth,
+        headers: {}
       };
     });
 
@@ -412,16 +414,10 @@ experiment('modules/billing/routes', () => {
       expect(response.statusCode).to.equal(400);
     });
 
-    test('returns a 400 if the calling user id is not supplied', async () => {
-      request.headers = {};
+    test('returns a 403 if the request has insufficient scope', async () => {
+      request.auth.credentials.scope = [];
       const response = await server.inject(request);
-      expect(response.statusCode).to.equal(400);
-    });
-
-    test('returns a 400 if the calling user id is not a number', async () => {
-      request.headers['defra-internal-user-id'] = 'a string';
-      const response = await server.inject(request);
-      expect(response.statusCode).to.equal(400);
+      expect(response.statusCode).to.equal(403);
     });
 
     test('contains a pre handler to load the batch', async () => {
@@ -438,12 +434,13 @@ experiment('modules/billing/routes', () => {
     let invoiceLicenceId;
 
     beforeEach(async () => {
-      server = getServer(routes.getInvoiceLicence);
+      server = await getServer(routes.getInvoiceLicence);
       invoiceLicenceId = uuid();
 
       request = {
         method: 'GET',
-        url: `/water/1.0/billing/invoice-licences/${invoiceLicenceId}`
+        url: `/water/1.0/billing/invoice-licences/${invoiceLicenceId}`,
+        auth
       };
     });
 
@@ -465,15 +462,15 @@ experiment('modules/billing/routes', () => {
     let validBatchId;
 
     beforeEach(async () => {
-      server = getServer(routes.postApproveReviewBatch);
+      server = await getServer(routes.postApproveReviewBatch);
       validBatchId = uuid();
 
       request = {
         method: 'POST',
         url: `/water/1.0/billing/batches/${validBatchId}/approve-review`,
         headers: {
-          'defra-internal-user-id': 1234
-        }
+        },
+        auth
       };
     });
 

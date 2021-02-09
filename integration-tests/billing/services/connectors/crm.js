@@ -3,7 +3,6 @@
 const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const config = require('../../../../config');
 const urlJoin = require('url-join');
-const { logger } = require('../../../../src/logger');
 
 const createCrmUrl = (...parts) => {
   return urlJoin(config.services.crm_v2, ...parts);
@@ -21,7 +20,7 @@ const createCompany = data => {
       isTest: true
     }
   };
-  return serviceRequest.post(createCrmUrl('companies'), options).catch(err => logger.error(err));
+  return serviceRequest.post(createCrmUrl('companies'), options);
 };
 
 const createCompanyAddress = (companyId, addressId, startDate, endDate, roleName) => {
@@ -36,7 +35,7 @@ const createCompanyAddress = (companyId, addressId, startDate, endDate, roleName
       isTest: true
     }
   };
-  return serviceRequest.post(url, options).catch(err => logger.error(err));
+  return serviceRequest.post(url, options);
 };
 
 /**
@@ -68,7 +67,7 @@ const createAddress = data => {
       isTest: true
     }
   };
-  return serviceRequest.post(createCrmUrl('addresses'), options).catch(err => logger.error(err));
+  return serviceRequest.post(createCrmUrl('addresses'), options);
 };
 
 /**
@@ -92,7 +91,7 @@ const createInvoiceAccountAddress = (invoiceAccountId, addressId, startDate, end
     }
   };
 
-  return serviceRequest.post(url, options).catch(err => logger.error(err));
+  return serviceRequest.post(url, options);
 };
 
 /**
@@ -110,7 +109,7 @@ const createDocument = data => {
       isTest: true
     }
   };
-  return serviceRequest.post(url, options).catch(err => logger.error(err));
+  return serviceRequest.post(url, options);
 };
 
 /**
@@ -147,7 +146,7 @@ const createContact = data => {
 
 const getRole = roleName => {
   const url = createCrmUrl('roles', roleName);
-  return serviceRequest.get(url).catch(err => logger.error(err));
+  return serviceRequest.get(url);
 };
 
 /**
@@ -155,7 +154,7 @@ const getRole = roleName => {
  * @return {Promise}
  */
 const tearDown = () => {
-  return serviceRequest.delete(createCrmUrl('test-data')).catch(err => logger.error(err));
+  return serviceRequest.delete(createCrmUrl('test-data'));
 };
 
 exports.createAddress = createAddress;

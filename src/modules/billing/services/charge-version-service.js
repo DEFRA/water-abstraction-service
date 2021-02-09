@@ -36,13 +36,12 @@ const isTwoPartTariffBillingNeeded = async row => {
   if (!row.isTwoPartTariff) {
     return createTwoPartTariffBatches();
   }
-
   // There is a two-part tariff agreement - we need to look at the returns required
   // to work out which seasons
   const returnVersions = await returnRequirementVersionService.getByLicenceId(row.licenceId);
-
   // Filter only return versions that overlap this charge period
   const chargePeriod = new DateRange(row.startDate, row.endDate);
+
   const returnVersionsInChargePeriod = returnVersions.filter(
     returnVersion => returnVersion.dateRange.overlaps(chargePeriod) && returnVersion.isNotDraft
   );
@@ -51,6 +50,7 @@ const isTwoPartTariffBillingNeeded = async row => {
   const isSummer = returnVersionsInChargePeriod.some(
     returnVersion => returnVersion.hasTwoPartTariffPurposeReturnsInSeason(RETURN_SEASONS.summer)
   );
+
   const isWinterAllYear = returnVersionsInChargePeriod.some(
     returnVersion => returnVersion.hasTwoPartTariffPurposeReturnsInSeason(RETURN_SEASONS.winterAllYear)
   );
@@ -133,6 +133,7 @@ const chargeVersionFilters = {
  */
 const createFinancialYearChargeVersionYears = async (batch, financialYear, transactionType, isSummer) => {
   // Get all charge versions and other flags for any bill run type
+
   const chargeVersions = await repos.chargeVersions.findValidInRegionAndFinancialYear(
     batch.region.id, financialYear.endYear
   );

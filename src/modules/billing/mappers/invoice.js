@@ -8,18 +8,23 @@ const FinancialYear = require('../../../lib/models/financial-year');
 
 const invoiceAccount = require('../../../lib/mappers/invoice-account');
 const invoiceLicence = require('./invoice-licence');
+const batchMapper = require('./batch');
 
 const { createMapper } = require('../../../lib/object-mapper');
 const { createModel } = require('../../../lib/mappers/lib/helpers');
 
 const dbToModelMapper = createMapper()
   .copy(
-    'dateCreated'
+    'dateCreated',
+    'invoiceNumber',
+    'isCredit',
+    'netAmount'
   )
   .map('billingInvoiceId').to('id')
   .map('invoiceAccountId').to('invoiceAccount', invoiceAccountId => new InvoiceAccount(invoiceAccountId))
   .map('invoiceAccountNumber').to('invoiceAccount.accountNumber')
   .map('billingInvoiceLicences').to('invoiceLicences', billingInvoiceLicences => billingInvoiceLicences.map(invoiceLicence.dbToModel))
+  .map('billingBatch').to('billingBatch', batchMapper.dbToModel)
   .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding));
 
 /**

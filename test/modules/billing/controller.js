@@ -197,7 +197,7 @@ experiment('modules/billing/controller', () => {
       test('publishes a new job to the message queue with the batch ID', async () => {
         const [jobName, batchId] = request.queueManager.add.lastCall.args;
         expect(jobName).to.equal('billing.create-bill-run');
-        expect(batchId).to.equal(batch);
+        expect(batchId).to.equal(batch.id);
       });
 
       test('the response contains the event', async () => {

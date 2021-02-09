@@ -19,7 +19,6 @@ const handler = async job => {
 
   try {
     const batch = await batchService.createChargeModuleBillRun(batchId);
-
     return { batchId: batch.id };
   } catch (err) {
     await batchJob.logHandlingErrorAndSetBatchStatus(job, err, BATCH_ERROR_CODE.failedToCreateBillRun);
