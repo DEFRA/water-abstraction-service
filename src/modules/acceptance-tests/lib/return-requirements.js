@@ -3,8 +3,8 @@ const returnRequirementsConnector = require('../../../lib/connectors/repos/retur
 
 const createReturnRequirement = async (ver, returnsFrequency, formatId) => {
   const requirement = {
-    returnVersionId: ver.returnVersionId,
     returnsFrequency,
+    returnVersionId: ver.returnVersionId,
     isSummer: false,
     isUpload: false,
     abstractionPeriodStartDay: 1,
@@ -17,8 +17,7 @@ const createReturnRequirement = async (ver, returnsFrequency, formatId) => {
     externalId: `6:${formatId}`
   };
 
-  const req = await returnRequirementsConnector.create(requirement);
-  return req;
+  return returnRequirementsConnector.create(requirement);
 };
 
 const deleteReturnRequirements = `delete from water.return_requirements rr
@@ -30,9 +29,7 @@ using
     and rv.licence_id=l.licence_id 
     and l.is_test=true;`;
 
-const deleteReturnRequirement = async () => {
-  return bookshelf.knex.raw(deleteReturnRequirements);
-};
+const deleteReturnRequirement = async () => bookshelf.knex.raw(deleteReturnRequirements);
 
 exports.create = createReturnRequirement;
 exports.delete = deleteReturnRequirement;

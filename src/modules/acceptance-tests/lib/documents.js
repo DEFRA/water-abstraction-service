@@ -49,8 +49,8 @@ const create = async (companyId, licenceId, licenceRef, companyV2Id, addressId) 
     invoiceAccountId: null,
     companyId: companyV2Id,
     contactId: null,
-    addressId,
-    isTest: true
+    isTest: true,
+    addressId
   };
 
   documentV2Connector.createDocumentRole(documentV2.documentId, documentRole);
@@ -59,4 +59,4 @@ const create = async (companyId, licenceId, licenceRef, companyV2Id, addressId) 
 };
 
 exports.create = create;
-exports.delete = async () => await documentV1Connector.deleteAcceptanceTestData();
+exports.delete = async () => documentV1Connector.deleteAcceptanceTestData();

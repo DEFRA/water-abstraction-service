@@ -27,13 +27,10 @@ const createReturnRequirementPurpose = async (returnRequirementId, formatId, pur
     returnRequirementId
   };
 
-  const returnReqPurpose = await returnRequirementPurposes.create(purpose);
-  return returnReqPurpose;
+  return returnRequirementPurposes.create(purpose);
 };
 
-const deleteReturnPurpose = async () => {
-  return bookshelf.knex.raw(deleteReturnRequirementPurposes);
-};
+const deleteReturnPurpose = async () => bookshelf.knex.raw(deleteReturnRequirementPurposes);
 
 exports.create = createReturnRequirementPurpose;
 exports.delete = deleteReturnPurpose;

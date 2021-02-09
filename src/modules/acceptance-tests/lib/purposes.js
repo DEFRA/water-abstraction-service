@@ -6,16 +6,20 @@ const secondaryPurposes = require('../../../lib/connectors/repos/purpose-seconda
 
 const createPurposes = async () => {
   // empty container for the purposes
-  const purposes = {};
+  const purposes = {
+    primaryPurpose: '',
+    secondaryPurposes: '',
+    purposeUse: ''
+  };
   purposes.primaryPurpose = await primaryPurposes.findOneByLegacyId('A');
   if (!purposes.primaryPurpose) {
     purposes.primaryPurpose = await primaryPurposes.create({ legacy_id: 'A', description: 'Agriculture' });
-  };
+  }
 
   purposes.secondaryPurpose = await secondaryPurposes.findOneByLegacyId('AGR');
   if (!purposes.secondaryPurpose) {
     purposes.secondaryPurpose = secondaryPurposes.create({ legacy_id: 'AGR', description: 'General Agriculture' });
-  };
+  }
 
   purposes.purposeUse = await purposeUses.findOneByLegacyId(140);
   if (!purposes.purposeUse) {
@@ -26,7 +30,7 @@ const createPurposes = async () => {
         lossFactor: 'medium',
         isTwoPartTariff: false
       });
-  };
+  }
 
   return purposes;
 };

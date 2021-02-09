@@ -76,7 +76,7 @@ const createDueReturn = async (licenceRef, frequency, formatId, oldReturn = fals
   const row = createReturnRow(licenceRef, cycle, metadata, formatId, frequency, 'due');
   if (oldReturn) {
     row.due_date = moment().add(-1, 'year').format('YYYY-MM-DD');
-  };
+  }
   const result = await returnsConnector.returns.create(row);
   return result.data;
 };

@@ -45,4 +45,4 @@ const create = async (companyId, licenceId, licenceRef) => {
 };
 
 exports.create = create;
-exports.delete = async () => await documentV1Connector.deleteAcceptanceTestData();
+exports.delete = async () => documentV1Connector.deleteAcceptanceTestData();

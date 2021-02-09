@@ -11,9 +11,7 @@ const createReturnVersion = async (licence, returnsFrequency, formatId) => {
     externalId: `6:${formatId}`
   };
 
-  const ver = await returnVersionConnector.create(version);
-
-  return ver;
+  return returnVersionConnector.create(version);
 };
 
 const deleteReturnVersions = `delete from water.return_versions rv
@@ -23,9 +21,7 @@ using
     rv.licence_id=l.licence_id 
     and l.is_test=true;`;
 
-const deleteReturnVersion = async () => {
-  return bookshelf.knex.raw(deleteReturnVersions);
-};
+const deleteReturnVersion = async () => bookshelf.knex.raw(deleteReturnVersions);
 
 exports.create = createReturnVersion;
 exports.delete = deleteReturnVersion;
