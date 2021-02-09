@@ -474,11 +474,11 @@ experiment('modules/billing/services/batch-service', () => {
         expect(batchId).to.equal(batch.id);
       });
 
-      test('sets the status of the batch to sent', async () => {
+      test('sets the status of the batch to processing', async () => {
         const [id, changes] = newRepos.billingBatches.update.lastCall.args;
         expect(id).to.equal(batch.id);
         expect(changes).to.equal({
-          status: 'sent'
+          status: 'processing'
         });
       });
     });
