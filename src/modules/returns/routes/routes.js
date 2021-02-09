@@ -35,6 +35,20 @@ module.exports = {
     }
   },
 
+  deleteReturn: {
+    path: '/water/1.0/returns/{returnId}',
+    method: 'DELETE',
+    handler: controller.deleteReturn,
+    config: {
+      description: 'Accepts posted return data from UI layer',
+      validate: {
+        params: {
+          returnId: Joi.string().required()
+        }
+      }
+    }
+  },
+
   patchReturnHeader: {
     path: '/water/1.0/returns/header',
     method: 'PATCH',

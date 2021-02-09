@@ -5,6 +5,7 @@ const {
   versions,
   lines
 } = require('../../../lib/connectors/returns');
+const returnsConnector = require('../../../lib/connectors/returns');
 
 const { mapReturnToVersion, mapReturnToLines, mapReturn } = require('./model-returns-mapper');
 const { logger } = require('../../../logger');
@@ -183,6 +184,8 @@ const patchReturnData = async (ret) => {
   return data;
 };
 
+const deleteReturnById = async (returnId) => returnsConnector.deleteReturnById(returnId);
+
 module.exports = {
   fetchReturn,
   fetchVersion,
@@ -191,5 +194,6 @@ module.exports = {
   persistReturnData,
   patchReturnData,
   ReturnAPIError,
-  throwIfError
+  throwIfError,
+  deleteReturnById
 };

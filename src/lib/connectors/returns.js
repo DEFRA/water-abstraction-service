@@ -138,6 +138,11 @@ const getKPIReturnsByCycle = async (startDate, endDate, isSummer) => {
   return helpers.serviceRequest.get(url);
 };
 
+const deleteReturnById = async (returnId) => {
+  const url = urlJoin(config.services.returns, 'return', encodeURIComponent(returnId));
+  return helpers.serviceRequest.delete(url);
+};
+
 exports.returns = returnsClient;
 exports.versions = versionsClient;
 exports.lines = linesClient;
@@ -147,6 +152,7 @@ exports.getServiceVersion = getServiceVersion;
 exports.getReturnsForLicence = getReturnsForLicence;
 exports.getLinesForReturn = getLinesForReturn;
 exports.getKPIReturnsByCycle = getKPIReturnsByCycle;
+exports.deleteReturnById = deleteReturnById;
 
 if (config.isAcceptanceTestTarget) {
   exports.deleteAcceptanceTestData = deleteAcceptanceTestData;
