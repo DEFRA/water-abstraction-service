@@ -7,6 +7,7 @@ const permits = require('./lib/permits');
 const entities = require('./lib/entities');
 const licences = require('./lib/licences');
 const users = require('./lib/users');
+const notifications = require('./lib/notifications');
 const documents = require('./lib/documents');
 const events = require('./lib/events');
 const sessions = require('./lib/sessions');
@@ -165,6 +166,7 @@ const postSetup = async (request, h) => {
     const company = await entities.createV1Company();
     await entities.createV2Company();
     await entities.createV2Address();
+    await notifications.create();
     const externalPrimaryUser = await createExternalPrimaryUser(company);
     const currentLicencesWithReturns = await createCurrentLicencesWithReturns(company, externalPrimaryUser);
 
@@ -202,6 +204,8 @@ const postTearDown = async () => {
   await sessions.delete();
   console.log('Tearing down acceptance test licences');
   await licences.delete();
+  console.log('Tearing down acceptance test notifications');
+  await notifications.delete();
 
   return 'tear down complete';
 };

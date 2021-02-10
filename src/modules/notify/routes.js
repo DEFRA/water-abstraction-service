@@ -40,5 +40,26 @@ module.exports = {
         }
       }
     }
+  },
+
+  notifyCallback: {
+    method: 'POST',
+    path: `/water/${version}/notify/callback`,
+    handler: controller.callback,
+    config: {
+      description: 'Accept callback from Notify',
+      validate: {
+        payload: {
+          id: Joi.string().required().guid(),
+          reference: Joi.any(),
+          to: Joi.string(),
+          status: Joi.string().valid('delivered', 'permanent-failure', 'temporary-failure', 'technical-failure'),
+          created_at: Joi.date().iso(),
+          completed_at: Joi.date().iso(),
+          sent_at: Joi.date().iso(),
+          notification_type: Joi.string().valid('sms', 'email')
+        }
+      }
+    }
   }
 };

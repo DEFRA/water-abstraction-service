@@ -9,6 +9,8 @@ const { MESSAGE_STATUSES } = require('../models/scheduled-notification');
 const getScheduledNotificationById = id =>
   service.findOne(id, repo.findOne, mapper);
 
+const getScheduledNotificationByNotifyId = notifyId => repo.findOneByNotifyId(notifyId);
+
 const createScheduledNotification = async scheduledNotification => {
   const dbRow = mapper.modelToDb(scheduledNotification);
   const saved = await repo.create(dbRow);
@@ -32,6 +34,10 @@ const updateScheduledNotificationWithNotifyResponse = (messageId, notifyResponse
   return repo.update(messageId, changes);
 };
 
-exports.createScheduledNotification = createScheduledNotification;
+const updateScheduledNotificationWithNotifyCallback = (messageId, status) => repo.update(messageId, { notifyStatus: status });
+
 exports.getScheduledNotificationById = getScheduledNotificationById;
+exports.getScheduledNotificationByNotifyId = getScheduledNotificationByNotifyId;
+exports.createScheduledNotification = createScheduledNotification;
 exports.updateScheduledNotificationWithNotifyResponse = updateScheduledNotificationWithNotifyResponse;
+exports.updateScheduledNotificationWithNotifyCallback = updateScheduledNotificationWithNotifyCallback;

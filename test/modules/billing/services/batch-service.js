@@ -119,6 +119,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(chargeModuleBillRunConnector, 'approve').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'send').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'removeCustomerInFinancialYear').resolves();
+    sandbox.stub(chargeModuleBillRunConnector, 'getTransactions').resolves();
 
     sandbox.stub(eventService, 'create').resolves();
 
@@ -1432,6 +1433,55 @@ experiment('modules/billing/services/batch-service', () => {
       test('the billing / charge version data is deleted from water service tables', async () => {
         expect(newRepos.billingBatches.deleteAllBillingData.called).to.be.true();
       });
+    });
+  });
+
+  experiment('.getAllCmTransactionsForBatch', () => {
+    const getTransaction = page => ({
+      transactions: [{
+        id: `test-cm-transaction-${page}`
+      }]
+    });
+    let result;
+    beforeEach(async () => {
+      chargeModuleBillRunConnector.getTransactions.onFirstCall().resolves({
+        pagination: { pageCount: 3 },
+        data: getTransaction(1)
+      });
+      chargeModuleBillRunConnector.getTransactions.onSecondCall().resolves({
+        data: getTransaction(2)
+      });
+      chargeModuleBillRunConnector.getTransactions.onThirdCall().resolves({
+        data: getTransaction(3)
+      });
+
+      result = await batchService.getAllCmTransactionsForBatch({ externalId: 'test-cm-batch-id' });
+    });
+
+    test('calls the CM transactions endpoint the expected number of times', () => {
+      expect(chargeModuleBillRunConnector.getTransactions.callCount).to.equal(3);
+    });
+
+    test('first call: calls the CM with the expected params', () => {
+      const [id, page] = chargeModuleBillRunConnector.getTransactions.firstCall.args;
+      expect(id).to.equal('test-cm-batch-id');
+      expect(page).to.be.undefined();
+    });
+
+    test('second call: calls the CM with the expected params', () => {
+      const [id, page] = chargeModuleBillRunConnector.getTransactions.secondCall.args;
+      expect(id).to.equal('test-cm-batch-id');
+      expect(page).to.equal(2);
+    });
+
+    test('third call: calls the CM with the expected params', () => {
+      const [id, page] = chargeModuleBillRunConnector.getTransactions.thirdCall.args;
+      expect(id).to.equal('test-cm-batch-id');
+      expect(page).to.equal(3);
+    });
+
+    test('returns an array containing all of the transactions', () => {
+      expect(result).to.have.length(3);
     });
   });
 });
