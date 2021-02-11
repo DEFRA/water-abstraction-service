@@ -170,7 +170,7 @@ const getBatchDownloadData = async request => {
  * - Re-imports charge version data from import module
  * @return {Promise}
  */
-const deleteAllBillingData = async request => {
+const deleteAllBillingData = async (request, h) => {
   try {
     await batchService.deleteAllBillingData();
     await importConnector.postImportChargeVersions();
