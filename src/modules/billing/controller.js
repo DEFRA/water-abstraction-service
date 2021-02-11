@@ -2,6 +2,7 @@
 
 const Boom = require('@hapi/boom');
 
+const { flatMap, uniq } = require('lodash');
 const { envelope } = require('../../lib/response');
 const { jobStatus } = require('./lib/event');
 const { createBatchEvent } = require('./lib/batch-event');
@@ -13,6 +14,7 @@ const { logger } = require('../../logger');
 // Services
 const invoiceService = require('./services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
+const chargeVersionService = require('../../lib/services/charge-versions');
 const batchService = require('./services/batch-service');
 const importConnector = require('../../lib/connectors/import');
 
@@ -81,7 +83,7 @@ const getBatches = async request => {
 const getBatchInvoices = async request => {
   const { batch } = request.pre;
   try {
-    const invoices = await invoiceService.getInvoicesForBatch(batch, true);
+    const invoices = await invoiceService.getInvoicesForBatch(batch, true, false);
     return invoices.map(mappers.api.invoice.modelToBatchInvoices);
   } catch (err) {
     return mapErrorResponse(err);
@@ -149,6 +151,18 @@ const getInvoiceLicenceWithTransactions = async (request, h) => {
   return invoiceLicence || Boom.notFound(`Invoice licence ${invoiceLicenceId} not found`);
 };
 
+const getBatchDownloadData = async (request, h) => {
+  const { batch } = request.pre;
+  const invoices = await invoiceService.getInvoicesForBatch(batch, true);
+  const chargeVersionIds = uniq(flatMap(invoices.map(invoice => {
+    return flatMap(invoice.invoiceLicences.map(invoiceLicence =>
+      invoiceLicence.transactions.map(transaction => transaction.chargeElement.chargeVersionId)
+    ));
+  })));
+  const chargeVersions = await chargeVersionService.getManyByChargeVersionIds(chargeVersionIds);
+  return { invoices, chargeVersions };
+};
+
 /**
  * Deletes all billing data (!)
  * - Deletes water.billing_* tables
@@ -169,6 +183,7 @@ const deleteAllBillingData = async (request, h) => {
 
 exports.getBatch = getBatch;
 exports.getBatches = getBatches;
+exports.getBatchDownloadData = getBatchDownloadData;
 exports.getBatchInvoices = getBatchInvoices;
 exports.getBatchInvoiceDetail = getBatchInvoiceDetail;
 exports.getBatchInvoicesDetails = getBatchInvoicesDetails;

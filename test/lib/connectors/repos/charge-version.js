@@ -81,6 +81,40 @@ experiment('lib/connectors/repos/charge-versions', () => {
     });
   });
 
+  experiment('.findMany', () => {
+    beforeEach(async () => {
+      result = await chargeVersions.findMany(['test-id-1', 'test-id-2']);
+    });
+
+    test('.forge() is called', async () => {
+      expect(ChargeVersion.forge.called).to.be.true();
+    });
+
+    test('.where() is called with expected params', async () => {
+      expect(stub.where.calledWith(
+        'charge_version_id',
+        'in',
+        ['test-id-1', 'test-id-2']
+      )).to.be.true();
+    });
+
+    test('.fetchAll() is called with related models', async () => {
+      expect(stub.fetchAll.calledWith({
+        withRelated: ['changeReason']
+      })).to.be.true();
+    });
+
+    test('calls model.toJSON()', async () => {
+      expect(model.toJSON.called).to.be.true();
+    });
+
+    test('returns result of model.toJSON()', async () => {
+      expect(result).to.equal({
+        chargeElementId: 'test-id'
+      });
+    });
+  });
+
   experiment('.findValidInRegionAndFinancialYear', () => {
     const regionId = 'test-region-id';
     const financialYearEnding = 2020;
