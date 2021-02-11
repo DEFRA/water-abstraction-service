@@ -132,7 +132,7 @@ const deleteBatch = (request, h) => controller.deleteEntity(
   request.defra.internalCallingUser
 );
 
-const postApproveBatch = async (request, h) => {
+const postApproveBatch = async request => {
   const { batch } = request.pre;
   const { internalCallingUser } = request.defra;
 
@@ -145,13 +145,13 @@ const postApproveBatch = async (request, h) => {
   }
 };
 
-const getInvoiceLicenceWithTransactions = async (request, h) => {
+const getInvoiceLicenceWithTransactions = async request => {
   const { invoiceLicenceId } = request.params;
   const invoiceLicence = await invoiceLicenceService.getInvoiceLicenceWithTransactions(invoiceLicenceId);
   return invoiceLicence || Boom.notFound(`Invoice licence ${invoiceLicenceId} not found`);
 };
 
-const getBatchDownloadData = async (request, h) => {
+const getBatchDownloadData = async request => {
   const { batch } = request.pre;
   const invoices = await invoiceService.getInvoicesForBatch(batch, true);
   const chargeVersionIds = uniq(flatMap(invoices.map(invoice => {
@@ -170,7 +170,7 @@ const getBatchDownloadData = async (request, h) => {
  * - Re-imports charge version data from import module
  * @return {Promise}
  */
-const deleteAllBillingData = async (request, h) => {
+const deleteAllBillingData = async request => {
   try {
     await batchService.deleteAllBillingData();
     await importConnector.postImportChargeVersions();
