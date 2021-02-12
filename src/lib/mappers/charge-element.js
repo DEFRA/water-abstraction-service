@@ -22,7 +22,8 @@ const dbToModelMapper = createMapper()
     'loss',
     'authorisedAnnualQuantity',
     'billableAnnualQuantity',
-    'description'
+    'description',
+    'chargeVersionId'
   )
   .map().to('abstractionPeriod', abstractionPeriodMapper.dbToModel)
   .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.dbToModel)

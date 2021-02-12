@@ -186,4 +186,26 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
       expect(perPage).to.equal(100);
     });
   });
+
+  experiment('.getCustomerTransactions', () => {
+    beforeEach(async () => {
+      await billRunsApiConnector.getCustomerTransactions('test-id', 'test-customer-ref', 3);
+    });
+
+    test('the correct endpoint is called', async () => {
+      const [path] = request.get.lastCall.args;
+      expect(path).to.equal('v1/wrls/billruns/test-id/transactions');
+    });
+
+    test('the correct customer is specified', async () => {
+      const [, { customerReference }] = request.get.lastCall.args;
+      expect(customerReference).to.equal('test-customer-ref');
+    });
+
+    test('the correct pagination params are specified', async () => {
+      const [, { page, perPage }] = request.get.lastCall.args;
+      expect(page).to.equal(3);
+      expect(perPage).to.equal(100);
+    });
+  });
 });

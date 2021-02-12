@@ -6,6 +6,7 @@ const uuid = require('uuid/v4');
 const JOB_NAME = 'billing.persist-invoice-numbers-and-totals';
 
 const batchService = require('../services/batch-service');
+const { BATCH_STATUS } = require('../../../lib/models/batch');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 
@@ -33,6 +34,7 @@ const handler = async job => {
   try {
     const batch = await batchService.getBatchById(batchId, true);
     await batchService.persistInvoiceNumbersAndTotals(batch);
+    await batchService.setStatus(batch.id, BATCH_STATUS.sent);
   } catch (err) {
     await batchJob.logHandlingError(job, err);
     throw err;

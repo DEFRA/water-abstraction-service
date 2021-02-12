@@ -251,6 +251,20 @@ experiment('lib/models/charge-element', () => {
     });
   });
 
+  experiment('.chargeVersionId', () => {
+    test('can be set to a guid string', async () => {
+      chargeElement.chargeVersionId = TEST_GUID;
+      expect(chargeElement.chargeVersionId).to.equal(TEST_GUID);
+    });
+
+    test('throws an error if set to a non-guid string', async () => {
+      const func = () => {
+        chargeElement.chargeVersionId = 'hey';
+      };
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.purposePrimary', () => {
     test('can be set to a Purpose instance', async () => {
       const purpose = new Purpose();

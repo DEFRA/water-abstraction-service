@@ -29,6 +29,11 @@ const getByChargeVersionId = async chargeVersionId =>
     chargeVersionMapper
   );
 
+const getManyByChargeVersionIds = async ids => {
+  const result = await chargeVersionRepo.findMany(ids);
+  return result.map(chargeVersionMapper.dbToModel);
+};
+
 /**
  * Gets a charge version from the DB including the related
  * invoice account
@@ -180,6 +185,7 @@ const create = async chargeVersion => {
 };
 
 exports.getByChargeVersionId = getByChargeVersionId;
+exports.getManyByChargeVersionIds = getManyByChargeVersionIds;
 exports.getByIdWithInvoiceAccount = getByIdWithInvoiceAccount;
 exports.getByLicenceId = getByLicenceId;
 exports.getByLicenceRef = getByLicenceRef;
