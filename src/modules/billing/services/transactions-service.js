@@ -110,8 +110,16 @@ const persistDeMinimis = batch => {
   ]);
 };
 
+/**
+ * Delete one or more transactions by ID
+ * @param {String|Array} ids
+ * @return {Promise}
+ */
+const deleteById = ids => newRepos.billingTransactions.delete(ids);
+
 exports.saveTransactionToDB = saveTransactionToDB;
 exports.getById = getById;
 exports.updateWithChargeModuleResponse = updateTransactionWithChargeModuleResponse;
 exports.setErrorStatus = setErrorStatus;
 exports.persistDeMinimis = persistDeMinimis;
+exports.deleteById = deleteById;

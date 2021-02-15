@@ -4,7 +4,7 @@
  * @module syncs the charge module invoices/licences/transactions
  * to the local WRLS DB
  */
-const { get } = require('lodash');
+const { get, difference } = require('lodash');
 
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 const { logger } = require('../../../logger');
@@ -115,6 +115,20 @@ const mapTransaction = (invoice, transactionMap, cmTransaction) => {
   }
 };
 
+const getCMTransactionId = cmTransaction => cmTransaction.id;
+
+/**
+ * Deletes transactions no longer in the invoice according to the CM data
+ * @param {Array<Object>} cmTransactions
+ * @param {Map} transactionMap - keyed by external (CM) id
+ * @return {Promise}
+ */
+const deleteTransactions = (cmTransactions, transactionMap) => {
+  const validIds = cmTransactions.map(getCMTransactionId);
+  const deleteIds = difference(Array.from(transactionMap.keys()), validIds);
+  return transactionService.deleteById(deleteIds);
+};
+
 /**
  * Maps CM data to an Invoice model
  *
@@ -138,13 +152,16 @@ const updateInvoice = async (batch, invoice, cmInvoiceSummary, cmTransactions) =
   // Index WRLS transactions by external ID
   const transactionMap = getTransactionMap(invoice);
 
-  // Update transactions
+  // Create/update transactions
   for (const cmTransaction of cmTransactions) {
     const invoiceLicence = invoice
       .getInvoiceLicenceByLicenceNumber(cmTransaction.licenceNumber);
     const transaction = mapTransaction(invoice, transactionMap, cmTransaction);
     await transactionService.saveTransactionToDB(invoiceLicence, transaction);
   }
+
+  // Delete transactions no longer on the CM side
+  await deleteTransactions(cmTransactions, transactionMap);
 
   return invoice;
 };
