@@ -99,33 +99,6 @@ const dbToModelMapper = createMapper()
 const dbToModel = row =>
   createModel(Transaction, row, dbToModelMapper);
 
-/**
- * Maps agreements array to fields in water.billing_transactions table
- * @param {Array<Agreement>} agreements
- * @return {Object}
- */
-const mapAgreementsToDB = agreements => {
-  const twoPartTariffAgreement = agreements.find(agreement => agreement.isTwoPartTariff());
-  const abatementAgreement = agreements.find(agreement => agreement.isAbatement());
-  const canalAndRiversTrustAgreement = agreements.find(agreement => agreement.isCanalAndRiversTrust());
-
-  return {
-    section127Agreement: !!twoPartTariffAgreement,
-    section126Factor: abatementAgreement ? abatementAgreement.factor : null,
-    section130Agreement: canalAndRiversTrustAgreement ? canalAndRiversTrustAgreement.code : null
-  };
-};
-
-// const getChargeType = transaction => {
-//   if (transaction.isCompensationCharge) {
-//     return 'compensation';
-//   }
-//   if (transaction.isMinimumCharge) {
-//     return 'minimum_charge';
-//   }
-//   return 'standard';
-// };
-
 const mapChargeType = (isCompensationCharge, isMinimumCharge) => {
   if (isCompensationCharge) {
     return 'compensation';

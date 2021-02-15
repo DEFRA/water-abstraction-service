@@ -1,6 +1,6 @@
 'use strict';
 
-const { flatMap, get } = require('lodash');
+const { flatMap, get, omit } = require('lodash');
 
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(require('moment'));
@@ -48,7 +48,7 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
   const absPeriod = chargeElement.abstractionPeriod.toJSON();
   const transaction = new Transaction();
   transaction.fromHash({
-    ...flags,
+    ...omit(flags, 'isMinimumCharge'),
     chargeElement,
     agreements: agreements.filter(agreement => agreementAppliesToTransaction(agreement, chargeElement.purposeUse)),
     chargePeriod,
