@@ -41,6 +41,7 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
     }
 
     sandbox.stub(billingVolumesService, 'persist');
+    sandbox.stub(billingVolumesService, 'getBillingVolumesByChargeVersion').resolves([]);
   });
 
   afterEach(async () => {
@@ -49,11 +50,10 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
 
   experiment('.processBatch', () => {
     const batch = new Batch(uuid());
+    const tempTestId1 = uuid();
+    const tempTestId2 = uuid();
 
     experiment('for a two-part tariff batch', () => {
-      const tempTestId1 = uuid();
-      const tempTestId2 = uuid();
-
       const chargeVersionYears = [{
         chargeVersionId: tempTestId1,
         financialYearEnding: 2020,
@@ -93,7 +93,7 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
 
       test('the second charge element year is matched', async () => {
         const [id, financialYear, isSummer] = volumeMatchingService.matchVolumes.secondCall.args;
-
+        console.log(volumeMatchingService.matchVolumes.secondCall.args);
         expect(id).to.equal(tempTestId2);
         expect(financialYear.endYear).to.equal(2020);
         expect(isSummer).to.equal(false);
@@ -113,9 +113,6 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
     });
 
     experiment('for a supplementary batch', () => {
-      const tempTestId1 = uuid();
-      const tempTestId2 = uuid();
-
       const chargeVersionYears = [
         {
           chargeVersionId: tempTestId1,
