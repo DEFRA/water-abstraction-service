@@ -170,7 +170,7 @@ const approveBatch = async (batch, internalCallingUser) => {
 
     await licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch(batch.id);
 
-    return setStatus(batch.id, BATCH_STATUS.sent);
+    return setStatus(batch.id, BATCH_STATUS.processing);
   } catch (err) {
     logger.error('Failed to approve the batch', err, batch);
     await saveEvent('billing-batch:approve', 'error', internalCallingUser, batch);
@@ -476,21 +476,22 @@ const deleteAllBillingData = async () => {
 };
 
 /**
- * Calls CM transactions endpoint multiple times and
- * collates all paginated results
- * @param {Batch} batch
+ * Calls provided CM transactions endpoint multiple
+ * times and collates all paginated results
+ * @param {Function} connectorFunc
+ * @param {String} externalId from batch
+ * @param {Array} params if required, eg customerReference
  * @return {Array<Object>} CM transaction details
  */
-const getAllCmTransactionsForBatch = async batch => {
-  const { externalId } = batch;
-
+const getAllCmTransactions = async (connectorFunc, externalId, params = []) => {
+  const allParams = [externalId, ...params];
   try {
-    const { data, pagination: { pageCount } } = await chargeModuleBillRunConnector.getTransactions(externalId);
+    const { data, pagination: { pageCount } } = await connectorFunc(...allParams);
 
     const result = data.transactions;
 
     for (let page = 2; page <= pageCount; page++) {
-      const { data: { transactions } } = await chargeModuleBillRunConnector.getTransactions(externalId, page);
+      const { data: { transactions } } = await connectorFunc(...allParams, page);
       result.push(...transactions);
     }
     return result;
@@ -499,6 +500,25 @@ const getAllCmTransactionsForBatch = async batch => {
     throw error;
   }
 };
+
+const getAllCmTransactionsForBatch = async batch =>
+  getAllCmTransactions(
+    chargeModuleBillRunConnector.getTransactions,
+    batch.externalId
+  );
+
+/**
+ * Calls CM transactions endpoint multiple times and
+ * collates all paginated results
+ * @param {Batch} batch
+ * @return {Array<Object>} CM transaction details
+ */
+const getCmTransactionsForCustomer = async (batch, invoiceAccountNumber) =>
+  getAllCmTransactions(
+    chargeModuleBillRunConnector.getCustomerTransactions,
+    batch.externalId,
+    [invoiceAccountNumber]
+  );
 
 /**
  * Updates batch invoices with invoice numbers and totals
@@ -528,6 +548,7 @@ exports.getTransactionStatusCounts = getTransactionStatusCounts;
 exports.getExistingAndDuplicateBatchesForRegion = getExistingAndDuplicateBatchesForRegion;
 exports.getExistingOrDuplicateSentBatch = getExistingOrDuplicateSentBatch;
 exports.getAllCmTransactionsForBatch = getAllCmTransactionsForBatch;
+exports.getCmTransactionsForCustomer = getCmTransactionsForCustomer;
 
 exports.refreshTotals = refreshTotals;
 exports.saveInvoicesToDB = saveInvoicesToDB;

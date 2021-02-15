@@ -120,6 +120,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(chargeModuleBillRunConnector, 'send').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'removeCustomerInFinancialYear').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'getTransactions').resolves();
+    sandbox.stub(chargeModuleBillRunConnector, 'getCustomerTransactions').resolves();
 
     sandbox.stub(eventService, 'create').resolves();
 
@@ -474,11 +475,11 @@ experiment('modules/billing/services/batch-service', () => {
         expect(batchId).to.equal(batch.id);
       });
 
-      test('sets the status of the batch to sent', async () => {
+      test('sets the status of the batch to processing', async () => {
         const [id, changes] = newRepos.billingBatches.update.lastCall.args;
         expect(id).to.equal(batch.id);
         expect(changes).to.equal({
-          status: 'sent'
+          status: 'processing'
         });
       });
     });
@@ -1482,6 +1483,56 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('returns an array containing all of the transactions', () => {
       expect(result).to.have.length(3);
+    });
+  });
+
+  experiment('.getCmTransactionsForCustomer', () => {
+    let result;
+    beforeEach(async () => {
+      chargeModuleBillRunConnector.getCustomerTransactions.resolves({
+        pagination: { pageCount: 1 },
+        data: {
+          transactions: [{
+            id: 'test-cm-transaction'
+          }]
+        }
+      });
+
+      result = await batchService.getCmTransactionsForCustomer({ externalId: 'test-cm-batch-id' }, 'test-customer-reference');
+    });
+
+    test('calls the CM transactions endpoint the expected number of times', () => {
+      expect(chargeModuleBillRunConnector.getCustomerTransactions.callCount).to.equal(1);
+    });
+
+    test('calls the CM with the expected params', () => {
+      const [id, customerRef, page] = chargeModuleBillRunConnector.getCustomerTransactions.lastCall.args;
+      expect(id).to.equal('test-cm-batch-id');
+      expect(customerRef).to.equal('test-customer-reference');
+      expect(page).to.be.undefined();
+    });
+
+    test('returns the result of the call', () => {
+      expect(result).to.equal([{ id: 'test-cm-transaction' }]);
+    });
+
+    experiment('if an error occurs', () => {
+      let error;
+      beforeEach(() => {
+        error = new Error('very bad error');
+        chargeModuleBillRunConnector.getCustomerTransactions.rejects(error);
+      });
+
+      test('the error is logged and rethrown', async () => {
+        try {
+          await batchService.getCmTransactionsForCustomer({ externalId: 'test-cm-batch-id' }, 'test-customer-reference');
+        } catch (err) {
+          expect(logger.error.calledWith(
+            'Unable to retrieve transactions for CM batch test-cm-batch-id'
+          )).to.be.true();
+          expect(err).to.equal(error);
+        }
+      });
     });
   });
 });

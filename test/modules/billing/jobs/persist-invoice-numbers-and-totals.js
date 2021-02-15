@@ -33,6 +33,7 @@ experiment('modules/billing/jobs/persist-invoice-numbers-and-totals', () => {
     });
     sandbox.stub(batchService, 'getBatchById').resolves(batch);
     sandbox.stub(batchService, 'persistInvoiceNumbersAndTotals').resolves();
+    sandbox.stub(batchService, 'setStatus').resolves();
 
     sandbox.stub(logger, 'error');
   });
@@ -89,11 +90,15 @@ experiment('modules/billing/jobs/persist-invoice-numbers-and-totals', () => {
       });
 
       test('gets the batch with invoices by id', async () => {
-        expect(batchService.getBatchById.calledWith(BATCH_ID, true));
+        expect(batchService.getBatchById.calledWith(BATCH_ID, true)).to.be.true();
       });
 
       test('persists invoice numbers and totals for batch invoices', async () => {
-        expect(batchService.persistInvoiceNumbersAndTotals.calledWith(batch));
+        expect(batchService.persistInvoiceNumbersAndTotals.calledWith(batch)).to.be.true();
+      });
+
+      test('the batch status is updated to sent', async () => {
+        expect(batchService.setStatus.calledWith(batch.id, 'sent')).to.be.true();
       });
 
       test('no error is logged', async () => {

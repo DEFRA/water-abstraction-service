@@ -36,8 +36,7 @@ const saveInvoiceToDB = async (batch, invoice) => {
   return repos.billingInvoices.upsert(data);
 };
 
-const updateCmCustomersWithTransactionDetails = async (batch, cmResponse) => {
-  const cmTransactions = await batchService.getAllCmTransactionsForBatch(batch);
+const updateCmCustomersWithTransactionDetails = (cmResponse, cmTransactions) => {
   cmResponse.billRun.customers = chargeModuleDecorators.mapCmTransactionsToSummary(cmResponse, cmTransactions);
   return cmResponse;
 };
@@ -74,7 +73,9 @@ const getChargeModuleCustomer = async context => {
   if (isBatchReadyOrSent(batch)) {
     const billingInvoice = find(context.billingInvoices, { billingInvoiceId: invoiceId });
     const cmResponse = await chargeModuleBillRunConnector.getCustomer(batch.externalId, billingInvoice.invoiceAccountNumber);
-    context.cmResponse = cmResponse;
+    const cmTransactions = await batchService.getCmTransactionsForCustomer(batch, billingInvoice.invoiceAccountNumber);
+    const updated = updateCmCustomersWithTransactionDetails(cmResponse, cmTransactions);
+    context.cmResponse = updated;
   }
   return context;
 };
@@ -85,12 +86,17 @@ const getChargeModuleCustomer = async context => {
  * @return {Promise<Object>} updated context
  */
 const getChargeModuleBillRun = async context => {
-  const { batch } = context;
+  const { batch, mapCMTransactionData } = context;
   try {
     // Load Charge Module summary data
     const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
-    const updated = await updateCmCustomersWithTransactionDetails(batch, cmResponse);
-    context.cmResponse = updated;
+    if (mapCMTransactionData) {
+      const cmTransactions = await batchService.getAllCmTransactionsForBatch(batch);
+      const updated = updateCmCustomersWithTransactionDetails(cmResponse, cmTransactions);
+      context.cmResponse = updated;
+    } else {
+      context.cmResponse = cmResponse;
+    }
   } catch (err) {
     logger.error('CM error', err);
   }
@@ -197,8 +203,8 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
  * @param {Boolean} [includeTransactions] - whether to include transactions data
  * @return {Promise<Invoice>}
  */
-const getInvoicesForBatch = async (batch, includeTransactions = false) => {
-  const context = { batch, includeTransactions };
+const getInvoicesForBatch = async (batch, includeTransactions = false, mapCMTransactionData = true) => {
+  const context = { batch, includeTransactions, mapCMTransactionData };
 
   return pWaterfall([
     getBatchInvoices,
