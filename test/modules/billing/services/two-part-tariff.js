@@ -28,8 +28,6 @@ const billingVolumes = [
 ];
 
 experiment('modules/billing/services/two-part-tariff.js', () => {
-  const tempTestId1 = uuid();
-  const tempTestId2 = uuid();
   beforeEach(async () => {
     sandbox.stub(chargeVersionYearService, 'getForBatch');
     sandbox.stub(chargeVersionYearService, 'getTwoPartTariffForBatch');
@@ -53,6 +51,9 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
     const batch = new Batch(uuid());
 
     experiment('for a two-part tariff batch', () => {
+      const tempTestId1 = uuid();
+      const tempTestId2 = uuid();
+
       const chargeVersionYears = [{
         chargeVersionId: tempTestId1,
         financialYearEnding: 2020,
@@ -112,6 +113,9 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
     });
 
     experiment('for a supplementary batch', () => {
+      const tempTestId1 = uuid();
+      const tempTestId2 = uuid();
+
       const chargeVersionYears = [
         {
           chargeVersionId: tempTestId1,
