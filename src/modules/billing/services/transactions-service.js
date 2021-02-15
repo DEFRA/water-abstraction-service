@@ -15,6 +15,9 @@ const { get, flatMap } = require('lodash');
  */
 const saveTransactionToDB = (invoiceLicence, transaction) => {
   const data = mappers.transaction.modelToDb(invoiceLicence, transaction);
+  if (transaction.id) {
+    return newRepos.billingTransactions.update(transaction.id, data);
+  }
   return newRepos.billingTransactions.create(data);
 };
 

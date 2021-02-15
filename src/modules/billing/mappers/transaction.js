@@ -77,6 +77,7 @@ const dbToModelMapper = createMapper()
     'isDeMinimis',
     'isNewLicence'
   )
+  .map('netAmount').to('value')
   .map('billingTransactionId').to('id')
   .map('batchType').to('type')
   .map(['startDate', 'endDate']).to('chargePeriod', (startDate, endDate) => new DateRange(startDate, endDate))
@@ -112,6 +113,16 @@ const mapAgreementsToDB = agreements => {
   };
 };
 
+const getChargeType = transaction => {
+  if (transaction.isCompensationCharge) {
+    return 'compensation';
+  }
+  if (transaction.isMinimumCharge) {
+    return 'minimum_charge';
+  }
+  return 'standard';
+};
+
 /**
  * Maps a Transaction instance (with associated InvoiceLicence) to
  * a row of data ready for persistence to water.billing_transactions
@@ -129,7 +140,7 @@ const modelToDb = (invoiceLicence, transaction) => ({
   season: transaction.chargeElement.season,
   loss: transaction.chargeElement.loss,
   isCredit: transaction.isCredit,
-  chargeType: transaction.isCompensationCharge ? 'compensation' : 'standard',
+  chargeType: getChargeType(transaction),
   authorisedQuantity: transaction.chargeElement.authorisedAnnualQuantity,
   billableQuantity: transaction.chargeElement.billableAnnualQuantity,
   authorisedDays: transaction.authorisedDays,
@@ -140,7 +151,8 @@ const modelToDb = (invoiceLicence, transaction) => ({
   ...mapAgreementsToDB(transaction.agreements),
   transactionKey: transaction.transactionKey,
   isTwoPartTariffSupplementary: transaction.isTwoPartTariffSupplementary,
-  isNewLicence: transaction.isNewLicence
+  isNewLicence: transaction.isNewLicence,
+  netAmount: transaction.value
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';

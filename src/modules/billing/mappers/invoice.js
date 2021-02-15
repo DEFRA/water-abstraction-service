@@ -1,10 +1,11 @@
 'use strict';
 
-const { omit } = require('lodash');
+const { omit, isNull } = require('lodash');
 
 const Invoice = require('../../../lib/models/invoice');
 const InvoiceAccount = require('../../../lib/models/invoice-account');
 const FinancialYear = require('../../../lib/models/financial-year');
+const Totals = require('../../../lib/models/totals');
 
 const invoiceAccount = require('../../../lib/mappers/invoice-account');
 const invoiceLicence = require('./invoice-licence');
@@ -13,19 +14,24 @@ const batchMapper = require('./batch');
 const { createMapper } = require('../../../lib/object-mapper');
 const { createModel } = require('../../../lib/mappers/lib/helpers');
 
+const mapTotals = (netAmount, invoiceTotal, creditNoteTotal) => isNull(netAmount)
+  ? null
+  : new Totals().fromHash({ netAmount, invoiceTotal, creditNoteTotal });
+
 const dbToModelMapper = createMapper()
   .copy(
     'dateCreated',
     'invoiceNumber',
     'isCredit',
-    'netAmount'
+    'isDeMinimis'
   )
   .map('billingInvoiceId').to('id')
   .map('invoiceAccountId').to('invoiceAccount', invoiceAccountId => new InvoiceAccount(invoiceAccountId))
   .map('invoiceAccountNumber').to('invoiceAccount.accountNumber')
   .map('billingInvoiceLicences').to('invoiceLicences', billingInvoiceLicences => billingInvoiceLicences.map(invoiceLicence.dbToModel))
   .map('billingBatch').to('billingBatch', batchMapper.dbToModel)
-  .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding));
+  .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding))
+  .map(['netAmount', 'invoiceTotal', 'creditNoteTotal']).to('totals', mapTotals);
 
 /**
  * Converts DB representation to a Invoice service model
@@ -55,7 +61,10 @@ const modelToDb = (batch, invoice) => {
     financialYearEnding: invoice.financialYear.endYear,
     invoiceNumber: invoice.invoiceNumber || null,
     netAmount: totals ? totals.netTotal : null,
-    isCredit: totals ? totals.netTotal < 0 : null
+    isCredit: totals ? totals.netTotal < 0 : null,
+    invoiceValue: totals ? totals.debitLineValue : null,
+    creditNoteValue: totals ? totals.creditLineValue : null,
+    isDeMinimis: invoice.isDeMinimis
   };
 };
 

@@ -69,6 +69,23 @@ const getTransactions = (billRunId, page = 1, perPage = 100) =>
 
 const getCustomerTransactions = (billRunId, customerReference, page = 1, perPage = 100) =>
   request.get(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference, page, perPage });
+/**
+   * Gets transactions in given bill run for supplied customer ref / financial year grouping
+   * @param {String} billRunId
+   * @param {String} customerReference
+   * @param {Number} financialYearEnding
+   * @param {Number} [page] - default 1
+   */
+const getInvoiceTransactions = (billRunId, customerReference, financialYearEnding, page = 1) => {
+  const path = `v1/wrls/billruns/${billRunId}/transactions`;
+  const query = {
+    customerReference,
+    financialYear: financialYearEnding - 1,
+    page,
+    perPage: 100
+  };
+  return request.get(path, query);
+};
 
 exports.addTransaction = addTransaction;
 exports.approve = approve;
@@ -80,3 +97,4 @@ exports.getTransactions = getTransactions;
 exports.getCustomerTransactions = getCustomerTransactions;
 exports.removeCustomerInFinancialYear = removeCustomerInFinancialYear;
 exports.send = send;
+exports.getInvoiceTransactions = getInvoiceTransactions;

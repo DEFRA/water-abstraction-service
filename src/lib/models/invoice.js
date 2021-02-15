@@ -20,6 +20,7 @@ class Invoice extends Model {
   constructor (id) {
     super(id);
     this._invoiceLicences = [];
+    this.isDeMinimis = false;
   }
 
   /**
@@ -154,7 +155,7 @@ class Invoice extends Model {
    * @param {Totals} totals
    */
   set totals (totals) {
-    assertIsInstanceOf(totals, Totals);
+    assertIsNullableInstanceOf(totals, Totals);
     this._totals = totals;
   }
 

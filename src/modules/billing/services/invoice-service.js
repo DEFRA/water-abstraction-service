@@ -56,7 +56,13 @@ const saveInvoiceNumbersAndTotals = async invoice => {
  * @return {Promise<Object>} updated context
  */
 const getCRMData = async context => {
-  const ids = context.billingInvoices.map(row => row.invoiceAccountId);
+  const { billingInvoices, options: { includeInvoiceAccounts } } = context;
+
+  if (!includeInvoiceAccounts) {
+    return context;
+  }
+
+  const ids = billingInvoices.map(row => row.invoiceAccountId);
   if (ids.length > 0) {
     context.crmInvoiceAccounts = await invoiceAccountsConnector.getInvoiceAccountsByIds(ids);
   }
@@ -109,7 +115,7 @@ const getChargeModuleBillRun = async context => {
  * @return {Promise<Object>} updated context
  */
 const getBatchInvoices = async context => {
-  const { batch, includeTransactions } = context;
+  const { batch, options: { includeTransactions } } = context;
   const method = includeTransactions ? 'findOneWithInvoicesWithTransactions' : 'findOneWithInvoices';
   const { billingInvoices } = await repos.billingBatches[method](batch.id);
   context.billingInvoices = billingInvoices;
@@ -163,10 +169,9 @@ const decorateInvoiceWithCRMData = (invoice, context) => {
  * @return {Invoice}
  */
 const mapInvoice = async (billingInvoice, context) => {
+  const { options: { includeInvoiceAccounts } } = context;
   const invoice = mappers.invoice.dbToModel(billingInvoice);
-  decorateInvoiceWithCRMData(invoice, context);
-  chargeModuleDecorators.decorateInvoice(invoice, context.cmResponse.billRun.customers);
-  return invoice;
+  return includeInvoiceAccounts ? decorateInvoiceWithCRMData(invoice, context) : invoice;
 };
 
 const mapToInvoices = async context => {
@@ -189,7 +194,6 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
 
   const res = await pWaterfall([
     getInvoice,
-    getChargeModuleCustomer,
     getCRMData,
     mapToInvoices
   ], context);
@@ -200,15 +204,21 @@ const getInvoiceForBatch = async (batch, invoiceId) => {
 /**
  * Loads all invoices in batch
  * @param {Batch} batch
- * @param {Boolean} [includeTransactions] - whether to include transactions data
+ * @param {Object} options
+ * @param {Boolean} options.includeTransactions
+ * @param {Boolean} options.includeInvoiceAccounts - whether to load invoice data from CRM
  * @return {Promise<Invoice>}
  */
-const getInvoicesForBatch = async (batch, includeTransactions = false, mapCMTransactionData = true) => {
-  const context = { batch, includeTransactions, mapCMTransactionData };
+const getInvoicesForBatch = async (batch, options = {}) => {
+  const defaults = {
+    includeTransactions: false,
+    includeInvoiceAccounts: false
+  };
+
+  const context = { batch, options: Object.assign(defaults, options) };
 
   return pWaterfall([
     getBatchInvoices,
-    getChargeModuleBillRun,
     getCRMData,
     mapToInvoices
   ], context);

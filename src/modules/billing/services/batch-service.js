@@ -564,3 +564,4 @@ exports.getSentTptBatchesForFinancialYearAndRegion = getSentTptBatchesForFinanci
 exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteAllBillingData = deleteAllBillingData;
 exports.persistInvoiceNumbersAndTotals = persistInvoiceNumbersAndTotals;
+exports.persistTotals = persistTotals;

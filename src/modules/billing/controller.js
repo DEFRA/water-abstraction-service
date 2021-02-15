@@ -21,7 +21,6 @@ const importConnector = require('../../lib/connectors/import');
 // Bull job queue manager
 const { jobName: createBillRunJobName } = require('./jobs/create-bill-run');
 const { jobName: refreshTotalsJobName } = require('./jobs/refresh-totals');
-const { jobName: persistInvoiceNumbersAndTotalsJobName } = require('./jobs/persist-invoice-numbers-and-totals');
 
 /**
  * Resource that will create a new batch skeleton which will
@@ -138,7 +137,7 @@ const postApproveBatch = async request => {
 
   try {
     const approvedBatch = await batchService.approveBatch(batch, internalCallingUser);
-    await request.queueManager.add(persistInvoiceNumbersAndTotalsJobName, batch.id);
+    await request.queueManager.add(refreshTotalsJobName, batch.id);
     return approvedBatch;
   } catch (err) {
     return err;
