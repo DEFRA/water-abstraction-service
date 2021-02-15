@@ -27,6 +27,16 @@ const findOne = async chargeVersionId => {
   return model.toJSON();
 };
 
+const findMany = async chargeVersionIds => {
+  const models = await ChargeVersion
+    .forge()
+    .where('charge_version_id', 'in', chargeVersionIds)
+    .fetchAll({
+      withRelated: ['changeReason']
+    });
+  return models.toJSON();
+};
+
 const findByLicenceRef = async licenceRef => {
   const models = await ChargeVersion
     .forge()
@@ -82,6 +92,7 @@ const update = (id, changes) =>
 
 exports.create = create;
 exports.findOne = findOne;
+exports.findMany = findMany;
 exports.findByLicenceRef = findByLicenceRef;
 exports.findValidInRegionAndFinancialYear = findValidInRegionAndFinancialYear;
 exports.update = update;

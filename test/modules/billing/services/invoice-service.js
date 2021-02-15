@@ -319,6 +319,7 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(chargeModuleBillRunConnector, 'getCustomer').resolves(chargeModuleData);
 
     sandbox.stub(batchService, 'getAllCmTransactionsForBatch').resolves();
+    sandbox.stub(batchService, 'getCmTransactionsForCustomer').resolves();
 
     sandbox.stub(repos.billingInvoices, 'findOne').resolves();
     sandbox.stub(repos.billingInvoices, 'upsert').resolves();
@@ -349,6 +350,10 @@ experiment('modules/billing/services/invoiceService', () => {
     test('gets batch summary data from charge module with correct external ID', async () => {
       const [externalId] = chargeModuleBillRunConnector.get.lastCall.args;
       expect(externalId).to.equal(IDS.batchExternalId);
+    });
+
+    test('gets the CM transactions', async () => {
+      expect(batchService.getAllCmTransactionsForBatch.calledWith(batch)).to.be.true();
     });
 
     test('there is an invoice for each customer and financial year combination', async () => {
@@ -621,16 +626,20 @@ experiment('modules/billing/services/invoiceService', () => {
     });
 
     experiment('when the billing batch ID does match', () => {
-      let invoice;
+      let invoice, billingInvoice;
 
       beforeEach(async () => {
-        const billingInvoice = createBatchData().billingInvoices[0];
+        billingInvoice = createBatchData().billingInvoices[0];
         repos.billingInvoices.findOne.resolves(billingInvoice);
         invoice = await invoiceService.getInvoiceForBatch(batch, IDS.invoices[0]);
       });
 
       test('the correct billing invoice is found', async () => {
         expect(repos.billingInvoices.findOne.calledWith(IDS.invoices[0])).to.be.true();
+      });
+
+      test('the CM transactions are fetched', async () => {
+        expect(batchService.getCmTransactionsForCustomer.calledWith(batch, billingInvoice.invoiceAccountNumber)).to.be.true();
       });
 
       experiment('the 2019 invoice for customer 1', () => {

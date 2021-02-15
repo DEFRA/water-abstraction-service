@@ -219,6 +219,25 @@ const postApproveReviewBatch = {
   }
 };
 
+const getBatchDownloadData = {
+  method: 'GET',
+  path: `${BASE_PATH}/{batchId}/download-data`,
+  handler: controller.getBatchDownloadData,
+  config: {
+    validate: {
+      params: {
+        batchId: Joi.string().uuid().required()
+      }
+    },
+    auth: {
+      scope: [billing]
+    },
+    pre: [
+      { method: preHandlers.loadBatch, assign: 'batch' }
+    ]
+  }
+};
+
 if (config.featureToggles.deleteAllBillingData) {
   const deleteAllBillingData = {
     method: 'DELETE',
@@ -247,6 +266,7 @@ exports.deleteBatch = deleteBatch;
 exports.postApproveBatch = postApproveBatch;
 exports.postCreateBatch = postCreateBatch;
 exports.postApproveReviewBatch = postApproveReviewBatch;
+exports.getBatchDownloadData = getBatchDownloadData;
 
 const tptRoutes = require('./routes/two-part-tariff-review');
 exports.getBatchLicences = tptRoutes.getBatchLicences;

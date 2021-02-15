@@ -25,7 +25,8 @@ const data = {
     chargeElementId: '90d4af8a-1717-452c-84bd-467a7d55ade4',
     source: 'supported',
     season: CHARGE_SEASON.summer,
-    loss: 'high'
+    loss: 'high',
+    chargeVersionId: '6d53dddd-2ab6-449b-b28c-d6d857569b94'
   },
   timeLimitedChargeElement: {
     chargeElementId: '90d4af8a-1717-452c-84bd-467a7d55ade4',
@@ -39,7 +40,8 @@ const data = {
     charge_element_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
     source: 'supported',
     season: CHARGE_SEASON.summer,
-    loss: 'high'
+    loss: 'high',
+    charge_version_id: '6d53dddd-2ab6-449b-b28c-d6d857569b94'
   },
   dbRowWithPurposeUse: {
     charge_element_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
@@ -86,6 +88,9 @@ experiment('lib/mappers/charge-element', () => {
       expect(result.loss).to.equal(data.chargeElement.loss);
     });
 
+    test('sets the .chargeVersionId property', async () => {
+      expect(result.chargeVersionId).to.equal(data.chargeElement.chargeVersionId);
+    });
     experiment('when the database row does not contain a purpose use', () => {
       test('the purposeUse property is not set', async () => {
         expect(result.purposeUse).to.be.undefined();

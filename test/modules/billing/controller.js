@@ -13,6 +13,9 @@ const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
 const Invoice = require('../../../src/lib/models/invoice');
+const InvoiceLicence = require('../../../src/lib/models/invoice-licence');
+const Transaction = require('../../../src/lib/models/transaction');
+const ChargeElement = require('../../../src/lib/models/charge-element');
 const Batch = require('../../../src/lib/models/batch');
 const { BATCH_STATUS, BATCH_TYPE } = Batch;
 
@@ -24,6 +27,7 @@ const batchService = require('../../../src/modules/billing/services/batch-servic
 const transactionsService = require('../../../src/modules/billing/services/transactions-service');
 const billingVolumesService = require('../../../src/modules/billing/services/billing-volumes-service');
 const importConnector = require('../../../src/lib/connectors/import');
+const chargeVersionService = require('../../../src/lib/services/charge-versions');
 
 const controller = require('../../../src/modules/billing/controller');
 const mappers = require('../../../src/modules/billing/mappers');
@@ -75,6 +79,8 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(batchService, 'approveTptBatchReview').resolves(processingBatch);
     sandbox.stub(batchService, 'deleteBatchInvoice').resolves();
     sandbox.stub(batchService, 'deleteAllBillingData').resolves();
+
+    sandbox.stub(chargeVersionService, 'getManyByChargeVersionIds').resolves();
 
     sandbox.stub(invoiceService, 'getInvoiceForBatch').resolves();
     sandbox.stub(invoiceService, 'getInvoicesForBatch').resolves();
@@ -606,6 +612,61 @@ experiment('modules/billing/controller', () => {
     });
     test('calls the invoice licence service with the correct invoice licence id', () => {
       expect(invoiceLicenceService.getInvoiceLicenceWithTransactions.lastCall.args[0]).to.equal('test-id');
+    });
+  });
+
+  experiment('.getBatchDownloadData', () => {
+    let request, cvIds, invoices, result;
+
+    const getTransactionWithChargeElement = cvId => {
+      const chargeElement = new ChargeElement();
+      chargeElement.chargeVersionId = cvId;
+      const transaction = new Transaction();
+      transaction.chargeElement = chargeElement;
+
+      return transaction;
+    };
+
+    const setUpInvoiceLicenceWithTransactions = cvIds => {
+      const invoiceLicence = new InvoiceLicence();
+      invoiceLicence.transactions = cvIds.map(getTransactionWithChargeElement);
+      return invoiceLicence;
+    };
+
+    beforeEach(async () => {
+      request = {
+        pre: { batch: { id: 'test-batch-id' } }
+      };
+
+      cvIds = [uuid(), uuid(), uuid()];
+
+      const firstInvoice = new Invoice();
+      firstInvoice.invoiceLicences = [setUpInvoiceLicenceWithTransactions([cvIds[0], cvIds[0]])];
+      const secondInvoice = new Invoice();
+      secondInvoice.invoiceLicences = [setUpInvoiceLicenceWithTransactions([cvIds[1], cvIds[2]])];
+      invoices = [firstInvoice, secondInvoice];
+
+      invoiceService.getInvoicesForBatch.resolves(invoices);
+      chargeVersionService.getManyByChargeVersionIds.resolves([{ foo: 'bar' }]);
+      result = await controller.getBatchDownloadData(request, h);
+    });
+
+    test('calls the invoice service with expected params', () => {
+      expect(invoiceService.getInvoicesForBatch.calledWith(
+        request.pre.batch,
+        true
+      )).to.be.true();
+    });
+
+    test('calls the charge version service with unique list of charge version ids', () => {
+      expect(chargeVersionService.getManyByChargeVersionIds.calledWith(
+        cvIds
+      )).to.be.true();
+    });
+
+    test('returns the result of both service calls', () => {
+      expect(result.invoices).to.be.equal(invoices);
+      expect(result.chargeVersions).to.be.equal([{ foo: 'bar' }]);
     });
   });
 
