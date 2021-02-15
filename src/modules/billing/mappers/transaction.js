@@ -2,7 +2,7 @@
 
 const moment = require('moment');
 const { titleCase } = require('title-case');
-const { identity } = require('lodash');
+const { identity, get } = require('lodash');
 const helpers = require('@envage/water-abstraction-helpers').charging;
 
 const DateRange = require('../../../lib/models/date-range');
@@ -60,6 +60,8 @@ const getBillingVolumeForTransaction = row => {
   return relevantBillingVolume ? billingVolumeMapper.dbToModel(relevantBillingVolume) : null;
 };
 
+const isValueEqualTo = testValue => value => testValue === value;
+
 /**
  * Maps a row from water.billing_transactions to a Transaction model
  * @param {Object} row - from water.billing_transactions, camel cased
@@ -81,7 +83,8 @@ const dbToModelMapper = createMapper()
   .map('billingTransactionId').to('id')
   .map('batchType').to('type')
   .map(['startDate', 'endDate']).to('chargePeriod', (startDate, endDate) => new DateRange(startDate, endDate))
-  .map('chargeType').to('isCompensationCharge', chargeType => chargeType === 'compensation')
+  .map('chargeType').to('isCompensationCharge', isValueEqualTo('compensation'))
+  .map('chargeType').to('isMinimumCharge', isValueEqualTo('minimum_charge'))
   .map('chargeElement').to('chargeElement', chargeElementMapper.dbToModel)
   .map('volume').to('volume', volume => volume ? parseFloat(volume) : null)
   .map().to('agreements', mapDBToAgreements)
@@ -113,15 +116,59 @@ const mapAgreementsToDB = agreements => {
   };
 };
 
-const getChargeType = transaction => {
-  if (transaction.isCompensationCharge) {
+// const getChargeType = transaction => {
+//   if (transaction.isCompensationCharge) {
+//     return 'compensation';
+//   }
+//   if (transaction.isMinimumCharge) {
+//     return 'minimum_charge';
+//   }
+//   return 'standard';
+// };
+
+const mapChargeType = (isCompensationCharge, isMinimumCharge) => {
+  if (isCompensationCharge) {
     return 'compensation';
   }
-  if (transaction.isMinimumCharge) {
+  if (isMinimumCharge) {
     return 'minimum_charge';
   }
   return 'standard';
 };
+
+const isSection127Agreement = agreements => !!agreements.find(agreement => agreement.isTwoPartTariff());
+
+const getSection126Factor = agreements => get(agreements.find(agreement => agreement.isAbatement()), 'factor', null);
+
+const getSection130Agreement = agreements => get(agreements.find(agreement => agreement.isCanalAndRiversTrust()), 'code', null);
+
+const modelToDbMapper = createMapper()
+  .copy(
+    'isCredit',
+    'authorisedDays',
+    'billableDays',
+    'description',
+    'status',
+    'volume',
+    'transactionKey',
+    'isTwoPartTariffSupplementary',
+    'isNewLicence',
+    'externalId'
+  )
+  .map('chargeElement.id').to('chargeElementId')
+  .map('chargePeriod.startDate').to('startDate')
+  .map('chargePeriod.endDate').to('endDate')
+  .map('chargeElement.abstractionPeriod').to('abstractionPeriod', absPeriod => absPeriod.toJSON())
+  .map('chargeElement.source').to('source')
+  .map('chargeElement.season').to('season')
+  .map('chargeElement.loss').to('loss')
+  .map('chargeElement.authorisedAnnualQuantity').to('authorisedQuantity')
+  .map('chargeElement.billableAnnualQuantity').to('billableQuantity')
+  .map(['isCompensationCharge', 'isMinimumCharge']).to('chargeType', mapChargeType)
+  .map('agreements').to('section127Agreement', isSection127Agreement)
+  .map('agreements').to('section126Factor', getSection126Factor)
+  .map('agreements').to('section130Agreement', getSection130Agreement)
+  .map('value').to('netAmount');
 
 /**
  * Maps a Transaction instance (with associated InvoiceLicence) to
@@ -132,27 +179,7 @@ const getChargeType = transaction => {
  */
 const modelToDb = (invoiceLicence, transaction) => ({
   billingInvoiceLicenceId: invoiceLicence.id,
-  chargeElementId: transaction.chargeElement.id,
-  startDate: transaction.chargePeriod.startDate,
-  endDate: transaction.chargePeriod.endDate,
-  abstractionPeriod: transaction.chargeElement.abstractionPeriod.toJSON(),
-  source: transaction.chargeElement.source,
-  season: transaction.chargeElement.season,
-  loss: transaction.chargeElement.loss,
-  isCredit: transaction.isCredit,
-  chargeType: getChargeType(transaction),
-  authorisedQuantity: transaction.chargeElement.authorisedAnnualQuantity,
-  billableQuantity: transaction.chargeElement.billableAnnualQuantity,
-  authorisedDays: transaction.authorisedDays,
-  billableDays: transaction.billableDays,
-  description: transaction.description,
-  status: transaction.status,
-  volume: transaction.volume,
-  ...mapAgreementsToDB(transaction.agreements),
-  transactionKey: transaction.transactionKey,
-  isTwoPartTariffSupplementary: transaction.isTwoPartTariffSupplementary,
-  isNewLicence: transaction.isNewLicence,
-  netAmount: transaction.value
+  ...modelToDbMapper.execute(transaction)
 });
 
 const DATE_FORMAT = 'YYYY-MM-DD';
@@ -246,6 +273,14 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
   };
 };
 
+const mapIsTwoPartTariffSupplementary = twoPartTariff => twoPartTariff === true;
+
+const cmStatusMap = new Map([
+  ['unbilled', Transaction.statuses.chargeCreated]
+]);
+
+const mapCMTransactionStatus = cmStatus => cmStatusMap.get(cmStatus);
+
 /**
  * Creates a Transaction model for Minimum Charge transaction
  * returned from the Charge Module
@@ -259,7 +294,9 @@ const cmToModelMapper = createMapper()
   .map('compensationCharge').to('isCompensationCharge')
   .map('minimumChargeAdjustment').to('isMinimumCharge')
   .map('deminimis').to('isDeMinimis')
-  .map('newLicence').to('isNewLicence');
+  .map('newLicence').to('isNewLicence')
+  .map('twoPartTariff').to('isTwoPartTariffSupplementary', mapIsTwoPartTariffSupplementary)
+  .map('transactionStatus').to('status', mapCMTransactionStatus);
 
 /**
  * Converts Minimum Charge transaction returned from the CM

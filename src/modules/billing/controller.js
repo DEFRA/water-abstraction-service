@@ -68,10 +68,7 @@ const postCreateBatch = async (request, h) => {
  * @param {Boolean} request.query.totals - indicates that batch totals should be included in response
  * @return {Promise<Batch>}
  */
-const getBatch = async request => {
-  const { totals } = request.query;
-  return totals ? batchService.decorateBatchWithTotals(request.pre.batch) : request.pre.batch;
-};
+const getBatch = async request => request.pre.batch;
 
 const getBatches = async request => {
   const { page, perPage } = request.query;
@@ -82,7 +79,9 @@ const getBatches = async request => {
 const getBatchInvoices = async request => {
   const { batch } = request.pre;
   try {
-    const invoices = await invoiceService.getInvoicesForBatch(batch, true, false);
+    const invoices = await invoiceService.getInvoicesForBatch(batch, {
+      includeInvoiceAccounts: true
+    });
     return invoices.map(mappers.api.invoice.modelToBatchInvoices);
   } catch (err) {
     return mapErrorResponse(err);

@@ -54,10 +54,10 @@ const getBatch = {
     validate: {
       params: {
         batchId: Joi.string().uuid().required()
-      },
-      query: {
-        totals: Joi.boolean().truthy('1').falsy('0').default(false)
       }
+      // query: {
+      //   totals: Joi.boolean().truthy('1').falsy('0').default(false)
+      // }
     },
     auth: {
       scope: [billing]

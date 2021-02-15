@@ -14,9 +14,9 @@ const batchMapper = require('./batch');
 const { createMapper } = require('../../../lib/object-mapper');
 const { createModel } = require('../../../lib/mappers/lib/helpers');
 
-const mapTotals = (netAmount, invoiceTotal, creditNoteTotal) => isNull(netAmount)
+const mapTotals = (netAmount, invoiceValue, creditNoteValue) => isNull(netAmount)
   ? null
-  : new Totals().fromHash({ netAmount, invoiceTotal, creditNoteTotal });
+  : new Totals().fromHash({ netTotal: netAmount, invoiceValue, creditNoteValue });
 
 const dbToModelMapper = createMapper()
   .copy(
@@ -31,7 +31,7 @@ const dbToModelMapper = createMapper()
   .map('billingInvoiceLicences').to('invoiceLicences', billingInvoiceLicences => billingInvoiceLicences.map(invoiceLicence.dbToModel))
   .map('billingBatch').to('billingBatch', batchMapper.dbToModel)
   .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding))
-  .map(['netAmount', 'invoiceTotal', 'creditNoteTotal']).to('totals', mapTotals);
+  .map('netAmount', 'invoiceValue', 'creditNoteValue').to('totals', mapTotals);
 
 /**
  * Converts DB representation to a Invoice service model

@@ -5,25 +5,12 @@ const pWaterfall = require('p-waterfall');
 
 // Connectors
 const invoiceAccountsConnector = require('../../../lib/connectors/crm-v2/invoice-accounts');
-const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
-
-const batchService = require('./batch-service');
-
 const repos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
-const { logger } = require('../../../logger');
-
-const chargeModuleDecorators = require('../mappers/charge-module-decorators');
-
-// Models
-const Batch = require('../../../lib/models/batch');
 
 // Errors
 const { NotFoundError } = require('../../../lib/errors');
-
-const isBatchReadyOrSent = batch =>
-  batch.statusIsOneOf(Batch.BATCH_STATUS.ready, Batch.BATCH_STATUS.sent);
 
 /**
  * Saves an Invoice model to water.billing_invoices
@@ -34,11 +21,6 @@ const isBatchReadyOrSent = batch =>
 const saveInvoiceToDB = async (batch, invoice) => {
   const data = mappers.invoice.modelToDb(batch, invoice);
   return repos.billingInvoices.upsert(data);
-};
-
-const updateCmCustomersWithTransactionDetails = (cmResponse, cmTransactions) => {
-  cmResponse.billRun.customers = chargeModuleDecorators.mapCmTransactionsToSummary(cmResponse, cmTransactions);
-  return cmResponse;
 };
 
 const saveInvoiceNumbersAndTotals = async invoice => {
@@ -65,46 +47,6 @@ const getCRMData = async context => {
   const ids = billingInvoices.map(row => row.invoiceAccountId);
   if (ids.length > 0) {
     context.crmInvoiceAccounts = await invoiceAccountsConnector.getInvoiceAccountsByIds(ids);
-  }
-  return context;
-};
-
-/**
- * Loads single customer bill run data from charge module into context object
- * @param {Object} context
- * @return {Promise<Object>} updated context
- */
-const getChargeModuleCustomer = async context => {
-  const { batch, invoiceId } = context;
-  if (isBatchReadyOrSent(batch)) {
-    const billingInvoice = find(context.billingInvoices, { billingInvoiceId: invoiceId });
-    const cmResponse = await chargeModuleBillRunConnector.getCustomer(batch.externalId, billingInvoice.invoiceAccountNumber);
-    const cmTransactions = await batchService.getCmTransactionsForCustomer(batch, billingInvoice.invoiceAccountNumber);
-    const updated = updateCmCustomersWithTransactionDetails(cmResponse, cmTransactions);
-    context.cmResponse = updated;
-  }
-  return context;
-};
-
-/**
- * Loads bill run data from charge module into context object
- * @param {Object} context
- * @return {Promise<Object>} updated context
- */
-const getChargeModuleBillRun = async context => {
-  const { batch, mapCMTransactionData } = context;
-  try {
-    // Load Charge Module summary data
-    const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
-    if (mapCMTransactionData) {
-      const cmTransactions = await batchService.getAllCmTransactionsForBatch(batch);
-      const updated = updateCmCustomersWithTransactionDetails(cmResponse, cmTransactions);
-      context.cmResponse = updated;
-    } else {
-      context.cmResponse = cmResponse;
-    }
-  } catch (err) {
-    logger.error('CM error', err);
   }
   return context;
 };
@@ -190,7 +132,7 @@ const mapToInvoices = async context => {
  * @return {Promise<Invoice>}
  */
 const getInvoiceForBatch = async (batch, invoiceId) => {
-  const context = { batch, invoiceId };
+  const context = { batch, invoiceId, options: { includeTransactions: true, includeInvoiceAccounts: true } };
 
   const res = await pWaterfall([
     getInvoice,

@@ -1,5 +1,6 @@
 'use strict';
 
+const { isNull } = require('lodash');
 const { titleCase } = require('title-case');
 
 const hashers = require('../../lib/hash');
@@ -201,8 +202,12 @@ class Transaction extends Model {
   }
 
   set volume (volume) {
-    validators.assertNullableQuantityWithMaximum(volume, this.chargeElement.maxAnnualQuantity);
-    this._volume = volume;
+    if (isNull(volume)) {
+      this._volume = volume;
+    } else {
+      validators.assertNullableQuantityWithMaximum(volume, this.chargeElement.maxAnnualQuantity);
+      this._volume = volume;
+    }
   }
 
   /**
