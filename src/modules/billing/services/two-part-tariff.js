@@ -45,7 +45,8 @@ const processChargeVersionYear = async chargeVersionYear => {
     new FinancialYear(financialYearEnding),
     isSummer
   );
-  if (existingBillingVolumes.every(isApprovedBillingVolume)) {
+
+  if (existingBillingVolumes.length > 0 && existingBillingVolumes.every(isApprovedBillingVolume)) {
     return logger.info(`Skipping matching for ${chargeVersionId}, ${financialYearEnding}, ${isSummer} - approved billing volumes exist`);
   }
 
