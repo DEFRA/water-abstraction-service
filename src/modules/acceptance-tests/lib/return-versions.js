@@ -1,7 +1,7 @@
 const { bookshelf } = require('../../../lib/connectors/bookshelf');
 const returnVersionConnector = require('../../../lib/connectors/repos/return-versions');
 
-const createReturnVersion = async (licence, returnsFrequency, formatId) => {
+const createReturnVersion = async (licence, formatId) => {
   const version = {
     licenceId: licence.licenceId,
     versionNumber: 101,

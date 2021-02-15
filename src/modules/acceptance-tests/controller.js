@@ -80,10 +80,10 @@ const createReturns = () => Promise.all([
 ]);
 
 const createReturnVersions = (dailyDocumentV2, weeklyDocumentV2, monthlyDocumentV2) => Promise.all([
-  returnVersions.create(dailyDocumentV2, 'day', '9999991'),
-  returnVersions.create(weeklyDocumentV2, 'week', '9999992'),
-  returnVersions.create(monthlyDocumentV2, 'month', '9999993'),
-  returnVersions.create(monthlyDocumentV2, 'month', '9999994')
+  returnVersions.create(dailyDocumentV2, '9999991'),
+  returnVersions.create(weeklyDocumentV2, '9999992'),
+  returnVersions.create(monthlyDocumentV2, '9999993'),
+  returnVersions.create(monthlyDocumentV2, '9999994')
 ]);
 
 const createReturnRequirements = (dailyReturnVer, weeklyReturnVer, monthlyReturnVer1, monthlyReturnVer2) => Promise.all([

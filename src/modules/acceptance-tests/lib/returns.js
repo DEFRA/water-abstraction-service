@@ -14,7 +14,7 @@ const moment = require('moment');
  * @param {String} status The returns status (completed|due|void|received))
  * @param {String} formatId The external id also used for the return requirements in the water schema
  */
-const createReturnRow = (licenceRef, cycle, metadata, formatId, frequency = 'day', status = 'due') => {
+const createReturnRow = (licenceRef, cycle, metadata, formatId, frequency, status, oldReturn) => {
   return {
     return_id: getReturnId(6, licenceRef, formatId, cycle.startDate, cycle.endDate),
     regime: 'water',
@@ -27,7 +27,7 @@ const createReturnRow = (licenceRef, cycle, metadata, formatId, frequency = 'day
     metadata: JSON.stringify(metadata),
     received_date: null,
     return_requirement: formatId,
-    due_date: moment().add(1, 'month').format('YYYY-MM-DD'),
+    due_date: oldReturn ? moment().add(-1, 'year').format('YYYY-MM-DD') : moment().add(1, 'month').format('YYYY-MM-DD'),
     is_test: true
   };
 };
@@ -73,10 +73,7 @@ const createDueReturn = async (licenceRef, frequency, formatId, oldReturn = fals
   const cycle = cycles.pop();
 
   const metadata = createReturnMetadata(cycle.isSummer, formatId);
-  const row = createReturnRow(licenceRef, cycle, metadata, formatId, frequency, 'due');
-  if (oldReturn) {
-    row.due_date = moment().add(-1, 'year').format('YYYY-MM-DD');
-  }
+  const row = createReturnRow(licenceRef, cycle, metadata, formatId, frequency, 'due', oldReturn);
   const result = await returnsConnector.returns.create(row);
   return result.data;
 };
