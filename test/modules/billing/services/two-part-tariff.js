@@ -28,6 +28,8 @@ const billingVolumes = [
 ];
 
 experiment('modules/billing/services/two-part-tariff.js', () => {
+  const tempTestId1 = uuid();
+  const tempTestId2 = uuid();
   beforeEach(async () => {
     sandbox.stub(chargeVersionYearService, 'getForBatch');
     sandbox.stub(chargeVersionYearService, 'getTwoPartTariffForBatch');
@@ -52,14 +54,14 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
 
     experiment('for a two-part tariff batch', () => {
       const chargeVersionYears = [{
-        chargeVersionId: 'test-id-1',
+        chargeVersionId: tempTestId1,
         financialYearEnding: 2020,
         billingBatchId: batch.id,
         transactionType: TRANSACTION_TYPE.twoPartTariff,
         isSummer: false
       },
       {
-        chargeVersionId: 'test-id-2',
+        chargeVersionId: tempTestId2,
         financialYearEnding: 2020,
         billingBatchId: batch.id,
         transactionType: TRANSACTION_TYPE.twoPartTariff,
@@ -83,7 +85,7 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
       test('the first charge element year is matched', async () => {
         const [id, financialYear, isSummer] = volumeMatchingService.matchVolumes.firstCall.args;
 
-        expect(id).to.equal('test-id-1');
+        expect(id).to.equal(tempTestId1);
         expect(financialYear.endYear).to.equal(2020);
         expect(isSummer).to.equal(false);
       });
@@ -91,7 +93,7 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
       test('the second charge element year is matched', async () => {
         const [id, financialYear, isSummer] = volumeMatchingService.matchVolumes.secondCall.args;
 
-        expect(id).to.equal('test-id-2');
+        expect(id).to.equal(tempTestId2);
         expect(financialYear.endYear).to.equal(2020);
         expect(isSummer).to.equal(false);
       });
@@ -112,42 +114,42 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
     experiment('for a supplementary batch', () => {
       const chargeVersionYears = [
         {
-          chargeVersionId: 'test-id-1',
+          chargeVersionId: tempTestId1,
           financialYearEnding: 2019,
           billingBatchId: batch.id,
           transactionType: TRANSACTION_TYPE.twoPartTariff,
           isSummer: true
         },
         {
-          chargeVersionId: 'test-id-2',
+          chargeVersionId: tempTestId2,
           financialYearEnding: 2019,
           billingBatchId: batch.id,
           transactionType: TRANSACTION_TYPE.twoPartTariff,
           isSummer: true
         },
         {
-          chargeVersionId: 'test-id-1',
+          chargeVersionId: tempTestId1,
           financialYearEnding: 2019,
           billingBatchId: batch.id,
           transactionType: TRANSACTION_TYPE.twoPartTariff,
           isSummer: false
         },
         {
-          chargeVersionId: 'test-id-2',
+          chargeVersionId: tempTestId2,
           financialYearEnding: 2019,
           billingBatchId: batch.id,
           transactionType: TRANSACTION_TYPE.twoPartTariff,
           isSummer: false
         },
         {
-          chargeVersionId: 'test-id-1',
+          chargeVersionId: tempTestId1,
           financialYearEnding: 2020,
           billingBatchId: batch.id,
           transactionType: TRANSACTION_TYPE.twoPartTariff,
           isSummer: true
         },
         {
-          chargeVersionId: 'test-id-2',
+          chargeVersionId: tempTestId2,
           financialYearEnding: 2020,
           billingBatchId: batch.id,
           transactionType: TRANSACTION_TYPE.twoPartTariff,
@@ -172,7 +174,7 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
       test('the first charge element year is matched in summer 2019', async () => {
         const [id, financialYear, isSummer] = volumeMatchingService.matchVolumes.getCall(0).args;
 
-        expect(id).to.equal('test-id-1');
+        expect(id).to.equal(tempTestId1);
         expect(financialYear.endYear).to.equal(2019);
         expect(isSummer).to.equal(true);
       });
@@ -180,7 +182,7 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
       test('the second charge element year is matched in summer 2019', async () => {
         const [id, financialYear, isSummer] = volumeMatchingService.matchVolumes.getCall(1).args;
 
-        expect(id).to.equal('test-id-2');
+        expect(id).to.equal(tempTestId2);
         expect(financialYear.endYear).to.equal(2019);
         expect(isSummer).to.equal(true);
       });
@@ -188,7 +190,7 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
       test('the first charge element year is matched in winter 2019', async () => {
         const [id, financialYear, isSummer] = volumeMatchingService.matchVolumes.getCall(2).args;
 
-        expect(id).to.equal('test-id-1');
+        expect(id).to.equal(tempTestId1);
         expect(financialYear.endYear).to.equal(2019);
         expect(isSummer).to.equal(false);
       });
@@ -196,7 +198,7 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
       test('the second charge element year is matched in winter 2019', async () => {
         const [id, financialYear, isSummer] = volumeMatchingService.matchVolumes.getCall(3).args;
 
-        expect(id).to.equal('test-id-2');
+        expect(id).to.equal(tempTestId2);
         expect(financialYear.endYear).to.equal(2019);
         expect(isSummer).to.equal(false);
       });
@@ -204,7 +206,7 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
       test('the first charge element year is matched in summer 2020', async () => {
         const [id, financialYear, isSummer] = volumeMatchingService.matchVolumes.getCall(4).args;
 
-        expect(id).to.equal('test-id-1');
+        expect(id).to.equal(tempTestId1);
         expect(financialYear.endYear).to.equal(2020);
         expect(isSummer).to.equal(true);
       });
@@ -212,7 +214,7 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
       test('the second charge element year is matched in summer 2020', async () => {
         const [id, financialYear, isSummer] = volumeMatchingService.matchVolumes.getCall(5).args;
 
-        expect(id).to.equal('test-id-2');
+        expect(id).to.equal(tempTestId2);
         expect(financialYear.endYear).to.equal(2020);
         expect(isSummer).to.equal(true);
       });
