@@ -200,24 +200,6 @@ const saveInvoicesToDB = async batch => {
 };
 
 /**
- * Persists the batch totals to water.billing_batches
- * Also sets batch status to 'ready'
- * @param {Batch} batch
- * @return {Promise}
- */
-const persistTotals = batch => {
-  const changes = {
-    status: Batch.BATCH_STATUS.ready,
-    ...batch.totals.pick([
-      'invoiceCount',
-      'creditNoteCount',
-      'netTotal'
-    ])
-  };
-  return newRepos.billingBatches.update(batch.id, changes);
-};
-
-/**
  * Gets counts of the number of transactions in each status for the
  * supplied batch ID
  * @param {String} batchId
@@ -415,29 +397,27 @@ const deleteAllBillingData = async () => {
 };
 
 /**
- * Calls provided CM transactions endpoint multiple
- * times and collates all paginated results
- * @param {Function} connectorFunc
- * @param {String} externalId from batch
- * @param {Array} params if required, eg customerReference
- * @return {Array<Object>} CM transaction details
+ * Updates batch from CM summary data
+ * @param {String} batchId
+ * @param {Object} cmResponse
+ * @return {Promise<Batch>} updated batch model
  */
-const getAllCmTransactions = async (connectorFunc, externalId, params = []) => {
-  const allParams = [externalId, ...params];
-  try {
-    const { data, pagination: { pageCount } } = await connectorFunc(...allParams);
+const updateWithCMSummary = async (batchId, cmResponse) => {
+  const { summary, approvedForBilling } = cmResponse.billRun;
 
-    const result = data.transactions;
+  const status = approvedForBilling
+    ? Batch.BATCH_STATUS.sent
+    : Batch.BATCH_STATUS.ready;
 
-    for (let page = 2; page <= pageCount; page++) {
-      const { data: { transactions } } = await connectorFunc(...allParams, page);
-      result.push(...transactions);
-    }
-    return result;
-  } catch (error) {
-    logger.error(`Unable to retrieve transactions for CM batch ${externalId}`);
-    throw error;
-  }
+  const changes = {
+    status,
+    invoiceCount: summary.invoiceCount,
+    creditNoteCount: summary.creditNoteCount,
+    netTotal: summary.netTotal
+  };
+
+  const data = await newRepos.billingBatches.update(batchId, changes);
+  return mappers.batch.dbToModel(data);
 };
 
 exports.approveBatch = approveBatch;
@@ -459,4 +439,4 @@ exports.approveTptBatchReview = approveTptBatchReview;
 exports.getSentTptBatchesForFinancialYearAndRegion = getSentTptBatchesForFinancialYearAndRegion;
 exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteAllBillingData = deleteAllBillingData;
-exports.persistTotals = persistTotals;
+exports.updateWithCMSummary = updateWithCMSummary;
