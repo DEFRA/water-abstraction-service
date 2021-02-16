@@ -11,4 +11,5 @@ const relatedModels = [
 const findOneByExternalId = externalId =>
   helpers.findOne(ReturnRequirement, 'externalId', externalId, relatedModels);
 
+exports.create = data => helpers.create(ReturnRequirement, data);
 exports.findOneByExternalId = findOneByExternalId;

@@ -1,6 +1,7 @@
 'use strict';
 
 const { PurposeUse } = require('../bookshelf');
+const helpers = require('./lib/helpers');
 
 /**
  * Gets a list of purpose uses by the supplied legacy NALD use codes
@@ -14,4 +15,6 @@ const findByCodes = async codes => {
   return collection ? collection.toJSON() : null;
 };
 
+exports.findOneByLegacyId = id => helpers.findOne(PurposeUse, 'legacyId', id);
+exports.create = data => helpers.create(PurposeUse, data);
 exports.findByCodes = findByCodes;
