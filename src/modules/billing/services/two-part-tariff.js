@@ -4,6 +4,7 @@ const Batch = require('../../../lib/models/batch');
 const FinancialYear = require('../../../lib/models/financial-year');
 
 const validators = require('../../../lib/models/validators');
+const { logger } = require('../../../logger');
 
 const chargeVersionYearService = require('./charge-version-year');
 const billingVolumesService = require('./billing-volumes-service');
@@ -23,6 +24,8 @@ const decorateBillingVolumesWithBatchId = (billingVolumes, billingBatchId) => {
   });
 };
 
+const isApprovedBillingVolume = billingVolume => billingVolume.isApproved;
+
 /**
  * Processes the supplied charge version year and season flag and persists
  * the billing volumes to the DB via the billing volumes service
@@ -34,6 +37,19 @@ const decorateBillingVolumesWithBatchId = (billingVolumes, billingBatchId) => {
  */
 const processChargeVersionYear = async chargeVersionYear => {
   const { chargeVersionId, financialYearEnding, isSummer, billingBatchId } = chargeVersionYear;
+
+  // Check if approved billing volumes already exist for this charge version /
+  // financial year / season combination.  If so skip
+  const existingBillingVolumes = await billingVolumesService.getBillingVolumesByChargeVersion(
+    chargeVersionId,
+    new FinancialYear(financialYearEnding),
+    isSummer
+  );
+
+  if (existingBillingVolumes.length > 0 && existingBillingVolumes.every(isApprovedBillingVolume)) {
+    return logger.info(`Skipping matching for ${chargeVersionId}, ${financialYearEnding}, ${isSummer} - approved billing volumes exist`);
+  }
+
   const billingVolumes = await volumeMatchingService.matchVolumes(chargeVersionId, new FinancialYear(financialYearEnding), isSummer);
   decorateBillingVolumesWithBatchId(billingVolumes, billingBatchId);
   const tasks = billingVolumes.map(billingVolumesService.persist);
