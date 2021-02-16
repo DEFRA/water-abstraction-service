@@ -3,6 +3,10 @@
     {
       "service": "idm",
       "file": "internal-users.yaml"
+    },
+    {
+      "service": "idm",
+      "file": "external-users.yaml"
     }
   ]
 }
