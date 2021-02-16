@@ -1,0 +1,8 @@
+{
+  "users": [
+    {
+      "service": "idm",
+      "file": "internal-users.yaml"
+    }
+  ]
+}

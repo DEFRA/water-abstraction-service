@@ -1,0 +1,21 @@
+- ref: $superUser
+  model: User
+  fields:
+    user_name: 'acceptance-test.internal.super2@defra.gov.uk'
+    password: 'P@55word'
+    reset_required: 0
+    application: 'water_admin'
+    bad_logins: 0
+    enabled: true
+    user_data: >
+      {
+        "source": "acceptance-test-setup"
+      }
+
+- ref: $superUserRoles
+  model: Roles
+  fields:
+    userId: $superUser.user_id
+    application: 'water_admin'
+    roles: []
+    groups: ['super']
