@@ -178,7 +178,7 @@ module.exports = {
   cognito: {
     username: process.env.COGNITO_USERNAME,
     password: process.env.COGNITO_PASSWORD,
-    isLocalDocker: process.env.CHARGE_MODULE_ORIGIN.includes('localhost') && !isTest
+    isLocalDocker: (process.env.CHARGE_MODULE_ORIGIN || '').includes('localhost') && !isTest
   },
 
   proxy: process.env.PROXY,
