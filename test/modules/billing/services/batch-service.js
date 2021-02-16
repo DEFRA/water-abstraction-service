@@ -18,7 +18,6 @@ const Invoice = require('../../../../src/lib/models/invoice');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../src/lib/models/licence');
-const Totals = require('../../../../src/lib/models/totals');
 const Transaction = require('../../../../src/lib/models/transaction');
 const { BatchStatusError } = require('../../../../src/modules/billing/lib/errors');
 const { NotFoundError } = require('../../../../src/lib/errors');
