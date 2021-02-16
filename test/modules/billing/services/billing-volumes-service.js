@@ -32,11 +32,45 @@ experiment('modules/billing/services/billing-volumes-service', () => {
     sandbox.stub(billingVolumesRepo, 'create');
     sandbox.stub(billingVolumesRepo, 'update');
     sandbox.stub(billingVolumesRepo, 'updateByBatchId');
+    sandbox.stub(billingVolumesRepo, 'findApprovedByChargeElementIdsAndFinancialYear').resolves([]);
     sandbox.stub(billingVolumesRepo, 'findByIds').resolves([]);
     sandbox.stub(billingVolumesRepo, 'findByBatchIdAndLicenceId').resolves();
+    sandbox.stub(billingVolumesRepo, 'findByChargeVersionFinancialYearAndSeason').resolves([]);
   });
 
   afterEach(async () => sandbox.restore());
+
+  experiment('.getVolumesForChargeElements', () => {
+    const tempId = uuid();
+    beforeEach(async () => {
+      await billingVolumesService.getVolumesForChargeElements([{ id: tempId }], { endYear: '2020' });
+    });
+
+    test('calls volumes repo findApprovedByChargeElementIdsAndFinancialYear', () => {
+      expect(billingVolumesRepo.findApprovedByChargeElementIdsAndFinancialYear.called).to.be.true();
+    });
+
+    test('calls with the right params', () => {
+      const params = billingVolumesRepo.findApprovedByChargeElementIdsAndFinancialYear.lastCall.args;
+      expect(params).to.equal([[tempId], '2020']);
+    });
+  });
+
+  experiment('.getBillingVolumesByChargeVersion', () => {
+    const tempId = uuid();
+    beforeEach(async () => {
+      await billingVolumesService.getBillingVolumesByChargeVersion(tempId, { endYear: '2020' }, false);
+    });
+
+    test('calls billing volumes repo findByChargeVersionFinancialYearAndSeason', () => {
+      expect(billingVolumesRepo.findByChargeVersionFinancialYearAndSeason.called).to.be.true();
+    });
+
+    test('uses the right params', () => {
+      const params = billingVolumesRepo.findByChargeVersionFinancialYearAndSeason.lastCall.args;
+      expect(params).to.equal([tempId, '2020', false]);
+    });
+  });
 
   experiment('.updateBillingVolume', () => {
     let batch, billingVolumeData;

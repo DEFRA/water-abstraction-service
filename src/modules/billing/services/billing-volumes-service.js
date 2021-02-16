@@ -124,6 +124,24 @@ const getBillingVolumeById = async (billingVolumeId) => {
   return mappers.billingVolume.dbToModel(data);
 };
 
+/**
+ * Finds existing approved billing volumes for the supplied charge version in the
+ * financial year and season
+ *
+ * @param {String} chargeVersionId
+ * @param {FinancialYear} financialYear
+ * @param {Boolean} isSummer
+ * @return {Promise<Array>} - array of BillingVolume service models
+ */
+const getBillingVolumesByChargeVersion = async (chargeVersionId, financialYear, isSummer) => {
+  const data = await billingVolumesRepo.findByChargeVersionFinancialYearAndSeason(
+    chargeVersionId,
+    financialYear.endYear,
+    isSummer
+  );
+  return data.map(mappers.billingVolume.dbToModel);
+};
+
 exports.updateBillingVolume = updateBillingVolume;
 exports.getUnapprovedVolumesForBatchCount = getUnapprovedVolumesForBatchCount;
 exports.getVolumesForBatch = getVolumesForBatch;
@@ -132,3 +150,4 @@ exports.persist = persist;
 exports.getLicenceBillingVolumes = getLicenceBillingVolumes;
 exports.getBillingVolumeById = getBillingVolumeById;
 exports.getVolumesForChargeElements = getVolumesForChargeElements;
+exports.getBillingVolumesByChargeVersion = getBillingVolumesByChargeVersion;
