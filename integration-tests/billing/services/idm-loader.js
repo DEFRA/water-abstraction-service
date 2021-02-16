@@ -14,9 +14,9 @@ const dir = path.resolve(__dirname, '../fixtures');
 
 const create = () => {
 // Create IDM fixture loader
-  const idmAdapter = new AsyncAdapter();
+  const asyncAdapter = new AsyncAdapter();
 
-  idmAdapter
+  asyncAdapter
     .add('User', async (body) => {
       const newUser = await serviceRequest.post(createIdmUrl('user'), { body });
       return newUser.data;
@@ -26,7 +26,7 @@ const create = () => {
       return newRoles.data;
     });
 
-  return new FixtureLoader(idmAdapter, dir);
+  return new FixtureLoader(asyncAdapter, dir);
 };
 
 module.exports = create;
