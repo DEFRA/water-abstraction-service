@@ -18,9 +18,7 @@ const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
 
 const mappers = require('../../../../src/modules/billing/mappers');
 const repos = require('../../../../src/lib/connectors/repos');
-const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
 const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts');
-const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 
@@ -46,105 +44,7 @@ const createBatch = () => {
   });
 };
 
-const createChargeModuleData = () => ({
-  billRun: {
-    customers: [
-      {
-        // Customer 1
-        customerReference: IDS.accountNumbers[0],
-        summaryByFinancialYear: [
-          // Year ending 2019
-          {
-            financialYear: 2018,
-            creditLineCount: 0,
-            creditLineValue: 0,
-            debitLineCount: 2,
-            debitLineValue: 12345,
-            netTotal: 12345,
-            deminimis: false,
-            transactions: [{
-              id: IDS.transactions[0],
-              licenceNumber: '01/123/ABC',
-              chargeValue: 2345,
-              deminimis: false,
-              minimumChargeAdjustment: false
-            }, {
-              id: IDS.transactions[1],
-              licenceNumber: '01/123/ABC',
-              chargeValue: 10000,
-              deminimis: false,
-              minimumChargeAdjustment: false
-            }]
-          },
-          // Year ending 2020
-          {
-            financialYear: 2019,
-            creditLineCount: 1,
-            creditLineValue: -200,
-            debitLineCount: 1,
-            debitLineValue: 100,
-            netTotal: -100,
-            deminimis: false,
-            transactions: [{
-              id: IDS.transactions[4],
-              licenceNumber: '01/123/ABC',
-              chargeValue: 100,
-              deminimis: false,
-              minimumChargeAdjustment: false
-            }, {
-              id: IDS.transactions[5],
-              licenceNumber: '01/123/ABC',
-              chargeValue: -200,
-              deminimis: false,
-              minimumChargeAdjustment: false
-            }]
-          }
-        ]
-      }, {
-        // Customer 2
-        customerReference: IDS.accountNumbers[1],
-        summaryByFinancialYear: [
-          // Year ending 2019
-          {
-            financialYear: 2018,
-            creditLineCount: 0,
-            creditLineValue: 0,
-            debitLineCount: 2,
-            debitLineValue: 523,
-            netTotal: 523,
-            deminimis: false,
-            transactions: [{
-              id: IDS.transactions[2],
-              licenceNumber: '01/123/ABC',
-              chargeValue: 400,
-              deminimis: false,
-              minimumChargeAdjustment: false
-            }, {
-              id: IDS.transactions[3],
-              licenceNumber: '01/123/ABC',
-              chargeValue: 123,
-              deminimis: false,
-              minimumChargeAdjustment: false
-            }]
-          }
-        ]
-      }
-    ],
-    summary: {
-      creditNoteCount: 0,
-      creditNoteValue: 0,
-      invoiceCount: 1,
-      invoiceValue: 2003,
-      creditLineCount: 0,
-      creditLineValue: 0,
-      debitLineCount: 2,
-      debitLineValue: 2003,
-      netTotal: 2003
-    }
-  }
-});
-
-const createTransaction = externalId => ({
+const createTransaction = (externalId, netAmount = 2345) => ({
   billingTransactionId: uuid(),
   volume: 10.6,
   chargeElement: {
@@ -156,7 +56,8 @@ const createTransaction = externalId => ({
   },
   billingVolume: [],
   externalId,
-  isDeMinimis: false
+  isDeMinimis: false,
+  netAmount
 });
 
 const createLicence = licenceRef => ({
@@ -189,13 +90,16 @@ const createBatchData = () => {
         invoiceAccountId: IDS.invoiceAccounts[0],
         invoiceAccountNumber: IDS.accountNumbers[0],
         financialYearEnding: 2019,
+        netAmount: 12345,
+        creditNoteValue: 0,
+        invoiceValue: 12345,
         billingInvoiceLicences: [{
           billingInvoiceId: IDS.invoices[0],
           billingInvoiceLicenceId: uuid(),
           licence: createLicence('01/123'),
           billingTransactions: [
-            createTransaction(IDS.transactions[0]),
-            createTransaction(IDS.transactions[1])
+            createTransaction(IDS.transactions[0], 2345),
+            createTransaction(IDS.transactions[1], 10000)
           ]
         }]
       },
@@ -206,13 +110,16 @@ const createBatchData = () => {
         invoiceAccountId: IDS.invoiceAccounts[1],
         invoiceAccountNumber: IDS.accountNumbers[1],
         financialYearEnding: 2019,
+        invoiceValue: 523,
+        creditNoteValue: 0,
+        netAmount: 523,
         billingInvoiceLicences: [{
           billingInvoiceId: IDS.invoices[1],
           billingInvoiceLicenceId: uuid(),
           licence: createLicence('02/456'),
           billingTransactions: [
-            createTransaction(IDS.transactions[2]),
-            createTransaction(IDS.transactions[3])
+            createTransaction(IDS.transactions[2], 400),
+            createTransaction(IDS.transactions[3], 123)
           ]
         }]
       },
@@ -223,13 +130,16 @@ const createBatchData = () => {
         invoiceAccountId: IDS.invoiceAccounts[0],
         invoiceAccountNumber: IDS.accountNumbers[0],
         financialYearEnding: 2020,
+        invoiceValue: 100,
+        creditNoteValue: -200,
+        netAmount: -100,
         billingInvoiceLicences: [{
           billingInvoiceId: IDS.invoices[2],
           billingInvoiceLicenceId: uuid(),
           licence: createLicence('01/123'),
           billingTransactions: [
-            createTransaction(IDS.transactions[4]),
-            createTransaction(IDS.transactions[5])
+            createTransaction(IDS.transactions[4], 100),
+            createTransaction(IDS.transactions[5], -200)
           ]
         }]
       }
@@ -305,21 +215,14 @@ const createCrmData = () => ([
 ]);
 
 experiment('modules/billing/services/invoiceService', () => {
-  let batch, chargeModuleData, crmData;
+  let batch, crmData;
 
   beforeEach(async () => {
     batch = createBatch();
-    chargeModuleData = createChargeModuleData();
     crmData = createCrmData();
 
     sandbox.stub(repos.billingBatches, 'findOneWithInvoices').resolves(createBatchDataWithoutTransactions());
     sandbox.stub(repos.billingBatches, 'findOneWithInvoicesWithTransactions').resolves(createBatchData());
-
-    sandbox.stub(chargeModuleBillRunConnector, 'get').resolves(chargeModuleData);
-    sandbox.stub(chargeModuleBillRunConnector, 'getCustomer').resolves(chargeModuleData);
-
-    sandbox.stub(batchService, 'getAllCmTransactionsForBatch').resolves();
-    sandbox.stub(batchService, 'getCmTransactionsForCustomer').resolves();
 
     sandbox.stub(repos.billingInvoices, 'findOne').resolves();
     sandbox.stub(repos.billingInvoices, 'upsert').resolves();
@@ -338,22 +241,15 @@ experiment('modules/billing/services/invoiceService', () => {
     let invoices;
 
     beforeEach(async () => {
-      invoices = await invoiceService.getInvoicesForBatch(batch);
+      invoices = await invoiceService.getInvoicesForBatch(batch, {
+        includeInvoiceAccounts: true
+      });
     });
 
     test('gets batch with correct ID', async () => {
       expect(
         repos.billingBatches.findOneWithInvoices.calledWith(IDS.batch)
       ).to.be.true();
-    });
-
-    test('gets batch summary data from charge module with correct external ID', async () => {
-      const [externalId] = chargeModuleBillRunConnector.get.lastCall.args;
-      expect(externalId).to.equal(IDS.batchExternalId);
-    });
-
-    test('gets the CM transactions', async () => {
-      expect(batchService.getAllCmTransactionsForBatch.calledWith(batch)).to.be.true();
     });
 
     test('there is an invoice for each customer and financial year combination', async () => {
@@ -380,10 +276,8 @@ experiment('modules/billing/services/invoiceService', () => {
       test('has a correct financial summary', async () => {
         const { totals } = invoice;
 
-        expect(totals.creditLineCount).to.equal(0);
-        expect(totals.creditLineValue).to.equal(0);
-        expect(totals.debitLineCount).to.equal(2);
-        expect(totals.debitLineValue).to.equal(12345);
+        expect(totals.creditNoteValue).to.equal(0);
+        expect(totals.invoiceValue).to.equal(12345);
         expect(totals.netTotal).to.equal(12345);
       });
     });
@@ -408,10 +302,8 @@ experiment('modules/billing/services/invoiceService', () => {
       test('has a correct financial summary', async () => {
         const { totals } = invoice;
 
-        expect(totals.creditLineCount).to.equal(1);
-        expect(totals.creditLineValue).to.equal(-200);
-        expect(totals.debitLineCount).to.equal(1);
-        expect(totals.debitLineValue).to.equal(100);
+        expect(totals.creditNoteValue).to.equal(-200);
+        expect(totals.invoiceValue).to.equal(100);
         expect(totals.netTotal).to.equal(-100);
       });
     });
@@ -436,10 +328,8 @@ experiment('modules/billing/services/invoiceService', () => {
       test('has a correct financial summary', async () => {
         const { totals } = invoice;
 
-        expect(totals.creditLineCount).to.equal(0);
-        expect(totals.creditLineValue).to.equal(0);
-        expect(totals.debitLineCount).to.equal(2);
-        expect(totals.debitLineValue).to.equal(523);
+        expect(totals.creditNoteValue).to.equal(0);
+        expect(totals.invoiceValue).to.equal(523);
         expect(totals.netTotal).to.equal(523);
       });
     });
@@ -449,18 +339,16 @@ experiment('modules/billing/services/invoiceService', () => {
     let invoices;
 
     beforeEach(async () => {
-      invoices = await invoiceService.getInvoicesTransactionsForBatch(batch);
+      invoices = await invoiceService.getInvoicesTransactionsForBatch(batch, {
+        includeInvoiceAccounts: true,
+        includeTransactions: true
+      });
     });
 
     test('gets batch with correct ID', async () => {
       expect(
         repos.billingBatches.findOneWithInvoicesWithTransactions.calledWith(IDS.batch)
       ).to.be.true();
-    });
-
-    test('gets batch summary data from charge module with correct external ID', async () => {
-      const [externalId] = chargeModuleBillRunConnector.get.lastCall.args;
-      expect(externalId).to.equal(IDS.batchExternalId);
     });
 
     test('there is an invoice for each customer and financial year combination', async () => {
@@ -501,10 +389,8 @@ experiment('modules/billing/services/invoiceService', () => {
       test(' has a correct financial summary', async () => {
         const { totals } = invoice;
 
-        expect(totals.creditLineCount).to.equal(0);
-        expect(totals.creditLineValue).to.equal(0);
-        expect(totals.debitLineCount).to.equal(2);
-        expect(totals.debitLineValue).to.equal(12345);
+        expect(totals.creditNoteValue).to.equal(0);
+        expect(totals.invoiceValue).to.equal(12345);
         expect(totals.netTotal).to.equal(12345);
       });
     });
@@ -543,10 +429,8 @@ experiment('modules/billing/services/invoiceService', () => {
       test('has a correct financial summary', async () => {
         const { totals } = invoice;
 
-        expect(totals.creditLineCount).to.equal(1);
-        expect(totals.creditLineValue).to.equal(-200);
-        expect(totals.debitLineCount).to.equal(1);
-        expect(totals.debitLineValue).to.equal(100);
+        expect(totals.creditNoteValue).to.equal(-200);
+        expect(totals.invoiceValue).to.equal(100);
         expect(totals.netTotal).to.equal(-100);
       });
     });
@@ -585,10 +469,8 @@ experiment('modules/billing/services/invoiceService', () => {
       test('has a correct financial summary', async () => {
         const { totals } = invoice;
 
-        expect(totals.creditLineCount).to.equal(0);
-        expect(totals.creditLineValue).to.equal(0);
-        expect(totals.debitLineCount).to.equal(2);
-        expect(totals.debitLineValue).to.equal(523);
+        expect(totals.creditNoteValue).to.equal(0);
+        expect(totals.invoiceValue).to.equal(523);
         expect(totals.netTotal).to.equal(523);
       });
     });
@@ -638,10 +520,6 @@ experiment('modules/billing/services/invoiceService', () => {
         expect(repos.billingInvoices.findOne.calledWith(IDS.invoices[0])).to.be.true();
       });
 
-      test('the CM transactions are fetched', async () => {
-        expect(batchService.getCmTransactionsForCustomer.calledWith(batch, billingInvoice.invoiceAccountNumber)).to.be.true();
-      });
-
       experiment('the 2019 invoice for customer 1', () => {
         test('is an instance of Invoice', async () => {
           expect(invoice instanceof Invoice).to.be.true();
@@ -670,10 +548,8 @@ experiment('modules/billing/services/invoiceService', () => {
         test(' has a correct financial summary', async () => {
           const { totals } = invoice;
 
-          expect(totals.creditLineCount).to.equal(0);
-          expect(totals.creditLineValue).to.equal(0);
-          expect(totals.debitLineCount).to.equal(2);
-          expect(totals.debitLineValue).to.equal(12345);
+          expect(totals.creditNoteValue).to.equal(0);
+          expect(totals.invoiceValue).to.equal(12345);
           expect(totals.netTotal).to.equal(12345);
         });
       });

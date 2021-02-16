@@ -10,6 +10,7 @@ const isLocal = process.env.NODE_ENV === 'local';
 const isTlsConnection = (process.env.REDIS_HOST || '').includes('aws');
 const isRedisLazy = !!process.env.LAZY_REDIS;
 const isPermitsTestDatabase = process.env.DATABASE_URL.includes('permits-test');
+const isTest = process.env.NODE_ENV === 'test';
 
 module.exports = {
 
@@ -166,7 +167,7 @@ module.exports = {
     permits: process.env.PERMIT_URI || 'http://127.0.0.1:8004/API/1.0/',
     returns: process.env.RETURNS_URI || 'http://127.0.0.1:8006/returns/1.0',
     import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0',
-    chargeModule: process.env.CHARGE_MODULE_ORIGIN || 'https://charging.defra.com',
+    chargeModule: process.env.CHARGE_MODULE_ORIGIN,
     cognito: process.env.COGNITO_HOST
   },
 
@@ -176,7 +177,8 @@ module.exports = {
 
   cognito: {
     username: process.env.COGNITO_USERNAME,
-    password: process.env.COGNITO_PASSWORD
+    password: process.env.COGNITO_PASSWORD,
+    isLocalDocker: process.env.CHARGE_MODULE_ORIGIN.includes('localhost') && !isTest
   },
 
   proxy: process.env.PROXY,

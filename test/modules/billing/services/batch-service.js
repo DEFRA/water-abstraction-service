@@ -728,158 +728,49 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.decorateBatchWithTotals', () => {
-    let batch;
-
-    const summary = {
-      creditNoteCount: 0,
-      creditNoteValue: 0,
-      invoiceCount: 3,
-      invoiceValue: 15022872,
-      creditLineCount: 0,
-      creditLineValue: 0,
-      debitLineCount: 15,
-      debitLineValue: 15022872,
-      netTotal: 15022872
+  experiment('.updateWithCMSummary', () => {
+    const invoiceCount = 2;
+    const creditNoteCount = 3;
+    const netTotal = 1234;
+    const cmResponse = {
+      billRun: {
+        approvedForBilling: false,
+        summary: {
+          invoiceCount,
+          creditNoteCount,
+          netTotal
+        }
+      }
     };
 
-    experiment('when the batch is in ready/sent status', () => {
+    experiment('when the CM batch is not approved for billing', async () => {
       beforeEach(async () => {
-        chargeModuleBillRunConnector.get.resolves({
-          billRun: {
-            summary
-          }
-        });
-        batch = new Batch(uuid());
-        batch.fromHash({
-          externalId: uuid(),
-          status: Batch.BATCH_STATUS.ready
-        });
-        await batchService.decorateBatchWithTotals(batch);
+        await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
 
-      test('calls charge module batch API with correct params', async () => {
-        const [externalId] = chargeModuleBillRunConnector.get.lastCall.args;
-        expect(externalId).to.equal(batch.externalId);
-      });
-
-      test('adds a Totals instance to the batch', async () => {
-        expect(batch.totals instanceof Totals).to.be.true();
-      });
-
-      test('copies totals correctly', async () => {
-        expect(batch.totals.toJSON()).to.equal(summary);
-      });
-    });
-
-    const statuses = [
-      Batch.BATCH_STATUS.processing,
-      Batch.BATCH_STATUS.review,
-      Batch.BATCH_STATUS.error,
-      Batch.BATCH_STATUS.empty
-    ];
-
-    for (const status of statuses) {
-      experiment(`when the batch is in ${status} status`, () => {
-        beforeEach(async () => {
-          batch.status = status;
-          await batchService.decorateBatchWithTotals(batch);
-        });
-
-        test('the charge module API is not called', async () => {
-          expect(chargeModuleBillRunConnector.get.called).to.be.false();
-        });
-      });
-    }
-  });
-
-  experiment('.refreshTotals', () => {
-    const batchId = uuid();
-    const externalId = uuid();
-
-    experiment('when the batch is found', () => {
-      beforeEach(async () => {
-        newRepos.billingBatches.findOneWithInvoicesWithTransactions.resolves({
-          billingBatchId: batchId,
-          externalId,
+      test('the batch is updated correctly with "ready" status', async () => {
+        expect(newRepos.billingBatches.update.calledWith(BATCH_ID, {
           status: Batch.BATCH_STATUS.ready,
-          batchType: Batch.BATCH_TYPE.supplementary
-        });
-      });
-
-      experiment('when the charge module is not ready', () => {
-        beforeEach(async () => {
-          chargeModuleBillRunConnector.get.resolves({
-            billRun: {
-              status: 'generating_summary'
-            }
-          });
-          result = await batchService.refreshTotals(batchId);
-        });
-
-        test('the result is false', async () => {
-          expect(result).to.be.false();
-        });
-      });
-
-      experiment('when the charge module is ready', () => {
-        beforeEach(async () => {
-          chargeModuleBillRunConnector.get.resolves({
-            billRun: {
-              summary: {
-                invoiceCount: 3,
-                creditNoteCount: 5,
-                netTotal: 343553,
-                externalId: 335
-              }
-            }
-          });
-          result = await batchService.refreshTotals(batchId);
-        });
-
-        test('fetches the batch and associated invoices from DB', async () => {
-          expect(newRepos.billingBatches.findOneWithInvoicesWithTransactions.calledWith(
-            batchId
-          )).to.be.true();
-        });
-
-        test('gets the bill run summary from the charge module', async () => {
-          expect(
-            chargeModuleBillRunConnector.get.calledWith(externalId)
-          ).to.be.true();
-        });
-
-        test('updates the billing batch with the totals and sets status to "ready"', async () => {
-          const [id, updates] = newRepos.billingBatches.update.lastCall.args;
-          expect(id).to.equal(batchId);
-          expect(updates.invoiceCount).to.equal(3);
-          expect(updates.creditNoteCount).to.equal(5);
-          expect(updates.netTotal).to.equal(343553);
-          expect(updates.status).to.equal(Batch.BATCH_STATUS.ready);
-        });
-
-        test('persists the transactions de-minimis status flag', async () => {
-          const [batch] = transactionsService.persistDeMinimis.lastCall.args;
-          expect(batch instanceof Batch).to.be.true();
-          expect(batch.id).to.equal(batchId);
-        });
-
-        test('resolves with true', async () => {
-          expect(result).to.be.true();
-        });
+          invoiceCount,
+          creditNoteCount,
+          netTotal
+        })).to.be.true();
       });
     });
 
-    experiment('when the batch is not found', () => {
+    experiment('when the CM batch is approved for billing', async () => {
       beforeEach(async () => {
-        newRepos.billingBatches.findOneWithInvoicesWithTransactions.resolves(null);
+        cmResponse.billRun.approvedForBilling = true;
+        await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
 
-      test('a not found error is thrown', async () => {
-        const func = () => batchService.refreshTotals(batchId);
-        const err = await expect(func()).to.reject();
-        expect(err).to.be.an.instanceOf(NotFoundError);
-        expect(err.message).to.equal(`Batch ${batchId} not found`);
+      test('the batch is updated correctly with "sent" status', async () => {
+        expect(newRepos.billingBatches.update.calledWith(BATCH_ID, {
+          status: Batch.BATCH_STATUS.sent,
+          invoiceCount,
+          creditNoteCount,
+          netTotal
+        })).to.be.true();
       });
     });
   });
@@ -1433,105 +1324,6 @@ experiment('modules/billing/services/batch-service', () => {
 
       test('the billing / charge version data is deleted from water service tables', async () => {
         expect(newRepos.billingBatches.deleteAllBillingData.called).to.be.true();
-      });
-    });
-  });
-
-  experiment('.getAllCmTransactionsForBatch', () => {
-    const getTransaction = page => ({
-      transactions: [{
-        id: `test-cm-transaction-${page}`
-      }]
-    });
-    let result;
-    beforeEach(async () => {
-      chargeModuleBillRunConnector.getTransactions.onFirstCall().resolves({
-        pagination: { pageCount: 3 },
-        data: getTransaction(1)
-      });
-      chargeModuleBillRunConnector.getTransactions.onSecondCall().resolves({
-        data: getTransaction(2)
-      });
-      chargeModuleBillRunConnector.getTransactions.onThirdCall().resolves({
-        data: getTransaction(3)
-      });
-
-      result = await batchService.getAllCmTransactionsForBatch({ externalId: 'test-cm-batch-id' });
-    });
-
-    test('calls the CM transactions endpoint the expected number of times', () => {
-      expect(chargeModuleBillRunConnector.getTransactions.callCount).to.equal(3);
-    });
-
-    test('first call: calls the CM with the expected params', () => {
-      const [id, page] = chargeModuleBillRunConnector.getTransactions.firstCall.args;
-      expect(id).to.equal('test-cm-batch-id');
-      expect(page).to.be.undefined();
-    });
-
-    test('second call: calls the CM with the expected params', () => {
-      const [id, page] = chargeModuleBillRunConnector.getTransactions.secondCall.args;
-      expect(id).to.equal('test-cm-batch-id');
-      expect(page).to.equal(2);
-    });
-
-    test('third call: calls the CM with the expected params', () => {
-      const [id, page] = chargeModuleBillRunConnector.getTransactions.thirdCall.args;
-      expect(id).to.equal('test-cm-batch-id');
-      expect(page).to.equal(3);
-    });
-
-    test('returns an array containing all of the transactions', () => {
-      expect(result).to.have.length(3);
-    });
-  });
-
-  experiment('.getCmTransactionsForCustomer', () => {
-    let result;
-    beforeEach(async () => {
-      chargeModuleBillRunConnector.getCustomerTransactions.resolves({
-        pagination: { pageCount: 1 },
-        data: {
-          transactions: [{
-            id: 'test-cm-transaction'
-          }]
-        }
-      });
-
-      result = await batchService.getCmTransactionsForCustomer({ externalId: 'test-cm-batch-id' }, 'test-customer-reference');
-    });
-
-    test('calls the CM transactions endpoint the expected number of times', () => {
-      expect(chargeModuleBillRunConnector.getCustomerTransactions.callCount).to.equal(1);
-    });
-
-    test('calls the CM with the expected params', () => {
-      const [id, customerRef, page] = chargeModuleBillRunConnector.getCustomerTransactions.lastCall.args;
-      expect(id).to.equal('test-cm-batch-id');
-      expect(customerRef).to.equal('test-customer-reference');
-      expect(page).to.be.undefined();
-    });
-
-    test('returns the result of the call', () => {
-      expect(result).to.equal([{ id: 'test-cm-transaction' }]);
-    });
-
-    experiment('if an error occurs', () => {
-      let error;
-      beforeEach(() => {
-        error = new Error('very bad error');
-        chargeModuleBillRunConnector.getCustomerTransactions.rejects(error);
-      });
-
-      test('the error is logged and rethrown', async () => {
-        try {
-          await batchService.getCmTransactionsForCustomer({ externalId: 'test-cm-batch-id' }, 'test-customer-reference');
-        } catch (err) {
-          expect(logger.error.calledWith(
-            'Unable to retrieve transactions for CM batch test-cm-batch-id'
-          )).to.be.true();
-          expect(err).to.equal(error);
-        }
       });
     });
   });

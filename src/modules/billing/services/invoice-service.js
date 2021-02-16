@@ -166,7 +166,9 @@ const getInvoicesForBatch = async (batch, options = {}) => {
   ], context);
 };
 
-const getInvoicesTransactionsForBatch = partialRight(getInvoicesForBatch, true);
+const getInvoicesTransactionsForBatch = partialRight(getInvoicesForBatch, {
+  includeTransactions: true
+});
 
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
