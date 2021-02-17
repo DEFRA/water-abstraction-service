@@ -1,0 +1,5 @@
+- ref: $dailylicence
+  model: Licence
+  fields:
+    licenceRef: 'AT/CURR/DAILY/01'
+    startDate: '2020-01-01'

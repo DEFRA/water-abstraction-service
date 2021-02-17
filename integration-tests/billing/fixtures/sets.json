@@ -15,6 +15,10 @@
       "file": "external-users.yaml"
     },
     {
+      "service": "permits",
+      "file": "test-permits.yaml"
+    },
+    {
       "service": "crm",
       "file": "crm.yaml"
     },
