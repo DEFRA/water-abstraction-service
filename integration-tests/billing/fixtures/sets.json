@@ -13,6 +13,14 @@
     {
       "service": "idm",
       "file": "external-users.yaml"
+    },
+    {
+      "service": "crm",
+      "file": "crm.yaml"
+    },
+    {
+      "service": "water",
+      "file": "test-licences.yaml"
     }
   ]
 }

@@ -68,6 +68,14 @@ class FixtureLoader {
   }
 
   /**
+   * Fetches all set refs
+   * @return {Promise<Object>} - refs
+   */
+  getRefs () {
+    return this._refs;
+  }
+
+  /**
    * Load fixtures from specified YAML file
    * @param {String} yamlFile
    * @return {Promise<Array>} created Bookshelf models

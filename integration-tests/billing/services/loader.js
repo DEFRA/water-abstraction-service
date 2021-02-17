@@ -9,6 +9,7 @@ const loaders = {
 };
 
 const load = async (service, file) => {
+  console.log(`Loading ${file} from ${service}`);
   await loaders[service].load(file);
 };
 
