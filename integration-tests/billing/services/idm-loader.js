@@ -12,7 +12,7 @@ const createIdmUrl = (...parts) => urlJoin(config.services.idm, ...parts);
 const path = require('path');
 const dir = path.resolve(__dirname, '../fixtures');
 
-const create = () => {
+const create = (sharedData) => {
 // Create IDM fixture loader
   const asyncAdapter = new AsyncAdapter();
 

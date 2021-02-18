@@ -2,7 +2,6 @@
 
 const FixtureLoader = require('./fixture-loader/FixtureLoader');
 const AsyncAdapter = require('./fixture-loader/adapters/AsyncAdapter');
-
 const { createScheduledNotification } = require('../../../src/lib/services/scheduled-notifications');
 const ScheduledNotification = require('../../../src/lib/models/scheduled-notification');
 const licencesConnector = require('../../../src/lib/connectors/repos/licences');
@@ -12,7 +11,7 @@ const regionsConnector = require('../../../src/lib/connectors/repos/regions');
 const path = require('path');
 const dir = path.resolve(__dirname, '../fixtures');
 
-const create = () => {
+const create = (sharedData) => {
   // Create Returns service fixture loader
   const asyncAdapter = new AsyncAdapter();
 

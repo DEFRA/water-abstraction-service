@@ -41,3 +41,49 @@
     application: 'water_admin'
     roles: []
     groups: ['billing_and_data']
+
+
+- ref: $eoDataUser
+  model: User
+  fields:
+    user_name: 'acceptance-test.internal.environment_officer@defra.gov.uk'
+    password: 'P@55word'
+    reset_required: 0
+    application: 'water_admin'
+    bad_logins: 0
+    enabled: true
+    user_data: >
+      {
+        "source": "acceptance-test-setup"
+      }
+
+- ref: $eoDataUserRoles
+  model: Roles
+  fields:
+    userId: $eoDataUser.user_id
+    application: 'water_admin'
+    roles: []
+    groups: ['environment_officer']
+
+
+- ref: $wirsDataUser
+  model: User
+  fields:
+    user_name: 'acceptance-test.internal.wirs@defra.gov.uk'
+    password: 'P@55word'
+    reset_required: 0
+    application: 'water_admin'
+    bad_logins: 0
+    enabled: true
+    user_data: >
+      {
+        "source": "acceptance-test-setup"
+      }
+
+- ref: $wirsDataUserRoles
+  model: Roles
+  fields:
+    userId: $wirsDataUser.user_id
+    application: 'water_admin'
+    roles: []
+    groups: ['wirs']

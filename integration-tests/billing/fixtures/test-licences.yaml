@@ -2,3 +2,18 @@
   model: Licence
   fields:
     licenceRef: 'AT/CURR/DAILY/01'
+
+- ref: $weeklyLicence
+  model: Licence
+  fields:
+    licenceRef: 'AT/CURR/WEEKLY/01'
+
+- ref: $monthlyLicence1
+  model: Licence
+  fields:
+    licenceRef: 'AT/CURR/MONTHLY/01'
+
+- ref: $monthlyLicence2
+  model: Licence
+  fields:
+    licenceRef: 'AT/CURR/MONTHLY/02'
