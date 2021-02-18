@@ -23,7 +23,6 @@ const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/
 const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
 
 const { NotFoundError } = require('../../../../src/lib/errors');
-const Totals = require('../../../../src/lib/models/totals');
 
 const IDS = {
   batch: uuid(),
@@ -274,11 +273,9 @@ experiment('modules/billing/services/invoiceService', () => {
       });
 
       test('has a correct financial summary', async () => {
-        const { totals } = invoice;
-
-        expect(totals.creditNoteValue).to.equal(0);
-        expect(totals.invoiceValue).to.equal(12345);
-        expect(totals.netTotal).to.equal(12345);
+        expect(invoice.creditNoteValue).to.equal(0);
+        expect(invoice.invoiceValue).to.equal(12345);
+        expect(invoice.netTotal).to.equal(12345);
       });
     });
 
@@ -300,11 +297,9 @@ experiment('modules/billing/services/invoiceService', () => {
       });
 
       test('has a correct financial summary', async () => {
-        const { totals } = invoice;
-
-        expect(totals.creditNoteValue).to.equal(-200);
-        expect(totals.invoiceValue).to.equal(100);
-        expect(totals.netTotal).to.equal(-100);
+        expect(invoice.creditNoteValue).to.equal(-200);
+        expect(invoice.invoiceValue).to.equal(100);
+        expect(invoice.netTotal).to.equal(-100);
       });
     });
 
@@ -326,11 +321,9 @@ experiment('modules/billing/services/invoiceService', () => {
       });
 
       test('has a correct financial summary', async () => {
-        const { totals } = invoice;
-
-        expect(totals.creditNoteValue).to.equal(0);
-        expect(totals.invoiceValue).to.equal(523);
-        expect(totals.netTotal).to.equal(523);
+        expect(invoice.creditNoteValue).to.equal(0);
+        expect(invoice.invoiceValue).to.equal(523);
+        expect(invoice.netTotal).to.equal(523);
       });
     });
   });
@@ -387,11 +380,9 @@ experiment('modules/billing/services/invoiceService', () => {
       });
 
       test(' has a correct financial summary', async () => {
-        const { totals } = invoice;
-
-        expect(totals.creditNoteValue).to.equal(0);
-        expect(totals.invoiceValue).to.equal(12345);
-        expect(totals.netTotal).to.equal(12345);
+        expect(invoice.creditNoteValue).to.equal(0);
+        expect(invoice.invoiceValue).to.equal(12345);
+        expect(invoice.netTotal).to.equal(12345);
       });
     });
 
@@ -427,11 +418,9 @@ experiment('modules/billing/services/invoiceService', () => {
       });
 
       test('has a correct financial summary', async () => {
-        const { totals } = invoice;
-
-        expect(totals.creditNoteValue).to.equal(-200);
-        expect(totals.invoiceValue).to.equal(100);
-        expect(totals.netTotal).to.equal(-100);
+        expect(invoice.creditNoteValue).to.equal(-200);
+        expect(invoice.invoiceValue).to.equal(100);
+        expect(invoice.netTotal).to.equal(-100);
       });
     });
 
@@ -467,11 +456,9 @@ experiment('modules/billing/services/invoiceService', () => {
       });
 
       test('has a correct financial summary', async () => {
-        const { totals } = invoice;
-
-        expect(totals.creditNoteValue).to.equal(0);
-        expect(totals.invoiceValue).to.equal(523);
-        expect(totals.netTotal).to.equal(523);
+        expect(invoice.creditNoteValue).to.equal(0);
+        expect(invoice.invoiceValue).to.equal(523);
+        expect(invoice.netTotal).to.equal(523);
       });
     });
   });
@@ -546,11 +533,9 @@ experiment('modules/billing/services/invoiceService', () => {
         });
 
         test(' has a correct financial summary', async () => {
-          const { totals } = invoice;
-
-          expect(totals.creditNoteValue).to.equal(0);
-          expect(totals.invoiceValue).to.equal(12345);
-          expect(totals.netTotal).to.equal(12345);
+          expect(invoice.creditNoteValue).to.equal(0);
+          expect(invoice.invoiceValue).to.equal(12345);
+          expect(invoice.netTotal).to.equal(12345);
         });
       });
     });
@@ -571,28 +556,6 @@ experiment('modules/billing/services/invoiceService', () => {
 
     test('calls .upsert() on the repo with the result of the mapping', async () => {
       expect(repos.billingInvoices.upsert.calledWith({ foo: 'bar' })).to.be.true();
-    });
-  });
-
-  experiment('.saveInvoiceNumbersAndTotals', () => {
-    const invoice = new Invoice(IDS.invoices[0]);
-    invoice.totals = new Totals();
-    invoice.totals.netTotal = 123456;
-    invoice.invoiceNumber = 'AAI1000000';
-
-    beforeEach(async () => {
-      await invoiceService.saveInvoiceNumbersAndTotals(invoice);
-    });
-
-    test('calls .update() on the repo with the invoice id and changes to be updated', async () => {
-      expect(repos.billingInvoices.update.calledWith(
-        invoice.id,
-        {
-          invoiceNumber: invoice.invoiceNumber,
-          netAmount: invoice.totals.netTotal,
-          isCredit: false
-        }
-      )).to.be.true();
     });
   });
 });

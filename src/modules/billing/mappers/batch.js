@@ -4,7 +4,6 @@ const Batch = require('../../../lib/models/batch');
 const FinancialYear = require('../../../lib/models/financial-year');
 const regionMapper = require('../../../lib/mappers/region');
 const transactionMapper = require('./transaction');
-const totalsMapper = require('./totals');
 const invoiceMapper = require('./invoice');
 
 const { createMapper } = require('../../../lib/object-mapper');
@@ -18,16 +17,19 @@ const dbToModelMapper = createMapper({ mapNull: false })
     'dateUpdated',
     'errorCode',
     'externalId',
-    'billRunNumber'
+    'billRunNumber',
+    'creditNoteCount',
+    'invoiceCount',
+    'netTotal',
+    'invoiceValue',
+    'creditNoteValue'
   )
   .map('billingBatchId').to('id')
   .map('batchType').to('type')
   .map('fromFinancialYearEnding').to('startYear', fromFinancialYearEnding => new FinancialYear(fromFinancialYearEnding))
   .map('toFinancialYearEnding').to('endYear', toFinancialYearEnding => new FinancialYear(toFinancialYearEnding))
   .map('region').to('region', regionMapper.dbToModel)
-  .map('billingInvoices').to('invoices', invoices => invoices.map(invoiceMapper.dbToModel))
-  .map(['creditNoteCount', 'invoiceCount', 'netTotal']).to('totals',
-    (creditNoteCount, invoiceCount, netTotal) => totalsMapper.dbToModel({ creditNoteCount, invoiceCount, netTotal }));
+  .map('billingInvoices').to('invoices', invoices => invoices.map(invoiceMapper.dbToModel));
 
 /**
  * Converts DB representation to a Batch service model

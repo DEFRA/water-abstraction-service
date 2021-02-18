@@ -20,16 +20,9 @@ const { NotFoundError } = require('../../../lib/errors');
  */
 const saveInvoiceToDB = async (batch, invoice) => {
   const data = mappers.invoice.modelToDb(batch, invoice);
+  console.log(invoice);
+  console.log(data);
   return repos.billingInvoices.upsert(data);
-};
-
-const saveInvoiceNumbersAndTotals = async invoice => {
-  const changes = {
-    invoiceNumber: invoice.invoiceNumber,
-    netAmount: invoice.totals.netTotal,
-    isCredit: invoice.totals.netTotal < 0
-  };
-  return repos.billingInvoices.update(invoice.id, changes);
 };
 
 /**
@@ -174,4 +167,3 @@ exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;
-exports.saveInvoiceNumbersAndTotals = saveInvoiceNumbersAndTotals;

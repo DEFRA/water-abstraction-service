@@ -7,7 +7,7 @@ const {
   assertIsNullableInstanceOf, assertIsBoolean,
   assertNullableString
 } = require('./validators');
-const Model = require('./model');
+
 const Address = require('./address');
 const InvoiceAccount = require('./invoice-account');
 const InvoiceLicence = require('./invoice-licence');
@@ -16,7 +16,7 @@ const Contact = require('./contact-v2');
 const FinancialYear = require('./financial-year');
 const Totals = require('./totals');
 
-class Invoice extends Model {
+class Invoice extends Totals {
   constructor (id) {
     super(id);
     this._invoiceLicences = [];
@@ -147,20 +147,6 @@ class Invoice extends Model {
     return uniq(flatMap(this.invoiceLicences, invoiceLicence => {
       return get(invoiceLicence, 'licence.id');
     }));
-  }
-
-  /**
-   * The charge module summary contains data on
-   * invoice/credit count, invoice/credit totals, net total
-   * @param {Totals} totals
-   */
-  set totals (totals) {
-    assertIsNullableInstanceOf(totals, Totals);
-    this._totals = totals;
-  }
-
-  get totals () {
-    return this._totals;
   }
 
   /**

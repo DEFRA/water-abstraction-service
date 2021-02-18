@@ -13,7 +13,6 @@ const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-mod
 const { logger } = require('../../../logger');
 
 // Mappers
-const totalsMapper = require('../mappers/totals');
 const transactionMapper = require('../mappers/transaction');
 
 // Services
@@ -42,7 +41,6 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, customerReference, fi
     }
     return result;
   } catch (error) {
-    console.error(error);
     logger.error(`Unable to retrieve transactions for CM invoice ${cmBillRunId} ${customerReference} ${financialYearEnding}`);
     throw error;
   }
@@ -144,9 +142,11 @@ const deleteTransactions = (cmTransactions, transactionMap) => {
 const updateInvoice = async (batch, invoice, cmInvoiceSummary, cmTransactions) => {
   // Populate invoice model with updated CM data
   invoice.fromHash({
-    totals: totalsMapper.chargeModuleBillRunToInvoiceModel(cmInvoiceSummary),
     isDeMinimis: cmInvoiceSummary.deminimis,
-    invoiceNumber: cmTransactions[0].transactionReference
+    invoiceNumber: cmTransactions[0].transactionReference,
+    netTotal: cmInvoiceSummary.netTotal,
+    invoiceValue: cmInvoiceSummary.debitLineValue,
+    creditNoteValue: cmInvoiceSummary.creditLineValue
   });
 
   // Persist

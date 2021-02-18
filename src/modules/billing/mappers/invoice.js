@@ -5,7 +5,6 @@ const { omit, isNull } = require('lodash');
 const Invoice = require('../../../lib/models/invoice');
 const InvoiceAccount = require('../../../lib/models/invoice-account');
 const FinancialYear = require('../../../lib/models/financial-year');
-const Totals = require('../../../lib/models/totals');
 
 const invoiceAccount = require('../../../lib/mappers/invoice-account');
 const invoiceLicence = require('./invoice-licence');
@@ -14,24 +13,22 @@ const batchMapper = require('./batch');
 const { createMapper } = require('../../../lib/object-mapper');
 const { createModel } = require('../../../lib/mappers/lib/helpers');
 
-const mapTotals = (netAmount, invoiceValue, creditNoteValue) => isNull(netAmount)
-  ? null
-  : new Totals().fromHash({ netTotal: netAmount, invoiceValue, creditNoteValue });
-
 const dbToModelMapper = createMapper()
   .copy(
     'dateCreated',
     'invoiceNumber',
     'isCredit',
-    'isDeMinimis'
+    'isDeMinimis',
+    'invoiceValue',
+    'creditNoteValue'
   )
+  .map('netAmount').to('netTotal')
   .map('billingInvoiceId').to('id')
   .map('invoiceAccountId').to('invoiceAccount', invoiceAccountId => new InvoiceAccount(invoiceAccountId))
   .map('invoiceAccountNumber').to('invoiceAccount.accountNumber')
   .map('billingInvoiceLicences').to('invoiceLicences', billingInvoiceLicences => billingInvoiceLicences.map(invoiceLicence.dbToModel))
   .map('billingBatch').to('billingBatch', batchMapper.dbToModel)
-  .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding))
-  .map(['netAmount', 'invoiceValue', 'creditNoteValue']).to('totals', mapTotals);
+  .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding));
 
 /**
  * Converts DB representation to a Invoice service model
@@ -51,8 +48,6 @@ const mapAddress = invoice =>
  * @return {Object}
  */
 const modelToDb = (batch, invoice) => {
-  const { totals } = invoice;
-
   return {
     invoiceAccountId: invoice.invoiceAccount.id,
     invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
@@ -60,11 +55,11 @@ const modelToDb = (batch, invoice) => {
     billingBatchId: batch.id,
     financialYearEnding: invoice.financialYear.endYear,
     invoiceNumber: invoice.invoiceNumber || null,
-    netAmount: totals ? totals.netTotal : null,
-    isCredit: totals ? totals.netTotal < 0 : null,
-    invoiceValue: totals ? totals.debitLineValue : null,
-    creditNoteValue: totals ? totals.creditLineValue : null,
-    isDeMinimis: invoice.isDeMinimis
+    isCredit: isNull(invoice.netTotal) ? null : invoice.netTotal < 0,
+    isDeMinimis: invoice.isDeMinimis,
+    netAmount: invoice.netTotal,
+    invoiceValue: invoice.invoiceValue,
+    creditNoteValue: invoice.creditNoteValue
   };
 };
 

@@ -287,9 +287,9 @@ class Transaction extends Model {
   /**
    * Sets the transactionKey values to a unique hash for this transaction
    *
-   * @param {String} invoiceAccount The invoice account for the transaction
-   * @param {Object} licence Licence information
-   * @param {Object} batch The batch this transaction appears in
+   * @param {InvoiceAccount} invoiceAccount The invoice account for the transaction
+   * @param {Licence} licence Licence information
+   * @param {Batch} batch The batch this transaction appears in
    */
   createTransactionKey (invoiceAccount, licence, batch) {
     const hash = this.getHashData(invoiceAccount, licence, batch);

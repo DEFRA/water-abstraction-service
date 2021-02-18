@@ -1,6 +1,6 @@
 'use strict';
 
-const { partialRight, startCase } = require('lodash');
+const { partialRight, startCase, pick } = require('lodash');
 const Boom = require('@hapi/boom');
 
 const newRepos = require('../../../lib/connectors/repos');
@@ -411,9 +411,7 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
 
   const changes = {
     status,
-    invoiceCount: summary.invoiceCount,
-    creditNoteCount: summary.creditNoteCount,
-    netTotal: summary.netTotal
+    ...pick(summary, 'invoiceCount', 'creditNoteCount', 'invoiceValue', 'creditNoteValue', 'netTotal')
   };
 
   const data = await newRepos.billingBatches.update(batchId, changes);
