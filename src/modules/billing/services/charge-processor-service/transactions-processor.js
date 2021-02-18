@@ -71,6 +71,9 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
  */
 const isCompensationChargesNeeded = chargeVersion => !chargeVersion.licence.isWaterUndertaker;
 
+const doesChargePeriodStartOnFirstApril = chargePeriodStartDate =>
+  chargePeriodStartDate.isSame(moment(`${chargePeriodStartDate.year()}-04-01`, 'YYYY-MM-DD'), 'day');
+
 /**
  * Predicate to check whether the minimum charge applies
  * @param {DateRange} chargePeriod of the charge element
@@ -79,9 +82,12 @@ const isCompensationChargesNeeded = chargeVersion => !chargeVersion.licence.isWa
  */
 const doesMinimumChargeApply = (chargePeriod, chargeVersion) => {
   const { dateRange, changeReason } = chargeVersion;
-  const chargeVersionStartDate = moment(dateRange.startDate);
-  const isSharedStartDate = moment(chargePeriod.startDate).isSame(chargeVersionStartDate, 'day');
-  return isSharedStartDate && get(changeReason, 'triggersMinimumCharge', false);
+  const chargePeriodStartDate = moment(chargePeriod.startDate);
+
+  const isSharedStartDate = chargePeriodStartDate.isSame(moment(dateRange.startDate), 'day');
+  const isFirstChargeOnNewLicence = isSharedStartDate && get(changeReason, 'triggersMinimumCharge', false);
+
+  return doesChargePeriodStartOnFirstApril(chargePeriodStartDate) || isFirstChargeOnNewLicence;
 };
 
 /**

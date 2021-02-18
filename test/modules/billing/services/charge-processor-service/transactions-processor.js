@@ -25,14 +25,16 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
       test('a standard charge transaction is created for the first element', async () => {
         expect(transactions[0].chargeElement.purposeUse.code).to.equal('300');
         expect(transactions[0].isCompensationCharge).to.equal(false);
+        expect(transactions[0].isMinimumCharge).to.equal(true);
         expect(transactions[0].agreements).to.equal([]);
         expect(transactions[0].isTwoPartTariffSupplementary).to.equal(false);
         expect(transactions[0].description).to.equal('Test Description');
       });
 
       test('a compensation charge transaction is created for the first element', async () => {
-        expect(transactions[0].chargeElement.purposeUse.code).to.equal('300');
+        expect(transactions[1].chargeElement.purposeUse.code).to.equal('300');
         expect(transactions[1].isCompensationCharge).to.equal(true);
+        expect(transactions[1].isMinimumCharge).to.equal(true);
         expect(transactions[1].agreements).to.equal([]);
         expect(transactions[1].isTwoPartTariffSupplementary).to.equal(false);
         expect(transactions[1].description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
@@ -41,6 +43,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
       test('a first-part two-part tariff charge is created for the second element', async () => {
         expect(transactions[2].chargeElement.purposeUse.code).to.equal('400');
         expect(transactions[2].isCompensationCharge).to.equal(false);
+        expect(transactions[2].isMinimumCharge).to.equal(true);
         expect(transactions[2].agreements[0].code).to.equal('S127');
         expect(transactions[2].isTwoPartTariffSupplementary).to.equal(false);
         expect(transactions[2].description).to.equal('First Part Spray Irrigation Direct Charge at Test Description');
@@ -49,6 +52,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
       test('a first-part two-part tariff compensation charge is created for the second element', async () => {
         expect(transactions[3].chargeElement.purposeUse.code).to.equal('400');
         expect(transactions[3].isCompensationCharge).to.equal(true);
+        expect(transactions[3].isMinimumCharge).to.equal(true);
         expect(transactions[3].agreements[0].code).to.equal('S127');
         expect(transactions[3].isTwoPartTariffSupplementary).to.equal(false);
         expect(transactions[3].description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
@@ -77,6 +81,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
       test('a second-part two-part tariff charge is created for the second element', async () => {
         expect(transactions[0].chargeElement.purposeUse.code).to.equal('400');
         expect(transactions[0].isCompensationCharge).to.equal(false);
+        expect(transactions[0].isMinimumCharge).to.be.undefined();
         expect(transactions[0].agreements[0].code).to.equal('S127');
         expect(transactions[0].isTwoPartTariffSupplementary).to.equal(true);
         expect(transactions[0].description).to.equal('Second Part Spray Irrigation Direct Charge at Test Description');
@@ -520,7 +525,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
       });
 
       test('is false when charge version start date is different from licence start date', async () => {
-        chargeVersion = data.createChargeVersion({ triggersMinimumCharge: true });
+        chargeVersion = data.createChargeVersion({ startDate: '2019-05-01', licenceStartDate: '2019-06-01', triggersMinimumCharge: true });
         chargeVersion.chargeElements = [data.createChargeElement()];
         chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
         const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
@@ -530,7 +535,17 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
       });
 
       test('is true when charge version start date is the same as licence start date', async () => {
-        chargeVersion = data.createChargeVersion({ startDate: '2019-04-01', triggersMinimumCharge: true });
+        chargeVersion = data.createChargeVersion({ startDate: '2019-06-01', triggersMinimumCharge: true });
+        chargeVersion.chargeElements = [data.createChargeElement()];
+        chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
+        const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
+        transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
+
+        expect(transactions[0].isNewLicence).to.equal(true);
+      });
+
+      test('is true when the charge period starts on 1 April', async () => {
+        chargeVersion = data.createChargeVersion({ triggersMinimumCharge: true });
         chargeVersion.chargeElements = [data.createChargeElement()];
         chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
         const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);

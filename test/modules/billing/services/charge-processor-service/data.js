@@ -40,7 +40,7 @@ const createChargeVersion = (overrides = {}) => {
   chargeVersion.invoiceAccount = new InvoiceAccount(uuid());
   chargeVersion.changeReason = new ChangeReason(uuid());
   chargeVersion.changeReason.triggersMinimumCharge = overrides.triggersMinimumCharge || false;
-  chargeVersion.licence = createLicence();
+  chargeVersion.licence = createLicence({ startDate: overrides.licenceStartDate });
   return chargeVersion.fromHash({
     dateRange: new DateRange(overrides.startDate || '2000-01-01', overrides.endDate || null),
     ...overrides
