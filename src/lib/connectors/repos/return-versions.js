@@ -1,6 +1,7 @@
 'use strict';
 
 const { ReturnVersion } = require('../bookshelf');
+const helpers = require('./lib/helpers');
 
 const relatedModels = [
   'returnRequirements',
@@ -23,4 +24,5 @@ const findByLicenceId = async licenceId => {
   return collection.toJSON();
 };
 
+exports.create = data => helpers.create(ReturnVersion, data);
 exports.findByLicenceId = findByLicenceId;
