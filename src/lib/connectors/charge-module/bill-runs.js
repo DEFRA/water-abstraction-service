@@ -80,8 +80,8 @@ const getInvoiceTransactions = (billRunId, customerReference, financialYearEndin
   const path = `v1/wrls/billruns/${billRunId}/transactions`;
   const query = {
     customerReference,
-    financialYear: financialYearEnding - 1,
     page,
+    financialYear: financialYearEnding - 1,
     perPage: 100
   };
   return request.get(path, query);

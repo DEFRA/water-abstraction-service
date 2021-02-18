@@ -8,6 +8,7 @@
  * if batch could not be loaded
  */
 const { get, difference } = require('lodash');
+const errors = require('../../../lib/errors');
 
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
 const { logger } = require('../../../logger');
@@ -196,8 +197,11 @@ const updateInvoices = async (batch, cmResponse) => {
 const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating_summary';
 
 const updateBatch = async batchId => {
-  // Fetch WRLS batch and invoices
+  // Fetch WRLS batch
   let batch = await batchService.getBatchById(batchId);
+  if (!batch) {
+    throw new errors.NotFoundError(`CM refresh failed, batch ${batchId} not found`);
+  }
 
   // Get CM bill run summary
   const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
