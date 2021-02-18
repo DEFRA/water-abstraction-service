@@ -17,6 +17,9 @@ const returns = require('../../../src/modules/acceptance-tests/lib/returns');
 const events = require('../../../src/modules/acceptance-tests/lib/events');
 const sessions = require('../../../src/modules/acceptance-tests/lib/sessions');
 const licences = require('../../../src/modules/acceptance-tests/lib/licences');
+const returnRequirements = require('../../../src/modules/acceptance-tests/lib/return-requirements');
+const returnRequirementPurposes = require('../../../src/modules/acceptance-tests/lib/return-requirements-purposes');
+const returnVersions = require('../../../src/modules/acceptance-tests/lib/return-versions');
 
 const controller = require('../../../src/modules/acceptance-tests/controller');
 const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
@@ -59,6 +62,9 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(documents, 'create').resolves({});
     sandbox.stub(licences, 'create').resolves({});
     sandbox.stub(returns, 'createDueReturn').resolves({});
+    sandbox.stub(returnVersions, 'create').resolves({});
+    sandbox.stub(returnRequirements, 'create').resolves({});
+    sandbox.stub(returnRequirementPurposes, 'create').resolves({});
 
     sandbox.stub(returns, 'delete').resolves();
     sandbox.stub(events, 'delete').resolves();
@@ -96,7 +102,6 @@ experiment('modules/acceptance-tests/controller', () => {
 
       test('the expected current licence response is created', async () => {
         const data = response.currentLicencesWithReturns;
-
         expect(data.company.entity_id).to.equal('test-company');
         expect(data.externalPrimaryUser.user.user_name).to.equal('acceptance-test.external@example.com');
         expect(data.externalPrimaryUser.entity.entity_nm).to.equal('acceptance-test.external@example.com');
@@ -109,6 +114,12 @@ experiment('modules/acceptance-tests/controller', () => {
         expect(data.returns.daily).to.exist();
         expect(data.returns.weekly).to.exist();
         expect(data.returns.monthly).to.exist();
+      });
+      test('the expected response includes current licences with no returns', async () => {
+        const data = response.currentLicenceNoReturns;
+        expect(data.monthlyDocument).to.exist();
+        expect(data.monthlyDocumentV2).to.exist();
+        expect(data.returns).to.not.exist();
       });
 
       test('there are no agents', async () => {
