@@ -37,7 +37,9 @@ const groupTransactionsByCustomerAndFinancialYear = cmTransactions => groupBy(cm
 const mergeTransactionData = (customerSummary, transactionsForFinYear) => {
   // minimum charge transactions don't have a year associated with them, so customer summary is undefined
   // they are still included in the customer summary for the financial year, so aren't lost
-  if (!customerSummary) { return; }
+  if (!customerSummary) {
+    return null;
+  }
   return customerSummary.transactions.forEach(summaryTransaction =>
     merge(summaryTransaction, find(transactionsForFinYear, { id: summaryTransaction.id }))
   );
