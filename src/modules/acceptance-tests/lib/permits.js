@@ -1,6 +1,8 @@
 const permitsConnector = require('../../../lib/connectors/permit');
 const moment = require('moment');
 
+const { ACCEPTANCE_TEST_SOURCE } = require('./constants');
+
 const formatMoment = date => date.format('DD/MM/YYYY');
 const formatMomentIso = date => date.toISOString();
 
@@ -305,7 +307,7 @@ const createPermitRow = (startDate, endDate, licenceRef, licenceData) => {
     licence_end_dt: formatMomentIso(endDate),
     licence_ref: licenceRef,
     licence_data_value: JSON.stringify(licenceData),
-    metadata: JSON.stringify({ source: 'ACCEPTANCE_TEST_SOURCE' })
+    metadata: JSON.stringify({ source: ACCEPTANCE_TEST_SOURCE })
   };
 };
 
