@@ -3,9 +3,6 @@
 /**
  * @module syncs the charge module invoices/licences/transactions
  * to the local WRLS DB
- *
- * @todo old code ran await newRepos.billingVolumes.markVolumesAsErrored(batchId);
- * if batch could not be loaded
  */
 const { get, difference } = require('lodash');
 const errors = require('../../../lib/errors');
