@@ -160,12 +160,30 @@ const secondCustomer = {
   }]
 };
 
+const createCMTransactions = (additionalTrans = []) => [{
+  id: '00000000-0000-0000-0000-000000002019',
+  customerReference: 'A12345678A',
+  periodStart: '01-APR-2018',
+  periodEnd: '31-MAR-2019',
+  transactionReference: 'AAI1000001'
+}, {
+  id: '00000000-0000-0000-0000-000000002020',
+  customerReference: 'A12345678A',
+  periodStart: '01-MAY-2019',
+  periodEnd: '31-MAR-2020',
+  transactionReference: 'AAI1000002'
+},
+...additionalTrans
+];
+
 const cmMinimumChargeTransaction = {
   id: '00000000-0000-0000-1111-000000002020',
   licenceNumber: '01/123/ABC',
   chargeValue: 270,
   deminimis: false,
   minimumChargeAdjustment: true,
+  periodStart: null,
+  periodEnd: null,
   transactionReference: null
 };
 
@@ -175,20 +193,7 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
   beforeEach(async () => {
     batch = createBatch();
     cmResponse = createCMResponse();
-    cmTransactions =
-       [{
-         id: '00000000-0000-0000-0000-000000002019',
-         customerReference: 'A12345678A',
-         periodStart: '01-APR-2018',
-         periodEnd: '31-MAR-2019',
-         transactionReference: 'AAI1000001'
-       }, {
-         id: '00000000-0000-0000-0000-000000002020',
-         customerReference: 'A12345678A',
-         periodStart: '01-MAY-2019',
-         periodEnd: '31-MAR-2020',
-         transactionReference: 'AAI1000002'
-       }];
+    cmTransactions = createCMTransactions();
   });
 
   afterEach(() => sandbox.restore());
@@ -257,15 +262,15 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
     });
 
     experiment('when there are multiple invoice numbers for a given financial year', () => {
+      let cmResponse, cmTransactions;
       beforeEach(() => {
+        cmResponse = createCMResponse();
         cmResponse.billRun.customers[0].summaryByFinancialYear[1].transactions.push(cmMinimumChargeTransaction);
-        cmTransactions.push({
+        cmTransactions = createCMTransactions([{
           ...cmMinimumChargeTransaction,
           customerReference: 'A12345678A',
-          periodStart: '01-APR-2019',
-          periodEnd: '31-MAR-2020',
           transactionReference: 'AAI1000003'
-        });
+        }]);
       });
 
       test('throws InvoiceNumberError', async () => {
@@ -316,24 +321,9 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
       cmResponse.billRun.customers.push(secondCustomer);
       // add min charge transaction to 2019 summary for first customer
       cmResponse.billRun.customers[0].summaryByFinancialYear[1].transactions.push(cmMinimumChargeTransaction);
-      cmTransactions = [{
-        id: '00000000-0000-0000-0000-000000002020',
-        customerReference: 'A12345678A',
-        periodStart: '01-MAY-2019',
-        periodEnd: '31-MAR-2020',
-        transactionReference: 'AAI1000001'
-      }, {
-        id: '00000000-0000-0000-0000-000000002019',
-        customerReference: 'A12345678A',
-        periodStart: '01-APR-2018',
-        periodEnd: '31-MAR-2019',
-        transactionReference: 'AAI1000002'
-      }, {
+      cmTransactions = createCMTransactions([{
         ...cmMinimumChargeTransaction,
-        customerReference: 'A12345678A',
-        periodStart: '01-APR-2019',
-        periodEnd: '31-MAR-2020',
-        transactionReference: null
+        customerReference: 'A12345678A'
       }, {
         id: '00000000-2222-0000-0000-000000002020',
         customerReference: 'B12345678A',
@@ -346,7 +336,7 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
         periodStart: '01-JUL-2018',
         periodEnd: '31-MAR-2019',
         transactionReference: 'BAI1000002'
-      }];
+      }]);
     });
 
     experiment('when cmTransactions is an empty object', () => {
@@ -386,13 +376,13 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
             const transaction = finYear.transactions.find(txn => txn.id === '00000000-0000-0000-0000-000000002020');
             expect(transaction.periodStart).to.equal('01-MAY-2019');
             expect(transaction.periodEnd).to.equal('31-MAR-2020');
-            expect(transaction.transactionReference).to.equal('AAI1000001');
+            expect(transaction.transactionReference).to.equal('AAI1000002');
           });
 
           test('second transaction is min charge has expected data', () => {
             const transaction = finYear.transactions.find(txn => txn.id === '00000000-0000-0000-1111-000000002020');
-            expect(transaction.periodStart).to.equal('01-APR-2019');
-            expect(transaction.periodEnd).to.equal('31-MAR-2020');
+            expect(transaction.periodStart).to.equal(null);
+            expect(transaction.periodEnd).to.equal(null);
             expect(transaction.transactionReference).to.equal(null);
           });
         });
@@ -411,7 +401,7 @@ experiment('modules/billing/mappers/charge-module-decorators', () => {
             const transaction = finYear.transactions.find(txn => txn.id === '00000000-0000-0000-0000-000000002019');
             expect(transaction.periodStart).to.equal('01-APR-2018');
             expect(transaction.periodEnd).to.equal('31-MAR-2019');
-            expect(transaction.transactionReference).to.equal('AAI1000002');
+            expect(transaction.transactionReference).to.equal('AAI1000001');
           });
         });
       });
