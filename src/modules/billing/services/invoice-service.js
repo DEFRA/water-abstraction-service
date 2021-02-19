@@ -20,8 +20,6 @@ const { NotFoundError } = require('../../../lib/errors');
  */
 const saveInvoiceToDB = async (batch, invoice) => {
   const data = mappers.invoice.modelToDb(batch, invoice);
-  console.log(invoice);
-  console.log(data);
   return repos.billingInvoices.upsert(data);
 };
 

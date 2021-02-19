@@ -280,8 +280,8 @@ experiment('modules/billing/controller', () => {
       result = await controller.getBatch(request);
     });
 
-    expect('returns the batch in request.pre', async () => {
-      expect(result).to.equal(request.pre);
+    test('returns the batch in request.pre', async () => {
+      expect(result).to.equal(request.pre.batch);
     });
   });
 
