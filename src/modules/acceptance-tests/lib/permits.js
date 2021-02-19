@@ -1,4 +1,3 @@
-const { ACCEPTANCE_TEST_SOURCE } = require('./constants');
 const permitsConnector = require('../../../lib/connectors/permit');
 const moment = require('moment');
 
