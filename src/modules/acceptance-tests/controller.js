@@ -278,9 +278,11 @@ const postSetupFromYaml = (request, h) => {
 const postTearDown = async () => {
   console.log('Tearing down acceptance test returns');
   await returns.delete();
-  console.log('Tearing down acceptance test return versions');
+  console.log('Tearing down acceptance test return requirement purposes');
   await returnRequirementPurposes.delete();
+  console.log('Tearing down acceptance test return requirements');
   await returnRequirements.delete();
+  console.log('Tearing down acceptance test return versions');
   await returnVersions.delete();
   console.log('Tearing down acceptance test events');
   await events.delete();
