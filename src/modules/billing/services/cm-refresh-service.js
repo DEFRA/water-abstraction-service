@@ -127,7 +127,10 @@ const getCMTransactionId = cmTransaction => cmTransaction.id;
  */
 const deleteTransactions = (cmTransactions, transactionMap) => {
   const validIds = cmTransactions.map(getCMTransactionId);
-  const deleteIds = difference(Array.from(transactionMap.keys()), validIds);
+  const deleteExternalIds = difference(Array.from(transactionMap.keys()), validIds);
+  const deleteIds = deleteExternalIds.map(
+    externalId => transactionMap.get(externalId).id
+  );
   return transactionService.deleteById(deleteIds);
 };
 

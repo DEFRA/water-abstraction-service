@@ -208,4 +208,31 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
       expect(perPage).to.equal(100);
     });
   });
+
+  experiment('.getInvoiceTransactions', () => {
+    beforeEach(async () => {
+      await billRunsApiConnector.getInvoiceTransactions('test-id', 'test-customer-ref', 2020, 3);
+    });
+
+    test('the correct endpoint is called', async () => {
+      const [path] = request.get.lastCall.args;
+      expect(path).to.equal('v1/wrls/billruns/test-id/transactions');
+    });
+
+    test('the correct customer is specified', async () => {
+      const [, { customerReference }] = request.get.lastCall.args;
+      expect(customerReference).to.equal('test-customer-ref');
+    });
+
+    test('the correct financial year is specified', async () => {
+      const [, { financialYear }] = request.get.lastCall.args;
+      expect(financialYear).to.equal(2019);
+    });
+
+    test('the correct pagination params are specified', async () => {
+      const [, { page, perPage }] = request.get.lastCall.args;
+      expect(page).to.equal(3);
+      expect(perPage).to.equal(100);
+    });
+  });
 });

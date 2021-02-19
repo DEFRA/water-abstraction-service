@@ -24,11 +24,12 @@ const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../src/lib/models/licence');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
+const Transaction = require('../../../../src/lib/models/transaction');
 
 const batchId = uuid();
 const externalId = uuid();
 const transactionIds = [
-  uuid(), uuid()
+  uuid(), uuid(), uuid()
 ];
 const customerRefs = [
   'A00000000A', 'A00000001A'
@@ -39,6 +40,11 @@ const licenceNumbers = [
 const financialYearEnding = 2021;
 const invoiceNumbers = [
   'A1234', 'B4567'
+];
+const minChargeDescription = 'Minimum Charge Calculation - raised under Schedule 23 of the Environment Act 1995';
+const minChargeValue = 2044;
+const deletedTransactionIds = [
+  uuid(), uuid()
 ];
 
 const createBatch = () => new Batch().fromHash({
@@ -142,6 +148,14 @@ const cmResponses = {
           chargeValue: 456,
           transactionReference: invoiceNumbers[1],
           licenceNumber: licenceNumbers[1]
+        }, {
+          id: transactionIds[2],
+          deminimis: false,
+          chargeValue: minChargeValue,
+          minimumChargeAdjustment: true,
+          transactionReference: invoiceNumbers[1],
+          licenceNumber: licenceNumbers[1],
+          lineDescription: minChargeDescription
         }]
       }
     }
@@ -158,7 +172,13 @@ const createInvoices = () => customerRefs.map((accountNumber, i) => {
       new InvoiceLicence().fromHash({
         licence: new Licence().fromHash({
           licenceNumber: licenceNumbers[i]
-        })
+        }),
+        transactions: [
+          new Transaction().fromHash({
+            id: deletedTransactionIds[i],
+            externalId: uuid()
+          })
+        ]
       })
     ]
   });
@@ -247,6 +267,38 @@ experiment('modules/billing/services/cm-refresh-service', () => {
       test('invoices are fetched for the batch from the db', async () => {
         expect(invoiceService.getInvoicesForBatch.calledWith(
           batch, { includeTransactions: true }
+        )).to.be.true();
+      });
+
+      test('transactions are fetched from the CM for each invoice', async () => {
+        expect(cmBillRunsConnector.getInvoiceTransactions.callCount).to.equal(2);
+        expect(cmBillRunsConnector.getInvoiceTransactions.calledWith(
+          externalId, customerRefs[0], financialYearEnding, 1
+        )).to.be.true();
+        expect(cmBillRunsConnector.getInvoiceTransactions.calledWith(
+          externalId, customerRefs[1], financialYearEnding, 1
+        )).to.be.true();
+      });
+
+      test('the transactions are persisted', async () => {
+        expect(transactionService.saveTransactionToDB.callCount).to.equal(3);
+      });
+
+      test('the minimum charge transaction is persisted', async () => {
+        const [invoiceLicence, transaction] = transactionService.saveTransactionToDB.lastCall.args;
+        expect(invoiceLicence.licence.licenceNumber).to.equal(licenceNumbers[1]);
+        expect(transaction.isMinimumCharge).to.be.true();
+        expect(transaction.description).to.equal(minChargeDescription);
+        expect(transaction.value).to.equal(minChargeValue);
+      });
+
+      test('local transactions no longer in the CM batch are deleted', async () => {
+        expect(transactionService.deleteById.callCount).to.equal(2);
+        expect(transactionService.deleteById.calledWith(
+          [deletedTransactionIds[0]]
+        )).to.be.true();
+        expect(transactionService.deleteById.calledWith(
+          [deletedTransactionIds[1]]
         )).to.be.true();
       });
     });
