@@ -12,9 +12,9 @@ const tearDownReturnVersions = async () => {
 };
 
 const tearDown = async () => {
-  await tearDownReturnPurposes();
-  await tearDownReturnRequirements();
   await tearDownReturnVersions();
+  await tearDownReturnRequirements();
+  await tearDownReturnPurposes();
 };
 
 exports.tearDown = tearDown;

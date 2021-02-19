@@ -25,10 +25,7 @@ const create = (sharedData) => {
       ...body
     }) => serviceRequest.post(createCrmV2Url('companies', companyId, 'addresses'), { body }))
     .add('Document', async body => {
-      console.log('saved as....');
       const response = await serviceRequest.post(createCrmV2Url('documents'), { body });
-
-      console.log(`v2doc-${body.documentRef}`);
 
       sharedData.set(`v2doc-${body.documentRef}`, response);
       return response;

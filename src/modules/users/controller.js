@@ -78,8 +78,7 @@ const getUserCompanyStatus = async user => {
     return Promise.resolve([[], [], []]);
   }
 
-  const thing = await crmEntitiesConnector.getEntityCompanies(entityId);
-  console.log(thing.data);
+  await crmEntitiesConnector.getEntityCompanies(entityId);
 
   return Promise.all([
     crmEntitiesConnector.getEntityCompanies(entityId),

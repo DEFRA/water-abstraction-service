@@ -4,7 +4,6 @@ class SharedData {
   }
 
   set (key, value) {
-    console.log('setting ' + key);
     return this._sharedData.set(key, value);
   }
 

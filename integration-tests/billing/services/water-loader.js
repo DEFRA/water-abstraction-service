@@ -5,7 +5,13 @@ const AsyncAdapter = require('./fixture-loader/adapters/AsyncAdapter');
 const { createScheduledNotification } = require('../../../src/lib/services/scheduled-notifications');
 const ScheduledNotification = require('../../../src/lib/models/scheduled-notification');
 const licencesConnector = require('../../../src/lib/connectors/repos/licences');
+const returnVersionsConnector = require('../../../src/lib/connectors/repos/return-versions');
+const returnRequirementsConnector = require('../../../src/lib/connectors/repos/return-requirements');
+const returnRequirementPurposesConnector = require('../../../src/lib/connectors/repos/return-requirement-purposes');
 const regionsConnector = require('../../../src/lib/connectors/repos/regions');
+const purposeUses = require('../../../src/lib/connectors/repos/purpose-uses');
+const primaryPurposes = require('../../../src/lib/connectors/repos/purpose-primary');
+const secondaryPurposes = require('../../../src/lib/connectors/repos/purpose-secondary');
 
 // Resolve path to fixtures directory
 const path = require('path');
@@ -36,7 +42,35 @@ const create = (sharedData) => {
         },
         true,
         true);
-    });
+    })
+    .add('PrimaryPurpose', async body => {
+      const exists = await primaryPurposes.findOneByLegacyId(body.legacy_id);
+      if (exists) {
+        return exists;
+      } else {
+        return primaryPurposes.create(body);
+      }
+    })
+    .add('SecondaryPurpose', async body => {
+      const exists = await secondaryPurposes.findOneByLegacyId(body.legacy_id);
+      if (exists) {
+        return exists;
+      } else {
+        return secondaryPurposes.create(body);
+      }
+    })
+    .add('PurposeUse', async body => {
+      const exists = await purposeUses.findOneByLegacyId(body.legacy_id);
+      if (exists) {
+        return exists;
+      } else {
+        return primaryPurposes.create(body);
+      }
+    })
+    .add('ReturnVersion', body => returnVersionsConnector.create(body))
+    .add('ReturnRequirement', body => returnRequirementsConnector.create(body))
+    .add('ReturnRequirementPurpose', body => returnRequirementPurposesConnector.create(body));
+
   return new FixtureLoader(asyncAdapter, dir);
 };
 

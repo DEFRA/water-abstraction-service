@@ -12,6 +12,7 @@
     address1 : Big Farm
     address2 : Windy road
     address3 : Buttercup meadow
+    address4 : Buttercup Village
     town : Testington
     county : Testingshire
     postcode : TT1 1TT
@@ -57,7 +58,7 @@
     contactId: $contact.contactId
     roleName: 'licenceHolder'
     emailAddress: 'acceptance-test.external@example.com'
-    startDate: '2020-01-01'
+    startDate: '2018-01-01'
     isTest: true
 
 - model: DocumentRole
@@ -125,7 +126,7 @@
   fields:
     versionNumber : 1
     status : current
-    startDate : '2020-01-01'
+    startDate : '2018-01-01'
     endDate: null
     regime: water
     documentType: abstraction_licence
@@ -136,7 +137,7 @@
   fields:
     documentId: $documentDaily.documentId
     role: licenceHolder
-    startDate : '2020-01-01'
+    startDate: '2018-01-01'
     endDate: null
     companyId : $company.companyId
     addressId : $address.addressId
@@ -167,7 +168,7 @@
   fields:
     documentId: $documentWeekly.documentId
     role: licenceHolder
-    startDate : '2020-01-01'
+    startDate : '2018-01-01'
     endDate: null
     companyId : $company.companyId
     addressId : $address.addressId
@@ -187,18 +188,18 @@
   fields:
     versionNumber: 1
     status: current
-    startDate: '2020-01-01'
+    startDate: '2018-01-01'
     endDate: null
     regime: water
     documentType: abstraction_licence
-    documentRef: 'AT/CURR/Monthly/01'
+    documentRef: 'AT/CURR/MONTHLY/01'
     isTest: true
 
 - model: DocumentRole
   fields:
     documentId: $documentMonthly.documentId
     role: licenceHolder
-    startDate: '2020-01-01'
+    startDate : '2018-01-01'
     endDate: null
     companyId: $company.companyId
     addressId: $address.addressId
@@ -218,18 +219,18 @@
   fields:
     versionNumber: 1
     status: current
-    startDate: '2020-01-01'
+    startDate: '2018-01-01'
     endDate: null
     regime: water
     documentType: abstraction_licence
-    documentRef: 'AT/CURR/Monthly/02'
+    documentRef: 'AT/CURR/MONTHLY/02'
     isTest: true
 
 - model: DocumentRole
   fields:
     documentId: $documentMonthly2.documentId
     role: licenceHolder
-    startDate: '2020-01-01'
+    startDate : '2018-01-01'
     endDate: null
     companyId: $company.companyId
     addressId: $address.addressId

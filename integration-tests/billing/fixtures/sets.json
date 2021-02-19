@@ -1,6 +1,10 @@
 {
   "notify-mock-notification": [
     {
+      "service": "idm",
+      "file": "external-users.yaml"
+    },
+    {
       "service": "water",
       "file": "notify-mock-notification.yaml"
     }
