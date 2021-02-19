@@ -88,7 +88,7 @@ class Transaction extends Model {
   }
 
   set authorisedDays (days) {
-    validators.assertAuthorisedDays(days);
+    validators.assertDaysInYear(days);
     this._authorisedDays = days;
   }
 
@@ -102,7 +102,7 @@ class Transaction extends Model {
   }
 
   set billableDays (days) {
-    validators.assertBillableDays(days);
+    validators.assertDaysInYear(days);
     this._billableDays = days;
   }
 

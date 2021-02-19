@@ -162,18 +162,24 @@ experiment('lib/models/transaction', () => {
       expect(transaction.authorisedDays).to.equal(125);
     });
 
-    test('setting to zero throws an error', async () => {
+    test('can be set to zero', async () => {
       const transaction = new Transaction();
-      const func = () => {
-        transaction.authorisedDays = 0;
-      };
-      expect(func).to.throw();
+      transaction.authorisedDays = 0;
+      expect(transaction.authorisedDays).to.equal(0);
     });
 
     test('setting to a value >366 throws an error', async () => {
       const transaction = new Transaction();
       const func = () => {
         transaction.authorisedDays = 367;
+      };
+      expect(func).to.throw();
+    });
+
+    test('setting to a value <0 throws an error', async () => {
+      const transaction = new Transaction();
+      const func = () => {
+        transaction.authorisedDays = -1;
       };
       expect(func).to.throw();
     });
