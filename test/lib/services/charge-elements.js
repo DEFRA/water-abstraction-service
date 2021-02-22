@@ -97,8 +97,8 @@ experiment('lib/services/charge-elements', () => {
       expect(element.abstractionPeriod).to.equal(licenceVersionPurpose.abstractionPeriod);
     });
 
-    test('the charge element authorised annual quantity is taken from the licence version purpose', async () => {
-      expect(element.authorisedAnnualQuantity).to.equal(licenceVersionPurpose.annualQuantity);
+    test('the charge element authorised annual quantity is converted to megalitres from the licence version purpose', async () => {
+      expect(element.authorisedAnnualQuantity).to.equal(licenceVersionPurpose.annualQuantity / 1000);
     });
 
     test('the billable annual quanity is set to null', async () => {

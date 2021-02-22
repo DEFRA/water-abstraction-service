@@ -12,6 +12,8 @@ const SPRAY_ANTI_FROST = '380';
 const chargeElementMapper = require('../mappers/charge-element');
 const chargeElementRepo = require('../connectors/repos/charge-elements');
 
+const unitConversion = require('../../lib/unit-conversion');
+
 const calculateSeason = licenceVersionPurpose => {
   const { code } = licenceVersionPurpose.purposeUse;
 
@@ -41,7 +43,7 @@ const getChargeElementsFromLicenceVersion = licenceVersion => {
     chargeElement.source = 'unsupported';
     chargeElement.loss = licenceVersionPurpose.purposeUse.lossFactor;
     chargeElement.abstractionPeriod = licenceVersionPurpose.abstractionPeriod;
-    chargeElement.authorisedAnnualQuantity = licenceVersionPurpose.annualQuantity | null;
+    chargeElement.authorisedAnnualQuantity = unitConversion.cubicMetresToMegalitres(licenceVersionPurpose.annualQuantity);
     chargeElement.billableAnnualQuantity = null;
     chargeElement.purposePrimary = licenceVersionPurpose.purposePrimary;
     chargeElement.purposeSecondary = licenceVersionPurpose.purposeSecondary;
