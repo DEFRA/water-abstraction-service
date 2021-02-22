@@ -19,7 +19,7 @@
 ]
  */
 const Joi = require('@hapi/joi');
-const { chunk, flatMap, find, uniq, cond, negate, get, isEqual } = require('lodash');
+const { chunk, flatMap, find, uniq, cond, negate, get, isEqual, pick } = require('lodash');
 
 const returnsConnector = require('../../../lib/connectors/returns');
 const documents = require('../../../lib/connectors/crm/documents');
@@ -85,18 +85,41 @@ const getCompanyDocumentFilter = (licenceNumber, companyId) => ({
 });
 
 /**
+ * Gets only those properties from a return line that are relevant
+ * to determine the date range/time period for comparison
+ *
+ * @param {Object} line
+ * @return {Object}
+ */
+const getLineDateRange = line => pick(line, ['startDate', 'endDate', 'timePeriod']);
+
+/**
  * Checks that the return lines in the uploaded data match those calculated
- * @param  {Object} ret - return upload object
+ * from the return header
+ *
+ * @param {Object} ret - return upload object
+ * @param {Object} context
+ * @param {Array<Object>} context.returns
  * @return {boolean}     - true if return lines OK or nil return
  */
-const validateReturnlines = ret => {
+const validateReturnlines = (ret, context) => {
   if (ret.isNil) {
     return true;
   }
-  const { startDate, endDate, frequency } = ret;
-  const requiredLines = returnLines.getRequiredLines(startDate, endDate, frequency);
 
-  return ret.lines.length === requiredLines.length;
+  // Generate required lines specified by return header
+  const header = find(context.returns, { return_id: ret.returnId });
+  const requiredLines = returnLines.getRequiredLines(
+    header.start_date,
+    header.end_date,
+    header.returns_frequency
+  );
+
+  // Check if the supplied return lines are identical to those in header
+  return isEqual(
+    requiredLines.map(getLineDateRange),
+    ret.lines.map(getLineDateRange)
+  );
 };
 
 /**
@@ -283,9 +306,7 @@ const validate = async (returns, companyId) => {
   return batchProcess(returns, 100, validateBatch, context);
 };
 
-// exports.hasExpectedReturnLines = hasExpectedReturnLines;
 exports.validate = validate;
 exports.batchProcess = batchProcess;
 exports.uploadErrors = uploadErrors;
 exports.getDocuments = getDocuments;
-exports.validateReturnlines = validateReturnlines;
