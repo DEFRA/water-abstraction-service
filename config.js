@@ -24,7 +24,7 @@ module.exports = {
   },
 
   billing: {
-    supplementaryYears: 6,
+    supplementaryYears: isTest ? 1 : 6,
     // There are 4 processes on the environments but only 1 locally
     createChargeJobConcurrency: isLocal ? 16 : 4
   },
