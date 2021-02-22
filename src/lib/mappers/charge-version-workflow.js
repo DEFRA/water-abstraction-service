@@ -4,6 +4,7 @@ const chargeVersionMapper = require('./charge-version');
 const userMapper = require('./user');
 const licenceMapper = require('./licence');
 const regionMapper = require('./region');
+
 const ChargeVersionWorkflow = require('../models/charge-version-workflow');
 
 const { createMapper } = require('../object-mapper');
@@ -19,7 +20,9 @@ const dbToModelMapper = createMapper()
   .map('data').to('chargeVersion', data => chargeVersionMapper.pojoToModel(data.chargeVersion))
   .map('licence').to('licence', licenceMapper.dbToModel)
   .map('licence').to('chargeVersion.licence', licenceMapper.dbToModel)
-  .map('licence.region').to('chargeVersion.region', regionMapper.dbToModel);
+  .map('licence.region').to('chargeVersion.region', regionMapper.dbToModel)
+  .map('licenceVersionId').to('licenceVersion', 'licenceVersionId')
+  .map('dateDelete').to('dateDeleted');
 
 /**
  * Converts DB representation to a ChargeVersionWorkflow service model
@@ -35,7 +38,9 @@ const modelToDbMapper = createMapper()
   .map('approverComments').to('approverComments')
   .map('status').to('status')
   .map('createdBy').to('createdBy', userMapper.modelToDb)
-  .map('chargeVersion').to('data.chargeVersion', chargeVersion => chargeVersion.toJSON());
+  .map('chargeVersion').to('data.chargeVersion', chargeVersion => chargeVersion.toJSON())
+  .map('licenceVersionId').to('licenceVersionId')
+  .map('dateDeleted').to('dateDeleted');
 
 /**
  * Converts ChargeVersionWorkflow service model to a DB row

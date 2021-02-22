@@ -40,7 +40,7 @@ const getChargeVersionWorkflow = request =>
  */
 const postChargeVersionWorkflow = async request => {
   const { licenceId } = request.payload;
-  const { chargeVersion, user } = request.pre;
+  const { chargeVersion, user, licenceVersion } = request.pre;
 
   chargeVersion.status = 'draft';
 
@@ -50,7 +50,7 @@ const postChargeVersionWorkflow = async request => {
     return Boom.notFound(`Licence ${licenceId} not found`);
   }
 
-  return chargeVersionsWorkflowService.create(licence, chargeVersion, user);
+  return chargeVersionsWorkflowService.create(licence, licenceVersion.licenceVersionId, chargeVersion, user);
 };
 
 /**
