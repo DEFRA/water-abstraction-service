@@ -8,6 +8,8 @@ const moment = MomentRange.extendMoment(require('moment'));
 // DEFRA helpers
 const helpers = require('@envage/water-abstraction-helpers');
 
+const billingConfig = require('../../../../../config').billing;
+
 // Service models
 const DateRange = require('../../../../lib/models/date-range');
 const Transaction = require('../../../../lib/models/transaction');
@@ -71,8 +73,11 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
  */
 const isCompensationChargesNeeded = chargeVersion => !chargeVersion.licence.isWaterUndertaker;
 
+const isNaldTransaction = chargePeriodStartDate =>
+  chargePeriodStartDate.isBefore(moment(billingConfig.naldSwitchOverDate, DATE_FORMAT));
+
 const doesChargePeriodStartOnFirstApril = chargePeriodStartDate =>
-  chargePeriodStartDate.isSame(moment(`${chargePeriodStartDate.year()}-04-01`, 'YYYY-MM-DD'), 'day');
+  chargePeriodStartDate.isSame(moment(`${chargePeriodStartDate.year()}-04-01`, DATE_FORMAT), 'day');
 
 /**
  * Predicate to check whether the minimum charge applies
@@ -83,6 +88,10 @@ const doesChargePeriodStartOnFirstApril = chargePeriodStartDate =>
 const doesMinimumChargeApply = (chargePeriod, chargeVersion) => {
   const { dateRange, changeReason } = chargeVersion;
   const chargePeriodStartDate = moment(chargePeriod.startDate);
+
+  if (isNaldTransaction(chargePeriodStartDate)) {
+    return false;
+  }
 
   const isSharedStartDate = chargePeriodStartDate.isSame(moment(dateRange.startDate), 'day');
   const isFirstChargeOnNewLicence = isSharedStartDate && get(changeReason, 'triggersMinimumCharge', false);

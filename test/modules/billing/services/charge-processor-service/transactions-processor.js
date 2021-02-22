@@ -1,10 +1,15 @@
 const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
+const sandbox = require('sinon').createSandbox();
 
 const transactionsProcessor = require('../../../../../src/modules/billing/services/charge-processor-service/transactions-processor');
+const config = require('../../../../../config');
 const data = require('./data');
 
 experiment('modules/billing/services/charge-processor-service/transactions-processor', async () => {
+  beforeEach(() => {
+    sandbox.stub(config.billing, 'naldSwitchOverDate').value('2019-04-01');
+  });
   experiment('.createTransactions', async () => {
     const financialYear = data.createFinancialYear();
     let chargeVersionYear, chargeVersion, batch, transactions;
@@ -94,9 +99,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           batch = data.createBatch('annual');
           chargeVersion = data.createChargeVersion();
           chargeVersion.licence = data.createLicence();
-          chargeVersion.chargeElements = [
-            data.createChargeElement()
-          ];
+
           chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
           transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
@@ -182,9 +185,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.licence = data.createLicence({
             startDate: '2019-05-01'
           });
-          chargeVersion.chargeElements = [
-            data.createChargeElement()
-          ];
+
           chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
           transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
@@ -209,9 +210,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
             lapsedDate: '2019-09-01',
             revokedDate: '2019-10-01'
           });
-          chargeVersion.chargeElements = [
-            data.createChargeElement()
-          ];
+
           chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
           transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
@@ -232,9 +231,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         beforeEach(async () => {
           chargeVersion = data.createChargeVersion({ startDate: '2019-05-01' });
           chargeVersion.licence = data.createLicence();
-          chargeVersion.chargeElements = [
-            data.createChargeElement()
-          ];
+
           chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
           transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
@@ -255,9 +252,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         beforeEach(async () => {
           chargeVersion = data.createChargeVersion({ endDate: '2020-02-01' });
           chargeVersion.licence = data.createLicence();
-          chargeVersion.chargeElements = [
-            data.createChargeElement()
-          ];
+
           chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
           transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
@@ -391,9 +386,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         beforeEach(async () => {
           chargeVersion = data.createChargeVersion();
           chargeVersion.licence = data.createLicence();
-          chargeVersion.chargeElements = [
-            data.createChargeElement()
-          ];
+
           chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
           transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
@@ -416,9 +409,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         beforeEach(async () => {
           chargeVersion = data.createChargeVersion();
           chargeVersion.licence = data.createLicence({ isWaterUndertaker: true });
-          chargeVersion.chargeElements = [
-            data.createChargeElement()
-          ];
+
           chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
           transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
@@ -441,9 +432,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         beforeEach(async () => {
           chargeVersion = data.createChargeVersion();
           chargeVersion.licence = data.createLicence();
-          chargeVersion.chargeElements = [
-            data.createChargeElement()
-          ];
+
           chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
           transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
@@ -462,9 +451,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.licence.licenceAgreements = [
             data.createLicenceAgreement({ code: 'S130U' })
           ];
-          chargeVersion.chargeElements = [
-            data.createChargeElement()
-          ];
+
           chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
           transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
@@ -485,9 +472,7 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
           chargeVersion.licence.licenceAgreements = [
             data.createLicenceAgreement({ code: 'S130U', startDate: '2019-05-01' })
           ];
-          chargeVersion.chargeElements = [
-            data.createChargeElement()
-          ];
+
           chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
           const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
           transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
@@ -526,7 +511,6 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
 
       test('is false when charge version start date is different from licence start date', async () => {
         chargeVersion = data.createChargeVersion({ startDate: '2019-05-01', licenceStartDate: '2019-06-01', triggersMinimumCharge: true });
-        chargeVersion.chargeElements = [data.createChargeElement()];
         chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
         const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
         transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
@@ -536,7 +520,6 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
 
       test('is true when charge version start date is the same as licence start date', async () => {
         chargeVersion = data.createChargeVersion({ startDate: '2019-06-01', triggersMinimumCharge: true });
-        chargeVersion.chargeElements = [data.createChargeElement()];
         chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
         const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
         transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
@@ -546,12 +529,21 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
 
       test('is true when the charge period starts on 1 April', async () => {
         chargeVersion = data.createChargeVersion({ triggersMinimumCharge: true });
-        chargeVersion.chargeElements = [data.createChargeElement()];
         chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
         const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
         transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
 
         expect(transactions[0].isNewLicence).to.equal(true);
+      });
+
+      test('is false when the charge period starts before NALD switch over date', async () => {
+        chargeVersion = data.createChargeVersion({ startDate: '2018-06-01', triggersMinimumCharge: true });
+        const financialYear = data.createFinancialYear(2019);
+        chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
+        const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
+        transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
+
+        expect(transactions[0].isNewLicence).to.equal(false);
       });
     });
   });

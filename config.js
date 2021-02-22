@@ -25,7 +25,8 @@ module.exports = {
   billing: {
     supplementaryYears: 1,
     // There are 4 processes on the environments but only 1 locally
-    createChargeJobConcurrency: isLocal ? 16 : 4
+    createChargeJobConcurrency: isLocal ? 16 : 4,
+    naldSwitchOverDate: '2021-04-01'
   },
 
   blipp: {
