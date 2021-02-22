@@ -13,6 +13,7 @@ const chargeElementMapper = require('../mappers/charge-element');
 const chargeElementRepo = require('../connectors/repos/charge-elements');
 
 const unitConversion = require('../../lib/unit-conversion');
+const toFixed = require('../../lib/to-fixed');
 
 const calculateSeason = licenceVersionPurpose => {
   const { code } = licenceVersionPurpose.purposeUse;
@@ -43,7 +44,9 @@ const getChargeElementsFromLicenceVersion = licenceVersion => {
     chargeElement.source = 'unsupported';
     chargeElement.loss = licenceVersionPurpose.purposeUse.lossFactor;
     chargeElement.abstractionPeriod = licenceVersionPurpose.abstractionPeriod;
-    chargeElement.authorisedAnnualQuantity = unitConversion.cubicMetresToMegalitres(licenceVersionPurpose.annualQuantity);
+    chargeElement.authorisedAnnualQuantity = toFixed(
+      unitConversion.cubicMetresToMegalitres(licenceVersionPurpose.annualQuantity), 6
+    );
     chargeElement.billableAnnualQuantity = null;
     chargeElement.purposePrimary = licenceVersionPurpose.purposePrimary;
     chargeElement.purposeSecondary = licenceVersionPurpose.purposeSecondary;
