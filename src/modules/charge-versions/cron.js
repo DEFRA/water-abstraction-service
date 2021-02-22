@@ -6,7 +6,7 @@ const createChargeVersionWorkflows = require('./lib/charge-version-workflow-jobs
 /**
  * Scheduled jobs for creating charge version workflows
  */
-const scheduleJobs = () => cron.schedule('0 /6 * * *', createChargeVersionWorkflows);
+const scheduleJobs = () => cron.schedule('0 0 */6 * * *', createChargeVersionWorkflows);
 
 module.exports = {
   scheduleJobs
