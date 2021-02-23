@@ -1,5 +1,6 @@
 'use strict';
 
+const { isNull } = require('lodash');
 const { titleCase } = require('title-case');
 
 const hashers = require('../../lib/hash');
@@ -87,7 +88,7 @@ class Transaction extends Model {
   }
 
   set authorisedDays (days) {
-    validators.assertAuthorisedDays(days);
+    validators.assertDaysInYear(days);
     this._authorisedDays = days;
   }
 
@@ -101,7 +102,7 @@ class Transaction extends Model {
   }
 
   set billableDays (days) {
-    validators.assertBillableDays(days);
+    validators.assertDaysInYear(days);
     this._billableDays = days;
   }
 
@@ -201,8 +202,12 @@ class Transaction extends Model {
   }
 
   set volume (volume) {
-    validators.assertNullableQuantityWithMaximum(volume, this.chargeElement.maxAnnualQuantity);
-    this._volume = volume;
+    if (isNull(volume)) {
+      this._volume = volume;
+    } else {
+      validators.assertNullableQuantityWithMaximum(volume, this.chargeElement.maxAnnualQuantity);
+      this._volume = volume;
+    }
   }
 
   /**
@@ -282,9 +287,9 @@ class Transaction extends Model {
   /**
    * Sets the transactionKey values to a unique hash for this transaction
    *
-   * @param {String} invoiceAccount The invoice account for the transaction
-   * @param {Object} licence Licence information
-   * @param {Object} batch The batch this transaction appears in
+   * @param {InvoiceAccount} invoiceAccount The invoice account for the transaction
+   * @param {Licence} licence Licence information
+   * @param {Batch} batch The batch this transaction appears in
    */
   createTransactionKey (invoiceAccount, licence, batch) {
     const hash = this.getHashData(invoiceAccount, licence, batch);

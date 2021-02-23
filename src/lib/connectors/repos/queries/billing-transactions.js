@@ -15,7 +15,6 @@ join (
 where
   b.status='sent'
   and b.billing_batch_id<>:batchId
-  and b.batch_type<>'two_part_tariff'
   and t.start_date>=il_2.min_date
   and t.end_date<=il_2.max_date
 order by t.date_created ASC

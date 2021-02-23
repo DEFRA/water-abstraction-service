@@ -11,6 +11,7 @@ const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const { logger } = require('../../../logger');
+const cmRefreshService = require('../services/cm-refresh-service');
 
 const { StateError } = require('../../../lib/errors');
 
@@ -41,7 +42,7 @@ const handler = async job => {
   batchStatus.assertBatchIsProcessing(batch);
 
   // Update batch with totals/bill run ID from charge module
-  const isSuccess = await batchService.refreshTotals(batchId);
+  const isSuccess = await cmRefreshService.updateBatch(batchId);
 
   if (!isSuccess) {
     throw new StateError(`CM bill run summary not ready for batch ${batchId}`);
