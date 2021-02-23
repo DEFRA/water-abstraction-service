@@ -113,7 +113,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
       const [, payload] = request.delete.lastCall.args;
       expect(payload).to.equal({
         customerReference: 'customer-id',
-        financialYear: 2019
+        financialYear: 2020
       });
     });
   });
@@ -226,7 +226,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct financial year is specified', async () => {
       const [, { financialYear }] = request.get.lastCall.args;
-      expect(financialYear).to.equal(2019);
+      expect(financialYear).to.equal(2020);
     });
 
     test('the correct pagination params are specified', async () => {

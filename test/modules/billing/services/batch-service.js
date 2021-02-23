@@ -1171,9 +1171,9 @@ experiment('modules/billing/services/batch-service', () => {
           expect(newRepos.billingInvoices.findOne.calledWith(invoiceId)).to.be.true();
         });
 
-        test('deletes the charge module transactions in the bill run with matching customer number and financial year', async () => {
+        test('deletes the charge module transactions in the bill run with matching customer number and financial year starting', async () => {
           expect(chargeModuleBillRunConnector.removeCustomerInFinancialYear.calledWith(
-            batch.externalId, 'A12345678A', 2020
+            batch.externalId, 'A12345678A', 2019
           )).to.be.true();
         });
 

@@ -250,8 +250,8 @@ experiment('modules/billing/services/cm-refresh-service', () => {
         invoiceService.getInvoicesForBatch.resolves(invoices);
 
         cmBillRunsConnector.get.resolves(cmResponses.batchSummary.ready);
-        cmBillRunsConnector.getInvoiceTransactions.withArgs(externalId, customerRefs[0], financialYearEnding, 1).resolves(cmResponses.batchTransactions[customerRefs[0]]);
-        cmBillRunsConnector.getInvoiceTransactions.withArgs(externalId, customerRefs[1], financialYearEnding, 1).resolves(cmResponses.batchTransactions[customerRefs[1]]);
+        cmBillRunsConnector.getInvoiceTransactions.withArgs(externalId, customerRefs[0], financialYearEnding - 1, 1).resolves(cmResponses.batchTransactions[customerRefs[0]]);
+        cmBillRunsConnector.getInvoiceTransactions.withArgs(externalId, customerRefs[1], financialYearEnding - 1, 1).resolves(cmResponses.batchTransactions[customerRefs[1]]);
 
         result = await cmRefreshService.updateBatch(batchId);
       });
@@ -273,10 +273,10 @@ experiment('modules/billing/services/cm-refresh-service', () => {
       test('transactions are fetched from the CM for each invoice', async () => {
         expect(cmBillRunsConnector.getInvoiceTransactions.callCount).to.equal(2);
         expect(cmBillRunsConnector.getInvoiceTransactions.calledWith(
-          externalId, customerRefs[0], financialYearEnding, 1
+          externalId, customerRefs[0], financialYearEnding - 1, 1
         )).to.be.true();
         expect(cmBillRunsConnector.getInvoiceTransactions.calledWith(
-          externalId, customerRefs[1], financialYearEnding, 1
+          externalId, customerRefs[1], financialYearEnding - 1, 1
         )).to.be.true();
       });
 

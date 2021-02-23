@@ -29,12 +29,12 @@ const transactionService = require('./transactions-service');
  */
 const getAllCmTransactionsForInvoice = async (cmBillRunId, customerReference, financialYearEnding) => {
   try {
-    const { data, pagination: { pageCount } } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, customerReference, financialYearEnding, 1);
+    const { data, pagination: { pageCount } } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, customerReference, financialYearEnding - 1, 1);
 
     const result = data.transactions;
 
     for (let page = 2; page <= pageCount; page++) {
-      const { data: { transactions } } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, customerReference, financialYearEnding, page);
+      const { data: { transactions } } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, customerReference, financialYearEnding - 1, page);
       result.push(...transactions);
     }
     return result;

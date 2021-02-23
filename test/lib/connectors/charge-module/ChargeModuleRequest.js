@@ -47,9 +47,9 @@ experiment('lib/connectors/charge-module/ChargeModuleRequest', () => {
   let cmRequest, result;
 
   beforeEach(async () => {
-    sandbox.stub(config.services, 'cognito').value(data.cognito.url);
-    sandbox.stub(config.cognito, 'username').value(data.cognito.username);
-    sandbox.stub(config.cognito, 'password').value(data.cognito.password);
+    sandbox.stub(config.chargeModule.cognito, 'host').value(data.cognito.url);
+    sandbox.stub(config.chargeModule.cognito, 'username').value(data.cognito.username);
+    sandbox.stub(config.chargeModule.cognito, 'password').value(data.cognito.password);
     sandbox.stub(config, 'proxy').value(data.proxy);
 
     sandbox.stub(logger, 'info');

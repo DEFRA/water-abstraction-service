@@ -166,19 +166,21 @@ module.exports = {
     idm: process.env.IDM_URI || 'http://127.0.0.1:8003/idm/1.0',
     permits: process.env.PERMIT_URI || 'http://127.0.0.1:8004/API/1.0/',
     returns: process.env.RETURNS_URI || 'http://127.0.0.1:8006/returns/1.0',
-    import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0',
-    chargeModule: process.env.CHARGE_MODULE_ORIGIN,
-    cognito: process.env.COGNITO_HOST
+    import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0'
   },
 
   isAcceptanceTestTarget,
 
   isProduction,
 
-  cognito: {
-    username: process.env.COGNITO_USERNAME,
-    password: process.env.COGNITO_PASSWORD,
-    isLocalDocker: (process.env.CHARGE_MODULE_ORIGIN || '').includes('localhost') && !isTest
+  chargeModule: {
+    isLocalDocker: (process.env.CHARGE_MODULE_ORIGIN || '').includes('localhost') && !isTest,
+    host: process.env.CHARGE_MODULE_ORIGIN,
+    cognito: {
+      host: process.env.COGNITO_HOST,
+      username: process.env.COGNITO_USERNAME,
+      password: process.env.COGNITO_PASSWORD
+    }
   },
 
   proxy: process.env.PROXY,

@@ -19,7 +19,7 @@ experiment('lib/connectors/charge-module/request', () => {
     sandbox.stub(request.cmRequest, 'post').resolves();
     sandbox.stub(request.cmRequest, 'patch').resolves();
 
-    sandbox.stub(config.services, 'chargeModule').value('https://test.example.com');
+    sandbox.stub(config.chargeModule, 'host').value('https://test.example.com');
   });
 
   afterEach(async () => {

@@ -39,11 +39,11 @@ const send = billRunId =>
  * Removes an individual customer from the bill run
  * @param {String} billRunId - CM bill ID GUID
  * @param {String} customerReference - invoice account number
- * @param {Number} financialYearEnding
+ * @param {Number} financialYear - note: CM uses financial year starting, WRLS uses ending
  * @return {Promise<Object>} response payload
  */
-const removeCustomerInFinancialYear = (billRunId, customerReference, financialYearEnding) =>
-  request.delete(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference, financialYear: financialYearEnding - 1 });
+const removeCustomerInFinancialYear = (billRunId, customerReference, financialYear) =>
+  request.delete(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference, financialYear });
 
 /**
  * Deletes entire bill run
@@ -73,15 +73,15 @@ const getCustomerTransactions = (billRunId, customerReference, page = 1, perPage
    * Gets transactions in given bill run for supplied customer ref / financial year grouping
    * @param {String} billRunId
    * @param {String} customerReference
-   * @param {Number} financialYearEnding
+   * @param {Number} financialYear - note: CM uses financial year starting, WRLS uses ending
    * @param {Number} [page] - default 1
    */
-const getInvoiceTransactions = (billRunId, customerReference, financialYearEnding, page = 1) => {
+const getInvoiceTransactions = (billRunId, customerReference, financialYear, page = 1) => {
   const path = `v1/wrls/billruns/${billRunId}/transactions`;
   const query = {
     customerReference,
     page,
-    financialYear: financialYearEnding - 1,
+    financialYear,
     perPage: 100
   };
   return request.get(path, query);

@@ -15,19 +15,19 @@ const { logger } = require('../../../logger');
  * @return {Promise<Object>}
  */
 const makeTokenRequest = async () => {
-  if (config.cognito.isLocalDocker) {
-    const token = await jwt.sign({ client_id: config.cognito.username }, '1');
+  if (config.chargeModule.isLocalDocker) {
+    const token = await jwt.sign({ client_id: config.chargeModule.cognito.username }, '1');
     return {
       access_token: token
     };
   }
   logger.info('getting cognito token');
-  const buff = Buffer.from(config.cognito.username + ':' + config.cognito.password);
+  const buff = Buffer.from(config.chargeModule.cognito.username + ':' + config.chargeModule.cognito.password);
   const options = {
     method: 'POST',
     json: true,
     proxy: config.proxy || null,
-    uri: urlJoin(config.services.cognito, '/oauth2/token'),
+    uri: urlJoin(config.chargeModule.cognito.host, '/oauth2/token'),
     qs: {
       grant_type: 'client_credentials'
     },
@@ -37,8 +37,7 @@ const makeTokenRequest = async () => {
     }
   };
   try {
-    const response = await http.request(options);
-    return response;
+    return await http.request(options);
   } catch (err) {
     logger.error('error getting cognito token', err);
     throw err;
