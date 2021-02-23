@@ -1,10 +1,4 @@
-const permitsConnector = require('../../../lib/connectors/permit');
-const moment = require('moment');
-
-const { ACCEPTANCE_TEST_SOURCE } = require('./constants');
-
 const formatMoment = date => date.format('DD/MM/YYYY');
-const formatMomentIso = date => date.toISOString();
 
 const testAddress = {
   TOWN: 'Test town',
@@ -19,7 +13,7 @@ const testAddress = {
   FGAC_REGION_CODE: '6'
 };
 
-const testQuanties = {
+const testQuantities = {
   INST_QTY: '12',
   HOURLY_QTY: '12',
   DAILY_QTY: '123',
@@ -77,7 +71,7 @@ const getLicenceData = (licenceRef, startDate, endDate) => {
           LANDS: 'Boldly outlined on map',
           NOTES: 'null',
           purpose: [testPurpose],
-          ...testQuanties,
+          ...testQuantities,
           PERIOD_ST_DAY: '1',
           purposePoints: [
             {
@@ -242,7 +236,7 @@ const getLicenceData = (licenceRef, startDate, endDate) => {
             LANDS: 'Boldly outlined on map',
             NOTES: 'null',
             purpose: [testPurpose],
-            ...testQuanties,
+            ...testQuantities,
             PERIOD_ST_DAY: '1',
             purposePoints: [
               {
@@ -298,28 +292,4 @@ const getLicenceData = (licenceRef, startDate, endDate) => {
   };
 };
 
-const createPermitRow = (startDate, endDate, licenceRef, licenceData) => {
-  return {
-    licence_status_id: 1,
-    licence_type_id: 8,
-    licence_regime_id: 1,
-    licence_start_dt: formatMomentIso(startDate),
-    licence_end_dt: formatMomentIso(endDate),
-    licence_ref: licenceRef,
-    licence_data_value: JSON.stringify(licenceData),
-    metadata: JSON.stringify({ source: ACCEPTANCE_TEST_SOURCE })
-  };
-};
-
-const createCurrentLicence = async (licenceRef) => {
-  const startDate = moment().subtract(1, 'year');
-  const endDate = moment().add(1, 'year');
-  const licence = getLicenceData(licenceRef, startDate, endDate);
-
-  const row = createPermitRow(startDate, endDate, licenceRef, licence);
-  const { data } = await permitsConnector.licences.create(row);
-  return data;
-};
-
-exports.createCurrentLicence = createCurrentLicence;
-exports.delete = () => permitsConnector.deleteAcceptanceTestData();
+exports.getLicenceData = getLicenceData;

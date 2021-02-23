@@ -1,6 +1,7 @@
 'use strict';
 
 const { get } = require('lodash');
+const Boom = require('@hapi/boom');
 
 const returns = require('./lib/returns');
 const returnVersions = require('./lib/return-versions');
@@ -130,7 +131,7 @@ const createCurrentLicencesWithReturns = async (company, externalPrimaryUser, co
     monthlyReturnRequirement1,
     monthlyReturnRequirement2
   ] = await createReturnRequirements(dailyReturnVersion, weeklyReturnVersion, monthlyReturnVersion1, monthlyReturnVersion2);
-  // create return requirements purposes
+    // create return requirements purposes
   const [
     dailyReturnReqPurpose,
     weeklyReturnReqPurpose,
@@ -189,7 +190,7 @@ const createLicencesWithNoReturns = async (company, companyV2Id, addressId) => {
 
 /**
  * National Permitting Service and Digitise! editor Send renewals and digitise licence information.
-National Permitting Service and Digitise! approver Send renewals, digitise licence information and approve changes.
+ National Permitting Service and Digitise! approver Send renewals, digitise licence information and approve changes.
 
  */
 const createInternalUsers = async () => {
@@ -260,12 +261,28 @@ const postSetup = async (request, h) => {
   }
 };
 
+const postSetupFromYaml = (request, h) => {
+  const { key } = request.params;
+  const set = require('../../../integration-tests/billing/fixtures/sets.json');
+
+  if (!set[key]) {
+    return Boom.notFound(`Key ${key} did not match any available Yaml sets.`);
+  }
+
+  const loader = require('../../../integration-tests/billing/services/loader');
+  set[key].map(item => loader.load(item.service, item.file));
+
+  return h.response().code(204);
+};
+
 const postTearDown = async () => {
   console.log('Tearing down acceptance test returns');
   await returns.delete();
-  console.log('Tearing down acceptance test return versions');
+  console.log('Tearing down acceptance test return requirement purposes');
   await returnRequirementPurposes.delete();
+  console.log('Tearing down acceptance test return requirements');
   await returnRequirements.delete();
+  console.log('Tearing down acceptance test return versions');
   await returnVersions.delete();
   console.log('Tearing down acceptance test events');
   await events.delete();
@@ -288,4 +305,5 @@ const postTearDown = async () => {
 };
 
 exports.postSetup = postSetup;
+exports.postSetupFromYaml = postSetupFromYaml;
 exports.postTearDown = postTearDown;

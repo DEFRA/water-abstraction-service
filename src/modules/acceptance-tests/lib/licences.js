@@ -3,15 +3,13 @@ const { pool } = require('../../../lib/connectors/db');
 const licencesConnector = require('../../../lib/connectors/repos/licences');
 const regionsConnector = require('../../../lib/connectors/repos/regions');
 
-const deleteLicences = () => {
-  return pool.query(`
+const deleteLicences = () => pool.query(`
     delete from
     water.licences
     where licence_ref IN (SELECT system_external_id FROM crm.document_header
     where metadata->>'dataType' = '${ACCEPTANCE_TEST_SOURCE}')
     OR is_test = true;
     `);
-};
 
 const createLicence = async (companyId, licenceId, licenceRef) => {
   const regions = await regionsConnector.find();
