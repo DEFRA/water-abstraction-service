@@ -236,6 +236,54 @@ experiment('modules/acceptance-tests/controller', () => {
     });
   });
 
+  experiment('postSetupFromYaml', () => {
+    experiment('invalid key', () => {
+      let h, request, response;
+      const invalidkey = 'some-invalid-key';
+      beforeEach(async () => {
+        h = {
+          response: sandbox.stub().returnsThis(),
+          code: sandbox.stub()
+        };
+
+        request = {
+          params: { key: invalidkey }
+        };
+
+        response = await controller.postSetupFromYaml(request, h);
+      });
+      test('returns Boom error', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.payload.statusCode).to.equal(404);
+        expect(response.output.payload.message).to.equal(`Key ${invalidkey} did not match any available Yaml sets.`);
+      });
+    });
+
+    experiment('valid key', () => {
+      let h, request, response, loader;
+      const validKey = 'barebones';
+      beforeEach(async () => {
+        loader = require('../../../integration-tests/billing/services/loader');
+
+        await sandbox.stub(loader, 'load').resolves();
+
+        h = {
+          response: sandbox.stub().returnsThis(),
+          code: sandbox.stub()
+        };
+
+        request = {
+          params: { key: validKey }
+        };
+
+        response = await controller.postSetupFromYaml(request, h);
+      });
+      test('returns 202', async () => {
+        expect(loader.load.called).to.be.true();
+      });
+    });
+  });
+
   experiment('postTearDown', () => {
     test('deletes the test data that has been created', async () => {
       await controller.postTearDown();

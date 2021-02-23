@@ -269,8 +269,8 @@ const postSetupFromYaml = (request, h) => {
     return Boom.notFound(`Key ${key} did not match any available Yaml sets.`);
   }
 
-  const { load } = require('../../../integration-tests/billing/services/loader');
-  set[key].map(item => load(item.service, item.file));
+  const loader = require('../../../integration-tests/billing/services/loader');
+  set[key].map(item => loader.load(item.service, item.file));
 
   return h.response().code(204);
 };
