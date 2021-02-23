@@ -21,7 +21,6 @@ const importConnector = require('../../lib/connectors/import');
 // Bull job queue manager
 const { jobName: createBillRunJobName } = require('./jobs/create-bill-run');
 const { jobName: refreshTotalsJobName } = require('./jobs/refresh-totals');
-const { jobName: persistInvoiceNumbersAndTotalsJobName } = require('./jobs/persist-invoice-numbers-and-totals');
 
 /**
  * Resource that will create a new batch skeleton which will
@@ -69,10 +68,7 @@ const postCreateBatch = async (request, h) => {
  * @param {Boolean} request.query.totals - indicates that batch totals should be included in response
  * @return {Promise<Batch>}
  */
-const getBatch = async request => {
-  const { totals } = request.query;
-  return totals ? batchService.decorateBatchWithTotals(request.pre.batch) : request.pre.batch;
-};
+const getBatch = async request => request.pre.batch;
 
 const getBatches = async request => {
   const { page, perPage } = request.query;
@@ -83,7 +79,9 @@ const getBatches = async request => {
 const getBatchInvoices = async request => {
   const { batch } = request.pre;
   try {
-    const invoices = await invoiceService.getInvoicesForBatch(batch, true, false);
+    const invoices = await invoiceService.getInvoicesForBatch(batch, {
+      includeInvoiceAccounts: true
+    });
     return invoices.map(mappers.api.invoice.modelToBatchInvoices);
   } catch (err) {
     return mapErrorResponse(err);
@@ -138,7 +136,7 @@ const postApproveBatch = async request => {
 
   try {
     const approvedBatch = await batchService.approveBatch(batch, internalCallingUser);
-    await request.queueManager.add(persistInvoiceNumbersAndTotalsJobName, batch.id);
+    await request.queueManager.add(refreshTotalsJobName, batch.id);
     return approvedBatch;
   } catch (err) {
     return err;
@@ -153,10 +151,15 @@ const getInvoiceLicenceWithTransactions = async request => {
 
 const getBatchDownloadData = async request => {
   const { batch } = request.pre;
-  const invoices = await invoiceService.getInvoicesForBatch(batch, true);
+  const invoices = await invoiceService.getInvoicesForBatch(batch, {
+    includeTransactions: true,
+    includeInvoiceAccounts: true
+  });
   const chargeVersionIds = uniq(flatMap(invoices.map(invoice => {
     return flatMap(invoice.invoiceLicences.map(invoiceLicence =>
-      invoiceLicence.transactions.map(transaction => transaction.chargeElement.chargeVersionId)
+      invoiceLicence.transactions
+        .filter(transaction => !!transaction.chargeElement)
+        .map(transaction => transaction.chargeElement.chargeVersionId)
     ));
   })));
   const chargeVersions = await chargeVersionService.getManyByChargeVersionIds(chargeVersionIds);

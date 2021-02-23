@@ -93,7 +93,6 @@ experiment('modules/billing/services/two-part-tariff.js', () => {
 
       test('the second charge element year is matched', async () => {
         const [id, financialYear, isSummer] = volumeMatchingService.matchVolumes.secondCall.args;
-        console.log(volumeMatchingService.matchVolumes.secondCall.args);
         expect(id).to.equal(tempTestId2);
         expect(financialYear.endYear).to.equal(2020);
         expect(isSummer).to.equal(false);

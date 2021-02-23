@@ -57,15 +57,11 @@ experiment('lib/models/totals', () => {
   [
     'creditNoteCount',
     'invoiceCount',
-    'invoiceValue',
-    'creditLineCount',
-    'debitLineCount',
-    'debitLineValue'
+    'invoiceValue'
   ].map(positiveOrZeroIntegerExperiment);
 
   [
-    'creditNoteValue',
-    'creditLineValue'
+    'creditNoteValue'
   ].map(negativeOrZeroIntegerExperiment);
 
   experiment('.netTotal', () => {

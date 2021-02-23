@@ -16,7 +16,6 @@ const Invoice = require('../../../../src/lib/models/invoice');
 const Address = require('../../../../src/lib/models/address');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
-const Totals = require('../../../../src/lib/models/totals');
 
 const invoiceMapper = require('../../../../src/modules/billing/mappers/invoice');
 
@@ -25,7 +24,10 @@ const invoiceRow = {
   invoiceAccountId: 'aea355f7-b931-4824-8465-575f5b95657f',
   invoiceAccountNumber: 'A12345678A',
   dateCreated: '2020-03-05T10:57:23.911Z',
-  financialYearEnding: 2019
+  financialYearEnding: 2019,
+  netAmount: 123,
+  invoiceValue: 200,
+  creditNoteValue: -77
 };
 
 experiment('modules/billing/mappers/invoice', () => {
@@ -66,7 +68,6 @@ experiment('modules/billing/mappers/invoice', () => {
       invoice = new Invoice();
       invoice.invoiceAccount = new InvoiceAccount(uuid());
       invoice.invoiceAccount.accountNumber = 'A12345678A';
-
       invoice.financialYear = new FinancialYear(2020);
     });
 
@@ -116,21 +117,17 @@ experiment('modules/billing/mappers/invoice', () => {
       });
     });
 
-    experiment('when the totals are present', () => {
-      beforeEach(() => {
-        invoice.totals = new Totals();
-        invoice.totals.fromHash({
-          netTotal: 123456
-        });
+    experiment('when totals are present', () => {
+      beforeEach(async () => {
+        invoice.netTotal = 123;
+        invoice.invoiceValue = 200;
+        invoice.creditNoteValue = -77;
         result = invoiceMapper.modelToDb(batch, invoice);
       });
-
-      test('net amount is mapped correctly', () => {
-        expect(result.netAmount).to.equal(123456);
-      });
-
-      test('isCredit flag is mapped correctly', () => {
-        expect(result.isCredit).to.be.false();
+      test('the totals are mapped', async () => {
+        expect(invoice.netTotal).to.equal(123);
+        expect(invoice.creditNoteValue).to.equal(-77);
+        expect(invoice.invoiceValue).to.equal(200);
       });
     });
   });
