@@ -91,14 +91,14 @@
     endDate: null
     isTest: true
 
-- ref: $userentity
+- ref: $userEntity
   model: Entity
   fields:
     entity_nm: 'acceptance-test.external@example.com'
     entity_type: 'individual'
     source: 'acceptance-test-setup'
 
-- ref: $companyentity
+- ref: $companyEntity
   model: Entity
   fields:
     entity_nm: 'Big Farm Co Ltd'
@@ -108,8 +108,8 @@
 - ref: $entityRole
   model: EntityRole
   fields:
-    entityId: $userentity.entity_id
-    company_entity_id: $companyentity.entity_id
+    entityId: $userEntity.entity_id
+    company_entity_id: $companyEntity.entity_id
     role: 'primary_user'
     created_by: 'acceptance-test-setup'
 
@@ -119,7 +119,7 @@
     regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf'
     system_id: 'permit-repo'
     system_external_id: 'AT/CURR/DAILY/01'
-    company_entity_id: $companyentity.entity_id
+    company_entity_id: $companyEntity.entity_id
 
 - ref: $documentDaily
   model: Document
@@ -150,7 +150,7 @@
     regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf'
     system_id: 'permit-repo'
     system_external_id: 'AT/CURR/WEEKLY/01'
-    company_entity_id: $companyentity.entity_id
+    company_entity_id: $companyEntity.entity_id
 
 - ref: $documentWeekly
   model: Document
@@ -181,7 +181,7 @@
     regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf'
     system_id: 'permit-repo'
     system_external_id: 'AT/CURR/MONTHLY/01'
-    company_entity_id: $companyentity.entity_id
+    company_entity_id: $companyEntity.entity_id
 
 - ref: $documentMonthly
   model: Document
@@ -212,7 +212,7 @@
     regime_entity_id: '0434dc31-a34e-7158-5775-4694af7a60cf'
     system_id: 'permit-repo'
     system_external_id: 'AT/CURR/MONTHLY/02'
-    company_entity_id: $companyentity.entity_id
+    company_entity_id: $companyEntity.entity_id
 
 - ref: $documentMonthly2
   model: Document
