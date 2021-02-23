@@ -187,7 +187,6 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
 
       test('adds a message to the queue for every transaction', async () => {
         expect(queueManager.add.callCount).to.equal(2);
-        console.log(queueManager.add.firstCall.args);
         expect(queueManager.add.firstCall.calledWith(
           'billing.create-charge', BATCH_ID, data.transactions[0].billingTransactionId
         )).to.be.true();

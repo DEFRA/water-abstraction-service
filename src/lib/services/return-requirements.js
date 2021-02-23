@@ -10,7 +10,6 @@ const service = require('./service');
  * @param {String} externalId - NALD external ID, in the form regionCode:returnReference
  * @return {Promise<ReturnRequirement>}
  */
-const getReturnRequirementByExternalId = externalId =>
-  service.findOne(externalId, returnRequirementsRepo.findOneByExternalId, returnRequirementsMapper);
+const getReturnRequirementByExternalId = async externalId => service.findOne(externalId, returnRequirementsRepo.findOneByExternalId, returnRequirementsMapper);
 
 exports.getReturnRequirementByExternalId = getReturnRequirementByExternalId;

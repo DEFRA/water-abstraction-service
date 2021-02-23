@@ -13,6 +13,8 @@ const sandbox = require('sinon').createSandbox();
 
 const refreshTotals = require('../../../../src/modules/billing/jobs/refresh-totals');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
+const cmRefreshService = require('../../../../src/modules/billing/services/cm-refresh-service');
+
 const batchJob = require('../../../../src/modules/billing/jobs/lib/batch-job');
 const Batch = require('../../../../src/lib/models/batch');
 const { logger } = require('../../../../src/logger');
@@ -28,7 +30,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
     sandbox.stub(batchJob, 'logHandlingError');
     sandbox.stub(batchJob, 'logOnCompleteError');
 
-    sandbox.stub(batchService, 'refreshTotals');
+    sandbox.stub(cmRefreshService, 'updateBatch');
     sandbox.stub(batchService, 'setErrorStatus');
 
     batch = new Batch().fromHash({
@@ -83,7 +85,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
 
     experiment('when there are no errors', () => {
       beforeEach(async () => {
-        batchService.refreshTotals.resolves(true);
+        cmRefreshService.updateBatch.resolves(true);
         await refreshTotals.handler(job);
       });
 
@@ -92,7 +94,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
       });
 
       test('refreshes the totals from the charge module using the batch ID', async () => {
-        expect(batchService.refreshTotals.calledWith(BATCH_ID));
+        expect(cmRefreshService.updateBatch.calledWith(BATCH_ID));
       });
 
       test('no error is logged', async () => {
@@ -116,7 +118,7 @@ experiment('modules/billing/jobs/refresh-totals', () => {
 
       beforeEach(async () => {
         error = new Error('refresh error');
-        batchService.refreshTotals.rejects(error);
+        cmRefreshService.updateBatch.rejects(error);
         await expect(refreshTotals.handler(job)).to.reject();
       });
 

@@ -2,8 +2,9 @@
 
 const urlJoin = require('url-join');
 
-const getURI = path => urlJoin(config.services.chargeModule, path);
 const config = require('../../../../config.js');
+const getURI = path => urlJoin(config.chargeModule.host, path);
+
 const ChargeModuleRequest = require('./ChargeModuleRequest');
 
 const cmRequest = new ChargeModuleRequest();

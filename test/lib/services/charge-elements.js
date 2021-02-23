@@ -68,7 +68,7 @@ experiment('lib/services/charge-elements', () => {
       licenceVersionPurpose.abstractionPeriod = abstractionPeriods.withinSummer;
 
       licenceVersionPurpose.fromHash({
-        annualQuantity: 100,
+        annualQuantity: 100.123456789,
         purposePrimary: new Purpose(uuid()),
         purposeSecondary: new Purpose(uuid()),
         purposeUse
@@ -97,8 +97,8 @@ experiment('lib/services/charge-elements', () => {
       expect(element.abstractionPeriod).to.equal(licenceVersionPurpose.abstractionPeriod);
     });
 
-    test('the charge element authorised annual quantity is taken from the licence version purpose', async () => {
-      expect(element.authorisedAnnualQuantity).to.equal(licenceVersionPurpose.annualQuantity);
+    test('the charge element authorised annual quantity is converted to megalitres from the licence version purpose to 6 decimal places', async () => {
+      expect(element.authorisedAnnualQuantity).to.equal(0.100123);
     });
 
     test('the billable annual quanity is set to null', async () => {

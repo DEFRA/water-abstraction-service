@@ -1,6 +1,5 @@
 'use strict';
 
-const Model = require('./model');
 const Invoice = require('./invoice');
 const FinancialYear = require('./financial-year');
 const Region = require('./region');
@@ -43,7 +42,7 @@ const BATCH_TYPE = {
   twoPartTariff: 'two_part_tariff'
 };
 
-class Batch extends Model {
+class Batch extends Totals {
   constructor (id) {
     super(id);
     this._invoices = [];
@@ -239,20 +238,6 @@ class Batch extends Model {
   set region (region) {
     validators.assertIsInstanceOf(region, Region);
     this._region = region;
-  }
-
-  /**
-   * The charge module summary contains data on
-   * invoice/credit count, invoice/credit totals, net total
-   * @param {Totals} totals
-   */
-  set totals (totals) {
-    validators.assertIsNullableInstanceOf(totals, Totals);
-    this._totals = totals;
-  }
-
-  get totals () {
-    return this._totals;
   }
 
   /**

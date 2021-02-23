@@ -74,7 +74,6 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(batchService, 'getBatches').resolves();
     sandbox.stub(batchService, 'deleteBatch').resolves();
     sandbox.stub(batchService, 'approveBatch').resolves();
-    sandbox.stub(batchService, 'decorateBatchWithTotals').resolves();
     sandbox.stub(batchService, 'getExistingOrDuplicateSentBatch').resolves();
     sandbox.stub(batchService, 'approveTptBatchReview').resolves(processingBatch);
     sandbox.stub(batchService, 'deleteBatchInvoice').resolves();
@@ -263,49 +262,26 @@ experiment('modules/billing/controller', () => {
   });
 
   experiment('.getBatch', () => {
-    experiment('when the batch is found', () => {
-      let response, request;
+    let result, request;
 
-      beforeEach(async () => {
-        request = {
-          params: {
-            batchId: 'test-batch-id'
-          },
-          query: {
-            totals: false
-          },
-          pre: {
-            batch: new Batch('00000000-0000-0000-0000-000000000000')
-          }
-        };
-      });
+    beforeEach(async () => {
+      request = {
+        params: {
+          batchId: 'test-batch-id'
+        },
+        query: {
+          totals: false
+        },
+        pre: {
+          batch: new Batch('00000000-0000-0000-0000-000000000000')
+        }
+      };
 
-      experiment('when totals query param is false', () => {
-        beforeEach(async () => {
-          response = await controller.getBatch(request);
-        });
+      result = await controller.getBatch(request);
+    });
 
-        test('the batch is returned', async () => {
-          expect(response).to.equal(request.pre.batch);
-        });
-
-        test('the batch is not decorated with totals', async () => {
-          expect(batchService.decorateBatchWithTotals.called).to.be.false();
-        });
-      });
-
-      experiment('when the totals are requested', () => {
-        beforeEach(async () => {
-          request.query.totals = true;
-          response = await controller.getBatch(request);
-        });
-
-        test('the batch is decorated with totals', async () => {
-          expect(batchService.decorateBatchWithTotals.calledWith(
-            request.pre.batch
-          )).to.be.true();
-        });
-      });
+    test('returns the batch in request.pre', async () => {
+      expect(result).to.equal(request.pre.batch);
     });
   });
 
@@ -367,9 +343,9 @@ experiment('modules/billing/controller', () => {
       });
 
       test('the batch id is passed to the invoice service', async () => {
-        const [batch, includeTransactions] = invoiceService.getInvoicesForBatch.lastCall.args;
+        const [batch, { includeInvoiceAccounts }] = invoiceService.getInvoicesForBatch.lastCall.args;
         expect(batch).to.equal(request.pre.batch);
-        expect(includeTransactions).to.equal(true);
+        expect(includeInvoiceAccounts).to.equal(true);
       });
 
       test('the response is mapped using the appropriate mapper', async () => {
@@ -574,7 +550,7 @@ experiment('modules/billing/controller', () => {
 
     test('publishes a new job to the message queue with the batch ID', async () => {
       const [jobName, batchId] = request.queueManager.add.lastCall.args;
-      expect(jobName).to.equal('billing.persist-invoice-numbers-and-totals');
+      expect(jobName).to.equal('billing.refresh-totals');
       expect(batchId).to.equal(batch.id);
     });
 
@@ -654,7 +630,10 @@ experiment('modules/billing/controller', () => {
     test('calls the invoice service with expected params', () => {
       expect(invoiceService.getInvoicesForBatch.calledWith(
         request.pre.batch,
-        true
+        {
+          includeTransactions: true,
+          includeInvoiceAccounts: true
+        }
       )).to.be.true();
     });
 
