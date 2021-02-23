@@ -260,7 +260,7 @@ experiment('modules/acceptance-tests/controller', () => {
     });
 
     experiment('valid key', () => {
-      let h, request, response, loader;
+      let h, request, loader;
       const validKey = 'barebones';
       beforeEach(async () => {
         loader = require('../../../integration-tests/billing/services/loader');
@@ -276,7 +276,7 @@ experiment('modules/acceptance-tests/controller', () => {
           params: { key: validKey }
         };
 
-        response = await controller.postSetupFromYaml(request, h);
+        await controller.postSetupFromYaml(request, h);
       });
       test('returns 202', async () => {
         expect(loader.load.called).to.be.true();
