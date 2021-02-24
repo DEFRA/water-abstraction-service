@@ -1,27 +1,30 @@
 exports.findHistoryByBatchId = `
-select t.* from water.billing_transactions t
-join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
-join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
-join water.billing_batches b on i.billing_batch_id=b.billing_batch_id
+select t.*,
+il.licence_id, il.billing_invoice_licence_id, i.financial_year_ending, i.invoice_account_number
+from water.billing_batches b
+join water.billing_invoices i on b.billing_batch_id=i.billing_batch_id
+join water.billing_invoice_licences il on i.billing_invoice_id=il.billing_invoice_id
+
 join (
-  select il.licence_id,
-    make_date(b.from_financial_year_ending-1, 4, 1) AS min_date,
-    make_date(b.to_financial_year_ending, 3, 31) AS max_date
-  from water.billing_batches b
-  join water.billing_invoices i on b.billing_batch_id=i.billing_batch_id
-  join water.billing_invoice_licences il on i.billing_invoice_id=il.billing_invoice_id
-  where b.billing_batch_id=:batchId
-) il_2 on il.licence_id=il_2.licence_id
-where
-  b.status='sent'
-  and b.billing_batch_id<>:batchId
-  and t.start_date>=il_2.min_date
-  and t.end_date<=il_2.max_date
-order by t.date_created ASC
+  select t.*, il.licence_id, i.invoice_account_number, i.financial_year_ending, 
+  b.billing_batch_id, b.is_summer
+  from water.billing_transactions t
+  join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
+  join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
+  join water.billing_batches b on i.billing_batch_id=b.billing_batch_id
+  where 
+    b.billing_batch_id<>:batchId
+    and b.status='sent'
+    and i.is_de_minimis=false
+) t on t.licence_id=il.licence_id and t.financial_year_ending=i.financial_year_ending and t.invoice_account_number=i.invoice_account_number
+
+where b.billing_batch_id=:batchId
+order by t.start_date asc, t.date_created asc
 `;
 
 exports.findByBatchId = `
-select t.* from water.billing_transactions t
+select t.*, i.invoice_account_number, i.financial_year_ending, b.billing_batch_id, b.is_summer
+from water.billing_transactions t
 join water.billing_invoice_licences il on t.billing_invoice_licence_id=il.billing_invoice_licence_id
 join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
 join water.billing_batches b on i.billing_batch_id=b.billing_batch_id
