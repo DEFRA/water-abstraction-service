@@ -2,8 +2,12 @@ const s3 = require('../../lib/services/s3');
 
 const getReport = async (request) => {
   const { reportIdentifier } = request.params;
-  const response = await s3.getSignedUrl(`reporting/${reportIdentifier}.csv`);
-  return response;
+  const url = await s3.getSignedUrl(`reporting/${reportIdentifier}.csv`);
+  return {
+    data: {
+      url
+    }
+  };
 };
 
 exports.getReport = getReport;

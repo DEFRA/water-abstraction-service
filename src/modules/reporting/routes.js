@@ -15,9 +15,9 @@ module.exports = {
       validate: {
         params: {
           reportIdentifier: Joi.string().valid(
-            'billedLicences',
-            'revokedUncreditedLicences',
-            'unbilledLicences'
+            'billedActiveLicences',
+            'uncreditedInactiveLicences',
+            'unbilledActiveLicences'
           ).required()
         },
         headers: async values => {
