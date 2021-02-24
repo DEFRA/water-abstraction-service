@@ -142,9 +142,10 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
       });
 
       test('resolves with batch and transactions', async () => {
-        expect(result.batch).to.be.an.instanceof(Batch);
-        expect(result.batch.id).to.equal(BATCH_ID);
-        expect(result.transactions).to.equal(data.transactions);
+        expect(result.billingTransactionIds).to.equal([
+          data.transactions[0].billingTransactionId,
+          data.transactions[1].billingTransactionId
+        ]);
       });
     });
 
@@ -167,9 +168,14 @@ experiment('modules/billing/jobs/prepare-transactions', () => {
 
     beforeEach(async () => {
       job = {
+        data: {
+          batchId: BATCH_ID
+        },
         returnvalue: {
-          batch: data.batch,
-          transactions: data.transactions
+          billingTransactionIds: [
+            data.transactions[0].billingTransactionId,
+            data.transactions[1].billingTransactionId
+          ]
         }
       };
     });

@@ -321,7 +321,7 @@ experiment('lib/connectors/repos/billing-volumes', () => {
 
   experiment('.markVolumesAsErrored', () => {
     beforeEach(async () => {
-      await billingVolumes.markVolumesAsErrored('test-batch-id');
+      await billingVolumes.markVolumesAsErrored('test-batch-id', { require: false });
     });
 
     test('calls .where to find only the rows in the relevant batch', async () => {
@@ -332,7 +332,15 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     });
 
     test('saves the changes', async () => {
-      expect(stub.save.calledWith({ errored_on: new Date() })).to.be.true();
+      const [updates] = stub.save.lastCall.args;
+      expect(Object.keys(updates)).to.only.include('errored_on');
+      expect(updates.errored_on instanceof Date).to.be.true();
+    });
+
+    test('passes in expected options', async () => {
+      const [, options] = stub.save.lastCall.args;
+      expect(options.method).to.equal('update');
+      expect(options.require).to.be.false();
     });
 
     test('calls .toJSON on the collection', async () => {

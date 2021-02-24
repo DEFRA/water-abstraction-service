@@ -24,7 +24,10 @@ const invoiceRow = {
   invoiceAccountId: 'aea355f7-b931-4824-8465-575f5b95657f',
   invoiceAccountNumber: 'A12345678A',
   dateCreated: '2020-03-05T10:57:23.911Z',
-  financialYearEnding: 2019
+  financialYearEnding: 2019,
+  netAmount: 123,
+  invoiceValue: 200,
+  creditNoteValue: -77
 };
 
 experiment('modules/billing/mappers/invoice', () => {
@@ -65,7 +68,6 @@ experiment('modules/billing/mappers/invoice', () => {
       invoice = new Invoice();
       invoice.invoiceAccount = new InvoiceAccount(uuid());
       invoice.invoiceAccount.accountNumber = 'A12345678A';
-
       invoice.financialYear = new FinancialYear(2020);
     });
 
@@ -91,6 +93,9 @@ experiment('modules/billing/mappers/invoice', () => {
         expect(result.address).to.equal(invoice.address.toJSON());
         expect(result.billingBatchId).to.equal(batch.id);
         expect(result.financialYearEnding).to.equal(invoice.financialYear.yearEnding);
+        expect(result.invoiceNumber).to.be.null();
+        expect(result.netAmount).to.be.null();
+        expect(result.isCredit).to.be.null();
       });
     });
 
@@ -101,6 +106,28 @@ experiment('modules/billing/mappers/invoice', () => {
 
       test('the address property is an empty object', async () => {
         expect(result.address).to.equal({});
+      });
+    });
+
+    experiment('when the invoice number is populated', () => {
+      test('it is mapped', () => {
+        invoice.invoiceNumber = 'AAI1000000';
+        const { invoiceNumber } = invoiceMapper.modelToDb(batch, invoice);
+        expect(invoiceNumber).to.equal('AAI1000000');
+      });
+    });
+
+    experiment('when totals are present', () => {
+      beforeEach(async () => {
+        invoice.netTotal = 123;
+        invoice.invoiceValue = 200;
+        invoice.creditNoteValue = -77;
+        result = invoiceMapper.modelToDb(batch, invoice);
+      });
+      test('the totals are mapped', async () => {
+        expect(invoice.netTotal).to.equal(123);
+        expect(invoice.creditNoteValue).to.equal(-77);
+        expect(invoice.invoiceValue).to.equal(200);
       });
     });
   });

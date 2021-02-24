@@ -37,6 +37,7 @@ experiment('modules/billing/jobs/create-bill-run', () => {
     sandbox.stub(batchJob, 'logHandlingErrorAndSetBatchStatus');
     sandbox.stub(batchJob, 'logOnCompleteError');
     sandbox.stub(batchJob, 'logOnComplete');
+    sandbox.stub(batchJob, 'logHandlingError');
 
     batch = new Batch();
     batch.fromHash(data.batch);
@@ -60,7 +61,7 @@ experiment('modules/billing/jobs/create-bill-run', () => {
   experiment('.createMessage', () => {
     test('creates the expected message array', async () => {
       const message = createBillRunJob.createMessage(
-        data.batch
+        batchId
       );
 
       expect(message).to.equal([

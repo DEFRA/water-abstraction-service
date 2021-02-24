@@ -142,14 +142,28 @@ const updateByBatchId = async (billingBatchId, changes) => {
  * Marks all records as errored by batch ID
  * @param {String} billingBatchId
  */
-const markVolumesAsErrored = async (billingBatchId) => {
+const markVolumesAsErrored = async (billingBatchId, options = {}) => {
   const result = await BillingVolume
     .where('billing_batch_id', billingBatchId)
     .save({
       errored_on: new Date()
-    }, { method: 'update' });
+    }, { method: 'update', ...options });
   return result.toJSON();
 };
+
+/**
+ * Finds approved billing volumes for the specified charge version ID
+ * in the supplied financial year and season
+ *
+ * @param {String} chargeVersionId - guid
+ * @param {Number} financialYearEnding - e.g. 2020
+ * @param {Boolean} isSummer
+ * @return {Promise<Array>}
+ */
+const findByChargeVersionFinancialYearAndSeason = async (chargeVersionId, financialYearEnding, isSummer) =>
+  raw.multiRow(queries.findByChargeVersionFinancialYearAndSeason, {
+    chargeVersionId, financialYearEnding, isSummer
+  });
 
 exports.create = create;
 exports.findApprovedByChargeElementIdsAndFinancialYear = findApprovedByChargeElementIdsAndFinancialYear;
@@ -164,3 +178,4 @@ exports.findByIds = findByIds;
 exports.deleteByBatchIdAndLicenceId = deleteByBatchIdAndLicenceId;
 exports.updateByBatchId = updateByBatchId;
 exports.markVolumesAsErrored = markVolumesAsErrored;
+exports.findByChargeVersionFinancialYearAndSeason = findByChargeVersionFinancialYearAndSeason;

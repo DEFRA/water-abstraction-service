@@ -1,8 +1,7 @@
 'use strict';
 
-const { omit } = require('lodash');
+const { omit, isObject } = require('lodash');
 const Company = require('../models/company');
-const { ORGANISATION_TYPES, COMPANY_TYPES } = Company;
 
 const { createMapper } = require('../object-mapper');
 const { createModel } = require('./lib/helpers');
@@ -32,12 +31,7 @@ const uiToModel = companyData => {
   if (companyData.companyId) {
     return new Company(companyData.companyId);
   }
-  const company = new Company();
-  return company.fromHash({
-    ...companyData,
-    type: companyData.type === ORGANISATION_TYPES.individual ? COMPANY_TYPES.person : COMPANY_TYPES.organisation,
-    organisationType: companyData.type
-  });
+  return new Company().fromHash(companyData);
 };
 
 /**
@@ -48,6 +42,9 @@ const uiToModel = companyData => {
 const modelToCrm = company => omit(company.toJSON(), 'companyAddresses', 'companyContacts');
 
 const pojoToModel = object => {
+  if (!isObject(object)) {
+    return null;
+  }
   const company = new Company();
   return company.pickFrom(object, ['id', 'type', 'organisationType', 'name', 'companyNumber']);
 };

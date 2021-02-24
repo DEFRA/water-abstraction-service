@@ -22,6 +22,7 @@ const returnsNotifications = require('./src/modules/returns-notifications');
 const batchNotifications = require('./src/modules/batch-notifications/lib/jobs/init-batch-notifications');
 const db = require('./src/lib/connectors/db');
 const CatboxRedis = require('@hapi/catbox-redis');
+const { validate } = require('./src/lib/validate');
 
 // Notification cron jobs
 require('./src/modules/batch-notifications/cron').scheduleJobs();
@@ -47,7 +48,6 @@ const plugins = [
   require('./src/lib/message-queue').plugin,
   require('./src/lib/message-queue-v2').plugin,
   require('./src/modules/returns/register-subscribers'),
-  require('./src/plugins/internal-calling-user'),
   require('./src/modules/address-search/plugin'),
   require('./src/modules/billing/register-subscribers')
 ];
@@ -91,7 +91,8 @@ const registerServerPlugins = async (server) => {
           info: {
             title: 'Test API Documentation',
             version: require('./package.json').version
-          }
+          },
+          pathPrefixSize: 3
         }
       }
     ]);
@@ -101,7 +102,7 @@ const registerServerPlugins = async (server) => {
 const configureServerAuthStrategy = (server) => {
   server.auth.strategy('jwt', 'jwt', {
     ...config.jwt,
-    validate: async (decoded) => ({ isValid: !!decoded.id })
+    validate
   });
   server.auth.default('jwt');
 };
@@ -156,6 +157,13 @@ const start = async function () {
   }
 };
 
+const stop = () => {
+  server.stop({ timeout: 5000 }).then(function (err) {
+    console.log('hapi server stopped');
+    process.exit((err) ? 1 : 0);
+  });
+};
+
 const processError = message => err => {
   logger.error(message, err);
   process.exit(1);
@@ -188,3 +196,4 @@ if (!module.parent) {
 
 module.exports = server;
 module.exports._start = start;
+module.exports._stop = stop;

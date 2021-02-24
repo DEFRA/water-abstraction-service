@@ -37,3 +37,11 @@ delete from water.billing_volumes v
     and l.licence_id=:licenceId
     and v.billing_batch_id=:billingBatchId
 `;
+
+exports.findByChargeVersionFinancialYearAndSeason = `
+select bv.* from water.charge_elements ce
+join water.billing_volumes bv on 
+  ce.charge_element_id=bv.charge_element_id 
+  and bv.financial_year=:financialYearEnding 
+  and bv.is_summer=:isSummer 
+where ce.charge_version_id=:chargeVersionId`;

@@ -36,6 +36,7 @@ experiment('lib/services/charge-versions', () => {
     sandbox.stub(service, 'findMany').resolves('test');
     sandbox.stub(chargeVersionRepo, 'create').resolves({});
     sandbox.stub(chargeVersionRepo, 'update');
+    sandbox.stub(chargeVersionRepo, 'findMany');
     sandbox.stub(licencesService, 'getLicenceById').resolves({});
     sandbox.stub(licencesService, 'flagForSupplementaryBilling');
     sandbox.stub(chargeElementService, 'create');
@@ -60,6 +61,30 @@ experiment('lib/services/charge-versions', () => {
       expect(chargeVersionId).to.equal(id);
       expect(fetch).to.equal(chargeVersionRepo.findOne);
       expect(mapper).to.equal(chargeVersionMapper);
+    });
+  });
+
+  experiment('.getManyByChargeVersionIds', () => {
+    let ids, result;
+    beforeEach(async () => {
+      ids = [uuid(), uuid()];
+      chargeVersionRepo.findMany.resolves([
+        { chargeVersionId: ids[0] },
+        { chargeVersionId: ids[1] }]);
+
+      result = await chargeVersionService.getManyByChargeVersionIds(ids);
+    });
+
+    test('calls the .findMany repo function', async () => {
+      expect(chargeVersionRepo.findMany.calledWith(ids)).to.be.true();
+    });
+
+    test('returns the result of the mapper', () => {
+      expect(result).to.be.an.array().have.length(2);
+      expect(result[0]).to.be.an.instanceOf(ChargeVersion);
+      expect(result[0].id).to.equal(ids[0]);
+      expect(result[1]).to.be.an.instanceOf(ChargeVersion);
+      expect(result[1].id).to.equal(ids[1]);
     });
   });
 

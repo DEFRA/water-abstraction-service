@@ -17,7 +17,6 @@ const uuid = require('uuid/v4');
 const Batch = require('../../../../src/lib/models/batch');
 const FinancialYear = require('../../../../src/lib/models/financial-year');
 const Region = require('../../../../src/lib/models/region');
-const Totals = require('../../../../src/lib/models/totals');
 const Invoice = require('../../../../src/lib/models/invoice');
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Transaction = require('../../../../src/lib/models/transaction');
@@ -41,7 +40,9 @@ const data = {
     netTotal: null,
     creditNoteCount: 4,
     invoiceCount: 3,
-    errorCode: 10
+    errorCode: 10,
+    invoiceValue: null,
+    creditNoteValue: null
   }
 };
 
@@ -93,8 +94,16 @@ experiment('modules/billing/mappers/batch', () => {
         expect(batch.externalId).to.be.undefined();
       });
 
-      test('totals are not set', async () => {
-        expect(batch.totals).to.be.null();
+      test('the netTotal is null', async () => {
+        expect(batch.netTotal).to.be.null();
+      });
+
+      test('the creditNoteValue is null', async () => {
+        expect(batch.creditNoteValue).to.be.null();
+      });
+
+      test('the invoiceValue is null', async () => {
+        expect(batch.invoiceValue).to.be.null();
       });
 
       test('sets the errorCode property', async () => {
@@ -102,16 +111,26 @@ experiment('modules/billing/mappers/batch', () => {
       });
     });
 
-    experiment('when the net total is not null', () => {
+    experiment('when the totals are not null', () => {
       beforeEach(async () => {
         batch = batchMapper.dbToModel({
           ...data.batch,
-          netTotal: 2345
+          netTotal: 2345,
+          invoiceValue: 2400,
+          creditNoteValue: -55
         });
       });
 
-      test('totals is a Totals instance', async () => {
-        expect(batch.totals instanceof Totals).to.be.true();
+      test('the netTotal is set', async () => {
+        expect(batch.netTotal).to.equal(2345);
+      });
+
+      test('the invoiceValue is set', async () => {
+        expect(batch.invoiceValue).to.equal(2400);
+      });
+
+      test('the creditNoteValue is set', async () => {
+        expect(batch.creditNoteValue).to.equal(-55);
       });
     });
 
@@ -121,6 +140,7 @@ experiment('modules/billing/mappers/batch', () => {
           ...data.batch,
           billingInvoices: [{
             billingInvoiceId: uuid(),
+            invoiceAccountId: uuid(),
             invoiceAccountNumber: 'A12345678A'
           }]
         };

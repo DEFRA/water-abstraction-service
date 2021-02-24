@@ -51,7 +51,6 @@ experiment('modules/billing/jobs/update-customers', () => {
       expect(message[1]).to.equal({
         invoiceAccountId: tempInvoiceAccountId
       });
-      expect(message[2].singletonKey).startsWith(`billing.update-customer-account.${tempInvoiceAccountId}.`);
     });
   });
 

@@ -421,6 +421,26 @@ experiment('csv-schema-validation', () => {
       expect(isValid).to.be.true();
     });
 
+    test('can be yes', async () => {
+      const records = getValidSingleLicenceReturn();
+      setNilReturn(records, 'yes');
+
+      const csv = csvStringify(records);
+      const { isValid } = await csvSchemaValidation.validate(csv);
+
+      expect(isValid).to.be.true();
+    });
+
+    test('can be YES', async () => {
+      const records = getValidSingleLicenceReturn();
+      setNilReturn(records, 'YES');
+
+      const csv = csvStringify(records);
+      const { isValid } = await csvSchemaValidation.validate(csv);
+
+      expect(isValid).to.be.true();
+    });
+
     test('can be N', async () => {
       const records = getValidSingleLicenceReturn();
       setNilReturn(records, 'N');
@@ -434,6 +454,26 @@ experiment('csv-schema-validation', () => {
     test('can be n', async () => {
       const records = getValidSingleLicenceReturn();
       setNilReturn(records, 'n');
+
+      const csv = csvStringify(records);
+      const { isValid } = await csvSchemaValidation.validate(csv);
+
+      expect(isValid).to.be.true();
+    });
+
+    test('can be no', async () => {
+      const records = getValidSingleLicenceReturn();
+      setNilReturn(records, 'no');
+
+      const csv = csvStringify(records);
+      const { isValid } = await csvSchemaValidation.validate(csv);
+
+      expect(isValid).to.be.true();
+    });
+
+    test('can be NO', async () => {
+      const records = getValidSingleLicenceReturn();
+      setNilReturn(records, 'NO');
 
       const csv = csvStringify(records);
       const { isValid } = await csvSchemaValidation.validate(csv);

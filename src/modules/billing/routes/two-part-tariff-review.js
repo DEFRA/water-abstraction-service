@@ -2,6 +2,7 @@
 const Joi = require('@hapi/joi');
 const controller = require('../controllers/two-part-tariff-review');
 const preHandlers = require('../pre-handlers');
+const { ROLES: { billing } } = require('../../../lib/roles');
 
 const getBatchLicences = {
   method: 'GET',
@@ -12,10 +13,10 @@ const getBatchLicences = {
     validate: {
       params: {
         batchId: Joi.string().uuid().required()
-      },
-      headers: async values => {
-        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
       }
+    },
+    auth: {
+      scope: [billing]
     },
     pre: [
       { method: preHandlers.loadBatch, assign: 'batch' }
@@ -33,10 +34,10 @@ const getBatchLicenceVolumes = {
       params: {
         batchId: Joi.string().uuid().required(),
         licenceId: Joi.string().uuid().required()
-      },
-      headers: async values => {
-        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
       }
+    },
+    auth: {
+      scope: [billing]
     },
     pre: [
       { method: preHandlers.loadBatch, assign: 'batch' }
@@ -54,10 +55,10 @@ const deleteBatchLicence = {
       params: {
         batchId: Joi.string().uuid().required(),
         licenceId: Joi.string().uuid().required()
-      },
-      headers: async values => {
-        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
       }
+    },
+    auth: {
+      scope: [billing]
     },
     pre: [
       { method: preHandlers.loadBatch, assign: 'batch' }
@@ -74,10 +75,10 @@ const getBillingVolume = {
     validate: {
       params: {
         billingVolumeId: Joi.string().uuid().required()
-      },
-      headers: async values => {
-        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
       }
+    },
+    auth: {
+      scope: [billing]
     }
   }
 };
@@ -94,10 +95,10 @@ const patchBillingVolume = {
       },
       payload: {
         volume: Joi.number().positive().allow(0).required()
-      },
-      headers: async values => {
-        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
       }
+    },
+    auth: {
+      scope: [billing]
     }
   }
 };
@@ -110,10 +111,10 @@ const postApproveReviewBatch = {
     validate: {
       params: {
         batchId: Joi.string().uuid().required()
-      },
-      headers: async values => {
-        Joi.assert(values['defra-internal-user-id'], Joi.number().integer().required());
       }
+    },
+    auth: {
+      scope: [billing]
     },
     pre: [
       { method: preHandlers.loadBatch, assign: 'batch' }

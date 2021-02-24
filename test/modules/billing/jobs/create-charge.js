@@ -447,7 +447,7 @@ experiment('modules/billing/jobs/create-charge', () => {
 
       test('the batch is not updated', async () => {
         expect(batchService.setErrorStatus.calledWith(
-          job.data.batchId, BATCH_ERROR_CODE.failedToPrepareTransactions
+          job.data.batchId, BATCH_ERROR_CODE.failedToCreateCharge
         )).to.be.true();
       });
     });

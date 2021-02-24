@@ -4,9 +4,10 @@ const { uniq, get, flatMap } = require('lodash');
 
 const {
   assertIsInstanceOf, assertIsArrayOfType,
-  assertIsNullableInstanceOf, assertIsBoolean
+  assertIsNullableInstanceOf, assertIsBoolean,
+  assertNullableString
 } = require('./validators');
-const Model = require('./model');
+
 const Address = require('./address');
 const InvoiceAccount = require('./invoice-account');
 const InvoiceLicence = require('./invoice-licence');
@@ -15,10 +16,11 @@ const Contact = require('./contact-v2');
 const FinancialYear = require('./financial-year');
 const Totals = require('./totals');
 
-class Invoice extends Model {
+class Invoice extends Totals {
   constructor (id) {
     super(id);
     this._invoiceLicences = [];
+    this.isDeMinimis = false;
   }
 
   /**
@@ -148,20 +150,6 @@ class Invoice extends Model {
   }
 
   /**
-   * The charge module summary contains data on
-   * invoice/credit count, invoice/credit totals, net total
-   * @param {Totals} totals
-   */
-  set totals (totals) {
-    assertIsInstanceOf(totals, Totals);
-    this._totals = totals;
-  }
-
-  get totals () {
-    return this._totals;
-  }
-
-  /**
    * Sets the financial year
    * @param {FinancialYear} financialYear
    */
@@ -177,7 +165,7 @@ class Invoice extends Model {
   /**
    * Whether de-minimis rules is applied
    * This occurs when invoice/credit note value < £5
-   * @param {Boolean}
+   * @param {Boolean} isDeMinimis
    */
   set isDeMinimis (isDeMinimis) {
     assertIsBoolean(isDeMinimis);
@@ -186,6 +174,19 @@ class Invoice extends Model {
 
   get isDeMinimis () {
     return this._isDeMinimis;
+  }
+
+  /**
+   * Sets the invoice number
+   * @param {String} invoiceNumber
+   */
+  set invoiceNumber (invoiceNumber) {
+    assertNullableString(invoiceNumber);
+    this._invoiceNumber = invoiceNumber;
+  }
+
+  get invoiceNumber () {
+    return this._invoiceNumber;
   }
 
   get hasTransactionErrors () {

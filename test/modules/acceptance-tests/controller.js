@@ -9,8 +9,6 @@ const {
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
-const batches = require('../../../src/modules/acceptance-tests/lib/charging/batches');
-const chargingScenarios = require('../../../src/modules/acceptance-tests/lib/charging/charging-scenarios');
 const users = require('../../../src/modules/acceptance-tests/lib/users');
 const entities = require('../../../src/modules/acceptance-tests/lib/entities');
 const permits = require('../../../src/modules/acceptance-tests/lib/permits');
@@ -19,6 +17,9 @@ const returns = require('../../../src/modules/acceptance-tests/lib/returns');
 const events = require('../../../src/modules/acceptance-tests/lib/events');
 const sessions = require('../../../src/modules/acceptance-tests/lib/sessions');
 const licences = require('../../../src/modules/acceptance-tests/lib/licences');
+const returnRequirements = require('../../../src/modules/acceptance-tests/lib/return-requirements');
+const returnRequirementPurposes = require('../../../src/modules/acceptance-tests/lib/return-requirements-purposes');
+const returnVersions = require('../../../src/modules/acceptance-tests/lib/return-versions');
 
 const controller = require('../../../src/modules/acceptance-tests/controller');
 const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
@@ -61,9 +62,10 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(documents, 'create').resolves({});
     sandbox.stub(licences, 'create').resolves({});
     sandbox.stub(returns, 'createDueReturn').resolves({});
+    sandbox.stub(returnVersions, 'create').resolves({});
+    sandbox.stub(returnRequirements, 'create').resolves({});
+    sandbox.stub(returnRequirementPurposes, 'create').resolves({});
 
-    sandbox.stub(batches, 'delete').resolves();
-    sandbox.stub(batches, 'getTestRegionBatchIds').resolves([]);
     sandbox.stub(returns, 'delete').resolves();
     sandbox.stub(events, 'delete').resolves();
     sandbox.stub(permits, 'delete').resolves();
@@ -72,9 +74,10 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(users, 'delete').resolves();
     sandbox.stub(sessions, 'delete').resolves();
     sandbox.stub(licences, 'delete').resolves();
+    sandbox.stub(returnVersions, 'delete').resolves();
+    sandbox.stub(returnRequirements, 'delete').resolves();
+    sandbox.stub(returnRequirementPurposes, 'delete').resolves();
     sandbox.stub(chargeTestDataTearDown, 'tearDown').resolves();
-    sandbox.stub(chargingScenarios, 'annualBillRun').resolves({ regionId: 'test-annual-bill-run-region-id' });
-    sandbox.stub(chargingScenarios, 'supplementaryBillRun').resolves({ regionId: 'test-supplementary-bill-run-region-id' });
   });
 
   afterEach(async () => {
@@ -90,8 +93,10 @@ experiment('modules/acceptance-tests/controller', () => {
       });
 
       test('the existing data is torn down', async () => {
-        expect(batches.delete.called).to.be.true();
         expect(returns.delete.called).to.be.true();
+        expect(returnRequirementPurposes.delete.called).to.be.true();
+        expect(returnRequirements.delete.called).to.be.true();
+        expect(returnVersions.delete.called).to.be.true();
         expect(events.delete.called).to.be.true();
         expect(permits.delete.called).to.be.true();
         expect(documents.delete.called).to.be.true();
@@ -103,7 +108,6 @@ experiment('modules/acceptance-tests/controller', () => {
 
       test('the expected current licence response is created', async () => {
         const data = response.currentLicencesWithReturns;
-
         expect(data.company.entity_id).to.equal('test-company');
         expect(data.externalPrimaryUser.user.user_name).to.equal('acceptance-test.external@example.com');
         expect(data.externalPrimaryUser.entity.entity_nm).to.equal('acceptance-test.external@example.com');
@@ -116,6 +120,12 @@ experiment('modules/acceptance-tests/controller', () => {
         expect(data.returns.daily).to.exist();
         expect(data.returns.weekly).to.exist();
         expect(data.returns.monthly).to.exist();
+      });
+      test('the expected response includes current licences with no returns', async () => {
+        const data = response.currentLicenceNoReturns;
+        expect(data.monthlyDocument).to.exist();
+        expect(data.monthlyDocumentV2).to.exist();
+        expect(data.returns).to.not.exist();
       });
 
       test('there are no agents', async () => {
@@ -226,46 +236,57 @@ experiment('modules/acceptance-tests/controller', () => {
     });
   });
 
-  experiment('when annual bill data is requested', async () => {
-    let response;
+  experiment('postSetupFromYaml', () => {
+    experiment('invalid key', () => {
+      let h, request, response;
+      const invalidkey = 'some-invalid-key';
+      beforeEach(async () => {
+        h = {
+          response: sandbox.stub().returnsThis(),
+          code: sandbox.stub()
+        };
 
-    beforeEach(async () => {
-      const request = {
-        payload: {
-          includeAnnualBillRun: true
-        }
-      };
-      response = await controller.postSetup(request);
+        request = {
+          params: { key: invalidkey }
+        };
+
+        response = await controller.postSetupFromYaml(request, h);
+      });
+      test('returns Boom error', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.payload.statusCode).to.equal(404);
+        expect(response.output.payload.message).to.equal(`Key ${invalidkey} did not match any available Yaml sets.`);
+      });
     });
 
-    test('annual bill run data is created', async () => {
-      const charging = response.charging;
-      expect(charging).to.equal({ regionId: 'test-annual-bill-run-region-id' });
-    });
-  });
+    experiment('valid key', () => {
+      let h, request, loader;
+      const validKey = 'barebones';
+      beforeEach(async () => {
+        loader = require('../../../integration-tests/billing/services/loader');
 
-  experiment('when annual bill data is requested', async () => {
-    let response;
+        await sandbox.stub(loader, 'load').resolves();
 
-    beforeEach(async () => {
-      const request = {
-        payload: {
-          includeSupplementaryBillRun: true
-        }
-      };
-      response = await controller.postSetup(request);
-    });
+        h = {
+          response: sandbox.stub().returnsThis(),
+          code: sandbox.stub()
+        };
 
-    test('supplementary bill run data is created', async () => {
-      const charging = response.charging;
-      expect(charging).to.equal({ regionId: 'test-supplementary-bill-run-region-id' });
+        request = {
+          params: { key: validKey }
+        };
+
+        await controller.postSetupFromYaml(request, h);
+      });
+      test('returns 202', async () => {
+        expect(loader.load.called).to.be.true();
+      });
     });
   });
 
   experiment('postTearDown', () => {
     test('deletes the test data that has been created', async () => {
       await controller.postTearDown();
-      expect(batches.delete.called).to.be.true();
       expect(returns.delete.called).to.be.true();
       expect(events.delete.called).to.be.true();
       expect(permits.delete.called).to.be.true();
@@ -273,7 +294,6 @@ experiment('modules/acceptance-tests/controller', () => {
       expect(entities.delete.called).to.be.true();
       expect(users.delete.called).to.be.true();
       expect(sessions.delete.called).to.be.true();
-      expect(batches.getTestRegionBatchIds.called).to.be.true();
     });
   });
 });

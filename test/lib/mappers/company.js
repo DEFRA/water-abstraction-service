@@ -21,7 +21,8 @@ const dbRow = {
 
 const companyData = {
   name: 'company name',
-  type: Company.ORGANISATION_TYPES.individual
+  type: Company.COMPANY_TYPES.person,
+  organisationType: Company.ORGANISATION_TYPES.individual
 };
 
 experiment('modules/billing/mappers/company', () => {
@@ -88,7 +89,7 @@ experiment('modules/billing/mappers/company', () => {
       expect(result.id).to.equal(dbRow.companyId);
     });
 
-    experiment('when type = "individual"', () => {
+    experiment('when type = "person"', () => {
       test('has the expected type value', async () => {
         expect(result.type).to.equal(Company.COMPANY_TYPES.person);
       });
@@ -98,14 +99,17 @@ experiment('modules/billing/mappers/company', () => {
       });
     });
 
-    experiment('when type != "individual', () => {
+    experiment('when type = "organisation"', () => {
       const organisationTypes = omit(Company.ORGANISATION_TYPES, 'individual');
-      Object.values(organisationTypes).forEach(type => {
-        test(`maps data correctly when type is set to ${type}`, async () => {
-          companyData.type = type;
-          result = companyMapper.uiToModel(companyData);
+      Object.values(organisationTypes).forEach(organisationType => {
+        test(`maps data correctly when organisationType is set to ${organisationType}`, async () => {
+          result = companyMapper.uiToModel({
+            ...companyData,
+            type: Company.COMPANY_TYPES.organisation,
+            organisationType
+          });
           expect(result.type).to.equal(Company.COMPANY_TYPES.organisation);
-          expect(result.organisationType).to.equal(type);
+          expect(result.organisationType).to.equal(organisationType);
         });
       });
     });

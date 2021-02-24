@@ -7,8 +7,10 @@ const isProduction = ['production'].includes(process.env.NODE_ENV);
 const isProductionLike = ['production', 'preprod'].includes(process.env.NODE_ENV);
 const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0';
 const isLocal = process.env.NODE_ENV === 'local';
-const isTravis = process.env.TRAVIS;
-const isLab = !!process.env.IS_LAB;
+const isTlsConnection = (process.env.REDIS_HOST || '').includes('aws');
+const isRedisLazy = !!process.env.LAZY_REDIS;
+const isPermitsTestDatabase = process.env.DATABASE_URL.includes('permits-test');
+const isTest = process.env.NODE_ENV === 'test';
 
 module.exports = {
 
@@ -22,9 +24,10 @@ module.exports = {
   },
 
   billing: {
-    supplementaryYears: 1,
+    supplementaryYears: isTest ? 1 : 6,
     // There are 4 processes on the environments but only 1 locally
-    createChargeJobConcurrency: isLocal ? 16 : 4
+    createChargeJobConcurrency: isLocal ? 16 : 4,
+    naldSwitchOverDate: '2021-04-01'
   },
 
   blipp: {
@@ -164,18 +167,21 @@ module.exports = {
     idm: process.env.IDM_URI || 'http://127.0.0.1:8003/idm/1.0',
     permits: process.env.PERMIT_URI || 'http://127.0.0.1:8004/API/1.0/',
     returns: process.env.RETURNS_URI || 'http://127.0.0.1:8006/returns/1.0',
-    import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0',
-    chargeModule: process.env.CHARGE_MODULE_ORIGIN || 'https://charging.defra.com',
-    cognito: process.env.COGNITO_HOST
+    import: process.env.IMPORT_URI || 'http://127.0.0.1:8007/import/1.0'
   },
 
   isAcceptanceTestTarget,
 
   isProduction,
 
-  cognito: {
-    username: process.env.COGNITO_USERNAME,
-    password: process.env.COGNITO_PASSWORD
+  chargeModule: {
+    isLocalDocker: (process.env.CHARGE_MODULE_ORIGIN || '').includes('localhost') && !isTest,
+    host: process.env.CHARGE_MODULE_ORIGIN,
+    cognito: {
+      host: process.env.COGNITO_HOST,
+      username: process.env.COGNITO_USERNAME,
+      password: process.env.COGNITO_PASSWORD
+    }
   },
 
   proxy: process.env.PROXY,
@@ -192,13 +198,9 @@ module.exports = {
     host: process.env.REDIS_HOST || '127.0.0.1',
     port: process.env.REDIS_PORT || 6379,
     password: process.env.REDIS_PASSWORD || '',
-    ...!(isLocal || isTravis) && { tls: {} },
-    db: 2,
-    lazyConnect: isLab
-  },
-
-  licences: {
-    withChargeVersionsStartDate: '2020-01-01'
+    ...(isTlsConnection) && { tls: {} },
+    db: isPermitsTestDatabase ? 4 : 2,
+    lazyConnect: isRedisLazy
   },
 
   featureToggles: {

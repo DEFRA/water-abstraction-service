@@ -15,7 +15,7 @@ experiment('./modules/kpi-reporting/lib/mappers', () => {
       { currentYear: false, month: 12, named: 200, renamed: 100, year: 2019 }
     ];
     test('the licences named data is mapped correctly', async () => {
-      const mappedData = mappers.mapLicenceNamesData(licenceNamesData);
+      const mappedData = mappers.mapLicenceNamesData(licenceNamesData, new Date('2020-12-01'));
       expect(mappedData.totals).to.be.equal({ allTime: 630, ytd: 330 });
       expect(mappedData.monthly[0].currentYear).to.be.true();
       expect(mappedData.monthly[0].named).to.equal(220);
@@ -46,13 +46,13 @@ experiment('./modules/kpi-reporting/lib/mappers', () => {
 
   experiment('.mapReturnsDataMonthly', () => {
     const returnsDataMonthly = [
-      { currentYear: true, month: 2, request: 2, return: 2 },
-      { currentYear: true, month: 1, request: 3, return: 3 },
-      { currentYear: false, month: 12, request: 1, return: 1 }
+      { currentYear: true, month: 2, request: 2, return: 2, year: 2020 },
+      { currentYear: true, month: 1, request: 3, return: 3, year: 2020 },
+      { currentYear: false, month: 12, request: 1, return: 1, year: 2020 }
     ];
 
     test('the returns data by cycle is mapped correctly', async () => {
-      const mappedData = mappers.mapReturnsDataMonthly(returnsDataMonthly);
+      const mappedData = mappers.mapReturnsDataMonthly(returnsDataMonthly, new Date('2020-12-01'));
       expect(mappedData.totals).to.be.equal({ allTime: 6, ytd: 5 });
       expect(mappedData.monthly.length).to.equal(2);
       expect(mappedData.monthly[0].month).to.equal('February');

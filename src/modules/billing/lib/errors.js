@@ -24,6 +24,14 @@ class BillingVolumeStatusError extends StateError {
   }
 }
 
+class InvoiceNumberError extends StateError {
+  constructor (message) {
+    super(message);
+    this.name = 'InvoiceNumberError';
+  }
+}
+
 exports.BatchStatusError = BatchStatusError;
 exports.TransactionStatusError = TransactionStatusError;
 exports.BillingVolumeStatusError = BillingVolumeStatusError;
+exports.InvoiceNumberError = InvoiceNumberError;

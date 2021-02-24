@@ -12,6 +12,7 @@ const dbToModel = dbRow => {
     'eventId',
     'licences',
     'status',
+    'notifyId',
     'notifyStatus'
   ]);
 };
@@ -26,6 +27,7 @@ const modelToDb = scheduledNotification => {
     'eventId',
     'licences',
     'status',
+    'notifyId',
     'notifyStatus'
   ]);
 };

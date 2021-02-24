@@ -1,6 +1,7 @@
-const { ACCEPTANCE_TEST_SOURCE } = require('./constants');
 const permitsConnector = require('../../../lib/connectors/permit');
 const moment = require('moment');
+
+const { ACCEPTANCE_TEST_SOURCE } = require('./constants');
 
 const formatMoment = date => date.format('DD/MM/YYYY');
 const formatMomentIso = date => date.toISOString();

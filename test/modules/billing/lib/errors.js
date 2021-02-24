@@ -44,4 +44,17 @@ experiment('modules/billing/lib/errors', () => {
       expect(err.message).to.equal('oops');
     });
   });
+
+  experiment('InvoiceNumberError', () => {
+    beforeEach(async () => {
+      err = new errors.InvoiceNumberError('oops');
+    });
+    test('has the correct name', async () => {
+      expect(err.name).to.equal('InvoiceNumberError');
+    });
+
+    test('has the correct message', async () => {
+      expect(err.message).to.equal('oops');
+    });
+  });
 });

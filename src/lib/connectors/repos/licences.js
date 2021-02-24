@@ -110,10 +110,18 @@ const updateIncludeInSupplementaryBillingStatusForBatch = (batchId, from, to) =>
     .raw(queries.updateIncludeInSupplementaryBillingStatusForBatch, params);
 };
 
-const findWithoutChargeVersions = startDate =>
-  raw.multiRow(queries.getLicencesWithoutChargeVersions, {
-    startDate
-  });
+const findWithoutChargeVersions = () =>
+  raw.multiRow(queries.getLicencesWithoutChargeVersions);
+
+/**
+ * Finds licences which have a 'current' charge version linked to the specified
+ * invoice account ID
+ *
+ * @param {String} invoiceAccountId
+ * @return {Promise}
+ */
+const findByInvoiceAccountId = invoiceAccountId =>
+  raw.multiRow(queries.getLicencesByInvoiceAccount, { invoiceAccountId });
 
 exports.create = create;
 exports.deleteTest = deleteTest;
@@ -122,6 +130,7 @@ exports.findOneByLicenceRef = findOneByLicenceRef;
 exports.findOne = findOne;
 exports.findByLicenceRef = findByLicenceRef;
 exports.findWithoutChargeVersions = findWithoutChargeVersions;
+exports.findByInvoiceAccountId = findByInvoiceAccountId;
 
 exports.update = update;
 exports.updateIncludeLicenceInSupplementaryBilling = updateIncludeLicenceInSupplementaryBilling;
