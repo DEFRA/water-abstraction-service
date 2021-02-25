@@ -1,6 +1,7 @@
 'use strict';
 
-const { groupBy, pick, omit, last } = require('lodash');
+const { groupBy, pick, omit, last, negate, flatMap, mapValues, sortBy } = require('lodash');
+const moment = require('moment');
 const newRepos = require('../../../lib/connectors/repos');
 
 const billingTransactionsRepo = require('../../../lib/connectors/repos/billing-transactions');
@@ -40,6 +41,16 @@ const commonTransactionKeys = [
   'isNewLicence',
   'invoiceAccountNumber',
   'financialYearEnding'
+];
+
+const omitKeys = [
+  'licenceId',
+  'financialYearEnding',
+  'invoiceAccountNumber',
+  'billingTransactionId',
+  'isCurrentBatch',
+  'billingBatchId',
+  'isSummer'
 ];
 
 /**
@@ -129,6 +140,14 @@ const isValidTransaction = transaction =>
 const isCurrentBatchTransaction = transaction => transaction.isCurrentBatch;
 
 /**
+ * Predicate to check if transaction is part of an existing batch
+ *
+ * @param {Object} transaction
+ * @return {Boolean}
+ */
+const isExistingBatchTransaction = negate(isCurrentBatchTransaction);
+
+/**
  * Gets transaction ID from transaction
  *
  * @param {Object} transaction
@@ -167,16 +186,94 @@ const getChanges = (transaction, sum) => {
 };
 
 /**
+ * Gets a key for pairing transactions within a group which have the same:
+ * - Charge period
+ * - Billable days (for annual transactions)
+ * - Volume (for TPT transactions)
+ *
+ * @param {Object} transaction
+ * @return {String}
+ */
+const getPairGroupingKey = transaction => {
+  const keys = ['startDate', 'endDate'];
+  keys.push(
+    transaction.isTwoPartTariffSupplementary ? 'volume' : 'billableDays'
+  );
+  return JSON.stringify(pick(transaction, keys));
+};
+
+/**
+ * Filters cancelling transactions in the supplied list
+ *
+ * The transactions are sorted by date created, and then reduced to the minumum amount
+ * of credits/charges to have the same financial effect
+ *
+ * The transactions supplied should already be sorted into a similar group
+ *
+ * E.g.
+ *
+ * Charge transaction - remove
+ * Credit transaction - remove
+ * Charge transaction - keep
+ *
+ * @param {Array<Object>} transactions
+ * @return {Array<Object>}
+ */
+const filterCancellingTransactions = transactions => {
+  return sortBy(transactions, transaction => moment(transaction.dateCreated).unix())
+    .reduce((acc, transaction) => {
+      const index = acc.findIndex(row => row.isCredit === !transaction.isCredit);
+      index === -1 ? acc.push(transaction) : acc.splice(index, 1);
+      return acc;
+    }, []);
+};
+
+/**
+ * Looks at all the transactions in a group, and returns a new array of
+ * transasctions with "pairs" (e.g. credits and charges that cancel each other)
+ * removed
+ *
+ * @param {Array<Object>} transactions
+ * @return {Array<Object>} transactions with cancelling pairs removed
+ */
+const getNonCancellingTransactions = transactions => {
+  const pairGroups = groupBy(transactions, getPairGroupingKey);
+  const filteredGroups = mapValues(pairGroups, filterCancellingTransactions);
+  return flatMap(Object.values(filteredGroups));
+};
+
+const getReversedTransaction = sourceTransaction => ({
+  ...getNewTransaction(sourceTransaction),
+  isCredit: !sourceTransaction.isCredit
+});
+
+/**
  * Updates a transaction in the current batch
  *
  * @param {Object} transaction
  * @param {Decimal} sum
  * @return {Promise}
  */
-const updateCurrentBatchTransaction = (transaction, sum) => {
-  const changes = getChanges(transaction, sum);
-  return billingTransactionsRepo.update(transaction.billingTransactionId, changes);
+const reverseExistingTransactions = async group => {
+  const existingBatchTransactions = group.transactions.filter(isExistingBatchTransaction);
+
+  // Get a list of transactions to reverse
+  const effectiveTransactions = getNonCancellingTransactions(existingBatchTransactions);
+
+  const reversedTransactions = effectiveTransactions.map(getReversedTransaction);
+
+  for (const reversedTransaction of reversedTransactions) {
+    await billingTransactionsRepo.create(reversedTransaction);
+  }
 };
+
+const getNewTransaction = sourceTransaction => ({
+  ...omit(sourceTransaction, omitKeys),
+  sourceTransactionId: sourceTransaction.billingTransactionId,
+  status: Transaction.statuses.candidate,
+  legacyId: null,
+  externalId: null
+});
 
 /**
  * Creates a new transaction in the current batch using a
@@ -193,20 +290,8 @@ const createTransaction = transactionGroup => {
   const sourceTransaction = last(transactionGroup.transactions);
 
   const transaction = {
-    ...omit(sourceTransaction, [
-      'licenceId',
-      'financialYearEnding',
-      'invoiceAccountNumber',
-      'billingTransactionId',
-      'isCurrentBatch',
-      'billingBatchId',
-      'isSummer'
-    ]),
-    ...getChanges(sourceTransaction, transactionGroup.sum),
-    sourceTransactionId: sourceTransaction.billingTransactionId,
-    status: Transaction.statuses.candidate,
-    legacyId: null,
-    externalId: null
+    ...getNewTransaction(sourceTransaction),
+    ...getChanges(sourceTransaction, transactionGroup.sum)
   };
   return billingTransactionsRepo.create(transaction);
 };
@@ -218,7 +303,10 @@ const createTransaction = transactionGroup => {
  * - Updates the transaction in the current batch if found to create a zero sum
  * - Creates a new transaction by copying one from a previous batch to create a zero sum
  *
- * @param {*} group
+ * @param {Object} group
+ * @param {Array} group.transactions
+ * @param {Decimal} group.sum
+ * @return {Promise}
  */
 const processTransactionGroup = async group => {
   // If group sums to zero, we don't need any adjustments in this group.
@@ -230,9 +318,9 @@ const processTransactionGroup = async group => {
     // updated
     const currentBatchTransaction = group.transactions.find(isCurrentBatchTransaction);
     if (currentBatchTransaction) {
-      return updateCurrentBatchTransaction(currentBatchTransaction, group.sum);
+      return reverseExistingTransactions(group);
     } else {
-      // If there is no transaction, we create a new one using a transaction from a
+      // If there are no transaction in current batch, we create a new one using a transaction from a
       // past batch as a template
       return createTransaction(group);
     }
