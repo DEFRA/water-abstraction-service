@@ -36,12 +36,8 @@ const handler = async job => {
   }
 };
 
-const onComplete = async (job) => {
+const onComplete = async job => {
   logger.info(`onComplete: ${job.id}`);
-  try {
-  } catch (err) {
-    logger.error(`Error handling onComplete: ${job.id}`, err, job.data);
-  }
 };
 
 const onFailed = (job, err) => {

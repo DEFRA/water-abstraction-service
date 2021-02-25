@@ -68,11 +68,8 @@ const loadLicenceVersion = async request => {
     //  Find non 'draft' licence versions for the licenceId where the draft charge version start date is in the date range of
     //  licence versions then pick the licence version with the greatest version number.
     const versions = await licenceVersions.findByLicenceId(licenceId);
-    const versionsFiltered = versions.filter(v => {
-      return v.status !== 'draft' && moment.range(v.startDate, v.endDate).contains(startDate);
-    });
-    const version = sortBy(versionsFiltered, getSortableVersionNumber).pop();
-    return version;
+    const versionsFiltered = versions.filter(v => v.status !== 'draft' && moment.range(v.startDate, v.endDate).contains(startDate));
+    return sortBy(versionsFiltered, getSortableVersionNumber).pop();
   } catch (err) {
     return Boom.notFound(`Licence version not found for licence ${licenceId}`);
   }
