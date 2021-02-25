@@ -14,7 +14,8 @@ const ChargeVersion = require('../../../../src/lib/models/charge-version');
 const Licence = require('../../../../src/lib/models/licence');
 const User = require('../../../../src/lib/models/user');
 const ChargeVersionWorkflow = require('../../../../src/lib/models/charge-version-workflow');
-
+const LicenceVersion = require('../../../../src/lib/models/licence-version');
+const licenceVersions = require('../../../../src/lib/connectors/repos/licence-versions');
 // Controllers
 const controller = require('../../../../src/lib/controller');
 const cvWorkflowsController = require('../../../../src/modules/charge-versions/controllers/charge-version-workflow');
@@ -32,6 +33,8 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
 
     sandbox.stub(licencesService, 'getLicenceById');
     sandbox.stub(licencesService, 'flagForSupplementaryBilling').resolves();
+
+    sandbox.stub(licenceVersions, 'findByLicenceId').resolves({ licenceId: 'test-lv-id', version: 100, increment: 1 });
 
     sandbox.stub(chargeVersionWorkflowService, 'create');
     sandbox.stub(chargeVersionWorkflowService, 'update');
@@ -118,7 +121,8 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
         },
         pre: {
           chargeVersion: new ChargeVersion(uuid()),
-          user: new User(123, 'mail@example.com')
+          user: new User(123, 'mail@example.com'),
+          licenceVersion: new LicenceVersion(uuid())
         }
       };
 
@@ -144,8 +148,9 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
       });
 
       test('the charge version workflow service creates the record', async () => {
-        const [licence, chargeVersion, user] = chargeVersionWorkflowService.create.lastCall.args;
+        const [licence, licenceVersionId, chargeVersion, user] = chargeVersionWorkflowService.create.lastCall.args;
         expect(licence).to.be.an.instanceof(Licence);
+        expect(licenceVersionId).to.equal(request.pre.licenceVersion.licenceVersionId);
         expect(chargeVersion).to.equal(request.pre.chargeVersion);
         expect(user).to.be.equal(request.pre.user);
       });

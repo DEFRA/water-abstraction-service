@@ -33,6 +33,7 @@ const Role = require('../../../../src/lib/models/role');
 const Licence = require('../../../../src/lib/models/licence');
 const ChargeVersion = require('../../../../src/lib/models/charge-version');
 const User = require('../../../../src/lib/models/user');
+const LicenceVersion = require('../../../../src/lib/models/licence-version');
 
 // Mappers
 const chargeVersionWorkflowMapper = require('../../../../src/lib/mappers/charge-version-workflow');
@@ -204,11 +205,13 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
   });
 
   experiment('.create', () => {
-    let licence, chargeVersion, user;
+    let licence, chargeVersion, user, licenceVersion;
     const chargeVersionWorkflowId = uuid();
 
     beforeEach(async () => {
       licence = new Licence(uuid());
+      licenceVersion = new LicenceVersion(uuid());
+
       chargeVersion = new ChargeVersion();
       chargeVersion.dateRange = new DateRange('2019-01-01', null);
       user = new User(123, 'mail@example.com');
@@ -226,10 +229,9 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
               }
             }
           }
-
         });
 
-        result = await chargeVersionWorkflowService.create(licence, chargeVersion, user);
+        result = await chargeVersionWorkflowService.create(licence, licenceVersion.id, chargeVersion, user);
       });
 
       test('the charge version workflow data is persisted in the repo', async () => {
