@@ -38,7 +38,7 @@ const modelToDbMapper = createMapper()
   .map('approverComments').to('approverComments')
   .map('status').to('status')
   .map('createdBy').to('createdBy', userMapper.modelToDb)
-  .map('chargeVersion').to('data.chargeVersion', chargeVersion => chargeVersion.toJSON())
+  .map('chargeVersion').to('data.chargeVersion', chargeVersion => chargeVersion ? chargeVersion.toJSON() : null)
   .map('licenceVersionId').to('licenceVersionId')
   .map('dateDeleted').to('dateDeleted');
 

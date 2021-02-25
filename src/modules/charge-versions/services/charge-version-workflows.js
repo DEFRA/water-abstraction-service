@@ -107,11 +107,14 @@ const setOrThrowInvalidEntityError = (chargeVersionWorkflow, changes) => {
  * @param {User} user
  * @return {Promise<ChargeVersionWorkflow>}
  */
-const create = async (licence, licenceVersionId, chargeVersion, user) => {
+const create = async (licence, licenceVersionId, chargeVersion, user, status = CHARGE_VERSION_WORKFLOW_STATUS.review) => {
   validators.assertIsInstanceOf(licence, Licence);
   validators.assertId(licenceVersionId);
-  validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
-  validators.assertIsInstanceOf(user, User);
+
+  if (status !== CHARGE_VERSION_WORKFLOW_STATUS.toSetup) {
+    validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
+    validators.assertIsInstanceOf(user, User);
+  }
 
   // Map all data to ChargeVersionWorkflow model
   const chargeVersionWorkflow = new ChargeVersionWorkflow();
@@ -120,7 +123,7 @@ const create = async (licence, licenceVersionId, chargeVersion, user) => {
     createdBy: user,
     licence: licence,
     chargeVersion,
-    status: CHARGE_VERSION_WORKFLOW_STATUS.review,
+    status,
     licenceVersionId
   });
 

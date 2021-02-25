@@ -13,7 +13,7 @@ const findOne = id =>
   helpers.findOne(ChargeVersionWorkflow, 'chargeVersionWorkflowId', id, relatedModels);
 
 const findAll = () =>
-  helpers.findMany(ChargeVersionWorkflow, {}, relatedModels);
+  helpers.findMany(ChargeVersionWorkflow, { date_deleted: null }, relatedModels);
 
 const findManyForLicence = licenceId =>
   helpers.findMany(ChargeVersionWorkflow, { licence_id: licenceId, date_deleted: null }, relatedModels);
