@@ -175,7 +175,6 @@ module.exports = {
   isProduction,
 
   chargeModule: {
-    isLocalDocker: (process.env.CHARGE_MODULE_ORIGIN || '').includes('localhost') && !isTest,
     host: process.env.CHARGE_MODULE_ORIGIN,
     cognito: {
       host: process.env.COGNITO_HOST,

@@ -8,7 +8,7 @@ const request = require('./request');
  * @return {Promise<Object>} response payload
  */
 const create = region =>
-  request.post('v1/wrls/billruns', { region });
+  request.post('v2/wrls/bill-runs', { region });
 
 /**
  * Adds a transaction to the specified bill run
@@ -17,7 +17,7 @@ const create = region =>
  * @return {Promise<Object>} response payload
  */
 const addTransaction = (billRunId, transaction) =>
-  request.post(`v1/wrls/billruns/${billRunId}/transactions`, transaction);
+  request.post(`v2/wrls/bill-runs/${billRunId}/transactions`, transaction);
 
 /**
  * Approves the spefified CM bill run

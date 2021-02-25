@@ -15,12 +15,6 @@ const { logger } = require('../../../logger');
  * @return {Promise<Object>}
  */
 const makeTokenRequest = async () => {
-  if (config.chargeModule.isLocalDocker) {
-    const token = await jwt.sign({ client_id: config.chargeModule.cognito.username }, '1');
-    return {
-      access_token: token
-    };
-  }
   logger.info('getting cognito token');
   const buff = Buffer.from(config.chargeModule.cognito.username + ':' + config.chargeModule.cognito.password);
   const options = {
