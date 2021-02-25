@@ -1,0 +1,113 @@
+- ref: $dailylicence
+  model: Licence
+  fields:
+    licenceRef: 'AT/CURR/DAILY/01'
+
+- ref: $weeklyLicence
+  model: Licence
+  fields:
+    licenceRef: 'AT/CURR/WEEKLY/01'
+
+- ref: $monthlyLicenceA
+  model: Licence
+  fields:
+    licenceRef: 'AT/CURR/MONTHLY/01'
+
+- ref: $monthlyLicenceB
+  model: Licence
+  fields:
+    licenceRef: 'AT/CURR/MONTHLY/02'
+
+- ref: $primaryPurpose
+  model: PrimaryPurpose
+  fields:
+    legacy_id: A
+    description: Agriculture
+
+- ref: $secondaryPurpose
+  model: SecondaryPurpose
+  fields:
+    legacy_id: AGR
+    description: General Agriculture
+
+- ref: $purposeUse
+  model: PurposeUse
+  fields:
+    legacy_id: 140
+    description: 'General Farming & Domestic'
+    lossFactor: 'medium'
+    isTwoPartTariff: false
+
+- ref: $monthlyLicenceBReturnVersionA
+  model: ReturnVersion
+  fields:
+    versionNumber: 101
+    startDate: '2019-01-01'
+    endDate: null
+    status: 'current'
+    externalId: '6:9999990'
+    licenceId: $monthlyLicenceB.licenceId
+
+- ref: $monthlyLicenceBReturnRequirementsA
+  model: ReturnRequirement
+  fields:
+    returnsFrequency: 'month'
+    returnVersionId: $monthlyLicenceBReturnVersionA.returnVersionId
+    isSummer: false
+    isUpload: false
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 01
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 12
+    siteDescription: 'WELL POINTS AT MARS'
+    description: '2 Jigga Watts 2000 CMD'
+    legacyId: 9999990
+    externalId: '6:9999990'
+
+- ref: $monthlyLicenceBReturnRequirementPurposesA
+  model: ReturnRequirementPurpose
+  fields:
+    returnRequirementId: $monthlyLicenceBReturnRequirementsA.returnRequirementId
+    externalId: '6:9999990:A:AGR:420'
+    purposeAlias: 'SPRAY IRRIGATION STORAGE'
+    purposePrimaryId: $primaryPurpose.purposePrimaryId
+    purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+
+
+- ref: $monthlyLicenceBReturnVersionB
+  model: ReturnVersion
+  fields:
+    versionNumber: 101
+    startDate: '2020-01-01'
+    endDate: null
+    status: 'current'
+    externalId: '6:9999991'
+    licenceId: $monthlyLicenceB.licenceId
+
+- ref: $monthlyLicenceBReturnRequirementsB
+  model: ReturnRequirement
+  fields:
+    returnsFrequency: 'month'
+    returnVersionId: $monthlyLicenceBReturnVersionB.returnVersionId
+    isSummer: false
+    isUpload: false
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 01
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 12
+    siteDescription: 'WELL POINTS AT MARS'
+    description: '2 Jigga Watts 2000 CMD'
+    legacyId: 9999991
+    externalId: '6:9999991'
+
+- ref: $monthlyLicenceBReturnRequirementPurposesB
+  model: ReturnRequirementPurpose
+  fields:
+    returnRequirementId: $monthlyLicenceBReturnRequirementsA.returnRequirementId
+    externalId: '6:9999991:A:AGR:420'
+    purposeAlias: 'SPRAY IRRIGATION STORAGE'
+    purposePrimaryId: $primaryPurpose.purposePrimaryId
+    purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId
+

@@ -13,7 +13,6 @@ const Invoice = require('../../../../../src/lib/models/invoice');
 const InvoiceAccount = require('../../../../../src/lib/models/invoice-account');
 const InvoiceLicence = require('../../../../../src/lib/models/invoice-licence');
 const Licence = require('../../../../../src/lib/models/licence');
-const Totals = require('../../../../../src/lib/models/totals');
 
 const apiInvoiceMapper = require('../../../../../src/modules/billing/mappers/api/invoice');
 
@@ -35,8 +34,7 @@ const createInvoice = (isWaterUndertaker = false) => {
   });
 
   invoice.invoiceLicences[0].licence = licence;
-  invoice.totals = new Totals();
-  invoice.totals.netTotal = 3634654;
+  invoice.netTotal = 3634654;
   return invoice;
 };
 

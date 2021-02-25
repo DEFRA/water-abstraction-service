@@ -1,6 +1,6 @@
 'use strict';
 
-const { omit } = require('lodash');
+const { omit, isNull } = require('lodash');
 
 const Invoice = require('../../../lib/models/invoice');
 const InvoiceAccount = require('../../../lib/models/invoice-account');
@@ -18,8 +18,11 @@ const dbToModelMapper = createMapper()
     'dateCreated',
     'invoiceNumber',
     'isCredit',
-    'netAmount'
+    'isDeMinimis',
+    'invoiceValue',
+    'creditNoteValue'
   )
+  .map('netAmount').to('netTotal')
   .map('billingInvoiceId').to('id')
   .map('invoiceAccountId').to('invoiceAccount', invoiceAccountId => new InvoiceAccount(invoiceAccountId))
   .map('invoiceAccountNumber').to('invoiceAccount.accountNumber')
@@ -45,8 +48,6 @@ const mapAddress = invoice =>
  * @return {Object}
  */
 const modelToDb = (batch, invoice) => {
-  const { totals } = invoice;
-
   return {
     invoiceAccountId: invoice.invoiceAccount.id,
     invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
@@ -54,8 +55,11 @@ const modelToDb = (batch, invoice) => {
     billingBatchId: batch.id,
     financialYearEnding: invoice.financialYear.endYear,
     invoiceNumber: invoice.invoiceNumber || null,
-    netAmount: totals ? totals.netTotal : null,
-    isCredit: totals ? totals.netTotal < 0 : null
+    isCredit: isNull(invoice.netTotal) ? null : invoice.netTotal < 0,
+    isDeMinimis: invoice.isDeMinimis,
+    netAmount: invoice.netTotal,
+    invoiceValue: invoice.invoiceValue,
+    creditNoteValue: invoice.creditNoteValue
   };
 };
 

@@ -74,6 +74,9 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(users, 'delete').resolves();
     sandbox.stub(sessions, 'delete').resolves();
     sandbox.stub(licences, 'delete').resolves();
+    sandbox.stub(returnVersions, 'delete').resolves();
+    sandbox.stub(returnRequirements, 'delete').resolves();
+    sandbox.stub(returnRequirementPurposes, 'delete').resolves();
     sandbox.stub(chargeTestDataTearDown, 'tearDown').resolves();
   });
 
@@ -91,6 +94,9 @@ experiment('modules/acceptance-tests/controller', () => {
 
       test('the existing data is torn down', async () => {
         expect(returns.delete.called).to.be.true();
+        expect(returnRequirementPurposes.delete.called).to.be.true();
+        expect(returnRequirements.delete.called).to.be.true();
+        expect(returnVersions.delete.called).to.be.true();
         expect(events.delete.called).to.be.true();
         expect(permits.delete.called).to.be.true();
         expect(documents.delete.called).to.be.true();
@@ -226,6 +232,54 @@ experiment('modules/acceptance-tests/controller', () => {
         expect(user.user_name).to.equal('acceptance-test.internal.psc@defra.gov.uk');
         expect(user.groups).to.equal(['psc']);
         expect(user.roles).to.equal([]);
+      });
+    });
+  });
+
+  experiment('postSetupFromYaml', () => {
+    experiment('invalid key', () => {
+      let h, request, response;
+      const invalidkey = 'some-invalid-key';
+      beforeEach(async () => {
+        h = {
+          response: sandbox.stub().returnsThis(),
+          code: sandbox.stub()
+        };
+
+        request = {
+          params: { key: invalidkey }
+        };
+
+        response = await controller.postSetupFromYaml(request, h);
+      });
+      test('returns Boom error', async () => {
+        expect(response.isBoom).to.be.true();
+        expect(response.output.payload.statusCode).to.equal(404);
+        expect(response.output.payload.message).to.equal(`Key ${invalidkey} did not match any available Yaml sets.`);
+      });
+    });
+
+    experiment('valid key', () => {
+      let h, request, loader;
+      const validKey = 'barebones';
+      beforeEach(async () => {
+        loader = require('../../../integration-tests/billing/services/loader');
+
+        await sandbox.stub(loader, 'load').resolves();
+
+        h = {
+          response: sandbox.stub().returnsThis(),
+          code: sandbox.stub()
+        };
+
+        request = {
+          params: { key: validKey }
+        };
+
+        await controller.postSetupFromYaml(request, h);
+      });
+      test('returns 202', async () => {
+        expect(loader.load.called).to.be.true();
       });
     });
   });

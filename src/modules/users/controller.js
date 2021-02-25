@@ -71,12 +71,14 @@ const mapCompanies = (companies, verifications, documentHeaders) => {
 
 const isInternalUser = user => user.application === config.idm.application.internalUser;
 
-const getUserCompanyStatus = user => {
+const getUserCompanyStatus = async user => {
   const entityId = user.external_id;
 
   if (isInternalUser(user) || !entityId) {
     return Promise.resolve([[], [], []]);
   }
+
+  await crmEntitiesConnector.getEntityCompanies(entityId);
 
   return Promise.all([
     crmEntitiesConnector.getEntityCompanies(entityId),
