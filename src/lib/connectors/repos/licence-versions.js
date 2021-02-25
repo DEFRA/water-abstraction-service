@@ -42,8 +42,8 @@ const findByLicenceId = async licenceId => {
  * Finds licence version id created on or after a timestamp
  * @param {String} dateAndTime timestamp
  */
-const findIdsCreatedAfterDate = dateAndTime => raw.multiRow(queries.findIdsCreatedAfterDate, { dateAndTime });
+const findIdsByDateNotInChargeVersionWorkflows = dateAndTime => raw.multiRow(queries.findIdsCreatedAfterDate, { dateAndTime });
 
-exports.findIdsCreatedAfterDate = findIdsCreatedAfterDate;
+exports.findIdsByDateNotInChargeVersionWorkflows = findIdsByDateNotInChargeVersionWorkflows;
 exports.findByLicenceId = findByLicenceId;
 exports.findOne = findOne;

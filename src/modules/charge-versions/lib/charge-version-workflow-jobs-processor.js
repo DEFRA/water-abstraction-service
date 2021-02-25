@@ -11,7 +11,7 @@ const { queueManager } = require('../../../lib/message-queue-v2');
  * @return {Promise} resolves when all jobs published
  */
 const createChargeVersionWorkflows = async () => {
-  const batch = await licenceVersions.findIdsCreatedAfterDate(moment().add(-24, 'hour').toISOString());
+  const batch = await licenceVersions.findIdsByDateNotInChargeVersionWorkflows(moment().add(-24, 'hour').toISOString());
   const tasks = batch.map(item => {
     queueManager.add(createChargeVersionWorkflow.jobName, item.licenceVersionId, item.licenceId);
   });

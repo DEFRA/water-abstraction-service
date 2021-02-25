@@ -185,6 +185,11 @@ experiment('modules/charge-versions/routes/charge-version-workflows', () => {
       expect(pre[1].method).to.equal(preHandlers.mapInternalCallingUser);
       expect(pre[1].assign).to.equal('user');
     });
+    test('contains a pre handler to get the latest licence version for the charge version start date', async () => {
+      const { pre } = routes.postChargeVersionWorkflow.options;
+      expect(pre[2].method).to.equal(preHandlers.loadLicenceVersion);
+      expect(pre[2].assign).to.equal('licenceVersion');
+    });
   });
 
   experiment('.patchChargeVersionWorkflow', () => {

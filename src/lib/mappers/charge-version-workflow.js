@@ -22,7 +22,7 @@ const dbToModelMapper = createMapper()
   .map('licence').to('chargeVersion.licence', licenceMapper.dbToModel)
   .map('licence.region').to('chargeVersion.region', regionMapper.dbToModel)
   .map('licenceVersionId').to('licenceVersion', 'licenceVersionId')
-  .map('dateDelete').to('dateDeleted');
+  .map('dateDeleted').to('dateDeleted');
 
 /**
  * Converts DB representation to a ChargeVersionWorkflow service model

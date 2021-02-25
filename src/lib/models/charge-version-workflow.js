@@ -106,16 +106,28 @@ class ChargeVersionWorkflow extends Model {
   }
 
   /**
-   * Updated date
+   * Date deleted
    * @param {String} timestamp
    */
   set dateDeleted (value) {
-    validators.assertNullableDate(value);
     this._dateDeleted = value === null ? null : this.getDateTimeFromValue(value);
   }
 
   get dateDeleted () {
     return this._dateDeleted;
+  }
+
+  /**
+   * licence version id
+   * @param {String} uuid
+   */
+  set licenceVersionId (value) {
+    validators.assertId(value);
+    this._licenceVersionId = value;
+  }
+
+  get licenceVersionId () {
+    return this._licenceVersionId;
   }
 }
 

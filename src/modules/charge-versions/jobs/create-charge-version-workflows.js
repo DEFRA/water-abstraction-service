@@ -36,16 +36,11 @@ const handler = async job => {
   }
 };
 
-const onComplete = async job => {
-  logger.info(`onComplete: ${job.id}`);
-};
-
 const onFailed = (job, err) => {
   logger.error(`Job ${job.name} ${job.id} failed`, err);
 };
 
 exports.handler = handler;
-exports.onComplete = onComplete;
 exports.onFailed = onFailed;
 exports.jobName = JOB_NAME;
 exports.createMessage = createMessage;
