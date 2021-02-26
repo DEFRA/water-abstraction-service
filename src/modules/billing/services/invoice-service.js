@@ -8,6 +8,7 @@ const invoiceAccountsConnector = require('../../../lib/connectors/crm-v2/invoice
 const repos = require('../../../lib/connectors/repos');
 
 const mappers = require('../mappers');
+const FinancialYear = require('../../../lib/models/financial-year');
 
 // Errors
 const { NotFoundError } = require('../../../lib/errors');
@@ -161,7 +162,36 @@ const getInvoicesTransactionsForBatch = partialRight(getInvoicesForBatch, {
   includeTransactions: true
 });
 
+/**
+ * Gets or creates an invoice in the batch
+ * If the invoice needs creating, the customer details are fetched from the CRM v2 API
+ *
+ * @param {String} batchId
+ * @param {String} invoiceAccountId
+ * @param {Number} financialYearEnding
+ * @return {Promise<Object>} the new/existing invoice service model
+ */
+const getOrCreateInvoice = async (batchId, invoiceAccountId, financialYearEnding) => {
+  const existingRow = await repos.billingInvoices.findOneBy({
+    billingBatchId: batchId,
+    invoiceAccountId,
+    financialYearEnding
+  });
+  if (existingRow) {
+    return mappers.invoice.dbToModel(existingRow);
+  }
+  // Look up invoice account in CRM and map to service model
+  const [crmData] = await invoiceAccountsConnector.getInvoiceAccountsByIds([invoiceAccountId]);
+  const modelFromCrm = mappers.invoice.crmToModel(crmData);
+  modelFromCrm.financialYear = new FinancialYear(financialYearEnding);
+
+  // Write to DB and map back to service model
+  const newRow = await saveInvoiceToDB({ id: batchId }, modelFromCrm);
+  return mappers.invoice.dbToModel(newRow);
+};
+
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;
+exports.getOrCreateInvoice = getOrCreateInvoice;

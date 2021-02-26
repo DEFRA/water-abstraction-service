@@ -1,13 +1,18 @@
 'use strict';
 
-const { groupBy, pick, omit, last, negate, flatMap, mapValues, sortBy } = require('lodash');
+/**
+ * @module exports a pure function processBatch() which looks through
+ * a supplied list of current batch transactions and historical batch transactions
+ * and either flags each for deletion or reversal depending on whether any
+ * changes are needed
+ */
+
+const { groupBy, pick, negate, flatMap, mapValues, sortBy } = require('lodash');
 const moment = require('moment');
-const newRepos = require('../../../lib/connectors/repos');
-
-const billingTransactionsRepo = require('../../../lib/connectors/repos/billing-transactions');
-const Transaction = require('../../../lib/models/transaction');
-
 const Decimal = require('decimal.js-light');
+
+const hashers = require('../../../../lib/hash');
+const { actions } = require('./constants');
 
 /**
  * These are the keys in the abstractionPeriod field
@@ -43,16 +48,6 @@ const commonTransactionKeys = [
   'financialYearEnding'
 ];
 
-const omitKeys = [
-  'licenceId',
-  'financialYearEnding',
-  'invoiceAccountNumber',
-  'billingTransactionId',
-  'isCurrentBatch',
-  'billingBatchId',
-  'isSummer'
-];
-
 /**
  * Gets a grouping key for the given transaction - this is to allow
  * similar transactions to be grouped together
@@ -76,7 +71,7 @@ const getGroupingKey = transaction => {
     description: transaction.description.trim().toLowerCase(),
     abstractionPeriod: pick(transaction.abstractionPeriod, abstractionPeriodKeys)
   };
-  return JSON.stringify(data);
+  return hashers.createMd5Hash(JSON.stringify(data));
 };
 
 const xor = (a, b) => a ? !b : b;
@@ -110,7 +105,8 @@ const mapTransactionGroup = (batchId, transactions) => transactions.reduce((acc,
   return {
     transactions: [...acc.transactions, {
       ...transaction,
-      isCurrentBatch
+      isCurrentBatch,
+      action: null
     }],
     sum: acc.sum.plus(value)
   };
@@ -148,14 +144,6 @@ const isCurrentBatchTransaction = transaction => transaction.isCurrentBatch;
 const isExistingBatchTransaction = negate(isCurrentBatchTransaction);
 
 /**
- * Gets transaction ID from transaction
- *
- * @param {Object} transaction
- * @return {String}
- */
-const getTransactionId = transaction => transaction.billingTransactionId;
-
-/**
  * Deletes all transactions in the given group that are
  * in the current batch
  *
@@ -163,26 +151,12 @@ const getTransactionId = transaction => transaction.billingTransactionId;
  * @param {Array<Object>} group.transactions
  * @return {Promise}
  */
-const deleteGroupTransactions = group => {
-  const ids = group.transactions
+const markCurrentBatchTransactionsForDeletion = group => {
+  group.transactions
     .filter(isCurrentBatchTransaction)
-    .map(getTransactionId);
-  return billingTransactionsRepo.delete(ids);
-};
-
-/**
- * Gets the changes to apply to a transaction in the current batch
- *
- * @param {Object} transaction
- * @param {Decimal} sum
- * @return {Object}
- */
-const getChanges = (transaction, sum) => {
-  const absoluteValue = sum.absoluteValue();
-  const isCredit = sum.isNegative();
-  return transaction.isTwoPartTariffSupplementary
-    ? { isCredit, volume: absoluteValue.toFixed(6) }
-    : { isCredit, billableDays: absoluteValue.toNumber() };
+    .forEach(transaction => {
+      transaction.action = actions.deleteTransaction;
+    });
 };
 
 /**
@@ -242,11 +216,6 @@ const getNonCancellingTransactions = transactions => {
   return flatMap(Object.values(filteredGroups));
 };
 
-const getReversedTransaction = sourceTransaction => ({
-  ...getNewTransaction(sourceTransaction),
-  isCredit: !sourceTransaction.isCredit
-});
-
 /**
  * Updates a transaction in the current batch
  *
@@ -254,46 +223,19 @@ const getReversedTransaction = sourceTransaction => ({
  * @param {Decimal} sum
  * @return {Promise}
  */
-const reverseExistingTransactions = async group => {
+const markExistingBatchTransactionsForReversal = async group => {
   const existingBatchTransactions = group.transactions.filter(isExistingBatchTransaction);
 
   // Get a list of transactions to reverse
   const effectiveTransactions = getNonCancellingTransactions(existingBatchTransactions);
-
-  const reversedTransactions = effectiveTransactions.map(getReversedTransaction);
-
-  for (const reversedTransaction of reversedTransactions) {
-    await billingTransactionsRepo.create(reversedTransaction);
+  if (effectiveTransactions.length === 0) {
+    return;
   }
-};
 
-const getNewTransaction = sourceTransaction => ({
-  ...omit(sourceTransaction, omitKeys),
-  sourceTransactionId: sourceTransaction.billingTransactionId,
-  status: Transaction.statuses.candidate,
-  legacyId: null,
-  externalId: null
-});
-
-/**
- * Creates a new transaction in the current batch using a
- * transaction from a previous batch as the template
- *
- * The most recent transaction is used in cases where
- * there are >1
- *
- * @param {Object} transactionGroup
- * @param {Decimal} sum
- * @return {Promise}
- */
-const createTransaction = transactionGroup => {
-  const sourceTransaction = last(transactionGroup.transactions);
-
-  const transaction = {
-    ...getNewTransaction(sourceTransaction),
-    ...getChanges(sourceTransaction, transactionGroup.sum)
-  };
-  return billingTransactionsRepo.create(transaction);
+  // Create invoice and invoice licence
+  effectiveTransactions.forEach(transaction => {
+    transaction.action = actions.reverseTransaction;
+  });
 };
 
 /**
@@ -308,22 +250,17 @@ const createTransaction = transactionGroup => {
  * @param {Decimal} group.sum
  * @return {Promise}
  */
-const processTransactionGroup = async group => {
+const processTransactionGroup = async (batchId, group) => {
   // If group sums to zero, we don't need any adjustments in this group.
-  // Delete all batch transactions
+  // Flag current batch transactions for deletion
   if (group.sum.equals(0)) {
-    await deleteGroupTransactions(group);
+    return markCurrentBatchTransactionsForDeletion(group);
   } else {
-    // If there is already a transaction in the current batch for this group, it is
-    // updated
-    const currentBatchTransaction = group.transactions.find(isCurrentBatchTransaction);
-    if (currentBatchTransaction) {
-      return reverseExistingTransactions(group);
-    } else {
-      // If there are no transaction in current batch, we create a new one using a transaction from a
-      // past batch as a template
-      return createTransaction(group);
-    }
+    // Otherwise we flag historical transactions in the group to be reversed
+    // so that the customer will net
+    // have only been charged the correct transactions generated by the
+    // current batch
+    return markExistingBatchTransactionsForReversal(group);
   }
 };
 
@@ -332,29 +269,25 @@ const processTransactionGroup = async group => {
  * deleting some transactions in the batch and crediting others
  * previously billed
  * @param {String} batchId
- * @reutrn {Promise}
+ * @param {Array<Object>} transactions
+ * @reutrn {Array<Object>}
  */
-const processBatch = async batchId => {
-  // Loads:
-  // - transactions in current batch
-  // - historical transactions relating to licences in current batch
-  const [batchTransactions, historicalTransactions] = await Promise.all([
-    newRepos.billingTransactions.findByBatchId(batchId),
-    newRepos.billingTransactions.findHistoryByBatchId(batchId)
-  ]);
-
+const processBatch = (batchId, transactions) => {
   // Valid transactions excludes min charge transactions
-  const validTransactions = [...batchTransactions, ...historicalTransactions].filter(isValidTransaction);
+  const validTransactions = transactions.filter(isValidTransaction);
 
-  // Group transactions with similar properties
-  const transactionGroups = groupBy(validTransactions, getGroupingKey);
+  // Group transactions
+  const transactionGroups = mapValues(
+    groupBy(validTransactions, getGroupingKey),
+    transactions => mapTransactionGroup(batchId, transactions)
+  );
 
-  // Sum totals in each group
-  const groupsWithTotals = Object.values(transactionGroups).map(transactions => mapTransactionGroup(batchId, transactions));
-
-  for (const group of groupsWithTotals) {
-    await processTransactionGroup(group);
+  for (const key in transactionGroups) {
+    processTransactionGroup(batchId, transactionGroups[key]);
   }
+
+  return Object.values(transactionGroups)
+    .map(group => group.transactions);
 };
 
 exports.processBatch = processBatch;
