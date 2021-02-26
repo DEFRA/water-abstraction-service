@@ -59,7 +59,7 @@ const deleteBillRun = billRunId =>
  * @return {Promise<Object>} response payload
  */
 const get = billRunId =>
-  request.get(`v1/wrls/billruns/${billRunId}`);
+  request.get(`v2/wrls/bill-runs/${billRunId}`);
 
 const getCustomer = (billRunId, customerReference) =>
   request.get(`v1/wrls/billruns/${billRunId}`, { customerReference });
