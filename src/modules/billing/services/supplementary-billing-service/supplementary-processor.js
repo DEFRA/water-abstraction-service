@@ -38,7 +38,6 @@ const commonTransactionKeys = [
   'season',
   'loss',
   'chargeType',
-  'volume',
   'section126Factor',
   'section127Agreement',
   'section130Agreement',
