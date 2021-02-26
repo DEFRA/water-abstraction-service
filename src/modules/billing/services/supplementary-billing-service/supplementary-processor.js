@@ -279,7 +279,7 @@ const processBatch = (batchId, transactions) => {
   // Group transactions
   const transactionGroups = mapValues(
     groupBy(validTransactions, getGroupingKey),
-    transactions => mapTransactionGroup(batchId, transactions)
+    groupTransactions => mapTransactionGroup(batchId, groupTransactions)
   );
 
   for (const key in transactionGroups) {

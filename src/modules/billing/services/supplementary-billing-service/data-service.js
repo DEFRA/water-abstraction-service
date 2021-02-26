@@ -81,10 +81,10 @@ const reverseInvoiceLicenceTransactions = async (invoiceLicence, transactions) =
 };
 
 const reverseTransactions = async (batchId, transactions) => {
-  const reverseTransactions = transactions.filter(isMarkedForReversal);
+  const validTransactions = transactions.filter(isMarkedForReversal);
 
   // Group by invoice
-  const invoiceGroups = groupBy(reverseTransactions, getInvoiceKey);
+  const invoiceGroups = groupBy(validTransactions, getInvoiceKey);
 
   for (const invoiceKey in invoiceGroups) {
     const [financialYearEnding, invoiceAccountId] = invoiceKey.split('_');
@@ -121,7 +121,7 @@ const deleteTransactions = transactions => {
 
   // Delete if >0 records to delete
   if (ids.length === 0) {
-    return;
+    return null;
   }
 
   return billingTransactionsRepo.delete(ids);
