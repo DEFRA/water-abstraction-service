@@ -101,7 +101,6 @@ const mapTransactionGroup = (batchId, transactions) => transactions.reduce((acc,
   if (xor(transaction.isCredit, !isCurrentBatch)) {
     value = value.negated();
   }
-
   return {
     transactions: [...acc.transactions, {
       ...transaction,
@@ -264,6 +263,8 @@ const processTransactionGroup = async (batchId, group) => {
   }
 };
 
+const getTransactions = group => group.transactions;
+
 /**
  * Processes the supplementary billing batch specified by
  * deleting some transactions in the batch and crediting others
@@ -286,8 +287,10 @@ const processBatch = (batchId, transactions) => {
     processTransactionGroup(batchId, transactionGroups[key]);
   }
 
-  return Object.values(transactionGroups)
-    .map(group => group.transactions);
+  // Convert data structure back to a flat array of transactions
+  return flatMap(
+    Object.values(transactionGroups).map(getTransactions)
+  );
 };
 
 exports.processBatch = processBatch;

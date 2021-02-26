@@ -16,7 +16,7 @@ const { actions } = require('./constants');
  * These are the keys present on a transaction object
  * from the initial DB query and subsequent processing
  * which must be omitted before attempting to write the
- * transaction to the DB
+ * transaction back to the DB
  */
 const omitKeys = [
   'licenceId',
@@ -25,7 +25,10 @@ const omitKeys = [
   'billingTransactionId',
   'isCurrentBatch',
   'billingBatchId',
-  'isSummer'
+  'isSummer',
+  'action',
+  'invoiceAccountId',
+  'licenceRef'
 ];
 
 const getReversedTransaction = (invoiceLicence, sourceTransaction) => ({
@@ -50,7 +53,7 @@ const getTransactions = async batchId => {
     billingTransactionsRepo.findByBatchId(batchId),
     billingTransactionsRepo.findHistoryByBatchId(batchId)
   ]);
-  return [...batchTransactions, historicalTransactions];
+  return [...batchTransactions, ...historicalTransactions];
 };
 
 /**
@@ -95,7 +98,7 @@ const reverseTransactions = async (batchId, transactions) => {
     const licenceGroups = groupBy(invoiceGroups[invoiceKey], getLicenceId);
 
     // For each licence in the group
-    for (const licenceId of licenceGroups) {
+    for (const licenceId in licenceGroups) {
       const invoiceLicenceTransactions = licenceGroups[licenceId];
 
       // Get/create invoice licence in current batch

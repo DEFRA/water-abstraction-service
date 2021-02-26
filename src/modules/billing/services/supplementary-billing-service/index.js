@@ -16,6 +16,4 @@ const processBatch = async (batchId) => {
   return dataService.persistChanges(batchId, processedTransactions);
 };
 
-processBatch('bbf65c27-8d4a-4e17-8be8-d6d58c903547');
-
 exports.processBatch = processBatch;
