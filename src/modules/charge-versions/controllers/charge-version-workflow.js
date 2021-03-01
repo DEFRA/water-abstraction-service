@@ -7,8 +7,6 @@ const licencesService = require('../../../lib/services/licences');
 
 const controller = require('../../../lib/controller');
 
-const { rowToAPIList } = require('../mappers/api-mapper');
-
 const mapErrorResponse = require('../../../lib/map-error-response');
 
 /**
@@ -21,7 +19,7 @@ const getChargeVersionWorkflows = async request => {
   if (licenceId) {
     return { data: await chargeVersionsWorkflowService.getManyByLicenceId(licenceId) };
   } else {
-    return await controller.getEntities(null, chargeVersionsWorkflowService.getAllWithLicenceHolder, rowToAPIList);
+    return chargeVersionsWorkflowService.getAllWithLicenceHolder();
   }
 };
 

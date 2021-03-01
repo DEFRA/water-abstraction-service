@@ -6,7 +6,8 @@ const helpers = require('./lib/helpers');
 
 const relatedModels = [
   'licence',
-  'licence.region'
+  'licence.region',
+  'licenceVersion'
 ];
 
 const findOne = id =>

@@ -39,7 +39,8 @@ experiment('lib/connectors/repos/charge-version-workflows', () => {
       expect(idValue).to.equal('test-id');
       expect(relatedModels).to.equal([
         'licence',
-        'licence.region'
+        'licence.region',
+        'licenceVersion'
       ]);
     });
   });
@@ -55,7 +56,8 @@ experiment('lib/connectors/repos/charge-version-workflows', () => {
       expect(conditions).to.equal({ date_deleted: null });
       expect(relatedModels).to.equal([
         'licence',
-        'licence.region'
+        'licence.region',
+        'licenceVersion'
       ]);
     });
   });
@@ -71,7 +73,8 @@ experiment('lib/connectors/repos/charge-version-workflows', () => {
       expect(conditions).to.equal({ licence_id: 'test-licence-id', date_deleted: null });
       expect(relatedModels).to.equal([
         'licence',
-        'licence.region'
+        'licence.region',
+        'licenceVersion'
       ]);
     });
   });

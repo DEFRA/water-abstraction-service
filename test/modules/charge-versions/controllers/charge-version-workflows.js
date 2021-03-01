@@ -20,9 +20,6 @@ const licenceVersions = require('../../../../src/lib/connectors/repos/licence-ve
 const controller = require('../../../../src/lib/controller');
 const cvWorkflowsController = require('../../../../src/modules/charge-versions/controllers/charge-version-workflow');
 
-// Mappers
-const apiMapper = require('../../../../src/modules/charge-versions/mappers/api-mapper');
-
 // Errors
 const { NotFoundError, InvalidEntityError } = require('../../../../src/lib/errors');
 
@@ -47,23 +44,6 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
   });
 
   experiment('.getChargeVersionWorkflows', () => {
-    experiment('when licence id is not present', () => {
-      const request = {
-        query: {}
-      };
-
-      beforeEach(async () => {
-        await cvWorkflowsController.getChargeVersionWorkflows(request);
-      });
-
-      test('delegates to controller.getEntities', async () => {
-        const [id, serviceFunc, mapper] = controller.getEntities.lastCall.args;
-        expect(id).to.be.null();
-        expect(serviceFunc).to.equal(chargeVersionWorkflowService.getAllWithLicenceHolder);
-        expect(mapper).to.equal(apiMapper.rowToAPIList);
-      });
-    });
-
     experiment('when licence id is present', () => {
       const request = {
         query: {

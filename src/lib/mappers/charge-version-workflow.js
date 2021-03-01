@@ -3,6 +3,7 @@
 const chargeVersionMapper = require('./charge-version');
 const userMapper = require('./user');
 const licenceMapper = require('./licence');
+const licenceVersionMapper = require('./licence-version');
 const regionMapper = require('./region');
 
 const ChargeVersionWorkflow = require('../models/charge-version-workflow');
@@ -19,9 +20,8 @@ const dbToModelMapper = createMapper()
   .map('dateUpdated').to('dateUpdated')
   .map('data').to('chargeVersion', data => chargeVersionMapper.pojoToModel(data.chargeVersion))
   .map('licence').to('licence', licenceMapper.dbToModel)
-  .map('licence').to('chargeVersion.licence', licenceMapper.dbToModel)
   .map('licence.region').to('chargeVersion.region', regionMapper.dbToModel)
-  .map('licenceVersionId').to('licenceVersion', 'licenceVersionId')
+  .map('licenceVersion').to('licenceVersion', licenceVersionMapper.dbToModel)
   .map('dateDeleted').to('dateDeleted');
 
 /**
