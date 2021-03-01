@@ -42,6 +42,11 @@ const BATCH_TYPE = {
   twoPartTariff: 'two_part_tariff'
 };
 
+const BATCH_SOURCE = {
+  nald: 'nald',
+  wrls: 'wrls'
+};
+
 class Batch extends Totals {
   constructor (id) {
     super(id);
@@ -313,9 +318,25 @@ class Batch extends Totals {
   get billRunNumber () {
     return this._billRunNumber;
   }
+
+  /**
+   * The batch source indicates whether the batch originated in WRLS
+   * or was imported from NALD data
+   *
+   * @param {String} source
+   */
+  set source (source) {
+    validators.assertEnum(source, Object.values(BATCH_SOURCE));
+    this._source = source;
+  }
+
+  get source () {
+    return this._source;
+  }
 }
 
 module.exports = Batch;
 module.exports.BATCH_TYPE = BATCH_TYPE;
 module.exports.BATCH_STATUS = BATCH_STATUS;
 module.exports.BATCH_ERROR_CODE = BATCH_ERROR_CODE;
+module.exports.BATCH_SOURCE = BATCH_SOURCE;

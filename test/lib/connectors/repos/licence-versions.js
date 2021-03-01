@@ -9,9 +9,11 @@ const {
 const { expect } = require('@hapi/code');
 
 const sandbox = require('sinon').createSandbox();
-
-const licenceVersionsRepo = require('../../../../src/lib/connectors/repos/licence-versions');
+const moment = require('moment');
+const { licenceVersions } = require('../../../../src/lib/connectors/repos');
 const LicenceVersion = require('../../../../src/lib/connectors/bookshelf/LicenceVersion');
+const raw = require('../../../../src/lib/connectors/repos/lib/raw');
+const queries = require('../../../../src/lib/connectors/repos/queries/licence-versions');
 
 experiment('lib/connectors/repos/licence-versions', () => {
   let stub;
@@ -34,7 +36,7 @@ experiment('lib/connectors/repos/licence-versions', () => {
       };
       sandbox.stub(LicenceVersion, 'forge').returns(stub);
 
-      result = await licenceVersionsRepo.findByLicenceId('test-licence-id');
+      result = await licenceVersions.findByLicenceId('test-licence-id');
     });
 
     test('queries by licence id', async () => {
@@ -67,7 +69,7 @@ experiment('lib/connectors/repos/licence-versions', () => {
 
       sandbox.stub(LicenceVersion, 'forge').returns(stub);
 
-      result = await licenceVersionsRepo.findOne('test-licence-version-id');
+      result = await licenceVersions.findOne('test-licence-version-id');
     });
 
     test('queries by licence version id', async () => {
@@ -98,9 +100,24 @@ experiment('lib/connectors/repos/licence-versions', () => {
 
       LicenceVersion.forge.returns(stub);
 
-      result = await licenceVersionsRepo.findOne('test-licence-version-id');
+      result = await licenceVersions.findOne('test-licence-version-id');
 
       expect(result).to.equal(null);
+    });
+  });
+
+  experiment('.findIdsByDateNotInChargeVersionWorkflows', async () => {
+    const dateAndTime = moment().toISOString();
+
+    beforeEach(async () => {
+      sandbox.stub(raw, 'multiRow');
+      await licenceVersions.findIdsByDateNotInChargeVersionWorkflows(dateAndTime);
+    });
+
+    test('calls knex.raw() with correct arguments', async () => {
+      const [query, params] = raw.multiRow.lastCall.args;
+      expect(query).to.equal(queries.findIdsCreatedAfterDate);
+      expect(params).to.equal({ dateAndTime });
     });
   });
 });
