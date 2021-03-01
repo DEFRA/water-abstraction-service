@@ -89,7 +89,7 @@ experiment('lib/models/charge-version-workflow', () => {
   });
 
   experiment('.status', () => {
-    ['review', 'changes_requested'].forEach(status => {
+    ['review', 'changes_requested', 'to_setup'].forEach(status => {
       test(`can be set to "${status}"`, async () => {
         chargeVersionWorkflow.status = status;
         expect(chargeVersionWorkflow.status).to.equal(status);
@@ -201,6 +201,63 @@ experiment('lib/models/charge-version-workflow', () => {
     test('allows null', async () => {
       chargeVersionWorkflow.dateUpdated = null;
       expect(chargeVersionWorkflow.dateUpdated).to.be.null();
+    });
+  });
+
+  experiment('.dateDeleted', () => {
+    test('converts an ISO date string to a moment internally', async () => {
+      const dateString = '2020-01-20T14:51:42.024Z';
+      chargeVersionWorkflow.dateDeleted = dateString;
+
+      expect(chargeVersionWorkflow.dateDeleted).to.equal(moment(dateString));
+    });
+
+    test('converts a JS Date to a moment internally', async () => {
+      const date = new Date();
+      chargeVersionWorkflow.dateDeleted = date;
+
+      expect(chargeVersionWorkflow.dateDeleted).to.equal(moment(date));
+    });
+
+    test('can be set using a moment', async () => {
+      const now = moment();
+
+      chargeVersionWorkflow.dateDeleted = now;
+
+      expect(chargeVersionWorkflow.dateDeleted).to.equal(now);
+    });
+
+    test('throws for an invalid string', async () => {
+      const dateString = 'not a date';
+
+      expect(() => {
+        chargeVersionWorkflow.dateDeleted = dateString;
+      }).to.throw();
+    });
+
+    test('throws for a boolean value', async () => {
+      expect(() => {
+        chargeVersionWorkflow.dateDeleted = true;
+      }).to.throw();
+    });
+
+    test('allows null', async () => {
+      chargeVersionWorkflow.dateDeleted = null;
+      expect(chargeVersionWorkflow.dateDeleted).to.be.null();
+    });
+  });
+
+  experiment('.licenceVersionId', () => {
+    test('can be set to a guid string', async () => {
+      chargeVersionWorkflow.licenceVersionId = TEST_GUID;
+      expect(chargeVersionWorkflow.licenceVersionId).to.equal(TEST_GUID);
+    });
+
+    test('throws an error if set to a non-guid string', async () => {
+      const func = () => {
+        chargeVersionWorkflow.licenceVersionId = 'WHAT?';
+      };
+      expect(func).to.throw();
     });
   });
 });

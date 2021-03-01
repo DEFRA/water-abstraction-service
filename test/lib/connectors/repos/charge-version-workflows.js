@@ -10,7 +10,6 @@ const { expect } = require('@hapi/code');
 
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
-
 const ChargeVersionWorkflow = require('../../../../src/lib/connectors/bookshelf/ChargeVersionWorkflow.js');
 const chargeVersionWorkflowsRepo = require('../../../../src/lib/connectors/repos/charge-version-workflows');
 const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
@@ -40,7 +39,8 @@ experiment('lib/connectors/repos/charge-version-workflows', () => {
       expect(idValue).to.equal('test-id');
       expect(relatedModels).to.equal([
         'licence',
-        'licence.region'
+        'licence.region',
+        'licenceVersion'
       ]);
     });
   });
@@ -53,10 +53,11 @@ experiment('lib/connectors/repos/charge-version-workflows', () => {
     test('delegates to the findMany helper', async () => {
       const [model, conditions, relatedModels] = helpers.findMany.lastCall.args;
       expect(model).to.equal(ChargeVersionWorkflow);
-      expect(conditions).to.equal({});
+      expect(conditions).to.equal({ date_deleted: null });
       expect(relatedModels).to.equal([
         'licence',
-        'licence.region'
+        'licence.region',
+        'licenceVersion'
       ]);
     });
   });
@@ -69,10 +70,11 @@ experiment('lib/connectors/repos/charge-version-workflows', () => {
     test('delegates to the findMany helper', async () => {
       const [model, conditions, relatedModels] = helpers.findMany.lastCall.args;
       expect(model).to.equal(ChargeVersionWorkflow);
-      expect(conditions).to.equal({ licence_id: 'test-licence-id' });
+      expect(conditions).to.equal({ licence_id: 'test-licence-id', date_deleted: null });
       expect(relatedModels).to.equal([
         'licence',
-        'licence.region'
+        'licence.region',
+        'licenceVersion'
       ]);
     });
   });
@@ -111,9 +113,11 @@ experiment('lib/connectors/repos/charge-version-workflows', () => {
     });
 
     test('delegates to the delete helper', async () => {
-      expect(helpers.deleteOne.calledWith(
-        ChargeVersionWorkflow, 'chargeVersionWorkflowId', 'test-id'
-      )).to.be.true();
+      const args = helpers.update.lastCall.args;
+      expect(args[0]).to.equal(ChargeVersionWorkflow);
+      expect(args[1]).to.equal('chargeVersionWorkflowId');
+      expect(args[2]).to.equal('test-id');
+      expect(Object.keys(args[3])[0]).to.equal('dateDeleted');
     });
   });
 });

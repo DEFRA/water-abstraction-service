@@ -42,7 +42,6 @@ const isNotDraft = doc => doc.status !== Document.DOCUMENT_STATUS.draft;
 const getValidDocumentOnDate = async (licenceNumber, date) => {
   const docs = await getDocuments(licenceNumber);
   const [doc] = docs.filter(doc => doc.dateRange.includes(date) && isNotDraft(doc));
-
   return doc ? getDocument(doc.id) : null;
 };
 

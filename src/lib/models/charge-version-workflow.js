@@ -8,7 +8,8 @@ const Licence = require('./licence');
 
 const CHARGE_VERSION_WORKFLOW_STATUS = {
   review: 'review',
-  changesRequested: 'changes_requested'
+  changesRequested: 'changes_requested',
+  toSetup: 'to_setup'
 };
 
 /**
@@ -72,7 +73,7 @@ class ChargeVersionWorkflow extends Model {
    * @param {ChargeVersion} chargeVersion - mapped from the data jsonb property
    */
   set chargeVersion (chargeVersion) {
-    validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
+    validators.assertIsNullableInstanceOf(chargeVersion, ChargeVersion);
     this._chargeVersion = chargeVersion;
   }
 
@@ -102,6 +103,31 @@ class ChargeVersionWorkflow extends Model {
 
   get dateUpdated () {
     return this._dateUpdated;
+  }
+
+  /**
+   * Date deleted
+   * @param {String} timestamp
+   */
+  set dateDeleted (value) {
+    this._dateDeleted = value === null ? null : this.getDateTimeFromValue(value);
+  }
+
+  get dateDeleted () {
+    return this._dateDeleted;
+  }
+
+  /**
+   * licence version id
+   * @param {String} uuid
+   */
+  set licenceVersionId (value) {
+    validators.assertId(value);
+    this._licenceVersionId = value;
+  }
+
+  get licenceVersionId () {
+    return this._licenceVersionId;
   }
 }
 
