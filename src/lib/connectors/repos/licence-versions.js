@@ -1,7 +1,8 @@
 'use strict';
 
 const LicenceVersion = require('../bookshelf/LicenceVersion');
-
+const queries = require('./queries/licence-versions');
+const raw = require('./lib/raw');
 /**
  * Gets a licence version including any licenceVersionPurposes,
  * which will also including the purposeUse
@@ -37,5 +38,12 @@ const findByLicenceId = async licenceId => {
   return licenceVersions.toJSON();
 };
 
+/**
+ * Finds licence version id created on or after a timestamp
+ * @param {String} dateAndTime timestamp
+ */
+const findIdsByDateNotInChargeVersionWorkflows = dateAndTime => raw.multiRow(queries.findIdsCreatedAfterDate, { dateAndTime });
+
+exports.findIdsByDateNotInChargeVersionWorkflows = findIdsByDateNotInChargeVersionWorkflows;
 exports.findByLicenceId = findByLicenceId;
 exports.findOne = findOne;

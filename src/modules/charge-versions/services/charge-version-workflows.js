@@ -40,13 +40,15 @@ const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeV
  */
 const getLicenceHolderRole = async chargeVersionWorkflow => {
   const { licenceNumber } = chargeVersionWorkflow.licence;
-  const startDate = get(chargeVersionWorkflow, 'chargeVersion.dateRange.startDate', null);
-  const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate);
+  const startDate = chargeVersionWorkflow.status === 'to_setup'
+    ? chargeVersionWorkflow.licenceVersion.startDate
+    : get(chargeVersionWorkflow, 'chargeVersion.dateRange.startDate', null);
 
+  const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate);
   const role = doc ? doc.getRoleOnDate(Role.ROLE_NAMES.licenceHolder, startDate) : {};
 
   return {
-    chargeVersionWorkflow,
+    ...chargeVersionWorkflow.toJSON(),
     licenceHolderRole: role
   };
 };
@@ -107,10 +109,14 @@ const setOrThrowInvalidEntityError = (chargeVersionWorkflow, changes) => {
  * @param {User} user
  * @return {Promise<ChargeVersionWorkflow>}
  */
-const create = async (licence, chargeVersion, user) => {
+const create = async (licence, licenceVersionId, chargeVersion, user, status = CHARGE_VERSION_WORKFLOW_STATUS.review) => {
   validators.assertIsInstanceOf(licence, Licence);
-  validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
-  validators.assertIsInstanceOf(user, User);
+  validators.assertId(licenceVersionId);
+
+  if (status !== CHARGE_VERSION_WORKFLOW_STATUS.toSetup) {
+    validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
+    validators.assertIsInstanceOf(user, User);
+  }
 
   // Map all data to ChargeVersionWorkflow model
   const chargeVersionWorkflow = new ChargeVersionWorkflow();
@@ -119,7 +125,8 @@ const create = async (licence, chargeVersion, user) => {
     createdBy: user,
     licence: licence,
     chargeVersion,
-    status: CHARGE_VERSION_WORKFLOW_STATUS.review
+    status,
+    licenceVersionId
   });
 
   const dbRow = chargeVersionWorkflowMapper.modelToDb(chargeVersionWorkflow);

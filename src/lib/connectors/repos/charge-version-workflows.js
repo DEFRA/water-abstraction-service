@@ -1,21 +1,23 @@
 'use strict';
 
+const moment = require('moment');
 const { ChargeVersionWorkflow } = require('../bookshelf');
 const helpers = require('./lib/helpers');
 
 const relatedModels = [
   'licence',
-  'licence.region'
+  'licence.region',
+  'licenceVersion'
 ];
 
 const findOne = id =>
   helpers.findOne(ChargeVersionWorkflow, 'chargeVersionWorkflowId', id, relatedModels);
 
 const findAll = () =>
-  helpers.findMany(ChargeVersionWorkflow, {}, relatedModels);
+  helpers.findMany(ChargeVersionWorkflow, { date_deleted: null }, relatedModels);
 
 const findManyForLicence = licenceId =>
-  helpers.findMany(ChargeVersionWorkflow, { licence_id: licenceId }, relatedModels);
+  helpers.findMany(ChargeVersionWorkflow, { licence_id: licenceId, date_deleted: null }, relatedModels);
 
 const create = data =>
   helpers.create(ChargeVersionWorkflow, data);
@@ -24,7 +26,7 @@ const update = (id, changes) =>
   helpers.update(ChargeVersionWorkflow, 'chargeVersionWorkflowId', id, changes);
 
 const deleteOne = id =>
-  helpers.deleteOne(ChargeVersionWorkflow, 'chargeVersionWorkflowId', id);
+  helpers.update(ChargeVersionWorkflow, 'chargeVersionWorkflowId', id, { dateDeleted: moment() });
 
 exports.findOne = findOne;
 exports.findAll = findAll;
