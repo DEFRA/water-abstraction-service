@@ -42,10 +42,10 @@ const getDates = (financialYear, chargeVersion, isStartDate = true) => {
 };
 
 const getChargePeriodStartDate = (financialYear, chargeVersion) => getMaxDate(
-  getDates(financialYear, chargeVersion)).format('YYYY-MM-DD');
+  getDates(financialYear, chargeVersion)).format(DATE_FORMAT);
 
 const getChargePeriodEndDate = (financialYear, chargeVersion) => getMinDate(
-  getDates(financialYear, chargeVersion, false)).format('YYYY-MM-DD');
+  getDates(financialYear, chargeVersion, false)).format(DATE_FORMAT);
 
 const getChargePeriod = (financialYear, chargeVersion) => {
   const startDate = getChargePeriodStartDate(financialYear, chargeVersion);
