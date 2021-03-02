@@ -28,7 +28,9 @@ const omitKeys = [
   'isSummer',
   'action',
   'invoiceAccountId',
-  'licenceRef'
+  'licenceRef',
+  'dateCreated',
+  'dateUpdated'
 ];
 
 const getReversedTransaction = (invoiceLicence, sourceTransaction) => ({
@@ -91,7 +93,7 @@ const reverseTransactions = async (batchId, transactions) => {
 
     // Get/create invoice in current batch
     const invoice = await invoiceService.getOrCreateInvoice(
-      batchId, invoiceAccountId, financialYearEnding
+      batchId, invoiceAccountId, parseInt(financialYearEnding)
     );
 
     // Group transactions by licence

@@ -13,63 +13,7 @@ const { actions } = require('../../../../../src/modules/billing/services/supplem
 
 const batchId = uuid();
 
-const createTransaction = (id, overrides = {}) => {
-  const defaults = {
-    billingTransactionId: id,
-    billingInvoiceLicenceId: 'billing-invoice-licence-1',
-    chargeElementId: 'charge-element-1',
-    startDate: '2014-04-01',
-    endDate: '2015-03-31',
-    abstractionPeriod: {
-      endDay: 31,
-      endMonth: 3,
-      startDay: 1,
-      startMonth: 4
-    },
-    netAmount: null,
-    isCredit: false,
-    authorisedQuantity: '21.48',
-    billableQuantity: null,
-    authorisedDays: 365,
-    billableDays: 365,
-    status: 'candidate',
-    description: 'Big stream near the babbling brook',
-    dateCreated: '2021-02-26T13:01:28.732Z',
-    dateUpdated: '2021-02-26T13:01:28.732Z',
-    source: 'unsupported',
-    season: 'all year',
-    loss: 'medium',
-    chargeType: 'standard',
-    externalId: null,
-    volume: '21.48',
-    section126Factor: null,
-    section127Agreement: false,
-    section130Agreement: null,
-    isTwoPartTariffSupplementary: false,
-    calculatedVolume: null,
-    twoPartTariffError: null,
-    twoPartTariffStatus: null,
-    twoPartTariffReview: null,
-    isDeMinimis: false,
-    isNewLicence: false,
-    legacyId: null,
-    metadata: null,
-    sourceTransactionId: null,
-    licenceId: 'licence-1',
-    licenceRef: '01/123/A',
-    invoiceAccountNumber: 'A00000000A',
-    financialYearEnding: 2021,
-    invoiceAccountId: 'invoice-account-1',
-    billingBatchId: batchId,
-    isSummer: false
-  };
-
-  return Object.assign(defaults, overrides);
-};
-
-const findTransactionById = (result, id) => result.find(
-  transaction => transaction.billingTransactionId === id
-);
+const { createTransaction, findTransactionById } = require('./test-helpers');
 
 experiment('modules/billing/services/supplementary-billing-service/supplementary-processor', () => {
   let result;
@@ -77,7 +21,7 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
   experiment('when there are no historical transactions', async () => {
     beforeEach(async () => {
       const transactions = [
-        createTransaction(uuid())
+        createTransaction(batchId, uuid())
       ];
       result = supplementaryBillingProcessor.processBatch(batchId, transactions);
     });
@@ -91,9 +35,7 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
     experiment('and there is 1 historical transaction', () => {
       beforeEach(async () => {
         const transactions = [
-          createTransaction(uuid(), {
-            billingBatchId: 'historical-batch'
-          })
+          createTransaction('historical-batch', uuid())
         ];
         result = supplementaryBillingProcessor.processBatch(batchId, transactions);
       });
@@ -108,13 +50,11 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
 
       beforeEach(async () => {
         const transactions = [
-          createTransaction(ids[0], {
-            billingBatchId: 'historical-batch',
+          createTransaction('historical-batch', ids[0], {
             dateCreated: '2020-04-01 12:00:00',
             isCredit: false
           }),
-          createTransaction(ids[1], {
-            billingBatchId: 'historical-batch',
+          createTransaction('historical-batch', ids[1], {
             dateCreated: '2020-04-02 12:00:00',
             isCredit: true
           })
@@ -133,18 +73,15 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
 
       beforeEach(async () => {
         const transactions = [
-          createTransaction(ids[0], {
-            billingBatchId: 'historical-batch',
+          createTransaction('historical-batch', ids[0], {
             dateCreated: '2020-04-01 12:00:00',
             isCredit: false
           }),
-          createTransaction(ids[1], {
-            billingBatchId: 'historical-batch',
+          createTransaction('historical-batch', ids[1], {
             dateCreated: '2020-04-02 12:00:00',
             isCredit: true
           }),
-          createTransaction(ids[2], {
-            billingBatchId: 'historical-batch',
+          createTransaction('historical-batch', ids[2], {
             dateCreated: '2020-04-03 12:00:00',
             isCredit: false
           })
@@ -166,17 +103,15 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
     experiment('and there are annual transactions which have net zero billable days', async () => {
       beforeEach(async () => {
         const transactions = [
-          createTransaction(ids[0], {
-            billingBatchId: 'historical-batch',
+          createTransaction('historical-batch', ids[0], {
             billableDays: 365,
             isCredit: false
           }),
-          createTransaction(ids[1], {
-            billingBatchId: 'historical-batch',
+          createTransaction('historical-batch', ids[1], {
             billableDays: 20,
             isCredit: true
           }),
-          createTransaction(ids[2], {
+          createTransaction(batchId, ids[2], {
             billableDays: 345,
             isCredit: false
           })
@@ -197,17 +132,15 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
     experiment('and there are annual transactions which do not have net zero billable days', async () => {
       beforeEach(async () => {
         const transactions = [
-          createTransaction(ids[0], {
-            billingBatchId: 'historical-batch',
+          createTransaction('historical-batch', ids[0], {
             billableDays: 365,
             isCredit: false
           }),
-          createTransaction(ids[1], {
-            billingBatchId: 'historical-batch',
+          createTransaction('historical-batch', ids[1], {
             billableDays: 20,
             isCredit: true
           }),
-          createTransaction(ids[2], {
+          createTransaction(batchId, ids[2], {
             billableDays: 355,
             isCredit: false
           })
@@ -228,19 +161,17 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
     experiment('and there are TPT transactions which have net zero volume', async () => {
       beforeEach(async () => {
         const transactions = [
-          createTransaction(ids[0], {
-            billingBatchId: 'historical-batch',
+          createTransaction('historical-batch', ids[0], {
             volume: 20.345,
             isTwoPartTariffSupplementary: true,
             isCredit: false
           }),
-          createTransaction(ids[1], {
-            billingBatchId: 'historical-batch',
+          createTransaction('historical-batch', ids[1], {
             volume: 10,
             isTwoPartTariffSupplementary: true,
             isCredit: true
           }),
-          createTransaction(ids[2], {
+          createTransaction(batchId, ids[2], {
             volume: 10.345,
             isTwoPartTariffSupplementary: true,
             isCredit: false
@@ -262,19 +193,17 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
     experiment('and there are TPT transactions which do not have a net zero volume', async () => {
       beforeEach(async () => {
         const transactions = [
-          createTransaction(ids[0], {
-            billingBatchId: 'historical-batch',
+          createTransaction('historical-batch', ids[0], {
             volume: 20.345,
             isTwoPartTariffSupplementary: true,
             isCredit: false
           }),
-          createTransaction(ids[1], {
-            billingBatchId: 'historical-batch',
+          createTransaction('historical-batch', ids[1], {
             volume: 10,
             isTwoPartTariffSupplementary: true,
             isCredit: true
           }),
-          createTransaction(ids[2], {
+          createTransaction(batchId, ids[2], {
             volume: 15,
             isTwoPartTariffSupplementary: true,
             isCredit: false

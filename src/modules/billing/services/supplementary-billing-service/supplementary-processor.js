@@ -14,6 +14,8 @@ const Decimal = require('decimal.js-light');
 const hashers = require('../../../../lib/hash');
 const { actions } = require('./constants');
 
+const { isNaldTransaction } = require('../../lib/charge-period');
+
 /**
  * These are the keys in the abstractionPeriod field
  * By specifying the keys we guarantee their ordering
@@ -42,7 +44,6 @@ const commonTransactionKeys = [
   'section127Agreement',
   'section130Agreement',
   'isTwoPartTariffSupplementary',
-  'isNewLicence',
   'invoiceAccountNumber',
   'financialYearEnding'
 ];
@@ -63,6 +64,12 @@ const getGroupingKey = transaction => {
   transaction.isTwoPartTariffSupplementary
     ? keys.push('isSummer')
     : keys.push('authorisedDays', 'volume');
+
+  // The 'new licence' flag only affects WRLS transactions so it does not
+  // need to be incorporated into the key for NALD transactions
+  if (!isNaldTransaction(transaction.startDate)) {
+    keys.push('isNewLicence');
+  }
 
   // Get the data and serialize to a JSON string
   const data = {
