@@ -23,23 +23,25 @@ const transactionService = require('./transactions-service');
  * collates all paginated results for a given invoice
  *
  * @param {String} cmBillRunId
- * @param {String} customerReference
- * @param {Number} financialYearEnding
+ * @param {String} invoiceId
  * @return {Array<Object>} CM transaction details
  */
-const getAllCmTransactionsForInvoice = async (cmBillRunId, customerReference, financialYearEnding) => {
+const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
   try {
-    const { data, pagination: { pageCount } } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, customerReference, financialYearEnding - 1, 1);
+    const { invoice } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, invoiceId);
 
-    const result = data.transactions;
+    const result = invoice.licences.map(lic => lic.transactions.map(transaction => {
+      return {
+        ...transaction,
+        transactionReference: invoice.transactionReference,
+        isDeminimis: invoice.deminimisInvoice,
+        licenceNumber: invoice.licences[0].licenceNumber
+      };
+    })).flat();
 
-    for (let page = 2; page <= pageCount; page++) {
-      const { data: { transactions } } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, customerReference, financialYearEnding - 1, page);
-      result.push(...transactions);
-    }
     return result;
   } catch (error) {
-    logger.error(`Unable to retrieve transactions for CM invoice ${cmBillRunId} ${customerReference} ${financialYearEnding}`);
+    logger.error(`Unable to retrieve transactions for CM invoice. Bill run ID ${cmBillRunId} and invoice ID ${invoiceId}`);
     throw error;
   }
 };
@@ -67,17 +69,12 @@ const getInvoiceMap = invoices => {
  * @return {Map}
  */
 const getCMInvoiceMap = cmResponse => {
-  return cmResponse.billRun.customers.reduce((acc, customer) => {
-    const { customerReference } = customer;
-    customer.summaryByFinancialYear.forEach(summary => {
-      const key = getInvoiceKey(customerReference, summary.financialYear + 1);
-      acc.set(key, {
-        ...summary,
-        customerReference
-      });
-    });
-    return acc;
-  }, new Map());
+  return cmResponse.billRun.invoices.map(invoice => {
+    return {
+      ...invoice,
+      key: getInvoiceKey(invoice.customerReference, invoice.financialYear + 1)
+    };
+  });
 };
 
 /**
@@ -100,7 +97,7 @@ const mapTransaction = (invoice, transactionMap, cmTransaction) => {
     return transactionMap
       .get(cmTransaction.id)
       .fromHash({
-        isDeMinimis: cmTransaction.deminimis,
+        isDeMinimis: invoice.isDeMinimis, // TODO this needs checking. It used to be `cmTransaction.deminimis`
         value: cmTransaction.chargeValue
       });
   } else {
@@ -142,8 +139,9 @@ const deleteTransactions = (cmTransactions, transactionMap) => {
  */
 const updateInvoice = async (batch, invoice, cmInvoiceSummary, cmTransactions) => {
   // Populate invoice model with updated CM data
+
   invoice.fromHash({
-    isDeMinimis: cmInvoiceSummary.deminimis,
+    isDeMinimis: cmInvoiceSummary.deminimisInvoice,
     invoiceNumber: cmTransactions[0].transactionReference,
     netTotal: cmInvoiceSummary.netTotal,
     invoiceValue: cmInvoiceSummary.debitLineValue,
@@ -180,18 +178,15 @@ const updateInvoices = async (batch, cmResponse) => {
   // Get existing invoices in DB and map
   const invoiceMap = await getInvoiceMap(invoices);
 
-  for (const [key, cmInvoiceSummary] of cmInvoiceMap.entries()) {
-    // Get the CM transactions for this customer/financial year
+  cmInvoiceMap.map(async invoice => {
     const cmTransactions = await getAllCmTransactionsForInvoice(
       batch.externalId,
-      cmInvoiceSummary.customerReference,
-      cmInvoiceSummary.financialYear + 1
+      invoice.id
     );
-
     // Note: for now we don't need to expect invoices not in our DB
     // this will likely change when the CM implements rebilling
-    updateInvoice(batch, invoiceMap.get(key), cmInvoiceSummary, cmTransactions);
-  }
+    updateInvoice(batch, invoiceMap.get(invoice.key), invoice, cmTransactions);
+  });
 };
 
 const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating_summary';
@@ -205,6 +200,7 @@ const updateBatch = async batchId => {
 
   // Get CM bill run summary
   const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
+
   if (isCMGeneratingSummary(cmResponse)) {
     return false;
   }

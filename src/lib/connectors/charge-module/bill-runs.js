@@ -70,21 +70,13 @@ const getTransactions = (billRunId, page = 1, perPage = 100) =>
 const getCustomerTransactions = (billRunId, customerReference, page = 1, perPage = 100) =>
   request.get(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference, page, perPage });
 /**
-   * Gets transactions in given bill run for supplied customer ref / financial year grouping
+   * Gets transactions in given bill run for a particular invoice.
    * @param {String} billRunId
-   * @param {String} customerReference
-   * @param {Number} financialYear - note: CM uses financial year starting, WRLS uses ending
-   * @param {Number} [page] - default 1
+   * @param {String} invoiceId
    */
-const getInvoiceTransactions = (billRunId, customerReference, financialYear, page = 1) => {
-  const path = `v1/wrls/billruns/${billRunId}/transactions`;
-  const query = {
-    customerReference,
-    page,
-    financialYear,
-    perPage: 100
-  };
-  return request.get(path, query);
+const getInvoiceTransactions = (billRunId, invoiceId) => {
+  const path = `v2/wrls/bill-runs/${billRunId}/invoices/${invoiceId}`;
+  return request.get(path);
 };
 
 exports.addTransaction = addTransaction;

@@ -403,15 +403,19 @@ const deleteAllBillingData = async () => {
  * @return {Promise<Batch>} updated batch model
  */
 const updateWithCMSummary = async (batchId, cmResponse) => {
-  const { summary, approvedForBilling } = cmResponse.billRun;
+  const { invoiceCount, creditLineCount: creditNoteCount, invoiceValue, creditLineValue: creditNoteValue, netTotal, status: cmStatus } = cmResponse.billRun;
 
-  const status = approvedForBilling
+  const status = cmStatus === 'approved'
     ? Batch.BATCH_STATUS.sent
     : Batch.BATCH_STATUS.ready;
 
   const changes = {
     status,
-    ...pick(summary, 'invoiceCount', 'creditNoteCount', 'invoiceValue', 'creditNoteValue', 'netTotal')
+    invoiceCount,
+    creditNoteCount,
+    invoiceValue,
+    creditNoteValue,
+    netTotal
   };
 
   const data = await newRepos.billingBatches.update(batchId, changes);
