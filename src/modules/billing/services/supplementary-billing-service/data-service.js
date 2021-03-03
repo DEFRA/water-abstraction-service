@@ -1,6 +1,6 @@
 'use strict';
 
-const { groupBy, omit } = require('lodash');
+const { groupBy, pick } = require('lodash');
 
 // Models
 const Transaction = require('../../../../lib/models/transaction');
@@ -13,35 +13,49 @@ const invoiceLicencesService = require('../invoice-licences-service');
 const { actions } = require('./constants');
 
 /**
- * These are the keys present on a transaction object
- * from the initial DB query and subsequent processing
- * which must be omitted before attempting to write the
- * transaction back to the DB
+ * These are the keys we wish to pick from the source
+ * transaction object when creating a reversed transaction
+ * before attempting to write the transaction back to the DB
  */
-const omitKeys = [
-  'licenceId',
-  'financialYearEnding',
-  'invoiceAccountNumber',
-  'billingTransactionId',
-  'isCurrentBatch',
-  'billingBatchId',
-  'isSummer',
-  'action',
-  'invoiceAccountId',
-  'licenceRef',
-  'dateCreated',
-  'dateUpdated'
+const pickKeys = [
+  'chargeElementId',
+  'startDate',
+  'endDate',
+  'abstractionPeriod',
+  'netAmount',
+  'authorisedQuantity',
+  'billableQuantity',
+  'authorisedDays',
+  'billableDays',
+  'description',
+  'source',
+  'season',
+  'loss',
+  'chargeType',
+  'volume',
+  'section126Factor',
+  'section127Agreement',
+  'section130Agreement',
+  'isTwoPartTariffSupplementary',
+  'calculatedVolume',
+  'twoPartTariffError',
+  'twoPartTariffStatus',
+  'twoPartTariffReview',
+  'isDeMinimis',
+  'isNewLicence'
 ];
 
-const getReversedTransaction = (invoiceLicence, sourceTransaction) => ({
-  ...omit(sourceTransaction, omitKeys),
-  billingInvoiceLicenceId: invoiceLicence.id,
-  sourceTransactionId: sourceTransaction.billingTransactionId,
-  status: Transaction.statuses.candidate,
-  legacyId: null,
-  externalId: null,
-  isCredit: !sourceTransaction.isCredit
-});
+const getReversedTransaction = (invoiceLicence, sourceTransaction) => {
+  return {
+    ...pick(sourceTransaction, pickKeys),
+    billingInvoiceLicenceId: invoiceLicence.id,
+    sourceTransactionId: sourceTransaction.billingTransactionId,
+    status: Transaction.statuses.candidate,
+    legacyId: null,
+    externalId: null,
+    isCredit: !sourceTransaction.isCredit
+  };
+};
 
 /**
  * Gets a list of transactions in the current batch plus historical transactions
