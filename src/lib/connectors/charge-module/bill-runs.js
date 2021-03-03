@@ -25,7 +25,7 @@ const addTransaction = (billRunId, transaction) =>
  * @return {Promise<Object>} response payload
  */
 const approve = billRunId =>
-  request.patch(`v1/wrls/billruns/${billRunId}/approve`);
+  request.patch(`v2/wrls/bill-runs/${billRunId}/approve`);
 
 /**
  * Sends the spefified CM bill run
