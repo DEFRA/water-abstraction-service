@@ -56,7 +56,7 @@ const cmResponses = {
   batchSummary: {
     generating: {
       billRun: {
-        status: 'generating_summary'
+        status: 'generating'
       }
     },
     ready: {
@@ -199,6 +199,8 @@ experiment('modules/billing/services/cm-refresh-service', () => {
 
     sandbox.stub(transactionService, 'saveTransactionToDB');
     sandbox.stub(transactionService, 'deleteById');
+
+    sandbox.stub(cmRefreshService, 'updateBatch').resolves();
   });
 
   afterEach(async () => {
@@ -218,7 +220,7 @@ experiment('modules/billing/services/cm-refresh-service', () => {
       });
     });
 
-    experiment('when the CM batch status is "generating_summary"', () => {
+    experiment('when the CM batch status is "generating"', () => {
       beforeEach(async () => {
         batch = createBatch();
         batchService.getBatchById.resolves(batch);

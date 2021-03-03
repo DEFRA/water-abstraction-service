@@ -731,14 +731,18 @@ experiment('modules/billing/services/batch-service', () => {
     const invoiceCount = 2;
     const creditNoteCount = 3;
     const netTotal = 1234;
+    const creditNoteValue = 500;
+    const invoiceValue = 750000;
+    const status = 'generated';
+
     const cmResponse = {
       billRun: {
-        approvedForBilling: false,
-        summary: {
-          invoiceCount,
-          creditNoteCount,
-          netTotal
-        }
+        invoiceCount,
+        creditLineCount: creditNoteCount,
+        invoiceValue,
+        creditLineValue: creditNoteValue,
+        netTotal,
+        status
       }
     };
 
@@ -748,10 +752,14 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('the batch is updated correctly with "ready" status', async () => {
+        console.log('§§§§§§§§§§§§§§§§§§');
+        console.log(newRepos.billingBatches.update.lastCall.args);
         expect(newRepos.billingBatches.update.calledWith(BATCH_ID, {
           status: Batch.BATCH_STATUS.ready,
           invoiceCount,
           creditNoteCount,
+          invoiceValue,
+          creditNoteValue,
           netTotal
         })).to.be.true();
       });
@@ -759,7 +767,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     experiment('when the CM batch is approved for billing', async () => {
       beforeEach(async () => {
-        cmResponse.billRun.approvedForBilling = true;
+        cmResponse.billRun.status = 'approved';
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
 
@@ -768,6 +776,8 @@ experiment('modules/billing/services/batch-service', () => {
           status: Batch.BATCH_STATUS.sent,
           invoiceCount,
           creditNoteCount,
+          invoiceValue,
+          creditNoteValue,
           netTotal
         })).to.be.true();
       });

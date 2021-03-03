@@ -36,7 +36,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = request.post.lastCall.args;
-      expect(path).to.equal('v1/wrls/billruns');
+      expect(path).to.equal('v2/wrls/bill-runs');
     });
 
     test('the region is included in the payload', async () => {
@@ -56,7 +56,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = request.post.lastCall.args;
-      expect(path).to.equal('v1/wrls/billruns/test-id/transactions');
+      expect(path).to.equal('v2/wrls/bill-runs/test-id/transactions');
     });
 
     test('the transaction is included in the payload', async () => {
@@ -76,7 +76,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = request.patch.lastCall.args;
-      expect(path).to.equal('v1/wrls/billruns/test-id/approve');
+      expect(path).to.equal('v2/wrls/bill-runs/test-id/approve');
     });
   });
 
@@ -144,7 +144,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = request.get.lastCall.args;
-      expect(path).to.equal('v1/wrls/billruns/test-id');
+      expect(path).to.equal('v2/wrls/bill-runs/test-id');
     });
   });
 
@@ -211,28 +211,12 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
   experiment('.getInvoiceTransactions', () => {
     beforeEach(async () => {
-      await billRunsApiConnector.getInvoiceTransactions('test-id', 'test-customer-ref', 2020, 3);
+      await billRunsApiConnector.getInvoiceTransactions('test-id', 'test-invoice-id');
     });
 
     test('the correct endpoint is called', async () => {
       const [path] = request.get.lastCall.args;
-      expect(path).to.equal('v1/wrls/billruns/test-id/transactions');
-    });
-
-    test('the correct customer is specified', async () => {
-      const [, { customerReference }] = request.get.lastCall.args;
-      expect(customerReference).to.equal('test-customer-ref');
-    });
-
-    test('the correct financial year is specified', async () => {
-      const [, { financialYear }] = request.get.lastCall.args;
-      expect(financialYear).to.equal(2020);
-    });
-
-    test('the correct pagination params are specified', async () => {
-      const [, { page, perPage }] = request.get.lastCall.args;
-      expect(page).to.equal(3);
-      expect(perPage).to.equal(100);
+      expect(path).to.equal('v2/wrls/bill-runs/test-id/invoices/test-invoice-id');
     });
   });
 });

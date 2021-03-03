@@ -108,6 +108,9 @@ experiment('modules/billing/jobs/create-charge', () => {
     sandbox.stub(transactionService, 'setErrorStatus').resolves();
 
     sandbox.stub(batchService, 'setErrorStatus').resolves();
+    sandbox.stub(batchService, 'getBatchById').resolves({
+      externalId: 'test-external-id'
+    });
     sandbox.stub(batchService, 'setStatus');
     sandbox.stub(batchService, 'getTransactionStatusCounts').resolves({
       candidate: 0,
@@ -116,6 +119,7 @@ experiment('modules/billing/jobs/create-charge', () => {
     sandbox.stub(batchService, 'cleanup');
 
     sandbox.stub(chargeModuleBillRunConnector, 'addTransaction').resolves(data.chargeModuleResponse);
+    sandbox.stub(chargeModuleBillRunConnector, 'generate').resolves();
     sandbox.stub(mappers.batch, 'modelToChargeModule').returns([data.chargeModuleTransaction]);
   });
 
