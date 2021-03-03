@@ -1,15 +1,17 @@
 'use strict';
 
-exports.findOne = async (bookshelfModel, idKey, id, withRelated = []) => {
+const findOneBy = async (bookshelfModel, conditions, withRelated = []) => {
   const result = await bookshelfModel
-    .forge({ [idKey]: id })
+    .forge(conditions)
     .fetch({
       withRelated,
       require: false
     });
-
   return result && result.toJSON();
 };
+
+exports.findOne = async (bookshelfModel, idKey, id, withRelated = []) =>
+  findOneBy(bookshelfModel, { [idKey]: id }, withRelated);
 
 exports.findMany = async (bookshelfModel, conditions = {}, withRelated = []) => {
   const result = await bookshelfModel
@@ -43,3 +45,5 @@ exports.deleteTestData = async (bookShelfModel) => {
     require: false
   });
 };
+
+exports.findOneBy = findOneBy;

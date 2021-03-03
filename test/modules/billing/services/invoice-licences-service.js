@@ -7,6 +7,7 @@ const {
 const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
+const uuid = require('uuid/v4');
 
 const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
@@ -20,7 +21,6 @@ const mappers = require('../../../../src/modules/billing/mappers'); ;
 experiment('modules/billing/services/invoice-licences-service', () => {
   beforeEach(async () => {
     sandbox.stub(newRepos.billingInvoiceLicences, 'findOne');
-    // sandbox.stub(newRepos.billingInvoiceLicences, 'findLicencesWithTransactionStatusesForBatch');
     sandbox.stub(newRepos.billingInvoiceLicences, 'upsert');
     sandbox.stub(newRepos.billingInvoiceLicences, 'findOneInvoiceLicenceWithTransactions');
     sandbox.stub(newRepos.billingInvoiceLicences, 'delete');
@@ -84,6 +84,37 @@ experiment('modules/billing/services/invoice-licences-service', () => {
       test('calls the invoice mapper to map the data from database to the correct models', async () => {
         expect(mappers.invoiceLicence.dbToModel.lastCall.args[0]).to.equal({ billingInvoiceLicenceId: 'db-invoice-licence-id' });
       });
+    });
+  });
+
+  experiment('.getOrCreateInvoiceLicence', () => {
+    let result;
+    const billingInvoiceId = uuid();
+    const licenceId = uuid();
+    const licenceRef = '01/123/ABC';
+    const billingInvoiceLicenceId = uuid();
+
+    beforeEach(async () => {
+      newRepos.billingInvoiceLicences.upsert.resolves({
+        billingInvoiceLicenceId,
+        billingInvoiceId,
+        licenceId,
+        licenceRef
+      });
+      result = await invoiceLicencesService.getOrCreateInvoiceLicence(billingInvoiceId, licenceId, licenceRef);
+    });
+
+    test('the record is upserted', async () => {
+      expect(newRepos.billingInvoiceLicences.upsert.calledWith({
+        billingInvoiceId,
+        licenceId,
+        licenceRef
+      })).to.be.true();
+    });
+
+    test('resolves with an InvoiceLicence model', async () => {
+      expect(result instanceof InvoiceLicence).to.be.true();
+      expect(result.id).to.equal(billingInvoiceLicenceId);
     });
   });
 });

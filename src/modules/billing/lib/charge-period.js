@@ -3,6 +3,9 @@
 const moment = require('moment');
 const { sortBy, first, last, identity } = require('lodash');
 
+const config = require('../../../../config');
+
+const DATE_FORMAT = 'YYYY-MM-DD';
 const DateRange = require('../../../lib/models/date-range');
 
 /**
@@ -39,10 +42,10 @@ const getDates = (financialYear, chargeVersion, isStartDate = true) => {
 };
 
 const getChargePeriodStartDate = (financialYear, chargeVersion) => getMaxDate(
-  getDates(financialYear, chargeVersion)).format('YYYY-MM-DD');
+  getDates(financialYear, chargeVersion)).format(DATE_FORMAT);
 
 const getChargePeriodEndDate = (financialYear, chargeVersion) => getMinDate(
-  getDates(financialYear, chargeVersion, false)).format('YYYY-MM-DD');
+  getDates(financialYear, chargeVersion, false)).format(DATE_FORMAT);
 
 const getChargePeriod = (financialYear, chargeVersion) => {
   const startDate = getChargePeriodStartDate(financialYear, chargeVersion);
@@ -50,6 +53,22 @@ const getChargePeriod = (financialYear, chargeVersion) => {
   return new DateRange(startDate, endDate);
 };
 
+/**
+ * Predicate to check whether the supplied date is
+ * for a NALD transaction
+ *
+ * This is configured via the naldSwitchOverDate config option
+ *
+ * @param {String} chargePeriodStartDate
+ * @return {Boolean}
+ */
+const isNaldTransaction = chargePeriodStartDate => {
+  const startDate = moment(chargePeriodStartDate, DATE_FORMAT);
+  const comparisonDate = moment(config.billing.naldSwitchOverDate, DATE_FORMAT);
+  return startDate.isBefore(comparisonDate);
+};
+
 exports.getChargePeriodEndDate = getChargePeriodEndDate;
 exports.getChargePeriodStartDate = getChargePeriodStartDate;
 exports.getChargePeriod = getChargePeriod;
+exports.isNaldTransaction = isNaldTransaction;

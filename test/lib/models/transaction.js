@@ -4,9 +4,7 @@ const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
 const sandbox = require('sinon').createSandbox();
-const { omit } = require('lodash');
 
-const hashers = require('../../../src/lib/hash');
 const Transaction = require('../../../src/lib/models/transaction');
 const Agreement = require('../../../src/lib/models/agreement');
 const DateRange = require('../../../src/lib/models/date-range');
@@ -104,29 +102,6 @@ experiment('lib/models/transaction', () => {
       expect(transaction.id).to.equal(id);
       expect(transaction.value).to.equal(100);
       expect(transaction.isCredit).to.be.true();
-    });
-  });
-
-  experiment('.toCredit', () => {
-    let credit, transaction;
-
-    beforeEach(async () => {
-      transaction = getTestDataForHashing().transaction;
-      credit = transaction.toCredit();
-    });
-
-    test('the id is not set', async () => {
-      expect(credit.id).to.be.undefined();
-    });
-
-    test('the isCredit flag is true', async () => {
-      expect(credit.isCredit).to.be.true();
-    });
-
-    test('the transactions match except for the id and credit flag', async () => {
-      const originalData = omit(transaction.toJSON(), ['id', 'isCredit']);
-      const creditData = omit(credit.toJSON(), ['id', 'isCredit']);
-      expect(originalData).to.equal(creditData);
     });
   });
 
@@ -495,98 +470,6 @@ experiment('lib/models/transaction', () => {
       const transaction = new Transaction();
       transaction.externalId = externalId;
       expect(transaction.externalId).to.equal(externalId);
-    });
-  });
-
-  experiment('.transactionKey', () => {
-    test('can set the transaction key to a valid 32 char string', async () => {
-      const transaction = new Transaction();
-      const validKey = '0123456789ABCDEFFEDCBA9876543210';
-      transaction.transactionKey = validKey;
-      expect(transaction.transactionKey).to.equal(validKey);
-    });
-
-    test('will throw if an invalid value is set', async () => {
-      const transaction = new Transaction();
-
-      expect(() => {
-        transaction.transactionKey = 'nope';
-      }).to.throw();
-    });
-  });
-
-  experiment('.getHashData', () => {
-    test('returns a flat object containing the data to feed to the hash', () => {
-      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
-
-      const hashData = transaction.getHashData(invoiceAccount, licence, batch);
-
-      expect(hashData.periodStart).to.equal(transaction.chargePeriod.startDate);
-      expect(hashData.periodEnd).to.equal(transaction.chargePeriod.endDate);
-      expect(hashData.billableDays).to.equal(transaction.billableDays);
-      expect(hashData.authorisedDays).to.equal(transaction.authorisedDays);
-      expect(hashData.volume).to.equal(transaction.volume);
-      expect(hashData.agreements).to.equal('S127-S130T-S130W');
-      expect(hashData.accountNumber).to.equal(invoiceAccount.accountNumber);
-      expect(hashData.source).to.equal(transaction.chargeElement.source);
-      expect(hashData.season).to.equal(transaction.chargeElement.season);
-      expect(hashData.loss).to.equal(transaction.chargeElement.loss);
-      expect(hashData.description).to.equal(transaction.description);
-      expect(hashData.licenceNumber).to.equal(licence.licenceNumber);
-      expect(hashData.regionCode).to.equal(batch.region.code);
-      expect(hashData.isCompensationCharge).to.equal(transaction.isCompensationCharge);
-      expect(hashData.isTwoPartTariff).to.equal(transaction.isTwoPartTariffSupplementary);
-      expect(hashData.isMinimumCharge).to.equal(transaction.isMinimumCharge);
-    });
-  });
-
-  experiment('.createTransactionKey', () => {
-    test('sets the transactionKey value on the transaction', () => {
-      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
-      transaction.createTransactionKey(invoiceAccount, licence, batch);
-
-      expect(transaction.transactionKey).to.equal('d66d068052a800647c287ae471e7310b');
-    });
-
-    test('returns the transactionKey', () => {
-      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
-      const transactionKey = transaction.createTransactionKey(invoiceAccount, licence, batch);
-
-      expect(transactionKey).to.equal('d66d068052a800647c287ae471e7310b');
-    });
-
-    test('sets the value to the result of calling createMd5Hash', async () => {
-      sandbox.stub(hashers, 'createMd5Hash').returns('0123456789ABCDEF0123456789ABCDEF');
-      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
-      const transactionKey = transaction.createTransactionKey(invoiceAccount, licence, batch);
-
-      expect(transactionKey).to.equal('0123456789ABCDEF0123456789ABCDEF');
-    });
-
-    test('sorts by key for consistent behaviour', async () => {
-      sandbox.stub(hashers, 'createMd5Hash');
-      const { batch, invoiceAccount, licence, transaction } = getTestDataForHashing();
-      transaction.createTransactionKey(invoiceAccount, licence, batch);
-
-      const [hashInput] = hashers.createMd5Hash.lastCall.args;
-      expect(hashInput.split(',')).to.equal([
-        'accountNumber:A00000000A',
-        'agreements:S127-S130T-S130W',
-        'authorisedDays:2',
-        'billableDays:1',
-        'description:description',
-        'isCompensationCharge:true',
-        'isNewLicence:false',
-        'isTwoPartTariff:true',
-        'licenceNumber:ABCCBA',
-        'loss:low',
-        'periodEnd:2020-01-01',
-        'periodStart:2010-01-01',
-        'regionCode:A',
-        'season:summer',
-        'source:supported',
-        'volume:3'
-      ]);
     });
   });
 
