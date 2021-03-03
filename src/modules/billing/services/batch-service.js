@@ -422,6 +422,8 @@ const updateWithCMSummary = async (batchId, cmResponse) => {
   return mappers.batch.dbToModel(data);
 };
 
+const generateBatchById = CMBillRunId => chargeModuleBillRunConnector.generate(CMBillRunId);
+
 exports.approveBatch = approveBatch;
 exports.deleteBatch = deleteBatch;
 exports.getBatchById = getBatchById;
@@ -442,3 +444,4 @@ exports.getSentTptBatchesForFinancialYearAndRegion = getSentTptBatchesForFinanci
 exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteAllBillingData = deleteAllBillingData;
 exports.updateWithCMSummary = updateWithCMSummary;
+exports.generateBatchById = generateBatchById;

@@ -79,6 +79,11 @@ const getInvoiceTransactions = (billRunId, invoiceId) => {
   return request.get(path);
 };
 
+const generate = CMBillRunId => {
+  const path = `v2/wrls/bill-runs/${CMBillRunId}/generate`;
+  return request.patch(path);
+};
+
 exports.addTransaction = addTransaction;
 exports.approve = approve;
 exports.create = create;
@@ -90,3 +95,4 @@ exports.getCustomerTransactions = getCustomerTransactions;
 exports.removeCustomerInFinancialYear = removeCustomerInFinancialYear;
 exports.send = send;
 exports.getInvoiceTransactions = getInvoiceTransactions;
+exports.generate = generate;

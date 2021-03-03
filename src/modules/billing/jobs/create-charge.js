@@ -117,6 +117,11 @@ const onComplete = async (job, queueManager) => {
     const { isReady, isEmptyBatch } = job.returnvalue;
 
     if (isReady && !isEmptyBatch) {
+      /* the generate() function calls `PATCH /wrls/v2/{bill run}/generate` which tells the charge module
+      * to generate the bill run summary
+      */
+      const billRun = await batchService.getBatchById(batchId);
+      await chargeModuleBillRunConnector.generate(billRun.externalId);
       await queueManager.add(refreshTotalsJobName, batchId);
     }
   } catch (err) {

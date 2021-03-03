@@ -189,7 +189,7 @@ const updateInvoices = async (batch, cmResponse) => {
   });
 };
 
-const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating_summary';
+const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating';
 
 const updateBatch = async batchId => {
   // Fetch WRLS batch
@@ -207,7 +207,6 @@ const updateBatch = async batchId => {
 
   // Set batch totals
   batch = await batchService.updateWithCMSummary(batch.id, cmResponse);
-
   // Update invoices in batch
   await updateInvoices(batch, cmResponse);
   return true;
