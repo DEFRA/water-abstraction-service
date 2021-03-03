@@ -752,8 +752,6 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       test('the batch is updated correctly with "ready" status', async () => {
-        console.log('§§§§§§§§§§§§§§§§§§');
-        console.log(newRepos.billingBatches.update.lastCall.args);
         expect(newRepos.billingBatches.update.calledWith(BATCH_ID, {
           status: Batch.BATCH_STATUS.ready,
           invoiceCount,
