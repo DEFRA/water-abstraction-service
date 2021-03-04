@@ -1,32 +1,10 @@
 'use strict';
 
 const repo = require('../connectors/repos');
-const Event = require('../models/event');
 const camelCase = require('../camel-case-keys');
 
-/**
- * Creates Event object model from data received from the repo layer
- * @param  {Object} data - data from repository class
- * @return {Object}      - data with keys camel cased
- */
-const mapFromRepo = (data) => {
-  const { eventId, ...rest } = data;
-  const event = new Event(eventId);
-  return event.fromHash(rest);
-};
-
-/**
- * Maps data from event model back to the Bookshelf repo
- * @param {Event} eventModel
- * @return {Object}
- */
-const mapToRepo = eventModel => {
-  const { id, ...rest } = eventModel.toJSON();
-  return {
-    eventId: id,
-    ...rest
-  };
-};
+const eventMapper = require('../mappers/event');
+const notificationEventMapper = require('../mappers/notification-event');
 
 /**
  * Creates an Event model object
@@ -34,9 +12,9 @@ const mapToRepo = eventModel => {
  * @returns {Event} Event model object
  */
 const create = async (eventModel) => {
-  const data = mapToRepo(eventModel);
+  const data = eventMapper.modelToDb(eventModel);
   const result = await repo.events.create(data);
-  return mapFromRepo(result);
+  return eventMapper.dbToModel(result);
 };
 
 /**
@@ -46,7 +24,7 @@ const create = async (eventModel) => {
  */
 const findOne = async (eventId) => {
   const result = await repo.events.findOne(eventId);
-  return mapFromRepo(result);
+  return eventMapper.dbToModel(result);
 };
 
 /**
@@ -56,8 +34,8 @@ const findOne = async (eventId) => {
  * @returns {Event} Event model object
  */
 const update = async (eventModel) => {
-  const result = await repo.events.update(eventModel.id, mapToRepo(eventModel));
-  return mapFromRepo(result);
+  const result = await repo.events.update(eventModel.id, eventMapper.modelToDb(eventModel));
+  return eventMapper.dbToModel(result);
 };
 
 /**
@@ -70,7 +48,7 @@ const update = async (eventModel) => {
  */
 const updateStatus = async (eventId, status) => {
   const result = await repo.events.update(eventId, { status });
-  return mapFromRepo(result);
+  return eventMapper.dbToModel(result);
 };
 
 const getMostRecentReturnsInvitationByLicence = async licenceRef => {
@@ -89,6 +67,13 @@ const getKPILicenceNames = async () => {
   return nullIfEmpty(camelCase(result.rows));
 };
 
+const getNotificationEvents = async (page = 1) => {
+  const { rows } = await repo.events.findNotifications(page);
+  return rows
+    .map(camelCase)
+    .map(notificationEventMapper.dbToModel);
+};
+
 exports.create = create;
 exports.findOne = findOne;
 exports.update = update;
@@ -96,3 +81,4 @@ exports.updateStatus = updateStatus;
 exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitationByLicence;
 exports.getKPIReturnsMonthly = getKPIReturnsMonthly;
 exports.getKPILicenceNames = getKPILicenceNames;
+exports.getNotificationEvents = getNotificationEvents;

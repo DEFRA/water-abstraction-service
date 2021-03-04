@@ -2,9 +2,11 @@
  * Controller methods to send/preview notifications
  * @module src/modules/notifications/controller
  */
+const { pick } = require('lodash');
 const { prepareNotification, sendNotification } = require('./lib');
 const taskConfigLoader = require('./lib/task-config-loader');
 const generateReference = require('../../lib/reference-generator');
+const eventsService = require('../../lib/services/events');
 
 /**
  * @param { Object } request.payload.filter - standard filter
@@ -57,7 +59,17 @@ async function postSend (request, reply) {
   return { error: null, data };
 }
 
+const mapNotification = notification => pick(notification, 'id', 'issuer', 'type', 'subtype', 'recipientCount', 'errorCount', 'created');
+
+const getNotifications = async (request, h) => {
+  const { page } = request.query;
+  const results = await eventsService.getNotificationEvents(page);
+
+  return results.map(mapNotification);
+};
+
 module.exports = {
   postPreview,
-  postSend
+  postSend,
+  getNotifications
 };

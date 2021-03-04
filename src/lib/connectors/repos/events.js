@@ -1,5 +1,6 @@
 const { Event, bookshelf } = require('../bookshelf');
 const queries = require('./queries/events');
+
 /**
  * creates a new event record in the database
  * @param {Object} event event pojo
@@ -42,9 +43,13 @@ const getKPILicenceNamesData = () => {
   return bookshelf.knex.raw(queries.getKPILicenceNamesData);
 };
 
+const findNotifications = (page = 1) =>
+  bookshelf.knex.raw(queries.findNotifications);
+
 exports.create = create;
 exports.update = update;
 exports.findOne = findOne;
 exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitationByLicence;
 exports.getKPIReturnsMonthlyData = getKPIReturnsMonthlyData;
 exports.getKPILicenceNamesData = getKPILicenceNamesData;
+exports.findNotifications = findNotifications;

@@ -17,6 +17,13 @@ const MESSAGE_TYPES = {
   sms: 'sms'
 };
 
+const NOTIFY_STATUSES = {
+  permanentFailure: 'permanent-failure',
+  temporaryFailure: 'temporary-failure',
+  technicalFailure: 'technical-failure',
+  validationFailure: 'validation-failed'
+};
+
 class ScheduledNotification extends Model {
   constructor (...args) {
     super(...args);
@@ -80,3 +87,4 @@ class ScheduledNotification extends Model {
 module.exports = ScheduledNotification;
 module.exports.MESSAGE_STATUSES = MESSAGE_STATUSES;
 module.exports.MESSAGE_TYPES = MESSAGE_TYPES;
+module.exports.NOTIFY_STATUSES = NOTIFY_STATUSES;
