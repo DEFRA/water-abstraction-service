@@ -82,6 +82,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     sandbox.stub(chargeVersionWorkflowRepo, 'create');
     sandbox.stub(chargeVersionWorkflowRepo, 'update');
     sandbox.stub(chargeVersionWorkflowRepo, 'deleteOne').resolves();
+    sandbox.stub(chargeVersionWorkflowRepo, 'softDeleteOne').resolves();
 
     sandbox.stub(chargeVersionService, 'create');
 
@@ -336,27 +337,47 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
   experiment('.delete', () => {
     let chargeVersionWorkflow;
-    beforeEach(async () => {
-      chargeVersionWorkflow = new ChargeVersionWorkflow(uuid());
-      chargeVersionWorkflow.licence = new Licence(uuid());
-      await chargeVersionWorkflowService.delete(chargeVersionWorkflow);
+    experiment('default behaviour', () => {
+      beforeEach(async () => {
+        chargeVersionWorkflow = new ChargeVersionWorkflow(uuid());
+        chargeVersionWorkflow.licence = new Licence(uuid());
+        await chargeVersionWorkflowService.delete(chargeVersionWorkflow);
+      });
+
+      test('calls the repo .softDeleteOne method', async () => {
+        expect(chargeVersionWorkflowRepo.softDeleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
+      });
+
+      test('the licence is flagged for supplementary billing', async () => {
+        expect(licencesService.flagForSupplementaryBilling.calledWith(
+          chargeVersionWorkflow.licence.id
+        )).to.be.true();
+      });
+
+      test('if there is an error, catches and rethrows a NotFoundError', async () => {
+        chargeVersionWorkflowRepo.softDeleteOne.throws(new Error('oh no!'));
+        const func = () => chargeVersionWorkflowService.delete(chargeVersionWorkflow);
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.an.instanceof(NotFoundError);
+      });
     });
 
-    test('calls the repo .deleteOne method', async () => {
-      expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
-    });
+    experiment('hard delete', () => {
+      beforeEach(async () => {
+        chargeVersionWorkflow = new ChargeVersionWorkflow(uuid());
+        chargeVersionWorkflow.licence = new Licence(uuid());
+        await chargeVersionWorkflowService.delete(chargeVersionWorkflow, false);
+      });
 
-    test('the licence is flagged for supplementary billing', async () => {
-      expect(licencesService.flagForSupplementaryBilling.calledWith(
-        chargeVersionWorkflow.licence.id
-      )).to.be.true();
-    });
+      test('calls the repo .deleteOne method', async () => {
+        expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
+      });
 
-    test('if there is an error, catches and rethrows a NotFoundError', async () => {
-      chargeVersionWorkflowRepo.deleteOne.throws(new Error('oh no!'));
-      const func = () => chargeVersionWorkflowService.delete(chargeVersionWorkflow);
-      const err = await expect(func()).to.reject();
-      expect(err).to.be.an.instanceof(NotFoundError);
+      test('the licence is flagged for supplementary billing', async () => {
+        expect(licencesService.flagForSupplementaryBilling.calledWith(
+          chargeVersionWorkflow.licence.id
+        )).to.be.true();
+      });
     });
   });
 

@@ -14,6 +14,7 @@ const { licenceVersions } = require('../../../../src/lib/connectors/repos');
 const LicenceVersion = require('../../../../src/lib/connectors/bookshelf/LicenceVersion');
 const raw = require('../../../../src/lib/connectors/repos/lib/raw');
 const queries = require('../../../../src/lib/connectors/repos/queries/licence-versions');
+const helpers = require('../../../../src/lib/connectors/repos/lib/helpers');
 
 experiment('lib/connectors/repos/licence-versions', () => {
   let stub;
@@ -118,6 +119,18 @@ experiment('lib/connectors/repos/licence-versions', () => {
       const [query, params] = raw.multiRow.lastCall.args;
       expect(query).to.equal(queries.findIdsCreatedAfterDate);
       expect(params).to.equal({ dateAndTime });
+    });
+  });
+
+  experiment('.create', () => {
+    beforeEach(async () => {
+      sandbox.stub(helpers, 'create').resolves();
+
+      await licenceVersions.create({ foo: 'bar' });
+    });
+
+    test('creating a new record is delegated to helpers function', () => {
+      expect(helpers.create.calledWith(LicenceVersion, { foo: 'bar' })).to.be.true();
     });
   });
 });

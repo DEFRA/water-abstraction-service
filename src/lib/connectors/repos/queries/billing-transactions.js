@@ -21,6 +21,11 @@ join (
     and i.is_de_minimis=false
 ) t on t.licence_id=l.licence_id and t.financial_year_ending>= b.from_financial_year_ending and t.financial_year_ending<=b.to_financial_year_ending
 where b.billing_batch_id=:batchId
+and l.licence_id not in (
+  select cvw.licence_id 
+  from water.charge_version_workflows cvw
+  where cvw.date_deleted is null
+)
 order by t.date_created asc
 `;
 
