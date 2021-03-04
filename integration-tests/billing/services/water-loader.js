@@ -4,7 +4,9 @@ const FixtureLoader = require('./fixture-loader/FixtureLoader');
 const AsyncAdapter = require('./fixture-loader/adapters/AsyncAdapter');
 const { createScheduledNotification } = require('../../../src/lib/services/scheduled-notifications');
 const ScheduledNotification = require('../../../src/lib/models/scheduled-notification');
+const chargeVersionWorkflowsConnector = require('../../../src/lib/connectors/repos/charge-version-workflows');
 const licencesConnector = require('../../../src/lib/connectors/repos/licences');
+const licenceVersionsConnector = require('../../../src/lib/connectors/repos/licence-versions');
 const returnVersionsConnector = require('../../../src/lib/connectors/repos/return-versions');
 const returnRequirementsConnector = require('../../../src/lib/connectors/repos/return-requirements');
 const returnRequirementPurposesConnector = require('../../../src/lib/connectors/repos/return-requirement-purposes');
@@ -35,7 +37,7 @@ const create = (sharedData) => {
       return licencesConnector.create(
         body.licenceRef,
         regions.find(x => x.naldRegionId === 6).regionId,
-        new Date().toJSON().slice(0, 10),
+        body.startDate,
         null, {
           historicalAreaCode: 'SAAR',
           regionalChargeArea: 'Southern'
@@ -43,6 +45,8 @@ const create = (sharedData) => {
         true,
         true);
     })
+    .add('LicenceVersion', body => licenceVersionsConnector.create(body))
+    .add('ChargeVersionWorkflow', body => chargeVersionWorkflowsConnector.create(body))
     .add('PrimaryPurpose', async body => {
       const exists = await primaryPurposes.findOneByLegacyId(body.legacy_id);
       if (exists) {

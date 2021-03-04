@@ -26,6 +26,9 @@ const update = (id, changes) =>
   helpers.update(ChargeVersionWorkflow, 'chargeVersionWorkflowId', id, changes);
 
 const deleteOne = id =>
+  helpers.deleteOne(ChargeVersionWorkflow, 'chargeVersionWorkflowId', id);
+
+const softDeleteOne = id =>
   helpers.update(ChargeVersionWorkflow, 'chargeVersionWorkflowId', id, { dateDeleted: moment() });
 
 exports.findOne = findOne;
@@ -34,3 +37,4 @@ exports.findManyForLicence = findManyForLicence;
 exports.create = create;
 exports.update = update;
 exports.deleteOne = deleteOne;
+exports.softDeleteOne = softDeleteOne;

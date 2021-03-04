@@ -110,9 +110,6 @@ const updateIncludeInSupplementaryBillingStatusForBatch = (batchId, from, to) =>
     .raw(queries.updateIncludeInSupplementaryBillingStatusForBatch, params);
 };
 
-const findWithoutChargeVersions = () =>
-  raw.multiRow(queries.getLicencesWithoutChargeVersions);
-
 /**
  * Finds licences which have a 'current' charge version linked to the specified
  * invoice account ID
@@ -129,7 +126,6 @@ exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffRevie
 exports.findOneByLicenceRef = findOneByLicenceRef;
 exports.findOne = findOne;
 exports.findByLicenceRef = findByLicenceRef;
-exports.findWithoutChargeVersions = findWithoutChargeVersions;
 exports.findByInvoiceAccountId = findByInvoiceAccountId;
 
 exports.update = update;

@@ -1,4 +1,4 @@
-- ref: $dailylicence
+- ref: $dailyLicence
   model: Licence
   fields:
     licenceRef: 'AT/CURR/DAILY/01'
