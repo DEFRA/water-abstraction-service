@@ -2,7 +2,7 @@
  * Controller methods to send/preview notifications
  * @module src/modules/notifications/controller
  */
-const { pick } = require('lodash');
+const { pick, get } = require('lodash');
 const { prepareNotification, sendNotification } = require('./lib');
 const taskConfigLoader = require('./lib/task-config-loader');
 const generateReference = require('../../lib/reference-generator');
@@ -59,7 +59,10 @@ async function postSend (request, reply) {
   return { error: null, data };
 }
 
-const mapNotification = notification => pick(notification, 'id', 'issuer', 'type', 'subtype', 'recipientCount', 'errorCount', 'created');
+const mapNotification = notification => ({
+  ...pick(notification, 'id', 'issuer', 'type', 'subtype', 'recipientCount', 'errorCount', 'created', 'referenceCode'),
+  name: get(notification, 'metadata.name')
+});
 
 const getNotifications = async (request, h) => {
   const { page } = request.query;

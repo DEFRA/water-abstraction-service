@@ -18,10 +18,15 @@ const MESSAGE_TYPES = {
 };
 
 const NOTIFY_STATUSES = {
+  accepted: 'accepted',
   permanentFailure: 'permanent-failure',
   temporaryFailure: 'temporary-failure',
   technicalFailure: 'technical-failure',
-  validationFailure: 'validation-failed'
+  validationFailure: 'validation-failed',
+  delivered: 'delivered',
+  sending: 'sending',
+  received: 'received',
+  error: 'error'
 };
 
 class ScheduledNotification extends Model {
@@ -65,6 +70,13 @@ class ScheduledNotification extends Model {
     this._licences = licenceNumbers;
   }
 
+  /**
+   * This is the status of the message in WRLS and is used to track
+   * the full lifecycle of the message, including when it is held in draft
+   * status prior to sending
+   *
+   * @param {String}
+   */
   get status () { return this._status; }
   set status (value) {
     validators.assertNullableEnum(value, Object.values(MESSAGE_STATUSES));
@@ -77,6 +89,14 @@ class ScheduledNotification extends Model {
     this._notifyId = value;
   }
 
+  /**
+   * This is the status of the message in Notify and is only populated
+   * once the message is sent.
+   *
+   * This status may be updated several times
+   *
+   * @param {String}
+   */
   get notifyStatus () { return this._notifyStatus; }
   set notifyStatus (value) {
     validators.assertNullableString(value);
