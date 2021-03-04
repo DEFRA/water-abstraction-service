@@ -113,6 +113,19 @@ experiment('lib/connectors/repos/charge-version-workflows', () => {
     });
 
     test('delegates to the delete helper', async () => {
+      const args = helpers.deleteOne.lastCall.args;
+      expect(args[0]).to.equal(ChargeVersionWorkflow);
+      expect(args[1]).to.equal('chargeVersionWorkflowId');
+      expect(args[2]).to.equal('test-id');
+    });
+  });
+
+  experiment('.softDeleteOne', () => {
+    beforeEach(async () => {
+      await chargeVersionWorkflowsRepo.softDeleteOne('test-id');
+    });
+
+    test('delegates to the update helper', async () => {
       const args = helpers.update.lastCall.args;
       expect(args[0]).to.equal(ChargeVersionWorkflow);
       expect(args[1]).to.equal('chargeVersionWorkflowId');
