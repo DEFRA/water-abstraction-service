@@ -11,12 +11,15 @@ const sandbox = require('sinon').createSandbox();
 
 const users = require('../../../src/modules/acceptance-tests/lib/users');
 const entities = require('../../../src/modules/acceptance-tests/lib/entities');
+const chargeVersionWorkflows = require('../../../src/modules/acceptance-tests/lib/charge-version-workflows');
 const permits = require('../../../src/modules/acceptance-tests/lib/permits');
 const documents = require('../../../src/modules/acceptance-tests/lib/documents');
 const returns = require('../../../src/modules/acceptance-tests/lib/returns');
 const events = require('../../../src/modules/acceptance-tests/lib/events');
 const sessions = require('../../../src/modules/acceptance-tests/lib/sessions');
 const licences = require('../../../src/modules/acceptance-tests/lib/licences');
+const licenceVersions = require('../../../src/modules/acceptance-tests/lib/licence-versions');
+const notifications = require('../../../src/modules/acceptance-tests/lib/notifications');
 const returnRequirements = require('../../../src/modules/acceptance-tests/lib/return-requirements');
 const returnRequirementPurposes = require('../../../src/modules/acceptance-tests/lib/return-requirements-purposes');
 const returnVersions = require('../../../src/modules/acceptance-tests/lib/return-versions');
@@ -73,7 +76,10 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(entities, 'delete').resolves();
     sandbox.stub(users, 'delete').resolves();
     sandbox.stub(sessions, 'delete').resolves();
+    sandbox.stub(chargeVersionWorkflows, 'delete').resolves();
     sandbox.stub(licences, 'delete').resolves();
+    sandbox.stub(licenceVersions, 'delete').resolves();
+    sandbox.stub(notifications, 'delete').resolves();
     sandbox.stub(returnVersions, 'delete').resolves();
     sandbox.stub(returnRequirements, 'delete').resolves();
     sandbox.stub(returnRequirementPurposes, 'delete').resolves();
@@ -288,12 +294,19 @@ experiment('modules/acceptance-tests/controller', () => {
     test('deletes the test data that has been created', async () => {
       await controller.postTearDown();
       expect(returns.delete.called).to.be.true();
+      expect(returnRequirementPurposes.delete.called).to.be.true();
+      expect(returnRequirements.delete.called).to.be.true();
+      expect(returnVersions.delete.called).to.be.true();
       expect(events.delete.called).to.be.true();
       expect(permits.delete.called).to.be.true();
-      expect(documents.delete.called).to.be.true();
       expect(entities.delete.called).to.be.true();
+      expect(documents.delete.called).to.be.true();
       expect(users.delete.called).to.be.true();
       expect(sessions.delete.called).to.be.true();
+      expect(chargeVersionWorkflows.delete.called).to.be.true();
+      expect(licenceVersions.delete.called).to.be.true();
+      expect(licences.delete.called).to.be.true();
+      expect(notifications.delete.called).to.be.true();
     });
   });
 });
