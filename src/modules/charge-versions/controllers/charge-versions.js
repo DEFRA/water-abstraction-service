@@ -62,13 +62,11 @@ const postCreateFromWorkflow = async request => {
   const { chargeVersionWorkflowId } = request.params;
   try {
     const chargeVersionWorkflow = await chargeVersionWorkflowService.getById(chargeVersionWorkflowId);
-    console.log({ chargeVersionWorkflow });
     if (!chargeVersionWorkflow) {
       return Boom.notFound(`Charge version workflow ${chargeVersionWorkflowId} not found`);
     }
 
     const approvedBy = userMapper.pojoToModel(request.defra.internalCallingUser);
-    console.log({ approvedBy });
     return chargeVersionWorkflowService.approve(chargeVersionWorkflow, approvedBy);
   } catch (err) {
     logger.error(`Error creating charge version from workflow ${chargeVersionWorkflowId}`, err);
