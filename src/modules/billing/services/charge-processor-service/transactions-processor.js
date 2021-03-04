@@ -8,14 +8,12 @@ const moment = MomentRange.extendMoment(require('moment'));
 // DEFRA helpers
 const helpers = require('@envage/water-abstraction-helpers');
 
-const billingConfig = require('../../../../../config').billing;
-
 // Service models
 const DateRange = require('../../../../lib/models/date-range');
 const Transaction = require('../../../../lib/models/transaction');
 
 const { TRANSACTION_TYPE } = require('../../../../lib/models/charge-version-year');
-const { getChargePeriod } = require('../../lib/charge-period');
+const { getChargePeriod, isNaldTransaction } = require('../../lib/charge-period');
 
 const agreements = require('./lib/agreements');
 
@@ -72,9 +70,6 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
  * @return {Boolean}
  */
 const isCompensationChargesNeeded = chargeVersion => !chargeVersion.licence.isWaterUndertaker;
-
-const isNaldTransaction = chargePeriodStartDate =>
-  chargePeriodStartDate.isBefore(moment(billingConfig.naldSwitchOverDate, DATE_FORMAT));
 
 const doesChargePeriodStartOnFirstApril = chargePeriodStartDate =>
   chargePeriodStartDate.isSame(moment(`${chargePeriodStartDate.year()}-04-01`, DATE_FORMAT), 'day');

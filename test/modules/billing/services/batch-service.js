@@ -571,7 +571,6 @@ experiment('modules/billing/services/batch-service', () => {
       invoiceService.saveInvoiceToDB.resolves({ billingInvoiceId });
 
       models = createModels();
-      sandbox.stub(models.transaction, 'createTransactionKey');
       await batchService.saveInvoicesToDB(models.batch);
     });
 
@@ -593,12 +592,6 @@ experiment('modules/billing/services/batch-service', () => {
 
     test('the invoice licence model is updated with the returned ID', async () => {
       expect(models.invoiceLicence.id).to.equal(billingInvoiceLicenceId);
-    });
-
-    test('.createTransactionKey is called on each transaction', async () => {
-      expect(models.transaction.createTransactionKey.calledWith(
-        models.invoiceAccount, models.licence, models.batch
-      ));
     });
 
     test('each transaction in the batch is saved', async () => {

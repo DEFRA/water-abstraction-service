@@ -73,7 +73,6 @@ const dbToModelMapper = createMapper()
     'authorisedDays',
     'billableDays',
     'description',
-    'transactionKey',
     'externalId',
     'isTwoPartTariffSupplementary',
     'isDeMinimis',
@@ -123,7 +122,6 @@ const modelToDbMapper = createMapper()
     'description',
     'status',
     'volume',
-    'transactionKey',
     'isTwoPartTariffSupplementary',
     'isNewLicence',
     'externalId'

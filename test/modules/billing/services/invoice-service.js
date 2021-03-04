@@ -226,6 +226,7 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(repos.billingInvoices, 'findOne').resolves();
     sandbox.stub(repos.billingInvoices, 'upsert').resolves();
     sandbox.stub(repos.billingInvoices, 'update').resolves();
+    sandbox.stub(repos.billingInvoices, 'findOneBy').resolves();
 
     sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountsByIds').resolves(crmData);
 
@@ -556,6 +557,73 @@ experiment('modules/billing/services/invoiceService', () => {
 
     test('calls .upsert() on the repo with the result of the mapping', async () => {
       expect(repos.billingInvoices.upsert.calledWith({ foo: 'bar' })).to.be.true();
+    });
+  });
+
+  experiment('.getOrCreateInvoice', () => {
+    const invoiceAccountId = uuid();
+    const financialYearEnding = 2022;
+    let result;
+
+    experiment('when the invoice exists', () => {
+      beforeEach(async () => {
+        repos.billingInvoices.findOneBy.resolves(
+          createBatchData().billingInvoices[0]
+        );
+        result = await invoiceService.getOrCreateInvoice(IDS.batch, invoiceAccountId, financialYearEnding);
+      });
+
+      test('the row is fetched from the DB', async () => {
+        expect(repos.billingInvoices.findOneBy.calledWith({
+          billingBatchId: IDS.batch,
+          invoiceAccountId,
+          financialYearEnding
+        })).to.be.true();
+      });
+
+      test('no rows are created', async () => {
+        expect(repos.billingInvoices.upsert.called).to.be.false();
+      });
+
+      test('no data is fetched from the CRM', async () => {
+        expect(invoiceAccountsConnector.getInvoiceAccountsByIds.called).to.be.false();
+      });
+
+      test('resolves with an Invoice model', async () => {
+        expect(result instanceof Invoice).to.be.true();
+        expect(result.id).to.equal(IDS.invoices[0]);
+      });
+    });
+
+    experiment('when the invoice does not exist', () => {
+      beforeEach(async () => {
+        repos.billingInvoices.findOneBy.resolves(null);
+        repos.billingInvoices.upsert.resolves(createBatchData().billingInvoices[0]);
+        result = await invoiceService.getOrCreateInvoice(IDS.batch, invoiceAccountId, financialYearEnding);
+      });
+
+      test('the row is fetched from the DB', async () => {
+        expect(repos.billingInvoices.findOneBy.calledWith({
+          billingBatchId: IDS.batch,
+          invoiceAccountId,
+          financialYearEnding
+        })).to.be.true();
+      });
+
+      test('the invoice account is fetched from the CRM', async () => {
+        expect(invoiceAccountsConnector.getInvoiceAccountsByIds.calledWith(
+          [invoiceAccountId]
+        )).to.be.true();
+      });
+
+      test('the row is created', async () => {
+        expect(repos.billingInvoices.upsert.called).to.be.true();
+      });
+
+      test('resolves with an Invoice model', async () => {
+        expect(result instanceof Invoice).to.be.true();
+        expect(result.id).to.equal(IDS.invoices[0]);
+      });
     });
   });
 });

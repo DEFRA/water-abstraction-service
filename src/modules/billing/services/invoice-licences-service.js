@@ -23,5 +23,15 @@ const getInvoiceLicenceWithTransactions = async invoiceLicenceId => {
   return invoiceLicence;
 };
 
+const getOrCreateInvoiceLicence = async (billingInvoiceId, licenceId, licenceRef) => {
+  const data = await newRepos.billingInvoiceLicences.upsert({
+    billingInvoiceId,
+    licenceId,
+    licenceRef
+  });
+  return mappers.invoiceLicence.dbToModel(data);
+};
+
 exports.saveInvoiceLicenceToDB = saveInvoiceLicenceToDB;
 exports.getInvoiceLicenceWithTransactions = getInvoiceLicenceWithTransactions;
+exports.getOrCreateInvoiceLicence = getOrCreateInvoiceLicence;
