@@ -178,12 +178,13 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
   validators.assertIsInstanceOf(chargeVersionWorkflow, ChargeVersionWorkflow);
   validators.assertIsInstanceOf(approvedBy, User);
 
-  const { chargeVersion } = chargeVersionWorkflow;
-
+  const { chargeVersion, licence } = chargeVersionWorkflow;
+  console.log({ chargeVersion });
   // Store users who created/approved
   chargeVersion.fromHash({
     createdBy: chargeVersionWorkflow.createdBy,
-    approvedBy
+    approvedBy,
+    licence
   });
 
   // Persist the new charge version
