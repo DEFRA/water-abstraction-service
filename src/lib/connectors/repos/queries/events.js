@@ -51,9 +51,19 @@ left join (
   ) n
   group by n.event_id
 ) e2 on e.event_id=e2.event_id
-where e.type='notification'
-and e.status in ('sent', 'completed', 'sending')
+where 
+  e.type='notification'
+  and e.status in ('sent', 'completed', 'sending')
 group by e.event_id, e2.statuses
 order by e.created desc
-limit 50;
+limit :limit 
+offset :offset
+`;
+
+exports.findNotificationsCount = `
+select count(e.*)
+  from water.events e
+where 
+  e.type='notification'
+  and e.status in ('sent', 'completed', 'sending')
 `;

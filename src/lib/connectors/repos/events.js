@@ -43,8 +43,22 @@ const getKPILicenceNamesData = () => {
   return bookshelf.knex.raw(queries.getKPILicenceNamesData);
 };
 
-const findNotifications = (page = 1) =>
-  bookshelf.knex.raw(queries.findNotifications);
+/**
+ * Gets notification events for sent/completed/sending
+ * with breakdown of related scheduled_notifications statuses in each notification
+ *
+ * @param {Object} params
+ * @param {Number} params.limit
+ * @param {Number} params.offset
+ */
+const findNotifications = params =>
+  bookshelf.knex.raw(queries.findNotifications, params);
+
+/**
+ * Gets total row count for above
+ */
+const findNotificationsCount = () =>
+  bookshelf.knex.raw(queries.findNotificationsCount);
 
 exports.create = create;
 exports.update = update;
@@ -53,3 +67,4 @@ exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitation
 exports.getKPIReturnsMonthlyData = getKPIReturnsMonthlyData;
 exports.getKPILicenceNamesData = getKPILicenceNamesData;
 exports.findNotifications = findNotifications;
+exports.findNotificationsCount = findNotificationsCount;

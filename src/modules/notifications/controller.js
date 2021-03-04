@@ -63,9 +63,12 @@ const mapNotification = notification => pick(notification, 'id', 'issuer', 'type
 
 const getNotifications = async (request, h) => {
   const { page } = request.query;
-  const results = await eventsService.getNotificationEvents(page);
+  const { data, pagination } = await eventsService.getNotificationEvents(page);
 
-  return results.map(mapNotification);
+  return {
+    data: data.map(mapNotification),
+    pagination
+  };
 };
 
 module.exports = {

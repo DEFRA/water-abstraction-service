@@ -5,6 +5,7 @@ const camelCase = require('../camel-case-keys');
 
 const eventMapper = require('../mappers/event');
 const notificationEventMapper = require('../mappers/notification-event');
+const Pagination = require('../models/pagination');
 
 /**
  * Creates an Event model object
@@ -68,10 +69,27 @@ const getKPILicenceNames = async () => {
 };
 
 const getNotificationEvents = async (page = 1) => {
-  const { rows } = await repo.events.findNotifications(page);
-  return rows
+  // Initialise pagination model
+  const pagination = new Pagination()
+    .fromHash({
+      page,
+      perPage: 50
+    });
+
+  // Find and map data to NotificationEvent service models
+  const { rows } = await repo.events.findNotifications({
+    limit: pagination.perPage,
+    offset: pagination.startIndex
+  });
+  const data = rows
     .map(camelCase)
     .map(notificationEventMapper.dbToModel);
+
+  // Update pagination with total rows
+  const { rows: [{ count: totalRows }] } = await repo.events.findNotificationsCount();
+  pagination.totalRows = totalRows;
+
+  return { pagination, data };
 };
 
 exports.create = create;
