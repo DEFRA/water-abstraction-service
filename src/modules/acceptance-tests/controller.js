@@ -9,6 +9,8 @@ const returnRequirements = require('./lib/return-requirements');
 const returnRequirementPurposes = require('./lib/return-requirements-purposes');
 const permits = require('./lib/permits');
 const entities = require('./lib/entities');
+const chargeVersionWorkflows = require('./lib/charge-version-workflows');
+const licenceVersions = require('./lib/licence-versions');
 const licences = require('./lib/licences');
 const users = require('./lib/users');
 const notifications = require('./lib/notifications');
@@ -191,7 +193,6 @@ const createLicencesWithNoReturns = async (company, companyV2Id, addressId) => {
 /**
  * National Permitting Service and Digitise! editor Send renewals and digitise licence information.
  National Permitting Service and Digitise! approver Send renewals, digitise licence information and approve changes.
-
  */
 const createInternalUsers = async () => {
   const emailRegex = /acceptance-test\.internal\.(\w*)@defra\.gov\.uk/;
@@ -296,6 +297,10 @@ const postTearDown = async () => {
   await users.delete();
   console.log('Tearing down acceptance test sessions');
   await sessions.delete();
+  console.log('Tearing down acceptance test charge version workflows');
+  await chargeVersionWorkflows.delete();
+  console.log('Tearing down acceptance test licence versions');
+  await licenceVersions.delete();
   console.log('Tearing down acceptance test licences');
   await licences.delete();
   console.log('Tearing down acceptance test notifications');

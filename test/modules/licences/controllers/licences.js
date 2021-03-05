@@ -20,7 +20,6 @@ experiment('modules/licences/controllers/licences.js', () => {
     sandbox.stub(licencesService, 'getLicenceById');
     sandbox.stub(licencesService, 'getLicenceVersions');
     sandbox.stub(licencesService, 'getLicenceAccountsByRefAndDate');
-    sandbox.stub(licencesService, 'getLicencesWithoutChargeVersions');
 
     sandbox.stub(documentsService, 'getValidDocumentOnDate');
 

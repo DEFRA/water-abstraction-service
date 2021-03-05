@@ -3,6 +3,8 @@
 const LicenceVersion = require('../bookshelf/LicenceVersion');
 const queries = require('./queries/licence-versions');
 const raw = require('./lib/raw');
+const helpers = require('./lib/helpers');
+
 /**
  * Gets a licence version including any licenceVersionPurposes,
  * which will also including the purposeUse
@@ -43,6 +45,8 @@ const findByLicenceId = async licenceId => {
  * @param {String} dateAndTime timestamp
  */
 const findIdsByDateNotInChargeVersionWorkflows = dateAndTime => raw.multiRow(queries.findIdsCreatedAfterDate, { dateAndTime });
+
+exports.create = data => helpers.create(LicenceVersion, data);
 
 exports.findIdsByDateNotInChargeVersionWorkflows = findIdsByDateNotInChargeVersionWorkflows;
 exports.findByLicenceId = findByLicenceId;

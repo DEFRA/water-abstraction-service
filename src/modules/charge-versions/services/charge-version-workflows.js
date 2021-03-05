@@ -160,9 +160,12 @@ const update = async (chargeVersionWorkflowId, changes) => {
  * @param {ChargeVersionWorkflow} chargeVersionWorkflow
  * @return {Promise}
  */
-const deleteOne = async chargeVersionWorkflow => {
+const deleteOne = async (chargeVersionWorkflow, isSoftDelete = true) => {
   try {
-    await chargeVersionWorkflowsRepo.deleteOne(chargeVersionWorkflow.id);
+    const deleteFunc = isSoftDelete
+      ? chargeVersionWorkflowsRepo.softDeleteOne
+      : chargeVersionWorkflowsRepo.deleteOne;
+    await deleteFunc(chargeVersionWorkflow.id);
     await licencesService.flagForSupplementaryBilling(chargeVersionWorkflow.licence.id);
   } catch (err) {
     throw new NotFoundError(`Charge version workflow ${chargeVersionWorkflow.id} not found`);
@@ -178,12 +181,13 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
   validators.assertIsInstanceOf(chargeVersionWorkflow, ChargeVersionWorkflow);
   validators.assertIsInstanceOf(approvedBy, User);
 
-  const { chargeVersion } = chargeVersionWorkflow;
+  const { chargeVersion, licence } = chargeVersionWorkflow;
 
   // Store users who created/approved
   chargeVersion.fromHash({
     createdBy: chargeVersionWorkflow.createdBy,
-    approvedBy
+    approvedBy,
+    licence
   });
 
   // Persist the new charge version
@@ -191,7 +195,7 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
 
   // Delete the charge version workflow record as it is no longer needed
   // and flag for supplementary billing
-  await deleteOne(chargeVersionWorkflow);
+  await deleteOne(chargeVersionWorkflow, false);
 
   return persistedChargeVersion;
 };
