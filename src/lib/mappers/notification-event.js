@@ -10,11 +10,12 @@ const errorStatuses = [
   NOTIFY_STATUSES.permanentFailure,
   NOTIFY_STATUSES.technicalFailure,
   NOTIFY_STATUSES.temporaryFailure,
-  NOTIFY_STATUSES.validationFailure
+  NOTIFY_STATUSES.validationFailure,
+  NOTIFY_STATUSES.error
 ];
 
 const getErrorCount = statuses => (statuses || []).reduce((acc, { count, status }) =>
-  acc + errorStatuses.includes(status) ? count : 0
+  acc + (errorStatuses.includes(status) ? count : 0)
 , 0);
 
 const dbToModelMapper = createMapper()
@@ -26,7 +27,7 @@ const dbToModelMapper = createMapper()
     'subtype',
     'metadata',
     'created',
-    'updated',
+    'modified',
     'referenceCode'
   )
   .map('statuses').to('errorCount', getErrorCount);

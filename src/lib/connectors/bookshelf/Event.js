@@ -6,11 +6,7 @@ module.exports = bookshelf.model('Event', {
 
   idAttribute: 'event_id',
 
-  hasTimestamps: ['created', 'modified'],
-
-  scheduledNotifications () {
-    return this.hasMany('ScheduledNotification', 'event_id', 'event_id');
-  }
+  hasTimestamps: ['created', 'modified']
 
 },
 {
