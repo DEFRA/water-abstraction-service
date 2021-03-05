@@ -4,6 +4,7 @@ const Joi = require('@hapi/joi');
 const controller = require('./controller');
 
 const exampleGuid = '00000000-0000-0000-0000-000000000000';
+const preHandlers = require('./pre-handlers');
 
 module.exports = {
 
@@ -47,7 +48,28 @@ module.exports = {
         params: {
           eventId: Joi.string().guid().required().example(exampleGuid)
         }
-      }
+      },
+      pre: [{
+        method: preHandlers.getEvent, assign: 'event'
+      }]
+    }
+  },
+
+  getNotificationMessages: {
+    method: 'GET',
+    path: '/water/1.0/notifications/{eventId}/messages',
+    handler: controller.getNotificationMessages,
+    options: {
+      tags: ['api'],
+      description: 'Gets the messages for a notification',
+      validate: {
+        params: {
+          eventId: Joi.string().guid().required().example(exampleGuid)
+        }
+      },
+      pre: [{
+        method: preHandlers.getEvent, assign: 'event'
+      }]
     }
   }
 

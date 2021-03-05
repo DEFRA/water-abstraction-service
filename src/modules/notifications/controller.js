@@ -7,6 +7,7 @@ const { prepareNotification, sendNotification } = require('./lib');
 const taskConfigLoader = require('./lib/task-config-loader');
 const generateReference = require('../../lib/reference-generator');
 const eventsService = require('../../lib/services/events');
+const scheduledNotificationsService = require('../../lib/services/scheduled-notifications');
 const mapErrorResponse = require('../../lib/map-error-response');
 
 /**
@@ -82,19 +83,20 @@ const getNotifications = async request => {
 /**
  * Get a single notification including the event and messages
  */
-const getNotification = async request => {
+const getNotification = async request => mapNotificationEvent(request.pre.event);
+
+const getNotificationMessages = async request => {
   const { eventId } = request.params;
-  try {
-    const notificationEvent = await eventsService.getNotificationEvent(eventId);
-    return mapNotificationEvent(notificationEvent);
-  } catch (err) {
-    return mapErrorResponse(err);
-  }
+  const messages = await scheduledNotificationsService.getByEventId(eventId);
+  return {
+    data: messages
+  };
 };
 
 module.exports = {
   postPreview,
   postSend,
   getNotifications,
-  getNotification
+  getNotification,
+  getNotificationMessages
 };

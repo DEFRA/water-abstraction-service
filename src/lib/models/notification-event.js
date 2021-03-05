@@ -2,7 +2,6 @@
 
 const { isNull } = require('lodash');
 const Event = require('./event');
-const ScheduledNotification = require('./scheduled-notification');
 
 const validators = require('./validators');
 
@@ -31,19 +30,6 @@ class NotificationEvent extends Event {
 
   get errorCount () {
     return this._errorCount;
-  }
-
-  /**
-   * Scheuled notifications
-   * @return {Array<ScheduledNotification>}
-   */
-  get scheduledNotifications () {
-    return this._scheduledNotifications;
-  }
-
-  set scheduledNotifications (scheduledNotifications) {
-    validators.assertIsArrayOfType(scheduledNotifications, ScheduledNotification);
-    this._scheduledNotifications = scheduledNotifications;
   }
 }
 

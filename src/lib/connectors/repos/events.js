@@ -18,9 +18,7 @@ const create = async (event) => {
  * @returns {Object} event pojo
  */
 const findOne = id =>
-  helpers.findOne(Event, 'eventId', id, [
-    'scheduledNotifications'
-  ]);
+  helpers.findOne(Event, 'eventId', id);
 
 /**
  * Updates the all the fields for the event record

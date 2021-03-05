@@ -23,7 +23,11 @@ const create = data => helpers.create(ScheduledNotification, data);
 
 const update = (id, changes) => helpers.update(ScheduledNotification, 'id', id, changes);
 
+const findByEventId = eventId =>
+  helpers.findMany(ScheduledNotification, { event_id: eventId });
+
 exports.create = create;
 exports.findOne = findOne;
 exports.findOneByNotifyId = findOneByNotifyId;
 exports.update = update;
+exports.findByEventId = findByEventId;

@@ -98,19 +98,6 @@ const getNotificationEvents = async (page = 1) => {
   return { pagination, data };
 };
 
-/**
- * Gets a single notification event including its scheduled notifications
- * @param {String} eventId
- * @return {Promise<NotificationEvent>
- */
-const getNotificationEvent = async eventId => {
-  const data = await repo.events.findOne(eventId);
-  if (!data) {
-    throw new NotFoundError(`Event ${eventId} not found`);
-  }
-  return notificationEventMapper.dbToModel(data);
-};
-
 exports.create = create;
 exports.findOne = findOne;
 exports.update = update;
@@ -119,4 +106,3 @@ exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitation
 exports.getKPIReturnsMonthly = getKPIReturnsMonthly;
 exports.getKPILicenceNames = getKPILicenceNames;
 exports.getNotificationEvents = getNotificationEvents;
-exports.getNotificationEvent = getNotificationEvent;

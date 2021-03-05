@@ -133,7 +133,6 @@ class ScheduledNotification extends Model {
    * @return {String}
    */
   get displayStatus () {
-    console.log(this.notifyStatus, this.status);
     return mapDisplayStatus(this.status, this.notifyStatus);
   }
 
