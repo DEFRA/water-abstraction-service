@@ -61,7 +61,7 @@ async function postSend (request, reply) {
 }
 
 const mapNotificationEvent = notification => ({
-  ...pick(notification, 'id', 'issuer', 'type', 'subtype', 'recipientCount', 'errorCount', 'created', 'referenceCode', 'scheduledNotifications'),
+  ...pick(notification, 'id', 'issuer', 'type', 'subtype', 'recipientCount', 'errorCount', 'created', 'referenceCode'),
   name: get(notification, 'metadata.name')
 });
 
@@ -84,6 +84,10 @@ const getNotifications = async request => {
  */
 const getNotification = async request => mapNotificationEvent(request.pre.event);
 
+/**
+ * Get a list of scheduled_notifications messages for the specified
+ * notification event
+ */
 const getNotificationMessages = async request => {
   const { eventId } = request.params;
   const messages = await scheduledNotificationsService.getByEventId(eventId);
