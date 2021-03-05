@@ -6,7 +6,6 @@ const camelCase = require('../camel-case-keys');
 const eventMapper = require('../mappers/event');
 const notificationEventMapper = require('../mappers/notification-event');
 const Pagination = require('../models/pagination');
-const { NotFoundError } = require('../../lib/errors');
 
 /**
  * Creates an Event model object

@@ -8,7 +8,6 @@ const taskConfigLoader = require('./lib/task-config-loader');
 const generateReference = require('../../lib/reference-generator');
 const eventsService = require('../../lib/services/events');
 const scheduledNotificationsService = require('../../lib/services/scheduled-notifications');
-const mapErrorResponse = require('../../lib/map-error-response');
 
 /**
  * @param { Object } request.payload.filter - standard filter
