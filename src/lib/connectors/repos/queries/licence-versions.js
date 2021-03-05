@@ -1,5 +1,5 @@
 exports.findIdsCreatedAfterDate = `
-SELECT licence_version_id, licence_id
+SELECT DISTINCT licence_version_id, licence_id
 FROM (
 SELECT * FROM
 water.licence_versions
