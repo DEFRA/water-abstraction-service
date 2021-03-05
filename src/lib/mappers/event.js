@@ -19,7 +19,7 @@ const dbToModel = data => {
  * @return {Object}
  */
 const modelToDb = eventModel => {
-  const { id, ...rest } = eventModel.toJSON();
+  const { id, scheduledNotifications, ...rest } = eventModel.toJSON();
   return {
     eventId: id,
     ...rest
