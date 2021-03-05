@@ -14,9 +14,11 @@ const errorStatuses = [
   NOTIFY_STATUSES.error
 ];
 
-const getErrorCount = statuses => (statuses || []).reduce((acc, { count, status }) =>
-  acc + (errorStatuses.includes(status) ? count : 0)
-, 0);
+const getErrorCount = statuses => statuses
+  ? statuses.reduce((acc, { count, status }) =>
+    acc + (errorStatuses.includes(status) ? count : 0)
+  , 0)
+  : null;
 
 const dbToModelMapper = createMapper()
   .map('eventId').to('id')

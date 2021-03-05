@@ -83,43 +83,71 @@ experiment('modules/billing/mappers/notification-event', () => {
   experiment('.dbToModel', () => {
     let result;
 
-    beforeEach(async () => {
-      result = mapper.dbToModel(row);
-    });
+    experiment('when there is a statuses array', () => {
+      beforeEach(async () => {
+        result = mapper.dbToModel(row);
+      });
 
-    test('returns a NotificationEvent model', async () => {
-      expect(result instanceof NotificationEvent).to.be.true();
-    });
+      test('returns a NotificationEvent model', async () => {
+        expect(result instanceof NotificationEvent).to.be.true();
+      });
 
-    test('maps id', async () => {
-      expect(result.id).to.equal(row.eventId);
-    });
+      test('maps id', async () => {
+        expect(result.id).to.equal(row.eventId);
+      });
 
-    const copiedProperties = [
-      'recipientCount',
-      'issuer',
-      'type',
-      'subtype',
-      'metadata',
-      'referenceCode'
-    ];
+      const copiedProperties = [
+        'recipientCount',
+        'issuer',
+        'type',
+        'subtype',
+        'metadata',
+        'referenceCode'
+      ];
 
-    copiedProperties.forEach(property => {
-      test(`maps ${property}`, async () => {
-        expect(result[property]).to.equal(row[property]);
+      copiedProperties.forEach(property => {
+        test(`maps ${property}`, async () => {
+          expect(result[property]).to.equal(row[property]);
+        });
+      });
+
+      test('maps .created to a moment', async () => {
+        expect(result.created.format(DATE_FORMAT)).to.equal(row.created);
+      });
+
+      test('maps .modified to a moment', async () => {
+        expect(result.modified.format(DATE_FORMAT)).to.equal(row.modified);
+      });
+
+      test('maps the statuses array to a single error count', async () => {
+        expect(result.errorCount).to.equal(505);
       });
     });
 
-    test('maps .created to a moment', async () => {
-      expect(result.created.format(DATE_FORMAT)).to.equal(row.created);
+    experiment('when the statuses are null', () => {
+      beforeEach(async () => {
+        result = mapper.dbToModel({
+          ...row,
+          statuses: null
+        });
+      });
+
+      test('the errorCount is null', async () => {
+        expect(result.errorCount).to.be.null();
+      });
     });
 
-    test('maps .modified to a moment', async () => {
-      expect(result.modified.format(DATE_FORMAT)).to.equal(row.modified);
-    });
+    experiment('when the recipient count is null', () => {
+      beforeEach(async () => {
+        result = mapper.dbToModel({
+          ...row,
+          recipientCount: null
+        });
+      });
 
-    test('maps the statuses array to a single error count', async () => {
-      expect(result.errorCount).to.equal(505);
+      test('the recipientCount is null', async () => {
+        expect(result.recipientCount).to.be.null();
+      });
     });
   });
 });

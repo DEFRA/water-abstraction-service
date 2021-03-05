@@ -11,7 +11,7 @@ class NotificationEvent extends Event {
    * @param {Number} recipientCount
    */
   set recipientCount (recipientCount) {
-    validators.assertPositiveOrZeroInteger(recipientCount);
+    validators.assertNullablePositiveOrZeroInteger(recipientCount);
     this._recipientCount = isNull(recipientCount) ? null : parseInt(recipientCount);
   }
 
