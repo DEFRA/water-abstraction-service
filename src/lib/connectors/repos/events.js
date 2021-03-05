@@ -1,5 +1,6 @@
 const { Event, bookshelf } = require('../bookshelf');
 const queries = require('./queries/events');
+const helpers = require('./lib/helpers');
 
 /**
  * creates a new event record in the database
@@ -16,10 +17,10 @@ const create = async (event) => {
  * @param {String} id UUID eventId
  * @returns {Object} event pojo
  */
-const findOne = async (id) => {
-  const result = await Event.forge({ eventId: id }).fetch();
-  return result.toJSON();
-};
+const findOne = id =>
+  helpers.findOne(Event, 'eventId', id, [
+    'scheduledNotifications'
+  ]);
 
 /**
  * Updates the all the fields for the event record

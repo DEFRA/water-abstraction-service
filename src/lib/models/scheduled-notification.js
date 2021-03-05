@@ -4,20 +4,20 @@ const Model = require('./model');
 
 const validators = require('./validators');
 
-const MESSAGE_STATUSES = {
+const messageStatuses = {
   draft: 'draft',
   sending: 'sending',
   sent: 'sent',
   error: 'error'
 };
 
-const MESSAGE_TYPES = {
+const messageTypes = {
   letter: 'letter',
   email: 'email',
   sms: 'sms'
 };
 
-const NOTIFY_STATUSES = {
+const notifyStatuses = {
   accepted: 'accepted',
   permanentFailure: 'permanent-failure',
   temporaryFailure: 'temporary-failure',
@@ -28,6 +28,31 @@ const NOTIFY_STATUSES = {
   received: 'received',
   error: 'error'
 };
+
+const displayStatuses = {
+  pending: 'pending',
+  sent: 'sent',
+  error: 'error'
+};
+
+const statusMap = new Map()
+  .set(messageStatuses.draft, displayStatuses.pending)
+  .set(messageStatuses.sending, displayStatuses.pending)
+  .set(messageStatuses.sent, displayStatuses.sent)
+  .set(messageStatuses.error, displayStatuses.error);
+
+const notifyStatusMap = new Map()
+  .set(notifyStatuses.permanentFailure, displayStatuses.error)
+  .set(notifyStatuses.temporaryFailure, displayStatuses.error)
+  .set(notifyStatuses.technicalFailure, displayStatuses.error)
+  .set(notifyStatuses.validationFailure, displayStatuses.error)
+  .set(notifyStatuses.sending, displayStatuses.pending)
+  .set(notifyStatuses.delivered, displayStatuses.sent)
+  .set(notifyStatuses.received, displayStatuses.sent)
+  .set(notifyStatuses.accepted, displayStatuses.sent);
+
+const mapDisplayStatus = (status, notifyStatus) =>
+  notifyStatusMap.get(notifyStatus) || statusMap.get(status);
 
 class ScheduledNotification extends Model {
   constructor (...args) {
@@ -43,7 +68,7 @@ class ScheduledNotification extends Model {
 
   get messageType () { return this._messageType; }
   set messageType (value) {
-    validators.assertEnum(value, Object.values(MESSAGE_TYPES));
+    validators.assertEnum(value, Object.values(messageTypes));
     this._messageType = value;
   }
 
@@ -79,7 +104,7 @@ class ScheduledNotification extends Model {
    */
   get status () { return this._status; }
   set status (value) {
-    validators.assertNullableEnum(value, Object.values(MESSAGE_STATUSES));
+    validators.assertNullableEnum(value, Object.values(messageStatuses));
     this._status = value;
   }
 
@@ -102,9 +127,30 @@ class ScheduledNotification extends Model {
     validators.assertNullableString(value);
     this._notifyStatus = value;
   }
+
+  /**
+   * A simple display status that can be used in the UI
+   * @return {String}
+   */
+  get displayStatus () {
+    console.log(this.notifyStatus, this.status);
+    return mapDisplayStatus(this.status, this.notifyStatus);
+  }
+
+  /**
+   * Convert model to JSON
+   * @return {Object}
+   */
+  toJSON () {
+    return {
+      ...super.toJSON(),
+      displayStatus: this.displayStatus
+    };
+  }
 }
 
 module.exports = ScheduledNotification;
-module.exports.MESSAGE_STATUSES = MESSAGE_STATUSES;
-module.exports.MESSAGE_TYPES = MESSAGE_TYPES;
-module.exports.NOTIFY_STATUSES = NOTIFY_STATUSES;
+module.exports.MESSAGE_STATUSES = messageStatuses;
+module.exports.MESSAGE_TYPES = messageTypes;
+module.exports.NOTIFY_STATUSES = notifyStatuses;
+module.exports.DISPLAY_STATUSES = displayStatuses;

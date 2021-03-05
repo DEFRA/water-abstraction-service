@@ -1,7 +1,11 @@
 'use strict';
+const { createMapper } = require('../object-mapper');
+const { createModel } = require('./lib/helpers');
 
 const NotificationEvent = require('../models/notification-event');
 const { MESSAGE_STATUSES, NOTIFY_STATUSES } = require('../models/scheduled-notification');
+
+const scheduledNotificationMapper = require('./scheduled-notification');
 
 const errorStatuses = [
   MESSAGE_STATUSES.error,
@@ -15,13 +19,21 @@ const getErrorCount = statuses => (statuses || []).reduce((acc, { count, status 
   acc + errorStatuses.includes(status) ? count : 0
 , 0);
 
-const dbToModel = row => {
-  const { eventId, statuses, ...rest } = row;
-  const errorCount = getErrorCount(statuses);
-  return new NotificationEvent(eventId).fromHash({
-    errorCount,
-    ...rest
-  });
-};
+const dbToModelMapper = createMapper()
+  .map('eventId').to('id')
+  .copy(
+    'recipientCount',
+    'issuer',
+    'type',
+    'subtype',
+    'metadata',
+    'created',
+    'updated',
+    'referenceCode'
+  )
+  .map('statuses').to('errorCount', getErrorCount)
+  .map('scheduledNotifications').to('scheduledNotifications', rows => rows.map(scheduledNotificationMapper.dbToModel));
+
+const dbToModel = row => createModel(NotificationEvent, row, dbToModelMapper);
 
 exports.dbToModel = dbToModel;

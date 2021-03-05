@@ -6,6 +6,7 @@ const camelCase = require('../camel-case-keys');
 const eventMapper = require('../mappers/event');
 const notificationEventMapper = require('../mappers/notification-event');
 const Pagination = require('../models/pagination');
+const { NotFoundError } = require('../../lib/errors');
 
 /**
  * Creates an Event model object
@@ -68,6 +69,11 @@ const getKPILicenceNames = async () => {
   return nullIfEmpty(camelCase(result.rows));
 };
 
+/**
+ * Gets paginated notification events
+ * @param {Number} page
+ * @return {Promise<Object>} { data : [], pagination : {} }
+ */
 const getNotificationEvents = async (page = 1) => {
   // Initialise pagination model
   const pagination = new Pagination()
@@ -92,6 +98,19 @@ const getNotificationEvents = async (page = 1) => {
   return { pagination, data };
 };
 
+/**
+ * Gets a single notification event including its scheduled notifications
+ * @param {String} eventId
+ * @return {Promise<NotificationEvent>
+ */
+const getNotificationEvent = async eventId => {
+  const data = await repo.events.findOne(eventId);
+  if (!data) {
+    throw new NotFoundError(`Event ${eventId} not found`);
+  }
+  return notificationEventMapper.dbToModel(data);
+};
+
 exports.create = create;
 exports.findOne = findOne;
 exports.update = update;
@@ -100,3 +119,4 @@ exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitation
 exports.getKPIReturnsMonthly = getKPIReturnsMonthly;
 exports.getKPILicenceNames = getKPILicenceNames;
 exports.getNotificationEvents = getNotificationEvents;
+exports.getNotificationEvent = getNotificationEvent;

@@ -7,6 +7,7 @@ const { prepareNotification, sendNotification } = require('./lib');
 const taskConfigLoader = require('./lib/task-config-loader');
 const generateReference = require('../../lib/reference-generator');
 const eventsService = require('../../lib/services/events');
+const mapErrorResponse = require('../../lib/map-error-response');
 
 /**
  * @param { Object } request.payload.filter - standard filter
@@ -59,23 +60,41 @@ async function postSend (request, reply) {
   return { error: null, data };
 }
 
-const mapNotification = notification => ({
-  ...pick(notification, 'id', 'issuer', 'type', 'subtype', 'recipientCount', 'errorCount', 'created', 'referenceCode'),
+const mapNotificationEvent = notification => ({
+  ...pick(notification, 'id', 'issuer', 'type', 'subtype', 'recipientCount', 'errorCount', 'created', 'referenceCode', 'scheduledNotifications'),
   name: get(notification, 'metadata.name')
 });
 
-const getNotifications = async (request, h) => {
+/**
+ * Gets a paginated list of sent notifications.
+ * These are stored in the water.events table with a type of 'notification'
+ */
+const getNotifications = async request => {
   const { page } = request.query;
   const { data, pagination } = await eventsService.getNotificationEvents(page);
 
   return {
-    data: data.map(mapNotification),
+    data: data.map(mapNotificationEvent),
     pagination
   };
+};
+
+/**
+ * Get a single notification including the event and messages
+ */
+const getNotification = async request => {
+  const { eventId } = request.params;
+  try {
+    const notificationEvent = await eventsService.getNotificationEvent(eventId);
+    return mapNotificationEvent(notificationEvent);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
 };
 
 module.exports = {
   postPreview,
   postSend,
-  getNotifications
+  getNotifications,
+  getNotification
 };
