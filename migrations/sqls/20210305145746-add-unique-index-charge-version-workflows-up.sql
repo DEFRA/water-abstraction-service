@@ -1,6 +1,4 @@
 /* Replace with your SQL commands */
-DELETE FROM water.charge_version_workflows;
-
 ALTER TABLE water.charge_version_workflows
 DROP CONSTRAINT unique_licence_version_id_date_deleted;
 
