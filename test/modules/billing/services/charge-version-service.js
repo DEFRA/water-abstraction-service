@@ -107,6 +107,7 @@ experiment('modules/billing/services/charge-version-service', () => {
     experiment('for an annual batch', () => {
       beforeEach(async () => {
         batch.fromHash({
+          startYear: new FinancialYear(2021),
           endYear: new FinancialYear(2021),
           type: Batch.BATCH_TYPE.annual,
           region: new Region(uuid())
@@ -172,7 +173,7 @@ experiment('modules/billing/services/charge-version-service', () => {
       });
 
       test('gets the charge versions in the financial year', async () => {
-        expect(repos.chargeVersions.findValidInRegionAndFinancialYear.callCount).to.equal(4);
+        expect(repos.chargeVersions.findValidInRegionAndFinancialYear.callCount).to.equal(2);
         expect(repos.chargeVersions.findValidInRegionAndFinancialYear.calledWith(
           batch.region.id, 2020
         )).to.be.true();
@@ -216,6 +217,7 @@ experiment('modules/billing/services/charge-version-service', () => {
 
         batch = new Batch();
         batch.fromHash({
+          startYear: new FinancialYear(2021),
           endYear: new FinancialYear(2021),
           type: Batch.BATCH_TYPE.twoPartTariff,
           region: new Region(uuid()),
