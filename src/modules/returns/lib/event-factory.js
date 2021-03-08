@@ -51,5 +51,14 @@ const createBulkUploadEvent = (uploadUserName, subtype = 'csv') => {
   });
 };
 
+const createDeleteReturnsEvent = (returnId) => {
+  const event = new Event();
+  return event.fromHash({
+    type: 'returns-delete',
+    returnId
+  });
+};
+
 exports.createSubmissionEvent = createSubmissionEvent;
 exports.createBulkUploadEvent = createBulkUploadEvent;
+exports.createDeleteReturnsEvent = createDeleteReturnsEvent;

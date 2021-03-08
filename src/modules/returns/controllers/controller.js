@@ -6,7 +6,7 @@
 const Boom = require('@hapi/boom');
 const { uniq, xor } = require('lodash');
 const bluebird = require('bluebird');
-
+const { logger } = require('../../../logger');
 const apiConnector = require('../lib/api-connector');
 const { mapReturnToModel } = require('../lib/model-returns-mapper');
 const returnsFacade = require('../lib/facade');
@@ -110,7 +110,16 @@ const getIncompleteReturns = async request => {
   return bluebird.map(licences, getLicenceDocumentReturns);
 };
 
+const deleteReturn = request => {
+  const { returnId } = request.params;
+  apiConnector.deleteReturnById(returnId);
+  logger.info(`Return with ID ${returnId} was deleted.`);
+  eventFactory.createDeleteReturnsEvent(returnId);
+  return 'OK';
+};
+
 exports.getReturn = getReturn;
 exports.postReturn = postReturn;
 exports.patchReturnHeader = patchReturnHeader;
 exports.getIncompleteReturns = getIncompleteReturns;
+exports.deleteReturn = deleteReturn;
