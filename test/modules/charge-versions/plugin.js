@@ -56,7 +56,7 @@ experiment('modules/charge-versions/plugin.js', () => {
     });
   });
 
-  experiment('register', () => {
+  experiment('publishJobs', () => {
     beforeEach(async () => {
       sandbox.stub(process, 'env').value({
         NODE_ENV: 'test'
@@ -64,7 +64,7 @@ experiment('modules/charge-versions/plugin.js', () => {
       await chargeVersionWorkflowPlugin.publishJobs(server.queueManager);
     });
 
-    test('adds subscriber for the charge charge version workflow job', async () => {
+    test('the right job details are added to the queue manager', async () => {
       const [jobName, licenceVersionId, licenceId] = server.queueManager.add.args[0];
       expect(server.queueManager.add.called).to.be.true();
       expect(jobName).to.equal(chargeVersionWorkflowJob.jobName);
