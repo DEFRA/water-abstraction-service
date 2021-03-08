@@ -169,27 +169,40 @@ experiment('lib/services/event', () => {
   });
 
   experiment('.findOne', () => {
-    beforeEach(async () => {
-      sandbox.stub(repo.events, 'findOne').resolves(testEvent);
+    experiment('when the event is found', () => {
+      beforeEach(async () => {
+        sandbox.stub(repo.events, 'findOne').resolves(testEvent);
+      });
+
+      test('should return an Event data model', async () => {
+        const event = new Event();
+        const ev = await eventsService.findOne('testEventId', 'testStatus');
+        expect(typeof ev).to.equal(typeof event);
+      });
+
+      test('should include the eventId when calling the findOne method at the database repos layer', async () => {
+        await eventsService.findOne('testEventId');
+        const { args } = repo.events.findOne.firstCall;
+        expect(args[0]).to.equal('testEventId');
+      });
+
+      test('should map the object key receveived from the database repos layer to camelCase', async () => {
+        const event = new Event();
+        event.type = 'test-type';
+        const { created } = await eventsService.findOne(event);
+        expect(moment.isMoment(created)).to.equal(true);
+      });
     });
 
-    test('should return an Event data model', async () => {
-      const event = new Event();
-      const ev = await eventsService.findOne('testEventId', 'testStatus');
-      expect(typeof ev).to.equal(typeof event);
-    });
+    experiment('when the event is not found', () => {
+      beforeEach(async () => {
+        sandbox.stub(repo.events, 'findOne').resolves(null);
+      });
 
-    test('should include the eventId when calling the findOne method at the database repos layer', async () => {
-      await eventsService.findOne('testEventId');
-      const { args } = repo.events.findOne.firstCall;
-      expect(args[0]).to.equal('testEventId');
-    });
-
-    test('should map the object key receveived from the database repos layer to camelCase', async () => {
-      const event = new Event();
-      event.type = 'test-type';
-      const { created } = await eventsService.findOne(event);
-      expect(moment.isMoment(created)).to.equal(true);
+      test('resolves null', async () => {
+        const result = await eventsService.findOne('testEventId', 'testStatus');
+        expect(result).to.be.null();
+      });
     });
   });
 

@@ -1,5 +1,7 @@
 'use strict';
 
+const { isNull } = require('lodash');
+
 const Event = require('../models/event');
 
 /**
@@ -8,6 +10,9 @@ const Event = require('../models/event');
  * @return {Object}      - data with keys camel cased
  */
 const dbToModel = data => {
+  if (isNull(data)) {
+    return null;
+  }
   const { eventId, ...rest } = data;
   const event = new Event(eventId);
   return event.fromHash(rest);
