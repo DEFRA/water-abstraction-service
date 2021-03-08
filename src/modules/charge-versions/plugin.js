@@ -29,3 +29,6 @@ exports.plugin = {
   dependencies: ['hapiBull'],
   register: registerSubscribers
 };
+
+// exporting for testing
+module.exports.publishJobs = publishJobs;
