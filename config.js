@@ -27,7 +27,7 @@ module.exports = {
     supplementaryYears: isTest ? 1 : 6,
     // There are 4 processes on the environments but only 1 locally
     createChargeJobConcurrency: isLocal ? 16 : 4,
-    naldSwitchOverDate: process.env.BILLING_GO_LIVE_DATE || '2021-04-01'
+    naldSwitchOverDate: '2021-04-01'
   },
 
   blipp: {
