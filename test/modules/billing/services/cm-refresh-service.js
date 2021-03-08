@@ -37,12 +37,14 @@ const customerRefs = [
 const licenceNumbers = [
   '01/234/ABC', '04/567/CDE'
 ];
+const invoiceIds = [
+  uuid(), uuid()
+];
 const financialYearEnding = 2021;
 const invoiceNumbers = [
   'A1234', 'B4567'
 ];
-const minChargeDescription = 'Minimum Charge Calculation - raised under Schedule 23 of the Environment Act 1995';
-const minChargeValue = 2044;
+
 const deletedTransactionIds = [
   uuid(), uuid()
 ];
@@ -56,7 +58,8 @@ const cmResponses = {
   batchSummary: {
     generating: {
       billRun: {
-        status: 'generating'
+        status: 'generating',
+        invoices: []
       }
     },
     ready: {
@@ -79,84 +82,92 @@ const cmResponses = {
           zeroValueLineCount: 7,
           netTotal: 1836217
         },
-        customers: [
+        invoices: [
           {
+            id: invoiceIds[0],
             customerReference: customerRefs[0],
-            summaryByFinancialYear: [
+            financialYear: financialYearEnding - 1,
+            creditLineCount: 1,
+            creditLineValue: -21127,
+            debitLineCount: 1,
+            debitLineValue: 11274,
+            zeroLineCount: 0,
+            deminimisInvoice: false,
+            zeroValueInvoice: false,
+            transactionReference: invoiceNumbers[0],
+            licences: [
               {
-                financialYear: financialYearEnding - 1,
-                creditLineCount: 2,
-                creditLineValue: -21127,
-                debitLineCount: 1,
-                debitLineValue: 11274,
-                zeroValueLineCount: 3,
-                netTotal: -9853,
-                deminimis: false,
-                netZeroValueInvoice: false
+                id: uuid(),
+                licenceNumber: licenceNumbers[0],
+                transactions: [{
+                  value: -21127,
+                  isCredit: true,
+                  licenceNumber: licenceNumbers[0],
+                  transactionReference: invoiceNumbers[0]
+                },
+                {
+                  value: 11274,
+                  licenceNumber: licenceNumbers[0],
+                  transactionReference: invoiceNumbers[0]
+                }
+                ]
               }
-            ]
+            ],
+            netTotal: -9853
           },
           {
+            id: invoiceIds[1],
             customerReference: customerRefs[1],
-            summaryByFinancialYear: [
+            financialYear: financialYearEnding - 1,
+            creditLineCount: 2,
+            creditLineValue: -21127,
+            debitLineCount: 1,
+            debitLineValue: 3063,
+            zeroLineCount: 1,
+            deminimisInvoice: false,
+            zeroValueInvoice: false,
+            transactionReference: invoiceNumbers[1],
+            licences: [
               {
-                financialYear: financialYearEnding - 1,
-                creditLineCount: 2,
-                creditLineValue: -21127,
-                debitLineCount: 1,
-                debitLineValue: 3063,
-                zeroValueLineCount: 3,
-                netTotal: -18064,
-                deminimis: false,
-                netZeroValueInvoice: false
+                id: uuid(),
+                licenceNumber: licenceNumbers[1],
+                transactions: [{
+                  value: -10200,
+                  isCredit: true,
+                  isMinimumCharge: false,
+                  minChargeValue: 25,
+                  licenceNumber: licenceNumbers[1],
+                  transactionReference: invoiceNumbers[1]
+                },
+                {
+                  value: -10927,
+                  isCredit: true,
+                  isMinimumCharge: false,
+                  minChargeValue: 25,
+                  licenceNumber: licenceNumbers[1],
+                  transactionReference: invoiceNumbers[1]
+                },
+                {
+                  value: 3063,
+                  isCredit: false,
+                  isMinimumCharge: false,
+                  minChargeValue: 25,
+                  licenceNumber: licenceNumbers[1],
+                  transactionReference: invoiceNumbers[1]
+                },
+                {
+                  value: 1,
+                  isCredit: false,
+                  isMinimumCharge: true,
+                  minChargeValue: 25,
+                  licenceNumber: licenceNumbers[1],
+                  transactionReference: invoiceNumbers[1]
+                }]
               }
-            ]
+            ],
+            netTotal: -18064
           }
         ]
-      }
-    }
-  },
-  batchTransactions: {
-    [customerRefs[0]]: {
-      pagination: {
-        page: 1,
-        perPage: 50,
-        pageCount: 1,
-        recordCount: 1
-      },
-      data: {
-        transactions: [{
-          id: transactionIds[0],
-          deminimis: false,
-          chargeValue: 123,
-          transactionReference: invoiceNumbers[0],
-          licenceNumber: licenceNumbers[0]
-        }]
-      }
-    },
-    [customerRefs[1]]: {
-      pagination: {
-        page: 1,
-        perPage: 50,
-        pageCount: 1,
-        recordCount: 1
-      },
-      data: {
-        transactions: [{
-          id: transactionIds[1],
-          deminimis: false,
-          chargeValue: 456,
-          transactionReference: invoiceNumbers[1],
-          licenceNumber: licenceNumbers[1]
-        }, {
-          id: transactionIds[2],
-          deminimis: false,
-          chargeValue: minChargeValue,
-          minimumChargeAdjustment: true,
-          transactionReference: invoiceNumbers[1],
-          licenceNumber: licenceNumbers[1],
-          lineDescription: minChargeDescription
-        }]
       }
     }
   }
@@ -199,8 +210,6 @@ experiment('modules/billing/services/cm-refresh-service', () => {
 
     sandbox.stub(transactionService, 'saveTransactionToDB');
     sandbox.stub(transactionService, 'deleteById');
-
-    sandbox.stub(cmRefreshService, 'updateBatch').resolves();
   });
 
   afterEach(async () => {
@@ -252,8 +261,12 @@ experiment('modules/billing/services/cm-refresh-service', () => {
         invoiceService.getInvoicesForBatch.resolves(invoices);
 
         cmBillRunsConnector.get.resolves(cmResponses.batchSummary.ready);
-        cmBillRunsConnector.getInvoiceTransactions.withArgs(externalId, customerRefs[0], financialYearEnding - 1, 1).resolves(cmResponses.batchTransactions[customerRefs[0]]);
-        cmBillRunsConnector.getInvoiceTransactions.withArgs(externalId, customerRefs[1], financialYearEnding - 1, 1).resolves(cmResponses.batchTransactions[customerRefs[1]]);
+        cmBillRunsConnector.getInvoiceTransactions.withArgs(externalId, invoiceIds[0]).resolves({
+          invoice: cmResponses.batchSummary.ready.billRun.invoices[0]
+        });
+        cmBillRunsConnector.getInvoiceTransactions.withArgs(externalId, invoiceIds[1]).resolves({
+          invoice: cmResponses.batchSummary.ready.billRun.invoices[1]
+        });
 
         result = await cmRefreshService.updateBatch(batchId);
       });
@@ -273,25 +286,17 @@ experiment('modules/billing/services/cm-refresh-service', () => {
       });
 
       test('transactions are fetched from the CM for each invoice', async () => {
-        expect(cmBillRunsConnector.getInvoiceTransactions.callCount).to.equal(2);
+        expect(cmBillRunsConnector.getInvoiceTransactions.callCount).to.equal(2); // one for each invoice
         expect(cmBillRunsConnector.getInvoiceTransactions.calledWith(
-          externalId, customerRefs[0], financialYearEnding - 1, 1
+          externalId, invoiceIds[0]
         )).to.be.true();
         expect(cmBillRunsConnector.getInvoiceTransactions.calledWith(
-          externalId, customerRefs[1], financialYearEnding - 1, 1
+          externalId, invoiceIds[1]
         )).to.be.true();
       });
 
       test('the transactions are persisted', async () => {
-        expect(transactionService.saveTransactionToDB.callCount).to.equal(3);
-      });
-
-      test('the minimum charge transaction is persisted', async () => {
-        const [invoiceLicence, transaction] = transactionService.saveTransactionToDB.lastCall.args;
-        expect(invoiceLicence.licence.licenceNumber).to.equal(licenceNumbers[1]);
-        expect(transaction.isMinimumCharge).to.be.true();
-        expect(transaction.description).to.equal(minChargeDescription);
-        expect(transaction.value).to.equal(minChargeValue);
+        expect(transactionService.saveTransactionToDB.callCount).to.equal(6); // one for each transaction
       });
 
       test('local transactions no longer in the CM batch are deleted', async () => {
