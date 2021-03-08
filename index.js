@@ -27,9 +27,6 @@ const { validate } = require('./src/lib/validate');
 // Notification cron jobs
 require('./src/modules/batch-notifications/cron').scheduleJobs();
 
-// Charge Version workflow job
-require('./src/modules/charge-versions/cron').scheduleJobs();
-
 // Initialise logger
 const { logger } = require('./src/logger');
 const goodWinstonStream = new GoodWinston({ winston: logger });
@@ -53,7 +50,7 @@ const plugins = [
   require('./src/modules/returns/register-subscribers'),
   require('./src/modules/address-search/plugin'),
   require('./src/modules/billing/register-subscribers'),
-  require('./src/modules/charge-versions/register-subscribers')
+  require('./src/modules/charge-versions/plugin').plugin
 ];
 
 const registerServerPlugins = async (server) => {
