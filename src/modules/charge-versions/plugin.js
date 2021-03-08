@@ -20,7 +20,7 @@ const publishJobs = async queueManager => {
 const registerSubscribers = async server => {
   server.queueManager.register(createChargeVersionWorkflows);
   if (!process.env.TRAVIS) {
-    cron.schedule('*/1 * * * *', () => publishJobs(server.queueManager));
+    cron.schedule('0 */6 * * *', () => publishJobs(server.queueManager));
   }
 };
 
