@@ -5,7 +5,6 @@ const urlJoin = require('url-join');
 const moment = require('moment');
 const { set, cloneDeep } = require('lodash');
 const config = require('../../../../config.js');
-const jwt = require('jsonwebtoken');
 const { logger } = require('../../../logger');
 
 /**

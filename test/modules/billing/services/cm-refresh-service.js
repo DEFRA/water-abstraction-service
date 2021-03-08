@@ -28,9 +28,7 @@ const Transaction = require('../../../../src/lib/models/transaction');
 
 const batchId = uuid();
 const externalId = uuid();
-const transactionIds = [
-  uuid(), uuid(), uuid()
-];
+
 const customerRefs = [
   'A00000000A', 'A00000001A'
 ];

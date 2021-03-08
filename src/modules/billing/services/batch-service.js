@@ -1,6 +1,6 @@
 'use strict';
 
-const { partialRight, startCase, pick } = require('lodash');
+const { partialRight, startCase } = require('lodash');
 const Boom = require('@hapi/boom');
 
 const newRepos = require('../../../lib/connectors/repos');
