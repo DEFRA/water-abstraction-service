@@ -54,7 +54,7 @@ left join (
   select 
     n.event_id, 
     sum(n.count) as recipient_count,
-    jsonb_agg(jsonb_build_object('status', n.status, 'count', n.count)) as statuses
+    jsonb_agg(jsonb_build_object('status', n.status, 'notify_status', n.notify_status, 'count', n.count)) as statuses
   from (
     --
     -- this inner query fetches a count of messages in each status, grouped by 
@@ -64,7 +64,7 @@ left join (
     -- a notify status, this is preferred over the "status" column for determining the fate
     -- of the message 
     --
-    select n.event_id, coalesce(n.notify_status, n.status) as status, count(*) as "count"
+    select n.event_id, n.status, n.notify_status, count(*) as "count"
     from water.scheduled_notification n
     where n.event_id is not null
     group by n.event_id, n.status, n.notify_status

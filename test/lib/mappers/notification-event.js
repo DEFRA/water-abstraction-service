@@ -26,54 +26,67 @@ const row = {
   statuses: [
     {
       status: MESSAGE_STATUSES.draft,
+      notifyStatus: null,
       count: 1
     },
     {
       status: MESSAGE_STATUSES.sending,
+      notifyStatus: null,
       count: 2
     },
     {
       status: MESSAGE_STATUSES.sent,
+      notifyStatus: null,
       count: 3
     },
     {
       status: MESSAGE_STATUSES.error,
+      notifyStatus: null,
       count: 5
     },
     {
-      status: NOTIFY_STATUSES.accepted,
+      status: MESSAGE_STATUSES.sent,
+      notifyStatus: NOTIFY_STATUSES.accepted,
       count: 8
     },
     {
-      status: NOTIFY_STATUSES.permanentFailure,
+      status: MESSAGE_STATUSES.sent,
+      notifyStatus: NOTIFY_STATUSES.permanentFailure,
       count: 13
     },
     {
-      status: NOTIFY_STATUSES.temporaryFailure,
+      status: MESSAGE_STATUSES.sent,
+      notifyStatus: NOTIFY_STATUSES.temporaryFailure,
       count: 21
     },
     {
-      status: NOTIFY_STATUSES.technicalFailure,
+      status: MESSAGE_STATUSES.sent,
+      notifyStatus: NOTIFY_STATUSES.technicalFailure,
       count: 34
     },
     {
-      status: NOTIFY_STATUSES.validationFailure,
+      status: MESSAGE_STATUSES.sent,
+      notifyStatus: NOTIFY_STATUSES.validationFailure,
       count: 55
     },
     {
-      status: NOTIFY_STATUSES.delivered,
+      status: MESSAGE_STATUSES.sent,
+      notifyStatus: NOTIFY_STATUSES.delivered,
       count: 89
     },
     {
-      status: NOTIFY_STATUSES.sending,
+      status: MESSAGE_STATUSES.sent,
+      notifyStatus: NOTIFY_STATUSES.sending,
       count: 144
     },
     {
-      status: NOTIFY_STATUSES.received,
+      status: MESSAGE_STATUSES.sent,
+      notifyStatus: NOTIFY_STATUSES.received,
       count: 233
     },
     {
-      status: NOTIFY_STATUSES.error,
+      status: MESSAGE_STATUSES.sent,
+      notifyStatus: NOTIFY_STATUSES.error,
       count: 377
     }
   ]

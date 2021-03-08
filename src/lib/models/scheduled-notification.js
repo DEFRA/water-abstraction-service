@@ -42,6 +42,7 @@ const statusMap = new Map()
   .set(messageStatuses.error, displayStatuses.error);
 
 const notifyStatusMap = new Map()
+  .set(notifyStatuses.error, displayStatuses.error)
   .set(notifyStatuses.permanentFailure, displayStatuses.error)
   .set(notifyStatuses.temporaryFailure, displayStatuses.error)
   .set(notifyStatuses.technicalFailure, displayStatuses.error)
@@ -51,7 +52,7 @@ const notifyStatusMap = new Map()
   .set(notifyStatuses.received, displayStatuses.sent)
   .set(notifyStatuses.accepted, displayStatuses.sent);
 
-const mapDisplayStatus = (status, notifyStatus) =>
+const getDisplayStatus = (status, notifyStatus) =>
   notifyStatusMap.get(notifyStatus) || statusMap.get(status);
 
 class ScheduledNotification extends Model {
@@ -133,7 +134,7 @@ class ScheduledNotification extends Model {
    * @return {String}
    */
   get displayStatus () {
-    return mapDisplayStatus(this.status, this.notifyStatus);
+    return getDisplayStatus(this.status, this.notifyStatus);
   }
 
   /**
@@ -153,3 +154,4 @@ module.exports.MESSAGE_STATUSES = messageStatuses;
 module.exports.MESSAGE_TYPES = messageTypes;
 module.exports.NOTIFY_STATUSES = notifyStatuses;
 module.exports.DISPLAY_STATUSES = displayStatuses;
+module.exports.getDisplayStatus = getDisplayStatus;
