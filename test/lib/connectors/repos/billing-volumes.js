@@ -301,7 +301,7 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     };
 
     beforeEach(async () => {
-      await billingVolumes.updateByBatchId('test-batch-id', changes);
+      await billingVolumes.updateByBatchId('test-batch-id', changes, { require: false });
     });
 
     test('calls .where to find only the rows in the relevant batch', async () => {
@@ -312,6 +312,12 @@ experiment('lib/connectors/repos/billing-volumes', () => {
 
     test('saves the changes', async () => {
       expect(stub.save.calledWith(changes)).to.be.true();
+    });
+
+    test('passes in expected options', async () => {
+      const [, options] = stub.save.lastCall.args;
+      expect(options.method).to.equal('update');
+      expect(options.require).to.be.false();
     });
 
     test('calls .toJSON on the collection', async () => {

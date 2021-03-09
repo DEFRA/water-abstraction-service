@@ -131,10 +131,10 @@ const deleteByBatchIdAndLicenceId = (billingBatchId, licenceId) =>
  * @param {String} billingBatchId
  * @param {Object} changes
  */
-const updateByBatchId = async (billingBatchId, changes) => {
+const updateByBatchId = async (billingBatchId, changes, options = {}) => {
   const result = await BillingVolume
     .where('billing_batch_id', billingBatchId)
-    .save(changes, { method: 'update' });
+    .save(changes, { method: 'update', ...options });
   return result.toJSON();
 };
 
