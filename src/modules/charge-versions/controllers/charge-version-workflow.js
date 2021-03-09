@@ -42,6 +42,13 @@ const postChargeVersionWorkflow = async request => {
 
   chargeVersion.status = 'draft';
 
+  // if a charge version exists then update
+  const workflowsForLicence = await chargeVersionsWorkflowService.getManyByLicenceId(licenceId);
+  const workflowForLicenceVersion = workflowsForLicence ? workflowsForLicence.find(row => row.licenceVersion.id === licenceVersion.licenceVersionId) : null;
+  if (workflowForLicenceVersion) {
+    return chargeVersionsWorkflowService.update(workflowForLicenceVersion.id, { chargeVersion, status: 'review', createdBy: user });
+  }
+
   // Find licence or 404
   const licence = await licencesService.getLicenceById(licenceId);
   if (!licence) {
