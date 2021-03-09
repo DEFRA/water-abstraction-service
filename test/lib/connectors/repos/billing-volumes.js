@@ -301,7 +301,7 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     };
 
     beforeEach(async () => {
-      await billingVolumes.updateByBatchId('test-batch-id', changes, { require: false });
+      await billingVolumes.updateByBatchId('test-batch-id', changes);
     });
 
     test('calls .where to find only the rows in the relevant batch', async () => {
