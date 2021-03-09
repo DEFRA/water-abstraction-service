@@ -314,6 +314,12 @@ experiment('lib/connectors/repos/billing-volumes', () => {
       expect(stub.save.calledWith(changes)).to.be.true();
     });
 
+    test('passes in expected options', async () => {
+      const [, options] = stub.save.lastCall.args;
+      expect(options.method).to.equal('update');
+      expect(options.require).to.be.false();
+    });
+
     test('calls .toJSON on the collection', async () => {
       expect(model.toJSON.called).to.be.true();
     });

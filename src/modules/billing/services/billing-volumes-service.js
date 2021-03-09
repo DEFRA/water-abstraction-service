@@ -80,7 +80,7 @@ const assertNoBillingVolumesWithTwoPartError = async batch => {
  */
 const approveVolumesForBatch = async batch => {
   await assertNoBillingVolumesWithTwoPartError(batch);
-  return billingVolumesRepo.updateByBatchId(batch.id, { isApproved: true });
+  return billingVolumesRepo.updateByBatchId(batch.id, { isApproved: true }, { require: false });
 };
 
 /**
