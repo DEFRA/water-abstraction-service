@@ -28,12 +28,12 @@ const approve = billRunId =>
   request.patch(`v2/wrls/bill-runs/${billRunId}/approve`);
 
 /**
- * Sends the spefified CM bill run
+ * Sends the specified CM bill run
  * @param {String} billRunId - CM bill ID GUID
  * @return {Promise<Object>} response payload
  */
 const send = billRunId =>
-  request.post(`v1/wrls/billruns/${billRunId}/send`);
+  request.post(`v2/wrls/bill-runs/${billRunId}/send`);
 
 /**
  * Removes an individual customer from the bill run

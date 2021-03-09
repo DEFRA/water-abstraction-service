@@ -6,6 +6,7 @@ const isAcceptanceTestTarget = ['local', 'dev', 'development', 'test', 'qa', 'pr
 const isProduction = ['production'].includes(process.env.NODE_ENV);
 const isProductionLike = ['production', 'preprod'].includes(process.env.NODE_ENV);
 const crmUri = process.env.CRM_URI || 'http://127.0.0.1:8002/crm/1.0';
+const isLocal = process.env.NODE_ENV === 'local';
 const isTlsConnection = (process.env.REDIS_HOST || '').includes('aws');
 const isRedisLazy = !!process.env.LAZY_REDIS;
 const isPermitsTestDatabase = process.env.DATABASE_URL.includes('permits-test');
@@ -25,7 +26,7 @@ module.exports = {
   billing: {
     supplementaryYears: isTest ? 1 : 6,
     // There are 4 processes on the environments but only 1 locally
-    createChargeJobConcurrency: 1,
+    createChargeJobConcurrency: isLocal ? 16 : 4,
     naldSwitchOverDate: '2021-04-01'
   },
 
