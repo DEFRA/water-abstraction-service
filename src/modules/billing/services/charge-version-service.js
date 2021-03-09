@@ -92,10 +92,10 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
   const types = getAnnualTransactionTypes();
 
   const twoPartTariffSeasons = await getTwoPartTariffSeasonsForChargeVersion(chargeVersion);
-  if (existingTPTBatches.some(batch => batch.isSummer) && twoPartTariffSeasons[RETURN_SEASONS.summer]) {
+  if (existingTPTBatches.some(existingBatch => existingBatch.isSummer) && twoPartTariffSeasons[RETURN_SEASONS.summer]) {
     types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: true });
   }
-  if (existingTPTBatches.some(batch => !batch.isSummer) && twoPartTariffSeasons[RETURN_SEASONS.winterAllYear]) {
+  if (existingTPTBatches.some(existingBatch => !existingBatch.isSummer) && twoPartTariffSeasons[RETURN_SEASONS.winterAllYear]) {
     types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: false });
   }
 
