@@ -43,7 +43,7 @@ experiment('lib/connectors/repos/change-reasons', () => {
     });
 
     test('collection is sorted on position property', async () => {
-      expect(stub.orderBy.calledWith('position')).to.be.true();
+      expect(stub.orderBy.calledWith('description')).to.be.true();
     });
 
     test('.fetch() is called', async () => {
