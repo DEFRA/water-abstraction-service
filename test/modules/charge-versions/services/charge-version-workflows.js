@@ -33,6 +33,7 @@ const Role = require('../../../../src/lib/models/role');
 const Licence = require('../../../../src/lib/models/licence');
 const ChargeVersion = require('../../../../src/lib/models/charge-version');
 const User = require('../../../../src/lib/models/user');
+const LicenceVersion = require('../../../../src/lib/models/licence-version');
 
 // Mappers
 const chargeVersionWorkflowMapper = require('../../../../src/lib/mappers/charge-version-workflow');
@@ -46,18 +47,21 @@ const createChargeVersionWorkflow = () => {
   const licence = new Licence();
   licence.licenceNumber = '01/123/ABC';
 
+  const licenceVersion = new LicenceVersion();
+
   const chargeVersionWorkflow = new ChargeVersionWorkflow(uuid());
   return chargeVersionWorkflow.fromHash({
     chargeVersion,
-    licence
+    licence,
+    licenceVersion
   });
 };
 
+const role = new Role(roleId);
+
 const createDocument = () => {
   const doc = new Document();
-  sandbox.stub(doc, 'getRoleOnDate').returns(
-    new Role(roleId)
-  );
+  sandbox.stub(doc, 'getRoleOnDate').returns(role.toJSON());
   return doc;
 };
 
@@ -78,6 +82,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
     sandbox.stub(chargeVersionWorkflowRepo, 'create');
     sandbox.stub(chargeVersionWorkflowRepo, 'update');
     sandbox.stub(chargeVersionWorkflowRepo, 'deleteOne').resolves();
+    sandbox.stub(chargeVersionWorkflowRepo, 'softDeleteOne').resolves();
 
     sandbox.stub(chargeVersionService, 'create');
 
@@ -126,8 +131,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
     test('resolves with an array of objects each with a chargeVersionWorkflow and licenceHolderRole', async () => {
       expect(result).to.be.an.array().length(1);
-      expect(result[0].chargeVersionWorkflow).to.equal(chargeVersionWorkflow);
-      expect(result[0].licenceHolderRole.id).to.equal(roleId);
+      expect(result[0]).to.equal({ ...chargeVersionWorkflow.toJSON(), licenceHolderRole: role.toJSON() });
     });
   });
 
@@ -169,8 +173,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
       test('resolves with an object with a chargeVersionWorkflow and licenceHolderRole', async () => {
         expect(result).to.be.an.object();
-        expect(result.chargeVersionWorkflow).to.equal(chargeVersionWorkflow);
-        expect(result.licenceHolderRole.id).to.equal(roleId);
+        expect(result).to.equal({ ...chargeVersionWorkflow.toJSON(), licenceHolderRole: role.toJSON() });
       });
     });
 
@@ -204,11 +207,13 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
   });
 
   experiment('.create', () => {
-    let licence, chargeVersion, user;
+    let licence, chargeVersion, user, licenceVersion;
     const chargeVersionWorkflowId = uuid();
 
     beforeEach(async () => {
       licence = new Licence(uuid());
+      licenceVersion = new LicenceVersion(uuid());
+
       chargeVersion = new ChargeVersion();
       chargeVersion.dateRange = new DateRange('2019-01-01', null);
       user = new User(123, 'mail@example.com');
@@ -226,10 +231,9 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
               }
             }
           }
-
         });
 
-        result = await chargeVersionWorkflowService.create(licence, chargeVersion, user);
+        result = await chargeVersionWorkflowService.create(licence, licenceVersion.id, chargeVersion, user);
       });
 
       test('the charge version workflow data is persisted in the repo', async () => {
@@ -333,27 +337,47 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
 
   experiment('.delete', () => {
     let chargeVersionWorkflow;
-    beforeEach(async () => {
-      chargeVersionWorkflow = new ChargeVersionWorkflow(uuid());
-      chargeVersionWorkflow.licence = new Licence(uuid());
-      await chargeVersionWorkflowService.delete(chargeVersionWorkflow);
+    experiment('default behaviour', () => {
+      beforeEach(async () => {
+        chargeVersionWorkflow = new ChargeVersionWorkflow(uuid());
+        chargeVersionWorkflow.licence = new Licence(uuid());
+        await chargeVersionWorkflowService.delete(chargeVersionWorkflow);
+      });
+
+      test('calls the repo .softDeleteOne method', async () => {
+        expect(chargeVersionWorkflowRepo.softDeleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
+      });
+
+      test('the licence is flagged for supplementary billing', async () => {
+        expect(licencesService.flagForSupplementaryBilling.calledWith(
+          chargeVersionWorkflow.licence.id
+        )).to.be.true();
+      });
+
+      test('if there is an error, catches and rethrows a NotFoundError', async () => {
+        chargeVersionWorkflowRepo.softDeleteOne.throws(new Error('oh no!'));
+        const func = () => chargeVersionWorkflowService.delete(chargeVersionWorkflow);
+        const err = await expect(func()).to.reject();
+        expect(err).to.be.an.instanceof(NotFoundError);
+      });
     });
 
-    test('calls the repo .deleteOne method', async () => {
-      expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
-    });
+    experiment('hard delete', () => {
+      beforeEach(async () => {
+        chargeVersionWorkflow = new ChargeVersionWorkflow(uuid());
+        chargeVersionWorkflow.licence = new Licence(uuid());
+        await chargeVersionWorkflowService.delete(chargeVersionWorkflow, false);
+      });
 
-    test('the licence is flagged for supplementary billing', async () => {
-      expect(licencesService.flagForSupplementaryBilling.calledWith(
-        chargeVersionWorkflow.licence.id
-      )).to.be.true();
-    });
+      test('calls the repo .deleteOne method', async () => {
+        expect(chargeVersionWorkflowRepo.deleteOne.calledWith(chargeVersionWorkflow.id)).to.be.true();
+      });
 
-    test('if there is an error, catches and rethrows a NotFoundError', async () => {
-      chargeVersionWorkflowRepo.deleteOne.throws(new Error('oh no!'));
-      const func = () => chargeVersionWorkflowService.delete(chargeVersionWorkflow);
-      const err = await expect(func()).to.reject();
-      expect(err).to.be.an.instanceof(NotFoundError);
+      test('the licence is flagged for supplementary billing', async () => {
+        expect(licencesService.flagForSupplementaryBilling.calledWith(
+          chargeVersionWorkflow.licence.id
+        )).to.be.true();
+      });
     });
   });
 
@@ -389,28 +413,23 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
   });
   experiment('getLicenceHolderRole', () => {
     experiment('when no document is found for the licence and start date', () => {
+      const chargeVersionObject = new ChargeVersion(uuid());
+      const licenceObject = new Licence(uuid());
       beforeEach(async () => {
+        chargeVersionWorkflow = new ChargeVersionWorkflow(uuid());
+        chargeVersionWorkflow.fromHash({
+          chargeVersion: new ChargeVersion(uuid()),
+          createdBy: new User(456, 'someone-else@example.com')
+        });
+        chargeVersionWorkflow.licence = licenceObject;
+        chargeVersionWorkflow.chargeVersion = chargeVersionObject;
         documentsService.getValidDocumentOnDate.resolves(null);
       });
 
       test('a response is returned with a blank role object', async () => {
-        const licenceObject = {
-          licenceNumber: '123'
-        };
-
-        const chargeVersionObject = {
-          dateRange: {
-            startDate: '2000-01-01'
-          }
-        };
-
-        result = await chargeVersionWorkflowService.getLicenceHolderRole({
-          licence: licenceObject,
-          chargeVersion: chargeVersionObject
-        });
-
-        expect(result.chargeVersionWorkflow.licence).to.equal(licenceObject);
-        expect(result.chargeVersionWorkflow.chargeVersion).to.equal(chargeVersionObject);
+        result = await chargeVersionWorkflowService.getLicenceHolderRole(chargeVersionWorkflow);
+        expect(result.licence).to.equal(licenceObject.toJSON());
+        expect(result.chargeVersion).to.equal(chargeVersionObject.toJSON());
         expect(result.licenceHolderRole).to.equal({});
       });
     });

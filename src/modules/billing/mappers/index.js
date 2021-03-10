@@ -5,7 +5,6 @@ exports.billingVolume = require('./billing-volume');
 exports.chargeElement = require('../../../lib/mappers/charge-element');
 exports.chargeVersion = require('../../../lib/mappers/charge-version');
 exports.chargeVersionYear = require('./charge-version-year');
-exports.totals = require('./totals');
 exports.company = require('../../../lib/mappers/company');
 exports.contact = require('../../../lib/mappers/contact');
 exports.invoice = require('./invoice');

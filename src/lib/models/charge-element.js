@@ -182,6 +182,12 @@ class ChargeElement extends Model {
     this._description = description;
   }
 
+  get chargeVersionId () { return this._chargeVersionId; }
+  set chargeVersionId (chargeVersionId) {
+    validators.assertId(chargeVersionId);
+    this._chargeVersionId = chargeVersionId;
+  }
+
   toJSON () {
     return {
       ...super.toJSON(),

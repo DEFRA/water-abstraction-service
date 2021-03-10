@@ -4,7 +4,7 @@ const documentV2Connector = require('../../../lib/connectors/crm-v2/documents');
 
 const config = require('../../../../config');
 
-const create = async (companyId, licenceId, licenceRef) => {
+const create = async (companyId, licenceId, licenceRef, companyV2Id, addressId) => {
   const document = {
     regime_entity_id: config.crm.waterRegime,
     system_id: 'permit-repo',
@@ -40,9 +40,23 @@ const create = async (companyId, licenceId, licenceRef) => {
   };
 
   const { data } = await documentV1Connector.create(document);
-  await documentV2Connector.createDocument(licenceRef, 'current', new Date().toJSON().slice(0, 10), null, true);
+  const documentV2 = await documentV2Connector.createDocument(licenceRef, 'current', '2019-01-01', null, true);
+
+  const documentRole = {
+    role: 'licenceHolder',
+    startDate: '2019-01-01',
+    endDate: null,
+    invoiceAccountId: null,
+    companyId: companyV2Id,
+    contactId: null,
+    isTest: true,
+    addressId
+  };
+
+  documentV2Connector.createDocumentRole(documentV2.documentId, documentRole);
+
   return data;
 };
 
 exports.create = create;
-exports.delete = async () => await documentV1Connector.deleteAcceptanceTestData();
+exports.delete = async () => documentV1Connector.deleteAcceptanceTestData();

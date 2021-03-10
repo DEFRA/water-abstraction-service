@@ -32,27 +32,6 @@ const updateIncludeInSupplementaryBillingStatusForBatch = `
   and l.include_in_supplementary_billing = :from;
 `;
 
-/**
- * Get all licences that:
- *
- * have a start date after a given value
- * have current or superseded licence versions
- * have no charge versions
- * have no charge version workflows started
- */
-const getLicencesWithoutChargeVersions = `
-select l.*
-from water.licences l
-  inner join water.licence_versions lv
-    on l.licence_id = lv.licence_id and lv.status in ('superseded', 'current')
-  left join water.charge_versions cv
-    on l.licence_ref = cv.licence_ref
-where cv.licence_ref is null
-and l.licence_id not in (
-  select licence_id from water.charge_version_workflows
-)
-`;
-
 const getLicencesByInvoiceAccount = `
 select distinct l.* from water.charge_versions cv
 join water.licences l on cv.licence_id=l.licence_id
@@ -60,7 +39,6 @@ where cv.invoice_account_id=:invoiceAccountId
 and cv.status='current'
 `;
 
-exports.getLicencesWithoutChargeVersions = getLicencesWithoutChargeVersions;
 exports.updateIncludeInSupplementaryBillingStatusForBatch = updateIncludeInSupplementaryBillingStatusForBatch;
 exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview;
 exports.getLicencesByInvoiceAccount = getLicencesByInvoiceAccount;

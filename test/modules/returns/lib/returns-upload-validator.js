@@ -113,7 +113,14 @@ experiment('validate', () => {
     expect(errors).to.equal([ERR_LINES]);
   });
 
-  test('fails validation if there is an error with the line frequency', async () => {
+  test('fails validation if supplied return frequency does match that expected in the return header', async () => {
+    const { ERR_LINES } = returnsUploadValidator.uploadErrors;
+    const testData = data.upload[6];
+    const [{ errors }] = await returnsUploadValidator.validate([testData], data.companyId);
+    expect(errors).to.equal([ERR_LINES]);
+  });
+
+  test('fails validation if supplied lines do not match the supplied return frequency', async () => {
     const { ERR_DATE_FORMAT } = returnsUploadValidator.uploadErrors;
     const testData = data.upload[5];
     testData.lines[0] = {
@@ -164,43 +171,5 @@ experiment('validate', () => {
       const [{ errors }] = await returnsUploadValidator.validate(returnData, data.companyId);
       expect(errors).to.equal([ERR_METER_DETAILS]);
     });
-  });
-});
-
-experiment('validateReturnlines', () => {
-  test('it should return true for a nil return', async () => {
-    const result = returnsUploadValidator.validateReturnlines(data.upload[0]);
-    expect(result).to.equal(true);
-  });
-
-  test('it should return true if the expected lines are present', async () => {
-    const ret = {
-      startDate: '2018-12-01',
-      endDate: '2019-01-31',
-      frequency: 'month',
-      lines: [{
-        startDate: '2019-01-01',
-        endDate: '2019-01-31'
-      }, {
-        startDate: '2018-12-01',
-        endDate: '2018-12-31'
-      }]
-    };
-    const result = returnsUploadValidator.validateReturnlines(ret);
-    expect(result).to.equal(true);
-  });
-
-  test('it should return false if the expected lines are not present', async () => {
-    const ret = {
-      startDate: '2018-12-01',
-      endDate: '2019-01-31',
-      frequency: 'month',
-      lines: [{
-        startDate: '2019-01-01',
-        endDate: '2019-01-31'
-      }]
-    };
-    const result = returnsUploadValidator.validateReturnlines(ret);
-    expect(result).to.equal(false);
   });
 });

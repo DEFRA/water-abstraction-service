@@ -18,6 +18,7 @@ experiment('modules/acceptance-tests/lib/documents', () => {
     });
 
     sandbox.stub(documentV2Connector, 'createDocument').resolves({});
+    sandbox.stub(documentV2Connector, 'createDocumentRole').resolves({});
 
     sandbox.stub(documentConnector, 'deleteAcceptanceTestData').resolves();
   });
@@ -30,7 +31,7 @@ experiment('modules/acceptance-tests/lib/documents', () => {
     let createdDocument;
 
     beforeEach(async () => {
-      createdDocument = await documents.create('comp-id', 'lic-id', 'lic-ref');
+      createdDocument = await documents.create('comp-id', 'lic-id', 'lic-ref', 'company-V2-id', 'address-id');
     });
 
     test('sets the system_internal_id', async () => {

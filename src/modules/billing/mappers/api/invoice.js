@@ -13,7 +13,7 @@ const map = {
   id: 'id',
   'invoiceAccount.accountNumber': 'accountNumber',
   'invoiceAccount.company.name': 'name',
-  'totals.netTotal': 'netTotal',
+  netTotal: 'netTotal',
   'invoiceLicences[].licence.licenceNumber': 'licenceNumbers[]',
   'financialYear.yearEnding': 'financialYearEnding',
   invoiceLicences: {

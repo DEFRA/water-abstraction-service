@@ -37,7 +37,7 @@ const getActiveReturnsChunk = (returnIds) => {
     'metadata->>isCurrent': 'true'
   };
 
-  const columns = ['return_id', 'status', 'due_date'];
+  const columns = ['return_id', 'status', 'due_date', 'start_date', 'end_date', 'returns_frequency'];
 
   return returnsClient.findAll(filter, null, columns);
 };

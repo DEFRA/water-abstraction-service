@@ -1,17 +1,26 @@
 const Model = require('./model');
 const {
-  assertPositiveOrZeroInteger,
-  assertNegativeOrZeroInteger,
-  assertInteger
+  assertNullablePositiveOrZeroInteger,
+  assertNullableNegativeOrZeroInteger,
+  assertNullableInteger
 } = require('./validators');
 
 class Totals extends Model {
+  constructor (id) {
+    super(id);
+    this.creditNoteCount = null;
+    this.creditNoteValue = null;
+    this.invoiceCount = null;
+    this.invoiceValue = null;
+    this.netTotal = null;
+  }
+
   /**
    * Number of credit notes
    * @param {Number} count
    */
   set creditNoteCount (count) {
-    assertPositiveOrZeroInteger(count);
+    assertNullablePositiveOrZeroInteger(count);
     this._creditNoteCount = count;
   }
 
@@ -24,7 +33,7 @@ class Totals extends Model {
    * @param {Number} value - in pence
    */
   set creditNoteValue (value) {
-    assertNegativeOrZeroInteger(value);
+    assertNullableNegativeOrZeroInteger(value);
     this._creditNoteValue = value;
   }
 
@@ -37,7 +46,7 @@ class Totals extends Model {
    * @param {Number} count
    */
   set invoiceCount (count) {
-    assertPositiveOrZeroInteger(count);
+    assertNullablePositiveOrZeroInteger(count);
     this._invoiceCount = count;
   }
 
@@ -50,7 +59,7 @@ class Totals extends Model {
    * @param {Number} value - in pence
    */
   set invoiceValue (value) {
-    assertPositiveOrZeroInteger(value);
+    assertNullablePositiveOrZeroInteger(value);
     this._invoiceValue = value;
   }
 
@@ -59,63 +68,11 @@ class Totals extends Model {
   }
 
   /**
-   * Number of credit lines
-   * @param {Number} count
-   */
-  set creditLineCount (count) {
-    assertPositiveOrZeroInteger(count);
-    this._creditLineCount = count;
-  }
-
-  get creditLineCount () {
-    return this._creditLineCount;
-  }
-
-  /**
-   * Value of credit lines
-   * @param {Number} value - in pence
-   */
-  set creditLineValue (value) {
-    assertNegativeOrZeroInteger(value);
-    this._creditLineValue = value;
-  }
-
-  get creditLineValue () {
-    return this._creditLineValue;
-  }
-
-  /**
-   * Number of debit lines
-   * @param {Number} count
-   */
-  set debitLineCount (count) {
-    assertPositiveOrZeroInteger(count);
-    this._debitLineCount = count;
-  }
-
-  get debitLineCount () {
-    return this._debitLineCount;
-  }
-
-  /**
-   * Value of debit lines
-   * @param {Number} value - in pence
-   */
-  set debitLineValue (value) {
-    assertPositiveOrZeroInteger(value);
-    this._debitLineValue = value;
-  }
-
-  get debitLineValue () {
-    return this._debitLineValue;
-  }
-
-  /**
    * Net total
    * @param {Number} value - in pence
    */
   set netTotal (value) {
-    assertInteger(value);
+    assertNullableInteger(value);
     this._netTotal = value;
   }
 

@@ -5,7 +5,7 @@ const uuid = require('uuid/v4');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
-const { Batch, FinancialYear, Invoice, InvoiceAccount, Region, Totals } =
+const { Batch, FinancialYear, Invoice, InvoiceAccount, Region } =
   require('../../../src/lib/models');
 
 const TEST_GUID = 'add1cf3b-7296-4817-b013-fea75a928580';
@@ -396,29 +396,6 @@ experiment('lib/models/batch', () => {
     });
   });
 
-  experiment('.totals', () => {
-    test('can be set to a totals instance', async () => {
-      const batch = new Batch();
-      const totals = new Totals();
-      batch.totals = totals;
-      expect(batch.totals).to.equal(totals);
-    });
-
-    test('can be set to null', async () => {
-      const batch = new Batch();
-      batch.totals = null;
-      expect(batch.totals).to.equal(null);
-    });
-
-    test('throws an error if set to a different type', async () => {
-      const batch = new Batch();
-      const func = () => {
-        batch.totals = new Region();
-      };
-      expect(func).to.throw();
-    });
-  });
-
   experiment('.externalId', () => {
     test('can be set to guid', async () => {
       const id = uuid();
@@ -613,6 +590,31 @@ experiment('lib/models/batch', () => {
       const batch = new Batch();
       batch.status = Batch.BATCH_STATUS.review;
       expect(batch.canDeleteInvoices()).to.equal(false);
+    });
+  });
+
+  experiment('.source', () => {
+    Object.values(Batch.BATCH_SOURCE).forEach(source => {
+      test(`can be set to ${source}`, async () => {
+        const batch = new Batch();
+        batch.source = source;
+
+        expect(batch.source).to.equal(source);
+      });
+    });
+
+    test('cannot be null', async () => {
+      expect(() => {
+        const batch = new Batch();
+        batch.source = null;
+      }).to.throw();
+    });
+
+    test('cannot be other values', async () => {
+      expect(() => {
+        const batch = new Batch();
+        batch.source = 'invalid-source';
+      }).to.throw();
     });
   });
 });

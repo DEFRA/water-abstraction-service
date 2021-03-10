@@ -9,7 +9,7 @@ const createReturn = data => ({
   status: 'due',
   versionNumber: 1,
   isCurrent: true,
-  meters:[],
+  meters: [],
   user: {
     email: 'mail@example.com',
     entityId: 'd9c5412c-8993-49b9-9d20-b8f2208ccd8e',
@@ -49,15 +49,24 @@ module.exports = {
   'returns': [
     {
       'return_id': 'v1:1:05/678:456:2017-11-01:2018-10-31',
-      'status': 'completed'
+      'status': 'completed',
+      'start_date': '2017-11-01',
+      'end_date': '2018-10-31',
+      'returns_frequency': 'month'
     },
     {
       'return_id': 'v1:2:06/890:789:2017-11-01:2018-10-31',
-      'status': 'due'
+      'status': 'due',
+      'start_date': '2017-11-01',
+      'end_date': '2018-10-31',
+      'returns_frequency': 'month'
     },
     {
       'return_id': 'v1:2:06/890:789:2019-02-01:2019-02-28',
-      'status': 'due'
+      'status': 'due',
+      'start_date': '2019-02-01',
+      'end_date': '2019-02-28',
+      'returns_frequency': 'month'
     }
   ],
   'upload': [
@@ -98,6 +107,184 @@ module.exports = {
           'endDate': '2019-03-31',
           'quantity': '0'
         }
+      ]
+    }),
+    createReturn({
+      'returnId': 'v1:2:06/890:789:2019-02-01:2019-02-28',
+      'licenceNumber': '06/890',
+      'isNil': false,
+      'frequency': 'day',
+      'startDate': '2019-02-01',
+      'endDate': '2019-02-28',
+      'lines': [
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-01',
+          'endDate': '2019-02-01',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-02',
+          'endDate': '2019-02-02',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-03',
+          'endDate': '2019-02-03',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-04',
+          'endDate': '2019-02-04',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-05',
+          'endDate': '2019-02-05',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-06',
+          'endDate': '2019-02-06',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-07',
+          'endDate': '2019-02-07',
+          'quantity': '8'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-08',
+          'endDate': '2019-02-08',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-09',
+          'endDate': '2019-02-09',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-10',
+          'endDate': '2019-02-10',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-11',
+          'endDate': '2019-02-11',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-12',
+          'endDate': '2019-02-12',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-13',
+          'endDate': '2019-02-13',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-14',
+          'endDate': '2019-02-14',
+          'quantity': '8'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-15',
+          'endDate': '2019-02-15',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-16',
+          'endDate': '2019-02-16',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-17',
+          'endDate': '2019-02-17',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-18',
+          'endDate': '2019-02-18',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-19',
+          'endDate': '2019-02-19',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-20',
+          'endDate': '2019-02-20',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-21',
+          'endDate': '2019-02-21',
+          'quantity': '8'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-22',
+          'endDate': '2019-02-22',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-23',
+          'endDate': '2019-02-23',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-24',
+          'endDate': '2019-02-24',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-25',
+          'endDate': '2019-02-25',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-26',
+          'endDate': '2019-02-26',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-27',
+          'endDate': '2019-02-27',
+          'quantity': '0'
+        },
+        {
+          'timePeriod': 'day',
+          'startDate': '2019-02-28',
+          'endDate': '2019-02-28',
+          'quantity': '8'
+        },
       ]
     })
   ]

@@ -40,13 +40,15 @@ const getAll = () => service.findAll(chargeVersionWorkflowsRepo.findAll, chargeV
  */
 const getLicenceHolderRole = async chargeVersionWorkflow => {
   const { licenceNumber } = chargeVersionWorkflow.licence;
-  const startDate = get(chargeVersionWorkflow, 'chargeVersion.dateRange.startDate', null);
-  const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate);
+  const startDate = chargeVersionWorkflow.status === 'to_setup'
+    ? chargeVersionWorkflow.licenceVersion.startDate
+    : get(chargeVersionWorkflow, 'chargeVersion.dateRange.startDate', null);
 
+  const doc = await documentsService.getValidDocumentOnDate(licenceNumber, startDate);
   const role = doc ? doc.getRoleOnDate(Role.ROLE_NAMES.licenceHolder, startDate) : {};
 
   return {
-    chargeVersionWorkflow,
+    ...chargeVersionWorkflow.toJSON(),
     licenceHolderRole: role
   };
 };
@@ -107,10 +109,14 @@ const setOrThrowInvalidEntityError = (chargeVersionWorkflow, changes) => {
  * @param {User} user
  * @return {Promise<ChargeVersionWorkflow>}
  */
-const create = async (licence, chargeVersion, user) => {
+const create = async (licence, licenceVersionId, chargeVersion, user, status = CHARGE_VERSION_WORKFLOW_STATUS.review) => {
   validators.assertIsInstanceOf(licence, Licence);
-  validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
-  validators.assertIsInstanceOf(user, User);
+  validators.assertId(licenceVersionId);
+
+  if (status !== CHARGE_VERSION_WORKFLOW_STATUS.toSetup) {
+    validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
+    validators.assertIsInstanceOf(user, User);
+  }
 
   // Map all data to ChargeVersionWorkflow model
   const chargeVersionWorkflow = new ChargeVersionWorkflow();
@@ -119,7 +125,8 @@ const create = async (licence, chargeVersion, user) => {
     createdBy: user,
     licence: licence,
     chargeVersion,
-    status: CHARGE_VERSION_WORKFLOW_STATUS.review
+    status,
+    licenceVersionId
   });
 
   const dbRow = chargeVersionWorkflowMapper.modelToDb(chargeVersionWorkflow);
@@ -153,9 +160,12 @@ const update = async (chargeVersionWorkflowId, changes) => {
  * @param {ChargeVersionWorkflow} chargeVersionWorkflow
  * @return {Promise}
  */
-const deleteOne = async chargeVersionWorkflow => {
+const deleteOne = async (chargeVersionWorkflow, isSoftDelete = true) => {
   try {
-    await chargeVersionWorkflowsRepo.deleteOne(chargeVersionWorkflow.id);
+    const deleteFunc = isSoftDelete
+      ? chargeVersionWorkflowsRepo.softDeleteOne
+      : chargeVersionWorkflowsRepo.deleteOne;
+    await deleteFunc(chargeVersionWorkflow.id);
     await licencesService.flagForSupplementaryBilling(chargeVersionWorkflow.licence.id);
   } catch (err) {
     throw new NotFoundError(`Charge version workflow ${chargeVersionWorkflow.id} not found`);
@@ -171,12 +181,13 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
   validators.assertIsInstanceOf(chargeVersionWorkflow, ChargeVersionWorkflow);
   validators.assertIsInstanceOf(approvedBy, User);
 
-  const { chargeVersion } = chargeVersionWorkflow;
+  const { chargeVersion, licence } = chargeVersionWorkflow;
 
   // Store users who created/approved
   chargeVersion.fromHash({
     createdBy: chargeVersionWorkflow.createdBy,
-    approvedBy
+    approvedBy,
+    licence
   });
 
   // Persist the new charge version
@@ -184,7 +195,7 @@ const approve = async (chargeVersionWorkflow, approvedBy) => {
 
   // Delete the charge version workflow record as it is no longer needed
   // and flag for supplementary billing
-  await deleteOne(chargeVersionWorkflow);
+  await deleteOne(chargeVersionWorkflow, false);
 
   return persistedChargeVersion;
 };

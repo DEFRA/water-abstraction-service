@@ -39,11 +39,11 @@ const send = billRunId =>
  * Removes an individual customer from the bill run
  * @param {String} billRunId - CM bill ID GUID
  * @param {String} customerReference - invoice account number
- * @param {Number} financialYearEnding
+ * @param {Number} financialYear - note: CM uses financial year starting, WRLS uses ending
  * @return {Promise<Object>} response payload
  */
-const removeCustomerInFinancialYear = (billRunId, customerReference, financialYearEnding) =>
-  request.delete(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference, financialYear: financialYearEnding - 1 });
+const removeCustomerInFinancialYear = (billRunId, customerReference, financialYear) =>
+  request.delete(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference, financialYear });
 
 /**
  * Deletes entire bill run
@@ -64,8 +64,28 @@ const get = billRunId =>
 const getCustomer = (billRunId, customerReference) =>
   request.get(`v1/wrls/billruns/${billRunId}`, { customerReference });
 
-const getTransactions = billRunId =>
-  request.get(`v1/wrls/billruns/${billRunId}/transactions`);
+const getTransactions = (billRunId, page = 1, perPage = 100) =>
+  request.get(`v1/wrls/billruns/${billRunId}/transactions`, { page, perPage });
+
+const getCustomerTransactions = (billRunId, customerReference, page = 1, perPage = 100) =>
+  request.get(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference, page, perPage });
+/**
+   * Gets transactions in given bill run for supplied customer ref / financial year grouping
+   * @param {String} billRunId
+   * @param {String} customerReference
+   * @param {Number} financialYear - note: CM uses financial year starting, WRLS uses ending
+   * @param {Number} [page] - default 1
+   */
+const getInvoiceTransactions = (billRunId, customerReference, financialYear, page = 1) => {
+  const path = `v1/wrls/billruns/${billRunId}/transactions`;
+  const query = {
+    customerReference,
+    page,
+    financialYear,
+    perPage: 100
+  };
+  return request.get(path, query);
+};
 
 exports.addTransaction = addTransaction;
 exports.approve = approve;
@@ -74,5 +94,7 @@ exports.delete = deleteBillRun;
 exports.get = get;
 exports.getCustomer = getCustomer;
 exports.getTransactions = getTransactions;
+exports.getCustomerTransactions = getCustomerTransactions;
 exports.removeCustomerInFinancialYear = removeCustomerInFinancialYear;
 exports.send = send;
+exports.getInvoiceTransactions = getInvoiceTransactions;

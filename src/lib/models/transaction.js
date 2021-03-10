@@ -1,8 +1,7 @@
 'use strict';
 
+const { isNull } = require('lodash');
 const { titleCase } = require('title-case');
-
-const hashers = require('../../lib/hash');
 
 const Model = require('./model');
 const Agreement = require('./agreement');
@@ -41,25 +40,6 @@ class Transaction extends Model {
     this.status = statuses.candidate;
   }
 
-  /**
-   * Creates a fresh model (with no ID) from the current model, set up as
-   * a credit
-   * @return {Transaction}
-   */
-  toCredit () {
-    const transaction = new Transaction();
-    transaction.pickFrom(this, [
-      'value', 'authorisedDays', 'billableDays', 'agreements', 'chargePeriod',
-      'isCompensationCharge', 'description', 'chargeElement', 'volume',
-      'isTwoPartTariffSupplementary', 'isDeMinimis', 'isNewLicence'
-    ]);
-    transaction.fromHash({
-      isCredit: true,
-      status: statuses.candidate
-    });
-    return transaction;
-  }
-
   get value () {
     return this._value;
   }
@@ -87,7 +67,7 @@ class Transaction extends Model {
   }
 
   set authorisedDays (days) {
-    validators.assertAuthorisedDays(days);
+    validators.assertDaysInYear(days);
     this._authorisedDays = days;
   }
 
@@ -101,7 +81,7 @@ class Transaction extends Model {
   }
 
   set billableDays (days) {
-    validators.assertBillableDays(days);
+    validators.assertDaysInYear(days);
     this._billableDays = days;
   }
 
@@ -201,8 +181,12 @@ class Transaction extends Model {
   }
 
   set volume (volume) {
-    validators.assertNullableQuantityWithMaximum(volume, this.chargeElement.maxAnnualQuantity);
-    this._volume = volume;
+    if (isNull(volume)) {
+      this._volume = volume;
+    } else {
+      validators.assertNullableQuantityWithMaximum(volume, this.chargeElement.maxAnnualQuantity);
+      this._volume = volume;
+    }
   }
 
   /**
@@ -277,32 +261,6 @@ class Transaction extends Model {
       regionCode: batch.region.code,
       isTwoPartTariff: this.isTwoPartTariffSupplementary
     };
-  }
-
-  /**
-   * Sets the transactionKey values to a unique hash for this transaction
-   *
-   * @param {String} invoiceAccount The invoice account for the transaction
-   * @param {Object} licence Licence information
-   * @param {Object} batch The batch this transaction appears in
-   */
-  createTransactionKey (invoiceAccount, licence, batch) {
-    const hash = this.getHashData(invoiceAccount, licence, batch);
-
-    const hashInput = Object.entries(hash)
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(entry => `${entry[0]}:${entry[1]}`)
-      .join(',');
-
-    this.transactionKey = hashers.createMd5Hash(hashInput);
-    return this.transactionKey;
-  }
-
-  get transactionKey () { return this._transactionKey; }
-
-  set transactionKey (transactionKey) {
-    validators.assertTransactionKey(transactionKey);
-    this._transactionKey = transactionKey;
   }
 
   /**

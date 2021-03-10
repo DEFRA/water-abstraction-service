@@ -1,6 +1,6 @@
 'use strict';
 
-const { flatMap, get } = require('lodash');
+const { flatMap, get, omit } = require('lodash');
 
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(require('moment'));
@@ -13,7 +13,7 @@ const DateRange = require('../../../../lib/models/date-range');
 const Transaction = require('../../../../lib/models/transaction');
 
 const { TRANSACTION_TYPE } = require('../../../../lib/models/charge-version-year');
-const { getChargePeriod } = require('../../lib/charge-period');
+const { getChargePeriod, isNaldTransaction } = require('../../lib/charge-period');
 
 const agreements = require('./lib/agreements');
 
@@ -48,7 +48,7 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
   const absPeriod = chargeElement.abstractionPeriod.toJSON();
   const transaction = new Transaction();
   transaction.fromHash({
-    ...flags,
+    ...omit(flags, 'isMinimumCharge'),
     chargeElement,
     agreements: agreements.filter(agreement => agreementAppliesToTransaction(agreement, chargeElement.purposeUse)),
     chargePeriod,
@@ -71,6 +71,9 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
  */
 const isCompensationChargesNeeded = chargeVersion => !chargeVersion.licence.isWaterUndertaker;
 
+const doesChargePeriodStartOnFirstApril = chargePeriodStartDate =>
+  chargePeriodStartDate.isSame(moment(`${chargePeriodStartDate.year()}-04-01`, DATE_FORMAT), 'day');
+
 /**
  * Predicate to check whether the minimum charge applies
  * @param {DateRange} chargePeriod of the charge element
@@ -79,9 +82,16 @@ const isCompensationChargesNeeded = chargeVersion => !chargeVersion.licence.isWa
  */
 const doesMinimumChargeApply = (chargePeriod, chargeVersion) => {
   const { dateRange, changeReason } = chargeVersion;
-  const chargeVersionStartDate = moment(dateRange.startDate);
-  const isSharedStartDate = moment(chargePeriod.startDate).isSame(chargeVersionStartDate, 'day');
-  return isSharedStartDate && get(changeReason, 'triggersMinimumCharge', false);
+  const chargePeriodStartDate = moment(chargePeriod.startDate);
+
+  if (isNaldTransaction(chargePeriodStartDate)) {
+    return false;
+  }
+
+  const isSharedStartDate = chargePeriodStartDate.isSame(moment(dateRange.startDate), 'day');
+  const isFirstChargeOnNewLicence = isSharedStartDate && get(changeReason, 'triggersMinimumCharge', false);
+
+  return doesChargePeriodStartOnFirstApril(chargePeriodStartDate) || isFirstChargeOnNewLicence;
 };
 
 /**

@@ -1,0 +1,56 @@
+{
+  "notify-mock-notification": [
+    {
+      "service": "idm",
+      "file": "external-users.yaml"
+    },
+    {
+      "service": "water",
+      "file": "notify-mock-notification.yaml"
+    }
+  ],
+  "barebones": [
+    {
+      "service": "idm",
+      "file": "internal-users.yaml"
+    },
+    {
+      "service": "idm",
+      "file": "external-users.yaml"
+    },
+    {
+      "service": "permits",
+      "file": "test-permits.yaml"
+    },
+    {
+      "service": "crm",
+      "file": "crm.yaml"
+    },
+    {
+      "service": "water",
+      "file": "test-licences.yaml"
+    },
+    {
+      "service": "returns",
+      "file": "test-returns.yaml"
+    }
+  ],
+  "charge-version-workflow": [
+    {
+      "service": "idm",
+      "file": "internal-users.yaml"
+    },
+    {
+      "service": "permits",
+      "file": "test-permits.yaml"
+    },
+    {
+      "service": "crm",
+      "file": "crm.yaml"
+    },
+    {
+      "service": "water",
+      "file": "charge-version-workflows.yaml"
+    }
+  ]
+}

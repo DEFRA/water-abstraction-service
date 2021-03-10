@@ -1,6 +1,5 @@
 'use strict';
 
-const Model = require('./model');
 const Invoice = require('./invoice');
 const FinancialYear = require('./financial-year');
 const Region = require('./region');
@@ -43,7 +42,12 @@ const BATCH_TYPE = {
   twoPartTariff: 'two_part_tariff'
 };
 
-class Batch extends Model {
+const BATCH_SOURCE = {
+  nald: 'nald',
+  wrls: 'wrls'
+};
+
+class Batch extends Totals {
   constructor (id) {
     super(id);
     this._invoices = [];
@@ -242,20 +246,6 @@ class Batch extends Model {
   }
 
   /**
-   * The charge module summary contains data on
-   * invoice/credit count, invoice/credit totals, net total
-   * @param {Totals} totals
-   */
-  set totals (totals) {
-    validators.assertIsNullableInstanceOf(totals, Totals);
-    this._totals = totals;
-  }
-
-  get totals () {
-    return this._totals;
-  }
-
-  /**
    * Sets the external ID.  This is the bill run ID in the charge module.
    * @return {Region}
    */
@@ -328,9 +318,25 @@ class Batch extends Model {
   get billRunNumber () {
     return this._billRunNumber;
   }
+
+  /**
+   * The batch source indicates whether the batch originated in WRLS
+   * or was imported from NALD data
+   *
+   * @param {String} source
+   */
+  set source (source) {
+    validators.assertEnum(source, Object.values(BATCH_SOURCE));
+    this._source = source;
+  }
+
+  get source () {
+    return this._source;
+  }
 }
 
 module.exports = Batch;
 module.exports.BATCH_TYPE = BATCH_TYPE;
 module.exports.BATCH_STATUS = BATCH_STATUS;
 module.exports.BATCH_ERROR_CODE = BATCH_ERROR_CODE;
+module.exports.BATCH_SOURCE = BATCH_SOURCE;

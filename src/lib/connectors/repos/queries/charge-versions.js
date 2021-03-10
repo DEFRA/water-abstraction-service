@@ -24,7 +24,11 @@ from (
     and l.suspend_from_billing = FALSE
     and cv.status='current'
     and (cv.change_reason_id is null or cr.type = 'new_chargeable_charge_version')
-    and l.licence_id not in (select licence_id from water.charge_version_workflows)
+    and l.licence_id not in (
+      select cvw.licence_id 
+      from water.charge_version_workflows cvw
+      where cvw.date_deleted is null
+    )
 ) cv
   left join (
     select la.* from water.licence_agreements la 
