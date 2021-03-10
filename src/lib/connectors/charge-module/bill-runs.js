@@ -61,14 +61,9 @@ const deleteBillRun = billRunId =>
 const get = billRunId =>
   request.get(`v2/wrls/bill-runs/${billRunId}`);
 
-const getCustomer = (billRunId, customerReference) =>
-  request.get(`v1/wrls/billruns/${billRunId}`, { customerReference });
-
 const getTransactions = (billRunId, page = 1, perPage = 100) =>
   request.get(`v1/wrls/billruns/${billRunId}/transactions`, { page, perPage });
 
-const getCustomerTransactions = (billRunId, customerReference, page = 1, perPage = 100) =>
-  request.get(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference, page, perPage });
 /**
    * Gets transactions in given bill run for a particular invoice.
    * @param {String} billRunId
@@ -89,9 +84,7 @@ exports.approve = approve;
 exports.create = create;
 exports.delete = deleteBillRun;
 exports.get = get;
-exports.getCustomer = getCustomer;
 exports.getTransactions = getTransactions;
-exports.getCustomerTransactions = getCustomerTransactions;
 exports.removeCustomerInFinancialYear = removeCustomerInFinancialYear;
 exports.send = send;
 exports.getInvoiceTransactions = getInvoiceTransactions;

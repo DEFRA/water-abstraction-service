@@ -119,7 +119,6 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(chargeModuleBillRunConnector, 'send').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'removeCustomerInFinancialYear').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'getTransactions').resolves();
-    sandbox.stub(chargeModuleBillRunConnector, 'getCustomerTransactions').resolves();
 
     sandbox.stub(eventService, 'create').resolves();
 
