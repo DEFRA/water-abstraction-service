@@ -36,16 +36,6 @@ const send = billRunId =>
   request.patch(`v2/wrls/bill-runs/${billRunId}/send`);
 
 /**
- * Removes an individual customer from the bill run
- * @param {String} billRunId - CM bill ID GUID
- * @param {String} customerReference - invoice account number
- * @param {Number} financialYear - note: CM uses financial year starting, WRLS uses ending
- * @return {Promise<Object>} response payload
- */
-const removeCustomerInFinancialYear = (billRunId, customerReference, financialYear) =>
-  request.delete(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference, financialYear });
-
-/**
  * Deletes a specified invoice from a given bill run
  * @param {String} billRunId - CM bill ID GUID
  * @param {String} invoiceId - CM invoice ID GUID
@@ -95,7 +85,6 @@ exports.delete = deleteBillRun;
 exports.get = get;
 exports.getTransactions = getTransactions;
 exports.deleteBillRun = deleteBillRun;
-exports.removeCustomerInFinancialYear = removeCustomerInFinancialYear;
 exports.send = send;
 exports.getInvoiceTransactions = getInvoiceTransactions;
 exports.deleteInvoiceFromBillRun = deleteInvoiceFromBillRun;

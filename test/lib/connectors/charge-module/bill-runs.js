@@ -95,9 +95,9 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
     });
   });
 
-  experiment('.removeCustomerInFinancialYear', () => {
+  experiment('.deleteInvoiceFromBillRun', () => {
     beforeEach(async () => {
-      await billRunsApiConnector.removeCustomerInFinancialYear('test-id', 'customer-id', 2020);
+      await billRunsApiConnector.deleteInvoiceFromBillRun('test-id', 'test-other-id');
     });
 
     test('the method is DELETE', async () => {
@@ -106,15 +106,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = request.delete.lastCall.args;
-      expect(path).to.equal('v1/wrls/billruns/test-id/transactions');
-    });
-
-    test('the correct customer and financial year starting is specified', async () => {
-      const [, payload] = request.delete.lastCall.args;
-      expect(payload).to.equal({
-        customerReference: 'customer-id',
-        financialYear: 2020
-      });
+      expect(path).to.equal('v2/wrls/bill-runs/test-id/invoices/test-other-id');
     });
   });
 

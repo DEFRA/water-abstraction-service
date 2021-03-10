@@ -117,7 +117,7 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(chargeModuleBillRunConnector, 'delete').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'approve').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'send').resolves();
-    sandbox.stub(chargeModuleBillRunConnector, 'removeCustomerInFinancialYear').resolves();
+    sandbox.stub(chargeModuleBillRunConnector, 'deleteInvoiceFromBillRun').resolves();
     sandbox.stub(chargeModuleBillRunConnector, 'getTransactions').resolves();
 
     sandbox.stub(eventService, 'create').resolves();
@@ -1122,10 +1122,11 @@ experiment('modules/billing/services/batch-service', () => {
       });
 
       experiment('when the invoice is found and there are no errors', () => {
-        let billingInvoiceId, invoiceAccountId, licenceId;
+        let billingInvoiceId, billingInvoiceExternalId, invoiceAccountId, licenceId;
 
         beforeEach(async () => {
           billingInvoiceId = uuid();
+          billingInvoiceExternalId = uuid();
           invoiceAccountId = uuid();
           licenceId = uuid();
 
@@ -1133,6 +1134,7 @@ experiment('modules/billing/services/batch-service', () => {
             billingInvoiceId,
             invoiceAccountId,
             invoiceAccountNumber: 'A12345678A',
+            externalId: billingInvoiceExternalId,
             financialYearEnding: 2020,
             billingBatch: {
               externalId: batch.externalId
@@ -1164,37 +1166,37 @@ experiment('modules/billing/services/batch-service', () => {
             ]
           });
           newRepos.billingTransactions.countByBatchId.resolves(0);
-          await batchService.deleteBatchInvoice(batch, invoiceId);
+          await batchService.deleteBatchInvoice(batch, billingInvoiceId);
         });
 
         test('loads the invoice with the supplied ID', async () => {
-          expect(newRepos.billingInvoices.findOne.calledWith(invoiceId)).to.be.true();
+          expect(newRepos.billingInvoices.findOne.calledWith(billingInvoiceId)).to.be.true();
         });
 
         test('deletes the charge module transactions in the bill run with matching customer number and financial year starting', async () => {
-          expect(chargeModuleBillRunConnector.removeCustomerInFinancialYear.calledWith(
-            batch.externalId, 'A12345678A', 2019
+          expect(chargeModuleBillRunConnector.deleteInvoiceFromBillRun.calledWith(
+            batch.externalId, billingInvoiceExternalId
           )).to.be.true();
         });
 
         test('deletes associated charge version years from batch', async () => {
-          expect(newRepos.billingBatchChargeVersionYears.deleteByInvoiceId.calledWith(invoiceId)).to.be.true();
+          expect(newRepos.billingBatchChargeVersionYears.deleteByInvoiceId.calledWith(billingInvoiceId)).to.be.true();
         });
 
         test('deletes associated billing volumes from batch', async () => {
-          expect(newRepos.billingVolumes.deleteByBatchAndInvoiceId.calledWith(batch.id, invoiceId)).to.be.true();
+          expect(newRepos.billingVolumes.deleteByBatchAndInvoiceId.calledWith(batch.id, billingInvoiceId)).to.be.true();
         });
 
         test('deletes associated transactions from batch', async () => {
-          expect(newRepos.billingTransactions.deleteByInvoiceId.calledWith(invoiceId)).to.be.true();
+          expect(newRepos.billingTransactions.deleteByInvoiceId.calledWith(billingInvoiceId)).to.be.true();
         });
 
         test('deletes associated invoice licences from batch', async () => {
-          expect(newRepos.billingInvoiceLicences.deleteByInvoiceId.calledWith(invoiceId)).to.be.true();
+          expect(newRepos.billingInvoiceLicences.deleteByInvoiceId.calledWith(billingInvoiceId)).to.be.true();
         });
 
         test('deletes invoice from batch', async () => {
-          expect(newRepos.billingInvoices.delete.calledWith(invoiceId)).to.be.true();
+          expect(newRepos.billingInvoices.delete.calledWith(billingInvoiceId)).to.be.true();
         });
 
         test('updates the include in supplementary billing status to reprocess where currently yes', async () => {
@@ -1221,7 +1223,7 @@ experiment('modules/billing/services/batch-service', () => {
             }
           });
           newRepos.billingTransactions.findByBatchId.resolves([]);
-          chargeModuleBillRunConnector.removeCustomerInFinancialYear.rejects(new Error('oh no!'));
+          chargeModuleBillRunConnector.deleteInvoiceFromBillRun.rejects(new Error('oh no!'));
         });
 
         test('the batch is set to error status with the correct code', async () => {
