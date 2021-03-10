@@ -18,6 +18,7 @@ module.exports = {
     handler: controller.getChargeVersionWorkflows,
     options: {
       description: 'Lists all charge version workflows in progress',
+      tags: ['api'],
       auth: {
         scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
       },
@@ -36,6 +37,7 @@ module.exports = {
     handler: controller.getChargeVersionWorkflow,
     options: {
       description: 'Gets a single charge version workflow record',
+      tags: ['api'],
       auth: {
         scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
       },
@@ -54,6 +56,7 @@ module.exports = {
     handler: controller.postChargeVersionWorkflow,
     options: {
       description: 'Creates a new charge version workflow record',
+      tags: ['api'],
       auth: {
         scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
       },
@@ -66,7 +69,8 @@ module.exports = {
       },
       pre: [
         { method: preHandlers.mapChargeVersion, assign: 'chargeVersion' },
-        { method: preHandlers.mapInternalCallingUser, assign: 'user' }
+        { method: preHandlers.mapInternalCallingUser, assign: 'user' },
+        { method: preHandlers.loadLicenceVersion, assign: 'licenceVersion' }
       ]
     }
   },
@@ -77,6 +81,7 @@ module.exports = {
     handler: controller.patchChargeVersionWorkflow,
     options: {
       description: 'Updates an existing charge version workflow record',
+      tags: ['api'],
       auth: {
         scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
       },
@@ -100,6 +105,7 @@ module.exports = {
     handler: controller.deleteChargeVersionWorkflow,
     options: {
       description: 'Deletes an existing charge version workflow record',
+      tags: ['api'],
       auth: {
         scope: [chargeVersionWorkflowEditor, chargeVersionWorkflowReviewer]
       },

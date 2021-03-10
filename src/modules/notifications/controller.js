@@ -2,9 +2,12 @@
  * Controller methods to send/preview notifications
  * @module src/modules/notifications/controller
  */
+const { pick, get } = require('lodash');
 const { prepareNotification, sendNotification } = require('./lib');
 const taskConfigLoader = require('./lib/task-config-loader');
 const generateReference = require('../../lib/reference-generator');
+const eventsService = require('../../lib/services/events');
+const scheduledNotificationsService = require('../../lib/services/scheduled-notifications');
 
 /**
  * @param { Object } request.payload.filter - standard filter
@@ -57,7 +60,46 @@ async function postSend (request, reply) {
   return { error: null, data };
 }
 
+const mapNotificationEvent = notification => ({
+  ...pick(notification, 'id', 'issuer', 'type', 'subtype', 'recipientCount', 'errorCount', 'created', 'referenceCode'),
+  name: get(notification, 'metadata.name')
+});
+
+/**
+ * Gets a paginated list of sent notifications.
+ * These are stored in the water.events table with a type of 'notification'
+ */
+const getNotifications = async request => {
+  const { page } = request.query;
+  const { data, pagination } = await eventsService.getNotificationEvents(page);
+
+  return {
+    data: data.map(mapNotificationEvent),
+    pagination
+  };
+};
+
+/**
+ * Get a single notification including the event and messages
+ */
+const getNotification = async request => mapNotificationEvent(request.pre.event);
+
+/**
+ * Get a list of scheduled_notifications messages for the specified
+ * notification event
+ */
+const getNotificationMessages = async request => {
+  const { eventId } = request.params;
+  const messages = await scheduledNotificationsService.getByEventId(eventId);
+  return {
+    data: messages
+  };
+};
+
 module.exports = {
   postPreview,
-  postSend
+  postSend,
+  getNotifications,
+  getNotification,
+  getNotificationMessages
 };

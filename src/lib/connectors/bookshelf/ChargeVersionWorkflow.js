@@ -13,5 +13,9 @@ module.exports = bookshelf.model('ChargeVersionWorkflow', {
 
   licence () {
     return this.hasOne('Licence', 'licence_id', 'licence_id');
+  },
+
+  licenceVersion () {
+    return this.hasOne('LicenceVersion', 'licence_version_id', 'licence_version_id');
   }
 });

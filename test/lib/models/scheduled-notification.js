@@ -6,6 +6,8 @@ const uuid = require('uuid/v4');
 
 const ScheduledNotification = require('../../../src/lib/models/scheduled-notification');
 
+const { NOTIFY_STATUSES, MESSAGE_STATUSES, DISPLAY_STATUSES } = ScheduledNotification;
+
 experiment('lib/models/scheduled-notification', () => {
   experiment('construction', () => {
     test('can include the id', async () => {
@@ -266,6 +268,40 @@ experiment('lib/models/scheduled-notification', () => {
         const notification = new ScheduledNotification();
         notification.notifyStatus = 123;
       }).to.throw();
+    });
+  });
+
+  experiment('.displayStatus', () => {
+    const data = [
+      [MESSAGE_STATUSES.draft, null, DISPLAY_STATUSES.pending],
+      [MESSAGE_STATUSES.sending, null, DISPLAY_STATUSES.pending],
+      [MESSAGE_STATUSES.error, null, DISPLAY_STATUSES.error],
+      [MESSAGE_STATUSES.sent, null, DISPLAY_STATUSES.sent],
+      [MESSAGE_STATUSES.sent, NOTIFY_STATUSES.permanentFailure, DISPLAY_STATUSES.error],
+      [MESSAGE_STATUSES.sent, NOTIFY_STATUSES.temporaryFailure, DISPLAY_STATUSES.error],
+      [MESSAGE_STATUSES.sent, NOTIFY_STATUSES.technicalFailure, DISPLAY_STATUSES.error],
+      [MESSAGE_STATUSES.sent, NOTIFY_STATUSES.validationFailure, DISPLAY_STATUSES.error],
+      [MESSAGE_STATUSES.sent, NOTIFY_STATUSES.sending, DISPLAY_STATUSES.pending],
+      [MESSAGE_STATUSES.sent, NOTIFY_STATUSES.delivered, DISPLAY_STATUSES.sent],
+      [MESSAGE_STATUSES.sent, NOTIFY_STATUSES.received, DISPLAY_STATUSES.sent],
+      [MESSAGE_STATUSES.sent, NOTIFY_STATUSES.accepted, DISPLAY_STATUSES.sent]
+    ];
+
+    for (const [status, notifyStatus, displayStatus] of data) {
+      test(`is ${displayStatus} when the status is ${status} and the notifyStatus is ${notifyStatus}`, async () => {
+        const model = new ScheduledNotification().fromHash({ status, notifyStatus });
+        expect(model.displayStatus).to.equal(displayStatus);
+      });
+    }
+  });
+
+  experiment('.toJSON', () => {
+    test('includes the displayStatus property', async () => {
+      const model = new ScheduledNotification().fromHash({
+        status: MESSAGE_STATUSES.sent,
+        notifyStatus: NOTIFY_STATUSES.technicalFailure
+      });
+      expect(model.toJSON().displayStatus).to.equal(DISPLAY_STATUSES.error);
     });
   });
 });

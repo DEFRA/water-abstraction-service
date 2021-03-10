@@ -1,5 +1,7 @@
 const { Event, bookshelf } = require('../bookshelf');
 const queries = require('./queries/events');
+const helpers = require('./lib/helpers');
+
 /**
  * creates a new event record in the database
  * @param {Object} event event pojo
@@ -15,10 +17,8 @@ const create = async (event) => {
  * @param {String} id UUID eventId
  * @returns {Object} event pojo
  */
-const findOne = async (id) => {
-  const result = await Event.forge({ eventId: id }).fetch();
-  return result.toJSON();
-};
+const findOne = id =>
+  helpers.findOne(Event, 'eventId', id);
 
 /**
  * Updates the all the fields for the event record
@@ -42,9 +42,28 @@ const getKPILicenceNamesData = () => {
   return bookshelf.knex.raw(queries.getKPILicenceNamesData);
 };
 
+/**
+ * Gets notification events for sent/completed/sending
+ * with breakdown of related scheduled_notifications statuses in each notification
+ *
+ * @param {Object} params
+ * @param {Number} params.limit
+ * @param {Number} params.offset
+ */
+const findNotifications = params =>
+  bookshelf.knex.raw(queries.findNotifications, params);
+
+/**
+ * Gets total row count for above
+ */
+const findNotificationsCount = () =>
+  bookshelf.knex.raw(queries.findNotificationsCount);
+
 exports.create = create;
 exports.update = update;
 exports.findOne = findOne;
 exports.getMostRecentReturnsInvitationByLicence = getMostRecentReturnsInvitationByLicence;
 exports.getKPIReturnsMonthlyData = getKPIReturnsMonthlyData;
 exports.getKPILicenceNamesData = getKPILicenceNamesData;
+exports.findNotifications = findNotifications;
+exports.findNotificationsCount = findNotificationsCount;

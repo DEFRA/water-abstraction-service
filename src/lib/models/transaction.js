@@ -3,8 +3,6 @@
 const { isNull } = require('lodash');
 const { titleCase } = require('title-case');
 
-const hashers = require('../../lib/hash');
-
 const Model = require('./model');
 const Agreement = require('./agreement');
 const DateRange = require('./date-range');
@@ -40,25 +38,6 @@ class Transaction extends Model {
     this.isCredit = isCredit;
     this._agreements = [];
     this.status = statuses.candidate;
-  }
-
-  /**
-   * Creates a fresh model (with no ID) from the current model, set up as
-   * a credit
-   * @return {Transaction}
-   */
-  toCredit () {
-    const transaction = new Transaction();
-    transaction.pickFrom(this, [
-      'value', 'authorisedDays', 'billableDays', 'agreements', 'chargePeriod',
-      'isCompensationCharge', 'description', 'chargeElement', 'volume',
-      'isTwoPartTariffSupplementary', 'isDeMinimis', 'isNewLicence'
-    ]);
-    transaction.fromHash({
-      isCredit: true,
-      status: statuses.candidate
-    });
-    return transaction;
   }
 
   get value () {
@@ -282,32 +261,6 @@ class Transaction extends Model {
       regionCode: batch.region.code,
       isTwoPartTariff: this.isTwoPartTariffSupplementary
     };
-  }
-
-  /**
-   * Sets the transactionKey values to a unique hash for this transaction
-   *
-   * @param {InvoiceAccount} invoiceAccount The invoice account for the transaction
-   * @param {Licence} licence Licence information
-   * @param {Batch} batch The batch this transaction appears in
-   */
-  createTransactionKey (invoiceAccount, licence, batch) {
-    const hash = this.getHashData(invoiceAccount, licence, batch);
-
-    const hashInput = Object.entries(hash)
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(entry => `${entry[0]}:${entry[1]}`)
-      .join(',');
-
-    this.transactionKey = hashers.createMd5Hash(hashInput);
-    return this.transactionKey;
-  }
-
-  get transactionKey () { return this._transactionKey; }
-
-  set transactionKey (transactionKey) {
-    validators.assertTransactionKey(transactionKey);
-    this._transactionKey = transactionKey;
   }
 
   /**

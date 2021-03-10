@@ -221,15 +221,4 @@ experiment('lib/connectors/repos/licences.js', () => {
       )).to.be.true();
     });
   });
-
-  experiment('.findWithoutChargeVersions', () => {
-    beforeEach(async () => {
-      await licencesRepo.findWithoutChargeVersions();
-    });
-
-    test('calls raw.multiRow with correct query', async () => {
-      const [query] = raw.multiRow.lastCall.args;
-      expect(query).to.equal(licenceQueries.getLicencesWithoutChargeVersions);
-    });
-  });
 });

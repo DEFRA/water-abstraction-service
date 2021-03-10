@@ -17,6 +17,7 @@ experiment('lib/connectors/repos/scheduled-notifications', () => {
   beforeEach(async () => {
     sandbox.stub(repoHelpers, 'create');
     sandbox.stub(repoHelpers, 'findOne');
+    sandbox.stub(repoHelpers, 'findMany');
   });
 
   afterEach(async () => {
@@ -41,6 +42,20 @@ experiment('lib/connectors/repos/scheduled-notifications', () => {
       expect(model).to.equal(ScheduledNotification);
       expect(idKey).to.equal('id');
       expect(id).to.equal('test-id');
+    });
+  });
+
+  experiment('.findByEventId', () => {
+    const eventId = 'test-event-id';
+
+    beforeEach(async () => {
+      await repo.findByEventId(eventId);
+    });
+
+    test('calls through to the helpers findMany function', async () => {
+      expect(repoHelpers.findMany.calledWith(
+        ScheduledNotification, { event_id: eventId }
+      )).to.be.true();
     });
   });
 });

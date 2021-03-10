@@ -592,4 +592,29 @@ experiment('lib/models/batch', () => {
       expect(batch.canDeleteInvoices()).to.equal(false);
     });
   });
+
+  experiment('.source', () => {
+    Object.values(Batch.BATCH_SOURCE).forEach(source => {
+      test(`can be set to ${source}`, async () => {
+        const batch = new Batch();
+        batch.source = source;
+
+        expect(batch.source).to.equal(source);
+      });
+    });
+
+    test('cannot be null', async () => {
+      expect(() => {
+        const batch = new Batch();
+        batch.source = null;
+      }).to.throw();
+    });
+
+    test('cannot be other values', async () => {
+      expect(() => {
+        const batch = new Batch();
+        batch.source = 'invalid-source';
+      }).to.throw();
+    });
+  });
 });

@@ -40,6 +40,9 @@ const findOne = async id => {
   return model.toJSON();
 };
 
+const findOneBy = conditions =>
+  helpers.findOneBy(BillingInvoice, conditions);
+
 /**
  * Delete a single record by ID
  * @param {String} id - one or many IDs
@@ -64,6 +67,7 @@ const update = async (billingInvoiceId, changes) =>
 exports.upsert = upsert;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;
+exports.findOneBy = findOneBy;
 exports.delete = deleteRecord;
 exports.deleteByBatchId = deleteByBatchId;
 exports.update = update;

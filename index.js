@@ -49,7 +49,8 @@ const plugins = [
   require('./src/lib/message-queue-v2').plugin,
   require('./src/modules/returns/register-subscribers'),
   require('./src/modules/address-search/plugin'),
-  require('./src/modules/billing/register-subscribers')
+  require('./src/modules/billing/register-subscribers'),
+  require('./src/modules/charge-versions/plugin').plugin
 ];
 
 const registerServerPlugins = async (server) => {

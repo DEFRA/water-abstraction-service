@@ -8,7 +8,7 @@ const {
 
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
-
+const moment = require('moment');
 const ChargeVersion = require('../../../src/lib/models/charge-version');
 const ChargeVersionWorkflow = require('../../../src/lib/models/charge-version-workflow');
 const Licence = require('../../../src/lib/models/licence');
@@ -80,7 +80,9 @@ experiment('lib/mappers/charge-version-workflow', () => {
             name: 'Test region',
             displayName: 'Test region'
           }
-        }
+        },
+        licenceVersionId: '1294g68e-kk09-7dhg-24e9-e6aa42bcfq81',
+        dateDeleted: '2020-10-24T08:47:16.913Z'
       };
 
       model = mapper.dbToModel(row);
@@ -124,6 +126,7 @@ experiment('lib/mappers/charge-version-workflow', () => {
   });
 
   experiment('.modelToDb', () => {
+    const licenceVersionId = uuid();
     beforeEach(async () => {
       const licence = new Licence(uuid());
       const creator = new User();
@@ -132,7 +135,6 @@ experiment('lib/mappers/charge-version-workflow', () => {
         email: 'creator@example.com'
       });
       const chargeVersion = new ChargeVersion(uuid());
-
       model = new ChargeVersionWorkflow();
       model.fromHash({
         id: uuid(),
@@ -140,7 +142,9 @@ experiment('lib/mappers/charge-version-workflow', () => {
         approverComments: 'Great work!',
         status: 'review',
         createdBy: creator,
-        chargeVersion
+        chargeVersion,
+        licenceVersionId,
+        dateDeleted: '2020-10-24T08:47:16.913Z'
       });
 
       row = mapper.modelToDb(model);
@@ -173,6 +177,14 @@ experiment('lib/mappers/charge-version-workflow', () => {
     test('the .chargeVersion property is mapped to the data jsonb column', async () => {
       expect(row.data.chargeVersion).to.be.an.object();
       expect(row.data.chargeVersion.id).to.equal(model.chargeVersion.id);
+    });
+
+    test('the .licenceVersionId property is mapped', async () => {
+      expect(row.licenceVersionId).to.equal(licenceVersionId);
+    });
+
+    test('the .dateDeleted property is mapped', async () => {
+      expect(row.dateDeleted).to.equal(moment('2020-10-24T08:47:16.913Z'));
     });
   });
 });

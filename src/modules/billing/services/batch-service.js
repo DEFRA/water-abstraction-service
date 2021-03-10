@@ -177,7 +177,6 @@ const approveBatch = async (batch, internalCallingUser) => {
 
 const saveInvoiceLicenceTransactions = async (batch, invoice, invoiceLicence) => {
   for (const transaction of invoiceLicence.transactions) {
-    transaction.createTransactionKey(invoice.invoiceAccount, invoiceLicence.licence, batch);
     const { billingTransactionId } = await transactionsService.saveTransactionToDB(invoiceLicence, transaction);
     transaction.id = billingTransactionId;
   }

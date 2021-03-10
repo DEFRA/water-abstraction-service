@@ -7,8 +7,6 @@ const licencesService = require('../../../lib/services/licences');
 
 const controller = require('../../../lib/controller');
 
-const { rowToAPIList } = require('../mappers/api-mapper');
-
 const mapErrorResponse = require('../../../lib/map-error-response');
 
 /**
@@ -21,7 +19,7 @@ const getChargeVersionWorkflows = async request => {
   if (licenceId) {
     return { data: await chargeVersionsWorkflowService.getManyByLicenceId(licenceId) };
   } else {
-    return await controller.getEntities(null, chargeVersionsWorkflowService.getAllWithLicenceHolder, rowToAPIList);
+    return chargeVersionsWorkflowService.getAllWithLicenceHolder();
   }
 };
 
@@ -40,9 +38,16 @@ const getChargeVersionWorkflow = request =>
  */
 const postChargeVersionWorkflow = async request => {
   const { licenceId } = request.payload;
-  const { chargeVersion, user } = request.pre;
+  const { chargeVersion, user, licenceVersion } = request.pre;
 
   chargeVersion.status = 'draft';
+
+  // if a charge version exists then update
+  const workflowsForLicence = await chargeVersionsWorkflowService.getManyByLicenceId(licenceId);
+  const workflowForLicenceVersion = workflowsForLicence ? workflowsForLicence.find(row => row.licenceVersion.id === licenceVersion.licenceVersionId) : null;
+  if (workflowForLicenceVersion) {
+    return chargeVersionsWorkflowService.update(workflowForLicenceVersion.id, { chargeVersion, status: 'review', createdBy: user });
+  }
 
   // Find licence or 404
   const licence = await licencesService.getLicenceById(licenceId);
@@ -50,7 +55,7 @@ const postChargeVersionWorkflow = async request => {
     return Boom.notFound(`Licence ${licenceId} not found`);
   }
 
-  return chargeVersionsWorkflowService.create(licence, chargeVersion, user);
+  return chargeVersionsWorkflowService.create(licence, licenceVersion.licenceVersionId, chargeVersion, user);
 };
 
 /**
