@@ -145,7 +145,8 @@ const updateInvoice = async (batch, invoice, cmInvoiceSummary, cmTransactions) =
     invoiceNumber: cmTransactions[0].transactionReference,
     netTotal: cmInvoiceSummary.netTotal,
     invoiceValue: cmInvoiceSummary.debitLineValue,
-    creditNoteValue: cmInvoiceSummary.creditLineValue
+    creditNoteValue: cmInvoiceSummary.creditLineValue,
+    externalId: cmInvoiceSummary.id
   });
 
   // Persist

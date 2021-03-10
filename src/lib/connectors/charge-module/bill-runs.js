@@ -46,6 +46,15 @@ const removeCustomerInFinancialYear = (billRunId, customerReference, financialYe
   request.delete(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference, financialYear });
 
 /**
+ * Deletes a specified invoice from a given bill run
+ * @param {String} billRunId - CM bill ID GUID
+ * @param {String} invoiceId - CM invoice ID GUID
+ * @return {Promise<Object>} response payload
+ */
+const deleteInvoiceFromBillRun = (billRunId, invoiceId) =>
+  request.delete(`v2/wrls/bill-runs/${billRunId}/invoices/${invoiceId}`);
+
+/**
  * Deletes entire bill run
  * @param {String} billRunId - CM bill ID GUID
  * @return {Promise<Object>} response payload
@@ -85,7 +94,9 @@ exports.create = create;
 exports.delete = deleteBillRun;
 exports.get = get;
 exports.getTransactions = getTransactions;
+exports.deleteBillRun = deleteBillRun;
 exports.removeCustomerInFinancialYear = removeCustomerInFinancialYear;
 exports.send = send;
 exports.getInvoiceTransactions = getInvoiceTransactions;
+exports.deleteInvoiceFromBillRun = deleteInvoiceFromBillRun;
 exports.generate = generate;

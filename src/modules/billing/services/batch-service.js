@@ -1,6 +1,6 @@
 'use strict';
 
-const { partialRight, startCase } = require('lodash');
+const { partialRight, startCase, eq } = require('lodash');
 const Boom = require('@hapi/boom');
 
 const newRepos = require('../../../lib/connectors/repos');
@@ -351,11 +351,8 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
   }
 
   try {
-    // Delete CM transactions
-    const { invoiceAccountNumber, financialYearEnding } = invoice;
-    const { externalId } = invoice.billingBatch;
-    await chargeModuleBillRunConnector.removeCustomerInFinancialYear(externalId, invoiceAccountNumber, financialYearEnding - 1);
-
+    // await chargeModuleBillRunConnector.removeCustomerInFinancialYear(externalId, invoiceAccountNumber, financialYearEnding - 1);
+    await chargeModuleBillRunConnector.deleteInvoiceFromBillRun(invoice.billingBatch.externalId, invoice.externalId);
     // Delete local data
     await newRepos.billingBatchChargeVersionYears.deleteByInvoiceId(invoiceId);
     await newRepos.billingVolumes.deleteByBatchAndInvoiceId(batch.id, invoiceId);
