@@ -3,14 +3,10 @@
 const raw = require('./lib/raw');
 const { Licence, bookshelf } = require('../bookshelf');
 const queries = require('./queries/licences');
+const { helpers } = require('handlebars');
 
-const create = async (licenceRef, regionId, startDate = new Date().toJSON().slice(0, 10), expiredDate = null, regions = {}, is_water_undertaker = true, isTest = false) => {
-  const model = await Licence
-    .forge({ licenceRef, regionId, is_water_undertaker, regions: regions, startDate, expiredDate, is_test: isTest })
-    .save();
-
-  return model ? model.toJSON() : null;
-};
+const create = data =>
+  helpers.create(Licence, data);
 
 const deleteTest = () => Licence
   .forge()
@@ -120,7 +116,7 @@ const updateIncludeInSupplementaryBillingStatusForBatch = (batchId, from, to) =>
 const findByInvoiceAccountId = invoiceAccountId =>
   raw.multiRow(queries.getLicencesByInvoiceAccount, { invoiceAccountId });
 
-exports.create = create;
+// exports.create = create;
 exports.deleteTest = deleteTest;
 exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview;
 exports.findOneByLicenceRef = findOneByLicenceRef;

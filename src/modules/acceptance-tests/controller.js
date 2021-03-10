@@ -2,6 +2,7 @@
 
 const { get } = require('lodash');
 const Boom = require('@hapi/boom');
+const bluebird = require('bluebird');
 
 const returns = require('./lib/returns');
 const returnVersions = require('./lib/return-versions');
@@ -262,7 +263,7 @@ const postSetup = async (request, h) => {
   }
 };
 
-const postSetupFromYaml = (request, h) => {
+const postSetupFromYaml = async (request, h) => {
   const { key } = request.params;
   const set = require('../../../integration-tests/billing/fixtures/sets.json');
 
@@ -270,8 +271,13 @@ const postSetupFromYaml = (request, h) => {
     return Boom.notFound(`Key ${key} did not match any available Yaml sets.`);
   }
 
-  const loader = require('../../../integration-tests/billing/services/loader');
-  set[key].map(item => loader.load(item.service, item.file));
+  // Create a set loader
+  const loader = require('../../../integration-tests/billing/services/loader').createSetLoader();
+
+  // Load YAML files in series
+  await bluebird.mapSeries(set[key],
+    ({ service, file }) => loader.load(service, file)
+  );
 
   return h.response().code(204);
 };

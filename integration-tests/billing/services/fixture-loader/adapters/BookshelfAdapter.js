@@ -24,6 +24,8 @@ class BookshelfAdapter {
 
       return model.toJSON();
     } catch (err) {
+      console.error(err);
+
       // Handle unique constraint violation allowing previously inserted models
       // to be referenced
       if (err.code === '23505' && (err.constraint in constraints) && ref) {
