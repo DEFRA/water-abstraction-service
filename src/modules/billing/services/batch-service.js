@@ -404,7 +404,9 @@ const deleteAllBillingData = async () => {
 const updateWithCMSummary = async (batchId, cmResponse) => {
   const { invoiceCount, creditLineCount: creditNoteCount, invoiceValue, creditLineValue: creditNoteValue, netTotal, status: cmStatus } = cmResponse.billRun;
 
-  const status = cmStatus === 'approved'
+  const cmCompletedStatuses = ['pending', 'billed', 'billing_not_required'];
+
+  const status = cmCompletedStatuses.includes(cmStatus)
     ? Batch.BATCH_STATUS.sent
     : Batch.BATCH_STATUS.ready;
 

@@ -314,13 +314,13 @@ experiment('modules/billing/services/batch-service', () => {
       };
     });
 
-    experiment('when the batch is in "sent" status', () => {
+    experiment('when the batch is in "pending" status', () => {
       test('an error is thrown as the batch cannot be deleted', async () => {
-        batch.status = Batch.BATCH_STATUS.sent;
+        batch.status = Batch.BATCH_STATUS.pending;
         const func = () => batchService.deleteBatch(batch, internalCallingUser);
         const err = await expect(func()).to.reject();
         expect(err instanceof BatchStatusError);
-        expect(err.message).to.equal(`Batch ${batch.id} cannot be deleted - status is sent`);
+        expect(err.message).to.equal(`Batch ${batch.id} cannot be deleted - status is pending`);
       });
     });
 
@@ -756,9 +756,9 @@ experiment('modules/billing/services/batch-service', () => {
       });
     });
 
-    experiment('when the CM batch is approved for billing', async () => {
+    experiment('when the CM batch is showing as "pending"', async () => {
       beforeEach(async () => {
-        cmResponse.billRun.status = 'approved';
+        cmResponse.billRun.status = 'pending';
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
 

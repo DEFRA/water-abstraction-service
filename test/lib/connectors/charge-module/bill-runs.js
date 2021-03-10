@@ -85,13 +85,13 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
       await billRunsApiConnector.send('test-id');
     });
 
-    test('the method is POST', async () => {
-      expect(request.post.called).to.be.true();
+    test('the method is PATCH', async () => {
+      expect(request.patch.called).to.be.true();
     });
 
     test('the correct endpoint is called', async () => {
-      const [path] = request.post.lastCall.args;
-      expect(path).to.equal('v1/wrls/billruns/test-id/send');
+      const [path] = request.patch.lastCall.args;
+      expect(path).to.equal('v2/wrls/bill-runs/test-id/send');
     });
   });
 

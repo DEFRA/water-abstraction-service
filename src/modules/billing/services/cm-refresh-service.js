@@ -185,8 +185,8 @@ const updateInvoices = async (batch, cmResponse) => {
     );
     // Note: for now we don't need to expect invoices not in our DB
     // this will likely change when the CM implements rebilling
-    await updateInvoice(batch, invoiceMap.get(key), cmInvoiceSummary, cmTransactions);
-  }
+    await updateInvoice(batch, invoiceMap.get(invoice.key), invoice, cmTransactions);
+  });
 };
 
 const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating';

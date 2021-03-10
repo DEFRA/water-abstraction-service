@@ -33,7 +33,7 @@ const approve = billRunId =>
  * @return {Promise<Object>} response payload
  */
 const send = billRunId =>
-  request.post(`v2/wrls/bill-runs/${billRunId}/send`);
+  request.patch(`v2/wrls/bill-runs/${billRunId}/send`);
 
 /**
  * Removes an individual customer from the bill run
