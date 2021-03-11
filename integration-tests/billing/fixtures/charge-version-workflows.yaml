@@ -1,3 +1,12 @@
+- ref: $region
+  model: Region
+  fields:
+    chargeRegionId: A
+    naldRegionId: 1
+    name: Test Region
+    displayName: Test Region 
+    isTest: true
+
 - ref: $licence
   model: Licence
   fields:
@@ -10,6 +19,10 @@
     revokedDate : null
     suspendFromBilling : false
     isTest: true
+    regionId: $region.regionId
+    regions:      
+      historicalAreaCode: 'ARCA'
+      regionalChargeArea: 'Anglian'
 
 - ref: $licenceVersion
   model: LicenceVersion
