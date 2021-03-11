@@ -59,20 +59,28 @@ class FixtureLoader {
   }
 
   /**
-   * Get ref
-   * @param {String} refName - e.g. '$company'
-   * @return {Object}
+   * Sets initial value for refs
+   * @param {Map}
    */
-  getRef (refName) {
-    return this._refs.get(refName);
+  setRefs (refs) {
+    this._refs = refs;
+    return this;
   }
 
   /**
    * Fetches all set refs
-   * @return {Promise<Object>} - refs
+   * @return {Promise<Map>} - refs
    */
   getRefs () {
     return this._refs;
+  }
+
+  /**
+   * Fetches a single ref
+   * @param {String} key
+   */
+  getRef (key) {
+    return this._refs.get(key);
   }
 
   /**

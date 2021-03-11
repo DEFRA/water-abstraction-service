@@ -14,9 +14,7 @@ const { omit } = require('lodash');
 const services = require('../../services');
 const transactionTests = require('../transaction-tests');
 
-const bookshelfLoader = require('../../services/bookshelf-loader')();
-const crmLoader = require('../../services/crm-loader')();
-const returnsLoader = require('../../services/returns-loader')();
+const { createSetLoader } = require('../../services/loader');
 
 experiment('two part tariff ref: 2PT1', () => {
   let batch;
@@ -27,11 +25,12 @@ experiment('two part tariff ref: 2PT1', () => {
     await services.tearDown.tearDown();
 
     // Load fixtures
-    await crmLoader.load('crm.yaml');
-    bookshelfLoader.setRef('$invoiceAccount', crmLoader.getRef('$invoiceAccount'));
-    await bookshelfLoader.load('2PT1.yaml');
-    await returnsLoader.load('2PT1-returns.yaml');
-    const region = bookshelfLoader.getRef('$region');
+    const loader = createSetLoader();
+    await loader.load('crmV2', 'crm-v2.yaml');
+    await loader.load('water', '2PT1.yaml');
+    await loader.load('returns', '2PT1-returns.yaml');
+
+    const region = loader.getRef('$region');
 
     batch = await services.scenarios.runScenario(region.regionId, 'two_part_tariff', 2020, true);
   });
@@ -95,7 +94,7 @@ experiment('two part tariff ref: 2PT1', () => {
             addressLine1: 'Big Farm',
             addressLine2: 'Windy road',
             addressLine3: 'Buttercup meadow',
-            addressLine4: null,
+            addressLine4: 'Buttercup Village',
             source: 'nald'
           });
         });
@@ -173,10 +172,6 @@ experiment('two part tariff ref: 2PT1', () => {
               expect(transaction.section126Factor).to.equal(null);
               expect(transaction.section127Agreement).to.equal(true);
               expect(transaction.section130Agreement).to.equal(null);
-            });
-
-            test('has a stable transaction key', async () => {
-              expect(transaction.transactionKey).to.equal('63569871e91035bbc0dc1537f304eb1e');
             });
           });
         });

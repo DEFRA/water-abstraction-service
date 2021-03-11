@@ -1,34 +1,16 @@
-class SharedData {
-  constructor () {
-    this._sharedData = new Map();
-  }
+'use strict';
 
-  set (key, value) {
-    return this._sharedData.set(key, value);
-  }
+const SetLoader = require('./fixture-loader/SetLoader');
 
-  getAll () {
-    return this._sharedData;
-  }
-
-  get (key) {
-    return this._sharedData.get(key);
-  }
-}
-
-const sharedData = new SharedData();
-
-const load = async (service, file) => {
-  const loaders = {
-    crm: require('../services/crm-loader')(sharedData),
-    idm: require('../services/idm-loader')(sharedData),
-    water: require('../services/water-loader')(sharedData),
-    permits: require('../services/permits-loader')(sharedData),
-    returns: require('../services/returns-loader')(sharedData)
-  };
-
-  console.log(`Loading ${file} from ${service}`);
-  await loaders[service].load(file);
+const createSetLoader = () => {
+  return new SetLoader({
+    crmV1: require('../services/crm-v1-loader')(),
+    crmV2: require('../services/crm-v2-loader')(),
+    idm: require('../services/idm-loader')(),
+    water: require('../services/bookshelf-loader')(),
+    permits: require('../services/permits-loader')(),
+    returns: require('../services/returns-loader')()
+  });
 };
 
-exports.load = load;
+exports.createSetLoader = createSetLoader;
