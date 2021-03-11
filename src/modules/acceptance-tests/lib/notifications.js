@@ -16,13 +16,23 @@ const create = async () => {
   return notificationsService.createScheduledNotification(notification);
 };
 
-const deleteTestNotifications = () => {
-  return pool.query(`
-    delete from
-    water.scheduled_notification
-    where message_ref = 'test-ref';
-    `);
-};
+const deleteMessageQuery = `
+delete from
+water.scheduled_notification
+where message_ref = 'test-ref';
+`;
+
+const deleteMessagesRelatingToTestEvents = `
+delete from 
+water.scheduled_notification sn
+using water.events e
+where sn.event_id=e.event_id and strpos(e.issuer, 'acceptance-test') = 1;
+`;
+
+const deleteTestNotifications = () => Promise.all([
+  pool.query(deleteMessageQuery),
+  pool.query(deleteMessagesRelatingToTestEvents)
+]);
 
 exports.create = create;
 exports.delete = deleteTestNotifications;

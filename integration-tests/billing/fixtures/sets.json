@@ -23,8 +23,12 @@
       "file": "test-permits.yaml"
     },
     {
-      "service": "crm",
-      "file": "crm.yaml"
+      "service": "crmV1",
+      "file": "crm-v1.yaml"
+    },
+    {
+      "service": "crmV2",
+      "file": "crm-v2.yaml"
     },
     {
       "service": "water",
@@ -45,8 +49,8 @@
       "file": "test-permits.yaml"
     },
     {
-      "service": "crm",
-      "file": "crm.yaml"
+      "service": "crmV2",
+      "file": "crm-v2.yaml"
     },
     {
       "service": "water",
