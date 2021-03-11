@@ -3,10 +3,6 @@
 const raw = require('./lib/raw');
 const { Licence, bookshelf } = require('../bookshelf');
 const queries = require('./queries/licences');
-const { helpers } = require('handlebars');
-
-const create = data =>
-  helpers.create(Licence, data);
 
 const deleteTest = () => Licence
   .forge()
@@ -116,7 +112,6 @@ const updateIncludeInSupplementaryBillingStatusForBatch = (batchId, from, to) =>
 const findByInvoiceAccountId = invoiceAccountId =>
   raw.multiRow(queries.getLicencesByInvoiceAccount, { invoiceAccountId });
 
-// exports.create = create;
 exports.deleteTest = deleteTest;
 exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview;
 exports.findOneByLicenceRef = findOneByLicenceRef;
