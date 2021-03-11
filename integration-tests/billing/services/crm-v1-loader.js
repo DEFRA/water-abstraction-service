@@ -14,8 +14,7 @@ const path = require('path');
 const dir = path.resolve(__dirname, '../fixtures');
 
 const create = () => {
-// Create CRM fixture loader
-
+  // Create CRM fixture loader
   const asyncAdapter = new AsyncAdapter();
   asyncAdapter
     .add('DocumentHeader', body => serviceRequest.post(createCrmV1Url('documentHeader'), {
@@ -24,7 +23,6 @@ const create = () => {
           dataType: 'acceptance-test-setup',
           IsCurrent: true
         }),
-        // system_internal_id: sharedData.get(`permit-${body.system_external_id}`).licence_id,
         ...body
       }
     }))
