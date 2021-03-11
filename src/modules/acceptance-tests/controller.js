@@ -313,7 +313,7 @@ const postTearDown = async () => {
   await licenceVersions.delete();
   console.log('Tearing down acceptance test licences');
   await licences.delete();
-  console.log('Tearing regions');
+  console.log('Tearing down acceptance test regions');
   await regions.delete();
 
   return 'tear down complete';
