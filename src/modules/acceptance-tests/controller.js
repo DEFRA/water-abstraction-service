@@ -291,6 +291,8 @@ const postTearDown = async () => {
   await returnRequirements.delete();
   console.log('Tearing down acceptance test return versions');
   await returnVersions.delete();
+  console.log('Tearing down acceptance test notifications');
+  await notifications.delete();
   console.log('Tearing down acceptance test events');
   await events.delete();
   console.log('Tearing down acceptance test permits');
@@ -309,8 +311,6 @@ const postTearDown = async () => {
   await licenceVersions.delete();
   console.log('Tearing down acceptance test licences');
   await licences.delete();
-  console.log('Tearing down acceptance test notifications');
-  await notifications.delete();
 
   return 'tear down complete';
 };
