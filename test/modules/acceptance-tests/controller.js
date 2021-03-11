@@ -23,6 +23,7 @@ const notifications = require('../../../src/modules/acceptance-tests/lib/notific
 const returnRequirements = require('../../../src/modules/acceptance-tests/lib/return-requirements');
 const returnRequirementPurposes = require('../../../src/modules/acceptance-tests/lib/return-requirements-purposes');
 const returnVersions = require('../../../src/modules/acceptance-tests/lib/return-versions');
+const setLoader = require('../../../integration-tests/billing/services/loader');
 
 const controller = require('../../../src/modules/acceptance-tests/controller');
 const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
@@ -84,6 +85,8 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(returnRequirements, 'delete').resolves();
     sandbox.stub(returnRequirementPurposes, 'delete').resolves();
     sandbox.stub(chargeTestDataTearDown, 'tearDown').resolves();
+
+    sandbox.stub(setLoader, 'createSetLoader');
   });
 
   afterEach(async () => {
@@ -266,12 +269,14 @@ experiment('modules/acceptance-tests/controller', () => {
     });
 
     experiment('valid key', () => {
-      let h, request, loader;
+      let h, request, loaderStub;
       const validKey = 'barebones';
       beforeEach(async () => {
-        loader = require('../../../integration-tests/billing/services/loader');
+        loaderStub = {
+          load: sandbox.stub()
+        };
 
-        await sandbox.stub(loader, 'load').resolves();
+        setLoader.createSetLoader.returns(loaderStub);
 
         h = {
           response: sandbox.stub().returnsThis(),
@@ -284,8 +289,17 @@ experiment('modules/acceptance-tests/controller', () => {
 
         await controller.postSetupFromYaml(request, h);
       });
-      test('returns 202', async () => {
-        expect(loader.load.called).to.be.true();
+
+      test('creates a set loader', async () => {
+        expect(setLoader.createSetLoader.callCount).to.equal(1);
+      });
+
+      test('calls load to load the YAML files', async () => {
+        expect(loaderStub.load.called).to.be.true();
+      });
+
+      test('responds with 204 status code', async () => {
+        expect(h.code.calledWith(204)).to.be.true();
       });
     });
   });

@@ -19,6 +19,7 @@ const documents = require('./lib/documents');
 const events = require('./lib/events');
 const sessions = require('./lib/sessions');
 const purposes = require('./lib/purposes');
+const setLoader = require('../../../integration-tests/billing/services/loader');
 
 const {
   TEST_EXTERNAL_USER_EMAIL,
@@ -272,7 +273,7 @@ const postSetupFromYaml = async (request, h) => {
   }
 
   // Create a set loader
-  const loader = require('../../../integration-tests/billing/services/loader').createSetLoader();
+  const loader = setLoader.createSetLoader();
 
   // Load YAML files in series
   await bluebird.mapSeries(set[key],
