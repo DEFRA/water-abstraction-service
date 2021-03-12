@@ -121,7 +121,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
 
     test('the correct endpoint is called', async () => {
       const [path] = request.delete.lastCall.args;
-      expect(path).to.equal('v1/wrls/billruns/test-id');
+      expect(path).to.equal('v2/wrls/bill-runs/test-id');
     });
   });
 

@@ -50,7 +50,7 @@ const deleteInvoiceFromBillRun = (billRunId, invoiceId) =>
  * @return {Promise<Object>} response payload
  */
 const deleteBillRun = billRunId =>
-  request.delete(`v1/wrls/billruns/${billRunId}`);
+  request.delete(`v2/wrls/bill-runs/${billRunId}`);
 
 /**
  * Gets bill run including summary data
