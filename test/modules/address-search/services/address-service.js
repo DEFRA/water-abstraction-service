@@ -16,7 +16,7 @@ const addressService = require('../../../../src/modules/address-search/services/
 
 experiment('modules/application-state/controller', () => {
   beforeEach(async () => {
-    sandbox.stub(eaAddressFacadeApi, 'matchAddresses').resolves({
+    sandbox.stub(eaAddressFacadeApi, 'getAddressesByPostcode').resolves({
       results: [{
         uprn: '12345',
         organisation: 'Big Co',
@@ -38,11 +38,11 @@ experiment('modules/application-state/controller', () => {
     let result;
 
     beforeEach(async () => {
-      result = await addressService.getAddresses('TT1 1TT');
+      result = await addressService.getAddressesByPostcode('TT1 1TT');
     });
 
     test('calles the EA address facade with the query', async () => {
-      expect(eaAddressFacadeApi.matchAddresses.calledWith('TT1 1TT'));
+      expect(eaAddressFacadeApi.getAddressesByPostcode.calledWith('TT1 1TT'));
     });
 
     test('resolves with mapped addresses in { data } envelope', async () => {
