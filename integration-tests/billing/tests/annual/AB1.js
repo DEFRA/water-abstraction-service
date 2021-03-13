@@ -14,8 +14,7 @@ const { omit } = require('lodash');
 
 const services = require('../../services');
 
-const bookshelfLoader = require('../../services/bookshelf-loader')();
-const crmLoader = require('../../services/crm-loader')();
+const { createSetLoader } = require('../../services/loader');
 
 experiment('basic example scenario', () => {
   let batch;
@@ -23,13 +22,11 @@ experiment('basic example scenario', () => {
   before(async () => {
     await services.tearDown.tearDown();
 
-    // Load CRM fixtures
-    await crmLoader.load('crm.yaml');
+    const loader = createSetLoader();
+    await loader.load('crmV2', 'crm-v2.yaml');
+    await loader.load('water', 'AB1.yaml');
 
-    // Load Bookshelf fixtures
-    bookshelfLoader.setRef('$invoiceAccount', crmLoader.getRef('$invoiceAccount'));
-    await bookshelfLoader.load('AB1.yaml');
-    const region = bookshelfLoader.getRef('$region');
+    const region = loader.getRef('$region');
 
     batch = await services.scenarios.runScenario(region.regionId, 'annual');
   });
@@ -83,7 +80,7 @@ experiment('basic example scenario', () => {
           addressLine1: 'Big Farm',
           addressLine2: 'Windy road',
           addressLine3: 'Buttercup meadow',
-          addressLine4: null,
+          addressLine4: 'Buttercup Village',
           source: 'nald'
         });
       });
@@ -161,10 +158,6 @@ experiment('basic example scenario', () => {
             expect(transaction.section126Factor).to.equal(null);
             expect(transaction.section127Agreement).to.equal(false);
             expect(transaction.section130Agreement).to.equal(null);
-          });
-
-          test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('dc1467401acc8ff1124ac55ef6033a15');
           });
         });
       });

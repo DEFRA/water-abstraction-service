@@ -2,6 +2,7 @@
 
 const { get } = require('lodash');
 const Boom = require('@hapi/boom');
+const bluebird = require('bluebird');
 
 const returns = require('./lib/returns');
 const returnVersions = require('./lib/return-versions');
@@ -18,6 +19,8 @@ const documents = require('./lib/documents');
 const events = require('./lib/events');
 const sessions = require('./lib/sessions');
 const purposes = require('./lib/purposes');
+const regions = require('./lib/regions');
+const setLoader = require('../../../integration-tests/billing/services/loader');
 
 const {
   TEST_EXTERNAL_USER_EMAIL,
@@ -262,7 +265,7 @@ const postSetup = async (request, h) => {
   }
 };
 
-const postSetupFromYaml = (request, h) => {
+const postSetupFromYaml = async (request, h) => {
   const { key } = request.params;
   const set = require('../../../integration-tests/billing/fixtures/sets.json');
 
@@ -270,8 +273,13 @@ const postSetupFromYaml = (request, h) => {
     return Boom.notFound(`Key ${key} did not match any available Yaml sets.`);
   }
 
-  const loader = require('../../../integration-tests/billing/services/loader');
-  set[key].map(item => loader.load(item.service, item.file));
+  // Create a set loader
+  const loader = setLoader.createSetLoader();
+
+  // Load YAML files in series
+  await bluebird.mapSeries(set[key],
+    ({ service, file }) => loader.load(service, file)
+  );
 
   return h.response().code(204);
 };
@@ -285,6 +293,8 @@ const postTearDown = async () => {
   await returnRequirements.delete();
   console.log('Tearing down acceptance test return versions');
   await returnVersions.delete();
+  console.log('Tearing down acceptance test notifications');
+  await notifications.delete();
   console.log('Tearing down acceptance test events');
   await events.delete();
   console.log('Tearing down acceptance test permits');
@@ -303,8 +313,8 @@ const postTearDown = async () => {
   await licenceVersions.delete();
   console.log('Tearing down acceptance test licences');
   await licences.delete();
-  console.log('Tearing down acceptance test notifications');
-  await notifications.delete();
+  console.log('Tearing down acceptance test regions');
+  await regions.delete();
 
   return 'tear down complete';
 };

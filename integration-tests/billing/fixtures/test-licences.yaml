@@ -1,34 +1,77 @@
+- ref: $region
+  model: Region
+  fields:
+    chargeRegionId: S
+    naldRegionId: 6
+    name: Southern
+    displayName: Southern 
+    isTest: true
+
 - ref: $dailyLicence
   model: Licence
   fields:
+    regionId: $region.regionId
     licenceRef: 'AT/CURR/DAILY/01'
+    regions:      
+      historicalAreaCode: 'SAAR'
+      regionalChargeArea: 'Southern'
+    isWaterUndertaker: false
+    startDate: '2020-01-01'
+    isTest: true
 
 - ref: $weeklyLicence
   model: Licence
   fields:
+    regionId: $region.regionId
     licenceRef: 'AT/CURR/WEEKLY/01'
+    regions:      
+      historicalAreaCode: 'SAAR'
+      regionalChargeArea: 'Southern'
+    isWaterUndertaker: false
+    startDate: '2020-01-01'
+    isTest: true
 
 - ref: $monthlyLicenceA
   model: Licence
   fields:
+    regionId: $region.regionId
     licenceRef: 'AT/CURR/MONTHLY/01'
+    regions:      
+      historicalAreaCode: 'SAAR'
+      regionalChargeArea: 'Southern'
+    isWaterUndertaker: false
+    startDate: '2020-01-01'
+    isTest: true
 
 - ref: $monthlyLicenceB
   model: Licence
   fields:
+    regionId: $region.regionId
     licenceRef: 'AT/CURR/MONTHLY/02'
+    regions:      
+      historicalAreaCode: 'SAAR'
+      regionalChargeArea: 'Southern'
+    isWaterUndertaker: false
+    startDate: '2020-01-01'
+    isTest: true
 
 - ref: $primaryPurpose
-  model: PrimaryPurpose
+  model: PurposePrimary
   fields:
     legacy_id: A
     description: Agriculture
+  constraints:
+    purposes_primary_unq_legacy_id:
+      - legacyId
 
 - ref: $secondaryPurpose
-  model: SecondaryPurpose
+  model: PurposeSecondary
   fields:
     legacy_id: AGR
     description: General Agriculture
+  constraints:
+    purposes_secondary_unq_legacy_id:
+      - legacyId
 
 - ref: $purposeUse
   model: PurposeUse
@@ -37,7 +80,10 @@
     description: 'General Farming & Domestic'
     lossFactor: 'medium'
     isTwoPartTariff: false
-
+  constraints:
+    purposes_uses_unq_legacy_id:
+      - legacyId
+      
 - ref: $monthlyLicenceBReturnVersionA
   model: ReturnVersion
   fields:
