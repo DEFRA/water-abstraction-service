@@ -1,6 +1,7 @@
 'use strict';
 
 const { expect } = require('@hapi/code');
+// const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
 const {
   experiment,
   test,
@@ -11,11 +12,13 @@ const {
 const { omit } = require('lodash');
 
 const services = require('../../services');
+// const transactionTests = require('../transaction-tests');
 
 const { createSetLoader } = require('../../services/loader');
 
 experiment('two part tariff ref: 2PT2', () => {
   let batch;
+  // let chargeModuleTransactions;
   let twoPartTariffBatch;
 
   before(async () => {
@@ -59,6 +62,7 @@ experiment('two part tariff ref: 2PT2', () => {
   experiment('approve the 2PT batch and continue processing', () => {
     before(async () => {
       twoPartTariffBatch = await services.scenarios.approveTwoPartTariffBatch(batch.billingBatchId);
+      // chargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(twoPartTariffBatch);
     });
 
     experiment('has expected invoice details', () => {
@@ -175,6 +179,21 @@ experiment('two part tariff ref: 2PT2', () => {
     });
   });
 
+  /*
+  experiment('transactions', () => {
+      test('the batch and charge module have the same number of transactions', async () => {
+        transactionTests.assertNumberOfTransactions(twoPartTariffBatch, chargeModuleTransactions);
+      });
+
+      test('the batch and charge module contain the same transactions', async () => {
+        transactionTests.assertTransactionsAreInEachSet(twoPartTariffBatch, chargeModuleTransactions);
+      });
+
+      test('the charge module transaction contain the expected data', async () => {
+        transactionTests.assertBatchTransactionDataExistsInChargeModule(twoPartTariffBatch, chargeModuleTransactions);
+      });
+    });
+   */
   after(async () => {
     await services.tearDown.tearDown(batch);
   });
