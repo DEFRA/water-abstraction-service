@@ -42,4 +42,4 @@
     licenceId: $licence.licenceId
     licenceVersionId: $licenceVersion.licenceVersionId
     status: 'to_setup'
-    data: { chargeVersion: null, isTest: true }
+    data: { chargeVersion: null, source: "acceptance-test-setup" }
