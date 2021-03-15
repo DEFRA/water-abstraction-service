@@ -138,6 +138,21 @@ const getKPIReturnsByCycle = async (startDate, endDate, isSummer) => {
   return helpers.serviceRequest.get(url);
 };
 
+/**
+ * Gets a report of return cycles with data on number of returns in each status
+ *
+ * @return {Promise<Object>}
+ */
+const getReturnsCyclesReport = async startDate => {
+  const url = urlJoin(config.services.returns, 'return-cycles/report');
+  const options = {
+    qs: {
+      startDate
+    }
+  };
+  return helpers.serviceRequest.get(url, options);
+};
+
 exports.returns = returnsClient;
 exports.versions = versionsClient;
 exports.lines = linesClient;
@@ -151,3 +166,5 @@ exports.getKPIReturnsByCycle = getKPIReturnsByCycle;
 if (config.isAcceptanceTestTarget) {
   exports.deleteAcceptanceTestData = deleteAcceptanceTestData;
 }
+
+exports.getReturnsCyclesReport = getReturnsCyclesReport;
