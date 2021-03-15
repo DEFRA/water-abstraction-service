@@ -420,7 +420,8 @@ experiment('modules/billing/jobs/create-charge', () => {
       beforeEach(async () => {
         job = {
           data: {
-            batchId
+            batchId,
+            billingBatchTransactionId: await uuid()
           },
           attemptsMade: 5,
           opts: {
@@ -439,7 +440,8 @@ experiment('modules/billing/jobs/create-charge', () => {
       beforeEach(async () => {
         job = {
           data: {
-            batchId
+            batchId,
+            billingBatchTransactionId: await uuid()
           },
           attemptsMade: 10,
           opts: {

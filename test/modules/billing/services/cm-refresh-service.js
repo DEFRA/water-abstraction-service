@@ -86,7 +86,7 @@ const cmResponses = {
             customerReference: customerRefs[0],
             financialYear: financialYearEnding - 1,
             creditLineCount: 1,
-            creditLineValue: -21127,
+            creditLineValue: 21127,
             debitLineCount: 1,
             debitLineValue: 11274,
             zeroLineCount: 0,
@@ -98,7 +98,7 @@ const cmResponses = {
                 id: uuid(),
                 licenceNumber: licenceNumbers[0],
                 transactions: [{
-                  value: -21127,
+                  value: 21127,
                   isCredit: true,
                   licenceNumber: licenceNumbers[0],
                   transactionReference: invoiceNumbers[0]
@@ -118,7 +118,7 @@ const cmResponses = {
             customerReference: customerRefs[1],
             financialYear: financialYearEnding - 1,
             creditLineCount: 2,
-            creditLineValue: -21127,
+            creditLineValue: 21127,
             debitLineCount: 1,
             debitLineValue: 3063,
             zeroLineCount: 1,
@@ -130,7 +130,7 @@ const cmResponses = {
                 id: uuid(),
                 licenceNumber: licenceNumbers[1],
                 transactions: [{
-                  value: -10200,
+                  value: 10200,
                   isCredit: true,
                   isMinimumCharge: false,
                   minChargeValue: 25,
@@ -138,7 +138,7 @@ const cmResponses = {
                   transactionReference: invoiceNumbers[1]
                 },
                 {
-                  value: -10927,
+                  value: 10927,
                   isCredit: true,
                   isMinimumCharge: false,
                   minChargeValue: 25,
