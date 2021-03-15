@@ -30,7 +30,7 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
   try {
     const { invoice } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, invoiceId);
 
-    const result = invoice.licences.map(lic => lic.transactions.map(transaction => {
+    return invoice.licences.map(lic => lic.transactions.map(transaction => {
       return {
         ...transaction,
         transactionReference: invoice.transactionReference,
@@ -38,8 +38,6 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
         licenceNumber: invoice.licences[0].licenceNumber
       };
     })).flat();
-
-    return result;
   } catch (error) {
     logger.error(`Unable to retrieve transactions for CM invoice. Bill run ID ${cmBillRunId} and invoice ID ${invoiceId}`);
     throw error;
@@ -97,7 +95,7 @@ const mapTransaction = (invoice, transactionMap, cmTransaction) => {
     return transactionMap
       .get(cmTransaction.id)
       .fromHash({
-        isDeMinimis: invoice.isDeMinimis, // TODO this needs checking. It used to be `cmTransaction.deminimis`
+        isDeMinimis: cmTransaction.isDeminimis,
         value: cmTransaction.chargeValue
       });
   } else {

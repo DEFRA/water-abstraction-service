@@ -351,7 +351,6 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
   }
 
   try {
-    // await chargeModuleBillRunConnector.removeCustomerInFinancialYear(externalId, invoiceAccountNumber, financialYearEnding - 1);
     await chargeModuleBillRunConnector.deleteInvoiceFromBillRun(invoice.billingBatch.externalId, invoice.externalId);
     // Delete local data
     await newRepos.billingBatchChargeVersionYears.deleteByInvoiceId(invoiceId);
