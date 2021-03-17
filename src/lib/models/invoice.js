@@ -5,7 +5,7 @@ const { uniq, get, flatMap } = require('lodash');
 const {
   assertIsInstanceOf, assertIsArrayOfType,
   assertIsNullableInstanceOf, assertIsBoolean,
-  assertNullableString
+  assertNullableString, assertNullableId
 } = require('./validators');
 
 const Address = require('./address');
@@ -191,6 +191,18 @@ class Invoice extends Totals {
 
   get hasTransactionErrors () {
     return this.invoiceLicences.some(invoiceLicence => invoiceLicence.hasTransactionErrors);
+  }
+
+  /**
+   * Sets the external ID.  This is the invoice ID in the charge module.
+   */
+  get externalId () {
+    return this._externalId;
+  }
+
+  set externalId (externalId) {
+    assertNullableId(externalId);
+    this._externalId = externalId;
   }
 
   toJSON () {

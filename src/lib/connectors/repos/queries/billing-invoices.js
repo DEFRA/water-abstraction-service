@@ -2,12 +2,12 @@ exports.upsert = `insert into water.billing_invoices
   (
     invoice_account_id, address, invoice_account_number, 
     date_created, date_updated, billing_batch_id, financial_year_ending,
-    net_amount, credit_note_value, invoice_value, is_de_minimis, is_credit
+    net_amount, credit_note_value, invoice_value, is_de_minimis, is_credit, external_id
   )
 values (
     :invoiceAccountId, :address, :invoiceAccountNumber, 
     NOW(), NOW(), :billingBatchId, :financialYearEnding,
-    :netAmount, :creditNoteValue, :invoiceValue, :isDeMinimis, :isCredit
+    :netAmount, :creditNoteValue, :invoiceValue, :isDeMinimis, :isCredit, :externalId
 )
 on conflict (invoice_account_id, billing_batch_id, financial_year_ending) where legacy_id is null do update 
   set date_updated = NOW(), 
@@ -15,7 +15,8 @@ on conflict (invoice_account_id, billing_batch_id, financial_year_ending) where 
     credit_note_value=EXCLUDED.credit_note_value,
     invoice_value=EXCLUDED.invoice_value,
     is_de_minimis=EXCLUDED.is_de_minimis,
-    is_credit=EXCLUDED.is_credit
+    is_credit=EXCLUDED.is_credit,
+    external_id=EXCLUDED.external_id
   returning *;`;
 
 exports.deleteEmptyByBatchId = `delete from water.billing_invoices i
