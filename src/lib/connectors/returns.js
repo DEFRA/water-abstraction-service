@@ -164,6 +164,17 @@ const getReturnCycleById = async returnCycleId => {
   return helpers.serviceRequest.get(url);
 };
 
+/**
+ * Gets returns for the specified return cycle by ID
+ *
+ * @param {String} returnCycleId
+ * @return {Promise<Object>}
+ */
+const getReturnCycleReturns = async returnCycleId => {
+  const url = urlJoin(config.services.returns, 'return-cycles', returnCycleId, 'returns');
+  return helpers.serviceRequest.get(url);
+};
+
 exports.returns = returnsClient;
 exports.versions = versionsClient;
 exports.lines = linesClient;
@@ -180,3 +191,4 @@ if (config.isAcceptanceTestTarget) {
 
 exports.getReturnsCyclesReport = getReturnsCyclesReport;
 exports.getReturnCycleById = getReturnCycleById;
+exports.getReturnCycleReturns = getReturnCycleReturns;

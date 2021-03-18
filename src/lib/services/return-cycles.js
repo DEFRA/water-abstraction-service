@@ -2,7 +2,8 @@
 
 const returnsConnector = require('../connectors/returns');
 const mapper = require('../mappers/return-cycle');
-const errors = require('../errors');
+const DateRange = require('../models/date-range');
+const User = require('../models/user');
 
 const mapCycleReport = returnCycle => {
   const { returnCycleId, ...rest } = returnCycle;
@@ -33,15 +34,34 @@ const getReturnCycleReport = async () => {
  */
 const getReturnCycleById = async id => {
   const data = await returnsConnector.getReturnCycleById(id);
+  return data ? mapper.returnServiceToModel(data) : null;
+};
 
-  // Throw error if not found
-  if (!data) {
-    throw new errors.NotFoundError(`Return cycle ${id} not found`);
-  }
+const mapCycleReturn = row => {
+  const { returnId, startDate, endDate, userId: email, ...rest } = row;
+  return {
+    id: returnId,
+    dateRange: new DateRange(startDate, endDate),
+    user: email ? new User().fromHash({ email }) : null,
+    ...rest
+  };
+};
 
-  // Map to service model and return
-  return mapper.returnServiceToModel(data);
+/**
+ * Gets a report of returns within a return cycle
+ *
+ * Note: because this is a report it returns plain objects rather than
+ * service models
+ *
+ *  @returns {Promise<Array>}
+ */
+const getReturnCycleReturns = async returnCycleId => {
+  const { data } = await returnsConnector.getReturnCycleReturns(returnCycleId);
+  return {
+    data: data.map(mapCycleReturn)
+  };
 };
 
 exports.getReturnCycleReport = getReturnCycleReport;
 exports.getReturnCycleById = getReturnCycleById;
+exports.getReturnCycleReturns = getReturnCycleReturns;

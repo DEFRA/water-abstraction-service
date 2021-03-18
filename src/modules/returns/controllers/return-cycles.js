@@ -2,6 +2,7 @@
 
 const returnCyclesService = require('../../../lib/services/return-cycles');
 const mapErrorResponse = require('../../../lib/map-error-response');
+const requestPromise = require('request-promise-native');
 
 /**
  * Get a report of return cycles
@@ -16,10 +17,15 @@ const getReturnCyclesReport = async request => {
 /**
  * Get the specified return cycle model by ID
  */
-const getReturnCycle = async (request, h) => {
+const getReturnCycle = async request => request.pre.returnCycle;
+
+/**
+ * Get the specified return cycle model by ID
+ */
+const getReturnCycleReturns = async (request, h) => {
   const { returnCycleId } = request.params;
   try {
-    return await returnCyclesService.getReturnCycleById(returnCycleId);
+    return await returnCyclesService.getReturnCycleReturns(returnCycleId);
   } catch (err) {
     return mapErrorResponse(err);
   }
@@ -27,3 +33,4 @@ const getReturnCycle = async (request, h) => {
 
 exports.getReturnCyclesReport = getReturnCyclesReport;
 exports.getReturnCycle = getReturnCycle;
+exports.getReturnCycleReturns = getReturnCycleReturns;

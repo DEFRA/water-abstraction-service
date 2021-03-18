@@ -2,6 +2,7 @@
 
 const Joi = require('@hapi/joi');
 const controller = require('../controllers/return-cycles');
+const preHandlers = require('../pre-handlers');
 
 module.exports = {
 
@@ -25,11 +26,31 @@ module.exports = {
       validate: {
         params: Joi.object({
           returnCycleId: Joi.string().guid().required()
-        }),
-        failAction: (request, h, err) => {
-          console.error(err);
-        }
-      }
+        })
+      },
+      pre: [{
+        method: preHandlers.getReturnCycle,
+        assign: 'returnCycle'
+      }]
+    }
+  },
+
+  getReturnCycleReturns: {
+    path: '/water/1.0/return-cycles/{returnCycleId}/returns',
+    method: 'GET',
+    handler: controller.getReturnCycleReturns,
+    config: {
+      tags: ['api'],
+      description: 'Gets returns for the specified return cycle',
+      validate: {
+        params: Joi.object({
+          returnCycleId: Joi.string().guid().required()
+        })
+      },
+      pre: [{
+        method: preHandlers.getReturnCycle,
+        assign: 'returnCycle'
+      }]
     }
   }
 };
