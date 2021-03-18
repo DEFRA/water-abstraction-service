@@ -35,7 +35,7 @@ const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
         ...transaction,
         transactionReference: invoice.transactionReference,
         isDeminimis: invoice.deminimisInvoice,
-        licenceNumber: invoice.licences[0].licenceNumber
+        licenceNumber: lic.licenceNumber
       };
     })).flat();
   } catch (error) {
