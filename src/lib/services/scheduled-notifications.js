@@ -36,8 +36,19 @@ const updateScheduledNotificationWithNotifyResponse = (messageId, notifyResponse
 
 const updateScheduledNotificationWithNotifyCallback = (messageId, status) => repo.update(messageId, { notifyStatus: status });
 
+/**
+ * Get all scheduled notifications by event ID
+ * @param {String} eventId
+ * @return {Promise<ScheduledNotification>}
+ */
+const getByEventId = async eventId => {
+  const data = await repo.findByEventId(eventId);
+  return data.map(mapper.dbToModel);
+};
+
 exports.getScheduledNotificationById = getScheduledNotificationById;
 exports.getScheduledNotificationByNotifyId = getScheduledNotificationByNotifyId;
 exports.createScheduledNotification = createScheduledNotification;
 exports.updateScheduledNotificationWithNotifyResponse = updateScheduledNotificationWithNotifyResponse;
 exports.updateScheduledNotificationWithNotifyCallback = updateScheduledNotificationWithNotifyCallback;
+exports.getByEventId = getByEventId;

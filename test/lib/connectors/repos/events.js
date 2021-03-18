@@ -10,6 +10,8 @@ const sandbox = sinon.createSandbox();
 
 const events = require('../../../../src/lib/connectors/repos/events');
 const { Event } = require('../../../../src/lib/connectors/bookshelf/');
+const { bookshelf } = require('../../../../src/lib/connectors/bookshelf');
+const queries = require('../../../../src/lib/connectors/repos/queries/events');
 
 experiment('lib/connectors/repos/events', () => {
   let model, stub;
@@ -26,6 +28,7 @@ experiment('lib/connectors/repos/events', () => {
     };
 
     sandbox.stub(Event, 'forge').returns(stub);
+    sandbox.stub(bookshelf.knex, 'raw');
   });
 
   afterEach(async () => {
@@ -85,6 +88,32 @@ experiment('lib/connectors/repos/events', () => {
 
     test('returns a JSON object of the model updated', async () => {
       expect(result).to.equal(model.toJSON());
+    });
+  });
+
+  experiment('.findNotifications', () => {
+    const params = { limit: 10, offset: 10 };
+
+    beforeEach(async () => {
+      await events.findNotifications(params);
+    });
+
+    test('calls knew.raw with the query and params', async () => {
+      expect(bookshelf.knex.raw.calledWith(
+        queries.findNotifications, params
+      )).to.be.true();
+    });
+  });
+
+  experiment('.findNotificationsCount', () => {
+    beforeEach(async () => {
+      await events.findNotificationsCount();
+    });
+
+    test('calls knew.raw with the query and params', async () => {
+      expect(bookshelf.knex.raw.calledWith(
+        queries.findNotificationsCount
+      )).to.be.true();
     });
   });
 });
