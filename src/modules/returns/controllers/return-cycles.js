@@ -1,35 +1,27 @@
 'use strict';
 
 const returnCyclesService = require('../../../lib/services/return-cycles');
-const mapErrorResponse = require('../../../lib/map-error-response');
+const controller = require('../../../lib/controller');
 
 /**
  * Get a report of return cycles
  * @param {*} request
- * @returns
  */
-const getReturnCyclesReport = async () => {
-  const data = await returnCyclesService.getReturnCycleReport();
-  return { data };
-};
+const getReturnCyclesReport = () =>
+  controller.getEntities(null, returnCyclesService.getReturnCycleReport);
 
 /**
  * Get the specified return cycle model by ID
+ * @param {String} request.params.returnCycleId
  */
-const getReturnCycle = async request => request.pre.returnCycle;
+const getReturnCycle = request => request.pre.returnCycle;
 
 /**
  * Get the specified return cycle model by ID
+ * @param {String} request.params.returnCycleId
  */
-const getReturnCycleReturns = async request => {
-  const { returnCycleId } = request.params;
-  try {
-    const data = await returnCyclesService.getReturnCycleReturns(returnCycleId);
-    return { data };
-  } catch (err) {
-    return mapErrorResponse(err);
-  }
-};
+const getReturnCycleReturns = request =>
+  controller.getEntities(request.params.returnCycleId, returnCyclesService.getReturnCycleReturns);
 
 exports.getReturnCyclesReport = getReturnCyclesReport;
 exports.getReturnCycle = getReturnCycle;
