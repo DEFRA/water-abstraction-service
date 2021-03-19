@@ -309,6 +309,78 @@ class Transaction extends Model {
     return this._isDeMinimis;
   }
 
+  set calcSourceFactor (calcSourceFactor) {
+    validators.assertFactor(calcSourceFactor);
+    this._calcSourceFactor = calcSourceFactor;
+  }
+
+  get calcSourceFactor () {
+    return this._calcSourceFactor;
+  }
+
+  set calcSeasonFactor (calcSeasonFactor) {
+    validators.assertFactor(calcSeasonFactor);
+    this._calcSeasonFactor = calcSeasonFactor;
+  }
+
+  get calcSeasonFactor () {
+    return this._calcSeasonFactor;
+  }
+
+  set calcLossFactor (calcLossFactor) {
+    validators.assertFactor(calcLossFactor);
+    this._calcLossFactor = calcLossFactor;
+  }
+
+  get calcLossFactor () {
+    return this._calcLossFactor;
+  }
+
+  set calcSucFactor (calcSucFactor) {
+    validators.assertFactor(calcSucFactor);
+    this._calcSucFactor = calcSucFactor;
+  }
+
+  get calcSucFactor () {
+    return this._calcSucFactor;
+  }
+
+  set calcS126Factor (calcS126Factor) {
+    validators.assertFactor(calcS126Factor);
+    this._calcS126Factor = calcS126Factor;
+  }
+
+  get calcS126Factor () {
+    return this._calcS126Factor;
+  }
+
+  set calcS127Factor (calcS127Factor) {
+    validators.assertFactor(calcS127Factor);
+    this._calcS127Factor = calcS127Factor;
+  }
+
+  get calcS127Factor () {
+    return this._calcS127Factor;
+  }
+
+  set calcEiucFactor (calcEiucFactor) {
+    validators.assertFactor(calcEiucFactor);
+    this._calcEiucFactor = calcEiucFactor;
+  }
+
+  get calcEiucFactor () {
+    return this._calcEiucFactor;
+  }
+
+  set calcEiucSourceFactor (calcEiucSourceFactor) {
+    validators.assertFactor(calcEiucSourceFactor);
+    this._calcEiucSourceFactor = calcEiucSourceFactor;
+  }
+
+  get calcEiucSourceFactor () {
+    return this._calcEiucSourceFactor;
+  }
+
   /**
    * Checks if the transaction is in error status
    * @return {Boolean}

@@ -124,7 +124,15 @@ const modelToDbMapper = createMapper()
     'volume',
     'isTwoPartTariffSupplementary',
     'isNewLicence',
-    'externalId'
+    'externalId',
+    'calcSourceFactor',
+    'calcSeasonFactor',
+    'calcLossFactor',
+    'calcSucFactor',
+    'calcEiucFactor',
+    'calcEiucSourceFactor',
+    'calcS126Factor',
+    'calcS127Factor'
   )
   .map('chargeElement.id').to('chargeElementId')
   .map('chargePeriod.startDate').to('startDate')
@@ -240,7 +248,19 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     batchNumber: batch.id,
     ...mapChargeElementToChargeModuleTransaction(transaction.chargeElement),
     ...mapLicenceToChargeElementTransaction(invoiceLicence.licence),
-    newLicence: transaction.isNewLicence
+    newLicence: transaction.isNewLicence,
+    calculation: {
+      WRLSChargingResponse: {
+        sourceFactor: transaction.calcSourceFactor,
+        seasonFactor: transaction.calcSeasonFactor,
+        lossFactor: transaction.calcLossFactor,
+        sucFactor: transaction.calcSucFactor,
+        abatementAdjustment: transaction.calcS126Factor ? `S127 x ${transaction.calcS126Factor}` : null,
+        s127Agreement: transaction.calcS127Factor ? `S127 x ${transaction.calcS127Factor}` : null,
+        eiucFactor: transaction.calcEiucFactor,
+        eiucSourceFactor: transaction.calcEiucSourceFactor
+      }
+    }
   };
 };
 
@@ -267,7 +287,15 @@ const cmToModelMapper = createMapper()
   .map('deminimis').to('isDeMinimis')
   .map('newLicence').to('isNewLicence')
   .map('twoPartTariff').to('isTwoPartTariffSupplementary', mapIsTwoPartTariffSupplementary)
-  .map('transactionStatus').to('status', mapCMTransactionStatus);
+  .map('transactionStatus').to('status', mapCMTransactionStatus)
+  .map('calculation.WRLSChargingResponse.sourceFactor').to('calcSourceFactor')
+  .map('calculation.WRLSChargingResponse.seasonFactor').to('calcSeasonFactor')
+  .map('calculation.WRLSChargingResponse.lossFactor').to('calcLossFactor')
+  .map('calculation.WRLSChargingResponse.sucFactor').to('calcSucFactor')
+  .map('calculation.WRLSChargingResponse.abatementAdjustment').to('calcS126Factor', val => val ? `S126 x ${val}` : null)
+  .map('calculation.WRLSChargingResponse.s127Agreement').to('calcS127Factor', val => val ? `S127 x ${val}` : null)
+  .map('calculation.WRLSChargingResponse.eiucFactor').to('calcEiucFactor')
+  .map('calculation.WRLSChargingResponse.eiucSourceFactor').to('calcEiucSourceFactor');
 
 /**
  * Converts Minimum Charge transaction returned from the CM
