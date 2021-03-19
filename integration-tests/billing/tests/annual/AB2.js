@@ -13,8 +13,6 @@ const {
 const moment = require('moment');
 const { omit } = require('lodash');
 const services = require('../../services');
-const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
-const transactionTests = require('../transaction-tests');
 
 const { createSetLoader } = require('../../services/loader');
 
@@ -22,7 +20,6 @@ const { createSetLoader } = require('../../services/loader');
 // Single Licence with a single charge version effective for whole year with 2 Part Tariff agreements
 experiment('annual batch ref: AB2', () => {
   let batch;
-  let chargeModuleTransactions;
 
   before(async () => {
     await services.tearDown.tearDown();
@@ -34,8 +31,6 @@ experiment('annual batch ref: AB2', () => {
     const region = loader.getRef('$region');
 
     batch = await services.scenarios.runScenario(region.regionId, 'annual');
-
-    chargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(batch);
   });
 
   experiment('has expected batch details', () => {
@@ -177,20 +172,6 @@ experiment('annual batch ref: AB2', () => {
           });
         });
       });
-    });
-  });
-
-  experiment('transactions', () => {
-    test('the batch and charge module have the same number of transactions', async () => {
-      transactionTests.assertNumberOfTransactions(batch, chargeModuleTransactions);
-    });
-
-    test('the batch and charge module contain the same transactions', async () => {
-      transactionTests.assertTransactionsAreInEachSet(batch, chargeModuleTransactions);
-    });
-
-    test('the charge module transaction contain the expected data', async () => {
-      transactionTests.assertBatchTransactionDataExistsInChargeModule(batch, chargeModuleTransactions);
     });
   });
 

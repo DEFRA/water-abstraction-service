@@ -8,7 +8,7 @@ const request = require('./request');
  * @return {Promise<Object>} response payload
  */
 const create = region =>
-  request.post('v1/wrls/billruns', { region });
+  request.post('v2/wrls/bill-runs', { region });
 
 /**
  * Adds a transaction to the specified bill run
@@ -17,7 +17,7 @@ const create = region =>
  * @return {Promise<Object>} response payload
  */
 const addTransaction = (billRunId, transaction) =>
-  request.post(`v1/wrls/billruns/${billRunId}/transactions`, transaction);
+  request.post(`v2/wrls/bill-runs/${billRunId}/transactions`, transaction);
 
 /**
  * Approves the spefified CM bill run
@@ -25,25 +25,24 @@ const addTransaction = (billRunId, transaction) =>
  * @return {Promise<Object>} response payload
  */
 const approve = billRunId =>
-  request.patch(`v1/wrls/billruns/${billRunId}/approve`);
+  request.patch(`v2/wrls/bill-runs/${billRunId}/approve`);
 
 /**
- * Sends the spefified CM bill run
+ * Sends the specified CM bill run
  * @param {String} billRunId - CM bill ID GUID
  * @return {Promise<Object>} response payload
  */
 const send = billRunId =>
-  request.post(`v1/wrls/billruns/${billRunId}/send`);
+  request.patch(`v2/wrls/bill-runs/${billRunId}/send`);
 
 /**
- * Removes an individual customer from the bill run
+ * Deletes a specified invoice from a given bill run
  * @param {String} billRunId - CM bill ID GUID
- * @param {String} customerReference - invoice account number
- * @param {Number} financialYear - note: CM uses financial year starting, WRLS uses ending
+ * @param {String} invoiceId - CM invoice ID GUID
  * @return {Promise<Object>} response payload
  */
-const removeCustomerInFinancialYear = (billRunId, customerReference, financialYear) =>
-  request.delete(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference, financialYear });
+const deleteInvoiceFromBillRun = (billRunId, invoiceId) =>
+  request.delete(`v2/wrls/bill-runs/${billRunId}/invoices/${invoiceId}`);
 
 /**
  * Deletes entire bill run
@@ -51,7 +50,7 @@ const removeCustomerInFinancialYear = (billRunId, customerReference, financialYe
  * @return {Promise<Object>} response payload
  */
 const deleteBillRun = billRunId =>
-  request.delete(`v1/wrls/billruns/${billRunId}`);
+  request.delete(`v2/wrls/bill-runs/${billRunId}`);
 
 /**
  * Gets bill run including summary data
@@ -59,32 +58,21 @@ const deleteBillRun = billRunId =>
  * @return {Promise<Object>} response payload
  */
 const get = billRunId =>
-  request.get(`v1/wrls/billruns/${billRunId}`);
+  request.get(`v2/wrls/bill-runs/${billRunId}`);
 
-const getCustomer = (billRunId, customerReference) =>
-  request.get(`v1/wrls/billruns/${billRunId}`, { customerReference });
-
-const getTransactions = (billRunId, page = 1, perPage = 100) =>
-  request.get(`v1/wrls/billruns/${billRunId}/transactions`, { page, perPage });
-
-const getCustomerTransactions = (billRunId, customerReference, page = 1, perPage = 100) =>
-  request.get(`v1/wrls/billruns/${billRunId}/transactions`, { customerReference, page, perPage });
 /**
-   * Gets transactions in given bill run for supplied customer ref / financial year grouping
+   * Gets transactions in given bill run for a particular invoice.
    * @param {String} billRunId
-   * @param {String} customerReference
-   * @param {Number} financialYear - note: CM uses financial year starting, WRLS uses ending
-   * @param {Number} [page] - default 1
+   * @param {String} invoiceId
    */
-const getInvoiceTransactions = (billRunId, customerReference, financialYear, page = 1) => {
-  const path = `v1/wrls/billruns/${billRunId}/transactions`;
-  const query = {
-    customerReference,
-    page,
-    financialYear,
-    perPage: 100
-  };
-  return request.get(path, query);
+const getInvoiceTransactions = (billRunId, invoiceId) => {
+  const path = `v2/wrls/bill-runs/${billRunId}/invoices/${invoiceId}`;
+  return request.get(path);
+};
+
+const generate = CMBillRunId => {
+  const path = `v2/wrls/bill-runs/${CMBillRunId}/generate`;
+  return request.patch(path);
 };
 
 exports.addTransaction = addTransaction;
@@ -92,9 +80,8 @@ exports.approve = approve;
 exports.create = create;
 exports.delete = deleteBillRun;
 exports.get = get;
-exports.getCustomer = getCustomer;
-exports.getTransactions = getTransactions;
-exports.getCustomerTransactions = getCustomerTransactions;
-exports.removeCustomerInFinancialYear = removeCustomerInFinancialYear;
+exports.deleteBillRun = deleteBillRun;
 exports.send = send;
 exports.getInvoiceTransactions = getInvoiceTransactions;
+exports.deleteInvoiceFromBillRun = deleteInvoiceFromBillRun;
+exports.generate = generate;

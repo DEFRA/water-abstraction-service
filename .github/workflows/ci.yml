@@ -111,7 +111,7 @@ jobs:
         env:
           CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
         with:
-          coverageCommand: npm run test:travis
+          coverageCommand: npm run test:ci
           debug: true
 
       - name: Analyze with SonarCloud
