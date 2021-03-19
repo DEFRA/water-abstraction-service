@@ -90,6 +90,7 @@ const assertIsNullableBoolean = value => assert(value, Joi.boolean().required().
 const assertNullableQuantityWithMaximum = (value, max) => assert(value, VALID_NULLABLE_QUANTITY.max(max));
 const assertReturnId = value => assert(value, VALID_RETURN_ID);
 const assertObject = value => assert(value, VALID_OBJECT);
+const assertNullableObject = value => assert(value, VALID_OBJECT.allow(null));
 const assertArray = value => assert(value, VALID_ARRAY);
 const assertIsNullableArrayOfLicenceNumbers = value => assert(value, Joi.array().allow(null).items(VALID_LICENCE_NUMBER.optional()));
 
@@ -131,5 +132,6 @@ exports.assertIsNullableBoolean = assertIsNullableBoolean;
 exports.assertNullableQuantityWithMaximum = assertNullableQuantityWithMaximum;
 exports.assertReturnId = assertReturnId;
 exports.assertObject = assertObject;
+exports.assertNullableObject = assertNullableObject;
 exports.assertArray = assertArray;
 exports.assertIsNullableArrayOfLicenceNumbers = assertIsNullableArrayOfLicenceNumbers;

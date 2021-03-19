@@ -5,7 +5,10 @@ const { uniq, get, flatMap } = require('lodash');
 const {
   assertIsInstanceOf, assertIsArrayOfType,
   assertIsNullableInstanceOf, assertIsBoolean,
-  assertNullableString
+  assertNullableString, assertNullableObject,
+  assertNullableInteger,
+  assertNullablePositiveOrZeroInteger,
+  assertNullableNegativeOrZeroInteger
 } = require('./validators');
 
 const Address = require('./address');
@@ -187,6 +190,84 @@ class Invoice extends Totals {
 
   get invoiceNumber () {
     return this._invoiceNumber;
+  }
+
+  /**
+   * Sets the net total
+   * @param {Integer} netTotal
+   */
+  set netTotal (netTotal) {
+    assertNullableInteger(netTotal);
+    this._netTotal = netTotal;
+  }
+
+  get netTotal () {
+    return this._netTotal;
+  }
+
+  /**
+   * Sets the isCredit flag
+   * @param {Boolean} isCredit
+   */
+  set isCredit (isCredit) {
+    assertIsBoolean(isCredit);
+    this._isCredit = isCredit;
+  }
+
+  get isCredit () {
+    return this._isCredit;
+  }
+
+  /**
+   * Sets the legacy id
+   * @param {String} legacyId
+   */
+  set legacyId (legacyId) {
+    assertNullableString(legacyId);
+    this._legacyId = legacyId;
+  }
+
+  get legacyId () {
+    return this._legacyId;
+  }
+
+  /**
+   * Sets the metadata
+   * @param {Object} metadata
+   */
+  set metadata (metadata) {
+    assertNullableObject(metadata);
+    this._metadata = metadata;
+  }
+
+  get metadata () {
+    return this._metadata;
+  }
+
+  /**
+   * Sets the invoice value
+   * @param {Integer} invoiceValue
+   */
+  set invoiceValue (invoiceValue) {
+    assertNullablePositiveOrZeroInteger(invoiceValue);
+    this._invoiceValue = invoiceValue;
+  }
+
+  get invoiceValue () {
+    return this._invoiceValue;
+  }
+
+  /**
+   * Sets the credit note value
+   * @param {Integer} creditNoteValue
+   */
+  set creditNoteValue (creditNoteValue) {
+    assertNullableNegativeOrZeroInteger(creditNoteValue);
+    this._creditNoteValue = creditNoteValue;
+  }
+
+  get creditNoteValue () {
+    return this._creditNoteValue;
   }
 
   get hasTransactionErrors () {

@@ -20,9 +20,11 @@ const dbToModelMapper = createMapper()
     'isCredit',
     'isDeMinimis',
     'invoiceValue',
-    'creditNoteValue'
+    'creditNoteValue',
+    'legacyId',
+    'metadata'
   )
-  .map('netAmount').to('netTotal')
+  .map('netAmount').to('netTotal', netAmount => parseInt(netAmount))
   .map('billingInvoiceId').to('id')
   .map('invoiceAccountId').to('invoiceAccount', invoiceAccountId => new InvoiceAccount(invoiceAccountId))
   .map('invoiceAccountNumber').to('invoiceAccount.accountNumber')
