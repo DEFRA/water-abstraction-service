@@ -16,3 +16,11 @@ exports.deleteEmptyByBatchId = `delete from water.billing_invoice_licences l
 exports.deleteByBatchId = `delete from water.billing_invoice_licences il
   using water.billing_invoices i where i.billing_invoice_id = il.billing_invoice_id
   and i.billing_batch_id = :batchId;`;
+
+exports.findAllByLicenceIdForSentBatches = `select * from water.billing_invoice_licences il
+  join water.billing_invoices i on il.billing_invoice_id=i.billing_invoice_id
+  join water.billing_batches b on i.billing_batch_id=b.billing_batch_id
+  where il.licence_id= :licenceId
+  and b.status='sent'
+  order by il.date_created desc,  
+  i.financial_year_ending desc;`;

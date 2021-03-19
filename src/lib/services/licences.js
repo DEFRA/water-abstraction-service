@@ -131,6 +131,24 @@ const getLicenceAccountsByRefAndDate = async (documentRef, date) => {
 const flagForSupplementaryBilling = licenceId =>
   repos.licences.update(licenceId, { includeInSupplementaryBilling: INCLUDE_IN_SUPPLEMENTARY_BILLING.yes });
 
+const getLabelForInvoiceWithoutInvoiceNumber = invoice => {
+  const { isDeMinimis, legacyId, netTotal } = invoice;
+
+  if (isDeMinimis) return 'De minimis bill';
+  if (legacyId) return 'NALD revised bill';
+  if (netTotal === 0) return 'Zero value bill';
+  // Prevents an error if there is an unexpected case
+  return null;
+};
+
+const mapInvoice = row => {
+  const invoice = invoiceMapper.dbToModel(row);
+  if (!invoice.invoiceNumber) {
+    invoice.invoiceNumber = getLabelForInvoiceWithoutInvoiceNumber(invoice);
+  }
+  return invoice;
+};
+
 /**
  * Retrieves the invoices associated with a licence
  * Used in the UI bills tab
@@ -144,8 +162,8 @@ const getLicenceInvoices = async (licenceId, page = 1, perPage = 10) => {
 
   const mappedInvoices = invoices.data.map(row => {
     const temp = invoiceLicenceMapper.dbToModel(row);
-    temp.invoice = invoiceMapper.dbToModel(row.billingInvoice);
-    temp.batch = batchMapper.dbToModel(row.billingInvoice.billingBatch);
+    temp.invoice = mapInvoice(row);
+    temp.batch = batchMapper.dbToModel(row);
 
     return temp;
   });

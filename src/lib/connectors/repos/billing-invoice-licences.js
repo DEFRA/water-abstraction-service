@@ -34,18 +34,8 @@ const findOne = async id => {
  * @return {Promise<Object>}
  */
 const findAll = async (licenceId, page = 1, perPage = 10) => {
-  const result = await BillingInvoiceLicence
-    .collection()
-    .where({
-      licence_id: licenceId
-    })
-    .orderBy('date_created', 'DESC')
-    .fetchPage({
-      pageSize: perPage,
-      page: page,
-      withRelated
-    });
-  return paginationHelper.paginatedEnvelope(result);
+  const results = await raw.multiRow(queries.findAllByLicenceIdForSentBatches, { licenceId });
+  return paginationHelper.paginateRawQueryResults(results, page, perPage);
 };
 
 /**

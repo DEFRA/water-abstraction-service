@@ -24,6 +24,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     sandbox.stub(raw, 'singleRow');
     sandbox.stub(raw, 'multiRow');
     sandbox.stub(paginationHelper, 'paginatedEnvelope');
+    sandbox.stub(paginationHelper, 'paginateRawQueryResults').resolves();
 
     model = {
       toJSON: sandbox.stub()
@@ -153,35 +154,21 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     const billingInvoiceLicenceId = uuid();
 
     beforeEach(async () => {
-      await paginationHelper.paginatedEnvelope.resolves({});
+      raw.multiRow.resolves([{ foo: 'bar' }]);
       await billingInvoiceLicences.findAll(billingInvoiceLicenceId, 1, 10);
     });
 
-    test('collection() is called on the model', () => {
-      expect(billingInvoiceLicence.collection.called).to.be.true();
+    test('calls raw.singleRow with correct arguments', async () => {
+      const [query, params] = raw.multiRow.lastCall.args;
+      expect(query).to.equal(queries.findAllByLicenceIdForSentBatches);
+      expect(params).to.equal({ licenceId: billingInvoiceLicenceId });
     });
 
-    test('where() is called to narrow down results to the relevant licence', () => {
-      expect(bookshelfStub.where.calledWith({
-        licence_id: billingInvoiceLicenceId
-      })).to.be.true();
-    });
-
-    test('calls orderBy to sort by date created descending', () => {
-      const [field, direction] = bookshelfStub.orderBy.lastCall.args;
-      expect(field).to.equal('date_created');
-      expect(direction).to.equal('DESC');
-    });
-
-    test('calls fetchPage() with the expected params', () => {
-      const [options] = bookshelfStub.fetchPage.lastCall.args;
-      expect(options.page).to.equal(1);
-      expect(options.pageSize).to.equal(10);
-      expect(options.withRelated).to.equal([
-        'billingInvoice',
-        'billingInvoice.billingBatch',
-        'billingInvoice.billingBatch.region'
-      ]);
+    test('calls pagination helper with results and pagination query params', () => {
+      const [results, page, perPage] = paginationHelper.paginateRawQueryResults.lastCall.args;
+      expect(results).to.equal([{ foo: 'bar' }]);
+      expect(page).to.equal(1);
+      expect(perPage).to.equal(10);
     });
   });
 
