@@ -134,9 +134,15 @@ const flagForSupplementaryBilling = licenceId =>
 const getLabelForInvoiceWithoutInvoiceNumber = invoice => {
   const { isDeMinimis, legacyId, netTotal } = invoice;
 
-  if (isDeMinimis) { return 'De minimis bill'; }
-  if (legacyId) { return 'NALD revised bill'; }
-  if (netTotal === 0) { return 'Zero value bill'; }
+  if (isDeMinimis) {
+    return 'De minimis bill';
+  }
+  if (legacyId) {
+    return 'NALD revised bill';
+  }
+  if (netTotal === 0) {
+    return 'Zero value bill';
+  }
   // Prevents an error being thrown if there is an unexpected case
   return null;
 };
