@@ -11,11 +11,9 @@ const returnRequirementPurposes = require('./lib/return-requirements-purposes');
 const permits = require('./lib/permits');
 const entities = require('./lib/entities');
 const transactions = require('./lib/billing-transactions');
-const invoicesLicences = require('./lib/billing-invoice-licences');
+const invoiceLicences = require('./lib/billing-invoice-licences');
 const invoices = require('./lib/billing-invoices');
 const batches = require('./lib/billing-batches');
-const chargeElements = require('./lib/charge-elements');
-const chargeVersions = require('./lib/charge-versions');
 const chargeVersionWorkflows = require('./lib/charge-version-workflows');
 const licenceVersions = require('./lib/licence-versions');
 const licences = require('./lib/licences');
@@ -25,6 +23,8 @@ const documents = require('./lib/documents');
 const events = require('./lib/events');
 const sessions = require('./lib/sessions');
 const purposes = require('./lib/purposes');
+const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
+
 const setLoader = require('../../../integration-tests/billing/services/loader');
 
 const {
@@ -317,15 +317,13 @@ const postTearDown = async () => {
   console.log('Tearing down acceptance test transactions');
   await transactions.delete();
   console.log('Tearing down acceptance test invoiceLicences');
-  await invoicesLicences.delete();
+  await invoiceLicences.delete();
   console.log('Tearing down acceptance test invoices');
   await invoices.delete();
   console.log('Tearing down acceptance test batches');
   await batches.delete();
-  console.log('Tearing down acceptance test charge elements');
-  await chargeElements.delete();
-  console.log('Tearing down acceptance test charge versions');
-  await chargeVersions.delete();
+  console.log('Tearing down acceptance test charge data');
+  await chargeTestDataTearDown.tearDown();
   console.log('Tearing down acceptance test licence versions');
   await licenceVersions.delete();
   console.log('Tearing down acceptance test licences');
