@@ -25,6 +25,7 @@ const sessions = require('./lib/sessions');
 const purposes = require('./lib/purposes');
 const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
 
+const regions = require('./lib/regions');
 const setLoader = require('../../../integration-tests/billing/services/loader');
 
 const {
@@ -328,6 +329,8 @@ const postTearDown = async () => {
   await licenceVersions.delete();
   console.log('Tearing down acceptance test licences');
   await licences.delete();
+  console.log('Tearing down acceptance test regions');
+  await regions.delete();
 
   return 'tear down complete';
 };

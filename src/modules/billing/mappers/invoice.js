@@ -20,9 +20,14 @@ const dbToModelMapper = createMapper()
     'isCredit',
     'isDeMinimis',
     'invoiceValue',
+<<<<<<< HEAD
     'creditNoteValue',
     'legacyId',
     'metadata'
+=======
+    'externalId',
+    'creditNoteValue'
+>>>>>>> develop
   )
   .map('netAmount').to('netTotal', netAmount => parseInt(netAmount))
   .map('billingInvoiceId').to('id')
@@ -50,6 +55,7 @@ const mapAddress = invoice =>
  * @return {Object}
  */
 const modelToDb = (batch, invoice) => ({
+  externalId: invoice.externalId || null,
   invoiceAccountId: invoice.invoiceAccount.id,
   invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
   address: mapAddress(invoice),

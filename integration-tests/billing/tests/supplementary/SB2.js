@@ -12,8 +12,9 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 
 const services = require('../../services');
-const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
-const transactionTests = require('../transaction-tests');
+
+// const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
+// const transactionTests = require('../transaction-tests');
 
 const { createSetLoader } = require('../../services/loader');
 
@@ -22,7 +23,7 @@ const { createSetLoader } = require('../../services/loader');
 experiment('supplementary ref: SB2', () => {
   let annualBatch;
   let supplementaryBatch;
-  let supplementaryChargeModuleTransactions;
+  // let supplementaryChargeModuleTransactions;
 
   before(async () => {
     await services.tearDown.tearDown();
@@ -50,7 +51,7 @@ experiment('supplementary ref: SB2', () => {
 
     // Run supplementary batch
     supplementaryBatch = await services.scenarios.runScenario(region.regionId, 'supplementary');
-    supplementaryChargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(supplementaryBatch);
+    // supplementaryChargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(supplementaryBatch);
   });
 
   experiment('has expected batch details', () => {
@@ -76,6 +77,31 @@ experiment('supplementary ref: SB2', () => {
       expect(supplementaryBatch.errorCode).to.equal(null);
     });
   });
+
+  /*
+   experiment('transactions', () => {
+    test('the batch and charge module have the same number of transactions', async () => {
+      transactionTests.assertNumberOfTransactions(
+        supplementaryBatch,
+        supplementaryChargeModuleTransactions
+      );
+    });
+
+    test('the batch and charge module contain the same transactions', async () => {
+      transactionTests.assertTransactionsAreInEachSet(
+        supplementaryBatch,
+        supplementaryChargeModuleTransactions
+      );
+    });
+
+    test('the charge module transaction contain the expected data', async () => {
+      transactionTests.assertBatchTransactionDataExistsInChargeModule(
+        supplementaryBatch,
+        supplementaryChargeModuleTransactions
+      );
+    });
+  });
+   */
 
   experiment('has expected invoice details', () => {
     test('1 invoice is generated', async () => {
@@ -315,29 +341,6 @@ experiment('supplementary ref: SB2', () => {
           });
         });
       });
-    });
-  });
-
-  experiment('transactions', () => {
-    test('the batch and charge module have the same number of transactions', async () => {
-      transactionTests.assertNumberOfTransactions(
-        supplementaryBatch,
-        supplementaryChargeModuleTransactions
-      );
-    });
-
-    test('the batch and charge module contain the same transactions', async () => {
-      transactionTests.assertTransactionsAreInEachSet(
-        supplementaryBatch,
-        supplementaryChargeModuleTransactions
-      );
-    });
-
-    test('the charge module transaction contain the expected data', async () => {
-      transactionTests.assertBatchTransactionDataExistsInChargeModule(
-        supplementaryBatch,
-        supplementaryChargeModuleTransactions
-      );
     });
   });
 
