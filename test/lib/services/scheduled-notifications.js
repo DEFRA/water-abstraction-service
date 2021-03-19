@@ -8,6 +8,8 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
+const uuid = require('uuid/v4');
+
 const sandbox = require('sinon').createSandbox();
 
 const service = require('../../../src/lib/services/service');
@@ -20,6 +22,7 @@ experiment('src/lib/services/scheduled-notifications', () => {
   beforeEach(async () => {
     sandbox.stub(service, 'findOne');
     sandbox.stub(repo, 'create');
+    sandbox.stub(repo, 'findByEventId');
   });
 
   afterEach(async () => {
@@ -63,6 +66,27 @@ experiment('src/lib/services/scheduled-notifications', () => {
     test('returns a model object with the updated id', async () => {
       expect(result).to.be.instanceOf(ScheduledNofication);
       expect(result.id).to.equal('11111111-2222-3333-4444-555555555555');
+    });
+  });
+
+  experiment('.getByEventId', () => {
+    const eventId = uuid();
+    let result;
+
+    beforeEach(async () => {
+      repo.findByEventId.resolves([{
+        eventId
+      }]);
+      result = await scheduledNotificationsService.getByEventId(eventId);
+    });
+
+    test('calls the repo .findByEventId method', async () => {
+      expect(repo.findByEventId.calledWith(eventId)).to.be.true();
+    });
+
+    test('resolves with an array of ScheduledNotification models', async () => {
+      expect(result).to.be.an.array().length(1);
+      expect(result.every(item => item instanceof ScheduledNofication)).to.be.true();
     });
   });
 });

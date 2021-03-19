@@ -24,7 +24,8 @@ class Pagination extends Model {
 
   set totalRows (totalRows) {
     validators.assertPositiveOrZeroInteger(totalRows);
-    this._totalRows = totalRows;
+    this._totalRows = parseInt(totalRows);
+    this._pageCount = Math.ceil(this._totalRows / this._perPage);
   }
 
   get totalRows () {

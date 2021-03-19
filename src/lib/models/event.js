@@ -4,6 +4,10 @@ const Model = require('./model');
 
 const validators = require('./validators');
 
+const eventTypes = {
+  notification: 'notification'
+};
+
 class Event extends Model {
   constructor (id) {
     super(id);
@@ -197,3 +201,4 @@ class Event extends Model {
 }
 
 module.exports = Event;
+module.exports.eventTypes = eventTypes;
