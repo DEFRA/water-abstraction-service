@@ -13,7 +13,7 @@ const sandbox = require('sinon').createSandbox();
 const addressService = require('../../../src/modules/address-search/services/address-service');
 const plugin = require('../../../src/modules/address-search/plugin');
 
-experiment('modules/address-search/plugin/js', () => {
+experiment('modules/address-search/plugin.js', () => {
   let server;
 
   beforeEach(async () => {
@@ -38,8 +38,8 @@ experiment('modules/address-search/plugin/js', () => {
     plugin.register(server);
     const [name, func, options] = server.method.lastCall.args;
 
-    expect(name).to.equal('getAddresses');
-    expect(func).to.equal(addressService.getAddresses);
+    expect(name).to.equal('getAddressesByPostcode');
+    expect(func).to.equal(addressService.getAddressesByPostcode);
     expect(options).to.equal({
       cache: {
         expiresIn: 24 * 60 * 60 * 1000,
