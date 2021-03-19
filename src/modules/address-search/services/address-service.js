@@ -11,8 +11,8 @@ const addressMapper = require('../../../lib/mappers/address');
  * @param {String} query
  * @return {Promise<Array>}
  */
-const getAddresses = async query => {
-  const data = await eaAddressFacadeApi.matchAddresses(query);
+const getAddressesByPostcode = async postcode => {
+  const data = await eaAddressFacadeApi.getAddressesByPostcode(postcode);
 
   const addresses = data.results.map(addressMapper.eaAddressFacadeToModel);
 
@@ -21,4 +21,4 @@ const getAddresses = async query => {
   };
 };
 
-exports.getAddresses = getAddresses;
+exports.getAddressesByPostcode = getAddressesByPostcode;

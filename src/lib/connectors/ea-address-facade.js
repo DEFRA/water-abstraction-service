@@ -6,10 +6,10 @@ const { set } = require('lodash');
 const urlJoin = require('url-join');
 
 /**
- * Get an options object for use with request-promise
- * decorated with the auth header
+ * Makes a request to the EA address facade
+ *
  * @param {Object} options
- * @return {import('lodash').Object}
+ * @return {Promise<Object>} response payload
  */
 const eaAddressFacadeRequest = (tail, options = {}) => {
   const requestOptions = {
@@ -23,18 +23,17 @@ const eaAddressFacadeRequest = (tail, options = {}) => {
 };
 
 /**
- * Search companies house companies with the supplied query string
- * @param {String} q - search query string
- * @param {Number} startIndex - the index of the item to return from in the result set
- * @param {Number} perPage - the number of results to retrieve per page
- * @return {Promise}
+ * Search OS places for addresses with the given postcode
+ *
+ * @param {Strign} postcode - valid UK postcode
+ * @return {Promise<Object>} response payload
  */
-const matchAddresses = q => {
-  return eaAddressFacadeRequest('/address-service/v1/addresses/match', {
+const getAddressesByPostcode = postcode => {
+  return eaAddressFacadeRequest('/address-service/v1/addresses/postcode', {
     qs: {
-      'query-string': q
+      'query-string': postcode
     }
   });
 };
 
-exports.matchAddresses = matchAddresses;
+exports.getAddressesByPostcode = getAddressesByPostcode;

@@ -25,11 +25,11 @@ experiment('lib/connectors/ea-address-facade-api', () => {
     sandbox.restore();
   });
 
-  experiment('.matchAddresses', () => {
+  experiment('.getAddressesByPostcode', () => {
     let result;
 
     beforeEach(async () => {
-      result = await eaAddressFacadeApi.matchAddresses('TT1 1TT');
+      result = await eaAddressFacadeApi.getAddressesByPostcode('TT1 1TT');
     });
 
     test('is a GET call', async () => {
@@ -39,7 +39,7 @@ experiment('lib/connectors/ea-address-facade-api', () => {
 
     test('calls the correct endpoint', async () => {
       const [{ uri }] = http.request.lastCall.args;
-      expect(uri).to.equal('http://test-host/address-service/v1/addresses/match');
+      expect(uri).to.equal('http://test-host/address-service/v1/addresses/postcode');
     });
 
     test('sets the correct query params', async () => {

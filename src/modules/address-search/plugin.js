@@ -17,6 +17,6 @@ const config = {
 module.exports = {
   name: 'addressSearchPlugin',
   register: async server => {
-    server.method('getAddresses', addressService.getAddresses, config);
+    server.method('getAddressesByPostcode', addressService.getAddressesByPostcode, config);
   }
 };
