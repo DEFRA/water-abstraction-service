@@ -3,7 +3,7 @@ ALTER TABLE water.billing_transactions
     DROP COLUMN calc_season_factor,
     DROP COLUMN calc_loss_factor,
     DROP COLUMN calc_suc_factor,
-    DROP COLUMN calc_s126_factor,
-    DROP COLUMN calc_s127_factor,
+    DROP COLUMN calc_s_126_factor,
+    DROP COLUMN calc_s_127_factor,
     DROP COLUMN calc_eiuc_factor,
     DROP COLUMN calc_eiuc_source_factor;

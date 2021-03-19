@@ -96,7 +96,15 @@ const mapTransaction = (invoice, transactionMap, cmTransaction) => {
       .get(cmTransaction.id)
       .fromHash({
         isDeMinimis: cmTransaction.isDeminimis,
-        value: cmTransaction.chargeValue
+        value: cmTransaction.chargeValue,
+        calcSourceFactor: cmTransaction.calculation.WRLSChargingResponse.sourceFactor,
+        calcSeasonFactor: cmTransaction.calculation.WRLSChargingResponse.seasonFactor,
+        calcLossFactor: cmTransaction.calculation.WRLSChargingResponse.lossFactor,
+        calcSucFactor: cmTransaction.calculation.WRLSChargingResponse.sucFactor,
+        calcS126Factor: cmTransaction.calculation.WRLSChargingResponse.abatementAdjustment,
+        calcS127Factor: cmTransaction.calculation.WRLSChargingResponse.s127Agreement,
+        calcEiucFactor: cmTransaction.calculation.WRLSChargingResponse.eiucFactor,
+        calcEiucSourceFactor: cmTransaction.calculation.WRLSChargingResponse.eiucSourceFactor
       });
   } else {
     // Create a new min charge model and add to heirarchy

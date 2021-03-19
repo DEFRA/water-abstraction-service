@@ -310,7 +310,7 @@ class Transaction extends Model {
   }
 
   set calcSourceFactor (calcSourceFactor) {
-    validators.assertFactor(calcSourceFactor);
+    validators.assertNumeric(calcSourceFactor);
     this._calcSourceFactor = calcSourceFactor;
   }
 
@@ -319,7 +319,7 @@ class Transaction extends Model {
   }
 
   set calcSeasonFactor (calcSeasonFactor) {
-    validators.assertFactor(calcSeasonFactor);
+    validators.assertNumeric(calcSeasonFactor);
     this._calcSeasonFactor = calcSeasonFactor;
   }
 
@@ -328,7 +328,7 @@ class Transaction extends Model {
   }
 
   set calcLossFactor (calcLossFactor) {
-    validators.assertFactor(calcLossFactor);
+    validators.assertNumeric(calcLossFactor);
     this._calcLossFactor = calcLossFactor;
   }
 
@@ -337,7 +337,7 @@ class Transaction extends Model {
   }
 
   set calcSucFactor (calcSucFactor) {
-    validators.assertFactor(calcSucFactor);
+    validators.assertNumeric(calcSucFactor);
     this._calcSucFactor = calcSucFactor;
   }
 
@@ -346,16 +346,16 @@ class Transaction extends Model {
   }
 
   set calcS126Factor (calcS126Factor) {
-    validators.assertFactor(calcS126Factor);
+    validators.assertFactorWithPrefix(calcS126Factor);
     this._calcS126Factor = calcS126Factor;
   }
 
-  get calcS126Factor () {
+  get calcs126Factor () {
     return this._calcS126Factor;
   }
 
   set calcS127Factor (calcS127Factor) {
-    validators.assertFactor(calcS127Factor);
+    validators.assertFactorWithPrefix(calcS127Factor);
     this._calcS127Factor = calcS127Factor;
   }
 
@@ -364,7 +364,7 @@ class Transaction extends Model {
   }
 
   set calcEiucFactor (calcEiucFactor) {
-    validators.assertFactor(calcEiucFactor);
+    validators.assertNumeric(calcEiucFactor);
     this._calcEiucFactor = calcEiucFactor;
   }
 
@@ -373,7 +373,7 @@ class Transaction extends Model {
   }
 
   set calcEiucSourceFactor (calcEiucSourceFactor) {
-    validators.assertFactor(calcEiucSourceFactor);
+    validators.assertNumeric(calcEiucSourceFactor);
     this._calcEiucSourceFactor = calcEiucSourceFactor;
   }
 
