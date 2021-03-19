@@ -2,7 +2,6 @@
 
 const returnCyclesService = require('../../../lib/services/return-cycles');
 const mapErrorResponse = require('../../../lib/map-error-response');
-const requestPromise = require('request-promise-native');
 
 /**
  * Get a report of return cycles

@@ -6,9 +6,10 @@ const DateRange = require('../models/date-range');
 const User = require('../models/user');
 
 const mapCycleReport = returnCycle => {
-  const { returnCycleId, ...rest } = returnCycle;
+  const { returnCycleId, startDate, endDate, ...rest } = returnCycle;
   return {
     id: returnCycleId,
+    dateRange: new DateRange(startDate, endDate),
     ...rest
   };
 };
