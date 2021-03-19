@@ -8,7 +8,7 @@ const mapErrorResponse = require('../../../lib/map-error-response');
  * @param {*} request
  * @returns
  */
-const getReturnCyclesReport = async request => {
+const getReturnCyclesReport = async () => {
   const data = await returnCyclesService.getReturnCycleReport();
   return { data };
 };
@@ -21,10 +21,11 @@ const getReturnCycle = async request => request.pre.returnCycle;
 /**
  * Get the specified return cycle model by ID
  */
-const getReturnCycleReturns = async (request, h) => {
+const getReturnCycleReturns = async request => {
   const { returnCycleId } = request.params;
   try {
-    return await returnCyclesService.getReturnCycleReturns(returnCycleId);
+    const data = await returnCyclesService.getReturnCycleReturns(returnCycleId);
+    return { data };
   } catch (err) {
     return mapErrorResponse(err);
   }

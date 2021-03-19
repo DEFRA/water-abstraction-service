@@ -58,9 +58,7 @@ const mapCycleReturn = row => {
  */
 const getReturnCycleReturns = async returnCycleId => {
   const { data } = await returnsConnector.getReturnCycleReturns(returnCycleId);
-  return {
-    data: data.map(mapCycleReturn)
-  };
+  return data.map(mapCycleReturn);
 };
 
 exports.getReturnCycleReport = getReturnCycleReport;
