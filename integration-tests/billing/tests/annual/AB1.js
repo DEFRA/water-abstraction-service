@@ -13,14 +13,11 @@ const {
 const { omit } = require('lodash');
 
 const services = require('../../services');
-const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
-const transactionTests = require('../transaction-tests');
 
 const { createSetLoader } = require('../../services/loader');
 
 experiment('basic example scenario', () => {
   let batch;
-  let chargeModuleTransactions;
 
   before(async () => {
     await services.tearDown.tearDown();
@@ -32,8 +29,6 @@ experiment('basic example scenario', () => {
     const region = loader.getRef('$region');
 
     batch = await services.scenarios.runScenario(region.regionId, 'annual');
-
-    chargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(batch);
   });
 
   experiment('has expected batch details', () => {
@@ -166,20 +161,6 @@ experiment('basic example scenario', () => {
           });
         });
       });
-    });
-  });
-
-  experiment('transactions', () => {
-    test('the batch and charge module have the same number of transactions', async () => {
-      transactionTests.assertNumberOfTransactions(batch, chargeModuleTransactions);
-    });
-
-    test('the batch and charge module contain the same transactions', async () => {
-      transactionTests.assertTransactionsAreInEachSet(batch, chargeModuleTransactions);
-    });
-
-    test('the charge module transaction contain the expected data', async () => {
-      transactionTests.assertBatchTransactionDataExistsInChargeModule(batch, chargeModuleTransactions);
     });
   });
 

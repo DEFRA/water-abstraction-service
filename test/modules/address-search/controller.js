@@ -26,7 +26,7 @@ experiment('modules/application-state/controller', () => {
         query: { q: 'TT1 1TT' },
         server: {
           methods: {
-            getAddresses: sandbox.stub().resolves({
+            getAddressesByPostcode: sandbox.stub().resolves({
               data: [
                 new Address()
               ]
@@ -38,7 +38,7 @@ experiment('modules/application-state/controller', () => {
     });
 
     test('fetches the data via the server method', async () => {
-      expect(request.server.methods.getAddresses.calledWith('TT1 1TT')).to.be.true();
+      expect(request.server.methods.getAddressesByPostcode.calledWith('TT1 1TT')).to.be.true();
     });
 
     test('returns the data', async () => {

@@ -6,7 +6,7 @@
  */
 const getAddressSearch = async (request, h) => {
   const { q } = request.query;
-  return request.server.methods.getAddresses(q);
+  return request.server.methods.getAddressesByPostcode(q);
 };
 
 exports.getAddressSearch = getAddressSearch;
