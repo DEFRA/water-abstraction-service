@@ -145,8 +145,8 @@ const modelToDbMapper = createMapper()
   .map('agreements').to('section127Agreement', isSection127Agreement)
   .map('agreements').to('section126Factor', getSection126Factor)
   .map('agreements').to('section130Agreement', getSection130Agreement)
-  .map('calcS126Factor').to('calcS126Factor', (value) => value ? value.split(' x ')[1] || null : null)
-  .map('calcS127Factor').to('calcS127Factor', (value) => value ? value.split(' x ')[1] || null : null)
+  .map('calcS126Factor').to('calcS126Factor', value => value ? value.split(' x ')[1] || null : null)
+  .map('calcS127Factor').to('calcS127Factor', value => value ? value.split(' x ')[1] || null : null)
   .map('value').to('netAmount');
 
 /**
