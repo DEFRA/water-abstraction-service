@@ -5,6 +5,7 @@
  * to the local WRLS DB
  */
 const { get, difference } = require('lodash');
+const Bluebird = require('bluebird');
 const errors = require('../../../lib/errors');
 
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
@@ -29,7 +30,6 @@ const transactionService = require('./transactions-service');
 const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
   try {
     const { invoice } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, invoiceId);
-
     return invoice.licences.map(lic => lic.transactions.map(transaction => {
       return {
         ...transaction,
@@ -185,7 +185,8 @@ const updateInvoices = async (batch, cmResponse) => {
   // Get existing invoices in DB and map
   const invoiceMap = await getInvoiceMap(invoices);
 
-  cmInvoiceMap.map(async invoice => {
+  // Iterate through invoices in series, to avoid overwhelming CM with too many simultaneous requests
+  Bluebird.mapSeries(cmInvoiceMap, async invoice => {
     const cmTransactions = await getAllCmTransactionsForInvoice(
       batch.externalId,
       invoice.id
