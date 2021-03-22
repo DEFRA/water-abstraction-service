@@ -25,7 +25,9 @@ const BATCH_STATUS = {
   empty: 'empty',
   pending: 'pending',
   billed: 'billed',
-  billing_not_required: 'billing_not_required'
+  billing_not_required: 'billing_not_required',
+
+  generating: 'generating' // generating transactions -- same as what 'processing' was in CMv1
 };
 
 const BATCH_ERROR_CODE = {
