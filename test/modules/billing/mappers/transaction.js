@@ -57,7 +57,15 @@ const createTransaction = (options = {}) => {
     description: 'Tiny pond',
     volume: 5.64,
     isTwoPartTariffSupplementary: !!options.isTwoPartTariffSupplementary,
-    isNewLicence: !!options.isNewLicence
+    isNewLicence: !!options.isNewLicence,
+    calcSourceFactor: 1,
+    calcSeasonFactor: 1,
+    calcSucFactor: 1,
+    calcLossFactor: 1,
+    calcS126Factor: null,
+    calcS127Factor: null,
+    calcEiucFactor: 1,
+    calcEiucSourceFactor: 1
   });
   return transaction;
 };
@@ -176,7 +184,14 @@ experiment('modules/billing/mappers/transaction', () => {
           section127Agreement: false,
           section130Agreement: null,
           isTwoPartTariffSupplementary: false,
-          isNewLicence: false
+          isNewLicence: false,
+          calcSourceFactor: 1,
+          calcSeasonFactor: 1,
+          calcSucFactor: 1,
+          calcLossFactor: 1,
+          calcS127Factor: null,
+          calcEiucFactor: 1,
+          calcEiucSourceFactor: 1
         });
       });
     });
@@ -452,7 +467,19 @@ experiment('modules/billing/mappers/transaction', () => {
             licenceNumber: '01/123/ABC',
             region: 'A',
             areaCode: 'ARCA',
-            newLicence: false
+            newLicence: false,
+            calculation: {
+              WRLSChargingResponse: {
+                abatementAdjustment: null,
+                eiucFactor: 1,
+                eiucSourceFactor: 1,
+                lossFactor: 1,
+                s127Agreement: null,
+                seasonFactor: 1,
+                sourceFactor: 1,
+                sucFactor: 1
+              }
+            }
           });
         });
 
