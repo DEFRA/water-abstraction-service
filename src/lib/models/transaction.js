@@ -350,7 +350,7 @@ class Transaction extends Model {
     this._calcS126Factor = calcS126Factor;
   }
 
-  get calcs126Factor () {
+  get calcS126Factor () {
     return this._calcS126Factor;
   }
 

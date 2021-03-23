@@ -56,6 +56,16 @@ const getTestDataForHashing = () => {
   transaction.isNewLicence = false;
   transaction.isDeMinimis = false;
 
+  transaction.calcSourceFactor = 0.5;
+  transaction.calcSeasonFactor = 0.5;
+
+  transaction.calcLossFactor = 0.5;
+  transaction.calcSucFactor = 0.5;
+  transaction.calcS126Factor = 'S126 x 0.5';
+  transaction.calcS127Factor = 'S127 x 0.5';
+  transaction.calcEiucFactor = 0.5;
+  transaction.calcEiucSourceFactor = 0.5;
+
   transaction.agreements = [
     new Agreement().fromHash({ code: 'S130T' }),
     new Agreement().fromHash({ code: 'S127' }),
