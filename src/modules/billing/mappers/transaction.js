@@ -248,19 +248,7 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     batchNumber: batch.id,
     ...mapChargeElementToChargeModuleTransaction(transaction.chargeElement),
     ...mapLicenceToChargeElementTransaction(invoiceLicence.licence),
-    newLicence: transaction.isNewLicence,
-    calculation: {
-      WRLSChargingResponse: {
-        sourceFactor: transaction.calcSourceFactor,
-        seasonFactor: transaction.calcSeasonFactor,
-        lossFactor: transaction.calcLossFactor,
-        sucFactor: transaction.calcSucFactor,
-        abatementAdjustment: transaction.calcS126Factor ? `S127 x ${transaction.calcS126Factor}` : null,
-        s127Agreement: transaction.calcS127Factor ? `S127 x ${transaction.calcS127Factor}` : null,
-        eiucFactor: transaction.calcEiucFactor,
-        eiucSourceFactor: transaction.calcEiucSourceFactor
-      }
-    }
+    newLicence: transaction.isNewLicence
   };
 };
 
