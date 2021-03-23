@@ -310,7 +310,7 @@ class Transaction extends Model {
   }
 
   set calcSourceFactor (calcSourceFactor) {
-    validators.assertNumeric(calcSourceFactor);
+    validators.assertNullableNumeric(calcSourceFactor);
     this._calcSourceFactor = calcSourceFactor;
   }
 
@@ -319,7 +319,7 @@ class Transaction extends Model {
   }
 
   set calcSeasonFactor (calcSeasonFactor) {
-    validators.assertNumeric(calcSeasonFactor);
+    validators.assertNullableNumeric(calcSeasonFactor);
     this._calcSeasonFactor = calcSeasonFactor;
   }
 
@@ -328,7 +328,7 @@ class Transaction extends Model {
   }
 
   set calcLossFactor (calcLossFactor) {
-    validators.assertNumeric(calcLossFactor);
+    validators.assertNullableNumeric(calcLossFactor);
     this._calcLossFactor = calcLossFactor;
   }
 
@@ -337,7 +337,7 @@ class Transaction extends Model {
   }
 
   set calcSucFactor (calcSucFactor) {
-    validators.assertNumeric(calcSucFactor);
+    validators.assertNullableNumeric(calcSucFactor);
     this._calcSucFactor = calcSucFactor;
   }
 
@@ -346,7 +346,7 @@ class Transaction extends Model {
   }
 
   set calcS126Factor (calcS126Factor) {
-    validators.assertFactorWithPrefix(calcS126Factor);
+    validators.assertNullableFactorWithPrefix(calcS126Factor);
     this._calcS126Factor = calcS126Factor;
   }
 
@@ -355,7 +355,7 @@ class Transaction extends Model {
   }
 
   set calcS127Factor (calcS127Factor) {
-    validators.assertFactorWithPrefix(calcS127Factor);
+    validators.assertNullableFactorWithPrefix(calcS127Factor);
     this._calcS127Factor = calcS127Factor;
   }
 
@@ -364,7 +364,7 @@ class Transaction extends Model {
   }
 
   set calcEiucFactor (calcEiucFactor) {
-    validators.assertNumeric(calcEiucFactor);
+    validators.assertNullableNumeric(calcEiucFactor);
     this._calcEiucFactor = calcEiucFactor;
   }
 
@@ -373,7 +373,7 @@ class Transaction extends Model {
   }
 
   set calcEiucSourceFactor (calcEiucSourceFactor) {
-    validators.assertNumeric(calcEiucSourceFactor);
+    validators.assertNullableNumeric(calcEiucSourceFactor);
     this._calcEiucSourceFactor = calcEiucSourceFactor;
   }
 
