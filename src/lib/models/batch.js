@@ -23,11 +23,7 @@ const BATCH_STATUS = {
   // if there are no charge versions, or all billing has already happened
   // in earlier run, or all customers have been removed from the batch
   empty: 'empty',
-  pending: 'pending',
-  billed: 'billed',
-  billing_not_required: 'billing_not_required',
-
-  generating: 'generating' // generating transactions -- same as what 'processing' was in CMv1
+  generating: 'generating'
 };
 
 const BATCH_ERROR_CODE = {
