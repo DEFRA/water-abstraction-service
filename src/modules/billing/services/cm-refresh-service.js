@@ -92,16 +92,7 @@ const getTransactionMap = invoice => {
 const mapTransaction = (invoice, transactionMap, cmTransaction) => {
   // Update existing transaction
   if (transactionMap.has(cmTransaction.id)) {
-    const {
-      sourceFactor,
-      seasonFactor,
-      lossFactor,
-      sucFactor,
-      abatementAdjustment,
-      s127Agreement,
-      eiucFactor,
-      eiucSourceFactor
-    } = cmTransaction.calculation.WRLSChargingResponse;
+    const { sourceFactor, seasonFactor, lossFactor, sucFactor, abatementAdjustment, s127Agreement, eiucFactor, eiucSourceFactor } = cmTransaction.calculation.WRLSChargingResponse;
 
     return transactionMap
       .get(cmTransaction.id)
