@@ -22,9 +22,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
   beforeEach(async () => {
     sandbox.stub(bookshelf.knex, 'raw');
     sandbox.stub(raw, 'singleRow');
-    sandbox.stub(raw, 'multiRow');
     sandbox.stub(paginationHelper, 'paginatedEnvelope');
-    sandbox.stub(paginationHelper, 'paginateRawQueryResults').resolves();
 
     model = {
       toJSON: sandbox.stub()
@@ -35,6 +33,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       orderBy: sandbox.stub().returnsThis(),
       fetch: sandbox.stub().resolves(model),
       fetchPage: sandbox.stub().resolves(model),
+      query: sandbox.stub().returnsThis(),
       destroy: sandbox.stub()
     };
     sandbox.stub(billingInvoiceLicence, 'forge').returns(bookshelfStub);
@@ -89,7 +88,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       const { args } = billingInvoiceLicence.forge.lastCall;
       expect(args[0]).to.equal({ billingInvoiceLicenceId: '00000000-0000-0000-0000-000000000000' });
     });
-    test('calls forge().fetch with correct argumements', async () => {
+    test('calls forge().fetch with correct arguments', async () => {
       const { args } = billingInvoiceLicence.forge().fetch.lastCall;
       expect(args[0].withRelated[0]).to.equal('licence');
       expect(args[0].withRelated[1]).to.equal('licence.region');
@@ -154,21 +153,27 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     const billingInvoiceLicenceId = uuid();
 
     beforeEach(async () => {
-      raw.multiRow.resolves([{ foo: 'bar' }]);
       await billingInvoiceLicences.findAll(billingInvoiceLicenceId, 1, 10);
     });
 
-    test('calls raw.singleRow with correct arguments', async () => {
-      const [query, params] = raw.multiRow.lastCall.args;
-      expect(query).to.equal(queries.findAllByLicenceIdForSentBatches);
-      expect(params).to.equal({ licenceId: billingInvoiceLicenceId });
+    test('the model is forged', async () => {
+      expect(billingInvoiceLicence.forge.called).to.be.true();
     });
 
-    test('calls pagination helper with results and pagination query params', () => {
-      const [results, page, perPage] = paginationHelper.paginateRawQueryResults.lastCall.args;
-      expect(results).to.equal([{ foo: 'bar' }]);
+    test('calls query with a function', async () => {
+      const [func] = billingInvoiceLicence.forge().query.lastCall.args;
+      expect(func).to.be.a.function();
+    });
+
+    test('calls forge().fetchPage with correct arguments', async () => {
+      const [{ pageSize, page, withRelated }] = billingInvoiceLicence.forge().fetchPage.lastCall.args;
+      expect(pageSize).to.equal(10);
       expect(page).to.equal(1);
-      expect(perPage).to.equal(10);
+      expect(withRelated).to.equal([
+        'billingInvoice',
+        'billingInvoice.billingBatch',
+        'billingInvoice.billingBatch.region'
+      ]);
     });
   });
 

@@ -34,8 +34,21 @@ const findOne = async id => {
  * @return {Promise<Object>}
  */
 const findAll = async (licenceId, page = 1, perPage = 10) => {
-  const results = await raw.multiRow(queries.findAllByLicenceIdForSentBatches, { licenceId });
-  return paginationHelper.paginateRawQueryResults(results, page, perPage);
+  const result = await BillingInvoiceLicence
+    .forge()
+    .query(function (qb) {
+      qb.join('water.billing_invoices', 'water.billing_invoices.billing_invoice_id', '=', 'water.billing_invoice_licences.billing_invoice_id');
+      qb.join('water.billing_batches', 'water.billing_invoices.billing_batch_id', '=', 'water.billing_batches.billing_batch_id');
+      qb.where({ licence_id: licenceId, 'water.billing_batches.status': 'sent' });
+      qb.orderBy('date_created', 'DESC', 'water.billing_invoices.financial_year_ending', 'DESC');
+    })
+    .fetchPage({
+      pageSize: perPage,
+      page: page,
+      withRelated
+    });
+
+  return paginationHelper.paginatedEnvelope(result);
 };
 
 /**
