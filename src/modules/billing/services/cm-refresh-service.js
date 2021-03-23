@@ -92,19 +92,30 @@ const getTransactionMap = invoice => {
 const mapTransaction = (invoice, transactionMap, cmTransaction) => {
   // Update existing transaction
   if (transactionMap.has(cmTransaction.id)) {
+    const {
+      sourceFactor,
+      seasonFactor,
+      lossFactor,
+      sucFactor,
+      abatementAdjustment,
+      s127Agreement,
+      eiucFactor,
+      eiucSourceFactor
+    } = cmTransaction.calculation.WRLSChargingResponse;
+
     return transactionMap
       .get(cmTransaction.id)
       .fromHash({
         isDeMinimis: cmTransaction.isDeminimis,
         value: cmTransaction.chargeValue,
-        calcSourceFactor: cmTransaction.calculation.WRLSChargingResponse.sourceFactor,
-        calcSeasonFactor: cmTransaction.calculation.WRLSChargingResponse.seasonFactor,
-        calcLossFactor: cmTransaction.calculation.WRLSChargingResponse.lossFactor,
-        calcSucFactor: cmTransaction.calculation.WRLSChargingResponse.sucFactor,
-        calcS126Factor: cmTransaction.calculation.WRLSChargingResponse.abatementAdjustment,
-        calcS127Factor: cmTransaction.calculation.WRLSChargingResponse.s127Agreement,
-        calcEiucFactor: cmTransaction.calculation.WRLSChargingResponse.eiucFactor,
-        calcEiucSourceFactor: cmTransaction.calculation.WRLSChargingResponse.eiucSourceFactor
+        calcSourceFactor: sourceFactor,
+        calcSeasonFactor: seasonFactor,
+        calcLossFactor: lossFactor,
+        calcSucFactor: sucFactor,
+        calcS126Factor: abatementAdjustment,
+        calcS127Factor: s127Agreement,
+        calcEiucFactor: eiucFactor,
+        calcEiucSourceFactor: eiucSourceFactor
       });
   } else {
     // Create a new min charge model and add to heirarchy
