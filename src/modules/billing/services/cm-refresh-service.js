@@ -145,13 +145,12 @@ const deleteTransactions = (cmTransactions, transactionMap) => {
  */
 const updateInvoice = async (batch, invoice, cmInvoiceSummary, cmTransactions) => {
   // Populate invoice model with updated CM data
-
   invoice.fromHash({
     isDeMinimis: cmInvoiceSummary.deminimisInvoice,
     invoiceNumber: cmTransactions[0].transactionReference,
     netTotal: cmInvoiceSummary.netTotal,
-    invoiceValue: cmInvoiceSummary.netTotal >= 0 ? cmInvoiceSummary.netTotal : null,
-    creditNoteValue: cmInvoiceSummary.netTotal < 0 ? cmInvoiceSummary.netTotal : null,
+    invoiceValue: cmInvoiceSummary.debitLineValue,
+    creditNoteValue: -cmInvoiceSummary.creditLineValue,
     externalId: cmInvoiceSummary.id
   });
 
