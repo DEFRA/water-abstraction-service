@@ -286,10 +286,28 @@ class Invoice extends Totals {
     this._externalId = externalId;
   }
 
+  get displayLabel () {
+    if (this.invoiceNumber) {
+      return this.invoiceNumber;
+    }
+    if (this.isDeMinimis) {
+      return 'De minimis bill';
+    }
+    if (this.legacyId) {
+      return 'NALD revised bill';
+    }
+    if (this.netTotal === 0) {
+      return 'Zero value bill';
+    }
+    // Prevents an error being thrown if there is an unexpected case
+    return null;
+  }
+
   toJSON () {
-    const { hasTransactionErrors } = this;
+    const { hasTransactionErrors, displayLabel } = this;
     return {
       hasTransactionErrors,
+      displayLabel,
       ...super.toJSON()
     };
   }
