@@ -22,8 +22,7 @@ const BATCH_STATUS = {
   error: 'error',
   // if there are no charge versions, or all billing has already happened
   // in earlier run, or all customers have been removed from the batch
-  empty: 'empty',
-  generating: 'generating'
+  empty: 'empty'
 };
 
 const BATCH_ERROR_CODE = {
