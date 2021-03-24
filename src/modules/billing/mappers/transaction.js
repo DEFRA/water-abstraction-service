@@ -124,7 +124,13 @@ const modelToDbMapper = createMapper()
     'volume',
     'isTwoPartTariffSupplementary',
     'isNewLicence',
-    'externalId'
+    'externalId',
+    'calcSourceFactor',
+    'calcSeasonFactor',
+    'calcLossFactor',
+    'calcSucFactor',
+    'calcEiucFactor',
+    'calcEiucSourceFactor'
   )
   .map('chargeElement.id').to('chargeElementId')
   .map('chargePeriod.startDate').to('startDate')
@@ -139,6 +145,8 @@ const modelToDbMapper = createMapper()
   .map('agreements').to('section127Agreement', isSection127Agreement)
   .map('agreements').to('section126Factor', getSection126Factor)
   .map('agreements').to('section130Agreement', getSection130Agreement)
+  .map('calcS126Factor').to('calcS126Factor', value => value ? value.split(' x ')[1] || null : null)
+  .map('calcS127Factor').to('calcS127Factor', value => value ? value.split(' x ')[1] || null : null)
   .map('value').to('netAmount');
 
 /**
@@ -267,7 +275,15 @@ const cmToModelMapper = createMapper()
   .map('deminimis').to('isDeMinimis')
   .map('newLicence').to('isNewLicence')
   .map('twoPartTariff').to('isTwoPartTariffSupplementary', mapIsTwoPartTariffSupplementary)
-  .map('transactionStatus').to('status', mapCMTransactionStatus);
+  .map('transactionStatus').to('status', mapCMTransactionStatus)
+  .map('calculation.WRLSChargingResponse.sourceFactor').to('calcSourceFactor')
+  .map('calculation.WRLSChargingResponse.seasonFactor').to('calcSeasonFactor')
+  .map('calculation.WRLSChargingResponse.lossFactor').to('calcLossFactor')
+  .map('calculation.WRLSChargingResponse.sucFactor').to('calcSucFactor')
+  .map('calculation.WRLSChargingResponse.abatementAdjustment').to('calcS126Factor', val => val ? `S126 x ${val}` : null)
+  .map('calculation.WRLSChargingResponse.s127Agreement').to('calcS127Factor', val => val ? `S127 x ${val}` : null)
+  .map('calculation.WRLSChargingResponse.eiucFactor').to('calcEiucFactor')
+  .map('calculation.WRLSChargingResponse.eiucSourceFactor').to('calcEiucSourceFactor');
 
 /**
  * Converts Minimum Charge transaction returned from the CM
