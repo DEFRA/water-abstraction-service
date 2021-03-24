@@ -14,7 +14,7 @@ const { logger } = require('../../../logger');
  * @return {Promise<Object>}
  */
 const makeTokenRequest = async () => {
-  logger.info('getting cognito token');
+  logger.info('Getting Cognito token');
   const buff = Buffer.from(config.chargeModule.cognito.username + ':' + config.chargeModule.cognito.password);
   const options = {
     method: 'POST',
@@ -32,7 +32,7 @@ const makeTokenRequest = async () => {
   try {
     return await http.request(options);
   } catch (err) {
-    logger.error('error getting cognito token', err);
+    logger.error('Error when getting Cognito token', err);
     throw err;
   }
 };
@@ -50,7 +50,7 @@ class ChargeModuleRequest {
     const result = await makeTokenRequest();
     this.token = result.access_token;
     this.expires = moment().add(result.expires_in, 'second');
-    logger.info(`obtained cognito token expires at ${this.expires.format()}`);
+    logger.info(`Obtained Cognito token which expires at ${this.expires.format()}`);
   }
 
   /**
@@ -61,15 +61,14 @@ class ChargeModuleRequest {
   _isTokenValid () {
     // Token missing
     if (!this.token) {
-      logger.info('no cognito token');
+      logger.info('No cognito token found');
       return false;
     }
     // Token expires
     if (moment().isSameOrAfter(this.expires)) {
-      logger.info('cognito token expired');
+      logger.info('Cognito token expired');
       return false;
     }
-    logger.info('use existing cognito token');
     return true;
   }
 
