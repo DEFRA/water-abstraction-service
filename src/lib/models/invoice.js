@@ -1,6 +1,6 @@
 'use strict';
 
-const { uniq, get, flatMap } = require('lodash');
+const { uniq, get, flatMap, isNull } = require('lodash');
 
 const {
   assertIsInstanceOf, assertIsArrayOfType,
@@ -8,7 +8,8 @@ const {
   assertNullableString, assertNullableObject,
   assertNullableInteger, assertNullableId,
   assertNullablePositiveOrZeroInteger,
-  assertNullableNegativeOrZeroInteger
+  assertNullableNegativeOrZeroInteger,
+  assertIsNullableBoolean
 } = require('./validators');
 
 const Address = require('./address');
@@ -198,7 +199,7 @@ class Invoice extends Totals {
    */
   set netTotal (netTotal) {
     assertNullableInteger(netTotal);
-    this._netTotal = netTotal;
+    this._netTotal = isNull(netTotal) ? null : parseInt(netTotal);
   }
 
   get netTotal () {
@@ -210,7 +211,7 @@ class Invoice extends Totals {
    * @param {Boolean} isCredit
    */
   set isCredit (isCredit) {
-    assertIsBoolean(isCredit);
+    assertIsNullableBoolean(isCredit);
     this._isCredit = isCredit;
   }
 
