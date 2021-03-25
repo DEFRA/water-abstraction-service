@@ -1,0 +1,33 @@
+- ref: $chargeVersion
+  model: ChargeVersion
+  fields:
+    licenceRef: $dailyLicence.licenceRef
+    scheme: alcs
+    versionNumber: 1
+    startDate: '2018-01-01' 
+    endDate: null
+    status: current
+    regionCode: $region.naldRegionId
+    source: wrls
+    companyId: $company.companyId
+    invoiceAccountId: $invoiceAccount.invoiceAccountId
+    isTest: true
+    licenceId: $dailyLicence.licenceId
+
+- ref: $chargeElement
+  model: ChargeElement
+  fields:
+    chargeVersionId: $chargeVersion.chargeVersionId
+    abstractionPeriodStartDay: 1
+    abstractionPeriodStartMonth: 4
+    abstractionPeriodEndDay: 31
+    abstractionPeriodEndMonth: 3
+    authorisedAnnualQuantity: 15.54
+    season: 'all year'
+    seasonDerived: 'all year'
+    source: unsupported
+    loss: medium
+    isTest: true
+    purposePrimaryId: $primaryPurpose.purposePrimaryId
+    purposeSecondaryId: $secondaryPurpose.purposeSecondaryId
+    purposeUseId: $purposeUse.purposeUseId

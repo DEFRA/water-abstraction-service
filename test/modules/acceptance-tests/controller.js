@@ -23,6 +23,10 @@ const notifications = require('../../../src/modules/acceptance-tests/lib/notific
 const returnRequirements = require('../../../src/modules/acceptance-tests/lib/return-requirements');
 const returnRequirementPurposes = require('../../../src/modules/acceptance-tests/lib/return-requirements-purposes');
 const returnVersions = require('../../../src/modules/acceptance-tests/lib/return-versions');
+const transactions = require('../../../src/modules/acceptance-tests/lib/billing-transactions');
+const invoiceLicences = require('../../../src/modules/acceptance-tests/lib/billing-invoice-licences');
+const invoices = require('../../../src/modules/acceptance-tests/lib/billing-invoices');
+const batches = require('../../../src/modules/acceptance-tests/lib/billing-batches');
 const setLoader = require('../../../integration-tests/billing/services/loader');
 
 const controller = require('../../../src/modules/acceptance-tests/controller');
@@ -71,19 +75,23 @@ experiment('modules/acceptance-tests/controller', () => {
     sandbox.stub(returnRequirementPurposes, 'create').resolves({});
 
     sandbox.stub(returns, 'delete').resolves();
+    sandbox.stub(returnRequirementPurposes, 'delete').resolves();
+    sandbox.stub(returnRequirements, 'delete').resolves();
+    sandbox.stub(returnVersions, 'delete').resolves();
+    sandbox.stub(notifications, 'delete').resolves();
     sandbox.stub(events, 'delete').resolves();
     sandbox.stub(permits, 'delete').resolves();
-    sandbox.stub(documents, 'delete').resolves();
     sandbox.stub(entities, 'delete').resolves();
+    sandbox.stub(documents, 'delete').resolves();
     sandbox.stub(users, 'delete').resolves();
     sandbox.stub(sessions, 'delete').resolves();
     sandbox.stub(chargeVersionWorkflows, 'delete').resolves();
-    sandbox.stub(licences, 'delete').resolves();
+    sandbox.stub(transactions, 'delete').resolves();
+    sandbox.stub(invoiceLicences, 'delete').resolves();
+    sandbox.stub(invoices, 'delete').resolves();
+    sandbox.stub(batches, 'delete').resolves();
     sandbox.stub(licenceVersions, 'delete').resolves();
-    sandbox.stub(notifications, 'delete').resolves();
-    sandbox.stub(returnVersions, 'delete').resolves();
-    sandbox.stub(returnRequirements, 'delete').resolves();
-    sandbox.stub(returnRequirementPurposes, 'delete').resolves();
+    sandbox.stub(licences, 'delete').resolves();
     sandbox.stub(chargeTestDataTearDown, 'tearDown').resolves();
 
     sandbox.stub(setLoader, 'createSetLoader');
@@ -108,10 +116,17 @@ experiment('modules/acceptance-tests/controller', () => {
         expect(returnVersions.delete.called).to.be.true();
         expect(events.delete.called).to.be.true();
         expect(permits.delete.called).to.be.true();
-        expect(documents.delete.called).to.be.true();
         expect(entities.delete.called).to.be.true();
+        expect(documents.delete.called).to.be.true();
         expect(users.delete.called).to.be.true();
         expect(sessions.delete.called).to.be.true();
+        expect(chargeVersionWorkflows.delete.called).to.be.true();
+        expect(transactions.delete.called).to.be.true();
+        expect(invoiceLicences.delete.called).to.be.true();
+        expect(invoices.delete.called).to.be.true();
+        expect(batches.delete.called).to.be.true();
+        expect(chargeTestDataTearDown.tearDown.called).to.be.true();
+        expect(licenceVersions.delete.called).to.be.true();
         expect(licences.delete.called).to.be.true();
       });
 
@@ -318,9 +333,13 @@ experiment('modules/acceptance-tests/controller', () => {
       expect(users.delete.called).to.be.true();
       expect(sessions.delete.called).to.be.true();
       expect(chargeVersionWorkflows.delete.called).to.be.true();
+      expect(transactions.delete.called).to.be.true();
+      expect(invoiceLicences.delete.called).to.be.true();
+      expect(invoices.delete.called).to.be.true();
+      expect(batches.delete.called).to.be.true();
+      expect(chargeTestDataTearDown.tearDown.called).to.be.true();
       expect(licenceVersions.delete.called).to.be.true();
       expect(licences.delete.called).to.be.true();
-      expect(notifications.delete.called).to.be.true();
     });
   });
 });

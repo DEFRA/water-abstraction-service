@@ -1,13 +1,12 @@
 'use strict';
+const { bookshelf } = require('../../../lib/connectors/bookshelf');
 
-const { pool } = require('../../../lib/connectors/db');
-
-const deleteLicenceVersions = () => {
-  return pool.query(`
+const deleteLicenceVersionsQuery = `
     delete from
     water.licence_versions
     where is_test=true;
-    `);
-};
+    `;
+
+const deleteLicenceVersions = async () => bookshelf.knex.raw(deleteLicenceVersionsQuery);
 
 exports.delete = deleteLicenceVersions;

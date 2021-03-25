@@ -5,6 +5,7 @@
  * to the local WRLS DB
  */
 const { get, difference } = require('lodash');
+const Bluebird = require('bluebird');
 const errors = require('../../../lib/errors');
 
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
@@ -29,7 +30,6 @@ const transactionService = require('./transactions-service');
 const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
   try {
     const { invoice } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, invoiceId);
-
     return invoice.licences.map(lic => lic.transactions.map(transaction => {
       return {
         ...transaction,
@@ -92,11 +92,21 @@ const getTransactionMap = invoice => {
 const mapTransaction = (invoice, transactionMap, cmTransaction) => {
   // Update existing transaction
   if (transactionMap.has(cmTransaction.id)) {
+    const { sourceFactor, seasonFactor, lossFactor, sucFactor, abatementAdjustment, s127Agreement, eiucFactor, eiucSourceFactor } = cmTransaction.calculation.WRLSChargingResponse;
+
     return transactionMap
       .get(cmTransaction.id)
       .fromHash({
         isDeMinimis: cmTransaction.isDeminimis,
-        value: cmTransaction.chargeValue
+        value: cmTransaction.chargeValue,
+        calcSourceFactor: sourceFactor,
+        calcSeasonFactor: seasonFactor,
+        calcLossFactor: lossFactor,
+        calcSucFactor: sucFactor,
+        calcS126Factor: abatementAdjustment,
+        calcS127Factor: s127Agreement,
+        calcEiucFactor: eiucFactor,
+        calcEiucSourceFactor: eiucSourceFactor
       });
   } else {
     // Create a new min charge model and add to heirarchy
@@ -127,6 +137,16 @@ const deleteTransactions = (cmTransactions, transactionMap) => {
 };
 
 /**
+  * Gets transaction reference from cmTransactions
+  * NB. it is not guaranteed to be present in all transactions
+  * @param {Array<Object>} cmTransactions
+  */
+const getInvoiceNumber = cmTransactions => {
+  const transactionsWithRef = cmTransactions.filter(trans => trans.transactionReference !== null);
+  return transactionsWithRef[0] ? transactionsWithRef[0].transactionReference : null;
+};
+
+/**
  * Maps CM data to an Invoice model
  *
  * @param {Batch} batch
@@ -139,7 +159,7 @@ const updateInvoice = async (batch, invoice, cmInvoiceSummary, cmTransactions) =
   // Populate invoice model with updated CM data
   invoice.fromHash({
     isDeMinimis: cmInvoiceSummary.deminimisInvoice,
-    invoiceNumber: cmTransactions[0].transactionReference,
+    invoiceNumber: getInvoiceNumber(cmTransactions),
     netTotal: cmInvoiceSummary.netTotal,
     invoiceValue: cmInvoiceSummary.debitLineValue,
     creditNoteValue: -cmInvoiceSummary.creditLineValue,
@@ -176,7 +196,8 @@ const updateInvoices = async (batch, cmResponse) => {
   // Get existing invoices in DB and map
   const invoiceMap = await getInvoiceMap(invoices);
 
-  cmInvoiceMap.map(async invoice => {
+  // Iterate through invoices in series, to avoid overwhelming CM with too many simultaneous requests
+  Bluebird.mapSeries(cmInvoiceMap, async invoice => {
     const cmTransactions = await getAllCmTransactionsForInvoice(
       batch.externalId,
       invoice.id

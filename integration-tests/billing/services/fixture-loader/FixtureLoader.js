@@ -95,7 +95,7 @@ class FixtureLoader {
 
     for (const config of data) {
       // Pre-process field data to include references to previously inserted models
-      // Models are processed sequencially
+      // Models are processed sequentially
       const data = mapValues(config.fields, val => mapValue(val, _refs));
 
       // Create new model using adapter
