@@ -188,6 +188,12 @@ class ChargeElement extends Model {
     this._chargeVersionId = chargeVersionId;
   }
 
+  get isFactorsOverridden () { return this._isFactorsOverridden; }
+  set isFactorsOverridden (isFactorsOverridden) {
+    validators.assertIsBoolean(isFactorsOverridden);
+    this._isFactorsOverridden = isFactorsOverridden;
+  }
+
   toJSON () {
     return {
       ...super.toJSON(),
