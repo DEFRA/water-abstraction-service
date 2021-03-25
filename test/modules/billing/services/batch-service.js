@@ -312,13 +312,13 @@ experiment('modules/billing/services/batch-service', () => {
       };
     });
 
-    experiment('when the batch is in "pending" status', () => {
+    experiment('when the batch is in "generating" status', () => {
       test('an error is thrown as the batch cannot be deleted', async () => {
-        batch.status = Batch.BATCH_STATUS.pending;
+        batch.status = Batch.BATCH_STATUS.sent;
         const func = () => batchService.deleteBatch(batch, internalCallingUser);
         const err = await expect(func()).to.reject();
         expect(err instanceof BatchStatusError);
-        expect(err.message).to.equal(`Batch ${batch.id} cannot be deleted - status is pending`);
+        expect(err.message).to.equal(`Batch ${batch.id} cannot be deleted - status is sent`);
       });
     });
 
