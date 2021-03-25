@@ -1,13 +1,14 @@
 'use strict';
 
-const { pool } = require('../../../lib/connectors/db');
+const { bookshelf } = require('../../../lib/connectors/bookshelf');
+const { ACCEPTANCE_TEST_SOURCE } = require('./constants');
 
-const deleteChargeVersionWorkflows = () => {
-  return pool.query(`
+const deleteChargeVersionWorkflowQuery = `
     delete from
     water.charge_version_workflows
-    where data->>'isTest'='true';
-    `);
-};
+    where data->>'source'='${ACCEPTANCE_TEST_SOURCE}';
+    `;
+
+const deleteChargeVersionWorkflows = async () => bookshelf.knex.raw(deleteChargeVersionWorkflowQuery);
 
 exports.delete = deleteChargeVersionWorkflows;

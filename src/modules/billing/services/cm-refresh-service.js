@@ -137,6 +137,16 @@ const deleteTransactions = (cmTransactions, transactionMap) => {
 };
 
 /**
+  * Gets transaction reference from cmTransactions
+  * NB. it is not guaranteed to be present in all transactions
+  * @param {Array<Object>} cmTransactions
+  */
+const getInvoiceNumber = cmTransactions => {
+  const transactionsWithRef = cmTransactions.filter(trans => trans.transactionReference !== null);
+  return transactionsWithRef[0] ? transactionsWithRef[0].transactionReference : null;
+};
+
+/**
  * Maps CM data to an Invoice model
  *
  * @param {Batch} batch
@@ -149,7 +159,7 @@ const updateInvoice = async (batch, invoice, cmInvoiceSummary, cmTransactions) =
   // Populate invoice model with updated CM data
   invoice.fromHash({
     isDeMinimis: cmInvoiceSummary.deminimisInvoice,
-    invoiceNumber: cmTransactions[0].transactionReference,
+    invoiceNumber: getInvoiceNumber(cmTransactions),
     netTotal: cmInvoiceSummary.netTotal,
     invoiceValue: cmInvoiceSummary.debitLineValue,
     creditNoteValue: -cmInvoiceSummary.creditLineValue,

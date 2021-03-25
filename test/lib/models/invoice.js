@@ -215,6 +215,144 @@ experiment('lib/models/invoice', () => {
     });
   });
 
+  experiment('.netTotal', () => {
+    test('can be set to an integer', async () => {
+      invoice.netTotal = 12345;
+      expect(invoice.netTotal).to.equal(12345);
+    });
+
+    test('can be set to an integer string', async () => {
+      invoice.netTotal = '12345';
+      expect(invoice.netTotal).to.equal('12345');
+    });
+
+    test('throws an error if set to a non-integer', async () => {
+      const func = () => {
+        invoice.netTotal = 'hey';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.isCredit', () => {
+    test('can be set to a boolean true', async () => {
+      invoice.isCredit = true;
+      expect(invoice.isCredit).to.equal(true);
+    });
+
+    test('can be set to a boolean false', async () => {
+      invoice.isCredit = false;
+      expect(invoice.isCredit).to.equal(false);
+    });
+
+    test('throws an error if set to a non-boolean', async () => {
+      const func = () => {
+        invoice.isCredit = 'hey';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.legacyId', () => {
+    test('can be set to a string', async () => {
+      invoice.legacyId = '12345:4358';
+      expect(invoice.legacyId).to.equal('12345:4358');
+    });
+
+    test('can be set to null', async () => {
+      invoice.legacyId = null;
+      expect(invoice.legacyId).to.equal(null);
+    });
+
+    test('throws an error if set to a non-string and not null', async () => {
+      const func = () => {
+        invoice.legacyId = 13445;
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.metadata', () => {
+    test('can be set to an object', async () => {
+      invoice.metadata = { foo: 'bar' };
+      expect(invoice.metadata).to.equal({ foo: 'bar' });
+    });
+
+    test('can be set to null', async () => {
+      invoice.metadata = null;
+      expect(invoice.metadata).to.equal(null);
+    });
+
+    test('throws an error if set to a non-object', async () => {
+      const func = () => {
+        invoice.metadata = 'hey';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.invoiceValue', () => {
+    test('can be set to a positive integer', async () => {
+      invoice.invoiceValue = 12345;
+      expect(invoice.invoiceValue).to.equal(12345);
+    });
+
+    test('can be set to 0', async () => {
+      invoice.invoiceValue = 0;
+      expect(invoice.invoiceValue).to.equal(0);
+    });
+
+    test('can be set to null', async () => {
+      invoice.invoiceValue = null;
+      expect(invoice.invoiceValue).to.equal(null);
+    });
+
+    test('throws an error if set to a negative integer', async () => {
+      const func = () => {
+        invoice.invoiceValue = -1234;
+      };
+      expect(func).to.throw();
+    });
+
+    test('throws an error if set to a non-integer', async () => {
+      const func = () => {
+        invoice.invoiceValue = 'hey';
+      };
+      expect(func).to.throw();
+    });
+  });
+
+  experiment('.creditNoteValue', () => {
+    test('can be set to a negative integer', async () => {
+      invoice.creditNoteValue = -12345;
+      expect(invoice.creditNoteValue).to.equal(-12345);
+    });
+
+    test('can be set to 0', async () => {
+      invoice.creditNoteValue = 0;
+      expect(invoice.creditNoteValue).to.equal(0);
+    });
+
+    test('can be set to null', async () => {
+      invoice.creditNoteValue = null;
+      expect(invoice.creditNoteValue).to.equal(null);
+    });
+
+    test('throws an error if set to a positive integer', async () => {
+      const func = () => {
+        invoice.creditNoteValue = 1234;
+      };
+      expect(func).to.throw();
+    });
+
+    test('throws an error if set to a non-integer', async () => {
+      const func = () => {
+        invoice.creditNoteValue = 'hey';
+      };
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.hasTransactionErrors', () => {
     test('is false when no underlying transactions have errors', async () => {
       const invoice = new Invoice().fromHash({
@@ -253,6 +391,60 @@ experiment('lib/models/invoice', () => {
       expect(
         Object.keys(invoice.toJSON())
       ).to.include('hasTransactionErrors');
+    });
+
+    experiment('displayLabel, set to', () => {
+      test('"de minimis bill" when isDeMinimis is true', async () => {
+        invoice = new Invoice();
+        invoice.fromHash({
+          billingInvoiceId: uuid(),
+          isDeMinimis: true,
+          legacyId: null,
+          netTotal: 0,
+          invoiceNumber: null
+        });
+        const result = invoice.toJSON();
+        expect(result.displayLabel).to.equal('De minimis bill');
+      });
+
+      test('"NALD revised bill" when a legacy id is present', async () => {
+        invoice = new Invoice();
+        invoice.fromHash({
+          billingInvoiceId: uuid(),
+          isDeMinimis: false,
+          legacyId: '12345:583',
+          netTotal: 0,
+          invoiceNumber: null
+        });
+        const result = invoice.toJSON();
+        expect(result.displayLabel).to.equal('NALD revised bill');
+      });
+
+      test('"zero value bill" when net amount is 0', async () => {
+        invoice = new Invoice();
+        invoice.fromHash({
+          billingInvoiceId: uuid(),
+          isDeMinimis: false,
+          legacyId: null,
+          netTotal: 0,
+          invoiceNumber: null
+        });
+        const result = invoice.toJSON();
+        expect(result.displayLabel).to.equal('Zero value bill');
+      });
+
+      test('null if none of the expected criteria are met', async () => {
+        invoice = new Invoice();
+        invoice.fromHash({
+          billingInvoiceId: uuid(),
+          isDeMinimis: false,
+          legacyId: null,
+          netTotal: 50,
+          invoiceNumber: null
+        });
+        const result = invoice.toJSON();
+        expect(result.displayLabel).to.equal(null);
+      });
     });
   });
 });
