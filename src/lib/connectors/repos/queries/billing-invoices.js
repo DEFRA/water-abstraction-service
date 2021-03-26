@@ -2,18 +2,19 @@ exports.upsert = `insert into water.billing_invoices
   (
     invoice_account_id, address, invoice_account_number, 
     date_created, date_updated, billing_batch_id, financial_year_ending,
-    net_amount, credit_note_value, invoice_value, is_de_minimis, is_credit, external_id
+    net_amount, invoice_number, credit_note_value, invoice_value, is_de_minimis, is_credit, external_id
   )
 values (
     :invoiceAccountId, :address, :invoiceAccountNumber, 
     NOW(), NOW(), :billingBatchId, :financialYearEnding,
-    :netAmount, :creditNoteValue, :invoiceValue, :isDeMinimis, :isCredit, :externalId
+    :netAmount, :invoiceNumber, :creditNoteValue, :invoiceValue, :isDeMinimis, :isCredit, :externalId
 )
 on conflict (invoice_account_id, billing_batch_id, financial_year_ending) where legacy_id is null do update 
   set date_updated = NOW(), 
     net_amount=EXCLUDED.net_amount, 
     credit_note_value=EXCLUDED.credit_note_value,
     invoice_value=EXCLUDED.invoice_value,
+    invoice_number=EXCLUDED.invoice_number,
     is_de_minimis=EXCLUDED.is_de_minimis,
     is_credit=EXCLUDED.is_credit,
     external_id=EXCLUDED.external_id

@@ -17,6 +17,8 @@ const returns = require('../../../src/lib/connectors/returns');
 
 experiment('connectors/returns', () => {
   beforeEach(async () => {
+    sandbox.stub(config.services, 'returns').value('http://test.defra/returns/1.0');
+    sandbox.stub(helpers.serviceRequest, 'get').resolves();
     sandbox.stub(helpers.serviceRequest, 'delete').resolves();
   });
 
@@ -236,21 +238,65 @@ experiment('connectors/returns', () => {
     });
   });
 
-  experiment('lib/connectors/idm/kpi-reporting', () => {
-    experiment('.getKPIRegistrations', () => {
-      beforeEach(async () => {
-        sandbox.stub(helpers.serviceRequest, 'get').resolves();
-        sandbox.stub(config.services, 'returns').value('http://test.defra/returns/1.0');
-        await returns.getKPIReturnsByCycle('2001-01-01', '2001-01-01', true);
-      });
+  experiment('.getKPIReturnsByCycle', () => {
+    beforeEach(async () => {
+      await returns.getKPIReturnsByCycle('2001-01-01', '2001-01-01', true);
+    });
 
-      afterEach(async => { sandbox.restore(); });
+    afterEach(async => { sandbox.restore(); });
 
-      test('makes a request to the expected URL', async () => {
-        const testUrl = 'http://test.defra/returns/1.0/kpi/licencesBySeason?startDate=2001-01-01&endDate=2001-01-01&isSummer=true';
-        const [url] = helpers.serviceRequest.get.lastCall.args;
-        expect(url).to.equal(testUrl);
-      });
+    test('makes a request to the expected URL', async () => {
+      const testUrl = 'http://test.defra/returns/1.0/kpi/licencesBySeason?startDate=2001-01-01&endDate=2001-01-01&isSummer=true';
+      const [url] = helpers.serviceRequest.get.lastCall.args;
+      expect(url).to.equal(testUrl);
+    });
+  });
+
+  experiment('.getReturnsCyclesReport', () => {
+    const startDate = '2020-01-01';
+
+    beforeEach(async () => {
+      await returns.getReturnsCyclesReport(startDate);
+    });
+
+    test('.calls the expected url', async () => {
+      const testUrl = 'http://test.defra/returns/1.0/return-cycles/report';
+
+      expect(helpers.serviceRequest.get.calledWith(
+        testUrl, { qs: { startDate } }
+      )).to.be.true();
+    });
+  });
+
+  experiment('.getReturnCycleById', () => {
+    const returnCycleId = 'test-id';
+
+    beforeEach(async () => {
+      await returns.getReturnCycleById(returnCycleId);
+    });
+
+    test('.calls the expected url', async () => {
+      const testUrl = `http://test.defra/returns/1.0/return-cycles/${returnCycleId}`;
+
+      expect(helpers.serviceRequest.get.calledWith(
+        testUrl
+      )).to.be.true();
+    });
+  });
+
+  experiment('.getReturnCycleReturns', () => {
+    const returnCycleId = 'test-id';
+
+    beforeEach(async () => {
+      await returns.getReturnCycleReturns(returnCycleId);
+    });
+
+    test('.calls the expected url', async () => {
+      const testUrl = `http://test.defra/returns/1.0/return-cycles/${returnCycleId}/returns`;
+
+      expect(helpers.serviceRequest.get.calledWith(
+        testUrl
+      )).to.be.true();
     });
   });
 });

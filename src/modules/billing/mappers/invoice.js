@@ -20,8 +20,10 @@ const dbToModelMapper = createMapper()
     'isCredit',
     'isDeMinimis',
     'invoiceValue',
+    'creditNoteValue',
     'externalId',
-    'creditNoteValue'
+    'legacyId',
+    'metadata'
   )
   .map('netAmount').to('netTotal')
   .map('billingInvoiceId').to('id')
@@ -48,22 +50,20 @@ const mapAddress = invoice =>
  * @param {Invoice} invoice
  * @return {Object}
  */
-const modelToDb = (batch, invoice) => {
-  return {
-    externalId: invoice.externalId || null,
-    invoiceAccountId: invoice.invoiceAccount.id,
-    invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
-    address: mapAddress(invoice),
-    billingBatchId: batch.id,
-    financialYearEnding: invoice.financialYear.endYear,
-    invoiceNumber: invoice.invoiceNumber || null,
-    isCredit: isNull(invoice.netTotal) ? null : invoice.netTotal < 0,
-    isDeMinimis: invoice.isDeMinimis,
-    netAmount: invoice.netTotal,
-    invoiceValue: invoice.invoiceValue,
-    creditNoteValue: invoice.creditNoteValue
-  };
-};
+const modelToDb = (batch, invoice) => ({
+  externalId: invoice.externalId || null,
+  invoiceAccountId: invoice.invoiceAccount.id,
+  invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
+  address: mapAddress(invoice),
+  billingBatchId: batch.id,
+  financialYearEnding: invoice.financialYear.endYear,
+  invoiceNumber: invoice.invoiceNumber || null,
+  isCredit: isNull(invoice.netTotal) ? null : invoice.netTotal < 0,
+  isDeMinimis: invoice.isDeMinimis,
+  netAmount: invoice.netTotal,
+  invoiceValue: invoice.invoiceValue,
+  creditNoteValue: invoice.creditNoteValue
+});
 
 const crmToModel = row => {
   const invoice = new Invoice();

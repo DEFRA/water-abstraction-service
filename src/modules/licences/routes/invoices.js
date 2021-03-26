@@ -11,13 +11,13 @@ module.exports = {
     handler: controller.getLicenceInvoices,
     config: {
       validate: {
-        params: {
+        params: Joi.object({
           licenceId: Joi.string().uuid().required()
-        },
-        query: {
+        }),
+        query: Joi.object({
           page: Joi.number().default(1),
           perPage: Joi.number().default(10)
-        }
+        })
       }
     }
   }

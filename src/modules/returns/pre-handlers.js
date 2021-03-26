@@ -2,6 +2,7 @@ const { get } = require('lodash');
 const Boom = require('@hapi/boom');
 const eventsService = require('../../lib/services/events');
 const returnsUpload = require('./lib/returns-upload');
+const returnCyclesService = require('../../lib/services/return-cycles');
 
 /**
  * Pre-handler to load event with requested ID
@@ -49,6 +50,13 @@ const preCheckIssuer = async (request, h) => {
   return h.continue;
 };
 
+const getReturnCycle = async request => {
+  const { returnCycleId } = request.params;
+  const returnCycle = await returnCyclesService.getReturnCycleById(returnCycleId);
+  return returnCycle || Boom.notFound(`Return cycle ${returnCycleId} not found`);
+};
+
 exports.preLoadEvent = preLoadEvent;
 exports.preLoadJson = preLoadJson;
 exports.preCheckIssuer = preCheckIssuer;
+exports.getReturnCycle = getReturnCycle;

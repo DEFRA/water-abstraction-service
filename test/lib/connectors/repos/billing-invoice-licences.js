@@ -22,7 +22,6 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
   beforeEach(async () => {
     sandbox.stub(bookshelf.knex, 'raw');
     sandbox.stub(raw, 'singleRow');
-    sandbox.stub(raw, 'multiRow');
     sandbox.stub(paginationHelper, 'paginatedEnvelope');
 
     model = {
@@ -34,6 +33,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       orderBy: sandbox.stub().returnsThis(),
       fetch: sandbox.stub().resolves(model),
       fetchPage: sandbox.stub().resolves(model),
+      query: sandbox.stub().returnsThis(),
       destroy: sandbox.stub()
     };
     sandbox.stub(billingInvoiceLicence, 'forge').returns(bookshelfStub);
@@ -88,7 +88,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
       const { args } = billingInvoiceLicence.forge.lastCall;
       expect(args[0]).to.equal({ billingInvoiceLicenceId: '00000000-0000-0000-0000-000000000000' });
     });
-    test('calls forge().fetch with correct argumements', async () => {
+    test('calls forge().fetch with correct arguments', async () => {
       const { args } = billingInvoiceLicence.forge().fetch.lastCall;
       expect(args[0].withRelated[0]).to.equal('licence');
       expect(args[0].withRelated[1]).to.equal('licence.region');
@@ -153,31 +153,23 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     const billingInvoiceLicenceId = uuid();
 
     beforeEach(async () => {
-      await paginationHelper.paginatedEnvelope.resolves({});
       await billingInvoiceLicences.findAll(billingInvoiceLicenceId, 1, 10);
     });
 
-    test('collection() is called on the model', () => {
-      expect(billingInvoiceLicence.collection.called).to.be.true();
+    test('the model is forged', async () => {
+      expect(billingInvoiceLicence.forge.called).to.be.true();
     });
 
-    test('where() is called to narrow down results to the relevant licence', () => {
-      expect(bookshelfStub.where.calledWith({
-        licence_id: billingInvoiceLicenceId
-      })).to.be.true();
+    test('calls query with a function', async () => {
+      const [func] = billingInvoiceLicence.forge().query.lastCall.args;
+      expect(func).to.be.a.function();
     });
 
-    test('calls orderBy to sort by date created descending', () => {
-      const [field, direction] = bookshelfStub.orderBy.lastCall.args;
-      expect(field).to.equal('date_created');
-      expect(direction).to.equal('DESC');
-    });
-
-    test('calls fetchPage() with the expected params', () => {
-      const [options] = bookshelfStub.fetchPage.lastCall.args;
-      expect(options.page).to.equal(1);
-      expect(options.pageSize).to.equal(10);
-      expect(options.withRelated).to.equal([
+    test('calls forge().fetchPage with correct arguments', async () => {
+      const [{ pageSize, page, withRelated }] = billingInvoiceLicence.forge().fetchPage.lastCall.args;
+      expect(pageSize).to.equal(10);
+      expect(page).to.equal(1);
+      expect(withRelated).to.equal([
         'billingInvoice',
         'billingInvoice.billingBatch',
         'billingInvoice.billingBatch.region'
