@@ -6,9 +6,9 @@ const chargeVersionsWorkflowService = require('../services/charge-version-workfl
 const licencesService = require('../../../lib/services/licences');
 
 const controller = require('../../../lib/controller');
-
+const userMapper = require('../../../lib/mappers/user');
 const mapErrorResponse = require('../../../lib/map-error-response');
-
+const { logger } = require('../../../logger');
 /**
  * Gets all charge version workflow or
  * those for the given licence id
@@ -59,14 +59,21 @@ const postChargeVersionWorkflow = async request => {
  */
 const patchChargeVersionWorkflow = async (request, h) => {
   const { chargeVersionWorkflowId } = request.params;
-  const { approverComments, status } = request.payload;
+  const { approverComments, status, createdBy } = request.payload;
   const { chargeVersion } = request.pre;
 
   const changes = {
     ...request.payload,
     ...chargeVersion && { chargeVersion }
   };
-
+  if (createdBy) {
+    try {
+      changes.createdBy = userMapper.pojoToModel(createdBy);
+    } catch (err) {
+      logger.error('Error mapping user', err);
+      return Boom.badData('Invalid user in charge version data');
+    }
+  }
   try {
     if (status === 'changes_requested') {
       const chargeVersionWorkflow = await chargeVersionsWorkflowService.update(chargeVersionWorkflowId, { approverComments, status });
