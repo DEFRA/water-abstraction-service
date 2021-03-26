@@ -25,7 +25,7 @@ const dbToModelMapper = createMapper()
     'legacyId',
     'metadata'
   )
-  .map('netAmount').to('netTotal', netAmount => parseInt(netAmount))
+  .map('netAmount').to('netTotal')
   .map('billingInvoiceId').to('id')
   .map('invoiceAccountId').to('invoiceAccount', invoiceAccountId => new InvoiceAccount(invoiceAccountId))
   .map('invoiceAccountNumber').to('invoiceAccount.accountNumber')

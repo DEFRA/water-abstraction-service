@@ -223,7 +223,12 @@ experiment('lib/models/invoice', () => {
 
     test('can be set to an integer string', async () => {
       invoice.netTotal = '12345';
-      expect(invoice.netTotal).to.equal('12345');
+      expect(invoice.netTotal).to.equal(12345);
+    });
+
+    test('can be set to null', async () => {
+      invoice.netTotal = null;
+      expect(invoice.netTotal).to.be.null();
     });
 
     test('throws an error if set to a non-integer', async () => {
