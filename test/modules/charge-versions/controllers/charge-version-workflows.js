@@ -128,9 +128,8 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
       });
 
       test('the charge version workflow service creates the record', async () => {
-        const [licence, licenceVersionId, chargeVersion, user] = chargeVersionWorkflowService.create.lastCall.args;
+        const [licence, chargeVersion, user] = chargeVersionWorkflowService.create.lastCall.args;
         expect(licence).to.be.an.instanceof(Licence);
-        expect(licenceVersionId).to.equal(request.pre.licenceVersion.licenceVersionId);
         expect(chargeVersion).to.equal(request.pre.chargeVersion);
         expect(user).to.be.equal(request.pre.user);
       });

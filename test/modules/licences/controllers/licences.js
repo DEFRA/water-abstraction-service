@@ -138,7 +138,8 @@ experiment('modules/licences/controllers/licences.js', () => {
       request = {
         params: {
           licenceId: 'test-licence-id'
-        }
+        },
+        query: {}
       };
     });
 

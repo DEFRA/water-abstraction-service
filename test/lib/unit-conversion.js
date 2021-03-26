@@ -9,7 +9,7 @@ const unitConversion = require('../../src/lib/unit-conversion');
 experiment('lib/unit-conversion', () => {
   experiment('cubicMetresToMegalitres', () => {
     test('handles null', async () => {
-      expect(unitConversion.cubicMetresToMegalitres(null)).to.equal(null);
+      expect(unitConversion.cubicMetresToMegalitres(null)).to.equal(0);
     });
 
     test('converts values in cubic litres to megalitres', async () => {
