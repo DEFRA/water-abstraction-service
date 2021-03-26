@@ -9,15 +9,15 @@ const { expect } = require('@hapi/code');
 
 const uuid = require('uuid/v4');
 
-const Batch = require('../../../../src/lib/models/batch');
-const Company = require('../../../../src/lib/models/company');
-const Contact = require('../../../../src/lib/models/contact-v2');
-const Invoice = require('../../../../src/lib/models/invoice');
-const Address = require('../../../../src/lib/models/address');
-const FinancialYear = require('../../../../src/lib/models/financial-year');
-const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
+const Batch = require('../../../src/lib/models/batch');
+const Company = require('../../../src/lib/models/company');
+const Contact = require('../../../src/lib/models/contact-v2');
+const Invoice = require('../../../src/lib/models/invoice');
+const Address = require('../../../src/lib/models/address');
+const FinancialYear = require('../../../src/lib/models/financial-year');
+const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 
-const invoiceMapper = require('../../../../src/modules/billing/mappers/invoice');
+const invoiceMapper = require('../../../src/lib/mappers/invoice');
 
 const invoiceRow = {
   billingInvoiceId: '5a1577d7-8dc9-4d67-aadc-37d7ea85abca',
@@ -32,7 +32,7 @@ const invoiceRow = {
   metadata: { foo: 'bar' }
 };
 
-experiment('modules/billing/mappers/invoice', () => {
+experiment('lib/mappers/invoice', () => {
   experiment('.dbToModel', () => {
     let result;
 
