@@ -12,17 +12,17 @@ const sandbox = sinon.createSandbox();
 const uuid = require('uuid/v4');
 const { find } = require('lodash');
 
-const Batch = require('../../../../src/lib/models/batch');
-const Invoice = require('../../../../src/lib/models/invoice');
-const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
+const Batch = require('../../../src/lib/models/batch');
+const Invoice = require('../../../src/lib/models/invoice');
+const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
-const mappers = require('../../../../src/modules/billing/mappers');
-const repos = require('../../../../src/lib/connectors/repos');
-const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts');
+const mappers = require('../../../src/lib/mappers');
+const repos = require('../../../src/lib/connectors/repos');
+const invoiceAccountsConnector = require('../../../src/lib/connectors/crm-v2/invoice-accounts');
 
-const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
+const invoiceService = require('../../../src/lib/services/invoice-service');
 
-const { NotFoundError } = require('../../../../src/lib/errors');
+const { NotFoundError } = require('../../../src/lib/errors');
 
 const IDS = {
   batch: uuid(),
