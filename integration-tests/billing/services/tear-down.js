@@ -6,14 +6,10 @@ const batches = require('./batches');
 const cmConnector = require('../../../src/lib/connectors/charge-module/bill-runs');
 const returnsConnector = require('../services/connectors/returns');
 const returnRequirements = require('../services/return-requirements');
-const server = require('../../../index');
+
+const messageQueue = require('../../../src/lib/message-queue-v2');
 
 const deleteCMBatch = batch => batch.externalId && cmConnector.delete(batch.externalId);
-
-const deleteJobsAndCMData = (server, batch) => Promise.all([
-  server.queueManager.deleteKeysByPattern('bull:*'),
-  deleteCMBatch(batch)
-]);
 
 const tearDownTable = tableName => bookshelf.knex(tableName)
   .where('is_test', true)
@@ -45,9 +41,12 @@ const tearDown = async (...batchesToDelete) => {
   await tearDownTable('water.purposes_secondary');
   await tearDownTable('water.purposes_uses');
 
-  const tasks = (batchesToDelete || []).map(batch => deleteJobsAndCMData(server, batch));
+  // Delete CM batches
+  const tasks = (batchesToDelete || []).map(deleteCMBatch);
   await Promise.all(tasks);
-  await server._stop;
+
+  // Delete Bull MQ jobs
+  await messageQueue.getQueueManager().deleteKeysByPattern('bull:*');
 };
 
 exports.tearDown = tearDown;
