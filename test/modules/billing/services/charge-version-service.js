@@ -307,12 +307,16 @@ experiment('modules/billing/services/charge-version-service', () => {
 
       experiment('when the licence is not flagged for supplementary billing', () => {
         beforeEach(async () => {
-          repos.chargeVersions.findValidInRegionAndFinancialYear.resolves([
+          repos.chargeVersions.findValidInRegionAndFinancialYear.withArgs(batch.region.id, 2021).resolves([
             createChargeVersionRow({
               includeInSupplementaryBilling: false
-            })
+            }, 2021)
           ]);
-
+          repos.chargeVersions.findValidInRegionAndFinancialYear.withArgs(batch.region.id, 2022).resolves([
+            createChargeVersionRow({
+              includeInSupplementaryBilling: false
+            }, 2022)
+          ]);
           await chargeVersionService.createForBatch(batch);
         });
 
@@ -357,11 +361,17 @@ experiment('modules/billing/services/charge-version-service', () => {
 
         experiment('when the licence does not have two-part tariff agreement', () => {
           beforeEach(async () => {
-            repos.chargeVersions.findValidInRegionAndFinancialYear.resolves([
+            repos.chargeVersions.findValidInRegionAndFinancialYear.withArgs(batch.region.id, 2021).resolves([
               createChargeVersionRow({
                 includeInSupplementaryBilling: true,
                 isTwoPartTariff: false
-              })
+              }, 2021)
+            ]);
+            repos.chargeVersions.findValidInRegionAndFinancialYear.withArgs(batch.region.id, 2022).resolves([
+              createChargeVersionRow({
+                includeInSupplementaryBilling: true,
+                isTwoPartTariff: false
+              }, 2022)
             ]);
 
             await chargeVersionService.createForBatch(batch);
@@ -380,11 +390,17 @@ experiment('modules/billing/services/charge-version-service', () => {
 
         experiment('when the licence has two-part tariff agreement', () => {
           beforeEach(async () => {
-            repos.chargeVersions.findValidInRegionAndFinancialYear.resolves([
+            repos.chargeVersions.findValidInRegionAndFinancialYear.withArgs(batch.region.id, 2021).resolves([
               createChargeVersionRow({
                 includeInSupplementaryBilling: true,
                 isTwoPartTariff: true
-              })
+              }, 2021)
+            ]);
+            repos.chargeVersions.findValidInRegionAndFinancialYear.withArgs(batch.region.id, 2022).resolves([
+              createChargeVersionRow({
+                includeInSupplementaryBilling: true,
+                isTwoPartTariff: true
+              }, 2022)
             ]);
 
             returnRequirementVersionService.getByLicenceId.resolves([
@@ -407,6 +423,97 @@ experiment('modules/billing/services/charge-version-service', () => {
             )).to.be.true();
             expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
               batch, chargeVersionId, new FinancialYear(2022), TRANSACTION_TYPE.twoPartTariff, false
+            )).to.be.true();
+            expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
+              batch, chargeVersionId, new FinancialYear(2022), TRANSACTION_TYPE.twoPartTariff, true
+            )).to.be.true();
+          });
+        });
+
+        experiment('when the licence has two-part tariff agreement, but there are no valid return versions', () => {
+          beforeEach(async () => {
+            repos.chargeVersions.findValidInRegionAndFinancialYear.withArgs(batch.region.id, 2021).resolves([
+              createChargeVersionRow({
+                includeInSupplementaryBilling: true,
+                isTwoPartTariff: true
+              }, 2021)
+            ]);
+            repos.chargeVersions.findValidInRegionAndFinancialYear.withArgs(batch.region.id, 2022).resolves([
+              createChargeVersionRow({
+                includeInSupplementaryBilling: true,
+                isTwoPartTariff: true
+              }, 2022)
+            ]);
+
+            returnRequirementVersionService.getByLicenceId.resolves([
+            ]);
+
+            await chargeVersionService.createForBatch(batch);
+          });
+
+          test('creates expected charge version years for each year', async () => {
+            expect(chargeVersionYearService.createBatchChargeVersionYear.callCount).to.equal(3);
+            expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
+              batch, chargeVersionId, new FinancialYear(2021), TRANSACTION_TYPE.annual, false
+            )).to.be.true();
+            expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
+              batch, chargeVersionId, new FinancialYear(2021), TRANSACTION_TYPE.twoPartTariff, false
+            )).to.be.true();
+            expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
+              batch, chargeVersionId, new FinancialYear(2022), TRANSACTION_TYPE.annual, false
+            )).to.be.true();
+          });
+        });
+      });
+
+      experiment('when the winter/all year two-part tariff batch has not yet been run', () => {
+        beforeEach(async () => {
+          batchService.getSentTptBatchesForFinancialYearAndRegion.withArgs(new FinancialYear(2021), batch.region).resolves([
+            {
+              endYear: { endYear: 2021 },
+              isSummer: false
+            }
+          ]);
+          batchService.getSentTptBatchesForFinancialYearAndRegion.withArgs(new FinancialYear(2022), batch.region).resolves([
+            {
+              endYear: { endYear: 2021 },
+              isSummer: true
+            }
+          ]);
+        });
+
+        experiment('when the licence has two-part tariff agreement', () => {
+          beforeEach(async () => {
+            repos.chargeVersions.findValidInRegionAndFinancialYear.withArgs(batch.region.id, 2021).resolves([
+              createChargeVersionRow({
+                includeInSupplementaryBilling: true,
+                isTwoPartTariff: true
+              }, 2021)
+            ]);
+            repos.chargeVersions.findValidInRegionAndFinancialYear.withArgs(batch.region.id, 2022).resolves([
+              createChargeVersionRow({
+                includeInSupplementaryBilling: true,
+                isTwoPartTariff: true
+              }, 2022)
+            ]);
+
+            returnRequirementVersionService.getByLicenceId.resolves([
+              createReturnVersion('2020-04-01', null, true)
+            ]);
+
+            await chargeVersionService.createForBatch(batch);
+          });
+
+          test('creates expected charge version years for each year', async () => {
+            expect(chargeVersionYearService.createBatchChargeVersionYear.callCount).to.equal(4);
+            expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
+              batch, chargeVersionId, new FinancialYear(2021), TRANSACTION_TYPE.annual, false
+            )).to.be.true();
+            expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
+              batch, chargeVersionId, new FinancialYear(2021), TRANSACTION_TYPE.twoPartTariff, false
+            )).to.be.true();
+            expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
+              batch, chargeVersionId, new FinancialYear(2022), TRANSACTION_TYPE.annual, false
             )).to.be.true();
             expect(chargeVersionYearService.createBatchChargeVersionYear.calledWith(
               batch, chargeVersionId, new FinancialYear(2022), TRANSACTION_TYPE.twoPartTariff, true
