@@ -26,7 +26,7 @@ const dbToModelMapper = createMapper()
     'chargeVersionId'
   )
   .map().to('abstractionPeriod', abstractionPeriodMapper.dbToModel)
-  .map('factorsOverridden').to('isFactorsOverridden', factorsOverridden => factorsOverridden)
+  .map('factorsOverridden').to('isFactorsOverridden')
   .map('purposePrimary').to('purposePrimary', purposePrimaryMapper.dbToModel)
   .map('purposeSecondary').to('purposeSecondary', purposeSecondaryMapper.dbToModel)
   .map('purposeUse').to('purposeUse', purposeUseMapper.dbToModel)
