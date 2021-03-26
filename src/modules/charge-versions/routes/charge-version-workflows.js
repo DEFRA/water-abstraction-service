@@ -69,8 +69,7 @@ module.exports = {
       },
       pre: [
         { method: preHandlers.mapChargeVersion, assign: 'chargeVersion' },
-        { method: preHandlers.mapInternalCallingUser, assign: 'user' },
-        { method: preHandlers.loadLicenceVersion, assign: 'licenceVersion' }
+        { method: preHandlers.mapInternalCallingUser, assign: 'user' }
       ]
     }
   },

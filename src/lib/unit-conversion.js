@@ -4,7 +4,7 @@ const { isNull } = require('lodash');
 
 const cubicMetresToMegalitres = value => {
   if (isNull(value)) {
-    return null;
+    return 0;
   }
   return new Decimal(value).dividedBy(1000).toNumber();
 };

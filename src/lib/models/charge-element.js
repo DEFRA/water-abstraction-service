@@ -89,7 +89,7 @@ class ChargeElement extends Model {
   }
 
   set authorisedAnnualQuantity (quantity) {
-    validators.assertQuantity(quantity);
+    validators.assertNullableQuantity(quantity);
     this._authorisedAnnualQuantity = parseFloat(quantity);
   }
 
