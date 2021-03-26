@@ -43,7 +43,7 @@ experiment('lib/services/charge-elements', () => {
     let abstractionPeriods;
 
     const setElements = () => {
-      purposeUse.isTwoPartTariff = ['400', '420', '600', '620'].includes(purposeUse.code);
+      purposeUse.isTwoPartTariff = ['380', '400', '420', '600', '620'].includes(purposeUse.code);
       elements = chargeElementsService.getChargeElementsFromLicenceVersion(licenceVersion);
       element = elements[0];
     };
@@ -313,6 +313,50 @@ experiment('lib/services/charge-elements', () => {
 
     test('resoles with the new charge element', async () => {
       expect(result).to.be.an.instanceOf(ChargeElement);
+    });
+  });
+
+  experiment('._getIsFactorsOverridden', () => {
+    let chargeElement;
+    beforeEach(() => {
+      chargeElement = new ChargeElement();
+      const abstractionPeriod = new AbstractionPeriod();
+      abstractionPeriod.setDates(1, 4, 31, 10);
+      const purposeUse = new PurposeUse(uuid());
+      purposeUse.lossFactor = 'high';
+      chargeElement.fromHash({
+        description: 'test element',
+        source: 'unsupported',
+        loss: 'high',
+        season: 'summer',
+        abstractionPeriod,
+        purposePrimary: new Purpose(uuid()),
+        purposeSecondary: new Purpose(uuid()),
+        purposeUse
+      });
+    });
+
+    test('returns false if no factors are overridden', () => {
+      const result = chargeElementsService._getIsFactorsOverridden(chargeElement);
+      expect(result).to.equal(false);
+    });
+
+    test('returns true if loss does not match purpose use loss factor', () => {
+      chargeElement.loss = 'medium';
+      const result = chargeElementsService._getIsFactorsOverridden(chargeElement);
+      expect(result).to.equal(true);
+    });
+
+    test('returns true if season does not match calculated season', () => {
+      chargeElement.season = 'all year';
+      const result = chargeElementsService._getIsFactorsOverridden(chargeElement);
+      expect(result).to.equal(true);
+    });
+
+    test('returns true if source is not "unsupported"', () => {
+      chargeElement.source = 'kielder';
+      const result = chargeElementsService._getIsFactorsOverridden(chargeElement);
+      expect(result).to.equal(true);
     });
   });
 });
