@@ -1,14 +1,12 @@
 'use strict';
 
-const { get, sortBy } = require('lodash');
+const { get } = require('lodash');
 
 const chargeVersionMapper = require('../../../lib/mappers/charge-version');
 const userMapper = require('../../../lib/mappers/user');
 const chargeVersionWorkflowService = require('../services/charge-version-workflows');
-const moment = require('moment');
 const Boom = require('@hapi/boom');
 const { logger } = require('../../../logger');
-const licenceVersions = require('../../../lib/connectors/repos/licence-versions');
 
 const mapOrThrowBoom = (entityName, data, mapper) => {
   try {

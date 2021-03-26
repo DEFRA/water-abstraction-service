@@ -13,7 +13,6 @@ const sandbox = sinon.createSandbox();
 const chargeVersionWorkflowService = require('../../../../src/modules/charge-versions/services/charge-version-workflows');
 const preHandlers = require('../../../../src/modules/charge-versions/controllers/pre-handlers');
 const ChargeVersionWorkflow = require('../../../../src/lib/models/charge-version-workflow');
-const licenceVersions = require('../../../../src/lib/connectors/repos/licence-versions');
 
 experiment('modules/charge-versions/controllers/pre-handlers', () => {
   let chargeVersionWorkflow;
