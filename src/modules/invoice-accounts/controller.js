@@ -5,6 +5,7 @@ const controller = require('../../lib/controller');
 const invoiceAccountService = require('../../lib/services/invoice-accounts-service');
 const licencesService = require('../../lib/services/licences');
 const invoiceAccountAddressMapper = require('../../lib/mappers/invoice-account-address');
+const invoiceService = require('../../lib/services/invoice-service');
 const mapErrorResponse = require('../../lib/map-error-response');
 const DATE_FORMAT = 'YYYY-MM-DD';
 
@@ -55,6 +56,20 @@ const getLicences = async request => {
   }
 };
 
+const getInvoices = async (request, h) => {
+  const { invoiceAccountId } = request.params;
+  try {
+    const result = await controller.getEntity(request.params.invoiceAccountId, invoiceAccountService.getByInvoiceAccountId);
+    if (result.isBoom) {
+      return result;
+    }
+    return invoiceService.getInvoicesForInvoiceAccount(invoiceAccountId);
+  } catch (err) {
+    return mapErrorResponse(err);
+  }
+};
+
 exports.getInvoiceAccount = getInvoiceAccount;
 exports.postInvoiceAccountAddress = postInvoiceAccountAddress;
 exports.getLicences = getLicences;
+exports.getInvoices = getInvoices;
