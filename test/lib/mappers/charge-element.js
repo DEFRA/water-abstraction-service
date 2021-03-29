@@ -26,7 +26,8 @@ const data = {
     source: 'supported',
     season: CHARGE_SEASON.summer,
     loss: 'high',
-    chargeVersionId: '6d53dddd-2ab6-449b-b28c-d6d857569b94'
+    chargeVersionId: '6d53dddd-2ab6-449b-b28c-d6d857569b94',
+    isFactorsOverridden: true
   },
   timeLimitedChargeElement: {
     chargeElementId: '90d4af8a-1717-452c-84bd-467a7d55ade4',
@@ -41,7 +42,8 @@ const data = {
     source: 'supported',
     season: CHARGE_SEASON.summer,
     loss: 'high',
-    charge_version_id: '6d53dddd-2ab6-449b-b28c-d6d857569b94'
+    charge_version_id: '6d53dddd-2ab6-449b-b28c-d6d857569b94',
+    factors_overridden: true
   },
   dbRowWithPurposeUse: {
     charge_element_id: '90d4af8a-1717-452c-84bd-467a7d55ade4',
@@ -91,6 +93,11 @@ experiment('lib/mappers/charge-element', () => {
     test('sets the .chargeVersionId property', async () => {
       expect(result.chargeVersionId).to.equal(data.chargeElement.chargeVersionId);
     });
+
+    test('sets the .isFactorsOverridden property', async () => {
+      expect(result.isFactorsOverridden).to.equal(data.chargeElement.isFactorsOverridden);
+    });
+
     experiment('when the database row does not contain a purpose use', () => {
       test('the purposeUse property is not set', async () => {
         expect(result.purposeUse).to.be.undefined();
@@ -206,7 +213,8 @@ experiment('lib/mappers/charge-element', () => {
         purposePrimary: new Purpose(uuid()),
         purposeSecondary: new Purpose(uuid()),
         purposeUse: new PurposeUse(uuid()),
-        timeLimitedPeriod: new DateRange('2019-01-01', '2020-12-31')
+        timeLimitedPeriod: new DateRange('2019-01-01', '2020-12-31'),
+        isFactorsOverridden: false
       });
     });
 
@@ -235,7 +243,8 @@ experiment('lib/mappers/charge-element', () => {
             timeLimitedStartDate: '2019-01-01',
             timeLimitedEndDate: '2020-12-31',
             seasonDerived: 'all year',
-            chargeVersionId: chargeVersion.id
+            chargeVersionId: chargeVersion.id,
+            factorsOverridden: model.isFactorsOverridden
           }
         );
       });
@@ -277,7 +286,8 @@ experiment('lib/mappers/charge-element', () => {
             timeLimitedStartDate: null,
             timeLimitedEndDate: null,
             seasonDerived: 'all year',
-            chargeVersionId: chargeVersion.id
+            chargeVersionId: chargeVersion.id,
+            factorsOverridden: model.isFactorsOverridden
           }
         );
       });
