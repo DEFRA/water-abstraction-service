@@ -56,7 +56,7 @@ const getLicences = async request => {
   }
 };
 
-const getInvoices = async (request, h) => {
+const getInvoices = async request => {
   const { invoiceAccountId } = request.params;
   try {
     const result = await controller.getEntity(request.params.invoiceAccountId, invoiceAccountService.getByInvoiceAccountId);
