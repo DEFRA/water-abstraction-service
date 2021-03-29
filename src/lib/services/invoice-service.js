@@ -113,7 +113,7 @@ const mapToInvoices = async context => {
   for (const billingInvoice of context.billingInvoices) {
     const mappedInvoice = await mapInvoice(billingInvoice, context);
     invoices.push(mappedInvoice);
-  };
+  }
   return invoices;
 };
 
