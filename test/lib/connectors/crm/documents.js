@@ -94,6 +94,34 @@ experiment('lib/connectors/crm/documents', () => {
       });
     });
 
+    experiment('for a expired licence', () => {
+      let result;
+
+      beforeEach(async () => {
+        documentsConnector.findAll.resolves([{
+          document_id: 'test-document-id',
+          system_external_id: 'test-licence-number'
+        }]);
+
+        result = await documentsConnector.getDocumentsByLicenceNumbers(['test-licence-number'], true);
+      });
+
+      test('returns the expected result', async () => {
+        expect(result.length).to.equal(1);
+        expect(result[0].document_id).to.equal('test-document-id');
+      });
+
+      test('creates the expected query filter', async () => {
+        const [filter] = documentsConnector.findAll.lastCall.args;
+        expect(filter).to.equal({
+          includeExpired: true,
+          system_external_id: {
+            $in: ['test-licence-number']
+          }
+        });
+      });
+    });
+
     experiment('for more than 20 licence numbers', () => {
       let result;
       let licenceNumbers;

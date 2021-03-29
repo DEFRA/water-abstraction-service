@@ -178,6 +178,34 @@ experiment('modules/charge-versions/controllers/charge-version-workflows', () =>
       });
     });
 
+    experiment('when there are no errors and createdBy is included in the payload', () => {
+      test('the service update() method is called with the correct ID and params', async () => {
+        delete request.payload.approverComments;
+        request.payload.createdBy = { id: 19, email: 'test@email.test' };
+        const user = new User(19, 'test@email.test');
+        const args = [
+          request.params.chargeVersionWorkflowId,
+          {
+            status: 'review',
+            createdBy: user,
+            chargeVersion: request.pre.chargeVersion
+          }
+        ];
+        await cvWorkflowsController.patchChargeVersionWorkflow(request);
+        expect(chargeVersionWorkflowService.update.lastCall.args).to.equal(args);
+      });
+    });
+
+    experiment('when the user details included in createdBy can not map to a user', () => {
+      test('the service returns a boom.badData error', async () => {
+        delete request.payload.approverComments;
+        request.payload.createdBy = { id: 19, email: 'testEmail' };
+        const response = await cvWorkflowsController.patchChargeVersionWorkflow(request);
+        expect(response.message).to.equal('Invalid user in charge version data');
+        expect(response.output.statusCode).to.equal(422);
+      });
+    });
+
     experiment('when there are no errors, and no charge version in payload', () => {
       beforeEach(async () => {
         delete request.pre.chargeVersion;
