@@ -223,4 +223,20 @@ experiment('lib/models/date-range', () => {
       expect(dateRange.isFinancialYear).to.be.true();
     });
   });
+
+  experiment('.isSameOrAfter', () => {
+    const dateRange = new DateRange('2019-01-01', '2019-12-31');
+
+    test('returns true if starts on the supplied date', async () => {
+      expect(dateRange.isSameOrAfter('2019-01-01')).to.be.true();
+    });
+
+    test('returns true if starts after the supplied date', async () => {
+      expect(dateRange.isSameOrAfter('2018-12-31')).to.be.true();
+    });
+
+    test('returns true if starts before the supplied date', async () => {
+      expect(dateRange.isSameOrAfter('2019-01-02')).to.be.false();
+    });
+  });
 });
