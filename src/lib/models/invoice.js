@@ -1,11 +1,15 @@
 'use strict';
 
-const { uniq, get, flatMap } = require('lodash');
+const { uniq, get, flatMap, isNull } = require('lodash');
 
 const {
   assertIsInstanceOf, assertIsArrayOfType,
   assertIsNullableInstanceOf, assertIsBoolean,
-  assertNullableString, assertNullableId
+  assertNullableString, assertNullableObject,
+  assertNullableInteger, assertNullableId,
+  assertNullablePositiveOrZeroInteger,
+  assertNullableNegativeOrZeroInteger,
+  assertIsNullableBoolean
 } = require('./validators');
 
 const Address = require('./address');
@@ -189,6 +193,84 @@ class Invoice extends Totals {
     return this._invoiceNumber;
   }
 
+  /**
+   * Sets the net total
+   * @param {Integer} netTotal
+   */
+  set netTotal (netTotal) {
+    assertNullableInteger(netTotal);
+    this._netTotal = isNull(netTotal) ? null : parseInt(netTotal);
+  }
+
+  get netTotal () {
+    return this._netTotal;
+  }
+
+  /**
+   * Sets the isCredit flag
+   * @param {Boolean} isCredit
+   */
+  set isCredit (isCredit) {
+    assertIsNullableBoolean(isCredit);
+    this._isCredit = isCredit;
+  }
+
+  get isCredit () {
+    return this._isCredit;
+  }
+
+  /**
+   * Sets the legacy id
+   * @param {String} legacyId
+   */
+  set legacyId (legacyId) {
+    assertNullableString(legacyId);
+    this._legacyId = legacyId;
+  }
+
+  get legacyId () {
+    return this._legacyId;
+  }
+
+  /**
+   * Sets the metadata
+   * @param {Object} metadata
+   */
+  set metadata (metadata) {
+    assertNullableObject(metadata);
+    this._metadata = metadata;
+  }
+
+  get metadata () {
+    return this._metadata;
+  }
+
+  /**
+   * Sets the invoice value
+   * @param {Integer} invoiceValue
+   */
+  set invoiceValue (invoiceValue) {
+    assertNullablePositiveOrZeroInteger(invoiceValue);
+    this._invoiceValue = invoiceValue;
+  }
+
+  get invoiceValue () {
+    return this._invoiceValue;
+  }
+
+  /**
+   * Sets the credit note value
+   * @param {Integer} creditNoteValue
+   */
+  set creditNoteValue (creditNoteValue) {
+    assertNullableNegativeOrZeroInteger(creditNoteValue);
+    this._creditNoteValue = creditNoteValue;
+  }
+
+  get creditNoteValue () {
+    return this._creditNoteValue;
+  }
+
   get hasTransactionErrors () {
     return this.invoiceLicences.some(invoiceLicence => invoiceLicence.hasTransactionErrors);
   }
@@ -205,10 +287,28 @@ class Invoice extends Totals {
     this._externalId = externalId;
   }
 
+  get displayLabel () {
+    if (this.invoiceNumber) {
+      return this.invoiceNumber;
+    }
+    if (this.isDeMinimis) {
+      return 'De minimis bill';
+    }
+    if (this.legacyId) {
+      return 'NALD revised bill';
+    }
+    if (this.netTotal === 0) {
+      return 'Zero value bill';
+    }
+    // Prevents an error being thrown if there is an unexpected case
+    return null;
+  }
+
   toJSON () {
-    const { hasTransactionErrors } = this;
+    const { hasTransactionErrors, displayLabel } = this;
     return {
       hasTransactionErrors,
+      displayLabel,
       ...super.toJSON()
     };
   }

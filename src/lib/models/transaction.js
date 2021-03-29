@@ -309,6 +309,78 @@ class Transaction extends Model {
     return this._isDeMinimis;
   }
 
+  set calcSourceFactor (calcSourceFactor) {
+    validators.assertNullableNumeric(calcSourceFactor);
+    this._calcSourceFactor = calcSourceFactor;
+  }
+
+  get calcSourceFactor () {
+    return this._calcSourceFactor;
+  }
+
+  set calcSeasonFactor (calcSeasonFactor) {
+    validators.assertNullableNumeric(calcSeasonFactor);
+    this._calcSeasonFactor = calcSeasonFactor;
+  }
+
+  get calcSeasonFactor () {
+    return this._calcSeasonFactor;
+  }
+
+  set calcLossFactor (calcLossFactor) {
+    validators.assertNullableNumeric(calcLossFactor);
+    this._calcLossFactor = calcLossFactor;
+  }
+
+  get calcLossFactor () {
+    return this._calcLossFactor;
+  }
+
+  set calcSucFactor (calcSucFactor) {
+    validators.assertNullableNumeric(calcSucFactor);
+    this._calcSucFactor = calcSucFactor;
+  }
+
+  get calcSucFactor () {
+    return this._calcSucFactor;
+  }
+
+  set calcS126Factor (calcS126Factor) {
+    validators.assertNullableFactorWithPrefix(calcS126Factor);
+    this._calcS126Factor = calcS126Factor;
+  }
+
+  get calcS126Factor () {
+    return this._calcS126Factor;
+  }
+
+  set calcS127Factor (calcS127Factor) {
+    validators.assertNullableFactorWithPrefix(calcS127Factor);
+    this._calcS127Factor = calcS127Factor;
+  }
+
+  get calcS127Factor () {
+    return this._calcS127Factor;
+  }
+
+  set calcEiucFactor (calcEiucFactor) {
+    validators.assertNullableNumeric(calcEiucFactor);
+    this._calcEiucFactor = calcEiucFactor;
+  }
+
+  get calcEiucFactor () {
+    return this._calcEiucFactor;
+  }
+
+  set calcEiucSourceFactor (calcEiucSourceFactor) {
+    validators.assertNullableNumeric(calcEiucSourceFactor);
+    this._calcEiucSourceFactor = calcEiucSourceFactor;
+  }
+
+  get calcEiucSourceFactor () {
+    return this._calcEiucSourceFactor;
+  }
+
   /**
    * Checks if the transaction is in error status
    * @return {Boolean}

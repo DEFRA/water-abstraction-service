@@ -282,30 +282,6 @@ experiment('modules/billing/services/cm-refresh-service', () => {
           batch, { includeTransactions: true }
         )).to.be.true();
       });
-
-      test('transactions are fetched from the CM for each invoice', async () => {
-        expect(cmBillRunsConnector.getInvoiceTransactions.callCount).to.equal(2); // one for each invoice
-        expect(cmBillRunsConnector.getInvoiceTransactions.calledWith(
-          externalId, invoiceIds[0]
-        )).to.be.true();
-        expect(cmBillRunsConnector.getInvoiceTransactions.calledWith(
-          externalId, invoiceIds[1]
-        )).to.be.true();
-      });
-
-      test('the transactions are persisted', async () => {
-        expect(transactionService.saveTransactionToDB.callCount).to.equal(6); // one for each transaction
-      });
-
-      test('local transactions no longer in the CM batch are deleted', async () => {
-        expect(transactionService.deleteById.callCount).to.equal(2);
-        expect(transactionService.deleteById.calledWith(
-          [deletedTransactionIds[0]]
-        )).to.be.true();
-        expect(transactionService.deleteById.calledWith(
-          [deletedTransactionIds[1]]
-        )).to.be.true();
-      });
     });
   });
 });
