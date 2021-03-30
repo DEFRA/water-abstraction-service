@@ -7,7 +7,7 @@ const Transaction = require('../../../../lib/models/transaction');
 
 // Services
 const billingTransactionsRepo = require('../../../../lib/connectors/repos/billing-transactions');
-const invoiceService = require('../invoice-service');
+const invoiceService = require('../../../../lib/services/invoice-service');
 const invoiceLicencesService = require('../invoice-licences-service');
 
 const { actions } = require('./constants');

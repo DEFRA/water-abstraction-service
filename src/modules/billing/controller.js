@@ -12,7 +12,7 @@ const mappers = require('./mappers');
 const { logger } = require('../../logger');
 
 // Services
-const invoiceService = require('./services/invoice-service');
+const invoiceService = require('../../lib/services/invoice-service');
 const invoiceLicenceService = require('./services/invoice-licences-service');
 const chargeVersionService = require('../../lib/services/charge-versions');
 const batchService = require('./services/batch-service');

@@ -13,7 +13,7 @@ const { pick } = require('lodash');
 
 const billingTransactionsRepo = require('../../../../../src/lib/connectors/repos/billing-transactions');
 const dataService = require('../../../../../src/modules/billing/services/supplementary-billing-service/data-service');
-const invoiceService = require('../../../../../src/modules/billing/services/invoice-service');
+const invoiceService = require('../../../../../src/lib/services/invoice-service');
 const invoiceLicenceService = require('../../../../../src/modules/billing/services/invoice-licences-service');
 
 // Models
