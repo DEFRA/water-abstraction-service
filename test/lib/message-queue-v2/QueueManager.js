@@ -7,13 +7,15 @@ const QueueManager = require('../../../src/lib/message-queue-v2/QueueManager');
 const bull = require('bullmq');
 const sandbox = require('sinon').createSandbox();
 const EventEmitter = require('events');
+const { logger } = require('../../../src/logger');
 
 experiment('lib/message-queue-v2/QueueManager', () => {
   let queueManager, connection, jobContainer, workerStub, queueStub, pipelineStub;
 
   beforeEach(async () => {
     workerStub = {
-      on: sandbox.stub()
+      on: sandbox.stub(),
+      close: sandbox.stub()
     };
     queueStub = {
       add: sandbox.stub()
@@ -36,6 +38,7 @@ experiment('lib/message-queue-v2/QueueManager', () => {
       onFailed: () => {},
       createMessage: (...args) => args
     };
+    sandbox.stub(logger, 'error');
   });
 
   afterEach(async () => {
@@ -152,6 +155,43 @@ experiment('lib/message-queue-v2/QueueManager', () => {
 
         result = await expect(func()).to.reject();
         expect(result).to.equal(err);
+      });
+    });
+  });
+
+  experiment('.stop', () => {
+    beforeEach(async () => {
+      queueManager.register(jobContainer);
+    });
+
+    experiment('when there are no errors', () => {
+      beforeEach(async () => {
+        await queueManager.stop();
+      });
+
+      test('calls close() on each worker', async () => {
+        expect(workerStub.close.callCount).to.equal(1);
+      });
+
+      test('no error is logged', async () => {
+        expect(logger.error.called).to.be.false();
+      });
+    });
+
+    experiment('when is an error', () => {
+      const err = new Error('Oops!');
+
+      beforeEach(async () => {
+        workerStub.close.rejects(err);
+        await queueManager.stop();
+      });
+
+      test('calls close() on each worker', async () => {
+        expect(workerStub.close.callCount).to.equal(1);
+      });
+
+      test('an error is logged', async () => {
+        expect(logger.error.calledWith(`Error shutting down worker ${jobContainer.jobName}`, err)).to.be.true();
       });
     });
   });
