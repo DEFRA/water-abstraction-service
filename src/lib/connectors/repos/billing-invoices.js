@@ -2,6 +2,7 @@ const { bookshelf, BillingInvoice } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoices');
 const helpers = require('./lib/helpers');
+const paginationHelper = require('./lib/envelope');
 
 /**
  * Upserts a water.billing_invoices record
@@ -64,6 +65,35 @@ const deleteByBatchId = async (batchId, isDeletionRequired = true) => BillingInv
 const update = async (billingInvoiceId, changes) =>
   helpers.update(BillingInvoice, 'billingInvoiceId', billingInvoiceId, changes);
 
+/**
+* Gets BillingInvoices and related models for an invoice account by invoiceAccountId
+* where the batch is sent
+* @param {String} invoiceAccountId
+* @param {number} page
+* @param {number} perPage
+* @return {Promise<Object>}
+*/
+const findAllForInvoiceAccount = async (invoiceAccountId, page = 1, perPage = 10) => {
+  const result = await BillingInvoice
+    .forge()
+    .query(function (qb) {
+      qb.join('water.billing_batches', 'water.billing_invoices.billing_batch_id', '=', 'water.billing_batches.billing_batch_id');
+      qb.where({ invoice_account_id: invoiceAccountId, 'water.billing_batches.status': 'sent' });
+      qb.orderBy('date_created', 'DESC', 'water.billing_invoices.financial_year_ending', 'DESC');
+    })
+    .fetchPage({
+      pageSize: perPage,
+      page: page,
+      withRelated: [
+        'billingInvoiceLicences',
+        'billingBatch',
+        'billingBatch.region'
+      ]
+    });
+
+  return paginationHelper.paginatedEnvelope(result);
+};
+
 exports.upsert = upsert;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;
@@ -71,3 +101,4 @@ exports.findOneBy = findOneBy;
 exports.delete = deleteRecord;
 exports.deleteByBatchId = deleteByBatchId;
 exports.update = update;
+exports.findAllForInvoiceAccount = findAllForInvoiceAccount;

@@ -21,7 +21,7 @@ const { BATCH_STATUS, BATCH_TYPE } = Batch;
 
 const newRepos = require('../../../src/lib/connectors/repos');
 const eventService = require('../../../src/lib/services/events');
-const invoiceService = require('../../../src/modules/billing/services/invoice-service');
+const invoiceService = require('../../../src/lib/services/invoice-service');
 const invoiceLicenceService = require('../../../src/modules/billing/services/invoice-licences-service');
 const batchService = require('../../../src/modules/billing/services/batch-service');
 const transactionsService = require('../../../src/modules/billing/services/transactions-service');

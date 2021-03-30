@@ -14,7 +14,7 @@ const uuid = require('uuid/v4');
 const cmBillRunsConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
 const cmRefreshService = require('../../../../src/modules/billing/services/cm-refresh-service');
 const batchService = require('../../../../src/modules/billing/services/batch-service');
-const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
+const invoiceService = require('../../../../src/lib/services/invoice-service');
 const transactionService = require('../../../../src/modules/billing/services/transactions-service');
 
 // Models
