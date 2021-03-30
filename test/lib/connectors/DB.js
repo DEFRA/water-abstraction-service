@@ -12,6 +12,7 @@ const db = require('../../../src/lib/connectors/db.js');
 experiment('src/lib/connectors/db', () => {
   beforeEach(async () => {
     sandbox.stub(knex.knex, 'raw');
+    sandbox.stub(knex.knex, 'destroy');
   });
 
   afterEach(async () => {
@@ -35,6 +36,13 @@ experiment('src/lib/connectors/db', () => {
           param_1: PARAMS[1]
         }
       )).to.be.true();
+    });
+  });
+
+  experiment('.end', () => {
+    test('calls knex.destroy()', async () => {
+      await db.pool.end();
+      expect(knex.knex.destroy.callCount).to.equal(1);
     });
   });
 });

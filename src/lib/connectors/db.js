@@ -5,5 +5,6 @@ const knex = require('./knex');
 const query = (...args) => knex.knex.raw(...db.mapQueryToKnex(...args));
 
 exports.pool = {
-  query
+  query,
+  end: () => knex.knex.destroy()
 };

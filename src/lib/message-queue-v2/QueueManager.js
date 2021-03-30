@@ -1,6 +1,7 @@
 'use strict';
 
 const bull = require('bullmq');
+const { logger } = require('../../logger');
 
 const STATUS_COMPLETED = 'completed';
 const STATUS_FAILED = 'failed';
@@ -8,6 +9,14 @@ const STATUS_FAILED = 'failed';
 const jobDefaults = {
   removeOnComplete: true,
   removeOnFail: 500
+};
+
+const closeWorker = async (jobName, worker) => {
+  try {
+    await worker.close();
+  } catch (err) {
+    logger.error(`Error shutting down worker ${jobName}`, err);
+  }
 };
 
 class QueueManager {
@@ -102,6 +111,15 @@ class QueueManager {
         reject(e);
       });
     });
+  }
+
+  /**
+   * Shuts down all registered workers
+   */
+  async stop () {
+    for (const [jobName, { worker }] of this._queues) {
+      await closeWorker(jobName, worker);
+    }
   }
 }
 
