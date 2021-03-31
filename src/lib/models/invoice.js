@@ -287,6 +287,19 @@ class Invoice extends Totals {
     this._externalId = externalId;
   }
 
+  /**
+   * Sets the isFlaggedForRebilling flag
+   * @param {Boolean} isFlaggedForRebilling
+   */
+  set isFlaggedForRebilling (isFlaggedForRebilling) {
+    assertIsNullableBoolean(isFlaggedForRebilling);
+    this._isFlaggedForRebilling = isFlaggedForRebilling;
+  }
+
+  get isFlaggedForRebilling () {
+    return this._isFlaggedForRebilling;
+  }
+
   get displayLabel () {
     if (this.invoiceNumber) {
       return this.invoiceNumber;
