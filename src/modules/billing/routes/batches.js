@@ -15,10 +15,10 @@ const getBatches = {
   handler: controller.getBatches,
   config: {
     validate: {
-      query: {
+      query: Joi.object({
         page: Joi.number().integer().optional(),
         perPage: Joi.number().integer().optional()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -32,13 +32,13 @@ const postCreateBatch = {
   handler: controller.postCreateBatch,
   config: {
     validate: {
-      payload: {
+      payload: Joi.object({
         userEmail: Joi.string().email().required(),
         regionId: Joi.string().uuid().required(),
         batchType: Joi.string().valid('annual', 'supplementary', 'two_part_tariff').required(),
         financialYearEnding: Joi.number().required(),
         isSummer: Joi.boolean().default(false)
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -52,9 +52,9 @@ const getBatch = {
   handler: controller.getBatch,
   config: {
     validate: {
-      params: {
+      params: Joi.object({
         batchId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -71,9 +71,9 @@ const getBatchInvoices = {
   handler: controller.getBatchInvoices,
   config: {
     validate: {
-      params: {
+      params: Joi.object({
         batchId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -90,9 +90,9 @@ const getBatchInvoicesDetails = {
   handler: controller.getBatchInvoicesDetails,
   config: {
     validate: {
-      params: {
+      params: Joi.object({
         batchId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -109,10 +109,10 @@ const getBatchInvoiceDetail = {
   handler: controller.getBatchInvoiceDetail,
   config: {
     validate: {
-      params: {
+      params: Joi.object({
         batchId: Joi.string().uuid().required(),
         invoiceId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -129,10 +129,10 @@ const deleteBatchInvoice = {
   handler: controller.deleteBatchInvoice,
   config: {
     validate: {
-      params: {
+      params: Joi.object({
         batchId: Joi.string().uuid().required(),
         invoiceId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -149,9 +149,9 @@ const deleteBatch = {
   handler: controller.deleteBatch,
   config: {
     validate: {
-      params: {
+      params: Joi.object({
         batchId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -168,9 +168,9 @@ const postApproveBatch = {
   handler: controller.postApproveBatch,
   config: {
     validate: {
-      params: {
+      params: Joi.object({
         batchId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -187,9 +187,9 @@ const getInvoiceLicence = {
   handler: controller.getInvoiceLicenceWithTransactions,
   config: {
     validate: {
-      params: {
+      params: Joi.object({
         invoiceLicenceId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -203,9 +203,9 @@ const postApproveReviewBatch = {
   handler: postApproveReviewBatchController,
   config: {
     validate: {
-      params: {
+      params: Joi.object({
         batchId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -222,9 +222,9 @@ const getBatchDownloadData = {
   handler: controller.getBatchDownloadData,
   config: {
     validate: {
-      params: {
+      params: Joi.object({
         batchId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
