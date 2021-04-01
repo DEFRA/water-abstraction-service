@@ -4,14 +4,14 @@ const { find, partialRight, pickBy } = require('lodash');
 const pWaterfall = require('p-waterfall');
 
 // Connectors
-const invoiceAccountsConnector = require('../../../lib/connectors/crm-v2/invoice-accounts');
-const repos = require('../../../lib/connectors/repos');
+const invoiceAccountsConnector = require('../connectors/crm-v2/invoice-accounts');
+const repos = require('../connectors/repos');
 
-const mappers = require('../mappers');
-const FinancialYear = require('../../../lib/models/financial-year');
+const mappers = require('../../modules/billing/mappers');
+const FinancialYear = require('../models/financial-year');
 
 // Errors
-const { NotFoundError } = require('../../../lib/errors');
+const { NotFoundError } = require('../errors');
 
 /**
  * Saves an Invoice model to water.billing_invoices
@@ -113,7 +113,7 @@ const mapToInvoices = async context => {
   for (const billingInvoice of context.billingInvoices) {
     const mappedInvoice = await mapInvoice(billingInvoice, context);
     invoices.push(mappedInvoice);
-  };
+  }
   return invoices;
 };
 
@@ -190,8 +190,14 @@ const getOrCreateInvoice = async (batchId, invoiceAccountId, financialYearEnding
   return mappers.invoice.dbToModel(newRow);
 };
 
+const getInvoicesForInvoiceAccount = async invoiceAccountId => {
+  const { data, pagination } = await repos.billingInvoices.findAllForInvoiceAccount(invoiceAccountId);
+  return { data: data.map(mappers.invoice.dbToModel), pagination };
+};
+
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;
 exports.getOrCreateInvoice = getOrCreateInvoice;
+exports.getInvoicesForInvoiceAccount = getInvoicesForInvoiceAccount;

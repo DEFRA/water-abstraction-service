@@ -15,7 +15,7 @@ const { logger } = require('../../../logger');
 const transactionMapper = require('../mappers/transaction');
 
 // Services
-const invoiceService = require('./invoice-service');
+const invoiceService = require('../../../lib/services/invoice-service');
 const batchService = require('./batch-service');
 const transactionService = require('./transactions-service');
 

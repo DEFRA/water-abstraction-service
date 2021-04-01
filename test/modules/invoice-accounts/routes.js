@@ -101,4 +101,52 @@ experiment('modules/invoice-accounts/routes', () => {
       expect(output.statusCode).to.equal(400);
     });
   });
+
+  experiment('.getLicences', () => {
+    beforeEach(async () => {
+      server = await testHelpers.createServerForRoute(routes.getLicences);
+    });
+
+    test('validates the id must be a uuid', async () => {
+      const url = '/water/1.0/invoice-accounts/not-a-valid-id/licences';
+      const output = await server.inject(url);
+      expect(output.statusCode).to.equal(400);
+    });
+
+    test('allows a valid uuid for the invoice account id', async () => {
+      const url = `/water/1.0/invoice-accounts/${uuid()}/licences`;
+      const output = await server.inject(url);
+      expect(output.statusCode).to.equal(200);
+    });
+  });
+
+  experiment('.getInvoices', () => {
+    beforeEach(async () => {
+      server = await testHelpers.createServerForRoute(routes.getInvoices);
+    });
+
+    test('validates the  id must be a uuid', async () => {
+      const url = '/water/1.0/invoice-accounts/not-a-valid-id/invoices';
+      const output = await server.inject(url);
+      expect(output.statusCode).to.equal(400);
+    });
+
+    test('allows a valid uuid for the invoice account id', async () => {
+      const url = `/water/1.0/invoice-accounts/${uuid()}/invoices`;
+      const output = await server.inject(url);
+      expect(output.statusCode).to.equal(200);
+    });
+
+    test('allows a page query to be supplied', async () => {
+      const url = `/water/1.0/invoice-accounts/${uuid()}/invoices?page=2`;
+      const output = await server.inject(url);
+      expect(output.statusCode).to.equal(200);
+    });
+
+    test('allows a perPage query to be supplied', async () => {
+      const url = `/water/1.0/invoice-accounts/${uuid()}/invoices?perPage=5`;
+      const output = await server.inject(url);
+      expect(output.statusCode).to.equal(200);
+    });
+  });
 });

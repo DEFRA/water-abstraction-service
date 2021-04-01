@@ -2,16 +2,16 @@
 
 const { omit, isNull } = require('lodash');
 
-const Invoice = require('../../../lib/models/invoice');
-const InvoiceAccount = require('../../../lib/models/invoice-account');
-const FinancialYear = require('../../../lib/models/financial-year');
+const Invoice = require('../models/invoice');
+const InvoiceAccount = require('../models/invoice-account');
+const FinancialYear = require('../models/financial-year');
 
-const invoiceAccount = require('../../../lib/mappers/invoice-account');
-const invoiceLicence = require('./invoice-licence');
-const batchMapper = require('./batch');
+const invoiceAccount = require('./invoice-account');
+const invoiceLicence = require('../../modules/billing/mappers/invoice-licence');
+const batchMapper = require('../../modules/billing/mappers/batch');
 
-const { createMapper } = require('../../../lib/object-mapper');
-const { createModel } = require('../../../lib/mappers/lib/helpers');
+const { createMapper } = require('../object-mapper');
+const { createModel } = require('./lib/helpers');
 
 const dbToModelMapper = createMapper()
   .copy(

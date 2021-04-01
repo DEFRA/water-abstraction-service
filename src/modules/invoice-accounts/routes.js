@@ -13,6 +13,7 @@ const { ROLES: { billing } } = require('../../lib/roles');
 const OPTIONAL_NULLABLE_STRING = Joi.string().trim().optional().allow(null);
 const EXAMPLE_GUID = '00000000-0000-0000-0000-000000000000';
 const OPTIONAL_GUID = Joi.string().guid().optional().example(EXAMPLE_GUID);
+const REQUIRED_GUID = Joi.string().guid().required().example(EXAMPLE_GUID);
 
 const addressSchema = Joi.object({
   id: OPTIONAL_GUID,
@@ -59,9 +60,9 @@ module.exports = {
       tags: ['api'],
       description: 'Gets invoice account by ID',
       validate: {
-        params: {
-          invoiceAccountId: Joi.string().guid().required()
-        }
+        params: Joi.object({
+          invoiceAccountId: REQUIRED_GUID
+        })
       }
     }
   },
@@ -74,9 +75,9 @@ module.exports = {
       tags: ['api'],
       description: 'Creates a new invoice account address on the invoice account',
       validate: {
-        params: {
-          invoiceAccountId: Joi.string().guid().required()
-        },
+        params: Joi.object({
+          invoiceAccountId: REQUIRED_GUID
+        }),
         payload: Joi.object({
           address: addressSchema,
           agentCompany: companySchema,
@@ -97,9 +98,28 @@ module.exports = {
       tags: ['api'],
       description: 'Gets the licences with current versions linked to this invoice account',
       validate: {
-        params: {
-          invoiceAccountId: Joi.string().guid().required().example(EXAMPLE_GUID)
-        }
+        params: Joi.object({
+          invoiceAccountId: REQUIRED_GUID
+        })
+      }
+    }
+  },
+
+  getInvoices: {
+    method: 'GET',
+    path: `${pathPrefix}{invoiceAccountId}/invoices`,
+    handler: controller.getInvoices,
+    config: {
+      tags: ['api'],
+      description: 'Gets sent invoices for a given invoice account',
+      validate: {
+        params: Joi.object({
+          invoiceAccountId: REQUIRED_GUID
+        }),
+        query: Joi.object({
+          page: Joi.number().default(1),
+          perPage: Joi.number().default(10)
+        })
       }
     }
   }

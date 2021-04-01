@@ -19,7 +19,7 @@ const Batch = require('../../../lib/models/batch');
 const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
 const billingVolumesService = require('./billing-volumes-service');
-const invoiceService = require('./invoice-service');
+const invoiceService = require('../../../lib/services/invoice-service');
 const licencesService = require('../../../lib/services/licences');
 const config = require('../../../../config');
 
