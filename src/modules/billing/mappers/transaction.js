@@ -240,7 +240,7 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     authorisedDays: transaction.authorisedDays,
     volume: transaction.volume,
     twoPartTariff: transaction.isTwoPartTariffSupplementary,
-    compensationCharge: transaction.isCompensationCharge === 'true', // TODO remove this once CM have fixed the issue. https://defra-digital.slack.com/archives/G01927WKA77/p1617281188003900
+    compensationCharge: ['true', true].includes(transaction.isCompensationCharge), // TODO remove this once CM have fixed the issue. https://defra-digital.slack.com/archives/G01927WKA77/p1617281188003900
     ...mapAgreementsToChargeModule(transaction),
     customerReference: invoice.invoiceAccount.accountNumber,
     lineDescription: transaction.description,
