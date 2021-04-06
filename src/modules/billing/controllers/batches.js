@@ -38,8 +38,8 @@ const postCreateBatch = async (request, h) => {
     const batch = await batchService.create(regionId, batchType, financialYearEnding, isSummer);
     // add these details to the event log
     const batchEvent = await createBatchEvent({
-      issuer: userEmail,
       batch,
+      issuer: userEmail,
       subtype: batch.type,
       status: jobStatus.start
     });
@@ -72,8 +72,7 @@ const getBatch = async request => request.pre.batch;
 
 const getBatches = async request => {
   const { page, perPage } = request.query;
-  const batches = await batchService.getBatches(page, perPage);
-  return batches;
+  return batchService.getBatches(page, perPage);
 };
 
 const getBatchInvoices = async request => {
