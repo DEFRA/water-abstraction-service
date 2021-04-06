@@ -452,7 +452,7 @@ experiment('modules/billing/mappers/transaction', () => {
             licenceNumber: '01/123/ABC',
             region: 'A',
             areaCode: 'ARCA',
-            newLicence: false
+            subjectToMinimumCharge: false
           });
         });
 
@@ -537,7 +537,7 @@ experiment('modules/billing/mappers/transaction', () => {
       compensationCharge: false,
       minimumChargeAdjustment: true,
       deminimis: false,
-      newLicence: false
+      subjectToMinimumCharge: false
     };
 
     beforeEach(async () => {
@@ -556,7 +556,7 @@ experiment('modules/billing/mappers/transaction', () => {
       expect(result.isCompensationCharge).to.equal(cmData.compensationCharge);
       expect(result.isMinimumCharge).to.equal(cmData.minimumChargeAdjustment);
       expect(result.isDeMinimis).to.equal(cmData.deminimis);
-      expect(result.isNewLicence).to.equal(cmData.newLicence);
+      expect(result.isNewLicence).to.equal(cmData.subjectToMinimumCharge);
     });
   });
 });

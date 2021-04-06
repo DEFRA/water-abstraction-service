@@ -9,15 +9,15 @@ const { expect } = require('@hapi/code');
 
 const uuid = require('uuid/v4');
 
-const Batch = require('../../../../src/lib/models/batch');
-const Company = require('../../../../src/lib/models/company');
-const Contact = require('../../../../src/lib/models/contact-v2');
-const Invoice = require('../../../../src/lib/models/invoice');
-const Address = require('../../../../src/lib/models/address');
-const FinancialYear = require('../../../../src/lib/models/financial-year');
-const InvoiceAccount = require('../../../../src/lib/models/invoice-account');
+const Batch = require('../../../src/lib/models/batch');
+const Company = require('../../../src/lib/models/company');
+const Contact = require('../../../src/lib/models/contact-v2');
+const Invoice = require('../../../src/lib/models/invoice');
+const Address = require('../../../src/lib/models/address');
+const FinancialYear = require('../../../src/lib/models/financial-year');
+const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 
-const invoiceMapper = require('../../../../src/modules/billing/mappers/invoice');
+const invoiceMapper = require('../../../src/lib/mappers/invoice');
 
 const invoiceRow = {
   billingInvoiceId: '5a1577d7-8dc9-4d67-aadc-37d7ea85abca',
@@ -25,12 +25,14 @@ const invoiceRow = {
   invoiceAccountNumber: 'A12345678A',
   dateCreated: '2020-03-05T10:57:23.911Z',
   financialYearEnding: 2019,
-  netAmount: 123,
+  netAmount: '123',
   invoiceValue: 200,
-  creditNoteValue: -77
+  creditNoteValue: -77,
+  legacyId: '12345:678',
+  metadata: { foo: 'bar' }
 };
 
-experiment('modules/billing/mappers/invoice', () => {
+experiment('lib/mappers/invoice', () => {
   experiment('.dbToModel', () => {
     let result;
 
@@ -57,6 +59,23 @@ experiment('modules/billing/mappers/invoice', () => {
     test('has a financial year instance', async () => {
       expect(result.financialYear instanceof FinancialYear).to.be.true();
       expect(result.financialYear.yearEnding).to.equal(invoiceRow.financialYearEnding);
+    });
+
+    test('maps the invoice value and credit note value', () => {
+      expect(result.invoiceValue).to.equal(invoiceRow.invoiceValue);
+      expect(result.creditNoteValue).to.equal(invoiceRow.creditNoteValue);
+    });
+
+    test('maps the net total as an integer', () => {
+      expect(result.netTotal).to.equal(123);
+    });
+
+    test('maps the legacy id', () => {
+      expect(result.legacyId).to.equal(invoiceRow.legacyId);
+    });
+
+    test('maps the metadata', () => {
+      expect(result.metadata).to.equal(invoiceRow.metadata);
     });
   });
 

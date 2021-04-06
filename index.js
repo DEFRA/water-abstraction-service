@@ -177,18 +177,21 @@ process
     logger.info('Stopping water service');
 
     await server.stop();
-    logger.info('1/3: Hapi server stopped');
+    logger.info('1/4: Hapi server stopped');
+
+    await server.queueManager.stop();
+    logger.info('2/4: Bull MQ stopped');
 
     await server.messageQueue.stop();
-    logger.info('2/3: Message queue stopped');
-    logger.info('Waiting 5 secs to allow pg-boss to finish');
+    logger.info('3/4: PG Boss stopped');
+    logger.info('Waiting 10 secs to allow jobs to finish');
 
     setTimeout(async () => {
       await db.pool.end();
-      logger.info('3/3: Connection pool closed');
+      logger.info('4/4: Connection pool closed');
 
       return process.exit(0);
-    }, 5000);
+    }, 10000);
   });
 
 if (!module.parent) {

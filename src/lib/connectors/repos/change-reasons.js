@@ -9,7 +9,7 @@ const { ChangeReason } = require('../bookshelf');
 const find = async () => {
   const result = await ChangeReason
     .collection()
-    .orderBy('position')
+    .orderBy('description')
     .fetch();
   return result.toJSON();
 };

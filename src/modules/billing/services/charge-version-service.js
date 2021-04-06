@@ -14,6 +14,8 @@ const FinancialYear = require('../../../lib/models/financial-year');
 const chargeVersionYearService = require('./charge-version-year');
 const batchService = require('./batch-service');
 
+const config = require('../../../../config');
+
 /**
  * Creates an object which describes whether 2-part tariff billing is needed in
  * each season
@@ -33,15 +35,24 @@ const createTwoPartTariffBatches = (isSummer = false, isWinterAllYear = false) =
  * @return {Promise<Object>} includes flags for each return season
  */
 const getTwoPartTariffSeasonsForChargeVersion = async row => {
+  // This CV doesn't have a TPT agreement - so don't create any
   if (!row.isTwoPartTariff) {
     return createTwoPartTariffBatches();
   }
+
+  const chargePeriod = new DateRange(row.startDate, row.endDate);
+
+  // When considering financial years processed in NALD, we need to match the
+  // import logic which is to import all TPT runs as winter/all year
+  if (!chargePeriod.isSameOrAfter(config.billing.naldSwitchOverDate)) {
+    return createTwoPartTariffBatches(false, true);
+  }
+
   // There is a two-part tariff agreement - we need to look at the returns required
   // to work out which seasons
   const returnVersions = await returnRequirementVersionService.getByLicenceId(row.licenceId);
-  // Filter only return versions that overlap this charge period
-  const chargePeriod = new DateRange(row.startDate, row.endDate);
 
+  // Filter only return versions that overlap this charge period
   const returnVersionsInChargePeriod = returnVersions.filter(
     returnVersion => returnVersion.dateRange.overlaps(chargePeriod) && returnVersion.isNotDraft
   );
@@ -88,9 +99,7 @@ const getSupplementaryTransactionTypes = async (batch, chargeVersion, existingTP
   if (!chargeVersion.includeInSupplementaryBilling) {
     return [];
   }
-
   const types = getAnnualTransactionTypes();
-
   const twoPartTariffSeasons = await getTwoPartTariffSeasonsForChargeVersion(chargeVersion);
   if (existingTPTBatches.some(existingBatch => existingBatch.isSummer) && twoPartTariffSeasons[RETURN_SEASONS.summer]) {
     types.push({ type: TRANSACTION_TYPE.twoPartTariff, isSummer: true });

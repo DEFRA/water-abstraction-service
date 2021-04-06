@@ -5,6 +5,7 @@
  * to the local WRLS DB
  */
 const { get, difference } = require('lodash');
+const Bluebird = require('bluebird');
 const errors = require('../../../lib/errors');
 
 const chargeModuleBillRunConnector = require('../../../lib/connectors/charge-module/bill-runs');
@@ -14,7 +15,7 @@ const { logger } = require('../../../logger');
 const transactionMapper = require('../mappers/transaction');
 
 // Services
-const invoiceService = require('./invoice-service');
+const invoiceService = require('../../../lib/services/invoice-service');
 const batchService = require('./batch-service');
 const transactionService = require('./transactions-service');
 
@@ -23,23 +24,22 @@ const transactionService = require('./transactions-service');
  * collates all paginated results for a given invoice
  *
  * @param {String} cmBillRunId
- * @param {String} customerReference
- * @param {Number} financialYearEnding
+ * @param {String} invoiceId
  * @return {Array<Object>} CM transaction details
  */
-const getAllCmTransactionsForInvoice = async (cmBillRunId, customerReference, financialYearEnding) => {
+const getAllCmTransactionsForInvoice = async (cmBillRunId, invoiceId) => {
   try {
-    const { data, pagination: { pageCount } } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, customerReference, financialYearEnding - 1, 1);
-
-    const result = data.transactions;
-
-    for (let page = 2; page <= pageCount; page++) {
-      const { data: { transactions } } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, customerReference, financialYearEnding - 1, page);
-      result.push(...transactions);
-    }
-    return result;
+    const { invoice } = await chargeModuleBillRunConnector.getInvoiceTransactions(cmBillRunId, invoiceId);
+    return invoice.licences.map(lic => lic.transactions.map(transaction => {
+      return {
+        ...transaction,
+        transactionReference: invoice.transactionReference,
+        isDeminimis: invoice.deminimisInvoice,
+        licenceNumber: lic.licenceNumber
+      };
+    })).flat();
   } catch (error) {
-    logger.error(`Unable to retrieve transactions for CM invoice ${cmBillRunId} ${customerReference} ${financialYearEnding}`);
+    logger.error(`Unable to retrieve transactions for CM invoice. Bill run ID ${cmBillRunId} and invoice ID ${invoiceId}`);
     throw error;
   }
 };
@@ -67,17 +67,12 @@ const getInvoiceMap = invoices => {
  * @return {Map}
  */
 const getCMInvoiceMap = cmResponse => {
-  return cmResponse.billRun.customers.reduce((acc, customer) => {
-    const { customerReference } = customer;
-    customer.summaryByFinancialYear.forEach(summary => {
-      const key = getInvoiceKey(customerReference, summary.financialYear + 1);
-      acc.set(key, {
-        ...summary,
-        customerReference
-      });
-    });
-    return acc;
-  }, new Map());
+  return cmResponse.billRun.invoices.map(invoice => {
+    return {
+      ...invoice,
+      key: getInvoiceKey(invoice.customerReference, invoice.financialYear + 1)
+    };
+  });
 };
 
 /**
@@ -97,15 +92,25 @@ const getTransactionMap = invoice => {
 const mapTransaction = (invoice, transactionMap, cmTransaction) => {
   // Update existing transaction
   if (transactionMap.has(cmTransaction.id)) {
+    const { sourceFactor, seasonFactor, lossFactor, sucFactor, abatementAdjustment, s127Agreement, eiucFactor, eiucSourceFactor } = cmTransaction.calculation.WRLSChargingResponse;
+
     return transactionMap
       .get(cmTransaction.id)
       .fromHash({
-        isDeMinimis: cmTransaction.deminimis,
-        value: cmTransaction.chargeValue
+        isDeMinimis: cmTransaction.isDeminimis,
+        value: cmTransaction.chargeValue,
+        calcSourceFactor: sourceFactor,
+        calcSeasonFactor: seasonFactor,
+        calcLossFactor: lossFactor,
+        calcSucFactor: sucFactor,
+        calcS126Factor: abatementAdjustment,
+        calcS127Factor: s127Agreement,
+        calcEiucFactor: eiucFactor,
+        calcEiucSourceFactor: eiucSourceFactor
       });
   } else {
     // Create a new min charge model and add to heirarchy
-    const newTransaction = transactionMapper.cmToModel(cmTransaction);
+    const newTransaction = transactionMapper.cmToModel({ ...cmTransaction, twoPartTariff: false });
     invoice
       .getInvoiceLicenceByLicenceNumber(cmTransaction.licenceNumber)
       .transactions
@@ -132,6 +137,16 @@ const deleteTransactions = (cmTransactions, transactionMap) => {
 };
 
 /**
+  * Gets transaction reference from cmTransactions
+  * NB. it is not guaranteed to be present in all transactions
+  * @param {Array<Object>} cmTransactions
+  */
+const getInvoiceNumber = cmTransactions => {
+  const transactionsWithRef = cmTransactions.filter(trans => trans.transactionReference !== null);
+  return transactionsWithRef[0] ? transactionsWithRef[0].transactionReference : null;
+};
+
+/**
  * Maps CM data to an Invoice model
  *
  * @param {Batch} batch
@@ -143,11 +158,12 @@ const deleteTransactions = (cmTransactions, transactionMap) => {
 const updateInvoice = async (batch, invoice, cmInvoiceSummary, cmTransactions) => {
   // Populate invoice model with updated CM data
   invoice.fromHash({
-    isDeMinimis: cmInvoiceSummary.deminimis,
-    invoiceNumber: cmTransactions[0].transactionReference,
+    isDeMinimis: cmInvoiceSummary.deminimisInvoice,
+    invoiceNumber: getInvoiceNumber(cmTransactions),
     netTotal: cmInvoiceSummary.netTotal,
     invoiceValue: cmInvoiceSummary.debitLineValue,
-    creditNoteValue: cmInvoiceSummary.creditLineValue
+    creditNoteValue: -cmInvoiceSummary.creditLineValue,
+    externalId: cmInvoiceSummary.id
   });
 
   // Persist
@@ -180,21 +196,19 @@ const updateInvoices = async (batch, cmResponse) => {
   // Get existing invoices in DB and map
   const invoiceMap = await getInvoiceMap(invoices);
 
-  for (const [key, cmInvoiceSummary] of cmInvoiceMap.entries()) {
-    // Get the CM transactions for this customer/financial year
+  // Iterate through invoices in series, to avoid overwhelming CM with too many simultaneous requests
+  Bluebird.mapSeries(cmInvoiceMap, async invoice => {
     const cmTransactions = await getAllCmTransactionsForInvoice(
       batch.externalId,
-      cmInvoiceSummary.customerReference,
-      cmInvoiceSummary.financialYear + 1
+      invoice.id
     );
-
     // Note: for now we don't need to expect invoices not in our DB
     // this will likely change when the CM implements rebilling
-    await updateInvoice(batch, invoiceMap.get(key), cmInvoiceSummary, cmTransactions);
-  }
+    await updateInvoice(batch, invoiceMap.get(invoice.key), invoice, cmTransactions);
+  });
 };
 
-const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating_summary';
+const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') === 'generating';
 
 const updateBatch = async batchId => {
   // Fetch WRLS batch
@@ -205,13 +219,13 @@ const updateBatch = async batchId => {
 
   // Get CM bill run summary
   const cmResponse = await chargeModuleBillRunConnector.get(batch.externalId);
+
   if (isCMGeneratingSummary(cmResponse)) {
     return false;
   }
 
   // Set batch totals
   batch = await batchService.updateWithCMSummary(batch.id, cmResponse);
-
   // Update invoices in batch
   await updateInvoices(batch, cmResponse);
   return true;

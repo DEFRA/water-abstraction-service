@@ -292,4 +292,23 @@ experiment('lib/models/charge-element', () => {
       expect(func).to.throw();
     });
   });
+
+  experiment('.isFactorsOverridden', () => {
+    test('can be set to a boolean true', async () => {
+      chargeElement.isFactorsOverridden = true;
+      expect(chargeElement.isFactorsOverridden).to.equal(true);
+    });
+
+    test('can be set to a boolean false', async () => {
+      chargeElement.isFactorsOverridden = false;
+      expect(chargeElement.isFactorsOverridden).to.equal(false);
+    });
+
+    test('throws an error if set to a non-boolean', async () => {
+      const func = () => {
+        chargeElement.isFactorsOverridden = 'hey';
+      };
+      expect(func).to.throw();
+    });
+  });
 });

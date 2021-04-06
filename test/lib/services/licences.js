@@ -326,7 +326,7 @@ experiment('src/lib/services/licences', () => {
   experiment('.getLicenceInvoices', () => {
     const tempLicenceId = uuid();
     beforeEach(async () => {
-      await repos.billingInvoiceLicences.findAll.resolves({ data: [] });
+      repos.billingInvoiceLicences.findAll.resolves({ data: [] });
       await licencesService.getLicenceInvoices(tempLicenceId);
     });
 

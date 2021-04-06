@@ -23,8 +23,12 @@
       "file": "test-permits.yaml"
     },
     {
-      "service": "crm",
-      "file": "crm.yaml"
+      "service": "crmV1",
+      "file": "crm-v1.yaml"
+    },
+    {
+      "service": "crmV2",
+      "file": "crm-v2.yaml"
     },
     {
       "service": "water",
@@ -45,12 +49,42 @@
       "file": "test-permits.yaml"
     },
     {
-      "service": "crm",
-      "file": "crm.yaml"
+      "service": "crmV2",
+      "file": "crm-v2.yaml"
     },
     {
       "service": "water",
       "file": "charge-version-workflows.yaml"
+    }
+  ],
+  "billing-data": [
+    {
+      "service": "idm",
+      "file": "internal-users.yaml"
+    },
+    {
+      "service": "permits",
+      "file": "test-permits.yaml"
+    },
+    {
+      "service": "crmV1",
+      "file": "crm-v1.yaml"
+    },
+    {
+      "service": "crmV2",
+      "file": "crm-v2.yaml"
+    },
+    {
+      "service": "water",
+      "file": "test-licences.yaml"
+    },
+    {
+      "service": "water",
+      "file": "test-charge-versions.yaml"
+    },
+    {
+      "service": "water",
+      "file": "test-billing-data.yaml"
     }
   ]
 }

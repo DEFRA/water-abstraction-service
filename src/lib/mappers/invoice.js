@@ -2,16 +2,16 @@
 
 const { omit, isNull } = require('lodash');
 
-const Invoice = require('../../../lib/models/invoice');
-const InvoiceAccount = require('../../../lib/models/invoice-account');
-const FinancialYear = require('../../../lib/models/financial-year');
+const Invoice = require('../models/invoice');
+const InvoiceAccount = require('../models/invoice-account');
+const FinancialYear = require('../models/financial-year');
 
-const invoiceAccount = require('../../../lib/mappers/invoice-account');
-const invoiceLicence = require('./invoice-licence');
-const batchMapper = require('./batch');
+const invoiceAccount = require('./invoice-account');
+const invoiceLicence = require('../../modules/billing/mappers/invoice-licence');
+const batchMapper = require('../../modules/billing/mappers/batch');
 
-const { createMapper } = require('../../../lib/object-mapper');
-const { createModel } = require('../../../lib/mappers/lib/helpers');
+const { createMapper } = require('../object-mapper');
+const { createModel } = require('./lib/helpers');
 
 const dbToModelMapper = createMapper()
   .copy(
@@ -20,7 +20,10 @@ const dbToModelMapper = createMapper()
     'isCredit',
     'isDeMinimis',
     'invoiceValue',
-    'creditNoteValue'
+    'creditNoteValue',
+    'externalId',
+    'legacyId',
+    'metadata'
   )
   .map('netAmount').to('netTotal')
   .map('billingInvoiceId').to('id')
@@ -47,21 +50,20 @@ const mapAddress = invoice =>
  * @param {Invoice} invoice
  * @return {Object}
  */
-const modelToDb = (batch, invoice) => {
-  return {
-    invoiceAccountId: invoice.invoiceAccount.id,
-    invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
-    address: mapAddress(invoice),
-    billingBatchId: batch.id,
-    financialYearEnding: invoice.financialYear.endYear,
-    invoiceNumber: invoice.invoiceNumber || null,
-    isCredit: isNull(invoice.netTotal) ? null : invoice.netTotal < 0,
-    isDeMinimis: invoice.isDeMinimis,
-    netAmount: invoice.netTotal,
-    invoiceValue: invoice.invoiceValue,
-    creditNoteValue: invoice.creditNoteValue
-  };
-};
+const modelToDb = (batch, invoice) => ({
+  externalId: invoice.externalId || null,
+  invoiceAccountId: invoice.invoiceAccount.id,
+  invoiceAccountNumber: invoice.invoiceAccount.accountNumber,
+  address: mapAddress(invoice),
+  billingBatchId: batch.id,
+  financialYearEnding: invoice.financialYear.endYear,
+  invoiceNumber: invoice.invoiceNumber || null,
+  isCredit: isNull(invoice.netTotal) ? null : invoice.netTotal < 0,
+  isDeMinimis: invoice.isDeMinimis,
+  netAmount: invoice.netTotal,
+  invoiceValue: invoice.invoiceValue,
+  creditNoteValue: invoice.creditNoteValue
+});
 
 const crmToModel = row => {
   const invoice = new Invoice();
