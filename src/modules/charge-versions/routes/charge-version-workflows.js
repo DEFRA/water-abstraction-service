@@ -24,9 +24,9 @@ module.exports = {
       },
       validate: {
         headers,
-        query: {
+        query: Joi.object({
           licenceId: Joi.string().guid().optional()
-        }
+        })
       }
     }
   },
@@ -43,9 +43,9 @@ module.exports = {
       },
       validate: {
         headers,
-        params: {
+        params: Joi.object({
           chargeVersionWorkflowId: Joi.string().guid().required()
-        }
+        })
       }
     }
   },
@@ -62,10 +62,10 @@ module.exports = {
       },
       validate: {
         headers,
-        payload: {
+        payload: Joi.object({
           licenceId: Joi.string().guid().required(),
           chargeVersion: Joi.object().required()
-        }
+        })
       },
       pre: [
         { method: preHandlers.mapChargeVersion, assign: 'chargeVersion' },
@@ -86,12 +86,15 @@ module.exports = {
       },
       validate: {
         headers,
-        payload: {
+        payload: Joi.object({
           status: Joi.string(),
           chargeVersion: Joi.object(),
           approverComments: Joi.string().allow(null),
-          createdBy: Joi.object().optional()
-        }
+          createdBy: Joi.object({
+            id: Joi.number().greater(0).required(),
+            email: Joi.string().email().lowercase().trim().required()
+          }).optional()
+        })
       },
       pre: [
         { method: preHandlers.mapChargeVersion, assign: 'chargeVersion' }
@@ -111,9 +114,9 @@ module.exports = {
       },
       validate: {
         headers,
-        params: {
+        params: Joi.object({
           chargeVersionWorkflowId: Joi.string().guid().required()
-        }
+        })
       },
       pre: [
         { method: preHandlers.loadChargeVersionWorkflow, assign: 'chargeVersionWorkflow' }
