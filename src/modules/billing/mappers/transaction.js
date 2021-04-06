@@ -240,7 +240,7 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     authorisedDays: transaction.authorisedDays,
     volume: transaction.volume,
     twoPartTariff: transaction.isTwoPartTariffSupplementary,
-    compensationCharge: ['true', true].includes(transaction.isCompensationCharge), // TODO remove this once CM have fixed the issue. https://defra-digital.slack.com/archives/G01927WKA77/p1617281188003900
+    compensationCharge: transaction.isCompensationCharge,
     ...mapAgreementsToChargeModule(transaction),
     customerReference: invoice.invoiceAccount.accountNumber,
     lineDescription: transaction.description,
@@ -270,7 +270,7 @@ const cmToModelMapper = createMapper()
   .map('chargeValue').to('value')
   .map('credit').to('isCredit')
   .map('lineDescription').to('description')
-  .map('compensationCharge').to('isCompensationCharge', val => ['true', true].includes(val)) // TODO remove this once CM have fixed the issue. https://defra-digital.slack.com/archives/G01927WKA77/p1617281188003900
+  .map('compensationCharge').to('isCompensationCharge')
   .map('minimumChargeAdjustment').to('isMinimumCharge')
   .map('deminimis').to('isDeMinimis')
   .map('subjectToMinimumCharge').to('isNewLicence')
