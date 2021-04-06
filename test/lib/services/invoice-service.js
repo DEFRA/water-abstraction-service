@@ -12,17 +12,17 @@ const sandbox = sinon.createSandbox();
 const uuid = require('uuid/v4');
 const { find } = require('lodash');
 
-const Batch = require('../../../../src/lib/models/batch');
-const Invoice = require('../../../../src/lib/models/invoice');
-const { CHARGE_SEASON } = require('../../../../src/lib/models/constants');
+const Batch = require('../../../src/lib/models/batch');
+const Invoice = require('../../../src/lib/models/invoice');
+const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 
-const mappers = require('../../../../src/modules/billing/mappers');
-const repos = require('../../../../src/lib/connectors/repos');
-const invoiceAccountsConnector = require('../../../../src/lib/connectors/crm-v2/invoice-accounts');
+const mappers = require('../../../src/lib/mappers');
+const repos = require('../../../src/lib/connectors/repos');
+const invoiceAccountsConnector = require('../../../src/lib/connectors/crm-v2/invoice-accounts');
 
-const invoiceService = require('../../../../src/modules/billing/services/invoice-service');
+const invoiceService = require('../../../src/lib/services/invoice-service');
 
-const { NotFoundError } = require('../../../../src/lib/errors');
+const { NotFoundError } = require('../../../src/lib/errors');
 
 const IDS = {
   batch: uuid(),
@@ -227,6 +227,7 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(repos.billingInvoices, 'upsert').resolves();
     sandbox.stub(repos.billingInvoices, 'update').resolves();
     sandbox.stub(repos.billingInvoices, 'findOneBy').resolves();
+    sandbox.stub(repos.billingInvoices, 'findAllForInvoiceAccount').resolves();
 
     sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountsByIds').resolves(crmData);
 
@@ -624,6 +625,31 @@ experiment('modules/billing/services/invoiceService', () => {
         expect(result instanceof Invoice).to.be.true();
         expect(result.id).to.equal(IDS.invoices[0]);
       });
+    });
+  });
+
+  experiment('.getInvoicesForInvoiceAccount', () => {
+    let result;
+    const invoiceAccountId = uuid();
+    const invoice = new Invoice(invoiceAccountId);
+
+    beforeEach(async () => {
+      repos.billingInvoices.findAllForInvoiceAccount.resolves({ data: [invoice], pagination: { page: 1, perPage: 10 } });
+      sandbox.stub(mappers.invoice, 'dbToModel').returns({ foo: 'bar' });
+      result = await invoiceService.getInvoicesForInvoiceAccount(invoiceAccountId);
+    });
+
+    test('calls the .upsert() on the repo with the invoice account id', async () => {
+      expect(repos.billingInvoices.findAllForInvoiceAccount.calledWith(invoiceAccountId)).to.be.true();
+    });
+
+    test('maps the results of the repo call', async () => {
+      expect(mappers.invoice.dbToModel.calledWith(invoice)).to.be.true();
+    });
+
+    test('returns mapped data and pagination', async () => {
+      expect(result.data).to.equal([{ foo: 'bar' }]);
+      expect(result.pagination).to.equal({ page: 1, perPage: 10 });
     });
   });
 });

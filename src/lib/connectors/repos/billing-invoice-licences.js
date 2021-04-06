@@ -27,7 +27,7 @@ const findOne = async id => {
 
 /**
  * Gets BillingInvoiceLicence and related models for a licence by licenceId
- * where the bill number is not null
+ * where the batch is sent
  * @param {String} licenceId
  * @param {number} page
  * @param {number} perPage

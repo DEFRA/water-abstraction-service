@@ -13,6 +13,7 @@ const { bookshelf, BillingInvoice } = require('../../../../src/lib/connectors/bo
 const queries = require('../../../../src/lib/connectors/repos/queries/billing-invoices');
 
 const billingInvoices = require('../../../../src/lib/connectors/repos/billing-invoices');
+const paginationHelper = require('../../../../src/lib/connectors/repos/lib/envelope');
 
 const result = {
   rows: [{
@@ -25,6 +26,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
 
   beforeEach(async () => {
     sandbox.stub(bookshelf.knex, 'raw').resolves(result);
+    sandbox.stub(paginationHelper, 'paginatedEnvelope').returns({ data: [{ foo: 'bar' }], pagination: { page: 1, perPage: 10 } });
 
     model = {
       toJSON: sandbox.stub().returns({ foo: 'bar' })
@@ -35,6 +37,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
       orderBy: sandbox.stub().returnsThis(),
       fetchPage: sandbox.stub().resolves(model),
       where: sandbox.stub().returnsThis(),
+      query: sandbox.stub().returnsThis(),
       save: sandbox.stub().resolves(model),
       destroy: sandbox.stub().resolves(model)
     };
@@ -183,6 +186,39 @@ experiment('lib/connectors/repos/billing-invoices', () => {
 
     test('the model is destroyed', async () => {
       expect(stub.save.calledWith(changes)).to.be.true();
+    });
+  });
+
+  experiment('.findAllForInvoiceAccount', async () => {
+    let result;
+    const invoiceAccountId = uuid();
+
+    beforeEach(async () => {
+      result = await billingInvoices.findAllForInvoiceAccount(invoiceAccountId, 1, 10);
+    });
+
+    test('the model is forged', async () => {
+      expect(BillingInvoice.forge.called).to.be.true();
+    });
+
+    test('calls query() with a function', async () => {
+      const [func] = stub.query.lastCall.args;
+      expect(func).to.be.a.function();
+    });
+
+    test('calls fetchPage() with the correct params', async () => {
+      const [params] = stub.fetchPage.lastCall.args;
+      expect(params.pageSize).to.equal(10);
+      expect(params.page).to.equal(1);
+      expect(params.withRelated).to.equal([
+        'billingInvoiceLicences',
+        'billingBatch',
+        'billingBatch.region'
+      ]);
+    });
+
+    test('returns the result of the paginationHelper.paginatedEnvelope call', async () => {
+      expect(result).to.equal({ data: [{ foo: 'bar' }], pagination: { page: 1, perPage: 10 } });
     });
   });
 });

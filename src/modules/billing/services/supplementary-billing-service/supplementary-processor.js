@@ -35,7 +35,6 @@ const abstractionPeriodKeys = [
  * augmented in the function below
  */
 const commonTransactionKeys = [
-  'authorisedDays',
   'source',
   'season',
   'loss',

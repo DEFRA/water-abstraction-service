@@ -5,6 +5,7 @@ const { afterEach, beforeEach, experiment, test } = exports.lab = require('@hapi
 
 const controller = require('../../../src/modules/invoice-accounts/controller');
 const invoiceAccountService = require('../../../src/lib/services/invoice-accounts-service');
+const invoiceService = require('../../../src/lib/services/invoice-service');
 const InvoiceAccount = require('../../../src/lib/models/invoice-account');
 const InvoiceAccountAddress = require('../../../src/lib/models/invoice-account-address');
 
@@ -23,6 +24,7 @@ experiment('modules/invoice-accounts/controller', () => {
     };
     sandbox.stub(invoiceAccountService, 'getByInvoiceAccountId');
     sandbox.stub(invoiceAccountService, 'createInvoiceAccountAddress');
+    sandbox.stub(invoiceService, 'getInvoicesForInvoiceAccount').resolves({ foo: 'bar' });
   });
 
   afterEach(async () => {
@@ -158,6 +160,55 @@ experiment('modules/invoice-accounts/controller', () => {
         const func = () => controller.postInvoiceAccountAddress(request, h, refDate);
         const response = await expect(func()).to.reject();
         expect(response).to.equal(err);
+      });
+    });
+  });
+
+  experiment('.getInvoices', () => {
+    let request, result;
+
+    beforeEach(async () => {
+      request = {
+        params: {
+          invoiceAccountId: 'test-id'
+        }
+      };
+    });
+
+    experiment('when the invoice account does not exist', () => {
+      beforeEach(async () => {
+        invoiceAccountService.getByInvoiceAccountId.resolves(null);
+        result = await controller.getInvoices(request);
+      });
+
+      test('resolves with a Boom 404', async () => {
+        expect(result.isBoom).to.be.true();
+        expect(result.output.statusCode).to.equal(404);
+      });
+    });
+
+    experiment('when the invoice account exists', () => {
+      beforeEach(async () => {
+        invoiceAccountService.getByInvoiceAccountId.resolves(new InvoiceAccount());
+        result = await controller.getInvoices(request);
+      });
+
+      test('invoices are fetched for the invoice account', async () => {
+        expect(invoiceAccountService.getByInvoiceAccountId.calledWith('test-id')).to.be.true();
+      });
+
+      test('returns the result of the invoice service call', async () => {
+        expect(result).to.equal({ foo: 'bar' });
+      });
+
+      experiment('when there is an error', () => {
+        test('returns the expected error', async () => {
+          const error = new Error('Oopsies!');
+          error.name = 'InvalidEntityError';
+          invoiceService.getInvoicesForInvoiceAccount.throws(error);
+          result = await controller.getInvoices(request);
+          expect(result.message).to.equal('Oopsies!');
+        });
       });
     });
   });
