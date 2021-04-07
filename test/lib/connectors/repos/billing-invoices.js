@@ -100,8 +100,9 @@ experiment('lib/connectors/repos/billing-invoices', () => {
       expect(params).to.equal({ billingInvoiceId: 'test-id' });
     });
 
-    test('calls fetch() with related models', async () => {
+    test('calls fetch() with expected options', async () => {
       const [params] = stub.fetch.lastCall.args;
+      expect(params.require).to.be.false();
       expect(params.withRelated).to.equal([
         'billingBatch',
         'billingBatch.region',
@@ -121,6 +122,17 @@ experiment('lib/connectors/repos/billing-invoices', () => {
 
     test('returns the result of the toJSON() call', async () => {
       expect(result).to.equal({ foo: 'bar' });
+    });
+
+    experiment('when no matching invoice is found', () => {
+      beforeEach(async () => {
+        stub.fetch.returns();
+        result = await billingInvoices.findOne('test-id');
+      });
+
+      test('returns null', () => {
+        expect(result).to.be.null();
+      });
     });
   });
 

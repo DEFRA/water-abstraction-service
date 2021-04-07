@@ -7,35 +7,35 @@ const {
   afterEach
 } = exports.lab = require('@hapi/lab').script();
 
-const config = require('../../../config');
+const config = require('../../../../config');
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
-const Invoice = require('../../../src/lib/models/invoice');
-const InvoiceLicence = require('../../../src/lib/models/invoice-licence');
-const Transaction = require('../../../src/lib/models/transaction');
-const ChargeElement = require('../../../src/lib/models/charge-element');
-const Batch = require('../../../src/lib/models/batch');
+const Invoice = require('../../../../src/lib/models/invoice');
+const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
+const Transaction = require('../../../../src/lib/models/transaction');
+const ChargeElement = require('../../../../src/lib/models/charge-element');
+const Batch = require('../../../../src/lib/models/batch');
 const { BATCH_STATUS, BATCH_TYPE } = Batch;
 
-const newRepos = require('../../../src/lib/connectors/repos');
-const eventService = require('../../../src/lib/services/events');
-const invoiceService = require('../../../src/lib/services/invoice-service');
-const invoiceLicenceService = require('../../../src/modules/billing/services/invoice-licences-service');
-const batchService = require('../../../src/modules/billing/services/batch-service');
-const transactionsService = require('../../../src/modules/billing/services/transactions-service');
-const billingVolumesService = require('../../../src/modules/billing/services/billing-volumes-service');
-const importConnector = require('../../../src/lib/connectors/import');
-const chargeVersionService = require('../../../src/lib/services/charge-versions');
+const newRepos = require('../../../../src/lib/connectors/repos');
+const eventService = require('../../../../src/lib/services/events');
+const invoiceService = require('../../../../src/lib/services/invoice-service');
+const invoiceLicenceService = require('../../../../src/modules/billing/services/invoice-licences-service');
+const batchService = require('../../../../src/modules/billing/services/batch-service');
+const transactionsService = require('../../../../src/modules/billing/services/transactions-service');
+const billingVolumesService = require('../../../../src/modules/billing/services/billing-volumes-service');
+const importConnector = require('../../../../src/lib/connectors/import');
+const chargeVersionService = require('../../../../src/lib/services/charge-versions');
 
-const controller = require('../../../src/modules/billing/controller');
-const mappers = require('../../../src/modules/billing/mappers');
-const { logger } = require('../../../src/logger');
-const { createBatch, createTransaction, createInvoice, createInvoiceLicence, createFinancialYear, createBillingVolume } = require('./test-data/test-billing-data');
+const controller = require('../../../../src/modules/billing/controllers/batches');
+const mappers = require('../../../../src/modules/billing/mappers');
+const { logger } = require('../../../../src/logger');
+const { createBatch, createTransaction, createInvoice, createInvoiceLicence, createFinancialYear, createBillingVolume } = require('../test-data/test-billing-data');
 
-const { NotFoundError } = require('../../../src/lib/errors');
-const { BatchStatusError } = require('../../../src/modules/billing/lib/errors');
+const { NotFoundError } = require('../../../../src/lib/errors');
+const { BatchStatusError } = require('../../../../src/modules/billing/lib/errors');
 
 experiment('modules/billing/controller', () => {
   let h, hapiResponseStub, batch, tptBatch, transaction, billingVolume, processingBatch;

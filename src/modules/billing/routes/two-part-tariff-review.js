@@ -11,9 +11,9 @@ const getBatchLicences = {
   config: {
     description: 'Gets a list of licences in billing batch for two-part tariff review with statuses',
     validate: {
-      params: {
+      params: Joi.object({
         batchId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -31,10 +31,10 @@ const getBatchLicenceVolumes = {
   config: {
     description: 'Gets a list of licences in billing batch for two-part tariff review with statuses',
     validate: {
-      params: {
+      params: Joi.object({
         batchId: Joi.string().uuid().required(),
         licenceId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -52,10 +52,10 @@ const deleteBatchLicence = {
   config: {
     description: 'Deletes specified licence from batch',
     validate: {
-      params: {
+      params: Joi.object({
         batchId: Joi.string().uuid().required(),
         licenceId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -73,9 +73,9 @@ const getBillingVolume = {
   config: {
     description: 'Deletes specified licence from batch',
     validate: {
-      params: {
+      params: Joi.object({
         billingVolumeId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -90,12 +90,12 @@ const patchBillingVolume = {
   config: {
     description: 'Updates billing volume',
     validate: {
-      params: {
+      params: Joi.object({
         billingVolumeId: Joi.string().uuid().required()
-      },
-      payload: {
+      }),
+      payload: Joi.object({
         volume: Joi.number().positive().allow(0).required()
-      }
+      })
     },
     auth: {
       scope: [billing]
@@ -109,9 +109,9 @@ const postApproveReviewBatch = {
   handler: controller.postApproveReviewBatch,
   config: {
     validate: {
-      params: {
+      params: Joi.object({
         batchId: Joi.string().uuid().required()
-      }
+      })
     },
     auth: {
       scope: [billing]
