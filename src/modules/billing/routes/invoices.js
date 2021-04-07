@@ -15,7 +15,7 @@ exports.patchInvoice = {
         invoiceId: Joi.string().guid().required()
       }),
       payload: Joi.object({
-        isFlaggedForRebilling: Joi.boolean().optional()
+        isFlaggedForRebilling: Joi.boolean().required()
       })
     },
     auth: {

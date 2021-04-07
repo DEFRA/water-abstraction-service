@@ -60,6 +60,12 @@ experiment('modules/billing/routes', () => {
       expect(response.statusCode).to.equal(400);
     });
 
+    test('returns a 400 if the isFlaggedForRebilling is omitted', async () => {
+      delete request.payload.isFlaggedForRebilling;
+      const response = await server.inject(request);
+      expect(response.statusCode).to.equal(400);
+    });
+
     test('returns a 400 if the isFlaggedForRebilling is an unexpected value', async () => {
       request.payload.isFlaggedForRebilling = 'a string';
       const response = await server.inject(request);
