@@ -1,5 +1,7 @@
 'use strict';
 
+const bluebird = require('bluebird');
+
 const Batch = require('../../../lib/models/batch');
 const FinancialYear = require('../../../lib/models/financial-year');
 
@@ -52,8 +54,7 @@ const processChargeVersionYear = async chargeVersionYear => {
 
   const billingVolumes = await volumeMatchingService.matchVolumes(chargeVersionId, new FinancialYear(financialYearEnding), isSummer);
   decorateBillingVolumesWithBatchId(billingVolumes, billingBatchId);
-  const tasks = billingVolumes.map(billingVolumesService.persist);
-  return Promise.all(tasks);
+  return bluebird.mapSeries(billingVolumes, billingVolumesService.persist);
 };
 
 /**
@@ -62,9 +63,7 @@ const processChargeVersionYear = async chargeVersionYear => {
  * @return {Promise<Array>}
  */
 const processChargeVersionYears = chargeVersionYears =>
-  Promise.all(chargeVersionYears.map(
-    processChargeVersionYear
-  ));
+  bluebird.mapSeries(chargeVersionYears, processChargeVersionYear);
 
 /**
  * For a supplementary batch, we check which TPT bill runs have previously been sent in the
