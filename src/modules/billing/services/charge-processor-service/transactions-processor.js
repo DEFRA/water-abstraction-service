@@ -1,6 +1,6 @@
 'use strict';
 
-const { flatMap, get, omit } = require('lodash');
+const { flatMap, get } = require('lodash');
 
 const MomentRange = require('moment-range');
 const moment = MomentRange.extendMoment(require('moment'));
