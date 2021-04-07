@@ -20,11 +20,12 @@ const getLicenceAccountsByRefAndDate = async request =>
  */
 const getLicenceDocument = async request => {
   const { licenceId } = request.params;
+  const { includeExpired } = request.query;
   const licence = await licencesService.getLicenceById(licenceId);
   if (!licence) {
     return Boom.notFound(`Licence ${licenceId} not found`);
   }
-  const [doc] = await crmDocumentsConnector.getDocumentsByLicenceNumbers([licence.licenceNumber]);
+  const [doc] = await crmDocumentsConnector.getDocumentsByLicenceNumbers([licence.licenceNumber], includeExpired);
 
   return doc || Boom.notFound(`Document not found for licence ${licenceId}`);
 };

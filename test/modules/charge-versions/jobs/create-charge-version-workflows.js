@@ -77,9 +77,9 @@ experiment('modules/charge-versions/jobs/create-charge-version-workflows', () =>
         result = await chargeVersionWorkflowJob.handler(job);
       });
 
-      test('batchService.createChargeModuleBillRun is called with the correct batch ID', async () => {
+      test(' is called with the correct batch ID', async () => {
         expect(chargeVersionWorkflowService.create.calledWith(
-          { licenceId: 'test-licence-id' }, 'test-licence-version-id', null, null, 'to_setup'
+          { licenceId: 'test-licence-id' }, null, null, 'to_setup', 'test-licence-version-id'
         )).to.be.true();
       });
 
