@@ -25,6 +25,7 @@ const findOne = async id => {
   const model = await BillingInvoice
     .forge({ billingInvoiceId: id })
     .fetch({
+      require: false,
       withRelated: [
         'billingBatch',
         'billingBatch.region',
@@ -38,7 +39,7 @@ const findOne = async id => {
       ]
     });
 
-  return model.toJSON();
+  return model ? model.toJSON() : null;
 };
 
 const findOneBy = conditions =>

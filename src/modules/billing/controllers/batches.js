@@ -3,24 +3,24 @@
 const Boom = require('@hapi/boom');
 
 const { flatMap, uniq } = require('lodash');
-const { envelope } = require('../../lib/response');
-const { jobStatus } = require('./lib/event');
-const { createBatchEvent } = require('./lib/batch-event');
-const controller = require('../../lib/controller');
-const mapErrorResponse = require('../../lib/map-error-response');
-const mappers = require('./mappers');
-const { logger } = require('../../logger');
+const { envelope } = require('../../../lib/response');
+const { jobStatus } = require('../lib/event');
+const { createBatchEvent } = require('../lib/batch-event');
+const controller = require('../../../lib/controller');
+const mapErrorResponse = require('../../../lib/map-error-response');
+const mappers = require('../mappers');
+const { logger } = require('../../../logger');
 
 // Services
-const invoiceService = require('../../lib/services/invoice-service');
-const invoiceLicenceService = require('./services/invoice-licences-service');
-const chargeVersionService = require('../../lib/services/charge-versions');
-const batchService = require('./services/batch-service');
-const importConnector = require('../../lib/connectors/import');
+const invoiceService = require('../../../lib/services/invoice-service');
+const invoiceLicenceService = require('../services/invoice-licences-service');
+const chargeVersionService = require('../../../lib/services/charge-versions');
+const batchService = require('../services/batch-service');
+const importConnector = require('../../../lib/connectors/import');
 
 // Bull job queue manager
-const { jobName: createBillRunJobName } = require('./jobs/create-bill-run');
-const { jobName: refreshTotalsJobName } = require('./jobs/refresh-totals');
+const { jobName: createBillRunJobName } = require('../jobs/create-bill-run');
+const { jobName: refreshTotalsJobName } = require('../jobs/refresh-totals');
 
 /**
  * Resource that will create a new batch skeleton which will
@@ -38,8 +38,8 @@ const postCreateBatch = async (request, h) => {
     const batch = await batchService.create(regionId, batchType, financialYearEnding, isSummer);
     // add these details to the event log
     const batchEvent = await createBatchEvent({
-      issuer: userEmail,
       batch,
+      issuer: userEmail,
       subtype: batch.type,
       status: jobStatus.start
     });
@@ -72,8 +72,7 @@ const getBatch = async request => request.pre.batch;
 
 const getBatches = async request => {
   const { page, perPage } = request.query;
-  const batches = await batchService.getBatches(page, perPage);
-  return batches;
+  return batchService.getBatches(page, perPage);
 };
 
 const getBatchInvoices = async request => {
