@@ -32,6 +32,11 @@ const agreementAppliesToTransaction = (agreement, purpose) => {
   return isCanalApplied || isTwoPartTariffApplied(agreement, purpose);
 };
 
+const getBillableDays = (absPeriod, startDate, endDate, isTwoPartTariffSupplementary) =>
+  isTwoPartTariffSupplementary
+    ? 0
+    : helpers.charging.getBillableDays(absPeriod, startDate, endDate);
+
 /**
  * Creates a Transaction model
  * @param {DateRange} chargePeriod - charge period for this charge element - taking time-limits into account
@@ -48,13 +53,12 @@ const createTransaction = (chargePeriod, chargeElement, agreements, financialYea
   const absPeriod = chargeElement.abstractionPeriod.toJSON();
   const transaction = new Transaction();
   transaction.fromHash({
-    ...omit(flags, 'isMinimumCharge'),
     chargeElement,
-    agreements: agreements.filter(agreement => agreementAppliesToTransaction(agreement, chargeElement.purposeUse)),
     chargePeriod,
+    agreements: agreements.filter(agreement => agreementAppliesToTransaction(agreement, chargeElement.purposeUse)),
     status: Transaction.statuses.candidate,
-    authorisedDays: helpers.charging.getBillableDays(absPeriod, financialYear.start.format(DATE_FORMAT), financialYear.end.format(DATE_FORMAT)),
-    billableDays: helpers.charging.getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate),
+    authorisedDays: getBillableDays(absPeriod, financialYear.start.format(DATE_FORMAT), financialYear.end.format(DATE_FORMAT), flags.isTwoPartTariffSupplementary),
+    billableDays: getBillableDays(absPeriod, chargePeriod.startDate, chargePeriod.endDate, flags.isTwoPartTariffSupplementary),
     volume: billingVolume ? billingVolume.volume : chargeElement.volume,
     isTwoPartTariffSupplementary: flags.isTwoPartTariffSupplementary || false,
     isCompensationCharge: flags.isCompensationCharge || false,
