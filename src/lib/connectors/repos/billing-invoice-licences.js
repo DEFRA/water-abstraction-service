@@ -27,7 +27,7 @@ const findOne = async id => {
 
 /**
  * Gets BillingInvoiceLicence and related models for a licence by licenceId
- * where the bill number is not null
+ * where the batch is sent
  * @param {String} licenceId
  * @param {number} page
  * @param {number} perPage
@@ -35,16 +35,19 @@ const findOne = async id => {
  */
 const findAll = async (licenceId, page = 1, perPage = 10) => {
   const result = await BillingInvoiceLicence
-    .collection()
-    .where({
-      licence_id: licenceId
+    .forge()
+    .query(function (qb) {
+      qb.join('water.billing_invoices', 'water.billing_invoices.billing_invoice_id', '=', 'water.billing_invoice_licences.billing_invoice_id');
+      qb.join('water.billing_batches', 'water.billing_invoices.billing_batch_id', '=', 'water.billing_batches.billing_batch_id');
+      qb.where({ licence_id: licenceId, 'water.billing_batches.status': 'sent' });
+      qb.orderBy('date_created', 'DESC', 'water.billing_invoices.financial_year_ending', 'DESC');
     })
-    .orderBy('date_created', 'DESC')
     .fetchPage({
       pageSize: perPage,
       page: page,
       withRelated
     });
+
   return paginationHelper.paginatedEnvelope(result);
 };
 

@@ -56,7 +56,6 @@ const createTransaction = (options = {}) => {
     billableDays: 366,
     description: 'Tiny pond',
     volume: 5.64,
-    transactionKey: '0123456789ABCDEF0123456789ABCDEF',
     isTwoPartTariffSupplementary: !!options.isTwoPartTariffSupplementary,
     isNewLicence: !!options.isNewLicence
   });
@@ -176,7 +175,6 @@ experiment('modules/billing/mappers/transaction', () => {
           section126Factor: null,
           section127Agreement: false,
           section130Agreement: null,
-          transactionKey: '0123456789ABCDEF0123456789ABCDEF',
           isTwoPartTariffSupplementary: false,
           isNewLicence: false
         });
@@ -285,8 +283,7 @@ experiment('modules/billing/mappers/transaction', () => {
       volume: '11.76',
       section126Factor: null,
       section127Agreement: false,
-      section130Agreement: null,
-      transactionKey: 'ABCDEF1234567890ABCDEF1234567890'
+      section130Agreement: null
     };
     beforeEach(async () => {
       result = transactionMapper.dbToModel(dbRow);
@@ -305,7 +302,6 @@ experiment('modules/billing/mappers/transaction', () => {
       expect(result.isCompensationCharge).to.be.true();
       expect(result.description).to.equal(dbRow.description);
       expect(result.volume).to.equal(11.76);
-      expect(result.transactionKey).to.equal('ABCDEF1234567890ABCDEF1234567890');
     });
 
     test('charge period is mapped correctly', async () => {
@@ -456,7 +452,7 @@ experiment('modules/billing/mappers/transaction', () => {
             licenceNumber: '01/123/ABC',
             region: 'A',
             areaCode: 'ARCA',
-            newLicence: false
+            subjectToMinimumCharge: false
           });
         });
 
@@ -541,7 +537,7 @@ experiment('modules/billing/mappers/transaction', () => {
       compensationCharge: false,
       minimumChargeAdjustment: true,
       deminimis: false,
-      newLicence: false
+      subjectToMinimumCharge: false
     };
 
     beforeEach(async () => {
@@ -560,7 +556,7 @@ experiment('modules/billing/mappers/transaction', () => {
       expect(result.isCompensationCharge).to.equal(cmData.compensationCharge);
       expect(result.isMinimumCharge).to.equal(cmData.minimumChargeAdjustment);
       expect(result.isDeMinimis).to.equal(cmData.deminimis);
-      expect(result.isNewLicence).to.equal(cmData.newLicence);
+      expect(result.isNewLicence).to.equal(cmData.subjectToMinimumCharge);
     });
   });
 });

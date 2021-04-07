@@ -133,6 +133,16 @@ class DateRange {
     const m = getDateTimeFromValue(date);
     return this._startDate.isSame(m, 'day');
   }
+
+  /**
+   * Checks if this range started on or after the supplied date
+   * @param {String} date
+   * @return {Boolean}
+   */
+  isSameOrAfter (date) {
+    const m = getDateTimeFromValue(date);
+    return this._startDate.isSameOrAfter(m, 'day');
+  }
 }
 
 module.exports = DateRange;

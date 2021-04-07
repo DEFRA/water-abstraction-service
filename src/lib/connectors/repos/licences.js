@@ -4,14 +4,6 @@ const raw = require('./lib/raw');
 const { Licence, bookshelf } = require('../bookshelf');
 const queries = require('./queries/licences');
 
-const create = async (licenceRef, regionId, startDate = new Date().toJSON().slice(0, 10), expiredDate = null, regions = {}, is_water_undertaker = true, isTest = false) => {
-  const model = await Licence
-    .forge({ licenceRef, regionId, is_water_undertaker, regions: regions, startDate, expiredDate, is_test: isTest })
-    .save();
-
-  return model ? model.toJSON() : null;
-};
-
 const deleteTest = () => Licence
   .forge()
   .where({ is_test: true })
@@ -110,9 +102,6 @@ const updateIncludeInSupplementaryBillingStatusForBatch = (batchId, from, to) =>
     .raw(queries.updateIncludeInSupplementaryBillingStatusForBatch, params);
 };
 
-const findWithoutChargeVersions = () =>
-  raw.multiRow(queries.getLicencesWithoutChargeVersions);
-
 /**
  * Finds licences which have a 'current' charge version linked to the specified
  * invoice account ID
@@ -123,13 +112,11 @@ const findWithoutChargeVersions = () =>
 const findByInvoiceAccountId = invoiceAccountId =>
   raw.multiRow(queries.getLicencesByInvoiceAccount, { invoiceAccountId });
 
-exports.create = create;
 exports.deleteTest = deleteTest;
 exports.findByBatchIdForTwoPartTariffReview = findByBatchIdForTwoPartTariffReview;
 exports.findOneByLicenceRef = findOneByLicenceRef;
 exports.findOne = findOne;
 exports.findByLicenceRef = findByLicenceRef;
-exports.findWithoutChargeVersions = findWithoutChargeVersions;
 exports.findByInvoiceAccountId = findByInvoiceAccountId;
 
 exports.update = update;

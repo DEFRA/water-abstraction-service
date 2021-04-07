@@ -21,9 +21,8 @@ function getQueueManager () {
 
 module.exports.plugin = {
   register: async server => {
-    const queueManager = getQueueManager();
-
     // Register instance with Hapi
+    const queueManager = getQueueManager();
     server.decorate('server', 'queueManager', queueManager);
     server.decorate('request', 'queueManager', queueManager);
   },

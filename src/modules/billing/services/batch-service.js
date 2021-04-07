@@ -1,6 +1,6 @@
 'use strict';
 
-const { partialRight, startCase, pick } = require('lodash');
+const { partialRight, startCase } = require('lodash');
 const Boom = require('@hapi/boom');
 
 const newRepos = require('../../../lib/connectors/repos');
@@ -19,7 +19,7 @@ const Batch = require('../../../lib/models/batch');
 const invoiceLicenceService = require('./invoice-licences-service');
 const transactionsService = require('./transactions-service');
 const billingVolumesService = require('./billing-volumes-service');
-const invoiceService = require('./invoice-service');
+const invoiceService = require('../../../lib/services/invoice-service');
 const licencesService = require('../../../lib/services/licences');
 const config = require('../../../../config');
 
@@ -177,7 +177,6 @@ const approveBatch = async (batch, internalCallingUser) => {
 
 const saveInvoiceLicenceTransactions = async (batch, invoice, invoiceLicence) => {
   for (const transaction of invoiceLicence.transactions) {
-    transaction.createTransactionKey(invoice.invoiceAccount, invoiceLicence.licence, batch);
     const { billingTransactionId } = await transactionsService.saveTransactionToDB(invoiceLicence, transaction);
     transaction.id = billingTransactionId;
   }
@@ -352,11 +351,7 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
   }
 
   try {
-    // Delete CM transactions
-    const { invoiceAccountNumber, financialYearEnding } = invoice;
-    const { externalId } = invoice.billingBatch;
-    await chargeModuleBillRunConnector.removeCustomerInFinancialYear(externalId, invoiceAccountNumber, financialYearEnding - 1);
-
+    await chargeModuleBillRunConnector.deleteInvoiceFromBillRun(invoice.billingBatch.externalId, invoice.externalId);
     // Delete local data
     await newRepos.billingBatchChargeVersionYears.deleteByInvoiceId(invoiceId);
     await newRepos.billingVolumes.deleteByBatchAndInvoiceId(batch.id, invoiceId);
@@ -403,20 +398,28 @@ const deleteAllBillingData = async () => {
  * @return {Promise<Batch>} updated batch model
  */
 const updateWithCMSummary = async (batchId, cmResponse) => {
-  const { summary, approvedForBilling } = cmResponse.billRun;
+  const { invoiceCount, creditLineCount: creditNoteCount, invoiceValue, creditLineValue: creditNoteValue, netTotal, status: cmStatus } = cmResponse.billRun;
 
-  const status = approvedForBilling
+  const cmCompletedStatuses = ['pending', 'billed', 'billing_not_required'];
+
+  const status = cmCompletedStatuses.includes(cmStatus)
     ? Batch.BATCH_STATUS.sent
     : Batch.BATCH_STATUS.ready;
 
   const changes = {
     status,
-    ...pick(summary, 'invoiceCount', 'creditNoteCount', 'invoiceValue', 'creditNoteValue', 'netTotal')
+    invoiceCount,
+    creditNoteCount,
+    invoiceValue,
+    creditNoteValue,
+    netTotal
   };
 
   const data = await newRepos.billingBatches.update(batchId, changes);
   return mappers.batch.dbToModel(data);
 };
+
+const generateBatchById = CMBillRunId => chargeModuleBillRunConnector.generate(CMBillRunId);
 
 exports.approveBatch = approveBatch;
 exports.deleteBatch = deleteBatch;
@@ -438,3 +441,4 @@ exports.getSentTptBatchesForFinancialYearAndRegion = getSentTptBatchesForFinanci
 exports.deleteBatchInvoice = deleteBatchInvoice;
 exports.deleteAllBillingData = deleteAllBillingData;
 exports.updateWithCMSummary = updateWithCMSummary;
+exports.generateBatchById = generateBatchById;

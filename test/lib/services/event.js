@@ -1,3 +1,6 @@
+'use strict';
+
+const uuid = require('uuid/v4');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 const { expect } = require('@hapi/code');
@@ -10,11 +13,19 @@ const {
 } = exports.lab = require('@hapi/lab').script();
 const repo = require('../../../src/lib/connectors/repos');
 const Event = require('../../../src/lib/models/event');
+const Pagination = require('../../../src/lib/models/pagination');
+const NotificationEvent = require('../../../src/lib/models/notification-event');
+
 const eventsService = require('../../../src/lib/services/events');
 
 const arr = ['foo', 'bar'];
 
 experiment('lib/services/event', () => {
+  beforeEach(async () => {
+    sandbox.stub(repo.events, 'findNotifications');
+    sandbox.stub(repo.events, 'findNotificationsCount');
+  });
+
   afterEach(async () => {
     sandbox.restore();
   });
@@ -158,27 +169,40 @@ experiment('lib/services/event', () => {
   });
 
   experiment('.findOne', () => {
-    beforeEach(async () => {
-      sandbox.stub(repo.events, 'findOne').resolves(testEvent);
+    experiment('when the event is found', () => {
+      beforeEach(async () => {
+        sandbox.stub(repo.events, 'findOne').resolves(testEvent);
+      });
+
+      test('should return an Event data model', async () => {
+        const event = new Event();
+        const ev = await eventsService.findOne('testEventId', 'testStatus');
+        expect(typeof ev).to.equal(typeof event);
+      });
+
+      test('should include the eventId when calling the findOne method at the database repos layer', async () => {
+        await eventsService.findOne('testEventId');
+        const { args } = repo.events.findOne.firstCall;
+        expect(args[0]).to.equal('testEventId');
+      });
+
+      test('should map the object key receveived from the database repos layer to camelCase', async () => {
+        const event = new Event();
+        event.type = 'test-type';
+        const { created } = await eventsService.findOne(event);
+        expect(moment.isMoment(created)).to.equal(true);
+      });
     });
 
-    test('should return an Event data model', async () => {
-      const event = new Event();
-      const ev = await eventsService.findOne('testEventId', 'testStatus');
-      expect(typeof ev).to.equal(typeof event);
-    });
+    experiment('when the event is not found', () => {
+      beforeEach(async () => {
+        sandbox.stub(repo.events, 'findOne').resolves(null);
+      });
 
-    test('should include the eventId when calling the findOne method at the database repos layer', async () => {
-      await eventsService.findOne('testEventId');
-      const { args } = repo.events.findOne.firstCall;
-      expect(args[0]).to.equal('testEventId');
-    });
-
-    test('should map the object key receveived from the database repos layer to camelCase', async () => {
-      const event = new Event();
-      event.type = 'test-type';
-      const { created } = await eventsService.findOne(event);
-      expect(moment.isMoment(created)).to.equal(true);
+      test('resolves null', async () => {
+        const result = await eventsService.findOne('testEventId', 'testStatus');
+        expect(result).to.be.null();
+      });
     });
   });
 
@@ -211,6 +235,56 @@ experiment('lib/services/event', () => {
     test('should map the object key receveived from the database repos layer to camelCase', async () => {
       const data = await eventsService.getKPILicenceNames();
       expect(data[0].currentYear).to.equal(true);
+    });
+  });
+
+  experiment('.getNotificationEvents', () => {
+    let result;
+    const page = 3;
+
+    beforeEach(async () => {
+      repo.events.findNotifications.resolves({
+        rows: [{
+          ...testEvent,
+          event_id: uuid(),
+          statuses: [{
+            status: 'technical-failure',
+            count: 2
+          }]
+        }]
+      });
+      repo.events.findNotificationsCount.resolves({
+        rows: [{
+          count: 123
+        }]
+      });
+      result = await eventsService.getNotificationEvents(page);
+    });
+
+    test('calls repo .findNotifications method with expected limit/offset params', async () => {
+      expect(repo.events.findNotifications.calledWith({
+        limit: 50,
+        offset: 100
+      })).to.be.true();
+    });
+
+    test('calls repo .findNotificationsCount method', async () => {
+      expect(repo.events.findNotifications.called).to.be.true();
+    });
+
+    test('result includes a pagination model', async () => {
+      const { pagination } = result;
+      expect(pagination instanceof Pagination).to.be.true();
+      expect(pagination.page).to.equal(page);
+      expect(pagination.totalRows).to.equal(123);
+      expect(pagination.pageCount).to.equal(3);
+      expect(pagination.perPage).to.equal(50);
+    });
+
+    test('result includes an array of NotificationEvent models', async () => {
+      const { data } = result;
+      expect(data).to.be.an.array().length(1);
+      expect(data[0] instanceof NotificationEvent).to.be.true();
     });
   });
 });

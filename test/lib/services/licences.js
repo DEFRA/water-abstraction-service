@@ -51,7 +51,6 @@ experiment('src/lib/services/licences', () => {
     sandbox.stub(repos.licences, 'findOne');
     sandbox.stub(repos.licences, 'findOneByLicenceRef');
     sandbox.stub(repos.licences, 'findByLicenceRef');
-    sandbox.stub(repos.licences, 'findWithoutChargeVersions');
     sandbox.stub(repos.licences, 'updateIncludeLicenceInSupplementaryBilling');
     sandbox.stub(repos.licences, 'updateIncludeInSupplementaryBillingStatusForBatch');
     sandbox.stub(repos.licences, 'update');
@@ -324,25 +323,10 @@ experiment('src/lib/services/licences', () => {
     });
   });
 
-  experiment('.getLicencesWithoutChargeVersions', () => {
-    let results;
-
-    beforeEach(async () => {
-      repos.licences.findWithoutChargeVersions.resolves([data.dbRow]);
-      results = await licencesService.getLicencesWithoutChargeVersions();
-    });
-
-    test('returns the results as Licence models', async () => {
-      expect(results.length).to.equal(1);
-      expect(results[0] instanceof Licence).to.equal(true);
-      expect(results[0].id).to.equal(data.dbRow.licenceId);
-    });
-  });
-
   experiment('.getLicenceInvoices', () => {
     const tempLicenceId = uuid();
     beforeEach(async () => {
-      await repos.billingInvoiceLicences.findAll.resolves({ data: [] });
+      repos.billingInvoiceLicences.findAll.resolves({ data: [] });
       await licencesService.getLicenceInvoices(tempLicenceId);
     });
 

@@ -13,32 +13,24 @@ const {
 const moment = require('moment');
 const { omit } = require('lodash');
 const services = require('../../services');
-const chargeModuleTransactionsService = require('../../services/charge-module-transactions');
-const transactionTests = require('../transaction-tests');
 
-const bookshelfLoader = require('../../services/bookshelf-loader')();
-const crmLoader = require('../../services/crm-loader')();
+const { createSetLoader } = require('../../services/loader');
 
 // Scenario: Annual Batch 2
 // Single Licence with a single charge version effective for whole year with 2 Part Tariff agreements
 experiment('annual batch ref: AB2', () => {
   let batch;
-  let chargeModuleTransactions;
 
   before(async () => {
     await services.tearDown.tearDown();
 
-    // Load CRM fixtures
-    await crmLoader.load('crm.yaml');
+    const loader = createSetLoader();
+    await loader.load('crmV2', 'crm-v2.yaml');
+    await loader.load('water', 'AB2.yaml');
 
-    // Load Bookshelf fixtures
-    bookshelfLoader.setRef('$invoiceAccount', crmLoader.getRef('$invoiceAccount'));
-    await bookshelfLoader.load('AB2.yaml');
-    const region = bookshelfLoader.getRef('$region');
+    const region = loader.getRef('$region');
 
     batch = await services.scenarios.runScenario(region.regionId, 'annual');
-
-    chargeModuleTransactions = await chargeModuleTransactionsService.getTransactionsForBatch(batch);
   });
 
   experiment('has expected batch details', () => {
@@ -90,7 +82,7 @@ experiment('annual batch ref: AB2', () => {
           addressLine1: 'Big Farm',
           addressLine2: 'Windy road',
           addressLine3: 'Buttercup meadow',
-          addressLine4: null,
+          addressLine4: 'Buttercup Village',
           source: 'nald'
         });
       });
@@ -178,26 +170,8 @@ experiment('annual batch ref: AB2', () => {
             expect(transaction.section127Agreement).to.equal(true);
             expect(transaction.section130Agreement).to.equal(null);
           });
-
-          test('has a stable transaction key', async () => {
-            expect(transaction.transactionKey).to.equal('d870c80b337e12b45e83c3d41c61aa22');
-          });
         });
       });
-    });
-  });
-
-  experiment('transactions', () => {
-    test('the batch and charge module have the same number of transactions', async () => {
-      transactionTests.assertNumberOfTransactions(batch, chargeModuleTransactions);
-    });
-
-    test('the batch and charge module contain the same transactions', async () => {
-      transactionTests.assertTransactionsAreInEachSet(batch, chargeModuleTransactions);
-    });
-
-    test('the charge module transaction contain the expected data', async () => {
-      transactionTests.assertBatchTransactionDataExistsInChargeModule(batch, chargeModuleTransactions);
     });
   });
 

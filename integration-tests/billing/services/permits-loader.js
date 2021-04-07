@@ -13,8 +13,8 @@ const path = require('path');
 const dir = path.resolve(__dirname, '../fixtures');
 const moment = require('moment');
 
-const create = (sharedData) => {
-// Create IDM fixture loader
+const create = () => {
+  // Create IDM fixture loader
   const asyncAdapter = new AsyncAdapter();
 
   asyncAdapter
@@ -30,7 +30,6 @@ const create = (sharedData) => {
           metadata: JSON.stringify({ source: 'acceptance-test-setup' })
         }
       });
-      sharedData.set(`permit-${newPermit.data.licence_ref}`, newPermit.data);
       return newPermit.data;
     });
 

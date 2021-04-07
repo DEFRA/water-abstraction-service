@@ -47,8 +47,10 @@ experiment('modules/licences/controllers/invoices', () => {
         sandbox.restore();
       });
       test('calls the licences service with the correct params', async () => {
-        const [id] = licenceService.getLicenceInvoices.lastCall.args;
+        const [id, page, perPage] = licenceService.getLicenceInvoices.lastCall.args;
         expect(id).to.equal(licenceId);
+        expect(page).to.equal(1);
+        expect(perPage).to.equal(10);
       });
     });
 

@@ -2,6 +2,7 @@
 
 const { get } = require('lodash');
 const Boom = require('@hapi/boom');
+const bluebird = require('bluebird');
 
 const returns = require('./lib/returns');
 const returnVersions = require('./lib/return-versions');
@@ -9,6 +10,12 @@ const returnRequirements = require('./lib/return-requirements');
 const returnRequirementPurposes = require('./lib/return-requirements-purposes');
 const permits = require('./lib/permits');
 const entities = require('./lib/entities');
+const transactions = require('./lib/billing-transactions');
+const invoiceLicences = require('./lib/billing-invoice-licences');
+const invoices = require('./lib/billing-invoices');
+const batches = require('./lib/billing-batches');
+const chargeVersionWorkflows = require('./lib/charge-version-workflows');
+const licenceVersions = require('./lib/licence-versions');
 const licences = require('./lib/licences');
 const users = require('./lib/users');
 const notifications = require('./lib/notifications');
@@ -16,6 +23,10 @@ const documents = require('./lib/documents');
 const events = require('./lib/events');
 const sessions = require('./lib/sessions');
 const purposes = require('./lib/purposes');
+const chargeTestDataTearDown = require('../../../integration-tests/billing/services/tear-down');
+
+const regions = require('./lib/regions');
+const setLoader = require('../../../integration-tests/billing/services/loader');
 
 const {
   TEST_EXTERNAL_USER_EMAIL,
@@ -191,7 +202,6 @@ const createLicencesWithNoReturns = async (company, companyV2Id, addressId) => {
 /**
  * National Permitting Service and Digitise! editor Send renewals and digitise licence information.
  National Permitting Service and Digitise! approver Send renewals, digitise licence information and approve changes.
-
  */
 const createInternalUsers = async () => {
   const emailRegex = /acceptance-test\.internal\.(\w*)@defra\.gov\.uk/;
@@ -261,7 +271,7 @@ const postSetup = async (request, h) => {
   }
 };
 
-const postSetupFromYaml = (request, h) => {
+const postSetupFromYaml = async (request, h) => {
   const { key } = request.params;
   const set = require('../../../integration-tests/billing/fixtures/sets.json');
 
@@ -269,8 +279,13 @@ const postSetupFromYaml = (request, h) => {
     return Boom.notFound(`Key ${key} did not match any available Yaml sets.`);
   }
 
-  const loader = require('../../../integration-tests/billing/services/loader');
-  set[key].map(item => loader.load(item.service, item.file));
+  // Create a set loader
+  const loader = setLoader.createSetLoader();
+
+  // Load YAML files in series
+  await bluebird.mapSeries(set[key],
+    ({ service, file }) => loader.load(service, file)
+  );
 
   return h.response().code(204);
 };
@@ -284,6 +299,8 @@ const postTearDown = async () => {
   await returnRequirements.delete();
   console.log('Tearing down acceptance test return versions');
   await returnVersions.delete();
+  console.log('Tearing down acceptance test notifications');
+  await notifications.delete();
   console.log('Tearing down acceptance test events');
   await events.delete();
   console.log('Tearing down acceptance test permits');
@@ -296,10 +313,24 @@ const postTearDown = async () => {
   await users.delete();
   console.log('Tearing down acceptance test sessions');
   await sessions.delete();
+  console.log('Tearing down acceptance test charge version workflows');
+  await chargeVersionWorkflows.delete();
+  console.log('Tearing down acceptance test transactions');
+  await transactions.delete();
+  console.log('Tearing down acceptance test invoiceLicences');
+  await invoiceLicences.delete();
+  console.log('Tearing down acceptance test invoices');
+  await invoices.delete();
+  console.log('Tearing down acceptance test batches');
+  await batches.delete();
+  console.log('Tearing down acceptance test charge data');
+  await chargeTestDataTearDown.tearDown();
+  console.log('Tearing down acceptance test licence versions');
+  await licenceVersions.delete();
   console.log('Tearing down acceptance test licences');
   await licences.delete();
-  console.log('Tearing down acceptance test notifications');
-  await notifications.delete();
+  console.log('Tearing down acceptance test regions');
+  await regions.delete();
 
   return 'tear down complete';
 };

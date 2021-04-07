@@ -15,21 +15,27 @@ const chargeElementRepo = require('../connectors/repos/charge-elements');
 const unitConversion = require('../../lib/unit-conversion');
 const toFixed = require('../../lib/to-fixed');
 
-const calculateSeason = licenceVersionPurpose => {
-  const { code } = licenceVersionPurpose.purposeUse;
+const calculateSeason = (purposeUse, abstractionPeriod) => {
+  if (purposeUse.isTwoPartTariff) {
+    if (purposeUse.code === SPRAY_ANTI_FROST) {
+      return CHARGE_SEASON.allYear;
+    }
 
-  if (code === SPRAY_ANTI_FROST) {
-    return CHARGE_SEASON.allYear;
-  }
-
-  if (licenceVersionPurpose.purposeUse.isTwoPartTariff) {
     const winter = AbstractionPeriod.getWinter();
-    return licenceVersionPurpose.abstractionPeriod.isWithinAbstractionPeriod(winter)
+    return abstractionPeriod.isWithinAbstractionPeriod(winter)
       ? CHARGE_SEASON.winter
       : CHARGE_SEASON.summer;
   }
 
-  return licenceVersionPurpose.abstractionPeriod.getChargeSeason();
+  return abstractionPeriod.getChargeSeason();
+};
+
+const getIsFactorsOverridden = chargeElement => {
+  const { source, season, loss, purposeUse, abstractionPeriod } = chargeElement;
+  const isLossMismatch = loss !== purposeUse.lossFactor;
+  const isSeasonMismatch = season !== calculateSeason(purposeUse, abstractionPeriod);
+  const isSourceNotUnsupported = source !== ChargeElement.sources.unsupported;
+  return isLossMismatch || isSeasonMismatch || isSourceNotUnsupported;
 };
 
 /**
@@ -52,7 +58,7 @@ const getChargeElementsFromLicenceVersion = licenceVersion => {
     chargeElement.purposeSecondary = licenceVersionPurpose.purposeSecondary;
     chargeElement.purposeUse = licenceVersionPurpose.purposeUse;
     chargeElement.description = licenceVersionPurpose.purposeUse.name;
-    chargeElement.season = calculateSeason(licenceVersionPurpose);
+    chargeElement.season = calculateSeason(licenceVersionPurpose.purposeUse, licenceVersionPurpose.abstractionPeriod);
 
     if (licenceVersionPurpose.timeLimitedPeriod) {
       chargeElement.timeLimitedPeriod = licenceVersionPurpose.timeLimitedPeriod;
@@ -71,6 +77,7 @@ const getChargeElementsFromLicenceVersion = licenceVersion => {
 const create = async (chargeVersion, chargeElement) => {
   validators.assertIsInstanceOf(chargeVersion, ChargeVersion);
   validators.assertIsInstanceOf(chargeElement, ChargeElement);
+  chargeElement.isFactorsOverridden = getIsFactorsOverridden(chargeElement);
   const dbRow = chargeElementMapper.modelToDb(chargeElement, chargeVersion);
   const result = await chargeElementRepo.create(dbRow);
   return chargeElementMapper.dbToModel(result);
@@ -78,3 +85,4 @@ const create = async (chargeVersion, chargeElement) => {
 
 exports.getChargeElementsFromLicenceVersion = getChargeElementsFromLicenceVersion;
 exports.create = create;
+exports._getIsFactorsOverridden = getIsFactorsOverridden;

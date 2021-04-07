@@ -26,8 +26,8 @@ module.exports = {
   billing: {
     supplementaryYears: isTest ? 1 : 6,
     // There are 4 processes on the environments but only 1 locally
-    createChargeJobConcurrency: isLocal ? 16 : 4,
-    naldSwitchOverDate: '2021-04-01'
+    createChargeJobConcurrency: isLocal ? 16 : 1,
+    naldSwitchOverDate: process.env.BILLING_GO_LIVE_DATE || '2021-04-01'
   },
 
   blipp: {
@@ -175,7 +175,6 @@ module.exports = {
   isProduction,
 
   chargeModule: {
-    isLocalDocker: (process.env.CHARGE_MODULE_ORIGIN || '').includes('localhost') && !isTest,
     host: process.env.CHARGE_MODULE_ORIGIN,
     cognito: {
       host: process.env.COGNITO_HOST,

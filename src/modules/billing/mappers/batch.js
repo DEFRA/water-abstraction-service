@@ -4,7 +4,7 @@ const Batch = require('../../../lib/models/batch');
 const FinancialYear = require('../../../lib/models/financial-year');
 const regionMapper = require('../../../lib/mappers/region');
 const transactionMapper = require('./transaction');
-const invoiceMapper = require('./invoice');
+const invoiceMapper = require('../../../lib/mappers/invoice');
 
 const { createMapper } = require('../../../lib/object-mapper');
 const helpers = require('../../../lib/mappers/lib/helpers');
@@ -22,7 +22,8 @@ const dbToModelMapper = createMapper({ mapNull: false })
     'invoiceCount',
     'netTotal',
     'invoiceValue',
-    'creditNoteValue'
+    'creditNoteValue',
+    'source'
   )
   .map('billingBatchId').to('id')
   .map('batchType').to('type')
