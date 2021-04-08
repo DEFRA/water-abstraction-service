@@ -1,13 +1,5 @@
-const s3 = require('../../lib/services/s3');
+const reportsConnector = require('../../lib/connectors/reporting/');
 
-const getReport = async (request) => {
-  const { reportIdentifier } = request.params;
-  const url = await s3.getSignedUrl(`reporting/${reportIdentifier}.csv`, 'getObject', 45);
-  return {
-    data: {
-      url
-    }
-  };
-};
+const getReport = async (request) => reportsConnector.getReport(request.params.reportIdentifier);
 
 exports.getReport = getReport;

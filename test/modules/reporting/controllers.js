@@ -10,13 +10,13 @@ const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const s3 = require('../../../src/lib/services/s3');
+const reportsConnector = require('../../../src/lib/connectors/reporting/');
 const controllers = require('../../../src/modules/reporting/controllers');
 
 experiment('modules/reporting/controllers', () => {
   let request;
   before(async () => {
-    await sandbox.stub(s3, 'getSignedUrl').resolves();
+    await sandbox.stub(reportsConnector, 'getReport').resolves();
   });
 
   afterEach(async () => {
@@ -33,8 +33,8 @@ experiment('modules/reporting/controllers', () => {
       await controllers.getReport(request);
     });
 
-    test('calls getSignedUrl with a file path', async () => {
-      expect(s3.getSignedUrl.calledWith('reporting/testreport.csv.csv')).to.be.true();
+    test('calls the reports connector', async () => {
+      expect(reportsConnector.getReport.calledWith('testreport.csv')).to.be.true();
     });
   });
 });

@@ -8,16 +8,16 @@ module.exports = {
     method: 'GET',
     handler: controllers.getReport,
     options: {
-      description: 'Fetches a signed URL for CSV reports stored in S3',
+      description: 'Fetches a CSV reports stored in S3',
       auth: {
         scope: [billing]
       },
       validate: {
         params: {
           reportIdentifier: Joi.string().valid(
-            'billedActiveLicences',
-            'uncreditedInactiveLicences',
-            'unbilledActiveLicences'
+            'billedActiveLicencesReport',
+            'uncreditedInactiveLicencesReport',
+            'unbilledActiveLicencesReport'
           ).required()
         },
         headers: async values => {
