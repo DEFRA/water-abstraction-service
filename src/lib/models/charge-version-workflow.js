@@ -122,7 +122,7 @@ class ChargeVersionWorkflow extends Model {
    * @param {String} uuid
    */
   set licenceVersionId (value) {
-    validators.assertId(value);
+    validators.assertNullableId(value);
     this._licenceVersionId = value;
   }
 

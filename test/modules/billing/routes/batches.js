@@ -4,10 +4,10 @@ const uuid = require('uuid/v4');
 const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 
-const routes = require('../../../src/modules/billing/routes');
-const preHandlers = require('../../../src/modules/billing/pre-handlers');
-const testHelpers = require('../../test-helpers');
-const { ROLES } = require('../../../src/lib/roles');
+const routes = require('../../../../src/modules/billing/routes/batches');
+const preHandlers = require('../../../../src/modules/billing/pre-handlers');
+const testHelpers = require('../../../test-helpers');
+const { ROLES } = require('../../../../src/lib/roles');
 
 /**
  * Creates a test Hapi server that has no other plugins loaded,

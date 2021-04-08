@@ -232,6 +232,8 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountsByIds').resolves(crmData);
 
     sandbox.stub(repos.billingInvoiceLicences, 'findOne');
+
+    sandbox.stub(mappers.invoice, 'modelToDb');
   });
 
   afterEach(async () => {
@@ -548,7 +550,7 @@ experiment('modules/billing/services/invoiceService', () => {
     const invoice = new Invoice();
 
     beforeEach(async () => {
-      sandbox.stub(mappers.invoice, 'modelToDb').returns({ foo: 'bar' });
+      mappers.invoice.modelToDb.returns({ foo: 'bar' });
       await invoiceService.saveInvoiceToDB(batch, invoice);
     });
 
@@ -634,8 +636,8 @@ experiment('modules/billing/services/invoiceService', () => {
     const invoice = new Invoice(invoiceAccountId);
 
     beforeEach(async () => {
-      repos.billingInvoices.findAllForInvoiceAccount.resolves({ data: [invoice], pagination: { page: 1, perPage: 10 } });
       sandbox.stub(mappers.invoice, 'dbToModel').returns({ foo: 'bar' });
+      repos.billingInvoices.findAllForInvoiceAccount.resolves({ data: [invoice], pagination: { page: 1, perPage: 10 } });
       result = await invoiceService.getInvoicesForInvoiceAccount(invoiceAccountId);
     });
 
@@ -650,6 +652,51 @@ experiment('modules/billing/services/invoiceService', () => {
     test('returns mapped data and pagination', async () => {
       expect(result.data).to.equal([{ foo: 'bar' }]);
       expect(result.pagination).to.equal({ page: 1, perPage: 10 });
+    });
+  });
+
+  experiment('.getInvoiceById', () => {
+    const invoiceId = uuid();
+
+    test('calls .findOne() on the repo with the invoice id', async () => {
+      repos.billingInvoices.findOne.resolves({ foo: 'bar' });
+      await invoiceService.getInvoiceById(invoiceId);
+      expect(repos.billingInvoices.findOne.calledWith(invoiceId)).to.be.true();
+    });
+
+    test('throws a NotFoundError if no data is returned', async () => {
+      repos.billingInvoices.findOne.resolves(null);
+      try {
+        await invoiceService.getInvoiceById(invoiceId);
+      } catch (err) {
+        expect(err).to.be.instanceOf(NotFoundError);
+        expect(err.message).to.equal(`Invoice ${invoiceId} not found`);
+      }
+    });
+  });
+
+  experiment('.updateInvoice', () => {
+    const invoiceId = uuid();
+    const changes = { isFlaggedForRebilling: true };
+    let result;
+
+    beforeEach(async () => {
+      sandbox.stub(mappers.invoice, 'dbToModel').returns({ bar: 'baz' });
+
+      repos.billingInvoices.update.resolves({ foo: 'bar' });
+      result = await invoiceService.updateInvoice(invoiceId, changes);
+    });
+
+    test('calls .update() on the repo with the invoice id', async () => {
+      expect(repos.billingInvoices.update.calledWith(invoiceId, changes)).to.be.true();
+    });
+
+    test('maps the invoice to the model', async () => {
+      expect(mappers.invoice.dbToModel.calledWith({ foo: 'bar' })).to.be.true();
+    });
+
+    test('returns the result of the mapping', () => {
+      expect(result).to.equal({ bar: 'baz' });
     });
   });
 });

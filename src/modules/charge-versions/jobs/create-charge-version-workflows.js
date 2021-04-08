@@ -28,7 +28,7 @@ const handler = async job => {
 
   try {
     const licence = await licences.getLicenceById(licenceId);
-    const chargeVersionWorkflow = await chargeVersionWorkflowService.create(licence, licenceVersionId, null, null, CHARGE_VERSION_WORKFLOW_STATUS.toSetup);
+    const chargeVersionWorkflow = await chargeVersionWorkflowService.create(licence, null, null, CHARGE_VERSION_WORKFLOW_STATUS.toSetup, licenceVersionId);
     return { chargeVersionWorkflowId: chargeVersionWorkflow.id };
   } catch (err) {
     logger.error(`Error handling: ${job.id}`, err, job.data);

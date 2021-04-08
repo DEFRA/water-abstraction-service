@@ -23,7 +23,8 @@ const dbToModelMapper = createMapper()
     'creditNoteValue',
     'externalId',
     'legacyId',
-    'metadata'
+    'metadata',
+    'isFlaggedForRebilling'
   )
   .map('netAmount').to('netTotal')
   .map('billingInvoiceId').to('id')
@@ -62,7 +63,8 @@ const modelToDb = (batch, invoice) => ({
   isDeMinimis: invoice.isDeMinimis,
   netAmount: invoice.netTotal,
   invoiceValue: invoice.invoiceValue,
-  creditNoteValue: invoice.creditNoteValue
+  creditNoteValue: invoice.creditNoteValue,
+  isFlaggedForRebilling: invoice.isFlaggedForRebilling
 });
 
 const crmToModel = row => {

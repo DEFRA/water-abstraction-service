@@ -109,9 +109,9 @@ const setOrThrowInvalidEntityError = (chargeVersionWorkflow, changes) => {
  * @param {User} user
  * @return {Promise<ChargeVersionWorkflow>}
  */
-const create = async (licence, licenceVersionId, chargeVersion, user, status = CHARGE_VERSION_WORKFLOW_STATUS.review) => {
+const create = async (licence, chargeVersion, user, status = CHARGE_VERSION_WORKFLOW_STATUS.review, licenceVersionId = null) => {
   validators.assertIsInstanceOf(licence, Licence);
-  validators.assertId(licenceVersionId);
+  validators.assertNullableId(licenceVersionId);
 
   if (status !== CHARGE_VERSION_WORKFLOW_STATUS.toSetup) {
     validators.assertIsInstanceOf(chargeVersion, ChargeVersion);

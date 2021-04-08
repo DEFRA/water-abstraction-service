@@ -158,7 +158,7 @@ client.setLicenceName = async (documentId, name) => {
  *
  * @param {Array<String>} licenceNumbers One or many licence numbers to use to find documents for
  */
-client.getDocumentsByLicenceNumbers = async licenceNumbers => {
+client.getDocumentsByLicenceNumbers = async (licenceNumbers, includeExpired = false) => {
   // run in batches of 20 so not to exceed the permitted request
   // query string size
   const batches = chunk(licenceNumbers, 20);
@@ -168,7 +168,8 @@ client.getDocumentsByLicenceNumbers = async licenceNumbers => {
       return client.findAll({
         system_external_id: {
           $in: ids
-        }
+        },
+        includeExpired
       });
     })
   );

@@ -358,6 +358,25 @@ experiment('lib/models/invoice', () => {
     });
   });
 
+  experiment('.isFlaggedForRebilling', () => {
+    test('can be set to a boolean true', async () => {
+      invoice.isFlaggedForRebilling = true;
+      expect(invoice.isFlaggedForRebilling).to.equal(true);
+    });
+
+    test('can be set to a boolean false', async () => {
+      invoice.isFlaggedForRebilling = false;
+      expect(invoice.isFlaggedForRebilling).to.equal(false);
+    });
+
+    test('throws an error if set to a non-boolean', async () => {
+      const func = () => {
+        invoice.isFlaggedForRebilling = 'hey';
+      };
+      expect(func).to.throw();
+    });
+  });
+
   experiment('.hasTransactionErrors', () => {
     test('is false when no underlying transactions have errors', async () => {
       const invoice = new Invoice().fromHash({

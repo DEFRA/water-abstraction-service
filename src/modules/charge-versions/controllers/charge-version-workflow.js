@@ -6,9 +6,9 @@ const chargeVersionsWorkflowService = require('../services/charge-version-workfl
 const licencesService = require('../../../lib/services/licences');
 
 const controller = require('../../../lib/controller');
-
+const userMapper = require('../../../lib/mappers/user');
 const mapErrorResponse = require('../../../lib/map-error-response');
-
+const { logger } = require('../../../logger');
 /**
  * Gets all charge version workflow or
  * those for the given licence id
@@ -38,16 +38,9 @@ const getChargeVersionWorkflow = request =>
  */
 const postChargeVersionWorkflow = async request => {
   const { licenceId } = request.payload;
-  const { chargeVersion, user, licenceVersion } = request.pre;
+  const { chargeVersion, user } = request.pre;
 
   chargeVersion.status = 'draft';
-
-  // if a charge version exists then update
-  const workflowsForLicence = await chargeVersionsWorkflowService.getManyByLicenceId(licenceId);
-  const workflowForLicenceVersion = workflowsForLicence ? workflowsForLicence.find(row => row.licenceVersion.id === licenceVersion.licenceVersionId) : null;
-  if (workflowForLicenceVersion) {
-    return chargeVersionsWorkflowService.update(workflowForLicenceVersion.id, { chargeVersion, status: 'review', createdBy: user });
-  }
 
   // Find licence or 404
   const licence = await licencesService.getLicenceById(licenceId);
@@ -55,7 +48,7 @@ const postChargeVersionWorkflow = async request => {
     return Boom.notFound(`Licence ${licenceId} not found`);
   }
 
-  return chargeVersionsWorkflowService.create(licence, licenceVersion.licenceVersionId, chargeVersion, user);
+  return chargeVersionsWorkflowService.create(licence, chargeVersion, user);
 };
 
 /**
@@ -66,14 +59,21 @@ const postChargeVersionWorkflow = async request => {
  */
 const patchChargeVersionWorkflow = async (request, h) => {
   const { chargeVersionWorkflowId } = request.params;
-  const { approverComments, status } = request.payload;
+  const { approverComments, status, createdBy } = request.payload;
   const { chargeVersion } = request.pre;
 
   const changes = {
     ...request.payload,
     ...chargeVersion && { chargeVersion }
   };
-
+  if (createdBy) {
+    try {
+      changes.createdBy = userMapper.pojoToModel(createdBy);
+    } catch (err) {
+      logger.error('Error mapping user', err);
+      return Boom.badData('Invalid user in charge version data');
+    }
+  }
   try {
     if (status === 'changes_requested') {
       const chargeVersionWorkflow = await chargeVersionsWorkflowService.update(chargeVersionWorkflowId, { approverComments, status });
