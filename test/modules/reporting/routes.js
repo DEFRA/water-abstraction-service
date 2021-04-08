@@ -31,14 +31,13 @@ const makeGet = url => makeRequest('get', url);
 
 experiment('modules/reporting/routes', () => {
   let server;
-  let id;
 
   experiment('.getReport', () => {
     let request;
 
     beforeEach(async () => {
       server = await testHelpers.createServerForRoute(routes.getReport, true);
-      request = makeGet('/water/1.0/report/billedLicences');
+      request = makeGet('/water/1.0/report/billedActiveLicencesReport');
     });
 
     test('http 403 error when user has insufficient scope', async () => {
@@ -68,7 +67,7 @@ experiment('modules/reporting/routes', () => {
 
     test('http 200 OK when the report identifier is valid', async () => {
       request.auth.credentials.scope = [billing];
-      request.url = '/water/1.0/report/billedLicences';
+      request.url = '/water/1.0/report/billedActiveLicencesReport';
       const response = await server.inject(request);
       expect(response.statusCode).to.equal(200);
     });
