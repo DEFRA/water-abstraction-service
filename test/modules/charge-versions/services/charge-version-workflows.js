@@ -233,7 +233,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
           }
         });
 
-        result = await chargeVersionWorkflowService.create(licence, licenceVersion.id, chargeVersion, user);
+        result = await chargeVersionWorkflowService.create(licence, chargeVersion, user, 'review', licenceVersion.id);
       });
 
       test('the charge version workflow data is persisted in the repo', async () => {
