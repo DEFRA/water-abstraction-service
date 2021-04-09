@@ -91,6 +91,11 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         expect(transactions[0].isTwoPartTariffSupplementary).to.equal(true);
         expect(transactions[0].description).to.equal('Second Part Spray Irrigation Direct Charge at Test Description');
       });
+
+      test('authorised and billable days are set to 0', () => {
+        expect(transactions[0].authorisedDays).to.equal(0);
+        expect(transactions[0].billableDays).to.equal(0);
+      });
     });
 
     experiment('transaction charge periods', () => {
