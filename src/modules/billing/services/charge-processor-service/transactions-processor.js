@@ -184,7 +184,9 @@ const createAnnualAndCompensationTransactions = (elementChargePeriod, chargeElem
   if (isCompensationChargesNeeded(chargeVersion)) {
     transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isCompensationCharge: true, isMinimumCharge }));
   }
-  return transactions;
+
+  // Filter any transactions with 0 billable days
+  return transactions.filter(transaction => transaction.billableDays > 0);
 };
 
 const actions = {
