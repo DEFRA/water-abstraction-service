@@ -76,8 +76,16 @@ const dbToModelMapper = createMapper()
     'externalId',
     'isTwoPartTariffSupplementary',
     'isDeMinimis',
-    'isNewLicence'
+    'isNewLicence',
+    'calcSeasonFactor',
+    'calcLossFactor',
+    'calcEiucSourceFactor',
+    'calcSourceFactor',
+    'calcEiucFactor',
+    'calcSucFactor'
   )
+  .map('calcS126Factor').to('calcS126FactorValue')
+  .map('calcS127Factor').to('calcS127FactorValue')
   .map('netAmount').to('value')
   .map('billingTransactionId').to('id')
   .map('batchType').to('type')
