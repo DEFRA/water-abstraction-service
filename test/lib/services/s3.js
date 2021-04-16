@@ -160,18 +160,4 @@ experiment('lib/services/s3', () => {
       );
     });
   });
-
-  experiment('.getSignedUrl', () => {
-    beforeEach(async () => {
-      await s3Service.getSignedUrl(RESOURCE_KEY);
-    });
-
-    test('calls getSignedUrl on connector with correct options', async () => {
-      expect(stub.getSignedUrl.lastCall.lastArg).to.equal({
-        Key: RESOURCE_KEY,
-        Bucket: BUCKET,
-        Expires: 60
-      });
-    });
-  });
 });
