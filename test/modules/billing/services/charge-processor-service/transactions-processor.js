@@ -1,6 +1,8 @@
 const { expect } = require('@hapi/code');
 const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
 const sandbox = require('sinon').createSandbox();
+const DateRange = require('../../../../../src/lib/models/date-range');
+const AbstractionPeriod = require('../../../../../src/lib/models/abstraction-period');
 
 const transactionsProcessor = require('../../../../../src/modules/billing/services/charge-processor-service/transactions-processor');
 const config = require('../../../../../config');
@@ -61,6 +63,57 @@ experiment('modules/billing/services/charge-processor-service/transactions-proce
         expect(transactions[3].agreements[0].code).to.equal('S127');
         expect(transactions[3].isTwoPartTariffSupplementary).to.equal(false);
         expect(transactions[3].description).to.equal('Compensation Charge calculated from all factors except Standard Unit Charge and Source (replaced by factors below) and excluding S127 Charge Element');
+      });
+    });
+
+    experiment('for an annual transaction type with 0 billable days', () => {
+      beforeEach(async () => {
+        batch = data.createBatch('annual');
+        chargeVersion = data.createChargeVersion({
+          startDate: '2020-01-01'
+        });
+        chargeVersion.chargeElements[0].fromHash({
+          abstractionPeriod: new AbstractionPeriod().fromHash({
+            startDay: 1,
+            startMonth: 4,
+            endDay: 31,
+            endMonth: 10
+          })
+        });
+
+        chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
+        const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
+        transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
+      });
+
+      test('0 transactions are created', async () => {
+        expect(transactions.length).to.equal(0);
+      });
+    });
+
+    experiment('for an annual transaction type with time-limited element and 0 billable days', () => {
+      beforeEach(async () => {
+        batch = data.createBatch('annual');
+        chargeVersion = data.createChargeVersion({
+          startDate: '2019-04-01'
+        });
+        chargeVersion.chargeElements[0].fromHash({
+          timeLimitedPeriod: new DateRange('2019-11-01', '2022-01-01'),
+          abstractionPeriod: new AbstractionPeriod().fromHash({
+            startDay: 1,
+            startMonth: 4,
+            endDay: 31,
+            endMonth: 10
+          })
+        });
+
+        chargeVersionYear = data.createChargeVersionYear(batch, chargeVersion, financialYear);
+        const billingVolumes = chargeVersion.chargeElements.map(data.createBillingVolume);
+        transactions = transactionsProcessor.createTransactions(chargeVersionYear, billingVolumes);
+      });
+
+      test('0 transactions are created', async () => {
+        expect(transactions.length).to.equal(0);
       });
     });
 
