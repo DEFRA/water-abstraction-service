@@ -110,7 +110,7 @@ const mapTransaction = (invoice, transactionMap, cmTransaction) => {
       });
   } else {
     // Create a new min charge model and add to heirarchy
-    const newTransaction = transactionMapper.cmToModel(cmTransaction);
+    const newTransaction = transactionMapper.cmToModel({ ...cmTransaction, twoPartTariff: false });
     invoice
       .getInvoiceLicenceByLicenceNumber(cmTransaction.licenceNumber)
       .transactions

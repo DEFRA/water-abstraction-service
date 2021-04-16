@@ -29,7 +29,8 @@ const invoiceRow = {
   invoiceValue: 200,
   creditNoteValue: -77,
   legacyId: '12345:678',
-  metadata: { foo: 'bar' }
+  metadata: { foo: 'bar' },
+  isFlaggedForRebilling: true
 };
 
 experiment('lib/mappers/invoice', () => {
@@ -76,6 +77,10 @@ experiment('lib/mappers/invoice', () => {
 
     test('maps the metadata', () => {
       expect(result.metadata).to.equal(invoiceRow.metadata);
+    });
+
+    test('maps the is flagged for rebilling', () => {
+      expect(result.isFlaggedForRebilling).to.equal(invoiceRow.isFlaggedForRebilling);
     });
   });
 

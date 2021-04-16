@@ -256,7 +256,7 @@ const modelToChargeModule = (batch, invoice, invoiceLicence, transaction) => {
     batchNumber: batch.id,
     ...mapChargeElementToChargeModuleTransaction(transaction.chargeElement),
     ...mapLicenceToChargeElementTransaction(invoiceLicence.licence),
-    newLicence: transaction.isNewLicence
+    subjectToMinimumCharge: transaction.isNewLicence
   };
 };
 
@@ -281,7 +281,7 @@ const cmToModelMapper = createMapper()
   .map('compensationCharge').to('isCompensationCharge')
   .map('minimumChargeAdjustment').to('isMinimumCharge')
   .map('deminimis').to('isDeMinimis')
-  .map('newLicence').to('isNewLicence')
+  .map('subjectToMinimumCharge').to('isNewLicence')
   .map('twoPartTariff').to('isTwoPartTariffSupplementary', mapIsTwoPartTariffSupplementary)
   .map('transactionStatus').to('status', mapCMTransactionStatus)
   .map('calculation.WRLSChargingResponse.sourceFactor').to('calcSourceFactor')

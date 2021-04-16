@@ -23,14 +23,15 @@ const dbToModelMapper = createMapper()
     'creditNoteValue',
     'externalId',
     'legacyId',
-    'metadata'
+    'metadata',
+    'isFlaggedForRebilling'
   )
   .map('netAmount').to('netTotal')
   .map('billingInvoiceId').to('id')
   .map('invoiceAccountId').to('invoiceAccount', invoiceAccountId => new InvoiceAccount(invoiceAccountId))
   .map('invoiceAccountNumber').to('invoiceAccount.accountNumber')
   .map('billingInvoiceLicences').to('invoiceLicences', billingInvoiceLicences => billingInvoiceLicences.map(invoiceLicence.dbToModel))
-  .map('billingBatch').to('billingBatch', batchMapper.dbToModel)
+  .map('billingBatch').to('batch', batchMapper.dbToModel)
   .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding));
 
 /**
@@ -62,7 +63,8 @@ const modelToDb = (batch, invoice) => ({
   isDeMinimis: invoice.isDeMinimis,
   netAmount: invoice.netTotal,
   invoiceValue: invoice.invoiceValue,
-  creditNoteValue: invoice.creditNoteValue
+  creditNoteValue: invoice.creditNoteValue,
+  isFlaggedForRebilling: invoice.isFlaggedForRebilling
 });
 
 const crmToModel = row => {

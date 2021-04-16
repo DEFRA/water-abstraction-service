@@ -13,6 +13,14 @@ const FinancialYear = require('../models/financial-year');
 // Errors
 const { NotFoundError } = require('../errors');
 
+const getInvoiceById = async invoiceId => {
+  const data = await repos.billingInvoices.findOne(invoiceId);
+  if (!data) {
+    throw new NotFoundError(`Invoice ${invoiceId} not found`);
+  }
+  return data;
+};
+
 /**
  * Saves an Invoice model to water.billing_invoices
  * @param {Batch} batch
@@ -64,11 +72,7 @@ const getBatchInvoices = async context => {
 const getInvoice = async context => {
   const { batch, invoiceId } = context;
 
-  const data = await repos.billingInvoices.findOne(invoiceId);
-
-  if (!data) {
-    throw new NotFoundError(`Invoice ${invoiceId} not found`);
-  }
+  const data = await getInvoiceById(invoiceId);
 
   if (data.billingBatchId !== batch.id) {
     throw new NotFoundError(`Invoice ${invoiceId} not found in batch ${batch.id}`);
@@ -190,9 +194,14 @@ const getOrCreateInvoice = async (batchId, invoiceAccountId, financialYearEnding
   return mappers.invoice.dbToModel(newRow);
 };
 
-const getInvoicesForInvoiceAccount = async invoiceAccountId => {
-  const { data, pagination } = await repos.billingInvoices.findAllForInvoiceAccount(invoiceAccountId);
+const getInvoicesForInvoiceAccount = async (invoiceAccountId, page, perPage) => {
+  const { data, pagination } = await repos.billingInvoices.findAllForInvoiceAccount(invoiceAccountId, page, perPage);
   return { data: data.map(mappers.invoice.dbToModel), pagination };
+};
+
+const updateInvoice = async (invoiceAccountId, changes) => {
+  const invoice = await repos.billingInvoices.update(invoiceAccountId, changes);
+  return mappers.invoice.dbToModel(invoice);
 };
 
 exports.getInvoicesForBatch = getInvoicesForBatch;
@@ -201,3 +210,5 @@ exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
 exports.saveInvoiceToDB = saveInvoiceToDB;
 exports.getOrCreateInvoice = getOrCreateInvoice;
 exports.getInvoicesForInvoiceAccount = getInvoicesForInvoiceAccount;
+exports.getInvoiceById = getInvoiceById;
+exports.updateInvoice = updateInvoice;
