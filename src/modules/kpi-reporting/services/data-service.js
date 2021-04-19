@@ -41,8 +41,15 @@ const getReturnsDataByMonth = async () => {
  */
 const getReturnCycles = async refDate => {
   const startDate = moment(refDate).subtract(729, 'day').format('YYYY-MM-DD');
-  const { data } = await returns.getReturnsCyclesReport(startDate);
-  return data.slice(0, 2);
+  try {
+    const { data } = await returns.getReturnsCyclesReport(startDate);
+    return data.slice(0, 2);
+  } catch (err) {
+    if (err.statusCode === 404) {
+      return null;
+    }
+    throw err;
+  }
 };
 
 module.exports.getCRMDelegatedAccessData = getCRMDelegatedAccessData;

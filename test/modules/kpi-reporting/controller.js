@@ -22,8 +22,10 @@ experiment('./modules/kpi-reporting/controller', () => {
     totals: { allTime: 20, ytd: 18 },
     monthly: [{ month: 'June', internal: 2, external: 1, year: 2020 }]
   };
-  const returnsDataCycle = { due: 1551, internalOnTime: 1, internalLate: 1, externalOnTime: 1, externalLate: 1 };
-  const returnsDataMonthly = [{ currentYear: true, month: 1, request: 0, return: 1, year: 2020 }];
+  const returnsDataMonthly = [
+    { currentYear: true, month: 1, paperFormCount: 2, returnCount: 5, year: 2020, sentNotificationCount: 7 },
+    { currentYear: false, month: 1, paperFormCount: 1, returnCount: 1, year: 2019, sentNotificationCount: 1 }
+  ];
   const licenceNamesData = [
     { currentYear: true, month: 1, named: 220, renamed: 110, year: 2020 },
     { currentYear: false, month: 12, named: 200, renamed: 100, year: 2019 }
@@ -39,7 +41,7 @@ experiment('./modules/kpi-reporting/controller', () => {
     sandbox.stub(dataService, 'getReturnsDataByMonth');
     sandbox.stub(dataService, 'getIDMRegistrationsData');
     sandbox.stub(dataService, 'getCRMDelegatedAccessData');
-    sandbox.stub(dataService, 'getReturnsDataByCycle');
+    sandbox.stub(dataService, 'getReturnCycles');
     sandbox.stub(helpers.returns.date, 'createReturnCycles').returns(returnCycles);
   });
 
@@ -53,17 +55,16 @@ experiment('./modules/kpi-reporting/controller', () => {
       dataService.getReturnsDataByMonth.resolves(null);
       dataService.getIDMRegistrationsData.resolves(null);
       dataService.getCRMDelegatedAccessData.resolves(null);
-      dataService.getReturnsDataByCycle.resolves(null);
+      dataService.getReturnCycles.resolves(null);
     });
-    test('Boom not found error is returned', async () => {
+    test('Empty data responses are returned', async () => {
       const emptyResponse = { totals: { allTime: 0, ytd: 0 }, monthly: [] };
       const emptyDataResponse = {
         data: {
           registrations: emptyResponse,
           delegatedAccess: emptyResponse,
           returnsMonthly: emptyResponse,
-          returnsCycle1: {},
-          returnsCycle2: {},
+          returnsCycles: [],
           licenceNames: emptyResponse
         }
       };
@@ -74,11 +75,11 @@ experiment('./modules/kpi-reporting/controller', () => {
 
   experiment('when data from services are returned', () => {
     beforeEach(async => {
-      dataService.getLicenceNamesData.returns(licenceNamesData);
-      dataService.getReturnsDataByMonth.returns(returnsDataMonthly);
-      dataService.getIDMRegistrationsData.returns(idmData);
-      dataService.getCRMDelegatedAccessData.returns(crmData);
-      dataService.getReturnsDataByCycle.returns(returnsDataCycle);
+      dataService.getLicenceNamesData.resolves(licenceNamesData);
+      dataService.getReturnsDataByMonth.resolves(returnsDataMonthly);
+      dataService.getIDMRegistrationsData.resolves(idmData);
+      dataService.getCRMDelegatedAccessData.resolves(crmData);
+      dataService.getReturnCycles.resolves(returnCycles);
     });
 
     test('Licence Named data from events is returned in the right shape', async () => {
@@ -103,10 +104,11 @@ experiment('./modules/kpi-reporting/controller', () => {
 
     test('Returns monthly data from events is returned in the right shape', async () => {
       const { data: { returnsMonthly } } = await controller.getKpiData();
-      expect(returnsMonthly.totals).to.be.equal({ allTime: 1, ytd: 1 });
+      expect(returnsMonthly.totals).to.be.equal({ allTime: 6, ytd: 5 });
       expect(returnsMonthly.monthly[0].month).to.equal('January');
-      expect(returnsMonthly.monthly[0].request).to.equal(0);
-      expect(returnsMonthly.monthly[0].return).to.equal(1);
+      expect(returnsMonthly.monthly[0].paperFormCount).to.equal(2);
+      expect(returnsMonthly.monthly[0].returnCount).to.equal(5);
+      expect(returnsMonthly.monthly[0].sentNotificationCount).to.equal(7);
       expect(returnsMonthly.monthly[0].currentYear).to.equal(2020);
     });
     test('Delegated access data from CRM is returned in the right shape', async () => {
@@ -117,29 +119,10 @@ experiment('./modules/kpi-reporting/controller', () => {
       expect(delegatedAccess.monthly[0].change).to.equal(100);
       expect(delegatedAccess.monthly[0].year).to.equal(2020);
     });
-    test('Returns cycle 1 data from returns is returned in the right shape', async () => {
-      const { data: { returnsCycle1 } } = await controller.getKpiData();
-      expect(returnsCycle1.startDate).to.be.equal('2018-04-01');
-      expect(returnsCycle1.endDate).to.equal('2019-03-31');
-      expect(returnsCycle1.isSummer).to.be.false();
-      expect(returnsCycle1.due).to.equal(1551);
-      expect(returnsCycle1.internalOnTime).to.equal(1);
-      expect(returnsCycle1.internalLate).to.equal(1);
-      expect(returnsCycle1.externalOnTime).to.equal(1);
-      expect(returnsCycle1.externalLate).to.equal(1);
-      expect(returnsCycle1.total).to.equal(4);
-    });
-    test('Returns cycle 2 data from returns is returned in the right shape', async () => {
-      const { data: { returnsCycle2 } } = await controller.getKpiData();
-      expect(returnsCycle2.startDate).to.be.equal('2017-11-01');
-      expect(returnsCycle2.endDate).to.equal('2018-10-31');
-      expect(returnsCycle2.isSummer).to.be.true();
-      expect(returnsCycle2.due).to.equal(1551);
-      expect(returnsCycle2.internalOnTime).to.equal(1);
-      expect(returnsCycle2.internalLate).to.equal(1);
-      expect(returnsCycle2.externalOnTime).to.equal(1);
-      expect(returnsCycle2.externalLate).to.equal(1);
-      expect(returnsCycle2.total).to.equal(4);
+
+    test('Last 2 return cycles data are returned in the expected shape', async () => {
+      const { data } = await controller.getKpiData();
+      expect(data.returnsCycles).to.equal(returnCycles);
     });
   });
 });

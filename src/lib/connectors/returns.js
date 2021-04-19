@@ -4,7 +4,6 @@ const helpers = require('@envage/water-abstraction-helpers');
 const urlJoin = require('url-join');
 const { URL } = require('url');
 const { chunk, flatMap } = require('lodash');
-const querystring = require('querystring');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
