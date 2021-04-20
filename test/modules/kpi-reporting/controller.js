@@ -64,7 +64,7 @@ experiment('./modules/kpi-reporting/controller', () => {
           registrations: emptyResponse,
           delegatedAccess: emptyResponse,
           returnsMonthly: emptyResponse,
-          returnsCycles: [],
+          returnCycles: [],
           licenceNames: emptyResponse
         }
       };
@@ -122,7 +122,7 @@ experiment('./modules/kpi-reporting/controller', () => {
 
     test('Last 2 return cycles data are returned in the expected shape', async () => {
       const { data } = await controller.getKpiData();
-      expect(data.returnsCycles).to.equal(returnCycles);
+      expect(data.returnCycles).to.equal(returnCycles);
     });
   });
 });

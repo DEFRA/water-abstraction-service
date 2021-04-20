@@ -35,7 +35,7 @@ const getKpiData = async (request) => {
       registrations: dataOrEmpty(kpiData.registrations),
       delegatedAccess: dataOrEmpty(kpiData.delegatedAccess),
       returnsMonthly: dataOrEmpty(kpiData.returnsMonthly, mappers.mapReturnsDataMonthly),
-      returnsCycles: kpiData.returnCycles || [],
+      returnCycles: kpiData.returnCycles || [],
       licenceNames: dataOrEmpty(kpiData.licenceNames, mappers.mapLicenceNamesData)
     }
   };
