@@ -117,8 +117,8 @@ module.exports = {
           invoiceAccountId: REQUIRED_GUID
         }),
         query: Joi.object({
-          page: Joi.number().default(1),
-          perPage: Joi.number().default(10)
+          page: Joi.number().default(1).example(1),
+          perPage: Joi.number().default(10).example(10)
         })
       }
     }

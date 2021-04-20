@@ -31,7 +31,7 @@ const dbToModelMapper = createMapper()
   .map('invoiceAccountId').to('invoiceAccount', invoiceAccountId => new InvoiceAccount(invoiceAccountId))
   .map('invoiceAccountNumber').to('invoiceAccount.accountNumber')
   .map('billingInvoiceLicences').to('invoiceLicences', billingInvoiceLicences => billingInvoiceLicences.map(invoiceLicence.dbToModel))
-  .map('billingBatch').to('billingBatch', batchMapper.dbToModel)
+  .map('billingBatch').to('batch', batchMapper.dbToModel)
   .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding));
 
 /**
