@@ -171,6 +171,10 @@ experiment('modules/invoice-accounts/controller', () => {
       request = {
         params: {
           invoiceAccountId: 'test-id'
+        },
+        query: {
+          page: 2,
+          perPage: 10
         }
       };
     });
@@ -194,7 +198,9 @@ experiment('modules/invoice-accounts/controller', () => {
       });
 
       test('invoices are fetched for the invoice account', async () => {
-        expect(invoiceAccountService.getByInvoiceAccountId.calledWith('test-id')).to.be.true();
+        expect(invoiceService.getInvoicesForInvoiceAccount.calledWith(
+          'test-id', request.query.page, request.query.perPage
+        )).to.be.true();
       });
 
       test('returns the result of the invoice service call', async () => {

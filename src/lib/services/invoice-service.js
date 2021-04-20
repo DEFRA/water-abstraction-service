@@ -194,8 +194,8 @@ const getOrCreateInvoice = async (batchId, invoiceAccountId, financialYearEnding
   return mappers.invoice.dbToModel(newRow);
 };
 
-const getInvoicesForInvoiceAccount = async invoiceAccountId => {
-  const { data, pagination } = await repos.billingInvoices.findAllForInvoiceAccount(invoiceAccountId);
+const getInvoicesForInvoiceAccount = async (invoiceAccountId, page, perPage) => {
+  const { data, pagination } = await repos.billingInvoices.findAllForInvoiceAccount(invoiceAccountId, page, perPage);
   return { data: data.map(mappers.invoice.dbToModel), pagination };
 };
 
