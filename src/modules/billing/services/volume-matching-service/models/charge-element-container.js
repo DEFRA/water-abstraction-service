@@ -206,8 +206,8 @@ class ChargeElementContainer {
       score -= 1000;
     }
 
-    // Give unsupported source precedence
-    if (this.chargeElement.source === ChargeElement.sources.unsupported) {
+    // Give supported source precedence
+    if (this.chargeElement.source === ChargeElement.sources.supported) {
       score -= 1000;
     }
 
