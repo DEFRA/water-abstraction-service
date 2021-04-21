@@ -32,6 +32,7 @@ class Invoice extends Totals {
     super(id);
     this._invoiceLicences = [];
     this.isDeMinimis = false;
+    this._linkedInvoices = [];
   }
 
   /**
@@ -360,6 +361,19 @@ class Invoice extends Totals {
 
   get originalInvoiceId () {
     return this._originalInvoiceId;
+  }
+
+  /**
+   * The ID of the original bill for rebilling
+   * @param {String|Null} id - guid
+   */
+  set linkedInvoices (invoices) {
+    assertIsArrayOfType(invoices, Invoice);
+    this._linkedInvoices = invoices;
+  }
+
+  get linkedInvoices () {
+    return this._linkedInvoices;
   }
 }
 
