@@ -28,3 +28,10 @@ exports.deleteEmptyByBatchId = `delete from water.billing_invoices i
   where b.billing_batch_id=:batchId
   group by i.billing_invoice_id
   having count(l.billing_invoice_licence_id)=0);`;
+
+exports.findByFlaggedForRebillingAndRegion = `
+select * from water.billing_invoices i
+join water.billing_batches b on i.billing_batch_id=b.billing_batch_id
+where i.is_flagged_for_rebilling=true
+and b.region_id=:regionId;
+  `;

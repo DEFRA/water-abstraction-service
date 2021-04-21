@@ -1,6 +1,7 @@
 'use strict';
 
 const got = require('./lib/got-cm');
+const { logger } = require('../../../logger');
 
 /**
  * Creates a bill run in the CM for the specified region code
@@ -71,6 +72,10 @@ const getInvoiceTransactions = (billRunId, invoiceId) =>
 const generate = CMBillRunId =>
   got.patch(`v2/wrls/bill-runs/${CMBillRunId}/generate`);
 
+const rebillInvoice = async (billRunId, invoiceId) => {
+  logger.info(`CM rebilling API for ${billRunId} ${invoiceId} not yet implemented`);
+};
+
 exports.addTransaction = addTransaction;
 exports.approve = approve;
 exports.create = create;
@@ -81,3 +86,4 @@ exports.send = send;
 exports.getInvoiceTransactions = getInvoiceTransactions;
 exports.deleteInvoiceFromBillRun = deleteInvoiceFromBillRun;
 exports.generate = generate;
+exports.rebillInvoice = rebillInvoice;

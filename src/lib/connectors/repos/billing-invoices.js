@@ -1,3 +1,5 @@
+'use strict';
+
 const { bookshelf, BillingInvoice } = require('../bookshelf');
 const raw = require('./lib/raw');
 const queries = require('./queries/billing-invoices');
@@ -95,6 +97,14 @@ const findAllForInvoiceAccount = async (invoiceAccountId, page = 1, perPage = 10
   return paginationHelper.paginatedEnvelope(result);
 };
 
+/**
+ * Finds invoices flagged for rebilling in the given region
+ * @param {String} regionId
+ * @returns {Promise<Array>}
+ */
+const findByFlaggedForRebillingAndRegion = regionId =>
+  raw.multiRow(queries.findByFlaggedForRebillingAndRegion, { regionId });
+
 exports.upsert = upsert;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;
@@ -103,3 +113,4 @@ exports.delete = deleteRecord;
 exports.deleteByBatchId = deleteByBatchId;
 exports.update = update;
 exports.findAllForInvoiceAccount = findAllForInvoiceAccount;
+exports.findByFlaggedForRebillingAndRegion = findByFlaggedForRebillingAndRegion;

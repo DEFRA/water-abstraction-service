@@ -1,6 +1,7 @@
 'use strict';
 
 const createBillRun = require('./jobs/create-bill-run');
+const rebilling = require('./jobs/rebilling');
 const createCharge = require('./jobs/create-charge');
 const populateBatchChargeVersions = require('./jobs/populate-batch-charge-versions');
 const prepareTransactions = require('./jobs/prepare-transactions');
@@ -16,6 +17,7 @@ module.exports = {
   register: async server => {
     server.queueManager
       .register(createBillRun)
+      .register(rebilling)
       .register(createCharge)
       .register(populateBatchChargeVersions)
       .register(prepareTransactions)

@@ -3,9 +3,12 @@
 const { find, partialRight, pickBy } = require('lodash');
 const pWaterfall = require('p-waterfall');
 
+const { logger } = require('../../logger');
+
 // Connectors
 const invoiceAccountsConnector = require('../connectors/crm-v2/invoice-accounts');
 const repos = require('../connectors/repos');
+const chargeModuleBillRunApi = require('../../lib/connectors/charge-module/bill-runs');
 
 const mappers = require('../../modules/billing/mappers');
 const FinancialYear = require('../models/financial-year');
@@ -204,6 +207,37 @@ const updateInvoice = async (invoiceAccountId, changes) => {
   return mappers.invoice.dbToModel(invoice);
 };
 
+const getInvoicesFlaggedForRebilling = async regionId => {
+  const data = await repos.billingInvoices.findByFlaggedForRebillingAndRegion(regionId);
+  return data.map(mappers.invoice.dbToModel);
+};
+
+/**
+ * Rebills the requested invoice
+ *
+ * @param {Batch} batch
+ * @param {Invoice} Invoice
+ * @return {Promise}
+ */
+const rebillInvoice = async (batch, invoice) => {
+  try {
+    await chargeModuleBillRunApi.rebillInvoice(batch.externalId, invoice.externalId);
+  } catch (err) {
+    if (err.statusCode === 409) {
+      logger.info(`Invoice ${invoice.id} already marked for rebilling in batch ${batch.id}`);
+    } else {
+      logger.error(`Failed to mark invoice ${invoice.id} for rebilling in charge module`);
+      throw err;
+    }
+  }
+  // Set the "originalBillingInvoiceId" to this invoice ID.  This allows an invoice
+  // to be linked with the reversal and recharge invoices which will be created by the CM
+  const updatedRow = await repos.billingInvoices.update(invoice.id, {
+    originalBillingInvoiceId: invoice.id
+  });
+  return mappers.invoice.dbToModel(updatedRow);
+};
+
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
 exports.getInvoicesTransactionsForBatch = getInvoicesTransactionsForBatch;
@@ -212,3 +246,5 @@ exports.getOrCreateInvoice = getOrCreateInvoice;
 exports.getInvoicesForInvoiceAccount = getInvoicesForInvoiceAccount;
 exports.getInvoiceById = getInvoiceById;
 exports.updateInvoice = updateInvoice;
+exports.getInvoicesFlaggedForRebilling = getInvoicesFlaggedForRebilling;
+exports.rebillInvoice = rebillInvoice;
