@@ -9,7 +9,9 @@ const {
   assertNullableInteger, assertNullableId,
   assertNullablePositiveOrZeroInteger,
   assertNullableNegativeOrZeroInteger,
-  assertIsNullableBoolean
+  assertIsNullableBoolean,
+  assertEnum,
+  assertNullableEnum
 } = require('./validators');
 
 const Address = require('./address');
@@ -19,6 +21,11 @@ const Company = require('./company');
 const Contact = require('./contact-v2');
 const FinancialYear = require('./financial-year');
 const Totals = require('./totals');
+
+const rebillingState = {
+  rebill: 'rebill',
+  reversal: 'reversal'
+};
 
 class Invoice extends Totals {
   constructor (id) {
@@ -324,6 +331,35 @@ class Invoice extends Totals {
       displayLabel,
       ...super.toJSON()
     };
+  }
+
+  /**
+   * Records whether this invoice is:
+   * - reversal - reverses a previous sent bill for rebilling
+   * - rebill - a fresh copy of the previously sent bill for rebilling
+   *
+   * @param {String} value  - reversal|rebill
+   */
+  set rebillingState (value) {
+    assertNullableEnum(value, Object.values(rebillingState));
+    this._rebillingState = value;
+  }
+
+  get rebillingState () {
+    return this._rebillingState;
+  }
+
+  /**
+   * The ID of the original bill for rebilling
+   * @param {String|Null} id - guid
+   */
+  set originalInvoiceId (id) {
+    assertNullableId(id);
+    this._originalInvoiceId = id;
+  }
+
+  get originalInvoiceId () {
+    return this._originalInvoiceId;
   }
 }
 
