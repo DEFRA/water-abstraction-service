@@ -58,9 +58,12 @@ module.exports = {
     config: {
       description: 'Gets the CRM v1 document for the licence with the given ID',
       validate: {
-        params: {
+        params: Joi.object({
           licenceId: Joi.string().guid().required()
-        }
+        }),
+        query: Joi.object({
+          includeExpired: Joi.boolean().optional().default(false)
+        })
       }
     }
   },
