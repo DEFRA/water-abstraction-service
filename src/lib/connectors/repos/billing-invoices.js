@@ -102,8 +102,19 @@ const findAllForInvoiceAccount = async (invoiceAccountId, page = 1, perPage = 10
  * @param {String} regionId
  * @returns {Promise<Array>}
  */
-const findByFlaggedForRebillingAndRegion = regionId =>
-  raw.multiRow(queries.findByFlaggedForRebillingAndRegion, { regionId });
+const findByIsFlaggedForRebillingAndRegion = regionId =>
+  raw.multiRow(queries.findByIsFlaggedForRebillingAndRegion, { regionId });
+
+/**
+ * Resets rebilling flags for invoices relating to the supplied
+ * batch Id.
+ * Note: the invoices themselves are not in this batch
+ *
+ * @param {String} batchId
+ * @return {Promise}
+ */
+const resetIsFlaggedForRebilling = batchId =>
+  raw.multiRow(queries.resetIsFlaggedForRebilling, { batchId });
 
 exports.upsert = upsert;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
@@ -113,4 +124,5 @@ exports.delete = deleteRecord;
 exports.deleteByBatchId = deleteByBatchId;
 exports.update = update;
 exports.findAllForInvoiceAccount = findAllForInvoiceAccount;
-exports.findByFlaggedForRebillingAndRegion = findByFlaggedForRebillingAndRegion;
+exports.findByIsFlaggedForRebillingAndRegion = findByIsFlaggedForRebillingAndRegion;
+exports.resetIsFlaggedForRebilling = resetIsFlaggedForRebilling;

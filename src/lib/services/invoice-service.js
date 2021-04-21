@@ -208,7 +208,7 @@ const updateInvoice = async (invoiceAccountId, changes) => {
 };
 
 const getInvoicesFlaggedForRebilling = async regionId => {
-  const data = await repos.billingInvoices.findByFlaggedForRebillingAndRegion(regionId);
+  const data = await repos.billingInvoices.findByIsFlaggedForRebillingAndRegion(regionId);
   return data.map(mappers.invoice.dbToModel);
 };
 
@@ -233,10 +233,20 @@ const rebillInvoice = async (batch, invoice) => {
   // Set the "originalBillingInvoiceId" to this invoice ID.  This allows an invoice
   // to be linked with the reversal and recharge invoices which will be created by the CM
   const updatedRow = await repos.billingInvoices.update(invoice.id, {
-    originalBillingInvoiceId: invoice.id
+    originalBillingInvoiceId: invoice.id,
+    rebillingState: null
   });
   return mappers.invoice.dbToModel(updatedRow);
 };
+
+/**
+ * Resets invoices originally flagged for rebilling which have now been re-billed
+ * in the current batch
+ *
+ * @param {String} batchId - current batch ID
+ * @returns {Promise}
+ */
+const resetIsFlaggedForRebilling = batchId => repos.billingInvoices.resetIsFlaggedForRebilling(batchId);
 
 exports.getInvoicesForBatch = getInvoicesForBatch;
 exports.getInvoiceForBatch = getInvoiceForBatch;
@@ -248,3 +258,4 @@ exports.getInvoiceById = getInvoiceById;
 exports.updateInvoice = updateInvoice;
 exports.getInvoicesFlaggedForRebilling = getInvoicesFlaggedForRebilling;
 exports.rebillInvoice = rebillInvoice;
+exports.resetIsFlaggedForRebilling = resetIsFlaggedForRebilling;
