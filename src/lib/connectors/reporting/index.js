@@ -1,16 +1,24 @@
 'use strict';
-
 const config = require('../../../../config');
-const { serviceRequest } = require('@envage/water-abstraction-helpers');
 const urlJoin = require('url-join');
+const got = require('got');
 
 /**
- * Posts to import module to re-import charging data
- * @return {Promise}
+ * Requests a report from the Reporting microservice
+ * @param request {Object} The request object
+ * @returns {Request} Got Request - Streams file from S3
  */
-const getReport = key => {
+const getReport = request => {
+  const key = request.params.reportIdentifier;
   const uri = urlJoin(config.services.reporting, 'report', key);
-  return serviceRequest.get(uri);
+  const options = {
+    headers: {
+      Authorization: `Bearer ${process.env.JWT_TOKEN}`,
+      'defra-internal-user-id': request.defra.userId
+    }
+  };
+
+  return got.stream(uri, options);
 };
 
 exports.getReport = getReport;

@@ -34,7 +34,7 @@ experiment('modules/reporting/controllers', () => {
     });
 
     test('calls the reports connector', async () => {
-      expect(reportsConnector.getReport.calledWith('testreport.csv')).to.be.true();
+      expect(reportsConnector.getReport.calledWith(request)).to.be.true();
     });
   });
 });
