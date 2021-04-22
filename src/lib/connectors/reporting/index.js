@@ -5,16 +5,16 @@ const got = require('got');
 
 /**
  * Requests a report from the Reporting microservice
- * @param request {Object} The request object
+ * @param userId {string} The user number
+ * @param reportIdentifier {string} The report identifier
  * @returns {Request} Got Request - Streams file from S3
  */
-const getReport = request => {
-  const key = request.params.reportIdentifier;
-  const uri = urlJoin(config.services.reporting, 'report', key);
+const getReport = (userId, reportIdentifier) => {
+  const uri = urlJoin(config.services.reporting, 'report', reportIdentifier);
   const options = {
     headers: {
       Authorization: `Bearer ${process.env.JWT_TOKEN}`,
-      'defra-internal-user-id': request.defra.userId
+      'defra-internal-user-id': `${userId}`
     }
   };
 

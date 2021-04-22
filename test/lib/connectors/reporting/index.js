@@ -27,27 +27,13 @@ experiment('connectors/import', () => {
 
   experiment('.getReport', () => {
     test('calls the expected URL', async () => {
-      await reportingConnector.getReport({
-        params: {
-          reportIdentifier: 'SomeReport'
-        },
-        defra: {
-          userId: '5050'
-        }
-      });
+      await reportingConnector.getReport('5050', 'SomeReport');
       const [url] = got.stream.lastCall.args;
       expect(url).to.endWith('/report/SomeReport');
     });
 
     test('calls the got.stream module function', async () => {
-      await reportingConnector.getReport({
-        params: {
-          reportIdentifier: 'SomeReport'
-        },
-        defra: {
-          userId: '5050'
-        }
-      });
+      await reportingConnector.getReport('5050', 'SomeReport');
       expect(got.stream.called).to.be.true();
     });
   });
