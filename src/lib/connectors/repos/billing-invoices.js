@@ -116,6 +116,25 @@ const findByIsFlaggedForRebillingAndRegion = regionId =>
 const resetIsFlaggedForRebilling = batchId =>
   raw.multiRow(queries.resetIsFlaggedForRebilling, { batchId });
 
+/**
+ * Finds invoices linked to the supplied invoice ID
+ * Invoices are linked via the original_billing_invoice_id column
+ * @param {String} billingInvoiceId
+ * @param {String} originalBillingInvoiceId
+ * @return {Promise<Array>}
+ */
+const findLinkedInvoices = async (billingInvoiceId, originalBillingInvoiceId) => {
+  const result = await BillingInvoice
+    .forge()
+    .where('originalBillingInvoiceId', originalBillingInvoiceId)
+    .andWhere('billingInvoiceId', '<>', billingInvoiceId)
+    .fetch({
+      require: false
+    });
+
+  return result.toJSON();
+};
+
 exports.upsert = upsert;
 exports.deleteEmptyByBatchId = deleteEmptyByBatchId;
 exports.findOne = findOne;
@@ -126,3 +145,4 @@ exports.update = update;
 exports.findAllForInvoiceAccount = findAllForInvoiceAccount;
 exports.findByIsFlaggedForRebillingAndRegion = findByIsFlaggedForRebillingAndRegion;
 exports.resetIsFlaggedForRebilling = resetIsFlaggedForRebilling;
+exports.findLinkedInvoices = findLinkedInvoices;
