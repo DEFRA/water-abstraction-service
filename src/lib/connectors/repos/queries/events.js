@@ -21,7 +21,12 @@ from (
     date_part('month', date.ts) as month,
     date_part('year', date.ts) as year
   from ( 
-    select * from generate_series('2018-10-31', now(), '1 month') as ts
+    select * from generate_series(
+      '2018-10-31', 
+      -- last day of current month
+      (date_trunc('month', now()::date) + interval '1 month' - interval '1 day')::date,
+      '1 month'
+    ) as ts
   ) as date
 ) as m
 left join (
