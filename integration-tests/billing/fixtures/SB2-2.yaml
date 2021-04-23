@@ -17,6 +17,7 @@
 - model: ChargeElement
   fields:
     chargeVersionId: $chargeVersion2.chargeVersionId
+    factorsOverridden: false
     abstractionPeriodStartDay : 1
     abstractionPeriodStartMonth : 4
     abstractionPeriodEndDay : 31
