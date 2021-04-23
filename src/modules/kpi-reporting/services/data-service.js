@@ -1,3 +1,6 @@
+'use strict';
+
+const moment = require('moment');
 
 const crm = require('../../../lib/connectors/crm/kpi-reporting');
 const idm = require('../../../lib/connectors/idm/kpi-reporting');
@@ -31,20 +34,26 @@ const getReturnsDataByMonth = async () => {
   return data;
 };
 
-const getReturnsDataByCycle = async (startDate, endDate, isSummer) => {
+/**
+ * Get last 2 return cycles
+ * @param {String} [refDate] - reference date, defaults to current date
+ * @returns
+ */
+const getReturnCycles = async refDate => {
+  const startDate = moment(refDate).subtract(729, 'day').format('YYYY-MM-DD');
   try {
-    const { data: [data] } = await returns.getKPIReturnsByCycle(startDate, endDate, isSummer);
-    return data;
+    const { data } = await returns.getReturnsCyclesReport(startDate);
+    return data.slice(0, 2);
   } catch (err) {
     if (err.statusCode === 404) {
       return null;
     }
-    return err;
+    throw err;
   }
 };
 
 module.exports.getCRMDelegatedAccessData = getCRMDelegatedAccessData;
 module.exports.getIDMRegistrationsData = getIDMRegistrationsData;
 module.exports.getReturnsDataByMonth = getReturnsDataByMonth;
-module.exports.getReturnsDataByCycle = getReturnsDataByCycle;
 module.exports.getLicenceNamesData = getLicenceNamesData;
+module.exports.getReturnCycles = getReturnCycles;
