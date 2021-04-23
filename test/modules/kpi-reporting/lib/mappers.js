@@ -46,9 +46,9 @@ experiment('./modules/kpi-reporting/lib/mappers', () => {
 
   experiment('.mapReturnsDataMonthly', () => {
     const returnsDataMonthly = [
-      { currentYear: true, month: 2, request: 2, return: 2, year: 2020 },
-      { currentYear: true, month: 1, request: 3, return: 3, year: 2020 },
-      { currentYear: false, month: 12, request: 1, return: 1, year: 2020 }
+      { currentYear: true, month: 2, paperFormCount: 2, returnCount: 2, year: 2020 },
+      { currentYear: true, month: 1, paperFormCount: 3, returnCount: 3, year: 2020 },
+      { currentYear: false, month: 12, paperFormCount: 1, returnCount: 1, year: 2020 }
     ];
 
     test('the returns data by cycle is mapped correctly', async () => {
@@ -56,12 +56,12 @@ experiment('./modules/kpi-reporting/lib/mappers', () => {
       expect(mappedData.totals).to.be.equal({ allTime: 6, ytd: 5 });
       expect(mappedData.monthly.length).to.equal(2);
       expect(mappedData.monthly[0].month).to.equal('February');
-      expect(mappedData.monthly[0].request).to.equal(2);
-      expect(mappedData.monthly[0].return).to.equal(2);
+      expect(mappedData.monthly[0].paperFormCount).to.equal(2);
+      expect(mappedData.monthly[0].returnCount).to.equal(2);
       expect(mappedData.monthly[0].currentYear).to.equal(2020);
       expect(mappedData.monthly[1].month).to.equal('January');
-      expect(mappedData.monthly[1].request).to.equal(3);
-      expect(mappedData.monthly[1].return).to.equal(3);
+      expect(mappedData.monthly[1].paperFormCount).to.equal(3);
+      expect(mappedData.monthly[1].returnCount).to.equal(3);
       expect(mappedData.monthly[1].currentYear).to.equal(2020);
     });
   });

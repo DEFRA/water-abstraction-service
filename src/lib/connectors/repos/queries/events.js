@@ -8,20 +8,60 @@ SELECT * FROM water.scheduled_notification
     `;
 
 exports.getKPIReturnsMonthlyData = `
-SELECT date_part('month', created)::integer AS month, 
-date_part('year', created)::integer AS year,
-SUM(CASE 
-  WHEN subtype = 'pdf.return_form' THEN 1
-  WHEN subtype = 'paperReturnForms' THEN jsonb_array_length(licences)
-  ELSE 0
-END)::integer AS request,
-SUM(CASE WHEN "type" = 'return' and subtype <> 'pdf.return_form' THEN 1 ELSE 0 END)::integer AS return, 
-CASE WHEN date_part('year', created)::integer = date_part('year', CURRENT_DATE) THEN true ELSE false END AS current_year
-FROM water.events 
-WHERE "type" = 'return' OR subtype IN ('pdf.return_form', 'paperReturnForms')      
-AND date_part('year', created) = date_part('year', CURRENT_DATE)  
-GROUP BY  current_year, month
-ORDER BY current_year asc, month desc;`;
+select 
+  m.month, 
+  m.year, 
+  coalesce(sum(e.is_return), 0)::integer as return_count, 
+  coalesce(sum(e.is_paper_form), 0)::integer as paper_form_count,
+  coalesce(sum(e.sent_notification_count), 0)::integer as sent_notification_count,
+  m.year = date_part('year', NOW()) as current_year
+from (
+  -- Gets a series of months beginning when WRLS began collecting returns
+  select 
+    date_part('month', date.ts) as month,
+    date_part('year', date.ts) as year
+  from ( 
+    select * from generate_series(
+      '2018-10-31', 
+      -- last day of current month
+      (date_trunc('month', now()::date) + interval '1 month' - interval '1 day')::date,
+      '1 month'
+    ) as ts
+  ) as date
+) as m
+left join (
+  -- Gets list of returns/return PDF form events with month and year  
+  select
+    e.event_id,
+    date_part('year', e.created) as year,
+    date_part('month', e.created) as month,
+    case
+      when e.type='return' then 1 else 0 end
+      as is_return,
+    case
+      when e.subtype in ('pdf.return_form', 'paperReturnForms') then 1 else 0 end
+      as is_paper_form,
+    sn.sent_notification_count
+  from water.events e 
+  left join (
+    -- Gets successfully sent notification count by event ID 
+    select sn.event_id, count(id) as sent_notification_count 
+      from water.scheduled_notification sn
+      where 
+        sn.notify_id is not null
+        and sn.notify_status in ('accepted', 'delivered', 'sending', 'accepted', 'received')
+        and sn.event_id is not null
+        group by sn.event_id
+  ) sn on e.event_id=sn.event_id
+  where 
+    (
+      e.type='return'
+      or e.subtype in ('pdf.return_form', 'paperReturnForms')
+    )
+    and e.status in ('sent', 'completed')
+  ) e on m.month=e.month and m.year=e.year
+  group by m.year, m.month
+`;
 
 exports.getKPILicenceNamesData = `
 SELECT date_part('month', created)::integer AS month, 

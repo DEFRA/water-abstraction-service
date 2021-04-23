@@ -4,7 +4,6 @@ const helpers = require('@envage/water-abstraction-helpers');
 const urlJoin = require('url-join');
 const { URL } = require('url');
 const { chunk, flatMap } = require('lodash');
-const querystring = require('querystring');
 
 const DATE_FORMAT = 'YYYY-MM-DD';
 
@@ -126,19 +125,6 @@ const getLinesForReturn = async ret => {
 };
 
 /**
- * Gets the returns KPI data by cycle within the specified parameters
- * @param {Date} startDate
- * @param {Date} endDate
- * @param {Boolean} isSummer
- * @returns Object
- */
-const getKPIReturnsByCycle = async (startDate, endDate, isSummer) => {
-  const qs = querystring.stringify({ startDate, endDate, isSummer });
-  const url = urlJoin(config.services.returns, `/kpi/licencesBySeason?${qs}`);
-  return helpers.serviceRequest.get(url);
-};
-
-/**
  * Gets a report of return cycles with data on number of returns in each status
  *
  * @return {Promise<Object>}
@@ -183,7 +169,6 @@ exports.getCurrentDueReturns = getCurrentDueReturns;
 exports.getServiceVersion = getServiceVersion;
 exports.getReturnsForLicence = getReturnsForLicence;
 exports.getLinesForReturn = getLinesForReturn;
-exports.getKPIReturnsByCycle = getKPIReturnsByCycle;
 
 if (config.isAcceptanceTestTarget) {
   exports.deleteAcceptanceTestData = deleteAcceptanceTestData;
