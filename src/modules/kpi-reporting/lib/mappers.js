@@ -13,9 +13,10 @@ const mapReturnsDataByCycle = (data, returnCycle) => {
 
 const mapReturnsDataMonthly = data => {
   return data.reduce((acc, row) => {
-    acc.totals.allTime = acc.totals.allTime + row.returnCount;
-    acc.totals.ytd = acc.totals.ytd + (row.currentYear ? row.returnCount : 0);
-    if (row.currentYear) { // row.month - 1 to mamtch the string array of months starting with index of 0
+    acc.totals.allTime += row.returnCount;
+    if (row.currentYear) {
+      acc.totals.ytd += row.returnCount;
+      // row.month - 1 to mamtch the string array of months starting with index of 0
       acc.monthly.push({ ...row, month: months[(row.month - 1)], currentYear: row.year });
     }
     return acc;
