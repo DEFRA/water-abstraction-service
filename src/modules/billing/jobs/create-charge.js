@@ -50,7 +50,7 @@ const isClientError = err => inRange(getStatus(err), 400, 500);
  * @param {Error} err
  * @return {Boolean}
  */
-const isConflictError = err => getStatus(err) === 409;
+// const isConflictError = err => getStatus(err) === 409;
 
 const updateBatchState = async batch => {
   const statuses = await batchService.getTransactionStatusCounts(batch.id);
@@ -72,6 +72,8 @@ const updateBatchState = async batch => {
   return flags;
 };
 
+const getTransactionStatus = batch => get(batch, 'invoices[0].invoiceLicences[0].transactions[0].status');
+
 const handler = async job => {
   batchJob.logHandling(job);
   const transactionId = get(job, 'data.billingBatchTransactionId');
@@ -80,6 +82,12 @@ const handler = async job => {
   const batch = await transactionsService.getById(transactionId);
 
   try {
+    // Skip CM call if transaction is already processed
+    const status = getTransactionStatus(batch);
+    if (status !== Transaction.statuses.candidate) {
+      return await updateBatchState(batch);
+    }
+
     // Map data to charge module transaction
     const [cmTransaction] = batchMapper.modelToChargeModule(batch);
 
@@ -95,11 +103,16 @@ const handler = async job => {
     batchJob.logHandlingError(job, err);
 
     // if the charge was created in the CM
+    /*
+    // Note: this has been temporarily removed as it is not supported
+    // by CM v2 currently
     if (isConflictError(err)) {
       await transactionsService.updateWithChargeModuleResponse(transactionId, err.response.body);
       return updateBatchState(batch);
     }
-    // if error code >= 400 and < 500 set transacti on status to error and continue
+    */
+
+    // if error code >= 400 and < 500 set transaction status to error and continue
     if (isClientError(err)) {
       await transactionsService.setErrorStatus(transactionId);
       return updateBatchState(batch);

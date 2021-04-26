@@ -17,6 +17,7 @@ const createChargeJob = require('../../../../src/modules/billing/jobs/create-cha
 // Connectors
 const chargeModuleBillRunConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
 const mappers = require('../../../../src/modules/billing/mappers');
+const { logger } = require('../../../../src/logger');
 
 // Services
 const transactionService = require('../../../../src/modules/billing/services/transactions-service');
@@ -24,7 +25,6 @@ const batchService = require('../../../../src/modules/billing/services/batch-ser
 
 // Models
 const Batch = require('../../../../src/lib/models/batch');
-const ChargeElement = require('../../../../src/lib/models/charge-element');
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
 const Invoice = require('../../../../src/lib/models/invoice');
 const Transaction = require('../../../../src/lib/models/transaction');
@@ -37,20 +37,10 @@ const { BATCH_ERROR_CODE } = require('../../../../src/lib/models/batch');
 
 const data = {
   eventId: 'test-event-id',
-  batch: {
-    id: batchId,
-    externalId: chargeModuleBillRunId
-  },
+
   transaction: {
     billing_transaction_id: transactionId,
     charge_element_id: 'test-charge-element-id'
-  },
-  models: {
-    batch: new Batch(),
-    chargeElement: new ChargeElement(),
-    invoiceLicence: new InvoiceLicence(),
-    invoice: new Invoice(),
-    transaction: new Transaction(transactionId)
   },
   chargeModuleTransaction: {
     periodStart: '01-APR-2019',
@@ -86,6 +76,27 @@ const data = {
   }
 };
 
+const createBatch = () => {
+  // Create transaction
+  const transaction = new Transaction(transactionId);
+  transaction.status = Transaction.statuses.candidate;
+
+  // Create invoice licence
+  const invoiceLicence = new InvoiceLicence();
+  invoiceLicence.transactions = [transaction];
+
+  // Create invoice
+  const invoice = new Invoice();
+  invoice.invoiceLicences = [invoiceLicence];
+
+  // Create batch
+  const batch = new Batch(batchId);
+  batch.invoices = [invoice];
+  batch.externalId = chargeModuleBillRunId;
+
+  return batch;
+};
+
 experiment('modules/billing/jobs/create-charge', () => {
   let batch, queueManager;
 
@@ -100,8 +111,7 @@ experiment('modules/billing/jobs/create-charge', () => {
       add: sandbox.stub()
     };
 
-    batch = new Batch();
-    batch.fromHash(data.batch);
+    batch = createBatch();
 
     sandbox.stub(transactionService, 'getById').resolves(batch);
     sandbox.stub(transactionService, 'updateWithChargeModuleResponse').resolves();
@@ -121,6 +131,8 @@ experiment('modules/billing/jobs/create-charge', () => {
     sandbox.stub(chargeModuleBillRunConnector, 'addTransaction').resolves(data.chargeModuleResponse);
     sandbox.stub(chargeModuleBillRunConnector, 'generate').resolves();
     sandbox.stub(mappers.batch, 'modelToChargeModule').returns([data.chargeModuleTransaction]);
+
+    sandbox.stub(logger, 'error');
   });
 
   afterEach(async () => {
@@ -184,7 +196,7 @@ experiment('modules/billing/jobs/create-charge', () => {
 
       test('the charge module payload is sent to the .createTransaction connector', async () => {
         const [externalId, payload] = chargeModuleBillRunConnector.addTransaction.lastCall.args;
-        expect(externalId).to.equal(data.batch.externalId);
+        expect(externalId).to.equal(batch.externalId);
         expect(payload).to.equal(data.chargeModuleTransaction);
       });
 
@@ -192,6 +204,44 @@ experiment('modules/billing/jobs/create-charge', () => {
         const [id, response] = transactionService.updateWithChargeModuleResponse.lastCall.args;
         expect(id).to.equal(transactionId);
         expect(response).to.equal(data.chargeModuleResponse);
+      });
+
+      test('the batchService.cleanup method is called', async () => {
+        expect(batchService.cleanup.calledWith(
+          batchId
+        )).to.be.true();
+      });
+
+      test('the batch status is not changed', async () => {
+        expect(batchService.setStatus.called).to.be.false();
+      });
+
+      test('resolves with flags to indicate status', async () => {
+        expect(result).to.equal({
+          isEmptyBatch: false,
+          isReady: true
+        });
+      });
+    });
+
+    experiment('when the transaction is not in "candidate" status', () => {
+      beforeEach(async () => {
+        batch = createBatch();
+        batch.invoices[0].invoiceLicences[0].transactions[0].status = Transaction.statuses.chargeCreated;
+        transactionService.getById.resolves(batch);
+        result = await createChargeJob.handler(job);
+      });
+
+      test('the transaction is loaded within the context of its batch', async () => {
+        expect(transactionService.getById.calledWith(transactionId)).to.be.true();
+      });
+
+      test('the charge module is never called', async () => {
+        expect(chargeModuleBillRunConnector.addTransaction.called).to.be.false();
+      });
+
+      test('the transaction is never updated', async () => {
+        expect(transactionService.updateWithChargeModuleResponse.called).to.be.false();
       });
 
       test('the batchService.cleanup method is called', async () => {
@@ -266,6 +316,9 @@ experiment('modules/billing/jobs/create-charge', () => {
       });
     });
 
+    /*
+    // Note: this has been temporarily removed as it is not supported
+    // by CM v2 currently
     experiment('when there is 409 error in the charge module', () => {
       const err = new Error('Test error');
       err.statusCode = 409;
@@ -297,6 +350,7 @@ experiment('modules/billing/jobs/create-charge', () => {
         expect(batchService.setErrorStatus.called).to.be.false();
       });
     });
+    */
 
     experiment('when there is a 5xx error', () => {
       const err = new Error('Test error');
