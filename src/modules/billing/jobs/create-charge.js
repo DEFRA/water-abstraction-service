@@ -45,13 +45,6 @@ const getStatus = err => get(err, 'statusCode', 0);
  */
 const isClientError = err => inRange(getStatus(err), 400, 500);
 
-/**
- * Checks if error is HTTP 409 - conflict
- * @param {Error} err
- * @return {Boolean}
- */
-// const isConflictError = err => getStatus(err) === 409;
-
 const updateBatchState = async batch => {
   const statuses = await batchService.getTransactionStatusCounts(batch.id);
   const flags = {
@@ -101,16 +94,6 @@ const handler = async job => {
     return await updateBatchState(batch);
   } catch (err) {
     batchJob.logHandlingError(job, err);
-
-    // if the charge was created in the CM
-    /*
-    // Note: this has been temporarily removed as it is not supported
-    // by CM v2 currently
-    if (isConflictError(err)) {
-      await transactionsService.updateWithChargeModuleResponse(transactionId, err.response.body);
-      return updateBatchState(batch);
-    }
-    */
 
     // if error code >= 400 and < 500 set transaction status to error and continue
     if (isClientError(err)) {

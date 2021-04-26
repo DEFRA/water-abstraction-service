@@ -316,42 +316,6 @@ experiment('modules/billing/jobs/create-charge', () => {
       });
     });
 
-    /*
-    // Note: this has been temporarily removed as it is not supported
-    // by CM v2 currently
-    experiment('when there is 409 error in the charge module', () => {
-      const err = new Error('Test error');
-      err.statusCode = 409;
-      err.response = {
-        body: {
-          id: '7205bd26-8064-4bf3-beb7-b4c4df7e29d4',
-          clientId: '548f5338-3dcf-4235-a3ba-4a3024a3710f'
-        }
-      };
-
-      beforeEach(async () => {
-        chargeModuleBillRunConnector.addTransaction.rejects(err);
-        await createChargeJob.handler(job);
-      });
-
-      test('the error is logged', async () => {
-        expect(batchJob.logHandlingError.calledWith(
-          job, err
-        )).to.be.true();
-      });
-
-      test('the transaction is updated with the charge module response', async () => {
-        const [id, response] = transactionService.updateWithChargeModuleResponse.lastCall.args;
-        expect(id).to.equal(transactionId);
-        expect(response).to.equal(err.response.body);
-      });
-
-      test('the batch status is not set to "error"', async () => {
-        expect(batchService.setErrorStatus.called).to.be.false();
-      });
-    });
-    */
-
     experiment('when there is a 5xx error', () => {
       const err = new Error('Test error');
       err.statusCode = 500;
