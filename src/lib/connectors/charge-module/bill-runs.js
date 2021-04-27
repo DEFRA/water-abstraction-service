@@ -1,6 +1,6 @@
 'use strict';
 
-const { got } = require('./got');
+const got = require('./lib/got-cm');
 
 /**
  * Creates a bill run in the CM for the specified region code
@@ -17,7 +17,7 @@ const create = region =>
  * @return {Promise<Object>} response payload
  */
 const addTransaction = (billRunId, transaction) =>
-  got.post(`v2/wrls/bill-runs/${billRunId}/transactions`, { json: transaction });
+  got.post(`v2/wrls/bill-runs/${billRunId}/transactions`, { json: transaction, retries: 0 });
 
 /**
  * Approves the spefified CM bill run
