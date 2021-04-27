@@ -1,6 +1,8 @@
 'use strict';
-const request = require('./request');
 
-const updateCustomer = data => request.post('v2/wrls/customer-changes', data);
+const { got } = require('./got');
+
+const updateCustomer = data =>
+  got.post('v2/wrls/customer-changes', { json: data });
 
 exports.updateCustomer = updateCustomer;
