@@ -260,7 +260,7 @@ experiment('modules/charge-versions/services/charge-version-workflows', () => {
       });
     });
 
-    experiment('when an invalid model is supplied', async () => {
+    experiment('when an invalid model is supplied', () => {
       test('a validation error is thrown', async () => {
         const func = () => chargeVersionWorkflowService.create(licence, licence, user);
         expect(func()).to.reject();

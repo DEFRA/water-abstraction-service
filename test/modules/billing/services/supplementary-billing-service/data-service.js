@@ -43,7 +43,7 @@ experiment('modules/billing/services/supplementary-billing-service/data-service'
     sandbox.restore();
   });
 
-  experiment('.getTransactions', async () => {
+  experiment('.getTransactions', () => {
     let transactions;
     beforeEach(async () => {
       transactions = {

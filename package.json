@@ -29,7 +29,7 @@
   "devDependencies": {
     "@hapi/basic": "^6.0.0",
     "@hapi/code": "^5.2.4",
-    "@hapi/lab": "^19.1.0",
+    "@hapi/lab": "^24.2.0",
     "auto-changelog": "^1.16.4",
     "codecov": "^3.7.2",
     "csv-stringify": "^2.0.4",

@@ -737,7 +737,7 @@ experiment('modules/billing/services/batch-service', () => {
       }
     };
 
-    experiment('when the CM batch is not approved for billing', async () => {
+    experiment('when the CM batch is not approved for billing', () => {
       beforeEach(async () => {
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
@@ -754,7 +754,7 @@ experiment('modules/billing/services/batch-service', () => {
       });
     });
 
-    experiment('when the CM batch is showing as "pending"', async () => {
+    experiment('when the CM batch is showing as "pending"', () => {
       beforeEach(async () => {
         cmResponse.billRun.status = 'pending';
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
@@ -837,7 +837,7 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.cleanup', async () => {
+  experiment('.cleanup', () => {
     beforeEach(async () => {
       await batchService.cleanup(BATCH_ID);
     });
@@ -855,8 +855,8 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.create', async () => {
-    experiment('when there is an existing batch', async () => {
+  experiment('.create', () => {
+    experiment('when there is an existing batch', () => {
       const existingBatchId = uuid();
       const regionId = uuid();
 
@@ -887,7 +887,7 @@ experiment('modules/billing/services/batch-service', () => {
       });
     });
 
-    experiment('when there is a duplicate sent batch', async () => {
+    experiment('when there is a duplicate sent batch', () => {
       const existingBatchId = uuid();
       const regionId = uuid();
 
@@ -919,7 +919,7 @@ experiment('modules/billing/services/batch-service', () => {
       });
     });
 
-    experiment('when there is not an existing batch', async () => {
+    experiment('when there is not an existing batch', () => {
       let result;
       const regionId = uuid();
 
@@ -931,7 +931,7 @@ experiment('modules/billing/services/batch-service', () => {
         sandbox.stub(config.billing, 'supplementaryYears').value(6);
       });
 
-      experiment('and the batch type is annual', async () => {
+      experiment('and the batch type is annual', () => {
         beforeEach(async () => {
           result = await batchService.create(regionId, 'annual', 2019, 'all-year');
         });
@@ -952,7 +952,7 @@ experiment('modules/billing/services/batch-service', () => {
         });
       });
 
-      experiment('and the batch type is supplementary', async () => {
+      experiment('and the batch type is supplementary', () => {
         beforeEach(async () => {
           result = await batchService.create(regionId, 'supplementary', 2019, 'all-year');
         });
@@ -973,7 +973,7 @@ experiment('modules/billing/services/batch-service', () => {
         });
       });
 
-      experiment('and the batch type is two_part_tariff', async () => {
+      experiment('and the batch type is two_part_tariff', () => {
         beforeEach(async () => {
           result = await batchService.create(regionId, 'two_part_tariff', 2019, 'summer');
         });
@@ -996,7 +996,7 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.createChargeModuleBillRun', async () => {
+  experiment('.createChargeModuleBillRun', () => {
     let result;
     const cmResponse = {
       billRun: {
@@ -1039,7 +1039,7 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.approveTptBatchReview', async () => {
+  experiment('.approveTptBatchReview', () => {
     let result, batch;
 
     beforeEach(async () => {

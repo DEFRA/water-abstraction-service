@@ -190,7 +190,7 @@ experiment('modules/acceptance-tests/controller', () => {
       });
     });
 
-    experiment('when internal users are requested', async () => {
+    experiment('when internal users are requested', () => {
       let response;
 
       beforeEach(async () => {

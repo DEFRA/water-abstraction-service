@@ -164,7 +164,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     });
   });
 
-  experiment('.delete', async () => {
+  experiment('.delete', () => {
     const billingInvoiceId = uuid();
 
     beforeEach(async () => {
@@ -182,7 +182,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     });
   });
 
-  experiment('.update', async () => {
+  experiment('.update', () => {
     const billingInvoiceId = uuid();
     const changes = { foo: 'bar' };
 
@@ -201,7 +201,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     });
   });
 
-  experiment('.findAllForInvoiceAccount', async () => {
+  experiment('.findAllForInvoiceAccount', () => {
     let result;
     const invoiceAccountId = uuid();
 

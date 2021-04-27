@@ -45,8 +45,8 @@ experiment('modules/unlink-licence/controller', () => {
 
   afterEach(async () => { sandbox.restore(); });
 
-  experiment('.patchUnlinkLicence', async () => {
-    experiment('when rowCount === 1', async () => {
+  experiment('.patchUnlinkLicence', () => {
+    experiment('when rowCount === 1', () => {
       test('calls h.response with the document data & 200 status code', async () => {
         await controller.patchUnlinkLicence(request, h);
         expect(h.response.calledWith({ data: document, error: null })).to.be.true();
@@ -54,7 +54,7 @@ experiment('modules/unlink-licence/controller', () => {
       });
     });
 
-    experiment('when rowCount === 0', async () => {
+    experiment('when rowCount === 0', () => {
       test('calls h.response with the document data & 202 status code', async () => {
         crmDocumentsConnector.updateMany.resolves({ data: [], rowCount: 0 });
         await controller.patchUnlinkLicence(request, h);
@@ -63,7 +63,7 @@ experiment('modules/unlink-licence/controller', () => {
       });
     });
 
-    experiment('when an error is thrown', async () => {
+    experiment('when an error is thrown', () => {
       test('calls logger.error if error is thrown', async () => {
         crmDocumentsConnector.updateMany.throws(Boom.teapot('bad error'));
         await controller.patchUnlinkLicence(request, h);
@@ -95,7 +95,7 @@ experiment('modules/unlink-licence/controller', () => {
     });
   });
 
-  experiment('.getCallingUser', async () => {
+  experiment('.getCallingUser', () => {
     test('calls idmConnector.usersClient.findOneById with callingUserId', async () => {
       await controller.getCallingUser(callingUserId);
       expect(idmConnector.usersClient.findOneById.calledWith(callingUserId)).to.be.true();
@@ -119,7 +119,7 @@ experiment('modules/unlink-licence/controller', () => {
     });
   });
 
-  experiment('.createUnlinkLicenceEvent', async () => {
+  experiment('.createUnlinkLicenceEvent', () => {
     test('calls event.create with expected arguments', async () => {
       await controller.createUnlinkLicenceEvent(user, documentId);
       expect(event.create.calledWith({
@@ -139,7 +139,7 @@ experiment('modules/unlink-licence/controller', () => {
     });
   });
 
-  experiment('.unlinkLicenceInCRM', async () => {
+  experiment('.unlinkLicenceInCRM', () => {
     test('calls crmDocumentsConnector.updateMandy with correct arguments', async () => {
       await controller.unlinkLicenceInCRM(documentId);
       const filter = { document_id: documentId, company_entity_id: { $ne: null } };

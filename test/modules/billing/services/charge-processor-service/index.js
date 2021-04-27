@@ -118,7 +118,7 @@ const crmData = {
   }
 };
 
-experiment('modules/billing/services/charge-processor-service/index.js', async () => {
+experiment('modules/billing/services/charge-processor-service/index.js', () => {
   beforeEach(async () => {
     sandbox.stub(crmV2.documents, 'getDocuments').resolves(crmData.documents);
     sandbox.stub(crmV2.documents, 'getDocument').resolves(crmData.document);

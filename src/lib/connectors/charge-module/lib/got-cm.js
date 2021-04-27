@@ -76,3 +76,5 @@ const instance = gotWithProxy.extend({
 });
 
 module.exports = instance;
+module.exports._beforeRequestHook = beforeRequestHook;
+module.exports._afterResponseHook = afterResponseHook;

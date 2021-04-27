@@ -136,7 +136,7 @@ experiment('modules/billing/services/billing-volumes-service', () => {
       });
     });
 
-    experiment('when the billing volume does not exists', async () => {
+    experiment('when the billing volume does not exists', () => {
       beforeEach(async () => {
         billingVolumesRepo.findByIds.resolves([]);
       });

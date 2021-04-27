@@ -108,7 +108,7 @@ experiment('lib/services/returns/index', () => {
   experiment('.getReturnsForLicenceInFinancialYear', () => {
     let result;
 
-    experiment('when the return has a current version with lines', async () => {
+    experiment('when the return has a current version with lines', () => {
       beforeEach(async () => {
         result = await returnsService.getReturnsForLicenceInFinancialYear(licenceNumber, financialYear);
       });
@@ -158,7 +158,7 @@ experiment('lib/services/returns/index', () => {
       });
     });
 
-    experiment('when the return is incomplete', async () => {
+    experiment('when the return is incomplete', () => {
       beforeEach(async () => {
         apiConnector.getReturnsForLicenceInCycle.onCall(0).resolves(createReturns({ status: 'due' }));
         result = await returnsService.getReturnsForLicenceInFinancialYear(licenceNumber, financialYear);
@@ -177,7 +177,7 @@ experiment('lib/services/returns/index', () => {
       });
     });
 
-    experiment('when there are no return versions', async () => {
+    experiment('when there are no return versions', () => {
       beforeEach(async () => {
         apiConnector.getCurrentVersion.resolves();
         result = await returnsService.getReturnsForLicenceInFinancialYear(licenceNumber, financialYear);
@@ -192,7 +192,7 @@ experiment('lib/services/returns/index', () => {
       });
     });
 
-    experiment('when there is a nil return', async () => {
+    experiment('when there is a nil return', () => {
       beforeEach(async () => {
         apiConnector.getCurrentVersion.resolves(createVersion({ isNilReturn: true }));
         result = await returnsService.getReturnsForLicenceInFinancialYear(licenceNumber, financialYear);

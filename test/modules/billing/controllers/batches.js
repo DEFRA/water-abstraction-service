@@ -355,7 +355,7 @@ experiment('modules/billing/controller', () => {
       });
     });
 
-    experiment('when the batch is not found', async () => {
+    experiment('when the batch is not found', () => {
       beforeEach(async () => {
         invoiceService.getInvoicesForBatch.rejects(new NotFoundError());
         response = await controller.getBatchInvoices(request);

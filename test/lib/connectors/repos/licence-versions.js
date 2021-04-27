@@ -107,7 +107,7 @@ experiment('lib/connectors/repos/licence-versions', () => {
     });
   });
 
-  experiment('.findIdsByDateNotInChargeVersionWorkflows', async () => {
+  experiment('.findIdsByDateNotInChargeVersionWorkflows', () => {
     const dateAndTime = moment().toISOString();
 
     beforeEach(async () => {

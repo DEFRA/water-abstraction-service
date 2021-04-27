@@ -130,7 +130,7 @@ experiment('handler', () => {
     expect(event.status).to.equal(returnsUpload.uploadStatus.SUBMITTED);
   });
 
-  experiment('when there is an error', async () => {
+  experiment('when there is an error', () => {
     beforeEach(async () => {
       try {
         returnsUpload.getReturnsS3Object.rejects(testError);

@@ -8,11 +8,11 @@ const transactionsProcessor = require('../../../../../src/modules/billing/servic
 const config = require('../../../../../config');
 const data = require('./data');
 
-experiment('modules/billing/services/charge-processor-service/transactions-processor', async () => {
+experiment('modules/billing/services/charge-processor-service/transactions-processor', () => {
   beforeEach(() => {
     sandbox.stub(config.billing, 'naldSwitchOverDate').value('2019-04-01');
   });
-  experiment('.createTransactions', async () => {
+  experiment('.createTransactions', () => {
     const financialYear = data.createFinancialYear();
     let chargeVersionYear, chargeVersion, batch, transactions;
 

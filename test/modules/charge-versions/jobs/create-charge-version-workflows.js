@@ -66,7 +66,7 @@ experiment('modules/charge-versions/jobs/create-charge-version-workflows', () =>
   experiment('.handler', () => {
     let result, job;
 
-    experiment('when there is no error', async () => {
+    experiment('when there is no error', () => {
       beforeEach(async () => {
         job = {
           data: {
@@ -88,7 +88,7 @@ experiment('modules/charge-versions/jobs/create-charge-version-workflows', () =>
       });
     });
 
-    experiment('when there is an error', async () => {
+    experiment('when there is an error', () => {
       let error;
       const err = new Error('something went wrong');
 

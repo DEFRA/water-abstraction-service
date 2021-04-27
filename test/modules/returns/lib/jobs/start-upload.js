@@ -119,7 +119,7 @@ experiment('handler', () => {
     expect(id).to.equal(eventId);
   });
 
-  experiment('when there is an error', async () => {
+  experiment('when there is an error', () => {
     beforeEach(async () => {
       try {
         returnsUpload.getReturnsS3Object.rejects({ name: 'test-error' });
@@ -146,7 +146,7 @@ experiment('handler', () => {
     });
   });
 
-  experiment('when the xml does not validate', async () => {
+  experiment('when the xml does not validate', () => {
     beforeEach(async () => {
       uploadAdapters.xml.validator.resolves({
         isValid: false,

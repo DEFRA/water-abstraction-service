@@ -139,7 +139,7 @@ experiment('validate', () => {
     expect(errors).to.equal([ERR_SCHEMA]);
   });
 
-  experiment('if a meter is used', async () => {
+  experiment('if a meter is used', () => {
     let returnData;
     beforeEach(async () => {
       returnData = cloneDeep([data.upload[4]]);

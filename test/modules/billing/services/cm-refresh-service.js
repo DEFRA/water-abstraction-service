@@ -215,7 +215,7 @@ experiment('modules/billing/services/cm-refresh-service', () => {
   });
 
   experiment('updateBatch', () => {
-    experiment('when the batch is not found', async () => {
+    experiment('when the batch is not found', () => {
       beforeEach(async () => {
         batchService.getBatchById.resolves(null);
       });

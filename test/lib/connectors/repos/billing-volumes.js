@@ -207,7 +207,7 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     });
   });
 
-  experiment('.deleteByInvoiceLicenceAndBatchId', async () => {
+  experiment('.deleteByInvoiceLicenceAndBatchId', () => {
     const invoiceLicenceId = 'test-invoice-licence-id';
     const batchId = 'test-batch-id';
 
@@ -222,7 +222,7 @@ experiment('lib/connectors/repos/billing-volumes', () => {
     });
   });
 
-  experiment('.deleteByBatchAndInvoiceId', async () => {
+  experiment('.deleteByBatchAndInvoiceId', () => {
     const batchId = 'test-batch-id';
     const billingInvoiceId = 'test-invoice-account-id';
 

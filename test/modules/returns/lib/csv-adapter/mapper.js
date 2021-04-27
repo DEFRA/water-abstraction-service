@@ -121,7 +121,7 @@ experiment('returns CSV to JSON mapper', () => {
     });
   });
 
-  experiment('createReturnLine', async () => {
+  experiment('createReturnLine', () => {
     test('calls dateParser with dateLabel', async () => {
       csvMapper._createReturnLine('7 May 2019');
       expect(dateParser.parse.calledWith('7 May 2019')).to.be.true();
@@ -150,7 +150,7 @@ experiment('returns CSV to JSON mapper', () => {
     });
   });
 
-  experiment('mapLines', async () => {
+  experiment('mapLines', () => {
     let result;
 
     beforeEach(async () => {

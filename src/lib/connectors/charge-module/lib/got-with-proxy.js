@@ -34,3 +34,4 @@ const gotWithProxy = got.extend({
 });
 
 module.exports = gotWithProxy;
+module.exports._beforeRequestHook = beforeRequestHook;

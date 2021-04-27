@@ -418,7 +418,7 @@ experiment('modules/billing/mappers/transaction', () => {
       transaction = createTransaction();
     });
 
-    experiment('for a supplementary bill run', async () => {
+    experiment('for a supplementary bill run', () => {
       experiment('with no section 126 agreement', () => {
         beforeEach(async () => {
           result = transactionMapper.modelToChargeModule(batch, invoice, invoiceLicence, transaction);
