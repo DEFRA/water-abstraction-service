@@ -14,7 +14,7 @@ const beforeRequestHook = options => {
         }
       })
     };
-  };
+  }
 };
 
 /**

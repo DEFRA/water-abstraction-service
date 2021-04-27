@@ -20,7 +20,7 @@ const accessTokenManager = new AccessTokenManager();
  *
  * @param {Object} options - got request options
  */
-const beforeRequestHook = async options => {
+const beforeRequestHook = async () => {
   if (!accessTokenManager.isTokenValid()) {
     // Save for further requests
     const accessToken = await accessTokenManager.refreshAccessToken();

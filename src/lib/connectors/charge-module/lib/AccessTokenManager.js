@@ -17,10 +17,10 @@ class AccessTokenManager {
    * Fetches a new access token from the cognito API
    * @returns
    */
-  async refreshAccessToken () {
+  async refreshAccessToken (refDate) {
     logger.info('getting cognito token');
     const uri = urlJoin(config.chargeModule.cognito.host, '/oauth2/token');
-    const buff = Buffer.from(config.chargeModule.cognito.username + ':' + config.chargeModule.cognito.password);
+    const buff = Buffer.from(`${config.chargeModule.cognito.username}:${config.chargeModule.cognito.password}`);
     const options = {
       searchParams: {
         grant_type: 'client_credentials'
@@ -36,7 +36,7 @@ class AccessTokenManager {
 
     // Update this instance with the access token and expiry time
     this.accessToken = accessToken;
-    this.expiresAt = moment().add(expiresIn, 'second');
+    this.expiresAt = moment(refDate).add(expiresIn, 'second');
     logger.info(`obtained cognito token expires at ${this.expiresAt.format()}`);
 
     return this.accessToken;
@@ -60,13 +60,6 @@ class AccessTokenManager {
     }
     logger.info('use existing cognito token');
     return true;
-  }
-
-  async getAccessToken () {
-    if (!this._isTokenValid()) {
-      await this.refreshAccessToken();
-    }
-    return this.accessToken;
   }
 }
 
