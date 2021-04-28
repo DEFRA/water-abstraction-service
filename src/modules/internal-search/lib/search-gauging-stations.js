@@ -5,7 +5,7 @@ const gaugingStationsRepo = require('../../../controllers/gauging-stations');
  * @param  {String}  query - format ID or full return ID
  * @return {Promise}       - resolves with array of returns
  */
-const searchGaugingStations = async (query) => {
+const searchGaugingStations = async query => {
   const { rows: gaugingStationWithMatchingStationReference } = await gaugingStationsRepo.repository.find({
     station_reference: {
       $equals: query.toUpperCase()
