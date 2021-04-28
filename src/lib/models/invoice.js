@@ -10,7 +10,6 @@ const {
   assertNullablePositiveOrZeroInteger,
   assertNullableNegativeOrZeroInteger,
   assertIsNullableBoolean,
-  assertEnum,
   assertNullableEnum
 } = require('./validators');
 
@@ -378,3 +377,4 @@ class Invoice extends Totals {
 }
 
 module.exports = Invoice;
+module.exports.rebillingState = rebillingState;

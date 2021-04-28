@@ -112,7 +112,8 @@ experiment('lib/connectors/repos/billing-invoices', () => {
         'billingInvoiceLicences.billingTransactions',
         'billingInvoiceLicences.billingTransactions.billingVolume',
         'billingInvoiceLicences.billingTransactions.chargeElement',
-        'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse'
+        'billingInvoiceLicences.billingTransactions.chargeElement.purposeUse',
+        'linkedBillingInvoices'
       ]);
     });
 
