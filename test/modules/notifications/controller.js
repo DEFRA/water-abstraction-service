@@ -84,7 +84,7 @@ experiment('modules/notifications/controller', () => {
     });
   });
 
-  experiment('.getNotification', async () => {
+  experiment('.getNotification', () => {
     let request, response, event;
 
     beforeEach(async () => {
@@ -105,7 +105,7 @@ experiment('modules/notifications/controller', () => {
     });
   });
 
-  experiment('.getNotificationMessages', async () => {
+  experiment('.getNotificationMessages', () => {
     let request, response;
 
     beforeEach(async () => {

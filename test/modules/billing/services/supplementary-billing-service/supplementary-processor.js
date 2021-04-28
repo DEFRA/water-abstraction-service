@@ -18,7 +18,7 @@ const { createTransaction, findTransactionById } = require('./test-helpers');
 experiment('modules/billing/services/supplementary-billing-service/supplementary-processor', () => {
   let result;
 
-  experiment('when there are no historical transactions', async () => {
+  experiment('when there are no historical transactions', () => {
     beforeEach(async () => {
       const transactions = [
         createTransaction(batchId, uuid())
@@ -31,7 +31,7 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
     });
   });
 
-  experiment('when there are no current batch transactions', async () => {
+  experiment('when there are no current batch transactions', () => {
     experiment('and there is 1 historical transaction', () => {
       beforeEach(async () => {
         const transactions = [
@@ -45,7 +45,7 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
       });
     });
 
-    experiment('when there are two historical transactions which sum to net zero', async () => {
+    experiment('when there are two historical transactions which sum to net zero', () => {
       const ids = [uuid(), uuid()];
 
       beforeEach(async () => {
@@ -68,7 +68,7 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
       });
     });
 
-    experiment('when there are several historical transactions, some of which sum to net zero', async () => {
+    experiment('when there are several historical transactions, some of which sum to net zero', () => {
       const ids = [uuid(), uuid(), uuid()];
 
       beforeEach(async () => {
@@ -97,10 +97,10 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
     });
   });
 
-  experiment('when there are current and historical transactions', async () => {
+  experiment('when there are current and historical transactions', () => {
     const ids = [uuid(), uuid(), uuid()];
 
-    experiment('and there are annual transactions which have net zero billable days', async () => {
+    experiment('and there are annual transactions which have net zero billable days', () => {
       beforeEach(async () => {
         const transactions = [
           createTransaction('historical-batch', ids[0], {
@@ -129,7 +129,7 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
       });
     });
 
-    experiment('and there are annual transactions which do not have net zero billable days', async () => {
+    experiment('and there are annual transactions which do not have net zero billable days', () => {
       beforeEach(async () => {
         const transactions = [
           createTransaction('historical-batch', ids[0], {
@@ -158,7 +158,7 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
       });
     });
 
-    experiment('and there are TPT transactions which have net zero volume', async () => {
+    experiment('and there are TPT transactions which have net zero volume', () => {
       beforeEach(async () => {
         const transactions = [
           createTransaction('historical-batch', ids[0], {
@@ -190,7 +190,7 @@ experiment('modules/billing/services/supplementary-billing-service/supplementary
       });
     });
 
-    experiment('and there are TPT transactions which do not have a net zero volume', async () => {
+    experiment('and there are TPT transactions which do not have a net zero volume', () => {
       beforeEach(async () => {
         const transactions = [
           createTransaction('historical-batch', ids[0], {

@@ -27,7 +27,7 @@ experiment('modules/billing/services/documents-service', () => {
     sandbox.restore();
   });
 
-  experiment('.getDocument', async () => {
+  experiment('.getDocument', () => {
     let result;
 
     experiment('when the document is found', () => {
@@ -65,7 +65,7 @@ experiment('modules/billing/services/documents-service', () => {
   });
 
   experiment('.getValidDocumentOnDate', () => {
-    experiment('when no documents are found', async () => {
+    experiment('when no documents are found', () => {
       let result;
 
       beforeEach(async () => {
@@ -82,7 +82,7 @@ experiment('modules/billing/services/documents-service', () => {
       });
     });
 
-    experiment('when documents are found', async () => {
+    experiment('when documents are found', () => {
       const documentId = uuid();
       let document;
 
@@ -130,7 +130,7 @@ experiment('modules/billing/services/documents-service', () => {
       });
     });
 
-    experiment('when documents are found, but none are current/superseded on date specified', async () => {
+    experiment('when documents are found, but none are current/superseded on date specified', () => {
       beforeEach(async () => {
         documentsConnector.getDocuments.resolves([{
           documentId: uuid(),

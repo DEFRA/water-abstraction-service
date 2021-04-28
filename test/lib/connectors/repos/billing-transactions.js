@@ -301,7 +301,7 @@ experiment('lib/connectors/repos/billing-transactions', () => {
     });
   });
 
-  experiment('.deleteByBatchId', async () => {
+  experiment('.deleteByBatchId', () => {
     const batchId = 'test-batch-id';
 
     beforeEach(async () => {

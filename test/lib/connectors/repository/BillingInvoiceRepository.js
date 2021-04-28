@@ -127,7 +127,7 @@ experiment('lib/connectors/repository/BillingInvoiceRepository', () => {
     });
   });
 
-  experiment('.findOneByTransactionId', async () => {
+  experiment('.findOneByTransactionId', () => {
     const transactionId = 'transaction-id';
 
     experiment('when a row is found', () => {

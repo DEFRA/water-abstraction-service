@@ -36,7 +36,7 @@ experiment('patchReturnData', () => {
   });
 });
 
-experiment('throwIfError', async () => {
+experiment('throwIfError', () => {
   test('Should throw an error if argument is truthy', async () => {
     const func = () => {
       apiConnector.throwIfError('Some message');

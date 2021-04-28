@@ -4,7 +4,7 @@ const { expect } = require('@hapi/code');
 const { experiment, test } = exports.lab = require('@hapi/lab').script();
 const viewHelpers = require('../../../../src/lib/services/pdf-generation/view-helpers');
 
-experiment('paginateReturnLines (weekly)', async () => {
+experiment('paginateReturnLines (weekly)', () => {
   test('the first week uses the week ending date (saturday)', async () => {
     const personalisation = {
       start_date: '2018-01-03',
@@ -47,7 +47,7 @@ experiment('paginateReturnLines (weekly)', async () => {
   });
 });
 
-experiment('paginateReturnLines (daily)', async () => {
+experiment('paginateReturnLines (daily)', () => {
   test('the start date is the first column', async () => {
     const personalisation = {
       start_date: '2018-01-03',
@@ -80,7 +80,7 @@ experiment('paginateReturnLines (daily)', async () => {
   });
 });
 
-experiment('paginateReturnLines (monthly)', async () => {
+experiment('paginateReturnLines (monthly)', () => {
   test('the first date uses the full month as the label', async () => {
     const personalisation = {
       start_date: '2018-01-03',

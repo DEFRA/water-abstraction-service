@@ -10,15 +10,15 @@ const { expect } = require('@hapi/code');
 const sinon = require('sinon');
 const sandbox = sinon.createSandbox();
 
-const request = require('../../../../src/lib/connectors/charge-module/request');
+const gotCM = require('../../../../src/lib/connectors/charge-module/lib/got-cm');
 const billRunsApiConnector = require('../../../../src/lib/connectors/charge-module/bill-runs');
 
 experiment('lib/connectors/charge-module/bill-runs', () => {
   beforeEach(async () => {
-    sandbox.stub(request, 'get').resolves();
-    sandbox.stub(request, 'post').resolves();
-    sandbox.stub(request, 'patch').resolves();
-    sandbox.stub(request, 'delete').resolves();
+    sandbox.stub(gotCM, 'get').resolves();
+    sandbox.stub(gotCM, 'post').resolves();
+    sandbox.stub(gotCM, 'patch').resolves();
+    sandbox.stub(gotCM, 'delete').resolves();
   });
 
   afterEach(async () => {
@@ -31,17 +31,17 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
     });
 
     test('the method is POST', async () => {
-      expect(request.post.called).to.be.true();
+      expect(gotCM.post.called).to.be.true();
     });
 
     test('the correct endpoint is called', async () => {
-      const [path] = request.post.lastCall.args;
+      const [path] = gotCM.post.lastCall.args;
       expect(path).to.equal('v2/wrls/bill-runs');
     });
 
     test('the region is included in the payload', async () => {
-      const [, payload] = request.post.lastCall.args;
-      expect(payload).to.equal({ region: 'A' });
+      const [, options] = gotCM.post.lastCall.args;
+      expect(options).to.equal({ json: { region: 'A' } });
     });
   });
 
@@ -51,17 +51,17 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
     });
 
     test('the method is POST', async () => {
-      expect(request.post.called).to.be.true();
+      expect(gotCM.post.called).to.be.true();
     });
 
     test('the correct endpoint is called', async () => {
-      const [path] = request.post.lastCall.args;
+      const [path] = gotCM.post.lastCall.args;
       expect(path).to.equal('v2/wrls/bill-runs/test-id/transactions');
     });
 
-    test('the transaction is included in the payload', async () => {
-      const [, payload] = request.post.lastCall.args;
-      expect(payload).to.equal({ foo: 'bar' });
+    test('the transaction is included in the option with 0 retries', async () => {
+      const [, options] = gotCM.post.lastCall.args;
+      expect(options).to.equal({ json: { foo: 'bar' }, retries: 0 });
     });
   });
 
@@ -71,11 +71,11 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
     });
 
     test('the method is PATCH', async () => {
-      expect(request.patch.called).to.be.true();
+      expect(gotCM.patch.called).to.be.true();
     });
 
     test('the correct endpoint is called', async () => {
-      const [path] = request.patch.lastCall.args;
+      const [path] = gotCM.patch.lastCall.args;
       expect(path).to.equal('v2/wrls/bill-runs/test-id/approve');
     });
   });
@@ -86,11 +86,11 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
     });
 
     test('the method is PATCH', async () => {
-      expect(request.patch.called).to.be.true();
+      expect(gotCM.patch.called).to.be.true();
     });
 
     test('the correct endpoint is called', async () => {
-      const [path] = request.patch.lastCall.args;
+      const [path] = gotCM.patch.lastCall.args;
       expect(path).to.equal('v2/wrls/bill-runs/test-id/send');
     });
   });
@@ -101,11 +101,11 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
     });
 
     test('the method is DELETE', async () => {
-      expect(request.delete.called).to.be.true();
+      expect(gotCM.delete.called).to.be.true();
     });
 
     test('the correct endpoint is called', async () => {
-      const [path] = request.delete.lastCall.args;
+      const [path] = gotCM.delete.lastCall.args;
       expect(path).to.equal('v2/wrls/bill-runs/test-id/invoices/test-other-id');
     });
   });
@@ -116,11 +116,11 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
     });
 
     test('the method is DELETE', async () => {
-      expect(request.delete.called).to.be.true();
+      expect(gotCM.delete.called).to.be.true();
     });
 
     test('the correct endpoint is called', async () => {
-      const [path] = request.delete.lastCall.args;
+      const [path] = gotCM.delete.lastCall.args;
       expect(path).to.equal('v2/wrls/bill-runs/test-id');
     });
   });
@@ -131,11 +131,11 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
     });
 
     test('the method is GET', async () => {
-      expect(request.get.called).to.be.true();
+      expect(gotCM.get.called).to.be.true();
     });
 
     test('the correct endpoint is called', async () => {
-      const [path] = request.get.lastCall.args;
+      const [path] = gotCM.get.lastCall.args;
       expect(path).to.equal('v2/wrls/bill-runs/test-id');
     });
   });
@@ -146,7 +146,7 @@ experiment('lib/connectors/charge-module/bill-runs', () => {
     });
 
     test('the correct endpoint is called', async () => {
-      const [path] = request.get.lastCall.args;
+      const [path] = gotCM.get.lastCall.args;
       expect(path).to.equal('v2/wrls/bill-runs/test-id/invoices/test-invoice-id');
     });
   });

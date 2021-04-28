@@ -65,7 +65,7 @@ const monthDateFormats = [
 ];
 
 experiment('modules/returns/lib/csv-adapter/date-parser', () => {
-  experiment('.parse', async () => {
+  experiment('.parse', () => {
     experiment('returns the correct type of return line', () => {
       test('week', () => {
         const returnLine = dateParser.parse('week ending 14 April 2018');
@@ -98,7 +98,7 @@ experiment('modules/returns/lib/csv-adapter/date-parser', () => {
     });
   });
 
-  experiment('.validate', async () => {
+  experiment('.validate', () => {
     test('returns true the parse method returns a return line', () => {
       const validation = dateParser.validate('Apr-18');
       expect(validation).to.be.true();
@@ -110,7 +110,7 @@ experiment('modules/returns/lib/csv-adapter/date-parser', () => {
     });
   });
 
-  experiment('.getDateFrequency', async () => {
+  experiment('.getDateFrequency', () => {
     test('returns "week" if date startsWith "week ending"', () => {
       const { timePeriod, moment: m } = dateParser._getDateFrequency('week ending 14 April 2018');
 
@@ -148,7 +148,7 @@ experiment('modules/returns/lib/csv-adapter/date-parser', () => {
     });
   });
 
-  experiment('.createDay', async () => {
+  experiment('.createDay', () => {
     test('creates a day return line skeleton from a moment', async () => {
       const result = dateParser._createDay(moment('2019-05-07'));
       expect(result).to.equal({
@@ -159,7 +159,7 @@ experiment('modules/returns/lib/csv-adapter/date-parser', () => {
     });
   });
 
-  experiment('.createWeek', async () => {
+  experiment('.createWeek', () => {
     test('creates a week return line skeleton from a moment', async () => {
       const result = dateParser._createWeek(moment('2019-05-11'));
       expect(result).to.equal({
@@ -170,7 +170,7 @@ experiment('modules/returns/lib/csv-adapter/date-parser', () => {
     });
   });
 
-  experiment('.createMonth', async () => {
+  experiment('.createMonth', () => {
     test('creates a month return line skeleton from a moment', async () => {
       const result = dateParser._createMonth(moment('2019-05-01'));
       expect(result).to.equal({

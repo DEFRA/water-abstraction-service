@@ -125,7 +125,7 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
       });
     });
 
-    experiment('when there is an error', async () => {
+    experiment('when there is an error', () => {
       const error = new Error('oops!');
       let err;
 

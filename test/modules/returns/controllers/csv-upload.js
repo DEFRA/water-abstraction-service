@@ -52,7 +52,7 @@ const requestFactory = (returnId) => {
   };
 };
 
-experiment('modules/returns/controllers/csv-upload', async () => {
+experiment('modules/returns/controllers/csv-upload', () => {
   experiment('.postUpload', () => {
     let request;
     let h;
@@ -269,7 +269,7 @@ experiment('modules/returns/controllers/csv-upload', async () => {
       expect(params.companyId).to.equal(request.query.companyId);
     });
 
-    experiment('when there are returns to submit', async () => {
+    experiment('when there are returns to submit', () => {
       test('it should update the event status to "submitted"', async () => {
         const request = requestFactory();
         await controller.postUploadSubmit(request, h);

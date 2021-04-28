@@ -68,7 +68,7 @@ experiment('modules/billing/mappers/invoice-licence', () => {
       expect(result.invoiceId).to.equal(dbRow.billingInvoiceId);
     });
 
-    experiment('when there are billingTransactions', async () => {
+    experiment('when there are billingTransactions', () => {
       let dbRow;
 
       beforeEach(async () => {

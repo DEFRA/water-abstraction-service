@@ -103,7 +103,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     });
   });
 
-  experiment('.findOne', async () => {
+  experiment('.findOne', () => {
     let result;
     const billingInvoiceLicenceId = uuid();
     experiment('when the model is not found', () => {
@@ -149,7 +149,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     });
   });
 
-  experiment('.findAll', async () => {
+  experiment('.findAll', () => {
     const billingInvoiceLicenceId = uuid();
 
     beforeEach(async () => {
@@ -177,7 +177,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     });
   });
 
-  experiment('.delete', async () => {
+  experiment('.delete', () => {
     const billingInvoiceLicenceId = uuid();
 
     beforeEach(async () => {
@@ -195,7 +195,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     });
   });
 
-  experiment('.deleteByBatchId', async () => {
+  experiment('.deleteByBatchId', () => {
     const batchId = uuid();
 
     beforeEach(async () => {
@@ -209,7 +209,7 @@ experiment('lib/connectors/repos/billing-invoice-licences', () => {
     });
   });
 
-  experiment('.deleteByInvoiceId', async () => {
+  experiment('.deleteByInvoiceId', () => {
     const billingInvoiceId = uuid();
 
     beforeEach(async () => {

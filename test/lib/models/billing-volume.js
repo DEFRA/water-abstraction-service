@@ -524,7 +524,7 @@ experiment('lib/models/billingVolume', () => {
     });
   });
 
-  experiment('.setVolumeFromCalculatedVolume', async () => {
+  experiment('.setVolumeFromCalculatedVolume', () => {
     test('sets the .volume property to the calculatedVolume rounded to 6DP', async () => {
       billingVolume.calculatedVolume = 2 / 3;
       billingVolume.setVolumeFromCalculatedVolume();

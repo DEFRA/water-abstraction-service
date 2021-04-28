@@ -106,7 +106,7 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       expect(chargeElementContainer.isReturnLineMatch(line)).to.be.true();
     });
 
-    experiment('when the element is time-limited', async () => {
+    experiment('when the element is time-limited', () => {
       beforeEach(async () => {
         chargeElement.timeLimitedPeriod = new DateRange('2019-06-01', '2025-01-01');
         chargeElementContainer.chargeElement = chargeElement;
@@ -314,8 +314,8 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
     });
   });
 
-  experiment('.setBillingVolume', async () => {
-    experiment('for a summer billing volume', async () => {
+  experiment('.setBillingVolume', () => {
+    experiment('for a summer billing volume', () => {
       const billingVolume = new BillingVolume(uuid());
       billingVolume.isSummer = true;
 
@@ -329,7 +329,7 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
       });
     });
 
-    experiment('for a winter/all year billing volume', async () => {
+    experiment('for a winter/all year billing volume', () => {
       const billingVolume = new BillingVolume(uuid());
       billingVolume.isSummer = false;
 

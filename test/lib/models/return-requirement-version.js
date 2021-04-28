@@ -148,7 +148,7 @@ experiment('lib/models/return-requirement-version', () => {
       });
     };
 
-    experiment('for summer', async () => {
+    experiment('for summer', () => {
       test('returns false if there are no summer two-part returns', async () => {
         returnRequirementVersion.returnRequirements = [
           createReturnRequirement(true, false),
@@ -166,7 +166,7 @@ experiment('lib/models/return-requirement-version', () => {
       });
     });
 
-    experiment('for winter/all year', async () => {
+    experiment('for winter/all year', () => {
       test('returns false if there are no winter/all year two-part returns', async () => {
         returnRequirementVersion.returnRequirements = [
           createReturnRequirement(true, true),

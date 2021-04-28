@@ -102,7 +102,7 @@ experiment('lib/event', () => {
       'modified'
     ];
 
-    experiment('when there is no ID', async () => {
+    experiment('when there is no ID', () => {
       beforeEach(async () => {
         result = await event.save(createPojo());
       });
@@ -123,7 +123,7 @@ experiment('lib/event', () => {
       });
     });
 
-    experiment('when there is an ID', async () => {
+    experiment('when there is an ID', () => {
       beforeEach(async () => {
         const data = {
           ...createPojo(),

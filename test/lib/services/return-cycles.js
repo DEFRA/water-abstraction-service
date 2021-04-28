@@ -92,7 +92,7 @@ experiment('src/lib/services/return-cycles', () => {
     let result;
     const returnCycleId = 'test-id';
 
-    experiment('when a record is found', async () => {
+    experiment('when a record is found', () => {
       beforeEach(async () => {
         returnsConnector.getReturnCycleById.resolves(
           data.cycles[0]
@@ -119,7 +119,7 @@ experiment('src/lib/services/return-cycles', () => {
       });
     });
 
-    experiment('when a record is not found', async () => {
+    experiment('when a record is not found', () => {
       beforeEach(async () => {
         returnsConnector.getReturnCycleById.resolves(null);
         result = await returnCyclesService.getReturnCycleById(returnCycleId);

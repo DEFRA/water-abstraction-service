@@ -79,7 +79,7 @@ experiment('modules/billing/jobs/create-bill-run', () => {
   experiment('.handler', () => {
     let result, job;
 
-    experiment('when there is no error', async () => {
+    experiment('when there is no error', () => {
       beforeEach(async () => {
         job = {
           data: {
@@ -100,7 +100,7 @@ experiment('modules/billing/jobs/create-bill-run', () => {
       });
     });
 
-    experiment('when there is an error', async () => {
+    experiment('when there is an error', () => {
       let error;
       const err = new Error('oops!');
 
