@@ -24,9 +24,13 @@ const buildInternalSearchResponse = async (request) => {
       const data = await search.searchReturns(query);
       buildResponse(response, 'returns', data);
     }
+    // Search gauging stations
+    const gaugingStationData = await search.searchGaugingStations(query);
+    buildResponse(response, 'gaugingStations', gaugingStationData);
+
     // Search CRM documents
-    const data = await search.searchDocuments(query, page);
-    buildResponse(response, 'documents', data);
+    const crmDocumentData = await search.searchDocuments(query, page);
+    buildResponse(response, 'documents', crmDocumentData);
   }
 
   return response;
