@@ -2,15 +2,19 @@
 
 const got = require('got');
 const tunnel = require('tunnel');
+const { URL } = require('url');
 
 const config = require('../../../../../config.js');
 
 const beforeRequestHook = options => {
   if (config.proxy) {
+    const url = new URL(config.proxy);
+
     options.agent = {
       https: tunnel.httpsOverHttp({
         proxy: {
-          host: config.proxy
+          host: url.hostname,
+          port: parseInt(url.port)
         }
       })
     };
