@@ -13,7 +13,7 @@ const batchMapper = require('../../modules/billing/mappers/batch');
 const { createMapper } = require('../object-mapper');
 const { createModel } = require('./lib/helpers');
 
-const mapLinkedInvoices = (linkedBillingInvoices, billingInvoiceId) => linkedBillingInvoices
+const mapLinkedInvoices = (linkedBillingInvoices = [], billingInvoiceId) => linkedBillingInvoices
   .filter(linkedBillingInvoice => linkedBillingInvoice.billingInvoiceId !== billingInvoiceId)
   .map(dbToModel);
 
@@ -39,7 +39,7 @@ const dbToModelMapper = createMapper()
   .map('billingBatch').to('batch', batchMapper.dbToModel)
   .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding))
   .map('originalBillingInvoiceId').to('originalInvoiceId')
-  .map('linkedBillingInvoices', 'billingInvoiceId').to('linkedInvoices', mapLinkedInvoices);
+  .map(['linkedBillingInvoices', 'billingInvoiceId']).to('linkedInvoices', mapLinkedInvoices);
 
 /**
  * Converts DB representation to a Invoice service model

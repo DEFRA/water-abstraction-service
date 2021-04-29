@@ -30,7 +30,13 @@ const invoiceRow = {
   creditNoteValue: -77,
   legacyId: '12345:678',
   metadata: { foo: 'bar' },
-  isFlaggedForRebilling: true
+  isFlaggedForRebilling: true,
+  linkedBillingInvoices: [{
+    billingInvoiceId: '5a1577d7-8dc9-4d67-aadc-37d7ea85abca'
+  },
+  {
+    billingInvoiceId: '4139a53a-a1f0-4dc9-bf1a-b97e41c5e866'
+  }]
 };
 
 experiment('lib/mappers/invoice', () => {
@@ -81,6 +87,12 @@ experiment('lib/mappers/invoice', () => {
 
     test('maps the is flagged for rebilling', () => {
       expect(result.isFlaggedForRebilling).to.equal(invoiceRow.isFlaggedForRebilling);
+    });
+
+    test('maps the linked billing invoices for re-billing, excluding the current invoice', () => {
+      const { linkedInvoices } = result;
+      expect(linkedInvoices).to.be.an.array().length(1);
+      expect(linkedInvoices[0].id).to.equal(invoiceRow.linkedBillingInvoices[1].billingInvoiceId);
     });
   });
 
