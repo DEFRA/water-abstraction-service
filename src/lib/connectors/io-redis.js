@@ -4,7 +4,7 @@ const IORedis = require('ioredis');
 const config = require('../../../config');
 
 // Note: this limit will need increasing if further Bull MQ job queues are added
-const maxListenerCount = 20;
+const maxListenerCount = 23;
 
 exports.createConnection = () => {
   const ioRedis = new IORedis(config.redis);
