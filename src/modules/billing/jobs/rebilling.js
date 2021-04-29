@@ -7,6 +7,8 @@ const JOB_NAME = 'billing.rebilling';
 const { logger } = require('../../../logger');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
+const batchStatus = require('./lib/batch-status');
+
 const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 
 // Services
@@ -38,6 +40,9 @@ const handler = async job => {
   // Get batch
   const batchId = getBatchId(job);
   const batch = await batchService.getBatchById(batchId);
+
+  // Check batch in "processing" status
+  batchStatus.assertBatchIsProcessing(batch);
 
   // Get invoices that are flagged for rebilling in the batch region
   const invoices = await invoiceService.getInvoicesFlaggedForRebilling(batch.region.id);
