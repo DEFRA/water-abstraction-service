@@ -30,11 +30,13 @@ const createMessage = batchId => ([
   }
 ]);
 
+const getBatchId = job => get(job, 'data.batchId');
+
 const handler = async job => {
   batchJob.logHandling(job);
 
   // Get batch
-  const batchId = get(job, 'data.batchId');
+  const batchId = getBatchId(job);
   const batch = await batchService.getBatchById(batchId);
 
   // Get invoices that are flagged for rebilling in the batch region
@@ -51,7 +53,7 @@ const onComplete = async (job, queueManager) => {
 
   try {
     // Publish next job in process
-    const batchId = get(job, 'data.batchId');
+    const batchId = getBatchId(job);
     await queueManager.add(populateBatchChargeVersionJobName, batchId);
   } catch (err) {
     batchJob.logOnCompleteError(job, err);
@@ -59,7 +61,7 @@ const onComplete = async (job, queueManager) => {
 };
 
 const onFailedHandler = async (job, err) => {
-  const batchId = get(job, 'data.batchId');
+  const batchId = getBatchId(job);
 
   // On final attempt, error the batch and log
   if (helpers.isFinalAttempt(job)) {

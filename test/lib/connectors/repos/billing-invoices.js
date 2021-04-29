@@ -238,7 +238,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     });
   });
 
-  experiment('.findByIsFlaggedForRebillingAndRegion', async () => {
+  experiment('.findByIsFlaggedForRebillingAndRegion', () => {
     const regionId = uuid();
 
     beforeEach(async () => {
@@ -252,7 +252,7 @@ experiment('lib/connectors/repos/billing-invoices', () => {
     });
   });
 
-  experiment('.resetIsFlaggedForRebilling', async () => {
+  experiment('.resetIsFlaggedForRebilling', () => {
     const batchId = uuid();
 
     beforeEach(async () => {
