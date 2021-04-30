@@ -149,23 +149,6 @@ experiment('modules/billing/jobs/populate-batch-charge-versions', () => {
   });
 
   experiment('.onComplete', () => {
-    experiment('when the batch is empty', () => {
-      beforeEach(async () => {
-        const job = {
-          returnvalue: {
-            batch: {
-              status: Batch.BATCH_STATUS.empty
-            }
-          }
-        };
-        await populateBatchChargeVersionsJob.onComplete(job, queueManager);
-      });
-
-      test('no further jobs are scheduled', async () => {
-        expect(queueManager.add.called).to.be.false();
-      });
-    });
-
     experiment('when the batch is a processing "annual" batch', () => {
       let job;
 

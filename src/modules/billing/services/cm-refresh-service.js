@@ -213,7 +213,7 @@ const isCMGeneratingSummary = cmResponse => get(cmResponse, 'billRun.status') ==
 
 const updateBatch = async batchId => {
   // Fetch WRLS batch
-  let batch = await batchService.getBatchById(batchId);
+  const batch = await batchService.getBatchById(batchId);
   if (!batch) {
     throw new errors.NotFoundError(`CM refresh failed, batch ${batchId} not found`);
   }
@@ -225,10 +225,14 @@ const updateBatch = async batchId => {
     return false;
   }
 
-  // Set batch totals
-  batch = await batchService.updateWithCMSummary(batch.id, cmResponse);
   // Update invoices in batch
+  // It is important to update the invoices first so that
+  // for a batch containing only re-billing, there are >0 transactions
+  // in the batch before calculating the new batch status
   await updateInvoices(batch, cmResponse);
+
+  await batchService.updateWithCMSummary(batch.id, cmResponse);
+
   return true;
 };
 

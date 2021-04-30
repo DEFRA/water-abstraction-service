@@ -10,7 +10,6 @@ const sandbox = sinon.createSandbox();
 const uuid = require('uuid/v4');
 
 const invoiceLicencesService = require('../../../../src/modules/billing/services/invoice-licences-service');
-const batchService = require('../../../../src/modules/billing/services/batch-service');
 
 const Invoice = require('../../../../src/lib/models/invoice');
 const InvoiceLicence = require('../../../../src/lib/models/invoice-licence');
@@ -34,8 +33,6 @@ experiment('modules/billing/services/invoice-licences-service', () => {
     });
 
     sandbox.stub(newRepos.licences, 'updateIncludeLicenceInSupplementaryBilling');
-
-    sandbox.stub(batchService, 'setStatusToEmptyWhenNoTransactions').resolves();
   });
 
   afterEach(async () => {
