@@ -8,12 +8,18 @@ const invoiceIsPartOfSentBatch = invoice => {
   return billingBatch.status === BATCH_STATUS.sent;
 };
 
+const invoiceIsRebill = invoice =>
+  invoice.rebillingState !== null;
+
 const patchInvoice = async request => {
   try {
     const { invoiceId } = request.params;
     const invoice = await invoiceService.getInvoiceById(invoiceId);
     if (!invoiceIsPartOfSentBatch(invoice)) {
       return Boom.conflict('Cannot update invoice that is not part of a sent batch');
+    }
+    if (invoiceIsRebill(invoice)) {
+      return Boom.conflict('Cannot update invoice that is itself a rebill');
     }
     return invoiceService.updateInvoice(invoiceId, request.payload);
   } catch (err) {

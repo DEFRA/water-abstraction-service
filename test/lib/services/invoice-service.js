@@ -19,6 +19,8 @@ const { CHARGE_SEASON } = require('../../../src/lib/models/constants');
 const mappers = require('../../../src/lib/mappers');
 const repos = require('../../../src/lib/connectors/repos');
 const invoiceAccountsConnector = require('../../../src/lib/connectors/crm-v2/invoice-accounts');
+const chargeModuleBillRunApi = require('../../../src/lib/connectors/charge-module/bill-runs');
+const { logger } = require('../../../src/logger');
 
 const invoiceService = require('../../../src/lib/services/invoice-service');
 
@@ -228,12 +230,19 @@ experiment('modules/billing/services/invoiceService', () => {
     sandbox.stub(repos.billingInvoices, 'update').resolves();
     sandbox.stub(repos.billingInvoices, 'findOneBy').resolves();
     sandbox.stub(repos.billingInvoices, 'findAllForInvoiceAccount').resolves();
+    sandbox.stub(repos.billingInvoices, 'findByIsFlaggedForRebillingAndRegion').resolves();
+    sandbox.stub(repos.billingInvoices, 'resetIsFlaggedForRebilling').resolves();
 
     sandbox.stub(invoiceAccountsConnector, 'getInvoiceAccountsByIds').resolves(crmData);
 
     sandbox.stub(repos.billingInvoiceLicences, 'findOne');
 
     sandbox.stub(mappers.invoice, 'modelToDb');
+
+    sandbox.stub(chargeModuleBillRunApi, 'rebillInvoice');
+
+    sandbox.stub(logger, 'info');
+    sandbox.stub(logger, 'error');
   });
 
   afterEach(async () => {
@@ -697,6 +706,119 @@ experiment('modules/billing/services/invoiceService', () => {
 
     test('returns the result of the mapping', () => {
       expect(result).to.equal({ bar: 'baz' });
+    });
+  });
+
+  experiment('.getInvoicesFlaggedForRebilling', () => {
+    const regionId = uuid();
+    let result;
+
+    beforeEach(async () => {
+      repos.billingInvoices.findByIsFlaggedForRebillingAndRegion.resolves(createBatchData().billingInvoices);
+      result = await invoiceService.getInvoicesFlaggedForRebilling(regionId);
+    });
+
+    test('calls .findByIsFlaggedForRebillingAndRegion() repo method with the region ID', async () => {
+      expect(repos.billingInvoices.findByIsFlaggedForRebillingAndRegion.calledWith(regionId)).to.be.true();
+    });
+
+    test('resolves with array of Invoice service models', async () => {
+      expect(result).to.be.an.array().length(3);
+      result.forEach(
+        item => expect(item).to.be.an.instanceOf(Invoice)
+      );
+    });
+  });
+
+  experiment('.rebillInvoice', () => {
+    let batch, invoice, result;
+
+    beforeEach(async () => {
+      batch = createBatch();
+      invoice = new Invoice().fromHash({
+        id: uuid(),
+        externalId: uuid()
+      });
+      repos.billingInvoices.update.resolves({});
+    });
+
+    experiment('when the CM responds with no errors', () => {
+      beforeEach(async () => {
+        result = await invoiceService.rebillInvoice(batch, invoice);
+      });
+
+      test('the request is made to the charge module rebilling API connector', async () => {
+        expect(chargeModuleBillRunApi.rebillInvoice.calledWith(
+          batch.externalId,
+          invoice.externalId
+        )).to.be.true();
+      });
+
+      test('no message is logged', async () => {
+        expect(logger.info.called).to.be.false();
+        expect(logger.error.called).to.be.false();
+      });
+
+      test('the invoice is updated so that the originalBillingInvoiceId = the invoice ID', async () => {
+        expect(repos.billingInvoices.update.calledWith(
+          invoice.id, {
+            originalBillingInvoiceId: invoice.id,
+            rebillingState: null
+          }
+        )).to.be.true();
+      });
+
+      test('resolves with the updated Invoice model', async () => {
+        expect(result).to.be.an.instanceOf(Invoice);
+      });
+    });
+
+    experiment('when the CM responds with a 409 error', () => {
+      beforeEach(async () => {
+        const err = new Error('Oh no');
+        err.statusCode = 409;
+        chargeModuleBillRunApi.rebillInvoice.rejects(err);
+        result = await invoiceService.rebillInvoice(batch, invoice);
+      });
+
+      test('the request is made to the charge module rebilling API connector', async () => {
+        expect(chargeModuleBillRunApi.rebillInvoice.calledWith(
+          batch.externalId,
+          invoice.externalId
+        )).to.be.true();
+      });
+
+      test('an info message is logged', async () => {
+        expect(logger.info.called).to.be.true();
+        expect(logger.error.called).to.be.false();
+      });
+
+      test('the invoice is updated so that the originalBillingInvoiceId = the invoice ID', async () => {
+        expect(repos.billingInvoices.update.calledWith(
+          invoice.id, {
+            originalBillingInvoiceId: invoice.id,
+            rebillingState: null
+          }
+        )).to.be.true();
+      });
+
+      test('resolves with the updated Invoice model', async () => {
+        expect(result).to.be.an.instanceOf(Invoice);
+      });
+    });
+
+    experiment('when the CM responds with a non-409 error', () => {
+      beforeEach(async () => {
+        const err = new Error('Oh no');
+        err.statusCode = 400;
+        chargeModuleBillRunApi.rebillInvoice.rejects(err);
+      });
+
+      test('the error is logged and rethrown', async () => {
+        const func = () => invoiceService.rebillInvoice(batch, invoice);
+        await expect(func()).to.reject();
+        expect(logger.error.called).to.be.true();
+      });
     });
   });
 });
