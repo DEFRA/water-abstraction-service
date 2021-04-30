@@ -747,6 +747,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     experiment('when the CM batch is not approved for billing', () => {
       beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(5);
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
 
@@ -764,6 +765,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     experiment('when the CM batch is showing as "pending"', () => {
       beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(5);
         cmResponse.billRun.status = 'pending';
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
@@ -776,6 +778,20 @@ experiment('modules/billing/services/batch-service', () => {
           invoiceValue,
           creditNoteValue,
           netTotal
+        })).to.be.true();
+      });
+    });
+
+    experiment('when there are 0 transactions in the batch', () => {
+      beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(0);
+        cmResponse.billRun.status = 'pending';
+        await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
+      });
+
+      test('the batch is updated correctly with "sent" status', async () => {
+        expect(newRepos.billingBatches.update.calledWith(BATCH_ID, {
+          status: Batch.BATCH_STATUS.empty
         })).to.be.true();
       });
     });
