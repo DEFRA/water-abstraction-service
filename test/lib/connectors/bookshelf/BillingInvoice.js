@@ -9,46 +9,81 @@ const {
 const { expect } = require('@hapi/code');
 const sandbox = require('sinon').createSandbox();
 
-const Agreement = require('../../../../src/lib/connectors/bookshelf/Agreement');
+const BillingInvoice = require('../../../../src/lib/connectors/bookshelf/BillingInvoice');
 
-experiment('lib/connectors/bookshelf/Agreement', () => {
+experiment('lib/connectors/bookshelf/BillingInvoice', () => {
   let instance;
 
   beforeEach(async () => {
-    instance = Agreement.forge();
+    instance = BillingInvoice.forge();
     sandbox.stub(instance, 'belongsTo');
+    sandbox.stub(instance, 'hasMany');
   });
 
   afterEach(async () => {
     sandbox.restore();
   });
 
-  test('uses the water.financial_agreement_types table', async () => {
-    expect(instance.tableName).to.equal('water.financial_agreement_types');
+  test('uses the water.billing_invoices table', async () => {
+    expect(instance.tableName).to.equal('water.billing_invoices');
   });
 
   test('uses the correct ID attribute', async () => {
-    expect(instance.idAttribute).to.equal('id');
+    expect(instance.idAttribute).to.equal('billing_invoice_id');
   });
 
   test('has the expected timestamp fields', async () => {
     expect(instance.hasTimestamps).to.equal(['date_created', 'date_updated']);
   });
 
-  experiment('the .licenceAgreement() relation', () => {
+  experiment('the .billingBatch() relation', () => {
     beforeEach(async () => {
-      instance.licenceAgreement();
+      instance.billingBatch();
     });
 
     test('is a function', async () => {
-      expect(instance.licenceAgreement).to.be.a.function();
+      expect(instance.billingBatch).to.be.a.function();
     });
 
     test('calls .belongsTo with correct params', async () => {
       const [model, foreignKey, foreignKeyTarget] = instance.belongsTo.lastCall.args;
-      expect(model).to.equal('LicenceAgreement');
-      expect(foreignKey).to.equal('id');
-      expect(foreignKeyTarget).to.equal('financial_agreement_type_id');
+      expect(model).to.equal('BillingBatch');
+      expect(foreignKey).to.equal('billing_batch_id');
+      expect(foreignKeyTarget).to.equal('billing_batch_id');
+    });
+  });
+
+  experiment('the .billingInvoiceLicences() relation', () => {
+    beforeEach(async () => {
+      instance.billingInvoiceLicences();
+    });
+
+    test('is a function', async () => {
+      expect(instance.billingInvoiceLicences).to.be.a.function();
+    });
+
+    test('calls .belongsTo with correct params', async () => {
+      const [model, foreignKey, foreignKeyTarget] = instance.hasMany.lastCall.args;
+      expect(model).to.equal('BillingInvoiceLicence');
+      expect(foreignKey).to.equal('billing_invoice_id');
+      expect(foreignKeyTarget).to.equal('billing_invoice_id');
+    });
+  });
+
+  experiment('the .linkedBillingInvoices() relation', () => {
+    beforeEach(async () => {
+      instance.linkedBillingInvoices();
+    });
+
+    test('is a function', async () => {
+      expect(instance.linkedBillingInvoices).to.be.a.function();
+    });
+
+    test('calls .belongsTo with correct params', async () => {
+      const [model, foreignKey, foreignKeyTarget] = instance.hasMany.lastCall.args;
+      expect(model).to.equal('BillingInvoice');
+      expect(foreignKey).to.equal('original_billing_invoice_id');
+      expect(foreignKeyTarget).to.equal('original_billing_invoice_id');
     });
   });
 });
