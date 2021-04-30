@@ -226,9 +226,11 @@ const updateBatch = async batchId => {
   }
 
   // Update invoices in batch
+  // It is important to update the invoices first so that
+  // for a batch containing only re-billing, there are >0 transactions
+  // in the batch before calculating the new batch status
   await updateInvoices(batch, cmResponse);
 
-  // Set batch totals
   await batchService.updateWithCMSummary(batch.id, cmResponse);
 
   return true;
