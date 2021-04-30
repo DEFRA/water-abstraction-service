@@ -7,7 +7,7 @@ const JOB_NAME = 'billing.populate-batch-charge-versions';
 const batchService = require('../services/batch-service');
 const chargeVersionService = require('../services/charge-version-service');
 
-const { BATCH_ERROR_CODE, BATCH_STATUS, BATCH_TYPE } = require('../../../lib/models/batch');
+const { BATCH_ERROR_CODE, BATCH_TYPE } = require('../../../lib/models/batch');
 const helpers = require('./lib/helpers');
 const batchJob = require('./lib/batch-job');
 

@@ -5,7 +5,7 @@ const { get, partial } = require('lodash');
 const JOB_NAME = 'billing.prepare-transactions';
 
 const batchService = require('../services/batch-service');
-const { BATCH_ERROR_CODE, BATCH_STATUS } = require('../../../lib/models/batch');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 const { jobName: createChargeJobName } = require('./create-charge');

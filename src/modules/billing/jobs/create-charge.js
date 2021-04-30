@@ -5,7 +5,7 @@ const { get, inRange } = require('lodash');
 const JOB_NAME = 'billing.create-charge';
 
 const batchService = require('../services/batch-service');
-const { BATCH_ERROR_CODE, BATCH_STATUS } = require('../../../lib/models/batch');
+const { BATCH_ERROR_CODE } = require('../../../lib/models/batch');
 const batchJob = require('./lib/batch-job');
 const helpers = require('./lib/helpers');
 const transactionsService = require('../services/transactions-service');

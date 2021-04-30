@@ -802,41 +802,6 @@ experiment('modules/billing/services/batch-service', () => {
     });
   });
 
-  experiment('.setStatusToEmptyWhenNoTransactions', () => {
-    experiment('when the batch has more transactions', () => {
-      test('the status is not updated', async () => {
-        const batch = new Batch(uuid());
-        batch.status = Batch.BATCH_STATUS.ready;
-
-        newRepos.billingTransactions.countByBatchId.resolves(5);
-
-        const result = await batchService.setStatusToEmptyWhenNoTransactions(batch);
-
-        expect(newRepos.billingBatches.update.called).to.equal(false);
-        expect(result.id).to.equal(batch.id);
-        expect(result.status).to.equal(batch.status);
-      });
-    });
-
-    experiment('when the batch has no more transactions', () => {
-      test('the status is updated to empty', async () => {
-        const batch = new Batch(uuid());
-        batch.status = Batch.BATCH_STATUS.ready;
-
-        newRepos.billingTransactions.countByBatchId.resolves(0);
-
-        newRepos.billingBatches.update.resolves({
-          id: batch.id,
-          status: Batch.BATCH_STATUS.empty
-        });
-
-        const result = await batchService.setStatusToEmptyWhenNoTransactions(batch);
-        expect(result.id).to.equal(batch.id);
-        expect(result.status).to.equal(Batch.BATCH_STATUS.empty);
-      });
-    });
-  });
-
   experiment('.cleanup', () => {
     beforeEach(async () => {
       await batchService.cleanup(BATCH_ID);
@@ -1203,12 +1168,6 @@ experiment('modules/billing/services/batch-service', () => {
           expect(from).to.equal('yes');
           expect(to).to.equal('reprocess');
           expect(licenceId).to.equal(licenceId);
-        });
-
-        test('sets status of batch to empty when there are no transactions', () => {
-          expect(newRepos.billingBatches.update.calledWith(
-            batch.id, { status: 'empty' }
-          )).to.be.true();
         });
       });
 

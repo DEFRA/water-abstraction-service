@@ -329,14 +329,14 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
     throw new BatchStatusError(`Cannot delete invoice from batch when status is ${batch.status}`);
   }
 
-  // Set batch status back to 'processing'
-  await setStatus(batch.id, Batch.BATCH_STATUS.processing);
-
   // Load invoice
   const invoice = await newRepos.billingInvoices.findOne(invoiceId);
   if (!invoice) {
     throw new NotFoundError(`Invoice ${invoiceId} not found`);
   }
+
+  // Set batch status back to 'processing'
+  await setStatus(batch.id, Batch.BATCH_STATUS.processing);
 
   try {
     await chargeModuleBillRunConnector.deleteInvoiceFromBillRun(invoice.billingBatch.externalId, invoice.externalId);
