@@ -33,7 +33,8 @@ const BATCH_ERROR_CODE = {
   failedToCreateBillRun: 50,
   failedToDeleteInvoice: 60,
   failedToProcessTwoPartTariff: 70,
-  failedToGetChargeModuleBillRunSummary: 80
+  failedToGetChargeModuleBillRunSummary: 80,
+  failedToProcessRebilling: 90
 };
 
 const BATCH_TYPE = {

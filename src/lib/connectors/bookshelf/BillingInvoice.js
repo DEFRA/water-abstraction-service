@@ -15,5 +15,9 @@ module.exports = bookshelf.model('BillingInvoice', {
 
   billingInvoiceLicences () {
     return this.hasMany('BillingInvoiceLicence', 'billing_invoice_id', 'billing_invoice_id');
+  },
+
+  linkedBillingInvoices () {
+    return this.hasMany('BillingInvoice', 'original_billing_invoice_id', 'original_billing_invoice_id');
   }
 });

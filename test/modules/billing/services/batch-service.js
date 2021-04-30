@@ -106,6 +106,8 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(invoiceLicencesService, 'saveInvoiceLicenceToDB');
 
     sandbox.stub(invoiceService, 'saveInvoiceToDB');
+    sandbox.stub(invoiceService, 'resetIsFlaggedForRebilling');
+
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId');
 
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatus').resolves();
@@ -470,6 +472,12 @@ experiment('modules/billing/services/batch-service', () => {
       test('updates the include in supplementary billing status for the batch licences', async () => {
         const [batchId] = licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch.lastCall.args;
         expect(batchId).to.equal(batch.id);
+      });
+
+      test('resets the invoice rebilling flags', async () => {
+        expect(invoiceService.resetIsFlaggedForRebilling.calledWith(
+          batch.id
+        )).to.be.true();
       });
 
       test('sets the status of the batch to processing', async () => {
