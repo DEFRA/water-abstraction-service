@@ -212,18 +212,6 @@ const getTransactionStatusCounts = async batchId => {
 };
 
 /**
- * If the batch has no more transactions then the batch is set
- * to empty, otherwise it stays the same
- *
- * @param {Batch} batch
- * @returns {Batch} The updated batch if no transactions
- */
-const setStatusToEmptyWhenNoTransactions = async batch => {
-  const count = await newRepos.billingTransactions.countByBatchId(batch.id);
-  return count === 0 ? setStatus(batch.id, BATCH_STATUS.empty) : batch;
-};
-
-/**
  * Cleans up any
  * - billing_invoice_licences with no related billing_transactions
  * - billing_invoices with no related billing_invoice_licences
@@ -363,8 +351,7 @@ const deleteBatchInvoice = async (batch, invoiceId) => {
     const invoiceModel = mappers.invoice.dbToModel(invoice);
     await updateInvoiceLicencesForSupplementaryReprocessing(invoiceModel);
 
-    // Mark batch as 'empty' if needed
-    return setStatusToEmptyWhenNoTransactions(batch);
+    return batch;
   } catch (err) {
     await setErrorStatus(batch.id, Batch.BATCH_ERROR_CODE.failedToDeleteInvoice);
     throw err;
@@ -398,22 +385,27 @@ const deleteAllBillingData = async () => {
  * @return {Promise<Batch>} updated batch model
  */
 const updateWithCMSummary = async (batchId, cmResponse) => {
+  // Extract counts/totals from CM bill run response
   const { invoiceCount, creditLineCount: creditNoteCount, invoiceValue, creditLineValue: creditNoteValue, netTotal, status: cmStatus } = cmResponse.billRun;
 
+  // Calculate next batch status
   const cmCompletedStatuses = ['pending', 'billed', 'billing_not_required'];
+  const status = cmCompletedStatuses.includes(cmStatus) ? Batch.BATCH_STATUS.sent : Batch.BATCH_STATUS.ready;
 
-  const status = cmCompletedStatuses.includes(cmStatus)
-    ? Batch.BATCH_STATUS.sent
-    : Batch.BATCH_STATUS.ready;
+  // Get transaction count in local DB
+  // if 0, the batch will be set to "empty" status
+  const count = await newRepos.billingTransactions.countByBatchId(batchId);
 
-  const changes = {
-    status,
-    invoiceCount,
-    creditNoteCount,
-    invoiceValue,
-    creditNoteValue,
-    netTotal
-  };
+  const changes = count === 0
+    ? { status: BATCH_STATUS.empty }
+    : {
+      status,
+      invoiceCount,
+      creditNoteCount,
+      invoiceValue,
+      creditNoteValue,
+      netTotal
+    };
 
   const data = await newRepos.billingBatches.update(batchId, changes);
   return mappers.batch.dbToModel(data);
@@ -432,7 +424,6 @@ exports.saveInvoicesToDB = saveInvoicesToDB;
 exports.setErrorStatus = setErrorStatus;
 exports.setStatus = setStatus;
 exports.setStatusToReview = partialRight(setStatus, Batch.BATCH_STATUS.review);
-exports.setStatusToEmptyWhenNoTransactions = setStatusToEmptyWhenNoTransactions;
 exports.cleanup = cleanup;
 exports.create = create;
 exports.createChargeModuleBillRun = createChargeModuleBillRun;

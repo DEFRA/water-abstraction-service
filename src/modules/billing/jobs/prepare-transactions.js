@@ -35,13 +35,6 @@ const handler = async job => {
     const transactions = await billingTransactionsRepo.findByBatchId(batch.id);
     const billingTransactionIds = transactions.map(getTransactionId);
 
-    // Set empty batch
-    if (transactions.length === 0) {
-      logger.info(`No transactions produced for batch ${batchId}, finalising batch run`);
-      await batchService.setStatus(batchId, BATCH_STATUS.empty);
-      return { billingTransactionIds };
-    }
-
     return {
       billingTransactionIds
     };

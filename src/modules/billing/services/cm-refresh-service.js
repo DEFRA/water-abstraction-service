@@ -225,10 +225,12 @@ const updateBatch = async batchId => {
     return false;
   }
 
-  // Set batch totals
-  batch = await batchService.updateWithCMSummary(batch.id, cmResponse);
   // Update invoices in batch
   await updateInvoices(batch, cmResponse);
+
+  // Set batch totals
+  batch = await batchService.updateWithCMSummary(batch.id, cmResponse);
+
   return true;
 };
 
