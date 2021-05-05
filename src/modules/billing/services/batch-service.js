@@ -168,7 +168,7 @@ const approveBatch = async (batch, internalCallingUser) => {
     await licencesService.updateIncludeInSupplementaryBillingStatusForSentBatch(batch.id);
     await invoiceService.resetIsFlaggedForRebilling(batch.id);
 
-    return setStatus(batch.id, BATCH_STATUS.processing);
+    return batch;
   } catch (err) {
     logger.error('Failed to approve the batch', err, batch);
     await saveEvent('billing-batch:approve', 'error', internalCallingUser, batch);

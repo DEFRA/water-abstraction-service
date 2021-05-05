@@ -479,14 +479,6 @@ experiment('modules/billing/services/batch-service', () => {
           batch.id
         )).to.be.true();
       });
-
-      test('sets the status of the batch to processing', async () => {
-        const [id, changes] = newRepos.billingBatches.update.lastCall.args;
-        expect(id).to.equal(batch.id);
-        expect(changes).to.equal({
-          status: 'processing'
-        });
-      });
     });
 
     experiment('when the batch does not approve', () => {
