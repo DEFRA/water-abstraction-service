@@ -6,13 +6,15 @@ const DateRange = require('../models/date-range');
 const LicenceAgreement = require('../models/licence-agreement');
 
 const agreementMapper = require('./agreement');
+const licenceAgreementPurposeUseMapper = require('./licence-agreement-purpose-use');
 
 const dbToModelMapper = createMapper()
   .map('licenceAgreementId').to('id')
   .map('licenceRef').to('licenceNumber')
   .map(['startDate', 'endDate']).to('dateRange', (startDate, endDate) => new DateRange(startDate, endDate))
   .map('financialAgreementType').to('agreement', agreementMapper.dbToModel)
-  .map('dateSigned').to('dateSigned');
+  .map('dateSigned').to('dateSigned')
+  .map('licenceAgreementPurposeUses').to('licenceAgreementPurposeUses', arr => arr.map(licenceAgreementPurposeUseMapper.dbToModel));
 
 const dbToModel = row => createModel(LicenceAgreement, row, dbToModelMapper);
 
