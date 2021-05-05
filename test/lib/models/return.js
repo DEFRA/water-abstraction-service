@@ -1,6 +1,6 @@
 'use strict';
 
-const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 const uuid = require('uuid/v4');
 
@@ -9,6 +9,8 @@ const DateRange = require('../../../src/lib/models/date-range');
 const PurposeUse = require('../../../src/lib/models/purpose-use');
 const Return = require('../../../src/lib/models/return');
 const ReturnVersion = require('../../../src/lib/models/return-version');
+const config = require('../../../config');
+const sandbox = require('sinon').createSandbox();
 
 class TestModel { };
 
@@ -17,6 +19,11 @@ experiment('lib/models/return', () => {
 
   beforeEach(async () => {
     ret = new Return();
+    sandbox.stub(config.billing, 'returnsGracePeriod').value(21);
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
   });
 
   experiment('.id', () => {
