@@ -28,7 +28,7 @@ const handler = async job => {
     const invoiceAccountId = get(job, 'data.invoiceAccountId');
     const invoiceAccountData = await invoiceAccountsService.getByInvoiceAccountId(invoiceAccountId);
     const invoiceAccountMappedData = await chargeModuleMappers.mapInvoiceAccountToChargeModuleCustomer(invoiceAccountData);
-    await chargeModuleCustomersConnector.updateCustomer(invoiceAccountMappedData);
+    return chargeModuleCustomersConnector.updateCustomer(invoiceAccountMappedData);
   } catch (e) {
     logger.error(new Error('Could not update CM with customer details.', e));
     return new Error('Could not update CM with customer details.');

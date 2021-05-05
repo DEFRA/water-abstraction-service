@@ -21,7 +21,7 @@ const createMessage = () => {
   ]);
 };
 
-const handler = async job => {
+const handler = async () => {
   logger.info(`Processing ${jobNames.findUpdatedInvoiceAccounts}`);
 
   // Call CRM to identify the invoice accounts
