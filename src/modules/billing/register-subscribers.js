@@ -11,6 +11,7 @@ const refreshTotals = require('./jobs/refresh-totals');
 const twoPartTariffMatching = require('./jobs/two-part-tariff-matching');
 const updateCustomer = require('./jobs/update-customer');
 const checkForUpdatedInvoiceAccounts = require('./jobs/check-for-updated-invoice-accounts');
+const approveBatch = require('./jobs/approve-batch');
 
 module.exports = {
   name: 'billing-jobs',
@@ -28,5 +29,6 @@ module.exports = {
       .register(twoPartTariffMatching)
       .register(updateCustomer)
       .register(checkForUpdatedInvoiceAccounts);
+      .register(approveBatch);
   }
 };
