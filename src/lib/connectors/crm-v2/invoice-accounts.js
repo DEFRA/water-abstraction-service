@@ -56,8 +56,18 @@ const createInvoiceAccountAddress = (invoiceAccountId, invoiceAccountAddress) =>
   return serviceRequest.post(url, { body: invoiceAccountAddress });
 };
 
+/**
+ * Fetches invoice account IDs where the entities hashes do not match
+ *
+ */
+const fetchInvoiceAccountsWithUpdatedEntities = () => {
+  const url = getUri('recently-updated');
+  return serviceRequest.get(url);
+};
+
 exports.createInvoiceAccount = createInvoiceAccount;
 exports.deleteInvoiceAccount = deleteInvoiceAccount;
 exports.createInvoiceAccountAddress = createInvoiceAccountAddress;
 exports.getInvoiceAccountById = getInvoiceAccountById;
 exports.getInvoiceAccountsByIds = getInvoiceAccountsByIds;
+exports.fetchInvoiceAccountsWithUpdatedEntities = fetchInvoiceAccountsWithUpdatedEntities;
