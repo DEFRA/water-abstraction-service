@@ -10,6 +10,7 @@ const processChargeVersions = require('./jobs/process-charge-versions');
 const refreshTotals = require('./jobs/refresh-totals');
 const twoPartTariffMatching = require('./jobs/two-part-tariff-matching');
 const updateCustomer = require('./jobs/update-customer');
+const approveBatch = require('./jobs/approve-batch');
 
 module.exports = {
   name: 'billing-jobs',
@@ -25,6 +26,7 @@ module.exports = {
       .register(processChargeVersions)
       .register(refreshTotals)
       .register(twoPartTariffMatching)
-      .register(updateCustomer);
+      .register(updateCustomer)
+      .register(approveBatch);
   }
 };

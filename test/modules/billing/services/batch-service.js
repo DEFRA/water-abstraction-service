@@ -479,14 +479,6 @@ experiment('modules/billing/services/batch-service', () => {
           batch.id
         )).to.be.true();
       });
-
-      test('sets the status of the batch to processing', async () => {
-        const [id, changes] = newRepos.billingBatches.update.lastCall.args;
-        expect(id).to.equal(batch.id);
-        expect(changes).to.equal({
-          status: 'processing'
-        });
-      });
     });
 
     experiment('when the batch does not approve', () => {
@@ -516,8 +508,9 @@ experiment('modules/billing/services/batch-service', () => {
         expect(savedEvent.metadata.batch).to.equal(batch);
       });
 
-      test('does not set the status of the batch to error so the user can retry', async () => {
-        expect(newRepos.billingBatches.update.called).to.be.false();
+      test('sets the status of the batch to ready so the user can retry', async () => {
+        expect(newRepos.billingBatches.update.called).to.be.true();
+        expect(newRepos.billingBatches.update.lastCall.args[1].status).to.equal('ready');
       });
     });
   });

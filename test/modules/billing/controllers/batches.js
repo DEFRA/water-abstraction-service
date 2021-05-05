@@ -78,6 +78,10 @@ experiment('modules/billing/controller', () => {
     sandbox.stub(batchService, 'approveTptBatchReview').resolves(processingBatch);
     sandbox.stub(batchService, 'deleteBatchInvoice').resolves();
     sandbox.stub(batchService, 'deleteAllBillingData').resolves();
+    sandbox.stub(batchService, 'setStatus').resolves({
+      id: 'test-batch-id',
+      status: 'processsing'
+    });
 
     sandbox.stub(chargeVersionService, 'getManyByChargeVersionIds').resolves();
 
@@ -544,32 +548,27 @@ experiment('modules/billing/controller', () => {
       await controller.postApproveBatch(request, h);
     });
 
-    test('approves the batch via the batch service', async () => {
-      expect(batchService.approveBatch.calledWith(batch, internalCallingUser)).to.be.true();
-    });
-
     test('publishes a new job to the message queue with the batch ID', async () => {
       const [jobName, batchId] = request.queueManager.add.lastCall.args;
-      expect(jobName).to.equal('billing.refresh-totals');
+      expect(jobName).to.equal('billing.approve-batch');
       expect(batchId).to.equal(batch.id);
     });
 
     test('returns the approved batch', async () => {
-      const approvedBatch = {
+      const batch = {
         id: 'test-batch-id',
-        status: 'sent'
+        status: 'processsing'
       };
-      batchService.approveBatch.resolves(approvedBatch);
+      batchService.approveBatch.resolves(batch);
 
       const result = await controller.postApproveBatch(request, h);
 
-      expect(result).to.equal(approvedBatch);
+      expect(result).to.equal(batch);
     });
 
     test('returns the error from the service if it fails', async () => {
       const err = new Error('whoops');
-      batchService.approveBatch.rejects(err);
-
+      request.queueManager.add.rejects(err);
       const result = await controller.postApproveBatch(request, h);
       expect(result).to.equal(err);
     });
