@@ -19,9 +19,6 @@ const messageQueue = require('../../../../src/lib/message-queue-v2');
 const { logger } = require('../../../../src/logger');
 
 experiment('modules/billing/jobs/update-customers', () => {
-  const tempInvoiceAccountId = uuid();
-  const tempJobId = uuid();
-
   const invoiceAccountsReturned = [{
     invoiceAccountId: uuid()
   }];
