@@ -216,11 +216,8 @@ experiment('modules/billing/jobs/create-charge', () => {
         expect(batchService.setStatus.called).to.be.false();
       });
 
-      test('resolves with flags to indicate status', async () => {
-        expect(result).to.equal({
-          isEmptyBatch: false,
-          isReady: true
-        });
+      test('resolves with boolean to indicate if batch ready', async () => {
+        expect(result).to.equal(true);
       });
     });
 
@@ -254,11 +251,8 @@ experiment('modules/billing/jobs/create-charge', () => {
         expect(batchService.setStatus.called).to.be.false();
       });
 
-      test('resolves with flags to indicate status', async () => {
-        expect(result).to.equal({
-          isEmptyBatch: false,
-          isReady: true
-        });
+      test('resolves with boolean to indicate if batch ready', async () => {
+        expect(result).to.equal(true);
       });
     });
 
@@ -277,17 +271,8 @@ experiment('modules/billing/jobs/create-charge', () => {
         )).to.be.true();
       });
 
-      test('the batch status is set to "empty"', async () => {
-        expect(batchService.setStatus.calledWith(
-          batchId, Batch.BATCH_STATUS.empty
-        )).to.be.true();
-      });
-
-      test('resolves with flags to indicate status', async () => {
-        expect(result).to.equal({
-          isEmptyBatch: true,
-          isReady: true
-        });
+      test('resolves with boolean to indicate batch is ready', async () => {
+        expect(result).to.equal(true);
       });
     });
 
@@ -346,9 +331,7 @@ experiment('modules/billing/jobs/create-charge', () => {
           data: {
             batchId
           },
-          returnvalue: {
-            isReady: false
-          }
+          returnvalue: false
         };
         await createChargeJob.onComplete(job, queueManager);
       });
@@ -366,35 +349,13 @@ experiment('modules/billing/jobs/create-charge', () => {
       });
     });
 
-    experiment('when a batch is ready but empty', () => {
+    experiment('when a batch is ready', () => {
       beforeEach(async () => {
         const job = {
           data: {
             batchId
           },
-          returnvalue: {
-            isReady: true,
-            isEmptyBatch: true
-          }
-        };
-        await createChargeJob.onComplete(job, queueManager);
-      });
-
-      test('no further jobs are published', async () => {
-        expect(queueManager.add.called).to.be.false();
-      });
-    });
-
-    experiment('when a batch is ready and not empty', () => {
-      beforeEach(async () => {
-        const job = {
-          data: {
-            batchId
-          },
-          returnvalue: {
-            isReady: true,
-            isEmptyBatch: false
-          }
+          returnvalue: true
         };
         await createChargeJob.onComplete(job, queueManager);
       });

@@ -106,6 +106,8 @@ experiment('modules/billing/services/batch-service', () => {
     sandbox.stub(invoiceLicencesService, 'saveInvoiceLicenceToDB');
 
     sandbox.stub(invoiceService, 'saveInvoiceToDB');
+    sandbox.stub(invoiceService, 'resetIsFlaggedForRebilling');
+
     sandbox.stub(invoiceAccountsService, 'getByInvoiceAccountId');
 
     sandbox.stub(licencesService, 'updateIncludeInSupplementaryBillingStatus').resolves();
@@ -472,6 +474,12 @@ experiment('modules/billing/services/batch-service', () => {
         expect(batchId).to.equal(batch.id);
       });
 
+      test('resets the invoice rebilling flags', async () => {
+        expect(invoiceService.resetIsFlaggedForRebilling.calledWith(
+          batch.id
+        )).to.be.true();
+      });
+
       test('sets the status of the batch to processing', async () => {
         const [id, changes] = newRepos.billingBatches.update.lastCall.args;
         expect(id).to.equal(batch.id);
@@ -739,6 +747,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     experiment('when the CM batch is not approved for billing', () => {
       beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(5);
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
 
@@ -756,6 +765,7 @@ experiment('modules/billing/services/batch-service', () => {
 
     experiment('when the CM batch is showing as "pending"', () => {
       beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(5);
         cmResponse.billRun.status = 'pending';
         await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
       });
@@ -768,6 +778,20 @@ experiment('modules/billing/services/batch-service', () => {
           invoiceValue,
           creditNoteValue,
           netTotal
+        })).to.be.true();
+      });
+    });
+
+    experiment('when there are 0 transactions in the batch', () => {
+      beforeEach(async () => {
+        newRepos.billingTransactions.countByBatchId.resolves(0);
+        cmResponse.billRun.status = 'pending';
+        await batchService.updateWithCMSummary(BATCH_ID, cmResponse);
+      });
+
+      test('the batch is updated correctly with "sent" status', async () => {
+        expect(newRepos.billingBatches.update.calledWith(BATCH_ID, {
+          status: Batch.BATCH_STATUS.empty
         })).to.be.true();
       });
     });
@@ -798,41 +822,6 @@ experiment('modules/billing/services/batch-service', () => {
       expect(result).to.equal({
         candidate: 3,
         charge_created: 7
-      });
-    });
-  });
-
-  experiment('.setStatusToEmptyWhenNoTransactions', () => {
-    experiment('when the batch has more transactions', () => {
-      test('the status is not updated', async () => {
-        const batch = new Batch(uuid());
-        batch.status = Batch.BATCH_STATUS.ready;
-
-        newRepos.billingTransactions.countByBatchId.resolves(5);
-
-        const result = await batchService.setStatusToEmptyWhenNoTransactions(batch);
-
-        expect(newRepos.billingBatches.update.called).to.equal(false);
-        expect(result.id).to.equal(batch.id);
-        expect(result.status).to.equal(batch.status);
-      });
-    });
-
-    experiment('when the batch has no more transactions', () => {
-      test('the status is updated to empty', async () => {
-        const batch = new Batch(uuid());
-        batch.status = Batch.BATCH_STATUS.ready;
-
-        newRepos.billingTransactions.countByBatchId.resolves(0);
-
-        newRepos.billingBatches.update.resolves({
-          id: batch.id,
-          status: Batch.BATCH_STATUS.empty
-        });
-
-        const result = await batchService.setStatusToEmptyWhenNoTransactions(batch);
-        expect(result.id).to.equal(batch.id);
-        expect(result.status).to.equal(Batch.BATCH_STATUS.empty);
       });
     });
   });
@@ -1203,12 +1192,6 @@ experiment('modules/billing/services/batch-service', () => {
           expect(from).to.equal('yes');
           expect(to).to.equal('reprocess');
           expect(licenceId).to.equal(licenceId);
-        });
-
-        test('sets status of batch to empty when there are no transactions', () => {
-          expect(newRepos.billingBatches.update.calledWith(
-            batch.id, { status: 'empty' }
-          )).to.be.true();
         });
       });
 

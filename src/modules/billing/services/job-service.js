@@ -22,14 +22,6 @@ const setReadyJob = (eventId, batchId) =>
   setStatuses(eventId, jobStatus.complete, batchId, BATCH_STATUS.ready);
 
 /**
- * Sets the event/job to complete, and the batch to empty
- * @param {String} eventId
- * @param {String} batchId
- */
-const setEmptyBatch = (eventId, batchId) =>
-  setStatuses(eventId, jobStatus.complete, batchId, BATCH_STATUS.empty);
-
-/**
  * Sets the event/job to error, and the batch to error
  * @param {String} eventId
  * @param {String} batchId
@@ -45,7 +37,6 @@ const setFailedJob = (eventId, batchId) =>
 const setReviewJob = (eventId, batchId) =>
   setStatuses(eventId, jobStatus.review, batchId, BATCH_STATUS.review);
 
-exports.setEmptyBatch = setEmptyBatch;
 exports.setFailedJob = setFailedJob;
 exports.setReadyJob = setReadyJob;
 exports.setReviewJob = setReviewJob;
