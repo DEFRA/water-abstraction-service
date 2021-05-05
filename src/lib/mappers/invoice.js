@@ -13,6 +13,10 @@ const batchMapper = require('../../modules/billing/mappers/batch');
 const { createMapper } = require('../object-mapper');
 const { createModel } = require('./lib/helpers');
 
+const mapLinkedInvoices = (billingInvoiceId, linkedBillingInvoices = []) => linkedBillingInvoices
+  .filter(linkedBillingInvoice => linkedBillingInvoice.billingInvoiceId !== billingInvoiceId)
+  .map(dbToModel);
+
 const dbToModelMapper = createMapper()
   .copy(
     'dateCreated',
@@ -24,7 +28,8 @@ const dbToModelMapper = createMapper()
     'externalId',
     'legacyId',
     'metadata',
-    'isFlaggedForRebilling'
+    'isFlaggedForRebilling',
+    'rebillingState'
   )
   .map('netAmount').to('netTotal')
   .map('billingInvoiceId').to('id')
@@ -32,7 +37,9 @@ const dbToModelMapper = createMapper()
   .map('invoiceAccountNumber').to('invoiceAccount.accountNumber')
   .map('billingInvoiceLicences').to('invoiceLicences', billingInvoiceLicences => billingInvoiceLicences.map(invoiceLicence.dbToModel))
   .map('billingBatch').to('batch', batchMapper.dbToModel)
-  .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding));
+  .map('financialYearEnding').to('financialYear', financialYearEnding => new FinancialYear(financialYearEnding))
+  .map('originalBillingInvoiceId').to('originalInvoiceId')
+  .map(['billingInvoiceId', 'linkedBillingInvoices']).to('linkedInvoices', mapLinkedInvoices);
 
 /**
  * Converts DB representation to a Invoice service model
@@ -64,7 +71,9 @@ const modelToDb = (batch, invoice) => ({
   netAmount: invoice.netTotal,
   invoiceValue: invoice.invoiceValue,
   creditNoteValue: invoice.creditNoteValue,
-  isFlaggedForRebilling: invoice.isFlaggedForRebilling
+  isFlaggedForRebilling: invoice.isFlaggedForRebilling,
+  rebillingState: invoice.rebillingState,
+  originalBillingInvoiceId: invoice.originalInvoiceId
 });
 
 const crmToModel = row => {

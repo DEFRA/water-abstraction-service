@@ -38,7 +38,7 @@ const server = Hapi.server({
     {
       provider: {
         constructor: CatboxRedis,
-        options: config.redis
+        options: config.redis.connection
       }
     }
   ]
