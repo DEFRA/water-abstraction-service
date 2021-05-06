@@ -10,6 +10,7 @@ const ReturnRequirement = require('./return-requirement');
 
 const validators = require('./validators');
 const { get } = require('lodash');
+const config = require('../../../config');
 
 const RETURN_STATUS = {
   completed: 'completed',
@@ -125,7 +126,7 @@ class Return extends Model {
    * @return {String} YYYY-MM-DD
    */
   get dueDateForBilling () {
-    return moment(this._dueDate).add(3, 'weeks').format('YYYY-MM-DD');
+    return moment(this._dueDate).add(config.billing.returnsGracePeriod, 'day').format('YYYY-MM-DD');
   }
 
   /**
