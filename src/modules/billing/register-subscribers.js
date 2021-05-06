@@ -28,7 +28,7 @@ module.exports = {
       .register(refreshTotals)
       .register(twoPartTariffMatching)
       .register(updateCustomer)
-      .register(checkForUpdatedInvoiceAccounts);
+      .register(checkForUpdatedInvoiceAccounts)
       .register(approveBatch);
   }
 };
