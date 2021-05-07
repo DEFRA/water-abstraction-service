@@ -58,12 +58,13 @@ const getLicences = async request => {
 
 const getInvoices = async request => {
   const { invoiceAccountId } = request.params;
+  const { page, perPage } = request.query;
   try {
     const result = await controller.getEntity(request.params.invoiceAccountId, invoiceAccountService.getByInvoiceAccountId);
     if (result.isBoom) {
       return result;
     }
-    return invoiceService.getInvoicesForInvoiceAccount(invoiceAccountId);
+    return invoiceService.getInvoicesForInvoiceAccount(invoiceAccountId, page, perPage);
   } catch (err) {
     return mapErrorResponse(err);
   }

@@ -15,7 +15,7 @@ const crm = require('../../../../src/lib/connectors/crm/kpi-reporting');
 const idm = require('../../../../src/lib/connectors/idm/kpi-reporting');
 const returns = require('../../../../src/lib/connectors/returns');
 
-experiment('./modules/kpi-reporting/controller', () => {
+experiment('./modules/kpi-reporting/services/data-service', () => {
   const crmData = {
     data: {
       totals: { allTime: 17, ytd: 14 },
@@ -29,7 +29,11 @@ experiment('./modules/kpi-reporting/controller', () => {
     }
   };
   const returnsDataCycle = {
-    data: [{ due: 1551, internalOnTime: 1, internalLate: 1, externalOnTime: 1, externalLate: 1 }]
+    data: [
+      { due: 1000, internalOnTime: 1, internalLate: 1, externalOnTime: 1, externalLate: 1 },
+      { due: 2000, internalOnTime: 2, internalLate: 2, externalOnTime: 2, externalLate: 2 },
+      { due: 3000, internalOnTime: 3, internalLate: 3, externalOnTime: 3, externalLate: 3 }
+    ]
   };
   const returnsDataMonthly = { rowCount: 1, rows: [{ current_year: true, month: 1, request: 0, return: 1 }] };
   const licenceNamesData = {
@@ -47,7 +51,7 @@ experiment('./modules/kpi-reporting/controller', () => {
     sandbox.stub(events, 'getKPIReturnsMonthlyData');
     sandbox.stub(idm, 'getKPIRegistrations');
     sandbox.stub(crm, 'getKPIAccessRequests');
-    sandbox.stub(returns, 'getKPIReturnsByCycle');
+    sandbox.stub(returns, 'getReturnsCyclesReport');
   });
 
   afterEach(async => {
@@ -60,7 +64,7 @@ experiment('./modules/kpi-reporting/controller', () => {
       events.getKPIReturnsMonthlyData.returns({ rowCount: 0, rows: [], error: 'no data' });
       idm.getKPIRegistrations.rejects({ statusCode: 404 });
       crm.getKPIAccessRequests.rejects({ statusCode: 404 });
-      returns.getKPIReturnsByCycle.rejects({ statusCode: 404 });
+      returns.getReturnsCyclesReport.rejects({ statusCode: 404 });
     });
     test('Licence Names data is null', async () => {
       const response = await dataService.getLicenceNamesData();
@@ -78,8 +82,8 @@ experiment('./modules/kpi-reporting/controller', () => {
       const response = await dataService.getCRMDelegatedAccessData();
       expect(response).to.be.equal(null);
     });
-    test('Delegated access data is null', async () => {
-      const response = await dataService.getReturnsDataByCycle(returnCycles[0]);
+    test('Returns cycle data is null', async () => {
+      const response = await dataService.getReturnCycles(returnCycles[0]);
       expect(response).to.be.equal(null);
     });
   });
@@ -90,7 +94,7 @@ experiment('./modules/kpi-reporting/controller', () => {
       events.getKPIReturnsMonthlyData.returns(returnsDataMonthly);
       idm.getKPIRegistrations.returns(idmData);
       crm.getKPIAccessRequests.returns(crmData);
-      returns.getKPIReturnsByCycle.returns(returnsDataCycle);
+      returns.getReturnsCyclesReport.returns(returnsDataCycle);
     });
 
     test('Licence Named data from events is returned in the right shape', async () => {
@@ -127,13 +131,26 @@ experiment('./modules/kpi-reporting/controller', () => {
       expect(delegatedAccess.monthly[0].year).to.equal(2020);
     });
 
-    test('Returns cycle data from returns is returned in the right shape', async () => {
-      const returnsCycle1 = await dataService.getReturnsDataByCycle(returnCycles[0]);
-      expect(returnsCycle1.due).to.equal(1551);
-      expect(returnsCycle1.internalOnTime).to.equal(1);
-      expect(returnsCycle1.internalLate).to.equal(1);
-      expect(returnsCycle1.externalOnTime).to.equal(1);
-      expect(returnsCycle1.externalLate).to.equal(1);
+    experiment('getReturnsDataByCycle', () => {
+      let result;
+
+      beforeEach(async () => {
+        result = await dataService.getReturnCycles('2020-03-30');
+      });
+
+      test('requests the most recent 2 cycles that have not yet opened for data', async () => {
+        expect(returns.getReturnsCyclesReport.calledWith(
+          '2018-04-01'
+        )).to.be.true();
+      });
+
+      test('returns the first 2 cycles retrieved', async () => {
+        expect(result).to.be.an.array().length(2);
+        expect(result).to.only.include([
+          returnsDataCycle.data[0],
+          returnsDataCycle.data[1]
+        ]);
+      });
     });
   });
 });
