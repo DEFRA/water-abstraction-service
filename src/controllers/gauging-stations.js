@@ -8,7 +8,7 @@ const { pool } = require('../lib/connectors/db.js');
 
 const GaugingStationsApi = new HAPIRestAPI({
   table: 'water.gauging_stations',
-  primaryKey: 'id',
+  primaryKey: 'gauging_station_id',
   endpoint: '/water/1.0/gaugingStations',
   connection: pool,
   primaryKeyAuto: false,
@@ -16,8 +16,8 @@ const GaugingStationsApi = new HAPIRestAPI({
   onCreateTimestamp: 'created',
   onUpdateTimestamp: 'modified',
   upsert: {
-    fields: ['id'],
-    set: ['label', 'lat', 'long', 'easting', 'northing', 'grid_reference', 'catchment_name', 'river_name', 'wiski_id', 'station_reference', 'status', 'metadata', 'modified']
+    fields: ['gauging_station_id'],
+    set: ['label', 'lat', 'long', 'easting', 'northing', 'grid_reference', 'catchment_name', 'river_name', 'wiski_id', 'station_reference', 'status', 'metadata', 'modified', 'hydrology_station_id']
   },
   validation: {
     id: Joi.string(),
