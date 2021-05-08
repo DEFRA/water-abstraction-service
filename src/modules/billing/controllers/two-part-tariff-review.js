@@ -66,8 +66,15 @@ const deleteBatchLicence = async (request, h) => {
  */
 const getBillingVolume = async request => {
   try {
-    const data = await billingVolumesService.getBillingVolumeById(request.params.billingVolumeId);
-    return data;
+    const { billingVolumeId } = request.params;
+
+    const billingVolume = await billingVolumesService.getBillingVolumeById(billingVolumeId);
+
+    // Get charge period
+    billingVolume.chargePeriod = await billingVolumesService.getBillingVolumeChargePeriod(billingVolume);
+
+    // Include the charge period in the payload response
+    return billingVolume;
   } catch (err) {
     return mapErrorResponse(err);
   }
