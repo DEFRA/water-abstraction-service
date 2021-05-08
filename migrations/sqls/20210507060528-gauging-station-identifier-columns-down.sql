@@ -10,3 +10,7 @@ ALTER TABLE water.gauging_stations ADD PRIMARY KEY (id);
 -- Add a new Unique col called hydrology_station_id to hold the external guids
 ALTER TABLE water.gauging_stations DROP CONSTRAINT gauging_stations_hydrology_station_id_key;
 ALTER TABLE water.gauging_stations DROP COLUMN hydrology_station_id;
+
+-- Reverse the renaming of timestamp columns to match convention
+ALTER TABLE water.gauging_stations RENAME COLUMN date_created TO created;
+ALTER TABLE water.gauging_stations RENAME COLUMN date_updated TO modified;
