@@ -284,11 +284,12 @@ experiment('lib/models/billingVolume', () => {
     beforeEach(async () => {
       billingVolume.calculatedVolume = 25;
       billingVolume.volume = 15;
+      billingVolume.isSummer = true;
     });
 
     experiment('when no returns are submitted', () => {
       beforeEach(async () => {
-        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED, 20);
+        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED, 20, true);
       });
 
       test('the volume is set', async () => {
@@ -308,9 +309,31 @@ experiment('lib/models/billingVolume', () => {
       });
     });
 
+    experiment('when no returns are submitted, but the season does not match that supplied', () => {
+      beforeEach(async () => {
+        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED, 20, false);
+      });
+
+      test('the volume is set to zero', async () => {
+        expect(billingVolume.volume).to.be.equal(0);
+      });
+
+      test('the calculatedVolume is null', async () => {
+        expect(billingVolume.calculatedVolume).to.be.null();
+      });
+
+      test('the error flag is not set', async () => {
+        expect(billingVolume.twoPartTariffError).to.not.be.true();
+      });
+
+      test('the status code is set', async () => {
+        expect(billingVolume.twoPartTariffStatus).to.equal(twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED);
+      });
+    });
+
     experiment('when returns are under query', () => {
       beforeEach(async () => {
-        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_UNDER_QUERY, 20);
+        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_UNDER_QUERY, 20, true);
       });
 
       test('the volume and calculated volume are not changed', async () => {
@@ -329,7 +352,7 @@ experiment('lib/models/billingVolume', () => {
 
     experiment('when returns are received not keyed', () => {
       beforeEach(async () => {
-        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_RECEIVED, 20);
+        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_RECEIVED, 20, true);
       });
 
       test('the volume and calculated volume are not changed', async () => {
@@ -348,7 +371,7 @@ experiment('lib/models/billingVolume', () => {
 
     experiment('when some returns are due', () => {
       beforeEach(async () => {
-        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE, 20);
+        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE, 20, true);
       });
 
       test('the volume is set', async () => {
@@ -364,13 +387,13 @@ experiment('lib/models/billingVolume', () => {
       });
 
       test('the status code is set', async () => {
-        expect(billingVolume.twoPartTariffStatus).to.equal(twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE);
+        expect(billingVolume.twoPartTariffStatus).to.equal(twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE, true);
       });
     });
 
     experiment('when returns are received late', () => {
       beforeEach(async () => {
-        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_LATE_RETURNS, 20);
+        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_LATE_RETURNS, 20, true);
       });
 
       test('the volume is set', async () => {
@@ -392,7 +415,7 @@ experiment('lib/models/billingVolume', () => {
 
     experiment('when there is over abstraction', () => {
       beforeEach(async () => {
-        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_OVER_ABSTRACTION, 20);
+        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_OVER_ABSTRACTION, 20, true);
       });
 
       test('the volume and calculated volume are not changed', async () => {
@@ -411,7 +434,7 @@ experiment('lib/models/billingVolume', () => {
 
     experiment('when there are no returns for matching', () => {
       beforeEach(async () => {
-        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_NO_RETURNS_FOR_MATCHING, 20);
+        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_NO_RETURNS_FOR_MATCHING, 20, true);
       });
 
       test('the volume and calculated volume are not changed', async () => {
@@ -430,7 +453,7 @@ experiment('lib/models/billingVolume', () => {
 
     experiment('when the returns are not due for billing', () => {
       beforeEach(async () => {
-        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_NOT_DUE_FOR_BILLING, 20);
+        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_NOT_DUE_FOR_BILLING, 20, true);
       });
 
       test('the volume and calculated volume are not changed', async () => {
@@ -449,7 +472,7 @@ experiment('lib/models/billingVolume', () => {
 
     experiment('when a return line overlaps the charge period start/end dates', () => {
       beforeEach(async () => {
-        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD, 20);
+        billingVolume.setTwoPartTariffStatus(twoPartTariffStatuses.ERROR_RETURN_LINE_OVERLAPS_CHARGE_PERIOD, 20, true);
       });
 
       test('the volume and calculated volume are not changed', async () => {
