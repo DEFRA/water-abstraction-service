@@ -31,6 +31,7 @@ const assignBillableStatuses = [
 ];
 
 const setErrorFlagStatuses = [
+  twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED,
   twoPartTariffStatuses.ERROR_UNDER_QUERY,
   twoPartTariffStatuses.ERROR_RECEIVED,
   twoPartTariffStatuses.ERROR_SOME_RETURNS_DUE,
