@@ -34,7 +34,8 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
     chargeElement.fromHash({
       id: uuid(),
       authorisedAnnualQuantity: 16.5,
-      billableAnnualQuantity: 14.2
+      billableAnnualQuantity: 14.2,
+      isSection127AgreementEnabled: true
     });
     chargeElement.abstractionPeriod = new AbstractionPeriod();
     chargeElement.abstractionPeriod.fromHash({
@@ -127,6 +128,11 @@ experiment('modules/billing/services/volume-matching-service/models/charge-eleme
   experiment('.isTwoPartTariffPurpose', () => {
     test('returns true if the charge element purpose use is a two-part tariff purpose', async () => {
       expect(chargeElementContainer.isTwoPartTariffPurpose).to.be.true();
+    });
+
+    test('returns false if the charge element has section 127 agreement disabled', async () => {
+      chargeElementContainer.chargeElement.isSection127AgreementEnabled = false;
+      expect(chargeElementContainer.isTwoPartTariffPurpose).to.be.false();
     });
 
     test('returns false if the charge element purpose use is not a two-part tariff purpose', async () => {

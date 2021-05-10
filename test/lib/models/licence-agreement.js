@@ -98,20 +98,4 @@ experiment('lib/models/licence-agreement', () => {
       expect(licenceAgreement.dateSigned).to.be.null();
     });
   });
-
-  experiment('.licenceAgreementPurposeUses', () => {
-    test('can be set to an array of LicenceAgreementPurposeUses', async () => {
-      const licenceAgreementPurposeUses = [new LicenceAgreementPurposeUse()];
-      licenceAgreement.licenceAgreementPurposeUses = licenceAgreementPurposeUses;
-      expect(licenceAgreement.licenceAgreementPurposeUses).to.equal(licenceAgreementPurposeUses);
-    });
-
-    test('throws an error if set to a different model type', async () => {
-      const func = () => {
-        const notLicenceAgreementPurposeUses = [new TestModel()];
-        licenceAgreement.licenceAgreementPurposeUses = notLicenceAgreementPurposeUses;
-      };
-      expect(func).to.throw();
-    });
-  });
 });

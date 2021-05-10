@@ -138,9 +138,9 @@ const getBillingVolumesForChargeElement = (chargeElement, billingVolumes) => bil
   billingVolume => billingVolume.chargeElementId === chargeElement.id
 );
 
-const hasTwoPartTariffAgreement = (agreements, purposeUse) => {
+const hasTwoPartTariffAgreement = (agreements, chargeElement) => {
   const agreementsAreTwoPartTariff = agreements.map(agreement =>
-    isTwoPartTariffApplied(agreement, purposeUse));
+    isTwoPartTariffApplied(agreement, chargeElement));
   return agreementsAreTwoPartTariff.includes(true);
 };
 
@@ -158,7 +158,7 @@ const createTwoPartTariffTransactions = (elementChargePeriod, chargeElement, agr
   const transactions = [];
   const elementBillingVolumes = getBillingVolumesForChargeElement(chargeElement, billingVolumes);
   elementBillingVolumes.forEach(billingVolume => {
-    if (hasTwoPartTariffAgreement(agreements, chargeElement.purposeUse)) {
+    if (hasTwoPartTariffAgreement(agreements, chargeElement)) {
       transactions.push(createTransaction(elementChargePeriod, chargeElement, agreements, financialYear, { isTwoPartTariffSupplementary: true }, billingVolume));
     }
   });
