@@ -322,8 +322,8 @@ experiment('lib/models/billingVolume', () => {
         expect(billingVolume.calculatedVolume).to.be.null();
       });
 
-      test('the error flag is not set', async () => {
-        expect(billingVolume.twoPartTariffError).to.not.be.true();
+      test('the error flag is set', async () => {
+        expect(billingVolume.twoPartTariffError).to.be.true();
       });
 
       test('the status code is set', async () => {
