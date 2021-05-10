@@ -2,7 +2,6 @@
 
 const DateRange = require('./date-range');
 const Agreement = require('./agreement');
-const LicenceAgreementPurposeUse = require('./licence-agreement-purpose-use');
 
 const validators = require('./validators');
 

@@ -5,7 +5,6 @@ const { expect } = require('@hapi/code');
 const moment = require('moment');
 
 const LicenceAgreement = require('../../../src/lib/models/licence-agreement');
-const LicenceAgreementPurposeUse = require('../../../src/lib/models/licence-agreement-purpose-use');
 const DateRange = require('../../../src/lib/models/date-range');
 const Agreement = require('../../../src/lib/models/agreement');
 class TestModel {};
