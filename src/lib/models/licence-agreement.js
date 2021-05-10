@@ -53,20 +53,6 @@ class LicenceAgreement extends Model {
   set dateSigned (dateSigned) {
     this._dateSigned = this.getDateTimeFromValue(dateSigned);
   }
-
-  /**
-   * Licence agreement purpose use
-   * @return {LicenceAgreementPurposeUse}
-   */
-  get licenceAgreementPurposeUses () {
-    return this._licenceAgreementPurposeUses;
-  }
-
-  set licenceAgreementPurposeUses (licenceAgreementPurposeUses) {
-    console.log(licenceAgreementPurposeUses);
-    validators.assertIsArrayOfType(licenceAgreementPurposeUses, LicenceAgreementPurposeUse);
-    this._licenceAgreementPurposeUses = licenceAgreementPurposeUses;
-  }
 }
 
 module.exports = LicenceAgreement;

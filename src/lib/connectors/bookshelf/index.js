@@ -14,7 +14,6 @@ exports.Event = require('./Event');
 exports.FinancialAgreementType = require('./FinancialAgreementType');
 exports.Licence = require('./Licence');
 exports.LicenceAgreement = require('./LicenceAgreement');
-exports.LicenceAgreementPurposeUse = require('./LicenceAgreementPurposeUse');
 exports.LicenceVersion = require('./LicenceVersion');
 exports.LicenceVersionPurpose = require('./LicenceVersionPurpose');
 exports.Region = require('./Region');
