@@ -1,6 +1,6 @@
 'use strict';
 
-const { experiment, test, beforeEach } = exports.lab = require('@hapi/lab').script();
+const { experiment, test, beforeEach, afterEach } = exports.lab = require('@hapi/lab').script();
 const { expect } = require('@hapi/code');
 
 // Services
@@ -14,6 +14,7 @@ const AbstractionPeriod = require('../../../../../src/lib/models/abstraction-per
 const Return = require('../../../../../src/lib/models/return');
 
 const { twoPartTariffStatuses } = require('../../../../../src/lib/models/billing-volume');
+const { logger } = require('../../../../../src/logger');
 
 const {
   chargePeriod,
@@ -21,6 +22,7 @@ const {
   createChargeElementContainer,
   createPurposeUse
 } = require('./data');
+const sandbox = require('sinon').createSandbox();
 
 const purposeUses = {
   sprayIrrigation: createPurposeUse('sprayIrrigation', true),
@@ -29,6 +31,14 @@ const purposeUses = {
 
 experiment('modules/billing/services/volume-matching-service/matching-service', () => {
   let returnGroup, chargeElementGroup, result;
+
+  beforeEach(async () => {
+    sandbox.stub(logger, 'info');
+  });
+
+  afterEach(async () => {
+    sandbox.restore();
+  });
 
   experiment('when a return has errors', () => {
     beforeEach(async () => {
@@ -43,7 +53,7 @@ experiment('modules/billing/services/volume-matching-service/matching-service', 
 
     test('the matching is aborted early and error codes assigned', async () => {
       expect(result).to.be.an.array().length(1);
-      expect(result[0].volume).to.equal(chargeElementGroup.chargeElementContainers[0].chargeElement.volume);
+      expect(result[0].volume).to.equal(0);
       expect(result[0].calculatedVolume).to.equal(null);
       expect(result[0].twoPartTariffStatus).to.equal(twoPartTariffStatuses.ERROR_NO_RETURNS_SUBMITTED);
     });

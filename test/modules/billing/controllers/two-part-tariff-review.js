@@ -12,6 +12,7 @@ const sandbox = require('sinon').createSandbox();
 const uuid = require('uuid/v4');
 
 const Batch = require('../../../../src/lib/models/batch');
+const DateRange = require('../../../../src/lib/models/date-range');
 const Event = require('../../../../src/lib/models/event');
 
 const controller = require('../../../../src/modules/billing/controllers/two-part-tariff-review');
@@ -22,6 +23,7 @@ const eventService = require('../../../../src/lib/services/events');
 
 const { NotFoundError } = require('../../../../src/lib/errors.js');
 const { BatchStatusError, TransactionStatusError } = require('../../../../src/modules/billing/lib/errors.js');
+const BillingVolume = require('../../../../src/lib/connectors/bookshelf/BillingVolume');
 
 experiment('modules/billing/controllers/two-part-tariff-review', () => {
   let h, request, result, batch, user, event;
@@ -71,6 +73,7 @@ experiment('modules/billing/controllers/two-part-tariff-review', () => {
     sandbox.stub(billingVolumesService, 'getLicenceBillingVolumes');
     sandbox.stub(billingVolumesService, 'getBillingVolumeById');
     sandbox.stub(billingVolumesService, 'updateBillingVolume');
+    sandbox.stub(billingVolumesService, 'getBillingVolumeChargePeriod').resolves(new DateRange('2021-04-01', '2022-03-31'));
 
     sandbox.stub(batchService, 'approveTptBatchReview').resolves(batch);
 
@@ -143,15 +146,34 @@ experiment('modules/billing/controllers/two-part-tariff-review', () => {
   });
 
   experiment('.getBillingVolume', () => {
+    let result;
+
     experiment('when there are no errors', () => {
+      const billingVolume = new BillingVolume(uuid());
+
       beforeEach(async () => {
-        await controller.getBillingVolume(request, h);
+        billingVolumesService.getBillingVolumeById.resolves(billingVolume);
+        result = await controller.getBillingVolume(request, h);
       });
 
       test('gets the specified billing volume by ID', async () => {
         expect(billingVolumesService.getBillingVolumeById.calledWith(
           request.params.billingVolumeId
         )).to.be.true();
+      });
+
+      test('gets the charge period', async () => {
+        expect(billingVolumesService.getBillingVolumeChargePeriod.calledWith(
+          billingVolume
+        )).to.be.true();
+      });
+
+      test('resolves with the billing volume and charge period', async () => {
+        expect(result).to.be.an.instanceOf(BillingVolume);
+      });
+
+      test('the billing volume has a charge period property', async () => {
+        expect(result.chargePeriod).to.be.an.instanceOf(DateRange);
       });
     });
 

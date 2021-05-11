@@ -225,7 +225,7 @@ class ChargeElementContainer {
   setTwoPartTariffStatus (returnSeason, twoPartTariffStatus) {
     validators.assertEnum(returnSeason, Object.values(RETURN_SEASONS));
     const { volume } = this.chargeElement;
-    this._billingVolumes[returnSeason].setTwoPartTariffStatus(twoPartTariffStatus, volume);
+    this._billingVolumes[returnSeason].setTwoPartTariffStatus(twoPartTariffStatus, volume, this.isSummer);
   }
 
   /**
