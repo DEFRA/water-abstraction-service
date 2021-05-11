@@ -23,7 +23,8 @@ const dbToModelMapper = createMapper()
     'authorisedAnnualQuantity',
     'billableAnnualQuantity',
     'description',
-    'chargeVersionId'
+    'chargeVersionId',
+    'isSection127AgreementEnabled'
   )
   .map().to('abstractionPeriod', abstractionPeriodMapper.dbToModel)
   .map('factorsOverridden').to('isFactorsOverridden')

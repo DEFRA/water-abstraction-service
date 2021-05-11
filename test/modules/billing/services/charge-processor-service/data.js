@@ -79,7 +79,8 @@ const createChargeElement = (overrides = {}) => {
     authorisedAnnualQuantity: 10.4,
     billableAnnualQuantity: 8.43,
     abstractionPeriod,
-    purposeUse: purpose
+    purposeUse: purpose,
+    isSection127AgreementEnabled: true
   });
 };
 
