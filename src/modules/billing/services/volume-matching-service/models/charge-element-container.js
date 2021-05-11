@@ -167,11 +167,13 @@ class ChargeElementContainer {
   }
 
   /**
-   * Checks if two-part tariff purpose on charge element
+   * Checks if two-part tariff purpose on charge element, and that the element
+   * hasn't been disabled for TPT billing
    * @return {Boolean}
    */
   get isTwoPartTariffPurpose () {
-    return this._chargeElement.purposeUse.isTwoPartTariff;
+    return this._chargeElement.purposeUse.isTwoPartTariff &&
+      this._chargeElement.isSection127AgreementEnabled;
   }
 
   /**
