@@ -2,22 +2,33 @@
 
 'use strict';
 
+// Dependencies
 const moment = require('moment');
-const JOB_NAME = 'gauging-stations.sync-from-csv';
 const { logger } = require('../../../logger');
 const s3Connector = require('../../../lib/services/s3');
-const { get: getApplicationState, save: saveApplicationState } = require('../../../lib/services/application-state');
-const gaugingStationsRepo = require('../../../lib/connectors/repos/gauging-stations');
-const gaugingStationMapper = require('../../../lib/mappers/gauging-station');
+
+// Constants
+const JOB_NAME = 'gauging-stations.sync-from-csv';
 const csvKey = 'gauging-stations/gauging-stations.csv';
 
+// Handy stuff
+const config = require('../../../../config');
+const { gaugingStationsCSVHeaders, getArraysFromCSV } = require('../helpers');
+const { get: getApplicationState, save: saveApplicationState } = require('../../../lib/services/application-state');
+
+// Gauging Stations Repo
+const gaugingStationsRepo = require('../../../lib/connectors/repos/gauging-stations');
+const gaugingStationMapper = require('../../../lib/mappers/gauging-station');
+
+console.log('§§§§§§§§');
+console.log(config.import.gaugingStationsSyncFrequencyInMS);
 const createMessage = () => ([
   JOB_NAME,
   {},
   {
     jobId: `${JOB_NAME}.${moment().format('YYYYMMDD')}`,
     repeat: {
-      every: 30000 // config.import.gaugingStationsSyncFrequencyInMS
+      every: 100000 // config.import.gaugingStationsSyncFrequencyInMS
     }
   }
 ]);
@@ -25,66 +36,55 @@ const createMessage = () => ([
 const handler = async job => {
   logger.info(`${JOB_NAME}: Job has started`);
 
+  // Get the Body and the ETag of the S3 object
   const { Body, ETag } = await s3Connector.getObject(csvKey);
 
-  const { data } = await getApplicationState('gauging-stations-import');
+  // Get the current application state for the import
+  const { data: currentApplicationState } = await getApplicationState('gauging-stations-import');
 
-  const lastEtag = data.etag;
-
-  if (ETag === lastEtag) {
+  if (ETag === currentApplicationState.etag) {
     logger.info('No change detected. Not processing file.');
     return 'No change detected. Not processing file.';
   }
 
-  const derivedArrays = Body.toString().split('\n') // split string to lines
-    .map(e => e.trim()) // remove white spaces for each line
-    .map(e => e.split(',').map(e => e.trim())); // split each line to array);
-
-  const headers = [
-    'hydrology_station_id',
-    'station_reference',
-    'wiski_id',
-    'label',
-    'lat',
-    'long',
-    'easting',
-    'northing',
-    'grid_reference',
-    'catchment_name',
-    'river_name'
-  ];
+  const arraysFromCSV = getArraysFromCSV(Body);
 
   const gaugingStationsInDb = await gaugingStationsRepo.findAll();
 
-  for (let i = 1; i < derivedArrays.length; i++) {
-    const data = derivedArrays[i];
-    const tempObj = {};
+  for (let i = 1; i < arraysFromCSV.length; i++) {
+    const row = arraysFromCSV[i];
+    const temporaryObject = {};
 
-    for (let j = 0; j < data.length; j++) {
-      tempObj[headers[j]] = data[j];
+    for (let j = 0; j < row.length; j++) {
+      temporaryObject[gaugingStationsCSVHeaders[j]] = row[j]; // Set each value
     }
-    const mappedGaugingStation = gaugingStationMapper.csvToModel(tempObj);
+
+    const mappedGaugingStation = gaugingStationMapper.csvToModel(temporaryObject);
 
     const stationInDbWithMatchingHydrologyStationId = gaugingStationsInDb.find(station => station.hydrologyStationId === mappedGaugingStation.hydrologyStationId);
     const stationInDbWithMatchingStationReference = gaugingStationsInDb.find(station => station.stationReference === mappedGaugingStation.stationReference);
     const stationInDbWithMatchingWiskiId = gaugingStationsInDb.find(station => station.wiskiId === mappedGaugingStation.wiskiId);
 
     if (stationInDbWithMatchingHydrologyStationId) {
+      // Update the station with the matching Hydrology GUID
       mappedGaugingStation.gaugingStationId = stationInDbWithMatchingHydrologyStationId.gaugingStationId;
-      await gaugingStationsRepo.update(stationInDbWithMatchingHydrologyStationId.gaugingStationId, mappedGaugingStation);
+      gaugingStationsRepo.update(stationInDbWithMatchingHydrologyStationId.gaugingStationId, mappedGaugingStation);
     } else if (stationInDbWithMatchingStationReference) {
+      // Update the station with the matching Station Reference
       mappedGaugingStation.id(stationInDbWithMatchingStationReference.gaugingStationId);
       mappedGaugingStation.gaugingStationId = stationInDbWithMatchingStationReference.gaugingStationId;
-      await gaugingStationsRepo.update(stationInDbWithMatchingStationReference.gaugingStationId, mappedGaugingStation);
+      gaugingStationsRepo.update(stationInDbWithMatchingStationReference.gaugingStationId, mappedGaugingStation);
     } else if (stationInDbWithMatchingWiskiId) {
+      // Update the station with the matching Wiski ID
       mappedGaugingStation.gaugingStationId = stationInDbWithMatchingWiskiId.gaugingStationId;
-      await gaugingStationsRepo.update(stationInDbWithMatchingWiskiId.gaugingStationId, mappedGaugingStation);
+      gaugingStationsRepo.update(stationInDbWithMatchingWiskiId.gaugingStationId, mappedGaugingStation);
     } else {
-      await gaugingStationsRepo.create(mappedGaugingStation);
+      // Nothing else matches... Create a new row in the database.
+      gaugingStationsRepo.create(mappedGaugingStation);
     }
   }
 
-  saveApplicationState('gauging-stations-import', { etag: ETag });
+  return saveApplicationState('gauging-stations-import', { etag: ETag });
 };
 
 const onFailedHandler = async (job, err) => {
