@@ -6,10 +6,10 @@ const csvToModel = data => {
   const gaugingStation = new GaugingStation();
 
   return gaugingStation.fromHash({
-    hydrologyStationId: data.hydrology_station_id.length === 36 ? data.hydrology_station_id : null || null,
+    hydrologyStationId: data.hydrology_station_id.length === 36 ? data.hydrology_station_id : null,
     stationReference: data.station_reference || null,
     wiskiId: data.wiski_id || null,
-    label: data.label || `Unnamed Gauging Station (${data.station_reference})`,
+    label: data.label || 'Unnamed Gauging Station',
     lat: parseFloat(data.lat) || null,
     long: parseFloat(data.long) || null,
     easting: parseFloat(data.easting) || null,
