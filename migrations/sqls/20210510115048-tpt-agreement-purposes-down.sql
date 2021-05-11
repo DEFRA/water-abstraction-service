@@ -10,3 +10,13 @@ create table water.licence_agreement_purpose_uses (
 
 alter table water.charge_elements 
   drop column is_section_127_agreement_enabled;
+
+/* Add a legacy ID column to track TPT agreements imported from NALD */
+alter table water.licence_agreements 
+  add column external_id varchar default null unique;
+
+/* Drop source column */
+alter table water.licence_agreements
+  drop column source;
+drop type water.licence_agreement_source;
+  
