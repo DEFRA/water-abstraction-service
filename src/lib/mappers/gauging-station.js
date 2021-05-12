@@ -4,9 +4,8 @@ const GaugingStation = require('../models/gauging-station');
 
 const csvToModel = data => {
   const gaugingStation = new GaugingStation();
-
   return gaugingStation.fromHash({
-    hydrologyStationId: data.hydrology_station_id.length === 36 ? data.hydrology_station_id : null,
+    hydrologyStationId: data.hydrology_station_id && data.hydrology_station_id.length === 36 ? data.hydrology_station_id : null,
     stationReference: data.station_reference || null,
     wiskiId: data.wiski_id || null,
     label: data.label || 'Unnamed Gauging Station',
