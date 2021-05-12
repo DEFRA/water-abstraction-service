@@ -106,6 +106,10 @@ class GaugingStation extends Model {
     return this._stationReference;
   }
 
+  get stationReference () {
+    return this._stationReference;
+  }
+
   set stationReference (stationReference) {
     this._stationReference = stationReference;
   }
