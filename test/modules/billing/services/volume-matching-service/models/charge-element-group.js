@@ -42,7 +42,8 @@ const createChargeElement = (description, options = {}) => {
     purposeUse: options.purposeUse,
     description,
     authorisedAnnualQuantity: 20,
-    billableAnnualQuantity: 10
+    billableAnnualQuantity: 10,
+    isSection127AgreementEnabled: true
   });
   if (options.isTimeLimited) {
     ele.timeLimitedPeriod = new DateRange('2005-01-01', '2019-05-31');
