@@ -59,9 +59,14 @@ const handler = async () => {
 
     const mappedGaugingStation = gaugingStationMapper.csvToModel(temporaryObject);
 
-    const stationInDbWithMatchingHydrologyStationId = gaugingStationsInDb.find(station => station.hydrologyStationId && station.hydrologyStationId === mappedGaugingStation.hydrologyStationId);
-    const stationInDbWithMatchingStationReference = gaugingStationsInDb.find(station => station.stationReference && station.stationReference === mappedGaugingStation.stationReference);
-    const stationInDbWithMatchingWiskiId = gaugingStationsInDb.find(station => station.wiskiId && station.wiskiId === mappedGaugingStation.wiskiId);
+    const stationInDbWithMatchingHydrologyStationId = gaugingStationsInDb.find(station =>
+      station.hydrologyStationId && station.hydrologyStationId === mappedGaugingStation.hydrologyStationId);
+
+    const stationInDbWithMatchingStationReference = gaugingStationsInDb.find(station =>
+      station.stationReference && station.stationReference === mappedGaugingStation.stationReference);
+
+    const stationInDbWithMatchingWiskiId = gaugingStationsInDb.find(station =>
+      station.wiskiId && station.wiskiId === mappedGaugingStation.wiskiId);
 
     if (stationInDbWithMatchingHydrologyStationId) {
       // Update the station with the matching Hydrology GUID
@@ -88,7 +93,7 @@ const onFailedHandler = async (job, err) => {
   logger.error(`${JOB_NAME}: Job has failed`, err);
 };
 
-const onComplete = async (job, queueManager) => {
+const onComplete = async () => {
   logger.info(`${JOB_NAME}: Job has completed`);
 };
 
