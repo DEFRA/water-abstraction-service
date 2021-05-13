@@ -1,12 +1,17 @@
 const { identity } = require('lodash');
 
-const getGaugingStationForUpdate = (mappedGaugingStation, gaugingStationsInDb) => {
-  const stationInDbWithMatchingHydrologyStationId = gaugingStationsInDb.find(station => {
-    return station.hydrologyStationId && station.hydrologyStationId === mappedGaugingStation.hydrologyStationId;
-  });
-  const stationInDbWithMatchingStationReference = gaugingStationsInDb.find(station => station.stationReference && station.stationReference === mappedGaugingStation.stationReference);
-  const stationInDbWithMatchingWiskiId = gaugingStationsInDb.find(station => station.wiskiId && station.wiskiId === mappedGaugingStation.wiskiId);
-  return [stationInDbWithMatchingHydrologyStationId, stationInDbWithMatchingStationReference, stationInDbWithMatchingWiskiId].map(res => res ? res.gaugingStationId : undefined).find(identity);
+const getGaugingStationForUpdate = (Station, gaugingStationsInDb) => {
+  const stationInDbWithMatchingHydrologyGuid = gaugingStationsInDb
+    .find(station => station.hydrologyStationId && station.hydrologyStationId === Station.hydrologyStationId);
+
+  const stationInDbWithMatchingStationReference = gaugingStationsInDb
+    .find(station => station.stationReference && station.stationReference === Station.stationReference);
+
+  const stationInDbWithMatchingWiskiId = gaugingStationsInDb
+    .find(station => station.wiskiId && station.wiskiId === Station.wiskiId);
+
+  return [stationInDbWithMatchingHydrologyGuid, stationInDbWithMatchingStationReference, stationInDbWithMatchingWiskiId]
+    .map(res => res ? res.gaugingStationId : undefined).find(identity);
 };
 
 const gaugingStationsCSVHeaders = [
