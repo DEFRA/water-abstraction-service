@@ -4,6 +4,8 @@
 
 // Dependencies
 const moment = require('moment');
+const Promise = require('bluebird');
+const csvParse = Promise.promisify(require('csv-parse'));
 const { logger } = require('../../../logger');
 const s3Connector = require('../../../lib/services/s3');
 
@@ -45,45 +47,18 @@ const handler = async () => {
     return 'No change detected. Not processing file.';
   }
 
-  const arraysFromCSV = await helpers.getArraysFromCSV(Body);
+  const arraysFromCSV = await csvParse(Body, { columns: true });
 
   const gaugingStationsInDb = await gaugingStationsRepo.findAll();
 
-  for (let i = 1; i < arraysFromCSV.length; i++) {
-    const row = arraysFromCSV[i];
-    const temporaryObject = {};
+  for (let i = 0; i < arraysFromCSV.length; i++) {
+    const mappedGaugingStation = gaugingStationMapper.csvToModel(arraysFromCSV[i]);
+    const gaugingStationForUpdate = helpers.getGaugingStationForUpdate(mappedGaugingStation, gaugingStationsInDb);
 
-    for (let j = 0; j < row.length; j++) {
-      temporaryObject[helpers.gaugingStationsCSVHeaders[j]] = row[j]; // Set each value
+    if (gaugingStationForUpdate) {
+      await gaugingStationsRepo.update(gaugingStationForUpdate, mappedGaugingStation);
     }
-
-    const mappedGaugingStation = gaugingStationMapper.csvToModel(temporaryObject);
-
-    const stationInDbWithMatchingHydrologyStationId = gaugingStationsInDb.find(station =>
-      station.hydrologyStationId && station.hydrologyStationId === mappedGaugingStation.hydrologyStationId);
-
-    const stationInDbWithMatchingStationReference = gaugingStationsInDb.find(station =>
-      station.stationReference && station.stationReference === mappedGaugingStation.stationReference);
-
-    const stationInDbWithMatchingWiskiId = gaugingStationsInDb.find(station =>
-      station.wiskiId && station.wiskiId === mappedGaugingStation.wiskiId);
-
-    if (stationInDbWithMatchingHydrologyStationId) {
-      // Update the station with the matching Hydrology GUID
-      mappedGaugingStation.gaugingStationId = stationInDbWithMatchingHydrologyStationId.gaugingStationId;
-      await gaugingStationsRepo.update(stationInDbWithMatchingHydrologyStationId.gaugingStationId, mappedGaugingStation);
-    } else if (stationInDbWithMatchingStationReference) {
-      // Update the station with the matching Station Reference
-      mappedGaugingStation.gaugingStationId = stationInDbWithMatchingStationReference.gaugingStationId;
-      await gaugingStationsRepo.update(stationInDbWithMatchingStationReference.gaugingStationId, mappedGaugingStation);
-    } else if (stationInDbWithMatchingWiskiId) {
-      // Update the station with the matching Wiski ID
-      mappedGaugingStation.gaugingStationId = stationInDbWithMatchingWiskiId.gaugingStationId;
-      await gaugingStationsRepo.update(stationInDbWithMatchingWiskiId.gaugingStationId, mappedGaugingStation);
-    } else {
-      // Nothing else matches... Create a new row in the database.
-      await gaugingStationsRepo.create(mappedGaugingStation);
-    }
+    await gaugingStationsRepo.create(mappedGaugingStation);
   }
 
   return applicationState.save('gauging-stations-import', { etag: ETag });

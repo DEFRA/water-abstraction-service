@@ -1,3 +1,14 @@
+const { identity } = require('lodash');
+
+const getGaugingStationForUpdate = (mappedGaugingStation, gaugingStationsInDb) => {
+  const stationInDbWithMatchingHydrologyStationId = gaugingStationsInDb.find(station => {
+    return station.hydrologyStationId && station.hydrologyStationId === mappedGaugingStation.hydrologyStationId;
+  });
+  const stationInDbWithMatchingStationReference = gaugingStationsInDb.find(station => station.stationReference && station.stationReference === mappedGaugingStation.stationReference);
+  const stationInDbWithMatchingWiskiId = gaugingStationsInDb.find(station => station.wiskiId && station.wiskiId === mappedGaugingStation.wiskiId);
+  return [stationInDbWithMatchingHydrologyStationId, stationInDbWithMatchingStationReference, stationInDbWithMatchingWiskiId].map(res => res ? res.gaugingStationId : undefined).find(identity);
+};
+
 const gaugingStationsCSVHeaders = [
   'hydrology_station_id',
   'station_reference',
@@ -12,11 +23,5 @@ const gaugingStationsCSVHeaders = [
   'river_name'
 ];
 
-const getArraysFromCSV = Body => Body.toString()
-  .split('\n') // split string to lines
-  .map(e => e.trim()) // remove white spaces for each line
-  .map(f => f.split(',')
-    .map(g => g.trim())); // split each line to a sub-array
-
 exports.gaugingStationsCSVHeaders = gaugingStationsCSVHeaders;
-exports.getArraysFromCSV = getArraysFromCSV;
+exports.getGaugingStationForUpdate = getGaugingStationForUpdate;

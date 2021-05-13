@@ -4,21 +4,10 @@ const Model = require('./model');
 
 const {
   assertString,
-  assertNullableString,
-  assertNullableId,
-  assertId
+  assertNullableId
 } = require('./validators');
 
 class GaugingStation extends Model {
-  get gaugingStationId () {
-    return this._gaugingStationId;
-  }
-
-  set gaugingStationId (gaugingStationId) {
-    assertId(gaugingStationId);
-    this._gaugingStationId = gaugingStationId;
-  }
-
   get hydrologyStationId () {
     return this._hydrologyStationId;
   }
@@ -74,7 +63,6 @@ class GaugingStation extends Model {
   }
 
   set gridReference (gridReference) {
-    assertNullableString(gridReference);
     this._gridReference = gridReference;
   }
 

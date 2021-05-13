@@ -11,8 +11,10 @@ const findAll = () =>
 const create = data =>
   helpers.create(GaugingStation, data);
 
-const update = (id, changes) =>
-  helpers.update(GaugingStation, 'gaugingStationId', id, changes);
+const update = (id, changes) => GaugingStation
+  .forge('gaugingStationId', id)
+  .save(changes, { method: 'update' })
+  .toJSON();
 
 const deleteOne = id =>
   helpers.deleteOne(GaugingStation, 'gaugingStationId', id);

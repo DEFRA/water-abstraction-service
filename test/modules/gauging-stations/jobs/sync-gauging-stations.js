@@ -16,7 +16,6 @@ const sandbox = sinon.createSandbox();
 const syncGaugingStationsJob = require('../../../../src/modules/gauging-stations/jobs/sync-gauging-stations');
 
 const s3Connector = require('../../../../src/lib/services/s3');
-const helpers = require('../../../../src/modules/gauging-stations/helpers');
 const applicationState = require('../../../../src/lib/services/application-state');
 const gaugingStationsRepo = require('../../../../src/lib/connectors/repos/gauging-stations');
 const gaugingStationsMapper = require('../../../../src/lib/mappers/gauging-station');
@@ -48,7 +47,8 @@ experiment('.createMessage', () => {
 
 experiment('.handler', () => {
   let newRecord = {};
-  const gaugingStationCSVRow = [[], [
+  let gaugingStationCSVRowString;
+  const gaugingStationCSVRow = [
     '93337f15-b2cd-4dd9-a2b7-361689d93d6e',
     'some_station',
     'WiskiId',
@@ -60,23 +60,8 @@ experiment('.handler', () => {
     'GRIDREF',
     'catchment_name',
     'river_name'
-  ]];
-  const refreshNewRecord = () => {
-    newRecord = gaugingStationsMapper.csvToModel({
-      hydrology_station_id: gaugingStationCSVRow[1][0],
-      station_reference: gaugingStationCSVRow[1][1],
-      wiski_id: gaugingStationCSVRow[1][2],
-      label: gaugingStationCSVRow[1][3],
-      lat: gaugingStationCSVRow[1][4],
-      long: gaugingStationCSVRow[1][5],
-      easting: gaugingStationCSVRow[1][6],
-      northing: gaugingStationCSVRow[1][7],
-      grid_reference: gaugingStationCSVRow[1][8],
-      catchment_name: gaugingStationCSVRow[1][9],
-      river_name: gaugingStationCSVRow[1][10]
-    });
-  };
-  refreshNewRecord();
+  ];
+
   const gaugingStations = [{
     gaugingStationId: 'e041a36a-d62c-4446-9bb0-11e87bd1c3ba',
     label: 'station_1',
@@ -86,16 +71,39 @@ experiment('.handler', () => {
     wiskiId: null
   }];
 
+  const refreshNewRecord = () => {
+    newRecord = gaugingStationsMapper.csvToModel({
+      hydrology_station_id: gaugingStationCSVRow[0],
+      station_reference: gaugingStationCSVRow[1],
+      wiski_id: gaugingStationCSVRow[2],
+      label: gaugingStationCSVRow[3],
+      lat: gaugingStationCSVRow[4],
+      long: gaugingStationCSVRow[5],
+      easting: gaugingStationCSVRow[6],
+      northing: gaugingStationCSVRow[7],
+      grid_reference: gaugingStationCSVRow[8],
+      catchment_name: gaugingStationCSVRow[9],
+      river_name: gaugingStationCSVRow[10]
+    });
+    gaugingStationCSVRowString = `hydrology_station_id,station_reference,wiski_id,label,lat,long,easting,northing,grid_reference,catchment_name,river_name\n${gaugingStationCSVRow[0]},${gaugingStationCSVRow[1]},${gaugingStationCSVRow[2]},${gaugingStationCSVRow[3]},${gaugingStationCSVRow[4]},${gaugingStationCSVRow[5]},${gaugingStationCSVRow[6]},${gaugingStationCSVRow[7]},${gaugingStationCSVRow[8]},${gaugingStationCSVRow[9]},${gaugingStationCSVRow[10]}`;
+
+    s3Connector.getObject.resolves
+      ? s3Connector.getObject.resolves({
+        Body: gaugingStationCSVRowString,
+        ETag: '123b'
+      })
+      : sandbox.stub(s3Connector, 'getObject').resolves({
+        Body: gaugingStationCSVRowString,
+        ETag: '123b'
+      });
+  };
+
   beforeEach(() => {
-    // Stub S3
-    sandbox.stub(s3Connector, 'getObject').resolves({ Body: 'Some body', ETag: '123a' });
+    refreshNewRecord();
 
     // Stub application state connector save and get
     sandbox.stub(applicationState, 'get').resolves({ data: { etag: null } });
     sandbox.stub(applicationState, 'save').resolves();
-
-    // Stub getArraysFromCSV
-    sandbox.stub(helpers, 'getArraysFromCSV').resolves(gaugingStationCSVRow);
 
     // Stub gaugingStationsRepo.findAll, gaugingStationsRepo.update, gaugingStationsRepo.create
     sandbox.stub(gaugingStationsRepo, 'findAll').resolves(gaugingStations);
@@ -103,12 +111,11 @@ experiment('.handler', () => {
     sandbox.stub(gaugingStationsRepo, 'create').resolves();
   });
 
-  afterEach(async () => {
-    sandbox.restore();
-  });
+  afterEach(() => sandbox.restore());
 
   experiment('When the ETag matches the known Etag in the application state', () => {
     beforeEach(() => {
+      refreshNewRecord();
       applicationState.get.resolves({
         data: {
           etag: '123a'
@@ -126,12 +133,10 @@ experiment('.handler', () => {
       gaugingStations[0].hydrologyStationId = '93337f15-b2cd-4dd9-a2b7-361689d93d6e';
       refreshNewRecord();
       await gaugingStationsRepo.findAll.resolves(gaugingStations);
-      await helpers.getArraysFromCSV.resolves(gaugingStationCSVRow);
       await syncGaugingStationsJob.handler();
     });
-    afterEach(async () => {
-      sandbox.restore();
-    });
+    afterEach(() => sandbox.restore());
+
     test('updates the existing station', () => {
       expect(gaugingStationsRepo.update.lastCall.args[0]).to.equal('e041a36a-d62c-4446-9bb0-11e87bd1c3ba');
       expect(omit(gaugingStationsRepo.update.lastCall.args[1], ['_gaugingStationId'])).to.equal(newRecord);
@@ -142,10 +147,9 @@ experiment('.handler', () => {
     beforeEach(async () => {
       gaugingStations[0].hydrologyStationId = null;
       gaugingStations[0].stationReference = 'some_station';
-      set(gaugingStationCSVRow, '[1][0]', null);
+      set(gaugingStationCSVRow, '[0]', '');
       refreshNewRecord();
       await gaugingStationsRepo.findAll.resolves(gaugingStations);
-      await helpers.getArraysFromCSV.resolves(gaugingStationCSVRow);
       await syncGaugingStationsJob.handler();
     });
     afterEach(async () => {
@@ -162,16 +166,13 @@ experiment('.handler', () => {
       gaugingStations[0].hydrologyStationId = null;
       gaugingStations[0].stationReference = null;
       gaugingStations[0].wiskiId = 'WiskiId';
-      set(gaugingStationCSVRow, '[1][0]', null);
-      set(gaugingStationCSVRow, '[1][1]', null);
+      set(gaugingStationCSVRow, '[0]', '');
+      set(gaugingStationCSVRow, '[1]', '');
       refreshNewRecord();
       gaugingStationsRepo.findAll.resolves(gaugingStations);
-      helpers.getArraysFromCSV.resolves(gaugingStationCSVRow);
       await syncGaugingStationsJob.handler();
     });
-    afterEach(async () => {
-      sandbox.restore();
-    });
+    afterEach(() => sandbox.restore());
     test('updates the existing station', () => {
       expect(gaugingStationsRepo.update.lastCall.args[0]).to.equal('e041a36a-d62c-4446-9bb0-11e87bd1c3ba');
       expect(omit(gaugingStationsRepo.update.lastCall.args[1], ['_gaugingStationId'])).to.equal(newRecord);
@@ -183,17 +184,14 @@ experiment('.handler', () => {
       gaugingStations[0].hydrologyStationId = null;
       gaugingStations[0].stationReference = null;
       gaugingStations[0].wiskiId = null;
-      set(gaugingStationCSVRow, '[1][0]', null);
-      set(gaugingStationCSVRow, '[1][1]', null);
-      set(gaugingStationCSVRow, '[1][2]', null);
+      set(gaugingStationCSVRow, '[0]', '');
+      set(gaugingStationCSVRow, '[1]', '');
+      set(gaugingStationCSVRow, '[2]', '');
       refreshNewRecord();
       gaugingStationsRepo.findAll.resolves(gaugingStations);
-      helpers.getArraysFromCSV.resolves(gaugingStationCSVRow);
       await syncGaugingStationsJob.handler();
     });
-    afterEach(async () => {
-      sandbox.restore();
-    });
+    afterEach(() => sandbox.restore());
     test('Creates a new station', () => {
       expect(omit(gaugingStationsRepo.create.lastCall.args[0], ['_gaugingStationId'])).to.equal(newRecord);
     });
